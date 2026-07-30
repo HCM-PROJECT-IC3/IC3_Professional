@@ -1,0 +1,136 @@
+/**
+ * css/review-detail.css
+ * ────────────────────────────────────────────────────────────────
+ * Style riêng cho js/review-detail.js — accordion "xem chi tiết
+ * đúng/sai" ở màn #result. Tách khỏi style.css để không phình thêm
+ * file gốc; chỉ nạp thêm 1 <link> trong index.html.
+ * Toàn bộ dùng lại biến màu chung từ css/theme.css (var(--...)).
+ * ────────────────────────────────────────────────────────────────
+ */
+
+/* Cho phép list dài hơn bản cũ (220px) vì giờ có thể mở rộng từng câu */
+.review-list { max-height: 420px; }
+
+.review-item-wrap { border-bottom: 1px solid var(--border); }
+.review-item-wrap:last-child { border-bottom: none; }
+
+/* Hàng tóm tắt — giờ là <button> để bấm mở rộng, giữ nguyên giao diện cũ */
+.review-item {
+  width: 100%;
+  display: flex; align-items: center; gap: .75rem;
+  padding: .6rem 1rem;
+  border: none; border-bottom: none;
+  background: transparent;
+  font: inherit; font-size: .9rem; font-weight: 600;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.review-item:hover { background: var(--card2); }
+.review-item .ri-caret {
+  font-size: .75rem; color: var(--muted);
+  transition: transform .15s ease;
+}
+.review-item.open .ri-caret { transform: rotate(180deg); }
+
+/* Panel chi tiết */
+.review-detail {
+  padding: .25rem 1rem 1rem 2.85rem;
+  background: var(--card2);
+  font-size: .85rem;
+  text-align: left;
+}
+.rd-question {
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: .6rem;
+  line-height: 1.4;
+}
+
+/* Trắc nghiệm (single/multi) */
+.rd-options { display: flex; flex-direction: column; gap: .35rem; margin-bottom: .5rem; }
+.rd-opt {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .4rem .6rem;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border);
+  color: var(--text-secondary, var(--muted));
+}
+.rd-opt-mark { width: 1.1em; text-align: center; font-weight: 800; }
+.rd-opt-correct { border-color: var(--teal); background: rgba(6,214,160,.08); color: var(--text); }
+.rd-opt-correct .rd-opt-mark { color: var(--teal); }
+.rd-opt-wrong { border-color: var(--red); background: rgba(239,71,111,.08); color: var(--text); }
+.rd-opt-wrong .rd-opt-mark { color: var(--red); }
+.rd-opt-tag {
+  margin-left: auto; font-size: .72rem; font-weight: 800;
+  color: var(--muted); text-transform: uppercase; letter-spacing: .3px;
+}
+
+/* Đúng/Sai (truefalse) */
+.rd-tf-list { display: flex; flex-direction: column; gap: .35rem; margin-bottom: .5rem; }
+.rd-tf-row {
+  display: flex; justify-content: space-between; align-items: center; gap: .5rem;
+  padding: .4rem .6rem; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border);
+}
+.rd-tf-row.rd-ok  { border-color: var(--teal); background: rgba(6,214,160,.08); }
+.rd-tf-row.rd-bad { border-color: var(--red);  background: rgba(239,71,111,.08); }
+.rd-tf-text { color: var(--text); }
+.rd-tf-ans  { font-weight: 700; white-space: nowrap; }
+.rd-tf-user    { color: var(--red); text-decoration: line-through; }
+.rd-tf-correct { color: var(--teal); }
+
+/* Nối cột (matching) */
+.rd-match-list { display: flex; flex-direction: column; gap: .35rem; margin-bottom: .5rem; }
+.rd-match-row {
+  display: flex; align-items: center; gap: .4rem; flex-wrap: wrap;
+  padding: .4rem .6rem; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border);
+}
+.rd-match-row.rd-ok  { border-color: var(--teal); background: rgba(6,214,160,.08); }
+.rd-match-row.rd-bad { border-color: var(--red);  background: rgba(239,71,111,.08); }
+.rd-match-left  { color: var(--text); font-weight: 600; }
+.rd-match-arrow { color: var(--muted); }
+.rd-match-correct { color: var(--teal); font-weight: 700; }
+.rd-match-user     { color: var(--red); text-decoration: line-through; }
+
+/* Bấm vào hình (hotspot) */
+.rd-hotspot-wrap {
+  position: relative; width: 100%; max-width: 420px;
+  line-height: 0; border: 2px solid var(--border); border-radius: var(--radius-sm);
+  overflow: hidden; margin-bottom: .5rem;
+}
+.rd-hotspot-wrap img { width: 100%; height: auto; display: block; }
+.rd-hotspot-box {
+  position: absolute; box-sizing: border-box;
+  border: 2.5px dashed rgba(150,150,150,.5);
+  border-radius: 6px; pointer-events: none;
+}
+.rd-hotspot-correct { border-color: var(--teal); background: rgba(6,214,160,.15); }
+.rd-hotspot-wrong   { border-color: var(--red);  background: rgba(239,71,111,.15); }
+.rd-hotspot-legend {
+  display: flex; gap: 1rem; font-size: .78rem; color: var(--muted);
+  margin-bottom: .5rem;
+}
+.rd-legend-dot {
+  display: inline-block; width: .7em; height: .7em; border-radius: 3px;
+  margin-right: .3em; vertical-align: -1px;
+}
+.rd-legend-correct { background: var(--teal); }
+.rd-legend-wrong    { background: var(--red); }
+
+/* Giải thích */
+.rd-explain {
+  display: flex; gap: .5rem; align-items: flex-start;
+  padding: .6rem .7rem;
+  background: rgba(255,209,102,.12);
+  border: 1.5px solid rgba(255,209,102,.4);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  line-height: 1.45;
+}
+.rd-explain-icon { flex-shrink: 0; }
+
+@media (max-width: 640px) {
+  .review-detail { padding-left: 1.5rem; }
+}

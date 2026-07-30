@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IC3 Quiz Dashboard – WIT Education</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&amp;family=Baloo+2:wght@700;800&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+
+<!-- ========================================
+     SIDEBAR
+     ======================================== -->
+<aside id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">🎮</div>
+    <div class="logo-text">IC3 Quiz
+      <span>WIT Education</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-item active" data-section="my-sets">
+      <span class="nav-icon">📚</span>
+      <span>Bộ đề của tôi</span>
+    </div>
+    <div class="nav-item" data-section="reports">
+      <span class="nav-icon">📊</span>
+      <span>Báo cáo kết quả</span>
+    </div>
+    <div class="nav-item" data-section="settings">
+      <span class="nav-icon">⚙️</span>
+      <span>Cài đặt hệ thống</span>
+    </div>
+    <a class="nav-item link-plain" href="image-manager.html">
+      <span class="nav-icon">🖼️</span>
+      <span>Quản lý hình ảnh câu hỏi</span>
+    </a>
+    <a class="nav-item link-plain" href="admin-users.html" id="adminUsersLink" style="display:none;">
+      <span class="nav-icon">👑</span>
+      <span>Quản lý tài khoản</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-chip" id="userChip" title="Bấm để đăng xuất">
+      <div class="user-avatar">👩‍🏫</div>
+      <div class="user-info">
+        <strong id="userChipName">Đang tải...</strong>
+        <span id="userChipRole"></span>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- Sidebar overlay for mobile -->
+<div id="sidebar-overlay"></div>
+
+<!-- ========================================
+     MAIN WRAPPER
+     ======================================== -->
+<div id="main-wrapper">
+
+  <!-- TOPBAR -->
+  <header id="topbar">
+    <div class="topbar-actions-left">
+      <button type="button" id="hamburger" onclick="toggleSidebar()">☰</button>
+      <div class="topbar-title" id="topbar-title">📚 Bộ đề của tôi</div>
+    </div>
+    <div class="topbar-right">
+      <a href="index.html" target="_blank" rel="noopener" class="pill-link">
+        🎓 Xem trang học sinh
+      </a>
+      <div class="theme-toggle" id="themeToggle" title="Chuyển đổi sáng/tối"></div>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <main id="content">
+
+    <!-- ========================================
+         MY SETS SECTION
+         ======================================== -->
+    <section class="section active" id="section-my-sets">
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <button type="button" class="btn-create" onclick="openModal('create')">➕ Tạo bộ đề mới</button>
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Tìm kiếm bộ đề..." oninput="filterCards()">
+        </div>
+        <div class="filter-group">
+          <button type="button" class="filter-btn active" data-filter="all" onclick="setFilter(this, 'all')">Tất cả</button>
+          <button type="button" class="filter-btn" data-filter="elementary" onclick="setFilter(this, 'elementary')">🌱 Tiểu học</button>
+          <button type="button" class="filter-btn" data-filter="middle" onclick="setFilter(this, 'middle')">🎒 THCS</button>
+        </div>
+      </div>
+
+      <!-- Cards Grid -->
+      <div class="cards-grid" id="cardsGrid"></div>
+    </section>
+
+    <!-- ========================================
+         REPORTS SECTION
+         ======================================== -->
+    <section class="section" id="section-reports">
+      <div class="reports-header">
+        <h2>📊 Báo cáo kết quả</h2>
+        <button type="button" class="btn-create" onclick="exportReport()">⬇️ Xuất báo cáo (CSV)</button>
+      </div>
+
+      <!-- Filters -->
+      <div class="report-filters">
+        <div class="report-filter-item">
+          <label for="filterClass">Lớp</label>
+          <select id="filterClass"><option value="">Tất cả</option></select>
+        </div>
+        <div class="report-filter-item">
+          <label for="filterTest">Bộ đề / Bài thi</label>
+          <select id="filterTest"><option value="">Tất cả</option></select>
+        </div>
+        <div class="report-filter-item">
+          <label for="filterRange">Khoảng thời gian</label>
+          <select id="filterRange">
+            <option value="7">7 ngày qua</option>
+            <option value="30" selected>30 ngày qua</option>
+            <option value="90">90 ngày qua</option>
+            <option value="all">Toàn bộ</option>
+          </select>
+        </div>
+        <button type="button" class="btn-refresh" onclick="updateReportTab()" title="Tải lại dữ liệu">🔄 Làm mới</button>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon">🧑‍🎓</div>
+          <div class="stat-label">Tổng lượt làm</div>
+          <div class="stat-value" id="totalSessions">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">✅</div>
+          <div class="stat-label">Tỉ lệ đạt (≥70%)</div>
+          <div class="stat-value" id="totalDone">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⭐</div>
+          <div class="stat-label">Điểm TB</div>
+          <div class="stat-value" id="avgScore">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🏆</div>
+          <div class="stat-label">Điểm cao nhất</div>
+          <div class="stat-value" id="topScore">—</div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="report-charts-grid">
+        <div class="chart-card">
+          <div class="chart-card-title">🥧 Tỉ lệ Đạt / Chưa đạt</div>
+          <div class="chart-card-body"><canvas id="chartPassFail"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">📊 Điểm trung bình theo lớp</div>
+          <div class="chart-card-body"><canvas id="chartByClass"></canvas></div>
+        </div>
+        <div class="chart-card chart-card-wide">
+          <div class="chart-card-title">📈 Xu hướng điểm trung bình theo ngày</div>
+          <div class="chart-card-body"><canvas id="chartTrend"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="report-table-wrap">
+        <div class="report-table-header">🗂️ Chi tiết lượt làm bài (tối đa 200 lượt gần nhất)</div>
+        <div class="table-scroll-x">
+          <table id="reportTable">
+            <thead>
+              <tr>
+                <th scope="col">Học sinh</th>
+                <th scope="col">Lớp</th>
+                <th scope="col">Bộ đề</th>
+                <th scope="col">Thời gian</th>
+                <th scope="col">Điểm số</th>
+                <th scope="col">Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody id="reportBody">
+              <tr><td colspan="6" class="table-empty-cell">Đang tải dữ liệu...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================
+         SETTINGS SECTION
+         ======================================== -->
+    <section class="section" id="section-settings">
+      <h2 class="section-title-lg">⚙️ Cài đặt hệ thống</h2>
+      <div class="settings-grid">
+        <div class="settings-card">
+          <h3>🔒 Bảo mật &amp; Chống gian lận</h3>
+          <div class="settings-row">
+            <label>Chặn tự sửa điểm</label>
+            <button type="button" aria-label="Chặn tự sửa điểm" class="toggle-switch on" onclick="this.classList.toggle('on')"></button>
+          </div>
+          <div class="settings-row">
+            <label>Ghi nhận phiên làm việc</label>
+            <button type="button" aria-label="Ghi nhận phiên làm việc" class="toggle-switch on" onclick="this.classList.toggle('on')"></button>
+          </div>
+          <div class="settings-row">
+            <label>Khoá link sau khi nộp bài</label>
+            <button type="button" aria-label="Khoá link sau khi nộp bài" class="toggle-switch" onclick="this.classList.toggle('on')"></button>
+          </div>
+          <div class="settings-row">
+            <label>Yêu cầu xác thực học sinh</label>
+            <button type="button" aria-label="Yêu cầu xác thực học sinh" class="toggle-switch on" onclick="this.classList.toggle('on')"></button>
+          </div>
+        </div>
+        <div class="settings-card">
+          <h3>🎨 Giao diện</h3>
+          <div class="settings-row">
+            <label>Chế độ tối (Dark Mode)</label>
+            <button type="button" aria-label="Chế độ tối (Dark Mode)" class="toggle-switch" id="settingsDark" onclick="toggleThemeFromSettings(this)"></button>
+          </div>
+          <div class="settings-row">
+            <label>Hiệu ứng chuyển động</label>
+            <button type="button" aria-label="Hiệu ứng chuyển động" class="toggle-switch on" onclick="this.classList.toggle('on')"></button>
+          </div>
+          <div class="settings-row">
+            <label>Hiển thị số câu hỏi</label>
+            <button type="button" aria-label="Hiển thị số câu hỏi" class="toggle-switch on" onclick="this.classList.toggle('on')"></button>
+          </div>
+        </div>
+        <div class="settings-card">
+          <h3>📤 Dữ liệu &amp; Xuất file</h3>
+          <div class="settings-row">
+            <label>Tự động lưu kết quả</label>
+            <button type="button" aria-label="Tự động lưu kết quả" class="toggle-switch on" onclick="this.classList.toggle('on')"></button>
+          </div>
+          <div class="settings-row">
+            <label>Lưu vào LocalStorage</label>
+            <button type="button" aria-label="Lưu vào LocalStorage" class="toggle-switch on" onclick="this.classList.toggle('on')"></button>
+          </div>
+          <div class="settings-row settings-row-col">
+            <label>Xóa toàn bộ dữ liệu phiên</label>
+            <button type="button" onclick="clearAllData()" class="btn-danger-outline">🗑️ Xóa tất cả</button>
+          </div>
+        </div>
+        <div class="settings-card">
+          <h3>ℹ️ Thông tin hệ thống</h3>
+          <div class="settings-row"><label>Phiên bản</label><span class="info-value">v2.0.2025</span></div>
+          <div class="settings-row"><label>Năm học</label><span class="info-value">2025–2026</span></div>
+          <div class="settings-row"><label>Nền tảng</label><span class="info-value">IC3 GS5</span></div>
+          <div class="settings-row"><label>Đơn vị</label><span class="info-value">WIT Education</span></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ========================================
+     CREATE MODAL
+     ======================================== -->
+<div id="modal-overlay" onclick="closeModalOnOverlay(event)">
+  <div class="modal" id="modal-box">
+    <div class="modal-header">
+      <h3 id="modal-title">➕ Tạo bộ đề mới</h3>
+      <button type="button" class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body">
+      <!-- dynamically filled -->
+    </div>
+    <div class="modal-footer" id="modal-footer">
+      <button type="button" class="btn-cancel" onclick="closeModal()">Huỷ bỏ</button>
+      <button type="button" class="btn-save" onclick="saveNewSet()">💾 Lưu bộ đề</button>
+    </div>
+  </div>
+</div>
+
+<!-- SESSION TOAST -->
+<div id="session-toast">
+  <span class="toast-icon">🚀</span>
+  <span id="toast-text">Đang ghi nhận phiên làm bài...</span>
+</div>
+
+<!-- ========================================
+     JAVASCRIPT
+     ======================================== -->
+<script src="js/dashboard-page.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/auth-guard.js"></script>
+<script src="js/idle-logout.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>
