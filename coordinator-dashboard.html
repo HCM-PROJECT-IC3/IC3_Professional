@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📊 Dashboard Điều phối đào tạo — EduQuiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/coordinator-dashboard.css">
+</head>
+<body>
+
+<div class="topbar">
+  <a href="ic3-dashboard.html" class="btn btn-ghost">← Dashboard</a>
+  <h1>📊 Dashboard Điều phối đào tạo</h1>
+  <div class="spacer"></div>
+  <a href="roster-manager.html" class="btn btn-ghost">🧑‍🎓 Quản lý danh sách học sinh</a>
+  <span class="whoami" id="whoami"></span>
+  <button type="button" class="btn btn-ghost" id="logoutBtn">Đăng xuất</button>
+</div>
+
+<div class="wrap">
+
+  <!-- ============ BỘ LỌC (5 chiều) ============ -->
+  <div class="filters-card">
+    <div class="filter-item">
+      <label for="f-course">Khoá học</label>
+      <select id="f-course"><option value="">Tất cả</option></select>
+    </div>
+    <div class="filter-item">
+      <label for="f-teacher">Giáo viên</label>
+      <select id="f-teacher"><option value="">Tất cả</option></select>
+    </div>
+    <div class="filter-item">
+      <label for="f-class">Lớp</label>
+      <select id="f-class"><option value="">Tất cả</option></select>
+    </div>
+    <div class="filter-item">
+      <label for="f-exam">Bài thi</label>
+      <select id="f-exam"><option value="">Tất cả</option></select>
+    </div>
+    <div class="filter-item">
+      <label for="f-range">Khoảng thời gian</label>
+      <select id="f-range">
+        <option value="7">7 ngày qua</option>
+        <option value="30" selected>30 ngày qua</option>
+        <option value="90">90 ngày qua</option>
+        <option value="all">Toàn bộ</option>
+      </select>
+    </div>
+    <button type="button" class="btn btn-ghost" id="resetFiltersBtn" title="Xoá bộ lọc">↺ Đặt lại</button>
+  </div>
+
+  <div class="loading-note" id="loadingNote">⏳ Đang tải dữ liệu roster &amp; kết quả bài thi...</div>
+
+  <!-- ============ 7 KPI ============ -->
+  <div class="kpi-grid" id="kpiGrid" hidden>
+    <div class="kpi-card">
+      <div class="kpi-icon">🧑‍🎓</div>
+      <div class="kpi-label">Tổng số học sinh</div>
+      <div class="kpi-value" id="kpiStudents">—</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">🧑‍🏫</div>
+      <div class="kpi-label">Tổng số giáo viên</div>
+      <div class="kpi-value" id="kpiTeachers">—</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">📝</div>
+      <div class="kpi-label">Số bài thi</div>
+      <div class="kpi-value" id="kpiExams">—</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">⭐</div>
+      <div class="kpi-label">Điểm trung bình</div>
+      <div class="kpi-value" id="kpiAvgScore">—</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">✅</div>
+      <div class="kpi-label">Tỷ lệ đạt</div>
+      <div class="kpi-value" id="kpiPassRate">—</div>
+    </div>
+    <div class="kpi-card kpi-warn">
+      <div class="kpi-icon">🚩</div>
+      <div class="kpi-label">Học sinh chưa làm bài</div>
+      <div class="kpi-value" id="kpiNotSubmitted">—</div>
+    </div>
+    <div class="kpi-card kpi-warn">
+      <div class="kpi-icon">🆘</div>
+      <div class="kpi-label">Học sinh cần hỗ trợ</div>
+      <div class="kpi-value" id="kpiNeedsSupport">—</div>
+    </div>
+  </div>
+
+  <!-- ============ 6 LOẠI BIỂU ĐỒ ============ -->
+  <div class="charts-grid" id="chartsGrid" hidden>
+    <div class="chart-card">
+      <div class="chart-card-title">📊 Điểm trung bình theo lớp (Bar)</div>
+      <div class="chart-card-body"><canvas id="chartBar"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">📈 Xu hướng điểm TB theo ngày (Line)</div>
+      <div class="chart-card-body"><canvas id="chartLine"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">🥧 Tỷ lệ Đạt / Chưa đạt (Pie)</div>
+      <div class="chart-card-body"><canvas id="chartPie"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">🕸️ So sánh điểm TB giữa các lớp (Radar)</div>
+      <div class="chart-card-body"><canvas id="chartRadar"></canvas></div>
+    </div>
+    <div class="chart-card chart-card-wide">
+      <div class="chart-card-title">🌡️ Ma trận điểm TB: Lớp × Bài thi (Heatmap)</div>
+      <div class="chart-card-body" id="chartHeatmap"><div class="chart-empty">Chưa đủ dữ liệu.</div></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">🎯 Tiến độ tổng quan (Progress)</div>
+      <div class="chart-card-body" id="chartProgress"></div>
+    </div>
+  </div>
+
+  <!-- ============ DANH SÁCH CẦN CHÚ Ý ============ -->
+  <div class="watchlists-grid" id="watchlistsGrid" hidden>
+    <div class="watchlist-card">
+      <div class="watchlist-title">🚩 Học sinh chưa làm bài <span class="watchlist-count" id="notSubmittedCount"></span></div>
+      <ul class="watchlist-list" id="notSubmittedList"></ul>
+      <div class="watchlist-more" id="notSubmittedMore"></div>
+    </div>
+    <div class="watchlist-card">
+      <div class="watchlist-title">🆘 Học sinh cần hỗ trợ <span class="watchlist-count" id="needsSupportCount"></span></div>
+      <ul class="watchlist-list" id="needsSupportList"></ul>
+      <div class="watchlist-more" id="needsSupportMore"></div>
+    </div>
+    <div class="watchlist-card">
+      <div class="watchlist-title">🏆 Học sinh xuất sắc <span class="watchlist-count" id="topStudentsCount"></span></div>
+      <ul class="watchlist-list" id="topStudentsList"></ul>
+      <div class="watchlist-more" id="topStudentsMore"></div>
+    </div>
+  </div>
+
+  <!-- ============ BẢNG QUẢN LÝ HỌC SINH (đầy đủ) — Commit #5 ============ -->
+  <div class="student-table-card" id="studentTableCard" hidden>
+    <div class="student-table-header">
+      <h2>🧑‍🎓 Danh sách học sinh <span class="watchlist-count" id="studentTableCount"></span></h2>
+      <div class="student-table-toolbar">
+        <input type="search" id="studentSearchInput" placeholder="🔍 Tìm theo tên hoặc MSSV…" autocomplete="off">
+        <select id="studentStatusFilter">
+          <option value="">Tất cả trạng thái</option>
+          <option value="active">Đang học</option>
+          <option value="inactive">Ngừng học</option>
+        </select>
+        <select id="studentPageSize">
+          <option value="10">10 / trang</option>
+          <option value="25">25 / trang</option>
+          <option value="50">50 / trang</option>
+        </select>
+        <button type="button" class="btn btn-ghost" id="exportExcelBtn" title="Xuất Excel — Commit #6">⬇️ Excel</button>
+        <button type="button" class="btn btn-ghost" id="exportPdfBtn" title="Xuất PDF — Commit #7">🖨️ PDF</button>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table id="studentTable">
+        <thead>
+          <tr>
+            <th></th>
+            <th>MSSV</th>
+            <th>Họ tên</th>
+            <th>Lớp</th>
+            <th>Giáo viên</th>
+            <th>Điểm gần nhất</th>
+            <th>Điểm TB</th>
+            <th>Tiến độ học</th>
+            <th>Trạng thái</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="studentTableBody"></tbody>
+      </table>
+    </div>
+    <div class="student-table-pagination">
+      <button type="button" class="btn btn-ghost" id="studentPrevPageBtn">← Trước</button>
+      <span id="studentPageIndicator">Trang 1/1</span>
+      <button type="button" class="btn btn-ghost" id="studentNextPageBtn">Sau →</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ DRAWER CHI TIẾT HỌC SINH — Commit #5 ============ -->
+<div class="detail-overlay" id="studentDetailOverlay">
+  <aside class="detail-drawer" id="studentDetailDrawer" role="dialog" aria-modal="true" aria-labelledby="detailDrawerName">
+    <div class="detail-drawer-header">
+      <div class="detail-drawer-avatar" id="detailAvatar"></div>
+      <div class="detail-drawer-title">
+        <h3 id="detailDrawerName">—</h3>
+        <span id="detailDrawerMeta" class="detail-drawer-meta"></span>
+      </div>
+      <button type="button" class="modal-close" id="detailDrawerCloseBtn" aria-label="Đóng">✕</button>
+    </div>
+    <div class="detail-drawer-body" id="detailDrawerBody">
+      <div class="loading-note">⏳ Đang tải lịch sử làm bài…</div>
+    </div>
+  </aside>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- QUAN TRỌNG: khai báo EDU_ALLOWED_ROLES TRƯỚC auth-guard.js (đúng quy
+     ước ghi trong chính file đó) — chỉ admin và coordinator được vào. -->
+<script>window.EDU_ALLOWED_ROLES = ['admin', 'coordinator'];</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/auth-guard.js"></script>
+<script src="js/idle-logout.js"></script>
+
+<!-- Nền tảng LMAP (Giai đoạn 1) -->
+<script src="js/core/rbac.js"></script>
+<script src="js/repositories/base-repository.js"></script>
+<script src="js/models/roster.model.js"></script>
+<script src="js/models/student-result.model.js"></script>
+<script src="js/models/exam-history.model.js"></script>
+<script src="js/models/activity-log.model.js"></script>
+<script src="js/repositories/roster-repository.js"></script>
+<script src="js/repositories/student-result-repository.js"></script>
+<script src="js/repositories/activity-log-repository.js"></script>
+<script src="js/services/analytics-service.js"></script>
+<script src="js/services/activity-log-service.js"></script>
+
+<!-- Coordinator dashboard (Commit #4) -->
+<script src="js/coordinator/data-loader.js"></script>
+<script src="js/coordinator/charts.js"></script>
+<script src="js/coordinator/student-table.js"></script>
+<script src="js/coordinator/student-detail.js"></script>
+<script src="js/coordinator/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧑‍🎓 Quản lý danh sách học sinh — EduQuiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/roster-manager.css">
+</head>
+<body>
+
+<div class="topbar">
+  <a href="ic3-dashboard.html" class="btn btn-ghost">← Dashboard</a>
+  <h1>🧑‍🎓 Quản lý danh sách học sinh</h1>
+  <div class="spacer"></div>
+  <span class="whoami" id="whoami"></span>
+  <button type="button" class="btn btn-ghost" id="logoutBtn">Đăng xuất</button>
+</div>
+
+<div class="wrap">
+  <div class="banner">
+    Danh sách <b>khoá học / lớp / học sinh</b> ở đây là dữ liệu <b>roster thật</b>,
+    độc lập với luồng làm bài ẩn danh hiện tại. Đây là nền tảng để hệ thống biết
+    được <b>học sinh nào chưa làm bài</b> ở Dashboard Điều phối đào tạo sắp tới.
+  </div>
+
+  <!-- ============ TABS ============ -->
+  <div class="tabs" role="tablist">
+    <button type="button" class="tab-btn active" data-tab="courses" role="tab">🏫 Khoá học</button>
+    <button type="button" class="tab-btn" data-tab="classes" role="tab">🧑‍🏫 Lớp học</button>
+    <button type="button" class="tab-btn" data-tab="students" role="tab">👤 Học sinh</button>
+  </div>
+
+  <!-- ============ TAB: COURSES ============ -->
+  <section class="tab-panel active" id="panel-courses">
+    <div class="panel-toolbar">
+      <div class="panel-toolbar-info"><span id="courseCount">0</span> khoá học</div>
+      <button type="button" class="btn btn-primary" id="addCourseBtn">➕ Thêm khoá học</button>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Tên khoá học</th><th>Cấp học</th><th>Số lớp</th><th></th></tr></thead>
+        <tbody id="courseRows"><tr><td colspan="4" class="empty-cell">Đang tải...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ TAB: CLASSES ============ -->
+  <section class="tab-panel" id="panel-classes">
+    <div class="panel-toolbar">
+      <div class="panel-toolbar-info"><span id="classCount">0</span> lớp học</div>
+      <button type="button" class="btn btn-primary" id="addClassBtn">➕ Thêm lớp học</button>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Tên lớp</th><th>Khoá học</th><th>Giáo viên phụ trách</th><th>Sĩ số</th><th></th></tr></thead>
+        <tbody id="classRows"><tr><td colspan="5" class="empty-cell">Đang tải...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ TAB: STUDENTS ============ -->
+  <section class="tab-panel" id="panel-students">
+    <div class="panel-toolbar">
+      <div class="panel-toolbar-info"><span id="studentCount">0</span> học sinh</div>
+      <div class="panel-toolbar-filters">
+        <input type="text" id="studentSearch" placeholder="🔍 Tìm theo tên hoặc MSSV...">
+        <select id="studentClassFilter"><option value="">Tất cả lớp</option></select>
+      </div>
+      <button type="button" class="btn btn-primary" id="addStudentBtn">➕ Thêm học sinh</button>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th></th><th>MSSV</th><th>Họ tên</th><th>Lớp</th><th>GV phụ trách</th><th>Trạng thái</th><th></th></tr></thead>
+        <tbody id="studentRows"><tr><td colspan="7" class="empty-cell">Đang tải...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- ============ MODAL (dùng chung cho cả 3 loại form) ============ -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="modalTitle">Thêm mới</h3>
+      <button type="button" class="modal-close" id="modalCloseBtn">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"><!-- điền động bằng JS --></div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" id="modalCancelBtn">Huỷ bỏ</button>
+      <button type="button" class="btn btn-primary" id="modalSaveBtn">💾 Lưu</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- QUAN TRỌNG: phải khai báo EDU_ALLOWED_ROLES TRƯỚC js/auth-guard.js
+     (xem hướng dẫn trong chính file auth-guard.js) — chỉ admin và
+     coordinator (Điều phối đào tạo) được vào trang quản lý roster này. -->
+<script>window.EDU_ALLOWED_ROLES = ['admin', 'coordinator'];</script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/auth-guard.js"></script>
+<script src="js/idle-logout.js"></script>
+
+<!-- Nền tảng LMAP (Giai đoạn 1) -->
+<script src="js/core/rbac.js"></script>
+<script src="js/repositories/base-repository.js"></script>
+<script src="js/models/roster.model.js"></script>
+<script src="js/models/activity-log.model.js"></script>
+<script src="js/repositories/roster-repository.js"></script>
+<script src="js/repositories/activity-log-repository.js"></script>
+<script src="js/services/activity-log-service.js"></script>
+
+<script src="js/roster-manager.js"></script>
+</body>
+</html>

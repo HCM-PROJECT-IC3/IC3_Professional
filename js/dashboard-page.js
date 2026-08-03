@@ -12,6 +12,18 @@ window.addEventListener('edu:ready', ({ detail }) => {
     document.getElementById('adminUsersLink').style.display = 'flex';
   }
 
+  // Trang quản lý danh sách học sinh (roster) — Admin và Điều phối đào
+  // tạo (xem js/roster-manager.js, Commit #3 lộ trình LMAP).
+  if (profile.role === 'admin' || profile.role === 'coordinator') {
+    document.getElementById('rosterManagerLink').style.display = 'flex';
+  }
+
+  // Dashboard riêng cho Điều phối đào tạo — 7 KPI, 6 loại biểu đồ, bộ lọc
+  // 5 chiều (xem js/coordinator/*.js, Commit #4 lộ trình LMAP).
+  if (profile.role === 'admin' || profile.role === 'coordinator') {
+    document.getElementById('coordinatorDashboardLink').style.display = 'flex';
+  }
+
   // Điều phối đào tạo (coordinator): chỉ xem Báo cáo kết quả, không có
   // quyền quản lý bộ đề / cài đặt hệ thống → ẩn các mục còn lại và mở
   // thẳng vào tab Báo cáo.

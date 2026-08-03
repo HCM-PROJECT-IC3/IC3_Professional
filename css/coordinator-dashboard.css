@@ -1,0 +1,348 @@
+/* ============================================================
+   COORDINATOR DASHBOARD — trang Dashboard riêng cho Điều phối đào tạo
+   (chỉ admin & coordinator). Dùng chung css/theme.css cho biến màu,
+   tái sử dụng pattern topbar/toast từ roster-manager.css & admin-users.css
+   để đồng nhất giao diện trong hệ thống.
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
+
+body {
+  font-family: 'Baloo 2', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding-bottom: 3rem;
+}
+
+/* ---- Topbar ---- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  flex-wrap: wrap;
+  padding: 1rem 1.6rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.topbar h1 { font-size: 1.05rem; font-weight: 800 }
+.spacer { flex: 1 }
+.whoami { font-size: .8rem; color: var(--muted); font-weight: 700 }
+
+.btn {
+  border: none;
+  border-radius: 999px;
+  padding: .55rem 1.1rem;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: .82rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.btn-ghost {
+  background: var(--card2);
+  color: var(--text);
+  border: 1.5px solid var(--border);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+}
+.btn-ghost:hover { background: var(--border) }
+
+.wrap { max-width: 1280px; margin: 0 auto; padding: 1.6rem }
+
+.loading-note {
+  text-align: center;
+  color: var(--muted);
+  font-weight: 700;
+  font-size: .88rem;
+  padding: 2.5rem 0;
+}
+
+/* ---- Bộ lọc ---- */
+.filters-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.2rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: .9rem;
+  margin-bottom: 1.4rem;
+}
+.filter-item { display: flex; flex-direction: column; gap: .3rem; min-width: 150px; flex: 1 }
+.filter-item label { font-size: .7rem; font-weight: 800; text-transform: uppercase; color: var(--muted) }
+.filter-item select {
+  font-family: inherit;
+  font-size: .82rem;
+  padding: .55rem .7rem;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--card2);
+  color: var(--text);
+}
+
+/* ---- KPI (7 thẻ) ---- */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: .9rem;
+  margin-bottom: 1.6rem;
+}
+.kpi-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1.1rem 1rem;
+  box-shadow: var(--shadow-card);
+}
+.kpi-card.kpi-warn { border-color: rgba(240,72,62,.3) }
+.kpi-icon { font-size: 1.3rem; margin-bottom: .4rem }
+.kpi-label { font-size: .72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .02em }
+.kpi-value { font-size: 1.6rem; font-weight: 800; margin-top: .25rem }
+.kpi-warn .kpi-value { color: var(--red) }
+
+/* ---- Charts (6 loại) ---- */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.1rem;
+  margin-bottom: 1.6rem;
+}
+.chart-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.1rem 1.2rem;
+  box-shadow: var(--shadow-card);
+}
+.chart-card-wide { grid-column: span 2 }
+@media (max-width: 900px) { .chart-card-wide { grid-column: span 1 } }
+.chart-card-title { font-size: .85rem; font-weight: 800; margin-bottom: .8rem }
+.chart-card-body { position: relative; height: 240px }
+.chart-empty { color: var(--muted); font-size: .82rem; text-align: center; padding: 2rem 0 }
+
+/* ---- Heatmap (tự vẽ bằng DOM, không cần plugin Chart.js) ---- */
+#chartHeatmap { height: auto; overflow-x: auto }
+.heatmap-table { border-collapse: collapse; width: 100%; font-size: .72rem }
+.heatmap-table th, .heatmap-table td { padding: .45rem .55rem; text-align: center; border: 1px solid var(--border); white-space: nowrap }
+.heatmap-table th { background: var(--card2); font-weight: 800; color: var(--muted) }
+.heatmap-table th:first-child, .heatmap-table td:first-child { text-align: left; font-weight: 700; position: sticky; left: 0; background: var(--card) }
+.heatmap-cell { font-weight: 800; color: #fff; border-radius: 4px }
+.heatmap-cell.empty { color: var(--muted); background: var(--card2); font-weight: 400 }
+
+/* ---- Progress rings (tự vẽ bằng conic-gradient, không cần plugin) ---- */
+#chartProgress { display: flex; flex-wrap: wrap; justify-content: space-around; align-items: center; gap: 1rem; height: auto; padding-top: .5rem }
+.progress-ring-wrap { display: flex; flex-direction: column; align-items: center; gap: .5rem }
+.progress-ring {
+  width: 92px; height: 92px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.progress-ring::before {
+  content: '';
+  position: absolute; inset: 8px;
+  border-radius: 50%;
+  background: var(--card);
+}
+.progress-ring-value { position: relative; font-weight: 800; font-size: 1rem }
+.progress-ring-label { font-size: .72rem; font-weight: 700; color: var(--muted); text-align: center }
+
+/* ---- Watchlists ---- */
+.watchlists-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.1rem;
+}
+.watchlist-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.1rem;
+  box-shadow: var(--shadow-card);
+}
+.watchlist-title { font-size: .85rem; font-weight: 800; margin-bottom: .7rem; display: flex; align-items: center; gap: .4rem }
+.watchlist-count { font-size: .7rem; font-weight: 800; color: var(--muted) }
+.watchlist-list { list-style: none; display: flex; flex-direction: column; gap: .5rem; max-height: 260px; overflow-y: auto }
+.watchlist-item {
+  display: flex; align-items: center; justify-content: space-between; gap: .6rem;
+  font-size: .8rem; padding: .5rem .6rem; border-radius: 8px; background: var(--card2);
+}
+.watchlist-item .name { font-weight: 700 }
+.watchlist-item .meta { font-size: .72rem; color: var(--muted) }
+.watchlist-item .score-chip {
+  font-weight: 800; font-size: .72rem; padding: .15rem .55rem; border-radius: 999px;
+}
+.watchlist-empty { color: var(--muted); font-size: .8rem; padding: .6rem 0 }
+.watchlist-more { font-size: .72rem; color: var(--muted); margin-top: .5rem; text-align: center }
+
+.toast {
+  position: fixed;
+  bottom: 1.4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text);
+  color: var(--bg);
+  padding: .75rem 1.3rem;
+  border-radius: 999px;
+  font-size: .82rem;
+  font-weight: 700;
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s;
+  z-index: 1200;
+}
+.toast.show { opacity: 1 }
+
+/* ============================================================
+   BẢNG QUẢN LÝ HỌC SINH (đầy đủ) — Commit #5
+   Tái sử dụng pattern .table-scroll / table / .badge / .avatar-cell
+   đã có sẵn trong css/roster-manager.css để đồng nhất giao diện.
+   ============================================================ */
+.student-table-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1.2rem;
+  margin-top: 1.4rem;
+}
+.student-table-header {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: .8rem; margin-bottom: 1rem;
+}
+.student-table-header h2 { font-size: 1rem; font-weight: 800; display: flex; align-items: center; gap: .4rem }
+.student-table-toolbar { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center }
+.student-table-toolbar input,
+.student-table-toolbar select {
+  font-family: inherit;
+  font-size: .82rem;
+  padding: .55rem .8rem;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--card2);
+  color: var(--text);
+}
+#studentSearchInput { min-width: 220px }
+
+.table-scroll { overflow-x: auto; border-radius: var(--radius-sm) }
+#studentTable {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+#studentTable th, #studentTable td {
+  padding: .7rem .8rem; text-align: left; font-size: .84rem;
+  border-bottom: 1px solid var(--border); vertical-align: middle;
+}
+#studentTable th { background: var(--card2); font-weight: 800; font-size: .7rem; text-transform: uppercase; color: var(--muted) }
+#studentTable tr:last-child td { border-bottom: none }
+#studentTable tbody tr:hover { background: var(--card2) }
+.student-empty-cell { text-align: center; color: var(--muted); padding: 1.8rem !important }
+
+.avatar-cell {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--purple-lt); color: var(--purple);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: .76rem; overflow: hidden; flex-shrink: 0;
+}
+.avatar-cell img { width: 100%; height: 100%; object-fit: cover }
+
+.badge { display: inline-flex; padding: .25rem .65rem; border-radius: 999px; font-size: .68rem; font-weight: 800 }
+.badge.active   { background: var(--green-lt); color: var(--green) }
+.badge.inactive { background: var(--red-lt);   color: var(--red) }
+
+.score-cell { font-weight: 800 }
+.score-cell.none { color: var(--muted); font-weight: 600 }
+.score-cell.pass { color: var(--green) }
+.score-cell.fail { color: var(--red) }
+
+.progress-mini-track {
+  width: 90px; height: 8px; border-radius: 999px; background: var(--card2);
+  overflow: hidden; display: inline-block; vertical-align: middle; margin-right: .4rem;
+}
+.progress-mini-fill { height: 100%; background: var(--purple); border-radius: 999px }
+.progress-mini-label { font-size: .72rem; color: var(--muted); font-weight: 700 }
+
+.row-view-btn {
+  border: none; background: var(--purple-lt); color: var(--purple);
+  font-weight: 800; font-size: .75rem; padding: .4rem .8rem;
+  border-radius: 999px; cursor: pointer; transition: var(--transition);
+}
+.row-view-btn:hover { background: var(--purple); color: #fff }
+
+.student-table-pagination {
+  display: flex; align-items: center; justify-content: center; gap: 1rem;
+  margin-top: 1rem; font-size: .8rem; font-weight: 700; color: var(--muted);
+}
+
+/* ============================================================
+   DRAWER CHI TIẾT HỌC SINH — Commit #5
+   ============================================================ */
+.detail-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 999;
+  background: var(--modal-overlay);
+}
+.detail-overlay.show { display: block }
+.detail-drawer {
+  position: fixed; top: 0; right: 0; bottom: 0;
+  width: 100%; max-width: 460px;
+  background: var(--card);
+  box-shadow: var(--shadow-lg);
+  display: flex; flex-direction: column;
+  transform: translateX(100%);
+  transition: transform .28s cubic-bezier(.4,0,.2,1);
+}
+.detail-overlay.show .detail-drawer { transform: translateX(0) }
+
+.detail-drawer-header {
+  display: flex; align-items: center; gap: .8rem;
+  padding: 1.2rem 1.4rem; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.detail-drawer-avatar {
+  width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
+  background: var(--purple-lt); color: var(--purple);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 1rem; overflow: hidden;
+}
+.detail-drawer-avatar img { width: 100%; height: 100%; object-fit: cover }
+.detail-drawer-title { flex: 1; min-width: 0 }
+.detail-drawer-title h3 { font-size: 1rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.detail-drawer-meta { font-size: .78rem; color: var(--muted); font-weight: 700 }
+
+.detail-drawer-body { flex: 1; overflow-y: auto; padding: 1.2rem 1.4rem; display: flex; flex-direction: column; gap: 1.2rem }
+
+.detail-kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: .6rem }
+.detail-kpi { background: var(--card2); border-radius: var(--radius-sm); padding: .7rem .5rem; text-align: center }
+.detail-kpi-value { font-size: 1.05rem; font-weight: 800; color: var(--purple) }
+.detail-kpi-label { font-size: .66rem; color: var(--muted); font-weight: 700; text-transform: uppercase; margin-top: .2rem }
+
+.detail-section-title { font-size: .82rem; font-weight: 800; margin-bottom: .6rem; display: flex; align-items: center; gap: .4rem }
+
+.detail-history-table { width: 100%; border-collapse: collapse; font-size: .78rem }
+.detail-history-table th, .detail-history-table td {
+  padding: .5rem .5rem; text-align: left; border-bottom: 1px solid var(--border);
+}
+.detail-history-table th { color: var(--muted); font-weight: 800; font-size: .66rem; text-transform: uppercase }
+.detail-history-table tr:last-child td { border-bottom: none }
+
+.detail-empty-note {
+  font-size: .78rem; color: var(--muted); background: var(--card2);
+  border-radius: var(--radius-sm); padding: .8rem .9rem; line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .student-table-toolbar { width: 100%; flex-direction: column; align-items: stretch }
+  .detail-kpi-row { grid-template-columns: repeat(2, 1fr) }
+}

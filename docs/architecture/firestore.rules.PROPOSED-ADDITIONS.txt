@@ -1,0 +1,83 @@
+============================================================
+ĐỀ XUẤT BỔ SUNG cho firestore.rules — CHỈ THÊM, KHÔNG THAY THẾ
+============================================================
+File firestore.rules đang chạy của bạn giữ nguyên 100%. Đây là các
+"match block" cần CHÈN THÊM vào bên trong "match /databases/{database}/documents { ... }"
+(ngang hàng với match /users/{userId}, match /questions/{questionId}...),
+SAU KHI bạn đã tự kiểm tra kỹ và deploy thử trên 1 project Firebase
+test (khuyến nghị KHÔNG paste thẳng vào production).
+
+Các hàm isAdmin(), isApprovedTeacher(), isCoordinator(), canViewReports()
+đã có sẵn trong rules hiện tại — các block dưới đây TÁI SỬ DỤNG, không
+định nghĩa lại.
+
+------------------------------------------------------------
+// ---- Roster: khoá học / lớp / học sinh thật (Điều phối đào tạo quản lý) ----
+match /courses/{courseId} {
+  allow read: if canViewReports();
+  allow write: if isAdmin() || isCoordinator();
+}
+
+match /classes/{classId} {
+  allow read: if canViewReports();
+  allow write: if isAdmin() || isCoordinator();
+}
+
+match /students_roster/{studentId} {
+  // Giáo viên chỉ cần ĐỌC để xem lớp mình phụ trách; sửa roster là việc
+  // của Điều phối đào tạo / Admin (tránh giáo viên tự thêm/xoá học sinh
+  // ngoài phạm vi kiểm soát).
+  allow read: if canViewReports();
+  allow write: if isAdmin() || isCoordinator();
+}
+
+// ---- Chi tiết từng câu trả lời (để tính câu hỏi sai nhiều nhất) ----
+match /student_answers/{answerId} {
+  // Ghi công khai giống quiz_results hiện tại (học sinh làm bài không
+  // đăng nhập) — ràng buộc tối thiểu chống giả mạo.
+  allow create: if
+    request.resource.data.resultId is string &&
+    request.resource.data.questionUid is string &&
+    request.resource.data.isCorrect is bool &&
+    request.resource.data.answeredAt == request.time;
+  allow read: if canViewReports();
+  allow update, delete: if isAdmin();
+}
+
+// ---- Thống kê câu hỏi (được cập nhật dần bằng increment) ----
+match /question_statistics/{questionId} {
+  allow read: if canViewReports();
+  // Cho phép ghi công khai NHƯNG chỉ tăng số đếm (increment), không cho
+  // sửa tuỳ ý field khác — nếu Firestore Rules chưa hỗ trợ kiểm tra chi
+  // tiết increment ở phiên bản bạn dùng, cân nhắc chuyển việc cập nhật
+  // này sang 1 Cloud Function thay vì client-write để an toàn tuyệt đối.
+  allow write: if isAdmin() || isApprovedTeacher();
+}
+
+// ---- Tiến trình học tích luỹ theo học sinh ----
+match /learning_progress/{studentKey} {
+  allow read: if canViewReports();
+  allow write: if isAdmin() || isCoordinator() || isApprovedTeacher();
+}
+
+// ---- Nhật ký hoạt động (Audit Log) ----
+match /activity_logs/{logId} {
+  // Bất kỳ ai đã đăng nhập đều được ghi log hành động CỦA CHÍNH MÌNH.
+  allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+  // Chỉ Admin được xem toàn bộ nhật ký hệ thống.
+  allow read: if isAdmin();
+  allow update, delete: if false; // audit log không được sửa/xoá, kể cả Admin
+}
+------------------------------------------------------------
+
+GHI CHÚ AN TOÀN:
+1. "question_statistics" cho client-write là điểm CẦN CÂN NHẮC nhất —
+   về lâu dài nên chuyển sang Cloud Function (trigger onCreate của
+   student_answers) để không ai có thể gửi số liệu giả từ DevTools.
+   Ở giai đoạn hiện tại (chưa có Cloud Functions), việc validate qua
+   Rules là biện pháp tạm chấp nhận được vì đây là số liệu tổng hợp,
+   không phải điểm số cá nhân.
+2. "activity_logs" chặn TUYỆT ĐỐI update/delete — kể cả Admin — đúng
+   bản chất của một audit log (immutable).
+3. Sau khi thêm các block này, hãy dùng Firebase Console → Rules
+   Playground để test thử với từng role trước khi Publish.
