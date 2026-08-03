@@ -1,0 +1,227 @@
+/* ============================================================
+   ROSTER MANAGER — trang quản lý Khoá học / Lớp học / Học sinh
+   (chỉ admin & coordinator). Dùng chung css/theme.css cho biến màu,
+   tái sử dụng phần lớn class .btn/.badge/.toast giống admin-users.css
+   để giao diện đồng nhất trong hệ thống.
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
+
+body {
+  font-family: 'Baloo 2', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding-bottom: 3rem;
+}
+
+/* ---- Topbar (giống admin-users.html) ---- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1rem 1.6rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.topbar h1 { font-size: 1.1rem; font-weight: 800 }
+.spacer { flex: 1 }
+.whoami { font-size: .8rem; color: var(--muted); font-weight: 700 }
+
+.btn {
+  border: none;
+  border-radius: 999px;
+  padding: .6rem 1.2rem;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: .85rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.btn-ghost {
+  background: var(--card2);
+  color: var(--text);
+  border: 1.5px solid var(--border);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+}
+.btn-ghost:hover { background: var(--border) }
+.btn-primary {
+  background: var(--purple);
+  color: #fff;
+  box-shadow: var(--shadow-btn);
+}
+.btn-primary:hover { filter: brightness(1.08) }
+.btn-danger-text {
+  background: none;
+  border: none;
+  color: var(--red);
+  font-weight: 800;
+  font-size: .78rem;
+  cursor: pointer;
+}
+.btn-edit-text {
+  background: none;
+  border: none;
+  color: var(--purple);
+  font-weight: 800;
+  font-size: .78rem;
+  cursor: pointer;
+  margin-right: .8rem;
+}
+
+.wrap { max-width: 1140px; margin: 0 auto; padding: 2rem 1.6rem }
+
+.banner {
+  background: var(--purple-lt);
+  border: 1.5px solid rgba(79,107,255,.25);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.2rem;
+  margin-bottom: 1.6rem;
+  font-size: .85rem;
+  line-height: 1.6;
+}
+
+/* ---- Tabs ---- */
+.tabs {
+  display: flex;
+  gap: .4rem;
+  margin-bottom: 1.2rem;
+  border-bottom: 1.5px solid var(--border);
+}
+.tab-btn {
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: .9rem;
+  color: var(--muted);
+  padding: .7rem 1.1rem;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: var(--transition);
+}
+.tab-btn:hover { color: var(--text) }
+.tab-btn.active { color: var(--purple); border-bottom-color: var(--purple) }
+
+.tab-panel { display: none }
+.tab-panel.active { display: block; animation: fadeIn .2s ease }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: none } }
+
+/* ---- Panel toolbar ---- */
+.panel-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.panel-toolbar-info { font-size: .8rem; color: var(--muted); font-weight: 700 }
+.panel-toolbar-filters { display: flex; gap: .6rem; flex: 1; flex-wrap: wrap }
+.panel-toolbar .btn { margin-left: auto }
+.panel-toolbar-filters + .btn { margin-left: 0 }
+
+#studentSearch, #studentClassFilter, select.form-input, input.form-input {
+  font-family: inherit;
+  font-size: .82rem;
+  padding: .55rem .8rem;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--card2);
+  color: var(--text);
+}
+#studentSearch { min-width: 220px; flex: 1 }
+
+/* ---- Table (giống admin-users.css) ---- */
+.table-scroll { overflow-x: auto; border-radius: var(--radius-sm) }
+table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+th, td { padding: .8rem .9rem; text-align: left; font-size: .85rem; border-bottom: 1px solid var(--border); vertical-align: middle }
+th { background: var(--card2); font-weight: 800; font-size: .72rem; text-transform: uppercase; color: var(--muted) }
+tr:last-child td { border-bottom: none }
+.empty-cell { text-align: center; color: var(--muted); padding: 1.6rem !important }
+
+.avatar-cell {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--purple-lt); color: var(--purple);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: .8rem; overflow: hidden;
+}
+.avatar-cell img { width: 100%; height: 100%; object-fit: cover }
+
+.badge { display: inline-flex; padding: .25rem .65rem; border-radius: 999px; font-size: .68rem; font-weight: 800 }
+.badge.active   { background: var(--green-lt); color: var(--green) }
+.badge.inactive { background: var(--red-lt);   color: var(--red) }
+
+/* ---- Modal ---- */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 999;
+  background: var(--modal-overlay);
+  align-items: center; justify-content: center;
+  padding: 1rem;
+}
+.modal-overlay.show { display: flex }
+.modal-box {
+  background: var(--card);
+  border-radius: var(--radius);
+  width: 100%; max-width: 440px;
+  box-shadow: var(--shadow-lg);
+  max-height: 90vh;
+  display: flex; flex-direction: column;
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.2rem 1.4rem; border-bottom: 1px solid var(--border);
+}
+.modal-header h3 { font-size: 1rem; font-weight: 800 }
+.modal-close {
+  background: none; border: none; font-size: 1.1rem; cursor: pointer; color: var(--muted);
+}
+.modal-body { padding: 1.2rem 1.4rem; overflow-y: auto; display: flex; flex-direction: column; gap: .9rem }
+.modal-footer {
+  display: flex; justify-content: flex-end; gap: .7rem;
+  padding: 1rem 1.4rem; border-top: 1px solid var(--border);
+}
+.form-group { display: flex; flex-direction: column; gap: .35rem }
+.form-group label { font-size: .78rem; font-weight: 800; color: var(--muted) }
+.form-group .form-input { width: 100% }
+.form-hint { font-size: .72rem; color: var(--muted) }
+
+.toast {
+  position: fixed;
+  bottom: 1.4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text);
+  color: var(--bg);
+  padding: .75rem 1.3rem;
+  border-radius: 999px;
+  font-size: .82rem;
+  font-weight: 700;
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s;
+  z-index: 1200;
+}
+.toast.show { opacity: 1 }
+
+@media (max-width: 640px) {
+  .panel-toolbar { flex-direction: column; align-items: stretch }
+  .panel-toolbar .btn { margin-left: 0 }
+}
