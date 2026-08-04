@@ -38,11 +38,6 @@
     if (values.includes(current)) sel.value = current;
   }
 
-  function dispatchChange(sel) {
-    sel.dispatchEvent(new Event('change', { bubbles: true }));
-    sel.dispatchEvent(new Event('input', { bubbles: true }));
-  }
-
   function setStatus(msg, isError) {
     const el = document.getElementById('rosterStatus');
     if (!el) return;
@@ -127,14 +122,10 @@
 
     schoolSel.addEventListener('change', () => {
       refreshClassOptions(schoolSel, classSel, nameSel);
-      dispatchChange(classSel);
-      dispatchChange(nameSel);
     });
     classSel.addEventListener('change', () => {
       refreshNameOptions(schoolSel, classSel, nameSel);
-      dispatchChange(nameSel);
     });
-    nameSel.addEventListener('change', () => dispatchChange(nameSel));
   }
 
   async function init() {
