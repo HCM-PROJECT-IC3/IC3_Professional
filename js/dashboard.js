@@ -1,5 +1,21 @@
 /* ic3-dashboard.html — JS riêng cho trang Dashboard (tách từ inline <script>) */
 /* ========================================
+   ICON SET — cắt trực tiếp từ hình minh hoạ 7 chủ đề IC3
+   (Nội dung cơ bản, Công dân số, Quản lý thông tin,
+   Tạo nội dung, Giao tiếp, Cộng tác, Bảo mật) do người dùng cung
+   cấp — ảnh đặt tại img/deck-icon-*.png, mỗi ảnh là 1 ô vuông
+   icon 3D lấy nguyên từ tấm hình gốc.
+   ======================================== */
+const DECK_ICONS = {
+  monitor:   'img/deck-icon-computer.png', // Chủ đề 1: Nội dung cơ bản về công nghệ
+  shield:    'img/deck-icon-shield.png',   // Chủ đề 2: Công dân kỹ thuật số
+  lock:      'img/deck-icon-lock.png',     // Chủ đề 7: Bảo mật và an toàn
+  folder:    'img/deck-icon-folder.png',   // Chủ đề 3: Quản lý thông tin
+  palette:   'img/deck-icon-content.png',  // Chủ đề 4: Tạo nội dung
+  megaphone: 'img/deck-icon-comm.png'      // Chủ đề 5: Giao tiếp truyền thông
+};
+
+/* ========================================
    DATA STORE
    ======================================== */
 const QUIZ_SETS = [
@@ -9,9 +25,10 @@ const QUIZ_SETS = [
     subtitle: 'IC3 GS5 – Trung học cơ sở',
     questions: 30,
     type: 'middle',
-    icon: '🎒',
-    coverGradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    coverBg: '#667eea',
+    icon: DECK_ICONS.monitor,
+    iconColor: '#5B8DEF',
+    coverGradient: 'linear-gradient(135deg, #CFE3FF 0%, #EAF3FF 100%)',
+    coverBg: '#CFE3FF',
     link: 'https://wit.id.vn/20252026/THCS/Class6',
     students: 124
   },
@@ -21,9 +38,10 @@ const QUIZ_SETS = [
     subtitle: 'IC3 GS5 – Trung học cơ sở',
     questions: 30,
     type: 'middle',
-    icon: '💻',
-    coverGradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-    coverBg: '#f093fb',
+    icon: DECK_ICONS.shield,
+    iconColor: '#2FBF9B',
+    coverGradient: 'linear-gradient(135deg, #C9F3E6 0%, #E9FBF5 100%)',
+    coverBg: '#C9F3E6',
     link: 'https://wit.id.vn/20252026/THCS/Class7',
     students: 98
   },
@@ -33,9 +51,10 @@ const QUIZ_SETS = [
     subtitle: 'IC3 GS5 – Trung học cơ sở',
     questions: 30,
     type: 'middle',
-    icon: '🌐',
-    coverGradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-    coverBg: '#4facfe',
+    icon: DECK_ICONS.lock,
+    iconColor: '#8B5CF6',
+    coverGradient: 'linear-gradient(135deg, #E4D6FF 0%, #F3EBFF 100%)',
+    coverBg: '#E4D6FF',
     link: 'https://wit.id.vn/20252026/THCS/Class8',
     students: 111
   },
@@ -45,9 +64,10 @@ const QUIZ_SETS = [
     subtitle: 'IC3 GS5 – Tiểu học LV1',
     questions: 25,
     type: 'elementary',
-    icon: '🌱',
-    coverGradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-    coverBg: '#43e97b',
+    icon: DECK_ICONS.folder,
+    iconColor: '#34B368',
+    coverGradient: 'linear-gradient(135deg, #D4F5DC 0%, #EEFBF1 100%)',
+    coverBg: '#D4F5DC',
     link: 'https://wit.id.vn/20252026/TiH/LV1_Class3',
     students: 87
   },
@@ -57,9 +77,10 @@ const QUIZ_SETS = [
     subtitle: 'IC3 GS5 – Tiểu học LV2',
     questions: 25,
     type: 'elementary',
-    icon: '⭐',
-    coverGradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-    coverBg: '#fa709a',
+    icon: DECK_ICONS.palette,
+    iconColor: '#E8A93D',
+    coverGradient: 'linear-gradient(135deg, #FFECC2 0%, #FFF8E6 100%)',
+    coverBg: '#FFECC2',
     link: 'https://wit.id.vn/20252026/TiH/LV2_Class4',
     students: 95
   },
@@ -69,9 +90,10 @@ const QUIZ_SETS = [
     subtitle: 'IC3 GS5 – Tiểu học LV3',
     questions: 25,
     type: 'elementary',
-    icon: '🚀',
-    coverGradient: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)',
-    coverBg: '#a18cd1',
+    icon: DECK_ICONS.megaphone,
+    iconColor: '#F2795A',
+    coverGradient: 'linear-gradient(135deg, #FFDCCF 0%, #FFEFE8 100%)',
+    coverBg: '#FFDCCF',
     link: 'https://wit.id.vn/20252026/TiH/LV3_Class5',
     students: 102
   }
@@ -96,6 +118,17 @@ let currentSearch = '';
 /* ========================================
    RENDER CARDS
    ======================================== */
+/* set.icon có thể là đường dẫn ảnh (img/deck-icon-*.png, dùng cho
+   6 bộ đề mặc định) hoặc 1 emoji do người dùng nhập khi tạo bộ đề
+   mới (modal "Tạo bộ đề mới") — hàm này render đúng loại tương ứng. */
+function renderDeckIcon(set) {
+  const icon = set.icon || '🎯';
+  if (/\.(png|jpg|jpeg|webp|svg)$/i.test(icon)) {
+    return `<img src="${icon}" alt="${set.title}" loading="lazy">`;
+  }
+  return `<span class="cover-icon-emoji">${icon}</span>`;
+}
+
 function renderCards() {
   const grid = document.getElementById('cardsGrid');
   let sets = allSets;
@@ -118,7 +151,7 @@ function renderCards() {
     <div class="quiz-card" data-id="${set.id}" data-type="${set.type}">
       <div class="card-cover" style="background:${set.coverGradient};">
         <div class="cover-pattern"></div>
-        <div class="cover-icon">${set.icon}</div>
+        <div class="cover-icon-wrap" style="color:${set.iconColor || '#5B8DEF'};">${renderDeckIcon(set)}</div>
       </div>
       <div class="card-body">
         <div class="card-header">
@@ -528,10 +561,12 @@ function saveNewSet() {
   }
 
   const gradients = [
-    'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-    'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-    'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-    'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+    'linear-gradient(135deg, #CFE3FF 0%, #EAF3FF 100%)',
+    'linear-gradient(135deg, #C9F3E6 0%, #E9FBF5 100%)',
+    'linear-gradient(135deg, #E4D6FF 0%, #F3EBFF 100%)',
+    'linear-gradient(135deg, #D4F5DC 0%, #EEFBF1 100%)',
+    'linear-gradient(135deg, #FFECC2 0%, #FFF8E6 100%)',
+    'linear-gradient(135deg, #FFDCCF 0%, #FFEFE8 100%)',
   ];
 
   const newSet = {

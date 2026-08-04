@@ -175,6 +175,14 @@ body {
   gap: 16px;
   position: sticky; top: 0; z-index: 90;
   transition: var(--transition);
+  position: sticky;
+}
+#topbar::before {
+  content: '';
+  position: absolute; left: 0; right: 0; top: 0; height: 3px;
+  background: var(--gradient-hero, linear-gradient(120deg,#4f6bff,#8b5cf6,#17b3a3));
+  background-size: 200% 100%;
+  animation: gradientShift 5s ease-in-out infinite;
 }
 
 .topbar-title {
@@ -184,6 +192,7 @@ body {
   color: var(--text-primary);
   white-space: nowrap;
 }
+@keyframes gradientShift { 0%,100% { background-position: 0% 50% } 50% { background-position: 100% 50% } }
 
 .topbar-right {
   display: flex; align-items: center; gap: 12px;
@@ -312,6 +321,39 @@ body {
 }
 
 /* ========================================
+   MY-SETS SECTION — nền pastel nhiều màu, lấy cảm hứng
+   từ dải 7 chủ đề IC3 (xanh dương → lục lam → xanh lá →
+   vàng → cam → hồng → tím)
+   ======================================== */
+#section-my-sets {
+  position: relative;
+  isolation: isolate;
+  border-radius: 26px;
+}
+#section-my-sets::before {
+  content: '';
+  position: absolute;
+  inset: -18px;
+  z-index: -1;
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 6% 10%,  rgba(167,199,255,0.55) 0%, transparent 34%),
+    radial-gradient(circle at 22% 85%, rgba(150,232,220,0.50) 0%, transparent 34%),
+    radial-gradient(circle at 40% 15%, rgba(184,242,201,0.45) 0%, transparent 32%),
+    radial-gradient(circle at 58% 88%, rgba(255,226,154,0.50) 0%, transparent 34%),
+    radial-gradient(circle at 76% 12%, rgba(255,201,160,0.48) 0%, transparent 32%),
+    radial-gradient(circle at 90% 82%, rgba(255,179,198,0.50) 0%, transparent 34%),
+    radial-gradient(circle at 98% 25%, rgba(212,179,255,0.50) 0%, transparent 32%);
+  filter: blur(18px);
+  opacity: 0.9;
+  transition: var(--transition);
+}
+[data-theme="dark"] #section-my-sets::before {
+  opacity: 0.28;
+  filter: blur(22px) saturate(0.8);
+}
+
+/* ========================================
    QUIZ CARDS GRID
    ======================================== */
 .cards-grid {
@@ -357,20 +399,48 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 64px;
   position: relative;
   overflow: hidden;
 }
 
 .card-cover .cover-pattern {
   position: absolute; inset: 0;
-  opacity: 0.15;
-  background-image: radial-gradient(circle at 20% 80%, white 1px, transparent 1px),
-                    radial-gradient(circle at 80% 20%, white 1px, transparent 1px);
-  background-size: 24px 24px;
+  opacity: 0.55;
+  background-image: radial-gradient(circle at 20% 78%, rgba(255,255,255,0.85) 2px, transparent 2px),
+                    radial-gradient(circle at 82% 22%, rgba(255,255,255,0.85) 2px, transparent 2px),
+                    radial-gradient(circle at 50% 50%, rgba(31,41,55,0.05) 1px, transparent 1px);
+  background-size: 26px 26px, 26px 26px, 13px 13px;
 }
 
-.card-cover .cover-icon { position: relative; z-index: 1; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25)); }
+/* Icon chip: ảnh vuông bo góc cắt từ hình minh hoạ 7 chủ đề IC3 gốc
+   (img/deck-icon-*.png), viền trắng nổi khối — cho bộ đề mặc định.
+   Với bộ đề tự tạo (emoji) thì hiển thị trong khung tròn trắng. */
+.cover-icon-wrap {
+  position: relative;
+  z-index: 1;
+  width: 76px; height: 76px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.85);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 10px 24px rgba(31,41,55,0.18), 0 2px 6px rgba(31,41,55,0.10);
+  overflow: hidden;
+  border: 3px solid rgba(255,255,255,0.9);
+}
+.cover-icon-wrap img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.cover-icon-wrap svg { width: 32px; height: 32px; }
+.cover-icon-wrap .cover-icon-emoji {
+  font-size: 34px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+}
+.cover-icon-wrap:has(.cover-icon-emoji) {
+  border-radius: 50%;
+  background: rgba(255,255,255,0.94);
+}
 
 .card-body { padding: 16px; flex: 1; display: flex; flex-direction: column; gap: 10px; }
 
@@ -507,6 +577,12 @@ body {
   border: 2px solid var(--border-color);
   box-shadow: var(--shadow-card);
   padding: 16px 18px;
+  transition: transform .25s cubic-bezier(.16,1,.3,1), box-shadow .25s ease, border-color .25s ease;
+}
+.chart-card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--accent-purple, #4f6bff) 40%, var(--border-color));
+  box-shadow: var(--shadow-card-hover);
 }
 .chart-card-wide { grid-column: 1 / -1; }
 .chart-card-title { font-family: 'Baloo 2', cursive; font-weight: 800; font-size: 14px; margin-bottom: 10px; }
@@ -529,10 +605,26 @@ body {
   border: 2px solid var(--border-color);
   box-shadow: var(--shadow-card);
   display: flex; flex-direction: column; gap: 6px;
+  transition: transform .25s cubic-bezier(.16,1,.3,1), box-shadow .25s ease, border-color .25s ease;
+  animation: statCardRise .4s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes statCardRise { from { opacity:0; transform: translateY(10px) } to { opacity:1; transform: translateY(0) } }
+.stats-row .stat-card:nth-child(1) { animation-delay: .04s }
+.stats-row .stat-card:nth-child(2) { animation-delay: .09s }
+.stats-row .stat-card:nth-child(3) { animation-delay: .14s }
+.stats-row .stat-card:nth-child(4) { animation-delay: .19s }
+.stat-card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--accent-purple, #4f6bff) 40%, var(--border-color));
+  box-shadow: var(--shadow-card-hover);
 }
 .stat-card .stat-label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-.stat-card .stat-value { font-family: 'Baloo 2', cursive; font-size: 28px; font-weight: 800; color: var(--text-primary); }
-.stat-card .stat-icon { font-size: 24px; margin-bottom: 4px; }
+.stat-card .stat-value { font-family: 'Baloo 2', cursive; font-size: 28px; font-weight: 800; color: var(--text-primary); transition: color .2s }
+.stat-card .stat-icon { font-size: 24px; margin-bottom: 4px; display: inline-block; animation: iconBob 3s ease-in-out infinite }
+.stats-row .stat-card:nth-child(2) .stat-icon { animation-delay: .3s }
+.stats-row .stat-card:nth-child(3) .stat-icon { animation-delay: .6s }
+.stats-row .stat-card:nth-child(4) .stat-icon { animation-delay: .9s }
+@keyframes iconBob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-3px) } }
 
 .report-table-wrap {
   background: var(--bg-card);

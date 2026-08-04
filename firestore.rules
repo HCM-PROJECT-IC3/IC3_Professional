@@ -98,5 +98,27 @@ service cloud.firestore {
       allow read: if canViewReports();
       allow update, delete: if isAdmin();
     }
+
+    // ---- Roster: khoá học / lớp / học sinh thật (Điều phối đào tạo quản lý
+    //      trong roster-manager.html) ----
+    // Đọc CÔNG KHAI (allow read: if true) vì màn hình học sinh (index.html)
+    // cần đổ 3 select Trường/Lớp/Tên MÀ KHÔNG đăng nhập Firebase Auth —
+    // giống cách "questions" đã được đọc công khai ở trên. Chỉ TÊN/LỚP/TRƯỜNG
+    // học sinh được lộ ra (không phải dữ liệu nhạy cảm), việc GHI vẫn chỉ
+    // dành cho admin/coordinator.
+    match /courses/{courseId} {
+      allow read: if true;
+      allow write: if isAdmin() || isCoordinator();
+    }
+
+    match /classes/{classId} {
+      allow read: if true;
+      allow write: if isAdmin() || isCoordinator();
+    }
+
+    match /students_roster/{studentId} {
+      allow read: if true;
+      allow write: if isAdmin() || isCoordinator();
+    }
   }
 }
