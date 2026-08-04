@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IC3 Quiz Dashboard – WIT Education</title>
+<title>IC3 Quiz Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&amp;family=Baloo+2:wght@700;800&amp;display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/theme.css">
 <link rel="stylesheet" href="css/dashboard.css">
+<link rel="stylesheet" href="css/motion.css">
 </head>
 <body>
 
@@ -17,7 +18,6 @@
   <div class="sidebar-logo">
     <div class="logo-icon">🎮</div>
     <div class="logo-text">IC3 Quiz
-      <span>WIT Education</span>
     </div>
   </div>
 
@@ -36,19 +36,19 @@
     </div>
     <a class="nav-item link-plain" href="image-manager.html">
       <span class="nav-icon">🖼️</span>
-      <span>Quản lý hình ảnh câu hỏi</span>
+      <span>Quản lý câu hỏi</span>
     </a>
     <a class="nav-item link-plain" href="admin-users.html" id="adminUsersLink" style="display:none;">
       <span class="nav-icon">👑</span>
-      <span>Quản lý tài khoản</span>
+      <span>Tài khoản</span>
     </a>
     <a class="nav-item link-plain" href="roster-manager.html" id="rosterManagerLink" style="display:none;">
       <span class="nav-icon">🧑‍🎓</span>
-      <span>Quản lý danh sách học sinh</span>
+      <span>Danh sách học sinh</span>
     </a>
     <a class="nav-item link-plain" href="coordinator-dashboard.html" id="coordinatorDashboardLink" style="display:none;">
       <span class="nav-icon">📊</span>
-      <span>Dashboard Điều phối đào tạo</span>
+      <span>Dashboard</span>
     </a>
   </nav>
 
@@ -260,10 +260,6 @@
         </div>
         <div class="settings-card">
           <h3>ℹ️ Thông tin hệ thống</h3>
-          <div class="settings-row"><label>Phiên bản</label><span class="info-value">v2.0.2025</span></div>
-          <div class="settings-row"><label>Năm học</label><span class="info-value">2025–2026</span></div>
-          <div class="settings-row"><label>Nền tảng</label><span class="info-value">IC3 GS5</span></div>
-          <div class="settings-row"><label>Đơn vị</label><span class="info-value">WIT Education</span></div>
         </div>
       </div>
     </section>
@@ -309,5 +305,6 @@
 <script src="js/auth-guard.js"></script>
 <script src="js/idle-logout.js"></script>
 <script src="js/dashboard.js"></script>
+<script src="js/motion.js"></script>
 </body>
 </html>

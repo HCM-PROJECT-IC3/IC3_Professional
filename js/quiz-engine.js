@@ -45,51 +45,29 @@ window.quizRepository = null;
    chạy scripts/split-quiz-data.py), tự động rơi về cách cũ: tải
    nguyên quiz_data.json — đảm bảo không phá vỡ trang đang chạy.
    ============================================================ */
-const _levelCache   = new Map(); // "CAT__LV" → { minitests: {...} }   (bộ nhớ RAM, mất khi reload)
+const _levelCache   = new Map(); // "CAT__LV" → { minitests: {...} }   (bộ nhớ RAM, mất khi reload — KHÔNG lưu localStorage nữa, nên sửa file JSON là lần tải trang kế tiếp thấy ngay, không cần xoá cache tay)
 const _levelPending  = new Map(); // "CAT__LV" → Promise                (chống fetch trùng khi bấm nhanh)
-const LS_PREFIX      = 'eduquiz_lv_'; // tiền tố key trong localStorage (cache bền, còn sau khi reload)
 
 function _levelKey(catId, levelId) {
   return `${catId}__${levelId}`;
 }
 
 /**
- * Đọc cache bền (localStorage), có kiểm tra "version" từ meta.json.
- * Khi nội dung đề thi cập nhật, chỉ cần đổi State.quizData.version
- * (field mới trong meta.json) là toàn bộ cache cũ tự động hết hạn —
- * không cần học sinh phải xoá cache tay hay Ctrl+F5.
- */
-function _readPersistentCache(key) {
-  try {
-    const raw = localStorage.getItem(LS_PREFIX + key);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    const currentVersion = State.quizData?.version || 'v1';
-    if (parsed.v !== currentVersion) return null; // dữ liệu cũ → bỏ qua
-    return parsed.data;
-  } catch {
-    return null; // localStorage bị chặn (private mode…) → im lặng bỏ qua, không phá trang
-  }
-}
-
-function _writePersistentCache(key, data) {
-  try {
-    const currentVersion = State.quizData?.version || 'v1';
-    localStorage.setItem(LS_PREFIX + key, JSON.stringify({ v: currentVersion, data }));
-  } catch {
-    // Hết dung lượng hoặc bị chặn → bỏ qua, cache RAM (_levelCache) vẫn hoạt động bình thường
-  }
-}
-
-/**
  * Tải đầy đủ câu hỏi của 1 level, trả về { minitests }.
  * Thứ tự ưu tiên (mỗi bước chỉ tải đúng 1 lần, không tải thừa):
- *   1. _levelCache      — đã có sẵn trong RAM của lần thi trước đó cùng phiên
- *   2. localStorage      — đã tải ở lần ghé trang trước (còn hợp lệ theo version)
- *   3. fetch data/ic3/<file>.json — file gọn theo từng khối (lazy-load thật sự)
- *   4. quizFullData / quiz_data.json — chỉ dùng khi dự án chưa split dữ liệu
+ *   1. _levelCache      — đã có sẵn trong RAM của lần thi trước đó cùng phiên (mất khi reload trang)
+ *   2. fetch data/ic3/<file>.json — file gọn theo từng khối (lazy-load thật sự), luôn tải MỚI từ mạng
+ *   3. quizFullData / quiz_data.json — chỉ dùng khi dự án chưa split dữ liệu
  * _levelPending đảm bảo nếu học sinh đổi qua đổi lại dropdown thật nhanh,
  * cùng 1 khối không bị gọi fetch() song song nhiều lần.
+ *
+ * LƯU Ý: trước đây có thêm 1 lớp cache bền trong localStorage (còn sống qua
+ * nhiều lần ghé trang, chỉ hết hạn khi đổi field "version" trong meta.json).
+ * Lớp này đã bị GỠ BỎ theo yêu cầu — vì khi sửa trực tiếp file JSON câu hỏi
+ * (vd. chỉnh lại toạ độ % của câu hotspot) mà không tự tay cập nhật
+ * "version" trong meta.json, trình duyệt vẫn âm thầm phát dữ liệu CŨ từ
+ * localStorage, khiến tưởng như sửa hoài không lên. Giờ mỗi lần tải trang
+ * mới sẽ luôn fetch() thẳng từ file JSON hiện tại trên server.
  */
 async function _fetchLevelData(catId, levelId) {
   const key = _levelKey(catId, levelId);
@@ -97,18 +75,13 @@ async function _fetchLevelData(catId, levelId) {
   if (_levelPending.has(key)) return _levelPending.get(key); // đang tải rồi → chờ chung 1 promise
 
   const promise = (async () => {
-    // ── Bước 2: cache bền trong localStorage (khỏi tải lại qua session) ──
-    const cached = _readPersistentCache(key);
-    if (cached) return cached;
-
-    // ── Bước 3: lazy-load file gọn theo khối (dự án đã chạy split-quiz-data.py) ──
+    // ── lazy-load file gọn theo khối (dự án đã chạy split-quiz-data.py) ──
     const metaLevel = _findMetaLevel(catId, levelId);
     if (metaLevel?.file) {
       try {
-        const res = await fetch(`data/ic3/${metaLevel.file}`);
+        const res = await fetch(`data/ic3/${metaLevel.file}`, { cache: 'no-store' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const full = await res.json();
-        _writePersistentCache(key, full);
         return full;
       } catch (err) {
         console.warn(`[EduQuiz] Không tải được data/ic3/${metaLevel.file}, thử fallback quiz_data.json`, err.message);
@@ -125,7 +98,7 @@ async function _fetchLevelData(catId, levelId) {
     // ── Bước 4b: tải nguyên quiz_data.json 1 lần rồi tự cache ──
     if (!window.quizFullData) {
       try {
-        const res = await fetch('quiz_data.json');
+        const res = await fetch('quiz_data.json', { cache: 'no-store' });
         if (res.ok) window.quizFullData = await res.json();
       } catch (err) {
         console.warn('[EduQuiz] Không tải được quiz_data.json (fallback cuối):', err.message);
@@ -241,7 +214,7 @@ async function loadData() {
 
   try {
     // ── Ưu tiên: meta.json nhẹ (vài KB) để dựng lobby ─────────
-    const res = await fetch('data/ic3/meta.json');
+    const res = await fetch('data/ic3/meta.json', { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const meta = await res.json();
 
@@ -259,7 +232,7 @@ async function loadData() {
     //    → quay lại tải nguyên quiz_data.json như bản cũ ────────
     console.warn('[EduQuiz] ⚠ Không tải được data/ic3/meta.json, thử quiz_data.json...', err.message);
     try {
-      const res2 = await fetch('quiz_data.json');
+      const res2 = await fetch('quiz_data.json', { cache: 'no-store' });
       if (!res2.ok) throw new Error(`HTTP ${res2.status}`);
       const data = await res2.json();
       window.quizFullData = data; // dùng làm nguồn cho _fetchLevelData()
@@ -375,10 +348,10 @@ function initLobby() {
         .map(([t, n]) => `${n} ${typeLabels[t] || t}`)
         .join(' · ');
 
-      el.innerHTML = `
-        <span class="chip green">📝 ${count} câu</span>
-        <span class="meta-breakdown">${breakdown}</span>
-      `;
+      // el.innerHTML = `
+      //   <span class="chip green">📝 ${count} câu</span>
+      //   <span class="meta-breakdown">${breakdown}</span>
+      // `;
     } else {
       el.innerHTML = '<span class="chip" style="color:var(--red)">⚠ Không có câu hỏi</span>';
     }
@@ -398,7 +371,10 @@ function initLobby() {
   catSel.addEventListener('change', refreshLevels);
   lvlSel.addEventListener('change', refreshMinitests);
   mtSel .addEventListener('change', refreshMeta);
+  // Trường/Lớp/Họ và tên giờ là <select> đổ từ roster thật (js/lobby-roster.js)
+  // thay vì gõ tay — lắng nghe cả 'change' lẫn 'input' cho chắc chắn.
   ['studentName', 'studentClass', 'studentSchool'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', refreshMeta);
     document.getElementById(id)?.addEventListener('input', refreshMeta);
   });
 
@@ -483,6 +459,7 @@ async function startExam() {
   if (info) info.textContent = `👤 ${name} · ${cls} · ${mtName}`;
 
   buildSidebar();
+  _restoreSidebarState();
   renderQuestion(0);
   startTimer();
 }
@@ -561,6 +538,31 @@ function buildSidebar() {
     b.onclick     = () => jumpTo(i);
     grid.appendChild(b);
   });
+}
+
+/**
+ * Thu gọn/mở rộng sidebar danh sách câu hỏi (desktop: co hẹp còn dải icon;
+ * điện thoại: ép chiều cao về 0 để nhường không gian dọc cho ảnh câu hỏi).
+ * Trạng thái được nhớ lại (localStorage) để không phải bấm lại mỗi lần thi.
+ */
+function toggleSidebar() {
+  const sb = document.getElementById('examSidebar');
+  if (!sb) return;
+  sb.classList.toggle('collapsed');
+  try { localStorage.setItem('ic3_sidebar_collapsed', sb.classList.contains('collapsed') ? '1' : '0'); }
+  catch (e) { /* localStorage có thể bị chặn — bỏ qua, không ảnh hưởng chức năng */ }
+  // Sau khi animation đổi kích thước sidebar chạy xong, đo lại không gian
+  // trống thật cho ảnh hotspot (nếu câu hiện tại là hotspot) để ảnh luôn
+  // vừa khít, không bị méo/tràn.
+  setTimeout(() => { if (typeof fitHotspotStage === 'function') fitHotspotStage(); }, 300);
+}
+
+function _restoreSidebarState() {
+  const sb = document.getElementById('examSidebar');
+  if (!sb) return;
+  try {
+    if (localStorage.getItem('ic3_sidebar_collapsed') === '1') sb.classList.add('collapsed');
+  } catch (e) { /* ignore */ }
 }
 
 function updateSidebar() {
@@ -658,7 +660,7 @@ function renderQuestion(idx) {
   const imgBlock = q.type === 'hotspot' ? '' : _buildImageBlock(q);
 
   panel.innerHTML = `
-    <div class="q-card">
+    <div class="q-card${q.type === 'hotspot' ? ' q-card--hotspot' : ''}">
       <div class="q-header">
         <div class="q-badge">${idx + 1}</div>
         <div class="q-meta">
@@ -1249,12 +1251,118 @@ function renderHotspot(q, qi) {
         Đã chọn: <span id="hotspot-count-${qi}">${sel.size}</span>/${totalCorrect}
       </span>
     </div>
-    <div class="hotspot-wrap">
-      <img src="${src}" alt="Bấm trực tiếp vào hình để chọn đáp án" loading="lazy"
-           onerror="this.parentElement.innerHTML='<div class=&quot;q-img-notice&quot;>🖼️ Không tải được hình ảnh.</div>'">
-      ${areasHtml}
+    <div class="hsq-stage">
+      <div class="hotspot-wrap">
+        <img src="${src}" alt="Bấm trực tiếp vào hình để chọn đáp án" loading="lazy"
+             onload="fitHotspotStage()"
+             onerror="this.parentElement.innerHTML='<div class=&quot;q-img-notice&quot;>🖼️ Không tải được hình ảnh.</div>'">
+        ${areasHtml}
+      </div>
     </div>
     <div class="match-region-tip">👆 Bấm trực tiếp vào vị trí đúng trên hình. Bấm lại để bỏ chọn.</div>`;
+
+  // Đo lại vùng trống còn lại (sau header/hint/tip/nút) và gán kích thước
+  // hiển thị vừa khít cho ảnh — chạy ngay (phòng khi ảnh đã có sẵn trong
+  // cache nên "onload" có thể không bắn lại) và chạy lại mỗi khi
+  // resize/xoay màn hình (responsive mọi thiết bị).
+  const _hsqImg = body.querySelector('.hotspot-wrap img');
+  if (_hsqImg && _hsqImg.complete) fitHotspotStage();
+  requestAnimationFrame(fitHotspotStage);
+}
+
+/**
+ * Đo không gian trống thực tế của .hsq-stage rồi tính kích thước hiển thị
+ * TỐI ƯU cho ảnh — phóng to lên nếu ảnh gốc nhỏ hơn chỗ trống, hoặc thu
+ * nhỏ lại nếu ảnh quá to — giống hệt object-fit:contain, nhưng khung
+ * .hotspot-wrap được gán ĐÚNG BẰNG kích thước ảnh đang hiển thị (không
+ * phải kích thước cả sân khấu) nên các vùng bấm định vị theo % vẫn luôn
+ * khớp chính xác vị trí trên ảnh ở mọi kích thước màn hình.
+ */
+function fitHotspotStage() {
+  const stage = document.querySelector('.hsq-stage');
+  const wrap  = stage ? stage.querySelector('.hotspot-wrap') : null;
+  const img   = wrap ? wrap.querySelector('img') : null;
+  if (!stage || !wrap || !img) return;
+  if (!img.naturalWidth || !img.naturalHeight) return; // ảnh chưa tải xong
+
+  const availW = stage.clientWidth;
+  const availH = Math.max(140, stage.clientHeight);
+  if (!availW || !availH) return;
+
+  const ratio = img.naturalWidth / img.naturalHeight;
+  let w = availW, h = w / ratio;
+  if (h > availH) { h = availH; w = h * ratio; }
+
+  wrap.style.width  = Math.round(w) + 'px';
+  wrap.style.height = Math.round(h) + 'px';
+
+  adjustHotspotHitAreas();
+}
+
+/**
+ * Trước đây các vùng hotspot (.hotspot-area) bị ép min-width/min-height
+ * cố định (32px, 40px trên điện thoại) để dễ bấm — nhưng khi ảnh thu nhỏ
+ * lại trên màn hình hẹp, việc ép kích thước cố định này khiến các vùng
+ * nằm sát nhau trên ảnh gốc (VD: nút đóng tab, ô địa chỉ, nút "≡"...) bị
+ * phóng to đè/chồng lên nhau, vừa rối mắt vừa dễ bấm nhầm.
+ *
+ * Cách khắc phục: khung nhìn (viền chấm) luôn giữ ĐÚNG kích thước % gốc
+ * (không bao giờ bị phóng to ⇒ không bao giờ chồng hình ảnh lên nhau).
+ * Để vẫn dễ chạm trên điện thoại, mỗi vùng được cộng thêm một "vùng bấm"
+ * vô hình (pseudo-element ::after, điều khiển bằng biến CSS --hit-slop)
+ * mở rộng ra xung quanh — nhưng KHÔNG BAO GIỜ vượt quá 1/2 khoảng cách
+ * tới vùng hotspot gần nhất, nên 2 vùng bấm liền kề không bao giờ đè lên
+ * nhau, bất kể ảnh nhỏ tới đâu.
+ */
+function adjustHotspotHitAreas() {
+  const wrap = document.querySelector('.hotspot-wrap');
+  if (!wrap) return;
+  const areas = Array.from(wrap.querySelectorAll('.hotspot-area'));
+  if (areas.length === 0) return;
+
+  const wrapRect = wrap.getBoundingClientRect();
+  if (!wrapRect.width || !wrapRect.height) return;
+
+  // Kích thước "vùng bấm" mong muốn mỗi bên — ưu tiên lớn hơn trên điện
+  // thoại vì thao tác bằng ngón tay kém chính xác hơn chuột.
+  const desiredSlop = window.innerWidth <= 720 ? 14 : 9;
+  const buffer = 1.5; // khoảng hở an toàn, tránh 2 vùng bấm chạm sát mép nhau
+
+  const rects = areas.map(el => {
+    const r = el.getBoundingClientRect();
+    return {
+      left:   r.left   - wrapRect.left,
+      top:    r.top    - wrapRect.top,
+      right:  r.right  - wrapRect.left,
+      bottom: r.bottom - wrapRect.top,
+    };
+  });
+
+  areas.forEach((el, i) => {
+    const a = rects[i];
+    let slop = desiredSlop;
+
+    rects.forEach((b, j) => {
+      if (i === j) return;
+      const dx = Math.max(b.left - a.right, a.left - b.right, 0);
+      const dy = Math.max(b.top - a.bottom, a.top - b.bottom, 0);
+      let gap;
+      if (dx > 0 && dy > 0) gap = Math.sqrt(dx * dx + dy * dy); // lệch chéo
+      else gap = dx > 0 ? dx : (dy > 0 ? dy : 0); // trùng trục, hoặc đã chồng nhau sẵn
+
+      slop = Math.min(slop, Math.max(0, gap / 2 - buffer));
+    });
+
+    el.style.setProperty('--hit-slop', `${Math.round(slop)}px`);
+  });
+}
+if (!window.__hsqResizeBound) {
+  window.__hsqResizeBound = true;
+  let _hsqResizeT = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(_hsqResizeT);
+    _hsqResizeT = setTimeout(fitHotspotStage, 120);
+  });
 }
 
 function toggleHotspot(el) {
@@ -1730,10 +1838,23 @@ function fmtTime(s) {
 
 function backToLobby() {
   clearInterval(State.timer);
-  document.getElementById('result').style.display = 'none';
-  document.getElementById('lobby').style.display  = 'flex';
+  document.getElementById('exam').style.display    = 'none';
+  document.getElementById('result').style.display  = 'none';
+  document.getElementById('lobby').style.display   = 'grid';
   document.getElementById('adminEntryLink')?.style.setProperty('display', 'flex');
+  // Quay lại từ bài thi/kết quả → luôn về màn Form (chọn bài tiếp theo),
+  // bất kể lần trước học sinh đang xem màn Giới thiệu ở màn hình hẹp.
+  if (typeof setLobbyView === 'function') setLobbyView('form');
   if (window.EduGamification) EduGamification.renderInto('#lobbyGameStrip');
+}
+
+/**
+ * Nút "← Quay lại trang chọn bài" trong sidebar khi đang làm bài dở dang —
+ * hỏi xác nhận trước vì thoát ngang chừng sẽ KHÔNG lưu/nộp bài đang làm.
+ */
+function confirmBackToLobby() {
+  const ok = confirm('Thoát về trang chọn bài? Bài làm hiện tại sẽ không được lưu và không tính là đã nộp.');
+  if (ok) backToLobby();
 }
 
 /* ============================================================

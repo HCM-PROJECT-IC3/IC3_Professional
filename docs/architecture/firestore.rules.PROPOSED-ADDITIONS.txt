@@ -24,10 +24,14 @@ match /classes/{classId} {
 }
 
 match /students_roster/{studentId} {
-  // Giáo viên chỉ cần ĐỌC để xem lớp mình phụ trách; sửa roster là việc
-  // của Điều phối đào tạo / Admin (tránh giáo viên tự thêm/xoá học sinh
-  // ngoài phạm vi kiểm soát).
-  allow read: if canViewReports();
+  // ĐỌC CÔNG KHAI (allow read: if true): index.html (trang học sinh
+  // làm bài) đọc collection này KHÔNG cần đăng nhập để đổ 3 select
+  // Trường/Lớp/Họ và tên (xem js/lobby-roster.js) — thay cho cơ chế
+  // nạp Excel/localStorage cũ trên chính trang đó. Dữ liệu ở đây chỉ
+  // gồm tên/trường/lớp (không có điểm số/thông tin nhạy cảm) nên chấp
+  // nhận được việc đọc công khai. Sửa roster (thêm/xoá/nạp Excel) vẫn
+  // CHỈ dành cho Điều phối đào tạo / Admin ở roster-manager.html.
+  allow read: if true;
   allow write: if isAdmin() || isCoordinator();
 }
 

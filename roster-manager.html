@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/theme.css">
 <link rel="stylesheet" href="css/roster-manager.css">
+<link rel="stylesheet" href="css/motion.css">
 </head>
 <body>
 
@@ -69,15 +70,32 @@
         <input type="text" id="studentSearch" placeholder="🔍 Tìm theo tên hoặc MSSV...">
         <select id="studentClassFilter"><option value="">Tất cả lớp</option></select>
       </div>
+      <button type="button" class="btn btn-secondary" id="importExcelBtn">📥 Nạp từ Excel</button>
+      <input type="file" id="importExcelInput" accept=".xlsx,.xls" hidden>
       <button type="button" class="btn btn-primary" id="addStudentBtn">➕ Thêm học sinh</button>
     </div>
     <div class="table-scroll">
       <table>
-        <thead><tr><th></th><th>MSSV</th><th>Họ tên</th><th>Lớp</th><th>GV phụ trách</th><th>Trạng thái</th><th></th></tr></thead>
-        <tbody id="studentRows"><tr><td colspan="7" class="empty-cell">Đang tải...</td></tr></tbody>
+        <thead><tr><th></th><th>MSSV</th><th>Họ tên</th><th>Trường</th><th>Lớp</th><th>GV phụ trách</th><th>Trạng thái</th><th></th></tr></thead>
+        <tbody id="studentRows"><tr><td colspan="8" class="empty-cell">Đang tải...</td></tr></tbody>
       </table>
     </div>
   </section>
+</div>
+
+<!-- ============ MODAL: NẠP DANH SÁCH TỪ EXCEL ============ -->
+<div class="modal-overlay" id="importModalOverlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>📥 Nạp học sinh từ Excel</h3>
+      <button type="button" class="modal-close" id="importModalCloseBtn">✕</button>
+    </div>
+    <div class="modal-body" id="importModalBody"><!-- điền động bằng JS --></div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" id="importCancelBtn">Huỷ bỏ</button>
+      <button type="button" class="btn btn-primary" id="importConfirmBtn">💾 Nạp danh sách</button>
+    </div>
+  </div>
 </div>
 
 <!-- ============ MODAL (dùng chung cho cả 3 loại form) ============ -->
@@ -118,6 +136,11 @@
 <script src="js/repositories/activity-log-repository.js"></script>
 <script src="js/services/activity-log-service.js"></script>
 
+<!-- Đọc file Excel (.xlsx/.xls) ngay trên trình duyệt bằng SheetJS, dùng
+     cho tính năng "📥 Nạp từ Excel" ở tab Học sinh (xem js/roster-manager.js). -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
 <script src="js/roster-manager.js"></script>
+<script src="js/motion.js"></script>
 </body>
 </html>

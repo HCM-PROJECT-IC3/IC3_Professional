@@ -13,7 +13,12 @@
    - "courses"  : { id, name, level("thcs"|"tieu_hoc"), createdAt }
    - "classes"  : { id, name, courseId, teacherId, teacherName, studentCount, createdAt }
    - "students_roster" : { id (mssv hoặc auto), mssv, name, className,
-       classId, teacherId, teacherName, avatarUrl, status, createdAt }
+       school, classId, teacherId, teacherName, avatarUrl, status, createdAt }
+
+   TRƯỜNG (school): chuỗi tự do do Điều phối đào tạo nhập tay hoặc import
+   từ Excel — dùng để lọc 3 select (Trường → Lớp → Tên) ở form làm bài
+   index.html (xem js/lobby-roster.js). Không phải collection riêng vì
+   1 Điều phối có thể quản lý học sinh của nhiều trường khác nhau.
 
    Đối chiếu với quiz_results: dùng studentName + studentClass (chuẩn
    hoá lowercase/trim) làm khoá nối tạm thời — xem
@@ -38,11 +43,12 @@
     return `${(name || '').trim().toLowerCase()}__${(className || '').trim().toLowerCase()}`;
   }
 
-  function buildStudent({ mssv, name, className, classId, teacherId, teacherName, avatarUrl }) {
+  function buildStudent({ mssv, name, className, school, classId, teacherId, teacherName, avatarUrl }) {
     return {
       mssv: mssv || '',
       name: name || '',
       className: className || '',
+      school: school || '',
       classId: classId || '',
       teacherId: teacherId || '',
       teacherName: teacherName || '',

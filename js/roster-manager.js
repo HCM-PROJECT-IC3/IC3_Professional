@@ -311,14 +311,14 @@
 
     const filtered = state.students.filter((s) => {
       if (classFilter && s.classId !== classFilter) return false;
-      if (search && !(`${s.name} ${s.mssv}`.toLowerCase().includes(search))) return false;
+      if (search && !(`${s.name} ${s.mssv} ${s.school || ''}`.toLowerCase().includes(search))) return false;
       return true;
     });
 
     document.getElementById('studentCount').textContent = `${filtered.length} / ${state.students.length}`;
     const tbody = document.getElementById('studentRows');
     if (!filtered.length) {
-      tbody.innerHTML = '<tr><td colspan="7" class="empty-cell">Không tìm thấy học sinh nào.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="empty-cell">Không tìm thấy học sinh nào.</td></tr>';
       return;
     }
     tbody.innerHTML = filtered.map((s) => {
@@ -331,6 +331,7 @@
         <td><div class="avatar-cell">${avatar}</div></td>
         <td>${esc(s.mssv || '—')}</td>
         <td>${esc(s.name)}</td>
+        <td>${esc(s.school || '—')}</td>
         <td>${esc(s.className || '—')}</td>
         <td>${esc(s.teacherName || '—')}</td>
         <td><span class="badge ${statusOk ? 'active' : 'inactive'}">${statusOk ? 'Đang học' : 'Ngừng học'}</span></td>
@@ -348,6 +349,221 @@
   document.getElementById('studentSearch').addEventListener('input', renderStudents);
   document.getElementById('studentClassFilter').addEventListener('change', renderStudents);
   document.getElementById('addStudentBtn').addEventListener('click', () => openStudentModal(null));
+
+  // ============================================================
+  // NẠP HỌC SINH TỪ FILE EXCEL (.xlsx/.xls) — đọc bằng SheetJS ngay
+  // trên trình duyệt, KHÔNG dùng file làm nguồn dữ liệu thường trực:
+  // chỉ dùng 1 LẦN để đổ vào Firestore (students_roster), sau đó
+  // trang danh sách học sinh vẫn hiển thị dữ liệu Firestore như bình
+  // thường. Đây là nơi DUY NHẤT trong hệ thống có nút nạp Excel —
+  // KHÔNG đặt ở index.html (trang học sinh làm bài) để tránh lộ thao
+  // tác quản trị ra màn hình công khai.
+  // ============================================================
+  const IMPORT_HEADER_ALIASES = {
+    mssv:      ['mssv', 'ma so hoc sinh', 'ma hoc sinh', 'ma so sinh vien', 'id', 'student id'],
+    name:      ['ho va ten', 'hovaten', 'hoten', 'ten', 'ten hoc sinh', 'name', 'fullname', 'hotenhocsinh'],
+    school:    ['truong', 'ten truong', 'truonghoc', 'school'],
+    className: ['lop', 'ten lop', 'class', 'classname'],
+  };
+  let pendingImportRows = []; // kết quả phân tích, chờ người dùng bấm "Nạp danh sách"
+
+  function stripDiacritics(str) {
+    return String(str ?? '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/gi, 'd')
+      .toLowerCase().trim().replace(/\s+/g, ' ');
+  }
+
+  function matchImportHeader(cell) {
+    const norm = stripDiacritics(cell);
+    for (const key of Object.keys(IMPORT_HEADER_ALIASES)) {
+      if (IMPORT_HEADER_ALIASES[key].includes(norm)) return key;
+    }
+    return null;
+  }
+
+  function parseImportWorkbook(workbook) {
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+    if (!rows.length) throw new Error('File Excel không có dữ liệu.');
+
+    const colMap = {};
+    rows[0].forEach((cell, idx) => {
+      const key = matchImportHeader(cell);
+      if (key) colMap[key] = idx;
+    });
+    if (colMap.name === undefined) {
+      throw new Error('Không tìm thấy cột "Họ và tên". Đặt tên cột: MSSV / Trường / Lớp / Họ và tên.');
+    }
+
+    const cell = (row, key) => (colMap[key] !== undefined ? String(row[colMap[key]] ?? '').trim() : '');
+    const out = [];
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      const name = cell(row, 'name');
+      if (!name && !cell(row, 'mssv')) continue; // dòng trống hoàn toàn
+      out.push({ mssv: cell(row, 'mssv'), name, school: cell(row, 'school'), className: cell(row, 'className') });
+    }
+    if (!out.length) throw new Error('Không đọc được học sinh nào (kiểm tra cột "Họ và tên").');
+    return out;
+  }
+
+  /** Gắn nhãn new/update/skip cho từng dòng đã đọc, dựa trên dữ liệu hiện có trong state. */
+  function classifyImportRows(rows) {
+    return rows.map((r) => {
+      if (!r.name) return Object.assign({}, r, { action: 'skip', reason: 'Thiếu họ tên' });
+
+      const existingByMssv = r.mssv ? state.students.find((s) => s.mssv && s.mssv.toLowerCase() === r.mssv.toLowerCase()) : null;
+      const existingByName = !existingByMssv
+        ? state.students.find((s) => stripDiacritics(s.name) === stripDiacritics(r.name)
+            && stripDiacritics(s.className || '') === stripDiacritics(r.className || ''))
+        : null;
+      const existing = existingByMssv || existingByName;
+
+      const matchedClass = state.classes.find((c) => stripDiacritics(c.name) === stripDiacritics(r.className || ''));
+      return Object.assign({}, r, {
+        action: existing ? 'update' : 'new',
+        existingId: existing ? existing.id : null,
+        willCreateClass: !!r.className && !matchedClass,
+        matchedClassId: matchedClass ? matchedClass.id : null,
+        matchedClassTeacher: matchedClass ? { id: matchedClass.teacherId || '', name: matchedClass.teacherName || '' } : null,
+      });
+    });
+  }
+
+  function renderImportPreview() {
+    const rows = pendingImportRows;
+    const nNew = rows.filter((r) => r.action === 'new').length;
+    const nUpdate = rows.filter((r) => r.action === 'update').length;
+    const nSkip = rows.filter((r) => r.action === 'skip').length;
+    const newClasses = [...new Set(rows.filter((r) => r.willCreateClass).map((r) => r.className))];
+
+    const tagHtml = { new: '<span class="import-tag new">Mới</span>', update: '<span class="import-tag update">Cập nhật</span>', skip: '<span class="import-tag skip">Bỏ qua</span>' };
+    const rowsHtml = rows.map((r) => `
+      <tr class="${r.action === 'skip' ? 'import-row-err' : r.willCreateClass ? 'import-row-warn' : ''}">
+        <td>${tagHtml[r.action]}</td>
+        <td>${esc(r.mssv || '—')}</td>
+        <td>${esc(r.name || '—')}</td>
+        <td>${esc(r.school || '—')}</td>
+        <td>${esc(r.className || '—')}${r.willCreateClass ? ' <span class="import-tag update">Lớp mới</span>' : ''}</td>
+      </tr>`).join('');
+
+    document.getElementById('importModalBody').innerHTML = `
+      <div class="import-hint">File cần có cột <b>Họ và tên</b> (bắt buộc), và tuỳ chọn <b>MSSV</b>, <b>Trường</b>, <b>Lớp</b>.
+        Học sinh trùng MSSV (hoặc trùng Họ tên + Lớp) sẽ được <b>cập nhật</b> thay vì tạo trùng.
+        ${newClasses.length ? `Sẽ tự tạo ${newClasses.length} lớp mới: <b>${newClasses.map(esc).join(', ')}</b>.` : ''}</div>
+      <div class="import-summary">
+        <div class="import-stat ok"><b>${nNew}</b><span>Học sinh mới</span></div>
+        <div class="import-stat"><b>${nUpdate}</b><span>Cập nhật</span></div>
+        <div class="import-stat ${nSkip ? 'err' : ''}"><b>${nSkip}</b><span>Bỏ qua</span></div>
+      </div>
+      <div class="import-preview-scroll">
+        <table>
+          <thead><tr><th></th><th>MSSV</th><th>Họ tên</th><th>Trường</th><th>Lớp</th></tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>`;
+
+    const confirmBtn = document.getElementById('importConfirmBtn');
+    confirmBtn.disabled = !(nNew + nUpdate);
+    confirmBtn.textContent = `💾 Nạp ${nNew + nUpdate} học sinh`;
+  }
+
+  function openImportModal() {
+    document.getElementById('importModalOverlay').classList.add('show');
+  }
+  function closeImportModal() {
+    document.getElementById('importModalOverlay').classList.remove('show');
+    pendingImportRows = [];
+  }
+  document.getElementById('importModalCloseBtn').addEventListener('click', closeImportModal);
+  document.getElementById('importCancelBtn').addEventListener('click', closeImportModal);
+  document.getElementById('importModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'importModalOverlay') closeImportModal();
+  });
+
+  document.getElementById('importExcelBtn').addEventListener('click', () => document.getElementById('importExcelInput').click());
+  document.getElementById('importExcelInput').addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!window.XLSX) { toast('⚠️ Chưa tải được thư viện đọc Excel, kiểm tra mạng rồi thử lại.'); return; }
+    const reader = new FileReader();
+    reader.onerror = () => toast('⚠️ Không đọc được file, thử lại.');
+    reader.onload = (ev) => {
+      try {
+        const workbook = XLSX.read(ev.target.result, { type: 'array' });
+        pendingImportRows = classifyImportRows(parseImportWorkbook(workbook));
+        renderImportPreview();
+        openImportModal();
+      } catch (err) {
+        toast('⚠️ ' + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+
+  document.getElementById('importConfirmBtn').addEventListener('click', async () => {
+    const rows = pendingImportRows.filter((r) => r.action !== 'skip');
+    if (!rows.length) return;
+    const btn = document.getElementById('importConfirmBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Đang nạp...';
+    try {
+      const db = window.EduFirebase.db;
+      const classCol = window.EduRepositories.class.col();
+      const studentCol = window.EduRepositories.studentRoster.col();
+
+      // 1) Tạo trước các lớp còn thiếu (mỗi tên lớp mới chỉ tạo 1 lần).
+      const classIdByName = {};
+      const newClassNames = [...new Set(rows.filter((r) => r.willCreateClass).map((r) => r.className))];
+      let batch = db.batch();
+      let ops = 0;
+      for (const name of newClassNames) {
+        const ref = classCol.doc();
+        batch.set(ref, { name, courseId: '', teacherId: '', teacherName: '', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+        classIdByName[name] = ref.id;
+        ops++;
+        if (ops >= 400) { await batch.commit(); batch = db.batch(); ops = 0; }
+      }
+
+      // 2) Tạo/cập nhật từng học sinh. Có MSSV → dùng MSSV làm ID (chống
+      // nạp trùng khi import lại cùng file); không có MSSV → dò theo
+      // (đã làm ở classifyImportRows) hoặc tạo ID tự động.
+      for (const r of rows) {
+        const classId = r.matchedClassId || classIdByName[r.className] || '';
+        const teacherId = r.matchedClassTeacher ? r.matchedClassTeacher.id : '';
+        const teacherName = r.matchedClassTeacher ? r.matchedClassTeacher.name : '';
+        const data = {
+          mssv: r.mssv, name: r.name, school: r.school, className: r.className,
+          classId, teacherId, teacherName, status: 'active',
+        };
+        let ref;
+        if (r.existingId) {
+          ref = studentCol.doc(r.existingId);
+          batch.set(ref, data, { merge: true });
+        } else if (r.mssv) {
+          ref = studentCol.doc(r.mssv);
+          batch.set(ref, Object.assign({ createdAt: firebase.firestore.FieldValue.serverTimestamp() }, data), { merge: true });
+        } else {
+          ref = studentCol.doc();
+          batch.set(ref, Object.assign({ createdAt: firebase.firestore.FieldValue.serverTimestamp() }, data));
+        }
+        ops++;
+        if (ops >= 400) { await batch.commit(); batch = db.batch(); ops = 0; }
+      }
+      if (ops > 0) await batch.commit();
+
+      logRosterChange('import_excel', null, { count: rows.length, newClasses: newClassNames.length });
+      toast(`✅ Đã nạp ${rows.length} học sinh từ Excel`);
+      closeImportModal();
+      loadEverything();
+    } catch (err) {
+      toast('❌ ' + friendlyError(err));
+    } finally {
+      btn.disabled = false;
+    }
+  });
 
   function openStudentModal(id) {
     const student = id ? state.students.find((s) => s.id === id) : null;
@@ -367,6 +583,11 @@
         <label for="f-student-name">Họ tên</label>
         <input type="text" id="f-student-name" class="form-input" placeholder="VD: Nguyễn Văn A" value="${esc(student ? student.name : '')}">
         <span class="form-hint">Họ tên phải khớp CHÍNH XÁC với tên học sinh nhập lúc làm bài để hệ thống đối chiếu được kết quả.</span>
+      </div>
+      <div class="form-group">
+        <label for="f-student-school">Trường</label>
+        <input type="text" id="f-student-school" class="form-input" placeholder="VD: THCS Nguyễn Du" value="${esc(student ? student.school : '')}">
+        <span class="form-hint">Dùng để lọc danh sách Trường → Lớp → Tên ở màn hình học sinh chọn khi bắt đầu làm bài.</span>
       </div>
       <div class="form-group">
         <label for="f-student-class">Lớp</label>
@@ -389,6 +610,7 @@
   async function saveStudent() {
     const mssv = document.getElementById('f-student-mssv').value.trim();
     const name = document.getElementById('f-student-name').value.trim();
+    const school = document.getElementById('f-student-school').value.trim();
     const classId = document.getElementById('f-student-class').value;
     const avatarUrl = document.getElementById('f-student-avatar').value.trim();
     const status = document.getElementById('f-student-status').value;
@@ -396,7 +618,7 @@
 
     const cls = state.classes.find((c) => c.id === classId);
     const data = {
-      mssv, name, avatarUrl, status,
+      mssv, name, school, avatarUrl, status,
       classId: classId || '',
       className: cls ? cls.name : '',
       teacherId: cls ? cls.teacherId || '' : '',

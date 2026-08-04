@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="css/theme.css">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="css/review-detail.css">
+<link rel="stylesheet" href="css/motion.css">
 </head>
 <body>
 
@@ -21,78 +22,152 @@
   🔑 <span class="admin-link-label">Quản trị</span>
 </a>
 
+<!-- ── Danh sách Trường/Lớp/Họ và tên hiển thị ở form bên dưới do Điều
+     phối đào tạo NẠP TỪ Excel ngay trong khu quản trị (xem trang
+     "🧑‍🎓 Quản lý danh sách học sinh" → roster-manager.html →
+     nút "📥 Nạp từ Excel"), KHÔNG còn nút nạp Excel ngoài trang công
+     khai này nữa để tránh lộ thao tác quản trị cho học sinh — xem
+     js/lobby-roster.js. ── -->
+
 <!-- ═══════════════════════════════════
      LOBBY — Two-column layout
      ═══════════════════════════════════ -->
 <div id="lobby">
-  <!-- Left: branding + features -->
-  <div class="lobby-left">
-    <div class="lobby-star-row">⭐🎓⭐</div>
-    <div class="lobby-logo">EduQuiz IC3</div>
-    <div class="lobby-tagline">Luyện thi IC3 · Vui vẻ · Sinh động · Dễ dùng</div>
+  <!-- Toggle Giới thiệu ⇄ Form — chỉ hiển thị khi màn hình hẹp (≤900px),
+       nơi 2 khối không còn đủ chỗ hiện song song. Xem setLobbyView()
+       trong js/main.js. Ẩn hoàn toàn ở màn rộng (CSS display:none). -->
+  <div class="lobby-view-toggle" role="tablist" aria-label="Chuyển đổi màn giới thiệu và màn làm bài">
+    <button type="button" class="view-toggle-btn" id="toggleIntroBtn" role="tab" aria-selected="false" onclick="setLobbyView('intro')">🎓 Giới thiệu</button>
+    <button type="button" class="view-toggle-btn active" id="toggleFormBtn" role="tab" aria-selected="true" onclick="setLobbyView('form')">📝 Làm bài</button>
+  </div>
 
-    <div class="lobby-features">
-      <div class="feature-pill">
-        <span class="pill-icon">📝</span>
-        <span class="pill-text">
-          <span class="pill-title">Đa dạng câu hỏi</span>
-          <span class="pill-sub">Trắc nghiệm, Đúng/Sai, Nối cột</span>
-        </span>
-      </div>
-      <div class="feature-pill">
-        <span class="pill-icon">⏱️</span>
-        <span class="pill-text">
-          <span class="pill-title">Tính giờ tự động</span>
-          <span class="pill-sub">Nộp bài khi hết thời gian</span>
-        </span>
-      </div>
-      <div class="feature-pill">
-        <span class="pill-icon">📊</span>
-        <span class="pill-text">
-          <span class="pill-title">Lưu kết quả</span>
-          <span class="pill-sub">Xem lại lịch sử bài làm</span>
-        </span>
-      </div>
-      <div class="feature-pill">
-        <span class="pill-icon">🏆</span>
-        <span class="pill-text">
-          <span class="pill-title">Chấm điểm ngay</span>
-          <span class="pill-sub">Xem đúng/sai sau khi nộp</span>
-        </span>
+  <!-- Left: branding + 7 chủ đề năng lực số IC3 GS6 (minh hoạ bằng
+       hình ảnh/icon thay vì liệt kê chữ — xem .lobby-topics bên dưới) -->
+  <div class="lobby-left">
+    <span class="eyebrow-chip"><span class="dot"></span> Phiên bản mới · Hotspot &amp; 11 dạng câu hỏi</span>
+    <div class="lobby-star-row">🎓</div>
+    <div class="lobby-logo">EduQuiz IC3</div>
+    <div class="lobby-tagline">Luyện thi IC3 GS6 vui vẻ mỗi ngày — chấm điểm tức thì, theo dõi tiến bộ rõ ràng.</div>
+
+    <div class="lobby-stat-row" aria-hidden="true">
+      <div class="lobby-stat"><span class="lobby-stat-val">11</span><span class="lobby-stat-lbl">Dạng câu hỏi</span></div>
+      <div class="lobby-stat"><span class="lobby-stat-val">7</span><span class="lobby-stat-lbl">Chủ đề IC3</span></div>
+      <div class="lobby-stat"><span class="lobby-stat-val">100%</span><span class="lobby-stat-lbl">Miễn phí</span></div>
+    </div>
+
+    <!-- Signature element: thẻ mockup câu hỏi "nổi", nghiêng nhẹ theo
+         chuột (xem tiltHeroCard() trong js/main.js) — lấy cảm hứng từ
+         khối mockup nổi của tuhoc.cc nhưng đổi thành xem trước 1 câu
+         hỏi trắc nghiệm IC3 kèm vòng XP, đúng với sản phẩm thật. -->
+    <div class="lobby-mockup" aria-hidden="true">
+      <div class="mockup-tilt" id="lobbyMockup">
+        <div class="mockup-card">
+          <div class="mockup-card-head">
+            <span class="mockup-dot d1"></span><span class="mockup-dot d2"></span><span class="mockup-dot d3"></span>
+            <span class="mockup-card-tag">Câu 6/20</span>
+          </div>
+          <div class="mockup-q">Biểu tượng nào dùng để <b>lưu tệp</b> trong phần mềm văn phòng?</div>
+          <div class="mockup-opts">
+            <div class="mockup-opt correct"><span class="opt-dot"></span>💾 Biểu tượng đĩa mềm</div>
+            <div class="mockup-opt"><span class="opt-dot"></span>🖨 Biểu tượng máy in</div>
+            <div class="mockup-opt"><span class="opt-dot"></span>📁 Biểu tượng thư mục</div>
+          </div>
+        </div>
+        <div class="mockup-xp-ring">
+          <svg viewBox="0 0 100 100">
+            <circle class="ring-track" cx="50" cy="50" r="42"></circle>
+            <circle class="ring-fill" cx="50" cy="50" r="42"></circle>
+          </svg>
+          <div class="mockup-xp-txt"><span>+80</span>XP</div>
+        </div>
+        <div class="mockup-streak">🔥 3 ngày liên tiếp</div>
       </div>
     </div>
 
-    <!-- Streak / XP / huy hiệu của học sinh trên MÁY này (js/gamification.js) -->
-    <div id="lobbyGameStrip" class="lobby-game-strip"></div>
+    <div class="lobby-topics" role="list" aria-label="7 chủ đề năng lực số cốt lõi của IC3 GS6">
+      <div class="topic-card topic-1" role="listitem">
+        <div class="topic-icon">
+          <img src="img/topic-icon-1-tech.png" alt="" loading="lazy">
+        </div>
+        <span class="topic-label">Công nghệ<br>cơ bản</span>
+      </div>
+      <div class="topic-card topic-2" role="listitem">
+        <div class="topic-icon">
+          <img src="img/topic-icon-2-citizenship.png" alt="" loading="lazy">
+        </div>
+        <span class="topic-label">Công dân<br>kỷ nguyên số</span>
+      </div>
+      <div class="topic-card topic-3" role="listitem">
+        <div class="topic-icon">
+          <img src="img/topic-icon-3-info.png" alt="" loading="lazy">
+        </div>
+        <span class="topic-label">Quản lý<br>thông tin</span>
+      </div>
+      <div class="topic-card topic-4" role="listitem">
+        <div class="topic-icon">
+          <img src="img/topic-icon-4-content.png" alt="" loading="lazy">
+        </div>
+        <span class="topic-label">Sáng tạo<br>nội dung</span>
+      </div>
+      <div class="topic-card topic-5" role="listitem">
+        <div class="topic-icon">
+          <img src="img/topic-icon-5-comm.png" alt="" loading="lazy">
+        </div>
+        <span class="topic-label">Giao tiếp<br>kỹ thuật số</span>
+      </div>
+      <div class="topic-card topic-6" role="listitem">
+        <div class="topic-icon">
+          <img src="img/topic-icon-6-collab.png" alt="" loading="lazy">
+        </div>
+        <span class="topic-label">Cộng tác<br>trực tuyến</span>
+      </div>
+      <div class="topic-card topic-7" role="listitem">
+        <div class="topic-icon">
+          <img src="img/topic-icon-7-safety.png" alt="" loading="lazy">
+        </div>
+        <span class="topic-label">An toàn<br>&amp; bảo mật</span>
+      </div>
+    </div>
   </div>
 
   <!-- Right: form -->
   <div class="lobby-right">
+    <div class="lobby-brand">
+      <span class="lobby-brand-emoji">🎓</span>
+      <span class="lobby-brand-name">EduQuiz IC3</span>
+    </div>
     <div class="lobby-card">
       <div class="lobby-card-title"><span>🚀</span> Bắt đầu làm bài</div>
 
-      <!-- Row 1: Tên + Lớp -->
-      <div class="form-row">
-        <div class="form-group">
-          <label>👤 Họ và tên</label>
-          <input type="text" id="studentName" placeholder="Nhập tên của bạn..." autocomplete="off">
-        </div>
-        <div class="form-group">
-          <label>🏫 Lớp</label>
-          <input type="text" id="studentClass" placeholder="6A1, 7B2..." autocomplete="off">
-        </div>
-      </div>
-
-      <!-- Row 2: Trường (full width) -->
+      <!-- Row 1: Trường (full width) — chọn trước để lọc Lớp/Tên bên dưới -->
       <div class="form-group">
         <label>🏛️ Trường</label>
-        <input type="text" id="studentSchool" placeholder="Nhập tên trường của bạn..." autocomplete="off">
+        <select id="studentSchool" disabled>
+          <option value="">⚠ Chưa có danh sách — liên hệ Điều phối đào tạo</option>
+        </select>
+        <!-- <div class="roster-status" id="rosterStatus"></div> -->
+      </div>
+
+      <!-- Row 2: Lớp + Họ và tên (lọc dần theo Trường đã chọn) -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>🏫 Lớp</label>
+          <select id="studentClass" disabled>
+            <option value="">-- Chọn trường trước --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>👤 Họ và tên</label>
+          <select id="studentName" disabled>
+            <option value="">-- Chọn lớp trước --</option>
+          </select>
+        </div>
       </div>
 
       <!-- Row 3: Danh mục + Cấp độ -->
       <div class="form-row">
         <div class="form-group">
-          <label>📚 Danh mục</label>
+          <label>📚 Chương Trình</label>
           <select id="categorySelect"></select>
         </div>
         <div class="form-group">
@@ -101,23 +176,11 @@
         </div>
       </div>
 
-      <!-- Row 4: Minitest + Thời gian -->
-      <div class="form-row">
-        <div class="form-group">
-          <label>📝 Minitest</label>
-          <select id="minitestSelect"></select>
-          <div class="minitest-meta" id="minitestMeta"></div>
-        </div>
-        <div class="form-group">
-          <label>⏰ Thời gian</label>
-          <select id="timeSelect">
-            <option value="1200">20 phút</option>
-            <option value="1800">30 phút</option>
-            <option value="2700">45 phút</option>
-            <option value="3600">60 phút</option>
-            <option value="600">10 phút (Demo)</option>
-          </select>
-        </div>
+      <!-- Row 4: Minitest (thời gian mặc định 20 phút, không cho học sinh tự chọn) -->
+      <div class="form-group">
+        <label>📝 Minitest</label>
+        <select id="minitestSelect"></select>
+        <div class="minitest-meta" id="minitestMeta"></div>
       </div>
 
       <button type="button" class="btn-start" id="btnStart" onclick="startExam()" disabled>▶ Bắt đầu thi</button>
@@ -135,7 +198,7 @@
     <div class="topbar-info" id="topbarInfo"></div>
     <div class="timer-wrap">
       <span class="timer-icon">⏱</span>
-      <span id="timer-display">20:00</span>
+      <span id="timer-display">50:00</span>
     </div>
     <button type="button" class="btn-submit-top" onclick="confirmSubmit()">Nộp bài ✓</button>
     <button type="button" onclick="toggleTheme()" title="Chế độ sáng/tối"
@@ -143,7 +206,7 @@
   </div>
   <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
   <div class="exam-body">
-    <div class="sidebar">
+    <div class="sidebar" id="examSidebar">
       <div class="sidebar-title">📋 Câu hỏi</div>
       <div class="q-grid" id="qGrid"></div>
       <div class="legend">
@@ -151,7 +214,14 @@
         <div class="legend-item"><div class="legend-dot flagged"></div> Đánh dấu</div>
         <div class="legend-item"><div class="legend-dot unanswered"></div> Chưa trả lời</div>
       </div>
+      <div class="sidebar-footer">
+        <button type="button" class="btn-back-lobby" onclick="confirmBackToLobby()">←<span class="btn-back-lobby-label"> Quay lại trang chọn bài</span></button>
+      </div>
     </div>
+    <button type="button" class="sidebar-toggle-btn" id="sidebarToggle" onclick="toggleSidebar()"
+      aria-label="Thu gọn/Mở rộng danh sách câu hỏi" title="Thu gọn/Mở rộng danh sách câu hỏi">
+      <span class="sidebar-toggle-icon"></span>
+    </button>
     <div class="q-panel" id="qPanel"></div>
   </div>
 </div>
@@ -209,8 +279,18 @@
 <script src="js/firebase-config.js"></script>
 <script src="js/firestore-results.js"></script>
 
+<!-- Danh sách Trường/Lớp/Tên: đọc trực tiếp từ Firestore (students_roster) —
+     cùng dữ liệu roster thật do Điều phối đào tạo quản lý ở roster-manager.html
+     (đổ 3 select ở form "Bắt đầu làm bài", xem js/lobby-roster.js) -->
+<script src="js/lobby-roster.js"></script>
+
 <script src="js/review-detail.js"></script>
 <script src="js/quiz-engine.js"></script>
 <script src="js/main.js"></script>
+<!-- Lớp hiệu ứng chuyển động dùng chung: hiện dần khi cuộn, gợn sóng
+     khi bấm, "nảy" khi chọn đáp án, kéo-thả có trọng lượng, chuyển
+     màn mượt — lấy cảm hứng từ tuhoc.cc. Thuần cộng thêm, xem
+     js/motion.js. -->
+<script src="js/motion.js"></script>
 </body>
 </html>

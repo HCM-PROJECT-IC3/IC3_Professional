@@ -59,6 +59,12 @@ body {
   box-shadow: var(--shadow-btn);
 }
 .btn-primary:hover { filter: brightness(1.08) }
+.btn-secondary {
+  background: var(--teal-lt);
+  color: var(--teal);
+  border: 1.5px solid rgba(23,179,163,.35);
+}
+.btn-secondary:hover { background: var(--teal); color: #fff }
 .btn-danger-text {
   background: none;
   border: none;
@@ -225,3 +231,44 @@ tr:last-child td { border-bottom: none }
   .panel-toolbar { flex-direction: column; align-items: stretch }
   .panel-toolbar .btn { margin-left: 0 }
 }
+
+/* ---- Modal nạp Excel: bảng xem trước + tóm tắt ---- */
+#importModalOverlay .modal-box { max-width: 620px }
+.import-hint {
+  font-size: .8rem; line-height: 1.6; color: var(--muted);
+  background: var(--card2); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); padding: .8rem 1rem;
+}
+.import-hint b { color: var(--text) }
+.import-dropzone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1.6rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition);
+  color: var(--muted);
+  font-weight: 700;
+  font-size: .85rem;
+}
+.import-dropzone:hover, .import-dropzone.drag-over { border-color: var(--teal); color: var(--teal); background: var(--teal-lt) }
+.import-summary { display: flex; gap: .6rem; flex-wrap: wrap }
+.import-stat {
+  flex: 1; min-width: 110px;
+  background: var(--card2); border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  padding: .7rem .8rem; text-align: center;
+}
+.import-stat b { display: block; font-size: 1.3rem; font-weight: 800; color: var(--text) }
+.import-stat span { font-size: .7rem; color: var(--muted); font-weight: 700 }
+.import-stat.ok b { color: var(--green) }
+.import-stat.warn b { color: var(--yellow) }
+.import-stat.err b { color: var(--red) }
+.import-preview-scroll { max-height: 240px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm) }
+.import-preview-scroll table { min-width: 0 }
+.import-preview-scroll th, .import-preview-scroll td { padding: .5rem .6rem; font-size: .76rem }
+.import-row-warn td { background: var(--yellow-lt) }
+.import-row-err td { background: var(--red-lt); color: var(--red) }
+.import-tag { font-size: .68rem; font-weight: 800; padding: .15rem .5rem; border-radius: 999px }
+.import-tag.new    { background: var(--green-lt); color: var(--green) }
+.import-tag.update { background: var(--blue-lt);  color: var(--blue) }
+.import-tag.skip   { background: var(--red-lt);   color: var(--red) }

@@ -76,6 +76,15 @@
   --lobby-blob1: rgba(79,107,255,.16);
   --lobby-blob2: rgba(23,179,163,.16);
 
+  /* ── Vibrant motion tokens (2026 "cháy" refresh) ──
+     Dùng cho hero, mockup card, chip, glow-hover... trên mọi trang. */
+  --gradient-hero: linear-gradient(120deg, var(--purple) 0%, #8b5cf6 32%, var(--teal) 68%, var(--orange) 100%);
+  --gradient-cta:  linear-gradient(135deg, var(--purple) 0%, #7c6bff 55%, var(--teal) 100%);
+  --glow-purple: 0 8px 30px rgba(79,107,255,.35);
+  --glow-teal:   0 8px 30px rgba(23,179,163,.32);
+  --glow-orange: 0 8px 30px rgba(255,138,61,.32);
+  --shine: linear-gradient(115deg, transparent 20%, rgba(255,255,255,.55) 42%, rgba(255,255,255,.55) 48%, transparent 70%);
+
   /* ── Alias cho tên biến cũ của ic3-dashboard.html ──
      Giữ lại để không phải sửa từng chỗ dùng trong file đó.
      Trang mới nên dùng thẳng bộ biến chuẩn phía trên. */
@@ -123,6 +132,10 @@
   --lobby-bg:  linear-gradient(160deg,#0d0f1a 0%,#111428 50%,#160f1a 100%);
   --lobby-blob1: rgba(79,107,255,.25);
   --lobby-blob2: rgba(23,179,163,.2);
+  --glow-purple: 0 8px 34px rgba(79,107,255,.5);
+  --glow-teal:   0 8px 34px rgba(23,179,163,.42);
+  --glow-orange: 0 8px 34px rgba(255,138,61,.42);
+  --shine: linear-gradient(115deg, transparent 20%, rgba(255,255,255,.18) 42%, rgba(255,255,255,.18) 48%, transparent 70%);
   --color-text-primary:   #e8eaf6;
   --color-text-secondary: #8892c8;
 
@@ -137,4 +150,86 @@
   --sidebar-active-bg: rgba(79,107,255,.18);
   --input-bg: var(--card2);
   --modal-overlay: rgba(0,0,0,.7);
+}
+
+/* ════════════════════════════════════════════════════════════
+   SHARED MOTION UTILITIES — dùng chung mọi trang
+   Chip/badge "eyebrow", nút CTA có ánh sáng lướt, hover-lift cho
+   card, reduced-motion fallback. Lấy cảm hứng bố cục tuhoc.cc:
+   badge tròn góc, headline gradient, card nổi có glow theo màu.
+   ════════════════════════════════════════════════════════════ */
+.eyebrow-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .38rem .85rem;
+  border-radius: 999px;
+  font-size: .74rem;
+  font-weight: 800;
+  letter-spacing: .2px;
+  color: var(--purple);
+  background: color-mix(in srgb, var(--purple) 12%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--purple) 30%, transparent);
+  animation: chipPulse 2.6s ease-in-out infinite;
+}
+.eyebrow-chip .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--teal);
+  box-shadow: 0 0 0 0 rgba(23,179,163,.6);
+  animation: dotPing 1.8s ease-in-out infinite;
+}
+@keyframes dotPing {
+  0%   { box-shadow: 0 0 0 0 rgba(23,179,163,.55) }
+  70%  { box-shadow: 0 0 0 6px rgba(23,179,163,0) }
+  100% { box-shadow: 0 0 0 0 rgba(23,179,163,0) }
+}
+@keyframes chipPulse {
+  0%,100% { transform: translateY(0) }
+  50%     { transform: translateY(-2px) }
+}
+
+.glow-cta {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.glow-cta::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: var(--shine);
+  background-size: 200% 100%;
+  background-position: 150% 0;
+  transition: background-position .7s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+.glow-cta:hover::before { background-position: -50% 0 }
+
+.hover-lift {
+  transition: transform .28s cubic-bezier(.16,1,.3,1), box-shadow .28s ease, border-color .28s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-5px);
+}
+
+@keyframes floatY {
+  0%,100% { transform: translateY(0) }
+  50%     { transform: translateY(-10px) }
+}
+@keyframes spinSlow {
+  from { transform: rotate(0deg) }
+  to   { transform: rotate(360deg) }
+}
+@keyframes ringDash {
+  from { stroke-dashoffset: var(--ring-from, 283) }
+  to   { stroke-dashoffset: var(--ring-to, 0) }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
