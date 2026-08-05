@@ -30,7 +30,9 @@
      phối đào tạo NẠP TỪ Excel ngay trong khu quản trị (xem trang
      "🧑‍🎓 Quản lý danh sách học sinh" → roster-manager.html →
      nút "📥 Nạp từ Excel"), KHÔNG còn nút nạp Excel ngoài trang công
-     khai này nữa để tránh lộ thao tác quản trị cho học sinh — xem
+     khai này nữa để tránh lộ thao tác quản trị cho học sinh. Trang này
+     đọc danh sách từ file tĩnh data/roster/students-active.json (xuất
+     ra từ roster-manager.html), KHÔNG gọi Firestore trực tiếp — xem
      js/lobby-roster.js. ── -->
 
   <!-- ═══════════════════════════════════
@@ -324,9 +326,10 @@
   <script src="js/firebase-config.js"></script>
   <script src="js/firestore-results.js"></script>
 
-  <!-- Danh sách Trường/Lớp/Tên: đọc trực tiếp từ Firestore (students_roster) —
-     cùng dữ liệu roster thật do Điều phối đào tạo quản lý ở roster-manager.html
-     (đổ 3 select ở form "Bắt đầu làm bài", xem js/lobby-roster.js) -->
+  <!-- Danh sách Trường/Lớp/Tên: đọc từ file tĩnh data/roster/students-active.json
+     (KHÔNG gọi Firestore trực tiếp — tránh nổ quota đọc mỗi lần tải/tải lại trang).
+     File này do Điều phối đào tạo xuất ra từ roster-manager.html (nút "🗂️ Xuất JSON")
+     mỗi khi danh sách roster thay đổi. Xem js/lobby-roster.js. -->
   <script src="js/lobby-roster.js"></script>
 
   <script src="js/review-detail.js"></script>

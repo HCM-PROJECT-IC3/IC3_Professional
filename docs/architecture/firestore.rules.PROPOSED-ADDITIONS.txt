@@ -1,6 +1,18 @@
 ============================================================
 ĐỀ XUẤT BỔ SUNG cho firestore.rules — CHỈ THÊM, KHÔNG THAY THẾ
 ============================================================
+[ĐÃ ÁP DỤNG + CẬP NHẬT] Các block courses / classes / students_roster
+bên dưới đã được đưa vào firestore.rules đang chạy, nhưng với quyền
+đọc CHẶT HƠN những gì đề xuất ở đây: KHÔNG còn "allow read: if true"
+cho students_roster/classes nữa. Lý do: index.html (trang học sinh)
+từng đọc "students_roster" trực tiếp mỗi lần tải trang để đổ 3 select
+Trường/Lớp/Tên, gây nổ quota đọc Firestore free tier chỉ sau ~100 lượt
+mở trang. Trang này giờ đọc từ file tĩnh
+data/roster/students-active.json (xuất thủ công từ roster-manager.html
+→ nút "🗂️ Xuất JSON", xem js/lobby-roster.js) nên không cần đọc công
+khai Firestore nữa — chỉ admin/coordinator đã đăng nhập mới đọc 3
+collection này. Nội dung dưới đây GIỮ NGUYÊN để tham khảo lịch sử; xem
+firestore.rules để biết rule đang thực sự chạy.
 File firestore.rules đang chạy của bạn giữ nguyên 100%. Đây là các
 "match block" cần CHÈN THÊM vào bên trong "match /databases/{database}/documents { ... }"
 (ngang hàng với match /users/{userId}, match /questions/{questionId}...),

@@ -69,29 +69,26 @@
         <input type="text" id="studentSearch" placeholder="🔍 Tìm theo tên hoặc MSSV...">
         <select id="studentClassFilter"><option value="">Tất cả lớp</option></select>
       </div>
-<<<<<<< HEAD
-=======
       <button type="button" class="btn btn-secondary" id="importExcelBtn">📥 Nạp từ Excel</button>
       <input type="file" id="importExcelInput" accept=".xlsx,.xls" hidden>
->>>>>>> ee1d34d (please commit)
+      <button type="button" class="btn btn-secondary" id="exportRosterJsonBtn">🗂️ Xuất JSON (cho index.html)</button>
       <button type="button" class="btn btn-primary" id="addStudentBtn">➕ Thêm học sinh</button>
+    </div>
+    <div class="export-hint" id="exportRosterHint">
+      💡 Sau khi thêm/sửa/xoá/nạp Excel, bấm <b>"Xuất JSON"</b> rồi commit + push file
+      <code>data/roster/students-active.json</code> lên GitHub — trang <code>index.html</code>
+      đọc danh sách từ file tĩnh này (không gọi Firestore trực tiếp nữa) nên thay đổi
+      chỉ hiển thị cho học sinh SAU khi file đã được đẩy lên.
     </div>
     <div class="table-scroll">
       <table>
-<<<<<<< HEAD
-        <thead><tr><th></th><th>MSSV</th><th>Họ tên</th><th>Lớp</th><th>GV phụ trách</th><th>Trạng thái</th><th></th></tr></thead>
-        <tbody id="studentRows"><tr><td colspan="7" class="empty-cell">Đang tải...</td></tr></tbody>
-=======
         <thead><tr><th></th><th>MSSV</th><th>Họ tên</th><th>Trường</th><th>Lớp</th><th>GV phụ trách</th><th>Trạng thái</th><th></th></tr></thead>
         <tbody id="studentRows"><tr><td colspan="8" class="empty-cell">Đang tải...</td></tr></tbody>
->>>>>>> ee1d34d (please commit)
       </table>
     </div>
   </section>
 </div>
 
-<<<<<<< HEAD
-=======
 <!-- ============ MODAL: NẠP DANH SÁCH TỪ EXCEL ============ -->
 <div class="modal-overlay" id="importModalOverlay">
   <div class="modal-box">
@@ -107,7 +104,6 @@
   </div>
 </div>
 
->>>>>>> ee1d34d (please commit)
 <!-- ============ MODAL (dùng chung cho cả 3 loại form) ============ -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal-box">
@@ -146,13 +142,10 @@
 <script src="js/repositories/activity-log-repository.js"></script>
 <script src="js/services/activity-log-service.js"></script>
 
-<<<<<<< HEAD
-=======
 <!-- Đọc file Excel (.xlsx/.xls) ngay trên trình duyệt bằng SheetJS, dùng
      cho tính năng "📥 Nạp từ Excel" ở tab Học sinh (xem js/roster-manager.js). -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
->>>>>>> ee1d34d (please commit)
 <script src="js/roster-manager.js"></script>
 </body>
 </html>

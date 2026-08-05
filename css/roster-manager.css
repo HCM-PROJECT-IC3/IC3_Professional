@@ -133,6 +133,23 @@ body {
 .panel-toolbar-filters { display: flex; gap: .6rem; flex: 1; flex-wrap: wrap }
 .panel-toolbar .btn { margin-left: auto }
 .panel-toolbar-filters + .btn { margin-left: 0 }
+#exportRosterJsonBtn { margin-left: 0 }
+
+.export-hint {
+  background: var(--purple-lt);
+  border: 1.5px solid rgba(79,107,255,.25);
+  border-radius: var(--radius-sm);
+  padding: .7rem 1rem;
+  margin: -.4rem 0 1rem;
+  font-size: .78rem;
+  line-height: 1.55;
+}
+.export-hint code {
+  background: rgba(0,0,0,.06);
+  border-radius: 4px;
+  padding: .1rem .35rem;
+  font-size: .76rem;
+}
 
 #studentSearch, #studentClassFilter, select.form-input, input.form-input {
   font-family: inherit;

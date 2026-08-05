@@ -351,6 +351,54 @@
   document.getElementById('addStudentBtn').addEventListener('click', () => openStudentModal(null));
 
   // ============================================================
+  // XUẤT JSON TĨNH cho index.html (js/lobby-roster.js đọc file này
+  // thay vì gọi Firestore trực tiếp — xem ghi chú đầu file
+  // js/lobby-roster.js để biết lý do: tránh nổ quota đọc Firestore
+  // (mỗi lần mở/tải lại index.html trước đây tốn 1 lượt đọc × số học
+  // sinh "active"). File xuất ra là NGUỒN TĨNH, chỉ cập nhật khi
+  // Điều phối đào tạo bấm nút này rồi tự commit + push lên GitHub —
+  // đây là bước THỦ CÔNG bắt buộc vì trang này chạy trên GitHub Pages
+  // (không có server để tự ghi file).
+  // ============================================================
+  function buildRosterExportPayload() {
+    const students = state.students
+      .filter((s) => s.status === 'active' && s.name)
+      .map((s) => ({ school: s.school || '', className: s.className || '', name: s.name }))
+      .sort((a, b) =>
+        String(a.school).localeCompare(String(b.school), 'vi') ||
+        String(a.className).localeCompare(String(b.className), 'vi') ||
+        String(a.name).localeCompare(String(b.name), 'vi'));
+
+    return {
+      version: new Date().toISOString().replace(/[-:TZ.]/g, '').slice(0, 14),
+      generatedAt: new Date().toISOString(),
+      count: students.length,
+      students,
+    };
+  }
+
+  function exportRosterJson() {
+    const payload = buildRosterExportPayload();
+    if (!payload.count) {
+      toast('⚠️ Chưa có học sinh "Đang học" nào để xuất.');
+      return;
+    }
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'students-active.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    logRosterChange('export_json', null, { count: payload.count });
+    toast(`📤 Đã tải file — chép đè vào data/roster/students-active.json rồi commit + push lên GitHub (${payload.count} học sinh).`);
+  }
+
+  document.getElementById('exportRosterJsonBtn').addEventListener('click', exportRosterJson);
+
+  // ============================================================
   // NẠP HỌC SINH TỪ FILE EXCEL (.xlsx/.xls) — đọc bằng SheetJS ngay
   // trên trình duyệt, KHÔNG dùng file làm nguồn dữ liệu thường trực:
   // chỉ dùng 1 LẦN để đổ vào Firestore (students_roster), sau đó
