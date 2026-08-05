@@ -223,108 +223,339 @@ body {
 }
 .lobby-stat-lbl { font-size: .7rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px }
 
-/* ── Hero mockup — thẻ xem trước câu hỏi "nổi", nghiêng nhẹ theo
-   chuột, biểu tượng đặc trưng của EduQuiz (tương đương khối mockup
-   gõ phím nổi trên tuhoc.cc). Neo góc trên-phải của .lobby-left,
-   chồng nhẹ lên dải chủ đề bên dưới để tạo chiều sâu. Ẩn ở màn hẹp
-   để tránh rối giao diện (xem media query cuối file). */
+/* ── Hero mockup — bàn phím 3D nổi, nghiêng theo chuột + KÉO để xoay
+   (xem initKeyboardScene() trong js/main.js), lấy cảm hứng trực tiếp
+   từ khối mockup gõ phím "neon" của tuhoc.cc. Luôn dùng bảng màu tối
+   cố định (không đổi theo theme sáng/tối của trang) để giữ hiệu ứng
+   neon/glow rõ nét như bản gốc — đây là 1 “khung rọi đèn” (spotlight)
+   độc lập, không phải nội dung đọc được nên không cần theo theme.
+   Neo góc trên-phải của .lobby-left, ẩn ở màn hẹp (xem media query). */
 .lobby-mockup {
   position: absolute;
-  top: clamp(185px, 23vw, 235px);
-  right: clamp(-.5rem, 0vw, 1rem);
-  width: min(250px, 27vw);
+  top: clamp(150px, 20vw, 195px);
+  right: clamp(-1rem, -1vw, .5rem);
+  width: min(340px, 36vw);
   z-index: 2;
-  perspective: 1000px;
   opacity: 0;
-  animation: mockupIn .7s .5s cubic-bezier(.16,1,.3,1) forwards, floatY 5s 1.3s ease-in-out infinite;
+  animation: mockupIn .7s .5s cubic-bezier(.16,1,.3,1) forwards, floatY 6s 1.3s ease-in-out infinite;
 }
 @keyframes mockupIn {
-  from { opacity: 0; transform: translateY(24px) scale(.9) }
+  from { opacity: 0; transform: translateY(24px) scale(.92) }
   to   { opacity: 1; transform: translateY(0) scale(1) }
 }
-/* Lớp tilt riêng — KHÔNG có animation CSS trên transform, để
-   js/main.js (tiltHeroCard) có thể set transform theo chuột mà
-   không bị animation ghi đè mỗi khung hình. */
-.mockup-tilt {
+@keyframes floatY {
+  0%,100% { transform: translateY(0) }
+  50%     { transform: translateY(-10px) }
+}
+
+.kb-scene {
   position: relative;
-  transform: rotate(-4deg);
-  transform-style: preserve-3d;
-  transition: transform .15s ease-out;
+  border-radius: 20px;
+  padding: 1.6rem 1rem 1.3rem;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  transition: background .35s ease, box-shadow .35s ease;
+
+  /* Biến màu riêng cho khối bàn phím — đổi theo data-theme để nền/khối
+     phím LUÔN khớp sáng/tối với toàn trang (không còn cố định tối). */
+  --kb-bg1: #eef1ff;
+  --kb-bg2: #eafbf7;
+  --kb-bg3: #fff8ea;
+  --kb-grid-line: rgba(79,107,255,.14);
+  --kb-glow: rgba(140,110,255,.30);
+  --kb-key-bg1: #ffffff;
+  --kb-key-bg2: #eef0fb;
+  --kb-key-text: #4b5170;
+  --kb-key-border: rgba(30,40,80,.10);
+  --kb-key-shadow-1: rgba(30,40,80,.22);
+  --kb-key-shadow-2: rgba(30,40,80,.16);
+  --kb-badge-bg: rgba(255,255,255,.78);
+  --kb-badge-border: rgba(30,40,80,.12);
+  --kb-badge-text: #33395c;
+  --kb-hint-text: #6b7094;
+  --kb-hint-strong: #2c3160;
+
+  background: linear-gradient(165deg, var(--kb-bg1) 0%, var(--kb-bg2) 55%, var(--kb-bg3) 100%);
+  box-shadow: 0 24px 60px rgba(40,50,110,.16), 0 0 0 1px rgba(30,40,80,.06) inset;
+}
+[data-theme="dark"] .kb-scene {
+  --kb-bg1: #150f2e;
+  --kb-bg2: #1a1440;
+  --kb-bg3: #0c0a1c;
+  --kb-grid-line: rgba(140,130,255,.14);
+  --kb-glow: rgba(140,90,255,.55);
+  --kb-key-bg1: #2c2758;
+  --kb-key-bg2: #1b1838;
+  --kb-key-text: #c9c6f0;
+  --kb-key-border: rgba(255,255,255,.08);
+  --kb-key-shadow-1: #0a0918;
+  --kb-key-shadow-2: rgba(0,0,0,.45);
+  --kb-badge-bg: rgba(24,18,52,.72);
+  --kb-badge-border: rgba(255,255,255,.14);
+  --kb-badge-text: #e7e4ff;
+  --kb-hint-text: #9d97d6;
+  --kb-hint-strong: #e7e4ff;
+
+  box-shadow: 0 24px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.06) inset;
+}
+.kb-scene.is-dragging { cursor: grabbing }
+.kb-grid-bg {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(var(--kb-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--kb-grid-line) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, #000 40%, transparent 90%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, #000 40%, transparent 90%);
+  opacity: .8;
+}
+.kb-glow {
+  position: absolute;
+  left: 50%; top: 38%;
+  width: 78%; height: 60%;
+  transform: translate(-50%,-50%);
+  background: radial-gradient(closest-side, var(--kb-glow), transparent 75%);
+  filter: blur(20px);
   pointer-events: none;
 }
-.mockup-card {
-  background: var(--card);
-  background: color-mix(in srgb, var(--card) 94%, transparent);
-  backdrop-filter: blur(10px) saturate(1.15);
-  -webkit-backdrop-filter: blur(10px) saturate(1.15);
-  border: 2px solid var(--border);
-  border-radius: 16px;
-  padding: .85rem .9rem .95rem;
-  box-shadow: 0 18px 44px rgba(20,25,60,.22), var(--glow-purple);
-}
-.mockup-card-head { display: flex; align-items: center; gap: .3rem; margin-bottom: .55rem }
-.mockup-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block }
-.mockup-dot.d1 { background: var(--red) }
-.mockup-dot.d2 { background: var(--yellow) }
-.mockup-dot.d3 { background: var(--green) }
-.mockup-card-tag { margin-left: auto; font-size: .62rem; font-weight: 800; color: var(--muted); background: var(--card2); padding: .15rem .5rem; border-radius: 999px }
-.mockup-q { font-size: .74rem; font-weight: 700; line-height: 1.35; color: var(--text); margin-bottom: .6rem }
-.mockup-opts { display: flex; flex-direction: column; gap: .32rem }
-.mockup-opt {
-  display: flex; align-items: center; gap: .4rem;
-  font-size: .68rem; font-weight: 600; color: var(--muted);
-  background: var(--card2);
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  padding: .38rem .5rem;
-}
-.opt-dot { width: 8px; height: 8px; border-radius: 3px; border: 2px solid var(--border); flex-shrink: 0 }
-.mockup-opt.correct {
-  color: var(--green);
-  background: var(--green-lt);
-  border-color: color-mix(in srgb, var(--green) 45%, transparent);
-  animation: optCorrectPulse 2.4s 1.6s ease-in-out infinite;
-}
-.mockup-opt.correct .opt-dot { background: var(--green); border-color: var(--green) }
-@keyframes optCorrectPulse {
-  0%,100% { box-shadow: 0 0 0 0 rgba(33,179,107,0) }
-  60%     { box-shadow: 0 0 0 5px rgba(33,179,107,.14) }
-}
-.mockup-xp-ring {
-  position: absolute; top: -14px; left: -16px;
-  width: 54px; height: 54px;
-  filter: drop-shadow(0 6px 14px rgba(246,167,35,.4));
-}
-.mockup-xp-ring svg { width: 100%; height: 100%; transform: rotate(-90deg) }
-.ring-track { fill: none; stroke: var(--border); stroke-width: 9 }
-.ring-fill {
-  fill: none; stroke: var(--yellow); stroke-width: 9; stroke-linecap: round;
-  stroke-dasharray: 264; stroke-dashoffset: 264;
-  animation: ringFill 1.4s 1.1s cubic-bezier(.16,1,.3,1) forwards;
-}
-@keyframes ringFill { to { stroke-dashoffset: 66 } }
-.mockup-xp-txt {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  font-size: .58rem; font-weight: 800; color: var(--text);
-}
-.mockup-xp-txt span { font-family: 'Space Mono', monospace; font-size: .72rem; color: var(--yellow) }
-.mockup-streak {
-  position: absolute; bottom: -12px; right: 6px;
+
+/* Badge nổi kiểu "78 WPM / 98% chính xác" của tuhoc.cc, đổi số liệu
+   sang ngữ cảnh IC3. Thuần trang trí — không phải số liệu đo thật. */
+.kb-badge {
+  position: absolute;
+  z-index: 3;
+  display: inline-flex; align-items: center; gap: .4rem;
   font-size: .62rem; font-weight: 800;
-  background: var(--card);
-  border: 1.5px solid var(--border);
-  padding: .3rem .55rem;
+  color: var(--kb-badge-text);
+  background: var(--kb-badge-bg);
+  border: 1.5px solid var(--kb-badge-border);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  padding: .35rem .6rem;
   border-radius: 999px;
-  box-shadow: 0 8px 18px rgba(20,25,60,.18);
-  animation: streakWiggle 3.2s 1.8s ease-in-out infinite;
+  box-shadow: 0 8px 18px rgba(30,20,60,.18);
+  white-space: nowrap;
+  animation: floatBob 4.5s ease-in-out infinite;
+  transition: color .35s ease, background .35s ease, border-color .35s ease;
 }
-@keyframes streakWiggle {
-  0%,100% { transform: rotate(0deg) }
-  50%     { transform: rotate(-4deg) }
+.kb-badge b { font-family: 'Space Mono', monospace; font-size: .68rem }
+.kb-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0 }
+.kb-dot.cyan   { background: #22b8d9; box-shadow: 0 0 8px #22b8d9 }
+.kb-dot.green  { background: #21b36b; box-shadow: 0 0 8px #21b36b }
+.kb-dot.yellow { background: #e0a52e; box-shadow: 0 0 8px #e0a52e }
+[data-theme="dark"] .kb-dot.cyan   { background: #34e0f0; box-shadow: 0 0 8px #34e0f0 }
+[data-theme="dark"] .kb-dot.green  { background: #21e08a; box-shadow: 0 0 8px #21e08a }
+[data-theme="dark"] .kb-dot.yellow { background: #f6c945; box-shadow: 0 0 8px #f6c945 }
+.kb-badge-1 { top: 4%;  left: 2%;   animation-delay: 0s }
+.kb-badge-2 { top: 30%; right: 0;   animation-delay: .9s }
+.kb-badge-3 { bottom: 24%; left: 6%; animation-delay: 1.8s }
+@keyframes floatBob {
+  0%,100% { transform: translateY(0) }
+  50%     { transform: translateY(-6px) }
 }
-[data-theme="dark"] .mockup-card,
-[data-theme="dark"] .mockup-streak { box-shadow: 0 18px 44px rgba(0,0,0,.5), var(--glow-purple) }
+
+.kb-mascot {
+  position: absolute;
+  top: -.4rem; right: .2rem;
+  z-index: 3;
+  font-size: 1.6rem;
+  filter: drop-shadow(0 6px 14px rgba(140,90,255,.5));
+  animation: kbMascotBob 4s ease-in-out infinite;
+}
+@keyframes kbMascotBob {
+  0%,100% { transform: translateY(0) rotate(-4deg) }
+  50%     { transform: translateY(-8px) rotate(6deg) }
+}
+
+/* Màn hình mini "đặt trên" bàn phím — khung giống cửa sổ terminal,
+   chữ được gõ ra dần bằng JS (initKeyboardTyper trong js/main.js),
+   xen kẽ dòng lệnh code ngắn và phím tắt để sinh động, đúng tinh
+   thần "Công nghệ cơ bản" của IC3 GS6. */
+.kb-screen {
+  position: relative;
+  z-index: 2;
+  width: 88%;
+  margin: 0 auto .9rem;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--kb-key-bg1) 88%, transparent);
+  border: 1px solid var(--kb-key-border);
+  box-shadow: 0 10px 22px rgba(20,10,50,.16);
+  overflow: hidden;
+  backdrop-filter: blur(4px);
+}
+.kb-screen-bar {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+  padding: .4rem .55rem;
+  border-bottom: 1px solid var(--kb-key-border);
+}
+.kb-screen-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block }
+.kb-screen-dot.d1 { background: var(--red) }
+.kb-screen-dot.d2 { background: var(--yellow) }
+.kb-screen-dot.d3 { background: var(--green) }
+.kb-screen-tag {
+  margin-left: auto;
+  font-size: .52rem;
+  font-weight: 800;
+  letter-spacing: .2px;
+  color: var(--kb-hint-text);
+}
+.kb-screen-body {
+  padding: .5rem .6rem .6rem;
+  min-height: 1.5em;
+  font-family: 'Space Mono', monospace;
+  font-size: .62rem;
+  font-weight: 700;
+  color: var(--kb-key-text);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.kb-typed { color: var(--kb-hint-strong) }
+.kb-caret {
+  display: inline-block;
+  width: 2px;
+  height: .9em;
+  margin-left: 1px;
+  background: var(--pink);
+  vertical-align: -.15em;
+  animation: kbCaretBlink 1s step-end infinite;
+}
+@keyframes kbCaretBlink {
+  0%,49%  { opacity: 1 }
+  50%,100%{ opacity: 0 }
+}
+
+/* Bàn phím 3D — 1 mặt phẳng nghiêng (perspective + rotateX/Z), các
+   phím là những "khối" 2D nhưng có box-shadow tầng để trông nổi khối.
+   Góc nghỉ mặc định set trong initKeyboardScene(); chuột di vào thêm
+   lệch nhẹ, KÉO (pointerdown+drag) xoay quanh trục Z không giới hạn.
+   4 phím tắt hay dùng (Ctrl·C·V·Z·S·A) tô "heatmap" đậm nhạt theo mức
+   thông dụng — lấy cảm hứng từ heatmap luyện gõ của tuhoc Typing,
+   nhưng ở đây là phím TẮT (IC3 GS6 dạy thao tác bàn phím cơ bản)
+   thay vì heatmap gõ sai. */
+.kb-board-wrap {
+  position: relative;
+  z-index: 2;
+  perspective: 760px;
+  padding: .6rem 0 1.5rem;
+}
+.kb-board {
+  transform-style: preserve-3d;
+  transform: rotateX(54deg) rotateZ(-36deg);
+  transition: transform .18s ease-out;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: fit-content;
+  margin: 0 auto;
+}
+.kb-row { display: flex; gap: 6px }
+.kb-row.indent-1 { margin-left: 10px }
+.kb-row.indent-2 { margin-left: 20px }
+.kb-key {
+  width: 24px; height: 24px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Space Mono', monospace;
+  font-size: .55rem; font-weight: 700;
+  color: var(--kb-key-text);
+  background: linear-gradient(160deg, var(--kb-key-bg1), var(--kb-key-bg2));
+  border: 1px solid var(--kb-key-border);
+  box-shadow: 0 3px 0 var(--kb-key-shadow-1), 0 5px 10px var(--kb-key-shadow-2);
+  transition: background .35s ease, color .35s ease, border-color .35s ease, box-shadow .35s ease, transform .2s ease;
+}
+.kb-ctrl, .kb-alt, .kb-enter { font-size: .46rem; letter-spacing: .2px }
+.kb-ctrl  { width: 34px }
+.kb-alt   { width: 28px }
+.kb-enter { width: 38px }
+
+/* Heatmap phím tắt — 3 mức đậm nhạt dùng chung gradient thương hiệu
+   (--purple/--teal/--pink) nên tự khớp cả 2 theme, không cần khai
+   báo riêng cho dark mode. */
+.kb-key.heat-1 {
+  color: #fff;
+  background: linear-gradient(135deg, var(--purple), #6d5bd0);
+  border-color: rgba(255,255,255,.25);
+  box-shadow: 0 3px 0 #3b3384, 0 0 12px 1px color-mix(in srgb, var(--purple) 55%, transparent);
+}
+.kb-key.heat-2 {
+  color: #fff;
+  background: linear-gradient(135deg, var(--purple), var(--pink));
+  border-color: rgba(255,255,255,.28);
+  box-shadow: 0 3px 0 #7a2f8a, 0 0 14px 2px color-mix(in srgb, var(--pink) 55%, transparent);
+}
+.kb-key.heat-3 {
+  color: var(--kb-key-text);
+  background: color-mix(in srgb, var(--purple) 22%, var(--kb-key-bg1));
+  border-color: color-mix(in srgb, var(--purple) 35%, transparent);
+}
+/* Flash neon khi phím đang được "gõ" trên màn hình mini (đồng bộ với
+   initKeyboardTyper trong js/main.js) — đè lên mọi màu nền/heatmap có
+   sẵn, tự tắt sau ~170ms rồi mờ dần về màu gốc bằng transition nền
+   của .kb-key (.35s). Bật lên nhanh (transition riêng ở đây), tắt đi
+   chậm (mượt) bằng transition mặc định khi lớp bị gỡ. */
+.kb-key.kb-key-press {
+  color: #fff;
+  background: linear-gradient(135deg, var(--teal), var(--purple));
+  border-color: rgba(255,255,255,.55);
+  box-shadow: 0 3px 0 rgba(10,10,30,.4), 0 0 18px 4px color-mix(in srgb, var(--teal) 70%, transparent);
+  transform: translateY(-2px) scale(1.1);
+  transition: transform .06s ease-out, box-shadow .06s ease-out, background .06s ease-out, border-color .06s ease-out;
+}
+.kb-key.heat-active {
+  color: #fff;
+  background: linear-gradient(135deg, var(--pink), var(--purple));
+  border-color: rgba(255,255,255,.3);
+  box-shadow: 0 3px 0 #8a2f7a, 0 0 18px 3px color-mix(in srgb, var(--pink) 65%, transparent);
+  animation: kbHotPulse 1.8s ease-in-out infinite;
+}
+@keyframes kbHotPulse {
+  0%,100% { box-shadow: 0 3px 0 #8a2f7a, 0 0 14px 2px color-mix(in srgb, var(--pink) 55%, transparent) }
+  50%     { box-shadow: 0 3px 0 #8a2f7a, 0 0 24px 6px color-mix(in srgb, var(--pink) 85%, transparent) }
+}
+.kb-space {
+  width: 112px; height: 22px;
+  font-size: .48rem;
+  letter-spacing: .3px;
+}
+
+/* Chú giải heatmap — giống dòng "Heatmap bàn phím — phím hay sai
+   sáng dần" của tuhoc Typing, đổi nghĩa sang phím tắt thông dụng. */
+.kb-legend {
+  position: relative;
+  z-index: 3;
+  display: flex; align-items: center; gap: .35rem;
+  justify-content: center;
+  margin-top: .5rem;
+  font-size: .56rem;
+  font-weight: 600;
+  color: var(--kb-hint-text);
+}
+.kb-legend-dots { display: inline-flex; gap: 3px }
+.kb-legend-dots span {
+  width: 7px; height: 7px; border-radius: 2px;
+  background: linear-gradient(135deg, var(--purple), var(--pink));
+}
+.kb-legend-dots span:nth-child(1) { opacity: .35 }
+.kb-legend-dots span:nth-child(2) { opacity: .65 }
+.kb-legend-dots span:nth-child(3) { opacity: 1 }
+
+.kb-hint {
+  position: relative;
+  z-index: 3;
+  display: block;
+  text-align: center;
+  font-size: .62rem;
+  font-weight: 700;
+  color: var(--kb-hint-text);
+  letter-spacing: .2px;
+  transition: color .35s ease;
+}
+.kb-hint b { color: var(--kb-hint-strong) }
+
 
 /* ── 7 chủ đề năng lực số IC3 GS6 — minh hoạ bằng icon/hình ảnh thay
    vì liệt kê chữ (Technology Basics / Digital Citizenship / Information

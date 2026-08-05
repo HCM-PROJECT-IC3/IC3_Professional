@@ -163,7 +163,7 @@ const State = {
   flags:     new Set(),
   current:   0,
   timer:     null,
-  timeLeft:  1200,
+  timeLeft:  3000,
   matching:  {},     // qi → { left: right }
   matchSel:  {},
   hotspot:   {},     // qi → Set<areaId> đã bấm chọn
@@ -363,7 +363,7 @@ function initLobby() {
     const btn    = document.getElementById('btnStart');
     if (btn) {
       btn.disabled = !(count && name && cls && school);
-      btn.textContent = btn.disabled ? '▶ Bắt đầu thi' : '▶ Bắt đầu thi';
+      btn.textContent = btn.disabled ? '▶ Bắt đầu' : '▶ Bắt đầu';
     }
   };
 
@@ -430,7 +430,7 @@ async function startExam() {
   State.matching  = {};
   State.matchSel  = {};
   State.hotspot   = {};
-  State.timeLeft  = parseInt(document.getElementById('timeSelect')?.value || '1200', 10);
+  State.timeLeft  = parseInt(document.getElementById('timeSelect')?.value || '3000', 10);
 
   // ── Khởi tạo session (dữ liệu anti-cheat) ─────────────────
   State.session = {
