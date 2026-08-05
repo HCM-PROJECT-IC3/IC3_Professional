@@ -691,6 +691,161 @@ document.getElementById('backupBtn').addEventListener('click', () => {
 });
 
 /* ============================================================
+   XUẤT RA data/ic3/*.json + meta.json + quiz_data.json
+   ────────────────────────────────────────────────────────────
+   Đây là CẦU NỐI chính thức giữa Firestore (nơi admin sửa câu hỏi
+   trên trang này) và file JSON tĩnh mà js/quiz-engine.js thực sự
+   đọc khi học sinh làm bài trên index.html — 2 nơi này KHÔNG tự
+   đồng bộ, nên phải bấm nút này rồi deploy lại sau mỗi đợt sửa.
+
+   Firestore chỉ lưu tên hiển thị (catName/gradeName), không lưu id
+   ngắn gọn kiểu "IC3"/"LV1" dùng để đặt tên file — nên script này
+   đọc data/ic3/meta.json hiện có trên site làm "bảng tra cứu" tên→id.
+   Danh mục/khối nào chưa từng có trong meta.json (mới tạo trên trang
+   này) sẽ được tự đặt id tạm từ tên (slug hoá) và cảnh báo trong
+   README-EXPORT.txt để admin đặt lại id cho gọn trước khi deploy.
+   ============================================================ */
+document.getElementById('exportStaticBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('exportStaticBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Đang gom dữ liệu...';
+  try {
+    // 1) Đọc thẳng Firestore lần nữa (không dùng QUESTIONS trong bộ nhớ)
+    //    để chắc chắn export đúng bản mới nhất, kể cả khi có admin khác
+    //    vừa sửa ở tab/máy khác.
+    const snap = await colRef().get();
+    const freshQuestions = snap.docs.map(doc => doc.data());
+
+    // 2) Tải meta.json hiện có trên site để lấy bảng tra cứu
+    //    catName → { id, color }, "catName::gradeName" → { id, grade }
+    const metaRes = await fetch('data/ic3/meta.json', { cache: 'no-store' });
+    const oldMeta = metaRes.ok ? await metaRes.json() : { categories: [] };
+
+    const catLookup = new Map();
+    const gradeLookup = new Map();
+    (oldMeta.categories || []).forEach(cat => {
+      catLookup.set(cat.name, { id: cat.id, color: cat.color });
+      (cat.levels || []).forEach(lvl => {
+        gradeLookup.set(`${cat.name}::${lvl.name}`, { id: lvl.id, grade: lvl.grade || lvl.id });
+      });
+    });
+
+    const slug = (s) => (s || 'x').toLowerCase().normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+    // 3) Gom câu hỏi theo cat_id → level_id → minitestName
+    const catMap = new Map();
+    const unmapped = [];
+
+    freshQuestions.forEach(q => {
+      const catName = q.catName || '(Chưa phân loại)';
+      const gradeName = q.gradeName || '(Chưa có khối)';
+      const mtName = q.minitestName || 'Minitest 1';
+
+      let catInfo = catLookup.get(catName);
+      if (!catInfo) {
+        catInfo = { id: slug(catName) || 'cat', color: '#9C27B0' };
+        unmapped.push(`Danh mục mới: "${catName}" → dùng id tạm "${catInfo.id}"`);
+      }
+      let lvlInfo = gradeLookup.get(`${catName}::${gradeName}`);
+      if (!lvlInfo) {
+        lvlInfo = { id: slug(gradeName) || 'lv', grade: slug(gradeName) || 'lv' };
+        unmapped.push(`Khối mới: "${catName} / ${gradeName}" → dùng id tạm "${lvlInfo.id}"`);
+      }
+
+      if (!catMap.has(catInfo.id)) {
+        catMap.set(catInfo.id, { id: catInfo.id, name: catName, color: catInfo.color, levels: new Map() });
+      }
+      const cat = catMap.get(catInfo.id);
+      if (!cat.levels.has(lvlInfo.id)) {
+        cat.levels.set(lvlInfo.id, { id: lvlInfo.id, name: gradeName, grade: lvlInfo.grade, cat_id: catInfo.id, minitests: {} });
+      }
+      const lvl = cat.levels.get(lvlInfo.id);
+      if (!lvl.minitests[mtName]) lvl.minitests[mtName] = [];
+
+      const clone = Object.assign({}, q);
+      delete clone.catName; delete clone.gradeName; delete clone.minitestName;
+      lvl.minitests[mtName].push(clone);
+    });
+
+    // 4) Sinh nội dung từng file — đúng schema mà scripts/split-quiz-data.py
+    //    và js/quiz-engine.js đang mong đợi (data/ic3/<cat_id>__<level_id>.json,
+    //    data/ic3/meta.json, quiz_data.json)
+    const zip = new JSZip();
+    const meta = { version: `${new Date().toISOString().slice(0, 10)}.${Date.now().toString(36)}`, categories: [] };
+    const quizData = { categories: [] };
+    let totalQuestions = 0, totalLevels = 0;
+
+    catMap.forEach(cat => {
+      const metaCat = { id: cat.id, name: cat.name, color: cat.color, levels: [] };
+      const qdCat = { id: cat.id, name: cat.name, color: cat.color, levels: [] };
+
+      cat.levels.forEach(lvl => {
+        const fileKey = `${cat.id}__${lvl.id}`;
+        const levelFileContent = { id: lvl.id, name: lvl.name, grade: lvl.grade, cat_id: cat.id, minitests: lvl.minitests };
+        zip.file(`data/ic3/${fileKey}.json`, JSON.stringify(levelFileContent, null, 2));
+
+        const metaMinitests = {};
+        Object.keys(lvl.minitests).forEach(mtName => {
+          const qs = lvl.minitests[mtName];
+          const types = {};
+          qs.forEach(q => { types[q.type || 'unknown'] = (types[q.type || 'unknown'] || 0) + 1; });
+          metaMinitests[mtName] = { count: qs.length, types };
+          totalQuestions += qs.length;
+        });
+        metaCat.levels.push({ id: lvl.id, file: `${fileKey}.json`, name: lvl.name, grade: lvl.grade, minitests: metaMinitests });
+        qdCat.levels.push({ id: lvl.id, name: lvl.name, grade: lvl.grade, minitests: lvl.minitests });
+        totalLevels++;
+      });
+
+      meta.categories.push(metaCat);
+      quizData.categories.push(qdCat);
+    });
+
+    zip.file('data/ic3/meta.json', JSON.stringify(meta, null, 2));
+    zip.file('quiz_data.json', JSON.stringify(quizData, null, 2));
+
+    const readme = `Gói export từ Firestore — ${new Date().toLocaleString('vi-VN')}
+Tổng: ${totalLevels} khối / ${totalQuestions} câu hỏi.
+
+CÁCH DÙNG:
+1. Giải nén file zip này.
+2. Copy đè thư mục data/ic3/ và file quiz_data.json vào gốc dự án
+   (ghi đè file cũ).
+3. Deploy lại trang (git push / firebase deploy --only hosting, tuỳ
+   cách bạn đang host).
+4. Nếu có câu hỏi dùng ảnh dạng "Lưu thành file riêng" (không phải
+   nhúng base64), nhớ đã copy đủ file ảnh vào thư mục img/ trước khi
+   deploy — export này KHÔNG kèm theo file ảnh vật lý.
+${unmapped.length ? '\nCẢNH BÁO — danh mục/khối mới chưa có id chính thức (đã tự đặt id tạm dựa trên tên):\n- ' + unmapped.join('\n- ') + '\nNên đổi id tạm này thành id ngắn gọn giống các khối khác trước khi deploy, kẻo tên file không nhất quán.' : ''}
+`;
+    zip.file('README-EXPORT.txt', readme);
+
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `data-ic3-export-${new Date().toISOString().slice(0, 10)}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+    if (unmapped.length) {
+      toast(`⚠️ Đã xuất xong nhưng có ${unmapped.length} danh mục/khối mới cần kiểm tra lại id (xem README-EXPORT.txt)`, 6000);
+    } else {
+      toast(`✅ Đã xuất ${totalLevels} khối / ${totalQuestions} câu hỏi ra file zip — giải nén rồi deploy lại nhé`, 5000);
+    }
+  } catch (err) {
+    console.error(err);
+    toast('❌ Lỗi khi xuất dữ liệu: ' + err.message, 5000);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📤 Xuất ra data/ic3 (đồng bộ học sinh)';
+  }
+});
+
+/* ============================================================
    FILTER UI WIRING
    ============================================================ */
 document.getElementById('searchBox').addEventListener('input', (e) => {

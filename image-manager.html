@@ -19,15 +19,19 @@
   <span class="whoami" id="whoami"></span>
   <button type="button" class="btn btn-ghost btn-sm" id="logoutBtn">Đăng xuất</button>
   <button type="button" class="btn btn-ghost btn-sm" id="themeToggle">🌙</button>
-  <button type="button" class="btn btn-primary btn-sm" id="backupBtn">⬇️ Sao lưu JSON</button>
+  <button type="button" class="btn btn-ghost btn-sm" id="backupBtn">⬇️ Sao lưu JSON</button>
+  <button type="button" class="btn btn-primary btn-sm" id="exportStaticBtn">📤 Xuất ra data/ic3 (đồng bộ học sinh)</button>
 </div>
 
 <div class="wrap">
 
   <div class="banner">
     Trang này đọc/ghi trực tiếp trên <b>Firebase Firestore</b> (collection <code>questions</code>).
-    Mọi thay đổi (thêm / xoá / sửa nội dung / sửa ảnh) đều được <b>lưu ngay lập tức</b> lên Firebase —
-    không cần xuất file thủ công nữa. Nút "Sao lưu JSON" chỉ để tải một bản dự phòng, không phải bước bắt buộc.
+    Mọi thay đổi (thêm / xoá / sửa nội dung / sửa ảnh) đều được <b>lưu ngay lập tức</b> lên Firebase.
+    <b>Lưu ý quan trọng:</b> trang bài thi học sinh làm (<code>index.html</code>) <b>không đọc Firestore</b> —
+    nó chỉ đọc file JSON tĩnh trong <code>data/ic3/</code>. Sau khi sửa xong trên trang này, bạn phải bấm
+    <b>"📤 Xuất ra data/ic3"</b> rồi deploy lại thì học sinh mới thấy thay đổi. Nút "Sao lưu JSON" chỉ tải 1
+    bản dự phòng gộp chung, không dùng để deploy.
   </div>
 
   <div id="migrateBox" class="banner banner-warn hidden">
@@ -84,6 +88,7 @@
 <script src="js/auth.js"></script>
 <script src="js/auth-guard.js"></script>
 <script src="js/idle-logout.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="js/image-manager.js"></script>
 </body>
 </html>

@@ -7,12 +7,12 @@
    icon 3D lấy nguyên từ tấm hình gốc.
    ======================================== */
 const DECK_ICONS = {
-  monitor:   'img/deck-icon-computer.png', // Chủ đề 1: Nội dung cơ bản về công nghệ
-  shield:    'img/deck-icon-shield.png',   // Chủ đề 2: Công dân kỹ thuật số
-  lock:      'img/deck-icon-lock.png',     // Chủ đề 7: Bảo mật và an toàn
-  folder:    'img/deck-icon-folder.png',   // Chủ đề 3: Quản lý thông tin
-  palette:   'img/deck-icon-content.png',  // Chủ đề 4: Tạo nội dung
-  megaphone: 'img/deck-icon-comm.png'      // Chủ đề 5: Giao tiếp truyền thông
+  monitor:   'img/topic-icon-1-tech.png', // Chủ đề 1: Nội dung cơ bản về công nghệ
+  shield:    'img/topic-icon-2-citizenship.png',   // Chủ đề 2: Công dân kỹ thuật số
+  lock:      'img/topic-icon-3-info.png',     // Chủ đề 7: Bảo mật và an toàn
+  folder:    'img/topic-icon-4-content.png',   // Chủ đề 3: Quản lý thông tin
+  palette:   'img/topic-icon-5-comm.png',  // Chủ đề 4: Tạo nội dung
+  megaphone: 'img/topic-icon-7-safety.png'      // Chủ đề 5: Giao tiếp truyền thông
 };
 
 /* ========================================
