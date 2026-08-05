@@ -1,28 +1,35 @@
 /* ============================================================
    js/lobby-roster.js
    Đổ 3 select "Trường / Lớp / Họ và tên" ở form "Bắt đầu làm bài"
-   (index.html) bằng danh sách roster THẬT — cùng 1 nguồn dữ liệu với
-   trang quản trị "🧑‍🎓 Quản lý danh sách học sinh" (roster-manager.html,
-   collection Firestore "students_roster").
+   (index.html) bằng danh sách roster THẬT — cùng 1 nguồn dữ liệu (gốc)
+   với trang quản trị "🧑‍🎓 Quản lý danh sách học sinh"
+   (roster-manager.html, collection Firestore "students_roster").
 
    Điều phối đào tạo nạp/chỉnh danh sách ở roster-manager.html (nút
    "📥 Nạp từ Excel" hoặc "➕ Thêm học sinh") — KHÔNG có nút nạp Excel
    nào ở trang công khai index.html nữa, để tránh lộ thao tác quản trị
-   ra màn hình học sinh làm bài. Trang này chỉ ĐỌC (read-only) danh
-   sách học sinh đang "Đang học" để đổ vào 3 select, học sinh chỉ chọn
-   trong danh sách có sẵn (không gõ tay) để tránh sai chính tả/không
-   khớp dữ liệu khi đối chiếu báo cáo.
+   ra màn hình học sinh làm bài.
 
-   YÊU CẦU FIRESTORE RULES: collection "students_roster" cần cho phép
-   đọc công khai (allow read: if true — chỉ đọc, không ghi) vì trang
-   này KHÔNG yêu cầu đăng nhập. Xem
-   docs/architecture/firestore.rules.PROPOSED-ADDITIONS.txt.
+   NGUỒN DỮ LIỆU: file tĩnh data/roster/students-active.json —
+   KHÔNG gọi Firestore trực tiếp nữa. Lý do (xem thêm PR mô tả): mỗi
+   lần index.html được tải/tải lại trước đây tốn 1 lượt đọc Firestore
+   × số học sinh "Đang học" trong roster, dễ chạm trần 50.000 lượt
+   đọc/ngày của gói Spark chỉ sau ~100 lượt mở trang với roster 500 em.
+   Đổi sang file JSON tĩnh loại bỏ hẳn giới hạn đọc đó (phục vụ qua CDN
+   của GitHub Pages, scale vô hạn, không tốn quota).
+
+   File data/roster/students-active.json được XUẤT THỦ CÔNG từ
+   roster-manager.html (nút "🗂️ Xuất JSON") mỗi khi danh sách thay đổi
+   — Điều phối đào tạo cần tải file, rồi commit + push lên GitHub thì
+   học sinh mới thấy danh sách mới (xem hướng dẫn ngay trên nút đó).
 
    Luồng chọn: Trường → Lớp (lọc theo Trường) → Họ và tên (lọc theo
    Trường + Lớp).
    ============================================================ */
 (function () {
   'use strict';
+
+  const ROSTER_JSON_URL = 'data/roster/students-active.json';
 
   let allStudents = []; // [{ school, className, name }]
 
@@ -45,15 +52,22 @@
     el.classList.toggle('is-error', !!isError);
   }
 
-  // ── Nạp roster từ Firestore (students_roster, status == active) ──
-  async function fetchRosterFromFirestore() {
-    if (!window.EduFirebase || !window.EduFirebase.db) {
-      throw new Error('Firestore chưa sẵn sàng.');
+  // ── Nạp roster từ file tĩnh data/roster/students-active.json ──
+  // 'cache: no-cache' để trình duyệt LUÔN kiểm tra lại với server
+  // (revalidate qua ETag/Last-Modified) thay vì dùng bản cache cũ vô
+  // thời hạn, nhưng vẫn không tải lại toàn bộ file nếu chưa đổi
+  // (khác với 'no-store' — không ép tải lại hoàn toàn không cần thiết).
+  async function fetchRosterFromStaticFile() {
+    const res = await fetch(ROSTER_JSON_URL, { cache: 'no-cache' });
+    if (!res.ok) {
+      throw new Error(`Không tải được ${ROSTER_JSON_URL} (HTTP ${res.status})`);
     }
-    const snap = await window.EduFirebase.db.collection('students_roster')
-      .where('status', '==', 'active').get();
-    return snap.docs
-      .map((doc) => doc.data())
+    const payload = await res.json();
+    const students = Array.isArray(payload) ? payload : payload.students;
+    if (!Array.isArray(students)) {
+      throw new Error(`${ROSTER_JSON_URL} sai định dạng (thiếu mảng "students").`);
+    }
+    return students
       .filter((s) => s && s.name)
       .map((s) => ({ school: s.school || '', className: s.className || '', name: s.name }));
   }
@@ -133,10 +147,10 @@
     initCascadeListeners();
     setStatus('⏳ Đang nạp danh sách...');
     try {
-      allStudents = await fetchRosterFromFirestore();
+      allStudents = await fetchRosterFromStaticFile();
       applyStudentsToForm(null);
     } catch (err) {
-      console.error('[EduQuiz] Lỗi nạp roster từ Firestore:', err);
+      console.error('[EduQuiz] Lỗi nạp roster từ file tĩnh:', err);
       allStudents = [];
       applyStudentsToForm('⚠ Không nạp được danh sách, thử tải lại trang.');
     }

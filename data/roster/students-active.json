@@ -1,0 +1,157 @@
+{
+  "version": "20260805080733",
+  "generatedAt": "2026-08-05T08:07:33.475Z",
+  "count": 30,
+  "students": [
+    {
+      "school": "THCS Nguyễn Du",
+      "className": "6A1",
+      "name": "Hoàng Văn Em"
+    },
+    {
+      "school": "THCS Nguyễn Du",
+      "className": "6A1",
+      "name": "Lê Hoàng Cường"
+    },
+    {
+      "school": "THCS Nguyễn Du",
+      "className": "6A1",
+      "name": "Nguyễn Văn An"
+    },
+    {
+      "school": "THCS Nguyễn Du",
+      "className": "6A1",
+      "name": "Phạm Thị Dung"
+    },
+    {
+      "school": "THCS Nguyễn Du",
+      "className": "6A1",
+      "name": "Trần Thị Bình"
+    },
+    {
+      "school": "THCS Nguyễn Du",
+      "className": "6A2",
+      "name": "Bùi Thị Hoa"
+    },
+    {
+      "school": "THCS Nguyễn Du",
+      "className": "6A2",
+      "name": "Đặng Minh Giang"
+    },
+    {
+      "school": "THCS Nguyễn Du",
+      "className": "6A2",
+      "name": "Đỗ Thị Kim"
+    },
+    {
+      "school": "THCS Nguyễn Du",
+      "className": "6A2",
+      "name": "Ngô Văn Inh"
+    },
+    {
+      "school": "THCS Nguyễn Du",
+      "className": "6A2",
+      "name": "Vũ Thị Phương"
+    },
+    {
+      "school": "THCS Nguyễn Du",
+      "className": "7A1",
+      "name": "Dương Thị Oanh"
+    },
+    {
+      "school": "THCS Nguyễn Du",
+      "className": "7A1",
+      "name": "Lý Văn Nam"
+    },
+    {
+      "school": "THCS Nguyễn Du",
+      "className": "7A1",
+      "name": "Phan Văn Long"
+    },
+    {
+      "school": "THCS Nguyễn Du",
+      "className": "7A1",
+      "name": "Tô Văn Phúc"
+    },
+    {
+      "school": "THCS Nguyễn Du",
+      "className": "7A1",
+      "name": "Trịnh Thị Mai"
+    },
+    {
+      "school": "THCS Trần Phú",
+      "className": "6B1",
+      "name": "Chu Thị Thảo"
+    },
+    {
+      "school": "THCS Trần Phú",
+      "className": "6B1",
+      "name": "Đinh Thị Quyên"
+    },
+    {
+      "school": "THCS Trần Phú",
+      "className": "6B1",
+      "name": "Lâm Văn Út"
+    },
+    {
+      "school": "THCS Trần Phú",
+      "className": "6B1",
+      "name": "Mai Văn Sơn"
+    },
+    {
+      "school": "THCS Trần Phú",
+      "className": "6B1",
+      "name": "Vương Thị Xuân"
+    },
+    {
+      "school": "THCS Trần Phú",
+      "className": "7B1",
+      "name": "Hoàng Thị Diệp"
+    },
+    {
+      "school": "THCS Trần Phú",
+      "className": "7B1",
+      "name": "Lê Thị Cẩm"
+    },
+    {
+      "school": "THCS Trần Phú",
+      "className": "7B1",
+      "name": "Nguyễn Thị Yến"
+    },
+    {
+      "school": "THCS Trần Phú",
+      "className": "7B1",
+      "name": "Phạm Văn Đạt"
+    },
+    {
+      "school": "THCS Trần Phú",
+      "className": "7B1",
+      "name": "Trần Văn Bảo"
+    },
+    {
+      "school": "THCS Trần Phú",
+      "className": "8B1",
+      "name": "Bùi Văn Minh"
+    },
+    {
+      "school": "THCS Trần Phú",
+      "className": "8B1",
+      "name": "Đặng Thị Linh"
+    },
+    {
+      "school": "THCS Trần Phú",
+      "className": "8B1",
+      "name": "Đỗ Văn Phát"
+    },
+    {
+      "school": "THCS Trần Phú",
+      "className": "8B1",
+      "name": "Ngô Thị Nga"
+    },
+    {
+      "school": "THCS Trần Phú",
+      "className": "8B1",
+      "name": "Vũ Văn Hùng"
+    }
+  ]
+}

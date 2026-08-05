@@ -101,23 +101,33 @@ service cloud.firestore {
 
     // ---- Roster: khoá học / lớp / học sinh thật (Điều phối đào tạo quản lý
     //      trong roster-manager.html) ----
-    // Đọc CÔNG KHAI (allow read: if true) vì màn hình học sinh (index.html)
-    // cần đổ 3 select Trường/Lớp/Tên MÀ KHÔNG đăng nhập Firebase Auth —
-    // giống cách "questions" đã được đọc công khai ở trên. Chỉ TÊN/LỚP/TRƯỜNG
-    // học sinh được lộ ra (không phải dữ liệu nhạy cảm), việc GHI vẫn chỉ
-    // dành cho admin/coordinator.
+    // TRƯỚC ĐÂY 3 collection này "allow read: if true" (đọc công khai, không
+    // cần đăng nhập) vì màn hình học sinh (index.html) từng đọc trực tiếp
+    // "students_roster" mỗi lần tải trang để đổ 3 select Trường/Lớp/Tên.
+    // Việc đó gây nổ quota đọc Firestore (mỗi lần mở/tải lại trang tốn 1 lượt
+    // đọc × số học sinh "Đang học") — chỉ ~100 lượt mở trang là chạm trần
+    // 50.000 lượt đọc/ngày của gói Spark với roster 500 học sinh.
+    // index.html giờ đọc từ file tĩnh data/roster/students-active.json (xuất
+    // thủ công từ roster-manager.html, xem js/lobby-roster.js) thay vì gọi
+    // Firestore, nên CHỈ admin/coordinator (đã đăng nhập, ở roster-manager.html
+    // hoặc coordinator-dashboard.html) mới cần đọc 3 collection này nữa —
+    // đóng luôn quyền đọc công khai để không ai đọc trực tiếp qua Firestore
+    // SDK từ bên ngoài (kể cả khi không dùng index.html).
+    // NHỚ: đổi rule này chỉ có hiệu lực sau khi PUBLISH lại Firestore Rules
+    // (Firebase Console → Firestore Database → Rules → Publish, hoặc
+    // `firebase deploy --only firestore:rules`).
     match /courses/{courseId} {
-      allow read: if true;
+      allow read: if isAdmin() || isCoordinator();
       allow write: if isAdmin() || isCoordinator();
     }
 
     match /classes/{classId} {
-      allow read: if true;
+      allow read: if isAdmin() || isCoordinator();
       allow write: if isAdmin() || isCoordinator();
     }
 
     match /students_roster/{studentId} {
-      allow read: if true;
+      allow read: if isAdmin() || isCoordinator();
       allow write: if isAdmin() || isCoordinator();
     }
   }
