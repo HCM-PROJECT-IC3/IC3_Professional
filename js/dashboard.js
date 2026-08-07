@@ -373,8 +373,49 @@ function renderReportTable(rows) {
   }).join('');
 }
 
+/** Hiện thông báo lỗi thân thiện thay cho canvas trắng khi Chart.js không tải được
+ *  (bị chặn mạng, tracking prevention, adblock, CDN sập...). Không im lặng bỏ qua. */
+function showChartLibUnavailable(canvasId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas || !canvas.parentElement) return;
+  canvas.style.display = 'none';
+  let msg = canvas.parentElement.querySelector('.chart-lib-error');
+  if (!msg) {
+    msg = document.createElement('div');
+    msg.className = 'chart-lib-error chart-empty';
+    msg.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;height:100%;min-height:180px;text-align:center;color:var(--text-muted);font-size:13px;padding:16px;';
+    msg.innerHTML = '⚠️ Không tải được thư viện biểu đồ (Chart.js).<br>Có thể do trình chặn theo dõi (Tracking Prevention), adblock, hoặc mất mạng.' +
+      '<button type="button" class="btn-retry-chart" style="margin-top:6px;padding:6px 14px;border-radius:8px;border:1px solid var(--border,#ddd);background:#fff;cursor:pointer;">🔄 Thử lại</button>';
+    canvas.parentElement.appendChild(msg);
+    msg.querySelector('.btn-retry-chart').addEventListener('click', () => {
+      msg.innerHTML = 'Đang thử tải lại…';
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js';
+      s.onload = () => renderReportCharts(_reportFiltered);
+      s.onerror = () => { location.reload(); };
+      document.body.appendChild(s);
+    });
+  }
+  msg.style.display = 'flex';
+}
+
+function hideChartLibUnavailable(canvasId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas || !canvas.parentElement) return;
+  canvas.style.display = '';
+  const msg = canvas.parentElement.querySelector('.chart-lib-error');
+  if (msg) msg.style.display = 'none';
+}
+
 function renderReportCharts(rows) {
-  if (typeof Chart === 'undefined') return; // thư viện chưa tải xong / bị chặn mạng
+  if (typeof Chart === 'undefined') {
+    // Thư viện chưa tải xong / bị chặn mạng — hiện cảnh báo rõ ràng ở cả 3
+    // card thay vì để trắng trơn không rõ lý do (đúng nguyên nhân trong ảnh
+    // console: cdnjs.cloudflare.com bị Tracking Prevention chặn).
+    ['chartPassFail', 'chartByClass', 'chartTrend'].forEach(showChartLibUnavailable);
+    return;
+  }
+  ['chartPassFail', 'chartByClass', 'chartTrend'].forEach(hideChartLibUnavailable);
 
   Object.values(_reportCharts).forEach(c => c && c.destroy());
   _reportCharts = {};

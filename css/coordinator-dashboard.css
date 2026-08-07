@@ -154,6 +154,10 @@ body {
 .chart-card-title { font-size: .85rem; font-weight: 800; margin-bottom: .8rem }
 .chart-card-body { position: relative; height: 240px }
 .chart-empty { color: var(--muted); font-size: .82rem; text-align: center; padding: 2rem 0 }
+.chart-lib-error {
+  position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+  padding: 1rem; line-height: 1.5;
+}
 
 /* ---- Heatmap (tự vẽ bằng DOM, không cần plugin Chart.js) ---- */
 #chartHeatmap { height: auto; overflow-x: auto }

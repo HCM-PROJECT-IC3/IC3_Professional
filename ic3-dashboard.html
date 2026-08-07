@@ -298,8 +298,28 @@
 <!-- ========================================
      JAVASCRIPT
      ======================================== -->
+<!-- Chart.js: ưu tiên bản tự lưu trữ (js/vendor) để không bị Tracking
+     Prevention / adblock của trình duyệt (Edge, Brave...) chặn khi tải từ
+     cdnjs — đây là nguyên nhân khiến 3 biểu đồ ở tab "Báo cáo kết quả" bị
+     trắng trơn trước đây. Nếu vì lý do nào đó file local thiếu, tự động
+     rơi về cdnjs → jsDelivr → unpkg trước khi bỏ cuộc. -->
+<script src="js/vendor/chart.umd.min.js"></script>
+<script>
+  if (typeof Chart === 'undefined') {
+    document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"><\/script>');
+  }
+</script>
+<script>
+  if (typeof Chart === 'undefined') {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"><\/script>');
+  }
+</script>
+<script>
+  if (typeof Chart === 'undefined') {
+    document.write('<script src="https://unpkg.com/chart.js@4.4.4/dist/chart.umd.min.js"><\/script>');
+  }
+</script>
 <script src="js/dashboard-page.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>

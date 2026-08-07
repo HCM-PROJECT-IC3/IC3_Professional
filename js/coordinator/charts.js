@@ -24,16 +24,56 @@
     charts = {};
   }
 
+  /** Hiện thông báo lỗi thân thiện thay cho canvas trắng khi Chart.js không tải được
+   *  (bị chặn mạng, tracking prevention, adblock, CDN sập...). Không throw, không im lặng. */
+  function showLibUnavailable(canvasId) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas || !canvas.parentElement) return;
+    canvas.style.display = 'none';
+    let msg = canvas.parentElement.querySelector('.chart-lib-error');
+    if (!msg) {
+      msg = document.createElement('div');
+      msg.className = 'chart-lib-error chart-empty';
+      msg.innerHTML = '⚠️ Không tải được thư viện biểu đồ (Chart.js).<br>Kiểm tra kết nối mạng, trình chặn quảng cáo, hoặc thử "🔄 Làm mới dữ liệu".';
+      canvas.parentElement.appendChild(msg);
+    }
+    msg.style.display = 'flex';
+  }
+
+  function hideLibUnavailable(canvasId) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas || !canvas.parentElement) return;
+    canvas.style.display = '';
+    const msg = canvas.parentElement.querySelector('.chart-lib-error');
+    if (msg) msg.style.display = 'none';
+  }
+
   /** @param {Object} p { filteredResults, examHistories, filteredStudents } */
   function renderAll(p) {
-    if (typeof Chart === 'undefined') return; // CDN Chart.js chưa tải xong / bị chặn mạng
     destroyAll();
-    renderBar(p.filteredResults);
-    renderLine(p.filteredResults);
-    renderPie(p.filteredResults);
-    renderRadar(p.filteredResults);
-    renderHeatmap(p.filteredResults);
-    renderProgress(p.filteredResults, p.examHistories, p.filteredStudents);
+
+    // 4 biểu đồ Bar/Line/Pie/Radar cần Chart.js (CDN). Nếu CDN chưa sẵn sàng
+    // hoặc bị chặn, KHÔNG được bỏ qua toàn bộ hàm — Heatmap & Progress bên
+    // dưới tự vẽ bằng DOM/CSS, không phụ thuộc Chart.js, vẫn phải chạy bình
+    // thường. Mỗi chart cũng được bọc try/catch riêng để 1 chart lỗi (vd.
+    // dữ liệu bất thường) không kéo sập các chart còn lại.
+    const chartJsReady = typeof Chart !== 'undefined';
+    [
+      ['chartBar', () => renderBar(p.filteredResults)],
+      ['chartLine', () => renderLine(p.filteredResults)],
+      ['chartPie', () => renderPie(p.filteredResults)],
+      ['chartRadar', () => renderRadar(p.filteredResults)],
+    ].forEach(([canvasId, fn]) => {
+      if (!chartJsReady) { showLibUnavailable(canvasId); return; }
+      hideLibUnavailable(canvasId);
+      try { fn(); } catch (err) {
+        console.error(`[EduCoordinatorCharts] Lỗi khi vẽ #${canvasId}:`, err);
+        showLibUnavailable(canvasId);
+      }
+    });
+
+    try { renderHeatmap(p.filteredResults); } catch (err) { console.error('[EduCoordinatorCharts] Lỗi khi vẽ heatmap:', err); }
+    try { renderProgress(p.filteredResults, p.examHistories, p.filteredStudents); } catch (err) { console.error('[EduCoordinatorCharts] Lỗi khi vẽ progress:', err); }
   }
 
   // ---- 1) Bar: điểm TB theo lớp ----
