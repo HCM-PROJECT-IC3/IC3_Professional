@@ -33,10 +33,24 @@
     firebase.initializeApp(firebaseConfig);
   }
 
-  // Bật cache offline (không bắt buộc, giúp trang mượt hơn khi mạng chập chờn)
+  // Bật cache offline (không bắt buộc, giúp trang mượt hơn khi mạng chập chờn).
+  // enablePersistence({synchronizeTabs:true}) (= enableMultiTabIndexedDbPersistence
+  // bên dưới) đã bị SDK 10.13 đánh dấu deprecated — chuyển sang cấu hình cache
+  // mới qua settings({ localCache: persistentLocalCache(...) }) theo hướng dẫn
+  // migrate chính thức của Firebase. Phải gọi settings() TRƯỚC lần dùng
+  // firestore() đầu tiên nên đặt ngay tại đây, trước khi build EduFirebase.db.
   try {
-    firebase.firestore().enablePersistence({ synchronizeTabs: true }).catch(() => {});
-  } catch (e) { /* ignore */ }
+    if (firebase.firestore && firebase.firestore.persistentLocalCache) {
+      firebase.firestore().settings({
+        localCache: firebase.firestore.persistentLocalCache({
+          tabManager: firebase.firestore.persistentMultipleTabManager()
+        })
+      });
+    } else {
+      // SDK cũ hơn không có API cache mới — dùng lại cách cũ để không mất tính năng.
+      firebase.firestore().enablePersistence({ synchronizeTabs: true }).catch(() => {});
+    }
+  } catch (e) { /* cache offline là tính năng "nice-to-have", lỗi ở đây không được làm hỏng app */ }
 
   // firebase.auth() chỉ tồn tại nếu trang có nạp firebase-auth-compat.js.
   // index.html (trang học sinh làm bài) không yêu cầu đăng nhập nên có thể

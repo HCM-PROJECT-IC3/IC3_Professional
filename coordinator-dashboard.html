@@ -213,7 +213,26 @@
 <!-- QUAN TRỌNG: khai báo EDU_ALLOWED_ROLES TRƯỚC auth-guard.js (đúng quy
      ước ghi trong chính file đó) — chỉ admin và coordinator được vào. -->
 <script>window.EDU_ALLOWED_ROLES = ['admin', 'coordinator'];</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<!-- Chart.js: ưu tiên bản tự lưu trữ (js/vendor) để không bị Tracking
+     Prevention / adblock chặn khi tải từ cdnjs. document.write ở các fallback
+     bên dưới chạy đồng bộ ngay trong lúc parse HTML nên vẫn đảm bảo Chart.js
+     (nếu tải được) có mặt TRƯỚC js/coordinator/charts.js load bên dưới. -->
+<script src="js/vendor/chart.umd.min.js"></script>
+<script>
+  if (typeof Chart === 'undefined') {
+    document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"><\/script>');
+  }
+</script>
+<script>
+  if (typeof Chart === 'undefined') {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"><\/script>');
+  }
+</script>
+<script>
+  if (typeof Chart === 'undefined') {
+    document.write('<script src="https://unpkg.com/chart.js@4.4.4/dist/chart.umd.min.js"><\/script>');
+  }
+</script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
