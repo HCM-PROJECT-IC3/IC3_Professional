@@ -8,29 +8,44 @@ window.addEventListener('edu:ready', ({ detail }) => {
   const { user, profile } = detail;
   document.getElementById('userChipName').textContent = profile.name || user.email;
   document.getElementById('userChipRole').textContent = EduAuth.ROLE_LABEL[profile.role] || profile.role;
-  if (profile.role === 'admin') {
-    document.getElementById('adminUsersLink').style.display = 'flex';
-  }
 
-  // Trang quản lý danh sách học sinh (roster) — Admin và Điều phối đào
-  // tạo (xem js/roster-manager.js, Commit #3 lộ trình LMAP).
-  if (profile.role === 'admin' || profile.role === 'coordinator') {
-    document.getElementById('rosterManagerLink').style.display = 'flex';
-  }
+  const role = profile.role;
 
-  // Dashboard riêng cho Điều phối đào tạo — 7 KPI, 6 loại biểu đồ, bộ lọc
-  // 5 chiều (xem js/coordinator/*.js, Commit #4 lộ trình LMAP).
-  if (profile.role === 'admin' || profile.role === 'coordinator') {
-    document.getElementById('coordinatorDashboardLink').style.display = 'flex';
-  }
+  // ============================================================
+  // Ma trận hiển thị menu theo role (đúng yêu cầu: mỗi role chỉ thấy
+  // ĐÚNG các mục thuộc về mình — ẩn/hiện ở đây chỉ là lớp UX; quyền
+  // thật sự vẫn do EDU_ALLOWED_ROLES của từng trang đích + firestore.rules
+  // thực thi, xem js/core/rbac.js để biết thêm chi tiết nguyên tắc này).
+  //
+  //   admin       : toàn quyền — thấy tất cả các mục.
+  //   teacher     : CHỈ "Bộ đề của tôi" + "Dashboard của tôi".
+  //   coordinator : CHỈ "Báo cáo kết quả" + "Danh sách học sinh" + "Dashboard".
+  // ============================================================
+  const show = (id, visible) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = visible ? 'flex' : 'none';
+  };
 
-  // Điều phối đào tạo (coordinator): chỉ xem Báo cáo kết quả, không có
-  // quyền quản lý bộ đề / cài đặt hệ thống → ẩn các mục còn lại và mở
-  // thẳng vào tab Báo cáo.
-  if (profile.role === 'coordinator') {
-    document.querySelector('.nav-item[data-section="my-sets"]')?.style.setProperty('display', 'none');
-    document.querySelector('.nav-item[data-section="settings"]')?.style.setProperty('display', 'none');
-    document.querySelector('.nav-item[data-section="reports"]')?.click();
+  show('adminUsersLink', role === 'admin');
+  show('imageManagerLink', role === 'admin');
+  show('teacherDashboardLink', role === 'admin' || role === 'teacher');
+  show('rosterManagerLink', role === 'admin' || role === 'coordinator');
+  show('coordinatorDashboardLink', role === 'admin' || role === 'coordinator');
+
+  // 3 mục trong chính trang này (SPA, không phải link riêng): Bộ đề của tôi
+  // / Báo cáo kết quả / Cài đặt hệ thống.
+  show('navMySets', role === 'admin' || role === 'teacher');
+  show('navReports', role === 'admin' || role === 'coordinator');
+  show('navSettings', role === 'admin');
+
+  // Giáo viên: mặc định vào thẳng "Bộ đề của tôi" (đã active sẵn trong HTML) —
+  // không cần làm gì thêm vì đây cũng là mục duy nhất giáo viên còn thấy
+  // cùng "Dashboard của tôi" (link riêng, không phải section trong trang này).
+
+  // Điều phối đào tạo: không có "Bộ đề của tôi"/"Cài đặt hệ thống" → mở
+  // thẳng vào tab Báo cáo kết quả.
+  if (role === 'coordinator') {
+    document.getElementById('navReports')?.click();
   }
 
   document.getElementById('userChip').addEventListener('click', async () => {

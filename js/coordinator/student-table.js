@@ -77,6 +77,7 @@
         </td>
         <td>${esc(student.mssv || '—')}</td>
         <td>${esc(student.name || '—')}</td>
+        <td>${esc(student.school || '—')}</td>
         <td>${esc(student.className || '—')}</td>
         <td>${esc(student.teacherName || '—')}</td>
         <td class="score-cell ${scoreClass(latest)}">${latest !== null ? latest + '%' : '—'}</td>
@@ -108,7 +109,7 @@
     const tbody = document.getElementById('studentTableBody');
     tbody.innerHTML = pageRows.length
       ? pageRows.map(renderRow).join('')
-      : `<tr><td colspan="10" class="student-empty-cell">Không tìm thấy học sinh phù hợp bộ lọc hiện tại.</td></tr>`;
+      : `<tr><td colspan="11" class="student-empty-cell">Không tìm thấy học sinh phù hợp bộ lọc hiện tại.</td></tr>`;
 
     tbody.querySelectorAll('[data-view-student]').forEach((btn) => {
       btn.addEventListener('click', () => {

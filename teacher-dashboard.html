@@ -3,10 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📊 Dashboard Điều phối đào tạo — EduQuiz</title>
+<title>🧑‍🏫 Dashboard Giáo viên — EduQuiz</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/theme.css">
+<!-- Dùng lại NGUYÊN css/coordinator-dashboard.css (Commit #4) — cùng layout
+     KPI/biểu đồ/bảng/drawer, không style riêng nào khác biệt cần thêm. -->
 <link rel="stylesheet" href="css/coordinator-dashboard.css">
 <link rel="stylesheet" href="css/motion.css">
 </head>
@@ -14,24 +16,19 @@
 
 <div class="topbar">
   <a href="ic3-dashboard.html" class="btn btn-ghost">← Dashboard</a>
-  <h1>📊 Dashboard Điều phối đào tạo</h1>
+  <h1>🧑‍🏫 Dashboard Giáo viên</h1>
   <div class="spacer"></div>
-  <a href="roster-manager.html" class="btn btn-ghost">🧑‍🎓 Quản lý danh sách học sinh</a>
   <span class="whoami" id="whoami"></span>
   <button type="button" class="btn btn-ghost" id="logoutBtn">Đăng xuất</button>
 </div>
 
 <div class="wrap">
 
-  <!-- ============ BỘ LỌC (5 chiều) ============ -->
+  <!-- ============ BỘ LỌC ============ -->
   <div class="filters-card">
-    <div class="filter-item">
-      <label for="f-course">Khoá học</label>
-      <select id="f-course"><option value="">Tất cả</option></select>
-    </div>
-    <div class="filter-item">
-      <label for="f-teacher">Giáo viên</label>
-      <select id="f-teacher"><option value="">Tất cả</option></select>
+    <div class="filter-item" id="f-school-wrap" hidden>
+      <label for="f-school">Trường</label>
+      <select id="f-school"><option value="">Tất cả trường của tôi</option></select>
     </div>
     <div class="filter-item">
       <label for="f-class">Lớp</label>
@@ -54,19 +51,14 @@
     <button type="button" class="btn btn-ghost" id="refreshDataBtn" title="Đọc lại dữ liệu mới nhất từ máy chủ (dữ liệu hiện đang cache tạm 3 phút để đỡ tốn băng thông)">🔄 Làm mới dữ liệu</button>
   </div>
 
-  <div class="loading-note" id="loadingNote">⏳ Đang tải dữ liệu roster &amp; kết quả bài thi...</div>
+  <div class="loading-note" id="loadingNote">⏳ Đang tải dữ liệu học sinh &amp; kết quả bài thi của trường bạn...</div>
 
-  <!-- ============ 7 KPI ============ -->
+  <!-- ============ 6 KPI (không có "Tổng số giáo viên" như bản Điều phối) ============ -->
   <div class="kpi-grid" id="kpiGrid" hidden>
     <div class="kpi-card">
       <div class="kpi-icon">🧑‍🎓</div>
       <div class="kpi-label">Tổng số học sinh</div>
       <div class="kpi-value" id="kpiStudents">—</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-icon">🧑‍🏫</div>
-      <div class="kpi-label">Tổng số giáo viên</div>
-      <div class="kpi-value" id="kpiTeachers">—</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-icon">📝</div>
@@ -95,7 +87,7 @@
     </div>
   </div>
 
-  <!-- ============ 6 LOẠI BIỂU ĐỒ ============ -->
+  <!-- ============ 6 LOẠI BIỂU ĐỒ (dùng lại nguyên js/coordinator/charts.js) ============ -->
   <div class="charts-grid" id="chartsGrid" hidden>
     <div class="chart-card">
       <div class="chart-card-title">📊 Điểm trung bình theo lớp (Bar)</div>
@@ -142,7 +134,7 @@
     </div>
   </div>
 
-  <!-- ============ BẢNG QUẢN LÝ HỌC SINH (đầy đủ) — Commit #5 ============ -->
+  <!-- ============ BẢNG QUẢN LÝ HỌC SINH (dùng lại nguyên js/coordinator/student-table.js) ============ -->
   <div class="student-table-card" id="studentTableCard" hidden>
     <div class="student-table-header">
       <h2>🧑‍🎓 Danh sách học sinh <span class="watchlist-count" id="studentTableCount"></span></h2>
@@ -191,7 +183,7 @@
 
 </div>
 
-<!-- ============ DRAWER CHI TIẾT HỌC SINH — Commit #5 ============ -->
+<!-- ============ DRAWER CHI TIẾT HỌC SINH (dùng lại nguyên js/coordinator/student-detail.js) ============ -->
 <div class="detail-overlay" id="studentDetailOverlay">
   <aside class="detail-drawer" id="studentDetailDrawer" role="dialog" aria-modal="true" aria-labelledby="detailDrawerName">
     <div class="detail-drawer-header">
@@ -210,9 +202,13 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- QUAN TRỌNG: khai báo EDU_ALLOWED_ROLES TRƯỚC auth-guard.js (đúng quy
-     ước ghi trong chính file đó) — chỉ admin và coordinator được vào. -->
-<script>window.EDU_ALLOWED_ROLES = ['admin', 'coordinator'];</script>
+<!-- QUAN TRỌNG: khai báo EDU_ALLOWED_ROLES TRƯỚC auth-guard.js — chỉ admin
+     và teacher (đã duyệt) được vào. Admin vào trang này chỉ để hỗ trợ/kiểm
+     tra; vì admin không có field "schools" nên rule vẫn cho đọc không giới
+     hạn (isAdmin() luôn true trong firestore.rules), nhưng bộ lọc "Trường"
+     sẽ không hiện gì nếu admin không phải giáo viên — trang này chủ yếu
+     dành cho vai trò teacher. -->
+<script>window.EDU_ALLOWED_ROLES = ['admin', 'teacher'];</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
@@ -236,12 +232,14 @@
 <script src="js/services/analytics-service.js"></script>
 <script src="js/services/activity-log-service.js"></script>
 
-<!-- Coordinator dashboard (Commit #4) -->
-<script src="js/coordinator/data-loader.js"></script>
+<!-- Teacher dashboard (Commit #8/LMAP) — data-loader riêng, lọc theo trường
+     ngay từ Firestore; charts/student-table/student-detail TÁI DÙNG nguyên
+     bản của Coordinator Dashboard (Commit #4/#5), không sửa file nào. -->
+<script src="js/teacher/data-loader.js"></script>
 <script src="js/coordinator/charts.js"></script>
 <script src="js/coordinator/student-table.js"></script>
 <script src="js/coordinator/student-detail.js"></script>
-<script src="js/coordinator/dashboard.js"></script>
+<script src="js/teacher/dashboard.js"></script>
 <script src="js/motion.js"></script>
 </body>
 </html>

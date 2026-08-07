@@ -38,9 +38,9 @@
     boot();
   });
 
-  async function boot() {
+  async function boot(forceRefresh) {
     try {
-      rawData = await window.EduCoordinatorData.loadAll();
+      rawData = await window.EduCoordinatorData.loadAll({ forceRefresh: !!forceRefresh });
     } catch (err) {
       document.getElementById('loadingNote').textContent = '❌ Không tải được dữ liệu: ' + err.message;
       return;
@@ -53,6 +53,22 @@
     document.getElementById('watchlistsGrid').hidden = false;
     refresh();
   }
+
+  // "🔄 Làm mới dữ liệu": bỏ qua cache 3 phút, đọc lại thẳng từ Firestore —
+  // dùng khi cần xem số liệu tức thời (vd. đang theo dõi buổi thi trực tiếp).
+  document.getElementById('refreshDataBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('refreshDataBtn');
+    btn.disabled = true;
+    const oldLabel = btn.textContent;
+    btn.textContent = '⏳ Đang tải...';
+    try {
+      await boot(true);
+      toast('✅ Đã cập nhật dữ liệu mới nhất.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = oldLabel;
+    }
+  });
 
   function currentFilters() {
     return {
