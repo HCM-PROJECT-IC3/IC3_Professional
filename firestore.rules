@@ -9,7 +9,10 @@ rules_version = '2';
 // - admin:       toàn quyền.
 // - teacher:     chỉ được sửa collection "questions" SAU KHI được admin
 //                duyệt (approved == true). Không được tự đổi role/approved
-//                của mình. Được ĐỌC báo cáo kết quả (quiz_results).
+//                của mình. Được ĐỌC báo cáo kết quả (quiz_results) và roster
+//                (students_roster) NHƯNG CHỈ của (các) trường được Admin gán
+//                thủ công vào field "schools" trên hồ sơ mình (Commit #6/LMAP,
+//                gán trong admin-users.html) — không xem được trường khác.
 // - coordinator: "Điều phối đào tạo" — CHỈ ĐƯỢC ĐỌC quiz_results (báo cáo
 //                trực quan), không có quyền sửa questions/users. Tài
 //                khoản coordinator chỉ được ADMIN gán thủ công trong
@@ -41,11 +44,22 @@ service cloud.firestore {
     function isEditor() {
       return isAdmin() || isApprovedTeacher();
     }
-    // Ai được phép XEM báo cáo (đọc quiz_results): admin, teacher, coordinator.
-    function canViewReports() {
-      return isAdmin() || isApprovedTeacher() || isCoordinator();
+    // Danh sách trường mà giáo viên hiện tại ĐƯỢC PHÉP xem — do Admin gán
+    // thủ công trong admin-users.html (field "schools" trên users/{uid}),
+    // KHÔNG do giáo viên tự khai. Giáo viên chưa được gán trường nào
+    // ("schools" thiếu/rỗng) sẽ không đọc được document nào cả (in [] luôn false).
+    function myTeacherSchools() {
+      return isApprovedTeacher() && ('schools' in myProfile()) ? myProfile().schools : [];
     }
-
+    // Điều kiện scoping theo trường cho 1 document có field "school"/"studentSchool".
+    // LƯU Ý: mọi câu lệnh LIST (query) vào các collection dùng hàm này BẮT BUỘC
+    // phải có where(...,'in', myTeacherSchools()) ở phía client — nếu không, Firestore
+    // sẽ từ chối toàn bộ câu query (không lọc ngầm), vì rule chỉ xác nhận từng
+    // document trả về có hợp lệ hay không, không tự thêm điều kiện lọc giúp client.
+    function isOwnSchoolField(fieldName) {
+      return isAdmin() || isCoordinator()
+        || (isApprovedTeacher() && resource.data[fieldName] in myTeacherSchools());
+    }
     // ---- Tài khoản người dùng & phân quyền ----
     match /users/{userId} {
       allow read: if isSignedIn();
@@ -90,12 +104,21 @@ service cloud.firestore {
         request.resource.data.studentName is string &&
         request.resource.data.studentName.size() > 0 &&
         request.resource.data.studentName.size() < 200 &&
+        // studentSchool bắt buộc khác rỗng (Commit #6/LMAP): cần field này để
+        // Firestore rules lọc được báo cáo theo trường cho giáo viên bên dưới.
+        // index.html đã chọn Trường qua dropdown chuẩn hoá (js/lobby-roster.js),
+        // không phải gõ tay, nên giá trị luôn khớp với "schools" gán cho giáo viên.
+        request.resource.data.studentSchool is string &&
+        request.resource.data.studentSchool.size() > 0 &&
         request.resource.data.score is number &&
         request.resource.data.score >= 0 && request.resource.data.score <= 100 &&
         request.resource.data.total is number &&
         request.resource.data.submittedAt == request.time;
 
-      allow read: if canViewReports();
+      // Admin/coordinator: xem toàn bộ. Giáo viên: CHỈ xem kết quả của học sinh
+      // thuộc (các) trường đã được Admin gán ở admin-users.html (users/{uid}.schools) —
+      // KHÔNG còn được đọc toàn bộ collection như trước (lỗ hổng đã sửa ở Commit #6).
+      allow read: if isAdmin() || isCoordinator() || isOwnSchoolField('studentSchool');
       allow update, delete: if isAdmin();
     }
 
@@ -127,7 +150,14 @@ service cloud.firestore {
     }
 
     match /students_roster/{studentId} {
-      allow read: if isAdmin() || isCoordinator();
+      // Giáo viên (Commit #6/LMAP): chỉ đọc học sinh thuộc trường đã được gán —
+      // dùng cho teacher-dashboard.html, KHÔNG được ghi/sửa roster (vẫn là việc
+      // của Điều phối đào tạo/Admin trong roster-manager.html như cũ).
+      // "classes" KHÔNG mở cho giáo viên vì document đó không có field "school"
+      // (chỉ có teacherId/courseId) — teacher-dashboard.html không cần đọc trực
+      // tiếp collection "classes", chỉ cần "className" đã denormalize sẵn trên
+      // từng document students_roster.
+      allow read: if isAdmin() || isCoordinator() || isOwnSchoolField('school');
       allow write: if isAdmin() || isCoordinator();
     }
   }

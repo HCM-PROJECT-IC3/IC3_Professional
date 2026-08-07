@@ -84,6 +84,11 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<!-- QUAN TRỌNG: khai báo EDU_ALLOWED_ROLES TRƯỚC auth-guard.js (đúng quy
+     ước của js/auth-guard.js) — trang này chỉ dành cho Admin (chặn ở tầng
+     trang, không chỉ ẩn link ở sidebar, để đúng nguyên tắc client-side RBAC
+     phải đi kèm chặn truy cập trực tiếp bằng URL, xem js/core/rbac.js). -->
+<script>window.EDU_ALLOWED_ROLES = ['admin'];</script>
 <script src="js/firebase-config.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/auth-guard.js"></script>

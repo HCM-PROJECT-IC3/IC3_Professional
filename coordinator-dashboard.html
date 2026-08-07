@@ -51,6 +51,7 @@
       </select>
     </div>
     <button type="button" class="btn btn-ghost" id="resetFiltersBtn" title="Xoá bộ lọc">↺ Đặt lại</button>
+    <button type="button" class="btn btn-ghost" id="refreshDataBtn" title="Đọc lại dữ liệu mới nhất từ máy chủ (dữ liệu hiện đang cache tạm 3 phút để đỡ tốn băng thông)">🔄 Làm mới dữ liệu</button>
   </div>
 
   <div class="loading-note" id="loadingNote">⏳ Đang tải dữ liệu roster &amp; kết quả bài thi...</div>
@@ -168,6 +169,7 @@
             <th></th>
             <th>MSSV</th>
             <th>Họ tên</th>
+            <th>Trường</th>
             <th>Lớp</th>
             <th>Giáo viên</th>
             <th>Điểm gần nhất</th>
@@ -222,6 +224,7 @@
 
 <!-- Nền tảng LMAP (Giai đoạn 1) -->
 <script src="js/core/rbac.js"></script>
+<script src="js/services/data-cache-service.js"></script>
 <script src="js/repositories/base-repository.js"></script>
 <script src="js/models/roster.model.js"></script>
 <script src="js/models/student-result.model.js"></script>

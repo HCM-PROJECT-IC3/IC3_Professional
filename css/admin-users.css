@@ -127,3 +127,19 @@ select {
   .topbar { padding: .8rem 1rem }
   .topbar h1 { font-size: 1rem }
 }
+
+/* ── Commit #6 (LMAP): gán "Trường được xem" cho giáo viên ── */
+.schoolsCell { min-width: 190px }
+.schoolsSelect { width: 100%; min-width: 170px; margin-bottom: .4rem }
+.saveSchoolsBtn {
+  background: var(--blue-lt);
+  color: var(--blue);
+  border: none;
+  border-radius: 999px;
+  padding: .35rem .75rem;
+  font-size: .72rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.schoolsCurrent { font-size: .7rem; color: var(--muted); margin-top: .3rem }
+.schoolsCell .hint { font-size: .72rem; color: var(--muted); font-style: italic }

@@ -19,11 +19,19 @@
     /**
      * Lấy danh sách kết quả gần nhất, có thể lọc theo lớp/bài thi/khoảng thời gian.
      * Giữ giới hạn limit để tránh đọc quá nhiều doc (đúng tinh thần dashboard.js hiện tại).
+     *
+     * @param {string[]} [schools] Lọc theo studentSchool ('in', tối đa 10 giá trị —
+     *   đủ dùng vì 1 giáo viên hiếm khi được gán quá 10 trường). BẮT BUỘC truyền cho
+     *   teacher-dashboard.html (Commit #6/LMAP) — firestore.rules chỉ cho giáo viên đọc
+     *   document có studentSchool nằm trong "schools" của họ, nên nếu KHÔNG lọc where
+     *   ở đây, Firestore sẽ từ chối toàn bộ query (không tự lọc giúp). Coordinator/Admin
+     *   không cần truyền (đọc không giới hạn theo rule).
      */
-    async listRecent({ studentClass, testName, sinceMs, limit = 1000 } = {}) {
+    async listRecent({ studentClass, testName, sinceMs, schools, limit = 1000 } = {}) {
       const where = [];
       if (studentClass) where.push(['studentClass', '==', studentClass]);
       if (testName) where.push(['testName', '==', testName]);
+      if (schools && schools.length) where.push(['studentSchool', 'in', schools.slice(0, 10)]);
       const rows = await this.list({ where, orderBy: 'submittedAt', direction: 'desc', limit });
       const normalized = rows.map(normalize);
       return sinceMs ? normalized.filter((r) => (r.submittedAtMs || 0) >= sinceMs) : normalized;
@@ -40,9 +48,18 @@
      * so khớp tuyệt đối, phân biệt hoa/thường và khoảng trắng — nên có thể trả
      * về rỗng dù bảng học sinh (đã chuẩn hoá) đang hiện học sinh đó có điểm.
      */
-    async listByStudent({ studentName, studentClass }) {
+    /**
+     * @param {string[]} [schools] BẮT BUỘC truyền khi gọi với vai trò giáo viên
+     *   (Commit #8/LMAP, teacher-dashboard.html tái dùng student-detail.js của
+     *   coordinator) — nếu không, Firestore từ chối query vì không có điều kiện
+     *   where khớp rule scoping theo studentSchool. Coordinator/Admin không cần
+     *   truyền (rule của họ không yêu cầu).
+     */
+    async listByStudent({ studentName, studentClass, schools }) {
+      const where = [['studentClass', '==', studentClass]];
+      if (schools && schools.length) where.push(['studentSchool', 'in', schools.slice(0, 10)]);
       const rows = await this.list({
-        where: [['studentClass', '==', studentClass]],
+        where,
         orderBy: 'submittedAt',
         direction: 'desc',
       });

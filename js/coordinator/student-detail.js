@@ -73,7 +73,11 @@
     document.getElementById('detailDrawerBody').innerHTML = '<div class="loading-note">⏳ Đang tải lịch sử làm bài…</div>';
 
     global.EduRepositories.studentResult
-      .listByStudent({ studentName: student.name, studentClass: student.className })
+      // global.EduStudentDetailSchoolsScope: mặc định undefined (coordinator/admin,
+      // không giới hạn). teacher-dashboard.html gán mảng "schools" của giáo viên
+      // trước khi module này được nạp (xem js/teacher/dashboard.js, Commit #8/LMAP)
+      // để listByStudent() query đúng điều kiện firestore.rules yêu cầu.
+      .listByStudent({ studentName: student.name, studentClass: student.className, schools: global.EduStudentDetailSchoolsScope })
       .then((results) => {
         const [history] = global.EduModels.ExamHistory.buildFromResults(results);
         const full = history || { attempts: [], attemptsCount: 0, avgScore: null, bestScore: null, latestScore: null };
@@ -98,7 +102,7 @@
       : esc(initials(student.name));
     document.getElementById('detailDrawerName').textContent = student.name || '—';
     document.getElementById('detailDrawerMeta').textContent =
-      `${student.mssv ? 'MSSV ' + student.mssv + ' · ' : ''}${student.className || '—'}${student.teacherName ? ' · GV ' + student.teacherName : ''}`;
+      `${student.mssv ? 'MSSV ' + student.mssv + ' · ' : ''}${student.school ? student.school + ' · ' : ''}${student.className || '—'}${student.teacherName ? ' · GV ' + student.teacherName : ''}`;
   }
 
   function renderBody(student, history) {

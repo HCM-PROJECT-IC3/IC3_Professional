@@ -17,8 +17,24 @@
 (function (global) {
   'use strict';
 
-  /** Tải toàn bộ dữ liệu nền cần cho dashboard — gọi 1 lần lúc khởi động trang. */
-  async function loadAll() {
+  // Cache 3 phút: mở lại/F5 trang trong 3 phút không tốn thêm lượt đọc
+  // Firestore — quan trọng khi Điều phối đào tạo theo dõi liên tục lúc
+  // hàng ngàn học sinh đang làm bài (xem js/services/data-cache-service.js).
+  const CACHE_TTL_MS = 3 * 60 * 1000;
+  const CACHE_KEY = 'coordinator:all';
+
+  /**
+   * Tải toàn bộ dữ liệu nền cần cho dashboard — gọi 1 lần lúc khởi động trang
+   * (hoặc lại khi cache hết hạn / bấm "🔄 Làm mới dữ liệu").
+   * @param {Object} [opts]
+   * @param {boolean} [opts.forceRefresh] Bỏ qua cache, luôn đọc lại từ Firestore.
+   */
+  async function loadAll({ forceRefresh = false } = {}) {
+    if (!forceRefresh && global.EduDataCache) {
+      const cached = global.EduDataCache.get(CACHE_KEY);
+      if (cached) return cached;
+    }
+
     const [courses, classes, students, teacherSnap, results] = await Promise.all([
       global.EduRepositories.course.list(),
       global.EduRepositories.class.list(),
@@ -27,15 +43,26 @@
       global.EduRepositories.studentResult.listRecent({ limit: 1000 }),
     ]);
     const teachers = teacherSnap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
-    return { courses, classes, students, teachers, results };
+    const data = { courses, classes, students, teachers, results };
+    if (global.EduDataCache) global.EduDataCache.set(CACHE_KEY, data, CACHE_TTL_MS);
+    return data;
   }
 
-  /** Đổ các option vào 5 dropdown lọc (chỉ chạy 1 lần sau khi có dữ liệu). */
+  /** Xoá các <option> đã thêm động trước đó (giữ lại option đầu tiên — "Tất cả"). */
+  function resetDynamicOptions(sel) {
+    while (sel.options.length > 1) sel.remove(1);
+  }
+
+  /**
+   * Đổ các option vào 5 dropdown lọc. An toàn khi gọi lại nhiều lần (vd. sau
+   * khi bấm "🔄 Làm mới dữ liệu") — luôn xoá option cũ trước, tránh nhân đôi.
+   */
   function buildFilterOptions(data) {
     const courseSel = document.getElementById('f-course');
     const teacherSel = document.getElementById('f-teacher');
     const classSel = document.getElementById('f-class');
     const examSel = document.getElementById('f-exam');
+    [courseSel, teacherSel, classSel, examSel].forEach(resetDynamicOptions);
 
     data.courses.forEach((c) => courseSel.insertAdjacentHTML('beforeend', `<option value="${esc(c.id)}">${esc(c.name)}</option>`));
     data.teachers.forEach((t) => teacherSel.insertAdjacentHTML('beforeend', `<option value="${esc(t.id)}">${esc(t.name || t.email)}</option>`));
