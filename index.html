@@ -20,12 +20,6 @@
   <button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()"
     title="Chuyển chế độ sáng/tối">🌙</button>
 
-  <!-- ── Lối vào khu quản trị (chỉ hiện ở màn lobby, ẩn lúc làm bài) ── -->
-  <a href="ic3-dashboard.html" target="_blank" rel="noopener" id="adminEntryLink"
-    title="Dành cho giáo viên / quản trị viên" class="admin-entry-link">
-    🔑 <span class="admin-link-label">Tạo tài khoản</span>
-  </a>
-
   <!-- ── Danh sách Trường/Lớp/Họ và tên hiển thị ở form bên dưới do Điều
      phối đào tạo NẠP TỪ Excel ngay trong khu quản trị (xem trang
      "🧑‍🎓 Quản lý danh sách học sinh" → roster-manager.html →
@@ -49,120 +43,60 @@
         onclick="setLobbyView('form')">📝 Làm bài</button>
     </div>
 
-    <!-- Left: branding + 7 chủ đề năng lực số IC3 GS6 (minh hoạ bằng
-       hình ảnh/icon thay vì liệt kê chữ — xem .lobby-topics bên dưới) -->
+    <!-- Left: Animated 3D Carousel -->
     <div class="lobby-left">
-      <!-- <span class="eyebrow-chip"><span class="dot"></span> Phiên bản mới · Hotspot &amp; </span> -->
-      <div class="lobby-star-row">🎓</div>
-      <div class="lobby-logo">EduQuiz IC3</div>
-      <!-- <div class="lobby-tagline">Luyện thi IC3 GS6 vui vẻ mỗi ngày — chấm điểm tức thì, theo dõi tiến bộ rõ ràng.</div> -->
-
-      <div class="lobby-stat-row" aria-hidden="true">
-        <!-- <div class="lobby-stat"><span class="lobby-stat-val">11</span><span class="lobby-stat-lbl">Dạng câu hỏi</span></div> -->
-        <!-- <div class="lobby-stat"><span class="lobby-stat-val">7</span><span class="lobby-stat-lbl">Chủ đề IC3</span></div> -->
-        <!-- <div class="lobby-stat"><span class="lobby-stat-val">100%</span><span class="lobby-stat-lbl">Miễn phí</span></div> -->
-      </div>
-
-      <!-- Signature element: bàn phím 3D nổi, nghiêng theo chuột + KÉO
-         để xoay (xem initKeyboardScene() trong js/main.js) — lấy cảm
-         hứng trực tiếp từ khối mockup gõ phím "neon" của tuhoc.cc. -->
+      <!-- Signature element: carousel 3D thuần CSS/JS (vòng ảnh xoay
+         quanh trục Y bằng transform 3D, không dùng thư viện ngoài).
+         Kéo chuột/chạm để xoay tự do, thả ra tự "trôi" chậm dần
+         (easing/damping) rồi quay lại tự động xoay chậm; hover từng
+         panel để phóng to/sáng rõ, các panel còn lại mờ dần tạo chiều
+         sâu. Toàn bộ logic nằm trong js/carousel-3d.js. Nội dung mỗi
+         panel là ảnh nền gradient trừu tượng phong cách "4K wallpaper"
+         khai báo thuần CSS (không nhúng ảnh ngoài để tránh vấn đề bản
+         quyền và giữ ảnh luôn sắc nét ở mọi độ phân giải). -->
       <div class="lobby-mockup" aria-hidden="true">
-        <div class="kb-scene" id="kbScene">
-          <div class="kb-grid-bg"></div>
-          <div class="kb-glow"></div>
-          <!-- <div class="kb-mascot">🎓</div> -->
-
-          <!-- Màn hình mini "đặt trên" bàn phím — mô phỏng gõ code/phím
-               tắt liên tục (typewriter loop), xem initKeyboardTyper()
-               trong js/main.js. -->
-          <div class="kb-screen">
-            <div class="kb-screen-bar">
-              <span class="kb-screen-dot d1"></span><span class="kb-screen-dot d2"></span><span class="kb-screen-dot d3"></span>
-              <span class="kb-screen-tag">IC3 GS6</span>
-            </div>
-            <div class="kb-screen-body">
-              <span class="kb-typed" id="kbTyped"></span><span class="kb-caret"></span>
-            </div>
-          </div>
-
-          <div class="kb-board-wrap">
-            <div class="kb-board" id="kbBoard">
-              <div class="kb-row">
-                <div class="kb-key">Q</div><div class="kb-key">W</div><div class="kb-key">E</div>
-                <div class="kb-key">R</div><div class="kb-key">T</div><div class="kb-key">Y</div>
-                <div class="kb-key">U</div><div class="kb-key">I</div><div class="kb-key">O</div>
-                <div class="kb-key">P</div>
-              </div>
-              <div class="kb-row indent-1">
-                <div class="kb-key heat-3">A</div><div class="kb-key heat-3">S</div><div class="kb-key">D</div>
-                <div class="kb-key">F</div><div class="kb-key">G</div><div class="kb-key">H</div>
-                <div class="kb-key">J</div><div class="kb-key">K</div><div class="kb-key">L</div>
-              </div>
-              <div class="kb-row indent-2">
-                <div class="kb-key heat-3">Z</div><div class="kb-key heat-2">X</div><div class="kb-key heat-active">C</div>
-                <div class="kb-key heat-2">V</div><div class="kb-key">B</div><div class="kb-key">N</div>
-                <div class="kb-key">M</div>
-              </div>
-              <div class="kb-row">
-                <div class="kb-key heat-1 kb-ctrl">Ctrl</div>
-                <div class="kb-key kb-alt">Alt</div>
-                <div class="kb-key kb-space">IC3 · GS6</div>
-                <div class="kb-key kb-enter">Enter</div>
-              </div>
+        <div class="carousel-3d" id="carousel3d">
+          <!-- Badge nổi cố định — KHÔNG xoay theo ring, đứng yên trên
+             mặt phẳng màn hình như badge "78 WPM"/"98% chính xác" ở
+             hero tuhoc.cc, tạo cảm giác lớp UI nổi phía trước khối
+             bàn phím 3D đang xoay phía sau. -->
+          <!-- <div class="carousel-3d-badge carousel-3d-badge-tl" aria-hidden="true">
+            <span class="badge-dot dot-cyan"></span> <strong>6</strong> chủ đề
+          </div> -->
+          <!-- <div class="carousel-3d-badge carousel-3d-badge-tr" aria-hidden="true">
+            <span class="badge-dot dot-green"></span> Học nhanh · nhớ lâu
+          </div> -->
+          <div class="carousel-3d-stage" id="carouselStage">
+            <div class="carousel-3d-ring" id="carouselRing">
+              <div class="carousel-3d-cell"><div class="wallpaper-art wallpaper-1"><div class="kb-card" data-kb-card></div></div></div>
+              <div class="carousel-3d-cell"><div class="wallpaper-art wallpaper-2"><div class="kb-card" data-kb-card></div></div></div>
+              <div class="carousel-3d-cell"><div class="wallpaper-art wallpaper-3"><div class="kb-card" data-kb-card></div></div></div>
+              <div class="carousel-3d-cell"><div class="wallpaper-art wallpaper-4"><div class="kb-card" data-kb-card></div></div></div>
+              <div class="carousel-3d-cell"><div class="wallpaper-art wallpaper-5"><div class="kb-card" data-kb-card></div></div></div>
+              <div class="carousel-3d-cell"><div class="wallpaper-art wallpaper-6"><div class="kb-card" data-kb-card></div></div></div>
             </div>
           </div>
-
-          <!-- <span class="kb-hint"><b>Kéo</b> để xoay · di chuột để nghiêng</span> -->
-          <div class="kb-legend">
-            <span class="kb-legend-dots"><span></span><span></span><span></span></span>
+          <div class="carousel-3d-footer">
+            <!-- <div class="carousel-3d-badge carousel-3d-badge-bottom" aria-hidden="true">
+              <span class="badge-dot dot-amber"></span> IC3 Test Prep · Ôn theo chủ đề
+            </div> -->
+            <div class="carousel-3d-hint">↔ Kéo để xoay</div>
           </div>
         </div>
       </div>
 
-      <div class="lobby-topics" role="list" aria-label="7 chủ đề năng lực số cốt lõi của IC3 GS6">
-        <div class="topic-card topic-1" role="listitem">
-          <div class="topic-icon">
-            <img src="img/topic-icon-1-tech.png" alt="" loading="lazy">
-          </div>
-          <span class="topic-label">Công nghệ<br>cơ bản</span>
-        </div>
-        <div class="topic-card topic-2" role="listitem">
-          <div class="topic-icon">
-            <img src="img/topic-icon-2-citizenship.png" alt="" loading="lazy">
-          </div>
-          <span class="topic-label">Công dân<br>kỷ nguyên số</span>
-        </div>
-        <div class="topic-card topic-3" role="listitem">
-          <div class="topic-icon">
-            <img src="img/topic-icon-3-info.png" alt="" loading="lazy">
-          </div>
-          <span class="topic-label">Quản lý<br>thông tin</span>
-        </div>
-        <div class="topic-card topic-4" role="listitem">
-          <div class="topic-icon">
-            <img src="img/topic-icon-4-content.png" alt="" loading="lazy">
-          </div>
-          <span class="topic-label">Sáng tạo<br>nội dung</span>
-        </div>
-        <div class="topic-card topic-5" role="listitem">
-          <div class="topic-icon">
-            <img src="img/topic-icon-5-comm.png" alt="" loading="lazy">
-          </div>
-          <span class="topic-label">Giao tiếp<br>kỹ thuật số</span>
-        </div>
-        <div class="topic-card topic-6" role="listitem">
-          <div class="topic-icon">
-            <img src="img/topic-icon-6-collab.png" alt="" loading="lazy">
-          </div>
-          <span class="topic-label">Cộng tác<br>trực tuyến</span>
-        </div>
-        <div class="topic-card topic-7" role="listitem">
-          <div class="topic-icon">
-            <img src="img/topic-icon-7-safety.png" alt="" loading="lazy">
-          </div>
-          <span class="topic-label">An toàn<br>&amp; bảo mật</span>
-        </div>
-      </div>
+      <!-- Lối vào khu quản trị/giáo viên — trước đây là badge nổi cố
+         định ở góc trên-trái toàn trang ("🔑 Tạo tài khoản"), giờ đổi
+         tên thành "Chuyển tài khoản" và đặt hẳn trong panel Giới thiệu
+         (lobby-left) để luôn thấy được kể cả ở màn hẹp/tab Giới thiệu
+         trên di động — không còn bị trôi ra ngoài màn hình. Vẫn giữ
+         id="adminEntryLink" vì js/quiz-engine.js dùng id này để tự ẩn
+         nút lúc đang làm bài và hiện lại khi quay về lobby. -->
+      <a href="ic3-dashboard.html" target="_blank" rel="noopener" id="adminEntryLink"
+        title="Dành cho giáo viên / quản trị viên" class="switch-account-link">
+        🔄 <span>Chuyển tài khoản</span>
+      </a>
+
     </div>
 
     <!-- Right: form -->
@@ -335,6 +269,10 @@
   <script src="js/review-detail.js"></script>
   <script src="js/quiz-engine.js"></script>
   <script src="js/main.js"></script>
+  <!-- Animated 3D Carousel ở lobby-left — thuần vanilla JS, không phụ
+       thuộc thư viện ngoài. Xem js/carousel-3d.js. -->
+  <script src="js/carousel-3d.js"></script>
+  <script src="js/carousel-keyboard-cards.js"></script>
 </body>
 
 </html>

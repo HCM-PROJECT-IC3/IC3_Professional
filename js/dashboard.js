@@ -189,6 +189,38 @@ function filterCards() {
 }
 
 /* ========================================
+   3D SHELF VIEW (Working Volumes embed)
+   Chuyển đổi giữa lưới bộ đề dạng thẻ (mặc định)
+   và trải nghiệm kệ sách 3D, cùng nằm trong khu vực
+   #cardsViewport. Iframe chỉ được nạp (lazy) ở lần
+   bấm đầu tiên để không ảnh hưởng tốc độ tải trang.
+   ======================================== */
+let shelfViewActive = false;
+
+function toggleShelfView() {
+  const grid = document.getElementById('cardsGrid');
+  const shelf = document.getElementById('shelfEmbed');
+  const btn = document.getElementById('toggleShelfViewBtn');
+  const frame = document.getElementById('shelfFrame');
+  if (!grid || !shelf) return;
+
+  shelfViewActive = !shelfViewActive;
+
+  if (shelfViewActive) {
+    if (frame && frame.dataset.src && frame.getAttribute('src') === 'about:blank') {
+      frame.setAttribute('src', frame.dataset.src);
+    }
+    grid.hidden = true;
+    shelf.hidden = false;
+    btn && btn.classList.add('active');
+  } else {
+    shelf.hidden = true;
+    grid.hidden = false;
+    btn && btn.classList.remove('active');
+  }
+}
+
+/* ========================================
    SESSION & QUIZ START (Anti-cheat)
    ======================================== */
 function startQuiz(id, event) {

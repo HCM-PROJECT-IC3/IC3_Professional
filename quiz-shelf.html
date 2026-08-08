@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#171a24">
+  <meta
+    name="description"
+    content="Trải nghiệm kệ sách 3D tương tác — một góc trưng bày trực quan cho IC3 Quiz."
+  >
+  <title>Kệ sách 3D — IC3 Quiz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap"
+    rel="stylesheet"
+  >
+  <link rel="stylesheet" href="css/volumes-carousel.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <main class="experience" id="experience">
+    <div class="scene-shell">
+      <canvas id="scene" aria-hidden="true"></canvas>
+    </div>
+
+    <header class="editorial-header" aria-label="Collection">
+      <div class="editorial-identity">
+        <strong>Working Volumes</strong>
+        <span>Six field guides for IC3 GS6</span>
+      </div>
+      <div class="editorial-index">
+        <span>Edition 02 · 2026</span>
+        <span id="palette-label">Green · teal · red · IC3 GS6</span>
+      </div>
+    </header>
+
+    <div class="pointer-label" id="pointer-label" aria-hidden="true">
+      <span id="pointer-label-index">Volume 01</span>
+      <strong id="pointer-label-title">IC3-GS6 SPARK LEVEL 1</strong>
+    </div>
+
+    <section class="browse-ui" id="browse-ui" aria-label="Shelf navigation">
+      <div class="selection">
+        <span class="counter" id="counter">01 / 06</span>
+        <div class="selection__copy">
+          <h1 class="selection__title" id="selection-title">IC3-GS6 SPARK LEVEL 1</h1>
+          <p class="selection__note" id="selection-note">Precise intent, translated into tested systems.</p>
+        </div>
+      </div>
+
+      <div class="browse-actions">
+        <button class="round-button" id="previous" type="button" aria-label="Previous volume">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m10.5 3.5-4.5 4.5 4.5 4.5"></path></svg>
+        </button>
+        <button class="text-button" id="inspect" type="button">Open</button>
+        <button class="round-button" id="next" type="button" aria-label="Next volume">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m5.5 3.5 4.5 4.5-4.5 4.5"></path></svg>
+        </button>
+      </div>
+
+      <nav class="index-nav" aria-label="Volume index">
+        <div class="markers" id="markers" role="tablist" aria-label="Choose a volume"></div>
+        <p class="microcopy">Wheel · arrows · select</p>
+      </nav>
+    </section>
+
+    <aside
+      class="detail-panel"
+      id="detail-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="detail-title"
+      aria-hidden="true"
+      inert
+    >
+      <button class="close-button" id="close-detail" type="button" aria-label="Return volume to shelf">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 4 8 8M12 4l-8 8"></path></svg>
+      </button>
+      <p class="eyebrow" id="detail-eyebrow">Volume I · IC3 GS6 SPARK</p>
+      <h2 class="detail-title" id="detail-title">IC3-GS6 SPARK LEVEL 1</h2>
+      <p class="detail-deck" id="detail-deck">
+        IC3 GS6 SPARK Level 1 — foundational digital literacy and computing skills for learners.
+      </p>
+      <dl class="meta-list">
+        <div>
+          <dt>Binding</dt>
+          <dd id="detail-binding">Green illustrated cover · IC3 GS6 SPARK</dd>
+        </div>
+        <div>
+          <dt>Format</dt>
+          <dd id="detail-format">IC3 GS6 · Spark Level 1</dd>
+        </div>
+        <div>
+          <dt>Theme</dt>
+          <dd id="detail-theme">Computing Fundamentals</dd>
+        </div>
+        <div>
+          <dt>Motif</dt>
+          <dd id="detail-motif">IC3 GS6 SPARK Level 1</dd>
+        </div>
+      </dl>
+      <div class="page-navigation" role="group" aria-label="Browse sample pages">
+        <button class="page-button" id="previous-page" type="button" aria-label="Previous sample page" disabled>
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m10.5 3.5-4.5 4.5 4.5 4.5"></path></svg>
+        </button>
+        <p class="page-status" aria-live="off">
+          <strong id="page-label">Closed</strong>
+          <span id="page-counter">Click book to open</span>
+        </p>
+        <button class="page-button" id="next-page" type="button" aria-label="Next sample page" disabled>
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m5.5 3.5 4.5 4.5-4.5 4.5"></path></svg>
+        </button>
+      </div>
+      <div class="detail-controls">
+        <p class="microcopy">Drag cover or click once to open · Background to orbit</p>
+        <div class="detail-buttons">
+          <button class="text-button reset-button" id="toggle-book" type="button" aria-pressed="false">Open book</button>
+          <button class="text-button reset-button" id="reset-view" type="button">Reset view</button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="sr-only" id="live-region" aria-live="polite"></div>
+
+    <section class="static-fallback" id="static-fallback" aria-labelledby="fallback-title">
+      <div class="fallback__header">
+        <div>
+          <p class="fallback__kicker">Working Volumes · Static catalog</p>
+          <h2 id="fallback-title">Six IC3 GS6 learning guides.</h2>
+        </div>
+        <p class="fallback__status" id="fallback-status">
+          The complete catalog remains readable while the interactive shelf is prepared.
+        </p>
+      </div>
+      <div class="fallback__grid" aria-label="Six IC3 GS6 hardcovers">
+        <article class="fallback-book" style="--book-color:#5a9f4d;--book-foil:#ffffff;--book-height:390px"><span>Volume I</span><strong>IC3-GS6 SPARK LEVEL 1</strong></article>
+        <article class="fallback-book" style="--book-color:#229eaa;--book-foil:#ffffff;--book-height:390px"><span>Volume II</span><strong>IC3-GS6 SPARK LEVEL 2</strong></article>
+        <article class="fallback-book" style="--book-color:#c73535;--book-foil:#ffffff;--book-height:390px"><span>Volume III</span><strong>IC3-GS6 SPARK LEVEL 3</strong></article>
+        <article class="fallback-book" style="--book-color:#5a9f4d;--book-foil:#ffffff;--book-height:390px"><span>Volume IV</span><strong>IC3-GS6 LEVEL 1</strong></article>
+        <article class="fallback-book" style="--book-color:#2f63a5;--book-foil:#ffffff;--book-height:390px"><span>Volume V</span><strong>IC3-GS6 LEVEL 2</strong></article>
+        <article class="fallback-book" style="--book-color:#b9343b;--book-foil:#ffffff;--book-height:390px"><span>Volume VI</span><strong>IC3-GS6 LEVEL 3</strong></article>
+      </div>
+      <div class="fallback__footer">
+        <span>All bindings, motifs, descriptions, geometry, and cover artworks are original to this conceptual study.</span>
+        <span>Product names are used editorially and remain the property of their respective owners.</span>
+      </div>
+    </section>
+
+    <div class="loading" id="loading" hidden aria-live="polite">
+      <div class="loading__inner">
+        <div class="loading__mark" aria-hidden="true"></div>
+        <p>Binding the collection</p>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="js/volumes-carousel.js"></script>
+</body>
+</html>

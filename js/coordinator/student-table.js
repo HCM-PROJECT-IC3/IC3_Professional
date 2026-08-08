@@ -24,6 +24,7 @@
     pageSize: PAGE_SIZE_DEFAULT,
     search: '',
     status: '',
+    scoped: null,   // scoped gốc (chưa lọc search/status/trang) — dùng cho export Excel/PDF
   };
 
   function esc(s) {
@@ -92,10 +93,89 @@
   }
 
   function render(scoped) {
+    state.scoped = scoped;
     state.rows = buildRows(scoped);
     state.page = 1; // đổi bộ lọc 5 chiều => reset về trang 1
     renderTable();
     document.getElementById('studentTableCard').hidden = false;
+  }
+
+  // ============================================================
+  // EXPORT EXCEL/PDF (Commit #6, #7) — dùng đúng `state.rows`/`state.scoped`
+  // hiện có trong bảng (đã áp bộ lọc 5 chiều của dashboard), KHÔNG áp thêm
+  // search/status/trang cục bộ của riêng bảng — export toàn bộ tập đang xem.
+  // ============================================================
+
+  /** Đọc 7 KPI đã render sẵn trên trang (Coordinator có kpiTeachers, Teacher thì không). */
+  function readKpisFromDom() {
+    const map = [
+      ['kpiStudents', 'Tổng số học sinh'],
+      ['kpiTeachers', 'Tổng số giáo viên'],
+      ['kpiExams', 'Số bài thi'],
+      ['kpiAvgScore', 'Điểm trung bình'],
+      ['kpiPassRate', 'Tỉ lệ đạt'],
+      ['kpiNotSubmitted', 'Chưa nộp bài'],
+      ['kpiNeedsSupport', 'Cần hỗ trợ (TB < 60%)'],
+    ];
+    return map
+      .filter(([id]) => document.getElementById(id))
+      .map(([id, label]) => [label, document.getElementById(id).textContent || '—']);
+  }
+
+  function scopeLabel() {
+    const who = document.getElementById('whoami');
+    const title = document.title.replace(/^[^\wÀ-ỹ]+/u, '').trim();
+    return [title, who ? who.textContent : ''].filter(Boolean).join(' · ');
+  }
+
+  function exportOpts() {
+    return {
+      rows: state.rows,
+      kpis: readKpisFromDom(),
+      scopeLabel: scopeLabel(),
+    };
+  }
+
+  async function handleExportExcel(btn) {
+    if (!state.scoped) return;
+    if (!global.EduExcelExporter) {
+      global.dispatchEvent(new CustomEvent('edu:toast', { detail: '❌ Chưa nạp được engine xuất Excel.' }));
+      return;
+    }
+    const oldLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ Đang tạo...';
+    try {
+      await global.EduExcelExporter.exportWorkbook(state.scoped, exportOpts());
+      global.dispatchEvent(new CustomEvent('edu:toast', { detail: '✅ Đã tải file Excel (7 sheet).' }));
+    } catch (err) {
+      console.error('[EduCoordinatorStudentTable] Lỗi xuất Excel:', err);
+      global.dispatchEvent(new CustomEvent('edu:toast', { detail: '❌ Xuất Excel thất bại: ' + err.message }));
+    } finally {
+      btn.disabled = false;
+      btn.textContent = oldLabel;
+    }
+  }
+
+  function handleExportPdf(btn) {
+    if (!state.scoped) return;
+    if (!global.EduPdfExporter) {
+      global.dispatchEvent(new CustomEvent('edu:toast', { detail: '❌ Chưa nạp được engine xuất PDF.' }));
+      return;
+    }
+    const oldLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ Đang tạo...';
+    try {
+      global.EduPdfExporter.exportReport(state.scoped, exportOpts());
+      global.dispatchEvent(new CustomEvent('edu:toast', { detail: '✅ Đã tải file PDF.' }));
+    } catch (err) {
+      console.error('[EduCoordinatorStudentTable] Lỗi xuất PDF:', err);
+      global.dispatchEvent(new CustomEvent('edu:toast', { detail: '❌ Xuất PDF thất bại: ' + err.message }));
+    } finally {
+      btn.disabled = false;
+      btn.textContent = oldLabel;
+    }
   }
 
   function renderTable() {
@@ -148,15 +228,11 @@
       state.page += 1;
       renderTable();
     });
-    // Excel/PDF export: đúng lộ trình LMAP-ARCHITECTURE.md, các engine thật sẽ
-    // được thêm ở Commit #6 (js/export/excel-exporter.js) và #7 (pdf-exporter.js).
-    // Nút đã có sẵn ở đây để không phải sửa lại markup khi 2 commit đó tới.
-    document.getElementById('exportExcelBtn').addEventListener('click', () => {
-      global.dispatchEvent(new CustomEvent('edu:toast', { detail: 'Xuất Excel sẽ có ở Commit #6 (engine SheetJS 7-sheet workbook).' }));
-    });
-    document.getElementById('exportPdfBtn').addEventListener('click', () => {
-      global.dispatchEvent(new CustomEvent('edu:toast', { detail: 'Xuất PDF sẽ có ở Commit #7 (logo, header/footer, biểu đồ).' }));
-    });
+    // Excel/PDF export thật — Commit #6 (js/export/excel-exporter.js) và
+    // #7 (js/export/pdf-exporter.js). Xuất TOÀN BỘ tập đang xem trên dashboard
+    // (đã áp bộ lọc 5 chiều), không bị giới hạn bởi search/trang cục bộ của bảng.
+    document.getElementById('exportExcelBtn').addEventListener('click', (e) => handleExportExcel(e.currentTarget));
+    document.getElementById('exportPdfBtn').addEventListener('click', (e) => handleExportPdf(e.currentTarget));
   }
 
   // Script được nạp ở cuối <body> (giống toàn bộ file coordinator/* khác)
