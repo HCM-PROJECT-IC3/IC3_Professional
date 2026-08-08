@@ -362,6 +362,97 @@ body {
   gap: 20px;
 }
 
+/* ========================================
+   3D SHELF EMBED (Working Volumes)
+   Cùng vùng hiển thị với .cards-grid — chỉ 1 trong 2
+   xuất hiện tại một thời điểm, điều khiển bởi
+   toggleShelfView() trong js/dashboard.js.
+   ======================================== */
+.view-toggle-btn {
+  margin-left: auto;
+}
+.view-toggle-btn.active {
+  border-color: var(--accent-purple);
+  color: #fff;
+  background: linear-gradient(135deg, #6C5CE7, #8E7BFF);
+}
+
+.cards-viewport {
+  position: relative;
+}
+
+.shelf-embed {
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  background: #171a24;
+  animation: shelfFadeIn 420ms ease;
+}
+@keyframes shelfFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.shelf-embed-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  background: #10131b;
+  color: #f4eee6;
+}
+.shelf-embed-title {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+.shelf-embed-close {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(244, 238, 230, 0.35);
+  background: transparent;
+  color: #f4eee6;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+.shelf-embed-close:hover {
+  background: rgba(244, 238, 230, 0.14);
+}
+
+.shelf-embed-frame {
+  position: relative;
+  width: 100%;
+  /* Tỉ lệ responsive: cao ~62% chiều rộng, giới hạn min/max
+     để vừa khung nhìn trên cả desktop lẫn di động. */
+  aspect-ratio: 16 / 10;
+  min-height: 420px;
+  max-height: 78vh;
+}
+.shelf-embed-iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: #171a24;
+}
+
+@media (max-width: 900px) {
+  .shelf-embed-frame { aspect-ratio: 4 / 5; min-height: 380px; }
+}
+@media (max-width: 480px) {
+  .view-toggle-btn { margin-left: 0; }
+  .shelf-embed-bar { padding: 10px 14px; }
+  .shelf-embed-frame { aspect-ratio: 3 / 4; min-height: 340px; max-height: 70vh; }
+}
+
 .quiz-card {
   background: var(--bg-card);
   border-radius: 16px;

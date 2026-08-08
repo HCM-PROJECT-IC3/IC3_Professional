@@ -150,8 +150,8 @@
           <option value="25">25 / trang</option>
           <option value="50">50 / trang</option>
         </select>
-        <button type="button" class="btn btn-ghost" id="exportExcelBtn" title="Xuất Excel — Commit #6">⬇️ Excel</button>
-        <button type="button" class="btn btn-ghost" id="exportPdfBtn" title="Xuất PDF — Commit #7">🖨️ PDF</button>
+        <button type="button" class="btn btn-ghost" id="exportExcelBtn" title="Xuất workbook Excel 7 sheet (KPI, danh sách, biểu đồ, pivot)">⬇️ Excel</button>
+        <button type="button" class="btn btn-ghost" id="exportPdfBtn" title="Xuất báo cáo PDF (logo, header/footer, biểu đồ)">🖨️ PDF</button>
       </div>
     </div>
     <div class="table-scroll">
@@ -250,6 +250,14 @@
 <script src="js/repositories/activity-log-repository.js"></script>
 <script src="js/services/analytics-service.js"></script>
 <script src="js/services/activity-log-service.js"></script>
+
+<!-- Xuất Excel/PDF (Commit #6, #7) — TÁI DÙNG nguyên bản 2 engine của
+     Coordinator Dashboard (js/export/*), không sửa file nào. -->
+<script src="js/vendor/exceljs.min.js"></script>
+<script src="js/vendor/jspdf.umd.min.js"></script>
+<script src="js/vendor/jspdf.plugin.autotable.min.js"></script>
+<script src="js/export/excel-exporter.js"></script>
+<script src="js/export/pdf-exporter.js"></script>
 
 <!-- Teacher dashboard (Commit #8/LMAP) — data-loader riêng, lọc theo trường
      ngay từ Firestore; charts/student-table/student-detail TÁI DÙNG nguyên

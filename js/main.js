@@ -36,68 +36,11 @@ document.addEventListener('DOMContentLoaded', () => {
   setLobbyView(saved);
 });
 
-/* ── Bàn phím 3D nổi ở lobby-left: nghiêng nhẹ theo vị trí chuột +
-   KÉO (pointerdown/move) để xoay quanh trục Z không giới hạn, giống
-   hint "Kéo để xoay · di chuột để nghiêng" hiển thị dưới bàn phím.
-   Bỏ qua khi người dùng bật "giảm chuyển động" (prefers-reduced-motion) —
-   góc nghỉ mặc định (khớp với style.css) vẫn giữ nguyên, chỉ tắt phần
-   tương tác động. */
-document.addEventListener('DOMContentLoaded', () => {
-  const scene = document.getElementById('kbScene');
-  const board = document.getElementById('kbBoard');
-  if (!scene || !board) return;
-
-  const BASE_RX = 54, BASE_RZ = -36; // khớp giá trị rotateX/rotateZ mặc định trong CSS (.kb-board)
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (reduceMotion) return;
-
-  let hoverRX = 0, hoverRY = 0;
-  let dragZ = 0;
-  let dragging = false;
-  let lastX = 0;
-
-  function render() {
-    board.style.transform =
-      `rotateX(${BASE_RX + hoverRX}deg) rotateZ(${BASE_RZ + dragZ}deg) rotateY(${hoverRY}deg)`;
-  }
-
-  if (window.matchMedia('(hover: hover)').matches) {
-    scene.addEventListener('mousemove', (e) => {
-      if (dragging) return;
-      const r = scene.getBoundingClientRect();
-      const px = (e.clientX - r.left) / r.width;  // 0..1
-      const py = (e.clientY - r.top) / r.height;  // 0..1
-      hoverRX = (py - .5) * -10;
-      hoverRY = (px - .5) * 16;
-      render();
-    });
-    scene.addEventListener('mouseleave', () => {
-      hoverRX = 0; hoverRY = 0;
-      render();
-    });
-  }
-
-  scene.addEventListener('pointerdown', (e) => {
-    dragging = true;
-    lastX = e.clientX;
-    scene.classList.add('is-dragging');
-    try { scene.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
-  });
-  scene.addEventListener('pointermove', (e) => {
-    if (!dragging) return;
-    dragZ += (e.clientX - lastX) * .35;
-    lastX = e.clientX;
-    render();
-  });
-  function stopDrag(e) {
-    if (!dragging) return;
-    dragging = false;
-    scene.classList.remove('is-dragging');
-    try { scene.releasePointerCapture(e.pointerId); } catch (err) { /* ignore */ }
-  }
-  scene.addEventListener('pointerup', stopDrag);
-  scene.addEventListener('pointercancel', stopDrag);
-});
+/* ── Bàn phím 3D nổi ở lobby-left: từ bản này trở đi là scene WebGL
+   thật (Three.js) sống trong js/keyboard-scene-3d.js — chuyện nghiêng
+   theo chuột, KÉO để xoay, và "flash" phím theo ký tự gõ đều do module
+   đó tự quản lý (nó tự nghe pointerdown/move trên #kbScene). File này
+   chỉ còn giữ vòng lặp gõ chữ trên màn hình mini bên dưới. ── */
 
 /* ── Hiệu ứng "đang gõ" trên màn hình mini phía trên bàn phím: lặp
    qua các dòng code ngắn/phím tắt, gõ dần từng ký tự rồi xoá đi gõ
@@ -118,24 +61,15 @@ document.addEventListener('DOMContentLoaded', () => {
     'Ctrl + P  → In tài liệu',
   ];
 
-  // Map mỗi ký tự (chữ cái) sang đúng phím vật lý trên bàn phím 3D để
-  // flash neon theo — xem flashKey() bên dưới. Phím khoảng trắng (dài,
-  // đang ghi "IC3 · GS6") dùng riêng cho ký tự dấu cách.
-  const keyEls = {};
-  document.querySelectorAll('#kbBoard .kb-key').forEach((k) => {
-    const label = (k.textContent || '').trim();
-    if (label.length === 1) keyEls[label.toUpperCase()] = k;
-  });
-  const spaceKeyEl = document.querySelector('#kbBoard .kb-space');
-  const flashTimers = new WeakMap();
-
+  // Bàn phím giờ là mesh WebGL (js/keyboard-scene-3d.js), không còn
+  // phần tử DOM theo từng phím nữa, nên "flash" một ký tự = gọi API
+  // window.KB3D.flashKey(ch) mà module đó gắn lên window sau khi dựng
+  // xong scene. Nếu WebGL chưa kịp khởi tạo (hoặc lỗi/không hỗ trợ)
+  // thì bỏ qua trong im lặng — không ảnh hưởng gì tới việc gõ chữ trên
+  // màn hình mini bên trên.
   function flashKey(ch) {
     if (!ch) return;
-    const targetEl = ch === ' ' ? spaceKeyEl : keyEls[ch.toUpperCase()];
-    if (!targetEl) return; // ký tự không có trên bàn phím rút gọn (số, dấu câu...) → bỏ qua
-    targetEl.classList.add('kb-key-press');
-    clearTimeout(flashTimers.get(targetEl));
-    flashTimers.set(targetEl, setTimeout(() => targetEl.classList.remove('kb-key-press'), 170));
+    window.KB3D?.flashKey(ch);
   }
 
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
