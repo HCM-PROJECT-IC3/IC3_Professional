@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>🎱 Bi-a Phần Mềm — Mini Game</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/billiards.css">
+</head>
+
+<body class="bl-body">
+
+  <!-- Trang này được nhúng qua modal (js/billiards-modal.js), cùng pattern
+       với game.html / memory-game.html / sudoku.html — chỉ chứa đúng 1
+       mini-game độc lập, không đụng vào quiz-engine.js / gamification.js.
+       Cơ chế: bi-a 8-Ball đúng luật, 2 người thay phiên nhau — 7 bi Đặc
+       (1-7) + 7 bi Sọc (9-15), mỗi bi mang icon 1 phần mềm quen thuộc
+       (Word, Excel, PowerPoint, Outlook, Chrome, Teams, Zoom) lấy lại từ
+       img/memory-game/, cộng bi Đen số 8. Toàn bộ logic khai báo trong
+       js/billiards.js (canvas 2D thuần, không dùng thư viện vật lý ngoài). -->
+
+  <div class="bl-wrap">
+    <div class="bl-header">
+      <div class="bl-title">🎱 Bi-a Phần Mềm</div>
+      <div class="bl-subtitle">2 người thay phiên nhau — dồn hết nhóm Bi Đặc/Bi Sọc của mình rồi đánh Bi Đen để thắng!</div>
+    </div>
+
+    <div class="bl-players">
+      <div class="bl-player-card" id="blPlayer0Card">
+        <div class="bl-player-name">🔵 Người chơi 1</div>
+        <div class="bl-player-group" id="blPlayer0Group">Chưa xác định nhóm</div>
+        <div class="bl-player-remaining" id="blPlayer0Remaining">—</div>
+      </div>
+      <div class="bl-player-card" id="blPlayer1Card">
+        <div class="bl-player-name">🔴 Người chơi 2</div>
+        <div class="bl-player-group" id="blPlayer1Group">Chưa xác định nhóm</div>
+        <div class="bl-player-remaining" id="blPlayer1Remaining">—</div>
+      </div>
+    </div>
+    <div class="bl-shots-strip">Tổng lượt đánh: <span id="blShots">0</span></div>
+
+    <div class="bl-board-outer">
+      <canvas id="blCanvas" class="bl-canvas"></canvas>
+      <div class="bl-toast" id="blToast"></div>
+
+      <!-- Win overlay -->
+      <div class="bl-overlay" id="blOverlay">
+        <div class="bl-overlay-card">
+          <div class="bl-overlay-icon">🏆</div>
+          <div class="bl-overlay-title" id="blOverlayTitle">Hoàn thành!</div>
+          <div class="bl-overlay-sub" id="blOverlaySub"></div>
+          <div class="bl-overlay-stats" id="blOverlayStats"></div>
+          <button type="button" class="bl-btn bl-btn-primary" id="blOverlayRestartBtn">🔄 Chơi lại</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bl-footer">
+      <button type="button" class="bl-btn" id="blRestartBtn">🔄 Chơi lại</button>
+    </div>
+  </div>
+
+  <script src="js/billiards.js"></script>
+</body>
+
+</html>
