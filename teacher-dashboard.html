@@ -18,6 +18,7 @@
   <a href="ic3-dashboard.html" class="btn btn-ghost">← Dashboard</a>
   <h1>🧑‍🏫 Dashboard Giáo viên</h1>
   <div class="spacer"></div>
+  <button type="button" class="btn btn-ghost" id="openShelfBtn" title="Xem bộ đề dạng kệ sách 3D">🧊 Kệ sách 3D</button>
   <span class="whoami" id="whoami"></span>
   <button type="button" class="btn btn-ghost" id="logoutBtn">Đăng xuất</button>
 </div>
@@ -200,6 +201,27 @@
   </aside>
 </div>
 
+<!-- ============ KỆ SÁCH 3D (modal) — xem js/shelf-modal.js ============ -->
+<div class="shelf-modal-overlay" id="shelfModalOverlay">
+  <div class="shelf-modal">
+    <div class="shelf-modal-bar">
+      <span class="shelf-modal-title">🧊 Chế độ kệ sách 3D</span>
+      <button type="button" class="shelf-modal-close" id="closeShelfModalBtn">✕ Đóng</button>
+    </div>
+    <div class="shelf-modal-frame">
+      <iframe
+        id="shelfModalFrame"
+        class="shelf-modal-iframe"
+        title="Kệ sách 3D tương tác"
+        src="about:blank"
+        data-src="quiz-shelf.html"
+        loading="lazy"
+        allow="fullscreen"
+      ></iframe>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- QUAN TRỌNG: khai báo EDU_ALLOWED_ROLES TRƯỚC auth-guard.js — chỉ admin
@@ -268,5 +290,8 @@
 <script src="js/coordinator/student-detail.js"></script>
 <script src="js/teacher/dashboard.js"></script>
 <script src="js/motion.js"></script>
+
+<!-- Kệ sách 3D (modal) — dùng chung với Dashboard Điều phối đào tạo -->
+<script src="js/shelf-modal.js"></script>
 </body>
 </html>

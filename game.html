@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>✨ Prism Cascade — Mini Game</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/prism-cascade.css">
+</head>
+
+<body class="pc-body">
+
+  <!-- Trang này được nhúng qua modal (js/prism-cascade-modal.js) giống
+       kiểu "Kệ sách 3D" (js/shelf-modal.js) — chỉ chứa đúng 1 mini-game
+       độc lập, không đụng vào quiz-engine.js / gamification.js.
+       Phạm vi MVP: core loop match-3 (swap/match/cascade/chain combo),
+       CHƯA có Special Piece / Obstacle / RPG-Companion / Meta Game
+       (xem match3-game-design-document.md để mở rộng về sau). -->
+
+  <div class="pc-wrap">
+    <div class="pc-header">
+      <div class="pc-title">✨ Prism Cascade</div>
+      <div class="pc-subtitle">Khớp ≥3 Shard cùng loại để giải phóng năng lượng — giải trí giữa giờ ôn IC3</div>
+    </div>
+
+    <div class="pc-hud">
+      <div class="pc-stat">
+        <div class="pc-stat-label">Điểm</div>
+        <div class="pc-stat-value" id="gameScore">0</div>
+      </div>
+      <div class="pc-stat">
+        <div class="pc-stat-label">Lượt còn</div>
+        <div class="pc-stat-value" id="gameMoves">20</div>
+      </div>
+      <div class="pc-stat">
+        <div class="pc-stat-label">Mục tiêu</div>
+        <div class="pc-stat-value" id="gameTarget">3.000</div>
+      </div>
+    </div>
+
+    <div class="pc-progress-wrap">
+      <div class="pc-progress-fill" id="gameProgressFill"></div>
+    </div>
+
+    <div class="pc-board-outer">
+      <div class="pc-board" id="gameBoard"></div>
+      <div class="combo-banner" id="comboBanner"></div>
+      <div class="pc-toast" id="gameToast"></div>
+    </div>
+
+    <div class="pc-footer">
+      <button type="button" class="pc-btn" id="gameRestartBtn">🔄 Chơi lại</button>
+    </div>
+  </div>
+
+  <!-- Win / Lose overlay -->
+  <div class="pc-overlay" id="gameOverlay">
+    <div class="pc-overlay-card">
+      <div class="pc-overlay-icon" id="gameOverlayIcon">🏆</div>
+      <div class="pc-overlay-title" id="gameOverlayTitle">Hoàn thành mục tiêu!</div>
+      <div class="pc-overlay-sub" id="gameOverlaySub"></div>
+      <button type="button" class="pc-btn pc-btn-primary" id="gameOverlayRestartBtn">🔄 Chơi lại</button>
+    </div>
+  </div>
+
+  <script src="js/prism-cascade.js"></script>
+</body>
+
+</html>

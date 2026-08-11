@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>🧩 Sudoku Trí Tuệ — Mini Game</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/sudoku.css">
+</head>
+
+<body class="sk-body">
+
+  <!-- Trang này được nhúng qua modal (js/sudoku-modal.js), cùng pattern
+       với game.html / memory-game.html — chỉ chứa đúng 1 mini-game
+       độc lập, không đụng vào quiz-engine.js / gamification.js.
+       Cơ chế: Sudoku 9x9 chuẩn, sinh đề ngẫu nhiên đảm bảo lời giải
+       duy nhất (backtracking + kiểm tra số nghiệm), 3 mức độ khó.
+       Toàn bộ logic khai báo trong js/sudoku.js. -->
+
+  <div class="sk-wrap">
+    <div class="sk-header">
+      <div class="sk-title">🧩 Sudoku Trí Tuệ</div>
+      <div class="sk-subtitle" id="skSubtitle">Chọn độ khó để bắt đầu rèn luyện tư duy logic</div>
+    </div>
+
+    <!-- Màn hình chọn độ khó -->
+    <div class="sk-picker" id="skPicker"></div>
+
+    <!-- Màn hình chơi -->
+    <div class="sk-play" id="skPlay" style="display:none;">
+      <div class="sk-hud">
+        <div class="sk-stat">
+          <div class="sk-stat-label">Thời gian</div>
+          <div class="sk-stat-value" id="skTimer">00:00</div>
+        </div>
+        <div class="sk-stat">
+          <div class="sk-stat-label">Lỗi</div>
+          <div class="sk-stat-value" id="skMistakes">0 / 3</div>
+        </div>
+        <div class="sk-stat">
+          <div class="sk-stat-label">Gợi ý</div>
+          <div class="sk-stat-value" id="skHints">3</div>
+        </div>
+      </div>
+
+      <div class="sk-board-outer">
+        <div class="sk-board" id="skBoard"></div>
+        <div class="sk-toast" id="skToast"></div>
+
+        <!-- Win / Lose overlay -->
+        <div class="sk-overlay" id="skOverlay">
+          <div class="sk-overlay-card">
+            <div class="sk-overlay-icon" id="skOverlayIcon">🏆</div>
+            <div class="sk-overlay-title" id="skOverlayTitle">Hoàn thành!</div>
+            <div class="sk-overlay-sub" id="skOverlaySub"></div>
+            <div class="sk-overlay-stats" id="skOverlayStats"></div>
+            <button type="button" class="sk-btn sk-btn-primary" id="skOverlayRestartBtn">🔄 Chơi lại</button>
+            <button type="button" class="sk-btn" id="skOverlayPickerBtn">🔀 Đổi độ khó</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sk-numpad" id="skNumpad"></div>
+
+      <div class="sk-tools">
+        <button type="button" class="sk-tool-btn" id="skEraseBtn">
+          <span class="sk-tool-icon">🧽</span><span>Xóa</span>
+        </button>
+        <button type="button" class="sk-tool-btn" id="skNotesBtn">
+          <span class="sk-tool-icon">✏️</span><span>Ghi chú</span>
+        </button>
+        <button type="button" class="sk-tool-btn" id="skHintBtn">
+          <span class="sk-tool-icon">💡</span><span>Gợi ý</span><span class="sk-tool-badge" id="skHintBadge"></span>
+        </button>
+      </div>
+
+      <div class="sk-footer">
+        <button type="button" class="sk-btn" id="skRestartBtn">🔄 Chơi lại</button>
+        <button type="button" class="sk-btn" id="skPickerBtn">🔀 Đổi độ khó</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/sudoku.js"></script>
+</body>
+
+</html>

@@ -1201,6 +1201,23 @@ body {
    OPTION BUTTONS (Single & Multi)
    ══════════════════════════════════════════════ */
 .options-list { display: flex; flex-direction: column; gap: .6rem }
+
+/* Câu hỏi "Nhiều đáp án" (multi) có nhiều lựa chọn (>4) → chia 2 cột để
+   vừa màn hình, đỡ phải cuộn dài. Gắn class này ở renderMulti() trong
+   js/quiz-engine.js. Rớt về 1 cột trên màn hình hẹp (điện thoại) vì 2 cột
+   lúc đó làm chữ bị bóp quá chật. */
+.options-list.options-list--2col {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: .6rem .9rem;
+  align-items: stretch;
+}
+.options-list.options-list--2col .option-btn {
+  height: 100%;
+}
+@media (max-width: 720px) {
+  .options-list.options-list--2col { grid-template-columns: 1fr }
+}
 .option-btn {
   display: flex;
   align-items: flex-start;
@@ -1271,9 +1288,9 @@ body {
 /* ══════════════════════════════════════════════
    TRUE/FALSE TABLE
    ══════════════════════════════════════════════ */
-.tf-table { width:100%; border-collapse:separate; border-spacing:0 .5rem }
+.tf-table { width:100%; border-collapse:separate; border-spacing:0 .5rem; table-layout: fixed }
 .tf-table th {
-  font-size: .82rem;
+  font-size: .85rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: .6px;
@@ -1281,35 +1298,41 @@ body {
   padding: .4rem .75rem;
 }
 .tf-table th:last-child,
-.tf-table th:nth-last-child(2) { text-align:center; width:90px }
+.tf-table th:nth-last-child(2) { text-align:center; width:120px }
 .tf-row td {
   background: var(--card2);
   padding: .9rem .85rem;
-  font-size: clamp(.92rem, 2.5vw, 1rem);
+  font-size: clamp(.95rem, 2.5vw, 1.05rem);
   font-weight: 600;
   border: 2px solid var(--border);
 }
 .tf-row td:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); padding-left:1.1rem }
 .tf-row td:last-child  { border-radius: 0 var(--radius-sm) var(--radius-sm) 0 }
-.tf-btn-cell { text-align:center; border-left:none !important }
+.tf-btn-cell { text-align:center; border-left:none !important; padding: .5rem !important }
 .tf-btn {
-  width: 70px;
-  padding: .5rem .5rem;
+  width: 100%;
+  max-width: 100px;
+  padding: .55rem .5rem;
   border-radius: var(--radius-sm);
   border: 2px solid var(--border);
   background: var(--card);
   color: var(--muted);
   font-family: 'Baloo 2', sans-serif;
-  font-size: .88rem;
+  font-size: .98rem;
   font-weight: 800;
   cursor: pointer;
   transition: all .15s;
 }
 .tf-btn:hover { border-color: var(--purple); color: var(--purple); background: var(--purple-lt) }
-/* Chỉ đánh dấu ĐÃ CHỌN (chưa biết đúng/sai) — dùng xanh dương/cam thay vì
-   xanh lá/đỏ để học sinh không nhầm đây là kết quả chấm điểm. */
-.tf-btn.selected-true  { border-color: var(--blue);   background: var(--blue-lt);   color: #1c5fad }
-.tf-btn.selected-false { border-color: var(--orange); background: var(--orange-lt); color: #a4530f }
+/* Chỉ đánh dấu ĐÃ CHỌN (chưa biết đúng/sai) — Đúng và Sai dùng CHUNG 1 màu
+   (tím thương hiệu, giống trạng thái "đã chọn" ở câu trắc nghiệm) để học sinh
+   không suy luận màu sắc ra đáp án đúng/sai trước khi nộp bài. */
+.tf-btn.selected-true,
+.tf-btn.selected-false {
+  border-color: var(--purple);
+  background: var(--purple-lt);
+  color: var(--purple);
+}
 
 /* ══════════════════════════════════════════════
    MATCHING — Drag & Drop
@@ -1340,6 +1363,49 @@ body {
 .match-dot { width:12px; height:12px; border-radius:50%; border:2px solid var(--border); flex-shrink:0; transition:all .15s }
 .match-left-item.matched .match-dot { border-color:var(--teal); background:var(--teal) }
 .match-arrow { display:flex; flex-direction:column; justify-content:center; padding-top:2rem; color:var(--border); font-size:1.5rem; align-items:center; min-width:28px }
+
+/* ── Card từng dòng: nhãn thiết bị bên trái, ô đáp án GỌN nằm ngay bên
+     phải trên CÙNG một dòng (mắt học sinh chỉ cần đi trái → phải, không
+     phải kéo xuống nhìn ô thả to bên dưới). Nếu màn hình quá hẹp để vừa
+     một dòng, ô đáp án tự xuống dòng kế tiếp (flex-wrap) thay vì ép co
+     nhãn thiết bị lại. Màu "đã nối" dùng --purple (thương hiệu), KHÔNG
+     dùng --teal/--green vì dễ hiểu nhầm là "đúng" trước khi nộp bài. */
+.matching-list { display:flex; flex-direction:column; gap:.5rem }
+.match-row {
+  display:flex; flex-direction:row; align-items:center; flex-wrap:wrap;
+  justify-content:space-between; gap:.4rem .75rem;
+  padding:.65rem .85rem;
+  background: var(--card2);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: all .15s;
+}
+.match-row.filled { border-color: rgba(79,107,255,.4) }
+.match-row-text {
+  display: flex; align-items: center; gap: .55rem;
+  flex: 1 1 160px; min-width: 0;
+  font-size: clamp(.85rem, 2.3vw, .95rem);
+  font-weight: 700;
+  color: var(--text);
+}
+.match-row-num {
+  flex-shrink: 0;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--purple-lt); color: var(--purple);
+  font-size: .72rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+.match-row .match-drop-slot {
+  flex: 0 1 300px; width: auto; min-width: 220px; max-width: 320px;
+  margin-left: 0;
+  min-height: 40px; padding: .4rem .6rem;
+}
+.match-row .match-drop-slot.empty-hint::before { content: '[ Kéo đáp án vào ]'; font-size: .78rem }
+.match-row .match-drop-slot .slot-content {
+  padding-top: 0; padding-right: 1.3rem; font-size: .82rem; color: var(--purple);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.match-row .match-drop-slot .slot-remove { top: 50%; transform: translateY(-50%); right: 6px }
 
 /* ── Vùng bấm trực tiếp trên ảnh (câu nối cột dùng q.regions) ── */
 .match-region-wrap {
@@ -1461,12 +1527,12 @@ body {
   position: relative;
 }
 .match-drop-slot.drag-over { border-color:var(--purple); background:var(--purple-lt) }
-.match-drop-slot.filled   { border-style:solid; border-color:var(--teal); background:var(--teal-lt) }
+.match-drop-slot.filled   { border-style:solid; border-color:var(--purple); background:var(--purple-lt) }
 .match-drop-slot .slot-label {
   font-size: .7rem; font-weight:800; color:var(--muted); text-transform:uppercase;
   letter-spacing:.4px; position:absolute; top:4px; left:10px; opacity:.7;
 }
-.match-drop-slot .slot-content { font-size:.9rem; font-weight:700; color:#008060; padding-top:.9rem; width:100% }
+.match-drop-slot .slot-content { font-size:.9rem; font-weight:700; color:var(--purple); padding-top:.9rem; width:100% }
 .match-drop-slot .slot-remove {
   position: absolute; top:5px; right:8px;
   background:none; border:none; color:var(--red); cursor:pointer;
@@ -1474,20 +1540,25 @@ body {
 }
 .match-drop-slot .slot-remove:hover { opacity:1 }
 .match-drop-slot.empty-hint::before {
-  content: 'Kéo thả vào đây ↓';
-  font-size: .82rem; color:var(--muted); font-style:italic; width:100%; text-align:center;
+  content: 'Thả vào đây ↓';
+  font-size: .8rem; color:var(--muted); font-style:italic; width:100%; text-align:center;
 }
 
 /* Drag pool */
+.drag-pool-title {
+  font-size: .72rem; font-weight: 800; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .5px; margin-bottom: .35rem;
+}
 .drag-pool {
-  display: flex; flex-wrap: wrap; gap: .55rem;
-  margin-bottom: 1rem;
-  padding: .8rem;
+  display: flex; flex-wrap: wrap; gap: .5rem;
+  margin-bottom: .75rem;
+  padding: .6rem;
   background: var(--purple-lt);
   border: 2px solid rgba(79,107,255,.2);
   border-radius: var(--radius-sm);
-  min-height: 56px;
+  min-height: 48px;
 }
+.pool-done { color:var(--teal); font-size:.82rem; font-style:italic; padding:.25rem .5rem; }
 .drag-chip {
   padding: .5rem 1rem;
   background: #fff;
@@ -1510,15 +1581,15 @@ body {
   transform: translateY(-3px);
 }
 .match-hint {
-  font-size: .85rem; color: var(--purple);
-  background: var(--purple-lt);
-  border: 1.5px solid rgba(79,107,255,.25);
+  font-size: .8rem; font-weight: 700; color: var(--muted);
+  background: var(--yellow-lt);
+  border: 1.5px solid rgba(255,179,0,.25);
   border-radius: var(--radius-sm);
-  padding: .55rem .9rem;
-  margin-bottom: .75rem;
-  display: flex; align-items: center; gap: .5rem;
-  font-weight: 600;
+  padding: .45rem .8rem;
+  margin-bottom: .6rem;
+  display: flex; align-items: center; flex-wrap: wrap; gap: .4rem;
 }
+.match-hint-count { color: var(--teal); font-weight: 800; margin-left: .25rem }
 .match-pairs-display { margin-top:1rem; display:flex; flex-direction:column; gap:.4rem }
 .match-pair-row {
   display:flex; align-items:center; gap:.7rem; padding:.55rem 1rem;
@@ -1955,8 +2026,9 @@ body {
   .option-btn { font-size: .95rem; padding: .9rem 1rem; gap: .8rem }
   .option-marker { width: 30px; height: 30px; font-size: .8rem }
   .match-left-item { font-size: .9rem; padding: .65rem .85rem; min-height: 48px }
-  .match-drop-slot { min-height: 48px }
   .drag-chip { font-size: .82rem; padding: .4rem .8rem }
+  .match-row { padding: .55rem .65rem }
+  .match-row .match-drop-slot { flex: 1 1 100%; max-width: 100%; margin-top: .1rem }
   .theme-toggle { top: 10px; right: 10px; width: 38px; height: 38px; font-size: 1rem }
 }
 
@@ -2044,3 +2116,107 @@ body {
 }
 .theme-toggle-exam:hover { border-color: var(--purple) }
 .lobby-game-strip { margin-top: 18px; }
+/* ════════════════════════════════════════════════════════════
+   GAME MODAL — mini-game "Prism Cascade" (nhúng qua iframe)
+   Cùng "look" tối màu như 3D Shelf Modal (css/coordinator-
+   dashboard.css .shelf-modal-*), mở/đóng bởi
+   js/prism-cascade-modal.js. Markup đặt cuối <body> index.html.
+   ════════════════════════════════════════════════════════════ */
+.game-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(10, 12, 20, 0.72);
+  backdrop-filter: blur(2px);
+}
+.game-modal-overlay.show { display: flex }
+
+.game-modal {
+  width: min(520px, 100%);
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #10131f;
+  box-shadow: var(--shadow-lg);
+  animation: gameModalIn 260ms ease;
+}
+@keyframes gameModalIn {
+  from { opacity: 0; transform: translateY(12px) scale(.98) }
+  to   { opacity: 1; transform: none }
+}
+
+.game-modal-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px;
+  background: #0e1024;
+  color: #f4eee6;
+  flex-shrink: 0;
+}
+.game-modal-title {
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 800;
+  font-size: .92rem;
+  letter-spacing: .02em;
+}
+.game-modal-close {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(244, 238, 230, .35);
+  background: transparent;
+  color: #f4eee6;
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  font-size: .78rem;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+.game-modal-close:hover { background: rgba(244, 238, 230, .14) }
+
+.game-modal-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  max-height: 82vh;
+}
+.game-modal-iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: #0e1024;
+}
+
+@media (max-width: 480px) {
+  .game-modal-overlay { padding: 12px }
+  .game-modal-bar { padding: 10px 14px }
+  .game-modal-frame { aspect-ratio: 3 / 4; max-height: 78vh }
+}
+
+.play-game-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(79,107,255,.3);
+  background: linear-gradient(90deg, var(--purple-lt), var(--teal-lt));
+  color: var(--purple);
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  font-size: .82rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.play-game-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow) }

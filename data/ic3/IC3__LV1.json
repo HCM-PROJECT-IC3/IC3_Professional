@@ -1022,6 +1022,81 @@
         "explanation": "Đáp án đúng cho từng phát biểu: Trình duyệt web → Phần mềm ứng dụng; Bộ phát đa phương tiện → Phần mềm ứng dụng; Trình điều khiển Card đồ họa → Phần mềm hệ thống; Trình quản lý phân vùng ổ đĩa → Phần mềm hệ thống.",
         "id": 42,
         "uid": "ic3__lv1__t1__q42"
+      },
+      {
+        "question": "Đâu là thiết bị nhập (nhấp vào vị trí thiết bị). (Chọn 3)",
+        "type": "hotspot",
+        "image": true,
+        "image_file": "img-c333f1414e89ae897a66763dabf194edd4a0c421.png",
+        "imageUrl": "img/img-c333f1414e89ae897a66763dabf194edd4a0c421.png",
+        "areas": [
+          {
+            "id": "a1",
+            "shape": "rectangle",
+            "x": 36.62,
+            "y": 69.75,
+            "w": 41.85,
+            "h": 10.92,
+            "correct": true
+          },
+          {
+            "id": "a2",
+            "shape": "rectangle",
+            "x": 80.62,
+            "y": 65.55,
+            "w": 11.08,
+            "h": 10.5,
+            "correct": true
+          },
+          {
+            "id": "a3",
+            "shape": "oval",
+            "x": 78.04412052775858,
+            "y": 77.94405859550828,
+            "w": 18.39663322001382,
+            "h": 22.05594140449172,
+            "correct": true
+          },
+          {
+            "x": 65.01412052775858,
+            "y": 10.786359325768153,
+            "w": 34.252110733379396,
+            "h": 50.601335617493,
+            "shape": "rectangle",
+            "id": "a4",
+            "correct": false
+          },
+          {
+            "x": 2.512562862234506,
+            "y": 20.59414044917198,
+            "w": 22.210351788896567,
+            "h": 51.96539421300128,
+            "shape": "rectangle",
+            "id": "a5",
+            "correct": false
+          },
+          {
+            "x": 27.95643194105507,
+            "y": 10.185816460756687,
+            "w": 34.90246252227596,
+            "h": 44.824683314183446,
+            "shape": "rectangle",
+            "id": "a6",
+            "correct": false
+          },
+          {
+            "id": "a7",
+            "shape": "rectangle",
+            "x": 13.0339198478415,
+            "y": 77.10446215594153,
+            "w": 19.786432540096737,
+            "h": 14.209956909928664,
+            "correct": false
+          }
+        ],
+        "id": 167,
+        "uid": "ic3__lv1__hotspot__q1",
+        "explanation": "Có 3 vị trí đúng, được đánh dấu màu xanh trên hình minh họa ở trên."
       }
     ],
     "2. Công dân số": [
@@ -3657,83 +3732,6 @@
         "explanation": "Đây là hình thức bắt nạt xảy ra qua điện thoại, mạng xã hội, email, trò chơi trực tuyến,... nơi kẻ xấu có thể:",
         "id": 166,
         "uid": "ic3__lv1__t7__q22"
-      }
-    ],
-    "Minitest Hotspot": [
-      {
-        "question": "Đâu là thiết bị nhập (nhấp vào vị trí thiết bị). (Chọn 3)",
-        "type": "hotspot",
-        "image": true,
-        "image_file": "img-c333f1414e89ae897a66763dabf194edd4a0c421.png",
-        "imageUrl": "img/img-c333f1414e89ae897a66763dabf194edd4a0c421.png",
-        "areas": [
-          {
-            "id": "a1",
-            "shape": "rectangle",
-            "x": 36.62,
-            "y": 69.75,
-            "w": 41.85,
-            "h": 10.92,
-            "correct": true
-          },
-          {
-            "id": "a2",
-            "shape": "rectangle",
-            "x": 80.62,
-            "y": 65.55,
-            "w": 11.08,
-            "h": 10.5,
-            "correct": true
-          },
-          {
-            "id": "a3",
-            "shape": "oval",
-            "x": 78.04412052775858,
-            "y": 77.94405859550828,
-            "w": 18.39663322001382,
-            "h": 22.05594140449172,
-            "correct": true
-          },
-          {
-            "x": 65.01412052775858,
-            "y": 10.786359325768153,
-            "w": 34.252110733379396,
-            "h": 50.601335617493,
-            "shape": "rectangle",
-            "id": "a4",
-            "correct": false
-          },
-          {
-            "x": 2.512562862234506,
-            "y": 20.59414044917198,
-            "w": 22.210351788896567,
-            "h": 51.96539421300128,
-            "shape": "rectangle",
-            "id": "a5",
-            "correct": false
-          },
-          {
-            "x": 27.95643194105507,
-            "y": 10.185816460756687,
-            "w": 34.90246252227596,
-            "h": 44.824683314183446,
-            "shape": "rectangle",
-            "id": "a6",
-            "correct": false
-          },
-          {
-            "id": "a7",
-            "shape": "rectangle",
-            "x": 13.0339198478415,
-            "y": 77.10446215594153,
-            "w": 19.786432540096737,
-            "h": 14.209956909928664,
-            "correct": false
-          }
-        ],
-        "id": 167,
-        "uid": "ic3__lv1__hotspot__q1",
-        "explanation": "Có 3 vị trí đúng, được đánh dấu màu xanh trên hình minh họa ở trên."
       }
     ]
   }

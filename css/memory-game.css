@@ -1,0 +1,226 @@
+/* ════════════════════════════════════════════════════════════
+   css/memory-game.css — Mini-game "Trí Nhớ Thiết Bị & Phần Mềm"
+   Cùng design token / "look" tối màu như css/prism-cascade.css
+   (radial navy background, Baloo 2, thẻ bo tròn). Trang
+   memory-game.html được nhúng qua modal giống game.html, xem
+   js/memory-game-modal.js.
+   ════════════════════════════════════════════════════════════ */
+
+* { box-sizing: border-box; }
+
+body.mg-body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Baloo 2', sans-serif;
+  background: radial-gradient(ellipse at top, #1c2140 0%, #0e1024 70%);
+  color: #f4eee6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.mg-wrap {
+  width: 100%;
+  max-width: 480px;
+}
+
+/* ── Header / HUD ── */
+.mg-header { text-align: center; margin-bottom: 10px; }
+.mg-title {
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: .02em;
+  background: linear-gradient(90deg, #8fa4ff, #66e0d0, #ffcf80);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.mg-subtitle { font-size: .75rem; color: #b7bdd6; margin-top: 2px; }
+
+.mg-hud { display: flex; gap: 8px; margin: 12px 0 8px; }
+.mg-stat {
+  flex: 1;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 14px;
+  padding: 8px 10px;
+  text-align: center;
+}
+.mg-stat-label { font-size: .62rem; color: #9aa0c0; text-transform: uppercase; letter-spacing: .04em; }
+.mg-stat-value { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 1.05rem; margin-top: 2px; }
+
+/* ── Category picker ── */
+.mg-picker {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.mg-cat-card {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  padding: 14px 12px;
+  text-align: left;
+  color: #f4eee6;
+  font-family: 'Baloo 2', sans-serif;
+  cursor: pointer;
+  transition: .2s;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.mg-cat-card:hover { background: rgba(255,255,255,.12); transform: translateY(-2px); }
+.mg-cat-icon { font-size: 1.5rem; }
+.mg-cat-name { font-weight: 800; font-size: .88rem; margin-top: 2px; }
+.mg-cat-desc { font-size: .66rem; color: #b7bdd6; line-height: 1.3; }
+.mg-cat-count {
+  margin-top: 6px;
+  font-family: 'Space Mono', monospace;
+  font-size: .62rem;
+  color: #8fa4ff;
+  font-weight: 700;
+}
+
+/* ── Board ── */
+.mg-board-outer { position: relative; }
+.mg-board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  perspective: 800px;
+}
+
+.mg-card {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.mg-card-inner {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transition: transform .45s cubic-bezier(.4,.2,.2,1);
+}
+.mg-card.is-flipped .mg-card-inner,
+.mg-card.is-matched .mg-card-inner { transform: rotateY(180deg); }
+
+.mg-card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.mg-card-back {
+  background: linear-gradient(155deg, #2a2f57, #171a30);
+  border: 1px solid rgba(255,255,255,.12);
+}
+.mg-card-back::after {
+  content: '?';
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 800;
+  font-size: 1.4rem;
+  color: rgba(244,238,230,.28);
+}
+
+.mg-card-front {
+  background: #f4eee6;
+  transform: rotateY(180deg);
+  flex-direction: column;
+  padding: 8%;
+  gap: 4%;
+  border: 1px solid rgba(255,255,255,.12);
+}
+.mg-card-front img {
+  width: 100%;
+  height: 68%;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.mg-card-front span {
+  font-size: .58rem;
+  font-weight: 700;
+  color: #21243b;
+  text-align: center;
+  line-height: 1.1;
+}
+
+.mg-card.is-matched .mg-card-front {
+  background: #e4fff3;
+  box-shadow: 0 0 0 2px #4fd6a0 inset;
+}
+.mg-card.is-matched { animation: mgPop .38s ease; }
+@keyframes mgPop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.07); }
+  100% { transform: scale(1); }
+}
+
+.mg-card.is-mismatch .mg-card-inner { animation: mgShake .38s ease; }
+@keyframes mgShake {
+  0%, 100% { transform: rotateY(180deg) translateX(0); }
+  25% { transform: rotateY(180deg) translateX(-4px); }
+  75% { transform: rotateY(180deg) translateX(4px); }
+}
+
+.mg-toast {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  transform: translateX(-50%);
+  background: rgba(20,22,40,.92);
+  border: 1px solid rgba(255,255,255,.14);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: .72rem;
+  font-weight: 700;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s;
+}
+.mg-toast.show { opacity: 1; }
+
+/* ── Footer ── */
+.mg-footer { display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
+.mg-btn {
+  padding: 9px 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(244,238,230,.3);
+  background: rgba(255,255,255,.06);
+  color: #f4eee6;
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  font-size: .8rem;
+  cursor: pointer;
+  transition: .2s;
+}
+.mg-btn:hover { background: rgba(255,255,255,.14); transform: translateY(-1px); }
+.mg-btn-primary {
+  background: linear-gradient(90deg, #8fa4ff, #66e0d0);
+  color: #12142a;
+  border: none;
+}
+
+/* ── Win overlay ── */
+.mg-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10,12,20,.86);
+  border-radius: 18px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+.mg-overlay.show { display: flex; }
+.mg-overlay-card { text-align: center; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+.mg-overlay-card .mg-btn { margin-top: 8px; }
+.mg-overlay-icon { font-size: 2.2rem; }
+.mg-overlay-title { font-weight: 800; font-size: 1.05rem; margin-top: 6px; }
+.mg-overlay-sub { font-size: .78rem; color: #b7bdd6; margin: 6px 0 14px; }
