@@ -154,6 +154,23 @@
 
         <button type="button" class="btn-start" id="btnStart" onclick="startExam()" disabled>▶ Bắt đầu</button>
         <button type="button" class="btn-secondary" onclick="showRecords()">📊 Xem lịch sử bài làm</button>
+
+        <!-- Dải XP/Streak/Huy hiệu (js/gamification.js, gọi từ js/main.js) +
+             lối vào mini-game "Prism Cascade" — giải trí ngắn giữa các lượt
+             ôn bài, không liên quan tới điểm thi. Mở qua modal, xem
+             js/prism-cascade-modal.js. -->
+        <div class="lobby-game-strip" id="lobbyGameStrip"></div>
+        <button type="button" class="play-game-btn" id="openGameBtn" title="Chơi mini-game giải trí Prism Cascade">
+          🎮 Chơi Prism Cascade
+        </button>
+        <button type="button" class="play-game-btn" id="openMemoryGameBtn"
+          title="Chơi mini-game Trí Nhớ Thiết Bị &amp; Phần Mềm" style="margin-top:8px;">
+          🧠 Trí Nhớ Thiết Bị
+        </button>
+        <button type="button" class="play-game-btn" id="openSudokuBtn"
+          title="Chơi mini-game Sudoku Trí Tuệ" style="margin-top:8px;">
+          🧩 Sudoku Trí Tuệ
+        </button>
       </div>
     </div>
   </div>
@@ -251,6 +268,69 @@
     </div>
   </div>
 
+  <!-- ============ MINI-GAME "PRISM CASCADE" (modal) — xem js/prism-cascade-modal.js ============ -->
+  <div class="game-modal-overlay" id="gameModalOverlay">
+    <div class="game-modal">
+      <div class="game-modal-bar">
+        <span class="game-modal-title">✨ Prism Cascade — giải trí ngắn</span>
+        <button type="button" class="game-modal-close" id="closeGameModalBtn">✕ Đóng</button>
+      </div>
+      <div class="game-modal-frame">
+        <iframe
+          id="gameModalFrame"
+          class="game-modal-iframe"
+          title="Mini-game Prism Cascade"
+          src="about:blank"
+          data-src="game.html"
+          loading="lazy"
+          allow="fullscreen"
+        ></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MINI-GAME "TRÍ NHỚ THIẾT BỊ & PHẦN MỀM" (modal) — xem js/memory-game-modal.js ============ -->
+  <div class="game-modal-overlay" id="memoryGameModalOverlay">
+    <div class="game-modal">
+      <div class="game-modal-bar">
+        <span class="game-modal-title">🧠 Trí Nhớ Thiết Bị &amp; Phần Mềm</span>
+        <button type="button" class="game-modal-close" id="closeMemoryGameModalBtn">✕ Đóng</button>
+      </div>
+      <div class="game-modal-frame">
+        <iframe
+          id="memoryGameModalFrame"
+          class="game-modal-iframe"
+          title="Mini-game Trí Nhớ Thiết Bị &amp; Phần Mềm"
+          src="about:blank"
+          data-src="memory-game.html"
+          loading="lazy"
+          allow="fullscreen"
+        ></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MINI-GAME "SUDOKU TRÍ TUỆ" (modal) — xem js/sudoku-modal.js ============ -->
+  <div class="game-modal-overlay" id="sudokuModalOverlay">
+    <div class="game-modal">
+      <div class="game-modal-bar">
+        <span class="game-modal-title">🧩 Sudoku Trí Tuệ</span>
+        <button type="button" class="game-modal-close" id="closeSudokuModalBtn">✕ Đóng</button>
+      </div>
+      <div class="game-modal-frame">
+        <iframe
+          id="sudokuModalFrame"
+          class="game-modal-iframe"
+          title="Mini-game Sudoku Trí Tuệ"
+          src="about:blank"
+          data-src="sudoku.html"
+          loading="lazy"
+          allow="fullscreen"
+        ></iframe>
+      </div>
+    </div>
+  </div>
+
   <script src="js/googleSheet.js"></script>
   <script src="js/gamification.js"></script>
 
@@ -273,6 +353,9 @@
        thuộc thư viện ngoài. Xem js/carousel-3d.js. -->
   <script src="js/carousel-3d.js"></script>
   <script src="js/carousel-keyboard-cards.js"></script>
+  <script src="js/prism-cascade-modal.js"></script>
+  <script src="js/memory-game-modal.js"></script>
+  <script src="js/sudoku-modal.js"></script>
 </body>
 
 </html>

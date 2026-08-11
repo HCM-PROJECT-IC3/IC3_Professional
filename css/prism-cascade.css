@@ -1,0 +1,305 @@
+/* ════════════════════════════════════════════════════════════
+   css/prism-cascade.css — Mini-game "Prism Cascade" (MVP)
+   Dùng chung design token từ css/theme.css (--purple, --teal,
+   --yellow, --orange, --pink, --bg, --text...). Trang game.html
+   được nhúng qua modal (giống kiểu 3D Shelf) nên nền tối, gọn,
+   không phụ thuộc layout của trang chính.
+   ════════════════════════════════════════════════════════════ */
+
+* { box-sizing: border-box; }
+
+body.pc-body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Baloo 2', sans-serif;
+  background: radial-gradient(ellipse at top, #1c2140 0%, #0e1024 70%);
+  color: #f4eee6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.pc-wrap {
+  width: 100%;
+  max-width: 480px;
+}
+
+/* ── Header / HUD ── */
+.pc-header {
+  text-align: center;
+  margin-bottom: 10px;
+}
+.pc-title {
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: .02em;
+  background: linear-gradient(90deg, #8fa4ff, #66e0d0, #ffcf80);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.pc-subtitle {
+  font-size: .75rem;
+  color: #b7bdd6;
+  margin-top: 2px;
+}
+
+.pc-hud {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0 8px;
+}
+.pc-stat {
+  flex: 1;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 14px;
+  padding: 8px 10px;
+  text-align: center;
+}
+.pc-stat-label {
+  font-size: .62rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: #9aa0c2;
+}
+.pc-stat-value {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-top: 2px;
+}
+#gameScore { color: #ffd479; }
+#gameMoves { color: #7fe6d6; }
+
+.pc-progress-wrap {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.10);
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.pc-progress-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #4f6bff, #17b3a3, #f6a723);
+  transition: width .3s ease;
+}
+
+/* ── Board ── */
+.pc-board-outer {
+  position: relative;
+}
+
+.pc-board {
+  --cols: 6;
+  --rows: 6;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), 1fr);
+  grid-template-rows: repeat(var(--rows), 1fr);
+  gap: 4px;
+  aspect-ratio: 1 / 1;
+  background: #10131f;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 16px;
+  padding: 6px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 2px 14px rgba(0,0,0,.4);
+}
+
+.pc-board.board-shake { animation: pcBoardShake .38s ease; }
+@keyframes pcBoardShake {
+  0%,100% { transform: translate(0,0); }
+  20% { transform: translate(-4px,2px); }
+  40% { transform: translate(4px,-2px); }
+  60% { transform: translate(-3px,1px); }
+  80% { transform: translate(3px,-1px); }
+}
+
+.shard {
+  position: relative;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  will-change: transform;
+  animation: pcSpawnIn .22s ease;
+}
+@keyframes pcSpawnIn {
+  from { opacity: 0; transform: scale(.4); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.shard-inner {
+  width: 74%;
+  height: 74%;
+  display: block;
+  box-shadow: 0 2px 8px rgba(0,0,0,.35), inset 0 0 0 1.5px rgba(255,255,255,.35);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+
+.shard.selected .shard-inner {
+  transform: scale(1.14);
+  box-shadow: 0 0 0 3px #fff, 0 0 14px rgba(255,255,255,.7);
+}
+
+.shard.popping .shard-inner {
+  animation: pcPop .22s ease forwards;
+}
+@keyframes pcPop {
+  0% { transform: scale(1); opacity: 1; }
+  60% { transform: scale(1.35); opacity: .8; }
+  100% { transform: scale(0); opacity: 0; }
+}
+
+.shard.shake { animation: pcShardShake .19s ease; }
+@keyframes pcShardShake {
+  0%,100% { transform: translate(0,0); }
+  50% { transform: translate(2px,-2px); }
+}
+
+.shard.spawning { animation: pcSpawnIn .28s ease; }
+.shard.reshuffling { animation: pcSpawnIn .2s ease; }
+
+/* 5 loại Shard — hình học trừu tượng, không dùng icon kẹo/trái cây */
+.shard-prism .shard-inner {
+  clip-path: polygon(50% 4%, 4% 96%, 96% 96%);
+  background: linear-gradient(160deg, #7d94ff, #4f6bff);
+}
+.shard-cube .shard-inner {
+  border-radius: 7px;
+  background: linear-gradient(160deg, #3fe0cb, #17b3a3);
+}
+.shard-orb .shard-inner {
+  border-radius: 50%;
+  background: linear-gradient(160deg, #ffd479, #f6a723);
+}
+.shard-spire .shard-inner {
+  clip-path: polygon(50% 2%, 98% 50%, 50% 98%, 2% 50%);
+  background: linear-gradient(160deg, #ffab6b, #ff8a3d);
+}
+.shard-leaf .shard-inner {
+  clip-path: polygon(25% 4%, 75% 4%, 98% 50%, 75% 96%, 25% 96%, 2% 50%);
+  background: linear-gradient(160deg, #4fdd93, #21b36b);
+}
+
+/* ── Floating score / combo feedback ── */
+.floating-score {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: .9rem;
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0,0,0,.5);
+  pointer-events: none;
+  animation: pcFloatUp .7s ease forwards;
+  z-index: 5;
+}
+@keyframes pcFloatUp {
+  0% { opacity: 0; transform: translate(-50%,-50%) translateY(0) scale(.8); }
+  20% { opacity: 1; transform: translate(-50%,-50%) translateY(-6px) scale(1.05); }
+  100% { opacity: 0; transform: translate(-50%,-50%) translateY(-34px) scale(1); }
+}
+
+.combo-banner {
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  transform: translate(-50%, -8px);
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .02em;
+  opacity: 0;
+  pointer-events: none;
+  transition: transform .18s ease, opacity .18s ease;
+  z-index: 6;
+  white-space: nowrap;
+}
+.combo-banner.show { opacity: 1; transform: translate(-50%, 0); }
+.tier-flow { background: #17b3a3; color: #06231f; }
+.tier-surge { background: #f6a723; color: #2b1900; }
+.tier-storm { background: #ff8a3d; color: #2b1400; }
+.tier-overload { background: linear-gradient(90deg,#dd4fa6,#4f6bff); color: #fff; }
+
+.pc-toast {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translate(-50%, 8px);
+  background: rgba(0,0,0,.72);
+  color: #fff;
+  font-size: .74rem;
+  padding: 6px 12px;
+  border-radius: 999px;
+  opacity: 0;
+  pointer-events: none;
+  transition: transform .2s ease, opacity .2s ease;
+  z-index: 6;
+}
+.pc-toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ── Footer / controls ── */
+.pc-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+.pc-btn {
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.22);
+  background: rgba(255,255,255,.06);
+  color: #f4eee6;
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  font-size: .82rem;
+  cursor: pointer;
+  transition: background .15s ease, transform .15s ease;
+}
+.pc-btn:hover { background: rgba(255,255,255,.14); transform: translateY(-1px); }
+.pc-btn:active { transform: translateY(0); }
+.pc-btn-primary {
+  background: linear-gradient(90deg, #4f6bff, #17b3a3);
+  border-color: transparent;
+}
+.pc-btn-primary:hover { filter: brightness(1.08); }
+
+/* ── Win/Lose overlay ── */
+.pc-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(6,7,16,.78);
+  backdrop-filter: blur(3px);
+}
+.pc-overlay.show { display: flex; }
+.pc-overlay-card {
+  width: min(360px, 100%);
+  background: #161a2c;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 20px;
+  padding: 26px 22px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+  animation: pcSpawnIn .25s ease;
+}
+.pc-overlay-icon { font-size: 2.6rem; }
+.pc-overlay-title { font-weight: 800; font-size: 1.1rem; margin-top: 6px; }
+.pc-overlay-sub { font-size: .84rem; color: #b7bdd6; margin-top: 8px; line-height: 1.5; }
+.pc-overlay-card .pc-btn { margin-top: 16px; }
+
+@media (max-width: 380px) {
+  .pc-title { font-size: 1rem; }
+  .pc-stat-value { font-size: .92rem; }
+}

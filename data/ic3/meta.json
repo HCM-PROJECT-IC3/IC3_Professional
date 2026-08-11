@@ -1,5 +1,5 @@
 {
-  "version": "2026-07-30.8be66886",
+  "version": "2026-08-11.0271e62f",
   "categories": [
     {
       "id": "Spark",
@@ -13,12 +13,13 @@
           "grade": "LV1",
           "minitests": {
             "1. Căn bản về công nghệ": {
-              "count": 16,
+              "count": 21,
               "types": {
                 "single": 9,
                 "truefalse": 4,
                 "matching": 2,
-                "multi": 1
+                "multi": 1,
+                "hotspot": 5
               }
             },
             "2. Công dân số": {
@@ -35,16 +36,19 @@
               }
             },
             "4. Sáng tạo nội dung": {
-              "count": 5,
+              "count": 7,
               "types": {
                 "single": 3,
                 "truefalse": 1,
-                "matching": 1
+                "matching": 1,
+                "hotspot": 2
               }
             },
             "5. Giao tiếp": {
-              "count": 0,
-              "types": {}
+              "count": 4,
+              "types": {
+                "hotspot": 4
+              }
             },
             "6. Hợp tác, cộng tác": {
               "count": 23,
@@ -60,12 +64,6 @@
               "types": {
                 "single": 4,
                 "truefalse": 1
-              }
-            },
-            "Minitest Hotspot": {
-              "count": 11,
-              "types": {
-                "hotspot": 11
               }
             }
           }
@@ -102,12 +100,13 @@
               }
             },
             "4. Sáng tạo nội dung": {
-              "count": 10,
+              "count": 16,
               "types": {
                 "single": 5,
                 "matching": 1,
                 "truefalse": 3,
-                "multi": 1
+                "multi": 1,
+                "hotspot": 6
               }
             },
             "5. Giao tiếp": {
@@ -133,12 +132,6 @@
                 "multi": 1,
                 "matching": 1,
                 "truefalse": 1
-              }
-            },
-            "Minitest Hotspot": {
-              "count": 6,
-              "types": {
-                "hotspot": 6
               }
             }
           }
@@ -221,12 +214,13 @@
           "grade": "LV1",
           "minitests": {
             "1. Căn bản về công nghệ": {
-              "count": 42,
+              "count": 43,
               "types": {
                 "multi": 14,
                 "matching": 11,
                 "truefalse": 6,
-                "single": 11
+                "single": 11,
+                "hotspot": 1
               }
             },
             "2. Công dân số": {
@@ -277,12 +271,6 @@
                 "single": 9,
                 "truefalse": 1
               }
-            },
-            "Minitest Hotspot": {
-              "count": 1,
-              "types": {
-                "hotspot": 1
-              }
             }
           }
         },
@@ -293,12 +281,13 @@
           "grade": "LV2",
           "minitests": {
             "1. Căn bản về công nghệ": {
-              "count": 28,
+              "count": 31,
               "types": {
                 "truefalse": 8,
                 "multi": 11,
                 "matching": 2,
-                "single": 7
+                "single": 7,
+                "hotspot": 3
               }
             },
             "2. Công dân số": {
@@ -311,21 +300,23 @@
               }
             },
             "3. Quản lý thông tin": {
-              "count": 21,
+              "count": 27,
               "types": {
                 "multi": 5,
                 "truefalse": 4,
                 "matching": 5,
-                "single": 7
+                "single": 7,
+                "hotspot": 6
               }
             },
             "4. Sáng tạo nội dung": {
-              "count": 38,
+              "count": 39,
               "types": {
                 "truefalse": 3,
                 "matching": 8,
                 "multi": 16,
-                "single": 11
+                "single": 11,
+                "hotspot": 1
               }
             },
             "5. Giao tiếp": {
@@ -337,26 +328,22 @@
               }
             },
             "6. Hợp tác, cộng tác": {
-              "count": 42,
+              "count": 44,
               "types": {
                 "multi": 18,
                 "single": 16,
                 "matching": 4,
-                "truefalse": 4
+                "truefalse": 4,
+                "hotspot": 2
               }
             },
             "7. An toàn và bảo mật": {
-              "count": 12,
+              "count": 13,
               "types": {
                 "single": 7,
                 "multi": 4,
-                "truefalse": 1
-              }
-            },
-            "Minitest Hotspot": {
-              "count": 13,
-              "types": {
-                "hotspot": 13
+                "truefalse": 1,
+                "hotspot": 1
               }
             }
           }
@@ -368,11 +355,12 @@
           "grade": "LV3",
           "minitests": {
             "1. Căn bản về công nghệ": {
-              "count": 28,
+              "count": 29,
               "types": {
                 "single": 15,
                 "multi": 10,
-                "matching": 3
+                "matching": 3,
+                "hotspot": 1
               }
             },
             "2. Công dân số": {
@@ -424,12 +412,6 @@
                 "multi": 9,
                 "matching": 1,
                 "truefalse": 1
-              }
-            },
-            "Minitest Hotspot": {
-              "count": 1,
-              "types": {
-                "hotspot": 1
               }
             }
           }

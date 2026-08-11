@@ -783,6 +783,11 @@ function renderMulti(q, qi) {
     ? `Hãy chọn đúng <strong>${q.correct.length}</strong> đáp án`
     : 'Chọn tất cả đáp án đúng';
 
+  // Nhiều lựa chọn (>4) → chia 2 cột để vừa màn hình, đỡ cuộn dài
+  // (xem .options-list--2col trong style.css). Ảnh minh hoạ (noMarker)
+  // thường đi kèm chú thích dài hơn nên vẫn giữ 1 cột cho dễ đọc.
+  const useGrid = !noMarker && (q.options || []).length > 4;
+
   document.getElementById('q-body').innerHTML = `
     <div class="multi-hint" style="
         background:var(--purple-lt);border:1.5px solid rgba(79,107,255,.25);
@@ -793,7 +798,7 @@ function renderMulti(q, qi) {
         (Đã chọn: <span id="multi-count-${qi}">${current.length}</span>/${q.correct?.length || '?'})
       </span>
     </div>
-    <div class="options-list">
+    <div class="options-list${useGrid ? ' options-list--2col' : ''}">
       ${(q.options || []).map((opt, j) => {
         const cc  = COLORS[j % COLORS.length];
         const sel = current.includes(opt) ? `selected ${cc}` : '';
@@ -875,8 +880,8 @@ function renderTrueFalse(q, qi) {
           <th style="text-align:left;padding:.4rem .6rem;color:var(--muted);font-size:.8rem;">
             Phát biểu
           </th>
-          <th style="width:80px;text-align:center;color:var(--teal);font-size:.8rem;">${lT}</th>
-          <th style="width:80px;text-align:center;color:var(--red);font-size:.8rem;">${lF}</th>
+          <th style="width:120px;text-align:center;color:var(--muted);font-size:.85rem;">${lT}</th>
+          <th style="width:120px;text-align:center;color:var(--muted);font-size:.85rem;">${lF}</th>
         </tr>
       </thead>
       <tbody>
@@ -887,21 +892,19 @@ function renderTrueFalse(q, qi) {
                 current[j] === 'false' ? 'rgba(255,82,82,.06)' :
                 'var(--card2)'
               };border-radius:10px;transition:background .2s;">
-            <td style="padding:.55rem .75rem;border-radius:10px 0 0 10px;font-size:.9rem;">
+            <td style="padding:.55rem .75rem;border-radius:10px 0 0 10px;font-size:clamp(.95rem,2.5vw,1.05rem);">
               <span style="font-weight:700;color:var(--muted);margin-right:.4rem;">${j + 1}.</span>
               ${st.text}
             </td>
             <td class="tf-btn-cell" style="text-align:center;border-radius:0;">
               <button class="tf-btn ${current[j] === 'true' ? 'selected-true' : ''}"
                       data-qi="${qi}" data-j="${j}" data-v="true"
-                      onclick="selectTF(this)"
-                      style="min-width:60px;">${lT}</button>
+                      onclick="selectTF(this)">${lT}</button>
             </td>
             <td class="tf-btn-cell" style="text-align:center;border-radius:0 10px 10px 0;">
               <button class="tf-btn ${current[j] === 'false' ? 'selected-false' : ''}"
                       data-qi="${qi}" data-j="${j}" data-v="false"
-                      onclick="selectTF(this)"
-                      style="min-width:60px;">${lF}</button>
+                      onclick="selectTF(this)">${lF}</button>
             </td>
           </tr>`).join('')}
       </tbody>
@@ -970,20 +973,15 @@ function renderMatching(q, qi) {
   });
 
   const answeredPairs = Object.keys(matched).length;
+  const hasRegions = _hasRegions(q);
 
   body.innerHTML = `
-    <div class="match-hint" style="
-        font-size:.82rem;font-weight:700;color:var(--muted);margin-bottom:.75rem;
-        background:var(--yellow-lt);border:1.5px solid rgba(255,179,0,.25);
-        border-radius:10px;padding:.5rem .9rem;">
+    <div class="match-hint">
       🖱️ Kéo thả hoặc <strong>nhấn chip → nhấn ô</strong> để nối cột
-      <span style="margin-left:.75rem;color:var(--teal);">${answeredPairs}/${leftItems.length} đã nối</span>
+      <span class="match-hint-count">${answeredPairs}/${leftItems.length} đã nối</span>
     </div>
 
-    <div style="font-size:.75rem;font-weight:800;color:var(--muted);text-transform:uppercase;
-                letter-spacing:.6px;margin-bottom:.4rem;">
-      📦 Đáp án — kéo/nhấn vào ô bên phải:
-    </div>
+    <div class="drag-pool-title">📦 Đáp án — kéo hoặc nhấn để chọn:</div>
     <div class="drag-pool" id="dragPool-${qi}">
       ${poolChips.length > 0
         ? poolChips.map(({ r, id }) => `
@@ -992,21 +990,14 @@ function renderMatching(q, qi) {
                  data-right="${encodeURIComponent(r)}"
                  data-qi="${qi}"
                  id="${id}">⠿ ${r}</div>`).join('')
-        : `<span style="color:var(--teal);font-size:.82rem;font-style:italic;padding:.25rem .5rem;">
-             ✅ Đã điền hết — nhấn ✕ để thay đổi
-           </span>`}
+        : `<span class="pool-done">✅ Đã điền hết — nhấn ✕ để thay đổi</span>`}
     </div>
 
+    ${hasRegions ? `
     <div class="matching-container">
       <div class="matching-col">
         <div class="matching-col-title">Cột trái</div>
-        ${_hasRegions(q)
-          ? _buildRegionPicker(q, qi, matched)
-          : leftItems.map(left => `
-          <div class="match-left-item ${matched[left] ? 'matched' : ''}">
-            <div class="match-dot"></div>
-            <span>${left}</span>
-          </div>`).join('')}
+        ${_buildRegionPicker(q, qi, matched)}
       </div>
       <div class="match-arrow">→</div>
       <div class="match-right-col">
@@ -1025,7 +1016,27 @@ function renderMatching(q, qi) {
               : ''}
           </div>`).join('')}
       </div>
-    </div>`;
+    </div>` : `
+    <div class="matching-list">
+      ${leftItems.map((left, idx) => `
+        <div class="match-row ${matched[left] ? 'filled' : ''}">
+          <div class="match-row-text">
+            <span class="match-row-num">${idx + 1}</span>
+            <span>${left}</span>
+          </div>
+          <div class="match-drop-slot ${matched[left] ? 'filled' : 'empty-hint'}"
+               data-qi="${qi}"
+               data-left="${encodeURIComponent(left)}"
+               id="slot-${qi}-${idx}">
+            ${matched[left]
+              ? `<span class="slot-content" title="${matched[left]}">${matched[left]}</span>
+                 <button class="slot-remove"
+                         data-qi="${qi}" data-left="${encodeURIComponent(left)}"
+                         onclick="removeMatchDrop(this)">✕</button>`
+              : ''}
+          </div>
+        </div>`).join('')}
+    </div>`}`;
 
   // Gắn drag & drop events
   body.querySelectorAll('.drag-chip').forEach(chip => {

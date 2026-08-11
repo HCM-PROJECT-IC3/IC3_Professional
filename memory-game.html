@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>🧠 Trí Nhớ Thiết Bị & Phần Mềm — Mini Game</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/memory-game.css">
+</head>
+
+<body class="mg-body">
+
+  <!-- Trang này được nhúng qua modal (js/memory-game-modal.js), cùng
+       pattern với game.html / js/prism-cascade-modal.js — chỉ chứa
+       đúng 1 mini-game độc lập, không đụng vào quiz-engine.js.
+       Cơ chế: chọn 1 chủ đề (mỗi chủ đề là 1 bộ ảnh trong
+       img/memory-game/), rồi lật 2 thẻ mỗi lượt để tìm cặp ảnh
+       giống nhau. Danh sách chủ đề + ảnh khai báo trong
+       js/memory-game.js (biến CATEGORIES). -->
+
+  <div class="mg-wrap">
+    <div class="mg-header">
+      <div class="mg-title">🧠 Trí Nhớ Thiết Bị &amp; Phần Mềm</div>
+      <div class="mg-subtitle" id="mgSubtitle">Chọn 1 chủ đề để bắt đầu lật thẻ tìm cặp</div>
+    </div>
+
+    <!-- Màn hình chọn chủ đề -->
+    <div class="mg-picker" id="mgPicker"></div>
+
+    <!-- Màn hình chơi -->
+    <div class="mg-play" id="mgPlay" style="display:none;">
+      <div class="mg-hud">
+        <div class="mg-stat">
+          <div class="mg-stat-label">Lượt lật</div>
+          <div class="mg-stat-value" id="mgMoves">0</div>
+        </div>
+        <div class="mg-stat">
+          <div class="mg-stat-label">Cặp đúng</div>
+          <div class="mg-stat-value" id="mgMatches">0 / 10</div>
+        </div>
+        <div class="mg-stat">
+          <div class="mg-stat-label">Thời gian</div>
+          <div class="mg-stat-value" id="mgTimer">00:00</div>
+        </div>
+      </div>
+
+      <div class="mg-board-outer">
+        <div class="mg-board" id="mgBoard"></div>
+        <div class="mg-toast" id="mgToast"></div>
+
+        <!-- Win overlay -->
+        <div class="mg-overlay" id="mgOverlay">
+          <div class="mg-overlay-card">
+            <div class="mg-overlay-icon" id="mgOverlayIcon">🏆</div>
+            <div class="mg-overlay-title" id="mgOverlayTitle">Hoàn thành!</div>
+            <div class="mg-overlay-sub" id="mgOverlaySub"></div>
+            <button type="button" class="mg-btn mg-btn-primary" id="mgOverlayRestartBtn">🔄 Chơi lại</button>
+            <button type="button" class="mg-btn" id="mgOverlayPickerBtn">🔀 Đổi chủ đề</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mg-footer">
+        <button type="button" class="mg-btn" id="mgRestartBtn">🔄 Chơi lại</button>
+        <button type="button" class="mg-btn" id="mgPickerBtn">🔀 Đổi chủ đề</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/memory-game.js"></script>
+</body>
+
+</html>

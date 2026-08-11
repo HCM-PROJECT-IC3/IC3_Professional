@@ -377,3 +377,99 @@ body {
   .student-table-toolbar { width: 100%; flex-direction: column; align-items: stretch }
   .detail-kpi-row { grid-template-columns: repeat(2, 1fr) }
 }
+
+/* ========================================
+   3D SHELF MODAL (Kệ sách 3D) — dùng chung cho Dashboard Giáo viên
+   (teacher-dashboard.html) & Dashboard Điều phối đào tạo
+   (coordinator-dashboard.html). Cùng file iframe (quiz-shelf.html) và
+   cùng "look" tối màu như bản embed gốc ở trang "Bộ đề của tôi"
+   (css/dashboard.css .shelf-embed), nhưng hiển thị dạng modal overlay
+   vì 2 trang này không có "cards-grid" để hoán đổi tại chỗ.
+   Mở/đóng bởi js/shelf-modal.js — id: #openShelfBtn (nút mở, đặt trong
+   topbar), #shelfModalOverlay/#shelfModalFrame (markup, đặt cạnh
+   #studentDetailOverlay ở cuối <body>).
+   ======================================== */
+.shelf-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(10, 12, 20, 0.72);
+  backdrop-filter: blur(2px);
+}
+.shelf-modal-overlay.show { display: flex }
+
+.shelf-modal {
+  width: min(1100px, 100%);
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #171a24;
+  box-shadow: var(--shadow-card-hover);
+  animation: shelfModalIn 260ms ease;
+}
+@keyframes shelfModalIn {
+  from { opacity: 0; transform: translateY(12px) scale(.98) }
+  to   { opacity: 1; transform: none }
+}
+
+.shelf-modal-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px;
+  background: #10131b;
+  color: #f4eee6;
+  flex-shrink: 0;
+}
+.shelf-modal-title {
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 800;
+  font-size: .92rem;
+  letter-spacing: .02em;
+}
+.shelf-modal-close {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(244, 238, 230, .35);
+  background: transparent;
+  color: #f4eee6;
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  font-size: .78rem;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+.shelf-modal-close:hover { background: rgba(244, 238, 230, .14) }
+
+.shelf-modal-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  max-height: 78vh;
+}
+.shelf-modal-iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: #171a24;
+}
+
+@media (max-width: 900px) {
+  .shelf-modal-frame { aspect-ratio: 4 / 5; max-height: 74vh }
+}
+@media (max-width: 480px) {
+  .shelf-modal-overlay { padding: 12px }
+  .shelf-modal-bar { padding: 10px 14px }
+  .shelf-modal-frame { aspect-ratio: 3 / 4; max-height: 70vh }
+}

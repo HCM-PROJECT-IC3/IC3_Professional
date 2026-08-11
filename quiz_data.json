@@ -377,6 +377,264 @@
                 "id": 16,
                 "uid": "spark__lv1__t1__q16",
                 "explanation": "Đáp án đúng là: “Đoạn văn bản”."
+              },
+              {
+                "question": "Bạn muốn tìm một trò chơi được cài đặt trên máy tính của mình. Trên thanh tác vụ được hiển thị, bạn nên nhấp vào đâu để tìm trò chơi? (Nhấp vào vị trí đúng trong hình để trả lời.)",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-5f0b11f607be0c11931ece782443e451fc2a9d36.png",
+                "imageUrl": "img/img-5f0b11f607be0c11931ece782443e451fc2a9d36.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 1.49,
+                    "y": 40.93812516784074,
+                    "w": 7.19,
+                    "h": 17.454608514816233,
+                    "correct": true
+                  },
+                  {
+                    "id": "a2",
+                    "shape": "rectangle",
+                    "x": 9.108040375600083,
+                    "y": 41.45215684802752,
+                    "w": 44.28392044688317,
+                    "h": 16.011563255283313,
+                    "correct": false
+                  },
+                  {
+                    "id": "a3",
+                    "shape": "rectangle",
+                    "x": 66.73995102810406,
+                    "y": 42.3416881399877,
+                    "w": 5.967336797806951,
+                    "h": 14.677266317343033,
+                    "correct": false
+                  },
+                  {
+                    "id": "a4",
+                    "shape": "rectangle",
+                    "x": 79.6168356970559,
+                    "y": 42.3416881399877,
+                    "w": 5.182160903358678,
+                    "h": 14.232500671362942,
+                    "correct": false
+                  },
+                  {
+                    "id": "a5",
+                    "shape": "rectangle",
+                    "x": 92.33668518711809,
+                    "y": 41.89692249400762,
+                    "w": 5.967336797806951,
+                    "h": 16.45632890126339,
+                    "correct": false
+                  }
+                ],
+                "id": 78,
+                "uid": "spark__lv1__hotspot__q1",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
+              },
+              {
+                "question": "Bạn cần truy cập một trang Web khác. Trên trang Web được hiển thị, bạn nên nhập URL mới vào đâu? (Nhấp vào vị trí đúng trong hình để trả lời.)",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-2602ca98466f97d775b096cde06a7b98720db310.png",
+                "imageUrl": "img/img-2602ca98466f97d775b096cde06a7b98720db310.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 21.468894463331033,
+                    "y": 6.280115232965486,
+                    "w": 59.982211073337936,
+                    "h": 10.239961589011504,
+                    "correct": true
+                  },
+                  {
+                    "id": "a2",
+                    "shape": "rectangle",
+                    "x": 21.670854686772614,
+                    "y": 77.36980668392798,
+                    "w": 55.590453326938444,
+                    "h": 16.318694026391157,
+                    "correct": false
+                  },
+                  {
+                    "id": "a3",
+                    "shape": "rectangle",
+                    "x": 14.290201278958751,
+                    "y": 21.694262358593466,
+                    "w": 59.20226244140055,
+                    "h": 11.51907813627611,
+                    "correct": false
+                  }
+                ],
+                "id": 79,
+                "uid": "spark__lv1__hotspot__q2",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
+              },
+              {
+                "question": "Trong cửa sổ trình duyệt được hiển thị, bạn nên nhấp vào đâu để truy cập các trang khác của trang Web Net PC? (Nhấp vào vị trí đúng trong hình để trả lời.)",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-61ec6844534aa52e3cf3f3c5218ceff050c3f362.png",
+                "imageUrl": "img/img-61ec6844534aa52e3cf3f3c5218ceff050c3f362.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 27.764070357779314,
+                    "y": 35.803274356466524,
+                    "w": 46.31185928444137,
+                    "h": 10.012055818733344,
+                    "correct": true
+                  },
+                  {
+                    "id": "a2",
+                    "shape": "rectangle",
+                    "x": 11.14949770116562,
+                    "y": 9.628531506400432,
+                    "w": 75.21985068814553,
+                    "h": 8.317842018200356,
+                    "correct": false
+                  },
+                  {
+                    "id": "a3",
+                    "shape": "rectangle",
+                    "x": 91.5515092926698,
+                    "y": 8.8723640502004,
+                    "w": 8.008794123372496,
+                    "h": 8.569897836933702,
+                    "correct": false
+                  },
+                  {
+                    "id": "a4",
+                    "shape": "rectangle",
+                    "x": 29.836683989034757,
+                    "y": 1.5627453069334198,
+                    "w": 18.21608075120017,
+                    "h": 8.065786199467011,
+                    "correct": false
+                  }
+                ],
+                "id": 80,
+                "uid": "spark__lv1__hotspot__q3",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
+              },
+              {
+                "question": "Bạn cần đóng (Close) cửa sổ trình duyệt hiển thị. Bạn nên nhấp hoặc nhấn vào biểu tượng nào? (Nhấp vào vị trí đúng trong hình để trả lời.)",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-728ecf91d9eb51c1d3f0f76dac3e39567fb1757c.png",
+                "imageUrl": "img/img-728ecf91d9eb51c1d3f0f76dac3e39567fb1757c.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 92.96110553666897,
+                    "y": 1.046373830404252,
+                    "w": 6.392964821110343,
+                    "h": 9.278242982425512,
+                    "correct": true
+                  },
+                  {
+                    "id": "a2",
+                    "shape": "rectangle",
+                    "x": 11.463568058944933,
+                    "y": 11.125023552417343,
+                    "w": 75.21985068814553,
+                    "h": 6.854280409489448,
+                    "correct": false
+                  },
+                  {
+                    "id": "a3",
+                    "shape": "rectangle",
+                    "x": 30.150754346814075,
+                    "y": 56.468724722886,
+                    "w": 40.043970616862445,
+                    "h": 11.33592529261717,
+                    "correct": false
+                  },
+                  {
+                    "id": "a4",
+                    "shape": "rectangle",
+                    "x": 50.094222065800466,
+                    "y": 1.898107616566163,
+                    "w": 19.786432540096726,
+                    "h": 8.436037427063935,
+                    "correct": false
+                  }
+                ],
+                "id": 81,
+                "uid": "spark__lv1__hotspot__q4",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
+              },
+              {
+                "question": "Nhi muốn tham gia một trang mạng xã hội mới nổi tiếng. Để đăng ký, cô ấy phải điền vào một biểu mẫu trực tuyến. Nhi nên giữ phím nào trong khi gõ để chỉ viết hoa chữ cái đầu tiên trong tên của cô ấy? (Chọn phím thích hợp trong khu vực trả lời).",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-75888e086c9a6a57a0a3c4cff5e0717d90dfbb82.png",
+                "imageUrl": "img/img-75888e086c9a6a57a0a3c4cff5e0717d90dfbb82.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 0,
+                    "y": 61.48,
+                    "w": 11.44,
+                    "h": 17.07,
+                    "correct": true
+                  },
+                  {
+                    "id": "a2",
+                    "shape": "rectangle",
+                    "x": 66.22,
+                    "y": 61.79,
+                    "w": 10.9,
+                    "h": 17.07,
+                    "correct": true
+                  },
+                  {
+                    "id": "a3",
+                    "shape": "rectangle",
+                    "x": 0,
+                    "y": 41.9063509116622,
+                    "w": 10.364321806717337,
+                    "h": 18.656938999591382,
+                    "correct": false
+                  },
+                  {
+                    "id": "a4",
+                    "shape": "rectangle",
+                    "x": 63.91331780809024,
+                    "y": 41.9063509116622,
+                    "w": 12.56281431117253,
+                    "h": 17.221789845776662,
+                    "correct": false
+                  },
+                  {
+                    "id": "a5",
+                    "shape": "rectangle",
+                    "x": 19.786432540096737,
+                    "y": 80.1769950133881,
+                    "w": 27.48115630568991,
+                    "h": 19.135322050862953,
+                    "correct": false
+                  },
+                  {
+                    "id": "a6",
+                    "shape": "rectangle",
+                    "x": 0.6281407155586265,
+                    "y": 3.635706809936317,
+                    "w": 4.396985008910385,
+                    "h": 17.22178984577665,
+                    "correct": false
+                  }
+                ],
+                "id": 83,
+                "uid": "spark__lv1__hotspot__q6",
+                "explanation": "Có 2 vị trí đúng, được đánh dấu màu xanh trên hình minh họa ở trên."
               }
             ],
             "2. Công dân số": [
@@ -1041,9 +1299,307 @@
                 "id": 49,
                 "uid": "spark__lv1__t4__q5",
                 "explanation": "Ghép đúng: “Thư điện tử (Email)” ↔ “Gửi lịch đã sửa đổi cho mọi người”; “Tin nhắn trong ứng dụng (In-app-message)” ↔ “Liên hệ bộ phận hỗ trợ trực tuyến”; “Tin nhắn văn bản (Text message)” ↔ “Thông báo cho bạn bè rằng bạn đang đến muộn”."
+              },
+              {
+                "question": "Bạn sẽ tìm thấy lệnh Đóng (Close) trong thẻ (Tab) nào sau đây? (Nhấp vào vị trí đúng trong hình bên để trả lời.)",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-06657d738cf6d0e5f4258b53714284a81bebc58a.png",
+                "imageUrl": "img/img-06657d738cf6d0e5f4258b53714284a81bebc58a.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 1.6292462522275963,
+                    "y": 11.31587199596852,
+                    "w": 7.3666833899930895,
+                    "h": 57.949999999999996,
+                    "correct": true
+                  },
+                  {
+                    "id": "a2",
+                    "shape": "rectangle",
+                    "x": 20.728643613434674,
+                    "y": 13.067533646741559,
+                    "w": 6.1243719766966045,
+                    "h": 58.077951935496316,
+                    "correct": false
+                  },
+                  {
+                    "id": "a3",
+                    "shape": "rectangle",
+                    "x": 38.944724364634844,
+                    "y": 7.622725652788779,
+                    "w": 8.16582930226215,
+                    "h": 65.33769592743336,
+                    "correct": false
+                  },
+                  {
+                    "id": "a4",
+                    "shape": "rectangle",
+                    "x": 74.27763961480758,
+                    "y": 9.437661650773041,
+                    "w": 7.3806534078138535,
+                    "h": 58.077951935496316,
+                    "correct": false
+                  },
+                  {
+                    "id": "a5",
+                    "shape": "rectangle",
+                    "x": 91.70854447155946,
+                    "y": 13.067533646741559,
+                    "w": 6.752512692255237,
+                    "h": 56.26301593751205,
+                    "correct": false
+                  }
+                ],
+                "id": 82,
+                "uid": "spark__lv1__hotspot__q5",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
+              },
+              {
+                "question": "Nhi đang viết một báo cáo trên máy tính của mình. Bạn ấy được yêu cầu thụt lề dòng đầu tiên của mỗi đoạn 1.5 inch. Nhi nên nhấn phím nào (một lần) để thụt lề chính xác dòng đầu tiên? (Chọn phím thích hợp trong khu vực trả lời).",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-75888e086c9a6a57a0a3c4cff5e0717d90dfbb82.png",
+                "imageUrl": "img/img-75888e086c9a6a57a0a3c4cff5e0717d90dfbb82.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 0.15703517888965662,
+                    "y": 23.27,
+                    "w": 7.13,
+                    "h": 17.978681358901017,
+                    "correct": true
+                  },
+                  {
+                    "id": "a2",
+                    "shape": "rectangle",
+                    "x": 20.100502897876048,
+                    "y": 79.69861196211653,
+                    "w": 26.695980411241628,
+                    "h": 20.09208815340608,
+                    "correct": false
+                  },
+                  {
+                    "id": "a3",
+                    "shape": "rectangle",
+                    "x": 66.26884549143509,
+                    "y": 61.04167296252515,
+                    "w": 10.992462522275968,
+                    "h": 19.13532205086295,
+                    "correct": false
+                  },
+                  {
+                    "id": "a4",
+                    "shape": "rectangle",
+                    "x": 68.7814083536696,
+                    "y": 1.7221746048500228,
+                    "w": 8.636934838931111,
+                    "h": 20.092088153406092,
+                    "correct": false
+                  }
+                ],
+                "id": 84,
+                "uid": "spark__lv1__hotspot__q7",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
               }
             ],
-            "5. Giao tiếp": [],
+            "5. Giao tiếp": [
+              {
+                "question": "An cần gửi Email cảm ơn đến giáo viên của mình nhưng bạn ấy không biết nên sử dụng phông chữ nào. Phông chữ nào thích hợp nhất cho thông báo này? (Nhấp chọn vào vòng tròn để trả lời)",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-7892a4b2695c52bc18161b47d8a46b5ed9ea59c0.png",
+                "imageUrl": "img/img-7892a4b2695c52bc18161b47d8a46b5ed9ea59c0.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 1.08,
+                    "y": 2.52,
+                    "w": 97.11,
+                    "h": 21,
+                    "correct": true
+                  },
+                  {
+                    "id": "a2",
+                    "shape": "rectangle",
+                    "x": 0.8793979602487451,
+                    "y": 26.202840506741104,
+                    "w": 97.36181091158711,
+                    "h": 21.570489930164136,
+                    "correct": false
+                  },
+                  {
+                    "id": "a3",
+                    "shape": "rectangle",
+                    "x": 1.5075386758073717,
+                    "y": 51.13266903258654,
+                    "w": 96.57663501713883,
+                    "h": 21.570489930164136,
+                    "correct": false
+                  },
+                  {
+                    "id": "a4",
+                    "shape": "rectangle",
+                    "x": 1.6645738546970281,
+                    "y": 75.35526838039381,
+                    "w": 96.10552948046985,
+                    "h": 21.92410451918323,
+                    "correct": false
+                  }
+                ],
+                "id": 85,
+                "uid": "spark__lv1__hotspot__q8",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
+              },
+              {
+                "question": "Bạn là đội trưởng của đội bóng đá. Bạn cần thay mặt đội bóng hỏi huấn luyện viên của mình một câu hỏi khẩn cấp. Bạn nên đặt chủ đề khẩn cấp (UGRENT) ở đâu để đảm bảo rằng huấn luyện viên của bạn nhận được thông báo và mở Email một cách nhanh chóng? (Nhấp chọn 1 trong các chữ A-B-C-D)",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-b5f8216ad430f7092a02a213fd384d2ecbfb14b3.png",
+                "imageUrl": "img/img-b5f8216ad430f7092a02a213fd384d2ecbfb14b3.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 10.765175894448284,
+                    "y": 25.837324063080104,
+                    "w": 39.94,
+                    "h": 11.66,
+                    "correct": true
+                  },
+                  {
+                    "id": "a2",
+                    "shape": "rectangle",
+                    "x": 10.992462522275963,
+                    "y": 13.068840936237965,
+                    "w": 39.57286508019347,
+                    "h": 10.890703747679577,
+                    "correct": false
+                  },
+                  {
+                    "id": "a3",
+                    "shape": "rectangle",
+                    "x": 2.512562862234506,
+                    "y": 41.07350771598545,
+                    "w": 39.88693543797279,
+                    "h": 10.501750042405305,
+                    "correct": false
+                  },
+                  {
+                    "id": "a4",
+                    "shape": "rectangle",
+                    "x": 2.8266332200138193,
+                    "y": 55.075841105859205,
+                    "w": 95.32035358602157,
+                    "h": 32.67211124303872,
+                    "correct": false
+                  }
+                ],
+                "id": 86,
+                "uid": "spark__lv1__hotspot__q9",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
+              },
+              {
+                "question": "Bạn cần gửi Email cho giáo viên. Bạn nên đặt địa chỉ Email của giáo viên ở đâu? (Nhấp chọn 1 trong các chữ A-B-C)",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-418176fc93ae04213eaa7265156431171efe26be.png",
+                "imageUrl": "img/img-418176fc93ae04213eaa7265156431171efe26be.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 1.7471856888274715,
+                    "y": 1.2484077727795047,
+                    "w": 18.528743953393217,
+                    "h": 9.51,
+                    "correct": true
+                  },
+                  {
+                    "id": "a2",
+                    "shape": "rectangle",
+                    "x": 1.5703517888965661,
+                    "y": 11.150516224715695,
+                    "w": 19.47236218231742,
+                    "h": 8.729942002298205,
+                    "correct": false
+                  },
+                  {
+                    "id": "a3",
+                    "shape": "rectangle",
+                    "x": 0.9422110733379399,
+                    "y": 29.99925463876864,
+                    "w": 98.61809234270436,
+                    "h": 47.419457694301634,
+                    "correct": false
+                  }
+                ],
+                "id": 87,
+                "uid": "spark__lv1__hotspot__q10",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
+              },
+              {
+                "question": "Ryan đang gửi cho cô Dung một Email. Bạn ấy biết có năm phần quan trọng cần đưa vào Email. Lời chào là phần nào? (Nhấp chọn 1 trong các chữ A-B-C-D-E)",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-7f100be57b1886b9da887406e6bf37fc204f5eda.png",
+                "imageUrl": "img/img-7f100be57b1886b9da887406e6bf37fc204f5eda.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 1.778944633310301,
+                    "y": 42.9474803398971,
+                    "w": 51.51949770116562,
+                    "h": 13.407558980308693,
+                    "correct": true
+                  },
+                  {
+                    "id": "a2",
+                    "shape": "rectangle",
+                    "x": 2.1984925044551926,
+                    "y": 14.38020319848732,
+                    "w": 51.35050349691771,
+                    "h": 13.69543252226375,
+                    "correct": false
+                  },
+                  {
+                    "id": "a3",
+                    "shape": "rectangle",
+                    "x": 1.8844221466758797,
+                    "y": 28.69815538085397,
+                    "w": 51.35050349691771,
+                    "h": 13.384172692212303,
+                    "correct": false
+                  },
+                  {
+                    "id": "a4",
+                    "shape": "rectangle",
+                    "x": 2.1984925044551926,
+                    "y": 57.33405974558726,
+                    "w": 50.565327602469424,
+                    "h": 13.38417269221231,
+                    "correct": false
+                  },
+                  {
+                    "id": "a5",
+                    "shape": "rectangle",
+                    "x": 2.3555276833448495,
+                    "y": 71.34075209790247,
+                    "w": 50.094222065800466,
+                    "h": 17.43055048288113,
+                    "correct": false
+                  }
+                ],
+                "id": 88,
+                "uid": "spark__lv1__hotspot__q11",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
+              }
+            ],
             "6. Hợp tác, cộng tác": [
               {
                 "question": "Bạn gặp một người trong phòng trò chuyện chơi Game trực tuyến. Họ yêu cầu bạn cung cấp địa chỉ nhà của bạn. Bạn nên kết luận điều gì từ yêu cầu của họ?",
@@ -1610,563 +2166,6 @@
                 "id": 77,
                 "uid": "spark__lv1__t7__q5",
                 "explanation": "Đúng: Giữ chân trên sàn, Thư giãn vai của bạn. Sai: Cúi người về phía trước để xem màn hình, Bắt chéo chân dưới bàn làm việc."
-              }
-            ],
-            "Minitest Hotspot": [
-              {
-                "question": "Bạn muốn tìm một trò chơi được cài đặt trên máy tính của mình. Trên thanh tác vụ được hiển thị, bạn nên nhấp vào đâu để tìm trò chơi? (Nhấp vào vị trí đúng trong hình để trả lời.)",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-5f0b11f607be0c11931ece782443e451fc2a9d36.png",
-                "imageUrl": "img/img-5f0b11f607be0c11931ece782443e451fc2a9d36.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 1.49,
-                    "y": 40.93812516784074,
-                    "w": 7.19,
-                    "h": 17.454608514816233,
-                    "correct": true
-                  },
-                  {
-                    "id": "a2",
-                    "shape": "rectangle",
-                    "x": 9.108040375600083,
-                    "y": 41.45215684802752,
-                    "w": 44.28392044688317,
-                    "h": 16.011563255283313,
-                    "correct": false
-                  },
-                  {
-                    "id": "a3",
-                    "shape": "rectangle",
-                    "x": 66.73995102810406,
-                    "y": 42.3416881399877,
-                    "w": 5.967336797806951,
-                    "h": 14.677266317343033,
-                    "correct": false
-                  },
-                  {
-                    "id": "a4",
-                    "shape": "rectangle",
-                    "x": 79.6168356970559,
-                    "y": 42.3416881399877,
-                    "w": 5.182160903358678,
-                    "h": 14.232500671362942,
-                    "correct": false
-                  },
-                  {
-                    "id": "a5",
-                    "shape": "rectangle",
-                    "x": 92.33668518711809,
-                    "y": 41.89692249400762,
-                    "w": 5.967336797806951,
-                    "h": 16.45632890126339,
-                    "correct": false
-                  }
-                ],
-                "id": 78,
-                "uid": "spark__lv1__hotspot__q1",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
-              },
-              {
-                "question": "Bạn cần truy cập một trang Web khác. Trên trang Web được hiển thị, bạn nên nhập URL mới vào đâu? (Nhấp vào vị trí đúng trong hình để trả lời.)",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-2602ca98466f97d775b096cde06a7b98720db310.png",
-                "imageUrl": "img/img-2602ca98466f97d775b096cde06a7b98720db310.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 21.468894463331033,
-                    "y": 6.280115232965486,
-                    "w": 59.982211073337936,
-                    "h": 10.239961589011504,
-                    "correct": true
-                  },
-                  {
-                    "id": "a2",
-                    "shape": "rectangle",
-                    "x": 21.670854686772614,
-                    "y": 77.36980668392798,
-                    "w": 55.590453326938444,
-                    "h": 16.318694026391157,
-                    "correct": false
-                  },
-                  {
-                    "id": "a3",
-                    "shape": "rectangle",
-                    "x": 14.290201278958751,
-                    "y": 21.694262358593466,
-                    "w": 59.20226244140055,
-                    "h": 11.51907813627611,
-                    "correct": false
-                  }
-                ],
-                "id": 79,
-                "uid": "spark__lv1__hotspot__q2",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
-              },
-              {
-                "question": "Trong cửa sổ trình duyệt được hiển thị, bạn nên nhấp vào đâu để truy cập các trang khác của trang Web Net PC? (Nhấp vào vị trí đúng trong hình để trả lời.)",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-61ec6844534aa52e3cf3f3c5218ceff050c3f362.png",
-                "imageUrl": "img/img-61ec6844534aa52e3cf3f3c5218ceff050c3f362.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 27.764070357779314,
-                    "y": 35.803274356466524,
-                    "w": 46.31185928444137,
-                    "h": 10.012055818733344,
-                    "correct": true
-                  },
-                  {
-                    "id": "a2",
-                    "shape": "rectangle",
-                    "x": 11.14949770116562,
-                    "y": 9.628531506400432,
-                    "w": 75.21985068814553,
-                    "h": 8.317842018200356,
-                    "correct": false
-                  },
-                  {
-                    "id": "a3",
-                    "shape": "rectangle",
-                    "x": 91.5515092926698,
-                    "y": 8.8723640502004,
-                    "w": 8.008794123372496,
-                    "h": 8.569897836933702,
-                    "correct": false
-                  },
-                  {
-                    "id": "a4",
-                    "shape": "rectangle",
-                    "x": 29.836683989034757,
-                    "y": 1.5627453069334198,
-                    "w": 18.21608075120017,
-                    "h": 8.065786199467011,
-                    "correct": false
-                  }
-                ],
-                "id": 80,
-                "uid": "spark__lv1__hotspot__q3",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
-              },
-              {
-                "question": "Bạn cần đóng (Close) cửa sổ trình duyệt hiển thị. Bạn nên nhấp hoặc nhấn vào biểu tượng nào? (Nhấp vào vị trí đúng trong hình để trả lời.)",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-728ecf91d9eb51c1d3f0f76dac3e39567fb1757c.png",
-                "imageUrl": "img/img-728ecf91d9eb51c1d3f0f76dac3e39567fb1757c.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 92.96110553666897,
-                    "y": 1.046373830404252,
-                    "w": 6.392964821110343,
-                    "h": 9.278242982425512,
-                    "correct": true
-                  },
-                  {
-                    "id": "a2",
-                    "shape": "rectangle",
-                    "x": 11.463568058944933,
-                    "y": 11.125023552417343,
-                    "w": 75.21985068814553,
-                    "h": 6.854280409489448,
-                    "correct": false
-                  },
-                  {
-                    "id": "a3",
-                    "shape": "rectangle",
-                    "x": 30.150754346814075,
-                    "y": 56.468724722886,
-                    "w": 40.043970616862445,
-                    "h": 11.33592529261717,
-                    "correct": false
-                  },
-                  {
-                    "id": "a4",
-                    "shape": "rectangle",
-                    "x": 50.094222065800466,
-                    "y": 1.898107616566163,
-                    "w": 19.786432540096726,
-                    "h": 8.436037427063935,
-                    "correct": false
-                  }
-                ],
-                "id": 81,
-                "uid": "spark__lv1__hotspot__q4",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
-              },
-              {
-                "question": "Bạn sẽ tìm thấy lệnh Đóng (Close) trong thẻ (Tab) nào sau đây? (Nhấp vào vị trí đúng trong hình bên để trả lời.)",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-06657d738cf6d0e5f4258b53714284a81bebc58a.png",
-                "imageUrl": "img/img-06657d738cf6d0e5f4258b53714284a81bebc58a.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 1.6292462522275963,
-                    "y": 11.31587199596852,
-                    "w": 7.3666833899930895,
-                    "h": 57.949999999999996,
-                    "correct": true
-                  },
-                  {
-                    "id": "a2",
-                    "shape": "rectangle",
-                    "x": 20.728643613434674,
-                    "y": 13.067533646741559,
-                    "w": 6.1243719766966045,
-                    "h": 58.077951935496316,
-                    "correct": false
-                  },
-                  {
-                    "id": "a3",
-                    "shape": "rectangle",
-                    "x": 38.944724364634844,
-                    "y": 7.622725652788779,
-                    "w": 8.16582930226215,
-                    "h": 65.33769592743336,
-                    "correct": false
-                  },
-                  {
-                    "id": "a4",
-                    "shape": "rectangle",
-                    "x": 74.27763961480758,
-                    "y": 9.437661650773041,
-                    "w": 7.3806534078138535,
-                    "h": 58.077951935496316,
-                    "correct": false
-                  },
-                  {
-                    "id": "a5",
-                    "shape": "rectangle",
-                    "x": 91.70854447155946,
-                    "y": 13.067533646741559,
-                    "w": 6.752512692255237,
-                    "h": 56.26301593751205,
-                    "correct": false
-                  }
-                ],
-                "id": 82,
-                "uid": "spark__lv1__hotspot__q5",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
-              },
-              {
-                "question": "Nhi muốn tham gia một trang mạng xã hội mới nổi tiếng. Để đăng ký, cô ấy phải điền vào một biểu mẫu trực tuyến. Nhi nên giữ phím nào trong khi gõ để chỉ viết hoa chữ cái đầu tiên trong tên của cô ấy? (Chọn phím thích hợp trong khu vực trả lời).",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-75888e086c9a6a57a0a3c4cff5e0717d90dfbb82.png",
-                "imageUrl": "img/img-75888e086c9a6a57a0a3c4cff5e0717d90dfbb82.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 0,
-                    "y": 61.48,
-                    "w": 11.44,
-                    "h": 17.07,
-                    "correct": true
-                  },
-                  {
-                    "id": "a2",
-                    "shape": "rectangle",
-                    "x": 66.22,
-                    "y": 61.79,
-                    "w": 10.9,
-                    "h": 17.07,
-                    "correct": true
-                  },
-                  {
-                    "id": "a3",
-                    "shape": "rectangle",
-                    "x": 0,
-                    "y": 41.9063509116622,
-                    "w": 10.364321806717337,
-                    "h": 18.656938999591382,
-                    "correct": false
-                  },
-                  {
-                    "id": "a4",
-                    "shape": "rectangle",
-                    "x": 63.91331780809024,
-                    "y": 41.9063509116622,
-                    "w": 12.56281431117253,
-                    "h": 17.221789845776662,
-                    "correct": false
-                  },
-                  {
-                    "id": "a5",
-                    "shape": "rectangle",
-                    "x": 19.786432540096737,
-                    "y": 80.1769950133881,
-                    "w": 27.48115630568991,
-                    "h": 19.135322050862953,
-                    "correct": false
-                  },
-                  {
-                    "id": "a6",
-                    "shape": "rectangle",
-                    "x": 0.6281407155586265,
-                    "y": 3.635706809936317,
-                    "w": 4.396985008910385,
-                    "h": 17.22178984577665,
-                    "correct": false
-                  }
-                ],
-                "id": 83,
-                "uid": "spark__lv1__hotspot__q6",
-                "explanation": "Có 2 vị trí đúng, được đánh dấu màu xanh trên hình minh họa ở trên."
-              },
-              {
-                "question": "Nhi đang viết một báo cáo trên máy tính của mình. Bạn ấy được yêu cầu thụt lề dòng đầu tiên của mỗi đoạn 1.5 inch. Nhi nên nhấn phím nào (một lần) để thụt lề chính xác dòng đầu tiên? (Chọn phím thích hợp trong khu vực trả lời).",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-75888e086c9a6a57a0a3c4cff5e0717d90dfbb82.png",
-                "imageUrl": "img/img-75888e086c9a6a57a0a3c4cff5e0717d90dfbb82.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 0.15703517888965662,
-                    "y": 23.27,
-                    "w": 7.13,
-                    "h": 17.978681358901017,
-                    "correct": true
-                  },
-                  {
-                    "id": "a2",
-                    "shape": "rectangle",
-                    "x": 20.100502897876048,
-                    "y": 79.69861196211653,
-                    "w": 26.695980411241628,
-                    "h": 20.09208815340608,
-                    "correct": false
-                  },
-                  {
-                    "id": "a3",
-                    "shape": "rectangle",
-                    "x": 66.26884549143509,
-                    "y": 61.04167296252515,
-                    "w": 10.992462522275968,
-                    "h": 19.13532205086295,
-                    "correct": false
-                  },
-                  {
-                    "id": "a4",
-                    "shape": "rectangle",
-                    "x": 68.7814083536696,
-                    "y": 1.7221746048500228,
-                    "w": 8.636934838931111,
-                    "h": 20.092088153406092,
-                    "correct": false
-                  }
-                ],
-                "id": 84,
-                "uid": "spark__lv1__hotspot__q7",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
-              },
-              {
-                "question": "An cần gửi Email cảm ơn đến giáo viên của mình nhưng bạn ấy không biết nên sử dụng phông chữ nào. Phông chữ nào thích hợp nhất cho thông báo này? (Nhấp chọn vào vòng tròn để trả lời)",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-7892a4b2695c52bc18161b47d8a46b5ed9ea59c0.png",
-                "imageUrl": "img/img-7892a4b2695c52bc18161b47d8a46b5ed9ea59c0.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 1.08,
-                    "y": 2.52,
-                    "w": 97.11,
-                    "h": 21,
-                    "correct": true
-                  },
-                  {
-                    "id": "a2",
-                    "shape": "rectangle",
-                    "x": 0.8793979602487451,
-                    "y": 26.202840506741104,
-                    "w": 97.36181091158711,
-                    "h": 21.570489930164136,
-                    "correct": false
-                  },
-                  {
-                    "id": "a3",
-                    "shape": "rectangle",
-                    "x": 1.5075386758073717,
-                    "y": 51.13266903258654,
-                    "w": 96.57663501713883,
-                    "h": 21.570489930164136,
-                    "correct": false
-                  },
-                  {
-                    "id": "a4",
-                    "shape": "rectangle",
-                    "x": 1.6645738546970281,
-                    "y": 75.35526838039381,
-                    "w": 96.10552948046985,
-                    "h": 21.92410451918323,
-                    "correct": false
-                  }
-                ],
-                "id": 85,
-                "uid": "spark__lv1__hotspot__q8",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
-              },
-              {
-                "question": "Bạn là đội trưởng của đội bóng đá. Bạn cần thay mặt đội bóng hỏi huấn luyện viên của mình một câu hỏi khẩn cấp. Bạn nên đặt chủ đề khẩn cấp (UGRENT) ở đâu để đảm bảo rằng huấn luyện viên của bạn nhận được thông báo và mở Email một cách nhanh chóng? (Nhấp chọn 1 trong các chữ A-B-C-D)",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-b5f8216ad430f7092a02a213fd384d2ecbfb14b3.png",
-                "imageUrl": "img/img-b5f8216ad430f7092a02a213fd384d2ecbfb14b3.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 10.765175894448284,
-                    "y": 25.837324063080104,
-                    "w": 39.94,
-                    "h": 11.66,
-                    "correct": true
-                  },
-                  {
-                    "id": "a2",
-                    "shape": "rectangle",
-                    "x": 10.992462522275963,
-                    "y": 13.068840936237965,
-                    "w": 39.57286508019347,
-                    "h": 10.890703747679577,
-                    "correct": false
-                  },
-                  {
-                    "id": "a3",
-                    "shape": "rectangle",
-                    "x": 2.512562862234506,
-                    "y": 41.07350771598545,
-                    "w": 39.88693543797279,
-                    "h": 10.501750042405305,
-                    "correct": false
-                  },
-                  {
-                    "id": "a4",
-                    "shape": "rectangle",
-                    "x": 2.8266332200138193,
-                    "y": 55.075841105859205,
-                    "w": 95.32035358602157,
-                    "h": 32.67211124303872,
-                    "correct": false
-                  }
-                ],
-                "id": 86,
-                "uid": "spark__lv1__hotspot__q9",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
-              },
-              {
-                "question": "Bạn cần gửi Email cho giáo viên. Bạn nên đặt địa chỉ Email của giáo viên ở đâu? (Nhấp chọn 1 trong các chữ A-B-C)",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-418176fc93ae04213eaa7265156431171efe26be.png",
-                "imageUrl": "img/img-418176fc93ae04213eaa7265156431171efe26be.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 1.7471856888274715,
-                    "y": 1.2484077727795047,
-                    "w": 18.528743953393217,
-                    "h": 9.51,
-                    "correct": true
-                  },
-                  {
-                    "id": "a2",
-                    "shape": "rectangle",
-                    "x": 1.5703517888965661,
-                    "y": 11.150516224715695,
-                    "w": 19.47236218231742,
-                    "h": 8.729942002298205,
-                    "correct": false
-                  },
-                  {
-                    "id": "a3",
-                    "shape": "rectangle",
-                    "x": 0.9422110733379399,
-                    "y": 29.99925463876864,
-                    "w": 98.61809234270436,
-                    "h": 47.419457694301634,
-                    "correct": false
-                  }
-                ],
-                "id": 87,
-                "uid": "spark__lv1__hotspot__q10",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
-              },
-              {
-                "question": "Ryan đang gửi cho cô Dung một Email. Bạn ấy biết có năm phần quan trọng cần đưa vào Email. Lời chào là phần nào? (Nhấp chọn 1 trong các chữ A-B-C-D-E)",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-7f100be57b1886b9da887406e6bf37fc204f5eda.png",
-                "imageUrl": "img/img-7f100be57b1886b9da887406e6bf37fc204f5eda.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 1.778944633310301,
-                    "y": 42.9474803398971,
-                    "w": 51.51949770116562,
-                    "h": 13.407558980308693,
-                    "correct": true
-                  },
-                  {
-                    "id": "a2",
-                    "shape": "rectangle",
-                    "x": 2.1984925044551926,
-                    "y": 14.38020319848732,
-                    "w": 51.35050349691771,
-                    "h": 13.69543252226375,
-                    "correct": false
-                  },
-                  {
-                    "id": "a3",
-                    "shape": "rectangle",
-                    "x": 1.8844221466758797,
-                    "y": 28.69815538085397,
-                    "w": 51.35050349691771,
-                    "h": 13.384172692212303,
-                    "correct": false
-                  },
-                  {
-                    "id": "a4",
-                    "shape": "rectangle",
-                    "x": 2.1984925044551926,
-                    "y": 57.33405974558726,
-                    "w": 50.565327602469424,
-                    "h": 13.38417269221231,
-                    "correct": false
-                  },
-                  {
-                    "id": "a5",
-                    "shape": "rectangle",
-                    "x": 2.3555276833448495,
-                    "y": 71.34075209790247,
-                    "w": 50.094222065800466,
-                    "h": 17.43055048288113,
-                    "correct": false
-                  }
-                ],
-                "id": 88,
-                "uid": "spark__lv1__hotspot__q11",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
               }
             ]
           }
@@ -3776,6 +3775,294 @@
                 "id": 70,
                 "uid": "spark__lv2__t4__q10",
                 "explanation": "Các đáp án đúng là: “Các tập tin như hình ảnh, Video và tài liệu có thể được đính kèm”; “Người nhận Email có thể tải xuống tập tin đính kèm”."
+              },
+              {
+                "question": "Bạn cần chỉ ra các phần của một tài liệu. Hãy chọn đúng Tiêu đề trong phần trả lời.",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-1ef466b2ec9fa77e71c7a0298009cb4f5e3030a7.png",
+                "imageUrl": "img/img-1ef466b2ec9fa77e71c7a0298009cb4f5e3030a7.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 0.0,
+                    "y": 0.0,
+                    "w": 84.29,
+                    "h": 9.68,
+                    "correct": true
+                  },
+                  {
+                    "x": 3.51,
+                    "y": 19.65,
+                    "w": 25.28,
+                    "h": 9.87,
+                    "shape": "rectangle",
+                    "id": "a2",
+                    "correct": false
+                  },
+                  {
+                    "x": 69.1,
+                    "y": 84.86,
+                    "w": 27.44,
+                    "h": 9.46,
+                    "shape": "rectangle",
+                    "id": "a3",
+                    "correct": false
+                  },
+                  {
+                    "x": 73.01,
+                    "y": 16.17,
+                    "w": 23.5,
+                    "h": 9.12,
+                    "shape": "rectangle",
+                    "id": "a4",
+                    "correct": false
+                  }
+                ],
+                "id": 103,
+                "uid": "spark__lv2__hotspot__q1",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
+              },
+              {
+                "question": "Bạn hãy chọn đúng Đề mục (Heading) trong tài liệu bên dưới.",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-1ef466b2ec9fa77e71c7a0298009cb4f5e3030a7.png",
+                "imageUrl": "img/img-1ef466b2ec9fa77e71c7a0298009cb4f5e3030a7.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 0.0,
+                    "y": 28.94,
+                    "w": 94.22,
+                    "h": 10.89,
+                    "correct": true
+                  },
+                  {
+                    "x": 35.36,
+                    "y": 77.82,
+                    "w": 25.78,
+                    "h": 11.1,
+                    "shape": "rectangle",
+                    "id": "a2",
+                    "correct": false
+                  },
+                  {
+                    "x": 2.8,
+                    "y": 13.35,
+                    "w": 27.93,
+                    "h": 11.94,
+                    "shape": "rectangle",
+                    "id": "a3",
+                    "correct": false
+                  },
+                  {
+                    "x": 35.34,
+                    "y": 8.19,
+                    "w": 26.8,
+                    "h": 9.6,
+                    "shape": "rectangle",
+                    "id": "a4",
+                    "correct": false
+                  }
+                ],
+                "id": 104,
+                "uid": "spark__lv2__hotspot__q2",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
+              },
+              {
+                "question": "Bạn làm việc tại tiệm bánh Doe’s Bakery. Người chủ nhờ bạn đổi danh sách menu từ kiểu có ký hiệu đầu hàng thành đánh số. Trên tài liệu Word, đâu là danh sách có ký hiệu đầu hàng? Nhấp vào vị trí để chọn đáp án đúng.",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-fa058ecf0bf8ab8521d2bfd86f59c0b0877a7c0e.png",
+                "imageUrl": "img/img-fa058ecf0bf8ab8521d2bfd86f59c0b0877a7c0e.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 10.64,
+                    "y": 11.08,
+                    "w": 73.06,
+                    "h": 47.58,
+                    "correct": true
+                  },
+                  {
+                    "x": 35.77,
+                    "y": 70.64,
+                    "w": 27.45,
+                    "h": 23.4,
+                    "shape": "rectangle",
+                    "id": "a2",
+                    "correct": false
+                  },
+                  {
+                    "x": 72.96,
+                    "y": 69.52,
+                    "w": 24.92,
+                    "h": 23.68,
+                    "shape": "rectangle",
+                    "id": "a3",
+                    "correct": false
+                  },
+                  {
+                    "x": 4.55,
+                    "y": 72.71,
+                    "w": 25.03,
+                    "h": 19.84,
+                    "shape": "rectangle",
+                    "id": "a4",
+                    "correct": false
+                  }
+                ],
+                "id": 105,
+                "uid": "spark__lv2__hotspot__q3",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
+              },
+              {
+                "question": "Hãy chọn đúng ứng dụng được dùng để tạo bài trình chiếu.",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-e4af801105b50c3b8bb730ae0d67c9797988cccf.png",
+                "imageUrl": "img/img-e4af801105b50c3b8bb730ae0d67c9797988cccf.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 50.99,
+                    "y": 0.0,
+                    "w": 13.22,
+                    "h": 100.0,
+                    "correct": true
+                  },
+                  {
+                    "x": 22.52,
+                    "y": 72.42,
+                    "w": 7.65,
+                    "h": 24.52,
+                    "shape": "rectangle",
+                    "id": "a2",
+                    "correct": false
+                  },
+                  {
+                    "x": 72.17,
+                    "y": 38.74,
+                    "w": 8.68,
+                    "h": 24.59,
+                    "shape": "rectangle",
+                    "id": "a3",
+                    "correct": false
+                  },
+                  {
+                    "x": 69.15,
+                    "y": 70.5,
+                    "w": 8.43,
+                    "h": 19.41,
+                    "shape": "rectangle",
+                    "id": "a4",
+                    "correct": false
+                  }
+                ],
+                "id": 106,
+                "uid": "spark__lv2__hotspot__q4",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
+              },
+              {
+                "question": "Bạn làm việc cho tiệm bánh Doe’s Bakery. Bạn đã thêm 4 ảnh mẫu vào tài liệu, nhưng thực tế chỉ cần 1. Bạn nên giữ lại hình nào? Hãy nhấp chọn vào hình cần giữ lại.",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-565195b6023ada179126949a7340bd210fc93ba1.png",
+                "imageUrl": "img/img-565195b6023ada179126949a7340bd210fc93ba1.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 74.47,
+                    "y": 33.83,
+                    "w": 10.56,
+                    "h": 32.8,
+                    "correct": true
+                  },
+                  {
+                    "x": 46.0,
+                    "y": 70.44,
+                    "w": 7.7,
+                    "h": 24.18,
+                    "shape": "rectangle",
+                    "id": "a2",
+                    "correct": false
+                  },
+                  {
+                    "x": 3.82,
+                    "y": 36.43,
+                    "w": 8.5,
+                    "h": 22.81,
+                    "shape": "rectangle",
+                    "id": "a3",
+                    "correct": false
+                  },
+                  {
+                    "x": 11.01,
+                    "y": 68.98,
+                    "w": 7.33,
+                    "h": 20.65,
+                    "shape": "rectangle",
+                    "id": "a4",
+                    "correct": false
+                  }
+                ],
+                "id": 107,
+                "uid": "spark__lv2__hotspot__q5",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
+              },
+              {
+                "question": "Bạn được yêu cầu tạo một bài trình chiếu về các chú chó đang chơi đùa. Hãy chọn hình ảnh phù hợp nhất với chủ đề này trong phần trả lời.",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-675657880b867cde76c864e17a098148d29e9218.png",
+                "imageUrl": "img/img-675657880b867cde76c864e17a098148d29e9218.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 24.73,
+                    "y": 0.0,
+                    "w": 23.85,
+                    "h": 100.0,
+                    "correct": true
+                  },
+                  {
+                    "x": 73.79,
+                    "y": 2.22,
+                    "w": 8.3,
+                    "h": 22.42,
+                    "shape": "rectangle",
+                    "id": "a2",
+                    "correct": false
+                  },
+                  {
+                    "x": 5.67,
+                    "y": 69.11,
+                    "w": 8.63,
+                    "h": 22.33,
+                    "shape": "rectangle",
+                    "id": "a3",
+                    "correct": false
+                  },
+                  {
+                    "x": 80.75,
+                    "y": 35.43,
+                    "w": 8.0,
+                    "h": 24.55,
+                    "shape": "rectangle",
+                    "id": "a4",
+                    "correct": false
+                  }
+                ],
+                "id": 108,
+                "uid": "spark__lv2__hotspot__q6",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
               }
             ],
             "5. Giao tiếp": [
@@ -4474,296 +4761,6 @@
                 "id": 102,
                 "uid": "spark__lv2__t7__q5",
                 "explanation": "Đúng: Bạn có thể bị khô mắt, Bạn có thể bị mờ mắt, Bạn có thể bị đau cổ."
-              }
-            ],
-            "Minitest Hotspot": [
-              {
-                "question": "Bạn cần chỉ ra các phần của một tài liệu. Hãy chọn đúng Tiêu đề trong phần trả lời.",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-1ef466b2ec9fa77e71c7a0298009cb4f5e3030a7.png",
-                "imageUrl": "img/img-1ef466b2ec9fa77e71c7a0298009cb4f5e3030a7.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 0.0,
-                    "y": 0.0,
-                    "w": 84.29,
-                    "h": 9.68,
-                    "correct": true
-                  },
-                  {
-                    "x": 3.51,
-                    "y": 19.65,
-                    "w": 25.28,
-                    "h": 9.87,
-                    "shape": "rectangle",
-                    "id": "a2",
-                    "correct": false
-                  },
-                  {
-                    "x": 69.1,
-                    "y": 84.86,
-                    "w": 27.44,
-                    "h": 9.46,
-                    "shape": "rectangle",
-                    "id": "a3",
-                    "correct": false
-                  },
-                  {
-                    "x": 73.01,
-                    "y": 16.17,
-                    "w": 23.5,
-                    "h": 9.12,
-                    "shape": "rectangle",
-                    "id": "a4",
-                    "correct": false
-                  }
-                ],
-                "id": 103,
-                "uid": "spark__lv2__hotspot__q1",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
-              },
-              {
-                "question": "Bạn hãy chọn đúng Đề mục (Heading) trong tài liệu bên dưới.",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-1ef466b2ec9fa77e71c7a0298009cb4f5e3030a7.png",
-                "imageUrl": "img/img-1ef466b2ec9fa77e71c7a0298009cb4f5e3030a7.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 0.0,
-                    "y": 28.94,
-                    "w": 94.22,
-                    "h": 10.89,
-                    "correct": true
-                  },
-                  {
-                    "x": 35.36,
-                    "y": 77.82,
-                    "w": 25.78,
-                    "h": 11.1,
-                    "shape": "rectangle",
-                    "id": "a2",
-                    "correct": false
-                  },
-                  {
-                    "x": 2.8,
-                    "y": 13.35,
-                    "w": 27.93,
-                    "h": 11.94,
-                    "shape": "rectangle",
-                    "id": "a3",
-                    "correct": false
-                  },
-                  {
-                    "x": 35.34,
-                    "y": 8.19,
-                    "w": 26.8,
-                    "h": 9.6,
-                    "shape": "rectangle",
-                    "id": "a4",
-                    "correct": false
-                  }
-                ],
-                "id": 104,
-                "uid": "spark__lv2__hotspot__q2",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
-              },
-              {
-                "question": "Bạn làm việc tại tiệm bánh Doe’s Bakery. Người chủ nhờ bạn đổi danh sách menu từ kiểu có ký hiệu đầu hàng thành đánh số. Trên tài liệu Word, đâu là danh sách có ký hiệu đầu hàng? Nhấp vào vị trí để chọn đáp án đúng.",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-fa058ecf0bf8ab8521d2bfd86f59c0b0877a7c0e.png",
-                "imageUrl": "img/img-fa058ecf0bf8ab8521d2bfd86f59c0b0877a7c0e.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 10.64,
-                    "y": 11.08,
-                    "w": 73.06,
-                    "h": 47.58,
-                    "correct": true
-                  },
-                  {
-                    "x": 35.77,
-                    "y": 70.64,
-                    "w": 27.45,
-                    "h": 23.4,
-                    "shape": "rectangle",
-                    "id": "a2",
-                    "correct": false
-                  },
-                  {
-                    "x": 72.96,
-                    "y": 69.52,
-                    "w": 24.92,
-                    "h": 23.68,
-                    "shape": "rectangle",
-                    "id": "a3",
-                    "correct": false
-                  },
-                  {
-                    "x": 4.55,
-                    "y": 72.71,
-                    "w": 25.03,
-                    "h": 19.84,
-                    "shape": "rectangle",
-                    "id": "a4",
-                    "correct": false
-                  }
-                ],
-                "id": 105,
-                "uid": "spark__lv2__hotspot__q3",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
-              },
-              {
-                "question": "Hãy chọn đúng ứng dụng được dùng để tạo bài trình chiếu.",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-e4af801105b50c3b8bb730ae0d67c9797988cccf.png",
-                "imageUrl": "img/img-e4af801105b50c3b8bb730ae0d67c9797988cccf.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 50.99,
-                    "y": 0.0,
-                    "w": 13.22,
-                    "h": 100.0,
-                    "correct": true
-                  },
-                  {
-                    "x": 22.52,
-                    "y": 72.42,
-                    "w": 7.65,
-                    "h": 24.52,
-                    "shape": "rectangle",
-                    "id": "a2",
-                    "correct": false
-                  },
-                  {
-                    "x": 72.17,
-                    "y": 38.74,
-                    "w": 8.68,
-                    "h": 24.59,
-                    "shape": "rectangle",
-                    "id": "a3",
-                    "correct": false
-                  },
-                  {
-                    "x": 69.15,
-                    "y": 70.5,
-                    "w": 8.43,
-                    "h": 19.41,
-                    "shape": "rectangle",
-                    "id": "a4",
-                    "correct": false
-                  }
-                ],
-                "id": 106,
-                "uid": "spark__lv2__hotspot__q4",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
-              },
-              {
-                "question": "Bạn làm việc cho tiệm bánh Doe’s Bakery. Bạn đã thêm 4 ảnh mẫu vào tài liệu, nhưng thực tế chỉ cần 1. Bạn nên giữ lại hình nào? Hãy nhấp chọn vào hình cần giữ lại.",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-565195b6023ada179126949a7340bd210fc93ba1.png",
-                "imageUrl": "img/img-565195b6023ada179126949a7340bd210fc93ba1.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 74.47,
-                    "y": 33.83,
-                    "w": 10.56,
-                    "h": 32.8,
-                    "correct": true
-                  },
-                  {
-                    "x": 46.0,
-                    "y": 70.44,
-                    "w": 7.7,
-                    "h": 24.18,
-                    "shape": "rectangle",
-                    "id": "a2",
-                    "correct": false
-                  },
-                  {
-                    "x": 3.82,
-                    "y": 36.43,
-                    "w": 8.5,
-                    "h": 22.81,
-                    "shape": "rectangle",
-                    "id": "a3",
-                    "correct": false
-                  },
-                  {
-                    "x": 11.01,
-                    "y": 68.98,
-                    "w": 7.33,
-                    "h": 20.65,
-                    "shape": "rectangle",
-                    "id": "a4",
-                    "correct": false
-                  }
-                ],
-                "id": 107,
-                "uid": "spark__lv2__hotspot__q5",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
-              },
-              {
-                "question": "Bạn được yêu cầu tạo một bài trình chiếu về các chú chó đang chơi đùa. Hãy chọn hình ảnh phù hợp nhất với chủ đề này trong phần trả lời.",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-675657880b867cde76c864e17a098148d29e9218.png",
-                "imageUrl": "img/img-675657880b867cde76c864e17a098148d29e9218.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 24.73,
-                    "y": 0.0,
-                    "w": 23.85,
-                    "h": 100.0,
-                    "correct": true
-                  },
-                  {
-                    "x": 73.79,
-                    "y": 2.22,
-                    "w": 8.3,
-                    "h": 22.42,
-                    "shape": "rectangle",
-                    "id": "a2",
-                    "correct": false
-                  },
-                  {
-                    "x": 5.67,
-                    "y": 69.11,
-                    "w": 8.63,
-                    "h": 22.33,
-                    "shape": "rectangle",
-                    "id": "a3",
-                    "correct": false
-                  },
-                  {
-                    "x": 80.75,
-                    "y": 35.43,
-                    "w": 8.0,
-                    "h": 24.55,
-                    "shape": "rectangle",
-                    "id": "a4",
-                    "correct": false
-                  }
-                ],
-                "id": 108,
-                "uid": "spark__lv2__hotspot__q6",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
               }
             ]
           }
@@ -8521,6 +8518,81 @@
                 "explanation": "Đáp án đúng cho từng phát biểu: Trình duyệt web → Phần mềm ứng dụng; Bộ phát đa phương tiện → Phần mềm ứng dụng; Trình điều khiển Card đồ họa → Phần mềm hệ thống; Trình quản lý phân vùng ổ đĩa → Phần mềm hệ thống.",
                 "id": 42,
                 "uid": "ic3__lv1__t1__q42"
+              },
+              {
+                "question": "Đâu là thiết bị nhập (nhấp vào vị trí thiết bị). (Chọn 3)",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-c333f1414e89ae897a66763dabf194edd4a0c421.png",
+                "imageUrl": "img/img-c333f1414e89ae897a66763dabf194edd4a0c421.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 36.62,
+                    "y": 69.75,
+                    "w": 41.85,
+                    "h": 10.92,
+                    "correct": true
+                  },
+                  {
+                    "id": "a2",
+                    "shape": "rectangle",
+                    "x": 80.62,
+                    "y": 65.55,
+                    "w": 11.08,
+                    "h": 10.5,
+                    "correct": true
+                  },
+                  {
+                    "id": "a3",
+                    "shape": "oval",
+                    "x": 78.04412052775858,
+                    "y": 77.94405859550828,
+                    "w": 18.39663322001382,
+                    "h": 22.05594140449172,
+                    "correct": true
+                  },
+                  {
+                    "x": 65.01412052775858,
+                    "y": 10.786359325768153,
+                    "w": 34.252110733379396,
+                    "h": 50.601335617493,
+                    "shape": "rectangle",
+                    "id": "a4",
+                    "correct": false
+                  },
+                  {
+                    "x": 2.512562862234506,
+                    "y": 20.59414044917198,
+                    "w": 22.210351788896567,
+                    "h": 51.96539421300128,
+                    "shape": "rectangle",
+                    "id": "a5",
+                    "correct": false
+                  },
+                  {
+                    "x": 27.95643194105507,
+                    "y": 10.185816460756687,
+                    "w": 34.90246252227596,
+                    "h": 44.824683314183446,
+                    "shape": "rectangle",
+                    "id": "a6",
+                    "correct": false
+                  },
+                  {
+                    "id": "a7",
+                    "shape": "rectangle",
+                    "x": 13.0339198478415,
+                    "y": 77.10446215594153,
+                    "w": 19.786432540096737,
+                    "h": 14.209956909928664,
+                    "correct": false
+                  }
+                ],
+                "id": 167,
+                "uid": "ic3__lv1__hotspot__q1",
+                "explanation": "Có 3 vị trí đúng, được đánh dấu màu xanh trên hình minh họa ở trên."
               }
             ],
             "2. Công dân số": [
@@ -11157,83 +11229,6 @@
                 "id": 166,
                 "uid": "ic3__lv1__t7__q22"
               }
-            ],
-            "Minitest Hotspot": [
-              {
-                "question": "Đâu là thiết bị nhập (nhấp vào vị trí thiết bị). (Chọn 3)",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-c333f1414e89ae897a66763dabf194edd4a0c421.png",
-                "imageUrl": "img/img-c333f1414e89ae897a66763dabf194edd4a0c421.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 36.62,
-                    "y": 69.75,
-                    "w": 41.85,
-                    "h": 10.92,
-                    "correct": true
-                  },
-                  {
-                    "id": "a2",
-                    "shape": "rectangle",
-                    "x": 80.62,
-                    "y": 65.55,
-                    "w": 11.08,
-                    "h": 10.5,
-                    "correct": true
-                  },
-                  {
-                    "id": "a3",
-                    "shape": "oval",
-                    "x": 78.04412052775858,
-                    "y": 77.94405859550828,
-                    "w": 18.39663322001382,
-                    "h": 22.05594140449172,
-                    "correct": true
-                  },
-                  {
-                    "x": 65.01412052775858,
-                    "y": 10.786359325768153,
-                    "w": 34.252110733379396,
-                    "h": 50.601335617493,
-                    "shape": "rectangle",
-                    "id": "a4",
-                    "correct": false
-                  },
-                  {
-                    "x": 2.512562862234506,
-                    "y": 20.59414044917198,
-                    "w": 22.210351788896567,
-                    "h": 51.96539421300128,
-                    "shape": "rectangle",
-                    "id": "a5",
-                    "correct": false
-                  },
-                  {
-                    "x": 27.95643194105507,
-                    "y": 10.185816460756687,
-                    "w": 34.90246252227596,
-                    "h": 44.824683314183446,
-                    "shape": "rectangle",
-                    "id": "a6",
-                    "correct": false
-                  },
-                  {
-                    "id": "a7",
-                    "shape": "rectangle",
-                    "x": 13.0339198478415,
-                    "y": 77.10446215594153,
-                    "w": 19.786432540096737,
-                    "h": 14.209956909928664,
-                    "correct": false
-                  }
-                ],
-                "id": 167,
-                "uid": "ic3__lv1__hotspot__q1",
-                "explanation": "Có 3 vị trí đúng, được đánh dấu màu xanh trên hình minh họa ở trên."
-              }
             ]
           }
         },
@@ -11873,6 +11868,150 @@
                 "id": 28,
                 "uid": "ic3__lv2__t1__q28",
                 "explanation": "Các đáp án đúng là: “D”; “K”."
+              },
+              {
+                "question": "Hãy nhấp đúng vào vị trí trên hình để chỉnh tốc độ di chuyển chuột (Mouse)?",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-e5d99ad5d66310b4d07649933eed9e95c49baf4a.png",
+                "imageUrl": "img/img-e5d99ad5d66310b4d07649933eed9e95c49baf4a.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 51.61,
+                    "y": 9.24,
+                    "w": 37.51,
+                    "h": 10.3,
+                    "correct": true
+                  },
+                  {
+                    "x": 35.44,
+                    "y": 42.79,
+                    "w": 29.03,
+                    "h": 9.32,
+                    "shape": "rectangle",
+                    "id": "a2",
+                    "correct": false
+                  },
+                  {
+                    "x": 35.96,
+                    "y": 84.69,
+                    "w": 27.76,
+                    "h": 11.52,
+                    "shape": "rectangle",
+                    "id": "a3",
+                    "correct": false
+                  },
+                  {
+                    "x": 70.04,
+                    "y": 51.01,
+                    "w": 26.01,
+                    "h": 11.44,
+                    "shape": "rectangle",
+                    "id": "a4",
+                    "correct": false
+                  }
+                ],
+                "id": 188,
+                "uid": "ic3__lv2__hotspot__q10",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
+              },
+              {
+                "question": "Bạn muốn thay đổi độ tương phản của màn hình trên máy tính. Nhấp vào tính năng sẽ cho phép bạn điều chỉnh cài đặt độ tương phản trên máy tính Windows này.",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-39c39f9f2cc1ce6022c10539c8bade3b075a4545.png",
+                "imageUrl": "img/img-39c39f9f2cc1ce6022c10539c8bade3b075a4545.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 5.32,
+                    "y": 68.79,
+                    "w": 26.63,
+                    "h": 14.22,
+                    "correct": true
+                  },
+                  {
+                    "x": 35.63,
+                    "y": 10.73,
+                    "w": 27.08,
+                    "h": 15.5,
+                    "shape": "rectangle",
+                    "id": "a2",
+                    "correct": false
+                  },
+                  {
+                    "x": 39.63,
+                    "y": 38.91,
+                    "w": 24.84,
+                    "h": 12.96,
+                    "shape": "rectangle",
+                    "id": "a3",
+                    "correct": false
+                  },
+                  {
+                    "x": 40.42,
+                    "y": 75.09,
+                    "w": 24.15,
+                    "h": 13.08,
+                    "shape": "rectangle",
+                    "id": "a4",
+                    "correct": false
+                  }
+                ],
+                "id": 190,
+                "uid": "ic3__lv2__hotspot__q12",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
+              },
+              {
+                "question": "Bạn muốn giảm độ sáng của màn hình trên máy tính. Nhấp vào tính năng cho phép bạn điều chỉnh cài đặt độ sáng trên máy tính Windows này.",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-452e721ee3e28c3ea43afd253e2e41dce0b79c79.png",
+                "imageUrl": "img/img-452e721ee3e28c3ea43afd253e2e41dce0b79c79.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 1.11,
+                    "y": 28.59,
+                    "w": 97.61,
+                    "h": 8.01,
+                    "correct": true
+                  },
+                  {
+                    "x": 69.88,
+                    "y": 86.36,
+                    "w": 25.24,
+                    "h": 7.4,
+                    "shape": "rectangle",
+                    "id": "a2",
+                    "correct": false
+                  },
+                  {
+                    "x": 69.62,
+                    "y": 16.14,
+                    "w": 24.83,
+                    "h": 7.15,
+                    "shape": "rectangle",
+                    "id": "a3",
+                    "correct": false
+                  },
+                  {
+                    "x": 73.97,
+                    "y": 55.57,
+                    "w": 23.1,
+                    "h": 8.96,
+                    "shape": "rectangle",
+                    "id": "a4",
+                    "correct": false
+                  }
+                ],
+                "id": 191,
+                "uid": "ic3__lv2__hotspot__q13",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
               }
             ],
             "2. Công dân số": [
@@ -13028,6 +13167,303 @@
                 "id": 79,
                 "uid": "ic3__lv2__t3__q21",
                 "explanation": "Đáp án đúng là: “Từ khóa”."
+              },
+              {
+                "question": "Bạn hãy nhấp chọn vào tính năng chia sẻ toàn bộ lịch của bạn với người khác trong hình sau đây?",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-3c25df40245dd3ce4ce0d966095a0d7e1fc3fcc5.png",
+                "imageUrl": "img/img-3c25df40245dd3ce4ce0d966095a0d7e1fc3fcc5.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 54.26,
+                    "y": 3.88,
+                    "w": 6.65,
+                    "h": 19.11,
+                    "correct": true
+                  },
+                  {
+                    "x": 80.55,
+                    "y": 72.7,
+                    "w": 7.33,
+                    "h": 19.35,
+                    "shape": "rectangle",
+                    "id": "a2",
+                    "correct": false
+                  },
+                  {
+                    "x": 9.54,
+                    "y": 35.48,
+                    "w": 8.44,
+                    "h": 18.81,
+                    "shape": "rectangle",
+                    "id": "a3",
+                    "correct": false
+                  },
+                  {
+                    "x": 84.45,
+                    "y": 40.92,
+                    "w": 7.11,
+                    "h": 17.14,
+                    "shape": "rectangle",
+                    "id": "a4",
+                    "correct": false
+                  }
+                ],
+                "id": 179,
+                "uid": "ic3__lv2__hotspot__q1",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
+              },
+              {
+                "question": "Bạn cần thêm cuộc họp hội Sinh viên tháng tới vào lịch của mình. Hãy chọn vị trí để mở hộp thoại sự kiện? (Chọn 2)",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-a6e0e55b1bee3ded05d70545878eb8d7f50d60d5.png",
+                "imageUrl": "img/img-a6e0e55b1bee3ded05d70545878eb8d7f50d60d5.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 1.07,
+                    "y": 19.32,
+                    "w": 15.82,
+                    "h": 17.18,
+                    "correct": true
+                  },
+                  {
+                    "id": "a2",
+                    "shape": "rectangle",
+                    "x": 33.62,
+                    "y": 17.03,
+                    "w": 65.45,
+                    "h": 81.78,
+                    "correct": true
+                  },
+                  {
+                    "x": 10.41,
+                    "y": 38.25,
+                    "w": 19.55,
+                    "h": 20.54,
+                    "shape": "rectangle",
+                    "id": "a3",
+                    "correct": false
+                  },
+                  {
+                    "x": 2.77,
+                    "y": 74.67,
+                    "w": 19.83,
+                    "h": 21.68,
+                    "shape": "rectangle",
+                    "id": "a4",
+                    "correct": false
+                  },
+                  {
+                    "x": 6.04,
+                    "y": 2.22,
+                    "w": 12.98,
+                    "h": 13.73,
+                    "shape": "rectangle",
+                    "id": "a5",
+                    "correct": false
+                  }
+                ],
+                "id": 180,
+                "uid": "ic3__lv2__hotspot__q2",
+                "explanation": "Có 2 vị trí đúng, được đánh dấu màu xanh trên hình minh họa ở trên."
+              },
+              {
+                "question": "Trong hình ảnh sau đây, tùy chọn nào sẽ được sử dụng để hiển thị lịch theo tháng? (Nhấp vào vị trí bạn thấy Đúng)",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-f24224dd9ebb54f8dde9bdc7566a0c95c0505b2a.png",
+                "imageUrl": "img/img-f24224dd9ebb54f8dde9bdc7566a0c95c0505b2a.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 83.71,
+                    "y": 3.26,
+                    "w": 8.42,
+                    "h": 6.73,
+                    "correct": true
+                  },
+                  {
+                    "x": 49.24,
+                    "y": 22.04,
+                    "w": 10.28,
+                    "h": 8.61,
+                    "shape": "rectangle",
+                    "id": "a2",
+                    "correct": false
+                  },
+                  {
+                    "x": 40.44,
+                    "y": 38.73,
+                    "w": 9.53,
+                    "h": 7.44,
+                    "shape": "rectangle",
+                    "id": "a3",
+                    "correct": false
+                  },
+                  {
+                    "x": 16.81,
+                    "y": 10.47,
+                    "w": 10.7,
+                    "h": 7.3,
+                    "shape": "rectangle",
+                    "id": "a4",
+                    "correct": false
+                  }
+                ],
+                "id": 181,
+                "uid": "ic3__lv2__hotspot__q3",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
+              },
+              {
+                "question": "Bạn muốn đặt lịch để nhắc ngày thứ Tư hàng tuần ăn trưa cùng Fran hàng tuần. Bạn sẽ chọn tuỳ chọn nào trong hình?  (Nhấp vào vị trí bạn thấy Đúng)",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-1cf6ede182d4aabe8b3f55811c6b7fcd900b20a1.png",
+                "imageUrl": "img/img-1cf6ede182d4aabe8b3f55811c6b7fcd900b20a1.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 44.31,
+                    "y": 45.15,
+                    "w": 20.11,
+                    "h": 12.81,
+                    "correct": true
+                  },
+                  {
+                    "x": 9.83,
+                    "y": 73.07,
+                    "w": 19.22,
+                    "h": 11.5,
+                    "shape": "rectangle",
+                    "id": "a2",
+                    "correct": false
+                  },
+                  {
+                    "x": 4.83,
+                    "y": 2.64,
+                    "w": 21.81,
+                    "h": 13.06,
+                    "shape": "rectangle",
+                    "id": "a3",
+                    "correct": false
+                  },
+                  {
+                    "x": 7.53,
+                    "y": 42.56,
+                    "w": 21.49,
+                    "h": 12.64,
+                    "shape": "rectangle",
+                    "id": "a4",
+                    "correct": false
+                  }
+                ],
+                "id": 182,
+                "uid": "ic3__lv2__hotspot__q4",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
+              },
+              {
+                "question": "Bạn sẽ nhấp vào mục nào trong hình ảnh sau đây để truy cập các tính năng lọc kết quả tìm kiếm trên Google?",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-88680267cad67f51e25622babef0406635d03a68.png",
+                "imageUrl": "img/img-88680267cad67f51e25622babef0406635d03a68.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 72.07,
+                    "y": 14.13,
+                    "w": 5.0,
+                    "h": 11.31,
+                    "correct": true
+                  },
+                  {
+                    "x": 7.81,
+                    "y": 81.88,
+                    "w": 7.19,
+                    "h": 11.64,
+                    "shape": "rectangle",
+                    "id": "a2",
+                    "correct": false
+                  },
+                  {
+                    "x": 45.53,
+                    "y": 9.42,
+                    "w": 7.16,
+                    "h": 10.19,
+                    "shape": "rectangle",
+                    "id": "a3",
+                    "correct": false
+                  },
+                  {
+                    "x": 21.28,
+                    "y": 48.98,
+                    "w": 8.52,
+                    "h": 10.52,
+                    "shape": "rectangle",
+                    "id": "a4",
+                    "correct": false
+                  }
+                ],
+                "id": 183,
+                "uid": "ic3__lv2__hotspot__q5",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
+              },
+              {
+                "question": "Bạn đang viết báo cáo về chiến tranh năm 1812. Bạn thực hiện tìm kiếm trực tuyến cho các bài viết về chiến tranh. Bạn cần lọc kết quả của mình để chỉ hiển thị các bài viết được xuất bản trong năm qua. Bạn có thể chọn nút nào để đạt được mục tiêu? Nhấp vào vị trí Đúng.",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-7846b79dad5eda5997ec59de17617b539e6acf22.png",
+                "imageUrl": "img/img-7846b79dad5eda5997ec59de17617b539e6acf22.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 86.97,
+                    "y": 23.93,
+                    "w": 9.52,
+                    "h": 12.32,
+                    "correct": true
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 44.18,
+                    "w": 10.31,
+                    "h": 12.26,
+                    "shape": "rectangle",
+                    "id": "a2",
+                    "correct": false
+                  },
+                  {
+                    "x": 54.04,
+                    "y": 35.53,
+                    "w": 10.29,
+                    "h": 11.04,
+                    "shape": "rectangle",
+                    "id": "a3",
+                    "correct": false
+                  },
+                  {
+                    "x": 38.91,
+                    "y": 4.59,
+                    "w": 9.82,
+                    "h": 12.51,
+                    "shape": "rectangle",
+                    "id": "a4",
+                    "correct": false
+                  }
+                ],
+                "id": 184,
+                "uid": "ic3__lv2__hotspot__q6",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
               }
             ],
             "4. Sáng tạo nội dung": [
@@ -13873,6 +14309,54 @@
                 "id": 117,
                 "uid": "ic3__lv2__t4__q38",
                 "explanation": "Ghép đúng: “Khả năng xem nội dung của một tập tin nhưng không thể sửa đổi nó” ↔ “Tập tin chỉ đọc (Read-Only)”; “Cài đặt xác định ai có thể đọc, ghi hoặc thực thi tệp” ↔ “Quyền tập tin”; “Quá trình mã hóa dữ liệu để ngăn chặn truy cập trái phép” ↔ “Mã hóa bảo mật”; “Một tập tin có thể được xem và sửa đổi bởi người dùng có quyền thích hợp” ↔ “Tập tin đọc-ghi (Read-Write)”; “Một tính năng bảo mật hạn chế quyền truy cập tệp đối với những người dùng nhập đúng mã truy cập” ↔ “Bảo vệ bằng mật khẩu”."
+              },
+              {
+                "question": "Bạn sẽ sử dụng nhóm nào sau đây để tạo danh sách các thuật ngữ hoặc thông tin chính và vị trí của chúng trong tài liệu?",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-5403e127d09ebd2302c515334ac10dc229ff8982.png",
+                "imageUrl": "img/img-5403e127d09ebd2302c515334ac10dc229ff8982.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 66.86,
+                    "y": 22.38,
+                    "w": 14.31,
+                    "h": 75.87,
+                    "correct": true
+                  },
+                  {
+                    "x": 55.14,
+                    "y": 7.29,
+                    "w": 7.43,
+                    "h": 23.37,
+                    "shape": "rectangle",
+                    "id": "a2",
+                    "correct": false
+                  },
+                  {
+                    "x": 13.06,
+                    "y": 8.25,
+                    "w": 7.7,
+                    "h": 20.93,
+                    "shape": "rectangle",
+                    "id": "a3",
+                    "correct": false
+                  },
+                  {
+                    "x": 83.92,
+                    "y": 6.71,
+                    "w": 7.2,
+                    "h": 20.5,
+                    "shape": "rectangle",
+                    "id": "a4",
+                    "correct": false
+                  }
+                ],
+                "id": 185,
+                "uid": "ic3__lv2__hotspot__q7",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
               }
             ],
             "5. Giao tiếp": [
@@ -14934,6 +15418,102 @@
                 "id": 166,
                 "uid": "ic3__lv2__t6__q42",
                 "explanation": "Không: Sửa lỗi cho người khác khi ý kiến và ý tưởng của họ sai, Sử dụng chữ viết tắt , tiếng lóng và biểu tượng cảm xúc ( emoji ) để làm cho bình luận của bạn thêm cá tính. Có: Đưa ra lời phê bình công bằng và góp ý mang tính xây dựng , nhưng hãy diễn đạt một cách tôn trọng."
+              },
+              {
+                "question": "Bạn viết một bài luận. Một người bạn cùng lớp nhận xét bài luận này và gợi ý sửa chữa như hình. Bạn đồng ý việc thực hiện các sửa chữa vĩnh viễn trong tài liệu. Bạn nên sử dụng chức năng nào? Hãy nhấp vào công cụ phù hợp.",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-a76f4b6157d73c37937976f302b440009aa095ff.png",
+                "imageUrl": "img/img-a76f4b6157d73c37937976f302b440009aa095ff.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 67.19,
+                    "y": 7.19,
+                    "w": 6.07,
+                    "h": 17.54,
+                    "correct": true
+                  },
+                  {
+                    "x": 45.24,
+                    "y": 5.11,
+                    "w": 8.18,
+                    "h": 17.54,
+                    "shape": "rectangle",
+                    "id": "a2",
+                    "correct": false
+                  },
+                  {
+                    "x": 70.64,
+                    "y": 35.38,
+                    "w": 7.72,
+                    "h": 15.53,
+                    "shape": "rectangle",
+                    "id": "a3",
+                    "correct": false
+                  },
+                  {
+                    "x": 43.58,
+                    "y": 70.67,
+                    "w": 8.37,
+                    "h": 18.18,
+                    "shape": "rectangle",
+                    "id": "a4",
+                    "correct": false
+                  }
+                ],
+                "id": 186,
+                "uid": "ic3__lv2__hotspot__q8",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
+              },
+              {
+                "question": "Chức năng nào sau đây dùng để sử dụng tính năng đồng tác giả (Co-authoring) trên tập tin hiện tại. Hãy nhấp vào công cụ đó.",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-796b56f58afed95e38ce3323ed35a73ebbaad463.png",
+                "imageUrl": "img/img-796b56f58afed95e38ce3323ed35a73ebbaad463.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 92.38,
+                    "y": 1.82,
+                    "w": 6.47,
+                    "h": 5.38,
+                    "correct": true
+                  },
+                  {
+                    "x": 71.22,
+                    "y": 53.2,
+                    "w": 9.84,
+                    "h": 8.36,
+                    "shape": "rectangle",
+                    "id": "a2",
+                    "correct": false
+                  },
+                  {
+                    "x": 4.4,
+                    "y": 81.13,
+                    "w": 10.16,
+                    "h": 7.16,
+                    "shape": "rectangle",
+                    "id": "a3",
+                    "correct": false
+                  },
+                  {
+                    "x": 11.86,
+                    "y": 45.37,
+                    "w": 10.24,
+                    "h": 8.41,
+                    "shape": "rectangle",
+                    "id": "a4",
+                    "correct": false
+                  }
+                ],
+                "id": 187,
+                "uid": "ic3__lv2__hotspot__q9",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
               }
             ],
             "7. An toàn và bảo mật": [
@@ -15177,497 +15757,6 @@
                 "id": 178,
                 "uid": "ic3__lv2__t7__q12",
                 "explanation": "Đáp án đúng là: “Máy in mặc định sẽ tự động được chọn khi bạn nhấp vào In”."
-              }
-            ],
-            "Minitest Hotspot": [
-              {
-                "question": "Bạn hãy nhấp chọn vào tính năng chia sẻ toàn bộ lịch của bạn với người khác trong hình sau đây?",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-3c25df40245dd3ce4ce0d966095a0d7e1fc3fcc5.png",
-                "imageUrl": "img/img-3c25df40245dd3ce4ce0d966095a0d7e1fc3fcc5.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 54.26,
-                    "y": 3.88,
-                    "w": 6.65,
-                    "h": 19.11,
-                    "correct": true
-                  },
-                  {
-                    "x": 80.55,
-                    "y": 72.7,
-                    "w": 7.33,
-                    "h": 19.35,
-                    "shape": "rectangle",
-                    "id": "a2",
-                    "correct": false
-                  },
-                  {
-                    "x": 9.54,
-                    "y": 35.48,
-                    "w": 8.44,
-                    "h": 18.81,
-                    "shape": "rectangle",
-                    "id": "a3",
-                    "correct": false
-                  },
-                  {
-                    "x": 84.45,
-                    "y": 40.92,
-                    "w": 7.11,
-                    "h": 17.14,
-                    "shape": "rectangle",
-                    "id": "a4",
-                    "correct": false
-                  }
-                ],
-                "id": 179,
-                "uid": "ic3__lv2__hotspot__q1",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
-              },
-              {
-                "question": "Bạn cần thêm cuộc họp hội Sinh viên tháng tới vào lịch của mình. Hãy chọn vị trí để mở hộp thoại sự kiện? (Chọn 2)",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-a6e0e55b1bee3ded05d70545878eb8d7f50d60d5.png",
-                "imageUrl": "img/img-a6e0e55b1bee3ded05d70545878eb8d7f50d60d5.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 1.07,
-                    "y": 19.32,
-                    "w": 15.82,
-                    "h": 17.18,
-                    "correct": true
-                  },
-                  {
-                    "id": "a2",
-                    "shape": "rectangle",
-                    "x": 33.62,
-                    "y": 17.03,
-                    "w": 65.45,
-                    "h": 81.78,
-                    "correct": true
-                  },
-                  {
-                    "x": 10.41,
-                    "y": 38.25,
-                    "w": 19.55,
-                    "h": 20.54,
-                    "shape": "rectangle",
-                    "id": "a3",
-                    "correct": false
-                  },
-                  {
-                    "x": 2.77,
-                    "y": 74.67,
-                    "w": 19.83,
-                    "h": 21.68,
-                    "shape": "rectangle",
-                    "id": "a4",
-                    "correct": false
-                  },
-                  {
-                    "x": 6.04,
-                    "y": 2.22,
-                    "w": 12.98,
-                    "h": 13.73,
-                    "shape": "rectangle",
-                    "id": "a5",
-                    "correct": false
-                  }
-                ],
-                "id": 180,
-                "uid": "ic3__lv2__hotspot__q2",
-                "explanation": "Có 2 vị trí đúng, được đánh dấu màu xanh trên hình minh họa ở trên."
-              },
-              {
-                "question": "Trong hình ảnh sau đây, tùy chọn nào sẽ được sử dụng để hiển thị lịch theo tháng? (Nhấp vào vị trí bạn thấy Đúng)",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-f24224dd9ebb54f8dde9bdc7566a0c95c0505b2a.png",
-                "imageUrl": "img/img-f24224dd9ebb54f8dde9bdc7566a0c95c0505b2a.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 83.71,
-                    "y": 3.26,
-                    "w": 8.42,
-                    "h": 6.73,
-                    "correct": true
-                  },
-                  {
-                    "x": 49.24,
-                    "y": 22.04,
-                    "w": 10.28,
-                    "h": 8.61,
-                    "shape": "rectangle",
-                    "id": "a2",
-                    "correct": false
-                  },
-                  {
-                    "x": 40.44,
-                    "y": 38.73,
-                    "w": 9.53,
-                    "h": 7.44,
-                    "shape": "rectangle",
-                    "id": "a3",
-                    "correct": false
-                  },
-                  {
-                    "x": 16.81,
-                    "y": 10.47,
-                    "w": 10.7,
-                    "h": 7.3,
-                    "shape": "rectangle",
-                    "id": "a4",
-                    "correct": false
-                  }
-                ],
-                "id": 181,
-                "uid": "ic3__lv2__hotspot__q3",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
-              },
-              {
-                "question": "Bạn muốn đặt lịch để nhắc ngày thứ Tư hàng tuần ăn trưa cùng Fran hàng tuần. Bạn sẽ chọn tuỳ chọn nào trong hình?  (Nhấp vào vị trí bạn thấy Đúng)",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-1cf6ede182d4aabe8b3f55811c6b7fcd900b20a1.png",
-                "imageUrl": "img/img-1cf6ede182d4aabe8b3f55811c6b7fcd900b20a1.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 44.31,
-                    "y": 45.15,
-                    "w": 20.11,
-                    "h": 12.81,
-                    "correct": true
-                  },
-                  {
-                    "x": 9.83,
-                    "y": 73.07,
-                    "w": 19.22,
-                    "h": 11.5,
-                    "shape": "rectangle",
-                    "id": "a2",
-                    "correct": false
-                  },
-                  {
-                    "x": 4.83,
-                    "y": 2.64,
-                    "w": 21.81,
-                    "h": 13.06,
-                    "shape": "rectangle",
-                    "id": "a3",
-                    "correct": false
-                  },
-                  {
-                    "x": 7.53,
-                    "y": 42.56,
-                    "w": 21.49,
-                    "h": 12.64,
-                    "shape": "rectangle",
-                    "id": "a4",
-                    "correct": false
-                  }
-                ],
-                "id": 182,
-                "uid": "ic3__lv2__hotspot__q4",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
-              },
-              {
-                "question": "Bạn sẽ nhấp vào mục nào trong hình ảnh sau đây để truy cập các tính năng lọc kết quả tìm kiếm trên Google?",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-88680267cad67f51e25622babef0406635d03a68.png",
-                "imageUrl": "img/img-88680267cad67f51e25622babef0406635d03a68.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 72.07,
-                    "y": 14.13,
-                    "w": 5.0,
-                    "h": 11.31,
-                    "correct": true
-                  },
-                  {
-                    "x": 7.81,
-                    "y": 81.88,
-                    "w": 7.19,
-                    "h": 11.64,
-                    "shape": "rectangle",
-                    "id": "a2",
-                    "correct": false
-                  },
-                  {
-                    "x": 45.53,
-                    "y": 9.42,
-                    "w": 7.16,
-                    "h": 10.19,
-                    "shape": "rectangle",
-                    "id": "a3",
-                    "correct": false
-                  },
-                  {
-                    "x": 21.28,
-                    "y": 48.98,
-                    "w": 8.52,
-                    "h": 10.52,
-                    "shape": "rectangle",
-                    "id": "a4",
-                    "correct": false
-                  }
-                ],
-                "id": 183,
-                "uid": "ic3__lv2__hotspot__q5",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
-              },
-              {
-                "question": "Bạn đang viết báo cáo về chiến tranh năm 1812. Bạn thực hiện tìm kiếm trực tuyến cho các bài viết về chiến tranh. Bạn cần lọc kết quả của mình để chỉ hiển thị các bài viết được xuất bản trong năm qua. Bạn có thể chọn nút nào để đạt được mục tiêu? Nhấp vào vị trí Đúng.",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-7846b79dad5eda5997ec59de17617b539e6acf22.png",
-                "imageUrl": "img/img-7846b79dad5eda5997ec59de17617b539e6acf22.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 86.97,
-                    "y": 23.93,
-                    "w": 9.52,
-                    "h": 12.32,
-                    "correct": true
-                  },
-                  {
-                    "x": 14.0,
-                    "y": 44.18,
-                    "w": 10.31,
-                    "h": 12.26,
-                    "shape": "rectangle",
-                    "id": "a2",
-                    "correct": false
-                  },
-                  {
-                    "x": 54.04,
-                    "y": 35.53,
-                    "w": 10.29,
-                    "h": 11.04,
-                    "shape": "rectangle",
-                    "id": "a3",
-                    "correct": false
-                  },
-                  {
-                    "x": 38.91,
-                    "y": 4.59,
-                    "w": 9.82,
-                    "h": 12.51,
-                    "shape": "rectangle",
-                    "id": "a4",
-                    "correct": false
-                  }
-                ],
-                "id": 184,
-                "uid": "ic3__lv2__hotspot__q6",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
-              },
-              {
-                "question": "Bạn sẽ sử dụng nhóm nào sau đây để tạo danh sách các thuật ngữ hoặc thông tin chính và vị trí của chúng trong tài liệu?",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-5403e127d09ebd2302c515334ac10dc229ff8982.png",
-                "imageUrl": "img/img-5403e127d09ebd2302c515334ac10dc229ff8982.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 66.86,
-                    "y": 22.38,
-                    "w": 14.31,
-                    "h": 75.87,
-                    "correct": true
-                  },
-                  {
-                    "x": 55.14,
-                    "y": 7.29,
-                    "w": 7.43,
-                    "h": 23.37,
-                    "shape": "rectangle",
-                    "id": "a2",
-                    "correct": false
-                  },
-                  {
-                    "x": 13.06,
-                    "y": 8.25,
-                    "w": 7.7,
-                    "h": 20.93,
-                    "shape": "rectangle",
-                    "id": "a3",
-                    "correct": false
-                  },
-                  {
-                    "x": 83.92,
-                    "y": 6.71,
-                    "w": 7.2,
-                    "h": 20.5,
-                    "shape": "rectangle",
-                    "id": "a4",
-                    "correct": false
-                  }
-                ],
-                "id": 185,
-                "uid": "ic3__lv2__hotspot__q7",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
-              },
-              {
-                "question": "Bạn viết một bài luận. Một người bạn cùng lớp nhận xét bài luận này và gợi ý sửa chữa như hình. Bạn đồng ý việc thực hiện các sửa chữa vĩnh viễn trong tài liệu. Bạn nên sử dụng chức năng nào? Hãy nhấp vào công cụ phù hợp.",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-a76f4b6157d73c37937976f302b440009aa095ff.png",
-                "imageUrl": "img/img-a76f4b6157d73c37937976f302b440009aa095ff.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 67.19,
-                    "y": 7.19,
-                    "w": 6.07,
-                    "h": 17.54,
-                    "correct": true
-                  },
-                  {
-                    "x": 45.24,
-                    "y": 5.11,
-                    "w": 8.18,
-                    "h": 17.54,
-                    "shape": "rectangle",
-                    "id": "a2",
-                    "correct": false
-                  },
-                  {
-                    "x": 70.64,
-                    "y": 35.38,
-                    "w": 7.72,
-                    "h": 15.53,
-                    "shape": "rectangle",
-                    "id": "a3",
-                    "correct": false
-                  },
-                  {
-                    "x": 43.58,
-                    "y": 70.67,
-                    "w": 8.37,
-                    "h": 18.18,
-                    "shape": "rectangle",
-                    "id": "a4",
-                    "correct": false
-                  }
-                ],
-                "id": 186,
-                "uid": "ic3__lv2__hotspot__q8",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
-              },
-              {
-                "question": "Chức năng nào sau đây dùng để sử dụng tính năng đồng tác giả (Co-authoring) trên tập tin hiện tại. Hãy nhấp vào công cụ đó.",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-796b56f58afed95e38ce3323ed35a73ebbaad463.png",
-                "imageUrl": "img/img-796b56f58afed95e38ce3323ed35a73ebbaad463.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 92.38,
-                    "y": 1.82,
-                    "w": 6.47,
-                    "h": 5.38,
-                    "correct": true
-                  },
-                  {
-                    "x": 71.22,
-                    "y": 53.2,
-                    "w": 9.84,
-                    "h": 8.36,
-                    "shape": "rectangle",
-                    "id": "a2",
-                    "correct": false
-                  },
-                  {
-                    "x": 4.4,
-                    "y": 81.13,
-                    "w": 10.16,
-                    "h": 7.16,
-                    "shape": "rectangle",
-                    "id": "a3",
-                    "correct": false
-                  },
-                  {
-                    "x": 11.86,
-                    "y": 45.37,
-                    "w": 10.24,
-                    "h": 8.41,
-                    "shape": "rectangle",
-                    "id": "a4",
-                    "correct": false
-                  }
-                ],
-                "id": 187,
-                "uid": "ic3__lv2__hotspot__q9",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
-              },
-              {
-                "question": "Hãy nhấp đúng vào vị trí trên hình để chỉnh tốc độ di chuyển chuột (Mouse)?",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-e5d99ad5d66310b4d07649933eed9e95c49baf4a.png",
-                "imageUrl": "img/img-e5d99ad5d66310b4d07649933eed9e95c49baf4a.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 51.61,
-                    "y": 9.24,
-                    "w": 37.51,
-                    "h": 10.3,
-                    "correct": true
-                  },
-                  {
-                    "x": 35.44,
-                    "y": 42.79,
-                    "w": 29.03,
-                    "h": 9.32,
-                    "shape": "rectangle",
-                    "id": "a2",
-                    "correct": false
-                  },
-                  {
-                    "x": 35.96,
-                    "y": 84.69,
-                    "w": 27.76,
-                    "h": 11.52,
-                    "shape": "rectangle",
-                    "id": "a3",
-                    "correct": false
-                  },
-                  {
-                    "x": 70.04,
-                    "y": 51.01,
-                    "w": 26.01,
-                    "h": 11.44,
-                    "shape": "rectangle",
-                    "id": "a4",
-                    "correct": false
-                  }
-                ],
-                "id": 188,
-                "uid": "ic3__lv2__hotspot__q10",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
               },
               {
                 "question": "Hãy chọn tính năng trên màn hình cung cấp khả năng bảo vệ tập tin để người khác không thể đọc.",
@@ -15715,102 +15804,6 @@
                 ],
                 "id": 189,
                 "uid": "ic3__lv2__hotspot__q11",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
-              },
-              {
-                "question": "Bạn muốn thay đổi độ tương phản của màn hình trên máy tính. Nhấp vào tính năng sẽ cho phép bạn điều chỉnh cài đặt độ tương phản trên máy tính Windows này.",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-39c39f9f2cc1ce6022c10539c8bade3b075a4545.png",
-                "imageUrl": "img/img-39c39f9f2cc1ce6022c10539c8bade3b075a4545.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 5.32,
-                    "y": 68.79,
-                    "w": 26.63,
-                    "h": 14.22,
-                    "correct": true
-                  },
-                  {
-                    "x": 35.63,
-                    "y": 10.73,
-                    "w": 27.08,
-                    "h": 15.5,
-                    "shape": "rectangle",
-                    "id": "a2",
-                    "correct": false
-                  },
-                  {
-                    "x": 39.63,
-                    "y": 38.91,
-                    "w": 24.84,
-                    "h": 12.96,
-                    "shape": "rectangle",
-                    "id": "a3",
-                    "correct": false
-                  },
-                  {
-                    "x": 40.42,
-                    "y": 75.09,
-                    "w": 24.15,
-                    "h": 13.08,
-                    "shape": "rectangle",
-                    "id": "a4",
-                    "correct": false
-                  }
-                ],
-                "id": 190,
-                "uid": "ic3__lv2__hotspot__q12",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
-              },
-              {
-                "question": "Bạn muốn giảm độ sáng của màn hình trên máy tính. Nhấp vào tính năng cho phép bạn điều chỉnh cài đặt độ sáng trên máy tính Windows này.",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-452e721ee3e28c3ea43afd253e2e41dce0b79c79.png",
-                "imageUrl": "img/img-452e721ee3e28c3ea43afd253e2e41dce0b79c79.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 1.11,
-                    "y": 28.59,
-                    "w": 97.61,
-                    "h": 8.01,
-                    "correct": true
-                  },
-                  {
-                    "x": 69.88,
-                    "y": 86.36,
-                    "w": 25.24,
-                    "h": 7.4,
-                    "shape": "rectangle",
-                    "id": "a2",
-                    "correct": false
-                  },
-                  {
-                    "x": 69.62,
-                    "y": 16.14,
-                    "w": 24.83,
-                    "h": 7.15,
-                    "shape": "rectangle",
-                    "id": "a3",
-                    "correct": false
-                  },
-                  {
-                    "x": 73.97,
-                    "y": 55.57,
-                    "w": 23.1,
-                    "h": 8.96,
-                    "shape": "rectangle",
-                    "id": "a4",
-                    "correct": false
-                  }
-                ],
-                "id": 191,
-                "uid": "ic3__lv2__hotspot__q13",
                 "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
               }
             ]
@@ -16405,6 +16398,54 @@
                 "id": 28,
                 "uid": "ic3__lv3__t1__q28",
                 "explanation": "Đáp án đúng là: “Xác định đa yếu tố”."
+              },
+              {
+                "question": "Bạn cần tìm phiên bản Windows mà máy tính của bạn đang chạy. Bạn nên thực hiện hành động này trong khu vực nào của Windows Settings? Để trả lời, hãy nhấp vào vị trí thích hợp trong hình.",
+                "type": "hotspot",
+                "image": true,
+                "image_file": "img-e7b88d072656d46798b8a5ac09fcb60c570035ce.png",
+                "imageUrl": "img/img-e7b88d072656d46798b8a5ac09fcb60c570035ce.png",
+                "areas": [
+                  {
+                    "id": "a1",
+                    "shape": "rectangle",
+                    "x": 8.08,
+                    "y": 25.48,
+                    "w": 26.6,
+                    "h": 16.83,
+                    "correct": true
+                  },
+                  {
+                    "x": 69.93,
+                    "y": 3.79,
+                    "w": 27.91,
+                    "h": 17.88,
+                    "shape": "rectangle",
+                    "id": "a2",
+                    "correct": false
+                  },
+                  {
+                    "x": 70.54,
+                    "y": 73.68,
+                    "w": 24.28,
+                    "h": 16.29,
+                    "shape": "rectangle",
+                    "id": "a3",
+                    "correct": false
+                  },
+                  {
+                    "x": 36.29,
+                    "y": 73.86,
+                    "w": 25.64,
+                    "h": 16.82,
+                    "shape": "rectangle",
+                    "id": "a4",
+                    "correct": false
+                  }
+                ],
+                "id": 184,
+                "uid": "ic3__lv3__hotspot__q1",
+                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
               }
             ],
             "2. Công dân số": [
@@ -19728,56 +19769,6 @@
                 "id": 183,
                 "uid": "ic3__lv3__t7__q21",
                 "explanation": "Các đáp án đúng là: “Để xác thực đa yếu tố, đảm bảo an toàn hơn cho tài khoản”; “Để lưu lại thông tin đăng nhập trong Cookie của trình duyệt”."
-              }
-            ],
-            "Minitest Hotspot": [
-              {
-                "question": "Bạn cần tìm phiên bản Windows mà máy tính của bạn đang chạy. Bạn nên thực hiện hành động này trong khu vực nào của Windows Settings? Để trả lời, hãy nhấp vào vị trí thích hợp trong hình.",
-                "type": "hotspot",
-                "image": true,
-                "image_file": "img-e7b88d072656d46798b8a5ac09fcb60c570035ce.png",
-                "imageUrl": "img/img-e7b88d072656d46798b8a5ac09fcb60c570035ce.png",
-                "areas": [
-                  {
-                    "id": "a1",
-                    "shape": "rectangle",
-                    "x": 8.08,
-                    "y": 25.48,
-                    "w": 26.6,
-                    "h": 16.83,
-                    "correct": true
-                  },
-                  {
-                    "x": 69.93,
-                    "y": 3.79,
-                    "w": 27.91,
-                    "h": 17.88,
-                    "shape": "rectangle",
-                    "id": "a2",
-                    "correct": false
-                  },
-                  {
-                    "x": 70.54,
-                    "y": 73.68,
-                    "w": 24.28,
-                    "h": 16.29,
-                    "shape": "rectangle",
-                    "id": "a3",
-                    "correct": false
-                  },
-                  {
-                    "x": 36.29,
-                    "y": 73.86,
-                    "w": 25.64,
-                    "h": 16.82,
-                    "shape": "rectangle",
-                    "id": "a4",
-                    "correct": false
-                  }
-                ],
-                "id": 184,
-                "uid": "ic3__lv3__hotspot__q1",
-                "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
               }
             ]
           }
