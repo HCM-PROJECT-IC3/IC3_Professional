@@ -175,6 +175,10 @@
           title="Chơi mini-game Bi-a Phần Mềm" style="margin-top:8px;">
           🎱 Bi-a Phần Mềm
         </button>
+        <button type="button" class="play-game-btn" id="openPzDefenseBtn"
+          title="Chơi mini-game Phòng Thủ Dữ Liệu" style="margin-top:8px;">
+          🧟 Phòng Thủ Dữ Liệu
+        </button>
       </div>
     </div>
   </div>
@@ -356,6 +360,27 @@
     </div>
   </div>
 
+  <!-- ============ MINI-GAME "PHÒNG THỦ DỮ LIỆU" (modal) — xem js/pz-defense-modal.js ============ -->
+  <div class="game-modal-overlay" id="pzDefenseModalOverlay">
+    <div class="game-modal">
+      <div class="game-modal-bar">
+        <span class="game-modal-title">🧟 Phòng Thủ Dữ Liệu</span>
+        <button type="button" class="game-modal-close" id="closePzDefenseModalBtn">✕ Đóng</button>
+      </div>
+      <div class="game-modal-frame">
+        <iframe
+          id="pzDefenseModalFrame"
+          class="game-modal-iframe"
+          title="Mini-game Phòng Thủ Dữ Liệu"
+          src="about:blank"
+          data-src="pz-defense.html"
+          loading="lazy"
+          allow="fullscreen"
+        ></iframe>
+      </div>
+    </div>
+  </div>
+
   <script src="js/googleSheet.js"></script>
   <script src="js/gamification.js"></script>
 
@@ -382,6 +407,7 @@
   <script src="js/memory-game-modal.js"></script>
   <script src="js/sudoku-modal.js"></script>
   <script src="js/billiards-modal.js"></script>
+  <script src="js/pz-defense-modal.js"></script>
 </body>
 
 </html>
