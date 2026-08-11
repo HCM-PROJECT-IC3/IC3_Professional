@@ -1,0 +1,172 @@
+/* ════════════════════════════════════════════════════════════
+   css/billiards.css — Mini-game "Bi-a Phần Mềm"
+   Cùng design token / "look" tối màu như css/sudoku.css và
+   css/memory-game.css (radial navy background, Baloo 2, thẻ bo
+   tròn). Trang billiards.html được nhúng qua modal giống
+   game.html / sudoku.html, xem js/billiards-modal.js.
+   ════════════════════════════════════════════════════════════ */
+
+* { box-sizing: border-box; }
+
+body.bl-body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Baloo 2', sans-serif;
+  background: radial-gradient(ellipse at top, #1c2140 0%, #0e1024 70%);
+  color: #f4eee6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.bl-wrap {
+  width: 100%;
+  max-width: 560px;
+}
+
+/* ── Header ── */
+.bl-header { text-align: center; margin-bottom: 10px; }
+.bl-title {
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: .02em;
+  background: linear-gradient(90deg, #8fa4ff, #66e0d0, #ffcf80);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.bl-subtitle { font-size: .75rem; color: #b7bdd6; margin-top: 4px; line-height: 1.4; }
+
+/* ── Bảng 2 người chơi ── */
+.bl-players { display: flex; gap: 8px; margin: 4px 0 8px; }
+.bl-player-card {
+  flex: 1;
+  background: rgba(255,255,255,.06);
+  border: 2px solid rgba(255,255,255,.10);
+  border-radius: 14px;
+  padding: 8px 10px;
+  text-align: center;
+  transition: .2s;
+}
+.bl-player-card.active {
+  border-color: #ffcf80;
+  background: rgba(255,207,128,.10);
+  box-shadow: 0 0 0 1px rgba(255,207,128,.25), 0 4px 14px rgba(0,0,0,.25);
+}
+.bl-player-name { font-weight: 700; font-size: .8rem; }
+.bl-player-group {
+  font-size: .64rem;
+  color: #b7bdd6;
+  margin-top: 4px;
+  font-weight: 600;
+}
+.bl-player-group.bl-group-solid { color: #ffcf80; }
+.bl-player-group.bl-group-stripe { color: #8fa4ff; }
+.bl-player-remaining {
+  font-family: 'Space Mono', monospace;
+  font-size: .72rem;
+  color: #f4eee6;
+  margin-top: 2px;
+}
+.bl-shots-strip {
+  text-align: center;
+  font-size: .68rem;
+  color: #8790ad;
+  margin-bottom: 10px;
+}
+.bl-shots-strip span { color: #ffcf80; font-family: 'Space Mono', monospace; font-weight: 700; }
+
+/* ── Bàn bi-a ── */
+.bl-board-outer {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+}
+.bl-canvas {
+  display: block;
+  width: 100%;
+  touch-action: none;
+  cursor: crosshair;
+  background: #0e1024;
+}
+
+/* ── Toast ── */
+.bl-toast {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translate(-50%, 12px);
+  background: rgba(14,16,36,.92);
+  border: 1px solid rgba(255,255,255,.14);
+  color: #f4eee6;
+  font-size: .78rem;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 999px;
+  opacity: 0;
+  pointer-events: none;
+  transition: .25s;
+  white-space: nowrap;
+  max-width: 90%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bl-toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ── Overlay chiến thắng ── */
+.bl-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10,12,28,.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: .25s;
+}
+.bl-overlay.show { opacity: 1; pointer-events: auto; }
+.bl-overlay-card {
+  text-align: center;
+  padding: 20px 22px;
+  max-width: 90%;
+}
+.bl-overlay-icon { font-size: 2.4rem; }
+.bl-overlay-title { font-weight: 800; font-size: 1.15rem; margin-top: 6px; }
+.bl-overlay-sub { font-size: .82rem; color: #b7bdd6; margin-top: 6px; }
+.bl-overlay-stats {
+  font-family: 'Space Mono', monospace;
+  font-size: .72rem;
+  color: #8fa4ff;
+  margin-top: 10px;
+}
+
+/* ── Buttons ── */
+.bl-footer { display: flex; gap: 8px; margin-top: 12px; }
+.bl-btn {
+  flex: 1;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.14);
+  color: #f4eee6;
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  font-size: .85rem;
+  padding: 10px 14px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: .2s;
+}
+.bl-btn:hover { background: rgba(255,255,255,.14); transform: translateY(-1px); }
+.bl-btn-primary {
+  background: linear-gradient(90deg, #4f6bff, #17b3a3);
+  border: none;
+  margin-top: 12px;
+}
+.bl-btn-primary:hover { filter: brightness(1.08); }
+
+@media (max-width: 420px) {
+  .bl-title { font-size: 1.02rem; }
+  .bl-subtitle { font-size: .7rem; }
+}

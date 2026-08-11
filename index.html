@@ -171,6 +171,10 @@
           title="Chơi mini-game Sudoku Trí Tuệ" style="margin-top:8px;">
           🧩 Sudoku Trí Tuệ
         </button>
+        <button type="button" class="play-game-btn" id="openBilliardsBtn"
+          title="Chơi mini-game Bi-a Phần Mềm" style="margin-top:8px;">
+          🎱 Bi-a Phần Mềm
+        </button>
       </div>
     </div>
   </div>
@@ -331,6 +335,27 @@
     </div>
   </div>
 
+  <!-- ============ MINI-GAME "BI-A PHẦN MỀM" (modal) — xem js/billiards-modal.js ============ -->
+  <div class="game-modal-overlay" id="billiardsModalOverlay">
+    <div class="game-modal">
+      <div class="game-modal-bar">
+        <span class="game-modal-title">🎱 Bi-a Phần Mềm</span>
+        <button type="button" class="game-modal-close" id="closeBilliardsModalBtn">✕ Đóng</button>
+      </div>
+      <div class="game-modal-frame">
+        <iframe
+          id="billiardsModalFrame"
+          class="game-modal-iframe"
+          title="Mini-game Bi-a Phần Mềm"
+          src="about:blank"
+          data-src="billiards.html"
+          loading="lazy"
+          allow="fullscreen"
+        ></iframe>
+      </div>
+    </div>
+  </div>
+
   <script src="js/googleSheet.js"></script>
   <script src="js/gamification.js"></script>
 
@@ -356,6 +381,7 @@
   <script src="js/prism-cascade-modal.js"></script>
   <script src="js/memory-game-modal.js"></script>
   <script src="js/sudoku-modal.js"></script>
+  <script src="js/billiards-modal.js"></script>
 </body>
 
 </html>
