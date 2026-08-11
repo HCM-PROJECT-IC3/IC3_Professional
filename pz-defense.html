@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>🧟 Phòng Thủ Dữ Liệu — Mini Game</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/pz-defense.css">
+</head>
+
+<body class="pz-body">
+
+  <!-- Trang này được nhúng qua modal (js/pz-defense-modal.js), cùng pattern
+       với game.html / memory-game.html / sudoku.html / billiards.html — chỉ
+       chứa đúng 1 mini-game độc lập, không đụng vào quiz-engine.js /
+       gamification.js.
+       Cơ chế: tower-defense kiểu "Plants vs Zombies" reskin theo chủ đề
+       phần mềm — đặt "lá chắn phần mềm" (Word/Excel/Chrome/Outlook/Teams,
+       icon lấy lại từ img/memory-game/) lên lưới 5 hàng để chặn & tiêu diệt
+       "zombie mã độc" bò từ bên phải sang trước khi chúng xâm nhập Server
+       bên trái. Toàn bộ logic khai báo trong js/pz-defense.js (canvas 2D
+       thuần, không dùng thư viện vật lý ngoài). -->
+
+  <div class="pz-wrap">
+    <div class="pz-header">
+      <div class="pz-title">🧟 Phòng Thủ Dữ Liệu</div>
+      <div class="pz-subtitle">Đặt lá chắn phần mềm lên lưới để chặn zombie mã độc — đừng để chúng chạm tới Server!</div>
+    </div>
+
+    <div class="pz-stats">
+      <div class="pz-stat">
+        <div class="pz-stat-label">💾 Dữ liệu</div>
+        <div class="pz-stat-value" id="pzData">0</div>
+      </div>
+      <div class="pz-stat">
+        <div class="pz-stat-label">🌊 Đợt tấn công</div>
+        <div class="pz-stat-value" id="pzWave">0/0</div>
+      </div>
+      <div class="pz-stat pz-stat-wide">
+        <div class="pz-stat-label">🖥️ Máu Server</div>
+        <div class="pz-hp-bar"><div class="pz-hp-fill" id="pzHpFill"></div></div>
+      </div>
+    </div>
+
+    <div class="pz-shop" id="pzShop"><!-- render bằng JS --></div>
+
+    <div class="pz-board-outer">
+      <canvas id="pzCanvas" class="pz-canvas"></canvas>
+      <div class="pz-toast" id="pzToast"></div>
+
+      <!-- Kết thúc overlay (thắng/thua) -->
+      <div class="pz-overlay" id="pzOverlay">
+        <div class="pz-overlay-card">
+          <div class="pz-overlay-icon" id="pzOverlayIcon">🏆</div>
+          <div class="pz-overlay-title" id="pzOverlayTitle">Hoàn thành!</div>
+          <div class="pz-overlay-sub" id="pzOverlaySub"></div>
+          <div class="pz-overlay-stats" id="pzOverlayStats"></div>
+          <button type="button" class="pz-btn pz-btn-primary" id="pzOverlayRestartBtn">🔄 Chơi lại</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pz-footer">
+      <button type="button" class="pz-btn" id="pzRestartBtn">🔄 Chơi lại</button>
+    </div>
+  </div>
+
+  <script src="js/pz-defense.js"></script>
+</body>
+
+</html>
