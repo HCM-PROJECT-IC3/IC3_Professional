@@ -2129,15 +2129,22 @@ body {
   display: none;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 20px;
   background: rgba(10, 12, 20, 0.72);
   backdrop-filter: blur(2px);
 }
 .game-modal-overlay.show { display: flex }
 
+/* Modal chứa game qua iframe (Prism Cascade / Trí Nhớ / Sudoku / Bi-a /
+   Phòng Thủ Dữ Liệu): full-screen thay vì khung nhỏ cố định, để game
+   bên trong (đã tự responsive theo clientWidth/dpr hoặc grid fr) có
+   nhiều không gian hiển thị to, rõ hơn trên mọi kích thước màn hình.
+   .game-zone-modal (hub chọn game) override lại kích thước gọn bên
+   dưới vì đó chỉ là lưới 5 nút chọn, không cần full-screen. */
 .game-modal {
-  width: min(520px, 100%);
-  max-height: 92vh;
+  width: min(1440px, 96vw);
+  height: min(920px, 94vh);
+  max-height: 94vh;
   display: flex;
   flex-direction: column;
   border-radius: 20px;
@@ -2185,8 +2192,8 @@ body {
 .game-modal-frame {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 5;
-  max-height: 82vh;
+  flex: 1 1 auto;
+  min-height: 0; /* cho phép co lại đúng trong flex column, tránh tràn */
 }
 .game-modal-iframe {
   position: absolute;
@@ -2198,10 +2205,28 @@ body {
   background: #0e1024;
 }
 
-@media (max-width: 480px) {
-  .game-modal-overlay { padding: 12px }
+/* Màn hình lớn (desktop rộng): cho phép game to hơn nữa */
+@media (min-width: 1100px) {
+  .game-modal:not(.game-zone-modal) { width: min(1600px, 92vw); height: min(980px, 92vh); }
+}
+
+/* Tablet / màn hình vừa */
+@media (max-width: 768px) {
+  .game-modal-overlay { padding: 10px }
+  .game-modal:not(.game-zone-modal) { width: 100%; height: min(880px, 94vh); }
   .game-modal-bar { padding: 10px 14px }
-  .game-modal-frame { aspect-ratio: 3 / 4; max-height: 78vh }
+}
+
+/* Điện thoại: game chiếm trọn màn hình để dễ nhìn/thao tác nhất */
+@media (max-width: 480px) {
+  .game-modal-overlay { padding: 0 }
+  .game-modal:not(.game-zone-modal) {
+    width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+  .game-modal-bar { padding: 10px 14px }
 }
 
 .play-game-btn {
@@ -2220,3 +2245,113 @@ body {
   transition: var(--transition);
 }
 .play-game-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow) }
+
+/* ════════════════════════════════════════════════════════════
+   KHU VUI CHƠI — hub gộp 5 mini-game, khóa/mở theo điểm thi.
+   Xem js/game-zone-gate.js. Nút mở hub tái dùng phần lớn style
+   .play-game-btn nhưng to hơn (là lối vào chính) + trạng thái
+   .is-locked khi học sinh đang chọn chưa đạt 90% điểm.
+   ════════════════════════════════════════════════════════════ */
+.game-zone-open-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(79,107,255,.35);
+  background: linear-gradient(90deg, var(--purple-lt), var(--teal-lt));
+  color: var(--purple);
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 800;
+  font-size: .92rem;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-top: 10px;
+}
+.game-zone-open-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow) }
+.game-zone-open-btn.is-locked {
+  background: rgba(148, 155, 178, .16);
+  border-color: rgba(148, 155, 178, .35);
+  color: var(--muted);
+}
+.game-zone-hint {
+  margin-top: 6px;
+  font-size: .74rem;
+  color: var(--muted);
+  text-align: center;
+  min-height: 1.2em;
+}
+
+.game-zone-modal { width: min(560px, 100%); height: auto; max-height: 92vh; }
+
+.game-zone-locked {
+  padding: 34px 26px 30px;
+  text-align: center;
+}
+.game-zone-lock-icon { font-size: 2.4rem; line-height: 1; margin-bottom: 10px; }
+.game-zone-lock-title {
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: #f4eee6;
+  margin-bottom: 8px;
+}
+.game-zone-lock-desc {
+  font-size: .84rem;
+  color: rgba(244,238,230,.75);
+  line-height: 1.6;
+  max-width: 380px;
+  margin: 0 auto 16px;
+}
+.game-zone-progress {
+  display: inline-block;
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--purple, #7c8bff);
+  background: rgba(124,139,255,.14);
+  border: 1px solid rgba(124,139,255,.3);
+  border-radius: 999px;
+  padding: 6px 16px;
+}
+
+.game-zone-unlocked { padding: 20px 22px 26px; }
+.game-zone-unlocked-desc {
+  font-size: .84rem;
+  color: rgba(244,238,230,.8);
+  text-align: center;
+  margin: 0 0 16px;
+}
+.game-zone-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+.game-zone-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(244,238,230,.16);
+  background: rgba(244,238,230,.05);
+  color: #f4eee6;
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  font-size: .82rem;
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: center;
+}
+.game-zone-tile:hover {
+  transform: translateY(-2px);
+  background: rgba(244,238,230,.1);
+  border-color: rgba(244,238,230,.3);
+}
+.game-zone-tile-emoji { font-size: 1.7rem; line-height: 1; }
+
+@media (max-width: 480px) {
+  .game-zone-grid { grid-template-columns: repeat(2, 1fr); }
+}

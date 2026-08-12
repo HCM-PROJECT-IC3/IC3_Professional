@@ -1678,6 +1678,13 @@ function saveRecord(result, elapsedSec, integrity) {
   if (typeof window.EduGamification?.recordResult === 'function') {
     gameResult = window.EduGamification.recordResult(rec);
   }
+
+  // ── Báo cho các module khác (vd. js/game-zone-gate.js) biết vừa có
+  //    1 bản ghi kết quả mới được lưu, để tự tính lại trạng thái
+  //    khóa/mở Khu Vui Chơi (yêu cầu ≥90% điểm) mà không cần đụng vào
+  //    quiz-engine.js thêm lần nữa. ──
+  window.dispatchEvent(new CustomEvent('edu:record-saved', { detail: rec }));
+
   return gameResult;
 }
 
