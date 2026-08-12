@@ -713,14 +713,19 @@
   function hideOverlay() { if (els.overlay) els.overlay.classList.remove('show'); }
 
   function setupCanvas() {
+    // Đặt độ phân giải buffer khớp với kích thước hiển thị thực tế
+    // (thay vì cố định theo TABLE_W) để canvas luôn nét dù modal to
+    // nhỏ khác nhau trên từng màn hình — tránh bị mờ khi phóng to.
     dpr = window.devicePixelRatio || 1;
     var displayW = canvas.clientWidth || TABLE_W;
     var ratio = TABLE_H / TABLE_W;
-    canvas.width = TABLE_W * dpr;
-    canvas.height = TABLE_H * dpr;
-    canvas.style.height = (displayW * ratio) + 'px';
+    var displayH = displayW * ratio;
+    var scale = (displayW * dpr) / TABLE_W;
+    canvas.width = Math.round(TABLE_W * scale);
+    canvas.height = Math.round(TABLE_H * scale);
+    canvas.style.height = displayH + 'px';
     ctx = canvas.getContext('2d');
-    ctx.scale(dpr, dpr);
+    ctx.scale(scale, scale);
   }
 
   function init() {

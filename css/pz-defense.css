@@ -4,42 +4,60 @@
    css/sudoku.css và css/memory-game.css (radial navy background,
    Baloo 2, thẻ bo tròn). Trang pz-defense.html được nhúng qua modal,
    xem js/pz-defense-modal.js.
+
+   LAYOUT: bố cục kiểu dashboard ngang — .pz-topbar (tiêu đề + chỉ số +
+   nút chơi lại) mỏng, cố định ở trên; .pz-main chiếm hết chiều cao còn
+   lại, chia 2: bàn chơi (canvas, chiếm phần lớn, tự canh giữa theo tỉ
+   lệ 2:1 — xem js/pz-defense.js § setupCanvas) + shop lá chắn dạng
+   sidebar cuộn dọc riêng bên phải. Nhờ vậy toàn bộ bàn chơi luôn hiện
+   đủ trong khung modal, không cần cuộn trang để thấy hết trò chơi.
    ════════════════════════════════════════════════════════════ */
 
 * { box-sizing: border-box; }
 
+html, body.pz-body { height: 100%; }
 body.pz-body {
   margin: 0;
-  min-height: 100vh;
   font-family: 'Baloo 2', sans-serif;
   background: radial-gradient(ellipse at top, #1c2140 0%, #0e1024 70%);
   color: #f4eee6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 18px;
+  overflow: hidden;
+  padding: 14px;
 }
 
 .pz-wrap {
   width: 100%;
-  max-width: 620px;
+  height: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative; /* làm mốc cho .pz-loadout-overlay che toàn màn */
 }
 
-/* ── Header ── */
-.pz-header { text-align: center; margin-bottom: 10px; }
+/* ── Thanh trên: tiêu đề + chỉ số + nút chơi lại trên cùng 1 hàng ── */
+.pz-topbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.pz-header { flex: 1 1 260px; min-width: 200px; }
 .pz-title {
   font-weight: 800;
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   letter-spacing: .02em;
   background: linear-gradient(90deg, #8fa4ff, #66e0d0, #ffcf80);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
-.pz-subtitle { font-size: .75rem; color: #b7bdd6; margin-top: 4px; line-height: 1.4; }
+.pz-subtitle { font-size: .72rem; color: #b7bdd6; margin-top: 2px; line-height: 1.4; }
 
 /* ── Thanh chỉ số ── */
-.pz-stats { display: flex; gap: 8px; margin: 4px 0 10px; flex-wrap: wrap; }
+.pz-stats { display: flex; gap: 8px; flex: 2 1 380px; flex-wrap: wrap; }
 .pz-stat {
   flex: 1;
   min-width: 96px;
@@ -76,14 +94,52 @@ body.pz-body {
 .pz-hp-fill.pz-hp-mid { background: linear-gradient(90deg, #ffcf80, #ff9d4d); }
 .pz-hp-fill.pz-hp-low { background: linear-gradient(90deg, #ff6b6b, #e23b3b); }
 
-/* ── Shop lá chắn ── */
+.pz-restart-btn { flex: 0 0 auto; width: auto; }
+
+/* ── Khu vực chính: bàn chơi (trái, chiếm phần lớn) + shop (phải) ── */
+.pz-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  gap: 12px;
+}
+
+/* ── Bàn chơi ── */
+.pz-board-outer {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  background: rgba(255,255,255,.03);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pz-canvas {
+  display: block;
+  touch-action: none;
+  cursor: pointer;
+  background: #0e1024;
+  /* Kích thước thực đặt bằng JS (letterbox theo tỉ lệ TABLE_W/TABLE_H
+     để luôn vừa khít cả chiều rộng lẫn chiều cao của .pz-board-outer,
+     xem js/pz-defense.js § setupCanvas). */
+}
+
+/* ── Shop lá chắn: sidebar cuộn dọc riêng, không đẩy bàn chơi ── */
 .pz-shop {
+  flex: 0 0 220px;
+  overflow-y: auto;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(2, 1fr);
+  align-content: start;
   gap: 6px;
-  margin-bottom: 10px;
+  padding-right: 4px;
 }
 .pz-shop-card {
+  position: relative;
   background: rgba(255,255,255,.06);
   border: 2px solid rgba(255,255,255,.12);
   border-radius: 12px;
@@ -93,6 +149,7 @@ body.pz-body {
   transition: .15s;
   color: #f4eee6;
   font-family: 'Baloo 2', sans-serif;
+  overflow: hidden;
 }
 .pz-shop-card:hover { background: rgba(255,255,255,.11); transform: translateY(-1px); }
 .pz-shop-card.selected {
@@ -101,29 +158,30 @@ body.pz-body {
   box-shadow: 0 0 0 1px rgba(255,207,128,.3), 0 4px 14px rgba(0,0,0,.25);
 }
 .pz-shop-card.disabled { opacity: .4; cursor: not-allowed; }
+.pz-shop-card.cooling { opacity: .55; cursor: not-allowed; }
 .pz-shop-icon { width: 26px; height: 26px; object-fit: contain; margin: 0 auto; display: block; }
+.pz-shop-icon-emoji { font-size: 20px; line-height: 26px; }
 .pz-shop-name { font-size: .58rem; font-weight: 700; margin-top: 3px; line-height: 1.2; min-height: 1.9em; }
+.pz-shop-cd {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(11,13,32,.72);
+  color: #ffcf80;
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: .78rem;
+  pointer-events: none;
+}
+.pz-shop-cd:empty { display: none; }
 .pz-shop-cost {
   font-family: 'Space Mono', monospace;
   font-size: .62rem;
   color: #66e0d0;
   margin-top: 2px;
   font-weight: 700;
-}
-
-/* ── Bàn chơi ── */
-.pz-board-outer {
-  position: relative;
-  border-radius: 18px;
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0,0,0,.35);
-}
-.pz-canvas {
-  display: block;
-  width: 100%;
-  touch-action: none;
-  cursor: pointer;
-  background: #0e1024;
 }
 
 /* ── Toast ── */
@@ -146,6 +204,7 @@ body.pz-body {
   max-width: 90%;
   overflow: hidden;
   text-overflow: ellipsis;
+  z-index: 2;
 }
 .pz-toast.show { opacity: 1; transform: translate(-50%, 0); }
 
@@ -160,6 +219,7 @@ body.pz-body {
   opacity: 0;
   pointer-events: none;
   transition: .25s;
+  z-index: 3;
 }
 .pz-overlay.show { opacity: 1; pointer-events: auto; }
 .pz-overlay-card { text-align: center; padding: 20px 22px; max-width: 90%; }
@@ -175,9 +235,7 @@ body.pz-body {
 }
 
 /* ── Buttons ── */
-.pz-footer { display: flex; gap: 8px; margin-top: 12px; }
 .pz-btn {
-  flex: 1;
   background: rgba(255,255,255,.08);
   border: 1px solid rgba(255,255,255,.14);
   color: #f4eee6;
@@ -188,6 +246,7 @@ body.pz-body {
   border-radius: 14px;
   cursor: pointer;
   transition: .2s;
+  white-space: nowrap;
 }
 .pz-btn:hover { background: rgba(255,255,255,.14); transform: translateY(-1px); }
 .pz-btn-primary {
@@ -197,9 +256,121 @@ body.pz-body {
 }
 .pz-btn-primary:hover { filter: brightness(1.08); }
 
-@media (max-width: 460px) {
-  .pz-title { font-size: 1.02rem; }
-  .pz-subtitle { font-size: .7rem; }
-  .pz-shop { grid-template-columns: repeat(5, 1fr); gap: 4px; }
-  .pz-shop-name { font-size: .52rem; }
+/* ── Màn "Chọn đội hình" trước trận — che toàn bộ .pz-wrap ── */
+.pz-loadout-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10,12,28,.94);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: .25s;
+  z-index: 40;
+  padding: 14px;
+}
+.pz-loadout-overlay.show { opacity: 1; pointer-events: auto; }
+.pz-loadout-card {
+  width: 100%;
+  max-width: 760px;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 18px;
+  padding: 18px 20px;
+}
+.pz-loadout-title {
+  font-weight: 800;
+  font-size: 1.05rem;
+  background: linear-gradient(90deg, #8fa4ff, #66e0d0, #ffcf80);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.pz-loadout-sub { font-size: .76rem; color: #b7bdd6; margin-top: 4px; }
+.pz-loadout-sub strong { color: #ffcf80; }
+.pz-loadout-grid {
+  margin-top: 14px;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 8px;
+  padding-right: 2px;
+}
+.pz-loadout-item {
+  position: relative;
+  background: rgba(255,255,255,.06);
+  border: 2px solid rgba(255,255,255,.12);
+  border-radius: 12px;
+  padding: 7px 4px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: .15s;
+  color: #f4eee6;
+  font-family: 'Baloo 2', sans-serif;
+}
+.pz-loadout-item:hover { background: rgba(255,255,255,.11); transform: translateY(-1px); }
+.pz-loadout-item.selected {
+  border-color: #66e0d0;
+  background: rgba(102,224,208,.14);
+  box-shadow: 0 0 0 1px rgba(102,224,208,.35), 0 4px 14px rgba(0,0,0,.25);
+}
+.pz-loadout-check {
+  position: absolute;
+  top: 3px;
+  right: 5px;
+  font-size: .7rem;
+  color: #66e0d0;
+  opacity: 0;
+}
+.pz-loadout-item.selected .pz-loadout-check { opacity: 1; }
+.pz-loadout-icon { width: 26px; height: 26px; object-fit: contain; margin: 0 auto; display: block; }
+.pz-loadout-name { font-size: .58rem; font-weight: 700; margin-top: 3px; line-height: 1.2; min-height: 1.9em; }
+#pzLoadoutStartBtn:disabled { opacity: .4; cursor: not-allowed; }
+#pzLoadoutStartBtn:disabled:hover { transform: none; filter: none; }
+
+/* ── Gợi ý xoay ngang: chỉ hiện trên điện thoại đang cầm dọc, che
+   toàn bộ game vì bàn chơi 5 hàng cần bề ngang mới chơi thoải mái. ── */
+.pz-rotate-hint {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  padding: 24px;
+  background: radial-gradient(ellipse at top, #1c2140 0%, #0e1024 70%);
+}
+.pz-rotate-icon { font-size: 2.6rem; animation: pzRotatePulse 1.6s ease-in-out infinite; }
+@keyframes pzRotatePulse {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(90deg); }
+}
+.pz-rotate-text { font-size: .92rem; color: #f4eee6; font-weight: 700; max-width: 260px; }
+
+@media (max-width: 700px) and (orientation: portrait) {
+  .pz-wrap { display: none; }
+  .pz-rotate-hint { display: flex; }
+}
+
+/* ── Điện thoại nằm ngang: thu gọn thêm để vẫn vừa màn hình thấp ── */
+@media (max-height: 460px) {
+  body.pz-body { padding: 8px; }
+  .pz-wrap { gap: 6px; }
+  .pz-title { font-size: .92rem; }
+  .pz-subtitle { display: none; }
+  .pz-stat { padding: 4px 8px; }
+  .pz-shop { flex-basis: 160px; }
+  .pz-shop-name { font-size: .5rem; min-height: 1.6em; }
+}
+
+@media (max-width: 900px) {
+  .pz-shop { flex-basis: 176px; }
 }

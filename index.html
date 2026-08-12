@@ -155,30 +155,17 @@
         <button type="button" class="btn-start" id="btnStart" onclick="startExam()" disabled>▶ Bắt đầu</button>
         <button type="button" class="btn-secondary" onclick="showRecords()">📊 Xem lịch sử bài làm</button>
 
-        <!-- Dải XP/Streak/Huy hiệu (js/gamification.js, gọi từ js/main.js) +
-             lối vào mini-game "Prism Cascade" — giải trí ngắn giữa các lượt
-             ôn bài, không liên quan tới điểm thi. Mở qua modal, xem
-             js/prism-cascade-modal.js. -->
+        <!-- Dải XP/Streak/Huy hiệu (js/gamification.js, gọi từ js/main.js) -->
         <div class="lobby-game-strip" id="lobbyGameStrip"></div>
-        <button type="button" class="play-game-btn" id="openGameBtn" title="Chơi mini-game giải trí Prism Cascade">
-          🎮 Chơi Prism Cascade
+
+        <!-- Khu Vui Chơi: gộp cả 5 mini-game vào 1 lối vào duy nhất, chỉ mở
+             khóa khi học sinh ĐANG ĐƯỢC CHỌN đã có ít nhất 1 bài thi đạt
+             từ 90% điểm trở lên. Xem js/game-zone-gate.js. -->
+        <button type="button" class="game-zone-open-btn" id="openGameZoneBtn"
+          title="Khu Vui Chơi — mở khóa khi đạt từ 90% điểm 1 bài thi">
+          🎮 Khu Vui Chơi
         </button>
-        <button type="button" class="play-game-btn" id="openMemoryGameBtn"
-          title="Chơi mini-game Trí Nhớ Thiết Bị &amp; Phần Mềm" style="margin-top:8px;">
-          🧠 Trí Nhớ Thiết Bị
-        </button>
-        <button type="button" class="play-game-btn" id="openSudokuBtn"
-          title="Chơi mini-game Sudoku Trí Tuệ" style="margin-top:8px;">
-          🧩 Sudoku Trí Tuệ
-        </button>
-        <button type="button" class="play-game-btn" id="openBilliardsBtn"
-          title="Chơi mini-game Bi-a Phần Mềm" style="margin-top:8px;">
-          🎱 Bi-a Phần Mềm
-        </button>
-        <button type="button" class="play-game-btn" id="openPzDefenseBtn"
-          title="Chơi mini-game Phòng Thủ Dữ Liệu" style="margin-top:8px;">
-          🧟 Phòng Thủ Dữ Liệu
-        </button>
+        <div class="game-zone-hint" id="gameZoneHint"></div>
       </div>
     </div>
   </div>
@@ -273,6 +260,54 @@
         <button type="button" class="btn-danger" onclick="clearRecords()">🗑 Xóa tất cả</button>
       </div>
       <div id="recordsContent"></div>
+    </div>
+  </div>
+
+  <!-- ============ KHU VUI CHƠI (hub modal) — gộp cả 5 mini-game, chỉ mở
+       khóa khi học sinh đang chọn đạt ≥90% điểm 1 bài thi. Các nút
+       #openGameBtn/#openMemoryGameBtn/#openSudokuBtn/#openBilliardsBtn/
+       #openPzDefenseBtn NẰM Ở ĐÂY (không còn ở ngoài lobby nữa) để mỗi
+       js/*-modal.js hiện có tự tìm thấy nút của mình mà không cần sửa gì
+       thêm. Xem js/game-zone-gate.js. ============ -->
+  <div class="game-modal-overlay" id="gameZoneModalOverlay">
+    <div class="game-modal game-zone-modal">
+      <div class="game-modal-bar">
+        <span class="game-modal-title">🎮 Khu Vui Chơi</span>
+        <button type="button" class="game-modal-close" id="closeGameZoneModalBtn">✕ Đóng</button>
+      </div>
+
+      <!-- Trạng thái KHÓA: hiện khi học sinh đang chọn chưa đạt 90% điểm bất kỳ bài thi nào -->
+      <div class="game-zone-locked" id="gameZoneLocked">
+        <div class="game-zone-lock-icon">🔒</div>
+        <div class="game-zone-lock-title">Khu Vui Chơi đang khóa</div>
+        <p class="game-zone-lock-desc">
+          Làm bài thi đạt từ <strong>90% điểm</strong> trở lên (1 bài bất kỳ) để mở khóa toàn bộ
+          mini-game bên dưới.
+        </p>
+        <div class="game-zone-progress" id="gameZoneProgress"></div>
+      </div>
+
+      <!-- Trạng thái MỞ: hiện lưới 5 mini-game khi đã đạt điều kiện -->
+      <div class="game-zone-unlocked" id="gameZoneUnlocked">
+        <p class="game-zone-unlocked-desc">🎉 Đã mở khóa — chọn 1 mini-game bên dưới để chơi!</p>
+        <div class="game-zone-grid">
+          <button type="button" class="game-zone-tile" id="openGameBtn" title="Chơi mini-game giải trí Prism Cascade">
+            <span class="game-zone-tile-emoji">🎮</span> Prism Cascade
+          </button>
+          <button type="button" class="game-zone-tile" id="openMemoryGameBtn" title="Chơi mini-game Trí Nhớ Thiết Bị &amp; Phần Mềm">
+            <span class="game-zone-tile-emoji">🧠</span> Trí Nhớ Thiết Bị
+          </button>
+          <button type="button" class="game-zone-tile" id="openSudokuBtn" title="Chơi mini-game Sudoku Trí Tuệ">
+            <span class="game-zone-tile-emoji">🧩</span> Sudoku Trí Tuệ
+          </button>
+          <button type="button" class="game-zone-tile" id="openBilliardsBtn" title="Chơi mini-game Bi-a Phần Mềm">
+            <span class="game-zone-tile-emoji">🎱</span> Bi-a Phần Mềm
+          </button>
+          <button type="button" class="game-zone-tile" id="openPzDefenseBtn" title="Chơi mini-game Phòng Thủ Dữ Liệu">
+            <span class="game-zone-tile-emoji">🧟</span> Phòng Thủ Dữ Liệu
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -408,6 +443,11 @@
   <script src="js/sudoku-modal.js"></script>
   <script src="js/billiards-modal.js"></script>
   <script src="js/pz-defense-modal.js"></script>
+  <!-- Khu Vui Chơi: mở/khóa hub gộp 5 mini-game theo điểm thi. Nạp SAU
+       5 file *-modal.js ở trên để nút bên trong hub đã có listener mở
+       game riêng trước khi game-zone-gate.js gắn thêm listener "đóng hub
+       khi chọn 1 game". Xem js/game-zone-gate.js. -->
+  <script src="js/game-zone-gate.js"></script>
 </body>
 
 </html>
