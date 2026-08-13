@@ -12,9 +12,8 @@
 // ⚙️ CẤU HÌNH – CHỈ CẦN SỬA PHẦN NÀY
 // ──────────────────────────────────────────────────────────────
 
-// 🔗 Dán URL Google Apps Script Web App của bạn vào đây
-// Ví dụ: 'https://script.google.com/macros/s/AKfy.../exec'
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyuUMMy9_lzU-WQhPq4nXmuRcIIf_KuX2OMnfeF-9Rl07LB8p5DEafPFJd1yhxccZPx/exec';
+// 🔗 URL Google Apps Script Web App (apps/Code.gs — bản mới, thay Apps Script cũ)
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyxiqIjwDotYLobFSf11RvosrW9FksEHCQEz8lNm2uU8_8QQJtw9eDM5gBsW_Ga4JLa/exec';
 
 // ⏱️ Timeout: Nếu request quá 10 giây → báo lỗi (đơn vị: ms)
 const REQUEST_TIMEOUT_MS = 10000;
@@ -103,6 +102,9 @@ async function saveToGoogleSheet(data) {
 
   console.log('📦 [GoogleSheet] Payload sẽ gửi:', payload);
 
+  // Code.gs mới định tuyến theo "action" — bọc payload gốc vào đây.
+  const requestBody = { action: 'submitExam', payload };
+
   // ── Thiết lập Timeout (hủy request nếu quá lâu) ──────────
   const controller = new AbortController();
   const timeoutId  = setTimeout(() => {
@@ -111,34 +113,33 @@ async function saveToGoogleSheet(data) {
   }, REQUEST_TIMEOUT_MS);
 
   try {
-    // ── Gửi HTTP POST đến Google Apps Script ────────────────
-    // QUAN TRỌNG: dùng mode 'no-cors' vì Web App của Apps Script không trả
-    // Access-Control-Allow-Origin đúng chuẩn cho JS đọc lại response. Nếu
-    // không có 'no-cors', trình duyệt sẽ CHẶN đọc response và báo lỗi
-    // "Failed to fetch" NGAY CẢ KHI dữ liệu đã được ghi thành công vào Sheet.
-    // Cái giá phải trả: với no-cors, response trả về là "opaque" — không thể
-    // đọc status hay nội dung JSON. Vì vậy ta không còn cách nào để biết
-    // chắc chắn server có xử lý thành công hay không TỪ PHÍA TRÌNH DUYỆT;
-    // ta chỉ có thể coi "gửi không bị lỗi mạng" là dấu hiệu thành công, và
-    // dựa vào cơ chế chống trùng (submissionId + LockService) ở Code.gs để
-    // đảm bảo an toàn dữ liệu phía server.
-    await fetch(APPS_SCRIPT_URL, {
+    // ── Gửi HTTP POST đến Google Apps Script (Code.gs mới) ──
+    // Content-Type: text/plain (không phải application/json) để trình duyệt
+    // coi đây là "simple request", không gửi preflight OPTIONS — Apps Script
+    // Web App không tự xử lý preflight. Vì KHÔNG dùng no-cors, Code.gs mới
+    // (có ContentService trả JSON + Access-Control-Allow-Origin: * khi deploy
+    // "Anyone") cho phép đọc được response thật — biết chắc ghi thành công
+    // hay lỗi, thay vì đoán mù như trước.
+    const res = await fetch(APPS_SCRIPT_URL, {
       method:  'POST',
-      mode:    'no-cors',
       signal:  controller.signal,
-      // Không đặt Content-Type: giữ dạng "simple request" (text/plain mặc
-      // định) để tránh trình duyệt gửi preflight OPTIONS mà Apps Script
-      // không xử lý được.
-      body:    JSON.stringify(payload)
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body:    JSON.stringify(requestBody)
     });
 
-    clearTimeout(timeoutId);  // Hủy timeout nếu request gửi xong (không ném lỗi)
+    clearTimeout(timeoutId);
 
-    // Với no-cors, request coi như "gửi thành công" nếu không bị exception.
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error || 'Apps Script báo lỗi không rõ');
+
     _submittedIds.add(clientKey);
-    console.log('✅ [GoogleSheet] Đã gửi yêu cầu lưu (no-cors, không đọc được response).');
-    showNotification('✅ Đã lưu kết quả lên Google Sheet thành công!', 'success');
-    return { success: true, message: 'Đã gửi (no-cors)' };
+    console.log('✅ [GoogleSheet] Đã lưu:', json.data);
+    if (json.data && json.data.duplicate) {
+      showNotification('ℹ️ Bài thi đã được lưu trước đó (trùng submissionId).', 'info');
+    } else {
+      showNotification('✅ Đã lưu kết quả lên Google Sheet thành công!', 'success');
+    }
+    return { success: true, message: 'Đã lưu', data: json.data };
 
   } catch (err) {
     clearTimeout(timeoutId);
