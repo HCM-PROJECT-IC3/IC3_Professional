@@ -18,20 +18,20 @@
        với game.html / memory-game.html / sudoku.html / billiards.html — chỉ
        chứa đúng 1 mini-game độc lập, không đụng vào quiz-engine.js /
        gamification.js.
-       Cơ chế: tower-defense kiểu "Plants vs Zombies" reskin theo chủ đề
-       công nghệ — đặt 1 trong 19 "linh vật" gồm 12 PHẦN MỀM (Word/Excel/
-       Chrome/Outlook/Teams/Gemini/PowerPoint/Gmail/Zoom/Copilot/Windows/
-       Ổ cứng ngoài) + 6 PHẦN CỨNG (Bàn phím/Chuột/Máy in/Màn hình/CPU/Vỏ
-       máy) + 1 linh vật NỔ dùng-1-lần (Công Tắc Ngắt Khẩn) — mỗi linh
-       vật minh họa bằng 1 icon cây/plant kiểu Plants vs Zombies lấy từ
-       img/pz-defense/plants/ lên lưới 5 hàng để
-       chặn & tiêu diệt "zombie mã độc" bò từ bên phải sang trước khi
-       chúng xâm nhập Server bên trái. Đã bổ sung 4 cơ chế kiểu PvZ gốc:
-       Sun ☀️ rơi từ trời (phải bấm để hứng, linh vật "sinh Dữ liệu" cũng
-       chỉ nảy Sun ra chứ không tự cộng), 🚜 Xe cắt cỏ (mạng chót/hàng),
-       linh vật nổ dùng-1-lần, và cooldown hồi chiêu riêng từng linh vật
-       sau khi đặt. Toàn bộ logic khai báo trong js/pz-defense.js (canvas
-       2D thuần, không dùng thư viện vật lý ngoài). -->
+       Cơ chế: tower-defense — đặt 1 trong 19 "lá chắn" gồm 12 PHẦN MỀM
+       (Word/Excel/Chrome/Outlook/Teams/Gemini/PowerPoint/Gmail/Zoom/
+       Copilot/Windows/Ổ cứng ngoài) + 6 PHẦN CỨNG (Bàn phím/Chuột/Máy in/
+       Màn hình/CPU/Vỏ máy) + 1 lá chắn NỔ dùng-1-lần (Công Tắc Ngắt Khẩn)
+       — mỗi lá chắn minh họa bằng 1 icon SVG gốc (tự vẽ, không dùng asset
+       của bên thứ ba) trong img/pz-defense/defenders/ — lên lưới 5 hàng để
+       chặn & tiêu diệt các tác nhân mã độc bò từ bên phải sang trước khi
+       chúng xâm nhập Server bên trái. Đã bổ sung 4 cơ chế: Sun ☀️ rơi từ
+       trời (phải bấm để hứng, lá chắn "sinh Dữ liệu" cũng chỉ nảy Sun ra
+       chứ không tự cộng), 🚜 Xe cắt cỏ (mạng chót/hàng), lá chắn nổ dùng-
+       1-lần, và cooldown hồi chiêu riêng từng lá chắn sau khi đặt. Toàn
+       bộ logic khai báo trong js/pz-defense.js (canvas 2D thuần, không
+       dùng thư viện vật lý ngoài). -->
+
 
   <div class="pz-wrap">
     <div class="pz-topbar">
@@ -68,6 +68,19 @@
         <canvas id="pzCanvas" class="pz-canvas"></canvas>
         <div class="pz-toast" id="pzToast"></div>
 
+        <!-- (Phase 9 — Cyber Tower Defense) Panel nâng cấp lá chắn: hiện
+             ra khi bấm vào 1 lá chắn ĐÃ ĐẶT trên bàn (không phải ô
+             trống, không phải đang chọn shop). Render/ẩn bằng JS trong
+             js/pz-defense.js § renderUpgradePanel(). -->
+        <div class="pz-upgrade-panel" id="pzUpgradePanel" hidden>
+          <button type="button" class="pz-upgrade-close" id="pzUpgradeCloseBtn">✕</button>
+          <div class="pz-upgrade-name" id="pzUpgradeName"></div>
+          <div class="pz-upgrade-level" id="pzUpgradeLevel"></div>
+          <div class="pz-upgrade-hpbar"><div class="pz-upgrade-hpfill" id="pzUpgradeHpFill"></div></div>
+          <div class="pz-upgrade-desc" id="pzUpgradeDesc"></div>
+          <button type="button" class="pz-btn pz-btn-primary pz-upgrade-btn" id="pzUpgradeActionBtn"></button>
+        </div>
+
         <!-- Kết thúc overlay (thắng/thua) -->
         <div class="pz-overlay" id="pzOverlay">
           <div class="pz-overlay-card">
@@ -101,6 +114,21 @@
       <div class="pz-rotate-text">Xoay ngang màn hình để chơi thoải mái hơn</div>
     </div>
   </div>
+
+  <!-- (Phase 3/4 — Game Hub) Ghi nhận lượt chơi để cộng XP + đồng bộ
+       Firestore đa thiết bị (js/gamification.js § recordGameSession).
+       Toàn bộ khối này KHÔNG BẮT BUỘC: nếu mạng lỗi hoặc script nào
+       không nạp được, js/pz-defense.js vẫn tự chạy bình thường (chỉ
+       cần jQuery-free canvas game, không phụ thuộc các script này) —
+       xem guard `typeof EduGamification !== 'undefined'` trong endGame(). -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/repositories/base-repository.js"></script>
+  <script src="js/models/exam-history.model.js"></script>
+  <script src="js/models/game-session.model.js"></script>
+  <script src="js/repositories/game-session-repository.js"></script>
+  <script src="js/gamification.js"></script>
 
   <script src="js/pz-defense.js"></script>
 </body>

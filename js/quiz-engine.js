@@ -167,6 +167,10 @@ const State = {
   matching:  {},     // qi → { left: right }
   matchSel:  {},
   hotspot:   {},     // qi → Set<areaId> đã bấm chọn
+  list:      {},     // qi → { itemIndex: chosenOptionText }        (type = "list")
+  classify:  {},     // qi → { itemText: zoneLabel }                (type = "classify")
+  ordering:  {},     // qi → [itemText, ...] thứ tự hiện tại         (type = "ordering")
+  fillblank: {},     // qi → { blankIndex: chosenText }             (type = "dragfill" | "selectfill")
   session:   {}
 };
 
@@ -430,6 +434,10 @@ async function startExam() {
   State.matching  = {};
   State.matchSel  = {};
   State.hotspot   = {};
+  State.list      = {};
+  State.classify  = {};
+  State.ordering  = {};
+  State.fillblank = {};
   State.timeLeft  = parseInt(document.getElementById('timeSelect')?.value || '3000', 10);
 
   // ── Khởi tạo session (dữ liệu anti-cheat) ─────────────────
@@ -493,6 +501,29 @@ function prepareQuestions(rawQs) {
     if (q.type === 'matching' && Array.isArray(q.pairs) && q.pairs.length > 0) {
       q._leftShuffled  = shuffle(q.pairs.map(p => p.left));
       q._rightShuffled = shuffle([...new Set(q.pairs.map(p => p.right))]);
+    }
+
+    // Xáo thứ tự các dòng cho "list" (mỗi dòng tự có options riêng, không ảnh hưởng đáp án)
+    if (q.type === 'list' && Array.isArray(q.items)) {
+      q.items = shuffle(q.items);
+    }
+
+    // "classify": xáo thứ tự item cần phân loại + thứ tự hiển thị zone
+    if (q.type === 'classify' && Array.isArray(q.items)) {
+      q.items      = shuffle(q.items);
+      q._zonesShow = Array.isArray(q.zones) ? shuffle(q.zones.map(z => (typeof z === 'string' ? z : z.label))) : [];
+    }
+
+    // "ordering": items là THỨ TỰ ĐÚNG (nguồn dữ liệu gốc) — tạo bản xáo trộn
+    // riêng để hiển thị ban đầu, đáp án đúng luôn so với q.items nguyên bản.
+    if (q.type === 'ordering' && Array.isArray(q.items)) {
+      q._displayOrder = shuffle(q.items);
+    }
+
+    // "dragfill" / "selectfill": xáo thứ tự wordBank hiển thị (không ảnh
+    // hưởng đáp án vì chấm điểm so sánh theo NỘI DUNG chữ của từng chỗ trống)
+    if ((q.type === 'dragfill' || q.type === 'selectfill') && Array.isArray(q.wordBank)) {
+      q._wordBankShuffled = shuffle(q.wordBank);
     }
   });
 
@@ -599,6 +630,19 @@ function isAnswered(i) {
       // Phải trả lời ĐỦ tất cả statements
       return Object.keys(State.answers[i] || {}).length === (q.statements?.length || 0);
 
+    case 'list':
+      return Object.keys(State.list[i] || {}).length === (q.items?.length || 0);
+
+    case 'classify':
+      return Object.keys(State.classify[i] || {}).length === (q.items?.length || 0);
+
+    case 'ordering':
+      return (State.ordering[i]?.length || 0) === (q.items?.length || 0);
+
+    case 'dragfill':
+    case 'selectfill':
+      return Object.keys(State.fillblank[i] || {}).length === (q.blanks?.length || 0);
+
     default: {
       const a = State.answers[i];
       return a !== undefined && a !== null && (Array.isArray(a) ? a.length > 0 : true);
@@ -643,6 +687,11 @@ function renderQuestion(idx) {
     truefalse: { icon: '⇄', label: 'Đúng / Sai' },
     matching:  { icon: '↔', label: 'Nối cột' },
     hotspot:   { icon: '🎯', label: 'Bấm vào hình' },
+    list:      { icon: '📋', label: 'Chọn cho từng dòng' },
+    classify:  { icon: '🗂️', label: 'Phân loại' },
+    ordering:  { icon: '↕', label: 'Sắp xếp thứ tự' },
+    dragfill:  { icon: '🧩', label: 'Kéo thả điền chỗ trống' },
+    selectfill:{ icon: '▾', label: 'Chọn điền chỗ trống' },
   };
   const { icon, label } = TYPE_META[q.type] || { icon: '?', label: q.type };
 
@@ -680,6 +729,11 @@ function renderQuestion(idx) {
     truefalse: renderTrueFalse,
     matching:  renderMatching,
     hotspot:   renderHotspot,
+    list:      renderList,
+    classify:  renderClassify,
+    ordering:  renderOrdering,
+    dragfill:  renderFillBlank,
+    selectfill:renderFillBlank,
   };
   (renderers[q.type] || (() => {}))(q, idx);
 
@@ -1394,6 +1448,375 @@ function toggleHotspot(el) {
 }
 
 /* ============================================================
+   § 14c — RENDER LIST  (type = "list")
+   Bảng nhiều dòng, MỖI DÒNG có bộ lựa chọn riêng (khác truefalse vì
+   không cố định 2 lựa chọn Đúng/Sai — có thể 2..n lựa chọn tuỳ dòng).
+   q.items = [{ text, options: [...], correct: "..." }, ...]
+   ============================================================ */
+
+function renderList(q, qi) {
+  const body = document.getElementById('q-body');
+  if (!body) return;
+  const current = State.list[qi] || {};
+  const items = q.items || [];
+  const answeredCount = Object.keys(current).length;
+
+  body.innerHTML = `
+    ${q.hint ? `<div class="q-hint-line">💡 ${q.hint}</div>` : ''}
+    <div style="font-size:.82rem;font-weight:700;color:var(--muted);margin:.4rem 0 .75rem;">
+      📋 Trả lời từng dòng (${answeredCount}/${items.length} đã chọn)
+    </div>
+    <div class="list-q-rows">
+      ${items.map((it, j) => `
+        <div class="list-q-row" id="list-row-${qi}-${j}">
+          <div class="list-q-text"><span style="font-weight:700;color:var(--muted);margin-right:.4rem;">${j + 1}.</span>${it.text}</div>
+          <div class="list-q-opts">
+            ${(it.options || []).map(opt => `
+              <button type="button"
+                      class="list-opt-btn ${current[j] === opt ? 'selected' : ''}"
+                      data-qi="${qi}" data-j="${j}" data-val="${encodeURIComponent(opt)}"
+                      onclick="selectListOpt(this)">${opt}</button>`).join('')}
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+
+function selectListOpt(el) {
+  const qi  = parseInt(el.dataset.qi);
+  const j   = parseInt(el.dataset.j);
+  const val = decodeURIComponent(el.dataset.val);
+  if (!State.list[qi]) State.list[qi] = {};
+  State.list[qi][j] = val;
+  State.session.clicks++;
+
+  const row = document.getElementById(`list-row-${qi}-${j}`);
+  if (row) row.querySelectorAll('.list-opt-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  animatePick(el);
+  updateSidebar();
+  renderList(State.questions[qi], qi); // cập nhật lại bộ đếm "đã chọn"
+}
+
+/* ============================================================
+   § 14d — RENDER CLASSIFY  (type = "classify")
+   Phân loại: kéo/nhấn từng item (chữ) vào đúng nhóm (zone).
+   q.zones = ["Google","Microsoft",...]  q.items = [{text, zone}]
+   Dùng lại cơ chế "nhấn chip → nhấn ô" giống matching để đồng nhất
+   trải nghiệm & không phải viết lại toàn bộ code kéo-thả.
+   ============================================================ */
+
+function renderClassify(q, qi) {
+  const body = document.getElementById('q-body');
+  if (!body) return;
+  if (!State.classify[qi]) State.classify[qi] = {};
+  const placed = State.classify[qi];
+  const items  = q.items || [];
+  const zones  = q._zonesShow || (q.zones || []).map(z => (typeof z === 'string' ? z : z.label));
+
+  const unplaced = items.filter(it => !placed[it.text]);
+  const answeredCount = Object.keys(placed).length;
+
+  body.innerHTML = `
+    ${q.hint ? `<div class="q-hint-line">💡 ${q.hint}</div>` : ''}
+    <div class="match-hint">
+      🖐️ Kéo-thả (hoặc bấm chọn rồi bấm vào nhóm) để phân loại
+      <span class="match-hint-count">${answeredCount}/${items.length} đã phân loại</span>
+    </div>
+    <div class="drag-pool-title">📦 Các mục cần phân loại:</div>
+    <div class="drag-pool" id="classifyPool-${qi}">
+      ${unplaced.length > 0
+        ? unplaced.map(it => `
+            <div class="drag-chip classify-chip" data-qi="${qi}" draggable="true"
+                 data-text="${encodeURIComponent(it.text)}"
+                 onclick="onClassifyChipTap(this)">⠿ ${it.text}</div>`).join('')
+        : `<span class="pool-done">✅ Đã phân loại hết — nhấn ✕ trong nhóm để thay đổi</span>`}
+    </div>
+    <div class="classify-zones">
+      ${zones.map(z => `
+        <div class="classify-zone" data-qi="${qi}" data-zone="${encodeURIComponent(z)}" onclick="onClassifyZoneTap(this)">
+          <div class="classify-zone-title">${z}</div>
+          <div class="classify-zone-items">
+            ${items.filter(it => placed[it.text] === z).map(it => `
+              <span class="classify-zone-chip">${it.text}
+                <button type="button" class="slot-remove" data-qi="${qi}" data-text="${encodeURIComponent(it.text)}"
+                        onclick="event.stopPropagation();removeClassifyItem(this)">✕</button>
+              </span>`).join('')}
+          </div>
+        </div>`).join('')}
+    </div>`;
+
+  // Gắn drag & drop events — kéo-thả thật (thiếu ở bản trước), song song
+  // với bấm-chọn cũ để vẫn dùng tốt trên điện thoại (không có HTML5 drag).
+  body.querySelectorAll('.classify-chip').forEach(chip => {
+    chip.addEventListener('dragstart', onClassifyDragStart);
+    chip.addEventListener('dragend',   onClassifyDragEnd);
+  });
+  body.querySelectorAll('.classify-zone').forEach(zone => {
+    zone.addEventListener('dragover',  onClassifyDragOver);
+    zone.addEventListener('dragleave', onClassifyDragLeave);
+    zone.addEventListener('drop',      onClassifyDrop);
+  });
+}
+
+// ── Classify tap-select state (bấm chọn rồi bấm vào nhóm — dự phòng
+//    cho điện thoại/máy tính bảng, nơi HTML5 drag không hoạt động) ──
+let _classifyTapChip = null;
+let _classifyTapText = null;
+let _classifyTapQi   = null;
+
+function onClassifyChipTap(el) {
+  document.querySelectorAll('.classify-chip.tap-selected').forEach(c => c.classList.remove('tap-selected'));
+  if (_classifyTapChip === el) { _classifyTapChip = null; _classifyTapText = null; _classifyTapQi = null; return; }
+  _classifyTapChip = el;
+  _classifyTapText = decodeURIComponent(el.dataset.text);
+  _classifyTapQi   = parseInt(el.dataset.qi);
+  el.classList.add('tap-selected');
+}
+
+function onClassifyZoneTap(el) {
+  if (!_classifyTapChip || _classifyTapText === null) return;
+  const qi = parseInt(el.dataset.qi);
+  if (qi !== _classifyTapQi) return;
+  const zone = decodeURIComponent(el.dataset.zone);
+  if (!State.classify[qi]) State.classify[qi] = {};
+  State.classify[qi][_classifyTapText] = zone;
+  State.session.clicks++;
+  _classifyTapChip = null; _classifyTapText = null; _classifyTapQi = null;
+  updateSidebar();
+  renderClassify(State.questions[qi], qi);
+}
+
+// ── Classify drag state (kéo-thả thẻ vào nhóm) ──────────────
+let _classifyDragText = null;
+let _classifyDragQi   = null;
+
+function onClassifyDragStart(e) {
+  _classifyDragText = decodeURIComponent(e.currentTarget.dataset.text);
+  _classifyDragQi    = parseInt(e.currentTarget.dataset.qi);
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', _classifyDragText);
+}
+
+function onClassifyDragEnd(e) {
+  e.currentTarget.classList.remove('dragging');
+}
+
+function onClassifyDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drag-over');
+}
+
+function onClassifyDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+
+function onClassifyDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  const qi   = parseInt(e.currentTarget.dataset.qi);
+  const zone = decodeURIComponent(e.currentTarget.dataset.zone);
+  // Ưu tiên state kéo-thả nội bộ; nếu trống (vd. thẻ được kéo từ nguồn
+  // khác) thì lấy lại text đã set qua dataTransfer khi bắt đầu kéo.
+  const text = _classifyDragText || decodeURIComponent(e.dataTransfer.getData('text/plain') || '');
+  if (!text || qi !== _classifyDragQi) return;
+  if (!State.classify[qi]) State.classify[qi] = {};
+  State.classify[qi][text] = zone;
+  State.session.clicks++;
+  _classifyDragText = null; _classifyDragQi = null;
+  document.querySelectorAll('.classify-chip.tap-selected').forEach(c => c.classList.remove('tap-selected'));
+  _classifyTapChip = null; _classifyTapText = null; _classifyTapQi = null;
+  updateSidebar();
+  renderClassify(State.questions[qi], qi);
+}
+
+function removeClassifyItem(el) {
+  const qi   = parseInt(el.dataset.qi);
+  const text = decodeURIComponent(el.dataset.text);
+  if (State.classify[qi]) delete State.classify[qi][text];
+  State.session.clicks++;
+  updateSidebar();
+  renderClassify(State.questions[qi], qi);
+}
+
+/* ============================================================
+   § 14e — RENDER ORDERING  (type = "ordering")
+   Sắp xếp lại các mục cho đúng thứ tự — điều khiển bằng nút mũi tên
+   lên/xuống (an toàn cho cả desktop lẫn điện thoại, không cần cài
+   thêm thư viện kéo-thả cho danh sách dọc).
+   q.items = [text, ...] theo ĐÚNG thứ tự (nguồn sự thật để chấm điểm)
+   ============================================================ */
+
+function renderOrdering(q, qi) {
+  const body = document.getElementById('q-body');
+  if (!body) return;
+  if (!State.ordering[qi]) State.ordering[qi] = [...(q._displayOrder || q.items || [])];
+  const order = State.ordering[qi];
+
+  body.innerHTML = `
+    ${q.hint ? `<div class="q-hint-line">💡 ${q.hint}</div>` : ''}
+    <div class="ordering-list">
+      ${order.map((text, j) => `
+        <div class="ordering-row">
+          <span class="ordering-num">${j + 1}</span>
+          <span class="ordering-text">${text}</span>
+          <div class="ordering-arrows">
+            <button type="button" class="ordering-arrow-btn" ${j === 0 ? 'disabled' : ''}
+                    data-qi="${qi}" data-j="${j}" data-dir="-1" onclick="moveOrderingItem(this)">▲</button>
+            <button type="button" class="ordering-arrow-btn" ${j === order.length - 1 ? 'disabled' : ''}
+                    data-qi="${qi}" data-j="${j}" data-dir="1" onclick="moveOrderingItem(this)">▼</button>
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+
+function moveOrderingItem(el) {
+  const qi  = parseInt(el.dataset.qi);
+  const j   = parseInt(el.dataset.j);
+  const dir = parseInt(el.dataset.dir);
+  const order = State.ordering[qi];
+  const k = j + dir;
+  if (!order || k < 0 || k >= order.length) return;
+  [order[j], order[k]] = [order[k], order[j]];
+  State.session.clicks++;
+  updateSidebar();
+  renderOrdering(State.questions[qi], qi);
+}
+
+/* ============================================================
+   § 14f — RENDER FILL-BLANK  (type = "dragfill" | "selectfill")
+   Điền vào chỗ trống trong đoạn văn. Dữ liệu chuẩn hoá:
+   q.segments = [text0, text1, ..., textN]  (N = số chỗ trống, đoạn
+                 text bao quanh mỗi chỗ trống, segments.length = blanks.length+1)
+   q.blanks   = [correctText0, correctText1, ...]  (đáp án đúng của
+                 từng chỗ trống, dùng để chấm điểm — SO SÁNH THEO CHỮ,
+                 không theo vị trí trong wordBank, nên xáo trộn
+                 wordBank không ảnh hưởng chấm điểm)
+   q.wordBank = [text, ...]  (toàn bộ lựa chọn hiển thị cho học sinh,
+                 có thể trùng lặp nếu 1 đáp án được dùng nhiều lần)
+   dragfill  → kéo/nhấn chip (tái dùng cơ chế giống renderMatching)
+   selectfill→ dropdown <select> tại mỗi chỗ trống
+   ============================================================ */
+
+function renderFillBlank(q, qi) {
+  const body = document.getElementById('q-body');
+  if (!body) return;
+  if (!State.fillblank[qi]) State.fillblank[qi] = {};
+  const filled = State.fillblank[qi];
+  const segments = q.segments || [];
+  const blanks   = q.blanks || [];
+  const answeredCount = Object.keys(filled).length;
+
+  const passageHtml = segments.map((seg, i) => {
+    const blankHtml = i < blanks.length ? `
+      <span class="fillblank-slot ${filled[i] ? 'filled' : 'empty-hint'}"
+            data-qi="${qi}" data-bi="${i}"
+            onclick="${q.type === 'selectfill' ? '' : 'onFillSlotTap(this)'}">
+        ${q.type === 'selectfill'
+          ? `<select class="fillblank-select" data-qi="${qi}" data-bi="${i}" onchange="onSelectFillChange(this)">
+               <option value="">— Chọn —</option>
+               ${(q._wordBankShuffled || q.wordBank || []).filter((w, idx, arr) => arr.indexOf(w) === idx).map(w =>
+                 `<option value="${encodeURIComponent(w)}" ${filled[i] === w ? 'selected' : ''}>${w}</option>`).join('')}
+             </select>`
+          : (filled[i]
+              ? `${filled[i]} <button type="button" class="slot-remove" data-qi="${qi}" data-bi="${i}" onclick="event.stopPropagation();removeFillBlank(this)">✕</button>`
+              : '…')}
+      </span>` : '';
+    return `${seg}${blankHtml}`;
+  }).join('');
+
+  const poolHtml = q.type === 'dragfill' ? `
+    <div class="drag-pool-title">📦 Đáp án — nhấn chip rồi nhấn vào chỗ trống:</div>
+    <div class="drag-pool" id="fillPool-${qi}">
+      ${_fillPoolChips(q, qi).map(({ w, id }) => `
+        <div class="drag-chip fill-chip" data-qi="${qi}" data-text="${encodeURIComponent(w)}"
+             id="${id}" onclick="onFillChipTap(this)">⠿ ${w}</div>`).join('')}
+    </div>` : '';
+
+  body.innerHTML = `
+    ${q.hint ? `<div class="q-hint-line">💡 ${q.hint}</div>` : ''}
+    <div style="font-size:.82rem;font-weight:700;color:var(--muted);margin:.4rem 0 .75rem;">
+      ${q.type === 'dragfill' ? '🧩' : '▾'} Đã điền: ${answeredCount}/${blanks.length}
+    </div>
+    ${poolHtml}
+    <div class="fillblank-passage">${passageHtml}</div>`;
+}
+
+/** Danh sách chip còn lại trong pool (dragfill) — trừ đi những cái đã dùng */
+function _fillPoolChips(q, qi) {
+  const filled = State.fillblank[qi] || {};
+  const usedCount = {};
+  Object.values(filled).forEach(w => { usedCount[w] = (usedCount[w] || 0) + 1; });
+
+  const totalCount = {};
+  (q.wordBank || []).forEach(w => { totalCount[w] = (totalCount[w] || 0) + 1; });
+
+  const bank = q._wordBankShuffled || q.wordBank || [];
+  const chips = [];
+  const seenIdx = {};
+  bank.forEach(w => {
+    seenIdx[w] = (seenIdx[w] || 0) + 1;
+    const remain = (totalCount[w] || 0) - (usedCount[w] || 0);
+    if (seenIdx[w] <= remain) chips.push({ w, id: `fillchip-${qi}-${encodeURIComponent(w)}-${seenIdx[w]}` });
+  });
+  return chips;
+}
+
+let _fillTapChip = null;
+let _fillTapText = null;
+let _fillTapQi   = null;
+
+function onFillChipTap(el) {
+  document.querySelectorAll('.fill-chip.tap-selected').forEach(c => c.classList.remove('tap-selected'));
+  if (_fillTapChip === el) { _fillTapChip = null; _fillTapText = null; _fillTapQi = null; return; }
+  _fillTapChip = el;
+  _fillTapText = decodeURIComponent(el.dataset.text);
+  _fillTapQi   = parseInt(el.dataset.qi);
+  el.classList.add('tap-selected');
+}
+
+function onFillSlotTap(el) {
+  if (!_fillTapChip || _fillTapText === null) return;
+  const qi = parseInt(el.dataset.qi);
+  if (qi !== _fillTapQi) return;
+  const bi = parseInt(el.dataset.bi);
+  if (!State.fillblank[qi]) State.fillblank[qi] = {};
+  State.fillblank[qi][bi] = _fillTapText;
+  State.session.clicks++;
+  _fillTapChip = null; _fillTapText = null; _fillTapQi = null;
+  updateSidebar();
+  renderFillBlank(State.questions[qi], qi);
+}
+
+function removeFillBlank(el) {
+  const qi = parseInt(el.dataset.qi);
+  const bi = parseInt(el.dataset.bi);
+  if (State.fillblank[qi]) delete State.fillblank[qi][bi];
+  State.session.clicks++;
+  updateSidebar();
+  renderFillBlank(State.questions[qi], qi);
+}
+
+function onSelectFillChange(el) {
+  const qi = parseInt(el.dataset.qi);
+  const bi = parseInt(el.dataset.bi);
+  const val = el.value ? decodeURIComponent(el.value) : null;
+  if (!State.fillblank[qi]) State.fillblank[qi] = {};
+  if (val) State.fillblank[qi][bi] = val;
+  else delete State.fillblank[qi][bi];
+  State.session.clicks++;
+  updateSidebar();
+  // Không render lại toàn bộ (mất focus dropdown) — chỉ cập nhật bộ đếm dòng trên
+  const q = State.questions[qi];
+  const counterLine = el.closest('#q-body')?.querySelector('div[style*="Đã điền"]');
+  if (counterLine) {
+    const answeredCount = Object.keys(State.fillblank[qi] || {}).length;
+    counterLine.textContent = `${q.type === 'dragfill' ? '🧩' : '▾'} Đã điền: ${answeredCount}/${(q.blanks||[]).length}`;
+  }
+}
+
+/* ============================================================
    § 15 — FLAG
    ============================================================ */
 
@@ -1552,6 +1975,59 @@ function gradeExam() {
         break;
       }
 
+      case 'list': {
+        const ans = State.list[i] || {};
+        const items = q.items || [];
+        if (Object.keys(ans).length === 0) {
+          skipped++;
+        } else {
+          const allCorrect = items.every((it, j) => ans[j] === it.correct);
+          if (allCorrect) { correct++; status = 'correct'; }
+          else             { incorrect++; status = 'incorrect'; }
+        }
+        break;
+      }
+
+      case 'classify': {
+        const ans = State.classify[i] || {};
+        const items = q.items || [];
+        if (Object.keys(ans).length === 0) {
+          skipped++;
+        } else {
+          const allCorrect = items.every(it => ans[it.text] === it.zone);
+          if (allCorrect) { correct++; status = 'correct'; }
+          else             { incorrect++; status = 'incorrect'; }
+        }
+        break;
+      }
+
+      case 'ordering': {
+        const ans = State.ordering[i];
+        const correctOrder = q.items || [];
+        if (!ans || ans.length === 0) {
+          skipped++;
+        } else {
+          const ok = JSON.stringify(ans) === JSON.stringify(correctOrder);
+          if (ok) { correct++; status = 'correct'; }
+          else    { incorrect++; status = 'incorrect'; }
+        }
+        break;
+      }
+
+      case 'dragfill':
+      case 'selectfill': {
+        const ans = State.fillblank[i] || {};
+        const blanks = q.blanks || [];
+        if (Object.keys(ans).length === 0) {
+          skipped++;
+        } else {
+          const allCorrect = blanks.every((correctText, bi) => ans[bi] === correctText);
+          if (allCorrect) { correct++; status = 'correct'; }
+          else             { incorrect++; status = 'incorrect'; }
+        }
+        break;
+      }
+
       default:
         skipped++;
     }
@@ -1582,6 +2058,15 @@ function gradeExam() {
         userMatch:  q.type === 'matching' ? (ma || {}) : null,
         areas:      q.type === 'hotspot' ? (q.areas || []) : null,
         userAreas:  q.type === 'hotspot' ? [...(State.hotspot[i] || [])] : null,
+        listItems:  q.type === 'list' ? (q.items || []) : null,
+        userList:   q.type === 'list' ? (State.list[i] || {}) : null,
+        classifyItems: q.type === 'classify' ? (q.items || []) : null,
+        userClassify:  q.type === 'classify' ? (State.classify[i] || {}) : null,
+        orderCorrect:  q.type === 'ordering' ? (q.items || []) : null,
+        orderUser:     q.type === 'ordering' ? (State.ordering[i] || []) : null,
+        segments:   (q.type === 'dragfill' || q.type === 'selectfill') ? (q.segments || []) : null,
+        blanks:     (q.type === 'dragfill' || q.type === 'selectfill') ? (q.blanks || []) : null,
+        userBlanks: (q.type === 'dragfill' || q.type === 'selectfill') ? (State.fillblank[i] || {}) : null,
       },
     });
   });

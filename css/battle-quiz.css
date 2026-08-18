@@ -1,0 +1,226 @@
+/* ════════════════════════════════════════════════════════════
+   css/battle-quiz.css — Mini-game "Battle Quiz" (Player vs AI).
+   Cùng design token / "look" tối màu như css/pz-defense.css,
+   css/billiards.css, css/sudoku.css (radial navy background,
+   Baloo 2, thẻ bo tròn). Trang battle-quiz.html được nhúng qua
+   modal, xem js/battle-quiz-modal.js.
+   ════════════════════════════════════════════════════════════ */
+
+* { box-sizing: border-box; }
+
+html, body.bq-body { height: 100%; }
+body.bq-body {
+  margin: 0;
+  font-family: 'Baloo 2', sans-serif;
+  background: radial-gradient(ellipse at top, #1c2140 0%, #0e1024 70%);
+  color: #f4eee6;
+  padding: 14px;
+  overflow: hidden;
+}
+
+.bq-wrap {
+  width: 100%;
+  height: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative; /* mốc cho .bq-overlay che toàn màn */
+}
+
+/* ── Topbar ── */
+.bq-topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.bq-title {
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: .02em;
+  background: linear-gradient(90deg, #8fa4ff, #66e0d0, #ffcf80);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.bq-subtitle { font-size: .72rem; color: #b7bdd6; margin-top: 2px; max-width: 480px; line-height: 1.4; }
+
+.bq-hud { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bq-hud-chip {
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: .78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.bq-restart-btn {
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.16);
+  color: #f4eee6;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: .78rem;
+  cursor: pointer;
+  transition: .15s;
+}
+.bq-restart-btn:hover { background: rgba(255,255,255,.16); }
+
+/* ── Arena: 2 fighter + VS ── */
+.bq-arena {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 18px;
+  padding: 16px;
+}
+.bq-fighter { flex: 1; display: flex; align-items: center; gap: 12px; min-width: 0; }
+.bq-fighter-enemy { flex-direction: row-reverse; text-align: right; }
+.bq-fighter-avatar {
+  flex: 0 0 auto;
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.06);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem;
+  overflow: hidden;
+  border: 2px solid rgba(255,255,255,.14);
+  transition: transform .15s;
+}
+.bq-fighter-avatar.bq-hit { animation: bqShake .35s; }
+.bq-enemy-img { width: 100%; height: 100%; object-fit: cover; }
+.bq-fighter-info { flex: 1; min-width: 0; }
+.bq-fighter-info-right { display: flex; flex-direction: column; align-items: flex-end; }
+.bq-fighter-name { font-weight: 700; font-size: .82rem; margin-bottom: 4px; }
+.bq-hpbar { width: 100%; height: 12px; border-radius: 999px; background: rgba(0,0,0,.35); overflow: hidden; }
+.bq-hpbar-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #4fd67a, #17b3a3);
+  border-radius: 999px;
+  transition: width .35s ease;
+}
+.bq-hpbar-fill-enemy { background: linear-gradient(90deg, #ff8a3d, #f0483e); }
+.bq-hp-text { font-size: .68rem; color: #b7bdd6; margin-top: 2px; }
+.bq-vs {
+  flex: 0 0 auto;
+  font-weight: 800;
+  font-size: 1rem;
+  color: #ffcf80;
+  opacity: .8;
+}
+.bq-floater-layer { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+.bq-floater {
+  position: absolute;
+  font-weight: 800;
+  font-size: 1.1rem;
+  animation: bqFloatUp 1s ease-out forwards;
+}
+.bq-floater-dmg { color: #ff8a3d; }
+.bq-floater-heal { color: #4fd67a; }
+
+@keyframes bqShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+@keyframes bqFloatUp {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-40px); }
+}
+
+/* ── Question panel ── */
+.bq-question-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 18px;
+  padding: 16px;
+  overflow-y: auto;
+}
+.bq-timerbar { height: 6px; border-radius: 999px; background: rgba(0,0,0,.35); overflow: hidden; flex: 0 0 auto; }
+.bq-timerbar-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #66e0d0, #ffcf80);
+  border-radius: 999px;
+  transition: width .1s linear;
+}
+.bq-timerbar-fill.bq-timer-low { background: linear-gradient(90deg, #ff8a3d, #f0483e); }
+.bq-question-text { font-size: .98rem; font-weight: 700; line-height: 1.5; }
+.bq-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.bq-option-btn {
+  background: rgba(255,255,255,.06);
+  border: 2px solid rgba(255,255,255,.12);
+  color: #f4eee6;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-family: 'Baloo 2', sans-serif;
+  font-size: .84rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: .15s;
+}
+.bq-option-btn:hover:not(:disabled) { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.3); transform: translateY(-1px); }
+.bq-option-btn:disabled { cursor: default; }
+.bq-option-btn.bq-correct { background: rgba(79,214,122,.22); border-color: #4fd67a; }
+.bq-option-btn.bq-wrong { background: rgba(240,72,62,.22); border-color: #f0483e; }
+
+/* ── Overlay dùng chung (chọn chủ đề / kết quả) ── */
+.bq-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10,12,26,.92);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 5;
+}
+.bq-overlay[hidden] { display: none; }
+.bq-overlay-card { max-width: 440px; text-align: center; }
+.bq-overlay-icon { font-size: 2.6rem; margin-bottom: 8px; }
+.bq-overlay-title { font-size: 1.15rem; font-weight: 800; margin-bottom: 6px; }
+.bq-overlay-desc { font-size: .82rem; color: #b7bdd6; line-height: 1.5; margin-bottom: 16px; white-space: pre-line; }
+.bq-topic-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.bq-topic-btn {
+  background: rgba(255,255,255,.06);
+  border: 2px solid rgba(255,255,255,.12);
+  color: #f4eee6;
+  border-radius: 12px;
+  padding: 10px 8px;
+  font-family: 'Baloo 2', sans-serif;
+  font-size: .76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: .15s;
+}
+.bq-topic-btn:hover { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.3); }
+.bq-topic-btn.bq-topic-random { grid-column: 1 / -1; background: rgba(124,139,255,.18); border-color: #7c8bff; }
+
+.bq-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 10px 22px;
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  font-size: .86rem;
+  cursor: pointer;
+  transition: .15s;
+}
+.bq-btn-primary { background: linear-gradient(90deg, #8fa4ff, #66e0d0); color: #0e1024; }
+.bq-btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
+
+@media (max-width: 560px) {
+  .bq-fighter-avatar { width: 48px; height: 48px; font-size: 1.5rem; }
+  .bq-question-text { font-size: .88rem; }
+  .bq-topic-grid { grid-template-columns: 1fr; }
+}

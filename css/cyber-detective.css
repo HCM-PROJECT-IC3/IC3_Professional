@@ -1,0 +1,187 @@
+/* ════════════════════════════════════════════════════════════
+   css/cyber-detective.css — Mini-game "Cyber Detective".
+   Cùng design token / "look" tối màu như css/battle-quiz.css,
+   css/pz-defense.css (radial navy background, Baloo 2, thẻ bo
+   tròn). Trang cyber-detective.html được nhúng qua modal, xem
+   js/cyber-detective-modal.js.
+   ════════════════════════════════════════════════════════════ */
+
+* { box-sizing: border-box; }
+
+html, body.cd-body { height: 100%; }
+body.cd-body {
+  margin: 0;
+  font-family: 'Baloo 2', sans-serif;
+  background: radial-gradient(ellipse at top, #1c2140 0%, #0e1024 70%);
+  color: #f4eee6;
+  padding: 14px;
+  overflow-y: auto;
+}
+
+.cd-wrap {
+  width: 100%;
+  max-width: 780px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative; /* mốc cho .cd-overlay che toàn màn */
+  min-height: calc(100vh - 28px);
+}
+
+/* ── Topbar ── */
+.cd-topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.cd-title {
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: .02em;
+  background: linear-gradient(90deg, #8fa4ff, #66e0d0, #ffcf80);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.cd-subtitle { font-size: .76rem; color: #b7bdd6; margin-top: 2px; }
+.cd-hud { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.cd-hud-chip {
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: .74rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.cd-restart-btn {
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.16);
+  color: #f4eee6;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: .78rem;
+  cursor: pointer;
+  transition: .15s;
+}
+.cd-restart-btn:hover { background: rgba(255,255,255,.16); }
+
+/* ── Mô tả tình huống ── */
+.cd-intro {
+  background: rgba(124,139,255,.1);
+  border: 1px solid rgba(124,139,255,.25);
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: .84rem;
+  line-height: 1.55;
+  color: #dfe3f5;
+}
+
+/* ── Bảng 6 hướng điều tra ── */
+.cd-board { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.cd-clue-card {
+  background: rgba(255,255,255,.05);
+  border: 2px solid rgba(255,255,255,.1);
+  border-radius: 14px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: .15s;
+}
+.cd-clue-card:hover { background: rgba(255,255,255,.09); border-color: rgba(255,255,255,.22); }
+.cd-clue-card.is-open { cursor: default; border-color: rgba(102,224,208,.4); background: rgba(102,224,208,.07); }
+.cd-clue-card.is-open.has-key { border-color: rgba(255,138,61,.55); background: rgba(255,138,61,.1); }
+.cd-clue-head { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: .84rem; }
+.cd-clue-icon { font-size: 1.2rem; }
+.cd-clue-body { margin-top: 8px; font-size: .78rem; line-height: 1.5; color: #d7dbef; }
+.cd-clue-hint { margin-top: 6px; font-size: .68rem; color: #7f88ab; font-style: italic; }
+.cd-clue-key-tag {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: .64rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255,138,61,.2);
+  color: #ffb578;
+}
+
+/* ── Khung kết luận ── */
+.cd-conclude-panel {
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 16px;
+  padding: 14px;
+}
+.cd-conclude-title { font-weight: 700; font-size: .88rem; margin-bottom: 10px; }
+.cd-cause-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-bottom: 12px; }
+.cd-cause-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,.06);
+  border: 2px solid rgba(255,255,255,.12);
+  color: #f4eee6;
+  border-radius: 12px;
+  padding: 8px 10px;
+  font-family: 'Baloo 2', sans-serif;
+  font-size: .78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .15s;
+  text-align: left;
+}
+.cd-cause-btn:hover { background: rgba(255,255,255,.12); }
+.cd-cause-btn.is-selected { border-color: #66e0d0; background: rgba(102,224,208,.14); }
+.cd-cause-icon { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; flex: 0 0 auto; }
+
+.cd-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 10px 22px;
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  font-size: .86rem;
+  cursor: pointer;
+  transition: .15s;
+  width: 100%;
+}
+.cd-btn-primary { background: linear-gradient(90deg, #8fa4ff, #66e0d0); color: #0e1024; }
+.cd-btn-primary:hover:not(:disabled) { filter: brightness(1.08); }
+.cd-btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ── Overlay dùng chung (chọn vụ án / kết quả) ── */
+.cd-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10,12,26,.94);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 5;
+  overflow-y: auto;
+}
+.cd-overlay[hidden] { display: none; }
+.cd-overlay-card { max-width: 460px; width: 100%; text-align: center; }
+.cd-overlay-icon { font-size: 2.6rem; margin-bottom: 8px; }
+.cd-overlay-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 6px; }
+.cd-overlay-desc { font-size: .8rem; color: #b7bdd6; line-height: 1.55; margin-bottom: 16px; white-space: pre-line; }
+.cd-case-list { display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.cd-case-btn {
+  background: rgba(255,255,255,.06);
+  border: 2px solid rgba(255,255,255,.12);
+  color: #f4eee6;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-family: 'Baloo 2', sans-serif;
+  font-size: .78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .15s;
+}
+.cd-case-btn:hover { background: rgba(255,255,255,.13); border-color: rgba(255,255,255,.3); }
+
+@media (max-width: 560px) {
+  .cd-board { grid-template-columns: 1fr; }
+  .cd-cause-grid { grid-template-columns: repeat(2, 1fr); }
+}

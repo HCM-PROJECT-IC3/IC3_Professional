@@ -7,6 +7,15 @@
  * làm (đã có sẵn trong `rec` mà saveRecord() tạo ra) và tự quản lý
  * state riêng trong localStorage key "eduquiz_gamestate".
  *
+ * localStorage vẫn là NGUỒN CHÍNH (đọc/hiện ngay, không cần mạng) —
+ * KHÔNG đổi hành vi cũ. (Phase 3/Game Hub) recordGameSession() thêm 1
+ * đường GHI PHỤ, không bắt buộc: nếu trang có nạp
+ * js/repositories/game-session-repository.js (tức có Firestore) thì
+ * lượt chơi cũng được ghi (fire-and-forget) vào collection
+ * "game_sessions" để đồng bộ đa thiết bị + cho Teacher/Coordinator
+ * Dashboard đọc sau này (Phase 11). Nếu thiếu repository (trang không
+ * nạp), hàm vẫn chạy bình thường — chỉ cập nhật localStorage như cũ.
+ *
  * Cách dùng ở trang khác (vd. ic3-dashboard.html):
  *   const state = EduGamification.getState();
  *   // state.xp, state.level, state.streak, state.badges: string[]
@@ -14,6 +23,13 @@
  * Cách hiển thị nhanh trong lobby (index.html), thêm vào cuối <body>:
  *   <script src="js/gamification.js"></script>
  *   <script>EduGamification.renderInto('#lobbyGameStrip');</script>
+ *
+ * Cách 1 mini-game ghi nhận lượt chơi (Phase 4+, khi game đó được build):
+ *   EduGamification.recordGameSession('pz-defense', {
+ *     score: 82, scoreType: 'percent', accuracy: 82,
+ *     correctAnswers: 41, wrongAnswers: 9, durationSec: 240,
+ *     studentName, studentClass, studentSchool, // lấy từ form lobby đang chọn
+ *   });
  */
 (function (global) {
   'use strict';
@@ -22,6 +38,7 @@
   const XP_PER_CORRECT = 10;
   const XP_PER_MINITEST_DONE = 50;
   const XP_PER_PERFECT_SCORE = 100; // thêm, cộng dồn cùng XP_PER_MINITEST_DONE
+  const XP_PER_GAME_SESSION = 20; // XP cơ bản cho 1 lượt chơi mini-game xong (Phase 3+)
 
   const LEVEL_THRESHOLDS = [0, 100, 250, 500, 900, 1400, 2000, 2800, 3800, 5000];
 
@@ -31,6 +48,7 @@
     { id: 'streak_7',      label: '🔥 7 ngày liên tiếp', check: s => s.streak >= 7 },
     { id: 'perfect_score', label: '🏆 Điểm tuyệt đối',   check: s => s.perfectScores >= 1 },
     { id: 'ten_quizzes',   label: '📚 10 bài đã làm',    check: s => s.totalQuizzes >= 10 },
+    { id: 'first_game',    label: '🎮 Lượt chơi đầu tiên', check: s => s.totalGameSessions >= 1 },
   ];
 
   function _today() {
@@ -45,6 +63,7 @@
       streak: 0,
       lastPlayedDate: null, // YYYY-MM-DD
       badges: [],
+      totalGameSessions: 0, // (Phase 3+) số lượt chơi mini-game đã ghi nhận, mọi game cộng chung
     };
   }
 
@@ -127,6 +146,55 @@
     return { xpGained, newBadges, state };
   }
 
+  /**
+   * (Phase 3+) Gọi hàm này khi 1 mini-game (Prism Cascade/Memory/Sudoku/
+   * Billiards/PZ Defense, và Cyber Defense/Battle Quiz... ở phase sau)
+   * kết thúc 1 lượt chơi. KHÔNG đụng streak (streak vẫn chỉ tính theo
+   * ngày làm BÀI THI, giữ đúng ý nghĩa cũ) — chỉ cộng XP + đếm lượt
+   * chơi + xét huy hiệu liên quan game.
+   *
+   * @param {string} gameId — 'pz-defense' | 'memory-game' | 'sudoku' | 'billiards' | 'prism-cascade' | ...
+   * @param {Object} [session] — xem @typedef GameSession trong
+   *   js/models/game-session.model.js. `xp` có thể tự truyền (game tự
+   *   tính XP riêng theo combo/độ khó); nếu không truyền, dùng mặc định
+   *   XP_PER_GAME_SESSION (+ thưởng thêm nếu có `score` dạng percent cao).
+   * @returns {{ xpGained: number, newBadges: object[], state: object }}
+   */
+  function recordGameSession(gameId, session = {}) {
+    const state = getState();
+
+    let xpGained = typeof session.xp === 'number' ? session.xp : XP_PER_GAME_SESSION;
+    if (session.scoreType === 'percent' && typeof session.score === 'number' && session.score >= 90) {
+      xpGained += 15; // thưởng nhỏ cho lượt chơi đạt điểm cao, không đổi luật XP_PER_PERFECT_SCORE của quiz
+    }
+
+    state.xp += xpGained;
+    state.totalGameSessions += 1;
+
+    const newBadges = [];
+    BADGE_DEFS.forEach(def => {
+      if (!state.badges.includes(def.id) && def.check(state)) {
+        state.badges.push(def.id);
+        newBadges.push(def);
+      }
+    });
+
+    _saveState(state);
+
+    // Ghi phụ lên Firestore (không bắt buộc — chỉ chạy nếu trang có nạp
+    // game-session-repository.js). Fire-and-forget: không await, không
+    // để lỗi mạng làm hỏng trải nghiệm chơi game tại chỗ.
+    try {
+      if (global.EduRepositories && global.EduRepositories.gameSession &&
+          session.studentName && session.studentClass) {
+        global.EduRepositories.gameSession.recordSession(Object.assign({ gameId, xp: xpGained }, session))
+          .catch(e => console.warn('[Gamification] Không ghi được game_sessions lên Firestore (không ảnh hưởng XP cục bộ).', e));
+      }
+    } catch (e) { /* im lặng — XP cục bộ đã lưu ở trên rồi, đây chỉ là đồng bộ phụ */ }
+
+    return { xpGained, newBadges, state };
+  }
+
   /** Render 1 dải nhỏ (streak + level + XP) vào 1 container có sẵn trên trang. */
   function renderInto(selector) {
     const el = typeof selector === 'string' ? document.querySelector(selector) : selector;
@@ -153,6 +221,7 @@
   global.EduGamification = {
     getState,
     recordResult,
+    recordGameSession,
     renderInto,
     levelForXp,
     xpToNextLevel,

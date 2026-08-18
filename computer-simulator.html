@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💻 Computer Simulator — Mini Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/computer-simulator.css">
+</head>
+<body class="cs-body">
+
+  <!-- Trang này được nhúng qua modal (js/computer-simulator-modal.js),
+       cùng pattern với cyber-detective.html/battle-quiz.html — chỉ chứa
+       đúng 1 mini-game độc lập, không đụng vào quiz-engine.js /
+       gamification.js.
+       Cơ chế (mục 11 yêu cầu gốc "Computer Simulator", PHẠM VI PHASE 8):
+       mô phỏng 1 trình quản lý tệp tin (file explorer) đơn giản — học
+       sinh Tạo thư mục / Đổi tên / Di chuyển / Sao chép / Xoá / Tìm kiếm
+       trên 1 cây thư mục ẢO trong bộ nhớ (không đụng ổ đĩa thật, an
+       toàn tuyệt đối), theo 5 nhiệm vụ có kịch bản thật (nhiệm vụ 2 là
+       ví dụ mẫu chính xác trong yêu cầu gốc: IC3 → Level 1 →
+       Documents/Images). Toàn bộ logic model + kiểm tra nhiệm vụ nằm
+       trong js/computer-simulator.js § FS/MISSIONS (đã test độc lập
+       bằng Node, không phụ thuộc DOM). -->
+
+  <div class="cs-wrap">
+
+    <!-- ============ TOPBAR ============ -->
+    <div class="cs-topbar">
+      <div class="cs-header">
+        <div class="cs-title">💻 Computer Simulator</div>
+        <div class="cs-subtitle" id="csMissionTitle">Đang tải nhiệm vụ…</div>
+      </div>
+      <button type="button" class="cs-restart-btn" id="csRestartBtn" title="Chọn nhiệm vụ khác">🔄 Nhiệm vụ khác</button>
+    </div>
+
+    <!-- ============ MÔ TẢ NHIỆM VỤ ============ -->
+    <div class="cs-mission-box" id="csMissionInstruction"></div>
+
+    <!-- ============ FILE EXPLORER ============ -->
+    <div class="cs-explorer">
+      <div class="cs-toolbar">
+        <button type="button" class="cs-tool-btn" id="csNewFolderBtn" title="Tạo thư mục mới">📁 Thư mục mới</button>
+        <button type="button" class="cs-tool-btn" id="csRenameBtn" disabled title="Đổi tên mục đang chọn">✏️ Đổi tên</button>
+        <button type="button" class="cs-tool-btn" id="csMoveBtn" disabled title="Di chuyển mục đang chọn">✂️ Di chuyển</button>
+        <button type="button" class="cs-tool-btn" id="csCopyBtn" disabled title="Sao chép mục đang chọn">📋 Sao chép</button>
+        <button type="button" class="cs-tool-btn cs-tool-btn-danger" id="csDeleteBtn" disabled title="Xoá mục đang chọn">🗑️ Xoá</button>
+        <input type="text" class="cs-search-input" id="csSearchInput" placeholder="🔍 Tìm kiếm file/thư mục…">
+      </div>
+
+      <div class="cs-breadcrumb" id="csBreadcrumb"></div>
+
+      <div class="cs-search-results" id="csSearchResults"></div>
+
+      <div class="cs-content" id="csContent"></div>
+    </div>
+
+    <!-- ============ NỘP KẾT QUẢ ============ -->
+    <div class="cs-submit-bar">
+      <div class="cs-feedback" id="csFeedback"></div>
+      <button type="button" class="cs-btn cs-btn-primary" id="csCheckBtn">✅ Kiểm tra kết quả</button>
+    </div>
+
+    <!-- ============ MÀN CHỌN NHIỆM VỤ ============ -->
+    <div class="cs-overlay" id="csMissionOverlay">
+      <div class="cs-overlay-card">
+        <div class="cs-overlay-icon">💻</div>
+        <div class="cs-overlay-title">Chọn 1 nhiệm vụ</div>
+        <div class="cs-overlay-desc">Mỗi nhiệm vụ mô phỏng 1 thao tác quản lý tệp tin thật trên máy tính — làm càng ít lỗi thử-sai, điểm càng cao!</div>
+        <div class="cs-mission-list" id="csMissionList"></div>
+      </div>
+    </div>
+
+    <!-- ============ MÀN KẾT QUẢ ============ -->
+    <div class="cs-overlay" id="csResultOverlay" hidden>
+      <div class="cs-overlay-card">
+        <div class="cs-overlay-icon" id="csResultIcon">🏆</div>
+        <div class="cs-overlay-title" id="csResultTitle">Hoàn thành!</div>
+        <div class="cs-overlay-desc" id="csResultDesc"></div>
+        <div class="cs-overlay-actions">
+          <button type="button" class="cs-btn cs-btn-primary" id="csNextMissionBtn">💻 Nhiệm vụ khác</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ OVERLAY CHỌN THƯ MỤC ĐÍCH (Di chuyển/Sao chép) ============ -->
+    <div class="cs-overlay" id="csPickerOverlay" hidden>
+      <div class="cs-overlay-card">
+        <div class="cs-overlay-title" id="csPickerTitle">Chọn thư mục đích</div>
+        <div class="cs-picker-tree" id="csPickerTree"></div>
+        <div class="cs-overlay-actions cs-overlay-actions-row">
+          <button type="button" class="cs-btn cs-btn-secondary" id="csPickerCancelBtn">Huỷ</button>
+          <button type="button" class="cs-btn cs-btn-primary" id="csPickerConfirmBtn" disabled>Xác nhận</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- (Phase 3/4/6/7/8 — Game Hub) Ghi nhận lượt chơi để cộng XP + đồng
+       bộ Firestore đa thiết bị, cùng pattern các mini-game trước. Không
+       bắt buộc — thiếu mạng/script vẫn chơi bình thường. -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/repositories/base-repository.js"></script>
+  <script src="js/models/exam-history.model.js"></script>
+  <script src="js/models/game-session.model.js"></script>
+  <script src="js/repositories/game-session-repository.js"></script>
+  <script src="js/gamification.js"></script>
+
+  <script src="js/computer-simulator.js"></script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔎 Cyber Detective — Mini Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/cyber-detective.css">
+</head>
+<body class="cd-body">
+
+  <!-- Trang này được nhúng qua modal (js/cyber-detective-modal.js), cùng
+       pattern với battle-quiz.html / pz-defense.html — chỉ chứa đúng 1
+       mini-game độc lập, không đụng vào quiz-engine.js / gamification.js.
+       Cơ chế (mục 10 yêu cầu gốc "Cyber Detective"): học sinh nhận 1
+       tình huống "tài khoản/máy tính bị xâm nhập", điều tra qua 6 hướng
+       (Email/Website/Mật khẩu/Thiết bị/Mạng/Tệp tin — mỗi hướng có thể ẩn
+       1 "manh mối chính" hoặc chỉ là thông tin trung lập), rồi đưa ra
+       KẾT LUẬN nguyên nhân tấn công. Nội dung 6 tình huống (js/cyber-
+       detective.js § CASES) do trang này tự quản lý (đúng cách pz-
+       defense.js tự quản lý ZOMBIE_TYPES) — KHÔNG bịa nguyên nhân mới:
+       6 "nguyên nhân" trùng đúng 6 trong 12 id tác nhân đã có ở
+       ZOMBIE_TYPES (js/pz-defense.js), và câu gợi ý phòng thủ sau khi kết
+       luận lấy TRỰC TIẾP từ js/game-engine/question-topic-map.js §
+       getWeaknessForEnemy() — không viết lại nội dung đã có. -->
+
+  <div class="cd-wrap">
+
+    <!-- ============ TOPBAR ============ -->
+    <div class="cd-topbar">
+      <div class="cd-header">
+        <div class="cd-title">🔎 Cyber Detective</div>
+        <div class="cd-subtitle" id="cdCaseTitle">Đang tải vụ án…</div>
+      </div>
+      <div class="cd-hud">
+        <div class="cd-hud-chip" title="Số hướng điều tra đã mở"><span id="cdRevealedCount">0</span>/6 đã điều tra</div>
+        <button type="button" class="cd-restart-btn" id="cdRestartBtn" title="Chọn vụ án khác">🔄 Vụ án khác</button>
+      </div>
+    </div>
+
+    <!-- ============ MÔ TẢ TÌNH HUỐNG ============ -->
+    <div class="cd-intro" id="cdIntro"></div>
+
+    <!-- ============ 6 HƯỚNG ĐIỀU TRA ============ -->
+    <div class="cd-board" id="cdBoard"><!-- điền động bằng JS: 6 .cd-clue-card --></div>
+
+    <!-- ============ KHUNG KẾT LUẬN ============ -->
+    <div class="cd-conclude-panel">
+      <div class="cd-conclude-title">🧩 Kết luận: Nguyên nhân tấn công là gì?</div>
+      <div class="cd-cause-grid" id="cdCauseGrid"><!-- điền động bằng JS --></div>
+      <button type="button" class="cd-btn cd-btn-primary" id="cdSubmitBtn" disabled>✅ Nộp kết luận</button>
+    </div>
+
+    <!-- ============ MÀN CHỌN VỤ ÁN ============ -->
+    <div class="cd-overlay" id="cdCaseOverlay">
+      <div class="cd-overlay-card">
+        <div class="cd-overlay-icon">🔎</div>
+        <div class="cd-overlay-title">Chọn 1 vụ án để điều tra</div>
+        <div class="cd-overlay-desc">Mỗi vụ án là 1 tình huống mất an toàn thông tin có thật trong đời sống số. Điều tra càng ít hướng mà vẫn kết luận đúng, điểm càng cao!</div>
+        <div class="cd-case-list" id="cdCaseList"><!-- điền động bằng JS --></div>
+      </div>
+    </div>
+
+    <!-- ============ MÀN KẾT QUẢ ============ -->
+    <div class="cd-overlay" id="cdResultOverlay" hidden>
+      <div class="cd-overlay-card">
+        <div class="cd-overlay-icon" id="cdResultIcon">🏆</div>
+        <div class="cd-overlay-title" id="cdResultTitle">Kết luận chính xác!</div>
+        <div class="cd-overlay-desc" id="cdResultDesc"></div>
+        <div class="cd-overlay-actions">
+          <button type="button" class="cd-btn cd-btn-primary" id="cdNextCaseBtn">🔎 Vụ án khác</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- (Phase 3/4/6/7 — Game Hub) Ghi nhận lượt chơi để cộng XP + đồng bộ
+       Firestore đa thiết bị, cùng pattern battle-quiz.html/pz-defense.html.
+       Không bắt buộc — thiếu mạng/script vẫn chơi bình thường. -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/repositories/base-repository.js"></script>
+  <script src="js/models/exam-history.model.js"></script>
+  <script src="js/models/game-session.model.js"></script>
+  <script src="js/repositories/game-session-repository.js"></script>
+  <script src="js/gamification.js"></script>
+  <script src="js/game-engine/question-topic-map.js"></script>
+
+  <script src="js/cyber-detective.js"></script>
+</body>
+</html>

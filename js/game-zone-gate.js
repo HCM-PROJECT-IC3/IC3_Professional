@@ -30,7 +30,10 @@
     'openMemoryGameBtn',
     'openSudokuBtn',
     'openBilliardsBtn',
-    'openPzDefenseBtn'
+    'openPzDefenseBtn',
+    'openBattleQuizBtn',
+    'openCyberDetectiveBtn',
+    'openComputerSimBtn'
   ];
 
   function init() {
@@ -147,11 +150,23 @@
       if (e.key === 'Escape' && overlay.classList.contains('show')) closeHub();
     });
 
+    // (Phase 3+) Trước khi mở 1 game, "gửi" học sinh đang chọn ở lobby
+    // cho game đó qua localStorage (đọc được từ trong iframe vì cùng
+    // origin) — để js/gamification.js § recordGameSession có thể ghi
+    // đúng người chơi khi ván kết thúc. Không có tác dụng gì với 5 game
+    // hiện tại (chưa game nào đọc key này) trừ Phòng Thủ Dữ Liệu.
+    function publishCurrentStudent() {
+      var st = currentStudent();
+      if (!st.name) return;
+      try { localStorage.setItem('eduquiz_current_student', JSON.stringify(st)); }
+      catch (e) { /* localStorage đầy/bị chặn — bỏ qua, không chặn việc mở game */ }
+    }
+
     // Chọn 1 game trong hub (khi đã mở khóa) → đóng hub lại, để game
     // riêng (đã tự mở qua listener của chính js/*-modal.js) hiện lên.
     GAME_BTN_IDS.forEach(function (id) {
       var btn = document.getElementById(id);
-      if (btn) btn.addEventListener('click', closeHub);
+      if (btn) btn.addEventListener('click', function () { publishCurrentStudent(); closeHub(); });
     });
 
     // Học sinh đổi Trường/Lớp/Tên → tính lại trạng thái khóa ngay.
