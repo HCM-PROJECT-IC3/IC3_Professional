@@ -15,11 +15,11 @@
      Server ở mép trái. MỖI loại có 1 cơ chế riêng phản ánh đúng
      hành vi thật (xem bảng trong pz-defense-design.md) — đây là
      cách "dạy ngầm" khái niệm IC3 qua gameplay.
-   - Người chơi dùng tài nguyên "Dữ liệu" để đặt 1 trong 19 "linh
-     vật" (12 phần mềm + 6 phần cứng + 1 "Công Tắc Ngắt Khẩn", icon
-     minh họa dạng cây/plant lấy từ img/pz-defense/plants/) lên các
-     ô trống — mỗi linh
-     vật 1 vai trò: chặn đường (có/không tự hồi máu), sinh Sun, bắn hạ
+   - Người chơi dùng tài nguyên "Dữ liệu" để đặt 1 trong 19 "lá
+     chắn" (12 phần mềm + 6 phần cứng + 1 "Công Tắc Ngắt Khẩn", icon
+     SVG gốc tự vẽ trong img/pz-defense/defenders/) lên các
+     ô trống — mỗi lá
+     chắn 1 vai trò: chặn đường (có/không tự hồi máu), sinh Sun, bắn hạ
      zombie (đơn lẻ hoặc buff bởi Copilot), gây sát thương diện rộng cả
      hàng, làm chậm/đóng băng cả hàng, "dò quét" để lộ diện tác nhân ẩn
      danh (Trojan ngụy trang / Spyware tàng hình / Rootkit kháng dame),
@@ -60,42 +60,42 @@
   //    nhân "khó nhằn" nhất gây ra; 6 linh vật phần cứng tái dùng các
   //    cơ chế nền để cân bằng lại roster — xem `desc` mỗi loại. ──
   var DEF_TYPES = [
-    { id: 'word', img: 'img/pz-defense/plants/wallnut.png', name: 'Word Chắn Đường', cost: 50, cooldownFrames: 780,
-      hp: 260, type: 'wall', ring: '#2b579a',
+    { id: 'word', img: 'img/pz-defense/defenders/word.svg', name: 'Word Chắn Đường', cost: 50, cooldownFrames: 780,
+      hp: 260, type: 'wall', ring: '#2b579a', relatedTopic: '4. Sáng tạo nội dung',
       desc: 'Núi hồ sơ Word chất đống chặn lối — rẻ, dễ đặt, nhưng "mỏng cơm" nhất trong 3 tường chắn.' },
-    { id: 'excel', img: 'img/pz-defense/plants/sunflower.png', name: 'Excel Sinh Dữ Liệu', cost: 60, cooldownFrames: 480,
-      hp: 90, type: 'generator', genAmount: 22, genFrames: 200, ring: '#217346',
+    { id: 'excel', img: 'img/pz-defense/defenders/excel.svg', name: 'Excel Sinh Dữ Liệu', cost: 60, cooldownFrames: 480,
+      hp: 90, type: 'generator', genAmount: 22, genFrames: 200, ring: '#217346', relatedTopic: '4. Sáng tạo nội dung',
       desc: 'Định kỳ "nảy" ra 1 cục Sun tại chỗ — bấm vào để hứng Dữ liệu, không tự cộng.' },
-    { id: 'chrome', img: 'img/pz-defense/plants/peashooter.png', name: 'Chrome Quét Nhanh', cost: 80, cooldownFrames: 360,
-      hp: 90, type: 'shooter', dmg: 9, rateFrames: 42, projSpeed: 6.5, ring: '#ea4335',
+    { id: 'chrome', img: 'img/pz-defense/defenders/chrome.svg', name: 'Chrome Quét Nhanh', cost: 80, cooldownFrames: 360,
+      hp: 90, type: 'shooter', dmg: 9, rateFrames: 42, projSpeed: 6.5, ring: '#ea4335', relatedTopic: '3. Quản lý thông tin',
       desc: 'Bắn nhanh, sát thương thấp — dọn tốt các tác nhân máu mỏng như Worm/DDoS.' },
-    { id: 'outlook', img: 'img/pz-defense/plants/firepeashooter.png', name: 'Outlook Cảnh Báo', cost: 130, cooldownFrames: 600,
-      hp: 110, type: 'shooter', dmg: 30, rateFrames: 108, projSpeed: 5, ring: '#0364b8',
+    { id: 'outlook', img: 'img/pz-defense/defenders/outlook.svg', name: 'Outlook Cảnh Báo', cost: 130, cooldownFrames: 600,
+      hp: 110, type: 'shooter', dmg: 30, rateFrames: 108, projSpeed: 5, ring: '#0364b8', relatedTopic: '5. Giao tiếp',
       desc: 'Bắn chậm, sát thương cao — phù hợp hạ các tác nhân trâu bò như Ransomware/Rootkit.' },
-    { id: 'teams', img: 'img/pz-defense/plants/icepeashooter.png', name: 'Teams Làm Chậm', cost: 95, cooldownFrames: 540,
-      hp: 110, type: 'slow', slowFactor: 0.5, ring: '#5b5fc7',
+    { id: 'teams', img: 'img/pz-defense/defenders/teams.svg', name: 'Teams Làm Chậm', cost: 95, cooldownFrames: 540,
+      hp: 110, type: 'slow', slowFactor: 0.5, ring: '#5b5fc7', relatedTopic: '6. Hợp tác, cộng tác',
       desc: 'Làm chậm mọi tác nhân trong cả hàng — cả hàng tấn công đều rề rà hơn.' },
-    { id: 'scanner', img: 'img/pz-defense/plants/datascanner.png', name: 'Gemini Dò Quét', cost: 150, cooldownFrames: 600,
-      hp: 100, type: 'scanner', ring: '#8e6ef0',
+    { id: 'scanner', img: 'img/pz-defense/defenders/scanner.svg', name: 'Gemini Dò Quét', cost: 150, cooldownFrames: 600,
+      hp: 100, type: 'scanner', ring: '#8e6ef0', relatedTopic: '7. An toàn và bảo mật',
       desc: 'AI quét sâu hơn Màn Hình: lộ diện Trojan ngụy trang / Spyware tàng hình / phá kháng dame của Rootkit — bền hơn, hồi chiêu nhanh hơn.' },
-    { id: 'powerpoint', img: 'img/pz-defense/plants/lightningreed.png', name: 'PowerPoint Phát Sóng', cost: 170, cooldownFrames: 680,
-      hp: 105, type: 'aoe', dmg: 9, rateFrames: 68, ring: '#d24726',
+    { id: 'powerpoint', img: 'img/pz-defense/defenders/powerpoint.svg', name: 'PowerPoint Phát Sóng', cost: 170, cooldownFrames: 680,
+      hp: 105, type: 'aoe', dmg: 9, rateFrames: 68, ring: '#d24726', relatedTopic: '4. Sáng tạo nội dung',
       desc: 'Định kỳ "phát sóng" gây sát thương cho TẤT CẢ tác nhân đang lộ diện trong cả hàng — khắc chế Worm tự nhân bản.' },
-    { id: 'gmail', img: 'img/pz-defense/plants/twinshooter.png', name: 'Gmail Lọc Thư Rác', cost: 110, cooldownFrames: 480,
-      hp: 100, type: 'shooter', dmg: 13, rateFrames: 58, projSpeed: 6, ring: '#c2402c',
+    { id: 'gmail', img: 'img/pz-defense/defenders/gmail.svg', name: 'Gmail Lọc Thư Rác', cost: 110, cooldownFrames: 480,
+      hp: 100, type: 'shooter', dmg: 13, rateFrames: 58, projSpeed: 6, ring: '#c2402c', relatedTopic: '5. Giao tiếp',
       immuneTo: 'hijack',
       desc: 'Bắn hạ bình thường, đồng thời lọc thư rác — mọi lá chắn cùng hàng MIỄN NHIỄM với "câu mồi" của Phishing.' },
-    { id: 'zoom', img: 'img/pz-defense/plants/timeleaf.png', name: 'Zoom Họp Khẩn', cost: 140, cooldownFrames: 720,
-      hp: 100, type: 'freeze', freezeFrames: 90, freezeIntervalFrames: 260, ring: '#2d8cff',
+    { id: 'zoom', img: 'img/pz-defense/defenders/zoom.svg', name: 'Zoom Họp Khẩn', cost: 140, cooldownFrames: 720,
+      hp: 100, type: 'freeze', freezeFrames: 90, freezeIntervalFrames: 260, ring: '#2d8cff', relatedTopic: '5. Giao tiếp',
       desc: 'Định kỳ triệu tập "họp khẩn" — đóng băng cả hàng vài giây, khắc chế Trùm Botnet triệu hồi & Logic Bomb hẹn giờ.' },
-    { id: 'copilot', img: 'img/pz-defense/plants/boosterbud.png', name: 'Copilot Trợ Lý', cost: 160, cooldownFrames: 660,
-      hp: 80, type: 'buff', buffDmgMult: 1.4, buffRateMult: 0.8, ring: '#6b57ff',
+    { id: 'copilot', img: 'img/pz-defense/defenders/copilot.svg', name: 'Copilot Trợ Lý', cost: 160, cooldownFrames: 660,
+      hp: 80, type: 'buff', buffDmgMult: 1.4, buffRateMult: 0.8, ring: '#6b57ff', relatedTopic: '4. Sáng tạo nội dung',
       desc: 'Không tự bắn — tăng sát thương & tốc độ bắn cho các lá chắn "bắn hạ" đứng cùng hàng.' },
-    { id: 'windows', img: 'img/pz-defense/plants/steelwall.png', name: 'Windows Tường Lửa', cost: 120, cooldownFrames: 900,
-      hp: 340, type: 'wall', regenPerTick: 1.2, ring: '#00adef',
+    { id: 'windows', img: 'img/pz-defense/defenders/windows.svg', name: 'Windows Tường Lửa', cost: 120, cooldownFrames: 900,
+      hp: 340, type: 'wall', regenPerTick: 1.2, ring: '#00adef', relatedTopic: '1. Căn bản về công nghệ',
       desc: 'Tường lửa hệ điều hành, tự hồi máu theo thời gian — chắc hơn Word, vẫn nhẹ hơn Vỏ Máy — trụ vững trước SQL Injection xuyên phá.' },
-    { id: 'extdrive', img: 'img/pz-defense/plants/repairflower.png', name: 'Ổ Cứng Sao Lưu', cost: 200, cooldownFrames: 960,
-      hp: 90, type: 'restore', healAmount: 14, healFrames: 220, ring: '#f5a623',
+    { id: 'extdrive', img: 'img/pz-defense/defenders/extdrive.svg', name: 'Ổ Cứng Sao Lưu', cost: 200, cooldownFrames: 960,
+      hp: 90, type: 'restore', healAmount: 14, healFrames: 220, ring: '#f5a623', relatedTopic: '3. Quản lý thông tin',
       desc: 'Định kỳ hồi máu Server & tự "giải khóa" các lá chắn đang bị Ransomware khóa cùng hàng — mô phỏng sao lưu định kỳ.' },
 
     // ── 6 linh vật PHẦN CỨNG bổ sung — cân bằng lại roster vốn thiên
@@ -103,31 +103,31 @@
     //    IC3 GS6 (thiết bị nhập/xuất, bộ xử lý, lưu trữ, vỏ máy...).
     //    Tái dùng các `type` cơ chế sẵn có (shooter/slow/scanner/aoe/
     //    generator/wall) — không cần đụng vào game-loop. ──
-    { id: 'keyboard', img: 'img/pz-defense/plants/cactus.png', name: 'Bàn Phím Gõ Lệnh', cost: 65, cooldownFrames: 300,
-      hp: 80, type: 'shooter', dmg: 7, rateFrames: 34, projSpeed: 7, ring: '#5a5a5a',
+    { id: 'keyboard', img: 'img/pz-defense/defenders/keyboard.svg', name: 'Bàn Phím Gõ Lệnh', cost: 65, cooldownFrames: 300,
+      hp: 80, type: 'shooter', dmg: 7, rateFrames: 34, projSpeed: 7, ring: '#5a5a5a', relatedTopic: '1. Căn bản về công nghệ',
       desc: 'Gõ lệnh liên tục, tốc độ bắn rất nhanh nhưng sát thương thấp — tỉa các tác nhân máu mỏng ngay từ đầu hàng.' },
-    { id: 'mouse', img: 'img/pz-defense/plants/magnetshroom.png', name: 'Chuột Khoanh Vùng', cost: 85, cooldownFrames: 420,
-      hp: 95, type: 'slow', slowFactor: 0.6, ring: '#c0c0c0',
+    { id: 'mouse', img: 'img/pz-defense/defenders/mouse.svg', name: 'Chuột Khoanh Vùng', cost: 85, cooldownFrames: 420,
+      hp: 95, type: 'slow', slowFactor: 0.6, ring: '#c0c0c0', relatedTopic: '1. Căn bản về công nghệ',
       desc: 'Rê chuột khoanh vùng chọn, làm chậm mọi tác nhân trong hàng — nhẹ tay hơn Teams nhưng rẻ hơn.' },
-    { id: 'printer', img: 'img/pz-defense/plants/solarshroom.png', name: 'Máy In Xuất Dữ Liệu', cost: 65, cooldownFrames: 360,
-      hp: 90, type: 'generator', genAmount: 16, genFrames: 145, ring: '#8d8d8d',
+    { id: 'printer', img: 'img/pz-defense/defenders/printer.svg', name: 'Máy In Xuất Dữ Liệu', cost: 65, cooldownFrames: 360,
+      hp: 90, type: 'generator', genAmount: 16, genFrames: 145, ring: '#8d8d8d', relatedTopic: '1. Căn bản về công nghệ',
       desc: 'Định kỳ "nảy" ra 1 cục Sun nhỏ tại chỗ (bấm để hứng) — sinh nhanh hơn Excel nhưng mỗi lần ít hơn, tổng sản lượng tương đương.' },
-    { id: 'monitor', img: 'img/pz-defense/plants/antivirusplant.png', name: 'Màn Hình Hiển Thị', cost: 135, cooldownFrames: 600,
-      hp: 95, type: 'scanner', ring: '#3aa0ff',
+    { id: 'monitor', img: 'img/pz-defense/defenders/monitor.svg', name: 'Màn Hình Hiển Thị', cost: 135, cooldownFrames: 600,
+      hp: 95, type: 'scanner', ring: '#3aa0ff', relatedTopic: '1. Căn bản về công nghệ',
       desc: 'Hiển thị rõ mọi hoạt động trong hàng, lộ diện Trojan ngụy trang / Spyware tàng hình / phá kháng dame của Rootkit — rẻ hơn Gemini, hiệu quả tương đương.' },
-    { id: 'cpu', img: 'img/pz-defense/plants/laserbean.png', name: 'CPU Xử Lý Đa Luồng', cost: 155, cooldownFrames: 660,
-      hp: 110, type: 'aoe', dmg: 8, rateFrames: 65, ring: '#00b7c3',
+    { id: 'cpu', img: 'img/pz-defense/defenders/cpu.svg', name: 'CPU Xử Lý Đa Luồng', cost: 155, cooldownFrames: 660,
+      hp: 110, type: 'aoe', dmg: 8, rateFrames: 65, ring: '#00b7c3', relatedTopic: '1. Căn bản về công nghệ',
       desc: 'Định kỳ xử lý & tỏa nhiệt, gây sát thương nhẹ cho TẤT CẢ tác nhân đang lộ diện trong cả hàng.' },
-    { id: 'tower', img: 'img/pz-defense/plants/tallnut.png', name: 'Vỏ Máy Bọc Thép', cost: 220, cooldownFrames: 1080,
-      hp: 460, type: 'wall', regenPerTick: 1.5, ring: '#2c2c2c',
+    { id: 'tower', img: 'img/pz-defense/defenders/tower.svg', name: 'Vỏ Máy Bọc Thép', cost: 220, cooldownFrames: 1080,
+      hp: 460, type: 'wall', regenPerTick: 1.5, ring: '#2c2c2c', relatedTopic: '1. Căn bản về công nghệ',
       desc: 'Case máy tính chắc chắn, tự "tản nhiệt" hồi máu theo thời gian — tường thủ TRÂU NHẤT trong 3 loại, đắt hơn cả Windows.' },
 
     // ── Linh vật NỔ dùng-1-lần (kiểu Cherry Bomb của PvZ gốc) — đặt
     //    xuống là kích hoạt ngòi nổ ngắn, dọn sạch 1 cụm rồi tự hủy;
     //    đổi lại hồi chiêu RẤT lâu. Dùng ảnh "Bomb Flower" (Plant
     //    reference) thay vì icon phần mềm/cứng lẫn emoji cũ. ──
-    { id: 'killswitch', img: 'img/pz-defense/plants/bombflower.png', name: 'Công Tắc Ngắt Khẩn', cost: 175, cooldownFrames: 1500,
-      hp: 40, type: 'bomb', fuseFrames: 45, blastDmg: 500, blastRadius: 130, ring: '#ff5252',
+    { id: 'killswitch', img: 'img/pz-defense/defenders/killswitch.svg', name: 'Công Tắc Ngắt Khẩn', cost: 175, cooldownFrames: 1500,
+      hp: 40, type: 'bomb', fuseFrames: 45, blastDmg: 500, blastRadius: 130, ring: '#ff5252', relatedTopic: '7. An toàn và bảo mật',
       desc: 'Đặt xuống là kích nổ gần như ngay lập tức, gây sát thương cực lớn quanh vị trí đặt rồi tự hủy — dùng 1 lần, hồi chiêu rất lâu.' }
   ];
   var DEF_BY_ID = {};
@@ -137,62 +137,62 @@
   //    phản ánh đúng hành vi thật (xem pz-defense-design.md §1) ──
   var ZOMBIE_TYPES = [
     { id: 'worm', img: 'img/pz-defense/zom_worm.png', name: 'Worm', hp: 55, speed: 0.75,
-      dmgToDef: 0.42, breachDmg: 8, reward: 3, mechanic: 'split',
+      dmgToDef: 0.42, breachDmg: 8, reward: 3, relatedTopic: '7. An toàn và bảo mật', mechanic: 'split',
       splitHpFactor: 0.45, splitCount: 2,
       tip: 'Worm tự lây lan mà không cần bạn mở file nào.' },
 
     { id: 'virus', img: 'img/pz-defense/zom_virus.png', name: 'Virus Lây Lan', hp: 45, speed: 1.0,
-      dmgToDef: 0.35, breachDmg: 6, reward: 3, mechanic: 'infect',
+      dmgToDef: 0.35, breachDmg: 6, reward: 3, relatedTopic: '7. An toàn và bảo mật', mechanic: 'infect',
       auraRadius: 70, buffMult: 1.35,
       tip: 'Virus cần 1 file/vật chủ để phát tán — khác Worm ở chỗ đó.' },
 
     { id: 'trojan', img: 'img/pz-defense/zom_trojan.png', name: 'Trojan Ẩn Danh', hp: 120, speed: 0.55,
-      dmgToDef: 0.6, breachDmg: 14, reward: 4, mechanic: 'disguise',
+      dmgToDef: 0.6, breachDmg: 14, reward: 4, relatedTopic: '7. An toàn và bảo mật', mechanic: 'disguise',
       revealAfterCols: 2,
       tip: 'Trojan trông vô hại — luôn kiểm tra nguồn trước khi cài phần mềm lạ.' },
 
     { id: 'adware', img: 'img/pz-defense/zom_adware.png', name: 'Adware', hp: 26, speed: 0.85,
-      dmgToDef: 0, breachDmg: 3, reward: 2, mechanic: 'debuff-lane',
+      dmgToDef: 0, breachDmg: 3, reward: 2, relatedTopic: '7. An toàn và bảo mật', mechanic: 'debuff-lane',
       laneRateMult: 1.7,
       tip: 'Adware gây phiền nhưng thường không đánh cắp dữ liệu trực tiếp.' },
 
     { id: 'spyware', img: 'img/pz-defense/zom_spyware.png', name: 'Spyware', hp: 40, speed: 0.8,
-      dmgToDef: 0.3, breachDmg: 0, reward: 5, mechanic: 'stealth',
+      dmgToDef: 0.3, breachDmg: 0, reward: 5, relatedTopic: '7. An toàn và bảo mật', mechanic: 'stealth',
       stealAmount: 26,
       tip: 'Spyware âm thầm theo dõi — antivirus + tường lửa giúp phát hiện sớm.' },
 
     { id: 'ransom', img: 'img/pz-defense/zom_ransom.png', name: 'Ransomware', hp: 230, speed: 0.4,
-      dmgToDef: 1.0, breachDmg: 22, reward: 6, mechanic: 'lock',
+      dmgToDef: 1.0, breachDmg: 22, reward: 6, relatedTopic: '7. An toàn và bảo mật', mechanic: 'lock',
       lockChance: 0.4, lockFrames: 110,
       tip: 'Ransomware khóa dữ liệu để đòi tiền — sao lưu định kỳ là cách phòng thủ tốt nhất.' },
 
     { id: 'phishing', img: 'img/pz-defense/zom_phishing.png', name: 'Phishing', hp: 50, speed: 0.7,
-      dmgToDef: 0.5, breachDmg: 10, reward: 4, mechanic: 'hijack',
+      dmgToDef: 0.5, breachDmg: 10, reward: 4, relatedTopic: '7. An toàn và bảo mật', mechanic: 'hijack',
       hijackFrames: 260,
       tip: 'Phishing khai thác SỰ CHỦ QUAN của con người, không phải lỗ hổng kỹ thuật.' },
 
     { id: 'rootkit', img: 'img/pz-defense/zom_rootkit.png', name: 'Rootkit', hp: 150, speed: 0.5,
-      dmgToDef: 0.55, breachDmg: 16, reward: 6, mechanic: 'resist',
+      dmgToDef: 0.55, breachDmg: 16, reward: 6, relatedTopic: '7. An toàn và bảo mật', mechanic: 'resist',
       resistHitsNeeded: 5, resistDmgMult: 0.4,
       tip: 'Rootkit ẩn sâu tới mức đôi khi phải cài lại hệ điều hành mới gỡ hết.' },
 
     { id: 'logicbomb', img: 'img/pz-defense/zom_logicbomb.png', name: 'Logic Bomb', hp: 140, speed: 0.45,
-      dmgToDef: 0.5, breachDmg: 18, reward: 7, mechanic: 'timed-bomb',
+      dmgToDef: 0.5, breachDmg: 18, reward: 7, relatedTopic: '7. An toàn và bảo mật', mechanic: 'timed-bomb',
       fuseFrames: 430, blastDmg: 110, blastRadius: 95,
       tip: 'Logic Bomb có thể nằm im hàng tháng trước khi kích hoạt theo điều kiện định sẵn.' },
 
     { id: 'sqlinjection', img: 'img/pz-defense/zom_sqlinjection.png', name: 'SQL Injection', hp: 65, speed: 0.6,
-      dmgToDef: 0.5, breachDmg: 12, reward: 5, mechanic: 'pierce',
+      dmgToDef: 0.5, breachDmg: 12, reward: 5, relatedTopic: '7. An toàn và bảo mật', mechanic: 'pierce',
       pierceDmgMult: 0.55,
       tip: 'SQL Injection khai thác ô nhập liệu không được kiểm tra kỹ (input validation).' },
 
     { id: 'boss', img: 'img/pz-defense/zom_botnet.png', name: 'Trùm Botnet', hp: 950, speed: 0.28,
-      dmgToDef: 1.8, breachDmg: 40, reward: 25, mechanic: 'summon',
+      dmgToDef: 1.8, breachDmg: 40, reward: 25, relatedTopic: '7. An toàn và bảo mật', mechanic: 'summon',
       summonFrames: 260, summonId: 'worm', summonCount: 2,
       tip: 'Botnet là mạng lưới máy đã nhiễm bị điều khiển từ xa để tấn công đồng loạt.' },
 
     { id: 'ddos', img: 'img/pz-defense/zom_ddos.png', name: 'DDoS', hp: 16, speed: 0.9,
-      dmgToDef: 0.2, breachDmg: 4, reward: 2, mechanic: 'flood',
+      dmgToDef: 0.2, breachDmg: 4, reward: 2, relatedTopic: '7. An toàn và bảo mật', mechanic: 'flood',
       tip: 'DDoS làm sập dịch vụ bằng LƯU LƯỢNG chứ không cần khai thác lỗ hổng nào.' }
   ];
   var ZOMBIE_BY_ID = {};
@@ -309,6 +309,7 @@
   var skySunTimer = 0;
   var spawnQueue = [], spawnedIdx = 0, spawnTimer = 0, spawnGap = 60;
   var gameOver = false, victory = false;
+  var sessionStartedAtMs = 0; // (Phase 3+) mốc bắt đầu ván, để tính durationSec khi ghi game_sessions
 
   var occ = [];             // occ[row][col] = defender | null
   var defenders = [], zombies = [], projectiles = [];
@@ -372,9 +373,11 @@
     DEF_TYPES.forEach(function (t) { cooldowns[t.id] = 0; });
     selectedDefId = null; hoverCell = null;
     resetOcc();
+    closeUpgradePanel(); // (Phase 9) đóng panel nâng cấp nếu đang mở từ ván trước
     updateHUD();
     hideOverlay();
     frameAcc = 0;
+    sessionStartedAtMs = Date.now();
     // Mỗi ván mới (kể cả bấm "Chơi lại") đều phải chọn lại đội hình
     // 7 linh vật trước khi trận thật sự chạy — xem showLoadoutOverlay.
     loadoutConfirmed = false;
@@ -431,6 +434,7 @@
       }
     }
     render();
+    if (upgradeTargetId) renderUpgradePanel(); // (Phase 9) cập nhật sống HP bar + tự đóng nếu lá chắn đã chết
     requestAnimationFrame(step);
   }
 
@@ -956,6 +960,40 @@
       showOverlay('💥', '💥 Server Đã Bị Xâm Nhập!', 'Đội phòng thủ đã bị áp đảo ở đợt ' + Math.min(waveIdx + 1, TOTAL_WAVES) + '/' + TOTAL_WAVES + '.', statsText);
     }
     updateHUD();
+    recordSessionIfPossible(win);
+  }
+
+  /**
+   * (Phase 3/4) Ghi 1 lượt chơi vào js/gamification.js § recordGameSession
+   * — cộng XP cục bộ NGAY LẬP TỨC (không cần mạng) + đồng bộ phụ lên
+   * Firestore nếu trang có nạp đủ script (xem cuối pz-defense.html).
+   * Im lặng bỏ qua nếu thiếu EduGamification hoặc chưa chọn học sinh nào
+   * ở lobby (localStorage "eduquiz_current_student") — KHÔNG được làm
+   * hỏng màn hình kết quả game vì thiếu thông tin phụ này.
+   */
+  function recordSessionIfPossible(win) {
+    try {
+      if (typeof EduGamification === 'undefined' || !EduGamification.recordGameSession) return;
+      var student = null;
+      try { student = JSON.parse(localStorage.getItem('eduquiz_current_student') || 'null'); }
+      catch (e) { student = null; }
+      if (!student || !student.name || !student.class) return; // chưa chọn học sinh ở lobby — bỏ qua, không ghi ẩn danh
+
+      var scorePct = win ? 100 : Math.round((wavesCleared / TOTAL_WAVES) * 100);
+      EduGamification.recordGameSession('pz-defense', {
+        score: scorePct,
+        scoreType: 'percent',
+        accuracy: null,
+        correctAnswers: null,
+        wrongAnswers: null,
+        topic: 'Cybersecurity',
+        difficulty: null,
+        durationSec: Math.max(0, Math.round((Date.now() - sessionStartedAtMs) / 1000)),
+        studentName: student.name,
+        studentClass: student.class,
+        studentSchool: student.school || '',
+      });
+    } catch (e) { /* ghi XP là phụ — không được làm hỏng trải nghiệm xem kết quả game */ }
   }
 
   // ── Đặt lá chắn / xác minh Phishing ──
@@ -967,6 +1005,13 @@
     if (!selectedDefId && existing && existing.hijacked && !existing.verified) {
       existing.verified = true;
       showToast('✅ Đã xác minh — lá chắn hoạt động trở lại!', 1600);
+      return;
+    }
+
+    // (Phase 9) Bấm vào 1 lá chắn ĐÃ ĐẶT, còn sống, không bị hijack,
+    // và KHÔNG đang chọn shop → mở panel nâng cấp thay vì báo lỗi.
+    if (!selectedDefId && existing && existing.alive) {
+      openUpgradePanel(existing);
       return;
     }
 
@@ -991,7 +1036,8 @@
       shootCooldown: Math.round((type.rateFrames || 0) * 0.4),
       fuseTimer: type.fuseFrames != null ? type.fuseFrames : null,
       stunned: false, stunTimer: 0,
-      hijacked: false, verified: false, hijackTimer: 0
+      hijacked: false, verified: false, hijackTimer: 0,
+      level: 1 // (Phase 9 — Cyber Tower Defense) mọi lá chắn bắt đầu ở Lv1/MAX_UPGRADE_LEVEL
     };
     defenders.push(d);
     occ[row][col] = d;
@@ -999,6 +1045,87 @@
     refreshShopAffordability();
     buildShopUI();
     updateHUD();
+  }
+
+  // ── (Phase 9 — Cyber Tower Defense) Nâng cấp lá chắn đã đặt ──
+  // Mỗi lá chắn có thể nâng lên tối đa MAX_UPGRADE_LEVEL. Nâng cấp
+  // KHÔNG đổi cơ chế tấn công/hiệu ứng riêng của từng loại (giữ đúng
+  // cân bằng game đã có từ Phase 4) — chỉ tăng độ bền (HP tối đa,
+  // hồi máu theo đúng tỉ lệ HP hiện tại) để lá chắn "quen việc" trụ
+  // vững hơn qua thời gian, đúng tinh thần "level/upgrade" mục 9 yêu
+  // cầu gốc. Ở Lv tối đa, mở khoá hiển thị mô tả kiến thức IC3 đầy đủ
+  // của lá chắn (đúng field `desc` đã có sẵn từ Phase 4) như một
+  // "specialAbility" được "mở khoá" — không bịa thêm cơ chế chiến đấu
+  // mới để tránh phá cân bằng đã test kỹ ở các phase trước.
+  var MAX_UPGRADE_LEVEL = 3;
+  var upgradeTargetId = null; // id (theo vị trí row/col) của lá chắn đang mở panel nâng cấp — dùng row/col vì defender không có id riêng
+
+  function upgradeCost(defender) {
+    return Math.round(defender.type.cost * 0.6 * defender.level);
+  }
+
+  function canUpgrade(defender) {
+    return defender.level < MAX_UPGRADE_LEVEL;
+  }
+
+  function doUpgrade(defender) {
+    if (!canUpgrade(defender)) return false;
+    var cost = upgradeCost(defender);
+    if (data < cost) { showToast('💾 Không đủ Dữ liệu để nâng cấp — cần ' + cost + '.', 1600); return false; }
+    data -= cost;
+    var hpRatio = defender.hp / defender.maxHp;
+    defender.level += 1;
+    defender.maxHp = Math.round(defender.type.hp * (1 + 0.25 * (defender.level - 1)));
+    defender.hp = Math.round(defender.maxHp * hpRatio); // giữ nguyên % máu hiện tại, không auto-hồi đầy (không "ăn gian")
+    updateHUD();
+    return true;
+  }
+
+  function findDefenderAt(col, row) {
+    return (occ[row] && occ[row][col]) || null;
+  }
+
+  function openUpgradePanel(defender) {
+    upgradeTargetId = { row: defender.row, col: defender.col };
+    renderUpgradePanel();
+  }
+
+  function closeUpgradePanel() {
+    upgradeTargetId = null;
+    if (els.upgradePanel) els.upgradePanel.hidden = true;
+  }
+
+  function currentUpgradeTarget() {
+    if (!upgradeTargetId) return null;
+    var d2 = findDefenderAt(upgradeTargetId.col, upgradeTargetId.row);
+    return (d2 && d2.alive) ? d2 : null;
+  }
+
+  function renderUpgradePanel() {
+    var d2 = currentUpgradeTarget();
+    if (!d2 || !els.upgradePanel) { closeUpgradePanel(); return; }
+    els.upgradePanel.hidden = false;
+    els.upgradeName.textContent = d2.type.name;
+    els.upgradeLevel.textContent = '⭐ Cấp ' + d2.level + '/' + MAX_UPGRADE_LEVEL;
+    var pct = Math.max(0, Math.min(100, Math.round((d2.hp / d2.maxHp) * 100)));
+    els.upgradeHpFill.style.width = pct + '%';
+
+    if (canUpgrade(d2)) {
+      var cost = upgradeCost(d2);
+      els.upgradeDesc.textContent = d2.type.desc || '';
+      els.upgradeActionBtn.textContent = '⬆️ Nâng cấp: ' + cost + ' 💾';
+      els.upgradeActionBtn.disabled = data < cost;
+      els.upgradeActionBtn.classList.remove('is-maxed');
+      els.upgradeActionBtn.onclick = function () {
+        if (doUpgrade(d2)) renderUpgradePanel();
+      };
+    } else {
+      els.upgradeDesc.textContent = '🔓 Kiến thức đã mở khoá: ' + (d2.type.desc || '');
+      els.upgradeActionBtn.textContent = '⭐ Đã đạt cấp tối đa';
+      els.upgradeActionBtn.disabled = true;
+      els.upgradeActionBtn.classList.add('is-maxed');
+      els.upgradeActionBtn.onclick = null;
+    }
   }
 
   // ── Vẽ ──
@@ -1508,7 +1635,15 @@
     els.loadoutGrid = $('pzLoadoutGrid');
     els.loadoutCount = $('pzLoadoutCount');
     els.loadoutStartBtn = $('pzLoadoutStartBtn');
+    els.upgradePanel = $('pzUpgradePanel');
+    els.upgradeCloseBtn = $('pzUpgradeCloseBtn');
+    els.upgradeName = $('pzUpgradeName');
+    els.upgradeLevel = $('pzUpgradeLevel');
+    els.upgradeHpFill = $('pzUpgradeHpFill');
+    els.upgradeDesc = $('pzUpgradeDesc');
+    els.upgradeActionBtn = $('pzUpgradeActionBtn');
     if (els.loadoutStartBtn) els.loadoutStartBtn.addEventListener('click', confirmLoadout);
+    if (els.upgradeCloseBtn) els.upgradeCloseBtn.addEventListener('click', closeUpgradePanel);
 
     setupCanvas();
     window.addEventListener('resize', setupCanvas);

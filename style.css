@@ -1449,6 +1449,13 @@ body {
 
 /* ── Câu "hotspot" — bấm trực tiếp lên (các) vị trí đúng trên ảnh ── */
 .hotspot-wrap {
+  /* box-sizing: content-box (khác reset mặc định *{box-sizing:border-box}
+     ở đầu file) — BẮT BUỘC để border 2px KHÔNG bị tính vào width/height
+     mà fitHotspotStage() gán bằng JS. Nếu để border-box, viền ăn vào
+     4px mỗi chiều ⇒ ảnh bên trong co lại lệch tỉ lệ khung hình gốc
+     ⇒ toạ độ % của các vùng hotspot-area (đặt theo đúng ảnh gốc trong
+     hotspot-editor) không còn khớp vị trí thật trên ảnh hiển thị. */
+  box-sizing: content-box;
   position: relative;
   width: 100%;              /* fallback trước khi JS đo xong */
   max-width: 100%;
@@ -1605,6 +1612,207 @@ body {
   font-size:1.1rem; padding:0 .25rem; opacity:.6; transition:opacity .15s;
 }
 .match-pair-row .pair-remove:hover { opacity:1 }
+
+/* ══════════════════════════════════════════════
+   HINT LINE — dùng chung cho list/classify/ordering/fillblank
+   (đồng bộ với .match-hint để font-size/khoảng cách nhất quán
+   giữa mọi dạng câu hỏi)
+   ══════════════════════════════════════════════ */
+.q-hint-line {
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--yellow-lt);
+  border: 1.5px solid rgba(255,179,0,.25);
+  border-radius: var(--radius-sm);
+  padding: .55rem .9rem;
+  margin-bottom: .85rem;
+  line-height: 1.5;
+}
+
+/* ══════════════════════════════════════════════
+   LIST  (type = "list") — nhiều dòng, mỗi dòng có bộ lựa chọn riêng
+   ══════════════════════════════════════════════ */
+.list-q-rows { display: flex; flex-direction: column; gap: .6rem }
+.list-q-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: .5rem 1rem;
+  padding: .9rem 1.1rem;
+  background: var(--card2);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color .15s, background .15s;
+}
+.list-q-text {
+  flex: 1 1 220px;
+  min-width: 0;
+  font-size: clamp(.95rem, 2.5vw, 1.05rem);
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--text);
+}
+.list-q-opts { display: flex; flex-wrap: wrap; gap: .5rem; flex-shrink: 0 }
+.list-opt-btn {
+  padding: .55rem 1.1rem;
+  min-width: 90px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--border);
+  background: var(--card);
+  color: var(--muted);
+  font-family: 'Baloo 2', sans-serif;
+  font-size: .95rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all .15s;
+}
+.list-opt-btn:hover { border-color: var(--purple); color: var(--purple); background: var(--purple-lt) }
+.list-opt-btn.selected {
+  border-color: var(--purple);
+  background: var(--purple-lt);
+  color: var(--purple);
+}
+
+/* ══════════════════════════════════════════════
+   CLASSIFY  (type = "classify") — kéo/nhấn thẻ vào đúng nhóm
+   ══════════════════════════════════════════════ */
+.classify-zones {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: .9rem;
+  margin-top: .9rem;
+}
+.classify-zone {
+  background: var(--card2);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: .9rem 1rem;
+  min-height: 110px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.classify-zone:hover { border-color: var(--purple); background: var(--purple-lt) }
+.classify-zone.drag-over { border-color: var(--purple); background: var(--purple-lt); border-style: solid }
+.classify-zone-title {
+  font-size: clamp(.9rem, 2.3vw, 1rem);
+  font-weight: 800;
+  color: var(--purple);
+  margin-bottom: .6rem;
+}
+.classify-zone-items { display: flex; flex-wrap: wrap; gap: .5rem }
+.classify-zone-chip {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .5rem .9rem;
+  background: var(--card);
+  border: 2px solid var(--purple);
+  border-radius: 100px;
+  font-size: .92rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.classify-zone-chip .slot-remove {
+  position: static;
+  background: none; border: none; color: var(--red); cursor: pointer;
+  font-size: .95rem; opacity: .7; transition: opacity .15s; line-height: 1;
+}
+.classify-zone-chip .slot-remove:hover { opacity: 1 }
+.classify-chip { /* kế thừa giao diện .drag-chip, không cần khai báo lại */ }
+
+/* ══════════════════════════════════════════════
+   ORDERING  (type = "ordering") — sắp xếp bằng nút mũi tên
+   ══════════════════════════════════════════════ */
+.ordering-list { display: flex; flex-direction: column; gap: .6rem }
+.ordering-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: .9rem 1.1rem;
+  background: var(--card2);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color .15s;
+}
+.ordering-num {
+  flex-shrink: 0;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--purple-lt);
+  color: var(--purple);
+  font-family: 'Space Mono', monospace;
+  font-size: .9rem;
+  font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+.ordering-text {
+  flex: 1;
+  min-width: 0;
+  font-size: clamp(.95rem, 2.5vw, 1.05rem);
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--text);
+}
+.ordering-arrows { display: flex; gap: .4rem; flex-shrink: 0 }
+.ordering-arrow-btn {
+  width: 38px; height: 38px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--border);
+  background: var(--card);
+  color: var(--muted);
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all .15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.ordering-arrow-btn:hover:not(:disabled) { border-color: var(--purple); color: var(--purple); background: var(--purple-lt) }
+.ordering-arrow-btn:disabled { opacity: .3; cursor: not-allowed }
+
+/* ══════════════════════════════════════════════
+   FILL-BLANK  (type = "dragfill" | "selectfill")
+   ══════════════════════════════════════════════ */
+.fillblank-passage {
+  font-size: clamp(.95rem, 2.5vw, 1.05rem);
+  font-weight: 600;
+  line-height: 2.1;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+.fillblank-slot {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  min-width: 110px;
+  padding: .3rem .7rem;
+  margin: 0 .2rem;
+  border-radius: var(--radius-sm);
+  border: 2px dashed var(--border);
+  background: var(--card2);
+  font-weight: 700;
+  color: var(--purple);
+  vertical-align: middle;
+  transition: all .15s;
+}
+.fillblank-slot.filled { border-style: solid; border-color: var(--purple); background: var(--purple-lt) }
+.fillblank-slot.empty-hint { color: var(--muted); font-weight: 600; cursor: pointer }
+.fillblank-slot.empty-hint:hover { border-color: var(--purple); background: var(--purple-lt) }
+.fillblank-slot .slot-remove {
+  background: none; border: none; color: var(--red); cursor: pointer;
+  font-size: .92rem; opacity: .7; transition: opacity .15s; line-height: 1;
+}
+.fillblank-slot .slot-remove:hover { opacity: 1 }
+.fillblank-select {
+  border: none;
+  background: transparent;
+  color: var(--purple);
+  font-family: 'Baloo 2', sans-serif;
+  font-size: .98rem;
+  font-weight: 800;
+  cursor: pointer;
+  outline: none;
+  max-width: 220px;
+}
 
 /* ══════════════════════════════════════════════
    NAV BUTTONS
@@ -2030,6 +2238,16 @@ body {
   .match-row { padding: .55rem .65rem }
   .match-row .match-drop-slot { flex: 1 1 100%; max-width: 100%; margin-top: .1rem }
   .theme-toggle { top: 10px; right: 10px; width: 38px; height: 38px; font-size: 1rem }
+
+  /* List / Classify / Ordering / Fill-blank — xếp dọc, chữ đủ to trên điện thoại */
+  .list-q-row { flex-direction: column; align-items: stretch; padding: .8rem .9rem }
+  .list-q-opts { width: 100% }
+  .list-opt-btn { flex: 1; min-width: 0 }
+  .classify-zones { grid-template-columns: 1fr }
+  .ordering-row { padding: .75rem .85rem; gap: .7rem }
+  .ordering-num { width: 28px; height: 28px; font-size: .82rem }
+  .ordering-arrow-btn { width: 34px; height: 34px }
+  .fillblank-slot { min-width: 90px; padding: .25rem .55rem }
 }
 
 /* ══════════════════════════════════════════════
@@ -2284,7 +2502,7 @@ body {
   min-height: 1.2em;
 }
 
-.game-zone-modal { width: min(560px, 100%); height: auto; max-height: 92vh; }
+.game-zone-modal { width: min(760px, 100%); height: auto; max-height: 92vh; }
 
 .game-zone-locked {
   padding: 34px 26px 30px;
@@ -2317,6 +2535,15 @@ body {
 }
 
 .game-zone-unlocked { padding: 20px 22px 26px; }
+.game-hub-kicker {
+  text-align: center;
+  font-size: .7rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--purple, #7c8bff);
+  margin-bottom: 4px;
+}
 .game-zone-unlocked-desc {
   font-size: .84rem;
   color: rgba(244,238,230,.8);
@@ -2325,22 +2552,24 @@ body {
 }
 .game-zone-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 12px;
 }
+/* Card giàu thông tin: icon + tên + mô tả ngắn + nhãn trạng thái.
+   Vẫn là <button> có id gốc cho 5 game hiện có (js/*-modal.js không
+   đổi gì); 3 card "sắp ra mắt" là <div aria-disabled> tĩnh, không có
+   id nên không nút *-modal.js nào tình cờ khớp phải. */
 .game-zone-tile {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 18px 10px;
+  gap: 6px;
+  padding: 16px 12px 14px;
   border-radius: 16px;
   border: 1px solid rgba(244,238,230,.16);
   background: rgba(244,238,230,.05);
   color: #f4eee6;
   font-family: 'Baloo 2', sans-serif;
-  font-weight: 700;
-  font-size: .82rem;
   cursor: pointer;
   transition: var(--transition);
   text-align: center;
@@ -2351,6 +2580,40 @@ body {
   border-color: rgba(244,238,230,.3);
 }
 .game-zone-tile-emoji { font-size: 1.7rem; line-height: 1; }
+.game-zone-tile-name { font-weight: 700; font-size: .86rem; }
+.game-zone-tile-desc {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: .72rem;
+  line-height: 1.35;
+  color: rgba(244,238,230,.68);
+}
+.game-zone-tile-tag {
+  margin-top: 4px;
+  font-family: 'Inter', sans-serif;
+  font-size: .66rem;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(124,139,255,.16);
+  color: var(--purple, #7c8bff);
+}
+
+/* Card "sắp ra mắt": không tương tác được, không thay đổi state khi
+   hover, phân biệt rõ với 5 game chơi được ngay. */
+.game-zone-tile.is-comingsoon {
+  cursor: default;
+  opacity: .55;
+}
+.game-zone-tile.is-comingsoon:hover {
+  transform: none;
+  background: rgba(244,238,230,.05);
+  border-color: rgba(244,238,230,.16);
+}
+.game-zone-tile-tag.is-soon {
+  background: rgba(148,155,178,.18);
+  color: var(--muted, #949bb2);
+}
 
 @media (max-width: 480px) {
   .game-zone-grid { grid-template-columns: repeat(2, 1fr); }

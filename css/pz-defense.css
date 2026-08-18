@@ -208,6 +208,42 @@ body.pz-body {
 }
 .pz-toast.show { opacity: 1; transform: translate(-50%, 0); }
 
+/* ── (Phase 9) Panel nâng cấp lá chắn ── */
+.pz-upgrade-panel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 190px;
+  background: rgba(14,16,36,.95);
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 14px;
+  padding: 12px 12px 10px;
+  z-index: 3;
+  font-family: 'Baloo 2', sans-serif;
+  color: #f4eee6;
+  box-shadow: 0 8px 24px rgba(0,0,0,.4);
+}
+.pz-upgrade-panel[hidden] { display: none; }
+.pz-upgrade-close {
+  position: absolute;
+  top: 6px; right: 8px;
+  background: none;
+  border: none;
+  color: #9aa1c2;
+  font-size: .8rem;
+  cursor: pointer;
+  padding: 2px;
+}
+.pz-upgrade-close:hover { color: #f4eee6; }
+.pz-upgrade-name { font-weight: 800; font-size: .82rem; padding-right: 14px; margin-bottom: 2px; }
+.pz-upgrade-level { font-size: .68rem; color: #ffcf80; font-weight: 700; margin-bottom: 6px; }
+.pz-upgrade-hpbar { height: 8px; border-radius: 999px; background: rgba(0,0,0,.4); overflow: hidden; margin-bottom: 6px; }
+.pz-upgrade-hpfill { height: 100%; background: linear-gradient(90deg, #4fd67a, #17b3a3); border-radius: 999px; transition: width .25s; }
+.pz-upgrade-desc { font-size: .64rem; line-height: 1.4; color: #b7bdd6; margin-bottom: 8px; min-height: 2.6em; }
+.pz-upgrade-btn { width: 100%; padding: 7px 8px; font-size: .7rem; }
+.pz-upgrade-btn:disabled { opacity: .45; cursor: not-allowed; filter: none; transform: none; }
+.pz-upgrade-btn.is-maxed { background: linear-gradient(90deg, #ffcf80, #ff8a3d); color: #1a1200; cursor: default; }
+
 /* ── Overlay thắng / thua ── */
 .pz-overlay {
   position: absolute;

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚔ Battle Quiz — Mini Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/battle-quiz.css">
+</head>
+<body class="bq-body">
+
+  <!-- Trang này được nhúng qua modal (js/battle-quiz-modal.js), cùng pattern
+       với pz-defense.html / billiards.html — chỉ chứa đúng 1 mini-game độc
+       lập, không đụng vào quiz-engine.js / gamification.js.
+       Cơ chế (theo đúng mục 12 yêu cầu gốc "Battle Quiz"): Player vs AI —
+       mỗi câu trả lời ĐÚNG = tấn công AI, trả lời SAI/hết giờ = AI phản
+       công. Combo 3 câu đúng liên tiếp = Combo Attack (dmg cao hơn), combo
+       5 = Critical, combo 10 = Ultimate. Ai về 0 HP trước thì thua.
+       KHÔNG tạo Question Engine mới — câu hỏi đọc trực tiếp từ Firestore
+       collection "questions" (giống image-manager.html), lọc theo chủ đề
+       qua js/game-engine/question-topic-map.js; nếu Firestore lỗi/offline,
+       tự rơi về đọc quiz_data.json tĩnh (đúng fallback mà index.html/
+       quiz-engine.js đã dùng). Chỉ dùng câu hỏi type "single" (câu hỏi 1
+       đáp án đúng) — phù hợp nhất với nhịp độ "trả lời nhanh, đúng/sai rõ
+       ràng" của thể loại battle, không cần dựng lại renderer cho matching/
+       hotspot/truefalse (vốn đã có sẵn trong quiz-engine.js cho trang thi
+       thật). -->
+
+  <div class="bq-wrap">
+
+    <!-- ============ TOPBAR: tiêu đề + HUD ============ -->
+    <div class="bq-topbar">
+      <div class="bq-header">
+        <div class="bq-title">⚔ Battle Quiz</div>
+        <div class="bq-subtitle">Trả lời đúng để tấn công — trả lời sai hoặc hết giờ, đối thủ sẽ phản công!</div>
+      </div>
+      <div class="bq-hud">
+        <div class="bq-hud-chip" title="Điểm số">🏆 <span id="bqScore">0</span></div>
+        <div class="bq-hud-chip" title="Combo hiện tại">🔥 Combo <span id="bqCombo">0</span></div>
+        <div class="bq-hud-chip" title="XP đã tích luỹ ván này">⭐ <span id="bqXp">0</span> XP</div>
+        <button type="button" class="bq-restart-btn" id="bqRestartBtn" title="Chơi lại từ đầu">🔄 Chơi lại</button>
+      </div>
+    </div>
+
+    <!-- ============ ARENA: 2 thanh HP + avatar ============ -->
+    <div class="bq-arena">
+      <div class="bq-fighter bq-fighter-player">
+        <div class="bq-fighter-avatar">🧑‍💻</div>
+        <div class="bq-fighter-info">
+          <div class="bq-fighter-name">Bạn</div>
+          <div class="bq-hpbar"><div class="bq-hpbar-fill" id="bqPlayerHpFill"></div></div>
+          <div class="bq-hp-text"><span id="bqPlayerHpText">100</span>/100</div>
+        </div>
+      </div>
+      <div class="bq-vs">VS</div>
+      <div class="bq-fighter bq-fighter-enemy">
+        <div class="bq-fighter-info bq-fighter-info-right">
+          <div class="bq-fighter-name">AI Thử Thách</div>
+          <div class="bq-hpbar"><div class="bq-hpbar-fill bq-hpbar-fill-enemy" id="bqEnemyHpFill"></div></div>
+          <div class="bq-hp-text"><span id="bqEnemyHpText">100</span>/100</div>
+        </div>
+        <div class="bq-fighter-avatar"><img src="img/pz-defense/zom_botnet.png" alt="AI Thử Thách" class="bq-enemy-img"></div>
+      </div>
+      <div class="bq-floater-layer" id="bqFloaterLayer"></div>
+    </div>
+
+    <!-- ============ CÂU HỎI ============ -->
+    <div class="bq-question-panel">
+      <div class="bq-timerbar"><div class="bq-timerbar-fill" id="bqTimerFill"></div></div>
+      <div class="bq-question-text" id="bqQuestionText">Đang tải câu hỏi…</div>
+      <div class="bq-options" id="bqOptions"></div>
+    </div>
+
+    <!-- ============ MÀN CHỌN CHỦ ĐỀ (trước khi bắt đầu) ============ -->
+    <div class="bq-overlay" id="bqTopicOverlay">
+      <div class="bq-overlay-card">
+        <div class="bq-overlay-icon">⚔</div>
+        <div class="bq-overlay-title">Chọn chủ đề để đấu</div>
+        <div class="bq-overlay-desc">Chọn 1 chủ đề IC3 để tập trung ôn luyện, hoặc chơi tổng hợp ngẫu nhiên.</div>
+        <div class="bq-topic-grid" id="bqTopicGrid"><!-- điền động bằng JS --></div>
+      </div>
+    </div>
+
+    <!-- ============ MÀN KẾT QUẢ ============ -->
+    <div class="bq-overlay" id="bqResultOverlay" hidden>
+      <div class="bq-overlay-card">
+        <div class="bq-overlay-icon" id="bqResultIcon">🏆</div>
+        <div class="bq-overlay-title" id="bqResultTitle">Chiến Thắng!</div>
+        <div class="bq-overlay-desc" id="bqResultStats"></div>
+        <div class="bq-overlay-actions">
+          <button type="button" class="bq-btn bq-btn-primary" id="bqPlayAgainBtn">🔄 Chơi lại</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- (Phase 3/4/6 — Game Hub) Ghi nhận lượt chơi để cộng XP + đồng bộ
+       Firestore đa thiết bị, giống hệt pz-defense.html. Không bắt buộc —
+       thiếu mạng/script vẫn chơi bình thường (xem guard trong battle-quiz.js). -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/repositories/base-repository.js"></script>
+  <script src="js/models/exam-history.model.js"></script>
+  <script src="js/models/game-session.model.js"></script>
+  <script src="js/repositories/game-session-repository.js"></script>
+  <script src="js/gamification.js"></script>
+  <script src="js/game-engine/question-topic-map.js"></script>
+
+  <script src="js/battle-quiz.js"></script>
+</body>
+</html>

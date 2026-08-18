@@ -76,6 +76,22 @@ match /learning_progress/{studentKey} {
   allow write: if isAdmin() || isCoordinator() || isApprovedTeacher();
 }
 
+// ---- (Phase 3/Game Hub) Lượt chơi mini-game — collection "game_sessions" ----
+match /game_sessions/{sessionId} {
+  // Ghi công khai giống quiz_results/student_answers hiện tại (học sinh
+  // chơi game KHÔNG đăng nhập) — ràng buộc tối thiểu chống giả mạo.
+  // Immutable: không có allow update — 1 lượt chơi ghi xong không sửa lại.
+  allow create: if
+    request.resource.data.gameId is string &&
+    request.resource.data.studentKey is string &&
+    request.resource.data.studentName is string &&
+    request.resource.data.studentClass is string &&
+    request.resource.data.xp is number &&
+    request.resource.data.playedAt == request.time;
+  allow read: if canViewReports();
+  allow update, delete: if isAdmin();
+}
+
 // ---- Nhật ký hoạt động (Audit Log) ----
 match /activity_logs/{logId} {
   // Bất kỳ ai đã đăng nhập đều được ghi log hành động CỦA CHÍNH MÌNH.

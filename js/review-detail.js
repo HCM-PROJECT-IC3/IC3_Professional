@@ -74,6 +74,19 @@ function _rdBuildDetailBody(d) {
     case 'hotspot':
       answerBlock = _rdHotspotBlock(r, d.imageUrl);
       break;
+    case 'list':
+      answerBlock = _rdListBlock(r);
+      break;
+    case 'classify':
+      answerBlock = _rdClassifyBlock(r);
+      break;
+    case 'ordering':
+      answerBlock = _rdOrderingBlock(r);
+      break;
+    case 'dragfill':
+    case 'selectfill':
+      answerBlock = _rdFillBlankBlock(r);
+      break;
   }
 
   const explanation = d.explanation
@@ -149,6 +162,78 @@ function _rdMatchingBlock(r) {
         </div>`;
       }).join('')}
     </div>`;
+}
+
+function _rdListBlock(r) {
+  const items = r.listItems || [];
+  const ua = r.userList || {};
+  return `
+    <div class="rd-tf-list">
+      ${items.map((it, j) => {
+        const userVal = ua[j];
+        const ok = userVal === it.correct;
+        return `<div class="rd-tf-row ${ok ? 'rd-ok' : 'rd-bad'}">
+          <span class="rd-tf-text">${_rdEsc(it.text)}</span>
+          <span class="rd-tf-ans">
+            ${ok ? '' : `<span class="rd-tf-user">${_rdEsc(userVal || '(chưa chọn)')}</span> →`}
+            <span class="rd-tf-correct">${_rdEsc(it.correct)}</span>
+          </span>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function _rdClassifyBlock(r) {
+  const items = r.classifyItems || [];
+  const ua = r.userClassify || {};
+  return `
+    <div class="rd-match-list">
+      ${items.map(it => {
+        const userZone = ua[it.text];
+        const ok = userZone === it.zone;
+        return `<div class="rd-match-row ${ok ? 'rd-ok' : 'rd-bad'}">
+          <span class="rd-match-left">${_rdEsc(it.text)}</span>
+          <span class="rd-match-arrow">→</span>
+          ${ok
+            ? `<span class="rd-match-correct">${_rdEsc(it.zone)}</span>`
+            : `<span class="rd-match-user">${_rdEsc(userZone || '(chưa phân loại)')}</span>
+               <span class="rd-match-correct">(đúng: ${_rdEsc(it.zone)})</span>`}
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function _rdOrderingBlock(r) {
+  const correctOrder = r.orderCorrect || [];
+  const userOrder = r.orderUser || [];
+  const ok = JSON.stringify(userOrder) === JSON.stringify(correctOrder);
+  return `
+    <div class="rd-ordering-cols">
+      <div>
+        <div class="rd-ordering-title">Thứ tự bạn chọn ${ok ? '✓' : '✗'}</div>
+        ${userOrder.map((t, j) => `<div class="rd-ordering-row ${ok ? 'rd-ok' : 'rd-bad'}">${j + 1}. ${_rdEsc(t)}</div>`).join('')}
+      </div>
+      ${ok ? '' : `<div>
+        <div class="rd-ordering-title">Thứ tự đúng</div>
+        ${correctOrder.map((t, j) => `<div class="rd-ordering-row rd-ok">${j + 1}. ${_rdEsc(t)}</div>`).join('')}
+      </div>`}
+    </div>`;
+}
+
+function _rdFillBlankBlock(r) {
+  const segments = r.segments || [];
+  const blanks = r.blanks || [];
+  const ua = r.userBlanks || {};
+  const passage = segments.map((seg, i) => {
+    if (i >= blanks.length) return _rdEsc(seg);
+    const userVal = ua[i];
+    const ok = userVal === blanks[i];
+    const blankHtml = ok
+      ? `<span class="rd-opt-mark" style="color:var(--accent5, #06d6a0);">${_rdEsc(blanks[i])}</span>`
+      : `<span class="rd-match-user">${_rdEsc(userVal || '(bỏ trống)')}</span> <span class="rd-match-correct">(đúng: ${_rdEsc(blanks[i])})</span>`;
+    return `${_rdEsc(seg)}${blankHtml}`;
+  }).join('');
+  return `<div class="rd-question" style="font-weight:500;">${passage}</div>`;
 }
 
 function _rdHotspotBlock(r, imageUrl) {

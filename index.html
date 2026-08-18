@@ -287,24 +287,66 @@
         <div class="game-zone-progress" id="gameZoneProgress"></div>
       </div>
 
-      <!-- Trạng thái MỞ: hiện lưới 5 mini-game khi đã đạt điều kiện -->
+      <!-- Trạng thái MỞ: hiện lưới mini-game khi đã đạt điều kiện.
+           ĐÂY LÀ "IC3 GAME HUB" — mỗi tile giữ NGUYÊN id cũ (để 5 file
+           js/*-modal.js hiện có tự tìm thấy nút của mình, không cần sửa
+           gì), chỉ giàu thông tin hơn: icon + tên + mô tả ngắn + nhãn.
+           Các card "🔜 Sắp ra mắt" là placeholder tĩnh (không có id
+           trùng với bất kỳ *-modal.js nào, disabled, không onclick) cho
+           game sẽ build ở phase sau (Battle Quiz, Cyber Detective,
+           Computer Simulator) — không load được gì ở bước này. -->
       <div class="game-zone-unlocked" id="gameZoneUnlocked">
+        <div class="game-hub-kicker">🎮 IC3 Game Hub</div>
         <p class="game-zone-unlocked-desc">🎉 Đã mở khóa — chọn 1 mini-game bên dưới để chơi!</p>
         <div class="game-zone-grid">
           <button type="button" class="game-zone-tile" id="openGameBtn" title="Chơi mini-game giải trí Prism Cascade">
-            <span class="game-zone-tile-emoji">🎮</span> Prism Cascade
+            <span class="game-zone-tile-emoji">🎮</span>
+            <span class="game-zone-tile-name">Prism Cascade</span>
+            <span class="game-zone-tile-desc">Match-3 giải trí ngắn giữa giờ ôn bài</span>
+            <span class="game-zone-tile-tag">Giải trí</span>
           </button>
           <button type="button" class="game-zone-tile" id="openMemoryGameBtn" title="Chơi mini-game Trí Nhớ Thiết Bị &amp; Phần Mềm">
-            <span class="game-zone-tile-emoji">🧠</span> Trí Nhớ Thiết Bị
+            <span class="game-zone-tile-emoji">🧠</span>
+            <span class="game-zone-tile-name">Trí Nhớ Thiết Bị</span>
+            <span class="game-zone-tile-desc">Lật thẻ ghép cặp thuật ngữ IC3</span>
+            <span class="game-zone-tile-tag">Kiến thức</span>
           </button>
           <button type="button" class="game-zone-tile" id="openSudokuBtn" title="Chơi mini-game Sudoku Trí Tuệ">
-            <span class="game-zone-tile-emoji">🧩</span> Sudoku Trí Tuệ
+            <span class="game-zone-tile-emoji">🧩</span>
+            <span class="game-zone-tile-name">Sudoku Trí Tuệ</span>
+            <span class="game-zone-tile-desc">Rèn tư duy logic, giải trí</span>
+            <span class="game-zone-tile-tag">Giải trí</span>
           </button>
           <button type="button" class="game-zone-tile" id="openBilliardsBtn" title="Chơi mini-game Bi-a Phần Mềm">
-            <span class="game-zone-tile-emoji">🎱</span> Bi-a Phần Mềm
+            <span class="game-zone-tile-emoji">🎱</span>
+            <span class="game-zone-tile-name">Bi-a Phần Mềm</span>
+            <span class="game-zone-tile-desc">Giải trí, thư giãn sau bài thi</span>
+            <span class="game-zone-tile-tag">Giải trí</span>
           </button>
           <button type="button" class="game-zone-tile" id="openPzDefenseBtn" title="Chơi mini-game Phòng Thủ Dữ Liệu">
-            <span class="game-zone-tile-emoji">🧟</span> Phòng Thủ Dữ Liệu
+            <span class="game-zone-tile-emoji">🧟</span>
+            <span class="game-zone-tile-name">Phòng Thủ Dữ Liệu</span>
+            <span class="game-zone-tile-desc">Chặn nguy cơ bằng kiến thức bảo mật IC3</span>
+            <span class="game-zone-tile-tag">Kiến thức</span>
+          </button>
+
+          <button type="button" class="game-zone-tile" id="openBattleQuizBtn" title="Chơi mini-game Battle Quiz">
+            <span class="game-zone-tile-emoji">⚔</span>
+            <span class="game-zone-tile-name">Battle Quiz</span>
+            <span class="game-zone-tile-desc">Đấu trả lời nhanh theo combo</span>
+            <span class="game-zone-tile-tag">Kiến thức</span>
+          </button>
+          <button type="button" class="game-zone-tile" id="openCyberDetectiveBtn" title="Chơi mini-game Cyber Detective">
+            <span class="game-zone-tile-emoji">🔎</span>
+            <span class="game-zone-tile-name">Cyber Detective</span>
+            <span class="game-zone-tile-desc">Điều tra tình huống mất an toàn thông tin</span>
+            <span class="game-zone-tile-tag">Kiến thức</span>
+          </button>
+          <button type="button" class="game-zone-tile" id="openComputerSimBtn" title="Chơi mini-game Computer Simulator">
+            <span class="game-zone-tile-emoji">💻</span>
+            <span class="game-zone-tile-name">Computer Simulator</span>
+            <span class="game-zone-tile-desc">Thực hành thao tác máy tính cơ bản</span>
+            <span class="game-zone-tile-tag">Kiến thức</span>
           </button>
         </div>
       </div>
@@ -416,6 +458,69 @@
     </div>
   </div>
 
+  <!-- ============ MINI-GAME "BATTLE QUIZ" (modal) — xem js/battle-quiz-modal.js ============ -->
+  <div class="game-modal-overlay" id="battleQuizModalOverlay">
+    <div class="game-modal">
+      <div class="game-modal-bar">
+        <span class="game-modal-title">⚔ Battle Quiz</span>
+        <button type="button" class="game-modal-close" id="closeBattleQuizModalBtn">✕ Đóng</button>
+      </div>
+      <div class="game-modal-frame">
+        <iframe
+          id="battleQuizModalFrame"
+          class="game-modal-iframe"
+          title="Mini-game Battle Quiz"
+          src="about:blank"
+          data-src="battle-quiz.html"
+          loading="lazy"
+          allow="fullscreen"
+        ></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MINI-GAME "CYBER DETECTIVE" (modal) — xem js/cyber-detective-modal.js ============ -->
+  <div class="game-modal-overlay" id="cyberDetectiveModalOverlay">
+    <div class="game-modal">
+      <div class="game-modal-bar">
+        <span class="game-modal-title">🔎 Cyber Detective</span>
+        <button type="button" class="game-modal-close" id="closeCyberDetectiveModalBtn">✕ Đóng</button>
+      </div>
+      <div class="game-modal-frame">
+        <iframe
+          id="cyberDetectiveModalFrame"
+          class="game-modal-iframe"
+          title="Mini-game Cyber Detective"
+          src="about:blank"
+          data-src="cyber-detective.html"
+          loading="lazy"
+          allow="fullscreen"
+        ></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MINI-GAME "COMPUTER SIMULATOR" (modal) — xem js/computer-simulator-modal.js ============ -->
+  <div class="game-modal-overlay" id="computerSimModalOverlay">
+    <div class="game-modal">
+      <div class="game-modal-bar">
+        <span class="game-modal-title">💻 Computer Simulator</span>
+        <button type="button" class="game-modal-close" id="closeComputerSimModalBtn">✕ Đóng</button>
+      </div>
+      <div class="game-modal-frame">
+        <iframe
+          id="computerSimModalFrame"
+          class="game-modal-iframe"
+          title="Mini-game Computer Simulator"
+          src="about:blank"
+          data-src="computer-simulator.html"
+          loading="lazy"
+          allow="fullscreen"
+        ></iframe>
+      </div>
+    </div>
+  </div>
+
   <script src="js/googleSheet.js"></script>
   <script src="js/gamification.js"></script>
 
@@ -443,6 +548,9 @@
   <script src="js/sudoku-modal.js"></script>
   <script src="js/billiards-modal.js"></script>
   <script src="js/pz-defense-modal.js"></script>
+  <script src="js/battle-quiz-modal.js"></script>
+  <script src="js/cyber-detective-modal.js"></script>
+  <script src="js/computer-simulator-modal.js"></script>
   <!-- Khu Vui Chơi: mở/khóa hub gộp 5 mini-game theo điểm thi. Nạp SAU
        5 file *-modal.js ở trên để nút bên trong hub đã có listener mở
        game riêng trước khi game-zone-gate.js gắn thêm listener "đóng hub
