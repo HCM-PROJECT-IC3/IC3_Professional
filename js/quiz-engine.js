@@ -509,9 +509,17 @@ function prepareQuestions(rawQs) {
     }
 
     // "classify": xáo thứ tự item cần phân loại + thứ tự hiển thị zone
+    // q.distractors (nếu có): thẻ "mồi nhử" không thuộc khung nào — không
+    // tính vào chấm điểm, chỉ trộn chung vào khay để hiển thị cho tự nhiên.
     if (q.type === 'classify' && Array.isArray(q.items)) {
       q.items      = shuffle(q.items);
-      q._zonesShow = Array.isArray(q.zones) ? shuffle(q.zones.map(z => (typeof z === 'string' ? z : z.label))) : [];
+      // Mỗi zone có thể là chuỗi (chữ) HOẶC object {label, image_file} (ảnh minh
+      // họa thay cho tiêu đề chữ — vd. hình cổng kết nối phía trên ô đích).
+      // "label" luôn là khoá định danh (data-zone), không nhất thiết hiển thị.
+      q._zonesShow = Array.isArray(q.zones)
+        ? shuffle(q.zones.map(z => (typeof z === 'string' ? { label: z } : z)))
+        : [];
+      q._poolShow  = shuffle(q.items.concat(Array.isArray(q.distractors) ? q.distractors : []));
     }
 
     // "ordering": items là THỨ TỰ ĐÚNG (nguồn dữ liệu gốc) — tạo bản xáo trộn
@@ -633,8 +641,13 @@ function isAnswered(i) {
     case 'list':
       return Object.keys(State.list[i] || {}).length === (q.items?.length || 0);
 
-    case 'classify':
-      return Object.keys(State.classify[i] || {}).length === (q.items?.length || 0);
+    case 'classify': {
+      // Chỉ đếm các item BẮT BUỘC (bỏ qua thẻ mồi nhử trong q.distractors,
+      // nếu có, vì chúng không cần được xếp vào nhóm nào để tính là đã trả lời).
+      const ans = State.classify[i] || {};
+      const req = q.items || [];
+      return req.length > 0 && req.every(it => ans[it.text] !== undefined);
+    }
 
     case 'ordering':
       return (State.ordering[i]?.length || 0) === (q.items?.length || 0);
@@ -1511,10 +1524,13 @@ function renderClassify(q, qi) {
   if (!State.classify[qi]) State.classify[qi] = {};
   const placed = State.classify[qi];
   const items  = q.items || [];
-  const zones  = q._zonesShow || (q.zones || []).map(z => (typeof z === 'string' ? z : z.label));
+  const pool   = q._poolShow || items.concat(Array.isArray(q.distractors) ? q.distractors : []);
+  const zones  = q._zonesShow || (q.zones || []).map(z => (typeof z === 'string' ? { label: z } : z));
 
-  const unplaced = items.filter(it => !placed[it.text]);
-  const answeredCount = Object.keys(placed).length;
+  const unplaced = pool.filter(it => !placed[it.text]);
+  // Đếm số item BẮT BUỘC (không tính thẻ mồi nhử) đã được xếp đúng-hay-sai
+  // để hiển thị tiến độ nhất quán với logic chấm điểm (chỉ dựa trên q.items).
+  const answeredCount = items.filter(it => placed[it.text] !== undefined).length;
 
   body.innerHTML = `
     ${q.hint ? `<div class="q-hint-line">💡 ${q.hint}</div>` : ''}
@@ -1526,18 +1542,26 @@ function renderClassify(q, qi) {
     <div class="drag-pool" id="classifyPool-${qi}">
       ${unplaced.length > 0
         ? unplaced.map(it => `
-            <div class="drag-chip classify-chip" data-qi="${qi}" draggable="true"
+            <div class="drag-chip classify-chip${it.image_file ? ' classify-chip-img' : ''}" data-qi="${qi}" draggable="true"
                  data-text="${encodeURIComponent(it.text)}"
-                 onclick="onClassifyChipTap(this)">⠿ ${it.text}</div>`).join('')
-        : `<span class="pool-done">✅ Đã phân loại hết — nhấn ✕ trong nhóm để thay đổi</span>`}
+                 onclick="onClassifyChipTap(this)">${it.image_file
+                   ? `<img src="img/${it.image_file}" alt="${it.text}" loading="lazy">`
+                   : `⠿ ${it.text}`}</div>`).join('')
+        : answeredCount >= items.length
+          ? `<span class="pool-done">✅ Đã phân loại hết — nhấn ✕ trong nhóm để thay đổi</span>`
+          : ''}
     </div>
-    <div class="classify-zones">
+    <div class="classify-zones${zones.some(z => z.image_file) ? ' classify-zones-img' : ''}">
       ${zones.map(z => `
-        <div class="classify-zone" data-qi="${qi}" data-zone="${encodeURIComponent(z)}" onclick="onClassifyZoneTap(this)">
-          <div class="classify-zone-title">${z}</div>
+        <div class="classify-zone" data-qi="${qi}" data-zone="${encodeURIComponent(z.label)}" onclick="onClassifyZoneTap(this)">
+          <div class="classify-zone-title">${z.image_file
+              ? `<img src="img/${z.image_file}" alt="" loading="lazy" class="classify-zone-img">`
+              : z.label}</div>
           <div class="classify-zone-items">
-            ${items.filter(it => placed[it.text] === z).map(it => `
-              <span class="classify-zone-chip">${it.text}
+            ${pool.filter(it => placed[it.text] === z.label).map(it => `
+              <span class="classify-zone-chip${it.image_file ? ' classify-zone-chip-img' : ''}">${it.image_file
+                  ? `<img src="img/${it.image_file}" alt="${it.text}" loading="lazy">`
+                  : it.text}
                 <button type="button" class="slot-remove" data-qi="${qi}" data-text="${encodeURIComponent(it.text)}"
                         onclick="event.stopPropagation();removeClassifyItem(this)">✕</button>
               </span>`).join('')}
@@ -1991,7 +2015,9 @@ function gradeExam() {
       case 'classify': {
         const ans = State.classify[i] || {};
         const items = q.items || [];
-        if (Object.keys(ans).length === 0) {
+        // Bỏ qua/skip chỉ khi KHÔNG item bắt buộc nào được xếp — thẻ mồi nhử
+        // (q.distractors) lỡ bị kéo vào 1 nhóm không tính là "đã trả lời".
+        if (!items.some(it => ans[it.text] !== undefined)) {
           skipped++;
         } else {
           const allCorrect = items.every(it => ans[it.text] === it.zone);

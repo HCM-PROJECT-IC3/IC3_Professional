@@ -1701,6 +1701,11 @@ body {
   color: var(--purple);
   margin-bottom: .6rem;
 }
+.classify-zones-img { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.classify-zone-img {
+  display: block; max-width: 100%; height: 84px; margin: 0 auto;
+  object-fit: contain;
+}
 .classify-zone-items { display: flex; flex-wrap: wrap; gap: .5rem }
 .classify-zone-chip {
   display: inline-flex; align-items: center; gap: .4rem;
@@ -1719,6 +1724,25 @@ body {
 }
 .classify-zone-chip .slot-remove:hover { opacity: 1 }
 .classify-chip { /* kế thừa giao diện .drag-chip, không cần khai báo lại */ }
+.classify-chip-img {
+  padding: .4rem; border-radius: var(--radius-sm);
+  background: #fff;
+}
+.classify-chip-img img {
+  display: block; width: 110px; height: 78px;
+  object-fit: cover; border-radius: calc(var(--radius-sm) - 4px);
+  pointer-events: none;
+}
+.classify-zone-chip-img {
+  padding: .4rem; border-radius: var(--radius-sm); background: var(--card);
+}
+.classify-zone-chip-img img {
+  display: block; width: 90px; height: 64px;
+  object-fit: cover; border-radius: calc(var(--radius-sm) - 4px);
+}
+@media (max-width: 480px) {
+  .classify-chip-img img, .classify-zone-chip-img img { width: 80px; height: 56px; }
+}
 
 /* ══════════════════════════════════════════════
    ORDERING  (type = "ordering") — sắp xếp bằng nút mũi tên
