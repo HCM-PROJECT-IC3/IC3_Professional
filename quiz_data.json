@@ -9459,32 +9459,43 @@
                 "explanation": "Các đáp án đúng là: “RAM”; “ROM”."
               },
               {
-                "question": "Ghép nối thiết bị phần cứng máy tính với hình ảnh tương ứng.",
-                "type": "matching",
-                "pairs": [
+                "question": "Ghép nối thiết bị phần cứng máy tính với hình ảnh tương ứng (kéo hình và thả vào ô trống bên dưới tên).",
+                "type": "classify",
+                "hint": "Kéo hoặc bấm chọn 1 hình thiết bị rồi bấm vào ô có tên thiết bị tương ứng để xếp vào.",
+                "zones": [
                   {
-                    "left": "Bo mạch chủ (Mainboard)",
-                    "right": "[Hình ảnh]",
-                    "rightImageFile": "img-b938951bb46eed883173cb4b0634cc8606ee0c9f.jpg",
-                    "rightImageUrl": "img/img-b938951bb46eed883173cb4b0634cc8606ee0c9f.jpg"
+                    "label": "Bo mạch chủ (Mainboard)"
                   },
                   {
-                    "left": "Ổ cứng thể rắn (SSD)",
-                    "right": "[Hình ảnh]",
-                    "rightImageFile": "img-3751942a1b5de18025d91f7f9dd20c6f62193fb5.jpg",
-                    "rightImageUrl": "img/img-3751942a1b5de18025d91f7f9dd20c6f62193fb5.jpg"
+                    "label": "Ổ cứng thể rắn (SSD)"
                   },
                   {
-                    "left": "Bộ xử lý trung tâm (CPU)",
-                    "right": "[Hình ảnh]",
-                    "rightImageFile": "img-543c5147c7360a64f4b5d4a54cd06eeadba4790a.jpg",
-                    "rightImageUrl": "img/img-543c5147c7360a64f4b5d4a54cd06eeadba4790a.jpg"
+                    "label": "Bộ xử lý trung tâm (CPU)"
                   },
                   {
-                    "left": "Ổ đĩa cứng (HDD)",
-                    "right": "[Hình ảnh]",
-                    "rightImageFile": "img-2a1499d2de9c4b0dfba3140fae53f1cdeb7e77ac.jpg",
-                    "rightImageUrl": "img/img-2a1499d2de9c4b0dfba3140fae53f1cdeb7e77ac.jpg"
+                    "label": "Ổ đĩa cứng (HDD)"
+                  }
+                ],
+                "items": [
+                  {
+                    "text": "Bo mạch chủ (Mainboard)",
+                    "image_file": "mainboard.png",
+                    "zone": "Bo mạch chủ (Mainboard)"
+                  },
+                  {
+                    "text": "Ổ cứng thể rắn (SSD)",
+                    "image_file": "ssd.png",
+                    "zone": "Ổ cứng thể rắn (SSD)"
+                  },
+                  {
+                    "text": "Bộ xử lý trung tâm (CPU)",
+                    "image_file": "cpu.png",
+                    "zone": "Bộ xử lý trung tâm (CPU)"
+                  },
+                  {
+                    "text": "Ổ đĩa cứng (HDD)",
+                    "image_file": "hdd.png",
+                    "zone": "Ổ đĩa cứng (HDD)"
                   }
                 ],
                 "image": false,
@@ -9492,7 +9503,7 @@
                 "image_id": null,
                 "id": 2,
                 "uid": "ic3__lv1__t1__q2",
-                "explanation": "Ghép đúng: “Bo mạch chủ (Mainboard)” ↔ “[Hình ảnh]”; “Ổ cứng thể rắn (SSD)” ↔ “[Hình ảnh]”; “Bộ xử lý trung tâm (CPU)” ↔ “[Hình ảnh]”; “Ổ đĩa cứng (HDD)” ↔ “[Hình ảnh]”."
+                "explanation": "Xếp đúng: Hình bo mạch chủ (Mainboard) → ô “Bo mạch chủ (Mainboard)”; hình ổ cứng thể rắn (SSD) → ô “Ổ cứng thể rắn (SSD)”; hình bộ xử lý trung tâm (CPU) → ô “Bộ xử lý trung tâm (CPU)”; hình ổ đĩa cứng (HDD) → ô “Ổ đĩa cứng (HDD)”."
               },
               {
                 "question": "Ghép từng thiết bị lưu trữ dữ liệu với định nghĩa tương ứng.",
