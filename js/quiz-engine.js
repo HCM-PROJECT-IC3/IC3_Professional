@@ -153,6 +153,87 @@ function _mtTypeCounts(mt) {
 }
 
 /* ============================================================
+   § 1b — MINITEST "TỔNG HỢP" (random, chia đều theo chủ đề)
+   Không đụng tới quiz_data.json / data/ic3/*.json — chỉ trộn ở
+   phía client mỗi lần học sinh bấm "Bắt đầu thi", nên luôn mới
+   ngẫu nhiên và không cần chạy lại split-quiz-data.py.
+   ============================================================ */
+const RANDOM_MIX_KEY   = '__RANDOM_MIX__';
+const RANDOM_MIX_TOTAL_DEFAULT = 40; // fallback nếu không tra được số câu chuẩn bên dưới
+
+// Số câu "Tổng hợp" theo ĐÚNG chuẩn đề thi thật (khớp bảng số câu/thời gian
+// chính thức của từng khối) — key = "<categoryId>__<levelId>", vd "IC3__LV1".
+const RANDOM_MIX_COUNTS = {
+  'Spark__LV1': 31,
+  'Spark__LV2': 36,
+  'Spark__LV3': 42,
+  'IC3__LV1':   45,
+  'IC3__LV2':   45,
+  'IC3__LV3':   40,
+};
+
+/** Lấy số câu "Tổng hợp" chuẩn cho đúng catId/levelId, fallback về mặc định nếu không có trong bảng. */
+function _randomMixTotalFor(catId, levelId) {
+  return RANDOM_MIX_COUNTS[`${catId}__${levelId}`] ?? RANDOM_MIX_TOTAL_DEFAULT;
+}
+
+function _shuffleArr(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/**
+ * Trộn câu hỏi TỔNG HỢP: chia đều số câu cho từng chủ đề (7 chủ đề IC3),
+ * nếu 1 chủ đề không đủ câu thì phần thiếu được san sẻ ngẫu nhiên
+ * cho các chủ đề khác còn dư (để vẫn cố gắng đạt đủ tổng số mong muốn).
+ * @param {Object} minitestsFull - { "1. Căn bản...": [câu hỏi...], ... } (mảng ĐẦY ĐỦ, không phải bản đếm gọn)
+ * @param {number} totalWanted   - tổng số câu muốn lấy
+ * @returns {Array} mảng câu hỏi đã trộn ngẫu nhiên, sẵn sàng đưa vào prepareQuestions()
+ */
+function buildRandomMixQuestions(minitestsFull, totalWanted) {
+  const topics = Object.keys(minitestsFull || {});
+  if (topics.length === 0) return [];
+
+  const avail = {};
+  topics.forEach(t => { avail[t] = (minitestsFull[t] || []).length; });
+
+  const base = Math.floor(totalWanted / topics.length);
+  let remainder = totalWanted - base * topics.length;
+
+  const want = {};
+  topics.forEach(t => { want[t] = base; });
+  _shuffleArr(topics).forEach(t => {
+    if (remainder > 0) { want[t] += 1; remainder--; }
+  });
+
+  // Chủ đề không đủ câu → dồn phần thiếu, san sẻ lại cho chủ đề còn dư chỗ
+  let deficit = 0;
+  topics.forEach(t => {
+    if (want[t] > avail[t]) { deficit += want[t] - avail[t]; want[t] = avail[t]; }
+  });
+  let guard = 0;
+  while (deficit > 0 && guard < 1000) {
+    guard++;
+    const spare = topics.filter(t => avail[t] > want[t]);
+    if (spare.length === 0) break;
+    for (const t of _shuffleArr(spare)) {
+      if (deficit <= 0) break;
+      if (avail[t] > want[t]) { want[t] += 1; deficit--; }
+    }
+  }
+
+  let pool = [];
+  topics.forEach(t => {
+    pool = pool.concat(_shuffleArr(minitestsFull[t] || []).slice(0, want[t]));
+  });
+  return _shuffleArr(pool);
+}
+
+/* ============================================================
    § 1 — STATE
    Giữ nguyên cấu trúc State để không phá vỡ anti-cheat
    ============================================================ */
@@ -318,8 +399,9 @@ function initLobby() {
     const lv  = cat?.levels?.find(l => l.id === lvlSel.value);
     mtSel.innerHTML = '';
 
-    const minitests = lv?.minitests || {};
-    Object.keys(minitests).forEach(name => {
+    const minitests  = lv?.minitests || {};
+    const topicNames = Object.keys(minitests);
+    topicNames.forEach(name => {
       const mt  = minitests[name];
       const opt = new Option(
         `${name} (${_mtCount(mt)} câu)`,
@@ -328,6 +410,19 @@ function initLobby() {
       mtSel.appendChild(opt);
     });
 
+    // ── Tùy chọn "Tổng hợp" — random chia đều các chủ đề của Level này ──
+    if (topicNames.length > 1) {
+      const totalAvail = topicNames.reduce((s, n) => s + _mtCount(minitests[n]), 0);
+      const wanted = Math.min(_randomMixTotalFor(catSel.value, lvlSel.value), totalAvail);
+      if (wanted > 0) {
+        const opt = new Option(
+          `📚 Tổng hợp — ngẫu nhiên chia đều ${topicNames.length} chủ đề (${wanted} câu)`,
+          RANDOM_MIX_KEY
+        );
+        mtSel.appendChild(opt);
+      }
+    }
+
     refreshMeta();
   };
 
@@ -335,8 +430,12 @@ function initLobby() {
   const refreshMeta = () => {
     const cat = _findCategory(catSel.value);
     const lv  = cat?.levels?.find(l => l.id === lvlSel.value);
-    const mt  = lv?.minitests?.[mtSel.value];
-    const count = _mtCount(mt);
+    const isRandomMix = mtSel.value === RANDOM_MIX_KEY;
+    const minitests   = lv?.minitests || {};
+    const mt    = isRandomMix ? null : minitests[mtSel.value];
+    const count = isRandomMix
+      ? Math.min(_randomMixTotalFor(catSel.value, lvlSel.value), Object.keys(minitests).reduce((s, n) => s + _mtCount(minitests[n]), 0))
+      : _mtCount(mt);
     const el  = document.getElementById('minitestMeta');
 
     if (count) {
@@ -417,7 +516,10 @@ async function startExam() {
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang tải câu hỏi...'; }
 
   const fullLevel = await _fetchLevelData(catId, lvlId);
-  const rawQs = fullLevel?.minitests?.[mtName];
+  const isRandomMix = mtName === RANDOM_MIX_KEY;
+  const rawQs = isRandomMix
+    ? buildRandomMixQuestions(fullLevel?.minitests, _randomMixTotalFor(catId, lvlId))
+    : fullLevel?.minitests?.[mtName];
 
   if (btn) { btn.disabled = false; btn.textContent = btnPrevText; }
 
@@ -425,6 +527,11 @@ async function startExam() {
     alert('⚠ Không tìm thấy câu hỏi cho bài này. Vui lòng kiểm tra dữ liệu trong data/ic3/.');
     return;
   }
+
+  // Tên minitest hiển thị/ghi log — dùng tên thân thiện thay vì key nội bộ
+  const mtDisplayName = isRandomMix
+    ? `Tổng hợp — ngẫu nhiên (${rawQs.length} câu, chia đều ${Object.keys(fullLevel?.minitests || {}).length} chủ đề)`
+    : mtName;
 
   // ── Deep clone + chuẩn bị (shuffle order & options) ───────
   State.questions = prepareQuestions(rawQs);
@@ -447,7 +554,7 @@ async function startExam() {
     studentSchool: school,
     category:      cat?.name  || catId,
     level:         lv?.name   || lvlId,
-    minitest:      mtName,
+    minitest:      mtDisplayName,
     startTime:     Date.now(),
     totalTime:     State.timeLeft,
     tabSwitches:   0,
@@ -464,7 +571,7 @@ async function startExam() {
   document.getElementById('adminEntryLink')?.style.setProperty('display', 'none');
 
   const info = document.getElementById('topbarInfo');
-  if (info) info.textContent = `👤 ${name} · ${cls} · ${mtName}`;
+  if (info) info.textContent = `👤 ${name} · ${cls} · ${mtDisplayName}`;
 
   buildSidebar();
   _restoreSidebarState();
