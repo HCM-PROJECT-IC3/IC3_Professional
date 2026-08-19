@@ -159,10 +159,11 @@
         <div class="lobby-game-strip" id="lobbyGameStrip"></div>
 
         <!-- Khu Vui Chơi: gộp cả 5 mini-game vào 1 lối vào duy nhất, chỉ mở
-             khóa khi học sinh ĐANG ĐƯỢC CHỌN đã có ít nhất 1 bài thi đạt
-             từ 90% điểm trở lên. Xem js/game-zone-gate.js. -->
+             khóa khi bài "Tổng hợp" GẦN NHẤT của học sinh ĐANG ĐƯỢC CHỌN đạt
+             từ 90% điểm trở lên — dùng 1 lần rồi khóa lại, phải làm bài
+             Tổng hợp mới để mở lại. Xem js/game-zone-gate.js. -->
         <button type="button" class="game-zone-open-btn" id="openGameZoneBtn"
-          title="Khu Vui Chơi — mở khóa khi đạt từ 90% điểm 1 bài thi">
+          title="Khu Vui Chơi — mở khóa khi làm bài Tổng hợp đạt từ 90% điểm (dùng 1 lần)">
           🎮 Khu Vui Chơi
         </button>
         <div class="game-zone-hint" id="gameZoneHint"></div>
@@ -264,7 +265,8 @@
   </div>
 
   <!-- ============ KHU VUI CHƠI (hub modal) — gộp cả 5 mini-game, chỉ mở
-       khóa khi học sinh đang chọn đạt ≥90% điểm 1 bài thi. Các nút
+       khóa khi bài "Tổng hợp" GẦN NHẤT của học sinh đang chọn đạt ≥90%
+       điểm — dùng 1 lần rồi khóa lại, phải làm bài Tổng hợp mới. Các nút
        #openGameBtn/#openMemoryGameBtn/#openSudokuBtn/#openBilliardsBtn/
        #openPzDefenseBtn NẰM Ở ĐÂY (không còn ở ngoài lobby nữa) để mỗi
        js/*-modal.js hiện có tự tìm thấy nút của mình mà không cần sửa gì
@@ -276,13 +278,16 @@
         <button type="button" class="game-modal-close" id="closeGameZoneModalBtn">✕ Đóng</button>
       </div>
 
-      <!-- Trạng thái KHÓA: hiện khi học sinh đang chọn chưa đạt 90% điểm bất kỳ bài thi nào -->
+      <!-- Trạng thái KHÓA: hiện khi bài "Tổng hợp" gần nhất của học sinh
+           đang chọn chưa đạt 90% (hoặc đã dùng lượt mở khóa rồi) -->
       <div class="game-zone-locked" id="gameZoneLocked">
         <div class="game-zone-lock-icon">🔒</div>
         <div class="game-zone-lock-title">Khu Vui Chơi đang khóa</div>
         <p class="game-zone-lock-desc">
-          Làm bài thi đạt từ <strong>90% điểm</strong> trở lên (1 bài bất kỳ) để mở khóa toàn bộ
-          mini-game bên dưới.
+          Làm bài <strong>📚 Tổng hợp</strong> (ngẫu nhiên chia đều 7 chủ đề) đạt từ
+          <strong>90% điểm</strong> trở lên để mở khóa toàn bộ mini-game bên dưới.
+          Lượt mở khóa chỉ dùng được <strong>1 lần</strong> — sau khi vào chơi, cần làm
+          1 bài Tổng hợp mới đạt ≥90% để mở lại.
         </p>
         <div class="game-zone-progress" id="gameZoneProgress"></div>
       </div>

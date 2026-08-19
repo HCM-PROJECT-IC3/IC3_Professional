@@ -1601,7 +1601,7 @@
                 "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
               },
               {
-                "question": "Thuật ngữ cho thời gian bạn dành để làm những việc như:",
+                "question": "Thuật ngữ cho thời gian bạn dành để làm những việc như:\n+ Xem một chương trình truyền hình với gia đình của bạn.\n+ Chơi trò chơi điện tử trên bảng điều khiển.\n+ Gửi tin nhắn văn bản từ điện thoại thông minh.\n+ Nghiên cứu một cái gì đó trên máy tính.",
                 "type": "single",
                 "options": [
                   "Thời gian sử dụng thiết bị (Screen time).",

@@ -555,6 +555,7 @@ async function startExam() {
     category:      cat?.name  || catId,
     level:         lv?.name   || lvlId,
     minitest:      mtDisplayName,
+    isRandomMix:   isRandomMix, // true = bài "Tổng hợp" (ngẫu nhiên chia đều chủ đề) — dùng để xét mở khóa Khu Vui Chơi
     startTime:     Date.now(),
     totalTime:     State.timeLeft,
     tabSwitches:   0,
@@ -2300,6 +2301,7 @@ function saveRecord(result, elapsedSec, integrity) {
     category:      s.category,
     level:         s.level,
     minitest:      s.minitest,
+    isRandomMix:   !!s.isRandomMix, // chỉ bài "Tổng hợp" mới được tính để mở khóa Khu Vui Chơi
     date:          new Date().toLocaleString('vi-VN'),
     score:         pct,
     correct:       result.correct,
