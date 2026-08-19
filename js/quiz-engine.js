@@ -1545,7 +1545,9 @@ function renderClassify(q, qi) {
             <div class="drag-chip classify-chip${it.image_file ? ' classify-chip-img' : ''}" data-qi="${qi}" draggable="true"
                  data-text="${encodeURIComponent(it.text)}"
                  onclick="onClassifyChipTap(this)">${it.image_file
-                   ? `<img src="img/${it.image_file}" alt="${it.text}" loading="lazy">`
+                   ? `<img src="img/${it.image_file}" alt="${it.text}" loading="lazy">
+                      <button type="button" class="img-zoom-btn" title="Xem hình lớn"
+                              onclick="event.stopPropagation();openImgZoom('img/${it.image_file}','${escapeAttr(it.text)}')">🔍</button>`
                    : `⠿ ${it.text}`}</div>`).join('')
         : answeredCount >= items.length
           ? `<span class="pool-done">✅ Đã phân loại hết — nhấn ✕ trong nhóm để thay đổi</span>`
@@ -1555,12 +1557,16 @@ function renderClassify(q, qi) {
       ${zones.map(z => `
         <div class="classify-zone" data-qi="${qi}" data-zone="${encodeURIComponent(z.label)}" onclick="onClassifyZoneTap(this)">
           <div class="classify-zone-title">${z.image_file
-              ? `<img src="img/${z.image_file}" alt="" loading="lazy" class="classify-zone-img">`
+              ? `<span class="classify-zone-img-wrap"><img src="img/${z.image_file}" alt="" loading="lazy" class="classify-zone-img">
+                   <button type="button" class="img-zoom-btn" title="Xem hình lớn"
+                           onclick="event.stopPropagation();openImgZoom('img/${z.image_file}','')">🔍</button></span>`
               : z.label}</div>
           <div class="classify-zone-items">
             ${pool.filter(it => placed[it.text] === z.label).map(it => `
               <span class="classify-zone-chip${it.image_file ? ' classify-zone-chip-img' : ''}">${it.image_file
-                  ? `<img src="img/${it.image_file}" alt="${it.text}" loading="lazy">`
+                  ? `<img src="img/${it.image_file}" alt="${it.text}" loading="lazy">
+                     <button type="button" class="img-zoom-btn" title="Xem hình lớn"
+                             onclick="event.stopPropagation();openImgZoom('img/${it.image_file}','${escapeAttr(it.text)}')">🔍</button>`
                   : it.text}
                 <button type="button" class="slot-remove" data-qi="${qi}" data-text="${encodeURIComponent(it.text)}"
                         onclick="event.stopPropagation();removeClassifyItem(this)">✕</button>
@@ -1662,6 +1668,34 @@ function removeClassifyItem(el) {
   State.session.clicks++;
   updateSidebar();
   renderClassify(State.questions[qi], qi);
+}
+
+// ── Xem hình phóng to (dùng cho các hình thu nhỏ trong câu "phân loại") ──
+function escapeAttr(str) {
+  return String(str ?? '').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+}
+
+function openImgZoom(src, alt) {
+  closeImgZoom();
+  const overlay = document.createElement('div');
+  overlay.className = 'img-zoom-overlay';
+  overlay.id = 'imgZoomOverlay';
+  overlay.onclick = (e) => { if (e.target === overlay) closeImgZoom(); };
+  overlay.innerHTML = `
+    <button type="button" class="img-zoom-close" onclick="closeImgZoom()">✕</button>
+    <img src="${src}" alt="${alt || ''}">`;
+  document.body.appendChild(overlay);
+  document.addEventListener('keydown', _imgZoomEscHandler);
+}
+
+function closeImgZoom() {
+  const el = document.getElementById('imgZoomOverlay');
+  if (el) el.remove();
+  document.removeEventListener('keydown', _imgZoomEscHandler);
+}
+
+function _imgZoomEscHandler(e) {
+  if (e.key === 'Escape') closeImgZoom();
 }
 
 /* ============================================================

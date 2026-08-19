@@ -1727,21 +1727,61 @@ body {
 .classify-chip-img {
   padding: .4rem; border-radius: var(--radius-sm);
   background: #fff;
+  position: relative;
 }
 .classify-chip-img img {
-  display: block; width: 110px; height: 78px;
-  object-fit: cover; border-radius: calc(var(--radius-sm) - 4px);
+  display: block; width: auto; height: 78px; max-width: 130px;
+  object-fit: contain; border-radius: calc(var(--radius-sm) - 4px);
   pointer-events: none;
 }
 .classify-zone-chip-img {
   padding: .4rem; border-radius: var(--radius-sm); background: var(--card);
+  position: relative;
 }
 .classify-zone-chip-img img {
-  display: block; width: 90px; height: 64px;
-  object-fit: cover; border-radius: calc(var(--radius-sm) - 4px);
+  display: block; width: auto; height: 64px; max-width: 100px;
+  object-fit: contain; border-radius: calc(var(--radius-sm) - 4px);
 }
 @media (max-width: 480px) {
-  .classify-chip-img img, .classify-zone-chip-img img { width: 80px; height: 56px; }
+  .classify-chip-img img { height: 64px; max-width: 100px; }
+  .classify-zone-chip-img img { height: 52px; max-width: 84px; }
+}
+
+/* ── Nút phóng to hình (xem hình gốc khi hình thu nhỏ quá khó nhìn) ── */
+.img-zoom-btn {
+  position: absolute; top: -6px; right: -6px;
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--purple); color: #fff;
+  border: 2px solid #fff; border-radius: 50%;
+  font-size: .68rem; line-height: 1; cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,.25);
+  z-index: 2; transition: transform .15s;
+}
+.img-zoom-btn:hover { transform: scale(1.15); background: var(--purple-dk, var(--purple)); }
+.classify-zone-img-wrap { position: relative; display: inline-block; max-width: 100%; }
+
+.img-zoom-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(20,16,40,.82);
+  display: flex; align-items: center; justify-content: center;
+  padding: 2rem; cursor: zoom-out;
+  animation: imgZoomFade .15s ease;
+}
+@keyframes imgZoomFade { from{opacity:0} to{opacity:1} }
+.img-zoom-overlay img {
+  max-width: min(90vw, 520px); max-height: 85vh;
+  object-fit: contain; border-radius: var(--radius-sm);
+  box-shadow: 0 10px 40px rgba(0,0,0,.5);
+  background: #fff;
+}
+.img-zoom-overlay .img-zoom-close {
+  position: absolute; top: 18px; right: 22px;
+  width: 38px; height: 38px; border-radius: 50%;
+  background: #fff; color: #222; border: none;
+  font-size: 1.2rem; cursor: pointer; display: flex;
+  align-items: center; justify-content: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,.3);
 }
 
 /* ══════════════════════════════════════════════
