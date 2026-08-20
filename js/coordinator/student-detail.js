@@ -49,11 +49,42 @@
   }
 
   const overlay = () => document.getElementById('studentDetailOverlay');
+  const drawer = () => document.getElementById('studentDetailDrawer');
+  const toggleBtn = () => document.getElementById('detailDrawerToggleBtn');
+
+  // Nhớ lựa chọn chế độ xem (toàn màn hình / thu gọn góc phải) giữa các lần mở,
+  // mặc định TOÀN MÀN HÌNH để dễ theo dõi bảng lịch sử làm bài.
+  const VIEW_MODE_KEY = 'eduStudentDetailViewMode';
+  function getViewMode() {
+    try { return localStorage.getItem(VIEW_MODE_KEY) === 'sidebar' ? 'sidebar' : 'fullscreen'; }
+    catch (_) { return 'fullscreen'; }
+  }
+  function setViewMode(mode) {
+    try { localStorage.setItem(VIEW_MODE_KEY, mode); } catch (_) { /* ignore (private mode, quota...) */ }
+  }
+  function applyViewMode(mode) {
+    const d = drawer(), btn = toggleBtn();
+    if (!d || !btn) return;
+    d.classList.toggle('is-sidebar', mode === 'sidebar');
+    if (mode === 'sidebar') {
+      btn.innerHTML = '<span class="icon">⛶</span><span class="label">Toàn màn hình</span>';
+      btn.title = 'Mở rộng thành toàn màn hình';
+    } else {
+      btn.innerHTML = '<span class="icon">⤢</span><span class="label">Thu gọn</span>';
+      btn.title = 'Thu gọn về góc phải màn hình';
+    }
+  }
+  function toggleViewMode() {
+    const next = drawer() && drawer().classList.contains('is-sidebar') ? 'fullscreen' : 'sidebar';
+    setViewMode(next);
+    applyViewMode(next);
+  }
 
   function open(student, quickHistory) {
     const key = global.EduModels.Roster.studentKeyOf({ name: student.name, className: student.className });
 
     renderHeader(student);
+    applyViewMode(getViewMode());
     overlay().classList.add('show');
     document.body.style.overflow = 'hidden';
 
@@ -155,6 +186,7 @@
   }
 
   document.getElementById('detailDrawerCloseBtn').addEventListener('click', close);
+  if (toggleBtn()) toggleBtn().addEventListener('click', toggleViewMode);
   overlay().addEventListener('click', (e) => { if (e.target === overlay()) close(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay().classList.contains('show')) close(); });
 
