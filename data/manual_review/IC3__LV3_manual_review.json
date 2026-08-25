@@ -40,7 +40,7 @@
     "question": "Bạn soạn hồ sơ để đi kèm với một tập hợp các hướng dẫn. Tham khảo hình ảnh bên dưới và hoàn thành các câu bằng cách chọn tự chọn đúng từ mỗi danh sách thả xuống.",
     "image_file": "img-d2a77144cdd4ce5a587ef0363d10e7d323006a89.png",
     "imageUrl": "img/img-d2a77144cdd4ce5a587ef0363d10e7d323006a89.png",
-    "note": "Câu hỏi dạng chọn nhanh trong dòng văn bản (vd Đúng/Sai hoặc phân loại). Xem full_text (chứa [[đáp án đúng]] đánh dấu ngay trong câu) để tái tạo lại.",
+    "note": "ĐÃ CHUYỂN sang dạng \"matching\" (kéo-thả ký hiệu lưu đồ vào đúng mô tả) trong data/ic3/IC3__LV3.json và quiz_data.json, uid=ic3__lv3__t4__q116_new2. 4 ảnh ký hiệu nằm ở img/flowchart/shape-{terminal,io,decision,process}.png. Mục này chỉ còn lưu lại để tham chiếu lịch sử, không cần thao tác thêm.",
     "full_text": "Khi soạn lưu đồ, một quyết định (decision) như Có so với Không hoặc Đúng so với Sai được biểu thị bằng [[Hình B]]. Có thể được sử dụng để biểu diễn Đầu vào (input) hoặc Đầu ra (output) trong một lưu đồ [[Hình C]]. Đánh dấu phần đầu và phần cuối của một sơ đồ bằng [[Hình A]]. Các quy trình trong một lưu đồ được biểu diễn bằng [[Hình D]]"
   },
   {

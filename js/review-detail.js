@@ -147,6 +147,12 @@ function _rdTrueFalseBlock(r) {
 function _rdMatchingBlock(r) {
   const pairs = r.pairs || [];
   const um = r.userMatch || {};
+  // right_img (nếu có): hiển thị hình ký hiệu thay vì chữ cho đáp án
+  const imgMap = {};
+  pairs.forEach(p => { if (p.right_img) imgMap[p.right] = p.right_img; });
+  const show = v => (v && imgMap[v])
+    ? `<img class="rd-match-img" src="${imgMap[v]}" alt="${_rdEsc(v)}">`
+    : _rdEsc(v || '(chưa nối)');
   return `
     <div class="rd-match-list">
       ${pairs.map(p => {
@@ -156,9 +162,9 @@ function _rdMatchingBlock(r) {
           <span class="rd-match-left">${_rdEsc(p.left)}</span>
           <span class="rd-match-arrow">→</span>
           ${ok
-            ? `<span class="rd-match-correct">${_rdEsc(p.right)}</span>`
-            : `<span class="rd-match-user">${_rdEsc(userRight || '(chưa nối)')}</span>
-               <span class="rd-match-correct">(đúng: ${_rdEsc(p.right)})</span>`}
+            ? `<span class="rd-match-correct">${show(p.right)}</span>`
+            : `<span class="rd-match-user">${show(userRight)}</span>
+               <span class="rd-match-correct">(đúng: ${show(p.right)})</span>`}
         </div>`;
       }).join('')}
     </div>`;
