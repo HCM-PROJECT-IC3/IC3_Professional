@@ -1587,6 +1587,18 @@ body {
   box-shadow: 0 0 0 4px rgba(79,107,255,.25);
   transform: translateY(-3px);
 }
+/* Chip/slot hiển thị HÌNH ẢNH (vd: ký hiệu lưu đồ) thay vì chữ */
+.drag-chip-img {
+  padding: .4rem .6rem;
+  border-color: var(--purple);
+  box-shadow: 0 2px 8px rgba(79,107,255,.2);
+}
+.drag-chip-img:hover { background: var(--purple-lt); box-shadow: 0 6px 16px rgba(79,107,255,.3); }
+.match-shape-img {
+  height: 44px; width: auto; max-width: 90px;
+  display: block; pointer-events: none;
+}
+.slot-content .match-shape-img { height: 36px; }
 .match-hint {
   font-size: .8rem; font-weight: 700; color: var(--muted);
   background: var(--yellow-lt);

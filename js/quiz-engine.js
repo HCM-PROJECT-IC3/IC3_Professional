@@ -1128,6 +1128,14 @@ function renderMatching(q, qi) {
 
   const leftItems = q._leftShuffled || q.pairs.map(p => p.left);
 
+  // Nếu pairs có "right_img", đáp án được hiển thị dạng HÌNH ẢNH thay vì chữ
+  // (ví dụ: nối mô tả với ký hiệu lưu đồ). Map: right-text → đường dẫn ảnh.
+  const rightImgMap = {};
+  q.pairs.forEach(p => { if (p.right_img) rightImgMap[p.right] = p.right_img; });
+  const _chipContent = r => rightImgMap[r]
+    ? `<img class="match-shape-img" src="${rightImgMap[r]}" alt="${r}" draggable="false">`
+    : r;
+
   // Đếm số lần mỗi right value CẦN dùng
   const rightCount = {};
   q.pairs.forEach(p => { rightCount[p.right] = (rightCount[p.right] || 0) + 1; });
@@ -1160,11 +1168,11 @@ function renderMatching(q, qi) {
     <div class="drag-pool" id="dragPool-${qi}">
       ${poolChips.length > 0
         ? poolChips.map(({ r, id }) => `
-            <div class="drag-chip"
+            <div class="drag-chip ${rightImgMap[r] ? 'drag-chip-img' : ''}"
                  draggable="true"
                  data-right="${encodeURIComponent(r)}"
                  data-qi="${qi}"
-                 id="${id}">⠿ ${r}</div>`).join('')
+                 id="${id}">${rightImgMap[r] ? '' : '⠿ '}${_chipContent(r)}</div>`).join('')
         : `<span class="pool-done">✅ Đã điền hết — nhấn ✕ để thay đổi</span>`}
     </div>
 
@@ -1184,7 +1192,7 @@ function renderMatching(q, qi) {
                id="slot-${qi}-${idx}">
             <span class="slot-label">${left.length > 22 ? left.slice(0,22)+'…' : left} →</span>
             ${matched[left]
-              ? `<span class="slot-content">${matched[left]}</span>
+              ? `<span class="slot-content">${_chipContent(matched[left])}</span>
                  <button class="slot-remove"
                          data-qi="${qi}" data-left="${encodeURIComponent(left)}"
                          onclick="removeMatchDrop(this)">✕</button>`
@@ -1204,7 +1212,7 @@ function renderMatching(q, qi) {
                data-left="${encodeURIComponent(left)}"
                id="slot-${qi}-${idx}">
             ${matched[left]
-              ? `<span class="slot-content" title="${matched[left]}">${matched[left]}</span>
+              ? `<span class="slot-content" title="${rightImgMap[matched[left]] ? matched[left] : ''}">${_chipContent(matched[left])}</span>
                  <button class="slot-remove"
                          data-qi="${qi}" data-left="${encodeURIComponent(left)}"
                          onclick="removeMatchDrop(this)">✕</button>`

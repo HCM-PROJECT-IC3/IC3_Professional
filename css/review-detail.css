@@ -92,6 +92,7 @@
 .rd-match-left  { color: var(--text); font-weight: 600; }
 .rd-match-arrow { color: var(--muted); }
 .rd-match-correct { color: var(--teal); font-weight: 700; }
+.rd-match-img { height: 32px; width: auto; vertical-align: middle; }
 .rd-match-user     { color: var(--red); text-decoration: line-through; }
 
 /* Bấm vào hình (hotspot) */

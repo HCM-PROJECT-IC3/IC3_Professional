@@ -1599,25 +1599,6 @@
                 "id": 88,
                 "uid": "spark__lv1__hotspot__q11",
                 "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
-              },
-              {
-                "question": "Thuật ngữ cho thời gian bạn dành để làm những việc như:\n+ Xem một chương trình truyền hình với gia đình của bạn.\n+ Chơi trò chơi điện tử trên bảng điều khiển.\n+ Gửi tin nhắn văn bản từ điện thoại thông minh.\n+ Nghiên cứu một cái gì đó trên máy tính.",
-                "type": "single",
-                "options": [
-                  "Thời gian sử dụng thiết bị (Screen time).",
-                  "Thời gian tập trung (Focus time).",
-                  "Tương tác trực tuyến (Online interaction).",
-                  "Cân bằng truyền thông (Media balance)."
-                ],
-                "correct": [
-                  "Thời gian sử dụng thiết bị (Screen time)."
-                ],
-                "image": false,
-                "image_file": null,
-                "image_id": null,
-                "explanation": "Đáp án đúng là “Thời gian sử dụng thiết bị” (Screen time) vì đây chính là thuật ngữ chỉ khoảng thời gian dùng điện thoại, máy tính, máy tính bảng hoặc thiết bị số nói chung. “Thời gian tập trung” nói về sự chú ý vào một việc, “tương tác trực tuyến” nói về việc giao tiếp qua mạng, còn “cân bằng truyền thông” nói về việc phân bổ hợp lý giữa các hoạt động — đều không phải định nghĩa của Screen time.",
-                "id": 89,
-                "uid": "spark__lv1__t5__q89_new"
               }
             ],
             "6. Hợp tác, cộng tác": [
@@ -2097,6 +2078,39 @@
                 "explanation": "Đáp án đúng là tạo áp phích với thông tin về cá mập, vì đây là mục tiêu chung mà cả nhóm cùng hướng tới, mỗi người đảm nhận một phần việc (in ảnh, mua bảng, lắp ráp) để hoàn thành sản phẩm đó. Hòa hợp nhóm, làm nhanh nhất hay in gọn gàng chỉ là cách thức hoặc hệ quả phụ, không phải mục tiêu chính của việc cộng tác này.",
                 "id": 73,
                 "uid": "spark__lv1__t6__q73_new"
+              },
+              {
+                "question": "Hầu hết các thư và Email đều có Câu chào hỏi và Câu kết thúc. Bạn hãy kéo thả vào đúng vị trí Câu chào hỏi hoặc Câu kết thúc.",
+                "type": "classify",
+                "hint": "Bấm chọn 1 thẻ rồi bấm vào khung nhóm để xếp vào, hoặc kéo-thả trực tiếp thẻ vào khung. Bấm vào thẻ đã xếp trong khung để đưa nó trở lại nhóm chưa xếp.",
+                "zones": [
+                  "Câu chào hỏi",
+                  "Câu kết thúc"
+                ],
+                "items": [
+                  {
+                    "text": "Trân trọng (Sincerely yours).",
+                    "zone": "Câu kết thúc"
+                  },
+                  {
+                    "text": "Cô An thân mến (Dear miss An).",
+                    "zone": "Câu chào hỏi"
+                  },
+                  {
+                    "text": "Xin chào buổi sáng (Good morning).",
+                    "zone": "Câu chào hỏi"
+                  },
+                  {
+                    "text": "Kính chào (lời chúc tốt đẹp).",
+                    "zone": "Câu kết thúc"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "\"Trân trọng (Sincerely yours)\" và \"Kính chào (lời chúc tốt đẹp)\" là các câu dùng để kết thúc thư/email. \"Cô An thân mến (Dear miss An)\" và \"Xin chào buổi sáng (Good morning)\" là các câu dùng để mở đầu/chào hỏi.",
+                "id": 74,
+                "uid": "spark__lv1__t6__q74_new"
               }
             ],
             "7. An toàn và bảo mật": [
@@ -11762,18 +11776,18 @@
                 "options": [
                   "Độ dài của bài viết và các chi tiết được đề cập.",
                   "Lượng hình ảnh được sử dụng trong bài viết.",
-                  "Danhi tiếng và mức độ uy tín của cơ quan báo chí.",
+                  "Danh tiếng và mức độ uy tín của cơ quan báo chí.",
                   "Số lượt thích và chia sẻ nhận được từ bài đăng."
                 ],
                 "correct": [
-                  "Danhi tiếng và mức độ uy tín của cơ quan báo chí."
+                  "Danh tiếng và mức độ uy tín của cơ quan báo chí."
                 ],
                 "image": false,
                 "image_file": null,
                 "image_id": null,
                 "id": 94,
                 "uid": "ic3__lv1__t3__q17",
-                "explanation": "Đáp án đúng là: “Danhi tiếng và mức độ uy tín của cơ quan báo chí”."
+                "explanation": "Đáp án đúng là: “Danh tiếng và mức độ uy tín của cơ quan báo chí”."
               }
             ],
             "4. Sáng tạo nội dung": [
@@ -15083,6 +15097,39 @@
                 "explanation": "- Cho giáo viên khoa học xem video và yêu cầu họ chia sẻ video đó với lớp của bạn.\n + Tôn trọng quyền riêng tư và hình ảnh cá nhân: Giáo viên đã đồng ý thực hiện thí nghiệm trong giờ ăn trưa cá nhân của họ để giúp nhóm bạn giải đáp thắc mắc. Do đó, việc tự ý đăng tải video có mặt giáo viên lên mạng xã hội (dù là công khai hay chỉ cho bạn bè xem) khi chưa được sự cho phép rõ ràng của thầy/cô là vi phạm quy tắc ứng xử và quyền riêng tư.\n + Đúng mục đích và an toàn: Việc đưa video cho giáo viên xem trước và nhờ thầy/cô chia sẻ là cách ứng xử chuyên nghiệp nhất. Giáo viên có thể sử dụng video đó như một học liệu trực quan, chính thống để chia sẻ cho cả lớp thông qua các kênh học tập của nhà trường, vừa đảm bảo tính giáo dục vừa tôn trọng không gian sư phạm.",
                 "id": 61,
                 "uid": "ic3__lv2__t2__q61_new"
+              },
+              {
+                "question": "Các nhà cung cấp thương mại điện tử bán nhiều hàng hóa và dịch vụ khác nhau trên mạng. Hãy phân loại từng mục sau đây.",
+                "type": "classify",
+                "hint": "Bấm chọn 1 thẻ rồi bấm vào khung nhóm để xếp vào, hoặc kéo-thả trực tiếp thẻ vào khung. Bấm vào thẻ đã xếp trong khung để đưa nó trở lại nhóm chưa xếp.",
+                "zones": [
+                  "Hàng hoá",
+                  "Dịch vụ"
+                ],
+                "items": [
+                  {
+                    "text": "Tai nghe Bluetooth.",
+                    "zone": "Hàng hoá"
+                  },
+                  {
+                    "text": "Bộ định tuyến mạng.",
+                    "zone": "Hàng hoá"
+                  },
+                  {
+                    "text": "Lưu trữ đám mây.",
+                    "zone": "Dịch vụ"
+                  },
+                  {
+                    "text": "Đăng ký phần mềm.",
+                    "zone": "Dịch vụ"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "\"Tai nghe Bluetooth\" và \"Bộ định tuyến mạng\" là các sản phẩm vật lý hữu hình nên thuộc nhóm Hàng hoá. \"Lưu trữ đám mây\" và \"Đăng ký phần mềm\" là các sản phẩm số/không hữu hình nên thuộc nhóm Dịch vụ.",
+                "id": 62,
+                "uid": "ic3__lv2__t2__q62_new"
               }
             ],
             "3. Quản lý thông tin": [
@@ -16785,25 +16832,6 @@
                 "id": 113,
                 "uid": "ic3__lv2__t4__q34",
                 "explanation": "Ghép đúng: “Tập tin âm thanh được nén” ↔ “.mp3”; “Tập tin video được nén” ↔ “.mp4”; “Tập tin âm thanh có thể nén hoặc chưa nén” ↔ “.wav”."
-              },
-              {
-                "question": "Đâu là hành động được xem là hiểu biết các nguyên tắc sở hữu trí tuệ khi tái sử dụng tác phẩm của người khác?",
-                "type": "single",
-                "options": [
-                  "Đảm bảo chỉnh sửa một chút và trình bày tác phẩm đó như của riêng mình.",
-                  "Chỉ sử dụng một phần nhỏ và giả định nó thuộc phạm vi sử dụng hợp lí.",
-                  "Thêm thông tin của tác giả sau khi đã xác nhận sử dụng hợp lí.",
-                  "Thêm thông tin trích dẫn ở phần tài liệu tham khảo thay vì trích dẫn trực tiếp văn bản."
-                ],
-                "correct": [
-                  "Thêm thông tin của tác giả sau khi đã xác nhận sử dụng hợp lí."
-                ],
-                "image": false,
-                "image_file": null,
-                "image_id": null,
-                "id": 114,
-                "uid": "ic3__lv2__t4__q35",
-                "explanation": "Đáp án đúng là: “Thêm thông tin của tác giả sau khi đã xác nhận sử dụng hợp lí”."
               },
               {
                 "question": "Một lợi ích của việc sử dụng macro trong các chương trình phần mềm là gì?",
@@ -18980,34 +19008,29 @@
                 "type": "matching",
                 "pairs": [
                   {
-                    "left": "Một Quyết định (Decision) như có so với không hoặc đúng so với sai.",
-                    "right": "[Hình ảnh]",
-                    "rightImageFile": "img-e3c4c59c87cd487118ee17c7d5c96c4074a6f096.png",
-                    "rightImageUrl": "img/img-e3c4c59c87cd487118ee17c7d5c96c4074a6f096.png"
-                  },
-                  {
                     "left": "Đánh dấu phần đầu và phần cuối của lưu đồ.",
-                    "right": "[Hình ảnh]",
-                    "rightImageFile": "img-705135216d98337a4ecaf2f867e7ccbf554abd34.png",
-                    "rightImageUrl": "img/img-705135216d98337a4ecaf2f867e7ccbf554abd34.png"
+                    "right": "Ký hiệu Bắt đầu / Kết thúc",
+                    "right_img": "img/flowchart/shape-terminal.png"
                   },
                   {
                     "left": "Biểu diễn Dữ liệu (Data) đầu vào (Input) và đầu ra (Output).",
-                    "right": "[Hình ảnh]",
-                    "rightImageFile": "img-2183e406db0d4cc80a1c6d703e93c77837a8e633.png",
-                    "rightImageUrl": "img/img-2183e406db0d4cc80a1c6d703e93c77837a8e633.png"
+                    "right": "Ký hiệu Đầu vào / Đầu ra",
+                    "right_img": "img/flowchart/shape-io.png"
+                  },
+                  {
+                    "left": "Một Quyết định (Decision) như có so với không hoặc đúng so với sai.",
+                    "right": "Ký hiệu Quyết định (Decision)",
+                    "right_img": "img/flowchart/shape-decision.png"
                   },
                   {
                     "left": "Các Quy trình xử lý trong lưu đồ.",
-                    "right": "[Hình ảnh]",
-                    "rightImageFile": "img-ad8da118dc14e679052794ed99ded681904d4996.png",
-                    "rightImageUrl": "img/img-ad8da118dc14e679052794ed99ded681904d4996.png"
+                    "right": "Ký hiệu Quy trình (Process)",
+                    "right_img": "img/flowchart/shape-process.png"
                   },
                   {
                     "left": "Thể hiện độ trễ trong quy trình.",
-                    "right": "[Hình ảnh]",
-                    "rightImageFile": "img-ee3e2ebf7b4a39329fc7c20112889378d6af0e14.png",
-                    "rightImageUrl": "img/img-ee3e2ebf7b4a39329fc7c20112889378d6af0e14.png"
+                    "right": "Ký hiệu Độ trễ (Delay)",
+                    "right_img": "img/flowchart/shape-delay.png"
                   }
                 ],
                 "image": false,
@@ -19015,7 +19038,7 @@
                 "image_id": null,
                 "id": 12,
                 "uid": "ic3__lv3__t1__q12",
-                "explanation": "Ghép đúng: “Một Quyết định (Decision) như có so với không hoặc đúng so với sai” ↔ “[Hình ảnh]”; “Đánh dấu phần đầu và phần cuối của lưu đồ” ↔ “[Hình ảnh]”; “Biểu diễn Dữ liệu (Data) đầu vào (Input) và đầu ra (Output)” ↔ “[Hình ảnh]”; “Các Quy trình xử lý trong lưu đồ” ↔ “[Hình ảnh]”; “Thể hiện độ trễ trong quy trình” ↔ “[Hình ảnh]”."
+                "explanation": "Ghép đúng: “Đánh dấu phần đầu và phần cuối của lưu đồ” ↔ Ký hiệu Bắt đầu/Kết thúc (hình bo tròn 2 đầu); “Biểu diễn Dữ liệu đầu vào và đầu ra” ↔ Ký hiệu Input/Output (hình bình hành); “Một Quyết định như có so với không hoặc đúng so với sai” ↔ Ký hiệu Decision (hình thoi); “Các Quy trình xử lý trong lưu đồ” ↔ Ký hiệu Process (hình chữ nhật); “Thể hiện độ trễ trong quy trình” ↔ Ký hiệu Delay (hình chữ D)."
               },
               {
                 "question": "Nối từng mục tiêu thể hiện trực quan với định dạng trực quan tương ứng hiệu quả nhất. Để trả lời, hãy di chuyển từng mục tiêu từ danh sách ở bên phải sang định dạng trực quan tương ứng ở bên trái.",
@@ -19281,7 +19304,7 @@
                 "explanation": "Đáp án đúng là: “Mô tả chức năng của hình ảnh”."
               },
               {
-                "question": "Bạn cần cài phần mềm yêu cầu cấu hình sau:",
+                "question": "Bạn cần cài phần mềm yêu cầu cấu hình sau:<div style='overflow-x:auto;margin:.6rem 0;'><table style='width:100%;border-collapse:collapse;font-size:.82rem;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);'><thead><tr style='background:var(--purple-lt,#eef1ff);'><th style='text-align:left;padding:.5rem .7rem;border:1px solid var(--border,#e1e6f4);'>Yêu cầu tối thiểu</th><th style='text-align:left;padding:.5rem .7rem;border:1px solid var(--border,#e1e6f4);'>Yêu cầu tối ưu</th><th style='text-align:left;padding:.5rem .7rem;border:1px solid var(--border,#e1e6f4);'>Yêu cầu khuyến nghị</th></tr></thead><tbody><tr><td style='vertical-align:top;padding:.5rem .7rem;border:1px solid var(--border,#e1e6f4);line-height:1.5;'>- CPU: 2GHz hai lõi (dual core)<br>- RAM: 16GB<br>- Độ phân giải: 1280×720<br>- Đồ họa: 1GB</td><td style='vertical-align:top;padding:.5rem .7rem;border:1px solid var(--border,#e1e6f4);line-height:1.5;'>- CPU: 2GHz bốn lõi (quad core)<br>- RAM: 32GB<br>- Độ phân giải: 1690×1050<br>- Đồ họa: 4GB</td><td style='vertical-align:top;padding:.5rem .7rem;border:1px solid var(--border,#e1e6f4);line-height:1.5;'>- CPU: 3.3GHz tám lõi (octa core)<br>- RAM: 64GB<br>- Độ phân giải: 1920×1080<br>- Đồ họa: 8GB</td></tr></tbody></table></div><div style='background:#173a5e;color:#fff;padding:.6rem .8rem;border-radius:10px;font-size:.86rem;line-height:1.6;'>Cấu hình máy tính của bạn: <em>2GHz hai lõi - Ram 32GB - Độ phân giải: 1920×1080 - Card đồ họa: 2GB.</em> <strong>Hãy chọn đáp án phù hợp.</strong></div>",
                 "type": "single",
                 "options": [
                   "Máy tính của bạn đáp ứng được cấu hình tối thiểu.",
@@ -21470,55 +21493,34 @@
                 "uid": "ic3__lv3__t4__q115_new"
               },
               {
-                "question": "Bạn soạn hồ sơ để đi kèm với một tập hợp các hướng dẫn. Tham khảo hình ảnh bên dưới và hoàn thành các câu bằng cách chọn tự chọn đúng từ mỗi danh sách thả xuống.",
-                "type": "list",
-                "hint": "Chọn 1 đáp án cho mỗi dòng.",
-                "items": [
+                "question": "Bạn soạn hồ sơ để đi kèm với một tập hợp các hướng dẫn. Hãy kéo (drag) mỗi ký hiệu lưu đồ ở dưới vào đúng mô tả tương ứng.",
+                "type": "matching",
+                "pairs": [
                   {
-                    "text": "Khi soạn lưu đồ, một quyết định (decision) như Có so với Không hoặc Đúng so với Sai được biểu thị bằng.",
-                    "options": [
-                      "Hình B",
-                      "Hình C",
-                      "Hình A",
-                      "Hình D"
-                    ],
-                    "correct": "Hình B"
+                    "left": "Đánh dấu phần đầu và phần cuối của một lưu đồ.",
+                    "right": "Ký hiệu Bắt đầu / Kết thúc",
+                    "right_img": "img/flowchart/shape-terminal.png"
                   },
                   {
-                    "text": "Có thể được sử dụng để biểu diễn Đầu vào (input) hoặc Đầu ra (output) trong một lưu đồ.",
-                    "options": [
-                      "Hình B",
-                      "Hình C",
-                      "Hình A",
-                      "Hình D"
-                    ],
-                    "correct": "Hình C"
+                    "left": "Có thể được sử dụng để biểu diễn Đầu vào (input) hoặc Đầu ra (output) trong một lưu đồ.",
+                    "right": "Ký hiệu Đầu vào / Đầu ra",
+                    "right_img": "img/flowchart/shape-io.png"
                   },
                   {
-                    "text": "Đánh dấu phần đầu và phần cuối của một sơ đồ bằng ",
-                    "options": [
-                      "Hình B",
-                      "Hình C",
-                      "Hình A",
-                      "Hình D"
-                    ],
-                    "correct": "Hình A"
+                    "left": "Một quyết định (decision) như Có so với Không hoặc Đúng so với Sai được biểu thị bằng.",
+                    "right": "Ký hiệu Quyết định (Decision)",
+                    "right_img": "img/flowchart/shape-decision.png"
                   },
                   {
-                    "text": "Các quy trình trong một lưu đồ được biểu diễn bằng",
-                    "options": [
-                      "Hình B",
-                      "Hình C",
-                      "Hình A",
-                      "Hình D"
-                    ],
-                    "correct": "Hình D"
+                    "left": "Các quy trình trong một lưu đồ được biểu diễn bằng.",
+                    "right": "Ký hiệu Quy trình (Process)",
+                    "right_img": "img/flowchart/shape-process.png"
                   }
                 ],
                 "image": false,
                 "image_file": null,
                 "image_id": null,
-                "explanation": "Hình thoi (B) đại diện cho một bước quyết định (Decision). Tại đây, sơ đồ sẽ rẽ nhánh dựa trên điều kiện đúng/sai (True/False) hoặc có/không (Yes/No).\nHình bình hành (C) đại diện cho các thao tác nhập dữ liệu vào (Input) hoặc xuất kết quả ra (Output).\nHình bo tròn 2 đầu / hình Oval (A) đại diện cho điểm bắt đầu (Start) hoặc kết thúc (End/Stop) của toàn bộ quy trình.\nHình chữ nhật (D) đại diện cho một quy trình (Process), hành động hoặc tính toán cụ thể được thực hiện.",
+                "explanation": "Hình thoi đại diện cho một bước quyết định (Decision). Tại đây, sơ đồ sẽ rẽ nhánh dựa trên điều kiện đúng/sai (True/False) hoặc có/không (Yes/No).\nHình bình hành đại diện cho các thao tác nhập dữ liệu vào (Input) hoặc xuất kết quả ra (Output).\nHình bo tròn 2 đầu / hình Oval đại diện cho điểm bắt đầu (Start) hoặc kết thúc (End/Stop) của toàn bộ quy trình.\nHình chữ nhật đại diện cho một quy trình (Process), hành động hoặc tính toán cụ thể được thực hiện.",
                 "id": 116,
                 "uid": "ic3__lv3__t4__q116_new2"
               },
@@ -21698,6 +21700,25 @@
                 "explanation": "1. Xác định yêu cầu → 2. Tạo ý tưởng → 3. Phát triển bản mẫu → 4. Kiểm tra bản mẫu → 5. Tinh chỉnh bản mẫu.\nĐây là trình tự chuẩn của quy trình thiết kế lặp (design process): hiểu vấn đề → nghĩ giải pháp → dựng thử → thử nghiệm → hoàn thiện.",
                 "id": 121,
                 "uid": "ic3__lv3__t4__q121_new2"
+              },
+              {
+                "question": "Đâu là hành động được xem là hiểu biết các nguyên tắc sở hữu trí tuệ khi tái sử dụng tác phẩm của người khác?",
+                "type": "single",
+                "options": [
+                  "Đảm bảo chỉnh sửa một chút và trình bày tác phẩm đó như của riêng mình.",
+                  "Chỉ sử dụng một phần nhỏ và giả định nó thuộc phạm vi sử dụng hợp lí.",
+                  "Thêm thông tin của tác giả sau khi đã xác nhận sử dụng hợp lí.",
+                  "Thêm thông tin trích dẫn ở phần tài liệu tham khảo thay vì trích dẫn trực tiếp văn bản."
+                ],
+                "correct": [
+                  "Thêm thông tin của tác giả sau khi đã xác nhận sử dụng hợp lí."
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 122,
+                "uid": "ic3__lv3__t4__q122_moved",
+                "explanation": "Đáp án đúng là: “Thêm thông tin của tác giả sau khi đã xác nhận sử dụng hợp lí”."
               }
             ],
             "5. Giao tiếp": [
