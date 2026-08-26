@@ -858,6 +858,9 @@ function renderQuestion(idx) {
   };
   (renderers[q.type] || (() => {}))(q, idx);
 
+  // Mọi câu có hình đều có nút phóng to riêng, kể cả hotspot/matching/classify.
+  _attachQuestionImageZoom(panel);
+
   updateSidebar();
   panel.scrollTop = 0;
 }
@@ -874,7 +877,7 @@ function _buildImageBlock(q) {
         <img src="${q.imageUrl}"
              alt="Hình minh họa câu hỏi ${q.id || ''}"
              loading="lazy"
-             style="max-width:100%;max-height:320px;border-radius:12px;
+             style="width:auto;max-width:100%;max-height:min(52vh,520px);
                     border:2px solid var(--border);box-shadow:var(--shadow);"
              onerror="this.parentElement.style.display='none'"/>
       </div>`;
@@ -888,7 +891,7 @@ function _buildImageBlock(q) {
         <img src="${url}"
              alt="Hình minh họa"
              loading="lazy"
-             style="max-width:100%;max-height:320px;border-radius:12px;
+             style="width:auto;max-width:100%;max-height:min(52vh,520px);
                     border:2px solid var(--border);box-shadow:var(--shadow);"
              onerror="this.parentElement.style.display='none'"/>
       </div>`;
@@ -908,6 +911,55 @@ function _buildImageBlock(q) {
    § 11 — RENDER SINGLE  (type = "single")
    Chỉ cho chọn 1 đáp án, so khớp với correct[0]
    ============================================================ */
+
+function _attachQuestionImageZoom(panel) {
+  if (!panel) return;
+
+  panel.querySelectorAll('.q-card img').forEach(img => {
+    // Ảnh tương tác (hotspot) có nút phóng to riêng bên ngoài sân khấu.
+    // Không được bọc lại bằng thumbnail cạnh ảnh vì sẽ làm co ảnh và lệch
+    // toàn bộ hệ toạ độ hotspot.
+    if (img.dataset.hotspotImage === '1') return;
+    // Không xử lý ảnh đang nằm trong overlay phóng to.
+    if (img.closest('.img-zoom-overlay')) return;
+    if (img.dataset.zoomReady === '1') return;
+    if (img.closest('[data-zoom-wrap="1"]')) return;
+
+    img.dataset.zoomReady = '1';
+
+    // THUMBNAILS MODE:
+    // Tách kính lúp thành một thumbnail điều khiển nằm NGOÀI ảnh.
+    // Không dùng position:absolute nên sẽ không thể đè lên chữ, đáp án
+    // hoặc các phần tử khác; đồng thời tự co giãn tốt trên desktop/mobile.
+    const wrap = document.createElement('span');
+    wrap.className = 'q-image-zoom-wrap';
+    wrap.setAttribute('data-zoom-wrap', '1');
+
+    img.parentNode.insertBefore(wrap, img);
+    wrap.appendChild(img);
+
+    const thumb = document.createElement('span');
+    thumb.className = 'q-image-zoom-thumb';
+    thumb.title = 'Phóng to hình';
+    thumb.setAttribute('aria-label', 'Phóng to hình');
+    thumb.setAttribute('role', 'button');
+    thumb.setAttribute('tabindex', '0');
+    thumb.innerHTML = '<span class="q-image-zoom-thumb-icon" aria-hidden="true">🔍</span>';
+
+    const open = e => {
+      e.preventDefault();
+      e.stopPropagation();
+      openImgZoom(img.currentSrc || img.src, img.alt || 'Hình minh họa');
+    };
+    thumb.addEventListener('click', open);
+    thumb.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') open(e);
+    });
+
+    // Đặt thumbnail ở cuối wrapper, bên ngoài vùng ảnh.
+    wrap.appendChild(thumb);
+  });
+}
 
 function _hasImage(q) {
   return !!(q?.imageUrl || q?.image_file);
@@ -1447,11 +1499,19 @@ function renderHotspot(q, qi) {
     </div>
     <div class="hsq-stage">
       <div class="hotspot-wrap">
-        <img src="${src}" alt="Bấm trực tiếp vào hình để chọn đáp án" loading="lazy"
+        <img src="${src}" data-hotspot-image="1"
+             alt="Bấm trực tiếp vào hình để chọn đáp án" loading="lazy"
              onload="fitHotspotStage()"
              onerror="this.parentElement.innerHTML='<div class=&quot;q-img-notice&quot;>🖼️ Không tải được hình ảnh.</div>'">
         ${areasHtml}
       </div>
+    </div>
+    <div class="hsq-stage-tools">
+      <button type="button" class="q-image-zoom-thumb q-image-zoom-thumb--hotspot"
+              title="Phóng to hình" aria-label="Phóng to hình"
+              onclick="openImgZoom('${escapeAttr(src)}','${escapeAttr(q.question || 'Hình minh họa')}')">
+        <span class="q-image-zoom-thumb-icon" aria-hidden="true">🔍</span>
+      </button>
     </div>
     <div class="match-region-tip">👆 Bấm trực tiếp vào vị trí đúng trên hình. Bấm lại để bỏ chọn.</div>`;
 
@@ -1661,9 +1721,12 @@ function renderClassify(q, qi) {
             <div class="drag-chip classify-chip${it.image_file ? ' classify-chip-img' : ''}" data-qi="${qi}" draggable="true"
                  data-text="${encodeURIComponent(it.text)}"
                  onclick="onClassifyChipTap(this)">${it.image_file
-                   ? `<img src="img/${it.image_file}" alt="${it.text}" loading="lazy">
-                      <button type="button" class="img-zoom-btn" title="Xem hình lớn"
-                              onclick="event.stopPropagation();openImgZoom('img/${it.image_file}','${escapeAttr(it.text)}')">🔍</button>`
+                   ? `<span class="classify-thumb-image">
+                        <img src="img/${it.image_file}" alt="${it.text}" loading="lazy">
+                        <span class="img-zoom-btn img-zoom-thumb" role="button" tabindex="0" title="Xem hình lớn" aria-label="Xem hình lớn"
+                              onclick="event.stopPropagation();openImgZoom('img/${it.image_file}','${escapeAttr(it.text)}')"
+                              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openImgZoom('img/${it.image_file}','${escapeAttr(it.text)}')}">🔍</span>
+                      </span>`
                    : `⠿ ${it.text}`}</div>`).join('')
         : answeredCount >= items.length
           ? `<span class="pool-done">✅ Đã phân loại hết — nhấn ✕ trong nhóm để thay đổi</span>`
@@ -1674,15 +1737,19 @@ function renderClassify(q, qi) {
         <div class="classify-zone" data-qi="${qi}" data-zone="${encodeURIComponent(z.label)}" onclick="onClassifyZoneTap(this)">
           <div class="classify-zone-title">${z.image_file
               ? `<span class="classify-zone-img-wrap"><img src="img/${z.image_file}" alt="" loading="lazy" class="classify-zone-img">
-                   <button type="button" class="img-zoom-btn" title="Xem hình lớn"
-                           onclick="event.stopPropagation();openImgZoom('img/${z.image_file}','')">🔍</button></span>`
+                   <span class="img-zoom-btn img-zoom-thumb" role="button" tabindex="0" title="Xem hình lớn" aria-label="Xem hình lớn"
+                         onclick="event.stopPropagation();openImgZoom('img/${z.image_file}','')"
+                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openImgZoom('img/${z.image_file}','')}">🔍</span></span>`
               : z.label}</div>
           <div class="classify-zone-items">
             ${pool.filter(it => placed[it.text] === z.label).map(it => `
               <span class="classify-zone-chip${it.image_file ? ' classify-zone-chip-img' : ''}">${it.image_file
-                  ? `<img src="img/${it.image_file}" alt="${it.text}" loading="lazy">
-                     <button type="button" class="img-zoom-btn" title="Xem hình lớn"
-                             onclick="event.stopPropagation();openImgZoom('img/${it.image_file}','${escapeAttr(it.text)}')">🔍</button>`
+                  ? `<span class="classify-thumb-image">
+                       <img src="img/${it.image_file}" alt="${it.text}" loading="lazy">
+                       <span class="img-zoom-btn img-zoom-thumb" role="button" tabindex="0" title="Xem hình lớn" aria-label="Xem hình lớn"
+                             onclick="event.stopPropagation();openImgZoom('img/${it.image_file}','${escapeAttr(it.text)}')"
+                             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openImgZoom('img/${it.image_file}','${escapeAttr(it.text)}')}">🔍</span>
+                     </span>`
                   : it.text}
                 <button type="button" class="slot-remove" data-qi="${qi}" data-text="${encodeURIComponent(it.text)}"
                         onclick="event.stopPropagation();removeClassifyItem(this)">✕</button>

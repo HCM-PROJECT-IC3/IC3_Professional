@@ -2,7 +2,7 @@
    js/lobby-roster.js
    Đổ 3 select "Trường / Lớp / Họ và tên" ở form "Bắt đầu làm bài"
    (index.html) bằng danh sách roster THẬT — cùng 1 nguồn dữ liệu (gốc)
-   với trang quản trị "🧑‍🎓 Quản lý danh sách học sinh"
+   với trang quản trị "🧑🎓 Quản lý danh sách học sinh"
    (roster-manager.html, collection Firestore "students_roster").
 
    Điều phối đào tạo nạp/chỉnh danh sách ở roster-manager.html (nút

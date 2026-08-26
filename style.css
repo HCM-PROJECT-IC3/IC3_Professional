@@ -1082,6 +1082,7 @@ body {
 }
 .q-card--hotspot .q-header,
 .q-card--hotspot .match-hint,
+.q-card--hotspot .hsq-stage-tools,
 .q-card--hotspot .match-region-tip {
   flex-shrink: 0;
 }
@@ -1095,8 +1096,9 @@ body {
    header/hint/tip. Nếu nội dung xung quanh quá dài trên màn hình rất nhỏ,
    vẫn giữ min-height an toàn và để .q-panel cuộn nhẹ thay vì cắt ảnh. */
 .hsq-stage {
-  flex: 1;
-  min-height: 140px;
+  flex: 1 1 auto;
+  min-height: 160px;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1460,7 +1462,7 @@ body {
   width: 100%;              /* fallback trước khi JS đo xong */
   max-width: 100%;
   min-height: 140px;
-  max-height: 70vh; /* chặn an toàn nếu JS lỗi/chưa chạy kịp */
+  max-height: none; /* JS fitHotspotStage() quyết định kích thước theo không gian thực */
   margin: 0 auto;
   border-radius: var(--radius-sm);
   overflow: hidden;
@@ -1480,6 +1482,7 @@ body {
 }
 .hotspot-area {
   position: absolute;
+  z-index: 2;
   border: 2px dashed rgba(255,179,0,.65);
   background: rgba(255,179,0,.10);
   cursor: pointer;
@@ -1737,7 +1740,8 @@ body {
 .classify-zone-chip .slot-remove:hover { opacity: 1 }
 .classify-chip { /* kế thừa giao diện .drag-chip, không cần khai báo lại */ }
 .classify-chip-img {
-  padding: .4rem; border-radius: var(--radius-sm);
+  padding: .4rem;
+  padding-right: .4rem; border-radius: var(--radius-sm);
   background: #fff;
   position: relative;
 }
@@ -1747,7 +1751,8 @@ body {
   pointer-events: none;
 }
 .classify-zone-chip-img {
-  padding: .4rem; border-radius: var(--radius-sm); background: var(--card);
+  padding: .4rem;
+  padding-right: .4rem; border-radius: var(--radius-sm); background: var(--card);
   position: relative;
 }
 .classify-zone-chip-img img {
@@ -1759,19 +1764,45 @@ body {
   .classify-zone-chip-img img { height: 52px; max-width: 84px; }
 }
 
-/* ── Nút phóng to hình (xem hình gốc khi hình thu nhỏ quá khó nhìn) ── */
+/* ── Nút phóng to hình — thumbnail nằm ngoài ảnh, không đè chữ ── */
 .img-zoom-btn {
-  position: absolute; top: -6px; right: -6px;
-  width: 22px; height: 22px;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--purple); color: #fff;
-  border: 2px solid #fff; border-radius: 50%;
-  font-size: .68rem; line-height: 1; cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,.25);
-  z-index: 2; transition: transform .15s;
+  position: static;
+  width: 40px; height: 40px;
+  min-width: 40px; min-height: 40px;
+  flex: 0 0 40px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(20,25,45,.92); color: #fff;
+  border: 2px solid #fff; border-radius: 10px;
+  font-size: .9rem; line-height: 1; cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0,0,0,.28);
+  z-index: 1; transition: transform .15s, background .15s;
+  touch-action: manipulation;
+  user-select: none;
 }
-.img-zoom-btn:hover { transform: scale(1.15); background: var(--purple-dk, var(--purple)); }
-.classify-zone-img-wrap { position: relative; display: inline-block; max-width: 100%; }
+.img-zoom-btn:hover, .img-zoom-btn:focus-visible {
+  transform: scale(1.08);
+  background: var(--purple-dk, var(--purple));
+  outline: none;
+}
+.img-zoom-thumb { position: static !important; }
+.classify-thumb-image,
+.classify-zone-img-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  max-width: 100%;
+  vertical-align: middle;
+}
+.classify-thumb-image img {
+  display: block;
+  flex: 0 1 auto;
+}
+.classify-zone-img-wrap .classify-zone-img {
+  flex: 0 1 auto;
+}
+
+
 
 .img-zoom-overlay {
   position: fixed; inset: 0; z-index: 9999;
