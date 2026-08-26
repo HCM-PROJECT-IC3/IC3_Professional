@@ -2416,7 +2416,7 @@
                   "Bút chì (Pencil).",
                   "Màn hình cảm ứng (Touch Screen).",
                   "Bút cảm ứng (Stylus).",
-                  "Chuột kĩ thuật số (Digital Mouse)."
+                  "Chuột kỹ thuật số (Digital Mouse)."
                 ],
                 "correct": [
                   "Màn hình cảm ứng (Touch Screen).",
@@ -2967,7 +2967,7 @@
                     "answer": "true"
                   },
                   {
-                    "text": "Hành vi trái luật và bị cơ quan hành pháp xử lí nghiêm khắc .",
+                    "text": "Hành vi trái luật và bị cơ quan hành pháp xử lý nghiêm khắc .",
                     "answer": "true"
                   },
                   {
@@ -2982,7 +2982,7 @@
                 "image_id": null,
                 "id": 33,
                 "uid": "spark__lv2__t2__q13",
-                "explanation": "Đúng: Hành vi cố ý gây bẽ mặt người khác bằng cách chia sẻ thông tin riêng tư, Hành vi trái luật và bị cơ quan hành pháp xử lí nghiêm khắc , Hành vi gửi, đăng hoặc chia sẻ nội dung ác ý."
+                "explanation": "Đúng: Hành vi cố ý gây bẽ mặt người khác bằng cách chia sẻ thông tin riêng tư, Hành vi trái luật và bị cơ quan hành pháp xử lý nghiêm khắc , Hành vi gửi, đăng hoặc chia sẻ nội dung ác ý."
               },
               {
                 "question": "Bạn đặt mua một game mới, nhưng khi nhận được thì phát hiện rằng đó là một bản sao chép trái phép, không phải game chính hãng. Là một công dân tốt trên môi trường số, đâu là cách phản ứng thích hợp?",
@@ -4403,7 +4403,7 @@
                 "explanation": "Đáp án đúng là: “Đính kèm chú thích”."
               },
               {
-                "question": "Giáo viên cung cấp cho bạn ví dụ về các hành vi xã hội giao tiếp kém trên mạng. Bạn nên làm theo hướng dẫn thực hành phép xã giao trực tuyến nào để chỉnh lại hành vi trong từng ví dụ? Hãy kết nối từng hướng dẫn thực hành phép xã giao trực tuyến từ danh sách ở bên phải sang ví dụ tương ứng bên trái. *",
+                "question": "Giáo viên cung cấp cho bạn ví dụ về các hành vi xã hội giao tiếp kém trên mạng. Bạn nên làm theo hướng dẫn thực hành phép xã giao trực tuyến nào để chỉnh lại hành vi trong từng ví dụ? Hãy kết nối từng hướng dẫn thực hành phép xã giao trực tuyến từ danh sách ở bên phải sang ví dụ tương ứng bên trái.",
                 "type": "matching",
                 "pairs": [
                   {
@@ -4458,7 +4458,7 @@
                     "answer": "true"
                   },
                   {
-                    "text": "Quy tắc ứng xử kĩ thuật số là quy tắc ứng xử đúng đắn trên Internet.",
+                    "text": "Quy tắc ứng xử kỹ thuật số là quy tắc ứng xử đúng đắn trên Internet.",
                     "answer": "true"
                   },
                   {
@@ -4473,7 +4473,7 @@
                 "image_id": null,
                 "id": 80,
                 "uid": "spark__lv2__t6__q8",
-                "explanation": "Đúng: Đồng cảm là khả năng thấu hiểu và chia sẻ cảm xúc với người khác, Quy tắc ứng xử kĩ thuật số là quy tắc ứng xử đúng đắn trên Internet. Sai: Tôn trọng là khi bạn mong một việc gì đó xảy ra hai lần."
+                "explanation": "Đúng: Đồng cảm là khả năng thấu hiểu và chia sẻ cảm xúc với người khác, Quy tắc ứng xử kỹ thuật số là quy tắc ứng xử đúng đắn trên Internet. Sai: Tôn trọng là khi bạn mong một việc gì đó xảy ra hai lần."
               },
               {
                 "question": "Với mỗi câu phát biểu về hoạt động giao tiếp trên môi trường số, hãy chọn Đúng hoặc Sai.",
@@ -4566,7 +4566,7 @@
                   "Khắc phục lỗi và làm cho bài tập hoàn chỉnh hơn.",
                   "Nhận được điểm số tuyệt đối.",
                   "Phối hợp với nhau để hướng đến một mục tiêu.",
-                  "Chia sẽ ý tưởng của bạn"
+                  "Chia sẻ ý tưởng của bạn"
                 ],
                 "correct": [
                   "Khắc phục lỗi và làm cho bài tập hoàn chỉnh hơn."
@@ -5212,7 +5212,7 @@
                 "explanation": "Đáp án đúng là: “HTTPS”."
               },
               {
-                "question": "Em hãy cho biết, lựa chọn nào là hành động hợp lí khi sử dụng thiết bị điện tử?",
+                "question": "Em hãy cho biết, lựa chọn nào là hành động hợp lý khi sử dụng thiết bị điện tử?",
                 "type": "single",
                 "options": [
                   "Nghỉ giải lao và giới hạn thời gian sử dụng thiết bị.",
@@ -5321,7 +5321,7 @@
                 "options": [
                   "Xác định thông tin cá nhân của người dùng.",
                   "Xác định các thiết bị hỗ trợ Internet trên mạng máy tính.",
-                  "Xác định vị trí địa chỉ vật lí của trang Web.",
+                  "Xác định vị trí địa chỉ vật lý của trang Web.",
                   "Gửi và nhận Email."
                 ],
                 "correct": [
@@ -5354,7 +5354,7 @@
                 "uid": "spark__lv3__t1__q32_new"
               },
               {
-                "question": "Em hãy cho biết, tùy chọn nào dưới đây KHÔNG phải là một phần của URL?",
+                "question": "Em hãy cho biết, tùy chọn nào dưới đây KHÔNG phải là một phần của URL?",
                 "type": "single",
                 "options": [
                   "Địa chỉ IP (IP Address)",
@@ -5411,30 +5411,6 @@
                 "uid": "spark__lv3__t1__q35_new"
               },
               {
-                "question": "Em hãy di chuyển từng loại lưu trữ dữ liệu từ danh sách ở bên phải sang trường hợp sử dụng phù hợp ở bên trái.",
-                "type": "matching",
-                "pairs": [
-                  {
-                    "left": "Em muốn dữ liệu của mình được sao lưu và lưu trữ một cách an toàn bởi một công ty khác.",
-                    "right": "Lưu trữ đám mây (Cloud Storage)"
-                  },
-                  {
-                    "left": "Em muốn sao chép hình ảnh giữa hai máy tính mà không cần kết nối mạng.",
-                    "right": "USB"
-                  },
-                  {
-                    "left": "Em chỉ muốn lưu trữ dữ liệu trên máy tính xách tay của mình.",
-                    "right": "Ổ cứng (Hard Drive)"
-                  }
-                ],
-                "image": false,
-                "image_file": null,
-                "image_id": null,
-                "explanation": "Ghép đúng: \"Em muốn dữ liệu của mình được sao lưu và lưu trữ một cách an toàn bởi một công ty khác.\" ghép với \"Lưu trữ đám mây (Cloud Storage)\"; \"Em muốn sao chép hình ảnh giữa hai máy tính mà không cần kết nối mạng.\" ghép với \"USB\"; \"Em chỉ muốn lưu trữ dữ liệu trên máy tính xách tay của mình.\" ghép với \"Ổ cứng (Hard Drive)\".",
-                "id": 36,
-                "uid": "spark__lv3__t1__q36_new"
-              },
-              {
                 "question": "Em hãy cho biết, URL (Uniform Resource Locator) là gì?",
                 "type": "single",
                 "options": [
@@ -5467,7 +5443,7 @@
                 "image": false,
                 "image_file": null,
                 "image_id": null,
-                "explanation": "Khi chỉ một thiết bị bị mất kết nối trong khi các thiết bị khác trong nhà vẫn hoạt động bình thường, nguyên nhân thường là do tín hiệu Wifi yếu ở vị trí hiện tại, nên cách khắc phục hợp lí là tiến lại gần thiết bị phát Wifi hơn, thay vì thay Pin hay đổi sang kết nối Bluetooth (không liên quan đến Internet).",
+                "explanation": "Khi chỉ một thiết bị bị mất kết nối trong khi các thiết bị khác trong nhà vẫn hoạt động bình thường, nguyên nhân thường là do tín hiệu Wifi yếu ở vị trí hiện tại, nên cách khắc phục hợp lý là tiến lại gần thiết bị phát Wifi hơn, thay vì thay Pin hay đổi sang kết nối Bluetooth (không liên quan đến Internet).",
                 "id": 38,
                 "uid": "spark__lv3__t1__q38_new"
               },
@@ -5881,25 +5857,6 @@
                 "explanation": "Có: Một nhân viên nhà trẻ muốn đăng hình về một em bé sơ sinh tại nhà trẻ, Một tài xế xe buýt muốn đăng hình về một em học sinh cấp một trên xe buýt, Một y tá muốn đăng ảnh về một bệnh nhân tại bệnh viện."
               },
               {
-                "question": "Em cần thực hiện bước đầu tiên để đảm bảo rằng dấu chân kỹ thuật số (Digital Footprint) của em được tích cực. Em nên làm gì?",
-                "type": "single",
-                "options": [
-                  "Yêu cầu báo cáo tín dụng từ ba cơ quan tín dụng.",
-                  "Chặn bài đăng của những người bạn không biết trên mạng xã hội.",
-                  "Thỉnh thoảng tìm kiếm bản thân trên Internet.",
-                  "Yêu cầu từng trang mạng xã hội xóa các bài đăng về mình."
-                ],
-                "correct": [
-                  "Thỉnh thoảng tìm kiếm bản thân trên Internet."
-                ],
-                "image": false,
-                "image_file": null,
-                "image_id": null,
-                "id": 44,
-                "uid": "spark__lv3__t2__q16",
-                "explanation": "Đáp án đúng là: “Thỉnh thoảng tìm kiếm bản thân trên Internet”."
-              },
-              {
                 "question": "Em hãy cho biết, những tác hại nào có thể xảy ra nếu em xem màn hình quá lâu? (Chọn 2)",
                 "type": "multi",
                 "options": [
@@ -6171,7 +6128,7 @@
                 "explanation": "Đáp án đúng là: “Bạn nên xin phép trong mọi tình huống”."
               },
               {
-                "question": "Em hãy cho biết, một ví dụ về quyền công dân kĩ thuật số tích cực là gì?",
+                "question": "Em hãy cho biết, một ví dụ về quyền công dân kỹ thuật số tích cực là gì?",
                 "type": "single",
                 "options": [
                   "Tạo tài khoản giả để lừa gạt người khác.",
@@ -6185,12 +6142,12 @@
                 "image": false,
                 "image_file": null,
                 "image_id": null,
-                "explanation": "Công dân kĩ thuật số tích cực là người sử dụng công nghệ một cách có trách nhiệm và mang lại lợi ích, ví dụ chia sẻ kiến thức, giúp đỡ người khác trực tuyến. Các lựa chọn còn lại đều mô tả hành vi tiêu cực như lừa gạt hay chia sẻ thông tin cá nhân bừa bãi.",
+                "explanation": "Công dân kỹ thuật số tích cực là người sử dụng công nghệ một cách có trách nhiệm và mang lại lợi ích, ví dụ chia sẻ kiến thức, giúp đỡ người khác trực tuyến. Các lựa chọn còn lại đều mô tả hành vi tiêu cực như lừa gạt hay chia sẻ thông tin cá nhân bừa bãi.",
                 "id": 57,
                 "uid": "spark__lv3__t2__q57_new"
               },
               {
-                "question": "Em hãy cho biết, ví dụ về nội dung kĩ thuật số có thể bị giới hạn độ tuổi là gì?",
+                "question": "Em hãy cho biết, ví dụ về nội dung kỹ thuật số có thể bị giới hạn độ tuổi là gì?",
                 "type": "single",
                 "options": [
                   "Phim hoạt hình trẻ em.",
@@ -6209,7 +6166,7 @@
                 "uid": "spark__lv3__t2__q58_new"
               },
               {
-                "question": "Em hãy cho biết, một ví dụ về quyền công dân kĩ thuật số tiêu cực là gì?",
+                "question": "Em hãy cho biết, một ví dụ về quyền công dân kỹ thuật số tiêu cực là gì?",
                 "type": "single",
                 "options": [
                   "Khen ngợi tác phẩm nghệ thuật của một người bạn trực tuyến.",
@@ -6223,7 +6180,7 @@
                 "image": false,
                 "image_file": null,
                 "image_id": null,
-                "explanation": "Tải xuống tài liệu có bản quyền mà không được phép là hành vi vi phạm pháp luật và đạo đức, thể hiện quyền công dân kĩ thuật số tiêu cực. Các lựa chọn còn lại (khen ngợi bạn bè, khuyến khích tử tế, hợp tác trực tuyến) đều là hành vi tích cực.",
+                "explanation": "Tải xuống tài liệu có bản quyền mà không được phép là hành vi vi phạm pháp luật và đạo đức, thể hiện quyền công dân kỹ thuật số tiêu cực. Các lựa chọn còn lại (khen ngợi bạn bè, khuyến khích tử tế, hợp tác trực tuyến) đều là hành vi tích cực.",
                 "id": 59,
                 "uid": "spark__lv3__t2__q59_new"
               },
@@ -6242,12 +6199,12 @@
                 "image": false,
                 "image_file": null,
                 "image_id": null,
-                "explanation": "Khi gặp nội dung không phù hợp với lứa tuổi, hành động đúng đắn là báo cáo cho người lớn đáng tin cậy hoặc người điều hành trang Web để họ xử lí, thay vì phớt lờ, chia sẻ tiếp hoặc bình luận công khai - những cách này không giải quyết được vấn đề và có thể khiến người khác cũng tiếp xúc với nội dung xấu.",
+                "explanation": "Khi gặp nội dung không phù hợp với lứa tuổi, hành động đúng đắn là báo cáo cho người lớn đáng tin cậy hoặc người điều hành trang Web để họ xử lý, thay vì phớt lờ, chia sẻ tiếp hoặc bình luận công khai - những cách này không giải quyết được vấn đề và có thể khiến người khác cũng tiếp xúc với nội dung xấu.",
                 "id": 60,
                 "uid": "spark__lv3__t2__q60_new"
               },
               {
-                "question": "Em cần thực hiện bước đầu tiên để đảm bảo rằng dấu chân kĩ thuật số (Digital Footprint) của em được tích cực. Em nên làm gì?",
+                "question": "Em cần thực hiện bước đầu tiên để đảm bảo rằng dấu chân kỹ thuật số (Digital Footprint) của em được tích cực. Em nên làm gì?",
                 "type": "single",
                 "options": [
                   "Yêu cầu từng trang mạng xã hội xóa các bài đăng về mình.",
@@ -6261,12 +6218,12 @@
                 "image": false,
                 "image_file": null,
                 "image_id": null,
-                "explanation": "Thỉnh thoảng tự tìm kiếm tên mình trên Internet giúp em biết được những gì đang xuất hiện công khai về bản thân, từ đó chủ động điều chỉnh để giữ dấu chân kĩ thuật số (Digital Footprint) tích cực - đây là bước đầu tiên hợp lí hơn nhiều so với yêu cầu xóa hàng loạt bài đăng ngay khi chưa biết có gì.",
+                "explanation": "Thỉnh thoảng tự tìm kiếm tên mình trên Internet giúp em biết được những gì đang xuất hiện công khai về bản thân, từ đó chủ động điều chỉnh để giữ dấu chân kỹ thuật số (Digital Footprint) tích cực - đây là bước đầu tiên hợp lý hơn nhiều so với yêu cầu xóa hàng loạt bài đăng ngay khi chưa biết có gì.",
                 "id": 61,
                 "uid": "spark__lv3__t2__q61_new"
               },
               {
-                "question": "Em hãy cho biết, tùy chọn nào là hành động giúp quản lí dấu chân kĩ thuật số (Digital Footprint) của riêng em?",
+                "question": "Em hãy cho biết, tùy chọn nào là hành động giúp quản lý dấu chân kỹ thuật số (Digital Footprint) của riêng em?",
                 "type": "single",
                 "options": [
                   "Hãy đăng bài về người khác trước khi họ đăng bài về em.",
@@ -6280,7 +6237,7 @@
                 "image": false,
                 "image_file": null,
                 "image_id": null,
-                "explanation": "Yêu cầu người khác không đăng bài về mình trực tuyến là cách chủ động quản lí dấu chân kĩ thuật số của bản thân, vì em không thể kiểm soát hoàn toàn nội dung người khác đăng, nhưng có thể lên tiếng đề nghị họ tôn trọng sự riêng tư của mình.",
+                "explanation": "Yêu cầu người khác không đăng bài về mình trực tuyến là cách chủ động quản lý dấu chân kỹ thuật số của bản thân, vì em không thể kiểm soát hoàn toàn nội dung người khác đăng, nhưng có thể lên tiếng đề nghị họ tôn trọng sự riêng tư của mình.",
                 "id": 62,
                 "uid": "spark__lv3__t2__q62_new"
               },
@@ -6299,7 +6256,7 @@
                 "image": false,
                 "image_file": null,
                 "image_id": null,
-                "explanation": "Vì lí do tôn trọng quyền riêng tư và sự đồng thuận của người khác, em nên xin phép trước khi chụp ảnh bất kỳ ai, bất kể đó là người thân, người lạ hay người nổi tiếng - việc chụp ảnh không xin phép không bao giờ là điều \"bình thường\" hay được mặc định cho phép.",
+                "explanation": "Vì lý do tôn trọng quyền riêng tư và sự đồng thuận của người khác, em nên xin phép trước khi chụp ảnh bất kỳ ai, bất kể đó là người thân, người lạ hay người nổi tiếng - việc chụp ảnh không xin phép không bao giờ là điều \"bình thường\" hay được mặc định cho phép.",
                 "id": 63,
                 "uid": "spark__lv3__t2__q63_new"
               },
@@ -6318,7 +6275,7 @@
                 "image": false,
                 "image_file": null,
                 "image_id": null,
-                "explanation": "Khi nhận tin nhắn không phù hợp hoặc không an toàn, em nên chụp ảnh màn hình để lưu bằng chứng và nhanh chóng cho người lớn đáng tin cậy xem, để được hỗ trợ xử lí kịp thời - không nên trả lời, phớt lờ hay tự ý tắt máy vì như vậy có thể làm mất bằng chứng hoặc bỏ lỡ sự giúp đỡ cần thiết.",
+                "explanation": "Khi nhận tin nhắn không phù hợp hoặc không an toàn, em nên chụp ảnh màn hình để lưu bằng chứng và nhanh chóng cho người lớn đáng tin cậy xem, để được hỗ trợ xử lý kịp thời - không nên trả lời, phớt lờ hay tự ý tắt máy vì như vậy có thể làm mất bằng chứng hoặc bỏ lỡ sự giúp đỡ cần thiết.",
                 "id": 64,
                 "uid": "spark__lv3__t2__q64_new"
               },
@@ -6337,7 +6294,7 @@
                 "image": false,
                 "image_file": null,
                 "image_id": null,
-                "explanation": "Khi nghi ngờ có hành vi bắt nạt trong lúc trò chuyện, cách xử lí đúng là chụp ảnh màn hình để lưu bằng chứng rồi chia sẻ với bố mẹ để được hỗ trợ, thay vì tự mình giải quyết (thoát trò chơi, xóa cuộc trò chuyện) hoặc chỉ nhắc bạn mình mà bỏ qua vấn đề.",
+                "explanation": "Khi nghi ngờ có hành vi bắt nạt trong lúc trò chuyện, cách xử lý đúng là chụp ảnh màn hình để lưu bằng chứng rồi chia sẻ với bố mẹ để được hỗ trợ, thay vì tự mình giải quyết (thoát trò chơi, xóa cuộc trò chuyện) hoặc chỉ nhắc bạn mình mà bỏ qua vấn đề.",
                 "id": 65,
                 "uid": "spark__lv3__t2__q65_new"
               },
@@ -6363,7 +6320,7 @@
                     "correct": "Không"
                   },
                   {
-                    "text": "Trích dẫn nguồn của bức ảnh mà em dùng cho áp phích kĩ thuật số của mình.",
+                    "text": "Trích dẫn nguồn của bức ảnh mà em dùng cho áp phích kỹ thuật số của mình.",
                     "options": [
                       "Không",
                       "Có"
@@ -6374,12 +6331,12 @@
                 "image": false,
                 "image_file": null,
                 "image_id": null,
-                "explanation": "\"Sử dụng tên và ngày sinh của một người bạn làm tên hiển thị công khai của mình.\" → Không; \"Đưa địa chỉ nhà của bạn cùng lớp cho một người em gặp trên mạng.\" → Không; \"Trích dẫn nguồn của bức ảnh mà em dùng cho áp phích kĩ thuật số của mình.\" → Có.",
+                "explanation": "\"Sử dụng tên và ngày sinh của một người bạn làm tên hiển thị công khai của mình.\" → Không; \"Đưa địa chỉ nhà của bạn cùng lớp cho một người em gặp trên mạng.\" → Không; \"Trích dẫn nguồn của bức ảnh mà em dùng cho áp phích kỹ thuật số của mình.\" → Có.",
                 "id": 66,
                 "uid": "spark__lv3__t2__q66_new2"
               },
               {
-                "question": "Với mỗi câu phát biểu, em hãy chọn Có nếu phát biểu đó thể hiện hành động của một công dân kĩ thuật số mẫu mực hoặc chọn Không nếu không phải.",
+                "question": "Với mỗi câu phát biểu, em hãy chọn Có nếu phát biểu đó thể hiện hành động của một công dân kỹ thuật số mẫu mực hoặc chọn Không nếu không phải.",
                 "type": "list",
                 "hint": "Chọn đáp án đúng cho mỗi dòng.",
                 "items": [
@@ -6416,7 +6373,7 @@
                 "uid": "spark__lv3__t2__q67_new2"
               },
               {
-                "question": "Với mỗi câu phát biểu, em hãy chọn Có nếu là hành động của một công dân kĩ thuật số mẫu mực hoặc chọn Không nếu không phải.",
+                "question": "Với mỗi câu phát biểu, em hãy chọn Có nếu là hành động của một công dân kỹ thuật số mẫu mực hoặc chọn Không nếu không phải.",
                 "type": "list",
                 "hint": "Chọn đáp án đúng cho mỗi dòng.",
                 "items": [
@@ -7036,8 +6993,8 @@
                 "type": "single",
                 "options": [
                   "Sử dụng công cụ thu thập dữ liệu.",
-                  "Áp dụng các công cụ quản lí thông tin.",
-                  "Hành động của công dân kĩ thuật số tích cực.",
+                  "Áp dụng các công cụ quản lý thông tin.",
+                  "Hành động của công dân kỹ thuật số tích cực.",
                   "Sử dụng một quy trình cộng tác."
                 ],
                 "correct": [
@@ -7189,7 +7146,7 @@
                 "uid": "spark__lv3__t3__q89_new"
               },
               {
-                "question": "Em hãy cho biết, thuật ngữ Thiên kiến (Bias) có nghĩa là gì trong truyền thông kĩ thuật số?",
+                "question": "Em hãy cho biết, thuật ngữ Thiên kiến (Bias) có nghĩa là gì trong truyền thông kỹ thuật số?",
                 "type": "single",
                 "options": [
                   "Xu hướng ủng hộ một bên hoặc có một quan điểm cụ thể.",
@@ -7208,12 +7165,12 @@
                 "uid": "spark__lv3__t3__q90_new"
               },
               {
-                "question": "Em hãy cho biết, phát biểu nào sau đây thể hiện sự thiên kiến?",
+                "question": "Em hãy cho biết, phát biểu nào sau đây thể hiện sự thiên kiến?",
                 "type": "single",
                 "options": [
                   "Sử dụng điện thoại thông minh là cần thiết để mọi người duy trì kết nối.",
                   "Tôi thích chơi trò chơi điện tử vì chúng rất thú vị.",
-                  "Học lập trình máy tính có thể giúp phát triển kĩ năng tư duy phản biện.",
+                  "Học lập trình máy tính có thể giúp phát triển kỹ năng tư duy phản biện.",
                   "Ăn rau giúp bạn duy trì lối sống lành mạnh."
                 ],
                 "correct": [
@@ -7642,7 +7599,7 @@
                 "uid": "spark__lv3__t4__q97_new"
               },
               {
-                "question": "Em sẽ sử dụng ứng dụng nào để tạo và quản lí bảng tính (Spreadsheet)?",
+                "question": "Em sẽ sử dụng ứng dụng nào để tạo và quản lý bảng tính (Spreadsheet)?",
                 "type": "single",
                 "options": [
                   "Microsoft PowerPoint",
@@ -7656,7 +7613,7 @@
                 "image": false,
                 "image_file": null,
                 "image_id": null,
-                "explanation": "Google Sheets là ứng dụng bảng tính trực tuyến, dùng để tạo, chỉnh sửa và quản lí dữ liệu dạng hàng - cột, tính toán công thức và vẽ biểu đồ. PowerPoint dùng cho bài trình chiếu, Illustrator cho thiết kế đồ họa, Pages cho văn bản.",
+                "explanation": "Google Sheets là ứng dụng bảng tính trực tuyến, dùng để tạo, chỉnh sửa và quản lý dữ liệu dạng hàng - cột, tính toán công thức và vẽ biểu đồ. PowerPoint dùng cho bài trình chiếu, Illustrator cho thiết kế đồ họa, Pages cho văn bản.",
                 "id": 98,
                 "uid": "spark__lv3__t4__q98_new"
               },
@@ -7786,26 +7743,26 @@
                 "explanation": "Ghép đúng: “Màu đỏ” ↔ “Dữ liệu”; “Xe hơi có màu đỏ nhiều hơn màu khác trong bãi xe” ↔ “Kiến thức”; “Chiếc xe hơi màu đỏ” ↔ “Thông tin”."
               },
               {
-                "question": "Em hãy cho biết, định nghĩa của giao tiếp kĩ thuật số giữa các cá nhân là gì?",
+                "question": "Em hãy cho biết, định nghĩa của giao tiếp kỹ thuật số giữa các cá nhân là gì?",
                 "type": "single",
                 "options": [
-                  "Sử dụng các thiết bị kĩ thuật số để trò chuyện với bạn bè và gia đình.",
-                  "Nói chuyện với trợ lí ảo hoặc Robot.",
+                  "Sử dụng các thiết bị kỹ thuật số để trò chuyện với bạn bè và gia đình.",
+                  "Nói chuyện với trợ lý ảo hoặc Robot.",
                   "Xem Video trực tuyến.",
                   "Cách các máy tính nói chuyện với nhau."
                 ],
                 "correct": [
-                  "Sử dụng các thiết bị kĩ thuật số để trò chuyện với bạn bè và gia đình."
+                  "Sử dụng các thiết bị kỹ thuật số để trò chuyện với bạn bè và gia đình."
                 ],
                 "image": false,
                 "image_file": null,
                 "image_id": null,
-                "explanation": "Giao tiếp kĩ thuật số giữa các cá nhân là việc con người sử dụng các thiết bị/ứng dụng kĩ thuật số (điện thoại, tin nhắn, video call...) để trò chuyện, trao đổi với nhau, khác với việc nói chuyện với trợ lí ảo, xem video một chiều hay giao tiếp máy - máy.",
+                "explanation": "Giao tiếp kỹ thuật số giữa các cá nhân là việc con người sử dụng các thiết bị/ứng dụng kỹ thuật số (điện thoại, tin nhắn, video call...) để trò chuyện, trao đổi với nhau, khác với việc nói chuyện với trợ lý ảo, xem video một chiều hay giao tiếp máy - máy.",
                 "id": 93,
                 "uid": "spark__lv3__t5__q93_new"
               },
               {
-                "question": "Em sẽ sử dụng hội nghị truyền hình như thế nào để cộng tác kĩ thuật số trong một dự án nhóm?",
+                "question": "Em sẽ sử dụng hội nghị truyền hình như thế nào để cộng tác kỹ thuật số trong một dự án nhóm?",
                 "type": "single",
                 "options": [
                   "Để theo dõi bất kì liên kết hoặc trang Web hữu ích nào.",
@@ -7838,7 +7795,7 @@
                 "image": false,
                 "image_file": null,
                 "image_id": null,
-                "explanation": "Dòng chủ đề (Subject) trong Email có nhiệm vụ cho người nhận biết ngay nội dung chính và mục đích của Email trước khi mở ra đọc, giúp họ sắp xếp và ưu tiên xử lí - khác với lời chào, tóm tắt hay lời kết trong nội dung thư.",
+                "explanation": "Dòng chủ đề (Subject) trong Email có nhiệm vụ cho người nhận biết ngay nội dung chính và mục đích của Email trước khi mở ra đọc, giúp họ sắp xếp và ưu tiên xử lý - khác với lời chào, tóm tắt hay lời kết trong nội dung thư.",
                 "id": 95,
                 "uid": "spark__lv3__t5__q95_new"
               },
@@ -7862,7 +7819,7 @@
                 "uid": "spark__lv3__t5__q96_new"
               },
               {
-                "question": "Em hãy cho biết, biểu tượng cảm xúc (Emoji) phù hợp với loại giao tiếp kĩ thuật số nào?",
+                "question": "Em hãy cho biết, biểu tượng cảm xúc (Emoji) phù hợp với loại giao tiếp kỹ thuật số nào?",
                 "type": "single",
                 "options": [
                   "Email cho các nhà tuyển dụng tiềm năng.",
@@ -7995,7 +7952,7 @@
                 "uid": "spark__lv3__t5__q103_new"
               },
               {
-                "question": "Với mỗi câu phát biểu, em hãy chọn Có nếu đó là một ví dụ về giao tiếp kĩ thuật số giữa các cá nhân hoặc chọn Không nếu không phải.",
+                "question": "Với mỗi câu phát biểu, em hãy chọn Có nếu đó là một ví dụ về giao tiếp kỹ thuật số giữa các cá nhân hoặc chọn Không nếu không phải.",
                 "type": "list",
                 "hint": "Chọn đáp án đúng cho mỗi dòng.",
                 "items": [
@@ -8032,7 +7989,7 @@
                 "uid": "spark__lv3__t5__q104_new2"
               },
               {
-                "question": "Với mỗi câu phát biểu, em hãy chọn Có nếu đó là giao tiếp kĩ thuật số giữa các cá nhân hoặc chọn Không nếu không phải.",
+                "question": "Với mỗi câu phát biểu, em hãy chọn Có nếu đó là giao tiếp kỹ thuật số giữa các cá nhân hoặc chọn Không nếu không phải.",
                 "type": "list",
                 "hint": "Chọn đáp án đúng cho mỗi dòng.",
                 "items": [
@@ -8077,7 +8034,7 @@
                 "uid": "spark__lv3__t5__q105_new2"
               },
               {
-                "question": "Với mỗi câu phát biểu, em hãy chọn Có nếu đó là ví dụ về hoạt động giao tiếp kĩ thuật số giữa các cá nhân hoặc chọn Không nếu không phải.",
+                "question": "Với mỗi câu phát biểu, em hãy chọn Có nếu đó là ví dụ về hoạt động giao tiếp kỹ thuật số giữa các cá nhân hoặc chọn Không nếu không phải.",
                 "type": "list",
                 "hint": "Chọn đáp án đúng cho mỗi dòng.",
                 "items": [
@@ -8143,7 +8100,7 @@
                 "uid": "spark__lv3__t5__q107_new2"
               },
               {
-                "question": "Với mỗi câu phát biểu, em hãy chọn Có nếu điều đó là phù hợp trong giao tiếp kĩ thuật số hoặc chọn Không nếu không phù hợp.",
+                "question": "Với mỗi câu phát biểu, em hãy chọn Có nếu điều đó là phù hợp trong giao tiếp kỹ thuật số hoặc chọn Không nếu không phù hợp.",
                 "type": "list",
                 "hint": "Chọn đáp án đúng cho mỗi dòng.",
                 "items": [
@@ -8238,7 +8195,7 @@
                     "correct": "Có"
                   },
                   {
-                    "text": "Ảnh kỉ yếu của học sinh được chụp chuyên nghiệp.",
+                    "text": "Ảnh kỷ yếu của học sinh được chụp chuyên nghiệp.",
                     "options": [
                       "Không",
                       "Có"
@@ -8262,7 +8219,7 @@
                 "uid": "spark__lv3__t5__q110_new2"
               },
               {
-                "question": "Với mỗi ví dụ về giao tiếp, em hãy chọn nền tảng giao tiếp kĩ thuật số thích hợp.",
+                "question": "Với mỗi ví dụ về giao tiếp, em hãy chọn nền tảng giao tiếp kỹ thuật số thích hợp.",
                 "type": "selectfill",
                 "hint": "Bấm mở dropdown ở mỗi câu và chọn đáp án phù hợp.",
                 "segments": [
@@ -8595,11 +8552,11 @@
                     "right": "Email"
                   },
                   {
-                    "left": "Người dùng có thể luôn tổ chức và quản lí công việc giữa nhiều người.",
-                    "right": "Calendars & Scheduling Software (Phần mềm Quản lí lịch)"
+                    "left": "Người dùng có thể luôn tổ chức và quản lý công việc giữa nhiều người.",
+                    "right": "Calendars & Scheduling Software (Phần mềm Quản lý lịch)"
                   },
                   {
-                    "left": "Mọi người có thể cộng tác và chia sẻ thông tin theo thời gian thực, bất kể vị trí địa lí.",
+                    "left": "Mọi người có thể cộng tác và chia sẻ thông tin theo thời gian thực, bất kể vị trí địa lý.",
                     "right": "Video Conferencing (Hội nghị truyền hình)"
                   },
                   {
@@ -8610,12 +8567,12 @@
                 "image": false,
                 "image_file": null,
                 "image_id": null,
-                "explanation": "Ghép đúng: \"Nhân viên có thể gửi và nhận thông tin liên lạc mọi lúc, mọi nơi.\" ghép với \"Email\"; \"Người dùng có thể luôn tổ chức và quản lí công việc giữa nhiều người.\" ghép với \"Calendars & Scheduling Software (Phần mềm Quản lí lịch)\"; \"Mọi người có thể cộng tác và chia sẻ thông tin theo thời gian thực, bất kể vị trí địa lí.\" ghép với \"Video Conferencing (Hội nghị truyền hình)\"; \"Các tập tin có thể được truy cập từ bất cứ nơi nào có kết nối Internet.\" ghép với \"Cloud Storage (Lưu trữ đám mây)\".",
+                "explanation": "Ghép đúng: \"Nhân viên có thể gửi và nhận thông tin liên lạc mọi lúc, mọi nơi.\" ghép với \"Email\"; \"Người dùng có thể luôn tổ chức và quản lý công việc giữa nhiều người.\" ghép với \"Calendars & Scheduling Software (Phần mềm Quản lý lịch)\"; \"Mọi người có thể cộng tác và chia sẻ thông tin theo thời gian thực, bất kể vị trí địa lý.\" ghép với \"Video Conferencing (Hội nghị truyền hình)\"; \"Các tập tin có thể được truy cập từ bất cứ nơi nào có kết nối Internet.\" ghép với \"Cloud Storage (Lưu trữ đám mây)\".",
                 "id": 109,
                 "uid": "spark__lv3__t6__q109_new"
               },
               {
-                "question": "Em hãy di chuyển mỗi kiểu hợp tác kĩ thuật số từ danh sách ở bên phải sang ví dụ tương ứng ở bên trái.",
+                "question": "Em hãy di chuyển mỗi kiểu hợp tác kỹ thuật số từ danh sách ở bên phải sang ví dụ tương ứng ở bên trái.",
                 "type": "matching",
                 "pairs": [
                   {
@@ -8658,7 +8615,7 @@
                 "uid": "spark__lv3__t6__q111_new"
               },
               {
-                "question": "Ken và Orson đều đang ở nhà. Họ có thể làm bài tập về nhà cùng nhau và cùng lúc qua hình thức kĩ thuật số nào?",
+                "question": "Ken và Orson đều đang ở nhà. Họ có thể làm bài tập về nhà cùng nhau và cùng lúc qua hình thức kỹ thuật số nào?",
                 "type": "single",
                 "options": [
                   "Tạo một hội thảo Video lúc 6 giờ chiều.",
@@ -8749,7 +8706,7 @@
                     "correct": "Có"
                   },
                   {
-                    "text": "Nhiệm vụ có thể phù hợp với kĩ năng của mỗi người.",
+                    "text": "Nhiệm vụ có thể phù hợp với kỹ năng của mỗi người.",
                     "options": [
                       "Không",
                       "Có"
@@ -8765,7 +8722,7 @@
                 "uid": "spark__lv3__t6__q115_new2"
               },
               {
-                "question": "Với mỗi câu phát biểu về cộng tác kĩ thuật số, hãy chọn Mục đích học tập hoặc Mục đích giải trí để xác định trường hợp sử dụng đúng.",
+                "question": "Với mỗi câu phát biểu về cộng tác kỹ thuật số, hãy chọn Mục đích học tập hoặc Mục đích giải trí để xác định trường hợp sử dụng đúng.",
                 "type": "list",
                 "hint": "Chọn đáp án đúng cho mỗi dòng.",
                 "items": [
@@ -8802,7 +8759,7 @@
                 "uid": "spark__lv3__t6__q116_new2"
               },
               {
-                "question": "Với mỗi câu phát biểu về mục đích của cộng tác kĩ thuật số, hãy chọn Học tập hoặc Giải trí để xác định trường hợp sử dụng đúng.",
+                "question": "Với mỗi câu phát biểu về mục đích của cộng tác kỹ thuật số, hãy chọn Học tập hoặc Giải trí để xác định trường hợp sử dụng đúng.",
                 "type": "list",
                 "hint": "Chọn đáp án đúng cho mỗi dòng.",
                 "items": [
@@ -9032,18 +8989,18 @@
                 "question": "Em hãy cho biết, Hacker mũ trắng là gì?",
                 "type": "single",
                 "options": [
-                  "Một người sử dụng các kĩ năng và kiến thức máy tính cho mục đích tốt.",
+                  "Một người sử dụng các kỹ năng và kiến thức máy tính cho mục đích tốt.",
                   "Ai đó đội mũ trắng để che giấu danh tính.",
                   "Người mặc đồ trắng khi sử dụng máy tính.",
                   "Ai đó nhắm vào những người xấu trực tuyến."
                 ],
                 "correct": [
-                  "Một người sử dụng các kĩ năng và kiến thức máy tính cho mục đích tốt."
+                  "Một người sử dụng các kỹ năng và kiến thức máy tính cho mục đích tốt."
                 ],
                 "image": false,
                 "image_file": null,
                 "image_id": null,
-                "explanation": "Hacker mũ trắng (White Hat Hacker) là người dùng kĩ năng công nghệ một cách hợp pháp và có đạo đức, thường để tìm và vá lỗ hổng bảo mật giúp hệ thống an toàn hơn - khác hẳn với việc \"đội mũ trắng\" theo nghĩa đen hay nhắm vào \"người xấu\" một cách tùy tiện.",
+                "explanation": "Hacker mũ trắng (White Hat Hacker) là người dùng kỹ năng công nghệ một cách hợp pháp và có đạo đức, thường để tìm và vá lỗ hổng bảo mật giúp hệ thống an toàn hơn - khác hẳn với việc \"đội mũ trắng\" theo nghĩa đen hay nhắm vào \"người xấu\" một cách tùy tiện.",
                 "id": 122,
                 "uid": "spark__lv3__t7__q122_new"
               },
@@ -9250,7 +9207,7 @@
                 "image": false,
                 "image_file": null,
                 "image_id": null,
-                "explanation": "Công nghệ thu thập dữ liệu là các công cụ/kĩ thuật giúp theo dõi và ghi nhận dữ liệu từ nhiều nguồn khác nhau (ví dụ Cookies, cảm biến, biểu mẫu trực tuyến), khác hẳn với công cụ cộng tác, lưu trữ hay trò chơi.",
+                "explanation": "Công nghệ thu thập dữ liệu là các công cụ/kỹ thuật giúp theo dõi và ghi nhận dữ liệu từ nhiều nguồn khác nhau (ví dụ Cookies, cảm biến, biểu mẫu trực tuyến), khác hẳn với công cụ cộng tác, lưu trữ hay trò chơi.",
                 "id": 132,
                 "uid": "spark__lv3__t7__q132_new"
               },
@@ -9288,7 +9245,7 @@
                 "image": false,
                 "image_file": null,
                 "image_id": null,
-                "explanation": "Vì tài khoản và mật khẩu đã bị lộ, cách xử lí đúng là đổi ngay mật khẩu mới và không chia sẻ nó với ai nữa, để chấm dứt việc người khác truy cập trái phép vào tài khoản. VPN, xóa lịch sử trình duyệt hay phần mềm diệt Virus không giải quyết được gốc rễ của vấn đề (mật khẩu đã bị người khác biết).",
+                "explanation": "Vì tài khoản và mật khẩu đã bị lộ, cách xử lý đúng là đổi ngay mật khẩu mới và không chia sẻ nó với ai nữa, để chấm dứt việc người khác truy cập trái phép vào tài khoản. VPN, xóa lịch sử trình duyệt hay phần mềm diệt Virus không giải quyết được gốc rễ của vấn đề (mật khẩu đã bị người khác biết).",
                 "id": 134,
                 "uid": "spark__lv3__t7__q134_new"
               },
@@ -9574,7 +9531,7 @@
                 "explanation": "Đúng: Kết nối Ethernet thường cung cấp tốc độ kết nối mạng nhanh hơn kết nối Wi-Fi. Sai: Kết nối Wi-Fi được mã hóa an toàn hơn so với kết nối Ethernet, Kết nối Wi-Fi thường ít xảy ra độ trễ khi truyền dữ liệu hơn so với kết nối Ethernet."
               },
               {
-                "question": "Bạn cần xác định các chức năng Hệ điều hành do máy tính quản lý. Với mỗi tác vụ dưới đây,  tác vụ nào do Hệ điều hành quản lý. (Chọn 2)",
+                "question": "Bạn cần xác định các chức năng Hệ điều hành do máy tính quản lý. Với mỗi tác vụ dưới đây, tác vụ nào do Hệ điều hành quản lý. (Chọn 2)",
                 "type": "multi",
                 "options": [
                   "Chỉnh sửa tập tin văn bản.",
@@ -10065,7 +10022,7 @@
                   },
                   {
                     "left": "Cookie",
-                    "right": "Một tập tin văn bản theo dõi hoạt động của   người dùng trên một trang web."
+                    "right": "Một tập tin văn bản theo dõi hoạt động của người dùng trên một trang web."
                   },
                   {
                     "left": "Breadcrumb",
@@ -10081,7 +10038,7 @@
                 "image_id": null,
                 "id": 26,
                 "uid": "ic3__lv1__t1__q26",
-                "explanation": "Ghép đúng: “HyperText Markup Language (HTML)” ↔ “Một ngôn ngữ đánh dấu được sử dụng để tạo các trang web”; “Internet Service Provider (ISP)” ↔ “Một công ty kết nối người dùng với Internet”; “Cookie” ↔ “Một tập tin văn bản theo dõi hoạt động của   người dùng trên một trang web”; “Breadcrumb” ↔ “Cho phép người dùng truy xuất lại các bước của họ trên một trang web”; “Domain Name Service (DNS)” ↔ “Một danh mục phân cấp ánh xạ vị trí của các tài nguyên trên Internet”."
+                "explanation": "Ghép đúng: “HyperText Markup Language (HTML)” ↔ “Một ngôn ngữ đánh dấu được sử dụng để tạo các trang web”; “Internet Service Provider (ISP)” ↔ “Một công ty kết nối người dùng với Internet”; “Cookie” ↔ “Một tập tin văn bản theo dõi hoạt động của người dùng trên một trang web”; “Breadcrumb” ↔ “Cho phép người dùng truy xuất lại các bước của họ trên một trang web”; “Domain Name Service (DNS)” ↔ “Một danh mục phân cấp ánh xạ vị trí của các tài nguyên trên Internet”."
               },
               {
                 "question": "Máy chủ lưu trữ đám mây sử dụng những loại phòng thủ nào để bảo vệ dữ liệu của người dùng? (Chọn 2)",
@@ -10672,6 +10629,74 @@
                 "explanation": "Quy trình cài đặt phần mềm hợp lý phải theo đúng thứ tự: tải trình cài đặt từ nguồn uy tín trước, sau đó nhấp đúp để bắt đầu cài, tiếp theo làm theo các bước hướng dẫn (đồng ý điều khoản, chọn tuỳ chọn), và cuối cùng mới khởi chạy được phần mềm sau khi cài đặt hoàn tất.",
                 "id": 171,
                 "uid": "ic3__lv1__t1__q171_new2"
+              },
+              {
+                "question": "Hãy chọn tên phù hợp cho các cổng kết nối (kéo tên và thả vào ô trống bên dưới hình).",
+                "type": "classify",
+                "hint": "Kéo hoặc bấm chọn 1 nhãn rồi bấm vào hình cổng kết nối tương ứng để xếp vào.",
+                "zones": [
+                  "Lightning",
+                  "Micro USB",
+                  "USB",
+                  "USB-C"
+                ],
+                "items": [
+                  {
+                    "text": "Lightning",
+                    "zone": "Lightning"
+                  },
+                  {
+                    "text": "Micro USB",
+                    "zone": "Micro USB"
+                  },
+                  {
+                    "text": "USB",
+                    "zone": "USB"
+                  },
+                  {
+                    "text": "USB-C",
+                    "zone": "USB-C"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Đầu nối dẹt hình thang có 8 chân vàng là Lightning (dùng cho thiết bị Apple đời cũ); đầu nối nhỏ hình thang có khấc là Micro USB; đầu nối chữ nhật dẹt là USB (USB-A) tiêu chuẩn; đầu nối oval đối xứng hai mặt là USB-C.",
+                "id": 172,
+                "uid": "ic3__lv1__t1__q172_new"
+              },
+              {
+                "question": "Hãy chọn hình phù hợp các khổ giấy (kéo hình vào ô trống).",
+                "type": "classify",
+                "hint": "Kéo hoặc bấm chọn 1 hình rồi bấm vào ô khổ giấy tương ứng để xếp vào. Không phải hình nào cũng có ô phù hợp.",
+                "zones": [
+                  "Khổ ngang (Landscape)",
+                  "Khổ dọc (Portait)"
+                ],
+                "items": [
+                  {
+                    "text": "Hình khổ ngang",
+                    "image_file": "landscape.png",
+                    "zone": "Khổ ngang (Landscape)"
+                  },
+                  {
+                    "text": "Hình khổ dọc",
+                    "image_file": "portrait.png",
+                    "zone": "Khổ dọc (Portait)"
+                  }
+                ],
+                "distractors": [
+                  {
+                    "text": "Hình vuông",
+                    "image_file": "not_landscape.png"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Hình có chiều rộng lớn hơn chiều cao là khổ ngang (Landscape); hình có chiều cao lớn hơn chiều rộng là khổ dọc (Portrait/Portait). Hình vuông có chiều rộng và chiều cao bằng nhau nên không thuộc khổ ngang hay khổ dọc.",
+                "id": 173,
+                "uid": "ic3__lv1__t1__q173_new"
               }
             ],
             "2. Công dân số": [
@@ -11030,7 +11055,7 @@
                 "explanation": "Các đáp án đúng là: “Ngày sinh”; “Nơi sinh”."
               },
               {
-                "question": "Với mỗi câu phát biểu, hãy chọn nếu đó là ví dụ về bắt nạt trên mạng. (Chọn 3) *",
+                "question": "Với mỗi câu phát biểu, hãy chọn nếu đó là ví dụ về bắt nạt trên mạng. (Chọn 3)",
                 "type": "multi",
                 "options": [
                   "An liên tục gửi những tin nhắn ác ý cho Dũng.",
@@ -12057,7 +12082,7 @@
                 "explanation": "Các đáp án đúng là: “Bạn nên giảm thiểu nội dung văn bản trong bài trình chiếu”; “Bạn có thể truy cập các bài thuyết trình Apple Keynote từ máy tính chạy Windows qua iCloud”."
               },
               {
-                "question": "Hai câu lệnh nào xác định mã hóa Encryption?  (Chọn 2)",
+                "question": "Hai câu lệnh nào xác định mã hóa Encryption? (Chọn 2)",
                 "type": "multi",
                 "options": [
                   "Nội dung của một tập tin được mã hóa chỉ có thể được đọc bởi người có khóa mã hóa.",
@@ -12277,7 +12302,7 @@
                 "explanation": "Đáp án đúng là: “Văn hóa là một khái niệm không ngừng thay đổi và có thể không phản ánh hoàn toàn bản sắc của một cá nhân nào đó”."
               },
               {
-                "question": "Đâu là ba yếu tố quan trọng của Chính sách sử dụng được chấp nhận? (Chọn 3) *",
+                "question": "Đâu là ba yếu tố quan trọng của Chính sách sử dụng được chấp nhận? (Chọn 3)",
                 "type": "multi",
                 "options": [
                   "Phần định nghĩa.",
@@ -13568,7 +13593,7 @@
                 "explanation": "Đúng: Bạn có thể sử dụng cáp HDMI để kết nối máy tính xách tay với máy chiếu, Bạn có thể sử dụng cáp CAT6 Ethernet để kết nối trực tiếp máy tính với bộ định tuyến không dây. Sai: Bạn có thể sử dụng cáp DVI để kết nối trực tiếp hai máy tính nhằm chia sẻ tập tin."
               },
               {
-                "question": "Bạn gặp sự cố khi in tài liệu từ máy tính của mình. Với mỗi câu phát biểu, hãy chọn Đúng nếu đó là phương pháp xác nhận kết nối thành công với máy in hoặc Sai nếu không phải. *",
+                "question": "Bạn gặp sự cố khi in tài liệu từ máy tính của mình. Với mỗi câu phát biểu, hãy chọn Đúng nếu đó là phương pháp xác nhận kết nối thành công với máy in hoặc Sai nếu không phải.",
                 "type": "truefalse",
                 "statements": [
                   {
@@ -13594,7 +13619,7 @@
                 "explanation": "Đúng: Kiểm tra trạng thái kết nối máy in trong cửa sổ cài đặt Máy in & Máy quét (Printers & Scanners). Sai: Với máy in được kết nối trực tiếp, hãy thay thế cáp kết nối bằng cáp CAT6, Đối với máy in được kết nối Ethernet, hãy đảm bảo rằng cáp Ethernet được kết nối trực tiếp với máy tính thay vì thông qua bộ chuyển đổi hoặc bộ định tuyến."
               },
               {
-                "question": "Kéo thả  từng loại cáp với thiết bị mà nó thường kết nối.",
+                "question": "Kéo thả từng loại cáp với thiết bị mà nó thường kết nối.",
                 "type": "matching",
                 "pairs": [
                   {
@@ -13648,7 +13673,7 @@
                 "explanation": "Có: Tùy chỉnh các nút, menu hoặc thanh công cụ của trình duyệt, Thêm plug-in và tiện ích mở rộng vào trình duyệt để có thêm chức năng, Thay đổi trang chủ trình duyệt được lập trình sẵn."
               },
               {
-                "question": "Bạn đang ở trong một căn phòng ồn ào. Bạn kết nối tai nghe với máy tính để bạn có thể nghe âm thanh tốt hơn, nhưng âm thanh vẫn đi qua loa máy tính thay vì tai nghe. Bạn cần âm thanh máy tính đi qua tai nghe thay vì loa. Bạn nên làm gì? *",
+                "question": "Bạn đang ở trong một căn phòng ồn ào. Bạn kết nối tai nghe với máy tính để bạn có thể nghe âm thanh tốt hơn, nhưng âm thanh vẫn đi qua loa máy tính thay vì tai nghe. Bạn cần âm thanh máy tính đi qua tai nghe thay vì loa. Bạn nên làm gì?",
                 "type": "single",
                 "options": [
                   "Quản lý thiết bị đầu ra.",
@@ -13710,7 +13735,7 @@
                 "explanation": "Các đáp án đúng là: “Ứng dụng trực tuyến (Online applications)”; “Lưu trữ đám mây (Cloud storage)”; “Hỗ trợ máy tính để bàn từ xa (Remote desktop support)”."
               },
               {
-                "question": "Bạn đang sử dụng một chương trình phần mềm mới để tạo một bản trình bày. Bạn cần phải sử dụng một chức năng mà bạn không quen thuộc. Hãy chọn câu đúng nếu bạn có thể sử dụng tài nguyên đó để tìm trợ giúp (Chọn 2) *",
+                "question": "Bạn đang sử dụng một chương trình phần mềm mới để tạo một bản trình bày. Bạn cần phải sử dụng một chức năng mà bạn không quen thuộc. Hãy chọn câu đúng nếu bạn có thể sử dụng tài nguyên đó để tìm trợ giúp (Chọn 2)",
                 "type": "multi",
                 "options": [
                   "Tính năng Trợ giúp Help trong chương trình.",
@@ -13730,7 +13755,7 @@
                 "explanation": "Các đáp án đúng là: “Tính năng Trợ giúp Help trong chương trình”; “Diễn đàn trực tuyến dành riêng cho phần mềm”."
               },
               {
-                "question": "Bạn nên tắt tính năng nào trên thiết bị Windows để ngăn phương tiện di động tự động khởi động khi được kết nối với thiết bị?\n(Chọn 2) *",
+                "question": "Bạn nên tắt tính năng nào trên thiết bị Windows để ngăn phương tiện di động tự động khởi động khi được kết nối với thiết bị?\n(Chọn 2)",
                 "type": "multi",
                 "options": [
                   "AutoConnect",
@@ -13769,7 +13794,7 @@
                 "explanation": "Đáp án đúng là: “Encryption (mã hóa)”."
               },
               {
-                "question": "Với mỗi câu phát biểu về tính bảo mật của thiết bị đa phương tiện di động, hãy chọn phát biểu Đúng hoặc Sai. *",
+                "question": "Với mỗi câu phát biểu về tính bảo mật của thiết bị đa phương tiện di động, hãy chọn phát biểu Đúng hoặc Sai.",
                 "type": "truefalse",
                 "statements": [
                   {
@@ -13840,7 +13865,7 @@
                 "explanation": "Đúng: Thiết bị USB được công ty cung cấp cho bạn để không bao giờ rời khỏi cơ sở. Sai: Thiết bị USB bạn mang theo từ nhà, Máy tính bảng cá nhân của bạn."
               },
               {
-                "question": "Sự khác nhau giữa Bộ xử lý trung tâm (CPU) và Bộ xử lý đồ họa (GPU). Hãy chọn phát biểu Đúng hoặc Sai? *",
+                "question": "Sự khác nhau giữa Bộ xử lý trung tâm (CPU) và Bộ xử lý đồ họa (GPU). Hãy chọn phát biểu Đúng hoặc Sai?",
                 "type": "truefalse",
                 "statements": [
                   {
@@ -14032,10 +14057,10 @@
                     "correct": true
                   },
                   {
-                    "x": 35.63,
-                    "y": 10.73,
-                    "w": 27.08,
-                    "h": 15.5,
+                    "x": 4.47,
+                    "y": 21.26,
+                    "w": 27.87,
+                    "h": 13.96,
                     "shape": "rectangle",
                     "id": "a2",
                     "correct": false
@@ -14050,10 +14075,10 @@
                     "correct": false
                   },
                   {
-                    "x": 40.42,
-                    "y": 75.09,
-                    "w": 24.15,
-                    "h": 13.08,
+                    "x": 4.75,
+                    "y": 52.77,
+                    "w": 27.8,
+                    "h": 13.77,
                     "shape": "rectangle",
                     "id": "a4",
                     "correct": false
@@ -14229,7 +14254,7 @@
                 "image": false,
                 "image_file": null,
                 "image_id": null,
-                "explanation": " + Người dùng chỉ được mở và xem tệp, không được chỉnh sửa hoặc lưu thay đổi.\n\n + Quyền tập tin quy định người dùng hoặc nhóm người dùng được phép đọc (Read), ghi (Write) hoặc thực thi (Execute) tệp.\n\n + Dữ liệu được chuyển thành dạng mã hóa để chỉ người có khóa giải mã mới đọc được.\n \n + Người dùng có quyền vừa xem vừa chỉnh sửa nội dung của tệp.\n\n + Chỉ người biết đúng mật khẩu mới có thể mở hoặc truy cập tệp.",
+                "explanation": "+ Người dùng chỉ được mở và xem tệp, không được chỉnh sửa hoặc lưu thay đổi.\n\n + Quyền tập tin quy định người dùng hoặc nhóm người dùng được phép đọc (Read), ghi (Write) hoặc thực thi (Execute) tệp.\n\n + Dữ liệu được chuyển thành dạng mã hóa để chỉ người có khóa giải mã mới đọc được.\n \n + Người dùng có quyền vừa xem vừa chỉnh sửa nội dung của tệp.\n\n + Chỉ người biết đúng mật khẩu mới có thể mở hoặc truy cập tệp.",
                 "id": 198,
                 "uid": "ic3__lv2__t1__q198_new"
               },
@@ -14346,7 +14371,7 @@
                 "hint": "Chọn 1 đáp án cho mỗi dòng.",
                 "items": [
                   {
-                    "text": "* Máy tính có CPU tích hợp GPU có thể thay thế Card đồ họa",
+                    "text": "Máy tính có CPU tích hợp GPU có thể thay thế Card đồ họa",
                     "options": [
                       "Đúng",
                       "Sai"
@@ -14354,7 +14379,7 @@
                     "correct": "Đúng"
                   },
                   {
-                    "text": "* Các máy tính có GPU hiện đại có thể xử lý được những tác vụ nặng như máy học, các thuật toán trí tuệ nhân tạo.",
+                    "text": "Các máy tính có GPU hiện đại có thể xử lý được những tác vụ nặng như máy học, các thuật toán trí tuệ nhân tạo.",
                     "options": [
                       "Đúng",
                       "Sai"
@@ -14362,7 +14387,7 @@
                     "correct": "Đúng"
                   },
                   {
-                    "text": "* GPU trên máy tính xách tay có thể thay thế màn hình máy tính.",
+                    "text": "GPU trên máy tính xách tay có thể thay thế màn hình máy tính.",
                     "options": [
                       "Đúng",
                       "Sai"
@@ -14370,7 +14395,7 @@
                     "correct": "Sai"
                   },
                   {
-                    "text": "* Trên một số máy tính và trò chơi hiện đại, chỉ cần có GPU mà không cần CPU",
+                    "text": "Trên một số máy tính và trò chơi hiện đại, chỉ cần có GPU mà không cần CPU",
                     "options": [
                       "Đúng",
                       "Sai"
@@ -14388,7 +14413,7 @@
             ],
             "2. Công dân số": [
               {
-                "question": "Khi tạo cuộc hẹn hoặc nhiệm vụ trên lịch kĩ thuật số cá nhân, bạn thường có thể tùy chỉnh hai cài đặt nào sau đây? (Chọn 2)",
+                "question": "Khi tạo cuộc hẹn hoặc nhiệm vụ trên lịch kỹ thuật số cá nhân, bạn thường có thể tùy chỉnh hai cài đặt nào sau đây? (Chọn 2)",
                 "type": "multi",
                 "options": [
                   "Chi phí của sự kiện (Cost of the event).",
@@ -14408,7 +14433,7 @@
                 "explanation": "Các đáp án đúng là: “Tần suất lặp lại sự kiện (How often to repeat the event)”; “Lời nhắc (Reminders)”."
               },
               {
-                "question": "Bạn đang sử dụng các tài khoản mạng xã hội cho mục đích cá nhân và công việc. Bạn nên đăng tải hai nội dung nào lên tài khoản mạng xã hội dùng vào mục đích công việc của mình? (Chọn 2)",
+                "question": "Bạn đang sử dụng các tài khoản mạng xã hội cho mục đích cá nhân và công việc. Bạn nên đăng tải hai nội dung nào lên tài khoản mạng xã hội dùng vào mục đích công việc của mình? (Chọn 2)",
                 "type": "multi",
                 "options": [
                   "Ảnh hồ sơ chính thức của bạn.",
@@ -14503,7 +14528,7 @@
                 "explanation": "Đáp án đúng là: “\"Vui lòng đừng đăng ảnh của tôi mà không có sự cho phép của tôi.\"”."
               },
               {
-                "question": "Hai khía cạnh nào của sự hiện diện trực tuyến của một người đóng góp vào danh tính kỹ thuật số nghề nghiệp của người đó? (Chọn 2)",
+                "question": "Hai khía cạnh nào của sự hiện diện trực tuyến của một người đóng góp vào danh tính kỹ thuật số nghề nghiệp của người đó? (Chọn 2)",
                 "type": "multi",
                 "options": [
                   "Ngày sinh.",
@@ -14542,7 +14567,7 @@
                 "explanation": "Đáp án đúng là: “Chuyển từ tài khoản Google cá nhân sang tài khoản trường học của bạn”."
               },
               {
-                "question": "Bạn tìm thấy một bài đăng trên mạng xã hội chia sẻ thông tin y tế không chính xác và gây hiểu lầm. Bạn quyết định trả lời bài viết này. Với mỗi phản hồi, hãy chọn Có nếu việc này tuân thủ các chuẩn mực đạo đức thích hợp trong môi trường số hoặc Không nếu không phải. *",
+                "question": "Bạn tìm thấy một bài đăng trên mạng xã hội chia sẻ thông tin y tế không chính xác và gây hiểu lầm. Bạn quyết định trả lời bài viết này. Với mỗi phản hồi, hãy chọn Có nếu việc này tuân thủ các chuẩn mực đạo đức thích hợp trong môi trường số hoặc Không nếu không phải.",
                 "type": "truefalse",
                 "statements": [
                   {
@@ -14592,7 +14617,7 @@
                 "explanation": "Các đáp án đúng là: “\"Nhiều học giả không đồng ý. Đây là một liên kết với một số sự kiện đối lập về cùng một sự kiện lịch sử này.\"”; “\"Bạn đã đọc nghiên cứu về sự kiện này do Hiệp hội Lịch sử Hoa Kỳ xuất bản chưa? Góc nhìn của họ thật thú vị.\"”."
               },
               {
-                "question": "Bạn đang nộp đơn xin việc trong lĩnh vực nghề nghiệp đã chọn. Nhà tuyển dụng tiềm năng sẽ truy cập hồ sơ công việc trực tuyến của bạn. Bạn cần làm gì để hỗ trợ hồ sơ công việc trực tuyến của mình? *",
+                "question": "Bạn đang nộp đơn xin việc trong lĩnh vực nghề nghiệp đã chọn. Nhà tuyển dụng tiềm năng sẽ truy cập hồ sơ công việc trực tuyến của bạn. Bạn cần làm gì để hỗ trợ hồ sơ công việc trực tuyến của mình?",
                 "type": "single",
                 "options": [
                   "Hạn chế quyền truy cập vào hồ sơ để duy trì quyền riêng tư.",
@@ -14689,7 +14714,7 @@
                 "explanation": "Đáp án đúng là: “Để giữ bí mật địa chỉ Email của nhiều người nhận với nhau”."
               },
               {
-                "question": "Đâu là hai ảnh hưởng của hội chứng FOMO (sợ bỏ lỡ)? (Chọn 2) (Đã sửa 18.06.2025) *",
+                "question": "Đâu là hai ảnh hưởng của hội chứng FOMO (sợ bỏ lỡ)? (Chọn 2) (Đã sửa 18.06.2025)",
                 "type": "multi",
                 "options": [
                   "Suy giảm lòng tự trọng.",
@@ -14728,7 +14753,7 @@
                 "explanation": "Đáp án đúng là: “MyFile.txt”."
               },
               {
-                "question": "Nam đang bị lo lắng và trầm cảm do hội chứng sợ bỏ lỡ (FOMO). Tùy chọn nào sau đây là triệu chứng hoặc ảnh hưởng của hội chứng FOMO? (Chọn 2) *",
+                "question": "Nam đang bị lo lắng và trầm cảm do hội chứng sợ bỏ lỡ (FOMO). Tùy chọn nào sau đây là triệu chứng hoặc ảnh hưởng của hội chứng FOMO? (Chọn 2)",
                 "type": "multi",
                 "options": [
                   "Anh ấy cần hiểu tất cả những trò đùa mà bạn bè của anh ấy đăng trên mạng xã hội.",
@@ -15040,44 +15065,20 @@
                 "question": "Bạn đang tạo một bài thuyết trình trình chiếu kỹ thuật số để kiếm tiền cho câu lạc bộ của bạn. Bạn tìm kiếm trực tuyến một bài hát để phối lại và thêm vào bản trình bày của bạn. Giấy phép Creative Commons nào cho phép bạn phối lại bài hát cho bài trình bày của mình?",
                 "type": "single",
                 "options": [
-                  "",
-                  "",
-                  "",
-                  ""
+                  "<img src=\"img/cc-license-by.svg\" alt=\"CC BY\" style=\"height:28px;vertical-align:middle;margin-right:10px;\"> CC BY (Attribution — chỉ cần ghi công tác giả)",
+                  "<img src=\"img/cc-license-by-nc.svg\" alt=\"CC BY-NC\" style=\"height:28px;vertical-align:middle;margin-right:10px;\"> CC BY-NC (Attribution-NonCommercial — không được dùng cho mục đích thương mại)",
+                  "<img src=\"img/cc-license-by-nd.svg\" alt=\"CC BY-ND\" style=\"height:28px;vertical-align:middle;margin-right:10px;\"> CC BY-ND (Attribution-NoDerivatives — không được chỉnh sửa/phối lại tác phẩm)",
+                  "<img src=\"img/cc-license-by-nc-nd.svg\" alt=\"CC BY-NC-ND\" style=\"height:28px;vertical-align:middle;margin-right:10px;\"> CC BY-NC-ND (Attribution-NonCommercial-NoDerivatives — không được thương mại và không được chỉnh sửa)"
                 ],
                 "correct": [
-                  ""
+                  "<img src=\"img/cc-license-by.svg\" alt=\"CC BY\" style=\"height:28px;vertical-align:middle;margin-right:10px;\"> CC BY (Attribution — chỉ cần ghi công tác giả)"
                 ],
                 "image": false,
                 "image_file": null,
                 "image_id": null,
-                "explanation": "CC BY-SA (Attribution-ShareAlike). Giấy phép này cho phép remix/biến đổi và sử dụng thương mại, nhưng phải ghi công và tác phẩm phái sinh phải giữ cùng điều kiện ShareAlike.",
+                "explanation": "Đáp án đúng là: “CC BY (Attribution — chỉ cần ghi công tác giả)”. Vì bài thuyết trình vừa cần phối lại (remix) bài hát — tạo ra một tác phẩm phái sinh — vừa dùng để gây quỹ (mục đích thương mại), nên cần một giấy phép cho phép cả hai việc này. CC BY là lựa chọn mở nhất: không có điều khoản NonCommercial (NC) nên không giới hạn mục đích thương mại, và không có điều khoản NoDerivatives (ND) nên cho phép chỉnh sửa/phối lại — chỉ cần ghi công tác giả gốc. Ba lựa chọn còn lại đều chứa NC và/hoặc ND, nên sẽ cấm ít nhất một trong hai việc bạn cần làm.",
                 "id": 59,
                 "uid": "ic3__lv2__t2__q59_new"
-              },
-              {
-                "question": "Kết nối các công cụ cộng tác kỹ thuật số thích hợp với mô tả tương ứng.",
-                "type": "matching",
-                "pairs": [
-                  {
-                    "left": "Cộng tác viên có thể chỉnh sửa cùng một lúc và tự động lưu các thay đổi.",
-                    "right": "Chia sẻ tập tin trên nền tảng đám mây."
-                  },
-                  {
-                    "left": "Cộng tác viên có thể đồng thời động não, xem xét và chỉnh sửa thông tin trực quan bằng cách viết, vẽ và chèn hình ảnh.",
-                    "right": "Bảng trắng trực tuyến."
-                  },
-                  {
-                    "left": "Cộng tác viên tham gia vào các hoạt động học tập và chia sẻ lập tức các phản ứng, diễn giải, áp dụng các ý tưởng đã trình bày.",
-                    "right": "Hội thảo trực tuyến."
-                  }
-                ],
-                "image": false,
-                "image_file": null,
-                "image_id": null,
-                "explanation": "Các nền tảng chia sẻ tập tin đám mây (như Google Docs, OneDrive) cho phép nhiều người chỉnh sửa đồng thời và tự động lưu. \nBảng trắng trực tuyến là công cụ trực quan để viết, vẽ, dán hình phục vụ động não nhóm. \nHội thảo trực tuyến (video conference/webinar) cho phép người tham gia tương tác, phản hồi ngay trong buổi học/hội thảo.",
-                "id": 60,
-                "uid": "ic3__lv2__t2__q60_new"
               },
               {
                 "question": "Một nhóm bạn của bạn đang thảo luận về một diễn viên hài mà họ đã thấy trên TV, người đã tạo ra một ngọn núi lửa bằng cách sử dụng Mentos và Coke. Họ đang tranh luận về việc anh ấy đã làm như thế nào. Bạn và bạn bè của bạn quyết định yêu cầu giáo viên khoa học của bạn cho biết nó đã được thực hiện như thế nào. Sau nhiều lần thuyết phục, giáo viên đồng ý chứng minh điều này đã được thực hiện như thế nào trong giờ ăn trưa của mình. Bạn quay video cuộc thực nghiệm trên điện thoại thông minh của bạn. Bạn muốn chia sẻ video với các bạn cùng lớp của mình theo cách thể hiện phép xã giao kỹ thuật số tốt. Bạn nên làm gì?",
@@ -15256,7 +15257,7 @@
                   },
                   {
                     "left": "Non-renewable (Đăng ký không tự động gia hạn)",
-                    "right": "Thuê  phim trực tuyến thông qua dịch vụ phát trực tuyến"
+                    "right": "Thuê phim trực tuyến thông qua dịch vụ phát trực tuyến"
                   }
                 ],
                 "image": false,
@@ -15264,31 +15265,7 @@
                 "image_id": null,
                 "id": 63,
                 "uid": "ic3__lv2__t3__q5",
-                "explanation": "Ghép đúng: “Auto-renewable (Đăng ký tự động gia hạn)” ↔ “Đăng ký dịch vụ phát trực tuyến video”; “Non-consumable (Không tiêu hao)” ↔ “Mở khóa một tính năng đặc biệt trong trò chơi điện tử”; “Consumable (Tiêu hao)” ↔ “Mua đá quý hoặc tiền xu cho các trò chơi di động”; “Non-renewable (Đăng ký không tự động gia hạn)” ↔ “Thuê  phim trực tuyến thông qua dịch vụ phát trực tuyến”."
-              },
-              {
-                "question": "Kết nối từng định nghĩa chuỗi tìm kiếm Boolean với chuỗi tìm kiếm Boolean tương ứng. *",
-                "type": "matching",
-                "pairs": [
-                  {
-                    "left": "Trả về kết quả không bao gồm một từ",
-                    "right": "trâu NOT bò"
-                  },
-                  {
-                    "left": "Trả về kết quả cho một trong hai từ nếu một từ khác được bao gồm",
-                    "right": "(cá OR rùa) AND biển"
-                  },
-                  {
-                    "left": "Trả về kết quả cho một trong hai từ",
-                    "right": "báo OR hổ"
-                  }
-                ],
-                "image": false,
-                "image_file": null,
-                "image_id": null,
-                "id": 64,
-                "uid": "ic3__lv2__t3__q6",
-                "explanation": "Ghép đúng: “Trả về kết quả không bao gồm một từ” ↔ “trâu NOT bò”; “Trả về kết quả cho một trong hai từ nếu một từ khác được bao gồm” ↔ “(cá OR rùa) AND biển”; “Trả về kết quả cho một trong hai từ” ↔ “báo OR hổ”."
+                "explanation": "Ghép đúng: “Auto-renewable (Đăng ký tự động gia hạn)” ↔ “Đăng ký dịch vụ phát trực tuyến video”; “Non-consumable (Không tiêu hao)” ↔ “Mở khóa một tính năng đặc biệt trong trò chơi điện tử”; “Consumable (Tiêu hao)” ↔ “Mua đá quý hoặc tiền xu cho các trò chơi di động”; “Non-renewable (Đăng ký không tự động gia hạn)” ↔ “Thuê phim trực tuyến thông qua dịch vụ phát trực tuyến”."
               },
               {
                 "question": "Bạn cần nghiên cứu tác động của việc học trực tuyến và đánh giá mức độ liên quan của kết quả tìm kiếm của bạn. Hãy chọn Có nếu kết quả tìm kiếm có liên quan đến chủ đề của bạn hoặc chọn Không nếu không liên quan.",
@@ -15321,7 +15298,7 @@
                 "explanation": "Có: Biểu đồ so sánh điểm thi của học sinh trong các hệ thống giáo dục trực tuyến và trực tiếp, Một bài báo trên tạp chí giáo dục về kinh nghiệm giảng dạy trực tuyến của giáo viên. Không: Một bài viết về lợi ích của giáo dục, Một trang web cung cấp tài nguyên giáo dục để bán."
               },
               {
-                "question": "Bạn đang chuẩn bị viết bài nghiên cứu. Bạn tìm thấy một nghiên cứu khoa học liên quan tới chủ đề của mình. Bạn cần phải xác định xem liệu nghiên cứu đó có đáng tin hay không. Với mỗi câu phát biểu, hãy chọn Có nếu bạn phải xem xét yếu tố đó để đánh giá độ tin cậy của nghiên cứu. Hoặc chọn Không nếu không phải. *",
+                "question": "Bạn đang chuẩn bị viết bài nghiên cứu. Bạn tìm thấy một nghiên cứu khoa học liên quan tới chủ đề của mình. Bạn cần phải xác định xem liệu nghiên cứu đó có đáng tin hay không. Với mỗi câu phát biểu, hãy chọn Có nếu bạn phải xem xét yếu tố đó để đánh giá độ tin cậy của nghiên cứu. Hoặc chọn Không nếu không phải.",
                 "type": "truefalse",
                 "statements": [
                   {
@@ -15456,13 +15433,13 @@
                 "question": "Bạn đang tạo một bài thuyết trình trình chiếu kỹ thuật số để kiếm tiền cho câu lạc bộ của bạn. Bạn tìm kiếm trực tuyến một bài hát để phối lại và thêm vào bản trình bày của bạn. Giấy phép Creative Commons nào cho phép bạn phối lại bài hát cho bài thuyết trình của mình?",
                 "type": "single",
                 "options": [
-                  "CC BY (Attribution — chỉ cần ghi công tác giả)",
-                  "CC BY-NC (Attribution-NonCommercial — không được dùng cho mục đích thương mại)",
-                  "CC BY-ND (Attribution-NoDerivatives — không được chỉnh sửa/phối lại tác phẩm)",
-                  "CC BY-NC-ND (Attribution-NonCommercial-NoDerivatives — không được thương mại và không được chỉnh sửa)"
+                  "<img src=\"img/cc-license-by.svg\" alt=\"CC BY\" style=\"height:28px;vertical-align:middle;margin-right:10px;\"> CC BY (Attribution — chỉ cần ghi công tác giả)",
+                  "<img src=\"img/cc-license-by-nc.svg\" alt=\"CC BY-NC\" style=\"height:28px;vertical-align:middle;margin-right:10px;\"> CC BY-NC (Attribution-NonCommercial — không được dùng cho mục đích thương mại)",
+                  "<img src=\"img/cc-license-by-nd.svg\" alt=\"CC BY-ND\" style=\"height:28px;vertical-align:middle;margin-right:10px;\"> CC BY-ND (Attribution-NoDerivatives — không được chỉnh sửa/phối lại tác phẩm)",
+                  "<img src=\"img/cc-license-by-nc-nd.svg\" alt=\"CC BY-NC-ND\" style=\"height:28px;vertical-align:middle;margin-right:10px;\"> CC BY-NC-ND (Attribution-NonCommercial-NoDerivatives — không được thương mại và không được chỉnh sửa)"
                 ],
                 "correct": [
-                  "CC BY (Attribution — chỉ cần ghi công tác giả)"
+                  "<img src=\"img/cc-license-by.svg\" alt=\"CC BY\" style=\"height:28px;vertical-align:middle;margin-right:10px;\"> CC BY (Attribution — chỉ cần ghi công tác giả)"
                 ],
                 "image": false,
                 "image_file": null,
@@ -15789,7 +15766,7 @@
                 "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
               },
               {
-                "question": "Bạn muốn đặt lịch để nhắc ngày thứ Tư hàng tuần ăn trưa cùng Fran hàng tuần. Bạn sẽ chọn tuỳ chọn nào trong hình?  (Nhấp vào vị trí bạn thấy Đúng)",
+                "question": "Bạn muốn đặt lịch để nhắc ngày thứ Tư hàng tuần ăn trưa cùng Fran hàng tuần. Bạn sẽ chọn tuỳ chọn nào trong hình? (Nhấp vào vị trí bạn thấy Đúng)",
                 "type": "hotspot",
                 "image": true,
                 "image_file": "img-1cf6ede182d4aabe8b3f55811c6b7fcd900b20a1.png",
@@ -16194,7 +16171,7 @@
                 "explanation": "Ghép đúng: “Xem hoặc truy cập nội dung tập tin” ↔ “Read”; “Xem nội dung tập tin hoặc thay đổi các nội dung của tập tin” ↔ “Write”; “Xem nội dung tập tin, thêm dữ liệu vào tập tin, và xóa tập tin” ↔ “Modify”; “Xem hoặc truy cập nội dung tập tin và chạy tập tin nếu đó là một chương trình” ↔ “Read & Execute”."
               },
               {
-                "question": "Tùy chọn nào sau đây là phát biểu đúng về quyền đối với tập tin tài liệu? (Chọn 2) *",
+                "question": "Tùy chọn nào sau đây là phát biểu đúng về quyền đối với tập tin tài liệu? (Chọn 2)",
                 "type": "multi",
                 "options": [
                   "Chỉ có thể xem nhưng không được sửa đổi một tài liệu Chỉ đọc.",
@@ -16313,7 +16290,7 @@
                 "explanation": "Các đáp án đúng là: “Hướng dẫn người khác sử dụng tính năng đó”; “Tham khảo tài nguyên trợ giúp của ứng dụng”."
               },
               {
-                "question": "Phát biểu nào là đúng về nguyên tắc nghi thức Email? (Chọn 2)",
+                "question": "Phát biểu nào là đúng về nguyên tắc nghi thức Email? (Chọn 2)",
                 "type": "multi",
                 "options": [
                   "Vì người nhận có thể thấy tập tin đính kèm, nên không cần thông báo cho người nhận về tập tin đính kèm.",
@@ -16474,7 +16451,7 @@
                 "explanation": "Ghép đúng: “Formula bar (Thanh công thức)” ↔ “Khu vực nơi bạn nhập dữ liệu và phương trình”; “Column (Cột)” ↔ “Chuỗi ô dọc, được dán nhãn bằng chữ cái”; “Sheet tab (Cửa sổ trang tính)” ↔ “Khu vực xác định và cho phép bạn chuyển đổi giữa các trang tính trong tập tin”; “Status bar (Thanh trạng thái)” ↔ “Vùng hiển thị thông tin về trang tính, nội dung trang tính và chương trình”."
               },
               {
-                "question": "Bạn tạo một tài liệu dài bao gồm nhiều phần (sections) nội dung. Bạn chèn tiêu đề (Title) ở đầu mỗi phần. Vì hai lý do nào bạn nên định dạng tiêu đề phần (title section) với heading style? (Chọn 2) *",
+                "question": "Bạn tạo một tài liệu dài bao gồm nhiều phần (sections) nội dung. Bạn chèn tiêu đề (Title) ở đầu mỗi phần. Vì hai lý do nào bạn nên định dạng tiêu đề phần (title section) với heading style? (Chọn 2)",
                 "type": "multi",
                 "options": [
                   "Để bạn có thể tự động tạo mục lục cho tài liệu.",
@@ -16533,7 +16510,7 @@
                 "explanation": "Đáp án đúng là: “Để cho phép người dùng khôi phục các bản sao trước đó của tập tin”."
               },
               {
-                "question": "Bạn của bạn nhờ bạn xem lại bài trình bày PowerPoint mà người đó đã tạo cho lớp chuyên Sử của họ. Bạn thấy bố cục bài trình bày lộn xộn và vô tổ chức. Đâu là hai nguyên tắc thống nhất về hình ảnh mà bạn nên khuyên bạn của mình tuân thủ? (Chọn 2) *",
+                "question": "Bạn của bạn nhờ bạn xem lại bài trình bày PowerPoint mà người đó đã tạo cho lớp chuyên Sử của họ. Bạn thấy bố cục bài trình bày lộn xộn và vô tổ chức. Đâu là hai nguyên tắc thống nhất về hình ảnh mà bạn nên khuyên bạn của mình tuân thủ? (Chọn 2)",
                 "type": "multi",
                 "options": [
                   "Áp dụng các nguyên tắc thiết kế và lặp lại, liên kết và xa - gần.",
@@ -16553,7 +16530,7 @@
                 "explanation": "Các đáp án đúng là: “Áp dụng các nguyên tắc thiết kế và lặp lại, liên kết và xa - gần”; “Duy trì tính nhất quán trên tất cả các phần tử trình bày”."
               },
               {
-                "question": "Ghép từng thuật ngữ trong bài trình chiếu với định nghĩa tương ứng. *",
+                "question": "Ghép từng thuật ngữ trong bài trình chiếu với định nghĩa tương ứng.",
                 "type": "matching",
                 "pairs": [
                   {
@@ -16630,7 +16607,7 @@
                 "explanation": "Ghép đúng: “Bước 1” ↔ “Tạo một trang tính”; “Bước 2” ↔ “Tạo tiêu đề cột Người chơi, Lượt truy cập, Lượt chạy và Lỗi”; “Bước 3” ↔ “Điền tên vào cột Người chơi”; “Bước 4” ↔ “Sao chép trang tính cho mỗi trò chơi”."
               },
               {
-                "question": "Với mỗi câu về mã hoá tập tin, hãy chọn Đúng hoặc Sai. (Đã sửa 18.06.2025) *",
+                "question": "Với mỗi câu về mã hoá tập tin, hãy chọn Đúng hoặc Sai. (Đã sửa 18.06.2025)",
                 "type": "truefalse",
                 "statements": [
                   {
@@ -16694,7 +16671,7 @@
                 "explanation": "Đáp án đúng là: “Bật tính năng Track Change”."
               },
               {
-                "question": "Ưu điểm chính của việc nén tập tin là gì? *",
+                "question": "Ưu điểm chính của việc nén tập tin là gì?",
                 "type": "single",
                 "options": [
                   "Truyền dữ liệu nhanh hơn.",
@@ -16952,34 +16929,6 @@
                 "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
               },
               {
-                "question": "Ghép từng thuật ngữ trong bài trình chiếu với định nghĩa tương ứng.",
-                "type": "matching",
-                "pairs": [
-                  {
-                    "left": "* Trang trình bày kiểm soát thiết kế của bạn.",
-                    "right": "Slide Master"
-                  },
-                  {
-                    "left": "* Hiệu ứng hình ảnh có chức năng di chuyển ảnh ra và vào các trang trình bày.",
-                    "right": "Hoạt hình (Animations)"
-                  },
-                  {
-                    "left": "* Hiệu ứng đặc biệt được sử dụng để chuyển tiếp trang trình bày.",
-                    "right": "Chuyển tiếp (Transitions)"
-                  },
-                  {
-                    "left": "* Tập tin chứa các kiểu tạo sẵn.",
-                    "right": "Mẫu (Template)"
-                  }
-                ],
-                "image": false,
-                "image_file": null,
-                "image_id": null,
-                "explanation": "Slide Master là trang tổng thể quyết định bố cục, font chữ, màu sắc áp dụng cho toàn bộ bài trình chiếu. Animations là hiệu ứng chuyển động áp dụng cho từng đối tượng (chữ, ảnh) trên một trang. Transitions là hiệu ứng khi chuyển từ trang này sang trang khác. Template là tệp chứa sẵn các kiểu định dạng, bố cục để tái sử dụng khi tạo bài trình chiếu mới.",
-                "id": 186,
-                "uid": "ic3__lv2__t4__q186_new"
-              },
-              {
                 "question": "Bạn cần thay hình ảnh 1 thành hình ảnh 2 bằng cách nào?",
                 "type": "multi",
                 "options": [
@@ -17046,7 +16995,7 @@
                 "explanation": "Các đáp án đúng là: “Tránh tất cả các chữ cái viết hoa”; “Sử dụng dấu câu thích hợp”; “Không sử dụng textspeak”."
               },
               {
-                "question": "Một sinh viên sẽ bỏ lỡ một cuộc hẹn cho một cuộc phỏng vấn thực tập. Anh ấy gửi email sau đây cho người phỏng vấn:\nCô Smith thân mến,\ntôi sẽ bizzy trong thời gian phỏng vấn của tôi vì vậy tôi cần phải sắp xếp lại tôi HY VỌNG ĐIỀU NÀY LÀ OK!!!!!!\nThnx!!!!\nYếu tố nào hiển thị nghi thức email thích hợp? *",
+                "question": "Một sinh viên sẽ bỏ lỡ một cuộc hẹn cho một cuộc phỏng vấn thực tập. Anh ấy gửi email sau đây cho người phỏng vấn:\nCô Smith thân mến,\ntôi sẽ bizzy trong thời gian phỏng vấn của tôi vì vậy tôi cần phải sắp xếp lại tôi HY VỌNG ĐIỀU NÀY LÀ OK!!!!!!\nThnx!!!!\nYếu tố nào hiển thị nghi thức email thích hợp?",
                 "type": "single",
                 "options": [
                   "Lời chào",
@@ -17084,25 +17033,6 @@
                 "explanation": "Đáp án đúng là: “Gửi một email cho tất cả bệnh nhân bằng cách sử dụng tùy chọn Bcc”."
               },
               {
-                "question": "Một hiệu trưởng đang soạn  email gửi cho phụ huynh về tầm quan trọng của việc tất cả học sinh đến trường đúng giờ. Ông ấy cần sử dụng phương pháp giao tiếp phù hợp và hiệu quả nhất. Thầy nên làm gì? *",
-                "type": "single",
-                "options": [
-                  "Gửi thư tới tất cả phụ huynh bằng cách sử dụng trường Bcc.",
-                  "Gửi thư tới tất cả phụ huynh bằng cách sử dụng trường Cc.",
-                  "Gửi thư tới một nhóm liên hệ chỉ bao gồm địa chỉ email của học sinh.",
-                  "Gửi thư tới phụ huynh có học sinh đã từng đi học muộn."
-                ],
-                "correct": [
-                  "Gửi thư tới tất cả phụ huynh bằng cách sử dụng trường Bcc."
-                ],
-                "image": false,
-                "image_file": null,
-                "image_id": null,
-                "id": 122,
-                "uid": "ic3__lv2__t5__q5",
-                "explanation": "Đáp án đúng là: “Gửi thư tới tất cả phụ huynh bằng cách sử dụng trường Bcc”."
-              },
-              {
                 "question": "Kết nối thanh toán kỹ thuật số với định nghĩa tương ứng.",
                 "type": "matching",
                 "pairs": [
@@ -17127,7 +17057,7 @@
                 "explanation": "Ghép đúng: “Bán hàng hóa và dịch vụ” ↔ “Người bán (Merchant)”; “Cung cấp thẻ ghi nợ hoặc thẻ tín dụng” ↔ “Nhà phát hành (Issuer)”; “Cho phép các giao dịch” ↔ “Ngân hàng thanh toán (Acquiter)”."
               },
               {
-                "question": "Bạn đã nhận được điểm 0 cho bài tập đã nộp hôm qua. Bạn cần gửi email cho giáo viên và bản sao email cho phụ huynh. Để trả lời, hãy di chuyển từng phần email phù hợp từ danh sách bên phải sang đúng vị trí bên trái.",
+                "question": "Bạn đã nhận được điểm 0 cho bài tập đã nộp hôm qua. Bạn cần gửi email cho giáo viên và bản sao email cho phụ huynh. Hãy sử dụng phương pháp cho phép giáo viên dễ dàng phản hồi cho cả bạn và phụ huynh. Để trả lời, hãy di chuyển từng phần email phù hợp từ danh sách bên trái sang đúng vị trí bên phải.",
                 "type": "matching",
                 "pairs": [
                   {
@@ -17209,7 +17139,7 @@
                 "uid": "ic3__lv2__t5__q126_new"
               },
               {
-                "question": "Một hiệu trưởng đang soạn ​ email gửi cho phụ huynh về tầm quan trọng của việc tất cả học sinh đến trường đúng giờ. Ông ấy cần sử dụng phương pháp giao tiếp phù hợp và hiệu quả nhất. Thầy nên làm gì? *",
+                "question": "Một hiệu trưởng đang soạn email gửi cho phụ huynh về tầm quan trọng của việc tất cả học sinh đến trường đúng giờ. Ông ấy cần sử dụng phương pháp giao tiếp phù hợp và hiệu quả nhất. Thầy nên làm gì?",
                 "type": "single",
                 "options": [
                   "Gửi thư tới tất cả phụ huynh bằng cách sử dụng trường Bcc.",
@@ -17247,7 +17177,7 @@
                 "image": false,
                 "image_file": null,
                 "image_id": null,
-                "explanation": " + Tình huống khẩn cấp → Gọi điện hoặc nhắn tin ngay.\n\n + Vấn đề cá nhân → Trao đổi trực tiếp vào ngày hôm sau. \n\n + Câu hỏi công việc không gấp → Gửi email và hẹn gửi vào 9:00 sáng hôm sau.",
+                "explanation": "+ Tình huống khẩn cấp → Gọi điện hoặc nhắn tin ngay.\n\n + Vấn đề cá nhân → Trao đổi trực tiếp vào ngày hôm sau. \n\n + Câu hỏi công việc không gấp → Gửi email và hẹn gửi vào 9:00 sáng hôm sau.",
                 "id": 128,
                 "uid": "ic3__lv2__t5__q128_new"
               },
@@ -17320,24 +17250,24 @@
                 "explanation": "Các đáp án đúng là: “Chia sẻ với những người cụ thể”; “Đặt ở chế độ công khai”."
               },
               {
-                "question": "Bạn lãnh đạo một nhóm gồm những người thuộc các nền văn hóa, giới tính và độ tuổi khác nhau. Bạn dự định tổ chức một cuộc họp từ xa bằng công cụ hội thảo video để lên ý tưởng cho một dự án mới. Bạn cần tuân thủ các chuẩn mực đạo đức trong môi trường số. Bạn nên thực hiện hai hành động nào sau đây? (Chọn 2)",
+                "question": "Bạn lãnh đạo một nhóm gồm những người thuộc các nền văn hóa, giới tính và độ tuổi khác nhau. Bạn dự định tổ chức một cuộc họp từ xa bằng công cụ hội thảo video để lên ý tưởng cho một dự án mới. Bạn cần tuân thủ các chuẩn mực đạo đức trong môi trường số. Bạn nên thực hiện hai hành động nào sau đây? (Chọn 2)",
                 "type": "multi",
                 "options": [
-                  "Yêu cầu một thành viên nói giọng không chuẩn bản ngữ (Có âm giọng nặng) trả lời qua hộp trò chuyện để các thành viên còn lại trong nhóm có thể hiểu rõ.",
+                  "Yêu cầu một thành viên nói giọng không chuẩn bản ngữ (Có âm giọng nặng) trả lời qua hộp trò chuyện để các thành viên còn lại trong nhóm có thể hiểu rõ.",
                   "Sử dụng các tính năng như Giơ tay (Raise Hand) để tạo cơ hội cho tất cả các thành viên trong nhóm tham gia.",
-                  "Đảm bảo sự tập trung và tránh xung đột trong nhóm bằng cách chỉ thảo luận các ý tưởng có trong danh sách riêng của bạn.",
-                  "Đề nghị hỗ trợ riêng cho thành viên trong nhóm không có kinh nghiệm tham dự hội thảo video nhằm giúp họ làm quen với chức năng điều khiển trước cuộc họp."
+                  "Đảm bảo sự tập trung và tránh xung đột trong nhóm bằng cách chỉ thảo luận các ý tưởng có trong danh sách riêng của bạn.",
+                  "Đề nghị hỗ trợ riêng cho thành viên trong nhóm không có kinh nghiệm tham dự hội thảo video nhằm giúp họ làm quen với chức năng điều khiển trước cuộc họp."
                 ],
                 "correct": [
                   "Sử dụng các tính năng như Giơ tay (Raise Hand) để tạo cơ hội cho tất cả các thành viên trong nhóm tham gia.",
-                  "Đề nghị hỗ trợ riêng cho thành viên trong nhóm không có kinh nghiệm tham dự hội thảo video nhằm giúp họ làm quen với chức năng điều khiển trước cuộc họp."
+                  "Đề nghị hỗ trợ riêng cho thành viên trong nhóm không có kinh nghiệm tham dự hội thảo video nhằm giúp họ làm quen với chức năng điều khiển trước cuộc họp."
                 ],
                 "image": false,
                 "image_file": null,
                 "image_id": null,
                 "id": 126,
                 "uid": "ic3__lv2__t6__q2",
-                "explanation": "Các đáp án đúng là: “Sử dụng các tính năng như Giơ tay (Raise Hand) để tạo cơ hội cho tất cả các thành viên trong nhóm tham gia”; “Đề nghị hỗ trợ riêng cho thành viên trong nhóm không có kinh nghiệm tham dự hội thảo video nhằm giúp họ làm quen với chức năng điều khiển trước cuộc họp”."
+                "explanation": "Các đáp án đúng là: “Sử dụng các tính năng như Giơ tay (Raise Hand) để tạo cơ hội cho tất cả các thành viên trong nhóm tham gia”; “Đề nghị hỗ trợ riêng cho thành viên trong nhóm không có kinh nghiệm tham dự hội thảo video nhằm giúp họ làm quen với chức năng điều khiển trước cuộc họp”."
               },
               {
                 "question": "Trong Công nghệ thông tin, thuật ngữ chính xác cho việc sử dụng phần mềm để tạo ra các hướng dẫn và quy trình lặp lại giúp thay thế sự tương tác của con người là gì?",
@@ -17541,7 +17471,7 @@
                 "explanation": "Ghép đúng: “Truyền trực tuyến phim (Streaming Movies)” ↔ “Netflix, Disney+, Hulu, Amazon Prime”; “Trình phát đa phương tiện (Media Players)” ↔ “Spotify, Kodi, Web Browsers”; “Thiết bị phát trực tuyến (Streaming Devices)” ↔ “Roku, Amazon Firestick, Apple TV, Chromecast”."
               },
               {
-                "question": "Công ty của bạn muốn cải tiến thiết kế của chiếc xe chạy bằng điện mà công ty sản xuất. Bạn cần khảo sát những khách hàng lẻ đã mua xe và cung cấp phản hồi hữu ích để giúp công ty đạt được mục tiêu nói trên. Với mỗi câu hỏi, hãy chọn câu hỏi mang đến phản hồi hữu ích. (Chọn 2) *",
+                "question": "Công ty của bạn muốn cải tiến thiết kế của chiếc xe chạy bằng điện mà công ty sản xuất. Bạn cần khảo sát những khách hàng lẻ đã mua xe và cung cấp phản hồi hữu ích để giúp công ty đạt được mục tiêu nói trên. Với mỗi câu hỏi, hãy chọn câu hỏi mang đến phản hồi hữu ích. (Chọn 2)",
                 "type": "multi",
                 "options": [
                   "Bạn có thích phương tiện này không?",
@@ -17809,7 +17739,7 @@
                 "explanation": "Các đáp án đúng là: “Gửi email”; “Gửi tin nhắn văn bản”."
               },
               {
-                "question": "Bạn và bạn cùng lớp đang đọc các tài liệu kỹ thuật số được chia sẻ của nhau. Tài liệu bạn đang đọc được viết bài bản, nhưng bạn nhận thấy một lỗi sai so với thực tế. Bạn cần lịch sự chỉ ra lỗi sai cho tác giả bằng một chú thích trong tài liệu. Bạn nên thực hiện hai hành động nào? (Chọn 2) *",
+                "question": "Bạn và bạn cùng lớp đang đọc các tài liệu kỹ thuật số được chia sẻ của nhau. Tài liệu bạn đang đọc được viết bài bản, nhưng bạn nhận thấy một lỗi sai so với thực tế. Bạn cần lịch sự chỉ ra lỗi sai cho tác giả bằng một chú thích trong tài liệu. Bạn nên thực hiện hai hành động nào? (Chọn 2)",
                 "type": "multi",
                 "options": [
                   "Cung cấp thông tin chính xác trong chú thích của bạn, nếu có.",
@@ -17857,7 +17787,7 @@
                 "explanation": "Ghép đúng: “Chia sẻ suy nghĩ hàng ngày của bạn về các sự kiện hiện tại trong nhật ký trực tuyến” ↔ “Blog post”; “Yêu cầu hoàn lại tiền từ một công ty” ↔ “Email message”; “Đặt câu hỏi cho một nhóm hội thảo luận trò chơi” ↔ “Forum post”; “Hãy nhanh chóng báo cho anh trai của bạn biết nơi đón bạn” ↔ “Text message”."
               },
               {
-                "question": "Kết nối các công cụ cộng tác kỹ thuật số thích hợp với mô tả tương ứng. *",
+                "question": "Kết nối các công cụ cộng tác kỹ thuật số thích hợp với mô tả tương ứng.",
                 "type": "matching",
                 "pairs": [
                   {
@@ -17899,7 +17829,7 @@
                 "explanation": "Đáp án đúng là: “Không đồng bộ (Asynchronous)”."
               },
               {
-                "question": "Hai lợi ích của việc cộng tác làm việc là gì? (Chọn 2) (Đã sửa 18.06.2025) *",
+                "question": "Hai lợi ích của việc cộng tác làm việc là gì? (Chọn 2) (Đã sửa 18.06.2025)",
                 "type": "multi",
                 "options": [
                   "Không bị ảnh hưởng bởi việc một thành viên trong nhóm không làm được việc.",
@@ -18005,19 +17935,19 @@
                 "type": "single",
                 "options": [
                   "Sử dụng BCC để trả lời cho các email quan trọng.",
-                  "Suy nghĩ kĩ trước khi trả lời email.",
+                  "Suy nghĩ kỹ trước khi trả lời email.",
                   "Trả lời email ngay lập tức khi bạn bận.",
                   "Trả lời tất cả để mọi người đều nhận được."
                 ],
                 "correct": [
-                  "Suy nghĩ kĩ trước khi trả lời email."
+                  "Suy nghĩ kỹ trước khi trả lời email."
                 ],
                 "image": false,
                 "image_file": null,
                 "image_id": null,
                 "id": 158,
                 "uid": "ic3__lv2__t6__q34",
-                "explanation": "Đáp án đúng là: “Suy nghĩ kĩ trước khi trả lời email”."
+                "explanation": "Đáp án đúng là: “Suy nghĩ kỹ trước khi trả lời email”."
               },
               {
                 "question": "Câu nào sau đây là đúng khi nói về việc điền biểu mẫu trực tuyến?",
@@ -18326,7 +18256,7 @@
             ],
             "7. An toàn và bảo mật": [
               {
-                "question": "Bạn đang làm việc trên máy tính xách tay của bạn trong một khu vực bên ngoài đầy nắng. Bạn cần giảm thiểu mỏi mắt. Bạn nên điều chỉnh cài đặt màn hình nào? *",
+                "question": "Bạn đang làm việc trên máy tính xách tay của bạn trong một khu vực bên ngoài đầy nắng. Bạn cần giảm thiểu mỏi mắt. Bạn nên điều chỉnh cài đặt màn hình nào?",
                 "type": "single",
                 "options": [
                   "Độ tương phản (Contrast).",
@@ -18385,7 +18315,7 @@
                 "explanation": "Các đáp án đúng là: “Độ tương phản (Contrast)”; “Độ sáng (Brightness)”."
               },
               {
-                "question": "Hai nguyên tắc thiết kế chung cho phần cứng máy tính? (Chọn 2) *",
+                "question": "Hai nguyên tắc thiết kế chung cho phần cứng máy tính? (Chọn 2)",
                 "type": "multi",
                 "options": [
                   "Sử dụng hợp lý: Thiết kế hữu ích và có thể bán được cho nhiều người có các khả năng thể chất/tinh thần khác nhau.",
@@ -18405,7 +18335,7 @@
                 "explanation": "Các đáp án đúng là: “Sử dụng hợp lý: Thiết kế hữu ích và có thể bán được cho nhiều người có các khả năng thể chất/tinh thần khác nhau”; “Kích thước, không gian để tiếp cận và sử dụng: Thiết kế cung cấp không gian để tiếp cận, với, thao tác và sử dụng, không phân biệt kích thước, tư thế hoặc khả năng di chuyển của người dùng”."
               },
               {
-                "question": "Bạn có nhiều tài khoản Microsoft. Một dành cho trường học, một dành cho gia đình và một dành cho hoạt động chơi game. Bạn có các tập tin lưu trữ trên OneDrive được liên kết với từng loại tài khoản. Bạn đã đăng nhập vào tài khoản gia đình của mình, nhưng bạn cần truy cập một tập tin được chia sẻ với bạn qua OneDrive trên tài khoản chơi game của bạn. Những gì bạn nên làm? *",
+                "question": "Bạn có nhiều tài khoản Microsoft. Một dành cho trường học, một dành cho gia đình và một dành cho hoạt động chơi game. Bạn có các tập tin lưu trữ trên OneDrive được liên kết với từng loại tài khoản. Bạn đã đăng nhập vào tài khoản gia đình của mình, nhưng bạn cần truy cập một tập tin được chia sẻ với bạn qua OneDrive trên tài khoản chơi game của bạn. Những gì bạn nên làm?",
                 "type": "single",
                 "options": [
                   "Cấu hình lại cả hai tài khoản Microsoft để sử dụng cùng một ID và mật khẩu đăng nhập.",
@@ -18444,7 +18374,7 @@
                 "explanation": "Đáp án đúng là: “Thiết lập email công việc của bạn trên điện thoại thông minh cá nhân của bạn”."
               },
               {
-                "question": "Với mỗi câu phát biểu về tính bảo mật của webcam, hãy chọn Đúng điều cần làm. (Chọn 2) *",
+                "question": "Với mỗi câu phát biểu về tính bảo mật của webcam, hãy chọn Đúng điều cần làm. (Chọn 2)",
                 "type": "multi",
                 "options": [
                   "Mọi người nên che webcam của mình khi không sử dụng.",
@@ -18733,7 +18663,7 @@
                 "hint": "Chọn 1 đáp án cho mỗi dòng.",
                 "items": [
                   {
-                    "text": "* Ngứa da.",
+                    "text": "Ngứa da.",
                     "options": [
                       "Có",
                       "Không"
@@ -18741,7 +18671,7 @@
                     "correct": "Không"
                   },
                   {
-                    "text": "* Đau cổ.",
+                    "text": "Đau cổ.",
                     "options": [
                       "Có",
                       "Không"
@@ -18749,7 +18679,7 @@
                     "correct": "Có"
                   },
                   {
-                    "text": "* Yếu cơ.",
+                    "text": "Yếu cơ.",
                     "options": [
                       "Có",
                       "Không"
@@ -18757,7 +18687,7 @@
                     "correct": "Có"
                   },
                   {
-                    "text": "* Tê bì tay.",
+                    "text": "Tê bì tay.",
                     "options": [
                       "Có",
                       "Không"
@@ -19502,7 +19432,7 @@
                     "answer": "true"
                   },
                   {
-                    "text": "Các quy tắc ứng xử (Eiquette) trên môi trường kĩ thuật số.",
+                    "text": "Các quy tắc ứng xử (Eiquette) trên môi trường kỹ thuật số.",
                     "answer": "true"
                   },
                   {
@@ -19517,7 +19447,7 @@
                 "image_id": null,
                 "id": 31,
                 "uid": "ic3__lv3__t2__q3",
-                "explanation": "Có: Luật bản quyền, Các quy tắc ứng xử (Eiquette) trên môi trường kĩ thuật số, Thiết đặt quyền riêng tư trên phương tiện truyền thông xã hội."
+                "explanation": "Có: Luật bản quyền, Các quy tắc ứng xử (Eiquette) trên môi trường kỹ thuật số, Thiết đặt quyền riêng tư trên phương tiện truyền thông xã hội."
               },
               {
                 "question": "Bạn cần bảo vệ thông tin nhận dạng cá nhân (PII) một cách thích hợp. Đối với mỗi câu, hãy chọn phát biểu Đúng hoặc Sai.",
@@ -19546,7 +19476,7 @@
                 "explanation": "Đúng: PII được thu thập bởi các trang web có thể được sử dụng cho mục đích đánh cắp danh tính. Sai: Sử dụng xác thực đa yếu tố làm tăng nguy cơ người ngoài truy cập PII của bạn, Đóng tài khoản trực tuyến sẽ xóa vĩnh viễn PII của bạn khỏi máy chủ lưu trữ trang web."
               },
               {
-                "question": "Phân tích các phát biểu sau về việc làm và cách thức việc làm liên quan đến việc sử dụng quyền riêng tư trên mạng xã hội.  Đối với mỗi câu, hãy chọn phát biểu Đúng hoặc Sai. (Đã sửa 4.6.2025)",
+                "question": "Phân tích các phát biểu sau về việc làm và cách thức việc làm liên quan đến việc sử dụng quyền riêng tư trên mạng xã hội. Đối với mỗi câu, hãy chọn phát biểu Đúng hoặc Sai. (Đã sửa 4.6.2025)",
                 "type": "truefalse",
                 "statements": [
                   {
@@ -21706,19 +21636,19 @@
                 "type": "single",
                 "options": [
                   "Đảm bảo chỉnh sửa một chút và trình bày tác phẩm đó như của riêng mình.",
-                  "Chỉ sử dụng một phần nhỏ và giả định nó thuộc phạm vi sử dụng hợp lí.",
-                  "Thêm thông tin của tác giả sau khi đã xác nhận sử dụng hợp lí.",
+                  "Chỉ sử dụng một phần nhỏ và giả định nó thuộc phạm vi sử dụng hợp lý.",
+                  "Thêm thông tin của tác giả sau khi đã xác nhận sử dụng hợp lý.",
                   "Thêm thông tin trích dẫn ở phần tài liệu tham khảo thay vì trích dẫn trực tiếp văn bản."
                 ],
                 "correct": [
-                  "Thêm thông tin của tác giả sau khi đã xác nhận sử dụng hợp lí."
+                  "Thêm thông tin của tác giả sau khi đã xác nhận sử dụng hợp lý."
                 ],
                 "image": false,
                 "image_file": null,
                 "image_id": null,
                 "id": 122,
                 "uid": "ic3__lv3__t4__q122_moved",
-                "explanation": "Đáp án đúng là: “Thêm thông tin của tác giả sau khi đã xác nhận sử dụng hợp lí”."
+                "explanation": "Đáp án đúng là: “Thêm thông tin của tác giả sau khi đã xác nhận sử dụng hợp lý”."
               }
             ],
             "5. Giao tiếp": [
@@ -21912,25 +21842,6 @@
                 "id": 120,
                 "uid": "ic3__lv3__t6__q4",
                 "explanation": "Đáp án đúng là: “Google Sheets”."
-              },
-              {
-                "question": "Lớp học lịch sử của bạn đang tham gia một chuyến đi thực tế đến một viện bảo tang. Một số bạn cùng lớp của bạn không thể tham dự. Giáo viên của bạn đã yêu cầu một tình nguyện viên phát trên web về chuyến đi thực tế. Ứng dụng phần mềm nào sẽ thích hợp để tạo webcast?",
-                "type": "single",
-                "options": [
-                  "Google Chrome",
-                  "Zoom",
-                  "Adobe InDesign",
-                  "Microsoft PowerPoint"
-                ],
-                "correct": [
-                  "Zoom"
-                ],
-                "image": false,
-                "image_file": null,
-                "image_id": null,
-                "id": 121,
-                "uid": "ic3__lv3__t6__q5",
-                "explanation": "Đáp án đúng là: “Zoom”."
               },
               {
                 "question": "Hai công cụ phần mềm nào sẽ tốt nhất để tạo ra đồ họa trực quan trong kinh doanh? (Chọn 2)",
@@ -22159,14 +22070,14 @@
                 "options": [
                   "Hướng cuộc thảo luận tập trung vào các lựa chọn thiết kế, thay vì phản ứng theo cảm xúc của bạn đối với những thay đổi của khách hàng.",
                   "Nói vói khách hàng rằng ý tưởng của họ không được hoan nghên.",
-                  "Yêu cầu khách hàng lí giải thích lý do thay đổi và tác động của các thay đổi này với áp phích.",
+                  "Yêu cầu khách hàng lý giải thích lý do thay đổi và tác động của các thay đổi này với áp phích.",
                   "Nhặc nhở khách hàng rằng nhóm của bạn có kiến thức kinh nghiệm để thiết kế nên áp phích hoàn hiện hiệu quả.",
                   "Nói với khách hàng rằng bạn không muốn thực hiện các thay đổi đó.",
                   "Tạo mẫu áp phích theo những thay đổi của khách hàng và gửi cho họ."
                 ],
                 "correct": [
                   "Hướng cuộc thảo luận tập trung vào các lựa chọn thiết kế, thay vì phản ứng theo cảm xúc của bạn đối với những thay đổi của khách hàng.",
-                  "Yêu cầu khách hàng lí giải thích lý do thay đổi và tác động của các thay đổi này với áp phích.",
+                  "Yêu cầu khách hàng lý giải thích lý do thay đổi và tác động của các thay đổi này với áp phích.",
                   "Tạo mẫu áp phích theo những thay đổi của khách hàng và gửi cho họ."
                 ],
                 "image": false,
@@ -22174,7 +22085,7 @@
                 "image_id": null,
                 "id": 132,
                 "uid": "ic3__lv3__t6__q16",
-                "explanation": "Các đáp án đúng là: “Hướng cuộc thảo luận tập trung vào các lựa chọn thiết kế, thay vì phản ứng theo cảm xúc của bạn đối với những thay đổi của khách hàng”; “Yêu cầu khách hàng lí giải thích lý do thay đổi và tác động của các thay đổi này với áp phích”; “Tạo mẫu áp phích theo những thay đổi của khách hàng và gửi cho họ”."
+                "explanation": "Các đáp án đúng là: “Hướng cuộc thảo luận tập trung vào các lựa chọn thiết kế, thay vì phản ứng theo cảm xúc của bạn đối với những thay đổi của khách hàng”; “Yêu cầu khách hàng lý giải thích lý do thay đổi và tác động của các thay đổi này với áp phích”; “Tạo mẫu áp phích theo những thay đổi của khách hàng và gửi cho họ”."
               },
               {
                 "question": "Ứng dụng nào có khả năng chia sẻ màn hình? (Chọn 3)",
@@ -22362,7 +22273,7 @@
                 "explanation": "Các đáp án đúng là: “Hiểu mục tiêu cuối cùng của dự án và các bước để đạt được điều đó”; “Hiểu vai trò của bạn và làm thế nào bạn có thể đóng góp tốt nhất cho sự thành công của nhóm”."
               },
               {
-                "question": "Bạn đã được chỉ là trưởng nhóm dịch vụ khách hàng cho một sản phẩm cụ thể trong công ty của bạn. Các thành viên trong nhóm của bạn ở các múi giờ khác nhau. Mục tiêu của bạn là xác định và hiểu các vấn đề với sản phẩm để bạn có thể đề xuất các giải pháp cho công ty. Đối với mỗi tuyên bố, hãy chọn phát biểu Đúng nếu nó sẽ đạt được thành công trong một nhóm ảo.  (Chọn 2)",
+                "question": "Bạn đã được chỉ là trưởng nhóm dịch vụ khách hàng cho một sản phẩm cụ thể trong công ty của bạn. Các thành viên trong nhóm của bạn ở các múi giờ khác nhau. Mục tiêu của bạn là xác định và hiểu các vấn đề với sản phẩm để bạn có thể đề xuất các giải pháp cho công ty. Đối với mỗi tuyên bố, hãy chọn phát biểu Đúng nếu nó sẽ đạt được thành công trong một nhóm ảo. (Chọn 2)",
                 "type": "multi",
                 "options": [
                   "Nhấn mạnh rằng tất cả các giao tiếp của nhóm đều sử dụng video trực tiếp, ngay cả khi nó yêu cầu một số thành viên tham gia vào ban đêm.",
@@ -22564,7 +22475,7 @@
                 "explanation": "Các đáp án đúng là: “Bật webcam của bạn và tập trung vào màn hình của bạn để người nói, bạn cùng lớp và giáo viên của bạn có thể thấy rằng bạn đang chú ý”; “Sử dụng biểu tượng “Raise Hand” khi bạn cần đặt câu hỏi”; “Bật tiếng Micro của bạn khi bạn được gọi để thảo luận”."
               },
               {
-                "question": "Thông lệ phổ biến tại hầu hết các hội nghị là không đặt câu hỏi cho các diễn giả chính trong khi thuyết trình trước  khán giả có quy mô khán phòng lớn. Những diễn giả này phải dựa vào các phương pháp khác để điều chỉnh và tùy chỉnh thông điệp của họ dựa trên phản hồi của khán giả. Đối với mỗi phương pháp hãy chọn Đúng nếu nó sẽ giúp điều chỉnh thông điệp của người nói. (Chọn 2)",
+                "question": "Thông lệ phổ biến tại hầu hết các hội nghị là không đặt câu hỏi cho các diễn giả chính trong khi thuyết trình trước khán giả có quy mô khán phòng lớn. Những diễn giả này phải dựa vào các phương pháp khác để điều chỉnh và tùy chỉnh thông điệp của họ dựa trên phản hồi của khán giả. Đối với mỗi phương pháp hãy chọn Đúng nếu nó sẽ giúp điều chỉnh thông điệp của người nói. (Chọn 2)",
                 "type": "multi",
                 "options": [
                   "Quan sát khán giả để biết ngôn ngữ cơ thể tích cực và tiêu cực.",
@@ -22627,23 +22538,23 @@
                 "question": "Liam đang giải bài tập toán nhưng không hiểu câu hỏi số 12 trong bài tập phân số 4.1 Liam nên viết gì trong tiêu đề để viết email cho giáo viên về hỏi vấn đề này?",
                 "type": "single",
                 "options": [
-                  "Cần trợ giúp phân số 4.1  câu hỏi 12.",
+                  "Cần trợ giúp phân số 4.1 câu hỏi 12.",
                   "(Không có tiêu đề)",
                   "Trợ giúp khẩn cấp",
-                  "GV Tôi cần GIÚP ĐỠ  Gửi email cho tôi NGAY BÂY GIỜ"
+                  "GV Tôi cần GIÚP ĐỠ Gửi email cho tôi NGAY BÂY GIỜ"
                 ],
                 "correct": [
-                  "Cần trợ giúp phân số 4.1  câu hỏi 12."
+                  "Cần trợ giúp phân số 4.1 câu hỏi 12."
                 ],
                 "image": false,
                 "image_file": null,
                 "image_id": null,
                 "id": 155,
                 "uid": "ic3__lv3__t6__q39",
-                "explanation": "Đáp án đúng là: “Cần trợ giúp phân số 4.1  câu hỏi 12”."
+                "explanation": "Đáp án đúng là: “Cần trợ giúp phân số 4.1 câu hỏi 12”."
               },
               {
-                "question": "Lợi ích của việc tuân thủ quy trình thiết kế tuần hoàn để tạo sản phẩm kĩ thuật số là gì?",
+                "question": "Lợi ích của việc tuân thủ quy trình thiết kế tuần hoàn để tạo sản phẩm kỹ thuật số là gì?",
                 "type": "single",
                 "options": [
                   "Giúp kiểm tra và cải tiến liên tục để có kết quả tốt nhất.",
@@ -23082,7 +22993,7 @@
                     "answer": "true"
                   },
                   {
-                    "text": "Việc sử dụng mật khẩu của đồng nghiệp để đăng nhập thay cho họ vì lí do đi muộn là một hành vi gian lận.",
+                    "text": "Việc sử dụng mật khẩu của đồng nghiệp để đăng nhập thay cho họ vì lý do đi muộn là một hành vi gian lận.",
                     "answer": "true"
                   },
                   {
@@ -23101,7 +23012,7 @@
                 "image_id": null,
                 "id": 177,
                 "uid": "ic3__lv3__t7__q15",
-                "explanation": "Đúng: Việc bạn sử dụng mật khẩu của người khác để đăng nhập, có thể bị giới hạn quyền truy cập vào mạng công ty trong tương lai, Việc sử dụng mật khẩu của đồng nghiệp để đăng nhập thay cho họ vì lí do đi muộn là một hành vi gian lận. Sai: Việc nhiều người sử dụng mật khẩu của đồng nghiệp để xảy ra vi phạm bảo mật. Tất cả có thể phải chịu trách nhiệm, Việc sử dụng mật khẩu của người bạn để đăng nhập được coi là hợp lệ nếu bạn chỉ giúp họ một lần."
+                "explanation": "Đúng: Việc bạn sử dụng mật khẩu của người khác để đăng nhập, có thể bị giới hạn quyền truy cập vào mạng công ty trong tương lai, Việc sử dụng mật khẩu của đồng nghiệp để đăng nhập thay cho họ vì lý do đi muộn là một hành vi gian lận. Sai: Việc nhiều người sử dụng mật khẩu của đồng nghiệp để xảy ra vi phạm bảo mật. Tất cả có thể phải chịu trách nhiệm, Việc sử dụng mật khẩu của người bạn để đăng nhập được coi là hợp lệ nếu bạn chỉ giúp họ một lần."
               },
               {
                 "question": "Tùy chọn nào đề xuất giúp hỗ trợ đặt mật khẩu an toàn mà bạn có thể nhớ?",
