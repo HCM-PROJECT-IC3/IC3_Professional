@@ -1,0 +1,267 @@
+/* EduQuiz — accessibility & typography consistency layer */
+:root {
+  --app-font: "Inter", "Noto Sans", Arial, sans-serif;
+  --app-font-heading: "Inter", "Noto Sans", Arial, sans-serif;
+}
+
+html {
+  font-size: 16px;
+  text-rendering: optimizeLegibility;
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  font-family: var(--app-font) !important;
+}
+
+body {
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+button,
+input,
+select,
+textarea {
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--app-font-heading) !important;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+p, li, label, td, th {
+  line-height: 1.6;
+}
+
+/* Nội dung câu hỏi: ưu tiên độ rõ ràng thay vì chữ quá nhỏ. */
+.q-text {
+  font-size: clamp(1.05rem, 1.7vw, 1.2rem) !important;
+  line-height: 1.65 !important;
+  font-weight: 650 !important;
+  overflow-wrap: anywhere;
+}
+
+.option-btn,
+.tf-statement,
+.match-left-item,
+.match-right-item,
+.q-hint-line,
+.match-hint,
+.drag-chip,
+.classify-zone-title,
+.classify-zone-chip,
+.ordering-text,
+.fill-option,
+.list-row,
+.question-explanation {
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.option-btn {
+  min-height: 48px;
+}
+
+.q-card {
+  overflow-wrap: anywhere;
+}
+
+/* Nút phóng to ảnh dùng chung cho mọi câu có hình.
+   Ảnh luôn nằm trọn một hàng; nút phóng to nằm bên dưới để KHÔNG làm
+   giảm chiều rộng ảnh và không gây tràn/clipping trên màn hình nhỏ. */
+.q-image-zoom-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  max-width: 100%;
+  vertical-align: middle;
+  line-height: 0;
+  margin: .12rem auto;
+  isolation: isolate;
+}
+.q-image-zoom-wrap > img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  flex: 0 1 auto;
+  margin: 0 auto;
+}
+.q-image-zoom-thumb {
+  position: static;
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 42px;
+  min-height: 38px;
+  height: 38px;
+  padding: 0 12px;
+  border: 1.5px solid rgba(255,255,255,.96);
+  border-radius: 10px;
+  background: rgba(20, 25, 45, .94);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: .82rem;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 3px 12px rgba(0,0,0,.28);
+  transition: transform .15s ease, background .15s ease, box-shadow .15s ease;
+  user-select: none;
+  touch-action: manipulation;
+  z-index: 1;
+}
+.q-image-zoom-thumb:hover,
+.q-image-zoom-thumb:focus-visible {
+  transform: translateY(-1px);
+  background: rgba(79,107,255,.97);
+  box-shadow: 0 5px 16px rgba(0,0,0,.32);
+  outline: none;
+}
+.q-image-zoom-thumb-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.q-image-zoom-thumb-label {
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Hotspot có nút zoom riêng dưới sân khấu, không làm thay đổi kích thước ảnh. */
+.hsq-stage-tools {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  margin: .25rem 0 .1rem;
+}
+.q-image-zoom-thumb--hotspot {
+  min-height: 38px;
+  height: 38px;
+  padding: 0 14px;
+}
+
+/* ── Ảnh + nút "Phóng to" bên trong đáp án ─────────────────────────
+   Với các đáp án có icon/ảnh (ví dụ giấy phép Creative Commons),
+   giữ icon + nút zoom nằm CÙNG HÀNG với nội dung đáp án thay vì
+   chiếm một hàng riêng phía trên. */
+.option-btn {
+  align-items: center;
+}
+.option-btn .q-image-zoom-wrap {
+  width: auto;
+  max-width: none;
+  flex: 0 0 auto;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  margin: 0;
+  line-height: 1;
+}
+.option-btn .q-image-zoom-wrap > img {
+  flex: 0 0 auto;
+  width: auto;
+  height: 28px;
+  max-width: 96px;
+  margin: 0;
+  object-fit: contain;
+}
+.option-btn .q-image-zoom-thumb {
+  min-width: 0;
+  width: auto;
+  min-height: 30px;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: 8px;
+  font-size: .72rem;
+  gap: 4px;
+  box-shadow: none;
+}
+.option-btn .q-image-zoom-thumb-icon {
+  font-size: .78rem;
+}
+.option-btn .q-image-zoom-thumb-label {
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .option-btn .q-image-zoom-wrap {
+    gap: 5px;
+  }
+  .option-btn .q-image-zoom-thumb {
+    min-height: 30px;
+    height: 30px;
+    padding: 0 7px;
+  }
+  .option-btn .q-image-zoom-thumb-label {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .q-image-zoom-wrap {
+    gap: 6px;
+  }
+  .q-image-zoom-thumb {
+    min-height: 40px;
+    height: 40px;
+    padding: 0 11px;
+  }
+}
+
+
+.img-zoom-overlay {
+  padding: 1rem !important;
+  cursor: zoom-out;
+}
+.img-zoom-overlay img {
+  max-width: min(94vw, 1400px) !important;
+  max-height: 90vh !important;
+  width: auto;
+  height: auto;
+  cursor: default;
+}
+.img-zoom-overlay::after {
+  content: "Nhấn Esc hoặc bấm ra ngoài để đóng";
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  font-size: .85rem;
+  font-weight: 600;
+  opacity: .85;
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  html { font-size: 15.5px; }
+  .q-text { font-size: 1.05rem !important; }
+  .q-image-zoom-btn { width: 40px; height: 40px; min-width: 40px; min-height: 40px; top: 5px; right: 5px; }
+}
+
+@media (max-width: 480px) {
+  html { font-size: 15px; }
+  .q-text { font-size: 1rem !important; }
+}
+
+/* Chỉ hiển thị biểu tượng kính lúp, không hiển thị chữ "Phóng to". */
+.q-image-zoom-thumb-label { display: none !important; }

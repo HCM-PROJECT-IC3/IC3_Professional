@@ -1457,7 +1457,7 @@
                 "explanation": "Đáp án đúng là vị trí được đánh dấu màu xanh trên hình minh họa ở trên."
               },
               {
-                "question": "Bạn là đội trưởng của đội bóng đá. Bạn cần thay mặt đội bóng hỏi huấn luyện viên của mình một câu hỏi khẩn cấp. Bạn nên đặt chủ đề khẩn cấp (UGRENT) ở đâu để đảm bảo rằng huấn luyện viên của bạn nhận được thông báo và mở Email một cách nhanh chóng? (Nhấp chọn 1 trong các chữ A-B-C-D)",
+                "question": "Bạn là đội trưởng của đội bóng đá. Bạn cần thay mặt đội bóng hỏi huấn luyện viên của mình một câu hỏi khẩn cấp. Bạn nên đặt chủ đề khẩn cấp (URGENT) ở đâu để đảm bảo rằng huấn luyện viên của bạn nhận được thông báo và mở Email một cách nhanh chóng? (Nhấp chọn 1 trong các chữ A-B-C-D)",
                 "type": "hotspot",
                 "image": true,
                 "image_file": "img-b5f8216ad430f7092a02a213fd384d2ecbfb14b3.png",
@@ -2852,7 +2852,7 @@
                 "image_id": null,
                 "id": 28,
                 "uid": "spark__lv2__t2__q8",
-                "explanation": "Thích hợp: Cháu có thể hiểu được sao chú lại thích đội Pythons. Nếu sống ở Florida, chắc cháu cũng sẽ rất yêu mến họ!. Không thích hợp: Có phải chú đã quá già để còn mê bóng chày không nhỉ? Bóng chày là môn cho người trẻ mà, thật đấy, Pythons là một đội kém cỏi, ông chú thích chúng nó nên cũng cùng một giuộc, thế nhé!."
+                "explanation": "Thích hợp: Cháu có thể hiểu được sao chú lại thích đội Pythons. Nếu sống ở Florida, chắc cháu cũng sẽ rất yêu mến họ! Không thích hợp: Có phải chú đã quá già để còn mê bóng chày không nhỉ? Bóng chày là môn cho người trẻ mà, thật đấy, Pythons là một đội kém cỏi, ông chú thích chúng nó nên cũng cùng một giuộc, thế nhé!"
               },
               {
                 "question": "Khi thực hiện một dự án ở trường, bạn bắt gặp hành vi bắt nạt trên mạng (Cyberbullying). Là một người dám lên tiếng bênh vực, đâu sẽ là một số cách bạn có thể phản ứng? Với mỗi câu phát biểu về việc lên tiếng bênh vực, hãy chọn Đúng hoặc Sai",
@@ -2967,7 +2967,7 @@
                     "answer": "true"
                   },
                   {
-                    "text": "Hành vi trái luật và bị cơ quan hành pháp xử lý nghiêm khắc .",
+                    "text": "Hành vi trái luật và bị cơ quan hành pháp xử lý nghiêm khắc.",
                     "answer": "true"
                   },
                   {
@@ -2982,7 +2982,7 @@
                 "image_id": null,
                 "id": 33,
                 "uid": "spark__lv2__t2__q13",
-                "explanation": "Đúng: Hành vi cố ý gây bẽ mặt người khác bằng cách chia sẻ thông tin riêng tư, Hành vi trái luật và bị cơ quan hành pháp xử lý nghiêm khắc , Hành vi gửi, đăng hoặc chia sẻ nội dung ác ý."
+                "explanation": "Đúng: Hành vi cố ý gây bẽ mặt người khác bằng cách chia sẻ thông tin riêng tư, Hành vi trái luật và bị cơ quan hành pháp xử lý nghiêm khắc, Hành vi gửi, đăng hoặc chia sẻ nội dung ác ý."
               },
               {
                 "question": "Bạn đặt mua một game mới, nhưng khi nhận được thì phát hiện rằng đó là một bản sao chép trái phép, không phải game chính hãng. Là một công dân tốt trên môi trường số, đâu là cách phản ứng thích hợp?",
@@ -3004,7 +3004,7 @@
                 "explanation": "Đáp án đúng là: “Yêu cầu hoàn tiền và thông báo cho cửa hàng rằng bản thân bạn nhận được không phải loại chính hãng”."
               },
               {
-                "question": "Những thông tin nào là một phần của dấu chân kỹ thuật số ?",
+                "question": "Những thông tin nào là một phần của dấu chân kỹ thuật số?",
                 "type": "single",
                 "options": [
                   "Những lượt/nội dung tìm kiếm mà bạn thực hiện trên Internet.",
@@ -3241,7 +3241,7 @@
                 "explanation": "Có: Tên của bạn. Không: Mật khẩu của bạn, Trường học của bạn, Ngày sinh của bạn."
               },
               {
-                "question": "Em hãy cho biết, vì sao người dùng nên bảo vệ danh tính trực tuyến của họ ? (chọn 2)",
+                "question": "Em hãy cho biết, vì sao người dùng nên bảo vệ danh tính trực tuyến của họ? (chọn 2)",
                 "type": "multi",
                 "options": [
                   "Người dùng không cần bảo vệ danh tính trực tuyến.",
@@ -11866,17 +11866,17 @@
                   "Chèn khoảng cách giữa các từ.",
                   "Sử dụng tên tập tin dài, chi tiết.",
                   "Đối với chuỗi tên tập tin bao gồm ngày tháng, hãy sử dụng định dạng DDMMYY.",
-                  "KHÔNG sử dụng ký tự đặc biệt (~! @ # $ % ^ & * ( ) ` ; < > ? , [ ] { } ' \" | /)."
+                  "KHÔNG sử dụng ký tự đặc biệt (~! @ # $ % ^ & * ( ) `; < >?, [ ] { } ' \" | /)."
                 ],
                 "correct": [
-                  "KHÔNG sử dụng ký tự đặc biệt (~! @ # $ % ^ & * ( ) ` ; < > ? , [ ] { } ' \" | /)."
+                  "KHÔNG sử dụng ký tự đặc biệt (~! @ # $ % ^ & * ( ) `; < >?, [ ] { } ' \" | /)."
                 ],
                 "image": false,
                 "image_file": null,
                 "image_id": null,
                 "id": 97,
                 "uid": "ic3__lv1__t4__q3",
-                "explanation": "Đáp án đúng là: “KHÔNG sử dụng ký tự đặc biệt (~! @ # $ % ^ & * ( ) ` ; < > ? , [ ] { } ' \" | /)”."
+                "explanation": "Đáp án đúng là: “KHÔNG sử dụng ký tự đặc biệt (~! @ # $ % ^ & * ( ) `; < >?, [ ] { } ' \" | /)”."
               },
               {
                 "question": "Bạn chụp ảnh kỷ yếu cho trường bằng điện thoại. Bạn chụp hơn 50 bức ảnh mỗi ngày. Bạn cần sử dụng phương pháp nhanh nhất và đáng tin cậy nhất để sao lưu các bức ảnh và xóa chúng khỏi điện thoại mỗi ngày. Bạn nên làm gì?",
@@ -16773,18 +16773,18 @@
                   "Poster - Poster Copy - Poster Copy2",
                   "My Poster - New Poster - Poster",
                   "Draft1 - Draft2 - Final",
-                  "Origial - Cut - Gray Scale"
+                  "Original - Cut - Gray Scale"
                 ],
                 "correct": [
                   "Draft1 - Draft2 - Final",
-                  "Origial - Cut - Gray Scale"
+                  "Original - Cut - Gray Scale"
                 ],
                 "image": false,
                 "image_file": null,
                 "image_id": null,
                 "id": 112,
                 "uid": "ic3__lv2__t4__q33",
-                "explanation": "Các đáp án đúng là: “Draft1 - Draft2 - Final”; “Origial - Cut - Gray Scale”."
+                "explanation": "Các đáp án đúng là: “Draft1 - Draft2 - Final”; “Original - Cut - Gray Scale”."
               },
               {
                 "question": "Ghép nối các mô tả đúng về các kiểu tập tin sau.",
@@ -18103,11 +18103,11 @@
                     "answer": "true"
                   },
                   {
-                    "text": "Đưa ra lời phê bình công bằng và góp ý mang tính xây dựng , nhưng hãy diễn đạt một cách tôn trọng.",
+                    "text": "Đưa ra lời phê bình công bằng và góp ý mang tính xây dựng, nhưng hãy diễn đạt một cách tôn trọng.",
                     "answer": "false"
                   },
                   {
-                    "text": "Sử dụng chữ viết tắt , tiếng lóng và biểu tượng cảm xúc ( emoji ) để làm cho bình luận của bạn thêm cá tính.",
+                    "text": "Sử dụng chữ viết tắt, tiếng lóng và biểu tượng cảm xúc ( emoji ) để làm cho bình luận của bạn thêm cá tính.",
                     "answer": "true"
                   }
                 ],
@@ -18118,7 +18118,7 @@
                 "image_id": null,
                 "id": 166,
                 "uid": "ic3__lv2__t6__q42",
-                "explanation": "Không: Sửa lỗi cho người khác khi ý kiến và ý tưởng của họ sai, Sử dụng chữ viết tắt , tiếng lóng và biểu tượng cảm xúc ( emoji ) để làm cho bình luận của bạn thêm cá tính. Có: Đưa ra lời phê bình công bằng và góp ý mang tính xây dựng , nhưng hãy diễn đạt một cách tôn trọng."
+                "explanation": "Không: Sửa lỗi cho người khác khi ý kiến và ý tưởng của họ sai, Sử dụng chữ viết tắt, tiếng lóng và biểu tượng cảm xúc ( emoji ) để làm cho bình luận của bạn thêm cá tính. Có: Đưa ra lời phê bình công bằng và góp ý mang tính xây dựng, nhưng hãy diễn đạt một cách tôn trọng."
               },
               {
                 "question": "Bạn viết một bài luận. Một người bạn cùng lớp nhận xét bài luận này và gợi ý sửa chữa như hình. Bạn đồng ý việc thực hiện các sửa chữa vĩnh viễn trong tài liệu. Bạn nên sử dụng chức năng nào? Hãy nhấp vào công cụ phù hợp.",
@@ -18231,7 +18231,7 @@
                 "image": false,
                 "image_file": null,
                 "image_id": null,
-                "explanation": "Đáp án đúng: Cộng tác..\n\nVì sao: Những công cụ này (như Meet, Teams, Word, Dropbox) đều phục vụ mục đích chung là giúp nhiều người làm việc, trao đổi và chỉnh sửa nội dung cùng nhau – tức là Cộng tác. Mỗi công cụ có thêm chức năng riêng như lưu trữ, trò chuyện video, nhưng điểm chung cốt lõi là cộng tác.",
+                "explanation": "Đáp án đúng: Cộng tác.\n\nVì sao: Những công cụ này (như Meet, Teams, Word, Dropbox) đều phục vụ mục đích chung là giúp nhiều người làm việc, trao đổi và chỉnh sửa nội dung cùng nhau – tức là Cộng tác. Mỗi công cụ có thêm chức năng riêng như lưu trữ, trò chuyện video, nhưng điểm chung cốt lõi là cộng tác.",
                 "id": 189,
                 "uid": "ic3__lv2__t6__q189_new"
               },
@@ -19220,7 +19220,7 @@
                 "options": [
                   "Mô tả chức năng của hình ảnh.",
                   "Cho phép các kết thúc thay thế trong một câu chuyện.",
-                  "Cung cấp cho người dung các ngôn ngữ thay thế để xem các trang web.",
+                  "Cung cấp cho người dùng các ngôn ngữ thay thế để xem các trang web.",
                   "Thay đổi nội dung trên một trang web."
                 ],
                 "correct": [
@@ -22359,12 +22359,12 @@
                 "question": "Khi chọn cách tốt nhất để phân phối thông tin, bạn nên xem xét đối tượng và hình thức truyền thông có sẵn. Đối với mỗi tuyên bố, hãy chọn cách có thể hiện hình thức giao tiếp tốt nhất với khán giả. (Chọn 2)",
                 "type": "multi",
                 "options": [
-                  "Một giám đốc tiếp thị chọn video để giới thiệu cho người dung sự dễ dàng khi vận hành một máy may mới.",
+                  "Một giám đốc tiếp thị chọn video để giới thiệu cho người dùng sự dễ dàng khi vận hành một máy may mới.",
                   "Một người hướng dẫn thiền tạo podcast âm thanh cho những người muốn học các phương pháp của cô ấy.",
                   "Tác giả của một bản tin dựa trên đăng ký hàng tuần về các lựa chọn của thị trường chứng khoán quyết định đăng thông tin cho công chúng trên phương tiện truyền thông xã hội."
                 ],
                 "correct": [
-                  "Một giám đốc tiếp thị chọn video để giới thiệu cho người dung sự dễ dàng khi vận hành một máy may mới.",
+                  "Một giám đốc tiếp thị chọn video để giới thiệu cho người dùng sự dễ dàng khi vận hành một máy may mới.",
                   "Một người hướng dẫn thiền tạo podcast âm thanh cho những người muốn học các phương pháp của cô ấy."
                 ],
                 "image": false,
@@ -22372,7 +22372,7 @@
                 "image_id": null,
                 "id": 146,
                 "uid": "ic3__lv3__t6__q30",
-                "explanation": "Các đáp án đúng là: “Một giám đốc tiếp thị chọn video để giới thiệu cho người dung sự dễ dàng khi vận hành một máy may mới”; “Một người hướng dẫn thiền tạo podcast âm thanh cho những người muốn học các phương pháp của cô ấy”."
+                "explanation": "Các đáp án đúng là: “Một giám đốc tiếp thị chọn video để giới thiệu cho người dùng sự dễ dàng khi vận hành một máy may mới”; “Một người hướng dẫn thiền tạo podcast âm thanh cho những người muốn học các phương pháp của cô ấy”."
               },
               {
                 "question": "Bạn đã được giao nhiệm vụ tạo một video trình chiếu về ý nghĩa lịch sử của các di tích. Đối với mỗi tuyên bố về chỉnh sửa nội dung video và âm thanh, hãy chọn phát biểu Đúng. (Chọn 2)",
@@ -22611,7 +22611,7 @@
                 "explanation": "Đáp án đúng là: “Cung cấp nhận xét để giúp cải thiện công việc của nhóm”."
               },
               {
-                "question": "Hành động nào xây đây giúp xây dựng nhóm?",
+                "question": "Hành động nào xây dựng giúp xây dựng nhóm?",
                 "type": "single",
                 "options": [
                   "Nhận xét mang tính xây dựng.",
@@ -22838,19 +22838,19 @@
                 "explanation": "Các đáp án đúng là: “Để kiểm tra xem giải pháp có hiệu quả hay không”; “Để tìm ra những sai sót trong thiết kế của bạn”."
               },
               {
-                "question": "Khi chọn cách tốt nhất để phân phối thông tin, bạn nên xem xét đối tượng và hình thức truyền thông có sẵn. Hoàn thành các câu bằng cách kéo từng chức năng từ cột bên phải sang mục địch của nó ở bên trái.",
+                "question": "Khi chọn cách tốt nhất để phân phối thông tin, bạn nên xem xét đối tượng và hình thức truyền thông có sẵn. Hoàn thành các câu bằng cách kéo từng chức năng từ cột bên phải sang mục đích của nó ở bên trái.",
                 "type": "matching",
                 "pairs": [
                   {
-                    "left": "Một của hàng có đợt giảm giá vào dịp lễ và muốn gửi phiếu giảm giá cho khách hàng thân thiết của họ. Họ quyết định các tốt nhất để phân phối phiếu giảm giá của họ là sử dụng.",
+                    "left": "Một cửa hàng có đợt giảm giá vào dịp lễ và muốn gửi phiếu giảm giá cho khách hàng thân thiết của họ. Họ quyết định cách tốt nhất để phân phối phiếu giảm giá của họ là sử dụng.",
                     "right": "Email"
                   },
                   {
-                    "left": "Một huấn luyện viên thể dục đã tạo ra một thói quen mới cho khách hàng của mình. Việc tập luyện khoảng 30 phút. Cách tốt nhất để anh ta phân phát hưỡng dẫn của mình là sử dụng.",
+                    "left": "Một huấn luyện viên thể dục đã tạo ra một thói quen mới cho khách hàng của mình. Việc tập luyện khoảng 30 phút. Cách tốt nhất để anh ta phân phát hướng dẫn của mình là sử dụng.",
                     "right": "Video"
                   },
                   {
-                    "left": "Bạn có một lý thuyết để chai sẻ với người khác dưới dạng podcast. Cách tốt nhất để phân phối nó sẽ là sử dụng.",
+                    "left": "Bạn có một lý thuyết để chia sẻ với người khác dưới dạng podcast. Cách tốt nhất để phân phối nó sẽ là sử dụng.",
                     "right": "Audio"
                   },
                   {
@@ -22863,7 +22863,7 @@
                 "image_id": null,
                 "id": 170,
                 "uid": "ic3__lv3__t7__q8",
-                "explanation": "Ghép đúng: “Một của hàng có đợt giảm giá vào dịp lễ và muốn gửi phiếu giảm giá cho khách hàng thân thiết của họ. Họ quyết định các tốt nhất để phân phối phiếu giảm giá của họ là sử dụng” ↔ “Email”; “Một huấn luyện viên thể dục đã tạo ra một thói quen mới cho khách hàng của mình. Việc tập luyện khoảng 30 phút. Cách tốt nhất để anh ta phân phát hưỡng dẫn của mình là sử dụng” ↔ “Video”; “Bạn có một lý thuyết để chai sẻ với người khác dưới dạng podcast. Cách tốt nhất để phân phối nó sẽ là sử dụng” ↔ “Audio”; “Một dàn hợp xướng địa phương muốn quảng bá album Giáng sinh mới của họ. Họ muốn tiếp cận càng nhiều người đăng ký mới càng tốt bằng cách giới thiệu một vài bài hát trong album. Cách tốt nhất để phân phối những bài hát này đến khán giả của họ là sử dụng” ↔ “Social Media”."
+                "explanation": "Ghép đúng: “Một cửa hàng có đợt giảm giá vào dịp lễ và muốn gửi phiếu giảm giá cho khách hàng thân thiết của họ. Họ quyết định cách tốt nhất để phân phối phiếu giảm giá của họ là sử dụng” ↔ “Email”; “Một huấn luyện viên thể dục đã tạo ra một thói quen mới cho khách hàng của mình. Việc tập luyện khoảng 30 phút. Cách tốt nhất để anh ta phân phát hướng dẫn của mình là sử dụng” ↔ “Video”; “Bạn có một lý thuyết để chia sẻ với người khác dưới dạng podcast. Cách tốt nhất để phân phối nó sẽ là sử dụng” ↔ “Audio”; “Một dàn hợp xướng địa phương muốn quảng bá album Giáng sinh mới của họ. Họ muốn tiếp cận càng nhiều người đăng ký mới càng tốt bằng cách giới thiệu một vài bài hát trong album. Cách tốt nhất để phân phối những bài hát này đến khán giả của họ là sử dụng” ↔ “Social Media”."
               },
               {
                 "question": "Bạn nên quét virus vì hai lý do nào? (Chọn 2)",
@@ -22966,7 +22966,7 @@
                 "explanation": "Các đáp án đúng là: “Cho phép khách hàng nhận ra các phiên bản cập nhật”; “Cho phép lập trình viên theo dõi các thay đổi”."
               },
               {
-                "question": "Bạn đang thiết kế bảo mật cho một trang web. Cái gì ghép nối với mật khẩu để tạo tạo ra xác thực đa yếu tố?",
+                "question": "Bạn đang thiết kế bảo mật cho một trang web. Cái gì ghép nối với mật khẩu để tạo ra xác thực đa yếu tố?",
                 "type": "single",
                 "options": [
                   "Tên của mẹ.",
@@ -23039,7 +23039,7 @@
                 "options": [
                   "Hỏi rõ khách hàng máy tính xách tay bị lỗi gì.",
                   "Khuyến khích khách hàng mua máy đời mới.",
-                  "Báo với khách là máy đời cũ giờ không sữa được nữa.",
+                  "Báo với khách là máy đời cũ giờ không sửa được nữa.",
                   "Kêu khách đến cửa hàng ngay để hoàn tiền."
                 ],
                 "correct": [
