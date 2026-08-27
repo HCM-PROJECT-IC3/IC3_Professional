@@ -23179,6 +23179,3673 @@
           }
         }
       ]
+    },
+    {
+      "id": "MOS",
+      "name": "MOS",
+      "color": "#313c64",
+      "levels": [
+        {
+          "id": "Word",
+          "name": "Word",
+          "grade": "Word",
+          "minitests": {
+            "Bài 1: Làm việc với tài liệu": [
+              {
+                "question": "Bạn muốn bổ sung Title, Author và Subject cho tài liệu. Bạn nên mở khu vực nào?",
+                "type": "single",
+                "options": [
+                  "File > Info > Properties",
+                  "Home > Editing",
+                  "Review > Comments",
+                  "View > Show"
+                ],
+                "correct": [
+                  "File > Info > Properties"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 1,
+                "uid": "mos_word__bài1__xlsx_q10__v1",
+                "explanation": ""
+              }
+            ],
+            "Bài 2: Thao tác với văn bản": [
+              {
+                "question": "Bạn cần chèn ký hiệu © vào vị trí con trỏ. Lệnh nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Symbol",
+                  "WordArt",
+                  "Equation Caption",
+                  "Page Number"
+                ],
+                "correct": [
+                  "Symbol"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 1,
+                "uid": "mos_word__bài2__xlsx_q5__v1",
+                "explanation": ""
+              },
+              {
+                "question": "Bạn cần tìm nhanh tất cả vị trí xuất hiện của cụm từ “doanh thu” trong tài liệu. Công cụ nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Navigation Pane",
+                  "Go To",
+                  "Track Changes",
+                  "Word Count"
+                ],
+                "correct": [
+                  "Navigation Pane"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 2,
+                "uid": "mos_word__bài2__xlsx_q37__v2",
+                "explanation": ""
+              },
+              {
+                "question": "Bạn cần thay tất cả cụm từ “Quý 1” thành “Quý I” trong toàn bộ tài liệu. Lệnh nào giúp hoàn thành nhanh nhất?",
+                "type": "single",
+                "options": [
+                  "Replace All trong Find and Replace",
+                  "Format Painter",
+                  "Go To",
+                  "AutoCorrect Options"
+                ],
+                "correct": [
+                  "Replace All trong Find and Replace"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 3,
+                "uid": "mos_word__bài2__xlsx_q46__v3",
+                "explanation": ""
+              }
+            ],
+            "Bài 3: Định dạng văn bản": [
+              {
+                "question": "Trên tab Home, nhóm nào chứa các lệnh Bold, Italic, Underline để định dạng ký tự?",
+                "type": "single",
+                "options": [
+                  "Font",
+                  "Paragraph",
+                  "Styles",
+                  "Editing"
+                ],
+                "correct": [
+                  "Font"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 1,
+                "uid": "word__lv1__t1__q1__v1",
+                "explanation": "Nhóm Font (tab Home) chứa các lệnh định dạng ký tự: Bold, Italic, Underline, cỡ chữ, màu chữ..."
+              },
+              {
+                "question": "Muốn chỉnh khoảng cách dòng (line spacing) của đoạn văn, em dùng lệnh Line and Paragraph Spacing nằm trong nhóm nào?",
+                "type": "single",
+                "options": [
+                  "Paragraph (tab Home)",
+                  "Font (tab Home)",
+                  "Styles (tab Home)",
+                  "Page Setup (tab Layout)"
+                ],
+                "correct": [
+                  "Paragraph (tab Home)"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 2,
+                "uid": "word__lv1__t1__q2__v2",
+                "explanation": "Line and Paragraph Spacing nằm trong nhóm Paragraph, tab Home — cùng nhóm với căn lề, thụt đầu dòng, đánh số/gạch đầu dòng."
+              },
+              {
+                "question": "Bộ sưu tập các kiểu định dạng có sẵn (Heading 1, Title, Quote...) để áp nhanh cho văn bản nằm ở nhóm nào trên tab Home?",
+                "type": "single",
+                "options": [
+                  "Styles",
+                  "Font",
+                  "Editing",
+                  "Clipboard"
+                ],
+                "correct": [
+                  "Styles"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 3,
+                "uid": "word__lv1__t1__q3__v3",
+                "explanation": "Nhóm Styles (tab Home) chứa các kiểu định dạng dựng sẵn như Normal, Heading 1, Heading 2, Title, Quote..."
+              },
+              {
+                "question": "Lệnh Replace (tìm và thay thế) nằm trong nhóm nào?",
+                "type": "single",
+                "options": [
+                  "Editing (tab Home)",
+                  "Styles (tab Home)",
+                  "Font (tab Home)",
+                  "Proofing (tab Review)"
+                ],
+                "correct": [
+                  "Editing (tab Home)"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 4,
+                "uid": "word__lv1__t1__q4__v4",
+                "explanation": "Find, Replace, Select đều nằm trong nhóm Editing, tab Home (thường ở cuối bên phải Ribbon)."
+              },
+              {
+                "question": "Xác định mỗi lệnh sau có nằm trên tab Home hay không.",
+                "type": "truefalse",
+                "statements": [
+                  {
+                    "text": "Nhóm Font (Bold, Italic...) nằm trên tab Home.",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Watermark nằm trên tab Home.",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Line and Paragraph Spacing nằm trên tab Home.",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "WordArt nằm trên tab Home.",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Spelling & Grammar nằm trên tab Home.",
+                    "answer": "false"
+                  }
+                ],
+                "label_true": "Ở trên tab Home",
+                "label_false": "Không ở trên tab Home",
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 5,
+                "uid": "word__lv1__t1__q5__v5",
+                "explanation": "Watermark ở tab Design; WordArt ở tab Insert (nhóm Text); Spelling & Grammar ở tab Review (nhóm Proofing). Font và Line and Paragraph Spacing đều ở tab Home."
+              },
+              {
+                "question": "Kết nối từng lệnh ở bên trái với đúng vị trí (nhóm) của nó trên tab Home.",
+                "type": "matching",
+                "pairs": [
+                  {
+                    "left": "Bold, Italic, Underline",
+                    "right": "Home – Font"
+                  },
+                  {
+                    "left": "Line and Paragraph Spacing",
+                    "right": "Home – Paragraph"
+                  },
+                  {
+                    "left": "Heading 1, Title (kiểu có sẵn)",
+                    "right": "Home – Styles"
+                  },
+                  {
+                    "left": "Cut, Copy, Paste",
+                    "right": "Home – Clipboard"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 6,
+                "uid": "word__lv1__t1__q6__v6",
+                "explanation": "Cả 4 nhóm Clipboard, Font, Paragraph, Styles đều nằm trên tab Home, mỗi nhóm phụ trách 1 mảng định dạng khác nhau."
+              },
+              {
+                "question": "Phân loại mỗi lệnh sau vào đúng nhóm: có nằm trên tab Home hay không.",
+                "type": "classify",
+                "zones": [
+                  "Trên tab Home",
+                  "Không trên tab Home"
+                ],
+                "items": [
+                  {
+                    "text": "Bold",
+                    "zone": "Trên tab Home"
+                  },
+                  {
+                    "text": "Watermark",
+                    "zone": "Không trên tab Home"
+                  },
+                  {
+                    "text": "Line and Paragraph Spacing",
+                    "zone": "Trên tab Home"
+                  },
+                  {
+                    "text": "WordArt",
+                    "zone": "Không trên tab Home"
+                  },
+                  {
+                    "text": "Styles (Heading 1, Title...)",
+                    "zone": "Trên tab Home"
+                  },
+                  {
+                    "text": "Table of Contents",
+                    "zone": "Không trên tab Home"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 7,
+                "uid": "word__lv1__t1__q7__v7",
+                "explanation": "Watermark ở tab Design, WordArt ở tab Insert, Table of Contents ở tab References — cả 3 đều không phải tab Home."
+              },
+              {
+                "question": "Sắp xếp đúng thứ tự các bước để áp kiểu Heading 1 cho một đoạn văn.",
+                "type": "ordering",
+                "hint": "Kéo-thả để sắp xếp lại thứ tự (hoặc dùng nút mũi tên).",
+                "items": [
+                  "Đặt con trỏ chuột vào đoạn văn cần định dạng.",
+                  "Vào tab Home.",
+                  "Trong nhóm Styles, chọn kiểu Heading 1."
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 8,
+                "uid": "word__lv1__t1__q8__v8",
+                "explanation": "Không cần bôi đen cả đoạn — chỉ cần đặt con trỏ vào trong đoạn rồi áp Style, toàn bộ đoạn sẽ được định dạng theo kiểu đó."
+              }
+            ],
+            "Bài 4: Định dạng tài liệu để xuất bản": [
+              {
+                "question": "Watermark (hình mờ) được chèn từ nhóm nào?",
+                "type": "single",
+                "options": [
+                  "Page Background (tab Design)",
+                  "Page Setup (tab Layout)",
+                  "Text (tab Insert)",
+                  "Styles (tab Home)"
+                ],
+                "correct": [
+                  "Page Background (tab Design)"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 1,
+                "uid": "word__lv1__t2__q1__v1",
+                "explanation": "Watermark, Page Color, Page Borders đều nằm trong nhóm Page Background, tab Design."
+              },
+              {
+                "question": "Muốn đổi hướng trang (Portrait/Landscape), em dùng lệnh nào?",
+                "type": "single",
+                "options": [
+                  "Orientation (tab Layout, nhóm Page Setup)",
+                  "Size (tab Layout, nhóm Page Setup)",
+                  "Watermark (tab Design)",
+                  "Columns (tab Layout)"
+                ],
+                "correct": [
+                  "Orientation (tab Layout, nhóm Page Setup)"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 2,
+                "uid": "word__lv1__t2__q2__v2",
+                "explanation": "Orientation nằm trong nhóm Page Setup, tab Layout — dùng để chuyển trang giữa dọc (Portrait) và ngang (Landscape)."
+              },
+              {
+                "question": "Lệnh chia văn bản thành nhiều cột báo (Columns) nằm ở nhóm nào?",
+                "type": "single",
+                "options": [
+                  "Page Setup (tab Layout)",
+                  "Paragraph (tab Layout)",
+                  "Text (tab Insert)",
+                  "Page Background (tab Design)"
+                ],
+                "correct": [
+                  "Page Setup (tab Layout)"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 3,
+                "uid": "word__lv1__t2__q3__v3",
+                "explanation": "Columns cùng nhóm Page Setup với Margins, Orientation, Size, Breaks, Hyphenation — tất cả đều ở tab Layout."
+              },
+              {
+                "question": "Xác định đúng/sai cho mỗi phát biểu về bố cục trang.",
+                "type": "truefalse",
+                "statements": [
+                  {
+                    "text": "Margins nằm trong nhóm Page Setup của tab Layout.",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Page Borders nằm trong nhóm Page Background của tab Design.",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Orientation dùng để đổi cỡ giấy (paper size).",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Watermark có thể chọn mẫu có sẵn như CONFIDENTIAL, SAMPLE.",
+                    "answer": "true"
+                  }
+                ],
+                "label_true": "Đúng",
+                "label_false": "Sai",
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 4,
+                "uid": "word__lv1__t2__q4__v4",
+                "explanation": "Orientation chỉ đổi hướng (dọc/ngang), đổi cỡ giấy (A4, Letter...) là lệnh Size, cùng nhóm Page Setup."
+              },
+              {
+                "question": "Kết nối từng lệnh với đúng tab – nhóm chứa nó.",
+                "type": "matching",
+                "pairs": [
+                  {
+                    "left": "Margins",
+                    "right": "Layout – Page Setup"
+                  },
+                  {
+                    "left": "Watermark",
+                    "right": "Design – Page Background"
+                  },
+                  {
+                    "left": "Page Color",
+                    "right": "Design – Page Background"
+                  },
+                  {
+                    "left": "Hyphenation",
+                    "right": "Layout – Page Setup"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 5,
+                "uid": "word__lv1__t2__q5__v5",
+                "explanation": "Margins và Hyphenation cùng nằm trong Page Setup (tab Layout); Watermark và Page Color cùng nằm trong Page Background (tab Design)."
+              },
+              {
+                "question": "Phân loại mỗi lệnh sau vào đúng tab chứa nó: Design hay Layout.",
+                "type": "classify",
+                "zones": [
+                  "Tab Design",
+                  "Tab Layout"
+                ],
+                "items": [
+                  {
+                    "text": "Watermark",
+                    "zone": "Tab Design"
+                  },
+                  {
+                    "text": "Page Borders",
+                    "zone": "Tab Design"
+                  },
+                  {
+                    "text": "Margins",
+                    "zone": "Tab Layout"
+                  },
+                  {
+                    "text": "Columns",
+                    "zone": "Tab Layout"
+                  },
+                  {
+                    "text": "Orientation",
+                    "zone": "Tab Layout"
+                  },
+                  {
+                    "text": "Page Color",
+                    "zone": "Tab Design"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 6,
+                "uid": "word__lv1__t2__q6__v6",
+                "explanation": "Nhóm Page Background (Watermark, Page Borders, Page Color) ở tab Design; nhóm Page Setup (Margins, Columns, Orientation) ở tab Layout."
+              },
+              {
+                "question": "Sắp xếp đúng thứ tự các bước để đặt lề trang (margin) tuỳ chỉnh.",
+                "type": "ordering",
+                "hint": "Kéo-thả để sắp xếp lại thứ tự (hoặc dùng nút mũi tên).",
+                "items": [
+                  "Vào tab Layout.",
+                  "Trong nhóm Page Setup, bấm Margins.",
+                  "Chọn Custom Margins... để mở hộp thoại Page Setup.",
+                  "Nhập số đo lề mong muốn rồi bấm OK."
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 7,
+                "uid": "word__lv1__t2__q7__v7",
+                "explanation": "Custom Margins nằm ở cuối menu thả xuống của Margins — cần mở hộp thoại này mới nhập được số đo lề chính xác theo ý muốn."
+              },
+              {
+                "question": "Muốn thêm viền trang trí quanh trang giấy (border), lệnh nào được dùng?",
+                "type": "single",
+                "options": [
+                  "Page Borders (tab Design)",
+                  "Table Borders (tab Table Design)",
+                  "Text Box Border (tab Shape Format)",
+                  "Picture Border (tab Picture Format)"
+                ],
+                "correct": [
+                  "Page Borders (tab Design)"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 8,
+                "uid": "word__lv1__t2__q8__v8",
+                "explanation": "Page Borders (nhóm Page Background, tab Design) dùng để viền cả trang giấy — khác với viền bảng hay viền hình."
+              }
+            ],
+            "Bài 5: Phân phối tài liệu": [
+              {
+                "question": "Một tài liệu có hơn 100 trang. Bạn cần chuyển trực tiếp đến trang 75. Lệnh nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Go To",
+                  "Replace",
+                  "Translate",
+                  "Read Aloud"
+                ],
+                "correct": [
+                  "Go To"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 1,
+                "uid": "mos_word__bài5__xlsx_q7__v1",
+                "explanation": ""
+              },
+              {
+                "question": "Bạn muốn tạo một liên kết để khi người đọc bấm vào sẽ chuyển đến tiêu đề “Phụ lục” trong cùng tài liệu. Bạn nên thực hiện thao tác nào?",
+                "type": "single",
+                "options": [
+                  "Chèn Link và chọn Place in This Document",
+                  "Chèn Page Break trước tiêu đề",
+                  "Thêm Comment vào tiêu đề",
+                  "Chèn Caption cho tiêu đề"
+                ],
+                "correct": [
+                  "Chèn Link và chọn Place in This Document"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 2,
+                "uid": "mos_word__bài5__xlsx_q23__v2",
+                "explanation": ""
+              },
+              {
+                "question": "Tài liệu có 20 trang nhưng bạn chỉ muốn in trang đang hiển thị. Trong phần Settings của màn hình Print, bạn nên chọn tùy chọn nào?",
+                "type": "single",
+                "options": [
+                  "Print Current Page",
+                  "Print All Pages",
+                  "Print Markup",
+                  "Print One Sided"
+                ],
+                "correct": [
+                  "Print Current Page"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 3,
+                "uid": "mos_word__bài5__xlsx_q33__v3",
+                "explanation": ""
+              },
+              {
+                "question": "Bạn cần gửi tài liệu dưới định dạng giữ nguyên bố cục và người nhận không cần chỉnh sửa bằng Word. Định dạng nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "PDF",
+                  "TXT",
+                  "RTF",
+                  "ODT"
+                ],
+                "correct": [
+                  "PDF"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 4,
+                "uid": "mos_word__bài5__xlsx_q36__v4",
+                "explanation": ""
+              },
+              {
+                "question": "Trước khi phát hành tài liệu, bạn muốn kiểm tra thông tin cá nhân ẩn, vấn đề trợ năng và tính tương thích. Hãy chọn 3 công cụ phù hợp.",
+                "type": "multiple",
+                "options": [
+                  "Document Inspector",
+                  "Accessibility Checker",
+                  "Navigation Pane",
+                  "Compatibility Checker",
+                  "Format Painter"
+                ],
+                "correct": [
+                  "Document Inspector",
+                  "Accessibility Checker",
+                  "Compatibility Checker"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 5,
+                "uid": "mos_word__bài5__xlsx_q38__v5",
+                "explanation": ""
+              },
+              {
+                "question": "Một nhóm cần cùng chỉnh sửa một bản tài liệu duy nhất và nhận các thay đổi mới nhất. Phương án chia sẻ nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Lưu tài liệu lên OneDrive và chia sẻ liên kết",
+                  "Gửi nhiều bản sao riêng biệt qua email",
+                  "Chuyển tài liệu thành ảnh",
+                  "In tài liệu và phát cho từng người"
+                ],
+                "correct": [
+                  "Lưu tài liệu lên OneDrive và chia sẻ liên kết"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 6,
+                "uid": "mos_word__bài5__xlsx_q43__v6",
+                "explanation": ""
+              }
+            ],
+            "Bài 6: Sử dụng Bảng": [
+              {
+                "question": "Khi con trỏ đang ở trong 1 bảng, Ribbon sẽ hiện thêm 2 tab ngữ cảnh (contextual tab) nào?",
+                "type": "single",
+                "options": [
+                  "Table Design và Table Layout",
+                  "Table Format và Table Insert",
+                  "Table Style và Table Tools",
+                  "Design và Layout (không đổi tên)"
+                ],
+                "correct": [
+                  "Table Design và Table Layout"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 1,
+                "uid": "word__lv1__t3__q1__v1",
+                "explanation": "Khi con trỏ ở trong bảng, Word hiện thêm cụm 'Table Tools' gồm 2 tab: Table Design (kiểu dáng, viền, tô nền) và Table Layout (chèn/xoá hàng-cột, gộp ô, canh chỉnh)."
+              },
+              {
+                "question": "Lệnh chèn 1 bảng mới (Insert Table) nằm ở tab nào?",
+                "type": "single",
+                "options": [
+                  "Insert (nhóm Tables)",
+                  "Home (nhóm Editing)",
+                  "Layout (nhóm Page Setup)",
+                  "References (nhóm Captions)"
+                ],
+                "correct": [
+                  "Insert (nhóm Tables)"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 2,
+                "uid": "word__lv1__t3__q2__v2",
+                "explanation": "Insert Table nằm trong nhóm Tables, tab Insert — trước khi có bảng thì chưa có tab ngữ cảnh Table Design/Table Layout."
+              },
+              {
+                "question": "Muốn thêm 1 hàng/cột mới vào bảng đã có, em dùng nhóm nào trên tab Table Layout?",
+                "type": "single",
+                "options": [
+                  "Rows & Columns",
+                  "Merge",
+                  "Cell Size",
+                  "Alignment"
+                ],
+                "correct": [
+                  "Rows & Columns"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 3,
+                "uid": "word__lv1__t3__q3__v3",
+                "explanation": "Nhóm Rows & Columns (tab Table Layout) chứa Insert Above/Below/Left/Right và Delete."
+              },
+              {
+                "question": "Xác định đúng/sai cho mỗi phát biểu về bảng biểu trong Word.",
+                "type": "truefalse",
+                "statements": [
+                  {
+                    "text": "Tab Table Design chỉ xuất hiện khi con trỏ đang ở trong bảng.",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Insert Table nằm trên tab References.",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Merge Cells dùng để gộp nhiều ô thành 1 ô.",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Cell Size dùng để đổi kiểu viền bảng (border style).",
+                    "answer": "false"
+                  }
+                ],
+                "label_true": "Đúng",
+                "label_false": "Sai",
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 4,
+                "uid": "word__lv1__t3__q4__v4",
+                "explanation": "Cell Size dùng để chỉnh chiều rộng/cao ô, không phải đổi kiểu viền — kiểu viền/tô màu bảng nằm trong tab Table Design."
+              },
+              {
+                "question": "Kết nối từng lệnh với đúng tab/nhóm chứa nó khi làm việc với bảng.",
+                "type": "matching",
+                "pairs": [
+                  {
+                    "left": "Insert Table",
+                    "right": "Insert – Tables"
+                  },
+                  {
+                    "left": "Merge Cells",
+                    "right": "Table Layout – Merge"
+                  },
+                  {
+                    "left": "Table Styles (màu, viền có sẵn)",
+                    "right": "Table Design"
+                  },
+                  {
+                    "left": "Sort (sắp xếp dữ liệu trong bảng)",
+                    "right": "Table Layout – Data"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 5,
+                "uid": "word__lv1__t3__q5__v5",
+                "explanation": "Insert Table nằm trước khi có bảng (tab Insert); các lệnh còn lại chỉ xuất hiện sau khi con trỏ đã ở trong bảng, thuộc Table Design hoặc Table Layout."
+              },
+              {
+                "question": "Phân loại mỗi lệnh sau vào đúng tab: Table Design hay Table Layout.",
+                "type": "classify",
+                "zones": [
+                  "Table Design",
+                  "Table Layout"
+                ],
+                "items": [
+                  {
+                    "text": "Table Styles",
+                    "zone": "Table Design"
+                  },
+                  {
+                    "text": "Borders / Shading",
+                    "zone": "Table Design"
+                  },
+                  {
+                    "text": "Merge Cells",
+                    "zone": "Table Layout"
+                  },
+                  {
+                    "text": "Insert Above / Insert Below",
+                    "zone": "Table Layout"
+                  },
+                  {
+                    "text": "Sort",
+                    "zone": "Table Layout"
+                  },
+                  {
+                    "text": "Table Style Options",
+                    "zone": "Table Design"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 6,
+                "uid": "word__lv1__t3__q6__v6",
+                "explanation": "Table Design lo về hình thức (kiểu dáng, viền, tô nền); Table Layout lo về cấu trúc và dữ liệu (chèn/xoá/gộp ô, canh chỉnh, sắp xếp)."
+              },
+              {
+                "question": "Sắp xếp đúng thứ tự các bước để gộp 2 ô trong bảng thành 1 ô.",
+                "type": "ordering",
+                "hint": "Kéo-thả để sắp xếp lại thứ tự (hoặc dùng nút mũi tên).",
+                "items": [
+                  "Bôi đen (chọn) các ô cần gộp.",
+                  "Click tab ngữ cảnh Table Layout.",
+                  "Trong nhóm Merge, chọn Merge Cells."
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 7,
+                "uid": "word__lv1__t3__q7__v7",
+                "explanation": "Phải chọn đúng vùng ô cần gộp trước, tab Table Layout mới có tác dụng lên đúng vùng đó."
+              },
+              {
+                "question": "Muốn văn bản trong ô canh giữa theo cả chiều ngang lẫn chiều dọc, em dùng nhóm nào trên tab Table Layout?",
+                "type": "single",
+                "options": [
+                  "Alignment",
+                  "Cell Size",
+                  "Data",
+                  "Rows & Columns"
+                ],
+                "correct": [
+                  "Alignment"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 8,
+                "uid": "word__lv1__t3__q8__v8",
+                "explanation": "Nhóm Alignment (tab Table Layout) có 9 kiểu canh văn bản trong ô, kết hợp ngang (trái/giữa/phải) và dọc (trên/giữa/dưới)."
+              }
+            ],
+            "Bài 7: Làm việc với hình ảnh minh họa": [
+              {
+                "question": "Khi chèn 1 hình ảnh (Picture) và click chọn nó, tab ngữ cảnh nào xuất hiện?",
+                "type": "single",
+                "options": [
+                  "Picture Format",
+                  "Shape Format",
+                  "SmartArt Design",
+                  "Table Design"
+                ],
+                "correct": [
+                  "Picture Format"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 1,
+                "uid": "word__lv1__t5__q1__v1",
+                "explanation": "Chọn 1 ảnh sẽ hiện thêm tab ngữ cảnh Picture Format, chứa các nhóm Picture Styles, Adjust, Arrange, Size."
+              },
+              {
+                "question": "Kiểu khung viền có sẵn cho ảnh (ví dụ Simple Frame, White) nằm ở nhóm nào?",
+                "type": "single",
+                "options": [
+                  "Picture Styles (tab Picture Format)",
+                  "Arrange (tab Picture Format)",
+                  "Size (tab Picture Format)",
+                  "Adjust (tab Picture Format)"
+                ],
+                "correct": [
+                  "Picture Styles (tab Picture Format)"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 2,
+                "uid": "word__lv1__t5__q2__v2",
+                "explanation": "Nhóm Picture Styles cung cấp các mẫu khung/bóng đổ/viền dựng sẵn để áp nhanh cho ảnh, chỉ cần click chọn."
+              },
+              {
+                "question": "WordArt (chữ nghệ thuật) được chèn từ nhóm nào?",
+                "type": "single",
+                "options": [
+                  "Text (tab Insert)",
+                  "Illustrations (tab Insert)",
+                  "Font (tab Home)",
+                  "Styles (tab Home)"
+                ],
+                "correct": [
+                  "Text (tab Insert)"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 3,
+                "uid": "word__lv1__t5__q3__v3",
+                "explanation": "WordArt nằm trong nhóm Text, tab Insert — cùng nhóm với Text Box, Drop Cap, Date & Time."
+              },
+              {
+                "question": "Xác định đúng/sai cho mỗi phát biểu về đối tượng đồ họa.",
+                "type": "truefalse",
+                "statements": [
+                  {
+                    "text": "SmartArt được chèn từ nhóm Illustrations, tab Insert.",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Khi chọn 1 hình vẽ (Shape), tab ngữ cảnh Shape Format sẽ xuất hiện.",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Shape Outline nằm trong nhóm Shape Styles của tab Shape Format.",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Picture Styles nằm trên tab Insert (không cần chọn ảnh trước).",
+                    "answer": "false"
+                  }
+                ],
+                "label_true": "Đúng",
+                "label_false": "Sai",
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 4,
+                "uid": "word__lv1__t5__q4__v4",
+                "explanation": "Picture Styles chỉ xuất hiện sau khi đã chèn VÀ chọn ảnh (thuộc tab ngữ cảnh Picture Format), không có sẵn trên tab Insert."
+              },
+              {
+                "question": "Kết nối mỗi tình huống chọn đối tượng với đúng tab ngữ cảnh xuất hiện.",
+                "type": "matching",
+                "pairs": [
+                  {
+                    "left": "Ảnh (Picture) đang được chọn",
+                    "right": "Picture Format"
+                  },
+                  {
+                    "left": "Hình vẽ (Shape) đang được chọn",
+                    "right": "Shape Format"
+                  },
+                  {
+                    "left": "SmartArt đang được chọn",
+                    "right": "SmartArt Design"
+                  },
+                  {
+                    "left": "Bảng (Table) đang được chọn",
+                    "right": "Table Design / Table Layout"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 5,
+                "uid": "word__lv1__t5__q5__v5",
+                "explanation": "Word tự động hiện thêm tab ngữ cảnh phù hợp tuỳ loại đối tượng đang được chọn — đây là điểm khác biệt lớn so với các tab cố định như Home, Insert."
+              },
+              {
+                "question": "Phân loại mỗi tab sau: có phải là tab ngữ cảnh (chỉ hiện khi chọn đúng đối tượng) hay không.",
+                "type": "classify",
+                "zones": [
+                  "Tab ngữ cảnh (cần chọn đối tượng trước)",
+                  "Tab luôn có sẵn"
+                ],
+                "items": [
+                  {
+                    "text": "Picture Format",
+                    "zone": "Tab ngữ cảnh (cần chọn đối tượng trước)"
+                  },
+                  {
+                    "text": "Shape Format",
+                    "zone": "Tab ngữ cảnh (cần chọn đối tượng trước)"
+                  },
+                  {
+                    "text": "Home",
+                    "zone": "Tab luôn có sẵn"
+                  },
+                  {
+                    "text": "Insert",
+                    "zone": "Tab luôn có sẵn"
+                  },
+                  {
+                    "text": "SmartArt Design",
+                    "zone": "Tab ngữ cảnh (cần chọn đối tượng trước)"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 6,
+                "uid": "word__lv1__t5__q6__v6",
+                "explanation": "Home, Insert, Design, Layout, References, Review, View luôn thường trực trên Ribbon; các tab Picture/Shape/Table/SmartArt Format chỉ xuất hiện khi đúng loại đối tượng đang được chọn."
+              },
+              {
+                "question": "Sắp xếp đúng thứ tự các bước để chèn 1 SmartArt và chọn bố cục cho nó.",
+                "type": "ordering",
+                "hint": "Kéo-thả để sắp xếp lại thứ tự (hoặc dùng nút mũi tên).",
+                "items": [
+                  "Vào tab Insert.",
+                  "Trong nhóm Illustrations, click SmartArt.",
+                  "Chọn 1 kiểu bố cục (layout) rồi bấm OK.",
+                  "Nhập nội dung vào từng khối trong SmartArt."
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 7,
+                "uid": "word__lv1__t5__q7__v7",
+                "explanation": "Phải chọn xong bố cục (Process, Cycle, Hierarchy...) và bấm OK thì SmartArt mới được chèn vào tài liệu để bắt đầu nhập nội dung."
+              },
+              {
+                "question": "Muốn đổi màu viền của 1 hình vẽ (Shape), em dùng lệnh nào?",
+                "type": "single",
+                "options": [
+                  "Shape Outline (nhóm Shape Styles)",
+                  "Shape Fill (nhóm Shape Styles)",
+                  "Text Fill (nhóm WordArt Styles)",
+                  "Arrange (nhóm Arrange)"
+                ],
+                "correct": [
+                  "Shape Outline (nhóm Shape Styles)"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 8,
+                "uid": "word__lv1__t5__q8__v8",
+                "explanation": "Shape Outline đổi màu VIỀN của hình; Shape Fill đổi màu NỀN bên trong hình — 2 lệnh khác nhau tuy cùng nhóm Shape Styles."
+              }
+            ],
+            "Bài 8: Tạo tài liệu tham khảo và Cộng tác tài liệu": [
+              {
+                "question": "Mục lục tự động (Table of Contents) được tạo từ nhóm nào?",
+                "type": "single",
+                "options": [
+                  "Table of Contents (tab References)",
+                  "Text (tab Insert)",
+                  "Page Background (tab Design)",
+                  "Styles (tab Home)"
+                ],
+                "correct": [
+                  "Table of Contents (tab References)"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 1,
+                "uid": "word__lv1__t4__q1__v1",
+                "explanation": "Table of Contents là nhóm đầu tiên bên trái của tab References, dùng chung với các Heading Style đã áp cho tài liệu."
+              },
+              {
+                "question": "Chú thích cuối trang (Footnote) và chú thích cuối tài liệu (Endnote) nằm trong nhóm nào?",
+                "type": "single",
+                "options": [
+                  "Footnotes (tab References)",
+                  "Text (tab Insert)",
+                  "Comments (tab Insert)",
+                  "Captions (tab References)"
+                ],
+                "correct": [
+                  "Footnotes (tab References)"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 2,
+                "uid": "word__lv1__t4__q2__v2",
+                "explanation": "Insert Footnote và Insert Endnote cùng nằm trong nhóm Footnotes, tab References."
+              },
+              {
+                "question": "Danh mục tài liệu tham khảo (Bibliography) nằm trong nhóm nào?",
+                "type": "single",
+                "options": [
+                  "Citations & Bibliography (tab References)",
+                  "Table of Contents (tab References)",
+                  "Captions (tab References)",
+                  "Index (tab References)"
+                ],
+                "correct": [
+                  "Citations & Bibliography (tab References)"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 3,
+                "uid": "word__lv1__t4__q3__v3",
+                "explanation": "Nhóm Citations & Bibliography quản lý cả trích dẫn (Insert Citation) lẫn danh mục tham khảo (Bibliography)."
+              },
+              {
+                "question": "Xác định đúng/sai cho mỗi phát biểu về References.",
+                "type": "truefalse",
+                "statements": [
+                  {
+                    "text": "Insert Endnote nằm trong nhóm Footnotes.",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Table of Contents phải được đánh tay từng dòng, Word không tự sinh được.",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Comment (ghi chú/bình luận) được chèn từ tab Review, nhóm Comments.",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Header & Footer nằm trên tab References.",
+                    "answer": "false"
+                  }
+                ],
+                "label_true": "Đúng",
+                "label_false": "Sai",
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 4,
+                "uid": "word__lv1__t4__q4__v4",
+                "explanation": "Table of Contents có thể tự sinh dựa trên các Heading Style đã áp; Header & Footer thực ra nằm ở tab Insert, không phải References."
+              },
+              {
+                "question": "Kết nối từng lệnh với đúng tab – nhóm chứa nó.",
+                "type": "matching",
+                "pairs": [
+                  {
+                    "left": "Table of Contents",
+                    "right": "References – Table of Contents"
+                  },
+                  {
+                    "left": "Insert Footnote",
+                    "right": "References – Footnotes"
+                  },
+                  {
+                    "left": "Bibliography",
+                    "right": "References – Citations & Bibliography"
+                  },
+                  {
+                    "left": "New Comment",
+                    "right": "Review – Comments"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 5,
+                "uid": "word__lv1__t4__q5__v5",
+                "explanation": "3 lệnh đầu đều thuộc tab References (khác nhóm); riêng Comment lại thuộc tab Review vì bản chất là ghi chú trao đổi/góp ý, không phải trích dẫn học thuật."
+              },
+              {
+                "question": "Phân loại mỗi lệnh sau vào đúng tab: References hay Review.",
+                "type": "classify",
+                "zones": [
+                  "Tab References",
+                  "Tab Review"
+                ],
+                "items": [
+                  {
+                    "text": "Table of Contents",
+                    "zone": "Tab References"
+                  },
+                  {
+                    "text": "Footnotes",
+                    "zone": "Tab References"
+                  },
+                  {
+                    "text": "Bibliography",
+                    "zone": "Tab References"
+                  },
+                  {
+                    "text": "New Comment",
+                    "zone": "Tab Review"
+                  },
+                  {
+                    "text": "Spelling & Grammar",
+                    "zone": "Tab Review"
+                  },
+                  {
+                    "text": "Captions",
+                    "zone": "Tab References"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 6,
+                "uid": "word__lv1__t4__q6__v6",
+                "explanation": "Tab References lo về học thuật/cấu trúc tài liệu (mục lục, chú thích, trích dẫn); tab Review lo về rà soát/góp ý (chính tả, comment, theo dõi sửa đổi)."
+              },
+              {
+                "question": "Sắp xếp đúng thứ tự các bước để chèn 1 chú thích cuối tài liệu (endnote).",
+                "type": "ordering",
+                "hint": "Kéo-thả để sắp xếp lại thứ tự (hoặc dùng nút mũi tên).",
+                "items": [
+                  "Đặt con trỏ vào cuối từ/câu cần chú thích.",
+                  "Vào tab References.",
+                  "Trong nhóm Footnotes, click Insert Endnote.",
+                  "Nhập nội dung chú thích."
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 7,
+                "uid": "word__lv1__t4__q7__v7",
+                "explanation": "Vị trí con trỏ trước khi bấm Insert Endnote quyết định số chú thích sẽ được đánh vào đúng chỗ nào trong văn bản."
+              },
+              {
+                "question": "Header & Footer (tiêu đề đầu trang/chân trang) được chèn từ tab nào?",
+                "type": "single",
+                "options": [
+                  "Insert (nhóm Header & Footer)",
+                  "References (nhóm Captions)",
+                  "Design (nhóm Page Background)",
+                  "Layout (nhóm Page Setup)"
+                ],
+                "correct": [
+                  "Insert (nhóm Header & Footer)"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 8,
+                "uid": "word__lv1__t4__q8__v8",
+                "explanation": "Header, Footer, Page Number đều nằm trong nhóm Header & Footer, tab Insert — dễ nhầm sang References vì liên quan đến 'tham chiếu' nhưng thực ra không phải."
+              }
+            ]
+          }
+        },
+        {
+          "id": "Excel",
+          "name": "Excel",
+          "grade": "Excel",
+          "minitests": {
+            "Bài 1: Giới thiệu Microsoft Excel": [],
+            "Bài 2: Xây dựng dữ liệu trong ô": [
+              {
+                "question": "Bạn sao chép một vùng có công thức nhưng chỉ muốn dán các kết quả hiện tại, không dán công thức. Tùy chọn nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Paste Formulas",
+                  "Transpose",
+                  "Paste Values",
+                  "Paste Formats"
+                ],
+                "correct": [
+                  "Paste Values"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 1,
+                "uid": "mos_excel__bài2__xlsx_q2__v1",
+                "explanation": "Paste Values chỉ dán kết quả tính toán hiện tại của công thức, không dán công thức gốc."
+              },
+              {
+                "question": "Bạn muốn cột C tự động điều chỉnh vừa với nội dung dài nhất trong cột. Thao tác nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "AutoFit Row Height",
+                  "Merge & Center",
+                  "AutoFit Column Width",
+                  "Wrap Text cho toàn trang tính"
+                ],
+                "correct": [
+                  "AutoFit Column Width"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 2,
+                "uid": "mos_excel__bài2__xlsx_q5__v2",
+                "explanation": "AutoFit Column Width tự động điều chỉnh độ rộng cột vừa khít với nội dung dài nhất trong cột."
+              },
+              {
+                "question": "Xác định đúng/sai cho từng phát biểu liên quan đến câu hỏi: \"Bạn cần chèn ba hàng mới phía trên hàng 10 và dịch một ô đang chọn sang phải. Hãy chọn 2 thao tác phù hợp.\"",
+                "type": "truefalse",
+                "statements": [
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn cần chèn ba hàng mới phía trên hàng 10 và dịch một ô đang chọn sang phải. Hãy chọn 2 thao tác phù hợp.\" — Dùng Hide Rows",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn cần chèn ba hàng mới phía trên hàng 10 và dịch một ô đang chọn sang phải. Hãy chọn 2 thao tác phù hợp.\" — Dùng Delete Sheet Columns",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn cần chèn ba hàng mới phía trên hàng 10 và dịch một ô đang chọn sang phải. Hãy chọn 2 thao tác phù hợp.\" — Dùng Insert Cells và chọn Shift cells right",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn cần chèn ba hàng mới phía trên hàng 10 và dịch một ô đang chọn sang phải. Hãy chọn 2 thao tác phù hợp.\" — Chọn ba hàng rồi dùng Insert Sheet Rows",
+                    "answer": "true"
+                  }
+                ],
+                "label_true": "Đúng",
+                "label_false": "Sai",
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Chọn ba hàng rồi dùng Insert Sheet Rows để chèn ba hàng mới; dùng Insert Cells và chọn Shift cells right để dịch ô đang chọn sang phải.",
+                "id": 3,
+                "uid": "Bài 2: Xây dựng dữ liệu trong ô_3__v3"
+              },
+              {
+                "question": "Phân loại mỗi phương án sau vào đúng nhóm cho câu hỏi: \"Ô A1 chứa Tháng 1 và ô A2 chứa Tháng 2. Bạn muốn tạo tiếp chuỗi Tháng 3, Tháng 4 bằng cách kéo. Công cụ nào đang được sử dụng?\"",
+                "type": "classify",
+                "zones": [
+                  "Đáp án đúng",
+                  "Đáp án sai"
+                ],
+                "items": [
+                  {
+                    "text": "Flash Fill",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Consolidate",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Auto Fill",
+                    "zone": "Đáp án đúng"
+                  },
+                  {
+                    "text": "Goal Seek",
+                    "zone": "Đáp án sai"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Auto Fill (kéo Fill Handle) dùng để tạo tiếp chuỗi có quy luật như Tháng 1, Tháng 2 thành Tháng 3, Tháng 4.",
+                "id": 4,
+                "uid": "Bài 2: Xây dựng dữ liệu trong ô_4__v4"
+              },
+              {
+                "question": "Phân loại mỗi phương án sau vào đúng nhóm cho câu hỏi: \"Trong Excel Microsoft 365, bạn muốn áp dụng cùng một màu tab và cùng định dạng tiêu đề cho ba trang tính có bố cục giống nhau. Cách nào hiệu quả nhất?\"",
+                "type": "classify",
+                "zones": [
+                  "Đáp án đúng",
+                  "Đáp án sai"
+                ],
+                "items": [
+                  {
+                    "text": "Dùng Freeze Panes trên từng trang tính",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Chuyển từng trang tính thành Table",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Group các trang tính rồi thực hiện định dạng",
+                    "zone": "Đáp án đúng"
+                  },
+                  {
+                    "text": "Tạo ba Hyperlink",
+                    "zone": "Đáp án sai"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Group các trang tính lại rồi định dạng một lần sẽ áp dụng đồng thời cho tất cả các trang tính trong nhóm.",
+                "id": 5,
+                "uid": "Bài 2: Xây dựng dữ liệu trong ô_5__v5"
+              }
+            ],
+            "Bài 3: Sử dụng các công thức": [
+              {
+                "question": "Bạn muốn hiển thị công thức trong các ô thay vì kết quả tính toán để kiểm tra sổ tính. Lệnh nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Evaluate Formula",
+                  "Trace Dependents",
+                  "Show Formulas",
+                  "Calculate Now"
+                ],
+                "correct": [
+                  "Show Formulas"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 1,
+                "uid": "mos_excel__bài3__xlsx_q38__v1",
+                "explanation": "Show Formulas hiển thị công thức trong các ô thay vì kết quả tính toán, giúp kiểm tra sổ tính."
+              },
+              {
+                "question": "Trong Excel Microsoft 365, bạn muốn tạo nhanh một dãy số từ 1 đến 12 bằng một công thức mảng động. Hàm nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "SUM()",
+                  "TEXTJOIN()",
+                  "SEQUENCE()",
+                  "COUNTBLANK()"
+                ],
+                "correct": [
+                  "SEQUENCE()"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 2,
+                "uid": "mos_excel__bài3__xlsx_q26__v2",
+                "explanation": "Hàm mảng động SEQUENCE() tạo nhanh một dãy số liên tiếp, ví dụ từ 1 đến 12."
+              },
+              {
+                "question": "Mã sản phẩm trong A2 là \"SP-2026-015\". Bạn cần lấy ba ký tự cuối cùng. Hàm nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "LEFT()",
+                  "LOWER()",
+                  "RIGHT()",
+                  "MID()"
+                ],
+                "correct": [
+                  "RIGHT()"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 3,
+                "uid": "mos_excel__bài3__xlsx_q31__v3",
+                "explanation": "Hàm RIGHT() trích ra một số ký tự tính từ bên phải của chuỗi, phù hợp để lấy ba ký tự cuối."
+              },
+              {
+                "question": "Trong công thức sao chép xuống dưới, bạn muốn cột B thay đổi theo hàng nhưng ô F1 luôn cố định. Cách viết nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "$B$2*F1",
+                  "B$2*$F1",
+                  "B2*$F$1",
+                  "$B2*F$1"
+                ],
+                "correct": [
+                  "B2*$F$1"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 4,
+                "uid": "mos_excel__bài3__xlsx_q47__v4",
+                "explanation": "B2*$F$1 giữ cột B thay đổi theo hàng khi sao chép xuống (tham chiếu tương đối) trong khi cố định tuyệt đối ô F1 (tham chiếu tuyệt đối)."
+              },
+              {
+                "question": "Trong Excel Microsoft 365, nhóm cần trao đổi theo chuỗi và trả lời trực tiếp ý kiến của nhau trong một ô. Tính năng nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Notes",
+                  "Track Changes (Legacy)",
+                  "Comments",
+                  "Data Validation"
+                ],
+                "correct": [
+                  "Comments"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 5,
+                "uid": "mos_excel__bài3__xlsx_q19__v5",
+                "explanation": "Comments trong Excel Microsoft 365 hỗ trợ trao đổi theo chuỗi (thread) và trả lời trực tiếp ý kiến của người khác trong cùng một ô."
+              },
+              {
+                "question": "Trong Excel Microsoft 365, bạn cần tạo ngẫu nhiên một số nguyên từ 100 đến 999. Hàm nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "SEQUENCE()",
+                  "COUNT()",
+                  "RANDBETWEEN()",
+                  "RANDARRAY()"
+                ],
+                "correct": [
+                  "RANDBETWEEN()"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 6,
+                "uid": "mos_excel__bài3__xlsx_q32__v6",
+                "explanation": "RANDBETWEEN() tạo ngẫu nhiên một số nguyên nằm trong khoảng giá trị chỉ định."
+              },
+              {
+                "question": "Bạn muốn ô C2 hiển thị \"Đạt\" khi B2 lớn hơn hoặc bằng 5, ngược lại hiển thị \"Chưa đạt\". Hàm nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "MAX()",
+                  "CONCAT()",
+                  "IF()",
+                  "MID()"
+                ],
+                "correct": [
+                  "IF()"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 7,
+                "uid": "mos_excel__bài3__xlsx_q11__v7",
+                "explanation": "Hàm IF() dùng để kiểm tra điều kiện và trả về một trong hai giá trị tùy theo điều kiện đúng hay sai."
+              },
+              {
+                "question": "Xác định đúng/sai cho từng phát biểu liên quan đến câu hỏi: \"Bạn cần chuyển nội dung trong A2 thành chữ hoa và đồng thời xác định số ký tự của chuỗi. Hai hàm liên quan là gì?\"",
+                "type": "truefalse",
+                "statements": [
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn cần chuyển nội dung trong A2 thành chữ hoa và đồng thời xác định số ký tự của chuỗi. Hai hàm liên quan là gì?\" — LOWER() và SUM()",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn cần chuyển nội dung trong A2 thành chữ hoa và đồng thời xác định số ký tự của chuỗi. Hai hàm liên quan là gì?\" — CONCAT() và COUNT()",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn cần chuyển nội dung trong A2 thành chữ hoa và đồng thời xác định số ký tự của chuỗi. Hai hàm liên quan là gì?\" — UPPER() và LEN()",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn cần chuyển nội dung trong A2 thành chữ hoa và đồng thời xác định số ký tự của chuỗi. Hai hàm liên quan là gì?\" — LEFT() và MAX()",
+                    "answer": "false"
+                  }
+                ],
+                "label_true": "Đúng",
+                "label_false": "Sai",
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "UPPER() chuyển chuỗi thành chữ hoa và LEN() trả về số ký tự của chuỗi.",
+                "id": 8,
+                "uid": "Bài 3: Sử dụng các công thức_8__v8"
+              },
+              {
+                "question": "Xác định đúng/sai cho từng phát biểu liên quan đến câu hỏi: \"Bạn muốn ghép Họ ở A2 và Tên ở B2, có một dấu cách ở giữa. Hàm nào phù hợp nhất khi cần chỉ định dấu phân cách và có thể bỏ qua ô trống?\"",
+                "type": "truefalse",
+                "statements": [
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn ghép Họ ở A2 và Tên ở B2, có một dấu cách ở giữa. Hàm nào phù hợp nhất khi cần chỉ định dấu phân cách và có thể bỏ qua ô trống?\" — COUNT()",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn ghép Họ ở A2 và Tên ở B2, có một dấu cách ở giữa. Hàm nào phù hợp nhất khi cần chỉ định dấu phân cách và có thể bỏ qua ô trống?\" — RANDBETWEEN()",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn ghép Họ ở A2 và Tên ở B2, có một dấu cách ở giữa. Hàm nào phù hợp nhất khi cần chỉ định dấu phân cách và có thể bỏ qua ô trống?\" — TEXTJOIN()",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn ghép Họ ở A2 và Tên ở B2, có một dấu cách ở giữa. Hàm nào phù hợp nhất khi cần chỉ định dấu phân cách và có thể bỏ qua ô trống?\" — MIN()",
+                    "answer": "false"
+                  }
+                ],
+                "label_true": "Đúng",
+                "label_false": "Sai",
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "TEXTJOIN() cho phép nối chuỗi với dấu phân cách tự chọn và có tùy chọn bỏ qua ô trống.",
+                "id": 9,
+                "uid": "Bài 3: Sử dụng các công thức_9__v9"
+              },
+              {
+                "question": "Xác định đúng/sai cho từng phát biểu liên quan đến câu hỏi: \"Hãy chọn 3 phát biểu đúng về các hàm đếm. Chọn 3 đáp án.\"",
+                "type": "truefalse",
+                "statements": [
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Hãy chọn 3 phát biểu đúng về các hàm đếm. Chọn 3 đáp án.\" — COUNTA() chỉ đếm ô chứa số",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Hãy chọn 3 phát biểu đúng về các hàm đếm. Chọn 3 đáp án.\" — COUNTBLANK() đếm các ô trống",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Hãy chọn 3 phát biểu đúng về các hàm đếm. Chọn 3 đáp án.\" — COUNTA() đếm các ô không trống",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Hãy chọn 3 phát biểu đúng về các hàm đếm. Chọn 3 đáp án.\" — COUNT() đếm các ô chứa số",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Hãy chọn 3 phát biểu đúng về các hàm đếm. Chọn 3 đáp án.\" — COUNT() đếm mọi ô có văn bản",
+                    "answer": "false"
+                  }
+                ],
+                "label_true": "Đúng",
+                "label_false": "Sai",
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "COUNTBLANK() đếm ô trống, COUNTA() đếm ô không trống (mọi kiểu dữ liệu) và COUNT() chỉ đếm ô chứa số.",
+                "id": 10,
+                "uid": "Bài 3: Sử dụng các công thức_10__v10"
+              },
+              {
+                "question": "Phân loại mỗi phương án sau vào đúng nhóm cho câu hỏi: \"Hãy chọn 4 hàm phù hợp để lần lượt tính trung bình, giá trị lớn nhất, giá trị nhỏ nhất và tổng của một vùng số. Chọn 4 đáp án.\"",
+                "type": "classify",
+                "zones": [
+                  "Đáp án đúng",
+                  "Đáp án sai"
+                ],
+                "items": [
+                  {
+                    "text": "COUNTBLANK()",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "TEXTJOIN()",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "MIN()",
+                    "zone": "Đáp án đúng"
+                  },
+                  {
+                    "text": "MAX()",
+                    "zone": "Đáp án đúng"
+                  },
+                  {
+                    "text": "AVERAGE()",
+                    "zone": "Đáp án đúng"
+                  },
+                  {
+                    "text": "SUM()",
+                    "zone": "Đáp án đúng"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "AVERAGE(), MAX(), MIN() và SUM() lần lượt tính trung bình, giá trị lớn nhất, nhỏ nhất và tổng của một vùng số.",
+                "id": 11,
+                "uid": "Bài 3: Sử dụng các công thức_11__v11"
+              },
+              {
+                "question": "Phân loại mỗi phương án sau vào đúng nhóm cho câu hỏi: \"Trong Excel Microsoft 365, hãy chọn 2 hàm mảng động phù hợp với yêu cầu: sắp xếp một vùng dữ liệu bằng công thức và trả về danh sách giá trị không trùng lặp. Chọn 2 đáp án.\"",
+                "type": "classify",
+                "zones": [
+                  "Đáp án đúng",
+                  "Đáp án sai"
+                ],
+                "items": [
+                  {
+                    "text": "IF()",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "COUNT()",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "UNIQUE()",
+                    "zone": "Đáp án đúng"
+                  },
+                  {
+                    "text": "SORT()",
+                    "zone": "Đáp án đúng"
+                  },
+                  {
+                    "text": "RIGHT()",
+                    "zone": "Đáp án sai"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "UNIQUE() trả về danh sách giá trị không trùng lặp và SORT() sắp xếp dữ liệu bằng công thức, đều là hàm mảng động.",
+                "id": 12,
+                "uid": "Bài 3: Sử dụng các công thức_12__v12"
+              }
+            ],
+            "Bài 4: Định dạng trang tính": [
+              {
+                "question": "Ô chứa giá trị 0,25 nhưng bạn muốn hiển thị thành 25%. Định dạng số nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Currency",
+                  "Text",
+                  "Percentage",
+                  "Fraction"
+                ],
+                "correct": [
+                  "Percentage"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 1,
+                "uid": "mos_excel__bài4__xlsx_q23__v1",
+                "explanation": "Định dạng số Percentage hiển thị giá trị thập phân dưới dạng phần trăm, ví dụ 0,25 hiển thị thành 25%."
+              },
+              {
+                "question": "Bạn muốn sao chép định dạng của ô A1 sang B1 và làm nội dung dài trong B1 hiển thị trên nhiều dòng trong cùng ô. Hãy chọn 2 công cụ phù hợp.",
+                "type": "multiple",
+                "options": [
+                  "Freeze Panes",
+                  "AutoSum",
+                  "Wrap Text",
+                  "Format Painter",
+                  "Name Manager"
+                ],
+                "correct": [
+                  "Wrap Text",
+                  "Format Painter"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 2,
+                "uid": "mos_excel__bài4__xlsx_q44__v2",
+                "explanation": "Format Painter sao chép định dạng từ ô này sang ô khác, còn Wrap Text giúp nội dung dài hiển thị trên nhiều dòng trong cùng một ô."
+              },
+              {
+                "question": "Bạn muốn làm nổi bật các giá trị lớn hơn 100 bằng màu nền và sau đó có thể xóa quy tắc này khỏi vùng dữ liệu. Hãy chọn 2 thao tác phù hợp.",
+                "type": "multiple",
+                "options": [
+                  "Dùng Remove Duplicates",
+                  "Dùng Clear Contents",
+                  "Dùng Clear Rules để xóa quy tắc",
+                  "Tạo quy tắc Conditional Formatting",
+                  "Dùng Format as Table"
+                ],
+                "correct": [
+                  "Dùng Clear Rules để xóa quy tắc",
+                  "Tạo quy tắc Conditional Formatting"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 3,
+                "uid": "mos_excel__bài4__xlsx_q50__v3",
+                "explanation": "Tạo quy tắc Conditional Formatting để tô màu các giá trị lớn hơn 100, sau đó dùng Clear Rules khi muốn xóa quy tắc đã áp dụng."
+              },
+              {
+                "question": "Hãy chọn 2 thao tác phù hợp khi bạn muốn áp dụng nhanh một kiểu định dạng dựng sẵn, sau đó loại bỏ toàn bộ định dạng khỏi một ô nhưng vẫn giữ dữ liệu.",
+                "type": "multiple",
+                "options": [
+                  "Dùng Remove Duplicates",
+                  "Dùng Delete Cells",
+                  "Dùng Clear Formats",
+                  "Áp dụng Cell Style",
+                  "Dùng Clear Contents"
+                ],
+                "correct": [
+                  "Dùng Clear Formats",
+                  "Áp dụng Cell Style"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 4,
+                "uid": "mos_excel__bài4__xlsx_q18__v4",
+                "explanation": "Áp dụng Cell Style để định dạng nhanh theo mẫu dựng sẵn, sau đó dùng Clear Formats để xóa toàn bộ định dạng mà vẫn giữ nguyên dữ liệu trong ô."
+              },
+              {
+                "question": "Bạn muốn xoay tiêu đề cột 45 độ và tăng mức thụt lề trong ô. Nhóm lệnh nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Number Format và Cell Styles",
+                  "Themes và Colors",
+                  "Orientation và Increase Indent trong nhóm Alignment",
+                  "Sort và Filter"
+                ],
+                "correct": [
+                  "Orientation và Increase Indent trong nhóm Alignment"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 5,
+                "uid": "mos_excel__bài4__xlsx_q13__v5",
+                "explanation": "Orientation và Increase Indent nằm trong nhóm Alignment trên thẻ Home, dùng để xoay góc chữ và tăng thụt lề."
+              },
+              {
+                "question": "Phân loại mỗi phương án sau vào đúng nhóm cho câu hỏi: \"Bạn muốn kết hợp các ô A1:C1 thành một ô tiêu đề nằm giữa vùng đã chọn. Lệnh nào phù hợp nhất\"",
+                "type": "classify",
+                "zones": [
+                  "Đáp án đúng",
+                  "Đáp án sai"
+                ],
+                "items": [
+                  {
+                    "text": "Wrap Text",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Format Painte",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Merge & Center",
+                    "zone": "Đáp án đúng"
+                  },
+                  {
+                    "text": "Center Across Selection",
+                    "zone": "Đáp án sai"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Merge & Center gộp nhiều ô đã chọn thành một ô và căn giữa nội dung, thường dùng cho tiêu đề.",
+                "id": 6,
+                "uid": "Bài 4: Định dạng trang tính_6__v6"
+              }
+            ],
+            "Bài 5: In và xem sổ tính": [
+              {
+                "question": "Trước khi phân phối sổ tính, hãy chọn 3 thao tác phù hợp để kiểm soát nội dung in, định dạng chia sẻ và các vấn đề ẩn. Chọn 3 đáp án.",
+                "type": "multiple",
+                "options": [
+                  "Sort tất cả trang tính theo màu",
+                  "Inspect Workbook",
+                  "Save hoặc Export thành PDF",
+                  "Set Print Area",
+                  "Merge & Center toàn bộ dữ liệu"
+                ],
+                "correct": [
+                  "Inspect Workbook",
+                  "Save hoặc Export thành PDF",
+                  "Set Print Area"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 1,
+                "uid": "mos_excel__bài5__xlsx_q15__v1",
+                "explanation": "Trước khi phân phối sổ tính nên dùng Inspect Workbook để rà soát thông tin ẩn, Set Print Area để kiểm soát vùng in và Save/Export thành PDF để chia sẻ định dạng cố định."
+              },
+              {
+                "question": "Xác định đúng/sai cho từng phát biểu liên quan đến câu hỏi: \"Bạn muốn hàng tiêu đề luôn hiển thị khi cuộn xuống cuối danh sách dài. Lệnh nào phù hợp nhất?\"",
+                "type": "truefalse",
+                "statements": [
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn hàng tiêu đề luôn hiển thị khi cuộn xuống cuối danh sách dài. Lệnh nào phù hợp nhất?\" — Split",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn hàng tiêu đề luôn hiển thị khi cuộn xuống cuối danh sách dài. Lệnh nào phù hợp nhất?\" — Page Break Preview",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn hàng tiêu đề luôn hiển thị khi cuộn xuống cuối danh sách dài. Lệnh nào phù hợp nhất?\" — Freeze Top Row",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn hàng tiêu đề luôn hiển thị khi cuộn xuống cuối danh sách dài. Lệnh nào phù hợp nhất?\" — New Window",
+                    "answer": "false"
+                  }
+                ],
+                "label_true": "Đúng",
+                "label_false": "Sai",
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Freeze Top Row giữ cố định hàng tiêu đề đầu tiên luôn hiển thị khi cuộn xuống các hàng bên dưới.",
+                "id": 2,
+                "uid": "Bài 5: In và xem sổ tính_2__v2"
+              },
+              {
+                "question": "Xác định đúng/sai cho từng phát biểu liên quan đến câu hỏi: \"Bạn muốn tên tập tin xuất hiện ở phần chân trang của mỗi trang in. Thành phần nào nên được chèn vào footer?\"",
+                "type": "truefalse",
+                "statements": [
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn tên tập tin xuất hiện ở phần chân trang của mỗi trang in. Thành phần nào nên được chèn vào footer?\" — Sheet Name",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn tên tập tin xuất hiện ở phần chân trang của mỗi trang in. Thành phần nào nên được chèn vào footer?\" — Number of Pages",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn tên tập tin xuất hiện ở phần chân trang của mỗi trang in. Thành phần nào nên được chèn vào footer?\" — File Name",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn tên tập tin xuất hiện ở phần chân trang của mỗi trang in. Thành phần nào nên được chèn vào footer?\" — Current Time",
+                    "answer": "false"
+                  }
+                ],
+                "label_true": "Đúng",
+                "label_false": "Sai",
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "File Name là thành phần có thể chèn vào Header/Footer để tên tập tin xuất hiện trên mỗi trang in.",
+                "id": 3,
+                "uid": "Bài 5: In và xem sổ tính_3__v3"
+              },
+              {
+                "question": "Phân loại mỗi phương án sau vào đúng nhóm cho câu hỏi: \"Một trang tính quá rộng khi in. Bạn muốn chuyển sang khổ ngang và thu nhỏ nội dung để vừa một trang theo chiều ngang. Nhóm thiết lập nào phù hợp nhất?\"",
+                "type": "classify",
+                "zones": [
+                  "Đáp án đúng",
+                  "Đáp án sai"
+                ],
+                "items": [
+                  {
+                    "text": "Font và Alignment trên thẻ Home",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Zoom và Freeze Panes trên thẻ View",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Orientation và Scale to Fit trên thẻ Page Layout",
+                    "zone": "Đáp án đúng"
+                  },
+                  {
+                    "text": "Sort và Filter trên thẻ Data",
+                    "zone": "Đáp án sai"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Orientation dùng để đổi hướng trang (dọc/ngang) và Scale to Fit trong nhóm Page Layout giúp thu nhỏ nội dung vừa số trang in mong muốn.",
+                "id": 4,
+                "uid": "Bài 5: In và xem sổ tính_4__v4"
+              },
+              {
+                "question": "Phân loại mỗi phương án sau vào đúng nhóm cho câu hỏi: \"Bạn cần xem đồng thời hai khu vực cách xa nhau trên cùng một trang tính trong một cửa sổ. Lệnh nào phù hợp nhất?\"",
+                "type": "classify",
+                "zones": [
+                  "Đáp án đúng",
+                  "Đáp án sai"
+                ],
+                "items": [
+                  {
+                    "text": "Hide",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Arrange All",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Split",
+                    "zone": "Đáp án đúng"
+                  },
+                  {
+                    "text": "Normal View",
+                    "zone": "Đáp án sai"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Split chia cửa sổ trang tính hiện tại thành nhiều vùng để xem đồng thời các khu vực cách xa nhau trong cùng một cửa sổ.",
+                "id": 5,
+                "uid": "Bài 5: In và xem sổ tính_5__v5"
+              }
+            ],
+            "Bài 6: Làm việc với biểu đồ": [
+              {
+                "question": "Bạn đã chọn vùng dữ liệu gồm các tháng và doanh số, muốn tạo biểu đồ cột để so sánh các tháng. Thao tác nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Chèn Sparkline vào từng ô",
+                  "Chuyển vùng thành Hyperlink",
+                  "Chèn Column Chart từ thẻ Insert",
+                  "Dùng Conditional Formatting \\> Data Bars"
+                ],
+                "correct": [
+                  "Chèn Column Chart từ thẻ Insert"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 1,
+                "uid": "mos_excel__bài6__xlsx_q43__v1",
+                "explanation": "Chèn Column Chart từ thẻ Insert phù hợp để so sánh giá trị (doanh số) giữa các tháng."
+              },
+              {
+                "question": "Hãy chọn 5 thao tác phù hợp để sửa và định dạng biểu đồ sau khi biểu đồ đã được tạo. Chọn 5 đáp án.",
+                "type": "multiple",
+                "options": [
+                  "Dùng Merge & Center vùng dữ liệu",
+                  "Dùng Clear Contents trên biểu đồ",
+                  "Thêm hoặc sửa Chart Element",
+                  "Áp dụng Quick Layout hoặc Chart Style",
+                  "Dùng Switch Row/Column",
+                  "Thêm data series bằng Select Data",
+                  "Thêm Alt Text cho biểu đồ"
+                ],
+                "correct": [
+                  "Thêm hoặc sửa Chart Element",
+                  "Áp dụng Quick Layout hoặc Chart Style",
+                  "Dùng Switch Row/Column",
+                  "Thêm data series bằng Select Data",
+                  "Thêm Alt Text cho biểu đồ"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 2,
+                "uid": "mos_excel__bài6__xlsx_q6__v2",
+                "explanation": "Sau khi tạo biểu đồ, có thể chỉnh Chart Element, áp dụng Quick Layout/Chart Style, đổi Switch Row/Column, thêm data series qua Select Data và thêm Alt Text; Merge & Center hay Clear Contents không dùng để chỉnh biểu đồ."
+              },
+              {
+                "question": "Bạn muốn biểu đồ chiếm toàn bộ một trang riêng trong sổ tính, không nằm trên trang tính dữ liệu. Thao tác nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Copy biểu đồ sang một ô khác",
+                  "Chọn Page Break Preview",
+                  "Move Chart và chọn New sheet",
+                  "Bật Full Screen"
+                ],
+                "correct": [
+                  "Move Chart và chọn New sheet"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 3,
+                "uid": "mos_excel__bài6__xlsx_q30__v3",
+                "explanation": "Move Chart và chọn New sheet sẽ đưa biểu đồ ra một trang (Chart Sheet) riêng, chiếm trọn một trang trong sổ tính."
+              },
+              {
+                "question": "Bạn muốn hiển thị xu hướng doanh số 12 tháng bằng một biểu đồ nhỏ nằm trong một ô. Thành phần nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Chart Sheet",
+                  "Data Form",
+                  "Sparkline",
+                  "Slicer"
+                ],
+                "correct": [
+                  "Sparkline"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 4,
+                "uid": "mos_excel__bài6__xlsx_q41__v4",
+                "explanation": "Sparkline là biểu đồ thu nhỏ nằm gọn trong một ô, dùng để thể hiện nhanh xu hướng dữ liệu."
+              }
+            ],
+            "Bài 7: Tổ chức dữ liệu": [
+              {
+                "question": "Vùng B2:B13 đã được đặt tên là DoanhThu. Công thức nào tính tổng vùng này rõ ràng nhất?",
+                "type": "single",
+                "options": [
+                  "Công thức LEN(DoanhThu)",
+                  "Công thức COUNTBLANK(\\\"DoanhThu\\\")",
+                  "Công thức SUM(DoanhThu)",
+                  "Công thức UPPER(DoanhThu)"
+                ],
+                "correct": [
+                  "Công thức SUM(DoanhThu)"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 1,
+                "uid": "mos_excel__bài7__xlsx_q16__v1",
+                "explanation": "Khi vùng đã được đặt tên, có thể dùng trực tiếp tên đó trong công thức, ví dụ SUM(DoanhThu), thay vì địa chỉ ô."
+              },
+              {
+                "question": "Hãy chọn 2 thao tác phù hợp để thay đổi giao diện của một Excel Table và sau đó chuyển bảng trở lại thành vùng ô thông thường.",
+                "type": "multiple",
+                "options": [
+                  "Dùng Clear Contents",
+                  "Dùng Merge & Center toàn bộ bảng",
+                  "Convert to Range",
+                  "Áp dụng Table Style",
+                  "Dùng Remove Duplicates để bỏ bảng"
+                ],
+                "correct": [
+                  "Convert to Range",
+                  "Áp dụng Table Style"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 2,
+                "uid": "mos_excel__bài7__xlsx_q46__v2",
+                "explanation": "Áp dụng Table Style để đổi giao diện Table, và Convert to Range để chuyển Table trở lại thành vùng ô thông thường."
+              },
+              {
+                "question": "Bạn nhập dữ liệu ngay bên dưới hàng cuối cùng của một Excel Table. Kết quả thường xảy ra là gì?",
+                "type": "single",
+                "options": [
+                  "Table tự chuyển thành PivotTable",
+                  "Toàn bộ công thức chuyển thành giá trị",
+                  "Table tự mở rộng để bao gồm hàng mới",
+                  "Hàng mới bị xóa"
+                ],
+                "correct": [
+                  "Table tự mở rộng để bao gồm hàng mới"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 3,
+                "uid": "mos_excel__bài7__xlsx_q28__v3",
+                "explanation": "Khi nhập dữ liệu ngay dưới hàng cuối của Excel Table, Table sẽ tự động mở rộng để bao gồm hàng mới đó."
+              },
+              {
+                "question": "Bạn chỉ muốn hiển thị các bản ghi có Khu vực là \"Miền Trung\". Thao tác nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Sắp xếp cột Khu vực A to Z",
+                  "Bật Total Row",
+                  "Lọc cột Khu vực và chọn Miền Trung",
+                  "Chuyển bảng thành vùng"
+                ],
+                "correct": [
+                  "Lọc cột Khu vực và chọn Miền Trung"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 4,
+                "uid": "mos_excel__bài7__xlsx_q39__v4",
+                "explanation": "Dùng bộ lọc (Filter) trên cột Khu vực và chọn giá trị Miền Trung để chỉ hiển thị các bản ghi tương ứng."
+              },
+              {
+                "question": "Bạn có một vùng dữ liệu liên tục với hàng tiêu đề và muốn chuyển thành Excel Table. Lệnh nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Consolidate",
+                  "Text to Columns",
+                  "Format as Table hoặc Insert \\> Table",
+                  "Subtotal"
+                ],
+                "correct": [
+                  "Format as Table hoặc Insert \\> Table"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 5,
+                "uid": "mos_excel__bài7__xlsx_q8__v5",
+                "explanation": "Format as Table (hoặc Insert > Table) chuyển một vùng dữ liệu liên tục có tiêu đề thành Excel Table."
+              },
+              {
+                "question": "Sổ tính có một vùng được đặt tên là DoanhThu_Thang. Bạn muốn chuyển trực tiếp đến vùng đó. Cách nào nhanh nhất?",
+                "type": "single",
+                "options": [
+                  "Dùng AutoSum",
+                  "Bật Wrap Text",
+                  "Chọn DoanhThu_Thang trong Name Box",
+                  "Mở Format Cells"
+                ],
+                "correct": [
+                  "Chọn DoanhThu_Thang trong Name Box"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 6,
+                "uid": "mos_excel__bài7__xlsx_q42__v6",
+                "explanation": "Gõ hoặc chọn tên vùng đã đặt (ví dụ DoanhThu_Thang) trong Name Box là cách nhanh nhất để chuyển đến đúng vùng đó."
+              },
+              {
+                "question": "Xác định đúng/sai cho từng phát biểu liên quan đến câu hỏi: \"Bạn muốn sắp xếp trước theo Phòng ban A đến Z, sau đó trong từng phòng ban sắp xếp Lương từ cao xuống thấp. Công cụ nào phù hợp nhất?\"",
+                "type": "truefalse",
+                "statements": [
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn sắp xếp trước theo Phòng ban A đến Z, sau đó trong từng phòng ban sắp xếp Lương từ cao xuống thấp. Công cụ nào phù hợp nhất?\" — Sort A to Z một lần trên cột Phòng ban",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn sắp xếp trước theo Phòng ban A đến Z, sau đó trong từng phòng ban sắp xếp Lương từ cao xuống thấp. Công cụ nào phù hợp nhất?\" — Remove Duplicates",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn sắp xếp trước theo Phòng ban A đến Z, sau đó trong từng phòng ban sắp xếp Lương từ cao xuống thấp. Công cụ nào phù hợp nhất?\" — Custom Sort và thêm hai cấp sắp xếp",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn sắp xếp trước theo Phòng ban A đến Z, sau đó trong từng phòng ban sắp xếp Lương từ cao xuống thấp. Công cụ nào phù hợp nhất?\" — Filter by Color",
+                    "answer": "false"
+                  }
+                ],
+                "label_true": "Đúng",
+                "label_false": "Sai",
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Custom Sort cho phép thêm nhiều cấp sắp xếp, ví dụ sắp xếp theo Phòng ban trước rồi theo Lương trong từng phòng ban.",
+                "id": 7,
+                "uid": "Bài 7: Tổ chức dữ liệu_7__v7"
+              },
+              {
+                "question": "Xác định đúng/sai cho từng phát biểu liên quan đến câu hỏi: \"Bạn muốn các hàng trong bảng hiển thị màu xen kẽ để dễ đọc. Tùy chọn nào phù hợp nhất?\"",
+                "type": "truefalse",
+                "statements": [
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn các hàng trong bảng hiển thị màu xen kẽ để dễ đọc. Tùy chọn nào phù hợp nhất?\" — First Column",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn các hàng trong bảng hiển thị màu xen kẽ để dễ đọc. Tùy chọn nào phù hợp nhất?\" — Filter Button",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn các hàng trong bảng hiển thị màu xen kẽ để dễ đọc. Tùy chọn nào phù hợp nhất?\" — Banded Rows",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn các hàng trong bảng hiển thị màu xen kẽ để dễ đọc. Tùy chọn nào phù hợp nhất?\" — Total Row",
+                    "answer": "false"
+                  }
+                ],
+                "label_true": "Đúng",
+                "label_false": "Sai",
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Banded Rows là tùy chọn tô màu xen kẽ các hàng trong Table Style để bảng dễ đọc hơn.",
+                "id": 8,
+                "uid": "Bài 7: Tổ chức dữ liệu_8__v8"
+              },
+              {
+                "question": "Phân loại mỗi phương án sau vào đúng nhóm cho câu hỏi: \"Trong Excel Microsoft 365, một bảng có tên Sales và cột Amount. Biểu thức nào là structured reference hợp lệ để tham chiếu cột Amount?\"",
+                "type": "classify",
+                "zones": [
+                  "Đáp án đúng",
+                  "Đáp án sai"
+                ],
+                "items": [
+                  {
+                    "text": "Sales!Amount",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Amount(Sales)",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Sales\\[Amount\\]",
+                    "zone": "Đáp án đúng"
+                  },
+                  {
+                    "text": "\\$Sales\\$Amount",
+                    "zone": "Đáp án sai"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Sales[Amount] là cú pháp structured reference hợp lệ để tham chiếu đến cột Amount trong Table có tên Sales.",
+                "id": 9,
+                "uid": "Bài 7: Tổ chức dữ liệu_9__v9"
+              },
+              {
+                "question": "Phân loại mỗi phương án sau vào đúng nhóm cho câu hỏi: \"Bạn muốn thêm một hàng cuối bảng để tính tổng cột Doanh thu bằng hàm thích hợp. Tính năng nào phù hợp nhất?\"",
+                "type": "classify",
+                "zones": [
+                  "Đáp án đúng",
+                  "Đáp án sai"
+                ],
+                "items": [
+                  {
+                    "text": "Header Row",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Slicer",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Total Row",
+                    "zone": "Đáp án đúng"
+                  },
+                  {
+                    "text": "First Column",
+                    "zone": "Đáp án sai"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Total Row là hàng tổng ở cuối Excel Table, cho phép chọn nhanh hàm tính tổng, trung bình... cho từng cột.",
+                "id": 10,
+                "uid": "Bài 7: Tổ chức dữ liệu_10__v10"
+              },
+              {
+                "question": "Phân loại mỗi phương án sau vào đúng nhóm cho câu hỏi: \"Bạn muốn đặt tên DoanhThu cho vùng B2:B13 để sử dụng dễ dàng trong công thức. Công cụ nào phù hợp nhất?\"",
+                "type": "classify",
+                "zones": [
+                  "Đáp án đúng",
+                  "Đáp án sai"
+                ],
+                "items": [
+                  {
+                    "text": "Format as Table",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Data Validation",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Define Name hoặc Name Box",
+                    "zone": "Đáp án đúng"
+                  },
+                  {
+                    "text": "Text to Columns",
+                    "zone": "Đáp án sai"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Define Name (hoặc gõ tên trực tiếp vào Name Box) dùng để đặt tên cho một vùng ô, giúp dùng tên đó thay cho địa chỉ ô trong công thức.",
+                "id": 11,
+                "uid": "Bài 7: Tổ chức dữ liệu_11__v11"
+              }
+            ],
+            "Bài 8: Sử dụng công cụ dữ liệu": [
+              {
+                "question": "Trong Excel Microsoft 365, bạn muốn lấy dữ liệu từ một nguồn trực tuyến thay vì nhập thủ công. Nhóm công cụ nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Page Setup",
+                  "Name Manager",
+                  "Get Data từ nguồn trực tuyến phù hợp",
+                  "Conditional Formatting"
+                ],
+                "correct": [
+                  "Get Data từ nguồn trực tuyến phù hợp"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 1,
+                "uid": "mos_excel__bài8__xlsx_q36__v1",
+                "explanation": "Nhóm công cụ Get Data hỗ trợ lấy dữ liệu từ các nguồn trực tuyến thay vì phải nhập thủ công."
+              },
+              {
+                "question": "Bạn thường xuyên sử dụng lệnh Print Preview và muốn truy cập lệnh này mà không cần mở thẻ File. Cách nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Thêm Print Preview vào Name Bo",
+                  "Tạo Hyperlink đến Print Preview",
+                  "Thêm Print Preview vào Quick Access Toolbar",
+                  "Đặt Print Preview làm Cell Style"
+                ],
+                "correct": [
+                  "Thêm Print Preview vào Quick Access Toolbar"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 2,
+                "uid": "mos_excel__bài8__xlsx_q33__v2",
+                "explanation": "Thêm lệnh vào Quick Access Toolbar giúp truy cập nhanh lệnh thường dùng như Print Preview mà không cần mở thẻ File."
+              },
+              {
+                "question": "Bạn muốn bổ sung Title, Subject và Author cho sổ tính. Khu vực nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Home \\> Styles",
+                  "View \\> Workbook Views",
+                  "File \\> Info \\> Properties",
+                  "Data \\> Queries & Connections"
+                ],
+                "correct": [
+                  "File \\> Info \\> Properties"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 3,
+                "uid": "mos_excel__bài8__xlsx_q14__v3",
+                "explanation": "File > Info > Properties là nơi khai báo các thuộc tính của sổ tính như Title, Subject, Author."
+              },
+              {
+                "question": "Bạn nhận được một tập tin văn bản có các cột dữ liệu được phân tách bằng dấu tab và muốn đưa dữ liệu vào Excel. Thao tác nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Mở Format Cells và chọn Text",
+                  "Sử dụng Find and Replace để tạo cột",
+                  "Sử dụng Get Data \\> From Text/CSV và chọn đúng dấu phân tách",
+                  "Chèn một bảng trống rồi nhập lại dữ liệu"
+                ],
+                "correct": [
+                  "Sử dụng Get Data \\> From Text/CSV và chọn đúng dấu phân tách"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 4,
+                "uid": "mos_excel__bài8__xlsx_q35__v4",
+                "explanation": "Get Data > From Text/CSV cho phép nhập dữ liệu từ tập tin văn bản và chọn đúng ký tự phân tách cột (ví dụ Tab)."
+              },
+              {
+                "question": "Trong Excel 2019, bạn cần nhập dữ liệu từ tập tin có phần mở rộng .csv. Lựa chọn nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Đổi phần mở rộng thành .xlsx trước khi mở",
+                  "Sử dụng Page Layout để liên kết tập tin",
+                  "Nhập tập tin bằng From Text/CSV",
+                  "Chèn dữ liệu bằng Screenshot"
+                ],
+                "correct": [
+                  "Nhập tập tin bằng From Text/CSV"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 5,
+                "uid": "mos_excel__bài8__xlsx_q49__v5",
+                "explanation": "Với tập tin .csv, dùng lệnh nhập From Text/CSV để đưa dữ liệu vào Excel đúng cách, thay vì đổi phần mở rộng tập tin."
+              },
+              {
+                "question": "Xác định đúng/sai cho từng phát biểu liên quan đến câu hỏi: \"Bạn muốn ô B3 mở trang web của công ty khi người dùng bấm vào. Thao tác nào phù hợp nhất?\"",
+                "type": "truefalse",
+                "statements": [
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn ô B3 mở trang web của công ty khi người dùng bấm vào. Thao tác nào phù hợp nhất?\" — Đặt Data Validation cho ô B3",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn ô B3 mở trang web của công ty khi người dùng bấm vào. Thao tác nào phù hợp nhất?\" — Áp dụng Cell Style Hyperlink nhưng không gắn địa chỉ",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn ô B3 mở trang web của công ty khi người dùng bấm vào. Thao tác nào phù hợp nhất?\" — Chèn Hyperlink vào ô B3",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn ô B3 mở trang web của công ty khi người dùng bấm vào. Thao tác nào phù hợp nhất?\" — Tạo Named Range cho ô B3",
+                    "answer": "false"
+                  }
+                ],
+                "label_true": "Đúng",
+                "label_false": "Sai",
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Chèn Hyperlink vào ô cho phép người dùng bấm vào ô đó để mở một trang web hoặc vị trí khác.",
+                "id": 6,
+                "uid": "Bài 8: Sử dụng công cụ dữ liệu_6__v6"
+              },
+              {
+                "question": "Xác định đúng/sai cho từng phát biểu liên quan đến câu hỏi: \"Bạn cần tìm tất cả ô có chứa cụm từ \"Miền Bắc\" trong toàn bộ sổ tính. Công cụ nào phù hợp nhất?\"",
+                "type": "truefalse",
+                "statements": [
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn cần tìm tất cả ô có chứa cụm từ \"Miền Bắc\" trong toàn bộ sổ tính. Công cụ nào phù hợp nhất?\" — Sort A to Z",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn cần tìm tất cả ô có chứa cụm từ \"Miền Bắc\" trong toàn bộ sổ tính. Công cụ nào phù hợp nhất?\" — Flash Fill",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn cần tìm tất cả ô có chứa cụm từ \"Miền Bắc\" trong toàn bộ sổ tính. Công cụ nào phù hợp nhất?\" — Find và đặt Within là Workbook",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn cần tìm tất cả ô có chứa cụm từ \"Miền Bắc\" trong toàn bộ sổ tính. Công cụ nào phù hợp nhất?\" — Name Manager",
+                    "answer": "false"
+                  }
+                ],
+                "label_true": "Đúng",
+                "label_false": "Sai",
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Trong hộp thoại Find, đặt Within là Workbook để tìm kiếm cụm từ trên tất cả các trang tính của sổ tính.",
+                "id": 7,
+                "uid": "Bài 8: Sử dụng công cụ dữ liệu_7__v7"
+              }
+            ]
+          }
+        },
+        {
+          "id": "PowerPoint",
+          "name": "PowerPoint",
+          "grade": "PowerPoint",
+          "minitests": {
+            "Bài 1: Bắt đầu với PowerPoint": [
+              {
+                "question": "Bạn muốn bổ sung Title, Subject và Author cho bài trình chiếu. Khu vực nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "View > Presentation Views",
+                  "Home > Paragraph",
+                  "File > Info > Properties",
+                  "Transitions > Timing"
+                ],
+                "correct": [
+                  "File > Info > Properties"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 1,
+                "uid": "mos_powerpoint__bài1__xlsx_q11__v1",
+                "explanation": "File > Info > Properties là nơi khai báo/chỉnh sửa các thuộc tính tài liệu như Title, Subject, Author."
+              },
+              {
+                "question": "Bài trình chiếu hiện có tỉ lệ 4:3. Bạn muốn chuyển sang màn hình rộng 16:9. Lệnh nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Format Background",
+                  "Page Setup > Letter",
+                  "Slide Size > Widescreen (16:9)",
+                  "Design Ideas"
+                ],
+                "correct": [
+                  "Slide Size > Widescreen (16:9)"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 2,
+                "uid": "mos_powerpoint__bài1__xlsx_q9__v2",
+                "explanation": "Slide Size > Widescreen (16:9) chuyển tỉ lệ bài trình chiếu từ 4:3 sang màn hình rộng 16:9."
+              }
+            ],
+            "Bài 2: Làm việc với trang chiếu": [
+              {
+                "question": "Bạn muốn tạo một slide mới giống hệt slide hiện tại, bao gồm toàn bộ nội dung và định dạng. Thao tác nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Reuse Slides",
+                  "New Slide",
+                  "Duplicate Slide",
+                  "Reset Slide"
+                ],
+                "correct": [
+                  "Duplicate Slide"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 1,
+                "uid": "mos_powerpoint__bài2__xlsx_q34__v1",
+                "explanation": "Duplicate Slide tạo một bản sao y hệt của slide hiện tại, bao gồm toàn bộ nội dung và định dạng."
+              },
+              {
+                "question": "Bạn muốn tổ chức bài trình chiếu dài thành các nhóm theo chủ đề. Hãy chọn 3 thao tác phù hợp.",
+                "type": "multiple",
+                "options": [
+                  "Animate Section",
+                  "Create Section",
+                  "Reorder Sections",
+                  "Rename Section",
+                  "Crop Section"
+                ],
+                "correct": [
+                  "Create Section",
+                  "Reorder Sections",
+                  "Rename Section"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 2,
+                "uid": "mos_powerpoint__bài2__xlsx_q14__v2",
+                "explanation": "Create Section tạo nhóm mới, Reorder Sections sắp xếp lại thứ tự các nhóm, Rename Section đổi tên nhóm — cả ba đều dùng để tổ chức bài trình chiếu dài thành các phần theo chủ đề."
+              },
+              {
+                "question": "Bạn muốn xem nhiều slide dưới dạng hình thu nhỏ để nhanh chóng kiểm tra thứ tự tổng thể. Chế độ xem nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Presenter View",
+                  "Notes Page View",
+                  "Slide Sorter View",
+                  "Reading View"
+                ],
+                "correct": [
+                  "Slide Sorter View"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 3,
+                "uid": "mos_powerpoint__bài2__xlsx_q47__v3",
+                "explanation": "Slide Sorter View hiển thị nhiều slide dưới dạng hình thu nhỏ, thuận tiện để kiểm tra nhanh thứ tự tổng thể của bài trình chiếu."
+              },
+              {
+                "question": "Bạn muốn di chuyển nhanh một slide từ cuối bài lên đầu một section trong chế độ quản lý tổng thể. Chế độ nào thuận tiện nhất?",
+                "type": "single",
+                "options": [
+                  "Presenter View",
+                  "Notes Page View",
+                  "Slide Sorter View",
+                  "Reading View"
+                ],
+                "correct": [
+                  "Slide Sorter View"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 4,
+                "uid": "mos_powerpoint__bài2__xlsx_q44__v4",
+                "explanation": "Slide Sorter View hiển thị toàn bộ slide dưới dạng hình thu nhỏ, giúp kéo-thả di chuyển nhanh một slide đến vị trí bất kỳ, kể cả sang đầu một section khác."
+              },
+              {
+                "question": "Bạn muốn chèn một slide mới và ngay lập tức chọn layout Title and Content. Thao tác nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Chèn Text Box hai lần",
+                  "Chọn Duplicate Slide rồi xóa nội dung",
+                  "Mở menu New Slide và chọn Title and Content",
+                  "Mở Slide Master và tạo master mới"
+                ],
+                "correct": [
+                  "Mở menu New Slide và chọn Title and Content"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 5,
+                "uid": "mos_powerpoint__bài2__xlsx_q43__v5",
+                "explanation": "Mở menu New Slide (mũi tên bên dưới nút New Slide) và chọn layout Title and Content sẽ chèn ngay slide mới với layout đó."
+              },
+              {
+                "question": "Bạn muốn tạm thời không trình chiếu slide 6 nhưng vẫn giữ slide trong tập tin, đồng thời đổi nền riêng của slide 7. Hãy chọn 2 thao tác phù hợp.",
+                "type": "multiple",
+                "options": [
+                  "Move Slide 7 to Notes Master",
+                  "Hide Slide đối với slide 6",
+                  "Delete Slide 6",
+                  "Format Background đối với slide 7",
+                  "Apply Theme to All"
+                ],
+                "correct": [
+                  "Hide Slide đối với slide 6",
+                  "Format Background đối với slide 7"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 6,
+                "uid": "mos_powerpoint__bài2__xlsx_q3__v6",
+                "explanation": "Hide Slide giúp tạm ẩn slide 6 mà không xoá khỏi tệp; Format Background đối với slide 7 (không chọn Apply to All) chỉ đổi nền riêng cho slide đó."
+              },
+              {
+                "question": "Bạn cần một layout mới gồm một tiêu đề và ba vùng chứa nội dung đặt theo thiết kế riêng. Lệnh nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Duplicate Slide",
+                  "New Slide trong Normal View",
+                  "Insert Layout trong Slide Master",
+                  "Reuse Slides"
+                ],
+                "correct": [
+                  "Insert Layout trong Slide Master"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 7,
+                "uid": "mos_powerpoint__bài2__xlsx_q23__v7",
+                "explanation": "Insert Layout trong chế độ Slide Master cho phép tạo một layout mới với các vùng chứa (placeholder) được sắp xếp tùy ý, ví dụ một tiêu đề và ba vùng nội dung."
+              },
+              {
+                "question": "Xác định đúng/sai cho từng phát biểu liên quan đến câu hỏi: \"Bạn muốn thay đổi theme cho toàn bộ bài trình chiếu, bao gồm cả các layout được sử dụng. Khu vực nào phù hợp nhất?\"",
+                "type": "truefalse",
+                "statements": [
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn thay đổi theme cho toàn bộ bài trình chiếu, bao gồm cả các layout được sử dụng. Khu vực nào phù hợp nhất?\" — Reading View",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn thay đổi theme cho toàn bộ bài trình chiếu, bao gồm cả các layout được sử dụng. Khu vực nào phù hợp nhất?\" — Notes Page",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn thay đổi theme cho toàn bộ bài trình chiếu, bao gồm cả các layout được sử dụng. Khu vực nào phù hợp nhất?\" — Slide Master",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn thay đổi theme cho toàn bộ bài trình chiếu, bao gồm cả các layout được sử dụng. Khu vực nào phù hợp nhất?\" — Animation Pane",
+                    "answer": "false"
+                  }
+                ],
+                "label_true": "Đúng",
+                "label_false": "Sai",
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Khu vực Slide Master cho phép thay đổi theme áp dụng cho toàn bộ bài trình chiếu, bao gồm cả các layout liên quan.",
+                "id": 8,
+                "uid": "Bài 2: Làm việc với trang chiếu_8__v8"
+              },
+              {
+                "question": "Phân loại mỗi phương án sau vào đúng nhóm cho câu hỏi: \"Bạn muốn đưa ba slide từ một bài trình chiếu khác vào bài hiện tại mà không sao chép thủ công từng đối tượng. Tính năng nào phù hợp nhất?\"",
+                "type": "classify",
+                "zones": [
+                  "Đáp án đúng",
+                  "Đáp án sai"
+                ],
+                "items": [
+                  {
+                    "text": "Duplicate Slide",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Insert Screenshot",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Reuse Slides",
+                    "zone": "Đáp án đúng"
+                  },
+                  {
+                    "text": "Slide Master",
+                    "zone": "Đáp án sai"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Reuse Slides cho phép đưa các slide được chọn từ một bài trình chiếu khác vào bài hiện tại mà không cần sao chép thủ công từng đối tượng.",
+                "id": 9,
+                "uid": "Bài 2: Làm việc với trang chiếu_9__v9"
+              },
+              {
+                "question": "Phân loại mỗi phương án sau vào đúng nhóm cho câu hỏi: \"Bạn muốn hiển thị ngày, footer và số slide trên nhiều slide trong bài trình chiếu. Hộp thoại nào phù hợp nhất?\"",
+                "type": "classify",
+                "zones": [
+                  "Đáp án đúng",
+                  "Đáp án sai"
+                ],
+                "items": [
+                  {
+                    "text": "Slide Size",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Format Background",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Header & Footer",
+                    "zone": "Đáp án đúng"
+                  },
+                  {
+                    "text": "Set Up Slide Show",
+                    "zone": "Đáp án sai"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Hộp thoại Header & Footer dùng để bật hiển thị ngày tháng, chân trang (footer) và số slide trên nhiều slide cùng lúc.",
+                "id": 10,
+                "uid": "Bài 2: Làm việc với trang chiếu_10__v10"
+              },
+              {
+                "question": "Phân loại mỗi phương án sau vào đúng nhóm cho câu hỏi: \"Bạn cần thêm logo công ty để logo tự động xuất hiện trên tất cả các slide sử dụng các layout thuộc cùng một master. Thao tác nào phù hợp nhất?\"",
+                "type": "classify",
+                "zones": [
+                  "Đáp án đúng",
+                  "Đáp án sai"
+                ],
+                "items": [
+                  {
+                    "text": "Chèn logo trong Notes Master",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Chèn logo riêng trên từng slide",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Chèn logo trên Slide Master",
+                    "zone": "Đáp án đúng"
+                  },
+                  {
+                    "text": "Chèn logo vào Handout Master",
+                    "zone": "Đáp án sai"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Chèn logo trên Slide Master khiến logo tự động xuất hiện trên mọi slide dùng layout thuộc master đó, thay vì phải chèn thủ công từng slide.",
+                "id": 11,
+                "uid": "Bài 2: Làm việc với trang chiếu_11__v11"
+              },
+              {
+                "question": "Phân loại mỗi phương án sau vào đúng nhóm cho câu hỏi: \"Bạn có một tài liệu Word được cấu trúc bằng heading và muốn tạo các slide từ dàn ý đó. Thao tác nào phù hợp nhất?\"",
+                "type": "classify",
+                "zones": [
+                  "Đáp án đúng",
+                  "Đáp án sai"
+                ],
+                "items": [
+                  {
+                    "text": "Insert Object",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Reuse Slides",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "New Slide > Slides from Outline",
+                    "zone": "Đáp án đúng"
+                  },
+                  {
+                    "text": "Summary Zoom",
+                    "zone": "Đáp án sai"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "New Slide > Slides from Outline nhập nội dung từ dàn ý (outline) của tài liệu Word đã cấu trúc bằng heading để tự động tạo các slide tương ứng.",
+                "id": 12,
+                "uid": "Bài 2: Làm việc với trang chiếu_12__v12"
+              }
+            ],
+            "Bài 3: Làm việc với văn bản": [
+              {
+                "question": "Bạn muốn biến năm dòng văn bản thành danh sách đánh số. Lệnh nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Convert to SmartArt",
+                  "Bullets",
+                  "Numbering",
+                  "Increase Font Size"
+                ],
+                "correct": [
+                  "Numbering"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 1,
+                "uid": "mos_powerpoint__bài3__xlsx_q6__v1",
+                "explanation": "Numbering chuyển các dòng văn bản đã chọn thành danh sách đánh số thứ tự."
+              },
+              {
+                "question": "Bạn muốn áp dụng màu chữ, độ đậm và hiệu ứng văn bản cho tiêu đề trên slide. Nhóm công cụ nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Table Layout",
+                  "Chart Design",
+                  "Các lệnh Font và Text Effects",
+                  "Media Playback"
+                ],
+                "correct": [
+                  "Các lệnh Font và Text Effects"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 2,
+                "uid": "mos_powerpoint__bài3__xlsx_q30__v2",
+                "explanation": "Nhóm lệnh Font (màu chữ, độ đậm) và Text Effects (hiệu ứng văn bản) dùng để định dạng tiêu đề trên slide theo yêu cầu."
+              },
+              {
+                "question": "Xác định đúng/sai cho từng phát biểu liên quan đến câu hỏi: \"Một Text Box dài cần được chia thành hai cột trong cùng đối tượng. Thiết lập nào phù hợp nhất?\"",
+                "type": "truefalse",
+                "statements": [
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Một Text Box dài cần được chia thành hai cột trong cùng đối tượng. Thiết lập nào phù hợp nhất?\" — Align Center",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Một Text Box dài cần được chia thành hai cột trong cùng đối tượng. Thiết lập nào phù hợp nhất?\" — Slide Size",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Một Text Box dài cần được chia thành hai cột trong cùng đối tượng. Thiết lập nào phù hợp nhất?\" — Columns trong Format Shape > Text Options",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Một Text Box dài cần được chia thành hai cột trong cùng đối tượng. Thiết lập nào phù hợp nhất?\" — Group Objects",
+                    "answer": "false"
+                  }
+                ],
+                "label_true": "Đúng",
+                "label_false": "Sai",
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Trong Format Shape > Text Options có tùy chọn Columns để chia nội dung văn bản trong một Text Box thành nhiều cột.",
+                "id": 3,
+                "uid": "Bài 3: Làm việc với văn bản_3__v3"
+              }
+            ],
+            "Bài 4: Làm việc với biểu đồ và bảng": [
+              {
+                "question": "Bạn muốn thay đổi tiêu đề, legend và data series của biểu đồ đã chèn. Nhóm công cụ nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Transitions và Animations",
+                  "Slide Master và Notes Master",
+                  "Chart Design và Format",
+                  "Review và Comments"
+                ],
+                "correct": [
+                  "Chart Design và Format"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 1,
+                "uid": "mos_powerpoint__bài4__xlsx_q4__v1",
+                "explanation": "Chart Design (thay đổi kiểu, dữ liệu) và Chart Format (định dạng) là nhóm công cụ chuyên dùng để chỉnh tiêu đề, chú giải (legend) và dữ liệu (data series) của biểu đồ."
+              },
+              {
+                "question": "Bạn muốn thêm một cột vào bảng và áp dụng nhanh một kiểu màu dựng sẵn. Hãy chọn 2 thao tác phù hợp.",
+                "type": "multiple",
+                "options": [
+                  "Crop Table",
+                  "Insert Column",
+                  "Convert to Chart",
+                  "Apply Table Style",
+                  "Animation Painter"
+                ],
+                "correct": [
+                  "Insert Column",
+                  "Apply Table Style"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 2,
+                "uid": "mos_powerpoint__bài4__xlsx_q33__v2",
+                "explanation": "Insert Column thêm một cột mới vào bảng; Apply Table Style áp dụng nhanh một kiểu định dạng màu sắc dựng sẵn cho bảng."
+              },
+              {
+                "question": "Xác định đúng/sai cho từng phát biểu liên quan đến câu hỏi: \"Bạn muốn tạo biểu đồ cột từ dữ liệu doanh số trực tiếp trong PowerPoint. Thao tác nào phù hợp nhất?\"",
+                "type": "truefalse",
+                "statements": [
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn tạo biểu đồ cột từ dữ liệu doanh số trực tiếp trong PowerPoint. Thao tác nào phù hợp nhất?\" — Insert > Icons",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn tạo biểu đồ cột từ dữ liệu doanh số trực tiếp trong PowerPoint. Thao tác nào phù hợp nhất?\" — Insert > Table rồi tô màu thủ công",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn tạo biểu đồ cột từ dữ liệu doanh số trực tiếp trong PowerPoint. Thao tác nào phù hợp nhất?\" — Insert > Chart rồi nhập dữ liệu trong bảng dữ liệu đi kèm",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn tạo biểu đồ cột từ dữ liệu doanh số trực tiếp trong PowerPoint. Thao tác nào phù hợp nhất?\" — Insert > Audio",
+                    "answer": "false"
+                  }
+                ],
+                "label_true": "Đúng",
+                "label_false": "Sai",
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Insert > Chart chèn biểu đồ và mở kèm bảng dữ liệu để nhập số liệu doanh số trực tiếp trong PowerPoint.",
+                "id": 3,
+                "uid": "Bài 4: Làm việc với biểu đồ và bảng_3__v3"
+              },
+              {
+                "question": "Xác định đúng/sai cho từng phát biểu liên quan đến câu hỏi: \"Bạn cần chèn một bảng gồm 4 cột và 5 hàng vào slide. Thao tác nào phù hợp nhất?\"",
+                "type": "truefalse",
+                "statements": [
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn cần chèn một bảng gồm 4 cột và 5 hàng vào slide. Thao tác nào phù hợp nhất?\" — Convert to SmartArt",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn cần chèn một bảng gồm 4 cột và 5 hàng vào slide. Thao tác nào phù hợp nhất?\" — Insert > Chart",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn cần chèn một bảng gồm 4 cột và 5 hàng vào slide. Thao tác nào phù hợp nhất?\" — Insert > Table và chỉ định 4 columns, 5 rows",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn cần chèn một bảng gồm 4 cột và 5 hàng vào slide. Thao tác nào phù hợp nhất?\" — Insert > Screenshot",
+                    "answer": "false"
+                  }
+                ],
+                "label_true": "Đúng",
+                "label_false": "Sai",
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Insert > Table cho phép chỉ định trực tiếp số cột (4) và số hàng (5) khi chèn bảng vào slide.",
+                "id": 4,
+                "uid": "Bài 4: Làm việc với biểu đồ và bảng_4__v4"
+              }
+            ],
+            "Bài 5: Thêm các yếu tố đa phương tiện": [
+              {
+                "question": "Bạn đã chèn một 3D model và muốn thay đổi góc nhìn dựng sẵn của mô hình. Công cụ nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Chart Styles",
+                  "Picture Corrections",
+                  "3D Model Views",
+                  "Crop to Shape"
+                ],
+                "correct": [
+                  "3D Model Views"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 1,
+                "uid": "mos_powerpoint__bài5__xlsx_q50__v1",
+                "explanation": "3D Model Views cung cấp các góc nhìn dựng sẵn để nhanh chóng thay đổi góc hiển thị của mô hình 3D đã chèn."
+              },
+              {
+                "question": "Bạn muốn ba shape di chuyển và thay đổi kích thước như một đối tượng duy nhất. Lệnh nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Align Middle",
+                  "Bring to Front",
+                  "Group",
+                  "Selection Pane"
+                ],
+                "correct": [
+                  "Group"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 2,
+                "uid": "mos_powerpoint__bài5__xlsx_q37__v2",
+                "explanation": "Group gộp nhiều shape lại thành một đối tượng duy nhất để có thể di chuyển và thay đổi kích thước cùng lúc."
+              },
+              {
+                "question": "Bạn muốn một đoạn chữ mở trang web khi được bấm trong chế độ Slide Show. Thao tác nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Add Animation",
+                  "Insert Comment",
+                  "Insert Hyperlink",
+                  "Format Background"
+                ],
+                "correct": [
+                  "Insert Hyperlink"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 3,
+                "uid": "mos_powerpoint__bài5__xlsx_q5__v3",
+                "explanation": "Insert Hyperlink cho phép gán liên kết mở trang web khi bấm vào văn bản trong lúc trình chiếu (Slide Show)."
+              },
+              {
+                "question": "Bạn cần hỗ trợ khả năng tiếp cận và sắp xếp ba đối tượng trên slide thành một hàng đều nhau. Hãy chọn 2 nhóm công cụ phù hợp.",
+                "type": "multiple",
+                "options": [
+                  "Header & Footer",
+                  "Alt Text",
+                  "Slide Size",
+                  "Align và Distribute",
+                  "Rehearse Timings"
+                ],
+                "correct": [
+                  "Alt Text",
+                  "Align và Distribute"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 4,
+                "uid": "mos_powerpoint__bài5__xlsx_q31__v4",
+                "explanation": "Alt Text cung cấp mô tả thay thế giúp hỗ trợ khả năng tiếp cận (accessibility); Align và Distribute dùng để sắp xếp nhiều đối tượng thành một hàng cách đều nhau."
+              },
+              {
+                "question": "Bạn muốn áp dụng nhanh một kiểu khung và hiệu ứng phản chiếu có sẵn cho ảnh. Công cụ nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Slide Master",
+                  "Shape Merge",
+                  "Picture Styles và Picture Effects",
+                  "Animation Pane"
+                ],
+                "correct": [
+                  "Picture Styles và Picture Effects"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 5,
+                "uid": "mos_powerpoint__bài5__xlsx_q29__v5",
+                "explanation": "Picture Styles cung cấp các kiểu khung dựng sẵn, còn Picture Effects (bao gồm Reflection) cho phép áp dụng nhanh hiệu ứng phản chiếu cho ảnh."
+              },
+              {
+                "question": "Bạn muốn cắt bỏ phần thừa xung quanh một bức ảnh nhưng vẫn giữ nguyên tỉ lệ của ảnh. Công cụ nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Remove Background",
+                  "Compress Media",
+                  "Crop",
+                  "Align"
+                ],
+                "correct": [
+                  "Crop"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 6,
+                "uid": "mos_powerpoint__bài5__xlsx_q28__v6",
+                "explanation": "Crop cắt bỏ phần thừa xung quanh ảnh trong khi vẫn giữ nguyên tỉ lệ gốc của phần ảnh còn lại."
+              },
+              {
+                "question": "Xác định đúng/sai cho từng phát biểu liên quan đến câu hỏi: \"Bạn chỉ muốn chèn một vùng nhỏ đang hiển thị trong cửa sổ ứng dụng khác. Lệnh nào phù hợp nhất?\"",
+                "type": "truefalse",
+                "statements": [
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn chỉ muốn chèn một vùng nhỏ đang hiển thị trong cửa sổ ứng dụng khác. Lệnh nào phù hợp nhất?\" — Photo Album",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn chỉ muốn chèn một vùng nhỏ đang hiển thị trong cửa sổ ứng dụng khác. Lệnh nào phù hợp nhất?\" — Insert Picture from File",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn chỉ muốn chèn một vùng nhỏ đang hiển thị trong cửa sổ ứng dụng khác. Lệnh nào phù hợp nhất?\" — Screenshot > Screen Clipping",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn chỉ muốn chèn một vùng nhỏ đang hiển thị trong cửa sổ ứng dụng khác. Lệnh nào phù hợp nhất?\" — Icons",
+                    "answer": "false"
+                  }
+                ],
+                "label_true": "Đúng",
+                "label_false": "Sai",
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Screenshot > Screen Clipping cho phép chọn và chèn một vùng nhỏ tùy ý đang hiển thị trong cửa sổ của ứng dụng khác vào slide.",
+                "id": 7,
+                "uid": "Bài 5: Thêm các yếu tố đa phương tiện_7__v7"
+              },
+              {
+                "question": "Xác định đúng/sai cho từng phát biểu liên quan đến câu hỏi: \"Bạn muốn thêm một bước mới vào SmartArt hiện có mà không tạo lại sơ đồ. Cách nào phù hợp nhất?\"",
+                "type": "truefalse",
+                "statements": [
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn thêm một bước mới vào SmartArt hiện có mà không tạo lại sơ đồ. Cách nào phù hợp nhất?\" — Insert Comment",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn thêm một bước mới vào SmartArt hiện có mà không tạo lại sơ đồ. Cách nào phù hợp nhất?\" — Duplicate Slide",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn thêm một bước mới vào SmartArt hiện có mà không tạo lại sơ đồ. Cách nào phù hợp nhất?\" — Thêm mục trong Text Pane hoặc dùng Add Shape",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn thêm một bước mới vào SmartArt hiện có mà không tạo lại sơ đồ. Cách nào phù hợp nhất?\" — Change Slide Size",
+                    "answer": "false"
+                  }
+                ],
+                "label_true": "Đúng",
+                "label_false": "Sai",
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Thêm mục mới trong Text Pane hoặc dùng lệnh Add Shape sẽ bổ sung một bước vào SmartArt hiện có mà không cần tạo lại toàn bộ sơ đồ.",
+                "id": 8,
+                "uid": "Bài 5: Thêm các yếu tố đa phương tiện_8__v8"
+              },
+              {
+                "question": "Xác định đúng/sai cho từng phát biểu liên quan đến câu hỏi: \"Bạn có một danh sách các bước và muốn chuyển nhanh thành sơ đồ quy trình. Tính năng nào phù hợp nhất?\"",
+                "type": "truefalse",
+                "statements": [
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn có một danh sách các bước và muốn chuyển nhanh thành sơ đồ quy trình. Tính năng nào phù hợp nhất?\" — Summary Zoom",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn có một danh sách các bước và muốn chuyển nhanh thành sơ đồ quy trình. Tính năng nào phù hợp nhất?\" — Convert to Table",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn có một danh sách các bước và muốn chuyển nhanh thành sơ đồ quy trình. Tính năng nào phù hợp nhất?\" — Convert to SmartArt",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn có một danh sách các bước và muốn chuyển nhanh thành sơ đồ quy trình. Tính năng nào phù hợp nhất?\" — Photo Album",
+                    "answer": "false"
+                  }
+                ],
+                "label_true": "Đúng",
+                "label_false": "Sai",
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Convert to SmartArt chuyển nhanh một danh sách văn bản (các bước) thành sơ đồ quy trình trực quan.",
+                "id": 9,
+                "uid": "Bài 5: Thêm các yếu tố đa phương tiện_9__v9"
+              },
+              {
+                "question": "Phân loại mỗi phương án sau vào đúng nhóm cho câu hỏi: \"Bạn muốn thêm chữ trực tiếp vào một shape đã chèn. Thao tác nào phù hợp nhất?\"",
+                "type": "classify",
+                "zones": [
+                  "Đáp án đúng",
+                  "Đáp án sai"
+                ],
+                "items": [
+                  {
+                    "text": "Chuyển shape thành ảnh",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Chèn Comment vào shape",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Chọn shape và bắt đầu nhập văn bản hoặc dùng Edit Text",
+                    "zone": "Đáp án đúng"
+                  },
+                  {
+                    "text": "Mở Notes Master",
+                    "zone": "Đáp án sai"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Chọn shape rồi gõ trực tiếp (hoặc dùng lệnh Edit Text) sẽ thêm văn bản ngay bên trong shape đó.",
+                "id": 10,
+                "uid": "Bài 5: Thêm các yếu tố đa phương tiện_10__v10"
+              }
+            ],
+            "Bài 6: Tạo bài thuyết trình nâng cao": [
+              {
+                "question": "Bạn muốn áp dụng một hiệu ứng chuyển tiếp cơ bản cho slide hiện tại. Thẻ nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Review",
+                  "Animations",
+                  "Transitions",
+                  "View"
+                ],
+                "correct": [
+                  "Transitions"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 1,
+                "uid": "mos_powerpoint__bài6__xlsx_q42__v1",
+                "explanation": "Thẻ Transitions chứa các hiệu ứng chuyển tiếp cơ bản có thể áp dụng cho slide hiện tại."
+              },
+              {
+                "question": "Bạn muốn vẽ trực tiếp lên slide bằng bút cảm ứng và lưu nét vẽ như một phần của slide. Công cụ nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Crop",
+                  "Format Painter",
+                  "Draw bằng digital ink",
+                  "Slide Zoom"
+                ],
+                "correct": [
+                  "Draw bằng digital ink"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 2,
+                "uid": "mos_powerpoint__bài6__xlsx_q46__v2",
+                "explanation": "Công cụ Draw (bút cảm ứng/digital ink) cho phép vẽ trực tiếp lên slide và lưu nét vẽ như một phần nội dung của slide."
+              },
+              {
+                "question": "Bạn muốn chèn một tập tin âm thanh vào slide và đặt âm thanh phát qua nhiều slide. Nhóm công cụ nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Slide Master và Themes",
+                  "Insert Video và Trim Video",
+                  "Insert Audio và Playback > Play Across Slides",
+                  "Transitions và Morph"
+                ],
+                "correct": [
+                  "Insert Audio và Playback > Play Across Slides"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 3,
+                "uid": "mos_powerpoint__bài6__xlsx_q12__v3",
+                "explanation": "Insert Audio chèn tập tin âm thanh vào slide; Playback > Play Across Slides thiết lập cho âm thanh tiếp tục phát khi chuyển sang các slide khác."
+              },
+              {
+                "question": "Bạn muốn xem và thay đổi thứ tự của nhiều animation trên cùng một slide. Công cụ nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Slide Sorter",
+                  "Selection Pane",
+                  "Animation Pane",
+                  "Format Background"
+                ],
+                "correct": [
+                  "Animation Pane"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 4,
+                "uid": "mos_powerpoint__bài6__xlsx_q10__v4",
+                "explanation": "Animation Pane hiển thị danh sách các hiệu ứng animation trên slide và cho phép xem, kéo-thả để thay đổi thứ tự thực hiện. (Lưu ý: đáp án trong file Word gốc không được in đậm, đã bổ sung dựa trên kiến thức MOS PowerPoint.)"
+              },
+              {
+                "question": "Xác định đúng/sai cho từng phát biểu liên quan đến câu hỏi: \"Bạn muốn một shape di chuyển theo một đường cong tùy chỉnh trên slide. Loại animation nào phù hợp nhất?\"",
+                "type": "truefalse",
+                "statements": [
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn một shape di chuyển theo một đường cong tùy chỉnh trên slide. Loại animation nào phù hợp nhất?\" — Exit",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn một shape di chuyển theo một đường cong tùy chỉnh trên slide. Loại animation nào phù hợp nhất?\" — Entrance",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn một shape di chuyển theo một đường cong tùy chỉnh trên slide. Loại animation nào phù hợp nhất?\" — Motion Path",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn một shape di chuyển theo một đường cong tùy chỉnh trên slide. Loại animation nào phù hợp nhất?\" — Emphasis",
+                    "answer": "false"
+                  }
+                ],
+                "label_true": "Đúng",
+                "label_false": "Sai",
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Motion Path là loại hiệu ứng animation cho phép đối tượng di chuyển theo một đường dẫn (kể cả đường cong) tùy chỉnh trên slide.",
+                "id": 5,
+                "uid": "Bài 6: Tạo bài thuyết trình nâng cao_5__v5"
+              },
+              {
+                "question": "Phân loại mỗi phương án sau vào đúng nhóm cho câu hỏi: \"Bạn cần ghi lại thao tác trên màn hình và thiết lập video tự phát khi slide xuất hiện. Hãy chọn 2 tính năng phù hợp.\"",
+                "type": "classify",
+                "zones": [
+                  "Đáp án đúng",
+                  "Đáp án sai"
+                ],
+                "items": [
+                  {
+                    "text": "Header & Footer",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Screen Recording",
+                    "zone": "Đáp án đúng"
+                  },
+                  {
+                    "text": "Slide Sorter",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Playback > Start Automatically",
+                    "zone": "Đáp án đúng"
+                  },
+                  {
+                    "text": "Format Background",
+                    "zone": "Đáp án sai"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Screen Recording dùng để ghi lại thao tác trên màn hình; Playback > Start Automatically thiết lập video tự phát khi slide xuất hiện. Các lựa chọn còn lại không liên quan đến ghi hình/tự phát.",
+                "id": 6,
+                "uid": "Bài 6: Tạo bài thuyết trình nâng cao_6__v6"
+              },
+              {
+                "question": "Phân loại mỗi phương án sau vào đúng nhóm cho câu hỏi: \"Hãy chọn 4 thao tác phù hợp để cấu hình animation cho nội dung trên slide. Chọn 4 đáp án.\"",
+                "type": "classify",
+                "zones": [
+                  "Đáp án đúng",
+                  "Đáp án sai"
+                ],
+                "items": [
+                  {
+                    "text": "Điều chỉnh Start, Duration và Delay",
+                    "zone": "Đáp án đúng"
+                  },
+                  {
+                    "text": "Insert Header",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Áp dụng animation cho text hoặc graphic element",
+                    "zone": "Đáp án đúng"
+                  },
+                  {
+                    "text": "Reorder animation trong Animation Pane",
+                    "zone": "Đáp án đúng"
+                  },
+                  {
+                    "text": "Áp dụng animation cho 3D model",
+                    "zone": "Đáp án đúng"
+                  },
+                  {
+                    "text": "Set Print Area",
+                    "zone": "Đáp án sai"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Điều chỉnh Start/Duration/Delay, áp dụng animation cho văn bản hoặc đối tượng đồ họa, sắp xếp lại thứ tự trong Animation Pane, và áp dụng animation cho mô hình 3D đều là các thao tác thuộc nhóm cấu hình animation cho nội dung trên slide.",
+                "id": 7,
+                "uid": "Bài 6: Tạo bài thuyết trình nâng cao_7__v7"
+              },
+              {
+                "question": "Phân loại mỗi phương án sau vào đúng nhóm cho câu hỏi: \"Bạn muốn thay đổi hướng chuyển động và thời lượng của hiệu ứng chuyển tiếp. Hai khu vực nào được sử dụng?\"",
+                "type": "classify",
+                "zones": [
+                  "Đáp án đúng",
+                  "Đáp án sai"
+                ],
+                "items": [
+                  {
+                    "text": "Slide Master và Layout",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Animation Pane và Trigger",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Effect Options và Duration",
+                    "zone": "Đáp án đúng"
+                  },
+                  {
+                    "text": "Crop và Size",
+                    "zone": "Đáp án sai"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Effect Options điều chỉnh hướng chuyển động của hiệu ứng, còn Duration điều chỉnh thời lượng thực hiện hiệu ứng chuyển tiếp (transition).",
+                "id": 8,
+                "uid": "Bài 6: Tạo bài thuyết trình nâng cao_8__v8"
+              }
+            ],
+            "Bài 7: Chuẩn bị bài trình chiếu": [
+              {
+                "question": "Bạn muốn tập luyện phần trình bày và ghi lại thời gian cần thiết cho từng slide. Tính năng nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Set Up Slide Show",
+                  "Record Slide Show",
+                  "Rehearse Timings",
+                  "Animation Painter"
+                ],
+                "correct": [
+                  "Rehearse Timings"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 1,
+                "uid": "mos_powerpoint__bài7__xlsx_q24__v1",
+                "explanation": "Rehearse Timings cho phép tập luyện bài thuyết trình và tự động ghi lại thời gian đã dùng cho mỗi slide."
+              },
+              {
+                "question": "Bạn muốn tạo một slide tổng quan có các hình thu nhỏ liên kết đến từng phần của bài trình chiếu. Tính năng nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Section Zoom",
+                  "Custom Slide Show",
+                  "Summary Zoom",
+                  "Hyperlink to File"
+                ],
+                "correct": [
+                  "Summary Zoom"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 2,
+                "uid": "mos_powerpoint__bài7__xlsx_q26__v2",
+                "explanation": "Summary Zoom tạo một slide tổng quan chứa các hình thu nhỏ (zoom link) liên kết trực tiếp đến từng phần/section của bài trình chiếu."
+              },
+              {
+                "question": "Bài trình chiếu sẽ chạy tự động tại quầy thông tin và người xem không được điều khiển bằng bàn phím. Tùy chọn thiết lập nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Browsed by an individual",
+                  "Presented by a speaker",
+                  "Browsed at a kiosk (full screen)",
+                  "Use Presenter View"
+                ],
+                "correct": [
+                  "Browsed at a kiosk (full screen)"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 3,
+                "uid": "mos_powerpoint__bài7__xlsx_q40__v3",
+                "explanation": "Browsed at a kiosk (full screen) là chế độ thiết lập cho bài trình chiếu tự động chạy tại một điểm thông tin mà không cần người điều khiển bằng bàn phím."
+              },
+              {
+                "question": "Bạn muốn điều chỉnh cách in tài liệu phát tay và trang ghi chú mà không sửa nội dung trên slide. Hãy chọn 2 chế độ phù hợp.",
+                "type": "multiple",
+                "options": [
+                  "Outline View",
+                  "Handout Master",
+                  "Slide Sorter",
+                  "Notes Master",
+                  "Presenter View"
+                ],
+                "correct": [
+                  "Handout Master",
+                  "Notes Master"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 4,
+                "uid": "mos_powerpoint__bài7__xlsx_q25__v4",
+                "explanation": "Handout Master điều chỉnh cách trình bày khi in tài liệu phát tay (handout); Notes Master điều chỉnh cách trình bày trang ghi chú (notes pages) khi in, mà không ảnh hưởng đến nội dung trên slide."
+              },
+              {
+                "question": "Khi thuyết trình với hai màn hình, bạn muốn nhìn thấy slide hiện tại, slide tiếp theo và ghi chú riêng trong khi khán giả chỉ thấy slide. Chế độ nào phù hợp nhất?",
+                "type": "single",
+                "options": [
+                  "Outline View",
+                  "Slide Sorter View",
+                  "Presenter View",
+                  "Reading View"
+                ],
+                "correct": [
+                  "Presenter View"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 5,
+                "uid": "mos_powerpoint__bài7__xlsx_q32__v5",
+                "explanation": "Presenter View cho phép người thuyết trình nhìn thấy slide hiện tại, slide tiếp theo và ghi chú riêng trên màn hình của mình, trong khi khán giả chỉ thấy slide đang trình chiếu."
+              },
+              {
+                "question": "Xác định đúng/sai cho từng phát biểu liên quan đến câu hỏi: \"Bạn muốn tạo các liên kết trực quan để chuyển đến một section và một slide cụ thể trong cùng bài trình chiếu. Hãy chọn 2 tính năng phù hợp.\"",
+                "type": "truefalse",
+                "statements": [
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn tạo các liên kết trực quan để chuyển đến một section và một slide cụ thể trong cùng bài trình chiếu. Hãy chọn 2 tính năng phù hợp.\" — Animation Trigger",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn tạo các liên kết trực quan để chuyển đến một section và một slide cụ thể trong cùng bài trình chiếu. Hãy chọn 2 tính năng phù hợp.\" — Section Zoom",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn tạo các liên kết trực quan để chuyển đến một section và một slide cụ thể trong cùng bài trình chiếu. Hãy chọn 2 tính năng phù hợp.\" — Summary Notes",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn tạo các liên kết trực quan để chuyển đến một section và một slide cụ thể trong cùng bài trình chiếu. Hãy chọn 2 tính năng phù hợp.\" — Slide Zoom",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn muốn tạo các liên kết trực quan để chuyển đến một section và một slide cụ thể trong cùng bài trình chiếu. Hãy chọn 2 tính năng phù hợp.\" — Reuse Slides",
+                    "answer": "false"
+                  }
+                ],
+                "label_true": "Đúng",
+                "label_false": "Sai",
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Section Zoom tạo liên kết trực quan đến một section, còn Slide Zoom tạo liên kết trực quan đến một slide cụ thể trong cùng bài trình chiếu.",
+                "id": 6,
+                "uid": "Bài 7: Chuẩn bị bài trình chiếu_6__v6"
+              },
+              {
+                "question": "Phân loại mỗi phương án sau vào đúng nhóm cho câu hỏi: \"Bạn chỉ muốn trình chiếu một số slide được chọn cho một nhóm người xem cụ thể mà không xóa các slide còn lại. Tính năng nào phù hợp nhất?\"",
+                "type": "classify",
+                "zones": [
+                  "Đáp án đúng",
+                  "Đáp án sai"
+                ],
+                "items": [
+                  {
+                    "text": "Summary Zoom",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Hide Background Graphics",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Custom Slide Show",
+                    "zone": "Đáp án đúng"
+                  },
+                  {
+                    "text": "Slide Master",
+                    "zone": "Đáp án sai"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Custom Slide Show cho phép chọn một tập hợp con các slide để trình chiếu cho một nhóm khán giả cụ thể mà không cần xoá các slide còn lại khỏi tệp.",
+                "id": 7,
+                "uid": "Bài 7: Chuẩn bị bài trình chiếu_7__v7"
+              },
+              {
+                "question": "Phân loại mỗi phương án sau vào đúng nhóm cho câu hỏi: \"Bạn muốn ghi lại lời thuyết minh và thao tác bút trong quá trình trình chiếu. Công cụ nào phù hợp nhất?\"",
+                "type": "classify",
+                "zones": [
+                  "Đáp án đúng",
+                  "Đáp án sai"
+                ],
+                "items": [
+                  {
+                    "text": "Slide Sorter",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Rehearse Timings",
+                    "zone": "Đáp án sai"
+                  },
+                  {
+                    "text": "Record Slide Show",
+                    "zone": "Đáp án đúng"
+                  },
+                  {
+                    "text": "Inspect Presentation",
+                    "zone": "Đáp án sai"
+                  }
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Record Slide Show cho phép ghi lại lời thuyết minh (âm thanh) và thao tác bút (ink) trong lúc trình chiếu.",
+                "id": 8,
+                "uid": "Bài 7: Chuẩn bị bài trình chiếu_8__v8"
+              }
+            ],
+            "Bài 8: Chia sẻ bài trình chiếu": [
+              {
+                "question": "Bạn cần in một bộ tài liệu cho người thuyết trình và một bộ cho người tham dự. Hãy chọn 2 lựa chọn in phù hợp.",
+                "type": "multiple",
+                "options": [
+                  "Print Slide Master",
+                  "Print Notes Pages",
+                  "Print Comments Only",
+                  "Print Handouts",
+                  "Print Animation Pane"
+                ],
+                "correct": [
+                  "Print Notes Pages",
+                  "Print Handouts"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 1,
+                "uid": "mos_powerpoint__bài8__xlsx_q13__v1",
+                "explanation": "Print Notes Pages phù hợp cho người thuyết trình (có phần ghi chú), còn Print Handouts phù hợp để phát cho người tham dự."
+              },
+              {
+                "question": "Trước khi gửi bài trình chiếu ra bên ngoài, hãy chọn 3 thao tác phù hợp để bảo vệ và kiểm tra nội dung. Chọn 3 đáp án.",
+                "type": "multiple",
+                "options": [
+                  "Duplicate All Slides",
+                  "Restrict Editing",
+                  "Inspect Presentation và sửa các vấn đề",
+                  "Protect Presentation bằng password",
+                  "Apply Random Transition"
+                ],
+                "correct": [
+                  "Restrict Editing",
+                  "Inspect Presentation và sửa các vấn đề",
+                  "Protect Presentation bằng password"
+                ],
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "id": 2,
+                "uid": "mos_powerpoint__bài8__xlsx_q1__v2",
+                "explanation": "Restrict Editing giới hạn chỉnh sửa, Inspect Presentation phát hiện và loại bỏ thông tin ẩn/vấn đề, Protect Presentation bằng password bảo vệ tệp — cả ba đều phù hợp để bảo vệ và kiểm tra nội dung trước khi gửi ra ngoài; Duplicate Slides và Random Transition không liên quan."
+              },
+              {
+                "question": "Xác định đúng/sai cho từng phát biểu liên quan đến câu hỏi: \"Bạn cần gửi bài trình chiếu cho người không có PowerPoint nhưng vẫn giữ bố cục và dễ xem. Lựa chọn nào phù hợp nhất?\"",
+                "type": "truefalse",
+                "statements": [
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn cần gửi bài trình chiếu cho người không có PowerPoint nhưng vẫn giữ bố cục và dễ xem. Lựa chọn nào phù hợp nhất?\" — Copy toàn bộ nội dung vào Notes",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn cần gửi bài trình chiếu cho người không có PowerPoint nhưng vẫn giữ bố cục và dễ xem. Lựa chọn nào phù hợp nhất?\" — Save thành TXT",
+                    "answer": "false"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn cần gửi bài trình chiếu cho người không có PowerPoint nhưng vẫn giữ bố cục và dễ xem. Lựa chọn nào phù hợp nhất?\" — Export thành PDF",
+                    "answer": "true"
+                  },
+                  {
+                    "text": "Đây là phương án ĐÚNG cho câu hỏi: \"Bạn cần gửi bài trình chiếu cho người không có PowerPoint nhưng vẫn giữ bố cục và dễ xem. Lựa chọn nào phù hợp nhất?\" — Chuyển tất cả slide thành layout",
+                    "answer": "false"
+                  }
+                ],
+                "label_true": "Đúng",
+                "label_false": "Sai",
+                "image": false,
+                "image_file": null,
+                "image_id": null,
+                "explanation": "Export bài trình chiếu thành PDF giúp người nhận không có PowerPoint vẫn xem được nội dung, giữ nguyên bố cục và định dạng.",
+                "id": 3,
+                "uid": "Bài 8: Chia sẻ bài trình chiếu_3__v3"
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

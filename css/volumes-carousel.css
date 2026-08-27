@@ -512,6 +512,17 @@
       padding: 0 14px;
     }
 
+    .practice-button {
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .practice-button:hover {
+      background: var(--accent);
+      color: var(--paper-deep);
+    }
+
     .folio {
       position: absolute;
       right: 40px;

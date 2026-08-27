@@ -170,6 +170,14 @@
           🎮 Khu Vui Chơi
         </button>
         <div class="game-zone-hint" id="gameZoneHint"></div>
+
+        <!-- MOS Word 2019 — mô phỏng thao tác Ribbon, 10 tiết ôn luyện cuối
+             khóa (không khóa như Khu Vui Chơi, đây là nội dung học chính).
+             Xem js/word-simulator-modal.js + word-simulator.html. -->
+        <button type="button" class="game-zone-open-btn" id="openWordSimBtn"
+          title="MOS Word 2019 — 10 tiết ôn luyện thao tác Ribbon">
+          📝 MOS Word — Ôn luyện Ribbon
+        </button>
       </div>
     </div>
   </div>
@@ -529,6 +537,27 @@
     </div>
   </div>
 
+  <!-- ============ MOS WORD 2019 — Ôn luyện Ribbon (modal) — xem js/word-simulator-modal.js ============ -->
+  <div class="game-modal-overlay" id="wordSimModalOverlay">
+    <div class="game-modal">
+      <div class="game-modal-bar">
+        <span class="game-modal-title">📝 MOS Word 2019 — Ôn luyện Ribbon</span>
+        <button type="button" class="game-modal-close" id="closeWordSimModalBtn">✕ Đóng</button>
+      </div>
+      <div class="game-modal-frame">
+        <iframe
+          id="wordSimModalFrame"
+          class="game-modal-iframe"
+          title="MOS Word 2019 — Ôn luyện Ribbon"
+          src="about:blank"
+          data-src="word-simulator.html"
+          loading="lazy"
+          allow="fullscreen"
+        ></iframe>
+      </div>
+    </div>
+  </div>
+
   <script src="js/googleSheet.js"></script>
   <script src="js/gamification.js"></script>
 
@@ -559,6 +588,7 @@
   <script src="js/battle-quiz-modal.js"></script>
   <script src="js/cyber-detective-modal.js"></script>
   <script src="js/computer-simulator-modal.js"></script>
+  <script src="js/word-simulator-modal.js"></script>
   <!-- Khu Vui Chơi: mở/khóa hub gộp 5 mini-game theo điểm thi. Nạp SAU
        5 file *-modal.js ở trên để nút bên trong hub đã có listener mở
        game riêng trước khi game-zone-gate.js gắn thêm listener "đóng hub

@@ -1,0 +1,264 @@
+/* ============================================================
+   MOS Word Simulator — mô phỏng Ribbon Word 2019 để luyện thao
+   tác cho 10 tiết ôn tập cuối khóa (xem js/word-simulator.js và
+   data/mos-word-lessons.json).
+   ============================================================ */
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", "Helvetica Neue", Arial, "Roboto", sans-serif;
+  background: #eef1f5;
+  color: #1b1b1b;
+}
+
+.ws-hidden { display: none !important; }
+
+.ws-screen { min-height: 100vh; }
+
+/* ---------- Lobby ---------- */
+.ws-lobby-header {
+  background: linear-gradient(135deg, #2b579a, #1e3f6f);
+  color: #fff;
+  padding: 28px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.ws-lobby-title { display: flex; align-items: center; gap: 16px; }
+.ws-lobby-emoji { font-size: 40px; }
+.ws-lobby-title h1 { margin: 0; font-size: 22px; }
+.ws-lobby-title p { margin: 4px 0 0; opacity: .85; font-size: 14px; }
+.ws-lobby-total {
+  background: rgba(255,255,255,.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.ws-lesson-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.ws-lesson-tile {
+  background: #fff;
+  border: 1px solid #dbe1ea;
+  border-radius: 14px;
+  padding: 18px;
+  cursor: pointer;
+  text-align: left;
+  transition: transform .15s ease, box-shadow .15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ws-lesson-tile:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(43,87,154,.18); }
+.ws-lesson-tile-num {
+  width: 34px; height: 34px; border-radius: 9px;
+  background: #2b579a; color: #fff; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+}
+.ws-lesson-tile-title { font-weight: 700; font-size: 15px; color: #17325b; }
+.ws-lesson-tile-sub { font-size: 12.5px; color: #5c6b82; min-height: 32px; }
+.ws-lesson-tile-progress-bar {
+  height: 7px; border-radius: 4px; background: #e6ebf3; overflow: hidden;
+}
+.ws-lesson-tile-progress-fill { height: 100%; background: #3fa86f; border-radius: 4px; }
+.ws-lesson-tile-progress-label { font-size: 12px; color: #5c6b82; }
+.ws-lesson-tile.ws-complete { border-color: #3fa86f; }
+.ws-lesson-tile.ws-complete .ws-lesson-tile-num { background: #3fa86f; }
+
+/* ---------- Lesson screen ---------- */
+.ws-lesson-header {
+  background: #fff;
+  border-bottom: 1px solid #dbe1ea;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: sticky; top: 0; z-index: 20;
+}
+.ws-back-btn {
+  border: 1px solid #cfd8e6; background: #f4f7fb; color: #2b579a;
+  border-radius: 8px; padding: 8px 12px; font-weight: 600; cursor: pointer; font-size: 13px;
+  flex-shrink: 0;
+}
+.ws-back-btn:hover { background: #e8eefc; }
+.ws-lesson-header-title { flex: 1; min-width: 0; }
+.ws-lesson-header-title h2 { margin: 0; font-size: 16px; color: #17325b; }
+.ws-lesson-header-title p { margin: 2px 0 0; font-size: 12.5px; color: #6b7a90; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ws-lesson-progress {
+  background: #eef3fb; color: #2b579a; font-weight: 700; font-size: 13px;
+  border-radius: 8px; padding: 8px 12px; flex-shrink: 0;
+}
+
+.ws-lesson-body { display: flex; gap: 0; align-items: flex-start; }
+
+.ws-task-rail {
+  width: 260px; flex-shrink: 0;
+  background: #fff; border-right: 1px solid #dbe1ea;
+  height: calc(100vh - 57px); overflow-y: auto;
+  position: sticky; top: 57px;
+  padding: 8px 0;
+}
+.ws-task-item {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 9px 14px; cursor: pointer; font-size: 12.5px;
+  border-left: 3px solid transparent;
+  color: #43506b;
+}
+.ws-task-item:hover { background: #f5f8fd; }
+.ws-task-item.ws-active { background: #eaf1fd; border-left-color: #2b579a; color: #17325b; font-weight: 600; }
+.ws-task-item.ws-done { color: #3fa86f; }
+.ws-task-item-mark { flex-shrink: 0; width: 16px; text-align: center; }
+.ws-task-item-text { line-height: 1.35; }
+
+.ws-stage { flex: 1; min-width: 0; padding: 18px 24px 40px; max-width: 980px; margin: 0 auto; }
+
+.ws-mission-card {
+  background: #fff; border: 1px solid #dbe1ea; border-radius: 12px;
+  padding: 14px 18px; margin-bottom: 12px;
+}
+.ws-mission-file {
+  display: inline-block; background: #eef3fb; color: #2b579a; font-weight: 700;
+  font-size: 12px; border-radius: 6px; padding: 3px 9px; margin-bottom: 6px;
+}
+.ws-mission-desc { font-size: 14.5px; line-height: 1.5; color: #1b1b1b; }
+
+.ws-instruction-bar {
+  background: #fff8e5; border: 1px solid #f0dfa0; border-radius: 10px;
+  padding: 10px 14px; margin-bottom: 12px; font-size: 13.5px; color: #5a4a10;
+  display: flex; gap: 10px; align-items: baseline;
+}
+.ws-instruction-step { font-weight: 800; color: #b3860a; flex-shrink: 0; }
+
+/* ---------- Fake Word window ---------- */
+.ww-window {
+  border: 1px solid #c7cfdb; border-radius: 8px; overflow: hidden;
+  box-shadow: 0 8px 30px rgba(20,30,60,.10);
+  background: #fff;
+}
+.ww-titlebar {
+  background: #2b579a; color: #fff; font-size: 12.5px;
+  padding: 6px 12px; display: flex; align-items: center; gap: 8px;
+}
+.ww-titlebar-icon {
+  width: 18px; height: 18px; background: #fff; color: #2b579a; border-radius: 3px;
+  font-weight: 800; font-size: 11px; display: flex; align-items: center; justify-content: center;
+}
+.ww-ribbon { background: #f3f2f1; border-bottom: 1px solid #d6d6d6; }
+.ww-tabs { display: flex; gap: 2px; padding: 4px 10px 0; flex-wrap: wrap; }
+.ww-tab {
+  background: transparent; border: none; padding: 7px 12px 8px; font-size: 13px;
+  color: #444; cursor: pointer; border-radius: 4px 4px 0 0;
+}
+.ww-tab:hover { background: #e5e9f5; }
+.ww-tab.ww-active { background: #fff; color: #2b579a; font-weight: 700; border: 1px solid #d6d6d6; border-bottom-color: #fff; margin-bottom: -1px; }
+.ww-tab.ww-target { animation: wsPulseTab 1.1s ease-in-out infinite; }
+@keyframes wsPulseTab {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(43,87,154,.35); }
+  50% { box-shadow: 0 0 0 5px rgba(43,87,154,0); }
+}
+
+.ww-groups { display: flex; gap: 0; padding: 8px 10px 10px; overflow-x: auto; background: #fff; }
+.ww-group {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 4px 10px; border-right: 1px solid #e3e3e3; min-width: 64px;
+}
+.ww-group:last-child { border-right: none; }
+.ww-group-buttons { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; max-width: 190px; }
+.ww-btn {
+  background: #fff; border: 1px solid transparent; border-radius: 4px;
+  padding: 5px 7px; font-size: 11.5px; color: #333; cursor: pointer;
+  white-space: nowrap; line-height: 1.2;
+}
+.ww-btn:hover { background: #e5e9f5; border-color: #cfd8ea; }
+.ww-btn:active { background: #d6def2; }
+.ww-btn.ww-correct-flash { background: #d7f5e0 !important; border-color: #3fa86f !important; }
+.ww-btn.ww-wrong-flash { background: #fbdada !important; border-color: #d64545 !important; animation: wsShake .3s; }
+.ww-group-label { font-size: 10px; color: #7a7a7a; text-align: center; }
+
+@keyframes wsShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.ww-canvas { background: #7f95b3; padding: 22px; min-height: 260px; display: flex; justify-content: center; }
+.ww-page { background: #fff; width: 100%; max-width: 560px; min-height: 240px; box-shadow: 0 2px 10px rgba(0,0,0,.25); padding: 26px 30px; }
+.ww-page-lines { display: flex; flex-direction: column; gap: 10px; }
+.ww-page-lines::before, .ww-page-lines::after { content: ""; }
+.ww-page-lines { background-image: repeating-linear-gradient(#e9edf3 0px, #e9edf3 2px, transparent 2px, transparent 20px); min-height: 190px; }
+
+.ww-statusbar { background: #2b579a; color: #fff; font-size: 11px; padding: 4px 12px; }
+
+.ws-mission-footer { margin-top: 12px; text-align: right; }
+.ws-skip-btn { background: none; border: none; color: #8a95a8; font-size: 12px; cursor: pointer; text-decoration: underline; }
+
+/* ---------- Dialog modal ---------- */
+.ww-dialog-overlay {
+  position: fixed; inset: 0; background: rgba(20,30,50,.45);
+  display: flex; align-items: center; justify-content: center; z-index: 100;
+  padding: 16px;
+}
+.ww-dialog {
+  background: #fff; border-radius: 8px; width: 100%; max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.3); overflow: hidden;
+}
+.ww-dialog-title {
+  background: #f3f2f1; border-bottom: 1px solid #ddd; padding: 10px 16px;
+  font-weight: 700; font-size: 13.5px; color: #17325b;
+}
+.ww-dialog-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.ww-dialog-field label { display: block; font-size: 12.5px; color: #444; margin-bottom: 4px; }
+.ww-dialog-field input[type="text"] {
+  width: 100%; padding: 7px 9px; border: 1px solid #c7cfdb; border-radius: 5px; font-size: 13px;
+}
+.ww-dialog-field input.ww-input-wrong { border-color: #d64545; background: #fff3f3; }
+.ww-choice-grid { display: flex; flex-direction: column; gap: 8px; }
+.ww-choice-option {
+  text-align: left; border: 1px solid #d6dce6; border-radius: 7px; padding: 9px 12px;
+  background: #fafbfe; cursor: pointer; font-size: 13px; color: #2a3550;
+}
+.ww-choice-option:hover { background: #eef3fb; border-color: #2b579a; }
+.ww-checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.ww-dialog-footer { padding: 10px 16px 16px; display: flex; justify-content: flex-end; gap: 8px; }
+.ww-dialog-btn {
+  border: 1px solid #2b579a; background: #2b579a; color: #fff; border-radius: 6px;
+  padding: 7px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.ww-dialog-btn.ww-secondary { background: #fff; color: #444; border-color: #c7cfdb; }
+.ww-dialog-btn:hover { opacity: .92; }
+
+/* ---------- Manual-action step ---------- */
+.ws-manual-box { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.ws-manual-confirm-btn {
+  background: #3fa86f; border: none; color: #fff; font-weight: 700;
+  padding: 9px 16px; border-radius: 7px; cursor: pointer; font-size: 13.5px;
+}
+.ws-manual-confirm-btn:hover { background: #34925f; }
+
+/* ---------- Toast ---------- */
+.ws-toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: #17325b; color: #fff; padding: 12px 20px; border-radius: 10px;
+  font-size: 14px; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  z-index: 200;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 760px) {
+  .ws-lesson-body { flex-direction: column; }
+  .ws-task-rail { width: 100%; height: 180px; position: static; }
+  .ws-stage { padding: 14px; }
+  .ww-groups { max-width: 100%; }
+}

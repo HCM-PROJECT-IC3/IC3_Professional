@@ -44,6 +44,8 @@
         roman: "II",
         discipline: "Document Processing",
         note: "Formatting, structuring, and producing polished documents.",
+        practiceUrl: "word-simulator.html",
+        practiceLabel: "Luyện tập Ribbon",
         deck: "A working guide to word processing: format text with purpose, structure long documents, and produce professional files worth handing in.",
         binding: "Navy cloth · silver foil",
         format: "156 × 228 mm · IC3 GS6 edition",
@@ -279,6 +281,7 @@
     const closeButton = document.querySelector("#close-detail");
     const resetButton = document.querySelector("#reset-view");
     const toggleBookButton = document.querySelector("#toggle-book");
+    const practiceButton = document.querySelector("#practice-btn");
     const previousPageButton = document.querySelector("#previous-page");
     const nextPageButton = document.querySelector("#next-page");
     const pageLabel = document.querySelector("#page-label");
@@ -2645,6 +2648,19 @@
       detailFormat.textContent = book.format;
       detailTheme.textContent = book.theme;
       detailMotif.textContent = book.motif;
+
+      // Cuốn nào có practiceUrl (hiện chỉ Volume II — Word) thì hiện nút
+      // CTA "Luyện tập" mở simulator tương ứng ở tab mới; cuốn khác vẫn
+      // thuần trưng bày như trước (không có nút).
+      if (practiceButton) {
+        if (book.practiceUrl) {
+          practiceButton.hidden = false;
+          practiceButton.textContent = book.practiceLabel || "Luyện tập";
+          practiceButton.setAttribute("aria-label", `${book.practiceLabel || "Luyện tập"} — ${book.title}`);
+        } else {
+          practiceButton.hidden = true;
+        }
+      }
     }
 
     function getSpreadLabels(book) {
@@ -4171,6 +4187,20 @@
       previousPageButton.addEventListener("click", () => turnPage(-1));
       nextPageButton.addEventListener("click", () => turnPage(1));
       resetButton.addEventListener("click", resetInspectionView);
+      if (practiceButton) {
+        practiceButton.addEventListener("click", () => {
+          const book = BOOKS[selectedIndex];
+          if (book && book.practiceUrl) {
+            // Mở ở tab mới (top-level), không điều hướng bên trong iframe
+            // #shelfModalFrame — tránh mất luôn cảnh 3D khi học sinh/GV
+            // bấm xong quay lại. Đường dẫn tương đối được resolve theo
+            // vị trí của chính quiz-shelf.html (cùng thư mục gốc dự án
+            // với word-simulator.html) nên vẫn đúng dù trang này đang
+            // được nhúng trong iframe của dashboard.
+            window.open(book.practiceUrl, "_blank", "noopener");
+          }
+        });
+      }
 
       renderer.render(scene, camera);
       loading.hidden = true;
