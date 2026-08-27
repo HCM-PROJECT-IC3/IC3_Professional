@@ -563,9 +563,17 @@
 
   <!-- Firestore: lưu kết quả bài thi cho trang Báo cáo trực quan (ic3-dashboard.html) -->
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/firestore-results.js"></script>
+
+  <!-- Nạp Auth SDK để js/game-zone-gate.js biết được nếu người đang mở trang
+       (do đã đăng nhập sẵn từ login.html ở tab/phiên khác) là admin/giáo viên
+       → những vai trò này được vào thẳng Khu Vui Chơi, không cần làm bài thi.
+       Trang này KHÔNG bắt buộc đăng nhập (học sinh vẫn vào bình thường không
+       cần tài khoản) — chỉ tận dụng phiên đăng nhập NẾU CÓ SẴN. -->
+  <script src="js/auth.js"></script>
 
   <!-- Danh sách Trường/Lớp/Tên: đọc từ file tĩnh data/roster/students-active.json
      (KHÔNG gọi Firestore trực tiếp — tránh nổ quota đọc mỗi lần tải/tải lại trang).
