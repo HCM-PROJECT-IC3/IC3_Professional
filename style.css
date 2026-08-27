@@ -913,8 +913,8 @@ body {
 
 /* ── Sidebar ── */
 .sidebar {
-  width: 200px;
-  min-width: 200px;
+  width: 236px;
+  min-width: 236px;
   background: var(--surface);
   border-right: 2px solid var(--border);
   overflow-y: auto;
@@ -1300,7 +1300,7 @@ body {
   padding: .4rem .75rem;
 }
 .tf-table th:last-child,
-.tf-table th:nth-last-child(2) { text-align:center; width:120px }
+.tf-table th:nth-last-child(2) { text-align:center; width:150px }
 .tf-row td {
   background: var(--card2);
   padding: .9rem .85rem;
@@ -1310,10 +1310,10 @@ body {
 }
 .tf-row td:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); padding-left:1.1rem }
 .tf-row td:last-child  { border-radius: 0 var(--radius-sm) var(--radius-sm) 0 }
-.tf-btn-cell { text-align:center; border-left:none !important; padding: .5rem !important }
+.tf-btn-cell { text-align:center; border-left:none !important; padding: .5rem .6rem !important }
 .tf-btn {
   width: 100%;
-  max-width: 100px;
+  max-width: 130px;
   padding: .55rem .5rem;
   border-radius: var(--radius-sm);
   border: 2px solid var(--border);
@@ -2263,7 +2263,7 @@ body {
   }
   .lobby-card { max-width: 640px }
 
-  .sidebar { width: 170px; min-width: 170px }
+  .sidebar { width: 196px; min-width: 196px }
 }
 
 /* ══════════════════════════════════════════════

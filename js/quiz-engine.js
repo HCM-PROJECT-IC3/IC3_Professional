@@ -727,8 +727,11 @@ function isAnswered(i) {
       if (!q.pairs || q.pairs.length === 0) return false;
       return Object.keys(State.matching[i] || {}).length > 0;
 
-    case 'hotspot':
-      return (State.hotspot[i]?.size || 0) > 0;
+    case 'hotspot': {
+      const areas = q.areas || [];
+      const totalCorrect = areas.filter(a => a.correct).length || areas.length;
+      return (State.hotspot[i]?.size || 0) === totalCorrect;
+    }
 
     case 'truefalse':
       // Phải trả lời ĐỦ tất cả statements
@@ -751,6 +754,14 @@ function isAnswered(i) {
     case 'dragfill':
     case 'selectfill':
       return Object.keys(State.fillblank[i] || {}).length === (q.blanks?.length || 0);
+
+    case 'multi': {
+      const arr = State.answers[i];
+      if (!Array.isArray(arr)) return false;
+      // Nếu đề bài quy định số lượng đáp án cần chọn (q.correct) thì phải
+      // chọn ĐỦ đúng số đó (không thiếu, không thừa) mới tính là đã trả lời.
+      return q.correct?.length ? arr.length === q.correct.length : arr.length > 0;
+    }
 
     default: {
       const a = State.answers[i];
@@ -1009,7 +1020,7 @@ function renderMulti(q, qi) {
         border-radius:10px;padding:.55rem 1rem;margin-bottom:.8rem;
         font-size:.85rem;font-weight:700;color:var(--purple);">
       ☑ ${hint}
-      <span style="color:var(--muted);font-weight:600;margin-left:.5rem;">
+      <span id="multi-counter-${qi}" style="color:${q.correct?.length ? (current.length === q.correct.length ? 'var(--teal)' : 'var(--yellow)') : 'var(--muted)'};font-weight:600;margin-left:.5rem;">
         (Đã chọn: <span id="multi-count-${qi}">${current.length}</span>/${q.correct?.length || '?'})
       </span>
     </div>
@@ -1033,6 +1044,8 @@ function selectMulti(el) {
   const qi  = parseInt(el.dataset.qi);
   const val = decodeURIComponent(el.dataset.val);
   const cc  = el.dataset.cc;
+  const q   = State.questions[qi];
+  const need = q?.correct?.length || 0;
 
   if (!State.answers[qi]) State.answers[qi] = [];
   const arr = State.answers[qi];
@@ -1042,6 +1055,11 @@ function selectMulti(el) {
     arr.splice(idx, 1);
     el.classList.remove('selected', 'c0','c1','c2','c3','c4','c5');
   } else {
+    // Chặn chọn quá số lượng yêu cầu — cảnh báo thay vì cho chọn thêm.
+    if (need > 0 && arr.length >= need) {
+      showNotification(`⚠️ Chỉ được chọn tối đa ${need} đáp án cho câu này. Bỏ chọn bớt trước khi chọn đáp án khác.`, 'warning');
+      return;
+    }
     arr.push(val);
     el.classList.add('selected', cc);
     animatePick(el);
@@ -1052,6 +1070,8 @@ function selectMulti(el) {
   // Cập nhật bộ đếm đã chọn
   const counter = document.getElementById(`multi-count-${qi}`);
   if (counter) counter.textContent = arr.length;
+  const counterWrap = document.getElementById(`multi-counter-${qi}`);
+  if (counterWrap && need > 0) counterWrap.style.color = arr.length === need ? 'var(--teal)' : 'var(--yellow)';
 
   updateSidebar();
 }
@@ -1095,8 +1115,8 @@ function renderTrueFalse(q, qi) {
           <th style="text-align:left;padding:.4rem .6rem;color:var(--muted);font-size:.8rem;">
             Phát biểu
           </th>
-          <th style="width:120px;text-align:center;color:var(--muted);font-size:.85rem;">${lT}</th>
-          <th style="width:120px;text-align:center;color:var(--muted);font-size:.85rem;">${lF}</th>
+          <th style="width:150px;text-align:center;color:var(--muted);font-size:.85rem;">${lT}</th>
+          <th style="width:150px;text-align:center;color:var(--muted);font-size:.85rem;">${lF}</th>
         </tr>
       </thead>
       <tbody>
@@ -1481,7 +1501,7 @@ function renderHotspot(q, qi) {
         background:var(--yellow-lt);border:1.5px solid rgba(255,179,0,.25);
         border-radius:10px;padding:.5rem .9rem;">
       🎯 Bấm vào đúng <strong>${totalCorrect}</strong> vị trí trên hình
-      <span style="margin-left:.75rem;color:var(--teal);">
+      <span id="hotspot-counter-${qi}" style="margin-left:.75rem;color:${sel.size === totalCorrect ? 'var(--teal)' : 'var(--yellow)'};">
         Đã chọn: <span id="hotspot-count-${qi}">${sel.size}</span>/${totalCorrect}
       </span>
     </div>
@@ -1612,14 +1632,28 @@ function toggleHotspot(el) {
   const id = el.dataset.id;
   if (!State.hotspot[qi]) State.hotspot[qi] = new Set();
   const sel = State.hotspot[qi];
+  const q = State.questions[qi];
+  const areas = q?.areas || [];
+  const totalCorrect = areas.filter(a => a.correct).length || areas.length;
 
-  if (sel.has(id)) sel.delete(id);
-  else sel.add(id);
+  if (sel.has(id)) {
+    sel.delete(id);
+  } else {
+    // Chặn chọn quá số lượng yêu cầu — cảnh báo thay vì cho chọn thêm,
+    // để học sinh không lỡ tay bấm tràn số vị trí đúng.
+    if (sel.size >= totalCorrect) {
+      showNotification(`⚠️ Chỉ được chọn tối đa ${totalCorrect} vị trí cho câu này. Bỏ chọn bớt trước khi chọn vị trí khác.`, 'warning');
+      return;
+    }
+    sel.add(id);
+  }
 
   State.session.clicks++;
   el.classList.toggle('selected');
   const counter = document.getElementById(`hotspot-count-${qi}`);
   if (counter) counter.textContent = sel.size;
+  const counterWrap = document.getElementById(`hotspot-counter-${qi}`);
+  if (counterWrap) counterWrap.style.color = sel.size === totalCorrect ? 'var(--teal)' : 'var(--yellow)';
   animatePick(el);
   updateSidebar();
 }
@@ -2061,11 +2095,20 @@ function toggleFlag(i) {
    ============================================================ */
 
 function confirmSubmit() {
-  const unans = State.questions.filter((_, i) => !isAnswered(i)).length;
-  const msg   = unans > 0
-    ? `Bạn còn ${unans} câu chưa trả lời.\nBạn có chắc muốn nộp bài không?`
-    : 'Bạn có chắc muốn nộp bài không?';
-  if (confirm(msg)) submitExam();
+  const unansweredIdx = State.questions
+    .map((_, i) => i)
+    .filter(i => !isAnswered(i));
+
+  if (unansweredIdx.length > 0) {
+    showNotification(
+      `⚠️ Bạn còn ${unansweredIdx.length} câu chưa làm đủ. Vui lòng hoàn thành tất cả câu hỏi trước khi nộp bài.`,
+      'warning'
+    );
+    jumpTo(unansweredIdx[0]);
+    return;
+  }
+
+  if (confirm('Bạn có chắc muốn nộp bài không?')) submitExam();
 }
 
 function autoSubmit() {
