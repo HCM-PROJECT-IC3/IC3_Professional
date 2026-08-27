@@ -439,22 +439,10 @@ function initLobby() {
     const el  = document.getElementById('minitestMeta');
 
     if (count) {
-      const typeCounts = _mtTypeCounts(mt);
-      const typeLabels = {
-        single:    'Trắc nghiệm',
-        multi:     'Nhiều đáp án',
-        truefalse: 'Đúng/Sai',
-        matching:  'Nối cột',
-        hotspot:   'Bấm vào hình',
-      };
-      const breakdown = Object.entries(typeCounts)
-        .map(([t, n]) => `${n} ${typeLabels[t] || t}`)
-        .join(' · ');
-
-      // el.innerHTML = `
-      //   <span class="chip green">📝 ${count} câu</span>
-      //   <span class="meta-breakdown">${breakdown}</span>
-      // `;
+      // Minitest có câu hỏi — xoá cảnh báo đỏ (nếu còn sót từ lần chọn
+      // trước đó có 0 câu), không hiện lại chip số câu/phân loại vì tên
+      // minitest trong dropdown đã có sẵn "(N câu)".
+      el.innerHTML = '';
     } else {
       el.innerHTML = '<span class="chip" style="color:var(--red)">⚠ Không có câu hỏi</span>';
     }

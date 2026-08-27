@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>MOS Word 2019 — Giả lập thao tác Ribbon</title>
+<link rel="stylesheet" href="css/word-simulator.css" />
+</head>
+<body>
+
+  <!-- ============ MÀN HÌNH 1: CHỌN TIẾT ============ -->
+  <div class="ws-screen" id="wsLobbyScreen">
+    <header class="ws-lobby-header">
+      <div class="ws-lobby-title">
+        <span class="ws-lobby-emoji">📝</span>
+        <div>
+          <h1>MOS Word 2019 — Ôn luyện cuối khóa</h1>
+          <p>10 tiết thực hành thao tác Ribbon, mô phỏng đúng quy trình GMetrix</p>
+        </div>
+      </div>
+      <div class="ws-lobby-total" id="wsLobbyTotal">Đang tải…</div>
+    </header>
+    <div class="ws-lesson-grid" id="wsLessonGrid"></div>
+  </div>
+
+  <!-- ============ MÀN HÌNH 2: LÀM TIẾT ============ -->
+  <div class="ws-screen ws-hidden" id="wsLessonScreen">
+    <header class="ws-lesson-header">
+      <button type="button" class="ws-back-btn" id="wsBackBtn">← Danh sách tiết</button>
+      <div class="ws-lesson-header-title">
+        <h2 id="wsLessonTitle">—</h2>
+        <p id="wsLessonSubtitle"></p>
+      </div>
+      <div class="ws-lesson-progress" id="wsLessonProgress">0/0</div>
+    </header>
+
+    <div class="ws-lesson-body">
+      <!-- Danh sách nhiệm vụ (sidebar) -->
+      <aside class="ws-task-rail" id="wsTaskRail"></aside>
+
+      <!-- Sân khấu chính -->
+      <main class="ws-stage">
+        <div class="ws-mission-card" id="wsMissionCard">
+          <div class="ws-mission-file" id="wsMissionFile"></div>
+          <div class="ws-mission-desc" id="wsMissionDesc"></div>
+        </div>
+
+        <div class="ws-instruction-bar" id="wsInstructionBar">
+          <span class="ws-instruction-step" id="wsInstructionStepNum"></span>
+          <span class="ws-instruction-text" id="wsInstructionText"></span>
+        </div>
+
+        <!-- Cửa sổ Word giả lập -->
+        <div class="ww-window">
+          <div class="ww-titlebar">
+            <span class="ww-titlebar-icon">W</span>
+            <span class="ww-titlebar-text" id="wwDocName">Document1 - Word</span>
+          </div>
+          <div class="ww-ribbon">
+            <div class="ww-tabs" id="wwTabs"></div>
+            <div class="ww-groups" id="wwGroups"></div>
+          </div>
+          <div class="ww-canvas" id="wwCanvas">
+            <div class="ww-page">
+              <div class="ww-page-lines"></div>
+            </div>
+          </div>
+          <div class="ww-statusbar">Trang 1/1 &nbsp;·&nbsp; Tiếng Việt &nbsp;·&nbsp; 100%</div>
+        </div>
+
+        <div class="ws-mission-footer">
+          <button type="button" class="ws-skip-btn" id="wsSkipBtn">Bỏ qua bước này →</button>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: hộp thoại giả lập (dialog_field / dialog_choice / checkbox / confirm) ============ -->
+  <div class="ww-dialog-overlay ws-hidden" id="wwDialogOverlay">
+    <div class="ww-dialog" id="wwDialog">
+      <div class="ww-dialog-title" id="wwDialogTitle">Hộp thoại</div>
+      <div class="ww-dialog-body" id="wwDialogBody"></div>
+      <div class="ww-dialog-footer" id="wwDialogFooter"></div>
+    </div>
+  </div>
+
+  <!-- ============ TOAST: hoàn thành nhiệm vụ ============ -->
+  <div class="ws-toast ws-hidden" id="wsToast"></div>
+
+  <script src="js/word-simulator.js"></script>
+</body>
+</html>
