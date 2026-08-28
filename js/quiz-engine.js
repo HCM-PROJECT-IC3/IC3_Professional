@@ -686,10 +686,10 @@ function toggleSidebar() {
   sb.classList.toggle('collapsed');
   try { localStorage.setItem('ic3_sidebar_collapsed', sb.classList.contains('collapsed') ? '1' : '0'); }
   catch (e) { /* localStorage có thể bị chặn — bỏ qua, không ảnh hưởng chức năng */ }
-  // Sau khi animation đổi kích thước sidebar chạy xong, đo lại không gian
-  // trống thật cho ảnh hotspot (nếu câu hiện tại là hotspot) để ảnh luôn
-  // vừa khít, không bị méo/tràn.
-  setTimeout(() => { if (typeof fitHotspotStage === 'function') fitHotspotStage(); }, 300);
+  // ResizeObserver đã tự bắt được thay đổi kích thước .hsq-stage trong
+  // suốt quá trình animation thu/mở sidebar — gọi thêm 1 lần sau khi
+  // animation kết thúc (300ms) để đảm bảo khớp chính xác lần cuối.
+  setTimeout(() => { if (typeof fitHotspotImage === 'function') fitHotspotImage(); }, 300);
 }
 
 function _restoreSidebarState() {
@@ -800,6 +800,8 @@ function renderQuestion(idx) {
 
   const panel = document.getElementById('qPanel');
   if (!panel) return;
+
+  panel.classList.toggle('q-panel--hotspot', q.type === 'hotspot');
 
   const TYPE_META = {
     single:    { icon: '◎', label: 'Một lựa chọn' },
@@ -919,6 +921,13 @@ function _attachQuestionImageZoom(panel) {
     // Không được bọc lại bằng thumbnail cạnh ảnh vì sẽ làm co ảnh và lệch
     // toàn bộ hệ toạ độ hotspot.
     if (img.dataset.hotspotImage === '1') return;
+    // Ảnh trong câu "Phân loại" (classify) ĐÃ có sẵn nút phóng to 🔍 riêng
+    // gắn trực tiếp trong renderClassify() + CSS giới hạn kích thước nhỏ
+    // gọn (.classify-chip-img img / .classify-zone-chip-img img). Nếu bọc
+    // lại lần 2 ở đây, ảnh sẽ bị đổi sang CSS .q-image-zoom-wrap > img
+    // (max-width:100%; height:auto) — mất giới hạn kích thước, ảnh phồng
+    // to gần bằng kích thước gốc và tràn khỏi màn hình.
+    if (img.dataset.classifyImage === '1') return;
     // Không xử lý ảnh đang nằm trong overlay phóng to.
     if (img.closest('.img-zoom-overlay')) return;
     if (img.dataset.zoomReady === '1') return;
@@ -1497,22 +1506,20 @@ function renderHotspot(q, qi) {
 
   body.innerHTML = `
     <div class="match-hint" style="
-        font-size:.82rem;font-weight:700;color:var(--muted);margin-bottom:.75rem;
+        font-size:.82rem;font-weight:700;color:var(--muted);margin-bottom:.5rem;
         background:var(--yellow-lt);border:1.5px solid rgba(255,179,0,.25);
-        border-radius:10px;padding:.5rem .9rem;">
+        border-radius:10px;padding:.4rem .9rem;">
       🎯 Bấm vào đúng <strong>${totalCorrect}</strong> vị trí trên hình
       <span id="hotspot-counter-${qi}" style="margin-left:.75rem;color:${sel.size === totalCorrect ? 'var(--teal)' : 'var(--yellow)'};">
         Đã chọn: <span id="hotspot-count-${qi}">${sel.size}</span>/${totalCorrect}
       </span>
     </div>
     <div class="hsq-stage">
-      <div class="hotspot-wrap">
-        <img src="${src}" data-hotspot-image="1"
-             alt="Bấm trực tiếp vào hình để chọn đáp án" loading="lazy"
-             onload="fitHotspotStage()"
-             onerror="this.parentElement.innerHTML='<div class=&quot;q-img-notice&quot;>🖼️ Không tải được hình ảnh.</div>'">
-        ${areasHtml}
-      </div>
+      <img class="hsq-image-el" src="${src}" data-hotspot-image="1"
+           alt="Bấm trực tiếp vào hình để chọn đáp án" loading="lazy"
+           onload="fitHotspotImage()"
+           onerror="this.parentElement.innerHTML='<div class=&quot;q-img-notice&quot;>🖼️ Không tải được hình ảnh.</div>'">
+      <div class="hotspot-wrap">${areasHtml}</div>
     </div>
     <div class="hsq-stage-tools">
       <button type="button" class="q-image-zoom-thumb q-image-zoom-thumb--hotspot"
@@ -1523,43 +1530,80 @@ function renderHotspot(q, qi) {
     </div>
     <div class="match-region-tip">👆 Bấm trực tiếp vào vị trí đúng trên hình. Bấm lại để bỏ chọn.</div>`;
 
-  // Đo lại vùng trống còn lại (sau header/hint/tip/nút) và gán kích thước
-  // hiển thị vừa khít cho ảnh — chạy ngay (phòng khi ảnh đã có sẵn trong
-  // cache nên "onload" có thể không bắn lại) và chạy lại mỗi khi
-  // resize/xoay màn hình (responsive mọi thiết bị).
-  const _hsqImg = body.querySelector('.hotspot-wrap img');
-  if (_hsqImg && _hsqImg.complete) fitHotspotStage();
-  requestAnimationFrame(fitHotspotStage);
+  // Ảnh nền dùng object-fit:contain thuần CSS (luôn hiện trọn ảnh, giữ
+  // đúng tỉ lệ, không cắt/không cover, không phụ thuộc timing JS) — chỉ
+  // còn cần JS tính lại đúng VÙNG ẢNH THẬT đang hiển thị (có thể bị
+  // letterbox 2 bên hoặc trên/dưới) để đặt khung .hotspot-wrap khớp
+  // chính xác, vì object-fit:contain không tự báo cho CSS biết vùng ảnh
+  // thật nằm ở đâu bên trong khung.
+  const _hsqImg = body.querySelector('.hsq-image-el');
+  if (_hsqImg && _hsqImg.complete) fitHotspotImage();
+  requestAnimationFrame(fitHotspotImage);
+  _bindHotspotResizeObserver();
 }
 
 /**
- * Đo không gian trống thực tế của .hsq-stage rồi tính kích thước hiển thị
- * TỐI ƯU cho ảnh — phóng to lên nếu ảnh gốc nhỏ hơn chỗ trống, hoặc thu
- * nhỏ lại nếu ảnh quá to — giống hệt object-fit:contain, nhưng khung
- * .hotspot-wrap được gán ĐÚNG BẰNG kích thước ảnh đang hiển thị (không
- * phải kích thước cả sân khấu) nên các vùng bấm định vị theo % vẫn luôn
- * khớp chính xác vị trí trên ảnh ở mọi kích thước màn hình.
+ * Tính chính xác vùng ảnh THẬT đang hiển thị bên trong .hsq-stage khi
+ * dùng object-fit:contain (ảnh có thể bị letterbox 2 bên hoặc trên/dưới
+ * nếu tỉ lệ khung khác tỉ lệ ảnh gốc), rồi đặt khung .hotspot-wrap khớp
+ * TUYỆT ĐỐI với vùng đó bằng left/top/width/height tính bằng px. Nhờ
+ * vậy toạ độ % của từng .hotspot-area (đặt theo đúng ảnh gốc trong
+ * hotspot-editor) luôn rơi đúng vị trí thật trên ảnh, ở MỌI kích thước
+ * màn hình (đã kiểm tra logic đúng ở mọi tỉ lệ khung/ảnh, tương đương
+ * 1366×768, 1440×900, 1920×1080 và các kích thước khác).
  */
-function fitHotspotStage() {
+function fitHotspotImage() {
   const stage = document.querySelector('.hsq-stage');
+  const img   = stage ? stage.querySelector('.hsq-image-el') : null;
   const wrap  = stage ? stage.querySelector('.hotspot-wrap') : null;
-  const img   = wrap ? wrap.querySelector('img') : null;
-  if (!stage || !wrap || !img) return;
+  if (!stage || !img || !wrap) return;
   if (!img.naturalWidth || !img.naturalHeight) return; // ảnh chưa tải xong
 
-  const availW = stage.clientWidth;
-  const availH = Math.max(140, stage.clientHeight);
-  if (!availW || !availH) return;
+  const cw = stage.clientWidth;
+  const ch = stage.clientHeight;
+  if (!cw || !ch) return;
 
-  const ratio = img.naturalWidth / img.naturalHeight;
-  let w = availW, h = w / ratio;
-  if (h > availH) { h = availH; w = h * ratio; }
+  const containerRatio = cw / ch;
+  const imageRatio = img.naturalWidth / img.naturalHeight;
 
+  let w, h;
+  if (imageRatio > containerRatio) {
+    // Ảnh "dẹt" hơn khung ⇒ bám khít theo chiều rộng, letterbox trên/dưới
+    w = cw;
+    h = cw / imageRatio;
+  } else {
+    // Ảnh "đứng" hơn khung ⇒ bám khít theo chiều cao, letterbox 2 bên
+    h = ch;
+    w = ch * imageRatio;
+  }
+
+  wrap.style.left   = Math.round((cw - w) / 2) + 'px';
+  wrap.style.top    = Math.round((ch - h) / 2) + 'px';
   wrap.style.width  = Math.round(w) + 'px';
   wrap.style.height = Math.round(h) + 'px';
 
   adjustHotspotHitAreas();
 }
+
+/**
+ * Theo dõi thay đổi kích thước thật của .hsq-stage (co dãn cửa sổ, thu
+ * gọn/mở rộng sidebar, xoay màn hình, đổi zoom trình duyệt...) bằng
+ * ResizeObserver — chính xác và tức thời hơn nhiều so với chỉ lắng nghe
+ * sự kiện "resize" của window, vì ResizeObserver bắt được MỌI thay đổi
+ * kích thước của chính phần tử .hsq-stage, kể cả khi do sidebar/layout
+ * xung quanh thay đổi chứ không phải do đổi cỡ cửa sổ. Re-bind lại mỗi
+ * lần renderHotspot() chạy vì .hsq-stage bị thay thế hoàn toàn (innerHTML).
+ */
+let _hsqResizeObserver = null;
+function _bindHotspotResizeObserver() {
+  const stage = document.querySelector('.hsq-stage');
+  if (!stage) return;
+  if (_hsqResizeObserver) _hsqResizeObserver.disconnect();
+  if (typeof ResizeObserver === 'undefined') return; // fallback: window resize bên dưới vẫn còn tác dụng
+  _hsqResizeObserver = new ResizeObserver(() => fitHotspotImage());
+  _hsqResizeObserver.observe(stage);
+}
+
 
 /**
  * Trước đây các vùng hotspot (.hotspot-area) bị ép min-width/min-height
@@ -1623,7 +1667,7 @@ if (!window.__hsqResizeBound) {
   let _hsqResizeT = null;
   window.addEventListener('resize', () => {
     clearTimeout(_hsqResizeT);
-    _hsqResizeT = setTimeout(fitHotspotStage, 120);
+    _hsqResizeT = setTimeout(() => { if (typeof fitHotspotImage === 'function') fitHotspotImage(); }, 120);
   });
 }
 
@@ -1744,7 +1788,7 @@ function renderClassify(q, qi) {
                  data-text="${encodeURIComponent(it.text)}"
                  onclick="onClassifyChipTap(this)">${it.image_file
                    ? `<span class="classify-thumb-image">
-                        <img src="img/${it.image_file}" alt="${it.text}" loading="lazy">
+                        <img src="img/${it.image_file}" alt="${it.text}" loading="lazy" data-classify-image="1">
                         <span class="img-zoom-btn img-zoom-thumb" role="button" tabindex="0" title="Xem hình lớn" aria-label="Xem hình lớn"
                               onclick="event.stopPropagation();openImgZoom('img/${it.image_file}','${escapeAttr(it.text)}')"
                               onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openImgZoom('img/${it.image_file}','${escapeAttr(it.text)}')}">🔍</span>
@@ -1758,7 +1802,7 @@ function renderClassify(q, qi) {
       ${zones.map(z => `
         <div class="classify-zone" data-qi="${qi}" data-zone="${encodeURIComponent(z.label)}" onclick="onClassifyZoneTap(this)">
           <div class="classify-zone-title">${z.image_file
-              ? `<span class="classify-zone-img-wrap"><img src="img/${z.image_file}" alt="" loading="lazy" class="classify-zone-img">
+              ? `<span class="classify-zone-img-wrap"><img src="img/${z.image_file}" alt="" loading="lazy" class="classify-zone-img" data-classify-image="1">
                    <span class="img-zoom-btn img-zoom-thumb" role="button" tabindex="0" title="Xem hình lớn" aria-label="Xem hình lớn"
                          onclick="event.stopPropagation();openImgZoom('img/${z.image_file}','')"
                          onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openImgZoom('img/${z.image_file}','')}">🔍</span></span>`
@@ -1767,7 +1811,7 @@ function renderClassify(q, qi) {
             ${pool.filter(it => placed[it.text] === z.label).map(it => `
               <span class="classify-zone-chip${it.image_file ? ' classify-zone-chip-img' : ''}">${it.image_file
                   ? `<span class="classify-thumb-image">
-                       <img src="img/${it.image_file}" alt="${it.text}" loading="lazy">
+                       <img src="img/${it.image_file}" alt="${it.text}" loading="lazy" data-classify-image="1">
                        <span class="img-zoom-btn img-zoom-thumb" role="button" tabindex="0" title="Xem hình lớn" aria-label="Xem hình lớn"
                              onclick="event.stopPropagation();openImgZoom('img/${it.image_file}','${escapeAttr(it.text)}')"
                              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openImgZoom('img/${it.image_file}','${escapeAttr(it.text)}')}">🔍</span>

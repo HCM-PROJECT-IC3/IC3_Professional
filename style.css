@@ -1070,15 +1070,52 @@ body {
   to   { opacity:1; transform: translateY(0) }
 }
 
-/* ── Câu "Bấm vào hình" (hotspot) — ưu tiên tối đa chiều cao còn lại cho
-   ảnh, để học sinh thấy trọn hình mà không cần cuộn, trên mọi thiết bị.
-   Chỉ áp dụng cho .q-card có class bổ trợ này (các loại câu khác giữ
-   nguyên hành vi cũ, không bị ảnh hưởng). ── */
+/* ── Câu "Bấm vào hình" (hotspot) — layout cố định vừa khít viewport:
+   header → thông tin câu hỏi (gọn) → trạng thái (match-hint) → vùng ảnh
+   (chiếm hết chiều cao còn lại). Ảnh LUÔN hiển thị TRỌN VẸN 100%, không
+   cắt/không cover: dùng object-fit:contain thuần CSS trên <img> (không
+   còn đo/ép kích thước bằng JS như trước — cách cũ dễ bị lệch timing
+   gây cắt ảnh). Nếu ảnh có tỉ lệ khác khung (letterbox), phần trống hiện
+   màu nền --card cho đồng bộ theme, KHÔNG có overflow/scroll nào cắt mất
+   nội dung ảnh. Toạ độ hotspot được JS tính lại chính xác theo đúng
+   vùng ảnh đang hiển thị thật (xem fitHotspotImage() trong quiz-engine.js)
+   nên luôn khớp dù ảnh scale theo bất kỳ kích thước màn hình nào. ── */
 .q-card--hotspot {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
+  /* Thu gọn padding/khoảng cách xung quanh (chỉ riêng câu hotspot) để
+     nhường thêm không gian thật cho ảnh — ảnh vẫn luôn vừa khít
+     (object-fit:contain, không cắt/không tràn), chỉ là được "giãn nở"
+     lớn hơn vì vùng .hsq-stage có nhiều chiều cao hơn để tính toán. */
+  padding: 1.15rem 1.5rem;
+}
+.q-card--hotspot .q-header {
+  margin-bottom: .6rem;
+}
+.q-card--hotspot .hsq-stage-tools {
+  min-height: 34px;
+  margin: .3rem 0 .05rem;
+}
+.q-card--hotspot .q-image-zoom-thumb--hotspot {
+  min-height: 32px;
+  height: 32px;
+}
+.q-card--hotspot .match-region-tip {
+  margin-top: .3rem;
+}
+/* Nút điều hướng ngay sau card hotspot — giảm khoảng cách phía trên để
+   nhường thêm chút chiều cao cho ảnh, không ảnh hưởng các loại câu khác. */
+.q-card--hotspot + .q-nav {
+  margin-top: .6rem;
+}
+/* .q-panel--hotspot: JS gắn class này khi đang hiển thị câu hotspot, bớt
+   padding dưới (mặc định 2rem, dư cho các câu dài cần cuộn) để dồn thêm
+   không gian thật cho ảnh — an toàn vì câu hotspot không cần khoảng đệm
+   cuộn ở đáy. */
+.q-panel.q-panel--hotspot {
+  padding-bottom: .9rem;
 }
 .q-card--hotspot .q-header,
 .q-card--hotspot .match-hint,
@@ -1093,16 +1130,35 @@ body {
   min-height: 0;
 }
 /* Vùng "sân khấu" chứa ảnh — nhận toàn bộ khoảng trống dọc còn lại sau
-   header/hint/tip. Nếu nội dung xung quanh quá dài trên màn hình rất nhỏ,
-   vẫn giữ min-height an toàn và để .q-panel cuộn nhẹ thay vì cắt ảnh. */
+   header/hint/tools/tip. min-height:0 là bắt buộc để flexbox cho phép
+   nó co đúng theo không gian thật thay vì tràn theo kích thước ảnh gốc. */
 .hsq-stage {
+  position: relative;
   flex: 1 1 auto;
-  min-height: 160px;
+  min-height: 0;
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--border);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  overflow: hidden; /* an toàn: chỉ ẩn phần nền letterbox trống, KHÔNG bao giờ cắt ảnh vì ảnh đã tự co vừa bằng object-fit:contain */
+}
+/* Ảnh nền — lấp đầy toàn bộ sân khấu nhưng luôn giữ nguyên tỉ lệ gốc và
+   hiện trọn vẹn 100% (object-fit:contain, KHÔNG dùng cover). */
+.hsq-image-el {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none; /* click luôn đi qua ảnh xuống nút hotspot bên trên */
+  user-select: none;
+}
+/* Khung định vị vùng hotspot — JS (fitHotspotImage) gán left/top/width/
+   height bằng px, khớp CHÍNH XÁC với vùng ảnh đang thực sự hiển thị bên
+   trong .hsq-stage (có tính cả phần letterbox nếu có) ⇒ toạ độ % của các
+   .hotspot-area bên trong luôn đúng vị trí thật trên ảnh. */
+.hotspot-wrap {
+  position: absolute;
 }
 
 .q-header { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1.4rem }
@@ -1449,37 +1505,8 @@ body {
   margin: .8rem 0 .35rem;
 }
 
-/* ── Câu "hotspot" — bấm trực tiếp lên (các) vị trí đúng trên ảnh ── */
-.hotspot-wrap {
-  /* box-sizing: content-box (khác reset mặc định *{box-sizing:border-box}
-     ở đầu file) — BẮT BUỘC để border 2px KHÔNG bị tính vào width/height
-     mà fitHotspotStage() gán bằng JS. Nếu để border-box, viền ăn vào
-     4px mỗi chiều ⇒ ảnh bên trong co lại lệch tỉ lệ khung hình gốc
-     ⇒ toạ độ % của các vùng hotspot-area (đặt theo đúng ảnh gốc trong
-     hotspot-editor) không còn khớp vị trí thật trên ảnh hiển thị. */
-  box-sizing: content-box;
-  position: relative;
-  width: 100%;              /* fallback trước khi JS đo xong */
-  max-width: 100%;
-  min-height: 140px;
-  max-height: none; /* JS fitHotspotStage() quyết định kích thước theo không gian thực */
-  margin: 0 auto;
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  border: 2px solid var(--border);
-  background: var(--card);
-  line-height: 0; /* tránh khoảng trắng dưới <img> */
-}
-/* JS (fitHotspotStage) gán width/height (px) đúng bằng kích thước ảnh khi
-   hiển thị — phóng to nếu ảnh gốc nhỏ hơn chỗ trống, thu nhỏ nếu quá to —
-   nên khung luôn ôm sát đúng ảnh thật, vùng hotspot định vị bằng % vẫn
-   chính xác tuyệt đối ở MỌI kích thước màn hình. */
-.hotspot-wrap img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain; /* chỉ có tác dụng trong khoảnh khắc trước khi JS set kích thước chính xác */
-}
+/* ── Vùng bấm hotspot (positioned tuyệt đối bên trong .hotspot-wrap —
+   xem khối CSS .hotspot-wrap phía trên) ── */
 .hotspot-area {
   position: absolute;
   z-index: 2;
