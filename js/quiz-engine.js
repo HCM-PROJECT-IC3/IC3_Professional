@@ -1179,8 +1179,12 @@ function selectTF(el) {
 
 /* ============================================================
    § 14 — RENDER MATCHING  (type = "matching")
-   Drag & drop (desktop) + tap-to-place (mobile)
-   Pool chip hỗ trợ nhiều right value giống nhau (ví dụ Google×2)
+   • Câu có ảnh + vùng bấm (q.regions)         → renderMatchingRegions
+     (giữ nguyên cơ chế kéo-thả / nhấn-chip cũ, vì đáp án nằm trên ảnh)
+   • Câu thuần chữ (không có regions)          → renderMatchingTwoCol
+     (giao diện NỐI 2 CỘT: nhấn 1 ô trái → nhấn 1 ô phải, có
+     đường nối SVG vẽ trực tiếp giữa 2 ô, giống bài tập "nối cột"
+     truyền thống thay vì kéo chip vào ô trống)
    ============================================================ */
 
 function renderMatching(q, qi) {
@@ -1193,10 +1197,19 @@ function renderMatching(q, qi) {
   }
 
   if (!State.matching[qi]) State.matching[qi] = {};
-  const matched = State.matching[qi];
+  const matched    = State.matching[qi];
+  const leftItems  = q._leftShuffled || q.pairs.map(p => p.left);
+  const hasRegions = _hasRegions(q);
 
-  const leftItems = q._leftShuffled || q.pairs.map(p => p.left);
+  if (hasRegions) {
+    renderMatchingRegions(q, qi, matched, leftItems, body);
+  } else {
+    renderMatchingTwoCol(q, qi, matched, leftItems, body);
+  }
+}
 
+/* ── Nhánh cũ: nối cột trên ẢNH (kéo-thả / nhấn-chip → nhấn vùng ảnh) ── */
+function renderMatchingRegions(q, qi, matched, leftItems, body) {
   // Nếu pairs có "right_img", đáp án được hiển thị dạng HÌNH ẢNH thay vì chữ
   // (ví dụ: nối mô tả với ký hiệu lưu đồ). Map: right-text → đường dẫn ảnh.
   const rightImgMap = {};
@@ -1225,7 +1238,6 @@ function renderMatching(q, qi) {
   });
 
   const answeredPairs = Object.keys(matched).length;
-  const hasRegions = _hasRegions(q);
 
   body.innerHTML = `
     <div class="match-hint">
@@ -1245,7 +1257,6 @@ function renderMatching(q, qi) {
         : `<span class="pool-done">✅ Đã điền hết — nhấn ✕ để thay đổi</span>`}
     </div>
 
-    ${hasRegions ? `
     <div class="matching-container">
       <div class="matching-col">
         <div class="matching-col-title">Cột trái</div>
@@ -1268,27 +1279,7 @@ function renderMatching(q, qi) {
               : ''}
           </div>`).join('')}
       </div>
-    </div>` : `
-    <div class="matching-list">
-      ${leftItems.map((left, idx) => `
-        <div class="match-row ${matched[left] ? 'filled' : ''}">
-          <div class="match-row-text">
-            <span class="match-row-num">${idx + 1}</span>
-            <span>${left}</span>
-          </div>
-          <div class="match-drop-slot ${matched[left] ? 'filled' : 'empty-hint'}"
-               data-qi="${qi}"
-               data-left="${encodeURIComponent(left)}"
-               id="slot-${qi}-${idx}">
-            ${matched[left]
-              ? `<span class="slot-content" title="${rightImgMap[matched[left]] ? matched[left] : ''}">${_chipContent(matched[left])}</span>
-                 <button class="slot-remove"
-                         data-qi="${qi}" data-left="${encodeURIComponent(left)}"
-                         onclick="removeMatchDrop(this)">✕</button>`
-              : ''}
-          </div>
-        </div>`).join('')}
-    </div>`}`;
+    </div>`;
 
   // Gắn drag & drop events
   body.querySelectorAll('.drag-chip').forEach(chip => {
@@ -1308,6 +1299,190 @@ function renderMatching(q, qi) {
     hotspot.addEventListener('dragleave',onDragLeave);
     hotspot.addEventListener('drop',     onRegionDrop);
   });
+}
+
+/* ── Nhánh mới: NỐI 2 CỘT bằng đường kẻ SVG ─────────────────────
+   Nhấn 1 ô cột trái rồi nhấn 1 ô cột phải (hoặc ngược lại) để nối;
+   nhấn lại 1 ô trái đã nối để gỡ. Hỗ trợ right value trùng lặp
+   (một ô phải có thể nhận nhiều đường nối, hiện đếm x/y). ── */
+function renderMatchingTwoCol(q, qi, matched, leftItems, body) {
+  const rightImgMap = {};
+  q.pairs.forEach(p => { if (p.right_img) rightImgMap[p.right] = p.right_img; });
+  const _chipContent = r => rightImgMap[r]
+    ? `<img class="match-shape-img" src="${rightImgMap[r]}" alt="${r}">`
+    : r;
+
+  const rightCount = {};
+  q.pairs.forEach(p => { rightCount[p.right] = (rightCount[p.right] || 0) + 1; });
+
+  const placedCount = {};
+  Object.values(matched).forEach(r => { placedCount[r] = (placedCount[r] || 0) + 1; });
+
+  const uniqueRights   = q._rightShuffled || [...new Set(q.pairs.map(p => p.right))];
+  const answeredPairs  = Object.keys(matched).length;
+  const sel             = _m2State;
+  const isSelected = (side, key) => sel.qi === qi && sel.side === side && sel.key === key;
+
+  body.innerHTML = `
+    <div class="match-hint">
+      🖱️ Nhấn 1 ô bên trái rồi nhấn ô tương ứng bên phải để nối
+      <span class="match-hint-count">${answeredPairs}/${leftItems.length} đã nối</span>
+    </div>
+
+    <div class="match2col-wrap" id="match2col-${qi}">
+      <svg class="match2col-svg" id="matchSvg-${qi}"></svg>
+
+      <div class="match2col-col match2col-left">
+        ${leftItems.map((left, idx) => `
+          <button type="button"
+                  class="match2col-item ${matched[left] ? 'linked' : ''} ${isSelected('left', left) ? 'selected' : ''}"
+                  data-qi="${qi}" data-side="left" data-key="${encodeURIComponent(left)}">
+            <span class="match2col-num">${idx + 1}</span>
+            <span class="match2col-text">${left}</span>
+            <span class="match2col-dot"></span>
+          </button>`).join('')}
+      </div>
+
+      <div class="match2col-col match2col-right">
+        ${uniqueRights.map(r => {
+          const used = placedCount[r] || 0;
+          const cap  = rightCount[r]  || 0;
+          const full = used >= cap;
+          return `
+          <button type="button"
+                  class="match2col-item match2col-right-item ${full && !isSelected('right', r) ? 'full' : ''} ${isSelected('right', r) ? 'selected' : ''} ${rightImgMap[r] ? 'has-img' : ''}"
+                  data-qi="${qi}" data-side="right" data-key="${encodeURIComponent(r)}">
+            <span class="match2col-dot"></span>
+            <span class="match2col-text">${_chipContent(r)}</span>
+            ${cap > 1 ? `<span class="match2col-cap">${used}/${cap}</span>` : ''}
+          </button>`;
+        }).join('')}
+      </div>
+    </div>`;
+
+  body.querySelectorAll('.match2col-item').forEach(el => {
+    el.addEventListener('click', onMatch2ColClick);
+  });
+
+  _m2ActiveQi = qi;
+  requestAnimationFrame(() => drawMatchLines(qi));
+  _bindMatch2ColResize();
+}
+
+// ── Trạng thái lựa chọn hiện tại cho giao diện nối 2 cột ──────
+let _m2State       = { qi: null, side: null, key: null };
+let _m2ActiveQi     = null;
+let _m2ResizeBound  = false;
+
+function _bindMatch2ColResize() {
+  if (_m2ResizeBound) return;
+  _m2ResizeBound = true;
+  window.addEventListener('resize', () => {
+    if (_m2ActiveQi !== null) drawMatchLines(_m2ActiveQi);
+  });
+}
+
+function onMatch2ColClick(e) {
+  const el   = e.currentTarget;
+  const qi   = parseInt(el.dataset.qi);
+  const side = el.dataset.side;
+  const key  = decodeURIComponent(el.dataset.key);
+  const q    = State.questions[qi];
+  if (!q) return;
+  if (!State.matching[qi]) State.matching[qi] = {};
+  const matched = State.matching[qi];
+
+  const rightCount = {};
+  q.pairs.forEach(p => { rightCount[p.right] = (rightCount[p.right] || 0) + 1; });
+  const placedCount = {};
+  Object.values(matched).forEach(r => { placedCount[r] = (placedCount[r] || 0) + 1; });
+  const isFull = r => (placedCount[r] || 0) >= (rightCount[r] || 0);
+
+  // 1) Nhấn 1 ô TRÁI đã nối → gỡ đường nối, bỏ chọn
+  if (side === 'left' && matched[key]) {
+    delete matched[key];
+    State.session.clicks++;
+    _m2State = { qi: null, side: null, key: null };
+    updateSidebar();
+    renderMatching(q, qi);
+    return;
+  }
+
+  // 2) Chưa chọn gì trong câu này → chọn ô vừa nhấn (bỏ qua ô phải đã đầy)
+  if (_m2State.qi !== qi || !_m2State.side) {
+    if (side === 'right' && isFull(key)) return;
+    _m2State = { qi, side, key };
+    renderMatching(q, qi);
+    return;
+  }
+
+  // 3) Nhấn lại đúng ô đang chọn → bỏ chọn
+  if (_m2State.side === side && _m2State.key === key) {
+    _m2State = { qi: null, side: null, key: null };
+    renderMatching(q, qi);
+    return;
+  }
+
+  // 4) Nhấn ô khác CÙNG bên đang chọn → đổi lựa chọn sang ô đó
+  if (_m2State.side === side) {
+    if (side === 'right' && isFull(key)) return;
+    _m2State = { qi, side, key };
+    renderMatching(q, qi);
+    return;
+  }
+
+  // 5) Nhấn ô ở BÊN CÒN LẠI → hoàn tất nối
+  const left  = side === 'left' ? key : _m2State.key;
+  const right = side === 'right' ? key : _m2State.key;
+  if (isFull(right)) {
+    _m2State = { qi: null, side: null, key: null };
+    renderMatching(q, qi);
+    return;
+  }
+  matched[left] = right;
+  State.session.clicks++;
+  _m2State = { qi: null, side: null, key: null };
+  updateSidebar();
+  renderMatching(q, qi);
+}
+
+/** Vẽ các đường nối SVG giữa ô trái ↔ ô phải đã ghép cho câu qi. */
+function drawMatchLines(qi) {
+  const wrap = document.getElementById(`match2col-${qi}`);
+  const svg  = document.getElementById(`matchSvg-${qi}`);
+  if (!wrap || !svg) return;
+
+  const wrapRect = wrap.getBoundingClientRect();
+  svg.setAttribute('width',  wrapRect.width);
+  svg.setAttribute('height', wrapRect.height);
+  svg.setAttribute('viewBox', `0 0 ${wrapRect.width} ${wrapRect.height}`);
+
+  const matched  = State.matching[qi] || {};
+  const leftEls  = [...wrap.querySelectorAll('.match2col-left .match2col-item')];
+  const rightEls = [...wrap.querySelectorAll('.match2col-right .match2col-item')];
+
+  const dotPos = (el, side) => {
+    const dot = el.querySelector('.match2col-dot') || el;
+    const r = dot.getBoundingClientRect();
+    return {
+      x: (side === 'left' ? r.right : r.left) - wrapRect.left,
+      y: (r.top + r.height / 2) - wrapRect.top
+    };
+  };
+
+  let inner = '';
+  Object.entries(matched).forEach(([left, right]) => {
+    const leftEl  = leftEls.find(el  => decodeURIComponent(el.dataset.key) === left);
+    const rightEl = rightEls.find(el => decodeURIComponent(el.dataset.key) === right);
+    if (!leftEl || !rightEl) return;
+    const p1 = dotPos(leftEl, 'left');
+    const p2 = dotPos(rightEl, 'right');
+    const midX = (p1.x + p2.x) / 2;
+    inner += `<path class="match2col-line" d="M ${p1.x} ${p1.y} C ${midX} ${p1.y}, ${midX} ${p2.y}, ${p2.x} ${p2.y}"/>`;
+    inner += `<circle class="match2col-node" cx="${p1.x}" cy="${p1.y}" r="4.5"/>`;
+    inner += `<circle class="match2col-node" cx="${p2.x}" cy="${p2.y}" r="4.5"/>`;
+  });
+  svg.innerHTML = inner;
 }
 
 /**
@@ -2014,6 +2189,7 @@ function renderFillBlank(q, qi) {
   const segments = q.segments || [];
   const blanks   = q.blanks || [];
   const answeredCount = Object.keys(filled).length;
+  const isDrag = q.type === 'dragfill';
 
   const passageHtml = segments.map((seg, i) => {
     const blankHtml = i < blanks.length ? `
@@ -2027,27 +2203,40 @@ function renderFillBlank(q, qi) {
                  `<option value="${encodeURIComponent(w)}" ${filled[i] === w ? 'selected' : ''}>${w}</option>`).join('')}
              </select>`
           : (filled[i]
-              ? `${filled[i]} <button type="button" class="slot-remove" data-qi="${qi}" data-bi="${i}" onclick="event.stopPropagation();removeFillBlank(this)">✕</button>`
-              : '…')}
+              ? `<span class="fillblank-slot-value">${filled[i]}</span>
+                 <button type="button" class="slot-remove" data-qi="${qi}" data-bi="${i}" onclick="event.stopPropagation();removeFillBlank(this)">✕</button>`
+              : `<span class="fillblank-slot-placeholder">${isDrag ? '⬇ Thả đáp án vào đây' : '… chọn đáp án'}</span>`)}
       </span>` : '';
     return `${seg}${blankHtml}`;
   }).join('');
 
-  const poolHtml = q.type === 'dragfill' ? `
-    <div class="drag-pool-title">📦 Đáp án — nhấn chip rồi nhấn vào chỗ trống:</div>
+  const poolHtml = isDrag ? `
+    <div class="drag-pool-title">📦 Đáp án — kéo thả hoặc nhấn chip rồi nhấn vào chỗ trống:</div>
     <div class="drag-pool" id="fillPool-${qi}">
       ${_fillPoolChips(q, qi).map(({ w, id }) => `
-        <div class="drag-chip fill-chip" data-qi="${qi}" data-text="${encodeURIComponent(w)}"
+        <div class="drag-chip fill-chip" draggable="true" data-qi="${qi}" data-text="${encodeURIComponent(w)}"
              id="${id}" onclick="onFillChipTap(this)">⠿ ${w}</div>`).join('')}
     </div>` : '';
 
   body.innerHTML = `
     ${q.hint ? `<div class="q-hint-line">💡 ${q.hint}</div>` : ''}
     <div style="font-size:.82rem;font-weight:700;color:var(--muted);margin:.4rem 0 .75rem;">
-      ${q.type === 'dragfill' ? '🧩' : '▾'} Đã điền: ${answeredCount}/${blanks.length}
+      ${isDrag ? '🧩' : '▾'} Đã điền: ${answeredCount}/${blanks.length}
     </div>
     ${poolHtml}
     <div class="fillblank-passage">${passageHtml}</div>`;
+
+  if (isDrag) {
+    body.querySelectorAll('.fill-chip').forEach(chip => {
+      chip.addEventListener('dragstart', onFillChipDragStart);
+      chip.addEventListener('dragend',   onFillChipDragEnd);
+    });
+    body.querySelectorAll('.fillblank-slot[data-bi]').forEach(slot => {
+      slot.addEventListener('dragover',  onFillSlotDragOver);
+      slot.addEventListener('dragleave', onFillSlotDragLeave);
+      slot.addEventListener('drop',      onFillSlotDrop);
+    });
+  }
 }
 
 /** Danh sách chip còn lại trong pool (dragfill) — trừ đi những cái đã dùng */
@@ -2092,6 +2281,52 @@ function onFillSlotTap(el) {
   State.fillblank[qi][bi] = _fillTapText;
   State.session.clicks++;
   _fillTapChip = null; _fillTapText = null; _fillTapQi = null;
+  updateSidebar();
+  renderFillBlank(State.questions[qi], qi);
+}
+
+// ── Kéo-thả thật (chuột/trackpad) cho dragfill ───────────────
+// Song song với cơ chế "nhấn chip → nhấn ô" ở trên để vẫn dùng
+// được trên di động (HTML5 drag-and-drop không hoạt động trên
+// cảm ứng theo mặc định).
+let _fillDragText   = null;
+let _fillDragQi     = null;
+let _fillDragChipEl = null;
+
+function onFillChipDragStart(e) {
+  _fillDragText   = decodeURIComponent(e.currentTarget.dataset.text);
+  _fillDragQi     = parseInt(e.currentTarget.dataset.qi);
+  _fillDragChipEl = e.currentTarget;
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', _fillDragText);
+}
+
+function onFillChipDragEnd(e) {
+  e.currentTarget.classList.remove('dragging');
+}
+
+function onFillSlotDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drag-over');
+}
+
+function onFillSlotDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+
+function onFillSlotDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  const qi   = parseInt(e.currentTarget.dataset.qi);
+  const bi   = parseInt(e.currentTarget.dataset.bi);
+  const text = _fillDragText;
+  if (text === null || qi !== _fillDragQi) return;
+  if (!State.fillblank[qi]) State.fillblank[qi] = {};
+  State.fillblank[qi][bi] = text;
+  State.session.clicks++;
+  _fillDragText = null; _fillDragQi = null; _fillDragChipEl = null;
   updateSidebar();
   renderFillBlank(State.questions[qi], qi);
 }

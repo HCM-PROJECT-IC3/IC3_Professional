@@ -1465,6 +1465,126 @@ body {
 }
 .match-row .match-drop-slot .slot-remove { top: 50%; transform: translateY(-50%); right: 6px }
 
+/* ══════════════════════════════════════════════
+   MATCHING — Nối 2 cột (đường kẻ SVG)
+   Dùng cho câu matching KHÔNG có ảnh/regions: nhấn 1 ô trái rồi
+   nhấn 1 ô phải để nối, đường kẻ được vẽ trực tiếp giữa 2 ô thay
+   vì kéo chip vào ô trống. Màu "đã nối" dùng --purple (thương
+   hiệu), KHÔNG dùng --teal/--green để tránh hiểu nhầm là "đúng"
+   trước khi nộp bài — nhất quán với .match-row.filled ở trên.
+   ══════════════════════════════════════════════ */
+.match2col-wrap {
+  position: relative;
+  display: flex;
+  gap: 2.5rem;
+  align-items: stretch;
+}
+.match2col-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  overflow: visible;
+}
+.match2col-line {
+  fill: none;
+  stroke: var(--purple);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  opacity: .85;
+}
+.match2col-node { fill: var(--purple); }
+
+.match2col-col {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .55rem;
+}
+
+.match2col-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  width: 100%;
+  padding: .7rem .85rem;
+  background: var(--card2);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: clamp(.85rem, 2.3vw, .95rem);
+  font-weight: 700;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  min-height: 48px;
+  transition: all .15s;
+}
+.match2col-item:hover { border-color: var(--purple); background: var(--purple-lt) }
+.match2col-item.selected {
+  border-color: var(--yellow);
+  background: var(--yellow-lt);
+  box-shadow: 0 0 0 3px rgba(246,167,35,.25);
+}
+.match2col-item.linked { border-color: var(--purple); background: var(--purple-lt) }
+.match2col-right-item.full {
+  cursor: default;
+  opacity: .75;
+}
+.match2col-right-item.full:hover { border-color: var(--border); background: var(--card2) }
+
+.match2col-left  .match2col-item { justify-content: flex-start }
+.match2col-right .match2col-item { justify-content: flex-start; text-align: left }
+
+.match2col-num {
+  flex-shrink: 0;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--purple-lt); color: var(--purple);
+  font-size: .72rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+.match2col-item.linked .match2col-num,
+.match2col-item.selected .match2col-num { background: var(--surface) }
+
+.match2col-text { flex: 1; min-width: 0 }
+.match2col-cap {
+  flex-shrink: 0;
+  font-size: .68rem; font-weight: 800;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: .1rem .45rem;
+}
+
+.match2col-dot {
+  flex-shrink: 0;
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  transition: all .15s;
+}
+.match2col-left  .match2col-dot { order: 99; margin-left: auto }
+.match2col-right .match2col-dot { order: -1 }
+.match2col-item.linked .match2col-dot,
+.match2col-item.selected .match2col-dot { border-color: var(--purple); background: var(--purple) }
+.match2col-item.selected .match2col-dot { border-color: var(--yellow); background: var(--yellow) }
+
+.match2col-item.has-img .match-shape-img { height: 34px }
+
+@media (max-width: 640px) {
+  .match2col-wrap { gap: 1.1rem }
+  .match2col-item { padding: .55rem .6rem; font-size: .8rem; min-height: 42px; gap: .4rem }
+  .match2col-num { width: 19px; height: 19px; font-size: .65rem }
+}
+
 /* ── Vùng bấm trực tiếp trên ảnh (câu nối cột dùng q.regions) ── */
 .match-region-wrap {
   position: relative;
@@ -1909,19 +2029,20 @@ body {
 .fillblank-passage {
   font-size: clamp(.95rem, 2.5vw, 1.05rem);
   font-weight: 600;
-  line-height: 2.1;
+  line-height: 2.6;
   color: var(--text);
   white-space: pre-wrap;
 }
 .fillblank-slot {
   display: inline-flex;
   align-items: center;
-  gap: .35rem;
-  min-width: 110px;
-  padding: .3rem .7rem;
-  margin: 0 .2rem;
+  gap: .4rem;
+  min-width: 150px;
+  min-height: 40px;
+  padding: .45rem .85rem;
+  margin: .15rem .25rem;
   border-radius: var(--radius-sm);
-  border: 2px dashed var(--border);
+  border: 2.5px dashed var(--border);
   background: var(--card2);
   font-weight: 700;
   color: var(--purple);
@@ -1931,9 +2052,25 @@ body {
 .fillblank-slot.filled { border-style: solid; border-color: var(--purple); background: var(--purple-lt) }
 .fillblank-slot.empty-hint { color: var(--muted); font-weight: 600; cursor: pointer }
 .fillblank-slot.empty-hint:hover { border-color: var(--purple); background: var(--purple-lt) }
+.fillblank-slot-placeholder { font-size: .82rem; white-space: nowrap }
+.fillblank-slot-value {
+  flex: 1; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* Trạng thái đang kéo 1 chip ngang qua ô — phóng to nhẹ + đổi màu rõ
+   rệt để học sinh biết chắc thả vào đây sẽ ăn (giống .match-drop-slot
+   .drag-over, dùng chung ngôn ngữ hình ảnh "đang kéo" trong toàn app). */
+.fillblank-slot.drag-over {
+  border-style: solid;
+  border-color: var(--purple);
+  background: var(--purple-lt);
+  transform: scale(1.05);
+  box-shadow: 0 4px 14px rgba(79,107,255,.25);
+}
 .fillblank-slot .slot-remove {
   background: none; border: none; color: var(--red); cursor: pointer;
   font-size: .92rem; opacity: .7; transition: opacity .15s; line-height: 1;
+  flex-shrink: 0;
 }
 .fillblank-slot .slot-remove:hover { opacity: 1 }
 .fillblank-select {
