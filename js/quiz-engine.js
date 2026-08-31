@@ -1115,7 +1115,7 @@ function renderTrueFalse(q, qi) {
   const answeredCount = Object.keys(current).length;
 
   document.getElementById('q-body').innerHTML = `
-    <div style="font-size:.82rem;font-weight:700;color:var(--muted);margin-bottom:.75rem;">
+    <div id="tf-counter-${qi}" data-total="${stmts.length}" style="font-size:.82rem;font-weight:700;color:var(--muted);margin-bottom:.75rem;">
       📋 Trả lời từng câu (${answeredCount}/${stmts.length} đã chọn)
     </div>
     <table class="tf-table" style="width:100%;border-collapse:separate;border-spacing:0 .4rem;">
@@ -1172,6 +1172,15 @@ function selectTF(el) {
     row.style.background = v === 'true'
       ? 'rgba(0,201,160,.08)'
       : 'rgba(255,82,82,.06)';
+  }
+
+  // Cập nhật bộ đếm "x/y đã chọn" ở đầu câu (trước đây bị bỏ sót, khiến
+  // bộ đếm luôn đứng yên ở 0 dù đã trả lời hết — xem ảnh lỗi báo cáo).
+  const counterEl = document.getElementById(`tf-counter-${qi}`);
+  if (counterEl) {
+    const total = parseInt(counterEl.dataset.total, 10) || 0;
+    const count = Object.keys(State.answers[qi] || {}).length;
+    counterEl.textContent = `📋 Trả lời từng câu (${count}/${total} đã chọn)`;
   }
 
   updateSidebar();
