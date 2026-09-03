@@ -205,7 +205,7 @@
   </aside>
 </div>
 
-<!-- ============ KỆ SÁCH 3D (modal) — xem js/shelf-modal.js ============ -->
+<!-- ============ KỆ SÁCH 3D (modal) — xem js/game-modal.js ============ -->
 <div class="shelf-modal-overlay" id="shelfModalOverlay">
   <div class="shelf-modal">
     <div class="shelf-modal-bar">
@@ -296,6 +296,11 @@
 <script src="js/motion.js"></script>
 
 <!-- Kệ sách 3D (modal) — dùng chung với Dashboard Điều phối đào tạo -->
-<script src="js/shelf-modal.js"></script>
+<!-- Thay cho js/game-modal.js cũ — nay dùng chung factory js/game-modal.js
+     (persist: true để giữ trạng thái Kệ sách 3D khi đóng/mở lại). -->
+<script src="js/game-modal.js"></script>
+<script>
+  initGameModal({ openBtnId: 'openShelfBtn', overlayId: 'shelfModalOverlay', closeBtnId: 'closeShelfModalBtn', frameId: 'shelfModalFrame', persist: true });
+</script>
 </body>
 </html>
