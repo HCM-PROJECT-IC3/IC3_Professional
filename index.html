@@ -173,7 +173,7 @@
 
         <!-- MOS Word 2019 — mô phỏng thao tác Ribbon, 10 tiết ôn luyện cuối
              khóa (không khóa như Khu Vui Chơi, đây là nội dung học chính).
-             Xem js/word-simulator-modal.js + word-simulator.html. -->
+             Xem js/game-modal.js + word-simulator.html. -->
         <button type="button" class="game-zone-open-btn" id="openWordSimBtn"
           title="MOS Word 2019 — 10 tiết ôn luyện thao tác Ribbon">
           📝 MOS Word — Ôn luyện Ribbon
@@ -369,7 +369,7 @@
     </div>
   </div>
 
-  <!-- ============ MINI-GAME "PRISM CASCADE" (modal) — xem js/prism-cascade-modal.js ============ -->
+  <!-- ============ MINI-GAME "PRISM CASCADE" (modal) — xem js/game-modal.js ============ -->
   <div class="game-modal-overlay" id="gameModalOverlay">
     <div class="game-modal">
       <div class="game-modal-bar">
@@ -390,7 +390,7 @@
     </div>
   </div>
 
-  <!-- ============ MINI-GAME "TRÍ NHỚ THIẾT BỊ & PHẦN MỀM" (modal) — xem js/memory-game-modal.js ============ -->
+  <!-- ============ MINI-GAME "TRÍ NHỚ THIẾT BỊ & PHẦN MỀM" (modal) — xem js/game-modal.js ============ -->
   <div class="game-modal-overlay" id="memoryGameModalOverlay">
     <div class="game-modal">
       <div class="game-modal-bar">
@@ -411,7 +411,7 @@
     </div>
   </div>
 
-  <!-- ============ MINI-GAME "SUDOKU TRÍ TUỆ" (modal) — xem js/sudoku-modal.js ============ -->
+  <!-- ============ MINI-GAME "SUDOKU TRÍ TUỆ" (modal) — xem js/game-modal.js ============ -->
   <div class="game-modal-overlay" id="sudokuModalOverlay">
     <div class="game-modal">
       <div class="game-modal-bar">
@@ -432,7 +432,7 @@
     </div>
   </div>
 
-  <!-- ============ MINI-GAME "BI-A PHẦN MỀM" (modal) — xem js/billiards-modal.js ============ -->
+  <!-- ============ MINI-GAME "BI-A PHẦN MỀM" (modal) — xem js/game-modal.js ============ -->
   <div class="game-modal-overlay" id="billiardsModalOverlay">
     <div class="game-modal">
       <div class="game-modal-bar">
@@ -453,7 +453,7 @@
     </div>
   </div>
 
-  <!-- ============ MINI-GAME "PHÒNG THỦ DỮ LIỆU" (modal) — xem js/pz-defense-modal.js ============ -->
+  <!-- ============ MINI-GAME "PHÒNG THỦ DỮ LIỆU" (modal) — xem js/game-modal.js ============ -->
   <div class="game-modal-overlay" id="pzDefenseModalOverlay">
     <div class="game-modal">
       <div class="game-modal-bar">
@@ -474,7 +474,7 @@
     </div>
   </div>
 
-  <!-- ============ MINI-GAME "BATTLE QUIZ" (modal) — xem js/battle-quiz-modal.js ============ -->
+  <!-- ============ MINI-GAME "BATTLE QUIZ" (modal) — xem js/game-modal.js ============ -->
   <div class="game-modal-overlay" id="battleQuizModalOverlay">
     <div class="game-modal">
       <div class="game-modal-bar">
@@ -495,7 +495,7 @@
     </div>
   </div>
 
-  <!-- ============ MINI-GAME "CYBER DETECTIVE" (modal) — xem js/cyber-detective-modal.js ============ -->
+  <!-- ============ MINI-GAME "CYBER DETECTIVE" (modal) — xem js/game-modal.js ============ -->
   <div class="game-modal-overlay" id="cyberDetectiveModalOverlay">
     <div class="game-modal">
       <div class="game-modal-bar">
@@ -516,7 +516,7 @@
     </div>
   </div>
 
-  <!-- ============ MINI-GAME "COMPUTER SIMULATOR" (modal) — xem js/computer-simulator-modal.js ============ -->
+  <!-- ============ MINI-GAME "COMPUTER SIMULATOR" (modal) — xem js/game-modal.js ============ -->
   <div class="game-modal-overlay" id="computerSimModalOverlay">
     <div class="game-modal">
       <div class="game-modal-bar">
@@ -537,7 +537,7 @@
     </div>
   </div>
 
-  <!-- ============ MOS WORD 2019 — Ôn luyện Ribbon (modal) — xem js/word-simulator-modal.js ============ -->
+  <!-- ============ MOS WORD 2019 — Ôn luyện Ribbon (modal) — xem js/game-modal.js ============ -->
   <div class="game-modal-overlay" id="wordSimModalOverlay">
     <div class="game-modal">
       <div class="game-modal-bar">
@@ -588,15 +588,21 @@
        thuộc thư viện ngoài. Xem js/carousel-3d.js. -->
   <script src="js/carousel-3d.js"></script>
   <script src="js/carousel-keyboard-cards.js"></script>
-  <script src="js/prism-cascade-modal.js"></script>
-  <script src="js/memory-game-modal.js"></script>
-  <script src="js/sudoku-modal.js"></script>
-  <script src="js/billiards-modal.js"></script>
-  <script src="js/pz-defense-modal.js"></script>
-  <script src="js/battle-quiz-modal.js"></script>
-  <script src="js/cyber-detective-modal.js"></script>
-  <script src="js/computer-simulator-modal.js"></script>
-  <script src="js/word-simulator-modal.js"></script>
+  <!-- Thay cho 9 file js/*-modal.js cũ (trùng lặp ~90%, chỉ khác id) —
+       nay dùng chung 1 factory js/game-modal.js, mỗi mini-game chỉ khai
+       báo id DOM của mình. Xem js/game-modal.js để biết chi tiết. -->
+  <script src="js/game-modal.js"></script>
+  <script>
+    initGameModal({ openBtnId: 'openGameBtn', overlayId: 'gameModalOverlay', closeBtnId: 'closeGameModalBtn', frameId: 'gameModalFrame' }); // Prism Cascade
+    initGameModal({ openBtnId: 'openMemoryGameBtn', overlayId: 'memoryGameModalOverlay', closeBtnId: 'closeMemoryGameModalBtn', frameId: 'memoryGameModalFrame' });
+    initGameModal({ openBtnId: 'openSudokuBtn', overlayId: 'sudokuModalOverlay', closeBtnId: 'closeSudokuModalBtn', frameId: 'sudokuModalFrame' });
+    initGameModal({ openBtnId: 'openBilliardsBtn', overlayId: 'billiardsModalOverlay', closeBtnId: 'closeBilliardsModalBtn', frameId: 'billiardsModalFrame' });
+    initGameModal({ openBtnId: 'openPzDefenseBtn', overlayId: 'pzDefenseModalOverlay', closeBtnId: 'closePzDefenseModalBtn', frameId: 'pzDefenseModalFrame' });
+    initGameModal({ openBtnId: 'openBattleQuizBtn', overlayId: 'battleQuizModalOverlay', closeBtnId: 'closeBattleQuizModalBtn', frameId: 'battleQuizModalFrame' });
+    initGameModal({ openBtnId: 'openCyberDetectiveBtn', overlayId: 'cyberDetectiveModalOverlay', closeBtnId: 'closeCyberDetectiveModalBtn', frameId: 'cyberDetectiveModalFrame' });
+    initGameModal({ openBtnId: 'openComputerSimBtn', overlayId: 'computerSimModalOverlay', closeBtnId: 'closeComputerSimModalBtn', frameId: 'computerSimModalFrame' });
+    initGameModal({ openBtnId: 'openWordSimBtn', overlayId: 'wordSimModalOverlay', closeBtnId: 'closeWordSimModalBtn', frameId: 'wordSimModalFrame', persist: true }); // giữ tiến độ ws_progress_v1
+  </script>
   <!-- Khu Vui Chơi: mở/khóa hub gộp 5 mini-game theo điểm thi. Nạp SAU
        5 file *-modal.js ở trên để nút bên trong hub đã có listener mở
        game riêng trước khi game-zone-gate.js gắn thêm listener "đóng hub
