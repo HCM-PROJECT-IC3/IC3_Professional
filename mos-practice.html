@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🧮 MOS Practice — Thực hành Excel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <!-- Dùng lại theme.css + style.css (class .lobby-card/.form-group/.btn-start...) để phần chọn
+       Trường/Lớp/Họ và tên giống hệt index.html — không phát minh lại UI đã có. -->
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="css/mos-practice.css">
+  <link rel="stylesheet" href="css/accessibility.css">
+</head>
+
+<body class="mos-body">
+
+  <header class="mos-topbar">
+    <a href="index.html" class="mos-back-link">← Về trang chủ</a>
+    <div class="mos-topbar-title">🧮 MOS Practice <span class="mos-topbar-badge">Excel &amp; PowerPoint · Phiên bản thử nghiệm</span></div>
+    <div class="theme-toggle" id="themeToggle" title="Chuyển đổi sáng/tối"></div>
+  </header>
+
+  <main class="mos-wrap">
+
+    <!-- ============================================================
+         BƯỚC 1 — Xác định học sinh (giống hệt cơ chế index.html: không
+         cần đăng nhập, chọn Trường → Lớp → Họ và tên từ roster có sẵn,
+         nạp bởi js/lobby-roster.js — không viết lại logic này).
+         ============================================================ -->
+    <section class="lobby-card mos-card" id="mosStep1">
+      <div class="lobby-card-title mos-card-title"><span>1️⃣</span> Xác định học sinh</div>
+      <div class="form-group">
+        <label>🏛️ Trường</label>
+        <select id="studentSchool" disabled>
+          <option value="">⚠ Chưa có danh sách — liên hệ Điều phối đào tạo</option>
+        </select>
+        <div class="roster-status" id="rosterStatus"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>🏫 Lớp</label>
+          <select id="studentClass" disabled>
+            <option value="">-- Chọn trường trước --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>👤 Họ và tên</label>
+          <select id="studentName" disabled>
+            <option value="">-- Chọn lớp trước --</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         BƯỚC 2 — Chọn dự án thực hành (Phase 1: đúng 1 dự án pilot).
+         ============================================================ -->
+    <section class="lobby-card mos-card" id="mosStep2">
+      <div class="lobby-card-title mos-card-title"><span>2️⃣</span> Chọn dự án thực hành</div>
+      <div class="mos-project-list" id="mosProjectList"><!-- đổ bởi js/mos-practice.js --></div>
+    </section>
+
+    <!-- ============================================================
+         BƯỚC 3 — Đề bài + tải file + nộp bài (ẩn cho tới khi chọn dự án).
+         ============================================================ -->
+    <section class="lobby-card mos-card" id="mosStep3" hidden>
+      <div class="lobby-card-title mos-card-title"><span>3️⃣</span> <span id="mosProjectTitle"></span></div>
+
+      <div class="mos-instructions">
+        <p><strong>Cách làm:</strong></p>
+        <ol>
+          <li>Tải file đề bài (file <span id="mosSubjectName">Office</span> thật) về máy.</li>
+          <li>Mở bằng Microsoft <span id="mosSubjectName2">Office</span> thật trên máy bạn, hoàn thành từng Task bên dưới.</li>
+          <li>Lưu file, rồi tải file đã làm lên đây để hệ thống chấm điểm.</li>
+        </ol>
+        <p class="mos-note">
+          ℹ️ File bạn tải lên chỉ được đọc <strong>ngay trong trình duyệt của bạn</strong> để chấm điểm —
+          KHÔNG gửi lên bất kỳ server nào. Hệ thống chỉ lưu lại điểm số + chi tiết đúng/sai từng Task.
+        </p>
+        <a class="btn-start mos-download-btn" id="mosDownloadBtn" href="#" download>⬇️ Tải file đề bài</a>
+      </div>
+
+      <div class="mos-task-list" id="mosTaskList"><!-- đổ bởi js/mos-practice.js --></div>
+
+      <div class="mos-upload-zone">
+        <label for="mosFileInput" class="mos-upload-label" id="mosUploadLabel">
+          📤 Chọn file đã làm để nộp bài
+        </label>
+        <input type="file" id="mosFileInput" accept=".xlsx,.pptx">
+        <div id="mosUploadStatus" class="mos-upload-status"></div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         BƯỚC 4 — Kết quả chấm.
+         ============================================================ -->
+    <section class="lobby-card mos-card" id="mosStep4" hidden>
+      <div class="lobby-card-title mos-card-title"><span>4️⃣</span> Kết quả chấm</div>
+      <div id="mosResultSummary" class="mos-result-summary"></div>
+      <div id="mosResultList" class="mos-result-list"></div>
+      <button type="button" class="btn-secondary" onclick="location.reload()">🔁 Làm lại / chọn dự án khác</button>
+    </section>
+
+  </main>
+
+  <!-- ============================================================
+       JAVASCRIPT
+       ============================================================ -->
+  <script src="js/vendor/exceljs.min.js"></script>
+  <script src="js/vendor/jszip.min.js"></script>
+  <script src="js/mos-tasks/tiet3-project1.js"></script>
+  <script src="js/mos-tasks/pptx-tiet10-project2.js"></script>
+  <script src="js/mos-grading-engine.js"></script>
+  <script src="js/mos-grading-engine-pptx.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/mos-submissions.js"></script>
+
+  <script src="js/lobby-roster.js"></script>
+  <script src="js/mos-practice.js"></script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+/* ============================================================
+   mos-practice.html — CSS riêng cho trang MOS Practice.
+   Dùng chung token màu/font với theme.css + style.css (không khai báo
+   lại --purple, --card... — xem quy ước ở đầu css/theme.css). Class
+   .lobby-card/.form-group/.btn-start/.btn-secondary tái dùng nguyên
+   từ style.css (form "Bắt đầu ghi danh" ở index.html) — file này chỉ
+   thêm phần RIÊNG của trang: topbar, danh sách dự án, danh sách task,
+   khu vực tải lên, báo cáo kết quả.
+   ============================================================ */
+
+body.mos-body {
+  background: var(--bg);
+  min-height: 100vh;
+  font-family: 'Baloo 2', 'Inter', sans-serif;
+  color: var(--text);
+}
+
+/* ── Topbar ─────────────────────────────────────────── */
+.mos-topbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: .9rem 1.4rem;
+  background: var(--card);
+  border-bottom: 2px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.mos-back-link {
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: .9rem;
+  white-space: nowrap;
+}
+.mos-back-link:hover { color: var(--purple) }
+.mos-topbar-title {
+  flex: 1;
+  font-weight: 800;
+  font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  flex-wrap: wrap;
+}
+.mos-topbar-badge {
+  font-size: .72rem;
+  font-weight: 800;
+  padding: .2rem .6rem;
+  border-radius: 999px;
+  background: var(--purple-lt);
+  color: var(--purple);
+  white-space: nowrap;
+}
+
+/* ── Layout chung ───────────────────────────────────── */
+.mos-wrap {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 1.6rem 1rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+/* .lobby-card mặc định max-width:560px (vừa cho form đăng nhập hẹp) —
+   trang này cần rộng hơn để chứa danh sách task/kết quả. */
+.mos-card { max-width: 100%; }
+
+/* ── Bước 2: danh sách dự án ────────────────────────── */
+.mos-project-list { display: flex; flex-direction: column; gap: .7rem }
+.mos-project-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .9rem 1.1rem;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm, 12px);
+  background: var(--card2);
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.mos-project-item:hover { border-color: var(--purple); background: var(--purple-lt) }
+.mos-project-item.is-selected { border-color: var(--purple); background: var(--purple-lt) }
+.mos-project-item-title { font-weight: 800; font-size: 1rem }
+.mos-project-item-meta { font-size: .8rem; color: var(--muted); margin-top: .2rem }
+.mos-project-item-arrow { color: var(--purple); font-weight: 800; flex-shrink: 0 }
+
+/* ── Bước 3: đề bài + task list + upload ───────────── */
+.mos-instructions { font-size: .92rem; line-height: 1.6; margin-bottom: 1rem }
+.mos-instructions ol { padding-left: 1.3rem; margin: .4rem 0 }
+.mos-note {
+  background: var(--card2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm, 10px);
+  padding: .6rem .8rem;
+  font-size: .82rem;
+  color: var(--muted);
+}
+.mos-download-btn {
+  display: inline-flex;
+  width: auto;
+  margin-top: .7rem;
+  text-decoration: none;
+  padding: .65rem 1.2rem;
+}
+
+.mos-task-list { display: flex; flex-direction: column; gap: .55rem; margin: 1.1rem 0 }
+.mos-task-item {
+  display: flex;
+  align-items: flex-start;
+  gap: .6rem;
+  padding: .7rem .85rem;
+  border-radius: var(--radius-sm, 10px);
+  background: var(--card2);
+  border: 1.5px solid var(--border);
+  font-size: .9rem;
+  line-height: 1.5;
+}
+.mos-task-num {
+  flex: none;
+  font-weight: 800;
+  color: var(--purple);
+  min-width: 1.6rem;
+}
+
+.mos-upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-sm, 12px);
+  padding: 1.2rem;
+  text-align: center;
+}
+.mos-upload-label {
+  display: inline-block;
+  font-weight: 800;
+  color: var(--purple);
+  cursor: pointer;
+  padding: .6rem 1rem;
+  border-radius: 999px;
+  background: var(--purple-lt);
+}
+.mos-upload-zone input[type="file"] { display: block; margin: .8rem auto 0 }
+.mos-upload-status { margin-top: .6rem; font-size: .85rem; font-weight: 700; color: var(--muted) }
+.mos-upload-status.is-error { color: var(--red) }
+.mos-upload-status.is-busy  { color: var(--purple) }
+
+/* ── Bước 4: kết quả chấm ───────────────────────────── */
+.mos-result-summary {
+  display: flex;
+  align-items: baseline;
+  gap: .8rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.mos-result-score {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: var(--purple);
+}
+.mos-result-score-label { font-size: .85rem; color: var(--muted); font-weight: 700 }
+
+.mos-result-list { display: flex; flex-direction: column; gap: .55rem; margin-bottom: 1.2rem }
+.mos-result-item {
+  display: flex;
+  align-items: flex-start;
+  gap: .6rem;
+  padding: .7rem .85rem;
+  border-radius: var(--radius-sm, 10px);
+  border: 1.5px solid var(--border);
+  font-size: .9rem;
+  line-height: 1.5;
+}
+.mos-result-item.is-pass   { border-color: var(--green); background: var(--green-lt) }
+.mos-result-item.is-fail   { border-color: var(--red);   background: var(--red-lt) }
+.mos-result-item.is-manual { border-color: var(--border); background: var(--card2) }
+.mos-result-icon { flex: none; font-size: 1.05rem }
+.mos-result-note { color: var(--muted); font-size: .82rem; margin-top: .2rem }
+
+@media (max-width: 640px) {
+  .mos-wrap { padding: 1.1rem .75rem 2.5rem }
+  .mos-topbar { padding: .75rem 1rem; flex-wrap: wrap }
+}

@@ -120,7 +120,7 @@ body {
 
 .nav-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   padding: 11px 14px;
   border-radius: 14px;
@@ -128,6 +128,7 @@ body {
   color: var(--text-secondary);
   font-weight: 700;
   font-size: 14px;
+  line-height: 20px; /* == chiều cao icon, để nhãn 1 dòng vẫn canh giữa icon như cũ */
   transition: var(--transition);
   user-select: none;
   text-decoration: none;
@@ -144,7 +145,23 @@ body {
      thanh viền trái đặc như trước. */
   box-shadow: var(--shadow-card-inset);
 }
-.nav-item .nav-icon { font-size: 18px; }
+/* flex-shrink để icon không bị bóp khi nhãn dài xuống dòng 2 — trước
+   đây align-items:center khiến dòng 2 của nhãn dài (vd. "Dashboard của
+   tôi") trông như bị thụt vào, lệch khỏi icon. */
+.nav-item .nav-icon { font-size: 18px; line-height: 20px; flex-shrink: 0; }
+
+/* Nhãn nhóm trong sidebar (vd. "Trang khác") — tách các link quản trị
+   rời khỏi 3 mục section chính, tránh menu đọc như 1 danh sách phẳng. */
+.nav-section-label {
+  margin: 10px 14px 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color, rgba(148,163,184,.25));
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--text-muted);
+}
 
 .sidebar-footer {
   padding: 14px 12px;
@@ -280,10 +297,22 @@ body {
    ======================================== */
 .toolbar {
   display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.toolbar-row {
+  display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 24px;
+}
+.toolbar-row-filters { gap: 10px; }
+.toolbar-count {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .btn-create {
@@ -530,7 +559,7 @@ body {
 
 .card-cover .cover-pattern {
   position: absolute; inset: 0;
-  opacity: 0.55;
+  opacity: 0.32;
   background-image: radial-gradient(circle at 20% 78%, rgba(255,255,255,0.85) 2px, transparent 2px),
                     radial-gradient(circle at 82% 22%, rgba(255,255,255,0.85) 2px, transparent 2px),
                     radial-gradient(circle at 50% 50%, rgba(31,41,55,0.05) 1px, transparent 1px);
@@ -642,6 +671,22 @@ body {
 }
 .btn-manage:hover { color: var(--accent-purple); box-shadow: var(--shadow-card-hover); }
 .btn-manage:active { box-shadow: var(--shadow-btn-active); }
+
+.progress-score-form { display: flex; align-items: center; gap: 6px; }
+.progress-score-form input {
+  width: 56px; padding: 6px 8px;
+  border: none; border-radius: 8px;
+  background: var(--bg-main); color: var(--text-primary);
+  font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 13px;
+  text-align: center; box-shadow: var(--shadow-card-inset);
+}
+.progress-score-form button {
+  padding: 6px 10px; border: none; border-radius: 8px;
+  background: var(--accent-purple); color: #fff;
+  font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 12px;
+  cursor: pointer; white-space: nowrap;
+}
+.progress-score-form button:hover { background: #4f46e5; }
 
 /* ========================================
    NO RESULTS

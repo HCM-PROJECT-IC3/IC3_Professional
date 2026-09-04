@@ -36,6 +36,14 @@
       <span class="nav-icon">⚙️</span>
       <span>Cài đặt hệ thống</span>
     </div>
+
+    <!-- Nhóm 2: trang quản trị/khác (link rời, không phải section trong
+         SPA này) — tách nhãn khỏi 3 mục "Bộ đề của tôi/Báo cáo kết
+         quả/Cài đặt hệ thống" ở trên để không đọc thành 1 danh sách phẳng
+         8 mục. Icon dùng emoji 1 glyph (bỏ ZWJ 🧑‍🏫/🧑‍🎓 — không phải
+         mọi hệ điều hành ghép được, dễ vỡ layout/wrap chữ) và không
+         trùng icon với mục nào khác trong menu. -->
+    <div class="nav-section-label">Trang khác</div>
     <a class="nav-item link-plain" href="image-manager.html" id="imageManagerLink" style="display:none;">
       <span class="nav-icon">🖼️</span>
       <span>Quản lý câu hỏi</span>
@@ -45,22 +53,22 @@
       <span>Tài khoản</span>
     </a>
     <a class="nav-item link-plain" href="teacher-dashboard.html" id="teacherDashboardLink" style="display:none;">
-      <span class="nav-icon">🧑🏫</span>
+      <span class="nav-icon">🏫</span>
       <span>Dashboard của tôi</span>
     </a>
     <a class="nav-item link-plain" href="roster-manager.html" id="rosterManagerLink" style="display:none;">
-      <span class="nav-icon">🧑🎓</span>
+      <span class="nav-icon">📋</span>
       <span>Danh sách học sinh</span>
     </a>
     <a class="nav-item link-plain" href="coordinator-dashboard.html" id="coordinatorDashboardLink" style="display:none;">
-      <span class="nav-icon">📊</span>
-      <span>Dashboard</span>
+      <span class="nav-icon">🧭</span>
+      <span>Dashboard điều phối</span>
     </a>
   </nav>
 
   <div class="sidebar-footer">
     <div class="user-chip" id="userChip" title="Bấm để đăng xuất">
-      <div class="user-avatar">👩🏫</div>
+      <div class="user-avatar">🧑</div>
       <div class="user-info">
         <strong id="userChipName">Đang tải...</strong>
         <span id="userChipRole"></span>
@@ -98,18 +106,24 @@
          MY SETS SECTION
          ======================================== -->
     <section class="section active" id="section-my-sets">
-      <!-- Toolbar -->
+      <!-- Toolbar: hàng 1 = hành động chính (tạo mới + tìm kiếm),
+           hàng 2 = bộ lọc (không còn chen chúc trên 1 dòng như trước) -->
       <div class="toolbar">
-        <button type="button" class="btn-create" onclick="openModal('create')">➕ Tạo bộ đề mới</button>
-        <div class="search-box">
-          <input type="text" id="searchInput" placeholder="Tìm kiếm bộ đề..." oninput="filterCards()">
+        <div class="toolbar-row toolbar-row-primary">
+          <button type="button" class="btn-create" onclick="openModal('create')">➕ Tạo bộ đề mới</button>
+          <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Tìm kiếm bộ đề..." oninput="filterCards()">
+          </div>
         </div>
-        <div class="filter-group">
-          <button type="button" class="filter-btn active" data-filter="all" onclick="setFilter(this, 'all')">Tất cả</button>
-          <button type="button" class="filter-btn" data-filter="elementary" onclick="setFilter(this, 'elementary')">🌱 Tiểu học</button>
-          <button type="button" class="filter-btn" data-filter="middle" onclick="setFilter(this, 'middle')">🎒 THCS</button>
+        <div class="toolbar-row toolbar-row-filters">
+          <div class="filter-group">
+            <button type="button" class="filter-btn active" data-filter="all" onclick="setFilter(this, 'all')">Tất cả</button>
+            <button type="button" class="filter-btn" data-filter="elementary" onclick="setFilter(this, 'elementary')">🌱 Tiểu học</button>
+            <button type="button" class="filter-btn" data-filter="middle" onclick="setFilter(this, 'middle')">🎒 THCS</button>
+          </div>
+          <span class="toolbar-count" id="cardsCount"></span>
+          <button type="button" class="filter-btn view-toggle-btn" id="toggleShelfViewBtn" onclick="toggleShelfView()">🧊 Kệ sách 3D</button>
         </div>
-        <button type="button" class="filter-btn view-toggle-btn" id="toggleShelfViewBtn" onclick="toggleShelfView()">🧊 Kệ sách 3D</button>
       </div>
 
       <!-- Cards Grid / 3D Shelf (cùng một vùng hiển thị, chuyển đổi qua lại) -->
@@ -170,7 +184,7 @@
       <!-- Stats Row -->
       <div class="stats-row">
         <div class="stat-card">
-          <div class="stat-icon">🧑🎓</div>
+          <div class="stat-icon">🎓</div>
           <div class="stat-label">Tổng lượt làm</div>
           <div class="stat-value" id="totalSessions">0</div>
         </div>

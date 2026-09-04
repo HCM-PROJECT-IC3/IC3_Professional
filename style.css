@@ -662,6 +662,21 @@ body {
   50%     { transform: translateY(-3px) rotate(-6deg) }
 }
 
+/* Nhãn nhóm trong form ghi danh (vd. "Thông tin học sinh" / "Chọn bài
+   thi") — thay cho .lobby-card-title đã bỏ, giúp form có bố cục rõ ràng
+   theo 2 bước thay vì 1 danh sách phẳng 6 field liền nhau. */
+.form-section-label {
+  font-size: .72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--muted);
+  margin: .9rem 0 .4rem;
+  padding-bottom: .3rem;
+  border-bottom: 1.5px solid var(--border);
+}
+.form-section-label:first-child { margin-top: 0 }
+
 /* Form groups */
 .form-row {
   display: grid;
@@ -761,6 +776,42 @@ body {
 }
 .btn-start:active:not(:disabled) { transform: translateY(0) }
 .btn-start:disabled { opacity: .45; cursor: not-allowed }
+
+/* Bộ nút "chế độ" lọc trước Minitest (Theo tiết / Theo chủ đề / Tổng
+   hợp) — bấm 1 nút để select bên dưới chỉ hiện đúng nhóm đó, tránh 1
+   dropdown xổ ra 15-16 dòng liền lúc. */
+.mt-mode-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  margin-bottom: .4rem;
+}
+/* .mt-mode-toggle khai báo display:flex ở trên, cùng độ đặc hiệu với
+   [hidden] mặc định của trình duyệt (quy tắc sau thắng) — set
+   .hidden=true bằng JS (chỉ 1 chế độ khả dụng, vd MOS) sẽ KHÔNG ẩn
+   được nếu thiếu dòng này (bug thật đã gặp với .game-zone-open-btn). */
+.mt-mode-toggle[hidden] { display: none; }
+.mt-mode-btn {
+  flex: 1 1 auto;
+  padding: .4rem .7rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: var(--card2);
+  color: var(--muted);
+  font-family: 'Baloo 2', sans-serif;
+  font-size: .74rem;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.mt-mode-btn:hover { border-color: var(--purple); color: var(--purple) }
+.mt-mode-btn.is-active {
+  background: var(--purple);
+  border-color: var(--purple);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(79,107,255,.3);
+}
 
 /* Minitest meta chips */
 .minitest-meta { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin-top: .3rem }
@@ -1344,52 +1395,115 @@ body {
 .option-btn.multi-style .option-marker { border-radius: 8px }
 
 /* ══════════════════════════════════════════════
-   TRUE/FALSE TABLE
+   TRUE/FALSE LIST — dãy thẻ "phát biểu" hiện đại,
+   thay cho bảng cũ (dễ vỡ dòng khi label dài như
+   "Không thích hợp"). Layout thống nhất mobile/desktop,
+   chỉ đổi hướng flex của khối nút theo bề rộng màn hình.
    ══════════════════════════════════════════════ */
-.tf-table { width:100%; border-collapse:separate; border-spacing:0 .5rem; table-layout: fixed }
-.tf-table th {
-  font-size: .85rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: .6px;
-  color: var(--muted);
-  padding: .4rem .75rem;
+.tf-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem .9rem;
+  margin-bottom: .9rem;
 }
-.tf-table th:last-child,
-.tf-table th:nth-last-child(2) { text-align:center; width:150px }
-.tf-row td {
+.tf-counter { font-size: .82rem; font-weight: 700; color: var(--muted) }
+
+.tf-list { display: flex; flex-direction: column; gap: .6rem }
+.tf-row {
+  display: flex;
+  align-items: center;
+  /* KHÔNG dùng justify-content:space-between — với phát biểu ngắn, nút
+     Có/Không bị đẩy sát mép phải hàng, tạo khoảng trắng rỗng rất lớn ở
+     giữa (xem ảnh lỗi báo cáo). Gói text+nút sát nhau (flex-start),
+     khoảng trống dư (nếu có) dồn về lề phải — bình thường như mọi
+     danh sách khác, không còn tạo cảm giác "khoảng trống vô nghĩa". */
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: .7rem 1rem;
   background: var(--card2);
-  padding: .9rem .85rem;
-  font-size: clamp(.95rem, 2.5vw, 1.05rem);
-  font-weight: 600;
   border: 2px solid var(--border);
-}
-.tf-row td:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); padding-left:1.1rem }
-.tf-row td:last-child  { border-radius: 0 var(--radius-sm) var(--radius-sm) 0 }
-.tf-btn-cell { text-align:center; border-left:none !important; padding: .5rem .6rem !important }
-.tf-btn {
-  width: 100%;
-  max-width: 130px;
-  padding: .55rem .5rem;
   border-radius: var(--radius-sm);
+  padding: .85rem 1rem;
+  transition: background .2s, border-color .2s;
+}
+/* Chỉ đánh dấu ĐÃ CHỌN (chưa biết đúng/sai) — Đúng và Sai dùng CHUNG 1 màu
+   (tím thương hiệu, giống trạng thái "đã chọn" ở câu trắc nghiệm) để học sinh
+   không suy luận màu sắc ra đáp án đúng/sai trước khi nộp bài. */
+.tf-row.is-true,
+.tf-row.is-false { background: var(--purple-lt); border-color: var(--purple) }
+
+.tf-row-main {
+  display: flex;
+  align-items: baseline;
+  gap: .55rem;
+  /* min-width CỐ ĐỊNH (thay vì flex-grow tự do trước đây) — mọi hàng
+     đều có cột văn bản rộng tối thiểu bằng nhau nên cụm nút Có/Không
+     luôn thẳng hàng dọc như 1 cột bảng, không còn so le theo độ dài
+     từng câu (xem ảnh lỗi báo cáo). Văn bản ngắn thì phần dư là
+     khoảng trắng đều đặn trong CÙNG cột đó — không tạo hố trống lệch
+     tâm hàng như cách dùng space-between trước đây; văn bản dài vẫn
+     được phép vượt min-width tới max-width rồi mới tự xuống dòng. */
+  flex: 0 1 auto;
+  min-width: min(19rem, 55%);
+  max-width: min(70%, 560px);
+}
+.tf-row-num {
+  flex: none;
+  font-weight: 800;
+  color: var(--muted);
+}
+.tf-row-text {
+  font-size: clamp(.95rem, 2.3vw, 1.05rem);
+  font-weight: 600;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.tf-row-actions { display: flex; gap: .5rem; flex: none }
+.tf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  white-space: nowrap;
+  padding: .55rem 1rem;
+  border-radius: 999px;
   border: 2px solid var(--border);
   background: var(--card);
   color: var(--muted);
   font-family: 'Baloo 2', sans-serif;
-  font-size: .98rem;
+  font-size: .92rem;
   font-weight: 800;
   cursor: pointer;
   transition: all .15s;
 }
-.tf-btn:hover { border-color: var(--purple); color: var(--purple); background: var(--purple-lt) }
-/* Chỉ đánh dấu ĐÃ CHỌN (chưa biết đúng/sai) — Đúng và Sai dùng CHUNG 1 màu
-   (tím thương hiệu, giống trạng thái "đã chọn" ở câu trắc nghiệm) để học sinh
-   không suy luận màu sắc ra đáp án đúng/sai trước khi nộp bài. */
+.tf-btn:hover { border-color: var(--purple); color: var(--purple); background: var(--purple-lt); transform: translateY(-1px) }
 .tf-btn.selected-true,
 .tf-btn.selected-false {
   border-color: var(--purple);
-  background: var(--purple-lt);
-  color: var(--purple);
+  background: var(--purple);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(79,107,255,.35);
+}
+
+/* Nâng cấp bằng CSS Grid subgrid (trình duyệt hiện đại — Chrome 117+,
+   Firefox 71+, Safari 16+): cột văn bản GIÃN HẾT phần còn trống thay vì
+   dừng lại ở min-width cố định như bản dự phòng flex ở trên, nên không
+   còn dư khoảng trắng lớn bên phải cụm nút trên màn hình rộng (xem ảnh
+   báo lỗi) — đồng thời cụm nút của mọi hàng vẫn thẳng cột tuyệt đối vì
+   dùng CHUNG 1 lưới cột duy nhất (subgrid) từ .tf-list. Trình duyệt
+   chưa hỗ trợ subgrid tự động dùng lại layout flex phía trên, không vỡ
+   giao diện. */
+@supports (grid-template-columns: subgrid) {
+  .tf-list { display: grid; grid-template-columns: 1fr auto; }
+  .tf-row  { display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; }
+  .tf-row-main {
+    grid-column: 1;
+    min-width: 0;
+    max-width: none;
+  }
+  .tf-row-actions { grid-column: 2; justify-self: end; }
 }
 
 /* ══════════════════════════════════════════════
@@ -2490,12 +2604,18 @@ body {
   .q-card  { padding: 1.2rem 1rem }
   .matching-container { flex-direction: column }
   .match-arrow { display: none }
-  .tf-table thead { display: none }
-  .tf-row { display: block; margin-bottom: .5rem; border: 2px solid var(--border); border-radius: var(--radius-sm); overflow: hidden }
-  .tf-row td { display: block; border: none; border-bottom: 1px solid var(--border); padding: .7rem .9rem }
-  .tf-row td:last-child { border-bottom: none }
-  .tf-btn-cell { display: flex; gap: .5rem; justify-content: center; padding: .6rem }
-  .tf-btn { flex: 1; max-width: 130px }
+  .tf-row { flex-direction: column; align-items: stretch }
+  .tf-row-main { flex-basis: auto }
+  .tf-row-actions { width: 100% }
+  .tf-btn { flex: 1 }
+  /* Màn hẹp: lưới subgrid cũng gộp về 1 cột, xếp nút xuống dưới text
+     giống hệt bản dự phòng flex ở trên (nếu không, 2 cột subgrid sẽ ép
+     nút chen ngang, quá chật trên điện thoại). */
+  @supports (grid-template-columns: subgrid) {
+    .tf-list  { grid-template-columns: 1fr }
+    .tf-row   { grid-template-columns: 1fr }
+    .tf-row-actions { grid-column: 1; justify-self: stretch }
+  }
   .q-nav { gap: .5rem }
   .btn-nav { padding: .75rem 1.2rem; font-size: .92rem }
   .btn-flag { margin-left: 0; flex: 1; justify-content: center }
@@ -2758,8 +2878,16 @@ body {
   cursor: pointer;
   transition: var(--transition);
   margin-top: 8px;
+  /* #openMosPracticeBtn là <a> (mở mos-practice.html ở tab mới) thay vì
+     <button> như các nút khác cùng class — reset gạch chân mặc định. */
+  text-decoration: none;
 }
 .game-zone-open-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow) }
+/* .game-zone-open-btn khai báo display:inline-flex ở trên, đè luôn cả
+   [hidden] mặc định của trình duyệt (cùng độ đặc hiệu, quy tắc sau thắng)
+   — #openWordSimBtn/#openMosPracticeBtn set thuộc tính hidden bằng JS
+   (js/main.js) sẽ KHÔNG ẩn được nếu thiếu dòng này. */
+.game-zone-open-btn[hidden] { display: none; }
 .game-zone-open-btn.is-locked {
   background: rgba(148, 155, 178, .16);
   border-color: rgba(148, 155, 178, .35);
@@ -2767,6 +2895,7 @@ body {
 }
 .game-zone-hint {
   margin-top: 4px;
+  margin-bottom: .8rem;
   font-size: .7rem;
   color: var(--muted);
   text-align: center;
@@ -2844,6 +2973,9 @@ body {
   cursor: pointer;
   transition: var(--transition);
   text-align: center;
+  /* Đa số tile là <button>, nhưng tile "MOS Practice" là <a> (mở trang riêng
+     ở tab mới thay vì iframe-modal) — reset gạch chân mặc định của link. */
+  text-decoration: none;
 }
 .game-zone-tile:hover {
   transform: translateY(-2px);

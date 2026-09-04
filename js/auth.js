@@ -87,7 +87,7 @@
 
   const ROLE_LABEL = {
     admin: '👑 Quản trị viên',
-    teacher: '🧑🏫 Giáo viên',
+    teacher: '📖 Giáo viên',
     coordinator: '🧭 Điều phối đào tạo',
     student: '🎓 Học sinh',
   };

@@ -6,13 +6,23 @@
    cấp — ảnh đặt tại img/deck-icon-*.png, mỗi ảnh là 1 ô vuông
    icon 3D lấy nguyên từ tấm hình gốc.
    ======================================== */
+/* ĐẶT TÊN KHỚP VỚI FILE ẢNH THẬT (trước đây tên key — monitor/shield/
+   lock/folder/palette/megaphone — không khớp icon thật sự render ra,
+   vd. key "lock" lại trỏ tới ảnh info-icon, dễ gây nhầm khi đọc code
+   lẫn khi gán icon cho từng bộ đề bên dưới). 6 bộ đề khối lớp không map
+   1-1 với 7 chủ đề IC3 nên KHÔNG gán icon theo đúng tên chủ đề (khối
+   lớp nào cũng học đủ 7 chủ đề) — chỉ chọn ảnh có TÔNG MÀU/SẮC THÁI phù
+   hợp với đối tượng: khối lớn (THCS) dùng icon nghiêm túc hơn (màn
+   hình, cộng đồng, bảo mật), khối nhỏ (Tiểu học) dùng icon vui tươi
+   hơn (bút vẽ, hội thoại, tài liệu) — tránh ví dụ icon khoá bảo mật
+   nghiêm trọng gán cho học sinh Tiểu học như trước. */
 const DECK_ICONS = {
-  monitor:   'img/topic-icon-1-tech.png', // Chủ đề 1: Nội dung cơ bản về công nghệ
-  shield:    'img/topic-icon-2-citizenship.png',   // Chủ đề 2: Công dân kỹ thuật số
-  lock:      'img/topic-icon-3-info.png',     // Chủ đề 7: Bảo mật và an toàn
-  folder:    'img/topic-icon-4-content.png',   // Chủ đề 3: Quản lý thông tin
-  palette:   'img/topic-icon-5-comm.png',  // Chủ đề 4: Tạo nội dung
-  megaphone: 'img/topic-icon-7-safety.png'      // Chủ đề 5: Giao tiếp truyền thông
+  tech:        'img/topic-icon-1-tech.png',        // màn hình máy tính
+  citizenship: 'img/topic-icon-2-citizenship.png',  // nhóm người / cộng đồng
+  info:        'img/topic-icon-3-info.png',         // tài liệu / thông tin
+  content:     'img/topic-icon-4-content.png',       // bút vẽ / sáng tạo nội dung
+  comm:        'img/topic-icon-5-comm.png',          // bong bóng hội thoại
+  safety:      'img/topic-icon-7-safety.png'         // khiên/khoá bảo mật
 };
 
 /* ========================================
@@ -25,12 +35,11 @@ const QUIZ_SETS = [
     subtitle: 'IC3 GS5 – Trung học cơ sở',
     questions: 30,
     type: 'middle',
-    icon: DECK_ICONS.monitor,
+    icon: DECK_ICONS.tech,
     iconColor: '#5B8DEF',
     coverGradient: 'linear-gradient(135deg, #CFE3FF 0%, #EAF3FF 100%)',
     coverBg: '#CFE3FF',
-    link: 'https://wit.id.vn/20252026/THCS/Class6',
-    students: 124
+    link: 'https://wit.id.vn/20252026/THCS/Class6'
   },
   {
     id: 'class7',
@@ -38,12 +47,11 @@ const QUIZ_SETS = [
     subtitle: 'IC3 GS5 – Trung học cơ sở',
     questions: 30,
     type: 'middle',
-    icon: DECK_ICONS.shield,
+    icon: DECK_ICONS.citizenship,
     iconColor: '#2FBF9B',
     coverGradient: 'linear-gradient(135deg, #C9F3E6 0%, #E9FBF5 100%)',
     coverBg: '#C9F3E6',
-    link: 'https://wit.id.vn/20252026/THCS/Class7',
-    students: 98
+    link: 'https://wit.id.vn/20252026/THCS/Class7'
   },
   {
     id: 'class8',
@@ -51,12 +59,11 @@ const QUIZ_SETS = [
     subtitle: 'IC3 GS5 – Trung học cơ sở',
     questions: 30,
     type: 'middle',
-    icon: DECK_ICONS.lock,
+    icon: DECK_ICONS.safety,
     iconColor: '#8B5CF6',
     coverGradient: 'linear-gradient(135deg, #E4D6FF 0%, #F3EBFF 100%)',
     coverBg: '#E4D6FF',
-    link: 'https://wit.id.vn/20252026/THCS/Class8',
-    students: 111
+    link: 'https://wit.id.vn/20252026/THCS/Class8'
   },
   {
     id: 'tiH3',
@@ -64,12 +71,11 @@ const QUIZ_SETS = [
     subtitle: 'IC3 GS5 – Tiểu học LV1',
     questions: 25,
     type: 'elementary',
-    icon: DECK_ICONS.folder,
+    icon: DECK_ICONS.content,
     iconColor: '#34B368',
     coverGradient: 'linear-gradient(135deg, #D4F5DC 0%, #EEFBF1 100%)',
     coverBg: '#D4F5DC',
-    link: 'https://wit.id.vn/20252026/TiH/LV1_Class3',
-    students: 87
+    link: 'https://wit.id.vn/20252026/TiH/LV1_Class3'
   },
   {
     id: 'tiH4',
@@ -77,12 +83,11 @@ const QUIZ_SETS = [
     subtitle: 'IC3 GS5 – Tiểu học LV2',
     questions: 25,
     type: 'elementary',
-    icon: DECK_ICONS.palette,
+    icon: DECK_ICONS.comm,
     iconColor: '#E8A93D',
     coverGradient: 'linear-gradient(135deg, #FFECC2 0%, #FFF8E6 100%)',
     coverBg: '#FFECC2',
-    link: 'https://wit.id.vn/20252026/TiH/LV2_Class4',
-    students: 95
+    link: 'https://wit.id.vn/20252026/TiH/LV2_Class4'
   },
   {
     id: 'tiH5',
@@ -90,12 +95,11 @@ const QUIZ_SETS = [
     subtitle: 'IC3 GS5 – Tiểu học LV3',
     questions: 25,
     type: 'elementary',
-    icon: DECK_ICONS.megaphone,
+    icon: DECK_ICONS.info,
     iconColor: '#F2795A',
     coverGradient: 'linear-gradient(135deg, #FFDCCF 0%, #FFEFE8 100%)',
     coverBg: '#FFDCCF',
-    link: 'https://wit.id.vn/20252026/TiH/LV3_Class5',
-    students: 102
+    link: 'https://wit.id.vn/20252026/TiH/LV3_Class5'
   }
 ];
 
@@ -129,8 +133,18 @@ function renderDeckIcon(set) {
   return `<span class="cover-icon-emoji">${icon}</span>`;
 }
 
+/* Số "lượt" hiển thị trên thẻ = số phiên làm bài THẬT được ghi nhận
+   trong localStorage (mỗi lần bấm "Bắt đầu làm bài" tạo 1 phiên) —
+   trước đây là số hardcode cố định (124, 98...), không phản ánh gì
+   thực tế. Không có endpoint nhận điểm thật từ link ngoài (wit.id.vn)
+   nên đây là số liệu THẬT duy nhất mà app tự ghi nhận được. */
+function getAttemptCount(setId) {
+  return getSessions().filter(s => s.setId === setId).length;
+}
+
 function renderCards() {
   const grid = document.getElementById('cardsGrid');
+  const countLabel = document.getElementById('cardsCount');
   let sets = allSets;
 
   // Filter by type
@@ -141,6 +155,8 @@ function renderCards() {
   if (currentSearch) {
     sets = sets.filter(s => s.title.toLowerCase().includes(currentSearch.toLowerCase()));
   }
+
+  if (countLabel) countLabel.textContent = `${sets.length} bộ đề`;
 
   if (sets.length === 0) {
     grid.innerHTML = `<div class="no-results"><span class="emoji">🔍</span><p>Không tìm thấy bộ đề nào phù hợp.</p></div>`;
@@ -162,11 +178,11 @@ function renderCards() {
         </div>
         <div class="card-stats">
           <div class="stat-item"><span>📝</span><span>${set.questions} câu hỏi</span></div>
-          <div class="stat-item"><span>👥</span><span>${set.students} lượt</span></div>
+          <div class="stat-item"><span>👥</span><span>${getAttemptCount(set.id)} lượt</span></div>
         </div>
         <div class="card-actions">
-          <button class="btn-play" onclick="startQuiz('${set.id}', event)">🚀 Bắt đầu làm bài</button>
-          <button class="btn-manage" onclick="openManageModal('${set.id}', event)">⚙️</button>
+          <button class="btn-play" onclick="openStartModal('${set.id}', event)">🚀 Bắt đầu làm bài</button>
+          <button class="btn-manage" onclick="openManageModal('${set.id}', event)" title="Quản lý bộ đề">⚙️</button>
         </div>
       </div>
     </div>
@@ -223,18 +239,42 @@ function toggleShelfView() {
 /* ========================================
    SESSION & QUIZ START (Anti-cheat)
    ======================================== */
-function startQuiz(id, event) {
+/* Trước đây dùng prompt() (hộp thoại trình duyệt xấu, chặn thao tác)
+   để xin tên học sinh — giờ dùng modal sẵn có của trang cho đồng bộ
+   giao diện. */
+function openStartModal(id, event) {
   event && event.stopPropagation();
   const set = allSets.find(s => s.id === id);
   if (!set) return;
 
-  // Record session in localStorage
-  const studentName = prompt('Nhập tên của bạn để ghi nhận phiên làm bài:', 'Học sinh');
-  if (!studentName) return;
+  document.getElementById('modal-title').innerHTML = `🚀 Bắt đầu – ${set.title}`;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn-cancel" onclick="closeModal()">Huỷ bỏ</button>
+    <button class="btn-save" onclick="confirmStartQuiz('${id}')">🚀 Mở bài làm</button>
+  `;
+  document.getElementById('modal-body').innerHTML = `
+    <div class="form-group">
+      <label>Tên học sinh *</label>
+      <input id="startStudentName" type="text" placeholder="VD: Nguyễn Văn A" value="Học sinh">
+    </div>
+    <p style="font-size:12px;color:var(--text-muted);margin-top:-4px;">
+      Bài làm sẽ mở ở đường link ngoài của bộ đề này. Đây chỉ là ghi nhận cục bộ trên máy này để theo dõi
+      ai đã bắt đầu — điểm số cần nhập tay ở mục "⚙️ Quản lý" sau khi học sinh làm xong.
+    </p>
+  `;
+  openModalEl();
+  document.getElementById('startStudentName')?.focus();
+}
+
+function confirmStartQuiz(id) {
+  const set = allSets.find(s => s.id === id);
+  if (!set) return;
+  const nameInput = document.getElementById('startStudentName');
+  const studentName = (nameInput?.value || '').trim() || 'Học sinh';
 
   const session = {
     id: 'sess_' + Date.now(),
-    studentName: studentName.trim() || 'Học sinh',
+    studentName,
     setId: id,
     setTitle: set.title,
     startTime: new Date().toLocaleString('vi-VN'),
@@ -244,15 +284,11 @@ function startQuiz(id, event) {
   };
 
   saveSession(session);
+  closeModal();
   showToast(`📌 Ghi nhận: ${session.studentName} – ${set.title}`);
+  renderCards();
 
-  // Open quiz link after short delay
-  setTimeout(() => {
-    window.open(set.link, '_blank', 'noopener,noreferrer');
-    // Simulate score coming back (demo only)
-    simulateScore(session.id, id);
-  }, 800);
-
+  window.open(set.link, '_blank', 'noopener,noreferrer');
   updateReportTab();
 }
 
@@ -266,24 +302,22 @@ function getSessions() {
   try { return JSON.parse(localStorage.getItem('ic3_sessions') || '[]'); } catch { return []; }
 }
 
-function simulateScore(sessionId, setId) {
-  // Demo: after 5s, mark session done with random score
-  setTimeout(() => {
-    let sessions = getSessions();
-    const idx = sessions.findIndex(s => s.id === sessionId);
-    if (idx !== -1) {
-      const set = allSets.find(s => s.id === setId);
-      const total = set ? set.questions : 30;
-      const correct = Math.floor(Math.random() * (total - Math.floor(total * 0.4))) + Math.floor(total * 0.4);
-      const score = Math.round((correct / total) * 100);
-      sessions[idx].score = score;
-      sessions[idx].correct = correct;
-      sessions[idx].total = total;
-      sessions[idx].status = 'Hoàn thành';
-      localStorage.setItem('ic3_sessions', JSON.stringify(sessions));
-      updateReportTab();
-    }
-  }, 5000);
+/* Bộ đề dùng link ngoài (wit.id.vn) nên app không có cách nào nhận điểm
+   thật tự động — trước đây có 1 hàm simulateScore() BỊA điểm ngẫu nhiên
+   sau 5s để demo, trông như thật nhưng hoàn toàn giả. Đã bỏ hàm đó;
+   thay vào đó giáo viên tự nhập điểm thật (recordScore, gọi từ modal
+   "⚙️ Quản lý") sau khi học sinh làm xong ở link ngoài. */
+function recordScore(sessionId, score) {
+  score = Math.max(0, Math.min(100, Math.round(score)));
+  const sessions = getSessions();
+  const idx = sessions.findIndex(s => s.id === sessionId);
+  if (idx === -1) return;
+  sessions[idx].score = score;
+  sessions[idx].status = 'Hoàn thành';
+  localStorage.setItem('ic3_sessions', JSON.stringify(sessions));
+  const set = allSets.find(s => s.id === sessions[idx].setId);
+  if (set) openManageModal(set.id);
+  updateReportTab();
 }
 
 /* ========================================
@@ -546,9 +580,12 @@ function openManageModal(id, event) {
             <div class="progress-name">${s.studentName}</div>
             <div class="progress-meta">${s.startTime}</div>
           </div>
-          <div class="progress-score" style="color:${s.score !== null ? '#6366f1' : 'var(--text-muted)'}">
-            ${s.score !== null ? s.score + '%' : '...'}
-          </div>
+          ${s.score !== null
+            ? `<div class="progress-score" style="color:#6366f1">${s.score}%</div>`
+            : `<form class="progress-score-form" onsubmit="event.preventDefault();recordScore('${s.id}', this.querySelector('input').value)">
+                 <input type="number" min="0" max="100" placeholder="%" required>
+                 <button type="submit" title="Lưu điểm học sinh này">✔ Lưu</button>
+               </form>`}
         </div>`;
       }).join('');
 
@@ -650,8 +687,7 @@ function saveNewSet() {
     type: type,
     icon: icon,
     coverGradient: gradients[Math.floor(Math.random() * gradients.length)],
-    link: link,
-    students: 0
+    link: link
   };
 
   // Save to localStorage

@@ -25,7 +25,7 @@
 
   <!-- ── Danh sách Trường/Lớp/Họ và tên hiển thị ở form bên dưới do Điều
      phối đào tạo NẠP TỪ Excel ngay trong khu quản trị (xem trang
-     "🧑🎓 Quản lý danh sách học sinh" → roster-manager.html →
+     "🎓 Quản lý danh sách học sinh" → roster-manager.html →
      nút "📥 Nạp từ Excel"), KHÔNG còn nút nạp Excel ngoài trang công
      khai này nữa để tránh lộ thao tác quản trị cho học sinh. Trang này
      đọc danh sách từ file tĩnh data/roster/students-active.json (xuất
@@ -109,9 +109,10 @@
         <span class="lobby-brand-name">EduQuiz IC3</span>
       </div>
       <div class="lobby-card">
-        <div class="lobby-card-title"><span>🚀</span> Bắt đầu ghi danh</div>
+        <!-- Nhóm 1: Thông tin học sinh -->
+        <div class="form-section-label">👤 Thông tin học sinh</div>
 
-        <!-- Row 1: Trường (full width) — chọn trước để lọc Lớp/Tên bên dưới -->
+        <!-- Trường (full width) — chọn trước để lọc Lớp/Tên bên dưới -->
         <div class="form-group">
           <label>🏛️ Trường</label>
           <select id="studentSchool" disabled>
@@ -120,7 +121,7 @@
           <!-- <div class="roster-status" id="rosterStatus"></div> -->
         </div>
 
-        <!-- Row 2: Lớp + Họ và tên (lọc dần theo Trường đã chọn) -->
+        <!-- Lớp + Họ và tên (lọc dần theo Trường đã chọn) -->
         <div class="form-row">
           <div class="form-group">
             <label>🏫 Lớp</label>
@@ -136,10 +137,12 @@
           </div>
         </div>
 
-        <!-- Row 3: Danh mục + Cấp độ -->
+        <!-- Nhóm 2: Chọn bài thi -->
+        <div class="form-section-label">📝 Chọn bài thi</div>
+
         <div class="form-row">
           <div class="form-group">
-            <label>📚 Chương Trình</label>
+            <label>📚 Chương trình</label>
             <select id="categorySelect"></select>
           </div>
           <div class="form-group">
@@ -148,9 +151,15 @@
           </div>
         </div>
 
-        <!-- Row 4: Minitest (thời gian mặc định 20 phút, không cho học sinh tự chọn) -->
+        <!-- Minitest (thời gian mặc định 20 phút, không cho học sinh tự chọn).
+             Chọn theo 2 bước: bấm 1 trong các nút "chế độ" (Theo tiết/Theo
+             chủ đề/Tổng hợp) trước để LỌC bớt, rồi mới chọn cụ thể trong
+             select bên dưới — tránh 1 dropdown xổ ra 16 dòng liền một lúc
+             (7 chủ đề + 8 tiết + Tổng hợp), khó quét/dễ chọn nhầm trên di
+             động. Xem js/quiz-engine.js § refreshMinitests(). -->
         <div class="form-group">
-          <label>📝 Minitest</label>
+          <label>🗂️ Minitest</label>
+          <div class="mt-mode-toggle" id="mtModeToggle"></div>
           <select id="minitestSelect"></select>
           <div class="minitest-meta" id="minitestMeta"></div>
         </div>
@@ -158,26 +167,24 @@
         <button type="button" class="btn-start" id="btnStart" onclick="startExam()" disabled>▶ Bắt đầu</button>
         <button type="button" class="btn-secondary" onclick="showRecords()">📊 Xem lịch sử bài làm</button>
 
-        <!-- Dải XP/Streak/Huy hiệu (js/gamification.js, gọi từ js/main.js) -->
-        <div class="lobby-game-strip" id="lobbyGameStrip"></div>
-
-        <!-- Khu Vui Chơi: gộp cả 5 mini-game vào 1 lối vào duy nhất, chỉ mở
-             khóa khi bài "Tổng hợp" GẦN NHẤT của học sinh ĐANG ĐƯỢC CHỌN đạt
-             từ 90% điểm trở lên — dùng 1 lần rồi khóa lại, phải làm bài
-             Tổng hợp mới để mở lại. Xem js/game-zone-gate.js. -->
-        <button type="button" class="game-zone-open-btn" id="openGameZoneBtn"
-          title="Khu Vui Chơi — mở khóa khi làm bài Tổng hợp đạt từ 90% điểm (dùng 1 lần)">
-          🎮 Khu Vui Chơi
-        </button>
-        <div class="game-zone-hint" id="gameZoneHint"></div>
-
         <!-- MOS Word 2019 — mô phỏng thao tác Ribbon, 10 tiết ôn luyện cuối
              khóa (không khóa như Khu Vui Chơi, đây là nội dung học chính).
-             Xem js/game-modal.js + word-simulator.html. -->
-        <button type="button" class="game-zone-open-btn" id="openWordSimBtn"
+             Xem js/game-modal.js + word-simulator.html.
+             CHỈ HIỆN khi đang chọn Chương trình = MOS + Cấp độ = Word — gắn
+             chặt với đúng môn đang chọn thay vì luôn hiện không ngữ cảnh,
+             xem hàm updateMosInlinePractice() ở js/main.js. -->
+        <button type="button" class="game-zone-open-btn" id="openWordSimBtn" hidden
           title="MOS Word 2019 — 10 tiết ôn luyện thao tác Ribbon">
           📝 MOS Word — Ôn luyện Ribbon
         </button>
+
+        <!-- MOS Practice (Excel/PowerPoint) — tải đề thật, làm trên Office
+             thật, nộp file để hệ thống tự chấm điểm (mos-practice.html).
+             Cùng nguyên tắc với nút Ribbon ở trên: chỉ hiện khi đang chọn
+             đúng Chương trình = MOS + Cấp độ = Excel/PowerPoint. -->
+        <a class="game-zone-open-btn" id="openMosPracticeBtn" href="mos-practice.html" target="_blank" rel="noopener" hidden>
+          📤 MOS Practice — Nộp bài chấm điểm thật
+        </a>
       </div>
     </div>
   </div>
@@ -256,6 +263,20 @@
         </div>
       </div>
       <div class="review-list" id="reviewList"></div>
+
+      <!-- Khu Vui Chơi: gộp cả 5 mini-game vào 1 lối vào duy nhất, chỉ mở
+           khóa khi bài "Tổng hợp" GẦN NHẤT của học sinh ĐANG ĐƯỢC CHỌN đạt
+           từ 90% điểm trở lên — dùng 1 lần rồi khóa lại, phải làm bài
+           Tổng hợp mới để mở lại. Đặt ở màn Kết quả (thay vì form ghi danh)
+           vì đây đúng lúc học sinh biết mình có vừa đạt mốc mở khóa hay
+           chưa. Xem js/game-zone-gate.js (chỉ đọc id qua getElementById,
+           không phụ thuộc vị trí DOM). -->
+      <button type="button" class="game-zone-open-btn" id="openGameZoneBtn"
+        title="Khu Vui Chơi — mở khóa khi làm bài Tổng hợp đạt từ 90% điểm (dùng 1 lần)">
+        🎮 Khu Vui Chơi
+      </button>
+      <div class="game-zone-hint" id="gameZoneHint"></div>
+
       <button type="button" class="btn-retry" onclick="backToLobby()">🔄 Làm lại / Chọn bài khác</button>
       <button type="button" class="btn-secondary" onclick="showRecords()">📊 Xem lịch sử bài làm</button>
     </div>
