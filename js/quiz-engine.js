@@ -186,6 +186,13 @@ function _shuffleArr(arr) {
   return a;
 }
 
+// "Tiết N" (N=1..8) là minitest ĐÃ TỰ TRỘN SẴN từ 7 chủ đề gốc (xem
+// scripts/generate-tiet-minitests.js) — KHÔNG phải 1 chủ đề thật, nên
+// phải loại khỏi mọi chỗ tính "chia đều theo chủ đề" (nếu không, bài
+// "Tổng hợp" sẽ tưởng có 15 chủ đề thay vì 7, chia sai tỉ lệ).
+const LESSON_KEY_RE = /^Tiết \d+$/;
+function _isRealTopic(name) { return !LESSON_KEY_RE.test(name); }
+
 /**
  * Trộn câu hỏi TỔNG HỢP: chia đều số câu cho từng chủ đề (7 chủ đề IC3),
  * nếu 1 chủ đề không đủ câu thì phần thiếu được san sẻ ngẫu nhiên
@@ -195,7 +202,7 @@ function _shuffleArr(arr) {
  * @returns {Array} mảng câu hỏi đã trộn ngẫu nhiên, sẵn sàng đưa vào prepareQuestions()
  */
 function buildRandomMixQuestions(minitestsFull, totalWanted) {
-  const topics = Object.keys(minitestsFull || {});
+  const topics = Object.keys(minitestsFull || {}).filter(_isRealTopic);
   if (topics.length === 0) return [];
 
   const avail = {};
@@ -369,9 +376,15 @@ function _setLoadingState(isLoading) {
    ============================================================ */
 
 function initLobby() {
-  const catSel = document.getElementById('categorySelect');
-  const lvlSel = document.getElementById('levelSelect');
-  const mtSel  = document.getElementById('minitestSelect');
+  const catSel   = document.getElementById('categorySelect');
+  const lvlSel   = document.getElementById('levelSelect');
+  const mtSel    = document.getElementById('minitestSelect');
+  const modeWrap = document.getElementById('mtModeToggle');
+
+  // "Chế độ" đang chọn ở khối chọn Minitest — nhớ giữa các lần đổi Level
+  // (nếu vẫn còn hợp lệ) để không giật lại "Theo tiết" mỗi lần bấm chọn
+  // linh tinh. 'lesson' làm mặc định vì đây là lộ trình học khuyến nghị.
+  let mtMode = 'lesson';
 
   // ── Đổ danh mục (categories) ───────────────────────────────
   catSel.innerHTML = '';
@@ -394,36 +407,67 @@ function initLobby() {
   };
 
   // ── Hàm cập nhật Minitest khi đổi Level ───────────────────
+  // Chọn theo 2 BƯỚC thay vì 1 dropdown dài: bấm nút "chế độ" (Theo
+  // tiết / Theo chủ đề / Tổng hợp) để LỌC trước, select bên dưới chỉ
+  // hiện đúng nhóm đó (tối đa 8 dòng thay vì 16) — dễ thao tác hơn hẳn
+  // trên di động, không phải cuộn 1 danh sách dài để tìm đúng mục.
   const refreshMinitests = () => {
     const cat = _findCategory(catSel.value);
     const lv  = cat?.levels?.find(l => l.id === lvlSel.value);
-    mtSel.innerHTML = '';
 
-    const minitests  = lv?.minitests || {};
-    const topicNames = Object.keys(minitests);
-    topicNames.forEach(name => {
-      const mt  = minitests[name];
-      const opt = new Option(
-        `${name} (${_mtCount(mt)} câu)`,
-        name
-      );
-      mtSel.appendChild(opt);
-    });
+    const minitests   = lv?.minitests || {};
+    const allNames    = Object.keys(minitests);
+    const lessonNames = allNames.filter(n => LESSON_KEY_RE.test(n));
+    const topicNames  = allNames.filter(_isRealTopic);
 
-    // ── Tùy chọn "Tổng hợp" — random chia đều các chủ đề của Level này ──
-    if (topicNames.length > 1) {
-      const totalAvail = topicNames.reduce((s, n) => s + _mtCount(minitests[n]), 0);
-      const wanted = Math.min(_randomMixTotalFor(catSel.value, lvlSel.value), totalAvail);
-      if (wanted > 0) {
-        const opt = new Option(
-          `📚 Tổng hợp — ngẫu nhiên chia đều ${topicNames.length} chủ đề (${wanted} câu)`,
-          RANDOM_MIX_KEY
-        );
-        mtSel.appendChild(opt);
-      }
-    }
+    // "Tổng hợp" — random chia đều các CHỦ ĐỀ THẬT (KHÔNG tính "Tiết N"
+    // là 1 chủ đề — xem _isRealTopic).
+    const totalAvail = topicNames.reduce((s, n) => s + _mtCount(minitests[n]), 0);
+    const mixWanted  = topicNames.length > 1
+      ? Math.min(_randomMixTotalFor(catSel.value, lvlSel.value), totalAvail)
+      : 0;
 
-    refreshMeta();
+    const modes = [];
+    if (lessonNames.length) modes.push({ id: 'lesson', label: '🗓️ Theo tiết', names: lessonNames });
+    if (topicNames.length)  modes.push({ id: 'topic',  label: '📖 Theo chủ đề', names: topicNames });
+    if (mixWanted > 0)      modes.push({ id: 'mix',    label: '📚 Tổng hợp',   names: [RANDOM_MIX_KEY] });
+
+    // Giữ nguyên chế độ đang chọn nếu Level mới vẫn có (vd đổi Level
+    // trong cùng Chương trình, vẫn có "Theo tiết") — không thì rơi về
+    // chế độ đầu tiên sẵn có (vd MOS không có "Theo tiết").
+    if (!modes.find(m => m.id === mtMode)) mtMode = modes[0]?.id;
+
+    const renderModeButtons = () => {
+      modeWrap.innerHTML = modes.map(m =>
+        `<button type="button" class="mt-mode-btn${m.id === mtMode ? ' is-active' : ''}" data-mode="${m.id}">${m.label}</button>`
+      ).join('');
+      // Chỉ 1 chế độ (vd MOS chỉ có "Theo chủ đề") → ẩn hẳn thanh nút,
+      // không cần bấm chọn khi chẳng có gì để lọc.
+      modeWrap.hidden = modes.length <= 1;
+      modeWrap.querySelectorAll('.mt-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (btn.dataset.mode === mtMode) return;
+          mtMode = btn.dataset.mode;
+          renderModeButtons();
+          renderOptions();
+        });
+      });
+    };
+
+    const renderOptions = () => {
+      mtSel.innerHTML = '';
+      const mode = modes.find(m => m.id === mtMode);
+      (mode?.names || []).forEach(name => {
+        const label = name === RANDOM_MIX_KEY
+          ? `📚 Tổng hợp — ngẫu nhiên chia đều ${topicNames.length} chủ đề (${mixWanted} câu)`
+          : `${name} (${_mtCount(minitests[name])} câu)`;
+        mtSel.appendChild(new Option(label, name));
+      });
+      refreshMeta();
+    };
+
+    renderModeButtons();
+    renderOptions();
   };
 
   // ── Cập nhật chip thống kê + nút Bắt đầu ──────────────────
@@ -456,6 +500,13 @@ function initLobby() {
       btn.disabled = !(count && name && cls && school);
       btn.textContent = btn.disabled ? '▶ Bắt đầu' : '▶ Bắt đầu';
     }
+
+    // Hiện/ẩn nút "MOS Word — Ôn luyện Ribbon" / "MOS Practice" ngay trong
+    // form chọn bài, tuỳ theo Chương trình/Cấp độ đang chọn — xem
+    // js/main.js § updateMosInlinePractice(). Đặt ở cuối refreshMeta() vì
+    // hàm này CHẮC CHẮN chạy sau mọi thay đổi catSel/lvlSel lẫn lần tải
+    // trang đầu tiên (initLobby() gọi refreshLevels() → ... → refreshMeta()).
+    window.updateMosInlinePractice?.(catSel.value, lvlSel.value);
   };
 
   // ── Gắn sự kiện ───────────────────────────────────────────
@@ -1115,44 +1166,31 @@ function renderTrueFalse(q, qi) {
   const answeredCount = Object.keys(current).length;
 
   document.getElementById('q-body').innerHTML = `
-    <div id="tf-counter-${qi}" data-total="${stmts.length}" style="font-size:.82rem;font-weight:700;color:var(--muted);margin-bottom:.75rem;">
-      📋 Trả lời từng câu (${answeredCount}/${stmts.length} đã chọn)
+    <div class="tf-toolbar">
+      <div id="tf-counter-${qi}" class="tf-counter" data-total="${stmts.length}">
+        📋 Trả lời từng câu (${answeredCount}/${stmts.length} đã chọn)
+      </div>
     </div>
-    <table class="tf-table" style="width:100%;border-collapse:separate;border-spacing:0 .4rem;">
-      <thead>
-        <tr>
-          <th style="text-align:left;padding:.4rem .6rem;color:var(--muted);font-size:.8rem;">
-            Phát biểu
-          </th>
-          <th style="width:150px;text-align:center;color:var(--muted);font-size:.85rem;">${lT}</th>
-          <th style="width:150px;text-align:center;color:var(--muted);font-size:.85rem;">${lF}</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${stmts.map((st, j) => `
-          <tr class="tf-row" id="tf-row-${qi}-${j}"
-              style="background:${
-                current[j] === 'true'  ? 'rgba(0,201,160,.08)' :
-                current[j] === 'false' ? 'rgba(255,82,82,.06)' :
-                'var(--card2)'
-              };border-radius:10px;transition:background .2s;">
-            <td style="padding:.55rem .75rem;border-radius:10px 0 0 10px;font-size:clamp(.95rem,2.5vw,1.05rem);">
-              <span style="font-weight:700;color:var(--muted);margin-right:.4rem;">${j + 1}.</span>
-              ${st.text}
-            </td>
-            <td class="tf-btn-cell" style="text-align:center;border-radius:0;">
-              <button class="tf-btn ${current[j] === 'true' ? 'selected-true' : ''}"
-                      data-qi="${qi}" data-j="${j}" data-v="true"
-                      onclick="selectTF(this)">${lT}</button>
-            </td>
-            <td class="tf-btn-cell" style="text-align:center;border-radius:0 10px 10px 0;">
-              <button class="tf-btn ${current[j] === 'false' ? 'selected-false' : ''}"
-                      data-qi="${qi}" data-j="${j}" data-v="false"
-                      onclick="selectTF(this)">${lF}</button>
-            </td>
-          </tr>`).join('')}
-      </tbody>
-    </table>`;
+    <div class="tf-list">
+      ${stmts.map((st, j) => `
+        <div class="tf-row ${
+              current[j] === 'true'  ? 'is-true' :
+              current[j] === 'false' ? 'is-false' : ''
+            }" id="tf-row-${qi}-${j}">
+          <div class="tf-row-main">
+            <span class="tf-row-num">${j + 1}</span>
+            <span class="tf-row-text">${st.text}</span>
+          </div>
+          <div class="tf-row-actions">
+            <button class="tf-btn tf-btn-true ${current[j] === 'true' ? 'selected-true' : ''}"
+                    data-qi="${qi}" data-j="${j}" data-v="true"
+                    onclick="selectTF(this)">${lT}</button>
+            <button class="tf-btn tf-btn-false ${current[j] === 'false' ? 'selected-false' : ''}"
+                    data-qi="${qi}" data-j="${j}" data-v="false"
+                    onclick="selectTF(this)">${lF}</button>
+          </div>
+        </div>`).join('')}
+    </div>`;
 }
 
 function selectTF(el) {
@@ -1165,13 +1203,12 @@ function selectTF(el) {
   State.session.clicks++;
 
   // Cập nhật UI row
-  const row = el.closest('tr');
+  const row = el.closest('.tf-row');
   if (row) {
     row.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('selected-true','selected-false'));
     el.classList.add(v === 'true' ? 'selected-true' : 'selected-false');
-    row.style.background = v === 'true'
-      ? 'rgba(0,201,160,.08)'
-      : 'rgba(255,82,82,.06)';
+    row.classList.remove('is-true','is-false');
+    row.classList.add(v === 'true' ? 'is-true' : 'is-false');
   }
 
   // Cập nhật bộ đếm "x/y đã chọn" ở đầu câu (trước đây bị bỏ sót, khiến
@@ -2190,6 +2227,44 @@ function moveOrderingItem(el) {
    selectfill→ dropdown <select> tại mỗi chỗ trống
    ============================================================ */
 
+/** Nội dung bên trong 1 ô chỗ trống (dùng chung cho cả 2 layout bên dưới). */
+function _fillBlankSlotHtml(q, qi, i, filled, isDrag) {
+  return `
+    <span class="fillblank-slot ${filled[i] ? 'filled' : 'empty-hint'}"
+          data-qi="${qi}" data-bi="${i}"
+          onclick="${q.type === 'selectfill' ? '' : 'onFillSlotTap(this)'}">
+      ${q.type === 'selectfill'
+        ? `<select class="fillblank-select" data-qi="${qi}" data-bi="${i}" onchange="onSelectFillChange(this)">
+             <option value="">— Chọn —</option>
+             ${(q._wordBankShuffled || q.wordBank || []).filter((w, idx, arr) => arr.indexOf(w) === idx).map(w =>
+               `<option value="${encodeURIComponent(w)}" ${filled[i] === w ? 'selected' : ''}>${w}</option>`).join('')}
+           </select>`
+        : (filled[i]
+            ? `<span class="fillblank-slot-value">${filled[i]}</span>
+               <button type="button" class="slot-remove" data-qi="${qi}" data-bi="${i}" onclick="event.stopPropagation();removeFillBlank(this)">✕</button>`
+            : `<span class="fillblank-slot-placeholder">${isDrag ? '⬇ Thả đáp án vào đây' : '… chọn đáp án'}</span>`)}
+    </span>`;
+}
+
+/**
+ * Tách segments/blanks thành từng "dòng" theo ký tự "\n" trong dữ liệu —
+ * KHÔNG quan tâm \n nằm ở đầu hay cuối segment nào (dữ liệu thật không
+ * đồng nhất, có câu để \n ở đầu segment sau, có câu để ở cuối segment
+ * trước — xem data/ic3/*.json). Mỗi dòng trả về gồm các token
+ * {type:'text'|'blank', ...} theo đúng thứ tự xuất hiện.
+ */
+function _splitFillBlankLines(segments, blanksLen) {
+  const lines = [[]];
+  segments.forEach((seg, i) => {
+    String(seg || '').split('\n').forEach((part, pi) => {
+      if (pi > 0) lines.push([]);
+      if (part) lines[lines.length - 1].push({ type: 'text', value: part });
+    });
+    if (i < blanksLen) lines[lines.length - 1].push({ type: 'blank', index: i });
+  });
+  return lines.filter(line => line.length > 0);
+}
+
 function renderFillBlank(q, qi) {
   const body = document.getElementById('q-body');
   if (!body) return;
@@ -2200,24 +2275,18 @@ function renderFillBlank(q, qi) {
   const answeredCount = Object.keys(filled).length;
   const isDrag = q.type === 'dragfill';
 
-  const passageHtml = segments.map((seg, i) => {
-    const blankHtml = i < blanks.length ? `
-      <span class="fillblank-slot ${filled[i] ? 'filled' : 'empty-hint'}"
-            data-qi="${qi}" data-bi="${i}"
-            onclick="${q.type === 'selectfill' ? '' : 'onFillSlotTap(this)'}">
-        ${q.type === 'selectfill'
-          ? `<select class="fillblank-select" data-qi="${qi}" data-bi="${i}" onchange="onSelectFillChange(this)">
-               <option value="">— Chọn —</option>
-               ${(q._wordBankShuffled || q.wordBank || []).filter((w, idx, arr) => arr.indexOf(w) === idx).map(w =>
-                 `<option value="${encodeURIComponent(w)}" ${filled[i] === w ? 'selected' : ''}>${w}</option>`).join('')}
-             </select>`
-          : (filled[i]
-              ? `<span class="fillblank-slot-value">${filled[i]}</span>
-                 <button type="button" class="slot-remove" data-qi="${qi}" data-bi="${i}" onclick="event.stopPropagation();removeFillBlank(this)">✕</button>`
-              : `<span class="fillblank-slot-placeholder">${isDrag ? '⬇ Thả đáp án vào đây' : '… chọn đáp án'}</span>`)}
-      </span>` : '';
-    return `${seg}${blankHtml}`;
-  }).join('');
+  // Dạng "mỗi dòng đúng 1 phát biểu + 1 chỗ trống" (dữ liệu đóng gói
+  // nhiều câu true/false độc lập vào chung 1 câu selectfill/dragfill) →
+  // hiển thị theo hàng, chỗ trống thẳng cột bên phải như bảng Đúng/Sai.
+  // Khác với chỗ trống nằm GIỮA 1 câu liền mạch (kể cả câu có 2-3 chỗ
+  // trống trong cùng 1 dòng, xem data/ic3/IC3__LV3.json câu AND/OR/NOT)
+  // — dạng đó BẮT BUỘC vẫn phải trôi nổi theo chữ (passage) như cũ, nếu
+  // ép vào layout hàng sẽ xé câu ra khỏi ngữ nghĩa. Trước đây render
+  // passage cho cả dạng "nhiều dòng" khiến chỗ trống bị đẩy xuống dòng
+  // riêng, bỏ trống cả phần còn lại của dòng — xem ảnh báo lỗi.
+  const fbLines = _splitFillBlankLines(segments, blanks.length);
+  const isStatementList = fbLines.length > 1 &&
+    fbLines.every(line => line.filter(t => t.type === 'blank').length === 1);
 
   const poolHtml = isDrag ? `
     <div class="drag-pool-title">📦 Đáp án — kéo thả hoặc nhấn chip rồi nhấn vào chỗ trống:</div>
@@ -2227,13 +2296,35 @@ function renderFillBlank(q, qi) {
              id="${id}" onclick="onFillChipTap(this)">⠿ ${w}</div>`).join('')}
     </div>` : '';
 
+  const bodyHtml = isStatementList
+    ? `<div class="tf-list">
+        ${fbLines.map((line, li) => {
+          const text = line.filter(t => t.type === 'text').map(t => t.value).join('').trim();
+          const blankTok = line.find(t => t.type === 'blank');
+          return `
+          <div class="tf-row" id="fb-row-${qi}-${li}">
+            <div class="tf-row-main">
+              <span class="tf-row-num">${li + 1}</span>
+              <span class="tf-row-text">${text}</span>
+            </div>
+            <div class="tf-row-actions">
+              ${_fillBlankSlotHtml(q, qi, blankTok.index, filled, isDrag)}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`
+    : `<div class="fillblank-passage">${segments.map((seg, i) =>
+        `${seg}${i < blanks.length ? _fillBlankSlotHtml(q, qi, i, filled, isDrag) : ''}`).join('')}</div>`;
+
   body.innerHTML = `
     ${q.hint ? `<div class="q-hint-line">💡 ${q.hint}</div>` : ''}
-    <div style="font-size:.82rem;font-weight:700;color:var(--muted);margin:.4rem 0 .75rem;">
-      ${isDrag ? '🧩' : '▾'} Đã điền: ${answeredCount}/${blanks.length}
+    <div class="tf-toolbar">
+      <div id="fb-counter-${qi}" class="tf-counter">
+        ${isDrag ? '🧩' : '▾'} Đã điền: ${answeredCount}/${blanks.length}
+      </div>
     </div>
     ${poolHtml}
-    <div class="fillblank-passage">${passageHtml}</div>`;
+    ${bodyHtml}`;
 
   if (isDrag) {
     body.querySelectorAll('.fill-chip').forEach(chip => {
@@ -2360,7 +2451,7 @@ function onSelectFillChange(el) {
   updateSidebar();
   // Không render lại toàn bộ (mất focus dropdown) — chỉ cập nhật bộ đếm dòng trên
   const q = State.questions[qi];
-  const counterLine = el.closest('#q-body')?.querySelector('div[style*="Đã điền"]');
+  const counterLine = document.getElementById(`fb-counter-${qi}`);
   if (counterLine) {
     const answeredCount = Object.keys(State.fillblank[qi] || {}).length;
     counterLine.textContent = `${q.type === 'dragfill' ? '🧩' : '▾'} Đã điền: ${answeredCount}/${(q.blanks||[]).length}`;

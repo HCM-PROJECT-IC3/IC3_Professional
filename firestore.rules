@@ -122,6 +122,28 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // ---- Kết quả nộp bài MOS Practice (mos-practice.html, chấm bằng ExcelJS
+    //      NGAY TRONG TRÌNH DUYỆT — file .xlsx học sinh nộp KHÔNG được gửi
+    //      lên server/Storage, chỉ kết quả chấm được lưu ở đây). Cùng mô
+    //      hình xác thực với quiz_results ở trên (học sinh không đăng nhập
+    //      Firebase Auth, chặn giả mạo bằng ràng buộc schema tối thiểu). ----
+    match /mos_submissions/{submissionId} {
+      allow create: if
+        request.resource.data.studentName is string &&
+        request.resource.data.studentName.size() > 0 &&
+        request.resource.data.studentName.size() < 200 &&
+        request.resource.data.studentSchool is string &&
+        request.resource.data.studentSchool.size() > 0 &&
+        request.resource.data.projectId is string &&
+        request.resource.data.projectId.size() > 0 &&
+        request.resource.data.score is number &&
+        request.resource.data.score >= 0 && request.resource.data.score <= 100 &&
+        request.resource.data.submittedAt == request.time;
+
+      allow read: if isAdmin() || isCoordinator() || isOwnSchoolField('studentSchool');
+      allow update, delete: if isAdmin();
+    }
+
     // ---- Roster: khoá học / lớp / học sinh thật (Điều phối đào tạo quản lý
     //      trong roster-manager.html) ----
     // TRƯỚC ĐÂY 3 collection này "allow read: if true" (đọc công khai, không

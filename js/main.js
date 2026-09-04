@@ -5,6 +5,37 @@ document.addEventListener('DOMContentLoaded', () => {
   if (window.EduGamification) EduGamification.renderInto('#lobbyGameStrip');
 });
 
+/* ── MOS Word/Excel/PowerPoint — nút luyện tập THẬT (Ribbon simulator hoặc
+   nộp file chấm điểm) gắn NGAY TRONG form chọn bài, không phải trong Khu
+   Vui Chơi (mini-game, có khoá điểm) — vì đây là nội dung ôn luyện chính,
+   không phải giải trí. Chỉ hiện đúng 1 nút phù hợp với Cấp độ đang chọn khi
+   Chương trình = MOS; các trường hợp khác ẩn cả 2. Gọi từ
+   js/quiz-engine.js § refreshMeta() (chạy lại mỗi khi đổi Chương
+   trình/Cấp độ, và ngay lần tải trang đầu tiên). */
+function updateMosInlinePractice(catId, levelId) {
+  const wordBtn = document.getElementById('openWordSimBtn');
+  const practiceBtn = document.getElementById('openMosPracticeBtn');
+  if (!wordBtn || !practiceBtn) return;
+
+  const isMos = catId === 'MOS';
+  wordBtn.hidden = !(isMos && levelId === 'Word');
+
+  const practiceSubject = isMos && levelId === 'Excel' ? 'excel'
+    : isMos && levelId === 'PowerPoint' ? 'powerpoint'
+    : null;
+  practiceBtn.hidden = !practiceSubject;
+  if (practiceSubject) {
+    // Truyền ?subject= để mos-practice.html tự cuộn/lọc đúng dự án của môn
+    // đang chọn thay vì học sinh phải tự tìm trong danh sách — xem
+    // js/mos-practice.js đọc URLSearchParams lúc khởi tạo.
+    practiceBtn.href = `mos-practice.html?subject=${practiceSubject}`;
+    practiceBtn.textContent = practiceSubject === 'excel'
+      ? '📤 MOS Practice — Nộp bài Excel chấm điểm thật'
+      : '📤 MOS Practice — Nộp bài PowerPoint chấm điểm thật';
+  }
+}
+window.updateMosInlinePractice = updateMosInlinePractice;
+
 /* ── Toggle Giới thiệu ⇄ Form (chỉ có tác dụng thấy được khi #lobby
    thu về 1 cột ở màn hẹp ≤900px — xem media query trong style.css).
    Ở màn rộng, cả 2 khối luôn hiện song song nên toggle bị ẩn và hàm
