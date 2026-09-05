@@ -157,14 +157,23 @@
         <!-- Cam kết chống gian lận — CHỈ hiện/bắt buộc tick khi chọn chế độ
              "Kiểm tra" (Ôn luyện không ràng buộc gì). Bắt buộc vì nút "Bắt
              đầu" bị khoá disabled cho tới khi tick, xem js/quiz-engine.js
-             § refreshMeta()/wireExamModeToggle(). -->
+             § refreshMeta()/wireExamModeToggle(). Nội dung rút gọn còn 1 câu
+             — chi tiết vi phạm cụ thể học sinh sẽ thấy ngay trong lúc làm
+             bài (toast/khoá màn hình), không cần liệt kê hết ở đây. Ô tick
+             tự vẽ (input gốc ẩn nhưng vẫn giữ để bàn phím/screen reader
+             dùng được — không dùng display:none) + hiệu ứng tick/pop khi
+             chọn, xem css .pledge-check*. -->
         <div class="form-group anti-cheat-pledge" id="antiCheatPledgeWrap" hidden>
           <label class="pledge-label" for="antiCheatPledge">
-            <input type="checkbox" id="antiCheatPledge">
-            <span>
-              Tôi cam kết trong lúc làm bài <strong>Kiểm tra</strong>: chỉ mở <strong>1 tab duy nhất</strong>,
-              không thoát toàn màn hình, không dùng điện thoại/Google Lens/ChatGPT hay bất kỳ công cụ AI/thiết bị nào
-              khác để tra cứu đáp án. Hệ thống sẽ tự động ghi nhận các vi phạm phát hiện được trong lúc làm bài.
+            <span class="pledge-check">
+              <input type="checkbox" id="antiCheatPledge">
+              <span class="pledge-check-box" aria-hidden="true">
+                <svg class="pledge-check-icon" viewBox="0 0 24 24" width="12" height="12"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+              </span>
+            </span>
+            <span class="pledge-text">
+              Cam kết làm bài nghiêm túc: <strong>1 tab duy nhất</strong>, không thoát toàn màn hình,
+              không dùng AI/thiết bị khác để tra đáp án.
             </span>
           </label>
         </div>
