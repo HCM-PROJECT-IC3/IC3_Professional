@@ -55,8 +55,16 @@ function toggleReviewDetail(num) {
   btn?.classList.toggle('open', opening);
 }
 
-/** Dựng phần nội dung chi tiết theo từng loại câu hỏi. */
-function _rdBuildDetailBody(d) {
+/**
+ * Dựng phần nội dung chi tiết theo từng loại câu hỏi.
+ * @param {object} d - { type, fullText, imageUrl, explanation, raw, status }
+ * @param {object} [opts]
+ * @param {boolean} [opts.showQuestionText=true] - false khi gọi từ màn
+ *   làm bài (chế độ Ôn luyện, xem checkCurrentAnswer() trong quiz-engine.js)
+ *   vì đề bài đã hiển thị sẵn ngay phía trên, lặp lại sẽ dư thừa.
+ */
+function _rdBuildDetailBody(d, opts) {
+  const showQuestionText = opts?.showQuestionText !== false;
   const r = d.raw || {};
   let answerBlock = '';
 
@@ -94,7 +102,7 @@ function _rdBuildDetailBody(d) {
     : '';
 
   return `
-    <div class="rd-question">${_rdEsc(d.fullText)}</div>
+    ${showQuestionText ? `<div class="rd-question">${_rdEsc(d.fullText)}</div>` : ''}
     ${answerBlock}
     ${explanation}
   `;
