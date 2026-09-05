@@ -79,6 +79,107 @@ async function loadFromFirestore() {
 }
 
 /* ============================================================
+   GOM CÂY DỮ LIỆU (categories→levels→minitests) THÀNH DANH SÁCH
+   CÂU HỎI PHẲNG, SẴN SÀNG GHI VÀO FIRESTORE
+   ────────────────────────────────────────────────────────────
+   Dùng chung cho MIGRATE (nhập quiz_data.json lần đầu) VÀ UPLOAD JSON
+   (nhập/ghi đè bất cứ lúc nào từ 1 file JSON do admin chọn). Nhận 2
+   dạng file:
+     1. Cây đầy đủ  { categories: [ { levels: [ { minitests: {...} } ] } ] }
+        — đúng dạng quiz_data.json / file "Sao lưu JSON" tải xuống.
+     2. 1 khối lẻ   { id, name, grade, cat_id, minitests: {...} }
+        — đúng dạng từng file data/ic3/<cat>__<lvl>.json.
+   docId ưu tiên q.uid nếu câu hỏi đã có sẵn (vd tải "Sao lưu JSON" về
+   sửa rồi tải lên lại) để GHI ĐÈ đúng câu cũ thay vì tạo bản trùng;
+   chỉ câu hỏi hoàn toàn mới (chưa có uid) mới tự sinh docId mới.
+   ============================================================ */
+function flattenQuestionTree(data, metaLookup) {
+  let categories;
+  if (Array.isArray(data?.categories)) {
+    categories = data.categories;
+  } else if (data?.minitests && typeof data.minitests === 'object') {
+    // Dạng 1 khối lẻ (data/ic3/<cat>__<lvl>.json) — bọc thành 1
+    // category/level ảo để dùng chung vòng lặp bên dưới. cat_id/id trong
+    // file này là id NGẮN (vd "IC3"/"LV1"), không phải tên hiển thị —
+    // tra cứu lại tên thật qua meta.json (metaLookup), nếu không tìm
+    // thấy (khối hoàn toàn mới) thì đành tạm dùng chính id làm tên.
+    const catId = data.cat_id || data.catId || '(chưa rõ)';
+    const lvlId = data.id || data.grade || '(chưa rõ)';
+    const names = metaLookup?.get(`${catId}::${lvlId}`);
+    categories = [{
+      id: catId,
+      name: names?.catName || catId,
+      levels: [{
+        id: lvlId,
+        grade: data.grade || lvlId,
+        name: names?.lvlName || data.name || lvlId,
+        minitests: data.minitests,
+      }],
+    }];
+  } else {
+    throw new Error('Không nhận diện được định dạng file JSON (cần có "categories" hoặc "minitests").');
+  }
+
+  const flat = [];
+  categories.forEach(cat => {
+    (cat.levels || []).forEach(lvl => {
+      const mts = lvl.minitests || {};
+      Object.keys(mts).forEach(mtName => {
+        (mts[mtName] || []).forEach(q => {
+          const docId = q.uid || `${cat.id || cat.name}__${lvl.grade || lvl.id}__${mtName}__q${q.id}`.replace(/\s+/g, '_');
+          flat.push({
+            docId,
+            data: Object.assign({}, q, {
+              uid: docId,
+              catName: cat.name || cat.id || '',
+              gradeName: lvl.name || lvl.grade || lvl.id || '',
+              minitestName: mtName,
+            }),
+          });
+        });
+      });
+    });
+  });
+  return flat;
+}
+
+/** Tải data/ic3/meta.json (nếu có) → bảng tra "catId::lvlId" → tên hiển
+ * thị thật, dùng để nhập 1 file khối lẻ (xem flattenQuestionTree()).
+ * Không có/lỗi thì trả về Map rỗng — flattenQuestionTree() sẽ tự dùng
+ * tạm id làm tên, không chặn việc nhập. */
+async function _buildMetaNameLookup() {
+  const map = new Map();
+  try {
+    const res = await fetch('data/ic3/meta.json', { cache: 'no-store' });
+    if (res.ok) {
+      const meta = await res.json();
+      (meta.categories || []).forEach(cat => {
+        (cat.levels || []).forEach(lvl => {
+          map.set(`${cat.id}::${lvl.id}`, { catName: cat.name, lvlName: lvl.name });
+        });
+      });
+    }
+  } catch { /* best-effort — im lặng bỏ qua */ }
+  return map;
+}
+
+/** Ghi 1 danh sách câu hỏi phẳng (từ flattenQuestionTree()) lên Firestore
+ * theo từng lô ≤450 doc/batch (giới hạn Firestore là 500), báo tiến độ
+ * qua onProgress(done, total). */
+async function batchWriteQuestions(flat, onProgress) {
+  let done = 0;
+  for (let i = 0; i < flat.length; i += 450) {
+    const batch = db().batch();
+    flat.slice(i, i + 450).forEach(item => {
+      batch.set(colRef().doc(item.docId), item.data);
+    });
+    await batch.commit();
+    done += Math.min(450, flat.length - i);
+    onProgress?.(done, flat.length);
+  }
+}
+
+/* ============================================================
    MIGRATE quiz_data.json → Firestore (chỉ admin, 1 lần)
    ============================================================ */
 document.getElementById('migrateBtn').addEventListener('click', async () => {
@@ -90,37 +191,11 @@ document.getElementById('migrateBtn').addEventListener('click', async () => {
     const res = await fetch('quiz_data.json');
     if (!res.ok) throw new Error('Không tải được quiz_data.json');
     const data = await res.json();
-    const flat = [];
-    (data.categories || []).forEach(cat => {
-      (cat.levels || []).forEach(lvl => {
-        const mts = lvl.minitests || {};
-        Object.keys(mts).forEach(mtName => {
-          (mts[mtName] || []).forEach(q => {
-            const docId = q.uid || `${cat.id || cat.name}__${lvl.grade || lvl.id}__${mtName}__q${q.id}`.replace(/\s+/g, '_');
-            flat.push({
-              docId,
-              data: Object.assign({}, q, {
-                uid: docId,
-                catName: cat.name || cat.id || '',
-                gradeName: lvl.name || lvl.grade || lvl.id || '',
-                minitestName: mtName,
-              }),
-            });
-          });
-        });
-      });
-    });
+    const flat = flattenQuestionTree(data);
 
-    let done = 0;
-    for (let i = 0; i < flat.length; i += 450) {
-      const batch = db().batch();
-      flat.slice(i, i + 450).forEach(item => {
-        batch.set(colRef().doc(item.docId), item.data);
-      });
-      await batch.commit();
-      done += Math.min(450, flat.length - i);
-      btn.textContent = `⏳ Đã nhập ${done}/${flat.length}...`;
-    }
+    await batchWriteQuestions(flat, (done, total) => {
+      btn.textContent = `⏳ Đã nhập ${done}/${total}...`;
+    });
     toast(`✅ Đã nhập ${flat.length} câu hỏi lên Firebase`);
     loadFromFirestore();
   } catch (err) {
@@ -128,6 +203,68 @@ document.getElementById('migrateBtn').addEventListener('click', async () => {
     toast('❌ Lỗi nhập dữ liệu: ' + err.message, 5000);
     btn.disabled = false;
     btn.textContent = '📥 Nhập dữ liệu từ quiz_data.json';
+  }
+});
+
+/* ============================================================
+   UPLOAD JSON — cập nhật/ghi đè dữ liệu câu hỏi từ 1 file JSON admin
+   tự chọn (bản "Sao lưu JSON" đã sửa offline, quiz_data.json mới, hoặc
+   1 file data/ic3/<cat>__<lvl>.json lẻ) — dùng được bất cứ lúc nào,
+   không chỉ lần đầu như "Nhập dữ liệu từ quiz_data.json" ở trên.
+   ============================================================ */
+document.getElementById('uploadJsonBtn').addEventListener('click', () => {
+  document.getElementById('uploadJsonInput').click();
+});
+document.getElementById('uploadJsonInput').addEventListener('change', async (e) => {
+  const file = e.target.files?.[0];
+  e.target.value = ''; // cho phép chọn lại đúng file đó lần sau vẫn nổ sự kiện 'change'
+  if (!file) return;
+
+  const btn = document.getElementById('uploadJsonBtn');
+  const btnPrevText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Đang đọc file...';
+  try {
+    const text = await file.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new Error('File không phải JSON hợp lệ.');
+    }
+
+    const metaLookup = await _buildMetaNameLookup();
+    const flat = flattenQuestionTree(data, metaLookup);
+    if (flat.length === 0) throw new Error('Không tìm thấy câu hỏi nào trong file.');
+
+    // Đếm sơ bộ bao nhiêu câu là GHI ĐÈ (đã có uid trùng câu đang có trên
+    // Firebase) và bao nhiêu câu HOÀN TOÀN MỚI, để admin cân nhắc trước
+    // khi xác nhận — tránh bấm nhầm ghi đè hàng loạt.
+    const existingIds = new Set(QUESTIONS.map(x => x.docId));
+    const overwriteCount = flat.filter(item => existingIds.has(item.docId)).length;
+    const newCount = flat.length - overwriteCount;
+    const confirmMsg =
+      `File "${file.name}" có ${flat.length} câu hỏi:\n` +
+      `- ${overwriteCount} câu sẽ GHI ĐÈ lên câu đã có trên Firebase (trùng mã).\n` +
+      `- ${newCount} câu hoàn toàn mới sẽ được thêm vào.\n\n` +
+      `Tiếp tục ghi lên Firebase?`;
+    if (!confirm(confirmMsg)) {
+      btn.disabled = false;
+      btn.textContent = btnPrevText;
+      return;
+    }
+
+    await batchWriteQuestions(flat, (done, total) => {
+      btn.textContent = `⏳ Đang ghi ${done}/${total}...`;
+    });
+    toast(`✅ Đã cập nhật ${flat.length} câu hỏi (${overwriteCount} ghi đè, ${newCount} mới) lên Firebase`, 5000);
+    loadFromFirestore();
+  } catch (err) {
+    console.error(err);
+    toast('❌ Lỗi tải JSON lên: ' + err.message, 6000);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = btnPrevText;
   }
 });
 

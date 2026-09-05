@@ -161,6 +161,16 @@ function _mtTypeCounts(mt) {
 const RANDOM_MIX_KEY   = '__RANDOM_MIX__';
 const RANDOM_MIX_TOTAL_DEFAULT = 40; // fallback nếu không tra được số câu chuẩn bên dưới
 
+/* ============================================================
+   § 1c — CHẾ ĐỘ LÀM BÀI: ÔN LUYỆN vs KIỂM TRA
+   2 chế độ dùng chung TOÀN BỘ bộ đề hiện có (Spark/IC3/MOS × LV1-3 ×
+   Theo tiết/Theo chủ đề/Tổng hợp) — không tách dữ liệu riêng, chỉ khác
+   cách tính giờ khi vào làm bài:
+     - 'practice' (Ôn luyện) → không giới hạn thời gian, không auto-nộp.
+     - 'test'     (Kiểm tra) → đúng chuẩn thi thật, 50 phút/bài (3000s).
+   ============================================================ */
+const TEST_TIME_LIMIT_SECONDS = 50 * 60; // 50 phút/bài — chế độ "Kiểm tra"
+
 // Số câu "Tổng hợp" theo ĐÚNG chuẩn đề thi thật (khớp bảng số câu/thời gian
 // chính thức của từng khối) — key = "<categoryId>__<levelId>", vd "IC3__LV1".
 const RANDOM_MIX_COUNTS = {
@@ -252,6 +262,7 @@ const State = {
   current:   0,
   timer:     null,
   timeLeft:  3000,
+  examMode:  'test', // 'practice' (không giới hạn giờ) | 'test' (đếm ngược 50 phút) — xem #examModeToggle
   matching:  {},     // qi → { left: right }
   matchSel:  {},
   hotspot:   {},     // qi → Set<areaId> đã bấm chọn
@@ -278,6 +289,10 @@ document.addEventListener('visibilitychange', () => {
 
 window.addEventListener('blur', () => {
   if (State.session.startTime) flushQTime(State.current);
+  // Mất focus cửa sổ (kể cả khi KHÔNG đổi tab — vd. alt-tab sang app khác
+  // như điện thoại kết nối qua Link to Windows, ChatGPT desktop...) — tín
+  // hiệu bổ sung riêng cho chế độ "Kiểm tra", xem § 2b bên dưới.
+  if (_AC.active) State.session.appSwitches = (State.session.appSwitches || 0) + 1;
 });
 
 function flushQTime(qi) {
@@ -290,6 +305,348 @@ function flushQTime(qi) {
 function beginQTime(qi) {
   flushQTime(State.current);
   State.session.qStart[qi] = Date.now();
+}
+
+/* ============================================================
+   § 2b — ANTI-CHEAT NÂNG CAO — CHỈ ÁP DỤNG CHẾ ĐỘ "KIỂM TRA"
+   ────────────────────────────────────────────────────────────
+   Giới hạn thành thật: đây là 1 trang web thuần chạy trong trình duyệt,
+   KHÔNG có quyền hệ điều hành. Một số hành vi (vd. dùng ĐIỆN THOẠI/máy
+   ảnh rời chụp màn hình rồi hỏi Google Lens/ChatGPT) xảy ra HOÀN TOÀN
+   BÊN NGOÀI trình duyệt — không có API web nào phát hiện hay chặn được.
+   Với nhóm này, hệ thống chỉ có thể:
+     1. Bắt cam kết (checkbox) trước khi vào thi (xem #antiCheatPledge).
+     2. Dán watermark tên/lớp/giờ làm bài để TRUY VẾT nếu ảnh bị phát tán.
+     3. Ghi nhận các tín hiệu gián tiếp (mất focus, mở nhiều tab, thoát
+        toàn màn hình, mở DevTools...) làm CĂN CỨ để giáo viên xem xét
+        thủ công — không phải bằng chứng tuyệt đối chỉ dựa 1 mình nó.
+   Những gì CHẶN ĐƯỢC thật sự (vì xảy ra trong chính trang này): mở
+   ≥2 tab/cửa sổ trang này cùng lúc, thoát toàn màn hình, copy/paste,
+   chuột phải, in trang, vài phím tắt DevTools.
+   ============================================================ */
+
+const _AC = {
+  active:        false,
+  multiTabTimer: null,
+  devtoolsTimer: null,
+  wasDevtoolsOpen: false,
+};
+
+/** Escape HTML tối thiểu cho nội dung chèn vào khối khoá màn hình
+ * (_acShowLock) — nội dung hiện tại đều do chính code tạo ra (không có
+ * input tự do từ học sinh), nhưng vẫn escape cho chắc. */
+function _acEscapeHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// "Có mặt trên trang" — MỌI tab đang mở index.html (bất kể đang ở lobby
+// hay đang thi) tự ghi nhịp tim vào localStorage để tab khác biết. Chạy
+// SUỐT vòng đời trang (không chỉ lúc thi) vì chi phí rất nhẹ (1 lần
+// đọc/ghi localStorage mỗi 2s) — nhờ vậy lúc bấm "Bắt đầu thi" (Kiểm
+// tra) là phát hiện được NGAY nếu đã có sẵn 1 tab khác mở từ trước,
+// không cần đợi tab kia cũng đang thi.
+const SITE_TAB_HEARTBEAT_KEY = 'eduquiz_site_tabs';
+const SITE_TAB_HEARTBEAT_MS  = 2000;
+const SITE_TAB_STALE_MS      = 6000;
+const _siteTabId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+
+function _acReadTabMap() {
+  try { return JSON.parse(localStorage.getItem(SITE_TAB_HEARTBEAT_KEY) || '{}'); }
+  catch { return {}; }
+}
+function _acWriteTabMap(map) {
+  try { localStorage.setItem(SITE_TAB_HEARTBEAT_KEY, JSON.stringify(map)); } catch {}
+}
+function _acPruneStale(map) {
+  const now = Date.now();
+  Object.keys(map).forEach(id => { if (now - (map[id] || 0) > SITE_TAB_STALE_MS) delete map[id]; });
+  return map;
+}
+function _acBeat() {
+  const map = _acPruneStale(_acReadTabMap());
+  map[_siteTabId] = Date.now();
+  _acWriteTabMap(map);
+}
+function _acOtherTabCount() {
+  return Object.keys(_acPruneStale(_acReadTabMap())).filter(id => id !== _siteTabId).length;
+}
+_acBeat();
+setInterval(_acBeat, SITE_TAB_HEARTBEAT_MS);
+window.addEventListener('beforeunload', () => {
+  const map = _acReadTabMap();
+  delete map[_siteTabId];
+  _acWriteTabMap(map);
+});
+// 'storage' chỉ nổ ở CÁC TAB KHÁC (không nổ ở tab vừa ghi) → phát hiện
+// gần như tức thì thay vì phải đợi tick định kỳ của _acStartMultiTabWatch().
+window.addEventListener('storage', (e) => {
+  if (e.key !== SITE_TAB_HEARTBEAT_KEY || !_AC.active) return;
+  const others = _acOtherTabCount();
+  if (others > 0) _acFlagMultiTab(others); else _acHideLock('multitab');
+});
+
+function _acFlagMultiTab(otherCount) {
+  State.session.multiTabHits = (State.session.multiTabHits || 0) + 1;
+  _acShowLock('multitab', {
+    icon:  '🗔',
+    title: 'Phát hiện mở nhiều tab/cửa sổ',
+    message: `Hệ thống phát hiện trang IC3 đang mở ở ${otherCount + 1} tab/cửa sổ cùng lúc. ` +
+              `Vui lòng đóng bớt, chỉ giữ lại đúng 1 tab đang làm bài để tiếp tục.`,
+    actionLabel: 'Tôi đã đóng các tab khác',
+    onAction: () => {
+      const others = _acOtherTabCount();
+      if (others > 0) {
+        showNotification('⚠️ Vẫn còn tab khác đang mở. Vui lòng đóng hết rồi thử lại.', 'warning');
+      } else {
+        _acHideLock('multitab');
+      }
+    },
+  });
+}
+
+function _acStartMultiTabWatch() {
+  const others = _acOtherTabCount();
+  if (others > 0) _acFlagMultiTab(others);
+  _AC.multiTabTimer = setInterval(() => {
+    if (!_AC.active) return;
+    const n = _acOtherTabCount();
+    if (n > 0) _acFlagMultiTab(n); else _acHideLock('multitab');
+  }, SITE_TAB_HEARTBEAT_MS);
+}
+function _acStopMultiTabWatch() {
+  clearInterval(_AC.multiTabTimer);
+  _AC.multiTabTimer = null;
+}
+
+/** Yêu cầu vào toàn màn hình — PHẢI gọi ngay trong hàm xử lý click (trước
+ * bất kỳ await nào) vì Fullscreen API chỉ cho phép khi còn "user gesture"
+ * gần đó, xem onStartExamClick(). */
+function _acRequestFullscreen() {
+  const el  = document.documentElement;
+  const req = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+  try { req?.call(el)?.catch?.(() => {}); } catch {}
+}
+function _acExitFullscreen() {
+  const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+  try { if (document.fullscreenElement) exit?.call(document)?.catch?.(() => {}); } catch {}
+}
+function _acOnFullscreenChange() {
+  if (!_AC.active) return;
+  if (!document.fullscreenElement) {
+    State.session.fullscreenExits = (State.session.fullscreenExits || 0) + 1;
+    _acShowLock('fullscreen', {
+      icon:  '🖥️',
+      title: 'Bạn đã thoát toàn màn hình',
+      message: `Bài Kiểm tra yêu cầu làm bài ở chế độ toàn màn hình. ` +
+                `Đã ghi nhận ${State.session.fullscreenExits} lần thoát.`,
+      actionLabel: 'Quay lại toàn màn hình',
+      onAction: () => { _acRequestFullscreen(); },
+    });
+  } else {
+    _acHideLock('fullscreen');
+  }
+}
+function _acStartFullscreenWatch() {
+  document.addEventListener('fullscreenchange', _acOnFullscreenChange);
+  document.addEventListener('webkitfullscreenchange', _acOnFullscreenChange);
+  // Nếu trình duyệt/thiết bị không hỗ trợ Fullscreen API (vd Safari iOS)
+  // thì document.fullscreenElement luôn undefined → không ép được, bỏ qua
+  // êm re thay vì khoá nhầm học sinh dùng thiết bị không hỗ trợ.
+}
+function _acStopFullscreenWatch() {
+  document.removeEventListener('fullscreenchange', _acOnFullscreenChange);
+  document.removeEventListener('webkitfullscreenchange', _acOnFullscreenChange);
+}
+
+/** Heuristic phát hiện DevTools đang mở: khi DevTools "docked" (ghim vào
+ * cửa sổ trình duyệt thay vì tách rời), chênh lệch outerWidth/Height so
+ * với innerWidth/Height sẽ tăng vọt. Không bắt được DevTools tách cửa sổ
+ * rời hoàn toàn, nhưng đó là đánh đổi chấp nhận được cho 1 tín hiệu miễn
+ * phí, không cần thư viện ngoài. */
+function _acStartDevtoolsWatch() {
+  _AC.wasDevtoolsOpen = false;
+  _AC.devtoolsTimer = setInterval(() => {
+    if (!_AC.active) return;
+    const wDiff = window.outerWidth  - window.innerWidth;
+    const hDiff = window.outerHeight - window.innerHeight;
+    const open  = wDiff > 160 || hDiff > 160;
+    if (open && !_AC.wasDevtoolsOpen) {
+      State.session.devtoolsHits = (State.session.devtoolsHits || 0) + 1;
+      showNotification('⚠️ Phát hiện dấu hiệu mở DevTools/công cụ kiểm tra mã nguồn — đã ghi nhận vi phạm.', 'warning');
+    }
+    _AC.wasDevtoolsOpen = open;
+  }, 2000);
+}
+function _acStopDevtoolsWatch() {
+  clearInterval(_AC.devtoolsTimer);
+  _AC.devtoolsTimer = null;
+}
+
+/** Khoá 1 số phím tắt hay dùng để lấy/lộ đề: copy, in, lưu trang, xem mã
+ * nguồn, DevTools, PrintScreen. Không thể chặn tuyệt đối (vd DevTools mở
+ * qua menu chuột phải "Kiểm tra"/đã tắt chuột phải riêng bên dưới, hoặc
+ * phím tắt hệ điều hành như Win+Shift+S không lọt tới trình duyệt), chỉ
+ * là lớp cản + ghi nhận thêm. */
+function _acOnKeydown(e) {
+  if (!_AC.active) return;
+  const key = e.key;
+  const ctrlOrMeta = e.ctrlKey || e.metaKey;
+  const isDevtoolsCombo =
+    key === 'F12' ||
+    (ctrlOrMeta && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c'].includes(key)) ||
+    (ctrlOrMeta && ['U', 'u'].includes(key));
+  const isCopyPrintSave =
+    ctrlOrMeta && !e.shiftKey && ['C', 'c', 'X', 'x', 'P', 'p', 'S', 's'].includes(key);
+  const isPrintScreen = key === 'PrintScreen';
+
+  if (!isDevtoolsCombo && !isCopyPrintSave && !isPrintScreen) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+  State.session.shortcutBlocks = (State.session.shortcutBlocks || 0) + 1;
+  if (isPrintScreen) {
+    showNotification('⚠️ Đã ghi nhận thao tác chụp màn hình (Print Screen) trong lúc Kiểm tra.', 'warning');
+  } else {
+    showNotification('⛔ Thao tác này bị khoá trong lúc Kiểm tra.', 'warning');
+  }
+}
+function _acBindKeyGuards() { document.addEventListener('keydown', _acOnKeydown, true); }
+function _acUnbindKeyGuards() { document.removeEventListener('keydown', _acOnKeydown, true); }
+
+/** Khoá chuột phải + copy/cut trong PHẠM VI màn hình thi (#exam) — không
+ * đụng tới dragstart vì các câu dạng kéo-thả (dragfill/classify/matching)
+ * dùng đúng cơ chế HTML5 drag-and-drop này để trả lời. */
+function _acOnContextMenu(e) {
+  if (!_AC.active) return;
+  e.preventDefault();
+  showNotification('⛔ Không dùng chuột phải trong lúc Kiểm tra.', 'warning');
+}
+function _acOnCopyCut(e) {
+  if (!_AC.active) return;
+  e.preventDefault();
+  showNotification('⛔ Không sao chép nội dung trong lúc Kiểm tra.', 'warning');
+}
+function _acBindCopyGuards() {
+  const examEl = document.getElementById('exam');
+  examEl?.addEventListener('contextmenu', _acOnContextMenu);
+  examEl?.addEventListener('copy', _acOnCopyCut);
+  examEl?.addEventListener('cut', _acOnCopyCut);
+}
+function _acUnbindCopyGuards() {
+  const examEl = document.getElementById('exam');
+  examEl?.removeEventListener('contextmenu', _acOnContextMenu);
+  examEl?.removeEventListener('copy', _acOnCopyCut);
+  examEl?.removeEventListener('cut', _acOnCopyCut);
+}
+
+function _acOnBeforePrint() {
+  if (!_AC.active) return;
+  State.session.printAttempts = (State.session.printAttempts || 0) + 1;
+  showNotification('⛔ Không thể in bài Kiểm tra (xem @media print trong style.css).', 'warning');
+}
+
+/** Cảnh báo native của trình duyệt khi học sinh cố đóng tab/reload lúc
+ * đang Kiểm tra — không chặn được tuyệt đối (học sinh vẫn có thể bấm
+ * "Rời khỏi trang"), nhưng là rào cản hợp lệ duy nhất mà Web API cho
+ * phép (không có API nào chặn đóng tab hoàn toàn, kể cả để chống gian
+ * lận). */
+function _acOnBeforeUnloadWarn(e) {
+  if (!_AC.active) return;
+  e.preventDefault();
+  e.returnValue = '';
+}
+
+/** Watermark tên/lớp/giờ làm bài — 1 dòng chữ nhỏ, mờ, đặt gọn ở góc dưới
+ * trái màn hình thi (không đè lên câu hỏi/nút bấm). KHÔNG ngăn được việc
+ * chụp ảnh màn hình (điện thoại/máy ảnh rời), chỉ giúp TRUY VẾT nguồn nếu
+ * ảnh bị phát tán ra ngoài — đổi lại ĐÚNG 1 dòng nhỏ, không rối mắt, không
+ * che nội dung (bản trộn kín màn hình trước đây gây rối, đã bỏ theo phản
+ * hồi thực tế). */
+function _acMountWatermark() {
+  const examEl = document.getElementById('exam');
+  if (!examEl) return;
+  let wm = document.getElementById('examWatermark');
+  if (!wm) {
+    wm = document.createElement('div');
+    wm.id = 'examWatermark';
+    wm.className = 'exam-watermark';
+    wm.setAttribute('aria-hidden', 'true');
+    examEl.appendChild(wm);
+  }
+  const s     = State.session;
+  const stamp = new Date().toLocaleString('vi-VN');
+  wm.textContent = `${s.studentName || ''} · ${s.studentClass || ''} · ${stamp}`;
+}
+function _acUnmountWatermark() {
+  document.getElementById('examWatermark')?.remove();
+}
+
+/** Khối khoá màn hình dùng chung cho vi phạm "thoát toàn màn hình" và
+ * "mở nhiều tab" — che kín thao tác bài thi cho tới khi khắc phục. */
+function _acShowLock(kind, opts) {
+  let el = document.getElementById(`acLock-${kind}`);
+  if (el) {
+    const msgEl = el.querySelector('.ac-lock-msg');
+    if (msgEl) msgEl.textContent = opts.message;
+    return;
+  }
+  el = document.createElement('div');
+  el.id = `acLock-${kind}`;
+  el.className = 'modal-overlay ac-lock-overlay';
+  el.innerHTML = `
+    <div class="modal-box ac-lock-box">
+      <h3>${opts.icon} ${_acEscapeHtml(opts.title)}</h3>
+      <p class="ac-lock-msg">${_acEscapeHtml(opts.message)}</p>
+      <button type="button" class="ac-lock-action">${_acEscapeHtml(opts.actionLabel)}</button>
+    </div>`;
+  el.querySelector('.ac-lock-action').addEventListener('click', () => opts.onAction?.());
+  document.body.appendChild(el);
+}
+function _acHideLock(kind) {
+  document.getElementById(`acLock-${kind}`)?.remove();
+}
+
+/** Bật toàn bộ lớp bảo vệ trên — gọi từ startExam() SAU KHI đã chuyển
+ * sang màn hình thi (#exam hiển thị), CHỈ khi State.examMode === 'test'. */
+function acStartGuard() {
+  if (_AC.active) return; // đã bật rồi (vd double-click nút Bắt đầu) → khỏi bật lại
+  _AC.active = true;
+  State.session.appSwitches     = 0;
+  State.session.fullscreenExits = 0;
+  State.session.multiTabHits    = 0;
+  State.session.devtoolsHits    = 0;
+  State.session.shortcutBlocks  = 0;
+  State.session.printAttempts   = 0;
+
+  document.getElementById('exam')?.classList.add('exam-locked');
+  _acMountWatermark();
+  _acStartMultiTabWatch();
+  _acStartFullscreenWatch();
+  _acStartDevtoolsWatch();
+  _acBindKeyGuards();
+  _acBindCopyGuards();
+  window.addEventListener('beforeprint', _acOnBeforePrint);
+  window.addEventListener('beforeunload', _acOnBeforeUnloadWarn);
+}
+
+/** Tắt toàn bộ lớp bảo vệ — gọi khi nộp bài (submitExam/autoSubmit) hoặc
+ * thoát ngang giữa chừng (backToLobby). An toàn khi gọi nhiều lần. */
+function acStopGuard() {
+  if (!_AC.active) return;
+  _AC.active = false;
+  _acStopMultiTabWatch();
+  _acStopFullscreenWatch();
+  _acStopDevtoolsWatch();
+  _acUnbindKeyGuards();
+  _acUnbindCopyGuards();
+  window.removeEventListener('beforeprint', _acOnBeforePrint);
+  window.removeEventListener('beforeunload', _acOnBeforeUnloadWarn);
+  _acHideLock('fullscreen');
+  _acHideLock('multitab');
+  _acUnmountWatermark();
+  document.getElementById('exam')?.classList.remove('exam-locked');
+  _acExitFullscreen();
 }
 
 /* ============================================================
@@ -380,6 +737,46 @@ function initLobby() {
   const lvlSel   = document.getElementById('levelSelect');
   const mtSel    = document.getElementById('minitestSelect');
   const modeWrap = document.getElementById('mtModeToggle');
+
+  // ── Chế độ làm bài: Ôn luyện (không giới hạn giờ) / Kiểm tra (50 phút) ──
+  // Áp dụng cho MỌI bộ đề bên dưới (không lọc/ẩn Chương trình-Cấp độ-
+  // Minitest nào cả) — chỉ đổi cách tính giờ lúc bấm "Bắt đầu thi", xem
+  // startExam() và startTimer().
+  const examModeWrap  = document.getElementById('examModeToggle');
+  const pledgeWrap     = document.getElementById('antiCheatPledgeWrap');
+  const pledgeCheckbox = document.getElementById('antiCheatPledge');
+
+  // Cam kết chống gian lận chỉ áp dụng/bắt buộc ở chế độ "Kiểm tra" — ẩn
+  // hẳn ở "Ôn luyện" vì không có ràng buộc gì. refreshMeta() (khai báo bên
+  // dưới) đọc lại checkbox này mỗi lần chạy để bật/tắt nút "Bắt đầu".
+  const applyExamModeUI = () => {
+    if (pledgeWrap) pledgeWrap.hidden = State.examMode !== 'test';
+  };
+
+  if (examModeWrap) {
+    applyExamModeUI();
+    examModeWrap.querySelectorAll('.mt-mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mode = btn.dataset.examMode;
+        if (mode === State.examMode) return;
+        State.examMode = mode;
+        examModeWrap.querySelectorAll('.mt-mode-btn').forEach(b => {
+          b.classList.toggle('is-active', b.dataset.examMode === mode);
+        });
+        // Đổi qua lại chế độ → bắt tick lại cam kết từ đầu, tránh trường
+        // hợp tick sẵn ở Kiểm tra rồi lỡ tay đổi đi đổi lại vẫn coi là hợp lệ.
+        if (pledgeCheckbox) pledgeCheckbox.checked = false;
+        applyExamModeUI();
+        refreshMeta();
+      });
+    });
+  }
+  // Bọc trong arrow function (thay vì truyền thẳng refreshMeta) vì
+  // refreshMeta được khai báo (const) ở PHÍA DƯỚI trong cùng hàm này —
+  // truyền thẳng tên hàm ở đây sẽ đọc biến ngay lập tức và dính lỗi TDZ
+  // "Cannot access 'refreshMeta' before initialization". Bọc closure thì
+  // chỉ đọc biến LÚC checkbox đổi (đã chắc chắn refreshMeta tồn tại).
+  pledgeCheckbox?.addEventListener('change', () => refreshMeta());
 
   // "Chế độ" đang chọn ở khối chọn Minitest — nhớ giữa các lần đổi Level
   // (nếu vẫn còn hợp lệ) để không giật lại "Theo tiết" mỗi lần bấm chọn
@@ -491,13 +888,15 @@ function initLobby() {
       el.innerHTML = '<span class="chip" style="color:var(--red)">⚠ Không có câu hỏi</span>';
     }
 
-    // Kích hoạt nút Bắt đầu chỉ khi đủ thông tin
-    const name   = document.getElementById('studentName')?.value.trim();
-    const cls    = document.getElementById('studentClass')?.value.trim();
-    const school = document.getElementById('studentSchool')?.value.trim();
-    const btn    = document.getElementById('btnStart');
+    // Kích hoạt nút Bắt đầu chỉ khi đủ thông tin — riêng chế độ "Kiểm tra"
+    // còn bắt buộc tick cam kết chống gian lận (#antiCheatPledge) trước.
+    const name    = document.getElementById('studentName')?.value.trim();
+    const cls     = document.getElementById('studentClass')?.value.trim();
+    const school  = document.getElementById('studentSchool')?.value.trim();
+    const pledged = State.examMode !== 'test' || !!document.getElementById('antiCheatPledge')?.checked;
+    const btn     = document.getElementById('btnStart');
     if (btn) {
-      btn.disabled = !(count && name && cls && school);
+      btn.disabled = !(count && name && cls && school && pledged);
       btn.textContent = btn.disabled ? '▶ Bắt đầu' : '▶ Bắt đầu';
     }
 
@@ -532,6 +931,19 @@ function _findCategory(catId) {
 /* ============================================================
    § 5 — START EXAM  (Task 3 — nạp đúng minitest từ JSON)
    ============================================================ */
+
+/**
+ * Wrapper gắn vào onclick của nút "Bắt đầu" thay vì gọi thẳng startExam().
+ * Lý do: Fullscreen API chỉ cho request thành công khi còn "user gesture"
+ * (transient activation) — nếu gọi SAU 1 await (như startExam() có await
+ * fetch dữ liệu câu hỏi) thì gesture có thể đã hết hạn ở vài trình duyệt,
+ * khiến vào toàn màn hình thất bại âm thầm. Gọi request đồng bộ NGAY tại
+ * đây (trước mọi await) để chắc chắn còn gesture hợp lệ.
+ */
+function onStartExamClick() {
+  if (State.examMode === 'test') _acRequestFullscreen();
+  startExam();
+}
 
 async function startExam() {
   const name   = document.getElementById('studentName')?.value.trim();
@@ -584,7 +996,11 @@ async function startExam() {
   State.classify  = {};
   State.ordering  = {};
   State.fillblank = {};
-  State.timeLeft  = parseInt(document.getElementById('timeSelect')?.value || '3000', 10);
+  // 'test' (Kiểm tra) → luôn đúng 50 phút/bài, không cho tự chọn (chuẩn thi
+  // thật). 'practice' (Ôn luyện) → không giới hạn giờ, xem startTimer().
+  State.timeLeft  = State.examMode === 'practice'
+    ? Infinity
+    : parseInt(document.getElementById('timeSelect')?.value || String(TEST_TIME_LIMIT_SECONDS), 10);
 
   // ── Khởi tạo session (dữ liệu anti-cheat) ─────────────────
   State.session = {
@@ -595,6 +1011,7 @@ async function startExam() {
     level:         lv?.name   || lvlId,
     minitest:      mtDisplayName,
     isRandomMix:   isRandomMix, // true = bài "Tổng hợp" (ngẫu nhiên chia đều chủ đề) — dùng để xét mở khóa Khu Vui Chơi
+    examMode:      State.examMode, // 'practice' | 'test' — ghi lại để lịch sử/báo cáo phân biệt được 2 dạng
     startTime:     Date.now(),
     totalTime:     State.timeLeft,
     tabSwitches:   0,
@@ -617,6 +1034,10 @@ async function startExam() {
   _restoreSidebarState();
   renderQuestion(0);
   startTimer();
+
+  // Bật lớp bảo vệ chống gian lận CHỈ cho chế độ "Kiểm tra" (§ 2b) — Ôn
+  // luyện không bị ràng buộc gì, giữ nguyên trải nghiệm thoải mái.
+  if (State.examMode === 'test') acStartGuard();
 }
 
 /* ============================================================
@@ -691,6 +1112,17 @@ function prepareQuestions(rawQs) {
 
 function startTimer() {
   clearInterval(State.timer);
+
+  // Chế độ "Ôn luyện" → không đếm ngược, không auto-nộp khi hết giờ (vì
+  // không có "hết giờ"). Ẩn hẳn khối đồng hồ trên topbar để khỏi gây hiểu
+  // lầm là vẫn đang bị tính giờ.
+  const wrap = document.getElementById('timerWrap');
+  if (State.examMode === 'practice') {
+    if (wrap) wrap.hidden = true;
+    return;
+  }
+  if (wrap) wrap.hidden = false;
+
   updateTimerDisplay();
   State.timer = setInterval(() => {
     State.timeLeft--;
@@ -881,6 +1313,18 @@ function renderQuestion(idx) {
   // (câu hotspot tự vẽ ảnh + vùng bấm bên trong renderHotspot() → không dùng block chung)
   const imgBlock = q.type === 'hotspot' ? '' : _buildImageBlock(q);
 
+  // Nút "Kiểm tra đáp án" — CHỈ hiện ở chế độ "Ôn luyện" (State.examMode
+  // === 'practice'), không có ở "Kiểm tra" (đúng tinh thần thi thật —
+  // không biết đúng/sai cho tới lúc nộp bài). Xem checkCurrentAnswer()
+  // ở § 6b — mỗi lần đổi câu, panel bị dựng lại từ đầu nên kết quả kiểm
+  // tra của câu trước KHÔNG còn sót lại (id trùng nhưng nội dung rỗng).
+  const practiceCheckBlock = State.examMode === 'practice'
+    ? `<div class="q-check-wrap">
+         <button type="button" class="btn-check-answer" onclick="checkCurrentAnswer()">✅ Kiểm tra đáp án</button>
+         <div class="q-check-result" id="qCheckResult"></div>
+       </div>`
+    : '';
+
   panel.innerHTML = `
     <div class="q-card${q.type === 'hotspot' ? ' q-card--hotspot' : ''}">
       <div class="q-header">
@@ -892,6 +1336,7 @@ function renderQuestion(idx) {
       </div>
       ${imgBlock}
       <div id="q-body"></div>
+      ${practiceCheckBlock}
     </div>
     <div class="q-nav">${navPrev}${navNext}${navFlag}</div>`;
 
@@ -915,6 +1360,54 @@ function renderQuestion(idx) {
 
   updateSidebar();
   panel.scrollTop = 0;
+}
+
+/* ============================================================
+   § 6b — "KIỂM TRA ĐÁP ÁN" NGAY TRONG LÚC LÀM — CHỈ CHẾ ĐỘ ÔN LUYỆN
+   ────────────────────────────────────────────────────────────
+   Tái dùng NGUYÊN VẸN phần chấm điểm (_buildQuestionDetail(), § 16) và
+   phần dựng HTML đúng/sai (js/review-detail.js — vốn dùng cho màn "Xem
+   chi tiết" SAU KHI nộp bài) để hiện đúng/sai + giải thích NGAY khi học
+   sinh bấm nút, không cần đợi nộp cả bài — đúng tinh thần "Ôn luyện":
+   biết ngay mình đúng/sai ở đâu và VÌ SAO để hiểu chứ không chỉ để biết
+   điểm. Ở chế độ "Kiểm tra" không có nút này (không được xem đáp án
+   giữa chừng — giữ đúng tính chất 1 bài thi thật).
+   ============================================================ */
+
+/** Chấm + hiện đúng/sai + giải thích cho ĐÚNG câu đang xem — gọi từ nút
+ * "✅ Kiểm tra đáp án" (chỉ render.ở chế độ 'practice', xem renderQuestion()). */
+function checkCurrentAnswer() {
+  if (State.examMode !== 'practice') return; // phòng hờ — nút này vốn không tồn tại ở chế độ Kiểm tra
+  const i = State.current;
+  const q = State.questions[i];
+  if (!q) return;
+  _renderCheckResult(_buildQuestionDetail(q, i));
+}
+
+/** Vẽ banner Đúng/Sai/Chưa trả lời + phần giải thích (tái dùng
+ * _rdBuildDetailBody() của js/review-detail.js) vào #qCheckResult. */
+function _renderCheckResult(d) {
+  const el = document.getElementById('qCheckResult');
+  if (!el) return;
+
+  if (d.status === 'skipped') {
+    el.innerHTML = `<div class="q-check-banner q-check-skip">
+      ✋ Bạn chưa trả lời câu này — hãy chọn đáp án rồi bấm lại "Kiểm tra đáp án" nhé.
+    </div>`;
+    return;
+  }
+
+  const isCorrect = d.status === 'correct';
+  const banner = `<div class="q-check-banner ${isCorrect ? 'q-check-correct' : 'q-check-wrong'}">
+    ${isCorrect ? '✅ Chính xác! Làm tốt lắm.' : '❌ Chưa đúng — xem giải thích bên dưới để hiểu vì sao nhé.'}
+  </div>`;
+  // showQuestionText:false vì đề bài đã hiển thị sẵn ngay phía trên trong
+  // .q-header — lặp lại lần nữa ở đây sẽ dư thừa (khác với review-detail.js
+  // dùng ở màn kết quả, nơi câu hỏi CHƯA hiển thị ở đâu khác).
+  const body = (typeof _rdBuildDetailBody === 'function')
+    ? _rdBuildDetailBody(d, { showQuestionText: false })
+    : '';
+  el.innerHTML = banner + body;
 }
 
 /**
@@ -2499,6 +2992,7 @@ function autoSubmit() {
 function submitExam() {
   clearInterval(State.timer);
   flushQTime(State.current);
+  acStopGuard(); // tắt lớp bảo vệ chống gian lận (nếu chế độ Kiểm tra có bật)
   const elapsed   = Math.round((Date.now() - State.session.startTime) / 1000);
   const result    = gradeExam();
   const integrity = computeIntegrity(result, elapsed);
@@ -2529,6 +3023,7 @@ function submitExam() {
       category:      s.category,
       level:         s.level,
       minitest:      s.minitest,
+      examMode:      s.examMode || 'test', // 'practice' (Ôn luyện) | 'test' (Kiểm tra)
       score:         pct,
       correct:       result.correct,
       incorrect:     result.incorrect,
@@ -2540,6 +3035,13 @@ function submitExam() {
       integrityOk:   integrity.valid,
       flags:         integrity.flags,
       timedOut:      s.timedOut,
+      // Vi phạm nâng cao chỉ có ý nghĩa ở chế độ "Kiểm tra" — xem § 2b
+      multiTabHits:    integrity.multiTabHits,
+      fullscreenExits: integrity.fullscreenExits,
+      appSwitches:     integrity.appSwitches,
+      devtoolsHits:    integrity.devtoolsHits,
+      shortcutBlocks:  integrity.shortcutBlocks,
+      printAttempts:   integrity.printAttempts,
     });
   }
 }
@@ -2552,176 +3054,152 @@ function submitExam() {
  * truefalse: every statement phải đúng answer
  * matching:  every pair phải đúng
  */
-function gradeExam() {
-  let correct = 0, incorrect = 0, skipped = 0;
-  const details = [];
+/**
+ * Chấm điểm + dựng "detail" (dữ liệu review đúng/sai) cho ĐÚNG 1 câu hỏi.
+ * Tách riêng khỏi gradeExam() để dùng chung cho 2 nơi:
+ *   1. gradeExam() — chấm cả bài lúc nộp (mọi chế độ).
+ *   2. checkCurrentAnswer() — chấm 1 câu ngay khi đang làm (chỉ chế độ
+ *      "Ôn luyện", xem § 6b bên dưới).
+ */
+function _buildQuestionDetail(q, i) {
+  const ua = State.answers[i];   // user answer
+  const ma = State.matching[i];  // user matching
+  let status = 'skipped';
 
-  State.questions.forEach((q, i) => {
-    const ua = State.answers[i];   // user answer
-    const ma = State.matching[i];  // user matching
-    let status = 'skipped';
+  switch (q.type) {
+    case 'single':
+      if (ua && (q.correct || []).includes(ua)) status = 'correct';
+      else if (ua) status = 'incorrect';
+      break;
 
-    switch (q.type) {
-      case 'single':
-        if (!ua) {
-          skipped++;
-        } else if ((q.correct || []).includes(ua)) {
-          correct++; status = 'correct';
-        } else {
-          incorrect++; status = 'incorrect';
-        }
-        break;
-
-      case 'multi': {
-        // Sắp xếp cả 2 mảng rồi so sánh để không phụ thuộc thứ tự
-        const userArr = [...(ua || [])].sort();
-        const corrArr = [...(q.correct || [])].sort();
-        if (userArr.length === 0) {
-          skipped++;
-        } else if (JSON.stringify(userArr) === JSON.stringify(corrArr)) {
-          correct++; status = 'correct';
-        } else {
-          incorrect++; status = 'incorrect';
-        }
-        break;
+    case 'multi': {
+      // Sắp xếp cả 2 mảng rồi so sánh để không phụ thuộc thứ tự
+      const userArr = [...(ua || [])].sort();
+      const corrArr = [...(q.correct || [])].sort();
+      if (userArr.length > 0) {
+        status = JSON.stringify(userArr) === JSON.stringify(corrArr) ? 'correct' : 'incorrect';
       }
-
-      case 'truefalse': {
-        const ans = ua || {};
-        if (Object.keys(ans).length === 0) {
-          skipped++;
-        } else {
-          // Kiểm tra TẤT CẢ statements phải đúng
-          const allCorrect = (q.statements || []).every((st, j) => ans[j] === st.answer);
-          if (allCorrect) { correct++; status = 'correct'; }
-          else            { incorrect++; status = 'incorrect'; }
-        }
-        break;
-      }
-
-      case 'matching': {
-        if (!q.pairs || q.pairs.length === 0) {
-          skipped++;
-        } else if (!ma || Object.keys(ma).length === 0) {
-          skipped++;
-        } else {
-          const ok = q.pairs.every(p => ma[p.left] === p.right);
-          if (ok) { correct++; status = 'correct'; }
-          else    { incorrect++; status = 'incorrect'; }
-        }
-        break;
-      }
-
-      case 'hotspot': {
-        const selSet = State.hotspot[i];
-        const correctIds = (q.areas || []).filter(a => a.correct).map(a => a.id).sort();
-        if (!selSet || selSet.size === 0) {
-          skipped++;
-        } else {
-          const selArr = [...selSet].sort();
-          const ok = JSON.stringify(selArr) === JSON.stringify(correctIds);
-          if (ok) { correct++; status = 'correct'; }
-          else    { incorrect++; status = 'incorrect'; }
-        }
-        break;
-      }
-
-      case 'list': {
-        const ans = State.list[i] || {};
-        const items = q.items || [];
-        if (Object.keys(ans).length === 0) {
-          skipped++;
-        } else {
-          const allCorrect = items.every((it, j) => ans[j] === it.correct);
-          if (allCorrect) { correct++; status = 'correct'; }
-          else             { incorrect++; status = 'incorrect'; }
-        }
-        break;
-      }
-
-      case 'classify': {
-        const ans = State.classify[i] || {};
-        const items = q.items || [];
-        // Bỏ qua/skip chỉ khi KHÔNG item bắt buộc nào được xếp — thẻ mồi nhử
-        // (q.distractors) lỡ bị kéo vào 1 nhóm không tính là "đã trả lời".
-        if (!items.some(it => ans[it.text] !== undefined)) {
-          skipped++;
-        } else {
-          const allCorrect = items.every(it => ans[it.text] === it.zone);
-          if (allCorrect) { correct++; status = 'correct'; }
-          else             { incorrect++; status = 'incorrect'; }
-        }
-        break;
-      }
-
-      case 'ordering': {
-        const ans = State.ordering[i];
-        const correctOrder = q.items || [];
-        if (!ans || ans.length === 0) {
-          skipped++;
-        } else {
-          const ok = JSON.stringify(ans) === JSON.stringify(correctOrder);
-          if (ok) { correct++; status = 'correct'; }
-          else    { incorrect++; status = 'incorrect'; }
-        }
-        break;
-      }
-
-      case 'dragfill':
-      case 'selectfill': {
-        const ans = State.fillblank[i] || {};
-        const blanks = q.blanks || [];
-        if (Object.keys(ans).length === 0) {
-          skipped++;
-        } else {
-          const allCorrect = blanks.every((correctText, bi) => ans[bi] === correctText);
-          if (allCorrect) { correct++; status = 'correct'; }
-          else             { incorrect++; status = 'incorrect'; }
-        }
-        break;
-      }
-
-      default:
-        skipped++;
+      break;
     }
 
-    details.push({
-      num:         i + 1,
-      qId:         q.id,
-      uid:         q.uid || '',
-      type:        q.type,
-      text:        q.question.slice(0, 60) + (q.question.length > 60 ? '…' : ''),
-      fullText:    q.question,
-      imageUrl:    q.imageUrl || '',
-      explanation: q.explanation || '',
-      status,
-      // Dữ liệu thô để js/review-detail.js dựng phần "xem chi tiết" —
-      // không dùng để chấm điểm (đã chấm ở switch phía trên).
-      raw: {
-        options:    q.options   || null,   // single/multi
-        correct:    q.correct   || null,   // single/multi
-        userAns:    q.type === 'single' ? (ua ?? null)
-                  : q.type === 'multi'  ? (ua || [])
-                  : null,
-        statements: q.type === 'truefalse' ? (q.statements || []) : null,
-        userTF:     q.type === 'truefalse' ? (ua || {}) : null,
-        labelTrue:  q.label_true  || 'Đúng',
-        labelFalse: q.label_false || 'Sai',
-        pairs:      q.type === 'matching' ? (q.pairs || []) : null,
-        userMatch:  q.type === 'matching' ? (ma || {}) : null,
-        areas:      q.type === 'hotspot' ? (q.areas || []) : null,
-        userAreas:  q.type === 'hotspot' ? [...(State.hotspot[i] || [])] : null,
-        listItems:  q.type === 'list' ? (q.items || []) : null,
-        userList:   q.type === 'list' ? (State.list[i] || {}) : null,
-        classifyItems: q.type === 'classify' ? (q.items || []) : null,
-        userClassify:  q.type === 'classify' ? (State.classify[i] || {}) : null,
-        orderCorrect:  q.type === 'ordering' ? (q.items || []) : null,
-        orderUser:     q.type === 'ordering' ? (State.ordering[i] || []) : null,
-        segments:   (q.type === 'dragfill' || q.type === 'selectfill') ? (q.segments || []) : null,
-        blanks:     (q.type === 'dragfill' || q.type === 'selectfill') ? (q.blanks || []) : null,
-        userBlanks: (q.type === 'dragfill' || q.type === 'selectfill') ? (State.fillblank[i] || {}) : null,
-      },
-    });
+    case 'truefalse': {
+      const ans = ua || {};
+      if (Object.keys(ans).length > 0) {
+        // Kiểm tra TẤT CẢ statements phải đúng
+        const allCorrect = (q.statements || []).every((st, j) => ans[j] === st.answer);
+        status = allCorrect ? 'correct' : 'incorrect';
+      }
+      break;
+    }
+
+    case 'matching': {
+      if (q.pairs && q.pairs.length > 0 && ma && Object.keys(ma).length > 0) {
+        const ok = q.pairs.every(p => ma[p.left] === p.right);
+        status = ok ? 'correct' : 'incorrect';
+      }
+      break;
+    }
+
+    case 'hotspot': {
+      const selSet = State.hotspot[i];
+      const correctIds = (q.areas || []).filter(a => a.correct).map(a => a.id).sort();
+      if (selSet && selSet.size > 0) {
+        const selArr = [...selSet].sort();
+        status = JSON.stringify(selArr) === JSON.stringify(correctIds) ? 'correct' : 'incorrect';
+      }
+      break;
+    }
+
+    case 'list': {
+      const ans = State.list[i] || {};
+      const items = q.items || [];
+      if (Object.keys(ans).length > 0) {
+        const allCorrect = items.every((it, j) => ans[j] === it.correct);
+        status = allCorrect ? 'correct' : 'incorrect';
+      }
+      break;
+    }
+
+    case 'classify': {
+      const ans = State.classify[i] || {};
+      const items = q.items || [];
+      // Bỏ qua/skip chỉ khi KHÔNG item bắt buộc nào được xếp — thẻ mồi nhử
+      // (q.distractors) lỡ bị kéo vào 1 nhóm không tính là "đã trả lời".
+      if (items.some(it => ans[it.text] !== undefined)) {
+        const allCorrect = items.every(it => ans[it.text] === it.zone);
+        status = allCorrect ? 'correct' : 'incorrect';
+      }
+      break;
+    }
+
+    case 'ordering': {
+      const ans = State.ordering[i];
+      const correctOrder = q.items || [];
+      if (ans && ans.length > 0) {
+        status = JSON.stringify(ans) === JSON.stringify(correctOrder) ? 'correct' : 'incorrect';
+      }
+      break;
+    }
+
+    case 'dragfill':
+    case 'selectfill': {
+      const ans = State.fillblank[i] || {};
+      const blanks = q.blanks || [];
+      if (Object.keys(ans).length > 0) {
+        const allCorrect = blanks.every((correctText, bi) => ans[bi] === correctText);
+        status = allCorrect ? 'correct' : 'incorrect';
+      }
+      break;
+    }
+  }
+
+  return {
+    num:         i + 1,
+    qId:         q.id,
+    uid:         q.uid || '',
+    type:        q.type,
+    text:        q.question.slice(0, 60) + (q.question.length > 60 ? '…' : ''),
+    fullText:    q.question,
+    imageUrl:    q.imageUrl || '',
+    explanation: q.explanation || '',
+    status,
+    // Dữ liệu thô để js/review-detail.js dựng phần "xem chi tiết" —
+    // không dùng để chấm điểm (đã chấm ở switch phía trên).
+    raw: {
+      options:    q.options   || null,   // single/multi
+      correct:    q.correct   || null,   // single/multi
+      userAns:    q.type === 'single' ? (ua ?? null)
+                : q.type === 'multi'  ? (ua || [])
+                : null,
+      statements: q.type === 'truefalse' ? (q.statements || []) : null,
+      userTF:     q.type === 'truefalse' ? (ua || {}) : null,
+      labelTrue:  q.label_true  || 'Đúng',
+      labelFalse: q.label_false || 'Sai',
+      pairs:      q.type === 'matching' ? (q.pairs || []) : null,
+      userMatch:  q.type === 'matching' ? (ma || {}) : null,
+      areas:      q.type === 'hotspot' ? (q.areas || []) : null,
+      userAreas:  q.type === 'hotspot' ? [...(State.hotspot[i] || [])] : null,
+      listItems:  q.type === 'list' ? (q.items || []) : null,
+      userList:   q.type === 'list' ? (State.list[i] || {}) : null,
+      classifyItems: q.type === 'classify' ? (q.items || []) : null,
+      userClassify:  q.type === 'classify' ? (State.classify[i] || {}) : null,
+      orderCorrect:  q.type === 'ordering' ? (q.items || []) : null,
+      orderUser:     q.type === 'ordering' ? (State.ordering[i] || []) : null,
+      segments:   (q.type === 'dragfill' || q.type === 'selectfill') ? (q.segments || []) : null,
+      blanks:     (q.type === 'dragfill' || q.type === 'selectfill') ? (q.blanks || []) : null,
+      userBlanks: (q.type === 'dragfill' || q.type === 'selectfill') ? (State.fillblank[i] || {}) : null,
+    },
+  };
+}
+
+function gradeExam() {
+  let correct = 0, incorrect = 0, skipped = 0;
+  const details = State.questions.map((q, i) => {
+    const d = _buildQuestionDetail(q, i);
+    if (d.status === 'correct') correct++;
+    else if (d.status === 'incorrect') incorrect++;
+    else skipped++;
+    return d;
   });
 
   return { correct, incorrect, skipped, total: State.questions.length, details };
@@ -2760,6 +3238,25 @@ function computeIntegrity(result, elapsedSec) {
     flags.push(`${ultraFast.length} câu trả lời trong dưới 1 giây`);
   }
 
+  // 5-9. Vi phạm ghi nhận riêng cho chế độ "Kiểm tra" (§ 2b) — chỉ có giá
+  // trị khi s.examMode === 'test', các trường này luôn 0/undefined ở "Ôn
+  // luyện" nên không bao giờ tự sinh cờ ở đó.
+  if (s.multiTabHits > 0) {
+    flags.push(`Mở nhiều tab/cửa sổ trong lúc thi (${s.multiTabHits} lần phát hiện)`);
+  }
+  if (s.fullscreenExits >= 1) {
+    flags.push(`Thoát toàn màn hình ${s.fullscreenExits} lần`);
+  }
+  if (s.appSwitches >= 5) {
+    flags.push(`Chuyển sang ứng dụng/cửa sổ khác ${s.appSwitches} lần`);
+  }
+  if (s.devtoolsHits > 0) {
+    flags.push(`Có dấu hiệu mở DevTools ${s.devtoolsHits} lần`);
+  }
+  if (s.shortcutBlocks > 0) {
+    flags.push(`Cố dùng phím tắt sao chép/in/xem mã nguồn/chụp màn hình ${s.shortcutBlocks} lần`);
+  }
+
   return {
     flags,
     valid:       flags.length === 0,
@@ -2768,6 +3265,13 @@ function computeIntegrity(result, elapsedSec) {
     elapsedSec,
     avgSecPerQ:  parseFloat(avgSec.toFixed(1)),
     timedOut:    s.timedOut,
+    // Vi phạm nâng cao (chỉ áp dụng chế độ "Kiểm tra" — xem § 2b)
+    multiTabHits:    s.multiTabHits    || 0,
+    fullscreenExits: s.fullscreenExits || 0,
+    appSwitches:     s.appSwitches     || 0,
+    devtoolsHits:    s.devtoolsHits    || 0,
+    shortcutBlocks:  s.shortcutBlocks  || 0,
+    printAttempts:   s.printAttempts   || 0,
   };
 }
 
@@ -2787,6 +3291,7 @@ function saveRecord(result, elapsedSec, integrity) {
     level:         s.level,
     minitest:      s.minitest,
     isRandomMix:   !!s.isRandomMix, // chỉ bài "Tổng hợp" mới được tính để mở khóa Khu Vui Chơi
+    examMode:      s.examMode || 'test', // 'practice' (Ôn luyện) | 'test' (Kiểm tra)
     date:          new Date().toLocaleString('vi-VN'),
     score:         pct,
     correct:       result.correct,
@@ -2800,6 +3305,13 @@ function saveRecord(result, elapsedSec, integrity) {
     timedOut:      s.timedOut,
     integrityOk:   integrity.valid,
     flags:         integrity.flags,
+    // Vi phạm nâng cao chỉ có ý nghĩa ở chế độ "Kiểm tra" — xem § 2b
+    multiTabHits:    integrity.multiTabHits,
+    fullscreenExits: integrity.fullscreenExits,
+    appSwitches:     integrity.appSwitches,
+    devtoolsHits:    integrity.devtoolsHits,
+    shortcutBlocks:  integrity.shortcutBlocks,
+    printAttempts:   integrity.printAttempts,
     details:       result.details,
   };
 
@@ -2922,8 +3434,10 @@ function renderRecords() {
     <table class="records-table">
       <thead><tr>
         <th>#</th><th>Học sinh</th><th>Lớp</th><th>Trường</th><th>Bài thi</th>
+        <th>Chế độ</th>
         <th>Điểm</th><th>Đúng/Tổng</th>
         <th>T.gian</th><th>Tab</th><th>Click</th>
+        <th>Vi phạm (Kiểm tra)</th>
         <th>Tính hợp lệ</th><th>Ngày làm</th>
       </tr></thead>
       <tbody>
@@ -2935,11 +3449,13 @@ function renderRecords() {
             <td style="font-size:.8rem">${r.studentSchool || '–'}</td>
             <td style="font-size:.8rem">${r.minitest}<br>
                 <span style="color:var(--muted)">${r.level}</span></td>
+            <td style="font-size:.8rem">${r.examMode === 'practice' ? '🕊️ Ôn luyện' : '⏱️ Kiểm tra'}</td>
             <td class="${r.score >= 70 ? 'pass' : 'fail'}">${r.score}%</td>
             <td>${r.correct}/${r.total}</td>
             <td style="font-family:'Space Mono',monospace;font-size:.8rem">${fmtTime(r.elapsedSec)}</td>
             <td class="${r.tabSwitches >= 3 ? 'warn' : ''}">${r.tabSwitches}</td>
             <td>${r.clicks ?? '–'}</td>
+            <td style="font-size:.72rem;white-space:nowrap">${_acFmtViolationBadges(r)}</td>
             <td class="${r.integrityOk ? 'pass' : 'warn'}">
               ${r.integrityOk ? '✓ Hợp lệ' : '⚠ ' + (r.flags?.[0] || 'Nghi vấn')}
             </td>
@@ -2947,6 +3463,20 @@ function renderRecords() {
           </tr>`).join('')}
       </tbody>
     </table>`;
+}
+
+/** Gộp các bộ đếm vi phạm nâng cao (§ 2b) thành vài badge gọn cho bảng
+ * lịch sử — chỉ hiện mục nào > 0, trả về "–" nếu bài làm sạch (hoặc là
+ * bài "Ôn luyện", vốn không bật các bộ đếm này). */
+function _acFmtViolationBadges(r) {
+  const parts = [];
+  if (r.multiTabHits)    parts.push(`🗔×${r.multiTabHits}`);
+  if (r.fullscreenExits) parts.push(`🖥️×${r.fullscreenExits}`);
+  if (r.appSwitches)     parts.push(`🔀×${r.appSwitches}`);
+  if (r.devtoolsHits)    parts.push(`🛠️×${r.devtoolsHits}`);
+  if (r.shortcutBlocks)  parts.push(`⌨️×${r.shortcutBlocks}`);
+  if (r.printAttempts)   parts.push(`🖨️×${r.printAttempts}`);
+  return parts.length ? parts.join(' ') : '–';
 }
 
 function clearRecords() {
@@ -2960,15 +3490,20 @@ function exportCSV() {
   try { records = JSON.parse(localStorage.getItem('eduquiz_records') || '[]'); } catch {}
   if (!records.length) { alert('Không có dữ liệu để xuất.'); return; }
 
-  const h = ['STT','Học sinh','Lớp','Trường','Danh mục','Cấp độ','Bài thi','Ngày','Điểm%',
+  const h = ['STT','Học sinh','Lớp','Trường','Danh mục','Cấp độ','Bài thi','Chế độ','Ngày','Điểm%',
              'Đúng','Sai','Bỏ qua','Tổng','Thời gian(s)','Chuyển tab',
-             'Số lần click','TB giây/câu','Hết giờ','Hợp lệ','Cờ cảnh báo'];
+             'Số lần click','TB giây/câu','Hết giờ',
+             'Mở nhiều tab','Thoát toàn màn hình','Chuyển ứng dụng','Mở DevTools','Phím tắt bị chặn','Cố in bài',
+             'Hợp lệ','Cờ cảnh báo'];
   const rows = records.map((r, i) => [
     i + 1, r.studentName, r.studentClass || '', r.studentSchool || '',
-    r.category, r.level, r.minitest, r.date,
+    r.category, r.level, r.minitest,
+    r.examMode === 'practice' ? 'Ôn luyện' : 'Kiểm tra', r.date,
     r.score, r.correct, r.incorrect ?? r.total - r.correct - r.skipped,
     r.skipped, r.total, r.elapsedSec, r.tabSwitches, r.clicks ?? 0,
     (r.avgSecPerQ || 0).toFixed(1), r.timedOut ? 'Có' : 'Không',
+    r.multiTabHits || 0, r.fullscreenExits || 0, r.appSwitches || 0,
+    r.devtoolsHits || 0, r.shortcutBlocks || 0, r.printAttempts || 0,
     r.integrityOk ? 'Hợp lệ' : 'Nghi vấn', (r.flags || []).join('; ')
   ]);
 
@@ -2995,6 +3530,7 @@ function fmtTime(s) {
 
 function backToLobby() {
   clearInterval(State.timer);
+  acStopGuard(); // an toàn khi gọi lại dù submitExam() đã gọi trước đó (no-op nếu đã tắt)
   document.getElementById('exam').style.display    = 'none';
   document.getElementById('result').style.display  = 'none';
   document.getElementById('lobby').style.display   = 'grid';

@@ -140,6 +140,35 @@
         <!-- Nhóm 2: Chọn bài thi -->
         <div class="form-section-label">📝 Chọn bài thi</div>
 
+        <!-- Chế độ làm bài: Ôn luyện (không giới hạn thời gian, để học sinh
+             học/thực hành thoải mái) và Kiểm tra (chấm 50 phút/bài như thi
+             thật). KHÔNG đụng tới danh sách Chương trình/Cấp độ/Minitest bên
+             dưới — mọi bộ đề hiện có (Spark, IC3, MOS × LV1-3) vẫn dùng
+             chung, chỉ khác cách tính giờ khi vào làm bài. Xem
+             js/quiz-engine.js § startExam()/startTimer(). -->
+        <div class="form-group">
+          <label>⏳ Chế độ làm bài</label>
+          <div class="mt-mode-toggle" id="examModeToggle">
+            <button type="button" class="mt-mode-btn" data-exam-mode="practice">🕊️ Ôn luyện — không giới hạn giờ</button>
+            <button type="button" class="mt-mode-btn is-active" data-exam-mode="test">⏱️ Kiểm tra — 50 phút/bài</button>
+          </div>
+        </div>
+
+        <!-- Cam kết chống gian lận — CHỈ hiện/bắt buộc tick khi chọn chế độ
+             "Kiểm tra" (Ôn luyện không ràng buộc gì). Bắt buộc vì nút "Bắt
+             đầu" bị khoá disabled cho tới khi tick, xem js/quiz-engine.js
+             § refreshMeta()/wireExamModeToggle(). -->
+        <div class="form-group anti-cheat-pledge" id="antiCheatPledgeWrap" hidden>
+          <label class="pledge-label" for="antiCheatPledge">
+            <input type="checkbox" id="antiCheatPledge">
+            <span>
+              Tôi cam kết trong lúc làm bài <strong>Kiểm tra</strong>: chỉ mở <strong>1 tab duy nhất</strong>,
+              không thoát toàn màn hình, không dùng điện thoại/Google Lens/ChatGPT hay bất kỳ công cụ AI/thiết bị nào
+              khác để tra cứu đáp án. Hệ thống sẽ tự động ghi nhận các vi phạm phát hiện được trong lúc làm bài.
+            </span>
+          </label>
+        </div>
+
         <div class="form-row">
           <div class="form-group">
             <label>📚 Chương trình</label>
@@ -151,8 +180,10 @@
           </div>
         </div>
 
-        <!-- Minitest (thời gian mặc định 20 phút, không cho học sinh tự chọn).
-             Chọn theo 2 bước: bấm 1 trong các nút "chế độ" (Theo tiết/Theo
+        <!-- Minitest (thời gian tính theo "Chế độ làm bài" chọn ở trên —
+             Ôn luyện = không giới hạn, Kiểm tra = 50 phút, không cho học
+             sinh tự chọn mốc khác). Chọn theo 2 bước: bấm 1 trong các nút
+             "chế độ" (Theo tiết/Theo
              chủ đề/Tổng hợp) trước để LỌC bớt, rồi mới chọn cụ thể trong
              select bên dưới — tránh 1 dropdown xổ ra 16 dòng liền một lúc
              (7 chủ đề + 8 tiết + Tổng hợp), khó quét/dễ chọn nhầm trên di
@@ -164,7 +195,7 @@
           <div class="minitest-meta" id="minitestMeta"></div>
         </div>
 
-        <button type="button" class="btn-start" id="btnStart" onclick="startExam()" disabled>▶ Bắt đầu</button>
+        <button type="button" class="btn-start" id="btnStart" onclick="onStartExamClick()" disabled>▶ Bắt đầu</button>
         <button type="button" class="btn-secondary" onclick="showRecords()">📊 Xem lịch sử bài làm</button>
 
         <!-- MOS Word 2019 — mô phỏng thao tác Ribbon, 10 tiết ôn luyện cuối
@@ -196,7 +227,7 @@
     <div class="topbar">
       <div class="topbar-brand">🎓 IC3</div>
       <div class="topbar-info" id="topbarInfo"></div>
-      <div class="timer-wrap">
+      <div class="timer-wrap" id="timerWrap">
         <span class="timer-icon">⏱</span>
         <span id="timer-display">50:00</span>
       </div>

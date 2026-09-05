@@ -23,6 +23,12 @@
   <button type="button" class="btn btn-ghost btn-sm" id="logoutBtn">Đăng xuất</button>
   <button type="button" class="btn btn-ghost btn-sm" id="themeToggle">🌙</button>
   <button type="button" class="btn btn-ghost btn-sm" id="backupBtn">⬇️ Sao lưu JSON</button>
+  <!-- Upload 1 file JSON (bản sao lưu đã sửa offline, quiz_data.json mới,
+       hoặc 1 file data/ic3/<cat>__<lvl>.json lẻ) để GHI ĐÈ lên Firebase —
+       xem js/image-manager.js § UPLOAD JSON. input file ẩn, bấm nút mới
+       mở hộp thoại chọn file (mẫu chuẩn: click nút proxy click input). -->
+  <input type="file" id="uploadJsonInput" accept="application/json,.json" hidden>
+  <button type="button" class="btn btn-ghost btn-sm" id="uploadJsonBtn">⬆️ Tải JSON cập nhật</button>
   <button type="button" class="btn btn-primary btn-sm" id="exportStaticBtn">📤 Xuất ra data/ic3 (đồng bộ học sinh)</button>
 </div>
 
