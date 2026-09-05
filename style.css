@@ -3026,29 +3026,106 @@ body {
    ANTI-CHEAT (chế độ "Kiểm tra") — xem js/quiz-engine.js § 2b
    ══════════════════════════════════════════════ */
 
-/* Ô cam kết chống gian lận, hiện trong form lobby khi chọn "Kiểm tra" */
+/* Ô cam kết chống gian lận, hiện trong form lobby khi chọn "Kiểm tra".
+   Đổi màu nền khi đã tick (đỏ nhạt "chưa cam kết" → xanh lá nhạt "đã cam
+   kết") nhờ :has() — trình duyệt không hỗ trợ :has() vẫn thấy đúng nội
+   dung, chỉ là thiếu hiệu ứng đổi màu nền này (ô tick tự vẽ bên dưới vẫn
+   hoạt động/animate bình thường vì dùng :checked, không phụ thuộc :has()). */
 .anti-cheat-pledge {
   background: var(--red-lt, rgba(255,82,82,.1));
   border: 1.5px solid rgba(255,82,82,.3);
   border-radius: var(--radius-sm);
-  padding: .7rem .85rem;
+  padding: .6rem .8rem;
+  transition: background .25s ease, border-color .25s ease;
 }
-.pledge-label {
+.anti-cheat-pledge:has(#antiCheatPledge:checked) {
+  background: rgba(6,214,160,.1);
+  border-color: rgba(6,214,160,.35);
+}
+/* Selector ghép thêm ".anti-cheat-pledge" (thay vì chỉ ".pledge-label")
+   để độ đặc hiệu (0,2,0) THẮNG được luật chung ".form-group label"
+   (0,1,1) ở trên — nếu không, "display:flex" ở đây bị "display:block"
+   của luật chung đè mất (bug THẬT đã gặp: ô tick + icon bên trong xẹp
+   về width:0 vì mất ngữ cảnh flex, do <label> trở lại "display:block"
+   mặc định). Khai đủ font-weight/margin-bottom vì luật chung cũng chỉnh
+   2 thuộc tính này (không muốn ăn theo giá trị dành cho label thường). */
+.anti-cheat-pledge .pledge-label {
   display: flex;
-  align-items: flex-start;
-  gap: .55rem;
+  align-items: center;
+  gap: .6rem;
   cursor: pointer;
   font-size: .78rem;
-  line-height: 1.5;
+  font-weight: 400;
+  line-height: 1.45;
   color: var(--text);
+  margin-bottom: 0;
 }
-.pledge-label input[type="checkbox"] {
+.pledge-text { flex: 1 1 auto; }
+
+/* Ô tick tự vẽ: input gốc vẫn ở đó (chỉ ẩn bằng opacity:0, KHÔNG
+   display:none) để giữ được điều hướng bàn phím (Tab/Space) và screen
+   reader — chỉ .pledge-check-box mới là phần thấy được, vẽ lại bằng CSS. */
+.pledge-check {
+  position: relative;
   flex: none;
-  width: 1.1rem;
-  height: 1.1rem;
-  margin-top: .15rem;
-  accent-color: var(--red, #ff5252);
+  width: 1.3rem;
+  height: 1.3rem;
+}
+.pledge-check input[type="checkbox"] {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
   cursor: pointer;
+  z-index: 1;
+}
+.pledge-check-box {
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  border: 2px solid var(--red, #ff5252);
+  background: var(--card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .2s ease, border-color .2s ease, transform .12s ease;
+}
+.pledge-check-icon {
+  /* Kích thước cố định (KHÔNG dùng %) — % trên <svg> làm con flex item co
+     về 0 (min-width:auto mặc định của flex item), icon biến mất hoàn
+     toàn dù stroke-dashoffset đã vẽ đúng. Bug thật đã gặp. */
+  width: .78rem;
+  height: .78rem;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 20;
+  stroke-dashoffset: 20;
+  transition: stroke-dashoffset .25s ease .05s;
+}
+/* Bấm tick → nền đổi sang xanh lá + nảy nhẹ (pop) + nét check "vẽ" ra
+   bằng stroke-dashoffset — 3 hiệu ứng cùng lúc cho cảm giác phản hồi rõ. */
+.pledge-check input:checked ~ .pledge-check-box {
+  background: var(--teal, #06d6a0);
+  border-color: var(--teal, #06d6a0);
+  animation: pledgeCheckPop .28s ease;
+}
+.pledge-check input:checked ~ .pledge-check-box .pledge-check-icon {
+  stroke-dashoffset: 0;
+}
+.pledge-check input:hover ~ .pledge-check-box { border-color: var(--teal, #06d6a0) }
+.pledge-check input:focus-visible ~ .pledge-check-box {
+  box-shadow: 0 0 0 3px rgba(6,214,160,.35);
+}
+@keyframes pledgeCheckPop {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.22); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pledge-check-box, .pledge-check-icon { transition: none; animation: none; }
 }
 
 /* Không cho bôi đen/chọn chữ trong lúc làm bài Kiểm tra — hạn chế copy
