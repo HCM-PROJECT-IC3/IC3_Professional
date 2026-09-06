@@ -182,5 +182,23 @@ service cloud.firestore {
       allow read: if isAdmin() || isCoordinator() || isOwnSchoolField('school');
       allow write: if isAdmin() || isCoordinator();
     }
+
+    // ---- Lịch giảng dạy hàng tuần của đội ngũ giáo viên
+    //      (teaching-schedule.html) — thay thế file Excel
+    //      "LỊCH GIẢNG DẠY TEAM GVTH...xlsx" quản lý thủ công trước đây.
+    //      Cùng mức quyền với roster ở trên (chỉ admin/coordinator quản lý,
+    //      giáo viên/học sinh không cần truy cập trang này). ----
+    match /teaching_teachers/{teacherCode} {
+      allow read: if isAdmin() || isCoordinator();
+      allow write: if isAdmin() || isCoordinator();
+    }
+    match /teaching_weeks/{weekKey} {
+      allow read: if isAdmin() || isCoordinator();
+      allow write: if isAdmin() || isCoordinator();
+    }
+    match /teaching_schedule/{scheduleId} {
+      allow read: if isAdmin() || isCoordinator();
+      allow write: if isAdmin() || isCoordinator();
+    }
   }
 }

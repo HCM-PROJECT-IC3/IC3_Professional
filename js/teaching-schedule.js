@@ -1,0 +1,576 @@
+/* ============================================================
+   js/teaching-schedule.js
+   Logic cho trang teaching-schedule.html — quản lý lịch giảng
+   dạy/làm việc hàng tuần của đội ngũ giáo viên (thay file Excel
+   "LỊCH GIẢNG DẠY TEAM GVTH...xlsx"). Chỉ admin/coordinator.
+
+   Kiến trúc theo đúng mẫu roster-manager.js: models/repositories đã
+   tách riêng (js/models/teaching-schedule.model.js,
+   js/repositories/teaching-schedule-repository.js), file này chỉ lo
+   UI + điều phối gọi repository.
+   ============================================================ */
+(function () {
+  'use strict';
+
+  const M = window.EduModels.TeachingSchedule;
+
+  // ---- State cục bộ ----
+  const state = {
+    teachers: [],          // toàn bộ giáo viên (mọi trạng thái)
+    weeks: [],             // toàn bộ tuần đã có dữ liệu
+    currentWeekKey: '',    // weekKey đang chọn ở tab "Lịch tuần"
+    schedulesByTeacher: {},// teacherCode -> schedule doc (CỦA TUẦN ĐANG CHỌN)
+    search: '',
+  };
+
+  let teacherModalEditingCode = null; // null = đang thêm mới
+  let schedModalTeacherCode = null;   // mã GV đang mở lưới sửa
+  let schedModalDraftDays = null;     // bản nháp days{} đang sửa trong modal (chưa lưu)
+  let pendingImport = null;           // { weeks:[{weekKey,label,teachers:[...]}], skippedSheets:[] }
+
+  // ============================================================
+  // TIỆN ÍCH DÙNG CHUNG
+  // ============================================================
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => el.classList.remove('show'), 2800);
+  }
+  function esc(s) {
+    return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+  function friendlyError(err) {
+    if (err && err.code === 'permission-denied') {
+      return 'Chưa có quyền ghi dữ liệu — kiểm tra Firestore Rules đã publish đủ 3 collection teaching_* chưa.';
+    }
+    return err && err.message ? err.message : String(err);
+  }
+
+  // ============================================================
+  // KHỞI ĐỘNG TRANG
+  // ============================================================
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await EduAuth.logoutUser();
+    window.location.href = 'login.html';
+  });
+
+  window.addEventListener('edu:ready', ({ detail }) => {
+    const { user, profile } = detail;
+    document.getElementById('whoami').textContent = `${profile.name || user.email} · ${EduAuth.ROLE_LABEL[profile.role]}`;
+    loadEverything();
+  });
+
+  async function loadEverything() {
+    try {
+      const [teachers, weeks] = await Promise.all([
+        window.EduRepositories.teachingTeacher.list({ orderBy: 'name' }),
+        window.EduRepositories.teachingWeek.listAll(),
+      ]);
+      state.teachers = teachers;
+      state.weeks = weeks;
+      renderTeacherTab();
+      renderWeekSelect();
+      if (state.currentWeekKey) await loadWeekSchedules(state.currentWeekKey);
+      else renderWeeklyTab(); // hiện bảng rỗng "chưa chọn tuần"
+    } catch (err) {
+      toast('❌ ' + friendlyError(err));
+    }
+  }
+
+  async function loadWeekSchedules(weekKey) {
+    state.currentWeekKey = weekKey;
+    try {
+      const rows = await window.EduRepositories.teachingSchedule.listByWeek(weekKey);
+      state.schedulesByTeacher = {};
+      rows.forEach((r) => { state.schedulesByTeacher[r.teacherCode] = r; });
+      renderWeeklyTab();
+    } catch (err) {
+      toast('❌ ' + friendlyError(err));
+    }
+  }
+
+  // ============================================================
+  // TABS
+  // ============================================================
+  document.querySelectorAll('.tab-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach((p) => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(`panel-${btn.dataset.tab}`).classList.add('active');
+    });
+  });
+
+  // ============================================================
+  // TAB "GIÁO VIÊN" — danh sách + thêm/sửa/xoá
+  // ============================================================
+  function renderTeacherTab() {
+    const tbody = document.getElementById('teacherRows');
+    document.getElementById('teacherCount').textContent = state.teachers.length;
+    if (!state.teachers.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-cell">Chưa có giáo viên nào — bấm "➕ Thêm giáo viên" hoặc nhập từ Excel.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = state.teachers.map((t) => `
+      <tr>
+        <td>${esc(t.code)}</td>
+        <td><strong>${esc(t.name)}</strong></td>
+        <td>${esc(t.phone) || '–'}</td>
+        <td>${esc(t.address) || '–'}</td>
+        <td><span class="badge ${t.active ? 'active' : 'inactive'}">${t.active ? 'Đang dạy' : 'Ngừng'}</span></td>
+        <td>
+          <button type="button" class="btn-edit-text" data-edit-teacher="${esc(t.id)}">Sửa</button>
+          <button type="button" class="btn-danger-text" data-del-teacher="${esc(t.id)}">Xoá</button>
+        </td>
+      </tr>`).join('');
+
+    tbody.querySelectorAll('[data-edit-teacher]').forEach((b) => b.addEventListener('click', () => openTeacherModal(b.dataset.editTeacher)));
+    tbody.querySelectorAll('[data-del-teacher]').forEach((b) => b.addEventListener('click', () => deleteTeacher(b.dataset.delTeacher)));
+  }
+
+  function openTeacherModal(code) {
+    const t = code ? state.teachers.find((x) => x.id === code) : null;
+    teacherModalEditingCode = code || null;
+    document.getElementById('teacherModalTitle').textContent = code ? '✏️ Sửa giáo viên' : '➕ Thêm giáo viên';
+    document.getElementById('f-teacher-code').value = t ? t.code : '';
+    document.getElementById('f-teacher-code').disabled = !!code; // mã NV là ID, không đổi được sau khi tạo
+    document.getElementById('f-teacher-name').value = t ? t.name : '';
+    document.getElementById('f-teacher-phone').value = t ? t.phone : '';
+    document.getElementById('f-teacher-address').value = t ? t.address : '';
+    document.getElementById('teacherModalOverlay').classList.add('show');
+  }
+  function closeTeacherModal() {
+    document.getElementById('teacherModalOverlay').classList.remove('show');
+    document.getElementById('f-teacher-code').disabled = false;
+  }
+  document.getElementById('addTeacherBtn').addEventListener('click', () => openTeacherModal(null));
+  document.getElementById('teacherModalCloseBtn').addEventListener('click', closeTeacherModal);
+  document.getElementById('teacherModalCancelBtn').addEventListener('click', closeTeacherModal);
+  document.getElementById('teacherModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'teacherModalOverlay') closeTeacherModal();
+  });
+
+  document.getElementById('teacherModalSaveBtn').addEventListener('click', async () => {
+    const code = document.getElementById('f-teacher-code').value.trim();
+    const name = document.getElementById('f-teacher-name').value.trim();
+    const phone = document.getElementById('f-teacher-phone').value.trim();
+    const address = document.getElementById('f-teacher-address').value.trim();
+    if (!code || !name) { toast('⚠️ Cần nhập Mã NV và Họ tên.'); return; }
+
+    const btn = document.getElementById('teacherModalSaveBtn');
+    btn.disabled = true;
+    try {
+      if (teacherModalEditingCode) {
+        await window.EduRepositories.teachingTeacher.update(teacherModalEditingCode, { name, phone, address });
+      } else {
+        if (state.teachers.some((t) => t.id === code)) { toast('⚠️ Mã NV này đã tồn tại.'); btn.disabled = false; return; }
+        await window.EduRepositories.teachingTeacher.createWithId(code, M.buildTeacher({ code, name, phone, address }));
+      }
+      toast('✅ Đã lưu giáo viên');
+      closeTeacherModal();
+      await loadEverything();
+    } catch (err) {
+      toast('❌ ' + friendlyError(err));
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  async function deleteTeacher(code) {
+    const t = state.teachers.find((x) => x.id === code);
+    if (!confirm(`Xoá giáo viên "${t ? t.name : code}"? Lịch đã nhập của giáo viên này ở các tuần vẫn còn trong hệ thống (không tự xoá theo), chỉ ẩn khỏi danh sách quản lý.`)) return;
+    try {
+      await window.EduRepositories.teachingTeacher.remove(code);
+      toast('🗑️ Đã xoá giáo viên');
+      await loadEverything();
+    } catch (err) {
+      toast('❌ ' + friendlyError(err));
+    }
+  }
+
+  // ============================================================
+  // TAB "LỊCH TUẦN"
+  // ============================================================
+  function renderWeekSelect() {
+    const sel = document.getElementById('weekSelect');
+    const prev = state.currentWeekKey;
+    if (!state.weeks.length) {
+      sel.innerHTML = '<option value="">-- Chưa có tuần nào --</option>';
+      return;
+    }
+    sel.innerHTML = state.weeks.map((w) => `<option value="${esc(w.id)}">${esc(w.label || w.id)}</option>`).join('');
+    // Giữ nguyên lựa chọn cũ nếu vẫn còn, không thì chọn TUẦN MỚI NHẤT
+    // (cuối danh sách, đã sắp theo weekKey tăng dần).
+    sel.value = state.weeks.some((w) => w.id === prev) ? prev : state.weeks[state.weeks.length - 1].id;
+    if (sel.value !== state.currentWeekKey) {
+      state.currentWeekKey = sel.value;
+      loadWeekSchedules(sel.value);
+    }
+  }
+  document.getElementById('weekSelect').addEventListener('change', (e) => loadWeekSchedules(e.target.value));
+  document.getElementById('teacherSearch').addEventListener('input', (e) => {
+    state.search = e.target.value.trim().toLowerCase();
+    renderWeeklyTab();
+  });
+
+  /** 1 dòng tóm tắt ngắn gọn cho 1 buổi (Sáng/Chiều) — hiện trong bảng
+   * chính, KHÔNG cần mở modal cũng biết sơ bộ giáo viên đang bận gì. */
+  function summarizeSession(sess) {
+    if (!sess || !sess.type) return '<span class="wk-chip wk-empty">–</span>';
+    const cls = {
+      'Dạy chính': 'wk-main', 'Dạy Trám': 'wk-sub', 'Dạy Trực Tuyến': 'wk-online',
+      'Ôn Thi': 'wk-review', 'Trợ Giảng': 'wk-mentor', 'Dự Giảng': 'wk-mentor',
+      'Soạn bài': 'wk-prep', 'Làm việc tại cty': 'wk-office', 'WFH': 'wk-office',
+      'Khám SK': 'wk-health', 'Nghỉ phép/ lễ': 'wk-leave',
+    }[sess.type] || 'wk-prep';
+    const periods = (sess.periods || []).filter((p) => (p || '').trim() !== '').length;
+    const extra = periods ? ` (${periods} tiết${sess.location ? ' · ' + esc(sess.location) : ''})` : (sess.location ? ` (${esc(sess.location)})` : '');
+    return `<span class="wk-chip ${cls}">${esc(sess.type)}</span>${extra ? `<small>${extra}</small>` : ''}`;
+  }
+
+  function renderWeeklyTab() {
+    const tbody = document.getElementById('weeklyRows');
+    if (!state.currentWeekKey) {
+      tbody.innerHTML = '<tr><td colspan="10" class="empty-cell">Chưa có tuần nào — bấm "📥 Nhập từ Excel" để nạp lịch, hoặc tạo tuần đầu tiên khi sửa lịch 1 giáo viên.</td></tr>';
+      return;
+    }
+    const q = state.search;
+    const teachers = state.teachers.filter((t) => !q || t.name.toLowerCase().includes(q) || t.code.toLowerCase().includes(q));
+    if (!teachers.length) {
+      tbody.innerHTML = '<tr><td colspan="10" class="empty-cell">Không có giáo viên khớp tìm kiếm.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = teachers.map((t) => {
+      const sched = state.schedulesByTeacher[t.code];
+      const days = (sched && sched.days) || M.emptyDays();
+      const dayCells = M.WEEKDAYS.map((d) => {
+        const day = days[String(d)] || M.emptyDay();
+        return `<td><div class="wk-day-cell">${summarizeSession(day.morning)}${summarizeSession(day.afternoon)}</div></td>`;
+      }).join('');
+      const stats = M.computeWeekStats(days);
+      const statsHtml = `<b>${stats.schoolsMain}</b> trường·<b>${stats.periodsMain}</b> tiết chính<br>
+        Trám: ${stats.periodsSub} tiết · Ôn thi: ${stats.periodsReview} tiết<br>
+        Soạn bài: ${stats.sessionsPrep} · Cty: ${stats.sessionsOffice} · TG/DG: ${stats.sessionsMentor}`;
+      return `<tr>
+        <td>${esc(t.code)}</td>
+        <td><strong>${esc(t.name)}</strong></td>
+        ${dayCells}
+        <td class="wk-stats-cell">${statsHtml}</td>
+        <td><button type="button" class="btn-edit-text" data-edit-sched="${esc(t.code)}">Sửa lịch</button></td>
+      </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('[data-edit-sched]').forEach((b) => b.addEventListener('click', () => openSchedModal(b.dataset.editSched)));
+  }
+
+  // ------------------------------------------------------------
+  // MODAL: LƯỚI LỊCH TUẦN CỦA 1 GIÁO VIÊN
+  // ------------------------------------------------------------
+  function openSchedModal(teacherCode) {
+    const t = state.teachers.find((x) => x.id === teacherCode);
+    if (!t) return;
+    if (!state.currentWeekKey) { toast('⚠️ Hãy chọn 1 tuần trước.'); return; }
+    schedModalTeacherCode = teacherCode;
+    const existing = state.schedulesByTeacher[teacherCode];
+    // Deep clone để sửa trong modal KHÔNG ảnh hưởng state cho tới khi bấm Lưu.
+    schedModalDraftDays = JSON.parse(JSON.stringify((existing && existing.days) || M.emptyDays()));
+
+    const week = state.weeks.find((w) => w.id === state.currentWeekKey);
+    document.getElementById('schedModalTitle').textContent = `📅 ${t.name} — ${week ? week.label || week.id : state.currentWeekKey}`;
+    renderSchedGrid();
+    document.getElementById('schedModalOverlay').classList.add('show');
+  }
+  function closeSchedModal() {
+    document.getElementById('schedModalOverlay').classList.remove('show');
+    schedModalTeacherCode = null;
+    schedModalDraftDays = null;
+  }
+  document.getElementById('schedModalCloseBtn').addEventListener('click', closeSchedModal);
+  document.getElementById('schedModalCancelBtn').addEventListener('click', closeSchedModal);
+  document.getElementById('schedModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'schedModalOverlay') closeSchedModal();
+  });
+
+  const TYPE_OPTIONS_HTML = ['', ...M.TASK_TYPES].map((t) => `<option value="${esc(t)}">${t ? esc(t) : '— (trống)'}</option>`).join('');
+
+  /** Dựng bảng sửa: 1 hàng nhãn "Thứ" trên cùng, rồi 2 nhóm (Sáng/Chiều) ×
+   * (Loại hình / Địa điểm / Tiết 1-5) — input đọc/ghi trực tiếp vào
+   * schedModalDraftDays qua data-attribute, không cần state riêng cho form. */
+  function renderSchedGrid() {
+    const table = document.getElementById('schedGrid');
+    const dayHeaders = M.WEEKDAYS.map((d) => `<th>${M.WEEKDAY_LABELS[d]}</th>`).join('');
+
+    function sessionRows(sessionKey, sessionLabel) {
+      const typeRow = `<tr class="sched-session-start">
+        <td class="sched-row-label" rowspan="7">${sessionLabel}</td>
+        <td class="sched-row-label">Loại hình</td>
+        ${M.WEEKDAYS.map((d) => {
+          const sess = schedModalDraftDays[String(d)][sessionKey];
+          return `<td><select class="sched-type" data-day="${d}" data-session="${sessionKey}" data-field="type">
+            ${['', ...M.TASK_TYPES].map((t) => `<option value="${esc(t)}" ${sess.type === t ? 'selected' : ''}>${t ? esc(t) : '— (trống)'}</option>`).join('')}
+          </select></td>`;
+        }).join('')}
+      </tr>`;
+      const locRow = `<tr>
+        <td class="sched-row-label">Địa điểm</td>
+        ${M.WEEKDAYS.map((d) => {
+          const sess = schedModalDraftDays[String(d)][sessionKey];
+          return `<td><input type="text" class="sched-loc" data-day="${d}" data-session="${sessionKey}" data-field="location" value="${esc(sess.location)}" placeholder="Tên trường..."></td>`;
+        }).join('')}
+      </tr>`;
+      const periodRows = [0, 1, 2, 3, 4].map((pi) => `<tr>
+        <td class="sched-row-label">Tiết ${pi + 1}</td>
+        ${M.WEEKDAYS.map((d) => {
+          const sess = schedModalDraftDays[String(d)][sessionKey];
+          return `<td><input type="text" class="sched-period" data-day="${d}" data-session="${sessionKey}" data-field="period" data-period-idx="${pi}" value="${esc(sess.periods[pi] || '')}" placeholder="Lớp..."></td>`;
+        }).join('')}
+      </tr>`).join('');
+      return typeRow + locRow + periodRows;
+    }
+
+    table.innerHTML = `
+      <thead><tr><th colspan="2">Buổi</th>${dayHeaders}</tr></thead>
+      <tbody>
+        ${sessionRows('morning', 'SÁNG')}
+        ${sessionRows('afternoon', 'CHIỀU')}
+      </tbody>`;
+
+    // Ghi trực tiếp vào draft khi người dùng gõ/chọn (không re-render toàn
+    // bảng mỗi keystroke — tránh mất focus/con trỏ trong input).
+    table.querySelectorAll('select, input').forEach((el) => {
+      el.addEventListener('input', () => {
+        const d = el.dataset.day, s = el.dataset.session, f = el.dataset.field;
+        const sess = schedModalDraftDays[d][s];
+        if (f === 'type') sess.type = el.value;
+        else if (f === 'location') sess.location = el.value;
+        else if (f === 'period') sess.periods[Number(el.dataset.periodIdx)] = el.value;
+        renderSchedStatsBar();
+      });
+    });
+    renderSchedStatsBar();
+  }
+
+  function renderSchedStatsBar() {
+    const stats = M.computeWeekStats(schedModalDraftDays);
+    document.getElementById('schedStatsBar').innerHTML = `
+      <div class="import-stat ok"><b>${stats.schoolsMain}</b><span>Trường dạy chính</span></div>
+      <div class="import-stat ok"><b>${stats.periodsMain}</b><span>Tiết dạy chính</span></div>
+      <div class="import-stat"><b>${stats.schoolsSub}</b><span>Trường dạy trám</span></div>
+      <div class="import-stat"><b>${stats.periodsSub}</b><span>Tiết dạy trám</span></div>
+      <div class="import-stat"><b>${stats.periodsReview}</b><span>Tiết ôn thi (TT/Online)</span></div>
+      <div class="import-stat"><b>${stats.sessionsPrep}</b><span>Buổi soạn bài</span></div>
+      <div class="import-stat"><b>${stats.sessionsOffice}</b><span>Buổi làm tại cty</span></div>
+      <div class="import-stat"><b>${stats.sessionsMentor}</b><span>Lần trợ giảng/dự giảng</span></div>`;
+  }
+
+  document.getElementById('schedModalSaveBtn').addEventListener('click', async () => {
+    if (!schedModalTeacherCode || !state.currentWeekKey) return;
+    const t = state.teachers.find((x) => x.id === schedModalTeacherCode);
+    const week = state.weeks.find((w) => w.id === state.currentWeekKey);
+    const docId = M.scheduleDocId(schedModalTeacherCode, state.currentWeekKey);
+    const btn = document.getElementById('schedModalSaveBtn');
+    btn.disabled = true;
+    try {
+      await window.EduRepositories.teachingSchedule.upsert(docId, {
+        teacherCode: schedModalTeacherCode,
+        teacherName: t ? t.name : '',
+        weekKey: state.currentWeekKey,
+        weekLabel: week ? week.label || week.id : '',
+        days: schedModalDraftDays,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+      toast('✅ Đã lưu lịch tuần');
+      closeSchedModal();
+      await loadWeekSchedules(state.currentWeekKey);
+    } catch (err) {
+      toast('❌ ' + friendlyError(err));
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // ============================================================
+  // NHẬP TỪ EXCEL — đọc TOÀN BỘ sheet tuần trong file, mỗi sheet là 1
+  // tuần đúng cấu trúc file gốc "LỊCH GIẢNG DẠY TEAM GVTH...xlsx":
+  //   Hàng tiêu đề chứa "MÃ NV" → xác định cột A-D (mã/tên/sđt/địa chỉ)
+  //   và 6 cột Thứ2..Thứ7 (cách nhau 2 cột: G,I,K,M,O,Q = idx 6,8,10,12,14,16).
+  //   Mỗi giáo viên chiếm khối 14 dòng liên tiếp ngay sau hàng tiêu đề:
+  //     dòng 0: loại hình (SÁNG) | dòng 1: địa điểm (SÁNG)
+  //     dòng 2-6: tiết 1-5 (SÁNG)
+  //     dòng 7: loại hình (CHIỀU) | dòng 8: địa điểm (CHIỀU)
+  //     dòng 9-13: tiết 1-5 (CHIỀU)
+  // ============================================================
+  const WEEKDAY_COL_IDX = [6, 8, 10, 12, 14, 16]; // 0-based, ứng với Thứ2..Thứ7
+  const BLOCK_ROWS = 14;
+
+  function computeWeekKeyFromLabel(label, fallbackSheetName) {
+    const m = String(label || '').match(/(\d{1,2})\.(\d{1,2})/);
+    const y = String(label || '').match(/(\d{4})/);
+    if (m && y) {
+      const day = m[1].padStart(2, '0');
+      const month = m[2].padStart(2, '0');
+      return `${y[1]}-${month}-${day}`;
+    }
+    // Không đọc được ngày từ nhãn → dùng chính tên sheet làm khoá tạm (vẫn
+    // nhập được, chỉ là không tự sắp đúng thứ tự thời gian trong dropdown).
+    return 'sheet-' + String(fallbackSheetName || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  }
+
+  function parseWorkbookSheet(rows, sheetName) {
+    let headerRowIdx = -1;
+    for (let r = 0; r < rows.length; r++) {
+      if ((rows[r] || []).some((cell) => String(cell ?? '').trim() === 'MÃ NV')) { headerRowIdx = r; break; }
+    }
+    if (headerRowIdx === -1) return null; // không phải sheet lịch tuần (vd sheet mẫu trống) → bỏ qua
+
+    let weekLabel = '';
+    for (let r = 0; r < headerRowIdx && !weekLabel; r++) {
+      for (const cell of rows[r] || []) {
+        const s = String(cell ?? '');
+        if (/tuần/i.test(s)) { weekLabel = s.replace(/^.*?tuần\s*/i, '').trim(); break; }
+      }
+    }
+    if (!weekLabel) weekLabel = sheetName;
+    const weekKey = computeWeekKeyFromLabel(weekLabel, sheetName);
+
+    const teachers = [];
+    let r = headerRowIdx + 1;
+    let consecutiveEmpty = 0;
+    while (r + BLOCK_ROWS <= rows.length && consecutiveEmpty < 2) {
+      const block = rows.slice(r, r + BLOCK_ROWS);
+      const code = String(block[0][0] ?? '').trim();
+      const name = String(block[0][1] ?? '').trim();
+      if (!code) { consecutiveEmpty++; r += BLOCK_ROWS; continue; }
+      consecutiveEmpty = 0;
+      const phone = String(block[0][2] ?? '').trim();
+      const address = String(block[0][3] ?? '').trim();
+
+      const days = {};
+      WEEKDAY_COL_IDX.forEach((col, wi) => {
+        const weekday = wi + 2;
+        const cell = (row, c) => String((rows[0] && block[row] && block[row][c]) ?? '').trim();
+        days[String(weekday)] = {
+          morning: {
+            type: cell(0, col), location: cell(1, col),
+            periods: [2, 3, 4, 5, 6].map((rr) => cell(rr, col)),
+          },
+          afternoon: {
+            type: cell(7, col), location: cell(8, col),
+            periods: [9, 10, 11, 12, 13].map((rr) => cell(rr, col)),
+          },
+        };
+      });
+
+      teachers.push({ code, name, phone, address, days });
+      r += BLOCK_ROWS;
+    }
+
+    return { weekKey, weekLabel, teachers };
+  }
+
+  document.getElementById('importExcelBtn').addEventListener('click', () => document.getElementById('importExcelInput').click());
+  document.getElementById('importExcelInput').addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!window.XLSX) { toast('⚠️ Chưa tải được thư viện đọc Excel, kiểm tra mạng rồi thử lại.'); return; }
+    const reader = new FileReader();
+    reader.onerror = () => toast('⚠️ Không đọc được file, thử lại.');
+    reader.onload = (ev) => {
+      try {
+        const workbook = XLSX.read(ev.target.result, { type: 'array' });
+        const weeks = [];
+        const skippedSheets = [];
+        workbook.SheetNames.forEach((sheetName) => {
+          const ws = workbook.Sheets[sheetName];
+          const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
+          const parsed = parseWorkbookSheet(rows, sheetName);
+          if (parsed && parsed.teachers.length) weeks.push(parsed);
+          else skippedSheets.push(sheetName);
+        });
+        if (!weeks.length) { toast('⚠️ Không tìm thấy sheet lịch tuần hợp lệ nào trong file (thiếu cột "MÃ NV").'); return; }
+
+        pendingImport = { weeks, skippedSheets };
+        const teacherCount = new Set(weeks.flatMap((w) => w.teachers.map((t) => t.code))).size;
+        document.getElementById('importSummary').hidden = false;
+        document.getElementById('importWeekCount').textContent = weeks.length;
+        document.getElementById('importTeacherCount').textContent = teacherCount;
+        const skippedStat = document.getElementById('importSkippedStat');
+        skippedStat.hidden = skippedSheets.length === 0;
+        document.getElementById('importSkippedCount').textContent = skippedSheets.length;
+        document.getElementById('importConfirmBtn').disabled = false;
+        document.getElementById('importModalOverlay').classList.add('show');
+      } catch (err) {
+        toast('⚠️ ' + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+
+  function closeImportModal() {
+    document.getElementById('importModalOverlay').classList.remove('show');
+    document.getElementById('importSummary').hidden = true;
+    document.getElementById('importConfirmBtn').disabled = true;
+    pendingImport = null;
+  }
+  document.getElementById('importModalCloseBtn').addEventListener('click', closeImportModal);
+  document.getElementById('importCancelBtn').addEventListener('click', closeImportModal);
+  document.getElementById('importModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'importModalOverlay') closeImportModal();
+  });
+
+  document.getElementById('importConfirmBtn').addEventListener('click', async () => {
+    if (!pendingImport) return;
+    const btn = document.getElementById('importConfirmBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Đang nhập...';
+    try {
+      const db = window.EduFirebase.db;
+      const teacherCol = window.EduRepositories.teachingTeacher.col();
+      const weekCol = window.EduRepositories.teachingWeek.col();
+      const schedCol = window.EduRepositories.teachingSchedule.col();
+
+      const knownTeacherCodes = new Set(state.teachers.map((t) => t.id));
+      const knownWeekKeys = new Set(state.weeks.map((w) => w.id));
+
+      let batch = db.batch();
+      let ops = 0;
+      const flushIfNeeded = async () => { if (ops >= 400) { await batch.commit(); batch = db.batch(); ops = 0; } };
+
+      for (const week of pendingImport.weeks) {
+        if (!knownWeekKeys.has(week.weekKey)) {
+          batch.set(weekCol.doc(week.weekKey), M.buildWeek({ label: week.weekLabel }));
+          knownWeekKeys.add(week.weekKey);
+          ops++; await flushIfNeeded();
+        }
+        for (const t of week.teachers) {
+          if (!knownTeacherCodes.has(t.code)) {
+            batch.set(teacherCol.doc(t.code), M.buildTeacher(t));
+            knownTeacherCodes.add(t.code);
+            ops++; await flushIfNeeded();
+          }
+          const docId = M.scheduleDocId(t.code, week.weekKey);
+          batch.set(schedCol.doc(docId), {
+            teacherCode: t.code, teacherName: t.name,
+            weekKey: week.weekKey, weekLabel: week.weekLabel,
+            days: t.days, updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+          ops++; await flushIfNeeded();
+        }
+      }
+      if (ops > 0) await batch.commit();
+
+      toast(`✅ Đã nhập ${pendingImport.weeks.length} tuần / ${new Set(pendingImport.weeks.flatMap((w) => w.teachers.map((t) => t.code))).size} giáo viên`);
+      closeImportModal();
+      await loadEverything();
+    } catch (err) {
+      toast('❌ ' + friendlyError(err));
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '💾 Nhập dữ liệu';
+    }
+  });
+})();
