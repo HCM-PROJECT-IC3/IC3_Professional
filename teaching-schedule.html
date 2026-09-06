@@ -32,9 +32,9 @@
   </div>
 
   <!-- ============ TABS ============ -->
-  <div class="tabs" role="tablist">
+  <div class="tabs" role="tablist" id="mainTabs">
     <button type="button" class="tab-btn active" data-tab="weekly" role="tab">📅 Lịch tuần</button>
-    <button type="button" class="tab-btn" data-tab="teachers" role="tab">👤 Giáo viên</button>
+    <button type="button" class="tab-btn" data-tab="teachers" role="tab" id="teachersTabBtn">👤 Giáo viên</button>
   </div>
 
   <!-- ============ TAB: WEEKLY SCHEDULE ============ -->
@@ -44,13 +44,16 @@
         <span>🗓️ Tuần:</span>
         <select id="weekSelect" class="form-input"><option value="">-- Chưa có tuần nào --</option></select>
       </div>
-      <div class="panel-toolbar-filters">
+      <div class="panel-toolbar-filters" id="weeklyFiltersWrap">
         <input type="text" id="teacherSearch" class="form-input" placeholder="🔍 Tìm theo tên hoặc mã NV...">
+        <label class="chk-missing"><input type="checkbox" id="onlyMissingChk"> Chỉ hiện GV chưa có lịch</label>
       </div>
+      <button type="button" class="btn btn-secondary" id="newWeekBtn">🧬 Tuần mới</button>
       <button type="button" class="btn btn-secondary" id="importExcelBtn">📥 Nhập từ Excel</button>
       <input type="file" id="importExcelInput" accept=".xlsx,.xls" hidden>
     </div>
-    <div class="table-scroll">
+    <div class="week-progress-bar" id="weekProgressBar" hidden></div>
+    <div class="table-scroll" id="weeklyTableWrap">
       <table>
         <thead><tr>
           <th>Mã NV</th><th>Giáo viên</th>
@@ -59,6 +62,20 @@
         </tr></thead>
         <tbody id="weeklyRows"><tr><td colspan="10" class="empty-cell">Đang tải...</td></tr></tbody>
       </table>
+    </div>
+
+    <!-- ============ "LỊCH CỦA TÔI" — chỉ hiện với role giáo viên (đã liên
+         kết Mã NV) — thay bảng tổng hợp nhiều GV bằng lưới thẻ theo ngày,
+         sửa/lưu trực tiếp ngay tại đây, không cần mở modal. ============ -->
+    <div class="my-week-wrap force-hide" id="myWeekWrap">
+      <div class="my-week-empty" id="myWeekEmpty" hidden></div>
+      <div class="my-week-body" id="myWeekBody" hidden>
+        <div class="my-week-cards" id="myWeekCards"></div>
+        <div class="my-week-footer">
+          <div class="sched-stats-bar" id="myWeekStatsBar"></div>
+          <button type="button" class="btn btn-primary my-week-save-btn" id="myWeekSaveBtn">💾 Lưu lịch tuần của tôi</button>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -137,6 +154,40 @@
   </div>
 </div>
 
+<!-- ============ MODAL: TẠO TUẦN MỚI (tự động hoá — sao chép từ tuần trước) ============ -->
+<div class="modal-overlay" id="newWeekModalOverlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>🧬 Tạo tuần mới</h3>
+      <button type="button" class="modal-close" id="newWeekCloseBtn">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="f-week-date">Ngày Thứ 2 đầu tuần *</label>
+        <input type="date" id="f-week-date" class="form-input">
+      </div>
+      <div class="form-group">
+        <label for="f-week-label">Nhãn hiển thị</label>
+        <input type="text" id="f-week-label" class="form-input" placeholder="Tự động theo ngày, có thể sửa lại">
+      </div>
+      <div class="form-group">
+        <label for="f-week-clone">Tự động sao chép lịch từ tuần</label>
+        <select id="f-week-clone" class="form-input">
+          <option value="">-- Để trống, không sao chép --</option>
+        </select>
+      </div>
+      <div class="import-hint">
+        Sao chép giúp bạn <b>chỉ cần sửa phần thay đổi</b> so với tuần được chọn, thay vì nhập lại từ đầu —
+        phù hợp vì phần lớn giáo viên dạy lặp lại lịch theo tuần.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" id="newWeekCancelBtn">Huỷ</button>
+      <button type="button" class="btn btn-primary" id="newWeekConfirmBtn">✅ Tạo tuần</button>
+    </div>
+  </div>
+</div>
+
 <!-- ============ MODAL: LƯỚI LỊCH TUẦN CỦA 1 GIÁO VIÊN ============ -->
 <div class="modal-overlay" id="schedModalOverlay">
   <div class="modal-box modal-wide">
@@ -160,9 +211,11 @@
 <div class="toast" id="toast"></div>
 
 <!-- QUAN TRỌNG: phải khai báo EDU_ALLOWED_ROLES TRƯỚC js/auth-guard.js —
-     trang này chỉ dành cho admin/coordinator (đúng vai trò quản lý roster
-     giáo viên/lịch làm việc), giống roster-manager.html. -->
-<script>window.EDU_ALLOWED_ROLES = ['admin', 'coordinator'];</script>
+     admin/coordinator: toàn quyền quản lý (giống roster-manager.html).
+     teacher (đã được Admin liên kết Mã NV ở admin-users.html): được vào
+     ở CHẾ ĐỘ CHỈ XEM đúng lịch của chính mình, xem js/teaching-schedule.js
+     phần "applyRoleUI()" — quyền thật sự vẫn do firestore.rules chốt. -->
+<script>window.EDU_ALLOWED_ROLES = ['admin', 'coordinator', 'teacher'];</script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>

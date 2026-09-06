@@ -192,6 +192,20 @@ tr:last-child td { border-bottom: none }
   .panel-toolbar .btn.push-right { margin-left: 0 }
 }
 
+/* Ẩn cưỡng bức theo role (js/teaching-schedule.js → applyRoleUI()) — dùng
+   class riêng thay vì thuộc tính [hidden] vì 1 số phần tử bị ẩn (vd
+   .panel-toolbar-filters) đã có "display:flex" trên chính class đó, cùng
+   độ ưu tiên CSS với UA-stylesheet của [hidden] nên không chắc thắng. */
+.force-hide { display: none !important; }
+
+/* Checkbox lọc "chỉ hiện GV chưa có lịch" — cùng hàng với ô tìm kiếm. */
+.chk-missing {
+  display: inline-flex; align-items: center; gap: .4rem;
+  font-size: .78rem; font-weight: 700; color: var(--muted);
+  white-space: nowrap; cursor: pointer; user-select: none;
+}
+.chk-missing input { cursor: pointer }
+
 /* ══════════════════════════════════════════════
    PHẦN RIÊNG: lưới lịch tuần (weekly grid)
    ══════════════════════════════════════════════ */
@@ -233,14 +247,23 @@ tr:last-child td { border-bottom: none }
   white-space: nowrap; text-align: right; font-size: .72rem;
 }
 .sched-grid tr.sched-session-start td.sched-row-label { border-top: 2px solid var(--border) }
-.sched-grid select.sched-type, .sched-grid input.sched-loc, .sched-grid input.sched-period {
+.sched-grid select.sched-type, .sched-grid input.sched-loc {
   width: 100%; min-width: 108px; font-family: inherit; font-size: .76rem;
   padding: .35rem .45rem; border-radius: 6px; border: 1.5px solid var(--border);
   background: var(--card); color: var(--text);
 }
-.sched-grid input.sched-period { min-width: 76px; text-align: center }
-.sched-grid select.sched-type:focus, .sched-grid input:focus {
+.sched-grid select.sched-type:focus, .sched-grid input.sched-loc:focus {
   outline: none; border-color: var(--purple); box-shadow: 0 0 0 3px var(--purple-lt);
+}
+/* Tiết 1-5: tích chọn (checkbox) "có dạy hay không", không còn gõ tên lớp. */
+.sched-grid td.sched-period-cell { text-align: center }
+.sched-grid input.sched-period {
+  width: 18px; height: 18px; cursor: pointer; accent-color: var(--purple);
+}
+/* Chế độ "chỉ xem" (giáo viên) — làm mờ nhẹ + đổi con trỏ để rõ ràng đây
+   là dữ liệu không sửa được, tránh nhầm tưởng ô bị lỗi/không phản hồi. */
+.sched-grid select.sched-type:disabled, .sched-grid input:disabled {
+  background: var(--card2); color: var(--muted); cursor: not-allowed; opacity: .85;
 }
 
 .sched-stats-bar {
@@ -248,3 +271,106 @@ tr:last-child td { border-bottom: none }
   gap: .6rem; margin-top: 1rem;
 }
 .sched-stats-bar .import-stat b { font-size: 1.1rem }
+
+/* Hàng bị đánh dấu "chưa nhập lịch tuần này" — viền trái màu vàng cảnh báo,
+   dễ quét mắt tìm giáo viên cần nhắc nhập lịch mà không cần đọc từng ô. */
+tr.row-missing { box-shadow: inset 4px 0 0 var(--yellow) }
+tr.row-missing td:first-child { position: relative }
+
+/* Thanh tiến độ "đã nhập lịch / tổng số GV" — tự động tính từ dữ liệu
+   thật (computeWeekStats/hasAnySchedule), không lưu số liệu tĩnh. */
+.week-progress-bar {
+  display: flex; align-items: center; gap: .8rem; flex-wrap: wrap;
+  background: var(--card2); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); padding: .6rem .9rem; margin-bottom: 1rem;
+}
+.wk-progress-track {
+  flex: 1; min-width: 120px; height: 8px; border-radius: 999px;
+  background: var(--border); overflow: hidden;
+}
+.wk-progress-fill { height: 100%; background: var(--green); border-radius: 999px; transition: width .3s ease }
+.wk-progress-label { font-size: .78rem; font-weight: 700; color: var(--muted); white-space: nowrap }
+.wk-progress-label b { color: var(--text) }
+.wk-progress-warn { color: #a97a00 !important }
+
+/* ══════════════════════════════════════════════
+   "LỊCH CỦA TÔI" — khối riêng cho role giáo viên: lưới thẻ theo ngày
+   (Thứ2→Thứ7), sửa/lưu trực tiếp ngay tại trang, không cần modal — dễ
+   dùng hơn bảng 10 cột vì giáo viên chỉ quản lý đúng 1 "hàng" của mình.
+   ══════════════════════════════════════════════ */
+.my-week-empty {
+  background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  padding: 1.6rem; text-align: center; color: var(--muted); font-size: .85rem; line-height: 1.6;
+}
+.my-week-body { display: flex; flex-direction: column; gap: 1.2rem }
+.my-week-cards {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: .9rem;
+}
+.day-card {
+  background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius);
+  padding: 1rem; display: flex; flex-direction: column; gap: .8rem;
+}
+.day-card-title {
+  font-weight: 800; font-size: .82rem; color: var(--purple);
+  text-transform: uppercase; letter-spacing: .03em;
+}
+/* Mỗi buổi (Sáng/Chiều) là 1 khối riêng, TỰ ĐỔI MÀU theo "loại hình phụ
+   trách" đang chọn — cùng bảng màu với thẻ tóm tắt (wk-chip) bên bảng
+   admin, để cùng 1 loại hình luôn ra cùng 1 màu ở mọi nơi trong trang.
+   Không chọn gì (trống/nghỉ) thì giữ màu trung tính mặc định. */
+.day-card-session {
+  display: flex; flex-direction: column; gap: .5rem;
+  padding: .7rem; border-radius: 10px;
+  background: var(--card2); border: 1.5px solid var(--border);
+  transition: background .15s ease, border-color .15s ease;
+}
+.day-card-session-label {
+  font-size: .68rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .03em;
+}
+.day-card-session.sess-main    { background: var(--green-lt);  border-color: rgba(33,179,107,.35) }
+.day-card-session.sess-sub     { background: var(--yellow-lt); border-color: rgba(246,167,35,.4) }
+.day-card-session.sess-online  { background: var(--blue-lt);   border-color: rgba(46,140,240,.35) }
+.day-card-session.sess-review  { background: var(--purple-lt); border-color: rgba(79,107,255,.35) }
+.day-card-session.sess-mentor  { background: var(--teal-lt);   border-color: rgba(23,179,163,.35) }
+.day-card-session.sess-prep, .day-card-session.sess-office {
+  background: var(--card2); border-color: var(--border);
+}
+.day-card-session.sess-leave, .day-card-session.sess-health { background: var(--red-lt); border-color: rgba(240,72,62,.35) }
+
+/* Ô nhập luôn nền TRẮNG/tối (--card, không phải --card2) để nổi rõ trên
+   khối buổi đã được tô màu phía sau, tránh 2 lớp nền trùng màu khó phân biệt. */
+.day-card select.my-week-type, .day-card input.my-week-loc {
+  width: 100%; font-family: inherit; font-size: .78rem;
+  padding: .5rem .6rem; border-radius: 8px; border: 1.5px solid var(--border);
+  background: var(--card); color: var(--text);
+}
+.day-card select.my-week-type:focus, .day-card input.my-week-loc:focus {
+  outline: none; border-color: var(--purple); box-shadow: 0 0 0 3px var(--purple-lt);
+}
+/* Tiết 1-5: tích chọn (checkbox) "có dạy tiết đó hay không" — nhãn T1..T5
+   cố định phía trên từng ô tích, không còn gõ tên lớp. */
+.periods-caption { font-size: .66rem; color: var(--muted); margin-top: .1rem }
+.day-card-periods { display: grid; grid-template-columns: repeat(5, 1fr); gap: .3rem }
+.period-cell {
+  display: flex; flex-direction: column; align-items: center; gap: .3rem;
+  cursor: pointer; padding: .35rem .2rem; border-radius: 8px;
+  background: var(--card); border: 1.5px solid var(--border);
+}
+.period-num { font-size: .62rem; font-weight: 800; color: var(--muted); white-space: nowrap }
+.period-cell input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--purple) }
+
+/* Thanh thống kê + nút Lưu — đặt trong 1 khối nổi bật (card riêng) ngay
+   dưới lưới thẻ ngày, nút Lưu tách hàng riêng bên dưới thống kê để luôn
+   rõ ràng, không lẫn vào giữa các số liệu. */
+.my-week-footer {
+  display: flex; flex-direction: column; gap: .9rem;
+  background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+}
+.my-week-footer .sched-stats-bar { margin-top: 0 }
+.my-week-save-btn { align-self: flex-end }
+
+@media (max-width: 720px) {
+  .my-week-save-btn { align-self: stretch; width: 100% }
+}

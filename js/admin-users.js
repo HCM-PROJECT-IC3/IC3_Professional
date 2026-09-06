@@ -34,6 +34,24 @@ window.EDU_ALLOWED_ROLES = ['admin'];
     }
   }
 
+  // Danh sách giáo viên trong "Lịch giảng dạy" (teaching-schedule.html) —
+  // dùng để liên kết 1 tài khoản (role teacher) với ĐÚNG 1 bản ghi giáo
+  // viên (field "teacherCode" trên users/{uid}), nhờ đó giáo viên tự xem
+  // được lịch của mình mà firestore.rules vẫn chặn được xem lịch người khác.
+  let allTeachingTeachers = []; // [{code,name}]
+
+  async function loadTeachingTeachers() {
+    try {
+      const snap = await EduFirebase.db.collection('teaching_teachers').get();
+      allTeachingTeachers = snap.docs
+        .map(d => ({ code: d.id, name: (d.data().name || '').trim() }))
+        .sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+    } catch (err) {
+      console.warn('[EduAdminUsers] Không tải được danh sách giáo viên (teaching_teachers):', err.message);
+      allTeachingTeachers = [];
+    }
+  }
+
   window.addEventListener('edu:ready', ({ detail }) => {
     const { user, profile } = detail;
     document.getElementById('whoami').textContent = `${profile.name || user.email} · ${EduAuth.ROLE_LABEL[profile.role]}`;
@@ -45,9 +63,10 @@ window.EDU_ALLOWED_ROLES = ['admin'];
     const [snap] = await Promise.all([
       EduFirebase.db.collection('users').orderBy('createdAt', 'desc').get(),
       loadSchools(),
+      loadTeachingTeachers(),
     ]);
     if (snap.empty) {
-      tbody.innerHTML = '<tr><td colspan="6">Chưa có tài khoản nào.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7">Chưa có tài khoản nào.</td></tr>';
       return;
     }
     tbody.innerHTML = snap.docs.map(doc => {
@@ -75,6 +94,15 @@ window.EDU_ALLOWED_ROLES = ['admin'];
             <button type="button" class="saveSchoolsBtn">💾 Lưu trường</button>
           ` : `<span class="hint">Chưa có trường nào trong danh sách học sinh (roster-manager.html)</span>`}
           ${userSchools.length ? `<div class="schoolsCurrent">Đang xem: ${userSchools.map(esc).join(', ')}</div>` : ''}
+        </td>
+        <td class="teacherCodeCell" ${u.role === 'teacher' ? '' : 'hidden'}>
+          ${allTeachingTeachers.length ? `
+            <select class="teacherCodeSelect">
+              <option value="">-- Chưa liên kết --</option>
+              ${allTeachingTeachers.map(tc => `<option value="${esc(tc.code)}" ${u.teacherCode === tc.code ? 'selected' : ''}>${esc(tc.code)} — ${esc(tc.name)}</option>`).join('')}
+            </select>
+            <button type="button" class="saveTeacherCodeBtn">💾 Lưu</button>
+          ` : `<span class="hint">Chưa có giáo viên nào trong Lịch giảng dạy (teaching-schedule.html)</span>`}
         </td>
         <td>${pending ? '<button class="approveBtn">✅ Duyệt ngay</button>' : '—'}</td>
       </tr>`;
@@ -122,6 +150,24 @@ window.EDU_ALLOWED_ROLES = ['admin'];
         try {
           await EduFirebase.db.collection('users').doc(uid).set({ schools: chosen }, { merge: true });
           toast(`✅ Đã gán ${chosen.length} trường cho giáo viên`);
+          loadUsers();
+        } catch (err) {
+          toast('❌ Lỗi: ' + err.message);
+        }
+      });
+    });
+
+    tbody.querySelectorAll('.saveTeacherCodeBtn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const tr = e.target.closest('tr');
+        const uid = tr.dataset.uid;
+        const sel = tr.querySelector('.teacherCodeSelect');
+        const code = sel.value;
+        try {
+          await EduFirebase.db.collection('users').doc(uid).set(
+            { teacherCode: code || firebase.firestore.FieldValue.delete() }, { merge: true }
+          );
+          toast(code ? '✅ Đã liên kết Mã NV cho giáo viên' : '✅ Đã bỏ liên kết Mã NV');
           loadUsers();
         } catch (err) {
           toast('❌ Lỗi: ' + err.message);

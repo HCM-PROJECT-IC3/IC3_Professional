@@ -23,7 +23,11 @@
        updatedAt }
      DaySchedule = { morning: Session, afternoon: Session }
      Session     = { type: TASK_TYPES[n]|'', location: string, periods: [p1..p5] }
-     (periods[i] = tên lớp đang dạy ở tiết i+1, chuỗi rỗng nếu không dạy)
+     (periods[i] = true nếu CÓ dạy tiết i+1, false/'' nếu không dạy — nhập
+     bằng tích chọn (checkbox), không gõ tên lớp nữa. Dữ liệu CŨ nhập từ
+     Excel có thể vẫn là tên lớp dạng chuỗi khác rỗng — mọi nơi đọc periods
+     chỉ nên dùng "truthy" (!!p), KHÔNG so sánh === true, để tương thích
+     ngược với dữ liệu đó.)
    ============================================================ */
 (function (global) {
   'use strict';
@@ -89,7 +93,10 @@
       const day = (days && days[String(d)]) || emptyDay();
       SESSIONS.forEach((s) => {
         const sess = day[s] || emptySession();
-        const taughtPeriods = (sess.periods || []).filter((p) => (p || '').trim() !== '').length;
+        // periods[i] giờ là boolean (tích/không tích) — nhưng dữ liệu CŨ
+        // nhập từ Excel có thể vẫn là chuỗi tên lớp, nên chỉ xét "truthy"
+        // (!!p), TUYỆT ĐỐI không gọi .trim() vì boolean không có hàm đó.
+        const taughtPeriods = (sess.periods || []).filter((p) => !!p).length;
         if (sess.type === 'Dạy chính') {
           if (sess.location) locSet['Dạy chính'].add(sess.location);
           periodsMain += taughtPeriods;
@@ -140,6 +147,45 @@
     };
   }
 
+  /** Suy ra nhãn hiển thị "dd.mm - dd.mm.yyyy" (Thứ2→Thứ7) từ ngày Thứ 2
+   * đầu tuần (chuỗi "YYYY-MM-DD" của input type=date) — dùng khi tạo tuần
+   * mới thủ công (nút "🧬 Tuần mới"), tự gợi ý nhãn giống format của file
+   * Excel gốc để không phải gõ tay. */
+  function labelFromMonday(mondayStr) {
+    const d = new Date(`${mondayStr}T00:00:00`);
+    if (Number.isNaN(d.getTime())) return mondayStr;
+    const sat = new Date(d);
+    sat.setDate(d.getDate() + 5);
+    const fmt = (x) => `${x.getDate()}.${x.getMonth() + 1}`;
+    return `${fmt(d)} - ${fmt(sat)}.${sat.getFullYear()}`;
+  }
+
+  /** weekKey (Thứ 2 đầu tuần, "YYYY-MM-DD") của TUẦN HIỆN TẠI theo giờ máy
+   * người dùng — dùng để mỗi lần mở trang đều tự nhảy đúng vào tuần đang
+   * diễn ra (thay vì luôn dừng ở tuần cuối danh sách), xem renderWeekSelect()
+   * trong teaching-schedule.js. */
+  function todayWeekKey() {
+    const now = new Date();
+    const dow = now.getDay(); // 0=CN, 1=Thứ2, ... 6=Thứ7
+    const diffToMonday = dow === 0 ? -6 : 1 - dow;
+    const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday);
+    const y = monday.getFullYear();
+    const m = String(monday.getMonth() + 1).padStart(2, '0');
+    const d = String(monday.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  /** Giáo viên đã nhập ÍT NHẤT 1 buổi có "loại hình phụ trách" trong tuần
+   * hay chưa — dùng cho thanh tiến độ + bộ lọc "chỉ hiện GV chưa có lịch". */
+  function hasAnySchedule(days) {
+    if (!days) return false;
+    return WEEKDAYS.some((d) => {
+      const day = days[String(d)];
+      if (!day) return false;
+      return SESSIONS.some((s) => day[s] && day[s].type);
+    });
+  }
+
   global.EduModels = global.EduModels || {};
   global.EduModels.TeachingSchedule = {
     TEACHERS_COLLECTION,
@@ -158,5 +204,8 @@
     computeWeekStats,
     buildTeacher,
     buildWeek,
+    labelFromMonday,
+    todayWeekKey,
+    hasAnySchedule,
   };
 })(window);

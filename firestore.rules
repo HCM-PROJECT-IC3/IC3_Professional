@@ -60,6 +60,14 @@ service cloud.firestore {
       return isAdmin() || isCoordinator()
         || (isApprovedTeacher() && resource.data[fieldName] in myTeacherSchools());
     }
+    // Mã NV (teaching_teachers) mà giáo viên hiện tại được liên kết — do
+    // Admin gán thủ công trong admin-users.html (field "teacherCode" trên
+    // users/{uid}), KHÔNG do giáo viên tự khai. Dùng để giáo viên CHỈ xem
+    // được đúng lịch giảng dạy của chính mình (teaching-schedule.html),
+    // không xem được lịch của giáo viên khác.
+    function myTeacherCode() {
+      return (isApprovedTeacher() && ('teacherCode' in myProfile())) ? myProfile().teacherCode : null;
+    }
     // ---- Tài khoản người dùng & phân quyền ----
     match /users/{userId} {
       allow read: if isSignedIn();
@@ -186,19 +194,32 @@ service cloud.firestore {
     // ---- Lịch giảng dạy hàng tuần của đội ngũ giáo viên
     //      (teaching-schedule.html) — thay thế file Excel
     //      "LỊCH GIẢNG DẠY TEAM GVTH...xlsx" quản lý thủ công trước đây.
-    //      Cùng mức quyền với roster ở trên (chỉ admin/coordinator quản lý,
-    //      giáo viên/học sinh không cần truy cập trang này). ----
+    //      Admin/coordinator: toàn quyền quản lý (thêm/sửa/xoá GV, nhập
+    //      Excel, sửa lịch mọi tuần). Giáo viên (đã được Admin liên kết
+    //      "teacherCode" trong admin-users.html): CHỈ ĐỌC (chế độ xem),
+    //      và CHỈ đúng bản ghi của chính mình — không sửa được, không xem
+    //      được lịch giáo viên khác. ----
     match /teaching_teachers/{teacherCode} {
-      allow read: if isAdmin() || isCoordinator();
+      allow read: if isAdmin() || isCoordinator() || (isApprovedTeacher() && teacherCode == myTeacherCode());
       allow write: if isAdmin() || isCoordinator();
     }
     match /teaching_weeks/{weekKey} {
-      allow read: if isAdmin() || isCoordinator();
+      // Nhãn tuần (vd "7.9 - 12.9.2026") không phải dữ liệu nhạy cảm và cần
+      // đọc được để giáo viên chọn đúng tuần xem lịch của mình → cho phép
+      // mọi giáo viên đã duyệt đọc toàn bộ danh sách tuần (không cần scope).
+      allow read: if isAdmin() || isCoordinator() || isApprovedTeacher();
       allow write: if isAdmin() || isCoordinator();
     }
     match /teaching_schedule/{scheduleId} {
-      allow read: if isAdmin() || isCoordinator();
-      allow write: if isAdmin() || isCoordinator();
+      allow read: if isAdmin() || isCoordinator()
+        || (isApprovedTeacher() && resource.data.teacherCode == myTeacherCode());
+      // Giáo viên được TỰ CẬP NHẬT đúng lịch của chính mình (teaching-schedule.html
+      // → khối "Lịch của tôi") — chỉ tạo/sửa bản ghi có teacherCode == chính mình,
+      // không đụng được lịch giáo viên khác. Xoá vẫn chỉ Admin/Điều phối (không có
+      // nút xoá lịch tuần trên UI, chỉ để phòng thao tác ngoài ý muốn).
+      allow create, update: if isAdmin() || isCoordinator()
+        || (isApprovedTeacher() && request.resource.data.teacherCode == myTeacherCode());
+      allow delete: if isAdmin() || isCoordinator();
     }
   }
 }
