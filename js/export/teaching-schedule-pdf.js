@@ -20,22 +20,23 @@
   const GRAY = [110, 110, 120];
   const PAGE_MARGIN = 40;
 
-  // Màu nền ô "Loại hình" trong bảng PDF — CÙNG Ý NGHĨA với bảng màu
-  // wk-chip/day-card-session trên web (xem css/teaching-schedule.css) để
-  // bản in ra vẫn nhận diện được loại hình bằng màu như trên màn hình.
-  // RGB nhạt (gần trắng) để chữ đen trong ô luôn đọc rõ khi in.
+  // Màu nền + màu CHỮ của ô "Loại hình" trong bảng PDF — CÙNG Ý NGHĨA với
+  // tc-chip/day-card-session trên web (xem css/teaching-schedule.css) và
+  // KHỚP ĐÚNG bảng màu chữ người dùng cung cấp, để bản in ra nhận diện
+  // được loại hình bằng màu y hệt màn hình. Nền luôn nhạt (gần trắng),
+  // chữ luôn đậm — đủ tương phản để đọc/in trắng đen vẫn rõ.
   const TYPE_COLOR = {
-    'Dạy chính': [231, 242, 254],
-    'Dạy Trám': [236, 240, 255],
-    'Dạy Trực Tuyến': [228, 250, 238],
-    'Ôn Thi': [227, 250, 246],
-    'Trợ Giảng': [250, 231, 244],
-    'Dự Giảng': [255, 239, 226],
-    'Soạn bài': [246, 248, 254],
-    'Làm việc tại cty': [246, 248, 254],
-    'WFH': [246, 248, 254],
-    'Khám SK': [253, 232, 231],
-    'Nghỉ phép/ lễ': [253, 232, 231],
+    'Dạy chính':        { bg: [227, 250, 246], text: [15, 133, 122] },  // teal — "Dạy Trực Tiếp"
+    'Dạy Trám':         { bg: [231, 242, 254], text: [30, 100, 190] },  // xanh dương
+    'Dạy Trực Tuyến':   { bg: [228, 250, 238], text: [21, 140, 84] },   // xanh lá
+    'Ôn Thi':           { bg: [236, 240, 255], text: [79, 107, 255] },  // tím
+    'Trợ Giảng':        { bg: [250, 231, 244], text: [196, 54, 144] },  // hồng/magenta
+    'Dự Giảng':         { bg: [255, 239, 226], text: [163, 84, 0] },    // cam
+    'Soạn bài':         { bg: [246, 248, 254], text: [102, 112, 133] }, // trung tính
+    'Làm việc tại cty': { bg: [253, 232, 231], text: [200, 40, 30] },   // đỏ
+    'WFH':              { bg: [255, 246, 227], text: [122, 88, 0] },    // vàng đậm
+    'Khám SK':          { bg: [253, 232, 231], text: [200, 40, 30] },   // đỏ
+    'Nghỉ phép/ lễ':    { bg: [246, 248, 254], text: [27, 32, 54] },    // đen/trung tính
   };
 
   function nowLabel() {
@@ -171,7 +172,10 @@
           const d = M.WEEKDAYS[data.column.index - 1];
           const sess = (days[String(d)] || M.emptyDay())[sessKey];
           const color = sess && TYPE_COLOR[sess.type];
-          if (color) data.cell.styles.fillColor = color;
+          if (color) {
+            data.cell.styles.fillColor = color.bg;
+            data.cell.styles.textColor = color.text;
+          }
         }
       },
     });

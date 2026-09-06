@@ -48,20 +48,50 @@
         <input type="text" id="teacherSearch" class="form-input" placeholder="🔍 Tìm theo tên hoặc mã NV...">
         <label class="chk-missing"><input type="checkbox" id="onlyMissingChk"> Chỉ hiện GV chưa có lịch</label>
       </div>
+      <!-- Điều phối đào tạo cần TỔNG QUAN cả đội (18+ GV) hơn là xem từng
+           người 1 — mặc định mở "📊 Tổng quan" (ma trận + KPI), chuyển
+           sang "🎴 Thẻ" khi cần đọc chi tiết/sửa lịch từng giáo viên. -->
+      <div class="view-toggle" id="viewToggle" role="tablist">
+        <button type="button" class="view-toggle-btn active" data-view="dashboard">📊 Tổng quan</button>
+        <button type="button" class="view-toggle-btn" data-view="cards">🎴 Thẻ</button>
+      </div>
       <button type="button" class="btn btn-secondary" id="newWeekBtn">🧬 Tuần mới</button>
       <button type="button" class="btn btn-secondary" id="importExcelBtn">📥 Nhập từ Excel</button>
       <button type="button" class="btn btn-ghost" id="exportAllPdfBtn" title="Xuất 1 file PDF gồm lịch của tất cả GV đang hiển thị, mỗi người 1 trang">🖨️ Xuất PDF tất cả</button>
       <input type="file" id="importExcelInput" accept=".xlsx,.xls" hidden>
     </div>
-    <div class="week-progress-bar" id="weekProgressBar" hidden></div>
+    <div class="week-progress-bar force-hide" id="weekProgressBar"></div>
 
-    <!-- ============ Lưới thẻ "Cover Flow" — mỗi giáo viên 1 thẻ (cỡ lớn,
-         chữ rõ ràng), cuộn ngang mượt (scroll-snap) thay cho bảng dày đặc
-         nhiều cột trước đây (18 GV × 6 cột Thứ rất khó dò theo hàng). Mỗi
-         thẻ liệt kê các chip lịch (Thứ + Buổi + loại hình phụ trách, chỉ
-         hiện buổi CÓ lịch) để vẫn quét mắt nhanh được ai bận gì mà không
-         cần mở lịch. ============ -->
-    <div class="weekly-cards-wrap" id="weeklyCardsWrap">
+    <!-- ============ "📊 Tổng quan" — dashboard cho điều phối đào tạo:
+         KPI toàn đội + ma trận Thứ2-7 × mọi giáo viên (chấm màu, gọn theo
+         hàng) + danh sách "Cần chú ý" (GV chưa nhập lịch) — xem được CẢ
+         ĐỘI trong 1 màn hình, không phải cuộn qua từng thẻ. ============ -->
+    <div class="weekly-dashboard" id="weeklyDashboard">
+      <div class="dash-kpi-row" id="dashKpiRow"></div>
+      <div class="dash-main">
+        <div class="dash-matrix-wrap" id="dashMatrixWrap">
+          <table class="dash-matrix">
+            <thead><tr>
+              <th class="dash-matrix-name-col">Giáo viên</th>
+              <th id="dashDayHead2">Thứ 2</th><th id="dashDayHead3">Thứ 3</th><th id="dashDayHead4">Thứ 4</th>
+              <th id="dashDayHead5">Thứ 5</th><th id="dashDayHead6">Thứ 6</th><th id="dashDayHead7">Thứ 7</th>
+              <th></th>
+            </tr></thead>
+            <tbody id="dashMatrixBody"><tr><td colspan="8" class="empty-cell">Đang tải...</td></tr></tbody>
+          </table>
+        </div>
+        <div class="dash-attention" id="dashAttention">
+          <h3>🚩 Cần chú ý</h3>
+          <div class="dash-attention-list" id="dashAttentionList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ "🎴 Thẻ" ("Cover Flow") — mỗi giáo viên 1 thẻ (cỡ
+         lớn, chữ rõ ràng), cuộn ngang mượt (scroll-snap) — dùng khi cần
+         đọc/sửa chi tiết lịch của TỪNG giáo viên, thay cho bảng dày đặc
+         nhiều cột trước đây. ============ -->
+    <div class="weekly-cards-wrap force-hide" id="weeklyCardsWrap">
       <button type="button" class="cards-scroll-btn cards-scroll-prev" id="weeklyCardsPrevBtn" aria-label="Cuộn sang trái">‹</button>
       <div class="weekly-cards" id="weeklyCards"><div class="empty-cell">Đang tải...</div></div>
       <button type="button" class="cards-scroll-btn cards-scroll-next" id="weeklyCardsNextBtn" aria-label="Cuộn sang phải">›</button>
@@ -71,8 +101,8 @@
          kết Mã NV) — thay bảng tổng hợp nhiều GV bằng lưới thẻ theo ngày,
          sửa/lưu trực tiếp ngay tại đây, không cần mở modal. ============ -->
     <div class="my-week-wrap force-hide" id="myWeekWrap">
-      <div class="my-week-empty" id="myWeekEmpty" hidden></div>
-      <div class="my-week-body" id="myWeekBody" hidden>
+      <div class="my-week-empty force-hide" id="myWeekEmpty"></div>
+      <div class="my-week-body force-hide" id="myWeekBody">
         <div class="my-week-cards" id="myWeekCards"></div>
         <div class="my-week-footer">
           <div class="sched-stats-bar" id="myWeekStatsBar"></div>
@@ -147,7 +177,7 @@
         <code>LỊCH GIẢNG DẠY TEAM GVTH...xlsx</code>). Giáo viên/tuần <b>chưa có</b> sẽ được tạo mới; đã có
         (trùng Mã NV + Tuần) sẽ <b>ghi đè</b> bằng dữ liệu trong file.
       </div>
-      <div class="import-summary" id="importSummary" hidden>
+      <div class="import-summary force-hide" id="importSummary">
         <div class="import-stat ok"><b id="importWeekCount">0</b><span>Tuần</span></div>
         <div class="import-stat ok"><b id="importTeacherCount">0</b><span>Giáo viên</span></div>
         <div class="import-stat warn" id="importSkippedStat" hidden><b id="importSkippedCount">0</b><span>Sheet bỏ qua</span></div>

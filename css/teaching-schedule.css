@@ -318,14 +318,16 @@ tr:last-child td { border-bottom: none }
   font-size: .74rem; font-weight: 600; color: #fff; white-space: nowrap;
 }
 .tc-chip b { font-weight: 800 }
-.tc-chip.main    { background: var(--blue) }
-.tc-chip.sub     { background: var(--purple) }
+.tc-chip.main    { background: var(--teal) }
+.tc-chip.sub     { background: var(--blue) }
 .tc-chip.online  { background: var(--green) }
-.tc-chip.review  { background: var(--teal) }
+.tc-chip.review  { background: var(--purple) }
 .tc-chip.assist  { background: var(--pink) }
 .tc-chip.demo    { background: var(--orange) }
-.tc-chip.prep, .tc-chip.office { background: var(--muted) }
-.tc-chip.health, .tc-chip.leave { background: var(--red) }
+.tc-chip.prep    { background: var(--muted) }
+.tc-chip.onsite, .tc-chip.health { background: var(--red) }
+.tc-chip.remote  { background: var(--yellow); color: #4a3600 }
+.tc-chip.leave   { background: var(--text); color: var(--bg) }
 .tc-empty-note { font-size: .78rem; color: var(--muted); font-style: italic }
 
 .teacher-card-stats { display: flex; flex-wrap: wrap; gap: .4rem .9rem; font-size: .76rem; color: var(--muted) }
@@ -343,6 +345,114 @@ tr:last-child td { border-bottom: none }
   display: flex; align-items: center; justify-content: center; transition: var(--transition);
 }
 .cards-scroll-btn:hover { background: var(--purple); color: #fff; border-color: var(--purple) }
+
+/* Nút chuyển "📊 Tổng quan" ⇄ "🎴 Thẻ" — segmented control nhỏ, cùng
+   ngôn ngữ thiết kế với .tabs chính của trang. */
+.view-toggle {
+  display: inline-flex; gap: .2rem; background: var(--card2);
+  border: 1.5px solid var(--border); border-radius: 999px; padding: .25rem;
+}
+.view-toggle-btn {
+  background: none; border: none; font-family: inherit; font-weight: 800;
+  font-size: .78rem; color: var(--muted); padding: .45rem .9rem; cursor: pointer;
+  border-radius: 999px; transition: var(--transition); white-space: nowrap;
+}
+.view-toggle-btn:hover { color: var(--text) }
+.view-toggle-btn.active { color: #fff; background: var(--purple) }
+
+/* ══════════════════════════════════════════════
+   "📊 Tổng quan" — dashboard cho điều phối đào tạo. KPI toàn đội + ma
+   trận Thứ2-7 × mọi giáo viên (chấm màu gọn, ghim cột tên khi cuộn) +
+   danh sách "Cần chú ý" — thấy CẢ ĐỘI trong 1 màn hình.
+   ══════════════════════════════════════════════ */
+.dash-kpi-row {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: .8rem; margin-bottom: 1.2rem;
+}
+.dash-kpi {
+  background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  padding: .9rem 1rem; box-shadow: var(--shadow);
+}
+.dash-kpi-value { font-size: 1.5rem; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums }
+.dash-kpi-label { font-size: .72rem; color: var(--muted); font-weight: 700; margin-top: .2rem }
+.dash-kpi.ok .dash-kpi-value { color: var(--green) }
+.dash-kpi.warn { border-color: var(--yellow) }
+.dash-kpi.warn .dash-kpi-value { color: #a97a00 }
+
+.dash-main { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 1.2rem; align-items: start }
+@media (max-width: 900px) { .dash-main { grid-template-columns: 1fr } }
+
+.dash-matrix-wrap {
+  overflow-x: auto; border-radius: var(--radius-sm); border: 1px solid var(--border); box-shadow: var(--shadow);
+  max-height: 640px; overflow-y: auto;
+}
+.dash-matrix { width: 100%; min-width: 780px; border-collapse: collapse; background: var(--card) }
+.dash-matrix th, .dash-matrix td { padding: .5rem .6rem; border-bottom: 1px solid var(--border); vertical-align: middle }
+.dash-matrix th {
+  background: var(--card2); font-weight: 800; font-size: .68rem; letter-spacing: .03em;
+  text-transform: uppercase; color: var(--muted); text-align: center; white-space: nowrap;
+  position: sticky; top: 0; z-index: 2;
+}
+.dash-matrix tbody tr:hover { background: var(--purple-lt) }
+.dash-matrix tr.dash-row-missing { background: var(--yellow-lt) }
+.dash-matrix tr.dash-row-missing:hover { background: var(--yellow-lt) }
+/* Ghim cột tên (đầu bảng) khi cuộn ngang — luôn biết đang xem hàng của ai. */
+.dash-matrix-name-col, .dash-matrix th:first-child {
+  position: sticky; left: 0; z-index: 1; background: var(--card); min-width: 132px;
+  box-shadow: 2px 0 4px rgba(0,0,0,.05);
+}
+.dash-matrix th:first-child { z-index: 3; background: var(--card2) }
+.dash-matrix tr.dash-row-missing .dash-matrix-name-col { background: var(--yellow-lt) }
+.dash-matrix tbody tr:hover .dash-matrix-name-col { background: var(--purple-lt) }
+.dash-matrix-name { font-weight: 800; font-size: .8rem }
+.dash-matrix-code { font-size: .68rem; color: var(--muted); font-weight: 700 }
+.dash-matrix-cell { text-align: center }
+.dash-matrix-actions { white-space: nowrap; text-align: right }
+.dash-matrix-actions button { font-size: .95rem; padding: 0 .2rem }
+
+/* Cột "hôm nay" (chỉ khi tuần đang xem CHỨA ngày hôm nay) — viền dưới
+   màu thương hiệu + chữ đậm ở header, tint rất nhẹ ở thân cột, đủ để
+   định vị nhanh mà không thêm màu nền gắt gây rối mắt. */
+.dash-matrix th.today-col { color: var(--purple); box-shadow: inset 0 -3px 0 var(--purple) }
+.dash-matrix-cell.today-col { background: var(--purple-lt) }
+
+/* Chip mini CÓ CHỮ trong ma trận (viết tắt loại hình, vd "Chính"/"Trám"/
+   "Cty") — thay chấm tròn trừu tượng trước đây (phải hover mới biết đang
+   bận gì); giờ nhìn là đọc được ngay, hover vẫn xem thêm địa điểm/số tiết
+   qua title. Sáng/Chiều xếp DỌC (.dash-cell-stack) thay vì cạnh nhau. */
+.dash-cell-stack { display: flex; flex-direction: column; gap: .25rem; align-items: stretch }
+.dash-chip {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: .18rem .4rem; border-radius: 6px;
+  font-size: .66rem; font-weight: 700; color: #fff; white-space: nowrap;
+  background: var(--card2); border: 1px solid var(--border);
+}
+.dash-chip.empty { color: var(--muted); font-weight: 400; background: none; border-color: transparent }
+.dash-chip.main    { background: var(--teal) }
+.dash-chip.sub     { background: var(--blue) }
+.dash-chip.online  { background: var(--green) }
+.dash-chip.review  { background: var(--purple) }
+.dash-chip.assist  { background: var(--pink) }
+.dash-chip.demo    { background: var(--orange) }
+.dash-chip.prep    { background: var(--muted) }
+.dash-chip.onsite, .dash-chip.health { background: var(--red) }
+.dash-chip.remote  { background: var(--yellow); color: #4a3600 }
+.dash-chip.leave   { background: var(--text); color: var(--bg) }
+
+.dash-attention {
+  background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  padding: 1rem; box-shadow: var(--shadow); max-height: 640px; overflow-y: auto;
+}
+.dash-attention h3 { font-size: .88rem; font-weight: 800; margin-bottom: .8rem }
+.dash-attention-list { display: flex; flex-direction: column; gap: .6rem }
+.dash-attention-item {
+  display: flex; align-items: center; justify-content: space-between; gap: .6rem;
+  background: var(--yellow-lt); border: 1px solid rgba(246,167,35,.35);
+  border-radius: var(--radius-sm); padding: .6rem .8rem;
+}
+.dash-attention-name { font-weight: 800; font-size: .82rem }
+.dash-attention-code { font-size: .68rem; color: var(--muted); font-weight: 700 }
+.dash-attention-empty { font-size: .82rem; color: var(--muted); text-align: center; padding: 1rem 0 }
 
 /* Toolbar chọn tuần */
 .week-select-wrap { display: flex; align-items: center; gap: .5rem; font-size: .82rem; font-weight: 700 }
@@ -439,16 +549,18 @@ tr:last-child td { border-bottom: none }
 .day-card-session-label {
   font-size: .68rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .03em;
 }
-.day-card-session.sess-main    { background: var(--blue-lt);   border-color: rgba(46,140,240,.35) }
-.day-card-session.sess-sub     { background: var(--purple-lt); border-color: rgba(79,107,255,.35) }
+.day-card-session.sess-main    { background: var(--teal-lt);   border-color: rgba(23,179,163,.35) }
+.day-card-session.sess-sub     { background: var(--blue-lt);   border-color: rgba(46,140,240,.35) }
 .day-card-session.sess-online  { background: var(--green-lt);  border-color: rgba(33,179,107,.35) }
-.day-card-session.sess-review  { background: var(--teal-lt);   border-color: rgba(23,179,163,.35) }
+.day-card-session.sess-review  { background: var(--purple-lt); border-color: rgba(79,107,255,.35) }
 .day-card-session.sess-assist  { background: rgba(221,79,166,.14); border-color: rgba(221,79,166,.4) }
 .day-card-session.sess-demo    { background: var(--orange-lt); border-color: rgba(255,138,61,.4) }
-.day-card-session.sess-prep, .day-card-session.sess-office {
+.day-card-session.sess-prep {
   background: var(--card2); border-color: var(--border);
 }
-.day-card-session.sess-leave, .day-card-session.sess-health { background: var(--red-lt); border-color: rgba(240,72,62,.35) }
+.day-card-session.sess-onsite, .day-card-session.sess-health { background: var(--red-lt); border-color: rgba(240,72,62,.35) }
+.day-card-session.sess-remote { background: var(--yellow-lt); border-color: rgba(246,167,35,.4) }
+.day-card-session.sess-leave  { background: var(--card2); border-color: var(--text) }
 
 /* Ô nhập luôn nền TRẮNG/tối (--card, không phải --card2) để nổi rõ trên
    khối buổi đã được tô màu phía sau, tránh 2 lớp nền trùng màu khó phân biệt. */
