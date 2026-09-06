@@ -143,3 +143,18 @@ select {
 }
 .schoolsCurrent { font-size: .7rem; color: var(--muted); margin-top: .3rem }
 .schoolsCell .hint { font-size: .72rem; color: var(--muted); font-style: italic }
+
+/* ── Liên kết "Mã NV" (Lịch giảng dạy) cho giáo viên tự xem lịch của mình ── */
+.teacherCodeCell { min-width: 190px }
+.teacherCodeSelect { width: 100%; min-width: 170px; margin-bottom: .4rem; display: block }
+.saveTeacherCodeBtn {
+  background: var(--purple-lt);
+  color: var(--purple);
+  border: none;
+  border-radius: 999px;
+  padding: .35rem .75rem;
+  font-size: .72rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.teacherCodeCell .hint { font-size: .72rem; color: var(--muted); font-style: italic }
