@@ -50,18 +50,21 @@
       </div>
       <button type="button" class="btn btn-secondary" id="newWeekBtn">🧬 Tuần mới</button>
       <button type="button" class="btn btn-secondary" id="importExcelBtn">📥 Nhập từ Excel</button>
+      <button type="button" class="btn btn-ghost" id="exportAllPdfBtn" title="Xuất 1 file PDF gồm lịch của tất cả GV đang hiển thị, mỗi người 1 trang">🖨️ Xuất PDF tất cả</button>
       <input type="file" id="importExcelInput" accept=".xlsx,.xls" hidden>
     </div>
     <div class="week-progress-bar" id="weekProgressBar" hidden></div>
-    <div class="table-scroll" id="weeklyTableWrap">
-      <table>
-        <thead><tr>
-          <th>Mã NV</th><th>Giáo viên</th>
-          <th>Thứ 2</th><th>Thứ 3</th><th>Thứ 4</th><th>Thứ 5</th><th>Thứ 6</th><th>Thứ 7</th>
-          <th>Thống kê tuần</th><th></th>
-        </tr></thead>
-        <tbody id="weeklyRows"><tr><td colspan="10" class="empty-cell">Đang tải...</td></tr></tbody>
-      </table>
+
+    <!-- ============ Lưới thẻ "Cover Flow" — mỗi giáo viên 1 thẻ (cỡ lớn,
+         chữ rõ ràng), cuộn ngang mượt (scroll-snap) thay cho bảng dày đặc
+         nhiều cột trước đây (18 GV × 6 cột Thứ rất khó dò theo hàng). Mỗi
+         thẻ liệt kê các chip lịch (Thứ + Buổi + loại hình phụ trách, chỉ
+         hiện buổi CÓ lịch) để vẫn quét mắt nhanh được ai bận gì mà không
+         cần mở lịch. ============ -->
+    <div class="weekly-cards-wrap" id="weeklyCardsWrap">
+      <button type="button" class="cards-scroll-btn cards-scroll-prev" id="weeklyCardsPrevBtn" aria-label="Cuộn sang trái">‹</button>
+      <div class="weekly-cards" id="weeklyCards"><div class="empty-cell">Đang tải...</div></div>
+      <button type="button" class="cards-scroll-btn cards-scroll-next" id="weeklyCardsNextBtn" aria-label="Cuộn sang phải">›</button>
     </div>
 
     <!-- ============ "LỊCH CỦA TÔI" — chỉ hiện với role giáo viên (đã liên
@@ -73,7 +76,10 @@
         <div class="my-week-cards" id="myWeekCards"></div>
         <div class="my-week-footer">
           <div class="sched-stats-bar" id="myWeekStatsBar"></div>
-          <button type="button" class="btn btn-primary my-week-save-btn" id="myWeekSaveBtn">💾 Lưu lịch tuần của tôi</button>
+          <div class="my-week-footer-actions">
+            <button type="button" class="btn btn-ghost" id="myWeekPdfBtn">🖨️ Xuất PDF</button>
+            <button type="button" class="btn btn-primary my-week-save-btn" id="myWeekSaveBtn">💾 Lưu lịch tuần của tôi</button>
+          </div>
         </div>
       </div>
     </div>
@@ -231,6 +237,18 @@
 <!-- Đọc file Excel (.xlsx/.xls) ngay trên trình duyệt bằng SheetJS, cùng
      thư viện/CDN đã dùng ở roster-manager.html (đã kiểm chứng hoạt động). -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<!-- Xuất PDF lịch tuần từng giáo viên — TÁI DÙNG đúng 2 thư viện đã có sẵn
+     trong project (js/vendor/*) cho tính năng xuất PDF báo cáo học sinh,
+     không thêm thư viện mới. -->
+<script src="js/vendor/jspdf.umd.min.js"></script>
+<script src="js/vendor/jspdf.plugin.autotable.min.js"></script>
+<!-- Font Unicode (Noto Sans, subset Latin + tiếng Việt) — jsPDF mặc định
+     chỉ hỗ trợ WinAnsi nên chữ có dấu bị sai; nạp SAU jsPDF, TRƯỚC
+     teaching-schedule-pdf.js để font "NotoSans" có sẵn khi xuất PDF. -->
+<script src="js/vendor/notosans-vietnamese-jspdf.js"></script>
+<script src="js/export/teaching-schedule-pdf.js"></script>
+
 <script src="js/teaching-schedule.js"></script>
 </body>
 </html>

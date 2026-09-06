@@ -93,8 +93,9 @@
     hide('weeklyFiltersWrap');  // tìm kiếm/lọc chỉ cần khi quản lý nhiều GV
     hide('newWeekBtn');
     hide('importExcelBtn');
+    hide('exportAllPdfBtn');    // xuất PDF nhiều GV cùng lúc — GV tự xuất đúng lịch của mình qua nút riêng trong "Lịch của tôi"
     hide('weekProgressBar');
-    hide('weeklyTableWrap');    // thay bằng khối thẻ "Lịch của tôi" bên dưới
+    hide('weeklyCardsWrap');    // thay bằng khối thẻ "Lịch của tôi" bên dưới
     show('myWeekWrap');
     const banner = document.querySelector('.banner');
     if (banner) {
@@ -292,37 +293,53 @@
   });
   document.getElementById('onlyMissingChk').addEventListener('change', renderWeeklyTab);
 
-  // Bảng màu THEO LOẠI HÌNH PHỤ TRÁCH — dùng chung cho cả thẻ tóm tắt ở
-  // bảng admin (wk-chip) LẪN khối thẻ ngày "Lịch của tôi" (day-card-session),
-  // để cùng 1 loại hình luôn ra cùng 1 màu ở bất kỳ đâu trong trang.
+  // Bảng màu THEO LOẠI HÌNH PHỤ TRÁCH — dùng chung cho cả chip lịch trong
+  // thẻ giáo viên (tc-chip) LẪN khối thẻ ngày "Lịch của tôi"
+  // (day-card-session), để cùng 1 loại hình luôn ra cùng 1 màu ở bất kỳ
+  // đâu trong trang.
+  // Khớp theo bảng màu người dùng cung cấp (Trợ Giảng=hồng/magenta, Dạy
+  // Trám=tím, Dạy chính/Trực Tiếp=xanh dương, Dạy Trực Tuyến=xanh lá, Dự
+  // Giảng=cam) — Trợ Giảng và Dự Giảng TRƯỚC ĐÂY dùng chung 1 màu (teal),
+  // nay tách riêng 2 màu theo đúng bảng màu đó. Các loại còn lại (Ôn Thi,
+  // Soạn bài, Làm việc tại cty, WFH, Khám SK, Nghỉ phép/lễ) không có trong
+  // bảng màu được cung cấp — giữ màu hợp lý sẵn có, xem css/teaching-schedule.css.
   const TYPE_COLOR_SUFFIX = {
     'Dạy chính': 'main', 'Dạy Trám': 'sub', 'Dạy Trực Tuyến': 'online',
-    'Ôn Thi': 'review', 'Trợ Giảng': 'mentor', 'Dự Giảng': 'mentor',
+    'Ôn Thi': 'review', 'Trợ Giảng': 'assist', 'Dự Giảng': 'demo',
     'Soạn bài': 'prep', 'Làm việc tại cty': 'office', 'WFH': 'office',
     'Khám SK': 'health', 'Nghỉ phép/ lễ': 'leave',
   };
   function typeColorSuffix(type) { return TYPE_COLOR_SUFFIX[type] || ''; }
 
-  /** 1 dòng tóm tắt ngắn gọn cho 1 buổi (Sáng/Chiều) — hiện trong bảng
-   * chính, KHÔNG cần mở modal cũng biết sơ bộ giáo viên đang bận gì. */
-  function summarizeSession(sess) {
-    if (!sess || !sess.type) return '<span class="wk-chip wk-empty">–</span>';
-    const cls = 'wk-' + (typeColorSuffix(sess.type) || 'prep');
-    // periods[i] giờ là boolean (tích/không tích) — chỉ xét truthy (!!p),
-    // không .trim() vì boolean không có hàm đó (dữ liệu cũ từ Excel vẫn có
-    // thể là chuỗi tên lớp, !!p vẫn đúng với cả 2 dạng).
+  /** Chữ viết tắt làm avatar cho 1 giáo viên — lấy chữ cái đầu của tối đa
+   * 2 từ cuối trong tên (thường là tên riêng, dễ nhận diện hơn họ). */
+  function initialsOf(name) {
+    const words = String(name || '').trim().split(/\s+/).filter(Boolean);
+    if (!words.length) return '?';
+    const last2 = words.slice(-2);
+    return last2.map((w) => w[0]).join('').toUpperCase();
+  }
+
+  /** 1 chip lịch trong thẻ giáo viên — CÓ CHỮ rõ ràng (Thứ + Buổi + loại
+   * hình), không phải chấm màu trừu tượng khó đọc như bản trước. Chỉ vẽ
+   * chip cho buổi CÓ lịch (bỏ qua buổi trống) — giáo viên bận nhiều thì
+   * thấy nhiều chip, rảnh thì thẻ ngắn gọn, không có ô trống chiếm chỗ. */
+  function scheduleChip(d, sessLabel, sess) {
+    if (!sess || !sess.type) return '';
+    const suffix = typeColorSuffix(sess.type) || 'prep';
     const periods = (sess.periods || []).filter((p) => !!p).length;
-    const extra = periods ? ` (${periods} tiết${sess.location ? ' · ' + esc(sess.location) : ''})` : (sess.location ? ` (${esc(sess.location)})` : '');
-    return `<span class="wk-chip ${cls}">${esc(sess.type)}</span>${extra ? `<small>${extra}</small>` : ''}`;
+    const detailParts = [sess.location, periods ? `${periods} tiết` : ''].filter(Boolean);
+    const title = detailParts.length ? ` title="${esc(detailParts.join(' · '))}"` : '';
+    return `<span class="tc-chip ${suffix}"${title}><b>T${d} ${sessLabel}</b> ${esc(sess.type)}</span>`;
   }
 
   function renderWeeklyTab() {
     if (isTeacherRole()) { renderMyWeekView(); return; }
 
-    const tbody = document.getElementById('weeklyRows');
+    const container = document.getElementById('weeklyCards');
     const progressBar = document.getElementById('weekProgressBar');
     if (!state.currentWeekKey) {
-      tbody.innerHTML = '<tr><td colspan="10" class="empty-cell">Chưa có tuần nào — bấm "🧬 Tuần mới" hoặc "📥 Nhập từ Excel" để bắt đầu.</td></tr>';
+      container.innerHTML = '<div class="empty-cell">Chưa có tuần nào — bấm "🧬 Tuần mới" hoặc "📥 Nhập từ Excel" để bắt đầu.</div>';
       if (progressBar) progressBar.hidden = true;
       return;
     }
@@ -352,32 +369,87 @@
     }
 
     if (!teachers.length) {
-      tbody.innerHTML = '<tr><td colspan="10" class="empty-cell">Không có giáo viên khớp tìm kiếm/bộ lọc.</td></tr>';
+      container.innerHTML = '<div class="empty-cell">Không có giáo viên khớp tìm kiếm/bộ lọc.</div>';
       return;
     }
 
-    tbody.innerHTML = teachers.map((t) => {
+    // Mỗi giáo viên 1 thẻ, kích thước lớn hơn hẳn bản trước — thay bảng dày
+    // đặc lẫn dải chấm màu trừu tượng (khó đọc) bằng danh sách chip CÓ CHỮ
+    // rõ ràng (Thứ + Buổi + loại hình), chỉ hiện buổi CÓ lịch nên thẻ giáo
+    // viên rảnh sẽ ngắn gọn, thẻ bận sẽ tự nhiên dài hơn.
+    container.innerHTML = teachers.map((t) => {
       const days = daysOf(t);
-      const dayCells = M.WEEKDAYS.map((d) => {
-        const day = days[String(d)] || M.emptyDay();
-        return `<td><div class="wk-day-cell">${summarizeSession(day.morning)}${summarizeSession(day.afternoon)}</div></td>`;
-      }).join('');
       const stats = M.computeWeekStats(days);
-      const statsHtml = `<b>${stats.schoolsMain}</b> trường·<b>${stats.periodsMain}</b> tiết chính<br>
-        Trám: ${stats.periodsSub} tiết · Ôn thi: ${stats.periodsReview} tiết<br>
-        Soạn bài: ${stats.sessionsPrep} · Cty: ${stats.sessionsOffice} · TG/DG: ${stats.sessionsMentor}`;
-      const rowClass = !M.hasAnySchedule(days) ? ' class="row-missing"' : '';
-      return `<tr${rowClass}>
-        <td>${esc(t.code)}</td>
-        <td><strong>${esc(t.name)}</strong></td>
-        ${dayCells}
-        <td class="wk-stats-cell">${statsHtml}</td>
-        <td><button type="button" class="btn-edit-text" data-edit-sched="${esc(t.code)}">Sửa lịch</button></td>
-      </tr>`;
+      const missing = !M.hasAnySchedule(days);
+      const chips = M.WEEKDAYS.map((d) => {
+        const day = days[String(d)] || M.emptyDay();
+        return scheduleChip(d, 'Sáng', day.morning) + scheduleChip(d, 'Chiều', day.afternoon);
+      }).join('');
+      const chipList = chips ? `<div class="tc-chip-list">${chips}</div>` : '<div class="tc-empty-note">Chưa nhập lịch tuần này</div>';
+      return `<div class="teacher-card${missing ? ' missing' : ''}">
+        <div class="teacher-card-header">
+          <div class="teacher-avatar">${esc(initialsOf(t.name))}</div>
+          <div class="teacher-card-title">
+            <div class="teacher-card-name">${esc(t.name)}</div>
+            <div class="teacher-card-code">${esc(t.code)}${missing ? ' · <span class="tc-missing-tag">chưa có lịch</span>' : ''}</div>
+          </div>
+        </div>
+        ${chipList}
+        <div class="teacher-card-stats">
+          <span><b>${stats.schoolsMain}</b> trường chính</span>
+          <span><b>${stats.periodsMain}</b> tiết chính</span>
+          <span><b>${stats.periodsSub}</b> tiết trám</span>
+          <span><b>${stats.sessionsPrep}</b> soạn bài</span>
+        </div>
+        <div class="teacher-card-actions">
+          <button type="button" class="btn btn-ghost" data-edit-sched="${esc(t.code)}">✏️ Sửa lịch</button>
+          <button type="button" class="btn btn-ghost" data-pdf-sched="${esc(t.code)}" title="Xuất lịch tuần của ${esc(t.name)} ra PDF">🖨️ PDF</button>
+        </div>
+      </div>`;
     }).join('');
 
-    tbody.querySelectorAll('[data-edit-sched]').forEach((b) => b.addEventListener('click', () => openSchedModal(b.dataset.editSched)));
+    container.querySelectorAll('[data-edit-sched]').forEach((b) => b.addEventListener('click', () => openSchedModal(b.dataset.editSched)));
+    container.querySelectorAll('[data-pdf-sched]').forEach((b) => b.addEventListener('click', () => exportTeacherPdf(b.dataset.pdfSched)));
   }
+
+  // Nút mũi tên trái/phải cuộn dải thẻ giáo viên — cuộn ngang bằng chuột/
+  // trackpad vẫn hoạt động bình thường, đây chỉ là lối tắt bổ sung.
+  document.getElementById('weeklyCardsPrevBtn')?.addEventListener('click', () => {
+    document.getElementById('weeklyCards')?.scrollBy({ left: -300, behavior: 'smooth' });
+  });
+  document.getElementById('weeklyCardsNextBtn')?.addEventListener('click', () => {
+    document.getElementById('weeklyCards')?.scrollBy({ left: 300, behavior: 'smooth' });
+  });
+
+  /** Xuất PDF lịch tuần của ĐÚNG 1 giáo viên (nút "🖨️ PDF" từng hàng). */
+  function exportTeacherPdf(teacherCode) {
+    const t = state.teachers.find((x) => x.id === teacherCode);
+    if (!t) return;
+    const week = state.weeks.find((w) => w.id === state.currentWeekKey);
+    const days = (state.schedulesByTeacher[teacherCode] && state.schedulesByTeacher[teacherCode].days) || M.emptyDays();
+    if (!window.EduTeachingSchedulePdf) { toast('⚠️ Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
+    window.EduTeachingSchedulePdf.exportOne(t, days, week ? (week.label || week.id) : state.currentWeekKey, M);
+  }
+
+  /** Xuất 1 file PDF DUY NHẤT gồm lịch của TOÀN BỘ giáo viên đang hiển thị
+   * (đã áp bộ lọc tìm kiếm/"chỉ hiện GV chưa có lịch" hiện tại), mỗi giáo
+   * viên 1 trang — nút "🖨️ Xuất PDF tất cả" trên thanh công cụ. */
+  function exportAllPdf() {
+    if (!state.currentWeekKey) { toast('⚠️ Hãy chọn 1 tuần trước.'); return; }
+    if (!window.EduTeachingSchedulePdf) { toast('⚠️ Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
+    const q = state.search;
+    let teachers = state.teachers.filter((t) => !q || t.name.toLowerCase().includes(q) || t.code.toLowerCase().includes(q));
+    const onlyMissingChk = document.getElementById('onlyMissingChk');
+    if (onlyMissingChk && onlyMissingChk.checked) {
+      teachers = teachers.filter((t) => !M.hasAnySchedule((state.schedulesByTeacher[t.code] && state.schedulesByTeacher[t.code].days) || M.emptyDays()));
+    }
+    if (!teachers.length) { toast('⚠️ Không có giáo viên nào để xuất (kiểm tra lại bộ lọc/tìm kiếm).'); return; }
+    const week = state.weeks.find((w) => w.id === state.currentWeekKey);
+    const weekLabel = week ? (week.label || week.id) : state.currentWeekKey;
+    const list = teachers.map((t) => ({ teacher: t, days: (state.schedulesByTeacher[t.code] && state.schedulesByTeacher[t.code].days) || M.emptyDays() }));
+    window.EduTeachingSchedulePdf.exportMany(list, weekLabel, M);
+  }
+  document.getElementById('exportAllPdfBtn')?.addEventListener('click', exportAllPdf);
 
   // ============================================================
   // "LỊCH CỦA TÔI" — khối riêng cho role giáo viên: thay bảng tổng hợp
@@ -507,6 +579,16 @@
       btn.disabled = false;
       btn.textContent = originalLabel;
     }
+  });
+
+  document.getElementById('myWeekPdfBtn')?.addEventListener('click', () => {
+    if (!state.myTeacherCode || !state.currentWeekKey || !state.myWeekDraft) return;
+    const t = state.teachers.find((x) => x.id === state.myTeacherCode);
+    const week = state.weeks.find((w) => w.id === state.currentWeekKey);
+    if (!window.EduTeachingSchedulePdf) { toast('⚠️ Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
+    // Xuất đúng những gì đang hiển thị trên màn hình (kể cả thay đổi CHƯA
+    // lưu) — giáo viên có thể muốn xem trước bản in trước khi bấm Lưu.
+    window.EduTeachingSchedulePdf.exportOne(t || { code: state.myTeacherCode, name: '' }, state.myWeekDraft, week ? (week.label || week.id) : state.currentWeekKey, M);
   });
 
   // ------------------------------------------------------------
