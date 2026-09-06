@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📅 Lịch giảng dạy — EduQuiz IC3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/teaching-schedule.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/accessibility.css">
+</head>
+<body>
+
+<div class="topbar">
+  <a href="ic3-dashboard.html" class="btn btn-ghost">← Dashboard</a>
+  <h1>📅 Lịch giảng dạy</h1>
+  <div class="spacer"></div>
+  <span class="whoami" id="whoami"></span>
+  <button type="button" class="btn btn-ghost" id="logoutBtn">Đăng xuất</button>
+</div>
+
+<div class="wrap">
+
+  <div class="banner">
+    Quản lý <b>lịch làm việc/giảng dạy hàng tuần</b> của đội ngũ giáo viên — thay thế việc cập nhật thủ công trên
+    file Excel <code>LỊCH GIẢNG DẠY TEAM GVTH...xlsx</code>. Mỗi tuần gồm lịch của từng giáo viên theo
+    <b>Thứ 2 → Thứ 7</b>, mỗi ngày chia <b>Sáng/Chiều</b> với loại hình phụ trách + địa điểm + tối đa 5 tiết dạy.
+    Có thể <b>nhập nhanh từ file Excel gốc</b> (nút bên dưới) rồi chỉnh sửa tiếp trực tiếp trên trang này.
+  </div>
+
+  <!-- ============ TABS ============ -->
+  <div class="tabs" role="tablist">
+    <button type="button" class="tab-btn active" data-tab="weekly" role="tab">📅 Lịch tuần</button>
+    <button type="button" class="tab-btn" data-tab="teachers" role="tab">👤 Giáo viên</button>
+  </div>
+
+  <!-- ============ TAB: WEEKLY SCHEDULE ============ -->
+  <section class="tab-panel active" id="panel-weekly">
+    <div class="panel-toolbar">
+      <div class="week-select-wrap">
+        <span>🗓️ Tuần:</span>
+        <select id="weekSelect" class="form-input"><option value="">-- Chưa có tuần nào --</option></select>
+      </div>
+      <div class="panel-toolbar-filters">
+        <input type="text" id="teacherSearch" class="form-input" placeholder="🔍 Tìm theo tên hoặc mã NV...">
+      </div>
+      <button type="button" class="btn btn-secondary" id="importExcelBtn">📥 Nhập từ Excel</button>
+      <input type="file" id="importExcelInput" accept=".xlsx,.xls" hidden>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr>
+          <th>Mã NV</th><th>Giáo viên</th>
+          <th>Thứ 2</th><th>Thứ 3</th><th>Thứ 4</th><th>Thứ 5</th><th>Thứ 6</th><th>Thứ 7</th>
+          <th>Thống kê tuần</th><th></th>
+        </tr></thead>
+        <tbody id="weeklyRows"><tr><td colspan="10" class="empty-cell">Đang tải...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ TAB: TEACHERS ============ -->
+  <section class="tab-panel" id="panel-teachers">
+    <div class="panel-toolbar">
+      <div class="panel-toolbar-info"><span id="teacherCount">0</span> giáo viên</div>
+      <button type="button" class="btn btn-primary push-right" id="addTeacherBtn">➕ Thêm giáo viên</button>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Mã NV</th><th>Họ và tên</th><th>SĐT</th><th>Địa chỉ nhà</th><th>Trạng thái</th><th></th></tr></thead>
+        <tbody id="teacherRows"><tr><td colspan="6" class="empty-cell">Đang tải...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- ============ MODAL: THÊM/SỬA GIÁO VIÊN ============ -->
+<div class="modal-overlay" id="teacherModalOverlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="teacherModalTitle">➕ Thêm giáo viên</h3>
+      <button type="button" class="modal-close" id="teacherModalCloseBtn">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="f-teacher-code">Mã NV *</label>
+        <input type="text" id="f-teacher-code" class="form-input" placeholder="VD: HCM0092">
+      </div>
+      <div class="form-group">
+        <label for="f-teacher-name">Họ và tên *</label>
+        <input type="text" id="f-teacher-name" class="form-input" placeholder="VD: Nguyễn Văn A">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="f-teacher-phone">SĐT</label>
+          <input type="text" id="f-teacher-phone" class="form-input">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="f-teacher-address">Địa chỉ nhà</label>
+        <input type="text" id="f-teacher-address" class="form-input">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" id="teacherModalCancelBtn">Huỷ</button>
+      <button type="button" class="btn btn-primary" id="teacherModalSaveBtn">💾 Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: NHẬP TỪ EXCEL ============ -->
+<div class="modal-overlay" id="importModalOverlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>📥 Nhập lịch từ Excel</h3>
+      <button type="button" class="modal-close" id="importModalCloseBtn">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="import-hint">
+        Đọc <b>mọi sheet tuần</b> trong file (mỗi sheet = 1 tuần, đúng cấu trúc file gốc
+        <code>LỊCH GIẢNG DẠY TEAM GVTH...xlsx</code>). Giáo viên/tuần <b>chưa có</b> sẽ được tạo mới; đã có
+        (trùng Mã NV + Tuần) sẽ <b>ghi đè</b> bằng dữ liệu trong file.
+      </div>
+      <div class="import-summary" id="importSummary" hidden>
+        <div class="import-stat ok"><b id="importWeekCount">0</b><span>Tuần</span></div>
+        <div class="import-stat ok"><b id="importTeacherCount">0</b><span>Giáo viên</span></div>
+        <div class="import-stat warn" id="importSkippedStat" hidden><b id="importSkippedCount">0</b><span>Sheet bỏ qua</span></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" id="importCancelBtn">Huỷ</button>
+      <button type="button" class="btn btn-primary" id="importConfirmBtn" disabled>💾 Nhập dữ liệu</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: LƯỚI LỊCH TUẦN CỦA 1 GIÁO VIÊN ============ -->
+<div class="modal-overlay" id="schedModalOverlay">
+  <div class="modal-box modal-wide">
+    <div class="modal-header">
+      <h3 id="schedModalTitle">📅 Lịch tuần</h3>
+      <button type="button" class="modal-close" id="schedModalCloseBtn">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="sched-grid-wrap">
+        <table class="sched-grid" id="schedGrid"></table>
+      </div>
+      <div class="sched-stats-bar" id="schedStatsBar"></div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" id="schedModalCancelBtn">Huỷ</button>
+      <button type="button" class="btn btn-primary" id="schedModalSaveBtn">💾 Lưu lịch tuần</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- QUAN TRỌNG: phải khai báo EDU_ALLOWED_ROLES TRƯỚC js/auth-guard.js —
+     trang này chỉ dành cho admin/coordinator (đúng vai trò quản lý roster
+     giáo viên/lịch làm việc), giống roster-manager.html. -->
+<script>window.EDU_ALLOWED_ROLES = ['admin', 'coordinator'];</script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/auth-guard.js"></script>
+<script src="js/idle-logout.js"></script>
+
+<script src="js/repositories/base-repository.js"></script>
+<script src="js/models/teaching-schedule.model.js"></script>
+<script src="js/repositories/teaching-schedule-repository.js"></script>
+
+<!-- Đọc file Excel (.xlsx/.xls) ngay trên trình duyệt bằng SheetJS, cùng
+     thư viện/CDN đã dùng ở roster-manager.html (đã kiểm chứng hoạt động). -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="js/teaching-schedule.js"></script>
+</body>
+</html>

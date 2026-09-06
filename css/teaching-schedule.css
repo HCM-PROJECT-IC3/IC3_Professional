@@ -1,0 +1,250 @@
+/* ============================================================
+   TEACHING SCHEDULE MANAGER — trang "📅 Lịch giảng dạy" (chỉ admin &
+   coordinator). Bố cục/tên class NHẤT QUÁN với css/roster-manager.css
+   (topbar/banner/tabs/table/modal/toast/import-*) để đồng bộ giao diện
+   toàn hệ thống — phần lớn khối dưới đây sao lại nguyên văn từ đó, chỉ
+   thêm phần RIÊNG cho lưới lịch tuần (.wk-*, .sched-*) ở cuối file.
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
+
+body {
+  font-family: 'Baloo 2', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding-bottom: 3rem;
+}
+
+/* ---- Topbar ---- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1rem 1.6rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.topbar h1 { font-size: 1.1rem; font-weight: 800 }
+.spacer { flex: 1 }
+.whoami { font-size: .8rem; color: var(--muted); font-weight: 700 }
+
+.btn {
+  border: none;
+  border-radius: 999px;
+  padding: .6rem 1.2rem;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: .85rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.btn-ghost {
+  background: var(--card2);
+  color: var(--text);
+  border: 1.5px solid var(--border);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+}
+.btn-ghost:hover { background: var(--border) }
+.btn-primary {
+  background: var(--purple);
+  color: #fff;
+  box-shadow: var(--shadow-btn);
+}
+.btn-primary:hover { filter: brightness(1.08) }
+.btn-primary:disabled { opacity: .5; cursor: not-allowed; filter: none }
+.btn-secondary {
+  background: var(--teal-lt);
+  color: var(--teal);
+  border: 1.5px solid rgba(23,179,163,.35);
+}
+.btn-secondary:hover { background: var(--teal); color: #fff }
+.btn-danger-text {
+  background: none; border: none; color: var(--red);
+  font-weight: 800; font-size: .78rem; cursor: pointer;
+}
+.btn-edit-text {
+  background: none; border: none; color: var(--purple);
+  font-weight: 800; font-size: .78rem; cursor: pointer; margin-right: .8rem;
+}
+
+.wrap { max-width: 1240px; margin: 0 auto; padding: 2rem 1.6rem }
+
+.banner {
+  background: var(--purple-lt);
+  border: 1.5px solid rgba(79,107,255,.25);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.2rem;
+  margin-bottom: 1.6rem;
+  font-size: .85rem;
+  line-height: 1.6;
+}
+
+/* ---- Tabs ---- */
+.tabs { display: flex; gap: .4rem; margin-bottom: 1.2rem; border-bottom: 1.5px solid var(--border) }
+.tab-btn {
+  background: none; border: none; font-family: inherit; font-weight: 800;
+  font-size: .9rem; color: var(--muted); padding: .7rem 1.1rem; cursor: pointer;
+  border-bottom: 3px solid transparent; transition: var(--transition);
+}
+.tab-btn:hover { color: var(--text) }
+.tab-btn.active { color: var(--purple); border-bottom-color: var(--purple) }
+.tab-panel { display: none }
+.tab-panel.active { display: block; animation: fadeIn .2s ease }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: none } }
+
+/* ---- Panel toolbar ---- */
+.panel-toolbar { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; margin-bottom: 1rem }
+.panel-toolbar-info { font-size: .8rem; color: var(--muted); font-weight: 700; white-space: nowrap }
+.panel-toolbar-filters { display: flex; gap: .6rem; flex: 1; flex-wrap: wrap }
+.panel-toolbar .btn.push-right { margin-left: auto }
+
+select.form-input, input.form-input {
+  font-family: inherit;
+  font-size: .82rem;
+  padding: .55rem .8rem;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--card2);
+  color: var(--text);
+}
+#teacherSearch { min-width: 200px; flex: 1 }
+
+/* ---- Table ---- */
+.table-scroll { overflow-x: auto; border-radius: var(--radius-sm) }
+table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+th, td { padding: .75rem .85rem; text-align: left; font-size: .82rem; border-bottom: 1px solid var(--border); vertical-align: middle }
+th { background: var(--card2); font-weight: 800; font-size: .7rem; text-transform: uppercase; color: var(--muted); white-space: nowrap }
+tr:last-child td { border-bottom: none }
+.empty-cell { text-align: center; color: var(--muted); padding: 1.6rem !important }
+
+.badge { display: inline-flex; padding: .25rem .65rem; border-radius: 999px; font-size: .68rem; font-weight: 800 }
+.badge.active   { background: var(--green-lt); color: var(--green) }
+.badge.inactive { background: var(--red-lt);   color: var(--red) }
+
+/* ---- Modal (dùng chung cho modal thêm/sửa GV, modal nhập Excel, modal lưới tuần) ---- */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 999;
+  background: var(--modal-overlay); align-items: center; justify-content: center; padding: 1rem;
+}
+.modal-overlay.show { display: flex }
+.modal-box {
+  background: var(--card); border-radius: var(--radius);
+  width: 100%; max-width: 440px; box-shadow: var(--shadow-lg);
+  max-height: 92vh; display: flex; flex-direction: column;
+}
+.modal-box.modal-wide { max-width: 1100px }
+.modal-header { display: flex; align-items: center; justify-content: space-between; gap: .8rem; padding: 1.2rem 1.4rem; border-bottom: 1px solid var(--border) }
+.modal-header h3 { font-size: 1rem; font-weight: 800 }
+.modal-close { background: none; border: none; font-size: 1.1rem; cursor: pointer; color: var(--muted) }
+.modal-body { padding: 1.2rem 1.4rem; overflow-y: auto; display: flex; flex-direction: column; gap: .9rem }
+.modal-footer { display: flex; justify-content: flex-end; gap: .7rem; padding: 1rem 1.4rem; border-top: 1px solid var(--border) }
+.form-group { display: flex; flex-direction: column; gap: .35rem }
+.form-group label { font-size: .78rem; font-weight: 800; color: var(--muted) }
+.form-group .form-input { width: 100% }
+.form-row { display: flex; gap: .8rem; flex-wrap: wrap }
+.form-row .form-group { flex: 1; min-width: 160px }
+
+.toast {
+  position: fixed; bottom: 1.4rem; left: 50%; transform: translateX(-50%);
+  background: var(--text); color: var(--bg); padding: .75rem 1.3rem; border-radius: 999px;
+  font-size: .82rem; font-weight: 700; box-shadow: var(--shadow-lg);
+  opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 1200;
+}
+.toast.show { opacity: 1 }
+
+/* ---- Modal nhập Excel: thống kê tóm tắt ---- */
+#importModalOverlay .modal-box { max-width: 560px }
+.import-hint {
+  font-size: .8rem; line-height: 1.6; color: var(--muted);
+  background: var(--card2); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); padding: .8rem 1rem;
+}
+.import-hint b { color: var(--text) }
+.import-summary { display: flex; gap: .6rem; flex-wrap: wrap }
+.import-stat {
+  flex: 1; min-width: 100px; background: var(--card2); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); padding: .7rem .8rem; text-align: center;
+}
+.import-stat b { display: block; font-size: 1.3rem; font-weight: 800; color: var(--text) }
+.import-stat span { font-size: .68rem; color: var(--muted); font-weight: 700 }
+.import-stat.ok b { color: var(--green) }
+.import-stat.warn b { color: var(--yellow) }
+
+@media (max-width: 640px) {
+  .panel-toolbar { flex-direction: column; align-items: stretch }
+  .panel-toolbar .btn.push-right { margin-left: 0 }
+}
+
+/* ══════════════════════════════════════════════
+   PHẦN RIÊNG: lưới lịch tuần (weekly grid)
+   ══════════════════════════════════════════════ */
+
+/* Thẻ màu theo "loại hình phụ trách" — hiện trong ô tóm tắt ở bảng chính
+   (không mở modal cũng thấy sơ bộ đang bận gì mỗi buổi). */
+.wk-chip {
+  display: inline-flex; align-items: center; gap: .25rem;
+  padding: .15rem .5rem; border-radius: 999px;
+  font-size: .68rem; font-weight: 800; white-space: nowrap;
+}
+.wk-chip.wk-main     { background: var(--green-lt); color: var(--green) }
+.wk-chip.wk-sub      { background: var(--yellow-lt); color: #7a5800 }
+.wk-chip.wk-online   { background: var(--blue-lt);  color: var(--blue) }
+.wk-chip.wk-review   { background: var(--purple-lt); color: var(--purple) }
+.wk-chip.wk-mentor   { background: var(--teal-lt);  color: var(--teal) }
+.wk-chip.wk-prep,
+.wk-chip.wk-office   { background: var(--card2); color: var(--muted); border: 1px solid var(--border) }
+.wk-chip.wk-leave,
+.wk-chip.wk-health   { background: var(--red-lt); color: var(--red) }
+.wk-chip.wk-empty    { color: var(--muted); font-weight: 600 }
+
+.wk-day-cell { display: flex; flex-direction: column; gap: .2rem; min-width: 108px }
+
+.wk-stats-cell { font-size: .72rem; color: var(--muted); line-height: 1.6; white-space: nowrap }
+.wk-stats-cell b { color: var(--text) }
+
+/* Toolbar chọn tuần */
+.week-select-wrap { display: flex; align-items: center; gap: .5rem; font-size: .82rem; font-weight: 700 }
+
+/* Modal lưới tuần của 1 giáo viên: bảng 7 cột (nhãn + Thứ2..7), mỗi buổi
+   là 1 nhóm hàng (loại hình / địa điểm / tiết 1-5). */
+.sched-grid-wrap { overflow-x: auto }
+.sched-grid { width: 100%; border-collapse: collapse; min-width: 760px }
+.sched-grid th, .sched-grid td { border: 1px solid var(--border); padding: .45rem .5rem; font-size: .78rem; vertical-align: middle }
+.sched-grid th { background: var(--card2); font-weight: 800; text-align: center; white-space: nowrap }
+.sched-grid td.sched-row-label {
+  background: var(--card2); font-weight: 800; color: var(--muted);
+  white-space: nowrap; text-align: right; font-size: .72rem;
+}
+.sched-grid tr.sched-session-start td.sched-row-label { border-top: 2px solid var(--border) }
+.sched-grid select.sched-type, .sched-grid input.sched-loc, .sched-grid input.sched-period {
+  width: 100%; min-width: 108px; font-family: inherit; font-size: .76rem;
+  padding: .35rem .45rem; border-radius: 6px; border: 1.5px solid var(--border);
+  background: var(--card); color: var(--text);
+}
+.sched-grid input.sched-period { min-width: 76px; text-align: center }
+.sched-grid select.sched-type:focus, .sched-grid input:focus {
+  outline: none; border-color: var(--purple); box-shadow: 0 0 0 3px var(--purple-lt);
+}
+
+.sched-stats-bar {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: .6rem; margin-top: 1rem;
+}
+.sched-stats-bar .import-stat b { font-size: 1.1rem }
