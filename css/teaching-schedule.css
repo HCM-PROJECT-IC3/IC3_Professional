@@ -1,9 +1,13 @@
 /* ============================================================
-   TEACHING SCHEDULE MANAGER — trang "📅 Lịch giảng dạy" (chỉ admin &
-   coordinator). Bố cục/tên class NHẤT QUÁN với css/roster-manager.css
-   (topbar/banner/tabs/table/modal/toast/import-*) để đồng bộ giao diện
-   toàn hệ thống — phần lớn khối dưới đây sao lại nguyên văn từ đó, chỉ
-   thêm phần RIÊNG cho lưới lịch tuần (.wk-*, .sched-*) ở cuối file.
+   TEACHING SCHEDULE MANAGER — trang "📅 Lịch giảng dạy" (admin/coordinator
+   quản lý toàn đội; giáo viên tự cập nhật đúng lịch của mình).
+
+   Bố cục nền tảng (topbar/banner/tabs/table/modal/toast/import-*) kế thừa
+   quy ước chung của css/roster-manager.css để đồng bộ hệ thống, nhưng
+   phần "look" (màu sắc, độ nổi khối, tương tác hover) đã làm mới toàn bộ
+   cho hiện đại/chuyên nghiệp hơn — dùng lại đúng token màu thương hiệu có
+   sẵn trong css/theme.css (--gradient-hero, --glow-purple, --shadow-card),
+   KHÔNG tự bịa thêm màu ngoài hệ thống.
    ============================================================ */
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
@@ -16,7 +20,8 @@ body {
   padding-bottom: 3rem;
 }
 
-/* ---- Topbar ---- */
+/* ---- Topbar — dải gradient thương hiệu ở viền dưới thay vì đường kẻ
+   xám phẳng, để trang có điểm nhấn màu ngay từ cái nhìn đầu tiên. ---- */
 .topbar {
   position: sticky;
   top: 0;
@@ -30,9 +35,19 @@ body {
   border-bottom: 1px solid var(--border);
   box-shadow: var(--shadow);
 }
-.topbar h1 { font-size: 1.1rem; font-weight: 800 }
+.topbar::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -3px; height: 3px;
+  background: var(--gradient-hero);
+}
+.topbar h1 {
+  font-size: 1.1rem; font-weight: 800; display: inline-flex; align-items: center; gap: .5rem;
+}
 .spacer { flex: 1 }
-.whoami { font-size: .8rem; color: var(--muted); font-weight: 700 }
+.whoami {
+  font-size: .78rem; color: var(--text); font-weight: 700;
+  background: var(--card2); border: 1.5px solid var(--border);
+  padding: .4rem .8rem; border-radius: 999px;
+}
 
 .btn {
   border: none;
@@ -59,14 +74,15 @@ body {
   color: #fff;
   box-shadow: var(--shadow-btn);
 }
-.btn-primary:hover { filter: brightness(1.08) }
-.btn-primary:disabled { opacity: .5; cursor: not-allowed; filter: none }
+.btn-primary:hover { filter: brightness(1.08); box-shadow: var(--glow-purple); transform: translateY(-1px) }
+.btn-primary:active { transform: translateY(0) }
+.btn-primary:disabled { opacity: .5; cursor: not-allowed; filter: none; box-shadow: var(--shadow-btn); transform: none }
 .btn-secondary {
   background: var(--teal-lt);
   color: var(--teal);
   border: 1.5px solid rgba(23,179,163,.35);
 }
-.btn-secondary:hover { background: var(--teal); color: #fff }
+.btn-secondary:hover { background: var(--teal); color: #fff; box-shadow: var(--glow-teal); transform: translateY(-1px) }
 .btn-danger-text {
   background: none; border: none; color: var(--red);
   font-weight: 800; font-size: .78rem; cursor: pointer;
@@ -78,31 +94,51 @@ body {
 
 .wrap { max-width: 1240px; margin: 0 auto; padding: 2rem 1.6rem }
 
+/* ---- Banner — thẻ giới thiệu có vệt màu bên trái (kiểu callout) thay
+   cho khối tím phẳng, đỡ nặng nề mà vẫn nổi bật trên nền trang. ---- */
 .banner {
-  background: var(--purple-lt);
-  border: 1.5px solid rgba(79,107,255,.25);
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--purple);
   border-radius: var(--radius-sm);
-  padding: 1rem 1.2rem;
+  padding: 1.1rem 1.3rem;
   margin-bottom: 1.6rem;
   font-size: .85rem;
-  line-height: 1.6;
+  line-height: 1.65;
+  color: var(--muted);
+  box-shadow: var(--shadow);
+}
+.banner b { color: var(--text) }
+.banner code {
+  font-family: 'JetBrains Mono', 'Consolas', monospace; font-size: .78rem;
+  background: var(--card2); padding: .1rem .35rem; border-radius: 5px; color: var(--text);
 }
 
-/* ---- Tabs ---- */
-.tabs { display: flex; gap: .4rem; margin-bottom: 1.2rem; border-bottom: 1.5px solid var(--border) }
+/* ---- Tabs — segmented control hiện đại (track nền + pill active trượt
+   màu), thay cho 2 nút chữ gạch chân đơn điệu. ---- */
+.tabs {
+  display: inline-flex; gap: .25rem; margin-bottom: 1.4rem;
+  background: var(--card2); border: 1.5px solid var(--border);
+  border-radius: 999px; padding: .3rem;
+}
 .tab-btn {
   background: none; border: none; font-family: inherit; font-weight: 800;
-  font-size: .9rem; color: var(--muted); padding: .7rem 1.1rem; cursor: pointer;
-  border-bottom: 3px solid transparent; transition: var(--transition);
+  font-size: .85rem; color: var(--muted); padding: .55rem 1.2rem; cursor: pointer;
+  border-radius: 999px; transition: var(--transition);
 }
 .tab-btn:hover { color: var(--text) }
-.tab-btn.active { color: var(--purple); border-bottom-color: var(--purple) }
+.tab-btn.active { color: #fff; background: var(--purple); box-shadow: var(--glow-purple) }
 .tab-panel { display: none }
-.tab-panel.active { display: block; animation: fadeIn .2s ease }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: none } }
+.tab-panel.active { display: block; animation: fadeIn .25s ease }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }
 
 /* ---- Panel toolbar ---- */
-.panel-toolbar { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; margin-bottom: 1rem }
+.panel-toolbar {
+  display: flex; align-items: center; gap: .7rem; flex-wrap: wrap;
+  margin-bottom: 1rem; background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: .8rem .9rem; box-shadow: var(--shadow);
+}
 .panel-toolbar-info { font-size: .8rem; color: var(--muted); font-weight: 700; white-space: nowrap }
 .panel-toolbar-filters { display: flex; gap: .6rem; flex: 1; flex-wrap: wrap }
 .panel-toolbar .btn.push-right { margin-left: auto }
@@ -115,22 +151,35 @@ select.form-input, input.form-input {
   border: 1.5px solid var(--border);
   background: var(--card2);
   color: var(--text);
+  transition: var(--transition);
+}
+select.form-input:focus, input.form-input:focus {
+  outline: none; border-color: var(--purple); box-shadow: 0 0 0 3px var(--purple-lt); background: var(--card);
 }
 #teacherSearch { min-width: 200px; flex: 1 }
 
-/* ---- Table ---- */
-.table-scroll { overflow-x: auto; border-radius: var(--radius-sm) }
+/* ---- Table — thẻ nổi khối rõ ràng, hàng highlight màu tím nhạt khi
+   hover để dễ dò theo mắt trên bảng nhiều cột. ---- */
+.table-scroll {
+  overflow-x: auto; border-radius: var(--radius-sm);
+  box-shadow: var(--shadow); border: 1px solid var(--border);
+}
 table {
   width: 100%;
   min-width: 640px;
   border-collapse: collapse;
   background: var(--card);
-  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   overflow: hidden;
 }
 th, td { padding: .75rem .85rem; text-align: left; font-size: .82rem; border-bottom: 1px solid var(--border); vertical-align: middle }
-th { background: var(--card2); font-weight: 800; font-size: .7rem; text-transform: uppercase; color: var(--muted); white-space: nowrap }
+th {
+  background: var(--card2); font-weight: 800; font-size: .68rem; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--muted); white-space: nowrap;
+  position: sticky; top: 0; z-index: 1;
+}
+tbody tr { transition: background .12s ease }
+tbody tr:hover { background: var(--purple-lt) }
 tr:last-child td { border-bottom: none }
 .empty-cell { text-align: center; color: var(--muted); padding: 1.6rem !important }
 
@@ -142,17 +191,26 @@ tr:last-child td { border-bottom: none }
 .modal-overlay {
   display: none; position: fixed; inset: 0; z-index: 999;
   background: var(--modal-overlay); align-items: center; justify-content: center; padding: 1rem;
+  backdrop-filter: blur(2px);
 }
 .modal-overlay.show { display: flex }
 .modal-box {
   background: var(--card); border-radius: var(--radius);
   width: 100%; max-width: 440px; box-shadow: var(--shadow-lg);
   max-height: 92vh; display: flex; flex-direction: column;
+  border-top: 4px solid var(--purple);
+  animation: modalPop .18s ease;
 }
+@keyframes modalPop { from { opacity: 0; transform: translateY(8px) scale(.98) } to { opacity: 1; transform: none } }
 .modal-box.modal-wide { max-width: 1100px }
 .modal-header { display: flex; align-items: center; justify-content: space-between; gap: .8rem; padding: 1.2rem 1.4rem; border-bottom: 1px solid var(--border) }
 .modal-header h3 { font-size: 1rem; font-weight: 800 }
-.modal-close { background: none; border: none; font-size: 1.1rem; cursor: pointer; color: var(--muted) }
+.modal-close {
+  background: var(--card2); border: none; font-size: 1rem; cursor: pointer; color: var(--muted);
+  width: 30px; height: 30px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center;
+  transition: var(--transition);
+}
+.modal-close:hover { background: var(--red-lt); color: var(--red) }
 .modal-body { padding: 1.2rem 1.4rem; overflow-y: auto; display: flex; flex-direction: column; gap: .9rem }
 .modal-footer { display: flex; justify-content: flex-end; gap: .7rem; padding: 1rem 1.4rem; border-top: 1px solid var(--border) }
 .form-group { display: flex; flex-direction: column; gap: .35rem }
@@ -181,10 +239,13 @@ tr:last-child td { border-bottom: none }
 .import-stat {
   flex: 1; min-width: 100px; background: var(--card2); border: 1.5px solid var(--border);
   border-radius: var(--radius-sm); padding: .7rem .8rem; text-align: center;
+  transition: var(--transition);
 }
 .import-stat b { display: block; font-size: 1.3rem; font-weight: 800; color: var(--text) }
 .import-stat span { font-size: .68rem; color: var(--muted); font-weight: 700 }
+.import-stat.ok   { background: var(--green-lt); border-color: rgba(33,179,107,.3) }
 .import-stat.ok b { color: var(--green) }
+.import-stat.warn { background: var(--yellow-lt); border-color: rgba(246,167,35,.35) }
 .import-stat.warn b { color: var(--yellow) }
 
 @media (max-width: 640px) {
@@ -204,41 +265,91 @@ tr:last-child td { border-bottom: none }
   font-size: .78rem; font-weight: 700; color: var(--muted);
   white-space: nowrap; cursor: pointer; user-select: none;
 }
-.chk-missing input { cursor: pointer }
+.chk-missing input { cursor: pointer; accent-color: var(--purple) }
 
 /* ══════════════════════════════════════════════
    PHẦN RIÊNG: lưới lịch tuần (weekly grid)
    ══════════════════════════════════════════════ */
 
-/* Thẻ màu theo "loại hình phụ trách" — hiện trong ô tóm tắt ở bảng chính
-   (không mở modal cũng thấy sơ bộ đang bận gì mỗi buổi). */
-.wk-chip {
-  display: inline-flex; align-items: center; gap: .25rem;
-  padding: .15rem .5rem; border-radius: 999px;
-  font-size: .68rem; font-weight: 800; white-space: nowrap;
+/* ══════════════════════════════════════════════
+   "Cover Flow" — dải thẻ giáo viên cuộn ngang (thay bảng dày đặc
+   nhiều cột trước đây, vốn rất khó dò khi có 15-20 giáo viên). Mỗi giáo
+   viên 1 thẻ đứng riêng, cuộn mượt bằng scroll-snap, phóng to nhẹ khi
+   hover — gợi từ hiệu ứng "cover flow" nhưng vẫn cho thấy NHIỀU thẻ cùng
+   lúc (không chỉ 1 thẻ giữa màn hình) để còn quét mắt so sánh cả đội. */
+.weekly-cards-wrap { position: relative; display: flex; align-items: center; gap: .5rem }
+.weekly-cards {
+  flex: 1; display: flex; gap: 1.1rem; overflow-x: auto;
+  scroll-snap-type: x proximity; scroll-behavior: smooth;
+  padding: .3rem .2rem 1.3rem;
 }
-.wk-chip.wk-main     { background: var(--green-lt); color: var(--green) }
-.wk-chip.wk-sub      { background: var(--yellow-lt); color: #7a5800 }
-.wk-chip.wk-online   { background: var(--blue-lt);  color: var(--blue) }
-.wk-chip.wk-review   { background: var(--purple-lt); color: var(--purple) }
-.wk-chip.wk-mentor   { background: var(--teal-lt);  color: var(--teal) }
-.wk-chip.wk-prep,
-.wk-chip.wk-office   { background: var(--card2); color: var(--muted); border: 1px solid var(--border) }
-.wk-chip.wk-leave,
-.wk-chip.wk-health   { background: var(--red-lt); color: var(--red) }
-.wk-chip.wk-empty    { color: var(--muted); font-weight: 600 }
+.weekly-cards .empty-cell { flex: 1 }
 
-.wk-day-cell { display: flex; flex-direction: column; gap: .2rem; min-width: 108px }
+.teacher-card {
+  scroll-snap-align: start; flex: 0 0 auto; width: 360px;
+  background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius);
+  padding: 1.3rem; display: flex; flex-direction: column; gap: 1rem;
+  box-shadow: var(--shadow); transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.teacher-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); z-index: 1 }
+.teacher-card.missing { border-color: var(--yellow) }
+.tc-missing-tag { color: #a97a00; font-weight: 800 }
 
-.wk-stats-cell { font-size: .72rem; color: var(--muted); line-height: 1.6; white-space: nowrap }
-.wk-stats-cell b { color: var(--text) }
+.teacher-card-header { display: flex; align-items: center; gap: .8rem }
+.teacher-avatar {
+  width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+  background: var(--gradient-hero); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: .95rem;
+}
+.teacher-card-title { min-width: 0 }
+.teacher-card-name { font-weight: 800; font-size: 1.02rem; line-height: 1.3 }
+.teacher-card-code { font-size: .76rem; color: var(--muted); font-weight: 700 }
+
+/* Danh sách chip lịch trong tuần — CÓ CHỮ rõ ràng (Thứ + Buổi + loại
+   hình phụ trách), chỉ hiện buổi thật sự có lịch nên độ dài thẻ tỉ lệ
+   thuận với độ bận của từng giáo viên; hover 1 chip xem thêm địa điểm/
+   số tiết qua tooltip. Nền màu ĐẬM (không phải -lt nhạt) vì chữ TRẮNG
+   bên trong cần đủ tương phản để đọc được ở cỡ chữ nhỏ. */
+.tc-chip-list { display: flex; flex-wrap: wrap; gap: .4rem; align-content: flex-start }
+.tc-chip {
+  display: inline-flex; align-items: center; gap: .3rem;
+  padding: .32rem .6rem; border-radius: 999px;
+  font-size: .74rem; font-weight: 600; color: #fff; white-space: nowrap;
+}
+.tc-chip b { font-weight: 800 }
+.tc-chip.main    { background: var(--blue) }
+.tc-chip.sub     { background: var(--purple) }
+.tc-chip.online  { background: var(--green) }
+.tc-chip.review  { background: var(--teal) }
+.tc-chip.assist  { background: var(--pink) }
+.tc-chip.demo    { background: var(--orange) }
+.tc-chip.prep, .tc-chip.office { background: var(--muted) }
+.tc-chip.health, .tc-chip.leave { background: var(--red) }
+.tc-empty-note { font-size: .78rem; color: var(--muted); font-style: italic }
+
+.teacher-card-stats { display: flex; flex-wrap: wrap; gap: .4rem .9rem; font-size: .76rem; color: var(--muted) }
+.teacher-card-stats b { color: var(--text); font-size: .84rem }
+
+.teacher-card-actions { display: flex; gap: .6rem; margin-top: auto }
+.teacher-card-actions .btn { flex: 1; padding: .55rem .7rem; font-size: .8rem }
+
+/* Nút mũi tên cuộn trái/phải — lối tắt bổ sung, cuộn ngang bằng chuột/
+   trackpad vẫn hoạt động bình thường song song. */
+.cards-scroll-btn {
+  flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%;
+  border: 1.5px solid var(--border); background: var(--card); color: var(--text);
+  font-size: 1.1rem; font-weight: 800; cursor: pointer; box-shadow: var(--shadow);
+  display: flex; align-items: center; justify-content: center; transition: var(--transition);
+}
+.cards-scroll-btn:hover { background: var(--purple); color: #fff; border-color: var(--purple) }
 
 /* Toolbar chọn tuần */
 .week-select-wrap { display: flex; align-items: center; gap: .5rem; font-size: .82rem; font-weight: 700 }
 
 /* Modal lưới tuần của 1 giáo viên: bảng 7 cột (nhãn + Thứ2..7), mỗi buổi
    là 1 nhóm hàng (loại hình / địa điểm / tiết 1-5). */
-.sched-grid-wrap { overflow-x: auto }
+.sched-grid-wrap { overflow-x: auto; border-radius: var(--radius-sm) }
 .sched-grid { width: 100%; border-collapse: collapse; min-width: 760px }
 .sched-grid th, .sched-grid td { border: 1px solid var(--border); padding: .45rem .5rem; font-size: .78rem; vertical-align: middle }
 .sched-grid th { background: var(--card2); font-weight: 800; text-align: center; white-space: nowrap }
@@ -272,23 +383,20 @@ tr:last-child td { border-bottom: none }
 }
 .sched-stats-bar .import-stat b { font-size: 1.1rem }
 
-/* Hàng bị đánh dấu "chưa nhập lịch tuần này" — viền trái màu vàng cảnh báo,
-   dễ quét mắt tìm giáo viên cần nhắc nhập lịch mà không cần đọc từng ô. */
-tr.row-missing { box-shadow: inset 4px 0 0 var(--yellow) }
-tr.row-missing td:first-child { position: relative }
-
 /* Thanh tiến độ "đã nhập lịch / tổng số GV" — tự động tính từ dữ liệu
-   thật (computeWeekStats/hasAnySchedule), không lưu số liệu tĩnh. */
+   thật (computeWeekStats/hasAnySchedule), không lưu số liệu tĩnh. Vệt
+   tiến độ dùng gradient thương hiệu thay vì 1 màu xanh phẳng. */
 .week-progress-bar {
   display: flex; align-items: center; gap: .8rem; flex-wrap: wrap;
-  background: var(--card2); border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm); padding: .6rem .9rem; margin-bottom: 1rem;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: .7rem 1rem; margin-bottom: 1rem;
+  box-shadow: var(--shadow);
 }
 .wk-progress-track {
-  flex: 1; min-width: 120px; height: 8px; border-radius: 999px;
-  background: var(--border); overflow: hidden;
+  flex: 1; min-width: 120px; height: 10px; border-radius: 999px;
+  background: var(--card2); border: 1px solid var(--border); overflow: hidden;
 }
-.wk-progress-fill { height: 100%; background: var(--green); border-radius: 999px; transition: width .3s ease }
+.wk-progress-fill { height: 100%; background: var(--gradient-hero); border-radius: 999px; transition: width .3s ease }
 .wk-progress-label { font-size: .78rem; font-weight: 700; color: var(--muted); white-space: nowrap }
 .wk-progress-label b { color: var(--text) }
 .wk-progress-warn { color: #a97a00 !important }
@@ -301,6 +409,7 @@ tr.row-missing td:first-child { position: relative }
 .my-week-empty {
   background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius-sm);
   padding: 1.6rem; text-align: center; color: var(--muted); font-size: .85rem; line-height: 1.6;
+  box-shadow: var(--shadow);
 }
 .my-week-body { display: flex; flex-direction: column; gap: 1.2rem }
 .my-week-cards {
@@ -310,15 +419,17 @@ tr.row-missing td:first-child { position: relative }
 .day-card {
   background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius);
   padding: 1rem; display: flex; flex-direction: column; gap: .8rem;
+  box-shadow: var(--shadow); transition: box-shadow .2s ease, transform .2s ease;
 }
+.day-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px) }
 .day-card-title {
   font-weight: 800; font-size: .82rem; color: var(--purple);
   text-transform: uppercase; letter-spacing: .03em;
 }
 /* Mỗi buổi (Sáng/Chiều) là 1 khối riêng, TỰ ĐỔI MÀU theo "loại hình phụ
-   trách" đang chọn — cùng bảng màu với thẻ tóm tắt (wk-chip) bên bảng
-   admin, để cùng 1 loại hình luôn ra cùng 1 màu ở mọi nơi trong trang.
-   Không chọn gì (trống/nghỉ) thì giữ màu trung tính mặc định. */
+   trách" đang chọn — cùng bảng màu với dải chấm mini (tc-chip) trong thẻ
+   giáo viên bên bảng admin, để cùng 1 loại hình luôn ra cùng 1 màu ở mọi
+   nơi trong trang. Không chọn gì (trống/nghỉ) thì giữ màu trung tính mặc định. */
 .day-card-session {
   display: flex; flex-direction: column; gap: .5rem;
   padding: .7rem; border-radius: 10px;
@@ -328,11 +439,12 @@ tr.row-missing td:first-child { position: relative }
 .day-card-session-label {
   font-size: .68rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .03em;
 }
-.day-card-session.sess-main    { background: var(--green-lt);  border-color: rgba(33,179,107,.35) }
-.day-card-session.sess-sub     { background: var(--yellow-lt); border-color: rgba(246,167,35,.4) }
-.day-card-session.sess-online  { background: var(--blue-lt);   border-color: rgba(46,140,240,.35) }
-.day-card-session.sess-review  { background: var(--purple-lt); border-color: rgba(79,107,255,.35) }
-.day-card-session.sess-mentor  { background: var(--teal-lt);   border-color: rgba(23,179,163,.35) }
+.day-card-session.sess-main    { background: var(--blue-lt);   border-color: rgba(46,140,240,.35) }
+.day-card-session.sess-sub     { background: var(--purple-lt); border-color: rgba(79,107,255,.35) }
+.day-card-session.sess-online  { background: var(--green-lt);  border-color: rgba(33,179,107,.35) }
+.day-card-session.sess-review  { background: var(--teal-lt);   border-color: rgba(23,179,163,.35) }
+.day-card-session.sess-assist  { background: rgba(221,79,166,.14); border-color: rgba(221,79,166,.4) }
+.day-card-session.sess-demo    { background: var(--orange-lt); border-color: rgba(255,138,61,.4) }
 .day-card-session.sess-prep, .day-card-session.sess-office {
   background: var(--card2); border-color: var(--border);
 }
@@ -356,7 +468,9 @@ tr.row-missing td:first-child { position: relative }
   display: flex; flex-direction: column; align-items: center; gap: .3rem;
   cursor: pointer; padding: .35rem .2rem; border-radius: 8px;
   background: var(--card); border: 1.5px solid var(--border);
+  transition: border-color .15s ease, background .15s ease;
 }
+.period-cell:has(input:checked) { border-color: var(--purple); background: var(--purple-lt) }
 .period-num { font-size: .62rem; font-weight: 800; color: var(--muted); white-space: nowrap }
 .period-cell input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--purple) }
 
@@ -366,11 +480,12 @@ tr.row-missing td:first-child { position: relative }
 .my-week-footer {
   display: flex; flex-direction: column; gap: .9rem;
   background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius);
-  padding: 1rem 1.1rem;
+  padding: 1rem 1.1rem; box-shadow: var(--shadow);
 }
 .my-week-footer .sched-stats-bar { margin-top: 0 }
-.my-week-save-btn { align-self: flex-end }
+.my-week-footer-actions { display: flex; justify-content: flex-end; gap: .7rem }
 
 @media (max-width: 720px) {
-  .my-week-save-btn { align-self: stretch; width: 100% }
+  .my-week-footer-actions { flex-direction: column-reverse }
+  .my-week-footer-actions .btn { width: 100% }
 }
