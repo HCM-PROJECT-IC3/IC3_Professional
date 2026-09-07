@@ -42,6 +42,14 @@ body {
 .topbar h1 {
   font-size: 1.1rem; font-weight: 800; display: inline-flex; align-items: center; gap: .5rem;
 }
+/* Nút giới thiệu ngắn gọn (xem qua tooltip khi hover) — thay cho khối
+   banner 3 dòng cũ vốn chiếm hẳn 1 khối phía trên, đẩy nội dung quan
+   trọng nhất (lịch của cả đội) xuống dưới màn hình đầu tiên. */
+.info-btn {
+  background: none; border: none; font-size: .85rem; line-height: 1;
+  cursor: help; opacity: .55; padding: 0; transition: var(--transition);
+}
+.info-btn:hover { opacity: 1 }
 .spacer { flex: 1 }
 .whoami {
   font-size: .78rem; color: var(--text); font-weight: 700;
@@ -92,10 +100,14 @@ body {
   font-weight: 800; font-size: .78rem; cursor: pointer; margin-right: .8rem;
 }
 
-.wrap { max-width: 1240px; margin: 0 auto; padding: 2rem 1.6rem }
+/* Bỏ khoảng đệm trên lớn (2rem) vì admin/điều phối không còn khối banner
+   giới thiệu (đã thay bằng nút ℹ️ ở tiêu đề) — nội dung quan trọng nhất
+   (lịch cả đội) cần lên gần đầu màn hình nhất có thể. */
+.wrap { max-width: 1400px; margin: 0 auto; padding: 1.2rem 1.6rem 2rem }
 
-/* ---- Banner — thẻ giới thiệu có vệt màu bên trái (kiểu callout) thay
-   cho khối tím phẳng, đỡ nặng nề mà vẫn nổi bật trên nền trang. ---- */
+/* Banner giới thiệu — CHỈ còn dùng cho role giáo viên (applyRoleUI() điền
+   chữ + bỏ .force-hide), vì "Lịch của tôi" không có sidebar/nút ℹ️ để
+   thay thế. Admin/điều phối giữ #pageBanner rỗng + ẩn vĩnh viễn. */
 .banner {
   position: relative;
   background: var(--card);
@@ -116,9 +128,11 @@ body {
 }
 
 /* ---- Tabs — segmented control hiện đại (track nền + pill active trượt
-   màu), thay cho 2 nút chữ gạch chân đơn điệu. ---- */
+   màu), thay cho 2 nút chữ gạch chân đơn điệu. Gộp chung hàng với thanh
+   công cụ (.panel-toolbar) nên không cần margin riêng, .panel-toolbar
+   đã có "gap" lo khoảng cách giữa các nhóm control. ---- */
 .tabs {
-  display: inline-flex; gap: .25rem; margin-bottom: 1.4rem;
+  display: inline-flex; gap: .25rem; flex-shrink: 0;
   background: var(--card2); border: 1.5px solid var(--border);
   border-radius: 999px; padding: .3rem;
 }
@@ -140,8 +154,7 @@ body {
   border-radius: var(--radius-sm); padding: .8rem .9rem; box-shadow: var(--shadow);
 }
 .panel-toolbar-info { font-size: .8rem; color: var(--muted); font-weight: 700; white-space: nowrap }
-.panel-toolbar-filters { display: flex; gap: .6rem; flex: 1; flex-wrap: wrap }
-.panel-toolbar .btn.push-right { margin-left: auto }
+.panel-toolbar .push-right { margin-left: auto }
 
 select.form-input, input.form-input {
   font-family: inherit;
@@ -250,16 +263,17 @@ tr:last-child td { border-bottom: none }
 
 @media (max-width: 640px) {
   .panel-toolbar { flex-direction: column; align-items: stretch }
-  .panel-toolbar .btn.push-right { margin-left: 0 }
+  .panel-toolbar .push-right { margin-left: 0 }
 }
 
 /* Ẩn cưỡng bức theo role (js/teaching-schedule.js → applyRoleUI()) — dùng
    class riêng thay vì thuộc tính [hidden] vì 1 số phần tử bị ẩn (vd
-   .panel-toolbar-filters) đã có "display:flex" trên chính class đó, cùng
-   độ ưu tiên CSS với UA-stylesheet của [hidden] nên không chắc thắng. */
+   .my-week-body) đã có "display:flex" trên chính class đó, cùng độ ưu
+   tiên CSS với UA-stylesheet của [hidden] nên không chắc thắng. */
 .force-hide { display: none !important; }
 
-/* Checkbox lọc "chỉ hiện GV chưa có lịch" — cùng hàng với ô tìm kiếm. */
+/* Checkbox lọc "chỉ hiện GV chưa có lịch" — cùng hàng menu với ô tìm
+   kiếm (căn thẳng đáy với ô nhập liệu qua .weekly-topbar-row > .chk-missing). */
 .chk-missing {
   display: inline-flex; align-items: center; gap: .4rem;
   font-size: .78rem; font-weight: 700; color: var(--muted);
@@ -272,21 +286,21 @@ tr:last-child td { border-bottom: none }
    ══════════════════════════════════════════════ */
 
 /* ══════════════════════════════════════════════
-   "Cover Flow" — dải thẻ giáo viên cuộn ngang (thay bảng dày đặc
-   nhiều cột trước đây, vốn rất khó dò khi có 15-20 giáo viên). Mỗi giáo
-   viên 1 thẻ đứng riêng, cuộn mượt bằng scroll-snap, phóng to nhẹ khi
-   hover — gợi từ hiệu ứng "cover flow" nhưng vẫn cho thấy NHIỀU thẻ cùng
-   lúc (không chỉ 1 thẻ giữa màn hình) để còn quét mắt so sánh cả đội. */
-.weekly-cards-wrap { position: relative; display: flex; align-items: center; gap: .5rem }
+   Lưới thẻ giáo viên — mỗi giáo viên 1 thẻ, TỰ XUỐNG DÒNG thay vì cuộn
+   ngang (bản "cover flow" cuộn ngang trước đây hay che mất 1 phần thẻ
+   cuối ở rìa màn hình khi số thẻ không vừa khít đúng bề rộng). Với
+   "auto-fit, minmax(...)" mỗi hàng LUÔN đủ nguyên vẹn số thẻ vừa khít —
+   không có thẻ nào bị cắt nửa chừng — và thẻ tự giãn (1fr) lấp hết
+   khoảng trống còn thừa trong hàng đó thay vì để trống. Nhiều giáo viên
+   thì xuống hàng mới, cuộn dọc theo trang như bình thường. */
+.weekly-cards-wrap { position: relative }
 .weekly-cards {
-  flex: 1; display: flex; gap: 1.1rem; overflow-x: auto;
-  scroll-snap-type: x proximity; scroll-behavior: smooth;
-  padding: .3rem .2rem 1.3rem;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.1rem; padding: .3rem .2rem 1.3rem;
 }
-.weekly-cards .empty-cell { flex: 1 }
+.weekly-cards .empty-cell { grid-column: 1 / -1 }
 
 .teacher-card {
-  scroll-snap-align: start; flex: 0 0 auto; width: 360px;
   background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius);
   padding: 1.3rem; display: flex; flex-direction: column; gap: 1rem;
   box-shadow: var(--shadow); transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
@@ -306,18 +320,25 @@ tr:last-child td { border-bottom: none }
 .teacher-card-name { font-weight: 800; font-size: 1.02rem; line-height: 1.3 }
 .teacher-card-code { font-size: .76rem; color: var(--muted); font-weight: 700 }
 
-/* Danh sách chip lịch trong tuần — CÓ CHỮ rõ ràng (Thứ + Buổi + loại
-   hình phụ trách), chỉ hiện buổi thật sự có lịch nên độ dài thẻ tỉ lệ
-   thuận với độ bận của từng giáo viên; hover 1 chip xem thêm địa điểm/
-   số tiết qua tooltip. Nền màu ĐẬM (không phải -lt nhạt) vì chữ TRẮNG
-   bên trong cần đủ tương phản để đọc được ở cỡ chữ nhỏ. */
-.tc-chip-list { display: flex; flex-wrap: wrap; gap: .4rem; align-content: flex-start }
-.tc-chip {
-  display: inline-flex; align-items: center; gap: .3rem;
-  padding: .32rem .6rem; border-radius: 999px;
-  font-size: .74rem; font-weight: 600; color: #fff; white-space: nowrap;
+/* Lưới lịch trong tuần — 2 CỘT CỐ ĐỊNH Sáng/Chiều, mỗi Thứ 1 hàng, luôn
+   đủ 2 ô mỗi hàng (ô trống hiện "—" mờ, xem scheduleChipCell()) nên 2 cột
+   LUÔN thẳng hàng — không còn kiểu chip tự wrap lộn xộn, dài ngắn lẫn lộn
+   như bản trước. Chỉ hiện buổi thật sự có lịch (bỏ hẳn ngày trống) nên độ
+   dài thẻ vẫn tỉ lệ thuận với độ bận của từng giáo viên. */
+.tc-chip-head {
+  display: grid; grid-template-columns: 1fr 1fr; gap: .4rem;
+  font-size: .62rem; font-weight: 800; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .04em; padding: 0 .15rem;
 }
-.tc-chip b { font-weight: 800 }
+.tc-chip-list { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem }
+.tc-chip, .tc-chip-off {
+  display: flex; flex-direction: column; align-items: flex-start; gap: .1rem;
+  width: 100%; box-sizing: border-box; min-width: 0;
+  padding: .38rem .55rem; border-radius: 8px;
+  font-size: .7rem; font-weight: 600; line-height: 1.25;
+}
+.tc-chip { color: #fff }
+.tc-chip b { font-size: .6rem; font-weight: 800; text-transform: uppercase; opacity: .85 }
 .tc-chip.main    { background: var(--teal) }
 .tc-chip.sub     { background: var(--blue) }
 .tc-chip.online  { background: var(--green) }
@@ -328,6 +349,12 @@ tr:last-child td { border-bottom: none }
 .tc-chip.onsite, .tc-chip.health { background: var(--red) }
 .tc-chip.remote  { background: var(--yellow); color: #4a3600 }
 .tc-chip.leave   { background: var(--text); color: var(--bg) }
+/* Ô trống trong 1 hàng có buổi kia bận — mờ, viền đứt, phân biệt rõ với
+   chip màu thật để không nhầm là 1 loại hình phụ trách hợp lệ. */
+.tc-chip-off {
+  color: var(--muted); background: var(--card2); border: 1px dashed var(--border);
+  flex-direction: row; align-items: center;
+}
 .tc-empty-note { font-size: .78rem; color: var(--muted); font-style: italic }
 
 .teacher-card-stats { display: flex; flex-wrap: wrap; gap: .4rem .9rem; font-size: .76rem; color: var(--muted) }
@@ -335,16 +362,6 @@ tr:last-child td { border-bottom: none }
 
 .teacher-card-actions { display: flex; gap: .6rem; margin-top: auto }
 .teacher-card-actions .btn { flex: 1; padding: .55rem .7rem; font-size: .8rem }
-
-/* Nút mũi tên cuộn trái/phải — lối tắt bổ sung, cuộn ngang bằng chuột/
-   trackpad vẫn hoạt động bình thường song song. */
-.cards-scroll-btn {
-  flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%;
-  border: 1.5px solid var(--border); background: var(--card); color: var(--text);
-  font-size: 1.1rem; font-weight: 800; cursor: pointer; box-shadow: var(--shadow);
-  display: flex; align-items: center; justify-content: center; transition: var(--transition);
-}
-.cards-scroll-btn:hover { background: var(--purple); color: #fff; border-color: var(--purple) }
 
 /* Nút chuyển "📊 Tổng quan" ⇄ "🎴 Thẻ" — segmented control nhỏ, cùng
    ngôn ngữ thiết kế với .tabs chính của trang. */
@@ -361,27 +378,11 @@ tr:last-child td { border-bottom: none }
 .view-toggle-btn.active { color: #fff; background: var(--purple) }
 
 /* ══════════════════════════════════════════════
-   "📊 Tổng quan" — dashboard cho điều phối đào tạo. KPI toàn đội + ma
-   trận Thứ2-7 × mọi giáo viên (chấm màu gọn, ghim cột tên khi cuộn) +
-   danh sách "Cần chú ý" — thấy CẢ ĐỘI trong 1 màn hình.
+   "📊 Tổng quan" — dashboard cho điều phối đào tạo. Ma trận Thứ2-7 × mọi
+   giáo viên (chip màu gọn, ghim cột tên khi cuộn); hàng của GV chưa nhập
+   lịch tự tô nền vàng nhạt (.dash-row-missing) — thấy CẢ ĐỘI trong 1
+   màn hình, không cần khối KPI/"Cần chú ý" riêng.
    ══════════════════════════════════════════════ */
-.dash-kpi-row {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: .8rem; margin-bottom: 1.2rem;
-}
-.dash-kpi {
-  background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius-sm);
-  padding: .9rem 1rem; box-shadow: var(--shadow);
-}
-.dash-kpi-value { font-size: 1.5rem; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums }
-.dash-kpi-label { font-size: .72rem; color: var(--muted); font-weight: 700; margin-top: .2rem }
-.dash-kpi.ok .dash-kpi-value { color: var(--green) }
-.dash-kpi.warn { border-color: var(--yellow) }
-.dash-kpi.warn .dash-kpi-value { color: #a97a00 }
-
-.dash-main { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 1.2rem; align-items: start }
-@media (max-width: 900px) { .dash-main { grid-template-columns: 1fr } }
-
 .dash-matrix-wrap {
   overflow-x: auto; border-radius: var(--radius-sm); border: 1px solid var(--border); box-shadow: var(--shadow);
   max-height: 640px; overflow-y: auto;
@@ -420,7 +421,8 @@ tr:last-child td { border-bottom: none }
    "Cty") — thay chấm tròn trừu tượng trước đây (phải hover mới biết đang
    bận gì); giờ nhìn là đọc được ngay, hover vẫn xem thêm địa điểm/số tiết
    qua title. Sáng/Chiều xếp DỌC (.dash-cell-stack) thay vì cạnh nhau. */
-.dash-cell-stack { display: flex; flex-direction: column; gap: .25rem; align-items: stretch }
+.dash-cell-stack { display: flex; flex-direction: column; gap: .5rem; align-items: stretch }
+.dash-cell-item { display: flex; flex-direction: column; align-items: center; gap: .15rem }
 .dash-chip {
   display: inline-flex; align-items: center; justify-content: center;
   padding: .18rem .4rem; border-radius: 6px;
@@ -428,6 +430,12 @@ tr:last-child td { border-bottom: none }
   background: var(--card2); border: 1px solid var(--border);
 }
 .dash-chip.empty { color: var(--muted); font-weight: 400; background: none; border-color: transparent }
+/* Chú thích địa điểm/số tiết dưới chip — tận dụng khoảng trống cột đã
+   rộng ra, cắt bớt (ellipsis) nếu địa điểm quá dài, xem đầy đủ qua title. */
+.dash-chip-meta {
+  font-size: .6rem; color: var(--muted); max-width: 108px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .dash-chip.main    { background: var(--teal) }
 .dash-chip.sub     { background: var(--blue) }
 .dash-chip.online  { background: var(--green) }
@@ -439,23 +447,46 @@ tr:last-child td { border-bottom: none }
 .dash-chip.remote  { background: var(--yellow); color: #4a3600 }
 .dash-chip.leave   { background: var(--text); color: var(--bg) }
 
-.dash-attention {
-  background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius-sm);
-  padding: 1rem; box-shadow: var(--shadow); max-height: 640px; overflow-y: auto;
-}
-.dash-attention h3 { font-size: .88rem; font-weight: 800; margin-bottom: .8rem }
-.dash-attention-list { display: flex; flex-direction: column; gap: .6rem }
-.dash-attention-item {
-  display: flex; align-items: center; justify-content: space-between; gap: .6rem;
-  background: var(--yellow-lt); border: 1px solid rgba(246,167,35,.35);
-  border-radius: var(--radius-sm); padding: .6rem .8rem;
-}
-.dash-attention-name { font-weight: 800; font-size: .82rem }
-.dash-attention-code { font-size: .68rem; color: var(--muted); font-weight: 700 }
-.dash-attention-empty { font-size: .82rem; color: var(--muted); text-align: center; padding: 1rem 0 }
+/* ══════════════════════════════════════════════
+   Bố cục menu NẰM NGANG Ở TRÊN, 2 HÀNG CÂN ĐỐI — mỗi hàng luôn chia rõ
+   trái/phải bằng "margin-left:auto" thay vì để trống lệch 1 bên như bản
+   trước (KPI/"Cần chú ý" đã bỏ hẳn nên không còn kéo dài chiều cao):
+     · Hàng 1: tab điều hướng (trái)  ↔  chế độ xem Tổng quan/Thẻ (phải)
+     · Hàng 2: tuần + tìm kiếm/lọc (trái)  ↔  nhóm nút hành động (phải)
+   + khối chính bên dưới (ma trận/thẻ) CHIẾM TRỌN bề rộng màn hình.
+   ══════════════════════════════════════════════ */
+.weekly-layout { display: flex; flex-direction: column; gap: 1.2rem }
 
-/* Toolbar chọn tuần */
-.week-select-wrap { display: flex; align-items: center; gap: .5rem; font-size: .82rem; font-weight: 700 }
+.weekly-sidebar {
+  display: flex; flex-direction: column; gap: .85rem;
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 1rem 1.2rem; box-shadow: var(--shadow);
+}
+
+.weekly-topbar-row { display: flex; align-items: center; gap: .9rem; flex-wrap: wrap }
+.weekly-topbar-row > :last-child { margin-left: auto }
+@media (max-width: 720px) {
+  .weekly-topbar-row > :last-child { margin-left: 0 }
+}
+
+/* "Tuần" và "Tìm kiếm" dùng CHUNG cấu trúc nhãn-trên/ô-dưới nên 2 ô luôn
+   ngang hàng nhau (trước đây ô tìm kiếm không có nhãn phía trên nên bị
+   lệch thấp hơn so với ô chọn tuần). */
+.sidebar-group { display: flex; flex-direction: column; gap: .3rem }
+.sidebar-group label { font-size: .7rem; font-weight: 800; color: var(--muted) }
+.sidebar-group .form-input { width: auto; min-width: 170px }
+/* Ô tìm kiếm rộng hơn hẳn để đọc trọn placeholder, không bị cắt chữ. */
+#weeklyFiltersWrap #teacherSearch { min-width: 280px; flex: none }
+
+/* Checkbox "Chỉ hiện GV chưa có lịch" không có khung nhãn phía trên như 2
+   ô cạnh nó — ghim xuống ngang hàng với Ô NHẬP LIỆU (không phải ngang
+   hàng với nhãn phía trên) để mắt vẫn thấy thẳng hàng với nội dung. */
+.weekly-topbar-row > .chk-missing { align-self: flex-end; margin-bottom: .55rem }
+
+.sidebar-actions { display: flex; flex-direction: row; gap: .6rem; flex-wrap: wrap }
+.sidebar-actions .btn { width: auto; white-space: nowrap }
+
+.weekly-main { min-width: 0 }
 
 /* Modal lưới tuần của 1 giáo viên: bảng 7 cột (nhãn + Thứ2..7), mỗi buổi
    là 1 nhóm hàng (loại hình / địa điểm / tiết 1-5). */

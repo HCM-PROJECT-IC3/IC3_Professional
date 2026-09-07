@@ -90,18 +90,18 @@
     const hide = (id) => { const el = document.getElementById(id); if (el) el.classList.add('force-hide'); };
     const show = (id) => { const el = document.getElementById(id); if (el) el.classList.remove('force-hide'); };
     if (!isTeacherRole()) return;
-    hide('mainTabs');           // chỉ còn đúng 1 tab "Lịch tuần" có ý nghĩa với GV
-    hide('weeklyFiltersWrap');  // tìm kiếm/lọc chỉ cần khi quản lý nhiều GV
-    hide('viewToggle');         // Tổng quan/Thẻ chỉ có ý nghĩa khi xem NHIỀU GV
-    hide('newWeekBtn');
-    hide('importExcelBtn');
-    hide('exportAllPdfBtn');    // xuất PDF nhiều GV cùng lúc — GV tự xuất đúng lịch của mình qua nút riêng trong "Lịch của tôi"
-    hide('weekProgressBar');
-    hide('weeklyDashboard');    // dashboard tổng quan chỉ dành cho admin/điều phối
-    hide('weeklyCardsWrap');    // thay bằng khối thẻ "Lịch của tôi" bên dưới
+    // Toàn bộ sidebar + khối chính (Tổng quan/Thẻ) chỉ dành cho admin/điều
+    // phối quản lý NHIỀU giáo viên — giáo viên chỉ cần đúng 1 khối
+    // "Lịch của tôi" full-width bên dưới, ẩn nguyên khối cha 1 lần thay vì
+    // ẩn từng phần tử con riêng lẻ.
+    hide('weeklyLayout');
     show('myWeekWrap');
-    const banner = document.querySelector('.banner');
+    // #pageBanner mặc định ẩn (force-hide) vì admin/điều phối không cần —
+    // giáo viên thì "Lịch của tôi" không có sidebar/nút ℹ️ thay thế nên
+    // vẫn cần hiện khối hướng dẫn này.
+    const banner = document.getElementById('pageBanner');
     if (banner) {
+      banner.classList.remove('force-hide');
       banner.innerHTML = 'Tự <b>cập nhật lịch làm việc/giảng dạy hàng tuần</b> của chính bạn ngay tại đây —'
         + ' chọn <b>loại hình phụ trách</b> cho từng buổi Sáng/Chiều, điền địa điểm và lớp đang dạy, rồi bấm'
         + ' <b>"💾 Lưu lịch tuần của tôi"</b>. Có thắc mắc về lịch, liên hệ Điều phối đào tạo/Admin.';
@@ -159,12 +159,15 @@
   // ============================================================
   // TABS
   // ============================================================
+  // Đồng bộ theo data-tab (không chỉ dựa vào chính nút vừa bấm) — mỗi
+  // toolbar (Lịch tuần/Giáo viên) có 1 bản sao nút tab riêng để gộp chung
+  // vào 1 hàng với các control khác (đỡ tốn 1 hàng trống riêng), đồng bộ
+  // theo data-tab đảm bảo mọi bản sao luôn hiển thị đúng trạng thái.
   document.querySelectorAll('.tab-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
-      document.querySelectorAll('.tab-panel').forEach((p) => p.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById(`panel-${btn.dataset.tab}`).classList.add('active');
+      const tab = btn.dataset.tab;
+      document.querySelectorAll('.tab-btn').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+      document.querySelectorAll('.tab-panel').forEach((p) => p.classList.toggle('active', p.id === `panel-${tab}`));
     });
   });
 
@@ -326,13 +329,22 @@
    * hình), không phải chấm màu trừu tượng khó đọc như bản trước. Chỉ vẽ
    * chip cho buổi CÓ lịch (bỏ qua buổi trống) — giáo viên bận nhiều thì
    * thấy nhiều chip, rảnh thì thẻ ngắn gọn, không có ô trống chiếm chỗ. */
-  function scheduleChip(d, sessLabel, sess) {
+  function scheduleChip(d, sess) {
     if (!sess || !sess.type) return '';
     const suffix = typeColorSuffix(sess.type) || 'prep';
     const periods = (sess.periods || []).filter((p) => !!p).length;
     const detailParts = [sess.location, periods ? `${periods} tiết` : ''].filter(Boolean);
     const title = detailParts.length ? ` title="${esc(detailParts.join(' · '))}"` : '';
-    return `<span class="tc-chip ${suffix}"${title}><b>T${d} ${sessLabel}</b> ${esc(sess.type)}</span>`;
+    // Không lặp lại chữ "Sáng"/"Chiều" trong từng chip nữa — vị trí CỘT
+    // (trái=Sáng, phải=Chiều, xem tc-chip-list) đã nói lên điều đó, chỉ
+    // cần "T{d}" (Thứ mấy) + loại hình, gọn và đỡ rối hơn.
+    return `<span class="tc-chip ${suffix}"${title}><b>T${d}</b> ${esc(sess.type)}</span>`;
+  }
+  /** 1 ô trong lưới 2 cột Sáng/Chiều — luôn trả về 1 phần tử (chip màu nếu
+   * có lịch, ô "—" mờ nếu buổi đó trống) để 2 cột LUÔN thẳng hàng theo
+   * từng Thứ, không bao giờ lệch cột như khi chip tự wrap tự do. */
+  function scheduleChipCell(d, sess) {
+    return scheduleChip(d, sess) || `<span class="tc-chip-off">T${d} —</span>`;
   }
 
   // Chuyển "📊 Tổng quan" ⇄ "🎴 Thẻ" — điều phối đào tạo cần thấy CẢ ĐỘI
@@ -357,8 +369,6 @@
       const msg = '<div class="empty-cell">Chưa có tuần nào — bấm "🧬 Tuần mới" hoặc "📥 Nhập từ Excel" để bắt đầu.</div>';
       cardsContainer.innerHTML = msg;
       document.getElementById('dashMatrixBody').innerHTML = `<tr><td colspan="8" class="empty-cell">${msg.replace(/<[^>]+>/g, '')}</td></tr>`;
-      document.getElementById('dashKpiRow').innerHTML = '';
-      document.getElementById('dashAttentionList').innerHTML = '';
       if (progressBar) progressBar.classList.add('force-hide');
       return;
     }
@@ -371,7 +381,8 @@
     // Thanh tiến độ "đã nhập lịch / tổng số GV" — tính TRƯỚC khi áp bộ lọc
     // "chỉ hiện GV chưa có lịch" để luôn phản ánh đúng cả đội, không phải
     // riêng phần đang lọc hiển thị. Chỉ hiện ở chế độ Thẻ — chế độ Tổng
-    // quan đã có KPI riêng đầy đủ hơn (dashKpiRow), tránh lặp thông tin.
+    // quan đã có ma trận + tô hàng vàng nhạt cho GV chưa nhập, tránh lặp
+    // thông tin.
     if (progressBar) {
       const total = teachers.length;
       const missing = teachers.filter((t) => !M.hasAnySchedule(daysOf(t))).length;
@@ -406,11 +417,20 @@
       const days = daysOf(t);
       const stats = M.computeWeekStats(days);
       const missing = !M.hasAnySchedule(days);
+      // Lưới 2 CỘT CỐ ĐỊNH (Sáng | Chiều) — mỗi Thứ 1 hàng, cả 2 ô của
+      // hàng đó LUÔN được vẽ (ô trống hiện "—" mờ thay vì bỏ trống hẳn)
+      // để 2 cột thẳng hàng nhau; CHỈ bỏ qua nguyên hàng nếu cả buổi Sáng
+      // lẫn Chiều hôm đó đều trống — giữ thẻ GV rảnh vẫn ngắn gọn.
       const chips = M.WEEKDAYS.map((d) => {
         const day = days[String(d)] || M.emptyDay();
-        return scheduleChip(d, 'Sáng', day.morning) + scheduleChip(d, 'Chiều', day.afternoon);
+        const hasMorning = day.morning && day.morning.type;
+        const hasAfternoon = day.afternoon && day.afternoon.type;
+        if (!hasMorning && !hasAfternoon) return '';
+        return scheduleChipCell(d, day.morning) + scheduleChipCell(d, day.afternoon);
       }).join('');
-      const chipList = chips ? `<div class="tc-chip-list">${chips}</div>` : '<div class="tc-empty-note">Chưa nhập lịch tuần này</div>';
+      const chipList = chips
+        ? `<div class="tc-chip-head"><span>Sáng</span><span>Chiều</span></div><div class="tc-chip-list">${chips}</div>`
+        : '<div class="tc-empty-note">Chưa nhập lịch tuần này</div>';
       return `<div class="teacher-card${missing ? ' missing' : ''}">
         <div class="teacher-card-header">
           <div class="teacher-avatar">${esc(initialsOf(t.name))}</div>
@@ -448,50 +468,32 @@
     'Khám SK': 'SK', 'Nghỉ phép/ lễ': 'Nghỉ',
   };
 
-  /** 1 ô mini trong ma trận dashboard — chip CÓ CHỮ (viết tắt loại hình),
-   * hover xem đầy đủ địa điểm/số tiết qua title. */
+  /** 1 ô mini trong ma trận dashboard — chip CÓ CHỮ (viết tắt loại hình) +
+   * dòng chú thích nhỏ (địa điểm/số tiết) ngay bên dưới — tận dụng khoảng
+   * trống đã rộng ra sau khi chuyển từ chấm tròn sang chip, cho thấy CHI
+   * TIẾT hơn mà không cần hover; hover vẫn còn để xem bản đầy đủ (chú
+   * thích hiển thị có thể bị cắt bớt nếu quá dài). */
   function dashMiniChip(sess) {
-    if (!sess || !sess.type) return '<span class="dash-chip empty">–</span>';
+    if (!sess || !sess.type) return '<div class="dash-cell-item"><span class="dash-chip empty">–</span></div>';
     const suffix = typeColorSuffix(sess.type) || 'prep';
     const periods = (sess.periods || []).filter((p) => !!p).length;
-    const detail = [sess.type, sess.location, periods ? `${periods} tiết` : ''].filter(Boolean).join(' · ');
     const abbr = TYPE_ABBR[sess.type] || sess.type;
-    return `<span class="dash-chip ${suffix}" title="${esc(detail)}">${esc(abbr)}</span>`;
+    const metaParts = [];
+    if (sess.location) metaParts.push(sess.location);
+    if (periods) metaParts.push(`${periods} tiết`);
+    const meta = metaParts.length ? `<div class="dash-chip-meta">${esc(metaParts.join(' · '))}</div>` : '';
+    const detail = [sess.type, sess.location, periods ? `${periods} tiết` : ''].filter(Boolean).join(' · ');
+    return `<div class="dash-cell-item" title="${esc(detail)}">
+      <span class="dash-chip ${suffix}">${esc(abbr)}</span>${meta}
+    </div>`;
   }
 
-  /** "📊 Tổng quan" — dashboard cho điều phối đào tạo: KPI toàn đội + ma
-   * trận Thứ2-7 × mọi giáo viên (chấm màu, gọn theo hàng, ghim cột tên) +
-   * danh sách "Cần chú ý" (GV chưa nhập lịch) — thấy được CẢ ĐỘI trong 1
-   * màn hình, không phải cuộn qua từng thẻ như chế độ "🎴 Thẻ". */
+  /** "📊 Tổng quan" — dashboard cho điều phối đào tạo: ma trận Thứ2-7 ×
+   * mọi giáo viên (chip màu, gọn theo hàng, ghim cột tên) — thấy được CẢ
+   * ĐỘI trong 1 màn hình, không phải cuộn qua từng thẻ như chế độ "🎴 Thẻ".
+   * Hàng của GV chưa nhập lịch tự tô nền vàng nhạt (.dash-row-missing) để
+   * dễ nhận ra ngay trong bảng, không cần khối KPI/"Cần chú ý" riêng. */
   function renderDashboardView(teachers, daysOf) {
-    // ---- KPI toàn đội (không bị ảnh hưởng bởi "chỉ hiện GV chưa có
-    // lịch" — dashboard luôn phản ánh ĐÚNG toàn đội đang tìm kiếm). ----
-    let missing = 0, periodsMain = 0, periodsSub = 0, sessionsMentor = 0, onLeave = 0;
-    teachers.forEach((t) => {
-      const days = daysOf(t);
-      if (!M.hasAnySchedule(days)) missing++;
-      const stats = M.computeWeekStats(days);
-      periodsMain += stats.periodsMain;
-      periodsSub += stats.periodsSub;
-      sessionsMentor += stats.sessionsMentor;
-      const hasLeave = M.WEEKDAYS.some((d) => {
-        const day = days[String(d)];
-        return day && M.SESSIONS.some((s) => day[s] && day[s].type === 'Nghỉ phép/ lễ');
-      });
-      if (hasLeave) onLeave++;
-    });
-    const total = teachers.length;
-    const done = total - missing;
-
-    document.getElementById('dashKpiRow').innerHTML = `
-      <div class="dash-kpi"><div class="dash-kpi-value">${total}</div><div class="dash-kpi-label">Tổng giáo viên</div></div>
-      <div class="dash-kpi ok"><div class="dash-kpi-value">${done}</div><div class="dash-kpi-label">Đã nhập lịch tuần này</div></div>
-      <div class="dash-kpi${missing ? ' warn' : ''}"><div class="dash-kpi-value">${missing}</div><div class="dash-kpi-label">Chưa nhập lịch</div></div>
-      <div class="dash-kpi"><div class="dash-kpi-value">${periodsMain}</div><div class="dash-kpi-label">Tổng tiết dạy chính</div></div>
-      <div class="dash-kpi"><div class="dash-kpi-value">${periodsSub}</div><div class="dash-kpi-label">Tổng tiết dạy trám</div></div>
-      <div class="dash-kpi"><div class="dash-kpi-value">${sessionsMentor}</div><div class="dash-kpi-label">Lần trợ giảng/dự giảng</div></div>
-      <div class="dash-kpi"><div class="dash-kpi-value">${onLeave}</div><div class="dash-kpi-label">GV có nghỉ phép tuần này</div></div>`;
-
     // ---- Ma trận Thứ2-7 × mọi giáo viên ----
     const tbody = document.getElementById('dashMatrixBody');
     if (!teachers.length) {
@@ -523,23 +525,6 @@
       tbody.querySelectorAll('[data-pdf-sched]').forEach((b) => b.addEventListener('click', () => exportTeacherPdf(b.dataset.pdfSched)));
     }
 
-    // ---- "🚩 Cần chú ý": GV chưa nhập lịch tuần này, có nút sửa ngay ----
-    const attentionList = document.getElementById('dashAttentionList');
-    const missingTeachers = teachers.filter((t) => !M.hasAnySchedule(daysOf(t)));
-    if (!missingTeachers.length) {
-      attentionList.innerHTML = '<div class="dash-attention-empty">🎉 Tất cả giáo viên đã nhập lịch tuần này.</div>';
-    } else {
-      attentionList.innerHTML = missingTeachers.map((t) => `
-        <div class="dash-attention-item">
-          <div>
-            <div class="dash-attention-name">${esc(t.name)}</div>
-            <div class="dash-attention-code">${esc(t.code)}</div>
-          </div>
-          <button type="button" class="btn-edit-text" data-edit-sched="${esc(t.code)}">Sửa lịch</button>
-        </div>`).join('');
-      attentionList.querySelectorAll('[data-edit-sched]').forEach((b) => b.addEventListener('click', () => openSchedModal(b.dataset.editSched)));
-    }
-
     // ---- Đánh dấu cột "hôm nay" trong ma trận (nếu tuần đang xem CHỨA
     // ngày hôm nay) — giúp điều phối đào tạo định vị nhanh "đang ở đâu
     // trong tuần" mà không cần đối chiếu lịch riêng. ----
@@ -553,15 +538,6 @@
       td.classList.toggle('today-col', Number(td.dataset.day) === todayDayNum);
     });
   }
-
-  // Nút mũi tên trái/phải cuộn dải thẻ giáo viên — cuộn ngang bằng chuột/
-  // trackpad vẫn hoạt động bình thường, đây chỉ là lối tắt bổ sung.
-  document.getElementById('weeklyCardsPrevBtn')?.addEventListener('click', () => {
-    document.getElementById('weeklyCards')?.scrollBy({ left: -300, behavior: 'smooth' });
-  });
-  document.getElementById('weeklyCardsNextBtn')?.addEventListener('click', () => {
-    document.getElementById('weeklyCards')?.scrollBy({ left: 300, behavior: 'smooth' });
-  });
 
   /** Xuất PDF lịch tuần của ĐÚNG 1 giáo viên (nút "🖨️ PDF" từng hàng). */
   function exportTeacherPdf(teacherCode) {

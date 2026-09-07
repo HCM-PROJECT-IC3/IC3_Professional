@@ -16,7 +16,12 @@
 
 <div class="topbar">
   <a href="ic3-dashboard.html" class="btn btn-ghost">← Dashboard</a>
-  <h1>📅 Lịch giảng dạy</h1>
+  <h1>📅 Lịch giảng dạy
+    <!-- Thay khối giới thiệu 3 dòng (chiếm hẳn 1 khối phía trên, đẩy lịch
+         18 GV — nội dung quan trọng nhất — xuống dưới) bằng 1 nút info
+         nhỏ, xem qua tooltip khi cần, không tốn chỗ thường trực. -->
+    <button type="button" class="info-btn" title="Quản lý lịch làm việc/giảng dạy hàng tuần của đội ngũ giáo viên — thay thế việc cập nhật thủ công trên file Excel LỊCH GIẢNG DẠY TEAM GVTH...xlsx. Mỗi tuần gồm lịch của từng giáo viên theo Thứ 2 → Thứ 7, mỗi ngày chia Sáng/Chiều với loại hình phụ trách + địa điểm + tối đa 5 tiết dạy. Có thể nhập nhanh từ file Excel gốc (nút Nhập từ Excel ở sidebar) rồi chỉnh sửa tiếp trực tiếp trên trang này.">ℹ️</button>
+  </h1>
   <div class="spacer"></div>
   <span class="whoami" id="whoami"></span>
   <button type="button" class="btn btn-ghost" id="logoutBtn">Đăng xuất</button>
@@ -24,77 +29,89 @@
 
 <div class="wrap">
 
-  <div class="banner">
-    Quản lý <b>lịch làm việc/giảng dạy hàng tuần</b> của đội ngũ giáo viên — thay thế việc cập nhật thủ công trên
-    file Excel <code>LỊCH GIẢNG DẠY TEAM GVTH...xlsx</code>. Mỗi tuần gồm lịch của từng giáo viên theo
-    <b>Thứ 2 → Thứ 7</b>, mỗi ngày chia <b>Sáng/Chiều</b> với loại hình phụ trách + địa điểm + tối đa 5 tiết dạy.
-    Có thể <b>nhập nhanh từ file Excel gốc</b> (nút bên dưới) rồi chỉnh sửa tiếp trực tiếp trên trang này.
-  </div>
-
-  <!-- ============ TABS ============ -->
-  <div class="tabs" role="tablist" id="mainTabs">
-    <button type="button" class="tab-btn active" data-tab="weekly" role="tab">📅 Lịch tuần</button>
-    <button type="button" class="tab-btn" data-tab="teachers" role="tab" id="teachersTabBtn">👤 Giáo viên</button>
-  </div>
+  <!-- Chỉ hiện với role giáo viên (applyRoleUI() điền chữ + bỏ force-hide)
+       — admin/điều phối không cần khối giới thiệu này nữa (xem nút ℹ️ ở
+       tiêu đề), giữ nguyên chỗ trống để lịch của 18 GV lên gần đầu trang
+       nhất có thể. -->
+  <div class="banner force-hide" id="pageBanner"></div>
 
   <!-- ============ TAB: WEEKLY SCHEDULE ============ -->
   <section class="tab-panel active" id="panel-weekly">
-    <div class="panel-toolbar">
-      <div class="week-select-wrap">
-        <span>🗓️ Tuần:</span>
-        <select id="weekSelect" class="form-input"><option value="">-- Chưa có tuần nào --</option></select>
-      </div>
-      <div class="panel-toolbar-filters" id="weeklyFiltersWrap">
-        <input type="text" id="teacherSearch" class="form-input" placeholder="🔍 Tìm theo tên hoặc mã NV...">
-        <label class="chk-missing"><input type="checkbox" id="onlyMissingChk"> Chỉ hiện GV chưa có lịch</label>
-      </div>
-      <!-- Điều phối đào tạo cần TỔNG QUAN cả đội (18+ GV) hơn là xem từng
-           người 1 — mặc định mở "📊 Tổng quan" (ma trận + KPI), chuyển
-           sang "🎴 Thẻ" khi cần đọc chi tiết/sửa lịch từng giáo viên. -->
-      <div class="view-toggle" id="viewToggle" role="tablist">
-        <button type="button" class="view-toggle-btn active" data-view="dashboard">📊 Tổng quan</button>
-        <button type="button" class="view-toggle-btn" data-view="cards">🎴 Thẻ</button>
-      </div>
-      <button type="button" class="btn btn-secondary" id="newWeekBtn">🧬 Tuần mới</button>
-      <button type="button" class="btn btn-secondary" id="importExcelBtn">📥 Nhập từ Excel</button>
-      <button type="button" class="btn btn-ghost" id="exportAllPdfBtn" title="Xuất 1 file PDF gồm lịch của tất cả GV đang hiển thị, mỗi người 1 trang">🖨️ Xuất PDF tất cả</button>
-      <input type="file" id="importExcelInput" accept=".xlsx,.xls" hidden>
-    </div>
-    <div class="week-progress-bar force-hide" id="weekProgressBar"></div>
+    <!-- ============ Menu NẰM NGANG Ở TRÊN, 2 hàng cân đối (hàng 1: tab +
+         chế độ xem trái/phải; hàng 2: tuần/lọc trái, hành động phải) +
+         khối chính bên dưới (ma trận/thẻ) CHIẾM TRỌN bề rộng màn hình —
+         đã bỏ KPI/"Cần chú ý" khỏi menu, chỉ còn điều hướng/thao tác. ============ -->
+    <div class="weekly-layout" id="weeklyLayout">
+      <div class="weekly-sidebar" id="weeklySidebar">
+        <div class="weekly-topbar-row">
+          <div class="tabs" role="tablist" id="mainTabs">
+            <button type="button" class="tab-btn active" data-tab="weekly" role="tab">📅 Lịch tuần</button>
+            <button type="button" class="tab-btn" data-tab="teachers" role="tab" id="teachersTabBtn">👤 Giáo viên</button>
+          </div>
 
-    <!-- ============ "📊 Tổng quan" — dashboard cho điều phối đào tạo:
-         KPI toàn đội + ma trận Thứ2-7 × mọi giáo viên (chấm màu, gọn theo
-         hàng) + danh sách "Cần chú ý" (GV chưa nhập lịch) — xem được CẢ
-         ĐỘI trong 1 màn hình, không phải cuộn qua từng thẻ. ============ -->
-    <div class="weekly-dashboard" id="weeklyDashboard">
-      <div class="dash-kpi-row" id="dashKpiRow"></div>
-      <div class="dash-main">
-        <div class="dash-matrix-wrap" id="dashMatrixWrap">
-          <table class="dash-matrix">
-            <thead><tr>
-              <th class="dash-matrix-name-col">Giáo viên</th>
-              <th id="dashDayHead2">Thứ 2</th><th id="dashDayHead3">Thứ 3</th><th id="dashDayHead4">Thứ 4</th>
-              <th id="dashDayHead5">Thứ 5</th><th id="dashDayHead6">Thứ 6</th><th id="dashDayHead7">Thứ 7</th>
-              <th></th>
-            </tr></thead>
-            <tbody id="dashMatrixBody"><tr><td colspan="8" class="empty-cell">Đang tải...</td></tr></tbody>
-          </table>
+          <!-- Điều phối đào tạo cần TỔNG QUAN cả đội (18+ GV) hơn là xem
+               từng người 1 — mặc định mở "📊 Tổng quan" (ma trận), chuyển
+               sang "🎴 Thẻ" khi cần đọc chi tiết/sửa lịch từng GV. -->
+          <div class="view-toggle" id="viewToggle" role="tablist">
+            <button type="button" class="view-toggle-btn active" data-view="dashboard">📊 Tổng quan</button>
+            <button type="button" class="view-toggle-btn" data-view="cards">🎴 Thẻ</button>
+          </div>
         </div>
-        <div class="dash-attention" id="dashAttention">
-          <h3>🚩 Cần chú ý</h3>
-          <div class="dash-attention-list" id="dashAttentionList"></div>
+
+        <div class="weekly-topbar-row">
+          <div class="sidebar-group">
+            <label for="weekSelect">🗓️ Tuần</label>
+            <select id="weekSelect" class="form-input"><option value="">-- Chưa có tuần nào --</option></select>
+          </div>
+
+          <div class="sidebar-group" id="weeklyFiltersWrap">
+            <label for="teacherSearch">🔍 Tìm kiếm</label>
+            <input type="text" id="teacherSearch" class="form-input" placeholder="Tìm theo tên hoặc mã NV...">
+          </div>
+
+          <label class="chk-missing"><input type="checkbox" id="onlyMissingChk"> Chỉ hiện GV chưa có lịch</label>
+
+          <div class="sidebar-actions">
+            <button type="button" class="btn btn-secondary" id="newWeekBtn">🧬 Tuần mới</button>
+            <button type="button" class="btn btn-secondary" id="importExcelBtn">📥 Nhập từ Excel</button>
+            <button type="button" class="btn btn-ghost" id="exportAllPdfBtn" title="Xuất 1 file PDF gồm lịch của tất cả GV đang hiển thị, mỗi người 1 trang">🖨️ Xuất PDF tất cả</button>
+            <input type="file" id="importExcelInput" accept=".xlsx,.xls" hidden>
+          </div>
+        </div>
+
+        <div class="week-progress-bar force-hide" id="weekProgressBar"></div>
+      </div>
+
+      <div class="weekly-main">
+        <!-- ============ "📊 Tổng quan" — dashboard cho điều phối đào
+             tạo: ma trận Thứ2-7 × mọi giáo viên (chip màu, gọn theo hàng),
+             CHIẾM TRỌN bề rộng còn lại của màn hình (hàng "chưa có lịch"
+             tự tô nền vàng nhạt để dễ nhận ra, không cần khối KPI/"Cần
+             chú ý" riêng nữa). ============ -->
+        <div class="weekly-dashboard" id="weeklyDashboard">
+          <div class="dash-matrix-wrap" id="dashMatrixWrap">
+            <table class="dash-matrix">
+              <thead><tr>
+                <th class="dash-matrix-name-col">Giáo viên</th>
+                <th id="dashDayHead2">Thứ 2</th><th id="dashDayHead3">Thứ 3</th><th id="dashDayHead4">Thứ 4</th>
+                <th id="dashDayHead5">Thứ 5</th><th id="dashDayHead6">Thứ 6</th><th id="dashDayHead7">Thứ 7</th>
+                <th></th>
+              </tr></thead>
+              <tbody id="dashMatrixBody"><tr><td colspan="8" class="empty-cell">Đang tải...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ============ "🎴 Thẻ" — mỗi giáo viên 1 thẻ (cỡ lớn, chữ rõ
+             ràng), LƯỚI TỰ XUỐNG DÒNG (không cuộn ngang) — trước đây cuộn
+             ngang kiểu "cover flow" hay bị che mất 1 phần thẻ cuối ở rìa
+             màn hình; giờ mỗi hàng luôn đủ nguyên vẹn số thẻ vừa khít bề
+             rộng, thẻ tự giãn lấp hết khoảng trống còn lại, hết hàng thì
+             xuống hàng mới (cuộn dọc theo trang, không còn mũi tên trái/phải). ============ -->
+        <div class="weekly-cards-wrap force-hide" id="weeklyCardsWrap">
+          <div class="weekly-cards" id="weeklyCards"><div class="empty-cell">Đang tải...</div></div>
         </div>
       </div>
-    </div>
-
-    <!-- ============ "🎴 Thẻ" ("Cover Flow") — mỗi giáo viên 1 thẻ (cỡ
-         lớn, chữ rõ ràng), cuộn ngang mượt (scroll-snap) — dùng khi cần
-         đọc/sửa chi tiết lịch của TỪNG giáo viên, thay cho bảng dày đặc
-         nhiều cột trước đây. ============ -->
-    <div class="weekly-cards-wrap force-hide" id="weeklyCardsWrap">
-      <button type="button" class="cards-scroll-btn cards-scroll-prev" id="weeklyCardsPrevBtn" aria-label="Cuộn sang trái">‹</button>
-      <div class="weekly-cards" id="weeklyCards"><div class="empty-cell">Đang tải...</div></div>
-      <button type="button" class="cards-scroll-btn cards-scroll-next" id="weeklyCardsNextBtn" aria-label="Cuộn sang phải">›</button>
     </div>
 
     <!-- ============ "LỊCH CỦA TÔI" — chỉ hiện với role giáo viên (đã liên
@@ -118,6 +135,13 @@
   <!-- ============ TAB: TEACHERS ============ -->
   <section class="tab-panel" id="panel-teachers">
     <div class="panel-toolbar">
+      <!-- Bản sao nút tab (đồng bộ theo data-tab với bản ở panel-weekly,
+           xem js/teaching-schedule.js) — để còn đường quay lại "Lịch tuần"
+           ngay từ đây, không phải phụ thuộc 1 hàng tab dùng chung riêng. -->
+      <div class="tabs" role="tablist">
+        <button type="button" class="tab-btn" data-tab="weekly" role="tab">📅 Lịch tuần</button>
+        <button type="button" class="tab-btn active" data-tab="teachers" role="tab">👤 Giáo viên</button>
+      </div>
       <div class="panel-toolbar-info"><span id="teacherCount">0</span> giáo viên</div>
       <button type="button" class="btn btn-primary push-right" id="addTeacherBtn">➕ Thêm giáo viên</button>
     </div>
