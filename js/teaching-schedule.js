@@ -29,6 +29,13 @@
     weeks: [],             // toàn bộ tuần đã có dữ liệu
     currentWeekKey: '',    // weekKey đang chọn ở tab "Lịch tuần"
     schedulesByTeacher: {},// teacherCode -> schedule doc (CỦA TUẦN ĐANG CHỌN)
+    timetablesByTeacher: {}, // teacherCode -> doc "teaching_timetable" (TKB lớp, CỦA TUẦN ĐANG CHỌN) —
+                              // nạp cùng lúc với schedulesByTeacher để "áp dụng TKB lớp vào Lịch tuần":
+                              // mỗi chip Sáng/Chiều ở Tổng quan/Thẻ giờ kèm luôn MÃ LỚP đã điền ở tab
+                              // "🗓️ TKB lớp" (xem classCodesFor()), không cần mở riêng tab kia mới biết.
+    periodTimesByTeacher: {}, // teacherCode -> doc "teaching_timetable_periods" (giờ tiết CỦA GIÁO VIÊN
+                                // đó, áp dụng mọi tuần) — dựng đúng số hàng/giờ giấc cho "📊 Tổng quan"
+                                // dạng lưới theo tiết (renderDashboardView()).
     myWeekDraft: null,     // days{} đang sửa ở khối "Lịch của tôi" (giáo viên) — chưa lưu
     search: '',
     viewMode: 'dashboard', // 'dashboard' (tổng quan, mặc định) | 'cards' (thẻ từng GV) — chỉ áp dụng admin/coordinator
@@ -141,19 +148,66 @@
     state.currentWeekKey = weekKey;
     try {
       state.schedulesByTeacher = {};
+      state.timetablesByTeacher = {};
+      // teaching_timetable/teaching_timetable_periods (tab "🗓️ TKB lớp") là
+      // tính năng thêm sau — repo có thể chưa kịp nạp trong 1 số ngữ cảnh
+      // test, nên luôn kiểm tra tồn tại trước khi gọi, tránh vỡ cả trang
+      // "Lịch tuần" chỉ vì thiếu 1 phần bổ trợ.
+      const TT = window.EduRepositories.teachingTimetable;
+      const PT = window.EduRepositories.teachingPeriodTimes;
+      const TTM = window.EduModels.TeachingTimetable;
       if (isTeacherRole()) {
         if (state.myTeacherCode) {
-          const doc = await window.EduRepositories.teachingSchedule.getById(M.scheduleDocId(state.myTeacherCode, weekKey));
+          const [doc, ttDoc] = await Promise.all([
+            window.EduRepositories.teachingSchedule.getById(M.scheduleDocId(state.myTeacherCode, weekKey)),
+            TT && TTM ? TT.getById(TTM.docId(state.myTeacherCode, weekKey)) : Promise.resolve(null),
+          ]);
           if (doc) state.schedulesByTeacher[state.myTeacherCode] = doc;
+          if (ttDoc) state.timetablesByTeacher[state.myTeacherCode] = ttDoc;
         }
       } else {
-        const rows = await window.EduRepositories.teachingSchedule.listByWeek(weekKey);
+        const [rows, ttRows, ptRows] = await Promise.all([
+          window.EduRepositories.teachingSchedule.listByWeek(weekKey),
+          TT ? TT.listByWeek(weekKey) : Promise.resolve([]),
+          // Giờ tiết KHÔNG lặp lại theo tuần (áp dụng mọi tuần, xem
+          // js/models/teaching-timetable.model.js) — tải trọn collection 1
+          // lần (18 giáo viên, rất nhỏ) để dựng đúng số hàng/giờ giấc cho
+          // ma trận "📊 Tổng quan" bên dưới.
+          PT ? PT.list() : Promise.resolve([]),
+        ]);
         rows.forEach((r) => { state.schedulesByTeacher[r.teacherCode] = r; });
+        ttRows.forEach((r) => { state.timetablesByTeacher[r.teacherCode] = r; });
+        state.periodTimesByTeacher = {};
+        ptRows.forEach((r) => { state.periodTimesByTeacher[r.id] = r; });
       }
       renderWeeklyTab();
     } catch (err) {
       toast('❌ ' + friendlyError(err));
     }
+  }
+
+  /** Mã lớp đã điền ở tab "🗓️ TKB lớp" cho ĐÚNG giáo viên/Thứ/buổi này (tuần
+   * đang chọn) — "áp dụng thời khoá biểu vào lịch tuần": ghép dữ liệu 2 tab
+   * lại để xem "Lịch tuần" là biết luôn đang dạy lớp nào, không cần mở
+   * riêng tab TKB. Trả về mảng mã lớp không rỗng (vd ["5/1"], có thể nhiều
+   * hơn 1 nếu các tiết trong buổi đó dạy nhiều lớp khác nhau). */
+  function classCodesFor(teacherCode, d, sessionKey) {
+    const tt = state.timetablesByTeacher[teacherCode];
+    const arr = tt && tt.days && tt.days[String(d)] && tt.days[String(d)][sessionKey];
+    if (!Array.isArray(arr)) return [];
+    // Loại trùng (nhiều tiết cùng buổi thường cùng 1 lớp) mà vẫn giữ đúng
+    // thứ tự tiết đầu tiên xuất hiện, để không lặp "5/1, 5/1, 5/1".
+    const seen = new Set();
+    const out = [];
+    // Mỗi ô-tiết của TKB lớp là {maLop, truong} (dữ liệu CŨ có thể vẫn là
+    // string thẳng) — dùng cellOf() để đọc đúng cả 2 dạng, không tự ý đọc
+    // .maLop trực tiếp (xem js/models/teaching-timetable.model.js).
+    const TT = window.EduModels.TeachingTimetable;
+    arr.forEach((v) => {
+      const code = String((TT ? TT.cellOf(v).maLop : v) || '').trim();
+      if (code && !seen.has(code)) { seen.add(code); out.push(code); }
+    });
+    return out;
   }
 
   // ============================================================
@@ -329,22 +383,42 @@
    * hình), không phải chấm màu trừu tượng khó đọc như bản trước. Chỉ vẽ
    * chip cho buổi CÓ lịch (bỏ qua buổi trống) — giáo viên bận nhiều thì
    * thấy nhiều chip, rảnh thì thẻ ngắn gọn, không có ô trống chiếm chỗ. */
-  function scheduleChip(d, sess) {
-    if (!sess || !sess.type) return '';
-    const suffix = typeColorSuffix(sess.type) || 'prep';
-    const periods = (sess.periods || []).filter((p) => !!p).length;
-    const detailParts = [sess.location, periods ? `${periods} tiết` : ''].filter(Boolean);
+  /** Mã lớp đọc THẲNG từ chính "Tiết 1-5" của buổi này (giờ là ô nhập chữ,
+   * không còn chỉ tích chọn) — gộp với mã lớp lấy từ tab "🗓️ TKB lớp"
+   * (tham số classCodes) để dù điền ở bên nào cũng hiện ra đủ, không sót. */
+  function ownPeriodClassCodes(sess) {
+    if (!sess || !Array.isArray(sess.periods)) return [];
+    const out = [];
+    sess.periods.forEach((p) => {
+      if (typeof p === 'string' && p.trim() && !out.includes(p.trim())) out.push(p.trim());
+    });
+    return out;
+  }
+
+  /** Chip lịch — CẤU TRÚC NHIỀU DÒNG giống hệt cách tab "🗓️ TKB lớp" trình
+   * bày (mỗi ô: Mã lớp trên/Trường dưới, nhãn rõ ràng), thay vì nhồi hết
+   * "Loại hình · mã lớp" vào 1 dòng như bản trước — nhìn 1 lần thấy đủ cả
+   * 3 lớp thông tin (loại hình / mã lớp / trường) mà không cần hover. */
+  function scheduleChip(d, sess, classCodes) {
+    const codes = Array.from(new Set([...ownPeriodClassCodes(sess), ...(classCodes || [])]));
+    const hasType = sess && sess.type;
+    if (!hasType && !codes.length) return '';
+    const suffix = hasType ? (typeColorSuffix(sess.type) || 'prep') : 'main';
+    const periods = hasType ? (sess.periods || []).filter((p) => !!p).length : 0;
+    const detailParts = [hasType ? sess.location : '', periods ? `${periods} tiết` : '', codes.length ? `Lớp ${codes.join(', ')}` : ''].filter(Boolean);
     const title = detailParts.length ? ` title="${esc(detailParts.join(' · '))}"` : '';
     // Không lặp lại chữ "Sáng"/"Chiều" trong từng chip nữa — vị trí CỘT
-    // (trái=Sáng, phải=Chiều, xem tc-chip-list) đã nói lên điều đó, chỉ
-    // cần "T{d}" (Thứ mấy) + loại hình, gọn và đỡ rối hơn.
-    return `<span class="tc-chip ${suffix}"${title}><b>T${d}</b> ${esc(sess.type)}</span>`;
+    // (trái=Sáng, phải=Chiều, xem tc-chip-list) đã nói lên điều đó.
+    const typeRow = `<div class="tc-chip-title"><b>T${d}</b> ${hasType ? esc(sess.type) : 'Lớp đang dạy'}</div>`;
+    const lopRow = codes.length ? `<div class="tc-chip-lop">${esc(codes.join(', '))}</div>` : '';
+    const truongRow = hasType && sess.location ? `<div class="tc-chip-truong">${esc(sess.location)}</div>` : '';
+    return `<span class="tc-chip ${suffix}"${title}>${typeRow}${lopRow}${truongRow}</span>`;
   }
   /** 1 ô trong lưới 2 cột Sáng/Chiều — luôn trả về 1 phần tử (chip màu nếu
    * có lịch, ô "—" mờ nếu buổi đó trống) để 2 cột LUÔN thẳng hàng theo
    * từng Thứ, không bao giờ lệch cột như khi chip tự wrap tự do. */
-  function scheduleChipCell(d, sess) {
-    return scheduleChip(d, sess) || `<span class="tc-chip-off">T${d} —</span>`;
+  function scheduleChipCell(d, sess, classCodes) {
+    return scheduleChip(d, sess, classCodes) || `<span class="tc-chip-off">T${d} —</span>`;
   }
 
   // Chuyển "📊 Tổng quan" ⇄ "🎴 Thẻ" — điều phối đào tạo cần thấy CẢ ĐỘI
@@ -368,7 +442,7 @@
     if (!state.currentWeekKey) {
       const msg = '<div class="empty-cell">Chưa có tuần nào — bấm "🧬 Tuần mới" hoặc "📥 Nhập từ Excel" để bắt đầu.</div>';
       cardsContainer.innerHTML = msg;
-      document.getElementById('dashMatrixBody').innerHTML = `<tr><td colspan="8" class="empty-cell">${msg.replace(/<[^>]+>/g, '')}</td></tr>`;
+      document.getElementById('dashMatrixBody').innerHTML = `<tr><td colspan="9" class="empty-cell">${msg.replace(/<[^>]+>/g, '')}</td></tr>`;
       if (progressBar) progressBar.classList.add('force-hide');
       return;
     }
@@ -423,10 +497,12 @@
       // lẫn Chiều hôm đó đều trống — giữ thẻ GV rảnh vẫn ngắn gọn.
       const chips = M.WEEKDAYS.map((d) => {
         const day = days[String(d)] || M.emptyDay();
-        const hasMorning = day.morning && day.morning.type;
-        const hasAfternoon = day.afternoon && day.afternoon.type;
+        const morningCodes = classCodesFor(t.code, d, 'morning');
+        const afternoonCodes = classCodesFor(t.code, d, 'afternoon');
+        const hasMorning = (day.morning && day.morning.type) || morningCodes.length;
+        const hasAfternoon = (day.afternoon && day.afternoon.type) || afternoonCodes.length;
         if (!hasMorning && !hasAfternoon) return '';
-        return scheduleChipCell(d, day.morning) + scheduleChipCell(d, day.afternoon);
+        return scheduleChipCell(d, day.morning, morningCodes) + scheduleChipCell(d, day.afternoon, afternoonCodes);
       }).join('');
       const chipList = chips
         ? `<div class="tc-chip-head"><span>Sáng</span><span>Chiều</span></div><div class="tc-chip-list">${chips}</div>`
@@ -468,59 +544,157 @@
     'Khám SK': 'SK', 'Nghỉ phép/ lễ': 'Nghỉ',
   };
 
-  /** 1 ô mini trong ma trận dashboard — chip CÓ CHỮ (viết tắt loại hình) +
-   * dòng chú thích nhỏ (địa điểm/số tiết) ngay bên dưới — tận dụng khoảng
-   * trống đã rộng ra sau khi chuyển từ chấm tròn sang chip, cho thấy CHI
-   * TIẾT hơn mà không cần hover; hover vẫn còn để xem bản đầy đủ (chú
-   * thích hiển thị có thể bị cắt bớt nếu quá dài). */
-  function dashMiniChip(sess) {
-    if (!sess || !sess.type) return '<div class="dash-cell-item"><span class="dash-chip empty">–</span></div>';
-    const suffix = typeColorSuffix(sess.type) || 'prep';
-    const periods = (sess.periods || []).filter((p) => !!p).length;
-    const abbr = TYPE_ABBR[sess.type] || sess.type;
-    const metaParts = [];
-    if (sess.location) metaParts.push(sess.location);
-    if (periods) metaParts.push(`${periods} tiết`);
-    const meta = metaParts.length ? `<div class="dash-chip-meta">${esc(metaParts.join(' · '))}</div>` : '';
-    const detail = [sess.type, sess.location, periods ? `${periods} tiết` : ''].filter(Boolean).join(' · ');
-    return `<div class="dash-cell-item" title="${esc(detail)}">
-      <span class="dash-chip ${suffix}">${esc(abbr)}</span>${meta}
-    </div>`;
+  // Loại hình KHÔNG tách theo tiết (áp dụng cho CẢ buổi, không có khái
+  // niệm "tiết mấy") — chỉ hiện 1 lần ở TIẾT ĐẦU TIÊN của buổi đó khi
+  // không có mã lớp nào, các tiết sau để trống, tránh lặp lại vô nghĩa.
+  const NON_PERIOD_TYPES = new Set(['Làm việc tại cty', 'WFH', 'Soạn bài', 'Nghỉ phép/ lễ', 'Khám SK']);
+
+  /** Mã lớp CỦA ĐÚNG 1 TIẾT (không phải cả buổi) — ưu tiên dữ liệu đã điền
+   * ở tab "🗓️ TKB lớp" (nguồn chi tiết nhất theo từng tiết), nếu trống thì
+   * lấy từ chính "Tiết {n}" của tab Lịch tuần (đã cho gõ mã lớp trực tiếp). */
+  function periodValueAt(teacherCode, day, thu, sessionKey, tietIdx) {
+    const TTM = window.EduModels.TeachingTimetable;
+    const tt = state.timetablesByTeacher[teacherCode];
+    const raw = tt && tt.days && tt.days[String(thu)] && tt.days[String(thu)][sessionKey] && tt.days[String(thu)][sessionKey][tietIdx];
+    const ttVal = raw != null && TTM ? TTM.cellOf(raw).maLop : '';
+    if (ttVal) return ttVal.trim();
+    const sess = day && day[sessionKey];
+    const p = sess && sess.periods && sess.periods[tietIdx];
+    return typeof p === 'string' ? p.trim() : '';
   }
 
-  /** "📊 Tổng quan" — dashboard cho điều phối đào tạo: ma trận Thứ2-7 ×
-   * mọi giáo viên (chip màu, gọn theo hàng, ghim cột tên) — thấy được CẢ
-   * ĐỘI trong 1 màn hình, không phải cuộn qua từng thẻ như chế độ "🎴 Thẻ".
-   * Hàng của GV chưa nhập lịch tự tô nền vàng nhạt (.dash-row-missing) để
-   * dễ nhận ra ngay trong bảng, không cần khối KPI/"Cần chú ý" riêng. */
+  /** 1 ô Thứ×Tiết trong ma trận "📊 Tổng quan" — CHỈ hiện đúng nội dung
+   * của TIẾT ĐÓ (mã lớp nếu có dạy), Buổi/Thời gian đã có cột riêng bên
+   * trái nên không cần nhắc lại trong từng ô nữa (khác bản trước dồn cả
+   * Buổi+Loại hình+Mã lớp+Trường vào 1 ô, dễ vỡ dòng). */
+  function dashPeriodCell(sess, value, isFirstPeriod) {
+    if (value) {
+      const hasType = sess && sess.type;
+      const suffix = hasType ? (typeColorSuffix(sess.type) || 'prep') : 'main';
+      // Kèm CHỮ viết tắt loại hình (vd "Chính · 5/2") ngay trong chip —
+      // chỉ dựa vào MÀU rất dễ nhầm giữa Dạy chính/Dạy Trám/Dự Giảng...
+      // (nhất là người mới xem lần đầu, chưa quen bảng màu), có chữ thì
+      // không cần nhớ màu vẫn đọc đúng ngay.
+      const label = hasType ? `${TYPE_ABBR[sess.type] || sess.type} · ${value}` : value;
+      const title = hasType ? `${sess.type} · ${value}` : value;
+      return `<span class="dash-chip ${suffix}" title="${esc(title)}">${esc(label)}</span>`;
+    }
+    // Loại hình không tách theo tiết (Cty/WFH/Soạn bài/Nghỉ phép.../Khám
+    // SK) — hiện đúng 1 lần ở tiết đầu buổi để biết cả buổi đang bận gì.
+    if (isFirstPeriod && sess && sess.type && NON_PERIOD_TYPES.has(sess.type)) {
+      const suffix = typeColorSuffix(sess.type) || 'prep';
+      return `<span class="dash-chip ${suffix}" title="${esc(sess.type)}">${esc(TYPE_ABBR[sess.type] || sess.type)}</span>`;
+    }
+    return '<span class="dash-chip-off">—</span>';
+  }
+
+  /** "📊 Tổng quan" — MỖI GIÁO VIÊN TÁCH THÀNH NHIỀU HÀNG, 1 hàng/tiết,
+   * đúng số tiết + giờ giấc lấy từ khung giờ đã cấu hình ở tab "🗓️ TKB
+   * lớp" (⏱️ Giờ tiết — mặc định 5 tiết Sáng/4 tiết Chiều nếu GV chưa tự
+   * cấu hình riêng). 2 cột "Buổi" (tô cam/xanh lá như TKB) và "Thời gian"
+   * ghim ngay cạnh cột tên — nhìn 1 hàng là biết NGAY tiết mấy, mấy giờ,
+   * buổi nào, đang dạy lớp gì ở từng Thứ, không cần suy luận hay hover.
+   * Hàng của GV chưa nhập lịch tự tô nền vàng nhạt (.dash-row-missing). */
+  /** Bảng chú thích màu loại hình (1 lần, tĩnh) — đối chiếu nhanh khi lỡ
+   * quên màu nào là loại hình gì, giảm nguy cơ nhầm giữa Dạy chính/Dạy
+   * Trám/Dự Giảng/Trợ Giảng... vốn chỉ khác nhau ở màu chip. */
+  function renderDashLegend() {
+    const el = document.getElementById('dashLegend');
+    if (!el || el.dataset.rendered) return;
+    el.dataset.rendered = '1';
+    el.innerHTML = Object.keys(TYPE_COLOR_SUFFIX).map((type) => {
+      const suffix = TYPE_COLOR_SUFFIX[type];
+      const abbr = TYPE_ABBR[type] || type;
+      return `<span class="dash-legend-item"><span class="dash-legend-swatch ${suffix}"></span>${esc(abbr)} = ${esc(type)}</span>`;
+    }).join('');
+  }
+
   function renderDashboardView(teachers, daysOf) {
-    // ---- Ma trận Thứ2-7 × mọi giáo viên ----
+    renderDashLegend();
     const tbody = document.getElementById('dashMatrixBody');
+    const TTM = window.EduModels.TeachingTimetable;
     if (!teachers.length) {
-      tbody.innerHTML = '<tr><td colspan="8" class="empty-cell">Không có giáo viên khớp tìm kiếm.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" class="empty-cell">Không có giáo viên khớp tìm kiếm.</td></tr>';
     } else {
       const sorted = [...teachers].sort((a, b) => a.name.localeCompare(b.name, 'vi'));
-      tbody.innerHTML = sorted.map((t) => {
+      const rowsHtml = [];
+      sorted.forEach((t) => {
         const days = daysOf(t);
-        const missingT = !M.hasAnySchedule(days);
-        const cells = M.WEEKDAYS.map((d) => {
-          const day = days[String(d)] || M.emptyDay();
-          return `<td class="dash-matrix-cell" data-day="${d}">
-            <div class="dash-cell-stack">${dashMiniChip(day.morning)}${dashMiniChip(day.afternoon)}</div>
-          </td>`;
-        }).join('');
-        return `<tr class="${missingT ? 'dash-row-missing' : ''}">
-          <td class="dash-matrix-name-col">
-            <div class="dash-matrix-name">${esc(t.name)}</div>
-            <div class="dash-matrix-code">${esc(t.code)}${missingT ? ' · <span class="tc-missing-tag">chưa có lịch</span>' : ''}</div>
-          </td>
-          ${cells}
-          <td class="dash-matrix-actions">
-            <button type="button" class="btn-edit-text" data-edit-sched="${esc(t.code)}" title="Sửa lịch của ${esc(t.name)}">✏️</button>
-            <button type="button" class="btn-edit-text" data-pdf-sched="${esc(t.code)}" title="Xuất PDF lịch của ${esc(t.name)}">🖨️</button>
-          </td>
-        </tr>`;
-      }).join('');
+        // GV đã điền mã lớp bên tab "🗓️ TKB lớp" (dù chưa chọn "loại hình
+        // phụ trách" bên đây) thì KHÔNG tính là "chưa có lịch" nữa — 2 tab
+        // giờ đã liên thông dữ liệu, tránh báo sai "thiếu" trong khi thật ra
+        // đã có TKB.
+        const tt = state.timetablesByTeacher[t.code];
+        // Mỗi ô-tiết là {maLop, truong} (object LUÔN truthy dù rỗng) — phải
+        // đọc qua cellOf().maLop mới biết ô đó THỰC SỰ có dữ liệu hay
+        // không, không thể .some(Boolean) trực tiếp trên mảng object.
+        const cellHasData = (c) => !!(TTM ? TTM.cellOf(c).maLop : c);
+        const hasTtData = !!(tt && tt.days && Object.values(tt.days).some(
+          (day) => (day.morning || []).some(cellHasData) || (day.afternoon || []).some(cellHasData),
+        ));
+        const missingT = !M.hasAnySchedule(days) && !hasTtData;
+        const missingClass = missingT ? ' dash-row-missing' : '';
+        // Ô tên giờ CAO NGUYÊN CỘT (rowspan ~9 hàng/GV) — thêm avatar + vài
+        // số liệu tuần (giống thẻ giáo viên) để lấp khoảng trắng thay vì
+        // chỉ 2 dòng chữ nổi lơ lửng giữa 1 ô rất cao, trông như "bỏ trống".
+        const stats = M.computeWeekStats(days);
+        // Chỉnh sửa/Xuất PDF giờ đi THẲNG qua cột tên giáo viên (2 nút icon
+        // nhỏ ngay trong ô tên) thay vì 1 cột "hành động" riêng ở rìa phải
+        // — cột đó gần như luôn trống (chỉ 1 hàng/GV nhờ rowspan) nên tốn
+        // hẳn 1 cột chỉ để hiện 2 icon, trong khi các cột Thứ lại chật hẹp.
+        // Bỏ cột này trả lại chỗ cho các cột Thứ giãn rộng ra, dễ đọc hơn.
+        const nameCellContent = `<div class="dash-matrix-teacher">
+            <div class="dash-matrix-avatar">${esc(initialsOf(t.name))}</div>
+            <div class="dash-matrix-name-info">
+              <div class="dash-matrix-name">${esc(t.name)}</div>
+              <div class="dash-matrix-code">${esc(t.code)}${missingT ? ' · <span class="tc-missing-tag">chưa có lịch</span>' : ''}</div>
+            </div>
+            <div class="dash-matrix-name-actions">
+              <button type="button" class="dash-name-action-btn" data-edit-sched="${esc(t.code)}" title="Sửa lịch của ${esc(t.name)}">✏️</button>
+              <button type="button" class="dash-name-action-btn" data-pdf-sched="${esc(t.code)}" title="Xuất PDF lịch của ${esc(t.name)}">🖨️</button>
+            </div>
+          </div>
+          <div class="dash-matrix-stats">
+            <span><b>${stats.periodsMain}</b> tiết chính</span>
+            <span><b>${stats.periodsSub}</b> tiết trám</span>
+          </div>`;
+
+        // Khung giờ tiết CỦA GIÁO VIÊN này (áp dụng mọi tuần, không lặp lại
+        // theo tuần) — nếu module TKB lớp chưa kịp nạp thì vẫn không vỡ
+        // trang, chỉ hiện 1 hàng gộp fallback bên dưới.
+        const pt = TTM ? TTM.clonePeriodTimes(state.periodTimesByTeacher[t.code]) : null;
+        const blocks = pt ? TTM.SESSIONS.map((sessionKey) => ({ sessionKey, periods: pt[sessionKey] || [] })).filter((b) => b.periods.length) : [];
+
+        if (!blocks.length) {
+          // Fallback: không có TTM (lỗi tải module) — vẫn hiện 1 hàng/GV
+          // như bản cũ, tối thiểu để trang không trắng xoá.
+          rowsHtml.push(`<tr class="${missingClass}">
+            <td class="dash-matrix-name-col">${nameCellContent}</td>
+            <td class="dash-matrix-buoi-cell">—</td><td class="dash-matrix-time-cell">—</td>
+            ${M.WEEKDAYS.map((d) => `<td class="dash-matrix-cell" data-day="${d}"><span class="dash-chip-off">—</span></td>`).join('')}
+          </tr>`);
+          return;
+        }
+
+        const totalRows = blocks.reduce((sum, b) => sum + b.periods.length, 0);
+        let nameCellWritten = false;
+        blocks.forEach((block, blockIdx) => {
+          block.periods.forEach((p, pi) => {
+            const dayCells = M.WEEKDAYS.map((d) => {
+              const day = days[String(d)] || M.emptyDay();
+              const val = periodValueAt(t.code, day, d, block.sessionKey, pi);
+              return `<td class="dash-matrix-cell" data-day="${d}">${dashPeriodCell(day[block.sessionKey], val, pi === 0)}</td>`;
+            }).join('');
+            const nameCellHtml = !nameCellWritten ? `<td class="dash-matrix-name-col" rowspan="${totalRows}">${nameCellContent}</td>` : '';
+            nameCellWritten = true;
+            const buoiCellHtml = pi === 0
+              ? `<td class="dash-matrix-buoi-cell dash-sess-${block.sessionKey}" rowspan="${block.periods.length}">${block.sessionKey === 'morning' ? '☀️ Sáng' : '🌙 Chiều'}</td>`
+              : '';
+            rowsHtml.push(`<tr class="${missingClass}">${nameCellHtml}${buoiCellHtml}<td class="dash-matrix-time-cell">${esc(p.start)} - ${esc(p.end)}</td>${dayCells}</tr>`);
+          });
+        });
+      });
+      tbody.innerHTML = rowsHtml.join('');
       tbody.querySelectorAll('[data-edit-sched]').forEach((b) => b.addEventListener('click', () => openSchedModal(b.dataset.editSched)));
       tbody.querySelectorAll('[data-pdf-sched]').forEach((b) => b.addEventListener('click', () => exportTeacherPdf(b.dataset.pdfSched)));
     }
@@ -619,12 +793,12 @@
           ${['', ...M.TASK_TYPES].map((t) => `<option value="${esc(t)}" ${sess.type === t ? 'selected' : ''}>${t ? esc(t) : '— (trống/nghỉ)'}</option>`).join('')}
         </select>
         <input type="text" class="my-week-loc" data-day="${d}" data-session="${sessionKey}" data-field="location" value="${esc(sess.location)}" placeholder="Địa điểm / tên trường...">
-        <div class="periods-caption">Tích vào tiết có dạy:</div>
+        <div class="periods-caption">Lớp đang dạy từng tiết (để trống nếu không dạy):</div>
         <div class="day-card-periods">
           ${[0, 1, 2, 3, 4].map((pi) => `
-            <label class="period-cell">
+            <label class="period-cell${sess.periods[pi] ? ' has-value' : ''}">
               <span class="period-num">T${pi + 1}</span>
-              <input type="checkbox" class="my-week-period" data-day="${d}" data-session="${sessionKey}" data-field="period" data-period-idx="${pi}" ${sess.periods[pi] ? 'checked' : ''} title="Có dạy tiết ${pi + 1} hay không">
+              <input type="text" class="my-week-period" data-day="${d}" data-session="${sessionKey}" data-field="period" data-period-idx="${pi}" value="${esc(sess.periods[pi] || '')}" placeholder="Lớp" title="Lớp đang dạy tiết ${pi + 1} (để trống nếu không dạy)">
             </label>`).join('')}
         </div>
       </div>`;
@@ -654,7 +828,10 @@
             sessionEl.className = 'day-card-session' + (suffix ? ` sess-${suffix}` : '');
           }
         } else if (f === 'location') sess.location = el.value;
-        else if (f === 'period') sess.periods[Number(el.dataset.periodIdx)] = el.checked; // tích chọn, không còn gõ tên lớp
+        else if (f === 'period') {
+          sess.periods[Number(el.dataset.periodIdx)] = el.value;
+          el.closest('.period-cell')?.classList.toggle('has-value', !!el.value.trim());
+        }
         renderMyWeekStatsBar();
       });
     });
@@ -751,7 +928,7 @@
 
     function sessionRows(sessionKey, sessionLabel) {
       const typeRow = `<tr class="sched-session-start">
-        <td class="sched-row-label" rowspan="7">${sessionLabel}</td>
+        <td class="sched-buoi-label ${sessionKey}" rowspan="7">${sessionLabel}</td>
         <td class="sched-row-label">Loại hình</td>
         ${M.WEEKDAYS.map((d) => {
           const sess = schedModalDraftDays[String(d)][sessionKey];
@@ -771,13 +948,17 @@
         <td class="sched-row-label">Tiết ${pi + 1}</td>
         ${M.WEEKDAYS.map((d) => {
           const sess = schedModalDraftDays[String(d)][sessionKey];
-          return `<td class="sched-period-cell"><input type="checkbox" class="sched-period" data-day="${d}" data-session="${sessionKey}" data-field="period" data-period-idx="${pi}" ${sess.periods[pi] ? 'checked' : ''} title="Có dạy tiết ${pi + 1} hay không"></td>`;
+          return `<td class="sched-period-cell"><input type="text" class="sched-period" data-day="${d}" data-session="${sessionKey}" data-field="period" data-period-idx="${pi}" value="${esc(sess.periods[pi] || '')}" placeholder="Lớp" title="Lớp đang dạy tiết ${pi + 1} (để trống nếu không dạy)"></td>`;
         }).join('')}
       </tr>`).join('');
       return typeRow + locRow + periodRows;
     }
 
     table.innerHTML = `
+      <colgroup>
+        <col class="sched-col-buoi"><col class="sched-col-label">
+        ${M.WEEKDAYS.map(() => '<col>').join('')}
+      </colgroup>
       <thead><tr><th colspan="2">Buổi</th>${dayHeaders}</tr></thead>
       <tbody>
         ${sessionRows('morning', 'SÁNG')}
@@ -792,7 +973,7 @@
         const sess = schedModalDraftDays[d][s];
         if (f === 'type') sess.type = el.value;
         else if (f === 'location') sess.location = el.value;
-        else if (f === 'period') sess.periods[Number(el.dataset.periodIdx)] = el.checked; // tích chọn, không còn gõ tên lớp
+        else if (f === 'period') sess.periods[Number(el.dataset.periodIdx)] = el.value;
         renderSchedStatsBar();
       });
     });

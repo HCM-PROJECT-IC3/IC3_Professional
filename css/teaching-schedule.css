@@ -103,7 +103,12 @@ body {
 /* Bỏ khoảng đệm trên lớn (2rem) vì admin/điều phối không còn khối banner
    giới thiệu (đã thay bằng nút ℹ️ ở tiêu đề) — nội dung quan trọng nhất
    (lịch cả đội) cần lên gần đầu màn hình nhất có thể. */
-.wrap { max-width: 1400px; margin: 0 auto; padding: 1.2rem 1.6rem 2rem }
+/* Không giới hạn max-width (bản trước 1400px để trống 2 dải lớn 2 bên
+   trên màn hình rộng) — đây là trang quản lý dữ liệu dày đặc (ma trận cả
+   đội GV), càng rộng càng đọc được nhiều cột Thứ/chip cùng lúc mà không
+   phải cuộn ngang, nên tận dụng HẾT bề ngang màn hình, chỉ chừa 1 khoảng
+   đệm 2 bên (padding) cho thoáng mắt thay vì giới hạn cứng 1 khổ cố định. */
+.wrap { margin: 0 auto; padding: 1.2rem 2rem 2rem }
 
 /* Banner giới thiệu — CHỈ còn dùng cho role giáo viên (applyRoleUI() điền
    chữ + bỏ .force-hide), vì "Lịch của tôi" không có sidebar/nút ℹ️ để
@@ -216,6 +221,10 @@ tr:last-child td { border-bottom: none }
 }
 @keyframes modalPop { from { opacity: 0; transform: translateY(8px) scale(.98) } to { opacity: 1; transform: none } }
 .modal-box.modal-wide { max-width: 1100px }
+/* Modal "Sửa lịch tuần" (schedGrid) cần rộng hơn hẳn — 2 cột nhãn (Buổi/
+   Loại hình-Địa điểm-Tiết) + 6 cột Thứ, mỗi cột cần đủ chỗ cho <select>
+   loại hình dài nhất ("Làm việc tại cty") mà không phải cuộn ngang liên tục. */
+.modal-box.modal-xwide { max-width: 1360px }
 .modal-header { display: flex; align-items: center; justify-content: space-between; gap: .8rem; padding: 1.2rem 1.4rem; border-bottom: 1px solid var(--border) }
 .modal-header h3 { font-size: 1rem; font-weight: 800 }
 .modal-close {
@@ -332,13 +341,19 @@ tr:last-child td { border-bottom: none }
 }
 .tc-chip-list { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem }
 .tc-chip, .tc-chip-off {
-  display: flex; flex-direction: column; align-items: flex-start; gap: .1rem;
+  display: flex; flex-direction: column; align-items: flex-start; gap: .2rem;
   width: 100%; box-sizing: border-box; min-width: 0;
-  padding: .38rem .55rem; border-radius: 8px;
-  font-size: .7rem; font-weight: 600; line-height: 1.25;
+  padding: .65rem .75rem; border-radius: 10px;
+  font-size: .85rem; font-weight: 700; line-height: 1.4;
 }
 .tc-chip { color: #fff }
-.tc-chip b { font-size: .6rem; font-weight: 800; text-transform: uppercase; opacity: .85 }
+.tc-chip b { font-size: .68rem; font-weight: 800; text-transform: uppercase; opacity: .9 }
+/* Cấu trúc nhiều dòng bên trong chip — GIỐNG HỆT ô trong tab "🗓️ TKB lớp"
+   (Mã lớp đậm/Trường nhạt xếp dưới) để nhìn 1 lần là nhận ra ngay 2 nơi
+   cùng 1 kiểu trình bày, không cần đối chiếu qua lại. */
+.tc-chip-title { font-size: .68rem; font-weight: 800; text-transform: uppercase; opacity: .9 }
+.tc-chip-lop { font-size: .88rem; font-weight: 800; line-height: 1.25 }
+.tc-chip-truong { font-size: .7rem; font-weight: 500; opacity: .85; line-height: 1.25 }
 .tc-chip.main    { background: var(--teal) }
 .tc-chip.sub     { background: var(--blue) }
 .tc-chip.online  { background: var(--green) }
@@ -385,31 +400,107 @@ tr:last-child td { border-bottom: none }
    ══════════════════════════════════════════════ */
 .dash-matrix-wrap {
   overflow-x: auto; border-radius: var(--radius-sm); border: 1px solid var(--border); box-shadow: var(--shadow);
-  max-height: 640px; overflow-y: auto;
+  /* Chiếm gần trọn chiều cao còn lại của màn hình thay vì 1 khối cố định
+     640px — "lịch" (ma trận) là nội dung quan trọng nhất của trang nên
+     phải là thứ được ưu tiên không gian nhất, không phải cuộn trong 1 khối
+     nhỏ giữa nhiều khoảng trắng thừa phía dưới. */
+  max-height: calc(100vh - 230px); min-height: 420px; overflow-y: auto;
 }
-.dash-matrix { width: 100%; min-width: 780px; border-collapse: collapse; background: var(--card) }
-.dash-matrix th, .dash-matrix td { padding: .5rem .6rem; border-bottom: 1px solid var(--border); vertical-align: middle }
+/* Ma trận giờ TÁCH THEO TIẾT (mỗi GV nhiều hàng, 1 hàng/tiết — xem
+   renderDashboardView() trong js/teaching-schedule.js), thêm 2 cột
+   "Buổi"/"Thời gian" ghim cạnh cột tên.
+   KHÔNG đặt min-width CỐ ĐỊNH cho cả bảng nữa (bản trước ép 1720px — lớn
+   hơn hẳn tổng min-width thật sự cần của từng cột cộng lại, nên ở màn
+   hình 100% zoom bảng bị ép rộng dư ra ngoài khung nhìn, đẩy Thứ 6/Thứ 7
+   khuất sau thanh cuộn ngang dù màn hình còn dư chỗ). Để table-layout
+   mặc định (auto) tự co theo tổng min-width của TỪNG Ô (xem các khai báo
+   min-width bên dưới) — bảng tự giãn lấp full bề ngang khi màn hình
+   rộng, và chỉ thật sự cần cuộn ngang khi màn hình hẹp hơn tổng tối
+   thiểu đó (xem thêm @media bên dưới để tự thu nhỏ tối thiểu ở màn hình
+   hẹp hơn). */
+.dash-matrix { width: 100%; border-collapse: collapse; background: var(--card) }
+.dash-matrix th, .dash-matrix td { padding: .55rem .7rem; border-bottom: 1px solid var(--border); vertical-align: middle }
 .dash-matrix th {
-  background: var(--card2); font-weight: 800; font-size: .68rem; letter-spacing: .03em;
+  background: var(--card2); font-weight: 800; font-size: .72rem; letter-spacing: .03em;
   text-transform: uppercase; color: var(--muted); text-align: center; white-space: nowrap;
   position: sticky; top: 0; z-index: 2;
 }
 .dash-matrix tbody tr:hover { background: var(--purple-lt) }
 .dash-matrix tr.dash-row-missing { background: var(--yellow-lt) }
 .dash-matrix tr.dash-row-missing:hover { background: var(--yellow-lt) }
-/* Ghim cột tên (đầu bảng) khi cuộn ngang — luôn biết đang xem hàng của ai. */
-.dash-matrix-name-col, .dash-matrix th:first-child {
-  position: sticky; left: 0; z-index: 1; background: var(--card); min-width: 132px;
+/* Ghim cột Giáo viên/Buổi/Thời gian (đầu bảng) khi cuộn ngang — luôn biết
+   đang xem hàng của ai, tiết mấy, mấy giờ dù đã cuộn sang các Thứ cuối. */
+.dash-matrix-name-col, .dash-matrix-buoi-cell, .dash-matrix-time-cell,
+.dash-matrix th:nth-child(1), .dash-matrix th:nth-child(2), .dash-matrix th:nth-child(3) {
+  position: sticky; z-index: 1; background: var(--card);
   box-shadow: 2px 0 4px rgba(0,0,0,.05);
 }
-.dash-matrix th:first-child { z-index: 3; background: var(--card2) }
-.dash-matrix tr.dash-row-missing .dash-matrix-name-col { background: var(--yellow-lt) }
-.dash-matrix tbody tr:hover .dash-matrix-name-col { background: var(--purple-lt) }
-.dash-matrix-name { font-weight: 800; font-size: .8rem }
+.dash-matrix-name-col, .dash-matrix th:nth-child(1) { left: 0; min-width: 196px }
+.dash-matrix-buoi-cell, .dash-matrix th:nth-child(2) { left: 196px; min-width: 78px; text-align: center }
+.dash-matrix-time-cell, .dash-matrix th:nth-child(3) { left: 274px; min-width: 100px; text-align: center; white-space: nowrap; font-weight: 700; font-size: .78rem }
+.dash-matrix th:nth-child(1), .dash-matrix th:nth-child(2), .dash-matrix th:nth-child(3) { z-index: 3; background: var(--card2) }
+.dash-matrix tr.dash-row-missing .dash-matrix-name-col,
+.dash-matrix tr.dash-row-missing .dash-matrix-buoi-cell,
+.dash-matrix tr.dash-row-missing .dash-matrix-time-cell { background: var(--yellow-lt) }
+.dash-matrix tbody tr:hover .dash-matrix-name-col,
+.dash-matrix tbody tr:hover .dash-matrix-buoi-cell,
+.dash-matrix tbody tr:hover .dash-matrix-time-cell { background: var(--purple-lt) }
+/* Ô Giáo viên rowspan CAO NGUYÊN CỘT (~9 hàng/GV) — avatar + số liệu tuần
+   để lấp khoảng trắng, thay vì 2 dòng chữ nổi lơ lửng giữa ô rất cao
+   trông như "bỏ trống" (phản hồi vùng trống không hợp lý).
+   Dùng FLEX (không phải grid 2 hàng cố định như bản trước) vì tên dài
+   cần xuống 2 dòng — với grid, avatar ghim cứng "hàng 1-2" nên khi tên
+   wrap xuống dòng 3 thì avatar+tên lệch nhau (avatar trôi lên cao hơn
+   khối tên/mã NV, nhìn như "rớt dòng"); flex + align-items:center luôn
+   canh avatar đúng giữa khối tên dù tên ngắn/dài/wrap mấy dòng. Nút
+   ✏️/🖨️ (trước đây là 1 cột "hành động" riêng ở rìa phải bảng) giờ nằm
+   NGAY TRONG ô tên — xem renderDashboardView() trong js/teaching-schedule.js. */
+.dash-matrix-teacher {
+  display: flex; align-items: center; gap: .55rem; text-align: left;
+}
+.dash-matrix-avatar {
+  flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%;
+  background: var(--gradient-hero); color: #fff; font-weight: 800; font-size: .78rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.dash-matrix-name-info { flex: 1; min-width: 0 }
+.dash-matrix-name { font-weight: 800; font-size: .8rem; line-height: 1.3; overflow-wrap: break-word }
 .dash-matrix-code { font-size: .68rem; color: var(--muted); font-weight: 700 }
-.dash-matrix-cell { text-align: center }
-.dash-matrix-actions { white-space: nowrap; text-align: right }
-.dash-matrix-actions button { font-size: .95rem; padding: 0 .2rem }
+.dash-matrix-name-actions { display: flex; flex-direction: column; gap: .15rem; flex-shrink: 0 }
+.dash-name-action-btn {
+  background: none; border: none; cursor: pointer; padding: .1rem .2rem;
+  font-size: .82rem; line-height: 1; border-radius: 6px; transition: var(--transition);
+}
+.dash-name-action-btn:hover { background: var(--purple-lt) }
+.dash-matrix-stats {
+  display: flex; flex-direction: column; gap: .2rem; margin-top: .6rem;
+  font-size: .7rem; color: var(--muted);
+}
+.dash-matrix-stats b { color: var(--text); font-size: .78rem }
+/* Cột "Buổi" — tô cam (Sáng)/xanh lá (Chiều) GIỐNG HỆT cột Buổi bên modal
+   "Sửa lịch" (sched-buoi-label) và tab "🗓️ TKB lớp", để mọi nơi trong
+   trang cùng 1 quy ước màu Sáng/Chiều, nhìn phát nhận ra ngay. */
+.dash-matrix-buoi-cell { font-weight: 800; font-size: .74rem; white-space: nowrap }
+.dash-matrix-buoi-cell.dash-sess-morning   { background: var(--orange-lt); color: var(--orange) }
+.dash-matrix-buoi-cell.dash-sess-afternoon { background: var(--green-lt);  color: var(--green) }
+.dash-matrix tr.dash-row-missing .dash-matrix-buoi-cell.dash-sess-morning,
+.dash-matrix tr.dash-row-missing .dash-matrix-buoi-cell.dash-sess-afternoon { background: var(--yellow-lt) }
+.dash-matrix-cell { text-align: center; min-width: 158px }
+
+/* Thu nhỏ tối thiểu của TỪNG CỘT khi màn hình không đủ ~1320px (tổng
+   min-width mặc định ở trên) — mục tiêu là bảng vẫn co vừa đủ 6 cột Thứ
+   2-7 KHÔNG bị cuộn ngang che khuất trên các màn hình laptop phổ biến
+   (1366/1280...), thay vì luôn cuộn ngang dù màn hình đã dư chỗ. */
+@media (max-width: 1400px) {
+  .dash-matrix-name-col, .dash-matrix th:nth-child(1) { min-width: 164px }
+  .dash-matrix-buoi-cell, .dash-matrix th:nth-child(2) { left: 164px; min-width: 62px }
+  .dash-matrix-time-cell, .dash-matrix th:nth-child(3) { left: 226px; min-width: 84px; font-size: .72rem }
+  .dash-matrix-cell { min-width: 112px }
+  .dash-matrix th, .dash-matrix td { padding: .45rem .45rem }
+  .dash-matrix-avatar { width: 28px; height: 28px; font-size: .7rem }
+  .dash-matrix-name { font-size: .76rem }
+  .dash-chip, .dash-chip-off { font-size: .7rem; padding: .35rem .35rem }
+}
 
 /* Cột "hôm nay" (chỉ khi tuần đang xem CHỨA ngày hôm nay) — viền dưới
    màu thương hiệu + chữ đậm ở header, tint rất nhẹ ở thân cột, đủ để
@@ -417,24 +508,20 @@ tr:last-child td { border-bottom: none }
 .dash-matrix th.today-col { color: var(--purple); box-shadow: inset 0 -3px 0 var(--purple) }
 .dash-matrix-cell.today-col { background: var(--purple-lt) }
 
-/* Chip mini CÓ CHỮ trong ma trận (viết tắt loại hình, vd "Chính"/"Trám"/
-   "Cty") — thay chấm tròn trừu tượng trước đây (phải hover mới biết đang
-   bận gì); giờ nhìn là đọc được ngay, hover vẫn xem thêm địa điểm/số tiết
-   qua title. Sáng/Chiều xếp DỌC (.dash-cell-stack) thay vì cạnh nhau. */
-.dash-cell-stack { display: flex; flex-direction: column; gap: .5rem; align-items: stretch }
-.dash-cell-item { display: flex; flex-direction: column; align-items: center; gap: .15rem }
-.dash-chip {
+/* Mỗi ô Thứ×Tiết giờ CHỈ còn đúng 1 chip (mã lớp của ĐÚNG tiết đó, hoặc
+   loại hình nếu là buổi không tách tiết như Cty/WFH) — Buổi/Thời gian đã
+   có cột riêng bên trái nên không cần nhồi thêm gì vào đây nữa, chip gọn
+   1 dòng, không còn nguy cơ vỡ chữ như bản dồn 3 lớp thông tin trước. */
+.dash-chip, .dash-chip-off {
   display: inline-flex; align-items: center; justify-content: center;
-  padding: .18rem .4rem; border-radius: 6px;
-  font-size: .66rem; font-weight: 700; color: #fff; white-space: nowrap;
-  background: var(--card2); border: 1px solid var(--border);
+  width: 100%; box-sizing: border-box; min-width: 0;
+  padding: .4rem .5rem; border-radius: 8px;
+  font-size: .76rem; font-weight: 800; line-height: 1.25; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
 }
-.dash-chip.empty { color: var(--muted); font-weight: 400; background: none; border-color: transparent }
-/* Chú thích địa điểm/số tiết dưới chip — tận dụng khoảng trống cột đã
-   rộng ra, cắt bớt (ellipsis) nếu địa điểm quá dài, xem đầy đủ qua title. */
-.dash-chip-meta {
-  font-size: .6rem; color: var(--muted); max-width: 108px;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+.dash-chip { color: #fff }
+.dash-chip-off {
+  color: var(--muted); background: var(--card2); border: 1px dashed var(--border); font-weight: 400;
 }
 .dash-chip.main    { background: var(--teal) }
 .dash-chip.sub     { background: var(--blue) }
@@ -446,6 +533,31 @@ tr:last-child td { border-bottom: none }
 .dash-chip.onsite, .dash-chip.health { background: var(--red) }
 .dash-chip.remote  { background: var(--yellow); color: #4a3600 }
 .dash-chip.leave   { background: var(--text); color: var(--bg) }
+
+/* Chú thích màu — đối chiếu nhanh Chính/Trám/Dự Giảng/Trợ Giảng... vốn
+   chỉ khác màu nhau, dùng CHUNG đúng class màu .dash-chip.* ở trên nên
+   luôn khớp 100% với màu thật trong bảng, không lo lệch màu do khai báo
+   trùng lặp ở 2 nơi. */
+.dash-legend {
+  display: flex; flex-wrap: wrap; gap: .5rem 1rem;
+  padding: .7rem .9rem; margin-bottom: .8rem;
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: .74rem; color: var(--muted);
+}
+.dash-legend-item { display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap }
+.dash-legend-swatch {
+  display: inline-block; width: 12px; height: 12px; border-radius: 4px; flex-shrink: 0;
+}
+.dash-legend-swatch.main    { background: var(--teal) }
+.dash-legend-swatch.sub     { background: var(--blue) }
+.dash-legend-swatch.online  { background: var(--green) }
+.dash-legend-swatch.review  { background: var(--purple) }
+.dash-legend-swatch.assist  { background: var(--pink) }
+.dash-legend-swatch.demo    { background: var(--orange) }
+.dash-legend-swatch.prep    { background: var(--muted) }
+.dash-legend-swatch.onsite, .dash-legend-swatch.health { background: var(--red) }
+.dash-legend-swatch.remote  { background: var(--yellow) }
+.dash-legend-swatch.leave   { background: var(--text) }
 
 /* ══════════════════════════════════════════════
    Bố cục menu NẰM NGANG Ở TRÊN, 2 HÀNG CÂN ĐỐI — mỗi hàng luôn chia rõ
@@ -488,30 +600,57 @@ tr:last-child td { border-bottom: none }
 
 .weekly-main { min-width: 0 }
 
-/* Modal lưới tuần của 1 giáo viên: bảng 7 cột (nhãn + Thứ2..7), mỗi buổi
-   là 1 nhóm hàng (loại hình / địa điểm / tiết 1-5). */
-.sched-grid-wrap { overflow-x: auto; border-radius: var(--radius-sm) }
-.sched-grid { width: 100%; border-collapse: collapse; min-width: 760px }
-.sched-grid th, .sched-grid td { border: 1px solid var(--border); padding: .45rem .5rem; font-size: .78rem; vertical-align: middle }
-.sched-grid th { background: var(--card2); font-weight: 800; text-align: center; white-space: nowrap }
+/* Modal lưới tuần của 1 giáo viên: bảng 8 cột (Buổi + Loại hình/Địa
+   điểm/Tiết + Thứ2..7) — phỏng THEO ĐÚNG bố cục file Excel gốc (cột
+   "Buổi" tô màu riêng SÁNG=cam/CHIỀU=xanh lá, viền kẻ đủ mọi ô, mỗi cột
+   Thứ rộng bằng nhau) để dễ đối chiếu, không còn kiểu canh lệch/ô to nhỏ
+   khác nhau giữa các hàng. */
+.sched-grid-wrap { overflow-x: auto; border-radius: var(--radius-sm); border: 1px solid var(--border) }
+.sched-grid { width: 100%; border-collapse: collapse; min-width: 900px; table-layout: fixed }
+.sched-grid th, .sched-grid td { border: 1px solid var(--border); padding: .5rem .55rem; font-size: .8rem; vertical-align: middle }
+.sched-grid th { background: var(--card2); font-weight: 800; text-align: center }
+.sched-grid col.sched-col-buoi { width: 44px }
+.sched-grid col.sched-col-label { width: 108px }
+/* Cột nhãn thứ 2 ("Loại hình"/"Địa điểm"/"Tiết N") — CĂN TRÁI (không phải
+   phải như bản trước) để đọc tự nhiên hơn, cùng 1 điểm bắt đầu cho mọi
+   nhãn dù ngắn dài khác nhau, tránh cảm giác "lệch" khi nhãn ngắn/dài xen kẽ. */
 .sched-grid td.sched-row-label {
   background: var(--card2); font-weight: 800; color: var(--muted);
-  white-space: nowrap; text-align: right; font-size: .72rem;
+  white-space: nowrap; text-align: left; font-size: .74rem;
 }
-.sched-grid tr.sched-session-start td.sched-row-label { border-top: 2px solid var(--border) }
+/* Cột "Buổi" (SÁNG/CHIỀU, rowspan 7) — tô màu + CHỮ ĐỨNG (viết dọc) như
+   trong file Excel gốc, giúp phân định rõ khối Sáng/Chiều dù bảng dài
+   phải cuộn qua nhiều Thứ. */
+.sched-grid td.sched-buoi-label {
+  text-align: center; font-weight: 800; font-size: .78rem; letter-spacing: .05em;
+  writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg);
+  padding: .8rem .4rem;
+}
+.sched-grid td.sched-buoi-label.morning   { background: var(--orange-lt); color: var(--orange) }
+.sched-grid td.sched-buoi-label.afternoon { background: var(--green-lt);  color: var(--green) }
+.sched-grid tr.sched-session-start td { border-top: 2px solid var(--border) }
 .sched-grid select.sched-type, .sched-grid input.sched-loc {
-  width: 100%; min-width: 108px; font-family: inherit; font-size: .76rem;
-  padding: .35rem .45rem; border-radius: 6px; border: 1.5px solid var(--border);
+  width: 100%; box-sizing: border-box; font-family: inherit; font-size: .78rem;
+  height: 34px; padding: 0 .5rem; border-radius: 6px; border: 1.5px solid var(--border);
   background: var(--card); color: var(--text);
 }
 .sched-grid select.sched-type:focus, .sched-grid input.sched-loc:focus {
   outline: none; border-color: var(--purple); box-shadow: 0 0 0 3px var(--purple-lt);
 }
-/* Tiết 1-5: tích chọn (checkbox) "có dạy hay không", không còn gõ tên lớp. */
-.sched-grid td.sched-period-cell { text-align: center }
+/* Tiết 1-5: gõ THẲNG mã lớp đang dạy (để trống = không dạy tiết đó) —
+   không còn chỉ tích chọn có/không như bản trước, vì điều phối cần biết
+   NGAY đang dạy lớp nào mà không phải mở riêng tab "🗓️ TKB lớp". */
+.sched-grid td.sched-period-cell { text-align: center; padding: .3rem !important }
 .sched-grid input.sched-period {
-  width: 18px; height: 18px; cursor: pointer; accent-color: var(--purple);
+  width: 100%; box-sizing: border-box; text-align: center;
+  font-family: inherit; font-size: .78rem; font-weight: 700; color: var(--text);
+  height: 32px; padding: 0 .3rem; border-radius: 6px; border: 1.5px solid var(--border);
+  background: var(--card);
 }
+.sched-grid input.sched-period:focus {
+  outline: none; border-color: var(--purple); box-shadow: 0 0 0 3px var(--purple-lt);
+}
+.sched-grid input.sched-period::placeholder { color: var(--border) }
 /* Chế độ "chỉ xem" (giáo viên) — làm mờ nhẹ + đổi con trỏ để rõ ràng đây
    là dữ liệu không sửa được, tránh nhầm tưởng ô bị lỗi/không phản hồi. */
 .sched-grid select.sched-type:disabled, .sched-grid input:disabled {
@@ -603,19 +742,26 @@ tr:last-child td { border-bottom: none }
 .day-card select.my-week-type:focus, .day-card input.my-week-loc:focus {
   outline: none; border-color: var(--purple); box-shadow: 0 0 0 3px var(--purple-lt);
 }
-/* Tiết 1-5: tích chọn (checkbox) "có dạy tiết đó hay không" — nhãn T1..T5
-   cố định phía trên từng ô tích, không còn gõ tên lớp. */
+/* Tiết 1-5: gõ THẲNG mã lớp đang dạy (để trống = không dạy tiết đó) —
+   nhãn T1..T5 cố định phía trên từng ô, viền tô đậm khi đã có lớp
+   (.has-value, xem renderMyWeekCards()) để dễ liếc thấy tiết nào đã điền. */
 .periods-caption { font-size: .66rem; color: var(--muted); margin-top: .1rem }
 .day-card-periods { display: grid; grid-template-columns: repeat(5, 1fr); gap: .3rem }
 .period-cell {
   display: flex; flex-direction: column; align-items: center; gap: .3rem;
-  cursor: pointer; padding: .35rem .2rem; border-radius: 8px;
+  padding: .35rem .2rem; border-radius: 8px;
   background: var(--card); border: 1.5px solid var(--border);
   transition: border-color .15s ease, background .15s ease;
 }
-.period-cell:has(input:checked) { border-color: var(--purple); background: var(--purple-lt) }
+.period-cell.has-value { border-color: var(--purple); background: var(--purple-lt) }
 .period-num { font-size: .62rem; font-weight: 800; color: var(--muted); white-space: nowrap }
-.period-cell input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--purple) }
+.period-cell input {
+  width: 100%; box-sizing: border-box; text-align: center; font-family: inherit;
+  font-size: .74rem; font-weight: 700; color: var(--text);
+  padding: .3rem .2rem; border-radius: 6px; border: 1.5px solid var(--border); background: var(--card);
+}
+.period-cell input:focus { outline: none; border-color: var(--purple); box-shadow: 0 0 0 3px var(--purple-lt) }
+.period-cell input::placeholder { color: var(--border) }
 
 /* Thanh thống kê + nút Lưu — đặt trong 1 khối nổi bật (card riêng) ngay
    dưới lưới thẻ ngày, nút Lưu tách hàng riêng bên dưới thống kê để luôn
@@ -631,4 +777,139 @@ tr:last-child td { border-bottom: none }
 @media (max-width: 720px) {
   .my-week-footer-actions { flex-direction: column-reverse }
   .my-week-footer-actions .btn { width: 100% }
+}
+
+/* ══════════════════════════════════════════════
+   TAB "🗓️ TKB LỚP" — thời khoá biểu dạng LƯỚI TIẾT HỌC (Buổi/Tiết/Thời
+   gian × Thứ2-7), phỏng theo mẫu thời khoá biểu giấy nhà trường (banner
+   "IG VIỆT NAM") — mỗi Thứ 1 màu riêng cho vui mắt/dễ định vị như bản
+   giấy gốc, ô nhập mã lớp tự do cho từng tiết.
+   ══════════════════════════════════════════════ */
+.tt-empty {
+  background: var(--card); border: 1.5px dashed var(--border); border-radius: var(--radius-sm);
+  padding: 2rem; text-align: center; color: var(--muted); font-size: .88rem;
+}
+.tt-poster-head { text-align: center; margin-bottom: 1rem }
+.tt-poster-title { font-size: 1.15rem; font-weight: 800; color: var(--text) }
+.tt-poster-sub { font-size: .82rem; color: var(--muted); font-weight: 700; margin-top: .2rem }
+
+.tt-grid { width: 100%; min-width: 920px; border-collapse: collapse; background: var(--card) }
+.tt-grid th, .tt-grid td { border: 1px solid var(--border); padding: .5rem .55rem; font-size: .82rem; text-align: center; vertical-align: middle }
+.tt-grid thead th { background: var(--card2); font-weight: 800; color: var(--text) }
+/* Mỗi Thứ 1 màu riêng — giống bản giấy gốc, giúp lướt mắt định vị nhanh
+   cột đang cần, đặc biệt hữu ích khi bảng dài phải cuộn ngang. */
+.tt-day-head.tt-day-0 { background: var(--blue-lt);   color: var(--blue) }
+.tt-day-head.tt-day-1 { background: var(--teal-lt);   color: var(--teal) }
+.tt-day-head.tt-day-2 { background: var(--purple-lt); color: var(--purple) }
+.tt-day-head.tt-day-3 { background: var(--orange-lt); color: var(--orange) }
+.tt-day-head.tt-day-4 { background: rgba(221,79,166,.16); color: var(--pink) }
+.tt-day-head.tt-day-5 { background: var(--green-lt);  color: var(--green) }
+
+.tt-buoi-cell {
+  font-weight: 800; font-size: .8rem; line-height: 1.5; white-space: nowrap;
+  width: 64px;
+}
+.tt-sess-morning   { background: var(--yellow-lt); color: #a97a00 }
+.tt-sess-afternoon { background: var(--purple-lt); color: var(--purple) }
+.tt-tiet-cell { font-weight: 800; color: var(--muted); width: 44px }
+.tt-time-cell { font-weight: 700; color: var(--text); white-space: nowrap; width: 108px }
+.tt-break-row td.tt-break-label {
+  background: var(--card2); color: var(--muted); font-weight: 700; font-size: .76rem;
+  padding: .35rem;
+}
+/* Mỗi ô Thứ×Tiết giờ xếp CHỒNG 2 ô nhập (Mã lớp trên, Trường dưới) — 1
+   giáo viên có thể dạy nhiều trường khác nhau, kể cả đổi trường giữa các
+   tiết trong cùng 1 buổi, nên "trường" phải tách theo TỪNG TIẾT thay vì
+   gộp chung như field "địa điểm" cấp buổi ở tab Lịch tuần.
+   QUAN TRỌNG: display:flex phải đặt trên .tt-cell-inner (1 <div> con),
+   TUYỆT ĐỐI không đặt thẳng lên .tt-cell (chính là <td>) — 1 <td> bị đổi
+   display khác "table-cell" sẽ khiến trình duyệt loại nó khỏi thuật toán
+   layout bảng, vỡ toàn bộ độ rộng cột (từng bị 1 cột phình to nuốt hết
+   nội dung các cột Thứ khác). */
+.tt-cell { padding: .3rem !important; min-width: 108px }
+.tt-cell-inner { display: flex; flex-direction: column; gap: .25rem }
+.tt-input {
+  width: 100%; box-sizing: border-box; text-align: center; font-family: inherit;
+  font-size: .82rem; font-weight: 700; color: var(--text);
+  padding: .4rem .3rem; border-radius: 6px; border: 1.5px solid transparent;
+  background: var(--card2);
+}
+.tt-input:focus { outline: none; border-color: var(--purple); box-shadow: 0 0 0 3px var(--purple-lt); background: var(--card) }
+.tt-input::placeholder { color: var(--border) }
+/* Ô "Trường" — nhạt/nhỏ hơn hẳn ô "Mã lớp" để mắt vẫn ưu tiên đọc mã lớp
+   trước (thông tin chính), trường là chú thích phụ thêm. */
+.tt-input-truong {
+  font-size: .68rem; font-weight: 600; color: var(--muted); padding: .3rem .3rem;
+  background: transparent; border-style: dashed; border-color: var(--border);
+}
+.tt-input-truong:focus { background: var(--card) }
+
+/* ---- Modal "⏱️ Giờ tiết" — 2 cột Sáng/Chiều, mỗi tiết 1 hàng giờ vào/ra
+   có thể thêm/bớt (số tiết mỗi trường không nhất thiết giống nhau). ---- */
+.pt-cols { display: flex; gap: 1rem; flex-wrap: wrap }
+.pt-col { flex: 1; min-width: 260px; display: flex; flex-direction: column; gap: .5rem }
+.pt-col-title { font-weight: 800; font-size: .85rem }
+.pt-row { display: flex; align-items: center; gap: .4rem }
+.pt-row-num { font-size: .74rem; font-weight: 700; color: var(--muted); width: 52px; flex-shrink: 0 }
+.pt-row .form-input { flex: 1; min-width: 0 }
+.pt-remove-btn {
+  background: none; border: none; color: var(--red); font-weight: 800; cursor: pointer;
+  padding: .2rem .4rem; flex-shrink: 0;
+}
+.pt-add-btn { align-self: flex-start; margin-top: .2rem }
+
+/* ---- In "🖨️ In" (window.print()) — chỉ hiện đúng khối thời khoá biểu,
+   ẩn topbar/sidebar/nút/modal/toast, tận dụng khổ giấy ngang cho đủ 6
+   cột Thứ. Bật bằng class .tt-printing gắn tạm vào <body> (xem
+   js/teaching-timetable.js), tự gỡ khi đóng hộp thoại in (afterprint). ---- */
+/* ---- Modal "📥 Nhập TKB lớp từ Excel" + mẹo dán bảng trực tiếp — dùng
+   lại đúng .import-hint/.import-summary/.import-stat đã có sẵn (giống
+   modal "Nhập từ Excel" của tab Lịch tuần) để đồng bộ giao diện. ---- */
+#ttImportFileInput { margin-top: .6rem }
+.tt-paste-hint {
+  font-size: .8rem; line-height: 1.6; color: var(--muted);
+  background: var(--purple-lt); border: 1.5px solid rgba(79,107,255,.25);
+  border-radius: var(--radius-sm); padding: .7rem 1rem; margin-bottom: 1rem;
+}
+.tt-paste-hint b { color: var(--text) }
+#ttImportFileInput ~ .tt-import-progress { margin-top: .6rem }
+.tt-import-progress {
+  font-size: .8rem; font-weight: 700; color: var(--purple);
+  display: flex; align-items: center; gap: .5rem;
+}
+.tt-import-progress::before {
+  content: ''; width: 14px; height: 14px; border-radius: 50%;
+  border: 2.5px solid var(--purple-lt); border-top-color: var(--purple);
+  animation: ttImportSpin .7s linear infinite; flex-shrink: 0;
+}
+@keyframes ttImportSpin { to { transform: rotate(360deg) } }
+/* ---- Khối kiểm duyệt (giờ tiết/trường lệch so với dữ liệu đã lưu) —
+   LUÔN hiện thẳng (không giấu trong <details>) để thấy ngay trước khi
+   bấm "Nhập dữ liệu", mỗi dòng 1 cảnh báo, màu vàng cảnh báo. ---- */
+.tt-import-checks { display: flex; flex-direction: column; gap: .4rem }
+.tt-import-check-row {
+  display: flex; align-items: flex-start; gap: .5rem;
+  font-size: .8rem; line-height: 1.5; padding: .5rem .7rem;
+  border-radius: 8px; border: 1.5px solid rgba(246,167,35,.35); background: var(--yellow-lt);
+}
+.tt-import-check-row b { color: var(--text) }
+.tt-import-errors-details { font-size: .76rem; color: var(--muted) }
+.tt-import-errors-details summary { cursor: pointer; font-weight: 700 }
+.tt-import-errors-text {
+  width: 100%; min-height: 90px; margin-top: .5rem; font-family: 'JetBrains Mono', 'Consolas', monospace;
+  font-size: .74rem; padding: .6rem; border-radius: var(--radius-sm); border: 1.5px solid var(--border);
+  background: var(--card2); color: var(--text); resize: vertical;
+}
+
+@media print {
+  body.tt-printing .topbar,
+  body.tt-printing #ttToolbar,
+  body.tt-printing .modal-overlay,
+  body.tt-printing .toast,
+  body.tt-printing #panel-weekly,
+  body.tt-printing #panel-teachers,
+  body.tt-printing .tt-empty { display: none !important; }
+  body.tt-printing .wrap { max-width: none; padding: 0 }
+  body.tt-printing .tt-grid { min-width: 0 }
+  @page { size: landscape; margin: 10mm; }
 }

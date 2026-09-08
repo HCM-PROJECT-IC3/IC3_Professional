@@ -221,5 +221,18 @@ service cloud.firestore {
         || (isApprovedTeacher() && request.resource.data.teacherCode == myTeacherCode());
       allow delete: if isAdmin() || isCoordinator();
     }
+
+    // ---- Tab "🗓️ TKB lớp" (thời khoá biểu dạng lưới tiết học, treo lớp) —
+    //      quản lý bởi Admin/Điều phối; giáo viên chỉ đọc ĐÚNG bản ghi của
+    //      chính mình (xem lịch tiết của mình), không sửa được. ----
+    match /teaching_timetable_periods/{teacherCode} {
+      allow read: if isAdmin() || isCoordinator() || (isApprovedTeacher() && teacherCode == myTeacherCode());
+      allow write: if isAdmin() || isCoordinator();
+    }
+    match /teaching_timetable/{docId} {
+      allow read: if isAdmin() || isCoordinator()
+        || (isApprovedTeacher() && resource.data.teacherCode == myTeacherCode());
+      allow write: if isAdmin() || isCoordinator();
+    }
   }
 }

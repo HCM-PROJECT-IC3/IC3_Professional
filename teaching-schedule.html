@@ -46,6 +46,7 @@
         <div class="weekly-topbar-row">
           <div class="tabs" role="tablist" id="mainTabs">
             <button type="button" class="tab-btn active" data-tab="weekly" role="tab">📅 Lịch tuần</button>
+            <button type="button" class="tab-btn" data-tab="timetable" role="tab" id="timetableTabBtn">🗓️ TKB lớp</button>
             <button type="button" class="tab-btn" data-tab="teachers" role="tab" id="teachersTabBtn">👤 Giáo viên</button>
           </div>
 
@@ -89,15 +90,32 @@
              tự tô nền vàng nhạt để dễ nhận ra, không cần khối KPI/"Cần
              chú ý" riêng nữa). ============ -->
         <div class="weekly-dashboard" id="weeklyDashboard">
+          <!-- Chú thích màu loại hình — chip mã lớp CHỈ dựa vào màu rất dễ
+               nhầm giữa Dạy chính/Dạy Trám/Dự Giảng... (đã kèm thêm chữ
+               viết tắt trong từng chip, xem dashPeriodCell(), nhưng vẫn
+               cần 1 bảng đối chiếu màu cố định ở đây cho chắc). -->
+          <div class="dash-legend" id="dashLegend"></div>
           <div class="dash-matrix-wrap" id="dashMatrixWrap">
             <table class="dash-matrix">
+              <!-- Mỗi giáo viên giờ tách thành NHIỀU HÀNG — 1 hàng/tiết,
+                   đúng số tiết + giờ giấc lấy từ khung giờ đã cấu hình ở
+                   tab "🗓️ TKB lớp" (⏱️ Giờ tiết) — kèm 2 cột "Buổi" (Sáng/
+                   Chiều, tô màu cam/xanh lá như TKB) và "Thời gian" ngay
+                   cạnh cột tên, để nhìn 1 hàng là biết NGAY tiết mấy, mấy
+                   giờ, buổi nào, lớp gì — xem renderDashboardView() trong
+                   js/teaching-schedule.js. -->
               <thead><tr>
                 <th class="dash-matrix-name-col">Giáo viên</th>
-                <th id="dashDayHead2">Thứ 2</th><th id="dashDayHead3">Thứ 3</th><th id="dashDayHead4">Thứ 4</th>
-                <th id="dashDayHead5">Thứ 5</th><th id="dashDayHead6">Thứ 6</th><th id="dashDayHead7">Thứ 7</th>
-                <th></th>
+                <th class="dash-matrix-buoi-col">Buổi</th>
+                <th class="dash-matrix-time-col">Thời gian</th>
+                <th id="dashDayHead2">Thứ 2</th>
+                <th id="dashDayHead3">Thứ 3</th>
+                <th id="dashDayHead4">Thứ 4</th>
+                <th id="dashDayHead5">Thứ 5</th>
+                <th id="dashDayHead6">Thứ 6</th>
+                <th id="dashDayHead7">Thứ 7</th>
               </tr></thead>
-              <tbody id="dashMatrixBody"><tr><td colspan="8" class="empty-cell">Đang tải...</td></tr></tbody>
+              <tbody id="dashMatrixBody"><tr><td colspan="9" class="empty-cell">Đang tải...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -132,6 +150,57 @@
     </div>
   </section>
 
+  <!-- ============ TAB: TKB LỚP (thời khoá biểu dạng lưới tiết học, treo
+       lớp) — điền MÃ LỚP đang dạy cho từng tiết/Thứ, phỏng theo đúng mẫu
+       thời khoá biểu giấy nhà trường; khác tab "Lịch tuần" vốn ghi LOẠI
+       HÌNH PHỤ TRÁCH ở cấp cả buổi, không tách theo tiết. ============ -->
+  <section class="tab-panel" id="panel-timetable">
+    <div class="panel-toolbar" id="ttToolbar">
+      <div class="tabs" role="tablist">
+        <button type="button" class="tab-btn" data-tab="weekly" role="tab">📅 Lịch tuần</button>
+        <button type="button" class="tab-btn active" data-tab="timetable" role="tab">🗓️ TKB lớp</button>
+        <button type="button" class="tab-btn" data-tab="teachers" role="tab">👤 Giáo viên</button>
+      </div>
+      <div class="sidebar-group">
+        <label for="ttWeekSelect">🗓️ Tuần</label>
+        <select id="ttWeekSelect" class="form-input"><option value="">-- Chưa có tuần nào --</option></select>
+      </div>
+      <div class="sidebar-group">
+        <label for="ttTeacherSelect">👤 Giáo viên</label>
+        <select id="ttTeacherSelect" class="form-input"><option value="">-- Chọn giáo viên --</option></select>
+      </div>
+      <div class="push-right sidebar-actions">
+        <button type="button" class="btn btn-secondary" id="ttPeriodTimesBtn" title="Sửa giờ vào/ra từng tiết của riêng giáo viên này — mỗi trường quy định giờ khác nhau nên cập nhật thủ công theo đúng trường đang dạy">⏱️ Giờ tiết</button>
+        <button type="button" class="btn btn-secondary" id="ttImportBtn" title="Nhập hàng loạt mã lớp cho nhiều giáo viên/nhiều ngày cùng lúc từ 1 file Excel">📥 Nhập từ Excel</button>
+        <button type="button" class="btn btn-ghost" id="ttPrintBtn" title="In/Xuất PDF đúng thời khoá biểu đang hiển thị (dùng hộp thoại in của trình duyệt)">🖨️ In</button>
+        <button type="button" class="btn btn-primary" id="ttSaveBtn">💾 Lưu thời khoá biểu</button>
+      </div>
+    </div>
+
+    <div class="tt-empty force-hide" id="ttEmpty">Chọn 1 tuần và 1 giáo viên ở trên để xem/sửa thời khoá biểu.</div>
+    <div class="tt-paste-hint force-hide" id="ttPasteHint">
+      💡 Mẹo: mỗi tiết có 2 ô — <b>Mã lớp</b> (trên) và <b>Trường</b> (dưới, để trống nếu dạy cùng trường như tiết trước) —
+      vì 1 giáo viên có thể dạy linh hoạt nhiều trường khác nhau, kể cả đổi trường giữa các tiết trong cùng 1 buổi.
+      Bôi đen 1 vùng ô Mã lớp trong Excel/Google Sheets rồi <b>Ctrl+C</b>, bấm vào đúng ô Mã lớp muốn bắt đầu điền rồi
+      <b>Ctrl+V</b> — hệ thống tự điền tiếp theo hàng/cột, không cần gõ tay từng ô.
+    </div>
+
+    <div class="tt-grid-wrap force-hide" id="ttGridWrap">
+      <div class="tt-poster-head" id="ttPosterHead"></div>
+      <div class="table-scroll">
+        <table class="tt-grid" id="ttGrid"></table>
+      </div>
+      <!-- Gợi ý "Trường"/"Mã lớp" khi gõ (combo-box, vẫn gõ tự do được nếu
+           không có trong danh sách) — nạp động theo giáo viên/tuần đang
+           xem, xem loadSuggestions() trong js/teaching-timetable.js.
+           "Trường" lấy từ tab Lịch tuần + lịch sử TKB của GV này; "Mã lớp"
+           lấy từ lịch sử TKB của GV này + mọi GV khác trong tuần đang xem
+           (giống cách chọn từ danh sách có sẵn ở file Excel gốc). -->
+      <datalist id="ttTruongOptions"></datalist>
+      <datalist id="ttLopOptions"></datalist>
+    </div>
+  </section>
+
   <!-- ============ TAB: TEACHERS ============ -->
   <section class="tab-panel" id="panel-teachers">
     <div class="panel-toolbar">
@@ -140,6 +209,7 @@
            ngay từ đây, không phải phụ thuộc 1 hàng tab dùng chung riêng. -->
       <div class="tabs" role="tablist">
         <button type="button" class="tab-btn" data-tab="weekly" role="tab">📅 Lịch tuần</button>
+        <button type="button" class="tab-btn" data-tab="timetable" role="tab">🗓️ TKB lớp</button>
         <button type="button" class="tab-btn active" data-tab="teachers" role="tab">👤 Giáo viên</button>
       </div>
       <div class="panel-toolbar-info"><span id="teacherCount">0</span> giáo viên</div>
@@ -250,7 +320,7 @@
 
 <!-- ============ MODAL: LƯỚI LỊCH TUẦN CỦA 1 GIÁO VIÊN ============ -->
 <div class="modal-overlay" id="schedModalOverlay">
-  <div class="modal-box modal-wide">
+  <div class="modal-box modal-wide modal-xwide">
     <div class="modal-header">
       <h3 id="schedModalTitle">📅 Lịch tuần</h3>
       <button type="button" class="modal-close" id="schedModalCloseBtn">✕</button>
@@ -264,6 +334,89 @@
     <div class="modal-footer">
       <button type="button" class="btn btn-ghost" id="schedModalCancelBtn">Huỷ</button>
       <button type="button" class="btn btn-primary" id="schedModalSaveBtn">💾 Lưu lịch tuần</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: GIỜ TIẾT (khung giờ riêng của 1 giáo viên) ============ -->
+<div class="modal-overlay" id="periodTimesModalOverlay">
+  <div class="modal-box modal-wide">
+    <div class="modal-header">
+      <h3 id="periodTimesModalTitle">⏱️ Giờ tiết</h3>
+      <button type="button" class="modal-close" id="periodTimesCloseBtn">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="import-hint">
+        Mỗi trường quy định giờ vào/ra tiết học khác nhau — sửa lại đúng giờ của trường
+        giáo viên này đang dạy. Áp dụng cho <b>mọi tuần</b> (không phải chỉ tuần đang xem).
+        Đổi <b>số tiết</b> (thêm/bớt dòng) nếu buổi Sáng/Chiều ở trường đó không phải 5/4 tiết.
+      </div>
+      <div class="pt-cols" id="periodTimesBody"></div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" id="periodTimesCancelBtn">Huỷ</button>
+      <button type="button" class="btn btn-primary" id="periodTimesSaveBtn">💾 Lưu giờ tiết</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: 📥 NHẬP TKB TỪ EXCEL ============
+     Định dạng "danh sách dài" (1 dòng = 1 tiết của 1 giáo viên) — KHÔNG
+     phải bảng dạng poster (Buổi/Tiết × Thứ) vì bảng poster hay có ô GỘP
+     (2 giáo viên chung 1 ngày, như mẫu "HCM0328" + "HCM0292" cùng Thứ
+     Hai) mà việc suy luận ô gộp thuộc về ai là nguồn gốc lỗi khi thử làm
+     bằng nhận diện ảnh (OCR) trước đây.
+
+     KIỂM DUYỆT trước khi ghi (tránh điền nhầm dữ liệu của giáo viên khác
+     chỉ vì gõ sai/nhầm 1 Mã GV trong file) — mỗi dòng phải qua đủ:
+     - Mã GV: phải tồn tại trong hệ thống.
+     - Tên GV: BẮT BUỘC và phải khớp đúng tên đã lưu của mã GV đó — đây là
+       chốt chặn chính, sai/thiếu tên sẽ bị BỎ QUA dòng đó dù mã GV đúng
+       (phòng trường hợp gõ nhầm mã của người khác).
+     - Giờ tiết: nếu khác giờ đã cấu hình trước đó cho đúng tiết này, vẫn
+       cho ghi nhưng CẢNH BÁO rõ để tự xác nhận có đúng ý không.
+     - Trường: LƯU vào đúng ô-tiết đó (1 giáo viên có thể dạy nhiều trường
+       khác nhau ngay trong cùng 1 buổi); nếu có ghi và tab "Lịch tuần" đã
+       có "địa điểm" khác cho đúng buổi đó → CẢNH BÁO (không chặn, vì địa
+       điểm ghi tự do nên tên gọi có thể không giống hệt). -->
+<div class="modal-overlay" id="ttImportModalOverlay">
+  <div class="modal-box modal-wide">
+    <div class="modal-header">
+      <h3>📥 Nhập TKB lớp từ Excel</h3>
+      <button type="button" class="modal-close" id="ttImportCloseBtn">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="import-hint">
+        File Excel cần đúng 9 cột theo thứ tự: <b>Mã GV</b>, <b>Tên GV</b> (bắt buộc — đối chiếu đúng
+        giáo viên, tránh nhầm mã), <b>Trường</b> (tuỳ chọn — LƯU THẲNG vào đúng tiết đó, vì 1 giáo viên có
+        thể dạy nhiều trường khác nhau ngay trong cùng 1 buổi; nếu tab "Lịch tuần" đã có ghi địa điểm cho
+        đúng buổi này mà khác thì hệ thống sẽ cảnh báo để tự kiểm tra), <b>Thứ</b> (2-7), <b>Buổi</b>
+        (Sáng/Chiều), <b>Tiết</b> (1, 2, 3...), <b>Mã lớp</b> (vd "4/6"), <b>Giờ bắt đầu</b>, <b>Giờ kết
+        thúc</b> (2 cột giờ có thể để trống nếu không muốn đổi giờ tiết đã cấu hình). Mỗi dòng = 1 tiết của
+        1 giáo viên — áp dụng cho <b>tuần đang chọn</b> ở trên (<span id="ttImportWeekLabel">chưa chọn
+        tuần</span>). Có thể gồm nhiều giáo viên/nhiều Thứ trong cùng 1 file để nhập hàng loạt.
+      </div>
+      <button type="button" class="btn btn-ghost" id="ttImportTemplateBtn">🧾 Tải file mẫu (.xlsx)</button>
+      <input type="file" id="ttImportFileInput" accept=".xlsx,.xls" class="form-input">
+      <div class="tt-import-progress force-hide" id="ttImportProgress">Đang kiểm duyệt (đối chiếu tên GV/giờ tiết/trường)...</div>
+      <div class="import-summary force-hide" id="ttImportSummary">
+        <div class="import-stat ok"><b id="ttImportRowCount">0</b><span>Dòng hợp lệ</span></div>
+        <div class="import-stat ok"><b id="ttImportTeacherCount">0</b><span>Giáo viên</span></div>
+        <div class="import-stat warn" id="ttImportSkippedStat" hidden><b id="ttImportSkippedCount">0</b><span>Dòng bỏ qua (lỗi)</span></div>
+        <div class="import-stat warn" id="ttImportWarnStat" hidden><b id="ttImportWarnCount">0</b><span>Cảnh báo (vẫn nhập)</span></div>
+      </div>
+      <!-- Cảnh báo (giờ/trường lệch) LUÔN hiện thẳng, không giấu trong
+           <details>, vì đây đúng là phần "kiểm duyệt" người dùng cần thấy
+           ngay để tự quyết định trước khi bấm Nhập. -->
+      <div class="tt-import-checks force-hide" id="ttImportWarnList"></div>
+      <details class="tt-import-errors-details force-hide" id="ttImportErrorsWrap">
+        <summary>Xem chi tiết các dòng bị bỏ qua</summary>
+        <textarea class="tt-import-errors-text" id="ttImportErrorsText" readonly></textarea>
+      </details>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" id="ttImportCancelBtn">Huỷ</button>
+      <button type="button" class="btn btn-primary" id="ttImportConfirmBtn" disabled>💾 Nhập dữ liệu</button>
     </div>
   </div>
 </div>
@@ -287,6 +440,8 @@
 <script src="js/repositories/base-repository.js"></script>
 <script src="js/models/teaching-schedule.model.js"></script>
 <script src="js/repositories/teaching-schedule-repository.js"></script>
+<script src="js/models/teaching-timetable.model.js"></script>
+<script src="js/repositories/teaching-timetable-repository.js"></script>
 
 <!-- Đọc file Excel (.xlsx/.xls) ngay trên trình duyệt bằng SheetJS, cùng
      thư viện/CDN đã dùng ở roster-manager.html (đã kiểm chứng hoạt động). -->
@@ -304,5 +459,7 @@
 <script src="js/export/teaching-schedule-pdf.js"></script>
 
 <script src="js/teaching-schedule.js"></script>
+<script src="js/teaching-timetable.js"></script>
+<script src="js/teaching-timetable-import.js"></script>
 </body>
 </html>
