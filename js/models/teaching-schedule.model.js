@@ -23,11 +23,14 @@
        updatedAt }
      DaySchedule = { morning: Session, afternoon: Session }
      Session     = { type: TASK_TYPES[n]|'', location: string, periods: [p1..p5] }
-     (periods[i] = true nếu CÓ dạy tiết i+1, false/'' nếu không dạy — nhập
-     bằng tích chọn (checkbox), không gõ tên lớp nữa. Dữ liệu CŨ nhập từ
-     Excel có thể vẫn là tên lớp dạng chuỗi khác rỗng — mọi nơi đọc periods
-     chỉ nên dùng "truthy" (!!p), KHÔNG so sánh === true, để tương thích
-     ngược với dữ liệu đó.)
+     (periods[i] = MÃ LỚP đang dạy tiết i+1 (chuỗi, vd "5/1"), '' nếu
+     không dạy tiết đó — gõ trực tiếp, không còn chỉ tích chọn có/không
+     (đã thử bản chỉ tích chọn, người dùng phản hồi cần biết ngay đang
+     dạy lớp nào ngay tại đây, không muốn phải mở riêng tab "🗓️ TKB lớp").
+     Dữ liệu CŨ (giai đoạn chỉ tích chọn) có thể vẫn là boolean true —
+     mọi nơi đọc periods chỉ nên dùng "truthy" (!!p) khi ĐẾM số tiết, và
+     kiểm `typeof p === 'string'` khi cần LẤY chữ mã lớp, để tương thích
+     ngược với cả 2 giai đoạn dữ liệu.)
    ============================================================ */
 (function (global) {
   'use strict';
@@ -93,9 +96,11 @@
       const day = (days && days[String(d)]) || emptyDay();
       SESSIONS.forEach((s) => {
         const sess = day[s] || emptySession();
-        // periods[i] giờ là boolean (tích/không tích) — nhưng dữ liệu CŨ
-        // nhập từ Excel có thể vẫn là chuỗi tên lớp, nên chỉ xét "truthy"
-        // (!!p), TUYỆT ĐỐI không gọi .trim() vì boolean không có hàm đó.
+        // periods[i] là MÃ LỚP (chuỗi) — dữ liệu CŨ hơn có thể vẫn là
+        // boolean true (giai đoạn chỉ tích chọn), nên ĐẾM số tiết chỉ xét
+        // "truthy" (!!p), TUYỆT ĐỐI không gọi .trim() ở đây vì boolean
+        // không có hàm đó (chỉ .trim() khi đã chắc chắn là string, xem
+        // ownPeriodClassCodes() trong teaching-schedule.js).
         const taughtPeriods = (sess.periods || []).filter((p) => !!p).length;
         if (sess.type === 'Dạy chính') {
           if (sess.location) locSet['Dạy chính'].add(sess.location);

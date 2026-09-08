@@ -125,11 +125,17 @@
   }
 
   /** Nội dung 1 ô (Buổi × Thứ) trong bảng lịch: loại hình + địa điểm +
-   * danh sách tiết có tích, mỗi phần 1 dòng riêng cho dễ đọc khi in. */
+   * danh sách tiết có tích (kèm mã lớp nếu đã gõ, vd "T1=5/1"), mỗi phần
+   * 1 dòng riêng cho dễ đọc khi in. */
   function sessionCellText(sess, M) {
     if (!sess || !sess.type) return '—';
     const periods = (sess.periods || [])
-      .map((p, i) => (p ? String(i + 1) : null))
+      .map((p, i) => {
+        if (!p) return null;
+        // Dữ liệu CŨ có thể vẫn là boolean true (chỉ tích, chưa gõ mã lớp)
+        // — chỉ hiện "T{i+1}=mã lớp" khi thật sự có chuỗi mã lớp.
+        return typeof p === 'string' ? `T${i + 1}=${p}` : `T${i + 1}`;
+      })
       .filter(Boolean);
     const lines = [sess.type];
     if (sess.location) lines.push(sess.location);
