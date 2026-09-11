@@ -18,10 +18,10 @@
        năm {y}" — khung giờ hành chính CỐ ĐỊNH (WORKDAY_START/END), CHỈ
        ngày là đổi theo Lịch tuần thật, không tính theo giờ tiết cụ thể
        (từng thử, ra giờ lẻ tẻ khác nhau mỗi ngày — không cần thiết).
-     - Mục đích             ← do người dùng CHỌN lúc xuất (Giảng dạy/Ôn
-       Thi — 2 lựa chọn duy nhất mẫu gốc dùng, xem modal trong
-       teaching-schedule.html), KHÔNG suy luận tự động vì 1 tuần có thể
-       vừa dạy vừa ôn thi, không có 1 câu trả lời "đúng" duy nhất.
+     - Mục đích             ← CỐ ĐỊNH "Giảng dạy IC3" (hằng số PURPOSE,
+       đúng nguyên văn file .doc gốc) — bản trước từng cho người dùng CHỌN
+       giữa Giảng dạy/Ôn Thi qua modal, nhưng người dùng phản hồi bỏ hẳn
+       lựa chọn này, không hỏi gì thêm khi xuất nữa.
      - Chữ ký người đi công tác ← tên giáo viên (chữ in, không phải chữ ký
        tay thật — vẫn cần ký tay/đóng dấu sau khi in như quy trình cũ).
      - Ngày...tháng...năm   ← NGÀY XUẤT FILE (thời điểm bấm nút), không
@@ -61,6 +61,11 @@
   // 08:00–17:30 (giờ hành chính chuẩn), không đọc từ periodTimes nữa.
   const WORKDAY_START = '08:00';
   const WORKDAY_END = '17:30';
+
+  // "Mục đích" KHÔNG còn cho chọn nữa (bản trước có modal chọn Giảng dạy/
+  // Ôn Thi — người dùng phản hồi bỏ hẳn lựa chọn, luôn cố định đúng câu
+  // chữ trong file .doc gốc "Mục đích : Giảng dạy IC3").
+  const PURPOSE = 'Giảng dạy IC3';
 
   // Logo IIG — trích trực tiếp từ On_Tap_MOS/Phieu cong tac.doc (xuất file
   // gốc ra PDF bằng Word rồi lấy đúng ảnh JPEG nhúng bên trong, không phải
@@ -200,9 +205,8 @@
    *   dateForWeekday()); có thể bỏ trống nếu không có, chỉ mất chi tiết
    *   ngày, KHÔNG chặn xuất PDF.
    * @param {Object} M      window.EduModels.TeachingSchedule
-   * @param {'Giảng dạy'|'Ôn Thi'} purpose Mục đích do người dùng chọn lúc xuất
    */
-  function drawOnePage(doc, teacher, days, weekKey, M, purpose) {
+  function drawOnePage(doc, teacher, days, weekKey, M) {
     const pageWidth = doc.internal.pageSize.getWidth();
     const contentWidth = pageWidth - MARGIN * 2;
     const teacherName = oneLine(teacher.name) || '(chưa rõ tên)';
@@ -271,7 +275,7 @@
     y += 8;
 
     doc.setFontSize(BODY_SIZE);
-    n = drawLabelValue(doc, 'Mục đích: ', purpose || 'Giảng dạy', MARGIN, y, contentWidth);
+    n = drawLabelValue(doc, 'Mục đích: ', PURPOSE, MARGIN, y, contentWidth);
     y += n * lineH + 30;
 
     // Ngày ký LẤY THEO THỜI ĐIỂM XUẤT FILE (không phải ngày đầu tuần lịch).
@@ -292,10 +296,6 @@
     y += 56; // chừa khoảng trống để ký tay thật sau khi in
     doc.setFont(FONT, 'normal');
     doc.text(teacherName, MARGIN + colWidth / 2, y, { align: 'center' });
-
-    doc.setFontSize(8.5);
-    doc.setTextColor(...GRAY);
-    doc.text('Phiếu công tác — tạo tự động từ Lịch giảng dạy', MARGIN, doc.internal.pageSize.getHeight() - 24);
   }
 
   /** Xuất "Phiếu công tác" cho ĐÚNG 1 giáo viên/1 tuần — 1 file PDF/1 trang.
@@ -305,13 +305,12 @@
    *   tương thích chữ ký hàm, phòng khi cần dùng lại sau này)
    * @param {string} weekKey   Xem drawOnePage()
    * @param {Object} M         window.EduModels.TeachingSchedule
-   * @param {'Giảng dạy'|'Ôn Thi'} purpose
    */
-  function exportOne(teacher, days, weekLabel, weekKey, M, purpose) {
+  function exportOne(teacher, days, weekLabel, weekKey, M) {
     if (!ensureLibsLoaded()) return;
     const { jsPDF } = global.jspdf;
     const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'portrait' });
-    drawOnePage(doc, teacher, days, weekKey, M, purpose);
+    drawOnePage(doc, teacher, days, weekKey, M);
     const teacherName = oneLine(teacher.name);
     doc.save(`Phieu_Cong_Tac_${slugName(teacherName || teacher.code || teacher.id)}.pdf`);
   }
@@ -323,17 +322,16 @@
    * @param {Array<{teacher, days}>} list Danh sách GV/dữ liệu tuần đang hiển thị
    * @param {string} weekKey
    * @param {Object} M
-   * @param {'Giảng dạy'|'Ôn Thi'} purpose
    * @param {string} [fileSuffix] Hậu tố tên file (thường là nhãn tuần đã slug hoá)
    */
-  function exportMany(list, weekKey, M, purpose, fileSuffix) {
+  function exportMany(list, weekKey, M, fileSuffix) {
     if (!ensureLibsLoaded()) return;
     if (!list.length) return;
     const { jsPDF } = global.jspdf;
     const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'portrait' });
     list.forEach(({ teacher, days }, i) => {
       if (i > 0) doc.addPage();
-      drawOnePage(doc, teacher, days, weekKey, M, purpose);
+      drawOnePage(doc, teacher, days, weekKey, M);
     });
     doc.save(`Phieu_Cong_Tac_Tat_Ca${fileSuffix ? `_${slugName(fileSuffix)}` : ''}.pdf`);
   }
