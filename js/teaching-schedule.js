@@ -527,12 +527,14 @@
         <div class="teacher-card-actions">
           <button type="button" class="btn btn-ghost" data-edit-sched="${esc(t.code)}">✏️ Sửa lịch</button>
           <button type="button" class="btn btn-ghost" data-pdf-sched="${esc(t.code)}" title="Xuất lịch tuần của ${esc(t.name)} ra PDF">🖨️ PDF</button>
+          <button type="button" class="btn btn-ghost" data-congtac-sched="${esc(t.code)}" title="Xuất Phiếu công tác của ${esc(t.name)} (tự điền theo lịch tuần này)">📋 Phiếu công tác</button>
         </div>
       </div>`;
     }).join('');
 
     cardsContainer.querySelectorAll('[data-edit-sched]').forEach((b) => b.addEventListener('click', () => openSchedModal(b.dataset.editSched)));
     cardsContainer.querySelectorAll('[data-pdf-sched]').forEach((b) => b.addEventListener('click', () => exportTeacherPdf(b.dataset.pdfSched)));
+    cardsContainer.querySelectorAll('[data-congtac-sched]').forEach((b) => b.addEventListener('click', () => openCongTacModalFor(b.dataset.congtacSched)));
   }
 
   // Tên viết tắt cho ô mini trong ma trận — chấm tròn trước đây không đọc
@@ -654,6 +656,7 @@
             <div class="dash-matrix-name-actions">
               <button type="button" class="dash-name-action-btn" data-edit-sched="${esc(t.code)}" title="Sửa lịch của ${esc(t.name)}">✏️</button>
               <button type="button" class="dash-name-action-btn" data-pdf-sched="${esc(t.code)}" title="Xuất PDF lịch của ${esc(t.name)}">🖨️</button>
+              <button type="button" class="dash-name-action-btn" data-congtac-sched="${esc(t.code)}" title="Xuất Phiếu công tác của ${esc(t.name)}">📋</button>
             </div>
           </div>
           <div class="dash-matrix-stats">
@@ -699,6 +702,7 @@
       tbody.innerHTML = rowsHtml.join('');
       tbody.querySelectorAll('[data-edit-sched]').forEach((b) => b.addEventListener('click', () => openSchedModal(b.dataset.editSched)));
       tbody.querySelectorAll('[data-pdf-sched]').forEach((b) => b.addEventListener('click', () => exportTeacherPdf(b.dataset.pdfSched)));
+      tbody.querySelectorAll('[data-congtac-sched]').forEach((b) => b.addEventListener('click', () => openCongTacModalFor(b.dataset.congtacSched)));
     }
 
     // ---- Đánh dấu cột "hôm nay" trong ma trận (nếu tuần đang xem CHỨA
@@ -889,6 +893,87 @@
     // Xuất đúng những gì đang hiển thị trên màn hình (kể cả thay đổi CHƯA
     // lưu) — giáo viên có thể muốn xem trước bản in trước khi bấm Lưu.
     window.EduTeachingSchedulePdf.exportOne(t || { code: state.myTeacherCode, name: '' }, state.myWeekDraft, week ? (week.label || week.id) : state.currentWeekKey, M);
+  });
+
+  // ------------------------------------------------------------
+  // MODAL: "📋 Phiếu công tác" — mẫu On_Tap_MOS/Phieu cong tac.doc, tự điền
+  // theo đúng Lịch tuần CỦA 1 GIÁO VIÊN (xem
+  // js/export/teaching-schedule-cong-tac-pdf.js). Dùng CHUNG 1 modal cho
+  // cả 2 lối vào: giáo viên tự xuất phiếu của chính mình ("Lịch của tôi")
+  // VÀ admin xuất phiếu thay cho bất kỳ giáo viên nào (nút 📋 trên từng
+  // thẻ/hàng ở "📊 Tổng quan"/"🎴 Thẻ") — congTacTarget ghi nhớ ĐÚNG giáo
+  // viên/dữ liệu tuần sắp xuất, set trước khi mở modal, đọc lại khi bấm
+  // Xuất PDF trong modal. Chỉ hỏi đúng 1 lựa chọn "Mục đích" (Giảng dạy/Ôn
+  // Thi — 2 giá trị duy nhất mẫu gốc dùng), mọi field còn lại tự điền,
+  // không hỏi thêm gì khác.
+  // ------------------------------------------------------------
+  let congTacTarget = null; // { teacher, days, weekLabel } của lần mở modal gần nhất
+  function openCongTacModal() {
+    const info = document.getElementById('congTacModalTeacher');
+    if (info && congTacTarget) {
+      info.textContent = `👤 ${congTacTarget.teacher.name || congTacTarget.teacher.code} · 🗓️ Tuần: ${congTacTarget.weekLabel}`;
+    }
+    document.getElementById('congTacModalOverlay').classList.add('show');
+  }
+  function closeCongTacModal() {
+    document.getElementById('congTacModalOverlay').classList.remove('show');
+    congTacTarget = null;
+  }
+  document.getElementById('myWeekCongTacBtn')?.addEventListener('click', async () => {
+    if (!state.myTeacherCode || !state.currentWeekKey || !state.myWeekDraft) { toast('⚠️ Chưa có lịch tuần để xuất.'); return; }
+    const t = state.teachers.find((x) => x.id === state.myTeacherCode);
+    const week = state.weeks.find((w) => w.id === state.currentWeekKey);
+    // Khung giờ tiết (để tính "Từ ... đến ..." trong mục "Thời gian") KHÔNG
+    // được tải sẵn ở khối "Lịch của tôi" (chỉ tab "🗓️ TKB lớp" mới cần) —
+    // tải riêng đúng lúc mở modal này, lỗi thì vẫn cho xuất PDF (module PDF
+    // tự dùng khung giờ mặc định thay thế).
+    const TTM = window.EduModels.TeachingTimetable;
+    let periodTimes = null;
+    try {
+      const raw = TTM ? await window.EduRepositories.teachingPeriodTimes.getById(state.myTeacherCode) : null;
+      periodTimes = TTM ? TTM.clonePeriodTimes(raw) : null;
+    } catch (err) { /* bỏ qua — xem chú thích ở trên */ }
+    congTacTarget = {
+      teacher: t || { code: state.myTeacherCode, name: '' },
+      days: state.myWeekDraft, // đúng những gì đang hiển thị trên màn hình, kể cả thay đổi CHƯA lưu
+      weekLabel: week ? (week.label || week.id) : state.currentWeekKey,
+      weekKey: state.currentWeekKey, // để suy ra ngày dương lịch cụ thể trong mục "Thời gian"
+      periodTimes,
+    };
+    openCongTacModal();
+  });
+  /** Admin/điều phối bấm nút 📋 trên 1 thẻ/hàng giáo viên cụ thể (khác
+   * "Lịch của tôi" — không có bản nháp đang sửa dở, luôn dùng đúng dữ liệu
+   * ĐÃ LƯU trong state.schedulesByTeacher của tuần đang chọn). Khung giờ
+   * tiết đã sẵn có trong state.periodTimesByTeacher (tải cùng lúc với
+   * "📊 Tổng quan" cho ma trận theo tiết), không cần gọi thêm Firestore. */
+  function openCongTacModalFor(teacherCode) {
+    const t = state.teachers.find((x) => x.id === teacherCode || x.code === teacherCode);
+    if (!t) return;
+    if (!state.currentWeekKey) { toast('⚠️ Hãy chọn 1 tuần trước.'); return; }
+    const week = state.weeks.find((w) => w.id === state.currentWeekKey);
+    const days = (state.schedulesByTeacher[teacherCode] && state.schedulesByTeacher[teacherCode].days) || M.emptyDays();
+    const TTM = window.EduModels.TeachingTimetable;
+    congTacTarget = {
+      teacher: t, days,
+      weekLabel: week ? (week.label || week.id) : state.currentWeekKey,
+      weekKey: state.currentWeekKey,
+      periodTimes: TTM ? TTM.clonePeriodTimes(state.periodTimesByTeacher[teacherCode]) : null,
+    };
+    openCongTacModal();
+  }
+  document.getElementById('congTacCloseBtn')?.addEventListener('click', closeCongTacModal);
+  document.getElementById('congTacCancelBtn')?.addEventListener('click', closeCongTacModal);
+  document.getElementById('congTacModalOverlay')?.addEventListener('click', (e) => {
+    if (e.target.id === 'congTacModalOverlay') closeCongTacModal();
+  });
+  document.getElementById('congTacConfirmBtn')?.addEventListener('click', () => {
+    if (!congTacTarget) return;
+    if (!window.EduCongTacPdf) { toast('⚠️ Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
+    const purpose = document.getElementById('f-cong-tac-purpose').value;
+    const { teacher, days, weekLabel, weekKey, periodTimes } = congTacTarget;
+    window.EduCongTacPdf.exportOne(teacher, days, weekLabel, weekKey, M, purpose, periodTimes);
+    closeCongTacModal();
   });
 
   // ------------------------------------------------------------

@@ -143,6 +143,7 @@
           <div class="sched-stats-bar" id="myWeekStatsBar"></div>
           <div class="my-week-footer-actions">
             <button type="button" class="btn btn-ghost" id="myWeekPdfBtn">🖨️ Xuất PDF</button>
+            <button type="button" class="btn btn-ghost" id="myWeekCongTacBtn" title="Xuất Phiếu công tác PDF tự điền theo đúng lịch tuần này (mẫu On_Tap_MOS/Phieu cong tac.doc)">📋 Phiếu công tác</button>
             <button type="button" class="btn btn-primary my-week-save-btn" id="myWeekSaveBtn">💾 Lưu lịch tuần của tôi</button>
           </div>
         </div>
@@ -312,6 +313,41 @@
   </div>
 </div>
 
+<!-- ============ MODAL: MỤC ĐÍCH "PHIẾU CÔNG TÁC" ============ -->
+<!-- Mẫu Word gốc chỉ dùng đúng 2 giá trị "Mục đích" — để người dùng CHỌN
+     lúc xuất thay vì suy luận tự động (1 tuần có thể vừa dạy vừa ôn thi,
+     không có câu trả lời "đúng" duy nhất), xem js/teaching-schedule.js. -->
+<div class="modal-overlay" id="congTacModalOverlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>📋 Xuất Phiếu công tác</h3>
+      <button type="button" class="modal-close" id="congTacCloseBtn">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Chỉ có ý nghĩa khi admin xuất thay cho giáo viên khác (nhiều lựa
+           chọn giáo viên/tuần cùng lúc trên trang) — giáo viên tự xuất
+           phiếu của chính mình ("Lịch của tôi") thì luôn chỉ 1 khả năng,
+           dòng này giúp xác nhận lại KHÔNG BẤM NHẦM giáo viên/tuần. -->
+      <div class="panel-toolbar-info" id="congTacModalTeacher" style="margin-bottom:.8rem"></div>
+      <div class="form-group">
+        <label for="f-cong-tac-purpose">Mục đích *</label>
+        <select id="f-cong-tac-purpose" class="form-input">
+          <option value="Giảng dạy">Giảng dạy</option>
+          <option value="Ôn Thi">Ôn Thi</option>
+        </select>
+      </div>
+      <div class="import-hint">
+        Họ tên, bộ phận, tên trường và chi tiết tiết Sáng/Chiều được tự động điền theo đúng <b>Lịch tuần</b> đang
+        chọn — chỉ cần chọn Mục đích rồi bấm Xuất PDF, mở file in/ký như bình thường.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" id="congTacCancelBtn">Huỷ</button>
+      <button type="button" class="btn btn-primary" id="congTacConfirmBtn">📋 Xuất PDF</button>
+    </div>
+  </div>
+</div>
+
 <!-- ============ MODAL: LƯỚI LỊCH TUẦN CỦA 1 GIÁO VIÊN ============ -->
 <div class="modal-overlay" id="schedModalOverlay">
   <div class="modal-box modal-wide modal-xwide">
@@ -454,6 +490,14 @@
      teaching-schedule-pdf.js để font "NotoSans" có sẵn khi xuất PDF. -->
 <script src="js/vendor/notosans-vietnamese-jspdf.js"></script>
 <script src="js/export/teaching-schedule-pdf.js"></script>
+<!-- "📋 Phiếu công tác" — mẫu On_Tap_MOS/Phieu cong tac.doc, tự điền theo
+     Lịch tuần của giáo viên (xem js/export/teaching-schedule-cong-tac-pdf.js).
+     Dùng font "Tinos" (Times New Roman metric-compatible, SIL OFL) thay vì
+     NotoSans ở trên — để GIỮ ĐÚNG kiểu chữ serif của file Word gốc mà
+     không phải đóng gói phân phối lại font Times New Roman độc quyền của
+     Microsoft (xem chú thích trong js/vendor/tinos-vietnamese-jspdf.js). -->
+<script src="js/vendor/tinos-vietnamese-jspdf.js"></script>
+<script src="js/export/teaching-schedule-cong-tac-pdf.js"></script>
 
 <script src="js/teaching-schedule.js"></script>
 <script src="js/teaching-timetable.js"></script>
