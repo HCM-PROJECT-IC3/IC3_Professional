@@ -12,13 +12,12 @@
        của Sáng/Chiều, mọi Thứ trong tuần) — GỘP TRÙNG (1 trường có thể
        dạy nhiều buổi/nhiều ngày trong tuần, chỉ liệt kê 1 lần), giữ đúng
        thứ tự xuất hiện đầu tiên (Thứ2 → Thứ7, Sáng → Chiều).
-     - Thời gian            ← ĐƠN GIẢN, 1 dòng/NGÀY (không tách theo buổi
-       Sáng/Chiều/loại hình/trường như bản thử trước — người dùng phản hồi
-       muốn gọn lại đúng như mẫu giấy gốc): "Từ {giờ tiết đầu tiên có dạy}
-       đến {giờ tiết cuối cùng có dạy}, ngày {d} tháng {m} năm {y}". Giờ
-       thật lấy từ khung giờ tiết CỦA GIÁO VIÊN (tab "🗓️ TKB lớp" → "⏱️ Giờ
-       tiết", collection teaching_timetable_periods) — truyền vào qua tham
-       số `periodTimes`, không tự suy diễn/hard-code 1 khung giờ chung.
+     - Thời gian            ← ĐƠN GIẢN, 1 dòng/NGÀY thật sự có dạy (không
+       tách theo buổi Sáng/Chiều/loại hình/trường — người dùng phản hồi chỉ
+       cần gọn đúng mẫu giấy gốc): "Từ 08:00 đến 17:30, ngày {d} tháng {m}
+       năm {y}" — khung giờ hành chính CỐ ĐỊNH (WORKDAY_START/END), CHỈ
+       ngày là đổi theo Lịch tuần thật, không tính theo giờ tiết cụ thể
+       (từng thử, ra giờ lẻ tẻ khác nhau mỗi ngày — không cần thiết).
      - Mục đích             ← do người dùng CHỌN lúc xuất (Giảng dạy/Ôn
        Thi — 2 lựa chọn duy nhất mẫu gốc dùng, xem modal trong
        teaching-schedule.html), KHÔNG suy luận tự động vì 1 tuần có thể
@@ -53,23 +52,15 @@
   const BODY_SIZE = 13; // khớp Font.Size=13 của toàn bộ nội dung trong file .doc gốc
   const TITLE_SIZE = 14; // khớp Font.Size=14 của dòng "PHIẾU CÔNG TÁC" trong file .doc gốc
 
-  // Khung giờ tiết MẶC ĐỊNH — CHỈ dùng khi không truyền được `periodTimes`
-  // thật của giáo viên (vd lỗi tải teaching_timetable_periods) để mục
-  // "Thời gian" vẫn có giờ để hiện thay vì trống trơn; khớp ĐÚNG
-  // DEFAULT_PERIOD_TIMES trong js/models/teaching-timetable.model.js (5
-  // tiết Sáng, 4 tiết Chiều, nghỉ giải lao sau tiết 2) — không import
-  // thẳng model đó để module này không phụ thuộc thứ tự nạp file.
-  const FALLBACK_PERIOD_TIMES = {
-    morning: [
-      { start: '07:30', end: '08:05' }, { start: '08:10', end: '08:45' },
-      { start: '09:20', end: '09:55' }, { start: '10:00', end: '10:25' },
-      { start: '10:35', end: '11:10' },
-    ],
-    afternoon: [
-      { start: '13:30', end: '14:05' }, { start: '14:10', end: '14:45' },
-      { start: '15:05', end: '15:40' }, { start: '15:45', end: '16:20' },
-    ],
-  };
+  // Khung giờ công tác CỐ ĐỊNH cho mọi ngày có dạy — ban đầu thử tính "Từ
+  // ... đến ..." theo ĐÚNG giờ tiết thật của từng giáo viên (khung giờ
+  // tiết ở tab "🗓️ TKB lớp"), nhưng ra giờ lẻ tẻ khác nhau mỗi ngày (vd
+  // "09:20 đến 09:55" nếu hôm đó chỉ dạy 1 tiết giữa buổi) — người dùng
+  // phản hồi phiếu công tác chỉ cần 1 khung giờ hành chính CHUẨN, THỐNG
+  // NHẤT mọi ngày, không cần khớp chính xác từng tiết. Cố định luôn
+  // 08:00–17:30 (giờ hành chính chuẩn), không đọc từ periodTimes nữa.
+  const WORKDAY_START = '08:00';
+  const WORKDAY_END = '17:30';
 
   // Logo IIG — trích trực tiếp từ On_Tap_MOS/Phieu cong tac.doc (xuất file
   // gốc ra PDF bằng Word rồi lấy đúng ảnh JPEG nhúng bên trong, không phải
@@ -137,38 +128,19 @@
   }
 
   /** Danh sách dòng "Thời gian" — ĐƠN GIẢN, 1 dòng/NGÀY thật sự có dạy (bất
-   * kỳ tiết nào ở Sáng hoặc Chiều có mã lớp/tích chọn): "Từ {giờ bắt đầu
-   * tiết ĐẦU TIÊN có dạy trong ngày} đến {giờ kết thúc tiết CUỐI CÙNG có
-   * dạy}, ngày {d} tháng {m} năm {y}" — gộp cả Sáng lẫn Chiều làm 1 khoảng
-   * giờ liền mạch trong ngày (vd dạy tiết cuối Sáng + tiết đầu Chiều thì
-   * "Từ giờ vào tiết đó của Sáng đến giờ ra tiết đó của Chiều"), KHÔNG còn
-   * tách riêng theo buổi/loại hình/trường (những chi tiết đó đã có đủ ở
-   * mục "Tên khách hàng cần gặp" phía trên, không cần lặp lại ở đây).
-   * Giờ thật lấy từ `periodTimes` (khung giờ tiết của giáo viên, tab "🗓️
-   * TKB lớp" → "⏱️ Giờ tiết") — so sánh chuỗi "HH:MM" trực tiếp AN TOÀN vì
-   * luôn có 0 đứng trước (giờ input type=time), không cần parse Date. */
-  function collectTimeLines(days, M, weekKey, periodTimes) {
-    const pt = periodTimes || FALLBACK_PERIOD_TIMES;
+   * kỳ tiết nào ở Sáng hoặc Chiều có mã lớp/tích chọn): "Từ 08:00 đến
+   * 17:30, ngày {d} tháng {m} năm {y}" — khung giờ hành chính CỐ ĐỊNH
+   * (WORKDAY_START/END), KHÔNG tính theo giờ tiết thật (từng ra giờ lẻ
+   * tẻ khác nhau mỗi ngày, không cần thiết cho phiếu công tác). Chỉ Ngày
+   * là thay đổi theo đúng Lịch tuần, giờ luôn thống nhất mọi dòng. */
+  function collectTimeLines(days, M, weekKey) {
     const out = [];
     M.WEEKDAYS.forEach((d) => {
       const day = (days && days[String(d)]) || M.emptyDay();
-      let startTime = null;
-      let endTime = null;
-      M.SESSIONS.forEach((s) => {
-        const sess = day[s];
-        const periods = (sess && sess.periods) || [];
-        const slots = pt[s] || [];
-        periods.forEach((p, i) => {
-          if (!p) return; // tiết không dạy — bỏ qua (dữ liệu CŨ có thể là boolean, vẫn tính là "có dạy" nếu truthy)
-          const slot = slots[i];
-          if (!slot || !slot.start || !slot.end) return; // tiết vượt ngoài khung giờ đã cấu hình — không có giờ để tính, bỏ qua
-          if (startTime === null || slot.start < startTime) startTime = slot.start;
-          if (endTime === null || slot.end > endTime) endTime = slot.end;
-        });
-      });
-      if (startTime === null || endTime === null) return; // ngày này không có tiết nào xác định được giờ
+      const hasTaughtPeriod = M.SESSIONS.some((s) => ((day[s] && day[s].periods) || []).some((p) => !!p));
+      if (!hasTaughtPeriod) return;
       const dateStr = dateForWeekday(weekKey, d) || `Thứ ${d}`;
-      out.push(`Từ ${startTime} đến ${endTime}, ${dateStr}`);
+      out.push(`Từ ${WORKDAY_START} đến ${WORKDAY_END}, ${dateStr}`);
     });
     return out;
   }
@@ -214,26 +186,23 @@
     return true;
   }
 
-  /** Xuất "Phiếu công tác" cho ĐÚNG 1 giáo viên/1 tuần.
+  /** Vẽ 1 trang "Phiếu công tác" cho ĐÚNG 1 giáo viên/1 tuần vào `doc` đã
+   * có sẵn (dùng chung cho cả exportOne — 1 trang duy nhất — và exportMany
+   * — nhiều trang, mỗi giáo viên 1 trang, gọi addPage() trước khi vẽ nếu
+   * không phải trang đầu). Tách riêng khỏi việc tạo jsPDF/lưu file để
+   * exportMany có thể gộp NHIỀU giáo viên vào 1 file PDF DUY NHẤT thay vì
+   * tải về từng file lẻ (giống hệt cách js/export/teaching-schedule-pdf.js
+   * đã làm với "🖨️ Xuất PDF tất cả" của Lịch tuần).
    * @param {{name:string, code?:string, id?:string}} teacher
    * @param {Object} days   Dữ liệu "days" của teaching_schedule (Lịch tuần)
-   * @param {string} weekLabel (không hiện trên PDF nữa — chỉ giữ tham số
-   *   để tương thích chữ ký hàm, phòng khi cần dùng lại sau này)
    * @param {string} weekKey Thứ 2 đầu tuần "YYYY-MM-DD" — dùng suy ra NGÀY
    *   DƯƠNG LỊCH CỤ THỂ của từng buổi trong mục "Thời gian" (xem
    *   dateForWeekday()); có thể bỏ trống nếu không có, chỉ mất chi tiết
    *   ngày, KHÔNG chặn xuất PDF.
    * @param {Object} M      window.EduModels.TeachingSchedule
    * @param {'Giảng dạy'|'Ôn Thi'} purpose Mục đích do người dùng chọn lúc xuất
-   * @param {{morning:Array<{start,end}>, afternoon:Array<{start,end}>}} [periodTimes]
-   *   Khung giờ tiết CỦA GIÁO VIÊN (teaching_timetable_periods) — dùng để
-   *   tính "Từ ... đến ..." trong mục "Thời gian"; thiếu thì dùng
-   *   FALLBACK_PERIOD_TIMES (không chặn xuất PDF).
    */
-  function exportOne(teacher, days, weekLabel, weekKey, M, purpose, periodTimes) {
-    if (!ensureLibsLoaded()) return;
-    const { jsPDF } = global.jspdf;
-    const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'portrait' });
+  function drawOnePage(doc, teacher, days, weekKey, M, purpose) {
     const pageWidth = doc.internal.pageSize.getWidth();
     const contentWidth = pageWidth - MARGIN * 2;
     const teacherName = oneLine(teacher.name) || '(chưa rõ tên)';
@@ -287,7 +256,7 @@
     doc.setFontSize(BODY_SIZE);
     doc.text('Thời gian:', MARGIN, y);
     y += lineH;
-    const timeLines = collectTimeLines(days, M, weekKey, periodTimes);
+    const timeLines = collectTimeLines(days, M, weekKey);
     if (timeLines.length) {
       y = drawList(doc, timeLines, {
         x: MARGIN + 14, y, maxWidth: contentWidth - 14, lineHeight: lineH,
@@ -327,9 +296,47 @@
     doc.setFontSize(8.5);
     doc.setTextColor(...GRAY);
     doc.text('Phiếu công tác — tạo tự động từ Lịch giảng dạy', MARGIN, doc.internal.pageSize.getHeight() - 24);
+  }
 
+  /** Xuất "Phiếu công tác" cho ĐÚNG 1 giáo viên/1 tuần — 1 file PDF/1 trang.
+   * @param {{name:string, code?:string, id?:string}} teacher
+   * @param {Object} days      Dữ liệu "days" của teaching_schedule (Lịch tuần)
+   * @param {string} weekLabel (không hiện trên PDF — chỉ giữ tham số để
+   *   tương thích chữ ký hàm, phòng khi cần dùng lại sau này)
+   * @param {string} weekKey   Xem drawOnePage()
+   * @param {Object} M         window.EduModels.TeachingSchedule
+   * @param {'Giảng dạy'|'Ôn Thi'} purpose
+   */
+  function exportOne(teacher, days, weekLabel, weekKey, M, purpose) {
+    if (!ensureLibsLoaded()) return;
+    const { jsPDF } = global.jspdf;
+    const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'portrait' });
+    drawOnePage(doc, teacher, days, weekKey, M, purpose);
+    const teacherName = oneLine(teacher.name);
     doc.save(`Phieu_Cong_Tac_${slugName(teacherName || teacher.code || teacher.id)}.pdf`);
   }
 
-  global.EduCongTacPdf = { exportOne };
+  /** Xuất "Phiếu công tác" của NHIỀU giáo viên (cùng 1 tuần) thành 1 file
+   * PDF DUY NHẤT, mỗi giáo viên 1 trang — nút "📋 Xuất PDF tất cả" trên
+   * thanh công cụ (chỉ admin), song song với "🖨️ Xuất PDF tất cả" của Lịch
+   * tuần đã có sẵn.
+   * @param {Array<{teacher, days}>} list Danh sách GV/dữ liệu tuần đang hiển thị
+   * @param {string} weekKey
+   * @param {Object} M
+   * @param {'Giảng dạy'|'Ôn Thi'} purpose
+   * @param {string} [fileSuffix] Hậu tố tên file (thường là nhãn tuần đã slug hoá)
+   */
+  function exportMany(list, weekKey, M, purpose, fileSuffix) {
+    if (!ensureLibsLoaded()) return;
+    if (!list.length) return;
+    const { jsPDF } = global.jspdf;
+    const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'portrait' });
+    list.forEach(({ teacher, days }, i) => {
+      if (i > 0) doc.addPage();
+      drawOnePage(doc, teacher, days, weekKey, M, purpose);
+    });
+    doc.save(`Phieu_Cong_Tac_Tat_Ca${fileSuffix ? `_${slugName(fileSuffix)}` : ''}.pdf`);
+  }
+
+  global.EduCongTacPdf = { exportOne, exportMany };
 })(window);
