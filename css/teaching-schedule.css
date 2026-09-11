@@ -110,27 +110,6 @@ body {
    đệm 2 bên (padding) cho thoáng mắt thay vì giới hạn cứng 1 khổ cố định. */
 .wrap { margin: 0 auto; padding: 1.2rem 2rem 2rem }
 
-/* Banner giới thiệu — CHỈ còn dùng cho role giáo viên (applyRoleUI() điền
-   chữ + bỏ .force-hide), vì "Lịch của tôi" không có sidebar/nút ℹ️ để
-   thay thế. Admin/điều phối giữ #pageBanner rỗng + ẩn vĩnh viễn. */
-.banner {
-  position: relative;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-left: 4px solid var(--purple);
-  border-radius: var(--radius-sm);
-  padding: 1.1rem 1.3rem;
-  margin-bottom: 1.6rem;
-  font-size: .85rem;
-  line-height: 1.65;
-  color: var(--muted);
-  box-shadow: var(--shadow);
-}
-.banner b { color: var(--text) }
-.banner code {
-  font-family: 'JetBrains Mono', 'Consolas', monospace; font-size: .78rem;
-  background: var(--card2); padding: .1rem .35rem; border-radius: 5px; color: var(--text);
-}
 
 /* ---- Tabs — segmented control hiện đại (track nền + pill active trượt
    màu), thay cho 2 nút chữ gạch chân đơn điệu. Gộp chung hàng với thanh
@@ -148,6 +127,10 @@ body {
 }
 .tab-btn:hover { color: var(--text) }
 .tab-btn.active { color: #fff; background: var(--purple); box-shadow: var(--glow-purple) }
+/* #mainTabs (teaching-schedule.html) đứng ĐỘC LẬP ở đầu trang — không còn
+   gộp hàng với .panel-toolbar/.weekly-topbar-row (xem lý do trong HTML) —
+   nên cần margin riêng thay vì dựa vào "gap" của khối cha cũ. */
+.main-tabs { margin-bottom: 1.2rem }
 .tab-panel { display: none }
 .tab-panel.active { display: block; animation: fadeIn .25s ease }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }
@@ -693,8 +676,21 @@ tr:last-child td { border-bottom: none }
 }
 .my-week-body { display: flex; flex-direction: column; gap: 1.2rem }
 .my-week-cards {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: .9rem;
+  /* LUÔN đúng 6 cột (Thứ 2 → Thứ 7, cố định — không đổi số ngày) trên 1
+     hàng duy nhất — "auto-fit, minmax(260px,1fr)" trước đây làm Thứ 7 bị
+     đẩy rớt xuống hàng riêng lẻ. "repeat(6,1fr)" (không sàn tối thiểu) lại
+     ra lỗi NGƯỢC: trên màn hình không đủ rộng, 6 cột bị ép quá hẹp khiến
+     ô Tiết (T1-T5, lồng thêm 1 lưới 5 cột NỮA bên trong mỗi thẻ ngày) hẹp
+     tới mức chữ mã lớp bị cắt (vd "5.1" chỉ còn thấy "5."), kể cả trên
+     màn hình lớn nếu cửa sổ trình duyệt chưa đủ rộng.
+     Sửa đúng: đặt SÀN tối thiểu 230px/thẻ (đủ chỗ cho lưới 5 ô Tiết bên
+     trong không bị cắt chữ) + overflow-x auto — đủ rộng thì 6 thẻ vẫn
+     luôn nằm 1 hàng khít đẹp (accepted trên đa số màn hình), chỉ khi cửa
+     sổ hẹp hơn 6×230px mới cuộn ngang thay vì tiếp tục ép hẹp làm mất
+     chữ. */
+  display: grid; grid-template-columns: repeat(6, minmax(230px, 1fr));
+  gap: .7rem;
+  overflow-x: auto; padding-bottom: .3rem;
 }
 .day-card {
   background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius);
@@ -745,20 +741,21 @@ tr:last-child td { border-bottom: none }
 /* Tiết 1-5: gõ THẲNG mã lớp đang dạy (để trống = không dạy tiết đó) —
    nhãn T1..T5 cố định phía trên từng ô, viền tô đậm khi đã có lớp
    (.has-value, xem renderMyWeekCards()) để dễ liếc thấy tiết nào đã điền. */
-.periods-caption { font-size: .66rem; color: var(--muted); margin-top: .1rem }
-.day-card-periods { display: grid; grid-template-columns: repeat(5, 1fr); gap: .3rem }
+.periods-caption { font-size: .68rem; color: var(--muted); margin-top: .1rem }
+.day-card-periods { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .3rem }
 .period-cell {
   display: flex; flex-direction: column; align-items: center; gap: .3rem;
-  padding: .35rem .2rem; border-radius: 8px;
+  padding: .35rem .1rem; border-radius: 8px;
   background: var(--card); border: 1.5px solid var(--border);
+  min-width: 0; /* item lưới CSS mặc định min-width:auto, không cho input co hẹp hơn nội dung mặc định của trình duyệt → phải ép về 0 mới co đúng theo cột */
   transition: border-color .15s ease, background .15s ease;
 }
 .period-cell.has-value { border-color: var(--purple); background: var(--purple-lt) }
-.period-num { font-size: .62rem; font-weight: 800; color: var(--muted); white-space: nowrap }
+.period-num { font-size: .64rem; font-weight: 800; color: var(--muted); white-space: nowrap }
 .period-cell input {
-  width: 100%; box-sizing: border-box; text-align: center; font-family: inherit;
-  font-size: .74rem; font-weight: 700; color: var(--text);
-  padding: .3rem .2rem; border-radius: 6px; border: 1.5px solid var(--border); background: var(--card);
+  width: 100%; min-width: 0; box-sizing: border-box; text-align: center; font-family: inherit;
+  font-size: .78rem; font-weight: 700; color: var(--text);
+  padding: .32rem .1rem; border-radius: 6px; border: 1.5px solid var(--border); background: var(--card);
 }
 .period-cell input:focus { outline: none; border-color: var(--purple); box-shadow: 0 0 0 3px var(--purple-lt) }
 .period-cell input::placeholder { color: var(--border) }
@@ -777,6 +774,12 @@ tr:last-child td { border-bottom: none }
 @media (max-width: 720px) {
   .my-week-footer-actions { flex-direction: column-reverse }
   .my-week-footer-actions .btn { width: 100% }
+}
+/* Màn hẹp (điện thoại/tablet dọc): ép đủ 6 cột sẽ bóp ô Tiết quá nhỏ để
+   đọc — quay lại auto-fit tự xuống dòng, mỗi thẻ vẫn đủ rộng để đọc rõ mã
+   lớp thay vì cố giữ nguyên 1 hàng. */
+@media (max-width: 900px) {
+  .my-week-cards { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) }
 }
 
 /* ══════════════════════════════════════════════
@@ -836,6 +839,10 @@ tr:last-child td { border-bottom: none }
 }
 .tt-input:focus { outline: none; border-color: var(--purple); box-shadow: 0 0 0 3px var(--purple-lt); background: var(--card) }
 .tt-input::placeholder { color: var(--border) }
+/* Giáo viên chỉ XEM TKB của mình (không sửa được) — ô readonly bỏ con trỏ
+   text để không trông như đang chờ gõ, xem applyTeacherReadOnlyUI() trong
+   js/teaching-timetable.js. */
+.tt-input[readonly] { cursor: default }
 /* Ô "Trường" — nhạt/nhỏ hơn hẳn ô "Mã lớp" để mắt vẫn ưu tiên đọc mã lớp
    trước (thông tin chính), trường là chú thích phụ thêm. */
 .tt-input-truong {
@@ -843,6 +850,10 @@ tr:last-child td { border-bottom: none }
   background: transparent; border-style: dashed; border-color: var(--border);
 }
 .tt-input-truong:focus { background: var(--card) }
+/* Ô vừa được TỰ ĐỘNG điền Mã lớp/Trường từ tab "📅 Lịch tuần" (xem
+   applyScheduleAutoFill() trong js/teaching-timetable.js) — viền xanh lá
+   nhạt để phân biệt với ô gõ tay/dán thủ công, vẫn sửa được bình thường. */
+.tt-cell-auto { outline: 1.5px dashed var(--green, #2e9e5b); outline-offset: 2px; border-radius: 8px }
 
 /* ---- Modal "⏱️ Giờ tiết" — 2 cột Sáng/Chiều, mỗi tiết 1 hàng giờ vào/ra
    có thể thêm/bớt (số tiết mỗi trường không nhất thiết giống nhau). ---- */
@@ -866,12 +877,6 @@ tr:last-child td { border-bottom: none }
    lại đúng .import-hint/.import-summary/.import-stat đã có sẵn (giống
    modal "Nhập từ Excel" của tab Lịch tuần) để đồng bộ giao diện. ---- */
 #ttImportFileInput { margin-top: .6rem }
-.tt-paste-hint {
-  font-size: .8rem; line-height: 1.6; color: var(--muted);
-  background: var(--purple-lt); border: 1.5px solid rgba(79,107,255,.25);
-  border-radius: var(--radius-sm); padding: .7rem 1rem; margin-bottom: 1rem;
-}
-.tt-paste-hint b { color: var(--text) }
 #ttImportFileInput ~ .tt-import-progress { margin-top: .6rem }
 .tt-import-progress {
   font-size: .8rem; font-weight: 700; color: var(--purple);
