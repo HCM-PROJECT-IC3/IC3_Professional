@@ -2,9 +2,20 @@
    js/teaching-timetable.js
    Logic cho tab "🗓️ TKB lớp" (teaching-schedule.html) — thời khoá biểu
    dạng lưới tiết học (Buổi/Tiết/Thời gian × Thứ2-7), điền MÃ LỚP đang dạy
-   cho từng tiết, phỏng theo mẫu thời khoá biểu giấy nhà trường. Chỉ dành
-   cho admin/coordinator (công cụ quản lý/in treo lớp cho cả 18 giáo viên),
-   độc lập với tab "📅 Lịch tuần" (theo dõi LOẠI HÌNH PHỤ TRÁCH nhân sự).
+   cho từng tiết, phỏng theo mẫu thời khoá biểu giấy nhà trường.
+   Model/collection tách riêng với tab "📅 Lịch tuần" (theo dõi LOẠI HÌNH
+   PHỤ TRÁCH nhân sự), nhưng Mã lớp/Trường của từng tiết được TỰ ĐỘNG lấy
+   từ Lịch tuần của đúng giáo viên/tuần đang xem mỗi khi mở lưới (xem
+   applyScheduleAutoFill()) — không cần gõ tay/dán bảng từ Excel như
+   trước, trừ những tiết Lịch tuần chưa có dữ liệu.
+
+   PHÂN QUYỀN (khớp firestore.rules):
+   - admin: toàn quyền xem/sửa/lưu TKB của mọi giáo viên.
+   - teacher: chỉ XEM (không sửa) đúng TKB của chính mình — teaching_timetable
+     chỉ cho phép admin write, nên mọi control chỉnh sửa (⏱️ Giờ tiết/📥 Nhập
+     Excel/💾 Lưu) đều ẩn, ô nhập chuyển readonly (xem applyTeacherReadOnlyUI()).
+   - coordinator (Điều phối đào tạo): KHÔNG được vào trang này nữa — chặn từ
+     EDU_ALLOWED_ROLES ở teaching-schedule.html, file này không cần tự kiểm.
 
    File tự chứa (IIFE riêng, không phụ thuộc biến nội bộ của
    js/teaching-schedule.js) — cùng nghe sự kiện 'edu:ready', dùng chung
@@ -18,6 +29,7 @@
 
   const state = {
     role: '',
+    myTeacherCode: '', // teacherCode liên kết của tài khoản (chỉ có ý nghĩa khi role==='teacher')
     teachers: [],
     weeks: [],
     weekKey: '',
@@ -26,6 +38,7 @@
     days: null,         // { "2".."7": { morning:[mã lớp...], afternoon:[mã lớp...] } }
     truongOptions: [],  // gợi ý "Trường" (datalist) — map từ tab Lịch tuần + lịch sử TKB của GV đang chọn
     lopOptions: [],      // gợi ý "Mã lớp" (datalist) — lịch sử TKB của GV đang chọn + mọi GV khác trong tuần đang xem
+    autoCells: new Set(), // set "day-session-idx" các ô vừa được tự động điền từ Lịch tuần (xem applyScheduleAutoFill) — chỉ để tô sáng UI, không lưu Firestore
   };
   let ptDraft = null; // bản nháp đang sửa trong modal "⏱️ Giờ tiết"
 
@@ -72,23 +85,47 @@
 
   window.addEventListener('edu:ready', ({ detail }) => {
     state.role = detail.profile.role;
-    // Công cụ quản lý cho admin/điều phối (in treo lớp cho cả đội) — giáo
-    // viên không cần sửa mã lớp từng tiết ở đây, ẩn hẳn tab để đỡ rối và
-    // tránh gọi list() collection mà rules không cho giáo viên đọc hết.
+    state.myTeacherCode = detail.profile.teacherCode || '';
     if (state.role === 'teacher') {
-      document.getElementById('timetableTabBtn')?.classList.add('force-hide');
-      document.querySelectorAll('[data-tab="timetable"]').forEach((b) => b.classList.add('force-hide'));
-      return;
+      // Giáo viên được XEM (không sửa) đúng TKB của chính mình — tab "👤
+      // Giáo viên" (quản lý toàn bộ đội ngũ) không thuộc quyền teacher nên
+      // vẫn ẩn; tab "🗓️ TKB lớp" thì HIỆN nhưng chuyển hẳn sang chế độ
+      // read-only (xem applyTeacherReadOnlyUI()).
+      document.querySelectorAll('[data-tab="teachers"]').forEach((b) => b.classList.add('force-hide'));
+      applyTeacherReadOnlyUI();
     }
     loadTeachersAndWeeks();
   });
 
+  /** Ẩn mọi control CHỈNH SỬA (⏱️ Giờ tiết/📥 Nhập Excel/💾 Lưu) — theo
+   * firestore.rules, teaching_timetable + teaching_timetable_periods chỉ
+   * cho phép admin ghi, giáo viên chỉ đọc được đúng bản ghi của chính mình.
+   * Ô "Mã lớp"/"Trường" trong lưới cũng chuyển readonly (xem renderGrid()). */
+  function applyTeacherReadOnlyUI() {
+    document.getElementById('ttPeriodTimesBtn')?.classList.add('force-hide');
+    document.getElementById('ttImportBtn')?.classList.add('force-hide');
+    document.getElementById('ttSaveBtn')?.classList.add('force-hide');
+    const teacherSel = document.getElementById('ttTeacherSelect');
+    if (teacherSel) teacherSel.disabled = true; // GV chỉ có đúng 1 lựa chọn (chính mình), không cần chọn tay
+  }
+
   async function loadTeachersAndWeeks() {
     try {
-      const [teachers, weeks] = await Promise.all([
-        window.EduRepositories.teachingTeacher.list({ orderBy: 'name' }),
-        window.EduRepositories.teachingWeek.listAll(),
-      ]);
+      let teachers, weeks;
+      if (state.role === 'teacher') {
+        // Firestore rules chỉ cho giáo viên đọc ĐÚNG 1 document
+        // teaching_teachers của chính mình — không được list() cả
+        // collection (giống cách js/teaching-schedule.js xử lý "Lịch của
+        // tôi"), nên KHÔNG dùng teachingTeacher.list() ở nhánh này.
+        const me = state.myTeacherCode ? await window.EduRepositories.teachingTeacher.getById(state.myTeacherCode) : null;
+        teachers = me ? [me] : [];
+        weeks = await window.EduRepositories.teachingWeek.listAll();
+      } else {
+        [teachers, weeks] = await Promise.all([
+          window.EduRepositories.teachingTeacher.list({ orderBy: 'name' }),
+          window.EduRepositories.teachingWeek.listAll(),
+        ]);
+      }
       state.teachers = teachers;
       state.weeks = weeks;
       renderWeekSelect();
@@ -117,10 +154,14 @@
     const sel = document.getElementById('ttTeacherSelect');
     if (!state.teachers.length) {
       sel.innerHTML = '<option value="">-- Chưa có giáo viên --</option>';
+      state.teacherCode = '';
       return;
     }
     sel.innerHTML = '<option value="">-- Chọn giáo viên --</option>'
       + state.teachers.map((t) => `<option value="${esc(t.code)}">${esc(t.name)} (${esc(t.code)})</option>`).join('');
+    // Giáo viên: tự động chọn đúng chính mình (danh sách chỉ có 1 lựa
+    // chọn) — không bắt gõ/chọn tay như admin.
+    if (state.role === 'teacher' && state.myTeacherCode) state.teacherCode = state.myTeacherCode;
     if (state.teacherCode && state.teachers.some((t) => t.code === state.teacherCode)) sel.value = state.teacherCode;
     else state.teacherCode = '';
   }
@@ -131,29 +172,75 @@
   async function loadAndRenderGrid() {
     const emptyEl = document.getElementById('ttEmpty');
     const wrapEl = document.getElementById('ttGridWrap');
-    const pasteHintEl = document.getElementById('ttPasteHint');
     if (!state.weekKey || !state.teacherCode) {
       emptyEl.classList.remove('force-hide');
       wrapEl.classList.add('force-hide');
-      pasteHintEl?.classList.add('force-hide');
+      // Giáo viên chưa được Admin liên kết "Mã NV" thì state.teachers rỗng
+      // (không tự chọn được ai) — nói rõ thay vì để nguyên câu chung chung
+      // "chọn 1 tuần và 1 giáo viên" (họ không có gì để chọn).
+      emptyEl.textContent = (state.role === 'teacher' && !state.myTeacherCode)
+        ? 'Tài khoản của bạn chưa được liên kết với hồ sơ giáo viên trong "Lịch giảng dạy" — vui lòng liên hệ Admin để được gán Mã NV (admin-users.html).'
+        : 'Chọn 1 tuần và 1 giáo viên ở trên để xem/sửa thời khoá biểu.';
       return;
     }
     try {
-      const [ptDoc, ttDoc] = await Promise.all([
+      const scheduleId = TS ? TS.scheduleDocId(state.teacherCode, state.weekKey) : null;
+      const [ptDoc, ttDoc, scheduleDoc] = await Promise.all([
         window.EduRepositories.teachingPeriodTimes.getById(state.teacherCode),
         window.EduRepositories.teachingTimetable.getById(M.docId(state.teacherCode, state.weekKey)),
+        scheduleId ? window.EduRepositories.teachingSchedule.getById(scheduleId).catch(() => null) : Promise.resolve(null),
       ]);
       state.periodTimes = M.clonePeriodTimes(ptDoc);
       state.days = M.normalizeDays(ttDoc && ttDoc.days, state.periodTimes);
+      applyScheduleAutoFill(scheduleDoc);
       emptyEl.classList.add('force-hide');
       wrapEl.classList.remove('force-hide');
-      pasteHintEl?.classList.remove('force-hide');
       renderPosterHead();
       renderGrid();
-      loadSuggestions(state.teacherCode, state.weekKey); // không await — nạp gợi ý xong render lại datalist riêng, không chặn lưới chính hiện ngay
+      // Gợi ý gõ nhanh chỉ cần cho chế độ SỬA (admin) — bỏ qua ở chế độ
+      // XEM của giáo viên, vừa không cần thiết (ô đã readonly) vừa tránh
+      // gọi listByWeek()/listByTeacher() (list cả collection) mà
+      // firestore.rules không cho phép role teacher.
+      if (state.role !== 'teacher') loadSuggestions(state.teacherCode, state.weekKey); // không await — nạp gợi ý xong render lại datalist riêng, không chặn lưới chính hiện ngay
     } catch (err) {
       toast('❌ ' + friendlyError(err));
     }
+  }
+
+  /** Tự động điền "Mã lớp"/"Trường" vào lưới TKB dựa trên dữ liệu đã ghi ở
+   * tab "📅 Lịch tuần" (collection teaching_schedule) của ĐÚNG giáo viên +
+   * tuần đang xem — thay cho việc phải gõ tay/dán bảng từ Excel như trước.
+   * Lịch tuần là NGUỒN GỐC (tiết nào có mã lớp thì mã lớp + trường của tiết
+   * đó trong TKB được ghi đè theo); những tiết Lịch tuần không có dữ liệu
+   * (vd tiết thứ 5 buổi chiều nếu giáo viên tự thêm qua "⏱️ Giờ tiết", hoặc
+   * cả tuần đó chưa nhập Lịch tuần) vẫn giữ nguyên giá trị đã lưu/gõ tay
+   * trong TKB — không tự xoá dữ liệu mà Lịch tuần không biết tới.
+   * state.autoCells ghi lại đúng những ô vừa được tự động điền (KHÔNG lưu
+   * vào Firestore, chỉ dùng để tô sáng UI ở renderGrid()). */
+  function applyScheduleAutoFill(scheduleDoc) {
+    state.autoCells = new Set();
+    if (!scheduleDoc || !scheduleDoc.days) return;
+    M.WEEKDAYS.forEach((d) => {
+      const schedDay = scheduleDoc.days[String(d)];
+      if (!schedDay) return;
+      M.SESSIONS.forEach((s) => {
+        const schedSess = schedDay[s];
+        if (!schedSess) return;
+        const location = (schedSess.location || '').trim();
+        const periods = schedSess.periods || [];
+        (state.days[String(d)][s] || []).forEach((cell, i) => {
+          const raw = periods[i];
+          // Tương thích ngược: dữ liệu Lịch tuần CŨ có thể vẫn là boolean
+          // true (giai đoạn chỉ tích chọn, chưa có mã lớp dạng chữ) — bỏ
+          // qua, không có mã lớp để điền.
+          const maLop = typeof raw === 'string' ? raw.trim() : '';
+          if (!maLop) return;
+          cell.maLop = maLop;
+          cell.truong = location || cell.truong;
+          state.autoCells.add(`${d}-${s}-${i}`);
+        });
+      });
+    });
   }
 
   /** Nạp gợi ý "Trường"/"Mã lớp" để gõ nhanh (datalist, vẫn gõ tự do được
@@ -238,6 +325,10 @@
   function renderGrid() {
     const table = document.getElementById('ttGrid');
     const dayHeaders = M.WEEKDAYS.map((d, i) => `<th class="tt-day-head tt-day-${i}">${M.WEEKDAY_LABELS[d]}</th>`).join('');
+    // Giáo viên chỉ được XEM (teaching_timetable chỉ cho admin write) —
+    // khoá cứng mọi ô nhập, không gắn listener sửa/dán bên dưới.
+    const readOnly = state.role === 'teacher';
+    const readOnlyAttr = readOnly ? ' readonly' : '';
 
     function sessionRows(sessionKey) {
       const periods = state.periodTimes[sessionKey];
@@ -260,9 +351,11 @@
             // list="ttLopOptions"/"ttTruongOptions" biến ô thành combo-box
             // (gõ tự do VẪN được, danh sách chỉ là gợi ý) — nạp động theo
             // đúng giáo viên/tuần đang xem qua loadSuggestions().
-            return `<td class="tt-cell"><div class="tt-cell-inner">
-              <input type="text" class="tt-input tt-input-lop" list="ttLopOptions" data-day="${d}" data-session="${sessionKey}" data-period-idx="${pi}" data-field="maLop" value="${esc(cell.maLop)}" placeholder="Mã lớp">
-              <input type="text" class="tt-input tt-input-truong" list="ttTruongOptions" data-day="${d}" data-session="${sessionKey}" data-period-idx="${pi}" data-field="truong" value="${esc(cell.truong)}" placeholder="Trường...">
+            const isAuto = state.autoCells.has(`${d}-${sessionKey}-${pi}`);
+            const autoTitle = isAuto ? ' title="🔄 Tự động lấy từ Lịch tuần — vẫn sửa được nếu TKB cần khác đi"' : '';
+            return `<td class="tt-cell"><div class="tt-cell-inner${isAuto ? ' tt-cell-auto' : ''}"${autoTitle}>
+              <input type="text" class="tt-input tt-input-lop" list="ttLopOptions" data-day="${d}" data-session="${sessionKey}" data-period-idx="${pi}" data-field="maLop" value="${esc(cell.maLop)}" placeholder="Mã lớp"${readOnlyAttr}>
+              <input type="text" class="tt-input tt-input-truong" list="ttTruongOptions" data-day="${d}" data-session="${sessionKey}" data-period-idx="${pi}" data-field="truong" value="${esc(cell.truong)}" placeholder="Trường..."${readOnlyAttr}>
             </div></td>`;
           }).join('')}
         </tr>`);
@@ -281,17 +374,19 @@
       <thead><tr><th>Buổi</th><th>Tiết</th><th>Thời gian</th>${dayHeaders}</tr></thead>
       <tbody>${sessionRows('morning')}${sessionRows('afternoon')}</tbody>`;
 
-    table.querySelectorAll('.tt-input').forEach((el) => {
-      el.addEventListener('input', () => {
-        const d = el.dataset.day, s = el.dataset.session, pi = Number(el.dataset.periodIdx), f = el.dataset.field;
-        state.days[d][s][pi][f] = el.value;
+    if (!readOnly) {
+      table.querySelectorAll('.tt-input').forEach((el) => {
+        el.addEventListener('input', () => {
+          const d = el.dataset.day, s = el.dataset.session, pi = Number(el.dataset.periodIdx), f = el.dataset.field;
+          state.days[d][s][pi][f] = el.value;
+        });
+        // Dán bảng trực tiếp CHỈ áp dụng cho cột "Mã lớp" (trường hợp dùng
+        // nhiều nhất — dán nguyên hàng mã lớp từ Excel) — ô "Trường" thường
+        // lặp lại giống nhau nhiều tiết liền nên gõ tay/copy 1 ô là đủ,
+        // không cần hỗ trợ dán khối cho ô đó.
+        if (el.dataset.field === 'maLop') el.addEventListener('paste', (e) => handleGridPaste(e, el, table));
       });
-      // Dán bảng trực tiếp CHỈ áp dụng cho cột "Mã lớp" (trường hợp dùng
-      // nhiều nhất — dán nguyên hàng mã lớp từ Excel) — ô "Trường" thường
-      // lặp lại giống nhau nhiều tiết liền nên gõ tay/copy 1 ô là đủ,
-      // không cần hỗ trợ dán khối cho ô đó.
-      if (el.dataset.field === 'maLop') el.addEventListener('paste', (e) => handleGridPaste(e, el, table));
-    });
+    }
   }
 
   /** Sắp xếp mọi (buổi, tiết) thành 1 danh sách "hàng" phẳng ĐÚNG THỨ TỰ

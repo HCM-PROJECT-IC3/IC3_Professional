@@ -30,7 +30,10 @@ window.addEventListener('edu:ready', ({ detail }) => {
   show('imageManagerLink', role === 'admin');
   show('teacherDashboardLink', role === 'admin' || role === 'teacher');
   show('rosterManagerLink', role === 'admin' || role === 'coordinator');
-  show('teachingScheduleLink', role === 'admin' || role === 'coordinator' || role === 'teacher');
+  // Điều phối đào tạo (coordinator) không có quyền xem Lịch tuần lẫn TKB
+  // lớp nữa (teaching-schedule.html) — chỉ còn admin/teacher, khớp
+  // EDU_ALLOWED_ROLES + firestore.rules của trang đó.
+  show('teachingScheduleLink', role === 'admin' || role === 'teacher');
   show('coordinatorDashboardLink', role === 'admin' || role === 'coordinator');
 
   // 3 mục trong chính trang này (SPA, không phải link riêng): Bộ đề của tôi

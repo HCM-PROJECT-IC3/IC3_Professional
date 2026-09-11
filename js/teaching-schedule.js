@@ -4,12 +4,15 @@
    dạy/làm việc hàng tuần của đội ngũ giáo viên (thay file Excel
    "LỊCH GIẢNG DẠY TEAM GVTH...xlsx").
 
-   - admin/coordinator: toàn quyền quản lý (thêm/sửa/xoá GV, nhập Excel,
-     tạo tuần mới, sửa lịch MỌI giáo viên) — bảng tổng hợp nhiều GV +
-     modal lưới lịch (renderWeeklyTab/openSchedModal).
+   - admin: toàn quyền quản lý (thêm/sửa/xoá GV, nhập Excel, tạo tuần mới,
+     sửa lịch MỌI giáo viên) — bảng tổng hợp nhiều GV + modal lưới lịch
+     (renderWeeklyTab/openSchedModal).
    - teacher (đã được Admin liên kết "Mã NV" ở admin-users.html): khối
      riêng "Lịch của tôi" — TỰ CẬP NHẬT đúng lịch của chính mình bằng lưới
      thẻ theo ngày, sửa/lưu trực tiếp không cần modal (renderMyWeekView).
+   - coordinator (Điều phối đào tạo): KHÔNG được vào trang này nữa (chặn ở
+     EDU_ALLOWED_ROLES của teaching-schedule.html + firestore.rules) — các
+     đoạn code còn lại trong file chỉ còn phân biệt admin/teacher.
 
    Kiến trúc theo đúng mẫu roster-manager.js: models/repositories đã
    tách riêng (js/models/teaching-schedule.model.js,
@@ -88,30 +91,29 @@
     loadEverything();
   });
 
-  /** Ẩn/khoá các chức năng quản lý nhiều GV (chỉ admin/coordinator) khi tài
-   * khoản đăng nhập là giáo viên, thay bằng khối "Lịch của tôi" (thẻ theo
-   * ngày, sửa/lưu trực tiếp — xem renderMyWeekView()). Quyền ghi thật sự
-   * vẫn do firestore.rules chốt (chỉ đúng teacherCode == chính mình), đây
-   * chỉ là lớp UX. */
+  /** Ẩn/khoá các chức năng quản lý nhiều GV (chỉ admin) khi tài khoản đăng
+   * nhập là giáo viên, thay bằng khối "Lịch của tôi" (thẻ theo ngày,
+   * sửa/lưu trực tiếp — xem renderMyWeekView()). Quyền ghi thật sự vẫn do
+   * firestore.rules chốt (chỉ đúng teacherCode == chính mình), đây chỉ là
+   * lớp UX. */
   function applyRoleUI() {
     const hide = (id) => { const el = document.getElementById(id); if (el) el.classList.add('force-hide'); };
     const show = (id) => { const el = document.getElementById(id); if (el) el.classList.remove('force-hide'); };
     if (!isTeacherRole()) return;
-    // Toàn bộ sidebar + khối chính (Tổng quan/Thẻ) chỉ dành cho admin/điều
-    // phối quản lý NHIỀU giáo viên — giáo viên chỉ cần đúng 1 khối
-    // "Lịch của tôi" full-width bên dưới, ẩn nguyên khối cha 1 lần thay vì
-    // ẩn từng phần tử con riêng lẻ.
+    // Toàn bộ sidebar + khối chính (Tổng quan/Thẻ) chỉ dành cho admin quản
+    // lý NHIỀU giáo viên — giáo viên chỉ cần đúng 1 khối "Lịch của tôi"
+    // full-width bên dưới, ẩn nguyên khối cha 1 lần thay vì ẩn từng phần
+    // tử con riêng lẻ.
     hide('weeklyLayout');
     show('myWeekWrap');
-    // #pageBanner mặc định ẩn (force-hide) vì admin/điều phối không cần —
-    // giáo viên thì "Lịch của tôi" không có sidebar/nút ℹ️ thay thế nên
-    // vẫn cần hiện khối hướng dẫn này.
-    const banner = document.getElementById('pageBanner');
-    if (banner) {
-      banner.classList.remove('force-hide');
-      banner.innerHTML = 'Tự <b>cập nhật lịch làm việc/giảng dạy hàng tuần</b> của chính bạn ngay tại đây —'
-        + ' chọn <b>loại hình phụ trách</b> cho từng buổi Sáng/Chiều, điền địa điểm và lớp đang dạy, rồi bấm'
-        + ' <b>"💾 Lưu lịch tuần của tôi"</b>. Có thắc mắc về lịch, liên hệ Điều phối đào tạo/Admin.';
+    // Banner giới thiệu riêng cho giáo viên đã bị bỏ (chiếm quá nhiều chỗ
+    // phía trên lưới thẻ) — dồn hướng dẫn vào đúng nút ℹ️ sẵn có ở tiêu đề
+    // (admin/teacher dùng chung 1 nút, chỉ đổi nội dung tooltip theo role).
+    const infoBtn = document.querySelector('.topbar .info-btn');
+    if (infoBtn) {
+      infoBtn.title = 'Tự cập nhật lịch làm việc/giảng dạy hàng tuần của chính bạn ngay tại đây — chọn loại '
+        + 'hình phụ trách cho từng buổi Sáng/Chiều, điền địa điểm và lớp đang dạy, rồi bấm "💾 Lưu lịch tuần của tôi". '
+        + 'Có thắc mắc về lịch, liên hệ Admin.';
     }
   }
 

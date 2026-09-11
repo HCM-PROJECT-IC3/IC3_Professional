@@ -194,45 +194,48 @@ service cloud.firestore {
     // ---- Lịch giảng dạy hàng tuần của đội ngũ giáo viên
     //      (teaching-schedule.html) — thay thế file Excel
     //      "LỊCH GIẢNG DẠY TEAM GVTH...xlsx" quản lý thủ công trước đây.
-    //      Admin/coordinator: toàn quyền quản lý (thêm/sửa/xoá GV, nhập
-    //      Excel, sửa lịch mọi tuần). Giáo viên (đã được Admin liên kết
-    //      "teacherCode" trong admin-users.html): CHỈ ĐỌC (chế độ xem),
-    //      và CHỈ đúng bản ghi của chính mình — không sửa được, không xem
-    //      được lịch giáo viên khác. ----
+    //      Admin: toàn quyền quản lý (thêm/sửa/xoá GV, nhập Excel, sửa lịch
+    //      mọi tuần). Giáo viên (đã được Admin liên kết "teacherCode" trong
+    //      admin-users.html): CHỈ ĐỌC (chế độ xem, riêng teaching_schedule
+    //      thì TỰ CẬP NHẬT được), và CHỈ đúng bản ghi của chính mình —
+    //      không xem/sửa được lịch giáo viên khác. Điều phối đào tạo
+    //      (coordinator) KHÔNG còn quyền gì trên các collection này nữa —
+    //      cố tình bỏ isCoordinator() khỏi mọi allow bên dưới (trang
+    //      teaching-schedule.html cũng đã chặn từ EDU_ALLOWED_ROLES). ----
     match /teaching_teachers/{teacherCode} {
-      allow read: if isAdmin() || isCoordinator() || (isApprovedTeacher() && teacherCode == myTeacherCode());
-      allow write: if isAdmin() || isCoordinator();
+      allow read: if isAdmin() || (isApprovedTeacher() && teacherCode == myTeacherCode());
+      allow write: if isAdmin();
     }
     match /teaching_weeks/{weekKey} {
       // Nhãn tuần (vd "7.9 - 12.9.2026") không phải dữ liệu nhạy cảm và cần
       // đọc được để giáo viên chọn đúng tuần xem lịch của mình → cho phép
       // mọi giáo viên đã duyệt đọc toàn bộ danh sách tuần (không cần scope).
-      allow read: if isAdmin() || isCoordinator() || isApprovedTeacher();
-      allow write: if isAdmin() || isCoordinator();
+      allow read: if isAdmin() || isApprovedTeacher();
+      allow write: if isAdmin();
     }
     match /teaching_schedule/{scheduleId} {
-      allow read: if isAdmin() || isCoordinator()
+      allow read: if isAdmin()
         || (isApprovedTeacher() && resource.data.teacherCode == myTeacherCode());
       // Giáo viên được TỰ CẬP NHẬT đúng lịch của chính mình (teaching-schedule.html
       // → khối "Lịch của tôi") — chỉ tạo/sửa bản ghi có teacherCode == chính mình,
-      // không đụng được lịch giáo viên khác. Xoá vẫn chỉ Admin/Điều phối (không có
-      // nút xoá lịch tuần trên UI, chỉ để phòng thao tác ngoài ý muốn).
-      allow create, update: if isAdmin() || isCoordinator()
+      // không đụng được lịch giáo viên khác. Xoá vẫn chỉ Admin (không có nút xoá
+      // lịch tuần trên UI, chỉ để phòng thao tác ngoài ý muốn).
+      allow create, update: if isAdmin()
         || (isApprovedTeacher() && request.resource.data.teacherCode == myTeacherCode());
-      allow delete: if isAdmin() || isCoordinator();
+      allow delete: if isAdmin();
     }
 
     // ---- Tab "🗓️ TKB lớp" (thời khoá biểu dạng lưới tiết học, treo lớp) —
-    //      quản lý bởi Admin/Điều phối; giáo viên chỉ đọc ĐÚNG bản ghi của
-    //      chính mình (xem lịch tiết của mình), không sửa được. ----
+    //      quản lý bởi Admin; giáo viên chỉ đọc ĐÚNG bản ghi của chính mình
+    //      (xem lịch tiết của mình), không sửa được. ----
     match /teaching_timetable_periods/{teacherCode} {
-      allow read: if isAdmin() || isCoordinator() || (isApprovedTeacher() && teacherCode == myTeacherCode());
-      allow write: if isAdmin() || isCoordinator();
+      allow read: if isAdmin() || (isApprovedTeacher() && teacherCode == myTeacherCode());
+      allow write: if isAdmin();
     }
     match /teaching_timetable/{docId} {
-      allow read: if isAdmin() || isCoordinator()
+      allow read: if isAdmin()
         || (isApprovedTeacher() && resource.data.teacherCode == myTeacherCode());
-      allow write: if isAdmin() || isCoordinator();
+      allow write: if isAdmin();
     }
   }
 }

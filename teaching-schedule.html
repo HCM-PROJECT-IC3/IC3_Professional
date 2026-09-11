@@ -29,27 +29,27 @@
 
 <div class="wrap">
 
-  <!-- Chỉ hiện với role giáo viên (applyRoleUI() điền chữ + bỏ force-hide)
-       — admin/điều phối không cần khối giới thiệu này nữa (xem nút ℹ️ ở
-       tiêu đề), giữ nguyên chỗ trống để lịch của 18 GV lên gần đầu trang
-       nhất có thể. -->
-  <div class="banner force-hide" id="pageBanner"></div>
-
   <!-- ============ TAB: WEEKLY SCHEDULE ============ -->
   <section class="tab-panel active" id="panel-weekly">
-    <!-- ============ Menu NẰM NGANG Ở TRÊN, 2 hàng cân đối (hàng 1: tab +
-         chế độ xem trái/phải; hàng 2: tuần/lọc trái, hành động phải) +
-         khối chính bên dưới (ma trận/thẻ) CHIẾM TRỌN bề rộng màn hình —
-         đã bỏ KPI/"Cần chú ý" khỏi menu, chỉ còn điều hướng/thao tác. ============ -->
+    <!-- QUAN TRỌNG: bản gốc đặt #mainTabs NẰM TRONG #weeklyLayout — vì
+         applyRoleUI() (js/teaching-schedule.js) ẩn nguyên khối #weeklyLayout
+         với role giáo viên (thay bằng #myWeekWrap), nút "🗓️ TKB lớp" bị ẩn
+         theo LUÔN, khiến giáo viên không có cách nào bấm sang xem TKB của
+         mình dù trang đã cho phép. Kéo #mainTabs ra NGOÀI, làm anh em cùng
+         cấp với #weeklyLayout/#myWeekWrap, để nó LUÔN hiện bất kể đang ở
+         chế độ admin hay "Lịch của tôi" của giáo viên. -->
+    <div class="tabs main-tabs" role="tablist" id="mainTabs">
+      <button type="button" class="tab-btn active" data-tab="weekly" role="tab">📅 Lịch tuần</button>
+      <button type="button" class="tab-btn" data-tab="timetable" role="tab" id="timetableTabBtn">🗓️ TKB lớp</button>
+      <button type="button" class="tab-btn" data-tab="teachers" role="tab" id="teachersTabBtn">👤 Giáo viên</button>
+    </div>
+
+    <!-- ============ Menu NẰM NGANG Ở TRÊN (chế độ xem trái/phải; hàng 2:
+         tuần/lọc trái, hành động phải) + khối chính bên dưới (ma trận/thẻ)
+         CHIẾM TRỌN bề rộng màn hình — chỉ admin mới thấy khối này. ============ -->
     <div class="weekly-layout" id="weeklyLayout">
       <div class="weekly-sidebar" id="weeklySidebar">
         <div class="weekly-topbar-row">
-          <div class="tabs" role="tablist" id="mainTabs">
-            <button type="button" class="tab-btn active" data-tab="weekly" role="tab">📅 Lịch tuần</button>
-            <button type="button" class="tab-btn" data-tab="timetable" role="tab" id="timetableTabBtn">🗓️ TKB lớp</button>
-            <button type="button" class="tab-btn" data-tab="teachers" role="tab" id="teachersTabBtn">👤 Giáo viên</button>
-          </div>
-
           <!-- Điều phối đào tạo cần TỔNG QUAN cả đội (18+ GV) hơn là xem
                từng người 1 — mặc định mở "📊 Tổng quan" (ma trận), chuyển
                sang "🎴 Thẻ" khi cần đọc chi tiết/sửa lịch từng GV. -->
@@ -178,12 +178,6 @@
     </div>
 
     <div class="tt-empty force-hide" id="ttEmpty">Chọn 1 tuần và 1 giáo viên ở trên để xem/sửa thời khoá biểu.</div>
-    <div class="tt-paste-hint force-hide" id="ttPasteHint">
-      💡 Mẹo: mỗi tiết có 2 ô — <b>Mã lớp</b> (trên) và <b>Trường</b> (dưới, để trống nếu dạy cùng trường như tiết trước) —
-      vì 1 giáo viên có thể dạy linh hoạt nhiều trường khác nhau, kể cả đổi trường giữa các tiết trong cùng 1 buổi.
-      Bôi đen 1 vùng ô Mã lớp trong Excel/Google Sheets rồi <b>Ctrl+C</b>, bấm vào đúng ô Mã lớp muốn bắt đầu điền rồi
-      <b>Ctrl+V</b> — hệ thống tự điền tiếp theo hàng/cột, không cần gõ tay từng ô.
-    </div>
 
     <div class="tt-grid-wrap force-hide" id="ttGridWrap">
       <div class="tt-poster-head" id="ttPosterHead"></div>
@@ -424,11 +418,14 @@
 <div class="toast" id="toast"></div>
 
 <!-- QUAN TRỌNG: phải khai báo EDU_ALLOWED_ROLES TRƯỚC js/auth-guard.js —
-     admin/coordinator: toàn quyền quản lý (giống roster-manager.html).
+     admin: toàn quyền quản lý (Lịch tuần + TKB lớp của mọi giáo viên).
      teacher (đã được Admin liên kết Mã NV ở admin-users.html): được vào
      ở CHẾ ĐỘ CHỈ XEM đúng lịch của chính mình, xem js/teaching-schedule.js
-     phần "applyRoleUI()" — quyền thật sự vẫn do firestore.rules chốt. -->
-<script>window.EDU_ALLOWED_ROLES = ['admin', 'coordinator', 'teacher'];</script>
+     phần "applyRoleUI()" và js/teaching-timetable.js phần
+     "applyTeacherReadOnlyUI()" — quyền thật sự vẫn do firestore.rules chốt.
+     coordinator (Điều phối đào tạo) KHÔNG có quyền vào trang này (cả Lịch
+     tuần lẫn TKB lớp) — cố tình bỏ khỏi danh sách bên dưới. -->
+<script>window.EDU_ALLOWED_ROLES = ['admin', 'teacher'];</script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
