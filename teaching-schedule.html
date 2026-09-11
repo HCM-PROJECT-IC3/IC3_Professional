@@ -314,41 +314,6 @@
   </div>
 </div>
 
-<!-- ============ MODAL: MỤC ĐÍCH "PHIẾU CÔNG TÁC" ============ -->
-<!-- Mẫu Word gốc chỉ dùng đúng 2 giá trị "Mục đích" — để người dùng CHỌN
-     lúc xuất thay vì suy luận tự động (1 tuần có thể vừa dạy vừa ôn thi,
-     không có câu trả lời "đúng" duy nhất), xem js/teaching-schedule.js. -->
-<div class="modal-overlay" id="congTacModalOverlay">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h3>📋 Xuất Phiếu công tác</h3>
-      <button type="button" class="modal-close" id="congTacCloseBtn">✕</button>
-    </div>
-    <div class="modal-body">
-      <!-- Chỉ có ý nghĩa khi admin xuất thay cho giáo viên khác (nhiều lựa
-           chọn giáo viên/tuần cùng lúc trên trang) — giáo viên tự xuất
-           phiếu của chính mình ("Lịch của tôi") thì luôn chỉ 1 khả năng,
-           dòng này giúp xác nhận lại KHÔNG BẤM NHẦM giáo viên/tuần. -->
-      <div class="panel-toolbar-info" id="congTacModalTeacher" style="margin-bottom:.8rem"></div>
-      <div class="form-group">
-        <label for="f-cong-tac-purpose">Mục đích *</label>
-        <select id="f-cong-tac-purpose" class="form-input">
-          <option value="Giảng dạy">Giảng dạy</option>
-          <option value="Ôn Thi">Ôn Thi</option>
-        </select>
-      </div>
-      <div class="import-hint">
-        Họ tên, bộ phận, tên trường và chi tiết tiết Sáng/Chiều được tự động điền theo đúng <b>Lịch tuần</b> đang
-        chọn — chỉ cần chọn Mục đích rồi bấm Xuất PDF, mở file in/ký như bình thường.
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-ghost" id="congTacCancelBtn">Huỷ</button>
-      <button type="button" class="btn btn-primary" id="congTacConfirmBtn">📋 Xuất PDF</button>
-    </div>
-  </div>
-</div>
-
 <!-- ============ MODAL: LƯỚI LỊCH TUẦN CỦA 1 GIÁO VIÊN ============ -->
 <div class="modal-overlay" id="schedModalOverlay">
   <div class="modal-box modal-wide modal-xwide">

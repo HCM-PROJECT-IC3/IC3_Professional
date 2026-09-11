@@ -905,46 +905,27 @@
   });
 
   // ------------------------------------------------------------
-  // MODAL: "📋 Phiếu công tác" — mẫu On_Tap_MOS/Phieu cong tac.doc, tự điền
-  // theo đúng Lịch tuần (xem js/export/teaching-schedule-cong-tac-pdf.js).
-  // Dùng CHUNG 1 modal cho 3 lối vào: giáo viên tự xuất phiếu của chính
-  // mình ("Lịch của tôi"), admin xuất phiếu thay cho 1 giáo viên cụ thể
-  // (nút 📋 trên từng thẻ/hàng ở "📊 Tổng quan"/"🎴 Thẻ"), và admin xuất
-  // HÀNG LOẠT mọi giáo viên đang hiển thị vào 1 file duy nhất ("📋 Xuất PDF
-  // tất cả Phiếu công tác" trên thanh công cụ) — congTacTarget (1 giáo
-  // viên) HOẶC congTacBulk (nhiều giáo viên) ghi nhớ ĐÚNG dữ liệu sắp
-  // xuất, set trước khi mở modal, đọc lại khi bấm Xuất PDF trong modal.
-  // Chỉ hỏi đúng 1 lựa chọn "Mục đích" (Giảng dạy/Ôn Thi — 2 giá trị duy
-  // nhất mẫu gốc dùng, áp dụng chung cho MỌI giáo viên nếu xuất hàng loạt
-  // — không có cách nào chọn riêng mục đích từng người trong 1 lần xuất),
-  // mọi field còn lại tự điền, không hỏi thêm gì khác.
+  // "📋 Phiếu công tác" — mẫu On_Tap_MOS/Phieu cong tac.doc, tự điền theo
+  // đúng Lịch tuần, xuất THẲNG khi bấm nút (không qua modal hỏi gì nữa —
+  // "Mục đích" từng cho chọn Giảng dạy/Ôn Thi qua modal, nhưng người dùng
+  // phản hồi bỏ hẳn lựa chọn đó, cố định luôn "Giảng dạy IC3" — xem hằng
+  // số PURPOSE trong js/export/teaching-schedule-cong-tac-pdf.js). 3 lối
+  // vào: giáo viên tự xuất phiếu của chính mình ("Lịch của tôi"), admin
+  // xuất phiếu thay cho 1 giáo viên cụ thể (nút 📋 trên từng thẻ/hàng ở
+  // "📊 Tổng quan"/"🎴 Thẻ"), và admin xuất HÀNG LOẠT mọi giáo viên đang
+  // hiển thị vào 1 file duy nhất ("📋 Xuất PDF tất cả Phiếu công tác").
   // ------------------------------------------------------------
-  let congTacTarget = null; // { teacher, days, weekLabel, weekKey } của lần mở modal gần nhất — chế độ 1 giáo viên
-  let congTacBulk = null;   // { list:[{teacher,days}], weekLabel, weekKey } — chế độ xuất hàng loạt
-  function openCongTacModal() {
-    const info = document.getElementById('congTacModalTeacher');
-    if (info) {
-      if (congTacBulk) info.textContent = `👥 ${congTacBulk.list.length} giáo viên · 🗓️ Tuần: ${congTacBulk.weekLabel}`;
-      else if (congTacTarget) info.textContent = `👤 ${congTacTarget.teacher.name || congTacTarget.teacher.code} · 🗓️ Tuần: ${congTacTarget.weekLabel}`;
-    }
-    document.getElementById('congTacModalOverlay').classList.add('show');
-  }
-  function closeCongTacModal() {
-    document.getElementById('congTacModalOverlay').classList.remove('show');
-    congTacTarget = null;
-    congTacBulk = null;
-  }
   document.getElementById('myWeekCongTacBtn')?.addEventListener('click', () => {
     if (!state.myTeacherCode || !state.currentWeekKey || !state.myWeekDraft) { toast('⚠️ Chưa có lịch tuần để xuất.'); return; }
+    if (!window.EduCongTacPdf) { toast('⚠️ Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
     const t = state.teachers.find((x) => x.id === state.myTeacherCode);
     const week = state.weeks.find((w) => w.id === state.currentWeekKey);
-    congTacTarget = {
-      teacher: t || { code: state.myTeacherCode, name: '' },
-      days: state.myWeekDraft, // đúng những gì đang hiển thị trên màn hình, kể cả thay đổi CHƯA lưu
-      weekLabel: week ? (week.label || week.id) : state.currentWeekKey,
-      weekKey: state.currentWeekKey, // để suy ra ngày dương lịch cụ thể trong mục "Thời gian"
-    };
-    openCongTacModal();
+    // Xuất đúng những gì đang hiển thị trên màn hình (kể cả thay đổi CHƯA
+    // lưu), nhất quán với nút "🖨️ Xuất PDF" lịch tuần bên cạnh.
+    window.EduCongTacPdf.exportOne(
+      t || { code: state.myTeacherCode, name: '' }, state.myWeekDraft,
+      week ? (week.label || week.id) : state.currentWeekKey, state.currentWeekKey, M,
+    );
   });
   /** Admin/điều phối bấm nút 📋 trên 1 thẻ/hàng giáo viên cụ thể (khác
    * "Lịch của tôi" — không có bản nháp đang sửa dở, luôn dùng đúng dữ liệu
@@ -953,14 +934,10 @@
     const t = state.teachers.find((x) => x.id === teacherCode || x.code === teacherCode);
     if (!t) return;
     if (!state.currentWeekKey) { toast('⚠️ Hãy chọn 1 tuần trước.'); return; }
+    if (!window.EduCongTacPdf) { toast('⚠️ Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
     const week = state.weeks.find((w) => w.id === state.currentWeekKey);
     const days = (state.schedulesByTeacher[teacherCode] && state.schedulesByTeacher[teacherCode].days) || M.emptyDays();
-    congTacTarget = {
-      teacher: t, days,
-      weekLabel: week ? (week.label || week.id) : state.currentWeekKey,
-      weekKey: state.currentWeekKey,
-    };
-    openCongTacModal();
+    window.EduCongTacPdf.exportOne(t, days, week ? (week.label || week.id) : state.currentWeekKey, state.currentWeekKey, M);
   }
   /** Nút "📋 Xuất PDF tất cả Phiếu công tác" — cùng bộ lọc GV đang hiển thị
    * với "🖨️ Xuất PDF tất cả" (Lịch tuần), chỉ khác đầu ra là Phiếu công
@@ -968,28 +945,12 @@
    * js/export/teaching-schedule-cong-tac-pdf.js). */
   document.getElementById('exportAllCongTacBtn')?.addEventListener('click', () => {
     if (!state.currentWeekKey) { toast('⚠️ Hãy chọn 1 tuần trước.'); return; }
+    if (!window.EduCongTacPdf) { toast('⚠️ Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
     const list = filteredTeachersWithDays();
     if (!list.length) { toast('⚠️ Không có giáo viên nào để xuất (kiểm tra lại bộ lọc/tìm kiếm).'); return; }
     const week = state.weeks.find((w) => w.id === state.currentWeekKey);
-    congTacBulk = { list, weekLabel: week ? (week.label || week.id) : state.currentWeekKey, weekKey: state.currentWeekKey };
-    openCongTacModal();
-  });
-  document.getElementById('congTacCloseBtn')?.addEventListener('click', closeCongTacModal);
-  document.getElementById('congTacCancelBtn')?.addEventListener('click', closeCongTacModal);
-  document.getElementById('congTacModalOverlay')?.addEventListener('click', (e) => {
-    if (e.target.id === 'congTacModalOverlay') closeCongTacModal();
-  });
-  document.getElementById('congTacConfirmBtn')?.addEventListener('click', () => {
-    if (!congTacTarget && !congTacBulk) return;
-    if (!window.EduCongTacPdf) { toast('⚠️ Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
-    const purpose = document.getElementById('f-cong-tac-purpose').value;
-    if (congTacBulk) {
-      window.EduCongTacPdf.exportMany(congTacBulk.list, congTacBulk.weekKey, M, purpose, congTacBulk.weekLabel);
-    } else {
-      const { teacher, days, weekLabel, weekKey } = congTacTarget;
-      window.EduCongTacPdf.exportOne(teacher, days, weekLabel, weekKey, M, purpose);
-    }
-    closeCongTacModal();
+    const weekLabel = week ? (week.label || week.id) : state.currentWeekKey;
+    window.EduCongTacPdf.exportMany(list, state.currentWeekKey, M, weekLabel);
   });
 
   // ------------------------------------------------------------
