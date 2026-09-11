@@ -358,8 +358,11 @@ tr:last-child td { border-bottom: none }
 .teacher-card-stats { display: flex; flex-wrap: wrap; gap: .4rem .9rem; font-size: .76rem; color: var(--muted) }
 .teacher-card-stats b { color: var(--text); font-size: .84rem }
 
-.teacher-card-actions { display: flex; gap: .6rem; margin-top: auto }
-.teacher-card-actions .btn { flex: 1; padding: .55rem .7rem; font-size: .8rem }
+/* flex-wrap: wrap — thêm nút "📋 Phiếu công tác" (chữ dài hơn hẳn 2 nút
+   còn lại) khiến 3 nút chia đều 1 hàng dễ bị bóp chữ trên thẻ hẹp; cho
+   phép tự xuống hàng thay vì ép vừa 1 hàng bằng mọi giá. */
+.teacher-card-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: auto }
+.teacher-card-actions .btn { flex: 1; min-width: 110px; padding: .55rem .7rem; font-size: .8rem }
 
 /* Nút chuyển "📊 Tổng quan" ⇄ "🎴 Thẻ" — segmented control nhỏ, cùng
    ngôn ngữ thiết kế với .tabs chính của trang. */
