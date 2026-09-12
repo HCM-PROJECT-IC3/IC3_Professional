@@ -280,7 +280,10 @@ tr:last-child td { border-bottom: none }
 .import-stat.ok b { color: var(--green) }
 .import-stat.warn b { color: var(--yellow) }
 .import-stat.err b { color: var(--red) }
-.import-preview-scroll { max-height: 240px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm) }
+/* overflow-x thêm vào để chịu được cột "GV phụ trách" phát sinh khi nạp
+   file dạng "FORM QUẢN LÝ LỚP" (mỗi sheet 1 lớp) — modal chỉ rộng 620px
+   nên 6 cột dễ bị bóp, cuộn ngang an toàn hơn là cắt/che dữ liệu. */
+.import-preview-scroll { max-height: 240px; overflow-y: auto; overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-sm) }
 .import-preview-scroll table { min-width: 0 }
 .import-preview-scroll th, .import-preview-scroll td { padding: .5rem .6rem; font-size: .76rem }
 .import-row-warn td { background: var(--yellow-lt) }

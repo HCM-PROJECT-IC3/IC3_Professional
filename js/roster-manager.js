@@ -414,12 +414,21 @@
     className: ['lop', 'ten lop', 'class', 'classname'],
   };
   let pendingImportRows = []; // kết quả phân tích, chờ người dùng bấm "Nạp danh sách"
+  let pendingImportFormat = 'flat'; // 'flat' (1 sheet, 1 hàng tiêu đề) | 'classSheet' (mỗi sheet = 1 lớp, kiểu FORM QUẢN LÝ LỚP)
 
   function stripDiacritics(str) {
     return String(str ?? '')
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
       .replace(/đ/gi, 'd')
       .toLowerCase().trim().replace(/\s+/g, ' ');
+  }
+
+  /** Chuẩn hoá tên cột thành 1 khoá chỉ gồm a-z0-9 — dùng riêng để dò tiêu
+   * đề dạng "classSheet" (VD "MÃ SỐ HS" -> "masohs", "HỌ & TÊN " -> "hoten"),
+   * vì các mẫu này có thêm khoảng trắng/ký tự "&" mà bảng alias của định
+   * dạng "flat" phía trên không cover hết. */
+  function normalizeHeaderKey(cell) {
+    return stripDiacritics(cell).replace(/[^a-z0-9]/g, '');
   }
 
   function matchImportHeader(cell) {
@@ -430,7 +439,7 @@
     return null;
   }
 
-  function parseImportWorkbook(workbook) {
+  function parseFlatWorkbook(workbook) {
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
     if (!rows.length) throw new Error('File Excel không có dữ liệu.');
@@ -456,22 +465,143 @@
     return out;
   }
 
+  /* ------------------------------------------------------------
+     ĐỊNH DẠNG "classSheet": file kiểu FORM QUẢN LÝ LỚP (mỗi sheet là
+     1 lớp — ô A1 = "TRƯỜNG", A2 = "LỚP:", có hàng tiêu đề "MÃ SỐ HS" /
+     "HỌ & TÊN" và 1 ô "TÊN GV ..." — xem On_Tap_MOS/FORM QUẢN LÝ LỚP
+     4.xlsx). Nhận diện TỰ ĐỘNG (không cần người dùng chọn định dạng) để
+     tận dụng luôn dữ liệu Trường/Lớp/GV có sẵn trong file thay vì bắt
+     nhập lại — bấm cùng 1 nút "📥 Nạp từ Excel" cho cả 2 kiểu file.
+     ------------------------------------------------------------ */
+  const CLASS_SHEET_SKIP_SHEETS = ['CÔNG CỤ ÔN TẬP', 'BÁO GIẢNG']; // sheet tiện ích, không phải danh sách lớp
+
+  function extractTeacherNameFromSheet(rows) {
+    for (const row of rows) {
+      for (const raw0 of row) {
+        const raw = String(raw0 || '');
+        if (!raw) continue;
+        if (normalizeHeaderKey(raw).indexOf('tengv') !== 0) continue;
+        // "GV" không có dấu nên vị trí trong chuỗi gốc không lệch do NFD —
+        // an toàn khi cắt chuỗi gốc theo vị trí tìm được trên chuỗi gốc.
+        const idx = raw.search(/gv/i);
+        if (idx !== -1) return raw.slice(idx + 2).trim();
+      }
+    }
+    return '';
+  }
+
+  function parseClassSheetWorkbook(workbook) {
+    const out = [];
+    for (const sheetName of workbook.SheetNames) {
+      if (CLASS_SHEET_SKIP_SHEETS.some((s) => stripDiacritics(s) === stripDiacritics(sheetName))) continue;
+      const ws = workbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
+      if (!rows.length || normalizeHeaderKey(rows[0][0]) !== 'truong') continue; // không đúng cấu trúc mong đợi
+
+      const school = String((rows[0] || [])[1] || '').trim();
+      const className = String((rows[1] || [])[1] || '').trim();
+      if (!className) continue;
+      const teacherName = extractTeacherNameFromSheet(rows);
+
+      // Dò hàng tiêu đề chứa "MÃ SỐ HS" trong vài hàng đầu (không cố định
+      // số hàng — file mẫu có 4 hàng banner/merge phía trên hàng tiêu đề).
+      let headerIdx = -1, colMssv = -1, colName = -1;
+      for (let i = 0; i < Math.min(rows.length, 12); i++) {
+        const normRow = rows[i].map(normalizeHeaderKey);
+        const mIdx = normRow.indexOf('masohs');
+        if (mIdx !== -1) {
+          headerIdx = i; colMssv = mIdx;
+          colName = normRow.findIndex((h) => h === 'hoten' || h === 'hovaten');
+          break;
+        }
+      }
+      if (headerIdx === -1 || colName === -1) continue; // sheet lạ — bỏ qua an toàn, không đoán bừa cột
+
+      // LƯU Ý: ngay sau hàng tiêu đề còn 5 hàng phụ (THỨ/NGÀY/TÊN GV/BÀI
+      // DẠY/ĐÃ HOÀN THÀNH — thuộc khối lịch giảng dạy, KHÔNG phải học
+      // sinh) có cột MÃ SỐ HS/HỌ & TÊN trống — phải BỎ QUA (không dừng)
+      // các hàng này trước khi gặp học sinh đầu tiên. Ngược lại, phía
+      // DƯỚI danh sách học sinh thật, sheet có sẵn các hàng "trắng" đã
+      // đánh số thứ tự tiếp (VD "IC3 - 30", "IC3 - 31"...) nhưng KHÔNG
+      // có tên — đây là chỗ trống định dạng sẵn cho HS mới, phải DỪNG
+      // ngay khi gặp (không phải bỏ qua) một khi đã bắt đầu đọc được học
+      // sinh thật. Vì vậy: bỏ qua hàng trống TRƯỚC khi có học sinh đầu
+      // tiên, nhưng dừng hẳn ở hàng trống ĐẦU TIÊN sau khi đã có học sinh.
+      let started = false;
+      for (let i = headerIdx + 1; i < rows.length; i++) {
+        const row = rows[i];
+        const mssv = String(row[colMssv] || '').trim();
+        const name = String(row[colName] || '').trim();
+        if (!name) {
+          if (started) break; // hết danh sách học sinh thật của lớp này
+          continue; // vẫn đang ở vùng hàng phụ phía trên, chưa tới học sinh
+        }
+        started = true;
+        out.push({ mssv, name, school, className, teacherName });
+      }
+    }
+    return out;
+  }
+
+  function parseImportWorkbook(workbook) {
+    const classSheetRows = parseClassSheetWorkbook(workbook);
+    if (classSheetRows.length) return { format: 'classSheet', rows: classSheetRows };
+    return { format: 'flat', rows: parseFlatWorkbook(workbook) };
+  }
+
+  /** Suy ra "Khối X" từ số đầu tiên trong tên lớp (VD "4A1" -> khối 4) —
+   * chỉ dùng cho định dạng classSheet để tự động điền tab "Khoá học",
+   * KHÔNG áp dụng cho định dạng flat (tránh tạo khoá học không rõ nguồn
+   * gốc từ 1 dòng Excel đơn lẻ không có ngữ cảnh khối lớp). */
+  function courseGradeFromClassName(className) {
+    const m = String(className || '').match(/(\d+)/);
+    return m ? m[1] : '';
+  }
+  function courseInfoForGrade(grade) {
+    const g = parseInt(grade, 10);
+    if (!g) return null;
+    return { name: `Khối ${g}`, level: g <= 5 ? 'tieu_hoc' : 'thcs' };
+  }
+
+  /** Slug an toàn để dùng làm ID Firestore (chỉ a-z0-9 và dấu gạch ngang). */
+  function docIdSlug(str) {
+    const s = stripDiacritics(str).replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    return s || 'x';
+  }
+
+  /** ID học sinh dự kiến sẽ ghi vào Firestore — QUAN TRỌNG: file dạng
+   * classSheet dùng "Mã số HS" kiểu "IC3 - 1" chỉ đánh số LẠI TỪ ĐẦU ở
+   * mỗi lớp (không duy nhất toàn trường) — nếu dùng thẳng làm ID như định
+   * dạng "flat" thì học sinh IC3-1 của lớp 4A1 và 4A2 sẽ GHI ĐÈ lẫn nhau.
+   * Ghép thêm tên lớp vào khoá để đảm bảo duy nhất, đồng thời khoá này ổn
+   * định qua các lần nạp lại (nạp lại cùng file → cập nhật, không tạo trùng). */
+  function studentDocIdFor(r, format) {
+    if (format === 'classSheet') return `${docIdSlug(r.className)}_${docIdSlug(r.mssv || r.name)}`;
+    return r.mssv || null; // định dạng flat: giữ nguyên hành vi cũ (không đổi để tránh ảnh hưởng dữ liệu đã nạp trước đây)
+  }
+
   /** Gắn nhãn new/update/skip cho từng dòng đã đọc, dựa trên dữ liệu hiện có trong state. */
-  function classifyImportRows(rows) {
+  function classifyImportRows(rows, format) {
     return rows.map((r) => {
       if (!r.name) return Object.assign({}, r, { action: 'skip', reason: 'Thiếu họ tên' });
 
-      const existingByMssv = r.mssv ? state.students.find((s) => s.mssv && s.mssv.toLowerCase() === r.mssv.toLowerCase()) : null;
-      const existingByName = !existingByMssv
-        ? state.students.find((s) => stripDiacritics(s.name) === stripDiacritics(r.name)
-            && stripDiacritics(s.className || '') === stripDiacritics(r.className || ''))
-        : null;
-      const existing = existingByMssv || existingByName;
+      const expectedDocId = studentDocIdFor(r, format);
+      let existing = null;
+      if (format === 'classSheet') {
+        existing = expectedDocId ? state.students.find((s) => s.id === expectedDocId) : null;
+      } else {
+        existing = r.mssv ? state.students.find((s) => s.mssv && s.mssv.toLowerCase() === r.mssv.toLowerCase()) : null;
+      }
+      if (!existing) {
+        existing = state.students.find((s) => stripDiacritics(s.name) === stripDiacritics(r.name)
+          && stripDiacritics(s.className || '') === stripDiacritics(r.className || ''));
+      }
 
       const matchedClass = state.classes.find((c) => stripDiacritics(c.name) === stripDiacritics(r.className || ''));
       return Object.assign({}, r, {
         action: existing ? 'update' : 'new',
         existingId: existing ? existing.id : null,
+        expectedDocId,
         willCreateClass: !!r.className && !matchedClass,
         matchedClassId: matchedClass ? matchedClass.id : null,
         matchedClassTeacher: matchedClass ? { id: matchedClass.teacherId || '', name: matchedClass.teacherName || '' } : null,
@@ -481,10 +611,22 @@
 
   function renderImportPreview() {
     const rows = pendingImportRows;
+    const isClassSheet = pendingImportFormat === 'classSheet';
     const nNew = rows.filter((r) => r.action === 'new').length;
     const nUpdate = rows.filter((r) => r.action === 'update').length;
     const nSkip = rows.filter((r) => r.action === 'skip').length;
     const newClasses = [...new Set(rows.filter((r) => r.willCreateClass).map((r) => r.className))];
+    // Chỉ tính khoá học MỚI (Khối X) cho định dạng classSheet — flat không
+    // đụng tới tab "Khoá học" để tránh phát sinh dữ liệu không liên quan.
+    const newCourseNames = isClassSheet
+      ? [...new Set(newClasses.map((cn) => {
+          const info = courseInfoForGrade(courseGradeFromClassName(cn));
+          return info ? info.name : null;
+        }).filter(Boolean))]
+      : [];
+    const teacherNames = isClassSheet
+      ? [...new Set(rows.filter((r) => r.teacherName).map((r) => r.teacherName))]
+      : [];
 
     const tagHtml = { new: '<span class="import-tag new">Mới</span>', update: '<span class="import-tag update">Cập nhật</span>', skip: '<span class="import-tag skip">Bỏ qua</span>' };
     const rowsHtml = rows.map((r) => `
@@ -494,12 +636,20 @@
         <td>${esc(r.name || '—')}</td>
         <td>${esc(r.school || '—')}</td>
         <td>${esc(r.className || '—')}${r.willCreateClass ? ' <span class="import-tag update">Lớp mới</span>' : ''}</td>
+        ${isClassSheet ? `<td>${esc(r.teacherName || '—')}</td>` : ''}
       </tr>`).join('');
 
+    const formatHint = isClassSheet
+      ? `Nhận diện đúng định dạng <b>"FORM QUẢN LÝ LỚP"</b> (mỗi sheet = 1 lớp) — Trường/Lớp/GV phụ trách được đọc thẳng từ file, không cần nhập tay.
+         ${newClasses.length ? `Sẽ tự tạo ${newClasses.length} lớp mới: <b>${newClasses.map(esc).join(', ')}</b>.` : ''}
+         ${newCourseNames.length ? ` Sẽ tự tạo khoá học: <b>${newCourseNames.map(esc).join(', ')}</b>.` : ''}
+         ${teacherNames.length ? ` Giáo viên phụ trách theo file: <b>${teacherNames.map(esc).join(', ')}</b>${teacherNames.length > 1 ? ' — kiểm tra lại nếu 1 lớp chỉ nên có 1 GV.' : ''}.` : ''}`
+      : `File cần có cột <b>Họ và tên</b> (bắt buộc), và tuỳ chọn <b>MSSV</b>, <b>Trường</b>, <b>Lớp</b>.
+         Học sinh trùng MSSV (hoặc trùng Họ tên + Lớp) sẽ được <b>cập nhật</b> thay vì tạo trùng.
+         ${newClasses.length ? `Sẽ tự tạo ${newClasses.length} lớp mới: <b>${newClasses.map(esc).join(', ')}</b>.` : ''}`;
+
     document.getElementById('importModalBody').innerHTML = `
-      <div class="import-hint">File cần có cột <b>Họ và tên</b> (bắt buộc), và tuỳ chọn <b>MSSV</b>, <b>Trường</b>, <b>Lớp</b>.
-        Học sinh trùng MSSV (hoặc trùng Họ tên + Lớp) sẽ được <b>cập nhật</b> thay vì tạo trùng.
-        ${newClasses.length ? `Sẽ tự tạo ${newClasses.length} lớp mới: <b>${newClasses.map(esc).join(', ')}</b>.` : ''}</div>
+      <div class="import-hint">${formatHint}</div>
       <div class="import-summary">
         <div class="import-stat ok"><b>${nNew}</b><span>Học sinh mới</span></div>
         <div class="import-stat"><b>${nUpdate}</b><span>Cập nhật</span></div>
@@ -507,7 +657,7 @@
       </div>
       <div class="import-preview-scroll">
         <table>
-          <thead><tr><th></th><th>MSSV</th><th>Họ tên</th><th>Trường</th><th>Lớp</th></tr></thead>
+          <thead><tr><th></th><th>MSSV</th><th>Họ tên</th><th>Trường</th><th>Lớp</th>${isClassSheet ? '<th>GV phụ trách</th>' : ''}</tr></thead>
           <tbody>${rowsHtml}</tbody>
         </table>
       </div>`;
@@ -523,6 +673,7 @@
   function closeImportModal() {
     document.getElementById('importModalOverlay').classList.remove('show');
     pendingImportRows = [];
+    pendingImportFormat = 'flat';
   }
   document.getElementById('importModalCloseBtn').addEventListener('click', closeImportModal);
   document.getElementById('importCancelBtn').addEventListener('click', closeImportModal);
@@ -541,7 +692,9 @@
     reader.onload = (ev) => {
       try {
         const workbook = XLSX.read(ev.target.result, { type: 'array' });
-        pendingImportRows = classifyImportRows(parseImportWorkbook(workbook));
+        const parsed = parseImportWorkbook(workbook);
+        pendingImportFormat = parsed.format;
+        pendingImportRows = classifyImportRows(parsed.rows, parsed.format);
         renderImportPreview();
         openImportModal();
       } catch (err) {
@@ -557,31 +710,78 @@
     const btn = document.getElementById('importConfirmBtn');
     btn.disabled = true;
     btn.textContent = '⏳ Đang nạp...';
+    const isClassSheet = pendingImportFormat === 'classSheet';
     try {
       const db = window.EduFirebase.db;
+      const courseCol = window.EduRepositories.course.col();
       const classCol = window.EduRepositories.class.col();
       const studentCol = window.EduRepositories.studentRoster.col();
 
-      // 1) Tạo trước các lớp còn thiếu (mỗi tên lớp mới chỉ tạo 1 lần).
-      const classIdByName = {};
-      const newClassNames = [...new Set(rows.filter((r) => r.willCreateClass).map((r) => r.className))];
       let batch = db.batch();
       let ops = 0;
+
+      // 0) (chỉ định dạng classSheet) tự tạo Khoá học theo khối lớp (suy ra
+      // từ số trong tên lớp, VD "4A1" -> "Khối 4") nếu chưa có sẵn — giúp
+      // tab "Khoá học" có dữ liệu thật thay vì bỏ trống, tận dụng đúng cấu
+      // trúc lớp có sẵn trong file thay vì bịa thêm khái niệm mới.
+      const courseIdByName = {};
+      if (isClassSheet) {
+        const neededCourses = new Map();
+        rows.forEach((r) => {
+          const info = courseInfoForGrade(courseGradeFromClassName(r.className));
+          if (info) neededCourses.set(info.name, info);
+        });
+        for (const info of neededCourses.values()) {
+          const existingCourse = state.courses.find((c) => stripDiacritics(c.name) === stripDiacritics(info.name));
+          if (existingCourse) { courseIdByName[info.name] = existingCourse.id; continue; }
+          const ref = courseCol.doc();
+          batch.set(ref, { name: info.name, level: info.level, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+          courseIdByName[info.name] = ref.id;
+          ops++;
+          if (ops >= 400) { await batch.commit(); batch = db.batch(); ops = 0; }
+        }
+      }
+
+      // 1) Tạo trước các lớp còn thiếu (mỗi tên lớp mới chỉ tạo 1 lần) —
+      // với định dạng classSheet, gắn luôn courseId vừa có ở bước 0 và
+      // GV phụ trách đọc được từ ô "TÊN GV ..." trong sheet (đối chiếu tên
+      // với danh sách tài khoản giáo viên đã duyệt để lấy đúng teacherId,
+      // không có mới lưu tạm teacherName để Admin gán lại thủ công sau).
+      const classIdByName = {};
+      const classTeacherByName = {};
+      const newClassNames = [...new Set(rows.filter((r) => r.willCreateClass).map((r) => r.className))];
       for (const name of newClassNames) {
         const ref = classCol.doc();
-        batch.set(ref, { name, courseId: '', teacherId: '', teacherName: '', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+        let courseId = '', teacherId = '', teacherName = '';
+        if (isClassSheet) {
+          const info = courseInfoForGrade(courseGradeFromClassName(name));
+          courseId = info ? (courseIdByName[info.name] || '') : '';
+          const sheetTeacherName = (rows.find((r) => r.className === name) || {}).teacherName || '';
+          const teacherMatch = sheetTeacherName
+            ? state.teachers.find((t) => stripDiacritics(t.name || '') === stripDiacritics(sheetTeacherName))
+            : null;
+          teacherId = teacherMatch ? teacherMatch.id : '';
+          teacherName = teacherMatch ? teacherMatch.name : sheetTeacherName;
+        }
+        batch.set(ref, { name, courseId, teacherId, teacherName, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
         classIdByName[name] = ref.id;
+        classTeacherByName[name] = { id: teacherId, name: teacherName };
         ops++;
         if (ops >= 400) { await batch.commit(); batch = db.batch(); ops = 0; }
       }
 
-      // 2) Tạo/cập nhật từng học sinh. Có MSSV → dùng MSSV làm ID (chống
-      // nạp trùng khi import lại cùng file); không có MSSV → dò theo
-      // (đã làm ở classifyImportRows) hoặc tạo ID tự động.
+      // 2) Tạo/cập nhật từng học sinh. Định dạng flat: có MSSV → dùng MSSV
+      // làm ID (hành vi cũ, không đổi); định dạng classSheet: dùng ID ghép
+      // "lớp_mã số hs" (xem studentDocIdFor) vì MSSV trong file này không
+      // duy nhất toàn trường — tránh 2 học sinh khác lớp ghi đè lẫn nhau.
       for (const r of rows) {
         const classId = r.matchedClassId || classIdByName[r.className] || '';
-        const teacherId = r.matchedClassTeacher ? r.matchedClassTeacher.id : '';
-        const teacherName = r.matchedClassTeacher ? r.matchedClassTeacher.name : '';
+        let teacherId = r.matchedClassTeacher ? r.matchedClassTeacher.id : '';
+        let teacherName = r.matchedClassTeacher ? r.matchedClassTeacher.name : '';
+        if (!r.matchedClassId && classTeacherByName[r.className]) {
+          teacherId = classTeacherByName[r.className].id;
+          teacherName = classTeacherByName[r.className].name;
+        }
         const data = {
           mssv: r.mssv, name: r.name, school: r.school, className: r.className,
           classId, teacherId, teacherName, status: 'active',
@@ -590,8 +790,8 @@
         if (r.existingId) {
           ref = studentCol.doc(r.existingId);
           batch.set(ref, data, { merge: true });
-        } else if (r.mssv) {
-          ref = studentCol.doc(r.mssv);
+        } else if (r.expectedDocId) {
+          ref = studentCol.doc(r.expectedDocId);
           batch.set(ref, Object.assign({ createdAt: firebase.firestore.FieldValue.serverTimestamp() }, data), { merge: true });
         } else {
           ref = studentCol.doc();
@@ -602,7 +802,7 @@
       }
       if (ops > 0) await batch.commit();
 
-      logRosterChange('import_excel', null, { count: rows.length, newClasses: newClassNames.length });
+      logRosterChange('import_excel', null, { count: rows.length, newClasses: newClassNames.length, format: pendingImportFormat });
       toast(`✅ Đã nạp ${rows.length} học sinh từ Excel`);
       closeImportModal();
       loadEverything();
