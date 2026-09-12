@@ -48,22 +48,38 @@ body {
   gap: .4rem;
 }
 
-.wrap { max-width: 1040px; margin: 0 auto; padding: 2rem 1.6rem }
+/* Trang có nhiều cột dữ liệu (Trường được xem, Mã NV liên kết...) nên mở
+   rộng gần hết chiều ngang màn hình thay vì bó hẹp 1040px — tránh dữ liệu
+   bị dồn/che/rớt dòng như phản ánh, đặc biệt trên màn hình lớn. */
+.wrap { max-width: 1600px; margin: 0 auto; padding: 2rem 2.4rem }
 .whoami { font-size: .8rem; color: var(--muted); font-weight: 700 }
 
 .table-scroll { overflow-x: auto; border-radius: var(--radius-sm) }
 table {
   width: 100%;
-  min-width: 640px;
+  min-width: 1120px;
   border-collapse: collapse;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   overflow: hidden;
+  table-layout: auto;
 }
-th, td { padding: .8rem .9rem; text-align: left; font-size: .85rem; border-bottom: 1px solid var(--border) }
-th { background: var(--card2); font-weight: 800; font-size: .75rem; text-transform: uppercase; color: var(--muted) }
+/* white-space: normal (thay vì mặc định nowrap) để tên dài/email dài tự
+   xuống dòng trong ô thay vì bị cắt/che bởi ô kế bên; vertical-align top
+   vì các ô "Trường được xem"/"Mã NV" có nội dung cao hơn (select + nút). */
+th, td { padding: .8rem .9rem; text-align: left; font-size: .85rem; border-bottom: 1px solid var(--border); white-space: normal; vertical-align: top; word-break: break-word }
+th { background: var(--card2); font-weight: 800; font-size: .75rem; text-transform: uppercase; color: var(--muted); white-space: nowrap }
 tr:last-child td { border-bottom: none }
+
+/* Cột "Tên" + "Email" (1 & 2) trước đây bị co quá hẹp so với các cột
+   select bên phải nên chữ rớt dòng liên tục dù còn thừa chỗ ngang (bảng
+   cuộn ngang trong .table-scroll) — ép min-width rộng rãi cho 2 cột này,
+   và giữ email KHÔNG xuống dòng (chỉ gồm chữ số + domain, xuống dòng giữa
+   chừng gây khó đọc) trong khi Tên vẫn được xuống dòng bình thường nếu
+   thật sự dài hơn cả min-width. */
+th:nth-child(1), td:nth-child(1) { min-width: 150px }
+th:nth-child(2), td:nth-child(2) { min-width: 230px; white-space: nowrap }
 
 select {
   font-family: inherit;
@@ -73,6 +89,7 @@ select {
   border: 1.5px solid var(--border);
   background: var(--card2);
   color: var(--text);
+  min-width: 150px;
 }
 
 .badge { display: inline-flex; padding: .25rem .65rem; border-radius: 999px; font-size: .68rem; font-weight: 800 }
@@ -92,16 +109,6 @@ select {
   font-size: .72rem;
   font-weight: 800;
   cursor: pointer;
-}
-
-.banner {
-  background: var(--purple-lt);
-  border: 1.5px solid rgba(79,107,255,.25);
-  border-radius: var(--radius-sm);
-  padding: 1rem 1.2rem;
-  margin-bottom: 1.6rem;
-  font-size: .85rem;
-  line-height: 1.6;
 }
 
 .toast {
@@ -130,8 +137,8 @@ select {
 }
 
 /* ── Commit #6 (LMAP): gán "Trường được xem" cho giáo viên ── */
-.schoolsCell { min-width: 190px }
-.schoolsSelect { width: 100%; min-width: 170px; margin-bottom: .4rem }
+.schoolsCell { min-width: 240px }
+.schoolsSelect { width: 100%; min-width: 220px; margin-bottom: .4rem }
 .saveSchoolsBtn {
   background: var(--blue-lt);
   color: var(--blue);
@@ -146,8 +153,8 @@ select {
 .schoolsCell .hint { font-size: .72rem; color: var(--muted); font-style: italic }
 
 /* ── Liên kết "Mã NV" (Lịch giảng dạy) cho giáo viên tự xem lịch của mình ── */
-.teacherCodeCell { min-width: 190px }
-.teacherCodeSelect { width: 100%; min-width: 170px; margin-bottom: .4rem; display: block }
+.teacherCodeCell { min-width: 230px }
+.teacherCodeSelect { width: 100%; min-width: 210px; margin-bottom: .4rem; display: block }
 .saveTeacherCodeBtn {
   background: var(--purple-lt);
   color: var(--purple);
