@@ -5,7 +5,7 @@ rules_version = '2';
 // Dán toàn bộ nội dung file này vào Firebase Console → Firestore
 // Database → Rules, rồi bấm "Publish".
 //
-// Vai trò (role): "admin" | "teacher" | "coordinator" | "student"
+// Vai trò (role): "admin" | "teacher" | "coordinator" | "teaching_coordinator" | "student"
 // - admin:       toàn quyền.
 // - teacher:     chỉ được sửa collection "questions" SAU KHI được admin
 //                duyệt (approved == true). Không được tự đổi role/approved
@@ -13,15 +13,29 @@ rules_version = '2';
 //                (students_roster) NHƯNG CHỈ của (các) trường được Admin gán
 //                thủ công vào field "schools" trên hồ sơ mình (Commit #6/LMAP,
 //                gán trong admin-users.html) — không xem được trường khác.
-// - coordinator: "Điều phối đào tạo" — CHỈ ĐƯỢC ĐỌC quiz_results (báo cáo
-//                trực quan), không có quyền sửa questions/users. Tài
-//                khoản coordinator chỉ được ADMIN gán thủ công trong
-//                admin-users.html (không thể tự đăng ký).
+// - coordinator: "🧭 Điều phối đào tạo" — quản lý roster (students_roster:
+//                tải học sinh lên, điểm số/điểm danh) NHƯNG CHỈ của (các)
+//                trường được Admin gán vào "schools" trên hồ sơ mình, +
+//                CHỈ ĐỌC quiz_results (báo cáo trực quan) trong phạm vi đó.
+//                KHÔNG có quyền gì trên 6 collection teaching_* (lịch
+//                giảng dạy của giáo viên) — đây là việc của role riêng
+//                "teaching_coordinator" bên dưới, 2 phạm vi TÁCH HẲN nhau,
+//                không chồng lấn. Không có quyền sửa questions/users.
+// - teaching_coordinator: "🚗 Điều phối giáo viên" — CHỈ ĐỌC 5 collection
+//                teaching_* (Lịch giảng dạy/TKB của MỌI giáo viên, tổng
+//                hợp báo cáo biểu đồ/pivot table) + ĐỌC/GHI
+//                teaching_travel_distances (khoảng cách nhà→trường từng
+//                giáo viên, để tính hỗ trợ xăng xe) — KHÔNG đụng gì tới
+//                roster/quiz_results/điểm số học sinh (đó là việc của
+//                "coordinator" ở trên), không có quyền sửa
+//                questions/users/teaching_teachers|weeks|schedule|timetable*.
 // - student:     chỉ đọc, không ghi được questions/users của người khác.
 //                Học sinh làm bài KHÔNG cần đăng nhập Firebase Auth — vì
 //                vậy việc ghi kết quả bài thi (quiz_results) phải cho phép
 //                cả người dùng CHƯA đăng nhập, nhưng có kiểm tra dữ liệu
 //                chặt để chống giả mạo.
+// Tài khoản "admin"/"coordinator"/"teaching_coordinator" KHÔNG thể tự đăng
+// ký — chỉ được ADMIN gán thủ công trong admin-users.html.
 // ============================================================
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -40,6 +54,15 @@ service cloud.firestore {
     }
     function isCoordinator() {
       return isSignedIn() && myProfile().role == 'coordinator';
+    }
+    // "🚗 Điều phối giáo viên" — role RIÊNG, TÁCH HẲN khỏi isCoordinator()
+    // ("🧭 Điều phối đào tạo" ở trên, quản lý roster/điểm số/điểm danh học
+    // sinh). teaching_coordinator CHỈ đụng tới lịch giảng dạy/TKB/báo cáo/
+    // hỗ trợ xăng xe của giáo viên (teaching-schedule.html) — KHÔNG có
+    // quyền gì trên roster/quiz_results, và ngược lại isCoordinator()
+    // KHÔNG còn quyền gì trên các collection teaching_* nữa (xem bên dưới).
+    function isTeachingCoordinator() {
+      return isSignedIn() && myProfile().role == 'teaching_coordinator';
     }
     function isEditor() {
       return isAdmin() || isApprovedTeacher();
@@ -72,16 +95,26 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isSignedIn();
 
+      // Admin tạo hồ sơ THAY cho người khác — dùng khi admin-users.html
+      // (📥 Nhập giáo viên từ Excel) tự tạo tài khoản Auth + hồ sơ Firestore
+      // hàng loạt cho giáo viên (uid vừa tạo KHÁC uid của admin đang đăng
+      // nhập, nên nhánh tự đăng ký bên dưới — bắt buộc uid trùng — không
+      // áp dụng được cho trường hợp này). Cho phép TOÀN QUYỀN vì admin vốn
+      // đã full quyền update/delete collection này.
+      //
       // Tự đăng ký: chỉ được tạo hồ sơ của chính mình, role student|teacher,
       // và không được tự "approved: true" nếu xin làm teacher.
-      // Lưu ý: role "admin" và "coordinator" KHÔNG nằm trong danh sách này —
-      // hai vai trò này chỉ có thể được ADMIN gán thủ công (admin-users.html).
-      allow create: if isSignedIn() && request.auth.uid == userId
+      // Lưu ý: role "admin", "coordinator" và "teaching_coordinator" KHÔNG
+      // nằm trong danh sách này — 3 vai trò này chỉ có thể được ADMIN gán
+      // thủ công (admin-users.html).
+      allow create: if isAdmin() || (
+        isSignedIn() && request.auth.uid == userId
         && request.resource.data.role in ['student', 'teacher']
         && (
           (request.resource.data.role == 'student' && request.resource.data.approved == true) ||
           (request.resource.data.role == 'teacher' && request.resource.data.approved == false)
-        );
+        )
+      );
 
       // Admin có thể sửa bất kỳ hồ sơ nào (đổi role, duyệt teacher...).
       // Người dùng thường chỉ được sửa hồ sơ CHÍNH MÌNH và KHÔNG được đổi role/approved.
@@ -198,23 +231,31 @@ service cloud.firestore {
     //      mọi tuần). Giáo viên (đã được Admin liên kết "teacherCode" trong
     //      admin-users.html): CHỈ ĐỌC (chế độ xem, riêng teaching_schedule
     //      thì TỰ CẬP NHẬT được), và CHỈ đúng bản ghi của chính mình —
-    //      không xem/sửa được lịch giáo viên khác. Điều phối đào tạo
-    //      (coordinator) KHÔNG còn quyền gì trên các collection này nữa —
-    //      cố tình bỏ isCoordinator() khỏi mọi allow bên dưới (trang
-    //      teaching-schedule.html cũng đã chặn từ EDU_ALLOWED_ROLES). ----
+    //      không xem/sửa được lịch giáo viên khác. "🚗 Điều phối giáo viên"
+    //      (teaching_coordinator): CHỈ ĐỌC toàn bộ (mọi giáo viên/mọi tuần)
+    //      — cần xem lịch cả đội để tổng hợp báo cáo (biểu đồ/pivot table)
+    //      + tính hỗ trợ xăng xe, KHÔNG được ghi gì ở 5 collection này
+    //      (isTeachingCoordinator() cố tình vắng mặt ở mọi allow write —
+    //      quyền ghi chỉ isAdmin()/giáo viên tự cập nhật lịch của chính
+    //      mình). "🧭 Điều phối đào tạo" (isCoordinator()) CỐ TÌNH KHÔNG
+    //      xuất hiện ở bất kỳ rule nào bên dưới — 2 role điều phối tách
+    //      biệt hoàn toàn, coordinator không đụng gì tới lịch giảng dạy.
+    //      teaching-schedule.html/js đã ẩn hết nút thêm/sửa/xoá khi role
+    //      teaching_coordinator (xem applyRoleUI() + body.role-teaching-coordinator
+    //      trong css/teaching-schedule.css) — rule ở đây là chốt chặn thật. ----
     match /teaching_teachers/{teacherCode} {
-      allow read: if isAdmin() || (isApprovedTeacher() && teacherCode == myTeacherCode());
+      allow read: if isAdmin() || isTeachingCoordinator() || (isApprovedTeacher() && teacherCode == myTeacherCode());
       allow write: if isAdmin();
     }
     match /teaching_weeks/{weekKey} {
       // Nhãn tuần (vd "7.9 - 12.9.2026") không phải dữ liệu nhạy cảm và cần
       // đọc được để giáo viên chọn đúng tuần xem lịch của mình → cho phép
       // mọi giáo viên đã duyệt đọc toàn bộ danh sách tuần (không cần scope).
-      allow read: if isAdmin() || isApprovedTeacher();
+      allow read: if isAdmin() || isTeachingCoordinator() || isApprovedTeacher();
       allow write: if isAdmin();
     }
     match /teaching_schedule/{scheduleId} {
-      allow read: if isAdmin()
+      allow read: if isAdmin() || isTeachingCoordinator()
         || (isApprovedTeacher() && resource.data.teacherCode == myTeacherCode());
       // Giáo viên được TỰ CẬP NHẬT đúng lịch của chính mình (teaching-schedule.html
       // → khối "Lịch của tôi") — chỉ tạo/sửa bản ghi có teacherCode == chính mình,
@@ -226,16 +267,30 @@ service cloud.firestore {
     }
 
     // ---- Tab "🗓️ TKB lớp" (thời khoá biểu dạng lưới tiết học, treo lớp) —
-    //      quản lý bởi Admin; giáo viên chỉ đọc ĐÚNG bản ghi của chính mình
-    //      (xem lịch tiết của mình), không sửa được. ----
+    //      quản lý bởi Admin; giáo viên/điều phối giáo viên chỉ đọc, không
+    //      sửa được (giáo viên CHỈ đúng bản ghi của chính mình, điều phối
+    //      giáo viên đọc HẾT). ----
     match /teaching_timetable_periods/{teacherCode} {
-      allow read: if isAdmin() || (isApprovedTeacher() && teacherCode == myTeacherCode());
+      allow read: if isAdmin() || isTeachingCoordinator() || (isApprovedTeacher() && teacherCode == myTeacherCode());
       allow write: if isAdmin();
     }
     match /teaching_timetable/{docId} {
-      allow read: if isAdmin()
+      allow read: if isAdmin() || isTeachingCoordinator()
         || (isApprovedTeacher() && resource.data.teacherCode == myTeacherCode());
       allow write: if isAdmin();
+    }
+
+    // ---- Hỗ trợ xăng xe (tab "🚗 Hỗ trợ xăng xe" trong teaching-schedule.html)
+    //      — khoảng cách nhà→trường (km, tự tay nhập vì không có toạ độ
+    //      thật để tính) CỦA TỪNG GIÁO VIÊN, dùng suy ra tiền hỗ trợ mỗi
+    //      ngày đi dạy. Admin VÀ "🚗 Điều phối giáo viên" cùng được QUẢN
+    //      LÝ (đọc/ghi) — đây là role vận hành trực tiếp của mảng này,
+    //      khác 4 collection lịch giảng dạy ở trên (chỉ đọc). Giáo viên
+    //      CHỈ ĐỌC đúng khoảng cách của chính mình (minh bạch số liệu dùng
+    //      để tính tiền hỗ trợ cho họ), không tự sửa được. ----
+    match /teaching_travel_distances/{teacherCode} {
+      allow read: if isAdmin() || isTeachingCoordinator() || (isApprovedTeacher() && teacherCode == myTeacherCode());
+      allow write: if isAdmin() || isTeachingCoordinator();
     }
   }
 }

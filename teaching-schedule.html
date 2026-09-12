@@ -42,6 +42,12 @@
       <button type="button" class="tab-btn active" data-tab="weekly" role="tab">📅 Lịch tuần</button>
       <button type="button" class="tab-btn" data-tab="timetable" role="tab" id="timetableTabBtn">🗓️ TKB lớp</button>
       <button type="button" class="tab-btn" data-tab="teachers" role="tab" id="teachersTabBtn">👤 Giáo viên</button>
+      <!-- 2 tab dưới đây CHỈ admin/🚗 điều phối giáo viên thấy (ẩn với
+           teacher — 1 giáo viên không cần xem tổng hợp/quản lý hỗ trợ
+           xăng xe CẢ ĐỘI), ẩn qua [data-tab="report"]/[data-tab="travel"]
+           trong chính js/teaching-schedule-report.js/js/teaching-schedule-travel.js. -->
+      <button type="button" class="tab-btn" data-tab="report" role="tab" id="reportTabBtn">📊 Báo cáo</button>
+      <button type="button" class="tab-btn" data-tab="travel" role="tab" id="travelTabBtn">🚗 Hỗ trợ xăng xe</button>
     </div>
 
     <!-- ============ Menu NẰM NGANG Ở TRÊN (chế độ xem trái/phải; hàng 2:
@@ -162,6 +168,8 @@
         <button type="button" class="tab-btn" data-tab="weekly" role="tab">📅 Lịch tuần</button>
         <button type="button" class="tab-btn active" data-tab="timetable" role="tab">🗓️ TKB lớp</button>
         <button type="button" class="tab-btn" data-tab="teachers" role="tab">👤 Giáo viên</button>
+        <button type="button" class="tab-btn" data-tab="report" role="tab">📊 Báo cáo</button>
+        <button type="button" class="tab-btn" data-tab="travel" role="tab">🚗 Hỗ trợ xăng xe</button>
       </div>
       <div class="sidebar-group">
         <label for="ttWeekSelect">🗓️ Tuần</label>
@@ -207,6 +215,8 @@
         <button type="button" class="tab-btn" data-tab="weekly" role="tab">📅 Lịch tuần</button>
         <button type="button" class="tab-btn" data-tab="timetable" role="tab">🗓️ TKB lớp</button>
         <button type="button" class="tab-btn active" data-tab="teachers" role="tab">👤 Giáo viên</button>
+        <button type="button" class="tab-btn" data-tab="report" role="tab">📊 Báo cáo</button>
+        <button type="button" class="tab-btn" data-tab="travel" role="tab">🚗 Hỗ trợ xăng xe</button>
       </div>
       <div class="panel-toolbar-info"><span id="teacherCount">0</span> giáo viên</div>
       <button type="button" class="btn btn-primary push-right" id="addTeacherBtn">➕ Thêm giáo viên</button>
@@ -216,6 +226,114 @@
         <thead><tr><th>Mã NV</th><th>Họ và tên</th><th>SĐT</th><th>Địa chỉ nhà</th><th>Trạng thái</th><th></th></tr></thead>
         <tbody id="teacherRows"><tr><td colspan="6" class="empty-cell">Đang tải...</td></tr></tbody>
       </table>
+    </div>
+  </section>
+
+  <!-- ============ TAB: BÁO CÁO — biểu đồ + pivot table tổng hợp NHIỀU
+       tuần (khác "📊 Tổng quan" ở tab Lịch tuần vốn chỉ xem ĐÚNG 1 tuần
+       dạng lịch treo) — chủ yếu phục vụ Điều phối đào tạo tổng hợp số
+       liệu làm báo cáo, admin cũng dùng được. Nội dung tính/vẽ trong
+       js/teaching-schedule-report.js. ============ -->
+  <section class="tab-panel" id="panel-report">
+    <div class="panel-toolbar">
+      <div class="tabs" role="tablist">
+        <button type="button" class="tab-btn" data-tab="weekly" role="tab">📅 Lịch tuần</button>
+        <button type="button" class="tab-btn" data-tab="timetable" role="tab">🗓️ TKB lớp</button>
+        <button type="button" class="tab-btn" data-tab="teachers" role="tab">👤 Giáo viên</button>
+        <button type="button" class="tab-btn active" data-tab="report" role="tab">📊 Báo cáo</button>
+        <button type="button" class="tab-btn" data-tab="travel" role="tab">🚗 Hỗ trợ xăng xe</button>
+      </div>
+      <div class="sidebar-group">
+        <label for="reportFromWeek">🗓️ Từ tuần</label>
+        <select id="reportFromWeek" class="form-input"><option value="">-- Chưa có tuần nào --</option></select>
+      </div>
+      <div class="sidebar-group">
+        <label for="reportToWeek">🗓️ Đến tuần</label>
+        <select id="reportToWeek" class="form-input"><option value="">-- Chưa có tuần nào --</option></select>
+      </div>
+      <button type="button" class="btn btn-primary push-right" id="reportLoadBtn">🔄 Tải báo cáo</button>
+    </div>
+
+    <div class="report-empty" id="reportEmpty">Chọn khoảng tuần rồi bấm "🔄 Tải báo cáo" để tổng hợp số liệu.</div>
+
+    <div class="report-body force-hide" id="reportBody">
+      <div class="panel-toolbar-info" id="reportRangeInfo" style="margin-bottom:.9rem"></div>
+
+      <div class="report-charts-grid">
+        <div class="chart-card">
+          <div class="chart-card-title">📊 Tổng số buổi theo loại hình phụ trách</div>
+          <div class="chart-card-body"><canvas id="reportChartByType"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">👤 Số buổi theo giáo viên (Top 15)</div>
+          <div class="chart-card-body"><canvas id="reportChartByTeacher"></canvas></div>
+        </div>
+        <div class="chart-card chart-card-wide force-hide" id="reportTrendCard">
+          <div class="chart-card-title">📈 Xu hướng tổng số buổi theo tuần</div>
+          <div class="chart-card-body"><canvas id="reportChartTrend"></canvas></div>
+        </div>
+      </div>
+
+      <div class="report-pivot-head">
+        <h3>🧮 Bảng tổng hợp (Pivot table) — Giáo viên × Loại hình phụ trách</h3>
+        <span class="panel-toolbar-info">Đơn vị: số buổi (Sáng/Chiều)</span>
+      </div>
+      <div class="table-scroll">
+        <table class="report-pivot" id="reportPivotTable">
+          <thead><tr><th>Đang tải...</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB: HỖ TRỢ XĂNG XE — tính tiền hỗ trợ đi lại cho giáo
+       viên dạy xa, theo đúng quy tắc: 11-15km = 20.000đ/ngày, ≥15,1km =
+       30.000đ/ngày, không hỗ trợ Dự Giảng/Ôn online/Trợ Giảng. Khoảng
+       cách nhà→trường do "🚗 Điều phối giáo viên" tự nhập (không có toạ độ
+       thật để tự tính) — xem js/models/teaching-travel.model.js +
+       js/teaching-schedule-travel.js. ============ -->
+  <section class="tab-panel" id="panel-travel">
+    <div class="panel-toolbar">
+      <div class="tabs" role="tablist">
+        <button type="button" class="tab-btn" data-tab="weekly" role="tab">📅 Lịch tuần</button>
+        <button type="button" class="tab-btn" data-tab="timetable" role="tab">🗓️ TKB lớp</button>
+        <button type="button" class="tab-btn" data-tab="teachers" role="tab">👤 Giáo viên</button>
+        <button type="button" class="tab-btn" data-tab="report" role="tab">📊 Báo cáo</button>
+        <button type="button" class="tab-btn active" data-tab="travel" role="tab">🚗 Hỗ trợ xăng xe</button>
+      </div>
+      <div class="sidebar-group">
+        <label for="travelWeekSelect">🗓️ Tuần</label>
+        <select id="travelWeekSelect" class="form-input"><option value="">-- Chưa có tuần nào --</option></select>
+      </div>
+      <button type="button" class="btn btn-primary push-right" id="travelLoadBtn">🔄 Tính hỗ trợ</button>
+      <button type="button" class="info-btn" title="Hỗ trợ 20.000đ/ngày nếu tổng khoảng cách đi lại trong ngày từ 11-15km; từ 15,1km trở lên: 30.000đ/ngày. Dưới 11km không có hỗ trợ. Khoảng cách tính: nhà → trường 1 (nếu 1 trường); nhà → trường 1 → trường 2 (nếu 2 trường trong cùng 1 ngày). KHÔNG hỗ trợ cho buổi Dự Giảng, Ôn online (Dạy Trực Tuyến), Trợ Giảng.">ℹ️</button>
+    </div>
+
+    <div class="report-empty" id="travelEmpty">Chọn 1 tuần rồi bấm "🔄 Tính hỗ trợ" để xem bảng khoảng cách + tiền hỗ trợ.</div>
+
+    <div class="report-body force-hide" id="travelBody">
+      <div class="report-pivot-head">
+        <h3>📏 Khoảng cách nhà → trường</h3>
+        <span class="panel-toolbar-info">Đơn vị: km (1 chiều) — điền/sửa rồi bấm ra ngoài ô để tự lưu</span>
+      </div>
+      <div class="table-scroll">
+        <table class="report-pivot" id="travelDistanceTable">
+          <thead><tr><th>Giáo viên</th><th>Trường</th><th>Khoảng cách (km)</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="report-pivot-head">
+        <h3>🚗 Hỗ trợ xăng xe theo tuần</h3>
+        <span class="panel-toolbar-info" id="travelRangeInfo"></span>
+      </div>
+      <div class="table-scroll">
+        <table class="report-pivot" id="travelAllowanceTable">
+          <thead><tr><th>Đang tải...</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
   </section>
 </div>
@@ -425,9 +543,19 @@
      ở CHẾ ĐỘ CHỈ XEM đúng lịch của chính mình, xem js/teaching-schedule.js
      phần "applyRoleUI()" và js/teaching-timetable.js phần
      "applyTeacherReadOnlyUI()" — quyền thật sự vẫn do firestore.rules chốt.
-     coordinator (Điều phối đào tạo) KHÔNG có quyền vào trang này (cả Lịch
-     tuần lẫn TKB lớp) — cố tình bỏ khỏi danh sách bên dưới. -->
-<script>window.EDU_ALLOWED_ROLES = ['admin', 'teacher'];</script>
+     teaching_coordinator (🚗 Điều phối giáo viên): CHỈ XEM (không sửa)
+     lịch của MỌI giáo viên + tab "📊 Báo cáo" (biểu đồ/pivot table) + tab
+     "🚗 Hỗ trợ xăng xe" — xem applyCoordinatorReadOnlyUI() trong
+     js/teaching-schedule.js, quyền ghi/xoá lịch vẫn luôn chỉ isAdmin() ở
+     firestore.rules bất kể UI (riêng dữ liệu khoảng cách nhà→trường thì
+     teaching_coordinator ĐƯỢC ghi — xem js/teaching-schedule-travel.js).
+     coordinator (🧭 Điều phối đào tạo — quản lý roster/điểm số/điểm danh
+     học sinh ở roster-manager.html) CỐ TÌNH KHÔNG có trong danh sách dưới
+     đây — 2 role điều phối tách biệt hoàn toàn, coordinator không xem
+     được lịch giảng dạy của giáo viên (đổi từ quyết định trước đó, xem
+     lịch sử trò chuyện: coordinator từng được cho vào rồi bị tách ra vì
+     đây thực chất phải là 1 role riêng, không phải coordinator). -->
+<script>window.EDU_ALLOWED_ROLES = ['admin', 'teacher', 'teaching_coordinator'];</script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
@@ -441,6 +569,8 @@
 <script src="js/repositories/teaching-schedule-repository.js"></script>
 <script src="js/models/teaching-timetable.model.js"></script>
 <script src="js/repositories/teaching-timetable-repository.js"></script>
+<script src="js/models/teaching-travel.model.js"></script>
+<script src="js/repositories/teaching-travel-repository.js"></script>
 
 <!-- Đọc file Excel (.xlsx/.xls) ngay trên trình duyệt bằng SheetJS, cùng
      thư viện/CDN đã dùng ở roster-manager.html (đã kiểm chứng hoạt động). -->
@@ -468,5 +598,27 @@
 <script src="js/teaching-schedule.js"></script>
 <script src="js/teaching-timetable.js"></script>
 <script src="js/teaching-timetable-import.js"></script>
+
+<!-- Tab "📊 Báo cáo" — biểu đồ dùng Chart.js, đúng file local + thứ tự
+     rơi về CDN (cdnjs → jsDelivr → unpkg) đã dùng ở ic3-dashboard.html,
+     không thêm phiên bản/thư viện khác cho đồng bộ toàn hệ thống. -->
+<script src="js/vendor/chart.umd.min.js"></script>
+<script>
+  if (typeof Chart === 'undefined') {
+    document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"><\/script>');
+  }
+</script>
+<script>
+  if (typeof Chart === 'undefined') {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"><\/script>');
+  }
+</script>
+<script>
+  if (typeof Chart === 'undefined') {
+    document.write('<script src="https://unpkg.com/chart.js@4.4.4/dist/chart.umd.min.js"><\/script>');
+  }
+</script>
+<script src="js/teaching-schedule-report.js"></script>
+<script src="js/teaching-schedule-travel.js"></script>
 </body>
 </html>

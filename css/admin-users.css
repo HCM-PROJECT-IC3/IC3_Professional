@@ -80,6 +80,7 @@ select {
 .badge.teacher { background: var(--purple-lt); color: var(--purple) }
 .badge.student { background: var(--teal-lt);   color: var(--teal) }
 .badge.coordinator { background: var(--blue-lt); color: var(--blue) }
+.badge.teaching_coordinator { background: var(--orange-lt); color: var(--orange) }
 .badge.pending { background: var(--yellow-lt); color: #a97a00; margin-left: .3rem }
 
 .approveBtn {
@@ -158,3 +159,67 @@ select {
   cursor: pointer;
 }
 .teacherCodeCell .hint { font-size: .72rem; color: var(--muted); font-style: italic }
+
+/* ── "📥 Nhập giáo viên từ Excel" — tạo hàng loạt tài khoản đăng nhập ── */
+.import-toolbar {
+  display: flex; align-items: center; gap: .9rem; flex-wrap: wrap;
+  margin-bottom: 1.2rem;
+}
+.import-toolbar-hint { font-size: .78rem; color: var(--muted); flex: 1; min-width: 220px }
+.empty-cell { text-align: center; color: var(--muted); padding: 1.6rem !important }
+
+/* ---- Modal (dùng cho "📥 Nhập giáo viên từ Excel") ---- */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 999;
+  background: var(--modal-overlay); align-items: center; justify-content: center; padding: 1rem;
+  backdrop-filter: blur(2px);
+}
+.modal-overlay.show { display: flex }
+.modal-box {
+  background: var(--card); border-radius: var(--radius);
+  width: 100%; max-width: 440px; box-shadow: var(--shadow-lg);
+  max-height: 92vh; display: flex; flex-direction: column;
+  border-top: 4px solid var(--purple);
+}
+.modal-box.modal-wide { max-width: 900px }
+.modal-header { display: flex; align-items: center; justify-content: space-between; gap: .8rem; padding: 1.2rem 1.4rem; border-bottom: 1px solid var(--border) }
+.modal-header h3 { font-size: 1rem; font-weight: 800 }
+.modal-close {
+  background: var(--card2); border: none; font-size: 1rem; cursor: pointer; color: var(--muted);
+  width: 30px; height: 30px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center;
+  transition: var(--transition);
+}
+.modal-close:hover { background: var(--red-lt); color: var(--red) }
+.modal-body { padding: 1.2rem 1.4rem; overflow-y: auto; display: flex; flex-direction: column; gap: .9rem }
+.modal-footer { display: flex; justify-content: flex-end; gap: .7rem; padding: 1rem 1.4rem; border-top: 1px solid var(--border) }
+
+.import-hint {
+  font-size: .8rem; line-height: 1.6; color: var(--muted);
+  background: var(--card2); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); padding: .8rem 1rem;
+}
+.import-hint b { color: var(--text) }
+.import-hint code {
+  font-family: 'JetBrains Mono', 'Consolas', monospace; font-size: .76rem;
+  background: var(--card); padding: .1rem .35rem; border-radius: 5px; color: var(--purple);
+}
+.import-summary { display: flex; gap: .6rem; flex-wrap: wrap }
+.import-stat {
+  flex: 1; min-width: 100px; background: var(--card2); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); padding: .7rem .8rem; text-align: center;
+  transition: var(--transition);
+}
+.import-stat b { display: block; font-size: 1.3rem; font-weight: 800; color: var(--text) }
+.import-stat span { font-size: .68rem; color: var(--muted); font-weight: 700 }
+.import-stat.ok   { background: var(--green-lt); border-color: rgba(33,179,107,.3) }
+.import-stat.ok b { color: var(--green) }
+.import-stat.warn { background: var(--yellow-lt); border-color: rgba(246,167,35,.35) }
+.import-stat.warn b { color: var(--yellow) }
+.import-stat.err  { background: var(--red-lt); border-color: rgba(240,72,62,.3) }
+.import-stat.err b { color: var(--red) }
+
+#importPreviewTable .row-skip td { color: var(--muted); text-decoration: line-through; opacity: .7 }
+#importPreviewTable .row-status-ok   { color: var(--green); font-weight: 800 }
+#importPreviewTable .row-status-skip { color: var(--muted); font-weight: 700 }
+#importPreviewTable .row-status-exists { color: var(--yellow); font-weight: 800 }
+#importPreviewTable .row-status-err  { color: var(--red); font-weight: 800 }

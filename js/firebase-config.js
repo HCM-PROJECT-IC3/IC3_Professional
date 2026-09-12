@@ -65,5 +65,14 @@
   window.EduFirebase = {
     auth: authInstance,
     db: firebase.firestore(),
+    // Lộ config ra ngoài để các trang cần tạo tài khoản HÀNG LOẠT (vd
+    // admin-users.html → "📥 Nhập giáo viên từ Excel") có thể khởi tạo
+    // THÊM 1 app instance PHỤ (firebase.initializeApp(config, 'ten-khac'))
+    // dùng RIÊNG cho createUserWithEmailAndPassword — SDK Compat luôn tự
+    // đăng nhập làm user vừa tạo trên CHÍNH app instance gọi hàm đó, nên
+    // nếu gọi thẳng trên app mặc định sẽ ĐĂNG XUẤT admin đang thao tác
+    // giữa chừng. Không hardcode lại config lần 2 ở nơi khác, tránh lệch
+    // khi đổi project sau này.
+    config: firebaseConfig,
   };
 })();

@@ -178,6 +178,28 @@
     return curY;
   }
 
+  /** Trên điện thoại/tablet (dò bằng "pointer: coarse", không phải bề
+   * rộng màn hình — tablet màn rộng vẫn dùng chạm), doc.save() KHÔNG lỗi
+   * nhưng hành vi khác desktop: Safari iOS/iPadOS thường MỞ THẲNG PDF
+   * trong tab mới thay vì tự tải xuống (cách Safari xử lý MỌI PDF trên
+   * web, không riêng app này) — hiện gợi ý 1 lần/thiết bị (nhớ qua
+   * localStorage) để người dùng không tưởng "bấm không có tác dụng". Lỗi
+   * đọc localStorage (chế độ ẩn danh chặn) chỉ bỏ gợi ý, KHÔNG chặn xuất
+   * PDF thật sự — xem cùng cơ chế trong js/export/teaching-schedule-pdf.js. */
+  function maybeShowMobileSaveHint() {
+    try {
+      if (!(global.matchMedia && global.matchMedia('(pointer: coarse)').matches)) return;
+      if (global.localStorage.getItem('eduPdfMobileHintShown')) return;
+      global.localStorage.setItem('eduPdfMobileHintShown', '1');
+    } catch (err) { return; }
+    const el = document.getElementById('toast');
+    if (!el) return;
+    el.textContent = 'ℹ️ Trên điện thoại/tablet, PDF thường mở ngay trong tab mới — bấm biểu tượng Chia sẻ rồi chọn "Lưu vào Files/Tải xuống" để lưu lại máy.';
+    el.classList.add('show');
+    clearTimeout(el._mobileHintT);
+    el._mobileHintT = setTimeout(() => el.classList.remove('show'), 5200);
+  }
+
   function ensureLibsLoaded() {
     if (typeof global.jspdf === 'undefined') {
       const el = document.getElementById('toast');
@@ -308,6 +330,7 @@
    */
   function exportOne(teacher, days, weekLabel, weekKey, M) {
     if (!ensureLibsLoaded()) return;
+    maybeShowMobileSaveHint();
     const { jsPDF } = global.jspdf;
     const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'portrait' });
     drawOnePage(doc, teacher, days, weekKey, M);
@@ -327,6 +350,7 @@
   function exportMany(list, weekKey, M, fileSuffix) {
     if (!ensureLibsLoaded()) return;
     if (!list.length) return;
+    maybeShowMobileSaveHint();
     const { jsPDF } = global.jspdf;
     const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'portrait' });
     list.forEach(({ teacher, days }, i) => {

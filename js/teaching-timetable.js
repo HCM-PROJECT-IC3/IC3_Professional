@@ -14,8 +14,17 @@
    - teacher: chỉ XEM (không sửa) đúng TKB của chính mình — teaching_timetable
      chỉ cho phép admin write, nên mọi control chỉnh sửa (⏱️ Giờ tiết/📥 Nhập
      Excel/💾 Lưu) đều ẩn, ô nhập chuyển readonly (xem applyTeacherReadOnlyUI()).
-   - coordinator (Điều phối đào tạo): KHÔNG được vào trang này nữa — chặn từ
-     EDU_ALLOWED_ROLES ở teaching-schedule.html, file này không cần tự kiểm.
+     Vì chỉ xem đúng 1 GV (chính mình) nên KHÔNG list() cả collection
+     teaching_teachers (rules không cho), tự chọn sẵn đúng GV đó, khoá cứng
+     ô chọn GV luôn (không có ai khác để chọn).
+   - teaching_coordinator (🚗 Điều phối giáo viên — KHÁC "coordinator" tức
+     "🧭 Điều phối đào tạo", role đó không được vào trang này nữa): CHỈ
+     XEM, giống hệt teacher ở phần ẩn nút chỉnh sửa (⏱️ Giờ tiết/📥 Nhập
+     Excel/💾 Lưu) + ô nhập readonly (xem applyCoordinatorReadOnlyUI()) —
+     nhưng KHÁC teacher ở chỗ được xem TKB của MỌI giáo viên (list() cả
+     collection teaching_teachers, rules đã cho phép), nên vẫn chọn GV tự
+     do qua <select> như admin và vẫn thấy tab "👤 Giáo viên" (chỉ ẩn nút
+     thêm/sửa/xoá ở đó, xem js/teaching-schedule.js).
 
    File tự chứa (IIFE riêng, không phụ thuộc biến nội bộ của
    js/teaching-schedule.js) — cùng nghe sự kiện 'edu:ready', dùng chung
@@ -93,6 +102,11 @@
       // read-only (xem applyTeacherReadOnlyUI()).
       document.querySelectorAll('[data-tab="teachers"]').forEach((b) => b.classList.add('force-hide'));
       applyTeacherReadOnlyUI();
+    } else if (state.role === 'teaching_coordinator') {
+      // "🚗 Điều phối giáo viên": CHỈ XEM như teacher nhưng được xem TKB
+      // của MỌI giáo viên (không tự chọn sẵn 1 người, không khoá ô chọn
+      // GV, không ẩn tab "👤 Giáo viên" — xem applyCoordinatorReadOnlyUI()).
+      applyCoordinatorReadOnlyUI();
     }
     loadTeachersAndWeeks();
   });
@@ -107,6 +121,15 @@
     document.getElementById('ttSaveBtn')?.classList.add('force-hide');
     const teacherSel = document.getElementById('ttTeacherSelect');
     if (teacherSel) teacherSel.disabled = true; // GV chỉ có đúng 1 lựa chọn (chính mình), không cần chọn tay
+  }
+
+  /** Giống applyTeacherReadOnlyUI() nhưng KHÔNG khoá ô chọn giáo viên —
+   * điều phối đào tạo xem TKB của MỌI giáo viên (list() cả collection,
+   * rules đã cho phép) nên vẫn cần chọn tự do qua <select> như admin. */
+  function applyCoordinatorReadOnlyUI() {
+    document.getElementById('ttPeriodTimesBtn')?.classList.add('force-hide');
+    document.getElementById('ttImportBtn')?.classList.add('force-hide');
+    document.getElementById('ttSaveBtn')?.classList.add('force-hide');
   }
 
   async function loadTeachersAndWeeks() {
@@ -198,10 +221,11 @@
       renderPosterHead();
       renderGrid();
       // Gợi ý gõ nhanh chỉ cần cho chế độ SỬA (admin) — bỏ qua ở chế độ
-      // XEM của giáo viên, vừa không cần thiết (ô đã readonly) vừa tránh
-      // gọi listByWeek()/listByTeacher() (list cả collection) mà
-      // firestore.rules không cho phép role teacher.
-      if (state.role !== 'teacher') loadSuggestions(state.teacherCode, state.weekKey); // không await — nạp gợi ý xong render lại datalist riêng, không chặn lưới chính hiện ngay
+      // XEM (teacher/coordinator): vừa không cần thiết (ô đã readonly) vừa
+      // đỡ tốn thêm mấy lượt đọc list()/listByWeek() vô ích (coordinator
+      // thật ra ĐƯỢC rules cho phép list(), nhưng không có gì để gõ nên
+      // không cần tải).
+      if (state.role !== 'teacher' && state.role !== 'teaching_coordinator') loadSuggestions(state.teacherCode, state.weekKey); // không await — nạp gợi ý xong render lại datalist riêng, không chặn lưới chính hiện ngay
     } catch (err) {
       toast('❌ ' + friendlyError(err));
     }
@@ -325,9 +349,9 @@
   function renderGrid() {
     const table = document.getElementById('ttGrid');
     const dayHeaders = M.WEEKDAYS.map((d, i) => `<th class="tt-day-head tt-day-${i}">${M.WEEKDAY_LABELS[d]}</th>`).join('');
-    // Giáo viên chỉ được XEM (teaching_timetable chỉ cho admin write) —
-    // khoá cứng mọi ô nhập, không gắn listener sửa/dán bên dưới.
-    const readOnly = state.role === 'teacher';
+    // Giáo viên/điều phối chỉ được XEM (teaching_timetable chỉ cho admin
+    // write) — khoá cứng mọi ô nhập, không gắn listener sửa/dán bên dưới.
+    const readOnly = state.role === 'teacher' || state.role === 'teaching_coordinator';
     const readOnlyAttr = readOnly ? ' readonly' : '';
 
     function sessionRows(sessionKey) {
