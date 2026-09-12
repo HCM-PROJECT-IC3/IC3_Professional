@@ -8,7 +8,7 @@
    {
      name: "Nguyễn Văn A",
      email: "a@example.com",
-     role: "admin" | "teacher" | "coordinator" | "student",
+     role: "admin" | "teacher" | "coordinator" | "teaching_coordinator" | "student",
      approved: true|false,   // teacher cần admin duyệt mới approved=true
      createdAt: <timestamp>
    }
@@ -17,11 +17,17 @@
    - Đăng ký mới luôn tạo role mặc định "student" (approved=true) trừ khi
      người dùng tự chọn "Tôi là giáo viên" → role "teacher", approved=false
      (chờ admin duyệt trong trang admin-users.html).
-   - Tài khoản "admin" và "coordinator" (Điều phối đào tạo) KHÔNG thể tự
-     đăng ký — chỉ được admin khác nâng cấp thủ công trong
+   - Tài khoản "admin", "coordinator" và "teaching_coordinator" KHÔNG thể
+     tự đăng ký — chỉ được admin khác nâng cấp thủ công trong
      admin-users.html (hoặc gán tay lần đầu trong Firestore Console).
-     "coordinator" chỉ có quyền ĐỌC báo cáo kết quả (mục Báo cáo trong
-     ic3-dashboard.html), không có quyền sửa câu hỏi/tài khoản.
+     - "coordinator" (🧭 Điều phối đào tạo): quản lý roster/điểm số/điểm
+       danh học sinh (roster-manager.html) + CHỈ ĐỌC báo cáo kết quả (mục
+       Báo cáo trong ic3-dashboard.html) — KHÔNG xem được lịch giảng dạy
+       của giáo viên (teaching-schedule.html), 2 việc tách biệt hoàn toàn.
+     - "teaching_coordinator" (🚗 Điều phối giáo viên): CHỈ XEM lịch giảng
+       dạy/TKB của MỌI giáo viên + báo cáo biểu đồ/pivot table + tính hỗ
+       trợ xăng xe (teaching-schedule.html) — KHÔNG đụng gì tới
+       roster/điểm số học sinh. Không có quyền sửa câu hỏi/tài khoản.
    ============================================================ */
 (function (global) {
   'use strict';
@@ -89,6 +95,7 @@
     admin: '👑 Quản trị viên',
     teacher: '📖 Giáo viên',
     coordinator: '🧭 Điều phối đào tạo',
+    teaching_coordinator: '🚗 Điều phối giáo viên',
     student: '🎓 Học sinh',
   };
 

@@ -83,6 +83,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
             <option value="student" ${u.role === 'student' ? 'selected' : ''}>🎓 Học sinh</option>
             <option value="teacher" ${u.role === 'teacher' ? 'selected' : ''}>📖 Giáo viên</option>
             <option value="coordinator" ${u.role === 'coordinator' ? 'selected' : ''}>🧭 Điều phối đào tạo</option>
+            <option value="teaching_coordinator" ${u.role === 'teaching_coordinator' ? 'selected' : ''}>🚗 Điều phối giáo viên</option>
             <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>👑 Quản trị viên</option>
           </select>
         </td>
@@ -179,3 +180,8 @@ window.EDU_ALLOWED_ROLES = ['admin'];
   function esc(s) {
     return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
+
+  // Lộ ra ngoài để js/admin-users-import.js gọi lại sau khi tạo xong hàng
+  // loạt tài khoản — bảng chính tự làm mới, không cần F5 mới thấy 18 tài
+  // khoản giáo viên vừa tạo.
+  window.EduAdminUsersReload = loadUsers;

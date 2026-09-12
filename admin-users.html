@@ -26,17 +26,53 @@
 <div class="wrap">
   <div class="banner">
     Chỉ <b>Quản trị viên</b> mới thấy trang này. Tại đây bạn có thể duyệt giáo viên mới đăng ký,
-    đổi vai trò (Học sinh / Giáo viên / Điều phối đào tạo / Quản trị viên) của bất kỳ tài khoản nào,
+    đổi vai trò (Học sinh / Giáo viên / Điều phối đào tạo / Điều phối giáo viên / Quản trị viên) của bất kỳ tài khoản nào,
     gán <b>"Trường được xem"</b> cho giáo viên — giáo viên chỉ xem được điểm/danh sách học sinh
     của (các) trường đã được gán ở đây trên trang Dashboard giáo viên, không thấy trường khác —
     và liên kết <b>"Mã NV"</b> để giáo viên tự xem được đúng lịch giảng dạy của mình (chế độ chỉ xem)
     trên trang <b>📅 Lịch giảng dạy</b>.
   </div>
+
+  <div class="import-toolbar">
+    <button type="button" class="btn btn-primary" id="importTeachersBtn">📥 Nhập giáo viên từ Excel</button>
+    <span class="import-toolbar-hint">File .xlsx có cột "Mã GV" + "Họ Tên" + "Số CCCD" (đúng mẫu Thong_Tin_GV.xlsx) — tự tạo tài khoản đăng nhập, không cần gõ tay từng người.</span>
+    <input type="file" id="importTeachersInput" accept=".xlsx,.xls" hidden>
+  </div>
+
   <div class="table-scroll">
     <table>
       <thead><tr><th>Tên</th><th>Email</th><th>Vai trò hiện tại</th><th>Đổi vai trò</th><th>Trường được xem (chỉ Giáo viên)</th><th>Mã NV liên kết (Lịch giảng dạy)</th><th>Trạng thái</th></tr></thead>
       <tbody id="userRows"><tr><td colspan="7">Đang tải...</td></tr></tbody>
     </table>
+  </div>
+</div>
+
+<!-- ============ MODAL: NHẬP GIÁO VIÊN TỪ EXCEL → TẠO TÀI KHOẢN HÀNG LOẠT
+     ============ -->
+<div class="modal-overlay" id="importModalOverlay">
+  <div class="modal-box modal-wide">
+    <div class="modal-header">
+      <h3>📥 Nhập giáo viên từ Excel</h3>
+      <button type="button" class="modal-close" id="importModalCloseBtn">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="import-hint" id="importRulesHint">
+        <b>Quy tắc tạo tài khoản</b> (không đổi được sau khi tạo — kiểm tra kỹ trước khi bấm "Tạo tài khoản"):<br>
+        Email đăng nhập = <code>&lt;Số CCCD&gt;@iigteacher.local</code> · Mật khẩu = <code>&lt;Số CCCD&gt;@IIG</code><br>
+        Dòng thiếu Mã GV hoặc Số CCCD, hoặc CCCD trùng nhau trong file sẽ tự BỎ QUA (đánh dấu bên dưới).
+      </div>
+      <div class="import-summary" id="importSummary"></div>
+      <div class="table-scroll">
+        <table id="importPreviewTable">
+          <thead><tr><th>Mã GV</th><th>Họ Tên</th><th>Số CCCD</th><th>Email sẽ tạo</th><th>Trạng thái</th></tr></thead>
+          <tbody><tr><td colspan="5" class="empty-cell">Chọn file Excel để xem trước danh sách...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" id="importModalCancelBtn">Huỷ</button>
+      <button type="button" class="btn btn-primary" id="importConfirmBtn" disabled>✅ Tạo tài khoản</button>
+    </div>
   </div>
 </div>
 
@@ -55,6 +91,10 @@
 <script src="js/auth-guard.js"></script>
 <script src="js/idle-logout.js"></script>
 <script src="js/admin-users.js"></script>
+<!-- "📥 Nhập giáo viên từ Excel" — đọc file bằng SheetJS, cùng CDN/phiên
+     bản đã dùng ở teaching-schedule.html cho đồng bộ toàn hệ thống. -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="js/admin-users-import.js"></script>
 <script src="js/motion.js"></script>
 </body>
 </html>

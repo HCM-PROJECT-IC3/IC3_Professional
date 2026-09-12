@@ -236,10 +236,34 @@
     return true;
   }
 
+  /** Trên điện thoại/tablet (thiết bị cầm tay chạm chính — dò bằng
+   * "pointer: coarse" thay vì bề rộng màn hình, vì tablet màn rộng vẫn
+   * dùng chạm), doc.save() KHÔNG lỗi nhưng hành vi khác desktop: Safari
+   * iOS/iPadOS thường MỞ THẲNG PDF trong tab mới thay vì tự tải xuống
+   * (đúng cách Safari xử lý MỌI file PDF trên web, không riêng gì app
+   * này) — không báo trước dễ khiến người dùng tưởng "bấm không có tác
+   * dụng gì". Hiện 1 lần duy nhất/thiết bị (ghi nhớ qua localStorage) để
+   * không làm phiền những lần xuất sau. Lỗi đọc localStorage (chế độ ẩn
+   * danh chặn) chỉ bỏ qua gợi ý, KHÔNG được chặn việc xuất PDF thật sự. */
+  function maybeShowMobileSaveHint() {
+    try {
+      if (!(global.matchMedia && global.matchMedia('(pointer: coarse)').matches)) return;
+      if (global.localStorage.getItem('eduPdfMobileHintShown')) return;
+      global.localStorage.setItem('eduPdfMobileHintShown', '1');
+    } catch (err) { return; }
+    const el = document.getElementById('toast');
+    if (!el) return;
+    el.textContent = 'ℹ️ Trên điện thoại/tablet, PDF thường mở ngay trong tab mới — bấm biểu tượng Chia sẻ rồi chọn "Lưu vào Files/Tải xuống" để lưu lại máy.';
+    el.classList.add('show');
+    clearTimeout(el._mobileHintT);
+    el._mobileHintT = setTimeout(() => el.classList.remove('show'), 5200);
+  }
+
   /** Xuất 1 file PDF cho ĐÚNG 1 giáo viên/1 tuần — nút "🖨️ PDF" từng hàng
    * (admin/coordinator) hoặc "🖨️ Xuất PDF" trong "Lịch của tôi" (giáo viên). */
   function exportOne(teacher, days, weekLabel, M) {
     if (!ensureLibsLoaded()) return;
+    maybeShowMobileSaveHint();
     const { jsPDF } = global.jspdf;
     const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'landscape' });
     drawOnePage(doc, teacher, days, weekLabel, M, { isFirstPage: true });
@@ -254,6 +278,7 @@
   function exportMany(list, weekLabel, M) {
     if (!ensureLibsLoaded()) return;
     if (!list.length) return;
+    maybeShowMobileSaveHint();
     const { jsPDF } = global.jspdf;
     const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'landscape' });
     list.forEach(({ teacher, days }, i) => {

@@ -10,9 +10,20 @@
    - teacher (đã được Admin liên kết "Mã NV" ở admin-users.html): khối
      riêng "Lịch của tôi" — TỰ CẬP NHẬT đúng lịch của chính mình bằng lưới
      thẻ theo ngày, sửa/lưu trực tiếp không cần modal (renderMyWeekView).
-   - coordinator (Điều phối đào tạo): KHÔNG được vào trang này nữa (chặn ở
-     EDU_ALLOWED_ROLES của teaching-schedule.html + firestore.rules) — các
-     đoạn code còn lại trong file chỉ còn phân biệt admin/teacher.
+   - teaching_coordinator (🚗 Điều phối giáo viên — KHÁC HẲN "coordinator"
+     tức 🧭 Điều phối đào tạo, role đó quản lý roster/điểm số học sinh ở
+     roster-manager.html và KHÔNG được vào trang này nữa): dùng CHUNG bảng
+     tổng hợp nhiều GV với admin (📊 Tổng quan/🎴 Thẻ, danh sách 👤 Giáo
+     viên) NHƯNG chỉ XEM — applyCoordinatorReadOnlyUI() gắn class
+     "role-teaching-coordinator" lên <body>, css/teaching-schedule.css dùng class
+     này ẩn MỌI nút thêm/sửa/xoá (Tuần mới/Nhập Excel/Sửa lịch/Thêm-Sửa-
+     Xoá giáo viên); các nút chỉ ĐỌC (Xuất PDF, Xuất Phiếu công tác) vẫn
+     giữ nguyên. Còn thấy thêm tab "📊 Báo cáo" (biểu đồ + pivot table
+     nhiều tuần, xem js/teaching-schedule-report.js) và "🚗 Hỗ trợ xăng xe"
+     (xem js/teaching-schedule-travel.js) mà admin/teacher không cần tới —
+     quyền ghi lịch thật sự luôn do firestore.rules chốt (chỉ isAdmin()),
+     đây chỉ là lớp UX (riêng dữ liệu khoảng cách xăng xe thì
+     teaching_coordinator ĐƯỢC ghi, xem collection teaching_travel_distances).
 
    Kiến trúc theo đúng mẫu roster-manager.js: models/repositories đã
    tách riêng (js/models/teaching-schedule.model.js,
@@ -26,7 +37,7 @@
 
   // ---- State cục bộ ----
   const state = {
-    role: '',              // 'admin' | 'coordinator' | 'teacher'
+    role: '',              // 'admin' | 'teaching_coordinator' | 'teacher' (KHÔNG bao gồm 'coordinator' — role đó không được vào trang này)
     myTeacherCode: '',      // teacherCode liên kết (chỉ có ý nghĩa khi role==='teacher')
     teachers: [],          // toàn bộ giáo viên (mọi trạng thái) — teacher chỉ thấy đúng 1 GV (chính mình)
     weeks: [],             // toàn bộ tuần đã có dữ liệu
@@ -48,6 +59,14 @@
    * viên TỰ CẬP NHẬT được đúng lịch của mình, quyền ghi thật sự vẫn do
    * firestore.rules chốt (chỉ đúng teacherCode == chính mình). */
   function isTeacherRole() { return state.role === 'teacher'; }
+  /** true khi tài khoản đăng nhập là "🚗 Điều phối giáo viên"
+   * (teaching_coordinator — KHÁC "coordinator" tức "🧭 Điều phối đào tạo",
+   * role đó không được vào trang này nữa) — dùng CHUNG bảng tổng hợp
+   * nhiều GV với admin (khác hẳn teacher, vốn có khối riêng "Lịch của
+   * tôi") nhưng CHỈ XEM, không có nút thêm/sửa/xoá gì — xem
+   * applyCoordinatorReadOnlyUI(). Quyền ghi thật sự luôn do
+   * firestore.rules chốt (chỉ isAdmin()), đây chỉ là lớp UX. */
+  function isCoordinatorRole() { return state.role === 'teaching_coordinator'; }
 
   let teacherModalEditingCode = null; // null = đang thêm mới
   let schedModalTeacherCode = null;   // mã GV đang mở lưới sửa
@@ -88,6 +107,7 @@
     state.role = profile.role;
     state.myTeacherCode = profile.teacherCode || '';
     applyRoleUI();
+    applyCoordinatorReadOnlyUI();
     loadEverything();
   });
 
@@ -115,6 +135,20 @@
         + 'hình phụ trách cho từng buổi Sáng/Chiều, điền địa điểm và lớp đang dạy, rồi bấm "💾 Lưu lịch tuần của tôi". '
         + 'Có thắc mắc về lịch, liên hệ Admin.';
     }
+  }
+
+  /** Điều phối đào tạo: dùng chung bảng tổng hợp nhiều GV với admin (KHÔNG
+   * chuyển sang "Lịch của tôi" như teacher — họ không phải giáo viên, cũng
+   * không quản lý MỘT giáo viên cụ thể nào) nhưng chỉ được XEM. Gắn 1 class
+   * lên <body> để css/teaching-schedule.css ẩn MỌI nút thêm/sửa/xoá (Tuần
+   * mới/Nhập Excel/Sửa lịch/Thêm-Sửa-Xoá giáo viên) — kể cả những nút
+   * render ĐỘNG mỗi lần vẽ lại bảng (data-edit-sched.../data-edit-teacher),
+   * không cần sửa từng hàm render để gọi hide() thủ công lặp lại. Các nút
+   * CHỈ ĐỌC (Xuất PDF/Xuất Phiếu công tác) không nằm trong danh sách ẩn.
+   * Quyền ghi thật sự luôn do firestore.rules chốt (chỉ isAdmin()). */
+  function applyCoordinatorReadOnlyUI() {
+    if (!isCoordinatorRole()) return;
+    document.body.classList.add('role-teaching-coordinator');
   }
 
   async function loadEverything() {

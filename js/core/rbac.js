@@ -24,7 +24,8 @@
 
   const ROLES = Object.freeze({
     ADMIN: 'admin',
-    COORDINATOR: 'coordinator',
+    COORDINATOR: 'coordinator',                   // 🧭 Điều phối đào tạo — roster/điểm số/điểm danh học sinh
+    TEACHING_COORDINATOR: 'teaching_coordinator',  // 🚗 Điều phối giáo viên — lịch giảng dạy/báo cáo/hỗ trợ xăng xe
     TEACHER: 'teacher',
     STUDENT: 'student',
   });
@@ -50,6 +51,11 @@
     'coordinator.manageRoster':      [ROLES.ADMIN, ROLES.COORDINATOR],
     'coordinator.exportExcel':       [ROLES.ADMIN, ROLES.COORDINATOR],
     'coordinator.exportPdf':         [ROLES.ADMIN, ROLES.COORDINATOR],
+
+    // ---- Điều phối giáo viên (teaching_coordinator) — lịch giảng dạy ----
+    'teachingCoordinator.viewSchedule':  [ROLES.ADMIN, ROLES.TEACHING_COORDINATOR],
+    'teachingCoordinator.viewReport':    [ROLES.ADMIN, ROLES.TEACHING_COORDINATOR],
+    'teachingCoordinator.manageTravel':  [ROLES.ADMIN, ROLES.TEACHING_COORDINATOR],
 
     // ---- Giáo viên ----
     'teacher.viewOwnDashboard':   [ROLES.ADMIN, ROLES.TEACHER],

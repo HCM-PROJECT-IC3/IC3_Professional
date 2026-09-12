@@ -2,7 +2,7 @@
    ic3-dashboard.html — page-specific init (tách ra khỏi HTML)
    ============================================================ */
 
-window.EDU_ALLOWED_ROLES = ['admin', 'teacher', 'coordinator'];
+window.EDU_ALLOWED_ROLES = ['admin', 'teacher', 'coordinator', 'teaching_coordinator'];
 
 window.addEventListener('edu:ready', ({ detail }) => {
   const { user, profile } = detail;
@@ -17,9 +17,17 @@ window.addEventListener('edu:ready', ({ detail }) => {
   // thật sự vẫn do EDU_ALLOWED_ROLES của từng trang đích + firestore.rules
   // thực thi, xem js/core/rbac.js để biết thêm chi tiết nguyên tắc này).
   //
-  //   admin       : toàn quyền — thấy tất cả các mục.
-  //   teacher     : CHỈ "Bộ đề của tôi" + "Dashboard của tôi".
-  //   coordinator : CHỈ "Báo cáo kết quả" + "Danh sách học sinh" + "Dashboard".
+  //   admin                : toàn quyền — thấy tất cả các mục.
+  //   teacher              : CHỈ "Bộ đề của tôi" + "Dashboard của tôi".
+  //   coordinator          : "🧭 Điều phối đào tạo" — CHỈ "Báo cáo kết quả" +
+  //                          "Danh sách học sinh" + "Dashboard" (roster/điểm
+  //                          số/điểm danh học sinh) — KHÔNG thấy "Lịch giảng
+  //                          dạy" (đó là việc của teaching_coordinator).
+  //   teaching_coordinator : "🚗 Điều phối giáo viên" — CHỈ "Lịch giảng dạy"
+  //                          (xem TKB/báo cáo/hỗ trợ xăng xe của giáo viên,
+  //                          teaching-schedule.html) — KHÔNG đụng gì tới
+  //                          roster/điểm số/báo cáo kết quả học sinh, 2 role
+  //                          điều phối tách biệt hoàn toàn.
   // ============================================================
   const show = (id, visible) => {
     const el = document.getElementById(id);
@@ -30,10 +38,13 @@ window.addEventListener('edu:ready', ({ detail }) => {
   show('imageManagerLink', role === 'admin');
   show('teacherDashboardLink', role === 'admin' || role === 'teacher');
   show('rosterManagerLink', role === 'admin' || role === 'coordinator');
-  // Điều phối đào tạo (coordinator) không có quyền xem Lịch tuần lẫn TKB
-  // lớp nữa (teaching-schedule.html) — chỉ còn admin/teacher, khớp
-  // EDU_ALLOWED_ROLES + firestore.rules của trang đó.
-  show('teachingScheduleLink', role === 'admin' || role === 'teacher');
+  // "🚗 Điều phối giáo viên" (teaching_coordinator) được XEM (không sửa)
+  // Lịch tuần + TKB lớp + tab "📊 Báo cáo"/"🚗 Hỗ trợ xăng xe" ở
+  // teaching-schedule.html — khớp EDU_ALLOWED_ROLES + firestore.rules (chỉ
+  // đọc lịch, riêng khoảng cách xăng xe thì được ghi) của trang đó.
+  // "🧭 Điều phối đào tạo" (coordinator) CỐ TÌNH không có trong điều kiện
+  // này nữa — 2 role điều phối tách biệt hoàn toàn (xem chú thích ở trên).
+  show('teachingScheduleLink', role === 'admin' || role === 'teacher' || role === 'teaching_coordinator');
   show('coordinatorDashboardLink', role === 'admin' || role === 'coordinator');
 
   // 3 mục trong chính trang này (SPA, không phải link riêng): Bộ đề của tôi
@@ -50,6 +61,17 @@ window.addEventListener('edu:ready', ({ detail }) => {
   // thẳng vào tab Báo cáo kết quả.
   if (role === 'coordinator') {
     document.getElementById('navReports')?.click();
+  }
+
+  // "🚗 Điều phối giáo viên": KHÔNG có mục nào trong chính trang SPA này
+  // (không navMySets/navReports/navSettings) — toàn bộ việc của role này
+  // nằm ở teaching-schedule.html. Mặc định "my-sets" vẫn active sẵn trong
+  // HTML (dành cho giáo viên) nên nếu để nguyên, teaching_coordinator sẽ
+  // thấy 1 khung trang trống/lỗi vì không có quyền + không có dữ liệu phù
+  // hợp — điều hướng thẳng sang trang đích duy nhất họ cần luôn cho gọn.
+  if (role === 'teaching_coordinator') {
+    window.location.href = 'teaching-schedule.html';
+    return;
   }
 
   document.getElementById('userChip').addEventListener('click', async () => {

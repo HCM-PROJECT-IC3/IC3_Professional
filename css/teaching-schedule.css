@@ -12,12 +12,54 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
 
+/* ---- Cuộn ngang trên chạm (mobile/tablet) — dùng CHUNG cho MỌI khối cố
+   tình cuộn ngang trong trang (bảng dữ liệu dày: ma trận Tổng quan, lưới
+   Sửa lịch tuần, lưới TKB lớp, lưới thẻ ngày "Lịch của tôi"):
+   - -webkit-overflow-scrolling:touch → cuộn có đà (momentum) mượt trên
+     Safari iOS thay vì giật cứng từng khung như overflow mặc định.
+   - overscroll-behavior-x:contain → chặn cuộn ngang "tràn" ra ngoài kích
+     hoạt cử chỉ vuốt-lùi/vuốt-tới của trình duyệt (hay gặp trên Android
+     Chrome/iOS Safari khi vuốt hết mép bảng), tránh cảm giác "lỡ tay"
+     thoát trang giữa chừng khi đang xem bảng dài.
+   - scrollbar mỏng nhưng LUÔN thấy được (không đợi hover mới hiện như mặc
+     định desktop) → gợi ý rõ "còn nội dung, vuốt tiếp" trên màn cảm ứng,
+     tránh hiểu lầm bảng đã hiện hết/bị lỗi khi thật ra chỉ cần vuốt. ---- */
+.table-scroll, .dash-matrix-wrap, .sched-grid-wrap, .my-week-cards {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin; /* Firefox */
+}
+.table-scroll::-webkit-scrollbar, .dash-matrix-wrap::-webkit-scrollbar,
+.sched-grid-wrap::-webkit-scrollbar, .my-week-cards::-webkit-scrollbar { height: 8px }
+.table-scroll::-webkit-scrollbar-thumb, .dash-matrix-wrap::-webkit-scrollbar-thumb,
+.sched-grid-wrap::-webkit-scrollbar-thumb, .my-week-cards::-webkit-scrollbar-thumb {
+  background: var(--border); border-radius: 999px;
+}
+
+/* ---- Vùng chạm (touch target) — icon-only button trong bảng/modal vốn
+   chỉ vài px đệm, đủ cho chuột nhưng dễ bấm trượt bằng ngón tay. Dùng
+   media (pointer: coarse) — đúng cho MỌI thiết bị chạm chính (điện thoại
+   VÀ tablet, kể cả tablet màn rộng vẫn dùng ngón tay), khác hẳn cách bắt
+   theo bề rộng màn hình (max-width) vốn không phân biệt được chuột/chạm. ---- */
+@media (pointer: coarse) {
+  .dash-name-action-btn { padding: .5rem; font-size: .95rem }
+  .modal-close { width: 38px; height: 38px }
+  .pt-remove-btn { padding: .4rem .6rem }
+}
+
 body {
   font-family: 'Baloo 2', sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
   padding-bottom: 3rem;
+  /* Lưới an toàn cho mobile/tablet: vài cụm phần tử "flex-shrink:0" (vd
+     #mainTabs, .tabs) không tự co theo màn hình hẹp — thiếu dòng này thì
+     phần tràn ra kéo CẢ TRANG cuộn ngang được (lệch bố cục, chạm ngoài ý
+     muốn). Không ảnh hưởng các khối CỐ TÌNH cuộn ngang (dash-matrix-wrap/
+     table-scroll/sched-grid-wrap/my-week-cards) vì chúng đã tự có
+     overflow-x:auto RIÊNG bên trong, độc lập với body. */
+  overflow-x: hidden;
 }
 
 /* ---- Topbar — dải gradient thương hiệu ở viền dưới thay vì đường kẻ
@@ -256,6 +298,17 @@ tr:last-child td { border-bottom: none }
 @media (max-width: 640px) {
   .panel-toolbar { flex-direction: column; align-items: stretch }
   .panel-toolbar .push-right { margin-left: 0 }
+  /* Lề trang 2rem mỗi bên (đúng khi màn rộng) ăn tới ~17% bề ngang 1
+     điện thoại 375px — bóp phần còn lại; giảm còn .8rem cho đủ chỗ. */
+  .wrap { padding: .9rem .8rem 1.4rem }
+  .topbar { padding: .8rem 1rem }
+  /* Track "Lịch tuần/TKB lớp/Giáo viên" vốn flex-shrink:0 + không wrap —
+     3 nút đủ dài để tràn khỏi màn hình hẹp (kéo cả trang cuộn ngang nếu
+     thiếu overflow-x:hidden ở body, và dù có overflow-x:hidden thì vẫn bị
+     CẮT MẤT nút thứ 3 nếu không cho tự co/wrap ở đây) — hạ cỡ chữ/đệm và
+     cho phép xuống dòng khi thật sự không đủ chỗ. */
+  .tabs { flex-wrap: wrap; justify-content: center; width: 100% }
+  .tab-btn { padding: .5rem .85rem; font-size: .78rem }
 }
 
 /* Ẩn cưỡng bức theo role (js/teaching-schedule.js → applyRoleUI()) — dùng
@@ -263,6 +316,22 @@ tr:last-child td { border-bottom: none }
    .my-week-body) đã có "display:flex" trên chính class đó, cùng độ ưu
    tiên CSS với UA-stylesheet của [hidden] nên không chắc thắng. */
 .force-hide { display: none !important; }
+
+/* Điều phối đào tạo (coordinator) — CHỈ XEM, ẩn MỌI nút thêm/sửa/xoá kể cả
+   những nút render ĐỘNG mỗi lần vẽ lại bảng/thẻ (data-edit-sched trên thẻ
+   GV lẫn ma trận Tổng quan, data-edit-teacher/data-del-teacher trên bảng
+   "👤 Giáo viên") — gắn 1 class lên <body> (applyCoordinatorReadOnlyUI()
+   trong js/teaching-schedule.js) rồi chặn ở đây, không cần sửa từng hàm
+   render để tự gọi hide() lặp lại mỗi khi thêm nút mới sau này. Nút CHỈ
+   ĐỌC (Xuất PDF/Xuất Phiếu công tác, cả 1-GV lẫn tất cả) KHÔNG nằm trong
+   danh sách này — vẫn dùng bình thường. Quyền ghi thật sự luôn do
+   firestore.rules chốt (chỉ isAdmin()), đây chỉ là lớp UX. */
+body.role-teaching-coordinator #newWeekBtn,
+body.role-teaching-coordinator #importExcelBtn,
+body.role-teaching-coordinator #addTeacherBtn,
+body.role-teaching-coordinator [data-edit-sched],
+body.role-teaching-coordinator [data-edit-teacher],
+body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
 
 /* Checkbox lọc "chỉ hiện GV chưa có lịch" — cùng hàng menu với ô tìm
    kiếm (căn thẳng đáy với ô nhập liệu qua .weekly-topbar-row > .chk-missing). */
@@ -785,6 +854,26 @@ tr:last-child td { border-bottom: none }
   .my-week-cards { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) }
 }
 
+/* Tablet ĐÚNG DẢI 641-900px (vd iPad dọc) — CỐ Ý dùng min-width kèm theo
+   để KHÔNG lấn vào dải điện thoại ≤640px đã có mức bóp riêng, mạnh hơn,
+   ở @media (max-width: 640px) phía trên: nếu chỉ dùng max-width:900px như
+   khối my-week-cards ở trên, block này (đứng SAU trong file) sẽ THẮNG
+   cascade và ghi đè nhầm padding .wrap tưởng "tinh chỉnh cho điện thoại"
+   ngược lại thành mức lỏng hơn dành cho tablet — dùng min-width chặn hẳn
+   khả năng chồng lấn đó, không phụ thuộc thứ tự khai báo trong file.
+   Lề 2rem mặc định + tổng min-width ~982px của ma trận Tổng quan (@media
+   1400px ở trên) vẫn buộc cuộn ngang gần hết bề rộng trên tablet — bóp
+   thêm lần nữa để đọc được 3-4 cột Thứ mà không phải vuốt liên tục. */
+@media (min-width: 641px) and (max-width: 900px) {
+  .wrap { padding: 1rem 1rem 1.6rem }
+  .dash-matrix-name-col, .dash-matrix th:nth-child(1) { min-width: 132px }
+  .dash-matrix-buoi-cell, .dash-matrix th:nth-child(2) { left: 132px; min-width: 48px }
+  .dash-matrix-time-cell, .dash-matrix th:nth-child(3) { left: 180px; min-width: 64px; font-size: .68rem }
+  .dash-matrix-cell { min-width: 92px }
+  .dash-matrix th, .dash-matrix td { padding: .38rem .35rem }
+  .dash-chip, .dash-chip-off { font-size: .66rem; padding: .3rem .3rem }
+}
+
 /* ══════════════════════════════════════════════
    TAB "🗓️ TKB LỚP" — thời khoá biểu dạng LƯỚI TIẾT HỌC (Buổi/Tiết/Thời
    gian × Thứ2-7), phỏng theo mẫu thời khoá biểu giấy nhà trường (banner
@@ -908,6 +997,78 @@ tr:last-child td { border-bottom: none }
   font-size: .74rem; padding: .6rem; border-radius: var(--radius-sm); border: 1.5px solid var(--border);
   background: var(--card2); color: var(--text); resize: vertical;
 }
+
+/* ══════════════════════════════════════════════
+   TAB "📊 BÁO CÁO" — biểu đồ (Chart.js) + pivot table tổng hợp nhiều tuần,
+   xem js/teaching-schedule-report.js. Bố cục thẻ biểu đồ theo ĐÚNG quy
+   ước đã dùng ở css/dashboard.css (report-charts-grid/chart-card...) cho
+   trang Báo cáo kết quả, nhưng đổi sang token màu riêng của FILE NÀY
+   (--card/--border/--radius/--shadow, không phải --bg-card/--shadow-card
+   của theme trang kia) để nhất quán với toàn bộ phần còn lại của trang
+   Lịch giảng dạy.
+   ══════════════════════════════════════════════ */
+.report-empty {
+  background: var(--card); border: 1.5px dashed var(--border); border-radius: var(--radius-sm);
+  padding: 2rem; text-align: center; color: var(--muted); font-size: .88rem;
+}
+.report-pivot-head {
+  display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+  margin: 1.4rem 0 .8rem;
+}
+.report-pivot-head h3 { font-size: .95rem; font-weight: 800 }
+
+.report-charts-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; margin-bottom: 1.4rem;
+}
+.chart-card {
+  background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 1rem 1.2rem;
+  transition: box-shadow .18s ease, transform .18s ease;
+}
+.chart-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px) }
+.chart-card-wide { grid-column: 1 / -1 }
+.chart-card-title { font-weight: 800; font-size: .85rem; margin-bottom: .8rem }
+.chart-card-body { position: relative; height: 260px }
+.chart-empty {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  color: var(--muted); font-size: .82rem; text-align: center; padding: 1rem 1.4rem;
+}
+@media (max-width: 780px) {
+  .report-charts-grid { grid-template-columns: 1fr }
+}
+
+/* Pivot table — giáo viên × loại hình phụ trách, cột/hàng "Tổng" tô đậm
+   để tách khỏi số liệu chi tiết, khớp cảm giác 1 bảng pivot Excel quen
+   thuộc với người dùng làm báo cáo. */
+.report-pivot { width: 100%; min-width: 640px; border-collapse: collapse; background: var(--card) }
+.report-pivot th, .report-pivot td {
+  padding: .6rem .75rem; border-bottom: 1px solid var(--border); text-align: center; font-size: .82rem;
+}
+.report-pivot thead th {
+  background: var(--card2); font-weight: 800; font-size: .7rem; letter-spacing: .03em;
+  text-transform: uppercase; color: var(--muted); white-space: nowrap;
+  position: sticky; top: 0;
+}
+.report-pivot thead th:first-child, .report-pivot td.report-pivot-name { text-align: left }
+.report-pivot td.report-pivot-name { font-weight: 700; white-space: nowrap }
+.report-pivot td.report-pivot-total { font-weight: 800; color: var(--purple); background: var(--purple-lt) }
+.report-pivot tr.report-pivot-footer { font-weight: 800; background: var(--card2) }
+.report-pivot tr.report-pivot-footer td.report-pivot-total { background: var(--purple) ; color: #fff }
+.report-pivot tbody tr:hover { background: var(--purple-lt) }
+
+/* Tab "🚗 Hỗ trợ xăng xe" — ô km nhập tay trong bảng khoảng cách + tô màu
+   ô tiền hỗ trợ theo trạng thái (0đ/có hỗ trợ/thiếu dữ liệu km) để liếc
+   nhanh biết ngay dòng nào cần bổ sung khoảng cách. */
+.travel-km-input {
+  width: 90px; box-sizing: border-box; text-align: center; font-family: inherit;
+  font-size: .82rem; font-weight: 700; color: var(--text);
+  padding: .35rem .3rem; border-radius: 6px; border: 1.5px solid var(--border); background: var(--card2);
+}
+.travel-km-input:focus { outline: none; border-color: var(--purple); box-shadow: 0 0 0 3px var(--purple-lt); background: var(--card) }
+.travel-km-input[readonly] { background: var(--card2); cursor: default; opacity: .7 }
+.report-pivot td.travel-cell-zero { color: var(--border) }
+.report-pivot td.travel-cell-paid { background: var(--green-lt); color: var(--green); font-weight: 800 }
+.report-pivot td.travel-cell-warn { background: var(--yellow-lt); color: #a97a00; font-weight: 800; cursor: help }
 
 @media print {
   body.tt-printing .topbar,
