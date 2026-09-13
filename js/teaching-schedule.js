@@ -788,7 +788,17 @@
     if (!list.length) { toast('⚠️ Không có giáo viên nào để xuất (kiểm tra lại bộ lọc/tìm kiếm).'); return; }
     const week = state.weeks.find((w) => w.id === state.currentWeekKey);
     const weekLabel = week ? (week.label || week.id) : state.currentWeekKey;
-    window.EduTeachingSchedulePdf.exportMany(list, weekLabel, M);
+    // TRƯỚC ĐÂY không có try/catch quanh đây — 1 lỗi bất kỳ khi build PDF
+    // (dữ liệu 1 giáo viên nào đó lệch dạng...) sẽ throw NGAY TRONG handler
+    // click, không có gì báo cho người dùng biết — bấm nút xong không thấy
+    // gì xảy ra, dễ hiểu lầm "không xuất được" trong khi thực ra có lỗi cụ
+    // thể (chỉ nằm im trong console). Bọc lại để LUÔN có toast báo rõ lý do.
+    try {
+      window.EduTeachingSchedulePdf.exportMany(list, weekLabel, M);
+    } catch (err) {
+      console.error('[Lịch giảng dạy] Lỗi khi xuất PDF tất cả:', err);
+      toast('❌ Xuất PDF thất bại: ' + (err && err.message ? err.message : String(err)));
+    }
   }
   document.getElementById('exportAllPdfBtn')?.addEventListener('click', exportAllPdf);
 
@@ -984,7 +994,14 @@
     if (!list.length) { toast('⚠️ Không có giáo viên nào để xuất (kiểm tra lại bộ lọc/tìm kiếm).'); return; }
     const week = state.weeks.find((w) => w.id === state.currentWeekKey);
     const weekLabel = week ? (week.label || week.id) : state.currentWeekKey;
-    window.EduCongTacPdf.exportMany(list, state.currentWeekKey, M, weekLabel);
+    // Cùng lý do bọc try/catch như exportAllPdf() ở trên — trước đây lỗi
+    // ở đây cũng throw âm thầm, không báo được gì cho người dùng.
+    try {
+      window.EduCongTacPdf.exportMany(list, state.currentWeekKey, M, weekLabel);
+    } catch (err) {
+      console.error('[Lịch giảng dạy] Lỗi khi xuất PDF tất cả Phiếu công tác:', err);
+      toast('❌ Xuất PDF thất bại: ' + (err && err.message ? err.message : String(err)));
+    }
   });
 
   // ------------------------------------------------------------

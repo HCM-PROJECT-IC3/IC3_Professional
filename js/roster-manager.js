@@ -93,8 +93,82 @@
       renderStudents();
 
       await repairKnownBadTeacherNames();
+      await renameGenericCourseNames();
+      await repairDuplicateCourses();
     } catch (err) {
       toast('❌ Lỗi tải dữ liệu: ' + friendlyError(err));
+    }
+  }
+
+  /** Đổi lại tên các khoá học đang để trần "Khối N" (do 1 bản cũ của
+   * courseInfoForGrade() tự tạo lúc "📥 Nạp từ Excel") thành "Khoá học
+   * Khối N" — tên trần "Khối 3" dễ bị nhìn nhầm thành tên LỚP (lớp thật
+   * sự tên kiểu "3/11"), gây rối vì 2 khái niệm khác nhau (khối = cấp
+   * học, lớp = 1 lớp cụ thể trong khối đó) lại trông giống hệt nhau ở
+   * cột "Tên khoá học". Chạy TRƯỚC repairDuplicateCourses() để các khoá
+   * học cùng khối sau khi đổi tên vẫn được nhóm đúng và gộp trùng bình
+   * thường. An toàn để chạy nhiều lần (không làm gì nếu đã đổi tên). */
+  async function renameGenericCourseNames() {
+    const BARE_GRADE_NAME = /^Khối\s*(\d+)$/i;
+    let renamed = 0;
+    for (const c of state.courses) {
+      const m = BARE_GRADE_NAME.exec((c.name || '').trim());
+      if (!m) continue;
+      const newName = `Khoá học Khối ${parseInt(m[1], 10)}`;
+      await window.EduRepositories.course.update(c.id, { name: newName });
+      c.name = newName;
+      renamed++;
+    }
+    if (renamed) {
+      renderCourses();
+      toast(`🔧 Đã đổi tên ${renamed} khoá học "Khối N" → "Khoá học Khối N" cho rõ nghĩa (không nhầm với tên lớp)`);
+    }
+  }
+
+  /** Gộp các "Khoá học" bị trùng TÊN (vd 3 khoá học cùng tên "Khối 3") —
+   * hậu quả của việc tự tạo khoá học lúc "📥 Nạp từ Excel" (xem
+   * courseInfoForGrade/renderImportPreview phía dưới) chỉ kiểm tra trùng
+   * tên dựa trên state.courses đã nạp SẴN TRONG BỘ NHỚ của phiên đó —
+   * nếu 2 người cùng nạp Excel gần như đồng thời (mỗi người 1 file lớp
+   * khác nhau nhưng cùng khối), cả 2 đều không thấy khoá học của người
+   * kia trong state.courses của mình → mỗi người tự tạo 1 khoá học mới
+   * trùng tên. Giữ lại khoá học có createdAt SỚM NHẤT (hoặc bản ghi đầu
+   * tiên nếu thiếu createdAt), chuyển hết "classes" đang trỏ courseId
+   * của các bản trùng còn lại sang khoá học được giữ, rồi xoá bản trùng.
+   * Chạy mỗi lần tải trang, không làm gì nếu không có trùng tên. */
+  async function repairDuplicateCourses() {
+    const groups = new Map(); // normalizedName -> [course,...]
+    state.courses.forEach((c) => {
+      const key = stripDiacritics(c.name || '');
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(c);
+    });
+
+    const toMs = (c) => (c.createdAt && c.createdAt.toMillis ? c.createdAt.toMillis() : Infinity);
+    let mergedCount = 0, deletedCount = 0;
+
+    for (const dupes of groups.values()) {
+      if (dupes.length < 2) continue;
+      const sorted = [...dupes].sort((a, b) => toMs(a) - toMs(b));
+      const keep = sorted[0];
+      const drop = sorted.slice(1);
+      for (const d of drop) {
+        const affectedClasses = state.classes.filter((cl) => cl.courseId === d.id);
+        for (const cl of affectedClasses) {
+          await window.EduRepositories.class.update(cl.id, { courseId: keep.id });
+          cl.courseId = keep.id;
+          mergedCount++;
+        }
+        await window.EduRepositories.course.remove(d.id);
+        state.courses = state.courses.filter((c) => c.id !== d.id);
+        deletedCount++;
+      }
+    }
+
+    if (deletedCount) {
+      renderCourses();
+      renderClasses();
+      toast(`🔧 Đã gộp ${deletedCount} khoá học trùng tên (chuyển ${mergedCount} lớp về khoá học giữ lại)`);
     }
   }
 
@@ -199,6 +273,11 @@
     const name = document.getElementById('f-course-name').value.trim();
     const level = document.getElementById('f-course-level').value;
     if (!name) { toast('⚠️ Vui lòng nhập tên khoá học'); return; }
+    // Chặn trùng tên (đã xảy ra thật — xem repairDuplicateCourses): 1 khối
+    // chỉ nên có 1 khoá học, trùng tên chỉ gây rối chứ không có tác dụng gì.
+    const dup = state.courses.find((c) =>
+      stripDiacritics(c.name) === stripDiacritics(name) && c.id !== modalMode.editingId);
+    if (dup) { toast(`⚠️ Đã có khoá học tên "${dup.name}" rồi — sửa khoá học đó thay vì tạo trùng.`); return; }
     const data = { name, level };
     try {
       if (modalMode.editingId) {
@@ -640,10 +719,15 @@
     const m = String(className || '').match(/(\d+)/);
     return m ? m[1] : '';
   }
+  // Tên khoá học đặt "Khoá học Khối N" (KHÔNG để trần "Khối N") — để trần
+  // dễ nhầm với tên LỚP (khái niệm khác: "Khối" là cấp học, "Lớp" là lớp cụ
+  // thể như "3/11"), người dùng phản ánh nhìn tên khoá học "Khối 3" cứ như
+  // đang xem tên lớp, thiếu logic. Xem thêm renameGenericCourseNames() —
+  // hàm tự đổi lại các khoá học cũ đã lỡ tạo theo tên trần này.
   function courseInfoForGrade(grade) {
     const g = parseInt(grade, 10);
     if (!g) return null;
-    return { name: `Khối ${g}`, level: g <= 5 ? 'tieu_hoc' : 'thcs' };
+    return { name: `Khoá học Khối ${g}`, level: g <= 5 ? 'tieu_hoc' : 'thcs' };
   }
 
   /** Slug an toàn để dùng làm ID Firestore (chỉ a-z0-9 và dấu gạch ngang). */
@@ -817,6 +901,13 @@
         for (const info of neededCourses.values()) {
           const existingCourse = state.courses.find((c) => stripDiacritics(c.name) === stripDiacritics(info.name));
           if (existingCourse) { courseIdByName[info.name] = existingCourse.id; continue; }
+          // state.courses được nạp lúc mở trang, có thể đã CŨ nếu ai đó vừa
+          // nạp Excel tạo cùng khoá học này ở phiên khác — đọc thẳng
+          // Firestore lần nữa ngay trước khi tạo để tránh tạo trùng do
+          // race condition (xem repairDuplicateCourses() để hiểu lỗi này
+          // đã từng xảy ra).
+          const freshMatch = await courseCol.where('name', '==', info.name).limit(1).get();
+          if (!freshMatch.empty) { courseIdByName[info.name] = freshMatch.docs[0].id; continue; }
           const ref = courseCol.doc();
           batch.set(ref, { name: info.name, level: info.level, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
           courseIdByName[info.name] = ref.id;

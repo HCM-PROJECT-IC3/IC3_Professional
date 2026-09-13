@@ -160,7 +160,14 @@ service cloud.firestore {
       // thuộc (các) trường đã được Admin gán ở admin-users.html (users/{uid}.schools) —
       // KHÔNG còn được đọc toàn bộ collection như trước (lỗ hổng đã sửa ở Commit #6).
       allow read: if isAdmin() || isCoordinator() || isOwnSchoolField('studentSchool');
-      allow update, delete: if isAdmin();
+      // Coordinator cũng được XOÁ (dùng ở ic3-dashboard.html → "🗂️ Chi tiết
+      // lượt làm bài" → nút xoá từng lượt, vd dọn bản ghi test/trùng) — trước
+      // đây chỉ Admin, nhưng Điều phối đào tạo là người thao tác trực tiếp ở
+      // trang báo cáo này nên cần quyền này. KHÔNG thêm isCoordinator() vào
+      // update: vẫn chỉ Admin được SỬA điểm số đã nộp (tránh gian lận sửa
+      // điểm), coordinator chỉ được xoá hẳn bản ghi, không sửa nội dung.
+      allow update: if isAdmin();
+      allow delete: if isAdmin() || isCoordinator();
     }
 
     // ---- Kết quả nộp bài MOS Practice (mos-practice.html, chấm bằng ExcelJS

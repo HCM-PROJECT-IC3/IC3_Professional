@@ -265,7 +265,13 @@ body {
 .table-scroll { overflow-x: auto; border-radius: var(--radius-sm) }
 #studentTable {
   width: 100%;
-  min-width: 760px;
+  /* Nâng từ 760px — bảng có tới 9 cột dữ liệu + 1 cột nút "Xem chi tiết",
+     760px quá chật khiến trình duyệt bóp các cột lại, đẩy chữ trong
+     badge/nút xuống 2 dòng dù đã set white-space: nowrap (nowrap chỉ
+     ngăn XUỐNG DÒNG, cột vẫn có thể bị bóp nhỏ hơn nội dung nếu bảng
+     tổng thể quá hẹp) — 1040px đủ chỗ cho cả 10 cột ở 1 dòng, hẹp hơn thì
+     cuộn ngang (.table-scroll đã có overflow-x: auto). */
+  min-width: 1040px;
   border-collapse: collapse;
   background: var(--card);
   border: 1px solid var(--border);
@@ -276,6 +282,15 @@ body {
   padding: .7rem .8rem; text-align: left; font-size: .84rem;
   border-bottom: 1px solid var(--border); vertical-align: middle;
 }
+/* MSSV/Họ tên/Trường/Giáo viên — min-width ở trên (qua min-width chung
+   của bảng) không CHẶN được xuống dòng nếu mã HS/tên/trường/GV dài hơn dự
+   tính (vd mã có dấu cách như "IC3 - 44" tự ngắt dòng ở đó) — nowrap để
+   cột luôn tự nới đúng bằng bề rộng chữ, hẹp hơn thì cuộn ngang thay vì
+   rớt dòng. */
+#studentTable td:nth-child(2),
+#studentTable td:nth-child(3),
+#studentTable td:nth-child(4),
+#studentTable td:nth-child(6) { white-space: nowrap }
 #studentTable th { background: var(--card2); font-weight: 800; font-size: .7rem; text-transform: uppercase; color: var(--muted) }
 #studentTable tr:last-child td { border-bottom: none }
 #studentTable tbody tr:hover { background: var(--card2) }
@@ -289,7 +304,12 @@ body {
 }
 .avatar-cell img { width: 100%; height: 100%; object-fit: cover }
 
-.badge { display: inline-flex; padding: .25rem .65rem; border-radius: 999px; font-size: .68rem; font-weight: 800 }
+/* white-space: nowrap — cột "Trạng thái" hẹp lại (nhường chỗ cho các cột
+   khác) đã từng bóp chữ "Đang học"/"Ngừng học" xuống 2 dòng bên trong viên
+   thuốc tròn, nhìn xấu và khó đọc — để text co giãn theo bề rộng cột thay
+   vì luôn giữ 1 dòng, tràn ra thì bảng tự cuộn ngang (.table-scroll đã có
+   overflow-x: auto) thay vì rớt dòng trong badge. */
+.badge { display: inline-flex; padding: .25rem .65rem; border-radius: 999px; font-size: .68rem; font-weight: 800; white-space: nowrap }
 .badge.active   { background: var(--green-lt); color: var(--green) }
 .badge.inactive { background: var(--red-lt);   color: var(--red) }
 
@@ -309,6 +329,7 @@ body {
   border: none; background: var(--purple-lt); color: var(--purple);
   font-weight: 800; font-size: .75rem; padding: .4rem .8rem;
   border-radius: 999px; cursor: pointer; transition: var(--transition);
+  white-space: nowrap; /* "Xem chi tiết" từng bị rớt dòng thành "Xem chi"/"tiết" khi cột hẹp */
 }
 .row-view-btn:hover { background: var(--purple); color: #fff }
 

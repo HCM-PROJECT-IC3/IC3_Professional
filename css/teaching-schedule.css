@@ -135,11 +135,11 @@ body {
 .btn-secondary:hover { background: var(--teal); color: #fff; box-shadow: var(--glow-teal); transform: translateY(-1px) }
 .btn-danger-text {
   background: none; border: none; color: var(--red);
-  font-weight: 800; font-size: .78rem; cursor: pointer;
+  font-weight: 800; font-size: .78rem; cursor: pointer; white-space: nowrap;
 }
 .btn-edit-text {
   background: none; border: none; color: var(--purple);
-  font-weight: 800; font-size: .78rem; cursor: pointer; margin-right: .8rem;
+  font-weight: 800; font-size: .78rem; cursor: pointer; margin-right: .8rem; white-space: nowrap;
 }
 
 /* Bỏ khoảng đệm trên lớn (2rem) vì admin/điều phối không còn khối banner
@@ -221,12 +221,19 @@ th {
   text-transform: uppercase; color: var(--muted); white-space: nowrap;
   position: sticky; top: 0; z-index: 1;
 }
+/* Bảng "Danh sách giáo viên": "Họ và tên"/"Địa chỉ nhà" (cột 2/4) hay dài
+   nhất trong bảng 6 cột — min-width không CHẶN được xuống dòng nếu nội
+   dung dài hơn dự tính, đổi sang nowrap để chắc chắn không bao giờ rớt
+   dòng (hẹp hơn thì cuộn ngang, .table-scroll đã có overflow-x: auto). */
+#teachersTable td:nth-child(1),
+#teachersTable td:nth-child(2),
+#teachersTable td:nth-child(4) { white-space: nowrap }
 tbody tr { transition: background .12s ease }
 tbody tr:hover { background: var(--purple-lt) }
 tr:last-child td { border-bottom: none }
 .empty-cell { text-align: center; color: var(--muted); padding: 1.6rem !important }
 
-.badge { display: inline-flex; padding: .25rem .65rem; border-radius: 999px; font-size: .68rem; font-weight: 800 }
+.badge { display: inline-flex; padding: .25rem .65rem; border-radius: 999px; font-size: .68rem; font-weight: 800; white-space: nowrap }
 .badge.active   { background: var(--green-lt); color: var(--green) }
 .badge.inactive { background: var(--red-lt);   color: var(--red) }
 
@@ -912,6 +919,19 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
   background: var(--card2); color: var(--muted); font-weight: 700; font-size: .76rem;
   padding: .35rem;
 }
+/* Ranh giới rõ ràng giữa khối SÁNG và khối CHIỀU — trước đây 2 khối nối
+   liền không có gì phân tách, nhìn như 1 dòng trống lạc chỗ ở điểm nối.
+   Vạch màu thương hiệu dày + khoảng trắng 2 bên, KHÔNG dùng border ô bảng
+   thường (dễ bị nhầm là 1 dòng dữ liệu). */
+.tt-session-divider td {
+  border: none !important; padding: 0 !important; height: 14px;
+  background: var(--card) !important;
+}
+.tt-session-divider td::before {
+  content: ''; display: block; height: 4px; margin: 5px 0;
+  background: linear-gradient(90deg, var(--yellow, #f6a723), var(--purple, #7c5cff));
+  border-radius: 3px;
+}
 /* Mỗi ô Thứ×Tiết giờ xếp CHỒNG 2 ô nhập (Mã lớp trên, Trường dưới) — 1
    giáo viên có thể dạy nhiều trường khác nhau, kể cả đổi trường giữa các
    tiết trong cùng 1 buổi, nên "trường" phải tách theo TỪNG TIẾT thay vì
@@ -961,10 +981,14 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
 }
 .pt-add-btn { align-self: flex-start; margin-top: .2rem }
 
-/* ---- In "🖨️ In" (window.print()) — chỉ hiện đúng khối thời khoá biểu,
-   ẩn topbar/sidebar/nút/modal/toast, tận dụng khổ giấy ngang cho đủ 6
-   cột Thứ. Bật bằng class .tt-printing gắn tạm vào <body> (xem
-   js/teaching-timetable.js), tự gỡ khi đóng hộp thoại in (afterprint). ---- */
+/* ---- Nút "🖨️ In" KHÔNG còn dùng window.print() nữa (đã đổi sang xuất
+   thẳng .pdf bằng jsPDF, xem js/export/teaching-timetable-pdf.js) — lý do:
+   hộp thoại in của Chrome/Edge tự chèn header/footer (ngày giờ/tiêu đề/
+   URL/số trang) mà không cách nào tắt được từ CSS/JS trang web. Vì vậy
+   class .tt-printing + khối "@media print" đi kèm ĐÃ BỊ XOÁ khỏi file
+   này (không còn nơi nào gắn class đó vào <body> nữa) — nếu sau này có ý
+   định quay lại window.print(), nhớ đọc lại comment này trước để hiểu vì
+   sao nó từng bị bỏ. ---- */
 /* ---- Modal "📥 Nhập TKB lớp từ Excel" + mẹo dán bảng trực tiếp — dùng
    lại đúng .import-hint/.import-summary/.import-stat đã có sẵn (giống
    modal "Nhập từ Excel" của tab Lịch tuần) để đồng bộ giao diện. ---- */
@@ -1070,15 +1094,3 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
 .report-pivot td.travel-cell-paid { background: var(--green-lt); color: var(--green); font-weight: 800 }
 .report-pivot td.travel-cell-warn { background: var(--yellow-lt); color: #a97a00; font-weight: 800; cursor: help }
 
-@media print {
-  body.tt-printing .topbar,
-  body.tt-printing #ttToolbar,
-  body.tt-printing .modal-overlay,
-  body.tt-printing .toast,
-  body.tt-printing #panel-weekly,
-  body.tt-printing #panel-teachers,
-  body.tt-printing .tt-empty { display: none !important; }
-  body.tt-printing .wrap { max-width: none; padding: 0 }
-  body.tt-printing .tt-grid { min-width: 0 }
-  @page { size: landscape; margin: 10mm; }
-}

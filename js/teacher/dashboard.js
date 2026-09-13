@@ -61,8 +61,14 @@
 
     // Ghi vào biến toàn cục để student-detail.js (tái dùng từ coordinator,
     // xem ghi chú trong chính file đó) lọc đúng theo trường của giáo viên
-    // khi query lịch sử làm bài đầy đủ của 1 học sinh.
-    window.EduStudentDetailSchoolsScope = rawData.schools;
+    // khi query lịch sử làm bài đầy đủ của 1 học sinh. CHỈ gán cho role
+    // teacher — Admin đọc KHÔNG giới hạn theo trường (đúng quyền isAdmin()
+    // trong firestore.rules, xem data-loader.js), phải để undefined ở đây
+    // (đúng mặc định student-detail.js mong đợi cho coordinator/admin),
+    // nếu không rawData.schools (Admin có thể được gán TỪ dữ liệu, có khi
+    // >10 trường) sẽ vô tình bị bó vào where('in', ...) tối đa 10 giá trị,
+    // âm thầm mất dữ liệu học sinh ở các trường ngoài 10 trường đầu.
+    window.EduStudentDetailSchoolsScope = currentProfile.role === 'admin' ? undefined : rawData.schools;
 
     window.EduTeacherData.buildFilterOptions(rawData);
     wireFilters();

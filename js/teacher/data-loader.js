@@ -29,30 +29,48 @@
 
   /**
    * Tải dữ liệu cho 1 giáo viên, giới hạn đúng các trường trong profile.schools.
-   * @param {Object} profile Hồ sơ Firestore users/{uid} của giáo viên đang đăng nhập.
+   *
+   * NGOẠI LỆ: Admin cũng được phép mở trang này (EDU_ALLOWED_ROLES ở
+   * teacher-dashboard.html gồm cả 'admin', vd để kiểm tra dashboard 1 giáo
+   * viên nhìn thấy gì) — nhưng Admin thì KHÔNG có/KHÔNG CẦN field "schools"
+   * (đó là khái niệm riêng của role teacher, gán ở admin-users.html), nên
+   * trước đây admin mở trang này luôn dính "chưa được gán Trường được xem"
+   * dù chính họ là người đi gán quyền đó cho người khác — vô lý. Admin đọc
+   * KHÔNG giới hạn theo trường (đúng quyền isAdmin() trong firestore.rules,
+   * giống hệt cách js/coordinator/data-loader.js đang tải), rồi tự suy ra
+   * danh sách trường từ dữ liệu tải được để 3 dropdown lọc vẫn có nghĩa.
+   * @param {Object} profile Hồ sơ Firestore users/{uid} của người đang đăng nhập.
    * @param {Object} [opts]
    * @param {boolean} [opts.forceRefresh] Bỏ qua cache, luôn đọc lại từ Firestore
-   *   (dùng khi giáo viên bấm nút "🔄 Làm mới dữ liệu").
+   *   (dùng khi bấm nút "🔄 Làm mới dữ liệu").
    */
   async function loadAll(profile, { forceRefresh = false } = {}) {
+    const isAdmin = profile.role === 'admin';
     const schools = Array.isArray(profile.schools) ? profile.schools.filter(Boolean) : [];
-    if (!schools.length) {
+    if (!isAdmin && !schools.length) {
       // Chưa được Admin gán trường nào — không query gì cả (tránh query rỗng
       // vô nghĩa), trả về rỗng kèm cờ báo để UI hiện đúng thông báo.
       return { schools, students: [], results: [], noSchoolsAssigned: true };
     }
 
-    const cacheKey = 'teacher:' + (profile.uid || profile.id || 'unknown') + ':' + schools.slice().sort().join('|');
+    const cacheKey = isAdmin
+      ? 'teacher:admin-all-schools'
+      : 'teacher:' + (profile.uid || profile.id || 'unknown') + ':' + schools.slice().sort().join('|');
     if (!forceRefresh && global.EduDataCache) {
       const cached = global.EduDataCache.get(cacheKey);
       if (cached) return cached;
     }
 
     const [students, results] = await Promise.all([
-      global.EduRepositories.studentRoster.listBySchools(schools),
-      global.EduRepositories.studentResult.listRecent({ schools, limit: 1000 }),
+      isAdmin
+        ? global.EduRepositories.studentRoster.list({ where: [['status', '==', 'active']] })
+        : global.EduRepositories.studentRoster.listBySchools(schools),
+      global.EduRepositories.studentResult.listRecent(isAdmin ? { limit: 1000 } : { schools, limit: 1000 }),
     ]);
-    const data = { schools, students, results, noSchoolsAssigned: false };
+    const effectiveSchools = isAdmin
+      ? [...new Set(students.map((s) => s.school).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'vi'))
+      : schools;
+    const data = { schools: effectiveSchools, students, results, noSchoolsAssigned: false };
     if (global.EduDataCache) global.EduDataCache.set(cacheKey, data, CACHE_TTL_MS);
     return data;
   }

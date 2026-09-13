@@ -182,7 +182,7 @@
       <div class="push-right sidebar-actions">
         <button type="button" class="btn btn-secondary" id="ttPeriodTimesBtn" title="Sửa giờ vào/ra từng tiết của riêng giáo viên này — mỗi trường quy định giờ khác nhau nên cập nhật thủ công theo đúng trường đang dạy">⏱️ Giờ tiết</button>
         <button type="button" class="btn btn-secondary" id="ttImportBtn" title="Nhập hàng loạt mã lớp cho nhiều giáo viên/nhiều ngày cùng lúc từ 1 file Excel">📥 Nhập từ Excel</button>
-        <button type="button" class="btn btn-ghost" id="ttPrintBtn" title="In/Xuất PDF đúng thời khoá biểu đang hiển thị (dùng hộp thoại in của trình duyệt)">🖨️ In</button>
+        <button type="button" class="btn btn-ghost" id="ttPrintBtn" title="Xuất file PDF đúng thời khoá biểu đang hiển thị, vừa 1 trang A4 ngang, không header/footer trình duyệt">🖨️ Xuất PDF</button>
         <button type="button" class="btn btn-primary" id="ttSaveBtn">💾 Lưu thời khoá biểu</button>
       </div>
     </div>
@@ -222,7 +222,7 @@
       <button type="button" class="btn btn-primary push-right" id="addTeacherBtn">➕ Thêm giáo viên</button>
     </div>
     <div class="table-scroll">
-      <table>
+      <table id="teachersTable">
         <thead><tr><th>Mã NV</th><th>Họ và tên</th><th>SĐT</th><th>Địa chỉ nhà</th><th>Trạng thái</th><th></th></tr></thead>
         <tbody id="teacherRows"><tr><td colspan="6" class="empty-cell">Đang tải...</td></tr></tbody>
       </table>
@@ -303,29 +303,54 @@
         <button type="button" class="tab-btn active" data-tab="travel" role="tab">🚗 Hỗ trợ xăng xe</button>
       </div>
       <div class="sidebar-group">
+        <label for="travelPeriodType">📆 Xem theo</label>
+        <select id="travelPeriodType" class="form-input">
+          <option value="week">Tuần</option>
+          <option value="month">Tháng</option>
+          <option value="quarter">Quý</option>
+          <option value="year">Năm</option>
+        </select>
+      </div>
+      <div class="sidebar-group" id="travelWeekWrap">
         <label for="travelWeekSelect">🗓️ Tuần</label>
         <select id="travelWeekSelect" class="form-input"><option value="">-- Chưa có tuần nào --</option></select>
       </div>
+      <div class="sidebar-group force-hide" id="travelMonthWrap">
+        <label for="travelMonthSelect">🗓️ Tháng</label>
+        <select id="travelMonthSelect" class="form-input"></select>
+      </div>
+      <div class="sidebar-group force-hide" id="travelQuarterWrap">
+        <label for="travelQuarterSelect">🗓️ Quý</label>
+        <select id="travelQuarterSelect" class="form-input"></select>
+      </div>
+      <div class="sidebar-group force-hide" id="travelYearWrap">
+        <label for="travelYearSelect">🗓️ Năm</label>
+        <select id="travelYearSelect" class="form-input"></select>
+      </div>
       <button type="button" class="btn btn-primary push-right" id="travelLoadBtn">🔄 Tính hỗ trợ</button>
-      <button type="button" class="info-btn" title="Hỗ trợ 20.000đ/ngày nếu tổng khoảng cách đi lại trong ngày từ 11-15km; từ 15,1km trở lên: 30.000đ/ngày. Dưới 11km không có hỗ trợ. Khoảng cách tính: nhà → trường 1 (nếu 1 trường); nhà → trường 1 → trường 2 (nếu 2 trường trong cùng 1 ngày). KHÔNG hỗ trợ cho buổi Dự Giảng, Ôn online (Dạy Trực Tuyến), Trợ Giảng.">ℹ️</button>
+      <button type="button" class="info-btn" title="Hỗ trợ 20.000đ/ngày nếu tổng khoảng cách đi lại trong ngày từ 11-15km; từ 15,1km trở lên: 30.000đ/ngày. Dưới 11km không có hỗ trợ. Khoảng cách tính: nhà → trường 1 (nếu 1 trường); nhà → trường 1 → trường 2 (nếu 2 trường trong cùng 1 ngày). KHÔNG hỗ trợ cho buổi Dự Giảng, Ôn online (Dạy Trực Tuyến), Trợ Giảng. Chọn 'Tháng/Quý/Năm' để cộng dồn nhiều tuần lại thành 1 kỳ.">ℹ️</button>
     </div>
 
-    <div class="report-empty" id="travelEmpty">Chọn 1 tuần rồi bấm "🔄 Tính hỗ trợ" để xem bảng khoảng cách + tiền hỗ trợ.</div>
+    <div class="report-empty" id="travelEmpty">Chọn 1 kỳ rồi bấm "🔄 Tính hỗ trợ" để xem bảng khoảng cách + tiền hỗ trợ.</div>
 
     <div class="report-body force-hide" id="travelBody">
       <div class="report-pivot-head">
         <h3>📏 Khoảng cách nhà → trường</h3>
-        <span class="panel-toolbar-info">Đơn vị: km (1 chiều) — điền/sửa rồi bấm ra ngoài ô để tự lưu</span>
+        <span class="panel-toolbar-info">Đơn vị: km (1 chiều) — điền/sửa rồi bấm ra ngoài ô để tự lưu, hoặc bấm nút bên dưới để Google Maps tự tính</span>
+      </div>
+      <div class="panel-toolbar" style="padding:0 0 .6rem">
+        <button type="button" class="btn btn-secondary" id="travelGmapsAllBtn">🌍 Tính tất cả qua Google Maps</button>
+        <span class="panel-toolbar-info">Cần địa chỉ nhà (tab "👤 Giáo viên") + 1 Google Maps API Key riêng (hỏi khi bấm lần đầu)</span>
       </div>
       <div class="table-scroll">
         <table class="report-pivot" id="travelDistanceTable">
-          <thead><tr><th>Giáo viên</th><th>Trường</th><th>Khoảng cách (km)</th></tr></thead>
+          <thead><tr><th>Giáo viên</th><th>Trường</th><th>Khoảng cách (km)</th><th></th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
 
       <div class="report-pivot-head">
-        <h3>🚗 Hỗ trợ xăng xe theo tuần</h3>
+        <h3 id="travelResultTitle">🚗 Hỗ trợ xăng xe theo tuần</h3>
         <span class="panel-toolbar-info" id="travelRangeInfo"></span>
       </div>
       <div class="table-scroll">
@@ -571,6 +596,10 @@
 <script src="js/repositories/teaching-timetable-repository.js"></script>
 <script src="js/models/teaching-travel.model.js"></script>
 <script src="js/repositories/teaching-travel-repository.js"></script>
+<!-- Tự tính khoảng cách nhà→trường qua Google Maps (nút "🌍 Tính tất cả
+     qua Google Maps" ở tab "🚗 Hỗ trợ xăng xe") — xem hướng dẫn tạo API
+     Key ở đầu file. -->
+<script src="js/services/google-maps-distance.js"></script>
 
 <!-- Đọc file Excel (.xlsx/.xls) ngay trên trình duyệt bằng SheetJS, cùng
      thư viện/CDN đã dùng ở roster-manager.html (đã kiểm chứng hoạt động). -->
@@ -585,6 +614,10 @@
      chỉ hỗ trợ WinAnsi nên chữ có dấu bị sai; nạp SAU jsPDF, TRƯỚC
      teaching-schedule-pdf.js để font "NotoSans" có sẵn khi xuất PDF. -->
 <script src="js/vendor/notosans-vietnamese-jspdf.js"></script>
+<!-- Logo IIG dùng chung cho MỌI PDF xuất ra ở trang này (Lịch giảng dạy +
+     Phiếu công tác) — nạp TRƯỚC cả 2 file exporter bên dưới, xem
+     js/export/iig-logo.js. -->
+<script src="js/export/iig-logo.js"></script>
 <script src="js/export/teaching-schedule-pdf.js"></script>
 <!-- "📋 Phiếu công tác" — mẫu On_Tap_MOS/Phieu cong tac.doc, tự điền theo
      Lịch tuần của giáo viên (xem js/export/teaching-schedule-cong-tac-pdf.js).
@@ -594,6 +627,11 @@
      Microsoft (xem chú thích trong js/vendor/tinos-vietnamese-jspdf.js). -->
 <script src="js/vendor/tinos-vietnamese-jspdf.js"></script>
 <script src="js/export/teaching-schedule-cong-tac-pdf.js"></script>
+<!-- "🗓️ Thời khoá biểu" (tab TKB lớp) → nút "🖨️ In" xuất thẳng .pdf bằng
+     jsPDF (KHÔNG dùng window.print() nữa — hộp thoại in của trình duyệt tự
+     chèn header/footer không tắt được, xem ghi chú đầu file). Dùng lại
+     NotoSans + logo IIG đã nạp ở trên. -->
+<script src="js/export/teaching-timetable-pdf.js"></script>
 
 <script src="js/teaching-schedule.js"></script>
 <script src="js/teaching-timetable.js"></script>

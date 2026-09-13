@@ -18,7 +18,7 @@
      ======================================== -->
 <aside id="sidebar">
   <div class="sidebar-logo">
-    <div class="logo-icon">🎮</div>
+    <div class="logo-icon"><img src="img/iig-logo.png" alt="IIG" class="logo-icon-img"></div>
     <div class="logo-text">IC3 Quiz
     </div>
   </div>
@@ -227,21 +227,26 @@
 
       <!-- Table -->
       <div class="report-table-wrap">
-        <div class="report-table-header">🗂️ Chi tiết lượt làm bài (tối đa 200 lượt gần nhất)</div>
+        <div class="report-table-header">
+          <span>🗂️ Chi tiết lượt làm bài (<span id="reportTableCount">0</span> lượt)</span>
+          <button type="button" class="btn-danger-text" id="deleteSelectedRowsBtn" hidden>🗑️ Xoá mục đã chọn (<span id="selectedRowsCount">0</span>)</button>
+        </div>
         <div class="table-scroll-x">
           <table id="reportTable">
             <thead>
               <tr>
+                <th scope="col"><input type="checkbox" id="reportSelectAll" title="Chọn tất cả"></th>
                 <th scope="col">Học sinh</th>
                 <th scope="col">Lớp</th>
                 <th scope="col">Bộ đề</th>
                 <th scope="col">Thời gian</th>
                 <th scope="col">Điểm số</th>
                 <th scope="col">Trạng thái</th>
+                <th scope="col"></th>
               </tr>
             </thead>
             <tbody id="reportBody">
-              <tr><td colspan="6" class="table-empty-cell">Đang tải dữ liệu...</td></tr>
+              <tr><td colspan="8" class="table-empty-cell">Đang tải dữ liệu...</td></tr>
             </tbody>
           </table>
         </div>
@@ -361,6 +366,11 @@
     document.write('<script src="https://unpkg.com/chart.js@4.4.4/dist/chart.umd.min.js"><\/script>');
   }
 </script>
+<!-- Hiệu ứng khối 3D + đổ bóng cho biểu đồ (bar/doughnut/line) — tự đăng ký
+     vào MỌI Chart.js instance của trang, xem js/charts-3d.js. Nạp NGAY SAU
+     khi Chart.js đã sẵn sàng (dù đi qua nhánh local hay fallback CDN nào ở
+     trên), TRƯỚC dashboard.js (nơi thật sự new Chart(...)). -->
+<script src="js/charts-3d.js"></script>
 <script src="js/dashboard-page.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
@@ -369,6 +379,14 @@
 <script src="js/auth.js"></script>
 <script src="js/auth-guard.js"></script>
 <script src="js/idle-logout.js"></script>
+<!-- Hàm tính điểm TB/tỉ lệ đạt/nhóm theo lớp/xu hướng theo ngày DÙNG CHUNG
+     với Dashboard điều phối (coordinator-dashboard.html) và Dashboard giáo
+     viên (teacher-dashboard.html) — xem js/dashboard.js!renderReportStats()/
+     renderReportCharts(). Chỉ cần đúng file này (không cần
+     models/exam-history.model.js) vì tab "Báo cáo kết quả" không dùng các
+     hàm phụ thuộc examHistories (topStudents/studentsNeedingSupport/
+     completionRate). -->
+<script src="js/services/analytics-service.js"></script>
 <script src="js/dashboard.js"></script>
 </body>
 </html>
