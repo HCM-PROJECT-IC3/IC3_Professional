@@ -91,8 +91,45 @@
       renderClasses();
       renderStudentClassFilter();
       renderStudents();
+
+      await repairKnownBadTeacherNames();
     } catch (err) {
       toast('❌ Lỗi tải dữ liệu: ' + friendlyError(err));
+    }
+  }
+
+  /** Tự sửa 1 lần dữ liệu GV bị đọc sai từ 1 lần nhập cũ (trước khi
+   * extractTeacherNameFromSheet() được vá lỗi bỏ ngoặc dư / chữ mẫu chưa
+   * điền — xem hàm đó): lớp 3/11 và 3/12 trường "TiH Phan Chu Trinh" đang
+   * lưu literal "(Nguyễn Tuyết Nhi)" / "(Tên lót + Tên)" làm teacherName,
+   * trong khi đối chiếu sheet gốc ("Nhi - FORM QUẢN LÝ LỚP 3.xlsx") cả 2
+   * lớp đều do cô Nguyễn Tuyết Nhi phụ trách. Chạy mỗi lần tải trang,
+   * không làm gì nếu dữ liệu đã đúng (an toàn để chạy nhiều lần) — có thể
+   * xoá đoạn này sau khi xác nhận dữ liệu đã sạch. */
+  async function repairKnownBadTeacherNames() {
+    const SCHOOL = 'TiH Phan Chu Trinh';
+    const CLASS_NAMES = ['3/11', '3/12'];
+    const BAD_VALUES = ['(Nguyễn Tuyết Nhi)', '(Tên lót + Tên)'];
+    const CORRECT_NAME = 'Nguyễn Tuyết Nhi';
+
+    const badStudents = state.students.filter((s) =>
+      s.school === SCHOOL && CLASS_NAMES.includes(s.className) && BAD_VALUES.includes(s.teacherName));
+    for (const s of badStudents) {
+      await window.EduRepositories.studentRoster.update(s.id, { teacherName: CORRECT_NAME });
+      s.teacherName = CORRECT_NAME;
+    }
+
+    const badClasses = state.classes.filter((cl) =>
+      CLASS_NAMES.includes(cl.name) && BAD_VALUES.includes(cl.teacherName));
+    for (const cl of badClasses) {
+      await window.EduRepositories.class.update(cl.id, { teacherName: CORRECT_NAME });
+      cl.teacherName = CORRECT_NAME;
+    }
+
+    if (badStudents.length || badClasses.length) {
+      renderClasses();
+      renderStudents();
+      toast(`🔧 Đã tự sửa GV → "${CORRECT_NAME}" cho ${badStudents.length} học sinh + ${badClasses.length} lớp (${SCHOOL}, ${CLASS_NAMES.join(' & ')})`);
     }
   }
 
@@ -355,10 +392,11 @@
   // thay vì gọi Firestore trực tiếp — xem ghi chú đầu file
   // js/lobby-roster.js để biết lý do: tránh nổ quota đọc Firestore
   // (mỗi lần mở/tải lại index.html trước đây tốn 1 lượt đọc × số học
-  // sinh "active"). File xuất ra là NGUỒN TĨNH, chỉ cập nhật khi
-  // Điều phối đào tạo bấm nút này rồi tự commit + push lên GitHub —
-  // đây là bước THỦ CÔNG bắt buộc vì trang này chạy trên GitHub Pages
-  // (không có server để tự ghi file).
+  // sinh "active"). File xuất ra là NGUỒN TĨNH — nút chính
+  // "🚀 Cập nhật cho học sinh" (publishRosterToGitHub, phía dưới) tự
+  // đẩy file này lên GitHub qua API. Hàm exportRosterJson() dưới đây
+  // chỉ còn là NÚT DỰ PHÒNG (tải file JSON về tay) cho lúc không dùng
+  // được token GitHub.
   // ============================================================
   function buildRosterExportPayload() {
     const students = state.students
@@ -397,6 +435,42 @@
   }
 
   document.getElementById('exportRosterJsonBtn').addEventListener('click', exportRosterJson);
+
+  // ============================================================
+  // CẬP NHẬT TỰ ĐỘNG CHO index.html — ĐẨY THẲNG data/roster/students-active.json
+  // LÊN GITHUB QUA API (window.EduGitHubPublish, xem js/github-publish.js),
+  // KHÔNG cần tải file + git commit + push thủ công nữa. Vẫn ghi ra
+  // CÙNG 1 file tĩnh (không đổi kiến trúc "index.html đọc file tĩnh,
+  // không gọi Firestore trực tiếp" — lý do bảo mật/quota vẫn còn
+  // nguyên, xem ghi chú ở buildRosterExportPayload phía trên), chỉ tự
+  // động hoá bước cuối.
+  // ============================================================
+  async function publishRosterToGitHub() {
+    const payload = buildRosterExportPayload();
+    if (!payload.count) {
+      toast('⚠️ Chưa có học sinh "Đang học" nào để cập nhật.');
+      return;
+    }
+    const btn = document.getElementById('publishRosterGitHubBtn');
+    const originalLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ Đang cập nhật...';
+    try {
+      await window.EduGitHubPublish.publishFiles(
+        [{ path: 'data/roster/students-active.json', content: JSON.stringify(payload, null, 2) }],
+        `chore(roster): cập nhật danh sách học sinh (${payload.count} HS, ${payload.version})`
+      );
+      logRosterChange('publish_json_github', null, { count: payload.count });
+      toast(`🚀 Đã cập nhật lên GitHub (${payload.count} học sinh) — index.html sẽ thấy sau khoảng 1 phút.`);
+    } catch (err) {
+      toast('❌ Cập nhật GitHub thất bại: ' + friendlyError(err));
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalLabel;
+    }
+  }
+
+  document.getElementById('publishRosterGitHubBtn').addEventListener('click', publishRosterToGitHub);
 
   // ============================================================
   // NẠP HỌC SINH TỪ FILE EXCEL (.xlsx/.xls) — đọc bằng SheetJS ngay
@@ -484,7 +558,16 @@
         // "GV" không có dấu nên vị trí trong chuỗi gốc không lệch do NFD —
         // an toàn khi cắt chuỗi gốc theo vị trí tìm được trên chuỗi gốc.
         const idx = raw.search(/gv/i);
-        if (idx !== -1) return raw.slice(idx + 2).trim();
+        if (idx === -1) continue;
+        let name = raw.slice(idx + 2).trim();
+        // Bỏ ngoặc đơn thừa quanh tên nếu GV lỡ gõ cả ngoặc (VD ô ghi
+        // "TÊN GV (Nguyễn Tuyết Nhi)" thay vì "TÊN GV Nguyễn Tuyết Nhi").
+        name = name.replace(/^\(([^()]+)\)$/, '$1').trim();
+        // Ô vẫn còn nguyên chữ mẫu hướng dẫn chưa điền (VD "(Tên lót +
+        // Tên)") — coi như chưa có tên, đọc tiếp ô "TÊN GV" khác (nếu có)
+        // thay vì trả về luôn chữ mẫu này làm tên GV.
+        if (!name || stripDiacritics(name).indexOf('ten lot') === 0) continue;
+        return name;
       }
     }
     return '';
