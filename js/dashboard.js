@@ -338,11 +338,20 @@ async function updateReportTab() {
   }
 
   if (_reportRawDocs === null) {
-    body.innerHTML = `<tr><td colspan="6" class="table-empty-cell">Đang tải dữ liệu...</td></tr>`;
+    body.innerHTML = `<tr><td colspan="8" class="table-empty-cell">Đang tải dữ liệu...</td></tr>`;
     try {
+      // Trước đây .limit(500) cắt bớt dữ liệu cũ hơn khỏi cả báo cáo (không
+      // chỉ bảng chi tiết) — người dùng phản hồi cần ĐẦY ĐỦ số lượt làm bài,
+      // không bị giới hạn. Nâng lên mức trần TỐI ĐA Firestore CHO PHÉP
+      // (10.000 — thử 20.000 trước đó bị chính Firestore từ chối thẳng với
+      // lỗi "Limit value in the structured query is over the maximum value
+      // of 10000", làm sập cả trang báo cáo) thay vì bỏ hẳn .limit() — query
+      // không có limit vẫn có thể tải cả collection nếu 1 ngày nào đó phình
+      // to bất thường, trần này chỉ để chặn tình huống đó, KHÔNG nhằm cắt
+      // bớt dữ liệu thật ở quy mô hiện tại (còn rất xa 10.000 bản ghi).
       const snap = await window.EduFirebase.db.collection('quiz_results')
         .orderBy('submittedAt', 'desc')
-        .limit(500)
+        .limit(10000)
         .get();
       _reportRawDocs = snap.docs.map(doc => {
         const d = doc.data();
@@ -401,11 +410,16 @@ function applyReportFiltersAndRender() {
 }
 
 function renderReportStats(rows) {
+  // Điểm TB / Tỉ lệ đạt DÙNG CHUNG js/services/analytics-service.js (đúng
+  // hàm EduAnalytics.avgScore()/passRate() mà Dashboard điều phối/Dashboard
+  // giáo viên đang dùng) thay vì tự tính lại — chỉ "Điểm cao nhất" (Math.max
+  // đơn giản) và "Tổng lượt làm" là giữ tính tại chỗ vì chưa có hàm dùng
+  // chung tương ứng trong analytics-service.
   const scores = rows.map(r => r.score).filter(x => typeof x === 'number');
-  const passed = scores.filter(s => s >= 70);
-  const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+  const avgScoreRaw = window.EduAnalytics.avgScore(rows);
+  const avgScore = avgScoreRaw === null ? null : Math.round(avgScoreRaw);
   const topScore = scores.length ? Math.max(...scores) : null;
-  const passRate = scores.length ? Math.round((passed.length / scores.length) * 100) : null;
+  const passRate = window.EduAnalytics.passRate(rows);
 
   document.getElementById('totalSessions').textContent = rows.length;
   document.getElementById('totalDone').textContent = passRate !== null ? passRate + '%' : '—';
@@ -413,17 +427,29 @@ function renderReportStats(rows) {
   document.getElementById('topScore').textContent = topScore !== null ? topScore + '%' : '—';
 }
 
+// ID các lượt làm bài đang được tick chọn trong bảng chi tiết (để xoá hàng loạt).
+// Reset mỗi lần lọc lại/render lại bảng (chọn ở lần lọc trước không còn ý nghĩa
+// vì hàng đó có thể không còn hiển thị).
+let _reportSelectedIds = new Set();
+
 function renderReportTable(rows) {
   const body = document.getElementById('reportBody');
+  document.getElementById('reportTableCount').textContent = rows.length;
+  _reportSelectedIds = new Set();
+  updateReportSelectionUI();
+
   if (rows.length === 0) {
-    body.innerHTML = `<tr><td colspan="6" class="table-empty-cell">Chưa có dữ liệu phù hợp bộ lọc. Học sinh bắt đầu làm bài để xem kết quả.</td></tr>`;
+    body.innerHTML = `<tr><td colspan="8" class="table-empty-cell">Chưa có dữ liệu phù hợp bộ lọc. Học sinh bắt đầu làm bài để xem kết quả.</td></tr>`;
     return;
   }
-  body.innerHTML = rows.slice(0, 200).map(r => {
+  // KHÔNG còn .slice(0, 200) — người dùng phản hồi cần thấy ĐẦY ĐỦ số lượt
+  // làm bài khớp bộ lọc hiện tại, không bị cắt bớt.
+  body.innerHTML = rows.map(r => {
     const dateStr = new Date(r.submittedAtMs).toLocaleString('vi-VN');
     const ok = r.integrityOk !== false;
     return `
-    <tr>
+    <tr data-row-id="${escHtml(r.id)}">
+      <td><input type="checkbox" class="report-row-check" data-id="${escHtml(r.id)}"></td>
       <td><strong>${escHtml(r.studentName || 'Ẩn danh')}</strong></td>
       <td>${escHtml(r.studentClass || '—')}</td>
       <td>${escHtml(r.testName || '—')}</td>
@@ -435,8 +461,71 @@ function renderReportTable(rows) {
         </div>
       </td>
       <td class="${ok ? 'status-done' : 'status-progress'}">${ok ? '✅ Hợp lệ' : '⚠️ Nghi vấn'}</td>
+      <td><button type="button" class="row-delete-btn" data-id="${escHtml(r.id)}" title="Xoá lượt này">🗑️</button></td>
     </tr>`;
   }).join('');
+
+  body.querySelectorAll('.report-row-check').forEach(cb => {
+    cb.addEventListener('change', () => {
+      if (cb.checked) _reportSelectedIds.add(cb.dataset.id);
+      else _reportSelectedIds.delete(cb.dataset.id);
+      updateReportSelectionUI();
+    });
+  });
+  body.querySelectorAll('.row-delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => deleteReportRows([btn.dataset.id]));
+  });
+}
+
+/** Cập nhật checkbox "chọn tất cả" + hiện/ẩn nút xoá hàng loạt theo số dòng đang tick. */
+function updateReportSelectionUI() {
+  const selectAll = document.getElementById('reportSelectAll');
+  const deleteBtn = document.getElementById('deleteSelectedRowsBtn');
+  const countEl = document.getElementById('selectedRowsCount');
+  const total = _reportFiltered.length;
+  const selected = _reportSelectedIds.size;
+  if (selectAll) {
+    selectAll.checked = total > 0 && selected === total;
+    selectAll.indeterminate = selected > 0 && selected < total;
+  }
+  if (countEl) countEl.textContent = selected;
+  if (deleteBtn) deleteBtn.hidden = selected === 0;
+}
+
+document.getElementById('reportSelectAll')?.addEventListener('change', (e) => {
+  _reportSelectedIds = e.target.checked ? new Set(_reportFiltered.map(r => r.id)) : new Set();
+  document.querySelectorAll('.report-row-check').forEach(cb => { cb.checked = e.target.checked; });
+  updateReportSelectionUI();
+});
+
+document.getElementById('deleteSelectedRowsBtn')?.addEventListener('click', () => {
+  deleteReportRows([..._reportSelectedIds]);
+});
+
+/** Xoá 1 hoặc nhiều lượt làm bài (collection "quiz_results") khỏi Firestore
+ * + khỏi 2 mảng cache cục bộ (_reportRawDocs/_reportFiltered), rồi vẽ lại
+ * bảng/thống kê/biểu đồ. Cần quyền isAdmin() hoặc isCoordinator() theo
+ * firestore.rules — báo lỗi rõ ràng nếu bị từ chối thay vì im lặng. */
+async function deleteReportRows(ids) {
+  if (!ids.length) return;
+  const msg = ids.length === 1
+    ? 'Xoá vĩnh viễn lượt làm bài này? Không thể hoàn tác.'
+    : `Xoá vĩnh viễn ${ids.length} lượt làm bài đã chọn? Không thể hoàn tác.`;
+  if (!confirm(msg)) return;
+
+  try {
+    const db = window.EduFirebase.db;
+    const batch = db.batch();
+    ids.forEach(id => batch.delete(db.collection('quiz_results').doc(id)));
+    await batch.commit();
+
+    const idSet = new Set(ids);
+    _reportRawDocs = (_reportRawDocs || []).filter(d => !idSet.has(d.id));
+    applyReportFiltersAndRender();
+  } catch (err) {
+    console.error('[EduQuiz] Lỗi xoá lượt làm bài:', err);
+    alert('❌ Xoá thất bại: ' + err.message + '\n(Cần quyền Admin/Điều phối đào tạo — kiểm tra lại tài khoản đăng nhập.)');
+  }
 }
 
 /** Hiện thông báo lỗi thân thiện thay cho canvas trắng khi Chart.js không tải được
@@ -473,6 +562,19 @@ function hideChartLibUnavailable(canvasId) {
   if (msg) msg.style.display = 'none';
 }
 
+// Style tooltip dùng chung cho cả 3 biểu đồ — to hơn, bo góc, đổ bóng nhẹ,
+// giống tooltip của các dashboard BI doanh nghiệp (PowerBI/Looker) thay vì
+// tooltip mặc định nhỏ/phẳng của Chart.js.
+const PROFESSIONAL_TOOLTIP = {
+  backgroundColor: 'rgba(20,22,34,.92)',
+  titleFont: { weight: '800', size: 13 },
+  bodyFont: { size: 12.5 },
+  padding: 12,
+  cornerRadius: 10,
+  displayColors: true,
+  boxPadding: 4,
+};
+
 function renderReportCharts(rows) {
   if (typeof Chart === 'undefined') {
     // Thư viện chưa tải xong / bị chặn mạng — hiện cảnh báo rõ ràng ở cả 3
@@ -490,50 +592,66 @@ function renderReportCharts(rows) {
   const passed = scores.filter(s => s >= 70).length;
   const failed = scores.length - passed;
 
-  // 1) Đạt / Chưa đạt
+  // 1) Đạt / Chưa đạt — doughnut 3D (xem js/charts-3d.js: plugin edu3dPie tự
+  // vẽ thêm "đáy trụ" dày hơn phía dưới). Cần chừa padding-bottom cho phần
+  // đáy đó không bị cắt bởi vùng clip mặc định của Chart.js.
   _reportCharts.passFail = new Chart(document.getElementById('chartPassFail'), {
     type: 'doughnut',
     data: {
       labels: ['Đạt (≥70%)', 'Chưa đạt (<70%)'],
-      datasets: [{ data: [passed, failed], backgroundColor: ['#21b36b', '#f0483e'], borderWidth: 0 }],
+      datasets: [{ data: [passed, failed], backgroundColor: ['#21b36b', '#f0483e'], borderWidth: 0, hoverOffset: 10 }],
     },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { bottom: 12 } },
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { weight: '700' }, padding: 16 } },
+        tooltip: PROFESSIONAL_TOOLTIP,
+      },
+    },
   });
 
-  // 2) Điểm trung bình theo lớp
-  const byClass = {};
-  rows.forEach(r => {
-    const key = r.studentClass || 'Chưa rõ';
-    if (!byClass[key]) byClass[key] = [];
-    if (typeof r.score === 'number') byClass[key].push(r.score);
-  });
+  // 2) Điểm trung bình theo lớp — DÙNG CHUNG EduAnalytics.groupAvgBy() (đúng
+  // hàm js/coordinator/charts.js!renderBar() đang dùng để vẽ biểu đồ y hệt
+  // ý nghĩa ở Dashboard điều phối/Dashboard giáo viên) thay vì tự nhóm/tính
+  // trung bình lại lần nữa ở đây.
+  const byClass = window.EduAnalytics.groupAvgBy(rows, 'studentClass');
   const classLabels = Object.keys(byClass).sort();
-  const classAverages = classLabels.map(k => Math.round(byClass[k].reduce((a, b) => a + b, 0) / byClass[k].length));
+  const classAverages = classLabels.map(k => Math.round(byClass[k] ?? 0));
 
+  // Bar 3D (plugin edu3dBar tự vẽ thêm mặt bên + nắp trên, xem
+  // js/charts-3d.js) — bỏ borderRadius (mặt phẳng bo tròn không khớp được
+  // với mặt bên/nắp hình bình hành), chừa padding top/right cho phần khối
+  // nhô thêm không bị cắt.
   _reportCharts.byClass = new Chart(document.getElementById('chartByClass'), {
     type: 'bar',
     data: {
       labels: classLabels,
-      datasets: [{ label: 'Điểm TB (%)', data: classAverages, backgroundColor: '#4f6bff', borderRadius: 6 }],
+      datasets: [{ label: 'Điểm TB (%)', data: classAverages, backgroundColor: '#4f6bff', maxBarThickness: 56 }],
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: { y: { beginAtZero: true, max: 100 } },
+      layout: { padding: { top: 16, right: 16 } },
+      plugins: { legend: { display: false }, tooltip: PROFESSIONAL_TOOLTIP },
+      scales: {
+        y: { beginAtZero: true, max: 100, grid: { color: 'rgba(0,0,0,.06)' } },
+        x: { grid: { display: false } },
+      },
     },
   });
 
-  // 3) Xu hướng điểm trung bình theo ngày
-  const byDay = {};
-  rows.forEach(r => {
-    const day = new Date(r.submittedAtMs).toLocaleDateString('vi-VN');
-    if (!byDay[day]) byDay[day] = [];
-    if (typeof r.score === 'number') byDay[day].push(r.score);
-  });
-  const dayEntries = Object.entries(byDay)
-    .map(([day, arr]) => ({ day, avg: Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) }))
-    .sort((a, b) => new Date(a.day.split('/').reverse().join('-')) - new Date(b.day.split('/').reverse().join('-')));
+  // 3) Xu hướng điểm trung bình theo ngày — DÙNG CHUNG EduAnalytics.trendByDay()
+  // (đúng hàm js/coordinator/charts.js!renderLine() đang dùng) — hàm này gom
+  // theo ngày kiểu ISO (yyyy-mm-dd, ổn định để sort tăng dần) rồi trả sẵn
+  // {date, avg}, chỉ cần đổi "date" sang định dạng vi-VN để hiển thị nhãn
+  // trục X giống hệt bản cũ.
+  const dayEntries = window.EduAnalytics.trendByDay(rows)
+    .map((e) => ({ day: new Date(e.date).toLocaleDateString('vi-VN'), avg: Math.round(e.avg ?? 0) }));
 
+  // Line "nổi khối" nhẹ (đổ bóng dưới đường viền, xem plugin edu3dLineShadow
+  // ở js/charts-3d.js) + gradient đậm dần xuống đáy vùng tô thay vì màu
+  // phẳng đơn sắc — trông có chiều sâu hơn mà biểu đồ xu hướng vẫn dễ đọc
+  // (khác bar/pie, line 3D thật sự sẽ rối mắt nên không vẽ khối 3D thật).
   _reportCharts.trend = new Chart(document.getElementById('chartTrend'), {
     type: 'line',
     data: {
@@ -541,14 +659,23 @@ function renderReportCharts(rows) {
       datasets: [{
         label: 'Điểm TB theo ngày (%)',
         data: dayEntries.map(e => e.avg),
-        borderColor: '#17b3a3', backgroundColor: 'rgba(23,179,163,.15)',
-        fill: true, tension: 0.3, pointRadius: 3,
+        borderColor: '#17b3a3',
+        backgroundColor: (ctx) => window.EduCharts3D.verticalGradient(
+          ctx.chart.ctx, ctx.chart.chartArea, 'rgba(23,179,163,.05)', 'rgba(23,179,163,.45)'
+        ),
+        fill: true, tension: 0.35, pointRadius: 4, pointHoverRadius: 6,
+        pointBackgroundColor: '#17b3a3', pointBorderColor: '#fff', pointBorderWidth: 2,
+        borderWidth: 3,
       }],
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: { y: { beginAtZero: true, max: 100 } },
+      layout: { padding: { bottom: 10 } },
+      plugins: { legend: { display: false }, tooltip: PROFESSIONAL_TOOLTIP },
+      scales: {
+        y: { beginAtZero: true, max: 100, grid: { color: 'rgba(0,0,0,.06)' } },
+        x: { grid: { display: false } },
+      },
     },
   });
 }

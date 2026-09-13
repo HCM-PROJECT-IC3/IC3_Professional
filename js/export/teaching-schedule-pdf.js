@@ -68,8 +68,9 @@
    * vẽ bảng lịch tiếp theo, TÍNH ĐỘNG theo số dòng thật của dòng thông tin
    * (tên GV/mã NV/tuần bọc qua doc.splitTextToSize) — tên giáo viên dài
    * sẽ tự xuống dòng đúng chỗ thay vì tràn lề/đè lên đường kẻ hay bảng
-   * bên dưới ("rớt dòng"). Không còn logo "IC3" — thay bằng 1 dải màu
-   * thương hiệu mỏng ở mép trên, gọn và chuyên nghiệp hơn khối logo vuông. */
+   * bên dưới ("rớt dòng"). Logo IIG thật (window.EduIigLogo, xem
+   * js/export/iig-logo.js) ở góc trái trên — GIỐNG hệt logo dùng ở
+   * "📋 Phiếu công tác" (js/export/teaching-schedule-cong-tac-pdf.js). */
   function drawHeader(doc, { teacherName, teacherCode, weekLabel }) {
     const pageWidth = doc.internal.pageSize.getWidth();
     const contentWidth = pageWidth - PAGE_MARGIN * 2;
@@ -77,11 +78,20 @@
     doc.setFillColor(...BRAND);
     doc.rect(0, 0, pageWidth, 5, 'F');
 
+    const logo = global.EduIigLogo;
+    let titleX = PAGE_MARGIN;
+    if (logo) {
+      const logoW = 50;
+      const logoH = logoW * logo.aspect;
+      doc.addImage(logo.base64, 'PNG', PAGE_MARGIN, 16, logoW, logoH);
+      titleX = PAGE_MARGIN + logoW + 14;
+    }
+
     let y = 34;
     doc.setTextColor(30, 30, 40);
     doc.setFont('NotoSans', 'bold');
     doc.setFontSize(16);
-    doc.text('Lịch giảng dạy hàng tuần', PAGE_MARGIN, y);
+    doc.text('LỊCH GIẢNG DẠY', titleX, y);
 
     doc.setFont('NotoSans', 'normal');
     doc.setFontSize(9);
@@ -95,9 +105,9 @@
     // splitTextToSize BỌC ĐÚNG theo bề rộng in được của font NotoSans đang
     // dùng — dù tên giáo viên dài tới đâu cũng không tràn lề, số dòng trả
     // về là con số THẬT để tính đúng khoảng cách xuống bảng bên dưới.
-    const lines = doc.splitTextToSize(subtitle, contentWidth);
-    doc.text(lines, PAGE_MARGIN, y);
-    y += lines.length * 14;
+    const lines = doc.splitTextToSize(subtitle, contentWidth - (titleX - PAGE_MARGIN));
+    doc.text(lines, titleX, y);
+    y = Math.max(y + lines.length * 14, 16 + logoW_H(logo));
 
     y += 8;
     doc.setDrawColor(220, 222, 235);
@@ -107,21 +117,11 @@
     return y + 14;
   }
 
-  function drawFooterAllPages(doc) {
-    const total = doc.internal.getNumberOfPages();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    for (let i = 1; i <= total; i += 1) {
-      doc.setPage(i);
-      doc.setDrawColor(220, 222, 235);
-      doc.setLineWidth(0.5);
-      doc.line(PAGE_MARGIN, pageHeight - 28, pageWidth - PAGE_MARGIN, pageHeight - 28);
-      doc.setFont('NotoSans', 'normal');
-      doc.setFontSize(9);
-      doc.setTextColor(...GRAY);
-      doc.text('Lịch giảng dạy — báo cáo được tạo tự động', PAGE_MARGIN, pageHeight - 15);
-      doc.text(`Trang ${i}/${total}`, pageWidth - PAGE_MARGIN, pageHeight - 15, { align: 'right' });
-    }
+  /** Chiều cao thật của logo (đã scale theo logoW=50 ở drawHeader) — dùng để
+   * đảm bảo đường kẻ phân cách luôn nằm DƯỚI logo, không đè lên nhau khi
+   * dòng phụ đề (tên GV/mã NV/tuần) ngắn hơn chiều cao logo. */
+  function logoW_H(logo) {
+    return logo ? 50 * logo.aspect : 0;
   }
 
   /** Nội dung 1 ô (Buổi × Thứ) trong bảng lịch: loại hình + địa điểm +
@@ -267,7 +267,6 @@
     const { jsPDF } = global.jspdf;
     const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'landscape' });
     drawOnePage(doc, teacher, days, weekLabel, M, { isFirstPage: true });
-    drawFooterAllPages(doc);
     doc.save(`lich-${slugify(teacher.name || teacher.code)}-${slugify(weekLabel)}.pdf`);
   }
 
@@ -284,7 +283,6 @@
     list.forEach(({ teacher, days }, i) => {
       drawOnePage(doc, teacher, days, weekLabel, M, { isFirstPage: i === 0 });
     });
-    drawFooterAllPages(doc);
     doc.save(`lich-giang-day-${slugify(weekLabel)}.pdf`);
   }
 

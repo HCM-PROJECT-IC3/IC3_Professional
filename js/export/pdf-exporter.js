@@ -8,19 +8,25 @@
    toàn cục autoTable(doc, opts), KHÔNG phải doc.autoTable(opts)
    như bản v3 cũ).
 
-   Chưa có file logo hình ảnh trong project (đã tìm nhưng không thấy
-   assets/logo.*) nên "logo" ở đây là 1 huy hiệu vector vẽ trực tiếp
-   bằng jsPDF (hình vuông bo góc + chữ "IC3") — nếu sau này project có
-   file assets/logo.png, chỉ cần sửa hàm drawLogoBadge() để doc.addImage()
-   logo thật thay vì vẽ hình vuông.
+   Logo: dùng chung window.EduIigLogo (ảnh logo IIG thật, xem
+   js/export/iig-logo.js) — GIỐNG hệt logo dùng ở "📋 Phiếu công tác"
+   (js/export/teaching-schedule-cong-tac-pdf.js), không còn vẽ huy hiệu
+   vector "IC3" tự chế như bản trước.
 
    Biểu đồ: lấy trực tiếp từ 4 canvas Chart.js đã vẽ sẵn trên trang
    (#chartBar/#chartLine/#chartPie/#chartRadar, xem js/coordinator/
    charts.js) bằng canvas.toDataURL('image/png') — không cần vẽ lại,
    không cần thêm thư viện chụp màn hình (html2canvas).
 
+   KHÔNG còn footer ở cuối mỗi trang, và KHÔNG còn dòng phụ đề nhỏ
+   (scopeLabel, vd "Dashboard Điều phối đào tạo — EduQuiz ·
+   dieuphoidaotao · Điều phối đào tạo") dưới tiêu đề — người dùng phản
+   hồi bỏ hẳn 2 phần này (xem drawHeader()/exportReport() bên dưới —
+   drawFooterAllPages() và tham số opts.scopeLabel không còn được dùng
+   để vẽ gì cả nữa, chỉ còn scopeLabel dùng để LỌC dữ liệu ở nơi khác).
+
    Nạp SAU: js/vendor/jspdf.umd.min.js, js/vendor/jspdf.plugin.autotable.min.js,
-            analytics-service.js.
+            js/export/iig-logo.js, analytics-service.js.
    ============================================================ */
 (function (global) {
   'use strict';
@@ -33,27 +39,27 @@
     return new Date().toLocaleString('vi-VN');
   }
 
+  // Logo IIG thật (window.EduIigLogo, xem js/export/iig-logo.js) — GIỐNG
+  // hệt logo dùng ở "📋 Phiếu công tác", thay cho huy hiệu vector "IC3"
+  // tự vẽ trước đây.
   function drawLogoBadge(doc, x, y) {
-    doc.setFillColor(...BRAND);
-    doc.roundedRect(x, y, 26, 26, 5, 5, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.text('IC3', x + 13, y + 17, { align: 'center' });
+    const logo = global.EduIigLogo;
+    if (!logo) return; // an toàn nếu lỡ quên nạp js/export/iig-logo.js
+    const logoW = 50;
+    const logoH = logoW * logo.aspect;
+    doc.addImage(logo.base64, 'PNG', x, y, logoW, logoH);
   }
 
-  function drawHeader(doc, opts) {
+  function drawHeader(doc) {
     const pageWidth = doc.internal.pageSize.getWidth();
-    drawLogoBadge(doc, PAGE_MARGIN, 24);
+    drawLogoBadge(doc, PAGE_MARGIN, 20);
     doc.setTextColor(30, 30, 40);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('NotoSans', 'bold');
     doc.setFontSize(13);
-    doc.text('Học Liệu Số — Báo cáo học sinh (IC3)', PAGE_MARGIN + 34, 38);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
-    doc.setTextColor(...GRAY);
-    doc.text(opts.scopeLabel || '', PAGE_MARGIN + 34, 49);
+    doc.text('Học Liệu Số — Báo cáo học sinh (IC3)', PAGE_MARGIN + 62, 38);
+    doc.setFont('NotoSans', 'normal');
     doc.setFontSize(8);
+    doc.setTextColor(...GRAY);
     doc.text(`Xuất lúc: ${nowLabel()}`, pageWidth - PAGE_MARGIN, 38, { align: 'right' });
     doc.setDrawColor(220, 222, 235);
     doc.setLineWidth(0.7);
@@ -61,25 +67,8 @@
     doc.setTextColor(0, 0, 0);
   }
 
-  function drawFooterAllPages(doc) {
-    const total = doc.internal.getNumberOfPages();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    for (let i = 1; i <= total; i += 1) {
-      doc.setPage(i);
-      doc.setDrawColor(220, 222, 235);
-      doc.setLineWidth(0.5);
-      doc.line(PAGE_MARGIN, pageHeight - 34, pageWidth - PAGE_MARGIN, pageHeight - 34);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      doc.setTextColor(...GRAY);
-      doc.text('Học Liệu Số — báo cáo được tạo tự động', PAGE_MARGIN, pageHeight - 20);
-      doc.text(`Trang ${i}/${total}`, pageWidth - PAGE_MARGIN, pageHeight - 20, { align: 'right' });
-    }
-  }
-
   function sectionTitle(doc, text, y) {
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('NotoSans', 'bold');
     doc.setFontSize(11.5);
     doc.setTextColor(...BRAND);
     doc.text(text, PAGE_MARGIN, y);
@@ -95,9 +84,9 @@
       theme: 'grid',
       headStyles: { fillColor: BRAND, textColor: 255, fontStyle: 'bold' },
       alternateRowStyles: { fillColor: [247, 248, 252] },
-      styles: { fontSize: 9.5, cellPadding: 5 },
+      styles: { font: 'NotoSans', fontSize: 9.5, cellPadding: 5 },
       columnStyles: { 1: { fontStyle: 'bold', halign: 'right' } },
-      didDrawPage: () => drawHeader(doc, { scopeLabel }),
+      didDrawPage: () => drawHeader(doc),
     });
     return doc.lastAutoTable.finalY;
   }
@@ -111,7 +100,7 @@
 
   function drawChartsPage(doc, scopeLabel) {
     doc.addPage();
-    drawHeader(doc, { scopeLabel });
+    drawHeader(doc);
     sectionTitle(doc, '📈 Biểu đồ', 78);
 
     const charts = [
@@ -127,7 +116,7 @@
     let y = 92;
     charts.forEach(([id, label], i) => {
       const img = captureCanvas(id);
-      doc.setFont('helvetica', 'bold');
+      doc.setFont('NotoSans', 'bold');
       doc.setFontSize(9);
       doc.setTextColor(...GRAY);
       doc.text(label, x, y);
@@ -149,7 +138,7 @@
 
   function drawStudentListTable(doc, rows, scopeLabel) {
     doc.addPage();
-    drawHeader(doc, { scopeLabel });
+    drawHeader(doc);
     sectionTitle(doc, '🧑\u200d🎓 Danh sách học sinh', 78);
 
     const body = rows.map(({ student, history, progress }) => [
@@ -169,9 +158,9 @@
       body,
       theme: 'grid',
       headStyles: { fillColor: BRAND, textColor: 255, fontStyle: 'bold', fontSize: 8.5 },
-      styles: { fontSize: 8, cellPadding: 4 },
+      styles: { font: 'NotoSans', fontSize: 8, cellPadding: 4 },
       alternateRowStyles: { fillColor: [247, 248, 252] },
-      didDrawPage: () => drawHeader(doc, { scopeLabel }),
+      didDrawPage: () => drawHeader(doc),
       didParseCell: (data) => {
         if (data.section === 'body' && (data.column.index === 4 || data.column.index === 5)) {
           const raw = parseFloat(data.cell.raw);
@@ -186,7 +175,7 @@
 
   function drawStudentPivotTable(doc, title, list, scopeLabel) {
     doc.addPage();
-    drawHeader(doc, { scopeLabel });
+    drawHeader(doc);
     sectionTitle(doc, title, 78);
     const body = list.map((e) => [e.studentName, e.studentClass || '—', `${e.avgScore}%`, `${e.bestScore}%`, e.attemptsCount]);
     global.autoTable(doc, {
@@ -196,9 +185,9 @@
       body,
       theme: 'grid',
       headStyles: { fillColor: BRAND, textColor: 255, fontStyle: 'bold' },
-      styles: { fontSize: 9, cellPadding: 4.5 },
+      styles: { font: 'NotoSans', fontSize: 9, cellPadding: 4.5 },
       alternateRowStyles: { fillColor: [247, 248, 252] },
-      didDrawPage: () => drawHeader(doc, { scopeLabel }),
+      didDrawPage: () => drawHeader(doc),
     });
   }
 
@@ -214,7 +203,7 @@
     const { jsPDF } = global.jspdf;
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
 
-    drawHeader(doc, opts);
+    drawHeader(doc);
     sectionTitle(doc, '📊 Tổng quan', 78);
     drawKpiTable(doc, opts.kpis, 88, opts.scopeLabel);
 
@@ -223,7 +212,6 @@
     drawStudentPivotTable(doc, '🏆 Học sinh xuất sắc (Top 20)', global.EduAnalytics.topStudents(scoped.examHistories, 20), opts.scopeLabel);
     drawStudentListTable(doc, opts.rows, opts.scopeLabel);
 
-    drawFooterAllPages(doc);
     doc.save(opts.fileName || `bao-cao-hoc-sinh-${new Date().toISOString().slice(0, 10)}.pdf`);
   }
 

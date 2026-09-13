@@ -287,6 +287,13 @@
 <script src="js/vendor/exceljs.min.js"></script>
 <script src="js/vendor/jspdf.umd.min.js"></script>
 <script src="js/vendor/jspdf.plugin.autotable.min.js"></script>
+<!-- Font Unicode (dấu tiếng Việt) cho jsPDF — THIẾU file này là lý do PDF
+     xuất ra bị lỗi font (chữ có dấu bị in sai/mất dấu) vì font mặc định
+     helvetica của jsPDF không hỗ trợ tiếng Việt. Phải nạp TRƯỚC
+     pdf-exporter.js (tự đăng ký font "NotoSans" vào mọi jsPDF() mới tạo). -->
+<script src="js/vendor/notosans-vietnamese-jspdf.js"></script>
+<!-- Logo IIG dùng cho tiêu đề PDF (xem js/export/pdf-exporter.js) -->
+<script src="js/export/iig-logo.js"></script>
 <script src="js/export/excel-exporter.js"></script>
 <script src="js/export/pdf-exporter.js"></script>
 

@@ -72,6 +72,7 @@ body {
   font-weight: 800;
   font-size: .78rem;
   cursor: pointer;
+  white-space: nowrap;
 }
 .btn-edit-text {
   background: none;
@@ -80,6 +81,7 @@ body {
   font-weight: 800;
   font-size: .78rem;
   cursor: pointer;
+  white-space: nowrap;
   margin-right: .8rem;
 }
 
@@ -166,7 +168,12 @@ body {
 .table-scroll { overflow-x: auto; border-radius: var(--radius-sm) }
 table {
   width: 100%;
-  min-width: 640px;
+  /* Nâng từ 640px — bảng Học sinh có 8 cột (kể cả "Trường"/"GV phụ trách"
+     hay dài như "TiH Nguyễn Trung Ngạn"/"Nguyễn Tuyết Nhi"), 640px quá
+     chật khiến trình duyệt bóp các cột lại, rớt chữ xuống 2-3 dòng nhìn
+     rối — hẹp hơn mức này thì cuộn ngang (overflow-x: auto ở trên) thay vì
+     bóp cột. */
+  min-width: 920px;
   border-collapse: collapse;
   background: var(--card);
   border: 1px solid var(--border);
@@ -178,6 +185,21 @@ th { background: var(--card2); font-weight: 800; font-size: .72rem; text-transfo
 tr:last-child td { border-bottom: none }
 .empty-cell { text-align: center; color: var(--muted); padding: 1.6rem !important }
 
+/* Bảng "Học sinh" cụ thể: MSSV/Họ tên/Trường/GV phụ trách VẪN bị rớt dòng
+   dù đã khoá min-width riêng (180px/160px) — min-width trên <td> chỉ đặt
+   SÀN tối thiểu cho cột, không chặn được chữ tự xuống dòng nếu nội dung
+   thật rộng hơn sàn đó (mã "IC3 - 44" tự ngắt ở dấu cách, tên HS/trường/GV
+   dài hơn dự tính, vd "Nguyễn Phạm Thiên Chi"/"TiH Phan Chu Trinh"). Đổi
+   sang white-space: nowrap — CHẮC CHẮN không bao giờ xuống dòng nữa vì cột
+   sẽ tự nới rộng đúng bằng bề rộng chữ, hẹp hơn thì bảng cuộn ngang
+   (.table-scroll đã có overflow-x: auto) thay vì bóp/rớt dòng. */
+#studentsRosterTable td:nth-child(2),
+#studentsRosterTable td:nth-child(3),
+#studentsRosterTable td:nth-child(4),
+#studentsRosterTable td:nth-child(6) { white-space: nowrap }
+/* Bảng "Lớp học": "Giáo viên phụ trách" (cột 3) cùng lý do như trên. */
+#classesTable td:nth-child(3) { white-space: nowrap }
+
 .avatar-cell {
   width: 34px; height: 34px; border-radius: 50%;
   background: var(--purple-lt); color: var(--purple);
@@ -186,7 +208,7 @@ tr:last-child td { border-bottom: none }
 }
 .avatar-cell img { width: 100%; height: 100%; object-fit: cover }
 
-.badge { display: inline-flex; padding: .25rem .65rem; border-radius: 999px; font-size: .68rem; font-weight: 800 }
+.badge { display: inline-flex; padding: .25rem .65rem; border-radius: 999px; font-size: .68rem; font-weight: 800; white-space: nowrap }
 .badge.active   { background: var(--green-lt); color: var(--green) }
 .badge.inactive { background: var(--red-lt);   color: var(--red) }
 

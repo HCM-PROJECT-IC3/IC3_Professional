@@ -394,9 +394,16 @@
       return rows.join('');
     }
 
+    // Dòng ngăn cách SÁNG/CHIỀU — trước đây 2 khối nối liền nhau không có
+    // ranh giới rõ ràng (nhìn như 1 dòng trống bất thường ở chỗ nối), người
+    // dùng phản hồi cần "giãn cách phân biệt sáng/chiều" rõ hơn. Kiểu dáng ở
+    // css/teaching-schedule.css (.tt-session-divider) — GIỮ NGUYÊN cả khi in
+    // (không nằm trong danh sách ẩn của @media print).
+    const sessionDivider = `<tr class="tt-session-divider"><td colspan="${3 + M.WEEKDAYS.length}"></td></tr>`;
+
     table.innerHTML = `
       <thead><tr><th>Buổi</th><th>Tiết</th><th>Thời gian</th>${dayHeaders}</tr></thead>
-      <tbody>${sessionRows('morning')}${sessionRows('afternoon')}</tbody>`;
+      <tbody>${sessionRows('morning')}${sessionDivider}${sessionRows('afternoon')}</tbody>`;
 
     if (!readOnly) {
       table.querySelectorAll('.tt-input').forEach((el) => {
@@ -485,16 +492,27 @@
   });
 
   // ------------------------------------------------------------
-  // In — chỉ cần hộp thoại in của trình duyệt (Ctrl+P), scope theo
-  // .tt-printing (xem css/teaching-schedule.css @media print) để chỉ in
-  // đúng khối thời khoá biểu, không kèm sidebar/topbar/nút.
+  // In/Xuất PDF — TRƯỚC ĐÂY gọi window.print() (hộp thoại in của trình
+  // duyệt, xem css/teaching-schedule.css @media print), nhưng Chrome/Edge
+  // tự chèn header/footer (ngày giờ, tiêu đề trang, URL, số trang) vào mỗi
+  // trang in mà KHÔNG có cách nào tắt từ phía trang web — người dùng phản
+  // hồi cần bỏ hẳn phần đó. Đổi sang xuất THẲNG file .pdf bằng jsPDF (xem
+  // js/export/teaching-timetable-pdf.js) — không đi qua hộp thoại in của
+  // trình duyệt nên không dính header/footer đó, đồng thời tự canh vừa
+  // đúng 1 trang A4 ngang (tự lùi cỡ chữ nếu cần) và tự vẽ vạch ngăn cách
+  // Sáng/Chiều rõ ràng thay vì phụ thuộc CSS in.
   // ------------------------------------------------------------
   document.getElementById('ttPrintBtn')?.addEventListener('click', () => {
     if (!state.teacherCode || !state.weekKey) { toast('⚠️ Chọn tuần và giáo viên trước.'); return; }
-    document.body.classList.add('tt-printing');
-    window.print();
+    const t = state.teachers.find((x) => x.code === state.teacherCode);
+    const week = state.weeks.find((w) => w.id === state.weekKey);
+    window.EduTeachingTimetablePdf.exportTimetablePdf({
+      teacherName: t ? t.name : state.teacherCode,
+      weekLabel: week ? (week.label || week.id) : state.weekKey,
+      days: state.days,
+      periodTimes: state.periodTimes,
+    }, M);
   });
-  window.addEventListener('afterprint', () => document.body.classList.remove('tt-printing'));
 
   // ------------------------------------------------------------
   // MODAL: ⏱️ Giờ tiết — khung giờ riêng của giáo viên đang chọn, áp dụng
