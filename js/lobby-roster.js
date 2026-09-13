@@ -18,10 +18,11 @@
    Đổi sang file JSON tĩnh loại bỏ hẳn giới hạn đọc đó (phục vụ qua CDN
    của GitHub Pages, scale vô hạn, không tốn quota).
 
-   File data/roster/students-active.json được XUẤT THỦ CÔNG từ
-   roster-manager.html (nút "🗂️ Xuất JSON") mỗi khi danh sách thay đổi
-   — Điều phối đào tạo cần tải file, rồi commit + push lên GitHub thì
-   học sinh mới thấy danh sách mới (xem hướng dẫn ngay trên nút đó).
+   File data/roster/students-active.json được cập nhật từ
+   roster-manager.html — nút "🚀 Cập nhật cho học sinh" tự đẩy file này
+   lên GitHub qua API (xem js/github-publish.js), KHÔNG cần Điều phối
+   đào tạo tải file/commit/push tay nữa. Nút "🗂️ Xuất JSON (thủ công)"
+   vẫn còn để dự phòng khi không dùng được token GitHub.
 
    Luồng chọn: Trường → Lớp (lọc theo Trường) → Họ và tên (lọc theo
    Trường + Lớp).

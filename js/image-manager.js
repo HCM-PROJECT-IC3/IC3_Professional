@@ -833,7 +833,10 @@ document.getElementById('backupBtn').addEventListener('click', () => {
    Đây là CẦU NỐI chính thức giữa Firestore (nơi admin sửa câu hỏi
    trên trang này) và file JSON tĩnh mà js/quiz-engine.js thực sự
    đọc khi học sinh làm bài trên index.html — 2 nơi này KHÔNG tự
-   đồng bộ, nên phải bấm nút này rồi deploy lại sau mỗi đợt sửa.
+   đồng bộ, nên phải bấm nút này sau mỗi đợt sửa. Nút này giờ tự đẩy
+   thẳng lên GitHub qua API (window.EduGitHubPublish, xem
+   js/github-publish.js) — KHÔNG cần giải nén/copy đè/git push tay nữa;
+   chỉ rơi về tải file zip thủ công nếu đẩy GitHub thất bại.
 
    Firestore chỉ lưu tên hiển thị (catName/gradeName), không lưu id
    ngắn gọn kiểu "IC3"/"LV1" dùng để đặt tên file — nên script này
@@ -919,9 +922,6 @@ document.getElementById('exportStaticBtn').addEventListener('click', async () =>
 
       cat.levels.forEach(lvl => {
         const fileKey = `${cat.id}__${lvl.id}`;
-        const levelFileContent = { id: lvl.id, name: lvl.name, grade: lvl.grade, cat_id: cat.id, minitests: lvl.minitests };
-        zip.file(`data/ic3/${fileKey}.json`, JSON.stringify(levelFileContent, null, 2));
-
         const metaMinitests = {};
         Object.keys(lvl.minitests).forEach(mtName => {
           const qs = lvl.minitests[mtName];
@@ -939,11 +939,49 @@ document.getElementById('exportStaticBtn').addEventListener('click', async () =>
       quizData.categories.push(qdCat);
     });
 
-    zip.file('data/ic3/meta.json', JSON.stringify(meta, null, 2));
-    zip.file('quiz_data.json', JSON.stringify(quizData, null, 2));
+    const metaJson = JSON.stringify(meta, null, 2);
+    const quizDataJson = JSON.stringify(quizData, null, 2);
 
-    const readme = `Gói export từ Firestore — ${new Date().toLocaleString('vi-VN')}
+    // Ưu tiên: đẩy thẳng lên GitHub bằng API (window.EduGitHubPublish, xem
+    // js/github-publish.js) — 1 commit gồm mọi file data/ic3/*.json +
+    // meta.json + quiz_data.json, KHÔNG cần tải zip/giải nén/copy đè/git
+    // push tay nữa. Nếu không dùng được (thiếu token, mất mạng tới GitHub
+    // API...) → rơi về tải file zip như cũ để không mất dữ liệu vừa gom.
+    const filesToPublish = [
+      { path: 'data/ic3/meta.json', content: metaJson },
+      { path: 'quiz_data.json', content: quizDataJson },
+    ];
+    catMap.forEach((cat) => {
+      cat.levels.forEach((lvl) => {
+        const levelFileContent = { id: lvl.id, name: lvl.name, grade: lvl.grade, cat_id: cat.id, minitests: lvl.minitests };
+        filesToPublish.push({ path: `data/ic3/${cat.id}__${lvl.id}.json`, content: JSON.stringify(levelFileContent, null, 2) });
+      });
+    });
+
+    const warnSuffix = unmapped.length
+      ? `\n⚠️ ${unmapped.length} danh mục/khối mới dùng id tạm (xem console) — nên đặt lại id gọn hơn sau.`
+      : '';
+    if (unmapped.length) console.warn('[EduQuiz] Danh mục/khối mới dùng id tạm:\n- ' + unmapped.join('\n- '));
+
+    try {
+      await window.EduGitHubPublish.publishFiles(
+        filesToPublish,
+        `chore(quiz): đồng bộ ngân hàng câu hỏi (${totalLevels} khối / ${totalQuestions} câu)`
+      );
+      toast(`🚀 Đã đẩy ${totalLevels} khối / ${totalQuestions} câu hỏi lên GitHub — học sinh thấy sau khoảng 1 phút.${warnSuffix}`, 6000);
+    } catch (publishErr) {
+      console.error('[EduQuiz] Đẩy GitHub thất bại, tải zip dự phòng thay thế:', publishErr);
+      zip.file('data/ic3/meta.json', metaJson);
+      zip.file('quiz_data.json', quizDataJson);
+      catMap.forEach((cat) => {
+        cat.levels.forEach((lvl) => {
+          const levelFileContent = { id: lvl.id, name: lvl.name, grade: lvl.grade, cat_id: cat.id, minitests: lvl.minitests };
+          zip.file(`data/ic3/${cat.id}__${lvl.id}.json`, JSON.stringify(levelFileContent, null, 2));
+        });
+      });
+      const readme = `Gói export từ Firestore — ${new Date().toLocaleString('vi-VN')}
 Tổng: ${totalLevels} khối / ${totalQuestions} câu hỏi.
+Đẩy tự động lên GitHub thất bại (${publishErr.message}) nên xuất file zip dự phòng.
 
 CÁCH DÙNG:
 1. Giải nén file zip này.
@@ -956,22 +994,17 @@ CÁCH DÙNG:
    deploy — export này KHÔNG kèm theo file ảnh vật lý.
 ${unmapped.length ? '\nCẢNH BÁO — danh mục/khối mới chưa có id chính thức (đã tự đặt id tạm dựa trên tên):\n- ' + unmapped.join('\n- ') + '\nNên đổi id tạm này thành id ngắn gọn giống các khối khác trước khi deploy, kẻo tên file không nhất quán.' : ''}
 `;
-    zip.file('README-EXPORT.txt', readme);
-
-    const blob = await zip.generateAsync({ type: 'blob' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `data-ic3-export-${new Date().toISOString().slice(0, 10)}.zip`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-
-    if (unmapped.length) {
-      toast(`⚠️ Đã xuất xong nhưng có ${unmapped.length} danh mục/khối mới cần kiểm tra lại id (xem README-EXPORT.txt)`, 6000);
-    } else {
-      toast(`✅ Đã xuất ${totalLevels} khối / ${totalQuestions} câu hỏi ra file zip — giải nén rồi deploy lại nhé`, 5000);
+      zip.file('README-EXPORT.txt', readme);
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `data-ic3-export-${new Date().toISOString().slice(0, 10)}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast('⚠️ Đẩy GitHub thất bại, đã tải file zip dự phòng — xem README-EXPORT.txt: ' + publishErr.message, 7000);
     }
   } catch (err) {
     console.error(err);
