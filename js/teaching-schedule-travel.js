@@ -8,9 +8,10 @@
    công thức người dùng đã cung cấp trực tiếp, KHÔNG tự đổi):
    - 11-15km/ngày: 20.000đ. ≥15,1km/ngày: 30.000đ. Dưới 11km: không hỗ trợ.
    - KHÔNG hỗ trợ cho buổi Dự Giảng/Ôn online (Dạy Trực Tuyến)/Trợ Giảng.
-   - Khoảng cách nhà→trường: điền tay HOẶC bấm "🌍 Tính tất cả qua Google
-     Maps" để tự tính (xem js/services/google-maps-distance.js) — lưu vào
-     collection teaching_travel_distances.
+   - Khoảng cách nhà→trường: điền tay HOẶC bấm "🌍 Tính tất cả (miễn phí)"
+     để tự tính qua OpenStreetMap/OSRM — MIỄN PHÍ HOÀN TOÀN, không cần API
+     key (xem js/services/free-map-distance.js) — lưu vào collection
+     teaching_travel_distances.
 
    XEM THEO Tuần/Tháng/Quý/Năm (Commit mở rộng theo yêu cầu): "Tuần" giữ
    NGUYÊN hành vi cũ (bảng chi tiết Thứ2→7 + tổng tuần/GV). "Tháng/Quý/
@@ -25,7 +26,7 @@
 
    Nạp SAU: js/models/teaching-schedule.model.js, js/models/teaching-travel.model.js,
    js/repositories/teaching-schedule-repository.js, js/repositories/teaching-travel-repository.js,
-   js/services/google-maps-distance.js.
+   js/services/free-map-distance.js.
    ============================================================ */
 (function () {
   'use strict';
@@ -40,13 +41,18 @@
     periodType: 'week',   // 'week' | 'month' | 'quarter' | 'year'
     scheduleRows: [],     // teaching_schedule docs khớp kỳ đang chọn (1 hoặc nhiều tuần, mọi giáo viên)
     distanceByTeacher: {}, // teacherCode -> { schools: { [ten truong]: km } }
-    teachersByCode: {},    // teacherCode -> teaching_teachers doc (cần .address cho Google Maps)
+    teachersByCode: {},    // teacherCode -> teaching_teachers doc (cần .address để tính khoảng cách)
     teachersLoaded: false,
-    // "teacherCode__school" -> địa chỉ trường Google đã DÒ trúng khi tính
-    // qua Google Maps — CHỈ lưu tạm trong phiên này (không có chỗ trong
-    // schema teaching_travel_distances hiện tại), dùng để hiện tooltip
-    // cho Điều phối giáo viên soát lại có đúng trường mong muốn không.
+    // "teacherCode__school" -> địa chỉ trường OpenStreetMap đã DÒ trúng khi
+    // tính tự động — CHỈ lưu tạm trong phiên này (không có chỗ trong schema
+    // teaching_travel_distances hiện tại), dùng để hiện tooltip cho Điều
+    // phối giáo viên soát lại có đúng trường mong muốn không.
     matchedSchoolAddress: {},
+    // teacherCode -> true nếu toạ độ NHÀ của GV đó là XẤP XỈ (Nominatim
+    // không định vị được tới đúng số nhà/hẻm, phải rút gọn còn tên đường —
+    // xem free-map-distance.js!geocode()) — CHỈ lưu tạm trong phiên này,
+    // dùng để hiện dấu ~ cảnh báo trước ô km.
+    approximateHome: {},
   };
 
   function esc(s) {
@@ -153,7 +159,7 @@
     }
   }
 
-  /** Tải danh sách giáo viên 1 lần (cần field `address` cho Google Maps) —
+  /** Tải danh sách giáo viên 1 lần (cần field `address` để tính khoảng cách) —
    * cache lại, không tải lại mỗi lần bấm "Tính hỗ trợ". */
   async function ensureTeachersLoaded() {
     if (state.teachersLoaded) return;
@@ -194,7 +200,7 @@
       const [weekResults, distanceDocs] = await Promise.all([
         Promise.all(weekKeys.map((wk) => window.EduRepositories.teachingSchedule.listByWeek(wk))),
         window.EduRepositories.teachingTravelDistance.listAll().catch(() => []),
-        ensureTeachersLoaded().catch((err) => { console.warn('[Hỗ trợ xăng xe] Không tải được danh sách GV (chỉ ảnh hưởng Google Maps):', err); }),
+        ensureTeachersLoaded().catch((err) => { console.warn('[Hỗ trợ xăng xe] Không tải được danh sách GV (chỉ ảnh hưởng tính khoảng cách tự động):', err); }),
       ]);
       state.scheduleRows = weekResults.flat();
       state.distanceByTeacher = {};
@@ -213,11 +219,21 @@
       document.getElementById('travelBody').classList.remove('force-hide');
     } catch (err) {
       toast('❌ ' + (err && err.message ? err.message : String(err)));
+      return;
     } finally {
       btn.disabled = false;
       btn.textContent = originalLabel;
     }
+
+    // TỰ ĐỘNG tính hết mọi khoảng cách còn trống ngay sau khi tải xong —
+    // KHÔNG chờ Điều phối giáo viên tự nhớ bấm "🌍 Tính tất cả" nữa (đây
+    // là lý do "vẫn còn giáo viên chưa có km" dù nút chạy đúng: phải người
+    // dùng tự bấm). Chạy NGẦM (không await ở đây) để không chặn UI — bảng
+    // vẫn hiện ngay, km trống sẽ tự lấp dần trong lúc người dùng đang xem.
+    if (!isReadOnlyRole()) fillMissingDistances(true);
   }
+
+  function isReadOnlyRole() { return state.role !== 'admin' && state.role !== 'teaching_coordinator'; }
 
   /** Danh sách trường (thứ tự Sáng→Chiều, GỘP TRÙNG) THẬT SỰ cần hỗ trợ
    * xăng xe trong 1 ngày — dùng để biết cần hỏi khoảng cách trường nào
@@ -254,19 +270,25 @@
       return;
     }
     rows.sort((a, b) => a.teacherName.localeCompare(b.teacherName, 'vi') || a.school.localeCompare(b.school, 'vi'));
-    const isReadOnly = state.role !== 'admin' && state.role !== 'teaching_coordinator';
+    const isReadOnly = isReadOnlyRole();
     const body = rows.map((r) => {
       const km = ((state.distanceByTeacher[r.teacherCode] || {}).schools || {})[r.school] || '';
       // Địa chỉ trường Google đã DÒ trúng lần tính gần nhất (nếu có) — hiện
       // làm tooltip tên trường để Điều phối giáo viên soát lại có đúng
       // trường mong muốn không (phòng trùng tên với trường ở khu vực khác).
       const matched = state.matchedSchoolAddress[`${r.teacherCode}__${r.school}`];
-      const schoolTitle = matched ? ` title="Google đã dò trúng: ${esc(matched)}"` : '';
+      const schoolTitle = matched ? ` title="Đã dò trúng: ${esc(matched)}"` : '';
+      // Nhà XẤP XỈ (địa chỉ có số nhà/hẻm mà OpenStreetMap không có tới
+      // từng số nhà, phải rút gọn còn tên đường mới định vị được, xem
+      // js/services/free-map-distance.js) — báo hiệu bằng ~ để biết km
+      // này chỉ chính xác tới cấp con đường, không phải đúng tuyệt đối.
+      const isApprox = state.approximateHome[r.teacherCode];
+      const kmTitle = isApprox ? ' title="Vị trí NHÀ chỉ xấp xỉ theo tên đường (không tìm được đúng số nhà/hẻm trên bản đồ) — nên kiểm tra lại nếu số km trông bất thường"' : '';
       return `<tr>
         <td class="report-pivot-name">${esc(r.teacherName)}</td>
         <td class="report-pivot-name"${schoolTitle}>${esc(r.school)}${matched ? ' 📍' : ''}</td>
-        <td><input type="number" min="0" step="0.1" class="travel-km-input" data-teacher="${esc(r.teacherCode)}" data-school="${esc(r.school)}" value="${esc(km)}" placeholder="vd 12.5" ${isReadOnly ? 'readonly' : ''}></td>
-        <td>${isReadOnly ? '' : `<button type="button" class="row-gmaps-btn" data-teacher="${esc(r.teacherCode)}" data-school="${esc(r.school)}" title="Tính lại đúng khoảng cách này qua Google Maps">🌍</button>`}</td>
+        <td${kmTitle}>${isApprox ? '~' : ''}<input type="number" min="0" step="0.1" class="travel-km-input" data-teacher="${esc(r.teacherCode)}" data-school="${esc(r.school)}" value="${esc(km)}" placeholder="vd 12.5" ${isReadOnly ? 'readonly' : ''}></td>
+        <td>${isReadOnly ? '' : `<button type="button" class="row-gmaps-btn" data-teacher="${esc(r.teacherCode)}" data-school="${esc(r.school)}" title="Tính lại đúng khoảng cách này (miễn phí, qua OpenStreetMap)">🌍</button>`}</td>
       </tr>`;
     }).join('');
     table.innerHTML = `<thead><tr><th>Giáo viên</th><th>Trường</th><th>Khoảng cách (km)</th><th></th></tr></thead><tbody>${body}</tbody>`;
@@ -276,14 +298,14 @@
       input.addEventListener('change', () => saveDistance(input.dataset.teacher, input.dataset.school, Number(input.value) || 0));
     });
     table.querySelectorAll('.row-gmaps-btn').forEach((btn) => {
-      btn.addEventListener('click', () => computeOneDistance(btn.dataset.teacher, btn.dataset.school, true));
+      btn.addEventListener('click', () => computeOneDistance(btn.dataset.teacher, btn.dataset.school));
     });
   }
 
   /** Lưu 1 khoảng cách (cập nhật state NGAY để bảng hỗ trợ tính lại tức
    * thì, không cần chờ round-trip Firestore) rồi ghi Firestore.
    * @param {string} [matchedSchoolAddress] Địa chỉ trường Google đã dò
-   *   trúng (chỉ có khi gọi từ luồng Google Maps) — lưu tạm để hiện
+   *   trúng (chỉ có khi tính tự động qua OpenStreetMap) — lưu tạm để hiện
    *   tooltip, xem ghi chú ở state.matchedSchoolAddress.
    * @param {boolean} [skipToast] Bỏ qua toast "Đã lưu" mặc định — dùng khi
    *   bên gọi (computeOneDistance) đã tự hiện 1 toast chi tiết hơn ngay
@@ -303,13 +325,14 @@
   }
 
   // ============================================================
-  // GOOGLE MAPS — tự tính khoảng cách nhà (địa chỉ GV, tab "👤 Giáo viên")
-  // → trường, thay vì Điều phối giáo viên phải tự tra tay từng cặp.
-  // "Trường" chỉ là TÊN NGẮN tự do (vd "TiH Tân Tạo A", không phải địa chỉ
-  // đầy đủ) — nới rộng thành "Trường Tiểu học ... , Thành phố Hồ Chí
-  // Minh, Việt Nam" để Google định vị đúng hơn (best-effort, không đảm
-  // bảo tuyệt đối chính xác nếu trùng tên trường ở khu vực khác — nên vẫn
-  // xem lại km sau khi tính, sửa tay nếu thấy vô lý).
+  // TỰ ĐỘNG TÍNH KHOẢNG CÁCH (miễn phí, qua OpenStreetMap/OSRM — xem
+  // js/services/free-map-distance.js) — nhà (địa chỉ GV, tab "👤 Giáo
+  // viên") → trường, thay vì Điều phối giáo viên phải tự tra tay từng
+  // cặp. "Trường" chỉ là TÊN NGẮN tự do (vd "TiH Tân Tạo A", không phải
+  // địa chỉ đầy đủ) — nới rộng thành "Trường Tiểu học ... , Thành phố Hồ
+  // Chí Minh, Việt Nam" để định vị đúng hơn (best-effort, không đảm bảo
+  // tuyệt đối chính xác nếu trùng tên trường ở khu vực khác — nên vẫn xem
+  // lại km sau khi tính, sửa tay nếu thấy vô lý).
   // ============================================================
   function expandSchoolQuery(school) {
     let q = school.trim();
@@ -318,7 +341,7 @@
     return q;
   }
 
-  async function computeOneDistance(teacherCode, school, forcePrompt) {
+  async function computeOneDistance(teacherCode, school) {
     const teacher = state.teachersByCode[teacherCode];
     const address = teacher && teacher.address && teacher.address.trim();
     if (!address) {
@@ -326,56 +349,64 @@
       return null;
     }
     try {
-      // computeDistanceKm() giờ tự DÒ đúng trường thật gần nhà GV qua
-      // Places API (xem js/services/google-maps-distance.js) — trả kèm
-      // matchedSchoolAddress để soát lại có đúng đã dò trúng trường mong
-      // muốn không (hiện trong tooltip + toast, phòng trường hợp trùng tên).
-      const result = await window.EduGoogleMapsDistance.computeDistanceKm(address, expandSchoolQuery(school));
+      // computeDistanceKm() tự DÒ đúng trường thật gần nhà GV qua Nominatim
+      // (xem js/services/free-map-distance.js) — trả kèm matchedSchoolAddress
+      // để soát lại có đúng đã dò trúng trường mong muốn không (hiện trong
+      // tooltip + toast, phòng trường hợp trùng tên).
+      const result = await window.EduFreeMapDistance.computeDistanceKm(address, expandSchoolQuery(school));
       if (result === null) {
-        toast(`⚠️ Google Maps không định vị được "${esc(school)}" hoặc địa chỉ nhà — kiểm tra lại, hoặc điền tay.`);
+        toast(`⚠️ Không định vị được "${esc(school)}" hoặc địa chỉ nhà — kiểm tra lại, hoặc điền tay.`);
         return null;
       }
-      const { km, matchedSchoolAddress } = result;
+      const { km, matchedSchoolAddress, approximateHome } = result;
+      state.approximateHome[teacherCode] = !!approximateHome;
       await saveDistance(teacherCode, school, km, matchedSchoolAddress, true);
-      toast(matchedSchoolAddress
+      renderDistanceTable(); // cập nhật ngay dấu "~"/tooltip 📍 vừa có, không cần bấm "Tính hỗ trợ" lại
+      const approxNote = approximateHome ? ' (⚠️ vị trí nhà chỉ xấp xỉ theo tên đường, không đúng số nhà/hẻm — nên xem lại)' : '';
+      toast((matchedSchoolAddress
         ? `✅ ${esc(school)}: ${km}km — đã dò trúng "${esc(matchedSchoolAddress)}"`
-        : `✅ ${esc(school)}: ${km}km (không dò được địa chỉ trường cụ thể, tính theo tên — nên kiểm tra lại)`);
+        : `✅ ${esc(school)}: ${km}km (không dò được địa chỉ trường cụ thể, tính theo tên — nên kiểm tra lại)`) + approxNote);
       return km;
     } catch (err) {
-      toast('❌ Google Maps: ' + (err && err.message ? err.message : String(err)));
-      if (forcePrompt) window.EduGoogleMapsDistance.forgetApiKey(); // cho prompt lại key ở lần bấm kế
+      toast('❌ Tính khoảng cách thất bại: ' + (err && err.message ? err.message : String(err)));
       return null;
     }
   }
 
-  document.getElementById('travelGmapsAllBtn')?.addEventListener('click', async () => {
+  /** Tính hết mọi ô "Khoảng cách (km)" ĐANG TRỐNG trên bảng hiện tại — dùng
+   * chung cho nút "🌍 Tính tất cả (miễn phí)" VÀ tự động chạy ngầm mỗi lần
+   * bấm "🔄 Tính hỗ trợ" (xem loadTravel()) để KHÔNG còn phụ thuộc việc
+   * Điều phối giáo viên nhớ bấm nút thủ công — người dùng phản hồi vẫn còn
+   * giáo viên chưa được cập nhật km dù code đã chạy đúng, nguyên nhân là
+   * PHẢI TỰ BẤM nút mới chạy; giờ chạy tự động ngay khi có ô trống.
+   * @param {boolean} [silent] true khi gọi tự động ngầm (không có nút để
+   *   disable/đổi chữ, chỉ toast kết quả cuối — tránh làm phiền nếu không
+   *   có ô nào trống, vẫn toast khi CÓ tính để người dùng biết đang chạy). */
+  async function fillMissingDistances(silent) {
     const btn = document.getElementById('travelGmapsAllBtn');
     const rows = [...document.querySelectorAll('.travel-km-input')].filter((el) => !el.value);
-    if (!rows.length) { toast('✅ Mọi khoảng cách đang hiện đã có giá trị — không có ô trống nào cần tính.'); return; }
-    // Đăng nhập/hỏi API Key NGAY LẦN ĐẦU (trước khi chạy vòng lặp) để nếu
-    // người dùng bấm Huỷ, không tốn thời gian chạy dở dang rồi mới báo lỗi.
-    try {
-      await window.EduGoogleMapsDistance.ensureLoaded(false);
-    } catch (err) {
-      toast('❌ ' + (err && err.message ? err.message : String(err)));
+    if (!rows.length) {
+      if (!silent) toast('✅ Mọi khoảng cách đang hiện đã có giá trị — không có ô trống nào cần tính.');
       return;
     }
-    btn.disabled = true;
+    if (btn) btn.disabled = true;
     let done = 0, ok = 0;
-    const originalLabel = btn.textContent;
+    const originalLabel = btn ? btn.textContent : '';
+    toast(`🌍 Phát hiện ${rows.length} khoảng cách còn trống — đang tự tính (miễn phí, qua OpenStreetMap, có thể mất vài giây/dòng)...`);
     for (const input of rows) {
       done++;
-      btn.textContent = `⏳ Đang tính (${done}/${rows.length})...`;
-      const km = await computeOneDistance(input.dataset.teacher, input.dataset.school, false);
+      // Nominatim (free-map-distance.js) tự giãn cách ĐỦ CHẬM bên trong
+      // (tối đa 1 request/giây theo usage policy) — vòng lặp này KHÔNG cần
+      // tự thêm delay nữa, nhưng vì vậy cả loạt sẽ chạy chậm hơn hẳn (vài
+      // giây/dòng), đặc biệt rõ khi tính cả 1 quý/năm nhiều dòng.
+      if (btn) btn.textContent = `⏳ Đang tính (${done}/${rows.length}, có thể mất vài giây/dòng)...`;
+      const km = await computeOneDistance(input.dataset.teacher, input.dataset.school);
       if (km !== null) ok++;
-      // Giãn nhẹ giữa các lượt gọi API — tránh dồn dập quá nhiều request
-      // cùng lúc nếu danh sách dài (vd cả 1 quý/năm).
-      await new Promise((r) => setTimeout(r, 150));
     }
-    btn.disabled = false;
-    btn.textContent = originalLabel;
-    toast(`🌍 Đã tính xong ${ok}/${rows.length} khoảng cách qua Google Maps.`);
-  });
+    if (btn) { btn.disabled = false; btn.textContent = originalLabel; }
+    toast(`🌍 Đã tính xong ${ok}/${rows.length} khoảng cách (miễn phí, qua OpenStreetMap).`);
+  }
+  document.getElementById('travelGmapsAllBtn')?.addEventListener('click', () => fillMissingDistances(false));
 
   // ============================================================
   // KẾT QUẢ — "Tuần": bảng chi tiết Thứ2→7 (giữ nguyên hành vi cũ).
