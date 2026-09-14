@@ -336,11 +336,11 @@
     <div class="report-body force-hide" id="travelBody">
       <div class="report-pivot-head">
         <h3>📏 Khoảng cách nhà → trường</h3>
-        <span class="panel-toolbar-info">Đơn vị: km (1 chiều) — điền/sửa rồi bấm ra ngoài ô để tự lưu, hoặc bấm nút bên dưới để Google Maps tự tính</span>
+        <span class="panel-toolbar-info">Đơn vị: km (1 chiều) — điền/sửa rồi bấm ra ngoài ô để tự lưu, hoặc bấm nút bên dưới để tự tính (miễn phí)</span>
       </div>
       <div class="panel-toolbar" style="padding:0 0 .6rem">
-        <button type="button" class="btn btn-secondary" id="travelGmapsAllBtn">🌍 Tính tất cả qua Google Maps</button>
-        <span class="panel-toolbar-info">Cần địa chỉ nhà (tab "👤 Giáo viên") + 1 Google Maps API Key riêng (hỏi khi bấm lần đầu)</span>
+        <button type="button" class="btn btn-secondary" id="travelGmapsAllBtn">🌍 Tính tất cả (miễn phí)</button>
+        <span class="panel-toolbar-info">Cần địa chỉ nhà (tab "👤 Giáo viên") — dùng OpenStreetMap, không cần API Key/thẻ ngân hàng, nhưng chạy chậm hơn Google (giới hạn ~1 dòng/giây)</span>
       </div>
       <div class="table-scroll">
         <table class="report-pivot" id="travelDistanceTable">
@@ -596,10 +596,10 @@
 <script src="js/repositories/teaching-timetable-repository.js"></script>
 <script src="js/models/teaching-travel.model.js"></script>
 <script src="js/repositories/teaching-travel-repository.js"></script>
-<!-- Tự tính khoảng cách nhà→trường qua Google Maps (nút "🌍 Tính tất cả
-     qua Google Maps" ở tab "🚗 Hỗ trợ xăng xe") — xem hướng dẫn tạo API
-     Key ở đầu file. -->
-<script src="js/services/google-maps-distance.js"></script>
+<!-- Tự tính khoảng cách nhà→trường MIỄN PHÍ qua OpenStreetMap/OSRM, không
+     cần API Key (nút "🌍 Tính tất cả (miễn phí)" ở tab "🚗 Hỗ trợ xăng
+     xe") — xem chi tiết đầu file. -->
+<script src="js/services/free-map-distance.js"></script>
 
 <!-- Đọc file Excel (.xlsx/.xls) ngay trên trình duyệt bằng SheetJS, cùng
      thư viện/CDN đã dùng ở roster-manager.html (đã kiểm chứng hoạt động). -->
