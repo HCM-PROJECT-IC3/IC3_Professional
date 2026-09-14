@@ -10,6 +10,7 @@
   'use strict';
 
   let rawData = null; // { courses, classes, students, teachers, results } — cache
+  let myProfile = null; // hồ sơ users/{uid} của Điều phối đào tạo đang đăng nhập
 
   function toast(msg) {
     const el = document.getElementById('toast');
@@ -34,17 +35,32 @@
 
   window.addEventListener('edu:ready', ({ detail }) => {
     const { user, profile } = detail;
+    myProfile = profile;
     document.getElementById('whoami').textContent = `${profile.name || user.email} · ${EduAuth.ROLE_LABEL[profile.role]}`;
     boot();
   });
 
   async function boot(forceRefresh) {
     try {
-      rawData = await window.EduCoordinatorData.loadAll({ forceRefresh: !!forceRefresh });
+      rawData = await window.EduCoordinatorData.loadAll(myProfile, { forceRefresh: !!forceRefresh });
     } catch (err) {
       document.getElementById('loadingNote').textContent = '❌ Không tải được dữ liệu: ' + err.message;
       return;
     }
+    // Chưa được Admin gán trường nào để hỗ trợ (Commit #7/LMAP) — không còn
+    // mặc định xem hết như trước, dừng ở đây với thông báo rõ ràng thay vì
+    // hiện dashboard rỗng khó hiểu.
+    if (rawData.noSchoolsAssigned) {
+      document.getElementById('loadingNote').textContent = '⚠️ Bạn chưa được Admin gán trường nào để hỗ trợ (Quản lý tài khoản → Trường được xem/hỗ trợ). Liên hệ Admin để được gán trường.';
+      return;
+    }
+    // js/coordinator/student-detail.js dùng biến toàn cục này để lọc đúng
+    // studentSchool khi tải lịch sử làm bài của 1 học sinh (listByStudent) —
+    // giống hệt cơ chế js/teacher/dashboard.js đã dùng cho Teacher Dashboard
+    // (Commit #8/LMAP) — KHÔNG gán thì query đó sẽ bị Firestore từ chối hẳn
+    // với coordinator đã bị siết phạm vi trường (Commit #7/LMAP).
+    window.EduStudentDetailSchoolsScope = myProfile.role === 'admin' ? undefined : rawData.schools;
+
     window.EduCoordinatorData.buildFilterOptions(rawData);
     wireFilters();
     document.getElementById('loadingNote').hidden = true;

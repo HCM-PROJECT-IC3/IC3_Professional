@@ -9,14 +9,30 @@ rules_version = '2';
 // - admin:       toàn quyền.
 // - teacher:     chỉ được sửa collection "questions" SAU KHI được admin
 //                duyệt (approved == true). Không được tự đổi role/approved
-//                của mình. Được ĐỌC báo cáo kết quả (quiz_results) và roster
-//                (students_roster) NHƯNG CHỈ của (các) trường được Admin gán
-//                thủ công vào field "schools" trên hồ sơ mình (Commit #6/LMAP,
-//                gán trong admin-users.html) — không xem được trường khác.
+//                của mình. Được ĐỌC báo cáo kết quả (quiz_results) NHƯNG CHỈ
+//                của (các) trường được Admin gán thủ công vào field "schools"
+//                trên hồ sơ mình (Commit #6/LMAP, gán trong admin-users.html,
+//                từ bản mở rộng sau tự đồng bộ theo lớp đang dạy thật) —
+//                không xem được trường khác. Roster (students_roster) CÒN
+//                SCOPE CHẶT HƠN: ngoài đúng trường, còn phải đúng
+//                "teacherId == chính mình" mới đọc được — TRƯỚC ĐÂY chỉ lọc
+//                theo trường, nên 1 giáo viên xem được CẢ học sinh của giáo
+//                viên KHÁC cùng trường (lỗi đã sửa): 2 giáo viên có thể dạy
+//                chung 1 trường/thậm chí trông giống cùng khối, nhưng mỗi
+//                người chỉ thấy đúng lớp CỦA MÌNH được phân công.
 // - coordinator: "🧭 Điều phối đào tạo" — quản lý roster (students_roster:
 //                tải học sinh lên, điểm số/điểm danh) NHƯNG CHỈ của (các)
-//                trường được Admin gán vào "schools" trên hồ sơ mình, +
-//                CHỈ ĐỌC quiz_results (báo cáo trực quan) trong phạm vi đó.
+//                trường được Admin gán vào "schools" trên hồ sơ mình (CÙNG
+//                field "schools" dùng cho teacher, xem myCoordinatorSchools()
+//                — trước đây field này KHÔNG được kiểm tra cho coordinator,
+//                tức mọi coordinator tự động xem/sửa được TOÀN BỘ trường,
+//                bất kể "schools" ghi gì — đã sửa: giờ coordinator PHẢI có
+//                trường đó trong "schools" của mình mới đọc/ghi được, ĐÚNG
+//                như tên gọi "trường mình hỗ trợ". Một coordinator có thể
+//                được gán 1 hoặc nhiều trường.) + CHỈ ĐỌC quiz_results (báo
+//                cáo trực quan) trong phạm vi đó. "courses"/"classes" KHÔNG
+//                có field trường (schema không hỗ trợ) nên vẫn để coordinator
+//                truy cập toàn bộ 2 collection này (không scope được).
 //                KHÔNG có quyền gì trên 6 collection teaching_* (lịch
 //                giảng dạy của giáo viên) — đây là việc của role riêng
 //                "teaching_coordinator" bên dưới, 2 phạm vi TÁCH HẲN nhau,
@@ -74,14 +90,60 @@ service cloud.firestore {
     function myTeacherSchools() {
       return isApprovedTeacher() && ('schools' in myProfile()) ? myProfile().schools : [];
     }
+    // Danh sách trường mà 1 "🧭 Điều phối đào tạo" ĐƯỢC PHÉP hỗ trợ — cùng
+    // field "schools" trên users/{uid} như giáo viên (gán/xem/sửa chung ở
+    // admin-users.html), khác ở chỗ coordinator dùng field này để QUẢN LÝ cả
+    // trường (không chỉ xem), và có thể được gán NHIỀU trường cùng lúc.
+    // Coordinator chưa được gán trường nào ("schools" thiếu/rỗng) sẽ không
+    // đọc/ghi được document nào cả (in [] luôn false) — GIỐNG teacher, không
+    // còn mặc định thấy hết như trước.
+    function myCoordinatorSchools() {
+      return isCoordinator() && ('schools' in myProfile()) ? myProfile().schools : [];
+    }
     // Điều kiện scoping theo trường cho 1 document có field "school"/"studentSchool".
     // LƯU Ý: mọi câu lệnh LIST (query) vào các collection dùng hàm này BẮT BUỘC
-    // phải có where(...,'in', myTeacherSchools()) ở phía client — nếu không, Firestore
-    // sẽ từ chối toàn bộ câu query (không lọc ngầm), vì rule chỉ xác nhận từng
-    // document trả về có hợp lệ hay không, không tự thêm điều kiện lọc giúp client.
+    // phải có where(...,'in', myTeacherSchools()/myCoordinatorSchools()) ở phía
+    // client — nếu không, Firestore sẽ từ chối toàn bộ câu query (không lọc
+    // ngầm), vì rule chỉ xác nhận từng document trả về có hợp lệ hay không,
+    // không tự thêm điều kiện lọc giúp client.
     function isOwnSchoolField(fieldName) {
-      return isAdmin() || isCoordinator()
+      return isAdmin()
+        || (isCoordinator() && resource.data[fieldName] in myCoordinatorSchools())
         || (isApprovedTeacher() && resource.data[fieldName] in myTeacherSchools());
+    }
+    // Riêng cho students_roster: giáo viên phải đúng TEACHERID (chính học
+    // sinh đó do mình phụ trách) mới đọc được — CỐ TÌNH CHỈ dùng teacherId,
+    // KHÔNG thêm điều kiện "school in myTeacherSchools()" nữa (dù về ý
+    // nghĩa 2 điều luôn đi cùng nhau — 1 học sinh do giáo viên X phụ trách
+    // thì trường của học sinh đó đương nhiên là trường X đang dạy): ghép
+    // thêm field thứ 2 buộc client phải where() cả 2 field cùng lúc, tạo
+    // composite index (Firestore tự nhắc tạo lúc chạy) — teacherId đứng 1
+    // mình đã là điều kiện ĐỦ CHẶT (chỉ đúng 1 giáo viên khớp), không cần
+    // field phụ. Coordinator: vẫn chỉ cần đúng trường (được xem/sửa CẢ đội
+    // giáo viên trong trường mình hỗ trợ, đó là việc của điều phối). Tách
+    // riêng khỏi isOwnSchoolField() vì quiz_results/mos_submissions không
+    // có field "teacherId" để so khớp.
+    function canAccessRosterStudent() {
+      return isAdmin()
+        || (isCoordinator() && resource.data.school in myCoordinatorSchools())
+        || (isApprovedTeacher() && resource.data.teacherId == request.auth.uid);
+    }
+    // Bản dùng cho create (chưa có `resource.data` — request.resource.data mới
+    // là dữ liệu SẮP ghi) — coordinator tạo/sửa học sinh chỉ trong trường mình
+    // hỗ trợ; giáo viên KHÔNG được tạo/sửa roster (đây vẫn là việc của Điều
+    // phối đào tạo/Admin, xem match /students_roster/ bên dưới).
+    function canWriteRosterStudent() {
+      return isAdmin()
+        || (isCoordinator() && request.resource.data.school in myCoordinatorSchools());
+    }
+    // Bản dùng cho DELETE — CỐ TÌNH KHÔNG dùng chung canAccessRosterStudent()
+    // (hàm đó có thêm vế giáo viên, dành cho ĐỌC) vì giáo viên KHÔNG được
+    // xoá roster dù là học sinh lớp mình — việc đó vẫn chỉ của Admin/Điều
+    // phối đào tạo, giữ nguyên hành vi cũ, chỉ siết thêm phạm vi trường cho
+    // coordinator.
+    function canDeleteRosterStudent() {
+      return isAdmin()
+        || (isCoordinator() && resource.data.school in myCoordinatorSchools());
     }
     // Mã NV (teaching_teachers) mà giáo viên hiện tại được liên kết — do
     // Admin gán thủ công trong admin-users.html (field "teacherCode" trên
@@ -156,18 +218,20 @@ service cloud.firestore {
         request.resource.data.total is number &&
         request.resource.data.submittedAt == request.time;
 
-      // Admin/coordinator: xem toàn bộ. Giáo viên: CHỈ xem kết quả của học sinh
-      // thuộc (các) trường đã được Admin gán ở admin-users.html (users/{uid}.schools) —
-      // KHÔNG còn được đọc toàn bộ collection như trước (lỗ hổng đã sửa ở Commit #6).
-      allow read: if isAdmin() || isCoordinator() || isOwnSchoolField('studentSchool');
+      // Admin: xem toàn bộ. Coordinator/Giáo viên: CHỈ xem kết quả của học
+      // sinh thuộc (các) trường đã được Admin gán ở admin-users.html
+      // (users/{uid}.schools) — KHÔNG còn được đọc toàn bộ collection như
+      // trước (lỗ hổng Commit #6 sửa cho teacher, ĐỢT NÀY sửa tiếp cho
+      // coordinator — trước đây coordinator luôn qua được vế isCoordinator()
+      // đứng riêng nên bỏ qua hẳn scope trường, xem isOwnSchoolField()).
+      allow read: if isOwnSchoolField('studentSchool');
       // Coordinator cũng được XOÁ (dùng ở ic3-dashboard.html → "🗂️ Chi tiết
-      // lượt làm bài" → nút xoá từng lượt, vd dọn bản ghi test/trùng) — trước
-      // đây chỉ Admin, nhưng Điều phối đào tạo là người thao tác trực tiếp ở
-      // trang báo cáo này nên cần quyền này. KHÔNG thêm isCoordinator() vào
-      // update: vẫn chỉ Admin được SỬA điểm số đã nộp (tránh gian lận sửa
-      // điểm), coordinator chỉ được xoá hẳn bản ghi, không sửa nội dung.
+      // lượt làm bài" → nút xoá từng lượt, vd dọn bản ghi test/trùng) — CHỈ
+      // trong (các) trường mình hỗ trợ. KHÔNG thêm coordinator vào update:
+      // vẫn chỉ Admin được SỬA điểm số đã nộp (tránh gian lận sửa điểm),
+      // coordinator chỉ được xoá hẳn bản ghi, không sửa nội dung.
       allow update: if isAdmin();
-      allow delete: if isAdmin() || isCoordinator();
+      allow delete: if isAdmin() || (isCoordinator() && resource.data.studentSchool in myCoordinatorSchools());
     }
 
     // ---- Kết quả nộp bài MOS Practice (mos-practice.html, chấm bằng ExcelJS
@@ -188,7 +252,7 @@ service cloud.firestore {
         request.resource.data.score >= 0 && request.resource.data.score <= 100 &&
         request.resource.data.submittedAt == request.time;
 
-      allow read: if isAdmin() || isCoordinator() || isOwnSchoolField('studentSchool');
+      allow read: if isOwnSchoolField('studentSchool');
       allow update, delete: if isAdmin();
     }
 
@@ -209,6 +273,14 @@ service cloud.firestore {
     // NHỚ: đổi rule này chỉ có hiệu lực sau khi PUBLISH lại Firestore Rules
     // (Firebase Console → Firestore Database → Rules → Publish, hoặc
     // `firebase deploy --only firestore:rules`).
+    // "courses"/"classes" CỐ TÌNH giữ nguyên isCoordinator() KHÔNG scope theo
+    // trường (khác students_roster/quiz_results/mos_submissions ở trên) —
+    // 2 collection này KHÔNG có field "school"/"studentSchool" trong schema
+    // (courses = { name, level }, classes = { name, courseId, teacherId,
+    // teacherName, studentCount } — xem js/models/roster.model.js), nên
+    // không có gì để so khớp với myCoordinatorSchools(). Coordinator vẫn cần
+    // đọc "courses" để hiện tên khoá học trên roster; hạn chế thật sự về
+    // trường vẫn nằm ở students_roster (nơi thật sự có PII học sinh).
     match /courses/{courseId} {
       allow read: if isAdmin() || isCoordinator();
       allow write: if isAdmin() || isCoordinator();
@@ -220,15 +292,25 @@ service cloud.firestore {
     }
 
     match /students_roster/{studentId} {
-      // Giáo viên (Commit #6/LMAP): chỉ đọc học sinh thuộc trường đã được gán —
-      // dùng cho teacher-dashboard.html, KHÔNG được ghi/sửa roster (vẫn là việc
-      // của Điều phối đào tạo/Admin trong roster-manager.html như cũ).
-      // "classes" KHÔNG mở cho giáo viên vì document đó không có field "school"
-      // (chỉ có teacherId/courseId) — teacher-dashboard.html không cần đọc trực
-      // tiếp collection "classes", chỉ cần "className" đã denormalize sẵn trên
-      // từng document students_roster.
-      allow read: if isAdmin() || isCoordinator() || isOwnSchoolField('school');
-      allow write: if isAdmin() || isCoordinator();
+      // Giáo viên (Commit #6/LMAP, SIẾT LẠI đợt này): chỉ đọc học sinh thuộc
+      // trường đã được gán VÀ do CHÍNH MÌNH phụ trách (teacherId ==
+      // request.auth.uid) — TRƯỚC ĐÂY chỉ lọc theo trường, nên 2 giáo viên
+      // dạy chung 1 trường nhìn thấy roster CỦA NHAU (lỗi người dùng phản
+      // hồi, xem canAccessRosterStudent()). Coordinator: vẫn theo trường
+      // (được xem/sửa roster CẢ đội giáo viên trong (các) trường mình hỗ
+      // trợ, đó đúng là việc của Điều phối đào tạo — không siết theo
+      // teacherId như giáo viên). Dùng cho teacher-dashboard.html/
+      // roster-manager.html. "classes" KHÔNG mở cho giáo viên vì document đó
+      // không có field "school" (chỉ có teacherId/courseId) — teacher-dashboard.html
+      // không cần đọc trực tiếp collection "classes", chỉ cần "className" đã
+      // denormalize sẵn trên từng document students_roster.
+      allow read: if canAccessRosterStudent();
+      // Ghi (tạo/sửa lớp-học sinh mới, đổi trạng thái...) vẫn là việc của
+      // Điều phối đào tạo/Admin (roster-manager.html) — giáo viên KHÔNG ghi
+      // được, kể cả học sinh của chính lớp mình. Coordinator CHỈ ghi được
+      // trong (các) trường mình hỗ trợ (trước đây không giới hạn gì).
+      allow create, update: if canWriteRosterStudent();
+      allow delete: if canDeleteRosterStudent();
     }
 
     // ---- Lịch giảng dạy hàng tuần của đội ngũ giáo viên

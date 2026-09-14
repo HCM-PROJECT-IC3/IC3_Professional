@@ -145,15 +145,15 @@ window.EDU_ALLOWED_ROLES = ['admin'];
             <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>👑 Quản trị viên</option>
           </select>
         </td>
-        <td class="schoolsCell" ${u.role === 'teacher' ? '' : 'hidden'}>
+        <td class="schoolsCell" ${(u.role === 'teacher' || u.role === 'coordinator') ? '' : 'hidden'}>
           ${allSchools.length ? `
-            <select class="schoolsSelect" multiple size="${Math.min(4, Math.max(2, allSchools.length))}" title="Giữ Ctrl (hoặc Cmd) để chọn nhiều trường — trang đã TỰ ĐỘNG đồng bộ theo lớp đang dạy thật mỗi lần tải trang, chỉ sửa tay ở đây nếu cần thêm ngoại lệ">
+            <select class="schoolsSelect" multiple size="${Math.min(4, Math.max(2, allSchools.length))}" title="Giữ Ctrl (hoặc Cmd) để chọn nhiều trường${u.role === 'teacher' ? ' — trang đã TỰ ĐỘNG đồng bộ theo lớp đang dạy thật mỗi lần tải trang, chỉ sửa tay ở đây nếu cần thêm ngoại lệ' : ''}">
               ${allSchools.map(s => `<option value="${esc(s)}" ${userSchools.includes(s) ? 'selected' : ''}>${esc(s)}</option>`).join('')}
             </select>
             <button type="button" class="saveSchoolsBtn">💾 Lưu trường</button>
-            <button type="button" class="syncSchoolsBtn" title="Đặt lại đúng theo trường giáo viên này ĐANG DẠY THẬT (students_roster), bỏ mọi chỉnh tay">🔄 Đồng bộ theo lớp đang dạy</button>
+            ${u.role === 'teacher' ? `<button type="button" class="syncSchoolsBtn" title="Đặt lại đúng theo trường giáo viên này ĐANG DẠY THẬT (students_roster), bỏ mọi chỉnh tay">🔄 Đồng bộ theo lớp đang dạy</button>` : ''}
           ` : `<span class="hint">Chưa có trường nào trong danh sách học sinh (roster-manager.html)</span>`}
-          ${userSchools.length ? `<div class="schoolsCurrent">Đang xem: ${userSchools.map(esc).join(', ')}</div>` : ''}
+          ${userSchools.length ? `<div class="schoolsCurrent">${u.role === 'coordinator' ? 'Đang hỗ trợ' : 'Đang xem'}: ${userSchools.map(esc).join(', ')}</div>` : (u.role === 'coordinator' ? `<div class="schoolsCurrent hint">⚠️ Chưa gán trường nào — điều phối đào tạo này CHƯA xem/sửa được trường nào cả (khác trước đây, mặc định thấy hết)</div>` : '')}
         </td>
         <td class="teacherCodeCell" ${u.role === 'teacher' ? '' : 'hidden'}>
           ${allTeachingTeachers.length ? `

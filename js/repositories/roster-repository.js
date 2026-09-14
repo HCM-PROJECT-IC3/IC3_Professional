@@ -30,8 +30,19 @@
       return this.list({ where: [['classId', '==', classId]] });
     }
 
+    /**
+     * Học sinh "Đang học" (status active) do ĐÚNG giáo viên `teacherId` (uid
+     * tài khoản, không phải mã NV Lịch giảng dạy) phụ trách — dùng cho
+     * teacher-dashboard.html (LMAP, đợt siết quyền theo teacherId): TRƯỚC
+     * ĐÂY trang này lọc theo listBySchools() (cả trường), khiến 1 giáo viên
+     * nhìn thấy CẢ học sinh của đồng nghiệp dạy chung trường — đã sửa để
+     * chỉ trả về đúng lớp giáo viên này phụ trách, khớp firestore.rules
+     * (canAccessRosterStudent() chỉ so khớp teacherId, không cần "school
+     * in [...]" nữa) — 2 điều kiện == đơn (teacherId + status) không cần
+     * composite index (khác where('in',...) trước đây).
+     */
     async listByTeacher(teacherId) {
-      return this.list({ where: [['teacherId', '==', teacherId]] });
+      return this.list({ where: [['teacherId', '==', teacherId], ['status', '==', 'active']] });
     }
 
     /**
