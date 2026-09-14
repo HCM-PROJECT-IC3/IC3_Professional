@@ -778,9 +778,24 @@
    * mỗi lớp (không duy nhất toàn trường) — nếu dùng thẳng làm ID như định
    * dạng "flat" thì học sinh IC3-1 của lớp 4A1 và 4A2 sẽ GHI ĐÈ lẫn nhau.
    * Ghép thêm tên lớp vào khoá để đảm bảo duy nhất, đồng thời khoá này ổn
-   * định qua các lần nạp lại (nạp lại cùng file → cập nhật, không tạo trùng). */
+   * định qua các lần nạp lại (nạp lại cùng file → cập nhật, không tạo trùng).
+   *
+   * SỬA (phát hiện qua báo cáo "K4 chỉ có 4 học sinh mới" dù nạp 92 dòng):
+   * ghép thêm TÊN TRƯỜNG vào khoá — nhiều trường DÙNG CHUNG tên lớp kiểu
+   * "4A5"/"4A3" (khuôn "FORM QUẢN LÝ LỚP" đánh số lại từ đầu mỗi trường,
+   * đã xác nhận trong data/roster/students-active.json: "4A3"/"4A5" tồn
+   * tại ở CẢ "TIH VÕ VĂN TẦN" lẫn "TIH NGUYỄN TRUNG NGẠN"), nên khoá cũ
+   * (chỉ lớp + mã số) của "4A5" trường A và "4A5" trường B TRÙNG NHAU —
+   * nạp lớp "4A5" của 1 trường sẽ vô tình khớp trúng ID học sinh của
+   * TRƯỜNG KHÁC, bị xếp nhầm "Cập nhật" thay vì "Mới", rồi GHI ĐÈ (merge)
+   * lên đúng bản ghi của trường kia khi bấm Nạp — chính là nguyên nhân
+   * "chỉ 4 học sinh mới" dù cả lớp thật ra là học sinh mới hoàn toàn.
+   * Học sinh ĐÃ NẠP TRƯỚC ĐÂY (khoá cũ, không có trường) vẫn được nhận
+   * diện đúng qua fallback so khớp tên+lớp+TRƯỜNG bên dưới (dùng existingId
+   * gốc để cập nhật, không đổi ID) — chỉ học sinh MỚI TẠO từ giờ mới dùng
+   * khoá mới (có trường) để tránh trùng lặp về sau. */
   function studentDocIdFor(r, format) {
-    if (format === 'classSheet') return `${docIdSlug(r.className)}_${docIdSlug(r.mssv || r.name)}`;
+    if (format === 'classSheet') return `${docIdSlug(r.school)}_${docIdSlug(r.className)}_${docIdSlug(r.mssv || r.name)}`;
     return r.mssv || null; // định dạng flat: giữ nguyên hành vi cũ (không đổi để tránh ảnh hưởng dữ liệu đã nạp trước đây)
   }
 
@@ -790,17 +805,26 @@
       if (!r.name) return Object.assign({}, r, { action: 'skip', reason: 'Thiếu họ tên' });
 
       const expectedDocId = studentDocIdFor(r, format);
+      // MỌI so khớp với học sinh ĐÃ CÓ đều bắt buộc kèm ĐÚNG TRƯỜNG — tránh
+      // nạp lớp "4A5" của trường này lại khớp/ghi đè học sinh "4A5" của
+      // trường khác (xem chú thích studentDocIdFor() ở trên).
+      const sameSchool = (s) => stripDiacritics(s.school || '') === stripDiacritics(r.school || '');
       let existing = null;
       if (format === 'classSheet') {
-        existing = expectedDocId ? state.students.find((s) => s.id === expectedDocId) : null;
+        existing = expectedDocId ? state.students.find((s) => s.id === expectedDocId && sameSchool(s)) : null;
       } else {
-        existing = r.mssv ? state.students.find((s) => s.mssv && s.mssv.toLowerCase() === r.mssv.toLowerCase()) : null;
+        existing = r.mssv ? state.students.find((s) => s.mssv && s.mssv.toLowerCase() === r.mssv.toLowerCase() && sameSchool(s)) : null;
       }
       if (!existing) {
-        existing = state.students.find((s) => stripDiacritics(s.name) === stripDiacritics(r.name)
+        existing = state.students.find((s) => sameSchool(s) && stripDiacritics(s.name) === stripDiacritics(r.name)
           && stripDiacritics(s.className || '') === stripDiacritics(r.className || ''));
       }
 
+      // "classes" KHÔNG có field trường (schema không hỗ trợ, xem
+      // firestore.rules) nên vẫn chỉ so khớp theo tên lớp — 2 trường cùng
+      // tên lớp "4A5" VẪN dùng chung 1 document "classes" (hạn chế đã biết,
+      // KHÔNG sửa trong đợt này vì cần đổi schema + di trú dữ liệu, phạm vi
+      // rộng hơn lỗi học sinh bị ghi đè đang sửa ở đây).
       const matchedClass = state.classes.find((c) => stripDiacritics(c.name) === stripDiacritics(r.className || ''));
       return Object.assign({}, r, {
         action: existing ? 'update' : 'new',
@@ -983,8 +1007,11 @@
 
       // 2) Tạo/cập nhật từng học sinh. Định dạng flat: có MSSV → dùng MSSV
       // làm ID (hành vi cũ, không đổi); định dạng classSheet: dùng ID ghép
-      // "lớp_mã số hs" (xem studentDocIdFor) vì MSSV trong file này không
-      // duy nhất toàn trường — tránh 2 học sinh khác lớp ghi đè lẫn nhau.
+      // "trường_lớp_mã số hs" (xem studentDocIdFor) vì MSSV trong file này
+      // không duy nhất toàn trường, THẬM CHÍ không duy nhất giữa CÁC TRƯỜNG
+      // (nhiều trường dùng chung tên lớp "4A5"/"4A3") — tránh học sinh khác
+      // lớp/khác TRƯỜNG ghi đè lẫn nhau (lỗi thật đã xảy ra, xem chú thích ở
+      // studentDocIdFor()).
       for (const r of rows) {
         const classId = r.matchedClassId || classIdByName[r.className] || '';
         let teacherId = r.matchedClassTeacher ? r.matchedClassTeacher.id : '';
