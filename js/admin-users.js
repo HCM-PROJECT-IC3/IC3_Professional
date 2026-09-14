@@ -21,17 +21,41 @@ window.EDU_ALLOWED_ROLES = ['admin'];
   // Không cho gõ tay để tránh lệch chính tả → giáo viên bị rớt mất dữ liệu
   // hợp lệ do firestore.rules so khớp "in" tuyệt đối chuỗi.
   let allSchools = [];
+  // uid (users/{uid}, CHÍNH LÀ students_roster.teacherId — roster-manager.html
+  // gán "Giáo viên phụ trách" cho 1 lớp bằng UID tài khoản, không phải
+  // teacherCode của Lịch giảng dạy) -> Set các trường có học sinh ĐANG HỌC
+  // do giáo viên đó phụ trách = "trường giáo viên này THẬT SỰ đang dạy".
+  // Dùng để TỰ ĐỘNG suy ra/sửa lại "Trường được xem" thay vì admin phải tự
+  // multi-select tay (dễ gán nhầm/gán sót — người dùng phản hồi đã thấy
+  // nhiều giáo viên khác nhau bị gán CÙNG 1 bộ trường giống hệt nhau).
+  let schoolsByTeacherId = {};
 
   async function loadSchools() {
     try {
-      const snap = await EduFirebase.db.collection('students_roster').get();
+      const snap = await EduFirebase.db.collection('students_roster').where('status', '==', 'active').get();
       const set = new Set();
-      snap.docs.forEach(d => { const s = (d.data().school || '').trim(); if (s) set.add(s); });
+      schoolsByTeacherId = {};
+      snap.docs.forEach(d => {
+        const data = d.data();
+        const s = (data.school || '').trim();
+        if (!s) return;
+        set.add(s);
+        if (!data.teacherId) return;
+        (schoolsByTeacherId[data.teacherId] = schoolsByTeacherId[data.teacherId] || new Set()).add(s);
+      });
       allSchools = [...set].sort((a, b) => a.localeCompare(b, 'vi'));
     } catch (err) {
       console.warn('[EduAdminUsers] Không tải được danh sách trường (students_roster):', err.message);
       allSchools = [];
+      schoolsByTeacherId = {};
     }
+  }
+
+  /** Trường THẬT SỰ giáo viên `uid` đang dạy (suy từ students_roster đang
+   * học, KHÔNG phải giá trị đã lưu tay trên users/{uid}.schools — dùng để
+   * so sánh/tự sửa nếu 2 giá trị lệch nhau). */
+  function actualSchoolsOf(uid) {
+    return [...(schoolsByTeacherId[uid] || [])].sort((a, b) => a.localeCompare(b, 'vi'));
   }
 
   // Danh sách giáo viên trong "Lịch giảng dạy" (teaching-schedule.html) —
@@ -69,8 +93,42 @@ window.EDU_ALLOWED_ROLES = ['admin'];
       tbody.innerHTML = '<tr><td colspan="7">Chưa có tài khoản nào.</td></tr>';
       return;
     }
-    tbody.innerHTML = snap.docs.map(doc => {
-      const u = doc.data();
+
+    // TỰ ĐỘNG sửa "Trường được xem" của giáo viên theo ĐÚNG trường họ đang
+    // dạy thật (students_roster.teacherId, xem loadSchools()) — trước đây
+    // trường này phải admin tự multi-select tay, dễ gán nhầm/gán sót (đã
+    // thấy nhiều giáo viên khác nhau bị gán CÙNG 1 bộ trường). CHỈ tự sửa
+    // khi có ít nhất 1 lớp roster thật cho GV đó (actual.length > 0) — GV
+    // mới chưa có lớp nào thì giữ nguyên (kể cả rỗng), tránh xoá mất gán
+    // tay hợp lệ của admin trong lúc chưa kịp nhập roster.
+    // .data() tạo object MỚI mỗi lần gọi — lấy ra đúng 1 lần/doc và dùng
+    // lại object đó xuyên suốt (vòng tự sửa bên dưới VÀ vòng render), nếu
+    // không sửa `u.schools` ở vòng tự sửa sẽ không thấy được ở vòng render
+    // (2 object .data() khác nhau, không liên quan gì tới nhau).
+    const users = snap.docs.map(doc => ({ doc, u: doc.data() }));
+
+    const batch = EduFirebase.db.batch();
+    let fixedCount = 0;
+    users.forEach(({ doc, u }) => {
+      if (u.role !== 'teacher') return;
+      const saved = Array.isArray(u.schools) ? [...u.schools].sort((a, b) => a.localeCompare(b, 'vi')) : [];
+      const actual = actualSchoolsOf(doc.id);
+      if (!actual.length) return;
+      if (JSON.stringify(saved) === JSON.stringify(actual)) return;
+      batch.set(doc.ref, { schools: actual }, { merge: true });
+      u.schools = actual; // cập nhật NGAY object dùng để render, không cần tải lại
+      fixedCount++;
+    });
+    if (fixedCount) {
+      try {
+        await batch.commit();
+        toast(`🔧 Đã tự đồng bộ lại "Trường được xem" cho ${fixedCount} giáo viên theo đúng lớp đang dạy`);
+      } catch (err) {
+        console.warn('[EduAdminUsers] Không tự đồng bộ được "Trường được xem":', err.message);
+      }
+    }
+
+    tbody.innerHTML = users.map(({ doc, u }) => {
       const pending = u.role === 'teacher' && u.approved === false;
       const userSchools = Array.isArray(u.schools) ? u.schools : [];
       return `
@@ -89,10 +147,11 @@ window.EDU_ALLOWED_ROLES = ['admin'];
         </td>
         <td class="schoolsCell" ${u.role === 'teacher' ? '' : 'hidden'}>
           ${allSchools.length ? `
-            <select class="schoolsSelect" multiple size="${Math.min(4, Math.max(2, allSchools.length))}" title="Giữ Ctrl (hoặc Cmd) để chọn nhiều trường">
+            <select class="schoolsSelect" multiple size="${Math.min(4, Math.max(2, allSchools.length))}" title="Giữ Ctrl (hoặc Cmd) để chọn nhiều trường — trang đã TỰ ĐỘNG đồng bộ theo lớp đang dạy thật mỗi lần tải trang, chỉ sửa tay ở đây nếu cần thêm ngoại lệ">
               ${allSchools.map(s => `<option value="${esc(s)}" ${userSchools.includes(s) ? 'selected' : ''}>${esc(s)}</option>`).join('')}
             </select>
             <button type="button" class="saveSchoolsBtn">💾 Lưu trường</button>
+            <button type="button" class="syncSchoolsBtn" title="Đặt lại đúng theo trường giáo viên này ĐANG DẠY THẬT (students_roster), bỏ mọi chỉnh tay">🔄 Đồng bộ theo lớp đang dạy</button>
           ` : `<span class="hint">Chưa có trường nào trong danh sách học sinh (roster-manager.html)</span>`}
           ${userSchools.length ? `<div class="schoolsCurrent">Đang xem: ${userSchools.map(esc).join(', ')}</div>` : ''}
         </td>
@@ -151,6 +210,24 @@ window.EDU_ALLOWED_ROLES = ['admin'];
         try {
           await EduFirebase.db.collection('users').doc(uid).set({ schools: chosen }, { merge: true });
           toast(`✅ Đã gán ${chosen.length} trường cho giáo viên`);
+          loadUsers();
+        } catch (err) {
+          toast('❌ Lỗi: ' + err.message);
+        }
+      });
+    });
+
+    tbody.querySelectorAll('.syncSchoolsBtn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const uid = e.target.closest('tr').dataset.uid;
+        const actual = actualSchoolsOf(uid);
+        if (!actual.length) {
+          toast('⚠️ Giáo viên này chưa có lớp nào đang học trong danh sách học sinh (roster-manager.html) — không có gì để đồng bộ.');
+          return;
+        }
+        try {
+          await EduFirebase.db.collection('users').doc(uid).set({ schools: actual }, { merge: true });
+          toast(`✅ Đã đặt lại đúng ${actual.length} trường đang dạy thật`);
           loadUsers();
         } catch (err) {
           toast('❌ Lỗi: ' + err.message);

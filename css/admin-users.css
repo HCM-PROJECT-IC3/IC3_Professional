@@ -149,6 +149,17 @@ select {
   font-weight: 800;
   cursor: pointer;
 }
+.syncSchoolsBtn {
+  background: var(--teal-lt, var(--blue-lt));
+  color: var(--teal, var(--blue));
+  border: none;
+  border-radius: 999px;
+  padding: .35rem .75rem;
+  font-size: .72rem;
+  font-weight: 800;
+  cursor: pointer;
+  margin-left: .3rem;
+}
 .schoolsCurrent { font-size: .7rem; color: var(--muted); margin-top: .3rem }
 .schoolsCell .hint { font-size: .72rem; color: var(--muted); font-style: italic }
 
