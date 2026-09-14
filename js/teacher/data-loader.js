@@ -61,10 +61,17 @@
       if (cached) return cached;
     }
 
+    // Roster: lọc theo ĐÚNG teacherId (uid) của giáo viên đang đăng nhập —
+    // KHÔNG còn theo "schools" (cả trường) như trước, vì 2 giáo viên có thể
+    // dạy chung 1 trường và trước đây mỗi người nhìn thấy CẢ học sinh của
+    // người kia (lỗi người dùng phản hồi, xem listByTeacher() + rule
+    // canAccessRosterStudent() trong firestore.rules). "schools" vẫn cần
+    // giữ lại cho quiz_results bên dưới (collection đó không có teacherId).
+    const uid = profile.uid || profile.id;
     const [students, results] = await Promise.all([
       isAdmin
         ? global.EduRepositories.studentRoster.list({ where: [['status', '==', 'active']] })
-        : global.EduRepositories.studentRoster.listBySchools(schools),
+        : global.EduRepositories.studentRoster.listByTeacher(uid),
       global.EduRepositories.studentResult.listRecent(isAdmin ? { limit: 1000 } : { schools, limit: 1000 }),
     ]);
     const effectiveSchools = isAdmin

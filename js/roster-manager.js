@@ -68,18 +68,55 @@
     window.location.href = 'login.html';
   });
 
+  let myProfile = null; // hồ sơ users/{uid} của người đang đăng nhập (Admin/Điều phối đào tạo)
+
   window.addEventListener('edu:ready', ({ detail }) => {
     const { user, profile } = detail;
+    myProfile = profile;
     document.getElementById('whoami').textContent = `${profile.name || user.email} · ${EduAuth.ROLE_LABEL[profile.role]}`;
     loadEverything();
   });
 
+  /** where('in', ...) tối đa 10 giá trị — chia nhỏ "schools" thành từng
+   * nhóm ≤10 rồi gộp kết quả lại (giống js/coordinator/data-loader.js). */
+  function chunk10(arr) {
+    const out = [];
+    for (let i = 0; i < arr.length; i += 10) out.push(arr.slice(i, i + 10));
+    return out;
+  }
+
   async function loadEverything() {
     try {
+      // Điều phối đào tạo (Commit #7/LMAP): firestore.rules giờ chỉ cho đọc
+      // students_roster trong (các) trường đã được Admin gán ở "schools" —
+      // TRƯỚC ĐÂY trang này tải KHÔNG lọc gì (list({orderBy:'name'})), vốn
+      // hoạt động vì coordinator từng mặc định xem hết; giờ 1 query không
+      // where(...,'in', schools) sẽ bị Firestore từ chối HẲN cho coordinator
+      // (không tự lọc giúp, xem canAccessRosterStudent() trong firestore.rules).
+      // Admin vẫn tải không lọc (đúng quyền isAdmin()).
+      const isAdmin = myProfile.role === 'admin';
+      const schools = Array.isArray(myProfile.schools) ? myProfile.schools.filter(Boolean) : [];
+      if (!isAdmin && !schools.length) {
+        toast('⚠️ Bạn chưa được Admin gán trường nào để hỗ trợ — liên hệ Admin (Quản lý tài khoản → Trường được xem/hỗ trợ).');
+        state.courses = []; state.classes = []; state.students = []; state.teachers = [];
+        renderCourses(); renderClasses(); renderStudentClassFilter(); renderStudents();
+        return;
+      }
+
       const [courses, classes, students, teacherSnap] = await Promise.all([
         window.EduRepositories.course.list({ orderBy: 'name' }),
         window.EduRepositories.class.list({ orderBy: 'name' }),
-        window.EduRepositories.studentRoster.list({ orderBy: 'name' }),
+        isAdmin
+          ? window.EduRepositories.studentRoster.list({ orderBy: 'name' })
+          // CỐ TÌNH KHÔNG dùng listBySchools() (chỉ lọc status "active") — trang
+          // này cần quản lý CẢ học sinh đã nghỉ/đã tốt nghiệp (đổi trạng thái,
+          // xem lại lịch sử...), nên lọc trực tiếp theo "school" mà không kèm
+          // điều kiện status. KHÔNG truyền orderBy ở query này (where('in',...)
+          // + orderBy field khác đòi hỏi composite index phải tạo tay trong
+          // Firebase Console — không có sẵn) — sắp xếp lại theo tên ở JS sau khi
+          // gộp các chunk thay vì nhờ Firestore sắp xếp.
+          : Promise.all(chunk10(schools).map((part) => window.EduRepositories.studentRoster.list({ where: [['school', 'in', part]] })))
+              .then((parts) => parts.flat().sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'vi'))),
         EduFirebase.db.collection('users').where('role', '==', 'teacher').where('approved', '==', true).get(),
       ]);
       state.courses = courses;
