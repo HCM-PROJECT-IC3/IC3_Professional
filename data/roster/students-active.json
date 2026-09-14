@@ -1,7 +1,7 @@
 {
-  "version": "20260913133218",
-  "generatedAt": "2026-09-13T13:32:18.313Z",
-  "count": 490,
+  "version": "20260914061419",
+  "generatedAt": "2026-09-14T06:14:19.155Z",
+  "count": 578,
   "students": [
     {
       "school": "TIH NGUYỄN TRUNG NGẠN",
@@ -150,8 +150,303 @@
     },
     {
       "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Bùi Ngọc Thanh Trà"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Bùi Phan Anh Đức"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Cao Huỳnh Minh Trí"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Dương Hoàng Tú Uyên"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Đào Nguyễn An Tư"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Đinh Khải Tâm"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Đoàn Huỳnh Minh Triết"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Hà Tấn Nghĩa"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Hoàng Thiên Ân"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Hoàng Thiên Phúc"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Huỳnh Đăng Khôi"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Lê Đức Hoà"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Lê Nguyễn Khánh An"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Lê Phạm Gia Hân"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Nguyễn Hoàng Gia Nhi"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Nguyễn Hoàng Hiểu Minh"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Nguyễn Hoàng Hưng Thịnh"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Nguyễn Hoàng Minh Thư"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Nguyễn Minh Phúc"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Nguyễn Phan Phương Thùy"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Nguyễn Phúc Khang"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Nguyễn Thiên Ân"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Phạm Hồng Bảo Trâm"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Phạm Thành Đạt"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Trần Ngọc Trà Mi"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Trịnh Nhã Hân"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Trương Đức Đình Phong"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Vũ Cát Nhiên"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Vũ Hoàng Yến"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A2",
+      "name": "Vũ Kim Ngân"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Bùi Ngọc Lam Khuê"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Cao Hoàng An Nhiên"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Doãn Ngô Gia Phúc"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Doãn Ngô Hà Linh"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Dương Tuấn Kiệt"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Đỗ Duy Bình"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Đỗ Phúc Nguyên"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Huỳnh Vân Anh"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Lâm Chí Thịnh"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Lê Cảnh Thịnh"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Lê Kỳ Duyên"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Lê Ngọc Đan Anh"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Lê Ngọc Phương Quyên"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
       "className": "4A3",
       "name": "Lê Quốc Việt"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Nguyễn Cảnh Long"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Nguyễn Duy"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Nguyễn Khánh Thy"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Nguyễn Ngọc Quỳnh Lam"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Nguyễn Tiến Đạt"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Nguyễn Trâm Anh"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Nguyễn Trương Ngọc Lam"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Phạm Gia Khánh"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Phạm Nguyễn Cát Tường"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Phạm Nhật Minh"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Phạm Vân Trang"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Phan Huy Hoàng"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Phan Quỳnh Thảo Nguyên"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Trần Đại Quang"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Trần Quang Khải"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A3",
+      "name": "Trương Đăng"
     },
     {
       "school": "TIH NGUYỄN TRUNG NGẠN",
@@ -311,6 +606,51 @@
     {
       "school": "TIH NGUYỄN TRUNG NGẠN",
       "className": "4A5",
+      "name": "Bùi Nguyễn Gia Nguyên"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
+      "name": "Đào Thiên Phúc"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
+      "name": "Đinh Hải Đăng"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
+      "name": "Đoàn Ngọc Thúy An"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
+      "name": "Đoàn Thái Minh Thiện"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
+      "name": "Đỗ Nguyễn An Nhiên"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
+      "name": "Hoàng Phạm Tú Quyên"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
+      "name": "Huỳnh Phan Quân"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
+      "name": "Huỳnh Tấn Phát"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
       "name": "Huỳnh Tuyết Trân"
     },
     {
@@ -321,7 +661,107 @@
     {
       "school": "TIH NGUYỄN TRUNG NGẠN",
       "className": "4A5",
+      "name": "Lâm Ngọc Hân"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
+      "name": "Lê Quốc Anh"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
+      "name": "Nguyễn Hải Chi"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
+      "name": "Nguyễn Khang"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
       "name": "Nguyễn Kiến Văn"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
+      "name": "Nguyễn Lê Khả Hân"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
+      "name": "Nguyễn Minh Nghĩa"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
+      "name": "Nguyễn Ngọc Đăng Khoa"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
+      "name": "Nguyễn Ngọc Gia Linh"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
+      "name": "Nguyễn Phạm Minh Thư"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
+      "name": "Nguyễn Phát Lộc"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
+      "name": "Nguyễn Thị Bảo Trân"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
+      "name": "Nguyễn Vũ Hoài An"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
+      "name": "Phạm Hoài Trung Hiếu"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
+      "name": "Phạm Ngọc Minh Anh"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
+      "name": "Phan Minh Quân"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
+      "name": "Trần Huỳnh Gia Huy"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
+      "name": "Trần Ngọc Phúc Thịnh"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
+      "name": "Võ Đức Anh"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
+      "name": "Võ Tấn Đạt"
+    },
+    {
+      "school": "TIH NGUYỄN TRUNG NGẠN",
+      "className": "4A5",
+      "name": "Vũ Thị Thảo My"
     },
     {
       "school": "TIH NGUYỄN TRUNG NGẠN",
