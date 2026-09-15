@@ -54,18 +54,38 @@
         <div class="ww-window">
           <div class="ww-titlebar">
             <span class="ww-titlebar-icon">W</span>
+            <div class="ww-qat" aria-hidden="true">
+              <span class="ww-qat-btn" title="AutoSave">⏺</span>
+              <span class="ww-qat-btn" title="Save">💾</span>
+              <span class="ww-qat-btn" title="Undo">↶</span>
+              <span class="ww-qat-btn" title="Redo">↷</span>
+            </div>
             <span class="ww-titlebar-text" id="wwDocName">Document1 - Word</span>
+            <div class="ww-winctrls" aria-hidden="true">
+              <span class="ww-winctrl">🗕</span>
+              <span class="ww-winctrl">🗗</span>
+              <span class="ww-winctrl ww-winctrl-close">🗙</span>
+            </div>
           </div>
           <div class="ww-ribbon">
             <div class="ww-tabs" id="wwTabs"></div>
             <div class="ww-groups" id="wwGroups"></div>
           </div>
+          <div class="ww-ruler" aria-hidden="true"></div>
           <div class="ww-canvas" id="wwCanvas">
             <div class="ww-page">
               <div class="ww-page-lines"></div>
+              <div class="ww-page-objects" id="wwPageObjects"></div>
             </div>
           </div>
-          <div class="ww-statusbar">Trang 1/1 &nbsp;·&nbsp; Tiếng Việt &nbsp;·&nbsp; 100%</div>
+          <div class="ww-statusbar">
+            <span>📄 Trang 1/1</span>
+            <span>🔤 1,204 từ</span>
+            <span>✔️ Tiếng Việt</span>
+            <span class="ww-statusbar-spacer"></span>
+            <span class="ww-statusbar-views">📖 🖨️ 🌐</span>
+            <span class="ww-statusbar-zoom">➖ ▬▬▬●▬▬▬ ➕ 100%</span>
+          </div>
         </div>
 
         <div class="ws-mission-footer">
@@ -87,6 +107,7 @@
   <!-- ============ TOAST: hoàn thành nhiệm vụ ============ -->
   <div class="ws-toast ws-hidden" id="wsToast"></div>
 
+  <script src="js/ribbon-sim-core.js"></script>
   <script src="js/word-simulator.js"></script>
 </body>
 </html>

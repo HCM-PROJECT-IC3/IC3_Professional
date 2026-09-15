@@ -115,6 +115,72 @@
         ? { passed: true, note: `Công thức đúng cho toàn bộ ${params.rows.length} dòng.` }
         : { passed: false, note: `Sai/thiếu kết quả ở ô: ${wrong.join(', ')}.` };
     },
+
+    /** params: { sheet, range: "A4:F12" } — vùng in (Print Area) của worksheet phải đúng bằng range
+     *  (so khớp không phân biệt "Sheet!A4:F12" hay "A4:F12", không phân biệt hoa/thường). */
+    printArea(workbook, params) {
+      const ws = workbook.getWorksheet(params.sheet);
+      if (!ws) return { passed: false, note: `Không tìm thấy worksheet "${params.sheet}".` };
+      const raw = (ws.pageSetup && ws.pageSetup.printArea) || '';
+      const got = norm(raw.split('!').pop().replace(/\$/g, ''));
+      const expected = norm(params.range);
+      return got === expected
+        ? { passed: true, note: `Đã đặt vùng in ${params.range}.` }
+        : { passed: false, note: `Vùng in hiện tại: "${raw || '(chưa đặt)'}", cần: ${params.range}.` };
+    },
+
+    /** params: { sheet, visibleRows: [n,...], hiddenRows: [n,...] } — sau khi lọc bảng, các hàng
+     *  trong hiddenRows phải bị ẩn (row.hidden=true), các hàng trong visibleRows phải còn hiển thị. */
+    rowsVisibility(workbook, params) {
+      const ws = workbook.getWorksheet(params.sheet);
+      if (!ws) return { passed: false, note: `Không tìm thấy worksheet "${params.sheet}".` };
+      const wrong = [];
+      (params.hiddenRows || []).forEach(r => { if (!ws.getRow(r).hidden) wrong.push(`hàng ${r} (chưa ẩn)`); });
+      (params.visibleRows || []).forEach(r => { if (ws.getRow(r).hidden) wrong.push(`hàng ${r} (bị ẩn nhầm)`); });
+      return wrong.length === 0
+        ? { passed: true, note: `Đã lọc đúng — ẩn ${((params.hiddenRows || []).length)} hàng không khớp điều kiện.` }
+        : { passed: false, note: `Chưa lọc đúng: ${wrong.join(', ')}.` };
+    },
+
+    /** params: { sheet, rows: [{ compareCell, targetCell }], op: '>', threshold, trueText, falseText }
+     *  — giá trị TÍNH ĐƯỢC ở targetCell phải bằng trueText/falseText tuỳ theo so sánh compareCell với
+     *  threshold (chỉ hỗ trợ op ">" — đủ cho các bài IF 1 điều kiện số trong bộ đề này). */
+    conditionalTextResult(workbook, params) {
+      const ws = workbook.getWorksheet(params.sheet);
+      if (!ws) return { passed: false, note: `Không tìm thấy worksheet "${params.sheet}".` };
+      const wrong = [];
+      params.rows.forEach(({ compareCell, targetCell }) => {
+        const cmpRaw = ws.getCell(compareCell).value;
+        const cmp = typeof cmpRaw === 'object' && cmpRaw && 'result' in cmpRaw ? cmpRaw.result : cmpRaw;
+        const isTrue = params.op === '>=' ? cmp >= params.threshold
+          : params.op === '<' ? cmp < params.threshold
+          : params.op === '<=' ? cmp <= params.threshold
+          : cmp > params.threshold;
+        const expected = norm(isTrue ? params.trueText : params.falseText);
+        const got = norm(cellText(ws.getCell(targetCell)));
+        if (got !== expected) wrong.push(targetCell);
+      });
+      return wrong.length === 0
+        ? { passed: true, note: `Công thức điều kiện đúng cho toàn bộ ${params.rows.length} dòng.` }
+        : { passed: false, note: `Sai/thiếu kết quả ở ô: ${wrong.join(', ')}.` };
+    },
+
+    /** params: { sheet, rows: [{ sourceCell, targetCell }], length } — targetCell phải bằng
+     *  "length" ký tự ĐẦU TIÊN của sourceCell (dùng cho công thức LEFT). */
+    leftCharsResult(workbook, params) {
+      const ws = workbook.getWorksheet(params.sheet);
+      if (!ws) return { passed: false, note: `Không tìm thấy worksheet "${params.sheet}".` };
+      const wrong = [];
+      params.rows.forEach(({ sourceCell, targetCell }) => {
+        const source = cellText(ws.getCell(sourceCell));
+        const expected = norm(source.slice(0, params.length));
+        const got = norm(cellText(ws.getCell(targetCell)));
+        if (!source || got !== expected) wrong.push(targetCell);
+      });
+      return wrong.length === 0
+        ? { passed: true, note: `Công thức LEFT đúng cho toàn bộ ${params.rows.length} dòng.` }
+        : { passed: false, note: `Sai/thiếu kết quả ở ô: ${wrong.join(', ')}.` };
+    },
   };
 
   /** "A11:B11" → ["A11","B11"]; hỗ trợ range nhiều hàng/cột (vd "B4:D9"). */

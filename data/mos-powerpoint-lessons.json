@@ -1,0 +1,69 @@
+{
+  "subject": "MOS PowerPoint 2019",
+  "version": 1,
+  "lessons": [
+    {
+      "id": "tiet10",
+      "index": 10,
+      "title": "Ôn tập Tiết 10",
+      "subtitle": "PowerPoint — Định dạng bảng, chèn slide/biểu đồ, định dạng biểu đồ",
+      "subtasks": [
+        {
+          "id": "pptx_tiet10_01",
+          "letter": "a",
+          "file": "Project_2.pptx",
+          "desc": "Trên Slide 1, hiệu chỉnh bảng có sẵn: áp dụng Table Style \"Medium Style 4 – Accent 6\" và bật tùy chọn \"Banded Rows\".",
+          "steps": [
+            { "type": "manual_action", "text": "Click vào bảng trên Slide 1 để chọn nó." },
+            { "type": "ribbon_tab", "tab": "Table Design", "group": null, "control": "tab Table Design", "text": "Click tab ngữ cảnh Table Design." },
+            { "type": "dialog_choice", "control": "Medium Style 4 - Accent 6", "text": "Trong nhóm Table Styles, chọn kiểu \"Medium Style 4 – Accent 6\"." },
+            { "type": "checkbox_toggle", "action": "Chọn", "label": "Banded Rows", "text": "Trong nhóm Table Style Options, tick chọn Banded Rows." }
+          ]
+        },
+        {
+          "id": "pptx_tiet10_02",
+          "letter": "b",
+          "file": "Project_2.pptx",
+          "desc": "Chèn thêm 1 dòng mới vào cuối bảng với dữ liệu: Everest Base Camp | 89 | 145 | 210 | 76 (tương ứng các cột: Under 19 | 19 to 34 | 35 to 49 | 50+).",
+          "steps": [
+            { "type": "manual_action", "text": "Click vào ô cuối cùng của hàng cuối trong bảng." },
+            { "type": "ribbon_tab", "tab": "Table Layout", "group": null, "control": "tab Table Layout", "text": "Click tab ngữ cảnh Table Layout." },
+            { "type": "ribbon_button", "tab": null, "group": "Rows & Columns", "control": "Insert Below", "text": "Trong nhóm Rows & Columns, click Insert Below." },
+            { "type": "manual_action", "text": "Nhập lần lượt vào hàng mới: Everest Base Camp, 89, 145, 210, 76." }
+          ]
+        },
+        {
+          "id": "pptx_tiet10_03",
+          "letter": "c",
+          "file": "Project_2.pptx",
+          "desc": "Chèn một slide mới (Slide 2) với bố cục \"Title and Content\". Chèn biểu đồ cột (Clustered Column Chart) với dữ liệu: Kilimanjaro (235, 368, 453) và Riding Rapids (678, 987, 1256) theo các nhóm tuổi Under 19 / 19 to 34 / 35 to 49.",
+          "steps": [
+            { "type": "manual_action", "text": "Ở ngăn Slide bên trái, click chuột phải sau Slide 1, chọn New Slide." },
+            { "type": "ribbon_button", "tab": "Home", "group": "Slides", "control": "Layout", "text": "Trên tab Home, trong nhóm Slides, click Layout." },
+            { "type": "dialog_choice", "control": "Title and Content", "text": "Chọn bố cục Title and Content." },
+            { "type": "ribbon_tab", "tab": "Insert", "group": null, "control": "tab Insert", "text": "Click tab Insert." },
+            { "type": "ribbon_button", "tab": null, "group": "Illustrations", "control": "Chart", "text": "Trong nhóm Illustrations, click Chart." },
+            { "type": "dialog_choice", "control": "Clustered Column", "text": "Chọn kiểu Clustered Column." },
+            { "type": "manual_action", "text": "Trong bảng dữ liệu Excel hiện ra, nhập 2 dòng dữ liệu Kilimanjaro (235, 368, 453) và Riding Rapids (678, 987, 1256) theo 3 cột Under 19 / 19 to 34 / 35 to 49, rồi đóng cửa sổ Excel." }
+          ]
+        },
+        {
+          "id": "pptx_tiet10_04",
+          "letter": "d",
+          "file": "Project_2.pptx",
+          "desc": "Định dạng biểu đồ vừa chèn: thêm Data Labels vị trí \"Outside End\", thêm tiêu đề biểu đồ (Chart Title) \"Adventure Tour Popularity\".",
+          "steps": [
+            { "type": "manual_action", "text": "Click chọn biểu đồ vừa chèn." },
+            { "type": "ribbon_tab", "tab": "Chart Design", "group": null, "control": "tab Chart Design", "text": "Click tab ngữ cảnh Chart Design." },
+            { "type": "ribbon_button", "tab": null, "group": "Chart Layouts", "control": "Add Chart Element", "text": "Trong nhóm Chart Layouts, click Add Chart Element." },
+            { "type": "dialog_choice", "control": "Data Labels", "text": "Chọn Data Labels." },
+            { "type": "dialog_choice", "control": "Outside End", "text": "Chọn vị trí Outside End." },
+            { "type": "ribbon_button", "tab": null, "group": "Chart Layouts", "control": "Add Chart Element", "text": "Lại click Add Chart Element." },
+            { "type": "dialog_choice", "control": "Chart Title", "text": "Chọn Chart Title." },
+            { "type": "manual_action", "text": "Nhập tiêu đề: Adventure Tour Popularity." }
+          ]
+        }
+      ]
+    }
+  ]
+}

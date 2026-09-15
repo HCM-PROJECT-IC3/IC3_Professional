@@ -1,0 +1,132 @@
+{
+  "subject": "MOS Excel 2019",
+  "version": 1,
+  "lessons": [
+    {
+      "id": "tiet3",
+      "index": 3,
+      "title": "Ôn tập Tiết 3",
+      "subtitle": "Excel — Named range, định dạng số, xoá hàng, in ấn, lọc bảng, hàm IF/LEFT/CONCAT",
+      "subtasks": [
+        {
+          "id": "excel_tiet3_01",
+          "letter": "a",
+          "file": "Tiet3_Project1.xlsx",
+          "desc": "Đi đến vùng được đặt tên \"Date\" (worksheet Exchange Rates) và xoá nội dung trong các ô đã chọn.",
+          "steps": [
+            { "type": "manual_action", "text": "Trong Name Box (góc trên bên trái, ngay dưới Ribbon), gõ Date rồi nhấn Enter để nhảy tới vùng đã đặt tên." },
+            { "type": "ribbon_button", "tab": "Home", "group": "Editing", "control": "Clear", "text": "Trên tab Home, trong nhóm Editing, click Clear." },
+            { "type": "dialog_choice", "control": "Clear Contents", "text": "Chọn Clear Contents." }
+          ]
+        },
+        {
+          "id": "excel_tiet3_02",
+          "letter": "b",
+          "file": "Tiet3_Project1.xlsx",
+          "desc": "Trên worksheet \"Exchange Rates\", trong các ô B4:D9, định dạng số để hiển thị 2 chữ số thập phân.",
+          "steps": [
+            { "type": "manual_action", "text": "Chọn vùng B4:D9." },
+            { "type": "ribbon_button", "tab": "Home", "group": "Number", "control": "Dialog Box Launcher", "text": "Trên tab Home, trong nhóm Number, click Dialog Box Launcher." },
+            { "type": "dialog_field", "fields": [["Decimal places", "2"]], "text": "Trong hộp thoại Format Cells (thẻ Number, mục Number), nhập Decimal places: 2." },
+            { "type": "confirm", "control": "OK", "text": "Click OK." }
+          ]
+        },
+        {
+          "id": "excel_tiet3_03",
+          "letter": "c",
+          "file": "Tiet3_Project1.xlsx",
+          "desc": "Trên worksheet \"New Accounts\", xoá hàng chứa dữ liệu \"Manley Valve\". Không thay đổi nội dung ngoài bảng.",
+          "steps": [
+            { "type": "manual_action", "text": "Click chuột phải vào số thứ tự hàng chứa Manley Valve để chọn cả hàng." },
+            { "type": "ribbon_button", "tab": "Home", "group": "Cells", "control": "Delete", "text": "Trên tab Home, trong nhóm Cells, click Delete." },
+            { "type": "dialog_choice", "control": "Delete Sheet Rows", "text": "Chọn Delete Sheet Rows." }
+          ]
+        },
+        {
+          "id": "excel_tiet3_04",
+          "letter": "d",
+          "file": "Tiet3_Project1.xlsx",
+          "desc": "Trên worksheet \"New Accounts\", với biểu đồ \"Account Balances\", hoán đổi dữ liệu qua trục (Switch Row/Column).",
+          "steps": [
+            { "type": "manual_action", "text": "Click chọn biểu đồ Account Balances." },
+            { "type": "ribbon_button", "tab": "Chart Design", "group": "Data", "control": "Switch Row/Column", "text": "Trên tab ngữ cảnh Chart Design, trong nhóm Data, click Switch Row/Column." }
+          ]
+        },
+        {
+          "id": "excel_tiet3_05",
+          "letter": "e",
+          "file": "Tiet3_Project1.xlsx",
+          "desc": "Trên worksheet \"Contact\", trong cột \"Email Address\", sử dụng hàm để tạo địa chỉ email từ First Name và \"@gmail.com\".",
+          "steps": [
+            { "type": "manual_action", "text": "Click vào ô C4 (cột Email Address, dòng đầu tiên)." },
+            { "type": "manual_action", "text": "Nhập công thức =A4&\"@gmail.com\" rồi nhấn Enter." },
+            { "type": "manual_action", "text": "Trỏ chuột vào góc dưới-phải ô C4 (con trỏ đổi thành dấu +), kéo Fill Handle xuống đến C13 để áp dụng công thức cho các dòng còn lại." }
+          ]
+        },
+        {
+          "id": "excel_tiet3_06",
+          "letter": "f",
+          "file": "Tiet3_Project1.xlsx",
+          "desc": "(Task 4 gốc — Xem đề trong Tiet_3_MOS_Excel_Projects.xlsx) Thao tác phức tạp trên đối tượng, hãy tự thực hiện trên Excel thật.",
+          "steps": [
+            { "type": "manual_action", "text": "Thao tác này khá phức tạp để mô phỏng đúng — hãy tự thực hiện trên Excel thật theo đề gốc, rồi bấm \"Đã thực hiện\"." }
+          ]
+        },
+        {
+          "id": "excel_tiet3_07",
+          "letter": "g",
+          "file": "Tiet3_Project2.xlsx",
+          "desc": "Cấu hình worksheet \"January\" để chỉ in phạm vi A4:F12.",
+          "steps": [
+            { "type": "manual_action", "text": "Trên worksheet January, chọn vùng A4:F12." },
+            { "type": "ribbon_tab", "tab": "Page Layout", "group": null, "control": "tab Page Layout", "text": "Click tab Page Layout." },
+            { "type": "ribbon_button", "tab": null, "group": "Page Setup", "control": "Print Area", "text": "Trong nhóm Page Setup, click Print Area." },
+            { "type": "dialog_choice", "control": "Set Print Area", "text": "Chọn Set Print Area." }
+          ]
+        },
+        {
+          "id": "excel_tiet3_08",
+          "letter": "h",
+          "file": "Tiet3_Project2.xlsx",
+          "desc": "Trên worksheet \"March\", lọc bảng để chỉ hiển thị các chính sách có \"Policy Type\" = \"MP\".",
+          "steps": [
+            { "type": "manual_action", "text": "Click vào mũi tên lọc (filter arrow) ở tiêu đề cột Policy Type." },
+            { "type": "dialog_choice", "control": "MP", "text": "Trong danh sách lọc, bỏ chọn (Select All), chỉ tick chọn MP." },
+            { "type": "confirm", "control": "OK", "text": "Click OK." }
+          ]
+        },
+        {
+          "id": "excel_tiet3_09",
+          "letter": "i",
+          "file": "Tiet3_Project2.xlsx",
+          "desc": "Trên worksheet \"February\", trong cột \"Discount\", dùng hàm hiển thị \"YES\" nếu \"Years as Member\" > 5, ngược lại hiển thị \"NO\".",
+          "steps": [
+            { "type": "manual_action", "text": "Click vào ô G5 (cột Discount, dòng đầu tiên)." },
+            { "type": "manual_action", "text": "Nhập công thức =IF(E5>5,\"YES\",\"NO\") rồi nhấn Enter." },
+            { "type": "manual_action", "text": "Kéo Fill Handle từ ô G5 xuống đến G16 để áp dụng công thức cho các dòng còn lại." }
+          ]
+        },
+        {
+          "id": "excel_tiet3_10",
+          "letter": "j",
+          "file": "Tiet3_Project2.xlsx",
+          "desc": "Trên worksheet \"Summary\", thêm mô tả Alt Text \"New Data\" cho biểu đồ.",
+          "steps": [
+            { "type": "manual_action", "text": "Click chuột phải vào biểu đồ, chọn Edit Alt Text, nhập New Data rồi đóng ngăn Alt Text." }
+          ]
+        },
+        {
+          "id": "excel_tiet3_11",
+          "letter": "k",
+          "file": "Tiet3_Project2.xlsx",
+          "desc": "Trên worksheet \"February\", trong cột \"Policy Type\", dùng hàm hiển thị 2 ký tự đầu tiên của \"Policy Number\" (cột B).",
+          "steps": [
+            { "type": "manual_action", "text": "Click vào ô F5 (cột Policy Type, dòng đầu tiên)." },
+            { "type": "manual_action", "text": "Nhập công thức =LEFT(B5,2) rồi nhấn Enter." },
+            { "type": "manual_action", "text": "Kéo Fill Handle từ ô F5 xuống đến F16 để áp dụng công thức cho các dòng còn lại." }
+          ]
+        }
+      ]
+    }
+  ]
+}

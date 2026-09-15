@@ -79,6 +79,8 @@
         roman: "III",
         discipline: "Spreadsheets",
         note: "Organizing data, building formulas, and reading the results.",
+        practiceUrl: "excel-simulator.html",
+        practiceLabel: "Luyện tập Ribbon",
         deck: "A compact handbook for spreadsheets: organize raw data into tables, write formulas that hold up, and turn rows and columns into an answer.",
         binding: "Forest-green cloth · gold foil",
         format: "140 × 210 mm · IC3 GS6 edition",
@@ -112,6 +114,8 @@
         roman: "IV",
         discipline: "Presentation Skills",
         note: "Turning ideas into slides an audience can follow.",
+        practiceUrl: "powerpoint-simulator.html",
+        practiceLabel: "Luyện tập Ribbon",
         deck: "A practical guide to presentation skills: shape an argument into slides, design for readability, and deliver an idea an audience can follow.",
         binding: "Burnt-orange cloth · charcoal foil",
         format: "162 × 240 mm · IC3 GS6 edition",
@@ -2649,9 +2653,9 @@
       detailTheme.textContent = book.theme;
       detailMotif.textContent = book.motif;
 
-      // Cuốn nào có practiceUrl (hiện chỉ Volume II — Word) thì hiện nút
-      // CTA "Luyện tập" mở simulator tương ứng ở tab mới; cuốn khác vẫn
-      // thuần trưng bày như trước (không có nút).
+      // Cuốn nào có practiceUrl (Volume II Word, III Excel, IV PowerPoint)
+      // thì hiện nút CTA "Luyện tập" mở simulator tương ứng ở tab mới;
+      // cuốn khác vẫn thuần trưng bày như trước (không có nút).
       if (practiceButton) {
         if (book.practiceUrl) {
           practiceButton.hidden = false;

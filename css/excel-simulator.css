@@ -1,0 +1,62 @@
+/* ============================================================
+   MOS Excel Simulator — chỉ khai báo màu chủ đề Excel (đè lên biến
+   --ws-accent* của css/word-simulator.css, được link TRƯỚC file này)
+   + kiểu riêng cho "lưới ô tính" (formula bar / grid / sheet tabs).
+   Toàn bộ khung Ribbon/dialog/lesson dùng chung với Word — xem
+   css/word-simulator.css.
+   ============================================================ */
+
+body.theme-excel {
+  --ws-accent: #217346;
+  --ws-accent-dark: #12532f;
+  --ws-accent-deep: #0d3d23;
+}
+
+/* ---------- Formula bar ---------- */
+.xw-formula-bar {
+  display: flex; align-items: center; gap: 8px;
+  background: #fff; border-bottom: 1px solid #d6d6d6; padding: 4px 10px;
+  font-size: 12px;
+}
+.xw-name-box {
+  border: 1px solid #c7cfdb; border-radius: 3px; padding: 2px 8px;
+  font-weight: 700; color: var(--ws-accent, #217346); background: #f4faf6; min-width: 50px; text-align: center;
+}
+.xw-fx { font-style: italic; color: #666; font-weight: 700; }
+.xw-formula-input { flex: 1; border-left: 1px solid #e3e3e3; padding-left: 8px; color: #888; }
+
+/* ---------- Grid ---------- */
+.xw-canvas { background: #dfe6df; padding: 0; display: block; }
+.xw-grid { overflow: auto; max-height: 320px; }
+.xw-table { border-collapse: collapse; width: 100%; background: #fff; font-size: 11.5px; }
+.xw-table th, .xw-table td {
+  border: 1px solid #d5dbd5; min-width: 54px; height: 22px; text-align: center; color: #333;
+  padding: 0 4px;
+}
+.xw-table thead th {
+  background: #eef2ee; color: #444; font-weight: 700; position: sticky; top: 0; z-index: 1;
+}
+.xw-table tbody th {
+  background: #eef2ee; color: #444; font-weight: 700; position: sticky; left: 0; z-index: 1;
+}
+.xw-table .xw-corner { background: #eef2ee; position: sticky; left: 0; top: 0; z-index: 2; }
+.xw-table td { cursor: default; }
+.xw-table td.xw-cell-hit {
+  background: #d7f5e0; box-shadow: inset 0 0 0 2px #3fa86f;
+  animation: xwHit .3s ease;
+}
+@keyframes xwHit { from { transform: scale(.9); } to { transform: scale(1); } }
+
+/* ---------- Sheet tabs ---------- */
+.xw-sheet-tabs {
+  display: flex; gap: 2px; background: #eef2ee; border-top: 1px solid #d5dbd5; padding: 4px 8px;
+  overflow-x: auto;
+}
+.xw-sheet-tab {
+  padding: 4px 12px; font-size: 11px; color: #555; background: #e2e8e2; border-radius: 3px 3px 0 0;
+  white-space: nowrap;
+}
+.xw-sheet-tab-active {
+  background: #fff; color: var(--ws-accent, #217346); font-weight: 700;
+  border-top: 2px solid var(--ws-accent, #217346);
+}
