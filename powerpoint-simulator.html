@@ -3,19 +3,20 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-<title>MOS Word 2019 — Giả lập thao tác Ribbon</title>
+<title>MOS PowerPoint 2019 — Giả lập thao tác Ribbon</title>
 <link rel="stylesheet" href="css/word-simulator.css" />
+<link rel="stylesheet" href="css/powerpoint-simulator.css" />
 </head>
-<body>
+<body class="theme-ppt">
 
   <!-- ============ MÀN HÌNH 1: CHỌN TIẾT ============ -->
   <div class="ws-screen" id="wsLobbyScreen">
     <header class="ws-lobby-header">
       <div class="ws-lobby-title">
-        <span class="ws-lobby-emoji">📝</span>
+        <span class="ws-lobby-emoji">🖥️</span>
         <div>
-          <h1>MOS Word 2019 — Ôn luyện cuối khóa</h1>
-          <p>10 tiết thực hành thao tác Ribbon, mô phỏng đúng quy trình GMetrix</p>
+          <h1>MOS PowerPoint 2019 — Ôn luyện cuối khóa</h1>
+          <p>Thực hành thao tác Ribbon, mô phỏng đúng quy trình GMetrix</p>
         </div>
       </div>
       <div class="ws-lobby-total" id="wsLobbyTotal">Đang tải…</div>
@@ -50,17 +51,17 @@
           <span class="ws-instruction-text" id="wsInstructionText"></span>
         </div>
 
-        <!-- Cửa sổ Word giả lập -->
+        <!-- Cửa sổ PowerPoint giả lập -->
         <div class="ww-window">
           <div class="ww-titlebar">
-            <span class="ww-titlebar-icon">W</span>
+            <span class="ww-titlebar-icon">P</span>
             <div class="ww-qat" aria-hidden="true">
               <span class="ww-qat-btn" title="AutoSave">⏺</span>
               <span class="ww-qat-btn" title="Save">💾</span>
               <span class="ww-qat-btn" title="Undo">↶</span>
               <span class="ww-qat-btn" title="Redo">↷</span>
             </div>
-            <span class="ww-titlebar-text" id="wwDocName">Document1 - Word</span>
+            <span class="ww-titlebar-text" id="wwDocName">Presentation1 - PowerPoint</span>
             <div class="ww-winctrls" aria-hidden="true">
               <span class="ww-winctrl">🗕</span>
               <span class="ww-winctrl">🗗</span>
@@ -71,19 +72,14 @@
             <div class="ww-tabs" id="wwTabs"></div>
             <div class="ww-groups" id="wwGroups"></div>
           </div>
-          <div class="ww-ruler" aria-hidden="true"></div>
-          <div class="ww-canvas" id="wwCanvas">
-            <div class="ww-page">
-              <div class="ww-page-lines"></div>
-              <div class="ww-page-objects" id="wwPageObjects"></div>
-            </div>
+          <div class="ww-canvas pw-canvas">
+            <aside class="pw-slide-rail" id="pwSlideRail"></aside>
+            <div class="pw-slide-main" id="pwSlideMain"></div>
           </div>
           <div class="ww-statusbar">
-            <span>📄 Trang 1/1</span>
-            <span>🔤 1,204 từ</span>
-            <span>✔️ Tiếng Việt</span>
+            <span>🖥️ Slide 1 of 1</span>
             <span class="ww-statusbar-spacer"></span>
-            <span class="ww-statusbar-views">📖 🖨️ 🌐</span>
+            <span class="ww-statusbar-views">🔲 ▦ 📖</span>
             <span class="ww-statusbar-zoom">➖ ▬▬▬●▬▬▬ ➕ 100%</span>
           </div>
         </div>
@@ -95,7 +91,7 @@
     </div>
   </div>
 
-  <!-- ============ MODAL: hộp thoại giả lập (dialog_field / dialog_choice / checkbox / confirm) ============ -->
+  <!-- ============ MODAL: hộp thoại giả lập ============ -->
   <div class="ww-dialog-overlay ws-hidden" id="wwDialogOverlay">
     <div class="ww-dialog" id="wwDialog">
       <div class="ww-dialog-title" id="wwDialogTitle">Hộp thoại</div>
@@ -104,10 +100,10 @@
     </div>
   </div>
 
-  <!-- ============ TOAST: hoàn thành nhiệm vụ ============ -->
+  <!-- ============ TOAST ============ -->
   <div class="ws-toast ws-hidden" id="wsToast"></div>
 
   <script src="js/ribbon-sim-core.js"></script>
-  <script src="js/word-simulator.js"></script>
+  <script src="js/powerpoint-simulator.js"></script>
 </body>
 </html>

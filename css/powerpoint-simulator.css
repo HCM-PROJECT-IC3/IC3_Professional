@@ -1,0 +1,62 @@
+/* ============================================================
+   MOS PowerPoint Simulator — chỉ khai báo màu chủ đề PowerPoint (đè lên
+   biến --ws-accent* của css/word-simulator.css, được link TRƯỚC file
+   này) + kiểu riêng cho "khung slide" (rail thumbnail / slide chính).
+   Toàn bộ khung Ribbon/dialog/lesson dùng chung với Word — xem
+   css/word-simulator.css.
+   ============================================================ */
+
+body.theme-ppt {
+  --ws-accent: #b7472a;
+  --ws-accent-dark: #7c2e1b;
+  --ws-accent-deep: #5c2113;
+}
+
+/* ---------- Slide canvas ---------- */
+.pw-canvas { background: #dcdcdc; padding: 14px; display: flex; gap: 12px; min-height: 260px; justify-content: flex-start; }
+
+.pw-slide-rail {
+  width: 78px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px;
+  overflow-y: auto; max-height: 280px;
+}
+.pw-thumb {
+  background: #fff; border: 2px solid #c7cfdb; border-radius: 3px; aspect-ratio: 16/9;
+  display: flex; align-items: center; justify-content: center; position: relative;
+  box-shadow: 0 1px 3px rgba(0,0,0,.15);
+}
+.pw-thumb-num {
+  position: absolute; top: 2px; left: 4px; font-size: 9px; color: #888; font-weight: 700;
+}
+.pw-thumb-active { border-color: var(--ws-accent, #b7472a); box-shadow: 0 0 0 2px rgba(183,71,42,.25); }
+
+.pw-slide-main {
+  flex: 1; background: #fff; aspect-ratio: 16/9; max-width: 560px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.25); padding: 18px 22px; position: relative;
+  font-family: Calibri, "Segoe UI", Arial, sans-serif; overflow: hidden;
+}
+.pw-slide-title {
+  font-size: 15px; font-weight: 700; color: var(--ws-accent-dark, #7c2e1b); margin-bottom: 10px;
+  border-bottom: 2px solid var(--ws-accent, #b7472a); padding-bottom: 6px; display: inline-block;
+}
+
+/* ---------- "Đối tượng" trên slide ---------- */
+.pwo { animation: pwoPop .25s ease; }
+@keyframes pwoPop { from { transform: scale(.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.pwo-table { border-collapse: collapse; width: 100%; margin-top: 6px; font-size: 11px; }
+.pwo-table td {
+  border: 1px solid #d8b9ce; padding: 4px 6px; background: #fbf4f8; text-align: center;
+}
+.pwo-table tr:first-child td { background: var(--ws-accent, #b7472a); color: #fff; font-weight: 700; }
+
+.pwo-chart {
+  margin-top: 10px; height: 140px; border: 1px dashed #c7cfdb; border-radius: 4px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-size: 34px; color: #b6c1d6; background: #f7f9fc;
+}
+.pwo-chart span { font-size: 10.5px; color: #7a8aa5; margin-top: 4px; }
+
+.pwo-chart-title {
+  margin-top: -6px; font-size: 10.5px; font-weight: 700; color: var(--ws-accent-dark, #7c2e1b);
+  text-align: center;
+}
