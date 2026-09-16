@@ -22,6 +22,10 @@
      2) Sau khi tạo xong, copy "Application (client) ID" và
         "Directory (tenant) ID" ở trang Overview → điền vào CLIENT_ID/
         TENANT_ID bên dưới.
+        Nếu sau này có thêm trang khác cũng đăng nhập Microsoft bằng app
+        registration này, nhớ thêm URL trang đó vào danh sách "Single-page
+        application" Redirect URI ở bước 1, nếu không sẽ gặp lỗi
+        "AADSTS900971: No reply address provided".
      3) API permissions → Add a permission → Microsoft Graph →
         Delegated permissions → thêm "Files.Read.All" → bấm "Grant
         admin consent" (nếu tổ chức yêu cầu admin duyệt trước).
