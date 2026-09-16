@@ -42,15 +42,15 @@
     shareUrl: 'https://iigvietnamedu.sharepoint.com/:x:/s/PhngDnTP.HCM/IQAZ_cGq41Z3QZgIgD0JF1myAVKf80z5MKPpNUifjN8kh0U?e=yuBUsd',
   };
 
-  let msalInstance = null;
+  let msalInstancePromise = null;
   function getMsalInstance() {
-    if (msalInstance) return msalInstance;
+    if (msalInstancePromise) return msalInstancePromise;
     const cfg = window.EDU_SHAREPOINT_CONFIG;
     if (!window.msal) throw new Error('Chưa tải được thư viện đăng nhập Microsoft (MSAL.js), kiểm tra mạng rồi thử lại.');
     if (!cfg.clientId || !cfg.tenantId) {
       throw new Error('Chưa cấu hình kết nối SharePoint — điền clientId/tenantId vào window.EDU_SHAREPOINT_CONFIG trong js/services/sharepoint-sync.js (xem hướng dẫn ở đầu file).');
     }
-    msalInstance = new msal.PublicClientApplication({
+    const instance = new msal.PublicClientApplication({
       auth: {
         clientId: cfg.clientId,
         authority: `https://login.microsoftonline.com/${cfg.tenantId}`,
@@ -58,13 +58,17 @@
       },
       cache: { cacheLocation: 'sessionStorage' },
     });
-    return msalInstance;
+    // MSAL.js v3+ bắt buộc phải initialize() (bất đồng bộ) trước khi gọi
+    // bất kỳ API nào khác (loginPopup/getAllAccounts/...), nếu không sẽ báo
+    // lỗi "uninitialized_public_client_application".
+    msalInstancePromise = instance.initialize().then(() => instance);
+    return msalInstancePromise;
   }
 
   const GRAPH_SCOPES = ['Files.Read.All'];
 
   async function getAccessToken() {
-    const msalApp = getMsalInstance();
+    const msalApp = await getMsalInstance();
     const accounts = msalApp.getAllAccounts();
     if (accounts.length) {
       try {
