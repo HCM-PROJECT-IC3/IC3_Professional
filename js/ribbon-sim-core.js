@@ -95,7 +95,11 @@
       currentLesson: null,
       currentSubtaskIdx: 0,
       currentStepIdx: 0,
-      activeTab: TAB_ORDER[1] || TAB_ORDER[0]
+      activeTab: TAB_ORDER[1] || TAB_ORDER[0],
+      examMode: false,
+      examSecondsLeft: 0,
+      examTimerId: null,
+      reviewFlags: {}
     };
 
     function loadProgress() {
@@ -145,6 +149,8 @@
     function openLesson(lesson) {
       STATE.currentLesson = lesson;
       STATE.currentSubtaskIdx = 0;
+      STATE.reviewFlags = {};
+      deactivateExamMode(); // mỗi lần vào tiết là 1 phiên mới — luôn bắt đầu ở chế độ luyện tập
       if (config.onResetLesson) config.onResetLesson();
       for (var i = 0; i < lesson.subtasks.length; i++) {
         if (!STATE.progress[lesson.subtasks[i].id]) { STATE.currentSubtaskIdx = i; break; }
@@ -152,14 +158,15 @@
       }
       document.getElementById('wsLessonTitle').textContent = lesson.title;
       document.getElementById('wsLessonSubtitle').textContent = lesson.subtitle || '';
-      show('wsLessonScreen'); hide('wsLobbyScreen');
+      show('wsLessonScreen'); hide('wsLobbyScreen'); hide('wsResultsScreen');
       renderTaskRail();
       openSubtask(STATE.currentSubtaskIdx);
     }
 
     function closeLesson() {
+      stopExamTimer();
       renderLobby();
-      show('wsLobbyScreen'); hide('wsLessonScreen');
+      show('wsLobbyScreen'); hide('wsLessonScreen'); hide('wsResultsScreen');
     }
 
     function renderTaskRail() {
@@ -197,6 +204,7 @@
       renderTab(STATE.activeTab);
       if (config.onOpenSubtask) config.onOpenSubtask(s);
       renderCurrentStep();
+      renderExamPanel();
     }
 
     function highlightRailActive() {
@@ -333,12 +341,15 @@
       var sub = currentSubtask();
       markSubtaskDone(sub.id);
       renderTaskRail();
+      renderExamPanel();
       if (config.onCompleteSubtask) config.onCompleteSubtask(sub);
       showToast('✅ Hoàn thành nhiệm vụ ' + (sub.letter ? sub.letter + '. ' : '') + '— ' + truncate(sub.desc, 60));
       var nextIdx = STATE.currentSubtaskIdx + 1;
       setTimeout(function () {
         if (nextIdx < STATE.currentLesson.subtasks.length) {
           openSubtask(nextIdx);
+        } else if (STATE.examMode) {
+          submitExam();
         } else {
           showToast('🎉 Bạn đã hoàn thành toàn bộ ' + STATE.currentLesson.title + '!');
         }
@@ -366,6 +377,7 @@
     }
 
     function pulseTab(tab) {
+      if (STATE.examMode) return; // chế độ thi: không gợi ý trước tab nào đúng, giống thi thật
       var tabsEl = document.getElementById('wwTabs');
       Array.prototype.forEach.call(tabsEl.children, function (el) {
         el.classList.toggle('ww-target', fuzzyMatch(el.textContent, tab));
@@ -589,6 +601,239 @@
       footer.insertBefore(btn, footer.firstChild);
     }
 
+    // ── EXAM MODE ("giống bài thi MOS thật") ────────────────────
+    // Mô phỏng thêm 3 đặc điểm nổi bật nhất của 1 bài thi MOS/GMetrix thật
+    // (khác hẳn chế độ Luyện tập ở trên, vốn luôn gợi ý từng bước):
+    //   1) Đồng hồ đếm ngược (giống thời lượng làm bài thật).
+    //   2) 1 cửa sổ nổi kiểu GMetrix hiển thị ĐÚNG mỗi yêu cầu đề bài (không
+    //      còn hướng dẫn bấm nút nào) + lưới điều hướng câu + cờ "xem lại".
+    //   3) Màn hình kết quả cuối bài theo thang điểm MOS chuẩn (0-1000,
+    //      mốc đạt 700) khi nộp bài / hết giờ / làm xong toàn bộ.
+    function computeExamDurationSec(lesson) {
+      if (config.examDurationSec) return config.examDurationSec;
+      var n = (lesson && lesson.subtasks && lesson.subtasks.length) || 20;
+      return Math.min(60 * 60, Math.max(15 * 60, Math.round(n * 70)));
+    }
+    function formatTime(sec) {
+      sec = Math.max(0, sec | 0);
+      var m = Math.floor(sec / 60), s = sec % 60;
+      return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+    }
+    function updateTimerDisplay() {
+      var el = document.getElementById('wsExamTimer');
+      if (!el) return;
+      el.textContent = formatTime(STATE.examSecondsLeft);
+      el.classList.toggle('ws-exam-timer-low', STATE.examSecondsLeft <= 300);
+    }
+    function startExamTimer() {
+      stopExamTimer();
+      STATE.examSecondsLeft = computeExamDurationSec(STATE.currentLesson);
+      updateTimerDisplay();
+      STATE.examTimerId = setInterval(function () {
+        STATE.examSecondsLeft--;
+        updateTimerDisplay();
+        if (STATE.examSecondsLeft <= 0) {
+          stopExamTimer();
+          submitExam();
+        }
+      }, 1000);
+    }
+    function stopExamTimer() {
+      if (STATE.examTimerId) { clearInterval(STATE.examTimerId); STATE.examTimerId = null; }
+    }
+
+    function setPracticeChromeHidden(hidden) {
+      ['wsMissionCard', 'wsInstructionBar', 'wsTaskRail'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.classList.toggle('ws-hidden', hidden);
+      });
+    }
+
+    function activateExamMode() {
+      STATE.examMode = true;
+      var btn = document.getElementById('wsExamModeToggle');
+      if (btn) { btn.classList.add('ws-exam-active'); btn.textContent = '🎯 Đang thi — bấm để tắt'; }
+      show('wsExamPanel', true);
+      setPracticeChromeHidden(true);
+      startExamTimer();
+      renderExamPanel();
+    }
+    function deactivateExamMode() {
+      STATE.examMode = false;
+      var btn = document.getElementById('wsExamModeToggle');
+      if (btn) { btn.classList.remove('ws-exam-active'); btn.textContent = '🎯 Chế độ thi'; }
+      hide('wsExamPanel');
+      setPracticeChromeHidden(false);
+      stopExamTimer();
+    }
+    function toggleExamMode() {
+      if (STATE.examMode) deactivateExamMode(); else activateExamMode();
+    }
+
+    function gotoRelative(delta) {
+      if (!STATE.currentLesson) return;
+      var idx = STATE.currentSubtaskIdx + delta;
+      idx = Math.max(0, Math.min(STATE.currentLesson.subtasks.length - 1, idx));
+      openSubtask(idx);
+    }
+
+    function toggleReviewFlag() {
+      var s = currentSubtask();
+      if (!s) return;
+      STATE.reviewFlags[s.id] = !STATE.reviewFlags[s.id];
+      renderExamPanel();
+    }
+
+    function renderExamPanel() {
+      if (!STATE.examMode || !STATE.currentLesson) return;
+      var subs = STATE.currentLesson.subtasks;
+      var idx = STATE.currentSubtaskIdx;
+      var s = subs[idx];
+
+      var projectLabel = document.getElementById('wsExamProjectLabel');
+      if (projectLabel) projectLabel.textContent = 'Câu ' + (idx + 1) + '/' + subs.length;
+      var descEl = document.getElementById('wsExamTaskDesc');
+      if (descEl) descEl.textContent = (s.file ? '[' + s.file + '] ' : '') + (s.letter ? s.letter + '. ' : '') + s.desc;
+
+      var flagged = !!STATE.reviewFlags[s.id];
+      var flagBtn = document.getElementById('wsExamFlagBtn');
+      if (flagBtn) {
+        flagBtn.classList.toggle('ws-exam-flag-on', flagged);
+        flagBtn.textContent = flagged ? '🚩 Đã đánh dấu — bấm để bỏ' : '🚩 Đánh dấu xem lại';
+      }
+
+      var grid = document.getElementById('wsExamTaskGrid');
+      if (grid) {
+        grid.innerHTML = subs.map(function (sub, i) {
+          var done = !!STATE.progress[sub.id];
+          var flag = !!STATE.reviewFlags[sub.id];
+          var cls = 'ws-exam-grid-item' +
+            (i === idx ? ' ws-exam-grid-current' : '') +
+            (done ? ' ws-exam-grid-done' : '') +
+            (flag ? ' ws-exam-grid-flag' : '');
+          return '<button type="button" class="' + cls + '" data-idx="' + i + '" title="' + escapeHtml(truncate(sub.desc, 60)) + '">' + (i + 1) + '</button>';
+        }).join('');
+      }
+
+      var prevBtn = document.getElementById('wsExamPrevBtn');
+      var nextBtn = document.getElementById('wsExamNextBtn');
+      if (prevBtn) prevBtn.disabled = idx === 0;
+      if (nextBtn) nextBtn.disabled = idx === subs.length - 1;
+    }
+
+    function submitExam() {
+      stopExamTimer();
+      var subs = STATE.currentLesson.subtasks;
+      var done = subs.filter(function (s) { return STATE.progress[s.id]; }).length;
+      var total = subs.length || 1;
+      var pct = done / total;
+      var score = Math.round(pct * 1000);
+      var pass = score >= 700;
+
+      hide('wsExamPanel');
+      hide('wsLessonScreen');
+      show('wsResultsScreen', true);
+
+      var banner = document.getElementById('wsResultsBanner');
+      if (banner) {
+        banner.textContent = pass ? '✅ ĐẠT (PASS)' : '❌ CHƯA ĐẠT (FAIL)';
+        banner.className = 'ws-results-banner ' + (pass ? 'ws-pass' : 'ws-fail');
+      }
+      var scoreEl = document.getElementById('wsResultsScore');
+      if (scoreEl) scoreEl.textContent = score + ' / 1000';
+
+      var flaggedCount = Object.keys(STATE.reviewFlags).filter(function (id) { return STATE.reviewFlags[id]; }).length;
+      var detailEl = document.getElementById('wsResultsDetail');
+      if (detailEl) {
+        detailEl.innerHTML =
+          '<p>Hoàn thành <strong>' + done + '/' + total + '</strong> nhiệm vụ (' + Math.round(pct * 100) + '%).</p>' +
+          '<p>Mốc điểm đạt (pass mark) theo chuẩn MOS: <strong>700/1000</strong>.</p>' +
+          (flaggedCount ? '<p>⚠ Còn <strong>' + flaggedCount + '</strong> nhiệm vụ bạn đã đánh dấu "xem lại" — xem lại trong lần làm tiếp theo.</p>' : '');
+      }
+    }
+
+    function makeDraggable(panel, handle) {
+      var offsetX = 0, offsetY = 0, dragging = false;
+      handle.addEventListener('mousedown', function (e) {
+        dragging = true;
+        var rect = panel.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+        panel.style.right = 'auto';
+        e.preventDefault();
+      });
+      document.addEventListener('mousemove', function (e) {
+        if (!dragging) return;
+        panel.style.left = Math.max(0, e.clientX - offsetX) + 'px';
+        panel.style.top = Math.max(0, e.clientY - offsetY) + 'px';
+      });
+      document.addEventListener('mouseup', function () { dragging = false; });
+    }
+
+    function injectExamUI() {
+      var header = document.querySelector('.ws-lesson-header');
+      if (header && !document.getElementById('wsExamModeToggle')) {
+        var toggleBtn = document.createElement('button');
+        toggleBtn.type = 'button';
+        toggleBtn.id = 'wsExamModeToggle';
+        toggleBtn.className = 'ws-exam-toggle-btn';
+        toggleBtn.textContent = '🎯 Chế độ thi';
+        toggleBtn.addEventListener('click', toggleExamMode);
+        header.appendChild(toggleBtn);
+      }
+
+      if (!document.getElementById('wsExamPanel')) {
+        var panel = document.createElement('div');
+        panel.id = 'wsExamPanel';
+        panel.className = 'ws-exam-panel ws-hidden';
+        panel.innerHTML =
+          '<div class="ws-exam-panel-header" id="wsExamPanelHeader">' +
+            '<span class="ws-exam-panel-title">📋 <span id="wsExamProjectLabel">Câu 1/1</span></span>' +
+            '<span class="ws-exam-timer" id="wsExamTimer">00:00</span>' +
+          '</div>' +
+          '<div class="ws-exam-panel-body">' +
+            '<div class="ws-exam-task-desc" id="wsExamTaskDesc"></div>' +
+            '<button type="button" id="wsExamFlagBtn" class="ws-exam-flag-btn">🚩 Đánh dấu xem lại</button>' +
+            '<div class="ws-exam-task-grid" id="wsExamTaskGrid"></div>' +
+            '<div class="ws-exam-panel-nav">' +
+              '<button type="button" id="wsExamPrevBtn">← Câu trước</button>' +
+              '<button type="button" id="wsExamNextBtn">Câu sau →</button>' +
+            '</div>' +
+            '<button type="button" id="wsExamSubmitBtn" class="ws-exam-submit-btn">📤 Nộp bài</button>' +
+          '</div>';
+        document.body.appendChild(panel);
+        makeDraggable(panel, document.getElementById('wsExamPanelHeader'));
+        document.getElementById('wsExamFlagBtn').addEventListener('click', toggleReviewFlag);
+        document.getElementById('wsExamPrevBtn').addEventListener('click', function () { gotoRelative(-1); });
+        document.getElementById('wsExamNextBtn').addEventListener('click', function () { gotoRelative(1); });
+        document.getElementById('wsExamSubmitBtn').addEventListener('click', function () {
+          if (window.confirm('Nộp bài và kết thúc phiên thi thử?')) submitExam();
+        });
+        document.getElementById('wsExamTaskGrid').addEventListener('click', function (e) {
+          var btn = e.target.closest ? e.target.closest('.ws-exam-grid-item') : null;
+          if (btn) openSubtask(parseInt(btn.dataset.idx, 10));
+        });
+      }
+
+      if (!document.getElementById('wsResultsScreen')) {
+        var results = document.createElement('div');
+        results.id = 'wsResultsScreen';
+        results.className = 'ws-screen ws-hidden ws-results-screen';
+        results.innerHTML =
+          '<div class="ws-results-card">' +
+            '<div class="ws-results-banner" id="wsResultsBanner"></div>' +
+            '<div class="ws-results-score" id="wsResultsScore"></div>' +
+            '<div class="ws-results-detail" id="wsResultsDetail"></div>' +
+            '<button type="button" class="ws-results-retry" id="wsResultsRetryBtn">🔁 Về danh sách tiết</button>' +
+          '</div>';
+        document.body.appendChild(results);
+        document.getElementById('wsResultsRetryBtn').addEventListener('click', function () {
+          hide('wsResultsScreen');
+          closeLesson();
+        });
+      }
+    }
+
     // ── UTIL show/hide ─────────────────────────────────────────
     function show(id, flex) {
       var el = document.getElementById(id);
@@ -604,6 +849,7 @@
     // ── INIT ───────────────────────────────────────────────────
     function init() {
       loadProgress();
+      injectExamUI();
       document.getElementById('wsBackBtn').addEventListener('click', closeLesson);
       document.getElementById('wsSkipBtn').addEventListener('click', function () {
         var manualBtn = document.getElementById('wsManualConfirmBtn');

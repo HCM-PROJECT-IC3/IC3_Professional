@@ -16,40 +16,50 @@
 
   var RIBBON = {
     'File': [
-      { group: 'Backstage', buttons: ['New', 'Open', 'Save', 'Save As', 'Print', 'Share', 'Export', 'Options', 'Close'] }
+      { group: 'Backstage', buttons: ['New', 'Open', 'Share', 'Save', 'Save As', 'Print', 'Export', 'Close', 'Account', 'Options'] },
+      { group: 'Info', buttons: ['Protect Document'] }
     ],
     'Home': [
       { group: 'Clipboard', buttons: ['Paste', 'Cut', 'Copy', 'Format Painter'] },
       { group: 'Font', buttons: ['Font', 'Arial', 'Font Size', 'Bold', 'Italic', 'Underline', 'Text Highlight Color', 'Font Color'] },
-      { group: 'Paragraph', buttons: ['Bullets', 'Numbering', 'Sort', 'Show/Hide ¶', 'Align Left', 'Center', 'Line and Paragraph Spacing', 'Shading', 'Borders', 'Increase Indent', 'Dialog Box Launcher'] },
+      { group: 'Paragraph', buttons: ['Bullets', 'Checkmark Bullets', 'Numbering', 'Sort', 'Show/Hide ¶', 'Align Left', 'Center', 'Line and Paragraph Spacing', 'Shading', 'Borders', 'Increase Indent', 'Dialog Box Launcher'] },
       { group: 'Styles', buttons: ['Normal', 'No Spacing', 'Heading 1', 'Heading 2', 'Title', 'Emphasis', 'Strong'] },
       { group: 'Editing', buttons: ['Find', 'Replace', 'Select', 'Select All', 'Go To'] }
     ],
     'Insert': [
       { group: 'Pages', buttons: ['Cover Page', 'Blank Page', 'Page Break'] },
       { group: 'Tables', buttons: ['Table', 'Convert Text to Table'] },
-      { group: 'Illustrations', buttons: ['Pictures', 'Shapes', 'SmartArt', 'Chart', 'Screenshot'] },
+      { group: 'Illustrations', buttons: ['Pictures', 'Shapes', '3D Models', 'SmartArt', 'Chart', 'Screenshot'] },
+      { group: 'Media', buttons: ['Online Videos'] },
       { group: 'Links', buttons: ['Insert Link', 'Bookmark', 'Cross-reference'] },
       { group: 'Comments', buttons: ['New Comment'] },
-      { group: 'Header & Footer', buttons: ['Header', 'Footer', 'Page Number'] },
-      { group: 'Text', buttons: ['Text Box', 'Quick Parts', 'WordArt', 'Drop Cap', 'Signature Line', 'Date & Time', 'Object'] },
+      { group: 'Header & Footer', buttons: ['Header', 'Footer', 'Page Number', 'Plain Number 3'] },
+      { group: 'Text', buttons: ['Text Box', 'Banded Quote', 'Retrospect Quote', 'Quick Parts', 'WordArt', 'Drop Cap', 'Signature Line', 'Date & Time', 'Object'] },
       { group: 'Symbols', buttons: ['Equation', 'Symbol'] }
     ],
     'Design': [
       { group: 'Document Formatting', buttons: ['Themes', 'Style Set', 'Colors', 'Fonts'] },
-      { group: 'Page Background', buttons: ['Watermark', 'Page Color', 'Page Borders'] }
+      { group: 'Page Background', buttons: ['Watermark', 'Page Color', 'Fill Effects', 'Page Borders'] }
     ],
     'Layout': [
-      { group: 'Page Setup', buttons: ['Margins', 'Orientation', 'Size', 'Columns', 'Breaks', 'Line Numbers', 'Hyphenation'] },
+      { group: 'Page Setup', buttons: ['Margins', 'Orientation', 'Size', 'Columns', 'Breaks', 'Continuous', 'Line Numbers', 'Hyphenation'] },
       { group: 'Paragraph', buttons: ['Indent Left', 'Indent Right', 'Spacing Before', 'Spacing After', 'Dialog Box Launcher'] },
-      { group: 'Arrange', buttons: ['Position', 'Wrap Text', 'Align', 'Rotate'] }
+      { group: 'Arrange', buttons: ['Position', 'Wrap Text', 'Bring Forward', 'Send Backward', 'Selection Pane', 'Align', 'Group', 'Rotate'] }
     ],
     'References': [
-      { group: 'Table of Contents', buttons: ['Table of Contents', 'Add Text', 'Update Table'] },
-      { group: 'Footnotes', buttons: ['Insert Footnote', 'Insert Endnote'] },
-      { group: 'Citations & Bibliography', buttons: ['Insert Citation', 'Bibliography', 'Style'] },
-      { group: 'Captions', buttons: ['Insert Caption'] },
-      { group: 'Index', buttons: ['Mark Entry', 'Insert Index'] }
+      { group: 'Table of Contents', buttons: ['Table of Contents', 'Automatic Table 2', 'Add Text', 'Update Table'] },
+      { group: 'Footnotes', buttons: ['Insert Footnote', 'Insert Endnote', 'Next Footnote', 'Show Notes'] },
+      { group: 'Citations & Bibliography', buttons: ['Insert Citation', 'Manage Sources', 'Style', 'Bibliography'] },
+      { group: 'Captions', buttons: ['Insert Caption', 'Insert Table of Figures', 'Cross-reference'] },
+      { group: 'Index', buttons: ['Mark Entry', 'Insert Index', 'Update Index'] },
+      { group: 'Table of Authorities', buttons: ['Mark Citation', 'Insert Table of Authorities'] }
+    ],
+    'Mailings': [
+      { group: 'Create', buttons: ['Envelopes', 'Labels'] },
+      { group: 'Start Mail Merge', buttons: ['Start Mail Merge', 'Select Recipients', 'Edit Recipient List'] },
+      { group: 'Write & Insert Fields', buttons: ['Highlight Merge Fields', 'Address Block', 'Greeting Line', 'Insert Merge Field', 'Rules', 'Match Fields'] },
+      { group: 'Preview Results', buttons: ['Preview Results', 'Find Recipient', 'Check for Errors'] },
+      { group: 'Finish', buttons: ['Finish & Merge'] }
     ],
     'Review': [
       { group: 'Proofing', buttons: ['Spelling & Grammar', 'Word Count'] },
@@ -60,7 +70,8 @@
     'View': [
       { group: 'Views', buttons: ['Read Mode', 'Print Layout', 'Web Layout', 'Outline', 'Draft'] },
       { group: 'Show', buttons: ['Ruler', 'Gridlines', 'Navigation Pane'] },
-      { group: 'Zoom', buttons: ['Zoom', '100%'] }
+      { group: 'Zoom', buttons: ['Zoom', '100%'] },
+      { group: 'Window', buttons: ['New Window', 'Arrange All', 'Split'] }
     ],
     // ---- Contextual tabs (chỉ hiện khi đang thao tác đối tượng liên quan,
     // nhưng để đơn giản hoá mô phỏng, engine cho phép chọn thẳng các tab
@@ -68,7 +79,7 @@
     'Picture Format': [
       { group: 'Adjust', buttons: ['Corrections', 'Color', 'Artistic Effects', 'Compress Pictures'] },
       { group: 'Picture Styles', buttons: ['Picture Border', 'Picture Effects', 'Picture Layout'] },
-      { group: 'Arrange', buttons: ['Position', 'Wrap Text'] }
+      { group: 'Arrange', buttons: ['Position', 'Wrap Text', 'Rotate', 'More Rotation Options'] }
     ],
     'Table Design': [
       { group: 'Table Styles', buttons: ['List Table 1 Light - Accent 3', 'Grid Table', 'Shading', 'Borders'] }
@@ -82,11 +93,11 @@
       { group: 'Close', buttons: ['Close Header and Footer'] }
     ],
     'Shape Format': [
-      { group: 'Shape Styles', buttons: ['Shape Fill', 'Shape Outline', 'Shape Effects'] },
+      { group: 'Shape Styles', buttons: ['Subtle Effect - Orange', 'Shape Fill', 'Shape Outline', 'Shape Effects'] },
       { group: 'Arrange', buttons: ['Position', 'Wrap Text', 'More Layout Options'] }
     ]
   };
-  var TAB_ORDER = ['File', 'Home', 'Insert', 'Design', 'Layout', 'References', 'Review', 'View'];
+  var TAB_ORDER = ['File', 'Home', 'Insert', 'Design', 'Layout', 'References', 'Mailings', 'Review', 'View'];
   var CONTEXTUAL_TABS = ['Picture Format', 'Table Design', 'Table Layout', 'Header & Footer', 'Shape Format'];
 
   var ICONS = {
@@ -123,14 +134,29 @@
     'convert to text': '📝', 'formula': '∑', 'insert below': '⬇️', 'insert above': '⬆️',
     'close header and footer': '✖️',
     'shape fill': '🎨', 'shape outline': '▭', 'shape effects': '✨', 'more layout options': '⚙️',
-    'bold': 'B', 'italic': 'I', 'underline': 'U'
+    'bold': 'B', 'italic': 'I', 'underline': 'U',
+    'account': '👤', 'protect document': '🔒', 'checkmark bullets': '✅',
+    '3d models': '📦', 'online videos': '🎬', 'plain number 3': '①',
+    'fill effects': '🎨', 'continuous': '⏎',
+    'bring forward': '⬆️', 'send backward': '⬇️', 'selection pane': '🗂️', 'group': '🔗',
+    'automatic table 2': '📑', 'next footnote': '¹', 'show notes': '👁️',
+    'manage sources': '📚', 'insert table of figures': '🏷️',
+    'update index': '🔄', 'mark citation': '⚖️', 'insert table of authorities': '⚖️',
+    'more rotation options': '↻',
+    'envelopes': '✉️', 'labels': '🏷️', 'start mail merge': '📧', 'select recipients': '👥',
+    'edit recipient list': '📋', 'highlight merge fields': '🖍️', 'address block': '🏠',
+    'greeting line': '👋', 'insert merge field': '➕', 'rules': '📏', 'match fields': '🔀',
+    'preview results': '👁️', 'find recipient': '🔍', 'check for errors': '⚠️', 'finish & merge': '✅',
+    'new window': '🪟', 'arrange all': '▦', 'split': '⬍',
+    'banded quote': '📝', 'retrospect quote': '📝', 'subtle effect - orange': '🟧'
   };
   var SMALL_GLYPH_LABELS = { 'bold': 1, 'italic': 1, 'underline': 1 };
   var SMALL_ICON_LABELS = {
     'cut': 1, 'copy': 1, 'format painter': 1, 'show/hide ¶': 1, 'align left': 1,
     'center': 1, 'shading': 1, 'borders': 1, 'increase indent': 1,
     'dialog box launcher': 1, 'text highlight color': 1, 'font color': 1,
-    'bullets': 1, 'numbering': 1, 'add text': 1, 'delete': 1, 'next': 1
+    'bullets': 1, 'numbering': 1, 'add text': 1, 'delete': 1, 'next': 1,
+    'bring forward': 1, 'send backward': 1, 'selection pane': 1, 'group': 1
   };
   var PILL_LABELS = {
     'font': 1, 'arial': 1, 'font size': 1, 'normal': 1, 'no spacing': 1,

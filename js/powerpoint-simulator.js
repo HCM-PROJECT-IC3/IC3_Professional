@@ -16,22 +16,22 @@
 
   var RIBBON = {
     'File': [
-      { group: 'Backstage', buttons: ['New', 'Open', 'Save', 'Save As', 'Print', 'Share', 'Export', 'Options', 'Close'] }
+      { group: 'Backstage', buttons: ['New', 'Open', 'Info', 'Save', 'Save As', 'Print', 'Share', 'Export', 'Options', 'Close'] }
     ],
     'Home': [
       { group: 'Clipboard', buttons: ['Paste', 'Cut', 'Copy', 'Format Painter'] },
-      { group: 'Slides', buttons: ['New Slide', 'Layout', 'Reset', 'Section'] },
-      { group: 'Font', buttons: ['Font', 'Font Size', 'Bold', 'Italic', 'Underline', 'Font Color'] },
-      { group: 'Paragraph', buttons: ['Bullets', 'Numbering', 'Align Left', 'Center', 'Line Spacing'] },
+      { group: 'Slides', buttons: ['New Slide', 'Layout', 'Reset', 'Section', 'Reuse Slides', 'Slides from Outline'] },
+      { group: 'Font', buttons: ['Font', 'Font Size', 'Bold', 'Italic', 'Underline', 'Font Color', 'Equalize Character Height'] },
+      { group: 'Paragraph', buttons: ['Bullets', 'Numbering', 'Align Left', 'Center', 'Line Spacing', 'Convert to SmartArt'] },
       { group: 'Drawing', buttons: ['Shapes', 'Arrange', 'Quick Styles'] },
       { group: 'Editing', buttons: ['Find', 'Replace', 'Select'] }
     ],
     'Insert': [
       { group: 'Slides', buttons: ['New Slide'] },
       { group: 'Tables', buttons: ['Table'] },
-      { group: 'Images', buttons: ['Pictures', 'Screenshot', 'Photo Album'] },
-      { group: 'Illustrations', buttons: ['Shapes', 'Icons', 'SmartArt', 'Chart'] },
-      { group: 'Links', buttons: ['Link', 'Action'] },
+      { group: 'Images', buttons: ['Pictures', 'This Device', 'Screenshot', 'Photo Album'] },
+      { group: 'Illustrations', buttons: ['Shapes', 'Icons', 'SmartArt', 'Chart', 'Forward or Next'] },
+      { group: 'Links', buttons: ['Link', 'Action', 'Zoom', 'Summary Zoom'] },
       { group: 'Comments', buttons: ['New Comment'] },
       { group: 'Text', buttons: ['Text Box', 'Header & Footer', 'WordArt', 'Date & Time', 'Object'] },
       { group: 'Symbols', buttons: ['Equation', 'Symbol'] },
@@ -43,16 +43,16 @@
       { group: 'Customize', buttons: ['Slide Size', 'Format Background'] }
     ],
     'Transitions': [
-      { group: 'Transition to This Slide', buttons: ['None', 'Fade', 'Push', 'Wipe'] },
+      { group: 'Transition to This Slide', buttons: ['None', 'Fade', 'Push', 'Wipe', 'Ripple'] },
       { group: 'Timing', buttons: ['Sound', 'Duration', 'Apply To All'] }
     ],
     'Animations': [
-      { group: 'Animation', buttons: ['None', 'Appear', 'Fade', 'Fly In'] },
+      { group: 'Animation', buttons: ['None', 'Appear', 'Fade', 'Fly In', 'Bounce', 'From Bottom-Right'] },
       { group: 'Advanced Animation', buttons: ['Add Animation', 'Animation Pane', 'Trigger'] },
-      { group: 'Timing', buttons: ['Start', 'Duration', 'Reorder Animation'] }
+      { group: 'Timing', buttons: ['Start', 'Duration', 'Reorder Animation', 'After Previous'] }
     ],
     'Slide Show': [
-      { group: 'Start Slide Show', buttons: ['From Beginning', 'From Current Slide'] },
+      { group: 'Start Slide Show', buttons: ['From Beginning', 'From Current Slide', 'Custom Slide Show', 'Record Slide Show'] },
       { group: 'Set Up', buttons: ['Set Up Slide Show', 'Hide Slide', 'Rehearse Timings'] },
       { group: 'Monitors', buttons: ['Resolution'] }
     ],
@@ -63,30 +63,54 @@
     ],
     'View': [
       { group: 'Presentation Views', buttons: ['Normal', 'Slide Sorter', 'Notes Page', 'Reading View'] },
+      { group: 'Master Views', buttons: ['Slide Master', 'Handout Master', 'Notes Master'] },
       { group: 'Show', buttons: ['Ruler', 'Gridlines'] },
       { group: 'Zoom', buttons: ['Zoom', '100%'] }
     ],
     // ---- Tab ngữ cảnh ----
     'Table Design': [
       { group: 'Table Styles', buttons: ['Medium Style 4 - Accent 6', 'Medium Style 2 - Accent 1'] },
-      { group: 'Table Style Options', buttons: ['Header Row', 'Banded Rows', 'Total Row'] }
+      { group: 'Table Style Options', buttons: ['Header Row', 'Banded Rows', 'Total Row'] },
+      { group: 'Borders', buttons: ['Outside Borders'] }
     ],
     'Table Layout': [
       { group: 'Rows & Columns', buttons: ['Insert Below', 'Insert Above', 'Delete'] },
       { group: 'Merge', buttons: ['Merge Cells', 'Split Cells'] }
     ],
     'Chart Design': [
+      { group: 'Type', buttons: ['Change Chart Type'] },
       { group: 'Chart Layouts', buttons: ['Add Chart Element', 'Quick Layout'] },
       { group: 'Chart Styles', buttons: ['Change Colors'] },
       { group: 'Data', buttons: ['Switch Row/Column', 'Select Data'] }
     ],
     'Picture Format': [
-      { group: 'Adjust', buttons: ['Corrections', 'Color', 'Artistic Effects'] },
-      { group: 'Picture Styles', buttons: ['Picture Border', 'Picture Effects'] }
+      { group: 'Adjust', buttons: ['Corrections', 'Color', 'Artistic Effects', 'Crop', 'Change Picture'] },
+      { group: 'Picture Styles', buttons: ['Picture Border', 'Picture Effects', 'Simple Frame', 'Oval'] },
+      { group: 'Arrange', buttons: ['Align', 'Align Top'] },
+      { group: 'Accessibility', buttons: ['Alt Text'] }
+    ],
+    'Shape Format': [
+      { group: 'Insert Shapes', buttons: ['Edit Shape'] },
+      { group: 'Shape Styles', buttons: ['Subtle Effect - Orange', 'Moderate Effect - Orange', 'Subtle Effect - Tan'] },
+      { group: 'Text', buttons: ['Align Text'] },
+      { group: 'Arrange', buttons: ['Arrange'] }
+    ],
+    'Slide Master': [
+      { group: 'Edit Theme', buttons: ['Themes', 'Colors', 'Fonts'] },
+      { group: 'Background', buttons: ['Colors', 'Fonts', 'Background Styles'] },
+      { group: 'Master Layout', buttons: ['Insert Placeholder', 'Picture', 'Media'] },
+      { group: 'Close', buttons: ['Close Master View'] }
+    ],
+    'Draw': [
+      { group: 'Tools', buttons: ['Pen', 'Highlighter', 'Eraser'] }
+    ],
+    'Playback': [
+      { group: 'Video Options', buttons: ['Trim Video', 'Start'] },
+      { group: 'Audio Options', buttons: ['Trim Audio', 'Start'] }
     ]
   };
   var TAB_ORDER = ['File', 'Home', 'Insert', 'Design', 'Transitions', 'Animations', 'Slide Show', 'Review', 'View'];
-  var CONTEXTUAL_TABS = ['Table Design', 'Table Layout', 'Chart Design', 'Picture Format'];
+  var CONTEXTUAL_TABS = ['Table Design', 'Table Layout', 'Chart Design', 'Picture Format', 'Shape Format', 'Slide Master', 'Draw', 'Playback'];
 
   var ICONS = {
     'new': '🆕', 'open': '📂', 'save': '💾', 'save as': '💾', 'print': '🖨️',
@@ -118,7 +142,21 @@
     'switch row/column': '⇄', 'select data': '📊',
     'corrections': '☀️', 'color': '🎨', 'artistic effects': '🖌️',
     'picture border': '▭', 'picture effects': '✨',
-    'bold': 'B', 'italic': 'I', 'underline': 'U'
+    'bold': 'B', 'italic': 'I', 'underline': 'U',
+    'info': 'ℹ️', 'reuse slides': '🔁', 'slides from outline': '📄',
+    'equalize character height': '🔤', 'convert to smartart': '🔷',
+    'this device': '💻', 'forward or next': '⏭️', 'zoom': '🔎', 'summary zoom': '🔎',
+    'ripple': '🌊', 'bounce': '⛹️', 'from bottom-right': '↖️', 'after previous': '⏱️',
+    'custom slide show': '🎬', 'record slide show': '⏺️',
+    'slide master': '🗂️', 'handout master': '🗂️', 'notes master': '🗂️',
+    'outside borders': '▦', 'change chart type': '📊',
+    'crop': '✂️', 'change picture': '🖼️', 'simple frame': '🖼️', 'oval': '⭕',
+    'align': '▤', 'align top': '⬆️', 'alt text': '🏷️',
+    'edit shape': '✏️', 'subtle effect - orange': '🟧', 'moderate effect - orange': '🟧',
+    'subtle effect - tan': '🟫', 'align text': '▤',
+    'media': '🎬', 'insert placeholder': '⬛', 'close master view': '✖️',
+    'colors': '🎨', 'fonts': '🔤', 'background styles': '🖼️', 'picture': '🖼️',
+    'pen': '🖊️', 'highlighter': '🖍️', 'eraser': '🧹', 'trim video': '✂️', 'trim audio': '✂️'
   };
   var SMALL_GLYPH_LABELS = { 'bold': 1, 'italic': 1, 'underline': 1 };
   var SMALL_ICON_LABELS = {
@@ -129,7 +167,7 @@
     'font': 1, 'font size': 1,
     'medium style 4 - accent 6': 1, 'medium style 2 - accent 1': 1,
     'header row': 1, 'banded rows': 1, 'total row': 1,
-    'none': 1, 'fade': 1, 'push': 1, 'wipe': 1, 'appear': 1, 'fly in': 1,
+    'none': 1, 'fade': 1, 'push': 1, 'wipe': 1, 'ripple': 1, 'appear': 1, 'fly in': 1, 'bounce': 1,
     'ruler': 1, 'gridlines': 1, '100%': 1
   };
 

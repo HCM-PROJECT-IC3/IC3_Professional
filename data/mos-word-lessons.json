@@ -187,7 +187,7 @@
        "type": "ribbon_tab",
        "tab": "Insert",
        "group": null,
-       "control": "tab Insert",
+       "control": null,
        "text": "Trong đoạn văn thứ nhất, tìm và chọn văn bản Fusion Tomo Incorporated rồi click tab Insert."
       },
       {
@@ -230,7 +230,7 @@
        "type": "ribbon_button",
        "tab": "Insert",
        "group": "Tables",
-       "control": "tab Insert",
+       "control": "Table",
        "text": "Click tab Insert, sau đó trong nhóm Tables, click Table."
       },
       {
@@ -291,7 +291,7 @@
        "type": "ribbon_tab",
        "tab": "Layout",
        "group": null,
-       "control": "tab Layout",
+       "control": null,
        "text": "Chọn đoạn văn bản được tô sáng màu vàng và click tab Layout."
       },
       {
@@ -341,7 +341,7 @@
        "type": "ribbon_tab",
        "tab": "First Letter",
        "group": null,
-       "control": "tab First Letter",
+       "control": null,
        "text": "Trong cửa sổ AutoCorrect, click nút Exceptions... và chọn tab First Letter."
       },
       {
@@ -467,7 +467,7 @@
        "type": "ribbon_button",
        "tab": "Insert",
        "group": "Text",
-       "control": "tab Insert",
+       "control": "Text Box",
        "text": "Click tab Insert. Trong nhóm Text, click Text Box."
       },
       {
@@ -523,7 +523,7 @@
        "type": "ribbon_tab",
        "tab": "File",
        "group": null,
-       "control": "tab File",
+       "control": null,
        "text": "Click tab File."
       },
       {
@@ -556,7 +556,7 @@
        "type": "ribbon_tab",
        "tab": "References",
        "group": null,
-       "control": "tab References",
+       "control": null,
        "text": "Đến cuối dòng đầu tiên trên trang 2 và click tab References."
       },
       {
@@ -575,7 +575,7 @@
        "type": "ribbon_tab",
        "tab": "Insert",
        "group": null,
-       "control": "tab Insert",
+       "control": null,
        "text": "Di chuyển con trỏ đến trang được đánh số 1, sau đó click tab Insert."
       },
       {
@@ -629,7 +629,7 @@
        "type": "ribbon_tab",
        "tab": "References",
        "group": null,
-       "control": "tab References",
+       "control": null,
        "text": "Click tab References."
       },
       {
@@ -675,12 +675,12 @@
        "type": "ribbon_tab",
        "tab": "File",
        "group": null,
-       "control": "tab File",
+       "control": null,
        "text": "Click tab File."
       },
       {
        "type": "ribbon_button",
-       "tab": null,
+       "tab": "File",
        "group": "Info",
        "control": "Protect Document",
        "text": "Trong nhóm Info, chọn Protect Document."
@@ -727,7 +727,7 @@
        "type": "ribbon_tab",
        "tab": "Home",
        "group": null,
-       "control": "tab Home",
+       "control": null,
        "text": "Trên thanh Ribbon, chọn tab Home."
       },
       {
@@ -751,7 +751,7 @@
        "type": "ribbon_tab",
        "tab": "Insert",
        "group": null,
-       "control": "tab Insert",
+       "control": null,
        "text": "Click tab Insert."
       },
       {
@@ -817,7 +817,7 @@
        "type": "ribbon_button",
        "tab": "Home",
        "group": "Paragraph",
-       "control": "checkmark",
+       "control": "Checkmark Bullets",
        "text": "Trên tab Home, trong nhóm Paragraph, click menu thả xuống Bullets và chọn tùy chọn checkmark."
       }
      ]
@@ -889,7 +889,7 @@
        "type": "ribbon_tab",
        "tab": "Review",
        "group": null,
-       "control": "tab Review",
+       "control": null,
        "text": "Click tab Review."
       },
       {
@@ -908,7 +908,7 @@
        "type": "ribbon_tab",
        "tab": "View",
        "group": null,
-       "control": "tab View",
+       "control": null,
        "text": "Click tab View."
       },
       {
@@ -956,7 +956,7 @@
        "type": "ribbon_tab",
        "tab": "References",
        "group": null,
-       "control": "tab References",
+       "control": null,
        "text": "Đặt con trỏ ở đầu trang và click tab References."
       },
       {
@@ -987,7 +987,7 @@
        "type": "ribbon_tab",
        "tab": "Design",
        "group": null,
-       "control": "tab Design",
+       "control": null,
        "text": "Click tab Design."
       },
       {
@@ -998,8 +998,7 @@
        "text": "Trong nhóm Page Background, click Page Color và chọn Fill Effects."
       },
       {
-       "type": "ribbon_tab",
-       "tab": "Texture",
+       "type": "dialog_choice",
        "group": null,
        "control": "Parchment",
        "text": "Vào tab Texture, chọn tùy chọn Parchment, rồi click OK."
@@ -1032,9 +1031,9 @@
      "desc": "Mã hóa tài liệu này bằng mật khẩu starship.",
      "steps": [
       {
-       "type": "ribbon_tab",
+       "type": "ribbon_button",
        "tab": "File",
-       "group": null,
+       "group": "Info",
        "control": "Protect Document",
        "text": "Từ tab File, click vào nhóm Info và chọn Protect Document."
       },
@@ -1064,7 +1063,7 @@
        "type": "ribbon_tab",
        "tab": "Layout",
        "group": null,
-       "control": "tab Layout",
+       "control": null,
        "text": "Click tab Layout."
       },
       {
@@ -1091,7 +1090,7 @@
        "type": "ribbon_tab",
        "tab": "Insert",
        "group": null,
-       "control": "tab Insert",
+       "control": null,
        "text": "Click tab Insert."
       },
       {
@@ -1108,7 +1107,7 @@
       },
       {
        "type": "ribbon_button",
-       "tab": null,
+       "tab": "Insert",
        "group": "Simple",
        "control": "Plain Number 3",
        "text": "Trong nhóm Simple, click Plain Number 3."
@@ -1125,7 +1124,7 @@
        "type": "ribbon_tab",
        "tab": "File",
        "group": null,
-       "control": "tab File",
+       "control": null,
        "text": "Click tab File."
       },
       {
@@ -1156,7 +1155,7 @@
        "type": "ribbon_tab",
        "tab": "Home",
        "group": null,
-       "control": "tab Home",
+       "control": null,
        "text": "Click tab Home."
       },
       {
@@ -1180,7 +1179,7 @@
        "type": "ribbon_tab",
        "tab": "Home",
        "group": null,
-       "control": "tab Home",
+       "control": null,
        "text": "Xác định đoạn trích dẫn bắt đầu bằng Start long và kết thúc bằng template. Tô sáng (highlight) đoạn trích này.Click tab Home."
       },
       {
@@ -1239,7 +1238,7 @@
        "type": "ribbon_tab",
        "tab": "Home",
        "group": null,
-       "control": "tab Home",
+       "control": null,
        "text": "Click tab Home."
       },
       {
@@ -1278,7 +1277,7 @@
        "type": "ribbon_tab",
        "tab": "Home",
        "group": null,
-       "control": "tab Home",
+       "control": null,
        "text": "Click tab Home."
       },
       {
@@ -1305,7 +1304,7 @@
        "type": "ribbon_tab",
        "tab": "Design",
        "group": null,
-       "control": "tab Design",
+       "control": null,
        "text": "Click tab Design."
       },
       {
@@ -1332,7 +1331,7 @@
        "type": "ribbon_tab",
        "tab": "Insert",
        "group": null,
-       "control": "tab Insert",
+       "control": null,
        "text": "Click tab Insert."
       },
       {
@@ -1423,7 +1422,7 @@
        "type": "ribbon_tab",
        "tab": "Review",
        "group": null,
-       "control": "tab Review",
+       "control": null,
        "text": "Click tab Review."
       },
       {
@@ -1445,7 +1444,7 @@
        "type": "ribbon_tab",
        "tab": "Review",
        "group": null,
-       "control": "tab Review",
+       "control": null,
        "text": "Click tab Review."
       },
       {
@@ -1847,14 +1846,14 @@
        "type": "ribbon_tab",
        "tab": "Proofing",
        "group": null,
-       "control": "tab Proofing",
+       "control": null,
        "text": "Trong hộp thoại Word Options, chọn tab Proofing."
       },
       {
        "type": "ribbon_tab",
        "tab": "AutoCorrect",
        "group": null,
-       "control": "tab Initial Caps",
+       "control": null,
        "text": "Tìm nhóm AutoCorrect Options → bấm AutoCorrect Options....Trong tab AutoCorrect, bấm nút Exceptions....Chọn tab Initial Caps."
       },
       {
@@ -2149,7 +2148,7 @@
        "type": "ribbon_tab",
        "tab": "Proofing",
        "group": null,
-       "control": "tab Proofing",
+       "control": null,
        "text": "Trong hộp thoại Word Options, chọn tab Proofing."
       },
       {
@@ -2237,7 +2236,7 @@
        "type": "ribbon_button",
        "tab": "Insert",
        "group": "Text",
-       "control": "tab Insert",
+       "control": "Text Box",
        "text": "Nhấp vào tab Insert, trong nhóm Text, nhấp vào menu thả xuống Text Box, và chọn Draw Text Box."
       },
       {
@@ -2464,7 +2463,7 @@
        "type": "ribbon_button",
        "tab": null,
        "group": "Tables",
-       "control": "Insert tab",
+       "control": "Table",
        "text": "Nhấp vào Insert tab, đi đến nhóm Tables, chọn menu xổ xuống Table, và nhấp Convert text to table."
       },
       {
@@ -2604,9 +2603,9 @@
       },
       {
        "type": "ribbon_button",
-       "tab": null,
+       "tab": "Picture Format",
        "group": "Picture Styles",
-       "control": "Picture Format contextual tab",
+       "control": "Picture Effects",
        "text": "Nhấp vào Picture Format contextual tab, đi đến nhóm Picture Styles, nhấp vào menu xổ xuống Picture Effects, chọn Glow, chọn More Glow Colors, và chọn Black, Text 1."
       }
      ]
@@ -2717,9 +2716,9 @@
       },
       {
        "type": "ribbon_button",
-       "tab": null,
+       "tab": "Review",
        "group": "Comments",
-       "control": "Review tab",
+       "control": "New Comment",
        "text": "Nhấp vào Review tab, đi đến nhóm Comments, và nhấp New Comment."
       },
       {
@@ -2736,7 +2735,7 @@
      "steps": [
       {
        "type": "ribbon_button",
-       "tab": null,
+       "tab": "References",
        "group": "Table of Contents",
        "control": "Automatic Table 2",
        "text": "Đặt cursor ở đầu document. Trong References tab, đi đến nhóm Table of Contents, nhấp vào menu xổ xuống Table of Contents, và chọn Automatic Table 2. Nếu có cửa sổ pop-up hướng dẫn cách thêm mục, nhấp OK."
@@ -2747,16 +2746,16 @@
       },
       {
        "type": "ribbon_button",
-       "tab": null,
+       "tab": "References",
        "group": "Table of Contents",
-       "control": "References tab",
+       "control": "Add Text",
        "text": "Sau khi highlight một tiêu đề, nhấp vào References tab, đi đến nhóm Table of Contents, và chọn menu xổ xuống Add Text. Chọn Level 2."
       },
       {
        "type": "ribbon_button",
-       "tab": null,
+       "tab": "References",
        "group": "Table of Contents",
-       "control": "Update Table trong References tab",
+       "control": "Update Table",
        "text": "Khi tất cả các tiêu đề đã được đổi thành Level 2, nhấp Update Table trong References tab, nhóm Table of Contents."
       }
      ]
@@ -3487,7 +3486,7 @@
       },
       {
        "type": "ribbon_button",
-       "tab": "Layout",
+       "tab": "Table Layout",
        "group": "Rows & Columns",
        "control": "Insert Below",
        "text": "Vào tab ngữ cảnh Layout, trong nhóm Rows & Columns, nhấp Insert Below."
@@ -3512,7 +3511,7 @@
        "type": "ribbon_button",
        "tab": "Insert",
        "group": "Text",
-       "control": "Field",
+       "control": "Quick Parts",
        "text": "Vào tab Insert, trong nhóm Text, nhấp vào nút xổ xuống Explore Quick Parts → chọn Field."
       },
       {
@@ -3840,7 +3839,7 @@
        "type": "ribbon_button",
        "tab": "Insert",
        "group": "Text",
-       "control": "Close",
+       "control": "Object",
        "text": "Nhấp Go To → sau đó nhấp Close. Vào tab Insert, nhóm Text, nhấp menu xổ xuống Object → chọn Text from File."
       },
       {
