@@ -37,6 +37,7 @@ window.addEventListener('edu:ready', ({ detail }) => {
   show('adminUsersLink', role === 'admin');
   show('imageManagerLink', role === 'admin');
   show('teacherDashboardLink', role === 'admin' || role === 'teacher');
+  show('docsSchoolYearLink', role === 'admin' || role === 'teacher');
   show('rosterManagerLink', role === 'admin' || role === 'coordinator');
   // "🚗 Điều phối giáo viên" (teaching_coordinator) được XEM (không sửa)
   // Lịch tuần + TKB lớp + tab "📊 Báo cáo"/"🚗 Hỗ trợ xăng xe" ở

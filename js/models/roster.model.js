@@ -11,7 +11,13 @@
 
    3 collection MỚI:
    - "courses"  : { id, name, level("thcs"|"tieu_hoc"), createdAt }
-   - "classes"  : { id, name, courseId, teacherId, teacherName, studentCount, createdAt }
+   - "classes"  : { id, name, school, courseId, teacherId, teacherName, studentCount, createdAt }
+     ("school" thêm sau — TRƯỚC ĐÂY thiếu field này khiến 2 trường cùng
+     đặt tên lớp giống nhau (rất phổ biến, VD "4A1") bị GỘP CHUNG 1 document
+     "classes" toàn hệ thống, kéo theo teacherId của lớp đó bị dùng SAI cho
+     học sinh ở TRƯỜNG KHÁC khi Nạp Excel — xem classifyImportRows() +
+     phần "1) Tạo trước các lớp còn thiếu" trong js/roster-manager.js, nơi
+     đã sửa để so khớp/tạo lớp theo cặp (school, name) thay vì chỉ name.)
    - "students_roster" : { id (mssv hoặc auto), mssv, name, className,
        school, classId, teacherId, teacherName, avatarUrl, status, createdAt }
 

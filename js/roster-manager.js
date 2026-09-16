@@ -354,7 +354,7 @@
     document.getElementById('classCount').textContent = state.classes.length;
     const tbody = document.getElementById('classRows');
     if (!state.classes.length) {
-      tbody.innerHTML = '<tr><td colspan="5" class="empty-cell">Chưa có lớp học nào.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-cell">Chưa có lớp học nào.</td></tr>';
       return;
     }
     tbody.innerHTML = state.classes.map((cl) => {
@@ -362,6 +362,7 @@
       const studentCount = state.students.filter((s) => s.classId === cl.id).length;
       return `<tr>
         <td>${esc(cl.name)}</td>
+        <td>${esc(cl.school || '—')}</td>
         <td>${esc(course ? course.name : '—')}</td>
         <td>${esc(cl.teacherName || '—')}</td>
         <td>${studentCount}</td>
@@ -391,10 +392,22 @@
       `<option value="${t.id}" ${cls && cls.teacherId === t.id ? 'selected' : ''}>${esc(t.name || t.email)}</option>`
     ).join('');
 
+    // Danh sách trường gợi ý (datalist) lấy từ chính học sinh đang có trong
+    // roster — KHÔNG bắt buộc chọn đúng 1 trong số này (school vẫn là chuỗi
+    // tự do, giống f-student-school), chỉ để tránh gõ sai chính tả tạo ra
+    // 1 "trường" mới lệch khỏi trường đã có (xem chú thích roster.model.js
+    // về lỗi lớp trùng tên bị gộp nhầm giữa các trường).
+    const knownSchools = [...new Set(state.students.map((s) => s.school).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'vi'));
+
     document.getElementById('modalBody').innerHTML = `
       <div class="form-group">
         <label for="f-class-name">Tên lớp</label>
         <input type="text" id="f-class-name" class="form-input" placeholder="VD: 6A1" value="${esc(cls ? cls.name : '')}">
+      </div>
+      <div class="form-group">
+        <label for="f-class-school">Trường</label>
+        <input type="text" id="f-class-school" class="form-input" list="f-class-school-list" placeholder="VD: TIH Nguyễn Trung Ngạn" value="${esc(cls ? cls.school || '' : '')}">
+        <datalist id="f-class-school-list">${knownSchools.map((s) => `<option value="${esc(s)}">`).join('')}</datalist>
       </div>
       <div class="form-group">
         <label for="f-class-course">Khoá học</label>
@@ -409,11 +422,12 @@
 
   async function saveClass() {
     const name = document.getElementById('f-class-name').value.trim();
+    const school = document.getElementById('f-class-school').value.trim();
     const courseId = document.getElementById('f-class-course').value;
     const teacherId = document.getElementById('f-class-teacher').value;
     const teacherName = teacherId ? (state.teachers.find((t) => t.id === teacherId) || {}).name || '' : '';
     if (!name) { toast('⚠️ Vui lòng nhập tên lớp'); return; }
-    const data = { name, courseId, teacherId, teacherName };
+    const data = { name, school, courseId, teacherId, teacherName };
     try {
       if (modalMode.editingId) {
         await window.EduRepositories.class.update(modalMode.editingId, data);
@@ -820,12 +834,15 @@
           && stripDiacritics(s.className || '') === stripDiacritics(r.className || ''));
       }
 
-      // "classes" KHÔNG có field trường (schema không hỗ trợ, xem
-      // firestore.rules) nên vẫn chỉ so khớp theo tên lớp — 2 trường cùng
-      // tên lớp "4A5" VẪN dùng chung 1 document "classes" (hạn chế đã biết,
-      // KHÔNG sửa trong đợt này vì cần đổi schema + di trú dữ liệu, phạm vi
-      // rộng hơn lỗi học sinh bị ghi đè đang sửa ở đây).
-      const matchedClass = state.classes.find((c) => stripDiacritics(c.name) === stripDiacritics(r.className || ''));
+      // So khớp lớp THEO CẢ TRƯỜNG lẫn tên — nếu chỉ so tên, 2 trường cùng
+      // đặt tên lớp giống nhau (rất phổ biến, VD "4A1") sẽ bị coi là CÙNG 1
+      // lớp, kéo theo teacherId của lớp đó (Nạp từ Excel, "TÊN GV" trong
+      // sheet) bị gán NHẦM cho học sinh ở TRƯỜNG KHÁC — đây chính là lỗi
+      // "1 giáo viên bị hiện thêm trường không dạy" ở admin-users.html (mục
+      // "Trường được xem" tự suy từ students_roster.teacherId). Xem thêm
+      // js/models/roster.model.js.
+      const matchedClass = state.classes.find((c) => stripDiacritics(c.name) === stripDiacritics(r.className || '')
+        && stripDiacritics(c.school || '') === stripDiacritics(r.school || ''));
       return Object.assign({}, r, {
         action: existing ? 'update' : 'new',
         existingId: existing ? existing.id : null,
@@ -977,30 +994,39 @@
         }
       }
 
-      // 1) Tạo trước các lớp còn thiếu (mỗi tên lớp mới chỉ tạo 1 lần) —
-      // với định dạng classSheet, gắn luôn courseId vừa có ở bước 0 và
-      // GV phụ trách đọc được từ ô "TÊN GV ..." trong sheet (đối chiếu tên
-      // với danh sách tài khoản giáo viên đã duyệt để lấy đúng teacherId,
-      // không có mới lưu tạm teacherName để Admin gán lại thủ công sau).
-      const classIdByName = {};
-      const classTeacherByName = {};
-      const newClassNames = [...new Set(rows.filter((r) => r.willCreateClass).map((r) => r.className))];
-      for (const name of newClassNames) {
+      // 1) Tạo trước các lớp còn thiếu (mỗi cặp TRƯỜNG+tên lớp mới chỉ tạo
+      // 1 lần — dùng cặp (school, name) làm khoá, KHÔNG chỉ tên, vì nhiều
+      // trường đặt tên lớp giống nhau, VD "4A1"; nếu chỉ khoá theo tên thì
+      // "4A1" của trường A và "4A1" của trường B lại dùng chung 1
+      // classIdByName/classTeacherByName, khiến GV phụ trách của trường A
+      // bị gán NHẦM luôn cho học sinh "4A1" của trường B, xem chú thích
+      // matchedClass ở classifyImportRows()) — với định dạng classSheet,
+      // gắn luôn courseId vừa có ở bước 0 và GV phụ trách đọc được từ ô
+      // "TÊN GV ..." trong sheet (đối chiếu tên với danh sách tài khoản
+      // giáo viên đã duyệt để lấy đúng teacherId, không có mới lưu tạm
+      // teacherName để Admin gán lại thủ công sau).
+      const classKeyOf = (school, name) => `${school || ''}${name || ''}`;
+      const classIdByKey = {};
+      const classTeacherByKey = {};
+      const newClassKeys = [...new Set(rows.filter((r) => r.willCreateClass).map((r) => classKeyOf(r.school, r.className)))];
+      for (const key of newClassKeys) {
+        const row = rows.find((r) => classKeyOf(r.school, r.className) === key);
+        const { school, className: name } = row;
         const ref = classCol.doc();
         let courseId = '', teacherId = '', teacherName = '';
         if (isClassSheet) {
           const info = courseInfoForGrade(courseGradeFromClassName(name));
           courseId = info ? (courseIdByName[info.name] || '') : '';
-          const sheetTeacherName = (rows.find((r) => r.className === name) || {}).teacherName || '';
+          const sheetTeacherName = row.teacherName || '';
           const teacherMatch = sheetTeacherName
             ? state.teachers.find((t) => stripDiacritics(t.name || '') === stripDiacritics(sheetTeacherName))
             : null;
           teacherId = teacherMatch ? teacherMatch.id : '';
           teacherName = teacherMatch ? teacherMatch.name : sheetTeacherName;
         }
-        batch.set(ref, { name, courseId, teacherId, teacherName, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-        classIdByName[name] = ref.id;
-        classTeacherByName[name] = { id: teacherId, name: teacherName };
+        batch.set(ref, { name, school, courseId, teacherId, teacherName, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+        classIdByKey[key] = ref.id;
+        classTeacherByKey[key] = { id: teacherId, name: teacherName };
         ops++;
         if (ops >= 400) { await batch.commit(); batch = db.batch(); ops = 0; }
       }
@@ -1013,12 +1039,13 @@
       // lớp/khác TRƯỜNG ghi đè lẫn nhau (lỗi thật đã xảy ra, xem chú thích ở
       // studentDocIdFor()).
       for (const r of rows) {
-        const classId = r.matchedClassId || classIdByName[r.className] || '';
+        const key = classKeyOf(r.school, r.className);
+        const classId = r.matchedClassId || classIdByKey[key] || '';
         let teacherId = r.matchedClassTeacher ? r.matchedClassTeacher.id : '';
         let teacherName = r.matchedClassTeacher ? r.matchedClassTeacher.name : '';
-        if (!r.matchedClassId && classTeacherByName[r.className]) {
-          teacherId = classTeacherByName[r.className].id;
-          teacherName = classTeacherByName[r.className].name;
+        if (!r.matchedClassId && classTeacherByKey[key]) {
+          teacherId = classTeacherByKey[key].id;
+          teacherName = classTeacherByKey[key].name;
         }
         const data = {
           mssv: r.mssv, name: r.name, school: r.school, className: r.className,
@@ -1040,7 +1067,7 @@
       }
       if (ops > 0) await batch.commit();
 
-      logRosterChange('import_excel', null, { count: rows.length, newClasses: newClassNames.length, format: pendingImportFormat });
+      logRosterChange('import_excel', null, { count: rows.length, newClasses: newClassKeys.length, format: pendingImportFormat });
       toast(`✅ Đã nạp ${rows.length} học sinh từ Excel`);
       closeImportModal();
       loadEverything();
