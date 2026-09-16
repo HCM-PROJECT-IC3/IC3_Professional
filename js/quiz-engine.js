@@ -159,6 +159,11 @@ function _mtTypeCounts(mt) {
    ngẫu nhiên và không cần chạy lại split-quiz-data.py.
    ============================================================ */
 const RANDOM_MIX_KEY   = '__RANDOM_MIX__';
+// "🎮 Tổng hợp Vui" — CÙNG bộ câu hỏi/CÙNG cách trộn với "📚 Tổng hợp" ở
+// trên (buildRandomMixQuestions), chỉ khác: cứ mỗi ~1/3 chặng đường lại
+// chèn 1 màn mini-game nhanh (kiểu "power-up" giữa các round của
+// Wayground/Quizizz) để đổi không khí — xem § 9b GAME BREAK bên dưới.
+const RANDOM_MIX_PLAY_KEY = '__RANDOM_MIX_PLAY__';
 const RANDOM_MIX_TOTAL_DEFAULT = 40; // fallback nếu không tra được số câu chuẩn bên dưới
 
 /* ============================================================
@@ -828,6 +833,9 @@ function initLobby() {
     if (lessonNames.length) modes.push({ id: 'lesson', label: '🗓️ Theo tiết', names: lessonNames });
     if (topicNames.length)  modes.push({ id: 'topic',  label: '📖 Theo chủ đề', names: topicNames });
     if (mixWanted > 0)      modes.push({ id: 'mix',    label: '📚 Tổng hợp',   names: [RANDOM_MIX_KEY] });
+    // Cần ít nhất 6 câu để chia được 3 chặng ~đều nhau kèm mini-game (xem
+    // _computeGameBreakPoints) — bài quá ngắn thì không hiện chế độ này.
+    if (mixWanted >= 6)     modes.push({ id: 'mixplay', label: '🎮 Tổng hợp Vui', names: [RANDOM_MIX_PLAY_KEY] });
 
     // Giữ nguyên chế độ đang chọn nếu Level mới vẫn có (vd đổi Level
     // trong cùng Chương trình, vẫn có "Theo tiết") — không thì rơi về
@@ -857,6 +865,8 @@ function initLobby() {
       (mode?.names || []).forEach(name => {
         const label = name === RANDOM_MIX_KEY
           ? `📚 Tổng hợp — ngẫu nhiên chia đều ${topicNames.length} chủ đề (${mixWanted} câu)`
+          : name === RANDOM_MIX_PLAY_KEY
+          ? `🎮 Tổng hợp Vui — ngẫu nhiên chia đều ${topicNames.length} chủ đề, xen kẽ mini-game (${mixWanted} câu)`
           : `${name} (${_mtCount(minitests[name])} câu)`;
         mtSel.appendChild(new Option(label, name));
       });
@@ -871,7 +881,7 @@ function initLobby() {
   const refreshMeta = () => {
     const cat = _findCategory(catSel.value);
     const lv  = cat?.levels?.find(l => l.id === lvlSel.value);
-    const isRandomMix = mtSel.value === RANDOM_MIX_KEY;
+    const isRandomMix = mtSel.value === RANDOM_MIX_KEY || mtSel.value === RANDOM_MIX_PLAY_KEY;
     const minitests   = lv?.minitests || {};
     const mt    = isRandomMix ? null : minitests[mtSel.value];
     const count = isRandomMix
@@ -967,7 +977,8 @@ async function startExam() {
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang tải câu hỏi...'; }
 
   const fullLevel = await _fetchLevelData(catId, lvlId);
-  const isRandomMix = mtName === RANDOM_MIX_KEY;
+  const isGameBreak = mtName === RANDOM_MIX_PLAY_KEY;
+  const isRandomMix = mtName === RANDOM_MIX_KEY || isGameBreak;
   const rawQs = isRandomMix
     ? buildRandomMixQuestions(fullLevel?.minitests, _randomMixTotalFor(catId, lvlId))
     : fullLevel?.minitests?.[mtName];
@@ -980,7 +991,9 @@ async function startExam() {
   }
 
   // Tên minitest hiển thị/ghi log — dùng tên thân thiện thay vì key nội bộ
-  const mtDisplayName = isRandomMix
+  const mtDisplayName = isGameBreak
+    ? `🎮 Tổng hợp Vui — ngẫu nhiên (${rawQs.length} câu, chia đều ${Object.keys(fullLevel?.minitests || {}).length} chủ đề, xen kẽ mini-game)`
+    : isRandomMix
     ? `Tổng hợp — ngẫu nhiên (${rawQs.length} câu, chia đều ${Object.keys(fullLevel?.minitests || {}).length} chủ đề)`
     : mtName;
 
@@ -1019,6 +1032,10 @@ async function startExam() {
     qTimes:        {},
     qStart:        { 0: Date.now() },
     timedOut:      false,
+    // "🎮 Tổng hợp Vui" — mốc câu hỏi (0-based, "current" NGAY TRƯỚC khi
+    // bấm Câu tiếp) sẽ chèn 1 mini-game giải lao — xem § 9b GAME BREAK.
+    gameBreakPoints: isGameBreak ? _computeGameBreakPoints(State.questions.length) : [],
+    gameBreaksDone:  new Set(),
   };
 
   // ── Chuyển màn hình ────────────────────────────────────────
@@ -1264,7 +1281,117 @@ function jumpTo(i) {
 }
 
 function prevQ() { if (State.current > 0) jumpTo(State.current - 1); }
-function nextQ() { if (State.current < State.questions.length - 1) jumpTo(State.current + 1); }
+
+/** Bấm sidebar (jumpTo trực tiếp) hoặc "Nộp bài" nhảy tới câu chưa làm
+ * KHÔNG bị chặn bởi game break — chỉ luồng "Câu tiếp →" tự nhiên mới
+ * chèn mini-game, giống cấu trúc "round" của Wayground/Quizizz. */
+function nextQ() {
+  if (State.current >= State.questions.length - 1) return;
+  const points = State.session?.gameBreakPoints;
+  if (points && points.length) {
+    const done = State.session.gameBreaksDone || (State.session.gameBreaksDone = new Set());
+    if (points.includes(State.current) && !done.has(State.current)) {
+      done.add(State.current);
+      showGameBreak(() => jumpTo(State.current + 1));
+      return;
+    }
+  }
+  jumpTo(State.current + 1);
+}
+
+/* ============================================================
+   § 9b — GAME BREAK ("🎮 Tổng hợp Vui" — xen kẽ mini-game kiểu Wayground)
+   Cứ khoảng mỗi 1/3 chặng đường của bài "Tổng hợp Vui" lại chèn 1 màn
+   mini-game NHẸ, chọn ngẫu nhiên trong vài game đã có sẵn của dự án
+   (js/memory-game.js, js/sudoku.js, js/billiards.js — dùng lại NGUYÊN
+   VẸN qua <iframe>, không đụng gì tới code riêng của từng game), rồi
+   quay lại làm tiếp — giống "power-up round" giữa các câu hỏi trong
+   Wayground/Quizizz, chỉ để đổi không khí, KHÔNG có yêu cầu thắng/thua
+   hay giới hạn thời gian chơi — học sinh tự bấm "Tiếp tục bài" khi
+   muốn quay lại làm bài.
+   ============================================================ */
+const GAME_BREAK_GAMES = [
+  { file: 'memory-game.html', label: '🧠 Trí Nhớ Thiết Bị' },
+  { file: 'sudoku.html',      label: '🔢 Sudoku' },
+  { file: 'billiards.html',   label: '🎱 Bi-a' },
+];
+
+/** Mốc (các) câu hỏi (0-based, tính theo "current" NGAY TRƯỚC khi bấm
+ * Câu tiếp) để chèn mini-game — chia bài làm 3 chặng ~đều nhau (~1/3 và
+ * ~2/3). Bài dưới 6 câu thì bỏ qua (đã lọc từ lúc hiện chế độ trong
+ * lobby, kiểm tra lại ở đây cho chắc — xem refreshMinitests()). */
+function _computeGameBreakPoints(n) {
+  if (!n || n < 6) return [];
+  const raw = [Math.floor(n / 3) - 1, Math.floor((2 * n) / 3) - 1];
+  return [...new Set(raw)].filter(p => p >= 0 && p < n - 1).sort((a, b) => a - b);
+}
+
+let _gameBreakStyleInjected = false;
+function _ensureGameBreakStyle() {
+  if (_gameBreakStyleInjected) return;
+  _gameBreakStyleInjected = true;
+  const style = document.createElement('style');
+  style.textContent = `
+    .game-break-overlay{position:fixed;inset:0;background:rgba(10,14,25,.78);
+      backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;
+      z-index:9999;padding:16px;}
+    .game-break-overlay.show{display:flex;}
+    .game-break-card{background:#12172a;border-radius:16px;width:min(960px,96vw);
+      height:min(680px,90vh);display:flex;flex-direction:column;overflow:hidden;
+      box-shadow:0 20px 60px rgba(0,0,0,.5);}
+    .game-break-header{display:flex;align-items:center;justify-content:space-between;
+      gap:12px;padding:12px 16px;background:linear-gradient(90deg,#5b6ee8,#8a5cf6);color:#fff;
+      flex-wrap:wrap;}
+    .game-break-title{font-weight:800;font-size:1.05rem;}
+    .game-break-continue{background:#fff;color:#4338ca;border:none;border-radius:999px;
+      padding:.55rem 1.1rem;font-weight:700;cursor:pointer;white-space:nowrap;}
+    .game-break-continue:hover{filter:brightness(.95);}
+    .game-break-frame{flex:1;border:0;width:100%;background:#fff;}
+  `;
+  document.head.appendChild(style);
+}
+
+function _ensureGameBreakOverlay() {
+  let ov = document.getElementById('gameBreakOverlay');
+  if (ov) return ov;
+  _ensureGameBreakStyle();
+  ov = document.createElement('div');
+  ov.id = 'gameBreakOverlay';
+  ov.className = 'game-break-overlay';
+  ov.innerHTML = `
+    <div class="game-break-card">
+      <div class="game-break-header">
+        <span class="game-break-title" id="gameBreakTitle">🎮 Giải lao chút nhé!</span>
+        <button type="button" class="game-break-continue" id="gameBreakContinueBtn">Tiếp tục bài ôn tập →</button>
+      </div>
+      <iframe id="gameBreakFrame" class="game-break-frame" title="Mini-game giải lao"></iframe>
+    </div>`;
+  document.body.appendChild(ov);
+  return ov;
+}
+
+/** Hiện 1 mini-game ngẫu nhiên toàn màn hình; gọi onContinue() khi học
+ * sinh bấm "Tiếp tục bài ôn tập →" (chỉ khi đó mới thật sự sang câu tiếp
+ * theo — xem nextQ()). */
+function showGameBreak(onContinue) {
+  const ov = _ensureGameBreakOverlay();
+  const pick = GAME_BREAK_GAMES[Math.floor(Math.random() * GAME_BREAK_GAMES.length)];
+  document.getElementById('gameBreakTitle').textContent = `🎮 Giải lao chút nhé! — ${pick.label}`;
+  const frame = document.getElementById('gameBreakFrame');
+  frame.src = pick.file;
+  ov.classList.add('show');
+  document.body.style.overflow = 'hidden';
+
+  const btn = document.getElementById('gameBreakContinueBtn');
+  const onClick = () => {
+    ov.classList.remove('show');
+    document.body.style.overflow = '';
+    frame.src = 'about:blank'; // dừng hẳn game (âm thanh/animation...) khi đóng
+    btn.removeEventListener('click', onClick);
+    onContinue();
+  };
+  btn.addEventListener('click', onClick);
+}
 
 /* ============================================================
    § 10 — RENDER QUESTION  (Task 3 — xử lý linh hoạt theo type)
@@ -1375,13 +1502,28 @@ function renderQuestion(idx) {
    ============================================================ */
 
 /** Chấm + hiện đúng/sai + giải thích cho ĐÚNG câu đang xem — gọi từ nút
- * "✅ Kiểm tra đáp án" (chỉ render.ở chế độ 'practice', xem renderQuestion()). */
+ * "✅ Kiểm tra đáp án" (chỉ render.ở chế độ 'practice', xem renderQuestion()).
+ * Bấm lần 2 (khi kết quả đang hiện) sẽ ẨN kết quả đi thay vì kiểm tra lại vô
+ * ích — nút tự đổi nhãn thành "🙈 Ẩn kết quả" để vẫn còn tác dụng và học
+ * sinh chủ động tắt được gợi ý/giải thích khi không muốn xem nữa. */
 function checkCurrentAnswer() {
   if (State.examMode !== 'practice') return; // phòng hờ — nút này vốn không tồn tại ở chế độ Kiểm tra
   const i = State.current;
   const q = State.questions[i];
   if (!q) return;
+  const el = document.getElementById('qCheckResult');
+  const btn = document.querySelector('.btn-check-answer');
+
+  if (el && el.dataset.shown === '1') {
+    el.innerHTML = '';
+    el.dataset.shown = '0';
+    if (btn) btn.textContent = '✅ Kiểm tra đáp án';
+    return;
+  }
+
   _renderCheckResult(_buildQuestionDetail(q, i));
+  if (el) el.dataset.shown = '1';
+  if (btn) btn.textContent = '🙈 Ẩn kết quả';
 }
 
 /** Vẽ banner Đúng/Sai/Chưa trả lời + phần giải thích (tái dùng
@@ -2242,7 +2384,7 @@ function renderHotspot(q, qi) {
         <span class="q-image-zoom-thumb-icon" aria-hidden="true">🔍</span>
       </button>
     </div>
-    <div class="match-region-tip">👆 Bấm trực tiếp vào vị trí đúng trên hình. Bấm lại để bỏ chọn.</div>`;
+    <div class="match-region-tip">👆 Bấm trực tiếp vào vị trí đúng trên hình. Bấm lại để bỏ chọn, hoặc bấm sang vị trí khác để tự động đổi lựa chọn.</div>`;
 
   // Ảnh nền dùng object-fit:contain thuần CSS (luôn hiện trọn ảnh, giữ
   // đúng tỉ lệ, không cắt/không cover, không phụ thuộc timing JS) — chỉ
@@ -2397,17 +2539,22 @@ function toggleHotspot(el) {
   if (sel.has(id)) {
     sel.delete(id);
   } else {
-    // Chặn chọn quá số lượng yêu cầu — cảnh báo thay vì cho chọn thêm,
-    // để học sinh không lỡ tay bấm tràn số vị trí đúng.
-    if (sel.size >= totalCorrect) {
-      showNotification(`⚠️ Chỉ được chọn tối đa ${totalCorrect} vị trí cho câu này. Bỏ chọn bớt trước khi chọn vị trí khác.`, 'warning');
-      return;
+    // Đã chọn đủ số vị trí yêu cầu: tự động bỏ chọn (các) vị trí đã chọn
+    // TRƯỚC ĐÓ (theo đúng thứ tự đã bấm — Set giữ thứ tự insertion) để
+    // nhường chỗ cho vị trí mới, thay vì chặn lại và bắt học sinh phải tự
+    // bấm lại đáp án cũ để bỏ chọn trước.
+    while (sel.size >= totalCorrect && sel.size > 0) {
+      sel.delete(sel.values().next().value);
     }
     sel.add(id);
   }
 
   State.session.clicks++;
-  el.classList.toggle('selected');
+  // Đồng bộ lại class "selected" cho TOÀN BỘ vùng của câu này (không chỉ
+  // vùng vừa bấm) vì thao tác trên có thể vừa tự bỏ chọn (các) vùng khác.
+  document.querySelectorAll(`.hotspot-area[data-qi="${qi}"]`).forEach(a => {
+    a.classList.toggle('selected', sel.has(a.dataset.id));
+  });
   const counter = document.getElementById(`hotspot-count-${qi}`);
   if (counter) counter.textContent = sel.size;
   const counterWrap = document.getElementById(`hotspot-counter-${qi}`);
