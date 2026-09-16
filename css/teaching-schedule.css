@@ -335,6 +335,7 @@ tr:last-child td { border-bottom: none }
    firestore.rules chốt (chỉ isAdmin()), đây chỉ là lớp UX. */
 body.role-teaching-coordinator #newWeekBtn,
 body.role-teaching-coordinator #importExcelBtn,
+body.role-teaching-coordinator #syncSharePointBtn,
 body.role-teaching-coordinator #addTeacherBtn,
 body.role-teaching-coordinator [data-edit-sched],
 body.role-teaching-coordinator [data-edit-teacher],

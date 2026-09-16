@@ -81,6 +81,7 @@
           <div class="sidebar-actions">
             <button type="button" class="btn btn-secondary" id="newWeekBtn">🧬 Tuần mới</button>
             <button type="button" class="btn btn-secondary" id="importExcelBtn">📥 Nhập từ Excel</button>
+            <button type="button" class="btn btn-secondary" id="syncSharePointBtn" title="Tải trực tiếp file Excel mới nhất từ SharePoint (cần đăng nhập Microsoft), không cần tải file về máy rồi nhập lại thủ công">🔗 Đồng bộ SharePoint</button>
             <button type="button" class="btn btn-ghost" id="exportAllPdfBtn" title="Xuất 1 file PDF gồm lịch của tất cả GV đang hiển thị, mỗi người 1 trang">🖨️ Xuất PDF tất cả</button>
             <button type="button" class="btn btn-ghost" id="exportAllCongTacBtn" title="Xuất 1 file PDF gồm Phiếu công tác của tất cả GV đang hiển thị, mỗi người 1 trang">📋 Xuất PDF tất cả Phiếu công tác</button>
             <input type="file" id="importExcelInput" accept=".xlsx,.xls" hidden>
@@ -604,6 +605,12 @@
 <!-- Đọc file Excel (.xlsx/.xls) ngay trên trình duyệt bằng SheetJS, cùng
      thư viện/CDN đã dùng ở roster-manager.html (đã kiểm chứng hoạt động). -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<!-- Đăng nhập Microsoft ngay trên trình duyệt (MSAL.js) để nút "🔗 Đồng bộ
+     SharePoint" tải trực tiếp file Excel mới nhất qua Microsoft Graph API —
+     xem hướng dẫn cấu hình ở đầu file js/services/sharepoint-sync.js. -->
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3/lib/msal-browser.min.js"></script>
+<script src="js/services/sharepoint-sync.js"></script>
 
 <!-- Xuất PDF lịch tuần từng giáo viên — TÁI DÙNG đúng 2 thư viện đã có sẵn
      trong project (js/vendor/*) cho tính năng xuất PDF báo cáo học sinh,

@@ -1295,6 +1295,37 @@
     return { weekKey, weekLabel, teachers };
   }
 
+  /** Parse 1 workbook (ArrayBuffer) thành { weeks, skippedSheets } và mở
+   * modal xác nhận nhập — dùng CHUNG cho cả 2 nguồn: chọn file .xlsx thủ
+   * công (importExcelInput) và tải trực tiếp từ SharePoint
+   * (syncSharePointBtn, xem js/services/sharepoint-sync.js) để không lặp
+   * lại logic đọc/parse Excel. */
+  function parseWorkbookArrayBufferAndOpenImport(arrayBuffer) {
+    if (!window.XLSX) { toast('⚠️ Chưa tải được thư viện đọc Excel, kiểm tra mạng rồi thử lại.'); return; }
+    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+    const weeks = [];
+    const skippedSheets = [];
+    workbook.SheetNames.forEach((sheetName) => {
+      const ws = workbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
+      const parsed = parseWorkbookSheet(rows, sheetName);
+      if (parsed && parsed.teachers.length) weeks.push(parsed);
+      else skippedSheets.push(sheetName);
+    });
+    if (!weeks.length) { toast('⚠️ Không tìm thấy sheet lịch tuần hợp lệ nào trong file (thiếu cột "MÃ NV").'); return; }
+
+    pendingImport = { weeks, skippedSheets };
+    const teacherCount = new Set(weeks.flatMap((w) => w.teachers.map((t) => t.code))).size;
+    document.getElementById('importSummary').classList.remove('force-hide');
+    document.getElementById('importWeekCount').textContent = weeks.length;
+    document.getElementById('importTeacherCount').textContent = teacherCount;
+    const skippedStat = document.getElementById('importSkippedStat');
+    skippedStat.hidden = skippedSheets.length === 0;
+    document.getElementById('importSkippedCount').textContent = skippedSheets.length;
+    document.getElementById('importConfirmBtn').disabled = false;
+    document.getElementById('importModalOverlay').classList.add('show');
+  }
+
   document.getElementById('importExcelBtn').addEventListener('click', () => document.getElementById('importExcelInput').click());
   document.getElementById('importExcelInput').addEventListener('change', (e) => {
     const file = e.target.files && e.target.files[0];
@@ -1305,34 +1336,35 @@
     reader.onerror = () => toast('⚠️ Không đọc được file, thử lại.');
     reader.onload = (ev) => {
       try {
-        const workbook = XLSX.read(ev.target.result, { type: 'array' });
-        const weeks = [];
-        const skippedSheets = [];
-        workbook.SheetNames.forEach((sheetName) => {
-          const ws = workbook.Sheets[sheetName];
-          const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
-          const parsed = parseWorkbookSheet(rows, sheetName);
-          if (parsed && parsed.teachers.length) weeks.push(parsed);
-          else skippedSheets.push(sheetName);
-        });
-        if (!weeks.length) { toast('⚠️ Không tìm thấy sheet lịch tuần hợp lệ nào trong file (thiếu cột "MÃ NV").'); return; }
-
-        pendingImport = { weeks, skippedSheets };
-        const teacherCount = new Set(weeks.flatMap((w) => w.teachers.map((t) => t.code))).size;
-        document.getElementById('importSummary').classList.remove('force-hide');
-        document.getElementById('importWeekCount').textContent = weeks.length;
-        document.getElementById('importTeacherCount').textContent = teacherCount;
-        const skippedStat = document.getElementById('importSkippedStat');
-        skippedStat.hidden = skippedSheets.length === 0;
-        document.getElementById('importSkippedCount').textContent = skippedSheets.length;
-        document.getElementById('importConfirmBtn').disabled = false;
-        document.getElementById('importModalOverlay').classList.add('show');
+        parseWorkbookArrayBufferAndOpenImport(ev.target.result);
       } catch (err) {
         toast('⚠️ ' + err.message);
       }
     };
     reader.readAsArrayBuffer(file);
   });
+
+  // Đồng bộ trực tiếp từ file Excel trên SharePoint (không cần tải về máy
+  // rồi upload lại thủ công) — đăng nhập Microsoft ngay trên trình duyệt
+  // qua MSAL.js, xem js/services/sharepoint-sync.js để biết cách cấu hình.
+  const syncSharePointBtn = document.getElementById('syncSharePointBtn');
+  if (syncSharePointBtn) {
+    syncSharePointBtn.addEventListener('click', async () => {
+      if (!window.EduSharePointSync) { toast('⚠️ Chưa tải được module đồng bộ SharePoint.'); return; }
+      syncSharePointBtn.disabled = true;
+      const originalText = syncSharePointBtn.textContent;
+      syncSharePointBtn.textContent = '⏳ Đang tải từ SharePoint...';
+      try {
+        const arrayBuffer = await window.EduSharePointSync.fetchLatestWorkbookArrayBuffer();
+        parseWorkbookArrayBufferAndOpenImport(arrayBuffer);
+      } catch (err) {
+        toast('⚠️ ' + err.message);
+      } finally {
+        syncSharePointBtn.disabled = false;
+        syncSharePointBtn.textContent = originalText;
+      }
+    });
+  }
 
   function closeImportModal() {
     document.getElementById('importModalOverlay').classList.remove('show');
