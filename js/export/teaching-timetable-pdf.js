@@ -59,36 +59,45 @@
   }
 
   /** Vẽ dải màu thương hiệu + logo IIG (window.EduIigLogo, xem
-   * js/export/iig-logo.js) + tiêu đề — trả về toạ độ Y để bắt đầu vẽ bảng. */
+   * js/export/iig-logo.js) + tiêu đề — trả về toạ độ Y để bắt đầu vẽ bảng.
+   * Cỡ chữ dòng phụ đề ("Áp dụng"/"Xuất lúc") + logo + khoảng cách dòng đều
+   * TỈ LỆ THEO titleSize (thay vì cố định 8.5pt/logo 38pt trước đây) — khi
+   * bảng ngắn được chọn cỡ chữ lớn (xem CANDIDATES trong exportTimetablePdf),
+   * tiêu đề phóng to nhưng dòng phụ đề vẫn tí hin/dính sát ngay dưới trông
+   * như lỗi, giờ phóng theo cùng tỉ lệ + giãn dòng rộng hơn cho cân đối. */
   function drawHeader(doc, teacherName, weekLabel, titleSize) {
     const pageWidth = doc.internal.pageSize.getWidth();
     doc.setFillColor(...BRAND);
     doc.rect(0, 0, pageWidth, 4, 'F');
 
+    const subSize = Math.max(9, Math.round(titleSize * 0.62 * 10) / 10);
+    const logoW = Math.max(38, titleSize * 3.1);
+    const titleY = Math.max(20, titleSize + 6);
+    const subY = titleY + subSize + 6;
+
     const logo = global.EduIigLogo;
     let titleX = PAGE_MARGIN;
     let logoBottom = 12;
     if (logo) {
-      const logoW = 38;
       const logoH = logoW * logo.aspect;
       doc.addImage(logo.base64, 'PNG', PAGE_MARGIN, 10, logoW, logoH);
-      titleX = PAGE_MARGIN + logoW + 10;
+      titleX = PAGE_MARGIN + logoW + 12;
       logoBottom = 10 + logoH;
     }
 
     doc.setTextColor(30, 30, 40);
     doc.setFont('NotoSans', 'bold');
     doc.setFontSize(titleSize);
-    doc.text(`THỜI KHOÁ BIỂU — ${teacherName || ''}`.trim(), titleX, 20);
+    doc.text(`THỜI KHOÁ BIỂU — ${teacherName || ''}`.trim(), titleX, titleY);
 
     doc.setFont('NotoSans', 'normal');
-    doc.setFontSize(8.5);
+    doc.setFontSize(subSize);
     doc.setTextColor(...GRAY);
-    doc.text(`Áp dụng: ${weekLabel || ''}`, titleX, 31);
-    doc.text(`Xuất lúc: ${nowLabel()}`, pageWidth - PAGE_MARGIN, 20, { align: 'right' });
+    doc.text(`Áp dụng: ${weekLabel || ''}`, titleX, subY);
+    doc.text(`Xuất lúc: ${nowLabel()}`, pageWidth - PAGE_MARGIN, titleY, { align: 'right' });
 
     doc.setTextColor(0, 0, 0);
-    return Math.max(38, logoBottom + 6);
+    return Math.max(subY + 16, logoBottom + 10);
   }
 
   /** Nội dung 1 ô Thứ×Tiết: "Mã lớp" (đậm) xuống dòng "Trường" (nhạt hơn) —
@@ -104,9 +113,10 @@
 
   /** Dựng head/body cho AutoTable — Buổi dùng rowSpan gộp theo từng buổi
    * (giống ô "Buổi" gộp dòng trên web), chèn 1 hàng "☕ Ra chơi" (colSpan)
-   * sau tiết BREAK_AFTER_INDEX của mỗi buổi, và 1 hàng vạch màu ngăn cách
-   * SÁNG/CHIỀU (colSpan toàn bảng) — đúng yêu cầu "giãn cách phân biệt
-   * sáng/chiều" nhưng vẽ chủ động thay vì phụ thuộc CSS in trình duyệt.
+   * và 1 hàng vạch màu ngăn cách SÁNG/CHIỀU (colSpan toàn bảng) — đúng yêu
+   * cầu "giãn cách phân biệt sáng/chiều" nhưng vẽ chủ động thay vì phụ
+   * thuộc CSS in trình duyệt. KHÔNG chèn hàng "☕ Ra chơi" (bản in PDF bỏ
+   * hẳn, khác bản web) — theo yêu cầu người dùng, giữ bảng gọn hơn.
    *
    * MỖI THỨ có khung giờ RIÊNG (periodTimesByDay) — cột "Thời gian" hiện
    * giờ THAM CHIẾU (Thứ 2, hoặc Thứ đầu tiên có tiết đó) giống bản web;
@@ -124,8 +134,6 @@
 
     M.SESSIONS.forEach((sessionKey, si) => {
       const maxCount = M.maxPeriodCount(periodTimesByDay, sessionKey);
-      const hasBreak = maxCount > M.BREAK_AFTER_INDEX + 1;
-      const rowSpan = maxCount + (hasBreak ? 1 : 0);
 
       for (let pi = 0; pi < maxCount; pi++) {
         const refPeriod = M.WEEKDAYS.map((d) => (periodTimesByDay[String(d)][sessionKey] || [])[pi]).find(Boolean);
@@ -133,7 +141,7 @@
         if (pi === 0) {
           row.push({
             content: M.SESSION_LABELS[sessionKey],
-            rowSpan,
+            rowSpan: maxCount,
             styles: Object.assign({ fontStyle: 'bold', valign: 'middle', halign: 'center' }, SESSION_STYLE[sessionKey]),
           });
         }
@@ -151,19 +159,16 @@
         body.push(row);
       }
 
-      if (hasBreak) {
-        body.push([{
-          content: '☕ Ra chơi',
-          colSpan: totalCols - 1, // trừ cột "Buổi" (đang bị rowSpan từ dòng tiết đầu che)
-          styles: { fillColor: [246, 247, 251], textColor: GRAY, fontStyle: 'bold', halign: 'center', fontSize: 7.5, cellPadding: 2 },
-        }]);
-      }
-
       // Vạch màu ngăn cách SÁNG/CHIỀU — chỉ chèn SAU khối đầu tiên (Sáng).
+      // Hàng CAO hơn hẳn (minCellHeight 16, trước đây chỉ 3) nhưng dải màu
+      // THẬT vẫn mảnh — phần cao thêm được "ăn" bằng màu trắng ở trên/dưới
+      // ngay trong didDrawCell của tryFit() (xem TRACKED bằng content: ''),
+      // tạo khoảng trắng thoáng rõ ràng 2 bên dải màu thay vì dán sát ngay
+      // vào hàng dữ liệu trên/dưới như trước (nhìn như lỗi kẻ bảng).
       if (si === 0) {
         body.push([{
           content: '', colSpan: totalCols,
-          styles: { fillColor: BRAND, minCellHeight: 3, cellPadding: 0, lineWidth: 0 },
+          styles: { fillColor: BRAND, minCellHeight: 16, cellPadding: 0, lineWidth: 0 },
         }]);
       }
     });
@@ -180,9 +185,24 @@
     const startY = doc.__startY;
     const { head, body } = doc.__rows;
     const pageWidth = doc.internal.pageSize.getWidth();
-    const labelColWidth = 34;
-    const tietColWidth = 30;
-    const timeColWidth = 62;
+    // 3 cột đầu (Buổi/Tiết/Thời gian) PHẢI đủ rộng cho chữ DÀI NHẤT sẽ in ở
+    // cỡ (fontSize) đang thử — hệ số ước lượng trước đó (fontSize * 3.4)
+    // vẫn KHÔNG đủ ở vài cỡ chữ, chữ vẫn bị ngắt dòng giữa từ ("Buổi" →
+    // "Buổ"+"i", "SÁNG" → "SÁN"+"G"). Đo THẬT bề rộng từng chữ bằng
+    // doc.getTextWidth() (đúng cỡ/độ đậm sẽ dùng khi vẽ) rồi mới cộng
+    // cellPadding — đảm bảo KHÔNG BAO GIỜ bị ngắt dòng bất kể cỡ chữ nào.
+    doc.setFont('NotoSans', 'bold');
+    doc.setFontSize(fontSize + 1);
+    const buoiHeadW = doc.getTextWidth('Buổi');
+    const tietHeadW = doc.getTextWidth('Tiết');
+    const timeHeadW = doc.getTextWidth('Thời gian');
+    doc.setFontSize(fontSize);
+    const buoiBodyW = Math.max(doc.getTextWidth('SÁNG'), doc.getTextWidth('CHIỀU'));
+    const timeBodyW = doc.getTextWidth('07:30 - 08:05'); // mẫu giờ dài nhất thực tế (HH:MM - HH:MM)
+    const pad = cellPadding * 2 + 4;
+    const labelColWidth = Math.max(34, buoiHeadW, buoiBodyW) + pad;
+    const tietColWidth = Math.max(30, tietHeadW) + pad;
+    const timeColWidth = Math.max(62, timeHeadW, timeBodyW) + pad;
     const dayColWidth = (pageWidth - PAGE_MARGIN * 2 - labelColWidth - tietColWidth - timeColWidth) / doc.__weekdayCount;
 
     global.autoTable(doc, {
@@ -191,11 +211,30 @@
       head, body,
       theme: 'grid',
       headStyles: { fillColor: BRAND, textColor: 255, fontStyle: 'bold', fontSize: fontSize + 1, halign: 'center' },
-      styles: { font: 'NotoSans', fontSize, cellPadding, valign: 'middle', halign: 'center', overflow: 'linebreak' },
+      // minCellHeight TỈ LỆ THEO cellPadding đang thử — ở cỡ chữ lớn (giáo
+      // viên ít tiết/ít ngày dạy), hàng cao hơn hẳn giúp bảng giãn lấp gần
+      // hết trang thay vì co cụm ở góc trên để trống cả mảng lớn phía dưới.
+      styles: { font: 'NotoSans', fontSize, cellPadding, valign: 'middle', halign: 'center', overflow: 'linebreak', minCellHeight: cellPadding * 5 },
       columnStyles: {
         0: { cellWidth: labelColWidth },
         1: { cellWidth: tietColWidth, textColor: GRAY, fontStyle: 'bold' },
         2: { cellWidth: timeColWidth, fontStyle: 'bold' },
+      },
+      // Ô vạch ngăn cách SÁNG/CHIỀU (content: '', colSpan toàn bảng, xem
+      // buildRows()) được vẽ CAO hơn thật (minCellHeight 16) rồi SƠN TRẮNG
+      // đè lên phần trên/dưới ngay sau khi autoTable tô màu xong, chỉ chừa
+      // lại 1 dải màu MỎNG (BAR_H) ở giữa — tạo khoảng trắng thoáng bao
+      // quanh thay vì dải màu dính sát hàng dữ liệu trên/dưới như trước.
+      didDrawCell: (data) => {
+        const raw = data.cell.raw;
+        if (data.section !== 'body' || !raw || typeof raw !== 'object' || raw.content !== '' || !raw.colSpan) return;
+        const BAR_H = 4;
+        const { x, y, width, height } = data.cell;
+        const gap = (height - BAR_H) / 2;
+        if (gap <= 0) return;
+        doc.setFillColor(255, 255, 255);
+        doc.rect(x, y, width, gap, 'F');
+        doc.rect(x, y + height - gap, width, gap, 'F');
       },
     });
     const fitsOnePage = doc.internal.getNumberOfPages() === 1;
@@ -213,10 +252,17 @@
     const { jsPDF } = global.jspdf;
     const { head, body } = buildRows(days, periodTimesByDay, M);
 
-    // Thử từ cỡ chữ bình thường, lùi dần nếu tràn quá 1 trang — chặn ở
-    // fontSize 5.5 (còn đọc được khi in) để không lùi vô hạn nếu 1 giáo
-    // viên có QUÁ nhiều tiết/buổi bất thường.
+    // Thử từ cỡ chữ LỚN NHẤT trước, LÙI DẦN nếu tràn quá 1 trang — vòng lặp
+    // dừng ngay ở candidate ĐẦU TIÊN vừa đúng 1 trang, nên đặt các cỡ LỚN ở
+    // đầu danh sách để giáo viên ít tiết/ít ngày dạy (bảng vốn ngắn) được
+    // chọn cỡ to nhất có thể, bảng giãn lấp gần hết trang thay vì luôn cố
+    // định ở cỡ nhỏ (8pt) rồi để trống cả mảng lớn phía dưới trang A4 ngang.
+    // Chặn ở fontSize 5.5 (còn đọc được khi in) để không lùi vô hạn nếu 1
+    // giáo viên có QUÁ nhiều tiết/buổi bất thường.
     const CANDIDATES = [
+      { fontSize: 13,  cellPadding: 10,  titleSize: 18 },
+      { fontSize: 11,  cellPadding: 8,   titleSize: 16 },
+      { fontSize: 9.5, cellPadding: 6,   titleSize: 15 },
       { fontSize: 8,   cellPadding: 4,   titleSize: 14 },
       { fontSize: 7.2, cellPadding: 3,   titleSize: 13 },
       { fontSize: 6.4, cellPadding: 2.2, titleSize: 12 },

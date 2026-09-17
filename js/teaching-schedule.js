@@ -478,7 +478,7 @@
     if (!state.currentWeekKey) {
       const msg = '<div class="empty-cell">Chưa có tuần nào — bấm "🧬 Tuần mới" hoặc "📥 Nhập từ Excel" để bắt đầu.</div>';
       cardsContainer.innerHTML = msg;
-      document.getElementById('dashMatrixBody').innerHTML = `<tr><td colspan="9" class="empty-cell">${msg.replace(/<[^>]+>/g, '')}</td></tr>`;
+      document.getElementById('dashMatrixBody').innerHTML = `<tr><td colspan="8" class="empty-cell">${msg.replace(/<[^>]+>/g, '')}</td></tr>`;
       if (progressBar) progressBar.classList.add('force-hide');
       return;
     }
@@ -571,16 +571,12 @@
     cardsContainer.querySelectorAll('[data-congtac-sched]').forEach((b) => b.addEventListener('click', () => openCongTacModalFor(b.dataset.congtacSched)));
   }
 
-  // Tên viết tắt cho ô mini trong ma trận — chấm tròn trước đây không đọc
-  // được gì (phải hover từng chấm mới biết loại hình), đổi sang chip CÓ
-  // CHỮ (viết tắt gọn, tooltip vẫn đủ chi tiết đầy đủ khi hover) để nhìn
-  // là biết ngay đang bận gì, không cần rà chuột qua từng ô.
-  const TYPE_ABBR = {
-    'Dạy chính': 'Chính', 'Dạy Trám': 'Trám', 'Dạy Trực Tuyến': 'Online',
-    'Ôn Thi': 'Ôn thi', 'Trợ Giảng': 'TG', 'Dự Giảng': 'DG',
-    'Soạn bài': 'Soạn', 'Làm việc tại cty': 'Cty', 'WFH': 'WFH',
-    'Khám SK': 'SK', 'Nghỉ phép/ lễ': 'Nghỉ',
-  };
+  // TRƯỚC ĐÂY hiện viết tắt (vd "Chính", "TG", "DG"...) kèm 1 bảng chú
+  // thích riêng bên dưới để tra "viết tắt = tên đầy đủ" — người dùng phản
+  // hồi cứ phải tra đi tra lại rất mất công. Đổi sang hiện NGUYÊN VĂN tên
+  // loại hình đầy đủ ngay trong chip (chip đã đủ rộng vì nằm cả hàng
+  // riêng, không như ô mini kiểu cũ) — dùng thẳng sess.type, không cần
+  // bảng viết tắt/chú thích nữa (đã bỏ renderDashLegend() + #dashLegend).
 
   // Loại hình KHÔNG tách theo tiết (áp dụng cho CẢ buổi, không có khái
   // niệm "tiết mấy") — chỉ hiện 1 lần ở TIẾT ĐẦU TIÊN của buổi đó khi
@@ -609,19 +605,16 @@
     if (value) {
       const hasType = sess && sess.type;
       const suffix = hasType ? (typeColorSuffix(sess.type) || 'prep') : 'main';
-      // Kèm CHỮ viết tắt loại hình (vd "Chính · 5/2") ngay trong chip —
-      // chỉ dựa vào MÀU rất dễ nhầm giữa Dạy chính/Dạy Trám/Dự Giảng...
-      // (nhất là người mới xem lần đầu, chưa quen bảng màu), có chữ thì
-      // không cần nhớ màu vẫn đọc đúng ngay.
-      const label = hasType ? `${TYPE_ABBR[sess.type] || sess.type} · ${value}` : value;
-      const title = hasType ? `${sess.type} · ${value}` : value;
-      return `<span class="dash-chip ${suffix}" title="${esc(title)}">${esc(label)}</span>`;
+      // Hiện NGUYÊN VĂN tên loại hình đầy đủ (vd "Dạy chính · 5/2") ngay
+      // trong chip — không cần nhớ bảng chú thích viết tắt/màu nữa.
+      const label = hasType ? `${sess.type} · ${value}` : value;
+      return `<span class="dash-chip ${suffix}" title="${esc(label)}">${esc(label)}</span>`;
     }
     // Loại hình không tách theo tiết (Cty/WFH/Soạn bài/Nghỉ phép.../Khám
     // SK) — hiện đúng 1 lần ở tiết đầu buổi để biết cả buổi đang bận gì.
     if (isFirstPeriod && sess && sess.type && NON_PERIOD_TYPES.has(sess.type)) {
       const suffix = typeColorSuffix(sess.type) || 'prep';
-      return `<span class="dash-chip ${suffix}" title="${esc(sess.type)}">${esc(TYPE_ABBR[sess.type] || sess.type)}</span>`;
+      return `<span class="dash-chip ${suffix}" title="${esc(sess.type)}">${esc(sess.type)}</span>`;
     }
     return '<span class="dash-chip-off">—</span>';
   }
@@ -629,34 +622,25 @@
   /** "📊 Tổng quan" — MỖI GIÁO VIÊN TÁCH THÀNH NHIỀU HÀNG, 1 hàng/tiết,
    * đúng số tiết + giờ giấc lấy từ khung giờ đã cấu hình ở tab "🗓️ TKB
    * lớp" (⏱️ Giờ tiết — mặc định 5 tiết Sáng/4 tiết Chiều nếu GV chưa tự
-   * cấu hình riêng). 2 cột "Buổi" (tô cam/xanh lá như TKB) và "Thời gian"
-   * ghim ngay cạnh cột tên — nhìn 1 hàng là biết NGAY tiết mấy, mấy giờ,
-   * buổi nào, đang dạy lớp gì ở từng Thứ, không cần suy luận hay hover.
-   * Hàng của GV chưa nhập lịch tự tô nền vàng nhạt (.dash-row-missing). */
-  /** Bảng chú thích màu loại hình (1 lần, tĩnh) — đối chiếu nhanh khi lỡ
-   * quên màu nào là loại hình gì, giảm nguy cơ nhầm giữa Dạy chính/Dạy
-   * Trám/Dự Giảng/Trợ Giảng... vốn chỉ khác nhau ở màu chip. */
-  function renderDashLegend() {
-    const el = document.getElementById('dashLegend');
-    if (!el || el.dataset.rendered) return;
-    el.dataset.rendered = '1';
-    el.innerHTML = Object.keys(TYPE_COLOR_SUFFIX).map((type) => {
-      const suffix = TYPE_COLOR_SUFFIX[type];
-      const abbr = TYPE_ABBR[type] || type;
-      return `<span class="dash-legend-item"><span class="dash-legend-swatch ${suffix}"></span>${esc(abbr)} = ${esc(type)}</span>`;
-    }).join('');
-  }
-
+   * cấu hình riêng). Cột "Buổi" (tô cam/xanh lá như TKB) ghim ngay cạnh
+   * cột tên — mỗi chip trong ô đã tự hiện nguyên văn loại hình + mã lớp
+   * nên KHÔNG cần thêm cột "Thời gian"/bảng chú thích màu riêng nữa (đã
+   * bỏ, xem dashPeriodCell()). Hàng của GV chưa nhập lịch tự tô nền vàng
+   * nhạt (.dash-row-missing). */
   function renderDashboardView(teachers, daysOf) {
-    renderDashLegend();
     const tbody = document.getElementById('dashMatrixBody');
     const TTM = window.EduModels.TeachingTimetable;
     if (!teachers.length) {
-      tbody.innerHTML = '<tr><td colspan="9" class="empty-cell">Không có giáo viên khớp tìm kiếm.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="empty-cell">Không có giáo viên khớp tìm kiếm.</td></tr>';
     } else {
       const sorted = [...teachers].sort((a, b) => a.name.localeCompare(b.name, 'vi'));
       const rowsHtml = [];
-      sorted.forEach((t) => {
+      sorted.forEach((t, tIdx) => {
+        // Viền phân tách rõ giữa khối hàng của từng giáo viên (mỗi GV
+        // nhiều hàng gộp qua rowspan cột tên) — chỉ hàng ĐẦU TIÊN của GV
+        // (trừ GV đầu bảng) mới cần viền trên, các hàng sau CÙNG 1 GV thì
+        // không (không phải là ranh giới giữa 2 GV khác nhau).
+        const teacherStartClass = tIdx > 0 ? ' dash-teacher-start' : '';
         const days = daysOf(t);
         // GV đã điền mã lớp bên tab "🗓️ TKB lớp" (dù chưa chọn "loại hình
         // phụ trách" bên đây) thì KHÔNG tính là "chưa có lịch" nữa — 2 tab
@@ -707,9 +691,9 @@
         if (!blocks.length) {
           // Fallback: không có TTM (lỗi tải module) — vẫn hiện 1 hàng/GV
           // như bản cũ, tối thiểu để trang không trắng xoá.
-          rowsHtml.push(`<tr class="${missingClass}">
+          rowsHtml.push(`<tr class="${missingClass}${teacherStartClass}">
             <td class="dash-matrix-name-col">${nameCellContent}</td>
-            <td class="dash-matrix-buoi-cell">—</td><td class="dash-matrix-time-cell">—</td>
+            <td class="dash-matrix-buoi-cell">—</td>
             ${M.WEEKDAYS.map((d) => `<td class="dash-matrix-cell" data-day="${d}"><span class="dash-chip-off">—</span></td>`).join('')}
           </tr>`);
           return;
@@ -718,18 +702,42 @@
         const totalRows = blocks.reduce((sum, b) => sum + b.periods.length, 0);
         let nameCellWritten = false;
         blocks.forEach((block, blockIdx) => {
+          // Thứ nào có loại hình KHÔNG tách theo tiết (Soạn bài/WFH/Cty/
+          // Nghỉ phép.../Khám SK — NON_PERIOD_TYPES) VÀ không có mã lớp gõ
+          // ở tiết nào — TRƯỚC ĐÂY chỉ hiện chip ở đúng tiết 1, các tiết
+          // 2-5 để trống "—" trông như còn dư tiết/mất dữ liệu, dù thực ra
+          // loại hình đó áp dụng CẢ buổi. Giờ GỘP các Thứ đó thành 1 ô
+          // rowSpan xuyên suốt cả buổi (giống ô "Buổi") — Thứ nào có mã lớp
+          // riêng theo từng tiết vẫn tách dòng bình thường như cũ.
+          const mergeWholeSession = {};
+          M.WEEKDAYS.forEach((d) => {
+            const day = days[String(d)] || M.emptyDay();
+            const sess = day[block.sessionKey];
+            const hasAnyPeriodValue = block.periods.some((_, pi) => periodValueAt(t.code, day, d, block.sessionKey, pi));
+            mergeWholeSession[d] = !!(sess && sess.type && NON_PERIOD_TYPES.has(sess.type) && !hasAnyPeriodValue);
+          });
           block.periods.forEach((p, pi) => {
             const dayCells = M.WEEKDAYS.map((d) => {
               const day = days[String(d)] || M.emptyDay();
+              if (mergeWholeSession[d]) {
+                if (pi > 0) return ''; // đã gộp vào ô rowSpan ở tiết 1, KHÔNG vẽ <td> ở các hàng sau
+                return `<td class="dash-matrix-cell" data-day="${d}" rowspan="${block.periods.length}">${dashPeriodCell(day[block.sessionKey], '', true)}</td>`;
+              }
               const val = periodValueAt(t.code, day, d, block.sessionKey, pi);
               return `<td class="dash-matrix-cell" data-day="${d}">${dashPeriodCell(day[block.sessionKey], val, pi === 0)}</td>`;
             }).join('');
-            const nameCellHtml = !nameCellWritten ? `<td class="dash-matrix-name-col" rowspan="${totalRows}">${nameCellContent}</td>` : '';
+            const isVeryFirstRow = !nameCellWritten;
+            const nameCellHtml = isVeryFirstRow ? `<td class="dash-matrix-name-col" rowspan="${totalRows}">${nameCellContent}</td>` : '';
             nameCellWritten = true;
             const buoiCellHtml = pi === 0
               ? `<td class="dash-matrix-buoi-cell dash-sess-${block.sessionKey}" rowspan="${block.periods.length}">${block.sessionKey === 'morning' ? '☀️ Sáng' : '🌙 Chiều'}</td>`
               : '';
-            rowsHtml.push(`<tr class="${missingClass}">${nameCellHtml}${buoiCellHtml}<td class="dash-matrix-time-cell">${esc(p.start)} - ${esc(p.end)}</td>${dayCells}</tr>`);
+            // Gắn class buổi NGAY TRÊN <tr> (không chỉ ô "Buổi") — để CSS tô
+            // nền vàng nhạt (Sáng)/xanh lá nhạt (Chiều) cho CẢ HÀNG giống
+            // đúng file Excel gốc "LỊCH GIẢNG DẠY TEAM GVTH..." (mẫu người
+            // dùng cung cấp), thay vì chỉ tô mỗi ô "Buổi" như bản trước.
+            const rowClass = `${missingClass}${isVeryFirstRow ? teacherStartClass : ''} dash-row-sess-${block.sessionKey}`;
+            rowsHtml.push(`<tr class="${rowClass}">${nameCellHtml}${buoiCellHtml}${dayCells}</tr>`);
           });
         });
       });
@@ -741,15 +749,16 @@
 
     // ---- Đánh dấu cột "hôm nay" trong ma trận (nếu tuần đang xem CHỨA
     // ngày hôm nay) — giúp điều phối đào tạo định vị nhanh "đang ở đâu
-    // trong tuần" mà không cần đối chiếu lịch riêng. ----
+    // trong tuần" mà không cần đối chiếu lịch riêng. CHỈ đánh dấu ở HEADER
+    // (viền dưới, xem .dash-matrix th.today-col trong CSS) — trước đây còn
+    // gắn class lên TỪNG Ô thân cột để tô nền tím, nhưng nền đó đè lên
+    // đúng chỗ màu vàng/xanh lá theo buổi, tạo mảng trắng/tím lạc tông
+    // giữa cột (phản hồi người dùng) — bỏ hẳn, 1 dấu hiệu ở header là đủ.
     const isCurrentWeek = state.currentWeekKey === M.todayWeekKey();
     const jsDow = new Date().getDay(); // 0=CN,1=T2,...6=T7
     const todayDayNum = isCurrentWeek && jsDow >= 1 && jsDow <= 6 ? jsDow + 1 : null;
     M.WEEKDAYS.forEach((d) => {
       document.getElementById(`dashDayHead${d}`)?.classList.toggle('today-col', d === todayDayNum);
-    });
-    document.querySelectorAll('.dash-matrix-cell[data-day]').forEach((td) => {
-      td.classList.toggle('today-col', Number(td.dataset.day) === todayDayNum);
     });
   }
 
