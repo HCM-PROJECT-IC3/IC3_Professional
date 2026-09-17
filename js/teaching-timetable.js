@@ -352,14 +352,14 @@
    * tiết thứ M.BREAK_AFTER_INDEX+1 của mỗi buổi (nếu buổi đó đủ dài) giống
    * mẫu giấy.
    *
-   * MỖI THỨ có khung giờ RIÊNG (state.periodTimesByDay) — cột "Thời gian"
-   * dùng chung 1 hàng cho cả 6 Thứ nên chỉ hiện được 1 giờ THAM CHIẾU
-   * (Thứ 2, hoặc Thứ đầu tiên có cấu hình tiết đó nếu Thứ 2 nghỉ) — Thứ nào
-   * có giờ THỰC TẾ khác giờ tham chiếu (vd Thứ 3 cấu hình khung THCS 45’
-   * trong khi cột tham chiếu là Tiểu học 35’) thì ô của Thứ đó tự hiện
-   * thêm giờ đúng của riêng nó, không phụ thuộc cột dùng chung nữa. Thứ
-   * nào có ÍT tiết hơn Thứ nhiều nhất (vd chỉ dạy 4 tiết Sáng thay vì 5) —
-   * ô dư ra của Thứ đó bị khoá (không có ô nhập, hiện "—"). */
+   * MỖI THỨ có khung giờ RIÊNG (state.periodTimesByDay) nên KHÔNG còn cột
+   * "Thời gian" dùng chung cho cả 6 Thứ (1 cột chung chỉ hiện được ĐÚNG 1
+   * giờ THAM CHIẾU trong khi các Thứ khác đã có giờ riêng ngay trong ô của
+   * mình rồi, giữ cột chung chỉ THỪA/GÂY HIỂU LẦM) — giờ mỗi ô ĐÃ CÓ mã
+   * lớp tự hiện LUÔN giờ thực của đúng Thứ/tiết đó, cột đầu chỉ còn "Tiết"
+   * (số thứ tự, không đổi theo Thứ). Thứ nào có ÍT tiết hơn Thứ nhiều nhất
+   * (vd chỉ dạy 4 tiết Sáng thay vì 5) — ô dư ra của Thứ đó bị khoá (không
+   * có ô nhập, hiện "—"). */
   function renderGrid() {
     const table = document.getElementById('ttGrid');
     const dayHeaders = M.WEEKDAYS.map((d, i) => `<th class="tt-day-head tt-day-${i}">${M.WEEKDAY_LABELS[d]}</th>`).join('');
@@ -386,6 +386,16 @@
       return `<span class="tt-level-badge tt-level-${levelKey}${mismatched ? ' tt-level-mismatch' : ''}"${warnTitle}>${esc(level.short)}${mismatched ? ' ⚠️' : ''}</span>`;
     }
 
+    /** Giờ THỰC của đúng Thứ/tiết này — hiện khi ô đã có mã lớp (xem
+     * computeBadgeHtml() ở trên cho lý do bỏ cột "Thời gian" dùng chung).
+     * Tách hàm riêng để dùng lại được cả lúc vẽ lưới lần đầu VÀ lúc gõ lại
+     * "Mã lớp" (input listener bên dưới) — gõ xong ẩn/hiện ngay, không cần
+     * tải lại cả lưới. */
+    function computeOwnTimeHtml(d, pi, cell, period) {
+      if (!cell.maLop || !period) return '';
+      return `<div class="tt-cell-own-time" title="Giờ tiết ${pi + 1} của ${esc(M.WEEKDAY_LABELS[d])}">⏱ ${esc(period.start)}–${esc(period.end)}</div>`;
+    }
+
     function sessionRows(sessionKey) {
       const maxCount = M.maxPeriodCount(state.periodTimesByDay, sessionKey);
       const hasBreak = maxCount > M.BREAK_AFTER_INDEX + 1;
@@ -394,11 +404,6 @@
       const label = M.SESSION_LABELS[sessionKey];
       const rows = [];
       for (let pi = 0; pi < maxCount; pi++) {
-        // Giờ THAM CHIẾU hiện ở cột "Thời gian" — Thứ 2 nếu có tiết này,
-        // else Thứ đầu tiên (theo thứ tự Thứ2→7) có cấu hình tiết này.
-        const refPeriod = M.WEEKDAYS.map((d) => (state.periodTimesByDay[String(d)][sessionKey] || [])[pi]).find(Boolean);
-        const refMinutes = refPeriod ? M.periodMinutes(refPeriod) : null;
-
         const dayCellsHtml = M.WEEKDAYS.map((d) => {
           const dayPeriods = state.periodTimesByDay[String(d)][sessionKey] || [];
           const period = dayPeriods[pi];
@@ -417,14 +422,8 @@
           // đúng giáo viên/tuần đang xem qua loadSuggestions().
           const isAuto = state.autoCells.has(`${d}-${sessionKey}-${pi}`);
           const autoTitle = isAuto ? ' title="🔄 Tự động lấy từ Lịch tuần — vẫn sửa được nếu TKB cần khác đi"' : '';
-          // Thứ này có giờ KHÁC cột "Thời gian" tham chiếu — hiện thêm giờ
-          // THỰC của riêng Thứ này ngay trong ô, không phụ thuộc cột chung.
-          const differsFromRef = refPeriod && (period.start !== refPeriod.start || period.end !== refPeriod.end);
-          const ownTimeHtml = differsFromRef
-            ? `<div class="tt-cell-own-time" title="Giờ riêng của ${esc(M.WEEKDAY_LABELS[d])}, khác cột Thời gian tham chiếu">⏱ ${esc(period.start)}–${esc(period.end)}</div>`
-            : '';
           return `<td class="tt-cell"><div class="tt-cell-inner${isAuto ? ' tt-cell-auto' : ''}"${autoTitle}>
-            ${ownTimeHtml}
+            <span class="tt-own-time-slot">${computeOwnTimeHtml(d, pi, cell, period)}</span>
             <input type="text" class="tt-input tt-input-lop" list="ttLopOptions" data-day="${d}" data-session="${sessionKey}" data-period-idx="${pi}" data-field="maLop" value="${esc(cell.maLop)}" placeholder="Mã lớp"${readOnlyAttr}>
             <div class="tt-truong-row">
               <input type="text" class="tt-input tt-input-truong" list="ttTruongOptions" data-day="${d}" data-session="${sessionKey}" data-period-idx="${pi}" data-field="truong" value="${esc(cell.truong)}" placeholder="Trường..."${readOnlyAttr}>
@@ -436,15 +435,14 @@
         rows.push(`<tr>
           ${pi === 0 ? `<td class="tt-buoi-cell tt-sess-${sessionKey}" rowspan="${rowspan}">${icon}<br>${label}</td>` : ''}
           <td class="tt-tiet-cell">${pi + 1}</td>
-          <td class="tt-time-cell">${refPeriod ? `${esc(refPeriod.start)} - ${esc(refPeriod.end)}${refMinutes ? `<div class="tt-time-mins">${refMinutes}’/tiết</div>` : ''}` : '—'}</td>
           ${dayCellsHtml}
         </tr>`);
         if (hasBreak && pi === M.BREAK_AFTER_INDEX) {
           // Cột "Buổi" đang bị chiếm bởi ô rowspan từ dòng tiết đầu tiên
           // của buổi này (bao trùm cả dòng "Ra chơi") nên dòng này KHÔNG có
-          // <td> riêng cho cột đó — colspan chỉ cần che 2 cột (Tiết/Thời
-          // gian) + 6 cột Thứ, không phải toàn bộ 3+6 cột của bảng.
-          rows.push(`<tr class="tt-break-row"><td class="tt-break-label" colspan="${2 + M.WEEKDAYS.length}">☕ Ra chơi</td></tr>`);
+          // <td> riêng cho cột đó — colspan chỉ cần che cột "Tiết" + 6 cột
+          // Thứ (đã bỏ cột "Thời gian" dùng chung, không còn 2 cột nữa).
+          rows.push(`<tr class="tt-break-row"><td class="tt-break-label" colspan="${1 + M.WEEKDAYS.length}">☕ Ra chơi</td></tr>`);
         }
       }
       return rows.join('');
@@ -455,10 +453,10 @@
     // dùng phản hồi cần "giãn cách phân biệt sáng/chiều" rõ hơn. Kiểu dáng ở
     // css/teaching-schedule.css (.tt-session-divider) — GIỮ NGUYÊN cả khi in
     // (không nằm trong danh sách ẩn của @media print).
-    const sessionDivider = `<tr class="tt-session-divider"><td colspan="${3 + M.WEEKDAYS.length}"></td></tr>`;
+    const sessionDivider = `<tr class="tt-session-divider"><td colspan="${2 + M.WEEKDAYS.length}"></td></tr>`;
 
     table.innerHTML = `
-      <thead><tr><th>Buổi</th><th>Tiết</th><th>Thời gian</th>${dayHeaders}</tr></thead>
+      <thead><tr><th>Buổi</th><th>Tiết</th>${dayHeaders}</tr></thead>
       <tbody>${sessionRows('morning')}${sessionDivider}${sessionRows('afternoon')}</tbody>`;
 
     if (!readOnly) {
@@ -468,11 +466,14 @@
           const cell = state.days[d][s][pi];
           cell[f] = el.value;
           // Gõ lại "Trường"/"Mã lớp" thì huy hiệu cấp học/cảnh báo lệch giờ
-          // cập nhật NGAY (không phải tải lại cả lưới mới thấy đúng) —
-          // dùng ĐÚNG khung giờ của Thứ này (không còn 1 khung chung).
+          // VÀ giờ thực (⏱) cập nhật NGAY (không phải tải lại cả lưới mới
+          // thấy đúng) — dùng ĐÚNG khung giờ của Thứ này.
           const period = (state.periodTimesByDay[d][s] || [])[pi];
-          const slot = el.closest('.tt-cell-inner').querySelector('.tt-level-badge-slot');
-          if (slot) slot.innerHTML = computeBadgeHtml(s, pi, cell, period);
+          const inner = el.closest('.tt-cell-inner');
+          const badgeSlot = inner.querySelector('.tt-level-badge-slot');
+          if (badgeSlot) badgeSlot.innerHTML = computeBadgeHtml(s, pi, cell, period);
+          const timeSlot = inner.querySelector('.tt-own-time-slot');
+          if (timeSlot) timeSlot.innerHTML = computeOwnTimeHtml(d, pi, cell, period);
         });
         // Dán bảng trực tiếp CHỈ áp dụng cho cột "Mã lớp" (trường hợp dùng
         // nhiều nhất — dán nguyên hàng mã lớp từ Excel) — ô "Trường" thường

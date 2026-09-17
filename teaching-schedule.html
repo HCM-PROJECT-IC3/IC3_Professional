@@ -55,6 +55,11 @@
          CHIẾM TRỌN bề rộng màn hình — chỉ admin mới thấy khối này. ============ -->
     <div class="weekly-layout" id="weeklyLayout">
       <div class="weekly-sidebar" id="weeklySidebar">
+        <!-- Trước đây "Tổng quan/Thẻ" nằm RIÊNG 1 hàng, đẩy sát phải bằng
+             margin-left:auto — cả nửa trái hàng đó bỏ TRỐNG không có gì,
+             nhìn rất lãng phí. Gộp chung 1 hàng với Tuần/Tìm kiếm/hành
+             động (đứng ĐẦU hàng, tách khỏi nhóm bên phải bằng viền dọc)
+             để không còn hàng nào trống, đồng thời sidebar thấp/gọn hơn. -->
         <div class="weekly-topbar-row">
           <!-- Điều phối đào tạo cần TỔNG QUAN cả đội (18+ GV) hơn là xem
                từng người 1 — mặc định mở "📊 Tổng quan" (ma trận), chuyển
@@ -63,9 +68,7 @@
             <button type="button" class="view-toggle-btn active" data-view="dashboard">📊 Tổng quan</button>
             <button type="button" class="view-toggle-btn" data-view="cards">🎴 Thẻ</button>
           </div>
-        </div>
 
-        <div class="weekly-topbar-row">
           <div class="sidebar-group">
             <label for="weekSelect">🗓️ Tuần</label>
             <select id="weekSelect" class="form-input"><option value="">-- Chưa có tuần nào --</option></select>
@@ -98,24 +101,21 @@
              tự tô nền vàng nhạt để dễ nhận ra, không cần khối KPI/"Cần
              chú ý" riêng nữa). ============ -->
         <div class="weekly-dashboard" id="weeklyDashboard">
-          <!-- Chú thích màu loại hình — chip mã lớp CHỈ dựa vào màu rất dễ
-               nhầm giữa Dạy chính/Dạy Trám/Dự Giảng... (đã kèm thêm chữ
-               viết tắt trong từng chip, xem dashPeriodCell(), nhưng vẫn
-               cần 1 bảng đối chiếu màu cố định ở đây cho chắc). -->
-          <div class="dash-legend" id="dashLegend"></div>
           <div class="dash-matrix-wrap" id="dashMatrixWrap">
             <table class="dash-matrix">
               <!-- Mỗi giáo viên giờ tách thành NHIỀU HÀNG — 1 hàng/tiết,
-                   đúng số tiết + giờ giấc lấy từ khung giờ đã cấu hình ở
-                   tab "🗓️ TKB lớp" (⏱️ Giờ tiết) — kèm 2 cột "Buổi" (Sáng/
-                   Chiều, tô màu cam/xanh lá như TKB) và "Thời gian" ngay
-                   cạnh cột tên, để nhìn 1 hàng là biết NGAY tiết mấy, mấy
-                   giờ, buổi nào, lớp gì — xem renderDashboardView() trong
-                   js/teaching-schedule.js. -->
+                   đúng số tiết lấy từ khung giờ đã cấu hình ở tab "🗓️ TKB
+                   lớp" (⏱️ Giờ tiết) — cột "Buổi" (Sáng/Chiều, tô màu cam/
+                   xanh lá như TKB) ghim cạnh cột tên. Mỗi chip trong ô đã tự
+                   hiện NGUYÊN VĂN loại hình + mã lớp (xem dashPeriodCell()
+                   trong js/teaching-schedule.js) nên KHÔNG cần cột "Thời
+                   gian"/bảng chú thích màu riêng nữa (đã bỏ cả 2, trước đây
+                   choán chỗ mà chỉ tra được viết tắt). Viền đậm phân tách
+                   khối hàng giữa các giáo viên (.dash-teacher-start, xem
+                   css/teaching-schedule.css). -->
               <thead><tr>
                 <th class="dash-matrix-name-col">Giáo viên</th>
                 <th class="dash-matrix-buoi-col">Buổi</th>
-                <th class="dash-matrix-time-col">Thời gian</th>
                 <th id="dashDayHead2">Thứ 2</th>
                 <th id="dashDayHead3">Thứ 3</th>
                 <th id="dashDayHead4">Thứ 4</th>
@@ -123,7 +123,7 @@
                 <th id="dashDayHead6">Thứ 6</th>
                 <th id="dashDayHead7">Thứ 7</th>
               </tr></thead>
-              <tbody id="dashMatrixBody"><tr><td colspan="9" class="empty-cell">Đang tải...</td></tr></tbody>
+              <tbody id="dashMatrixBody"><tr><td colspan="8" class="empty-cell">Đang tải...</td></tr></tbody>
             </table>
           </div>
         </div>

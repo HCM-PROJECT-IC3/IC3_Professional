@@ -172,7 +172,7 @@ body {
 /* #mainTabs (teaching-schedule.html) đứng ĐỘC LẬP ở đầu trang — không còn
    gộp hàng với .panel-toolbar/.weekly-topbar-row (xem lý do trong HTML) —
    nên cần margin riêng thay vì dựa vào "gap" của khối cha cũ. */
-.main-tabs { margin-bottom: 1.2rem }
+.main-tabs { margin-bottom: .7rem }
 .tab-panel { display: none }
 .tab-panel.active { display: block; animation: fadeIn .25s ease }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }
@@ -415,14 +415,14 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
 .tc-chip-lop { font-size: .88rem; font-weight: 800; line-height: 1.25 }
 .tc-chip-truong { font-size: .7rem; font-weight: 500; opacity: .85; line-height: 1.25 }
 .tc-chip.main    { background: var(--teal) }
-.tc-chip.sub     { background: var(--blue) }
+.tc-chip.sub     { background: var(--purple) }
 .tc-chip.online  { background: var(--green) }
-.tc-chip.review  { background: var(--purple) }
+.tc-chip.review  { background: var(--blue) }
 .tc-chip.assist  { background: var(--pink) }
 .tc-chip.demo    { background: var(--orange) }
-.tc-chip.prep    { background: var(--muted) }
+.tc-chip.prep    { background: var(--yellow); color: #4a3600 }
 .tc-chip.onsite, .tc-chip.health { background: var(--red) }
-.tc-chip.remote  { background: var(--yellow); color: #4a3600 }
+.tc-chip.remote  { background: var(--red) }
 .tc-chip.leave   { background: var(--text); color: var(--bg) }
 /* Ô trống trong 1 hàng có buổi kia bận — mờ, viền đứt, phân biệt rõ với
    chip màu thật để không nhầm là 1 loại hình phụ trách hợp lệ. */
@@ -483,31 +483,54 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
    hẹp hơn). */
 .dash-matrix { width: 100%; border-collapse: collapse; background: var(--card) }
 .dash-matrix th, .dash-matrix td { padding: .55rem .7rem; border-bottom: 1px solid var(--border); vertical-align: middle }
+/* Header CAM (#E36C09) chữ trắng — ĐÚNG màu hàng tiêu đề trong file Excel
+   gốc "LỊCH GIẢNG DẠY TEAM GVTH..." (mẫu người dùng cung cấp) và bản PDF
+   xuất ra (js/export/teaching-schedule-pdf.js), thay cho nền xám trung
+   tính mặc định trước đây — đồng bộ nhận diện màu xuyên suốt web/PDF. */
 .dash-matrix th {
-  background: var(--card2); font-weight: 800; font-size: .72rem; letter-spacing: .03em;
-  text-transform: uppercase; color: var(--muted); text-align: center; white-space: nowrap;
+  background: #E36C09; font-weight: 800; font-size: .72rem; letter-spacing: .03em;
+  text-transform: uppercase; color: #fff; text-align: center; white-space: nowrap;
   position: sticky; top: 0; z-index: 2;
 }
 .dash-matrix tbody tr:hover { background: var(--purple-lt) }
 .dash-matrix tr.dash-row-missing { background: var(--yellow-lt) }
 .dash-matrix tr.dash-row-missing:hover { background: var(--yellow-lt) }
-/* Ghim cột Giáo viên/Buổi/Thời gian (đầu bảng) khi cuộn ngang — luôn biết
-   đang xem hàng của ai, tiết mấy, mấy giờ dù đã cuộn sang các Thứ cuối. */
-.dash-matrix-name-col, .dash-matrix-buoi-cell, .dash-matrix-time-cell,
-.dash-matrix th:nth-child(1), .dash-matrix th:nth-child(2), .dash-matrix th:nth-child(3) {
-  position: sticky; z-index: 1; background: var(--card);
+/* Tô nền CẢ HÀNG theo buổi (vàng nhạt Sáng/xanh lá nhạt Chiều) — ĐÚNG màu
+   Excel gốc (FFF2CC/E2EFDA), gắn qua class trên <tr> (xem
+   renderDashboardView() trong js/teaching-schedule.js) thay vì chỉ tô mỗi
+   ô "Buổi" như bản trước. Ô trống ("—", .dash-chip-off) phải trong suốt
+   (xem thêm bên dưới) để màu nền hàng lộ ra xuyên qua; ô ĐÃ có lớp vẫn giữ
+   nguyên màu chip theo loại hình (không bị tint đè lên) — cách phối màu
+   này giữ được lợi ích "nhìn màu biết ngay loại hình" của bản dashboard
+   trong khi vẫn mang đúng cảm giác thị giác của tờ lịch giấy quen thuộc. */
+.dash-matrix tr.dash-row-sess-morning   > td { background: #FFF2CC }
+.dash-matrix tr.dash-row-sess-afternoon > td { background: #E2EFDA }
+.dash-matrix tr.dash-row-sess-morning   .dash-matrix-name-col,
+.dash-matrix tr.dash-row-sess-afternoon .dash-matrix-name-col { background: var(--card) }
+.dash-matrix tr.dash-row-missing.dash-row-sess-morning > td,
+.dash-matrix tr.dash-row-missing.dash-row-sess-afternoon > td { background: var(--yellow-lt) }
+.dash-matrix tbody tr.dash-row-sess-morning:hover > td,
+.dash-matrix tbody tr.dash-row-sess-afternoon:hover > td { background: var(--purple-lt) }
+/* Ghim cột Giáo viên/Buổi (đầu bảng) khi cuộn ngang — luôn biết đang xem
+   hàng của ai, buổi nào dù đã cuộn sang các Thứ cuối. Đã bỏ cột "Thời
+   gian" (thừa — mỗi chip trong ô Thứ×Tiết giờ tự hiện đủ tên loại hình,
+   xem dashPeriodCell() trong js/teaching-schedule.js) nên chỉ còn ghim 2
+   cột thay vì 3. CHỈ khai báo sticky/vị trí ở đây — MÀU NỀN của 2 cột này
+   do các rule ".dash-row-sess-*"/"dash-row-missing"/hover ở trên quyết
+   định (tránh khai báo trùng 2 nơi dễ lệch nhau khi 1 hàng vừa thiếu lịch
+   vừa đang hover). */
+.dash-matrix-name-col, .dash-matrix-buoi-cell,
+.dash-matrix th:nth-child(1), .dash-matrix th:nth-child(2) {
+  position: sticky; z-index: 1; background: var(--card); /* nền dự phòng — các rule ".dash-row-sess-*" ở trên đè lên khi áp dụng */
   box-shadow: 2px 0 4px rgba(0,0,0,.05);
 }
 .dash-matrix-name-col, .dash-matrix th:nth-child(1) { left: 0; min-width: 196px }
 .dash-matrix-buoi-cell, .dash-matrix th:nth-child(2) { left: 196px; min-width: 78px; text-align: center }
-.dash-matrix-time-cell, .dash-matrix th:nth-child(3) { left: 274px; min-width: 100px; text-align: center; white-space: nowrap; font-weight: 700; font-size: .78rem }
-.dash-matrix th:nth-child(1), .dash-matrix th:nth-child(2), .dash-matrix th:nth-child(3) { z-index: 3; background: var(--card2) }
-.dash-matrix tr.dash-row-missing .dash-matrix-name-col,
-.dash-matrix tr.dash-row-missing .dash-matrix-buoi-cell,
-.dash-matrix tr.dash-row-missing .dash-matrix-time-cell { background: var(--yellow-lt) }
-.dash-matrix tbody tr:hover .dash-matrix-name-col,
-.dash-matrix tbody tr:hover .dash-matrix-buoi-cell,
-.dash-matrix tbody tr:hover .dash-matrix-time-cell { background: var(--purple-lt) }
+.dash-matrix th:nth-child(1), .dash-matrix th:nth-child(2) { z-index: 3; background: #E36C09 }
+/* Viền đậm phân tách khối hàng giữa 2 giáo viên liền kề (mỗi GV nhiều
+   hàng gộp qua rowspan cột tên) — gắn ở hàng ĐẦU TIÊN của GV (trừ GV đầu
+   bảng), xem "dash-teacher-start" trong renderDashboardView(). */
+.dash-matrix tr.dash-teacher-start > td { border-top: 2px solid var(--purple) }
 /* Ô Giáo viên rowspan CAO NGUYÊN CỘT (~9 hàng/GV) — avatar + số liệu tuần
    để lấp khoảng trắng, thay vì 2 dòng chữ nổi lơ lửng giữa ô rất cao
    trông như "bỏ trống" (phản hồi vùng trống không hợp lý).
@@ -540,15 +563,18 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
   font-size: .7rem; color: var(--muted);
 }
 .dash-matrix-stats b { color: var(--text); font-size: .78rem }
-/* Cột "Buổi" — tô cam (Sáng)/xanh lá (Chiều) GIỐNG HỆT cột Buổi bên modal
-   "Sửa lịch" (sched-buoi-label) và tab "🗓️ TKB lớp", để mọi nơi trong
-   trang cùng 1 quy ước màu Sáng/Chiều, nhìn phát nhận ra ngay. */
+/* Cột "Buổi" — chữ cam (Sáng)/xanh lá đậm (Chiều) ĐÚNG màu chữ "SÁNG"/
+   "CHIỀU" trong Excel gốc (ED7D31/375623) và bản PDF xuất ra. Nền không
+   khai báo riêng ở đây nữa — dùng chung nền tint cả hàng (.dash-row-sess-*
+   ở đầu file) để nhất quán màu giữa cột "Buổi" và các ô Thứ trong CÙNG 1
+   hàng, tránh 2 nơi khai báo nền dễ lệch màu nhau. */
 .dash-matrix-buoi-cell { font-weight: 800; font-size: .74rem; white-space: nowrap }
-.dash-matrix-buoi-cell.dash-sess-morning   { background: var(--orange-lt); color: var(--orange) }
-.dash-matrix-buoi-cell.dash-sess-afternoon { background: var(--green-lt);  color: var(--green) }
-.dash-matrix tr.dash-row-missing .dash-matrix-buoi-cell.dash-sess-morning,
-.dash-matrix tr.dash-row-missing .dash-matrix-buoi-cell.dash-sess-afternoon { background: var(--yellow-lt) }
-.dash-matrix-cell { text-align: center; min-width: 158px }
+.dash-matrix-buoi-cell.dash-sess-morning   { color: #ED7D31 }
+.dash-matrix-buoi-cell.dash-sess-afternoon { color: #375623 }
+/* min-width TĂNG (158→186px) — chip giờ hiện NGUYÊN VĂN tên loại hình đầy
+   đủ (vd "Làm việc tại cty · 5/2") thay vì viết tắt, cần chỗ rộng hơn để
+   không bị bóp chữ quá chật. */
+.dash-matrix-cell { text-align: center; min-width: 186px }
 
 /* Thu nhỏ tối thiểu của TỪNG CỘT khi màn hình không đủ ~1320px (tổng
    min-width mặc định ở trên) — mục tiêu là bảng vẫn co vừa đủ 6 cột Thứ
@@ -557,70 +583,62 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
 @media (max-width: 1400px) {
   .dash-matrix-name-col, .dash-matrix th:nth-child(1) { min-width: 164px }
   .dash-matrix-buoi-cell, .dash-matrix th:nth-child(2) { left: 164px; min-width: 62px }
-  .dash-matrix-time-cell, .dash-matrix th:nth-child(3) { left: 226px; min-width: 84px; font-size: .72rem }
-  .dash-matrix-cell { min-width: 112px }
+  .dash-matrix-cell { min-width: 140px }
   .dash-matrix th, .dash-matrix td { padding: .45rem .45rem }
   .dash-matrix-avatar { width: 28px; height: 28px; font-size: .7rem }
   .dash-matrix-name { font-size: .76rem }
   .dash-chip, .dash-chip-off { font-size: .7rem; padding: .35rem .35rem }
 }
 
-/* Cột "hôm nay" (chỉ khi tuần đang xem CHỨA ngày hôm nay) — viền dưới
-   màu thương hiệu + chữ đậm ở header, tint rất nhẹ ở thân cột, đủ để
-   định vị nhanh mà không thêm màu nền gắt gây rối mắt. */
-.dash-matrix th.today-col { color: var(--purple); box-shadow: inset 0 -3px 0 var(--purple) }
-.dash-matrix-cell.today-col { background: var(--purple-lt) }
+/* Cột "hôm nay" (chỉ khi tuần đang xem CHỨA ngày hôm nay) — viền dưới +
+   tint rất nhẹ ở thân cột, đủ để định vị nhanh mà không thêm màu nền gắt
+   gây rối mắt. Header giờ nền CAM (#E36C09) — TRƯỚC ĐÂY đổi màu CHỮ header
+   sang tím (var(--purple)) khi là cột hôm nay, tím trên nền cam nhìn như
+   1 vệt xanh lạc màu/gạch chân lỗi (phản hồi người dùng) — giữ NGUYÊN chữ
+   trắng như mọi cột khác, CHỈ thêm viền dưới trắng dày để vẫn nổi bật mà
+   không đụng màu. */
+/* CHỈ viền dưới header — bỏ hẳn nền tím phủ lên thân cột (trước đây tô
+   var(--purple-lt) cho MỌI ô cột "hôm nay", đè lên đúng chỗ nền vàng/xanh
+   lá của hàng, tạo ra từng mảng trắng/tím lạc tông ngay giữa cột — phản
+   hồi người dùng). Chỉ cần 1 dấu hiệu ở header là đủ nhận ra cột nào là
+   hôm nay, không cần tô lại toàn bộ thân cột. */
+.dash-matrix th.today-col { box-shadow: inset 0 -3px 0 #fff }
 
 /* Mỗi ô Thứ×Tiết giờ CHỈ còn đúng 1 chip (mã lớp của ĐÚNG tiết đó, hoặc
-   loại hình nếu là buổi không tách tiết như Cty/WFH) — Buổi/Thời gian đã
-   có cột riêng bên trái nên không cần nhồi thêm gì vào đây nữa, chip gọn
-   1 dòng, không còn nguy cơ vỡ chữ như bản dồn 3 lớp thông tin trước. */
+   loại hình nếu là buổi không tách tiết như Cty/WFH) — Buổi đã có cột
+   riêng bên trái nên không cần nhồi thêm gì vào đây nữa. Chip hiện NGUYÊN
+   VĂN tên loại hình đầy đủ (không viết tắt) nên CHO XUỐNG DÒNG thay vì cắt
+   "..." (white-space: nowrap + ellipsis trước đây) — nội dung dài hơn hẳn
+   viết tắt cũ, cắt bớt sẽ mất đúng phần chữ cần đọc đầy đủ. */
 .dash-chip, .dash-chip-off {
   display: inline-flex; align-items: center; justify-content: center;
   width: 100%; box-sizing: border-box; min-width: 0;
   padding: .4rem .5rem; border-radius: 8px;
-  font-size: .76rem; font-weight: 800; line-height: 1.25; white-space: nowrap;
-  overflow: hidden; text-overflow: ellipsis;
+  font-size: .76rem; font-weight: 800; line-height: 1.3;
+  white-space: normal; word-break: break-word; text-align: center;
 }
 .dash-chip { color: #fff }
+/* Nền TRONG SUỐT (trước đây var(--card2) đặc) — để màu tint cả hàng theo
+   buổi (vàng/xanh lá nhạt, xem .dash-row-sess-* ở trên) lộ ra xuyên qua ô
+   trống, đúng cảm giác "cả ô tô màu buổi" của tờ lịch Excel gốc thay vì
+   từng ô trống có 1 khối xám riêng biệt cắt giữa nền màu. */
 .dash-chip-off {
-  color: var(--muted); background: var(--card2); border: 1px dashed var(--border); font-weight: 400;
+  color: var(--muted); background: transparent; border: 1px dashed var(--border); font-weight: 400;
 }
+/* Bảng màu loại hình — theo đúng quy ước người dùng chốt: Dạy Trám = tím,
+   Soạn bài = cam vàng, WFH/Làm việc tại cty = đỏ (đều "không đến trường"
+   nên cùng 1 màu cảnh báo cho dễ nhớ), Ôn Thi đổi sang xanh dương (nhường
+   chỗ tím cho Dạy Trám, tránh trùng màu 2 loại hình khác nhau). */
 .dash-chip.main    { background: var(--teal) }
-.dash-chip.sub     { background: var(--blue) }
+.dash-chip.sub     { background: var(--purple) }
 .dash-chip.online  { background: var(--green) }
-.dash-chip.review  { background: var(--purple) }
+.dash-chip.review  { background: var(--blue) }
 .dash-chip.assist  { background: var(--pink) }
 .dash-chip.demo    { background: var(--orange) }
-.dash-chip.prep    { background: var(--muted) }
+.dash-chip.prep    { background: var(--yellow); color: #4a3600 }
 .dash-chip.onsite, .dash-chip.health { background: var(--red) }
-.dash-chip.remote  { background: var(--yellow); color: #4a3600 }
+.dash-chip.remote  { background: var(--red) }
 .dash-chip.leave   { background: var(--text); color: var(--bg) }
-
-/* Chú thích màu — đối chiếu nhanh Chính/Trám/Dự Giảng/Trợ Giảng... vốn
-   chỉ khác màu nhau, dùng CHUNG đúng class màu .dash-chip.* ở trên nên
-   luôn khớp 100% với màu thật trong bảng, không lo lệch màu do khai báo
-   trùng lặp ở 2 nơi. */
-.dash-legend {
-  display: flex; flex-wrap: wrap; gap: .5rem 1rem;
-  padding: .7rem .9rem; margin-bottom: .8rem;
-  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm);
-  font-size: .74rem; color: var(--muted);
-}
-.dash-legend-item { display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap }
-.dash-legend-swatch {
-  display: inline-block; width: 12px; height: 12px; border-radius: 4px; flex-shrink: 0;
-}
-.dash-legend-swatch.main    { background: var(--teal) }
-.dash-legend-swatch.sub     { background: var(--blue) }
-.dash-legend-swatch.online  { background: var(--green) }
-.dash-legend-swatch.review  { background: var(--purple) }
-.dash-legend-swatch.assist  { background: var(--pink) }
-.dash-legend-swatch.demo    { background: var(--orange) }
-.dash-legend-swatch.prep    { background: var(--muted) }
-.dash-legend-swatch.onsite, .dash-legend-swatch.health { background: var(--red) }
-.dash-legend-swatch.remote  { background: var(--yellow) }
-.dash-legend-swatch.leave   { background: var(--text) }
 
 /* ══════════════════════════════════════════════
    Bố cục menu NẰM NGANG Ở TRÊN, 2 HÀNG CÂN ĐỐI — mỗi hàng luôn chia rõ
@@ -630,19 +648,26 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
      · Hàng 2: tuần + tìm kiếm/lọc (trái)  ↔  nhóm nút hành động (phải)
    + khối chính bên dưới (ma trận/thẻ) CHIẾM TRỌN bề rộng màn hình.
    ══════════════════════════════════════════════ */
-.weekly-layout { display: flex; flex-direction: column; gap: 1.2rem }
+/* Thu gọn khối toolbar đầu trang (trước đây 2 hàng, hàng "Tổng quan/Thẻ"
+   đứng riêng đẩy sát phải bỏ trống cả nửa trái) — giờ gộp còn 1 hàng (xem
+   HTML), nên padding/gap cũng giảm theo cho tương xứng, đỡ chiếm chỗ. */
+.weekly-layout { display: flex; flex-direction: column; gap: .8rem }
 
 .weekly-sidebar {
-  display: flex; flex-direction: column; gap: .85rem;
+  display: flex; flex-direction: column; gap: .6rem;
   background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm);
-  padding: 1rem 1.2rem; box-shadow: var(--shadow);
+  padding: .7rem 1rem; box-shadow: var(--shadow);
 }
 
-.weekly-topbar-row { display: flex; align-items: center; gap: .9rem; flex-wrap: wrap }
+.weekly-topbar-row { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap }
 .weekly-topbar-row > :last-child { margin-left: auto }
 @media (max-width: 720px) {
   .weekly-topbar-row > :last-child { margin-left: 0 }
 }
+/* "Tổng quan/Thẻ" đứng ĐẦU hàng chung với Tuần/Tìm kiếm/hành động (trước
+   đây tách hẳn 1 hàng riêng) — thêm viền dọc để vẫn phân biệt rõ đây là
+   nhóm "chế độ xem" khác với nhóm "bộ lọc/hành động" bên cạnh. */
+#viewToggle { padding-right: .9rem; border-right: 1.5px solid var(--border) }
 
 /* "Tuần" và "Tìm kiếm" dùng CHUNG cấu trúc nhãn-trên/ô-dưới nên 2 ô luôn
    ngang hàng nhau (trước đây ô tìm kiếm không có nhãn phía trên nên bị
@@ -796,16 +821,14 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
   font-size: .68rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .03em;
 }
 .day-card-session.sess-main    { background: var(--teal-lt);   border-color: rgba(23,179,163,.35) }
-.day-card-session.sess-sub     { background: var(--blue-lt);   border-color: rgba(46,140,240,.35) }
+.day-card-session.sess-sub     { background: var(--purple-lt); border-color: rgba(79,107,255,.35) }
 .day-card-session.sess-online  { background: var(--green-lt);  border-color: rgba(33,179,107,.35) }
-.day-card-session.sess-review  { background: var(--purple-lt); border-color: rgba(79,107,255,.35) }
+.day-card-session.sess-review  { background: var(--blue-lt);   border-color: rgba(46,140,240,.35) }
 .day-card-session.sess-assist  { background: rgba(221,79,166,.14); border-color: rgba(221,79,166,.4) }
 .day-card-session.sess-demo    { background: var(--orange-lt); border-color: rgba(255,138,61,.4) }
-.day-card-session.sess-prep {
-  background: var(--card2); border-color: var(--border);
-}
+.day-card-session.sess-prep   { background: var(--yellow-lt); border-color: rgba(246,167,35,.4) }
 .day-card-session.sess-onsite, .day-card-session.sess-health { background: var(--red-lt); border-color: rgba(240,72,62,.35) }
-.day-card-session.sess-remote { background: var(--yellow-lt); border-color: rgba(246,167,35,.4) }
+.day-card-session.sess-remote { background: var(--red-lt); border-color: rgba(240,72,62,.35) }
 .day-card-session.sess-leave  { background: var(--card2); border-color: var(--text) }
 
 /* Ô nhập luôn nền TRẮNG/tối (--card, không phải --card2) để nổi rõ trên
@@ -876,8 +899,7 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
   .wrap { padding: 1rem 1rem 1.6rem }
   .dash-matrix-name-col, .dash-matrix th:nth-child(1) { min-width: 132px }
   .dash-matrix-buoi-cell, .dash-matrix th:nth-child(2) { left: 132px; min-width: 48px }
-  .dash-matrix-time-cell, .dash-matrix th:nth-child(3) { left: 180px; min-width: 64px; font-size: .68rem }
-  .dash-matrix-cell { min-width: 92px }
+  .dash-matrix-cell { min-width: 110px }
   .dash-matrix th, .dash-matrix td { padding: .38rem .35rem }
   .dash-chip, .dash-chip-off { font-size: .66rem; padding: .3rem .3rem }
 }
@@ -915,11 +937,6 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
 .tt-sess-morning   { background: var(--yellow-lt); color: #a97a00 }
 .tt-sess-afternoon { background: var(--purple-lt); color: var(--purple) }
 .tt-tiet-cell { font-weight: 800; color: var(--muted); width: 44px }
-.tt-time-cell { font-weight: 700; color: var(--text); white-space: nowrap; width: 108px }
-/* Số phút/tiết ngay dưới giờ vào-ra — nhắc rõ khung giờ đang hiện ứng với
-   thời lượng nào (35’ Tiểu học hay 45’ THCS), tránh hiểu lầm "giờ chung
-   cho mọi trường" khi thực ra mỗi cấp học 1 khung khác nhau. */
-.tt-time-mins { font-size: .66rem; font-weight: 700; color: var(--muted); margin-top: .1rem }
 
 /* Chú thích huy hiệu cấp học — đặt ngay trên lưới, KHỚP màu với
    .tt-level-badge bên dưới để đối chiếu nhanh. */
