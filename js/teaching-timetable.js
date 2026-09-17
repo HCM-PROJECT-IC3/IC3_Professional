@@ -43,13 +43,18 @@
     weeks: [],
     weekKey: '',
     teacherCode: '',
-    periodTimes: null, // { morning:[{start,end}], afternoon:[{start,end}] } của giáo viên đang chọn
+    // { "2".."7": { morning:[{start,end}], afternoon:[{start,end}] } } — MỖI
+    // THỨ 1 khung giờ RIÊNG (không còn dùng chung 1 khung cho cả tuần —
+    // giáo viên dạy Tiểu học vài ngày/THCS vài ngày khác trong CÙNG 1 tuần
+    // rất phổ biến, xem js/models/teaching-timetable.model.js).
+    periodTimesByDay: null,
     days: null,         // { "2".."7": { morning:[mã lớp...], afternoon:[mã lớp...] } }
     truongOptions: [],  // gợi ý "Trường" (datalist) — map từ tab Lịch tuần + lịch sử TKB của GV đang chọn
     lopOptions: [],      // gợi ý "Mã lớp" (datalist) — lịch sử TKB của GV đang chọn + mọi GV khác trong tuần đang xem
     autoCells: new Set(), // set "day-session-idx" các ô vừa được tự động điền từ Lịch tuần (xem applyScheduleAutoFill) — chỉ để tô sáng UI, không lưu Firestore
   };
-  let ptDraft = null; // bản nháp đang sửa trong modal "⏱️ Giờ tiết"
+  let ptDraft = null; // bản nháp { "2".."7": {morning,afternoon} } đang sửa trong modal "⏱️ Giờ tiết"
+  let ptEditingDay = '2'; // Thứ đang chọn để sửa trong modal (tab) — mặc định Thứ 2
 
   // Cho phép module khác (js/teaching-timetable-import.js) ĐỌC được đúng
   // bối cảnh đang xem (giáo viên/tuần đang chọn, danh sách GV/tuần đã tải
@@ -63,7 +68,7 @@
       return {
         teacherCode: state.teacherCode,
         teacherName: t ? t.name : '',
-        periodTimes: state.periodTimes,
+        periodTimesByDay: state.periodTimesByDay,
         weekKey: state.weekKey,
         weekLabel: week ? (week.label || week.id) : '',
         teachers: state.teachers, // [{code, name, ...}] — GV đang có trong hệ thống, để đối chiếu mã GV nhập vào
@@ -213,8 +218,8 @@
         window.EduRepositories.teachingTimetable.getById(M.docId(state.teacherCode, state.weekKey)),
         scheduleId ? window.EduRepositories.teachingSchedule.getById(scheduleId).catch(() => null) : Promise.resolve(null),
       ]);
-      state.periodTimes = M.clonePeriodTimes(ptDoc);
-      state.days = M.normalizeDays(ttDoc && ttDoc.days, state.periodTimes);
+      state.periodTimesByDay = M.normalizePeriodTimesDoc(ptDoc);
+      state.days = M.normalizeDays(ttDoc && ttDoc.days, state.periodTimesByDay);
       applyScheduleAutoFill(scheduleDoc);
       emptyEl.classList.add('force-hide');
       wrapEl.classList.remove('force-hide');
@@ -345,7 +350,16 @@
    * trường giữa các tiết trong CÙNG 1 buổi, nên "trường" phải theo TỪNG
    * TIẾT chứ không gộp chung 1 ô/buổi được. Chèn 1 dòng "☕ Ra chơi" sau
    * tiết thứ M.BREAK_AFTER_INDEX+1 của mỗi buổi (nếu buổi đó đủ dài) giống
-   * mẫu giấy. */
+   * mẫu giấy.
+   *
+   * MỖI THỨ có khung giờ RIÊNG (state.periodTimesByDay) — cột "Thời gian"
+   * dùng chung 1 hàng cho cả 6 Thứ nên chỉ hiện được 1 giờ THAM CHIẾU
+   * (Thứ 2, hoặc Thứ đầu tiên có cấu hình tiết đó nếu Thứ 2 nghỉ) — Thứ nào
+   * có giờ THỰC TẾ khác giờ tham chiếu (vd Thứ 3 cấu hình khung THCS 45’
+   * trong khi cột tham chiếu là Tiểu học 35’) thì ô của Thứ đó tự hiện
+   * thêm giờ đúng của riêng nó, không phụ thuộc cột dùng chung nữa. Thứ
+   * nào có ÍT tiết hơn Thứ nhiều nhất (vd chỉ dạy 4 tiết Sáng thay vì 5) —
+   * ô dư ra của Thứ đó bị khoá (không có ô nhập, hiện "—"). */
   function renderGrid() {
     const table = document.getElementById('ttGrid');
     const dayHeaders = M.WEEKDAYS.map((d, i) => `<th class="tt-day-head tt-day-${i}">${M.WEEKDAY_LABELS[d]}</th>`).join('');
@@ -354,34 +368,76 @@
     const readOnly = state.role === 'teacher' || state.role === 'teaching_coordinator';
     const readOnlyAttr = readOnly ? ' readonly' : '';
 
+    /** Tính lại HTML huy hiệu cấp học cho 1 ô (dùng cả lúc vẽ lưới lần đầu
+     * VÀ khi gõ lại "Trường"/"Mã lớp" — xem addEventListener('input') bên
+     * dưới — để huy hiệu/cảnh báo cập nhật ngay khi gõ, không phải đợi tải
+     * lại cả lưới mới thấy đúng). `period` là khung giờ THỰC của ĐÚNG
+     * Thứ/tiết ô này (không còn dùng chung 1 khung cho cả tuần). */
+    function computeBadgeHtml(sessionKey, pi, cell, period) {
+      const rowMinutes = period ? M.periodMinutes(period) : null;
+      const levelKey = M.inferSchoolLevel(cell.truong);
+      if (!levelKey || !cell.maLop) return '';
+      const level = M.SCHOOL_LEVELS[levelKey];
+      const mismatched = rowMinutes && level.minutes !== rowMinutes;
+      const realPeriod = (M.LEVEL_PERIOD_TIMES[levelKey][sessionKey] || [])[pi];
+      const warnTitle = mismatched && realPeriod
+        ? ` title="⚠️ Ô này đang để ${rowMinutes}’/tiết, nhưng ${level.label} chuẩn ${level.minutes}’/tiết (≈ ${esc(realPeriod.start)}–${esc(realPeriod.end)}). Sửa khung giờ đúng Thứ này trong ⏱️ Giờ tiết nếu cần."`
+        : '';
+      return `<span class="tt-level-badge tt-level-${levelKey}${mismatched ? ' tt-level-mismatch' : ''}"${warnTitle}>${esc(level.short)}${mismatched ? ' ⚠️' : ''}</span>`;
+    }
+
     function sessionRows(sessionKey) {
-      const periods = state.periodTimes[sessionKey];
-      const hasBreak = periods.length > M.BREAK_AFTER_INDEX + 1;
-      const rowspan = periods.length + (hasBreak ? 1 : 0);
+      const maxCount = M.maxPeriodCount(state.periodTimesByDay, sessionKey);
+      const hasBreak = maxCount > M.BREAK_AFTER_INDEX + 1;
+      const rowspan = maxCount + (hasBreak ? 1 : 0);
       const icon = sessionKey === 'morning' ? '☀️' : '🌙';
       const label = M.SESSION_LABELS[sessionKey];
       const rows = [];
-      periods.forEach((p, pi) => {
+      for (let pi = 0; pi < maxCount; pi++) {
+        // Giờ THAM CHIẾU hiện ở cột "Thời gian" — Thứ 2 nếu có tiết này,
+        // else Thứ đầu tiên (theo thứ tự Thứ2→7) có cấu hình tiết này.
+        const refPeriod = M.WEEKDAYS.map((d) => (state.periodTimesByDay[String(d)][sessionKey] || [])[pi]).find(Boolean);
+        const refMinutes = refPeriod ? M.periodMinutes(refPeriod) : null;
+
+        const dayCellsHtml = M.WEEKDAYS.map((d) => {
+          const dayPeriods = state.periodTimesByDay[String(d)][sessionKey] || [];
+          const period = dayPeriods[pi];
+          if (!period) {
+            // Thứ này không dạy tới tiết thứ pi+1 (ít tiết hơn Thứ khác
+            // trong cùng buổi) — ô khoá, không có ô nhập.
+            return '<td class="tt-cell tt-cell-disabled"><div class="tt-cell-inner tt-cell-inner-disabled">—</div></td>';
+          }
+          const cell = M.cellOf((state.days[String(d)][sessionKey] || [])[pi]);
+          // LƯU Ý: input bọc trong 1 <div class="tt-cell-inner"> riêng —
+          // KHÔNG được đặt display:flex thẳng lên <td> (tt-cell), vì làm
+          // vậy trình duyệt bỏ luôn "table-cell" của ô đó, vỡ toàn bộ
+          // layout bảng (đã từng bị 1 cột phình to nuốt hết cột khác).
+          // list="ttLopOptions"/"ttTruongOptions" biến ô thành combo-box
+          // (gõ tự do VẪN được, danh sách chỉ là gợi ý) — nạp động theo
+          // đúng giáo viên/tuần đang xem qua loadSuggestions().
+          const isAuto = state.autoCells.has(`${d}-${sessionKey}-${pi}`);
+          const autoTitle = isAuto ? ' title="🔄 Tự động lấy từ Lịch tuần — vẫn sửa được nếu TKB cần khác đi"' : '';
+          // Thứ này có giờ KHÁC cột "Thời gian" tham chiếu — hiện thêm giờ
+          // THỰC của riêng Thứ này ngay trong ô, không phụ thuộc cột chung.
+          const differsFromRef = refPeriod && (period.start !== refPeriod.start || period.end !== refPeriod.end);
+          const ownTimeHtml = differsFromRef
+            ? `<div class="tt-cell-own-time" title="Giờ riêng của ${esc(M.WEEKDAY_LABELS[d])}, khác cột Thời gian tham chiếu">⏱ ${esc(period.start)}–${esc(period.end)}</div>`
+            : '';
+          return `<td class="tt-cell"><div class="tt-cell-inner${isAuto ? ' tt-cell-auto' : ''}"${autoTitle}>
+            ${ownTimeHtml}
+            <input type="text" class="tt-input tt-input-lop" list="ttLopOptions" data-day="${d}" data-session="${sessionKey}" data-period-idx="${pi}" data-field="maLop" value="${esc(cell.maLop)}" placeholder="Mã lớp"${readOnlyAttr}>
+            <div class="tt-truong-row">
+              <input type="text" class="tt-input tt-input-truong" list="ttTruongOptions" data-day="${d}" data-session="${sessionKey}" data-period-idx="${pi}" data-field="truong" value="${esc(cell.truong)}" placeholder="Trường..."${readOnlyAttr}>
+              <span class="tt-level-badge-slot">${computeBadgeHtml(sessionKey, pi, cell, period)}</span>
+            </div>
+          </div></td>`;
+        }).join('');
+
         rows.push(`<tr>
           ${pi === 0 ? `<td class="tt-buoi-cell tt-sess-${sessionKey}" rowspan="${rowspan}">${icon}<br>${label}</td>` : ''}
           <td class="tt-tiet-cell">${pi + 1}</td>
-          <td class="tt-time-cell">${esc(p.start)} - ${esc(p.end)}</td>
-          ${M.WEEKDAYS.map((d) => {
-            const cell = M.cellOf((state.days[String(d)][sessionKey] || [])[pi]);
-            // LƯU Ý: input bọc trong 1 <div class="tt-cell-inner"> riêng —
-            // KHÔNG được đặt display:flex thẳng lên <td> (tt-cell), vì làm
-            // vậy trình duyệt bỏ luôn "table-cell" của ô đó, vỡ toàn bộ
-            // layout bảng (đã từng bị 1 cột phình to nuốt hết cột khác).
-            // list="ttLopOptions"/"ttTruongOptions" biến ô thành combo-box
-            // (gõ tự do VẪN được, danh sách chỉ là gợi ý) — nạp động theo
-            // đúng giáo viên/tuần đang xem qua loadSuggestions().
-            const isAuto = state.autoCells.has(`${d}-${sessionKey}-${pi}`);
-            const autoTitle = isAuto ? ' title="🔄 Tự động lấy từ Lịch tuần — vẫn sửa được nếu TKB cần khác đi"' : '';
-            return `<td class="tt-cell"><div class="tt-cell-inner${isAuto ? ' tt-cell-auto' : ''}"${autoTitle}>
-              <input type="text" class="tt-input tt-input-lop" list="ttLopOptions" data-day="${d}" data-session="${sessionKey}" data-period-idx="${pi}" data-field="maLop" value="${esc(cell.maLop)}" placeholder="Mã lớp"${readOnlyAttr}>
-              <input type="text" class="tt-input tt-input-truong" list="ttTruongOptions" data-day="${d}" data-session="${sessionKey}" data-period-idx="${pi}" data-field="truong" value="${esc(cell.truong)}" placeholder="Trường..."${readOnlyAttr}>
-            </div></td>`;
-          }).join('')}
+          <td class="tt-time-cell">${refPeriod ? `${esc(refPeriod.start)} - ${esc(refPeriod.end)}${refMinutes ? `<div class="tt-time-mins">${refMinutes}’/tiết</div>` : ''}` : '—'}</td>
+          ${dayCellsHtml}
         </tr>`);
         if (hasBreak && pi === M.BREAK_AFTER_INDEX) {
           // Cột "Buổi" đang bị chiếm bởi ô rowspan từ dòng tiết đầu tiên
@@ -390,7 +446,7 @@
           // gian) + 6 cột Thứ, không phải toàn bộ 3+6 cột của bảng.
           rows.push(`<tr class="tt-break-row"><td class="tt-break-label" colspan="${2 + M.WEEKDAYS.length}">☕ Ra chơi</td></tr>`);
         }
-      });
+      }
       return rows.join('');
     }
 
@@ -409,7 +465,14 @@
       table.querySelectorAll('.tt-input').forEach((el) => {
         el.addEventListener('input', () => {
           const d = el.dataset.day, s = el.dataset.session, pi = Number(el.dataset.periodIdx), f = el.dataset.field;
-          state.days[d][s][pi][f] = el.value;
+          const cell = state.days[d][s][pi];
+          cell[f] = el.value;
+          // Gõ lại "Trường"/"Mã lớp" thì huy hiệu cấp học/cảnh báo lệch giờ
+          // cập nhật NGAY (không phải tải lại cả lưới mới thấy đúng) —
+          // dùng ĐÚNG khung giờ của Thứ này (không còn 1 khung chung).
+          const period = (state.periodTimesByDay[d][s] || [])[pi];
+          const slot = el.closest('.tt-cell-inner').querySelector('.tt-level-badge-slot');
+          if (slot) slot.innerHTML = computeBadgeHtml(s, pi, cell, period);
         });
         // Dán bảng trực tiếp CHỈ áp dụng cho cột "Mã lớp" (trường hợp dùng
         // nhiều nhất — dán nguyên hàng mã lớp từ Excel) — ô "Trường" thường
@@ -425,7 +488,10 @@
    * mấy hàng" đi từ đúng ô đang bấm khi dán 1 khối nhiều dòng/cột. */
   function flatRowOrder() {
     const order = [];
-    M.SESSIONS.forEach((s) => { state.periodTimes[s].forEach((_, idx) => order.push({ session: s, idx })); });
+    M.SESSIONS.forEach((s) => {
+      const maxCount = M.maxPeriodCount(state.periodTimesByDay, s);
+      for (let idx = 0; idx < maxCount; idx++) order.push({ session: s, idx });
+    });
     return order;
   }
 
@@ -510,19 +576,23 @@
       teacherName: t ? t.name : state.teacherCode,
       weekLabel: week ? (week.label || week.id) : state.weekKey,
       days: state.days,
-      periodTimes: state.periodTimes,
+      periodTimesByDay: state.periodTimesByDay,
     }, M);
   });
 
   // ------------------------------------------------------------
-  // MODAL: ⏱️ Giờ tiết — khung giờ riêng của giáo viên đang chọn, áp dụng
-  // mọi tuần (không lặp cấu hình theo tuần).
+  // MODAL: ⏱️ Giờ tiết — khung giờ riêng của giáo viên đang chọn, MỖI THỨ
+  // 2→7 sửa RIÊNG qua tab (không còn 1 khung chung cho cả tuần) — áp dụng
+  // cho mọi tuần (không lặp cấu hình theo tuần), chỉ khác theo Thứ.
   // ------------------------------------------------------------
   function openPeriodTimesModal() {
     if (!state.teacherCode) { toast('⚠️ Chọn giáo viên trước.'); return; }
     const t = state.teachers.find((x) => x.code === state.teacherCode);
     document.getElementById('periodTimesModalTitle').textContent = `⏱️ Giờ tiết — ${t ? t.name : state.teacherCode}`;
-    ptDraft = M.clonePeriodTimes(state.periodTimes);
+    ptDraft = {};
+    M.WEEKDAYS.forEach((d) => { ptDraft[String(d)] = M.clonePeriodTimes(state.periodTimesByDay[String(d)]); });
+    ptEditingDay = '2';
+    renderPeriodTimesTabs();
     renderPeriodTimesBody();
     document.getElementById('periodTimesModalOverlay').classList.add('show');
   }
@@ -537,12 +607,51 @@
     if (e.target.id === 'periodTimesModalOverlay') closePeriodTimesModal();
   });
 
+  /** Tab chọn Thứ đang sửa — CHỈ Thứ đang chọn (ptEditingDay) mới hiện/sửa
+   * được trong thân modal, các Thứ khác GIỮ NGUYÊN không đụng tới, đúng
+   * yêu cầu "mỗi Thứ áp dụng riêng" thay vì đổi chung cả tuần. */
+  function renderPeriodTimesTabs() {
+    const wrap = document.getElementById('periodTimesDayTabs');
+    if (!wrap) return;
+    wrap.innerHTML = M.WEEKDAYS.map((d) => {
+      const key = String(d);
+      const active = key === ptEditingDay ? ' pt-day-tab-active' : '';
+      return `<button type="button" class="pt-day-tab${active}" data-day="${key}">${esc(M.WEEKDAY_LABELS[d])}</button>`;
+    }).join('');
+    wrap.querySelectorAll('.pt-day-tab').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        ptEditingDay = btn.dataset.day;
+        renderPeriodTimesTabs();
+        renderPeriodTimesBody();
+      });
+    });
+  }
+
+  /** Nút "Áp dụng nhanh khung giờ chuẩn" (🟢 Tiểu học 35’ / 🔵 THCS 45’) —
+   * CHỈ thay khung giờ của ĐÚNG 1 buổi (sessionKey) CỦA ĐÚNG 1 THỨ đang
+   * chọn (ptEditingDay), KHÔNG đụng tới buổi/Thứ còn lại — giáo viên dạy
+   * Thứ 2 ở Tiểu học nhưng Thứ 3 lại ở THCS (hoặc Sáng/Chiều khác cấp
+   * trong cùng 1 ngày) rất phổ biến, áp rộng hơn phạm vi đang chọn sẽ làm
+   * sai giờ những Thứ/buổi không liên quan. */
+  function applyLevelPreset(sessionKey, levelKey) {
+    if (!ptDraft) return;
+    ptDraft[ptEditingDay][sessionKey] = M.LEVEL_PERIOD_TIMES[levelKey][sessionKey].map((p) => ({ ...p }));
+    renderPeriodTimesBody();
+    const sessLabel = sessionKey === 'morning' ? 'Sáng' : 'Chiều';
+    toast(`✅ Đã áp khung giờ ${M.SCHOOL_LEVELS[levelKey].label} (${M.SCHOOL_LEVELS[levelKey].minutes}’/tiết) cho buổi ${sessLabel} — ${M.WEEKDAY_LABELS[Number(ptEditingDay)]} — bấm "💾 Lưu giờ tiết" để áp dụng.`);
+  }
+
   function renderPeriodTimesBody() {
     const wrap = document.getElementById('periodTimesBody');
+    const dayDraft = ptDraft[ptEditingDay];
     function col(sessionKey, label) {
-      const periods = ptDraft[sessionKey];
+      const periods = dayDraft[sessionKey];
       return `<div class="pt-col">
         <div class="pt-col-title">${label}</div>
+        <div class="pt-preset-row">
+          <button type="button" class="btn btn-ghost pt-preset-btn" data-session="${sessionKey}" data-level="tieuHoc">🟢 Tiểu học · 35’</button>
+          <button type="button" class="btn btn-ghost pt-preset-btn" data-session="${sessionKey}" data-level="thcs">🔵 THCS · 45’</button>
+        </div>
         ${periods.map((p, pi) => `
           <div class="pt-row" data-session="${sessionKey}" data-idx="${pi}">
             <span class="pt-row-num">Tiết ${pi + 1}</span>
@@ -558,22 +667,40 @@
 
     wrap.querySelectorAll('.pt-row').forEach((row) => {
       const s = row.dataset.session, idx = Number(row.dataset.idx);
-      row.querySelector('.pt-start').addEventListener('input', (e) => { ptDraft[s][idx].start = e.target.value; });
-      row.querySelector('.pt-end').addEventListener('input', (e) => { ptDraft[s][idx].end = e.target.value; });
-      row.querySelector('.pt-remove-btn').addEventListener('click', () => { ptDraft[s].splice(idx, 1); renderPeriodTimesBody(); });
+      row.querySelector('.pt-start').addEventListener('input', (e) => { dayDraft[s][idx].start = e.target.value; });
+      row.querySelector('.pt-end').addEventListener('input', (e) => { dayDraft[s][idx].end = e.target.value; });
+      row.querySelector('.pt-remove-btn').addEventListener('click', () => { dayDraft[s].splice(idx, 1); renderPeriodTimesBody(); });
     });
     wrap.querySelectorAll('.pt-add-btn').forEach((btn) => {
-      btn.addEventListener('click', () => { ptDraft[btn.dataset.session].push({ start: '', end: '' }); renderPeriodTimesBody(); });
+      btn.addEventListener('click', () => { dayDraft[btn.dataset.session].push({ start: '', end: '' }); renderPeriodTimesBody(); });
+    });
+    wrap.querySelectorAll('.pt-preset-btn').forEach((btn) => {
+      btn.addEventListener('click', () => applyLevelPreset(btn.dataset.session, btn.dataset.level));
     });
   }
 
+  /** "📋 Copy khung giờ Thứ này cho tất cả các Thứ còn lại" — tiện ích cho
+   * trường hợp giáo viên dạy giống hệt nhau mọi ngày trong tuần (không
+   * cần bấm 6 lần), KHÔNG chạy tự động — chỉ khi admin chủ động bấm. */
+  document.getElementById('periodTimesCopyAllBtn')?.addEventListener('click', () => {
+    if (!ptDraft) return;
+    const source = ptDraft[ptEditingDay];
+    M.WEEKDAYS.forEach((d) => {
+      const key = String(d);
+      if (key === ptEditingDay) return;
+      ptDraft[key] = { morning: source.morning.map((p) => ({ ...p })), afternoon: source.afternoon.map((p) => ({ ...p })) };
+    });
+    toast(`✅ Đã copy khung giờ ${M.WEEKDAY_LABELS[Number(ptEditingDay)]} sang mọi Thứ còn lại — bấm "💾 Lưu giờ tiết" để áp dụng.`);
+  });
+
   document.getElementById('periodTimesSaveBtn').addEventListener('click', async () => {
     if (!state.teacherCode || !ptDraft) return;
-    if (!ptDraft.morning.length && !ptDraft.afternoon.length) { toast('⚠️ Cần ít nhất 1 tiết.'); return; }
+    const dayDraft = ptDraft[ptEditingDay];
+    if (!dayDraft.morning.length && !dayDraft.afternoon.length) { toast(`⚠️ ${M.WEEKDAY_LABELS[Number(ptEditingDay)]} cần ít nhất 1 tiết.`); return; }
     const btn = document.getElementById('periodTimesSaveBtn');
     btn.disabled = true;
     try {
-      await window.EduRepositories.teachingPeriodTimes.upsert(state.teacherCode, { morning: ptDraft.morning, afternoon: ptDraft.afternoon });
+      await window.EduRepositories.teachingPeriodTimes.upsert(state.teacherCode, { byDay: ptDraft });
       toast('✅ Đã lưu giờ tiết');
       closePeriodTimesModal();
       await loadAndRenderGrid(); // chuẩn hoá lại "days" theo số tiết mới (nếu vừa thêm/bớt)
