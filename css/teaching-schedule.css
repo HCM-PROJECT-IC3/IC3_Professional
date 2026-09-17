@@ -916,6 +916,19 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
 .tt-sess-afternoon { background: var(--purple-lt); color: var(--purple) }
 .tt-tiet-cell { font-weight: 800; color: var(--muted); width: 44px }
 .tt-time-cell { font-weight: 700; color: var(--text); white-space: nowrap; width: 108px }
+/* Số phút/tiết ngay dưới giờ vào-ra — nhắc rõ khung giờ đang hiện ứng với
+   thời lượng nào (35’ Tiểu học hay 45’ THCS), tránh hiểu lầm "giờ chung
+   cho mọi trường" khi thực ra mỗi cấp học 1 khung khác nhau. */
+.tt-time-mins { font-size: .66rem; font-weight: 700; color: var(--muted); margin-top: .1rem }
+
+/* Chú thích huy hiệu cấp học — đặt ngay trên lưới, KHỚP màu với
+   .tt-level-badge bên dưới để đối chiếu nhanh. */
+.tt-legend {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .9rem;
+  margin-bottom: .7rem; font-size: .76rem; color: var(--muted); font-weight: 700;
+}
+.tt-legend-item { display: inline-flex; align-items: center; gap: .35rem }
+.tt-legend-warn { color: #a97a00 }
 .tt-break-row td.tt-break-label {
   background: var(--card2); color: var(--muted); font-weight: 700; font-size: .76rem;
   padding: .35rem;
@@ -963,13 +976,62 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
   background: transparent; border-style: dashed; border-color: var(--border);
 }
 .tt-input-truong:focus { background: var(--card) }
+/* Trường + huy hiệu cấp học nằm CÙNG 1 hàng, sát nhau — huy hiệu tự nhận
+   diện cấp học ("TiH.../THCS..." — xem inferSchoolLevel()) để đối chiếu
+   nhanh với cột "Thời gian", KHÔNG chiếm thêm hàng riêng làm ô cao hơn. */
+.tt-truong-row { display: flex; align-items: center; gap: .3rem }
+.tt-truong-row .tt-input-truong { flex: 1; min-width: 0 }
+.tt-level-badge-slot:empty { display: none }
+.tt-level-badge {
+  display: inline-flex; align-items: center; flex-shrink: 0;
+  font-size: .6rem; font-weight: 800; letter-spacing: .02em;
+  padding: .15rem .35rem; border-radius: 999px; white-space: nowrap;
+  cursor: default;
+}
+.tt-level-badge.tt-level-tieuHoc { background: #e3faf6; color: #0f857a }
+.tt-level-badge.tt-level-thcs    { background: #e7f2fe; color: #1e64be }
+/* Lệch với khung giờ đang áp dụng cho cả tuần (vd tuần đang để 35’/tiết
+   nhưng ô này là lớp THCS chuẩn 45’) — đổi màu cảnh báo để bắt mắt hơn
+   huy hiệu bình thường, tooltip (title, gắn ở JS) nói rõ giờ thực tế. */
+.tt-level-badge.tt-level-mismatch { background: #fff1cf; color: #a97a00 }
 /* Ô vừa được TỰ ĐỘNG điền Mã lớp/Trường từ tab "📅 Lịch tuần" (xem
    applyScheduleAutoFill() trong js/teaching-timetable.js) — viền xanh lá
    nhạt để phân biệt với ô gõ tay/dán thủ công, vẫn sửa được bình thường. */
 .tt-cell-auto { outline: 1.5px dashed var(--green, #2e9e5b); outline-offset: 2px; border-radius: 8px }
+/* Ô Thứ không có đủ tiết (buổi đó ở Thứ này ít tiết hơn Thứ khác trong
+   tuần, vd chỉ 4 tiết Sáng thay vì 5) — khoá hẳn, không có ô nhập, tránh
+   hiểu lầm "còn tiết trống chưa xếp lớp". */
+.tt-cell-disabled { background: repeating-linear-gradient(45deg, var(--card2), var(--card2) 6px, var(--card) 6px, var(--card) 12px) }
+.tt-cell-inner-disabled { display: flex; align-items: center; justify-content: center; color: var(--border); font-weight: 800; min-height: 2.6rem }
+/* Giờ THỰC riêng của 1 Thứ khi khác cột "Thời gian" tham chiếu (vd Thứ 3
+   cấu hình khung THCS 45’ trong khi cột chung đang hiện giờ Tiểu học
+   35’ của Thứ 2) — hiện ngay trong ô, không phụ thuộc cột dùng chung. */
+.tt-cell-own-time {
+  font-size: .64rem; font-weight: 800; color: var(--purple);
+  background: var(--purple-lt); border-radius: 5px; padding: .1rem .3rem;
+  align-self: center;
+}
 
 /* ---- Modal "⏱️ Giờ tiết" — 2 cột Sáng/Chiều, mỗi tiết 1 hàng giờ vào/ra
    có thể thêm/bớt (số tiết mỗi trường không nhất thiết giống nhau). ---- */
+/* Tab chọn Thứ đang sửa — MỖI THỨ 1 khung giờ riêng (xem
+   js/teaching-timetable.js openPeriodTimesModal()), chỉ Thứ đang chọn mới
+   hiện/sửa được ở phần thân modal bên dưới. */
+.pt-day-tabs { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: 1rem }
+.pt-day-tab {
+  border: 1.5px solid var(--border); background: var(--card2); color: var(--muted);
+  font-weight: 800; font-size: .8rem; padding: .45rem .9rem; border-radius: 999px;
+  cursor: pointer; transition: all .15s ease;
+}
+.pt-day-tab:hover { border-color: var(--purple) }
+.pt-day-tab-active { background: var(--purple); border-color: var(--purple); color: #fff }
+.pt-copy-all-btn { margin-top: 1rem; font-size: .78rem }
+
+/* Mỗi buổi (Sáng/Chiều) có nút preset RIÊNG — CỐ TÌNH không gộp 1 hàng
+   nút chung áp cho cả 2 buổi, vì giáo viên dạy Sáng Tiểu học/Chiều THCS
+   (hoặc ngược lại) rất phổ biến, áp chung sẽ làm sai buổi kia. */
+.pt-preset-row { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: .3rem }
+.pt-preset-btn { font-size: .74rem; padding: .35rem .7rem }
 .pt-cols { display: flex; gap: 1rem; flex-wrap: wrap }
 .pt-col { flex: 1; min-width: 260px; display: flex; flex-direction: column; gap: .5rem }
 .pt-col-title { font-weight: 800; font-size: .85rem }

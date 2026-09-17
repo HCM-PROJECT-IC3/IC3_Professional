@@ -124,22 +124,41 @@
     return logo ? 50 * logo.aspect : 0;
   }
 
-  /** Nội dung 1 ô (Buổi × Thứ) trong bảng lịch: loại hình + địa điểm +
-   * danh sách tiết có tích (kèm mã lớp nếu đã gõ, vd "T1=5/1"), mỗi phần
-   * 1 dòng riêng cho dễ đọc khi in. */
+  /** Gom các tiết LIÊN TIẾP dạy CÙNG 1 lớp thành 1 dòng "Tiết x–y: lớp"
+   * thay vì liệt kê từng tiết rời rạc kiểu "T1=6A2, T2=6A8" (khó đọc, dễ
+   * nhầm dấu "=" là phép toán) — vd 2 tiết liền dạy cùng lớp 6A2 in gọn
+   * thành "Tiết 1–2: 6A2" thay vì "Tiết 1: 6A2" + "Tiết 2: 6A2" 2 dòng.
+   * Dữ liệu CŨ (giai đoạn chỉ tích chọn, periods[i] là boolean true, chưa
+   * có mã lớp) vẫn gom được bình thường, chỉ in "Tiết x–y" không kèm lớp. */
+  function periodGroups(periods) {
+    const list = periods || [];
+    const groups = [];
+    let i = 0;
+    while (i < list.length) {
+      const p = list[i];
+      if (!p) { i++; continue; }
+      const code = typeof p === 'string' ? p.trim() : null;
+      let j = i;
+      while (j + 1 < list.length) {
+        const next = list[j + 1];
+        const nextCode = next ? (typeof next === 'string' ? next.trim() : null) : undefined;
+        if (!next || nextCode !== code) break;
+        j++;
+      }
+      const range = i === j ? `Tiết ${i + 1}` : `Tiết ${i + 1}–${j + 1}`;
+      groups.push(code ? `${range}: ${code}` : range);
+      i = j + 1;
+    }
+    return groups;
+  }
+
+  /** Nội dung 1 ô (Buổi × Thứ) trong bảng lịch: loại hình + địa điểm + mỗi
+   * nhóm tiết/lớp 1 dòng riêng (xem periodGroups) cho dễ đọc khi in. */
   function sessionCellText(sess, M) {
     if (!sess || !sess.type) return '—';
-    const periods = (sess.periods || [])
-      .map((p, i) => {
-        if (!p) return null;
-        // Dữ liệu CŨ có thể vẫn là boolean true (chỉ tích, chưa gõ mã lớp)
-        // — chỉ hiện "T{i+1}=mã lớp" khi thật sự có chuỗi mã lớp.
-        return typeof p === 'string' ? `T${i + 1}=${p}` : `T${i + 1}`;
-      })
-      .filter(Boolean);
     const lines = [sess.type];
     if (sess.location) lines.push(sess.location);
-    if (periods.length) lines.push(`Tiết: ${periods.join(', ')}`);
+    lines.push(...periodGroups(sess.periods));
     return lines.join('\n');
   }
 
@@ -188,26 +207,57 @@
     return doc.lastAutoTable.finalY;
   }
 
-  /** Bảng thống kê tuần (2 cột label:value × 4 hàng) — cùng số liệu với
-   * "Thống kê tuần" trên web (M.computeWeekStats). */
-  function buildStatsTable(doc, stats, startY) {
-    const body = [
-      ['Trường dạy chính', String(stats.schoolsMain), 'Tiết dạy chính', String(stats.periodsMain)],
-      ['Trường dạy trám', String(stats.schoolsSub), 'Tiết dạy trám', String(stats.periodsSub)],
-      ['Tiết ôn thi (TT/Online)', String(stats.periodsReview), 'Buổi soạn bài', String(stats.sessionsPrep)],
-      ['Buổi làm tại cty', String(stats.sessionsOffice), 'Lần trợ giảng/dự giảng', String(stats.sessionsMentor)],
+  /** Bảng thống kê tuần (2 cặp label:value × 4 hàng) — cùng số liệu với
+   * "Thống kê tuần" trên web (M.computeWeekStats). Cột "value" đặt NGAY
+   * SÁT cột "label" (canh trái, bề rộng hẹp vừa đủ số) thay vì canh phải ở
+   * mép ngoài bảng — trước đây label/value tách xa nhau ở 2 đầu bảng nên
+   * dễ đọc nhầm số của nhóm khác, giờ mỗi cặp label:value dính liền nhau
+   * như 1 khối, đọc thẳng theo hàng ngang không bị lạc số. */
+  function buildStatsTable(doc, stats, startY, pageHeight) {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const contentWidth = pageWidth - PAGE_MARGIN * 2;
+    const pairWidth = contentWidth / 2;
+    const valueWidth = 44;
+    const labelWidth = pairWidth - valueWidth;
+
+    const rows = [
+      ['Trường dạy chính', stats.schoolsMain, 'Tiết dạy chính', stats.periodsMain],
+      ['Trường dạy trám', stats.schoolsSub, 'Tiết dạy trám', stats.periodsSub],
+      ['Tiết ôn thi (TT/Online)', stats.periodsReview, 'Buổi soạn bài', stats.sessionsPrep],
+      ['Buổi làm tại cty', stats.sessionsOffice, 'Lần trợ giảng/dự giảng', stats.sessionsMentor],
     ];
+    const body = rows.map(([l1, v1, l2, v2]) => [l1, String(v1), l2, String(v2)]);
+
+    // Ước lượng chiều cao khối "tiêu đề + bảng" để CĂN GIỮA phần không
+    // gian còn trống dưới bảng lịch (thay vì luôn dán sát ngay dưới bảng
+    // lịch, để lại 1 mảng trắng trống lớn phía dưới cùng trang in ngang).
+    const titleBlockH = 26;
+    const rowH = 30; // fontSize 12 + cellPadding 9*2, ước lượng
+    const estBlockH = titleBlockH + rows.length * rowH;
+    const remaining = pageHeight - PAGE_MARGIN - startY;
+    const gapAbove = Math.max(26, (remaining - estBlockH) / 2);
+    let y = startY + gapAbove;
+
+    doc.setFont('NotoSans', 'bold');
+    doc.setFontSize(11.5);
+    doc.setTextColor(...BRAND);
+    doc.text('THỐNG KÊ TUẦN', PAGE_MARGIN, y);
+    doc.setTextColor(0, 0, 0);
+    y += 14;
+
     global.autoTable(doc, {
-      startY: startY + 14,
+      startY: y,
       margin: { left: PAGE_MARGIN, right: PAGE_MARGIN },
       body,
-      theme: 'plain',
-      styles: { font: 'NotoSans', fontSize: 10, cellPadding: 5 },
+      theme: 'grid',
+      tableLineColor: [220, 222, 235],
+      tableLineWidth: 0.8,
+      styles: { font: 'NotoSans', fontSize: 12, cellPadding: 9, valign: 'middle' },
       columnStyles: {
-        0: { textColor: GRAY },
-        1: { fontStyle: 'bold', halign: 'right' },
-        2: { textColor: GRAY },
-        3: { fontStyle: 'bold', halign: 'right' },
+        0: { textColor: GRAY, halign: 'left', cellWidth: labelWidth },
+        1: { fontStyle: 'bold', halign: 'left', textColor: [30, 30, 40], cellWidth: valueWidth },
+        2: { textColor: GRAY, halign: 'left', cellWidth: labelWidth },
+        3: { fontStyle: 'bold', halign: 'left', textColor: [30, 30, 40], cellWidth: valueWidth },
       },
     });
     return doc.lastAutoTable.finalY;
@@ -220,7 +270,8 @@
     // bao giờ đè lên phần header phía trên.
     const tableStartY = drawHeader(doc, { teacherName: teacher.name, teacherCode: teacher.code || teacher.id, weekLabel });
     const tableEndY = buildScheduleTable(doc, days, M, tableStartY);
-    buildStatsTable(doc, M.computeWeekStats(days), tableEndY);
+    const pageHeight = doc.internal.pageSize.getHeight();
+    buildStatsTable(doc, M.computeWeekStats(days), tableEndY, pageHeight);
   }
 
   function ensureLibsLoaded() {

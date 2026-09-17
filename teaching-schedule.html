@@ -192,6 +192,15 @@
 
     <div class="tt-grid-wrap force-hide" id="ttGridWrap">
       <div class="tt-poster-head" id="ttPosterHead"></div>
+      <!-- Chú thích huy hiệu cấp học — gắn tự động vào ô "Trường" theo tiền
+           tố "TiH.../THCS..." (xem inferSchoolLevel() trong
+           js/models/teaching-timetable.model.js), giúp nhận ra ngay tiết nào
+           đang hiện SAI thời lượng chuẩn so với cấp học thật của ô đó. -->
+      <div class="tt-legend">
+        <span class="tt-legend-item"><span class="tt-level-badge tt-level-tieuHoc">TiH</span> Tiểu học · 35’/tiết</span>
+        <span class="tt-legend-item"><span class="tt-level-badge tt-level-thcs">THCS</span> THCS · 45’/tiết</span>
+        <span class="tt-legend-item tt-legend-warn">⚠️ Giờ trong ô lệch với khung giờ đang áp dụng cho cả tuần</span>
+      </div>
       <div class="table-scroll">
         <table class="tt-grid" id="ttGrid"></table>
       </div>
@@ -488,10 +497,14 @@
     <div class="modal-body">
       <div class="import-hint">
         Mỗi trường quy định giờ vào/ra tiết học khác nhau — sửa lại đúng giờ của trường
-        giáo viên này đang dạy. Áp dụng cho <b>mọi tuần</b> (không phải chỉ tuần đang xem).
+        giáo viên này đang dạy. Áp dụng cho <b>mọi tuần</b> (không phải chỉ tuần đang xem),
+        nhưng <b>từng Thứ sửa riêng</b> (chọn Thứ ở tab bên dưới) — vì giáo viên có thể dạy
+        khác trường/khác cấp học giữa các ngày trong cùng 1 tuần.
         Đổi <b>số tiết</b> (thêm/bớt dòng) nếu buổi Sáng/Chiều ở trường đó không phải 5/4 tiết.
       </div>
+      <div class="pt-day-tabs" id="periodTimesDayTabs"></div>
       <div class="pt-cols" id="periodTimesBody"></div>
+      <button type="button" class="btn btn-ghost pt-copy-all-btn" id="periodTimesCopyAllBtn" title="Copy đúng khung giờ của Thứ đang chọn sang cả 6 Thứ còn lại — dùng khi giáo viên dạy giống hệt nhau mọi ngày">📋 Copy khung giờ Thứ này cho tất cả các Thứ còn lại</button>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-ghost" id="periodTimesCancelBtn">Huỷ</button>

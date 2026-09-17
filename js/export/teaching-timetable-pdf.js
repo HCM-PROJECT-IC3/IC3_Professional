@@ -106,8 +106,14 @@
    * (giống ô "Buổi" gộp dòng trên web), chèn 1 hàng "☕ Ra chơi" (colSpan)
    * sau tiết BREAK_AFTER_INDEX của mỗi buổi, và 1 hàng vạch màu ngăn cách
    * SÁNG/CHIỀU (colSpan toàn bảng) — đúng yêu cầu "giãn cách phân biệt
-   * sáng/chiều" nhưng vẽ chủ động thay vì phụ thuộc CSS in trình duyệt. */
-  function buildRows(days, periodTimes, M) {
+   * sáng/chiều" nhưng vẽ chủ động thay vì phụ thuộc CSS in trình duyệt.
+   *
+   * MỖI THỨ có khung giờ RIÊNG (periodTimesByDay) — cột "Thời gian" hiện
+   * giờ THAM CHIẾU (Thứ 2, hoặc Thứ đầu tiên có tiết đó) giống bản web;
+   * Thứ nào có giờ THỰC TẾ khác giờ tham chiếu thì được nối thêm dòng giờ
+   * riêng ngay trong ô Thứ đó (xem cellText()), KHÔNG bịa 1 giờ chung sai
+   * cho những Thứ lệch khung. */
+  function buildRows(days, periodTimesByDay, M) {
     const head = [['Buổi', 'Tiết', 'Thời gian', ...M.WEEKDAYS.map((d) => M.WEEKDAY_LABELS[d])]];
     const body = [];
     const totalCols = 3 + M.WEEKDAYS.length;
@@ -117,11 +123,12 @@
     };
 
     M.SESSIONS.forEach((sessionKey, si) => {
-      const periods = periodTimes[sessionKey] || [];
-      const hasBreak = periods.length > M.BREAK_AFTER_INDEX + 1;
-      const rowSpan = periods.length + (hasBreak ? 1 : 0);
+      const maxCount = M.maxPeriodCount(periodTimesByDay, sessionKey);
+      const hasBreak = maxCount > M.BREAK_AFTER_INDEX + 1;
+      const rowSpan = maxCount + (hasBreak ? 1 : 0);
 
-      periods.forEach((p, pi) => {
+      for (let pi = 0; pi < maxCount; pi++) {
+        const refPeriod = M.WEEKDAYS.map((d) => (periodTimesByDay[String(d)][sessionKey] || [])[pi]).find(Boolean);
         const row = [];
         if (pi === 0) {
           row.push({
@@ -131,10 +138,18 @@
           });
         }
         row.push(String(pi + 1));
-        row.push(`${p.start || '?'} - ${p.end || '?'}`);
-        M.WEEKDAYS.forEach((d) => row.push(cellText(days, M, sessionKey, d, pi)));
+        row.push(refPeriod ? `${refPeriod.start || '?'} - ${refPeriod.end || '?'}` : '—');
+        M.WEEKDAYS.forEach((d) => {
+          const dayPeriod = (periodTimesByDay[String(d)][sessionKey] || [])[pi];
+          if (!dayPeriod) { row.push({ content: '—', styles: { textColor: GRAY } }); return; }
+          const raw = ((days[String(d)] || {})[sessionKey] || [])[pi];
+          const cell = M.cellOf(raw);
+          const differsFromRef = cell.maLop && refPeriod && (dayPeriod.start !== refPeriod.start || dayPeriod.end !== refPeriod.end);
+          const ownTime = differsFromRef ? `(${dayPeriod.start || '?'}-${dayPeriod.end || '?'})\n` : '';
+          row.push(ownTime + cellText(days, M, sessionKey, d, pi));
+        });
         body.push(row);
-      });
+      }
 
       if (hasBreak) {
         body.push([{
@@ -188,15 +203,15 @@
   }
 
   /**
-   * @param {Object} params { teacherName, weekLabel, days, periodTimes }
+   * @param {Object} params { teacherName, weekLabel, days, periodTimesByDay }
    * @param {Object} M module EduModels.TeachingTimetable (WEEKDAYS, WEEKDAY_LABELS,
-   *   SESSIONS, SESSION_LABELS, BREAK_AFTER_INDEX, cellOf)
+   *   SESSIONS, SESSION_LABELS, BREAK_AFTER_INDEX, cellOf, maxPeriodCount)
    */
   function exportTimetablePdf(params, M) {
     if (!ensureLibsLoaded()) return;
-    const { teacherName, weekLabel, days, periodTimes } = params;
+    const { teacherName, weekLabel, days, periodTimesByDay } = params;
     const { jsPDF } = global.jspdf;
-    const { head, body } = buildRows(days, periodTimes, M);
+    const { head, body } = buildRows(days, periodTimesByDay, M);
 
     // Thử từ cỡ chữ bình thường, lùi dần nếu tràn quá 1 trang — chặn ở
     // fontSize 5.5 (còn đọc được khi in) để không lùi vô hạn nếu 1 giáo

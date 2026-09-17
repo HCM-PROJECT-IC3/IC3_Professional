@@ -38,24 +38,90 @@
   const PERIOD_TIMES_COLLECTION = 'teaching_timetable_periods';
   const TIMETABLE_COLLECTION = 'teaching_timetable';
 
-  // Khung giờ mặc định — LẤY ĐÚNG từ mẫu thời khoá biểu giấy (5 tiết Sáng,
-  // 4 tiết Chiều, nghỉ giải lao sau tiết 2 mỗi buổi). Dùng khi giáo viên
-  // chưa tự sửa khung giờ riêng của mình.
-  const DEFAULT_PERIOD_TIMES = Object.freeze({
-    morning: Object.freeze([
-      { start: '07:30', end: '08:05' },
-      { start: '08:10', end: '08:45' },
-      { start: '09:20', end: '09:55' },
-      { start: '10:00', end: '10:25' },
-      { start: '10:35', end: '11:10' },
-    ]),
-    afternoon: Object.freeze([
-      { start: '13:30', end: '14:05' },
-      { start: '14:10', end: '14:45' },
-      { start: '15:05', end: '15:40' },
-      { start: '15:45', end: '16:20' },
-    ]),
+  // Mỗi CẤP HỌC có quy định thời lượng 1 tiết khác nhau (Tiểu học 35 phút,
+  // THCS 45 phút) — TRƯỚC ĐÂY cả app chỉ dùng 1 khung giờ chung
+  // (DEFAULT_PERIOD_TIMES, thực chất là khung Tiểu học) cho MỌI giáo viên,
+  // kể cả khi giáo viên đó dạy cả 2 cấp trong CÙNG 1 tuần (Dạy Trám ở
+  // nhiều trường khác nhau) — khiến cột "Thời gian" hiện SAI giờ thực tế
+  // cho các tiết tại trường THCS (hiện 35 phút/tiết trong khi thực tế
+  // 45 phút/tiết). SCHOOL_LEVELS + LEVEL_PERIOD_TIMES bên dưới tách rõ 2
+  // khung giờ chuẩn theo cấp học — xem inferSchoolLevel() để tự nhận diện
+  // cấp học từ tên trường đã gõ ("TiH ..." / "THCS ...", đúng quy ước tên
+  // trường đã dùng sẵn trong dữ liệu thật), dùng để tô huy hiệu màu +
+  // tính đúng giờ thực tế cho từng ô trong renderGrid() (js/teaching-timetable.js).
+  const SCHOOL_LEVELS = Object.freeze({
+    tieuHoc: Object.freeze({ key: 'tieuHoc', label: 'Tiểu học', short: 'TiH', minutes: 35, color: '#0f857a', bg: '#e3faf6' }),
+    thcs: Object.freeze({ key: 'thcs', label: 'THCS', short: 'THCS', minutes: 45, color: '#1e64be', bg: '#e7f2fe' }),
   });
+
+  /** Khung giờ CHUẨN theo cấp học — 5 tiết Sáng, 4 tiết Chiều, nghỉ giải lao
+   * sau tiết 2 mỗi buổi (giống mẫu thời khoá biểu giấy gốc), chỉ khác đúng
+   * THỜI LƯỢNG mỗi tiết (35' Tiểu học / 45' THCS). Dùng làm gợi ý áp dụng
+   * nhanh trong modal "⏱️ Giờ tiết" (nút "Áp dụng khung...") và để tính
+   * giờ THỰC TẾ hiển thị trong từng ô của lưới TKB — vẫn CHỈ LÀ MẶC ĐỊNH,
+   * giáo viên/admin sửa tay lại theo đúng giờ trường quy định nếu khác. */
+  const LEVEL_PERIOD_TIMES = Object.freeze({
+    tieuHoc: Object.freeze({
+      morning: Object.freeze([
+        { start: '07:30', end: '08:05' },
+        { start: '08:10', end: '08:45' },
+        { start: '09:20', end: '09:55' },
+        { start: '10:00', end: '10:35' },
+        { start: '10:40', end: '11:15' },
+      ]),
+      afternoon: Object.freeze([
+        { start: '13:30', end: '14:05' },
+        { start: '14:10', end: '14:45' },
+        { start: '15:05', end: '15:40' },
+        { start: '15:45', end: '16:20' },
+      ]),
+    }),
+    thcs: Object.freeze({
+      morning: Object.freeze([
+        { start: '07:00', end: '07:45' },
+        { start: '07:50', end: '08:35' },
+        { start: '08:55', end: '09:40' },
+        { start: '09:45', end: '10:30' },
+        { start: '10:35', end: '11:20' },
+      ]),
+      afternoon: Object.freeze([
+        { start: '13:30', end: '14:15' },
+        { start: '14:20', end: '15:05' },
+        { start: '15:20', end: '16:05' },
+        { start: '16:10', end: '16:55' },
+      ]),
+    }),
+  });
+
+  // Khung giờ mặc định khi giáo viên chưa tự sửa khung giờ riêng của mình
+  // — dùng khung Tiểu học làm mặc định gốc (đa số giáo viên hệ Tiểu học).
+  const DEFAULT_PERIOD_TIMES = LEVEL_PERIOD_TIMES.tieuHoc;
+
+  /** Tự nhận diện CẤP HỌC từ tên trường đã gõ ở ô "Trường" — dựa theo quy
+   * ước ĐÃ DÙNG SẴN trong dữ liệu thật (tiền tố "TiH ..." cho Tiểu học,
+   * "THCS ..." cho THCS), không bắt gõ thêm trường dữ liệu mới. Trả về
+   * null nếu không nhận diện được (tên trường không theo quy ước này) —
+   * nơi gọi tự bỏ qua huy hiệu/cảnh báo khi không chắc chắn thay vì đoán
+   * bừa cấp học. */
+  function inferSchoolLevel(truong) {
+    const t = (truong || '').trim().toLowerCase();
+    if (!t) return null;
+    if (/^thcs\b/.test(t) || t.includes('trung học cơ sở')) return 'thcs';
+    if (/^tih\b/.test(t) || t.includes('tiểu học') || t.includes('tieu hoc')) return 'tieuHoc';
+    return null;
+  }
+
+  /** Số phút thực của 1 tiết "HH:MM"→"HH:MM" — dùng để đối chiếu khung giờ
+   * ĐANG ÁP DỤNG cho 1 tiết với thời lượng CHUẨN của cấp học suy ra từ
+   * "Trường" của ô đó, phát hiện lệch (vd khung đang để 35' nhưng ô này là
+   * lớp THCS chuẩn 45'/tiết) để cảnh báo trong renderGrid(). */
+  function periodMinutes(period) {
+    if (!period || !period.start || !period.end) return null;
+    const [sh, sm] = period.start.split(':').map(Number);
+    const [eh, em] = period.end.split(':').map(Number);
+    if ([sh, sm, eh, em].some((n) => Number.isNaN(n))) return null;
+    return (eh * 60 + em) - (sh * 60 + sm);
+  }
 
   const WEEKDAYS = Object.freeze([2, 3, 4, 5, 6, 7]);
   const WEEKDAY_LABELS = Object.freeze({ 2: 'Thứ 2', 3: 'Thứ 3', 4: 'Thứ 4', 5: 'Thứ 5', 6: 'Thứ 6', 7: 'Thứ 7' });
@@ -89,13 +155,55 @@
     return { maLop: raw || '', truong: '' };
   }
 
-  /** Khung ngày trống — số tiết mỗi buổi khớp đúng periodTimes truyền vào
-   * (đệm ô rỗng cho đủ số tiết, cắt bớt nếu dư — dùng khi khung giờ vừa đổi
-   * số tiết nhưng dữ liệu cũ còn ít/nhiều tiết hơn). */
-  function emptyDays(periodTimes) {
-    const pt = clonePeriodTimes(periodTimes);
+  /** Chuẩn hoá 1 bộ khung giờ ĐÃ LƯU (đọc từ Firestore, collection
+   * PERIOD_TIMES_COLLECTION) về ĐÚNG 1 khung giờ RIÊNG cho MỖI Thứ 2→7 —
+   * TRƯỚC ĐÂY 1 giáo viên chỉ có 1 khung giờ DUY NHẤT áp cho CẢ TUẦN,
+   * nhưng thực tế rất phổ biến 1 giáo viên dạy Tiểu học (35’/tiết) vào
+   * mấy ngày, THCS (45’/tiết) vào mấy ngày khác trong CÙNG 1 tuần (dạy
+   * trám nhiều trường) — áp 1 khung chung cho mọi Thứ sẽ luôn SAI giờ ở
+   * ít nhất 1 vài ngày. Dữ liệu MỚI lưu dạng `{ byDay: {"2":{...},...,
+   * "7":{...}} }`; dữ liệu CŨ (trước bản này, lưu thẳng `{morning,
+   * afternoon}` không có "byDay") được hiểu là ÁP DỤNG GIỐNG NHAU cho mọi
+   * Thứ (tương thích ngược, không làm mất cấu hình giáo viên đã lưu
+   * trước đó) — admin chỉnh lại riêng từng Thứ khác cần khác đi qua modal
+   * "⏱️ Giờ tiết" (xem tab-chọn-Thứ trong js/teaching-timetable.js). */
+  function normalizePeriodTimesDoc(raw) {
+    const byDay = raw && raw.byDay && typeof raw.byDay === 'object' ? raw.byDay : null;
+    const legacyFlat = !byDay && raw && (raw.morning || raw.afternoon) ? raw : null;
+    const out = {};
+    WEEKDAYS.forEach((d) => {
+      const key = String(d);
+      out[key] = clonePeriodTimes(byDay ? byDay[key] : legacyFlat);
+    });
+    return out;
+  }
+
+  /** Khung giờ mặc định cho mọi Thứ 2→7 (dùng khi giáo viên chưa từng cấu
+   * hình gì) — mỗi Thứ 1 bản sao riêng (không share cùng 1 mảng, tránh sửa
+   * Thứ này lỡ đụng Thứ khác). */
+  function emptyPeriodTimesByDay() {
+    return normalizePeriodTimesDoc(null);
+  }
+
+  /** Số tiết NHIỀU NHẤT của 1 buổi (Sáng/Chiều) tính trên MỌI Thứ đã cấu
+   * hình — quyết định lưới TKB cần vẽ bao nhiêu HÀNG cho buổi đó, vì mỗi
+   * Thứ giờ có thể có số tiết khác nhau (Thứ này 5 tiết Tiểu học, Thứ kia
+   * chỉ 4 tiết THCS chẳng hạn). Thứ nào ít tiết hơn thì các hàng dư ra của
+   * Thứ đó hiện ô trống-khoá (xem renderGrid() trong js/teaching-timetable.js). */
+  function maxPeriodCount(periodTimesByDay, sessionKey) {
+    return WEEKDAYS.reduce((mx, d) => {
+      const pt = periodTimesByDay[String(d)];
+      const len = pt && pt[sessionKey] ? pt[sessionKey].length : 0;
+      return Math.max(mx, len);
+    }, 0);
+  }
+
+  /** Khung ngày trống — số tiết MỖI THỨ khớp đúng periodTimesByDay CỦA
+   * ĐÚNG THỨ ĐÓ (không còn dùng chung 1 khung cho mọi Thứ như trước). */
+  function emptyDays(periodTimesByDay) {
     const days = {};
     WEEKDAYS.forEach((d) => {
+      const pt = clonePeriodTimes(periodTimesByDay[String(d)]);
       days[String(d)] = {
         morning: pt.morning.map(() => emptyCell()),
         afternoon: pt.afternoon.map(() => emptyCell()),
@@ -104,15 +212,16 @@
     return days;
   }
 
-  /** Chuẩn hoá 1 bộ "days" đã lưu về đúng số tiết hiện tại của periodTimes
-   * (đệm/cắt từng mảng) + quy đổi từng ô về {maLop, truong} qua cellOf() —
-   * gọi mỗi khi render để không vỡ layout khi giáo viên vừa sửa khung giờ
-   * (thêm/bớt tiết) nhưng dữ liệu lớp cũ chưa khớp, và để tương thích
-   * ngược với dữ liệu CŨ (string) trước khi có field "Trường". */
-  function normalizeDays(days, periodTimes) {
-    const pt = clonePeriodTimes(periodTimes);
+  /** Chuẩn hoá 1 bộ "days" đã lưu về đúng số tiết hiện tại của ĐÚNG THỨ ĐÓ
+   * trong periodTimesByDay (đệm/cắt từng mảng theo TỪNG THỨ RIÊNG, không
+   * còn 1 số tiết chung cho cả tuần) + quy đổi từng ô về {maLop, truong}
+   * qua cellOf() — gọi mỗi khi render để không vỡ layout khi vừa sửa khung
+   * giờ (thêm/bớt tiết) của 1 Thứ nhưng dữ liệu lớp cũ chưa khớp, và để
+   * tương thích ngược với dữ liệu CŨ (string) trước khi có field "Trường". */
+  function normalizeDays(days, periodTimesByDay) {
     const out = {};
     WEEKDAYS.forEach((d) => {
+      const pt = clonePeriodTimes(periodTimesByDay[String(d)]);
       const src = (days && days[String(d)]) || {};
       out[String(d)] = {
         morning: pt.morning.map((_, i) => cellOf(src.morning && src.morning[i])),
@@ -127,6 +236,8 @@
     PERIOD_TIMES_COLLECTION,
     TIMETABLE_COLLECTION,
     DEFAULT_PERIOD_TIMES,
+    SCHOOL_LEVELS,
+    LEVEL_PERIOD_TIMES,
     WEEKDAYS,
     WEEKDAY_LABELS,
     SESSIONS,
@@ -134,9 +245,14 @@
     BREAK_AFTER_INDEX,
     docId,
     clonePeriodTimes,
+    normalizePeriodTimesDoc,
+    emptyPeriodTimesByDay,
+    maxPeriodCount,
     emptyCell,
     cellOf,
     emptyDays,
     normalizeDays,
+    inferSchoolLevel,
+    periodMinutes,
   };
 })(window);
