@@ -61,16 +61,26 @@
     });
   });
 
-  // Role choice
+  // Role choice — 4 lựa chọn (Học sinh/Giáo viên/Điều phối đào tạo/Điều
+  // phối giáo viên). CHỈ "student" tự động dùng được ngay; 3 lựa chọn còn
+  // lại đều cần quản trị viên duyệt thủ công (xem js/auth.js registerUser()
+  // + firestore.rules — "coordinator"/"teaching_coordinator" KHÔNG được tự
+  // đăng ký thẳng vào role đó vì lý do bảo mật, tài khoản tạm lưu ở dạng
+  // "giáo viên chờ duyệt" kèm requestedRole để admin thấy đúng ý muốn rồi
+  // gán role chính xác ở admin-users.html).
+  const ROLE_HINTS = {
+    student: 'Tài khoản học sinh dùng được ngay sau khi đăng ký.',
+    teacher: 'Tài khoản giáo viên cần quản trị viên duyệt trước khi dùng được các trang quản trị.',
+    coordinator: 'Tài khoản Điều phối đào tạo cần quản trị viên duyệt và gán trường phụ trách trước khi dùng được.',
+    teaching_coordinator: 'Tài khoản Điều phối giáo viên cần quản trị viên duyệt trước khi dùng được trang Lịch giảng dạy.',
+  };
   let chosenRole = 'student';
   document.querySelectorAll('.role-opt').forEach(opt => {
     opt.addEventListener('click', () => {
       document.querySelectorAll('.role-opt').forEach(o => o.classList.remove('active'));
       opt.classList.add('active');
       chosenRole = opt.dataset.role;
-      document.getElementById('roleHint').textContent = chosenRole === 'teacher'
-        ? 'Tài khoản giáo viên cần quản trị viên duyệt trước khi dùng được các trang quản trị.'
-        : 'Tài khoản học sinh dùng được ngay sau khi đăng ký.';
+      document.getElementById('roleHint').textContent = ROLE_HINTS[chosenRole] || '';
     });
   });
 
@@ -121,11 +131,12 @@
       const name = document.getElementById('regName').value.trim();
       const email = document.getElementById('regEmail').value.trim();
       const pass = document.getElementById('regPass').value;
-      const { role, approved } = await EduAuth.registerUser({
-        name, email, password: pass, wantsTeacher: chosenRole === 'teacher',
+      const { role, approved, requestedRole } = await EduAuth.registerUser({
+        name, email, password: pass, requestedRole: chosenRole,
       });
       if (role === 'teacher' && !approved) {
-        setMsg('✅ Đã tạo tài khoản giáo viên. Vui lòng chờ quản trị viên duyệt trước khi đăng nhập vào trang quản trị.', 'ok');
+        const label = EduAuth.ROLE_LABEL[requestedRole] || 'giáo viên';
+        setMsg(`✅ Đã tạo tài khoản (đăng ký làm ${label}). Vui lòng chờ quản trị viên duyệt trước khi đăng nhập vào trang quản trị.`, 'ok');
         btn.disabled = false;
         return;
       }

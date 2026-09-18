@@ -146,11 +146,20 @@ window.EDU_ALLOWED_ROLES = ['admin'];
     tbody.innerHTML = users.map(({ doc, u }) => {
       const pending = u.role === 'teacher' && u.approved === false;
       const userSchools = Array.isArray(u.schools) ? u.schools : [];
+      // Tài khoản đăng ký từ login.html chọn "Điều phối đào tạo"/"Điều
+      // phối giáo viên" đều tạm lưu role:'teacher' (bắt buộc theo
+      // firestore.rules — xem js/auth.js registerUser()) kèm field
+      // requestedRole ghi ĐÚNG vai trò họ thật sự muốn — hiện rõ ở đây để
+      // admin biết cần gán role gì khi duyệt, không phải đoán/hỏi lại.
+      const wantsOtherRole = pending && u.requestedRole && u.requestedRole !== 'teacher';
+      const pendingLabel = wantsOtherRole
+        ? `Chờ duyệt · muốn làm ${esc(EduAuth.ROLE_LABEL[u.requestedRole] || u.requestedRole)}`
+        : 'Chờ duyệt';
       return `
       <tr data-uid="${doc.id}">
         <td>${esc(u.name || '(chưa đặt tên)')}</td>
         <td>${esc(u.email || '')}</td>
-        <td><span class="badge ${esc(u.role)}">${esc(EduAuth.ROLE_LABEL[u.role] || u.role)}</span>${pending ? '<span class="badge pending">Chờ duyệt</span>' : ''}</td>
+        <td><span class="badge ${esc(u.role)}">${esc(EduAuth.ROLE_LABEL[u.role] || u.role)}</span>${pending ? `<span class="badge pending">${pendingLabel}</span>` : ''}</td>
         <td>
           <select class="roleSelect">
             <option value="student" ${u.role === 'student' ? 'selected' : ''}>🎓 Học sinh</option>
@@ -179,7 +188,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
             <button type="button" class="saveTeacherCodeBtn">💾 Lưu</button>
           ` : `<span class="hint">Chưa có giáo viên nào trong Lịch giảng dạy (teaching-schedule.html)</span>`}
         </td>
-        <td>${pending ? '<button class="approveBtn">✅ Duyệt ngay</button>' : '—'}</td>
+        <td>${pending ? `<button class="approveBtn" data-requested-role="${esc(u.requestedRole || '')}">✅ Duyệt${wantsOtherRole ? ' làm ' + esc(EduAuth.ROLE_LABEL[u.requestedRole] || '') : ' ngay'}</button>` : '—'}</td>
       </tr>`;
     }).join('');
 
@@ -202,9 +211,18 @@ window.EDU_ALLOWED_ROLES = ['admin'];
     tbody.querySelectorAll('.approveBtn').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         const uid = e.target.closest('tr').dataset.uid;
+        // Đăng ký muốn làm "Điều phối đào tạo"/"Điều phối giáo viên" (2 role
+        // KHÔNG tự đăng ký thẳng được, xem js/auth.js registerUser()) —
+        // duyệt là gán LUÔN đúng role đó thay vì để mãi ở "teacher", đỡ
+        // admin phải vào lại đổi role thủ công ở cột bên cạnh thêm 1 bước.
+        const requestedRole = e.target.dataset.requestedRole;
+        const patch = { approved: true };
+        if (requestedRole === 'coordinator' || requestedRole === 'teaching_coordinator') {
+          patch.role = requestedRole;
+        }
         try {
-          await EduFirebase.db.collection('users').doc(uid).set({ approved: true }, { merge: true });
-          toast('✅ Đã duyệt tài khoản giáo viên');
+          await EduFirebase.db.collection('users').doc(uid).set(patch, { merge: true });
+          toast('✅ Đã duyệt tài khoản' + (patch.role ? ` làm ${EduAuth.ROLE_LABEL[patch.role]}` : ''));
           loadUsers();
         } catch (err) {
           toast('❌ Lỗi: ' + err.message);
