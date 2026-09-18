@@ -177,6 +177,11 @@
     const el = document.getElementById('msg');
     el.textContent = text || '';
     el.className = 'msg' + (type ? ' ' + type : '');
+    // Đăng nhập/đăng ký THẤT BẠI ('err') → hiện minh họa lấp khoảng trống
+    // dưới thông báo (xem .fail-art trong css/login.css), mượt bằng
+    // transition thay vì hiện/ẩn đột ngột. Mọi trường hợp khác (thành
+    // công/rỗng) đều ẩn đi ngay.
+    document.getElementById('failArt').classList.toggle('show', type === 'err');
   }
 
   function friendlyError(err) {

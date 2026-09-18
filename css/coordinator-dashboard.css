@@ -150,6 +150,11 @@ body {
   box-shadow: var(--shadow-card);
   transition: transform .22s cubic-bezier(.16,1,.3,1), box-shadow .22s ease, border-color .22s ease;
   animation: statCardRise .4s cubic-bezier(.16,1,.3,1) both;
+  /* Item Grid mặc định min-width:auto (co theo min-content nội dung bên
+     trong) — ép về 0 để card luôn co vừa đúng cột được cấp, không đẩy cả
+     lưới rộng hơn khung nhìn trên điện thoại (cùng lỗi/cách sửa như
+     .quiz-card trong css/dashboard.css). */
+  min-width: 0;
 }
 @keyframes statCardRise { from { opacity:0; transform: translateY(10px) } to { opacity:1; transform: translateY(0) } }
 .kpi-grid .kpi-card:nth-child(1) { animation-delay: .03s }
@@ -180,6 +185,7 @@ body {
   border-radius: var(--radius-sm);
   padding: 1rem 1.1rem 1.2rem;
   box-shadow: var(--shadow-card);
+  min-width: 0;
 }
 .chart-card-wide { grid-column: span 2 }
 @media (max-width: 900px) { .chart-card-wide { grid-column: span 1 } }
@@ -229,6 +235,7 @@ body {
   border-radius: var(--radius-sm);
   padding: 1rem 1.1rem;
   box-shadow: var(--shadow-card);
+  min-width: 0;
 }
 .watchlist-title { font-size: .85rem; font-weight: 800; margin-bottom: .7rem; display: flex; align-items: center; gap: .4rem }
 .watchlist-count { font-size: .7rem; font-weight: 800; color: var(--muted) }
@@ -547,4 +554,17 @@ body {
   .shelf-modal-overlay { padding: 12px }
   .shelf-modal-bar { padding: 10px 14px }
   .shelf-modal-frame { aspect-ratio: 3 / 4; max-height: 70vh }
+}
+
+/* ĐIỆN THOẠI THẬT — .charts-grid dùng sàn 320px cho từng cột (minmax),
+   đây là RÀNG BUỘC CỦA CHÍNH GRID TRACK (không phải nội dung bên trong)
+   nên min-width:0 trên .chart-card KHÔNG đủ để sửa — vẫn tràn ngang trên
+   điện thoại (~360-412px). Đổi hẳn về 1fr dưới 700px (dưới sàn 320px×2 +
+   gap, tức lúc grid tự nhiên cũng chỉ còn vừa 1 cột) để khớp đúng lúc
+   grid chuyển sang 1 cột, tránh khoảng "lỡ cỡ" giữa 2 hành vi. */
+@media (max-width: 700px) {
+  .charts-grid { grid-template-columns: 1fr }
+}
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr) }
 }

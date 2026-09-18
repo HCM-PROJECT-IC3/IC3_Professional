@@ -261,3 +261,45 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ============================================================
+   CHUYỂN TRANG (Cross-Document View Transitions) — lấy cảm hứng từ bộ
+   sưu tập tympanus.net/Development/PageTransitions/ người dùng gửi tham
+   khảo. File này (theme.css) được nạp ở CẢ 24 trang nên khai báo 1 lần
+   ở đây là áp dụng toàn site ngay, không cần sửa từng trang.
+
+   Đây là API TRÌNH DUYỆT (không cần JS): khai báo "@view-transition"
+   bật animation mượt khi chuyển từ trang .html này sang trang .html
+   khác CÙNG GỐC (same-origin) — Chrome/Edge mới hỗ trợ thật, các trình
+   duyệt khác (Firefox/Safari hiện tại) tự bỏ qua và chuyển trang bình
+   thường y hệt trước đây (an toàn tuyệt đối, không có JS nào có thể lỗi
+   vì tính năng này — progressive enhancement đúng nghĩa).
+
+   Hiệu ứng chọn: fade + trượt nhẹ dọc + phóng to nhẹ (phối giữa "Fade"
+   và "Move" trong bộ sưu tập tham khảo) — đủ "có chuyển động" để thấy
+   chuyên nghiệp nhưng không chóng mặt/màu mè quá đà cho 1 app học tập
+   dùng nhiều lần trong ngày. Cùng easing cubic-bezier(.16,1,.3,1) đã
+   dùng nhất quán cho MỌI animation "xuất hiện" khác trong toàn app (xem
+   css/login.css, style.css...) để cảm giác chuyển động đồng bộ. */
+@view-transition {
+  navigation: auto;
+}
+::view-transition-old(root) {
+  animation: ic3-page-out .32s cubic-bezier(.4,0,1,1) both;
+}
+::view-transition-new(root) {
+  animation: ic3-page-in .42s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes ic3-page-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(-16px) scale(.985); }
+}
+@keyframes ic3-page-in {
+  from { opacity: 0; transform: translateY(16px) scale(.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

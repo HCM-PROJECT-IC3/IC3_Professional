@@ -1211,7 +1211,11 @@
       bottom: 26px;
       left: 34px;
       width: auto;
-      grid-template-columns: minmax(240px, 1fr) auto minmax(240px, 1fr);
+      /* Sàn 240px/cột (bản cũ) cao hơn cả .browse-ui base rule an toàn
+         (minmax(0,1fr), khai báo gốc phía trên) — dưới ~820px cột 2 bên
+         cộng lại đã ≥480px, tràn ngang trên điện thoại. Đổi về 0 để khớp
+         hành vi an toàn của base rule. */
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
       gap: 26px;
       transform: none;
     }
