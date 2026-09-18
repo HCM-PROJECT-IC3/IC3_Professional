@@ -32,12 +32,17 @@
     }
     #edu-guard-overlay .spin {
       width: 34px; height: 34px; border-radius: 50%;
-      border: 4px solid #e0e0f0; border-top-color: #6c63ff;
+      border: 4px solid #e0e0f0; border-top-color: #2f40b2;
       animation: edu-guard-spin .8s linear infinite;
     }
     @keyframes edu-guard-spin { to { transform: rotate(360deg); } }
     #edu-guard-overlay .msg { font-weight: 700; font-size: .95rem; color: #555; text-align:center; padding: 0 1.2rem; }
-    #edu-guard-overlay .btn { background:#6c63ff;color:#fff;border:none;border-radius:999px;padding:.6rem 1.3rem;font-weight:700;cursor:pointer; }
+    /* Màu #2f40b2 = navy lấy từ logo IIG thật (img/iig-logo.png), ĐỒNG BỘ
+       với --purple trong css/theme.css — file này tự viết CSS riêng (chạy
+       trước khi trang tải xong nên không đợi được theme.css), không dùng
+       var(--purple) được nên phải viết cứng, nhớ SỬA CẢ 2 NƠI nếu đổi màu
+       thương hiệu lần sau. */
+    #edu-guard-overlay .btn { background:#2f40b2;color:#fff;border:none;border-radius:999px;padding:.6rem 1.3rem;font-weight:700;cursor:pointer; }
   `;
   document.head.appendChild(style);
 

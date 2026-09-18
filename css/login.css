@@ -59,13 +59,13 @@ body::before {
   border: none;
   border-radius: var(--radius);
   box-shadow: var(--shadow-neu-raised);
-  padding: 2.2rem 2rem;
+  padding: 1.9rem 1.9rem;
   position: relative;
   z-index: 1;
   animation: cardRiseIn .5s .05s cubic-bezier(.16,1,.3,1) both;
   transition: box-shadow .25s ease;
 }
-.card:focus-within { box-shadow: var(--shadow-neu-raised), 0 0 0 3px rgba(79,107,255,.18) }
+.card:focus-within { box-shadow: var(--shadow-neu-raised), 0 0 0 3px rgba(47,64,178,.18) }
 @keyframes cardRiseIn {
   from { opacity: 0; transform: translateY(22px) scale(.97) }
   to   { opacity: 1; transform: translateY(0) scale(1) }
@@ -99,41 +99,76 @@ body::before {
     repeating-conic-gradient(#aab0c4 0deg 7deg, transparent 7deg 45deg);
   box-shadow: 2px 3px 6px rgba(0,0,0,.6), -1px -1px 3px rgba(255,255,255,.08);
 }
-.theme-toggle:hover { box-shadow: var(--shadow-neu-raised), 0 0 0 3px rgba(79,107,255,.15) }
+.theme-toggle:hover { box-shadow: var(--shadow-neu-raised), 0 0 0 3px rgba(47,64,178,.15) }
 
 .logo {
   font-family: 'Baloo 2', sans-serif;
   font-weight: 800;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   text-align: center;
   margin-bottom: .3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .55rem;
 }
-/* Icon controller trong logo "bồng bềnh" nhẹ — chấm động nhỏ để màn hình
-   đầu tiên không hoàn toàn tĩnh, cùng kiểu chuyển động với icon 🚀 ở
-   .lobby-card-title trong style.css (đồng bộ ngôn ngữ animation toàn app). */
-.logo-icon { display: inline-block; animation: logoFloat 2.6s ease-in-out infinite }
+/* Logo IIG THẬT (img/iig-logo.png — trước đây chỉ có emoji 🎮 không liên
+   quan gì tới thương hiệu thật) "bồng bềnh" nhẹ, cùng kiểu chuyển động với
+   icon 🚀 ở .lobby-card-title trong style.css (đồng bộ ngôn ngữ animation
+   toàn app). Nền trắng nhỏ + bo góc vì file gốc là ảnh nền trắng, đặt trực
+   tiếp lên nền xám neumorphism sẽ thấy viền vuông trắng lộ liễu. */
+.logo-img {
+  height: 30px; width: auto;
+  background: #fff; border-radius: 6px; padding: 3px 5px;
+  box-shadow: var(--shadow-neu-flat);
+  animation: logoFloat 2.6s ease-in-out infinite;
+}
 @keyframes logoFloat {
   0%,100% { transform: translateY(0) rotate(0deg) }
-  50%     { transform: translateY(-3px) rotate(-6deg) }
+  50%     { transform: translateY(-3px) rotate(-2deg) }
 }
 .sub {
   text-align: center;
   color: var(--muted);
   font-size: .88rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.2rem;
   font-weight: 600;
 }
 
+/* Tabs — CHỈ THỊ TRƯỢT (.tab-indicator) thay vì đổi màu nền tức thời:
+   1 khối tím trượt mượt sang trái/phải theo tab đang chọn, TÁCH RIÊNG
+   khỏi 2 nút .tab (nằm dưới, z-index thấp hơn) — .tab chỉ còn lo phần
+   chữ, không tự tô nền nữa (tránh 2 lớp nền đè lên nhau). */
 .tabs {
   display: flex;
+  position: relative;
   background: var(--card2);
   border-radius: 999px;
   padding: .3rem;
-  margin-bottom: 1.4rem;
+  margin-bottom: 1.2rem;
   box-shadow: var(--shadow-neu-pressed);
 }
+/* Cùng dải 3 màu IIG với nút submit (xem .btn-submit bên dưới), ĐÚNG thứ
+   tự người dùng chỉnh lại: xanh lá → cam → xanh dương (không phải cam →
+   xanh lá → xanh dương như lần trước) — để chỉ thị tab đang chọn cũng
+   mang bộ nhận diện thương hiệu IIG thay vì chỉ dùng gradient tím/teal
+   chung chung của toàn app. */
+.tab-indicator {
+  position: absolute;
+  top: .3rem; left: .3rem;
+  width: calc(50% - .3rem); height: calc(100% - .6rem);
+  background: linear-gradient(100deg,
+    var(--iig-green) 0%, var(--orange) 50%, var(--purple) 100%);
+  border-radius: 999px;
+  box-shadow: 0 3px 10px rgba(47,64,178,.35);
+  transition: transform .35s cubic-bezier(.34,1.56,.64,1);
+  z-index: 0;
+}
+.tab-indicator.pos-register { transform: translateX(100%) }
 .tab {
   flex: 1;
+  position: relative;
+  z-index: 1;
   text-align: center;
   padding: .55rem;
   border-radius: 999px;
@@ -141,17 +176,18 @@ body::before {
   font-size: .85rem;
   cursor: pointer;
   color: var(--muted);
-  transition: var(--transition);
+  transition: color .2s ease;
 }
-.tab.active { background: var(--purple); color: #fff; box-shadow: 0 3px 10px rgba(79,107,255,.35) }
+.tab.active { color: #fff }
 
 label {
   display: block;
   font-size: .78rem;
   font-weight: 800;
   color: var(--muted);
-  margin: .85rem 0 .35rem;
+  margin: .65rem 0 .3rem;
 }
+label:first-of-type { margin-top: 0 }
 /* Ô nhập kiểu neumorphism LÕM XUỐNG (pressed) — đồng bộ với mọi trang
    khác trong app (xem js/teaching-schedule.js, style.css...), trước đây
    trang login còn dùng kiểu viền cứng cũ, lệch tông với phần còn lại.
@@ -159,7 +195,7 @@ label {
    trang thay vì cả khối hiện cùng lúc, đỡ cảm giác tĩnh/liền khối. */
 input[type=text], input[type=email], input[type=password] {
   width: 100%;
-  padding: .75rem .9rem;
+  padding: .68rem .9rem;
   border-radius: 10px;
   border: none;
   background: var(--neu-surface);
@@ -172,7 +208,7 @@ input[type=text], input[type=email], input[type=password] {
 }
 input:focus {
   outline: none;
-  box-shadow: var(--shadow-neu-pressed), 0 0 0 3px rgba(79,107,255,.18);
+  box-shadow: var(--shadow-neu-pressed), 0 0 0 3px rgba(47,64,178,.18);
   transform: translateY(-1px);
 }
 @keyframes fieldRiseIn {
@@ -182,6 +218,66 @@ input:focus {
 label:nth-of-type(1), input:nth-of-type(1) { animation-delay: .06s }
 label:nth-of-type(2), input:nth-of-type(2) { animation-delay: .11s }
 label:nth-of-type(3), input:nth-of-type(3) { animation-delay: .16s }
+label:nth-of-type(4), input:nth-of-type(4) { animation-delay: .21s }
+label:nth-of-type(5), input:nth-of-type(5) { animation-delay: .26s }
+
+/* ── Ràng buộc/validate — ô lỗi rung nhẹ + lõm đỏ, thông báo nhỏ ngay dưới
+   ô thay vì chỉ báo lỗi chung ở cuối form (.msg) như trước — người dùng
+   biết NGAY ô nào sai mà không phải đọc hết thông báo tổng. ── */
+input.invalid {
+  box-shadow: var(--shadow-neu-pressed), 0 0 0 3px rgba(230,70,70,.28);
+  animation: fieldRiseIn .4s cubic-bezier(.16,1,.3,1) both, fieldShake .35s ease;
+}
+@keyframes fieldShake {
+  0%, 100% { transform: translateX(0) }
+  25% { transform: translateX(-4px) }
+  75% { transform: translateX(4px) }
+}
+input.valid {
+  box-shadow: var(--shadow-neu-pressed), 0 0 0 3px rgba(84,180,120,.22);
+}
+.field-err {
+  display: block;
+  min-height: 0;
+  font-size: .72rem;
+  font-weight: 700;
+  color: var(--red);
+  margin-top: .3rem;
+  line-height: 1.3;
+}
+.field-err:empty { margin-top: 0 }
+
+/* Ghi nhớ đăng nhập — checkbox thường nhưng bọc trong hàng bấm được toàn
+   bộ (label bao ngoài input), lấp thêm 1 dòng nội dung hữu ích vào form
+   đăng nhập (trước đây chỉ có 2 ô nên form ngắn hơn hẳn form đăng ký,
+   đổi tab bị "giật" kích thước rõ). */
+.remember-row {
+  display: flex !important;
+  align-items: center;
+  gap: .55rem;
+  margin: .9rem 0 0 !important;
+  font-size: .8rem !important;
+  font-weight: 700 !important;
+  color: var(--muted) !important;
+  cursor: pointer;
+  text-transform: none;
+}
+.remember-row input[type=checkbox] {
+  width: 17px; height: 17px; flex: none;
+  accent-color: var(--purple);
+  cursor: pointer;
+  animation: none;
+  box-shadow: none;
+}
+
+/* Cả FORM cũng trượt+mờ dần vào mỗi lần chuyển tab (không chỉ riêng từng
+   input) — display:none→hiện lại TỰ ĐỘNG replay animation CSS (hành vi
+   chuẩn của trình duyệt), nên không cần thêm JS, chỉ cần khai báo ở đây. */
+form:not(.hidden) { animation: formSlideIn .4s cubic-bezier(.16,1,.3,1) both }
+@keyframes formSlideIn {
+  from { opacity: 0; transform: translateY(10px) }
+  to   { opacity: 1; transform: translateY(0) }
+}
 
 /* "Bạn là?" — 4 lựa chọn (Học sinh/Giáo viên/Điều phối đào tạo/Điều phối
    giáo viên, thêm mới theo yêu cầu) nên chuyển lưới 2×2 thay vì 1 hàng
@@ -205,23 +301,28 @@ label:nth-of-type(3), input:nth-of-type(3) { animation-delay: .16s }
 .role-opt:hover { box-shadow: var(--shadow-neu-raised) }
 .role-opt.active { box-shadow: var(--shadow-neu-pressed); color: var(--purple) }
 
-/* Nút submit — gradient + hiệu ứng ánh sáng lướt qua khi hover (glow-cta
-   đã có sẵn trong css/theme.css nhưng cần nền overflow:hidden riêng ở
-   đây), thay cho màu tím phẳng 1 lớp trước đây. */
+/* Nút submit — ĐỔI sang dải màu 3 tông của chính logo IIG thật (cam →
+   xanh lá → xanh dương navy, xem 3 sọc chéo trong img/iig-logo.png) thay
+   vì gradient tím/teal chung của toàn app (--gradient-cta), để 2 nút
+   "Đăng nhập"/"Tạo tài khoản" — hành động quan trọng nhất trên trang —
+   gắn rõ thương hiệu IIG ngay từ cái nhìn đầu tiên. background-size lớn
+   hơn 100% để có chỗ "trượt" khi hover (xem background-position bên
+   dưới), không chỉ đứng yên 1 dải tĩnh. */
 .btn-submit {
-  margin-top: 1.5rem;
+  margin-top: 1.2rem;
   width: 100%;
   padding: .85rem;
   border: none;
   border-radius: 999px;
-  background: var(--gradient-cta);
-  background-size: 200% 200%;
+  background: linear-gradient(100deg,
+    var(--iig-green) 0%, var(--orange) 50%, var(--purple) 100%);
+  background-size: 100% 100%;
   color: #fff;
   font-weight: 800;
   font-size: .95rem;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(79,107,255,.4);
-  transition: transform .15s ease, box-shadow .15s ease, background-position .4s ease;
+  box-shadow: 0 4px 16px rgba(47,64,178,.35), 0 2px 10px rgba(93,147,61,.18);
+  transition: transform .15s ease, box-shadow .15s ease, background-position .5s ease;
   position: relative;
   overflow: hidden;
   isolation: isolate;
@@ -237,21 +338,20 @@ label:nth-of-type(3), input:nth-of-type(3) { animation-delay: .16s }
 }
 .btn-submit:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(79,107,255,.5);
-  background-position: 100% 50%;
+  box-shadow: 0 8px 22px rgba(47,64,178,.45), 0 4px 14px rgba(255,143,31,.25);
 }
 .btn-submit:hover:not(:disabled)::before { background-position: -50% 0 }
 .btn-submit:active:not(:disabled) { transform: translateY(0) }
 .btn-submit:disabled { opacity: .5; cursor: not-allowed }
 
-.msg { margin-top: 1.1rem; font-size: .84rem; font-weight: 700; text-align: center; min-height: 1.1em }
+.msg { margin-top: .8rem; font-size: .84rem; font-weight: 700; text-align: center; min-height: 1.1em }
 .msg.err { color: var(--red) }
 .msg.ok  { color: var(--green) }
 
 .forgot {
   display: block;
   text-align: center;
-  margin-top: 1.1rem;
+  margin-top: .8rem;
   font-size: .8rem;
   color: var(--purple);
   font-weight: 700;
@@ -270,5 +370,5 @@ form.hidden { display: none }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body::before, .card, input, .logo-icon { animation: none !important }
+  body::before, .card, input, .logo-icon, form, .tab-indicator { animation: none !important; transition: none !important }
 }

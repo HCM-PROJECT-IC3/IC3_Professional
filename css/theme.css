@@ -36,9 +36,15 @@
   --text:      #1b2036;
   --muted:     #667085;
 
-  /* Brand palette (indigo-blue primary) */
-  --purple:    #4f6bff;   /* primary brand / interactive accent */
-  --purple-lt: #ecf0ff;
+  /* Brand palette — LẤY ĐÚNG từ logo IIG thật (img/iig-logo.png): chữ "G"
+     xanh navy đậm, 2 vạch "II" xanh lá + cam. Đo màu bằng cách lấy mẫu
+     pixel lõi (không tính viền khử răng cưa) trực tiếp từ file logo:
+     navy rgb(47,64,178), lá rgb(93,147,61), cam rgb(255,143,0) — trước
+     đây --purple là indigo-tím #4f6bff không liên quan gì tới bộ nhận
+     diện IIG thật, giờ đổi thành đúng navy này làm màu chủ đạo. --orange
+     đã vốn rất gần màu cam logo nên chỉ tinh chỉnh nhẹ. */
+  --purple:    #2f40b2;   /* primary brand / interactive accent — navy IIG */
+  --purple-lt: #eef0f9;
   --teal:      #17b3a3;   /* secondary accent — "true" state, highlights */
   --teal-lt:   #e3faf6;
   --red:       #f0483e;   /* semantic danger — grading / errors ONLY */
@@ -47,11 +53,12 @@
   --yellow-lt: #fff6e3;
   --green:     #21b36b;   /* semantic success — grading ONLY */
   --green-lt:  #e4faee;
-  --orange:    #ff8a3d;   /* secondary accent 2 — "false" state, highlights */
+  --orange:    #ff8f1f;   /* secondary accent 2 — cam logo IIG */
   --orange-lt: #ffefe2;
   --blue:      #2e8cf0;   /* secondary accent 3 */
   --blue-lt:   #e7f2fe;
   --pink:      #dd4fa6;
+  --iig-green: #5d933d;   /* xanh lá logo IIG — dùng khi cần điểm nhấn sát brand thật (vd form-input:hover/focus) */
 
   /* Aliases */
   --accent1: var(--purple);
@@ -69,18 +76,22 @@
   --gap-sm: .6rem;
   --gap-md: 1.2rem;
   --gap-lg: 2rem;
-  --shadow:    0 4px 20px rgba(79,107,255,.10);
-  --shadow-lg: 0 10px 40px rgba(79,107,255,.16);
+  --shadow:    0 4px 20px rgba(47,64,178,.10);
+  --shadow-lg: 0 10px 40px rgba(47,64,178,.16);
 
-  --lobby-bg: linear-gradient(160deg,#eef1ff 0%,#eafbf7 50%,#fff8ea 100%);
-  --lobby-blob1: rgba(79,107,255,.16);
+  --lobby-bg: linear-gradient(160deg,#eef0f9 0%,#eafbf7 50%,#fff8ea 100%);
+  --lobby-blob1: rgba(47,64,178,.16);
   --lobby-blob2: rgba(23,179,163,.16);
 
   /* ── Vibrant motion tokens (2026 "cháy" refresh) ──
-     Dùng cho hero, mockup card, chip, glow-hover... trên mọi trang. */
-  --gradient-hero: linear-gradient(120deg, var(--purple) 0%, #8b5cf6 32%, var(--teal) 68%, var(--orange) 100%);
-  --gradient-cta:  linear-gradient(135deg, var(--purple) 0%, #7c6bff 55%, var(--teal) 100%);
-  --glow-purple: 0 8px 30px rgba(79,107,255,.35);
+     Dùng cho hero, mockup card, chip, glow-hover... trên mọi trang.
+     Điểm giữa gradient đổi từ tím sáng (#8b5cf6/#7c6bff, hợp với indigo
+     cũ) sang xanh dương-chàm đậm hơn (#4a4fd6/#4438c7) — bắc cầu màu hợp
+     lý hơn từ navy IIG (--purple) sang teal, không bị lệch tím lạc tông
+     với bộ nhận diện mới. */
+  --gradient-hero: linear-gradient(120deg, var(--purple) 0%, #4a4fd6 32%, var(--teal) 68%, var(--orange) 100%);
+  --gradient-cta:  linear-gradient(135deg, var(--purple) 0%, #4438c7 55%, var(--teal) 100%);
+  --glow-purple: 0 8px 30px rgba(47,64,178,.35);
   --glow-teal:   0 8px 30px rgba(23,179,163,.32);
   --glow-orange: 0 8px 30px rgba(255,138,61,.32);
   --shine: linear-gradient(115deg, transparent 20%, rgba(255,255,255,.55) 42%, rgba(255,255,255,.55) 48%, transparent 70%);
@@ -101,8 +112,8 @@
   --sidebar-active-bg:   var(--purple-lt);
   --input-bg:            var(--card2);
   --modal-overlay:       rgba(17, 24, 39, 0.6);
-  --shadow-card:       0 4px 0 #c9d3ff, 0 6px 20px rgba(79,107,255,0.12);
-  --shadow-card-hover: 0 6px 0 #a9b8ff, 0 10px 30px rgba(79,107,255,0.2);
+  --shadow-card:       0 4px 0 #6f7bca, 0 6px 20px rgba(47,64,178,0.12);
+  --shadow-card-hover: 0 6px 0 #959dd8, 0 10px 30px rgba(47,64,178,0.2);
   --shadow-btn:        0 3px 0 rgba(0,0,0,0.25);
   --tag-elementary-bg:   #d1fae5;
   --tag-elementary-text: #065f46;
@@ -132,7 +143,7 @@
   --border:    #2e3358;
   --text:      #e8eaf6;
   --muted:     #8892c8;
-  --purple-lt: rgba(79,107,255,.18);
+  --purple-lt: rgba(47,64,178,.22);
   --teal-lt:   rgba(23,179,163,.15);
   --red-lt:    rgba(240,72,62,.15);
   --yellow-lt: rgba(246,167,35,.12);
@@ -142,9 +153,9 @@
   --shadow:    0 4px 24px rgba(0,0,0,.4);
   --shadow-lg: 0 8px 40px rgba(0,0,0,.5);
   --lobby-bg:  linear-gradient(160deg,#0d0f1a 0%,#111428 50%,#160f1a 100%);
-  --lobby-blob1: rgba(79,107,255,.25);
+  --lobby-blob1: rgba(58,78,210,.28);
   --lobby-blob2: rgba(23,179,163,.2);
-  --glow-purple: 0 8px 34px rgba(79,107,255,.5);
+  --glow-purple: 0 8px 34px rgba(58,78,210,.5);
   --glow-teal:   0 8px 34px rgba(23,179,163,.42);
   --glow-orange: 0 8px 34px rgba(255,138,61,.42);
   --shine: linear-gradient(115deg, transparent 20%, rgba(255,255,255,.18) 42%, rgba(255,255,255,.18) 48%, transparent 70%);
@@ -159,7 +170,7 @@
   --text-secondary: var(--muted);
   --text-muted: #6b7280;
   --border-color: var(--border);
-  --sidebar-active-bg: rgba(79,107,255,.18);
+  --sidebar-active-bg: rgba(47,64,178,.22);
   --input-bg: var(--card2);
   --modal-overlay: rgba(0,0,0,.7);
 

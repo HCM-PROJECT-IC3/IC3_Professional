@@ -17,30 +17,43 @@
 <button type="button" class="theme-toggle" id="themeToggle" title="Chuyển đổi sáng/tối"></button>
 
 <div class="card">
-  <div class="logo"><span class="logo-icon">🎮</span> EduQuiz IC3</div>
+  <div class="logo"><img src="img/iig-logo.png" alt="IIG" class="logo-img"> EduQuiz IC3</div>
   <div class="sub">Đăng nhập để tiếp tục</div>
 
   <div class="tabs">
+    <div class="tab-indicator" id="tabIndicator"></div>
     <div class="tab active" data-tab="login">Đăng nhập</div>
     <div class="tab" data-tab="register">Đăng ký</div>
   </div>
 
-  <form id="loginForm">
+  <form id="loginForm" novalidate>
     <label for="loginEmail">Email</label>
     <input type="email" id="loginEmail" required autocomplete="username">
+    <span class="field-err" id="err-loginEmail"></span>
     <label for="loginPass">Mật khẩu</label>
     <input type="password" id="loginPass" required autocomplete="current-password">
+    <span class="field-err" id="err-loginPass"></span>
+    <label class="remember-row" for="rememberMe">
+      <input type="checkbox" id="rememberMe" checked>
+      <span>Ghi nhớ đăng nhập trên thiết bị này</span>
+    </label>
     <button type="submit" class="btn-submit" id="loginBtn">Đăng nhập</button>
     <span class="forgot" id="forgotLink">Quên mật khẩu?</span>
   </form>
 
-  <form id="registerForm" class="hidden">
+  <form id="registerForm" class="hidden" novalidate>
     <label for="regName">Họ và tên</label>
     <input type="text" id="regName" required autocomplete="name">
+    <span class="field-err" id="err-regName"></span>
     <label for="regEmail">Email</label>
     <input type="email" id="regEmail" required autocomplete="username">
-    <label for="regPass">Mật khẩu (tối thiểu 6 ký tự)</label>
+    <span class="field-err" id="err-regEmail"></span>
+    <label for="regPass">Mật khẩu (tối thiểu 6 ký tự, có cả chữ và số)</label>
     <input type="password" id="regPass" required minlength="6" autocomplete="new-password">
+    <span class="field-err" id="err-regPass"></span>
+    <label for="regPass2">Xác nhận mật khẩu</label>
+    <input type="password" id="regPass2" required minlength="6" autocomplete="new-password">
+    <span class="field-err" id="err-regPass2"></span>
     <label>Bạn là?</label>
     <div class="role-choice">
       <div class="role-opt active" data-role="student">🎓 Học sinh</div>

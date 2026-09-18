@@ -79,7 +79,7 @@ body {
     repeating-conic-gradient(#aab0c4 0deg 7deg, transparent 7deg 45deg);
   box-shadow: 2px 3px 6px rgba(0,0,0,.6), -1px -1px 3px rgba(255,255,255,.08);
 }
-.theme-toggle:hover { box-shadow: var(--shadow-neu-raised), 0 0 0 3px rgba(79,107,255,.15) }
+.theme-toggle:hover { box-shadow: var(--shadow-neu-raised), 0 0 0 3px rgba(47,64,178,.15) }
 
 /* Trang có nhiều cột dữ liệu (Trường được xem, Mã NV liên kết...) nên mở
    rộng gần hết chiều ngang màn hình thay vì bó hẹp 1040px — tránh dữ liệu

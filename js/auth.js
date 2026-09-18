@@ -75,7 +75,14 @@
     return { uid, role, approved, requestedRole: requestedRole || role };
   }
 
-  async function loginUser(email, password) {
+  async function loginUser(email, password, remember) {
+    // remember=false → chỉ giữ phiên đăng nhập trong tab hiện tại (mất khi đóng
+    // trình duyệt), remember=true/undefined → giữ đăng nhập lâu dài (mặc định
+    // gốc của Firebase), theo checkbox "Ghi nhớ đăng nhập" trên login.html.
+    const persistence = remember === false
+      ? firebase.auth.Auth.Persistence.SESSION
+      : firebase.auth.Auth.Persistence.LOCAL;
+    await auth().setPersistence(persistence);
     const cred = await auth().signInWithEmailAndPassword(email, password);
     return cred.user;
   }

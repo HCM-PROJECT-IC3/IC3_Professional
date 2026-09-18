@@ -128,7 +128,7 @@ body {
     repeating-conic-gradient(#aab0c4 0deg 7deg, transparent 7deg 45deg);
   box-shadow: 2px 3px 6px rgba(0,0,0,.6), -1px -1px 3px rgba(255,255,255,.08);
 }
-.theme-toggle:hover { box-shadow: var(--shadow-neu-raised), 0 0 0 3px rgba(79,107,255,.15) }
+.theme-toggle:hover { box-shadow: var(--shadow-neu-raised), 0 0 0 3px rgba(47,64,178,.15) }
 
 .btn {
   border: none;
@@ -877,7 +877,7 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
   font-size: .68rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .03em;
 }
 .day-card-session.sess-main    { background: var(--teal-lt);   border-color: rgba(23,179,163,.35) }
-.day-card-session.sess-sub     { background: var(--purple-lt); border-color: rgba(79,107,255,.35) }
+.day-card-session.sess-sub     { background: var(--purple-lt); border-color: rgba(47,64,178,.35) }
 .day-card-session.sess-online  { background: var(--green-lt);  border-color: rgba(33,179,107,.35) }
 .day-card-session.sess-review  { background: var(--blue-lt);   border-color: rgba(46,140,240,.35) }
 .day-card-session.sess-assist  { background: rgba(221,79,166,.14); border-color: rgba(221,79,166,.4) }
