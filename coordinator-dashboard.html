@@ -22,8 +22,25 @@
   <a href="roster-manager.html" class="btn btn-ghost">🎓 Quản lý danh sách học sinh</a>
   <button type="button" class="btn btn-ghost" id="openShelfBtn" title="Xem bộ đề dạng kệ sách 3D">🧊 Kệ sách 3D</button>
   <span class="whoami" id="whoami"></span>
+  <button type="button" class="theme-toggle" id="themeToggle" title="Chuyển đổi sáng/tối"></button>
   <button type="button" class="btn btn-ghost" id="logoutBtn">Đăng xuất</button>
 </div>
+<script>
+// Nút chuyển sáng/tối (đồng hồ mặt trời neumorphism, xem .theme-toggle
+// trong css/coordinator-dashboard.css).
+(function () {
+  var saved = localStorage.getItem('ic3_theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+  var btn = document.getElementById('themeToggle');
+  if (!btn) return;
+  btn.addEventListener('click', function () {
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var next = isDark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('ic3_theme', next);
+  });
+})();
+</script>
 
 <div class="wrap">
 

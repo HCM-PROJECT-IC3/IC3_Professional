@@ -1,5 +1,20 @@
 window.EDU_ALLOWED_ROLES = ['admin'];
 
+  // ---- Nút chuyển sáng/tối (đồng hồ mặt trời neumorphism, xem
+  // .theme-toggle trong css/admin-users.css). ----
+  (function initThemeToggle() {
+    const saved = localStorage.getItem('ic3_theme');
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+    const btn = document.getElementById('themeToggle');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const next = isDark ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('ic3_theme', next);
+    });
+  })();
+
   function toast(msg) {
     const el = document.getElementById('toast');
     el.textContent = msg;

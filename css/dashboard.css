@@ -248,37 +248,74 @@ body {
   display: flex; align-items: center; gap: 12px;
 }
 
-/* Theme Toggle */
+/* ========================================
+   THEME TOGGLE — kiểu "đồng hồ mặt trời" neumorphism, ĐÚNG THEO ẢNH THAM
+   CHIẾU người dùng gửi: rãnh (track) xám nổi khối mềm (neumorphism —
+   2 lớp box-shadow sáng/tối tạo cảm giác lồi ra khỏi nền), nút tròn trượt
+   là 1 "mặt đồng hồ" gồm 3 lớp tâm đồng: vòng vạch chia (8 vạch quanh rìa,
+   giống kim đồng hồ) → khoảng trắng đệm → đĩa tròn màu (vàng cam = mặt
+   trời ban ngày, xanh than có vài chấm sao = mặt trăng ban đêm). Vẽ 3 lớp
+   này bằng NHIỀU background-image xếp chồng (radial-gradient cho đĩa
+   tròn/khoảng trắng, repeating-conic-gradient cho vòng vạch chia) — lớp
+   liệt kê TRƯỚC luôn nằm TRÊN lớp sau. Khi bấm, nút vừa TRƯỢT ngang vừa
+   XOAY NHẸ (transform, animate mượt tuyệt đối bằng CSS) như 1 đồng hồ
+   thật sự quay kim — điểm nhấn "chuyển động" chính, còn màu/hoạ tiết bên
+   trong đổi tức thời giữa 2 trạng thái (gradient nhiều lớp không nội suy
+   mượt được giữa các trạng thái khác nhau, đây là giới hạn của CSS chứ
+   không phải thiếu sót). ===== */
 .theme-toggle {
-  width: 52px; height: 28px;
-  background: var(--bg-main);
+  width: 60px; height: 32px;
   border-radius: 999px;
+  background: #e7eaef;
   cursor: pointer;
   position: relative;
-  transition: var(--transition);
   border: none;
-  box-shadow: var(--shadow-card-inset);
   flex-shrink: 0;
+  box-shadow:
+    inset 2px 2px 5px rgba(163, 177, 198, .55),
+    inset -3px -3px 6px rgba(255, 255, 255, .85);
+  transition: background-color .5s ease, box-shadow .5s ease;
 }
-[data-theme="dark"] .theme-toggle { background: var(--bg-main); }
+[data-theme="dark"] .theme-toggle {
+  background: #262b36;
+  box-shadow:
+    inset 2px 2px 5px rgba(0, 0, 0, .6),
+    inset -3px -3px 6px rgba(255, 255, 255, .05);
+}
+/* Nút tròn trượt = "mặt đồng hồ mặt trời/mặt trăng" — xem mô tả 3 lớp ở
+   trên. cubic-bezier có chút nảy nhẹ (overshoot) ở cuối cho cảm giác "có
+   đời sống" thay vì trượt phẳng đơn điệu; rotate thêm 1 vòng khi trượt để
+   trông như bánh xe/đồng hồ đang thật sự quay, không chỉ dịch chuyển. */
 .theme-toggle::after {
-  content: '☀️';
+  content: '';
   position: absolute;
-  top: 2px; left: 2px;
-  width: 22px; height: 22px;
+  top: 3px; left: 3px;
+  width: 26px; height: 26px;
   border-radius: 50%;
-  background: var(--bg-card);
-  transition: var(--transition);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px;
-  line-height: 22px;
-  text-align: center;
-  box-shadow: 2px 2px 5px rgba(163,177,198,0.5), -1px -1px 3px rgba(255,255,255,0.7);
+  background:
+    radial-gradient(circle, #ffb938 0 36%, transparent 37%),
+    radial-gradient(circle, #ffffff 0 60%, transparent 61%),
+    repeating-conic-gradient(#ffb938 0deg 7deg, transparent 7deg 45deg);
+  box-shadow:
+    2px 3px 6px rgba(163, 177, 198, .7),
+    -1px -1px 3px rgba(255, 255, 255, .8);
+  transition: transform .55s cubic-bezier(.34, 1.56, .64, 1), box-shadow .4s ease;
 }
 [data-theme="dark"] .theme-toggle::after {
-  content: '🌙';
-  transform: translateX(24px);
-  box-shadow: 2px 2px 5px rgba(0,0,0,0.5), -1px -1px 3px rgba(255,255,255,0.05);
+  transform: translateX(28px) rotate(200deg);
+  /* 3 chấm sao NHỎ + MỜ (0.7px, opacity .8) rải lệch tâm — trước đây to
+     1.6px + đặc, xếp tam giác cân giữa đĩa trông như "mặt cười" thay vì
+     sao lấp lánh (phản hồi khi xem ảnh render thử). */
+  background:
+    radial-gradient(.7px .7px at 30% 33%, rgba(255,255,255,.85) 99%, transparent 100%),
+    radial-gradient(.6px .6px at 58% 28%, rgba(255,255,255,.7) 99%, transparent 100%),
+    radial-gradient(.6px .6px at 44% 55%, rgba(255,255,255,.75) 99%, transparent 100%),
+    radial-gradient(circle, #313650 0 36%, transparent 37%),
+    radial-gradient(circle, #e7eaf2 0 60%, transparent 61%),
+    repeating-conic-gradient(#aab0c4 0deg 7deg, transparent 7deg 45deg);
+  box-shadow:
+    2px 3px 6px rgba(0, 0, 0, .6),
+    -1px -1px 3px rgba(255, 255, 255, .08);
 }
 
 /* Hamburger for mobile */

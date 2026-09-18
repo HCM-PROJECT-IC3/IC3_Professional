@@ -33,6 +33,22 @@
 (function () {
   'use strict';
 
+  // ---- Nút chuyển sáng/tối (đồng hồ mặt trời neumorphism, xem
+  // .theme-toggle trong css/teaching-schedule.css) — trang này TRƯỚC ĐÂY
+  // chưa có, thêm mới đồng bộ với ic3-dashboard.html/index.html. ----
+  (function initThemeToggle() {
+    const saved = localStorage.getItem('ic3_theme');
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+    const btn = document.getElementById('themeToggle');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const next = isDark ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('ic3_theme', next);
+    });
+  })();
+
   const M = window.EduModels.TeachingSchedule;
 
   // ---- State cục bộ ----
@@ -678,8 +694,8 @@
             </div>
           </div>
           <div class="dash-matrix-stats">
-            <span><b>${stats.periodsMain}</b> tiết chính</span>
-            <span><b>${stats.periodsSub}</b> tiết trám</span>
+            <div class="dash-matrix-stat-card stat-main"><b>${stats.periodsMain}</b><span>tiết chính</span></div>
+            <div class="dash-matrix-stat-card stat-sub"><b>${stats.periodsSub}</b><span>tiết trám</span></div>
           </div>`;
 
         // Khung giờ tiết CỦA GIÁO VIÊN này (áp dụng mọi tuần, không lặp lại

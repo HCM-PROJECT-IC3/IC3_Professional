@@ -21,23 +21,52 @@ body {
   transition: background .3s, color .3s;
 }
 
-/* ── Dark mode toggle button ── */
+/* ── Dark/light mode toggle — kiểu "đồng hồ mặt trời" neumorphism (GIỐNG
+   HỆT bản trên ic3-dashboard.html, xem css/dashboard.css để biết chi tiết
+   kỹ thuật/lý do thiết kế) — rãnh nổi khối mềm + nút tròn trượt có vòng
+   vạch chia quanh rìa, đĩa tâm đổi vàng cam (mặt trời)/xanh than có sao
+   (mặt trăng). TRƯỚC ĐÂY là nút tròn đơn với icon emoji set qua JS
+   (textContent ☀️/🌙, xem toggleTheme() trong js/quiz-engine.js) — đã bỏ
+   hẳn, JS giờ CHỈ đổi attribute data-theme, không còn set icon nữa (mọi
+   hình vẽ nút đều do CSS đảm nhiệm, animate mượt hơn hẳn so với đổi emoji
+   tức thời). */
 .theme-toggle {
   position: fixed;
   top: 14px; right: 16px;
   z-index: 500;
-  width: 44px; height: 44px;
-  border-radius: 50%;
-  border: 2px solid var(--border);
-  background: var(--card);
-  color: var(--text);
-  font-size: 1.2rem;
+  width: 60px; height: 32px;
+  border-radius: 999px;
+  border: none;
+  background: var(--neu-surface);
   cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: var(--shadow);
-  transition: all .2s;
+  box-shadow: var(--shadow-neu-raised);
+  transition: box-shadow .3s ease;
 }
-.theme-toggle:hover { transform: scale(1.1); border-color: var(--purple) }
+.theme-toggle::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, #ffb938 0 36%, transparent 37%),
+    radial-gradient(circle, #ffffff 0 60%, transparent 61%),
+    repeating-conic-gradient(#ffb938 0deg 7deg, transparent 7deg 45deg);
+  box-shadow: 2px 3px 6px rgba(163,177,198,.7), -1px -1px 3px rgba(255,255,255,.8);
+  transition: transform .55s cubic-bezier(.34,1.56,.64,1), box-shadow .4s ease;
+}
+[data-theme="dark"] .theme-toggle::after {
+  transform: translateX(28px) rotate(200deg);
+  background:
+    radial-gradient(.7px .7px at 30% 33%, rgba(255,255,255,.85) 99%, transparent 100%),
+    radial-gradient(.6px .6px at 58% 28%, rgba(255,255,255,.7) 99%, transparent 100%),
+    radial-gradient(.6px .6px at 44% 55%, rgba(255,255,255,.75) 99%, transparent 100%),
+    radial-gradient(circle, #313650 0 36%, transparent 37%),
+    radial-gradient(circle, #e7eaf2 0 60%, transparent 61%),
+    repeating-conic-gradient(#aab0c4 0deg 7deg, transparent 7deg 45deg);
+  box-shadow: 2px 3px 6px rgba(0,0,0,.6), -1px -1px 3px rgba(255,255,255,.08);
+}
+.theme-toggle:hover { box-shadow: var(--shadow-neu-raised), 0 0 0 3px rgba(79,107,255,.15) }
 #adminEntryLink:hover { border-color: var(--purple); color: var(--purple) }
 
 /* ══════════════════════════════════════════════
@@ -620,24 +649,27 @@ body {
 
 /* Lobby Card — nổi bật trên nền ảnh minh hoạ nhiều màu, hiệu ứng
    kính mờ (frosted glass) để vẫn thấy sắc màu nền phía sau viền */
+/* Neumorphism (soft-UI) — bề mặt panel CÙNG MÀU với nền quanh nó
+   (--neu-surface), độ "nổi khối" chỉ đến từ 2 lớp box-shadow đối xứng
+   (var(--shadow-neu-raised), xem css/theme.css) thay vì viền cứng + đổ
+   bóng tối đơn hướng như trước — giữ lại backdrop-filter mờ kính để vẫn
+   thấy sắc màu ảnh nền phía sau, hợp với phong cách "soft dashboard". */
 .lobby-card {
   width: 100%;
   max-width: 560px;
   margin: 0 auto;
-  background: var(--card);
-  background: color-mix(in srgb, var(--card) 92%, transparent);
+  background: color-mix(in srgb, var(--neu-surface) 88%, transparent);
   backdrop-filter: blur(14px) saturate(1.15);
   -webkit-backdrop-filter: blur(14px) saturate(1.15);
-  border: 2px solid var(--border);
+  border: none;
   border-radius: calc(var(--radius)*1.3);
   padding: clamp(1rem, 1.8vw, 1.4rem);
-  box-shadow: 0 20px 60px rgba(20,25,60,.28), var(--shadow-lg);
+  box-shadow: var(--shadow-neu-raised);
   animation: cardRise .55s .1s cubic-bezier(.16,1,.3,1) both;
-  transition: border-color .25s ease, box-shadow .25s ease;
+  transition: box-shadow .25s ease;
 }
 .lobby-card:focus-within {
-  border-color: var(--purple);
-  box-shadow: 0 10px 36px rgba(79,107,255,.18), var(--shadow-lg);
+  box-shadow: var(--shadow-neu-raised), 0 0 0 3px rgba(79,107,255,.18);
 }
 @keyframes cardRise {
   from { opacity:0; transform: translateY(18px) scale(.98) }
@@ -705,29 +737,32 @@ body {
   margin-bottom: .2rem;
   letter-spacing: .2px;
 }
+/* Ô nhập/dropdown kiểu neumorphism LÕM XUỐNG (pressed) — không viền cứng,
+   độ "khắc chìm vào bề mặt" đến từ var(--shadow-neu-pressed) (2 lớp inset
+   shadow đối xứng), đúng cảm giác "khe rãnh" quen thuộc của thiết kế soft-UI
+   thay vì khung viền phẳng truyền thống. */
 .form-group input,
 .form-group select {
   width: 100%;
   padding: .52rem .8rem;
-  background: var(--card2);
-  border: 2px solid var(--border);
+  background: var(--neu-surface);
+  border: none;
   border-radius: var(--radius-sm);
   color: var(--text);
   font-family: 'Baloo 2', sans-serif;
   font-size: .88rem;
   font-weight: 600;
   outline: none;
-  transition: border-color .2s ease, box-shadow .2s ease, background .2s ease, transform .12s ease;
+  box-shadow: var(--shadow-neu-pressed);
+  transition: box-shadow .2s ease, transform .12s ease;
   appearance: none;
   -webkit-appearance: none;
 }
 .form-group input:hover,
-.form-group select:hover:not(:disabled) { border-color: var(--purple) }
+.form-group select:hover:not(:disabled) { box-shadow: var(--shadow-neu-pressed), 0 0 0 1px rgba(79,107,255,.25) }
 .form-group input:focus,
 .form-group select:focus {
-  border-color: var(--purple);
-  box-shadow: 0 0 0 3px rgba(79,107,255,.15);
-  background: var(--card);
+  box-shadow: var(--shadow-neu-pressed), 0 0 0 3px rgba(79,107,255,.18);
   transform: translateY(-1px);
 }
 .form-group select {
@@ -791,26 +826,29 @@ body {
    .hidden=true bằng JS (chỉ 1 chế độ khả dụng, vd MOS) sẽ KHÔNG ẩn
    được nếu thiếu dòng này (bug thật đã gặp với .game-zone-open-btn). */
 .mt-mode-toggle[hidden] { display: none; }
+/* Nút "chế độ" kiểu neumorphism — NỔI (raised) khi chưa chọn, LÕM
+   (pressed) khi đang active, đúng ẩn dụ "bấm nút vật lý" quen thuộc của
+   soft-UI thay vì đổi màu nền phẳng như nút thường. */
 .mt-mode-btn {
   flex: 1 1 auto;
   padding: .4rem .7rem;
   border-radius: 999px;
-  border: 1.5px solid var(--border);
-  background: var(--card2);
+  border: none;
+  background: var(--neu-surface);
   color: var(--muted);
   font-family: 'Baloo 2', sans-serif;
   font-size: .74rem;
   font-weight: 800;
   white-space: nowrap;
   cursor: pointer;
+  box-shadow: var(--shadow-neu-flat);
   transition: var(--transition);
 }
-.mt-mode-btn:hover { border-color: var(--purple); color: var(--purple) }
+.mt-mode-btn:hover { color: var(--purple) }
 .mt-mode-btn.is-active {
-  background: var(--purple);
-  border-color: var(--purple);
-  color: #fff;
-  box-shadow: 0 3px 10px rgba(79,107,255,.3);
+  background: var(--neu-surface);
+  color: var(--purple);
+  box-shadow: var(--shadow-neu-pressed);
 }
 
 /* Minitest meta chips */
@@ -2385,23 +2423,25 @@ body {
 }
 .btn-retry:hover { transform:translateY(-2px); box-shadow:0 8px 26px rgba(0,201,160,.45) }
 
-/* Secondary button */
+/* Secondary button — neumorphism NỔI (raised), lõm nhẹ khi bấm (active),
+   đồng bộ ẩn dụ "nút vật lý" với .mt-mode-btn ở trên. */
 .btn-secondary {
   width: 100%;
   padding: .5rem;
-  background: transparent;
-  border: 2px solid var(--border);
+  background: var(--neu-surface);
+  border: none;
   border-radius: var(--radius);
   color: var(--muted);
   font-family: 'Baloo 2', sans-serif;
   font-size: .85rem;
   font-weight: 800;
   cursor: pointer;
+  box-shadow: var(--shadow-neu-flat);
   transition: all .18s ease;
   margin-top: .4rem;
 }
-.btn-secondary:hover { border-color:var(--purple); color:var(--purple); background:var(--purple-lt); transform: translateY(-1px) }
-.btn-secondary:active { transform: translateY(0) }
+.btn-secondary:hover { color:var(--purple); transform: translateY(-1px) }
+.btn-secondary:active { transform: translateY(0); box-shadow: var(--shadow-neu-pressed) }
 
 /* ══════════════════════════════════════════════
    RECORDS MODAL
@@ -2717,13 +2757,41 @@ body {
   }
 }
 
+/* Bản THU NHỎ của .theme-toggle (đồng hồ mặt trời neumorphism) — dùng
+   trong topbar lúc đang làm bài, cùng cơ chế/màu, chỉ khác kích thước +
+   không position:fixed (nằm trong dòng topbar). */
 .theme-toggle-exam {
-  background: none; border: 1.5px solid var(--border); border-radius: 50%;
-  width: 36px; height: 36px; font-size: 1rem; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; transition: all .2s; color: var(--text);
+  position: relative;
+  background: var(--neu-surface); border: none; border-radius: 999px;
+  width: 48px; height: 26px; cursor: pointer;
+  flex-shrink: 0; transition: box-shadow .3s ease;
+  box-shadow: var(--shadow-neu-raised);
 }
-.theme-toggle-exam:hover { border-color: var(--purple) }
+.theme-toggle-exam::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, #ffb938 0 36%, transparent 37%),
+    radial-gradient(circle, #ffffff 0 60%, transparent 61%),
+    repeating-conic-gradient(#ffb938 0deg 7deg, transparent 7deg 45deg);
+  box-shadow: 2px 2px 5px rgba(163,177,198,.7), -1px -1px 2px rgba(255,255,255,.8);
+  transition: transform .55s cubic-bezier(.34,1.56,.64,1), box-shadow .4s ease;
+}
+[data-theme="dark"] .theme-toggle-exam::after {
+  transform: translateX(22px) rotate(200deg);
+  background:
+    radial-gradient(.6px .6px at 30% 33%, rgba(255,255,255,.85) 99%, transparent 100%),
+    radial-gradient(.5px .5px at 58% 28%, rgba(255,255,255,.7) 99%, transparent 100%),
+    radial-gradient(.5px .5px at 44% 55%, rgba(255,255,255,.75) 99%, transparent 100%),
+    radial-gradient(circle, #313650 0 36%, transparent 37%),
+    radial-gradient(circle, #e7eaf2 0 60%, transparent 61%),
+    repeating-conic-gradient(#aab0c4 0deg 7deg, transparent 7deg 45deg);
+  box-shadow: 2px 2px 5px rgba(0,0,0,.6), -1px -1px 2px rgba(255,255,255,.08);
+}
+.theme-toggle-exam:hover { box-shadow: var(--shadow-neu-raised), 0 0 0 3px rgba(79,107,255,.15) }
 .lobby-game-strip { margin-top: 10px; }
 /* ════════════════════════════════════════════════════════════
    GAME MODAL — mini-game "Prism Cascade" (nhúng qua iframe)

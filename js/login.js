@@ -1,3 +1,18 @@
+  // ---- Nút chuyển sáng/tối (đồng hồ mặt trời neumorphism, xem
+  // .theme-toggle trong css/login.css). ----
+  (function initThemeToggle() {
+    const saved = localStorage.getItem('ic3_theme');
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+    const btn = document.getElementById('themeToggle');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const next = isDark ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('ic3_theme', next);
+    });
+  })();
+
   const params = new URLSearchParams(location.search);
   const nextUrl = params.get('next') || 'ic3-dashboard.html';
 
