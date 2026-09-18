@@ -109,6 +109,18 @@
   --tag-middle-bg:       #dbeafe;
   --tag-middle-text:     #1e40af;
   --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── Neumorphism (soft-UI) — dùng chung cho mọi trang khi cần "dashboard
+     nổi khối mềm": nền và bề mặt component CÙNG 1 MÀU XÁM (--neu-surface),
+     độ nổi/lõm chỉ đến từ 2 lớp box-shadow đối xứng (sáng ở góc trên-trái,
+     tối ở góc dưới-phải) — không viền cứng, không nền tương phản như card
+     kiểu cũ. --shadow-neu-raised = bề mặt lồi lên (thẻ/nút ở trạng thái
+     nghỉ); --shadow-neu-pressed = bề mặt lõm xuống (ô nhập liệu, nút đang
+     nhấn/đang chọn); --shadow-neu-flat = phẳng nhẹ (hover trung gian). */
+  --neu-surface:    #e9ecf2;
+  --shadow-neu-raised:  6px 6px 14px rgba(163,177,198,.5), -6px -6px 14px rgba(255,255,255,.85);
+  --shadow-neu-pressed: inset 4px 4px 8px rgba(163,177,198,.5), inset -4px -4px 8px rgba(255,255,255,.85);
+  --shadow-neu-flat:    3px 3px 7px rgba(163,177,198,.4), -3px -3px 7px rgba(255,255,255,.7);
 }
 
 /* ── Dark Mode ── */
@@ -150,6 +162,11 @@
   --sidebar-active-bg: rgba(79,107,255,.18);
   --input-bg: var(--card2);
   --modal-overlay: rgba(0,0,0,.7);
+
+  --neu-surface: #262b36;
+  --shadow-neu-raised:  6px 6px 14px rgba(0,0,0,.55), -6px -6px 14px rgba(255,255,255,.045);
+  --shadow-neu-pressed: inset 4px 4px 8px rgba(0,0,0,.55), inset -4px -4px 8px rgba(255,255,255,.045);
+  --shadow-neu-flat:    3px 3px 7px rgba(0,0,0,.45), -3px -3px 7px rgba(255,255,255,.035);
 }
 
 /* ════════════════════════════════════════════════════════════

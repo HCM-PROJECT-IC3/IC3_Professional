@@ -58,16 +58,48 @@ body {
   cursor: pointer;
   transition: var(--transition);
 }
+/* Neumorphism — nổi khối mềm thay vì nền phẳng + viền cứng. */
 .btn-ghost {
-  background: var(--card2);
+  background: var(--neu-surface);
   color: var(--text);
-  border: 1.5px solid var(--border);
+  border: none;
+  box-shadow: var(--shadow-neu-flat);
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   gap: .4rem;
 }
-.btn-ghost:hover { background: var(--border) }
+.btn-ghost:hover { box-shadow: var(--shadow-neu-raised) }
+.btn-ghost:active { box-shadow: var(--shadow-neu-pressed) }
+
+/* Nút chuyển sáng/tối kiểu "đồng hồ mặt trời" neumorphism — GIỐNG HỆT bản
+   trên ic3-dashboard.html/index.html (xem css/dashboard.css). */
+.theme-toggle {
+  position: relative; width: 56px; height: 30px; border-radius: 999px; border: none;
+  background: var(--neu-surface); cursor: pointer; box-shadow: var(--shadow-neu-raised);
+  transition: box-shadow .3s ease; flex-shrink: 0;
+}
+.theme-toggle::after {
+  content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%;
+  background:
+    radial-gradient(circle, #ffb938 0 36%, transparent 37%),
+    radial-gradient(circle, #ffffff 0 60%, transparent 61%),
+    repeating-conic-gradient(#ffb938 0deg 7deg, transparent 7deg 45deg);
+  box-shadow: 2px 3px 6px rgba(163,177,198,.7), -1px -1px 3px rgba(255,255,255,.8);
+  transition: transform .55s cubic-bezier(.34,1.56,.64,1), box-shadow .4s ease;
+}
+[data-theme="dark"] .theme-toggle::after {
+  transform: translateX(26px) rotate(200deg);
+  background:
+    radial-gradient(.6px .6px at 30% 33%, rgba(255,255,255,.85) 99%, transparent 100%),
+    radial-gradient(.5px .5px at 58% 28%, rgba(255,255,255,.7) 99%, transparent 100%),
+    radial-gradient(.5px .5px at 44% 55%, rgba(255,255,255,.75) 99%, transparent 100%),
+    radial-gradient(circle, #313650 0 36%, transparent 37%),
+    radial-gradient(circle, #e7eaf2 0 60%, transparent 61%),
+    repeating-conic-gradient(#aab0c4 0deg 7deg, transparent 7deg 45deg);
+  box-shadow: 2px 3px 6px rgba(0,0,0,.6), -1px -1px 3px rgba(255,255,255,.08);
+}
+.theme-toggle:hover { box-shadow: var(--shadow-neu-raised), 0 0 0 3px rgba(79,107,255,.15) }
 
 .wrap { max-width: 1280px; margin: 0 auto; padding: 1.6rem }
 

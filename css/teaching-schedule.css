@@ -99,6 +99,37 @@ body {
   padding: .4rem .8rem; border-radius: 999px;
 }
 
+/* Nút chuyển sáng/tối kiểu "đồng hồ mặt trời" neumorphism — GIỐNG HỆT bản
+   trên ic3-dashboard.html/index.html (xem css/dashboard.css để biết chi
+   tiết kỹ thuật/lý do thiết kế: nút tròn trượt có vòng vạch chia quanh
+   rìa, tâm đổi vàng cam ↔ xanh than có sao). */
+.theme-toggle {
+  position: relative; width: 56px; height: 30px; border-radius: 999px; border: none;
+  background: var(--neu-surface); cursor: pointer; box-shadow: var(--shadow-neu-raised);
+  transition: box-shadow .3s ease; flex-shrink: 0;
+}
+.theme-toggle::after {
+  content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%;
+  background:
+    radial-gradient(circle, #ffb938 0 36%, transparent 37%),
+    radial-gradient(circle, #ffffff 0 60%, transparent 61%),
+    repeating-conic-gradient(#ffb938 0deg 7deg, transparent 7deg 45deg);
+  box-shadow: 2px 3px 6px rgba(163,177,198,.7), -1px -1px 3px rgba(255,255,255,.8);
+  transition: transform .55s cubic-bezier(.34,1.56,.64,1), box-shadow .4s ease;
+}
+[data-theme="dark"] .theme-toggle::after {
+  transform: translateX(26px) rotate(200deg);
+  background:
+    radial-gradient(.6px .6px at 30% 33%, rgba(255,255,255,.85) 99%, transparent 100%),
+    radial-gradient(.5px .5px at 58% 28%, rgba(255,255,255,.7) 99%, transparent 100%),
+    radial-gradient(.5px .5px at 44% 55%, rgba(255,255,255,.75) 99%, transparent 100%),
+    radial-gradient(circle, #313650 0 36%, transparent 37%),
+    radial-gradient(circle, #e7eaf2 0 60%, transparent 61%),
+    repeating-conic-gradient(#aab0c4 0deg 7deg, transparent 7deg 45deg);
+  box-shadow: 2px 3px 6px rgba(0,0,0,.6), -1px -1px 3px rgba(255,255,255,.08);
+}
+.theme-toggle:hover { box-shadow: var(--shadow-neu-raised), 0 0 0 3px rgba(79,107,255,.15) }
+
 .btn {
   border: none;
   border-radius: 999px;
@@ -109,16 +140,19 @@ body {
   cursor: pointer;
   transition: var(--transition);
 }
+/* Neumorphism — nổi khối mềm thay vì nền phẳng + viền cứng. */
 .btn-ghost {
-  background: var(--card2);
+  background: var(--neu-surface);
   color: var(--text);
-  border: 1.5px solid var(--border);
+  border: none;
+  box-shadow: var(--shadow-neu-flat);
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   gap: .4rem;
 }
-.btn-ghost:hover { background: var(--border) }
+.btn-ghost:hover { box-shadow: var(--shadow-neu-raised) }
+.btn-ghost:active { box-shadow: var(--shadow-neu-pressed) }
 .btn-primary {
   background: var(--purple);
   color: #fff;
@@ -186,18 +220,20 @@ body {
 .panel-toolbar-info { font-size: .8rem; color: var(--muted); font-weight: 700; white-space: nowrap }
 .panel-toolbar .push-right { margin-left: auto }
 
+/* Neumorphism — ô nhập/dropdown LÕM XUỐNG (pressed), không viền cứng. */
 select.form-input, input.form-input {
   font-family: inherit;
   font-size: .82rem;
   padding: .55rem .8rem;
   border-radius: 10px;
-  border: 1.5px solid var(--border);
-  background: var(--card2);
+  border: none;
+  background: var(--neu-surface);
   color: var(--text);
+  box-shadow: var(--shadow-neu-pressed);
   transition: var(--transition);
 }
 select.form-input:focus, input.form-input:focus {
-  outline: none; border-color: var(--purple); box-shadow: 0 0 0 3px var(--purple-lt); background: var(--card);
+  outline: none; box-shadow: var(--shadow-neu-pressed), 0 0 0 3px var(--purple-lt);
 }
 #teacherSearch { min-width: 200px; flex: 1 }
 
@@ -541,28 +577,48 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
    canh avatar đúng giữa khối tên dù tên ngắn/dài/wrap mấy dòng. Nút
    ✏️/🖨️ (trước đây là 1 cột "hành động" riêng ở rìa phải bảng) giờ nằm
    NGAY TRONG ô tên — xem renderDashboardView() trong js/teaching-schedule.js. */
+/* Cỡ chữ/avatar TĂNG hẳn (34→46px, tên .8rem→1.05rem...) + đổi tên sang
+   font Baloo 2 (font "đặc sắc" đã dùng cho tiêu đề/thương hiệu khắp app,
+   xem teaching-schedule.html) thay vì kế thừa Inter mặc định — người dùng
+   phản hồi chữ nhỏ/font không có điểm nhấn, khó nhận diện ngay ai là ai.
+   Số liệu tuần chuyển thành 2 "thẻ" nền màu (không còn chữ nổi trần) để
+   LẤP khoảng trắng còn dư dưới avatar/tên một cách có chủ đích, thay vì
+   để trống — cả khối giờ cân đối, không còn cảm giác "lửng lơ giữa ô cao". */
 .dash-matrix-teacher {
-  display: flex; align-items: center; gap: .55rem; text-align: left;
+  display: flex; align-items: center; gap: .7rem; text-align: left;
 }
 .dash-matrix-avatar {
-  flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%;
-  background: var(--gradient-hero); color: #fff; font-weight: 800; font-size: .78rem;
+  flex-shrink: 0; width: 46px; height: 46px; border-radius: 50%;
+  background: var(--gradient-hero); color: #fff; font-weight: 800; font-size: .95rem;
+  font-family: 'Baloo 2', sans-serif;
   display: flex; align-items: center; justify-content: center;
 }
 .dash-matrix-name-info { flex: 1; min-width: 0 }
-.dash-matrix-name { font-weight: 800; font-size: .8rem; line-height: 1.3; overflow-wrap: break-word }
-.dash-matrix-code { font-size: .68rem; color: var(--muted); font-weight: 700 }
-.dash-matrix-name-actions { display: flex; flex-direction: column; gap: .15rem; flex-shrink: 0 }
+.dash-matrix-name {
+  font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 1.05rem;
+  line-height: 1.3; color: var(--text); overflow-wrap: break-word;
+}
+.dash-matrix-code { font-size: .78rem; color: var(--muted); font-weight: 700; margin-top: .15rem }
+.dash-matrix-name-actions { display: flex; flex-direction: column; gap: .25rem; flex-shrink: 0 }
 .dash-name-action-btn {
-  background: none; border: none; cursor: pointer; padding: .1rem .2rem;
-  font-size: .82rem; line-height: 1; border-radius: 6px; transition: var(--transition);
+  background: var(--card2); border: none; cursor: pointer; padding: .35rem .4rem;
+  font-size: 1rem; line-height: 1; border-radius: 7px; transition: var(--transition);
 }
 .dash-name-action-btn:hover { background: var(--purple-lt) }
-.dash-matrix-stats {
-  display: flex; flex-direction: column; gap: .2rem; margin-top: .6rem;
-  font-size: .7rem; color: var(--muted);
+.dash-matrix-stats { display: flex; gap: .5rem; margin-top: 1rem }
+.dash-matrix-stat-card {
+  flex: 1; min-width: 0; background: var(--card2); border-radius: 10px;
+  padding: .5rem .6rem; text-align: center;
 }
-.dash-matrix-stats b { color: var(--text); font-size: .78rem }
+.dash-matrix-stat-card b {
+  display: block; font-family: 'Baloo 2', sans-serif; font-weight: 700;
+  font-size: 1.15rem; color: var(--text); line-height: 1.2;
+}
+.dash-matrix-stat-card span { font-size: .68rem; font-weight: 700; color: var(--muted) }
+.dash-matrix-stat-card.stat-main { background: var(--teal-lt) }
+.dash-matrix-stat-card.stat-main b { color: var(--teal) }
+.dash-matrix-stat-card.stat-sub { background: var(--purple-lt) }
+.dash-matrix-stat-card.stat-sub b { color: var(--purple) }
 /* Cột "Buổi" — chữ cam (Sáng)/xanh lá đậm (Chiều) ĐÚNG màu chữ "SÁNG"/
    "CHIỀU" trong Excel gốc (ED7D31/375623) và bản PDF xuất ra. Nền không
    khai báo riêng ở đây nữa — dùng chung nền tint cả hàng (.dash-row-sess-*
@@ -585,8 +641,8 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
   .dash-matrix-buoi-cell, .dash-matrix th:nth-child(2) { left: 164px; min-width: 62px }
   .dash-matrix-cell { min-width: 140px }
   .dash-matrix th, .dash-matrix td { padding: .45rem .45rem }
-  .dash-matrix-avatar { width: 28px; height: 28px; font-size: .7rem }
-  .dash-matrix-name { font-size: .76rem }
+  .dash-matrix-avatar { width: 36px; height: 36px; font-size: .8rem }
+  .dash-matrix-name { font-size: .92rem }
   .dash-chip, .dash-chip-off { font-size: .7rem; padding: .35rem .35rem }
 }
 

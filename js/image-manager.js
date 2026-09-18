@@ -1044,10 +1044,12 @@ document.getElementById('nextPage').addEventListener('click', () => { currentPag
 /* ============================================================
    THEME
    ============================================================ */
+// Icon mặt trời/mặt trăng giờ vẽ hoàn toàn bằng CSS (::after theo
+// data-theme, xem .theme-toggle trong css/image-manager.css) — JS chỉ
+// còn đổi attribute, không set textContent icon nữa.
 const themeBtn = document.getElementById('themeToggle');
 function applyTheme(t) {
   document.documentElement.setAttribute('data-theme', t);
-  themeBtn.textContent = t === 'dark' ? '☀️' : '🌙';
 }
 applyTheme(localStorage.getItem('ic3_theme') === 'dark' ? 'dark' : 'light');
 themeBtn.addEventListener('click', () => {

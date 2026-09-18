@@ -3806,15 +3806,14 @@ if (typeof submitToGoogleSheet !== 'function') {
    § 26 — DARK / LIGHT MODE TOGGLE
    ============================================================ */
 
+// Nút đổi giờ vẽ mặt trời/mặt trăng hoàn toàn bằng CSS (::after +
+// data-theme, xem .theme-toggle/.theme-toggle-exam trong style.css) —
+// TRƯỚC ĐÂY set icon emoji (☀️/🌙) qua textContent, đổi tức thời không
+// animate được. JS giờ CHỈ còn việc đổi attribute + lưu localStorage.
 function toggleTheme() {
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   const next   = isDark ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
-  const icon = next === 'dark' ? '☀️' : '🌙';
-  ['themeToggle', 'themeToggleExam'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = icon;
-  });
   try { localStorage.setItem('eduquiz_theme', next); } catch {}
 }
 
@@ -3822,15 +3821,7 @@ function toggleTheme() {
 (function applyTheme() {
   let saved = 'light';
   try { saved = localStorage.getItem('eduquiz_theme') || 'light'; } catch {}
-  if (saved === 'dark') {
-    document.documentElement.setAttribute('data-theme', 'dark');
-    document.addEventListener('DOMContentLoaded', () => {
-      ['themeToggle', 'themeToggleExam'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.textContent = '☀️';
-      });
-    });
-  }
+  if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
 })();
 
 /* ============================================================
