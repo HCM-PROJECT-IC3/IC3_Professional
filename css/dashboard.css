@@ -574,6 +574,13 @@ body {
   flex-direction: column;
   cursor: pointer;
   animation: cardIn 0.4s ease both;
+  /* Item trong CSS Grid mặc định min-width:auto (co theo min-content của
+     nội dung bên trong, GIỐNG hệt flex item) — dù .cards-grid đã đặt
+     "1fr" (xem @media ≤480px), nếu nội dung bên trong (tiêu đề dài, badge
+     nowrap...) có min-content rộng hơn cột thực tế, cả THẺ (và bởi đó cả
+     LƯỚI) vẫn bị đẩy rộng hơn khung nhìn trên điện thoại — ép về 0 để
+     card LUÔN co vừa đúng bề rộng cột được cấp. */
+  min-width: 0;
 }
 .quiz-card:hover {
   transform: translateY(-4px);
@@ -652,6 +659,8 @@ body {
   font-weight: 800;
   color: var(--text-primary);
   line-height: 1.3;
+  overflow-wrap: break-word;
+  min-width: 0;
 }
 
 .badge {
@@ -688,6 +697,7 @@ body {
 
 .btn-play {
   flex: 1;
+  min-width: 0;
   padding: 10px;
   background: #10b981;
   color: white;
@@ -941,6 +951,7 @@ tr:hover td { background: var(--sidebar-active-bg); }
   padding: 22px;
   border: none;
   box-shadow: var(--shadow-card);
+  min-width: 0;
 }
 .settings-card h3 {
   font-family: 'Baloo 2', cursive;
@@ -1142,6 +1153,9 @@ tr:hover td { background: var(--sidebar-active-bg); }
   #hamburger { display: flex; align-items: center; }
   #content { padding: 20px 16px; }
   .cards-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+  /* Sàn 300px của .settings-grid (xem khai báo gốc ở trên) vẫn cao hơn
+     bề rộng khả dụng trên điện thoại — đổi 1 cột cùng mốc với cards-grid. */
+  .settings-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 480px) {
   .cards-grid { grid-template-columns: 1fr; }

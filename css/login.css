@@ -348,6 +348,33 @@ form:not(.hidden) { animation: formSlideIn .4s cubic-bezier(.16,1,.3,1) both }
 .msg.err { color: var(--red) }
 .msg.ok  { color: var(--green) }
 
+/* Minh họa nhỏ khi đăng nhập/đăng ký THẤT BẠI — lấp khoảng trống dưới
+   .msg (trước đây chỉ có 1 dòng chữ đỏ, phần thẻ còn lại trống trải) +
+   tạo cảm giác chuyển mượt mà bằng transition max-height/opacity thay vì
+   hiện/ẩn đột ngột (display:none). Ảnh caveman-404.gif do người dùng
+   cung cấp — đúng nhân vật trong ảnh tham khảo Dribbble ban đầu. */
+.fail-art {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  border-radius: 14px;
+  margin-top: 0;
+  transition: max-height .45s cubic-bezier(.16,1,.3,1), opacity .35s ease, margin-top .45s ease;
+}
+.fail-art.show {
+  max-height: 260px;
+  opacity: 1;
+  margin-top: .9rem;
+}
+.fail-art img {
+  width: 100%;
+  height: 240px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: var(--shadow-neu-flat);
+}
+
 .forgot {
   display: block;
   text-align: center;

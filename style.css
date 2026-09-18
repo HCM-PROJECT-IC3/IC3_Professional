@@ -273,11 +273,16 @@ body {
 .carousel-3d-stage {
   position: relative;
   width: 100%;
-  height: clamp(280px, 38vw, 370px);
+  height: clamp(220px, 38vw, 370px);
   perspective: 1300px;
   cursor: grab;
   touch-action: none;
   user-select: none;
+  /* KHÔNG dùng mask-image/overflow:hidden ở đây dù muốn làm mờ dần 2 cạnh
+     — phần tử này là ancestor của .carousel-3d-ring (preserve-3d), và
+     mask cũng ép Chrome "làm phẳng" nó y hệt overflow:hidden (xem lý do
+     tương tự ở comment của .carousel-3d-cell bên dưới), làm cả vòng xoay
+     biến mất hoàn toàn thay vì chỉ mờ cạnh — thử thật, đã revert. */
 }
 .carousel-3d.is-dragging .carousel-3d-stage { cursor: grabbing }
 .carousel-3d-ring {
@@ -289,9 +294,14 @@ body {
 .carousel-3d-cell {
   position: absolute;
   top: 50%; left: 50%;
-  width: clamp(175px, 25vw, 235px);
-  height: clamp(220px, 32vw, 296px);
-  margin: calc(clamp(220px, 32vw, 296px) / -2) 0 0 calc(clamp(175px, 25vw, 235px) / -2);
+  /* Floor HẠ từ 175px xuống 140px — clamp() cũ không co được nữa dưới
+     ~700px viewport (25vw < 175px floor ngay cả ở 412px), khiến bán kính
+     vòng xoay (radius, tính theo width — xem js/carousel-3d.js) không
+     nhỏ lại tương ứng trên điện thoại thật, đẩy panel kế bên lồi hẳn ra
+     ngoài khung #lobby{overflow:hidden} thay vì chỉ "hé lộ" nhẹ. */
+  width: clamp(140px, 34vw, 235px);
+  height: clamp(178px, 43vw, 296px);
+  margin: calc(clamp(178px, 43vw, 296px) / -2) 0 0 calc(clamp(140px, 34vw, 235px) / -2);
   border-radius: 16px;
   /* KHÔNG đặt overflow:hidden ở đây — phần tử này nằm trong cây
      preserve-3d (bị rotateY+translateZ), mà overflow:hidden trên 1

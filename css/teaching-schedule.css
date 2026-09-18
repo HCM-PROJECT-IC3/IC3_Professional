@@ -409,6 +409,7 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
   background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius);
   padding: 1.3rem; display: flex; flex-direction: column; gap: 1rem;
   box-shadow: var(--shadow); transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  min-width: 0;
 }
 .teacher-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); z-index: 1 }
 .teacher-card.missing { border-color: var(--yellow) }
@@ -1229,4 +1230,35 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
 .report-pivot td.travel-cell-zero { color: var(--border) }
 .report-pivot td.travel-cell-paid { background: var(--green-lt); color: var(--green); font-weight: 800 }
 .report-pivot td.travel-cell-warn { background: var(--yellow-lt); color: #a97a00; font-weight: 800; cursor: help }
+
+/* ============================================================
+   ĐIỆN THOẠI THẬT (≤480px) — ma trận "Tổng quan" và lưới "TKB lớp" vẫn
+   dùng min-width dành cho tablet (@media 641-900px ở trên) vì trước đây
+   KHÔNG có mốc nào hẹp hơn 640px, nên trên điện thoại thật (~360-412px)
+   bảng phải cuộn ngang gần hết chiều dài ngay lập tức — bóp thêm 1 nấc
+   cuối riêng cho điện thoại (min-width vẫn > viewport nên vẫn cuộn được,
+   nhưng thấy nhiều cột hơn trong 1 lần nhìn, đỡ cảm giác "vỡ" khi vừa mở
+   trang). */
+@media (max-width: 480px) {
+  .dash-matrix-name-col, .dash-matrix th:nth-child(1) { min-width: 108px }
+  .dash-matrix-buoi-cell, .dash-matrix th:nth-child(2) { left: 108px; min-width: 40px }
+  .dash-matrix-cell { min-width: 92px }
+  .dash-matrix th, .dash-matrix td { padding: .32rem .28rem }
+  .dash-chip, .dash-chip-off { font-size: .6rem; padding: .26rem .26rem }
+  .dash-matrix-avatar { width: 30px; height: 30px; font-size: .7rem }
+
+  .tt-grid { min-width: 620px }
+  .tt-cell { min-width: 82px !important }
+  .tt-grid th, .tt-grid td { padding: .35rem .3rem; font-size: .74rem }
+  .tt-input { font-size: .74rem; padding: .32rem .25rem }
+  .tt-input-truong { font-size: .62rem }
+
+  table { min-width: 460px }
+  .report-pivot { min-width: 460px }
+
+  /* .weekly-cards dùng sàn 320px/thẻ (xem khai báo gốc, tab "📅 Lịch
+     tuần") — không có mốc hẹp nào override trước đây, tràn ngang trên
+     điện thoại thật. */
+  .weekly-cards { grid-template-columns: 1fr }
+}
 
