@@ -38,20 +38,41 @@
   const USERS_COL = 'users';
 
   /** Đăng ký tài khoản mới. wantsTeacher=true → xin làm giáo viên (chờ duyệt). */
-  async function registerUser({ name, email, password, wantsTeacher }) {
+  /**
+   * @param {Object} p
+   * @param {string} p.requestedRole - 'student'|'teacher'|'coordinator'|
+   *   'teaching_coordinator' — vai trò NGƯỜI DÙNG MUỐN đăng ký. LƯU Ý:
+   *   firestore.rules chỉ cho phép tự đăng ký thẳng role 'student' hoặc
+   *   'teacher' (xem match /users/{userId} → allow create) — 'coordinator'/
+   *   'teaching_coordinator' CHỦ Ý không nằm trong danh sách đó vì đây là
+   *   2 vai trò có quyền quản lý dữ liệu nhiều người khác, cần ADMIN xét
+   *   duyệt thủ công (admin-users.html) chứ không thể tự nhận ngay khi
+   *   đăng ký (tránh 1 tài khoản tự phong "điều phối" rồi có quyền y hệt
+   *   admin cấp). Nên khi requestedRole là 2 role này, hồ sơ Firestore vẫn
+   *   ghi role:'teacher', approved:false (ĐÚNG luồng "chờ duyệt" đã có sẵn
+   *   — auth-guard.js/login.js đã chặn truy cập khi teacher chưa approved)
+   *   kèm thêm field requestedRole để admin THẤY ĐÚNG người này muốn làm
+   *   gì mà gán role chính xác lúc duyệt, xem js/admin-users.js.
+   */
+  async function registerUser({ name, email, password, requestedRole }) {
     const cred = await auth().createUserWithEmailAndPassword(email, password);
     const uid = cred.user.uid;
     await auth().currentUser.updateProfile({ displayName: name });
-    const role = wantsTeacher ? 'teacher' : 'student';
-    const approved = !wantsTeacher; // student: tự động approved; teacher: chờ duyệt
+    const isStudent = requestedRole === 'student';
+    // role GHI VÀO FIRESTORE luôn thuộc {student, teacher} để hợp lệ với
+    // firestore.rules — requestedRole (field riêng) mới là vai trò THẬT
+    // người dùng chọn, dùng để admin duyệt đúng ý.
+    const role = isStudent ? 'student' : 'teacher';
+    const approved = isStudent; // chỉ học sinh tự động approved; mọi vai trò khác đều chờ duyệt
     await db().collection(USERS_COL).doc(uid).set({
       name: name || '',
       email: email || '',
       role,
       approved,
+      requestedRole: requestedRole || role,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
-    return { uid, role, approved };
+    return { uid, role, approved, requestedRole: requestedRole || role };
   }
 
   async function loginUser(email, password) {
