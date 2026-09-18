@@ -31,7 +31,7 @@ a{color:inherit}
 }
 .btn:hover{transform:translateY(-1px)}
 .btn:active{transform:translateY(0)}
-.btn-primary{background:var(--purple);color:#fff;box-shadow:0 4px 14px rgba(79,107,255,.35)}
+.btn-primary{background:var(--purple);color:#fff;box-shadow:0 4px 14px rgba(47,64,178,.35)}
 /* Neumorphism — nổi khối mềm thay vì nền phẳng + viền cứng. */
 .btn-ghost{background:var(--neu-surface);color:var(--text);border:none;box-shadow:var(--shadow-neu-flat)}
 .btn-ghost:active{box-shadow:var(--shadow-neu-pressed)}
@@ -92,7 +92,7 @@ a{color:inherit}
     repeating-conic-gradient(#aab0c4 0deg 7deg,transparent 7deg 45deg);
   box-shadow:2px 3px 6px rgba(0,0,0,.6),-1px -1px 3px rgba(255,255,255,.08);
 }
-.theme-toggle:hover{box-shadow:var(--shadow-neu-raised),0 0 0 3px rgba(79,107,255,.15)}
+.theme-toggle:hover{box-shadow:var(--shadow-neu-raised),0 0 0 3px rgba(47,64,178,.15)}
 .filters input[type=text]{flex:1;min-width:180px}
 .chip-group{display:flex;gap:.4rem;flex-wrap:wrap}
 .chip{
@@ -178,7 +178,7 @@ a{color:inherit}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
 
 .banner{
-  background:var(--purple-lt);border:1.5px solid rgba(79,107,255,.3);border-radius:var(--radius-sm);
+  background:var(--purple-lt);border:1.5px solid rgba(47,64,178,.3);border-radius:var(--radius-sm);
   padding:.8rem 1rem;margin-bottom:1.2rem;font-size:.82rem;color:var(--text);line-height:1.6;
 }
 .banner b{color:var(--purple)}

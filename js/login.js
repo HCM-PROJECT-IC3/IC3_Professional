@@ -49,12 +49,14 @@
     } catch (e) { /* ignore, ở lại trang login */ }
   }
 
-  // Tabs
+  // Tabs — chỉ thị trượt (.tab-indicator) + form trượt/mờ vào (xem
+  // form:not(.hidden) trong css/login.css) mỗi lần đổi tab.
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       const isLogin = tab.dataset.tab === 'login';
+      document.getElementById('tabIndicator').classList.toggle('pos-register', !isLogin);
       document.getElementById('loginForm').classList.toggle('hidden', !isLogin);
       document.getElementById('registerForm').classList.toggle('hidden', isLogin);
       setMsg('');
@@ -84,6 +86,93 @@
     });
   });
 
+  // ---- Ràng buộc/validate real-time (theo yêu cầu người dùng: "tạo thêm
+  // điều kiện ràng buộc cho form đăng ký và nhập") — kiểm tra khi rời ô
+  // (blur) + khi gõ lại (input, để tắt lỗi ngay khi sửa đúng), KHÔNG chỉ
+  // dựa vào HTML5 required/minlength mặc định (trình duyệt mỗi nơi hiện
+  // tooltip 1 kiểu, không đồng bộ giao diện, và không validate được các
+  // ràng buộc chéo như "2 mật khẩu khớp nhau"). ----
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const PASS_RE = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/; // tối thiểu 6 ký tự, có cả chữ và số
+
+  function showFieldError(input, message) {
+    const err = document.getElementById('err-' + input.id);
+    input.classList.toggle('invalid', !!message);
+    input.classList.toggle('valid', !message && input.value.trim() !== '');
+    if (err) err.textContent = message || '';
+    return !message;
+  }
+
+  function validators() {
+    return {
+      loginEmail: (v) => {
+        v = v.trim();
+        if (!v) return 'Vui lòng nhập email.';
+        if (!EMAIL_RE.test(v)) return 'Email không đúng định dạng.';
+        return '';
+      },
+      loginPass: (v) => (!v ? 'Vui lòng nhập mật khẩu.' : ''),
+      regName: (v) => {
+        v = v.trim();
+        if (!v) return 'Vui lòng nhập họ và tên.';
+        if (v.length < 2) return 'Họ và tên quá ngắn.';
+        return '';
+      },
+      regEmail: (v) => {
+        v = v.trim();
+        if (!v) return 'Vui lòng nhập email.';
+        if (!EMAIL_RE.test(v)) return 'Email không đúng định dạng.';
+        return '';
+      },
+      regPass: (v) => {
+        if (!v) return 'Vui lòng nhập mật khẩu.';
+        if (!PASS_RE.test(v)) return 'Mật khẩu cần tối thiểu 6 ký tự, gồm cả chữ và số.';
+        return '';
+      },
+      regPass2: (v) => {
+        const p1 = document.getElementById('regPass').value;
+        if (!v) return 'Vui lòng nhập lại mật khẩu.';
+        if (v !== p1) return 'Hai mật khẩu không khớp nhau.';
+        return '';
+      },
+    };
+  }
+
+  function validateField(input) {
+    const fn = validators()[input.id];
+    if (!fn) return true;
+    return showFieldError(input, fn(input.value));
+  }
+
+  function validateForm(formEl) {
+    const inputs = formEl.querySelectorAll('input[id]');
+    let firstInvalid = null;
+    let allValid = true;
+    inputs.forEach((input) => {
+      const ok = validateField(input);
+      if (!ok) {
+        allValid = false;
+        if (!firstInvalid) firstInvalid = input;
+      }
+    });
+    if (firstInvalid) firstInvalid.focus();
+    return allValid;
+  }
+
+  ['loginEmail', 'loginPass', 'regName', 'regEmail', 'regPass', 'regPass2'].forEach((id) => {
+    const input = document.getElementById(id);
+    if (!input) return;
+    input.addEventListener('blur', () => validateField(input));
+    input.addEventListener('input', () => {
+      if (input.classList.contains('invalid')) validateField(input);
+      // Mật khẩu 2 phụ thuộc mật khẩu 1 — gõ lại ô 1 thì kiểm tra lại ô 2 nếu đã đụng tới
+      if (id === 'regPass') {
+        const p2 = document.getElementById('regPass2');
+        if (p2.classList.contains('invalid') || p2.value) validateField(p2);
+      }
+    });
+  });
+
   function setMsg(text, type) {
     const el = document.getElementById('msg');
     el.textContent = text || '';
@@ -106,13 +195,16 @@
 
   document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    const formEl = e.target;
+    if (!validateForm(formEl)) { setMsg('⚠️ Vui lòng kiểm tra lại các ô được đánh dấu đỏ.', 'err'); return; }
     const btn = document.getElementById('loginBtn');
     btn.disabled = true;
     setMsg('Đang đăng nhập...', '');
     try {
       const email = document.getElementById('loginEmail').value.trim();
       const pass = document.getElementById('loginPass').value;
-      await EduAuth.loginUser(email, pass);
+      const remember = document.getElementById('rememberMe').checked;
+      await EduAuth.loginUser(email, pass, remember);
       setMsg('✅ Đăng nhập thành công, đang chuyển hướng...', 'ok');
       await redirectByRole();
     } catch (err) {
@@ -124,6 +216,8 @@
 
   document.getElementById('registerForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    const formEl = e.target;
+    if (!validateForm(formEl)) { setMsg('⚠️ Vui lòng kiểm tra lại các ô được đánh dấu đỏ.', 'err'); return; }
     const btn = document.getElementById('registerBtn');
     btn.disabled = true;
     setMsg('Đang tạo tài khoản...', '');
