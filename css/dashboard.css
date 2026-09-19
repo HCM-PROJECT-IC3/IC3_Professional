@@ -193,6 +193,9 @@ body {
   display: flex; align-items: center; justify-content: center;
   font-size: 16px; flex-shrink: 0;
   box-shadow: 3px 3px 8px rgba(239,68,68,0.35);
+  /* Icon Font Awesome (thay emoji 🧑 cũ) không tự có màu như emoji — cần
+     màu trắng tường minh để đủ tương phản trên nền gradient cam/đỏ. */
+  color: #fff;
 }
 .user-info { font-size: 12px; }
 .user-info strong { display: block; font-weight: 800; color: var(--text-primary); }
@@ -208,6 +211,15 @@ body {
   flex-direction: column;
   min-height: 100vh;
   transition: var(--transition);
+  /* Flex item mặc định min-width:auto — TỪ CHỐI co lại nhỏ hơn bề rộng
+     max-content của nội dung bên trong. Carousel "Bộ đề của tôi" (thêm
+     sau) có 1 hàng flex 6 thẻ KHÔNG xuống dòng bên trong, max-content của
+     hàng đó rất lớn (tổng bề rộng 6 thẻ+khoảng cách) — thiếu dòng này,
+     max-content đó "kéo" ngược lên tới tận #main-wrapper, ép CẢ VÙNG NỘI
+     DUNG rộng ra bằng đúng 6 thẻ xếp cạnh nhau thay vì bằng viewport, làm
+     overflow-x:auto của track vô nghĩa (không bao giờ thật sự cần cuộn vì
+     mọi thứ đã tự phình đủ rộng để chứa hết). */
+  min-width: 0;
 }
 
 /* ========================================
@@ -464,7 +476,8 @@ body {
 }
 
 /* ========================================
-   QUIZ CARDS GRID
+   QUIZ CARDS GRID (fallback — chỉ còn dùng cho trạng thái
+   "không tìm thấy bộ đề" bên trong carousel bên dưới)
    ======================================== */
 .cards-grid {
   display: grid;
@@ -473,22 +486,256 @@ body {
 }
 
 /* ========================================
-   3D SHELF EMBED (Working Volumes)
-   Cùng vùng hiển thị với .cards-grid — chỉ 1 trong 2
-   xuất hiện tại một thời điểm, điều khiển bởi
-   toggleShelfView() trong js/dashboard.js.
+   CAROUSEL "BỘ ĐỀ CỦA TÔI" — thay lưới thẻ tĩnh bằng dải trượt ngang
+   kiểu "coverflow": thẻ đang ở GIỮA khung nhìn tự phóng to + rõ nét,
+   các thẻ 2 bên thu nhỏ + mờ nhẹ, cuộn snap-vào-giữa mượt (chuột/trackpad/
+   vuốt cảm ứng đều dùng ĐÚNG hành vi cuộn ngang có sẵn của trình duyệt,
+   không cần thư viện ngoài). #cardsGrid GIỮ NGUYÊN làm ID gốc (JS
+   toggleShelfView() trong js/dashboard.js chỉ ẩn/hiện qua .hidden, không
+   đổi) — bọc quanh mũi tên + track + chấm điều hướng.
    ======================================== */
-.view-toggle-btn {
-  margin-left: auto;
+.carousel-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
-.view-toggle-btn.active {
-  border-color: var(--accent-purple);
+
+.carousel-track {
+  display: flex;
+  gap: 28px;
+  overflow-x: auto;
+  overflow-y: visible;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  /* padding-left/right ĐẶT BẰNG JS (xem updateCarouselEdgePadding() trong
+     js/dashboard.js), KHÔNG dùng calc(50% - ...) ở đây — % padding trên 1
+     flex item (flex:1) tạo vòng lặp phụ thuộc: bề rộng cuối cùng của
+     .carousel-track lại phụ thuộc vào chính padding của nó (đã gặp lỗi
+     thật: %-padding khiến khung này tự phình ra hơn 2000px, tràn khỏi màn
+     hình, thay vì set đúng bằng bề rộng khung nhìn) — JS đo clientWidth
+     THẬT sau khi layout xong rồi gán padding bằng px mới an toàn. Trên/
+     dưới giữ tĩnh, chỉ cần đủ chỗ cho thẻ active phóng to (scale 1 so với
+     0.86 mặc định) không bị cắt. KHÔNG dùng margin-top ÂM ở .carousel-dots
+     bên dưới để "kéo" nó lên nằm dưới phần padding-bottom này (đã thử —
+     phần padding vẫn thuộc hit-box của chính .carousel-track nên NUỐT MẤT
+     sự kiện click của các chấm dù nhìn có vẻ nằm ngoài). */
+  padding-top: 32px;
+  padding-bottom: 24px;
+  scrollbar-width: none;
+  flex: 1;
+  min-width: 0;
+}
+.carousel-track::-webkit-scrollbar { display: none; }
+.carousel-track:focus-visible {
+  outline: 2px solid var(--accent-purple);
+  outline-offset: 4px;
+  border-radius: 20px;
+}
+
+.carousel-item {
+  /* 78vw chỉ có tác dụng ở màn RẤT hẹp (≤~385px, còn lại luôn kẹp cứng ở
+     300px bất kể màn rộng bao nhiêu — đây chính là lý do "chưa responsive"
+     bị phản hồi: thẻ không hề lớn thêm dù màn hình rộng ra, khiến khoảng
+     trống 2 bên (xem updateCarouselEdgePadding() trong js/dashboard.js)
+     ngày càng chiếm tỉ lệ lớn). Đổi sang mốc vw THỰC SỰ có tác dụng trong
+     dải máy tính bảng/laptop/màn rộng phổ biến (768–2560px), thẻ lớn dần
+     theo màn thay vì đứng yên 1 cỡ. */
+  flex: 0 0 clamp(230px, 20vw, 380px);
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+  /* Mặc định "chưa phải thẻ chính" — thu nhỏ + mờ; JS gắn .is-active cho
+     ĐÚNG 1 thẻ đang nằm giữa khung nhìn (xem initCarousel() trong
+     js/dashboard.js), đổi biến CSS bên dưới để phóng to/rõ nét lại. */
+  --cf-scale: 0.86;
+  --cf-opacity: 0.55;
+  transform: scale(var(--cf-scale));
+  opacity: var(--cf-opacity);
+  transition: transform .45s cubic-bezier(.16,1,.3,1), opacity .45s cubic-bezier(.16,1,.3,1);
+}
+.carousel-item.is-active {
+  --cf-scale: 1;
+  --cf-opacity: 1;
+  z-index: 2;
+}
+/* Thẻ chính nổi bật hẳn khỏi mặt phẳng — đổ thêm 1 lớp bóng tím thương
+   hiệu mờ phía dưới, đúng cảm giác "xịn xò" của carousel coverflow thay
+   vì chỉ phóng to đơn thuần. */
+.carousel-item.is-active .quiz-card {
+  box-shadow: var(--shadow-card-hover), 0 22px 40px -18px rgba(108,92,231,0.45);
+}
+@media (prefers-reduced-motion: reduce) {
+  .carousel-item { transition: none; }
+  .carousel-track { scroll-behavior: auto; }
+}
+
+.carousel-arrow {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-btn);
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  z-index: 3;
+}
+.carousel-arrow:hover { color: #fff; background: linear-gradient(135deg, #6C5CE7, #8E7BFF); box-shadow: var(--shadow-btn-active); }
+.carousel-arrow:active { box-shadow: var(--shadow-btn-active); transform: scale(.94); }
+.carousel-arrow:disabled { opacity: .35; cursor: default; box-shadow: var(--shadow-card-inset); }
+.carousel-arrow:disabled:hover { color: var(--text-primary); background: var(--bg-card); }
+
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+.carousel-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  background: var(--neu-dark);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.carousel-dot:hover { background: var(--accent-purple); opacity: .7; }
+.carousel-dot.is-active {
+  width: 26px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #6C5CE7, #8E7BFF);
+}
+
+@media (max-width: 640px) {
+  .carousel-arrow { display: none; }
+  .carousel-track { padding-left: 24px; padding-right: 24px; }
+  .carousel-item { flex-basis: 82vw; }
+}
+
+/* ========================================
+   "🧊 Kệ sách 3D" — banner quảng bá, cùng ngôn ngữ thiết kế .quiz-card
+   (bo góc, đổ bóng neumorphism), đặt NGAY DƯỚI carousel bộ đề — vừa dễ
+   thấy/dễ bấm hơn hẳn nút nhỏ trước đây lạc trên toolbar, vừa lấp khoảng
+   trống còn lại bên dưới carousel trên màn hình rộng.
+   ======================================== */
+.shelf-promo-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  margin-top: 20px;
+  padding: 20px 24px;
+  border: none;
+  border-radius: 20px;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  text-align: left;
+  font-family: 'Nunito', sans-serif;
+  transition: var(--transition);
+}
+.shelf-promo-card:hover { box-shadow: var(--shadow-card-hover); transform: translateY(-2px); }
+.shelf-promo-card:active { box-shadow: var(--shadow-btn-active); transform: translateY(0); }
+
+.shelf-promo-icon {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  background: linear-gradient(135deg, #6C5CE7, #8E7BFF);
+  box-shadow: var(--shadow-btn);
+  color: #fff;
+}
+
+.shelf-promo-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.shelf-promo-title {
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+.shelf-promo-desc {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shelf-promo-cta {
+  flex-shrink: 0;
+  font-weight: 800;
+  font-size: 13px;
+  padding: 10px 18px;
+  border-radius: 999px;
   color: #fff;
   background: linear-gradient(135deg, #6C5CE7, #8E7BFF);
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .shelf-promo-card { padding: 16px; gap: 12px; }
+  .shelf-promo-icon { width: 46px; height: 46px; font-size: 22px; }
+  .shelf-promo-desc { white-space: normal; }
+  .shelf-promo-cta { display: none; }
 }
 
 .cards-viewport {
   position: relative;
+}
+
+/* "🧊 Kệ sách 3D" chiếm GẦN TRỌN chiều cao còn lại của màn hình khi bật
+   (áp bởi toggleShelfView()/applyShelfFullscreenSize() trong
+   js/dashboard.js) — TRƯỚC ĐÂY chỉ là 1 khung nhúng cỡ cố định (aspect-
+   ratio 16/10, tối đa 78vh) nằm DƯỚI carousel + banner vẫn còn hiện, phải
+   cuộn xuống mới thấy/dùng hết được (phản hồi người dùng). #section-my-
+   sets.style.height được JS gán bằng px THẬT (viewport − vị trí đỉnh
+   section, xem applyShelfFullscreenSize()) — chọn ID+class thay vì chỉ
+   class để chắc chắn thắng .section.active{display:block} vốn có độ đặc
+   hiệu cao hơn 1 class đơn (2 class > 1 class). */
+#section-my-sets.section-shelf-fullscreen {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.section-shelf-fullscreen .cards-viewport {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.section-shelf-fullscreen .shelf-embed {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.section-shelf-fullscreen .shelf-embed-frame {
+  flex: 1;
+  width: 100%;
+  height: auto;
+  aspect-ratio: unset;
+  min-height: 0;
+  max-height: none;
 }
 
 .shelf-embed {
@@ -558,7 +805,6 @@ body {
   .shelf-embed-frame { aspect-ratio: 4 / 5; min-height: 380px; }
 }
 @media (max-width: 480px) {
-  .view-toggle-btn { margin-left: 0; }
   .shelf-embed-bar { padding: 10px 14px; }
   .shelf-embed-frame { aspect-ratio: 3 / 4; min-height: 340px; max-height: 70vh; }
 }

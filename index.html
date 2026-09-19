@@ -4,7 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🌟 EduQuiz IC3</title>
+  <!-- <title> chỉ render TEXT THUẦN (tiêu đề tab trình duyệt) — bỏ emoji
+       thay vì để lọt icon "vỡ", không có cách nào render Font Awesome ở đây. -->
+  <title>EduQuiz IC3</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
     href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap"
@@ -15,6 +17,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/accessibility.css">
+<link rel="stylesheet" href="css/motion.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 
 <body>
@@ -41,9 +45,9 @@
        trong js/main.js. Ẩn hoàn toàn ở màn rộng (CSS display:none). -->
     <div class="lobby-view-toggle" role="tablist" aria-label="Chuyển đổi màn giới thiệu và màn làm bài">
       <button type="button" class="view-toggle-btn" id="toggleIntroBtn" role="tab" aria-selected="false"
-        onclick="setLobbyView('intro')">🎓 Giới thiệu</button>
+        onclick="setLobbyView('intro')"><i class="fa-solid fa-graduation-cap"></i> Giới thiệu</button>
       <button type="button" class="view-toggle-btn active" id="toggleFormBtn" role="tab" aria-selected="true"
-        onclick="setLobbyView('form')">📝 Làm bài</button>
+        onclick="setLobbyView('form')"><i class="fa-solid fa-pen-to-square"></i> Làm bài</button>
     </div>
 
     <!-- Left: Animated 3D Carousel -->
@@ -83,7 +87,7 @@
             <!-- <div class="carousel-3d-badge carousel-3d-badge-bottom" aria-hidden="true">
               <span class="badge-dot dot-amber"></span> IC3 Test Prep · Ôn theo chủ đề
             </div> -->
-            <div class="carousel-3d-hint">↔ Kéo để xoay</div>
+            <div class="carousel-3d-hint"><i class="fa-solid fa-arrows-left-right"></i> Kéo để xoay</div>
           </div>
         </div>
       </div>
@@ -97,7 +101,7 @@
          nút lúc đang làm bài và hiện lại khi quay về lobby. -->
       <a href="ic3-dashboard.html" target="_blank" rel="noopener" id="adminEntryLink"
         title="Dành cho giáo viên / quản trị viên" class="switch-account-link">
-        🔄 <span>Chuyển tài khoản</span>
+        <i class="fa-solid fa-arrows-rotate"></i> <span>Chuyển tài khoản</span>
       </a>
 
     </div>
@@ -105,18 +109,19 @@
     <!-- Right: form -->
     <div class="lobby-right">
       <div class="lobby-brand">
-        <span class="lobby-brand-emoji">🎓</span>
+        <span class="lobby-brand-emoji"><i class="fa-solid fa-graduation-cap"></i></span>
         <span class="lobby-brand-name">EduQuiz IC3</span>
       </div>
       <div class="lobby-card">
         <!-- Nhóm 1: Thông tin học sinh -->
-        <div class="form-section-label">👤 Thông tin học sinh</div>
+        <div class="form-section-label"><i class="fa-solid fa-user"></i> Thông tin học sinh</div>
 
         <!-- Trường (full width) — chọn trước để lọc Lớp/Tên bên dưới -->
         <div class="form-group">
-          <label>🏛️ Trường</label>
+          <label><i class="fa-solid fa-building-columns"></i> Trường</label>
           <select id="studentSchool" disabled>
-            <option value="">⚠ Chưa có danh sách — liên hệ Điều phối đào tạo</option>
+            <!-- <option> chỉ render text thuần — bỏ hẳn emoji thay vì để lọt icon "vỡ". -->
+            <option value="">Chưa có danh sách — liên hệ Điều phối đào tạo</option>
           </select>
           <!-- <div class="roster-status" id="rosterStatus"></div> -->
         </div>
@@ -124,13 +129,13 @@
         <!-- Lớp + Họ và tên (lọc dần theo Trường đã chọn) -->
         <div class="form-row">
           <div class="form-group">
-            <label>🏫 Lớp</label>
+            <label><i class="fa-solid fa-school"></i> Lớp</label>
             <select id="studentClass" disabled>
               <option value="">-- Chọn trường trước --</option>
             </select>
           </div>
           <div class="form-group">
-            <label>👤 Họ và tên</label>
+            <label><i class="fa-solid fa-user"></i> Họ và tên</label>
             <select id="studentName" disabled>
               <option value="">-- Chọn lớp trước --</option>
             </select>
@@ -138,7 +143,7 @@
         </div>
 
         <!-- Nhóm 2: Chọn bài thi -->
-        <div class="form-section-label">📝 Chọn bài thi</div>
+        <div class="form-section-label"><i class="fa-solid fa-pen-to-square"></i> Chọn bài thi</div>
 
         <!-- Chế độ làm bài: Ôn luyện (không giới hạn thời gian, để học sinh
              học/thực hành thoải mái) và Kiểm tra (chấm 50 phút/bài như thi
@@ -147,10 +152,10 @@
              chung, chỉ khác cách tính giờ khi vào làm bài. Xem
              js/quiz-engine.js § startExam()/startTimer(). -->
         <div class="form-group">
-          <label>⏳ Chế độ làm bài</label>
+          <label><i class="fa-solid fa-hourglass-half"></i> Chế độ làm bài</label>
           <div class="mt-mode-toggle" id="examModeToggle">
-            <button type="button" class="mt-mode-btn" data-exam-mode="practice">🕊️ Ôn luyện — không giới hạn giờ</button>
-            <button type="button" class="mt-mode-btn is-active" data-exam-mode="test">⏱️ Kiểm tra — 50 phút/bài</button>
+            <button type="button" class="mt-mode-btn" data-exam-mode="practice"><i class="fa-solid fa-dove"></i> Ôn luyện — không giới hạn giờ</button>
+            <button type="button" class="mt-mode-btn is-active" data-exam-mode="test"><i class="fa-solid fa-stopwatch"></i> Kiểm tra — 50 phút/bài</button>
           </div>
         </div>
 
@@ -180,11 +185,11 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label>📚 Chương trình</label>
+            <label><i class="fa-solid fa-book"></i> Chương trình</label>
             <select id="categorySelect"></select>
           </div>
           <div class="form-group">
-            <label>🎯 Cấp độ</label>
+            <label><i class="fa-solid fa-bullseye"></i> Cấp độ</label>
             <select id="levelSelect"></select>
           </div>
         </div>
@@ -198,14 +203,14 @@
              (7 chủ đề + 8 tiết + Tổng hợp), khó quét/dễ chọn nhầm trên di
              động. Xem js/quiz-engine.js § refreshMinitests(). -->
         <div class="form-group">
-          <label>🗂️ Minitest</label>
+          <label><i class="fa-solid fa-layer-group"></i> Minitest</label>
           <div class="mt-mode-toggle" id="mtModeToggle"></div>
           <select id="minitestSelect"></select>
           <div class="minitest-meta" id="minitestMeta"></div>
         </div>
 
-        <button type="button" class="btn-start" id="btnStart" onclick="onStartExamClick()" disabled>▶ Bắt đầu</button>
-        <button type="button" class="btn-secondary" onclick="showRecords()">📊 Xem lịch sử bài làm</button>
+        <button type="button" class="btn-start" id="btnStart" onclick="onStartExamClick()" disabled><i class="fa-solid fa-play"></i> Bắt đầu</button>
+        <button type="button" class="btn-secondary" onclick="showRecords()"><i class="fa-solid fa-clock-rotate-left"></i> Xem lịch sử bài làm</button>
 
         <!-- MOS Word 2019 — mô phỏng thao tác Ribbon, 10 tiết ôn luyện cuối
              khóa (không khóa như Khu Vui Chơi, đây là nội dung học chính).
@@ -215,7 +220,7 @@
              xem hàm updateMosInlinePractice() ở js/main.js. -->
         <button type="button" class="game-zone-open-btn" id="openWordSimBtn" hidden
           title="MOS Word 2019 — 10 tiết ôn luyện thao tác Ribbon">
-          📝 MOS Word — Ôn luyện Ribbon
+          <i class="fa-solid fa-pen-to-square"></i> MOS Word — Ôn luyện Ribbon
         </button>
 
         <!-- MOS Practice (Excel/PowerPoint) — tải đề thật, làm trên Office
@@ -223,7 +228,7 @@
              Cùng nguyên tắc với nút Ribbon ở trên: chỉ hiện khi đang chọn
              đúng Chương trình = MOS + Cấp độ = Excel/PowerPoint. -->
         <a class="game-zone-open-btn" id="openMosPracticeBtn" href="mos-practice.html" target="_blank" rel="noopener" hidden>
-          📤 MOS Practice — Nộp bài chấm điểm thật
+          <i class="fa-solid fa-file-export"></i> MOS Practice — Nộp bài chấm điểm thật
         </a>
       </div>
     </div>
@@ -234,13 +239,13 @@
      ═══════════════════════════════════ -->
   <div id="exam">
     <div class="topbar">
-      <div class="topbar-brand">🎓 IC3</div>
+      <div class="topbar-brand"><i class="fa-solid fa-graduation-cap"></i> IC3</div>
       <div class="topbar-info" id="topbarInfo"></div>
       <div class="timer-wrap" id="timerWrap">
-        <span class="timer-icon">⏱</span>
+        <span class="timer-icon"><i class="fa-solid fa-stopwatch"></i></span>
         <span id="timer-display">50:00</span>
       </div>
-      <button type="button" class="btn-submit-top" onclick="confirmSubmit()">Nộp bài ✓</button>
+      <button type="button" class="btn-submit-top" onclick="confirmSubmit()">Nộp bài <i class="fa-solid fa-check"></i></button>
       <button type="button" onclick="toggleTheme()" title="Chế độ sáng/tối" class="theme-toggle-exam"
         id="themeToggleExam"></button>
     </div>
@@ -249,7 +254,7 @@
     </div>
     <div class="exam-body">
       <div class="sidebar" id="examSidebar">
-        <div class="sidebar-title">📋 Câu hỏi</div>
+        <div class="sidebar-title"><i class="fa-solid fa-list-check"></i> Câu hỏi</div>
         <div class="q-grid" id="qGrid"></div>
         <div class="legend">
           <div class="legend-item">
@@ -284,22 +289,22 @@
       style="position:absolute;inset:0;background:radial-gradient(ellipse at center top,rgba(79,107,255,.15),transparent 60%);pointer-events:none;">
     </div>
     <div class="result-card">
-      <span class="result-emoji" id="resultEmoji">🎉</span>
+      <span class="result-emoji" id="resultEmoji"><i class="fa-solid fa-face-laugh-beam"></i></span>
       <div class="result-score" id="resultScore">0%</div>
       <div class="result-label" id="resultLabel">Kết quả bài thi</div>
       <div class="integrity-badge" id="integrityBadge"></div>
       <div class="result-stats">
         <div class="result-stat correct">
           <div class="result-stat-val" id="rCorrect">0</div>
-          <div class="result-stat-lbl">✅ Đúng</div>
+          <div class="result-stat-lbl"><i class="fa-solid fa-circle-check"></i> Đúng</div>
         </div>
         <div class="result-stat incorrect">
           <div class="result-stat-val" id="rIncorrect">0</div>
-          <div class="result-stat-lbl">❌ Sai</div>
+          <div class="result-stat-lbl"><i class="fa-solid fa-circle-xmark"></i> Sai</div>
         </div>
         <div class="result-stat skipped">
           <div class="result-stat-val" id="rSkipped">0</div>
-          <div class="result-stat-lbl">⏭ Bỏ qua</div>
+          <div class="result-stat-lbl"><i class="fa-solid fa-forward-step"></i> Bỏ qua</div>
         </div>
       </div>
       <div class="review-list" id="reviewList"></div>
@@ -313,12 +318,12 @@
            không phụ thuộc vị trí DOM). -->
       <button type="button" class="game-zone-open-btn" id="openGameZoneBtn"
         title="Khu Vui Chơi — mở khóa khi làm bài Tổng hợp đạt từ 90% điểm (dùng 1 lần)">
-        🎮 Khu Vui Chơi
+        <i class="fa-solid fa-gamepad"></i> Khu Vui Chơi
       </button>
       <div class="game-zone-hint" id="gameZoneHint"></div>
 
-      <button type="button" class="btn-retry" onclick="backToLobby()">🔄 Làm lại / Chọn bài khác</button>
-      <button type="button" class="btn-secondary" onclick="showRecords()">📊 Xem lịch sử bài làm</button>
+      <button type="button" class="btn-retry" onclick="backToLobby()"><i class="fa-solid fa-arrows-rotate"></i> Làm lại / Chọn bài khác</button>
+      <button type="button" class="btn-secondary" onclick="showRecords()"><i class="fa-solid fa-clock-rotate-left"></i> Xem lịch sử bài làm</button>
     </div>
   </div>
 
@@ -327,10 +332,10 @@
      ═══════════════════════════════════ -->
   <div id="recordsModal" class="modal-overlay" style="display:none;" onclick="closeModalBg(event)">
     <div class="modal-box">
-      <h3>📊 Lịch sử bài làm <button type="button" class="modal-close" onclick="closeRecords()">✕</button></h3>
+      <h3><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử bài làm <button type="button" class="modal-close" onclick="closeRecords()"><i class="fa-solid fa-xmark"></i></button></h3>
       <div class="modal-actions">
-        <button type="button" class="btn-export" onclick="exportCSV()">⬇ Xuất CSV (Excel)</button>
-        <button type="button" class="btn-danger" onclick="clearRecords()">🗑 Xóa tất cả</button>
+        <button type="button" class="btn-export" onclick="exportCSV()"><i class="fa-solid fa-download"></i> Xuất CSV (Excel)</button>
+        <button type="button" class="btn-danger" onclick="clearRecords()"><i class="fa-solid fa-trash"></i> Xóa tất cả</button>
       </div>
       <div id="recordsContent"></div>
     </div>
@@ -346,17 +351,17 @@
   <div class="game-modal-overlay" id="gameZoneModalOverlay">
     <div class="game-modal game-zone-modal">
       <div class="game-modal-bar">
-        <span class="game-modal-title">🎮 Khu Vui Chơi</span>
-        <button type="button" class="game-modal-close" id="closeGameZoneModalBtn">✕ Đóng</button>
+        <span class="game-modal-title"><i class="fa-solid fa-gamepad"></i> Khu Vui Chơi</span>
+        <button type="button" class="game-modal-close" id="closeGameZoneModalBtn"><i class="fa-solid fa-xmark"></i> Đóng</button>
       </div>
 
       <!-- Trạng thái KHÓA: hiện khi bài "Tổng hợp" gần nhất của học sinh
            đang chọn chưa đạt 90% (hoặc đã dùng lượt mở khóa rồi) -->
       <div class="game-zone-locked" id="gameZoneLocked">
-        <div class="game-zone-lock-icon">🔒</div>
+        <div class="game-zone-lock-icon"><i class="fa-solid fa-lock"></i></div>
         <div class="game-zone-lock-title">Khu Vui Chơi đang khóa</div>
         <p class="game-zone-lock-desc">
-          Làm bài <strong>📚 Tổng hợp</strong> (ngẫu nhiên chia đều 7 chủ đề) đạt từ
+          Làm bài <strong>Tổng hợp</strong> (ngẫu nhiên chia đều 7 chủ đề) đạt từ
           <strong>90% điểm</strong> trở lên để mở khóa toàn bộ mini-game bên dưới.
           Lượt mở khóa chỉ dùng được <strong>1 lần</strong> — sau khi vào chơi, cần làm
           1 bài Tổng hợp mới đạt ≥90% để mở lại.
@@ -373,54 +378,54 @@
            game sẽ build ở phase sau (Battle Quiz, Cyber Detective,
            Computer Simulator) — không load được gì ở bước này. -->
       <div class="game-zone-unlocked" id="gameZoneUnlocked">
-        <div class="game-hub-kicker">🎮 IC3 Game Hub</div>
-        <p class="game-zone-unlocked-desc">🎉 Đã mở khóa — chọn 1 mini-game bên dưới để chơi!</p>
+        <div class="game-hub-kicker"><i class="fa-solid fa-gamepad"></i> IC3 Game Hub</div>
+        <p class="game-zone-unlocked-desc"><i class="fa-solid fa-unlock"></i> Đã mở khóa — chọn 1 mini-game bên dưới để chơi!</p>
         <div class="game-zone-grid">
           <button type="button" class="game-zone-tile" id="openGameBtn" title="Chơi mini-game giải trí Prism Cascade">
-            <span class="game-zone-tile-emoji">🎮</span>
+            <span class="game-zone-tile-emoji"><i class="fa-solid fa-shapes"></i></span>
             <span class="game-zone-tile-name">Prism Cascade</span>
             <span class="game-zone-tile-desc">Match-3 giải trí ngắn giữa giờ ôn bài</span>
             <span class="game-zone-tile-tag">Giải trí</span>
           </button>
           <button type="button" class="game-zone-tile" id="openMemoryGameBtn" title="Chơi mini-game Trí Nhớ Thiết Bị &amp; Phần Mềm">
-            <span class="game-zone-tile-emoji">🧠</span>
+            <span class="game-zone-tile-emoji"><i class="fa-solid fa-brain"></i></span>
             <span class="game-zone-tile-name">Trí Nhớ Thiết Bị</span>
             <span class="game-zone-tile-desc">Lật thẻ ghép cặp thuật ngữ IC3</span>
             <span class="game-zone-tile-tag">Kiến thức</span>
           </button>
           <button type="button" class="game-zone-tile" id="openSudokuBtn" title="Chơi mini-game Sudoku Trí Tuệ">
-            <span class="game-zone-tile-emoji">🧩</span>
+            <span class="game-zone-tile-emoji"><i class="fa-solid fa-puzzle-piece"></i></span>
             <span class="game-zone-tile-name">Sudoku Trí Tuệ</span>
             <span class="game-zone-tile-desc">Rèn tư duy logic, giải trí</span>
             <span class="game-zone-tile-tag">Giải trí</span>
           </button>
           <button type="button" class="game-zone-tile" id="openBilliardsBtn" title="Chơi mini-game Bi-a Phần Mềm">
-            <span class="game-zone-tile-emoji">🎱</span>
+            <span class="game-zone-tile-emoji"><i class="fa-solid fa-circle"></i></span>
             <span class="game-zone-tile-name">Bi-a Phần Mềm</span>
             <span class="game-zone-tile-desc">Giải trí, thư giãn sau bài thi</span>
             <span class="game-zone-tile-tag">Giải trí</span>
           </button>
           <button type="button" class="game-zone-tile" id="openPzDefenseBtn" title="Chơi mini-game Phòng Thủ Dữ Liệu">
-            <span class="game-zone-tile-emoji">🧟</span>
+            <span class="game-zone-tile-emoji"><i class="fa-solid fa-shield-halved"></i></span>
             <span class="game-zone-tile-name">Phòng Thủ Dữ Liệu</span>
             <span class="game-zone-tile-desc">Chặn nguy cơ bằng kiến thức bảo mật IC3</span>
             <span class="game-zone-tile-tag">Kiến thức</span>
           </button>
 
           <button type="button" class="game-zone-tile" id="openBattleQuizBtn" title="Chơi mini-game Battle Quiz">
-            <span class="game-zone-tile-emoji">⚔</span>
+            <span class="game-zone-tile-emoji"><i class="fa-solid fa-hand-fist"></i></span>
             <span class="game-zone-tile-name">Battle Quiz</span>
             <span class="game-zone-tile-desc">Đấu trả lời nhanh theo combo</span>
             <span class="game-zone-tile-tag">Kiến thức</span>
           </button>
           <button type="button" class="game-zone-tile" id="openCyberDetectiveBtn" title="Chơi mini-game Cyber Detective">
-            <span class="game-zone-tile-emoji">🔎</span>
+            <span class="game-zone-tile-emoji"><i class="fa-solid fa-user-secret"></i></span>
             <span class="game-zone-tile-name">Cyber Detective</span>
             <span class="game-zone-tile-desc">Điều tra tình huống mất an toàn thông tin</span>
             <span class="game-zone-tile-tag">Kiến thức</span>
           </button>
           <button type="button" class="game-zone-tile" id="openComputerSimBtn" title="Chơi mini-game Computer Simulator">
-            <span class="game-zone-tile-emoji">💻</span>
+            <span class="game-zone-tile-emoji"><i class="fa-solid fa-computer"></i></span>
             <span class="game-zone-tile-name">Computer Simulator</span>
             <span class="game-zone-tile-desc">Thực hành thao tác máy tính cơ bản</span>
             <span class="game-zone-tile-tag">Kiến thức</span>
@@ -434,8 +439,8 @@
   <div class="game-modal-overlay" id="gameModalOverlay">
     <div class="game-modal">
       <div class="game-modal-bar">
-        <span class="game-modal-title">✨ Prism Cascade — giải trí ngắn</span>
-        <button type="button" class="game-modal-close" id="closeGameModalBtn">✕ Đóng</button>
+        <span class="game-modal-title"><i class="fa-solid fa-shapes"></i> Prism Cascade — giải trí ngắn</span>
+        <button type="button" class="game-modal-close" id="closeGameModalBtn"><i class="fa-solid fa-xmark"></i> Đóng</button>
       </div>
       <div class="game-modal-frame">
         <iframe
@@ -455,8 +460,8 @@
   <div class="game-modal-overlay" id="memoryGameModalOverlay">
     <div class="game-modal">
       <div class="game-modal-bar">
-        <span class="game-modal-title">🧠 Trí Nhớ Thiết Bị &amp; Phần Mềm</span>
-        <button type="button" class="game-modal-close" id="closeMemoryGameModalBtn">✕ Đóng</button>
+        <span class="game-modal-title"><i class="fa-solid fa-brain"></i> Trí Nhớ Thiết Bị &amp; Phần Mềm</span>
+        <button type="button" class="game-modal-close" id="closeMemoryGameModalBtn"><i class="fa-solid fa-xmark"></i> Đóng</button>
       </div>
       <div class="game-modal-frame">
         <iframe
@@ -476,8 +481,8 @@
   <div class="game-modal-overlay" id="sudokuModalOverlay">
     <div class="game-modal">
       <div class="game-modal-bar">
-        <span class="game-modal-title">🧩 Sudoku Trí Tuệ</span>
-        <button type="button" class="game-modal-close" id="closeSudokuModalBtn">✕ Đóng</button>
+        <span class="game-modal-title"><i class="fa-solid fa-puzzle-piece"></i> Sudoku Trí Tuệ</span>
+        <button type="button" class="game-modal-close" id="closeSudokuModalBtn"><i class="fa-solid fa-xmark"></i> Đóng</button>
       </div>
       <div class="game-modal-frame">
         <iframe
@@ -497,8 +502,8 @@
   <div class="game-modal-overlay" id="billiardsModalOverlay">
     <div class="game-modal">
       <div class="game-modal-bar">
-        <span class="game-modal-title">🎱 Bi-a Phần Mềm</span>
-        <button type="button" class="game-modal-close" id="closeBilliardsModalBtn">✕ Đóng</button>
+        <span class="game-modal-title"><i class="fa-solid fa-circle"></i> Bi-a Phần Mềm</span>
+        <button type="button" class="game-modal-close" id="closeBilliardsModalBtn"><i class="fa-solid fa-xmark"></i> Đóng</button>
       </div>
       <div class="game-modal-frame">
         <iframe
@@ -518,8 +523,8 @@
   <div class="game-modal-overlay" id="pzDefenseModalOverlay">
     <div class="game-modal">
       <div class="game-modal-bar">
-        <span class="game-modal-title">🧟 Phòng Thủ Dữ Liệu</span>
-        <button type="button" class="game-modal-close" id="closePzDefenseModalBtn">✕ Đóng</button>
+        <span class="game-modal-title"><i class="fa-solid fa-shield-halved"></i> Phòng Thủ Dữ Liệu</span>
+        <button type="button" class="game-modal-close" id="closePzDefenseModalBtn"><i class="fa-solid fa-xmark"></i> Đóng</button>
       </div>
       <div class="game-modal-frame">
         <iframe
@@ -539,8 +544,8 @@
   <div class="game-modal-overlay" id="battleQuizModalOverlay">
     <div class="game-modal">
       <div class="game-modal-bar">
-        <span class="game-modal-title">⚔ Battle Quiz</span>
-        <button type="button" class="game-modal-close" id="closeBattleQuizModalBtn">✕ Đóng</button>
+        <span class="game-modal-title"><i class="fa-solid fa-hand-fist"></i> Battle Quiz</span>
+        <button type="button" class="game-modal-close" id="closeBattleQuizModalBtn"><i class="fa-solid fa-xmark"></i> Đóng</button>
       </div>
       <div class="game-modal-frame">
         <iframe
@@ -560,8 +565,8 @@
   <div class="game-modal-overlay" id="cyberDetectiveModalOverlay">
     <div class="game-modal">
       <div class="game-modal-bar">
-        <span class="game-modal-title">🔎 Cyber Detective</span>
-        <button type="button" class="game-modal-close" id="closeCyberDetectiveModalBtn">✕ Đóng</button>
+        <span class="game-modal-title"><i class="fa-solid fa-user-secret"></i> Cyber Detective</span>
+        <button type="button" class="game-modal-close" id="closeCyberDetectiveModalBtn"><i class="fa-solid fa-xmark"></i> Đóng</button>
       </div>
       <div class="game-modal-frame">
         <iframe
@@ -581,8 +586,8 @@
   <div class="game-modal-overlay" id="computerSimModalOverlay">
     <div class="game-modal">
       <div class="game-modal-bar">
-        <span class="game-modal-title">💻 Computer Simulator</span>
-        <button type="button" class="game-modal-close" id="closeComputerSimModalBtn">✕ Đóng</button>
+        <span class="game-modal-title"><i class="fa-solid fa-computer"></i> Computer Simulator</span>
+        <button type="button" class="game-modal-close" id="closeComputerSimModalBtn"><i class="fa-solid fa-xmark"></i> Đóng</button>
       </div>
       <div class="game-modal-frame">
         <iframe
@@ -602,8 +607,8 @@
   <div class="game-modal-overlay" id="wordSimModalOverlay">
     <div class="game-modal">
       <div class="game-modal-bar">
-        <span class="game-modal-title">📝 MOS Word 2019 — Ôn luyện Ribbon</span>
-        <button type="button" class="game-modal-close" id="closeWordSimModalBtn">✕ Đóng</button>
+        <span class="game-modal-title"><i class="fa-solid fa-pen-to-square"></i> MOS Word 2019 — Ôn luyện Ribbon</span>
+        <button type="button" class="game-modal-close" id="closeWordSimModalBtn"><i class="fa-solid fa-xmark"></i> Đóng</button>
       </div>
       <div class="game-modal-frame">
         <iframe
@@ -669,6 +674,7 @@
        game riêng trước khi game-zone-gate.js gắn thêm listener "đóng hub
        khi chọn 1 game". Xem js/game-zone-gate.js. -->
   <script src="js/game-zone-gate.js"></script>
+<script src="js/motion.js"></script>
 </body>
 
 </html>

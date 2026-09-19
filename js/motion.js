@@ -3,7 +3,10 @@
    site (index.html khi làm bài, các trang quản trị), lấy cảm
    hứng từ tuhoc.cc: hiện dần khi CUỘN, nghiêng theo chuột khi
    RÊ, "nảy" khi CHỌN, có trọng lượng khi KÉO-THẢ, nhấn có gợn
-   sóng khi BẤM.
+   sóng khi BẤM, TRƯỢT NGANG mỗi khi CHUYỂN TRANG (lấy cảm hứng
+   từ tympanus.net/Development/PageTransitions — xem
+   interceptInternalLinks() + mục "8) PAGE TRANSITION" ở
+   css/motion.css).
 
    Nguyên tắc: THUẦN CỘNG THÊM.
    - Không sửa/đè bất kỳ hàm nào trong quiz-engine.js, main.js,
@@ -180,6 +183,39 @@
     mo.observe(bar, { attributes: true, attributeFilter: ['style'] });
   }
 
+  /* 8) PAGE TRANSITION — chặn click vào link NỘI BỘ (cùng gốc, cùng
+     tab, không phải tải file/neo/mailto/tel) để phát hiệu ứng trượt RA
+     (.mo-page-exit, xem css/motion.css) trước khi thật sự điều hướng —
+     site nhiều trang .html riêng biệt (không SPA) nên không "swap nội
+     dung" như demo tympanus gốc, chỉ làm mượt khoảnh khắc chuyển giữa 2
+     lần tải trang. Luôn có timeout an toàn phòng khi "animationend"
+     không bắn (tab bị ẩn, trình duyệt cũ...) để KHÔNG BAO GIỜ kẹt trang,
+     không điều hướng được. */
+  function interceptInternalLinks() {
+    if (reduced) return; // tôn trọng "giảm chuyển động" — điều hướng thẳng, không hiệu ứng
+    var navigating = false;
+    document.addEventListener('click', function (e) {
+      if (navigating || e.defaultPrevented || e.button !== 0) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      var a = e.target.closest && e.target.closest('a[href]');
+      if (!a || (a.target && a.target !== '_self') || a.hasAttribute('download')) return;
+      var href = a.getAttribute('href') || '';
+      if (!href || href.charAt(0) === '#' || /^(mailto:|tel:|javascript:)/i.test(href)) return;
+      var url;
+      try { url = new URL(href, window.location.href); } catch (err) { return; }
+      if (url.origin !== window.location.origin) return; // link ra ngoài site — giữ hành vi mặc định
+      if (url.pathname === window.location.pathname && url.hash) return; // chỉ nhảy neo trong cùng trang
+
+      e.preventDefault();
+      navigating = true;
+      document.body.classList.add('mo-page-exit');
+      var done = false;
+      var go = function () { if (!done) { done = true; window.location.href = a.href; } };
+      document.body.addEventListener('animationend', go, { once: true });
+      setTimeout(go, 380);
+    });
+  }
+
   function boot() {
     initScrollReveal();
     initRipple();
@@ -188,6 +224,7 @@
     initScreenTransition();
     initTopicTilt();
     initProgressShine();
+    interceptInternalLinks();
   }
 
   if (document.readyState === 'loading') {
@@ -197,16 +234,42 @@
   }
 
   /* Quét lại reveal + tilt mỗi khi nội dung mới được chèn động
-     (câu hỏi mới, bảng dữ liệu mới render...), có debounce nhẹ. */
-  var rescanTimer = null;
-  document.addEventListener('DOMContentLoaded', function () {
-    var bodyObserver = new MutationObserver(function () {
+     (câu hỏi mới, bảng dữ liệu mới render...). DÙNG ĐÚNG cách kiểm tra
+     readyState như boot() ở trên — file này thường được nạp ở CUỐI
+     <body> (SAU khi DOM đã parse xong), lúc đó "DOMContentLoaded" ĐÃ
+     BẮN RỒI nên addEventListener suông sẽ KHÔNG BAO GIỜ chạy, khiến mọi
+     nội dung render bằng JS SAU khi tải trang (hầu hết bảng/thẻ trong
+     các trang quản trị Firestore) không bao giờ được quét để gắn hiệu
+     ứng hiện dần — lỗi ĐÃ CÓ TỪ TRƯỚC, phát hiện khi kiểm thử mở rộng
+     motion.js ra toàn site.
+     Debounce 150ms CÓ TRẦN CHỜ TỐI ĐA 400ms (firstPendingAt) — trang
+     index.html (làm bài quiz) có DOM biến động LIÊN TỤC (đồng hồ đếm
+     giờ, tiến trình...), mutation nối tiếp nhau dưới 150ms sẽ liên tục
+     clearTimeout khiến debounce KHÔNG BAO GIỜ tới lượt chạy, quét reveal
+     bị "đói" mãi mãi trên đúng trang bận rộn nhất — trần 400ms đảm bảo
+     luôn quét lại dù DOM có bận đến đâu. */
+  function initRescanObserver() {
+    var rescanTimer = null;
+    var firstPendingAt = null;
+    function flush() {
       clearTimeout(rescanTimer);
-      rescanTimer = setTimeout(function () {
-        initScrollReveal();
-        initTopicTilt();
-      }, 150);
+      rescanTimer = null;
+      firstPendingAt = null;
+      initScrollReveal();
+      initTopicTilt();
+    }
+    var bodyObserver = new MutationObserver(function () {
+      var now = Date.now();
+      if (firstPendingAt == null) firstPendingAt = now;
+      if (now - firstPendingAt >= 400) { flush(); return; }
+      clearTimeout(rescanTimer);
+      rescanTimer = setTimeout(flush, 150);
     });
     bodyObserver.observe(document.body, { childList: true, subtree: true });
-  });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initRescanObserver);
+  } else {
+    initRescanObserver();
+  }
 })();

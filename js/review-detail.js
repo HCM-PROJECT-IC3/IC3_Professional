@@ -34,9 +34,9 @@ function renderReviewList(details) {
     <div class="review-item-wrap">
       <button type="button" class="review-item ${d.status}" onclick="toggleReviewDetail(${d.num})" aria-expanded="false">
         <span class="ri-num">${d.num}</span>
-        <span class="ri-icon">${d.status === 'correct' ? '✓' : d.status === 'incorrect' ? '✗' : '–'}</span>
+        <span class="ri-icon">${d.status === 'correct' ? '<i class="fa-solid fa-check"></i>' : d.status === 'incorrect' ? '<i class="fa-solid fa-xmark"></i>' : '–'}</span>
         <span class="ri-text">${_rdEsc(d.text)}</span>
-        <span class="ri-caret">▾</span>
+        <span class="ri-caret"><i class="fa-solid fa-caret-down"></i></span>
       </button>
       <div class="review-detail" id="rd-${d.num}" style="display:none;">
         ${_rdBuildDetailBody(d)}
@@ -98,7 +98,7 @@ function _rdBuildDetailBody(d, opts) {
   }
 
   const explanation = d.explanation
-    ? `<div class="rd-explain"><span class="rd-explain-icon">💡</span> ${_rdEsc(d.explanation)}</div>`
+    ? `<div class="rd-explain"><span class="rd-explain-icon"><i class="fa-solid fa-lightbulb"></i></span> ${_rdEsc(d.explanation)}</div>`
     : '';
 
   return `
@@ -123,7 +123,7 @@ function _rdChoiceBlock(r) {
         if (isCorrect) cls += ' rd-opt-correct';
         else if (isPicked) cls += ' rd-opt-wrong';
         return `<div class="${cls}">
-          <span class="rd-opt-mark">${isCorrect ? '✓' : (isPicked ? '✗' : '')}</span>
+          <span class="rd-opt-mark">${isCorrect ? '<i class="fa-solid fa-check"></i>' : (isPicked ? '<i class="fa-solid fa-xmark"></i>' : '')}</span>
           <span>${_rdEsc(opt)}</span>
           ${isPicked ? '<span class="rd-opt-tag">Bạn chọn</span>' : ''}
         </div>`;
@@ -224,7 +224,7 @@ function _rdOrderingBlock(r) {
   return `
     <div class="rd-ordering-cols">
       <div>
-        <div class="rd-ordering-title">Thứ tự bạn chọn ${ok ? '✓' : '✗'}</div>
+        <div class="rd-ordering-title">Thứ tự bạn chọn ${ok ? '<i class="fa-solid fa-check"></i>' : '<i class="fa-solid fa-xmark"></i>'}</div>
         ${userOrder.map((t, j) => `<div class="rd-ordering-row ${ok ? 'rd-ok' : 'rd-bad'}">${j + 1}. ${_rdEsc(t)}</div>`).join('')}
       </div>
       ${ok ? '' : `<div>

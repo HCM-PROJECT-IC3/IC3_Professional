@@ -700,9 +700,21 @@
 
         // Khung giờ tiết CỦA GIÁO VIÊN này (áp dụng mọi tuần, không lặp lại
         // theo tuần) — nếu module TKB lớp chưa kịp nạp thì vẫn không vỡ
-        // trang, chỉ hiện 1 hàng gộp fallback bên dưới.
+        // trang, chỉ hiện 1 hàng gộp fallback bên dưới. CHỈ dùng số tiết ở
+        // đây để biết vẽ BAO NHIÊU HÀNG (giá trị start/end không hiện ra
+        // cột nào cả, xem dashPeriodCell()) — ÉP TỐI THIỂU đủ
+        // M.PERIODS_PER_SESSION (5) hàng/buổi dù khung giờ TKB lớp của GV
+        // chỉ cấu hình 4 tiết Chiều (mặc định DEFAULT_PERIOD_TIMES.afternoon
+        // ở teaching-timetable.model.js), vì "Lịch giảng dạy" (periods[]
+        // của teaching_schedule) LUÔN cho phép dạy tới tiết 5 Chiều — thiếu
+        // bước ép này khiến 1 số GV có nhập lịch tiết 5 Chiều nhưng
+        // "Tổng quan" chỉ vẽ 4 hàng, tiết 5 bị ẩn mất dù dữ liệu vẫn còn.
         const pt = TTM ? TTM.clonePeriodTimes(state.periodTimesByTeacher[t.code]) : null;
-        const blocks = pt ? TTM.SESSIONS.map((sessionKey) => ({ sessionKey, periods: pt[sessionKey] || [] })).filter((b) => b.periods.length) : [];
+        const blocks = pt ? TTM.SESSIONS.map((sessionKey) => {
+          const periods = pt[sessionKey] || [];
+          const rowCount = Math.max(periods.length, M.PERIODS_PER_SESSION);
+          return { sessionKey, periods: Array.from({ length: rowCount }, (_, i) => periods[i] || { start: '', end: '' }) };
+        }).filter((b) => b.periods.length) : [];
 
         if (!blocks.length) {
           // Fallback: không có TTM (lỗi tải module) — vẫn hiện 1 hàng/GV

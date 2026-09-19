@@ -42,13 +42,16 @@
 
   const LEVEL_THRESHOLDS = [0, 100, 250, 500, 900, 1400, 2000, 2800, 3800, 5000];
 
+  // "label" hiện qua showToast() (js/quiz-engine.js, "Huy hiệu mới: ...")
+  // vốn dùng textContent (không innerHTML) để tránh phải escape thủ công
+  // — nên KHÔNG nhét icon Font Awesome vào đây được, bỏ hẳn emoji.
   const BADGE_DEFS = [
-    { id: 'first_quiz',    label: '🎉 Bài đầu tiên',     check: s => s.totalQuizzes >= 1 },
-    { id: 'streak_3',      label: '🔥 3 ngày liên tiếp', check: s => s.streak >= 3 },
-    { id: 'streak_7',      label: '🔥 7 ngày liên tiếp', check: s => s.streak >= 7 },
-    { id: 'perfect_score', label: '🏆 Điểm tuyệt đối',   check: s => s.perfectScores >= 1 },
-    { id: 'ten_quizzes',   label: '📚 10 bài đã làm',    check: s => s.totalQuizzes >= 10 },
-    { id: 'first_game',    label: '🎮 Lượt chơi đầu tiên', check: s => s.totalGameSessions >= 1 },
+    { id: 'first_quiz',    label: 'Bài đầu tiên',     check: s => s.totalQuizzes >= 1 },
+    { id: 'streak_3',      label: '3 ngày liên tiếp', check: s => s.streak >= 3 },
+    { id: 'streak_7',      label: '7 ngày liên tiếp', check: s => s.streak >= 7 },
+    { id: 'perfect_score', label: 'Điểm tuyệt đối',   check: s => s.perfectScores >= 1 },
+    { id: 'ten_quizzes',   label: '10 bài đã làm',    check: s => s.totalQuizzes >= 10 },
+    { id: 'first_game',    label: 'Lượt chơi đầu tiên', check: s => s.totalGameSessions >= 1 },
   ];
 
   function _today() {
@@ -206,13 +209,13 @@
     el.innerHTML = `
       <div class="eduquiz-game-strip" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:14px;">
         <span class="chip" style="background:#fff3cd;border:1px solid #ffe08a;border-radius:999px;padding:4px 12px;">
-          ⭐ Cấp ${lvl} · ${s.xp} XP${toNext !== null ? ` (còn ${toNext} XP lên cấp)` : ' (MAX)'}
+          <i class="fa-solid fa-star"></i> Cấp ${lvl} · ${s.xp} XP${toNext !== null ? ` (còn ${toNext} XP lên cấp)` : ' (MAX)'}
         </span>
         <span class="chip" style="background:#ffe5e5;border:1px solid #ffb3b3;border-radius:999px;padding:4px 12px;">
-          🔥 Chuỗi ${s.streak} ngày
+          <i class="fa-solid fa-fire"></i> Chuỗi ${s.streak} ngày
         </span>
         <span class="chip" style="background:#e0e7ff;border:1px solid #c7d2fe;border-radius:999px;padding:4px 12px;">
-          🎖️ ${s.badges.length} huy hiệu
+          <i class="fa-solid fa-medal"></i> ${s.badges.length} huy hiệu
         </span>
       </div>
     `;

@@ -358,10 +358,17 @@ service cloud.firestore {
     // ---- Tab "🗓️ TKB lớp" (thời khoá biểu dạng lưới tiết học, treo lớp) —
     //      quản lý bởi Admin; giáo viên/điều phối giáo viên chỉ đọc, không
     //      sửa được (giáo viên CHỈ đúng bản ghi của chính mình, điều phối
-    //      giáo viên đọc HẾT). ----
+    //      giáo viên đọc HẾT).
+    //      RIÊNG "⏱️ Giờ tiết" (teaching_timetable_periods) — giáo viên ĐƯỢC
+    //      tự ghi ĐÚNG document của chính mình (thiết lập linh hoạt khung
+    //      giờ Sáng/Chiều theo cấp học THCS/TiH cho từng Thứ, xem modal
+    //      "⏱️ Giờ tiết" ở js/teaching-timetable.js) — KHÁC teaching_timetable
+    //      (lưới mã lớp) bên dưới vẫn chỉ admin ghi được. "🚗 Điều phối giáo
+    //      viên" (isTeachingCoordinator()) CỐ TÌNH không có ở allow write —
+    //      vẫn chỉ đọc như trước, chỉ mở thêm quyền ghi cho ĐÚNG giáo viên. ----
     match /teaching_timetable_periods/{teacherCode} {
       allow read: if isAdmin() || isTeachingCoordinator() || (isApprovedTeacher() && teacherCode == myTeacherCode());
-      allow write: if isAdmin();
+      allow write: if isAdmin() || (isApprovedTeacher() && teacherCode == myTeacherCode());
     }
     match /teaching_timetable/{docId} {
       allow read: if isAdmin() || isTeachingCoordinator()
