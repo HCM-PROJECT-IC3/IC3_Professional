@@ -162,16 +162,18 @@
 
       if (unlocked) {
         openHubBtn.classList.remove('is-locked');
-        openHubBtn.innerHTML = '🎮 Khu Vui Chơi';
-        if (hint) hint.textContent = state.staff ? '✓ Quyền quản trị viên/giáo viên — không cần làm bài thi.' : '';
+        openHubBtn.innerHTML = '<i class="fa-solid fa-gamepad"></i> Khu Vui Chơi';
+        // innerHTML (không phải textContent) để icon Font Awesome render được
+        // — chuỗi tĩnh tự viết, không nội suy dữ liệu người dùng nên an toàn.
+        if (hint) hint.innerHTML = state.staff ? '<i class="fa-solid fa-check"></i> Quyền quản trị viên/giáo viên — không cần làm bài thi.' : '';
       } else {
         openHubBtn.classList.add('is-locked');
-        openHubBtn.innerHTML = '🔒 Khu Vui Chơi';
+        openHubBtn.innerHTML = '<i class="fa-solid fa-lock"></i> Khu Vui Chơi';
         if (hint) {
-          hint.textContent = !st.name
+          hint.innerHTML = !st.name
             ? 'Chọn học sinh để xem tiến độ mở khóa Khu Vui Chơi.'
             : (!rec
-                ? 'Làm bài "📚 Tổng hợp" đạt ≥' + PASS_THRESHOLD + '% để mở khóa.'
+                ? 'Làm bài "Tổng hợp" đạt ≥' + PASS_THRESHOLD + '% để mở khóa.'
                 : (rec.score >= PASS_THRESHOLD
                     ? 'Đã dùng lượt mở khóa — làm 1 bài "Tổng hợp" mới đạt ≥' + PASS_THRESHOLD + '% để vào lại.'
                     : 'Bài "Tổng hợp" gần nhất: ' + rec.score + '% — cần ≥' + PASS_THRESHOLD + '% để mở khóa.'));
@@ -257,7 +259,7 @@
       if (!wasUnlocked && nowUnlocked) {
         // Thông báo nhẹ nhàng, không chặn luồng xem kết quả bài thi.
         setTimeout(function () {
-          alert('🎉 Chúc mừng! Bạn đã đạt từ ' + PASS_THRESHOLD + '% điểm bài Tổng hợp — Khu Vui Chơi đã được mở khóa (dùng được 1 lần).');
+          alert('Chúc mừng! Bạn đã đạt từ ' + PASS_THRESHOLD + '% điểm bài Tổng hợp — Khu Vui Chơi đã được mở khóa (dùng được 1 lần).');
         }, 300);
       }
     });

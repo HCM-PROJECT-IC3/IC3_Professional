@@ -29,9 +29,9 @@ function updateMosInlinePractice(catId, levelId) {
     // đang chọn thay vì học sinh phải tự tìm trong danh sách — xem
     // js/mos-practice.js đọc URLSearchParams lúc khởi tạo.
     practiceBtn.href = `mos-practice.html?subject=${practiceSubject}`;
-    practiceBtn.textContent = practiceSubject === 'excel'
-      ? '📤 MOS Practice — Nộp bài Excel chấm điểm thật'
-      : '📤 MOS Practice — Nộp bài PowerPoint chấm điểm thật';
+    practiceBtn.innerHTML = practiceSubject === 'excel'
+      ? '<i class="fa-solid fa-file-export"></i> MOS Practice — Nộp bài Excel chấm điểm thật'
+      : '<i class="fa-solid fa-file-export"></i> MOS Practice — Nộp bài PowerPoint chấm điểm thật';
   }
 }
 window.updateMosInlinePractice = updateMosInlinePractice;

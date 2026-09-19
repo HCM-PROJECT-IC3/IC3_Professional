@@ -11,9 +11,13 @@
 
    PHÂN QUYỀN (khớp firestore.rules):
    - admin: toàn quyền xem/sửa/lưu TKB của mọi giáo viên.
-   - teacher: chỉ XEM (không sửa) đúng TKB của chính mình — teaching_timetable
-     chỉ cho phép admin write, nên mọi control chỉnh sửa (⏱️ Giờ tiết/📥 Nhập
-     Excel/💾 Lưu) đều ẩn, ô nhập chuyển readonly (xem applyTeacherReadOnlyUI()).
+   - teacher: chỉ XEM (không sửa) LƯỚI mã lớp của chính mình — teaching_timetable
+     chỉ cho phép admin write, nên "📥 Nhập Excel"/"💾 Lưu" (lưới) đều ẩn, ô
+     nhập chuyển readonly (xem applyTeacherReadOnlyUI()). RIÊNG "⏱️ Giờ tiết"
+     giáo viên ĐƯỢC TỰ SỬA (thiết lập linh hoạt khung giờ Sáng/Chiều theo cấp
+     học THCS/TiH cho từng Thứ) — teaching_timetable_periods cho phép giáo
+     viên ghi ĐÚNG bản ghi của chính mình (firestore.rules), khác hẳn
+     teaching_timetable (lưới mã lớp) vẫn chỉ admin ghi được.
      Vì chỉ xem đúng 1 GV (chính mình) nên KHÔNG list() cả collection
      teaching_teachers (rules không cho), tự chọn sẵn đúng GV đó, khoá cứng
      ô chọn GV luôn (không có ai khác để chọn).
@@ -55,6 +59,14 @@
   };
   let ptDraft = null; // bản nháp { "2".."7": {morning,afternoon} } đang sửa trong modal "⏱️ Giờ tiết"
   let ptEditingDay = '2'; // Thứ đang chọn để sửa trong modal (tab) — mặc định Thứ 2
+  // Tham số TỰ SINH giờ tiết (giờ vào/số phút mỗi tiết/số phút chuyển tiết/
+  // số phút nghỉ giải lao) CỦA TỪNG Thứ×Buổi đang sửa trong modal — CHỈ là
+  // trợ giúp tạo nhanh mảng periods (xem M.generatePeriodTimes()), KHÔNG
+  // lưu xuống Firestore (chỉ periods {start,end} cuối cùng mới lưu) nên
+  // reset mỗi lần mở modal, lazy-tính khi lần đầu vẽ 1 cột (xem
+  // getGenState()) — suy luận lại từ periods ĐÃ CÓ nếu giáo viên từng lưu,
+  // để không hiện số 0/trống vô nghĩa khi mở lại modal đã cấu hình trước đó.
+  let ptGenState = null; // { "day-session": {minutes,start,gap,breakMinutes} }
 
   // Cho phép module khác (js/teaching-timetable-import.js) ĐỌC được đúng
   // bối cảnh đang xem (giáo viên/tuần đang chọn, danh sách GV/tuần đã tải
@@ -116,12 +128,15 @@
     loadTeachersAndWeeks();
   });
 
-  /** Ẩn mọi control CHỈNH SỬA (⏱️ Giờ tiết/📥 Nhập Excel/💾 Lưu) — theo
-   * firestore.rules, teaching_timetable + teaching_timetable_periods chỉ
-   * cho phép admin ghi, giáo viên chỉ đọc được đúng bản ghi của chính mình.
-   * Ô "Mã lớp"/"Trường" trong lưới cũng chuyển readonly (xem renderGrid()). */
+  /** Ẩn control CHỈNH SỬA LƯỚI (📥 Nhập Excel/💾 Lưu) — theo firestore.rules,
+   * teaching_timetable chỉ cho phép admin ghi, giáo viên chỉ đọc được đúng
+   * bản ghi của chính mình. Ô "Mã lớp"/"Trường" trong lưới cũng chuyển
+   * readonly (xem renderGrid()). RIÊNG "⏱️ Giờ tiết" (khung giờ Sáng/Chiều
+   * theo cấp học THCS/TiH) VẪN HIỆN cho giáo viên — teaching_timetable_periods
+   * đã cho phép giáo viên tự ghi ĐÚNG bản ghi của chính mình (firestore.rules),
+   * để GV tự thiết lập giờ tiết linh hoạt theo trường mình đang dạy thay vì
+   * phải nhờ Admin chỉnh hộ. */
   function applyTeacherReadOnlyUI() {
-    document.getElementById('ttPeriodTimesBtn')?.classList.add('force-hide');
     document.getElementById('ttImportBtn')?.classList.add('force-hide');
     document.getElementById('ttSaveBtn')?.classList.add('force-hide');
     const teacherSel = document.getElementById('ttTeacherSelect');
@@ -592,6 +607,7 @@
     document.getElementById('periodTimesModalTitle').textContent = `⏱️ Giờ tiết — ${t ? t.name : state.teacherCode}`;
     ptDraft = {};
     M.WEEKDAYS.forEach((d) => { ptDraft[String(d)] = M.clonePeriodTimes(state.periodTimesByDay[String(d)]); });
+    ptGenState = {};
     ptEditingDay = '2';
     renderPeriodTimesTabs();
     renderPeriodTimesBody();
@@ -600,6 +616,7 @@
   function closePeriodTimesModal() {
     document.getElementById('periodTimesModalOverlay').classList.remove('show');
     ptDraft = null;
+    ptGenState = null;
   }
   document.getElementById('ttPeriodTimesBtn').addEventListener('click', openPeriodTimesModal);
   document.getElementById('periodTimesCloseBtn').addEventListener('click', closePeriodTimesModal);
@@ -628,18 +645,70 @@
     });
   }
 
-  /** Nút "Áp dụng nhanh khung giờ chuẩn" (🟢 Tiểu học 35’ / 🔵 THCS 45’) —
-   * CHỈ thay khung giờ của ĐÚNG 1 buổi (sessionKey) CỦA ĐÚNG 1 THỨ đang
-   * chọn (ptEditingDay), KHÔNG đụng tới buổi/Thứ còn lại — giáo viên dạy
-   * Thứ 2 ở Tiểu học nhưng Thứ 3 lại ở THCS (hoặc Sáng/Chiều khác cấp
-   * trong cùng 1 ngày) rất phổ biến, áp rộng hơn phạm vi đang chọn sẽ làm
-   * sai giờ những Thứ/buổi không liên quan. */
+  /** Tham số tự sinh giờ tiết CỦA ĐÚNG 1 Thứ×Buổi — lazy-tính lần đầu bằng
+   * cách ĐỌC NGƯỢC từ periods đã có (nếu giáo viên từng lưu/gõ tay trước
+   * đó), để mở modal lên không thấy toàn số trống dù đã cấu hình từ trước.
+   * Không suy luận được (chưa có tiết nào) thì để trống — bắt giáo viên tự
+   * gõ "Giờ vào" hoặc bấm 1 trong 2 nút cấp học để có gợi ý khởi điểm,
+   * thay vì áp liều 1 giờ vào không chắc đúng trường họ đang dạy. */
+  function getGenState(day, sessionKey) {
+    const key = `${day}-${sessionKey}`;
+    if (ptGenState[key]) return ptGenState[key];
+    const periods = ptDraft[day][sessionKey];
+    const minutes = periods.length ? M.periodMinutes(periods[0]) : null;
+    const gap = periods.length > 1 ? M.gapMinutesBetween(periods, 0) : null;
+    const breakMinutes = periods.length > M.BREAK_AFTER_INDEX + 1 ? M.gapMinutesBetween(periods, M.BREAK_AFTER_INDEX) : null;
+    const gs = {
+      minutes: minutes != null && minutes > 0 ? minutes : '',
+      start: (periods.length && periods[0].start) || '',
+      gap: gap != null && gap >= 0 ? gap : M.DEFAULT_GAP_MINUTES,
+      breakMinutes: breakMinutes != null && breakMinutes >= 0 ? breakMinutes : '',
+    };
+    ptGenState[key] = gs;
+    return gs;
+  }
+
+  /** Sinh lại mảng periods của ĐÚNG 1 Thứ×Buổi từ tham số hiện có
+   * (getGenState) — giữ NGUYÊN số tiết đang có (thêm/bớt tiết vẫn qua nút
+   * ➕/✕ như cũ, tách biệt với việc đổi giờ vào/nghỉ giải lao). Thiếu "Giờ
+   * vào" hoặc "Số phút/tiết" thì bỏ qua (chưa đủ để tính), giữ nguyên
+   * periods hiện có cho tới khi giáo viên điền đủ. */
+  function regeneratePeriods(day, sessionKey) {
+    const gs = getGenState(day, sessionKey);
+    if (!gs.start || !gs.minutes) return;
+    const count = ptDraft[day][sessionKey].length || (sessionKey === 'morning' ? 5 : 4);
+    ptDraft[day][sessionKey] = M.generatePeriodTimes({
+      startTime: gs.start,
+      minutesPerPeriod: gs.minutes,
+      gapMinutes: gs.gap === '' ? M.DEFAULT_GAP_MINUTES : gs.gap,
+      breakAfterIndex: M.BREAK_AFTER_INDEX,
+      breakMinutes: gs.breakMinutes === '' ? 0 : gs.breakMinutes,
+      count,
+    });
+  }
+
+  /** Nút "🟢 Tiểu học 35’/tiết · 🔵 THCS 45’/tiết" — CHỈ đặt SỐ PHÚT MỖI
+   * TIẾT (đặc trưng thật sự cố định theo cấp học) cho ĐÚNG 1 buổi
+   * (sessionKey) CỦA ĐÚNG 1 THỨ đang chọn (ptEditingDay), KHÔNG đụng tới
+   * buổi/Thứ còn lại — giáo viên dạy Thứ 2 ở Tiểu học nhưng Thứ 3 lại ở
+   * THCS (hoặc Sáng/Chiều khác cấp trong cùng 1 ngày) rất phổ biến.
+   * "Giờ vào"/"Nghỉ giải lao" GIỮ NGUYÊN nếu giáo viên đã tự gõ — CHỈ điền
+   * gợi ý khi ô đó còn trống — vì mỗi trường quy định giờ vào/giờ ra chơi
+   * khác nhau (7h hoặc 7h30 vào, buổi chiều vào giờ khác, nghỉ giải lao
+   * dài ngắn khác nhau), không có 1 khung giờ cố định đúng cho mọi nơi
+   * (phản hồi người dùng — bản trước đè thẳng cả khung giờ Excel mẫu, sai
+   * với những trường vào giờ khác). */
   function applyLevelPreset(sessionKey, levelKey) {
     if (!ptDraft) return;
-    ptDraft[ptEditingDay][sessionKey] = M.LEVEL_PERIOD_TIMES[levelKey][sessionKey].map((p) => ({ ...p }));
+    const gs = getGenState(ptEditingDay, sessionKey);
+    gs.minutes = M.SCHOOL_LEVELS[levelKey].minutes;
+    if (!gs.start) gs.start = M.SUGGESTED_START_TIME[levelKey][sessionKey];
+    if (gs.breakMinutes === '') gs.breakMinutes = M.SUGGESTED_BREAK_MINUTES[levelKey][sessionKey];
+    if (gs.gap === '') gs.gap = M.DEFAULT_GAP_MINUTES;
+    regeneratePeriods(ptEditingDay, sessionKey);
     renderPeriodTimesBody();
     const sessLabel = sessionKey === 'morning' ? 'Sáng' : 'Chiều';
-    toast(`✅ Đã áp khung giờ ${M.SCHOOL_LEVELS[levelKey].label} (${M.SCHOOL_LEVELS[levelKey].minutes}’/tiết) cho buổi ${sessLabel} — ${M.WEEKDAY_LABELS[Number(ptEditingDay)]} — bấm "💾 Lưu giờ tiết" để áp dụng.`);
+    toast(`✅ Đã đặt ${M.SCHOOL_LEVELS[levelKey].minutes}’/tiết cho buổi ${sessLabel} — ${M.WEEKDAY_LABELS[Number(ptEditingDay)]} (giờ vào/nghỉ giải lao xem lại bên dưới, sửa tay nếu trường bạn khác) — bấm "💾 Lưu giờ tiết" để áp dụng.`);
   }
 
   function renderPeriodTimesBody() {
@@ -647,11 +716,20 @@
     const dayDraft = ptDraft[ptEditingDay];
     function col(sessionKey, label) {
       const periods = dayDraft[sessionKey];
+      const gs = getGenState(ptEditingDay, sessionKey);
       return `<div class="pt-col">
         <div class="pt-col-title">${label}</div>
+        <div class="pt-gen-row">
+          <label class="pt-gen-field"><span>Giờ vào tiết 1</span><input type="time" class="pt-gen-start form-input" data-session="${sessionKey}" value="${esc(gs.start)}"></label>
+          <label class="pt-gen-field"><span>Phút/tiết</span><input type="number" min="1" class="pt-gen-minutes form-input" data-session="${sessionKey}" value="${esc(gs.minutes)}"></label>
+        </div>
+        <div class="pt-gen-row">
+          <label class="pt-gen-field"><span>Chuyển tiết (phút)</span><input type="number" min="0" class="pt-gen-gap form-input" data-session="${sessionKey}" value="${esc(gs.gap)}"></label>
+          <label class="pt-gen-field"><span>Nghỉ giải lao (phút)</span><input type="number" min="0" class="pt-gen-break form-input" data-session="${sessionKey}" value="${esc(gs.breakMinutes)}"></label>
+        </div>
         <div class="pt-preset-row">
-          <button type="button" class="btn btn-ghost pt-preset-btn" data-session="${sessionKey}" data-level="tieuHoc">🟢 Tiểu học · 35’</button>
-          <button type="button" class="btn btn-ghost pt-preset-btn" data-session="${sessionKey}" data-level="thcs">🔵 THCS · 45’</button>
+          <button type="button" class="btn btn-ghost pt-preset-btn" data-session="${sessionKey}" data-level="tieuHoc">🟢 Tiểu học · 35’/tiết</button>
+          <button type="button" class="btn btn-ghost pt-preset-btn" data-session="${sessionKey}" data-level="thcs">🔵 THCS · 45’/tiết</button>
         </div>
         ${periods.map((p, pi) => `
           <div class="pt-row" data-session="${sessionKey}" data-idx="${pi}">
@@ -678,6 +756,21 @@
     wrap.querySelectorAll('.pt-preset-btn').forEach((btn) => {
       btn.addEventListener('click', () => applyLevelPreset(btn.dataset.session, btn.dataset.level));
     });
+    // "Giờ vào"/"Phút mỗi tiết"/"Chuyển tiết"/"Nghỉ giải lao" — sửa xong (rời
+    // ô, không phải từng phím gõ) là TỰ SINH lại ngay các tiết bên dưới,
+    // không cần nút "Áp dụng" riêng.
+    wrap.querySelectorAll('.pt-gen-start, .pt-gen-minutes, .pt-gen-gap, .pt-gen-break').forEach((input) => {
+      input.addEventListener('change', (e) => {
+        const s = e.target.dataset.session;
+        const gs = getGenState(ptEditingDay, s);
+        if (e.target.classList.contains('pt-gen-start')) gs.start = e.target.value;
+        else if (e.target.classList.contains('pt-gen-minutes')) gs.minutes = e.target.value;
+        else if (e.target.classList.contains('pt-gen-gap')) gs.gap = e.target.value;
+        else gs.breakMinutes = e.target.value;
+        regeneratePeriods(ptEditingDay, s);
+        renderPeriodTimesBody();
+      });
+    });
   }
 
   /** "📋 Copy khung giờ Thứ này cho tất cả các Thứ còn lại" — tiện ích cho
@@ -690,6 +783,11 @@
       const key = String(d);
       if (key === ptEditingDay) return;
       ptDraft[key] = { morning: source.morning.map((p) => ({ ...p })), afternoon: source.afternoon.map((p) => ({ ...p })) };
+      // Xoá cache tham số tự sinh (giờ vào/nghỉ giải lao...) của các Thứ vừa
+      // bị ghi đè — lần sau mở lại Thứ đó, getGenState() sẽ ĐỌC NGƯỢC đúng
+      // từ periods vừa copy thay vì giữ giá trị cũ (đã lệch với periods mới).
+      delete ptGenState[`${key}-morning`];
+      delete ptGenState[`${key}-afternoon`];
     });
     toast(`✅ Đã copy khung giờ ${M.WEEKDAY_LABELS[Number(ptEditingDay)]} sang mọi Thứ còn lại — bấm "💾 Lưu giờ tiết" để áp dụng.`);
   });

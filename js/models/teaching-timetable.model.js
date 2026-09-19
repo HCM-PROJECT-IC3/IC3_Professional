@@ -97,6 +97,27 @@
   // — dùng khung Tiểu học làm mặc định gốc (đa số giáo viên hệ Tiểu học).
   const DEFAULT_PERIOD_TIMES = LEVEL_PERIOD_TIMES.tieuHoc;
 
+  // Số phút chuyển tiết mặc định (giữa 2 tiết liên tiếp, KHÔNG phải giờ ra
+  // chơi) — 5 phút giống mẫu giấy gốc ở cả 2 cấp học, ít khi khác trường
+  // này trường kia nên chỉ dùng làm GỢI Ý điền sẵn, vẫn sửa tay được.
+  const DEFAULT_GAP_MINUTES = 5;
+
+  // Gợi ý giờ vào/số phút nghỉ giải lao (sau tiết 2) TÍNH RA từ đúng
+  // LEVEL_PERIOD_TIMES ở trên — CHỈ dùng để ĐIỀN SẴN (placeholder) vào ô
+  // "Giờ vào"/"Nghỉ giải lao" trong modal "⏱️ Giờ tiết" lúc giáo viên bấm
+  // nút cấp học LẦN ĐẦU (ô đang trống), KHÔNG áp đè lên giá trị giáo viên
+  // đã tự gõ — vì thực tế mỗi trường quy định giờ vào/giờ ra chơi khác
+  // nhau (7h hoặc 7h30 vào, nghỉ giải lao dài ngắn khác nhau, buổi chiều
+  // vào giờ khác nữa), không thể LUÔN ĐÚNG cho mọi nơi.
+  const SUGGESTED_START_TIME = Object.freeze({
+    tieuHoc: Object.freeze({ morning: '07:30', afternoon: '13:30' }),
+    thcs: Object.freeze({ morning: '07:00', afternoon: '13:30' }),
+  });
+  const SUGGESTED_BREAK_MINUTES = Object.freeze({
+    tieuHoc: Object.freeze({ morning: 35, afternoon: 20 }),
+    thcs: Object.freeze({ morning: 20, afternoon: 15 }),
+  });
+
   /** Tự nhận diện CẤP HỌC từ tên trường đã gõ ở ô "Trường" — dựa theo quy
    * ước ĐÃ DÙNG SẴN trong dữ liệu thật (tiền tố "TiH ..." cho Tiểu học,
    * "THCS ..." cho THCS), không bắt gõ thêm trường dữ liệu mới. Trả về
@@ -121,6 +142,59 @@
     const [eh, em] = period.end.split(':').map(Number);
     if ([sh, sm, eh, em].some((n) => Number.isNaN(n))) return null;
     return (eh * 60 + em) - (sh * 60 + sm);
+  }
+
+  /** "HH:MM" → số phút kể từ 00:00, hoặc null nếu không hợp lệ. */
+  function timeToMinutes(hhmm) {
+    if (!hhmm) return null;
+    const [h, m] = String(hhmm).split(':').map(Number);
+    if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+    return h * 60 + m;
+  }
+  /** Số phút kể từ 00:00 → "HH:MM" (bọc vòng qua nửa đêm nếu âm/vượt 24h,
+   * dù thực tế không xảy ra với giờ học). */
+  function minutesToTime(mins) {
+    const m = ((Math.round(mins) % 1440) + 1440) % 1440;
+    return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+  }
+
+  /** Số phút giữa 2 tiết liên tiếp trong 1 mảng periods (kết thúc tiết
+   * `idx` → bắt đầu tiết `idx+1`) — dùng để "đọc ngược" lại đúng khoảng
+   * nghỉ/chuyển tiết giáo viên đã tự gõ tay trước đó, cho modal "⏱️ Giờ
+   * tiết" gợi ý sẵn giá trị hiện có thay vì luôn hiện số mặc định. Trả về
+   * null nếu thiếu tiết hoặc giờ không hợp lệ. */
+  function gapMinutesBetween(periods, idx) {
+    if (!periods || !periods[idx] || !periods[idx + 1]) return null;
+    const end = timeToMinutes(periods[idx].end);
+    const nextStart = timeToMinutes(periods[idx + 1].start);
+    if (end == null || nextStart == null) return null;
+    return nextStart - end;
+  }
+
+  /** Tự SINH mảng periods theo THAM SỐ TỰ DO (giờ vào tiết 1, số phút/tiết,
+   * số phút chuyển tiết giữa các tiết thường, số phút nghỉ giải lao SAU
+   * tiết `breakAfterIndex`) — THAY vì gán thẳng 1 khung giờ CỐ ĐỊNH như
+   * LEVEL_PERIOD_TIMES trước đây (chỉ đúng cho ĐÚNG 1 kiểu trường: 7h vào,
+   * ra chơi cố định X phút...). Mỗi trường quy định giờ vào/giờ ra chơi
+   * khác nhau (7h/7h30 vào, buổi chiều vào giờ khác, nghỉ giải lao dài
+   * ngắn khác nhau) nên các tham số này do giáo viên/admin tự gõ, nút
+   * "🟢 Tiểu học 35’/🔵 THCS 45’" giờ CHỈ còn gợi ý SỐ PHÚT MỖI TIẾT (đặc
+   * trưng thật sự cố định theo cấp học) — không còn tự ý áp giờ vào/giờ ra
+   * chơi cố định nữa (xem applyLevelPreset() ở js/teaching-timetable.js). */
+  function generatePeriodTimes({ startTime, minutesPerPeriod, gapMinutes, breakAfterIndex, breakMinutes, count }) {
+    const start = timeToMinutes(startTime);
+    let cursor = start == null ? 0 : start;
+    const perPeriod = Number(minutesPerPeriod) || 0;
+    const gap = Number(gapMinutes) || 0;
+    const brk = Number(breakMinutes) || 0;
+    const out = [];
+    for (let i = 0; i < count; i++) {
+      if (i > 0) cursor += (i - 1 === breakAfterIndex) ? brk : gap;
+      const end = cursor + perPeriod;
+      out.push({ start: minutesToTime(cursor), end: minutesToTime(end) });
+      cursor = end;
+    }
+    return out;
   }
 
   const WEEKDAYS = Object.freeze([2, 3, 4, 5, 6, 7]);
@@ -238,6 +312,9 @@
     DEFAULT_PERIOD_TIMES,
     SCHOOL_LEVELS,
     LEVEL_PERIOD_TIMES,
+    DEFAULT_GAP_MINUTES,
+    SUGGESTED_START_TIME,
+    SUGGESTED_BREAK_MINUTES,
     WEEKDAYS,
     WEEKDAY_LABELS,
     SESSIONS,
@@ -254,5 +331,9 @@
     normalizeDays,
     inferSchoolLevel,
     periodMinutes,
+    timeToMinutes,
+    minutesToTime,
+    gapMinutesBetween,
+    generatePeriodTimes,
   };
 })(window);

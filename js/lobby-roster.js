@@ -49,7 +49,12 @@
   function setStatus(msg, isError) {
     const el = document.getElementById('rosterStatus');
     if (!el) return;
-    el.textContent = msg;
+    if (!msg) { el.textContent = ''; el.classList.toggle('is-error', !!isError); return; }
+    // innerHTML (không phải textContent) để icon Font Awesome render được
+    // — msg luôn là chuỗi TĨNH tự viết trong file này, không nội suy dữ
+    // liệu người dùng nên an toàn.
+    const iconClass = isError ? 'fa-triangle-exclamation' : 'fa-circle-info';
+    el.innerHTML = `<i class="fa-solid ${iconClass}"></i> ${msg}`;
     el.classList.toggle('is-error', !!isError);
   }
 
@@ -110,7 +115,8 @@
 
     if (errorMsg || !allStudents.length || !schools.length) {
       schoolSel.disabled = true;
-      schoolSel.innerHTML = `<option value="">⚠ Chưa có danh sách — liên hệ Điều phối đào tạo</option>`;
+      // <option> chỉ render TEXT THUẦN — bỏ hẳn emoji thay vì để lọt icon "vỡ".
+      schoolSel.innerHTML = `<option value="">Chưa có danh sách — liên hệ Điều phối đào tạo</option>`;
       classSel.disabled = true;
       classSel.innerHTML = '<option value="">—</option>';
       nameSel.disabled = true;
@@ -126,7 +132,7 @@
     nameSel.disabled = true;
     nameSel.innerHTML = '<option value="">-- Chọn lớp trước --</option>';
 
-    setStatus(`✅ Đã nạp ${allStudents.length} học sinh`);
+    setStatus(`Đã nạp ${allStudents.length} học sinh`);
   }
 
   function initCascadeListeners() {
@@ -146,14 +152,14 @@
   async function init() {
     if (!document.getElementById('studentSchool')) return; // trang khác không có form này
     initCascadeListeners();
-    setStatus('⏳ Đang nạp danh sách...');
+    setStatus('Đang nạp danh sách...');
     try {
       allStudents = await fetchRosterFromStaticFile();
       applyStudentsToForm(null);
     } catch (err) {
       console.error('[EduQuiz] Lỗi nạp roster từ file tĩnh:', err);
       allStudents = [];
-      applyStudentsToForm('⚠ Không nạp được danh sách, thử tải lại trang.');
+      applyStudentsToForm('Không nạp được danh sách, thử tải lại trang.');
     }
   }
 

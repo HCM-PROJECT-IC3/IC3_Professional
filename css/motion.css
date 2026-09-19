@@ -100,9 +100,38 @@
 }
 .progress-bar-fill { position: relative; overflow: hidden; }
 
+/* 8) PAGE TRANSITION — lấy cảm hứng từ demo tympanus.net/Development/
+   PageTransitions, nhưng site này là nhiều trang .html RIÊNG BIỆT (không
+   phải SPA) nên không thể "swap nội dung qua fetch" như demo gốc (mỗi
+   trang tự nạp bộ script/Firebase riêng, swap nội dung dễ vỡ) — thay vào
+   đó dùng đúng 2 nhịp:
+   - VÀO trang: <body> tự trượt+mờ vào từ bên phải ngay khi trang vừa
+     load (@keyframes chạy tự động, không cần JS).
+     - RA trang: bấm 1 link NỘI BỘ (cùng site) thì js/motion.js chặn hành vi
+     mặc định, thêm class "mo-page-exit" cho <body> để trượt+mờ RA bên
+     trái, đợi hết animation (hoặc timeout an toàn) rồi mới điều hướng
+     thật — xem interceptInternalLinks(). Toàn bộ chỉ đụng transform/
+     opacity của <body>, không đổi layout/scroll nên an toàn thêm vào MỌI
+     trang hiện có. */
+@keyframes moPageEnter {
+  from { opacity: 0; transform: translateX(46px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+body { animation: moPageEnter .45s cubic-bezier(.16,1,.3,1) both; }
+
+@keyframes moPageExit {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-46px); }
+}
+body.mo-page-exit {
+  animation: moPageExit .32s cubic-bezier(.4,0,1,1) forwards;
+  pointer-events: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .mo-reveal, .mo-ripple, .mo-pick-pop, .mo-drag-lift,
-  .mo-drop-bounce, .mo-screen-in, .progress-bar-fill.mo-progress-bump::after {
+  .mo-drop-bounce, .mo-screen-in, .progress-bar-fill.mo-progress-bump::after,
+  body, body.mo-page-exit {
     animation: none !important;
     transition: none !important;
     opacity: 1 !important;

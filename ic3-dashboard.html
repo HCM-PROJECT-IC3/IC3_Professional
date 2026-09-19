@@ -10,6 +10,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/accessibility.css">
+<link rel="stylesheet" href="css/motion.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
 
@@ -25,58 +27,59 @@
 
   <nav class="sidebar-nav">
     <div class="nav-item active" data-section="my-sets" id="navMySets">
-      <span class="nav-icon">📚</span>
+      <span class="nav-icon"><i class="fa-solid fa-book-open"></i></span>
       <span>Bộ đề của tôi</span>
     </div>
     <div class="nav-item" data-section="reports" id="navReports">
-      <span class="nav-icon">📊</span>
+      <span class="nav-icon"><i class="fa-solid fa-chart-column"></i></span>
       <span>Báo cáo kết quả</span>
     </div>
     <div class="nav-item" data-section="settings" id="navSettings">
-      <span class="nav-icon">⚙️</span>
+      <span class="nav-icon"><i class="fa-solid fa-gear"></i></span>
       <span>Cài đặt hệ thống</span>
     </div>
 
     <!-- Nhóm 2: trang quản trị/khác (link rời, không phải section trong
          SPA này) — tách nhãn khỏi 3 mục "Bộ đề của tôi/Báo cáo kết
          quả/Cài đặt hệ thống" ở trên để không đọc thành 1 danh sách phẳng
-         8 mục. Icon dùng emoji 1 glyph (bỏ ZWJ 🧑‍🏫/🧑‍🎓 — không phải
-         mọi hệ điều hành ghép được, dễ vỡ layout/wrap chữ) và không
-         trùng icon với mục nào khác trong menu. -->
+         8 mục. Icon dùng Font Awesome (thay emoji cũ — xem
+         https://docs.fontawesome.com/web/style/animate, phản hồi người
+         dùng "icon emoji nhìn như web AI dị") và không trùng icon với
+         mục nào khác trong menu. -->
     <div class="nav-section-label">Trang khác</div>
     <a class="nav-item link-plain" href="image-manager.html" id="imageManagerLink" style="display:none;">
-      <span class="nav-icon">🖼️</span>
+      <span class="nav-icon"><i class="fa-solid fa-image"></i></span>
       <span>Quản lý câu hỏi</span>
     </a>
     <a class="nav-item link-plain" href="admin-users.html" id="adminUsersLink" style="display:none;">
-      <span class="nav-icon">👑</span>
+      <span class="nav-icon"><i class="fa-solid fa-crown"></i></span>
       <span>Tài khoản</span>
     </a>
     <a class="nav-item link-plain" href="teacher-dashboard.html" id="teacherDashboardLink" style="display:none;">
-      <span class="nav-icon">🏫</span>
+      <span class="nav-icon"><i class="fa-solid fa-school"></i></span>
       <span>Dashboard của tôi</span>
     </a>
     <a class="nav-item link-plain" href="tai-lieu-nam-hoc.html" id="docsSchoolYearLink" style="display:none;">
-      <span class="nav-icon">📁</span>
+      <span class="nav-icon"><i class="fa-solid fa-folder-open"></i></span>
       <span>Tài liệu năm học 2026-2027</span>
     </a>
     <a class="nav-item link-plain" href="roster-manager.html" id="rosterManagerLink" style="display:none;">
-      <span class="nav-icon">📋</span>
+      <span class="nav-icon"><i class="fa-solid fa-clipboard-list"></i></span>
       <span>Danh sách học sinh</span>
     </a>
     <a class="nav-item link-plain" href="teaching-schedule.html" id="teachingScheduleLink" style="display:none;">
-      <span class="nav-icon">📅</span>
+      <span class="nav-icon"><i class="fa-solid fa-calendar-days"></i></span>
       <span>Lịch giảng dạy</span>
     </a>
     <a class="nav-item link-plain" href="coordinator-dashboard.html" id="coordinatorDashboardLink" style="display:none;">
-      <span class="nav-icon">🧭</span>
+      <span class="nav-icon"><i class="fa-solid fa-compass"></i></span>
       <span>Dashboard điều phối</span>
     </a>
   </nav>
 
   <div class="sidebar-footer">
     <div class="user-chip" id="userChip" title="Bấm để đăng xuất">
-      <div class="user-avatar">🧑</div>
+      <div class="user-avatar"><i class="fa-solid fa-circle-user"></i></div>
       <div class="user-info">
         <strong id="userChipName">Đang tải...</strong>
         <span id="userChipRole"></span>
@@ -96,12 +99,12 @@
   <!-- TOPBAR -->
   <header id="topbar">
     <div class="topbar-actions-left">
-      <button type="button" id="hamburger" onclick="toggleSidebar()">☰</button>
-      <div class="topbar-title" id="topbar-title">📚 Bộ đề của tôi</div>
+      <button type="button" id="hamburger" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+      <div class="topbar-title" id="topbar-title"><i class="fa-solid fa-book-open"></i> Bộ đề của tôi</div>
     </div>
     <div class="topbar-right">
       <a href="index.html" target="_blank" rel="noopener" class="pill-link">
-        🎓 Xem trang học sinh
+        <i class="fa-solid fa-graduation-cap"></i> Xem trang học sinh
       </a>
       <div class="theme-toggle" id="themeToggle" title="Chuyển đổi sáng/tối"></div>
     </div>
@@ -118,7 +121,7 @@
            hàng 2 = bộ lọc (không còn chen chúc trên 1 dòng như trước) -->
       <div class="toolbar">
         <div class="toolbar-row toolbar-row-primary">
-          <button type="button" class="btn-create" onclick="openModal('create')">➕ Tạo bộ đề mới</button>
+          <button type="button" class="btn-create" onclick="openModal('create')"><i class="fa-solid fa-plus"></i> Tạo bộ đề mới</button>
           <div class="search-box">
             <input type="text" id="searchInput" placeholder="Tìm kiếm bộ đề..." oninput="filterCards()">
           </div>
@@ -126,22 +129,45 @@
         <div class="toolbar-row toolbar-row-filters">
           <div class="filter-group">
             <button type="button" class="filter-btn active" data-filter="all" onclick="setFilter(this, 'all')">Tất cả</button>
-            <button type="button" class="filter-btn" data-filter="elementary" onclick="setFilter(this, 'elementary')">🌱 Tiểu học</button>
-            <button type="button" class="filter-btn" data-filter="middle" onclick="setFilter(this, 'middle')">🎒 THCS</button>
+            <button type="button" class="filter-btn" data-filter="elementary" onclick="setFilter(this, 'elementary')"><i class="fa-solid fa-seedling"></i> Tiểu học</button>
+            <button type="button" class="filter-btn" data-filter="middle" onclick="setFilter(this, 'middle')"><i class="fa-solid fa-graduation-cap"></i> THCS</button>
           </div>
           <span class="toolbar-count" id="cardsCount"></span>
-          <button type="button" class="filter-btn view-toggle-btn" id="toggleShelfViewBtn" onclick="toggleShelfView()">🧊 Kệ sách 3D</button>
         </div>
       </div>
 
-      <!-- Cards Grid / 3D Shelf (cùng một vùng hiển thị, chuyển đổi qua lại) -->
+      <!-- Cards Carousel / 3D Shelf (cùng một vùng hiển thị, chuyển đổi qua lại).
+           #cardsGrid GIỮ NGUYÊN id gốc (toggleShelfView() trong js/dashboard.js
+           chỉ ẩn/hiện qua .hidden, không cần sửa) — giờ bọc quanh mũi tên +
+           dải trượt (xem css/dashboard.css mục "CAROUSEL"). -->
       <div class="cards-viewport" id="cardsViewport">
-        <div class="cards-grid" id="cardsGrid"></div>
+        <div class="carousel-wrap" id="cardsGrid">
+          <button type="button" class="carousel-arrow carousel-arrow-prev" id="carouselPrevBtn" aria-label="Bộ đề trước" onclick="carouselStep(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+          <div class="carousel-track" id="carouselTrack" tabindex="0"></div>
+          <button type="button" class="carousel-arrow carousel-arrow-next" id="carouselNextBtn" aria-label="Bộ đề sau" onclick="carouselStep(1)"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+        <div class="carousel-dots" id="carouselDots"></div>
+
+        <!-- "🧊 Kệ sách 3D" — TRƯỚC ĐÂY chỉ là 1 nút nhỏ lạc lõng ở góc toolbar,
+             không ăn nhập gì với carousel bộ đề bên trên (phản hồi người
+             dùng) — giờ đổi thành 1 banner LỚN cùng ngôn ngữ thiết kế với
+             .quiz-card (bo góc, đổ bóng neumorphism, cover gradient) đặt
+             NGAY DƯỚI carousel, vừa dễ thấy/dễ bấm hơn hẳn, vừa TẬN DỤNG
+             LUÔN khoảng trống còn lại bên dưới carousel (cũng là phản hồi
+             người dùng) thay vì bỏ trống. -->
+        <button type="button" class="shelf-promo-card" id="shelfPromoCard" onclick="toggleShelfView()">
+          <span class="shelf-promo-icon"><i class="fa-solid fa-cube fa-beat-fade" style="--fa-animation-duration: 2.5s; --fa-beat-fade-opacity: 0.7; --fa-beat-fade-scale: 1.1;"></i></span>
+          <span class="shelf-promo-text">
+            <span class="shelf-promo-title">Kệ sách 3D tương tác</span>
+            <span class="shelf-promo-desc">Duyệt toàn bộ bộ đề trên kệ sách 3D xoay được — trực quan &amp; thú vị hơn danh sách thường.</span>
+          </span>
+          <span class="shelf-promo-cta">Khám phá ngay <i class="fa-solid fa-arrow-right"></i></span>
+        </button>
 
         <div class="shelf-embed" id="shelfEmbed" hidden>
           <div class="shelf-embed-bar">
-            <span class="shelf-embed-title">🧊 Chế độ kệ sách 3D</span>
-            <button type="button" class="shelf-embed-close" id="closeShelfViewBtn" onclick="toggleShelfView()">✕ Quay lại lưới</button>
+            <span class="shelf-embed-title"><i class="fa-solid fa-cube"></i> Chế độ kệ sách 3D</span>
+            <button type="button" class="shelf-embed-close" id="closeShelfViewBtn" onclick="toggleShelfView()"><i class="fa-solid fa-xmark"></i> Quay lại lưới</button>
           </div>
           <div class="shelf-embed-frame">
             <iframe
@@ -163,8 +189,8 @@
          ======================================== -->
     <section class="section" id="section-reports">
       <div class="reports-header">
-        <h2>📊 Báo cáo kết quả</h2>
-        <button type="button" class="btn-create" onclick="exportReport()">⬇️ Xuất báo cáo (CSV)</button>
+        <h2><i class="fa-solid fa-chart-column"></i> Báo cáo kết quả</h2>
+        <button type="button" class="btn-create" onclick="exportReport()"><i class="fa-solid fa-download"></i> Xuất báo cáo (CSV)</button>
       </div>
 
       <!-- Filters -->
@@ -186,28 +212,28 @@
             <option value="all">Toàn bộ</option>
           </select>
         </div>
-        <button type="button" class="btn-refresh" onclick="updateReportTab()" title="Tải lại dữ liệu">🔄 Làm mới</button>
+        <button type="button" class="btn-refresh" onclick="updateReportTab()" title="Tải lại dữ liệu"><i class="fa-solid fa-arrow-rotate-right"></i> Làm mới</button>
       </div>
 
       <!-- Stats Row -->
       <div class="stats-row">
         <div class="stat-card">
-          <div class="stat-icon">🎓</div>
+          <div class="stat-icon"><i class="fa-solid fa-graduation-cap"></i></div>
           <div class="stat-label">Tổng lượt làm</div>
           <div class="stat-value" id="totalSessions">0</div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon">✅</div>
+          <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
           <div class="stat-label">Tỉ lệ đạt (≥70%)</div>
           <div class="stat-value" id="totalDone">—</div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon">⭐</div>
+          <div class="stat-icon"><i class="fa-solid fa-star"></i></div>
           <div class="stat-label">Điểm TB</div>
           <div class="stat-value" id="avgScore">—</div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon">🏆</div>
+          <div class="stat-icon"><i class="fa-solid fa-trophy"></i></div>
           <div class="stat-label">Điểm cao nhất</div>
           <div class="stat-value" id="topScore">—</div>
         </div>
@@ -216,15 +242,15 @@
       <!-- Charts -->
       <div class="report-charts-grid">
         <div class="chart-card">
-          <div class="chart-card-title">🥧 Tỉ lệ Đạt / Chưa đạt</div>
+          <div class="chart-card-title"><i class="fa-solid fa-chart-pie"></i> Tỉ lệ Đạt / Chưa đạt</div>
           <div class="chart-card-body"><canvas id="chartPassFail"></canvas></div>
         </div>
         <div class="chart-card">
-          <div class="chart-card-title">📊 Điểm trung bình theo lớp</div>
+          <div class="chart-card-title"><i class="fa-solid fa-chart-column"></i> Điểm trung bình theo lớp</div>
           <div class="chart-card-body"><canvas id="chartByClass"></canvas></div>
         </div>
         <div class="chart-card chart-card-wide">
-          <div class="chart-card-title">📈 Xu hướng điểm trung bình theo ngày</div>
+          <div class="chart-card-title"><i class="fa-solid fa-chart-line"></i> Xu hướng điểm trung bình theo ngày</div>
           <div class="chart-card-body"><canvas id="chartTrend"></canvas></div>
         </div>
       </div>
@@ -232,8 +258,8 @@
       <!-- Table -->
       <div class="report-table-wrap">
         <div class="report-table-header">
-          <span>🗂️ Chi tiết lượt làm bài (<span id="reportTableCount">0</span> lượt)</span>
-          <button type="button" class="btn-danger-text" id="deleteSelectedRowsBtn" hidden>🗑️ Xoá mục đã chọn (<span id="selectedRowsCount">0</span>)</button>
+          <span><i class="fa-solid fa-table-list"></i> Chi tiết lượt làm bài (<span id="reportTableCount">0</span> lượt)</span>
+          <button type="button" class="btn-danger-text" id="deleteSelectedRowsBtn" hidden><i class="fa-solid fa-trash"></i> Xoá mục đã chọn (<span id="selectedRowsCount">0</span>)</button>
         </div>
         <div class="table-scroll-x">
           <table id="reportTable">
@@ -261,10 +287,10 @@
          SETTINGS SECTION
          ======================================== -->
     <section class="section" id="section-settings">
-      <h2 class="section-title-lg">⚙️ Cài đặt hệ thống</h2>
+      <h2 class="section-title-lg"><i class="fa-solid fa-gear"></i> Cài đặt hệ thống</h2>
       <div class="settings-grid">
         <div class="settings-card">
-          <h3>🔒 Bảo mật &amp; Chống gian lận</h3>
+          <h3><i class="fa-solid fa-lock"></i> Bảo mật &amp; Chống gian lận</h3>
           <div class="settings-row">
             <label>Chặn tự sửa điểm</label>
             <button type="button" aria-label="Chặn tự sửa điểm" class="toggle-switch on" onclick="this.classList.toggle('on')"></button>
@@ -283,7 +309,7 @@
           </div>
         </div>
         <div class="settings-card">
-          <h3>🎨 Giao diện</h3>
+          <h3><i class="fa-solid fa-palette"></i> Giao diện</h3>
           <div class="settings-row">
             <label>Chế độ tối (Dark Mode)</label>
             <button type="button" aria-label="Chế độ tối (Dark Mode)" class="toggle-switch" id="settingsDark" onclick="toggleThemeFromSettings(this)"></button>
@@ -298,7 +324,7 @@
           </div>
         </div>
         <div class="settings-card">
-          <h3>📤 Dữ liệu &amp; Xuất file</h3>
+          <h3><i class="fa-solid fa-file-export"></i> Dữ liệu &amp; Xuất file</h3>
           <div class="settings-row">
             <label>Tự động lưu kết quả</label>
             <button type="button" aria-label="Tự động lưu kết quả" class="toggle-switch on" onclick="this.classList.toggle('on')"></button>
@@ -309,11 +335,11 @@
           </div>
           <div class="settings-row settings-row-col">
             <label>Xóa toàn bộ dữ liệu phiên</label>
-            <button type="button" onclick="clearAllData()" class="btn-danger-outline">🗑️ Xóa tất cả</button>
+            <button type="button" onclick="clearAllData()" class="btn-danger-outline"><i class="fa-solid fa-trash"></i> Xóa tất cả</button>
           </div>
         </div>
         <div class="settings-card">
-          <h3>ℹ️ Thông tin hệ thống</h3>
+          <h3><i class="fa-solid fa-circle-info"></i> Thông tin hệ thống</h3>
         </div>
       </div>
     </section>
@@ -327,22 +353,22 @@
 <div id="modal-overlay" onclick="closeModalOnOverlay(event)">
   <div class="modal" id="modal-box">
     <div class="modal-header">
-      <h3 id="modal-title">➕ Tạo bộ đề mới</h3>
-      <button type="button" class="modal-close" onclick="closeModal()">✕</button>
+      <h3 id="modal-title"><i class="fa-solid fa-plus"></i> Tạo bộ đề mới</h3>
+      <button type="button" class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="modal-body" id="modal-body">
       <!-- dynamically filled -->
     </div>
     <div class="modal-footer" id="modal-footer">
       <button type="button" class="btn-cancel" onclick="closeModal()">Huỷ bỏ</button>
-      <button type="button" class="btn-save" onclick="saveNewSet()">💾 Lưu bộ đề</button>
+      <button type="button" class="btn-save" onclick="saveNewSet()"><i class="fa-solid fa-floppy-disk"></i> Lưu bộ đề</button>
     </div>
   </div>
 </div>
 
 <!-- SESSION TOAST -->
 <div id="session-toast">
-  <span class="toast-icon">🚀</span>
+  <span class="toast-icon"><i class="fa-solid fa-rocket"></i></span>
   <span id="toast-text">Đang ghi nhận phiên làm bài...</span>
 </div>
 
@@ -392,5 +418,6 @@
      completionRate). -->
 <script src="js/services/analytics-service.js"></script>
 <script src="js/dashboard.js"></script>
+<script src="js/motion.js"></script>
 </body>
 </html>

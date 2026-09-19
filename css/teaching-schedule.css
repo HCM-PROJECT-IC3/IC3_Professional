@@ -1101,6 +1101,18 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
 .pt-day-tab-active { background: var(--purple); border-color: var(--purple); color: #fff }
 .pt-copy-all-btn { margin-top: 1rem; font-size: .78rem }
 
+/* Hàng tham số TỰ SINH giờ tiết (giờ vào/số phút mỗi tiết/chuyển tiết/
+   nghỉ giải lao) — mỗi trường quy định giờ vào và giờ ra chơi khác nhau
+   (7h hoặc 7h30 vào, nghỉ giải lao dài ngắn khác nhau, buổi chiều vào giờ
+   khác nữa) nên các ô này LUÔN sửa tay được, nút preset 35’/45’ bên dưới
+   chỉ gợi ý SỐ PHÚT MỖI TIẾT (đặc trưng thật sự cố định theo cấp học),
+   không còn tự áp nguyên khung giờ cố định như trước (xem
+   generatePeriodTimes() ở js/models/teaching-timetable.model.js). */
+.pt-gen-row { display: flex; gap: .6rem; flex-wrap: wrap }
+.pt-gen-field { display: flex; flex-direction: column; gap: .2rem; flex: 1; min-width: 110px }
+.pt-gen-field span { font-size: .7rem; font-weight: 700; color: var(--muted) }
+.pt-gen-field .form-input { width: 100%; box-sizing: border-box }
+
 /* Mỗi buổi (Sáng/Chiều) có nút preset RIÊNG — CỐ TÌNH không gộp 1 hàng
    nút chung áp cho cả 2 buổi, vì giáo viên dạy Sáng Tiểu học/Chiều THCS
    (hoặc ngược lại) rất phổ biến, áp chung sẽ làm sai buổi kia. */

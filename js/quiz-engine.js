@@ -394,7 +394,7 @@ window.addEventListener('storage', (e) => {
 function _acFlagMultiTab(otherCount) {
   State.session.multiTabHits = (State.session.multiTabHits || 0) + 1;
   _acShowLock('multitab', {
-    icon:  '🗔',
+    icon:  '<i class="fa-solid fa-clone"></i>',
     title: 'Phát hiện mở nhiều tab/cửa sổ',
     message: `Hệ thống phát hiện trang IC3 đang mở ở ${otherCount + 1} tab/cửa sổ cùng lúc. ` +
               `Vui lòng đóng bớt, chỉ giữ lại đúng 1 tab đang làm bài để tiếp tục.`,
@@ -402,7 +402,7 @@ function _acFlagMultiTab(otherCount) {
     onAction: () => {
       const others = _acOtherTabCount();
       if (others > 0) {
-        showNotification('⚠️ Vẫn còn tab khác đang mở. Vui lòng đóng hết rồi thử lại.', 'warning');
+        showNotification('Vẫn còn tab khác đang mở. Vui lòng đóng hết rồi thử lại.', 'warning');
       } else {
         _acHideLock('multitab');
       }
@@ -441,7 +441,7 @@ function _acOnFullscreenChange() {
   if (!document.fullscreenElement) {
     State.session.fullscreenExits = (State.session.fullscreenExits || 0) + 1;
     _acShowLock('fullscreen', {
-      icon:  '🖥️',
+      icon:  '<i class="fa-solid fa-desktop"></i>',
       title: 'Bạn đã thoát toàn màn hình',
       message: `Bài Kiểm tra yêu cầu làm bài ở chế độ toàn màn hình. ` +
                 `Đã ghi nhận ${State.session.fullscreenExits} lần thoát.`,
@@ -478,7 +478,7 @@ function _acStartDevtoolsWatch() {
     const open  = wDiff > 160 || hDiff > 160;
     if (open && !_AC.wasDevtoolsOpen) {
       State.session.devtoolsHits = (State.session.devtoolsHits || 0) + 1;
-      showNotification('⚠️ Phát hiện dấu hiệu mở DevTools/công cụ kiểm tra mã nguồn — đã ghi nhận vi phạm.', 'warning');
+      showNotification('Phát hiện dấu hiệu mở DevTools/công cụ kiểm tra mã nguồn — đã ghi nhận vi phạm.', 'warning');
     }
     _AC.wasDevtoolsOpen = open;
   }, 2000);
@@ -511,9 +511,9 @@ function _acOnKeydown(e) {
   e.stopPropagation();
   State.session.shortcutBlocks = (State.session.shortcutBlocks || 0) + 1;
   if (isPrintScreen) {
-    showNotification('⚠️ Đã ghi nhận thao tác chụp màn hình (Print Screen) trong lúc Kiểm tra.', 'warning');
+    showNotification('Đã ghi nhận thao tác chụp màn hình (Print Screen) trong lúc Kiểm tra.', 'warning');
   } else {
-    showNotification('⛔ Thao tác này bị khoá trong lúc Kiểm tra.', 'warning');
+    showNotification('Thao tác này bị khoá trong lúc Kiểm tra.', 'warning');
   }
 }
 function _acBindKeyGuards() { document.addEventListener('keydown', _acOnKeydown, true); }
@@ -525,12 +525,12 @@ function _acUnbindKeyGuards() { document.removeEventListener('keydown', _acOnKey
 function _acOnContextMenu(e) {
   if (!_AC.active) return;
   e.preventDefault();
-  showNotification('⛔ Không dùng chuột phải trong lúc Kiểm tra.', 'warning');
+  showNotification('Không dùng chuột phải trong lúc Kiểm tra.', 'warning');
 }
 function _acOnCopyCut(e) {
   if (!_AC.active) return;
   e.preventDefault();
-  showNotification('⛔ Không sao chép nội dung trong lúc Kiểm tra.', 'warning');
+  showNotification('Không sao chép nội dung trong lúc Kiểm tra.', 'warning');
 }
 function _acBindCopyGuards() {
   const examEl = document.getElementById('exam');
@@ -548,7 +548,7 @@ function _acUnbindCopyGuards() {
 function _acOnBeforePrint() {
   if (!_AC.active) return;
   State.session.printAttempts = (State.session.printAttempts || 0) + 1;
-  showNotification('⛔ Không thể in bài Kiểm tra (xem @media print trong style.css).', 'warning');
+  showNotification('Không thể in bài Kiểm tra (xem @media print trong style.css).', 'warning');
 }
 
 /** Cảnh báo native của trình duyệt khi học sinh cố đóng tab/reload lúc
@@ -726,7 +726,7 @@ function _setLoadingState(isLoading) {
   const btn = document.getElementById('btnStart');
   if (!btn) return;
   if (isLoading) {
-    btn.textContent = '⏳ Đang tải dữ liệu...';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải dữ liệu...';
     btn.disabled = true;
   }
   // Trạng thái enabled/disabled sau load sẽ do refreshMeta() quyết định
@@ -830,12 +830,12 @@ function initLobby() {
       : 0;
 
     const modes = [];
-    if (lessonNames.length) modes.push({ id: 'lesson', label: '🗓️ Theo tiết', names: lessonNames });
-    if (topicNames.length)  modes.push({ id: 'topic',  label: '📖 Theo chủ đề', names: topicNames });
-    if (mixWanted > 0)      modes.push({ id: 'mix',    label: '📚 Tổng hợp',   names: [RANDOM_MIX_KEY] });
+    if (lessonNames.length) modes.push({ id: 'lesson', label: '<i class="fa-solid fa-calendar-week"></i> Theo tiết', names: lessonNames });
+    if (topicNames.length)  modes.push({ id: 'topic',  label: '<i class="fa-solid fa-book-open"></i> Theo chủ đề', names: topicNames });
+    if (mixWanted > 0)      modes.push({ id: 'mix',    label: '<i class="fa-solid fa-book"></i> Tổng hợp',   names: [RANDOM_MIX_KEY] });
     // Cần ít nhất 6 câu để chia được 3 chặng ~đều nhau kèm mini-game (xem
     // _computeGameBreakPoints) — bài quá ngắn thì không hiện chế độ này.
-    if (mixWanted >= 6)     modes.push({ id: 'mixplay', label: '🎮 Tổng hợp Vui', names: [RANDOM_MIX_PLAY_KEY] });
+    if (mixWanted >= 6)     modes.push({ id: 'mixplay', label: '<i class="fa-solid fa-gamepad"></i> Tổng hợp Vui', names: [RANDOM_MIX_PLAY_KEY] });
 
     // Giữ nguyên chế độ đang chọn nếu Level mới vẫn có (vd đổi Level
     // trong cùng Chương trình, vẫn có "Theo tiết") — không thì rơi về
@@ -863,10 +863,12 @@ function initLobby() {
       mtSel.innerHTML = '';
       const mode = modes.find(m => m.id === mtMode);
       (mode?.names || []).forEach(name => {
+        // new Option(...) chỉ render TEXT THUẦN (như <option>) — không thể
+        // nhét icon Font Awesome vào đây, bỏ hẳn emoji thay vì để lọt icon "vỡ".
         const label = name === RANDOM_MIX_KEY
-          ? `📚 Tổng hợp — ngẫu nhiên chia đều ${topicNames.length} chủ đề (${mixWanted} câu)`
+          ? `Tổng hợp — ngẫu nhiên chia đều ${topicNames.length} chủ đề (${mixWanted} câu)`
           : name === RANDOM_MIX_PLAY_KEY
-          ? `🎮 Tổng hợp Vui — ngẫu nhiên chia đều ${topicNames.length} chủ đề, xen kẽ mini-game (${mixWanted} câu)`
+          ? `Tổng hợp Vui — ngẫu nhiên chia đều ${topicNames.length} chủ đề, xen kẽ mini-game (${mixWanted} câu)`
           : `${name} (${_mtCount(minitests[name])} câu)`;
         mtSel.appendChild(new Option(label, name));
       });
@@ -895,7 +897,7 @@ function initLobby() {
       // minitest trong dropdown đã có sẵn "(N câu)".
       el.innerHTML = '';
     } else {
-      el.innerHTML = '<span class="chip" style="color:var(--red)">⚠ Không có câu hỏi</span>';
+      el.innerHTML = '<span class="chip" style="color:var(--red)"><i class="fa-solid fa-triangle-exclamation"></i> Không có câu hỏi</span>';
     }
 
     // Kích hoạt nút Bắt đầu chỉ khi đủ thông tin — riêng chế độ "Kiểm tra"
@@ -907,7 +909,7 @@ function initLobby() {
     const btn     = document.getElementById('btnStart');
     if (btn) {
       btn.disabled = !(count && name && cls && school && pledged);
-      btn.textContent = btn.disabled ? '▶ Bắt đầu' : '▶ Bắt đầu';
+      btn.innerHTML = '<i class="fa-solid fa-play"></i> Bắt đầu';
     }
 
     // Hiện/ẩn nút "MOS Word — Ôn luyện Ribbon" / "MOS Practice" ngay trong
@@ -964,7 +966,7 @@ async function startExam() {
   const mtName = document.getElementById('minitestSelect')?.value;
 
   if (!name || !cls || !school) {
-    alert('⚠ Vui lòng điền đầy đủ thông tin học sinh!');
+    alert('Vui lòng điền đầy đủ thông tin học sinh!');
     return;
   }
 
@@ -973,8 +975,8 @@ async function startExam() {
 
   // ── Tải câu hỏi đầy đủ của ĐÚNG khối này (lazy-load) ──────
   const btn = document.getElementById('btnStart');
-  const btnPrevText = btn?.textContent;
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang tải câu hỏi...'; }
+  const btnPrevText = btn?.innerHTML;
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải câu hỏi...'; }
 
   const fullLevel = await _fetchLevelData(catId, lvlId);
   const isGameBreak = mtName === RANDOM_MIX_PLAY_KEY;
@@ -983,16 +985,19 @@ async function startExam() {
     ? buildRandomMixQuestions(fullLevel?.minitests, _randomMixTotalFor(catId, lvlId))
     : fullLevel?.minitests?.[mtName];
 
-  if (btn) { btn.disabled = false; btn.textContent = btnPrevText; }
+  if (btn) { btn.disabled = false; btn.innerHTML = btnPrevText; }
 
   if (!rawQs || rawQs.length === 0) {
-    alert('⚠ Không tìm thấy câu hỏi cho bài này. Vui lòng kiểm tra dữ liệu trong data/ic3/.');
+    alert('Không tìm thấy câu hỏi cho bài này. Vui lòng kiểm tra dữ liệu trong data/ic3/.');
     return;
   }
 
-  // Tên minitest hiển thị/ghi log — dùng tên thân thiện thay vì key nội bộ
+  // Tên minitest hiển thị/ghi log — dùng tên thân thiện thay vì key nội bộ.
+  // KHÔNG nhét icon HTML vào đây — chuỗi này còn được LƯU THẲNG vào
+  // State.session.minitest (báo cáo/Firestore) lẫn hiện qua textContent
+  // (dòng topbarInfo bên dưới, không render được HTML).
   const mtDisplayName = isGameBreak
-    ? `🎮 Tổng hợp Vui — ngẫu nhiên (${rawQs.length} câu, chia đều ${Object.keys(fullLevel?.minitests || {}).length} chủ đề, xen kẽ mini-game)`
+    ? `Tổng hợp Vui — ngẫu nhiên (${rawQs.length} câu, chia đều ${Object.keys(fullLevel?.minitests || {}).length} chủ đề, xen kẽ mini-game)`
     : isRandomMix
     ? `Tổng hợp — ngẫu nhiên (${rawQs.length} câu, chia đều ${Object.keys(fullLevel?.minitests || {}).length} chủ đề)`
     : mtName;
@@ -1045,7 +1050,10 @@ async function startExam() {
   document.getElementById('adminEntryLink')?.style.setProperty('display', 'none');
 
   const info = document.getElementById('topbarInfo');
-  if (info) info.textContent = `👤 ${name} · ${cls} · ${mtDisplayName}`;
+  // innerHTML (không phải textContent) để icon Font Awesome render được —
+  // name/cls/mtDisplayName đều do học sinh tự gõ/chọn nên PHẢI escape qua
+  // _acEscapeHtml() trước, tránh mở lỗ hổng XSS khi đổi sang innerHTML.
+  if (info) info.innerHTML = `<i class="fa-solid fa-user"></i> ${_acEscapeHtml(name)} · ${_acEscapeHtml(cls)} · ${_acEscapeHtml(mtDisplayName)}`;
 
   buildSidebar();
   _restoreSidebarState();
@@ -1311,9 +1319,9 @@ function nextQ() {
    muốn quay lại làm bài.
    ============================================================ */
 const GAME_BREAK_GAMES = [
-  { file: 'memory-game.html', label: '🧠 Trí Nhớ Thiết Bị' },
-  { file: 'sudoku.html',      label: '🔢 Sudoku' },
-  { file: 'billiards.html',   label: '🎱 Bi-a' },
+  { file: 'memory-game.html', label: '<i class="fa-solid fa-brain"></i> Trí Nhớ Thiết Bị' },
+  { file: 'sudoku.html',      label: '<i class="fa-solid fa-puzzle-piece"></i> Sudoku' },
+  { file: 'billiards.html',   label: '<i class="fa-solid fa-circle"></i> Bi-a' },
 ];
 
 /** Mốc (các) câu hỏi (0-based, tính theo "current" NGAY TRƯỚC khi bấm
@@ -1361,7 +1369,7 @@ function _ensureGameBreakOverlay() {
   ov.innerHTML = `
     <div class="game-break-card">
       <div class="game-break-header">
-        <span class="game-break-title" id="gameBreakTitle">🎮 Giải lao chút nhé!</span>
+        <span class="game-break-title" id="gameBreakTitle"><i class="fa-solid fa-gamepad"></i> Giải lao chút nhé!</span>
         <button type="button" class="game-break-continue" id="gameBreakContinueBtn">Tiếp tục bài ôn tập →</button>
       </div>
       <iframe id="gameBreakFrame" class="game-break-frame" title="Mini-game giải lao"></iframe>
@@ -1376,7 +1384,9 @@ function _ensureGameBreakOverlay() {
 function showGameBreak(onContinue) {
   const ov = _ensureGameBreakOverlay();
   const pick = GAME_BREAK_GAMES[Math.floor(Math.random() * GAME_BREAK_GAMES.length)];
-  document.getElementById('gameBreakTitle').textContent = `🎮 Giải lao chút nhé! — ${pick.label}`;
+  // innerHTML (không phải textContent) — pick.label chứa sẵn thẻ <i> Font
+  // Awesome (đọc từ GAME_BREAK_GAMES, hằng số tự viết, an toàn).
+  document.getElementById('gameBreakTitle').innerHTML = `<i class="fa-solid fa-gamepad"></i> Giải lao chút nhé! — ${pick.label}`;
   const frame = document.getElementById('gameBreakFrame');
   frame.src = pick.file;
   ov.classList.add('show');
@@ -1414,26 +1424,26 @@ function renderQuestion(idx) {
   panel.classList.toggle('q-panel--hotspot', q.type === 'hotspot');
 
   const TYPE_META = {
-    single:    { icon: '◎', label: 'Một lựa chọn' },
-    multi:     { icon: '☑', label: 'Nhiều lựa chọn' },
-    truefalse: { icon: '⇄', label: 'Đúng / Sai' },
-    matching:  { icon: '↔', label: 'Nối cột' },
-    hotspot:   { icon: '🎯', label: 'Bấm vào hình' },
-    list:      { icon: '📋', label: 'Chọn cho từng dòng' },
-    classify:  { icon: '🗂️', label: 'Phân loại' },
-    ordering:  { icon: '↕', label: 'Sắp xếp thứ tự' },
-    dragfill:  { icon: '🧩', label: 'Kéo thả điền chỗ trống' },
-    selectfill:{ icon: '▾', label: 'Chọn điền chỗ trống' },
+    single:    { icon: '<i class="fa-solid fa-circle-dot"></i>', label: 'Một lựa chọn' },
+    multi:     { icon: '<i class="fa-solid fa-square-check"></i>', label: 'Nhiều lựa chọn' },
+    truefalse: { icon: '<i class="fa-solid fa-right-left"></i>', label: 'Đúng / Sai' },
+    matching:  { icon: '<i class="fa-solid fa-arrows-left-right"></i>', label: 'Nối cột' },
+    hotspot:   { icon: '<i class="fa-solid fa-bullseye"></i>', label: 'Bấm vào hình' },
+    list:      { icon: '<i class="fa-solid fa-list-check"></i>', label: 'Chọn cho từng dòng' },
+    classify:  { icon: '<i class="fa-solid fa-layer-group"></i>', label: 'Phân loại' },
+    ordering:  { icon: '<i class="fa-solid fa-sort"></i>', label: 'Sắp xếp thứ tự' },
+    dragfill:  { icon: '<i class="fa-solid fa-puzzle-piece"></i>', label: 'Kéo thả điền chỗ trống' },
+    selectfill:{ icon: '<i class="fa-solid fa-caret-down"></i>', label: 'Chọn điền chỗ trống' },
   };
-  const { icon, label } = TYPE_META[q.type] || { icon: '?', label: q.type };
+  const { icon, label } = TYPE_META[q.type] || { icon: '<i class="fa-solid fa-question"></i>', label: q.type };
 
   // Nav buttons
-  const navPrev = `<button class="btn-nav" onclick="prevQ()" ${idx === 0 ? 'disabled' : ''}>← Câu trước</button>`;
+  const navPrev = `<button class="btn-nav" onclick="prevQ()" ${idx === 0 ? 'disabled' : ''}><i class="fa-solid fa-arrow-left"></i> Câu trước</button>`;
   const navNext = idx < State.questions.length - 1
-    ? `<button class="btn-nav btn-next-primary" onclick="nextQ()">Câu tiếp →</button>`
-    : `<button class="btn-nav" style="background:rgba(6,214,160,.15);border-color:var(--accent5);color:var(--accent5);" onclick="confirmSubmit()">Nộp bài ✓</button>`;
+    ? `<button class="btn-nav btn-next-primary" onclick="nextQ()">Câu tiếp <i class="fa-solid fa-arrow-right"></i></button>`
+    : `<button class="btn-nav" style="background:rgba(6,214,160,.15);border-color:var(--accent5);color:var(--accent5);" onclick="confirmSubmit()">Nộp bài <i class="fa-solid fa-check"></i></button>`;
   const navFlag = `<button class="btn-nav btn-flag ${State.flags.has(idx) ? 'flagged' : ''}" onclick="toggleFlag(${idx})">
-    ${State.flags.has(idx) ? '⚑ Bỏ đánh dấu' : '⚐ Đánh dấu'}
+    ${State.flags.has(idx) ? '<i class="fa-solid fa-flag"></i> Bỏ đánh dấu' : '<i class="fa-regular fa-flag"></i> Đánh dấu'}
   </button>`;
 
   // Hình ảnh — ưu tiên imageUrl (từ image_file), sau đó SVG minh họa
@@ -1447,7 +1457,7 @@ function renderQuestion(idx) {
   // tra của câu trước KHÔNG còn sót lại (id trùng nhưng nội dung rỗng).
   const practiceCheckBlock = State.examMode === 'practice'
     ? `<div class="q-check-wrap">
-         <button type="button" class="btn-check-answer" onclick="checkCurrentAnswer()">✅ Kiểm tra đáp án</button>
+         <button type="button" class="btn-check-answer" onclick="checkCurrentAnswer()"><i class="fa-solid fa-circle-check"></i> Kiểm tra đáp án</button>
          <div class="q-check-result" id="qCheckResult"></div>
        </div>`
     : '';
@@ -1517,13 +1527,13 @@ function checkCurrentAnswer() {
   if (el && el.dataset.shown === '1') {
     el.innerHTML = '';
     el.dataset.shown = '0';
-    if (btn) btn.textContent = '✅ Kiểm tra đáp án';
+    if (btn) btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Kiểm tra đáp án';
     return;
   }
 
   _renderCheckResult(_buildQuestionDetail(q, i));
   if (el) el.dataset.shown = '1';
-  if (btn) btn.textContent = '🙈 Ẩn kết quả';
+  if (btn) btn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Ẩn kết quả';
 }
 
 /** Vẽ banner Đúng/Sai/Chưa trả lời + phần giải thích (tái dùng
@@ -1534,14 +1544,14 @@ function _renderCheckResult(d) {
 
   if (d.status === 'skipped') {
     el.innerHTML = `<div class="q-check-banner q-check-skip">
-      ✋ Bạn chưa trả lời câu này — hãy chọn đáp án rồi bấm lại "Kiểm tra đáp án" nhé.
+      <i class="fa-solid fa-hand"></i> Bạn chưa trả lời câu này — hãy chọn đáp án rồi bấm lại "Kiểm tra đáp án" nhé.
     </div>`;
     return;
   }
 
   const isCorrect = d.status === 'correct';
   const banner = `<div class="q-check-banner ${isCorrect ? 'q-check-correct' : 'q-check-wrong'}">
-    ${isCorrect ? '✅ Chính xác! Làm tốt lắm.' : '❌ Chưa đúng — xem giải thích bên dưới để hiểu vì sao nhé.'}
+    ${isCorrect ? '<i class="fa-solid fa-circle-check"></i> Chính xác! Làm tốt lắm.' : '<i class="fa-solid fa-circle-xmark"></i> Chưa đúng — xem giải thích bên dưới để hiểu vì sao nhé.'}
   </div>`;
   // showQuestionText:false vì đề bài đã hiển thị sẵn ngay phía trên trong
   // .q-header — lặp lại lần nữa ở đây sẽ dư thừa (khác với review-detail.js
@@ -1638,7 +1648,7 @@ function _attachQuestionImageZoom(panel) {
     thumb.setAttribute('aria-label', 'Phóng to hình');
     thumb.setAttribute('role', 'button');
     thumb.setAttribute('tabindex', '0');
-    thumb.innerHTML = '<span class="q-image-zoom-thumb-icon" aria-hidden="true">🔍</span>';
+    thumb.innerHTML = '<span class="q-image-zoom-thumb-icon" aria-hidden="true"><i class="fa-solid fa-magnifying-glass"></i></span>';
 
     const open = e => {
       e.preventDefault();
@@ -1714,7 +1724,7 @@ function renderMulti(q, qi) {
         background:var(--purple-lt);border:1.5px solid rgba(79,107,255,.25);
         border-radius:10px;padding:.55rem 1rem;margin-bottom:.8rem;
         font-size:.85rem;font-weight:700;color:var(--purple);">
-      ☑ ${hint}
+      <i class="fa-solid fa-square-check"></i> ${hint}
       <span id="multi-counter-${qi}" style="color:${q.correct?.length ? (current.length === q.correct.length ? 'var(--teal)' : 'var(--yellow)') : 'var(--muted)'};font-weight:600;margin-left:.5rem;">
         (Đã chọn: <span id="multi-count-${qi}">${current.length}</span>/${q.correct?.length || '?'})
       </span>
@@ -1752,7 +1762,7 @@ function selectMulti(el) {
   } else {
     // Chặn chọn quá số lượng yêu cầu — cảnh báo thay vì cho chọn thêm.
     if (need > 0 && arr.length >= need) {
-      showNotification(`⚠️ Chỉ được chọn tối đa ${need} đáp án cho câu này. Bỏ chọn bớt trước khi chọn đáp án khác.`, 'warning');
+      showNotification(`Chỉ được chọn tối đa ${need} đáp án cho câu này. Bỏ chọn bớt trước khi chọn đáp án khác.`, 'warning');
       return;
     }
     arr.push(val);
@@ -1803,7 +1813,7 @@ function renderTrueFalse(q, qi) {
   document.getElementById('q-body').innerHTML = `
     <div class="tf-toolbar">
       <div id="tf-counter-${qi}" class="tf-counter" data-total="${stmts.length}">
-        📋 Trả lời từng câu (${answeredCount}/${stmts.length} đã chọn)
+        <i class="fa-solid fa-list-check"></i> Trả lời từng câu (${answeredCount}/${stmts.length} đã chọn)
       </div>
     </div>
     <div class="tf-list">
@@ -1852,7 +1862,7 @@ function selectTF(el) {
   if (counterEl) {
     const total = parseInt(counterEl.dataset.total, 10) || 0;
     const count = Object.keys(State.answers[qi] || {}).length;
-    counterEl.textContent = `📋 Trả lời từng câu (${count}/${total} đã chọn)`;
+    counterEl.innerHTML = `<i class="fa-solid fa-list-check"></i> Trả lời từng câu (${count}/${total} đã chọn)`;
   }
 
   updateSidebar();
@@ -1873,7 +1883,7 @@ function renderMatching(q, qi) {
   if (!body) return;
 
   if (!q.pairs || q.pairs.length === 0) {
-    body.innerHTML = `<div class="q-img-notice">🖼️ Câu nối cột này dùng hình ảnh — vui lòng xem đề thi in.</div>`;
+    body.innerHTML = `<div class="q-img-notice"><i class="fa-regular fa-image"></i> Câu nối cột này dùng hình ảnh — vui lòng xem đề thi in.</div>`;
     return;
   }
 
@@ -1922,11 +1932,11 @@ function renderMatchingRegions(q, qi, matched, leftItems, body) {
 
   body.innerHTML = `
     <div class="match-hint">
-      🖱️ Kéo thả hoặc <strong>nhấn chip → nhấn ô</strong> để nối cột
+      <i class="fa-solid fa-arrow-pointer"></i> Kéo thả hoặc <strong>nhấn chip → nhấn ô</strong> để nối cột
       <span class="match-hint-count">${answeredPairs}/${leftItems.length} đã nối</span>
     </div>
 
-    <div class="drag-pool-title">📦 Đáp án — kéo hoặc nhấn để chọn:</div>
+    <div class="drag-pool-title"><i class="fa-solid fa-box-archive"></i> Đáp án — kéo hoặc nhấn để chọn:</div>
     <div class="drag-pool" id="dragPool-${qi}">
       ${poolChips.length > 0
         ? poolChips.map(({ r, id }) => `
@@ -1934,8 +1944,8 @@ function renderMatchingRegions(q, qi, matched, leftItems, body) {
                  draggable="true"
                  data-right="${encodeURIComponent(r)}"
                  data-qi="${qi}"
-                 id="${id}">${rightImgMap[r] ? '' : '⠿ '}${_chipContent(r)}</div>`).join('')
-        : `<span class="pool-done">✅ Đã điền hết — nhấn ✕ để thay đổi</span>`}
+                 id="${id}">${rightImgMap[r] ? '' : '<i class="fa-solid fa-grip-vertical"></i> '}${_chipContent(r)}</div>`).join('')
+        : `<span class="pool-done"><i class="fa-solid fa-circle-check"></i> Đã điền hết — nhấn <i class="fa-solid fa-xmark"></i> để thay đổi</span>`}
     </div>
 
     <div class="matching-container">
@@ -1956,7 +1966,7 @@ function renderMatchingRegions(q, qi, matched, leftItems, body) {
               ? `<span class="slot-content">${_chipContent(matched[left])}</span>
                  <button class="slot-remove"
                          data-qi="${qi}" data-left="${encodeURIComponent(left)}"
-                         onclick="removeMatchDrop(this)">✕</button>`
+                         onclick="removeMatchDrop(this)"><i class="fa-solid fa-xmark"></i></button>`
               : ''}
           </div>`).join('')}
       </div>
@@ -2006,7 +2016,7 @@ function renderMatchingTwoCol(q, qi, matched, leftItems, body) {
 
   body.innerHTML = `
     <div class="match-hint">
-      🖱️ Nhấn 1 ô bên trái rồi nhấn ô tương ứng bên phải để nối
+      <i class="fa-solid fa-arrow-pointer"></i> Nhấn 1 ô bên trái rồi nhấn ô tương ứng bên phải để nối
       <span class="match-hint-count">${answeredPairs}/${leftItems.length} đã nối</span>
     </div>
 
@@ -2209,7 +2219,7 @@ function _buildRegionPicker(q, qi, matched) {
            onerror="this.parentElement.style.display='none'">
       ${hotspots}
     </div>
-    <div class="match-region-tip">👆 Bấm trực tiếp vào đúng vị trí trên hình</div>
+    <div class="match-region-tip"><i class="fa-regular fa-hand-point-up"></i> Bấm trực tiếp vào đúng vị trí trên hình</div>
     ${unmappedList}
   `;
 }
@@ -2345,7 +2355,7 @@ function renderHotspot(q, qi) {
   const totalCorrect = areas.filter(a => a.correct).length || areas.length;
 
   if (!src || areas.length === 0) {
-    body.innerHTML = `<div class="q-img-notice">🖼️ Câu hỏi này thiếu dữ liệu hình ảnh — vui lòng báo cho giáo viên/quản trị viên.</div>`;
+    body.innerHTML = `<div class="q-img-notice"><i class="fa-regular fa-image"></i> Câu hỏi này thiếu dữ liệu hình ảnh — vui lòng báo cho giáo viên/quản trị viên.</div>`;
     return;
   }
 
@@ -2365,7 +2375,7 @@ function renderHotspot(q, qi) {
         font-size:.82rem;font-weight:700;color:var(--muted);margin-bottom:.5rem;
         background:var(--yellow-lt);border:1.5px solid rgba(255,179,0,.25);
         border-radius:10px;padding:.4rem .9rem;">
-      🎯 Bấm vào đúng <strong>${totalCorrect}</strong> vị trí trên hình
+      <i class="fa-solid fa-bullseye"></i> Bấm vào đúng <strong>${totalCorrect}</strong> vị trí trên hình
       <span id="hotspot-counter-${qi}" style="margin-left:.75rem;color:${sel.size === totalCorrect ? 'var(--teal)' : 'var(--yellow)'};">
         Đã chọn: <span id="hotspot-count-${qi}">${sel.size}</span>/${totalCorrect}
       </span>
@@ -2374,17 +2384,17 @@ function renderHotspot(q, qi) {
       <img class="hsq-image-el" src="${src}" data-hotspot-image="1"
            alt="Bấm trực tiếp vào hình để chọn đáp án" loading="lazy"
            onload="fitHotspotImage()"
-           onerror="this.parentElement.innerHTML='<div class=&quot;q-img-notice&quot;>🖼️ Không tải được hình ảnh.</div>'">
+           onerror="this.parentElement.innerHTML='<div class=&quot;q-img-notice&quot;><i class=&quot;fa-regular fa-image&quot;></i> Không tải được hình ảnh.</div>'">
       <div class="hotspot-wrap">${areasHtml}</div>
     </div>
     <div class="hsq-stage-tools">
       <button type="button" class="q-image-zoom-thumb q-image-zoom-thumb--hotspot"
               title="Phóng to hình" aria-label="Phóng to hình"
               onclick="openImgZoom('${escapeAttr(src)}','${escapeAttr(q.question || 'Hình minh họa')}')">
-        <span class="q-image-zoom-thumb-icon" aria-hidden="true">🔍</span>
+        <span class="q-image-zoom-thumb-icon" aria-hidden="true"><i class="fa-solid fa-magnifying-glass"></i></span>
       </button>
     </div>
-    <div class="match-region-tip">👆 Bấm trực tiếp vào vị trí đúng trên hình. Bấm lại để bỏ chọn, hoặc bấm sang vị trí khác để tự động đổi lựa chọn.</div>`;
+    <div class="match-region-tip"><i class="fa-regular fa-hand-point-up"></i> Bấm trực tiếp vào vị trí đúng trên hình. Bấm lại để bỏ chọn, hoặc bấm sang vị trí khác để tự động đổi lựa chọn.</div>`;
 
   // Ảnh nền dùng object-fit:contain thuần CSS (luôn hiện trọn ảnh, giữ
   // đúng tỉ lệ, không cắt/không cover, không phụ thuộc timing JS) — chỉ
@@ -2578,9 +2588,9 @@ function renderList(q, qi) {
   const answeredCount = Object.keys(current).length;
 
   body.innerHTML = `
-    ${q.hint ? `<div class="q-hint-line">💡 ${q.hint}</div>` : ''}
+    ${q.hint ? `<div class="q-hint-line"><i class="fa-solid fa-lightbulb"></i> ${q.hint}</div>` : ''}
     <div style="font-size:.82rem;font-weight:700;color:var(--muted);margin:.4rem 0 .75rem;">
-      📋 Trả lời từng dòng (${answeredCount}/${items.length} đã chọn)
+      <i class="fa-solid fa-list-check"></i> Trả lời từng dòng (${answeredCount}/${items.length} đã chọn)
     </div>
     <div class="list-q-rows">
       ${items.map((it, j) => `
@@ -2636,12 +2646,12 @@ function renderClassify(q, qi) {
   const answeredCount = items.filter(it => placed[it.text] !== undefined).length;
 
   body.innerHTML = `
-    ${q.hint ? `<div class="q-hint-line">💡 ${q.hint}</div>` : ''}
+    ${q.hint ? `<div class="q-hint-line"><i class="fa-solid fa-lightbulb"></i> ${q.hint}</div>` : ''}
     <div class="match-hint">
-      🖐️ Kéo-thả (hoặc bấm chọn rồi bấm vào nhóm) để phân loại
+      <i class="fa-solid fa-hand"></i> Kéo-thả (hoặc bấm chọn rồi bấm vào nhóm) để phân loại
       <span class="match-hint-count">${answeredCount}/${items.length} đã phân loại</span>
     </div>
-    <div class="drag-pool-title">📦 Các mục cần phân loại:</div>
+    <div class="drag-pool-title"><i class="fa-solid fa-box-archive"></i> Các mục cần phân loại:</div>
     <div class="drag-pool" id="classifyPool-${qi}">
       ${unplaced.length > 0
         ? unplaced.map(it => `
@@ -2652,11 +2662,11 @@ function renderClassify(q, qi) {
                         <img src="img/${it.image_file}" alt="${it.text}" loading="lazy" data-classify-image="1">
                         <span class="img-zoom-btn img-zoom-thumb" role="button" tabindex="0" title="Xem hình lớn" aria-label="Xem hình lớn"
                               onclick="event.stopPropagation();openImgZoom('img/${it.image_file}','${escapeAttr(it.text)}')"
-                              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openImgZoom('img/${it.image_file}','${escapeAttr(it.text)}')}">🔍</span>
+                              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openImgZoom('img/${it.image_file}','${escapeAttr(it.text)}')}"><i class="fa-solid fa-magnifying-glass"></i></span>
                       </span>`
-                   : `⠿ ${it.text}`}</div>`).join('')
+                   : `<i class="fa-solid fa-grip-vertical"></i> ${it.text}`}</div>`).join('')
         : answeredCount >= items.length
-          ? `<span class="pool-done">✅ Đã phân loại hết — nhấn ✕ trong nhóm để thay đổi</span>`
+          ? `<span class="pool-done"><i class="fa-solid fa-circle-check"></i> Đã phân loại hết — nhấn <i class="fa-solid fa-xmark"></i> trong nhóm để thay đổi</span>`
           : ''}
     </div>
     <div class="classify-zones${zones.some(z => z.image_file) ? ' classify-zones-img' : ''}">
@@ -2666,7 +2676,7 @@ function renderClassify(q, qi) {
               ? `<span class="classify-zone-img-wrap"><img src="img/${z.image_file}" alt="" loading="lazy" class="classify-zone-img" data-classify-image="1">
                    <span class="img-zoom-btn img-zoom-thumb" role="button" tabindex="0" title="Xem hình lớn" aria-label="Xem hình lớn"
                          onclick="event.stopPropagation();openImgZoom('img/${z.image_file}','')"
-                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openImgZoom('img/${z.image_file}','')}">🔍</span></span>`
+                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openImgZoom('img/${z.image_file}','')}"><i class="fa-solid fa-magnifying-glass"></i></span></span>`
               : z.label}</div>
           <div class="classify-zone-items">
             ${pool.filter(it => placed[it.text] === z.label).map(it => `
@@ -2675,11 +2685,11 @@ function renderClassify(q, qi) {
                        <img src="img/${it.image_file}" alt="${it.text}" loading="lazy" data-classify-image="1">
                        <span class="img-zoom-btn img-zoom-thumb" role="button" tabindex="0" title="Xem hình lớn" aria-label="Xem hình lớn"
                              onclick="event.stopPropagation();openImgZoom('img/${it.image_file}','${escapeAttr(it.text)}')"
-                             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openImgZoom('img/${it.image_file}','${escapeAttr(it.text)}')}">🔍</span>
+                             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openImgZoom('img/${it.image_file}','${escapeAttr(it.text)}')}"><i class="fa-solid fa-magnifying-glass"></i></span>
                      </span>`
                   : it.text}
                 <button type="button" class="slot-remove" data-qi="${qi}" data-text="${encodeURIComponent(it.text)}"
-                        onclick="event.stopPropagation();removeClassifyItem(this)">✕</button>
+                        onclick="event.stopPropagation();removeClassifyItem(this)"><i class="fa-solid fa-xmark"></i></button>
               </span>`).join('')}
           </div>
         </div>`).join('')}
@@ -2792,7 +2802,7 @@ function openImgZoom(src, alt) {
   overlay.id = 'imgZoomOverlay';
   overlay.onclick = (e) => { if (e.target === overlay) closeImgZoom(); };
   overlay.innerHTML = `
-    <button type="button" class="img-zoom-close" onclick="closeImgZoom()">✕</button>
+    <button type="button" class="img-zoom-close" onclick="closeImgZoom()"><i class="fa-solid fa-xmark"></i></button>
     <img src="${src}" alt="${alt || ''}">`;
   document.body.appendChild(overlay);
   document.addEventListener('keydown', _imgZoomEscHandler);
@@ -2823,7 +2833,7 @@ function renderOrdering(q, qi) {
   const order = State.ordering[qi];
 
   body.innerHTML = `
-    ${q.hint ? `<div class="q-hint-line">💡 ${q.hint}</div>` : ''}
+    ${q.hint ? `<div class="q-hint-line"><i class="fa-solid fa-lightbulb"></i> ${q.hint}</div>` : ''}
     <div class="ordering-list">
       ${order.map((text, j) => `
         <div class="ordering-row">
@@ -2881,8 +2891,8 @@ function _fillBlankSlotHtml(q, qi, i, filled, isDrag) {
            </select>`
         : (filled[i]
             ? `<span class="fillblank-slot-value">${filled[i]}</span>
-               <button type="button" class="slot-remove" data-qi="${qi}" data-bi="${i}" onclick="event.stopPropagation();removeFillBlank(this)">✕</button>`
-            : `<span class="fillblank-slot-placeholder">${isDrag ? '⬇ Thả đáp án vào đây' : '… chọn đáp án'}</span>`)}
+               <button type="button" class="slot-remove" data-qi="${qi}" data-bi="${i}" onclick="event.stopPropagation();removeFillBlank(this)"><i class="fa-solid fa-xmark"></i></button>`
+            : `<span class="fillblank-slot-placeholder">${isDrag ? '<i class="fa-solid fa-arrow-down"></i> Thả đáp án vào đây' : '… chọn đáp án'}</span>`)}
     </span>`;
 }
 
@@ -2929,11 +2939,11 @@ function renderFillBlank(q, qi) {
     fbLines.every(line => line.filter(t => t.type === 'blank').length === 1);
 
   const poolHtml = isDrag ? `
-    <div class="drag-pool-title">📦 Đáp án — kéo thả hoặc nhấn chip rồi nhấn vào chỗ trống:</div>
+    <div class="drag-pool-title"><i class="fa-solid fa-box-archive"></i> Đáp án — kéo thả hoặc nhấn chip rồi nhấn vào chỗ trống:</div>
     <div class="drag-pool" id="fillPool-${qi}">
       ${_fillPoolChips(q, qi).map(({ w, id }) => `
         <div class="drag-chip fill-chip" draggable="true" data-qi="${qi}" data-text="${encodeURIComponent(w)}"
-             id="${id}" onclick="onFillChipTap(this)">⠿ ${w}</div>`).join('')}
+             id="${id}" onclick="onFillChipTap(this)"><i class="fa-solid fa-grip-vertical"></i> ${w}</div>`).join('')}
     </div>` : '';
 
   const bodyHtml = isStatementList
@@ -2957,10 +2967,10 @@ function renderFillBlank(q, qi) {
         `${seg}${i < blanks.length ? _fillBlankSlotHtml(q, qi, i, filled, isDrag) : ''}`).join('')}</div>`;
 
   body.innerHTML = `
-    ${q.hint ? `<div class="q-hint-line">💡 ${q.hint}</div>` : ''}
+    ${q.hint ? `<div class="q-hint-line"><i class="fa-solid fa-lightbulb"></i> ${q.hint}</div>` : ''}
     <div class="tf-toolbar">
       <div id="fb-counter-${qi}" class="tf-counter">
-        ${isDrag ? '🧩' : '▾'} Đã điền: ${answeredCount}/${blanks.length}
+        ${isDrag ? '<i class="fa-solid fa-puzzle-piece"></i>' : '<i class="fa-solid fa-caret-down"></i>'} Đã điền: ${answeredCount}/${blanks.length}
       </div>
     </div>
     ${poolHtml}
@@ -3094,7 +3104,7 @@ function onSelectFillChange(el) {
   const counterLine = document.getElementById(`fb-counter-${qi}`);
   if (counterLine) {
     const answeredCount = Object.keys(State.fillblank[qi] || {}).length;
-    counterLine.textContent = `${q.type === 'dragfill' ? '🧩' : '▾'} Đã điền: ${answeredCount}/${(q.blanks||[]).length}`;
+    counterLine.innerHTML = `${q.type === 'dragfill' ? '<i class="fa-solid fa-puzzle-piece"></i>' : '<i class="fa-solid fa-caret-down"></i>'} Đã điền: ${answeredCount}/${(q.blanks||[]).length}`;
   }
 }
 
@@ -3120,7 +3130,7 @@ function confirmSubmit() {
 
   if (unansweredIdx.length > 0) {
     showNotification(
-      `⚠️ Bạn còn ${unansweredIdx.length} câu chưa làm đủ. Vui lòng hoàn thành tất cả câu hỏi trước khi nộp bài.`,
+      `Bạn còn ${unansweredIdx.length} câu chưa làm đủ. Vui lòng hoàn thành tất cả câu hỏi trước khi nộp bài.`,
       'warning'
     );
     jumpTo(unansweredIdx[0]);
@@ -3132,7 +3142,7 @@ function confirmSubmit() {
 
 function autoSubmit() {
   State.session.timedOut = true;
-  alert('⏰ Hết giờ! Bài thi được nộp tự động.');
+  alert('Hết giờ! Bài thi được nộp tự động.');
   submitExam();
 }
 
@@ -3503,8 +3513,10 @@ function showResult(result, integrity) {
   document.getElementById('rIncorrect').textContent  = incorrect;
   document.getElementById('rSkipped').textContent    = skipped;
 
-  document.getElementById('resultEmoji').textContent =
-    pct >= 90 ? '🏆' : pct >= 70 ? '🎉' : pct >= 50 ? '👍' : '📚';
+  // innerHTML (không phải textContent) để icon Font Awesome render được —
+  // 4 nhánh đều là chuỗi TĨNH tự viết, an toàn.
+  document.getElementById('resultEmoji').innerHTML =
+    pct >= 90 ? '<i class="fa-solid fa-trophy"></i>' : pct >= 70 ? '<i class="fa-solid fa-face-laugh-beam"></i>' : pct >= 50 ? '<i class="fa-solid fa-thumbs-up"></i>' : '<i class="fa-solid fa-book"></i>';
 
   document.getElementById('resultLabel').textContent =
     (pct >= 90 ? 'Xuất sắc! Bạn đã làm rất tốt!' :
@@ -3515,14 +3527,14 @@ function showResult(result, integrity) {
 
   const badge = document.getElementById('integrityBadge');
   if (integrity.valid) {
-    badge.textContent = '🛡️ Bài làm hợp lệ';
+    badge.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Bài làm hợp lệ';
     Object.assign(badge.style, {
       color: 'var(--accent5)',
       background: 'rgba(6,214,160,.08)',
       borderColor: 'rgba(6,214,160,.3)',
     });
   } else {
-    badge.innerHTML = `⚠️ Cảnh báo: ${integrity.flags.map(f =>
+    badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Cảnh báo: ${integrity.flags.map(f =>
       `<span style="display:block">${f}</span>`).join('')}`;
     Object.assign(badge.style, {
       color: 'var(--accent4)',
@@ -3542,7 +3554,7 @@ function showResult(result, integrity) {
     document.getElementById('reviewList').innerHTML = details.map(d => `
       <div class="review-item ${d.status}">
         <span class="ri-num">${d.num}</span>
-        <span class="ri-icon">${d.status === 'correct' ? '✓' : d.status === 'incorrect' ? '✗' : '–'}</span>
+        <span class="ri-icon">${d.status === 'correct' ? '<i class="fa-solid fa-check"></i>' : d.status === 'incorrect' ? '<i class="fa-solid fa-xmark"></i>' : '–'}</span>
         <span class="ri-text">${d.text}</span>
       </div>`).join('');
   }
@@ -3573,7 +3585,7 @@ function renderRecords() {
   try { records = JSON.parse(localStorage.getItem('eduquiz_records') || '[]'); } catch {}
 
   if (!records.length) {
-    el.innerHTML = '<div class="no-records">📭 Chưa có bài làm nào được lưu.</div>';
+    el.innerHTML = '<div class="no-records"><i class="fa-solid fa-inbox"></i> Chưa có bài làm nào được lưu.</div>';
     return;
   }
 
@@ -3596,7 +3608,7 @@ function renderRecords() {
             <td style="font-size:.8rem">${r.studentSchool || '–'}</td>
             <td style="font-size:.8rem">${r.minitest}<br>
                 <span style="color:var(--muted)">${r.level}</span></td>
-            <td style="font-size:.8rem">${r.examMode === 'practice' ? '🕊️ Ôn luyện' : '⏱️ Kiểm tra'}</td>
+            <td style="font-size:.8rem">${r.examMode === 'practice' ? '<i class="fa-solid fa-dove"></i> Ôn luyện' : '<i class="fa-solid fa-stopwatch"></i> Kiểm tra'}</td>
             <td class="${r.score >= 70 ? 'pass' : 'fail'}">${r.score}%</td>
             <td>${r.correct}/${r.total}</td>
             <td style="font-family:'Space Mono',monospace;font-size:.8rem">${fmtTime(r.elapsedSec)}</td>
@@ -3604,7 +3616,7 @@ function renderRecords() {
             <td>${r.clicks ?? '–'}</td>
             <td style="font-size:.72rem;white-space:nowrap">${_acFmtViolationBadges(r)}</td>
             <td class="${r.integrityOk ? 'pass' : 'warn'}">
-              ${r.integrityOk ? '✓ Hợp lệ' : '⚠ ' + (r.flags?.[0] || 'Nghi vấn')}
+              ${r.integrityOk ? '<i class="fa-solid fa-circle-check"></i> Hợp lệ' : '<i class="fa-solid fa-triangle-exclamation"></i> ' + (r.flags?.[0] || 'Nghi vấn')}
             </td>
             <td style="font-size:.75rem;color:var(--muted)">${r.date}</td>
           </tr>`).join('')}
@@ -3617,12 +3629,12 @@ function renderRecords() {
  * bài "Ôn luyện", vốn không bật các bộ đếm này). */
 function _acFmtViolationBadges(r) {
   const parts = [];
-  if (r.multiTabHits)    parts.push(`🗔×${r.multiTabHits}`);
-  if (r.fullscreenExits) parts.push(`🖥️×${r.fullscreenExits}`);
-  if (r.appSwitches)     parts.push(`🔀×${r.appSwitches}`);
-  if (r.devtoolsHits)    parts.push(`🛠️×${r.devtoolsHits}`);
-  if (r.shortcutBlocks)  parts.push(`⌨️×${r.shortcutBlocks}`);
-  if (r.printAttempts)   parts.push(`🖨️×${r.printAttempts}`);
+  if (r.multiTabHits)    parts.push(`<i class="fa-solid fa-clone"></i>×${r.multiTabHits}`);
+  if (r.fullscreenExits) parts.push(`<i class="fa-solid fa-desktop"></i>×${r.fullscreenExits}`);
+  if (r.appSwitches)     parts.push(`<i class="fa-solid fa-shuffle"></i>×${r.appSwitches}`);
+  if (r.devtoolsHits)    parts.push(`<i class="fa-solid fa-screwdriver-wrench"></i>×${r.devtoolsHits}`);
+  if (r.shortcutBlocks)  parts.push(`<i class="fa-solid fa-keyboard"></i>×${r.shortcutBlocks}`);
+  if (r.printAttempts)   parts.push(`<i class="fa-solid fa-print"></i>×${r.printAttempts}`);
   return parts.length ? parts.join(' ') : '–';
 }
 
@@ -3853,8 +3865,18 @@ function showNotification(message, type = 'info') {
     "font-family:'Baloo 2',sans-serif;font-size:14px;font-weight:700;" +
     'max-width:360px;box-shadow:0 4px 20px rgba(0,0,0,.5);pointer-events:auto;' +
     'cursor:pointer;opacity:0;transform:translateX(40px);' +
-    'transition:opacity .3s ease,transform .3s ease;line-height:1.5;';
-  toast.textContent = message;
+    'transition:opacity .3s ease,transform .3s ease;line-height:1.5;' +
+    'display:flex;align-items:flex-start;gap:8px;';
+  // Icon Font Awesome THEO TYPE (thay vì mỗi lời gọi tự nhét 1 emoji khác
+  // nhau vào đầu message như trước — vừa đồng bộ hơn, vừa tránh phải
+  // escape HTML thủ công cho "message" (dùng textNode thay innerHTML nên
+  // an toàn ngay cả khi message có ký tự đặc biệt). */
+  const icons = { success: 'fa-circle-check', error: 'fa-circle-xmark', warning: 'fa-triangle-exclamation', info: 'fa-circle-info' };
+  const icon = document.createElement('i');
+  icon.className = 'fa-solid ' + (icons[type] || icons.info);
+  icon.style.cssText = 'flex-shrink:0;margin-top:2px;';
+  toast.appendChild(icon);
+  toast.appendChild(document.createTextNode(message));
   toast.onclick = () => {
     toast.style.opacity = '0'; toast.style.transform = 'translateX(40px)';
     setTimeout(() => toast.remove(), 300);

@@ -143,8 +143,10 @@ function getAttemptCount(setId) {
 }
 
 function renderCards() {
-  const grid = document.getElementById('cardsGrid');
+  const track = document.getElementById('carouselTrack');
+  const dotsWrap = document.getElementById('carouselDots');
   const countLabel = document.getElementById('cardsCount');
+  if (!track) return;
   let sets = allSets;
 
   // Filter by type
@@ -158,36 +160,165 @@ function renderCards() {
 
   if (countLabel) countLabel.textContent = `${sets.length} bộ đề`;
 
+  if (carouselObserver) { carouselObserver.disconnect(); carouselObserver = null; }
+
   if (sets.length === 0) {
-    grid.innerHTML = `<div class="no-results"><span class="emoji">🔍</span><p>Không tìm thấy bộ đề nào phù hợp.</p></div>`;
+    track.innerHTML = `<div class="no-results"><span class="emoji"><i class="fa-solid fa-magnifying-glass"></i></span><p>Không tìm thấy bộ đề nào phù hợp.</p></div>`;
+    if (dotsWrap) dotsWrap.innerHTML = '';
+    updateCarouselArrows(null, null);
     return;
   }
 
-  grid.innerHTML = sets.map(set => `
-    <div class="quiz-card" data-id="${set.id}" data-type="${set.type}">
-      <div class="card-cover" style="background:${set.coverGradient};">
-        <div class="cover-pattern"></div>
-        <div class="cover-icon-wrap" style="color:${set.iconColor || '#5B8DEF'};">${renderDeckIcon(set)}</div>
-      </div>
-      <div class="card-body">
-        <div class="card-header">
-          <div class="card-title">${set.title}</div>
-          <span class="badge ${set.type === 'elementary' ? 'badge-elementary' : 'badge-middle'}">
-            ${set.type === 'elementary' ? '🌱 Tiểu học' : '🎒 THCS'}
-          </span>
+  // Mỗi thẻ gốc (.quiz-card, GIỮ NGUYÊN markup/hành vi cũ) giờ bọc thêm 1
+  // lớp .carousel-item — lớp này chịu trách nhiệm phóng to/thu nhỏ theo vị
+  // trí trong dải trượt (xem initCarouselObserver()), tách biệt với hiệu
+  // ứng hover translateY sẵn có trên .quiz-card để 2 transform không đụng nhau.
+  track.innerHTML = sets.map(set => `
+    <div class="carousel-item" data-id="${set.id}">
+      <div class="quiz-card" data-id="${set.id}" data-type="${set.type}">
+        <div class="card-cover" style="background:${set.coverGradient};">
+          <div class="cover-pattern"></div>
+          <div class="cover-icon-wrap" style="color:${set.iconColor || '#5B8DEF'};">${renderDeckIcon(set)}</div>
         </div>
-        <div class="card-stats">
-          <div class="stat-item"><span>📝</span><span>${set.questions} câu hỏi</span></div>
-          <div class="stat-item"><span>👥</span><span>${getAttemptCount(set.id)} lượt</span></div>
-        </div>
-        <div class="card-actions">
-          <button class="btn-play" onclick="openStartModal('${set.id}', event)">🚀 Bắt đầu làm bài</button>
-          <button class="btn-manage" onclick="openManageModal('${set.id}', event)" title="Quản lý bộ đề">⚙️</button>
+        <div class="card-body">
+          <div class="card-header">
+            <div class="card-title">${set.title}</div>
+            <span class="badge ${set.type === 'elementary' ? 'badge-elementary' : 'badge-middle'}">
+              ${set.type === 'elementary' ? '<i class="fa-solid fa-seedling"></i> Tiểu học' : '<i class="fa-solid fa-graduation-cap"></i> THCS'}
+            </span>
+          </div>
+          <div class="card-stats">
+            <div class="stat-item"><span><i class="fa-solid fa-file-lines"></i></span><span>${set.questions} câu hỏi</span></div>
+            <div class="stat-item"><span><i class="fa-solid fa-users"></i></span><span>${getAttemptCount(set.id)} lượt</span></div>
+          </div>
+          <div class="card-actions">
+            <button class="btn-play" onclick="openStartModal('${set.id}', event)"><i class="fa-solid fa-rocket"></i> Bắt đầu làm bài</button>
+            <button class="btn-manage" onclick="openManageModal('${set.id}', event)" title="Quản lý bộ đề"><i class="fa-solid fa-gear"></i></button>
+          </div>
         </div>
       </div>
     </div>
   `).join('');
+
+  if (dotsWrap) {
+    dotsWrap.innerHTML = sets.map((set, i) => `<button type="button" class="carousel-dot" data-index="${i}" aria-label="Đi tới ${set.title}" onclick="carouselGoTo(${i})"></button>`).join('');
+  }
+
+  updateCarouselEdgePadding();
+  track.scrollLeft = 0; // về đầu dải mỗi lần đổi bộ lọc/tìm kiếm, tránh "lạc" giữa danh sách mới
+  initCarouselObserver();
 }
+
+/** Đặt padding-left/right CỦA #carouselTrack để thẻ ĐẦU/CUỐI khi cuộn tới
+ * cũng canh được gần giữa khung nhìn giống mọi thẻ khác, không bị dồn sát
+ * mép. Đo bằng JS (px thật sau khi layout xong) thay vì calc(%) trong CSS
+ * — xem chú thích trong css/dashboard.css lý do %-padding trên 1 flex item
+ * bị lỗi phình khung.
+ * CHẶN TRẦN padding ở 60% bề rộng thẻ (thay vì đúng công thức "canh giữa
+ * tuyệt đối" = (khung nhìn − thẻ)/2) — trên màn hình RỘNG, khung nhìn lớn
+ * hơn thẻ (cỡ tối đa 340px) rất nhiều, canh giữa tuyệt đối tạo ra khoảng
+ * trống 2 bên khổng lồ (phản hồi người dùng: "chỗ bị trống") trong khi lẽ
+ * ra màn rộng phải thấy được NHIỀU thẻ liền kề hơn. Có trần, thẻ đầu/cuối
+ * chỉ lệch nhẹ khỏi tâm (không còn tuyệt đối giữa) nhưng đổi lại lộ thêm
+ * hàng xóm — đúng cảm giác carousel "phủ kín" thay vì carousel "1 thẻ giữa
+ * biển trống". */
+function updateCarouselEdgePadding() {
+  const track = document.getElementById('carouselTrack');
+  const firstItem = track && track.querySelector('.carousel-item');
+  if (!track || !firstItem) return;
+  const itemWidth = firstItem.getBoundingClientRect().width;
+  const idealPad = (track.clientWidth - itemWidth) / 2;
+  const pad = Math.max(16, Math.min(idealPad, itemWidth * 0.6));
+  track.style.paddingLeft = pad + 'px';
+  track.style.paddingRight = pad + 'px';
+}
+
+/* ========================================
+   CAROUSEL "BỘ ĐỀ CỦA TÔI" — điều hướng mũi tên/chấm + tự nhận diện
+   thẻ đang nằm GIỮA khung nhìn để phóng to (đổi .is-active, xem
+   css/dashboard.css mục "CAROUSEL"). Dùng IntersectionObserver với
+   rootMargin thu hẹp còn 1 dải MỎNG ở giữa khung nhìn — thẻ nào chạm dải
+   đó (chỉ 1 thẻ tại 1 thời điểm, nhờ scroll-snap canh giữa) coi là đang
+   "active", không cần tự tính toán khoảng cách bằng tay trên mỗi sự kiện
+   scroll (đỡ tốn CPU hơn hẳn so với lắng nghe 'scroll' trực tiếp).
+   ======================================== */
+let carouselObserver = null;
+
+function carouselItems() {
+  const track = document.getElementById('carouselTrack');
+  return track ? Array.from(track.querySelectorAll('.carousel-item')) : [];
+}
+
+function initCarouselObserver() {
+  const track = document.getElementById('carouselTrack');
+  const items = carouselItems();
+  if (!track || !items.length) return;
+
+  const shrink = Math.max(0, track.getBoundingClientRect().width * 0.36);
+  carouselObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      const idx = items.indexOf(entry.target);
+      if (idx === -1) return;
+      items.forEach((el) => el.classList.remove('is-active'));
+      entry.target.classList.add('is-active');
+      document.querySelectorAll('#carouselDots .carousel-dot').forEach((d, i) => {
+        d.classList.toggle('is-active', i === idx);
+      });
+      updateCarouselArrows(idx, items.length);
+    });
+  }, { root: track, rootMargin: `0px -${shrink}px 0px -${shrink}px`, threshold: 0.6 });
+
+  items.forEach((item) => carouselObserver.observe(item));
+
+  // Đánh dấu thẻ đầu tiên "active" ngay lập tức — observer có thể mất 1
+  // nhịp mới bắn callback đầu tiên, tránh khoảnh khắc chưa thẻ nào nổi bật.
+  items[0].classList.add('is-active');
+  const firstDot = document.querySelector('#carouselDots .carousel-dot');
+  if (firstDot) firstDot.classList.add('is-active');
+  updateCarouselArrows(0, items.length);
+}
+
+function updateCarouselArrows(activeIdx, total) {
+  const prevBtn = document.getElementById('carouselPrevBtn');
+  const nextBtn = document.getElementById('carouselNextBtn');
+  if (!prevBtn || !nextBtn) return;
+  if (activeIdx == null || total == null) {
+    prevBtn.disabled = true;
+    nextBtn.disabled = true;
+    return;
+  }
+  prevBtn.disabled = activeIdx <= 0;
+  nextBtn.disabled = activeIdx >= total - 1;
+}
+
+function carouselGoTo(index) {
+  const items = carouselItems();
+  const item = items[index];
+  if (item) item.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+}
+
+function carouselStep(dir) {
+  const items = carouselItems();
+  if (!items.length) return;
+  const activeIdx = items.findIndex((el) => el.classList.contains('is-active'));
+  const from = activeIdx === -1 ? 0 : activeIdx;
+  carouselGoTo(Math.min(items.length - 1, Math.max(0, from + dir)));
+}
+
+// Bề rộng dải giữa (rootMargin) tính theo px tại thời điểm render — đổi cỡ
+// cửa sổ (xoay ngang điện thoại, thu nhỏ trình duyệt...) thì tính lại cho
+// đúng, không thì thẻ có thể bị "kẹt" không phóng to dù đã cuộn tới giữa.
+let carouselResizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(carouselResizeTimer);
+  carouselResizeTimer = setTimeout(() => {
+    if (document.getElementById('carouselTrack') && carouselItems().length) {
+      updateCarouselEdgePadding();
+      initCarouselObserver();
+    }
+  }, 200);
+});
 
 /* ========================================
    FILTERS & SEARCH
@@ -214,9 +345,12 @@ function filterCards() {
 let shelfViewActive = false;
 
 function toggleShelfView() {
+  const section = document.getElementById('section-my-sets');
+  const toolbar = section ? section.querySelector('.toolbar') : null;
   const grid = document.getElementById('cardsGrid');
+  const dots = document.getElementById('carouselDots');
+  const promo = document.getElementById('shelfPromoCard');
   const shelf = document.getElementById('shelfEmbed');
-  const btn = document.getElementById('toggleShelfViewBtn');
   const frame = document.getElementById('shelfFrame');
   if (!grid || !shelf) return;
 
@@ -226,15 +360,58 @@ function toggleShelfView() {
     if (frame && frame.dataset.src && frame.getAttribute('src') === 'about:blank') {
       frame.setAttribute('src', frame.dataset.src);
     }
-    grid.hidden = true;
+    // .hidden KHÔNG dùng được cho toolbar/grid/dots/promo — mỗi phần tử
+    // này đều có sẵn 1 rule CSS đặt thẳng "display" (vd .carousel-wrap
+    // {display:flex}) trong stylesheet CỦA TRANG (author), mà theo thứ tự
+    // ưu tiên cascade, CSS của trang LUÔN thắng CSS mặc định trình duyệt
+    // "[hidden]{display:none}" BẤT KỂ độ đặc hiệu (specificity) — nên gán
+    // .hidden=true chỉ đổi ĐÚNG thuộc tính HTML, không hề ẩn đi trên màn
+    // hình thật (lỗi đã gặp: 3 khối này vẫn hiện đè lên trên kệ sách 3D,
+    // đẩy kệ sách xuống phải cuộn mới thấy). Đặt thẳng style.display để
+    // CSS inline (ưu tiên cao nhất, thắng mọi rule trong stylesheet) mới
+    // chắc chắn ẩn được.
+    if (toolbar) toolbar.style.display = 'none';
+    grid.style.display = 'none';
+    if (dots) dots.style.display = 'none';
+    if (promo) promo.style.display = 'none';
     shelf.hidden = false;
-    btn && btn.classList.add('active');
+    // "Kệ sách 3D" giờ CHIẾM GẦN TRỌN chiều cao còn lại của màn hình (ẩn
+    // bớt toolbar/carousel phía trên để có chỗ) thay vì 1 khung nhúng cỡ
+    // cố định nằm DƯỚI carousel — trước đây phải cuộn xuống mới thấy hết,
+    // giờ hiện ngay không cần cuộn (xem applyShelfFullscreenSize()).
+    if (section) section.classList.add('section-shelf-fullscreen');
+    applyShelfFullscreenSize();
   } else {
     shelf.hidden = true;
-    grid.hidden = false;
-    btn && btn.classList.remove('active');
+    if (toolbar) toolbar.style.display = '';
+    grid.style.display = '';
+    if (dots) dots.style.display = '';
+    if (promo) promo.style.display = '';
+    if (section) {
+      section.classList.remove('section-shelf-fullscreen');
+      section.style.height = '';
+    }
   }
 }
+
+/** Đo chiều cao THẬT còn lại từ đỉnh #section-my-sets tới đáy viewport
+ * (đã trừ topbar/padding phía trên qua getBoundingClientRect(), không
+ * cần đoán cứng số px của từng phần tử phía trên) rồi gán làm chiều cao
+ * của section — .shelf-embed/.shelf-embed-frame bên trong đã đặt flex:1
+ * (xem css/dashboard.css) nên tự giãn lấp đầy hết chỗ này. */
+function applyShelfFullscreenSize() {
+  const section = document.getElementById('section-my-sets');
+  if (!section || !section.classList.contains('section-shelf-fullscreen')) return;
+  const top = section.getBoundingClientRect().top;
+  const available = Math.max(360, window.innerHeight - top - 20);
+  section.style.height = available + 'px';
+}
+
+let shelfResizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(shelfResizeTimer);
+  shelfResizeTimer = setTimeout(applyShelfFullscreenSize, 200);
+});
 
 /* ========================================
    SESSION & QUIZ START (Anti-cheat)
@@ -247,10 +424,10 @@ function openStartModal(id, event) {
   const set = allSets.find(s => s.id === id);
   if (!set) return;
 
-  document.getElementById('modal-title').innerHTML = `🚀 Bắt đầu – ${set.title}`;
+  document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-rocket"></i> Bắt đầu – ${set.title}`;
   document.getElementById('modal-footer').innerHTML = `
     <button class="btn-cancel" onclick="closeModal()">Huỷ bỏ</button>
-    <button class="btn-save" onclick="confirmStartQuiz('${id}')">🚀 Mở bài làm</button>
+    <button class="btn-save" onclick="confirmStartQuiz('${id}')"><i class="fa-solid fa-rocket"></i> Mở bài làm</button>
   `;
   document.getElementById('modal-body').innerHTML = `
     <div class="form-group">
@@ -259,7 +436,7 @@ function openStartModal(id, event) {
     </div>
     <p style="font-size:12px;color:var(--text-muted);margin-top:-4px;">
       Bài làm sẽ mở ở đường link ngoài của bộ đề này. Đây chỉ là ghi nhận cục bộ trên máy này để theo dõi
-      ai đã bắt đầu — điểm số cần nhập tay ở mục "⚙️ Quản lý" sau khi học sinh làm xong.
+      ai đã bắt đầu — điểm số cần nhập tay ở mục "<i class="fa-solid fa-gear"></i> Quản lý" sau khi học sinh làm xong.
     </p>
   `;
   openModalEl();
@@ -285,7 +462,7 @@ function confirmStartQuiz(id) {
 
   saveSession(session);
   closeModal();
-  showToast(`📌 Ghi nhận: ${session.studentName} – ${set.title}`);
+  showToast(`Ghi nhận: ${session.studentName} – ${set.title}`, 'fa-thumbtack');
   renderCards();
 
   window.open(set.link, '_blank', 'noopener,noreferrer');
@@ -333,7 +510,7 @@ async function updateReportTab() {
   const body = document.getElementById('reportBody');
 
   if (!window.EduFirebase || !window.EduFirebase.db) {
-    body.innerHTML = `<tr><td colspan="6" class="table-empty-cell">⚠️ Chưa kết nối được Firestore.</td></tr>`;
+    body.innerHTML = `<tr><td colspan="6" class="table-empty-cell"><i class="fa-solid fa-triangle-exclamation"></i> Chưa kết nối được Firestore.</td></tr>`;
     return;
   }
 
@@ -361,7 +538,7 @@ async function updateReportTab() {
       });
     } catch (err) {
       console.error('[EduQuiz] Lỗi tải báo cáo Firestore:', err);
-      body.innerHTML = `<tr><td colspan="6" class="table-empty-cell">❌ Không tải được dữ liệu: ${err.message}</td></tr>`;
+      body.innerHTML = `<tr><td colspan="6" class="table-empty-cell"><i class="fa-solid fa-circle-xmark"></i> Không tải được dữ liệu: ${err.message}</td></tr>`;
       return;
     }
   }
@@ -460,8 +637,8 @@ function renderReportTable(rows) {
           <span class="score-label">${r.score}%</span>
         </div>
       </td>
-      <td class="${ok ? 'status-done' : 'status-progress'}">${ok ? '✅ Hợp lệ' : '⚠️ Nghi vấn'}</td>
-      <td><button type="button" class="row-delete-btn" data-id="${escHtml(r.id)}" title="Xoá lượt này">🗑️</button></td>
+      <td class="${ok ? 'status-done' : 'status-progress'}">${ok ? '<i class="fa-solid fa-circle-check"></i> Hợp lệ' : '<i class="fa-solid fa-triangle-exclamation"></i> Nghi vấn'}</td>
+      <td><button type="button" class="row-delete-btn" data-id="${escHtml(r.id)}" title="Xoá lượt này"><i class="fa-solid fa-trash"></i></button></td>
     </tr>`;
   }).join('');
 
@@ -524,7 +701,11 @@ async function deleteReportRows(ids) {
     applyReportFiltersAndRender();
   } catch (err) {
     console.error('[EduQuiz] Lỗi xoá lượt làm bài:', err);
-    alert('❌ Xoá thất bại: ' + err.message + '\n(Cần quyền Admin/Điều phối đào tạo — kiểm tra lại tài khoản đăng nhập.)');
+    // alert() là hộp thoại NATIVE của trình duyệt — chỉ hiện được văn bản
+    // thuần, không render nổi thẻ <i> Font Awesome (khác các thông báo
+    // khác trong file này dùng innerHTML/toast tự vẽ), nên bỏ hẳn icon ở
+    // đây thay vì để lọt icon "vỡ" dạng chữ.
+    alert('Xoá thất bại: ' + err.message + '\n(Cần quyền Admin/Điều phối đào tạo — kiểm tra lại tài khoản đăng nhập.)');
   }
 }
 
@@ -539,8 +720,8 @@ function showChartLibUnavailable(canvasId) {
     msg = document.createElement('div');
     msg.className = 'chart-lib-error chart-empty';
     msg.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;height:100%;min-height:180px;text-align:center;color:var(--text-muted);font-size:13px;padding:16px;';
-    msg.innerHTML = '⚠️ Không tải được thư viện biểu đồ (Chart.js).<br>Có thể do trình chặn theo dõi (Tracking Prevention), adblock, hoặc mất mạng.' +
-      '<button type="button" class="btn-retry-chart" style="margin-top:6px;padding:6px 14px;border-radius:8px;border:1px solid var(--border,#ddd);background:#fff;cursor:pointer;">🔄 Thử lại</button>';
+    msg.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Không tải được thư viện biểu đồ (Chart.js).<br>Có thể do trình chặn theo dõi (Tracking Prevention), adblock, hoặc mất mạng.' +
+      '<button type="button" class="btn-retry-chart" style="margin-top:6px;padding:6px 14px;border-radius:8px;border:1px solid var(--border,#ddd);background:#fff;cursor:pointer;"><i class="fa-solid fa-arrow-rotate-right"></i> Thử lại</button>';
     canvas.parentElement.appendChild(msg);
     msg.querySelector('.btn-retry-chart').addEventListener('click', () => {
       msg.innerHTML = 'Đang thử tải lại…';
@@ -693,16 +874,20 @@ function openManageModal(id, event) {
   if (!set) return;
 
   const sessions = getSessions().filter(s => s.setId === id);
-  document.getElementById('modal-title').innerHTML = `⚙️ Quản lý – ${set.title}`;
+  document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-gear"></i> Quản lý – ${set.title}`;
   document.getElementById('modal-footer').innerHTML = `<button class="btn-cancel" onclick="closeModal()">Đóng</button>`;
 
   const items = sessions.length === 0
     ? `<div style="text-align:center;color:var(--text-muted);padding:24px 0;">Chưa có học sinh nào làm bài này.</div>`
     : sessions.map((s, i) => {
-        const emojis = ['😊','🎯','🌟','🦊','🐼','🦋','🚀','🎲'];
+        // Icon avatar XOAY VÒNG cho mỗi học sinh (chỉ để phân biệt trực quan
+        // giữa các hàng, không mang nghĩa gì) — đổi từ emoji (😊🦊🐼...) sang
+        // Font Awesome cho đồng bộ giao diện, tránh cảm giác "vườn thú emoji"
+        // thường thấy ở web tự sinh bằng AI.
+        const icons = ['fa-face-smile','fa-star','fa-bolt','fa-heart','fa-gem','fa-fire','fa-crown','fa-certificate'];
         const colors = ['#f59e0b','#10b981','#6366f1','#ef4444','#ec4899','#14b8a6','#f97316','#8b5cf6'];
         return `<div class="progress-item">
-          <div class="progress-avatar" style="background:${colors[i%colors.length]}22">${emojis[i%emojis.length]}</div>
+          <div class="progress-avatar" style="background:${colors[i%colors.length]}22;color:${colors[i%colors.length]}"><i class="fa-solid ${icons[i%icons.length]}"></i></div>
           <div class="progress-info">
             <div class="progress-name">${s.studentName}</div>
             <div class="progress-meta">${s.startTime}</div>
@@ -711,7 +896,7 @@ function openManageModal(id, event) {
             ? `<div class="progress-score" style="color:#6366f1">${s.score}%</div>`
             : `<form class="progress-score-form" onsubmit="event.preventDefault();recordScore('${s.id}', this.querySelector('input').value)">
                  <input type="number" min="0" max="100" placeholder="%" required>
-                 <button type="submit" title="Lưu điểm học sinh này">✔ Lưu</button>
+                 <button type="submit" title="Lưu điểm học sinh này"><i class="fa-solid fa-check"></i> Lưu</button>
                </form>`}
         </div>`;
       }).join('');
@@ -742,10 +927,10 @@ function openManageModal(id, event) {
    CREATE MODAL
    ======================================== */
 function openModal(type) {
-  document.getElementById('modal-title').innerHTML = '➕ Tạo bộ đề mới';
+  document.getElementById('modal-title').innerHTML = '<i class="fa-solid fa-plus"></i> Tạo bộ đề mới';
   document.getElementById('modal-footer').innerHTML = `
     <button class="btn-cancel" onclick="closeModal()">Huỷ bỏ</button>
-    <button class="btn-save" onclick="saveNewSet()">💾 Lưu bộ đề</button>
+    <button class="btn-save" onclick="saveNewSet()"><i class="fa-solid fa-floppy-disk"></i> Lưu bộ đề</button>
   `;
   document.getElementById('modal-body').innerHTML = `
     <div class="form-group">
@@ -755,8 +940,10 @@ function openModal(type) {
     <div class="form-group">
       <label>Cấp học *</label>
       <select id="newSetType">
-        <option value="elementary">🌱 Tiểu học</option>
-        <option value="middle">🎒 THCS</option>
+        <!-- <option> chỉ render được TEXT THUẦN (thẻ <i> Font Awesome bị hiện
+             thành chữ nếu nhét vào đây) — bỏ hẳn emoji thay vì để lọt icon "vỡ". -->
+        <option value="elementary">Tiểu học</option>
+        <option value="middle">THCS</option>
       </select>
     </div>
     <div class="form-group">
@@ -825,14 +1012,20 @@ function saveNewSet() {
   allSets = loadSets();
   renderCards();
   closeModal();
-  showToast('✅ Đã tạo bộ đề: ' + name);
+  showToast('Đã tạo bộ đề: ' + name, 'fa-circle-check');
 }
 
 /* ========================================
    TOAST NOTIFICATION
    ======================================== */
-function showToast(msg) {
+/** iconClass: tên icon Font Awesome (vd "fa-circle-check") — "toast-text"
+ * vẫn dùng textContent (KHÔNG innerHTML) vì msg có thể chứa tên bộ đề/học
+ * sinh do người dùng tự gõ, an toàn hơn là escape tay mỗi lần gọi; icon
+ * vì vậy phải là 1 <i> RIÊNG (không nhét vào chuỗi msg) mới hiện được. */
+function showToast(msg, iconClass) {
   const toast = document.getElementById('session-toast');
+  const iconEl = toast.querySelector('.toast-icon i');
+  if (iconEl) iconEl.className = 'fa-solid ' + (iconClass || 'fa-rocket');
   document.getElementById('toast-text').textContent = msg;
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 3500);
@@ -841,10 +1034,13 @@ function showToast(msg) {
 /* ========================================
    NAVIGATION
    ======================================== */
+// 3 giá trị TĨNH, tự viết (không nội suy dữ liệu người dùng) nên an toàn
+// gán qua innerHTML — cần innerHTML (thay vì textContent như code cũ) để
+// thẻ <i> Font Awesome bên trong thật sự RENDER thành icon.
 const SECTION_TITLES = {
-  'my-sets': '📚 Bộ đề của tôi',
-  'reports': '📊 Báo cáo kết quả',
-  'settings': '⚙️ Cài đặt hệ thống'
+  'my-sets': '<i class="fa-solid fa-book-open"></i> Bộ đề của tôi',
+  'reports': '<i class="fa-solid fa-chart-column"></i> Báo cáo kết quả',
+  'settings': '<i class="fa-solid fa-gear"></i> Cài đặt hệ thống'
 };
 
 document.querySelectorAll('.nav-item').forEach(item => {
@@ -856,7 +1052,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
 
     item.classList.add('active');
     document.getElementById('section-' + section).classList.add('active');
-    document.getElementById('topbar-title').textContent = SECTION_TITLES[section];
+    document.getElementById('topbar-title').innerHTML = SECTION_TITLES[section];
 
     if (section === 'reports') updateReportTab();
 
@@ -927,7 +1123,7 @@ function exportReport() {
   const a = document.createElement('a');
   a.href = url; a.download = 'IC3_BaoCao_' + new Date().toLocaleDateString('vi-VN').replace(/\//g,'_') + '.csv';
   a.click();
-  showToast('📥 Đã xuất báo cáo CSV!');
+  showToast('Đã xuất báo cáo CSV!', 'fa-download');
 }
 
 function clearAllData() {
@@ -937,7 +1133,7 @@ function clearAllData() {
   allSets = loadSets();
   renderCards();
   updateReportTab();
-  showToast('🗑️ Đã xoá toàn bộ dữ liệu!');
+  showToast('Đã xoá toàn bộ dữ liệu!', 'fa-trash');
 }
 
 /* ========================================

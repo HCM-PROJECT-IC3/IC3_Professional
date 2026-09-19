@@ -68,7 +68,7 @@ async function saveToGoogleSheet(data) {
   // ── Kiểm tra URL đã được cấu hình chưa ──────────────────
   if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('PASTE_YOUR')) {
     console.error('❌ [GoogleSheet] Chưa cấu hình APPS_SCRIPT_URL!');
-    showNotification('⚠️ Chưa cấu hình Google Sheet URL. Liên hệ giáo viên.', 'warning');
+    showNotification('Chưa cấu hình Google Sheet URL. Liên hệ giáo viên.', 'warning');
     return { success: false, message: 'Chưa cấu hình URL' };
   }
 
@@ -79,7 +79,7 @@ async function saveToGoogleSheet(data) {
   const clientKey = `${data.studentName}__${data.testName}`;
   if (_submittedIds.has(clientKey)) {
     console.warn('⚠️ [GoogleSheet] Phát hiện gửi trùng, bỏ qua:', clientKey);
-    showNotification('ℹ️ Bài thi đã được lưu trước đó.', 'info');
+    showNotification('Bài thi đã được lưu trước đó.', 'info');
     return { success: true, message: 'Duplicate - already submitted' };
   }
 
@@ -135,9 +135,9 @@ async function saveToGoogleSheet(data) {
     _submittedIds.add(clientKey);
     console.log('✅ [GoogleSheet] Đã lưu:', json.data);
     if (json.data && json.data.duplicate) {
-      showNotification('ℹ️ Bài thi đã được lưu trước đó (trùng submissionId).', 'info');
+      showNotification('Bài thi đã được lưu trước đó (trùng submissionId).', 'info');
     } else {
-      showNotification('✅ Đã lưu kết quả lên Google Sheet thành công!', 'success');
+      showNotification('Đã lưu kết quả lên Google Sheet thành công!', 'success');
     }
     return { success: true, message: 'Đã lưu', data: json.data };
 
@@ -147,18 +147,18 @@ async function saveToGoogleSheet(data) {
     // Phân loại lỗi để hiển thị thông báo rõ ràng hơn
     if (err.name === 'AbortError') {
       console.error('⏱️ [GoogleSheet] Request bị timeout');
-      showNotification('⏱️ Kết nối quá lâu. Kết quả đã lưu offline. Thử lại sau!', 'warning');
+      showNotification('Kết nối quá lâu. Kết quả đã lưu offline. Thử lại sau!', 'warning');
       return { success: false, message: 'Timeout' };
     }
 
     if (!navigator.onLine) {
       console.error('📵 [GoogleSheet] Không có kết nối Internet');
-      showNotification('📵 Mất kết nối Internet. Kết quả đã lưu offline.', 'warning');
+      showNotification('Mất kết nối Internet. Kết quả đã lưu offline.', 'warning');
       return { success: false, message: 'No internet' };
     }
 
     console.error('❌ [GoogleSheet] Lỗi không xác định:', err);
-    showNotification('❌ Không thể lưu kết quả. Vui lòng thử lại.', 'error');
+    showNotification('Không thể lưu kết quả. Vui lòng thử lại.', 'error');
     return { success: false, message: err.message };
   }
 }
