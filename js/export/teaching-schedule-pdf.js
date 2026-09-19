@@ -149,12 +149,12 @@
       doc.text(lines3, PAGE_MARGIN, y);
     }
 
-    y += Math.max(0, (lines3.length - 1)) * 13 + 14;
+    y += Math.max(0, (lines3.length - 1)) * 13 + 12;
     doc.setDrawColor(...BORDER_GRAY);
     doc.setLineWidth(0.8);
     doc.line(PAGE_MARGIN, y, pageWidth - PAGE_MARGIN, y);
     doc.setTextColor(0, 0, 0);
-    return y + 12;
+    return y + 8;
   }
 
   /** Đọc mã lớp CỦA ĐÚNG 1 TIẾT — periods[i] thường là chuỗi mã lớp, dữ
@@ -191,9 +191,9 @@
         {
           content: isSang ? 'SÁNG' : 'CHIỀU',
           rowSpan: rowCount,
-          styles: { fillColor: bg, textColor: labelColor, fontStyle: 'bold', fontSize: 12 },
+          styles: { fillColor: bg, textColor: labelColor, fontStyle: 'bold', fontSize: 10.5 },
         },
-        { content: 'Chọn loại hình\nphụ trách', styles: { fillColor: bg, textColor: TYPE_LABEL_BLUE, fontStyle: 'bold', fontSize: 8.5, halign: 'left' } },
+        { content: 'Chọn loại hình\nphụ trách', styles: { fillColor: bg, textColor: TYPE_LABEL_BLUE, fontStyle: 'bold', fontSize: 8.3, cellPadding: 4, halign: 'left' } },
         ...M.WEEKDAYS.map((d) => {
           const sess = sessOf(d);
           return { content: sess.type || '—', styles: { fillColor: bg, textColor: sess.type ? TYPE_VALUE_NAVY : GRAY } };
@@ -202,7 +202,7 @@
 
       // Hàng 2: "Địa điểm giảng dạy".
       body.push([
-        { content: 'Địa điểm\ngiảng dạy', styles: { fillColor: bg, textColor: LOCATION_LABEL_BLUE, fontStyle: 'bold', fontSize: 8.5, halign: 'left' } },
+        { content: 'Địa điểm\ngiảng dạy', styles: { fillColor: bg, textColor: LOCATION_LABEL_BLUE, fontStyle: 'bold', fontSize: 8.3, cellPadding: 4, halign: 'left' } },
         ...M.WEEKDAYS.map((d) => {
           const sess = sessOf(d);
           return { content: sess.location || '—', styles: { fillColor: bg, textColor: sess.location ? SUBTLE_BLUE : GRAY } };
@@ -212,7 +212,7 @@
       // Hàng 3-7: "Tiết 1".."Tiết 5".
       for (let pi = 0; pi < M.PERIODS_PER_SESSION; pi++) {
         body.push([
-          { content: String(pi + 1), styles: { fillColor: bg, textColor: labelColor, fontStyle: 'bold', fontSize: 11 } },
+          { content: String(pi + 1), styles: { fillColor: bg, textColor: labelColor, fontStyle: 'bold', fontSize: 9 } },
           ...M.WEEKDAYS.map((d) => {
             const sess = sessOf(d);
             const val = periodValue(sess, pi);
@@ -228,10 +228,10 @@
     // dòng giữa từ ("SÁNG" → "SÁN"+"G", "CHIỀU" → "CHI"+"ỀU"), đúng lỗi đã
     // từng gặp và sửa ở js/export/teaching-timetable-pdf.js.
     doc.setFont(FONT, 'bold');
-    doc.setFontSize(12);
+    doc.setFontSize(10.5);
     const buoiTextW = Math.max(doc.getTextWidth('SÁNG'), doc.getTextWidth('CHIỀU'));
     const buoiColWidth = buoiTextW + 14;
-    const infoColWidth = 82;
+    const infoColWidth = 78;
     const dayColWidth = (pageWidth - PAGE_MARGIN * 2 - buoiColWidth - infoColWidth) / M.WEEKDAYS.length;
     const columnStyles = {
       0: { cellWidth: buoiColWidth, halign: 'center' },
@@ -239,15 +239,22 @@
     };
     M.WEEKDAYS.forEach((_, i) => { columnStyles[i + 2] = { cellWidth: dayColWidth }; });
 
+    // cellPadding/fontSize CỐ TÌNH thu nhỏ hơn so với bản trước (5pt/9.5pt)
+    // — bảng LUÔN có đúng 15 hàng cố định (1 head + 2 buổi × 7 hàng, xem
+    // comment buildScheduleTable ở trên), nên có thể tính trước tổng chiều
+    // cao và ép đủ trong 1 trang A4 ngang (595pt) cùng bảng thống kê bên
+    // dưới — tránh lỗi ĐÃ GẶP: bảng + thống kê vượt quá chiều cao trang,
+    // khiến AutoTable tự chèn thêm trang 2 và "rớt" nốt bảng thống kê xuống
+    // đó (mất liền mạch, tưởng thiếu dữ liệu dù dữ liệu vẫn còn).
     global.autoTable(doc, {
       startY,
-      margin: { left: PAGE_MARGIN, right: PAGE_MARGIN },
+      margin: { left: PAGE_MARGIN, right: PAGE_MARGIN, bottom: PAGE_MARGIN },
       head, body,
       theme: 'grid',
       tableLineColor: BORDER_GRAY,
       tableLineWidth: 0.6,
-      headStyles: { font: FONT, fillColor: HEADER_ORANGE, textColor: 255, fontStyle: 'bold', fontSize: 10.5, halign: 'center' },
-      styles: { font: FONT, fontSize: 9.5, cellPadding: 5, valign: 'middle', halign: 'center', overflow: 'linebreak' },
+      headStyles: { font: FONT, fillColor: HEADER_ORANGE, textColor: 255, fontStyle: 'bold', fontSize: 9, cellPadding: 3, halign: 'center' },
+      styles: { font: FONT, fontSize: 8.3, cellPadding: 3, valign: 'middle', halign: 'center', overflow: 'linebreak' },
       columnStyles,
       // Viền phân cách ĐẬM MÀU XANH LÁ giữa các cột Thứ — Excel gốc dùng
       // nét đứt xanh lá (00B050) để tách rõ từng Thứ, AutoTable không vẽ
@@ -282,28 +289,40 @@
     ];
     const body = rows.map(([l1, v1, l2, v2]) => [l1, String(v1), l2, String(v2)]);
 
-    const titleBlockH = 26;
-    const rowH = 28;
-    const estBlockH = titleBlockH + rows.length * rowH;
-    const remaining = pageHeight - PAGE_MARGIN - startY;
-    const gapAbove = Math.max(22, (remaining - estBlockH) / 2);
+    // Co giãn theo khoảng trống THẬT còn lại phía dưới bảng lịch (thay vì
+    // cỡ chữ/khoảng cách cố định như bản trước) — đảm bảo khối thống kê
+    // LUÔN vừa trong phần còn lại của trang, không bao giờ bị AutoTable tự
+    // tách sang trang 2 (đúng lỗi đã gặp: hàng đầu ở trang 1, 3 hàng còn
+    // lại "rớt" xuống trang 2). titleBlockH/rowH dưới đây là cỡ MẶC ĐỊNH
+    // (đủ rộng rãi khi trang còn nhiều chỗ trống); factor < 1 khi chật.
+    const titleBlockH = 20;
+    const rowH = 20;
+    const gapAboveDefault = 14;
+    const desiredBlockH = gapAboveDefault + titleBlockH + rows.length * rowH;
+    const remaining = Math.max(0, pageHeight - PAGE_MARGIN - startY);
+    const factor = Math.max(0.55, Math.min(1, remaining / desiredBlockH));
+
+    const fontSize = 11.5 * factor;
+    const cellPadding = Math.max(2, 8 * factor);
+    const titleFontSize = Math.max(9, 12 * factor);
+    const gapAbove = Math.max(6, gapAboveDefault * factor);
     let y = startY + gapAbove;
 
     doc.setFont(FONT, 'bold');
-    doc.setFontSize(12);
+    doc.setFontSize(titleFontSize);
     doc.setTextColor(...SUBTLE_BLUE);
     doc.text('THỐNG KÊ TUẦN', PAGE_MARGIN, y);
     doc.setTextColor(0, 0, 0);
-    y += 14;
+    y += Math.max(10, 14 * factor);
 
     global.autoTable(doc, {
       startY: y,
-      margin: { left: PAGE_MARGIN, right: PAGE_MARGIN },
+      margin: { left: PAGE_MARGIN, right: PAGE_MARGIN, bottom: PAGE_MARGIN },
       body,
       theme: 'grid',
       tableLineColor: BORDER_GRAY,
       tableLineWidth: 0.6,
-      styles: { font: FONT, fontSize: 11.5, cellPadding: 8, valign: 'middle' },
+      styles: { font: FONT, fontSize, cellPadding, valign: 'middle' },
       columnStyles: {
         0: { textColor: GRAY, halign: 'left', cellWidth: labelWidth },
         1: { fontStyle: 'bold', halign: 'left', textColor: TYPE_VALUE_NAVY, cellWidth: valueWidth },
