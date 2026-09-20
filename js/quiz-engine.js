@@ -283,6 +283,158 @@ const State = {
 };
 
 /* ============================================================
+   § 1b — AUTOSAVE TIẾN ĐỘ BÀI ĐANG LÀM
+   ────────────────────────────────────────────────────────────
+   Trước đây State.answers/flags/timeLeft... chỉ tồn tại trong biến JS
+   — F5, mất mạng, crash trình duyệt hay hết pin giữa bài KIỂM TRA làm
+   mất trắng toàn bộ, học sinh phải làm lại từ đầu (không có cách nào
+   khôi phục). Nay tự lưu định kỳ vào localStorage (không dùng
+   sessionStorage vì cần sống sót cả qua trường hợp tắt máy đột ngột,
+   không chỉ F5 trong cùng 1 tab).
+
+   CHỈ lưu 1 bài đang làm tại 1 thời điểm dưới 1 KEY CỐ ĐỊNH — đúng bản
+   chất "1 học sinh làm 1 bài trên 1 máy tại 1 thời điểm" — hoàn toàn
+   TÁCH BIỆT với 'eduquiz_records' (lịch sử các bài ĐÃ NỘP, không đụng
+   tới ở đây).
+   ============================================================ */
+const INPROGRESS_KEY = 'eduquiz_inprogress_v1';
+const INPROGRESS_MAX_AGE_MS = 8 * 60 * 60 * 1000; // quá 8 giờ coi như đã bỏ dở hẳn, không hỏi lại nữa
+
+/** Lưu (best-effort) toàn bộ tiến độ đang làm — gọi từ nhiều điểm nhỏ (điều
+ * hướng câu, đánh dấu, mỗi vài giây khi đang đếm giờ) chứ không phải mỗi
+ * lần chọn đáp án riêng lẻ theo từng loại câu hỏi, để không phải sửa lại
+ * toàn bộ các hàm xử lý đáp án theo từng type. */
+function saveInProgress() {
+  // `State.submitted` chặn 1 bug thật đã bắt được khi test: sau khi nộp
+  // bài, State.session vẫn còn nguyên (dùng để hiện màn kết quả) nên nếu
+  // học sinh load lại trang NGAY SAU KHI NỘP, sự kiện 'beforeunload' (lưới
+  // an toàn cuối) sẽ chạy saveInProgress() lần nữa và VÔ TÌNH TẠO LẠI
+  // đúng bản autosave vừa bị clearInProgress() xoá trong submitExam() —
+  // khiến lần mở trang kế tiếp lại hỏi "làm tiếp?" một bài ĐÃ NỘP XONG.
+  if (!State.session || !State.session.startTime || !State.questions?.length || State.submitted) return;
+  try {
+    const snapshot = {
+      v: 1,
+      savedAt: Date.now(),
+      examMode: State.examMode,
+      testDurationMinutes: State.testDurationMinutes,
+      questions: State.questions, // đã shuffle sẵn — PHẢI lưu nguyên để answers khớp đúng thứ tự option khi khôi phục
+      answers:   State.answers,
+      flags:     [...State.flags],
+      current:   State.current,
+      timeLeft:  State.timeLeft,
+      matching:  State.matching,
+      matchSel:  State.matchSel,
+      hotspot:   Object.fromEntries(Object.entries(State.hotspot).map(([k, v]) => [k, v instanceof Set ? [...v] : v])),
+      list:      State.list,
+      classify:  State.classify,
+      ordering:  State.ordering,
+      fillblank: State.fillblank,
+      session: Object.assign({}, State.session, {
+        gameBreaksDone: [...(State.session.gameBreaksDone || [])],
+      }),
+    };
+    localStorage.setItem(INPROGRESS_KEY, JSON.stringify(snapshot));
+  } catch (e) {
+    // Đầy dung lượng / bị chặn (chế độ ẩn danh)... — autosave là
+    // "best effort", KHÔNG được làm hỏng trải nghiệm làm bài nếu thất bại.
+    console.warn('[EduQuiz] Autosave tiến độ thất bại (không ảnh hưởng bài đang làm):', e.message);
+  }
+}
+
+function clearInProgress() {
+  try { localStorage.removeItem(INPROGRESS_KEY); } catch (e) { /* không sao — key sẽ tự bị ghi đè ở lần lưu kế tiếp */ }
+}
+
+/** Đọc bản autosave — tự dọn key nếu JSON hỏng thay vì để lỗi (hoặc trạng
+ * thái "không nạp được") lặp lại âm ỉ ở mọi lần mở trang sau đó. */
+function _readInProgress() {
+  let raw;
+  try { raw = localStorage.getItem(INPROGRESS_KEY); } catch (e) { return null; }
+  if (!raw) return null;
+  try {
+    const data = JSON.parse(raw);
+    if (!data || !Array.isArray(data.questions) || !data.questions.length || !data.session) {
+      throw new Error('sai định dạng (thiếu questions/session)');
+    }
+    return data;
+  } catch (e) {
+    console.warn('[EduQuiz] Bản autosave tiến độ bị hỏng, đã dọn:', e.message);
+    clearInProgress();
+    return null;
+  }
+}
+
+/**
+ * Gọi từ initLobby() (SAU khi lobby đã dựng xong bình thường — xem chú
+ * thích ở nơi gọi) — nếu phát hiện 1 bài đang làm dở còn "mới", hỏi học
+ * sinh có muốn làm tiếp không, rồi khôi phục toàn bộ State và nhảy thẳng
+ * vào màn hình thi nếu đồng ý.
+ * @returns {boolean} true nếu đã khôi phục và chuyển sang màn hình thi.
+ */
+function tryResumeInProgress() {
+  const data = _readInProgress();
+  if (!data) return false;
+  if (Date.now() - (data.savedAt || 0) > INPROGRESS_MAX_AGE_MS) {
+    clearInProgress();
+    return false;
+  }
+
+  const s = data.session || {};
+  const minutesLeft = Number.isFinite(data.timeLeft) && data.timeLeft !== Infinity
+    ? Math.max(0, Math.round(data.timeLeft / 60))
+    : null;
+  const msg = `Phát hiện bài làm dở dang:\n"${s.minitest || ''}" — ${s.studentName || ''} (${s.studentClass || ''})` +
+    (minutesLeft !== null ? `\nCòn khoảng ${minutesLeft} phút.` : '') +
+    `\n\nBấm OK để LÀM TIẾP, hoặc Cancel để bỏ qua và bắt đầu bài mới.`;
+  if (!confirm(msg)) {
+    clearInProgress();
+    return false;
+  }
+
+  // ── Khôi phục State ────────────────────────────────────────
+  State.questions = data.questions;
+  State.answers   = data.answers || {};
+  State.flags     = new Set(data.flags || []);
+  State.current   = data.current || 0;
+  State.submitted = false; // § 1b — đang làm tiếp, chưa nộp, cho phép autosave tiếp
+  State.timeLeft  = data.timeLeft;
+  State.examMode  = data.examMode || 'test';
+  State.testDurationMinutes = data.testDurationMinutes || State.testDurationMinutes;
+  State.matching  = data.matching  || {};
+  State.matchSel  = data.matchSel  || {};
+  State.hotspot   = Object.fromEntries(Object.entries(data.hotspot || {}).map(([k, v]) => [k, new Set(v)]));
+  State.list      = data.list      || {};
+  State.classify  = data.classify  || {};
+  State.ordering  = data.ordering  || {};
+  State.fillblank = data.fillblank || {};
+  State.session   = Object.assign({}, s, {
+    gameBreaksDone: new Set(s.gameBreaksDone || []),
+  });
+
+  document.getElementById('lobby').style.display  = 'none';
+  document.getElementById('exam').style.display   = 'flex';
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('adminEntryLink')?.style.setProperty('display', 'none');
+
+  const info = document.getElementById('topbarInfo');
+  if (info) info.innerHTML = `<i class="fa-solid fa-user"></i> ${_acEscapeHtml(s.studentName)} · ${_acEscapeHtml(s.studentClass)} · ${_acEscapeHtml(s.minitest)}`;
+
+  buildSidebar();
+  renderQuestion(State.current);
+  startTimer();
+  if (State.examMode === 'test') acStartGuard();
+  return true;
+}
+
+// Lưới an toàn cuối cùng: đóng tab/đóng trình duyệt cũng cố lưu 1 lần
+// (không hiện hộp thoại xác nhận nào — chỉ tranh thủ ghi state trước khi
+// unload, tách biệt hoàn toàn với listener 'beforeunload' chống gian lận
+// ở trên vốn chỉ lo dọn tab-heartbeat, nhiều listener cùng loại vẫn chạy
+// độc lập bình thường).
+window.addEventListener('beforeunload', saveInProgress);
+
+/* ============================================================
    § 2 — ANTI-CHEAT: VISIBILITY & CLICK TRACKING  (Task 4)
    Giữ nguyên 100% logic chống gian lận
    ============================================================ */
@@ -1026,6 +1178,13 @@ function initLobby() {
 
   // Khởi tạo lần đầu
   refreshLevels();
+
+  // § 1b — dựng lobby XONG như bình thường trước (để khi học sinh nộp bài
+  // dở dang này xong và bấm "Quay lại trang chọn bài", lobby vẫn hoạt
+  // động đầy đủ — backToLobby() không gọi lại initLobby()), rồi MỚI kiểm
+  // tra có bài làm dở đang lưu không; nếu có và học sinh đồng ý, che lobby
+  // lại và nhảy thẳng vào màn hình thi.
+  tryResumeInProgress();
 }
 
 /** Tìm category theo id từ quizRepository */
@@ -1100,6 +1259,7 @@ async function startExam() {
   State.answers   = {};
   State.flags     = new Set();
   State.current   = 0;
+  State.submitted = false; // § 1b — bài MỚI, cho phép autosave lại từ đầu
   State.matching  = {};
   State.matchSel  = {};
   State.hotspot   = {};
@@ -1246,6 +1406,7 @@ function startTimer() {
   State.timer = setInterval(() => {
     State.timeLeft--;
     updateTimerDisplay();
+    if (State.timeLeft % 5 === 0) saveInProgress(); // § 1b — tự lưu mỗi ~5s, không chặn UI
     if (State.timeLeft <= 0) { clearInterval(State.timer); autoSubmit(); }
   }, 1000);
 }
@@ -1380,6 +1541,7 @@ function jumpTo(i) {
   beginQTime(i);
   State.current = i;
   renderQuestion(i);
+  saveInProgress(); // § 1b — mỗi lần đổi câu là 1 điểm chốt tự nhiên để autosave
 }
 
 function prevQ() { if (State.current > 0) jumpTo(State.current - 1); }
@@ -3210,6 +3372,7 @@ function toggleFlag(i) {
   if (State.flags.has(i)) State.flags.delete(i);
   else                    State.flags.add(i);
   renderQuestion(i);
+  saveInProgress(); // § 1b
 }
 
 /* ============================================================
@@ -3242,6 +3405,8 @@ function autoSubmit() {
 
 function submitExam() {
   clearInterval(State.timer);
+  State.submitted = true; // § 1b — chặn saveInProgress() "hồi sinh" lại autosave sau khi đã nộp (xem chú thích ở đó)
+  clearInProgress(); // đã nộp thật sự, không cần hỏi "làm tiếp" nữa lần sau mở trang
   flushQTime(State.current);
   acStopGuard(); // tắt lớp bảo vệ chống gian lận (nếu chế độ Kiểm tra có bật)
   const elapsed   = Math.round((Date.now() - State.session.startTime) / 1000);
