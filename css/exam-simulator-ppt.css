@@ -1,0 +1,39 @@
+/* css/exam-simulator-ppt.css — canvas kéo-thả object cho trang đề PowerPoint */
+.exp-canvas-wrap { overflow: auto; }
+.exp-slide-canvas {
+  position: relative;
+  width: 960px;
+  height: 540px;
+  background: #fff;
+  border: 1px solid var(--exs-border);
+  border-radius: 4px;
+  max-width: 100%;
+}
+@media (prefers-color-scheme: dark) { .exp-slide-canvas { background: #2a2f3a; } }
+
+.exp-object {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  cursor: move;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  padding: 4px;
+  user-select: none;
+}
+.exp-object.exp-selected { border-color: var(--exs-accent); box-shadow: 0 0 0 2px rgba(31,111,235,0.35); }
+.exp-object[data-type="text"] { background: rgba(255,255,255,0.02); border-style: dashed; border-color: #ccc; }
+.exp-object[data-type="text"][contenteditable="true"]:focus { cursor: text; user-select: text; }
+.exp-object[data-type="shape"] { color: #fff; }
+.exp-object[data-type="image"] { background: repeating-linear-gradient(45deg, #ddd, #ddd 6px, #eee 6px, #eee 12px); color: #666; }
+.exp-object[data-type="table"], .exp-object[data-type="chart"] { background: #f0f2f7; color: #444; border: 1px solid #ccc; }
+
+.exp-object-list { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+.exp-object-list button {
+  padding: 4px 10px; border-radius: 999px; border: 1px solid var(--exs-border);
+  background: var(--exs-panel); cursor: pointer; font-size: 0.8rem;
+}
+.exp-object-list button.exp-active { background: var(--exs-accent); color: var(--exs-accent-contrast); }

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>MOS Excel — Exam Simulator (state-based)</title>
+<link rel="stylesheet" href="css/exam-simulator.css" />
+</head>
+<body>
+<!-- ════════════════════════════════════════════════════════════
+     exam-simulator-excel.html — Bản thi thử THẬT (không phải quiz, không
+     phải mô phỏng bước-theo-bước). Học viên thao tác trực tiếp trên 1
+     Spreadsheet Engine sống (js/excel-engine/spreadsheet-model.js): gõ
+     công thức, định dạng số, in đậm... Application State được chấm bởi
+     Validation Engine (js/exam-engine/validation-engine.js) SO VỚI
+     REQUIREMENTS của task — không so chuỗi thao tác.
+
+     Đây là bản demo pipeline đầy đủ cho 1 task (chưa phải bộ đề nhiều
+     task/nhiều môn — xem js/exam-engine/exam-runner.js cho lớp điều phối
+     multi-task/multi-app, đã có sẵn & test qua Node, sẽ nối dây UI đầy
+     đủ ở các đợt tiếp theo).
+     ════════════════════════════════════════════════════════════ -->
+
+  <header class="exs-topbar">
+    <div class="exs-topbar-title"><i>📊</i> MOS Excel — Exam Simulator</div>
+    <div class="exs-timer" id="exsTimer">⏱ --:--</div>
+    <button type="button" class="exs-submit-btn" id="exsSubmitBtn">Nộp bài</button>
+  </header>
+
+  <main class="exs-layout">
+    <aside class="exs-instruction-panel">
+      <h2>Đề bài</h2>
+      <p id="exsInstruction">Đang tải...</p>
+      <div class="exs-points" id="exsPoints"></div>
+      <div class="exs-hint-box" id="exsHintBox" hidden>
+        <button type="button" id="exsHintBtn">💡 Xem gợi ý (trừ điểm)</button>
+        <ul id="exsHintList" hidden></ul>
+      </div>
+    </aside>
+
+    <section class="exs-sheet-panel">
+      <div class="exs-toolbar">
+        <button type="button" data-cmd="bold"><b>B</b></button>
+        <button type="button" data-cmd="italic"><i>I</i></button>
+        <button type="button" data-cmd="underline"><u>U</u></button>
+        <span class="exs-toolbar-sep"></span>
+        <select id="exsNumberFormat">
+          <option value="General">General</option>
+          <option value="Number">Number</option>
+          <option value="Currency">Currency</option>
+          <option value="Percentage">Percentage</option>
+        </select>
+      </div>
+      <div class="exs-formula-bar">
+        <span class="exs-name-box" id="exsNameBox">A1</span>
+        <span class="exs-fx">fx</span>
+        <input type="text" id="exsFormulaInput" autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="exs-grid-wrap">
+        <table class="exs-grid" id="exsGrid"></table>
+      </div>
+    </section>
+  </main>
+
+  <div class="exs-result-overlay" id="exsResultOverlay" hidden>
+    <div class="exs-result-card">
+      <h2>Kết quả chấm</h2>
+      <div class="exs-result-score" id="exsResultScore"></div>
+      <ul class="exs-result-details" id="exsResultDetails"></ul>
+      <button type="button" id="exsResultCloseBtn">Đóng</button>
+    </div>
+  </div>
+
+  <script src="js/exam-engine/task-schema.js"></script>
+  <script src="js/exam-engine/validation-engine.js"></script>
+  <script src="js/exam-engine/exam-runner.js"></script>
+  <script src="js/exam-engine/autosave-service.js"></script>
+  <script src="js/exam-engine/exam-ui-chrome.js"></script>
+  <script src="js/excel-engine/formula-engine.js"></script>
+  <script src="js/excel-engine/spreadsheet-model.js"></script>
+  <script src="js/excel-engine/excel-tasks-sample.js"></script>
+  <script src="js/exam-simulator-excel.js"></script>
+</body>
+</html>

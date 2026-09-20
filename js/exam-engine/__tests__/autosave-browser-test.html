@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>autosave test</title></head>
+<body>
+<script src="/js/exam-engine/autosave-service.js"></script>
+<script>
+async function run() {
+  var out = [];
+  function assertEq(label, actual, expected) {
+    var pass = JSON.stringify(actual) === JSON.stringify(expected);
+    out.push((pass ? 'PASS' : 'FAIL') + '  ' + label + '  => ' + JSON.stringify(actual) + (pass ? '' : ' (expected ' + JSON.stringify(expected) + ')'));
+  }
+
+  assertEq('hasIndexedDB detected', window.MosExamAutosave._internal.hasIndexedDB, true);
+  assertEq('firestore not available (no EduFirebase loaded)', window.MosExamAutosave._internal.firestoreAvailable(), false);
+
+  var sessionId = 'test-session-1';
+  await window.MosExamAutosave.clear(sessionId);
+
+  var before = await window.MosExamAutosave.restore(sessionId);
+  assertEq('nothing saved yet -> null', before, null);
+
+  var snapshot = { currentIndex: 1, flags: { t1: true }, states: { t1: { foo: 'bar' } }, secondsRemaining: 120, startedAt: 1000, submitted: false, result: null };
+  await window.MosExamAutosave.autosave(sessionId, { name: 'Hoc sinh A' }, snapshot);
+
+  var restored = await window.MosExamAutosave.restore(sessionId);
+  assertEq('restored sessionId', restored.sessionId, sessionId);
+  assertEq('restored studentInfo', restored.studentInfo, { name: 'Hoc sinh A' });
+  assertEq('restored snapshot', restored.snapshot, snapshot);
+
+  // Ghi đè bằng autosave lần 2 (giả lập tick tiếp theo)
+  var snapshot2 = Object.assign({}, snapshot, { currentIndex: 2, secondsRemaining: 90 });
+  await window.MosExamAutosave.autosave(sessionId, { name: 'Hoc sinh A' }, snapshot2);
+  var restored2 = await window.MosExamAutosave.restore(sessionId);
+  assertEq('restored after 2nd autosave has updated currentIndex', restored2.snapshot.currentIndex, 2);
+
+  await window.MosExamAutosave.clear(sessionId);
+  var afterClear = await window.MosExamAutosave.restore(sessionId);
+  assertEq('cleared -> null again', afterClear, null);
+
+  document.title = out.every(function (l) { return l.indexOf('FAIL') === -1; }) ? 'ALL PASSED' : 'HAS FAILURES';
+  document.body.innerText = out.join('\n');
+  window.__testOutput = out;
+}
+run().catch(function (e) { document.title = 'ERROR'; document.body.innerText = 'ERROR: ' + e.message + '\n' + e.stack; });
+</script>
+</body></html>

@@ -1,0 +1,172 @@
+/* css/exam-simulator.css — MOS Exam Simulator (state-based)
+   Trang demo pipeline Excel: giao diện tối giản, tập trung vào tính đúng
+   của state/engine hơn là làm giống Excel thật pixel-perfect (khác với
+   word/excel/powerpoint-simulator.css vốn ưu tiên "giống Office"). */
+:root {
+  --exs-bg: #f4f6fb;
+  --exs-panel: #ffffff;
+  --exs-border: #d7dce5;
+  --exs-text: #1f2430;
+  --exs-muted: #6b7280;
+  --exs-accent: #1f6feb;
+  --exs-accent-contrast: #ffffff;
+  --exs-success: #1a8f5e;
+  --exs-danger: #c62828;
+  --exs-grid-header: #eef1f7;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Inter, system-ui, sans-serif;
+  background: var(--exs-bg);
+  color: var(--exs-text);
+}
+
+.exs-topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 20px;
+  background: var(--exs-panel);
+  border-bottom: 1px solid var(--exs-border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.exs-topbar-title { font-weight: 700; font-size: 1.05rem; flex: 1; }
+.exs-timer {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--exs-grid-header);
+}
+.exs-timer.exs-timer-low { background: #ffe0e0; color: var(--exs-danger); }
+.exs-submit-btn {
+  background: var(--exs-accent);
+  color: var(--exs-accent-contrast);
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.exs-submit-btn:hover { filter: brightness(1.08); }
+
+.exs-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 16px;
+  padding: 16px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+@media (max-width: 800px) { .exs-layout { grid-template-columns: 1fr; } }
+
+.exs-instruction-panel, .exs-sheet-panel {
+  background: var(--exs-panel);
+  border: 1px solid var(--exs-border);
+  border-radius: 12px;
+  padding: 16px;
+}
+.exs-instruction-panel h2 { margin: 0 0 8px; font-size: 1rem; }
+.exs-instruction-panel p { line-height: 1.5; color: var(--exs-text); }
+.exs-points { margin-top: 10px; font-weight: 700; color: var(--exs-accent); }
+.exs-hint-box { margin-top: 16px; }
+.exs-hint-box button {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px dashed var(--exs-border);
+  background: var(--exs-grid-header);
+  cursor: pointer;
+}
+.exs-hint-box ul { padding-left: 18px; color: var(--exs-muted); }
+
+.exs-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.exs-toolbar button {
+  width: 32px; height: 32px;
+  border: 1px solid var(--exs-border);
+  background: var(--exs-panel);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.exs-toolbar button.exs-active { background: var(--exs-accent); color: var(--exs-accent-contrast); }
+.exs-toolbar-sep { width: 1px; height: 24px; background: var(--exs-border); margin: 0 4px; }
+.exs-toolbar select { padding: 4px 8px; border-radius: 6px; border: 1px solid var(--exs-border); }
+
+.exs-formula-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--exs-border);
+  border-radius: 8px;
+  padding: 4px 8px;
+  margin-bottom: 8px;
+  background: var(--exs-grid-header);
+}
+.exs-name-box { font-weight: 700; min-width: 40px; }
+.exs-fx { font-style: italic; color: var(--exs-muted); }
+.exs-formula-bar input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.95rem;
+  outline: none;
+  font-family: 'Consolas', monospace;
+}
+
+.exs-grid-wrap { overflow: auto; max-height: 60vh; border: 1px solid var(--exs-border); border-radius: 8px; }
+.exs-grid { border-collapse: collapse; width: 100%; }
+.exs-grid th, .exs-grid td {
+  border: 1px solid var(--exs-border);
+  min-width: 72px;
+  height: 26px;
+  text-align: right;
+  padding: 0 6px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.exs-grid th { background: var(--exs-grid-header); text-align: center; font-weight: 600; position: sticky; top: 0; }
+.exs-grid td.exs-row-header { background: var(--exs-grid-header); text-align: center; font-weight: 600; position: sticky; left: 0; }
+.exs-grid td.exs-cell { cursor: cell; }
+.exs-grid td.exs-cell.exs-selected { outline: 2px solid var(--exs-accent); outline-offset: -2px; background: #eaf2ff; }
+.exs-grid td.exs-cell.exs-bold { font-weight: 700; }
+.exs-grid td.exs-cell.exs-italic { font-style: italic; }
+.exs-grid td.exs-cell.exs-underline { text-decoration: underline; }
+.exs-grid td.exs-cell.exs-error { color: var(--exs-danger); font-weight: 700; }
+
+.exs-result-overlay {
+  position: fixed; inset: 0; background: rgba(15, 20, 30, 0.55);
+  display: flex; align-items: center; justify-content: center; z-index: 100;
+}
+/* Bắt buộc phải khai báo lại — nếu không, [hidden] (UA stylesheet) và
+   .exs-result-overlay (author stylesheet) có cùng độ đặc trưng (0,1,0),
+   và rule TÁC GIẢ (author) luôn thắng bất kể thứ tự viết trong file này,
+   khiến overlay HIỆN SẴN dù đã set hidden=true bằng JS. */
+.exs-result-overlay[hidden] { display: none; }
+.exs-result-card {
+  background: var(--exs-panel); border-radius: 14px; padding: 24px;
+  width: min(420px, 90vw); text-align: center;
+}
+.exs-result-score { font-size: 2rem; font-weight: 800; margin: 8px 0 16px; }
+.exs-result-details { list-style: none; padding: 0; margin: 0 0 16px; text-align: left; }
+.exs-result-details li { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--exs-border); }
+.exs-result-details li.exs-req-pass { color: var(--exs-success); }
+.exs-result-details li.exs-req-fail { color: var(--exs-danger); }
+.exs-result-card button {
+  background: var(--exs-accent); color: var(--exs-accent-contrast);
+  border: none; padding: 8px 20px; border-radius: 8px; font-weight: 700; cursor: pointer;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --exs-bg: #171a21; --exs-panel: #20242e; --exs-border: #333947;
+    --exs-text: #e7eaf2; --exs-muted: #9aa3b5; --exs-grid-header: #262b36;
+  }
+}

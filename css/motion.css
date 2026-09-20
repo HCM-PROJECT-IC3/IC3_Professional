@@ -113,11 +113,26 @@
      thật — xem interceptInternalLinks(). Toàn bộ chỉ đụng transform/
      opacity của <body>, không đổi layout/scroll nên an toàn thêm vào MỌI
      trang hiện có. */
+/* KHÔNG dùng fill-mode "both"/"forwards": làm vậy giữ nguyên transform của
+   KEYFRAME CUỐI (dù chỉ là translateX(0), 1 transform "identity" nhìn như
+   vô hại) trên <body> VĨNH VIỄN sau khi animation chạy xong. Theo đúng
+   đặc tả CSS, BẤT KỲ transform nào khác "none" trên 1 ancestor — kể cả
+   identity — biến ancestor đó thành containing block cho MỌI phần tử con
+   position:fixed/absolute, THAY VÌ viewport. Bug thật đã gặp: quiz-shelf.html
+   (kệ sách 3D) dùng ".experience{position:fixed;inset:0}" để phủ kín
+   viewport — <body> của trang đó không có nội dung "trong luồng" nào khác
+   nên auto-height = 0, và 1 khi <body> (thay vì viewport) trở thành
+   containing block, inset:0 resolve theo chiều cao 0 đó, khiến canvas 3D
+   co về cao 0px và "biến mất" hoàn toàn dù WebGL vẫn render đúng bên
+   trong. Bỏ hẳn fill-mode (mặc định "none") thì animation vẫn chạy y hệt
+   lúc vào trang, nhưng sau khi xong sẽ NHẢ transform ra (trở về "none" vì
+   không còn rule nào khác đặt transform cho <body>), không còn để lại
+   "bẫy" containing-block này. */
 @keyframes moPageEnter {
   from { opacity: 0; transform: translateX(46px); }
   to   { opacity: 1; transform: translateX(0); }
 }
-body { animation: moPageEnter .45s cubic-bezier(.16,1,.3,1) both; }
+body { animation: moPageEnter .45s cubic-bezier(.16,1,.3,1); }
 
 @keyframes moPageExit {
   from { opacity: 1; transform: translateX(0); }
