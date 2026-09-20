@@ -172,9 +172,12 @@ const RANDOM_MIX_TOTAL_DEFAULT = 40; // fallback nếu không tra được số 
    Theo tiết/Theo chủ đề/Tổng hợp) — không tách dữ liệu riêng, chỉ khác
    cách tính giờ khi vào làm bài:
      - 'practice' (Ôn luyện) → không giới hạn thời gian, không auto-nộp.
-     - 'test'     (Kiểm tra) → đúng chuẩn thi thật, 50 phút/bài (3000s).
+     - 'test'     (Kiểm tra) → đếm ngược theo State.testDurationMinutes
+       (mặc định 50 phút, chọn được ở #examDurationToggle trong index.html
+       — 35/45/50 phút hoặc nhập tay số phút khác để khớp đúng tiết học
+       thật, KHÔNG còn cố định 50 phút cho mọi cấp như trước). Xem
+       initLobby() § "Thời gian làm bài".
    ============================================================ */
-const TEST_TIME_LIMIT_SECONDS = 50 * 60; // 50 phút/bài — chế độ "Kiểm tra"
 
 // Số câu "Tổng hợp" theo ĐÚNG chuẩn đề thi thật (khớp bảng số câu/thời gian
 // chính thức của từng khối) — key = "<categoryId>__<levelId>", vd "IC3__LV1".
@@ -267,7 +270,8 @@ const State = {
   current:   0,
   timer:     null,
   timeLeft:  3000,
-  examMode:  'test', // 'practice' (không giới hạn giờ) | 'test' (đếm ngược 50 phút) — xem #examModeToggle
+  examMode:  'test', // 'practice' (không giới hạn giờ) | 'test' (đếm ngược, xem testDurationMinutes) — xem #examModeToggle
+  testDurationMinutes: 50, // thời lượng "Kiểm tra" (phút) — chọn được ở #examDurationToggle, xem initLobby()
   matching:  {},     // qi → { left: right }
   matchSel:  {},
   hotspot:   {},     // qi → Set<areaId> đã bấm chọn
@@ -743,19 +747,61 @@ function initLobby() {
   const mtSel    = document.getElementById('minitestSelect');
   const modeWrap = document.getElementById('mtModeToggle');
 
-  // ── Chế độ làm bài: Ôn luyện (không giới hạn giờ) / Kiểm tra (50 phút) ──
-  // Áp dụng cho MỌI bộ đề bên dưới (không lọc/ẩn Chương trình-Cấp độ-
-  // Minitest nào cả) — chỉ đổi cách tính giờ lúc bấm "Bắt đầu thi", xem
-  // startExam() và startTimer().
-  const examModeWrap  = document.getElementById('examModeToggle');
-  const pledgeWrap     = document.getElementById('antiCheatPledgeWrap');
-  const pledgeCheckbox = document.getElementById('antiCheatPledge');
+  // ── Chế độ làm bài: Ôn luyện (không giới hạn giờ) / Kiểm tra (đếm ngược,
+  // thời lượng chọn ở #examDurationToggle) ── Áp dụng cho MỌI bộ đề bên
+  // dưới (không lọc/ẩn Chương trình-Cấp độ-Minitest nào cả) — chỉ đổi cách
+  // tính giờ lúc bấm "Bắt đầu thi", xem startExam() và startTimer().
+  const examModeWrap   = document.getElementById('examModeToggle');
+  const examTestBtn    = document.getElementById('examModeTestBtn');
+  const pledgeWrap      = document.getElementById('antiCheatPledgeWrap');
+  const pledgeCheckbox  = document.getElementById('antiCheatPledge');
+  const durationWrap    = document.getElementById('examDurationWrap');
+  const durationToggle  = document.getElementById('examDurationToggle');
+  const durationCustom  = document.getElementById('examDurationCustom');
 
-  // Cam kết chống gian lận chỉ áp dụng/bắt buộc ở chế độ "Kiểm tra" — ẩn
-  // hẳn ở "Ôn luyện" vì không có ràng buộc gì. refreshMeta() (khai báo bên
-  // dưới) đọc lại checkbox này mỗi lần chạy để bật/tắt nút "Bắt đầu".
+  // Đổi nhãn nút "Kiểm tra — N phút/bài" theo đúng số phút đang chọn, thay
+  // vì để cứng "50 phút" như bản cũ (giờ có thể là 35/45/tuỳ chỉnh).
+  const applyExamDurationLabel = () => {
+    if (examTestBtn) {
+      examTestBtn.innerHTML = `<i class="fa-solid fa-stopwatch"></i> Kiểm tra — ${State.testDurationMinutes} phút/bài`;
+    }
+  };
+
+  // Chọn 1 mốc thời gian (giới hạn 5-180 phút để tránh gõ nhầm số âm/số
+  // khổng lồ) — dùng chung cho cả bấm nút preset lẫn gõ tay ở "Tuỳ chỉnh".
+  const setExamDuration = (minutes) => {
+    const n = Math.min(180, Math.max(5, parseInt(minutes, 10) || 50));
+    State.testDurationMinutes = n;
+    applyExamDurationLabel();
+  };
+
+  if (durationToggle) {
+    durationToggle.querySelectorAll('.mt-mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        durationToggle.querySelectorAll('.mt-mode-btn').forEach(b => b.classList.remove('is-active'));
+        btn.classList.add('is-active');
+        if (btn.dataset.duration === 'custom') {
+          durationCustom.hidden = false;
+          durationCustom.value = durationCustom.value || State.testDurationMinutes;
+          durationCustom.focus();
+          setExamDuration(durationCustom.value);
+        } else {
+          durationCustom.hidden = true;
+          setExamDuration(btn.dataset.duration);
+        }
+      });
+    });
+  }
+  durationCustom?.addEventListener('input', () => setExamDuration(durationCustom.value));
+  applyExamDurationLabel();
+
+  // Cam kết chống gian lận VÀ khối chọn thời gian chỉ áp dụng/hiện ở chế độ
+  // "Kiểm tra" — ẩn hẳn ở "Ôn luyện" vì không có ràng buộc/đếm giờ gì.
+  // refreshMeta() (khai báo bên dưới) đọc lại checkbox này mỗi lần chạy để
+  // bật/tắt nút "Bắt đầu".
   const applyExamModeUI = () => {
     if (pledgeWrap) pledgeWrap.hidden = State.examMode !== 'test';
+    if (durationWrap) durationWrap.hidden = State.examMode !== 'test';
   };
 
   if (examModeWrap) {
@@ -924,6 +970,49 @@ function initLobby() {
     window.updateMosInlinePractice?.(catSel.value, lvlSel.value);
   };
 
+  // ── Tự chọn Chương trình + Cấp độ + thời gian Kiểm tra theo Lớp (yêu
+  // cầu người dùng: "hạn chế học sinh nhầm bài") — lấy số khối đầu tiên
+  // trong tên lớp (VD "8A1" -> 8, "4a2" -> 4).
+  //   Lớp 3-5 (Tiểu học) -> Spark + 35 phút
+  //   Lớp 6-8 (THCS)     -> IC3 (đề GS6) + 45 phút
+  //   Cấp độ theo chu kỳ 3 lớp/level, khớp thứ tự khối thực tế:
+  //     Lớp 3 & 6 -> LV1 · Lớp 4 & 7 -> LV2 · Lớp 5 & 8 -> LV3
+  // Học sinh/GV vẫn đổi tay lại được sau đó (đây chỉ là GIÁ TRỊ MẶC ĐỊNH,
+  // không khoá cứng).
+  const studentClassSel = document.getElementById('studentClass');
+  const applyClassGradeDefaults = () => {
+    const grade = parseInt((studentClassSel?.value || '').match(/\d+/)?.[0], 10);
+    if (!grade) return;
+    const isElementary = grade <= 5;
+
+    const desiredCat = isElementary ? 'Spark' : 'IC3';
+    if (catSel.value !== desiredCat && [...catSel.options].some((o) => o.value === desiredCat)) {
+      catSel.value = desiredCat;
+      refreshLevels(); // đổ lại Cấp độ theo Chương trình mới, xem bên dưới để chọn ĐÚNG LV theo lớp
+    }
+
+    if (grade >= 3 && grade <= 8) {
+      const desiredLevel = 'LV' + (((grade - 3) % 3) + 1); // 3,6->LV1 · 4,7->LV2 · 5,8->LV3
+      if (lvlSel.value !== desiredLevel && [...lvlSel.options].some((o) => o.value === desiredLevel)) {
+        lvlSel.value = desiredLevel;
+        refreshMinitests();
+        _prefetchLevelData(catSel.value, lvlSel.value);
+      }
+    }
+
+    if (durationToggle) {
+      const desiredDuration = String(isElementary ? 35 : 45);
+      const btn = durationToggle.querySelector(`.mt-mode-btn[data-duration="${desiredDuration}"]`);
+      if (btn && !btn.classList.contains('is-active')) {
+        durationToggle.querySelectorAll('.mt-mode-btn').forEach((b) => b.classList.remove('is-active'));
+        btn.classList.add('is-active');
+        if (durationCustom) durationCustom.hidden = true;
+        setExamDuration(desiredDuration);
+      }
+    }
+  };
+  studentClassSel?.addEventListener('change', applyClassGradeDefaults);
+
   // ── Gắn sự kiện ───────────────────────────────────────────
   catSel.addEventListener('change', refreshLevels);
   lvlSel.addEventListener('change', refreshMinitests);
@@ -1018,11 +1107,12 @@ async function startExam() {
   State.classify  = {};
   State.ordering  = {};
   State.fillblank = {};
-  // 'test' (Kiểm tra) → luôn đúng 50 phút/bài, không cho tự chọn (chuẩn thi
-  // thật). 'practice' (Ôn luyện) → không giới hạn giờ, xem startTimer().
+  // 'test' (Kiểm tra) → đếm ngược theo số phút chọn ở #examDurationToggle
+  // (State.testDurationMinutes, mặc định 50 — xem initLobby()). 'practice'
+  // (Ôn luyện) → không giới hạn giờ, xem startTimer().
   State.timeLeft  = State.examMode === 'practice'
     ? Infinity
-    : parseInt(document.getElementById('timeSelect')?.value || String(TEST_TIME_LIMIT_SECONDS), 10);
+    : (State.testDurationMinutes || 50) * 60;
 
   // ── Khởi tạo session (dữ liệu anti-cheat) ─────────────────
   State.session = {
