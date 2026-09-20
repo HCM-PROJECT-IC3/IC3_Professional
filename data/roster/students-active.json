@@ -1,8 +1,3103 @@
 {
-  "version": "20260916143730",
-  "generatedAt": "2026-09-16T14:37:30.386Z",
-  "count": 578,
+  "version": "20260920035450",
+  "generatedAt": "2026-09-20T03:54:50.968Z",
+  "count": 1197,
   "students": [
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Bùi Đức Khánh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Bùi Kang Bảo Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Đỗ Anh Khoa"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Hà Nguyễn"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Hoàng Hồ Thanh Hà"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Hồ Quỳnh Anh Thư"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Huỳnh Chính Thắng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Kiều Phi Tùng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Lại An Phú"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Lâm Tuyết Ngân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Lê Bảo Yến"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Lê Khánh Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Lê Trần Bảo Quyên"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Ngô Đức Phát"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Nguyễn Bảo Thy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Nguyễn Công Gia Bảo"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Nguyễn Đỗ Bảo Ngân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Nguyễn Đức Anh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Nguyễn Hà Phương"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Nguyễn Hải Phong"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Nguyễn Khánh Ngọc Hân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Nguyễn Minh Cường"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Nguyễn Minh Khang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Nguyễn Ngọc Thảo Vy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Nguyễn Phát Tiến Thành"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Nguyễn Thanh Huy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Nguyễn Thị Ngọc Trinh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Nguyễn Thiên Kim"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Nguyễn Trọng Minh Khôi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Phạm Ngọc Trường An"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Phạm Trần Thanh Duy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Phan Nguyễn Quang Anh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Phan Trịnh Khánh Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Sú Tú Đức"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Thái Tường An"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Trần Khả Hân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Trần Minh Huy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Trần Minh Triết"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Trần Ngọc Vinh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Trần Thị Thảo Vy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Trần Tống Minh Khôi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Trương Thị Hải Dương"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Từ Khả Hân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Vũ Thanh Trúc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A1",
+      "name": "Vũ Xuân Lâm"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Danh Ngọc Thúy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Đào Ngọc Khánh Ngân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Đinh Thị Phương Thảo"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Đỗ Phạm Tường Vy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Hồ Quỳnh Hương"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Lâm Nguyễn Minh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Lê Hồ Bảo Nghi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Lê Nguyễn Bội Phương"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Lê Trần Bảo Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Lê Võ Minh Trí"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Lục Chí Tâm"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Lữ Minh Khang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Nguyễn Duy Khương"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Nguyễn Hoài Phương"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Nguyễn Hoàng Đạt"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Nguyễn Hoàng Phương Anh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Nguyễn Hồ Như Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Nguyễn Lê Bảo Long"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Nguyễn Lê Tấn Phát"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Nguyễn Lê Vân Khánh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Nguyễn Ngọc Gia Bảo"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Nguyễn Ngọc Minh Bảo"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Nguyễn Ngọc Quỳnh Như"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Nguyễn Thanh Nhân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Nguyễn Thị Yến Linh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Nguyễn Tiến Đạt"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Nguyễn Vũ Hoàng An"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Phạm Bảo Long"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Phạm Đức Thịnh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Phạm Thiên Long"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Phạm Vũ Công Vinh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Phan Nguyễn Kim Ngân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Phù Hưng Khang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Phùng Huỳnh Hải Đăng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Tạ Minh Huy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Trần Hoàng Thiên Trang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Trần Huỳnh Xuân An"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Trần Khải My"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Trần Minh Nhật"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Trần Minh Tâm"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Trần Ngọc Như Ý"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Trần Nhật Hào"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Trần Nhật Hưng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Triệu Văn Khả"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Trương Tấn Lộc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Trương Văn Hiếu Trọng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Võ Huỳnh Ngọc Vy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A10",
+      "name": "Võ Ngọc Diễm My"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Bùi Lê Minh Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Bùi Mỹ Đoan Trang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Cung Nguyễn Trọng Luân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Danh Nhựt Nam"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Dương Lâm Duy Phát"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Dương Ngọc Thái"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Đặng Ánh Hoàng Thi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Đặng Kim Quy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Đặng Lê Khánh Điền"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Đặng Tấn Phước"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Hà Lê Phương Anh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Hoàng Ngọc Duy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Huỳnh Anh Thuận"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Huỳnh Phạm Mỹ Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "La Kim Phụng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Lê Đỗ Ánh Tuyết"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Lê Nguyễn Tuấn Hùng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Lê Phương Linh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Lê Tấn Khôi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Lê Thị Bảo Trân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Lê Thị Thanh Trang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Lưu Trọng Nghĩa"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Nguyễn Anh Khoa"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Nguyễn Đức Hoàng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Nguyễn Hoài Nam"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Nguyễn Hoàng Nam"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Nguyễn Hữu Tùng Lâm"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Nguyễn Khải Minh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Nguyễn Khương An"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Nguyễn Lê Hoàng Hiếu"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Nguyễn Minh Tiến"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Nguyễn Ngọc Kim Ngân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Nguyễn Phạm Hoàng Yến"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Nguyễn Phạm Thảo My"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Nguyễn Phúc An Thịnh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Nguyễn Thanh Tiến"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Nguyễn Thị Yến Nhi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Nguyễn Thúy Vy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Phạm Lan Hương"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Phan Hoàng Bảo Long"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Phan Huỳnh Thiên Kim"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Thái Gia Bảo"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Trần Nguyên Khang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Trần Tấn Lộc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Trương Tấn Khang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Võ Tấn Phát"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A11",
+      "name": "Vũ Thanh Trúc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Bùi Gia Linh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Dương Thị Thùy Dung"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Đặng Khánh Phương"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Đặng Ngọc Sang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Đinh Trần Kim Anh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Đỗ Công Minh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Đỗ Huỳnh Ngọc Vy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Đỗ Văn Hào"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Hồ Vĩnh Khang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Huỳnh Thông"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Lê Đoàn Lâm Nguyên"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Lê Kim Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Lê Minh Huy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Lê Phạm Quế Chi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Lê Thành Chí Thiện"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Lưu Đức Huy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Ngô Quang Dũng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Nguyễn Duy Danh Bách"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Nguyễn Đình Minh Tú"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Nguyễn Hoàng Minh Thư"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Nguyễn Kim Hằng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Nguyễn Minh Hưng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Nguyễn Minh Tiến"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Nguyễn Ngọc Bảo Thy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Nguyễn Phương Nhi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Nguyễn Quốc Cường"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Nguyễn Tấn Lộc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Nguyễn Thành Thắng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Nguyễn Thị Ngọc Hân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Nguyễn Thị Yến Trang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Nguyễn Trường Thịnh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Phạm Minh Hoàng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Phạm Ngọc Minh Trang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Phạm Thái Vy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Phạm Trần Chương"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Phùng Văn Khang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Trần Gia Huy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Trần Linh Đan"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Trần Quốc Thịnh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Trương Ngọc Thảo My"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Từ Gia Bảo"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Võ Ngọc Minh Anh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Võ Phương Vy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Vũ Bảo Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Vũ Quỳnh Chi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Vũ Tiến Đạt"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Vương Ngọc Bảo Châu"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A12",
+      "name": "Vương Tuấn Kiệt"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Bế Hoàng Minh Nhật"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Bùi Châu Ngọc Thành"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Bùi Nguyễn Khải"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Châu Hoàng Gia Ân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Dương Minh Anh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Dương Yến Nhi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Đoàn Hoàng Yến"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Huỳnh Gia An"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Huỳnh Gia Bảo"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Lâm Thảo Nhi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Lê Hoàng Phi Long"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Lê Ngọc Thiên Kim"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Lê Nguyễn Minh Phú"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Lê Nguyễn Thanh Trà"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Lê Phúc Thịnh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Lê Quốc Vương"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Lê Thị Hồng Hạnh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Nguyễn Anh Vũ"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Nguyễn Gia Khang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Nguyễn Hoàng Nghĩa"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Nguyễn Hoàng Phương Vy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Nguyễn Huỳnh Minh Hiếu"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Nguyễn Hữu Đạt"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Nguyễn Lê Gia Khang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Nguyễn Ngọc Bảo Anh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Nguyễn Ngọc Khánh Thy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Nguyễn Ngọc Minh Thư"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Nguyễn Ngọc Như Ý"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Nguyễn Phạm Anh Thư"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "NGUYỄN THANH PHONG"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Nguyễn Thị Ngọc Hân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Nguyễn Thị Ngọc Thảo"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Nguyễn Trần Minh Đăng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Nguyễn Trịnh Bội Bội"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Phạm Nguyễn Gia Hào"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Phạm Như Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Thạch Hoàng Phúc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Trần Gia Bảo"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Trần Hoàng Bảo Anh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Trần Nam Khánh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Trần Nguyễn Ánh Dương"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Trần Phúc Huỳnh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Trần Tấn Phát"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Trần Thanh Thảo"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Trần Vũ Thái Quyên"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Võ Quang Vinh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A13",
+      "name": "Yên Diễm Thúy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Bùi Lê Kim Anh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Bùi Trần Huỳnh Dũng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Châu Hoàng Bích Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Chew Vy Hân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Đặng Minh Đăng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Đinh Ngọc Phương Trinh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Hà Bảo Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Hoàng Gia Bảo"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Hoàng Gia Vĩ"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Huỳnh Trúc Duyên"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Huỳnh Tuấn Khoa"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Huỳnh Uyên Phương"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Lâm Ngọc Hân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Lê Đình Huy Khánh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Lê Nguyễn Gia Huy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Lê Nguyễn Minh Quân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Lê Thị Minh Thư"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Nguyễn Duy Kiện"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Nguyễn Hoàng Nguyên"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Nguyễn Huy Khang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Nguyễn Hứa Huỳnh Như"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Nguyễn Ngọc Tú Vi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Nguyễn Như Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Nguyễn Thế Sang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Nguyễn Thế Trực"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Nguyễn Thị Thanh Trúc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Nguyễn Trần Anh Thy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Nguyễn Trấn Vũ"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Nguyễn Tuấn Thiên"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Nguyễn Võ Đức Khang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Nguyễn Võ Thiên Kim"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Nguyễn Xuân Phúc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Phạm Duy Mạnh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Phạm Gia Hân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Phạm Nguyễn Minh Anh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Phan Ánh Trang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Phan Mỹ Trang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Trần Hoàng Thiên Anh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Trần Lê Trúc Vy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Trần Ngọc Như Ý"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Trần Nguyễn Gia Phú"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Trần Tiến Thành"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Võ Đình Huy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Võ Khánh Lâm"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Võ Ngọc Minh Châu"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Vũ Đức Thành Trí"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Vũ Hoàng Tuấn Kiệt"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Vũ Ngọc Nghĩa"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A2",
+      "name": "Vương Ngọc Khánh Hân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Dương Tú Nguyên"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Đoàn Ngọc Như Ý"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Đỗ Ngọc Yến Nhi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Hoàng Gia Phú"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Hồ Kim Yến"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Huỳnh Đại Nghĩa"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Huỳnh Ngọc My"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Huỳnh Phước Thiên"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Kiều Gia Huy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Lê Hoàng Minh Khang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Lê Ngô Gia Hy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Lê Ngô Gia Kỳ"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Lê Tô Hải Nam"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Lương Đặng Bảo Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Mai Thế Vinh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Nguyễn Đức Thành Danh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Nguyễn Hoàng Khôi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Nguyễn Hoàng Kim Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Nguyễn Hoàng Long"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Nguyễn Hoàng Phúc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Nguyễn Hoàng Trung"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Nguyễn Lâm Bảo Ngân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Nguyễn Minh Đạt"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Nguyễn Minh Thái"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Nguyễn Ngọc Hương Giang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Nguyễn Ngọc Minh Thư"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Nguyễn Ngọc Phú"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Nguyễn Ngọc Quỳnh Anh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Nguyễn Ngọc Quỳnh Như"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Nguyễn Ngọc Thanh Quyên"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Nguyễn Phương Khánh Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Nguyễn Thanh Tú"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Nguyễn Thị Bảo Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Nguyễn Trần Minh Hải"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Nguyễn Tuấn Hưng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Phạm Hoa Gia Hân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Phạm Ngọc Minh Hiếu"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Phạm Thảo Nhi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Phạm Yến Nhi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Phan Thị Lan Vy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Sái Mộc Nhi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Trần Bùi Mai Phương"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Trần Hoàng Nguyên"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Trần Thị Như Quỳnh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Trương Chi Khánh Lan"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Trương Thái Bảo"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Văn Đức Mạnh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Võ Nguyễn Trâm An"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A3",
+      "name": "Vũ Huỳnh Anh Thư"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Bùi Anh Tuấn"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Bùi Bảo Điệp"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Bùi Đoàn Như Mây"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Bùi Gia Hân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Cao Thùy Hà Trúc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Châu Nguyễn Như Ý"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Dương Anh Vũ"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Đặng Lê Quỳnh Anh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Đặng Thành Đạt"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Đặng Thị Huyền Trang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Đinh Hoàng Khôi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Đoàn Nguyễn Khánh Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Đỗ Thị Ngân Thư"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Hoàng Phương Mai"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Hoàng Phương Thảo"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Hồ Như Quỳnh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Huỳnh Minh Phúc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Huỳnh Ngân Khánh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Huỳnh Ngọc Ý Vy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Lê Đỗ Bảo Quyên"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Lê Minh Phú"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Lê Trần Khánh Nam"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Lê Trần Uyển Vy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Lý Khánh Tâm"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Mai Trương Duy Phúc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Nguyễn Duy Khải"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Nguyễn Đoàn Minh Hoàng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Nguyễn Hoài Thu"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Nguyễn Hoàng Anh Thư"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Nguyễn Huỳnh Ngọc Lân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Nguyễn Ngọc Bảo Trân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Nguyễn Ngọc Hà"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Nguyễn Ngọc Khánh Ngân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Nguyễn Ngọc Yến Nhi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Nguyễn Phạm Gia Hiệp"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Nguyễn Quốc Vinh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Nguyễn Thái Quỳnh Hương"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Nguyễn Thị Bảo Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Nguyễn Thụy Linh Nhi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Nguyễn Trần Xuân Nhi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Nguyễn Viết Đắc Lâm"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Nguyễn Võ Kim Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Phạm Bảo Nam"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Phạm Minh Thư"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Phạm Ngọc Phương Vân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Phan Nguyễn Hoàng Minh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Trần Song Trúc Lam"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Trần Văn Trường"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Triều Phúc An Nhiên"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A4",
+      "name": "Vũ Gia Huy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Đào Ngọc Minh Anh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Đặng Lưu Nhật Khánh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Đặng Ngọc Thái My"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Đặng Thị Mỹ Phượng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Đinh Huỳnh Thanh Giang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Đinh Ngọc Diệp"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Đoàn Phạm Thục Nghi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Hà Bảo Châu"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Hà Ngọc Anh Thư"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Hoàng Dương Tấn Sang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Hoàng Lê Anh Tuấn"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Lâm Bảo Ân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Lâm Hoàng Ân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Lê Huỳnh Nhã Uyên"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Lê Ngọc Linh Đan"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Lê Nguyễn Hải Nam"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Lê Nguyễn Lan Chi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Lê Phương Oanh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Lê Tấn Phát"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Lê Thanh Nhật Huy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Lưu Hải Bình"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Nguyễn Đình Hiệp"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Nguyễn Đỗ Phương Hoa"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Nguyễn Đức Nhật Hoàng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Nguyễn Đức Trung"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Nguyễn Hữu Dũng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Nguyễn Hữu Đoàn"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Nguyễn Hữu Tiến"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Nguyễn Lê Cát Tường"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Nguyễn Lê Thanh Vy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Nguyễn Ngọc Lâm Tuyền"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Nguyễn Ngọc Mẫn Nghi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Nguyễn Ngọc Mỹ Ngân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Nguyễn Phúc Điền"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Nguyễn Quốc Cường"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Nguyễn Thị Như Ý"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Nguyễn Thiên Phúc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Nguyễn Trường Phúc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Nguyễn Vũ Quân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Phan Ngọc Gia Hân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Phan Tùng Lâm"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Tô Huỳnh Thảo Trang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Trần Anh Hào"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Trần Mỹ Hiếu"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Trần Ngọc Bảo Quyên"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Trần Nguyễn Bảo An"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Trần Quỳnh Anh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Trần Thái Thiên Hương"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Trương Lê Tuấn Vũ"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A5",
+      "name": "Võ Minh Khang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Bùi Sỹ Huy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Bùi Tấn Tình"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Cù Văn Huy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Dương Phạm Gia Hân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Đặng Mậu Đăng Khôi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Đặng Phương Linh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Đỗ Thanh Lam"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Hồ Ngọc Lan Nhi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Huỳnh Nguyễn Xuân Mai"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Lê Khang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Lê Minh Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Lê Tất Viên Phước"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Lương Hoàng An"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Lý Bích Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Ngô Lê Ngọc Nhi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Nguyễn Bảo Vân Phương"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Nguyễn Cao Phong Hòa"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Nguyễn Đặng Thúy Vân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Nguyễn Hoàng Bảo"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Nguyễn Hoàng Nguyên"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Nguyễn Lê Gia Linh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Nguyễn Lê Hồng Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Nguyễn Lê Minh Khang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Nguyễn Linh Bảo Ngân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Nguyễn Minh Châu"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Nguyễn Nam Phúc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Nguyễn Ngọc Hân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Nguyễn Phương Quyên"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Nguyễn Quang Đăng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Nguyễn Thanh Sơn"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Nguyễn Thị Thanh Tâm"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Nguyễn Tuấn Khang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Phạm Kiều Khánh Ly"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Phan Hà Xuân Thảo"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Phan Ngọc Linh An"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Tô Thùy Dung"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Trần Minh Long"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Trần Ngọc Như Ý"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Trần Nguyễn Gia Bảo"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Trần Yến Nhi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Trương Gia Tuệ"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Trương Giang Phúc Khang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Trương Lê Thanh Nhã"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Võ Bạch Thảo Trinh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Võ Hồng Hải"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Võ Ngọc Anh Thư"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Vũ Đặng Minh Duy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A6",
+      "name": "Vũ Hoàng Long"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Bùi Đăng Khôi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Bùi Phạm Nhật Vượng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Bùi Trọng Nhân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Dương Thị Ngọc Hân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Đặng Tường Luân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Đoàn Bùi Nhã Uyên"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Đoàn Nhật Huy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Đỗ Ngọc Trân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Huỳnh Đăng Thanh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Huỳnh Phúc Cát Tường"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Huỳnh Võ Gia Nghi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Lê Huỳnh Minh Quân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Lê Minh Kiên"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Lê Ngọc Anh Thư"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Lê Phúc Tường"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Lê Phước Kỳ Phong"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Lê Thị Cẩm Tiên"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Lê Trần Bảo Tiên"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Lê Tuấn Kiệt"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Lương Thanh Bình"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Nguyễn An Nam"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Nguyễn Lê Quốc An"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Nguyễn Ngọc Bảo Quyên"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Nguyễn Ngọc Kim Anh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Nguyễn Thị Thùy Giang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Nguyễn Thị Tố Quyên"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Nguyễn Trần Gia Bảo"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Nguyễn Trần Hải Duy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Nguyễn Trần Thanh Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Nguyễn Trần Thanh Vân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Nguyễn Trọng Phúc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Nguyễn Tuệ Lâm"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Nguyễn Tường Vy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Phạm Bảo Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Phạm Gia Huy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Phạm Khánh Hưng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Phạm Nguyễn Quỳnh Anh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Trần Đặng Vĩnh Khang"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Trần Gia Phát"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Trần Lâm Khả Vy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Trần Lê Minh Trí"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Trần Ngọc Khánh An"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Trần Ngọc Khánh Trân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Trần Nguyễn Gia Hân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Trịnh Quốc Khánh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Từ Thị Hương"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Võ Lê Khánh Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A7",
+      "name": "Vũ Trung Nghĩa"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Bùi Bảo Chi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Bùi Lê Như Ý"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Danh Hoàng Long"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Đàm Thu Khánh An"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Đặng Như Ý"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Đinh Bảo Vy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Đoàn Duy Hưng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Hoàng Gia Hân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Lê Anh Thư"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Lê Bảo Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Lê Nguyễn Thái Bằng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Lê Phương Quỳnh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Lê Quang Tùng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Lê Thị Bảo Trâm"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Lương Đặng Nhã Uyên"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Nguyễn Cao Tường Nam"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Nguyễn Đức Trí"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Nguyễn Hoàng Thảo My"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Nguyễn Huỳnh Lê Gia Huy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Nguyễn Khánh Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Nguyễn Khôi Nguyên"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Nguyễn Lê Bảo Ân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Nguyễn Minh Phú"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Nguyễn Minh Quân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Nguyễn Phạm Thiên Vy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Nguyễn Trọng Nhân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Phạm Anh Thư"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Phạm Đoàn Duy Anh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Phạm Gia Long"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Phạm Lê Diệu Hân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Phạm Lê Trí Nghĩa"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Phạm Văn Gia Huy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Phan Minh Khôi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Phan Phạm Bảo Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Phan Quỳnh Anh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Thồng Thoại Đan Như"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Trần Gia Hân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Trần Huy Khánh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Trần Lê Kim Anh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Trần Lê Lan Anh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Vũ Bảo Quyên"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Vũ Hải Đăng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Vũ Hoàng Gia Bảo"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A8",
+      "name": "Vũ Ngọc Gia Hưng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Bùi Nguyễn Thanh Vân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Cao Phạm Quỳnh Thương"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Đặng Trung Nghĩa"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Hà Thị Mai Lan"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Huỳnh Ngọc Trúc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Lại Thị Ngọc Anh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Lâm Thanh Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Lê Gia Hân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Lê Hà Minh Tuyết"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Lê Hồ Ngọc Quyên"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Lê Ngọc Mỹ Kim"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Lê Nguyễn Hữu Thiện"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Lê Tuấn Anh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Lê Vũ Quỳnh Hương"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Lương Ngọc Huy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Lưu Kim Mỹ"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Lý Cẩm Vy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Lý Phạm Ngọc Long"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Lý Phú Hưng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Nguyễn Châu Gia Hân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Nguyễn Đoàn Ánh Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Nguyễn Gia Bảo"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Nguyễn Hà Ngân Khánh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Nguyễn Hoàng Phát"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Nguyễn Khả Hân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Nguyễn Khánh Anh Thư"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Nguyễn Khánh Đăng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Nguyễn Mạnh Dũng"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Nguyễn Minh Nhật"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Nguyễn Ngọc Thanh Tâm"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Nguyễn Ngọc Thúy Vy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Nguyễn Thùy Minh"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Nguyễn Thùy Nguyệt"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "NGUYỄN VĂN NAM SƠN"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Phạm Hà Yến Nhi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Phạm Hoàng Ngọc Trâm"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Phạm Trần Minh Vĩ"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Phan Nguyễn Bảo Ngọc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Tô Hoàng Phúc"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Trần Duy Khôi"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Trần Minh Quân"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Trần Nhã Phương"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Trương Như Ý"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Trương Thị Diễm My"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Văn Nguyễn Gia Huy"
+    },
+    {
+      "school": "THCS Huỳnh Tấn Phát",
+      "className": "8A9",
+      "name": "Vũ Ngọc Gia Hân"
+    },
     {
       "school": "TIH NGUYỄN TRUNG NGẠN",
       "className": "4A1",

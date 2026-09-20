@@ -77,16 +77,13 @@
       </div>
       <button type="button" class="btn btn-secondary" id="importExcelBtn">📥 Nạp từ Excel</button>
       <input type="file" id="importExcelInput" accept=".xlsx,.xls" hidden>
-      <button type="button" class="btn btn-primary" id="publishRosterGitHubBtn">🚀 Cập nhật cho học sinh</button>
       <button type="button" class="btn btn-secondary" id="exportRosterJsonBtn">🗂️ Xuất JSON (thủ công)</button>
       <button type="button" class="btn btn-primary" id="addStudentBtn">➕ Thêm học sinh</button>
     </div>
     <div class="export-hint" id="exportRosterHint">
-      💡 Sau khi thêm/sửa/xoá/nạp Excel, bấm <b>"🚀 Cập nhật cho học sinh"</b> — tự đẩy thẳng
-      lên GitHub qua API (không cần tải file/commit/push tay), học sinh thấy danh sách mới
-      sau khoảng 1 phút (GitHub Pages build lại). Lần đầu bấm sẽ hỏi 1 GitHub token — xem
-      hướng dẫn tạo token khi được hỏi. Nút <b>"Xuất JSON (thủ công)"</b> chỉ để dự phòng khi
-      không dùng được token.
+      💡 Sau khi thêm/sửa/xoá/nạp Excel, bấm <b>"🗂️ Xuất JSON (thủ công)"</b> để tải file, rồi
+      chép đè vào <code>data/roster/students-active.json</code> và commit + push lên GitHub —
+      học sinh thấy danh sách mới sau khi GitHub Pages build lại.
     </div>
     <div class="table-scroll">
       <table id="studentsRosterTable">
@@ -154,10 +151,6 @@
      cho tính năng "📥 Nạp từ Excel" ở tab Học sinh (xem js/roster-manager.js). -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
-<!-- Đẩy thẳng file tĩnh (data/roster/students-active.json) lên GitHub qua
-     API, thay cho tải file + git commit + push thủ công — xem nút
-     "🚀 Cập nhật cho học sinh" ở tab Học sinh. -->
-<script src="js/github-publish.js"></script>
 
 <script src="js/roster-manager.js"></script>
 <script src="js/motion.js"></script>

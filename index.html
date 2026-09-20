@@ -209,7 +209,11 @@
           <div class="minitest-meta" id="minitestMeta"></div>
         </div>
 
-        <button type="button" class="btn-start" id="btnStart" onclick="onStartExamClick()" disabled><i class="fa-solid fa-play"></i> Bắt đầu</button>
+        <!-- fa-beat (https://docs.fontawesome.com/web/style/animate —
+             "Scale an icon up or down" để thu hút chú ý vào nút hành động
+             chính) — chỉ chạy lúc hover (paused mặc định, xem #btnStart
+             i.fa-beat trong style.css), tắt hẳn khi disabled. -->
+        <button type="button" class="btn-start" id="btnStart" onclick="onStartExamClick()" disabled><i class="fa-solid fa-play fa-beat"></i> Bắt đầu</button>
         <button type="button" class="btn-secondary" onclick="showRecords()"><i class="fa-solid fa-clock-rotate-left"></i> Xem lịch sử bài làm</button>
 
         <!-- MOS Word 2019 — mô phỏng thao tác Ribbon, 10 tiết ôn luyện cuối
