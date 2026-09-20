@@ -247,12 +247,36 @@
           <i class="fa-solid fa-pen-to-square"></i> MOS Word — Ôn luyện Ribbon
         </button>
 
+        <!-- MOS Excel/PowerPoint — cùng bộ Ribbon simulator 10 tiết như Word
+             (xem excel-simulator.html / powerpoint-simulator.html), chỉ hiện
+             khi đang chọn đúng Chương trình = MOS + Cấp độ tương ứng. -->
+        <button type="button" class="game-zone-open-btn" id="openExcelSimBtn" hidden
+          title="MOS Excel 2019 — 10 tiết ôn luyện thao tác Ribbon">
+          <i class="fa-solid fa-table-cells"></i> MOS Excel — Ôn luyện Ribbon
+        </button>
+        <button type="button" class="game-zone-open-btn" id="openPptSimBtn" hidden
+          title="MOS PowerPoint 2019 — 10 tiết ôn luyện thao tác Ribbon">
+          <i class="fa-solid fa-display"></i> MOS PowerPoint — Ôn luyện Ribbon
+        </button>
+
         <!-- MOS Practice (Excel/PowerPoint) — tải đề thật, làm trên Office
              thật, nộp file để hệ thống tự chấm điểm (mos-practice.html).
-             Cùng nguyên tắc với nút Ribbon ở trên: chỉ hiện khi đang chọn
-             đúng Chương trình = MOS + Cấp độ = Excel/PowerPoint. -->
+             Bổ sung cho Ribbon simulator ở trên (luyện thao tác) — đây là
+             bước kiểm tra thực chiến trên file .xlsx/.pptx thật. Chỉ hiện
+             khi đang chọn đúng Chương trình = MOS + Cấp độ = Excel/PowerPoint. -->
         <a class="game-zone-open-btn" id="openMosPracticeBtn" href="mos-practice.html" target="_blank" rel="noopener" hidden>
           <i class="fa-solid fa-file-export"></i> MOS Practice — Nộp bài chấm điểm thật
+        </a>
+
+        <!-- MOS Exam Simulator (mới) — chấm theo Application State thật
+             (Document/Spreadsheet/Slide Object Model), khác hẳn Ribbon
+             simulator ở trên (mô phỏng thao tác theo kịch bản cố định).
+             Xem exam-simulator-{word,excel,ppt}.html + js/main.js §
+             updateMosInlinePractice(). Mở tab mới (không phải modal) vì
+             có timer/autosave riêng, cần tồn tại độc lập với vòng đời
+             modal iframe. -->
+        <a class="game-zone-open-btn" id="openExamSimBtn" href="#" target="_blank" rel="noopener" hidden>
+          <i class="fa-solid fa-flask"></i> MOS Exam Simulator — Thi thử chấm theo trạng thái thật (Beta)
         </a>
       </div>
     </div>
@@ -648,6 +672,48 @@
     </div>
   </div>
 
+  <!-- ============ MOS EXCEL 2019 — Ôn luyện Ribbon (modal) — xem js/game-modal.js ============ -->
+  <div class="game-modal-overlay" id="excelSimModalOverlay">
+    <div class="game-modal">
+      <div class="game-modal-bar">
+        <span class="game-modal-title"><i class="fa-solid fa-table-cells"></i> MOS Excel 2019 — Ôn luyện Ribbon</span>
+        <button type="button" class="game-modal-close" id="closeExcelSimModalBtn"><i class="fa-solid fa-xmark"></i> Đóng</button>
+      </div>
+      <div class="game-modal-frame">
+        <iframe
+          id="excelSimModalFrame"
+          class="game-modal-iframe"
+          title="MOS Excel 2019 — Ôn luyện Ribbon"
+          src="about:blank"
+          data-src="excel-simulator.html"
+          loading="lazy"
+          allow="fullscreen"
+        ></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MOS POWERPOINT 2019 — Ôn luyện Ribbon (modal) — xem js/game-modal.js ============ -->
+  <div class="game-modal-overlay" id="pptSimModalOverlay">
+    <div class="game-modal">
+      <div class="game-modal-bar">
+        <span class="game-modal-title"><i class="fa-solid fa-display"></i> MOS PowerPoint 2019 — Ôn luyện Ribbon</span>
+        <button type="button" class="game-modal-close" id="closePptSimModalBtn"><i class="fa-solid fa-xmark"></i> Đóng</button>
+      </div>
+      <div class="game-modal-frame">
+        <iframe
+          id="pptSimModalFrame"
+          class="game-modal-iframe"
+          title="MOS PowerPoint 2019 — Ôn luyện Ribbon"
+          src="about:blank"
+          data-src="powerpoint-simulator.html"
+          loading="lazy"
+          allow="fullscreen"
+        ></iframe>
+      </div>
+    </div>
+  </div>
+
   <script src="js/googleSheet.js"></script>
   <script src="js/gamification.js"></script>
 
@@ -692,6 +758,8 @@
     initGameModal({ openBtnId: 'openCyberDetectiveBtn', overlayId: 'cyberDetectiveModalOverlay', closeBtnId: 'closeCyberDetectiveModalBtn', frameId: 'cyberDetectiveModalFrame' });
     initGameModal({ openBtnId: 'openComputerSimBtn', overlayId: 'computerSimModalOverlay', closeBtnId: 'closeComputerSimModalBtn', frameId: 'computerSimModalFrame' });
     initGameModal({ openBtnId: 'openWordSimBtn', overlayId: 'wordSimModalOverlay', closeBtnId: 'closeWordSimModalBtn', frameId: 'wordSimModalFrame', persist: true }); // giữ tiến độ ws_progress_v1
+    initGameModal({ openBtnId: 'openExcelSimBtn', overlayId: 'excelSimModalOverlay', closeBtnId: 'closeExcelSimModalBtn', frameId: 'excelSimModalFrame', persist: true }); // giữ tiến độ xs_progress_v1
+    initGameModal({ openBtnId: 'openPptSimBtn', overlayId: 'pptSimModalOverlay', closeBtnId: 'closePptSimModalBtn', frameId: 'pptSimModalFrame', persist: true }); // giữ tiến độ ps_progress_v1
   </script>
   <!-- Khu Vui Chơi: mở/khóa hub gộp 5 mini-game theo điểm thi. Nạp SAU
        5 file *-modal.js ở trên để nút bên trong hub đã có listener mở

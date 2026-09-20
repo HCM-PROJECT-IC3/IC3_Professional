@@ -1,0 +1,43 @@
+/* css/exam-simulator-word.css — phần riêng cho trang đề Word, dùng chung
+   khung .exs-* với css/exam-simulator.css */
+.exw-page {
+  background: #fff;
+  border: 1px solid var(--exs-border);
+  border-radius: 8px;
+  min-height: 50vh;
+  padding: 16px;
+  color: #111;
+}
+@media (prefers-color-scheme: dark) {
+  .exw-page { background: #2a2f3a; color: #eee; }
+}
+.exw-header, .exw-footer {
+  min-height: 24px;
+  padding: 4px 8px;
+  color: var(--exs-muted);
+  border-bottom: 1px dashed var(--exs-border);
+  outline: none;
+  font-size: 0.85rem;
+}
+.exw-footer { border-bottom: none; border-top: 1px dashed var(--exs-border); margin-top: 12px; }
+.exw-header:empty::before, .exw-footer:empty::before {
+  content: attr(data-placeholder);
+  opacity: 0.5;
+}
+.exw-body { padding: 12px 4px; }
+
+.exw-para {
+  outline: none;
+  min-height: 1.4em;
+  line-height: 1.5;
+  margin: 4px 0;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.exw-para:focus { background: rgba(31, 111, 235, 0.06); }
+.exw-para[data-style="Heading1"] { font-size: 1.5rem; font-weight: 800; }
+.exw-para[data-style="Heading2"] { font-size: 1.25rem; font-weight: 700; }
+.exw-para[data-style="Title"] { font-size: 2rem; font-weight: 800; }
+.exw-para[data-align="center"] { text-align: center; }
+.exw-para[data-align="right"] { text-align: right; }
+.exw-para[data-list="bullet"] { list-style: disc; margin-left: 24px; display: list-item; }

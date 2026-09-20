@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>MOS PowerPoint — Exam Simulator (state-based)</title>
+<link rel="stylesheet" href="css/exam-simulator.css" />
+<link rel="stylesheet" href="css/exam-simulator-ppt.css" />
+</head>
+<body>
+<!-- ════════════════════════════════════════════════════════════
+     exam-simulator-ppt.html — cùng kiến trúc pipeline với 2 trang Word/
+     Excel (xem chú thích ở exam-simulator-excel.html). Application State
+     là js/ppt-engine/slide-model.js (Slide Object Model thật: position/
+     size/rotation/zIndex/style từng object) — học viên KÉO THẢ object
+     thật trên canvas, không phải chọn đáp án trắc nghiệm.
+     ════════════════════════════════════════════════════════════ -->
+
+  <header class="exs-topbar">
+    <div class="exs-topbar-title"><i>🖥️</i> MOS PowerPoint — Exam Simulator</div>
+    <div class="exs-timer" id="exsTimer">⏱ --:--</div>
+    <button type="button" class="exs-submit-btn" id="exsSubmitBtn">Nộp bài</button>
+  </header>
+
+  <main class="exs-layout">
+    <aside class="exs-instruction-panel">
+      <h2>Đề bài</h2>
+      <p id="exsInstruction">Đang tải...</p>
+      <div class="exs-points" id="exsPoints"></div>
+      <div class="exs-hint-box" id="exsHintBox" hidden>
+        <button type="button" id="exsHintBtn">💡 Xem gợi ý (trừ điểm)</button>
+        <ul id="exsHintList" hidden></ul>
+      </div>
+    </aside>
+
+    <section class="exs-sheet-panel">
+      <div class="exs-toolbar">
+        <label>X <input type="number" id="expPosX" style="width:64px"></label>
+        <label>Y <input type="number" id="expPosY" style="width:64px"></label>
+        <span class="exs-toolbar-sep"></span>
+        <button type="button" id="expBringFront" title="Bring to Front">⬆⬆</button>
+        <button type="button" id="expBringForward" title="Bring Forward">⬆</button>
+        <button type="button" id="expSendBackward" title="Send Backward">⬇</button>
+        <button type="button" id="expSendBack" title="Send to Back">⬇⬇</button>
+      </div>
+      <div class="exp-canvas-wrap">
+        <div class="exp-slide-canvas" id="expCanvas"></div>
+      </div>
+      <!-- Selection Pane thu gọn — cần thiết vì object có thể bị object
+           khác đè hoàn toàn lên trên (đúng tình huống đề bài yêu cầu
+           "Bring to Front"), lúc đó không còn điểm ảnh nào để click chọn
+           trực tiếp trên canvas — giống Selection Pane thật của PowerPoint
+           (Format → Arrange → Selection Pane). -->
+      <div class="exp-object-list" id="expObjectList"></div>
+    </section>
+  </main>
+
+  <div class="exs-result-overlay" id="exsResultOverlay" hidden>
+    <div class="exs-result-card">
+      <h2>Kết quả chấm</h2>
+      <div class="exs-result-score" id="exsResultScore"></div>
+      <ul class="exs-result-details" id="exsResultDetails"></ul>
+      <button type="button" id="exsResultCloseBtn">Đóng</button>
+    </div>
+  </div>
+
+  <script src="js/exam-engine/task-schema.js"></script>
+  <script src="js/exam-engine/validation-engine.js"></script>
+  <script src="js/exam-engine/exam-runner.js"></script>
+  <script src="js/exam-engine/autosave-service.js"></script>
+  <script src="js/exam-engine/exam-ui-chrome.js"></script>
+  <script src="js/ppt-engine/slide-model.js"></script>
+  <script src="js/ppt-engine/ppt-tasks-sample.js"></script>
+  <script src="js/exam-simulator-ppt.js"></script>
+</body>
+</html>

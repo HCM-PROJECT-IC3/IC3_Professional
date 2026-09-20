@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>MOS Word — Exam Simulator (state-based)</title>
+<link rel="stylesheet" href="css/exam-simulator.css" />
+<link rel="stylesheet" href="css/exam-simulator-word.css" />
+</head>
+<body>
+<!-- ════════════════════════════════════════════════════════════
+     exam-simulator-word.html — Cùng kiến trúc với exam-simulator-excel.html
+     (xem chú thích ở đó): Application State là js/word-engine/document-model.js
+     (Document Object Model thật), chấm bởi Validation Engine dùng chung.
+
+     Gõ chữ dùng contenteditable THẬT (để có con trỏ/undo/IME mượt như
+     trình duyệt xử lý sẵn) — nhưng bàn phím tắt định dạng (Ctrl+B/I/U) bị
+     CHẶN hành vi mặc định của trình duyệt (vốn sẽ tự chèn thẻ <b>/<i>) và
+     ĐI QUA document-model.js để Application State luôn là "nguồn sự thật"
+     duy nhất; sau mỗi thao tác định dạng, DOM được vẽ lại HOÀN TOÀN từ
+     state (không tin để trình duyệt tự ý sinh HTML). Xem js/exam-simulator-word.js.
+     ════════════════════════════════════════════════════════════ -->
+
+  <header class="exs-topbar">
+    <div class="exs-topbar-title"><i>📝</i> MOS Word — Exam Simulator</div>
+    <div class="exs-timer" id="exsTimer">⏱ --:--</div>
+    <button type="button" class="exs-submit-btn" id="exsSubmitBtn">Nộp bài</button>
+  </header>
+
+  <main class="exs-layout">
+    <aside class="exs-instruction-panel">
+      <h2>Đề bài</h2>
+      <p id="exsInstruction">Đang tải...</p>
+      <div class="exs-points" id="exsPoints"></div>
+      <div class="exs-hint-box" id="exsHintBox" hidden>
+        <button type="button" id="exsHintBtn">💡 Xem gợi ý (trừ điểm)</button>
+        <ul id="exsHintList" hidden></ul>
+      </div>
+    </aside>
+
+    <section class="exs-sheet-panel">
+      <div class="exs-toolbar">
+        <select id="exsParaStyle">
+          <option value="Normal">Normal</option>
+          <option value="Heading1">Heading 1</option>
+          <option value="Heading2">Heading 2</option>
+          <option value="Title">Title</option>
+        </select>
+        <span class="exs-toolbar-sep"></span>
+        <button type="button" data-cmd="bold"><b>B</b></button>
+        <button type="button" data-cmd="italic"><i>I</i></button>
+        <button type="button" data-cmd="underline"><u>U</u></button>
+        <span class="exs-toolbar-sep"></span>
+        <button type="button" data-align="left">⬅</button>
+        <button type="button" data-align="center">⬛</button>
+        <button type="button" data-align="right">➡</button>
+        <span class="exs-toolbar-sep"></span>
+        <button type="button" data-list="bullet">• List</button>
+      </div>
+
+      <div class="exw-page">
+        <div class="exw-header" id="exwHeader" contenteditable="true" data-placeholder="Header..."></div>
+        <div class="exw-body" id="exwBody"></div>
+        <div class="exw-footer" id="exwFooter" contenteditable="true" data-placeholder="Footer..."></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="exs-result-overlay" id="exsResultOverlay" hidden>
+    <div class="exs-result-card">
+      <h2>Kết quả chấm</h2>
+      <div class="exs-result-score" id="exsResultScore"></div>
+      <ul class="exs-result-details" id="exsResultDetails"></ul>
+      <button type="button" id="exsResultCloseBtn">Đóng</button>
+    </div>
+  </div>
+
+  <script src="js/exam-engine/task-schema.js"></script>
+  <script src="js/exam-engine/validation-engine.js"></script>
+  <script src="js/exam-engine/exam-runner.js"></script>
+  <script src="js/exam-engine/autosave-service.js"></script>
+  <script src="js/exam-engine/exam-ui-chrome.js"></script>
+  <script src="js/word-engine/document-model.js"></script>
+  <script src="js/word-engine/word-tasks-sample.js"></script>
+  <script src="js/exam-simulator-word.js"></script>
+</body>
+</html>
