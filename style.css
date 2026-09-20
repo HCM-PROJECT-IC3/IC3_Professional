@@ -821,6 +821,15 @@ body {
 }
 .btn-start:active:not(:disabled) { transform: translateY(0) }
 .btn-start:disabled { opacity: .45; cursor: not-allowed }
+/* .fa-beat (https://docs.fontawesome.com/web/style/animate) tự chạy liên
+   tục theo mặc định — tạm dừng bằng animation-play-state, chỉ cho chạy
+   lúc hover VÀ nút đang bật (không phải :disabled), đúng tinh thần
+   "attention-grabbing" của tài liệu dành cho nút hành động chính, nhưng
+   không nhấp nháy suốt (tránh cảm giác giao diện tự sinh bởi AI).
+   prefers-reduced-motion đã được chính Font Awesome xử lý sẵn trong
+   all.min.css, không cần lặp lại ở đây. */
+.btn-start i.fa-beat { animation-play-state: paused; }
+.btn-start:hover:not(:disabled) i.fa-beat { animation-play-state: running; }
 
 /* Bộ nút "chế độ" lọc trước Minitest (Theo tiết / Theo chủ đề / Tổng
    hợp) — bấm 1 nút để select bên dưới chỉ hiện đúng nhóm đó, tránh 1

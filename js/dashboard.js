@@ -293,9 +293,24 @@ function updateCarouselArrows(activeIdx, total) {
 }
 
 function carouselGoTo(index) {
+  const track = document.getElementById('carouselTrack');
   const items = carouselItems();
   const item = items[index];
-  if (item) item.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  if (!track || !item) return;
+  // KHÔNG dùng item.scrollIntoView({inline:'center'}) — nó cuộn CẢ các
+  // ancestor scrollable khác (kể cả <body>, vì overflow:hidden vẫn nhận
+  // scrollLeft qua JS) chứ không chỉ track, khiến toàn bộ trang bị đẩy
+  // ngang, lộ khoảng trống bên phải và cắt mất sidebar bên trái (bug "mất
+  // 1 đoạn giao diện khi nhấn mũi tên"). Tự tính offset rồi cuộn ĐÚNG 1
+  // mình track bằng scrollTo() để không ảnh hưởng ancestor nào khác.
+  // Dùng getBoundingClientRect() thay vì item.offsetLeft — offsetLeft tính
+  // theo offsetParent GẦN NHẤT có position khác static, mà đó chưa chắc là
+  // track (vd .carousel-wrap mới là positioned ancestor), nên offsetLeft có
+  // thể lệch. rect trừ rect luôn ra đúng khoảng cách thật giữa 2 phần tử.
+  const itemRect = item.getBoundingClientRect();
+  const trackRect = track.getBoundingClientRect();
+  const targetLeft = track.scrollLeft + (itemRect.left - trackRect.left) - (track.clientWidth - item.clientWidth) / 2;
+  track.scrollTo({ left: targetLeft, behavior: 'smooth' });
 }
 
 function carouselStep(dir) {
@@ -1025,7 +1040,16 @@ function saveNewSet() {
 function showToast(msg, iconClass) {
   const toast = document.getElementById('session-toast');
   const iconEl = toast.querySelector('.toast-icon i');
-  if (iconEl) iconEl.className = 'fa-solid ' + (iconClass || 'fa-rocket');
+  if (iconEl) {
+    // fa-bounce (https://docs.fontawesome.com/web/style/animate —
+    // "Visually bouncing an icon up and down") — CHỈ gắn cho icon báo
+    // THÀNH CÔNG (fa-circle-check), tạo cảm giác "ăn mừng" nhẹ khi tạo bộ
+    // đề mới thành công; các icon khác (fa-thumbtack/fa-download/fa-trash)
+    // đứng yên để không biến MỌI toast thành hoạt hình liên tục — cùng
+    // nguyên tắc "complementary, not the only way" mà tài liệu khuyến nghị.
+    const animateClass = iconClass === 'fa-circle-check' ? ' fa-bounce' : '';
+    iconEl.className = 'fa-solid ' + (iconClass || 'fa-rocket') + animateClass;
+  }
   document.getElementById('toast-text').textContent = msg;
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 3500);

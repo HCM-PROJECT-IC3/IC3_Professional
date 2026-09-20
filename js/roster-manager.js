@@ -537,11 +537,9 @@
   // thay vì gọi Firestore trực tiếp — xem ghi chú đầu file
   // js/lobby-roster.js để biết lý do: tránh nổ quota đọc Firestore
   // (mỗi lần mở/tải lại index.html trước đây tốn 1 lượt đọc × số học
-  // sinh "active"). File xuất ra là NGUỒN TĨNH — nút chính
-  // "🚀 Cập nhật cho học sinh" (publishRosterToGitHub, phía dưới) tự
-  // đẩy file này lên GitHub qua API. Hàm exportRosterJson() dưới đây
-  // chỉ còn là NÚT DỰ PHÒNG (tải file JSON về tay) cho lúc không dùng
-  // được token GitHub.
+  // sinh "active"). File xuất ra là NGUỒN TĨNH — sau khi tải file này
+  // (exportRosterJson() dưới đây), chép đè vào
+  // data/roster/students-active.json rồi commit + push lên GitHub.
   // ============================================================
   function buildRosterExportPayload() {
     const students = state.students
@@ -580,42 +578,6 @@
   }
 
   document.getElementById('exportRosterJsonBtn').addEventListener('click', exportRosterJson);
-
-  // ============================================================
-  // CẬP NHẬT TỰ ĐỘNG CHO index.html — ĐẨY THẲNG data/roster/students-active.json
-  // LÊN GITHUB QUA API (window.EduGitHubPublish, xem js/github-publish.js),
-  // KHÔNG cần tải file + git commit + push thủ công nữa. Vẫn ghi ra
-  // CÙNG 1 file tĩnh (không đổi kiến trúc "index.html đọc file tĩnh,
-  // không gọi Firestore trực tiếp" — lý do bảo mật/quota vẫn còn
-  // nguyên, xem ghi chú ở buildRosterExportPayload phía trên), chỉ tự
-  // động hoá bước cuối.
-  // ============================================================
-  async function publishRosterToGitHub() {
-    const payload = buildRosterExportPayload();
-    if (!payload.count) {
-      toast('⚠️ Chưa có học sinh "Đang học" nào để cập nhật.');
-      return;
-    }
-    const btn = document.getElementById('publishRosterGitHubBtn');
-    const originalLabel = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = '⏳ Đang cập nhật...';
-    try {
-      await window.EduGitHubPublish.publishFiles(
-        [{ path: 'data/roster/students-active.json', content: JSON.stringify(payload, null, 2) }],
-        `chore(roster): cập nhật danh sách học sinh (${payload.count} HS, ${payload.version})`
-      );
-      logRosterChange('publish_json_github', null, { count: payload.count });
-      toast(`🚀 Đã cập nhật lên GitHub (${payload.count} học sinh) — index.html sẽ thấy sau khoảng 1 phút.`);
-    } catch (err) {
-      toast('❌ Cập nhật GitHub thất bại: ' + friendlyError(err));
-    } finally {
-      btn.disabled = false;
-      btn.textContent = originalLabel;
-    }
-  }
-
-  document.getElementById('publishRosterGitHubBtn').addEventListener('click', publishRosterToGitHub);
 
   // ============================================================
   // NẠP HỌC SINH TỪ FILE EXCEL (.xlsx/.xls) — đọc bằng SheetJS ngay

@@ -909,7 +909,11 @@ function initLobby() {
     const btn     = document.getElementById('btnStart');
     if (btn) {
       btn.disabled = !(count && name && cls && school && pledged);
-      btn.innerHTML = '<i class="fa-solid fa-play"></i> Bắt đầu';
+      // fa-beat (https://docs.fontawesome.com/web/style/animate) — paused
+      // mặc định, chỉ chạy khi hover (xem #btnStart i.fa-beat trong
+      // style.css); refreshMeta() chạy lại mỗi khi đổi lựa chọn nên phải
+      // giữ nguyên class này, không được rơi về plain fa-play.
+      btn.innerHTML = '<i class="fa-solid fa-play fa-beat"></i> Bắt đầu';
     }
 
     // Hiện/ẩn nút "MOS Word — Ôn luyện Ribbon" / "MOS Practice" ngay trong
@@ -3874,6 +3878,18 @@ function showNotification(message, type = 'info') {
   const icons = { success: 'fa-circle-check', error: 'fa-circle-xmark', warning: 'fa-triangle-exclamation', info: 'fa-circle-info' };
   const icon = document.createElement('i');
   icon.className = 'fa-solid ' + (icons[type] || icons.info);
+  // fa-shake/fa-bounce (https://docs.fontawesome.com/web/style/animate):
+  // - fa-shake: "Shaking an icon back and forth" cho "denial/attention" —
+  //   CHỈ gắn warning/error, đúng ngữ nghĩa "từ chối/cảnh báo" tài liệu mô
+  //   tả (vd chặn nộp bài khi chưa làm hết, phát hiện gian lận).
+  // - fa-bounce: "Visually bouncing an icon up and down" — gắn cho
+  //   success (lưu thành công, mở khóa huy hiệu mới...) để tạo cảm giác
+  //   "ăn mừng" nhẹ nhàng thay vì chỉ đứng yên.
+  // Cố tình KHÔNG gắn animation cho info — giữ 1 mức "trung tính" làm đối
+  // chứng, tránh mọi toast đều nhấp nháy (đúng khuyến nghị "complementary
+  // way rather than the only way" của tài liệu).
+  if (type === 'warning' || type === 'error') icon.classList.add('fa-shake');
+  else if (type === 'success') icon.classList.add('fa-bounce');
   icon.style.cssText = 'flex-shrink:0;margin-top:2px;';
   toast.appendChild(icon);
   toast.appendChild(document.createTextNode(message));

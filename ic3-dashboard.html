@@ -121,7 +121,12 @@
            hàng 2 = bộ lọc (không còn chen chúc trên 1 dòng như trước) -->
       <div class="toolbar">
         <div class="toolbar-row toolbar-row-primary">
-          <button type="button" class="btn-create" onclick="openModal('create')"><i class="fa-solid fa-plus"></i> Tạo bộ đề mới</button>
+          <!-- fa-beat: theo https://docs.fontawesome.com/web/style/animate
+               ("Scale an icon up or down" để thu hút chú ý) — CHỈ chạy khi
+               hover (mặc định paused, xem .btn-create i.fa-beat trong
+               css/dashboard.css), không tự chạy liên tục để tránh cảm giác
+               "web AI" nhấp nháy vô tội vạ. -->
+          <button type="button" class="btn-create" onclick="openModal('create')"><i class="fa-solid fa-plus fa-beat"></i> Tạo bộ đề mới</button>
           <div class="search-box">
             <input type="text" id="searchInput" placeholder="Tìm kiếm bộ đề..." oninput="filterCards()">
           </div>

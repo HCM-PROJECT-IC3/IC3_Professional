@@ -388,6 +388,15 @@ body {
 }
 .btn-create:hover { transform: translateY(-2px); box-shadow: 7px 7px 16px rgba(47,64,178,0.45), -4px -4px 12px rgba(255,255,255,0.55); background: #4f46e5; }
 .btn-create:active { transform: translateY(0); box-shadow: inset 3px 3px 8px rgba(49,46,129,0.5); }
+/* .fa-beat (https://docs.fontawesome.com/web/style/animate) tự chạy liên
+   tục theo mặc định của Font Awesome — ở đây CHỦ ĐỘNG tạm dừng
+   (animation-play-state), chỉ cho chạy lúc rê chuột vào nút CTA chính,
+   đúng tinh thần "attention-grabbing" của tài liệu nhưng không nhấp nháy
+   suốt (tránh cảm giác giao diện tự sinh bởi AI). prefers-reduced-motion
+   đã được chính Font Awesome xử lý sẵn trong file all.min.css, không cần
+   lặp lại ở đây. */
+.btn-create i.fa-beat { animation-play-state: paused; }
+.btn-create:hover i.fa-beat { animation-play-state: running; }
 
 .search-box {
   flex: 1; min-width: 180px;
