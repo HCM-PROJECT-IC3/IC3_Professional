@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let velocity = 0;       // độ/khung hình — dùng cho quán tính khi thả tay
   let dragging = false;
   let hovering = false;
+  let rafId = null;       // id của requestAnimationFrame đang chờ — dùng để TẠM DỪNG hẳn vòng lặp khi tab ẩn (xem tick())
   let lastX = 0;
   let lastMoveT = 0;
 
@@ -85,8 +86,23 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       render();
     }
-    requestAnimationFrame(tick);
+    rafId = requestAnimationFrame(tick);
   }
+
+  // § Nhóm H — TẠM DỪNG HẲN vòng lặp rAF khi tab bị ẩn/nền hoá thay vì
+  // chỉ trông chờ trình duyệt tự throttle (hành vi throttle không đồng
+  // nhất giữa các trình duyệt/phiên bản) — cảnh xoay 3D này chạy SUỐT
+  // vòng đời trang chủ (không như mini-game trong modal, vốn đã tự gỡ
+  // hẳn iframe lúc đóng), nên là nơi tốn pin/CPU nền nhiều nhất nếu học
+  // sinh mở trang rồi chuyển tab khác cả ngày. cancelAnimationFrame() rồi
+  // KHÔNG lên lịch tick() mới — không chỉ "bỏ qua việc vẽ" mà dừng hẳn.
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
+    } else if (rafId === null) {
+      rafId = requestAnimationFrame(tick);
+    }
+  });
 
   // ── Kéo để xoay (Pointer Events — dùng chung chuột + cảm ứng) ──
   function onPointerDown(e) {
@@ -150,5 +166,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
   computeRadius();
   render();
-  requestAnimationFrame(tick);
+  rafId = requestAnimationFrame(tick);
 });
