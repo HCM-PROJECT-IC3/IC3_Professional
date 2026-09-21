@@ -445,6 +445,14 @@ document.addEventListener('visibilitychange', () => {
     flushQTime(State.current);
   } else {
     State.session.qStart[State.current] = Date.now();
+    // § Nhóm C — đồng hồ đã neo theo timerEndAt (Date.now()) nên tick kế
+    // tiếp TỰ ĐỘNG đúng dù tab vừa bị ẩn bao lâu; đồng bộ lại NGAY khi
+    // quay lại tab chỉ để số hiển thị không đợi tới tick giây kế tiếp
+    // mới cập nhật (thuần UX, không ảnh hưởng tính đúng của thời gian).
+    if (State.timerEndAt && State.examMode === 'test') {
+      State.timeLeft = Math.max(0, Math.round((State.timerEndAt - Date.now()) / 1000));
+      updateTimerDisplay();
+    }
   }
 });
 
@@ -1402,9 +1410,20 @@ function startTimer() {
   }
   if (wrap) wrap.hidden = false;
 
+  // § Nhóm C — neo đồng hồ theo MỐC THỜI GIAN TUYỆT ĐỐI (Date.now()),
+  // không cộng dồn qua từng tick setInterval. Lý do: nếu chỉ
+  // "State.timeLeft--" mỗi tick, trình duyệt có thể trì hoãn/gộp tick khi
+  // tab bị ẩn/nền hoá hoặc máy yếu quá tải — khiến đồng hồ "đứng hình"
+  // so với thời gian thật đã trôi qua (học sinh vô tình được cộng thêm
+  // giờ làm bài). Neo theo timerEndAt thì MỖI LẦN tick đều tự tính lại
+  // đúng số giây còn lại theo đồng hồ thật, dù tick có bị trễ/gộp thế
+  // nào — và cũng tự đúng luôn khi startTimer() được gọi lại lúc khôi
+  // phục bài làm dở dang (§ 1b) vì tính lại timerEndAt mới mỗi lần gọi.
+  State.timerEndAt = Date.now() + State.timeLeft * 1000;
+
   updateTimerDisplay();
   State.timer = setInterval(() => {
-    State.timeLeft--;
+    State.timeLeft = Math.max(0, Math.round((State.timerEndAt - Date.now()) / 1000));
     updateTimerDisplay();
     if (State.timeLeft % 5 === 0) saveInProgress(); // § 1b — tự lưu mỗi ~5s, không chặn UI
     if (State.timeLeft <= 0) { clearInterval(State.timer); autoSubmit(); }
