@@ -77,6 +77,48 @@ window.EDU_ALLOWED_ROLES = ['admin'];
   // dùng để liên kết 1 tài khoản (role teacher) với ĐÚNG 1 bản ghi giáo
   // viên (field "teacherCode" trên users/{uid}), nhờ đó giáo viên tự xem
   // được lịch của mình mà firestore.rules vẫn chặn được xem lịch người khác.
+  // Danh sách LỚP thật (collection "classes", do roster-manager.html quản
+  // lý) — dùng để admin GÁN TRỰC TIẾP "giáo viên này dạy lớp nào" thay vì
+  // chỉ suy gián tiếp qua việc khớp tên GV lúc Nạp Excel (roster-manager.js
+  // classifyImportRows() so tên bằng stripDiacritics — 2 GV trùng tên/gõ
+  // sai dấu vẫn bị khớp NHẦM, khiến "Đồng bộ theo lớp đang dạy" ở đây lôi
+  // theo cả trường/lớp SAI mà admin không có cách nào tự sửa ngoài việc
+  // sửa lại tên trong Lịch giảng dạy). Người dùng phản hồi: cần chọn tay
+  // được lớp cho từng giáo viên ngay tại đây.
+  let allClasses = []; // [{id, name, school, courseId, teacherId, teacherName, ...}]
+
+  async function loadClasses() {
+    try {
+      const snap = await EduFirebase.db.collection('classes').get();
+      allClasses = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+    } catch (err) {
+      console.warn('[EduAdminUsers] Không tải được danh sách lớp (classes):', err.message);
+      allClasses = [];
+    }
+  }
+
+  /** <optgroup> theo trường, đánh dấu sẵn lớp đang gán cho `uid`, và ghi chú
+   * nếu lớp đó đang thuộc về giáo viên KHÁC (giúp admin tránh gán chồng). */
+  function classOptionsHtml(uid) {
+    const bySchool = {};
+    allClasses.forEach(c => {
+      const school = c.school || '(Chưa gán trường)';
+      (bySchool[school] = bySchool[school] || []).push(c);
+    });
+    const schoolNames = Object.keys(bySchool).sort((a, b) => a.localeCompare(b, 'vi'));
+    return schoolNames.map(school => {
+      const opts = bySchool[school]
+        .slice()
+        .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'vi'))
+        .map(c => {
+          const isMine = c.teacherId === uid;
+          const otherLabel = (c.teacherId && !isMine) ? ` — đang: ${c.teacherName || c.teacherId}` : '';
+          return `<option value="${esc(c.id)}" ${isMine ? 'selected' : ''}>${esc(c.name || '(chưa đặt tên)')}${esc(otherLabel)}</option>`;
+        }).join('');
+      return `<optgroup label="${esc(school)}">${opts}</optgroup>`;
+    }).join('');
+  }
+
   let allTeachingTeachers = []; // [{code,name}]
 
   async function loadTeachingTeachers() {
@@ -102,10 +144,11 @@ window.EDU_ALLOWED_ROLES = ['admin'];
     const [snap] = await Promise.all([
       EduFirebase.db.collection('users').orderBy('createdAt', 'desc').get(),
       loadSchools(),
+      loadClasses(),
       loadTeachingTeachers(),
     ]);
     if (snap.empty) {
-      tbody.innerHTML = '<tr><td colspan="7">Chưa có tài khoản nào.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8">Chưa có tài khoản nào.</td></tr>';
       return;
     }
 
@@ -178,6 +221,20 @@ window.EDU_ALLOWED_ROLES = ['admin'];
             ${u.role === 'teacher' ? `<button type="button" class="syncSchoolsBtn" title="Đặt lại đúng theo trường giáo viên này ĐANG DẠY THẬT (students_roster), bỏ mọi chỉnh tay">🔄 Đồng bộ theo lớp đang dạy</button>` : ''}
           ` : `<span class="hint">Chưa có trường nào trong danh sách học sinh (roster-manager.html)</span>`}
           ${userSchools.length ? `<div class="schoolsCurrent">${u.role === 'coordinator' ? 'Đang hỗ trợ' : 'Đang xem'}: ${userSchools.map(esc).join(', ')}</div>` : (u.role === 'coordinator' ? `<div class="schoolsCurrent hint">⚠️ Chưa gán trường nào — điều phối đào tạo này CHƯA xem/sửa được trường nào cả (khác trước đây, mặc định thấy hết)</div>` : '')}
+        </td>
+        <td class="classesCell" ${u.role === 'teacher' ? '' : 'hidden'}>
+          ${allClasses.length ? `
+            <select class="classesSelect" multiple size="${Math.min(6, Math.max(3, allClasses.length))}" title="Giữ Ctrl (hoặc Cmd) để chọn nhiều lớp — gán TRỰC TIẾP lớp giáo viên này dạy, không cần đợi khớp tên lúc Nạp Excel">
+              ${classOptionsHtml(doc.id)}
+            </select>
+            <button type="button" class="saveClassesBtn">💾 Lưu lớp</button>
+          ` : `<span class="hint">Chưa có lớp nào (roster-manager.html)</span>`}
+          ${(() => {
+            const mine = allClasses.filter(c => c.teacherId === doc.id);
+            return mine.length
+              ? `<div class="classesCurrent">Đang dạy: ${mine.map(c => esc(`${c.school || '?'} · ${c.name || '?'}`)).join(', ')}</div>`
+              : `<div class="classesCurrent hint">Chưa gán lớp nào</div>`;
+          })()}
         </td>
         <td class="teacherCodeCell" ${u.role === 'teacher' ? '' : 'hidden'}>
           ${allTeachingTeachers.length ? `
@@ -264,6 +321,78 @@ window.EDU_ALLOWED_ROLES = ['admin'];
           loadUsers();
         } catch (err) {
           toast('❌ Lỗi: ' + err.message);
+        }
+      });
+    });
+
+    tbody.querySelectorAll('.saveClassesBtn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const tr = e.target.closest('tr');
+        const uid = tr.dataset.uid;
+        const row = users.find(x => x.doc.id === uid);
+        const teacherName = row ? (row.u.name || row.u.email || '') : '';
+        const sel = tr.querySelector('.classesSelect');
+        const chosenIds = new Set(Array.from(sel.selectedOptions).map(o => o.value));
+        const toAssign = allClasses.filter(c => chosenIds.has(c.id) && c.teacherId !== uid);
+        const toUnassign = allClasses.filter(c => c.teacherId === uid && !chosenIds.has(c.id));
+        if (!toAssign.length && !toUnassign.length) {
+          toast('Không có thay đổi để lưu.');
+          return;
+        }
+        // Gán chồng: 1 lớp không nên có 2 GV phụ trách — cảnh báo (không
+        // chặn cứng, phòng trường hợp cố ý cho GV khác xem tạm) để admin
+        // biết mình vừa "cướp" lớp khỏi giáo viên đang đứng lớp đó.
+        const stolen = toAssign.filter(c => c.teacherId);
+        if (stolen.length && !confirm(
+          `${stolen.length} lớp bạn vừa chọn đang có giáo viên khác phụ trách:\n` +
+          stolen.map(c => `- ${c.school || '?'} · ${c.name || '?'} (đang: ${c.teacherName || c.teacherId})`).join('\n') +
+          `\n\nTiếp tục sẽ CHUYỂN các lớp này sang "${teacherName}". Tiếp tục?`
+        )) return;
+
+        btn.disabled = true;
+        const oldLabel = btn.textContent;
+        btn.textContent = '⏳ Đang lưu...';
+        try {
+          let batch = EduFirebase.db.batch();
+          let ops = 0;
+          const flushIfNeeded = async () => {
+            if (ops >= 400) { await batch.commit(); batch = EduFirebase.db.batch(); ops = 0; }
+          };
+          const applyToClass = async (classId, teacherIdVal, teacherNameVal) => {
+            batch.set(EduFirebase.db.collection('classes').doc(classId), { teacherId: teacherIdVal, teacherName: teacherNameVal }, { merge: true });
+            ops++; await flushIfNeeded();
+            // Lan xuống từng học sinh ĐANG HỌC của lớp — students_roster.teacherId
+            // là bản sao (denormalize) dùng để lọc trực tiếp ở
+            // js/teacher/data-loader.js, không tự suy từ "classes" lúc đọc.
+            const studentsSnap = await EduFirebase.db.collection('students_roster')
+              .where('classId', '==', classId).where('status', '==', 'active').get();
+            for (const d of studentsSnap.docs) {
+              batch.set(d.ref, { teacherId: teacherIdVal, teacherName: teacherNameVal }, { merge: true });
+              ops++; await flushIfNeeded();
+            }
+          };
+          for (const c of toAssign) await applyToClass(c.id, uid, teacherName);
+          for (const c of toUnassign) await applyToClass(c.id, '', '');
+          if (ops > 0) await batch.commit();
+
+          // Cập nhật ngay "Trường được xem" theo đúng lớp vừa gán, không cần
+          // đợi vòng tự sửa của lần tải trang sau (xem loadUsers()).
+          allClasses = allClasses.map(c => {
+            if (toAssign.some(x => x.id === c.id)) return Object.assign({}, c, { teacherId: uid, teacherName });
+            if (toUnassign.some(x => x.id === c.id)) return Object.assign({}, c, { teacherId: '', teacherName: '' });
+            return c;
+          });
+          const newSchools = [...new Set(allClasses.filter(c => c.teacherId === uid).map(c => c.school).filter(Boolean))]
+            .sort((a, b) => a.localeCompare(b, 'vi'));
+          await EduFirebase.db.collection('users').doc(uid).set({ schools: newSchools }, { merge: true });
+
+          toast(`✅ Đã cập nhật lớp đang dạy (${toAssign.length} gán thêm, ${toUnassign.length} bỏ gán)`);
+          loadUsers();
+        } catch (err) {
+          toast('❌ Lỗi: ' + err.message);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = oldLabel;
         }
       });
     });

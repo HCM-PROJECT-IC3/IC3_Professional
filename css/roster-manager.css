@@ -102,7 +102,7 @@ body {
   border: none;
   color: var(--red);
   font-weight: 800;
-  font-size: .78rem;
+  font-size: .88rem;
   cursor: pointer;
   white-space: nowrap;
 }
@@ -111,13 +111,13 @@ body {
   border: none;
   color: var(--purple);
   font-weight: 800;
-  font-size: .78rem;
+  font-size: .88rem;
   cursor: pointer;
   white-space: nowrap;
   margin-right: .8rem;
 }
 
-.wrap { max-width: 1140px; margin: 0 auto; padding: 2rem 1.6rem }
+.wrap { max-width: 1440px; margin: 0 auto; padding: 2rem 1.6rem }
 
 .banner {
   background: var(--purple-lt);
@@ -186,10 +186,10 @@ body {
 }
 
 /* Neumorphism — ô nhập/dropdown LÕM XUỐNG (pressed). */
-#studentSearch, #studentClassFilter, select.form-input, input.form-input {
+#studentSearch, #studentClassFilter, #studentSchoolFilter, #studentTeacherFilter, select.form-input, input.form-input {
   font-family: inherit;
-  font-size: .82rem;
-  padding: .55rem .8rem;
+  font-size: .92rem;
+  padding: .7rem 1rem;
   border-radius: 10px;
   border: none;
   background: var(--neu-surface);
@@ -197,6 +197,7 @@ body {
   box-shadow: var(--shadow-neu-pressed);
 }
 #studentSearch { min-width: 220px; flex: 1 }
+#studentSchoolFilter, #studentClassFilter, #studentTeacherFilter { min-width: 170px }
 
 /* ---- Table (giống admin-users.css) ---- */
 .table-scroll { overflow-x: auto; border-radius: var(--radius-sm) }
@@ -214,8 +215,8 @@ table {
   border-radius: var(--radius-sm);
   overflow: hidden;
 }
-th, td { padding: .8rem .9rem; text-align: left; font-size: .85rem; border-bottom: 1px solid var(--border); vertical-align: middle }
-th { background: var(--card2); font-weight: 800; font-size: .72rem; text-transform: uppercase; color: var(--muted) }
+th, td { padding: 1.05rem 1.1rem; text-align: left; font-size: 1rem; border-bottom: 1px solid var(--border); vertical-align: middle }
+th { background: var(--card2); font-weight: 800; font-size: .8rem; text-transform: uppercase; color: var(--muted) }
 tr:last-child td { border-bottom: none }
 .empty-cell { text-align: center; color: var(--muted); padding: 1.6rem !important }
 
@@ -235,14 +236,14 @@ tr:last-child td { border-bottom: none }
 #classesTable td:nth-child(3) { white-space: nowrap }
 
 .avatar-cell {
-  width: 34px; height: 34px; border-radius: 50%;
+  width: 42px; height: 42px; border-radius: 50%;
   background: var(--purple-lt); color: var(--purple);
   display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: .8rem; overflow: hidden;
+  font-weight: 800; font-size: .92rem; overflow: hidden;
 }
 .avatar-cell img { width: 100%; height: 100%; object-fit: cover }
 
-.badge { display: inline-flex; padding: .25rem .65rem; border-radius: 999px; font-size: .68rem; font-weight: 800; white-space: nowrap }
+.badge { display: inline-flex; padding: .32rem .8rem; border-radius: 999px; font-size: .76rem; font-weight: 800; white-space: nowrap }
 .badge.active   { background: var(--green-lt); color: var(--green) }
 .badge.inactive { background: var(--red-lt);   color: var(--red) }
 

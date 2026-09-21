@@ -114,7 +114,7 @@
       if (!isAdmin && !schools.length) {
         toast('⚠️ Bạn chưa được Admin gán trường nào để hỗ trợ — liên hệ Admin (Quản lý tài khoản → Trường được xem/hỗ trợ).');
         state.courses = []; state.classes = []; state.students = []; state.teachers = [];
-        renderCourses(); renderClasses(); renderStudentClassFilter(); renderStudents();
+        renderCourses(); renderClasses(); renderStudentClassFilter(); renderStudentSchoolFilter(); renderStudentTeacherFilter(); renderStudents();
         return;
       }
 
@@ -142,6 +142,8 @@
       renderCourses();
       renderClasses();
       renderStudentClassFilter();
+      renderStudentSchoolFilter();
+      renderStudentTeacherFilter();
       renderStudents();
 
       await repairKnownBadTeacherNames();
@@ -254,6 +256,7 @@
 
     if (badStudents.length || badClasses.length) {
       renderClasses();
+      renderStudentTeacherFilter();
       renderStudents();
       toast(`🔧 Đã tự sửa GV → "${CORRECT_NAME}" cho ${badStudents.length} học sinh + ${badClasses.length} lớp (${SCHOOL}, ${CLASS_NAMES.join(' & ')})`);
     }
@@ -478,21 +481,97 @@
   // ============================================================
   // RENDER: HỌC SINH (students_roster)
   // ============================================================
+  /** Áp 2/3 bộ lọc (Trường/Lớp/GV phụ trách) lên students_roster, BỎ QUA
+   * đúng 1 bộ lọc truyền vào — dùng để tính option còn HỢP LỆ cho CHÍNH bộ
+   * lọc đó (vd tính lại "Tất cả lớp" theo đúng 2 điều kiện Trường+GV đang
+   * chọn). Nhờ vậy 3 dropdown LUÔN cascading với nhau: chọn 1 GV thì Trường
+   * và Lớp tự thu hẹp về đúng phạm vi GV đó đang dạy (và ngược lại) — tránh
+   * nhầm lớp/học sinh giữa các giáo viên trùng tên lớp (vd "4A1" của 2
+   * trường khác nhau, người dùng phản hồi hay bị lẫn). Đọc trực tiếp
+   * students_roster (không phải "classes"/"teachers") để luôn khớp ĐÚNG
+   * dữ liệu đang hiện trong bảng bên dưới, kể cả khi lệch với "classes".
+   */
+  function studentsForFilterOptions({ skipSchool, skipClass, skipTeacher } = {}) {
+    const schoolFilter = skipSchool ? '' : document.getElementById('studentSchoolFilter').value;
+    const classFilter = skipClass ? '' : document.getElementById('studentClassFilter').value;
+    const teacherFilter = skipTeacher ? '' : document.getElementById('studentTeacherFilter').value;
+    return state.students.filter((s) => {
+      if (schoolFilter && s.school !== schoolFilter) return false;
+      if (classFilter && s.classId !== classFilter) return false;
+      if (teacherFilter === '__none__' && s.teacherName) return false;
+      if (teacherFilter && teacherFilter !== '__none__' && s.teacherName !== teacherFilter) return false;
+      return true;
+    });
+  }
+
+  function renderStudentSchoolFilter() {
+    const sel = document.getElementById('studentSchoolFilter');
+    const current = sel.value;
+    const pool = studentsForFilterOptions({ skipSchool: true });
+    const schools = [...new Set(pool.map((s) => s.school).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'vi'));
+    sel.innerHTML = '<option value="">Tất cả trường</option>' + schools.map((s) =>
+      `<option value="${esc(s)}" ${s === current ? 'selected' : ''}>${esc(s)}</option>`
+    ).join('');
+    // Lớp/GV vừa chọn khiến trường đang chọn không còn học sinh nào khớp —
+    // tự bỏ chọn thay vì để lọc ra danh sách rỗng khó hiểu.
+    if (current && !schools.includes(current)) sel.value = '';
+  }
+
   function renderStudentClassFilter() {
     const sel = document.getElementById('studentClassFilter');
     const current = sel.value;
-    sel.innerHTML = '<option value="">Tất cả lớp</option>' + state.classes.map((c) =>
-      `<option value="${c.id}">${esc(c.name)}</option>`
-    ).join('');
-    sel.value = current;
+    const pool = studentsForFilterOptions({ skipClass: true });
+    // Gom theo classId, nhóm theo Trường (<optgroup>) để cùng 1 tên lớp
+    // (vd "4A1") ở 2 trường khác nhau hiện RÕ RÀNG là 2 lựa chọn tách biệt,
+    // không còn gây nhầm lẫn như dropdown phẳng trước đây.
+    const byId = new Map();
+    pool.forEach((s) => {
+      if (!s.classId) return; // học sinh cũ thiếu classId — không đưa vào lọc theo lớp
+      if (!byId.has(s.classId)) byId.set(s.classId, { id: s.classId, name: s.className || '(chưa đặt tên)', school: s.school || '(chưa gán trường)' });
+    });
+    const groups = new Map();
+    byId.forEach((c) => {
+      if (!groups.has(c.school)) groups.set(c.school, []);
+      groups.get(c.school).push(c);
+    });
+    const schoolNames = [...groups.keys()].sort((a, b) => a.localeCompare(b, 'vi'));
+    let html = '<option value="">Tất cả lớp</option>';
+    schoolNames.forEach((school) => {
+      const opts = groups.get(school)
+        .sort((a, b) => a.name.localeCompare(b.name, 'vi'))
+        .map((c) => `<option value="${esc(c.id)}" ${c.id === current ? 'selected' : ''}>${esc(c.name)}</option>`)
+        .join('');
+      html += `<optgroup label="${esc(school)}">${opts}</optgroup>`;
+    });
+    sel.innerHTML = html;
+    if (current && !byId.has(current)) sel.value = '';
+  }
+
+  function renderStudentTeacherFilter() {
+    const sel = document.getElementById('studentTeacherFilter');
+    const current = sel.value;
+    const pool = studentsForFilterOptions({ skipTeacher: true });
+    const teacherNames = [...new Set(pool.map((s) => s.teacherName).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'vi'));
+    const hasNone = pool.some((s) => !s.teacherName);
+    sel.innerHTML = '<option value="">Tất cả GV phụ trách</option>'
+      + (hasNone ? `<option value="__none__" ${current === '__none__' ? 'selected' : ''}>— Chưa gán GV —</option>` : '')
+      + teacherNames.map((t) => `<option value="${esc(t)}" ${t === current ? 'selected' : ''}>${esc(t)}</option>`).join('');
+    if (current === '__none__' && !hasNone) sel.value = '';
+    else if (current && current !== '__none__' && !teacherNames.includes(current)) sel.value = '';
+  }
+
+  /** Gọi khi 1 trong 3 dropdown Trường/Lớp/GV đổi — tính lại option của CẢ
+   * 3 (cascading, xem studentsForFilterOptions()) rồi mới lọc bảng. */
+  function onStudentFacetFilterChange() {
+    renderStudentSchoolFilter();
+    renderStudentClassFilter();
+    renderStudentTeacherFilter();
+    renderStudents();
   }
 
   function renderStudents() {
     const search = document.getElementById('studentSearch').value.trim().toLowerCase();
-    const classFilter = document.getElementById('studentClassFilter').value;
-
-    const filtered = state.students.filter((s) => {
-      if (classFilter && s.classId !== classFilter) return false;
+    const filtered = studentsForFilterOptions().filter((s) => {
       if (search && !(`${s.name} ${s.mssv} ${s.school || ''}`.toLowerCase().includes(search))) return false;
       return true;
     });
@@ -529,7 +608,9 @@
   }
 
   document.getElementById('studentSearch').addEventListener('input', renderStudents);
-  document.getElementById('studentClassFilter').addEventListener('change', renderStudents);
+  document.getElementById('studentClassFilter').addEventListener('change', onStudentFacetFilterChange);
+  document.getElementById('studentSchoolFilter').addEventListener('change', onStudentFacetFilterChange);
+  document.getElementById('studentTeacherFilter').addEventListener('change', onStudentFacetFilterChange);
   document.getElementById('addStudentBtn').addEventListener('click', () => openStudentModal(null));
 
   // ============================================================

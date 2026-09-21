@@ -198,6 +198,23 @@ select {
 .schoolsCurrent { font-size: .7rem; color: var(--muted); margin-top: .3rem }
 .schoolsCell .hint { font-size: .72rem; color: var(--muted); font-style: italic }
 
+/* ── Gán trực tiếp "Lớp đang dạy" (classes.teacherId) cho giáo viên ── */
+.classesCell { min-width: 260px }
+.classesSelect { width: 100%; min-width: 240px; margin-bottom: .4rem }
+.saveClassesBtn {
+  background: var(--green-lt, var(--blue-lt));
+  color: var(--green, var(--blue));
+  border: none;
+  border-radius: 999px;
+  padding: .35rem .75rem;
+  font-size: .72rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.classesCurrent { font-size: .7rem; color: var(--muted); margin-top: .3rem }
+.classesCurrent.hint { font-style: italic }
+.classesCell .hint { font-size: .72rem; color: var(--muted); font-style: italic }
+
 /* ── Liên kết "Mã NV" (Lịch giảng dạy) cho giáo viên tự xem lịch của mình ──
    Nâng min-width — option dạng "HCM0107 — Tên đầy đủ" hay dài hơn 230px,
    bị trình duyệt cắt bớt thành "..." ngay trong khung select đóng (không
