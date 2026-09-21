@@ -3381,6 +3381,7 @@ function toggleFlag(i) {
    ============================================================ */
 
 function confirmSubmit() {
+  if (State.submitted) return; // đã nộp rồi — tránh hiện lại hộp thoại "Bạn có chắc..." thừa
   const unansweredIdx = State.questions
     .map((_, i) => i)
     .filter(i => !isAnswered(i));
@@ -3398,14 +3399,23 @@ function confirmSubmit() {
 }
 
 function autoSubmit() {
+  if (State.submitted) return; // đã nộp tay rồi — không hiện thêm "Hết giờ!" thừa
   State.session.timedOut = true;
   alert('Hết giờ! Bài thi được nộp tự động.');
   submitExam();
 }
 
 function submitExam() {
+  // Chặn nộp trùng (double-click "Nộp bài", hoặc hết giờ tự nộp đúng lúc
+  // đang nộp tay...): submitExam() không có await nào bên trong nên chạy
+  // trọn vẹn 1 lượt đồng bộ — chỉ cần CHECK-rồi-SET cờ này làm dòng ĐẦU
+  // TIÊN của hàm là đủ chặn mọi lần gọi lại sau đó, không cần khoá phức
+  // tạp hơn. Cờ này TÁI SỬ DỤNG State.submitted (vốn đã có sẵn từ § 1b để
+  // chặn autosave "hồi sinh" sau khi nộp) vì đúng ý nghĩa: "đã/đang nộp
+  // rồi, đừng làm gì thêm".
+  if (State.submitted) return;
+  State.submitted = true;
   clearInterval(State.timer);
-  State.submitted = true; // § 1b — chặn saveInProgress() "hồi sinh" lại autosave sau khi đã nộp (xem chú thích ở đó)
   clearInProgress(); // đã nộp thật sự, không cần hỏi "làm tiếp" nữa lần sau mở trang
   flushQTime(State.current);
   acStopGuard(); // tắt lớp bảo vệ chống gian lận (nếu chế độ Kiểm tra có bật)
