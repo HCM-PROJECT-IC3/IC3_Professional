@@ -1,0 +1,16 @@
+2026-09-21-resilience-nhom-a-h
+
+Ghi chú: đánh dấu commit này (Nhóm A→H trong đợt rà soát độ bền dữ
+liệu) để dễ đối chiếu/rollback nếu cần. Cập nhật file này (hoặc gắn git
+tag mới) sau mỗi lần deploy có ý nghĩa lên GitHub Pages.
+
+Gợi ý quy trình gắn tag (không bắt buộc, làm khi thấy cần mốc rollback
+rõ ràng — vd trước 1 đợt deploy lớn hoặc trước kỳ thi quan trọng):
+  git tag -a v2026-09-21 -m "Trước kỳ thi HK1 - đã có autosave/chống nộp trùng/hàng đợi gửi lại"
+  git push origin v2026-09-21
+
+Rollback nhanh khi cần (GitHub Pages tự deploy lại theo nhánh đang
+trỏ tới, nên rollback = trỏ nhánh đó về đúng tag cũ):
+  git checkout main
+  git reset --hard v2026-09-21   # CẨN THẬN: reset --hard bỏ mọi commit sau tag đó
+  git push origin main --force-with-lease
