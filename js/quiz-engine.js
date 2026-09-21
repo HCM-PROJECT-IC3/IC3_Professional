@@ -3451,17 +3451,45 @@ function submitExam() {
     });
   }
 
-  // Gửi lên Google Sheet (chạy nền, chỉ để đối chiếu/dự phòng)
-  if (typeof submitToGoogleSheet === 'function') {
-    submitToGoogleSheet(result, elapsed, integrity);
+  // § Nhóm E — build payload TỰ CHỨA ĐỦ DỮ LIỆU (không phụ thuộc
+  // State.session tại thời điểm gọi) 1 LẦN DUY NHẤT ở đây, dùng chung
+  // cho cả lần gửi đầu tiên lẫn lần gửi lại từ hàng đợi (js/services/
+  // pending-sync-queue.js) — nếu mạng down lúc nộp bài, hàng đợi có thể
+  // gọi lại đúng dữ liệu này NHIỀU PHÚT SAU, khi State đã chuyển sang
+  // bài khác hoặc học sinh đã rời trang.
+  const s   = State.session;
+  const pct = Math.round((result.correct / result.total) * 100);
+
+  // Gửi lên Google Sheet (chạy nền, chỉ để đối chiếu/dự phòng) — gọi
+  // THẲNG saveToGoogleSheet() (không qua wrapper submitToGoogleSheet(),
+  // vốn tự đọc lại State.session bên trong — không an toàn cho việc gửi
+  // lại trễ) để đảm bảo payload gửi lại luôn khớp đúng lúc nộp bài gốc.
+  if (typeof saveToGoogleSheet === 'function') {
+    const sheetData = {
+      studentName:   s.studentName,
+      studentClass:  s.studentClass  || '',
+      studentSchool: s.studentSchool || '',
+      testName:    [s.category, s.level, s.minitest].filter(Boolean).join(' › '),
+      score:       pct,
+      correct:     `${result.correct}/${result.total}`,
+      time:        `${String(Math.floor(elapsed / 60)).padStart(2, '0')}:${String(elapsed % 60).padStart(2, '0')}`,
+      tabSwitch:   integrity.tabSwitches,
+      clickCount:  integrity.clicks,
+      status:      integrity.valid ? 'OK' : '⚠️ ' + (integrity.flags[0] || 'Nghi vấn'),
+      timestamp:   new Date().toLocaleString('vi-VN'),
+      note:        integrity.flags.length > 1 ? integrity.flags.slice(1).join('; ') : (s.timedOut ? 'Hết giờ' : ''),
+    };
+    saveToGoogleSheet(sheetData).then(res => {
+      if ((!res || res.success === false) && window.EduPendingSync) {
+        window.EduPendingSync.enqueue('google_sheet', sheetData);
+      }
+    });
   }
 
   // Lưu vào Firestore (nguồn dữ liệu CHÍNH cho trang Báo cáo trực quan
   // ic3-dashboard.html — điều phối đào tạo / giáo viên / admin xem)
   if (typeof saveResultToFirestore === 'function') {
-    const s   = State.session;
-    const pct = Math.round((result.correct / result.total) * 100);
-    saveResultToFirestore({
+    const firestorePayload = {
       studentName:   s.studentName,
       studentClass:  s.studentClass  || '',
       studentSchool: s.studentSchool || '',
@@ -3487,6 +3515,11 @@ function submitExam() {
       devtoolsHits:    integrity.devtoolsHits,
       shortcutBlocks:  integrity.shortcutBlocks,
       printAttempts:   integrity.printAttempts,
+    };
+    saveResultToFirestore(firestorePayload).then(res => {
+      if (!res.success && window.EduPendingSync) {
+        window.EduPendingSync.enqueue('firestore_quiz_result', firestorePayload);
+      }
     });
   }
 }

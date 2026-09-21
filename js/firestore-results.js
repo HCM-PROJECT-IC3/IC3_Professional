@@ -65,6 +65,13 @@
     } catch (err) {
       // Không chặn trải nghiệm học sinh nếu lưu báo cáo thất bại —
       // localStorage + Google Sheet (googleSheet.js) vẫn giữ vai trò dự phòng.
+      // KHÔNG tự enqueue vào hàng đợi gửi lại ở ĐÂY — xem
+      // js/services/pending-sync-queue.js: hàng đợi tự gọi LẠI đúng hàm
+      // này lúc retry, nếu hàm tự enqueue chính nó mỗi lần thất bại sẽ
+      // tạo thêm 1 bản ghi hàng đợi MỚI mỗi vòng retry thất bại (chồng
+      // lên bản ghi mà flush() đã tự đưa lại vào hàng đợi) — nhân đôi vô
+      // hạn. Việc enqueue lần ĐẦU TIÊN do nơi GỌI (quiz-engine.js §
+      // submitExam) đảm nhận.
       console.error('❌ [EduQuiz] Lỗi lưu báo cáo Firestore:', err);
       return { success: false, message: err.message };
     }

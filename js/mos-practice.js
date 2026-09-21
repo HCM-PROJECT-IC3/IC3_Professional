@@ -186,16 +186,24 @@
     // Lưu kết quả CHẠY NỀN, không chặn học sinh thao tác tiếp — quiz_results
     // (js/firestore-results.js) cũng theo đúng nguyên tắc này: lưu báo cáo
     // không bao giờ được chặn trải nghiệm học sinh.
-    window.saveMosSubmission({
+    //
+    // § Nhóm E — ĐÂY LÀ NƠI DUY NHẤT lưu kết quả MOS Practice (không như
+    // bài kiểm tra chính còn có eduquiz_records làm lưới an toàn local) —
+    // nếu Firestore lỗi mà không có gì gửi lại, kết quả biến mất không
+    // dấu vết. Enqueue vào js/services/pending-sync-queue.js khi thất bại
+    // để tự gửi lại lúc có mạng.
+    const mosPayload = {
       studentName: student.name,
       studentClass: student.className,
       studentSchool: student.school,
       projectId: currentProject.id,
       projectTitle: currentProject.title,
       ...graded,
-    }).then(saveRes => {
+    };
+    window.saveMosSubmission(mosPayload).then(saveRes => {
       if (!saveRes.success) {
         console.warn('[MosPractice] Không lưu được kết quả lên Firestore:', saveRes.message);
+        if (window.EduPendingSync) window.EduPendingSync.enqueue('mos_submission', mosPayload);
       }
     });
   }
