@@ -417,6 +417,15 @@
   // update khi frameAcc đạt ngưỡng 1 — nghĩa là zombie/đạn di chuyển
   // chậm hơn, cooldown/hồi chiêu/Sun rơi/spawn đều giãn ra đúng cùng
   // 1 tỉ lệ vì tất cả cùng nằm trong khối update bên dưới.
+  // Giới hạn số khung hình VẼ/giây (render() dùng nhiều shadowBlur — phép
+  // vẽ canvas tốn CPU nhất trong game) — máy học sinh yếu/màn hình 120-144Hz
+  // trước đây vẽ lại ở đúng tần số refresh màn hình, dễ giật/nóng máy dù
+  // tốc độ GAME (frameAcc/FRAME_STEP ở trên) không đổi gì. Vẫn gọi
+  // requestAnimationFrame() mỗi khung để input (rê chuột/bấm) mượt, chỉ
+  // THƯA bớt số lần vẽ lại canvas — không đụng luật chơi/tốc độ game.
+  var lastRenderTs = 0;
+  var RENDER_INTERVAL_MS = 1000 / 30;
+
   function step() {
     animClock++;
     frameAcc += FRAME_STEP;
@@ -433,8 +442,12 @@
         updateFloatTexts();
       }
     }
-    render();
-    if (upgradeTargetId) renderUpgradePanel(); // (Phase 9) cập nhật sống HP bar + tự đóng nếu lá chắn đã chết
+    var now = (window.performance && performance.now) ? performance.now() : Date.now();
+    if (now - lastRenderTs >= RENDER_INTERVAL_MS) {
+      lastRenderTs = now;
+      render();
+      if (upgradeTargetId) renderUpgradePanel(); // (Phase 9) cập nhật sống HP bar + tự đóng nếu lá chắn đã chết
+    }
     requestAnimationFrame(step);
   }
 

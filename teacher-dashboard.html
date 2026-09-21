@@ -297,17 +297,22 @@
 <script src="js/services/activity-log-service.js"></script>
 
 <!-- Xuất Excel/PDF (Commit #6, #7) — TÁI DÙNG nguyên bản 2 engine của
-     Coordinator Dashboard (js/export/*), không sửa file nào. -->
-<script src="js/vendor/exceljs.min.js"></script>
-<script src="js/vendor/jspdf.umd.min.js"></script>
-<script src="js/vendor/jspdf.plugin.autotable.min.js"></script>
-<!-- Font Unicode (dấu tiếng Việt) cho jsPDF — xem ghi chú ở
-     coordinator-dashboard.html, phải nạp TRƯỚC pdf-exporter.js. -->
-<script src="js/vendor/notosans-vietnamese-jspdf.js"></script>
-<!-- Logo IIG dùng cho tiêu đề PDF (xem js/export/pdf-exporter.js) -->
-<script src="js/export/iig-logo.js"></script>
-<script src="js/export/excel-exporter.js"></script>
-<script src="js/export/pdf-exporter.js"></script>
+     Coordinator Dashboard (js/export/*), không sửa file nào. ~1.86MB, giờ
+     tải LƯỜI qua js/services/lazy-script-loader.js — CHỈ tải khi bấm nút
+     Xuất Excel/PDF (xem ghi chú đầy đủ ở coordinator-dashboard.html và
+     js/coordinator/student-table.js § handleExportExcel/handleExportPdf). -->
+<script src="js/services/lazy-script-loader.js"></script>
+<script>
+  window.EduExportVendorScripts = [
+    'js/vendor/exceljs.min.js',
+    'js/vendor/jspdf.umd.min.js',
+    'js/vendor/jspdf.plugin.autotable.min.js',
+    'js/vendor/notosans-vietnamese-jspdf.js',
+    'js/export/iig-logo.js',
+    'js/export/excel-exporter.js',
+    'js/export/pdf-exporter.js',
+  ];
+</script>
 
 <!-- Teacher dashboard (Commit #8/LMAP) — data-loader riêng, lọc theo trường
      ngay từ Firestore; charts/student-table/student-detail TÁI DÙNG nguyên

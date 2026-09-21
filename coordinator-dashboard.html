@@ -301,19 +301,26 @@
 
 <!-- Xuất Excel/PDF (Commit #6, #7) — thư viện tự lưu trữ (js/vendor), không
      phụ thuộc CDN. ExcelJS thay cho SheetJS vì cần ghi conditional
-     formatting thật (xem ghi chú đầu file excel-exporter.js). -->
-<script src="js/vendor/exceljs.min.js"></script>
-<script src="js/vendor/jspdf.umd.min.js"></script>
-<script src="js/vendor/jspdf.plugin.autotable.min.js"></script>
-<!-- Font Unicode (dấu tiếng Việt) cho jsPDF — THIẾU file này là lý do PDF
-     xuất ra bị lỗi font (chữ có dấu bị in sai/mất dấu) vì font mặc định
-     helvetica của jsPDF không hỗ trợ tiếng Việt. Phải nạp TRƯỚC
-     pdf-exporter.js (tự đăng ký font "NotoSans" vào mọi jsPDF() mới tạo). -->
-<script src="js/vendor/notosans-vietnamese-jspdf.js"></script>
-<!-- Logo IIG dùng cho tiêu đề PDF (xem js/export/pdf-exporter.js) -->
-<script src="js/export/iig-logo.js"></script>
-<script src="js/export/excel-exporter.js"></script>
-<script src="js/export/pdf-exporter.js"></script>
+     formatting thật (xem ghi chú đầu file excel-exporter.js).
+     ~1.86MB tổng cộng, TRƯỚC ĐÂY nạp thẳng (không "defer") ngay cả khi
+     người dùng chỉ vào xem KPI/biểu đồ, không bấm Xuất Excel/PDF bao giờ
+     — giờ nạp qua js/services/lazy-script-loader.js, CHỈ tải thật khi
+     bấm nút (xem EduExportVendorScripts + js/coordinator/student-table.js
+     § handleExportExcel/handleExportPdf). Font/logo nạp kèm theo, giữ
+     đúng thứ tự phụ thuộc (font phải nạp TRƯỚC pdf-exporter.js để tự
+     đăng ký "NotoSans" vào jsPDF() mới tạo). -->
+<script src="js/services/lazy-script-loader.js"></script>
+<script>
+  window.EduExportVendorScripts = [
+    'js/vendor/exceljs.min.js',
+    'js/vendor/jspdf.umd.min.js',
+    'js/vendor/jspdf.plugin.autotable.min.js',
+    'js/vendor/notosans-vietnamese-jspdf.js',
+    'js/export/iig-logo.js',
+    'js/export/excel-exporter.js',
+    'js/export/pdf-exporter.js',
+  ];
+</script>
 
 <!-- Coordinator dashboard (Commit #4) -->
 <script src="js/coordinator/data-loader.js"></script>

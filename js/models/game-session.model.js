@@ -42,11 +42,13 @@
 
   const COLLECTION_NAME = 'game_sessions';
 
-  // Danh sách gameId hợp lệ hiện có (Phase 2). Phase 4+ sẽ nối thêm khi
-  // từng game mới thực sự được build — KHÔNG khai báo trước game chưa
-  // tồn tại để tránh session "ma" không ai ghi được.
+  // Danh sách gameId hợp lệ hiện có. Cập nhật khi Battle Quiz/Cyber
+  // Detective/Computer Simulator (Phase 6-8) đã thực sự được build và tự
+  // gọi recordGameSession() — KHÔNG khai báo trước game chưa tồn tại để
+  // tránh session "ma" không ai ghi được.
   const GAME_IDS = Object.freeze([
     'prism-cascade', 'memory-game', 'sudoku', 'billiards', 'pz-defense',
+    'battle-quiz', 'cyber-detective', 'computer-simulator',
   ]);
 
   /** Định danh học sinh — tái dùng đúng công thức ExamHistory.keyOf() (không tạo khoá mới). */
