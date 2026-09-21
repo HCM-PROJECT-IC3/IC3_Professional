@@ -3993,6 +3993,24 @@ function clearRecords() {
   renderRecords();
 }
 
+/**
+ * Trả về 1 ô ĐÃ SẴN SÀNG đặt vào giữa cặp dấu " " trong dòng CSV (đã
+ * escape đủ, gọi 1 lần là xong, không cần escape thêm gì ở caller):
+ *   1) Chống CSV/Formula Injection — Excel/Sheets có thể THỰC THI nội
+ *      dung 1 ô bắt đầu bằng =, +, -, @ như công thức khi mở file (vd 1
+ *      học sinh có tên/lớp gõ nhầm/cố ý thành "=cmd|'/c calc'!A1" trong
+ *      roster). Thêm dấu nháy đơn phía trước để Excel/Sheets hiển thị
+ *      dạng VĂN BẢN THUẦN — đúng khuyến nghị OWASP CSV Injection
+ *      Prevention.
+ *   2) Escape dấu " lồng bên trong giá trị (nhân đôi thành "") — nếu
+ *      không, 1 giá trị chứa dấu " sẽ làm vỡ cấu trúc CSV từ ô đó trở đi.
+ */
+function _csvSafeCell(v) {
+  let s = String(v ?? '');
+  if (/^[=+\-@]/.test(s)) s = "'" + s;
+  return s.replace(/"/g, '""');
+}
+
 function exportCSV() {
   const records = _readRecordsSafe();
   if (!records.length) { alert('Không có dữ liệu để xuất.'); return; }
@@ -4015,7 +4033,7 @@ function exportCSV() {
   ]);
 
   const csv  = [h, ...rows].map(row =>
-    row.map(v => `"${String(v ?? '').replace(/"/g,'""')}"`).join(',')
+    row.map(v => `"${_csvSafeCell(v)}"`).join(',')
   ).join('\r\n');
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
   const a    = Object.assign(document.createElement('a'), {

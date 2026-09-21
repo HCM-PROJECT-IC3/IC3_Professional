@@ -1132,6 +1132,21 @@ document.getElementById('sidebar-overlay').addEventListener('click', closeSideba
 /* ========================================
    EXPORT REPORT — xuất CSV từ dữ liệu Firestore thật (đã áp bộ lọc hiện tại)
    ======================================== */
+/**
+ * Escape 1 ô CSV — 2 lỗi thật đã sửa cùng lúc:
+ *   1) Bản cũ KHÔNG escape dấu " lồng bên trong giá trị (khác với
+ *      quiz-engine.js đã có .replace(/"/g,'""')) — 1 giá trị chứa dấu "
+ *      (vd tên bộ đề gõ tự do) sẽ làm VỠ cấu trúc CSV từ ô đó trở đi.
+ *   2) Không chống CSV/Formula Injection — Excel/Sheets có thể THỰC THI
+ *      nội dung ô bắt đầu bằng =, +, -, @ như công thức khi mở file.
+ *      Thêm dấu nháy đơn phía trước để ép hiển thị dạng văn bản thuần
+ *      (khuyến nghị OWASP CSV Injection Prevention).
+ */
+function _csvSafeCell(v) {
+  let s = String(v ?? '');
+  if (/^[=+\-@]/.test(s)) s = "'" + s;
+  return s.replace(/"/g, '""');
+}
 function exportReport() {
   const rows = _reportFiltered;
   if (!rows || rows.length === 0) { alert('Chưa có dữ liệu để xuất (theo bộ lọc hiện tại)!'); return; }
@@ -1139,7 +1154,9 @@ function exportReport() {
     ...rows.map(r => {
       const dateStr = new Date(r.submittedAtMs).toLocaleString('vi-VN');
       const status = r.integrityOk !== false ? 'Hợp lệ' : 'Nghi vấn: ' + (r.flags || []).join('; ');
-      return `"${r.studentName || ''}","${r.studentClass || ''}","${r.studentSchool || ''}","${r.testName || ''}","${dateStr}","${r.score ?? ''}","${r.correct ?? ''}/${r.total ?? ''}","${status}"`;
+      return [r.studentName || '', r.studentClass || '', r.studentSchool || '', r.testName || '',
+        dateStr, r.score ?? '', `${r.correct ?? ''}/${r.total ?? ''}`, status]
+        .map(v => `"${_csvSafeCell(v)}"`).join(',');
     })
   ].join('\n');
   const blob = new Blob(['\ufeff' + csv], {type: 'text/csv;charset=utf-8;'});
