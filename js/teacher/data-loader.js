@@ -68,12 +68,26 @@
     // canAccessRosterStudent() trong firestore.rules). "schools" vẫn cần
     // giữ lại cho quiz_results bên dưới (collection đó không có teacherId).
     const uid = profile.uid || profile.id;
-    const [students, results] = await Promise.all([
+    const [students, resultsRaw] = await Promise.all([
       isAdmin
         ? global.EduRepositories.studentRoster.list({ where: [['status', '==', 'active']] })
         : global.EduRepositories.studentRoster.listByTeacher(uid),
       global.EduRepositories.studentResult.listRecent(isAdmin ? { limit: 1000 } : { schools, limit: 1000 }),
     ]);
+    // quiz_results không có field teacherId (chỉ có studentSchool) nên
+    // firestore.rules chỉ siết được theo "schools" — nếu dừng ở đó, 1 giáo
+    // viên sẽ thấy LẪN kết quả của các lớp đồng nghiệp khác dạy chung
+    // trường (bug người dùng báo: thấy lớp lạ, không thấy đủ lớp mình dạy
+    // vì bị trộn/che khuất bởi dữ liệu ngoài lớp). Lọc tiếp ở client theo
+    // đúng tập className mà giáo viên này thực sự phụ trách (suy từ
+    // "students" vừa lọc theo teacherId ở trên) — không lộ thêm dữ liệu gì
+    // (đã tải về theo rule cho phép), chỉ ẩn bớt cho khớp đúng lớp thật.
+    const results = isAdmin
+      ? resultsRaw
+      : (() => {
+          const ownClassNames = new Set(students.map((s) => s.className).filter(Boolean));
+          return resultsRaw.filter((r) => ownClassNames.has(r.studentClass));
+        })();
     const effectiveSchools = isAdmin
       ? [...new Set(students.map((s) => s.school).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'vi'))
       : schools;
