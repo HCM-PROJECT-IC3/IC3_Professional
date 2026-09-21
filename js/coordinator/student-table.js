@@ -41,14 +41,42 @@
     const { filteredStudents, examHistories, filteredResults } = scoped;
     const historyByKey = new Map(examHistories.map((e) => [e.studentKey, e]));
     const totalExams = new Set(filteredResults.map((r) => r.testName).filter(Boolean)).size;
+    const rosterKeys = new Set();
 
-    return filteredStudents.map((s) => {
+    const rows = filteredStudents.map((s) => {
       const key = global.EduModels.Roster.studentKeyOf({ name: s.name, className: s.className });
+      rosterKeys.add(key);
       const history = historyByKey.get(key) || null;
       const attemptsDone = history ? new Set(history.attempts.map((a) => a.testName).filter(Boolean)).size : 0;
       const progress = totalExams > 0 ? Math.min(100, Math.round((attemptsDone / totalExams) * 100)) : 0;
       return { student: s, history, progress, studentKey: key };
     });
+
+    // Học sinh đã làm bài (quiz_results) nhưng CHƯA có trong roster (vd. học sinh
+    // test link trước khi được thêm vào danh sách lớp) — trước đây bị loại hẳn khỏi
+    // bảng vì bảng chỉ duyệt filteredStudents (roster). Thêm các dòng này vào cuối,
+    // đánh dấu orphan=true để UI hiện rõ "chưa có trong danh sách lớp".
+    examHistories.forEach((history) => {
+      if (rosterKeys.has(history.studentKey)) return;
+      const attemptsDone = new Set(history.attempts.map((a) => a.testName).filter(Boolean)).size;
+      const progress = totalExams > 0 ? Math.min(100, Math.round((attemptsDone / totalExams) * 100)) : 0;
+      const latest = history.attempts[0] || {};
+      rows.push({
+        student: {
+          name: history.studentName,
+          className: history.studentClass,
+          school: latest.studentSchool || '',
+          mssv: '',
+          status: 'active',
+          orphan: true,
+        },
+        history,
+        progress,
+        studentKey: history.studentKey,
+      });
+    });
+
+    return rows;
   }
 
   function applyLocalFilters(rows) {
@@ -87,7 +115,9 @@
           <span class="progress-mini-track"><span class="progress-mini-fill" style="width:${progress}%"></span></span>
           <span class="progress-mini-label">${progress}%</span>
         </td>
-        <td><span class="badge ${student.status === 'inactive' ? 'inactive' : 'active'}">${student.status === 'inactive' ? 'Ngừng học' : 'Đang học'}</span></td>
+        <td>${student.orphan
+          ? '<span class="badge inactive" title="Đã nộp bài nhưng chưa có trong danh sách lớp — vào Quản lý danh sách để thêm">⚠️ Chưa có trong roster</span>'
+          : `<span class="badge ${student.status === 'inactive' ? 'inactive' : 'active'}">${student.status === 'inactive' ? 'Ngừng học' : 'Đang học'}</span>`}</td>
         <td><button type="button" class="row-view-btn" data-view-student="${esc(row.studentKey)}">Xem chi tiết</button></td>
       </tr>`;
   }
