@@ -166,14 +166,32 @@
     };
   }
 
+  /** Nạp ExcelJS/jsPDF + 2 engine xuất file — CHỈ tải thật khi người dùng
+   * bấm nút (xem js/services/lazy-script-loader.js + EduExportVendorScripts
+   * khai báo trong <head>/cuối <body> của *-dashboard.html) thay vì chặn
+   * render trang ngay từ đầu cho ~1.86MB thư viện đa số người dùng không
+   * bao giờ đụng tới. An toàn gọi lại nhiều lần (đã cache theo src). */
+  async function ensureExportEnginesLoaded() {
+    if (global.EduExcelExporter && global.EduPdfExporter) return;
+    if (!global.EduLazyLoad || !Array.isArray(global.EduExportVendorScripts)) {
+      throw new Error('Thiếu cấu hình tải engine xuất file (EduExportVendorScripts).');
+    }
+    await global.EduLazyLoad.loadScripts(global.EduExportVendorScripts);
+  }
+
   async function handleExportExcel(btn) {
     if (!state.scoped) return;
-    if (!global.EduExcelExporter) {
-      global.dispatchEvent(new CustomEvent('edu:toast', { detail: '❌ Chưa nạp được engine xuất Excel.' }));
-      return;
-    }
     const oldLabel = btn.textContent;
     btn.disabled = true;
+    btn.textContent = '⏳ Đang tải engine...';
+    try {
+      await ensureExportEnginesLoaded();
+    } catch (err) {
+      global.dispatchEvent(new CustomEvent('edu:toast', { detail: '❌ Không tải được engine xuất Excel: ' + err.message }));
+      btn.disabled = false;
+      btn.textContent = oldLabel;
+      return;
+    }
     btn.textContent = '⏳ Đang tạo...';
     try {
       await global.EduExcelExporter.exportWorkbook(state.scoped, exportOpts());
@@ -187,14 +205,19 @@
     }
   }
 
-  function handleExportPdf(btn) {
+  async function handleExportPdf(btn) {
     if (!state.scoped) return;
-    if (!global.EduPdfExporter) {
-      global.dispatchEvent(new CustomEvent('edu:toast', { detail: '❌ Chưa nạp được engine xuất PDF.' }));
-      return;
-    }
     const oldLabel = btn.textContent;
     btn.disabled = true;
+    btn.textContent = '⏳ Đang tải engine...';
+    try {
+      await ensureExportEnginesLoaded();
+    } catch (err) {
+      global.dispatchEvent(new CustomEvent('edu:toast', { detail: '❌ Không tải được engine xuất PDF: ' + err.message }));
+      btn.disabled = false;
+      btn.textContent = oldLabel;
+      return;
+    }
     btn.textContent = '⏳ Đang tạo...';
     try {
       global.EduPdfExporter.exportReport(state.scoped, exportOpts());
