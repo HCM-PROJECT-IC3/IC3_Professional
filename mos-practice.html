@@ -125,6 +125,11 @@
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/mos-submissions.js"></script>
+  <!-- Hàng đợi gửi lại khi mất mạng — xem index.html cho chú thích đầy đủ.
+       QUAN TRỌNG ở trang này: mos-submissions.js là nơi DUY NHẤT lưu kết
+       quả MOS Practice (không có localStorage dự phòng như bài kiểm tra
+       chính), nên hàng đợi này còn quan trọng hơn ở trang index.html. -->
+  <script src="js/services/pending-sync-queue.js"></script>
 
   <script src="js/lobby-roster.js"></script>
   <script src="js/mos-practice.js"></script>

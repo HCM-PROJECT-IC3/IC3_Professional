@@ -723,6 +723,11 @@
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/firestore-results.js"></script>
+  <!-- Hàng đợi gửi lại khi mất mạng (Firestore/Google Sheet) — nạp SAU
+       googleSheet.js/firestore-results.js (tra cứu hàm gửi theo tên lúc
+       flush(), không bắt buộc thứ tự nghiêm ngặt) và TRƯỚC quiz-engine.js
+       (quiz-engine gọi window.EduPendingSync.enqueue() khi lưu thất bại). -->
+  <script src="js/services/pending-sync-queue.js"></script>
 
   <!-- Nạp Auth SDK để js/game-zone-gate.js biết được nếu người đang mở trang
        (do đã đăng nhập sẵn từ login.html ở tab/phiên khác) là admin/giáo viên
