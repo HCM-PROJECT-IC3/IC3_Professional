@@ -3724,6 +3724,33 @@ function computeIntegrity(result, elapsedSec) {
    § 18 — SAVE RECORD (localStorage)
    ============================================================ */
 
+/**
+ * Đọc 'eduquiz_records' AN TOÀN — tự dọn key nếu JSON hỏng thay vì để
+ * MỌI lần lưu/xem lịch sử sau đó đều âm thầm thất bại vĩnh viễn.
+ *
+ * Bug thật đã bắt được: trước đây mỗi nơi đọc key này (saveRecord,
+ * renderRecords, exportCSV) tự try/catch riêng rồi BỎ QUA lỗi — nếu
+ * value từng bị ghi dở dang (đầy dung lượng/tab crash giữa lúc
+ * setItem), JSON.parse ném lỗi CHO ĐẾN KHI có người xoá tay key này.
+ * saveRecord() cụ thể là: catch nuốt lỗi ở BƯỚC ĐỌC, nên dòng
+ * `all.unshift(rec)` không bao giờ chạy được nữa — nghĩa là 1 lần
+ * hỏng dữ liệu làm học sinh mất khả năng lưu lịch sử VĨNH VIỄN trên
+ * máy đó, không có cách nào tự phục hồi.
+ */
+function _readRecordsSafe() {
+  let raw;
+  try { raw = localStorage.getItem('eduquiz_records'); } catch (e) { return []; }
+  if (!raw) return [];
+  try {
+    const data = JSON.parse(raw);
+    return Array.isArray(data) ? data : [];
+  } catch (e) {
+    console.warn('[EduQuiz] Lịch sử bài làm (eduquiz_records) bị hỏng, đã dọn để lưu tiếp được:', e.message);
+    try { localStorage.removeItem('eduquiz_records'); } catch (e2) { /* không sao */ }
+    return [];
+  }
+}
+
 function saveRecord(result, elapsedSec, integrity) {
   const s   = State.session;
   const pct = Math.round((result.correct / result.total) * 100);
@@ -3761,11 +3788,13 @@ function saveRecord(result, elapsedSec, integrity) {
   };
 
   try {
-    const all = JSON.parse(localStorage.getItem('eduquiz_records') || '[]');
+    const all = _readRecordsSafe();
     all.unshift(rec);
     if (all.length > 500) all.length = 500;
     localStorage.setItem('eduquiz_records', JSON.stringify(all));
   } catch (e) {
+    // Đầy dung lượng / bị chặn (chế độ ẩn danh)... — không làm hỏng màn
+    // hình kết quả đang hiện cho học sinh nếu bước lưu lịch sử thất bại.
     console.warn('[EduQuiz] Lưu lịch sử thất bại:', e);
   }
 
@@ -3869,8 +3898,7 @@ function closeModalBg(e) {
 
 function renderRecords() {
   const el = document.getElementById('recordsContent');
-  let records = [];
-  try { records = JSON.parse(localStorage.getItem('eduquiz_records') || '[]'); } catch {}
+  const records = _readRecordsSafe();
 
   if (!records.length) {
     el.innerHTML = '<div class="no-records"><i class="fa-solid fa-inbox"></i> Chưa có bài làm nào được lưu.</div>';
@@ -3933,8 +3961,7 @@ function clearRecords() {
 }
 
 function exportCSV() {
-  let records = [];
-  try { records = JSON.parse(localStorage.getItem('eduquiz_records') || '[]'); } catch {}
+  const records = _readRecordsSafe();
   if (!records.length) { alert('Không có dữ liệu để xuất.'); return; }
 
   const h = ['STT','Học sinh','Lớp','Trường','Danh mục','Cấp độ','Bài thi','Chế độ','Ngày','Điểm%',
