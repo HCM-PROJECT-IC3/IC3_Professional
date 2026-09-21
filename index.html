@@ -8,23 +8,42 @@
        bắt được cả lỗi xảy ra ngay lúc các script sau đang khởi tạo.
        Xem js/global-error-handler.js. -->
   <script src="js/global-error-handler.js"></script>
-  <!-- Ghi phiên bản đang chạy ra console (debug/hỗ trợ) — xem js/app-version.js + file VERSION ở gốc repo. -->
-  <script src="js/app-version.js"></script>
+  <!-- Ghi phiên bản đang chạy ra console (debug/hỗ trợ) — xem js/app-version.js + file VERSION ở gốc repo.
+       defer (không như global-error-handler.js ở trên — file đó CỐ Ý chặn
+       để bắt lỗi sớm nhất có thể; file này chỉ log debug, không cần gấp). -->
+  <script src="js/app-version.js" defer></script>
   <!-- <title> chỉ render TEXT THUẦN (tiêu đề tab trình duyệt) — bỏ emoji
        thay vì để lọt icon "vỡ", không có cách nào render Font Awesome ở đây. -->
   <title>EduQuiz IC3</title>
+  <!-- ĐỢT TỐI ƯU HIỆU NĂNG: 2 stylesheet Google Fonts + Font Awesome (icon)
+       vốn CHẶN RENDER (Lighthouse render-blocking, ~2.5s trong tổng ~3.1s
+       còn lại sau khi đã defer hết JS) — dùng kỹ thuật preload+swap chuẩn
+       (web.dev "loadCSS"): tải với ưu tiên cao qua rel="preload" (KHÔNG
+       chặn render), rồi tự đổi rel="stylesheet" khi tải xong để áp dụng.
+       An toàn cho 2 loại này vì: (1) font đã có sẵn &display=swap — chữ
+       vẫn hiện ngay bằng font hệ thống, không "trắng chữ" chờ font; (2)
+       icon Font Awesome chỉ là hình trang trí bên cạnh chữ — chậm xuất
+       hiện vài trăm ms không làm vỡ layout hay mất thông tin. KHÔNG áp
+       dụng kỹ thuật này cho style.css/theme.css (CSS layout CỐT LÕI) —
+       rủi ro FOUC (nội dung không có style) cao hơn nhiều so với lợi ích,
+       để lại 2 file này chặn render bình thường như trước. -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link
+  <link rel="preload" as="style"
     href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap"
-    rel="stylesheet">
+    onload="this.onload=null;this.rel='stylesheet'">
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="css/review-detail.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
   <link rel="stylesheet" href="css/accessibility.css">
 <link rel="stylesheet" href="css/motion.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" onload="this.onload=null;this.rel='stylesheet'">
+<noscript>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</noscript>
 </head>
 
 <body>
@@ -720,64 +739,71 @@
     </div>
   </div>
 
-  <script src="js/googleSheet.js"></script>
-  <script src="js/gamification.js"></script>
+  <!-- ĐỢT TỐI ƯU HIỆU NĂNG (Lighthouse Performance 57 → mục tiêu cao hơn
+       nhiều trên mobile/4G chậm): TOÀN BỘ 20 script dưới đây trước kia
+       chặn render (Lighthouse "render-blocking", ước tính ~6.1s trên 4G
+       giả lập) vì không có defer/async. Thêm `defer` đồng loạt — vẫn giữ
+       ĐÚNG thứ tự thực thi tương đối (defer chạy theo đúng thứ tự khai
+       báo, chỉ trì hoãn tới khi parse xong HTML) nên KHÔNG đổi hành vi gì,
+       chỉ đổi THỜI ĐIỂM chạy từ "chặn parser ngay tại vị trí này" sang
+       "tải song song, chạy đúng thứ tự ngay trước DOMContentLoaded".
+       QUAN TRỌNG: khối inline <script> gọi initGameModal(...) ở dưới PHẢI
+       bọc trong DOMContentLoaded — nếu không, nó chạy NGAY LÚC PARSE (inline
+       script không tôn trọng defer) tức là TRƯỚC KHI game-modal.js (giờ đã
+       defer) kịp thực thi, gây lỗi "initGameModal is not defined". -->
+  <script src="js/googleSheet.js" defer></script>
+  <script src="js/gamification.js" defer></script>
 
   <!-- Firestore: lưu kết quả bài thi cho trang Báo cáo trực quan (ic3-dashboard.html) -->
-  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js"></script>
-  <script src="js/firestore-results.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js" defer></script>
+  <script src="js/firebase-config.js" defer></script>
+  <script src="js/firestore-results.js" defer></script>
   <!-- Hàng đợi gửi lại khi mất mạng (Firestore/Google Sheet) — nạp SAU
        googleSheet.js/firestore-results.js (tra cứu hàm gửi theo tên lúc
        flush(), không bắt buộc thứ tự nghiêm ngặt) và TRƯỚC quiz-engine.js
        (quiz-engine gọi window.EduPendingSync.enqueue() khi lưu thất bại). -->
-  <script src="js/services/pending-sync-queue.js"></script>
+  <script src="js/services/pending-sync-queue.js" defer></script>
 
   <!-- Nạp Auth SDK để js/game-zone-gate.js biết được nếu người đang mở trang
        (do đã đăng nhập sẵn từ login.html ở tab/phiên khác) là admin/giáo viên
        → những vai trò này được vào thẳng Khu Vui Chơi, không cần làm bài thi.
        Trang này KHÔNG bắt buộc đăng nhập (học sinh vẫn vào bình thường không
        cần tài khoản) — chỉ tận dụng phiên đăng nhập NẾU CÓ SẴN. -->
-  <script src="js/auth.js"></script>
+  <script src="js/auth.js" defer></script>
 
   <!-- Danh sách Trường/Lớp/Tên: đọc từ file tĩnh data/roster/students-active.json
      (KHÔNG gọi Firestore trực tiếp — tránh nổ quota đọc mỗi lần tải/tải lại trang).
      File này do Điều phối đào tạo xuất ra từ roster-manager.html (nút "🗂️ Xuất JSON")
      mỗi khi danh sách roster thay đổi. Xem js/lobby-roster.js. -->
-  <script src="js/lobby-roster.js"></script>
+  <script src="js/lobby-roster.js" defer></script>
 
-  <script src="js/review-detail.js"></script>
-  <script src="js/quiz-engine.js"></script>
-  <script src="js/main.js"></script>
+  <script src="js/review-detail.js" defer></script>
+  <script src="js/quiz-engine.js" defer></script>
+  <script src="js/main.js" defer></script>
   <!-- Animated 3D Carousel ở lobby-left — thuần vanilla JS, không phụ
        thuộc thư viện ngoài. Xem js/carousel-3d.js. -->
-  <script src="js/carousel-3d.js"></script>
-  <script src="js/carousel-keyboard-cards.js"></script>
+  <script src="js/carousel-3d.js" defer></script>
+  <script src="js/carousel-keyboard-cards.js" defer></script>
   <!-- Thay cho 9 file js/*-modal.js cũ (trùng lặp ~90%, chỉ khác id) —
        nay dùng chung 1 factory js/game-modal.js, mỗi mini-game chỉ khai
        báo id DOM của mình. Xem js/game-modal.js để biết chi tiết. -->
-  <script src="js/game-modal.js"></script>
-  <script>
-    initGameModal({ openBtnId: 'openGameBtn', overlayId: 'gameModalOverlay', closeBtnId: 'closeGameModalBtn', frameId: 'gameModalFrame' }); // Prism Cascade
-    initGameModal({ openBtnId: 'openMemoryGameBtn', overlayId: 'memoryGameModalOverlay', closeBtnId: 'closeMemoryGameModalBtn', frameId: 'memoryGameModalFrame' });
-    initGameModal({ openBtnId: 'openSudokuBtn', overlayId: 'sudokuModalOverlay', closeBtnId: 'closeSudokuModalBtn', frameId: 'sudokuModalFrame' });
-    initGameModal({ openBtnId: 'openBilliardsBtn', overlayId: 'billiardsModalOverlay', closeBtnId: 'closeBilliardsModalBtn', frameId: 'billiardsModalFrame' });
-    initGameModal({ openBtnId: 'openPzDefenseBtn', overlayId: 'pzDefenseModalOverlay', closeBtnId: 'closePzDefenseModalBtn', frameId: 'pzDefenseModalFrame' });
-    initGameModal({ openBtnId: 'openBattleQuizBtn', overlayId: 'battleQuizModalOverlay', closeBtnId: 'closeBattleQuizModalBtn', frameId: 'battleQuizModalFrame' });
-    initGameModal({ openBtnId: 'openCyberDetectiveBtn', overlayId: 'cyberDetectiveModalOverlay', closeBtnId: 'closeCyberDetectiveModalBtn', frameId: 'cyberDetectiveModalFrame' });
-    initGameModal({ openBtnId: 'openComputerSimBtn', overlayId: 'computerSimModalOverlay', closeBtnId: 'closeComputerSimModalBtn', frameId: 'computerSimModalFrame' });
-    initGameModal({ openBtnId: 'openWordSimBtn', overlayId: 'wordSimModalOverlay', closeBtnId: 'closeWordSimModalBtn', frameId: 'wordSimModalFrame', persist: true }); // giữ tiến độ ws_progress_v1
-    initGameModal({ openBtnId: 'openExcelSimBtn', overlayId: 'excelSimModalOverlay', closeBtnId: 'closeExcelSimModalBtn', frameId: 'excelSimModalFrame', persist: true }); // giữ tiến độ xs_progress_v1
-    initGameModal({ openBtnId: 'openPptSimBtn', overlayId: 'pptSimModalOverlay', closeBtnId: 'closePptSimModalBtn', frameId: 'pptSimModalFrame', persist: true }); // giữ tiến độ ps_progress_v1
-  </script>
+  <script src="js/game-modal.js" defer></script>
+  <!-- Trước đây là 1 khối <script> nội tuyến gọi initGameModal(...) ngay
+       tại đây — tách thành file ngoài js/game-modal-init.js (kèm defer) để
+       giữ ĐÚNG thứ tự thực thi tương đối với game-modal.js (trước) và
+       game-zone-gate.js (sau, cần các listener mở-game đã gắn sẵn). Xem
+       chú thích đầy đủ trong chính file đó — bọc inline bằng
+       DOMContentLoaded ở đây tưởng đúng nhưng thực ra ĐẢO NGƯỢC thứ tự vì
+       mọi script defer chạy xong hết TRƯỚC KHI DOMContentLoaded bắn. -->
+  <script src="js/game-modal-init.js" defer></script>
   <!-- Khu Vui Chơi: mở/khóa hub gộp 5 mini-game theo điểm thi. Nạp SAU
        5 file *-modal.js ở trên để nút bên trong hub đã có listener mở
        game riêng trước khi game-zone-gate.js gắn thêm listener "đóng hub
        khi chọn 1 game". Xem js/game-zone-gate.js. -->
-  <script src="js/game-zone-gate.js"></script>
-<script src="js/motion.js"></script>
+  <script src="js/game-zone-gate.js" defer></script>
+<script src="js/motion.js" defer></script>
 </body>
 
 </html>
