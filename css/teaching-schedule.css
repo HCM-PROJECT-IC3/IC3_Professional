@@ -98,6 +98,14 @@ body {
   background: var(--card2); border: 1.5px solid var(--border);
   padding: .4rem .8rem; border-radius: 999px;
 }
+.whoami-chip { display: flex; align-items: center; gap: .5rem }
+.whoami-avatar {
+  width: 30px; height: 30px; border-radius: 50%; flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--gradient-hero); color: #fff; font-weight: 800; font-size: .75rem;
+  overflow: hidden;
+}
+.whoami-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50% }
 
 /* Nút chuyển sáng/tối kiểu "đồng hồ mặt trời" neumorphism — GIỐNG HỆT bản
    trên ic3-dashboard.html/index.html (xem css/dashboard.css để biết chi
@@ -338,6 +346,22 @@ tr:last-child td { border-bottom: none }
 .import-stat.warn { background: var(--yellow-lt); border-color: rgba(246,167,35,.35) }
 .import-stat.warn b { color: var(--yellow) }
 
+/* Danh sách tên + lý do từng sheet bị bỏ qua khi Nhập lịch từ Excel — trước
+   đây chỉ hiện 1 con số ("7 Sheet bỏ qua"), người dùng không biết là sheet
+   nào/vì sao (xem parseWorkbookArrayBufferAndOpenImport() trong
+   js/teaching-schedule.js). */
+.import-skipped-list {
+  list-style: none; margin: .6rem 0 0; padding: 0;
+  max-height: 160px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: .3rem;
+}
+.import-skipped-list li {
+  background: var(--yellow-lt); border: 1px solid rgba(246,167,35,.3);
+  border-radius: var(--radius-sm); padding: .5rem .7rem;
+  font-size: .76rem; line-height: 1.5; color: var(--text);
+}
+.import-skipped-list li b { color: var(--yellow) }
+
 @media (max-width: 640px) {
   .panel-toolbar { flex-direction: column; align-items: stretch }
   .panel-toolbar .push-right { margin-left: 0 }
@@ -421,7 +445,11 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
   background: var(--gradient-hero); color: #fff;
   display: flex; align-items: center; justify-content: center;
   font-weight: 800; font-size: .95rem;
+  overflow: hidden;
 }
+/* Ảnh đại diện thật (tải lên ở Trang Social Media, gvlab_profiles) thay cho viết tắt
+   khi có — xem patchScheduleAvatars() trong js/teaching-schedule.js. */
+.teacher-avatar img, .dash-matrix-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50% }
 .teacher-card-title { min-width: 0 }
 .teacher-card-name { font-weight: 800; font-size: 1.02rem; line-height: 1.3 }
 .teacher-card-code { font-size: .76rem; color: var(--muted); font-weight: 700 }
@@ -593,6 +621,14 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
   background: var(--gradient-hero); color: #fff; font-weight: 800; font-size: .95rem;
   font-family: 'Baloo 2', sans-serif;
   display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+/* Nút "✏️ Sửa lịch" của hàng KHÔNG PHẢI chính mình khi đăng nhập là giáo
+   viên — giữ vẫn hiện (để biết đồng nghiệp có nút này) nhưng khoá lại,
+   quyền ghi thật sự đã chốt ở firestore.rules (chỉ teacherCode == chính
+   mình), đây chỉ thêm lớp UX rõ ràng thay vì để bấm xong mới báo lỗi. */
+.dash-name-action-btn[disabled], .teacher-card-actions .btn[disabled] {
+  opacity: .35; cursor: not-allowed;
 }
 .dash-matrix-name-info { flex: 1; min-width: 0 }
 .dash-matrix-name {

@@ -9,6 +9,24 @@ window.addEventListener('edu:ready', ({ detail }) => {
   document.getElementById('userChipName').textContent = profile.name || user.email;
   document.getElementById('userChipRole').textContent = EduAuth.ROLE_LABEL[profile.role] || profile.role;
 
+  // Ảnh đại diện đã tải lên ở "Trang Social Media" (portfolio.html § PfProfile) lưu
+  // trong collection RIÊNG "gvlab_profiles" (KHÔNG phải "users" — cố
+  // tình tách để không đụng hồ sơ gốc dùng chung toàn nền tảng), nên
+  // trước đây avatar chip ở đây luôn là icon mặc định dù đã đổi ảnh bên
+  // Trang Social Media. Đọc thêm 1 lần đúng document của user hiện tại (1 lượt đọc,
+  // không phải listener sống) để hiện ảnh thật nếu có; còn không thì
+  // giữ nguyên icon mặc định như cũ.
+  if (window.EduFirebase && window.EduFirebase.db) {
+    window.EduFirebase.db.collection('gvlab_profiles').doc(user.uid).get()
+      .then((snap) => {
+        const avatar = snap.exists ? snap.data().avatar : null;
+        if (!avatar) return;
+        const avatarBox = document.querySelector('#userChip .user-avatar');
+        if (avatarBox) avatarBox.innerHTML = `<img src="${avatar}" alt="">`;
+      })
+      .catch((err) => console.warn('[IC3 Dashboard] Không tải được ảnh đại diện Trang Social Media:', err.message));
+  }
+
   const role = profile.role;
 
   // ============================================================
@@ -47,6 +65,9 @@ window.addEventListener('edu:ready', ({ detail }) => {
   // này nữa — 2 role điều phối tách biệt hoàn toàn (xem chú thích ở trên).
   show('teachingScheduleLink', role === 'admin' || role === 'teacher' || role === 'teaching_coordinator');
   show('coordinatorDashboardLink', role === 'admin' || role === 'coordinator');
+  // Trang Social Media — hiện cho mọi role đăng nhập hợp lệ được vào trang này
+  // (không lọc riêng theo role, khác các mục còn lại).
+  show('gvLabLink', true);
 
   // 3 mục trong chính trang này (SPA, không phải link riêng): Bộ đề của tôi
   // / Báo cáo kết quả / Cài đặt hệ thống.

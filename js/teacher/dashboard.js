@@ -39,6 +39,25 @@
   window.addEventListener('edu:ready', ({ detail }) => {
     const { user, profile } = detail;
     document.getElementById('whoami').textContent = `${profile.name || user.email} · ${EduAuth.ROLE_LABEL[profile.role]}`;
+
+    // Ảnh đại diện tải lên ở "Trang Social Media" (portfolio.html § PfProfile) nằm trong
+    // collection riêng "gvlab_profiles" — đọc 1 lần để hiện lên topbar,
+    // giữ chữ cái đầu tên làm fallback nếu giáo viên chưa từng đổi ảnh
+    // (cùng cách làm với js/dashboard-page.js).
+    const avatarBox = document.getElementById('whoamiAvatar');
+    if (avatarBox) {
+      const name = profile.name || user.email || '';
+      avatarBox.textContent = name.trim().charAt(0).toUpperCase();
+      if (window.EduFirebase && window.EduFirebase.db) {
+        window.EduFirebase.db.collection('gvlab_profiles').doc(user.uid).get()
+          .then((snap) => {
+            const avatar = snap.exists ? snap.data().avatar : null;
+            if (avatar) avatarBox.innerHTML = `<img src="${avatar}" alt="">`;
+          })
+          .catch((err) => console.warn('[Teacher Dashboard] Không tải được ảnh đại diện Trang Social Media:', err.message));
+      }
+    }
+
     boot(profile);
   });
 

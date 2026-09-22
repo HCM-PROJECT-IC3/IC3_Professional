@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trang Social Media — Certifications &amp; Life</title>
+<meta name="description" content="Trang Social Media — chứng chỉ Certiport/Pearson thật của đội ngũ, khoảnh khắc ngoài giờ code, và feed nội bộ để giáo viên đăng bài/thích/bình luận.">
+<!--
+  ================================================================
+  portfolio.html — Trang Social Media (bản rút gọn)
+  Trang trước đây có đủ 20 mục theo brief "Trang Social Media portfolio" — đã bỏ
+  bớt theo yêu cầu, CHỈ còn 2 phần chính: Certifications on File và
+  Life at Trang Social Media (mỗi phần kèm "Teacher Feed" — đăng bài/thích/bình
+  luận thật qua Firestore, xem js/portfolio.js § PfFeed +
+  firestore.rules § gvlab_posts).
+  ================================================================
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/portfolio.css">
+<!-- Firebase — cho feed "Trang Social Media" (đăng bài/thích/bình luận, xem
+     js/portfolio.js § PfFeed). Trang vẫn xem công khai không cần đăng
+     nhập (đúng firestore.rules § gvlab_posts "allow read: if true") —
+     chỉ khi bấm đăng bài/thích/bình luận mới cần tài khoản Giáo
+     viên/Admin đã đăng nhập. -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js" defer></script>
+<script src="js/firebase-config.js" defer></script>
+<script src="js/auth.js" defer></script>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<header class="gv-nav" id="gvNav">
+  <a class="gv-nav-brand" href="#top"><i class="fa-solid fa-share-nodes"></i> Social<span>Media</span></a>
+  <nav class="gv-nav-links" id="gvNavLinks">
+    <a href="#certs">Certifications</a>
+    <a href="#life">Life</a>
+    <a href="index.html">Vào ôn luyện</a>
+  </nav>
+  <button type="button" class="gv-nav-burger" id="gvBurger" aria-label="Mở menu"><i class="fa-solid fa-bars"></i></button>
+</header>
+
+<!-- ============ PROFILE BAR ============
+     Thanh "mạng lưới Trang Social Media" — hiện đúng người đang đăng nhập (avatar +
+     tên + vai trò), đúng cảm giác mạng xã hội thay vì trang giới thiệu
+     tĩnh. Đổ nội dung động trong js/portfolio.js § PfProfileBar (dùng
+     lại đúng trạng thái đăng nhập đang track cho PfFeed, không tạo
+     luồng auth thứ 2). -->
+<div class="gv-profile-bar" id="gvProfileBar">
+  <div class="gv-profile-guest" id="gvProfileGuest">
+    <i class="fa-solid fa-people-group"></i>
+    <span>Mạng lưới nội bộ Trang Social Media — <a href="login.html">đăng nhập</a> để đăng bài, thích, bình luận cùng team.</span>
+  </div>
+  <div class="gv-profile-user" id="gvProfileUser" hidden>
+    <span class="gv-avatar gv-mono" id="gvProfileAvatar">?</span>
+    <div class="gv-profile-user-info">
+      <strong id="gvProfileName">—</strong>
+      <span class="gv-mono" id="gvProfileRole">—</span>
+      <span class="gv-profile-status" id="gvProfileStatus" hidden></span>
+    </div>
+    <button type="button" class="gv-profile-edit-btn" id="gvEditProfileBtn"><i class="fa-solid fa-pen"></i> Hồ sơ</button>
+    <span class="gv-profile-online"><span class="gv-online-dot"></span> Đang hoạt động</span>
+  </div>
+</div>
+
+<!-- ============ PROFILE EDIT MODAL ============
+     Giáo viên tự chỉnh ảnh đại diện/trạng thái/tiểu sử — lưu vào
+     Firestore collection "gvlab_profiles" (KHÁC "users" dùng chung
+     toàn nền tảng — tách riêng để không đụng chạm hồ sơ gốc), xem
+     js/portfolio.js § PfProfile + firestore.rules § gvlab_profiles. -->
+<div class="gv-modal-overlay" id="gvProfileModalOverlay">
+  <div class="gv-modal">
+    <button type="button" class="gv-modal-close" id="gvProfileModalClose" aria-label="Đóng">✕</button>
+    <h3>Chỉnh sửa hồ sơ Trang Social Media</h3>
+    <div class="gv-profile-form-avatar">
+      <span class="gv-avatar gv-avatar-lg" id="gvProfileFormAvatarPreview">?</span>
+      <label class="gv-feed-file-btn">
+        <i class="fa-solid fa-camera"></i> Đổi ảnh đại diện
+        <input type="file" accept="image/*" id="gvProfileAvatarInput" hidden>
+      </label>
+    </div>
+    <label class="gv-form-label" for="gvProfileStatusInput">Trạng thái</label>
+    <input type="text" class="gv-form-input" id="gvProfileStatusInput" maxlength="60" placeholder="vd. 🟢 Đang dạy · 🌴 Nghỉ phép...">
+    <label class="gv-form-label" for="gvProfileBioInput">Giới thiệu ngắn</label>
+    <textarea class="gv-form-input" id="gvProfileBioInput" maxlength="220" rows="3" placeholder="Vài dòng về bạn, môn dạy, sở thích..."></textarea>
+    <p class="gv-feed-error gv-mono" id="gvProfileFormError" hidden></p>
+    <button type="button" class="gv-feed-submit gv-profile-save-btn" id="gvProfileSaveBtn">Lưu hồ sơ</button>
+  </div>
+</div>
+
+<!-- ============ CHAT NHÓM ============
+     Kênh chat nội bộ realtime (collection "gvlab_chat") — CHỈ đọc/ghi
+     được khi đã đăng nhập Giáo viên/Admin (khác Teacher Feed đọc công
+     khai), xem firestore.rules § gvlab_chat + js/portfolio.js § PfChat. -->
+<button type="button" class="gv-chat-fab" id="gvChatFab" hidden title="Chat nhóm Trang Social Media">
+  <i class="fa-solid fa-comments"></i>
+  <span class="gv-chat-badge" id="gvChatBadge" hidden></span>
+</button>
+<div class="gv-chat-panel" id="gvChatPanel" hidden>
+  <div class="gv-chat-head">
+    <div class="gv-chat-head-title">
+      <span><i class="fa-solid fa-comments"></i> Chat nhóm Trang Social Media</span>
+      <div class="gv-chat-online" id="gvChatOnline">
+        <div class="gv-chat-online-avatars" id="gvChatOnlineAvatars"></div>
+        <span class="gv-mono" id="gvChatOnlineCount"></span>
+      </div>
+    </div>
+    <button type="button" id="gvChatCloseBtn" aria-label="Đóng">✕</button>
+  </div>
+  <div class="gv-chat-messages" id="gvChatMessages"></div>
+  <p class="gv-chat-typing" id="gvChatTyping" hidden></p>
+  <div class="gv-chat-reply-preview" id="gvChatReplyPreview" hidden>
+    <span id="gvChatReplyText"></span>
+    <button type="button" id="gvChatReplyCancel" aria-label="Huỷ trả lời">✕</button>
+  </div>
+  <!-- Xem trước file/ảnh/ghi âm đã chọn, chờ bấm Gửi — xem
+       js/portfolio.js § PfChat renderAttachmentPreview(). -->
+  <div class="gv-chat-attach-preview" id="gvChatAttachPreview" hidden>
+    <span id="gvChatAttachPreviewLabel"></span>
+    <button type="button" id="gvChatAttachCancel" aria-label="Bỏ file đính kèm">✕</button>
+  </div>
+  <!-- Bảng chọn emoji cho Ô NHẬP (khác bảng thả cảm xúc trên từng tin
+       nhắn) — chèn emoji vào đang gõ, xem js/portfolio.js § initEmojiPicker. -->
+  <div class="gv-chat-emoji-panel" id="gvChatEmojiPanel" hidden></div>
+  <form class="gv-chat-form" id="gvChatForm">
+    <label class="gv-chat-attach-btn" title="Gửi ảnh/file/video">
+      <i class="fa-solid fa-paperclip"></i>
+      <input type="file" id="gvChatFileInput" hidden>
+    </label>
+    <button type="button" class="gv-chat-attach-btn" id="gvChatEmojiBtn" title="Chọn emoji"><i class="fa-regular fa-face-smile"></i></button>
+    <button type="button" class="gv-chat-attach-btn gv-chat-mic-btn" id="gvChatMicBtn" title="Ghi âm giọng nói"><i class="fa-solid fa-microphone"></i></button>
+    <input type="text" id="gvChatInput" placeholder="Nhắn gì đó với team…" maxlength="500" autocomplete="off">
+    <span class="gv-chat-rec-timer" id="gvChatRecTimer" hidden></span>
+    <button type="submit" id="gvChatSendBtn"><i class="fa-solid fa-paper-plane"></i></button>
+  </form>
+</div>
+
+<div id="top"></div>
+
+<!-- ============ CERTIFICATIONS ============
+     Chứng chỉ thật — chuyển thẳng từ PDF gốc trong thư mục Certiport
+     sang ảnh (PyMuPDF, không phải ảnh AI) — đủ 20/20 file có trong
+     repo dữ liệu bàn giao (19 PDF + 1 ảnh chụp), không chọn lọc bớt.
+     Bấm vào từng ảnh để xem cỡ đầy đủ (lightbox), xem js/portfolio.js
+     § PfCertLightbox. -->
+<section class="gv-certs-section" id="certs">
+  <p class="gv-eyebrow gv-mono">/ 01</p>
+  <h2>Certifications on File</h2>
+  <p class="gv-certs-sub">Certiport / Pearson VUE — đứng tên Nguyễn Hoài Bảo (20 chứng chỉ).</p>
+  <div class="gv-certs-grid" id="gvCertsGrid" data-certs></div>
+
+  <!-- Feed kiểu mạng xã hội cho mục Chứng chỉ — đăng bài/thích/bình luận
+       THẬT qua Firestore (collection gvlab_posts, category="certification"),
+       xem js/portfolio.js § PfFeed + firestore.rules § gvlab_posts. -->
+  <div class="gv-feed" data-feed="certification">
+    <div class="gv-feed-head">
+      <h4>Teacher Feed</h4>
+      <span class="gv-feed-hint gv-mono">Đăng ảnh · thích · bình luận</span>
+    </div>
+    <div class="gv-feed-composer" data-feed-composer hidden>
+      <span class="gv-avatar gv-feed-composer-avatar" data-composer-avatar>?</span>
+      <div class="gv-feed-composer-main">
+        <textarea class="gv-feed-textarea" data-feed-caption placeholder="Khoe chứng chỉ mới, chia sẻ vài dòng với team…" rows="2"></textarea>
+        <div class="gv-feed-composer-row">
+          <label class="gv-feed-file-btn">
+            <i class="fa-solid fa-image"></i> Chọn ảnh
+            <input type="file" accept="image/*" data-feed-file hidden>
+          </label>
+          <span class="gv-feed-file-name gv-mono" data-feed-file-name>Chưa chọn ảnh</span>
+          <button type="button" class="gv-feed-submit" data-feed-submit disabled>Đăng bài</button>
+        </div>
+        <p class="gv-feed-error gv-mono" data-feed-error hidden></p>
+      </div>
+    </div>
+    <p class="gv-feed-login-hint" data-feed-login-hint hidden><a href="login.html">Đăng nhập</a> với tài khoản Giáo viên/Admin để đăng bài, thích và bình luận.</p>
+    <div class="gv-feed-list" data-feed-list></div>
+  </div>
+</section>
+
+<!-- ============ LIFE AT SOCIAL MEDIA ============
+     Ảnh thật (không phải screenshot sản phẩm) — team building, gala,
+     tất niên, dã ngoại... do chính team Trang Social Media cung cấp. -->
+<section class="gv-life" id="life">
+  <p class="gv-eyebrow gv-mono">/ 02</p>
+  <h2>Life at Social Media</h2>
+  <p class="gv-life-sub">Không chỉ code. Team building, gala, tất niên và vài chuyến đi cùng nhau ngoài giờ lên lớp.</p>
+  <div class="gv-life-gallery">
+    <figure><img src="img/portfolio/team-gala.jpg" alt="Gala tổng kết năm học" loading="lazy" decoding="async"><figcaption class="gv-mono">Gala tổng kết năm học</figcaption></figure>
+    <figure><img src="img/portfolio/team-yep-2025.jpg" alt="Year End Party 2025" loading="lazy" decoding="async"><figcaption class="gv-mono">Year End Party 2025</figcaption></figure>
+    <figure><img src="img/portfolio/team-activity-09.jpg" alt="Year End Party 2025 — kỷ niệm 25 năm IIG" loading="lazy" decoding="async"><figcaption class="gv-mono">YEP 2025 — 25 năm IIG</figcaption></figure>
+    <figure><img src="img/portfolio/team-activity-10.jpg" alt="Year End Party 2025 toàn thể IIG Việt Nam" loading="lazy" decoding="async"><figcaption class="gv-mono">YEP 2025 — Toàn thể IIG</figcaption></figure>
+    <figure><img src="img/portfolio/team-yep-gv.jpg" alt="Giáo viên tại Year End Party" loading="lazy" decoding="async"><figcaption class="gv-mono">YEP — Team giáo viên</figcaption></figure>
+    <figure><img src="img/portfolio/team-building-gv.jpg" alt="Team Building giáo viên" loading="lazy" decoding="async"><figcaption class="gv-mono">Team Building — Giáo viên</figcaption></figure>
+    <figure><img src="img/portfolio/team-building-duan.jpg" alt="Team Building toàn dự án" loading="lazy" decoding="async"><figcaption class="gv-mono">Team Building — Toàn dự án</figcaption></figure>
+    <figure><img src="img/portfolio/team-building-iig.jpg" alt="Team Building cùng IIG" loading="lazy" decoding="async"><figcaption class="gv-mono">Team Building — Cùng IIG</figcaption></figure>
+    <figure><img src="img/portfolio/team-activity-06.jpg" alt="Tất niên Phòng Dự Án — CN Hồ Chí Minh" loading="lazy" decoding="async"><figcaption class="gv-mono">Tất niên — Phòng Dự Án CN HCM</figcaption></figure>
+    <figure><img src="img/portfolio/team-activity-07.jpg" alt="Liên hoan cuối năm cùng team" loading="lazy" decoding="async"><figcaption class="gv-mono">Liên hoan cuối năm</figcaption></figure>
+    <figure><img src="img/portfolio/team-activity-04.jpg" alt="Chuyến đi biển cùng team" loading="lazy" decoding="async"><figcaption class="gv-mono">Chuyến đi biển cùng team</figcaption></figure>
+    <figure><img src="img/portfolio/team-activity-05.jpg" alt="Tham quan Thiền Viện Trúc Lâm Chân Nguyên" loading="lazy" decoding="async"><figcaption class="gv-mono">Tham quan Thiền Viện Trúc Lâm</figcaption></figure>
+    <figure><img src="img/portfolio/team-activity-02.jpg" alt="Dã ngoại cuối tuần cùng gia đình team" loading="lazy" decoding="async"><figcaption class="gv-mono">Dã ngoại cuối tuần</figcaption></figure>
+    <figure><img src="img/portfolio/team-activity-03.jpg" alt="Tiệc nướng sân vườn" loading="lazy" decoding="async"><figcaption class="gv-mono">Tiệc nướng sân vườn</figcaption></figure>
+    <figure><img src="img/portfolio/team-activity-01.jpg" alt="Giờ giải lao tại văn phòng" loading="lazy" decoding="async"><figcaption class="gv-mono">Giờ giải lao tại văn phòng</figcaption></figure>
+    <figure><img src="img/portfolio/team-activity-08.jpg" alt="Khoảnh khắc tại văn phòng IIG" loading="lazy" decoding="async"><figcaption class="gv-mono">Khoảnh khắc văn phòng</figcaption></figure>
+  </div>
+
+  <!-- Feed kiểu mạng xã hội cho mục Life — cùng cơ chế với feed
+       Certifications ở trên, khác category="life". -->
+  <div class="gv-feed gv-feed-pad" data-feed="life">
+    <div class="gv-feed-head">
+      <h4>Teacher Feed</h4>
+      <span class="gv-feed-hint gv-mono">Đăng ảnh · thích · bình luận</span>
+    </div>
+    <div class="gv-feed-composer" data-feed-composer hidden>
+      <span class="gv-avatar gv-feed-composer-avatar" data-composer-avatar>?</span>
+      <div class="gv-feed-composer-main">
+        <textarea class="gv-feed-textarea" data-feed-caption placeholder="Khoảnh khắc hôm nay của team là gì?" rows="2"></textarea>
+        <div class="gv-feed-composer-row">
+          <label class="gv-feed-file-btn">
+            <i class="fa-solid fa-image"></i> Chọn ảnh
+            <input type="file" accept="image/*" data-feed-file hidden>
+          </label>
+          <span class="gv-feed-file-name gv-mono" data-feed-file-name>Chưa chọn ảnh</span>
+          <button type="button" class="gv-feed-submit" data-feed-submit disabled>Đăng bài</button>
+        </div>
+        <p class="gv-feed-error gv-mono" data-feed-error hidden></p>
+      </div>
+    </div>
+    <p class="gv-feed-login-hint" data-feed-login-hint hidden><a href="login.html">Đăng nhập</a> với tài khoản Giáo viên/Admin để đăng bài, thích và bình luận.</p>
+    <div class="gv-feed-list" data-feed-list></div>
+  </div>
+</section>
+
+<!-- ============ FOOTER (tối giản) ============ -->
+<footer class="gv-footer-min gv-mono">
+  <span>© <span id="gvYear"></span> Trang Social Media</span>
+  <a href="index.html">→ Vào trang ôn luyện</a>
+</footer>
+
+<!-- ============ CERT LIGHTBOX ============ -->
+<div class="gv-lightbox-overlay" id="gvLightboxOverlay">
+  <button type="button" class="gv-lightbox-close" id="gvLightboxClose" aria-label="Đóng">✕</button>
+  <figure class="gv-lightbox-fig">
+    <img id="gvLightboxImg" src="" alt="">
+    <figcaption id="gvLightboxCaption" class="gv-mono"></figcaption>
+  </figure>
+</div>
+
+<script src="js/portfolio.js" defer></script>
+</body>
+</html>

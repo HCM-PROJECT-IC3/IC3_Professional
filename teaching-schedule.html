@@ -25,7 +25,10 @@
     <button type="button" class="info-btn" title="Quản lý lịch làm việc/giảng dạy hàng tuần của đội ngũ giáo viên — thay thế việc cập nhật thủ công trên file Excel LỊCH GIẢNG DẠY TEAM GVTH...xlsx. Mỗi tuần gồm lịch của từng giáo viên theo Thứ 2 → Thứ 7, mỗi ngày chia Sáng/Chiều với loại hình phụ trách + địa điểm + tối đa 5 tiết dạy. Có thể nhập nhanh từ file Excel gốc (nút Nhập từ Excel ở sidebar) rồi chỉnh sửa tiếp trực tiếp trên trang này.">ℹ️</button>
   </h1>
   <div class="spacer"></div>
-  <span class="whoami" id="whoami"></span>
+  <div class="whoami-chip" id="whoamiChip">
+    <span class="whoami-avatar" id="whoamiAvatar"></span>
+    <span class="whoami" id="whoami"></span>
+  </div>
   <button type="button" class="theme-toggle" id="themeToggle" title="Chuyển đổi sáng/tối"></button>
   <button type="button" class="btn btn-ghost" id="logoutBtn">Đăng xuất</button>
 </div>
@@ -428,6 +431,7 @@
         <div class="import-stat ok"><b id="importTeacherCount">0</b><span>Giáo viên</span></div>
         <div class="import-stat warn" id="importSkippedStat" hidden><b id="importSkippedCount">0</b><span>Sheet bỏ qua</span></div>
       </div>
+      <ul class="import-skipped-list" id="importSkippedList" hidden></ul>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-ghost" id="importCancelBtn">Huỷ</button>

@@ -640,7 +640,14 @@ body {
   gap: .4rem;
   margin-bottom: .5rem;
   animation: lobbyRise .5s .05s cubic-bezier(.16,1,.3,1) both;
+  /* Giờ là <a href="portfolio.html"> (trước là <div> tĩnh) — link sang
+     trang giới thiệu dự án, giữ nguyên hình thức cũ (không gạch chân,
+     không đổi màu chữ vì lobby-brand-name đã tự tô gradient riêng). */
+  text-decoration: none;
+  cursor: pointer;
+  width: fit-content;
 }
+.lobby-brand:hover .lobby-brand-emoji { transform: scale(1.08); transition: transform .2s ease; }
 .lobby-brand-emoji {
   font-size: 1.35rem;
   filter: drop-shadow(0 3px 8px rgba(0,0,0,.18));

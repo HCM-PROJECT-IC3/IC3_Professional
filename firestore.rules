@@ -333,7 +333,11 @@ service cloud.firestore {
     //      teaching_coordinator (xem applyRoleUI() + body.role-teaching-coordinator
     //      trong css/teaching-schedule.css) — rule ở đây là chốt chặn thật. ----
     match /teaching_teachers/{teacherCode} {
-      allow read: if isAdmin() || isTeachingCoordinator() || (isApprovedTeacher() && teacherCode == myTeacherCode());
+      // Giáo viên giờ ĐƯỢC XEM lịch của CẢ ĐỘI (bảng "Tổng quan"/"Thẻ" đầy
+      // đủ như admin), không còn giới hạn chỉ đúng document của chính mình
+      // — CHỈ nới quyền ĐỌC; quyền GHI vẫn chốt ở teaching_schedule bên
+      // dưới (mỗi giáo viên chỉ sửa được đúng lịch của mình).
+      allow read: if isAdmin() || isTeachingCoordinator() || isApprovedTeacher();
       allow write: if isAdmin();
     }
     match /teaching_weeks/{weekKey} {
@@ -344,8 +348,9 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     match /teaching_schedule/{scheduleId} {
-      allow read: if isAdmin() || isTeachingCoordinator()
-        || (isApprovedTeacher() && resource.data.teacherCode == myTeacherCode());
+      // Đọc: mọi giáo viên đã duyệt xem được lịch của CẢ ĐỘI (giống hệt
+      // admin) — không còn lọc theo teacherCode == chính mình nữa.
+      allow read: if isAdmin() || isTeachingCoordinator() || isApprovedTeacher();
       // Giáo viên được TỰ CẬP NHẬT đúng lịch của chính mình (teaching-schedule.html
       // → khối "Lịch của tôi") — chỉ tạo/sửa bản ghi có teacherCode == chính mình,
       // không đụng được lịch giáo viên khác. Xoá vẫn chỉ Admin (không có nút xoá
@@ -367,12 +372,14 @@ service cloud.firestore {
     //      viên" (isTeachingCoordinator()) CỐ TÌNH không có ở allow write —
     //      vẫn chỉ đọc như trước, chỉ mở thêm quyền ghi cho ĐÚNG giáo viên. ----
     match /teaching_timetable_periods/{teacherCode} {
-      allow read: if isAdmin() || isTeachingCoordinator() || (isApprovedTeacher() && teacherCode == myTeacherCode());
+      allow read: if isAdmin() || isTeachingCoordinator() || isApprovedTeacher();
       allow write: if isAdmin() || (isApprovedTeacher() && teacherCode == myTeacherCode());
     }
     match /teaching_timetable/{docId} {
-      allow read: if isAdmin() || isTeachingCoordinator()
-        || (isApprovedTeacher() && resource.data.teacherCode == myTeacherCode());
+      // Đọc: mở cho cả đội giáo viên (cần để bảng "Tổng quan" hiện đúng mã
+      // lớp của TỪNG giáo viên khác, không riêng gì chính mình) — ghi vẫn
+      // chỉ Admin như cũ.
+      allow read: if isAdmin() || isTeachingCoordinator() || isApprovedTeacher();
       allow write: if isAdmin();
     }
 
@@ -387,6 +394,111 @@ service cloud.firestore {
     match /teaching_travel_distances/{teacherCode} {
       allow read: if isAdmin() || isTeachingCoordinator() || (isApprovedTeacher() && teacherCode == myTeacherCode());
       allow write: if isAdmin() || isTeachingCoordinator();
+    }
+
+    // ---- Trang Social Media — feed kiểu blog/mạng xã hội nội bộ trong portfolio.html
+    //      (mục "Life at Trang Social Media" / "Certifications on File"). Đọc CÔNG KHAI
+    //      (portfolio.html là trang giới thiệu công khai, không yêu cầu
+    //      đăng nhập) — chỉ GHI (đăng bài/thích/bình luận) mới cần là
+    //      isEditor() (admin hoặc giáo viên đã duyệt), đúng yêu cầu "để
+    //      Giáo viên đăng tải/like/comment". Ảnh lưu thẳng base64 trong
+    //      field "image" của document (KHÔNG dùng Cloud Storage — repo
+    //      này chưa có storage.rules quản lý, tránh phụ thuộc thứ chưa
+    //      cấu hình), nên phải giới hạn cỡ field để không vượt hạn mức
+    //      1MiB/document của Firestore — xem MAX_IMAGE_CHARS trong
+    //      js/portfolio.js § PfFeed (nén ảnh phía client trước khi ghi).
+    match /gvlab_posts/{postId} {
+      allow read: if true;
+      allow create: if isEditor()
+        && request.resource.data.authorUid == request.auth.uid
+        && request.resource.data.category in ['life', 'certification']
+        && request.resource.data.image is string
+        && request.resource.data.image.size() < 900000;
+      // Cho phép: (a) chính chủ sửa/xoá bài của mình, (b) BẤT KỲ editor nào
+      // cập nhật ĐÚNG 1 field "likeCount" (toggle thích — xem transaction
+      // trong js/portfolio.js, không cho sửa field nào khác qua đường này).
+      allow update: if isEditor() && (
+        resource.data.authorUid == request.auth.uid
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount'])
+      );
+      allow delete: if isEditor() && (resource.data.authorUid == request.auth.uid || isAdmin());
+
+      match /likes/{uid} {
+        allow read: if true;
+        allow write: if isSignedIn() && uid == request.auth.uid; // chỉ tự thích/bỏ thích cho chính mình
+      }
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if isEditor() && request.resource.data.authorUid == request.auth.uid;
+        allow delete: if isEditor() && (resource.data.authorUid == request.auth.uid || isAdmin());
+      }
+    }
+
+    // ---- Trang Social Media — hồ sơ cá nhân (ảnh đại diện/trạng thái/tiểu sử) cho
+    //      "Teacher Feed" ở portfolio.html. Doc id = CHÍNH uid của giáo
+    //      viên (không phải id tự sinh) — đảm bảo mỗi người chỉ có đúng
+    //      1 hồ sơ, và rule "chỉ tự sửa hồ sơ của mình" chỉ cần so sánh
+    //      thẳng document id với request.auth.uid, không cần field phụ.
+    //      Đọc CÔNG KHAI (ảnh đại diện cần hiện được cho khách xem feed
+    //      chưa đăng nhập) — CHỈ đúng chủ hồ sơ (hoặc admin) mới ghi được.
+    //      Ảnh đại diện base64 giới hạn nhỏ hơn nhiều ảnh bài đăng (avatar
+    //      không cần nét cao) — xem AVATAR_MAX_CHARS trong js/portfolio.js.
+    match /gvlab_profiles/{uid} {
+      allow read: if true;
+      allow write: if isEditor() && (uid == request.auth.uid || isAdmin())
+        && (!('avatar' in request.resource.data) || (request.resource.data.avatar is string && request.resource.data.avatar.size() < 300000));
+    }
+
+    // ---- Trang Social Media — chat nhóm nội bộ (portfolio.html). KHÁC "Teacher
+    //      Feed" (gvlab_posts, đọc công khai): đây là kênh trò chuyện
+    //      RIÊNG của đội ngũ, nên CẢ ĐỌC LẪN GHI đều yêu cầu isEditor()
+    //      — khách xem trang công khai không đọc được nội dung chat.
+    //      Ảnh/file/ghi âm đính kèm cũng mã hoá base64 giống gvlab_posts
+    //      (không dùng Cloud Storage — KHÔNG có hạ tầng nén video, nên
+    //      video thật hầu như luôn vượt hạn mức này, xem ghi chú
+    //      MAX_CHAT_ATTACH_CHARS trong js/portfolio.js § PfChat).
+    match /gvlab_chat/{messageId} {
+      allow read: if isEditor();
+      allow create: if isEditor()
+        && request.resource.data.authorUid == request.auth.uid
+        && (!('attachment' in request.resource.data) || (request.resource.data.attachment is string && request.resource.data.attachment.size() < 700000));
+      // "Xoá hẳn" (khác "thu hồi" bên dưới) — xoá luôn document, không
+      // ai còn thấy kể cả trong lịch sử. Tác giả HOẶC admin đều xoá được.
+      allow delete: if isEditor() && (resource.data.authorUid == request.auth.uid || isAdmin());
+      // Cho phép 2 kiểu update:
+      // (a) BẤT KỲ editor nào sửa ĐÚNG field "reactions" (thả/bỏ cảm
+      //     xúc trên tin của người khác) — denormalized ngay trên tin
+      //     nhắn thay vì subcollection riêng, giống "likeCount" của
+      //     gvlab_posts.
+      // (b) CHÍNH TÁC GIẢ sửa tin của mình — dùng cho "Thu hồi" (client
+      //     xoá field "attachment*" + đổi "text" thành rỗng + đặt
+      //     "recalled: true", xem js/portfolio.js § PfChat recallMessage()).
+      //     Cho phép author toàn quyền sửa tin CỦA CHÍNH MÌNH (không
+      //     giới hạn field) — đơn giản hơn liệt kê từng field, và hợp
+      //     lý cho 1 công cụ nội bộ nhỏ (không phải mạng xã hội công khai).
+      allow update: if isEditor() && (
+        resource.data.authorUid == request.auth.uid
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions'])
+      );
+    }
+
+    // ---- Trang Social Media — "đang nhập..." cho chat nhóm. Doc id = uid (mỗi
+    //      người 1 document duy nhất, tự ghi đè) — CHỈ TỒN TẠI TRONG
+    //      VÀI GIÂY (client tự xoá khi ngừng gõ/gửi xong, xem
+    //      js/portfolio.js § PfChat), không phải log vĩnh viễn.
+    match /gvlab_chat_typing/{uid} {
+      allow read: if isEditor();
+      allow write: if isEditor() && uid == request.auth.uid;
+    }
+
+    // ---- Trang Social Media — "đang hoạt động" (ai đang mở khung chat) cho chat
+    //      nhóm. Doc id = uid, client tự "nhịp tim" (cập nhật lại mỗi
+    //      ~20s) trong lúc mở khung chat và XOÁ khi đóng/rời trang —
+    //      xem js/portfolio.js § PfChat. Không phải hệ theo dõi hoạt
+    //      động toàn nền tảng, chỉ riêng cho khung chat Trang Social Media.
+    match /gvlab_presence/{uid} {
+      allow read: if isEditor();
+      allow write: if isEditor() && uid == request.auth.uid;
     }
   }
 }
