@@ -482,23 +482,10 @@ service cloud.firestore {
       );
     }
 
-    // ---- Trang Social Media — "đang nhập..." cho chat nhóm. Doc id = uid (mỗi
-    //      người 1 document duy nhất, tự ghi đè) — CHỈ TỒN TẠI TRONG
-    //      VÀI GIÂY (client tự xoá khi ngừng gõ/gửi xong, xem
-    //      js/portfolio.js § PfChat), không phải log vĩnh viễn.
-    match /gvlab_chat_typing/{uid} {
-      allow read: if isEditor();
-      allow write: if isEditor() && uid == request.auth.uid;
-    }
-
-    // ---- Trang Social Media — "đang hoạt động" (ai đang mở khung chat) cho chat
-    //      nhóm. Doc id = uid, client tự "nhịp tim" (cập nhật lại mỗi
-    //      ~20s) trong lúc mở khung chat và XOÁ khi đóng/rời trang —
-    //      xem js/portfolio.js § PfChat. Không phải hệ theo dõi hoạt
-    //      động toàn nền tảng, chỉ riêng cho khung chat Trang Social Media.
-    match /gvlab_presence/{uid} {
-      allow read: if isEditor();
-      allow write: if isEditor() && uid == request.auth.uid;
-    }
+    // gvlab_chat_typing / gvlab_presence (đang nhập.../đang hoạt động cho chat
+    // nhóm Trang Social Media) — ĐÃ BỎ tính năng này khỏi js/portfolio.js (tốn
+    // ghi liên tục mỗi ~20s/người mở khung chat, không phục vụ mục đích cốt
+    // lõi), nên cũng bỏ luôn 2 rule tương ứng — không còn client nào đọc/ghi
+    // 2 collection này nữa.
   }
 }
