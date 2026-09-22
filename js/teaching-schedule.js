@@ -70,11 +70,23 @@
     search: '',
     viewMode: 'dashboard', // 'dashboard' (tổng quan, mặc định) | 'cards' (thẻ từng GV) — chỉ áp dụng admin/coordinator
   };
-  /** true khi tài khoản đăng nhập là giáo viên — trang chuyển sang khối
-   * "Lịch của tôi" (renderMyWeekView) thay vì bảng tổng hợp nhiều GV; giáo
-   * viên TỰ CẬP NHẬT được đúng lịch của mình, quyền ghi thật sự vẫn do
+  /** true khi tài khoản đăng nhập là giáo viên — giờ dùng CHUNG bảng tổng
+   * hợp "Tổng quan"/"Thẻ" nhiều GV với admin (đã được cấp quyền ĐỌC cả đội
+   * qua firestore.rules, KHÔNG còn giới hạn chỉ đọc đúng 1 GV như trước) —
+   * chỉ khác ở chỗ nút "✏️ Sửa lịch" bị khoá với hàng KHÔNG PHẢI của chính
+   * mình (xem canEditTeacherRow()) + ẩn vài nút hành động cấp-đội chỉ
+   * Admin mới cần (xem applyRoleUI()). Quyền GHI thật sự vẫn luôn do
    * firestore.rules chốt (chỉ đúng teacherCode == chính mình). */
   function isTeacherRole() { return state.role === 'teacher'; }
+  /** true nếu tài khoản hiện tại được phép bấm "✏️ Sửa lịch" của hàng GV
+   * này — Admin/Điều phối giáo viên (đọc-hết, xem isCoordinatorRole())
+   * không có quyền sửa gì ở đây nên trả false luôn (nút vốn đã ẩn hết với
+   * role đó); Admin có toàn quyền; giáo viên chỉ đúng hàng của chính mình. */
+  function canEditTeacherRow(teacherCode) {
+    if (isCoordinatorRole()) return false;
+    if (isTeacherRole()) return teacherCode === state.myTeacherCode;
+    return true;
+  }
   /** true khi tài khoản đăng nhập là "🚗 Điều phối giáo viên"
    * (teaching_coordinator — KHÁC "coordinator" tức "🧭 Điều phối đào tạo",
    * role đó không được vào trang này nữa) — dùng CHUNG bảng tổng hợp
@@ -124,33 +136,91 @@
     state.myTeacherCode = profile.teacherCode || '';
     applyRoleUI();
     applyCoordinatorReadOnlyUI();
+    initWhoamiAvatar(user.uid, profile.name || user.email);
+    initScheduleAvatars();
     loadEverything();
   });
 
-  /** Ẩn/khoá các chức năng quản lý nhiều GV (chỉ admin) khi tài khoản đăng
-   * nhập là giáo viên, thay bằng khối "Lịch của tôi" (thẻ theo ngày,
-   * sửa/lưu trực tiếp — xem renderMyWeekView()). Quyền ghi thật sự vẫn do
-   * firestore.rules chốt (chỉ đúng teacherCode == chính mình), đây chỉ là
-   * lớp UX. */
+  /** Ảnh đại diện của CHÍNH tài khoản đang đăng nhập ở khung "whoami" trên
+   * topbar — cùng cách làm với js/dashboard-page.js/js/teacher/dashboard.js
+   * (đọc 1 lần đúng document gvlab_profiles/{uid}, KHÔNG phải listener sống). */
+  function initWhoamiAvatar(uid, name) {
+    const box = document.getElementById('whoamiAvatar');
+    if (!box) return;
+    box.textContent = String(name || '').trim().charAt(0).toUpperCase();
+    if (window.EduFirebase && window.EduFirebase.db) {
+      window.EduFirebase.db.collection('gvlab_profiles').doc(uid).get()
+        .then((snap) => {
+          const avatar = snap.exists ? snap.data().avatar : null;
+          if (avatar) box.innerHTML = `<img src="${avatar}" alt="">`;
+        })
+        .catch((err) => console.warn('[Lịch giảng dạy] Không tải được ảnh đại diện Trang Social Media:', err.message));
+    }
+  }
+
+  // ============================================================
+  // ẢNH ĐẠI DIỆN THẬT (Trang Social Media) TRÊN CÁC Ô "GIÁO VIÊN" — mã NV (teacherCode)
+  // không liên quan trực tiếp tới uid, nên phải bắc cầu: users/{uid} nào
+  // có field "teacherCode" → gvlab_profiles/{uid} có field "avatar". Đọc
+  // bảng users 1 LẦN (nhỏ, ~18 GV) để dựng map teacherCode -> uid, sau đó
+  // GẮN LISTENER SỐNG trên gvlab_profiles (giống avatarCache của
+  // js/portfolio.js) để ảnh cập nhật ngay khi giáo viên vừa đổi ở Trang Social Media,
+  // không cần tải lại trang. Mọi ô avatar render động đều gắn sẵn
+  // data-teacher-code="<mã NV>" để patchScheduleAvatars() tìm và vá lại
+  // sau mỗi lần render.
+  let teacherCodeToUid = {};
+  let scheduleAvatarByUid = {};
+  function initScheduleAvatars() {
+    if (!window.EduFirebase || !window.EduFirebase.db) return;
+    const db = window.EduFirebase.db;
+    db.collection('users').where('role', '==', 'teacher').get()
+      .then((snap) => {
+        snap.forEach((doc) => {
+          const code = doc.data().teacherCode;
+          if (code) teacherCodeToUid[code] = doc.id;
+        });
+        patchScheduleAvatars();
+      })
+      .catch((err) => console.warn('[Lịch giảng dạy] Không dựng được map giáo viên → tài khoản:', err.message));
+    db.collection('gvlab_profiles').onSnapshot((snap) => {
+      snap.docChanges().forEach((chg) => {
+        scheduleAvatarByUid[chg.doc.id] = chg.doc.data().avatar || null;
+      });
+      patchScheduleAvatars();
+    }, (err) => console.warn('[Lịch giảng dạy] Không theo dõi được ảnh đại diện Trang Social Media:', err.message));
+  }
+  /** Vá lại MỌI ô avatar đang hiện trên trang (thẻ + ma trận Tổng quan)
+   * bằng ảnh thật nếu có — gọi lại sau mỗi lần render lại danh sách/tuần,
+   * vì innerHTML render mới sẽ xoá mất ảnh đã vá trước đó. */
+  function patchScheduleAvatars() {
+    document.querySelectorAll('[data-teacher-code]').forEach((el) => {
+      const uid = teacherCodeToUid[el.dataset.teacherCode];
+      const avatar = uid ? scheduleAvatarByUid[uid] : null;
+      el.innerHTML = avatar ? `<img src="${avatar}" alt="">` : esc(initialsOf(el.dataset.teacherName || ''));
+    });
+  }
+
+  /** Ẩn các chức năng quản lý cấp-đội chỉ dành cho Admin (Tuần mới/Đồng bộ
+   * SharePoint/Xuất PDF tất cả/Xuất PDF tất cả Phiếu công tác/tab "Giáo
+   * viên" — CRUD hồ sơ + thông tin liên hệ của đồng nghiệp) khi tài khoản
+   * đăng nhập là giáo viên. Giáo viên giờ dùng CHUNG bảng "Tổng quan"/"Thẻ"
+   * nhiều GV với admin (đã được cấp quyền ĐỌC cả đội) để xem lịch của đồng
+   * nghiệp, chỉ KHÔNG sửa được ngoài đúng hàng của chính mình (xem
+   * canEditTeacherRow(), áp dụng ngay trong renderWeeklyTab()/renderDashboardView()).
+   * Quyền ghi thật sự vẫn luôn do firestore.rules chốt (chỉ teacherCode ==
+   * chính mình), đây chỉ là lớp UX. */
   function applyRoleUI() {
     const hide = (id) => { const el = document.getElementById(id); if (el) el.classList.add('force-hide'); };
-    const show = (id) => { const el = document.getElementById(id); if (el) el.classList.remove('force-hide'); };
     if (!isTeacherRole()) return;
-    // Toàn bộ sidebar + khối chính (Tổng quan/Thẻ) chỉ dành cho admin quản
-    // lý NHIỀU giáo viên — giáo viên chỉ cần đúng 1 khối "Lịch của tôi"
-    // full-width bên dưới, ẩn nguyên khối cha 1 lần thay vì ẩn từng phần
-    // tử con riêng lẻ.
-    hide('weeklyLayout');
-    show('myWeekWrap');
-    // Banner giới thiệu riêng cho giáo viên đã bị bỏ (chiếm quá nhiều chỗ
-    // phía trên lưới thẻ) — dồn hướng dẫn vào đúng nút ℹ️ sẵn có ở tiêu đề
-    // (admin/teacher dùng chung 1 nút, chỉ đổi nội dung tooltip theo role).
-    const infoBtn = document.querySelector('.topbar .info-btn');
-    if (infoBtn) {
-      infoBtn.title = 'Tự cập nhật lịch làm việc/giảng dạy hàng tuần của chính bạn ngay tại đây — chọn loại '
-        + 'hình phụ trách cho từng buổi Sáng/Chiều, điền địa điểm và lớp đang dạy, rồi bấm "💾 Lưu lịch tuần của tôi". '
-        + 'Có thắc mắc về lịch, liên hệ Admin.';
-    }
+    hide('newWeekBtn');
+    hide('syncSharePointBtn');
+    hide('exportAllPdfBtn');
+    hide('exportAllCongTacBtn');
+    // Tab "👤 Giáo viên" có tới 3 BẢN SAO nút (mỗi tab-panel 1 bản, đồng bộ
+    // theo data-tab — xem HTML) — phải ẩn CẢ 3, chỉ ẩn #teachersTabBtn
+    // (bản ở panel-weekly) thì giáo viên vẫn lách được qua bản sao ở
+    // panel-timetable/panel-teachers.
+    document.querySelectorAll('[data-tab="teachers"]').forEach((el) => el.classList.add('force-hide'));
   }
 
   /** Điều phối đào tạo: dùng chung bảng tổng hợp nhiều GV với admin (KHÔNG
@@ -169,22 +239,15 @@
 
   async function loadEverything() {
     try {
-      let teachers, weeks;
-      if (isTeacherRole()) {
-        // Giáo viên: firestore.rules chỉ cho đọc ĐÚNG 1 document
-        // teaching_teachers của chính mình — không được list() cả collection.
-        const [me, allWeeks] = await Promise.all([
-          state.myTeacherCode ? window.EduRepositories.teachingTeacher.getById(state.myTeacherCode) : Promise.resolve(null),
-          window.EduRepositories.teachingWeek.listAll(),
-        ]);
-        teachers = me ? [me] : [];
-        weeks = allWeeks;
-      } else {
-        [teachers, weeks] = await Promise.all([
-          window.EduRepositories.teachingTeacher.list({ orderBy: 'name' }),
-          window.EduRepositories.teachingWeek.listAll(),
-        ]);
-      }
+      // Giáo viên giờ ĐỌC ĐƯỢC cả đội (firestore.rules đã nới quyền đọc
+      // teaching_teachers/teaching_schedule/teaching_timetable cho mọi
+      // isApprovedTeacher(), không riêng gì đúng document của chính mình
+      // nữa) — dùng CHUNG 1 đường tải dữ liệu với admin/điều phối giáo
+      // viên, không cần nhánh riêng đọc "chỉ đúng 1 GV" như trước.
+      const [teachers, weeks] = await Promise.all([
+        window.EduRepositories.teachingTeacher.list({ orderBy: 'name' }),
+        window.EduRepositories.teachingWeek.listAll(),
+      ]);
       state.teachers = teachers;
       state.weeks = weeks;
       renderTeacherTab();
@@ -207,31 +270,22 @@
       // "Lịch tuần" chỉ vì thiếu 1 phần bổ trợ.
       const TT = window.EduRepositories.teachingTimetable;
       const PT = window.EduRepositories.teachingPeriodTimes;
-      const TTM = window.EduModels.TeachingTimetable;
-      if (isTeacherRole()) {
-        if (state.myTeacherCode) {
-          const [doc, ttDoc] = await Promise.all([
-            window.EduRepositories.teachingSchedule.getById(M.scheduleDocId(state.myTeacherCode, weekKey)),
-            TT && TTM ? TT.getById(TTM.docId(state.myTeacherCode, weekKey)) : Promise.resolve(null),
-          ]);
-          if (doc) state.schedulesByTeacher[state.myTeacherCode] = doc;
-          if (ttDoc) state.timetablesByTeacher[state.myTeacherCode] = ttDoc;
-        }
-      } else {
-        const [rows, ttRows, ptRows] = await Promise.all([
-          window.EduRepositories.teachingSchedule.listByWeek(weekKey),
-          TT ? TT.listByWeek(weekKey) : Promise.resolve([]),
-          // Giờ tiết KHÔNG lặp lại theo tuần (áp dụng mọi tuần, xem
-          // js/models/teaching-timetable.model.js) — tải trọn collection 1
-          // lần (18 giáo viên, rất nhỏ) để dựng đúng số hàng/giờ giấc cho
-          // ma trận "📊 Tổng quan" bên dưới.
-          PT ? PT.list() : Promise.resolve([]),
-        ]);
-        rows.forEach((r) => { state.schedulesByTeacher[r.teacherCode] = r; });
-        ttRows.forEach((r) => { state.timetablesByTeacher[r.teacherCode] = r; });
-        state.periodTimesByTeacher = {};
-        ptRows.forEach((r) => { state.periodTimesByTeacher[r.id] = r; });
-      }
+      // Giáo viên giờ tải lịch của CẢ ĐỘI giống admin/điều phối giáo viên
+      // (firestore.rules đã nới quyền đọc) — dùng chung 1 đường tải, không
+      // còn nhánh riêng "chỉ đúng 1 GV" như trước.
+      const [rows, ttRows, ptRows] = await Promise.all([
+        window.EduRepositories.teachingSchedule.listByWeek(weekKey),
+        TT ? TT.listByWeek(weekKey) : Promise.resolve([]),
+        // Giờ tiết KHÔNG lặp lại theo tuần (áp dụng mọi tuần, xem
+        // js/models/teaching-timetable.model.js) — tải trọn collection 1
+        // lần (18 giáo viên, rất nhỏ) để dựng đúng số hàng/giờ giấc cho
+        // ma trận "📊 Tổng quan" bên dưới.
+        PT ? PT.list() : Promise.resolve([]),
+      ]);
+      rows.forEach((r) => { state.schedulesByTeacher[r.teacherCode] = r; });
+      ttRows.forEach((r) => { state.timetablesByTeacher[r.teacherCode] = r; });
+      state.periodTimesByTeacher = {};
+      ptRows.forEach((r) => { state.periodTimesByTeacher[r.id] = r; });
       renderWeeklyTab();
     } catch (err) {
       toast('❌ ' + friendlyError(err));
@@ -487,8 +541,10 @@
   });
 
   function renderWeeklyTab() {
-    if (isTeacherRole()) { renderMyWeekView(); return; }
-
+    // Giáo viên giờ dùng CHUNG bảng "Tổng quan"/"Thẻ" nhiều GV với admin
+    // (không còn chuyển sang khối riêng "Lịch của tôi"/renderMyWeekView()
+    // nữa) — quyền sửa từng hàng bị khoá riêng ở canEditTeacherRow(), áp
+    // dụng ngay trong vòng lặp render bên dưới.
     const cardsContainer = document.getElementById('weeklyCards');
     const progressBar = document.getElementById('weekProgressBar');
     if (!state.currentWeekKey) {
@@ -559,9 +615,10 @@
       const chipList = chips
         ? `<div class="tc-chip-head"><span>Sáng</span><span>Chiều</span></div><div class="tc-chip-list">${chips}</div>`
         : '<div class="tc-empty-note">Chưa nhập lịch tuần này</div>';
+      const canEdit = canEditTeacherRow(t.code);
       return `<div class="teacher-card${missing ? ' missing' : ''}">
         <div class="teacher-card-header">
-          <div class="teacher-avatar">${esc(initialsOf(t.name))}</div>
+          <div class="teacher-avatar" data-teacher-code="${esc(t.code)}" data-teacher-name="${esc(t.name)}">${esc(initialsOf(t.name))}</div>
           <div class="teacher-card-title">
             <div class="teacher-card-name">${esc(t.name)}</div>
             <div class="teacher-card-code">${esc(t.code)}${missing ? ' · <span class="tc-missing-tag">chưa có lịch</span>' : ''}</div>
@@ -575,7 +632,7 @@
           <span><b>${stats.sessionsPrep}</b> soạn bài</span>
         </div>
         <div class="teacher-card-actions">
-          <button type="button" class="btn btn-ghost" data-edit-sched="${esc(t.code)}">✏️ Sửa lịch</button>
+          <button type="button" class="btn btn-ghost" data-edit-sched="${esc(t.code)}" ${canEdit ? '' : 'disabled title="Chỉ sửa được đúng lịch của chính mình"'}>✏️ Sửa lịch</button>
           <button type="button" class="btn btn-ghost" data-pdf-sched="${esc(t.code)}" title="Xuất lịch tuần của ${esc(t.name)} ra PDF">🖨️ PDF</button>
           <button type="button" class="btn btn-ghost" data-congtac-sched="${esc(t.code)}" title="Xuất Phiếu công tác của ${esc(t.name)} (tự điền theo lịch tuần này)">📋 Phiếu công tác</button>
         </div>
@@ -585,6 +642,7 @@
     cardsContainer.querySelectorAll('[data-edit-sched]').forEach((b) => b.addEventListener('click', () => openSchedModal(b.dataset.editSched)));
     cardsContainer.querySelectorAll('[data-pdf-sched]').forEach((b) => b.addEventListener('click', () => exportTeacherPdf(b.dataset.pdfSched)));
     cardsContainer.querySelectorAll('[data-congtac-sched]').forEach((b) => b.addEventListener('click', () => openCongTacModalFor(b.dataset.congtacSched)));
+    patchScheduleAvatars();
   }
 
   // TRƯỚC ĐÂY hiện viết tắt (vd "Chính", "TG", "DG"...) kèm 1 bảng chú
@@ -681,14 +739,15 @@
         // — cột đó gần như luôn trống (chỉ 1 hàng/GV nhờ rowspan) nên tốn
         // hẳn 1 cột chỉ để hiện 2 icon, trong khi các cột Thứ lại chật hẹp.
         // Bỏ cột này trả lại chỗ cho các cột Thứ giãn rộng ra, dễ đọc hơn.
+        const canEditRow = canEditTeacherRow(t.code);
         const nameCellContent = `<div class="dash-matrix-teacher">
-            <div class="dash-matrix-avatar">${esc(initialsOf(t.name))}</div>
+            <div class="dash-matrix-avatar" data-teacher-code="${esc(t.code)}" data-teacher-name="${esc(t.name)}">${esc(initialsOf(t.name))}</div>
             <div class="dash-matrix-name-info">
               <div class="dash-matrix-name">${esc(t.name)}</div>
               <div class="dash-matrix-code">${esc(t.code)}${missingT ? ' · <span class="tc-missing-tag">chưa có lịch</span>' : ''}</div>
             </div>
             <div class="dash-matrix-name-actions">
-              <button type="button" class="dash-name-action-btn" data-edit-sched="${esc(t.code)}" title="Sửa lịch của ${esc(t.name)}">✏️</button>
+              <button type="button" class="dash-name-action-btn" data-edit-sched="${esc(t.code)}" title="${canEditRow ? `Sửa lịch của ${esc(t.name)}` : 'Chỉ sửa được đúng lịch của chính mình'}" ${canEditRow ? '' : 'disabled'}>✏️</button>
               <button type="button" class="dash-name-action-btn" data-pdf-sched="${esc(t.code)}" title="Xuất PDF lịch của ${esc(t.name)}">🖨️</button>
               <button type="button" class="dash-name-action-btn" data-congtac-sched="${esc(t.code)}" title="Xuất Phiếu công tác của ${esc(t.name)}">📋</button>
             </div>
@@ -773,6 +832,7 @@
       tbody.querySelectorAll('[data-edit-sched]').forEach((b) => b.addEventListener('click', () => openSchedModal(b.dataset.editSched)));
       tbody.querySelectorAll('[data-pdf-sched]').forEach((b) => b.addEventListener('click', () => exportTeacherPdf(b.dataset.pdfSched)));
       tbody.querySelectorAll('[data-congtac-sched]').forEach((b) => b.addEventListener('click', () => openCongTacModalFor(b.dataset.congtacSched)));
+      patchScheduleAvatars();
     }
 
     // ---- Đánh dấu cột "hôm nay" trong ma trận (nếu tuần đang xem CHỨA
@@ -1285,7 +1345,11 @@
     for (let r = 0; r < rows.length; r++) {
       if ((rows[r] || []).some((cell) => String(cell ?? '').trim() === 'MÃ NV')) { headerRowIdx = r; break; }
     }
-    if (headerRowIdx === -1) return null; // không phải sheet lịch tuần (vd sheet mẫu trống) → bỏ qua
+    // Không tìm thấy hàng tiêu đề "MÃ NV" — KHÔNG hẳn là lỗi, sheet mẫu/ghi
+    // chú/hướng dẫn kèm trong file gốc cũng rơi vào đây. reason:'no-header'
+    // để modal xác nhận hiện rõ TÊN + LÝ DO thay vì chỉ 1 con số như trước
+    // (người dùng phản hồi không biết "7 Sheet bỏ qua" là sheet nào/vì sao).
+    if (headerRowIdx === -1) return { reason: 'no-header' };
 
     let weekLabel = '';
     for (let r = 0; r < headerRowIdx && !weekLabel; r++) {
@@ -1329,7 +1393,11 @@
       r += BLOCK_ROWS;
     }
 
-    return { weekKey, weekLabel, teachers };
+    // Có hàng "MÃ NV" nhưng không đọc được giáo viên nào — khác hẳn
+    // 'no-header' (đây LÀ sheet lịch tuần thật, chỉ là cấu trúc khối 14
+    // dòng/cột G,I,K,M,O,Q không khớp, vd sai dòng/thiếu cột) — đáng để
+    // người nhập kiểm tra lại file, không nên im lặng bỏ qua như nhau.
+    return { weekKey, weekLabel, teachers, reason: teachers.length ? null : 'no-teachers' };
   }
 
   /** Parse 1 workbook (ArrayBuffer) thành { weeks, skippedSheets } và mở
@@ -1346,8 +1414,8 @@
       const ws = workbook.Sheets[sheetName];
       const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
       const parsed = parseWorkbookSheet(rows, sheetName);
-      if (parsed && parsed.teachers.length) weeks.push(parsed);
-      else skippedSheets.push(sheetName);
+      if (parsed && parsed.teachers && parsed.teachers.length) weeks.push(parsed);
+      else skippedSheets.push({ name: sheetName, reason: (parsed && parsed.reason) || 'no-header' });
     });
     if (!weeks.length) { toast('⚠️ Không tìm thấy sheet lịch tuần hợp lệ nào trong file (thiếu cột "MÃ NV").'); return; }
 
@@ -1359,6 +1427,17 @@
     const skippedStat = document.getElementById('importSkippedStat');
     skippedStat.hidden = skippedSheets.length === 0;
     document.getElementById('importSkippedCount').textContent = skippedSheets.length;
+    const REASON_LABEL = {
+      'no-header': 'Không thấy hàng tiêu đề "MÃ NV" — thường là sheet mẫu/ghi chú/hướng dẫn, không phải lịch tuần.',
+      'no-teachers': 'Có hàng "MÃ NV" nhưng không đọc được giáo viên nào — kiểm tra lại cấu trúc file (đúng khối 14 dòng/GV, 6 cột Thứ2-Thứ7 cách nhau 2 cột).',
+    };
+    const skippedList = document.getElementById('importSkippedList');
+    if (skippedList) {
+      skippedList.innerHTML = skippedSheets.map((s) =>
+        `<li><b>${esc(s.name)}</b> — ${esc(REASON_LABEL[s.reason] || s.reason)}</li>`
+      ).join('');
+      skippedList.hidden = skippedSheets.length === 0;
+    }
     document.getElementById('importConfirmBtn').disabled = false;
     document.getElementById('importModalOverlay').classList.add('show');
   }

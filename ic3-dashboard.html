@@ -26,15 +26,15 @@
   </div>
 
   <nav class="sidebar-nav">
-    <div class="nav-item active" data-section="my-sets" id="navMySets">
+    <div class="nav-item active" data-section="my-sets" id="navMySets" title="Bộ đề của tôi">
       <span class="nav-icon"><i class="fa-solid fa-book-open"></i></span>
       <span>Bộ đề của tôi</span>
     </div>
-    <div class="nav-item" data-section="reports" id="navReports">
+    <div class="nav-item" data-section="reports" id="navReports" title="Báo cáo kết quả">
       <span class="nav-icon"><i class="fa-solid fa-chart-column"></i></span>
       <span>Báo cáo kết quả</span>
     </div>
-    <div class="nav-item" data-section="settings" id="navSettings">
+    <div class="nav-item" data-section="settings" id="navSettings" title="Cài đặt hệ thống">
       <span class="nav-icon"><i class="fa-solid fa-gear"></i></span>
       <span>Cài đặt hệ thống</span>
     </div>
@@ -47,33 +47,43 @@
          dùng "icon emoji nhìn như web AI dị") và không trùng icon với
          mục nào khác trong menu. -->
     <div class="nav-section-label">Trang khác</div>
-    <a class="nav-item link-plain" href="image-manager.html" id="imageManagerLink" style="display:none;">
+    <a class="nav-item link-plain" href="image-manager.html" id="imageManagerLink" style="display:none;" title="Quản lý câu hỏi">
       <span class="nav-icon"><i class="fa-solid fa-image"></i></span>
       <span>Quản lý câu hỏi</span>
     </a>
-    <a class="nav-item link-plain" href="admin-users.html" id="adminUsersLink" style="display:none;">
+    <a class="nav-item link-plain" href="admin-users.html" id="adminUsersLink" style="display:none;" title="Tài khoản">
       <span class="nav-icon"><i class="fa-solid fa-crown"></i></span>
       <span>Tài khoản</span>
     </a>
-    <a class="nav-item link-plain" href="teacher-dashboard.html" id="teacherDashboardLink" style="display:none;">
+    <a class="nav-item link-plain" href="teacher-dashboard.html" id="teacherDashboardLink" style="display:none;" title="Dashboard của tôi">
       <span class="nav-icon"><i class="fa-solid fa-school"></i></span>
       <span>Dashboard của tôi</span>
     </a>
-    <a class="nav-item link-plain" href="tai-lieu-nam-hoc.html" id="docsSchoolYearLink" style="display:none;">
+    <a class="nav-item link-plain" href="tai-lieu-nam-hoc.html" id="docsSchoolYearLink" style="display:none;" title="Tài liệu năm học 2026-2027">
       <span class="nav-icon"><i class="fa-solid fa-folder-open"></i></span>
       <span>Tài liệu năm học 2026-2027</span>
     </a>
-    <a class="nav-item link-plain" href="roster-manager.html" id="rosterManagerLink" style="display:none;">
+    <a class="nav-item link-plain" href="roster-manager.html" id="rosterManagerLink" style="display:none;" title="Danh sách học sinh">
       <span class="nav-icon"><i class="fa-solid fa-clipboard-list"></i></span>
       <span>Danh sách học sinh</span>
     </a>
-    <a class="nav-item link-plain" href="teaching-schedule.html" id="teachingScheduleLink" style="display:none;">
+    <a class="nav-item link-plain" href="teaching-schedule.html" id="teachingScheduleLink" style="display:none;" title="Lịch giảng dạy">
       <span class="nav-icon"><i class="fa-solid fa-calendar-days"></i></span>
       <span>Lịch giảng dạy</span>
     </a>
-    <a class="nav-item link-plain" href="coordinator-dashboard.html" id="coordinatorDashboardLink" style="display:none;">
+    <a class="nav-item link-plain" href="coordinator-dashboard.html" id="coordinatorDashboardLink" style="display:none;" title="Dashboard điều phối">
       <span class="nav-icon"><i class="fa-solid fa-compass"></i></span>
       <span>Dashboard điều phối</span>
+    </a>
+    <!-- Trang Social Media (portfolio.html) — trang giới thiệu công khai + "Teacher
+         Feed" (đăng bài/thích/bình luận nội bộ, xem js/portfolio.js §
+         PfFeed). Hiện cho MỌI role vào được trang này (không lọc theo
+         role như các mục trên) vì đây không phải công cụ dữ liệu riêng
+         của 1 vai trò, mà là kênh chung cho cả đội — mở tab mới để
+         không mất phiên làm việc đang dở trên dashboard. -->
+    <a class="nav-item link-plain" href="portfolio.html" target="_blank" rel="noopener" id="gvLabLink" style="display:none;" title="Trang Social Media">
+      <span class="nav-icon"><i class="fa-solid fa-share-nodes"></i></span>
+      <span>Trang Social Media</span>
     </a>
   </nav>
 
@@ -143,13 +153,14 @@
 
       <!-- Cards Carousel / 3D Shelf (cùng một vùng hiển thị, chuyển đổi qua lại).
            #cardsGrid GIỮ NGUYÊN id gốc (toggleShelfView() trong js/dashboard.js
-           chỉ ẩn/hiện qua .hidden, không cần sửa) — giờ bọc quanh mũi tên +
-           dải trượt (xem css/dashboard.css mục "CAROUSEL"). -->
+           chỉ ẩn/hiện qua .hidden, không cần sửa) — bọc quanh dải trượt (xem
+           css/dashboard.css mục "CAROUSEL"). Bỏ hẳn 2 nút mũi tên trái/phải
+           (phản hồi người dùng: để kéo trượt bằng tay/chuột chọn từng thẻ
+           cho dễ, không cần bấm mũi tên) — dải trượt vẫn giữ nguyên
+           scroll-snap + chấm điều hướng bên dưới. -->
       <div class="cards-viewport" id="cardsViewport">
         <div class="carousel-wrap" id="cardsGrid">
-          <button type="button" class="carousel-arrow carousel-arrow-prev" id="carouselPrevBtn" aria-label="Bộ đề trước" onclick="carouselStep(-1)"><i class="fa-solid fa-chevron-left"></i></button>
           <div class="carousel-track" id="carouselTrack" tabindex="0"></div>
-          <button type="button" class="carousel-arrow carousel-arrow-next" id="carouselNextBtn" aria-label="Bộ đề sau" onclick="carouselStep(1)"><i class="fa-solid fa-chevron-right"></i></button>
         </div>
         <div class="carousel-dots" id="carouselDots"></div>
 

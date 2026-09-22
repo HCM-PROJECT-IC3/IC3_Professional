@@ -1,0 +1,501 @@
+/* ============================================================
+   css/portfolio.css — Trang Social Media (portfolio.html)
+
+   Phong cách NEUMORPHIC — bề mặt "nổi khối mềm" cùng 1 tông màu nền be
+   ấm (không viền cứng, không thẻ trắng tương phản) — dùng LẠI đúng kỹ
+   thuật shadow-neu-raised/pressed/flat đã có sẵn trong css/theme.css
+   (đang dùng cho login.html/admin-users.html...), chỉ đổi màu bóng đổ
+   sang tông ấm (--gv-shadow-dark/light) để khớp nền be #F3EFE6 của
+   trang này thay vì nền xám lạnh --neu-surface mặc định của theme.css
+   (bóng đổ neumorphism BẮT BUỘC gần đúng tông nền mới nhìn "lõm/nổi"
+   tự nhiên — dùng thẳng bóng xám lạnh trên nền be sẽ nhìn bẩn/lệch tông).
+
+   Nâng cấp thành "mạng lưới nội bộ của giáo viên": thêm thanh hồ sơ
+   (.gv-profile-bar) hiện đúng người đang đăng nhập, avatar chữ cái đầu
+   cho từng bài đăng/bình luận, nút xoá bài của chính mình — xem
+   js/portfolio.js § PfProfileBar + PfFeed.
+   ============================================================ */
+
+:root {
+  --gv-bg: #f3efe6;
+  --gv-ink: #1a1a17;
+  --gv-muted: #766f60;
+  --gv-accent: var(--purple, #2f40b2); /* navy IIG thật — xem css/theme.css */
+  --gv-accent-lt: #e4e7f7;
+
+  /* Bóng đổ neumorphism tông ấm — khớp nền be #F3EFE6 (xem ghi chú đầu file) */
+  --gv-shadow-dark: rgba(176, 165, 138, .55);
+  --gv-shadow-light: rgba(255, 255, 255, .95);
+  --gv-raised: 7px 7px 15px var(--gv-shadow-dark), -7px -7px 15px var(--gv-shadow-light);
+  --gv-raised-sm: 4px 4px 9px var(--gv-shadow-dark), -4px -4px 9px var(--gv-shadow-light);
+  --gv-pressed: inset 4px 4px 8px var(--gv-shadow-dark), inset -4px -4px 8px var(--gv-shadow-light);
+  --gv-flat: 3px 3px 7px var(--gv-shadow-dark), -3px -3px 7px var(--gv-shadow-light);
+}
+
+* { box-sizing: border-box }
+html { scroll-behavior: smooth }
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--gv-bg);
+  color: var(--gv-ink);
+  -webkit-font-smoothing: antialiased;
+}
+img { max-width: 100%; display: block }
+a { color: inherit }
+.gv-mono { font-family: 'DM Mono', ui-monospace, monospace }
+h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; margin: 0; letter-spacing: -.01em }
+.gv-eyebrow { font-size: .78rem; font-weight: 500; color: var(--gv-muted); letter-spacing: .08em; margin: 0 0 .9rem }
+
+/* ── Avatar dùng chung (post/comment/profile-bar) — khối nổi tròn, chữ
+   cái đầu tên, cùng 1 màu nhấn duy nhất. ── */
+.gv-avatar {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px; font-size: .9rem;
+  border-radius: 50%; background: var(--gv-bg); color: var(--gv-accent);
+  font-weight: 700; box-shadow: var(--gv-raised-sm); flex: none;
+}
+
+/* ── Nav — thanh nổi mềm, không viền cứng ── */
+.gv-nav {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.1rem clamp(1.2rem, 4vw, 3rem);
+  background: var(--gv-bg);
+  box-shadow: 0 2px 18px rgba(176,165,138,.28);
+}
+.gv-nav-brand { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.1rem; letter-spacing: -.01em; text-decoration: none; display: inline-flex; align-items: center; gap: .4rem }
+.gv-nav-brand i { color: var(--gv-accent); font-size: 1rem }
+.gv-nav-brand span { color: var(--gv-accent) }
+.gv-nav-links { display: flex; gap: 2rem }
+.gv-nav-links a { text-decoration: none; font-size: .85rem; font-weight: 500; color: var(--gv-muted); transition: color .2s }
+.gv-nav-links a:hover { color: var(--gv-ink) }
+.gv-nav-burger {
+  display: none; background: var(--gv-bg); border: none; border-radius: 12px;
+  width: 38px; height: 38px; cursor: pointer; color: var(--gv-ink); font-size: .95rem;
+  box-shadow: var(--gv-raised-sm);
+}
+.gv-nav-burger:active { box-shadow: var(--gv-pressed) }
+
+/* ── Profile bar — "mạng lưới Trang Social Media": hiện người đang đăng nhập, cảm
+   giác mạng xã hội thay vì trang giới thiệu tĩnh. ── */
+.gv-profile-bar {
+  max-width: 1200px; margin: 1.4rem auto 0; padding: 0 clamp(1.2rem, 4vw, 3rem);
+}
+.gv-profile-guest, .gv-profile-user {
+  display: flex; align-items: center; gap: .9rem;
+  background: var(--gv-bg); border-radius: var(--radius, 18px);
+  padding: .9rem 1.3rem; box-shadow: var(--gv-flat);
+}
+.gv-profile-guest { color: var(--gv-muted); font-size: .85rem }
+.gv-profile-guest i { color: var(--gv-accent) }
+.gv-profile-guest a { color: var(--gv-accent); font-weight: 700; text-decoration: none }
+.gv-profile-guest a:hover { text-decoration: underline }
+.gv-profile-user .gv-avatar { width: 42px; height: 42px; font-size: 1rem }
+.gv-profile-user-info { display: flex; flex-direction: column; line-height: 1.3 }
+.gv-profile-user-info strong { font-size: .92rem }
+.gv-profile-user-info span { font-size: .7rem; color: var(--gv-muted) }
+.gv-profile-online {
+  margin-left: auto; display: flex; align-items: center; gap: .5rem;
+  font-size: .74rem; color: var(--gv-muted);
+}
+.gv-online-dot { width: 8px; height: 8px; border-radius: 50%; background: #3aa66b; box-shadow: 0 0 0 3px rgba(58,166,107,.2) }
+.gv-profile-status { font-style: italic; color: var(--gv-ink) !important }
+.gv-profile-edit-btn {
+  display: inline-flex; align-items: center; gap: .4rem;
+  border: none; background: var(--gv-bg); color: var(--gv-accent);
+  font-size: .76rem; font-weight: 700; padding: .5rem .9rem; cursor: pointer;
+  border-radius: 999px; box-shadow: var(--gv-raised-sm);
+}
+.gv-profile-edit-btn:active { box-shadow: var(--gv-pressed) }
+
+/* ── Modal dùng chung (chỉnh hồ sơ) — cùng ngôn ngữ neumorphic ── */
+.gv-modal-overlay {
+  position: fixed; inset: 0; z-index: 250;
+  background: rgba(26,26,23,.45);
+  display: none; align-items: center; justify-content: center; padding: 1.5rem;
+}
+.gv-modal-overlay.is-open { display: flex }
+.gv-modal {
+  width: min(440px, 100%); background: var(--gv-bg); border-radius: var(--radius, 18px);
+  padding: 1.8rem; box-shadow: var(--gv-raised); position: relative;
+}
+.gv-modal h3 { font-size: 1.15rem; margin-bottom: 1.4rem }
+.gv-modal-close {
+  position: absolute; top: 1.1rem; right: 1.1rem;
+  width: 34px; height: 34px; border-radius: 50%; border: none;
+  background: var(--gv-bg); color: var(--gv-ink); cursor: pointer; box-shadow: var(--gv-raised-sm);
+}
+.gv-modal-close:active { box-shadow: var(--gv-pressed) }
+.gv-profile-form-avatar { display: flex; align-items: center; gap: 1.1rem; margin-bottom: 1.4rem }
+.gv-avatar-lg { width: 68px; height: 68px; font-size: 1.5rem; overflow: hidden }
+.gv-avatar-lg img { width: 100%; height: 100%; object-fit: cover; border-radius: 50% }
+.gv-form-label { display: block; font-size: .74rem; font-weight: 700; color: var(--gv-muted); margin: 1rem 0 .5rem; text-transform: uppercase; letter-spacing: .04em }
+.gv-form-input {
+  width: 100%; border: none; background: var(--gv-bg); border-radius: 12px;
+  padding: .7rem .9rem; font-family: inherit; font-size: .88rem; color: var(--gv-ink);
+  box-shadow: var(--gv-pressed); resize: vertical;
+}
+.gv-form-input:focus { outline: none; box-shadow: var(--gv-pressed), 0 0 0 3px rgba(47,64,178,.15) }
+.gv-profile-save-btn { margin-top: 1.4rem; width: 100% }
+
+/* ── Chat nhóm nổi (floating action button + panel) ── */
+.gv-chat-fab {
+  position: fixed; right: clamp(1.2rem, 4vw, 2.4rem); bottom: clamp(1.2rem, 4vw, 2.4rem);
+  z-index: 120; width: 58px; height: 58px; border-radius: 50%;
+  background: var(--gv-bg); color: var(--gv-accent); border: none; cursor: pointer;
+  font-size: 1.25rem; box-shadow: var(--gv-raised);
+}
+.gv-chat-fab:active { box-shadow: var(--gv-pressed) }
+.gv-chat-badge {
+  position: absolute; top: -2px; right: -2px; min-width: 20px; height: 20px; padding: 0 5px;
+  border-radius: 999px; background: #c2453a; color: #fff; font-size: .68rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.gv-chat-panel {
+  position: fixed; right: clamp(1rem, 3vw, 2rem); bottom: clamp(5.2rem, 12vw, 6.6rem);
+  z-index: 121; width: min(360px, calc(100vw - 2rem)); height: min(520px, 70vh);
+  background: var(--gv-bg); border-radius: var(--radius, 18px);
+  box-shadow: var(--gv-raised); display: flex; flex-direction: column; overflow: hidden;
+}
+.gv-chat-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 1.2rem; font-weight: 700; font-size: .9rem;
+  box-shadow: 0 2px 10px rgba(176,165,138,.25);
+}
+.gv-chat-head-title { display: flex; flex-direction: column; gap: .15rem }
+.gv-chat-online { display: flex; align-items: center; gap: .4rem; min-height: 18px }
+.gv-chat-online-avatars { display: flex }
+.gv-chat-online-avatars .gv-avatar {
+  width: 20px; height: 20px; font-size: .58rem;
+  border: 2px solid var(--gv-bg); margin-left: -7px; box-shadow: none;
+}
+.gv-chat-online-avatars .gv-avatar:first-child { margin-left: 0 }
+.gv-chat-online-count { font-size: .66rem; font-weight: 500; color: #3aa66b }
+.gv-chat-online-count:empty { display: none }
+.gv-chat-head i { color: var(--gv-accent); margin-right: .4rem }
+.gv-chat-head button { border: none; background: none; cursor: pointer; color: var(--gv-muted); font-size: .95rem }
+.gv-chat-messages { flex: 1; overflow-y: auto; padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: .8rem }
+.gv-chat-msg { display: flex; gap: .6rem; align-items: flex-start; position: relative }
+.gv-chat-msg .gv-avatar { width: 28px; height: 28px; font-size: .7rem }
+.gv-chat-msg-col { display: flex; flex-direction: column; max-width: 78% }
+.gv-chat-msg.is-own { flex-direction: row-reverse }
+.gv-chat-msg.is-own .gv-chat-msg-col { align-items: flex-end }
+.gv-chat-msg-body { background: var(--gv-bg); border-radius: 14px; padding: .55rem .8rem; box-shadow: var(--gv-flat); font-size: .82rem; line-height: 1.5; position: relative }
+.gv-chat-msg.is-own .gv-chat-msg-body { box-shadow: var(--gv-pressed) }
+.gv-chat-msg-recalled { font-style: italic; color: var(--gv-muted) }
+.gv-chat-msg-recalled i { margin-right: .3rem }
+.gv-chat-msg-name { font-weight: 700; font-size: .72rem; display: block; margin-bottom: .15rem; color: var(--gv-accent) }
+.gv-chat-msg-img { max-width: 100%; border-radius: 10px; margin-top: .4rem; display: block }
+.gv-chat-msg-time { font-size: .62rem; color: var(--gv-muted); margin-top: .25rem; display: block }
+.gv-chat-empty { color: var(--gv-muted); font-size: .82rem; font-style: italic; text-align: center; margin: auto }
+
+/* ── Trích dẫn trả lời — trong bong bóng (đã gửi) VÀ trên ô nhập (đang soạn) ── */
+.gv-chat-quote {
+  border-left: 2px solid var(--gv-accent); padding-left: .5rem; margin-bottom: .35rem;
+  font-size: .74rem; color: var(--gv-muted); opacity: .85;
+}
+.gv-chat-quote b { color: var(--gv-accent) }
+
+/* ── Toolbar nổi khi rê chuột vào 1 tin nhắn: trả lời/thả cảm xúc/xoá ── */
+.gv-chat-msg-actions {
+  display: flex; gap: .2rem; align-self: center;
+  opacity: 0; transition: opacity .15s ease;
+}
+.gv-chat-msg:hover .gv-chat-msg-actions { opacity: 1 }
+.gv-chat-msg-actions button {
+  width: 26px; height: 26px; border-radius: 50%; border: none; cursor: pointer;
+  background: var(--gv-bg); box-shadow: var(--gv-raised-sm); color: var(--gv-muted); font-size: .68rem;
+}
+.gv-chat-msg-actions button:active { box-shadow: var(--gv-pressed) }
+.gv-chat-emoji-picker {
+  position: absolute; bottom: 100%; margin-bottom: .3rem; z-index: 5;
+  display: flex; gap: .2rem; background: var(--gv-bg); border-radius: 999px;
+  padding: .3rem .4rem; box-shadow: var(--gv-raised); white-space: nowrap;
+}
+.gv-chat-emoji-picker[hidden] { display: none }
+.gv-chat-emoji-picker button { border: none; background: none; cursor: pointer; font-size: 1.05rem; padding: .15rem .2rem; border-radius: 50% }
+.gv-chat-emoji-picker button:hover { background: var(--gv-bg-alt, rgba(0,0,0,.05)) }
+
+/* ── Cảm xúc đã thả dưới bong bóng ── */
+.gv-chat-reactions { display: flex; gap: .25rem; margin-top: .3rem; flex-wrap: wrap }
+.gv-chat-reaction {
+  display: inline-flex; align-items: center; gap: .2rem;
+  background: var(--gv-bg); border-radius: 999px; padding: .1rem .45rem;
+  font-size: .68rem; box-shadow: var(--gv-flat); cursor: pointer; border: none;
+}
+.gv-chat-reaction.is-mine { box-shadow: var(--gv-pressed); color: var(--gv-accent) }
+
+.gv-chat-typing {
+  margin: 0; padding: 0 1.1rem .3rem; font-size: .7rem; color: var(--gv-muted); font-style: italic;
+}
+.gv-chat-typing[hidden] { display: none }
+.gv-chat-reply-preview {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 0 1rem .5rem; padding: .5rem .7rem; border-radius: 10px;
+  background: var(--gv-bg); box-shadow: var(--gv-pressed); font-size: .74rem; color: var(--gv-muted);
+}
+.gv-chat-reply-preview[hidden] { display: none }
+.gv-chat-reply-preview button { border: none; background: none; cursor: pointer; color: var(--gv-muted) }
+
+/* ── Xem trước file/ảnh/ghi âm đã chọn, chờ gửi ── */
+.gv-chat-attach-preview {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 0 1rem .5rem; padding: .5rem .7rem; border-radius: 10px;
+  background: var(--gv-bg); box-shadow: var(--gv-pressed); font-size: .76rem; color: var(--gv-ink);
+}
+.gv-chat-attach-preview[hidden] { display: none }
+.gv-chat-attach-preview button { border: none; background: none; cursor: pointer; color: var(--gv-muted) }
+
+/* ── Bảng chọn emoji cho ô nhập ── */
+.gv-chat-emoji-panel {
+  display: grid; grid-template-columns: repeat(8, 1fr); gap: .2rem;
+  margin: 0 1rem .6rem; padding: .6rem; border-radius: 12px;
+  background: var(--gv-bg); box-shadow: var(--gv-raised); max-height: 160px; overflow-y: auto;
+}
+.gv-chat-emoji-panel[hidden] { display: none }
+.gv-chat-emoji-panel button { border: none; background: none; cursor: pointer; font-size: 1.15rem; padding: .3rem; border-radius: 8px }
+.gv-chat-emoji-panel button:hover { background: var(--gv-bg-alt, rgba(0,0,0,.05)) }
+
+/* ── Ghi âm giọng nói ── */
+.gv-chat-mic-btn.is-recording { color: #c2453a; box-shadow: var(--gv-pressed); animation: gvMicPulse 1.2s ease-in-out infinite }
+@keyframes gvMicPulse { 0%,100% { opacity: 1 } 50% { opacity: .55 } }
+.gv-chat-rec-timer { font-size: .74rem; color: #c2453a; font-weight: 700; white-space: nowrap }
+.gv-chat-rec-timer[hidden] { display: none }
+
+/* ── Thẻ file/audio đính kèm trong tin nhắn đã gửi ── */
+.gv-chat-msg-file {
+  display: flex; align-items: center; gap: .6rem; margin-top: .4rem;
+  background: var(--gv-bg-alt, rgba(0,0,0,.03)); border-radius: 10px; padding: .5rem .7rem; text-decoration: none; color: inherit;
+}
+.gv-chat-msg-file i { color: var(--gv-accent); font-size: 1.1rem; flex: none }
+.gv-chat-msg-file-name { font-size: .78rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px }
+.gv-chat-msg-file-size { font-size: .66rem; color: var(--gv-muted); display: block }
+.gv-chat-msg-audio { margin-top: .4rem; width: 220px; max-width: 100% }
+
+.gv-chat-form { display: flex; align-items: center; gap: .5rem; padding: .9rem 1rem; box-shadow: 0 -2px 10px rgba(176,165,138,.25) }
+.gv-chat-attach-btn {
+  flex: none; width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  background: var(--gv-bg); box-shadow: var(--gv-raised-sm); color: var(--gv-muted);
+}
+.gv-chat-form input[type="text"] {
+  flex: 1; border: none; background: var(--gv-bg); border-radius: 999px;
+  padding: .6rem .9rem; font-size: .82rem; font-family: inherit; box-shadow: var(--gv-pressed);
+}
+.gv-chat-form input[type="text"]:focus { outline: none }
+.gv-chat-form button[type="submit"] {
+  flex: none; width: 38px; height: 38px; border-radius: 50%; border: none; cursor: pointer;
+  background: var(--gv-bg); color: var(--gv-accent); box-shadow: var(--gv-raised-sm);
+}
+.gv-chat-form button[type="submit"]:active { box-shadow: var(--gv-pressed) }
+.gv-chat-file-preview { font-size: .7rem; color: var(--gv-muted); padding: 0 1rem .4rem }
+
+/* ── Certifications on file ── */
+.gv-certs-section {
+  padding: clamp(2.5rem, 6vw, 4.5rem) clamp(1.2rem, 4vw, 3rem);
+  max-width: 1200px; margin: 0 auto;
+}
+.gv-certs-section h2 { font-size: clamp(1.8rem, 4vw, 2.6rem) }
+.gv-certs-sub { margin: .6rem 0 1.8rem; color: var(--gv-muted); font-size: .88rem }
+.gv-certs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.8rem }
+.gv-certs-grid button {
+  border: none; background: var(--gv-bg); padding: 10px; cursor: pointer;
+  border-radius: var(--radius, 18px); box-shadow: var(--gv-raised);
+  aspect-ratio: 1.34/1; position: relative;
+  transition: box-shadow .3s ease, transform .3s cubic-bezier(.2,.8,.2,1);
+}
+.gv-certs-grid button > span {
+  display: block; width: 100%; height: 100%; overflow: hidden; position: relative;
+  border-radius: calc(var(--radius, 18px) - 6px); box-shadow: var(--gv-pressed);
+}
+.gv-certs-grid button img { width: 100%; height: 100%; object-fit: contain; background: var(--gv-bg); transition: transform .5s cubic-bezier(.2,.8,.2,1) }
+.gv-certs-grid button:hover { transform: translateY(-4px) }
+.gv-certs-grid button:hover img { transform: scale(1.05) }
+.gv-certs-grid button:active { box-shadow: var(--gv-pressed); transform: translateY(0) }
+.gv-certs-grid button .gv-cert-label {
+  position: absolute; left: 18px; right: 18px; bottom: 18px;
+  background: rgba(243,239,230,.92); color: var(--gv-ink);
+  font-size: .76rem; padding: .5rem .7rem; line-height: 1.3;
+  font-family: 'DM Mono', monospace; border-radius: 10px;
+  box-shadow: var(--gv-flat);
+}
+
+/* ── Lightbox ── */
+.gv-lightbox-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(26,26,23,.88);
+  display: none; align-items: center; justify-content: center;
+  padding: 2rem;
+}
+.gv-lightbox-overlay.is-open { display: flex }
+.gv-lightbox-fig { margin: 0; max-width: 900px; width: 100%; background: var(--gv-bg); border-radius: var(--radius, 18px); padding: 14px; box-shadow: var(--gv-raised) }
+.gv-lightbox-fig img { width: 100%; border-radius: calc(var(--radius, 18px) - 6px) }
+.gv-lightbox-fig figcaption { color: var(--gv-muted); font-size: .78rem; margin-top: .8rem; text-align: center }
+.gv-lightbox-close {
+  position: absolute; top: 1.5rem; right: 1.5rem;
+  width: 42px; height: 42px; border-radius: 50%;
+  background: var(--gv-bg); border: none; color: var(--gv-ink); cursor: pointer; font-size: 1rem;
+  box-shadow: var(--gv-raised-sm);
+}
+.gv-lightbox-close:active { box-shadow: var(--gv-pressed) }
+
+/* ── Life at Trang Social Media ── */
+.gv-life { padding: clamp(2.5rem, 6vw, 4.5rem) 0 }
+.gv-life h2, .gv-life .gv-eyebrow, .gv-life-sub { padding: 0 clamp(1.2rem, 4vw, 3rem); max-width: 1200px; margin-left: auto; margin-right: auto }
+.gv-life h2 { font-size: clamp(1.8rem, 4vw, 2.6rem) }
+.gv-life-sub { color: var(--gv-muted); font-size: .9rem; margin-top: .6rem; margin-bottom: 2rem; max-width: 60ch }
+.gv-life-gallery {
+  display: flex; gap: 1.6rem; overflow-x: auto;
+  padding: .6rem clamp(1.2rem, 4vw, 3rem) 1rem;
+  cursor: grab; user-select: none;
+  scrollbar-width: none;
+}
+.gv-life-gallery::-webkit-scrollbar { display: none }
+.gv-life-gallery.is-dragging { cursor: grabbing; scroll-snap-type: none }
+.gv-life-gallery:not(.is-dragging) { scroll-snap-type: x proximity }
+.gv-life-gallery figure {
+  flex: 0 0 clamp(320px, 36vw, 440px); margin: 0; scroll-snap-align: start;
+  opacity: 0; transform: translateY(24px) scale(.97);
+  transition: opacity .6s cubic-bezier(.2,.8,.2,1), transform .6s cubic-bezier(.2,.8,.2,1), box-shadow .4s ease;
+  background: var(--gv-bg); border-radius: var(--radius, 18px); padding: 10px;
+  box-shadow: var(--gv-raised);
+}
+.gv-life-gallery figure.is-visible { opacity: 1; transform: none }
+.gv-life-gallery figure:hover { box-shadow: var(--gv-flat) }
+.gv-life-gallery img {
+  width: 100%; aspect-ratio: 4/3; object-fit: cover;
+  border-radius: calc(var(--radius, 18px) - 6px);
+  filter: grayscale(55%); pointer-events: none;
+  transition: filter .4s ease, transform .5s cubic-bezier(.2,.8,.2,1);
+}
+.gv-life-gallery figure:hover img { filter: grayscale(0%); transform: scale(1.03) }
+.gv-life-gallery figcaption { margin-top: .8rem; padding: 0 .3rem; font-size: .74rem; color: var(--gv-muted) }
+
+/* ── Trang Social Media Feed — mạng xã hội/blog nội bộ, cùng ngôn ngữ neumorphic ── */
+.gv-feed { margin-top: 2.8rem; padding-top: 2rem }
+.gv-feed-pad { padding-left: clamp(1.2rem, 4vw, 3rem); padding-right: clamp(1.2rem, 4vw, 3rem); max-width: 1200px; margin-left: auto; margin-right: auto; margin-top: 2.4rem }
+.gv-feed-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 1.1rem }
+.gv-feed-head h4 { font-family: 'Space Grotesk', sans-serif; font-size: 1.05rem; margin: 0 }
+.gv-feed-hint { color: var(--gv-muted); font-size: .72rem }
+
+.gv-feed-composer {
+  background: var(--gv-bg); border-radius: var(--radius, 18px); padding: 1.3rem;
+  box-shadow: var(--gv-raised); margin-bottom: 1.8rem;
+  display: flex; gap: 1rem; align-items: flex-start;
+}
+.gv-feed-composer-avatar { margin-top: .2rem }
+.gv-feed-composer-main { flex: 1; min-width: 0 }
+.gv-feed-textarea {
+  width: 100%; border: none; resize: vertical; min-height: 46px;
+  font-family: 'Inter', sans-serif; font-size: .92rem; color: var(--gv-ink);
+  background: var(--gv-bg); border-radius: 12px; padding: .8rem .9rem; margin-bottom: .9rem;
+  box-shadow: var(--gv-pressed);
+}
+.gv-feed-textarea:focus { outline: none; box-shadow: var(--gv-pressed), 0 0 0 3px rgba(47,64,178,.15) }
+.gv-feed-composer-row { display: flex; align-items: center; gap: .9rem; flex-wrap: wrap }
+.gv-feed-file-btn {
+  display: inline-flex; align-items: center; gap: .5rem; cursor: pointer;
+  font-size: .8rem; font-weight: 600; border-radius: 999px; padding: .55rem 1.1rem;
+  background: var(--gv-bg); box-shadow: var(--gv-raised-sm);
+  transition: box-shadow .2s ease;
+}
+.gv-feed-file-btn:active { box-shadow: var(--gv-pressed) }
+.gv-feed-file-name { color: var(--gv-muted); font-size: .74rem; flex: 1; min-width: 80px }
+.gv-feed-submit {
+  border: none; background: var(--gv-bg); color: var(--gv-accent);
+  font-weight: 700; font-size: .82rem; padding: .6rem 1.4rem; cursor: pointer;
+  border-radius: 999px; box-shadow: var(--gv-raised-sm);
+  transition: box-shadow .2s ease, color .2s ease, opacity .2s ease;
+}
+.gv-feed-submit:hover:not(:disabled) { color: var(--gv-ink) }
+.gv-feed-submit:active:not(:disabled) { box-shadow: var(--gv-pressed) }
+.gv-feed-submit:disabled { opacity: .4; cursor: not-allowed; box-shadow: var(--gv-flat) }
+.gv-feed-error { color: #b3261e; font-size: .76rem; margin: .8rem 0 0 }
+.gv-feed-login-hint { font-size: .84rem; color: var(--gv-muted); margin: 0 0 1.6rem }
+.gv-feed-login-hint a { color: var(--gv-accent); font-weight: 600; text-decoration: underline }
+
+.gv-feed-list { display: flex; flex-direction: column; gap: 1.4rem }
+.gv-feed-empty { color: var(--gv-muted); font-size: .85rem; font-style: italic; padding: .5rem 0 }
+.gv-feed-post {
+  background: var(--gv-bg); border-radius: var(--radius, 18px); padding: 1.2rem;
+  box-shadow: var(--gv-raised);
+  display: grid; grid-template-columns: 200px 1fr; gap: 1.2rem;
+  animation: gvPostIn .4s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes gvPostIn { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: none } }
+.gv-feed-post-media { border-radius: 12px; overflow: hidden; box-shadow: var(--gv-pressed) }
+.gv-feed-post-media img { width: 100%; height: 100%; object-fit: cover; min-height: 160px; transition: transform .5s cubic-bezier(.2,.8,.2,1) }
+.gv-feed-post:hover .gv-feed-post-media img { transform: scale(1.05) }
+.gv-feed-post-body { display: flex; flex-direction: column; min-width: 0 }
+.gv-feed-post-top { display: flex; align-items: center; gap: .7rem; margin-bottom: .7rem }
+.gv-feed-post-top .gv-avatar { width: 34px; height: 34px; font-size: .82rem }
+.gv-feed-post-who { display: flex; flex-direction: column; line-height: 1.25; flex: 1; min-width: 0 }
+.gv-feed-post-who b { font-size: .85rem }
+.gv-feed-post-who span { font-size: .68rem; color: var(--gv-muted) }
+.gv-feed-post-caption { margin: 0 0 .8rem; font-size: .92rem; line-height: 1.55; color: var(--gv-ink) }
+.gv-feed-post-actions { display: flex; gap: .7rem; margin-top: auto }
+.gv-feed-post-actions button {
+  display: inline-flex; align-items: center; gap: .4rem;
+  border: none; background: var(--gv-bg); cursor: pointer;
+  font-size: .78rem; color: var(--gv-muted);
+  padding: .4rem .8rem; border-radius: 999px; box-shadow: var(--gv-raised-sm);
+  transition: box-shadow .2s ease, color .2s ease;
+}
+.gv-feed-post-actions button:hover { color: var(--gv-ink) }
+.gv-feed-post-actions button:active { box-shadow: var(--gv-pressed) }
+.gv-feed-post-actions button:disabled { cursor: not-allowed; opacity: .5 }
+.gv-feed-like.is-liked { color: #c2453a; box-shadow: var(--gv-pressed) }
+.gv-feed-like.is-liked i { animation: gvLikePop .35s ease }
+@keyframes gvLikePop { 0% { transform: scale(1) } 40% { transform: scale(1.35) } 100% { transform: scale(1) } }
+.gv-feed-delete { margin-left: auto; color: var(--gv-muted) }
+.gv-feed-delete:hover { color: #b3261e }
+.gv-feed-comments { margin-top: 1.1rem; padding-top: 1rem; border-top: 1px dashed var(--gv-shadow-dark) }
+.gv-feed-comments[hidden] { display: none }
+.gv-feed-comments-list { display: flex; flex-direction: column; gap: .7rem; margin-bottom: .9rem }
+.gv-feed-comment { display: flex; gap: .6rem; align-items: flex-start; font-size: .82rem; line-height: 1.5 }
+.gv-feed-comment .gv-avatar { width: 26px; height: 26px; font-size: .68rem; margin-top: .1rem }
+.gv-feed-comment-body b { font-weight: 600; display: block }
+.gv-feed-comment-body span { color: var(--gv-muted); font-size: .68rem }
+.gv-feed-comment-form { display: flex; gap: .6rem }
+.gv-feed-comment-form input {
+  flex: 1; border: none; padding: .6rem .9rem; font-size: .82rem;
+  font-family: inherit; background: var(--gv-bg); border-radius: 999px;
+  box-shadow: var(--gv-pressed);
+}
+.gv-feed-comment-form input:focus { outline: none; box-shadow: var(--gv-pressed), 0 0 0 3px rgba(47,64,178,.15) }
+.gv-feed-comment-form button {
+  border: none; background: var(--gv-bg); color: var(--gv-accent); padding: .5rem 1.1rem;
+  font-size: .78rem; font-weight: 700; cursor: pointer; border-radius: 999px; box-shadow: var(--gv-raised-sm);
+}
+.gv-feed-comment-form button:active { box-shadow: var(--gv-pressed) }
+
+/* ── Footer tối giản ── */
+.gv-footer-min {
+  display: flex; flex-wrap: wrap; gap: 1.4rem; align-items: center;
+  max-width: 1200px; margin: 2rem auto 0;
+  padding: 1.2rem clamp(1.2rem, 4vw, 3rem);
+  border-radius: var(--radius, 18px); box-shadow: var(--gv-flat);
+  font-size: .76rem; color: var(--gv-muted);
+}
+.gv-footer-min a { text-decoration: none; color: var(--gv-muted); transition: color .2s }
+.gv-footer-min a:hover { color: var(--gv-accent) }
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .gv-nav-links { display: none }
+  .gv-nav-burger { display: block }
+  .gv-nav.is-open .gv-nav-links {
+    display: flex; flex-direction: column; gap: 1rem;
+    position: absolute; top: 100%; left: 0; right: 0;
+    background: var(--gv-bg); box-shadow: var(--gv-flat);
+    padding: 1.2rem clamp(1.2rem, 4vw, 3rem) 1.6rem;
+  }
+  .gv-feed-post { grid-template-columns: 1fr }
+  .gv-feed-post-media img { min-height: 200px }
+  .gv-profile-online { display: none }
+  .gv-chat-panel {
+    right: .6rem; left: .6rem; bottom: 5rem; width: auto; height: min(70vh, 520px);
+  }
+  .gv-chat-fab { right: 1rem; bottom: 1rem }
+}

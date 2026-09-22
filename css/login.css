@@ -110,6 +110,11 @@ body::before {
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Giờ là <a href="portfolio.html"> (trước là <div> tĩnh) — giữ nguyên
+     hình thức cũ, chỉ thêm affordance link. */
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
   gap: .55rem;
 }
 /* Logo IIG THẬT (img/iig-logo.png — trước đây chỉ có emoji 🎮 không liên

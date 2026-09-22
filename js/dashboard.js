@@ -165,7 +165,6 @@ function renderCards() {
   if (sets.length === 0) {
     track.innerHTML = `<div class="no-results"><span class="emoji"><i class="fa-solid fa-magnifying-glass"></i></span><p>Không tìm thấy bộ đề nào phù hợp.</p></div>`;
     if (dotsWrap) dotsWrap.innerHTML = '';
-    updateCarouselArrows(null, null);
     return;
   }
 
@@ -203,6 +202,16 @@ function renderCards() {
   if (dotsWrap) {
     dotsWrap.innerHTML = sets.map((set, i) => `<button type="button" class="carousel-dot" data-index="${i}" aria-label="Đi tới ${set.title}" onclick="carouselGoTo(${i})"></button>`).join('');
   }
+
+  // Bấm THẲNG vào thẻ 2 bên (chưa phải thẻ chính giữa) để đưa nó vào giữa
+  // luôn — trước đây CHỈ chọn được bằng cách kéo trượt tay/chuột hoặc bấm
+  // đúng chấm nhỏ bên dưới (9px, khó bấm trúng), khiến cảm giác "khó tương
+  // tác để chọn bộ đề". 2 nút "Bắt đầu làm bài"/⚙️ bên trong thẻ đã tự
+  // event.stopPropagation() (xem openStartModal()/openManageModal()) nên
+  // không xung đột với click chọn thẻ ở đây.
+  track.querySelectorAll('.carousel-item').forEach((item, i) => {
+    item.addEventListener('click', () => { if (!item.classList.contains('is-active')) carouselGoTo(i); });
+  });
 
   updateCarouselEdgePadding();
   track.scrollLeft = 0; // về đầu dải mỗi lần đổi bộ lọc/tìm kiếm, tránh "lạc" giữa danh sách mới
@@ -249,6 +258,19 @@ function carouselItems() {
   return track ? Array.from(track.querySelectorAll('.carousel-item')) : [];
 }
 
+/** Gắn .is-active cho ĐÚNG 1 thẻ tại index (+ chấm tương ứng) — tách khỏi
+ * callback IntersectionObserver để dùng lại được ở phần "chốt ở 2 đầu dải"
+ * bên dưới (xem chú thích trong initCarouselObserver()). */
+function setActiveCarouselIndex(idx) {
+  const items = carouselItems();
+  if (idx < 0 || idx >= items.length) return;
+  items.forEach((el) => el.classList.remove('is-active'));
+  items[idx].classList.add('is-active');
+  document.querySelectorAll('#carouselDots .carousel-dot').forEach((d, i) => {
+    d.classList.toggle('is-active', i === idx);
+  });
+}
+
 function initCarouselObserver() {
   const track = document.getElementById('carouselTrack');
   const items = carouselItems();
@@ -260,12 +282,7 @@ function initCarouselObserver() {
       if (!entry.isIntersecting) return;
       const idx = items.indexOf(entry.target);
       if (idx === -1) return;
-      items.forEach((el) => el.classList.remove('is-active'));
-      entry.target.classList.add('is-active');
-      document.querySelectorAll('#carouselDots .carousel-dot').forEach((d, i) => {
-        d.classList.toggle('is-active', i === idx);
-      });
-      updateCarouselArrows(idx, items.length);
+      setActiveCarouselIndex(idx);
     });
   }, { root: track, rootMargin: `0px -${shrink}px 0px -${shrink}px`, threshold: 0.6 });
 
@@ -276,21 +293,35 @@ function initCarouselObserver() {
   items[0].classList.add('is-active');
   const firstDot = document.querySelector('#carouselDots .carousel-dot');
   if (firstDot) firstDot.classList.add('is-active');
-  updateCarouselArrows(0, items.length);
 }
 
-function updateCarouselArrows(activeIdx, total) {
-  const prevBtn = document.getElementById('carouselPrevBtn');
-  const nextBtn = document.getElementById('carouselNextBtn');
-  if (!prevBtn || !nextBtn) return;
-  if (activeIdx == null || total == null) {
-    prevBtn.disabled = true;
-    nextBtn.disabled = true;
-    return;
-  }
-  prevBtn.disabled = activeIdx <= 0;
-  nextBtn.disabled = activeIdx >= total - 1;
-}
+/** BUG THẬT đã sửa: padding 2 đầu #carouselTrack (updateCarouselEdgePadding())
+ * CỐ TÌNH kẹp trần ở 60% bề rộng thẻ (thay vì đúng công thức canh giữa
+ * tuyệt đối) để tránh khoảng trắng 2 bên quá lớn trên màn hình rộng — hệ
+ * quả phụ: trên màn RỘNG (padding cần thiết > trần cho phép), thẻ ĐẦU/CUỐI
+ * dải KHÔNG BAO GIỜ cuộn tới được vị trí thật sự nằm giữa khung nhìn, nên
+ * IntersectionObserver phía trên (chỉ nhận thẻ đạt ≥60% giao nhau với dải
+ * giữa hẹp) không bao giờ bắn active cho thẻ đó — mũi tên/dải trượt coi như
+ * "kẹt", bộ đề cuối cùng không sao bấm tới được dù track.scrollLeft đã tới
+ * đúng maxScroll (giới hạn cuộn thật của trình duyệt, không cuộn thêm được
+ * nữa). Sửa: theo dõi thêm sự kiện 'scroll' của track, hễ cuộn TỚI SÁT 2
+ * ĐẦU DẢI (không thể cuộn xa hơn) thì CHỐT LUÔN thẻ đầu/cuối là active,
+ * không phụ thuộc observer có bắn kịp hay không. */
+let carouselScrollEndTimer = null;
+(function bindCarouselScrollEdges() {
+  const track = document.getElementById('carouselTrack');
+  if (!track) return;
+  track.addEventListener('scroll', () => {
+    clearTimeout(carouselScrollEndTimer);
+    carouselScrollEndTimer = setTimeout(() => {
+      const items = carouselItems();
+      if (!items.length) return;
+      const maxScroll = track.scrollWidth - track.clientWidth;
+      if (track.scrollLeft <= 2) setActiveCarouselIndex(0);
+      else if (track.scrollLeft >= maxScroll - 2) setActiveCarouselIndex(items.length - 1);
+    }, 120);
+  });
+})();
 
 function carouselGoTo(index) {
   const track = document.getElementById('carouselTrack');
@@ -311,14 +342,6 @@ function carouselGoTo(index) {
   const trackRect = track.getBoundingClientRect();
   const targetLeft = track.scrollLeft + (itemRect.left - trackRect.left) - (track.clientWidth - item.clientWidth) / 2;
   track.scrollTo({ left: targetLeft, behavior: 'smooth' });
-}
-
-function carouselStep(dir) {
-  const items = carouselItems();
-  if (!items.length) return;
-  const activeIdx = items.findIndex((el) => el.classList.contains('is-active'));
-  const from = activeIdx === -1 ? 0 : activeIdx;
-  carouselGoTo(Math.min(items.length - 1, Math.max(0, from + dir)));
 }
 
 // Bề rộng dải giữa (rootMargin) tính theo px tại thời điểm render — đổi cỡ
@@ -1117,17 +1140,39 @@ function toggleThemeFromSettings(btn) {
 })();
 
 /* ========================================
-   MOBILE SIDEBAR
+   SIDEBAR — TOGGLE (điện thoại: trượt ẩn/hiện off-canvas kiểu cũ; desktop:
+   thu gọn còn dải icon 76px, xem khối ".collapsed" trong css/dashboard.css)
    ======================================== */
 function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('sidebar-overlay').classList.toggle('open');
+  const sidebar = document.getElementById('sidebar');
+  if (window.matchMedia('(max-width: 900px)').matches) {
+    sidebar.classList.toggle('open');
+    document.getElementById('sidebar-overlay').classList.toggle('open');
+    return;
+  }
+  sidebar.classList.toggle('collapsed');
+  document.getElementById('main-wrapper').classList.toggle('sidebar-collapsed');
+  try {
+    localStorage.setItem('ic3_sidebar_collapsed', sidebar.classList.contains('collapsed') ? '1' : '0');
+  } catch (e) { /* localStorage có thể bị chặn — bỏ qua, không ảnh hưởng chức năng */ }
 }
 function closeSidebar() {
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('sidebar-overlay').classList.remove('open');
 }
 document.getElementById('sidebar-overlay').addEventListener('click', closeSidebar);
+
+// Nhớ lại trạng thái thu gọn desktop giữa các lần vào trang (không áp
+// dụng cho điện thoại — .open off-canvas luôn bắt đầu đóng mỗi lần nạp
+// trang, không cần nhớ).
+(function restoreSidebarCollapsed() {
+  try {
+    if (localStorage.getItem('ic3_sidebar_collapsed') === '1' && window.matchMedia('(min-width: 901px)').matches) {
+      document.getElementById('sidebar').classList.add('collapsed');
+      document.getElementById('main-wrapper').classList.add('sidebar-collapsed');
+    }
+  } catch (e) { /* ignore */ }
+})();
 
 /* ========================================
    EXPORT REPORT — xuất CSV từ dữ liệu Firestore thật (đã áp bộ lọc hiện tại)

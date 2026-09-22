@@ -76,6 +76,26 @@ body {
 }
 [data-theme="dark"] #sidebar { box-shadow: 8px 0 24px rgba(0,0,0,0.35); }
 
+/* ========================================
+   SIDEBAR — THU GỌN (desktop, bấm #hamburger để toggle, xem
+   toggleSidebar() trong js/dashboard.js) — thu còn dải icon 76px, chỉ áp
+   dụng TỪ 901px trở lên vì dưới mốc đó #sidebar đã có cơ chế trượt ẩn/hiện
+   riêng (off-canvas .open, xem khối RESPONSIVE bên dưới) không liên quan
+   gì tới .collapsed. Trạng thái được nhớ lại qua localStorage
+   (_restoreSidebarCollapsed() gọi lúc trang nạp) để không phải bấm lại
+   mỗi lần vào trang. */
+@media (min-width: 901px) {
+  #sidebar.collapsed { width: 76px; }
+  #sidebar.collapsed .sidebar-logo { justify-content: center; padding: 22px 0 16px; }
+  #sidebar.collapsed .sidebar-logo .logo-text { display: none; }
+  #sidebar.collapsed .nav-item { justify-content: center; padding: 11px 0; }
+  #sidebar.collapsed .nav-item span:not(.nav-icon) { display: none; }
+  #sidebar.collapsed .nav-section-label { display: none; }
+  #sidebar.collapsed .user-chip { justify-content: center; padding: 10px 0; }
+  #sidebar.collapsed .user-info { display: none; }
+  #main-wrapper.sidebar-collapsed { margin-left: 76px; }
+}
+
 .sidebar-logo {
   padding: 22px 20px 16px;
   display: flex;
@@ -196,7 +216,9 @@ body {
   /* Icon Font Awesome (thay emoji 🧑 cũ) không tự có màu như emoji — cần
      màu trắng tường minh để đủ tương phản trên nền gradient cam/đỏ. */
   color: #fff;
+  overflow: hidden; /* bo tròn đúng khung khi đổi sang ảnh đại diện thật (Trang Social Media) */
 }
+.user-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50% }
 .user-info { font-size: 12px; }
 .user-info strong { display: block; font-weight: 800; color: var(--text-primary); }
 .user-info span { color: var(--text-muted); font-size: 11px; }
@@ -330,9 +352,11 @@ body {
     -1px -1px 3px rgba(255, 255, 255, .08);
 }
 
-/* Hamburger for mobile */
+/* Hamburger — trước đây CHỈ hiện trên điện thoại (off-canvas), giờ LUÔN
+   hiện để bấm thu gọn/mở rộng sidebar ngay trên desktop (xem khối
+   ".collapsed" ở #sidebar phía trên + toggleSidebar() trong js/dashboard.js). */
 #hamburger {
-  display: none;
+  display: flex; align-items: center; justify-content: center;
   background: none; border: none; cursor: pointer;
   font-size: 22px; color: var(--text-primary);
   padding: 4px;
@@ -501,13 +525,13 @@ body {
    vuốt cảm ứng đều dùng ĐÚNG hành vi cuộn ngang có sẵn của trình duyệt,
    không cần thư viện ngoài). #cardsGrid GIỮ NGUYÊN làm ID gốc (JS
    toggleShelfView() trong js/dashboard.js chỉ ẩn/hiện qua .hidden, không
-   đổi) — bọc quanh mũi tên + track + chấm điều hướng.
-   ======================================== */
+   đổi) — bọc quanh track + chấm điều hướng. ĐÃ BỎ 2 nút mũi tên trái/phải
+   (phản hồi người dùng: chỉ cần kéo trượt tay/chuột chọn thẻ cho dễ, mũi
+   tên thừa) — xem ic3-dashboard.html. */
 .carousel-wrap {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
 }
 
 .carousel-track {
@@ -517,6 +541,7 @@ body {
   overflow-y: visible;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
+  cursor: grab;
   /* padding-left/right ĐẶT BẰNG JS (xem updateCarouselEdgePadding() trong
      js/dashboard.js), KHÔNG dùng calc(50% - ...) ở đây — % padding trên 1
      flex item (flex:1) tạo vòng lặp phụ thuộc: bề rộng cuối cùng của
@@ -567,6 +592,10 @@ body {
   --cf-opacity: 1;
   z-index: 2;
 }
+/* Thẻ 2 bên (chưa active) bấm được để đưa vào giữa (xem renderCards()
+   trong js/dashboard.js) — con trỏ tay để gợi ý bấm được, thẻ chính giữa
+   giữ con trỏ mặc định vì đã có nút "Bắt đầu làm bài" làm CTA chính. */
+.carousel-item:not(.is-active) { cursor: pointer; }
 /* Thẻ chính nổi bật hẳn khỏi mặt phẳng — đổ thêm 1 lớp bóng tím thương
    hiệu mờ phía dưới, đúng cảm giác "xịn xò" của carousel coverflow thay
    vì chỉ phóng to đơn thuần. */
@@ -578,36 +607,21 @@ body {
   .carousel-track { scroll-behavior: auto; }
 }
 
-.carousel-arrow {
-  flex-shrink: 0;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: none;
-  background: var(--bg-card);
-  box-shadow: var(--shadow-btn);
-  color: var(--text-primary);
-  font-size: 20px;
-  font-weight: 900;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: var(--transition);
-  z-index: 3;
-}
-.carousel-arrow:hover { color: #fff; background: linear-gradient(135deg, #6C5CE7, #8E7BFF); box-shadow: var(--shadow-btn-active); }
-.carousel-arrow:active { box-shadow: var(--shadow-btn-active); transform: scale(.94); }
-.carousel-arrow:disabled { opacity: .35; cursor: default; box-shadow: var(--shadow-card-inset); }
-.carousel-arrow:disabled:hover { color: var(--text-primary); background: var(--bg-card); }
-
 .carousel-dots {
   display: flex;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   margin-top: 6px;
 }
+/* Chấm hiển thị chỉ 9px nhưng VÙNG BẤM thật rộng hơn hẳn (position:relative
+   + ::before phủ thêm 6px mỗi phía, tổng ~21x21px, gần sát chuẩn 24px tối
+   thiểu cho mục tiêu chạm) — trước đây chấm nhỏ xíu khó bấm trúng đúng là
+   lý do "khó tương tác để chọn bộ đề" bị phản hồi. Giữ nguyên kích thước
+   hiển thị (không phóng to chấm thật, tránh vỡ layout) mà vẫn dễ bấm hơn
+   hẳn trên cả chuột lẫn cảm ứng; gap 10px đủ để 2 vùng bấm cạnh nhau không
+   chồng lấn đáng kể. */
 .carousel-dot {
+  position: relative;
   width: 9px;
   height: 9px;
   border-radius: 50%;
@@ -617,6 +631,11 @@ body {
   cursor: pointer;
   transition: var(--transition);
 }
+.carousel-dot::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+}
 .carousel-dot:hover { background: var(--accent-purple); opacity: .7; }
 .carousel-dot.is-active {
   width: 26px;
@@ -625,7 +644,6 @@ body {
 }
 
 @media (max-width: 640px) {
-  .carousel-arrow { display: none; }
   .carousel-track { padding-left: 24px; padding-right: 24px; }
   .carousel-item { flex-basis: 82vw; }
 }
