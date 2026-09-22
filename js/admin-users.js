@@ -139,50 +139,82 @@ window.EDU_ALLOWED_ROLES = ['admin'];
     loadUsers();
   });
 
-  async function loadUsers() {
+  // Cache 3 phút — giống js/roster-manager.js/js/coordinator/data-loader.js:
+  // F5/mở lại trang trong 3 phút không tốn thêm lượt đọc Firestore (4 collection
+  // users/students_roster/classes/teaching_teachers) — xem js/services/data-cache-service.js.
+  const USERS_CACHE_KEY = 'admin-users:all';
+  const USERS_CACHE_TTL_MS = 3 * 60 * 1000;
+
+  /** @param {boolean} [forceRefresh] Bỏ qua cache — dùng sau khi ghi (duyệt/xoá/đổi role...). */
+  async function loadUsers(forceRefresh) {
     const tbody = document.getElementById('userRows');
-    const [snap] = await Promise.all([
-      EduFirebase.db.collection('users').orderBy('createdAt', 'desc').get(),
-      loadSchools(),
-      loadClasses(),
-      loadTeachingTeachers(),
-    ]);
-    if (snap.empty) {
-      tbody.innerHTML = '<tr><td colspan="8">Chưa có tài khoản nào.</td></tr>';
-      return;
+
+    // Cache hit: dựng lại đúng hình dạng { doc: {id}, u } mà toàn bộ code
+    // render + gắn sự kiện bên dưới đang dùng (KHÔNG viết lại code đó —
+    // chỉ "doc.id" được dùng ở nhánh render/sự kiện, "doc.ref" chỉ cần cho
+    // vòng tự sửa TỰ ĐỘNG bên dưới nên bỏ qua an toàn khi có cache).
+    let users;
+    if (!forceRefresh && window.EduDataCache) {
+      const cached = window.EduDataCache.get(USERS_CACHE_KEY);
+      if (cached) {
+        allSchools = cached.allSchools;
+        allClasses = cached.allClasses;
+        allTeachingTeachers = cached.allTeachingTeachers;
+        users = cached.users.map(({ id, u }) => ({ doc: { id }, u }));
+      }
     }
 
-    // TỰ ĐỘNG sửa "Trường được xem" của giáo viên theo ĐÚNG trường họ đang
-    // dạy thật (students_roster.teacherId, xem loadSchools()) — trước đây
-    // trường này phải admin tự multi-select tay, dễ gán nhầm/gán sót (đã
-    // thấy nhiều giáo viên khác nhau bị gán CÙNG 1 bộ trường). CHỈ tự sửa
-    // khi có ít nhất 1 lớp roster thật cho GV đó (actual.length > 0) — GV
-    // mới chưa có lớp nào thì giữ nguyên (kể cả rỗng), tránh xoá mất gán
-    // tay hợp lệ của admin trong lúc chưa kịp nhập roster.
-    // .data() tạo object MỚI mỗi lần gọi — lấy ra đúng 1 lần/doc và dùng
-    // lại object đó xuyên suốt (vòng tự sửa bên dưới VÀ vòng render), nếu
-    // không sửa `u.schools` ở vòng tự sửa sẽ không thấy được ở vòng render
-    // (2 object .data() khác nhau, không liên quan gì tới nhau).
-    const users = snap.docs.map(doc => ({ doc, u: doc.data() }));
+    if (!users) {
+      const [snap] = await Promise.all([
+        EduFirebase.db.collection('users').orderBy('createdAt', 'desc').get(),
+        loadSchools(),
+        loadClasses(),
+        loadTeachingTeachers(),
+      ]);
+      if (snap.empty) {
+        tbody.innerHTML = '<tr><td colspan="8">Chưa có tài khoản nào.</td></tr>';
+        return;
+      }
 
-    const batch = EduFirebase.db.batch();
-    let fixedCount = 0;
-    users.forEach(({ doc, u }) => {
-      if (u.role !== 'teacher') return;
-      const saved = Array.isArray(u.schools) ? [...u.schools].sort((a, b) => a.localeCompare(b, 'vi')) : [];
-      const actual = actualSchoolsOf(doc.id);
-      if (!actual.length) return;
-      if (JSON.stringify(saved) === JSON.stringify(actual)) return;
-      batch.set(doc.ref, { schools: actual }, { merge: true });
-      u.schools = actual; // cập nhật NGAY object dùng để render, không cần tải lại
-      fixedCount++;
-    });
-    if (fixedCount) {
-      try {
-        await batch.commit();
-        toast(`🔧 Đã tự đồng bộ lại "Trường được xem" cho ${fixedCount} giáo viên theo đúng lớp đang dạy`);
-      } catch (err) {
-        console.warn('[EduAdminUsers] Không tự đồng bộ được "Trường được xem":', err.message);
+      // TỰ ĐỘNG sửa "Trường được xem" của giáo viên theo ĐÚNG trường họ đang
+      // dạy thật (students_roster.teacherId, xem loadSchools()) — trước đây
+      // trường này phải admin tự multi-select tay, dễ gán nhầm/gán sót (đã
+      // thấy nhiều giáo viên khác nhau bị gán CÙNG 1 bộ trường). CHỈ tự sửa
+      // khi có ít nhất 1 lớp roster thật cho GV đó (actual.length > 0) — GV
+      // mới chưa có lớp nào thì giữ nguyên (kể cả rỗng), tránh xoá mất gán
+      // tay hợp lệ của admin trong lúc chưa kịp nhập roster.
+      // .data() tạo object MỚI mỗi lần gọi — lấy ra đúng 1 lần/doc và dùng
+      // lại object đó xuyên suốt (vòng tự sửa bên dưới VÀ vòng render), nếu
+      // không sửa `u.schools` ở vòng tự sửa sẽ không thấy được ở vòng render
+      // (2 object .data() khác nhau, không liên quan gì tới nhau).
+      users = snap.docs.map(doc => ({ doc, u: doc.data() }));
+
+      const batch = EduFirebase.db.batch();
+      let fixedCount = 0;
+      users.forEach(({ doc, u }) => {
+        if (u.role !== 'teacher') return;
+        const saved = Array.isArray(u.schools) ? [...u.schools].sort((a, b) => a.localeCompare(b, 'vi')) : [];
+        const actual = actualSchoolsOf(doc.id);
+        if (!actual.length) return;
+        if (JSON.stringify(saved) === JSON.stringify(actual)) return;
+        batch.set(doc.ref, { schools: actual }, { merge: true });
+        u.schools = actual; // cập nhật NGAY object dùng để render, không cần tải lại
+        fixedCount++;
+      });
+      if (fixedCount) {
+        try {
+          await batch.commit();
+          toast(`🔧 Đã tự đồng bộ lại "Trường được xem" cho ${fixedCount} giáo viên theo đúng lớp đang dạy`);
+        } catch (err) {
+          console.warn('[EduAdminUsers] Không tự đồng bộ được "Trường được xem":', err.message);
+        }
+      }
+
+      if (window.EduDataCache) {
+        window.EduDataCache.set(USERS_CACHE_KEY, {
+          allSchools, allClasses, allTeachingTeachers,
+          users: users.map(({ doc, u }) => ({ id: doc.id, u })),
+        }, USERS_CACHE_TTL_MS);
       }
     }
 
@@ -258,7 +290,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
             { role: newRole, approved: true }, { merge: true }
           );
           toast('✅ Đã cập nhật vai trò');
-          loadUsers();
+          loadUsers(true);
         } catch (err) {
           toast('❌ Lỗi: ' + err.message);
         }
@@ -280,7 +312,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
         try {
           await EduFirebase.db.collection('users').doc(uid).set(patch, { merge: true });
           toast('✅ Đã duyệt tài khoản' + (patch.role ? ` làm ${EduAuth.ROLE_LABEL[patch.role]}` : ''));
-          loadUsers();
+          loadUsers(true);
         } catch (err) {
           toast('❌ Lỗi: ' + err.message);
         }
@@ -300,7 +332,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
         try {
           await EduFirebase.db.collection('users').doc(uid).set({ schools: chosen }, { merge: true });
           toast(`✅ Đã gán ${chosen.length} trường cho giáo viên`);
-          loadUsers();
+          loadUsers(true);
         } catch (err) {
           toast('❌ Lỗi: ' + err.message);
         }
@@ -318,7 +350,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
         try {
           await EduFirebase.db.collection('users').doc(uid).set({ schools: actual }, { merge: true });
           toast(`✅ Đã đặt lại đúng ${actual.length} trường đang dạy thật`);
-          loadUsers();
+          loadUsers(true);
         } catch (err) {
           toast('❌ Lỗi: ' + err.message);
         }
@@ -387,7 +419,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
           await EduFirebase.db.collection('users').doc(uid).set({ schools: newSchools }, { merge: true });
 
           toast(`✅ Đã cập nhật lớp đang dạy (${toAssign.length} gán thêm, ${toUnassign.length} bỏ gán)`);
-          loadUsers();
+          loadUsers(true);
         } catch (err) {
           toast('❌ Lỗi: ' + err.message);
         } finally {
@@ -408,7 +440,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
             { teacherCode: code || firebase.firestore.FieldValue.delete() }, { merge: true }
           );
           toast(code ? '✅ Đã liên kết Mã NV cho giáo viên' : '✅ Đã bỏ liên kết Mã NV');
-          loadUsers();
+          loadUsers(true);
         } catch (err) {
           toast('❌ Lỗi: ' + err.message);
         }
@@ -422,5 +454,6 @@ window.EDU_ALLOWED_ROLES = ['admin'];
 
   // Lộ ra ngoài để js/admin-users-import.js gọi lại sau khi tạo xong hàng
   // loạt tài khoản — bảng chính tự làm mới, không cần F5 mới thấy 18 tài
-  // khoản giáo viên vừa tạo.
-  window.EduAdminUsersReload = loadUsers;
+  // khoản giáo viên vừa tạo. Luôn bỏ qua cache (forceRefresh) vì vừa ghi
+  // xong, cần thấy ngay các tài khoản mới tạo.
+  window.EduAdminUsersReload = () => loadUsers(true);

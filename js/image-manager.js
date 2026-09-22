@@ -48,12 +48,34 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
   window.location.href = 'login.html';
 });
 
-async function loadFromFirestore() {
+// Cache 3 phút cho TOÀN BỘ ngân hàng câu hỏi ("questions", có thể lên tới
+// hàng trăm/nghìn document) — F5/mở lại trang công cụ này trong 3 phút
+// không tốn thêm lượt đọc Firestore (xem js/services/data-cache-service.js).
+// KHÔNG áp dụng cho lần đọc "exportStaticBtn" (dòng có colRef().get() thứ 2
+// trong file này) — nơi đó CỐ TÌNH đọc thẳng Firestore để đảm bảo xuất đúng
+// bản mới nhất, kể cả khi admin khác vừa sửa ở tab/máy khác.
+const QUESTIONS_CACHE_KEY = 'image-manager:questions';
+const QUESTIONS_CACHE_TTL_MS = 3 * 60 * 1000;
+
+/** @param {boolean} [forceRefresh] Bỏ qua cache — dùng sau khi ghi (migrate/upload/xoá/sửa). */
+async function loadFromFirestore(forceRefresh) {
   document.getElementById('loadState').style.display = 'block';
   document.getElementById('loadState').textContent = '⏳ Đang tải dữ liệu câu hỏi từ Firebase…';
   document.getElementById('app').style.display = 'none';
   document.getElementById('migrateBox').style.display = 'none';
   try {
+    if (!forceRefresh && window.EduDataCache) {
+      const cached = window.EduDataCache.get(QUESTIONS_CACHE_KEY);
+      if (cached) {
+        QUESTIONS = cached;
+        scanUsedPictureNumbers();
+        document.getElementById('loadState').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        buildFilterOptions();
+        applyFilters();
+        return;
+      }
+    }
     const snap = await colRef().get();
     if (snap.empty) {
       document.getElementById('loadState').style.display = 'none';
@@ -67,6 +89,7 @@ async function loadFromFirestore() {
       return;
     }
     QUESTIONS = snap.docs.map(doc => ({ q: doc.data(), docId: doc.id }));
+    if (window.EduDataCache) window.EduDataCache.set(QUESTIONS_CACHE_KEY, QUESTIONS, QUESTIONS_CACHE_TTL_MS);
     scanUsedPictureNumbers();
     document.getElementById('loadState').style.display = 'none';
     document.getElementById('app').style.display = 'block';
@@ -197,7 +220,7 @@ document.getElementById('migrateBtn').addEventListener('click', async () => {
       btn.textContent = `⏳ Đã nhập ${done}/${total}...`;
     });
     toast(`✅ Đã nhập ${flat.length} câu hỏi lên Firebase`);
-    loadFromFirestore();
+    loadFromFirestore(true);
   } catch (err) {
     console.error(err);
     toast('❌ Lỗi nhập dữ liệu: ' + err.message, 5000);
@@ -258,7 +281,7 @@ document.getElementById('uploadJsonInput').addEventListener('change', async (e) 
       btn.textContent = `⏳ Đang ghi ${done}/${total}...`;
     });
     toast(`✅ Đã cập nhật ${flat.length} câu hỏi (${overwriteCount} ghi đè, ${newCount} mới) lên Firebase`, 5000);
-    loadFromFirestore();
+    loadFromFirestore(true);
   } catch (err) {
     console.error(err);
     toast('❌ Lỗi tải JSON lên: ' + err.message, 6000);
@@ -575,6 +598,7 @@ function refreshCard(item) {
 async function persistQuestion(item, patch) {
   try {
     await colRef().doc(item.docId).set(patch, { merge: true });
+    if (window.EduDataCache) window.EduDataCache.clear(QUESTIONS_CACHE_KEY);
   } catch (err) {
     console.error(err);
     toast('❌ Lỗi lưu Firebase: ' + err.message, 4000);
@@ -624,6 +648,9 @@ async function saveCardData(item, card) {
     // cập nhật bản sao cục bộ để card hiển thị đúng ngay sau khi lưu
     deleteKeys.forEach(k => delete item.q[k]);
     Object.assign(item.q, localPatch);
+    // Xoá cache — tránh lần mở lại trang (tab khác/F5 trong 3 phút) thấy
+    // dữ liệu cũ (xem QUESTIONS_CACHE_KEY ở loadFromFirestore()).
+    if (window.EduDataCache) window.EduDataCache.clear(QUESTIONS_CACHE_KEY);
 
     toast('✅ Đã lưu câu ' + (item.q.id ?? '') + ' lên Firebase');
     refreshCard(item);
@@ -640,6 +667,7 @@ async function deleteQuestion(item) {
   try {
     await colRef().doc(item.docId).delete();
     QUESTIONS = QUESTIONS.filter(x => x.docId !== item.docId);
+    if (window.EduDataCache) window.EduDataCache.clear(QUESTIONS_CACHE_KEY);
     applyFilters();
     toast('🗑️ Đã xoá câu hỏi khỏi Firebase');
   } catch (err) {
@@ -703,6 +731,7 @@ document.getElementById('addQuestionBtn').addEventListener('click', () => {
 
       await colRef().doc(docId).set(data);
       QUESTIONS.push({ q: data, docId });
+      if (window.EduDataCache) window.EduDataCache.clear(QUESTIONS_CACHE_KEY);
       scanUsedPictureNumbers();
       buildFilterOptions();
       applyFilters();

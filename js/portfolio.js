@@ -248,6 +248,22 @@
   // đúng những phần tử đã có ảnh thật trong cache, không phải chờ cache
   // tải xong mới render được initials. ──
   const avatarCache = {};
+
+  // ── Cache trạng thái "đã thích" của NGƯỜI DÙNG HIỆN TẠI theo postId —
+  // tránh gọi lại likes/{uid}.get() mỗi lần feed onSnapshot dội lại (bài
+  // đăng bất kỳ trong feed được thích/bình luận bởi AI CŨNG làm listener
+  // dội lại toàn bộ danh sách, và trước đây refreshAuthState() sẽ đọc lại
+  // TỪNG document likes/{uid} của mọi bài đang hiển thị mỗi lần như vậy —
+  // đây là nguồn đọc Firestore lớn nhất của trang). uid đổi (đăng nhập
+  // tài khoản khác) thì xoá cache vì trạng thái thích gắn với uid cũ. ──
+  const likeStatusCache = new Map(); // postId -> boolean
+  let likeStatusCacheUid = null;
+  function resetLikeStatusCacheIfNeeded(uid) {
+    if (likeStatusCacheUid !== uid) {
+      likeStatusCache.clear();
+      likeStatusCacheUid = uid;
+    }
+  }
   function applyAvatars(root) {
     (root || document).querySelectorAll('[data-avatar-uid]').forEach((el) => {
       const p = avatarCache[el.dataset.avatarUid];
@@ -386,6 +402,7 @@
       const likeRef = postRef.collection('likes').doc(currentUser.uid);
       btn.disabled = true;
       try {
+        let nowLiked = false;
         await db.runTransaction(async (tx) => {
           const likeSnap = await tx.get(likeRef);
           const postSnap = await tx.get(postRef);
@@ -393,11 +410,16 @@
           if (likeSnap.exists) {
             tx.delete(likeRef);
             tx.update(postRef, { likeCount: Math.max(0, curCount - 1) });
+            nowLiked = false;
           } else {
             tx.set(likeRef, { createdAt: firebase.firestore.FieldValue.serverTimestamp() });
             tx.update(postRef, { likeCount: curCount + 1 });
+            nowLiked = true;
           }
         });
+        // Biết ngay kết quả từ transaction — ghi thẳng vào cache thay vì
+        // để refreshAuthState() (chạy lại khi listener dội) phải get() lại.
+        likeStatusCache.set(postId, nowLiked);
       } catch (err) {
         console.warn('[Trang Social Media] Lỗi thích bài:', err.message);
       } finally {
@@ -464,11 +486,29 @@
 
     function refreshAuthState() {
       updateSubmitState();
+      if (!currentUser) {
+        listEl.querySelectorAll('[data-like-btn]').forEach((btn) => {
+          btn.disabled = true;
+          btn.classList.remove('is-liked');
+        });
+        return;
+      }
+      resetLikeStatusCacheIfNeeded(currentUser.uid);
       listEl.querySelectorAll('[data-like-btn]').forEach((btn) => {
-        btn.disabled = !currentUser;
-        if (!currentUser) { btn.classList.remove('is-liked'); return; }
-        db.collection('gvlab_posts').doc(btn.dataset.postId).collection('likes').doc(currentUser.uid).get()
-          .then((snap) => btn.classList.toggle('is-liked', snap.exists))
+        btn.disabled = false;
+        const postId = btn.dataset.postId;
+        if (likeStatusCache.has(postId)) {
+          // Đã biết trạng thái (từ lần get() trước hoặc từ toggleLike vừa
+          // chạy) — dùng thẳng, KHÔNG gọi lại Firestore. Đây là trường hợp
+          // phổ biến nhất: feed dội lại vì bài đăng KHÁC thay đổi.
+          btn.classList.toggle('is-liked', likeStatusCache.get(postId));
+          return;
+        }
+        db.collection('gvlab_posts').doc(postId).collection('likes').doc(currentUser.uid).get()
+          .then((snap) => {
+            likeStatusCache.set(postId, snap.exists);
+            btn.classList.toggle('is-liked', snap.exists);
+          })
           .catch(() => {});
       });
     }
@@ -606,10 +646,14 @@
   // ════════════════════════════════════════════════════════════
   // PfChat — chat nhóm nội bộ realtime kiểu Messenger (collection
   // "gvlab_chat"), CHỈ dùng được khi đã đăng nhập Giáo viên/Admin.
-  // Nâng cấp thêm: đang-nhập (gvlab_chat_typing), thả cảm xúc (field
-  // "reactions" denormalized ngay trên tin nhắn), trả lời trích dẫn
-  // (field replyTo* trên tin nhắn), xoá tin của chính mình, và ai đang
-  // mở khung chat (gvlab_presence, nhịp tim mỗi 20s).
+  // Nâng cấp thêm: thả cảm xúc (field "reactions" denormalized ngay
+  // trên tin nhắn), trả lời trích dẫn (field replyTo* trên tin nhắn),
+  // xoá tin của chính mình.
+  // ĐÃ BỎ (tối ưu lượt đọc/ghi Firestore): "đang nhập..." (gvlab_chat_typing)
+  // và "ai đang mở khung chat" (gvlab_presence, nhịp tim mỗi 20s) — 2 tính
+  // năng trang trí này tốn ghi liên tục (1 write/20s/người đang mở panel)
+  // + listener sống nghe toàn bộ 2 collection, không phục vụ mục đích cốt
+  // lõi của site (ôn luyện IC3).
   // ════════════════════════════════════════════════════════════
   const CHAT_REACTION_EMOJIS = ['👍', '❤️', '😂', '🎉', '😮', '🙏'];
   // Bảng emoji chèn vào Ô NHẬP (khác 6 emoji thả cảm xúc ở trên) — bộ phổ
@@ -648,9 +692,6 @@
     const panel = document.getElementById('gvChatPanel');
     const closeBtn = document.getElementById('gvChatCloseBtn');
     const messagesEl = document.getElementById('gvChatMessages');
-    const onlineAvatarsEl = document.getElementById('gvChatOnlineAvatars');
-    const onlineCountEl = document.getElementById('gvChatOnlineCount');
-    const typingEl = document.getElementById('gvChatTyping');
     const replyPreview = document.getElementById('gvChatReplyPreview');
     const replyPreviewText = document.getElementById('gvChatReplyText');
     const replyCancelBtn = document.getElementById('gvChatReplyCancel');
@@ -683,8 +724,6 @@
     let lastMessageTs = 0;
     let lastDocsById = {}; // id -> dữ liệu tin nhắn gần nhất (để lấy nội dung khi trả lời/xoá)
     let replyTarget = null; // { id, authorName, text }
-    let typingTimer = null;
-    let presenceInterval = null;
     let mediaRecorder = null;
     let recordedChunks = [];
     let recordTimerInterval = null;
@@ -906,68 +945,16 @@
         }, (err) => {
           messagesEl.innerHTML = `<p class="gv-chat-empty">Không tải được chat: ${esc(err.message)}</p>`;
         });
-
-      // "Đang nhập..." — chỉ những document còn "tươi" (< 5s) mới tính,
-      // tránh hiện mãi nếu 1 tab bị đóng đột ngột mà chưa kịp tự xoá.
-      db.collection('gvlab_chat_typing').onSnapshot((snap) => {
-        const now = Date.now();
-        const names = snap.docs
-          .filter((d) => d.id !== (currentUser && currentUser.uid))
-          .map((d) => d.data())
-          .filter((t) => t.ts && t.ts.toMillis && (now - t.ts.toMillis()) < 5000)
-          .map((t) => t.name || 'Ai đó');
-        if (names.length) {
-          typingEl.textContent = `${names.join(', ')} đang nhập…`;
-          typingEl.hidden = false;
-        } else {
-          typingEl.hidden = true;
-        }
-      }, () => {});
-
-      // Ai đang mở khung chat (presence) — chỉ tính "tươi" trong ~45s.
-      // Hiện avatar THẬT của từng người (không chỉ đếm số) — data-avatar-uid
-      // để applyAvatars() tự thay bằng ảnh đại diện thật khi cache có.
-      db.collection('gvlab_presence').onSnapshot((snap) => {
-        const now = Date.now();
-        const active = snap.docs
-          .map((d) => ({ uid: d.id, ...d.data() }))
-          .filter((p) => p.lastActive && p.lastActive.toMillis && (now - p.lastActive.toMillis()) < 45000);
-        const shown = active.slice(0, 6);
-        onlineAvatarsEl.innerHTML = shown.map((p) =>
-          `<span class="gv-avatar" data-avatar-uid="${esc(p.uid)}" title="${esc(p.name || 'Giáo viên')}">${esc(initials(p.name))}</span>`
-        ).join('');
-        applyAvatars(onlineAvatarsEl);
-        onlineCountEl.textContent = active.length
-          ? `${active.length > 6 ? '+' + (active.length - 6) + ' · ' : ''}Đang hoạt động`
-          : '';
-      }, () => {});
     }
-
-    function startPresence() {
-      if (!currentUser || presenceInterval) return;
-      const beat = () => db.collection('gvlab_presence').doc(currentUser.uid).set({
-        name: currentProfile.name || currentUser.email || 'Giáo viên',
-        lastActive: firebase.firestore.FieldValue.serverTimestamp(),
-      }).catch(() => {});
-      beat();
-      presenceInterval = setInterval(beat, 20000);
-    }
-    function stopPresence() {
-      if (presenceInterval) { clearInterval(presenceInterval); presenceInterval = null; }
-      if (currentUser) db.collection('gvlab_presence').doc(currentUser.uid).delete().catch(() => {});
-    }
-    window.addEventListener('beforeunload', stopPresence);
 
     function openPanel() {
       panel.hidden = false;
       startListening();
-      startPresence();
       if (lastMessageTs) markSeen(lastMessageTs);
       textInput.focus();
     }
     function closePanel() {
       panel.hidden = true;
-      stopPresence();
       emojiPanel.hidden = true;
       if (micBtn.classList.contains('is-recording')) stopRecording();
       messagesEl.querySelectorAll('[data-emoji-picker]').forEach((p) => { p.hidden = true; });
@@ -975,20 +962,6 @@
 
     fab.addEventListener('click', () => { panel.hidden ? openPanel() : closePanel(); });
     closeBtn.addEventListener('click', closePanel);
-
-    // "Đang nhập..." — ghi lại document của mình mỗi lần gõ (throttle nhẹ
-    // qua debounce 1.2s không gõ tiếp thì tự xoá document, báo đã dừng gõ).
-    textInput.addEventListener('input', () => {
-      if (!currentUser) return;
-      clearTimeout(typingTimer);
-      db.collection('gvlab_chat_typing').doc(currentUser.uid).set({
-        name: currentProfile.name || currentUser.email || 'Giáo viên',
-        ts: firebase.firestore.FieldValue.serverTimestamp(),
-      }).catch(() => {});
-      typingTimer = setTimeout(() => {
-        db.collection('gvlab_chat_typing').doc(currentUser.uid).delete().catch(() => {});
-      }, 1200);
-    });
 
     /** Đọc 1 Blob/File RAW (không nén được — không phải ảnh) thành data
      * URL, từ chối thẳng nếu vượt MAX_RAW_FILE_BYTES thay vì cố ghi rồi
@@ -1116,8 +1089,6 @@
         setPendingAttachment(null);
         fileInput.value = '';
         clearReplyTarget();
-        clearTimeout(typingTimer);
-        db.collection('gvlab_chat_typing').doc(currentUser.uid).delete().catch(() => {});
       } catch (err) {
         alert('Không gửi được tin nhắn: ' + err.message);
       } finally {

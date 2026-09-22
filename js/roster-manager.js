@@ -100,8 +100,36 @@
     return out;
   }
 
-  async function loadEverything() {
+  // Cache 3 phút — giống js/coordinator/data-loader.js: F5/mở lại trang trong
+  // 3 phút không tốn thêm lượt đọc Firestore (xem js/services/data-cache-service.js).
+  const CACHE_TTL_MS = 3 * 60 * 1000;
+  function rosterCacheKey() {
+    const isAdmin = myProfile.role === 'admin';
+    const schools = Array.isArray(myProfile.schools) ? myProfile.schools.filter(Boolean) : [];
+    return isAdmin ? 'roster-manager:admin-all-schools' : 'roster-manager:' + (myProfile.uid || myProfile.id || 'unknown') + ':' + schools.slice().sort().join('|');
+  }
+
+  /** @param {boolean} [forceRefresh] Bỏ qua cache — dùng sau khi ghi (thêm/sửa/xoá)
+   * để dữ liệu mới hiện ngay, không đợi cache 3 phút hết hạn. */
+  async function loadEverything(forceRefresh) {
     try {
+      const cacheKey = rosterCacheKey();
+      if (!forceRefresh && window.EduDataCache) {
+        const cached = window.EduDataCache.get(cacheKey);
+        if (cached) {
+          state.courses = cached.courses;
+          state.classes = cached.classes;
+          state.students = cached.students;
+          state.teachers = cached.teachers;
+          renderCourses();
+          renderClasses();
+          renderStudentClassFilter();
+          renderStudentSchoolFilter();
+          renderStudentTeacherFilter();
+          renderStudents();
+          return;
+        }
+      }
       // Điều phối đào tạo (Commit #7/LMAP): firestore.rules giờ chỉ cho đọc
       // students_roster trong (các) trường đã được Admin gán ở "schools" —
       // TRƯỚC ĐÂY trang này tải KHÔNG lọc gì (list({orderBy:'name'})), vốn
@@ -138,6 +166,9 @@
       state.classes = classes;
       state.students = students;
       state.teachers = teacherSnap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+      if (window.EduDataCache) {
+        window.EduDataCache.set(cacheKey, { courses: state.courses, classes: state.classes, students: state.students, teachers: state.teachers }, CACHE_TTL_MS);
+      }
 
       renderCourses();
       renderClasses();
@@ -345,7 +376,7 @@
       }
       toast('✅ Đã lưu khoá học');
       closeModal();
-      loadEverything();
+      loadEverything(true);
     } catch (err) {
       toast('❌ ' + friendlyError(err));
     }
@@ -359,7 +390,7 @@
       await window.EduRepositories.course.remove(id);
       logRosterChange('delete_course', id);
       toast('🗑️ Đã xoá khoá học');
-      loadEverything();
+      loadEverything(true);
     } catch (err) {
       toast('❌ ' + friendlyError(err));
     }
@@ -458,7 +489,7 @@
       }
       toast('✅ Đã lưu lớp học');
       closeModal();
-      loadEverything();
+      loadEverything(true);
     } catch (err) {
       toast('❌ ' + friendlyError(err));
     }
@@ -472,7 +503,7 @@
       await window.EduRepositories.class.remove(id);
       logRosterChange('delete_class', id);
       toast('🗑️ Đã xoá lớp học');
-      loadEverything();
+      loadEverything(true);
     } catch (err) {
       toast('❌ ' + friendlyError(err));
     }
@@ -1128,7 +1159,7 @@
       logRosterChange('import_excel', null, { count: rows.length, newClasses: newClassKeys.length, format: pendingImportFormat });
       toast(`✅ Đã nạp ${rows.length} học sinh từ Excel`);
       closeImportModal();
-      loadEverything();
+      loadEverything(true);
     } catch (err) {
       toast('❌ ' + friendlyError(err));
     } finally {
@@ -1206,7 +1237,7 @@
       }
       toast('✅ Đã lưu học sinh');
       closeModal();
-      loadEverything();
+      loadEverything(true);
     } catch (err) {
       toast('❌ ' + friendlyError(err));
     }
@@ -1219,7 +1250,7 @@
       await window.EduRepositories.studentRoster.remove(id);
       logRosterChange('delete_student', id);
       toast('🗑️ Đã xoá học sinh');
-      loadEverything();
+      loadEverything(true);
     } catch (err) {
       toast('❌ ' + friendlyError(err));
     }
