@@ -40,7 +40,7 @@
   <nav class="gv-nav-links" id="gvNavLinks">
     <a href="#certs">Certifications</a>
     <a href="#life">Life</a>
-    <a href="index.html">Vào ôn luyện</a>
+    <a href="ic3-dashboard.html">Dashboard</a>
   </nav>
   <button type="button" class="gv-nav-burger" id="gvBurger" aria-label="Mở menu"><i class="fa-solid fa-bars"></i></button>
 </header>
@@ -51,11 +51,7 @@
      tĩnh. Đổ nội dung động trong js/portfolio.js § PfProfileBar (dùng
      lại đúng trạng thái đăng nhập đang track cho PfFeed, không tạo
      luồng auth thứ 2). -->
-<div class="gv-profile-bar" id="gvProfileBar">
-  <div class="gv-profile-guest" id="gvProfileGuest">
-    <i class="fa-solid fa-people-group"></i>
-    <span>Mạng lưới nội bộ Trang Social Media — <a href="login.html">đăng nhập</a> để đăng bài, thích, bình luận cùng team.</span>
-  </div>
+<div class="gv-profile-bar" id="gvProfileBar" hidden>
   <div class="gv-profile-user" id="gvProfileUser" hidden>
     <span class="gv-avatar gv-mono" id="gvProfileAvatar">?</span>
     <div class="gv-profile-user-info">
@@ -93,60 +89,73 @@
   </div>
 </div>
 
-<!-- ============ CHAT NHÓM ============
-     Kênh chat nội bộ realtime (collection "gvlab_chat") — CHỈ đọc/ghi
-     được khi đã đăng nhập Giáo viên/Admin (khác Teacher Feed đọc công
-     khai), xem firestore.rules § gvlab_chat + js/portfolio.js § PfChat. -->
-<button type="button" class="gv-chat-fab" id="gvChatFab" hidden title="Chat nhóm Trang Social Media">
-  <i class="fa-solid fa-comments"></i>
-  <span class="gv-chat-badge" id="gvChatBadge" hidden></span>
+<!-- ============ TRỢ LÝ TRỢ NĂNG (A11y Assistant) ============
+     Trợ lý hỗ trợ tiếp cận: đọc to nội dung, phóng to/thu nhỏ chữ, tăng
+     độ tương phản, trả lời nhanh vài câu hỏi thường gặp về trang. CHẠY
+     HOÀN TOÀN PHÍA TRÌNH DUYỆT (rule-based + Web Speech API có sẵn
+     trong trình duyệt) — KHÔNG gọi Firestore/API nào, KHÔNG lưu lịch sử
+     hỏi đáp lên server. Lý do cố tình chọn hướng này thay vì 1 chatbot
+     AI thật có lưu hội thoại: nếu mỗi câu hỏi/trả lời đều ghi vào
+     Firestore + nghe realtime (kiểu chat nhóm cũ), số lượt đọc/ghi sẽ
+     nhân theo số học sinh/giáo viên mở trang mỗi ngày — đúng vấn đề
+     "reads tăng quá nhanh" đã xử lý ở Trang Social Media/roster trước đó.
+     Trợ lý này vì vậy KHÔNG tốn bất kỳ lượt đọc/ghi Firestore nào, dùng
+     được cho MỌI người xem trang (không cần đăng nhập) — xem
+     js/portfolio.js § A11yAssistant. -->
+<button type="button" class="gv-chat-fab" id="gvA11yFab" title="Trợ lý trợ năng">
+  <i class="fa-solid fa-universal-access"></i>
 </button>
-<div class="gv-chat-panel" id="gvChatPanel" hidden>
+<div class="gv-chat-panel" id="gvA11yPanel" hidden>
   <div class="gv-chat-head">
     <div class="gv-chat-head-title">
-      <span><i class="fa-solid fa-comments"></i> Chat nhóm Trang Social Media</span>
+      <span><i class="fa-solid fa-universal-access"></i> Trợ lý trợ năng</span>
     </div>
-    <button type="button" id="gvChatCloseBtn" aria-label="Đóng">✕</button>
+    <button type="button" id="gvA11yCloseBtn" aria-label="Đóng">✕</button>
   </div>
-  <div class="gv-chat-messages" id="gvChatMessages"></div>
-  <div class="gv-chat-reply-preview" id="gvChatReplyPreview" hidden>
-    <span id="gvChatReplyText"></span>
-    <button type="button" id="gvChatReplyCancel" aria-label="Huỷ trả lời">✕</button>
-  </div>
-  <!-- Xem trước file/ảnh/ghi âm đã chọn, chờ bấm Gửi — xem
-       js/portfolio.js § PfChat renderAttachmentPreview(). -->
-  <div class="gv-chat-attach-preview" id="gvChatAttachPreview" hidden>
-    <span id="gvChatAttachPreviewLabel"></span>
-    <button type="button" id="gvChatAttachCancel" aria-label="Bỏ file đính kèm">✕</button>
-  </div>
-  <!-- Bảng chọn emoji cho Ô NHẬP (khác bảng thả cảm xúc trên từng tin
-       nhắn) — chèn emoji vào đang gõ, xem js/portfolio.js § initEmojiPicker. -->
-  <div class="gv-chat-emoji-panel" id="gvChatEmojiPanel" hidden></div>
-  <form class="gv-chat-form" id="gvChatForm">
-    <label class="gv-chat-attach-btn" title="Gửi ảnh/file/video">
-      <i class="fa-solid fa-paperclip"></i>
-      <input type="file" id="gvChatFileInput" hidden>
-    </label>
-    <button type="button" class="gv-chat-attach-btn" id="gvChatEmojiBtn" title="Chọn emoji"><i class="fa-regular fa-face-smile"></i></button>
-    <button type="button" class="gv-chat-attach-btn gv-chat-mic-btn" id="gvChatMicBtn" title="Ghi âm giọng nói"><i class="fa-solid fa-microphone"></i></button>
-    <input type="text" id="gvChatInput" placeholder="Nhắn gì đó với team…" maxlength="500" autocomplete="off">
-    <span class="gv-chat-rec-timer" id="gvChatRecTimer" hidden></span>
-    <button type="submit" id="gvChatSendBtn"><i class="fa-solid fa-paper-plane"></i></button>
+  <div class="gv-chat-messages" id="gvA11yMessages"></div>
+  <div class="gv-a11y-chips" id="gvA11yChips"></div>
+  <form class="gv-chat-form" id="gvA11yForm">
+    <input type="text" id="gvA11yInput" placeholder="Hỏi về trang này…" maxlength="200" autocomplete="off">
+    <button type="submit" id="gvA11ySendBtn"><i class="fa-solid fa-paper-plane"></i></button>
   </form>
 </div>
 
 <div id="top"></div>
 
 <!-- ============ CERTIFICATIONS ============
-     Chứng chỉ thật — chuyển thẳng từ PDF gốc trong thư mục Certiport
-     sang ảnh (PyMuPDF, không phải ảnh AI) — đủ 20/20 file có trong
-     repo dữ liệu bàn giao (19 PDF + 1 ảnh chụp), không chọn lọc bớt.
-     Bấm vào từng ảnh để xem cỡ đầy đủ (lightbox), xem js/portfolio.js
-     § PfCertLightbox. -->
+     Chứng chỉ CỦA RIÊNG TỪNG giáo viên — mỗi Giáo viên/Admin đã đăng
+     nhập tự đăng/xoá chứng chỉ của chính mình (collection Firestore
+     "gvlab_certs", xem js/portfolio.js § PfCerts + firestore.rules §
+     gvlab_certs). 20 ảnh chứng chỉ thật ban đầu (Nguyễn Hoài Bảo, từ
+     PDF gốc Certiport/Pearson VUE, PyMuPDF) vẫn hiện như 1 bộ "sẵn có"
+     trong danh sách — xem hằng số CERTS/LEGACY_TEACHER_NAME trong
+     js/portfolio.js — cộng thêm mọi chứng chỉ mới do các giáo viên
+     khác tự đăng. Bấm vào từng ảnh
+     để xem cỡ đầy đủ (lightbox), xem js/portfolio.js § PfCertLightbox. -->
 <section class="gv-certs-section" id="certs">
   <p class="gv-eyebrow gv-mono">/ 01</p>
-  <h2>Certifications on File</h2>
-  <p class="gv-certs-sub">Certiport / Pearson VUE — đứng tên Nguyễn Hoài Bảo (20 chứng chỉ).</p>
+  <h2>Certifications</h2>
+
+  <div class="gv-certs-toolbar">
+    <label class="gv-certs-filter-label" for="gvCertsTeacherFilter">Xem chứng chỉ của
+      <select id="gvCertsTeacherFilter"><option value="">Tất cả giáo viên</option></select>
+    </label>
+  </div>
+
+  <div class="gv-certs-composer" id="gvCertsComposer" hidden>
+    <input type="text" id="gvCertsTitleInput" class="gv-form-input" placeholder="Tên chứng chỉ (vd. MOS Word — Associate)…" maxlength="120">
+    <div class="gv-feed-composer-row">
+      <label class="gv-feed-file-btn">
+        <i class="fa-solid fa-image"></i> Chọn ảnh
+        <input type="file" accept="image/*" id="gvCertsFileInput" hidden>
+      </label>
+      <span class="gv-feed-file-name gv-mono" id="gvCertsFileName">Chưa chọn ảnh</span>
+      <button type="button" class="gv-feed-submit" id="gvCertsSubmitBtn" disabled>Thêm chứng chỉ</button>
+    </div>
+    <p class="gv-feed-error gv-mono" id="gvCertsError" hidden></p>
+  </div>
+  <p class="gv-feed-login-hint" id="gvCertsLoginHint"><a href="login.html">Đăng nhập</a> với tài khoản Giáo viên/Admin để đăng chứng chỉ của riêng bạn.</p>
+
   <div class="gv-certs-grid" id="gvCertsGrid" data-certs></div>
 
   <!-- Feed kiểu mạng xã hội cho mục Chứng chỉ — đăng bài/thích/bình luận

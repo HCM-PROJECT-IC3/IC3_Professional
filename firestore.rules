@@ -434,6 +434,24 @@ service cloud.firestore {
       }
     }
 
+    // ---- Trang Social Media — chứng chỉ CỦA RIÊNG TỪNG giáo viên (mục
+    //      "Certifications" ở portfolio.html). Trước đây là 1 bộ ảnh tĩnh
+    //      dùng chung cho mọi người xem — đổi sang mỗi giáo viên tự đăng/
+    //      xoá chứng chỉ của chính mình, y hệt cơ chế gvlab_posts (đọc
+    //      công khai, ghi cần isEditor(), ảnh base64 nén phía client giới
+    //      hạn cỡ field — xem MAX_CERT_IMAGE_CHARS trong js/portfolio.js
+    //      § PfCerts).
+    match /gvlab_certs/{certId} {
+      allow read: if true;
+      allow create: if isEditor()
+        && request.resource.data.teacherUid == request.auth.uid
+        && request.resource.data.title is string
+        && request.resource.data.title.size() < 120
+        && request.resource.data.image is string
+        && request.resource.data.image.size() < 900000;
+      allow delete: if isEditor() && (resource.data.teacherUid == request.auth.uid || isAdmin());
+    }
+
     // ---- Trang Social Media — hồ sơ cá nhân (ảnh đại diện/trạng thái/tiểu sử) cho
     //      "Teacher Feed" ở portfolio.html. Doc id = CHÍNH uid của giáo
     //      viên (không phải id tự sinh) — đảm bảo mỗi người chỉ có đúng

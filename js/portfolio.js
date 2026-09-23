@@ -1,19 +1,21 @@
 /* ============================================================
    js/portfolio.js — Trang Social Media (portfolio.html)
 
-   Trang có 2 phần chính (Certifications on File / Life at Social Media),
-   mỗi phần kèm "Teacher Feed", cộng thêm hạ tầng mạng xã hội dùng
-   CHUNG cho cả trang: hồ sơ cá nhân (PfProfile), chat nhóm (PfChat),
-   và cache ảnh đại diện (avatarCache) — tất cả qua Firestore thật:
+   Trang có 2 phần chính (Certifications / Life at Social Media), mỗi
+   phần kèm "Teacher Feed", cộng thêm hạ tầng mạng xã hội dùng CHUNG cho
+   cả trang: hồ sơ cá nhân (PfProfile) và cache ảnh đại diện
+   (avatarCache) — qua Firestore thật:
      - gvlab_posts     : bài đăng (đọc công khai, ghi cần đăng nhập)
      - gvlab_profiles  : ảnh đại diện/trạng thái/tiểu sử (đọc công khai)
-     - gvlab_chat      : chat nhóm (CHỈ đọc/ghi khi đã đăng nhập)
    Xem firestore.rules cùng tên collection để biết đúng quyền hạn.
+   (Chat nhóm nội bộ "gvlab_chat" đã được thay bằng A11yAssistant — trợ
+   lý trợ năng chạy hoàn toàn phía trình duyệt, không còn dùng Firestore
+   — xem § A11yAssistant bên dưới.)
 
    Không dùng Cloud Storage cho ảnh (repo chưa có storage.rules quản
-   lý) — mọi ảnh (bài đăng/avatar/đính kèm chat) đều nén + mã hoá
-   base64 ngay trên trình duyệt trước khi ghi thẳng vào field Firestore
-   (xem compressImage()), giới hạn cỡ khác nhau theo mục đích dùng.
+   lý) — mọi ảnh bài đăng/avatar đều nén + mã hoá base64 ngay trên trình
+   duyệt trước khi ghi thẳng vào field Firestore (xem compressImage()),
+   giới hạn cỡ khác nhau theo mục đích dùng.
    ============================================================ */
 (function () {
   'use strict';
@@ -48,6 +50,7 @@
     { file: 'certs/mos-associate-office2019.jpg', title: 'MOS Associate — Office 2019' },
     { file: 'certs/mos-expert-office2019.jpg', title: 'MOS Expert — Office 2019' },
   ];
+  const LEGACY_TEACHER_NAME = 'Nguyễn Hoài Bảo';
 
   // ── Nav: chỉ lo toggle menu mobile. ──
   const nav = document.getElementById('gvNav');
@@ -131,7 +134,11 @@
   })();
 
   // ════════════════════════════════════════════════════════════
-  // PfCertLightbox — lưới 20 ảnh chứng chỉ + xem đầy đủ khi bấm vào.
+  // PfCertLightbox — lưới ảnh chứng chỉ + xem đầy đủ khi bấm vào. Dùng
+  // event delegation (1 listener trên chính lưới, đọc data-src/data-
+  // title trên nút bấm) thay vì gắn listener theo index cố định — lưới
+  // này giờ RENDER LẠI nhiều lần khi dữ liệu Firestore của PfCerts về
+  // (mỗi giáo viên/chứng chỉ riêng), nên không thể dựa vào 1 mảng tĩnh.
   // ════════════════════════════════════════════════════════════
   const certsGrid = document.getElementById('gvCertsGrid');
   const lightboxOverlay = document.getElementById('gvLightboxOverlay');
@@ -139,22 +146,29 @@
   const lightboxCaption = document.getElementById('gvLightboxCaption');
   const lightboxClose = document.getElementById('gvLightboxClose');
 
-  if (certsGrid) {
-    certsGrid.innerHTML = CERTS.map((c, i) => `
-      <button type="button" data-cert-index="${i}" aria-label="Xem ${esc(c.title)}">
-        <span><img src="img/portfolio/${esc(c.file)}" alt="${esc(c.title)}" loading="lazy" decoding="async"></span>
-        <span class="gv-cert-label">${esc(c.title)}</span>
+  // sub (tên giáo viên) đặt vào title="" (tooltip khi rê chuột) thay vì
+  // hiện luôn trong thẻ — giữ lưới GỌN, 1 dòng/thẻ; xem đủ tên qua bộ
+  // lọc "Xem chứng chỉ của" hoặc rê chuột vào ảnh.
+  function certCardHtml(src, title, sub, extraAttrs) {
+    const full = sub ? `${title} — ${sub}` : title;
+    return `
+      <button type="button" data-cert-src="${esc(src)}" data-cert-title="${esc(title)}" aria-label="Xem ${esc(full)}" title="${esc(full)}" ${extraAttrs || ''}>
+        <span><img src="${esc(src)}" alt="${esc(title)}" loading="lazy" decoding="async"></span>
+        <span class="gv-cert-label">${esc(title)}</span>
       </button>
-    `).join('');
-    certsGrid.querySelectorAll('[data-cert-index]').forEach((btn) => {
-      btn.addEventListener('click', () => openLightbox(CERTS[Number(btn.dataset.certIndex)]));
+    `;
+  }
+  if (certsGrid) {
+    certsGrid.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-cert-src]');
+      if (btn) openLightbox(btn.dataset.certSrc, btn.dataset.certTitle);
     });
   }
-  function openLightbox(c) {
+  function openLightbox(src, title) {
     if (!lightboxOverlay) return;
-    lightboxImg.src = `img/portfolio/${c.file}`;
-    lightboxImg.alt = c.title;
-    lightboxCaption.textContent = c.title;
+    lightboxImg.src = src;
+    lightboxImg.alt = title;
+    lightboxCaption.textContent = title;
     lightboxOverlay.classList.add('is-open');
     document.body.style.overflow = 'hidden';
   }
@@ -166,11 +180,158 @@
   if (lightboxOverlay) lightboxOverlay.addEventListener('click', (e) => { if (e.target === lightboxOverlay) closeLightbox(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
 
+  // Hiện ngay bộ chứng chỉ "sẵn có" (tĩnh, không cần Firestore) — nếu
+  // Firebase lỗi/chưa tải xong thì trang vẫn không trống trơn. PfCerts
+  // bên dưới (trong khối phụ thuộc Firebase) sẽ RENDER LẠI, gộp thêm
+  // chứng chỉ riêng của từng giáo viên khác khi tải xong.
+  if (certsGrid) {
+    certsGrid.innerHTML = CERTS.map((c) => certCardHtml(`img/portfolio/${c.file}`, c.title, LEGACY_TEACHER_NAME)).join('');
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // A11yAssistant — trợ lý trợ năng nổi góc phải: đọc to nội dung,
+  // phóng/thu chữ, tăng tương phản, trả lời nhanh vài câu hỏi thường gặp
+  // (rule-based, khớp từ khoá). Đặt TRƯỚC guard Firebase bên dưới và
+  // KHÔNG phụ thuộc db/currentUser — chạy được cho MỌI người xem trang,
+  // kể cả khi Firebase lỗi/chưa tải xong, và không tốn bất kỳ lượt đọc/
+  // ghi Firestore nào (xem chú thích dài hơn ngay tại HTML của khối này
+  // trong portfolio.html — lý do cố tình KHÔNG lưu hội thoại lên server).
+  // ════════════════════════════════════════════════════════════
+  (function A11yAssistant() {
+    const fab = document.getElementById('gvA11yFab');
+    const panel = document.getElementById('gvA11yPanel');
+    const closeBtn = document.getElementById('gvA11yCloseBtn');
+    const messagesEl = document.getElementById('gvA11yMessages');
+    const chipsEl = document.getElementById('gvA11yChips');
+    const form = document.getElementById('gvA11yForm');
+    const input = document.getElementById('gvA11yInput');
+    if (!fab || !panel) return;
+
+    const FONT_KEY = 'gv_a11y_font_scale';
+    const CONTRAST_KEY = 'gv_a11y_contrast';
+    const FONT_STEPS = [87.5, 100, 112.5, 125, 137.5];
+    let fontStepIdx = FONT_STEPS.indexOf(100);
+
+    function loadPrefs() {
+      try {
+        const savedFont = Number(localStorage.getItem(FONT_KEY));
+        const idx = FONT_STEPS.indexOf(savedFont);
+        if (idx >= 0) { fontStepIdx = idx; document.documentElement.style.fontSize = savedFont + '%'; }
+        if (localStorage.getItem(CONTRAST_KEY) === '1') document.body.classList.add('gv-a11y-contrast');
+      } catch (e) { /* localStorage có thể bị chặn — bỏ qua, dùng mặc định */ }
+    }
+    loadPrefs();
+
+    function addMsg(text, isBot) {
+      const div = document.createElement('div');
+      div.className = 'gv-chat-msg' + (isBot ? '' : ' is-own');
+      div.innerHTML = `<div class="gv-chat-msg-col"><div class="gv-chat-msg-body"></div></div>`;
+      div.querySelector('.gv-chat-msg-body').textContent = text;
+      messagesEl.appendChild(div);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      return div;
+    }
+
+    function speak(text) {
+      if (!('speechSynthesis' in window)) { addMsg('Trình duyệt này không hỗ trợ đọc to.', true); return; }
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'vi-VN';
+      window.speechSynthesis.speak(u);
+    }
+
+    function setFontStep(idx) {
+      fontStepIdx = Math.max(0, Math.min(FONT_STEPS.length - 1, idx));
+      const pct = FONT_STEPS[fontStepIdx];
+      document.documentElement.style.fontSize = pct + '%';
+      try { localStorage.setItem(FONT_KEY, String(pct)); } catch (e) { /* ignore */ }
+      addMsg(`Đã đặt cỡ chữ ${pct}%.`, true);
+    }
+
+    function toggleContrast() {
+      const on = document.body.classList.toggle('gv-a11y-contrast');
+      try { localStorage.setItem(CONTRAST_KEY, on ? '1' : '0'); } catch (e) { /* ignore */ }
+      addMsg(on ? 'Đã bật độ tương phản cao.' : 'Đã tắt độ tương phản cao.', true);
+    }
+
+    function readPageSummary() {
+      const parts = [document.title];
+      document.querySelectorAll('main h2, section h2').forEach((h) => parts.push(h.textContent.trim()));
+      const text = parts.filter(Boolean).join('. ');
+      addMsg('Đang đọc tóm tắt trang…', true);
+      speak(text);
+    }
+
+    // ── Bộ câu hỏi thường gặp — khớp từ khoá đơn giản, không cần API/AI
+    // ngoài nào. Mở rộng bảng này nếu cần thêm chủ đề. ──
+    const FAQ = [
+      { keys: ['ôn luyện', 'làm bài', 'thi', 'dashboard'], reply: 'Bấm nút "Dashboard" ở góc trên bên phải để vào khu vực ôn luyện/làm bài.' },
+      { keys: ['đăng nhập', 'login', 'tài khoản'], reply: 'Chỉ Giáo viên/Admin mới đăng nhập được, qua trang "login.html" — bấm liên kết Đăng nhập ở đầu trang.' },
+      { keys: ['đăng bài', 'feed', 'bình luận', 'thích'], reply: 'Đăng nhập bằng tài khoản Giáo viên/Admin, sau đó dùng ô soạn bài trong mục Certifications hoặc Life để đăng ảnh kèm chú thích, thích và bình luận.' },
+      { keys: ['hồ sơ', 'ảnh đại diện', 'avatar'], reply: 'Sau khi đăng nhập, bấm nút "Hồ sơ" cạnh tên bạn để đổi ảnh đại diện, trạng thái, tiểu sử.' },
+      { keys: ['chứng chỉ', 'certification', 'cert'], reply: 'Xem đầy đủ chứng chỉ ở mục "Certifications" — bấm vào từng ảnh để xem cỡ đầy đủ.' },
+      { keys: ['cỡ chữ', 'phóng to', 'to chữ', 'font'], reply: null, action: () => setFontStep(fontStepIdx + 1) },
+      { keys: ['thu nhỏ chữ', 'giảm cỡ chữ', 'nhỏ chữ'], reply: null, action: () => setFontStep(fontStepIdx - 1) },
+      { keys: ['tương phản', 'contrast'], reply: null, action: toggleContrast },
+      { keys: ['đọc', 'nghe', 'text to speech'], reply: null, action: readPageSummary },
+    ];
+
+    function handleQuestion(raw) {
+      const q = raw.trim();
+      if (!q) return;
+      addMsg(q, false);
+      const norm = q.toLowerCase();
+      const hit = FAQ.find((f) => f.keys.some((k) => norm.includes(k)));
+      if (hit) {
+        if (hit.action) hit.action();
+        else addMsg(hit.reply, true);
+      } else {
+        addMsg('Mình chưa hiểu câu này. Thử hỏi về: ôn luyện, đăng nhập, đăng bài, hồ sơ, chứng chỉ, cỡ chữ, tương phản — hoặc bấm 1 gợi ý bên dưới.', true);
+      }
+    }
+
+    const QUICK_CHIPS = [
+      { label: '🔠 Cỡ chữ to hơn', run: () => setFontStep(fontStepIdx + 1) },
+      { label: '🔡 Cỡ chữ nhỏ hơn', run: () => setFontStep(fontStepIdx - 1) },
+      { label: '🌓 Tương phản cao', run: toggleContrast },
+      { label: '🔊 Đọc tóm tắt trang', run: readPageSummary },
+      { label: '⏹ Dừng đọc', run: () => window.speechSynthesis && window.speechSynthesis.cancel() },
+      { label: 'Cách vào ôn luyện?', run: () => handleQuestion('ôn luyện') },
+      { label: 'Cách đăng bài?', run: () => handleQuestion('đăng bài') },
+    ];
+    if (chipsEl) {
+      chipsEl.innerHTML = QUICK_CHIPS.map((c, i) => `<button type="button" class="gv-a11y-chip" data-chip="${i}">${esc(c.label)}</button>`).join('');
+      chipsEl.querySelectorAll('[data-chip]').forEach((btn) => {
+        btn.addEventListener('click', () => QUICK_CHIPS[Number(btn.dataset.chip)].run());
+      });
+    }
+
+    let greeted = false;
+    function openPanel() {
+      panel.hidden = false;
+      if (!greeted) {
+        greeted = true;
+        addMsg('Chào bạn! Mình là trợ lý trợ năng — có thể đọc to nội dung, chỉnh cỡ chữ/độ tương phản, và trả lời vài câu hỏi thường gặp về trang này. Bấm 1 gợi ý bên dưới hoặc gõ câu hỏi.', true);
+      }
+      input.focus();
+    }
+    function closePanel() { panel.hidden = true; }
+
+    fab.addEventListener('click', () => { panel.hidden ? openPanel() : closePanel(); });
+    closeBtn.addEventListener('click', closePanel);
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const q = input.value;
+      input.value = '';
+      handleQuestion(q);
+    });
+  })();
+
   // ════════════════════════════════════════════════════════════
   // Hạ tầng mạng xã hội dùng CHUNG (Firebase, avatar cache, tiện ích) —
-  // PfFeed/PfProfile/PfChat bên dưới đều dựa vào đây. Dừng sớm nếu
-  // thiếu Firebase/EduAuth (trang vẫn hiện được Certifications/Life
-  // tĩnh, chỉ mất phần tương tác).
+  // PfFeed/PfProfile bên dưới đều dựa vào đây. Dừng sớm nếu thiếu
+  // Firebase/EduAuth (trang vẫn hiện được Certifications/Life tĩnh +
+  // trợ lý trợ năng, chỉ mất phần tương tác mạng xã hội).
   // ════════════════════════════════════════════════════════════
   if (!window.EduFirebase || !window.EduAuth) {
     console.warn('[Trang Social Media] Thiếu Firebase/EduAuth — feed/hồ sơ/chat sẽ không hoạt động trên trang này.');
@@ -539,6 +700,168 @@
   const feedInstances = Array.from(document.querySelectorAll('[data-feed]')).map(initFeed);
 
   // ════════════════════════════════════════════════════════════
+  // PfCerts — mỗi Giáo viên/Admin tự đăng/xoá chứng chỉ CỦA RIÊNG MÌNH
+  // (collection "gvlab_certs", đọc công khai — ai cũng xem được cả
+  // trang, chỉ đăng nhập mới đăng/xoá được, và chỉ xoá được của chính
+  // mình hoặc admin). Gộp hiển thị cùng bộ chứng chỉ tĩnh ban đầu
+  // (CERTS/LEGACY_TEACHER_NAME) trong CÙNG 1 lưới — lọc theo giáo viên
+  // qua <select> dựng từ chính dữ liệu đã tải (không query thêm).
+  // 1 onSnapshot có limit(), giống hệt cơ chế đã tối ưu của PfFeed.
+  // ════════════════════════════════════════════════════════════
+  const MAX_CERT_IMAGE_CHARS = 700000;
+  const MAX_CERT_IMAGE_DIM = 1000;
+  const certsInstance = (function PfCerts() {
+    const teacherFilter = document.getElementById('gvCertsTeacherFilter');
+    const composer = document.getElementById('gvCertsComposer');
+    const loginHint = document.getElementById('gvCertsLoginHint');
+    const titleInput = document.getElementById('gvCertsTitleInput');
+    const fileInput = document.getElementById('gvCertsFileInput');
+    const fileNameEl = document.getElementById('gvCertsFileName');
+    const submitBtn = document.getElementById('gvCertsSubmitBtn');
+    const errorEl = document.getElementById('gvCertsError');
+    if (!certsGrid || !teacherFilter) return;
+
+    let pendingImage = null;
+    let dynamicCerts = []; // [{ id, teacherUid, teacherName, title, image }]
+
+    function showError(msg) { errorEl.textContent = msg; errorEl.hidden = false; }
+    function updateComposerState() {
+      const editor = canEditFeed();
+      composer.hidden = !editor;
+      loginHint.hidden = editor;
+      submitBtn.disabled = !pendingImage;
+    }
+
+    function allCertItems() {
+      const legacy = CERTS.map((c) => ({
+        id: 'legacy:' + c.file,
+        teacherName: LEGACY_TEACHER_NAME,
+        title: c.title,
+        src: `img/portfolio/${c.file}`,
+        canDelete: false,
+      }));
+      const dynamic = dynamicCerts.map((c) => ({
+        id: c.id,
+        teacherName: c.teacherName || 'Giáo viên',
+        title: c.title,
+        src: c.image,
+        canDelete: !!currentUser && (currentUser.uid === c.teacherUid || (currentProfile && currentProfile.role === 'admin')),
+      }));
+      return legacy.concat(dynamic);
+    }
+
+    function renderTeacherFilterOptions(items) {
+      const names = [...new Set(items.map((c) => c.teacherName))].sort((a, b) => a.localeCompare(b, 'vi'));
+      const current = teacherFilter.value;
+      teacherFilter.innerHTML = '<option value="">Tất cả giáo viên</option>' +
+        names.map((n) => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+      if (names.includes(current)) teacherFilter.value = current;
+    }
+
+    function renderGrid() {
+      const items = allCertItems();
+      renderTeacherFilterOptions(items);
+      const wanted = teacherFilter.value;
+      const shown = wanted ? items.filter((c) => c.teacherName === wanted) : items;
+      certsGrid.innerHTML = shown.length
+        ? shown.map((c) => certCardHtml(
+            c.src, c.title, c.teacherName,
+            c.canDelete ? `data-cert-delete="${esc(c.id)}"` : ''
+          )).join('')
+        : '<p class="gv-feed-empty">Chưa có chứng chỉ nào của giáo viên này.</p>';
+      // Nút xoá nằm TRONG nút xem ảnh (data-cert-src) — chặn nổi bọt để
+      // bấm xoá không mở nhầm lightbox. Vì certCardHtml không có sẵn ô
+      // nút xoá riêng, dùng phím giữ (dbl bấm) là không thân thiện — nên
+      // thêm hẳn 1 nút xoá nhỏ đè lên góc thẻ bằng cách chèn qua DOM sau
+      // khi render (đơn giản hơn sửa lại template dùng chung với lightbox).
+      shown.forEach((c) => {
+        if (!c.canDelete) return;
+        const btn = certsGrid.querySelector(`[data-cert-src][data-cert-delete="${CSS.escape(c.id)}"]`);
+        if (!btn) return;
+        const del = document.createElement('span');
+        del.className = 'gv-cert-delete';
+        del.title = 'Xoá chứng chỉ này';
+        del.innerHTML = '<i class="fa-solid fa-trash"></i>';
+        del.addEventListener('click', (e) => {
+          e.stopPropagation();
+          deleteCert(c.id);
+        });
+        btn.appendChild(del);
+      });
+    }
+
+    async function deleteCert(id) {
+      if (!confirm('Xoá chứng chỉ này? Không thể hoàn tác.')) return;
+      try {
+        await db.collection('gvlab_certs').doc(id).delete();
+      } catch (err) {
+        alert('Xoá chứng chỉ thất bại: ' + err.message);
+      }
+    }
+
+    teacherFilter.addEventListener('change', renderGrid);
+
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+      errorEl.hidden = true;
+      fileNameEl.textContent = 'Đang nén ảnh…';
+      try {
+        pendingImage = await compressImage(file, MAX_CERT_IMAGE_DIM, MAX_CERT_IMAGE_CHARS);
+        fileNameEl.textContent = file.name;
+      } catch (err) {
+        pendingImage = null;
+        fileNameEl.textContent = 'Chưa chọn ảnh';
+        showError(err.message);
+      }
+      updateComposerState();
+    });
+
+    submitBtn.addEventListener('click', async () => {
+      const title = titleInput.value.trim();
+      if (!pendingImage || !title || !currentUser || !canEditFeed()) {
+        if (!title) showError('Nhập tên chứng chỉ trước khi thêm.');
+        return;
+      }
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Đang thêm…';
+      try {
+        await db.collection('gvlab_certs').add({
+          teacherUid: currentUser.uid,
+          teacherName: currentProfile.name || currentUser.email || 'Giáo viên',
+          title: title.slice(0, 120),
+          image: pendingImage,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        titleInput.value = '';
+        pendingImage = null;
+        fileInput.value = '';
+        fileNameEl.textContent = 'Chưa chọn ảnh';
+        errorEl.hidden = true;
+      } catch (err) {
+        showError('Thêm chứng chỉ thất bại: ' + err.message);
+      } finally {
+        submitBtn.textContent = 'Thêm chứng chỉ';
+        updateComposerState();
+      }
+    });
+
+    db.collection('gvlab_certs').orderBy('createdAt', 'desc').limit(200)
+      .onSnapshot((snap) => {
+        dynamicCerts = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+        renderGrid();
+      }, (err) => {
+        console.warn('[Trang Social Media] Không tải được chứng chỉ theo giáo viên (gvlab_certs):', err.message);
+      });
+
+    function refreshAuthState() {
+      updateComposerState();
+      renderGrid(); // canDelete phụ thuộc currentUser — vẽ lại để hiện/ẩn đúng nút xoá
+    }
+    return { refreshAuthState };
+  })();
+
+  // ════════════════════════════════════════════════════════════
   // PfProfile — chỉnh sửa hồ sơ Trang Social Media (ảnh đại diện/trạng thái/tiểu
   // sử), lưu vào collection RIÊNG "gvlab_profiles" (KHÔNG đụng "users"
   // dùng chung toàn nền tảng) — xem firestore.rules § gvlab_profiles.
@@ -619,8 +942,9 @@
   })();
 
   // ── PfProfileBar — thanh "mạng lưới Trang Social Media" dưới nav: avatar/tên/vai
-  // trò/trạng thái người đang đăng nhập. ──
-  const profileGuest = document.getElementById('gvProfileGuest');
+  // trò/trạng thái người đang đăng nhập. Không đăng nhập thì ẩn hẳn cả
+  // thanh (trước đây có banner mời đăng nhập ở trạng thái guest — đã bỏ). ──
+  const profileBar = document.getElementById('gvProfileBar');
   const profileUser = document.getElementById('gvProfileUser');
   const profileAvatar = document.getElementById('gvProfileAvatar');
   const profileName = document.getElementById('gvProfileName');
@@ -629,9 +953,9 @@
   const ROLE_LABEL_SHORT = { admin: 'Quản trị viên', teacher: 'Giáo viên', coordinator: 'Điều phối đào tạo', teaching_coordinator: 'Điều phối giáo viên', student: 'Học sinh' };
 
   function refreshProfileBarDisplay() {
-    if (!profileGuest || !profileUser) return;
+    if (!profileBar || !profileUser) return;
     const signedIn = !!currentUser;
-    profileGuest.hidden = signedIn;
+    profileBar.hidden = !signedIn;
     profileUser.hidden = !signedIn;
     if (!signedIn) return;
     const displayName = (currentProfile && currentProfile.name) || currentUser.email || '';
@@ -643,467 +967,6 @@
     else { profileStatus.hidden = true; }
   }
 
-  // ════════════════════════════════════════════════════════════
-  // PfChat — chat nhóm nội bộ realtime kiểu Messenger (collection
-  // "gvlab_chat"), CHỈ dùng được khi đã đăng nhập Giáo viên/Admin.
-  // Nâng cấp thêm: thả cảm xúc (field "reactions" denormalized ngay
-  // trên tin nhắn), trả lời trích dẫn (field replyTo* trên tin nhắn),
-  // xoá tin của chính mình.
-  // ĐÃ BỎ (tối ưu lượt đọc/ghi Firestore): "đang nhập..." (gvlab_chat_typing)
-  // và "ai đang mở khung chat" (gvlab_presence, nhịp tim mỗi 20s) — 2 tính
-  // năng trang trí này tốn ghi liên tục (1 write/20s/người đang mở panel)
-  // + listener sống nghe toàn bộ 2 collection, không phục vụ mục đích cốt
-  // lõi của site (ôn luyện IC3).
-  // ════════════════════════════════════════════════════════════
-  const CHAT_REACTION_EMOJIS = ['👍', '❤️', '😂', '🎉', '😮', '🙏'];
-  // Bảng emoji chèn vào Ô NHẬP (khác 6 emoji thả cảm xúc ở trên) — bộ phổ
-  // biến gọn cho chat giáo viên, không cần thư viện emoji-picker ngoài.
-  const CHAT_INPUT_EMOJIS = [
-    '😀', '😄', '😁', '😆', '🥹', '😊', '🙂', '😉', '😍', '🥰',
-    '😘', '😜', '🤔', '🤗', '🤝', '👏', '🙌', '👍', '👎', '💪',
-    '🙏', '✋', '👋', '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤',
-    '🔥', '✨', '🎉', '🎊', '🎓', '📚', '📌', '✅', '❌', '⚠️',
-    '😢', '😭', '😅', '😴', '🤯', '🥳', '👀', '💡', '⏰', '☕',
-  ];
-
-  /** Suy icon Font Awesome theo phần mở rộng file — chỉ để hiển thị thẻ
-   * file trong tin nhắn cho dễ nhận diện, không đọc nội dung file. */
-  function fileIconFor(name) {
-    const ext = String(name || '').split('.').pop().toLowerCase();
-    if (['pdf'].includes(ext)) return 'fa-file-pdf';
-    if (['doc', 'docx'].includes(ext)) return 'fa-file-word';
-    if (['xls', 'xlsx', 'csv'].includes(ext)) return 'fa-file-excel';
-    if (['ppt', 'pptx'].includes(ext)) return 'fa-file-powerpoint';
-    if (['zip', 'rar', '7z'].includes(ext)) return 'fa-file-zipper';
-    if (['mp4', 'mov', 'webm', 'avi', 'mkv'].includes(ext)) return 'fa-file-video';
-    if (['mp3', 'wav', 'ogg'].includes(ext)) return 'fa-file-audio';
-    return 'fa-file';
-  }
-  function humanSize(bytes) {
-    if (!bytes) return '';
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-  }
-
-  (function PfChat() {
-    const fab = document.getElementById('gvChatFab');
-    const badge = document.getElementById('gvChatBadge');
-    const panel = document.getElementById('gvChatPanel');
-    const closeBtn = document.getElementById('gvChatCloseBtn');
-    const messagesEl = document.getElementById('gvChatMessages');
-    const replyPreview = document.getElementById('gvChatReplyPreview');
-    const replyPreviewText = document.getElementById('gvChatReplyText');
-    const replyCancelBtn = document.getElementById('gvChatReplyCancel');
-    const attachPreview = document.getElementById('gvChatAttachPreview');
-    const attachPreviewLabel = document.getElementById('gvChatAttachPreviewLabel');
-    const attachCancelBtn = document.getElementById('gvChatAttachCancel');
-    const emojiPanel = document.getElementById('gvChatEmojiPanel');
-    const emojiBtn = document.getElementById('gvChatEmojiBtn');
-    const micBtn = document.getElementById('gvChatMicBtn');
-    const recTimerEl = document.getElementById('gvChatRecTimer');
-    const form = document.getElementById('gvChatForm');
-    const fileInput = document.getElementById('gvChatFileInput');
-    const textInput = document.getElementById('gvChatInput');
-    if (!fab || !panel) return;
-
-    // Cỡ tối đa RAW file (trước base64) cho file/ghi âm KHÔNG nén được
-    // (không như ảnh, không có cách nén file/PDF/audio phía client) —
-    // base64 phồng thêm ~33%, giữ dưới hạn 700 000 ký tự của
-    // firestore.rules § gvlab_chat. Video THẬT hầu như luôn vượt mức
-    // này (không có hạ tầng nén video phía client) — chat chỉ nhận
-    // được video RẤT ngắn/độ phân giải thấp, đây là giới hạn thật của
-    // kiến trúc "base64-trong-Firestore, không Cloud Storage".
-    const MAX_RAW_FILE_BYTES = 480000;
-    const MAX_CHAT_ATTACH_CHARS = 700000;
-    const MAX_RECORD_SECONDS = 60;
-
-    const SEEN_KEY = 'gvlab_chat_last_seen';
-    let started = false; // chỉ subscribe onSnapshot khi mở panel LẦN ĐẦU (đỡ tốn đọc nếu không ai chat)
-    let pendingAttachment = null; // { data, mime, name, size, kind: 'image'|'audio'|'file' }
-    let lastMessageTs = 0;
-    let lastDocsById = {}; // id -> dữ liệu tin nhắn gần nhất (để lấy nội dung khi trả lời/xoá)
-    let replyTarget = null; // { id, authorName, text }
-    let mediaRecorder = null;
-    let recordedChunks = [];
-    let recordTimerInterval = null;
-    let recordSeconds = 0;
-
-    function lastSeen() { try { return Number(localStorage.getItem(SEEN_KEY)) || 0; } catch (e) { return 0; } }
-    function markSeen(ts) { try { localStorage.setItem(SEEN_KEY, String(ts)); } catch (e) { /* ignore */ } badge.hidden = true; }
-
-    function setPendingAttachment(att) {
-      pendingAttachment = att;
-      if (!att) { attachPreview.hidden = true; return; }
-      const label = att.kind === 'audio' ? `🎤 Ghi âm (${att.durationLabel || ''})`
-        : att.kind === 'gif' ? `🎞 GIF · ${humanSize(att.size)}`
-        : `📎 ${att.name} · ${humanSize(att.size)}`;
-      attachPreviewLabel.textContent = label;
-      attachPreview.hidden = false;
-    }
-    attachCancelBtn.addEventListener('click', () => { setPendingAttachment(null); fileInput.value = ''; });
-
-    // ── Emoji cho ô nhập — chèn tại đúng vị trí con trỏ, không phải
-    // luôn nối vào cuối (giáo viên có thể đang sửa giữa câu). ──
-    if (emojiPanel.childElementCount === 0) {
-      emojiPanel.innerHTML = CHAT_INPUT_EMOJIS.map((e) => `<button type="button">${e}</button>`).join('');
-      emojiPanel.querySelectorAll('button').forEach((b) => {
-        b.addEventListener('click', () => {
-          const start = textInput.selectionStart ?? textInput.value.length;
-          const end = textInput.selectionEnd ?? textInput.value.length;
-          textInput.value = textInput.value.slice(0, start) + b.textContent + textInput.value.slice(end);
-          const pos = start + b.textContent.length;
-          textInput.setSelectionRange(pos, pos);
-          textInput.focus();
-          textInput.dispatchEvent(new Event('input')); // để trình "đang nhập" cũng tính chèn emoji là đang gõ
-        });
-      });
-    }
-    emojiBtn.addEventListener('click', () => { emojiPanel.hidden = !emojiPanel.hidden; });
-
-    function setReplyTarget(id) {
-      const m = lastDocsById[id];
-      if (!m) return;
-      const attLabel = m.attachmentType === 'audio' ? '🎤 Ghi âm' : m.attachmentType === 'file' ? `📎 ${m.attachmentName || 'File'}` : m.attachment ? '📎 Hình ảnh' : '';
-      replyTarget = { id, authorName: m.authorName || 'Giáo viên', text: m.text || attLabel };
-      replyPreviewText.textContent = `Trả lời ${replyTarget.authorName}: ${replyTarget.text.slice(0, 60)}`;
-      replyPreview.hidden = false;
-      textInput.focus();
-    }
-    function clearReplyTarget() { replyTarget = null; replyPreview.hidden = true; }
-    replyCancelBtn.addEventListener('click', clearReplyTarget);
-
-    async function toggleReaction(msgId, emoji) {
-      if (!currentUser) return;
-      const ref = db.collection('gvlab_chat').doc(msgId);
-      const m = lastDocsById[msgId] || {};
-      const current = (m.reactions || {})[currentUser.uid];
-      const field = `reactions.${currentUser.uid}`;
-      try {
-        if (current === emoji) {
-          await ref.update({ [field]: firebase.firestore.FieldValue.delete() });
-        } else {
-          await ref.update({ [field]: emoji });
-        }
-      } catch (err) {
-        console.warn('[Trang Social Media] Lỗi thả cảm xúc:', err.message);
-      }
-    }
-
-    // "Xoá hẳn" — xoá luôn document, không còn dấu vết gì (khác "Thu
-    // hồi" bên dưới, chỉ thay nội dung).
-    async function deleteMessage(msgId) {
-      if (!confirm('Xoá tin nhắn này? Không thể hoàn tác.')) return;
-      try { await db.collection('gvlab_chat').doc(msgId).delete(); }
-      catch (err) { alert('Xoá thất bại: ' + err.message); }
-    }
-
-    // "Thu hồi" (kiểu Messenger) — CHỈ tác giả, chỉ áp dụng cho tin của
-    // CHÍNH MÌNH (firestore.rules § gvlab_chat cũng chỉ cho phép đúng
-    // tác giả sửa tin của họ). Xoá THẬT nội dung/đính kèm khỏi Firestore
-    // (không phải ẩn phía client) — người xem chỉ còn thấy dòng "Tin
-    // nhắn đã được thu hồi", giữ đúng vị trí/thời gian trong luồng chat.
-    async function recallMessage(msgId) {
-      if (!confirm('Thu hồi tin nhắn này? Nội dung sẽ bị xoá khỏi Firestore, chỉ còn hiện "Đã thu hồi".')) return;
-      try {
-        await db.collection('gvlab_chat').doc(msgId).update({
-          recalled: true,
-          text: '',
-          attachment: firebase.firestore.FieldValue.delete(),
-          attachmentType: firebase.firestore.FieldValue.delete(),
-          attachmentName: firebase.firestore.FieldValue.delete(),
-          attachmentSize: firebase.firestore.FieldValue.delete(),
-          replyToId: firebase.firestore.FieldValue.delete(),
-          replyToName: firebase.firestore.FieldValue.delete(),
-          replyToText: firebase.firestore.FieldValue.delete(),
-        });
-      } catch (err) {
-        alert('Thu hồi thất bại: ' + err.message);
-      }
-    }
-
-    /** Đính kèm hiện theo đúng loại: ảnh/GIF -> <img> (GIF KHÔNG bị nén
-     * qua canvas — xem ghi chú trong fileInput handler — nên hoạt ảnh
-     * vẫn chạy), ghi âm -> <audio controls>, file khác -> thẻ tên file +
-     * cỡ + link tải (data URI, tải thẳng từ chính nội dung base64 đã
-     * lưu, không cần server phục vụ file). */
-    function renderAttachment(m) {
-      if (!m.attachment) return '';
-      if (m.attachmentType === 'audio') {
-        return `<audio class="gv-chat-msg-audio" src="${m.attachment}" controls></audio>`;
-      }
-      if (m.attachmentType === 'file') {
-        return `<a class="gv-chat-msg-file" href="${m.attachment}" download="${esc(m.attachmentName || 'file')}">
-          <i class="fa-solid ${fileIconFor(m.attachmentName)}"></i>
-          <span><span class="gv-chat-msg-file-name">${esc(m.attachmentName || 'File')}</span><span class="gv-chat-msg-file-size">${humanSize(m.attachmentSize)}</span></span>
-        </a>`;
-      }
-      return `<img class="gv-chat-msg-img" src="${m.attachment}" alt="">`;
-    }
-
-    function renderReactions(msgId, reactions) {
-      const counts = {};
-      Object.values(reactions || {}).forEach((e) => { counts[e] = (counts[e] || 0) + 1; });
-      const mine = currentUser ? (reactions || {})[currentUser.uid] : null;
-      return Object.keys(counts).length
-        ? `<div class="gv-chat-reactions">${Object.entries(counts).map(([e, n]) =>
-            `<button type="button" class="gv-chat-reaction ${e === mine ? 'is-mine' : ''}" data-react-toggle data-msg-id="${msgId}" data-emoji="${e}">${e} ${n}</button>`
-          ).join('')}</div>`
-        : '';
-    }
-
-    function renderMessages(snap) {
-      if (snap.empty) {
-        messagesEl.innerHTML = '<p class="gv-chat-empty">Chưa có tin nhắn nào — bắt đầu trò chuyện với team!</p>';
-        lastDocsById = {};
-        return;
-      }
-      lastDocsById = {};
-      messagesEl.innerHTML = snap.docs.map((doc) => {
-        const m = doc.data();
-        lastDocsById[doc.id] = m;
-        const ms = m.createdAt && m.createdAt.toMillis ? m.createdAt.toMillis() : Date.now();
-        const isOwn = currentUser && m.authorUid === currentUser.uid;
-        const canDelete = isOwn || (currentProfile && currentProfile.role === 'admin');
-
-        // Tin đã thu hồi — chỉ hiện dòng thông báo, không còn nút
-        // trả lời/thả cảm xúc/thu hồi lại lần 2 (không còn gì để thao
-        // tác), nhưng canDelete (admin) vẫn xoá hẳn được nếu cần dọn.
-        if (m.recalled) {
-          return `<div class="gv-chat-msg ${isOwn ? 'is-own' : ''}" data-msg-id="${doc.id}">
-            <span class="gv-avatar" data-avatar-uid="${esc(m.authorUid)}">${esc(initials(m.authorName))}</span>
-            <div class="gv-chat-msg-col">
-              <div class="gv-chat-msg-body gv-chat-msg-recalled">
-                ${isOwn ? '' : `<span class="gv-chat-msg-name">${esc(m.authorName || 'Giáo viên')}</span>`}
-                <i class="fa-solid fa-rotate-left"></i> Tin nhắn đã được thu hồi
-                <span class="gv-chat-msg-time">${relativeTime(ms)}</span>
-              </div>
-            </div>
-            ${canDelete ? `<div class="gv-chat-msg-actions"><button type="button" data-delete-msg data-msg-id="${doc.id}" title="Xoá hẳn"><i class="fa-solid fa-trash"></i></button></div>` : ''}
-          </div>`;
-        }
-
-        return `<div class="gv-chat-msg ${isOwn ? 'is-own' : ''}" data-msg-id="${doc.id}">
-          <span class="gv-avatar" data-avatar-uid="${esc(m.authorUid)}">${esc(initials(m.authorName))}</span>
-          <div class="gv-chat-msg-col">
-            <div class="gv-chat-msg-body">
-              ${isOwn ? '' : `<span class="gv-chat-msg-name">${esc(m.authorName || 'Giáo viên')}</span>`}
-              ${m.replyToText ? `<div class="gv-chat-quote"><b>${esc(m.replyToName || '')}</b>: ${esc(String(m.replyToText).slice(0, 80))}</div>` : ''}
-              ${m.text ? esc(m.text) : ''}
-              ${renderAttachment(m)}
-              <span class="gv-chat-msg-time">${relativeTime(ms)}</span>
-              <div class="gv-chat-emoji-picker" data-emoji-picker="${doc.id}" hidden>
-                ${CHAT_REACTION_EMOJIS.map((e) => `<button type="button" data-react-pick data-msg-id="${doc.id}" data-emoji="${e}">${e}</button>`).join('')}
-              </div>
-            </div>
-            ${renderReactions(doc.id, m.reactions)}
-          </div>
-          <div class="gv-chat-msg-actions">
-            <button type="button" data-reply-btn data-msg-id="${doc.id}" title="Trả lời"><i class="fa-solid fa-reply"></i></button>
-            <button type="button" data-emoji-btn data-msg-id="${doc.id}" title="Thả cảm xúc"><i class="fa-regular fa-face-smile"></i></button>
-            ${isOwn ? `<button type="button" data-recall-msg data-msg-id="${doc.id}" title="Thu hồi"><i class="fa-solid fa-rotate-left"></i></button>` : ''}
-            ${canDelete ? `<button type="button" data-delete-msg data-msg-id="${doc.id}" title="Xoá hẳn"><i class="fa-solid fa-trash"></i></button>` : ''}
-          </div>
-        </div>`;
-      }).join('');
-      applyAvatars(messagesEl);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
-
-      messagesEl.querySelectorAll('[data-reply-btn]').forEach((b) => b.addEventListener('click', () => setReplyTarget(b.dataset.msgId)));
-      messagesEl.querySelectorAll('[data-delete-msg]').forEach((b) => b.addEventListener('click', () => deleteMessage(b.dataset.msgId)));
-      messagesEl.querySelectorAll('[data-recall-msg]').forEach((b) => b.addEventListener('click', () => recallMessage(b.dataset.msgId)));
-      messagesEl.querySelectorAll('[data-react-toggle]').forEach((b) => b.addEventListener('click', () => toggleReaction(b.dataset.msgId, b.dataset.emoji)));
-      messagesEl.querySelectorAll('[data-emoji-btn]').forEach((b) => b.addEventListener('click', () => {
-        const picker = messagesEl.querySelector(`[data-emoji-picker="${b.dataset.msgId}"]`);
-        const willShow = picker.hidden;
-        messagesEl.querySelectorAll('[data-emoji-picker]').forEach((p) => { p.hidden = true; });
-        picker.hidden = !willShow;
-      }));
-      messagesEl.querySelectorAll('[data-react-pick]').forEach((b) => b.addEventListener('click', () => {
-        toggleReaction(b.dataset.msgId, b.dataset.emoji);
-        messagesEl.querySelectorAll('[data-emoji-picker]').forEach((p) => { p.hidden = true; });
-      }));
-    }
-
-    function startListening() {
-      if (started) return;
-      started = true;
-      db.collection('gvlab_chat').orderBy('createdAt', 'asc').limitToLast(80)
-        .onSnapshot((snap) => {
-          renderMessages(snap);
-          const docs = snap.docs;
-          if (docs.length) {
-            const last = docs[docs.length - 1].data();
-            lastMessageTs = last.createdAt && last.createdAt.toMillis ? last.createdAt.toMillis() : Date.now();
-            if (panel.hidden && lastMessageTs > lastSeen()) {
-              badge.hidden = false;
-              badge.textContent = '•';
-            } else if (!panel.hidden) {
-              markSeen(lastMessageTs);
-            }
-          }
-        }, (err) => {
-          messagesEl.innerHTML = `<p class="gv-chat-empty">Không tải được chat: ${esc(err.message)}</p>`;
-        });
-    }
-
-    function openPanel() {
-      panel.hidden = false;
-      startListening();
-      if (lastMessageTs) markSeen(lastMessageTs);
-      textInput.focus();
-    }
-    function closePanel() {
-      panel.hidden = true;
-      emojiPanel.hidden = true;
-      if (micBtn.classList.contains('is-recording')) stopRecording();
-      messagesEl.querySelectorAll('[data-emoji-picker]').forEach((p) => { p.hidden = true; });
-    }
-
-    fab.addEventListener('click', () => { panel.hidden ? openPanel() : closePanel(); });
-    closeBtn.addEventListener('click', closePanel);
-
-    /** Đọc 1 Blob/File RAW (không nén được — không phải ảnh) thành data
-     * URL, từ chối thẳng nếu vượt MAX_RAW_FILE_BYTES thay vì cố ghi rồi
-     * bị firestore.rules từ chối (báo lỗi rõ ràng ngay trên UI). */
-    function readRawFileAsDataUrl(fileOrBlob) {
-      return new Promise((resolve, reject) => {
-        if (fileOrBlob.size > MAX_RAW_FILE_BYTES) {
-          reject(new Error(`File quá lớn (${humanSize(fileOrBlob.size)}) — chat chỉ nhận file/video/ghi âm dưới ${humanSize(MAX_RAW_FILE_BYTES)} (không nén được như ảnh, do chưa có Cloud Storage).`));
-          return;
-        }
-        const reader = new FileReader();
-        reader.onerror = () => reject(new Error('Không đọc được file.'));
-        reader.onload = () => resolve(reader.result);
-        reader.readAsDataURL(fileOrBlob);
-      });
-    }
-
-    // Nhận MỌI loại file (ảnh/PDF/Word/Excel/zip/GIF/video ngắn...) —
-    // ảnh TĨNH được NÉN qua canvas như trước (nhẹ hơn nhiều). GIF cố
-    // tình KHÔNG đi qua compressImage(): vẽ GIF lên <canvas> rồi xuất
-    // lại bằng toDataURL('image/jpeg') chỉ giữ đúng 1 khung hình đầu —
-    // hoạt ảnh biến mất, gửi ra là ảnh tĩnh (đúng lỗi người dùng báo).
-    // GIF vì vậy đi theo nhánh RAW giống file thường, chỉ khác kind
-    // ('gif' thay vì 'file') để nhãn xem trước hiện đúng "GIF" thay vì
-    // tên file kỹ thuật, và cỡ tối đa cũng nhỏ hơn (GIF động thường
-    // nặng hơn ảnh tĩnh nhiều, không nén được nên phải giữ hạn mức thấp).
-    fileInput.addEventListener('change', async () => {
-      const file = fileInput.files && fileInput.files[0];
-      if (!file) return;
-      const isGif = file.type === 'image/gif';
-      const isImage = !isGif && file.type && file.type.indexOf('image/') === 0;
-      try {
-        if (isImage) {
-          const data = await compressImage(file, 1000, MAX_CHAT_ATTACH_CHARS);
-          setPendingAttachment({ data, mime: file.type, name: file.name, size: file.size, kind: 'image' });
-        } else if (isGif) {
-          const data = await readRawFileAsDataUrl(file);
-          setPendingAttachment({ data, mime: file.type, name: file.name, size: file.size, kind: 'gif' });
-        } else {
-          const data = await readRawFileAsDataUrl(file);
-          setPendingAttachment({ data, mime: file.type || 'application/octet-stream', name: file.name, size: file.size, kind: 'file' });
-        }
-      } catch (err) {
-        setPendingAttachment(null);
-        alert(err.message);
-      }
-    });
-
-    // ── Ghi âm giọng nói (MediaRecorder) — bấm micro để bắt đầu, bấm lại
-    // (hoặc quá MAX_RECORD_SECONDS) để tự dừng, đính kèm chờ gửi giống
-    // file/ảnh (KHÔNG tự gửi ngay — vẫn qua nút Gửi để còn kịp nhập chữ
-    // kèm theo hoặc huỷ). ──
-    async function startRecording() {
-      if (!navigator.mediaDevices || !window.MediaRecorder) {
-        alert('Trình duyệt này không hỗ trợ ghi âm.');
-        return;
-      }
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        recordedChunks = [];
-        mediaRecorder = new MediaRecorder(stream);
-        mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
-        mediaRecorder.onstop = async () => {
-          stream.getTracks().forEach((t) => t.stop());
-          const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
-          try {
-            const data = await readRawFileAsDataUrl(blob);
-            setPendingAttachment({ data, mime: blob.type, name: 'voice-note', size: blob.size, kind: 'audio', durationLabel: `0:${String(recordSeconds).padStart(2, '0')}` });
-          } catch (err) {
-            alert(err.message);
-          }
-        };
-        mediaRecorder.start();
-        recordSeconds = 0;
-        micBtn.classList.add('is-recording');
-        recTimerEl.hidden = false;
-        recTimerEl.textContent = '● 0:00';
-        recordTimerInterval = setInterval(() => {
-          recordSeconds++;
-          recTimerEl.textContent = `● 0:${String(recordSeconds).padStart(2, '0')}`;
-          if (recordSeconds >= MAX_RECORD_SECONDS) stopRecording();
-        }, 1000);
-      } catch (err) {
-        alert('Không dùng được micro: ' + err.message);
-      }
-    }
-    function stopRecording() {
-      if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-      clearInterval(recordTimerInterval);
-      micBtn.classList.remove('is-recording');
-      recTimerEl.hidden = true;
-    }
-    micBtn.addEventListener('click', () => {
-      if (!currentUser) { window.location.href = 'login.html'; return; }
-      if (micBtn.classList.contains('is-recording')) stopRecording();
-      else startRecording();
-    });
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (!currentUser || !canEditFeed()) { window.location.href = 'login.html'; return; }
-      const text = textInput.value.trim();
-      if (!text && !pendingAttachment) return;
-      const data = {
-        authorUid: currentUser.uid,
-        authorName: currentProfile.name || currentUser.email || 'Giáo viên',
-        text: text.slice(0, 500),
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      };
-      if (pendingAttachment) {
-        data.attachment = pendingAttachment.data;
-        data.attachmentType = pendingAttachment.kind;
-        if (pendingAttachment.name) data.attachmentName = pendingAttachment.name;
-        if (pendingAttachment.size) data.attachmentSize = pendingAttachment.size;
-      }
-      if (replyTarget) {
-        data.replyToId = replyTarget.id;
-        data.replyToName = replyTarget.authorName;
-        data.replyToText = replyTarget.text;
-      }
-      textInput.disabled = true;
-      try {
-        await db.collection('gvlab_chat').add(data);
-        textInput.value = '';
-        setPendingAttachment(null);
-        fileInput.value = '';
-        clearReplyTarget();
-      } catch (err) {
-        alert('Không gửi được tin nhắn: ' + err.message);
-      } finally {
-        textInput.disabled = false;
-        textInput.focus();
-      }
-    });
-
-    // Chỉ hiện nút chat nổi khi đã đăng nhập Giáo viên/Admin — expose ra
-    // ngoài để callback onAuthReady chung gọi vào.
-    window.__gvChatSetVisible = (visible) => {
-      fab.hidden = !visible;
-      if (!visible) closePanel();
-    };
-  })();
 
   // ════════════════════════════════════════════════════════════
   // Auth state dùng CHUNG cho Feed/Profile/Chat — 1 listener duy nhất.
@@ -1124,7 +987,7 @@
       el.innerHTML = p && p.avatar ? `<img src="${p.avatar}" alt="">` : esc(initials((profile && profile.name) || (user && user.email)));
     });
     refreshProfileBarDisplay();
-    if (window.__gvChatSetVisible) window.__gvChatSetVisible(editor);
+    if (certsInstance) certsInstance.refreshAuthState();
   });
 
   const yearEl = document.getElementById('gvYear');

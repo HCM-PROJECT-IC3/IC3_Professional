@@ -1,0 +1,97 @@
+/* ============================================================
+   css/a11y-assistant.css — style cho js/a11y-assistant.js (trợ lý trợ
+   năng dùng chung nhiều trang). Tự chứa (self-contained): dùng
+   var(--token, fallback) với fallback an toàn, nên rơi vào trang nào
+   cũng ra hình dù trang đó không có css/theme.css (vd portfolio.html).
+   ============================================================ */
+
+.a11y-fab {
+  position: fixed; right: clamp(1.2rem, 4vw, 2.4rem); bottom: clamp(1.2rem, 4vw, 2.4rem);
+  /* z-index 150: DƯỚI .modal-overlay (200 trong style.css — hộp thoại
+     xác nhận nộp bài...) và DƯỚI .ac-lock-overlay (9500 — khối khoá màn
+     hình khi phát hiện vi phạm lúc thi) CỐ TÌNH, chỉ nổi trên nội dung
+     trang thường — không được che/nổi trên các hộp thoại quan trọng đó. */
+  z-index: 150; width: 56px; height: 56px; border-radius: 50%;
+  background: var(--purple, #2f40b2); color: #fff; border: none; cursor: grab;
+  font-size: 1.2rem; box-shadow: var(--shadow-lg, 0 10px 30px rgba(47,64,178,.35));
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .15s ease, background .15s ease;
+  touch-action: none; /* để pointermove kéo-thả hoạt động mượt trên cảm ứng, không cuộn trang */
+}
+.a11y-fab:hover { transform: translateY(-2px) }
+.a11y-fab:active { transform: translateY(0) }
+.a11y-fab.is-open { background: var(--text, #1b2036) }
+/* Đang kéo — bỏ hiệu ứng hover/transition để bám chuột mượt, đổi con trỏ
+   báo đang giữ, tắt tạm click nổi (đã xử lý ở JS qua dragMoved). */
+.a11y-fab.is-dragging { cursor: grabbing; transition: none; box-shadow: var(--shadow, 0 4px 20px rgba(47,64,178,.10)) }
+
+/* Gọn hơn bản đầu (360×480) để đỡ che nội dung phía dưới/bên cạnh — vẫn
+   đủ chỗ đọc tin nhắn + bấm gợi ý. Có thể đóng nhanh bằng bấm ra ngoài
+   panel hoặc phím Esc (xem js/a11y-assistant.js), nên dù có che 1 góc
+   nhỏ ở màn hình hẹp cũng không kẹt lại lâu. */
+.a11y-panel {
+  position: fixed; right: clamp(1rem, 3vw, 2rem); bottom: clamp(4.6rem, 10vw, 5.6rem);
+  z-index: 151; width: min(300px, calc(100vw - 2rem)); height: min(400px, 55vh);
+  background: var(--surface, #fff); border: 1px solid var(--border, #e1e6f4);
+  border-radius: var(--radius, 16px); box-shadow: var(--shadow-lg, 0 10px 40px rgba(0,0,0,.18));
+  display: flex; flex-direction: column; overflow: hidden;
+  font-family: 'Inter', system-ui, sans-serif;
+  transition: height .2s ease;
+}
+/* Thu nhỏ: chỉ còn dải tiêu đề (bấm nút − hoặc bấm chính dải tiêu đề để
+   phóng to lại) — vẫn giữ nguyên vị trí/lịch sử chat, chỉ ẩn phần thân. */
+.a11y-panel.is-minimized { height: auto }
+.a11y-panel.is-minimized .a11y-body { display: none }
+.a11y-panel.is-minimized .a11y-head { cursor: pointer; border-radius: var(--radius, 16px) }
+
+.a11y-body { display: flex; flex-direction: column; flex: 1; min-height: 0 }
+
+.a11y-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .9rem 1.1rem; font-weight: 700; font-size: .88rem;
+  background: var(--purple, #2f40b2); color: #fff; flex: none;
+}
+.a11y-head > span:first-child i { margin-right: .4rem }
+.a11y-head-actions { display: flex; align-items: center; gap: .2rem }
+.a11y-head-actions button {
+  border: none; background: none; cursor: pointer; color: #fff; font-size: .8rem; opacity: .85;
+  width: 26px; height: 26px; border-radius: 7px; display: flex; align-items: center; justify-content: center;
+}
+.a11y-head-actions button:hover { opacity: 1; background: rgba(255,255,255,.18) }
+
+.a11y-messages { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: .7rem; background: var(--card2, #f6f8fe) }
+.a11y-msg { display: flex }
+.a11y-msg.is-own { justify-content: flex-end }
+.a11y-msg-body {
+  max-width: 82%; background: var(--surface, #fff); border: 1px solid var(--border, #e1e6f4);
+  border-radius: 12px; padding: .55rem .8rem; font-size: .82rem; line-height: 1.5; color: var(--text, #1b2036);
+}
+.a11y-msg.is-own .a11y-msg-body { background: var(--purple, #2f40b2); color: #fff; border-color: transparent }
+
+.a11y-chips { display: flex; flex-wrap: wrap; gap: .4rem; padding: .7rem 1rem 0; background: var(--card2, #f6f8fe) }
+.a11y-chip {
+  border: 1px solid var(--border, #e1e6f4); cursor: pointer; background: var(--surface, #fff); color: var(--text, #1b2036);
+  font-size: .7rem; padding: .38rem .65rem; border-radius: 999px;
+}
+.a11y-chip:hover { background: var(--purple-lt, #eef0f9); border-color: var(--purple, #2f40b2) }
+
+.a11y-form { display: flex; align-items: center; gap: .5rem; padding: .8rem 1rem; background: var(--card2, #f6f8fe) }
+.a11y-form input[type="text"] {
+  flex: 1; border: 1px solid var(--border, #e1e6f4); background: var(--surface, #fff); border-radius: 999px;
+  padding: .55rem .9rem; font-size: .82rem; font-family: inherit; color: var(--text, #1b2036);
+}
+.a11y-form input[type="text"]:focus { outline: none; border-color: var(--purple, #2f40b2) }
+.a11y-form button[type="submit"] {
+  flex: none; width: 36px; height: 36px; border-radius: 50%; border: none; cursor: pointer;
+  background: var(--purple, #2f40b2); color: #fff;
+}
+.a11y-form button[type="submit"]:hover { opacity: .9 }
+
+/* Bật bởi trợ lý trợ năng (gợi ý "Tương phản cao") — filter đơn giản,
+   áp dụng cho toàn trang, không cần khai báo lại từng màu/biến riêng. */
+body.a11y-contrast { filter: contrast(1.35) saturate(1.1) }
+
+@media (max-width: 480px) {
+  .a11y-panel { right: .5rem; left: .5rem; width: auto; bottom: 4.6rem }
+  .a11y-fab { right: 1rem; bottom: 1rem }
+}
