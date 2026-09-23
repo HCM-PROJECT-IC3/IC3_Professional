@@ -43,6 +43,9 @@ body {
 }
 img { max-width: 100%; display: block }
 a { color: inherit }
+/* Bật bởi trợ lý trợ năng (nút "Tương phản cao") — filter đơn giản, áp
+   dụng cho toàn trang, không cần khai báo lại từng màu/biến riêng. */
+body.gv-a11y-contrast { filter: contrast(1.35) saturate(1.1) }
 .gv-mono { font-family: 'DM Mono', ui-monospace, monospace }
 h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; margin: 0; letter-spacing: -.01em }
 .gv-eyebrow { font-size: .78rem; font-weight: 500; color: var(--gv-muted); letter-spacing: .08em; margin: 0 0 .9rem }
@@ -82,15 +85,11 @@ h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; margin: 0; letter-spa
 .gv-profile-bar {
   max-width: 1200px; margin: 1.4rem auto 0; padding: 0 clamp(1.2rem, 4vw, 3rem);
 }
-.gv-profile-guest, .gv-profile-user {
+.gv-profile-user {
   display: flex; align-items: center; gap: .9rem;
   background: var(--gv-bg); border-radius: var(--radius, 18px);
   padding: .9rem 1.3rem; box-shadow: var(--gv-flat);
 }
-.gv-profile-guest { color: var(--gv-muted); font-size: .85rem }
-.gv-profile-guest i { color: var(--gv-accent) }
-.gv-profile-guest a { color: var(--gv-accent); font-weight: 700; text-decoration: none }
-.gv-profile-guest a:hover { text-decoration: underline }
 .gv-profile-user .gv-avatar { width: 42px; height: 42px; font-size: 1rem }
 .gv-profile-user-info { display: flex; flex-direction: column; line-height: 1.3 }
 .gv-profile-user-info strong { font-size: .92rem }
@@ -139,7 +138,9 @@ h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; margin: 0; letter-spa
 .gv-form-input:focus { outline: none; box-shadow: var(--gv-pressed), 0 0 0 3px rgba(47,64,178,.15) }
 .gv-profile-save-btn { margin-top: 1.4rem; width: 100% }
 
-/* ── Chat nhóm nổi (floating action button + panel) ── */
+/* ── Trợ lý trợ năng nổi (floating action button + panel) — dùng lại
+   đúng bộ class .gv-chat-* của chat nhóm cũ (đã bỏ), chỉ thêm
+   .gv-a11y-chip/.gv-a11y-contrast bên dưới cho phần riêng của trợ lý. ── */
 .gv-chat-fab {
   position: fixed; right: clamp(1.2rem, 4vw, 2.4rem); bottom: clamp(1.2rem, 4vw, 2.4rem);
   z-index: 120; width: 58px; height: 58px; border-radius: 50%;
@@ -147,11 +148,6 @@ h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; margin: 0; letter-spa
   font-size: 1.25rem; box-shadow: var(--gv-raised);
 }
 .gv-chat-fab:active { box-shadow: var(--gv-pressed) }
-.gv-chat-badge {
-  position: absolute; top: -2px; right: -2px; min-width: 20px; height: 20px; padding: 0 5px;
-  border-radius: 999px; background: #c2453a; color: #fff; font-size: .68rem; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-}
 .gv-chat-panel {
   position: fixed; right: clamp(1rem, 3vw, 2rem); bottom: clamp(5.2rem, 12vw, 6.6rem);
   z-index: 121; width: min(360px, calc(100vw - 2rem)); height: min(520px, 70vh);
@@ -181,91 +177,7 @@ h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; margin: 0; letter-spa
 .gv-chat-msg-time { font-size: .62rem; color: var(--gv-muted); margin-top: .25rem; display: block }
 .gv-chat-empty { color: var(--gv-muted); font-size: .82rem; font-style: italic; text-align: center; margin: auto }
 
-/* ── Trích dẫn trả lời — trong bong bóng (đã gửi) VÀ trên ô nhập (đang soạn) ── */
-.gv-chat-quote {
-  border-left: 2px solid var(--gv-accent); padding-left: .5rem; margin-bottom: .35rem;
-  font-size: .74rem; color: var(--gv-muted); opacity: .85;
-}
-.gv-chat-quote b { color: var(--gv-accent) }
-
-/* ── Toolbar nổi khi rê chuột vào 1 tin nhắn: trả lời/thả cảm xúc/xoá ── */
-.gv-chat-msg-actions {
-  display: flex; gap: .2rem; align-self: center;
-  opacity: 0; transition: opacity .15s ease;
-}
-.gv-chat-msg:hover .gv-chat-msg-actions { opacity: 1 }
-.gv-chat-msg-actions button {
-  width: 26px; height: 26px; border-radius: 50%; border: none; cursor: pointer;
-  background: var(--gv-bg); box-shadow: var(--gv-raised-sm); color: var(--gv-muted); font-size: .68rem;
-}
-.gv-chat-msg-actions button:active { box-shadow: var(--gv-pressed) }
-.gv-chat-emoji-picker {
-  position: absolute; bottom: 100%; margin-bottom: .3rem; z-index: 5;
-  display: flex; gap: .2rem; background: var(--gv-bg); border-radius: 999px;
-  padding: .3rem .4rem; box-shadow: var(--gv-raised); white-space: nowrap;
-}
-.gv-chat-emoji-picker[hidden] { display: none }
-.gv-chat-emoji-picker button { border: none; background: none; cursor: pointer; font-size: 1.05rem; padding: .15rem .2rem; border-radius: 50% }
-.gv-chat-emoji-picker button:hover { background: var(--gv-bg-alt, rgba(0,0,0,.05)) }
-
-/* ── Cảm xúc đã thả dưới bong bóng ── */
-.gv-chat-reactions { display: flex; gap: .25rem; margin-top: .3rem; flex-wrap: wrap }
-.gv-chat-reaction {
-  display: inline-flex; align-items: center; gap: .2rem;
-  background: var(--gv-bg); border-radius: 999px; padding: .1rem .45rem;
-  font-size: .68rem; box-shadow: var(--gv-flat); cursor: pointer; border: none;
-}
-.gv-chat-reaction.is-mine { box-shadow: var(--gv-pressed); color: var(--gv-accent) }
-
-.gv-chat-reply-preview {
-  display: flex; align-items: center; justify-content: space-between;
-  margin: 0 1rem .5rem; padding: .5rem .7rem; border-radius: 10px;
-  background: var(--gv-bg); box-shadow: var(--gv-pressed); font-size: .74rem; color: var(--gv-muted);
-}
-.gv-chat-reply-preview[hidden] { display: none }
-.gv-chat-reply-preview button { border: none; background: none; cursor: pointer; color: var(--gv-muted) }
-
-/* ── Xem trước file/ảnh/ghi âm đã chọn, chờ gửi ── */
-.gv-chat-attach-preview {
-  display: flex; align-items: center; justify-content: space-between;
-  margin: 0 1rem .5rem; padding: .5rem .7rem; border-radius: 10px;
-  background: var(--gv-bg); box-shadow: var(--gv-pressed); font-size: .76rem; color: var(--gv-ink);
-}
-.gv-chat-attach-preview[hidden] { display: none }
-.gv-chat-attach-preview button { border: none; background: none; cursor: pointer; color: var(--gv-muted) }
-
-/* ── Bảng chọn emoji cho ô nhập ── */
-.gv-chat-emoji-panel {
-  display: grid; grid-template-columns: repeat(8, 1fr); gap: .2rem;
-  margin: 0 1rem .6rem; padding: .6rem; border-radius: 12px;
-  background: var(--gv-bg); box-shadow: var(--gv-raised); max-height: 160px; overflow-y: auto;
-}
-.gv-chat-emoji-panel[hidden] { display: none }
-.gv-chat-emoji-panel button { border: none; background: none; cursor: pointer; font-size: 1.15rem; padding: .3rem; border-radius: 8px }
-.gv-chat-emoji-panel button:hover { background: var(--gv-bg-alt, rgba(0,0,0,.05)) }
-
-/* ── Ghi âm giọng nói ── */
-.gv-chat-mic-btn.is-recording { color: #c2453a; box-shadow: var(--gv-pressed); animation: gvMicPulse 1.2s ease-in-out infinite }
-@keyframes gvMicPulse { 0%,100% { opacity: 1 } 50% { opacity: .55 } }
-.gv-chat-rec-timer { font-size: .74rem; color: #c2453a; font-weight: 700; white-space: nowrap }
-.gv-chat-rec-timer[hidden] { display: none }
-
-/* ── Thẻ file/audio đính kèm trong tin nhắn đã gửi ── */
-.gv-chat-msg-file {
-  display: flex; align-items: center; gap: .6rem; margin-top: .4rem;
-  background: var(--gv-bg-alt, rgba(0,0,0,.03)); border-radius: 10px; padding: .5rem .7rem; text-decoration: none; color: inherit;
-}
-.gv-chat-msg-file i { color: var(--gv-accent); font-size: 1.1rem; flex: none }
-.gv-chat-msg-file-name { font-size: .78rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px }
-.gv-chat-msg-file-size { font-size: .66rem; color: var(--gv-muted); display: block }
-.gv-chat-msg-audio { margin-top: .4rem; width: 220px; max-width: 100% }
-
 .gv-chat-form { display: flex; align-items: center; gap: .5rem; padding: .9rem 1rem; box-shadow: 0 -2px 10px rgba(176,165,138,.25) }
-.gv-chat-attach-btn {
-  flex: none; width: 36px; height: 36px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center; cursor: pointer;
-  background: var(--gv-bg); box-shadow: var(--gv-raised-sm); color: var(--gv-muted);
-}
 .gv-chat-form input[type="text"] {
   flex: 1; border: none; background: var(--gv-bg); border-radius: 999px;
   padding: .6rem .9rem; font-size: .82rem; font-family: inherit; box-shadow: var(--gv-pressed);
@@ -276,37 +188,68 @@ h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; margin: 0; letter-spa
   background: var(--gv-bg); color: var(--gv-accent); box-shadow: var(--gv-raised-sm);
 }
 .gv-chat-form button[type="submit"]:active { box-shadow: var(--gv-pressed) }
-.gv-chat-file-preview { font-size: .7rem; color: var(--gv-muted); padding: 0 1rem .4rem }
+
+/* ── Gợi ý nhanh (chip) trong trợ lý trợ năng ── */
+.gv-a11y-chips { display: flex; flex-wrap: wrap; gap: .4rem; padding: 0 1rem .7rem }
+.gv-a11y-chip {
+  border: none; cursor: pointer; background: var(--gv-bg); color: var(--gv-ink);
+  font-size: .72rem; padding: .4rem .7rem; border-radius: 999px; box-shadow: var(--gv-raised-sm);
+}
+.gv-a11y-chip:active { box-shadow: var(--gv-pressed) }
 
 /* ── Certifications on file ── */
 .gv-certs-section {
   padding: clamp(2.5rem, 6vw, 4.5rem) clamp(1.2rem, 4vw, 3rem);
   max-width: 1200px; margin: 0 auto;
 }
-.gv-certs-section h2 { font-size: clamp(1.8rem, 4vw, 2.6rem) }
-.gv-certs-sub { margin: .6rem 0 1.8rem; color: var(--gv-muted); font-size: .88rem }
-.gv-certs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.8rem }
+.gv-certs-section h2 { font-size: clamp(1.8rem, 4vw, 2.6rem); margin-bottom: 1.6rem }
+/* Lưới gọn: thẻ nhỏ hơn (180px thay vì 320px), khoảng cách hẹp lại —
+   xem được nhiều chứng chỉ hơn trong 1 màn hình, đúng kiểu "tường
+   chứng chỉ" thay vì mỗi thẻ chiếm gần nửa hàng như trước. */
+.gv-certs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .9rem }
 .gv-certs-grid button {
-  border: none; background: var(--gv-bg); padding: 10px; cursor: pointer;
-  border-radius: var(--radius, 18px); box-shadow: var(--gv-raised);
-  aspect-ratio: 1.34/1; position: relative;
+  border: none; background: var(--gv-bg); padding: 6px; cursor: pointer;
+  border-radius: 12px; box-shadow: var(--gv-raised-sm);
+  aspect-ratio: 1/1; position: relative;
   transition: box-shadow .3s ease, transform .3s cubic-bezier(.2,.8,.2,1);
 }
 .gv-certs-grid button > span {
   display: block; width: 100%; height: 100%; overflow: hidden; position: relative;
-  border-radius: calc(var(--radius, 18px) - 6px); box-shadow: var(--gv-pressed);
+  border-radius: 8px; box-shadow: var(--gv-pressed);
 }
 .gv-certs-grid button img { width: 100%; height: 100%; object-fit: contain; background: var(--gv-bg); transition: transform .5s cubic-bezier(.2,.8,.2,1) }
-.gv-certs-grid button:hover { transform: translateY(-4px) }
+.gv-certs-grid button:hover { transform: translateY(-3px) }
 .gv-certs-grid button:hover img { transform: scale(1.05) }
 .gv-certs-grid button:active { box-shadow: var(--gv-pressed); transform: translateY(0) }
 .gv-certs-grid button .gv-cert-label {
-  position: absolute; left: 18px; right: 18px; bottom: 18px;
+  position: absolute; left: 6px; right: 6px; bottom: 6px;
   background: rgba(243,239,230,.92); color: var(--gv-ink);
-  font-size: .76rem; padding: .5rem .7rem; line-height: 1.3;
-  font-family: 'DM Mono', monospace; border-radius: 10px;
+  font-size: .64rem; padding: .3rem .45rem; line-height: 1.25;
+  font-family: 'DM Mono', monospace; border-radius: 7px;
   box-shadow: var(--gv-flat);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+
+/* ── Xem/đăng chứng chỉ theo TỪNG giáo viên ── */
+.gv-certs-toolbar { margin-bottom: 1.1rem }
+.gv-certs-filter-label { font-size: .82rem; color: var(--gv-muted); display: inline-flex; align-items: center; gap: .5rem }
+.gv-certs-filter-label select {
+  font-family: inherit; font-size: .82rem; color: var(--gv-ink);
+  background: var(--gv-bg); border: none; border-radius: 999px;
+  padding: .45rem .9rem; box-shadow: var(--gv-pressed); cursor: pointer;
+}
+.gv-certs-composer {
+  background: var(--gv-bg); border-radius: var(--radius, 18px); padding: 1.1rem 1.3rem;
+  box-shadow: var(--gv-raised); margin-bottom: 1.3rem;
+}
+.gv-certs-composer .gv-form-input { margin-bottom: .8rem }
+.gv-certs-composer .gv-feed-composer-row { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap }
+.gv-cert-delete {
+  position: absolute; top: 12px; right: 12px; z-index: 2;
+  width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: rgba(26,26,23,.75); color: #fff; font-size: .8rem;
+}
+.gv-cert-delete:hover { background: #c2453a }
 
 /* ── Lightbox ── */
 .gv-lightbox-overlay {

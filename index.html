@@ -12,6 +12,10 @@
        defer (không như global-error-handler.js ở trên — file đó CỐ Ý chặn
        để bắt lỗi sớm nhất có thể; file này chỉ log debug, không cần gấp). -->
   <script src="js/app-version.js" defer></script>
+  <!-- Trợ lý trợ năng (đọc to câu hỏi, chỉnh cỡ chữ/độ tương phản khi làm
+       bài) — chạy độc lập phía trình duyệt, không phụ thuộc Firebase/auth,
+       không tốn lượt đọc/ghi Firestore nào. Xem js/a11y-assistant.js. -->
+  <script src="js/a11y-assistant.js" defer></script>
   <!-- <title> chỉ render TEXT THUẦN (tiêu đề tab trình duyệt) — bỏ emoji
        thay vì để lọt icon "vỡ", không có cách nào render Font Awesome ở đây. -->
   <title>EduQuiz IC3</title>
@@ -37,6 +41,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
   <link rel="stylesheet" href="css/accessibility.css">
+  <link rel="stylesheet" href="css/a11y-assistant.css">
 <link rel="stylesheet" href="css/motion.css">
 <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" onload="this.onload=null;this.rel='stylesheet'">
 <noscript>
