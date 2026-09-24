@@ -1540,6 +1540,23 @@
     if (e.target.id === 'importModalOverlay') closeImportModal();
   });
 
+  /** Dựng 5 ô-tiết {maLop,truong} (đúng schema TeachingTimetable Cell) cho
+   * 1 buổi, từ ĐÚNG session đã đọc ở "Lịch tuần" (periods[] + periodSchools[]
+   * nếu buổi đó dạy 2 trường, xem mergeSecondarySchoolColumn()) — dùng để tự
+   * điền tab "🗓️ TKB lớp" NGAY LÚC NHẬP EXCEL, khỏi phải mở riêng tab đó rồi
+   * bấm Lưu thêm 1 lần nữa mới ra đúng "Trường" từng tiết (đúng điều người
+   * dùng phản hồi: "phải cập nhật thủ công" sau khi nhập Excel). */
+  function sessionToTimetableCells(sess) {
+    const periods = sess.periods || [];
+    const periodSchools = sess.periodSchools || [];
+    return [0, 1, 2, 3, 4].map((i) => {
+      const maLop = typeof periods[i] === 'string' ? periods[i].trim() : '';
+      if (!maLop) return { maLop: '', truong: '' };
+      const truong = (periodSchools[i] || sess.location || '').trim();
+      return { maLop, truong };
+    });
+  }
+
   document.getElementById('importConfirmBtn').addEventListener('click', async () => {
     if (!pendingImport) return;
     const btn = document.getElementById('importConfirmBtn');
@@ -1550,9 +1567,27 @@
       const teacherCol = window.EduRepositories.teachingTeacher.col();
       const weekCol = window.EduRepositories.teachingWeek.col();
       const schedCol = window.EduRepositories.teachingSchedule.col();
+      const TTM = window.EduModels.TeachingTimetable;
+      const ttCol = TTM ? window.EduRepositories.teachingTimetable.col() : null;
 
       const knownTeacherCodes = new Set(state.teachers.map((t) => t.id));
       const knownWeekKeys = new Set(state.weeks.map((w) => w.id));
+
+      // Đọc TRƯỚC toàn bộ TKB lớp ĐÃ CÓ của đúng các giáo viên/tuần sắp
+      // nhập — CHỈ điền vào Ô-TIẾT nào TKB lớp đang TRỐNG (không mã lớp),
+      // giữ nguyên mọi ô Admin đã gõ tay khác đi trước đó (TKB lớp vẫn là
+      // nguồn chi tiết hơn — nhập Excel không được phép ghi đè dữ liệu đã
+      // tinh chỉnh thủ công ở đó, chỉ tự điền chỗ còn thiếu).
+      const existingTtById = new Map();
+      if (ttCol) {
+        const pairs = [];
+        pendingImport.weeks.forEach((week) => week.teachers.forEach((t) => pairs.push({ code: t.code, weekKey: week.weekKey })));
+        await Promise.all(pairs.map(async ({ code, weekKey }) => {
+          const id = TTM.docId(code, weekKey);
+          const doc = await window.EduRepositories.teachingTimetable.getById(id);
+          if (doc) existingTtById.set(id, doc);
+        }));
+      }
 
       let batch = db.batch();
       let ops = 0;
@@ -1577,11 +1612,40 @@
             days: t.days, updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
           });
           ops++; await flushIfNeeded();
+
+          if (ttCol) {
+            const ttId = TTM.docId(t.code, week.weekKey);
+            const existingTt = existingTtById.get(ttId);
+            const existingDays = (existingTt && existingTt.days) || {};
+            const ttDays = {};
+            M.WEEKDAYS.forEach((d) => {
+              const daySess = t.days[String(d)] || {};
+              const existingDay = existingDays[String(d)] || {};
+              ttDays[String(d)] = {};
+              ['morning', 'afternoon'].forEach((s) => {
+                const fromExcel = sessionToTimetableCells(daySess[s] || {});
+                const existingCells = (existingDay[s] || []).map((c) => TTM.cellOf(c));
+                // Ô nào TKB lớp đã có mã lớp thì GIỮ NGUYÊN; ô nào đang
+                // trống mới lấy dữ liệu vừa đọc từ Excel — merge tự nhiên,
+                // không mất dữ liệu Admin đã tinh chỉnh riêng ở TKB lớp.
+                ttDays[String(d)][s] = fromExcel.map((cell, i) => {
+                  const existing = existingCells[i];
+                  return (existing && existing.maLop) ? existing : cell;
+                });
+              });
+            });
+            batch.set(ttCol.doc(ttId), {
+              teacherCode: t.code, teacherName: t.name,
+              weekKey: week.weekKey, weekLabel: week.weekLabel,
+              days: ttDays, updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            }, { merge: true });
+            ops++; await flushIfNeeded();
+          }
         }
       }
       if (ops > 0) await batch.commit();
 
-      toast(`✅ Đã nhập ${pendingImport.weeks.length} tuần / ${new Set(pendingImport.weeks.flatMap((w) => w.teachers.map((t) => t.code))).size} giáo viên`);
+      toast(`✅ Đã nhập ${pendingImport.weeks.length} tuần / ${new Set(pendingImport.weeks.flatMap((w) => w.teachers.map((t) => t.code))).size} giáo viên${ttCol ? ' (đã tự điền cả TKB lớp)' : ''}`);
       closeImportModal();
       await loadEverything();
     } catch (err) {
