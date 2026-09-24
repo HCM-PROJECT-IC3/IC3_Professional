@@ -205,7 +205,11 @@
         { content: 'Địa điểm\ngiảng dạy', styles: { fillColor: bg, textColor: LOCATION_LABEL_BLUE, fontStyle: 'bold', fontSize: 8.3, cellPadding: 4, halign: 'left' } },
         ...M.WEEKDAYS.map((d) => {
           const sess = sessOf(d);
-          return { content: sess.location || '—', styles: { fillColor: bg, textColor: sess.location ? SUBTLE_BLUE : GRAY } };
+          // Buổi dạy Ở 2 TRƯỜNG ("Trường A + Trường B") — xuống dòng thay
+          // vì để dính 1 chuỗi dài dễ tràn cột hẹp, mỗi trường 1 dòng cho
+          // dễ đọc (bảng PDF chỉ có 1 cột/ngày, không tách 2 cột được).
+          const schools = M.splitLocations(sess.location);
+          return { content: schools.length ? schools.join('\n') : '—', styles: { fillColor: bg, textColor: schools.length ? SUBTLE_BLUE : GRAY } };
         }),
       ]);
 

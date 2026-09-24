@@ -278,11 +278,17 @@
         // NGƯỢC lại đúng field này mỗi khi lưu lưới) — khi đó KHÔNG được tự
         // điền đại trà 1 chuỗi gộp vào mọi ô "Trường" (sẽ xoá mất phân biệt
         // trường theo TỪNG TIẾT mà chính lưới này đang giữ, nguồn chi tiết
-        // hơn field cấp-buổi). Chỉ tự điền khi đúng 1 trường/buổi (trường
-        // hợp phổ biến, tương thích ngược với hành vi cũ).
+        // hơn field cấp-buổi). Chỉ tự điền 1 chuỗi gộp khi đúng 1 trường/buổi
+        // (trường hợp phổ biến, tương thích ngược với hành vi cũ).
         const schools = TS ? TS.splitLocations(schedSess.location) : [(schedSess.location || '').trim()].filter(Boolean);
         const location = schools.length === 1 ? schools[0] : '';
+        // `periodSchools[i]` (nếu có — ghi bởi import Excel 2 cột/ngày, xem
+        // mergeSecondarySchoolColumn() ở teaching-schedule.js, HOẶC bởi
+        // chính lượt lưu TRƯỚC của lưới này, xem syncScheduleLocationsFromTimetable())
+        // giữ ĐÚNG trường của TỪNG TIẾT — dùng field này khi buổi có 2+
+        // trường để tự điền "Trường" đúng cho từng tiết thay vì để trống.
         const periods = schedSess.periods || [];
+        const periodSchools = schedSess.periodSchools || [];
         (state.days[String(d)][s] || []).forEach((cell, i) => {
           const raw = periods[i];
           // Tương thích ngược: dữ liệu Lịch tuần CŨ có thể vẫn là boolean
@@ -291,7 +297,7 @@
           const maLop = typeof raw === 'string' ? raw.trim() : '';
           if (!maLop) return;
           cell.maLop = maLop;
-          cell.truong = location || cell.truong;
+          cell.truong = location || (periodSchools[i] || '').trim() || cell.truong;
           state.autoCells.add(`${d}-${s}-${i}`);
         });
       });
@@ -587,17 +593,24 @@
         const cells = (state.days[String(d)] && state.days[String(d)][s]) || [];
         const seen = new Set();
         const schools = [];
-        cells.forEach((cell) => {
-          const truong = (cell && cell.truong || '').trim();
+        // periodSchools[i] = đúng trường Admin vừa gõ ở TỪNG TIẾT — ghi
+        // kèm `location` gộp để applyScheduleAutoFill() lần sau tự điền
+        // đúng "Trường" cho từng tiết thay vì để trống (xem đó, cùng lý do
+        // bug gốc: `location` gộp không đủ để biết tiết nào ở trường nào).
+        const periodSchools = cells.map((cell) => (cell && cell.truong || '').trim());
+        periodSchools.forEach((truong) => {
           if (truong && !seen.has(truong)) { seen.add(truong); schools.push(truong); }
         });
         if (schools.length < 2) return; // đúng 0/1 trường — không có gì để đồng bộ ngược
         const newLocation = TS.joinLocations(schools);
         const schedDay = state.scheduleDoc && state.scheduleDoc.days && state.scheduleDoc.days[String(d)];
-        const currentLocation = ((schedDay && schedDay[s] && schedDay[s].location) || '').trim();
-        if (currentLocation === newLocation) return;
+        const currentSess = (schedDay && schedDay[s]) || {};
+        const currentLocation = (currentSess.location || '').trim();
+        const currentPeriodSchools = currentSess.periodSchools || [];
+        const periodSchoolsChanged = periodSchools.some((v, i) => (v || '') !== (currentPeriodSchools[i] || ''));
+        if (currentLocation === newLocation && !periodSchoolsChanged) return;
         daysPartial[String(d)] = daysPartial[String(d)] || {};
-        daysPartial[String(d)][s] = { location: newLocation };
+        daysPartial[String(d)][s] = { location: newLocation, periodSchools };
         changedCount++;
       });
     });

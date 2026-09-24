@@ -22,8 +22,20 @@
        teacherName, weekKey, weekLabel, days: { "2".."7": DaySchedule },
        updatedAt }
      DaySchedule = { morning: Session, afternoon: Session }
-     Session     = { type: TASK_TYPES[n]|'', location: string, periods: [p1..p5] }
-     (periods[i] = MÃ LỚP đang dạy tiết i+1 (chuỗi, vd "5/1"), '' nếu
+     Session     = { type: TASK_TYPES[n]|'', location: string, periods: [p1..p5],
+       periodSchools?: [s1..s5] }
+     (periodSchools[i] = TRƯỜNG riêng của tiết i+1 khi buổi đó dạy ≥2
+     trường khác nhau (location lúc này là "Trường A + Trường B", xem
+     joinLocations()/splitLocations() bên dưới) — field TUỲ CHỌN, chỉ có ý
+     nghĩa khi location gộp ≥2 trường; ghi bởi mergeSecondarySchoolColumn()
+     khi nhập Excel 2 cột/ngày (js/teaching-schedule.js) HOẶC bởi
+     syncScheduleLocationsFromTimetable() khi lưu lưới "🗓️ TKB lớp"
+     (js/teaching-timetable.js) — cả 2 nơi đọc `applyScheduleAutoFill()`
+     dùng field này để tự điền ĐÚNG "Trường" cho từng tiết thay vì để
+     trống khi chỉ có 1 chuỗi `location` gộp (không đủ để biết tiết nào ở
+     trường nào). Vắng field này (dữ liệu cũ/buổi 1 trường) → không sao,
+     mọi nơi đọc đều coi thiếu = mảng rỗng.
+     periods[i] = MÃ LỚP đang dạy tiết i+1 (chuỗi, vd "5/1"), '' nếu
      không dạy tiết đó — gõ trực tiếp, không còn chỉ tích chọn có/không
      (đã thử bản chỉ tích chọn, người dùng phản hồi cần biết ngay đang
      dạy lớp nào ngay tại đây, không muốn phải mở riêng tab "🗓️ TKB lớp").
