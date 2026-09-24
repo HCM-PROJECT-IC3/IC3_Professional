@@ -56,6 +56,8 @@
     truongOptions: [],  // gợi ý "Trường" (datalist) — map từ tab Lịch tuần + lịch sử TKB của GV đang chọn
     lopOptions: [],      // gợi ý "Mã lớp" (datalist) — lịch sử TKB của GV đang chọn + mọi GV khác trong tuần đang xem
     autoCells: new Set(), // set "day-session-idx" các ô vừa được tự động điền từ Lịch tuần (xem applyScheduleAutoFill) — chỉ để tô sáng UI, không lưu Firestore
+    scheduleDoc: null,    // doc teaching_schedule CỦA ĐÚNG giáo viên/tuần đang xem (nạp cùng lưới TKB) — dùng để
+                           // so sánh "location" hiện tại khi đồng bộ ngược, xem syncScheduleLocationsFromTimetable()
   };
   let ptDraft = null; // bản nháp { "2".."7": {morning,afternoon} } đang sửa trong modal "⏱️ Giờ tiết"
   let ptEditingDay = '2'; // Thứ đang chọn để sửa trong modal (tab) — mặc định Thứ 2
@@ -235,6 +237,7 @@
       ]);
       state.periodTimesByDay = M.normalizePeriodTimesDoc(ptDoc);
       state.days = M.normalizeDays(ttDoc && ttDoc.days, state.periodTimesByDay);
+      state.scheduleDoc = scheduleDoc;
       applyScheduleAutoFill(scheduleDoc);
       emptyEl.classList.add('force-hide');
       wrapEl.classList.remove('force-hide');
@@ -270,7 +273,15 @@
       M.SESSIONS.forEach((s) => {
         const schedSess = schedDay[s];
         if (!schedSess) return;
-        const location = (schedSess.location || '').trim();
+        // `location` có thể đã là "Trường A + Trường B" (buổi PHÁT SINH dạy
+        // ở nhiều trường — xem syncScheduleLocationsFromTimetable(), đồng bộ
+        // NGƯỢC lại đúng field này mỗi khi lưu lưới) — khi đó KHÔNG được tự
+        // điền đại trà 1 chuỗi gộp vào mọi ô "Trường" (sẽ xoá mất phân biệt
+        // trường theo TỪNG TIẾT mà chính lưới này đang giữ, nguồn chi tiết
+        // hơn field cấp-buổi). Chỉ tự điền khi đúng 1 trường/buổi (trường
+        // hợp phổ biến, tương thích ngược với hành vi cũ).
+        const schools = TS ? TS.splitLocations(schedSess.location) : [(schedSess.location || '').trim()].filter(Boolean);
+        const location = schools.length === 1 ? schools[0] : '';
         const periods = schedSess.periods || [];
         (state.days[String(d)][s] || []).forEach((cell, i) => {
           const raw = periods[i];
@@ -313,8 +324,12 @@
       scheduleRows.forEach((doc) => {
         Object.values(doc.days || {}).forEach((day) => {
           ['morning', 'afternoon'].forEach((s) => {
+            // `location` có thể là "Trường A + Trường B" (buổi dạy nhiều
+            // trường, xem syncScheduleLocationsFromTimetable()) — tách ra
+            // để gợi ý đúng TỪNG TÊN TRƯỜNG riêng lẻ, không gợi ý cả cụm
+            // ghép (vô nghĩa khi gõ "Trường" cho 1 tiết cụ thể).
             const loc = day[s] && day[s].location;
-            if (loc && loc.trim()) truongSet.add(loc.trim());
+            (TS ? TS.splitLocations(loc) : (loc && loc.trim() ? [loc.trim()] : [])).forEach((v) => truongSet.add(v));
           });
         });
       });
@@ -549,6 +564,73 @@
     toast(`✅ Đã dán ${filled} ô` + (skipped ? ` (bỏ qua ${skipped} ô vượt ngoài lưới hiện có)` : '') + '.');
   }
 
+  /** Sau khi lưu lưới TKB — quét lại từng buổi (Thứ×Sáng/Chiều) của giáo
+   * viên/tuần đang xem: nếu các Ô-TIẾT trong CÙNG 1 buổi đó giờ ghi NHIỀU
+   * HƠN 1 tên trường khác nhau (giáo viên/Admin vừa gõ tay cột "Trường"
+   * khác nhau giữa các tiết — đúng tình huống "1 buổi dạy ở 2 trường khác
+   * nhau" phát sinh thực tế, xem banner Excel gốc người dùng cung cấp) thì
+   * TỰ ĐỘNG cập nhật lại field `location` (cấp buổi) bên tab "📅 Lịch tuần"
+   * (collection teaching_schedule) thành "Trường A + Trường B" (xem
+   * M.joinLocations() ở teaching-schedule.model.js) — để lịch tuần/thống
+   * kê/hỗ trợ xăng xe không còn chỉ thấy ĐÚNG 1 trường trong khi TKB đã ghi
+   * rõ 2 trường. CHỈ đồng bộ khi ≥2 trường khác nhau (không đụng tới buổi
+   * chỉ có 1 trường, tránh ghi đè `location` đã gõ tay/khác cách viết hoa
+   * ở tab Lịch tuần khi không thật sự có xung đột trường).
+   * @returns {Promise<string|null>} câu mô tả ngắn để nối vào toast "Đã lưu",
+   *   null nếu không có buổi nào cần đồng bộ. */
+  async function syncScheduleLocationsFromTimetable() {
+    if (!state.days || !TS) return null;
+    const daysPartial = {};
+    let changedCount = 0;
+    M.WEEKDAYS.forEach((d) => {
+      M.SESSIONS.forEach((s) => {
+        const cells = (state.days[String(d)] && state.days[String(d)][s]) || [];
+        const seen = new Set();
+        const schools = [];
+        cells.forEach((cell) => {
+          const truong = (cell && cell.truong || '').trim();
+          if (truong && !seen.has(truong)) { seen.add(truong); schools.push(truong); }
+        });
+        if (schools.length < 2) return; // đúng 0/1 trường — không có gì để đồng bộ ngược
+        const newLocation = TS.joinLocations(schools);
+        const schedDay = state.scheduleDoc && state.scheduleDoc.days && state.scheduleDoc.days[String(d)];
+        const currentLocation = ((schedDay && schedDay[s] && schedDay[s].location) || '').trim();
+        if (currentLocation === newLocation) return;
+        daysPartial[String(d)] = daysPartial[String(d)] || {};
+        daysPartial[String(d)][s] = { location: newLocation };
+        changedCount++;
+      });
+    });
+    if (!changedCount) return null;
+    try {
+      const scheduleId = TS.scheduleDocId(state.teacherCode, state.weekKey);
+      const t = state.teachers.find((x) => x.code === state.teacherCode);
+      const week = state.weeks.find((w) => w.id === state.weekKey);
+      await window.EduRepositories.teachingSchedule.upsert(scheduleId, {
+        teacherCode: state.teacherCode,
+        teacherName: t ? t.name : '',
+        weekKey: state.weekKey,
+        weekLabel: week ? (week.label || week.id) : '',
+        days: daysPartial, // set(..., {merge:true}) — chỉ ghi đè đúng field location của từng buổi liên quan, giữ nguyên periods/type/các buổi khác
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+      // Cập nhật cache cục bộ để lần lưu TIẾP THEO (chưa tải lại trang) so
+      // sánh đúng currentLocation mới, không báo đồng bộ lặp lại vô ích.
+      state.scheduleDoc = state.scheduleDoc || { days: {} };
+      state.scheduleDoc.days = state.scheduleDoc.days || {};
+      Object.entries(daysPartial).forEach(([d, sessObj]) => {
+        state.scheduleDoc.days[d] = state.scheduleDoc.days[d] || {};
+        Object.entries(sessObj).forEach(([s, val]) => {
+          state.scheduleDoc.days[d][s] = Object.assign({}, state.scheduleDoc.days[d][s], val);
+        });
+      });
+      return `phát hiện ${changedCount} buổi dạy ở nhiều trường khác nhau — đã tự cập nhật "Địa điểm giảng dạy" tương ứng ở tab "📅 Lịch tuần"`;
+    } catch (err) {
+      console.warn('[TKB lớp] Không tự đồng bộ được Địa điểm giảng dạy về Lịch tuần:', err);
+      return null;
+    }
+  }
+
   document.getElementById('ttSaveBtn').addEventListener('click', async () => {
     if (!state.teacherCode || !state.weekKey) { toast('⚠️ Chọn tuần và giáo viên trước.'); return; }
     const t = state.teachers.find((x) => x.code === state.teacherCode);
@@ -565,7 +647,8 @@
         days: state.days,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
       });
-      toast('✅ Đã lưu thời khoá biểu');
+      const syncNote = await syncScheduleLocationsFromTimetable();
+      toast(syncNote ? `✅ Đã lưu thời khoá biểu — ${syncNote}` : '✅ Đã lưu thời khoá biểu');
     } catch (err) {
       toast('❌ ' + friendlyError(err));
     } finally {
