@@ -79,8 +79,12 @@
       if (!sess || !sess.type || !ALLOWANCE_TYPES.includes(sess.type)) return;
       const hasPeriod = (sess.periods || []).some((p) => !!p);
       if (!hasPeriod) return;
-      const loc = (sess.location || '').trim();
-      if (loc && !seen.has(loc)) { seen.add(loc); out.push(loc); }
+      // 1 buổi có thể PHÁT SINH dạy ở NHIỀU TRƯỜNG khác nhau (location dạng
+      // "Trường A + Trường B", xem js/models/teaching-schedule.model.js —
+      // LOCATION_SEP/splitLocations()) — phải tách ra để tính hỗ trợ xăng
+      // xe ĐỦ CẢ 2 trường, không tính nhầm thành 1 trường duy nhất.
+      const locs = M.splitLocations ? M.splitLocations(sess.location) : [(sess.location || '').trim()].filter(Boolean);
+      locs.forEach((loc) => { if (!seen.has(loc)) { seen.add(loc); out.push(loc); } });
     });
     return out;
   }

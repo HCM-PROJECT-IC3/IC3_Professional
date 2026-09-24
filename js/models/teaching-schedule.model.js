@@ -66,6 +66,31 @@
   function emptySession() {
     return { type: '', location: '', periods: ['', '', '', '', ''] };
   }
+
+  // Dấu nối dùng khi 1 buổi PHÁT SINH dạy ở NHIỀU TRƯỜNG khác nhau (vd tiết
+  // 1-2 trường A, tiết 3-5 trường B — xem tab "🗓️ TKB lớp", nơi mỗi tiết
+  // giữ riêng tên trường) — field `location` (vốn chỉ 1 trường/buổi) khi đó
+  // được TỰ ĐỘNG đồng bộ ngược thành "Trường A + Trường B" (xem
+  // js/teaching-timetable.js!syncScheduleLocationsFromTimetable(), chạy mỗi
+  // lần Admin lưu lưới TKB). Mọi nơi ĐANG đếm/tính theo từng trường riêng lẻ
+  // (thống kê, hỗ trợ xăng xe) phải tách qua splitLocations() thay vì dùng
+  // thẳng chuỗi `location`, để không tính nhầm 2 trường thành 1.
+  const LOCATION_SEP = ' + ';
+
+  /** Tách `location` (chuỗi) thành danh sách tên trường riêng lẻ — dữ liệu
+   * bình thường (1 trường/buổi) trả về mảng đúng 1 phần tử như cũ. */
+  function splitLocations(location) {
+    return String(location || '')
+      .split(LOCATION_SEP)
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+
+  /** Ghép danh sách tên trường (đã gộp trùng, giữ thứ tự) thành 1 chuỗi
+   * `location` — chiều ngược lại của splitLocations(). */
+  function joinLocations(schools) {
+    return (schools || []).map((s) => String(s || '').trim()).filter(Boolean).join(LOCATION_SEP);
+  }
   function emptyDay() {
     return { morning: emptySession(), afternoon: emptySession() };
   }
@@ -103,13 +128,13 @@
         // ownPeriodClassCodes() trong teaching-schedule.js).
         const taughtPeriods = (sess.periods || []).filter((p) => !!p).length;
         if (sess.type === 'Dạy chính') {
-          if (sess.location) locSet['Dạy chính'].add(sess.location);
+          splitLocations(sess.location).forEach((loc) => locSet['Dạy chính'].add(loc));
           periodsMain += taughtPeriods;
         } else if (sess.type === 'Dạy Trám') {
-          if (sess.location) locSet['Dạy Trám'].add(sess.location);
+          splitLocations(sess.location).forEach((loc) => locSet['Dạy Trám'].add(loc));
           periodsSub += taughtPeriods;
         } else if (sess.type === 'Ôn Thi' || sess.type === 'Dạy Trực Tuyến') {
-          if (sess.location) reviewLocSet.add(sess.location);
+          splitLocations(sess.location).forEach((loc) => reviewLocSet.add(loc));
           periodsReview += taughtPeriods;
         } else if (sess.type === 'Soạn bài') {
           sessionsPrep++;
@@ -202,6 +227,9 @@
     SESSIONS,
     SESSION_LABELS,
     PERIODS_PER_SESSION,
+    LOCATION_SEP,
+    splitLocations,
+    joinLocations,
     emptySession,
     emptyDay,
     emptyDays,
