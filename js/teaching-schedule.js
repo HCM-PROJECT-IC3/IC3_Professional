@@ -517,7 +517,12 @@
     // (trái=Sáng, phải=Chiều, xem tc-chip-list) đã nói lên điều đó.
     const typeRow = `<div class="tc-chip-title"><b>T${d}</b> ${hasType ? esc(sess.type) : 'Lớp đang dạy'}</div>`;
     const lopRow = codes.length ? `<div class="tc-chip-lop">${esc(codes.join(', '))}</div>` : '';
-    const truongRow = hasType && sess.location ? `<div class="tc-chip-truong">${esc(sess.location)}</div>` : '';
+    // Buổi dạy Ở 2 TRƯỜNG (location = "Trường A + Trường B", xem
+    // M.splitLocations()) → tách thành 2 dòng riêng thay vì dính chung 1
+    // chuỗi dài, giống đúng cách file Excel gốc trình bày 2 cột/buổi (cột
+    // chính + cột phụ) cho cùng 1 ngày — mỗi trường 1 dòng, rõ ràng.
+    const schoolRows = hasType ? M.splitLocations(sess.location) : [];
+    const truongRow = schoolRows.map((s) => `<div class="tc-chip-truong">${esc(s)}</div>`).join('');
     return `<span class="tc-chip ${suffix}"${title}>${typeRow}${lopRow}${truongRow}</span>`;
   }
   /** 1 ô trong lưới 2 cột Sáng/Chiều — luôn trả về 1 phần tử (chip màu nếu
@@ -1323,9 +1328,48 @@
   //     dòng 2-6: tiết 1-5 (SÁNG)
   //     dòng 7: loại hình (CHIỀU) | dòng 8: địa điểm (CHIỀU)
   //     dòng 9-13: tiết 1-5 (CHIỀU)
+  //   CỘT PHỤ (H,J,L,N,P,R = ngay bên phải mỗi cột Thứ, idx+1) — buổi nào
+  //   giáo viên dạy ở 2 TRƯỜNG khác nhau trong cùng buổi (vd Chiều Thứ Tư
+  //   nửa buổi ở trường A, nửa buổi ở trường B) thì người nhập lịch ghi
+  //   TRƯỜNG THỨ 2 + các tiết tương ứng ngay cột phụ này, cùng khối 14
+  //   dòng, giống hệt cột chính (xem banner Excel người dùng cung cấp,
+  //   cột L cạnh cột K/Thứ 4 của cô Huỳnh Ngọc Tuyết). Trước đây
+  //   WEEKDAY_COL_IDX chỉ trỏ vào cột CHÍNH nên toàn bộ dữ liệu cột phụ bị
+  //   ĐỌC SÓT khi nhập — mergeSecondarySchoolColumn() bên dưới gộp lại,
+  //   ghép `location` thành "Trường A + Trường B" bằng M.joinLocations()
+  //   (cùng quy ước với syncScheduleLocationsFromTimetable() ở
+  //   teaching-timetable.js) để thống kê/hỗ trợ xăng xe tính đúng 2 trường.
   // ============================================================
   const WEEKDAY_COL_IDX = [6, 8, 10, 12, 14, 16]; // 0-based, ứng với Thứ2..Thứ7
   const BLOCK_ROWS = 14;
+
+  /** Gộp session cột phụ (2 trường/buổi) vào session cột chính đã đọc được
+   * — `location` ghép bằng M.joinLocations() (bỏ trùng), `type` giữ của
+   * cột chính (chỉ lấy của cột phụ khi cột chính bỏ trống loại hình),
+   * `periods[i]` ưu tiên giá trị cột chính, chỉ lấy của cột phụ khi đúng
+   * tiết đó cột chính đang trống (đúng tình huống thực tế: 1 buổi nhưng
+   * mỗi trường dạy các tiết khác nhau, không tiết nào trùng cả 2 trường).
+   * `periodSchools[i]` = ĐÚNG trường của riêng tiết i (cột nào có mã lớp ở
+   * tiết đó thì lấy trường của cột đó) — field `location` gộp
+   * ("Trường A + Trường B") không đủ để biết tiết nào ở trường nào, nên
+   * giữ thêm mảng này để tab "🗓️ TKB lớp" tự điền ĐÚNG "Trường" cho từng
+   * tiết khi auto-fill (xem applyScheduleAutoFill() ở teaching-timetable.js
+   * — trước đây chỉ có `location` gộp nên KHÔNG tự điền được, để trống
+   * "Trường" ở mọi tiết của buổi 2-trường, đúng lỗi người dùng gặp: tiết
+   * 4 chiều Thứ 4 hiện mã lớp nhưng thiếu tên trường). */
+  function mergeSecondarySchoolColumn(primary, secondary) {
+    const hasSecondary = secondary.type || secondary.location || secondary.periods.some(Boolean);
+    if (!hasSecondary) return primary;
+    const schools = [];
+    M.splitLocations(primary.location).forEach((s) => { if (!schools.includes(s)) schools.push(s); });
+    M.splitLocations(secondary.location).forEach((s) => { if (!schools.includes(s)) schools.push(s); });
+    return {
+      type: primary.type || secondary.type,
+      location: M.joinLocations(schools),
+      periods: primary.periods.map((p, i) => p || secondary.periods[i] || ''),
+      periodSchools: primary.periods.map((p, i) => (p ? primary.location : (secondary.periods[i] ? secondary.location : ''))),
+    };
+  }
 
   function computeWeekKeyFromLabel(label, fallbackSheetName) {
     const m = String(label || '').match(/(\d{1,2})\.(\d{1,2})/);
@@ -1377,15 +1421,17 @@
       WEEKDAY_COL_IDX.forEach((col, wi) => {
         const weekday = wi + 2;
         const cell = (row, c) => String((rows[0] && block[row] && block[row][c]) ?? '').trim();
+        const readSession = (typeRow, locRow, periodRows, c) => ({
+          type: cell(typeRow, c), location: cell(locRow, c),
+          periods: periodRows.map((rr) => cell(rr, c)),
+        });
+        const morningPrimary = readSession(0, 1, [2, 3, 4, 5, 6], col);
+        const morningSecondary = readSession(0, 1, [2, 3, 4, 5, 6], col + 1);
+        const afternoonPrimary = readSession(7, 8, [9, 10, 11, 12, 13], col);
+        const afternoonSecondary = readSession(7, 8, [9, 10, 11, 12, 13], col + 1);
         days[String(weekday)] = {
-          morning: {
-            type: cell(0, col), location: cell(1, col),
-            periods: [2, 3, 4, 5, 6].map((rr) => cell(rr, col)),
-          },
-          afternoon: {
-            type: cell(7, col), location: cell(8, col),
-            periods: [9, 10, 11, 12, 13].map((rr) => cell(rr, col)),
-          },
+          morning: mergeSecondarySchoolColumn(morningPrimary, morningSecondary),
+          afternoon: mergeSecondarySchoolColumn(afternoonPrimary, afternoonSecondary),
         };
       });
 

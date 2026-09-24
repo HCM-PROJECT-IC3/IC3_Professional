@@ -108,8 +108,13 @@
     M.WEEKDAYS.forEach((d) => {
       const day = (days && days[String(d)]) || M.emptyDay();
       M.SESSIONS.forEach((s) => {
-        const loc = oneLine(day[s] && day[s].location);
-        if (loc && !seen.has(loc)) { seen.add(loc); out.push(loc); }
+        // Buổi dạy Ở 2 TRƯỜNG ("Trường A + Trường B") phải tách ra để liệt
+        // kê ĐỦ CẢ 2 trường trong công văn công tác, không được coi cả cụm
+        // ghép là 1 "địa điểm" duy nhất (xem M.splitLocations()).
+        M.splitLocations(day[s] && day[s].location).forEach((raw) => {
+          const loc = oneLine(raw);
+          if (loc && !seen.has(loc)) { seen.add(loc); out.push(loc); }
+        });
       });
     });
     return out;

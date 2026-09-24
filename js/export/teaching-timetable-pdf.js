@@ -118,15 +118,15 @@
    * thuộc CSS in trình duyệt. KHÔNG chèn hàng "☕ Ra chơi" (bản in PDF bỏ
    * hẳn, khác bản web) — theo yêu cầu người dùng, giữ bảng gọn hơn.
    *
-   * MỖI THỨ có khung giờ RIÊNG (periodTimesByDay) — cột "Thời gian" hiện
-   * giờ THAM CHIẾU (Thứ 2, hoặc Thứ đầu tiên có tiết đó) giống bản web;
-   * Thứ nào có giờ THỰC TẾ khác giờ tham chiếu thì được nối thêm dòng giờ
-   * riêng ngay trong ô Thứ đó (xem cellText()), KHÔNG bịa 1 giờ chung sai
-   * cho những Thứ lệch khung. */
+   * KHÔNG có cột "Thời gian" riêng (bản gốc Excel không có cột này) — giờ
+   * học TỪNG THỨ (periodTimesByDay có thể khác nhau theo ngày) được đưa
+   * THẲNG vào đầu mỗi ô Thứ×Tiết, cùng với Lớp/Trường (xem cellText()),
+   * để mỗi ô tự đủ thông tin "giờ — lớp — trường" mà không cần tra chéo
+   * sang 1 cột riêng. */
   function buildRows(days, periodTimesByDay, M) {
-    const head = [['Buổi', 'Tiết', 'Thời gian', ...M.WEEKDAYS.map((d) => M.WEEKDAY_LABELS[d])]];
+    const head = [['Buổi', 'Tiết', ...M.WEEKDAYS.map((d) => M.WEEKDAY_LABELS[d])]];
     const body = [];
-    const totalCols = 3 + M.WEEKDAYS.length;
+    const totalCols = 2 + M.WEEKDAYS.length;
     const SESSION_STYLE = {
       morning:   { fillColor: [255, 247, 224], textColor: [169, 122, 0] },
       afternoon: { fillColor: [240, 236, 255], textColor: [79, 107, 255] },
@@ -136,7 +136,6 @@
       const maxCount = M.maxPeriodCount(periodTimesByDay, sessionKey);
 
       for (let pi = 0; pi < maxCount; pi++) {
-        const refPeriod = M.WEEKDAYS.map((d) => (periodTimesByDay[String(d)][sessionKey] || [])[pi]).find(Boolean);
         const row = [];
         if (pi === 0) {
           row.push({
@@ -146,14 +145,14 @@
           });
         }
         row.push(String(pi + 1));
-        row.push(refPeriod ? `${refPeriod.start || '?'} - ${refPeriod.end || '?'}` : '—');
         M.WEEKDAYS.forEach((d) => {
           const dayPeriod = (periodTimesByDay[String(d)][sessionKey] || [])[pi];
           if (!dayPeriod) { row.push({ content: '—', styles: { textColor: GRAY } }); return; }
           const raw = ((days[String(d)] || {})[sessionKey] || [])[pi];
           const cell = M.cellOf(raw);
-          const differsFromRef = cell.maLop && refPeriod && (dayPeriod.start !== refPeriod.start || dayPeriod.end !== refPeriod.end);
-          const ownTime = differsFromRef ? `(${dayPeriod.start || '?'}-${dayPeriod.end || '?'})\n` : '';
+          // Chỉ in giờ ngay trong ô khi BUỔI ĐÓ THẬT SỰ có lớp — ô trống (Thứ
+          // không dạy tiết này) vẫn chỉ hiện "—" gọn, không cần giờ kèm theo.
+          const ownTime = cell.maLop ? `${dayPeriod.start || '?'} - ${dayPeriod.end || '?'}\n` : '';
           row.push(ownTime + cellText(days, M, sessionKey, d, pi));
         });
         body.push(row);
@@ -185,9 +184,9 @@
     const startY = doc.__startY;
     const { head, body } = doc.__rows;
     const pageWidth = doc.internal.pageSize.getWidth();
-    // 3 cột đầu (Buổi/Tiết/Thời gian) PHẢI đủ rộng cho chữ DÀI NHẤT sẽ in ở
-    // cỡ (fontSize) đang thử — hệ số ước lượng trước đó (fontSize * 3.4)
-    // vẫn KHÔNG đủ ở vài cỡ chữ, chữ vẫn bị ngắt dòng giữa từ ("Buổi" →
+    // 2 cột đầu (Buổi/Tiết) PHẢI đủ rộng cho chữ DÀI NHẤT sẽ in ở cỡ
+    // (fontSize) đang thử — hệ số ước lượng trước đó (fontSize * 3.4) vẫn
+    // KHÔNG đủ ở vài cỡ chữ, chữ vẫn bị ngắt dòng giữa từ ("Buổi" →
     // "Buổ"+"i", "SÁNG" → "SÁN"+"G"). Đo THẬT bề rộng từng chữ bằng
     // doc.getTextWidth() (đúng cỡ/độ đậm sẽ dùng khi vẽ) rồi mới cộng
     // cellPadding — đảm bảo KHÔNG BAO GIỜ bị ngắt dòng bất kể cỡ chữ nào.
@@ -195,15 +194,12 @@
     doc.setFontSize(fontSize + 1);
     const buoiHeadW = doc.getTextWidth('Buổi');
     const tietHeadW = doc.getTextWidth('Tiết');
-    const timeHeadW = doc.getTextWidth('Thời gian');
     doc.setFontSize(fontSize);
     const buoiBodyW = Math.max(doc.getTextWidth('SÁNG'), doc.getTextWidth('CHIỀU'));
-    const timeBodyW = doc.getTextWidth('07:30 - 08:05'); // mẫu giờ dài nhất thực tế (HH:MM - HH:MM)
     const pad = cellPadding * 2 + 4;
     const labelColWidth = Math.max(34, buoiHeadW, buoiBodyW) + pad;
     const tietColWidth = Math.max(30, tietHeadW) + pad;
-    const timeColWidth = Math.max(62, timeHeadW, timeBodyW) + pad;
-    const dayColWidth = (pageWidth - PAGE_MARGIN * 2 - labelColWidth - tietColWidth - timeColWidth) / doc.__weekdayCount;
+    const dayColWidth = (pageWidth - PAGE_MARGIN * 2 - labelColWidth - tietColWidth) / doc.__weekdayCount;
 
     global.autoTable(doc, {
       startY,
@@ -218,7 +214,6 @@
       columnStyles: {
         0: { cellWidth: labelColWidth },
         1: { cellWidth: tietColWidth, textColor: GRAY, fontStyle: 'bold' },
-        2: { cellWidth: timeColWidth, fontStyle: 'bold' },
       },
       // Ô vạch ngăn cách SÁNG/CHIỀU (content: '', colSpan toàn bảng, xem
       // buildRows()) được vẽ CAO hơn thật (minCellHeight 16) rồi SƠN TRẮNG
