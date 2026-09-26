@@ -23,20 +23,68 @@
 
   var CONFIG = {
     startHp: 100,
-    timePerQuestionSec: 15,
     maxQuestionsPerMatch: 15,
-    dmg: { normal: 10, combo: 16, critical: 26, ultimate: 45, enemyCounter: 12 },
+    dmg: { normal: 10, combo: 16, critical: 26, ultimate: 45 },
     comboTier: function (combo) {
-      if (combo >= 10) return { label: '💥 ULTIMATE!', dmg: CONFIG.dmg.ultimate };
-      if (combo >= 5) return { label: '⚡ CRITICAL!', dmg: CONFIG.dmg.critical };
-      if (combo >= 3) return { label: '🔥 Combo Attack!', dmg: CONFIG.dmg.combo };
-      return { label: 'Tấn công!', dmg: CONFIG.dmg.normal };
+      if (combo >= 10) return { label: '💥 ULTIMATE!', dmg: CONFIG.dmg.ultimate, sfx: 'critical' };
+      if (combo >= 5) return { label: '⚡ CRITICAL!', dmg: CONFIG.dmg.critical, sfx: 'critical' };
+      if (combo >= 3) return { label: '🔥 Combo Attack!', dmg: CONFIG.dmg.combo, sfx: 'combo' };
+      return { label: 'Tấn công!', dmg: CONFIG.dmg.normal, sfx: 'correct' };
     },
   };
+
+  // ── Dãy đối thủ (boss ladder) — dùng lại đúng bộ ảnh "zombie mối đe doạ
+  // mạng" đã có sẵn từ pz-defense (img/pz-defense/), xếp theo mức độ nguy
+  // hiểm tăng dần để vừa tạo cảm giác "lên hạng" khi thắng liên tiếp, vừa
+  // ôn lại đúng các khái niệm An toàn & bảo mật (chủ đề 7 IC3). Thắng 1
+  // trận → tiến 1 bậc (lưu localStorage, KHÔNG lùi hạng khi thua) — đây là
+  // động lực "chơi lại để lên hạng tiếp" thay vì luôn gặp lại đúng 1 đối
+  // thủ y hệt mọi ván như bản cũ.
+  var ENEMIES = [
+    { id: 'adware',       name: 'Adware — Quảng cáo độc hại',   img: 'img/pz-defense/zom_adware.png',       hp: 70,  counterDmg: 8,  timePerQ: 15 },
+    { id: 'spyware',      name: 'Spyware — Phần mềm gián điệp', img: 'img/pz-defense/zom_spyware.png',      hp: 85,  counterDmg: 9,  timePerQ: 14 },
+    { id: 'virus',        name: 'Virus máy tính',                img: 'img/pz-defense/zom_virus.png',        hp: 100, counterDmg: 10, timePerQ: 14 },
+    { id: 'worm',         name: 'Worm — Sâu máy tính',           img: 'img/pz-defense/zom_worm.png',         hp: 112, counterDmg: 11, timePerQ: 13 },
+    { id: 'trojan',       name: 'Trojan — Ngựa thành Troy',      img: 'img/pz-defense/zom_trojan.png',       hp: 124, counterDmg: 12, timePerQ: 13 },
+    { id: 'phishing',     name: 'Phishing — Lừa đảo trực tuyến', img: 'img/pz-defense/zom_phishing.png',     hp: 136, counterDmg: 13, timePerQ: 12 },
+    { id: 'sqlinjection', name: 'SQL Injection',                 img: 'img/pz-defense/zom_sqlinjection.png', hp: 148, counterDmg: 14, timePerQ: 12 },
+    { id: 'rootkit',      name: 'Rootkit',                       img: 'img/pz-defense/zom_rootkit.png',      hp: 160, counterDmg: 15, timePerQ: 11 },
+    { id: 'logicbomb',    name: 'Logic Bomb — Bom logic',        img: 'img/pz-defense/zom_logicbomb.png',    hp: 172, counterDmg: 16, timePerQ: 11 },
+    { id: 'ransomware',   name: 'Ransomware — Tống tiền dữ liệu',img: 'img/pz-defense/zom_ransom.png',       hp: 188, counterDmg: 18, timePerQ: 10 },
+    { id: 'botnet',       name: 'Botnet',                        img: 'img/pz-defense/zom_botnet.png',       hp: 205, counterDmg: 20, timePerQ: 10 },
+    { id: 'ddos',         name: 'DDoS — Trùm cuối',              img: 'img/pz-defense/zom_ddos.png',         hp: 230, counterDmg: 24, timePerQ: 9  },
+  ];
+  var PROGRESS_KEY = 'eduquiz_battlequiz_progress'; // { enemyIndex: number, wins: number }
+
+  function sfx(name) { if (window.EduSFX) window.EduSFX.play(name); }
+
+  function loadProgress() {
+    try {
+      var p = JSON.parse(localStorage.getItem(PROGRESS_KEY) || '{}');
+      return { enemyIndex: p.enemyIndex || 0, wins: p.wins || 0 };
+    } catch (e) { return { enemyIndex: 0, wins: 0 }; }
+  }
+  function saveProgress(p) {
+    try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(p)); } catch (e) { /* ignore */ }
+  }
+  function currentEnemy() {
+    var p = loadProgress();
+    return ENEMIES[Math.min(p.enemyIndex, ENEMIES.length - 1)];
+  }
+  function isLastEnemy(enemy) {
+    return ENEMIES.indexOf(enemy) === ENEMIES.length - 1;
+  }
+  function advanceProgressAfterWin() {
+    var p = loadProgress();
+    if (p.enemyIndex < ENEMIES.length - 1) p.enemyIndex += 1;
+    p.wins += 1;
+    saveProgress(p);
+  }
 
   // ── State ──
   var state = {
     playerHp: CONFIG.startHp,
+    enemy: null,
     enemyHp: CONFIG.startHp,
     score: 0,
     xp: 0,
@@ -67,6 +115,10 @@
     el.playerHpText = qs('bqPlayerHpText');
     el.enemyHpFill = qs('bqEnemyHpFill');
     el.enemyHpText = qs('bqEnemyHpText');
+    el.enemyHpMax = qs('bqEnemyHpMax');
+    el.enemyName = qs('bqEnemyName');
+    el.enemyImg = qs('bqEnemyImg');
+    el.enemyPreview = qs('bqEnemyPreview');
     el.playerAvatar = document.querySelector('.bq-fighter-player .bq-fighter-avatar');
     el.enemyAvatar = document.querySelector('.bq-fighter-enemy .bq-fighter-avatar');
     el.floaterLayer = qs('bqFloaterLayer');
@@ -142,7 +194,21 @@
 
   // ── Màn chọn chủ đề ──
 
+  function renderEnemyPreview() {
+    var p = loadProgress();
+    var enemy = currentEnemy();
+    var rankLabel = isLastEnemy(enemy) ? 'TRÙM CUỐI' : 'Đối thủ #' + (p.enemyIndex + 1) + '/' + ENEMIES.length;
+    el.enemyPreview.innerHTML =
+      '<img src="' + enemy.img + '" alt="' + enemy.name + '" class="bq-enemy-preview-img">' +
+      '<div class="bq-enemy-preview-info">' +
+        '<div class="bq-enemy-preview-rank">' + rankLabel + (p.wins > 0 ? ' · 🏆 ' + p.wins + ' trận thắng' : '') + '</div>' +
+        '<div class="bq-enemy-preview-name">' + enemy.name + '</div>' +
+        '<div class="bq-enemy-preview-hp">❤️ ' + enemy.hp + ' HP · ⏱ ' + enemy.timePerQ + 's/câu</div>' +
+      '</div>';
+  }
+
   function buildTopicOverlay() {
+    renderEnemyPreview();
     var topics = (window.EduGameEngine && window.EduGameEngine.QuestionTopicMap)
       ? window.EduGameEngine.QuestionTopicMap.CANONICAL_TOPICS
       : ['1. Căn bản về công nghệ', '2. Công dân số', '3. Quản lý thông tin', '4. Sáng tạo nội dung', '5. Giao tiếp', '6. Hợp tác, cộng tác', '7. An toàn và bảo mật'];
@@ -168,7 +234,12 @@
 
   function resetState() {
     state.playerHp = CONFIG.startHp;
-    state.enemyHp = CONFIG.startHp;
+    state.enemy = currentEnemy();
+    state.enemyHp = state.enemy.hp;
+    el.enemyImg.src = state.enemy.img;
+    el.enemyImg.alt = state.enemy.name;
+    el.enemyName.textContent = state.enemy.name;
+    el.enemyHpMax.textContent = state.enemy.hp;
     state.score = 0;
     state.xp = 0;
     state.combo = 0;
@@ -222,7 +293,8 @@
 
   function startTimer() {
     clearInterval(state.timerHandle);
-    state.timeLeftMs = CONFIG.timePerQuestionSec * 1000;
+    state.timePerQuestionMs = state.enemy.timePerQ * 1000;
+    state.timeLeftMs = state.timePerQuestionMs;
     var tickMs = 100;
     updateTimerBar();
     state.timerHandle = setInterval(function () {
@@ -236,7 +308,7 @@
   }
 
   function updateTimerBar() {
-    var pct = Math.max(0, state.timeLeftMs / (CONFIG.timePerQuestionSec * 1000)) * 100;
+    var pct = Math.max(0, state.timeLeftMs / state.timePerQuestionMs) * 100;
     el.timerFill.style.width = pct + '%';
     el.timerFill.classList.toggle('bq-timer-low', pct < 30);
   }
@@ -263,13 +335,16 @@
       var tier = CONFIG.comboTier(state.combo);
       state.enemyHp = Math.max(0, state.enemyHp - tier.dmg);
       state.score += 10 + state.combo;
+      sfx(tier.sfx);
       showFloater(tier.label + ' -' + tier.dmg, 'bq-floater-dmg', true);
       shakeAvatar(el.enemyAvatar);
     } else {
       state.combo = 0;
       state.wrongCount += 1;
-      state.playerHp = Math.max(0, state.playerHp - CONFIG.dmg.enemyCounter);
-      showFloater((selectedText === null ? '⏱ Hết giờ! ' : '❌ Sai! ') + '-' + CONFIG.dmg.enemyCounter, 'bq-floater-dmg', false);
+      var counterDmg = state.enemy.counterDmg;
+      state.playerHp = Math.max(0, state.playerHp - counterDmg);
+      sfx('wrong');
+      showFloater((selectedText === null ? '⏱ Hết giờ! ' : '❌ Sai! ') + '-' + counterDmg, 'bq-floater-dmg', false);
       shakeAvatar(el.playerAvatar);
     }
 
@@ -306,9 +381,10 @@
     el.score.textContent = state.score;
     el.combo.textContent = state.combo;
     el.xp.textContent = state.xp;
+    if (window.EduFX) { EduFX.pop(el.score); if (state.combo > 0) EduFX.pop(el.combo); }
     el.playerHpFill.style.width = state.playerHp + '%';
     el.playerHpText.textContent = state.playerHp;
-    el.enemyHpFill.style.width = state.enemyHp + '%';
+    el.enemyHpFill.style.width = Math.max(0, (state.enemyHp / state.enemy.hp) * 100) + '%';
     el.enemyHpText.textContent = state.enemyHp;
   }
 
@@ -324,13 +400,34 @@
     state.xp = Math.round(accuracyPct * 0.5) + (win ? 20 : 0);
     updateHud();
 
+    var rankUpNote = '';
+    if (win) {
+      var wasLast = isLastEnemy(state.enemy);
+      advanceProgressAfterWin();
+      sfx('win');
+      if (window.EduFX) {
+        EduFX.confetti({ x: 0.3, count: wasLast ? 80 : 55 });
+        if (wasLast) setTimeout(function () { EduFX.confetti({ x: 0.7, count: 80 }); }, 200);
+      }
+      if (wasLast) {
+        rankUpNote = '\n\n👑 Bạn đã hạ TRÙM CUỐI! Chơi lại để phá kỷ lục điểm số.';
+      } else {
+        var next = currentEnemy();
+        rankUpNote = '\n\n⬆ Lên hạng! Đối thủ tiếp theo: ' + next.name + ' (' + next.hp + ' HP).';
+      }
+    } else {
+      sfx('lose');
+      if (window.EduFX) EduFX.shake(el.resultOverlay);
+    }
+
     el.resultIcon.textContent = win ? '🏆' : '💥';
-    el.resultTitle.textContent = win ? 'Chiến Thắng!' : 'Bạn Đã Thua!';
+    el.resultTitle.textContent = win ? 'Chiến Thắng trước ' + state.enemy.name + '!' : 'Bạn Đã Thua!';
     el.resultStats.textContent =
       'Điểm: ' + state.score + '\n' +
       'Độ chính xác: ' + accuracyPct + '% (' + state.correctCount + ' đúng / ' + state.wrongCount + ' sai)\n' +
       'Combo cao nhất: ' + state.maxCombo + '\n' +
-      'XP nhận được: +' + state.xp;
+      'XP nhận được: +' + state.xp +
+      rankUpNote;
     el.resultOverlay.hidden = false;
 
     recordSessionIfPossible(win, accuracyPct);
@@ -372,10 +469,12 @@
     buildTopicOverlay();
     el.restartBtn.addEventListener('click', function () {
       clearInterval(state.timerHandle);
+      renderEnemyPreview();
       el.resultOverlay.hidden = true;
       el.topicOverlay.hidden = false;
     });
     el.playAgainBtn.addEventListener('click', function () {
+      renderEnemyPreview();
       el.resultOverlay.hidden = true;
       el.topicOverlay.hidden = false;
     });

@@ -13,9 +13,29 @@
   ];
 
   var MAX_MISTAKES = 3;
+  var BEST_KEY = 'eduquiz_sudoku_best'; // { easy: seconds, medium: seconds, hard: seconds } — kỷ lục thời gian giải nhanh nhất mỗi mức, tạo động lực chơi lại để phá kỷ lục của chính mình.
 
   var state = null; // gán trong startGame()
   var dom = {};
+
+  function sfx(name) { if (window.EduSFX) window.EduSFX.play(name); }
+
+  function loadBests() {
+    try { return JSON.parse(localStorage.getItem(BEST_KEY) || '{}'); } catch (e) { return {}; }
+  }
+  function fmtTime(sec) {
+    var m = Math.floor(sec / 60), s = sec % 60;
+    return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+  }
+  /** Ghi kỷ lục mới nếu thời gian này nhanh hơn — trả về true nếu vừa phá kỷ lục. */
+  function saveBestIfBetter(diffId, seconds) {
+    var bests = loadBests();
+    var prev = bests[diffId];
+    if (prev != null && prev <= seconds) return false;
+    bests[diffId] = seconds;
+    try { localStorage.setItem(BEST_KEY, JSON.stringify(bests)); } catch (e) { /* ignore */ }
+    return true;
+  }
 
   /* ---------- Tiện ích lưới 9x9 (mảng phẳng 81 phần tử) ---------- */
 
@@ -118,7 +138,9 @@
 
   function renderPicker() {
     dom.picker.innerHTML = '';
+    var bests = loadBests();
     DIFFICULTIES.forEach(function (d) {
+      var best = bests[d.id];
       var card = document.createElement('button');
       card.type = 'button';
       card.className = 'sk-diff-card';
@@ -128,8 +150,9 @@
         '<span class="sk-diff-name">' + d.name + '</span>' +
         '<span class="sk-diff-desc">' + d.desc + '</span>' +
         '<span class="sk-diff-clues">' + d.clues + ' ô cho sẵn · ' + d.hints + ' gợi ý</span>' +
+        (best != null ? '<span class="sk-diff-best">🏅 Kỷ lục: ' + fmtTime(best) + '</span>' : '') +
         '</span>';
-      card.addEventListener('click', function () { startGame(d); });
+      card.addEventListener('click', function () { sfx('click'); startGame(d); });
       dom.picker.appendChild(card);
     });
     dom.picker.style.display = '';
@@ -285,6 +308,7 @@
       state.grid[idx] = n;
       delete state.errorSet[idx];
       clearNotesForPlacement(idx, n);
+      sfx('correct');
       renderBoard();
       updateNumpadCounts();
       checkWin();
@@ -292,6 +316,7 @@
       state.grid[idx] = n;
       state.errorSet[idx] = true;
       state.mistakes++;
+      sfx('wrong');
       updateHUD();
       renderBoard();
       updateNumpadCounts();
@@ -354,6 +379,7 @@
     state.hintSet[pick] = true;
     state.hintsLeft--;
     state.selected = pick;
+    sfx('flip');
 
     updateHUD();
     renderBoard();
@@ -408,18 +434,26 @@
     state.selected = -1;
     stopTimer();
 
-    var m = Math.floor(state.seconds / 60), s = state.seconds % 60;
-    var timeStr = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+    var timeStr = fmtTime(state.seconds);
     var hintsUsed = state.difficulty.hints - state.hintsLeft;
 
     if (won) {
+      // Chỉ tính kỷ lục khi KHÔNG dùng gợi ý — giữ ý nghĩa "tự giải nhanh nhất",
+      // tránh kỷ lục ảo nhờ bấm hết gợi ý cho xong nhanh.
+      var isNewBest = hintsUsed === 0 && saveBestIfBetter(state.difficulty.id, state.seconds);
+      sfx(isNewBest ? 'win' : 'match');
+      if (window.EduFX) EduFX.confetti(isNewBest ? { count: 90 } : { count: 45 });
       dom.overlayIcon.textContent = '🏆';
-      dom.overlayTitle.textContent = 'Hoàn thành!';
-      dom.overlaySub.textContent = 'Bạn đã giải xong Sudoku mức ' + state.difficulty.name + '!';
+      dom.overlayTitle.textContent = isNewBest ? 'Kỷ lục mới! 🎉' : 'Hoàn thành!';
+      dom.overlaySub.textContent = isNewBest
+        ? 'Bạn vừa lập kỷ lục nhanh nhất mức ' + state.difficulty.name + ': ' + timeStr + '!'
+        : 'Bạn đã giải xong Sudoku mức ' + state.difficulty.name + '!';
     } else {
       // Hiển thị lời giải đầy đủ để người chơi đối chiếu.
       state.grid = state.solution.slice();
       renderBoard();
+      sfx('lose');
+      if (window.EduFX) EduFX.shake(dom.board);
       dom.overlayIcon.textContent = '💥';
       dom.overlayTitle.textContent = 'Hết lượt sai!';
       dom.overlaySub.textContent = 'Đừng nản — lời giải đã được hiển thị, thử lại ván mới nhé.';

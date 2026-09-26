@@ -69,6 +69,25 @@
     const form = document.getElementById('a11yForm');
     const input = document.getElementById('a11yInput');
 
+    // ── Chỉ hiện trợ lý khi ĐANG làm bài ở chế độ "Ôn luyện" ────────────
+    // #exam chỉ hiển thị (style.display khác 'none') khi học sinh đang
+    // làm bài (xem startExam() trong quiz-engine.js); lớp "exam-locked"
+    // chỉ được gắn khi State.examMode === 'test' (Kiểm tra — xem
+    // acStartGuard()/acStopGuard()). Không có #exam (vd portfolio.html)
+    // hoặc #exam đang ẩn (trang chọn đề, trang kết quả) → ẩn hẳn nút nổi,
+    // không tạo phiền cho các màn hình khác ngoài lúc ôn luyện.
+    function isPracticingNow() {
+      const examEl = document.getElementById('exam');
+      if (!examEl) return false;
+      const shown = (examEl.style.display || getComputedStyle(examEl).display) !== 'none';
+      return shown && !examEl.classList.contains('exam-locked');
+    }
+    function applyVisibility() {
+      const visible = isPracticingNow();
+      fab.style.display = visible ? '' : 'none';
+      if (!visible && !panel.hidden) closePanel();
+    }
+
     const FONT_KEY = 'a11y_font_scale';
     const CONTRAST_KEY = 'a11y_contrast';
     const FONT_STEPS = [87.5, 100, 112.5, 125, 137.5];
@@ -385,6 +404,15 @@
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && !panel.hidden) closePanel();
     });
+
+    // Theo dõi #exam đổi style/class (bắt đầu/nộp bài, chuyển Ôn luyện ⇄
+    // Kiểm tra qua acStartGuard/acStopGuard) để ẩn/hiện nút nổi kịp thời —
+    // trang là SPA (không load lại), nên không thể chỉ kiểm tra 1 lần.
+    const examEl = document.getElementById('exam');
+    if (examEl) {
+      new MutationObserver(applyVisibility).observe(examEl, { attributes: true, attributeFilter: ['style', 'class'] });
+    }
+    applyVisibility();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

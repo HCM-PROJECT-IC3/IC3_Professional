@@ -89,36 +89,11 @@
   </div>
 </div>
 
-<!-- ============ TRỢ LÝ TRỢ NĂNG (A11y Assistant) ============
-     Trợ lý hỗ trợ tiếp cận: đọc to nội dung, phóng to/thu nhỏ chữ, tăng
-     độ tương phản, trả lời nhanh vài câu hỏi thường gặp về trang. CHẠY
-     HOÀN TOÀN PHÍA TRÌNH DUYỆT (rule-based + Web Speech API có sẵn
-     trong trình duyệt) — KHÔNG gọi Firestore/API nào, KHÔNG lưu lịch sử
-     hỏi đáp lên server. Lý do cố tình chọn hướng này thay vì 1 chatbot
-     AI thật có lưu hội thoại: nếu mỗi câu hỏi/trả lời đều ghi vào
-     Firestore + nghe realtime (kiểu chat nhóm cũ), số lượt đọc/ghi sẽ
-     nhân theo số học sinh/giáo viên mở trang mỗi ngày — đúng vấn đề
-     "reads tăng quá nhanh" đã xử lý ở Trang Social Media/roster trước đó.
-     Trợ lý này vì vậy KHÔNG tốn bất kỳ lượt đọc/ghi Firestore nào, dùng
-     được cho MỌI người xem trang (không cần đăng nhập) — xem
-     js/portfolio.js § A11yAssistant. -->
-<button type="button" class="gv-chat-fab" id="gvA11yFab" title="Trợ lý trợ năng">
-  <i class="fa-solid fa-universal-access"></i>
-</button>
-<div class="gv-chat-panel" id="gvA11yPanel" hidden>
-  <div class="gv-chat-head">
-    <div class="gv-chat-head-title">
-      <span><i class="fa-solid fa-universal-access"></i> Trợ lý trợ năng</span>
-    </div>
-    <button type="button" id="gvA11yCloseBtn" aria-label="Đóng">✕</button>
-  </div>
-  <div class="gv-chat-messages" id="gvA11yMessages"></div>
-  <div class="gv-a11y-chips" id="gvA11yChips"></div>
-  <form class="gv-chat-form" id="gvA11yForm">
-    <input type="text" id="gvA11yInput" placeholder="Hỏi về trang này…" maxlength="200" autocomplete="off">
-    <button type="submit" id="gvA11ySendBtn"><i class="fa-solid fa-paper-plane"></i></button>
-  </form>
-</div>
+<!-- Trợ lý trợ năng (A11y Assistant) đã được bỏ khỏi trang này theo yêu
+     cầu — chỉ hiển thị khi học sinh đang làm bài Ôn luyện trong
+     index.html (xem js/a11y-assistant.js). Markup gvA11yFab/gvA11yPanel
+     cũ đã xoá; js/portfolio.js § A11yAssistant tự return sớm khi không
+     tìm thấy 2 phần tử này nên không cần sửa gì thêm ở đó. -->
 
 <div id="top"></div>
 

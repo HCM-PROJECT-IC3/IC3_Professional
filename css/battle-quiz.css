@@ -186,10 +186,25 @@ body.bq-body {
   z-index: 5;
 }
 .bq-overlay[hidden] { display: none; }
+.bq-overlay:not([hidden]) .bq-overlay-card { animation: eduOverlayPop .38s cubic-bezier(.34,1.56,.64,1); }
+@keyframes eduOverlayPop {
+  0%   { opacity: 0; transform: scale(.75) translateY(10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
 .bq-overlay-card { max-width: 440px; text-align: center; }
 .bq-overlay-icon { font-size: 2.6rem; margin-bottom: 8px; }
 .bq-overlay-title { font-size: 1.15rem; font-weight: 800; margin-bottom: 6px; }
 .bq-overlay-desc { font-size: .82rem; color: #b7bdd6; line-height: 1.5; margin-bottom: 16px; white-space: pre-line; }
+.bq-enemy-preview {
+  display: flex; align-items: center; gap: 12px; text-align: left;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+  border-radius: 12px; padding: 10px 14px; margin-bottom: 16px;
+}
+.bq-enemy-preview-img { width: 52px; height: 52px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 2px 6px rgba(0,0,0,.35)); }
+.bq-enemy-preview-info { flex: 1; min-width: 0; }
+.bq-enemy-preview-rank { font-family: 'Space Mono', monospace; font-size: .62rem; color: #ffd166; font-weight: 700; text-transform: uppercase; }
+.bq-enemy-preview-name { font-weight: 800; font-size: .9rem; color: #f4eee6; margin-top: 2px; }
+.bq-enemy-preview-hp { font-size: .72rem; color: #b7bdd6; margin-top: 2px; }
 .bq-topic-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .bq-topic-btn {
   background: rgba(255,255,255,.06);

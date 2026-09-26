@@ -70,6 +70,14 @@ body.sk-body {
   font-weight: 700;
   margin-top: 4px;
 }
+.sk-diff-best {
+  display: block;
+  font-family: 'Space Mono', monospace;
+  font-size: .62rem;
+  color: #ffd166;
+  font-weight: 700;
+  margin-top: 4px;
+}
 
 /* ── HUD ── */
 .sk-hud { display: flex; gap: 8px; margin: 4px 0 12px; }
@@ -249,6 +257,11 @@ body.sk-body {
   z-index: 5;
 }
 .sk-overlay.show { display: flex; }
+.sk-overlay.show .sk-overlay-card { animation: eduOverlayPop .38s cubic-bezier(.34,1.56,.64,1); }
+@keyframes eduOverlayPop {
+  0%   { opacity: 0; transform: scale(.75) translateY(10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
 .sk-overlay-card { text-align: center; padding: 20px; display: flex; flex-direction: column; align-items: center; }
 .sk-overlay-card .sk-btn { margin-top: 8px; }
 .sk-overlay-icon { font-size: 2.2rem; }

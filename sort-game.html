@@ -4,12 +4,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🧠 Trí Nhớ Thiết Bị & Phần Mềm — Mini Game</title>
+  <title>🧲 Phân Loại Thần Tốc — Mini Game</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
     href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="css/memory-game.css">
+  <link rel="stylesheet" href="css/sort-game.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/accessibility.css">
@@ -17,7 +17,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 
-<body class="mg-body">
+<body class="sg-body">
 <style>
   /* Neumorphism + nút chuyển sáng/tối — gắn NHANH cho trang mini-game này
      (không sửa sâu CSS gốc của game để tránh vỡ layout đã tinh chỉnh kỹ).
@@ -74,66 +74,73 @@
 </script>
 
 
-  <!-- Trang này được nhúng qua modal (js/game-modal.js), cùng
-       pattern với game.html / js/game-modal.js — chỉ chứa
-       đúng 1 mini-game độc lập, không đụng vào quiz-engine.js.
-       Cơ chế: chọn 1 chủ đề (mỗi chủ đề là 1 bộ ảnh trong
-       img/memory-game/), rồi lật 2 thẻ mỗi lượt để tìm cặp ảnh
-       giống nhau. Danh sách chủ đề + ảnh khai báo trong
-       js/memory-game.js (biến CATEGORIES). -->
+  <!-- Trang này được nhúng qua modal (js/game-modal.js), cùng pattern với
+       memory-game.html/sudoku.html — chỉ chứa đúng 1 mini-game độc lập,
+       không đụng vào quiz-engine.js / gamification.js.
+       Cơ chế: từng vật phẩm (dùng lại đúng ảnh trong img/memory-game/)
+       hiện lên, học sinh bấm đúng "thùng" chủ đề trước khi hết giờ riêng
+       của vật phẩm đó — càng đúng liên tiếp (combo) càng nhân điểm cao.
+       Hết giờ TOÀN VÁN (theo độ khó) thì kết thúc, chấm sao theo độ chính
+       xác + lưu kỷ lục điểm cao nhất mỗi độ khó. Toàn bộ logic khai báo
+       trong js/sort-game.js. -->
 
-  <div class="mg-wrap">
-    <div class="mg-header">
-      <div class="mg-title">🧠 Trí Nhớ Thiết Bị &amp; Phần Mềm</div>
-      <div class="mg-subtitle" id="mgSubtitle">Chọn 1 chủ đề để bắt đầu lật thẻ tìm cặp</div>
+  <div class="sg-wrap">
+    <div class="sg-header">
+      <div class="sg-title">🧲 Phân Loại Thần Tốc</div>
+      <div class="sg-subtitle" id="sgSubtitle">Chọn độ khó để bắt đầu</div>
     </div>
 
-    <!-- Màn hình chọn chủ đề -->
-    <div class="mg-picker" id="mgPicker"></div>
+    <!-- Màn hình chọn độ khó -->
+    <div class="sg-picker" id="sgPicker"></div>
 
     <!-- Màn hình chơi -->
-    <div class="mg-play" id="mgPlay" style="display:none;">
-      <div class="mg-hud">
-        <div class="mg-stat">
-          <div class="mg-stat-label">Lượt lật</div>
-          <div class="mg-stat-value" id="mgMoves">0</div>
+    <div class="sg-play" id="sgPlay" style="display:none;">
+      <div class="sg-hud">
+        <div class="sg-stat">
+          <div class="sg-stat-label">Điểm</div>
+          <div class="sg-stat-value" id="sgScore">0</div>
         </div>
-        <div class="mg-stat">
-          <div class="mg-stat-label">Cặp đúng</div>
-          <div class="mg-stat-value" id="mgMatches">0 / 10</div>
+        <div class="sg-stat">
+          <div class="sg-stat-label">Combo</div>
+          <div class="sg-stat-value" id="sgCombo">0</div>
         </div>
-        <div class="mg-stat">
-          <div class="mg-stat-label">Thời gian</div>
-          <div class="mg-stat-value" id="mgTimer">00:00</div>
-        </div>
-      </div>
-
-      <div class="mg-board-outer">
-        <div class="mg-board" id="mgBoard"></div>
-        <div class="mg-toast" id="mgToast"></div>
-
-        <!-- Win overlay -->
-        <div class="mg-overlay" id="mgOverlay">
-          <div class="mg-overlay-card">
-            <div class="mg-overlay-icon" id="mgOverlayIcon">🏆</div>
-            <div class="mg-overlay-title" id="mgOverlayTitle">Hoàn thành!</div>
-            <div class="mg-overlay-sub" id="mgOverlaySub"></div>
-            <button type="button" class="mg-btn mg-btn-primary" id="mgOverlayRestartBtn">🔄 Chơi lại</button>
-            <button type="button" class="mg-btn" id="mgOverlayPickerBtn">🔀 Đổi chủ đề</button>
-          </div>
+        <div class="sg-stat">
+          <div class="sg-stat-label">Thời gian</div>
+          <div class="sg-stat-value" id="sgRoundTimer">60s</div>
         </div>
       </div>
 
-      <div class="mg-footer">
-        <button type="button" class="mg-btn" id="mgRestartBtn">🔄 Chơi lại</button>
-        <button type="button" class="mg-btn" id="mgPickerBtn">🔀 Đổi chủ đề</button>
+      <div class="sg-item-card" id="sgItemCard">
+        <div class="sg-item-timerbar"><div class="sg-item-timerbar-fill" id="sgItemTimerFill"></div></div>
+        <img class="sg-item-img" id="sgItemImg" src="" alt="">
+        <div class="sg-item-label" id="sgItemLabel">—</div>
+      </div>
+
+      <div class="sg-bins" id="sgBins"></div>
+
+      <!-- Kết quả -->
+      <div class="sg-overlay" id="sgOverlay">
+        <div class="sg-overlay-card">
+          <div class="sg-overlay-icon" id="sgOverlayIcon">🏆</div>
+          <div class="sg-overlay-title" id="sgOverlayTitle">Hết giờ!</div>
+          <div class="sg-overlay-sub" id="sgOverlaySub"></div>
+          <div class="sg-overlay-stats" id="sgOverlayStats"></div>
+          <button type="button" class="sg-btn sg-btn-primary" id="sgOverlayRestartBtn">🔄 Chơi lại</button>
+          <button type="button" class="sg-btn" id="sgOverlayPickerBtn">🔀 Đổi độ khó</button>
+        </div>
+      </div>
+
+      <div class="sg-footer">
+        <button type="button" class="sg-btn" id="sgRestartBtn">🔄 Chơi lại</button>
+        <button type="button" class="sg-btn" id="sgPickerBtn">🔀 Đổi độ khó</button>
       </div>
     </div>
   </div>
 
+  <script src="js/gamification.js"></script>
   <script src="js/game-sfx.js"></script>
   <script src="js/game-fx.js"></script>
-  <script src="js/memory-game.js"></script>
+  <script src="js/sort-game.js"></script>
 <script src="js/motion.js"></script>
 </body>
 

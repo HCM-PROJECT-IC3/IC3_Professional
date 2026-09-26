@@ -38,6 +38,13 @@
   font-family: 'Inter', system-ui, sans-serif;
   transition: height .2s ease;
 }
+/* QUAN TRỌNG: rule display:flex ở trên (author CSS) sẽ ĐÈ LÊN rule mặc
+   định [hidden]{display:none} của trình duyệt (UA stylesheet luôn thua
+   author CSS dù specificity ngang nhau) — nếu thiếu dòng dưới đây thì
+   panel.hidden = true trong JS (đóng/không hiện panel) sẽ KHÔNG có tác
+   dụng, panel vẫn hiện. Selector [hidden] có specificity cao hơn nên
+   thắng được rule display:flex phía trên. */
+.a11y-panel[hidden] { display: none }
 /* Thu nhỏ: chỉ còn dải tiêu đề (bấm nút − hoặc bấm chính dải tiêu đề để
    phóng to lại) — vẫn giữ nguyên vị trí/lịch sử chat, chỉ ẩn phần thân. */
 .a11y-panel.is-minimized { height: auto }

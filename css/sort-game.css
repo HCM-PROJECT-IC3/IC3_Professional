@@ -1,0 +1,204 @@
+/* ════════════════════════════════════════════════════════════
+   css/sort-game.css — Mini-game "Phân Loại Thần Tốc"
+   Cùng design token / "look" tối màu như css/memory-game.css,
+   css/sudoku.css (radial navy background, Baloo 2, thẻ bo tròn).
+   Trang sort-game.html được nhúng qua modal, xem js/game-modal.js.
+   ════════════════════════════════════════════════════════════ */
+
+* { box-sizing: border-box; }
+
+body.sg-body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Baloo 2', sans-serif;
+  background: radial-gradient(ellipse at top, #1c2140 0%, #0e1024 70%);
+  color: #f4eee6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.sg-wrap { width: 100%; max-width: 560px; }
+
+/* ── Header / HUD ── */
+.sg-header { text-align: center; margin-bottom: 10px; }
+.sg-title {
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: .02em;
+  background: linear-gradient(90deg, #8fa4ff, #66e0d0, #ffcf80);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.sg-subtitle { font-size: .75rem; color: #b7bdd6; margin-top: 2px; }
+
+.sg-hud { display: flex; gap: 8px; margin: 12px 0 8px; }
+.sg-stat {
+  flex: 1;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 14px;
+  padding: 8px 10px;
+  text-align: center;
+}
+.sg-stat-label { font-size: .62rem; color: #9aa0c0; text-transform: uppercase; letter-spacing: .04em; }
+.sg-stat-value { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 1.05rem; margin-top: 2px; }
+
+/* ── Difficulty picker ── */
+.sg-picker { display: flex; flex-direction: column; gap: 10px; }
+.sg-diff-card {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  padding: 14px;
+  text-align: left;
+  color: #f4eee6;
+  font-family: 'Baloo 2', sans-serif;
+  cursor: pointer;
+  transition: .2s;
+}
+.sg-diff-card:hover { background: rgba(255,255,255,.12); transform: translateY(-2px); }
+.sg-diff-icon { font-size: 1.6rem; flex-shrink: 0; }
+.sg-diff-body { flex: 1; display: flex; flex-direction: column; }
+.sg-diff-name { font-weight: 800; font-size: .92rem; }
+.sg-diff-desc { font-size: .7rem; color: #b7bdd6; line-height: 1.3; margin-top: 2px; }
+.sg-diff-meta { font-family: 'Space Mono', monospace; font-size: .62rem; color: #8fa4ff; font-weight: 700; margin-top: 4px; }
+.sg-diff-best { font-family: 'Space Mono', monospace; font-size: .62rem; color: #ffd166; font-weight: 700; margin-top: 4px; }
+
+/* ── Vật phẩm hiện tại ── */
+.sg-item-card {
+  position: relative;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 18px;
+  padding: 20px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  transition: box-shadow .2s ease;
+}
+.sg-item-card.sg-item-correct { box-shadow: 0 0 0 3px #4fd6a0 inset; }
+.sg-item-card.sg-item-wrong { animation: sgShake .35s ease; box-shadow: 0 0 0 3px #ff6b6b inset; }
+@keyframes sgShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+.sg-item-timerbar { position: absolute; top: 0; left: 0; right: 0; height: 5px; background: rgba(255,255,255,.08); }
+.sg-item-timerbar-fill { height: 100%; background: linear-gradient(90deg, #66e0d0, #8fa4ff); transition: width .1s linear; }
+.sg-item-timerbar-fill.sg-timer-low { background: linear-gradient(90deg, #ff9d6b, #ff5b5b); }
+
+.sg-item-img { width: 96px; height: 96px; object-fit: contain; margin-top: 6px; }
+.sg-item-label { font-weight: 800; font-size: 1rem; text-align: center; }
+
+.sg-float-score {
+  position: absolute; top: 30%; left: 50%;
+  transform: translate(-50%, 0);
+  font-weight: 800; font-size: 1rem; color: #66e0d0;
+  animation: sgFloatUp .7s ease forwards;
+  pointer-events: none;
+}
+@keyframes sgFloatUp {
+  0%   { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -28px); }
+}
+
+/* ── Thùng phân loại ── */
+.sg-bins { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; margin-top: 12px; }
+.sg-bin {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: rgba(255,255,255,.06);
+  border: 2px solid rgba(255,255,255,.12);
+  border-radius: 14px;
+  padding: 12px 6px;
+  color: #f4eee6;
+  font-family: 'Baloo 2', sans-serif;
+  cursor: pointer;
+  transition: .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.sg-bin:hover { background: rgba(255,255,255,.12); transform: translateY(-2px); }
+.sg-bin-icon { font-size: 1.5rem; }
+.sg-bin-name { font-size: .66rem; font-weight: 700; text-align: center; line-height: 1.2; }
+.sg-bin-correct { border-color: #4fd6a0; background: rgba(79,214,160,.18); animation: sgPop .35s ease; }
+.sg-bin-wrong { border-color: #ff6b6b; background: rgba(255,107,107,.18); }
+@keyframes sgPop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* ── Footer ── */
+.sg-footer { display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
+.sg-btn {
+  padding: 9px 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(244,238,230,.3);
+  background: rgba(255,255,255,.06);
+  color: #f4eee6;
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  font-size: .8rem;
+  cursor: pointer;
+  transition: .2s;
+}
+.sg-btn:hover { background: rgba(255,255,255,.14); transform: translateY(-1px); }
+.sg-btn-primary {
+  background: linear-gradient(90deg, #8fa4ff, #66e0d0);
+  color: #12142a;
+  border: none;
+}
+
+/* ── Kết quả ── */
+.sg-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10,12,20,.9);
+  border-radius: 18px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+.sg-overlay.show { display: flex; }
+.sg-overlay.show .sg-overlay-card { animation: eduOverlayPop .38s cubic-bezier(.34,1.56,.64,1); }
+@keyframes eduOverlayPop {
+  0%   { opacity: 0; transform: scale(.75) translateY(10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.sg-overlay-card { text-align: center; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+.sg-overlay-card .sg-btn { margin-top: 8px; }
+.sg-overlay-icon { font-size: 2rem; letter-spacing: 2px; }
+.sg-star { display: inline-block; opacity: 0; transform: scale(0); animation: eduStarPop .4s cubic-bezier(.34,1.56,.64,1) forwards; }
+.sg-star:nth-child(1) { animation-delay: .38s; }
+.sg-star:nth-child(2) { animation-delay: .52s; }
+.sg-star:nth-child(3) { animation-delay: .66s; }
+@keyframes eduStarPop {
+  0%   { opacity: 0; transform: scale(0) rotate(-30deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+.sg-overlay-title { font-weight: 800; font-size: 1.05rem; margin-top: 6px; }
+.sg-overlay-sub { font-size: .78rem; color: #b7bdd6; margin: 6px 0 10px; max-width: 320px; }
+.sg-overlay-stats { display: flex; gap: 16px; margin-bottom: 10px; }
+.sg-overlay-stats div { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 1.1rem; display: flex; flex-direction: column; align-items: center; }
+.sg-overlay-stats div span { font-family: 'Baloo 2', sans-serif; font-size: .6rem; color: #9aa0c0; font-weight: 600; margin-top: 2px; }
+
+/* ── HUD nguy hiểm (còn ≤10s) ── */
+.sg-danger { color: #ff6b6b; animation: sgPulse 1s infinite; }
+@keyframes sgPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .5; }
+}
+
+/* Vị trí tương đối cho overlay tuyệt đối bên trong ── */
+.sg-play { position: relative; }
+
+@media (max-width: 480px) {
+  .sg-bins { grid-template-columns: repeat(3, 1fr); }
+}
