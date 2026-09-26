@@ -132,15 +132,20 @@
     doc.setFont(FONT, 'bold');
     doc.setFontSize(10.5);
     doc.setTextColor(30, 30, 30);
-    const line2 = `Mã NV: ${teacherCode || ''}      Họ tên giáo viên: ${teacherName || '(chưa rõ tên)'}`;
+    // Gộp mọi khoảng trắng/xuống dòng trong tên (dữ liệu dán từ Excel hay có
+    // ký tự xuống dòng ẩn) thành 1 khoảng trắng — nếu không, jsPDF sẽ coi
+    // "\n" trong chuỗi là lệnh xuống dòng thật, làm tên bị "rớt" xuống hàng
+    // dưới và đè lên dòng SĐT/Địa chỉ kế tiếp.
+    const oneLine = (s) => String(s || '').replace(/\s+/g, ' ').trim();
+    const line2 = `Mã NV: ${oneLine(teacherCode)}      Họ tên giáo viên: ${oneLine(teacherName) || '(chưa rõ tên)'}`;
     doc.text(line2, PAGE_MARGIN, y);
 
     let lines3 = [];
     if (teacherPhone || teacherAddress) {
       y += 16;
       const parts = [];
-      if (teacherPhone) parts.push(`SĐT: ${teacherPhone}`);
-      if (teacherAddress) parts.push(`Địa chỉ: ${teacherAddress}`);
+      if (teacherPhone) parts.push(`SĐT: ${oneLine(teacherPhone)}`);
+      if (teacherAddress) parts.push(`Địa chỉ: ${oneLine(teacherAddress)}`);
       const line3 = parts.join('      ');
       // splitTextToSize BỌC ĐÚNG theo bề rộng in được của font đang dùng —
       // địa chỉ dài tới đâu cũng không tràn lề, số dòng trả về là con số
