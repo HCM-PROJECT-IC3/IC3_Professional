@@ -892,7 +892,10 @@
     if (!week2) return null;
     const weekKey = isoDate(week2.start);
     if (!state.weeks.some((w) => w.id === weekKey)) return null;
-    return { weekKey, range: week2, label: `${formatDateRangeLabel(week2.start, week2.end)} (phần cuối tháng)` };
+    // KHÔNG thêm chú thích "(phần cuối tháng)" vào label — người dùng phản
+    // hồi trang phụ minh chứng chỉ cần hiện đúng "Tuần {d}.{m} - {d}.{m}.{y}"
+    // giống hệt cách trình bày của trang chính, không cần ghi chú thêm.
+    return { weekKey, range: week2, label: formatDateRangeLabel(week2.start, week2.end) };
   }
 
   /** Tải + cắt `days` của 1 giáo viên cho "tuần cuối tháng" (xem
