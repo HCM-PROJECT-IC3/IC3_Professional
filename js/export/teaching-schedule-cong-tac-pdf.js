@@ -2,7 +2,11 @@
    js/export/teaching-schedule-cong-tac-pdf.js
    Xuất "PHIẾU CÔNG TÁC" (mẫu Word gốc: On_Tap_MOS/Phieu cong tac.doc) ra
    PDF, TỰ ĐỘNG điền theo đúng Lịch tuần (teaching_schedule) của 1 giáo
-   viên/1 tuần — thay vì phải mở file Word gõ tay từng tuần:
+   viên — có thể GỘP NHIỀU TUẦN liên tiếp vào CHUNG 1 phiếu (vd "tuần vừa
+   rồi" + "các ngày còn lại của tháng" cần đi công tác 1 đợt, xem
+   weekEntries ở drawOnePage()/exportOne()/exportMany() — trước đây phải
+   xuất riêng từng tuần rồi tự ghép 2 phiếu, khá lòng vòng) — thay vì phải
+   mở file Word gõ tay từng tuần:
      - Logo IIG + tiêu đề       ← lấy đúng ảnh logo nhúng trong file Word
        gốc (xuất thử file gốc ra PDF rồi trích ảnh, xem LOGO_B64 bên dưới).
      - Họ và tên nhân viên  ← tên giáo viên.
@@ -100,55 +104,79 @@
     return String(s || '').replace(/\s+/g, ' ').trim();
   }
 
-  /** Danh sách "Địa điểm/tên trường" đã dạy trong tuần — gộp trùng, giữ
-   * đúng thứ tự xuất hiện đầu tiên (Thứ2→7, Sáng→Chiều). */
-  function collectSchools(days, M) {
+  /** Danh sách "Địa điểm/tên trường" đã dạy trong CẢ KỲ xuất (1 hoặc nhiều
+   * tuần gộp lại, xem weekEntries ở drawOnePage()) — gộp trùng CẢ GIỮA CÁC
+   * TUẦN (không phải chỉ trong 1 tuần), giữ đúng thứ tự xuất hiện đầu tiên
+   * (tuần theo weekKey tăng dần, trong 1 tuần thì Thứ2→7, Sáng→Chiều). */
+  function collectSchools(weekEntries, M) {
     const seen = new Set();
     const out = [];
-    M.WEEKDAYS.forEach((d) => {
-      const day = (days && days[String(d)]) || M.emptyDay();
-      M.SESSIONS.forEach((s) => {
-        // Buổi dạy Ở 2 TRƯỜNG ("Trường A + Trường B") phải tách ra để liệt
-        // kê ĐỦ CẢ 2 trường trong công văn công tác, không được coi cả cụm
-        // ghép là 1 "địa điểm" duy nhất (xem M.splitLocations()).
-        M.splitLocations(day[s] && day[s].location).forEach((raw) => {
-          const loc = oneLine(raw);
-          if (loc && !seen.has(loc)) { seen.add(loc); out.push(loc); }
+    weekEntries.forEach(({ days }) => {
+      M.WEEKDAYS.forEach((d) => {
+        const day = (days && days[String(d)]) || M.emptyDay();
+        M.SESSIONS.forEach((s) => {
+          // Buổi dạy Ở 2 TRƯỜNG ("Trường A + Trường B") phải tách ra để liệt
+          // kê ĐỦ CẢ 2 trường trong công văn công tác, không được coi cả cụm
+          // ghép là 1 "địa điểm" duy nhất (xem M.splitLocations()).
+          M.splitLocations(day[s] && day[s].location).forEach((raw) => {
+            const loc = oneLine(raw);
+            if (loc && !seen.has(loc)) { seen.add(loc); out.push(loc); }
+          });
         });
       });
     });
     return out;
   }
 
-  /** Ngày dương lịch cụ thể của 1 Thứ trong tuần — suy từ weekKey (Thứ 2
-   * đầu tuần, "YYYY-MM-DD") + số Thứ (2..7, Thứ2 lệch 0 ngày, Thứ7 lệch 5
-   * ngày) — xem js/models/teaching-schedule.model.js (WEEKDAYS/weekKey).
-   * Trả về '' nếu thiếu weekKey (không chặn xuất PDF, chỉ bớt 1 chi tiết). */
-  function dateForWeekday(weekKey, weekdayNum) {
-    if (!weekKey) return '';
+  /** Ngày dương lịch cụ thể (Date) của 1 Thứ trong tuần — suy từ weekKey
+   * (Thứ 2 đầu tuần, "YYYY-MM-DD") + số Thứ (2..7, Thứ2 lệch 0 ngày, Thứ7
+   * lệch 5 ngày) — xem js/models/teaching-schedule.model.js (WEEKDAYS/
+   * weekKey). Trả về null nếu thiếu weekKey (không chặn xuất PDF, chỉ bớt
+   * 1 chi tiết + không sắp xếp được dòng đó theo ngày thật). */
+  function dateObjForWeekday(weekKey, weekdayNum) {
+    if (!weekKey) return null;
     const monday = new Date(`${weekKey}T00:00:00`);
-    if (Number.isNaN(monday.getTime())) return '';
+    if (Number.isNaN(monday.getTime())) return null;
     const d = new Date(monday);
     d.setDate(monday.getDate() + (weekdayNum - 2));
+    return d;
+  }
+  function formatVnDate(d) {
     return `ngày ${d.getDate()} tháng ${d.getMonth() + 1} năm ${d.getFullYear()}`;
   }
 
-  /** Danh sách dòng "Thời gian" — ĐƠN GIẢN, 1 dòng/NGÀY thật sự có dạy (bất
-   * kỳ tiết nào ở Sáng hoặc Chiều có mã lớp/tích chọn): "Từ 08:00 đến
-   * 17:30, ngày {d} tháng {m} năm {y}" — khung giờ hành chính CỐ ĐỊNH
-   * (WORKDAY_START/END), KHÔNG tính theo giờ tiết thật (từng ra giờ lẻ
-   * tẻ khác nhau mỗi ngày, không cần thiết cho phiếu công tác). Chỉ Ngày
-   * là thay đổi theo đúng Lịch tuần, giờ luôn thống nhất mọi dòng. */
-  function collectTimeLines(days, M, weekKey) {
-    const out = [];
-    M.WEEKDAYS.forEach((d) => {
-      const day = (days && days[String(d)]) || M.emptyDay();
-      const hasTaughtPeriod = M.SESSIONS.some((s) => ((day[s] && day[s].periods) || []).some((p) => !!p));
-      if (!hasTaughtPeriod) return;
-      const dateStr = dateForWeekday(weekKey, d) || `Thứ ${d}`;
-      out.push(`Từ ${WORKDAY_START} đến ${WORKDAY_END}, ${dateStr}`);
+  /** Danh sách NGÀY thật sự có dạy (bất kỳ tiết nào ở Sáng hoặc Chiều có mã
+   * lớp/tích chọn) TRÊN CẢ KỲ xuất (weekEntries có thể gộp NHIỀU tuần liên
+   * tiếp — vd "tuần vừa rồi + các ngày còn lại của tháng" xuất chung 1
+   * phiếu thay vì phải xuất 2 lần), sắp theo ĐÚNG thứ tự ngày thật (không
+   * theo thứ tự weekEntries được truyền vào, phòng khi gọi lệch tuần).
+   * Dùng chung cho cả collectTimeLines() (in từng dòng) và drawOnePage()
+   * (suy khoảng ngày đầu-cuối để ghi thêm vào "Mục đích" khi phiếu gộp
+   * nhiều hơn 1 tuần — xem đó). */
+  function collectTaughtDays(weekEntries, M) {
+    const items = [];
+    weekEntries.forEach(({ days, weekKey }) => {
+      M.WEEKDAYS.forEach((d) => {
+        const day = (days && days[String(d)]) || M.emptyDay();
+        const hasTaughtPeriod = M.SESSIONS.some((s) => ((day[s] && day[s].periods) || []).some((p) => !!p));
+        if (!hasTaughtPeriod) return;
+        const date = dateObjForWeekday(weekKey, d);
+        items.push({ date, weekdayNum: d, sortKey: date ? date.getTime() : Infinity });
+      });
     });
-    return out;
+    items.sort((a, b) => a.sortKey - b.sortKey);
+    return items;
+  }
+
+  /** Danh sách dòng "Thời gian" — ĐƠN GIẢN, 1 dòng/NGÀY thật sự có dạy:
+   * "Từ 08:00 đến 17:30, ngày {d} tháng {m} năm {y}" — khung giờ hành
+   * chính CỐ ĐỊNH (WORKDAY_START/END), KHÔNG tính theo giờ tiết thật (từng
+   * ra giờ lẻ tẻ khác nhau mỗi ngày, không cần thiết cho phiếu công tác).
+   * @param {Array<{date: ?Date, weekdayNum: number}>} taughtDays Xem collectTaughtDays() */
+  function collectTimeLines(taughtDays) {
+    return taughtDays.map(({ date, weekdayNum }) => (
+      `Từ ${WORKDAY_START} đến ${WORKDAY_END}, ${date ? formatVnDate(date) : `Thứ ${weekdayNum}`}`
+    ));
   }
 
   /** "Nhãn: giá trị" trên ĐÚNG 1 hàng — value đã qua oneLine() ở nơi gọi
@@ -214,22 +242,26 @@
     return true;
   }
 
-  /** Vẽ 1 trang "Phiếu công tác" cho ĐÚNG 1 giáo viên/1 tuần vào `doc` đã
-   * có sẵn (dùng chung cho cả exportOne — 1 trang duy nhất — và exportMany
-   * — nhiều trang, mỗi giáo viên 1 trang, gọi addPage() trước khi vẽ nếu
-   * không phải trang đầu). Tách riêng khỏi việc tạo jsPDF/lưu file để
-   * exportMany có thể gộp NHIỀU giáo viên vào 1 file PDF DUY NHẤT thay vì
-   * tải về từng file lẻ (giống hệt cách js/export/teaching-schedule-pdf.js
-   * đã làm với "🖨️ Xuất PDF tất cả" của Lịch tuần).
+  /** Vẽ 1 trang "Phiếu công tác" cho ĐÚNG 1 giáo viên, GỘP CHUNG mọi tuần
+   * trong `weekEntries` vào `doc` đã có sẵn (dùng chung cho cả exportOne —
+   * 1 trang duy nhất — và exportMany — nhiều trang, mỗi giáo viên 1 trang,
+   * gọi addPage() trước khi vẽ nếu không phải trang đầu). weekEntries gộp
+   * NHIỀU tuần cho phép xuất 1 phiếu DUY NHẤT cho cả kỳ dài hơn 1 tuần (vd
+   * "tuần vừa rồi" + "các ngày còn lại của tháng" cần đi công tác chung 1
+   * đợt) — thay vì phải bấm xuất riêng từng tuần rồi tự ghép/nộp 2 phiếu.
+   * Tách riêng khỏi việc tạo jsPDF/lưu file để exportMany có thể gộp NHIỀU
+   * giáo viên vào 1 file PDF DUY NHẤT thay vì tải về từng file lẻ (giống
+   * hệt cách js/export/teaching-schedule-pdf.js đã làm với "🖨️ Xuất PDF
+   * tất cả" của Lịch tuần).
    * @param {{name:string, code?:string, id?:string}} teacher
-   * @param {Object} days   Dữ liệu "days" của teaching_schedule (Lịch tuần)
-   * @param {string} weekKey Thứ 2 đầu tuần "YYYY-MM-DD" — dùng suy ra NGÀY
-   *   DƯƠNG LỊCH CỤ THỂ của từng buổi trong mục "Thời gian" (xem
-   *   dateForWeekday()); có thể bỏ trống nếu không có, chỉ mất chi tiết
-   *   ngày, KHÔNG chặn xuất PDF.
+   * @param {Array<{weekKey:string, days:Object}>} weekEntries Danh sách 1
+   *   hoặc nhiều tuần cần gộp — mỗi phần tử là `days` của teaching_schedule
+   *   (Lịch tuần) kèm `weekKey` (Thứ 2 đầu tuần "YYYY-MM-DD", dùng suy ra
+   *   NGÀY DƯƠNG LỊCH CỤ THỂ của từng buổi trong mục "Thời gian" — có thể
+   *   bỏ trống nếu không có, chỉ mất chi tiết ngày, KHÔNG chặn xuất PDF).
    * @param {Object} M      window.EduModels.TeachingSchedule
    */
-  function drawOnePage(doc, teacher, days, weekKey, M) {
+  function drawOnePage(doc, teacher, weekEntries, M) {
     const pageWidth = doc.internal.pageSize.getWidth();
     const contentWidth = pageWidth - MARGIN * 2;
     const teacherName = oneLine(teacher.name) || '(chưa rõ tên)';
@@ -265,7 +297,7 @@
     doc.setFont(FONT, 'normal');
     doc.text('Tên khách hàng cần gặp:', MARGIN, y);
     y += lineH;
-    const schools = collectSchools(days, M);
+    const schools = collectSchools(weekEntries, M);
     if (schools.length) {
       y = drawList(doc, schools, {
         x: MARGIN + 14, y, maxWidth: contentWidth - 14, lineHeight: lineH,
@@ -273,7 +305,7 @@
       });
     } else {
       doc.setTextColor(...GRAY);
-      doc.text('(Chưa có lịch dạy trường nào trong tuần này)', MARGIN + 14, y);
+      doc.text('(Chưa có lịch dạy trường nào trong kỳ này)', MARGIN + 14, y);
       doc.setTextColor(20, 20, 30);
       y += lineH;
     }
@@ -283,7 +315,8 @@
     doc.setFontSize(BODY_SIZE);
     doc.text('Thời gian:', MARGIN, y);
     y += lineH;
-    const timeLines = collectTimeLines(days, M, weekKey);
+    const taughtDays = collectTaughtDays(weekEntries, M);
+    const timeLines = collectTimeLines(taughtDays);
     if (timeLines.length) {
       y = drawList(doc, timeLines, {
         x: MARGIN + 14, y, maxWidth: contentWidth - 14, lineHeight: lineH,
@@ -291,14 +324,28 @@
       });
     } else {
       doc.setTextColor(...GRAY);
-      doc.text('(Chưa có tiết dạy nào trong tuần này)', MARGIN + 14, y);
+      doc.text('(Chưa có tiết dạy nào trong kỳ này)', MARGIN + 14, y);
       doc.setTextColor(20, 20, 30);
       y += lineH;
     }
     y += 8;
 
     doc.setFontSize(BODY_SIZE);
-    n = drawLabelValue(doc, 'Mục đích: ', PURPOSE, MARGIN, y, contentWidth);
+    // GHI THÊM khoảng ngày công tác vào "Mục đích" khi phiếu GỘP NHIỀU TUẦN
+    // (vd tuần vừa dạy xong + vài ngày còn lại dính qua tuần sau/tháng sau)
+    // — người dùng phản hồi cần thấy ngay khoảng ngày ở đây, không phải tự
+    // dò lại từng dòng "Thời gian" mới biết phiếu này gộp từ ngày nào đến
+    // ngày nào. CHỈ thêm khi thật sự gộp >1 tuần (weekEntries.length > 1)
+    // — phiếu 1 tuần như cũ giữ nguyên "Mục đích: Giảng dạy IC3", không đổi.
+    let purposeText = PURPOSE;
+    if (weekEntries.length > 1 && taughtDays.length) {
+      const first = taughtDays[0].date;
+      const last = taughtDays[taughtDays.length - 1].date;
+      if (first && last) {
+        purposeText = `${PURPOSE} (từ ngày ${first.getDate()}/${first.getMonth() + 1} đến ngày ${last.getDate()}/${last.getMonth() + 1}/${last.getFullYear()})`;
+      }
+    }
+    n = drawLabelValue(doc, 'Mục đích: ', purposeText, MARGIN, y, contentWidth);
     y += n * lineH + 30;
 
     // Ngày ký LẤY THEO THỜI ĐIỂM XUẤT FILE (không phải ngày đầu tuần lịch).
@@ -321,42 +368,39 @@
     doc.text(teacherName, MARGIN + colWidth / 2, y, { align: 'center' });
   }
 
-  /** Xuất "Phiếu công tác" cho ĐÚNG 1 giáo viên/1 tuần — 1 file PDF/1 trang.
+  /** Xuất "Phiếu công tác" cho ĐÚNG 1 giáo viên — 1 file PDF/1 trang, GỘP
+   * CHUNG mọi tuần trong `weekEntries` vào cùng 1 phiếu (xem drawOnePage()).
    * @param {{name:string, code?:string, id?:string}} teacher
-   * @param {Object} days      Dữ liệu "days" của teaching_schedule (Lịch tuần)
-   * @param {string} weekLabel (không hiện trên PDF — chỉ giữ tham số để
-   *   tương thích chữ ký hàm, phòng khi cần dùng lại sau này)
-   * @param {string} weekKey   Xem drawOnePage()
+   * @param {Array<{weekKey:string, days:Object}>} weekEntries Xem drawOnePage()
    * @param {Object} M         window.EduModels.TeachingSchedule
    */
-  function exportOne(teacher, days, weekLabel, weekKey, M) {
+  function exportOne(teacher, weekEntries, M) {
     if (!ensureLibsLoaded()) return;
     maybeShowMobileSaveHint();
     const { jsPDF } = global.jspdf;
     const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'portrait' });
-    drawOnePage(doc, teacher, days, weekKey, M);
+    drawOnePage(doc, teacher, weekEntries, M);
     const teacherName = oneLine(teacher.name);
     doc.save(`Phieu_Cong_Tac_${slugName(teacherName || teacher.code || teacher.id)}.pdf`);
   }
 
-  /** Xuất "Phiếu công tác" của NHIỀU giáo viên (cùng 1 tuần) thành 1 file
-   * PDF DUY NHẤT, mỗi giáo viên 1 trang — nút "📋 Xuất PDF tất cả" trên
-   * thanh công cụ (chỉ admin), song song với "🖨️ Xuất PDF tất cả" của Lịch
-   * tuần đã có sẵn.
-   * @param {Array<{teacher, days}>} list Danh sách GV/dữ liệu tuần đang hiển thị
-   * @param {string} weekKey
+  /** Xuất "Phiếu công tác" của NHIỀU giáo viên (mỗi người có thể gộp
+   * NHIỀU tuần riêng, xem weekEntries) thành 1 file PDF DUY NHẤT, mỗi giáo
+   * viên 1 trang — nút "📋 Xuất PDF tất cả" trên thanh công cụ (chỉ admin),
+   * song song với "🖨️ Xuất PDF tất cả" của Lịch tuần đã có sẵn.
+   * @param {Array<{teacher, weekEntries}>} list Danh sách GV/dữ liệu kỳ đang hiển thị
    * @param {Object} M
-   * @param {string} [fileSuffix] Hậu tố tên file (thường là nhãn tuần đã slug hoá)
+   * @param {string} [fileSuffix] Hậu tố tên file (thường là nhãn kỳ đã slug hoá)
    */
-  function exportMany(list, weekKey, M, fileSuffix) {
+  function exportMany(list, M, fileSuffix) {
     if (!ensureLibsLoaded()) return;
     if (!list.length) return;
     maybeShowMobileSaveHint();
     const { jsPDF } = global.jspdf;
     const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'portrait' });
-    list.forEach(({ teacher, days }, i) => {
+    list.forEach(({ teacher, weekEntries }, i) => {
       if (i > 0) doc.addPage();
-      drawOnePage(doc, teacher, days, weekKey, M);
+      drawOnePage(doc, teacher, weekEntries, M);
     });
     doc.save(`Phieu_Cong_Tac_Tat_Ca${fileSuffix ? `_${slugName(fileSuffix)}` : ''}.pdf`);
   }

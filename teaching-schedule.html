@@ -474,6 +474,50 @@
   </div>
 </div>
 
+<!-- ============ MODAL: CHỌN KHOẢNG NGÀY XUẤT "PHIẾU CÔNG TÁC" ============
+     Mặc định gộp ĐÚNG "tuần hiện tại" (Thứ2→Thứ7 của tuần đang chọn) + "những
+     ngày còn lại của tháng" (từ Thứ2 tuần sau đến hết tháng, KHÔNG qua tháng
+     sau) — cho phép giáo viên/admin SỬA LẠI 2 khoảng ngày này trước khi xuất
+     (vd chỉ muốn xuất riêng tuần hiện tại, hoặc lùi/kéo dài khoảng ngày). -->
+<div class="modal-overlay" id="congTacRangeModalOverlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>📋 Khoảng ngày xuất Phiếu công tác</h3>
+      <button type="button" class="modal-close" id="congTacRangeCloseBtn">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="congTacRange1Start">Tuần hiện tại — từ ngày</label>
+          <input type="date" id="congTacRange1Start" class="form-input">
+        </div>
+        <div class="form-group">
+          <label for="congTacRange1End">đến ngày</label>
+          <input type="date" id="congTacRange1End" class="form-input">
+        </div>
+      </div>
+      <div class="form-row" id="congTacRange2Wrap">
+        <div class="form-group">
+          <label for="congTacRange2Start">Đến cuối tháng — từ ngày</label>
+          <input type="date" id="congTacRange2Start" class="form-input">
+        </div>
+        <div class="form-group">
+          <label for="congTacRange2End">đến ngày</label>
+          <input type="date" id="congTacRange2End" class="form-input">
+        </div>
+      </div>
+      <div class="import-hint">
+        Mặc định gộp cả tuần đang chọn và các ngày còn lại của tháng (không qua tháng sau) vào <b>1 phiếu duy nhất</b> —
+        có thể sửa lại 2 khoảng ngày trên nếu cần xuất khác đi.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" id="congTacRangeCancelBtn">Huỷ</button>
+      <button type="button" class="btn btn-primary" id="congTacRangeConfirmBtn">✅ Xuất PDF</button>
+    </div>
+  </div>
+</div>
+
 <!-- ============ MODAL: LƯỚI LỊCH TUẦN CỦA 1 GIÁO VIÊN ============ -->
 <div class="modal-overlay" id="schedModalOverlay">
   <div class="modal-box modal-wide modal-xwide">
