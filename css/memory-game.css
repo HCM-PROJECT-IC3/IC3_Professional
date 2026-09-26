@@ -81,6 +81,13 @@ body.mg-body {
   color: #8fa4ff;
   font-weight: 700;
 }
+.mg-cat-best {
+  margin-top: 4px;
+  font-family: 'Space Mono', monospace;
+  font-size: .62rem;
+  color: #ffd166;
+  font-weight: 700;
+}
 
 /* ── Board ── */
 .mg-board-outer { position: relative; }
@@ -219,8 +226,21 @@ body.mg-body {
   z-index: 5;
 }
 .mg-overlay.show { display: flex; }
+.mg-overlay.show .mg-overlay-card { animation: eduOverlayPop .38s cubic-bezier(.34,1.56,.64,1); }
+@keyframes eduOverlayPop {
+  0%   { opacity: 0; transform: scale(.75) translateY(10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
 .mg-overlay-card { text-align: center; padding: 20px; display: flex; flex-direction: column; align-items: center; }
 .mg-overlay-card .mg-btn { margin-top: 8px; }
 .mg-overlay-icon { font-size: 2.2rem; }
+.mg-star { display: inline-block; opacity: 0; transform: scale(0); animation: eduStarPop .4s cubic-bezier(.34,1.56,.64,1) forwards; }
+.mg-star:nth-child(1) { animation-delay: .38s; }
+.mg-star:nth-child(2) { animation-delay: .52s; }
+.mg-star:nth-child(3) { animation-delay: .66s; }
+@keyframes eduStarPop {
+  0%   { opacity: 0; transform: scale(0) rotate(-30deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
 .mg-overlay-title { font-weight: 800; font-size: 1.05rem; margin-top: 6px; }
 .mg-overlay-sub { font-size: .78rem; color: #b7bdd6; margin: 6px 0 14px; }

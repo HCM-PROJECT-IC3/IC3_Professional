@@ -508,6 +508,12 @@
             <span class="game-zone-tile-desc">Thực hành thao tác máy tính cơ bản</span>
             <span class="game-zone-tile-tag">Kiến thức</span>
           </button>
+          <button type="button" class="game-zone-tile" id="openSortGameBtn" title="Chơi mini-game Phân Loại Thần Tốc">
+            <span class="game-zone-tile-emoji"><i class="fa-solid fa-magnet"></i></span>
+            <span class="game-zone-tile-name">Phân Loại Thần Tốc</span>
+            <span class="game-zone-tile-desc">Bấm đúng thùng trước khi hết giờ</span>
+            <span class="game-zone-tile-tag">Giải trí</span>
+          </button>
         </div>
       </div>
     </div>
@@ -674,6 +680,27 @@
           title="Mini-game Computer Simulator"
           src="about:blank"
           data-src="computer-simulator.html"
+          loading="lazy"
+          allow="fullscreen"
+        ></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MINI-GAME "PHÂN LOẠI THẦN TỐC" (modal) — xem js/game-modal.js ============ -->
+  <div class="game-modal-overlay" id="sortGameModalOverlay">
+    <div class="game-modal">
+      <div class="game-modal-bar">
+        <span class="game-modal-title"><i class="fa-solid fa-magnet"></i> Phân Loại Thần Tốc</span>
+        <button type="button" class="game-modal-close" id="closeSortGameModalBtn"><i class="fa-solid fa-xmark"></i> Đóng</button>
+      </div>
+      <div class="game-modal-frame">
+        <iframe
+          id="sortGameModalFrame"
+          class="game-modal-iframe"
+          title="Mini-game Phân Loại Thần Tốc"
+          src="about:blank"
+          data-src="sort-game.html"
           loading="lazy"
           allow="fullscreen"
         ></iframe>

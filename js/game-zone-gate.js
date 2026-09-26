@@ -51,7 +51,8 @@
     'openPzDefenseBtn',
     'openBattleQuizBtn',
     'openCyberDetectiveBtn',
-    'openComputerSimBtn'
+    'openComputerSimBtn',
+    'openSortGameBtn'
   ];
 
   function init() {

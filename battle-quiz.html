@@ -118,11 +118,11 @@
       <div class="bq-vs">VS</div>
       <div class="bq-fighter bq-fighter-enemy">
         <div class="bq-fighter-info bq-fighter-info-right">
-          <div class="bq-fighter-name">AI Thử Thách</div>
+          <div class="bq-fighter-name" id="bqEnemyName">AI Thử Thách</div>
           <div class="bq-hpbar"><div class="bq-hpbar-fill bq-hpbar-fill-enemy" id="bqEnemyHpFill"></div></div>
-          <div class="bq-hp-text"><span id="bqEnemyHpText">100</span>/100</div>
+          <div class="bq-hp-text"><span id="bqEnemyHpText">100</span>/<span id="bqEnemyHpMax">100</span></div>
         </div>
-        <div class="bq-fighter-avatar"><img src="img/pz-defense/zom_botnet.png" alt="AI Thử Thách" class="bq-enemy-img"></div>
+        <div class="bq-fighter-avatar"><img src="img/pz-defense/zom_botnet.png" alt="AI Thử Thách" class="bq-enemy-img" id="bqEnemyImg"></div>
       </div>
       <div class="bq-floater-layer" id="bqFloaterLayer"></div>
     </div>
@@ -140,6 +140,7 @@
         <div class="bq-overlay-icon">⚔</div>
         <div class="bq-overlay-title">Chọn chủ đề để đấu</div>
         <div class="bq-overlay-desc">Chọn 1 chủ đề IC3 để tập trung ôn luyện, hoặc chơi tổng hợp ngẫu nhiên.</div>
+        <div class="bq-enemy-preview" id="bqEnemyPreview"><!-- điền động bằng JS: đối thủ tiếp theo trong dãy đấu --></div>
         <div class="bq-topic-grid" id="bqTopicGrid"><!-- điền động bằng JS --></div>
       </div>
     </div>
@@ -170,6 +171,8 @@
   <script src="js/repositories/game-session-repository.js"></script>
   <script src="js/gamification.js"></script>
   <script src="js/game-engine/question-topic-map.js"></script>
+  <script src="js/game-sfx.js"></script>
+  <script src="js/game-fx.js"></script>
 
   <script src="js/battle-quiz.js"></script>
 <script src="js/motion.js"></script>

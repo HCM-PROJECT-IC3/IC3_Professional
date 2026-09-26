@@ -85,7 +85,35 @@
 
   var pickerEl, playEl, subtitleEl, boardEl, movesEl, matchesEl, timerEl, toastEl,
       overlayEl, overlayIconEl, overlayTitleEl, overlaySubEl;
-  var state = { items: [], cards: [], flipped: [], matched: 0, moves: 0, lock: false, startTs: 0, timerId: null };
+  var state = { items: [], cards: [], flipped: [], matched: 0, moves: 0, lock: false, startTs: 0, timerId: null, catId: null };
+
+  function sfx(name) { if (window.EduSFX) window.EduSFX.play(name); }
+
+  var BEST_KEY = 'eduquiz_memory_best'; // { <catId>: { moves, seconds } } — kỷ lục ÍT lượt lật nhất mỗi chủ đề, tạo động lực chơi lại để phá kỷ lục.
+  function loadBests() {
+    try { return JSON.parse(localStorage.getItem(BEST_KEY) || '{}'); } catch (e) { return {}; }
+  }
+  /** So kỷ lục theo SỐ LƯỢT LẬT trước (thước đo chính của trí nhớ), thời gian chỉ để tham khảo. */
+  function saveBestIfBetter(catId, moves, seconds) {
+    var bests = loadBests();
+    var prev = bests[catId];
+    if (prev != null && prev.moves <= moves) return false;
+    bests[catId] = { moves: moves, seconds: seconds };
+    try { localStorage.setItem(BEST_KEY, JSON.stringify(bests)); } catch (e) { /* ignore */ }
+    return true;
+  }
+  /** Xếp hạng sao dựa trên số lượt lật so với mức lý tưởng (đúng bằng số cặp — lật đâu trúng đó). */
+  function starRating(moves, pairCount) {
+    if (moves <= pairCount * 1.3) return 3;
+    if (moves <= pairCount * 1.8) return 2;
+    return 1;
+  }
+  /** Dựng HTML 3 sao, mỗi sao 1 <span> riêng để CSS pop-in LẦN LƯỢT (xem .mg-star trong memory-game.css). */
+  function buildStarsHtml(filled) {
+    var html = '';
+    for (var i = 0; i < 3; i++) html += '<span class="mg-star">' + (i < filled ? '⭐' : '☆') + '</span>';
+    return html;
+  }
 
   function shuffle(arr) {
     for (var i = arr.length - 1; i > 0; i--) {
@@ -128,7 +156,9 @@
   /* ── Màn hình chọn chủ đề ── */
   function renderPicker() {
     pickerEl.innerHTML = '';
+    var bests = loadBests();
     CATEGORIES.forEach(function (cat) {
+      var best = bests[cat.id];
       var card = document.createElement('button');
       card.type = 'button';
       card.className = 'mg-cat-card';
@@ -136,8 +166,9 @@
         '<div class="mg-cat-icon">' + cat.icon + '</div>' +
         '<div class="mg-cat-name">' + cat.name + '</div>' +
         '<div class="mg-cat-desc">' + cat.desc + '</div>' +
-        '<div class="mg-cat-count">' + cat.items.length + ' cặp thẻ</div>';
-      card.addEventListener('click', function () { startCategory(cat); });
+        '<div class="mg-cat-count">' + cat.items.length + ' cặp thẻ</div>' +
+        (best ? '<div class="mg-cat-best">🏅 Kỷ lục: ' + best.moves + ' lượt · ' + fmtTime(best.seconds) + '</div>' : '');
+      card.addEventListener('click', function () { sfx('click'); startCategory(cat); });
       pickerEl.appendChild(card);
     });
   }
@@ -151,6 +182,7 @@
 
   function startCategory(cat) {
     state.items = cat.items;
+    state.catId = cat.id;
     pickerEl.style.display = 'none';
     playEl.style.display = 'block';
     subtitleEl.textContent = cat.icon + ' ' + cat.name;
@@ -183,6 +215,7 @@
     if (el.classList.contains('is-flipped') || el.classList.contains('is-matched')) return;
     if (state.flipped.length >= 2) return;
 
+    sfx('flip');
     el.classList.add('is-flipped');
     state.flipped.push({ idx: idx, el: el, card: card });
 
@@ -192,6 +225,7 @@
       var a = state.flipped[0], b = state.flipped[1];
       if (a.card.item.id === b.card.item.id) {
         state.lock = true;
+        sfx('match');
         setTimeout(function () {
           a.el.classList.add('is-matched');
           b.el.classList.add('is-matched');
@@ -203,6 +237,7 @@
         }, 260);
       } else {
         state.lock = true;
+        sfx('wrong');
         a.el.classList.add('is-mismatch');
         b.el.classList.add('is-mismatch');
         showToast('Chưa khớp, thử lại!');
@@ -219,9 +254,14 @@
   function onWin() {
     stopTimer();
     var sec = Math.floor((Date.now() - state.startTs) / 1000);
-    overlayIconEl.textContent = '🏆';
-    overlayTitleEl.textContent = 'Hoàn thành!';
-    overlaySubEl.textContent = 'Xong sau ' + state.moves + ' lượt lật · ' + fmtTime(sec);
+    var stars = starRating(state.moves, state.items.length);
+    var isNewBest = saveBestIfBetter(state.catId, state.moves, sec);
+    sfx(isNewBest ? 'win' : 'match');
+    if (window.EduFX && (isNewBest || stars === 3)) EduFX.confetti({ count: isNewBest ? 90 : 55 });
+    overlayIconEl.innerHTML = buildStarsHtml(stars);
+    overlayTitleEl.textContent = isNewBest ? 'Kỷ lục mới! 🎉' : 'Hoàn thành!';
+    overlaySubEl.textContent = 'Xong sau ' + state.moves + ' lượt lật · ' + fmtTime(sec) +
+      (isNewBest ? ' — nhanh nhất từ trước đến nay!' : '');
     overlayEl.classList.add('show');
   }
 
