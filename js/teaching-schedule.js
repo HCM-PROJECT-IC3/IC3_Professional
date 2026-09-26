@@ -855,14 +855,55 @@
     });
   }
 
-  /** Xuất PDF lịch tuần của ĐÚNG 1 giáo viên (nút "🖨️ PDF" từng hàng). */
-  function exportTeacherPdf(teacherCode) {
+  /** Xuất PDF lịch tuần của ĐÚNG 1 giáo viên (nút "🖨️ PDF" từng hàng) —
+   * TỰ ĐỘNG thêm 1 trang phụ "minh chứng tuần cuối tháng" nếu có (xem
+   * computeExtraWeekEvidence()), để khớp đúng khoảng ngày "Phiếu công tác"
+   * đã gộp (tuần hiện tại + phần còn lại của tháng). */
+  async function exportTeacherPdf(teacherCode) {
     const t = state.teachers.find((x) => x.id === teacherCode);
     if (!t) return;
     const week = state.weeks.find((w) => w.id === state.currentWeekKey);
     const days = (state.schedulesByTeacher[teacherCode] && state.schedulesByTeacher[teacherCode].days) || M.emptyDays();
     if (!window.EduTeachingSchedulePdf) { toast('⚠️ Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
-    window.EduTeachingSchedulePdf.exportOne(t, days, week ? (week.label || week.id) : state.currentWeekKey, M);
+    try {
+      const extra = computeExtraWeekEvidence();
+      const extraWeek = extra ? { days: await fetchExtraWeekDaysFor(teacherCode, extra), weekLabel: extra.label } : null;
+      window.EduTeachingSchedulePdf.exportOne(t, days, week ? (week.label || week.id) : state.currentWeekKey, M, extraWeek);
+    } catch (err) {
+      console.error('[Lịch giảng dạy] Lỗi khi xuất PDF:', err);
+      toast('❌ Xuất PDF thất bại: ' + (err && err.message ? err.message : String(err)));
+    }
+  }
+
+  /** Nhãn "d.m - d.m.yyyy" (khớp kiểu week.label sẵn có, vd "21.9 - 26.9.2026"). */
+  function formatDateRangeLabel(start, end) {
+    return `${start.getDate()}.${start.getMonth() + 1} - ${end.getDate()}.${end.getMonth() + 1}.${end.getFullYear()}`;
+  }
+
+  /** Khoảng ngày + weekKey của "tuần cuối tháng" (đoạn 2 trong
+   * defaultCongTacRanges(), xem đó — cùng quy tắc gộp với "📋 Phiếu công
+   * tác": tuần đang chọn KHÔNG PHẢI tuần cuối tháng thì phần còn lại của
+   * tháng, từ Thứ2 tuần sau đến hết tháng, mới cần minh chứng thêm) — CHỈ
+   * trả về khi tuần kế tiếp đó ĐÃ CÓ trong hệ thống (state.weeks, tức đã
+   * được tạo/có lịch), nếu chưa có gì để tải thì bỏ qua (null), PDF "Lịch
+   * giảng dạy" vẫn xuất bình thường, chỉ là không có trang phụ minh chứng. */
+  function computeExtraWeekEvidence() {
+    const { week2 } = defaultCongTacRanges();
+    if (!week2) return null;
+    const weekKey = isoDate(week2.start);
+    if (!state.weeks.some((w) => w.id === weekKey)) return null;
+    return { weekKey, range: week2, label: `${formatDateRangeLabel(week2.start, week2.end)} (phần cuối tháng)` };
+  }
+
+  /** Tải + cắt `days` của 1 giáo viên cho "tuần cuối tháng" (xem
+   * computeExtraWeekEvidence()) — chỉ giữ đúng những ngày còn trong tháng
+   * (clippedDaysForWeek), dùng làm trang phụ minh chứng của PDF "Lịch giảng
+   * dạy" (xem exportOne()/exportMany() trong js/export/teaching-schedule-pdf.js). */
+  async function fetchExtraWeekDaysFor(teacherCode, extra) {
+    const rows = await window.EduRepositories.teachingSchedule.listByWeek(extra.weekKey);
+    const row = rows.find((r) => r.teacherCode === teacherCode);
+    const rawDays = (row && row.days) || M.emptyDays();
+    return clippedDaysForWeek(rawDays, extra.weekKey, [extra.range], M);
   }
 
   /** Danh sách giáo viên ĐANG HIỂN THỊ ở "🎴 Thẻ"/"📊 Tổng quan" của tuần
@@ -881,9 +922,11 @@
   }
 
   /** Xuất 1 file PDF DUY NHẤT gồm lịch của TOÀN BỘ giáo viên đang hiển thị
-   * (đã áp bộ lọc tìm kiếm/"chỉ hiện GV chưa có lịch" hiện tại), mỗi giáo
-   * viên 1 trang — nút "🖨️ Xuất PDF tất cả" trên thanh công cụ. */
-  function exportAllPdf() {
+   * (đã áp bộ lọc tìm kiếm/"chỉ hiện GV chưa có lịch" hiện tại) — mỗi giáo
+   * viên 1 trang chính + (nếu có, xem computeExtraWeekEvidence()) 1 trang
+   * phụ minh chứng "tuần cuối tháng" — nút "🖨️ Xuất PDF tất cả" trên thanh
+   * công cụ. */
+  async function exportAllPdf() {
     if (!state.currentWeekKey) { toast('⚠️ Hãy chọn 1 tuần trước.'); return; }
     if (!window.EduTeachingSchedulePdf) { toast('⚠️ Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
     const list = filteredTeachersWithDays();
@@ -896,7 +939,21 @@
     // gì xảy ra, dễ hiểu lầm "không xuất được" trong khi thực ra có lỗi cụ
     // thể (chỉ nằm im trong console). Bọc lại để LUÔN có toast báo rõ lý do.
     try {
-      window.EduTeachingSchedulePdf.exportMany(list, weekLabel, M);
+      const extra = computeExtraWeekEvidence();
+      let fullList = list;
+      if (extra) {
+        // Tải MỘT LẦN cho cả tuần cuối tháng (dùng chung cho mọi giáo viên
+        // trong danh sách), không lặp lại 1 query/GV.
+        const rows = await window.EduRepositories.teachingSchedule.listByWeek(extra.weekKey);
+        const rawDaysByTeacher = new Map();
+        rows.forEach((r) => rawDaysByTeacher.set(r.teacherCode, r.days));
+        fullList = list.map(({ teacher, days }) => ({
+          teacher,
+          days,
+          extraDays: clippedDaysForWeek(rawDaysByTeacher.get(teacher.code) || M.emptyDays(), extra.weekKey, [extra.range], M),
+        }));
+      }
+      window.EduTeachingSchedulePdf.exportMany(fullList, weekLabel, M, extra ? extra.label : undefined);
     } catch (err) {
       console.error('[Lịch giảng dạy] Lỗi khi xuất PDF tất cả:', err);
       toast('❌ Xuất PDF thất bại: ' + (err && err.message ? err.message : String(err)));
@@ -1040,55 +1097,263 @@
     }
   });
 
-  document.getElementById('myWeekPdfBtn')?.addEventListener('click', () => {
+  document.getElementById('myWeekPdfBtn')?.addEventListener('click', async () => {
     if (!state.myTeacherCode || !state.currentWeekKey || !state.myWeekDraft) return;
     const t = state.teachers.find((x) => x.id === state.myTeacherCode);
     const week = state.weeks.find((w) => w.id === state.currentWeekKey);
     if (!window.EduTeachingSchedulePdf) { toast('⚠️ Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
-    // Xuất đúng những gì đang hiển thị trên màn hình (kể cả thay đổi CHƯA
-    // lưu) — giáo viên có thể muốn xem trước bản in trước khi bấm Lưu.
-    window.EduTeachingSchedulePdf.exportOne(t || { code: state.myTeacherCode, name: '' }, state.myWeekDraft, week ? (week.label || week.id) : state.currentWeekKey, M);
+    try {
+      // Xuất đúng những gì đang hiển thị trên màn hình (kể cả thay đổi CHƯA
+      // lưu) — giáo viên có thể muốn xem trước bản in trước khi bấm Lưu.
+      // TỰ ĐỘNG thêm trang phụ "minh chứng tuần cuối tháng" nếu có, khớp
+      // đúng khoảng ngày "Phiếu công tác" đã gộp (xem computeExtraWeekEvidence()).
+      const extra = computeExtraWeekEvidence();
+      const extraWeek = extra ? { days: await fetchExtraWeekDaysFor(state.myTeacherCode, extra), weekLabel: extra.label } : null;
+      window.EduTeachingSchedulePdf.exportOne(t || { code: state.myTeacherCode, name: '' }, state.myWeekDraft, week ? (week.label || week.id) : state.currentWeekKey, M, extraWeek);
+    } catch (err) {
+      console.error('[Lịch giảng dạy] Lỗi khi xuất PDF:', err);
+      toast('❌ Xuất PDF thất bại: ' + (err && err.message ? err.message : String(err)));
+    }
   });
 
   // ------------------------------------------------------------
   // "📋 Phiếu công tác" — mẫu On_Tap_MOS/Phieu cong tac.doc, tự điền theo
-  // đúng Lịch tuần, xuất THẲNG khi bấm nút (không qua modal hỏi gì nữa —
-  // "Mục đích" từng cho chọn Giảng dạy/Ôn Thi qua modal, nhưng người dùng
-  // phản hồi bỏ hẳn lựa chọn đó, cố định luôn "Giảng dạy IC3" — xem hằng
-  // số PURPOSE trong js/export/teaching-schedule-cong-tac-pdf.js). 3 lối
-  // vào: giáo viên tự xuất phiếu của chính mình ("Lịch của tôi"), admin
-  // xuất phiếu thay cho 1 giáo viên cụ thể (nút 📋 trên từng thẻ/hàng ở
-  // "📊 Tổng quan"/"🎴 Thẻ"), và admin xuất HÀNG LOẠT mọi giáo viên đang
+  // đúng Lịch tuần. "Mục đích" từng cho chọn Giảng dạy/Ôn Thi qua modal,
+  // nhưng người dùng phản hồi bỏ hẳn lựa chọn đó, cố định luôn "Giảng dạy
+  // IC3" (xem hằng số PURPOSE trong js/export/teaching-schedule-cong-tac-pdf.js).
+  // 3 lối vào: giáo viên tự xuất phiếu của chính mình ("Lịch của tôi"),
+  // admin xuất phiếu thay cho 1 giáo viên cụ thể (nút 📋 trên từng thẻ/hàng
+  // ở "📊 Tổng quan"/"🎴 Thẻ"), và admin xuất HÀNG LOẠT mọi giáo viên đang
   // hiển thị vào 1 file duy nhất ("📋 Xuất PDF tất cả Phiếu công tác").
+  //
+  // GỘP "TUẦN HIỆN TẠI" + "PHẦN CÒN LẠI CỦA THÁNG" (không phải cả tháng từ
+  // đầu, và KHÔNG qua tháng sau): người dùng phản hồi — giữa tháng làm
+  // phiếu cho tuần vừa dạy xong rồi cuối tháng lại phải làm tiếp cho những
+  // ngày còn lại, ra 2 phiếu/2 lần xuất, khá lòng vòng; nhưng gộp NGUYÊN
+  // CẢ THÁNG (kể cả các tuần ĐÃ LÀM PHIẾU TỪ TRƯỚC, và lỡ dính qua tận
+  // tháng sau nếu 1 tuần cuối tháng có Thứ7 rơi sang tháng kế) lại SAI —
+  // chỉ nên tính từ Thứ2 tuần đang chọn (Lịch tuần) đến hết ngày cuối cùng
+  // của đúng tháng đó. Cả 3 lối vào bên dưới đều mở modal
+  // congTacRangeModalOverlay cho chọn/sửa lại 2 khoảng ngày này (mặc định
+  // đúng quy tắc trên, xem defaultCongTacRanges()) trước khi xuất — xem
+  // weekEntries ở js/export/teaching-schedule-cong-tac-pdf.js.
   // ------------------------------------------------------------
+  function isoDate(d) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+  /** Parse "YYYY-MM-DD" (value của <input type="date">) thành Date LOCAL lúc
+   * 00:00 — không dùng `new Date(str)` thẳng (parse theo UTC, lệch múi giờ
+   * local có thể lùi/tăng 1 ngày). */
+  function parseIsoDate(s) {
+    const [y, m, d] = s.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+  /** Ngày dương lịch cụ thể (Date, LOCAL) của 1 Thứ trong tuần — suy từ
+   * weekKey (Thứ 2 đầu tuần "YYYY-MM-DD") + số Thứ (2..7, khớp M.WEEKDAYS) —
+   * bản LOCAL của dateObjForWeekday() trong js/export/teaching-schedule-cong-tac-pdf.js
+   * (cần lại ở đây để so ngày với các mốc range do người dùng chọn). */
+  function dateForWeekdayLocal(weekKey, weekdayNum) {
+    const monday = parseIsoDate(weekKey);
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + (weekdayNum - 2));
+    return d;
+  }
+  function lastDateOfMonthContaining(weekKey) {
+    const [y, m] = weekKey.split('-').map(Number);
+    return new Date(y, m, 0); // new Date(y, m, 0) = ngày cuối cùng của tháng m (m 1-indexed)
+  }
+
+  /** 2 khoảng ngày MẶC ĐỊNH để xuất Phiếu công tác + minh chứng Lịch giảng
+   * dạy, tính từ tuần đang chọn (state.currentWeekKey): {week1} = Thứ2→Thứ7
+   * của TUẦN ĐANG CHỌN (kẹp lại ở cuối tháng, phòng khi tuần này đã là
+   * tuần cuối cùng và Thứ7 rơi sang tháng sau); {week2} = Thứ2 tuần KẾ TIẾP
+   * → hết ngày cuối tháng.
+   * CHỈ gộp thêm week2 khi tuần đang chọn ĐÚNG LÀ TUẦN ÁP CHÓT của tháng
+   * (2 tuần cuối tháng) — người dùng phản hồi: nếu đang ở tuần ĐẦU/GIỮA
+   * tháng (còn ≥ 2 tuần trọn vẹn nữa mới hết tháng) thì KHÔNG được tự gộp
+   * thêm phần cuối tháng vào, chỉ xuất đúng 1 tuần đang chọn như bình
+   * thường — tránh gộp nhầm/gộp quá xa so với tuần đang xem. Điều kiện:
+   * Thứ2 tuần kế tiếp (nextMonday) phải nằm trong tháng NHƯNG Thứ2 tuần kế
+   * tiếp NỮA (nextMonday + 7 ngày) phải đã VƯỢT quá cuối tháng — tức tuần
+   * kế tiếp đó chính là tuần cuối cùng (đầy đủ hoặc chỉ còn vài ngày) của
+   * tháng, không còn tuần trọn vẹn nào khác xen giữa. */
+  function defaultCongTacRanges() {
+    const monday = parseIsoDate(state.currentWeekKey);
+    const saturday = new Date(monday);
+    saturday.setDate(monday.getDate() + 5);
+    const monthEnd = lastDateOfMonthContaining(state.currentWeekKey);
+    const week1 = { start: monday, end: saturday < monthEnd ? saturday : monthEnd };
+    let week2 = null;
+    if (saturday < monthEnd) {
+      const nextMonday = new Date(monday);
+      nextMonday.setDate(monday.getDate() + 7);
+      const mondayAfterNext = new Date(monday);
+      mondayAfterNext.setDate(monday.getDate() + 14);
+      if (nextMonday <= monthEnd && mondayAfterNext > monthEnd) week2 = { start: nextMonday, end: monthEnd };
+    }
+    return { week1, week2 };
+  }
+
+  function dateInAnyRange(date, ranges) {
+    return ranges.some((r) => date >= r.start && date <= r.end);
+  }
+
+  /** Mọi weekKey (đã có dữ liệu, state.weeks) có tuần GIAO NHAU với ít nhất
+   * 1 khoảng trong `ranges` — sắp tăng dần. Chỉ cần lấy ĐỦ các tuần liên
+   * quan để tải dữ liệu; việc cắt đúng ngày nằm trong/ngoài range để hiện
+   * lên phiếu do clippedDaysForWeek() đảm nhiệm. */
+  function weekKeysOverlappingRanges(ranges) {
+    if (!ranges.length) return [];
+    const minDate = new Date(Math.min(...ranges.map((r) => r.start.getTime())));
+    const maxDate = new Date(Math.max(...ranges.map((r) => r.end.getTime())));
+    return state.weeks
+      .map((w) => w.id)
+      .filter((wk) => {
+        const monday = parseIsoDate(wk);
+        const saturday = new Date(monday);
+        saturday.setDate(monday.getDate() + 5);
+        return saturday >= minDate && monday <= maxDate;
+      })
+      .sort();
+  }
+
+  /** Tải `days` của MỌI giáo viên cho từng weekKey trong `weekKeys`, trả
+   * về Map(weekKey -> Map(teacherCode -> days)) — tải MỖI TUẦN ĐÚNG 1 LẦN
+   * (dùng chung cho mọi giáo viên khi xuất hàng loạt) thay vì lặp lại 1
+   * query/GV/tuần. Tuần đang chọn (state.currentWeekKey) dùng lại đúng dữ
+   * liệu đã có sẵn trong state (không tải lại). */
+  async function fetchScheduleRowsByWeek(weekKeys) {
+    const otherWeekKeys = weekKeys.filter((wk) => wk !== state.currentWeekKey);
+    const otherRows = await Promise.all(
+      otherWeekKeys.map((wk) => window.EduRepositories.teachingSchedule.listByWeek(wk)),
+    );
+    const byWeek = new Map();
+    if (weekKeys.includes(state.currentWeekKey)) {
+      const cur = new Map();
+      Object.entries(state.schedulesByTeacher).forEach(([code, row]) => cur.set(code, row.days));
+      byWeek.set(state.currentWeekKey, cur);
+    }
+    otherWeekKeys.forEach((wk, i) => {
+      const cur = new Map();
+      otherRows[i].forEach((r) => cur.set(r.teacherCode, r.days));
+      byWeek.set(wk, cur);
+    });
+    return byWeek;
+  }
+
+  /** Cắt `days` của 1 tuần (weekKey) chỉ giữ lại đúng những Thứ có ngày
+   * dương lịch rơi vào 1 trong `ranges` — Thứ nào rơi ngoài mọi range (vd
+   * thuộc tuần trước "tuần hiện tại", hoặc rơi sang tháng sau) bị coi như
+   * KHÔNG dạy (M.emptyDay()), dù dữ liệu gốc trong teaching_schedule có gì
+   * đi nữa — đảm bảo cả "Tên khách hàng cần gặp" lẫn "Thời gian" trên phiếu
+   * đều tự động khớp đúng khoảng ngày người dùng đã chọn/xác nhận. */
+  function clippedDaysForWeek(daysRaw, weekKey, ranges, M) {
+    const out = {};
+    M.WEEKDAYS.forEach((d) => {
+      const date = dateForWeekdayLocal(weekKey, d);
+      const original = (daysRaw && daysRaw[String(d)]) || M.emptyDay();
+      out[String(d)] = dateInAnyRange(date, ranges) ? original : M.emptyDay();
+    });
+    return out;
+  }
+
+  /** Gộp `days` (đã CẮT đúng theo `ranges`) của 1 giáo viên qua nhiều tuần
+   * (từ `byWeek`, xem fetchScheduleRowsByWeek()) thành weekEntries cho
+   * js/export/teaching-schedule-cong-tac-pdf.js. `draftForCurrentWeek` cho
+   * phép ưu tiên bản nháp CHƯA LƯU của "Lịch của tôi" ở tuần đang chọn
+   * (nhất quán với nút "🖨️ Xuất PDF" lịch tuần bên cạnh, luôn xuất đúng
+   * những gì đang hiển thị trên màn hình). */
+  function weekEntriesFromByWeek(byWeek, weekKeys, teacherCode, ranges, draftForCurrentWeek) {
+    return weekKeys.map((wk) => {
+      const rawDays = (wk === state.currentWeekKey && draftForCurrentWeek)
+        ? draftForCurrentWeek
+        : (byWeek.get(wk) && byWeek.get(wk).get(teacherCode)) || M.emptyDays();
+      return { weekKey: wk, days: clippedDaysForWeek(rawDays, wk, ranges, M) };
+    });
+  }
+
+  // ---- Modal chọn/sửa 2 khoảng ngày trước khi xuất -----------------
+  let congTacRangePendingRun = null; // (ranges) => Promise<void>|void — set khi mở modal, chạy khi bấm "Xuất PDF"
+  function openCongTacRangeModal(run) {
+    const { week1, week2 } = defaultCongTacRanges();
+    document.getElementById('congTacRange1Start').value = isoDate(week1.start);
+    document.getElementById('congTacRange1End').value = isoDate(week1.end);
+    const week2Wrap = document.getElementById('congTacRange2Wrap');
+    if (week2) {
+      week2Wrap.classList.remove('force-hide');
+      document.getElementById('congTacRange2Start').value = isoDate(week2.start);
+      document.getElementById('congTacRange2End').value = isoDate(week2.end);
+    } else {
+      week2Wrap.classList.add('force-hide');
+    }
+    congTacRangePendingRun = run;
+    document.getElementById('congTacRangeModalOverlay').classList.add('show');
+  }
+  function closeCongTacRangeModal() {
+    document.getElementById('congTacRangeModalOverlay').classList.remove('show');
+    congTacRangePendingRun = null;
+  }
+  document.getElementById('congTacRangeCloseBtn')?.addEventListener('click', closeCongTacRangeModal);
+  document.getElementById('congTacRangeCancelBtn')?.addEventListener('click', closeCongTacRangeModal);
+  document.getElementById('congTacRangeModalOverlay')?.addEventListener('click', (e) => {
+    if (e.target.id === 'congTacRangeModalOverlay') closeCongTacRangeModal();
+  });
+  document.getElementById('congTacRangeConfirmBtn')?.addEventListener('click', async () => {
+    const r1s = document.getElementById('congTacRange1Start').value;
+    const r1e = document.getElementById('congTacRange1End').value;
+    if (!r1s || !r1e) { toast('⚠️ Chọn đủ ngày bắt đầu/kết thúc của tuần hiện tại.'); return; }
+    const ranges = [{ start: parseIsoDate(r1s), end: parseIsoDate(r1e) }];
+    const week2Visible = !document.getElementById('congTacRange2Wrap').classList.contains('force-hide');
+    if (week2Visible) {
+      const r2s = document.getElementById('congTacRange2Start').value;
+      const r2e = document.getElementById('congTacRange2End').value;
+      if (r2s && r2e) ranges.push({ start: parseIsoDate(r2s), end: parseIsoDate(r2e) });
+    }
+    const run = congTacRangePendingRun;
+    closeCongTacRangeModal();
+    if (run) await run(ranges);
+  });
+
   document.getElementById('myWeekCongTacBtn')?.addEventListener('click', () => {
     if (!state.myTeacherCode || !state.currentWeekKey || !state.myWeekDraft) { toast('⚠️ Chưa có lịch tuần để xuất.'); return; }
     if (!window.EduCongTacPdf) { toast('⚠️ Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
-    const t = state.teachers.find((x) => x.id === state.myTeacherCode);
-    const week = state.weeks.find((w) => w.id === state.currentWeekKey);
-    // Xuất đúng những gì đang hiển thị trên màn hình (kể cả thay đổi CHƯA
-    // lưu), nhất quán với nút "🖨️ Xuất PDF" lịch tuần bên cạnh.
-    window.EduCongTacPdf.exportOne(
-      t || { code: state.myTeacherCode, name: '' }, state.myWeekDraft,
-      week ? (week.label || week.id) : state.currentWeekKey, state.currentWeekKey, M,
-    );
+    openCongTacRangeModal(async (ranges) => {
+      const t = state.teachers.find((x) => x.id === state.myTeacherCode);
+      try {
+        const weekKeys = weekKeysOverlappingRanges(ranges);
+        const byWeek = await fetchScheduleRowsByWeek(weekKeys);
+        const weekEntries = weekEntriesFromByWeek(byWeek, weekKeys, state.myTeacherCode, ranges, state.myWeekDraft);
+        window.EduCongTacPdf.exportOne(t || { code: state.myTeacherCode, name: '' }, weekEntries, M);
+      } catch (err) {
+        console.error('[Lịch giảng dạy] Lỗi khi xuất Phiếu công tác:', err);
+        toast('❌ Xuất PDF thất bại: ' + (err && err.message ? err.message : String(err)));
+      }
+    });
   });
   /** Admin/điều phối bấm nút 📋 trên 1 thẻ/hàng giáo viên cụ thể (khác
    * "Lịch của tôi" — không có bản nháp đang sửa dở, luôn dùng đúng dữ liệu
-   * ĐÃ LƯU trong state.schedulesByTeacher của tuần đang chọn). */
+   * ĐÃ LƯU trong state.schedulesByTeacher/repository của khoảng ngày đã chọn). */
   function openCongTacModalFor(teacherCode) {
     const t = state.teachers.find((x) => x.id === teacherCode || x.code === teacherCode);
     if (!t) return;
     if (!state.currentWeekKey) { toast('⚠️ Hãy chọn 1 tuần trước.'); return; }
     if (!window.EduCongTacPdf) { toast('⚠️ Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
-    const week = state.weeks.find((w) => w.id === state.currentWeekKey);
-    const days = (state.schedulesByTeacher[teacherCode] && state.schedulesByTeacher[teacherCode].days) || M.emptyDays();
-    window.EduCongTacPdf.exportOne(t, days, week ? (week.label || week.id) : state.currentWeekKey, state.currentWeekKey, M);
+    openCongTacRangeModal(async (ranges) => {
+      try {
+        const weekKeys = weekKeysOverlappingRanges(ranges);
+        const byWeek = await fetchScheduleRowsByWeek(weekKeys);
+        const weekEntries = weekEntriesFromByWeek(byWeek, weekKeys, teacherCode, ranges);
+        window.EduCongTacPdf.exportOne(t, weekEntries, M);
+      } catch (err) {
+        console.error('[Lịch giảng dạy] Lỗi khi xuất Phiếu công tác:', err);
+        toast('❌ Xuất PDF thất bại: ' + (err && err.message ? err.message : String(err)));
+      }
+    });
   }
   /** Nút "📋 Xuất PDF tất cả Phiếu công tác" — cùng bộ lọc GV đang hiển thị
    * với "🖨️ Xuất PDF tất cả" (Lịch tuần), chỉ khác đầu ra là Phiếu công
-   * tác, gộp mọi giáo viên vào 1 file duy nhất (xem exportMany() trong
-   * js/export/teaching-schedule-cong-tac-pdf.js). */
+   * tác, gộp mọi giáo viên (+ khoảng ngày đã chọn) vào 1 file duy nhất (xem
+   * exportMany() trong js/export/teaching-schedule-cong-tac-pdf.js). */
   document.getElementById('exportAllCongTacBtn')?.addEventListener('click', () => {
     if (!state.currentWeekKey) { toast('⚠️ Hãy chọn 1 tuần trước.'); return; }
     if (!window.EduCongTacPdf) { toast('⚠️ Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
@@ -1096,14 +1361,22 @@
     if (!list.length) { toast('⚠️ Không có giáo viên nào để xuất (kiểm tra lại bộ lọc/tìm kiếm).'); return; }
     const week = state.weeks.find((w) => w.id === state.currentWeekKey);
     const weekLabel = week ? (week.label || week.id) : state.currentWeekKey;
-    // Cùng lý do bọc try/catch như exportAllPdf() ở trên — trước đây lỗi
-    // ở đây cũng throw âm thầm, không báo được gì cho người dùng.
-    try {
-      window.EduCongTacPdf.exportMany(list, state.currentWeekKey, M, weekLabel);
-    } catch (err) {
-      console.error('[Lịch giảng dạy] Lỗi khi xuất PDF tất cả Phiếu công tác:', err);
-      toast('❌ Xuất PDF thất bại: ' + (err && err.message ? err.message : String(err)));
-    }
+    openCongTacRangeModal(async (ranges) => {
+      // Cùng lý do bọc try/catch như exportAllPdf() ở trên — trước đây lỗi
+      // ở đây cũng throw âm thầm, không báo được gì cho người dùng.
+      try {
+        const weekKeys = weekKeysOverlappingRanges(ranges);
+        const byWeek = await fetchScheduleRowsByWeek(weekKeys);
+        const fullList = list.map(({ teacher }) => ({
+          teacher,
+          weekEntries: weekEntriesFromByWeek(byWeek, weekKeys, teacher.code, ranges),
+        }));
+        window.EduCongTacPdf.exportMany(fullList, M, weekLabel);
+      } catch (err) {
+        console.error('[Lịch giảng dạy] Lỗi khi xuất PDF tất cả Phiếu công tác:', err);
+        toast('❌ Xuất PDF thất bại: ' + (err && err.message ? err.message : String(err)));
+      }
+    });
   });
 
   // ------------------------------------------------------------

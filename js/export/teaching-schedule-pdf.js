@@ -396,28 +396,45 @@
   }
 
   /** Xuất 1 file PDF cho ĐÚNG 1 giáo viên/1 tuần — nút "🖨️ PDF" từng hàng
-   * (admin/coordinator) hoặc "🖨️ Xuất PDF" trong "Lịch của tôi" (giáo viên). */
-  function exportOne(teacher, days, weekLabel, M) {
+   * (admin/coordinator) hoặc "🖨️ Xuất PDF" trong "Lịch của tôi" (giáo viên).
+   * @param {{days:Object, weekLabel:string}} [extraWeek] Khi tuần đang xuất
+   *   KHÔNG PHẢI trọn vẹn 1 tuần Excel (vd dính vài ngày đầu tháng sau, đã
+   *   bị "Phiếu công tác" gộp coi là "tuần cuối tháng") — thêm 1 TRANG PHỤ
+   *   ngay sau trang chính, cùng thiết kế, làm MINH CHỨNG cho đúng những
+   *   ngày đó (xem js/teaching-schedule.js!computeExtraWeekEvidence()) —
+   *   người phê duyệt Phiếu công tác có thể đối chiếu Lịch giảng dạy khớp
+   *   đúng khoảng ngày đã khai, không cần đoán/suy luận thêm. */
+  function exportOne(teacher, days, weekLabel, M, extraWeek) {
     if (!ensureLibsLoaded()) return;
     maybeShowMobileSaveHint();
     const { jsPDF } = global.jspdf;
     const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'landscape' });
     drawOnePage(doc, teacher, days, weekLabel, M, { isFirstPage: true });
+    if (extraWeek) drawOnePage(doc, teacher, extraWeek.days, extraWeek.weekLabel, M, { isFirstPage: false });
     doc.save(`lich-${slugify(teacher.name || teacher.code)}-${slugify(weekLabel)}.pdf`);
   }
 
-  /** Xuất 1 file PDF DUY NHẤT gồm lịch của NHIỀU giáo viên, mỗi người 1
-   * trang — nút "🖨️ Xuất PDF tất cả" trên thanh công cụ (chỉ admin/coordinator).
-   * @param {Array<{teacher, days}>} list
+  /** Xuất 1 file PDF DUY NHẤT gồm lịch của NHIỀU giáo viên — nút "🖨️ Xuất
+   * PDF tất cả" trên thanh công cụ (chỉ admin/coordinator). Mỗi giáo viên
+   * chiếm 1 TRANG CHÍNH + (nếu có `extraDays`, xem exportOne()) 1 TRANG
+   * PHỤ minh chứng "tuần cuối tháng" ngay sau đó — không phải cứ 1 GV/1
+   * trang cố định nữa.
+   * @param {Array<{teacher, days, extraDays?:Object}>} list
    */
-  function exportMany(list, weekLabel, M) {
+  function exportMany(list, weekLabel, M, extraWeekLabel) {
     if (!ensureLibsLoaded()) return;
     if (!list.length) return;
     maybeShowMobileSaveHint();
     const { jsPDF } = global.jspdf;
     const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'landscape' });
-    list.forEach(({ teacher, days }, i) => {
-      drawOnePage(doc, teacher, days, weekLabel, M, { isFirstPage: i === 0 });
+    let pageIndex = 0;
+    list.forEach(({ teacher, days, extraDays }) => {
+      drawOnePage(doc, teacher, days, weekLabel, M, { isFirstPage: pageIndex === 0 });
+      pageIndex += 1;
+      if (extraDays) {
+        drawOnePage(doc, teacher, extraDays, extraWeekLabel, M, { isFirstPage: pageIndex === 0 });
+        pageIndex += 1;
+      }
     });
     doc.save(`lich-giang-day-${slugify(weekLabel)}.pdf`);
   }
