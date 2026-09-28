@@ -22,10 +22,16 @@
 (function (global) {
   'use strict';
 
-  // Cache 3 phút: mở lại/F5 trang trong 3 phút không tốn thêm lượt đọc
-  // Firestore — quan trọng khi giáo viên theo dõi liên tục lúc học sinh
-  // đang làm bài (xem js/services/data-cache-service.js để hiểu lý do).
-  const CACHE_TTL_MS = 3 * 60 * 1000;
+  // Cache 3 phút cho quiz_results (CẦN TƯƠI — giáo viên theo dõi liên tục
+  // lúc học sinh đang làm bài, xem js/services/data-cache-service.js).
+  const RESULTS_CACHE_TTL_MS = 3 * 60 * 1000;
+
+  // Cache 30 phút cho roster — chỉ đổi khi Admin import/sửa roster, không
+  // cần tươi từng phút. persist=true (localStorage): sống qua nhiều lần
+  // mở tab, quan trọng nhất ở nhánh admin (tải TOÀN BỘ roster, không giới
+  // hạn) khi trường có hàng chục nghìn học sinh — mỗi lần KHÔNG cache sẽ
+  // tốn lại toàn bộ số lượt đọc đó, dễ chạm trần 50.000 đọc/ngày (Spark).
+  const ROSTER_CACHE_TTL_MS = 30 * 60 * 1000;
 
   /**
    * Tải dữ liệu cho 1 giáo viên, giới hạn đúng các trường trong profile.schools.
@@ -53,13 +59,10 @@
       return { schools, students: [], results: [], noSchoolsAssigned: true };
     }
 
-    const cacheKey = isAdmin
-      ? 'teacher:admin-all-schools'
-      : 'teacher:' + (profile.uid || profile.id || 'unknown') + ':' + schools.slice().sort().join('|');
-    if (!forceRefresh && global.EduDataCache) {
-      const cached = global.EduDataCache.get(cacheKey);
-      if (cached) return cached;
-    }
+    const uid = profile.uid || profile.id;
+    const scopeKey = isAdmin ? 'admin-all-schools' : (uid || 'unknown') + ':' + schools.slice().sort().join('|');
+    const rosterCacheKey = 'teacher:roster:' + scopeKey;
+    const resultsCacheKey = 'teacher:results:' + scopeKey;
 
     // Roster: lọc theo ĐÚNG teacherId (uid) của giáo viên đang đăng nhập —
     // KHÔNG còn theo "schools" (cả trường) như trước, vì 2 giáo viên có thể
@@ -67,13 +70,26 @@
     // người kia (lỗi người dùng phản hồi, xem listByTeacher() + rule
     // canAccessRosterStudent() trong firestore.rules). "schools" vẫn cần
     // giữ lại cho quiz_results bên dưới (collection đó không có teacherId).
-    const uid = profile.uid || profile.id;
-    const [students, resultsRaw] = await Promise.all([
-      isAdmin
-        ? global.EduRepositories.studentRoster.list({ where: [['status', '==', 'active']] })
-        : global.EduRepositories.studentRoster.listByTeacher(uid),
-      global.EduRepositories.studentResult.listRecent(isAdmin ? { limit: 1000 } : { schools, limit: 1000 }),
-    ]);
+    //
+    // Cache TÁCH RIÊNG roster (persist=true, 30 phút) và quiz_results
+    // (sessionStorage, 3 phút) — xem ROSTER_CACHE_TTL_MS ở trên. Quan
+    // trọng nhất ở nhánh isAdmin (tải TOÀN BỘ roster không giới hạn).
+    let students = !forceRefresh && global.EduDataCache
+      ? global.EduDataCache.get(rosterCacheKey, /* persist */ true)
+      : null;
+    if (!students) {
+      students = isAdmin
+        ? await global.EduRepositories.studentRoster.list({ where: [['status', '==', 'active']] })
+        : await global.EduRepositories.studentRoster.listByTeacher(uid);
+      if (global.EduDataCache) global.EduDataCache.set(rosterCacheKey, students, ROSTER_CACHE_TTL_MS, /* persist */ true);
+    }
+
+    let resultsRaw = !forceRefresh && global.EduDataCache ? global.EduDataCache.get(resultsCacheKey) : null;
+    if (!resultsRaw) {
+      resultsRaw = await global.EduRepositories.studentResult.listRecent(isAdmin ? { limit: 1000 } : { schools, limit: 1000 });
+      if (global.EduDataCache) global.EduDataCache.set(resultsCacheKey, resultsRaw, RESULTS_CACHE_TTL_MS);
+    }
+
     // quiz_results không có field teacherId (chỉ có studentSchool) nên
     // firestore.rules chỉ siết được theo "schools" — nếu dừng ở đó, 1 giáo
     // viên sẽ thấy LẪN kết quả của các lớp đồng nghiệp khác dạy chung
@@ -91,9 +107,7 @@
     const effectiveSchools = isAdmin
       ? [...new Set(students.map((s) => s.school).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'vi'))
       : schools;
-    const data = { schools: effectiveSchools, students, results, noSchoolsAssigned: false };
-    if (global.EduDataCache) global.EduDataCache.set(cacheKey, data, CACHE_TTL_MS);
-    return data;
+    return { schools: effectiveSchools, students, results, noSchoolsAssigned: false };
   }
 
   /** Xoá các <option> đã thêm động trước đó (giữ lại option đầu tiên — "Tất cả"). */

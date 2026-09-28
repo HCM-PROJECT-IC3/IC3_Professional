@@ -28,10 +28,18 @@
 (function (global) {
   'use strict';
 
-  // Cache 3 phút: mở lại/F5 trang trong 3 phút không tốn thêm lượt đọc
-  // Firestore — quan trọng khi Điều phối đào tạo theo dõi liên tục lúc
-  // hàng ngàn học sinh đang làm bài (xem js/services/data-cache-service.js).
-  const CACHE_TTL_MS = 3 * 60 * 1000;
+  // Cache 3 phút cho quiz_results (CẦN TƯƠI — Điều phối đào tạo theo dõi
+  // liên tục lúc học sinh đang làm bài): mở lại/F5 trang trong 3 phút
+  // không tốn thêm lượt đọc Firestore (xem js/services/data-cache-service.js).
+  const RESULTS_CACHE_TTL_MS = 3 * 60 * 1000;
+
+  // Cache 30 phút cho roster (courses/classes/students/teachers) — dữ liệu
+  // này chỉ đổi khi có người import Excel/sửa roster, KHÔNG cần tươi từng
+  // phút như quiz_results. Cache riêng, dài hơn nhiều và SỐNG QUA NHIỀU
+  // LẦN mở tab (persist=true, xem data-cache-service.js) — quan trọng khi
+  // roster có hàng chục nghìn học sinh: tách khỏi cache quiz_results để
+  // không phải đọc lại TOÀN BỘ roster mỗi 3 phút chỉ vì cần kết quả tươi.
+  const ROSTER_CACHE_TTL_MS = 30 * 60 * 1000;
 
   /** where('in', ...) tối đa 10 giá trị — chia nhỏ "schools" thành từng
    * nhóm ≤10 rồi gộp kết quả lại, phòng khi 1 coordinator được gán > 10
@@ -64,25 +72,38 @@
       return { courses: [], classes: [], students: [], teachers: [], results: [], schools: [], noSchoolsAssigned: true };
     }
 
-    const cacheKey = isAdmin ? 'coordinator:admin-all-schools' : 'coordinator:' + (profile.uid || profile.id || 'unknown') + ':' + schools.slice().sort().join('|');
-    if (!forceRefresh && global.EduDataCache) {
-      const cached = global.EduDataCache.get(cacheKey);
-      if (cached) return cached;
+    const scopeKey = isAdmin ? 'admin-all-schools' : (profile.uid || profile.id || 'unknown') + ':' + schools.slice().sort().join('|');
+    const rosterCacheKey = 'coordinator:roster:' + scopeKey;
+    const resultsCacheKey = 'coordinator:results:' + scopeKey;
+
+    // 2 cache TÁCH RIÊNG, đọc song song — roster (persist=true, 30 phút,
+    // sống qua nhiều lần mở tab) và quiz_results (sessionStorage, 3 phút).
+    // forceRefresh bỏ qua CẢ HAI (nút "🔄 Làm mới dữ liệu" phải luôn thấy
+    // dữ liệu mới nhất tuyệt đối, không chỉ mỗi quiz_results).
+    let rosterBundle = !forceRefresh && global.EduDataCache
+      ? global.EduDataCache.get(rosterCacheKey, /* persist */ true)
+      : null;
+    if (!rosterBundle) {
+      const [courses, classes, students, teacherSnap] = await Promise.all([
+        global.EduRepositories.course.list(),
+        global.EduRepositories.class.list(),
+        isAdmin
+          ? global.EduRepositories.studentRoster.list({ where: [['status', '==', 'active']] })
+          : studentsByChunkedSchools(schools),
+        global.EduFirebase.db.collection('users').where('role', '==', 'teacher').where('approved', '==', true).get(),
+      ]);
+      const teachers = teacherSnap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+      rosterBundle = { courses, classes, students, teachers };
+      if (global.EduDataCache) global.EduDataCache.set(rosterCacheKey, rosterBundle, ROSTER_CACHE_TTL_MS, /* persist */ true);
     }
 
-    const [courses, classes, students, teacherSnap, results] = await Promise.all([
-      global.EduRepositories.course.list(),
-      global.EduRepositories.class.list(),
-      isAdmin
-        ? global.EduRepositories.studentRoster.list({ where: [['status', '==', 'active']] })
-        : studentsByChunkedSchools(schools),
-      global.EduFirebase.db.collection('users').where('role', '==', 'teacher').where('approved', '==', true).get(),
-      global.EduRepositories.studentResult.listRecent(isAdmin ? { limit: 1000 } : { schools, limit: 1000 }),
-    ]);
-    const teachers = teacherSnap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
-    const data = { courses, classes, students, teachers, results, schools, noSchoolsAssigned: false };
-    if (global.EduDataCache) global.EduDataCache.set(cacheKey, data, CACHE_TTL_MS);
-    return data;
+    let results = !forceRefresh && global.EduDataCache ? global.EduDataCache.get(resultsCacheKey) : null;
+    if (!results) {
+      results = await global.EduRepositories.studentResult.listRecent(isAdmin ? { limit: 1000 } : { schools, limit: 1000 });
+      if (global.EduDataCache) global.EduDataCache.set(resultsCacheKey, results, RESULTS_CACHE_TTL_MS);
+    }
+
+    return Object.assign({}, rosterBundle, { results, schools, noSchoolsAssigned: false });
   }
 
   /** Xoá các <option> đã thêm động trước đó (giữ lại option đầu tiên — "Tất cả"). */
