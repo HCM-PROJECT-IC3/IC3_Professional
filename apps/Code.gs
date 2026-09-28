@@ -27,6 +27,19 @@ const SHEET_REPORT_SUMMARY = 'TongHop'; // nơi ghi báo cáo tổng hợp do da
 // Firestore quiz_results) — KHÔNG dùng để tính getDashboard ở trên.
 const SHEET_SUBMISSION_LOG = 'NhatKyNopBai'; // cột: xem writeSubmissionLog_()
 
+// Email nhận cảnh báo khi phát hiện nghi vấn gian lận (status chứa ⚠️) —
+// điền email thật của giáo viên/điều phối vào đây (có thể để nhiều email,
+// cách nhau bằng dấu phẩy). Để mảng rỗng thì tắt tính năng gửi email,
+// dữ liệu vẫn được ghi vào NhatKyNopBai như cũ, chỉ là không có email.
+const ALERT_EMAILS = []; // vd: ['giaovien@example.com', 'dieuphoi@example.com']
+
+// Giới hạn số email cảnh báo gửi tối đa trong 1 giờ, để không bao giờ
+// chạm quota MailApp miễn phí (100/ngày với Gmail cá nhân) dù có sự cố
+// khiến hàng loạt học sinh bị gắn cờ nghi vấn cùng lúc (vd. bug ở
+// integrity-check phía client). Dùng CacheService (miễn phí, có sẵn
+// trong mọi project Apps Script) để đếm, không cần thêm Sheet/DB nào.
+const ALERT_EMAIL_MAX_PER_HOUR = 15;
+
 // ====== ROUTER CHÍNH ======
 
 function doGet(e) {
@@ -252,9 +265,57 @@ function writeSubmissionLog_(payload) {
       payload.note              || ''
     ]);
 
+    // Cảnh báo gian lận qua email — CHỈ khi có dấu ⚠️ trong status (do
+    // js/googleSheet.js gắn khi integrity.valid == false), và chỉ với
+    // dòng MỚI ghi (không gửi lại khi request retry trùng submissionId,
+    // vì nhánh đó đã return ở trên rồi). Đặt SAU appendRow để lỗi gửi mail
+    // (nếu có) không bao giờ làm mất dòng log đã ghi.
+    if (payload.status && String(payload.status).indexOf('⚠️') !== -1) {
+      sendCheatAlertEmail_(payload);
+    }
+
     return { written: true, duplicate: false };
   } finally {
     lock.releaseLock();
+  }
+}
+
+/**
+ * Gửi email cảnh báo 1 lượt nộp bài bị nghi vấn gian lận, có throttle
+ * (ALERT_EMAIL_MAX_PER_HOUR) để không bao giờ vượt quota MailApp free.
+ * Lỗi ở đây (mail quota hết, ALERT_EMAILS rỗng...) chỉ log, KHÔNG throw —
+ * đây là tính năng "thêm", không được phép làm hỏng luồng ghi log chính.
+ */
+function sendCheatAlertEmail_(payload) {
+  try {
+    if (!ALERT_EMAILS || ALERT_EMAILS.length === 0) return;
+
+    const cache = CacheService.getScriptCache();
+    const bucketKey = 'cheatAlertCount_' + Math.floor(Date.now() / (60 * 60 * 1000)); // 1 khoá/giờ
+    const sentThisHour = Number(cache.get(bucketKey) || 0);
+    if (sentThisHour >= ALERT_EMAIL_MAX_PER_HOUR) {
+      console.warn('Đã đạt giới hạn ' + ALERT_EMAIL_MAX_PER_HOUR + ' email cảnh báo/giờ — bỏ qua để giữ quota MailApp.');
+      return;
+    }
+
+    const subject = '⚠️ Nghi vấn gian lận: ' + (payload.studentName || 'Ẩn danh') + ' — ' + (payload.testName || '');
+    const body = [
+      'Học sinh: ' + (payload.studentName || ''),
+      'Lớp: ' + (payload.studentClass || ''),
+      'Trường: ' + (payload.studentSchool || ''),
+      'Bài thi: ' + (payload.testName || ''),
+      'Điểm: ' + (payload.score ?? ''),
+      'Trạng thái: ' + (payload.status || ''),
+      'Ghi chú: ' + (payload.note || ''),
+      'Số lần chuyển tab: ' + (payload.tabSwitch ?? ''),
+      '',
+      '(Email tự động từ apps/Code.gs — xem chi tiết đầy đủ ở sheet "' + SHEET_SUBMISSION_LOG + '")'
+    ].join('\n');
+
+    MailApp.sendEmail(ALERT_EMAILS.join(','), subject, body);
+    cache.put(bucketKey, String(sentThisHour + 1), 3600); // hết hạn sau 1 giờ, tự dọn
+  } catch (e) {
+    console.error('Lỗi gửi email cảnh báo gian lận (không ảnh hưởng việc ghi log):', e);
   }
 }
 

@@ -57,6 +57,15 @@
         flags:         Array.isArray(rec.flags) ? rec.flags.slice(0, 10) : [],
         timedOut:      !!rec.timedOut,
         submittedAt:   firebase.firestore.FieldValue.serverTimestamp(),
+        // Trường TTL — Firestore sẽ TỰ XÓA document này sau 365 ngày, KHÔNG
+        // tốn thao tác thủ công/Cloud Function. Chỉ có tác dụng SAU KHI bật
+        // TTL policy 1 lần trong Console (miễn phí, không cần code):
+        // Firebase Console → Firestore → tab "TTL" → Create policy →
+        // collection group "quiz_results" → field "expireAt". Không bật thì
+        // field này chỉ nằm im, không ảnh hưởng gì. Mục đích: quiz_results
+        // tích lũy vô thời hạn sẽ chạm trần 1GB storage free của gói Spark
+        // sớm muộn — TTL giữ dữ liệu ~1 năm gần nhất là đủ cho báo cáo.
+        expireAt:      firebase.firestore.Timestamp.fromMillis(Date.now() + 365 * 24 * 60 * 60 * 1000),
       };
 
       const docRef = await global.EduFirebase.db.collection(COLLECTION).add(payload);
