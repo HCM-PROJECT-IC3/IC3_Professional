@@ -136,6 +136,18 @@
 
   // ── Nạp câu hỏi ──
 
+  // startMatch() gọi loadQuestions() MỖI VÁN (bấm "Chơi lại" cũng tính 1
+  // ván mới) — nếu không cache, mỗi ván tốn tới 300 lượt đọc Firestore
+  // (query .limit(300)) dù ngân hàng câu hỏi hầu như không đổi giữa các
+  // ván. Với hàng nghìn học sinh chơi nhiều ván/ngày, không cache sẽ vượt
+  // xa 50.000 lượt đọc/ngày miễn phí của gói Spark chỉ riêng từ game này.
+  // Cache theo topic trong localStorage (sống qua nhiều ván/nhiều lần mở
+  // lại trang), TTL 1 giờ — đủ ngắn để câu hỏi mới thêm/sửa (qua
+  // image-manager.html) sớm được thấy, đủ dài để 1 buổi chơi (thường vài
+  // chục ván liên tiếp) chỉ tốn ĐÚNG 1 lần đọc thật cho mỗi chủ đề.
+  var FIRESTORE_QUESTIONS_CACHE_PREFIX = 'bqQuestionsCache:';
+  var FIRESTORE_QUESTIONS_CACHE_TTL_MS = 60 * 60 * 1000;
+
   function loadFromFirestore(topic) {
     if (typeof firebase === 'undefined' || !firebase.firestore) return Promise.reject(new Error('no-firebase'));
     try {
@@ -149,6 +161,26 @@
     } catch (e) {
       return Promise.reject(e);
     }
+  }
+
+  function loadFromFirestoreCached(topic) {
+    var cacheKey = FIRESTORE_QUESTIONS_CACHE_PREFIX + (topic || '__all__');
+    try {
+      var raw = localStorage.getItem(cacheKey);
+      if (raw) {
+        var entry = JSON.parse(raw);
+        if (entry && Date.now() < entry.expiresAt && Array.isArray(entry.data) && entry.data.length) {
+          return Promise.resolve(entry.data);
+        }
+      }
+    } catch (e) { /* localStorage bị chặn/lỗi parse — coi như cache miss, không chặn game */ }
+
+    return loadFromFirestore(topic).then(function (data) {
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify({ data: data, expiresAt: Date.now() + FIRESTORE_QUESTIONS_CACHE_TTL_MS }));
+      } catch (e) { /* hết quota localStorage — bỏ qua, không ảnh hưởng chức năng chính */ }
+      return data;
+    });
   }
 
   function loadFromStaticJson(topic) {
@@ -180,7 +212,7 @@
   }
 
   function loadQuestions(topic) {
-    return loadFromFirestore(topic).catch(function () {
+    return loadFromFirestoreCached(topic).catch(function () {
       return loadFromStaticJson(topic);
     }).then(function (list) {
       var shuffled = shuffle(list).slice(0, CONFIG.maxQuestionsPerMatch);
