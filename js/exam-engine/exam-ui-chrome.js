@@ -30,6 +30,31 @@
   }
 
   /**
+   * ID ngẫu nhiên, sinh 1 lần rồi lưu lại trong localStorage — dùng để
+   * ghép vào SESSION_ID cho mỗi trang exam-simulator-{word,excel,ppt}.
+   * LÝ DO CẦN: nếu SESSION_ID chỉ dựa vào TASK.id (cố định, giống nhau
+   * cho MỌI học sinh làm cùng 1 đề), lúc nào đó có bật đồng bộ Firestore
+   * cho các trang này thì mọi học sinh sẽ ghi ĐÈ LÊN CÙNG 1 document —
+   * không chỉ lãng phí lượt ghi, mà còn làm hỏng dữ liệu của người khác.
+   * Ghép thêm deviceId (ngẫu nhiên/máy) đảm bảo mỗi trình duyệt có
+   * session riêng, không đụng nhau.
+   */
+  function getOrCreateDeviceId() {
+    var KEY = 'examDeviceId';
+    try {
+      var id = localStorage.getItem(KEY);
+      if (id) return id;
+      id = 'dev-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+      localStorage.setItem(KEY, id);
+      return id;
+    } catch (e) {
+      // localStorage bị chặn (Safari riêng tư...) — vẫn trả về 1 id dùng
+      // được trong phiên hiện tại, chỉ là không nhớ lại được lần sau.
+      return 'dev-session-' + Date.now().toString(36);
+    }
+  }
+
+  /**
    * Debounce autosave — trả về 1 hàm schedule() gọi lại thì reset lại
    * hẹn giờ (giống mọi debounce chuẩn), sau `debounceMs` sẽ gọi
    * MosExamAutosave.autosave(sessionId, studentInfo, session.toSnapshot()).
@@ -110,6 +135,7 @@
 
   return {
     escapeHtml: escapeHtml,
+    getOrCreateDeviceId: getOrCreateDeviceId,
     createAutosaveScheduler: createAutosaveScheduler,
     renderTimer: renderTimer,
     startTicking: startTicking,

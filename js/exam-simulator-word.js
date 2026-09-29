@@ -21,7 +21,9 @@
   var UI = window.ExamEngine.UiChrome;
   var WD = window.WordEngine.DocumentModel;
   var TASK = window.WordTasks.sample.task;
-  var SESSION_ID = 'exam-word-' + TASK.id;
+  // Ghép thêm deviceId để mỗi học sinh có session Firestore RIÊNG, tránh
+  // ghi đè lên nhau nếu sau này bật đồng bộ (xem getOrCreateDeviceId()).
+  var SESSION_ID = 'exam-word-' + TASK.id + '-' + UI.getOrCreateDeviceId();
   var DURATION_SECONDS = 15 * 60;
 
   var session = new window.ExamEngine.ExamRunner.ExamSession({

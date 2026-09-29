@@ -424,7 +424,9 @@
       <div class="import-hint">
         Đọc <b>mọi sheet tuần</b> trong file (mỗi sheet = 1 tuần, đúng cấu trúc file gốc
         <code>LỊCH GIẢNG DẠY TEAM GVTH...xlsx</code>). Giáo viên/tuần <b>chưa có</b> sẽ được tạo mới; đã có
-        (trùng Mã NV + Tuần) sẽ <b>ghi đè</b> bằng dữ liệu trong file.
+        (trùng Mã NV + Tuần) sẽ <b>ghi đè</b> bằng dữ liệu trong file — RIÊNG tab "🗓️ TKB lớp" chỉ tự điền vào
+        ô-tiết ĐANG TRỐNG, ô nào đã có mã lớp (gõ tay hoặc từ lần nhập trước) sẽ được <b>giữ nguyên</b>
+        dù khác với file — xem danh sách "ô giữ nguyên" sau khi nhập để biết chỗ nào cần tự kiểm tra lại.
       </div>
       <div class="import-summary force-hide" id="importSummary">
         <div class="import-stat ok"><b id="importWeekCount">0</b><span>Tuần</span></div>
@@ -432,8 +434,18 @@
         <div class="import-stat warn" id="importSkippedStat" hidden><b id="importSkippedCount">0</b><span>Sheet bỏ qua</span></div>
       </div>
       <ul class="import-skipped-list" id="importSkippedList" hidden></ul>
+
+      <!-- Chỉ hiện SAU KHI đã bấm "Nhập dữ liệu" và phát hiện ô-tiết TKB lớp
+           khác với Excel vừa nhập nhưng bị giữ nguyên (xem sessionToTimetableCells()
+           trong teaching-schedule.js) — đúng loại lỗi "thứ Ba không khớp" đã gặp:
+           dữ liệu cũ ở TKB lớp lặng lẽ chặn dữ liệu mới từ Excel. -->
+      <div class="import-summary force-hide" id="importConflictSummary">
+        <div class="import-stat warn"><b id="importConflictCount">0</b><span>Ô TKB lớp GIỮ NGUYÊN (khác Excel)</span></div>
+      </div>
+      <ul class="import-skipped-list" id="importConflictList" hidden></ul>
     </div>
     <div class="modal-footer">
+      <button type="button" class="btn btn-warn force-hide" id="importOverrideBtn">⚠️ Ghi đè toàn bộ ô trên theo Excel</button>
       <button type="button" class="btn btn-ghost" id="importCancelBtn">Huỷ</button>
       <button type="button" class="btn btn-primary" id="importConfirmBtn" disabled>💾 Nhập dữ liệu</button>
     </div>

@@ -169,6 +169,14 @@ body {
 .btn-primary:hover { filter: brightness(1.08); box-shadow: var(--glow-purple); transform: translateY(-1px) }
 .btn-primary:active { transform: translateY(0) }
 .btn-primary:disabled { opacity: .5; cursor: not-allowed; filter: none; box-shadow: var(--shadow-btn); transform: none }
+.btn-warn {
+  background: #f59e0b;
+  color: #1a1200;
+  box-shadow: var(--shadow-btn);
+  display: inline-flex; align-items: center; gap: .4rem; margin-right: auto;
+}
+.btn-warn:hover { filter: brightness(1.08); transform: translateY(-1px) }
+.btn-warn:disabled { opacity: .5; cursor: not-allowed; filter: none; transform: none }
 .btn-secondary {
   background: var(--teal-lt);
   color: var(--teal);

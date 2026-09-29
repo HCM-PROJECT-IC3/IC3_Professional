@@ -132,6 +132,11 @@
     el.resultTitle = qs('bqResultTitle');
     el.resultStats = qs('bqResultStats');
     el.playAgainBtn = qs('bqPlayAgainBtn');
+    el.leaderboardBtn = qs('bqLeaderboardBtn');
+    el.viewLeaderboardBtn = qs('bqViewLeaderboardBtn');
+    el.closeLeaderboardBtn = qs('bqCloseLeaderboardBtn');
+    el.leaderboardOverlay = qs('bqLeaderboardOverlay');
+    el.leaderboardList = qs('bqLeaderboardList');
   }
 
   // ── Nạp câu hỏi ──
@@ -494,6 +499,76 @@
     } catch (e) { /* ghi XP là phụ — không được làm hỏng màn kết quả */ }
   }
 
+  // ── Bảng xếp hạng ──
+
+  // Top 10 điểm cao nhất, cache localStorage 5 phút — mở bảng xếp hạng
+  // nhiều lần trong 1 buổi (sau mỗi ván, hoặc tò mò bấm lại) KHÔNG tốn
+  // thêm lượt đọc Firestore mỗi lần, dù có hàng nghìn học sinh cùng mở.
+  // firestore.rules đã tự chặn request.query.limit <= 50 ở tầng server
+  // (xem match /game_sessions/{sessionId}) nên dù cache này có bị bỏ qua
+  // vì lý do gì, mỗi lần mở tối đa vẫn chỉ 10 lượt đọc (limit truyền vào
+  // listTopScores), không thể vô tình quét cả collection.
+  var LEADERBOARD_CACHE_KEY = 'bqLeaderboardCache:battle-quiz';
+  var LEADERBOARD_CACHE_TTL_MS = 5 * 60 * 1000;
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function renderLeaderboard(rows) {
+    if (!rows || !rows.length) {
+      el.leaderboardList.innerHTML = '<div class="bq-leaderboard-empty">Chưa có ai lập kỷ lục — hãy là người đầu tiên!</div>';
+      return;
+    }
+    el.leaderboardList.innerHTML = rows.map(function (r, i) {
+      var rank = i + 1;
+      var medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : String(rank);
+      var cls = 'bq-leaderboard-row' + (rank <= 3 ? ' bq-leaderboard-top3' : '');
+      return '<div class="' + cls + '">' +
+        '<div class="bq-leaderboard-rank">' + medal + '</div>' +
+        '<div class="bq-leaderboard-name">' + escapeHtml(r.studentName || 'Ẩn danh') +
+          (r.studentClass ? ' <span class="bq-leaderboard-meta">(' + escapeHtml(r.studentClass) + ')</span>' : '') + '</div>' +
+        '<div class="bq-leaderboard-score">' + Math.round(r.score || 0) + '%</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  function openLeaderboard() {
+    el.leaderboardOverlay.hidden = false;
+    el.leaderboardList.innerHTML = '<div class="bq-leaderboard-empty">⏳ Đang tải…</div>';
+
+    try {
+      var raw = localStorage.getItem(LEADERBOARD_CACHE_KEY);
+      if (raw) {
+        var entry = JSON.parse(raw);
+        if (entry && Date.now() < entry.expiresAt) {
+          renderLeaderboard(entry.data);
+          return;
+        }
+      }
+    } catch (e) { /* cache lỗi/bị chặn — coi như miss, tải lại bình thường */ }
+
+    if (!window.EduRepositories || !window.EduRepositories.gameSession) {
+      el.leaderboardList.innerHTML = '<div class="bq-leaderboard-error">Không tải được bảng xếp hạng.</div>';
+      return;
+    }
+    window.EduRepositories.gameSession.listTopScores('battle-quiz', 10).then(function (rows) {
+      try {
+        localStorage.setItem(LEADERBOARD_CACHE_KEY, JSON.stringify({ data: rows, expiresAt: Date.now() + LEADERBOARD_CACHE_TTL_MS }));
+      } catch (e) { /* hết quota localStorage — bỏ qua */ }
+      renderLeaderboard(rows);
+    }).catch(function (err) {
+      console.warn('[BattleQuiz] Không tải được bảng xếp hạng:', err);
+      el.leaderboardList.innerHTML = '<div class="bq-leaderboard-error">Không tải được bảng xếp hạng (lỗi mạng). Thử lại sau.</div>';
+    });
+  }
+
+  function closeLeaderboard() {
+    el.leaderboardOverlay.hidden = true;
+  }
+
   // ── Init ──
 
   function init() {
@@ -510,6 +585,9 @@
       el.resultOverlay.hidden = true;
       el.topicOverlay.hidden = false;
     });
+    el.leaderboardBtn.addEventListener('click', openLeaderboard);
+    el.viewLeaderboardBtn.addEventListener('click', openLeaderboard);
+    el.closeLeaderboardBtn.addEventListener('click', closeLeaderboard);
   }
 
   if (document.readyState === 'loading') {
