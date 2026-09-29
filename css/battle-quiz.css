@@ -233,6 +233,22 @@ body.bq-body {
 }
 .bq-btn-primary { background: linear-gradient(90deg, #8fa4ff, #66e0d0); color: #0e1024; }
 .bq-btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.bq-btn:not(.bq-btn-primary) { background: rgba(255,255,255,.1); color: #f4eee6; border: 1px solid rgba(255,255,255,.18); }
+.bq-btn:not(.bq-btn-primary):hover { background: rgba(255,255,255,.18); }
+.bq-overlay-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+.bq-leaderboard-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; max-height: 320px; overflow-y: auto; text-align: left; }
+.bq-leaderboard-row {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+  border-radius: 10px; padding: 8px 12px;
+}
+.bq-leaderboard-row.bq-leaderboard-top3 { background: rgba(255,209,102,.14); border-color: rgba(255,209,102,.4); }
+.bq-leaderboard-rank { font-family: 'Space Mono', monospace; font-weight: 800; width: 26px; flex-shrink: 0; color: #ffd166; }
+.bq-leaderboard-name { flex: 1; min-width: 0; font-weight: 700; font-size: .82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bq-leaderboard-meta { font-size: .68rem; color: #b7bdd6; }
+.bq-leaderboard-score { font-family: 'Space Mono', monospace; font-weight: 800; color: #66e0d0; flex-shrink: 0; }
+.bq-leaderboard-empty, .bq-leaderboard-error { font-size: .8rem; color: #b7bdd6; text-align: center; padding: 12px 0; }
 
 @media (max-width: 560px) {
   .bq-fighter-avatar { width: 48px; height: 48px; font-size: 1.5rem; }

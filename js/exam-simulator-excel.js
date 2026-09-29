@@ -24,7 +24,9 @@
 
   var UI = window.ExamEngine.UiChrome;
   var TASK = window.ExcelTasks.sample.task;
-  var SESSION_ID = 'exam-excel-' + TASK.id; // 1 học viên demo — tích hợp roster thật ở đợt sau
+  // Ghép thêm deviceId để mỗi học sinh có session Firestore RIÊNG, tránh
+  // ghi đè lên nhau nếu sau này bật đồng bộ (xem getOrCreateDeviceId()).
+  var SESSION_ID = 'exam-excel-' + TASK.id + '-' + UI.getOrCreateDeviceId(); // 1 học viên demo — tích hợp roster thật ở đợt sau
   var COLS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
   var ROWS = 15;
   var DURATION_SECONDS = 15 * 60;

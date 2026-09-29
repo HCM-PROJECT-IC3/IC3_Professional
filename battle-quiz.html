@@ -101,6 +101,7 @@
         <div class="bq-hud-chip" title="Điểm số">🏆 <span id="bqScore">0</span></div>
         <div class="bq-hud-chip" title="Combo hiện tại">🔥 Combo <span id="bqCombo">0</span></div>
         <div class="bq-hud-chip" title="XP đã tích luỹ ván này">⭐ <span id="bqXp">0</span> XP</div>
+        <button type="button" class="bq-restart-btn" id="bqLeaderboardBtn" title="Xem bảng xếp hạng">🏆 BXH</button>
         <button type="button" class="bq-restart-btn" id="bqRestartBtn" title="Chơi lại từ đầu">🔄 Chơi lại</button>
       </div>
     </div>
@@ -153,6 +154,20 @@
         <div class="bq-overlay-desc" id="bqResultStats"></div>
         <div class="bq-overlay-actions">
           <button type="button" class="bq-btn bq-btn-primary" id="bqPlayAgainBtn">🔄 Chơi lại</button>
+          <button type="button" class="bq-btn" id="bqViewLeaderboardBtn">🏆 Bảng xếp hạng</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ BẢNG XẾP HẠNG ============ -->
+    <div class="bq-overlay" id="bqLeaderboardOverlay" hidden>
+      <div class="bq-overlay-card">
+        <div class="bq-overlay-icon">🏆</div>
+        <div class="bq-overlay-title">Bảng xếp hạng</div>
+        <div class="bq-overlay-desc">Top 10 điểm cao nhất mọi thời đại (mỗi bạn chỉ tính 1 lượt điểm cao nhất trong danh sách — làm mới mỗi vài phút).</div>
+        <div class="bq-leaderboard-list" id="bqLeaderboardList"><!-- điền động bằng JS --></div>
+        <div class="bq-overlay-actions">
+          <button type="button" class="bq-btn bq-btn-primary" id="bqCloseLeaderboardBtn">Đóng</button>
         </div>
       </div>
     </div>

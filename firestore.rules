@@ -256,6 +256,45 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // ---- Lượt chơi mini-game (Battle Quiz/PZ Defense/Cyber Detective...),
+    //      xem js/models/game-session.model.js + js/repositories/
+    //      game-session-repository.js. Collection này TỪNG KHÔNG CÓ rule gì
+    //      ở đây (thiếu sót) — nghĩa là MỌI lượt ghi (recordSessionIfPossible
+    //      ở battle-quiz.js/pz-defense.js/cyber-detective.js) bị Firestore
+    //      từ chối âm thầm từ trước đến giờ (mặc định deny-all cho collection
+    //      không khớp rule nào) — game chạy bình thường vì lỗi bị nuốt có chủ
+    //      đích (catch rỗng, không phá trải nghiệm chơi), nhưng KHÔNG có dữ
+    //      liệu nào thực sự được lưu. Thêm rule này để bật tính năng "🏆 Bảng
+    //      xếp hạng" (đọc CÔNG KHAI, không cần đăng nhập — giống quiz mini-
+    //      game, không phải dữ liệu học tập nhạy cảm như quiz_results).
+    //
+    //      allow list giới hạn request.query.limit <= 50 — CHẶN Ở TẦNG RULE
+    //      (không chỉ ở code phía client) việc 1 client tự ý bỏ .limit() và
+    //      quét cả collection: đúng bài học đã rút ra từ vụ roster/quiz_results
+    //      từng gây nổ quota đọc Firestore (xem ghi chú "students_roster" bên
+    //      dưới) — lần này chặn ngay từ đầu thay vì phải vá sau.
+    match /game_sessions/{sessionId} {
+      allow get: if true;
+      allow list: if request.query.limit <= 50;
+
+      allow create: if
+        request.resource.data.studentName is string &&
+        request.resource.data.studentName.size() > 0 &&
+        request.resource.data.studentName.size() < 200 &&
+        request.resource.data.gameId in
+          ['prism-cascade', 'memory-game', 'sudoku', 'billiards', 'pz-defense',
+           'battle-quiz', 'cyber-detective', 'computer-simulator'] &&
+        request.resource.data.score is number &&
+        request.resource.data.score >= 0 && request.resource.data.score <= 1000000 &&
+        request.resource.data.xp is number &&
+        request.resource.data.xp >= 0 && request.resource.data.xp <= 10000 &&
+        request.resource.data.playedAt == request.time;
+
+      // Bất biến sau khi ghi (giống quiz_results/mos_submissions) — chỉ
+      // Admin được sửa/xoá (vd dọn dữ liệu rác/gian lận điểm số).
+      allow update, delete: if isAdmin();
+    }
+
     // ---- Roster: khoá học / lớp / học sinh thật (Điều phối đào tạo quản lý
     //      trong roster-manager.html) ----
     // TRƯỚC ĐÂY 3 collection này "allow read: if true" (đọc công khai, không

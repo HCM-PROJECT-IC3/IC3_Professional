@@ -29,6 +29,21 @@
   var hasIndexedDB = typeof indexedDB !== 'undefined';
   var dbPromise = null;
 
+  // exam-ui-chrome.js debounce autosave() mỗi ~1.5s sau lần gõ/thao tác
+  // cuối — hợp lý cho IndexedDB (local, miễn phí) nhưng NẾU học sinh thao
+  // tác liên tục (gõ chữ, kéo ô Excel...), Firestore sẽ bị ghi lại mỗi
+  // ~1.5s suốt buổi thi → 1 học sinh làm bài 15-45 phút có thể tạo ra
+  // hàng trăm lượt ghi, nhân với hàng nghìn học sinh/ngày dễ vượt 20.000
+  // lượt ghi/ngày miễn phí (Spark) chỉ riêng từ tính năng backup này.
+  // Throttle riêng: Firestore chỉ thực sự ghi tối đa 1 lần mỗi
+  // MIN_FIRESTORE_WRITE_INTERVAL_MS/session, bất kể autosave() được gọi
+  // dồn dập bao nhiêu lần — IndexedDB vẫn ghi NGAY MỖI LẦN như cũ (không
+  // đổi), nên khôi phục sau F5/mất mạng trên CÙNG máy không bị ảnh hưởng,
+  // chỉ có bản backup "đổi máy giữa chừng" trên Firestore là kém tươi hơn
+  // vài chục giây — đánh đổi hợp lý cho 1 tính năng phụ/dự phòng.
+  var MIN_FIRESTORE_WRITE_INTERVAL_MS = 20000;
+  var lastFirestoreWriteAtBySession = {};
+
   function openDb() {
     if (!hasIndexedDB) return Promise.reject(new Error('IndexedDB not available in this environment'));
     if (dbPromise) return dbPromise;
@@ -122,8 +137,15 @@
       return null;
     }) : Promise.resolve(null);
 
-    // Firestore ghi song song, không chặn UI — best-effort.
-    firestoreSave(sessionId, record);
+    // Firestore ghi song song, không chặn UI — best-effort, VÀ có throttle
+    // riêng (xem MIN_FIRESTORE_WRITE_INTERVAL_MS) để không ghi lại mỗi lần
+    // autosave() được gọi dồn dập.
+    var now = Date.now();
+    var lastWriteAt = lastFirestoreWriteAtBySession[sessionId] || 0;
+    if (now - lastWriteAt >= MIN_FIRESTORE_WRITE_INTERVAL_MS) {
+      lastFirestoreWriteAtBySession[sessionId] = now;
+      firestoreSave(sessionId, record);
+    }
 
     return localWrite;
   }
@@ -147,6 +169,7 @@
   }
 
   function clear(sessionId) {
+    delete lastFirestoreWriteAtBySession[sessionId];
     var localClear = hasIndexedDB ? idbDelete(sessionId).catch(function () { return false; }) : Promise.resolve(false);
     var remoteClear = firestoreAvailable()
       ? global.EduFirebase.db.collection(FIRESTORE_COLLECTION).doc(sessionId).delete().catch(function () { return false; })

@@ -18,7 +18,9 @@
   var UI = window.ExamEngine.UiChrome;
   var PM = window.PptEngine.SlideModel;
   var TASK = window.PptTasks.sample.task;
-  var SESSION_ID = 'exam-ppt-' + TASK.id;
+  // Ghép thêm deviceId để mỗi học sinh có session Firestore RIÊNG, tránh
+  // ghi đè lên nhau nếu sau này bật đồng bộ (xem getOrCreateDeviceId()).
+  var SESSION_ID = 'exam-ppt-' + TASK.id + '-' + UI.getOrCreateDeviceId();
   var DURATION_SECONDS = 15 * 60;
 
   var session = new window.ExamEngine.ExamRunner.ExamSession({

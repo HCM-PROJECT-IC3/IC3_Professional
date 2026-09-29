@@ -62,6 +62,24 @@
       });
       return rows.map(normalize);
     }
+
+    /**
+     * Top điểm cao nhất của 1 game — dùng cho "🏆 Bảng xếp hạng". `limit`
+     * mặc định 10 và LUÔN bị chặn tối đa 50 ở tầng firestore.rules
+     * (request.query.limit <= 50, xem match /game_sessions/{sessionId})
+     * dù caller có tự ý truyền limit cao hơn — không thể đọc quá 50 doc
+     * cho 1 lần gọi, giữ chi phí mỗi lần mở bảng xếp hạng luôn nhỏ và
+     * có trần rõ ràng bất kể code phía client viết đúng hay sai.
+     */
+    async listTopScores(gameId, limit = 10) {
+      const rows = await this.list({
+        where: [['gameId', '==', gameId]],
+        orderBy: 'score',
+        direction: 'desc',
+        limit: Math.min(limit, 50),
+      });
+      return rows.map(normalize);
+    }
   }
 
   global.EduRepositories = global.EduRepositories || {};
