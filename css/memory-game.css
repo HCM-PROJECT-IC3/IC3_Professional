@@ -1,9 +1,8 @@
 /* ════════════════════════════════════════════════════════════
    css/memory-game.css — Mini-game "Trí Nhớ Thiết Bị & Phần Mềm"
-   Cùng design token / "look" tối màu như css/prism-cascade.css
+   Cùng design token / "look" tối màu như css/pz-defense.css
    (radial navy background, Baloo 2, thẻ bo tròn). Trang
-   memory-game.html được nhúng qua modal giống game.html, xem
-   js/memory-game-modal.js.
+   memory-game.html được nhúng qua modal, xem js/game-modal.js.
    ════════════════════════════════════════════════════════════ */
 
 * { box-sizing: border-box; }

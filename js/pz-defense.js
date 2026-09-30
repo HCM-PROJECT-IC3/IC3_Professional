@@ -1,10 +1,9 @@
 /* ════════════════════════════════════════════════════════════
    js/pz-defense.js — Mini-game "Phòng Thủ Dữ Liệu"
    (tower-defense kiểu Plants vs Zombies, reskin theo chủ đề an
-   ninh mạng). Cùng pattern với js/billiards.js: trang
+   ninh mạng). Cùng pattern với js/memory-game.js: trang
    pz-defense.html được nhúng qua modal (js/pz-defense-modal.js)
-   giống hệt game.html / memory-game.html / sudoku.html /
-   billiards.html — chỉ chứa đúng 1 mini-game độc lập, không đụng
+   giống hệt memory-game.html / sort-game.html — chỉ chứa đúng 1 mini-game độc lập, không đụng
    vào quiz-engine.js / gamification.js.
 
    Cơ chế:
@@ -43,7 +42,7 @@
 
    Vật lý/thời gian: hoàn toàn tính theo khung hình (frame-based,
    giả định ~60fps qua requestAnimationFrame) — cùng cách tiếp cận
-   với js/billiards.js, không dùng deltaTime thực để giữ code đơn
+   với js/memory-game.js, không dùng deltaTime thực để giữ code đơn
    giản, nhất quán.
    ════════════════════════════════════════════════════════════ */
 (function () {

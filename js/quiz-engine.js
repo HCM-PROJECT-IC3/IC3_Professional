@@ -169,8 +169,8 @@ const RANDOM_MIX_TOTAL_DEFAULT = 40; // fallback nếu không tra được số 
 /* ============================================================
    § 1c — CHẾ ĐỘ LÀM BÀI: ÔN LUYỆN vs KIỂM TRA
    2 chế độ dùng chung TOÀN BỘ bộ đề hiện có (Spark/IC3/MOS × LV1-3 ×
-   Theo tiết/Theo chủ đề/Tổng hợp) — không tách dữ liệu riêng, chỉ khác
-   cách tính giờ khi vào làm bài:
+   Theo Tên bài/Ôn tập cuối kỳ/Theo chủ đề/Tổng hợp) — không tách dữ liệu
+   riêng, chỉ khác cách tính giờ khi vào làm bài:
      - 'practice' (Ôn luyện) → không giới hạn thời gian, không auto-nộp.
      - 'test'     (Kiểm tra) → đếm ngược theo State.testDurationMinutes
        (mặc định 50 phút, chọn được ở #examDurationToggle trong index.html
@@ -209,7 +209,12 @@ function _shuffleArr(arr) {
 // phải loại khỏi mọi chỗ tính "chia đều theo chủ đề" (nếu không, bài
 // "Tổng hợp" sẽ tưởng có 15 chủ đề thay vì 7, chia sai tỉ lệ).
 const LESSON_KEY_RE = /^Tiết \d+$/;
-function _isRealTopic(name) { return !LESSON_KEY_RE.test(name); }
+// "Bài N. Tên bài" — bộ đề CỦNG CỐ bám sát 1 bài giảng cụ thể trong PPCT
+// (vd "Bài 6. Kiểm chứng thông tin"), KHÁC với "Tiết N" (đã trộn sẵn nhiều
+// chủ đề) và cũng không phải 1 "chủ đề" IC3 gốc — nên cũng phải loại khỏi
+// _isRealTopic() để không bị tính đúp vào bài "Tổng hợp".
+const BAI_NAME_RE = /^Bài \d+[.:]/;
+function _isRealTopic(name) { return !LESSON_KEY_RE.test(name) && !BAI_NAME_RE.test(name); }
 
 /**
  * Trộn câu hỏi TỔNG HỢP: chia đều số câu cho từng chủ đề (7 chủ đề IC3),
@@ -270,7 +275,13 @@ const State = {
   current:   0,
   timer:     null,
   timeLeft:  3000,
-  examMode:  'test', // 'practice' (không giới hạn giờ) | 'test' (đếm ngược, xem testDurationMinutes) — xem #examModeToggle
+  // Mặc định 'practice' (Ôn luyện) — đa số học sinh vào để ôn lại sau
+  // buổi học chứ không phải thi thật, để mặc định 'test' (Kiểm tra) buộc
+  // hiện thêm khối "Thời gian làm bài" + cam kết chống gian lận ngay từ
+  // đầu là thừa thao tác cho trường hợp phổ biến nhất. Khớp với nút
+  // "Ôn luyện" đang mang class is-active trong index.html — đổi 1 trong 2
+  // chỗ mà quên chỗ kia sẽ làm UI và State lệch nhau ngay lần tải đầu.
+  examMode:  'practice', // 'practice' (không giới hạn giờ) | 'test' (đếm ngược, xem testDurationMinutes) — xem #examModeToggle
   testDurationMinutes: 50, // thời lượng "Kiểm tra" (phút) — chọn được ở #examDurationToggle, xem initLobby()
   matching:  {},     // qi → { left: right }
   matchSel:  {},
@@ -990,9 +1001,12 @@ function initLobby() {
   pledgeCheckbox?.addEventListener('change', () => refreshMeta());
 
   // "Chế độ" đang chọn ở khối chọn Minitest — nhớ giữa các lần đổi Level
-  // (nếu vẫn còn hợp lệ) để không giật lại "Theo tiết" mỗi lần bấm chọn
-  // linh tinh. 'lesson' làm mặc định vì đây là lộ trình học khuyến nghị.
-  let mtMode = 'lesson';
+  // (nếu vẫn còn hợp lệ) để không giật lại chế độ mặc định mỗi lần bấm
+  // chọn linh tinh. 'bai' (Theo Tên bài — củng cố đúng 1 bài vừa học) làm
+  // mặc định khi có sẵn vì đây là lộ trình ôn tập ngay-sau-buổi-học được
+  // khuyến nghị nhất; cấp/chương trình nào chưa có bộ "Theo Tên bài" thì
+  // rơi về modes[0] (thường là 'lesson' — Ôn tập cuối kỳ) như hành vi cũ.
+  let mtMode = 'bai';
 
   // ── Đổ danh mục (categories) ───────────────────────────────
   catSel.innerHTML = '';
@@ -1015,28 +1029,39 @@ function initLobby() {
   };
 
   // ── Hàm cập nhật Minitest khi đổi Level ───────────────────
-  // Chọn theo 2 BƯỚC thay vì 1 dropdown dài: bấm nút "chế độ" (Theo
-  // tiết / Theo chủ đề / Tổng hợp) để LỌC trước, select bên dưới chỉ
-  // hiện đúng nhóm đó (tối đa 8 dòng thay vì 16) — dễ thao tác hơn hẳn
-  // trên di động, không phải cuộn 1 danh sách dài để tìm đúng mục.
+  // Chọn theo 2 BƯỚC thay vì 1 dropdown dài: bấm nút "chế độ" (Theo Tên
+  // bài / Ôn tập cuối kỳ / Theo chủ đề / Tổng hợp) để LỌC trước, select
+  // bên dưới chỉ hiện đúng nhóm đó (tối đa 8 dòng thay vì 16) — dễ thao
+  // tác hơn hẳn trên di động, không phải cuộn 1 danh sách dài để tìm
+  // đúng mục.
   const refreshMinitests = () => {
     const cat = _findCategory(catSel.value);
     const lv  = cat?.levels?.find(l => l.id === lvlSel.value);
 
     const minitests   = lv?.minitests || {};
     const allNames    = Object.keys(minitests);
+    // Sắp theo đúng thứ tự số bài (Bài 5, Bài 6, Bài 7, …) thay vì thứ tự
+    // xuất hiện ngẫu nhiên trong JSON, để select bên dưới đọc từ trên
+    // xuống là đúng mạch chương trình.
+    const baiNames    = allNames.filter(n => BAI_NAME_RE.test(n))
+      .sort((a, b) => (parseInt(a.match(/\d+/)?.[0], 10) || 0) - (parseInt(b.match(/\d+/)?.[0], 10) || 0));
     const lessonNames = allNames.filter(n => LESSON_KEY_RE.test(n));
     const topicNames  = allNames.filter(_isRealTopic);
 
     // "Tổng hợp" — random chia đều các CHỦ ĐỀ THẬT (KHÔNG tính "Tiết N"
-    // là 1 chủ đề — xem _isRealTopic).
+    // hay "Bài N. …" là 1 chủ đề — xem _isRealTopic).
     const totalAvail = topicNames.reduce((s, n) => s + _mtCount(minitests[n]), 0);
     const mixWanted  = topicNames.length > 1
       ? Math.min(_randomMixTotalFor(catSel.value, lvlSel.value), totalAvail)
       : 0;
 
+    // Thứ tự nút hiển thị = thứ tự ưu tiên khuyến nghị: Theo Tên bài (ôn
+    // ngay sau buổi học) → Ôn tập cuối kỳ (gói câu hỏi tổng hợp nhiều chủ
+    // đề, dùng ôn trước kỳ thi) → Theo chủ đề → Tổng hợp / Tổng hợp Vui
+    // (luyện ngẫu nhiên diện rộng, phù hợp trước khi thi).
     const modes = [];
-    if (lessonNames.length) modes.push({ id: 'lesson', label: '<i class="fa-solid fa-calendar-week"></i> Theo tiết', names: lessonNames });
+    if (baiNames.length)    modes.push({ id: 'bai',    label: '<i class="fa-solid fa-graduation-cap"></i> Theo Tên bài', names: baiNames });
+    if (lessonNames.length) modes.push({ id: 'lesson', label: '<i class="fa-solid fa-flag-checkered"></i> Ôn tập cuối kỳ', names: lessonNames });
     if (topicNames.length)  modes.push({ id: 'topic',  label: '<i class="fa-solid fa-book-open"></i> Theo chủ đề', names: topicNames });
     if (mixWanted > 0)      modes.push({ id: 'mix',    label: '<i class="fa-solid fa-book"></i> Tổng hợp',   names: [RANDOM_MIX_KEY] });
     // Cần ít nhất 6 câu để chia được 3 chặng ~đều nhau kèm mini-game (xem
@@ -1044,8 +1069,8 @@ function initLobby() {
     if (mixWanted >= 6)     modes.push({ id: 'mixplay', label: '<i class="fa-solid fa-gamepad"></i> Tổng hợp Vui', names: [RANDOM_MIX_PLAY_KEY] });
 
     // Giữ nguyên chế độ đang chọn nếu Level mới vẫn có (vd đổi Level
-    // trong cùng Chương trình, vẫn có "Theo tiết") — không thì rơi về
-    // chế độ đầu tiên sẵn có (vd MOS không có "Theo tiết").
+    // trong cùng Chương trình, vẫn có "Ôn tập cuối kỳ") — không thì rơi về
+    // chế độ đầu tiên sẵn có (vd MOS không có "Ôn tập cuối kỳ").
     if (!modes.find(m => m.id === mtMode)) mtMode = modes[0]?.id;
 
     const renderModeButtons = () => {
@@ -1586,7 +1611,7 @@ function nextQ() {
    § 9b — GAME BREAK ("🎮 Tổng hợp Vui" — xen kẽ mini-game kiểu Wayground)
    Cứ khoảng mỗi 1/3 chặng đường của bài "Tổng hợp Vui" lại chèn 1 màn
    mini-game NHẸ, chọn ngẫu nhiên trong vài game đã có sẵn của dự án
-   (js/memory-game.js, js/sudoku.js, js/billiards.js — dùng lại NGUYÊN
+   (js/memory-game.js — dùng lại NGUYÊN
    VẸN qua <iframe>, không đụng gì tới code riêng của từng game), rồi
    quay lại làm tiếp — giống "power-up round" giữa các câu hỏi trong
    Wayground/Quizizz, chỉ để đổi không khí, KHÔNG có yêu cầu thắng/thua
@@ -1595,8 +1620,6 @@ function nextQ() {
    ============================================================ */
 const GAME_BREAK_GAMES = [
   { file: 'memory-game.html', label: '<i class="fa-solid fa-brain"></i> Trí Nhớ Thiết Bị' },
-  { file: 'sudoku.html',      label: '<i class="fa-solid fa-puzzle-piece"></i> Sudoku' },
-  { file: 'billiards.html',   label: '<i class="fa-solid fa-circle"></i> Bi-a' },
 ];
 
 /** Mốc (các) câu hỏi (0-based, tính theo "current" NGAY TRƯỚC khi bấm

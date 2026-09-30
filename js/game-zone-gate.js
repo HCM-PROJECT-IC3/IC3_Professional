@@ -1,7 +1,8 @@
 /* ════════════════════════════════════════════════════════════
-   js/game-zone-gate.js — "Khu Vui Chơi": gộp 5 mini-game (Prism
-   Cascade / Trí Nhớ Thiết Bị / Sudoku / Bi-a / Phòng Thủ Dữ Liệu)
-   vào 1 hub duy nhất (#gameZoneModalOverlay trong index.html).
+   js/game-zone-gate.js — "Khu Vui Chơi": gộp các mini-game (Trí Nhớ
+   Thiết Bị / Phòng Thủ Dữ Liệu / Battle Quiz / Cyber Detective /
+   Computer Simulator / Phân Loại Thần Tốc) vào 1 hub duy nhất
+   (#gameZoneModalOverlay trong index.html).
 
    ĐIỀU KIỆN MỞ KHÓA (single-use, chỉ tính bài "Tổng hợp"):
      0) BYPASS: nếu người đang mở trang đã đăng nhập sẵn (qua login.html,
@@ -23,9 +24,8 @@
         Chơi khóa lại ngay, học sinh phải làm 1 bài Tổng hợp MỚI
         đạt ≥90% thì mới mở khóa lại được.
 
-   Không đụng vào 5 file js/*-modal.js hiện có: các nút mở game gốc
-   (#openGameBtn, #openMemoryGameBtn, #openSudokuBtn,
-   #openBilliardsBtn, #openPzDefenseBtn) chỉ được DI CHUYỂN vào bên
+   Không đụng vào các file js/*-modal.js hiện có: các nút mở game gốc
+   (#openMemoryGameBtn, #openPzDefenseBtn...) chỉ được DI CHUYỂN vào bên
    trong hub trong index.html — id giữ nguyên nên mỗi *-modal.js vẫn
    tự tìm thấy nút của mình và hoạt động y hệt cũ. File này chỉ:
      1) Tính trạng thái khóa/mở dựa trên "eduquiz_records" +
@@ -44,10 +44,7 @@
   var CONSUMED_KEY    = 'eduquiz_gamezone_consumed'; // localStorage: mảng record.id đã "dùng" để vào game
 
   var GAME_BTN_IDS = [
-    'openGameBtn',
     'openMemoryGameBtn',
-    'openSudokuBtn',
-    'openBilliardsBtn',
     'openPzDefenseBtn',
     'openBattleQuizBtn',
     'openCyberDetectiveBtn',
