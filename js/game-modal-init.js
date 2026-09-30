@@ -19,10 +19,7 @@
    file ngoài + defer thì thứ tự tương đối với game-modal.js (trước) và
    game-zone-gate.js (sau) được giữ ĐÚNG như bản gốc.
    ============================================================ */
-initGameModal({ openBtnId: 'openGameBtn', overlayId: 'gameModalOverlay', closeBtnId: 'closeGameModalBtn', frameId: 'gameModalFrame' }); // Prism Cascade
 initGameModal({ openBtnId: 'openMemoryGameBtn', overlayId: 'memoryGameModalOverlay', closeBtnId: 'closeMemoryGameModalBtn', frameId: 'memoryGameModalFrame' });
-initGameModal({ openBtnId: 'openSudokuBtn', overlayId: 'sudokuModalOverlay', closeBtnId: 'closeSudokuModalBtn', frameId: 'sudokuModalFrame' });
-initGameModal({ openBtnId: 'openBilliardsBtn', overlayId: 'billiardsModalOverlay', closeBtnId: 'closeBilliardsModalBtn', frameId: 'billiardsModalFrame' });
 initGameModal({ openBtnId: 'openPzDefenseBtn', overlayId: 'pzDefenseModalOverlay', closeBtnId: 'closePzDefenseModalBtn', frameId: 'pzDefenseModalFrame' });
 initGameModal({ openBtnId: 'openBattleQuizBtn', overlayId: 'battleQuizModalOverlay', closeBtnId: 'closeBattleQuizModalBtn', frameId: 'battleQuizModalFrame' });
 initGameModal({ openBtnId: 'openCyberDetectiveBtn', overlayId: 'cyberDetectiveModalOverlay', closeBtnId: 'closeCyberDetectiveModalBtn', frameId: 'cyberDetectiveModalFrame' });

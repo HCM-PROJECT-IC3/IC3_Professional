@@ -150,13 +150,13 @@
   }
 
   /**
-   * (Phase 3+) Gọi hàm này khi 1 mini-game (Prism Cascade/Memory/Sudoku/
-   * Billiards/PZ Defense, và Cyber Defense/Battle Quiz... ở phase sau)
-   * kết thúc 1 lượt chơi. KHÔNG đụng streak (streak vẫn chỉ tính theo
+   * (Phase 3+) Gọi hàm này khi 1 mini-game (Memory/PZ Defense/Battle
+   * Quiz/Cyber Detective/Computer Simulator/Sort Game...) kết thúc 1
+   * lượt chơi. KHÔNG đụng streak (streak vẫn chỉ tính theo
    * ngày làm BÀI THI, giữ đúng ý nghĩa cũ) — chỉ cộng XP + đếm lượt
    * chơi + xét huy hiệu liên quan game.
    *
-   * @param {string} gameId — 'pz-defense' | 'memory-game' | 'sudoku' | 'billiards' | 'prism-cascade' | ...
+   * @param {string} gameId — 'pz-defense' | 'memory-game' | 'battle-quiz' | 'cyber-detective' | 'computer-simulator' | 'sort-game'
    * @param {Object} [session] — xem @typedef GameSession trong
    *   js/models/game-session.model.js. `xp` có thể tự truyền (game tự
    *   tính XP riêng theo combo/độ khó); nếu không truyền, dùng mặc định

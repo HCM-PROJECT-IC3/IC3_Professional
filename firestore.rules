@@ -282,8 +282,8 @@ service cloud.firestore {
         request.resource.data.studentName.size() > 0 &&
         request.resource.data.studentName.size() < 200 &&
         request.resource.data.gameId in
-          ['prism-cascade', 'memory-game', 'sudoku', 'billiards', 'pz-defense',
-           'battle-quiz', 'cyber-detective', 'computer-simulator'] &&
+          ['memory-game', 'pz-defense', 'battle-quiz', 'cyber-detective',
+           'computer-simulator', 'sort-game'] &&
         request.resource.data.score is number &&
         request.resource.data.score >= 0 && request.resource.data.score <= 1000000 &&
         request.resource.data.xp is number &&

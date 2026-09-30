@@ -25,9 +25,9 @@
    @property {string} studentName
    @property {string} studentClass
    @property {string} studentSchool
-   @property {string} gameId             'pz-defense' | 'memory-game' | 'sudoku' | 'billiards' | 'prism-cascade' (Phase 4+: 'cyber-defense', 'battle-quiz', 'cyber-detective', 'computer-simulator'...)
+   @property {string} gameId             'pz-defense' | 'memory-game' | 'battle-quiz' | 'cyber-detective' | 'computer-simulator' | 'sort-game'
    @property {number} score              Điểm của lượt chơi, thang tuỳ theo `scoreType`
-   @property {string} scoreType          'percent' (0-100) | 'raw' (điểm thô riêng của game, vd. Sudoku/Bi-a không có %)
+   @property {string} scoreType          'percent' (0-100) | 'raw' (điểm thô riêng của game, không có %)
    @property {number} xp                 XP cộng dồn từ lượt chơi này (tính sẵn phía client trước khi ghi)
    @property {number|null} accuracy      0-100, chỉ áp dụng game có gắn câu hỏi IC3 (null nếu không có)
    @property {number|null} correctAnswers
@@ -47,8 +47,8 @@
   // gọi recordGameSession() — KHÔNG khai báo trước game chưa tồn tại để
   // tránh session "ma" không ai ghi được.
   const GAME_IDS = Object.freeze([
-    'prism-cascade', 'memory-game', 'sudoku', 'billiards', 'pz-defense',
-    'battle-quiz', 'cyber-detective', 'computer-simulator',
+    'memory-game', 'pz-defense', 'battle-quiz', 'cyber-detective',
+    'computer-simulator', 'sort-game',
   ]);
 
   /** Định danh học sinh — tái dùng đúng công thức ExamHistory.keyOf() (không tạo khoá mới). */

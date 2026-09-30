@@ -4,7 +4,7 @@
    Toàn bộ ảnh lấy từ img/memory-game/ (thiết bị phần cứng nhập/
    xuất, phần mềm văn phòng, hệ điều hành, trình duyệt & liên
    lạc, trợ lý AI). Thuần vanilla JS, không phụ thuộc thư viện
-   ngoài — cùng phong cách js/prism-cascade.js.
+   ngoài — cùng phong cách js/pz-defense.js.
    ======================================== */
 (function () {
   var CATEGORIES = [

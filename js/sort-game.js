@@ -5,7 +5,7 @@
    Độ khó tăng theo SỐ THÙNG phải phân biệt (3 → 4 → 5) + nhịp độ mỗi
    vật phẩm nhanh dần, tạo cảm giác dồn dập khác hẳn Trí Nhớ (vốn không
    giới hạn giờ mỗi lượt). Thuần vanilla JS, cùng phong cách
-   js/memory-game.js / js/sudoku.js — không phụ thuộc thư viện ngoài.
+   js/memory-game.js — không phụ thuộc thư viện ngoài.
    ======================================== */
 (function () {
   var CATEGORIES = [

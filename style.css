@@ -754,6 +754,14 @@ body {
   margin-bottom: .2rem;
   letter-spacing: .2px;
 }
+/* Chú thích phụ ngắn ngay trong label (vd hướng dẫn 2 bước chọn Minitest)
+   — chữ thường, màu nhạt hơn để không cạnh tranh với nhãn chính. */
+.form-group label .label-hint {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: .68rem;
+  letter-spacing: 0;
+}
 /* Ô nhập/dropdown kiểu neumorphism LÕM XUỐNG (pressed) — không viền cứng,
    độ "khắc chìm vào bề mặt" đến từ var(--shadow-neu-pressed) (2 lớp inset
    shadow đối xứng), đúng cảm giác "khe rãnh" quen thuộc của thiết kế soft-UI
@@ -838,9 +846,9 @@ body {
 .btn-start i.fa-beat { animation-play-state: paused; }
 .btn-start:hover:not(:disabled) i.fa-beat { animation-play-state: running; }
 
-/* Bộ nút "chế độ" lọc trước Minitest (Theo tiết / Theo chủ đề / Tổng
-   hợp) — bấm 1 nút để select bên dưới chỉ hiện đúng nhóm đó, tránh 1
-   dropdown xổ ra 15-16 dòng liền lúc. */
+/* Bộ nút "chế độ" lọc trước Minitest (Theo Tên bài / Ôn tập cuối kỳ /
+   Theo chủ đề / Tổng hợp) — bấm 1 nút để select bên dưới chỉ hiện đúng
+   nhóm đó, tránh 1 dropdown xổ ra 15-16 dòng liền lúc. */
 .mt-mode-toggle {
   display: flex;
   flex-wrap: wrap;
@@ -875,6 +883,44 @@ body {
   background: var(--neu-surface);
   color: var(--purple);
   box-shadow: var(--shadow-neu-pressed);
+}
+
+/* Riêng bộ nút "chế độ" Minitest (#mtModeToggle) — có thể lên tới 5 nút
+   (Theo Tên bài / Ôn tập cuối kỳ / Theo chủ đề / Tổng hợp / Tổng hợp Vui) nên
+   cần bố cục LƯỚI đều hàng thay vì flex-wrap (dễ bị 1 nút dài rớt lẻ loi
+   xuống dòng cuối, hoặc bị bóp chữ vì white-space:nowrap). Dùng
+   auto-fit + minmax để tự chia 2-3 cột tuỳ độ rộng màn hình, luôn đều ô. */
+#mtModeToggle.mt-mode-toggle {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6.6rem, 1fr));
+  gap: .5rem;
+}
+#mtModeToggle.mt-mode-toggle[hidden] { display: none; }
+/* Cho phép xuống dòng trong nút (thay vì nowrap) vì nhãn dài như "Theo
+   Tên bài"/"Tổng hợp Vui" cần chỗ thở trên màn hình nhỏ — căn giữa cả
+   icon lẫn chữ, chiều cao đồng đều giữa các nút dù nhãn dài ngắn khác nhau. */
+#mtModeToggle .mt-mode-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .18rem;
+  min-height: 2.6rem;
+  padding: .5rem .4rem;
+  border-radius: var(--radius-sm);
+  white-space: normal;
+  line-height: 1.15;
+  text-align: center;
+}
+#mtModeToggle .mt-mode-btn i { font-size: .92rem }
+/* Trạng thái đang chọn: thêm NỀN màu tím nhạt + viền tím rõ ràng thay vì
+   chỉ đổi màu chữ + bóng lõm (dễ lẫn với trạng thái hover trên một số màn
+   hình) — giúp học sinh nhận ra ngay đang ở chế độ nào chỉ bằng 1 lần liếc. */
+#mtModeToggle .mt-mode-btn.is-active {
+  background: var(--purple-lt);
+  color: var(--purple);
+  box-shadow: var(--shadow-neu-pressed), 0 0 0 1.5px rgba(79,107,255,.45);
+  font-weight: 800;
 }
 
 /* Minitest meta chips */
@@ -2820,10 +2866,10 @@ body {
 .theme-toggle-exam:hover { box-shadow: var(--shadow-neu-raised), 0 0 0 3px rgba(79,107,255,.15) }
 .lobby-game-strip { margin-top: 10px; }
 /* ════════════════════════════════════════════════════════════
-   GAME MODAL — mini-game "Prism Cascade" (nhúng qua iframe)
+   GAME MODAL — mini-game nhúng qua iframe (dùng chung cho mọi game)
    Cùng "look" tối màu như 3D Shelf Modal (css/coordinator-
-   dashboard.css .shelf-modal-*), mở/đóng bởi
-   js/prism-cascade-modal.js. Markup đặt cuối <body> index.html.
+   dashboard.css .shelf-modal-*), mở/đóng bởi js/game-modal.js.
+   Markup đặt cuối <body> index.html.
    ════════════════════════════════════════════════════════════ */
 .game-modal-overlay {
   position: fixed;
@@ -2838,12 +2884,13 @@ body {
 }
 .game-modal-overlay.show { display: flex }
 
-/* Modal chứa game qua iframe (Prism Cascade / Trí Nhớ / Sudoku / Bi-a /
-   Phòng Thủ Dữ Liệu): full-screen thay vì khung nhỏ cố định, để game
-   bên trong (đã tự responsive theo clientWidth/dpr hoặc grid fr) có
-   nhiều không gian hiển thị to, rõ hơn trên mọi kích thước màn hình.
-   .game-zone-modal (hub chọn game) override lại kích thước gọn bên
-   dưới vì đó chỉ là lưới 5 nút chọn, không cần full-screen. */
+/* Modal chứa game qua iframe (Trí Nhớ / Phòng Thủ Dữ Liệu / Battle Quiz /
+   Cyber Detective / Computer Simulator / Phân Loại Thần Tốc): full-screen
+   thay vì khung nhỏ cố định, để game bên trong (đã tự responsive theo
+   clientWidth/dpr hoặc grid fr) có nhiều không gian hiển thị to, rõ hơn
+   trên mọi kích thước màn hình. .game-zone-modal (hub chọn game) override
+   lại kích thước gọn bên dưới vì đó chỉ là lưới nút chọn, không cần
+   full-screen. */
 .game-modal {
   width: min(1440px, 96vw);
   height: min(920px, 94vh);

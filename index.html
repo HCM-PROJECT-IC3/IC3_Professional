@@ -186,8 +186,8 @@
         <div class="form-group">
           <label><i class="fa-solid fa-hourglass-half"></i> Chế độ làm bài</label>
           <div class="mt-mode-toggle" id="examModeToggle">
-            <button type="button" class="mt-mode-btn" data-exam-mode="practice"><i class="fa-solid fa-dove"></i> Ôn luyện — không giới hạn giờ</button>
-            <button type="button" class="mt-mode-btn is-active" data-exam-mode="test" id="examModeTestBtn"><i class="fa-solid fa-stopwatch"></i> Kiểm tra — 50 phút/bài</button>
+            <button type="button" class="mt-mode-btn is-active" data-exam-mode="practice"><i class="fa-solid fa-dove"></i> Ôn luyện — không giới hạn giờ</button>
+            <button type="button" class="mt-mode-btn" data-exam-mode="test" id="examModeTestBtn"><i class="fa-solid fa-stopwatch"></i> Kiểm tra — 50 phút/bài</button>
           </div>
         </div>
 
@@ -197,8 +197,11 @@
              tiết học thực tế) thay vì CỐ ĐỊNH 50 phút cho mọi cấp như trước.
              Mốc TiH/THCS được TỰ CHỌN SẴN theo Lớp học sinh chọn ở trên (xem
              applyClassGradeDefaults() trong js/quiz-engine.js) — học sinh
-             vẫn đổi lại tay được nếu tiết học hôm đó khác thường lệ. -->
-        <div class="form-group" id="examDurationWrap">
+             vẫn đổi lại tay được nếu tiết học hôm đó khác thường lệ.
+             `hidden` mặc định sẵn trong HTML (khớp State.examMode mặc định
+             'practice' ở js/quiz-engine.js) để không bị loé hiện 1 nhịp
+             trước khi initLobby() kịp chạy applyExamModeUI(). -->
+        <div class="form-group" id="examDurationWrap" hidden>
           <label><i class="fa-solid fa-clock"></i> Thời gian làm bài (Kiểm tra)</label>
           <div class="mt-mode-toggle" id="examDurationToggle">
             <button type="button" class="mt-mode-btn" data-duration="35">35 phút (TiH)</button>
@@ -247,13 +250,22 @@
         <!-- Minitest (thời gian tính theo "Chế độ làm bài" chọn ở trên —
              Ôn luyện = không giới hạn, Kiểm tra = 50 phút, không cho học
              sinh tự chọn mốc khác). Chọn theo 2 bước: bấm 1 trong các nút
-             "chế độ" (Theo tiết/Theo
-             chủ đề/Tổng hợp) trước để LỌC bớt, rồi mới chọn cụ thể trong
-             select bên dưới — tránh 1 dropdown xổ ra 16 dòng liền một lúc
-             (7 chủ đề + 8 tiết + Tổng hợp), khó quét/dễ chọn nhầm trên di
-             động. Xem js/quiz-engine.js § refreshMinitests(). -->
+             "chế độ" (Theo Tên bài/Ôn tập cuối kỳ/Theo chủ đề/Tổng hợp/Tổng
+             hợp Vui) trước để LỌC bớt, rồi mới chọn cụ thể trong select
+             bên dưới — tránh 1 dropdown xổ ra hàng chục dòng liền một lúc,
+             khó quét/dễ chọn nhầm trên di động. "Theo Tên bài" (bộ đề CỦNG
+             CỐ bám sát từng bài giảng, vd "Bài 6. Kiểm chứng thông tin")
+             là chế độ mặc định khi cấp/chương trình đó đã có sẵn — phù hợp
+             nhất để ôn ngay sau buổi học. "Ôn tập cuối kỳ" (trước đây ghi
+             nhầm là "Theo tiết") là các gói câu hỏi ĐÃ TRỘN SẴN nhiều chủ
+             đề, dùng để ôn diện rộng trước kỳ thi — không phải 1 tiết học
+             cụ thể nào, đổi tên cho đúng bản chất. Xem js/quiz-engine.js §
+             refreshMinitests() (biến BAI_NAME_RE quyết định nhận diện tên
+             bài dạng "Bài N. …", LESSON_KEY_RE nhận diện "Tiết N"). -->
         <div class="form-group">
-          <label><i class="fa-solid fa-layer-group"></i> Minitest</label>
+          <label><i class="fa-solid fa-layer-group"></i> Minitest
+            <span class="label-hint">— chọn cách lọc, rồi chọn bài cụ thể bên dưới</span>
+          </label>
           <div class="mt-mode-toggle" id="mtModeToggle"></div>
           <select id="minitestSelect"></select>
           <div class="minitest-meta" id="minitestMeta"></div>
@@ -419,11 +431,10 @@
     </div>
   </div>
 
-  <!-- ============ KHU VUI CHƠI (hub modal) — gộp cả 5 mini-game, chỉ mở
+  <!-- ============ KHU VUI CHƠI (hub modal) — gộp mini-game, chỉ mở
        khóa khi bài "Tổng hợp" GẦN NHẤT của học sinh đang chọn đạt ≥90%
        điểm — dùng 1 lần rồi khóa lại, phải làm bài Tổng hợp mới. Các nút
-       #openGameBtn/#openMemoryGameBtn/#openSudokuBtn/#openBilliardsBtn/
-       #openPzDefenseBtn NẰM Ở ĐÂY (không còn ở ngoài lobby nữa) để mỗi
+       #openMemoryGameBtn/#openPzDefenseBtn NẰM Ở ĐÂY (không còn ở ngoài lobby nữa) để mỗi
        js/*-modal.js hiện có tự tìm thấy nút của mình mà không cần sửa gì
        thêm. Xem js/game-zone-gate.js. ============ -->
   <div class="game-modal-overlay" id="gameZoneModalOverlay">
@@ -459,29 +470,11 @@
         <div class="game-hub-kicker"><i class="fa-solid fa-gamepad"></i> IC3 Game Hub</div>
         <p class="game-zone-unlocked-desc"><i class="fa-solid fa-unlock"></i> Đã mở khóa — chọn 1 mini-game bên dưới để chơi!</p>
         <div class="game-zone-grid">
-          <button type="button" class="game-zone-tile" id="openGameBtn" title="Chơi mini-game giải trí Prism Cascade">
-            <span class="game-zone-tile-emoji"><i class="fa-solid fa-shapes"></i></span>
-            <span class="game-zone-tile-name">Prism Cascade</span>
-            <span class="game-zone-tile-desc">Match-3 giải trí ngắn giữa giờ ôn bài</span>
-            <span class="game-zone-tile-tag">Giải trí</span>
-          </button>
           <button type="button" class="game-zone-tile" id="openMemoryGameBtn" title="Chơi mini-game Trí Nhớ Thiết Bị &amp; Phần Mềm">
             <span class="game-zone-tile-emoji"><i class="fa-solid fa-brain"></i></span>
             <span class="game-zone-tile-name">Trí Nhớ Thiết Bị</span>
             <span class="game-zone-tile-desc">Lật thẻ ghép cặp thuật ngữ IC3</span>
             <span class="game-zone-tile-tag">Kiến thức</span>
-          </button>
-          <button type="button" class="game-zone-tile" id="openSudokuBtn" title="Chơi mini-game Sudoku Trí Tuệ">
-            <span class="game-zone-tile-emoji"><i class="fa-solid fa-puzzle-piece"></i></span>
-            <span class="game-zone-tile-name">Sudoku Trí Tuệ</span>
-            <span class="game-zone-tile-desc">Rèn tư duy logic, giải trí</span>
-            <span class="game-zone-tile-tag">Giải trí</span>
-          </button>
-          <button type="button" class="game-zone-tile" id="openBilliardsBtn" title="Chơi mini-game Bi-a Phần Mềm">
-            <span class="game-zone-tile-emoji"><i class="fa-solid fa-circle"></i></span>
-            <span class="game-zone-tile-name">Bi-a Phần Mềm</span>
-            <span class="game-zone-tile-desc">Giải trí, thư giãn sau bài thi</span>
-            <span class="game-zone-tile-tag">Giải trí</span>
           </button>
           <button type="button" class="game-zone-tile" id="openPzDefenseBtn" title="Chơi mini-game Phòng Thủ Dữ Liệu">
             <span class="game-zone-tile-emoji"><i class="fa-solid fa-shield-halved"></i></span>
@@ -519,27 +512,6 @@
     </div>
   </div>
 
-  <!-- ============ MINI-GAME "PRISM CASCADE" (modal) — xem js/game-modal.js ============ -->
-  <div class="game-modal-overlay" id="gameModalOverlay">
-    <div class="game-modal">
-      <div class="game-modal-bar">
-        <span class="game-modal-title"><i class="fa-solid fa-shapes"></i> Prism Cascade — giải trí ngắn</span>
-        <button type="button" class="game-modal-close" id="closeGameModalBtn"><i class="fa-solid fa-xmark"></i> Đóng</button>
-      </div>
-      <div class="game-modal-frame">
-        <iframe
-          id="gameModalFrame"
-          class="game-modal-iframe"
-          title="Mini-game Prism Cascade"
-          src="about:blank"
-          data-src="game.html"
-          loading="lazy"
-          allow="fullscreen"
-        ></iframe>
-      </div>
-    </div>
-  </div>
-
   <!-- ============ MINI-GAME "TRÍ NHỚ THIẾT BỊ & PHẦN MỀM" (modal) — xem js/game-modal.js ============ -->
   <div class="game-modal-overlay" id="memoryGameModalOverlay">
     <div class="game-modal">
@@ -554,48 +526,6 @@
           title="Mini-game Trí Nhớ Thiết Bị &amp; Phần Mềm"
           src="about:blank"
           data-src="memory-game.html"
-          loading="lazy"
-          allow="fullscreen"
-        ></iframe>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============ MINI-GAME "SUDOKU TRÍ TUỆ" (modal) — xem js/game-modal.js ============ -->
-  <div class="game-modal-overlay" id="sudokuModalOverlay">
-    <div class="game-modal">
-      <div class="game-modal-bar">
-        <span class="game-modal-title"><i class="fa-solid fa-puzzle-piece"></i> Sudoku Trí Tuệ</span>
-        <button type="button" class="game-modal-close" id="closeSudokuModalBtn"><i class="fa-solid fa-xmark"></i> Đóng</button>
-      </div>
-      <div class="game-modal-frame">
-        <iframe
-          id="sudokuModalFrame"
-          class="game-modal-iframe"
-          title="Mini-game Sudoku Trí Tuệ"
-          src="about:blank"
-          data-src="sudoku.html"
-          loading="lazy"
-          allow="fullscreen"
-        ></iframe>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============ MINI-GAME "BI-A PHẦN MỀM" (modal) — xem js/game-modal.js ============ -->
-  <div class="game-modal-overlay" id="billiardsModalOverlay">
-    <div class="game-modal">
-      <div class="game-modal-bar">
-        <span class="game-modal-title"><i class="fa-solid fa-circle"></i> Bi-a Phần Mềm</span>
-        <button type="button" class="game-modal-close" id="closeBilliardsModalBtn"><i class="fa-solid fa-xmark"></i> Đóng</button>
-      </div>
-      <div class="game-modal-frame">
-        <iframe
-          id="billiardsModalFrame"
-          class="game-modal-iframe"
-          title="Mini-game Bi-a Phần Mềm"
-          src="about:blank"
-          data-src="billiards.html"
           loading="lazy"
           allow="fullscreen"
         ></iframe>
