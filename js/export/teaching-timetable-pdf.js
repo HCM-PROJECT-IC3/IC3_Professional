@@ -31,7 +31,14 @@
   'use strict';
 
   const BRAND = [79, 107, 255];
+  const BRAND_TINT = [236, 239, 253];
+  const TEAL = [14, 148, 136];
+  const TEAL_TINT = [231, 247, 245];
+  const ORANGE = [205, 110, 30];
+  const ORANGE_TINT = [253, 240, 227];
   const GRAY = [110, 110, 120];
+  const MUTED = [130, 134, 150];
+  const DASH_GRAY = [196, 199, 214];
   const PAGE_MARGIN = 22;
 
   function nowLabel() {
@@ -67,8 +74,12 @@
    * như lỗi, giờ phóng theo cùng tỉ lệ + giãn dòng rộng hơn cho cân đối. */
   function drawHeader(doc, teacherName, weekLabel, titleSize) {
     const pageWidth = doc.internal.pageSize.getWidth();
+    // Dải màu thương hiệu 2 tông (thay vì 1 dải phẳng) — nhận diện rõ hơn,
+    // vẫn mảnh (4pt) nên không chiếm nhiều diện tích đầu trang.
     doc.setFillColor(...BRAND);
-    doc.rect(0, 0, pageWidth, 4, 'F');
+    doc.rect(0, 0, pageWidth * 0.65, 4, 'F');
+    doc.setFillColor(...TEAL);
+    doc.rect(pageWidth * 0.65, 0, pageWidth * 0.35, 4, 'F');
 
     const subSize = Math.max(9, Math.round(titleSize * 0.62 * 10) / 10);
     const logoW = Math.max(38, titleSize * 3.1);
@@ -90,25 +101,34 @@
     doc.setFontSize(titleSize);
     doc.text(`THỜI KHOÁ BIỂU — ${teacherName || ''}`.trim(), titleX, titleY);
 
-    doc.setFont('NotoSans', 'normal');
+    // "Áp dụng: ..." dạng pill (nền nhạt màu thương hiệu + chữ đậm) thay vì
+    // chữ thường — nổi bật hơn, dễ nhận ra ngay khoảng thời gian áp dụng.
+    doc.setFont('NotoSans', 'bold');
     doc.setFontSize(subSize);
-    doc.setTextColor(...GRAY);
-    doc.text(`Áp dụng: ${weekLabel || ''}`, titleX, subY);
+    const pillLabel = `Áp dụng: ${weekLabel || ''}`;
+    const pillPadX = subSize * 0.55;
+    const pillTextW = doc.getTextWidth(pillLabel);
+    const pillH = subSize * 1.7;
+    const pillY = subY - subSize * 0.85;
+    doc.setFillColor(...BRAND_TINT);
+    doc.roundedRect(titleX, pillY, pillTextW + pillPadX * 2, pillH, pillH / 2, pillH / 2, 'F');
+    doc.setTextColor(...BRAND);
+    doc.text(pillLabel, titleX + pillPadX, subY);
+
+    doc.setFont('NotoSans', 'normal');
+    doc.setFontSize(Math.max(8, subSize * 0.92));
+    doc.setTextColor(...MUTED);
     doc.text(`Xuất lúc: ${nowLabel()}`, pageWidth - PAGE_MARGIN, titleY, { align: 'right' });
 
-    doc.setTextColor(0, 0, 0);
-    return Math.max(subY + 16, logoBottom + 10);
-  }
+    const headerBottom = Math.max(subY + 16, logoBottom + 10);
+    // Gạch phân cách mảnh giữa header và bảng — tách bạch 2 khối nội dung
+    // rõ ràng hơn, giống tài liệu in chuyên nghiệp.
+    doc.setDrawColor(231, 232, 240);
+    doc.setLineWidth(0.6);
+    doc.line(PAGE_MARGIN, headerBottom - 8, pageWidth - PAGE_MARGIN, headerBottom - 8);
 
-  /** Nội dung 1 ô Thứ×Tiết: "Mã lớp" (đậm) xuống dòng "Trường" (nhạt hơn) —
-   * gộp thành 1 chuỗi có \n, AutoTable tự tách dòng (overflow: 'linebreak'). */
-  function cellText(days, M, sessionKey, dayNum, pi) {
-    const raw = ((days[String(dayNum)] || {})[sessionKey] || [])[pi];
-    const c = M.cellOf(raw);
-    const lines = [];
-    if (c.maLop) lines.push(c.maLop);
-    if (c.truong) lines.push(c.truong);
-    return lines.join('\n') || '—';
+    doc.setTextColor(0, 0, 0);
+    return headerBottom;
   }
 
   /** Dựng head/body cho AutoTable — Buổi dùng rowSpan gộp theo từng buổi
@@ -120,16 +140,21 @@
    *
    * KHÔNG có cột "Thời gian" riêng (bản gốc Excel không có cột này) — giờ
    * học TỪNG THỨ (periodTimesByDay có thể khác nhau theo ngày) được đưa
-   * THẲNG vào đầu mỗi ô Thứ×Tiết, cùng với Lớp/Trường (xem cellText()),
-   * để mỗi ô tự đủ thông tin "giờ — lớp — trường" mà không cần tra chéo
-   * sang 1 cột riêng. */
+   * THẲNG vào mỗi ô Thứ×Tiết, cùng với Lớp/Trường.
+   *
+   * Mỗi ô "có lớp" mang theo dữ liệu CÓ CẤU TRÚC (__kind/__time/__code/
+   * __school/__session trên chính object cell) thay vì 1 chuỗi text gộp —
+   * content để RỖNG (autoTable không tự vẽ chữ), tryFit() § didDrawCell tự
+   * vẽ 1 "thẻ" bo góc nền nhạt theo buổi + 3 dòng chữ phân cấp rõ ràng
+   * (giờ nhạt/mã lớp đậm màu/trường nhạt) thay vì 1 khối chữ đồng cỡ như
+   * trước — đúng tinh thần thiết kế mới (xem README đợt nâng cấp PDF). */
   function buildRows(days, periodTimesByDay, M) {
     const head = [['Buổi', 'Tiết', ...M.WEEKDAYS.map((d) => M.WEEKDAY_LABELS[d])]];
     const body = [];
     const totalCols = 2 + M.WEEKDAYS.length;
     const SESSION_STYLE = {
-      morning:   { fillColor: [255, 247, 224], textColor: [169, 122, 0] },
-      afternoon: { fillColor: [240, 236, 255], textColor: [79, 107, 255] },
+      morning:   { fillColor: TEAL_TINT, textColor: TEAL },
+      afternoon: { fillColor: ORANGE_TINT, textColor: ORANGE },
     };
 
     M.SESSIONS.forEach((sessionKey, si) => {
@@ -147,13 +172,19 @@
         row.push(String(pi + 1));
         M.WEEKDAYS.forEach((d) => {
           const dayPeriod = (periodTimesByDay[String(d)][sessionKey] || [])[pi];
-          if (!dayPeriod) { row.push({ content: '—', styles: { textColor: GRAY } }); return; }
+          if (!dayPeriod) { row.push({ content: '—', styles: { textColor: DASH_GRAY } }); return; }
           const raw = ((days[String(d)] || {})[sessionKey] || [])[pi];
           const cell = M.cellOf(raw);
-          // Chỉ in giờ ngay trong ô khi BUỔI ĐÓ THẬT SỰ có lớp — ô trống (Thứ
-          // không dạy tiết này) vẫn chỉ hiện "—" gọn, không cần giờ kèm theo.
-          const ownTime = cell.maLop ? `${dayPeriod.start || '?'} - ${dayPeriod.end || '?'}\n` : '';
-          row.push(ownTime + cellText(days, M, sessionKey, d, pi));
+          if (!cell.maLop) { row.push({ content: '—', styles: { textColor: DASH_GRAY } }); return; }
+          row.push({
+            content: '', // vẽ tay trong didDrawCell — xem tryFit()
+            styles: { fillColor: [255, 255, 255] },
+            __kind: 'lesson',
+            __session: sessionKey,
+            __time: `${dayPeriod.start || '?'} - ${dayPeriod.end || '?'}`,
+            __code: cell.maLop,
+            __school: cell.truong || '',
+          });
         });
         body.push(row);
       }
@@ -210,7 +241,14 @@
       // minCellHeight TỈ LỆ THEO cellPadding đang thử — ở cỡ chữ lớn (giáo
       // viên ít tiết/ít ngày dạy), hàng cao hơn hẳn giúp bảng giãn lấp gần
       // hết trang thay vì co cụm ở góc trên để trống cả mảng lớn phía dưới.
-      styles: { font: 'NotoSans', fontSize, cellPadding, valign: 'middle', halign: 'center', overflow: 'linebreak', minCellHeight: cellPadding * 5 },
+      // CŨNG phải đủ cho 3 DÒNG CHỮ TỰ VẼ (giờ/mã lớp/trường) trong ô "thẻ"
+      // (xem didDrawCell bên dưới) — vì content để RỖNG nên autoTable không
+      // tự đo được chiều cao cần thiết như trước (lúc còn là 1 chuỗi text
+      // thật); thiếu bước này, ở cỡ chữ nhỏ nhất (giáo viên dạy dày đặc),
+      // hàng có thể thấp hơn 3 dòng chữ thật cần, khiến chữ đè lên hàng kế
+      // tiếp. fontSize * 3.6 là ước lượng đủ cho 3 dòng ở MỌI cỡ chữ trong
+      // CANDIDATES — đã kiểm tra khớp với cách tính lh trong didDrawCell.
+      styles: { font: 'NotoSans', fontSize, cellPadding, valign: 'middle', halign: 'center', overflow: 'linebreak', minCellHeight: Math.max(cellPadding * 5, fontSize * 3.6) },
       columnStyles: {
         0: { cellWidth: labelColWidth },
         1: { cellWidth: tietColWidth, textColor: GRAY, fontStyle: 'bold' },
@@ -222,7 +260,52 @@
       // quanh thay vì dải màu dính sát hàng dữ liệu trên/dưới như trước.
       didDrawCell: (data) => {
         const raw = data.cell.raw;
-        if (data.section !== 'body' || !raw || typeof raw !== 'object' || raw.content !== '' || !raw.colSpan) return;
+        if (data.section !== 'body' || !raw || typeof raw !== 'object') return;
+
+        // Ô "có lớp" (xem buildRows()) — tự vẽ 1 "thẻ" bo góc nền nhạt theo
+        // buổi (xanh ngọc = Sáng, cam = Chiều) + 3 dòng chữ phân cấp rõ ràng
+        // (giờ nhạt/mã lớp đậm/trường nhạt) thay vì 1 khối chữ đồng cỡ như
+        // bản cũ — đây là phần nâng cấp trực quan chính của đợt này.
+        if (raw.__kind === 'lesson') {
+          const { x, y, width, height } = data.cell;
+          const palette = raw.__session === 'afternoon'
+            ? { bg: ORANGE_TINT, accent: ORANGE }
+            : { bg: TEAL_TINT, accent: TEAL };
+          const inset = Math.min(2, width * 0.06, height * 0.08);
+          doc.setFillColor(...palette.bg);
+          doc.roundedRect(x + inset, y + inset, width - inset * 2, height - inset * 2, 2.2, 2.2, 'F');
+
+          const cx = x + width / 2;
+          const lh = Math.max(fontSize * 1.05, 6);
+          let ty = y + height / 2 - lh * 0.8;
+
+          doc.setFont('NotoSans', 'normal');
+          doc.setFontSize(Math.max(5, fontSize - 1.8));
+          doc.setTextColor(...MUTED);
+          doc.text(raw.__time, cx, ty, { align: 'center' });
+
+          ty += lh;
+          doc.setFont('NotoSans', 'bold');
+          doc.setFontSize(fontSize + 0.6);
+          doc.setTextColor(...palette.accent);
+          doc.text(raw.__code, cx, ty, { align: 'center' });
+
+          if (raw.__school) {
+            ty += lh;
+            doc.setFont('NotoSans', 'normal');
+            doc.setFontSize(Math.max(5, fontSize - 2.2));
+            doc.setTextColor(...MUTED);
+            doc.text(raw.__school, cx, ty, { align: 'center', maxWidth: width - inset * 2 - 2 });
+          }
+          doc.setTextColor(0, 0, 0);
+          return;
+        }
+
+        // Vạch ngăn cách SÁNG/CHIỀU (content: '', colSpan toàn bảng) — vẽ
+        // CAO hơn thật (minCellHeight 16) rồi SƠN TRẮNG đè lên phần trên/
+        // dưới, chỉ chừa lại 1 dải màu MỎNG (BAR_H) ở giữa, tạo khoảng
+        // trắng thoáng bao quanh thay vì dính sát hàng dữ liệu kề bên.
+        if (raw.content !== '' || !raw.colSpan) return;
         const BAR_H = 4;
         const { x, y, width, height } = data.cell;
         const gap = (height - BAR_H) / 2;

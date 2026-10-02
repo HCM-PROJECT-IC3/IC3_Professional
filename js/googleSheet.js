@@ -63,8 +63,6 @@ function generateSubmissionId(studentName, testName) {
  * @returns {Promise<{success: boolean, message: string}>}
  */
 async function saveToGoogleSheet(data) {
-  console.log('📡 [GoogleSheet] Bắt đầu gửi dữ liệu...', data);
-
   // ── Kiểm tra URL đã được cấu hình chưa ──────────────────
   if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('PASTE_YOUR')) {
     console.error('❌ [GoogleSheet] Chưa cấu hình APPS_SCRIPT_URL!');
@@ -100,8 +98,6 @@ async function saveToGoogleSheet(data) {
     note:        data.note         || ''
   };
 
-  console.log('📦 [GoogleSheet] Payload sẽ gửi:', payload);
-
   // Code.gs mới định tuyến theo "action" — bọc payload gốc vào đây.
   const requestBody = { action: 'submitExam', payload };
 
@@ -133,7 +129,6 @@ async function saveToGoogleSheet(data) {
     if (!json.ok) throw new Error(json.error || 'Apps Script báo lỗi không rõ');
 
     _submittedIds.add(clientKey);
-    console.log('✅ [GoogleSheet] Đã lưu:', json.data);
     if (json.data && json.data.duplicate) {
       showNotification('Bài thi đã được lưu trước đó (trùng submissionId).', 'info');
     } else {
@@ -291,8 +286,6 @@ async function submitToGoogleSheet(result, elapsedSec, integrity) {
                    ? integrity.flags.slice(1).join('; ')
                    : (integrity.timedOut ? 'Hết giờ' : '')
   };
-
-  console.log('🎯 [EduQuiz] Chuẩn bị gửi kết quả:', sheetData);
 
   // Gửi lên Google Sheet (không chặn UI, chạy nền)
   await saveToGoogleSheet(sheetData);

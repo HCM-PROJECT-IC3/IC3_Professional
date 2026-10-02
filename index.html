@@ -3,6 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Bắt lỗi TOÀN CỤC — nạp SỚM NHẤT có thể (trước mọi script khác) để
        bắt được cả lỗi xảy ra ngay lúc các script sau đang khởi tạo.
@@ -18,7 +19,15 @@
   <script src="js/a11y-assistant.js" defer></script>
   <!-- <title> chỉ render TEXT THUẦN (tiêu đề tab trình duyệt) — bỏ emoji
        thay vì để lọt icon "vỡ", không có cách nào render Font Awesome ở đây. -->
-  <title>EduQuiz IC3</title>
+  <title>EduQuiz IC3 — Ôn luyện &amp; Kiểm tra chứng chỉ IC3/MOS</title>
+  <!-- SEO cơ bản (trang vào chính của toàn hệ thống) + Open Graph cho
+       preview khi chia sẻ link qua Zalo/Facebook/Messenger. -->
+  <meta name="description" content="Nền tảng ôn luyện và kiểm tra trực tuyến chứng chỉ IC3 (Spark/Level 1-3) và MOS Word/Excel/PowerPoint — trắc nghiệm theo chủ đề, mô phỏng thao tác thực hành, mini-game ôn tập và theo dõi tiến độ học tập.">
+  <meta name="robots" content="index, follow">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="EduQuiz IC3 — Ôn luyện &amp; Kiểm tra chứng chỉ IC3/MOS">
+  <meta property="og:description" content="Ôn luyện và kiểm tra trực tuyến chứng chỉ IC3/MOS — trắc nghiệm theo chủ đề, mô phỏng thực hành, mini-game ôn tập.">
+  <meta property="og:image" content="favicon.svg">
   <!-- ĐỢT TỐI ƯU HIỆU NĂNG: 2 stylesheet Google Fonts + Font Awesome (icon)
        vốn CHẶN RENDER (Lighthouse render-blocking, ~2.5s trong tổng ~3.1s
        còn lại sau khi đã defer hết JS) — dùng kỹ thuật preload+swap chuẩn
@@ -55,7 +64,7 @@
 
   <!-- ── Theme toggle ── -->
   <button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()"
-    title="Chuyển chế độ sáng/tối"></button>
+    title="Chuyển chế độ sáng/tối" aria-label="Chuyển chế độ sáng/tối"></button>
 
   <!-- ── Danh sách Trường/Lớp/Họ và tên hiển thị ở form bên dưới do Điều
      phối đào tạo NẠP TỪ Excel ngay trong khu quản trị (xem trang
@@ -337,7 +346,7 @@
       </div>
       <button type="button" class="btn-submit-top" onclick="confirmSubmit()">Nộp bài <i class="fa-solid fa-check"></i></button>
       <button type="button" onclick="toggleTheme()" title="Chế độ sáng/tối" class="theme-toggle-exam"
-        id="themeToggleExam"></button>
+        id="themeToggleExam" aria-label="Chuyển chế độ sáng/tối"></button>
     </div>
     <div class="progress-bar-wrap">
       <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
@@ -380,8 +389,27 @@
     </div>
     <div class="result-card">
       <span class="result-emoji" id="resultEmoji"><i class="fa-solid fa-face-laugh-beam"></i></span>
-      <div class="result-score" id="resultScore">0%</div>
+
+      <!-- Vòng tròn % điểm (SVG thuần, không thêm thư viện chart nào) —
+           2 <circle> chồng nhau: 1 làm nền mờ cố định, 1 là vòng tiến độ
+           tô màu theo điểm, vẽ bằng stroke-dasharray/offset. Số % vẫn giữ
+           nguyên #resultScore (đặt đè lên giữa vòng bằng CSS) để không
+           phải sửa logic JS đang set textContent cho id này. Xem
+           js/quiz-engine.js § applyResultRing(). -->
+      <div class="result-ring-wrap">
+        <svg class="result-ring" viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="result-ring-track" cx="60" cy="60" r="54"></circle>
+          <circle class="result-ring-progress" id="resultRingProgress" cx="60" cy="60" r="54"></circle>
+        </svg>
+        <div class="result-score" id="resultScore">0%</div>
+      </div>
+
       <div class="result-label" id="resultLabel">Kết quả bài thi</div>
+      <!-- So với lần làm GẦN NHẤT của ĐÚNG bài này (đọc từ lịch sử local
+           'eduquiz_records', không cần tài khoản/đăng nhập) — rỗng/ẩn nếu
+           đây là lần đầu làm bài này. Xem js/quiz-engine.js §
+           renderResultCompare(). -->
+      <div class="result-compare" id="resultCompare" hidden></div>
       <div class="integrity-badge" id="integrityBadge"></div>
       <div class="result-stats">
         <div class="result-stat correct">
@@ -397,6 +425,13 @@
           <div class="result-stat-lbl"><i class="fa-solid fa-forward-step"></i> Bỏ qua</div>
         </div>
       </div>
+      <!-- Thanh tỉ lệ đúng/sai/bỏ qua trực quan (đổi độ rộng theo %) thay
+           vì chỉ nhìn 3 con số thô ở trên — xem applyResultRing(). -->
+      <div class="result-bar" id="resultBar" role="img" aria-label="Tỉ lệ đúng/sai/bỏ qua">
+        <span class="result-bar-seg correct" id="resultBarCorrect"></span>
+        <span class="result-bar-seg incorrect" id="resultBarIncorrect"></span>
+        <span class="result-bar-seg skipped" id="resultBarSkipped"></span>
+      </div>
       <div class="review-list" id="reviewList"></div>
 
       <!-- Khu Vui Chơi: gộp cả 5 mini-game vào 1 lối vào duy nhất, chỉ mở
@@ -411,6 +446,17 @@
         <i class="fa-solid fa-gamepad"></i> Khu Vui Chơi
       </button>
       <div class="game-zone-hint" id="gameZoneHint"></div>
+
+      <!-- "Giải lao: Chim Vượt Ải" — KHÔNG bị khóa như Khu Vui Chơi ở
+           trên (không cần ≥90%/bài Tổng hợp): đây chỉ là gợi ý mini-game
+           giải trí tùy chọn sau MỌI bài thi, tự động lấy đúng chủ đề vừa
+           thi (không có bộ câu hỏi riêng nào cho mini-game — xem
+           js/quiz-engine.js § openMarioFlappyReward() và
+           js/mario-flappy.js). -->
+      <button type="button" class="game-zone-open-btn" style="margin-top:.5rem" id="openMarioFlappyRewardBtn"
+        onclick="openMarioFlappyReward()" title="Giải lao với mini-game Chim Vượt Ải — ôn lại đúng chủ đề vừa thi">
+        <i class="fa-solid fa-dove"></i> Giải lao: Chim Vượt Ải
+      </button>
 
       <button type="button" class="btn-retry" onclick="backToLobby()"><i class="fa-solid fa-arrows-rotate"></i> Làm lại / Chọn bài khác</button>
       <button type="button" class="btn-secondary" onclick="showRecords()"><i class="fa-solid fa-clock-rotate-left"></i> Xem lịch sử bài làm</button>
@@ -505,6 +551,12 @@
             <span class="game-zone-tile-emoji"><i class="fa-solid fa-magnet"></i></span>
             <span class="game-zone-tile-name">Phân Loại Thần Tốc</span>
             <span class="game-zone-tile-desc">Bấm đúng thùng trước khi hết giờ</span>
+            <span class="game-zone-tile-tag">Giải trí</span>
+          </button>
+          <button type="button" class="game-zone-tile" id="openMarioFlappyBtn" title="Chơi mini-game Chim Vượt Ải">
+            <span class="game-zone-tile-emoji"><i class="fa-solid fa-dove"></i></span>
+            <span class="game-zone-tile-name">Chim Vượt Ải</span>
+            <span class="game-zone-tile-desc">Vỗ cánh né cột ống, vượt 5 màn, trả lời câu hỏi IC3 ở cổng kiểm tra</span>
             <span class="game-zone-tile-tag">Giải trí</span>
           </button>
         </div>
@@ -631,6 +683,27 @@
           title="Mini-game Phân Loại Thần Tốc"
           src="about:blank"
           data-src="sort-game.html"
+          loading="lazy"
+          allow="fullscreen"
+        ></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MINI-GAME "CHIM VƯỢT ẢI" (modal) — xem js/game-modal.js ============ -->
+  <div class="game-modal-overlay" id="marioFlappyModalOverlay">
+    <div class="game-modal">
+      <div class="game-modal-bar">
+        <span class="game-modal-title"><i class="fa-solid fa-dove"></i> Chim Vượt Ải</span>
+        <button type="button" class="game-modal-close" id="closeMarioFlappyModalBtn"><i class="fa-solid fa-xmark"></i> Đóng</button>
+      </div>
+      <div class="game-modal-frame">
+        <iframe
+          id="marioFlappyModalFrame"
+          class="game-modal-iframe"
+          title="Mini-game Chim Vượt Ải"
+          src="about:blank"
+          data-src="mario-flappy.html"
           loading="lazy"
           allow="fullscreen"
         ></iframe>

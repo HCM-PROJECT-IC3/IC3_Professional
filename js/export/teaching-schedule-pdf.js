@@ -90,8 +90,14 @@
     const pageWidth = doc.internal.pageSize.getWidth();
     const contentWidth = pageWidth - PAGE_MARGIN * 2;
 
+    // Dải màu 2 tông ở mép trên (đỏ + cam, cả 2 đều LẤY TỪ bảng màu Excel
+    // gốc đã quy định ở trên — KHÔNG đổi sang màu khác) — cùng ngôn ngữ
+    // thị giác với Thời Khoá Biểu PDF (xem js/export/teaching-timetable-pdf.js),
+    // áp dụng mà không phá vỡ yêu cầu khớp đúng màu Excel gốc.
     doc.setFillColor(...TITLE_RED);
-    doc.rect(0, 0, pageWidth, 4, 'F');
+    doc.rect(0, 0, pageWidth * 0.65, 4, 'F');
+    doc.setFillColor(...HEADER_ORANGE);
+    doc.rect(pageWidth * 0.65, 0, pageWidth * 0.35, 4, 'F');
 
     const logo = global.EduIigLogo;
     if (logo) {
@@ -334,9 +340,29 @@
       styles: { font: FONT, fontSize, cellPadding, valign: 'middle' },
       columnStyles: {
         0: { textColor: GRAY, halign: 'left', cellWidth: labelWidth },
-        1: { fontStyle: 'bold', halign: 'left', textColor: TYPE_VALUE_NAVY, cellWidth: valueWidth },
+        1: { fontStyle: 'bold', halign: 'center', textColor: TYPE_VALUE_NAVY, cellWidth: valueWidth },
         2: { textColor: GRAY, halign: 'left', cellWidth: labelWidth },
-        3: { fontStyle: 'bold', halign: 'left', textColor: TYPE_VALUE_NAVY, cellWidth: valueWidth },
+        3: { fontStyle: 'bold', halign: 'center', textColor: TYPE_VALUE_NAVY, cellWidth: valueWidth },
+      },
+      // "THỐNG KÊ TUẦN" KHÔNG bị ràng buộc khớp Excel (khối tự thiết kế
+      // riêng — xem comment đầu hàm) nên áp được ngôn ngữ "thẻ" bo góc của
+      // Thời Khoá Biểu PDF cho 2 cột số liệu (1 và 3): vẽ 1 chip nền xanh
+      // nhạt sau mỗi con số thay vì chữ trần, dễ quét mắt hơn. Chặn chữ MẶC
+      // ĐỊNH của autoTable (didParseCell) để không bị vẽ chồng lên chữ tự
+      // vẽ trong didDrawCell bên dưới.
+      didParseCell: (data) => {
+        if (data.section === 'body' && (data.column.index === 1 || data.column.index === 3)) data.cell.text = [];
+      },
+      didDrawCell: (data) => {
+        if (data.section !== 'body' || (data.column.index !== 1 && data.column.index !== 3)) return;
+        const { x, y, width, height } = data.cell;
+        const inset = 2.5;
+        doc.setFillColor(230, 240, 250);
+        doc.roundedRect(x + inset, y + inset, width - inset * 2, height - inset * 2, 3, 3, 'F');
+        doc.setFont(FONT, 'bold');
+        doc.setFontSize(fontSize);
+        doc.setTextColor(...TYPE_VALUE_NAVY);
+        doc.text(String(data.cell.raw), x + width / 2, y + height / 2 + fontSize * 0.32, { align: 'center' });
       },
     });
     return doc.lastAutoTable.finalY;

@@ -25,6 +25,7 @@ initGameModal({ openBtnId: 'openBattleQuizBtn', overlayId: 'battleQuizModalOverl
 initGameModal({ openBtnId: 'openCyberDetectiveBtn', overlayId: 'cyberDetectiveModalOverlay', closeBtnId: 'closeCyberDetectiveModalBtn', frameId: 'cyberDetectiveModalFrame' });
 initGameModal({ openBtnId: 'openComputerSimBtn', overlayId: 'computerSimModalOverlay', closeBtnId: 'closeComputerSimModalBtn', frameId: 'computerSimModalFrame' });
 initGameModal({ openBtnId: 'openSortGameBtn', overlayId: 'sortGameModalOverlay', closeBtnId: 'closeSortGameModalBtn', frameId: 'sortGameModalFrame' });
+initGameModal({ openBtnId: 'openMarioFlappyBtn', overlayId: 'marioFlappyModalOverlay', closeBtnId: 'closeMarioFlappyModalBtn', frameId: 'marioFlappyModalFrame' });
 initGameModal({ openBtnId: 'openWordSimBtn', overlayId: 'wordSimModalOverlay', closeBtnId: 'closeWordSimModalBtn', frameId: 'wordSimModalFrame', persist: true }); // giữ tiến độ ws_progress_v1
 initGameModal({ openBtnId: 'openExcelSimBtn', overlayId: 'excelSimModalOverlay', closeBtnId: 'closeExcelSimModalBtn', frameId: 'excelSimModalFrame', persist: true }); // giữ tiến độ xs_progress_v1
 initGameModal({ openBtnId: 'openPptSimBtn', overlayId: 'pptSimModalOverlay', closeBtnId: 'closePptSimModalBtn', frameId: 'pptSimModalFrame', persist: true }); // giữ tiến độ ps_progress_v1

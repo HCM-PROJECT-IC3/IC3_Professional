@@ -129,7 +129,10 @@
     const classNames = [...new Set(data.students.map((s) => s.className).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'vi'));
     classNames.forEach((name) => classSel.insertAdjacentHTML('beforeend', `<option value="${esc(name)}">${esc(name)}</option>`));
 
-    const examNames = [...new Set(data.results.map((r) => r.testName).filter(Boolean))].sort();
+    // So theo SỐ "Bài N" thay vì bảng chữ cái — dùng chung
+    // window.EduAnalytics.compareNatural() với coordinator/ic3-dashboard
+    // thay vì tự viết lại (xem js/services/analytics-service.js).
+    const examNames = [...new Set(data.results.map((r) => r.testName).filter(Boolean))].sort(global.EduAnalytics?.compareNatural);
     examNames.forEach((name) => examSel.insertAdjacentHTML('beforeend', `<option value="${esc(name)}">${esc(name)}</option>`));
 
     // Chỉ hiện bộ chọn Trường nếu giáo viên được gán > 1 trường — 1 trường

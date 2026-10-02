@@ -2409,6 +2409,62 @@ body {
   animation: gradientShift 5s ease-in-out infinite, scoreIn .6s .15s cubic-bezier(.16,1,.3,1) both;
 }
 @keyframes scoreIn { from { opacity:0; transform: scale(.7) } to { opacity:1; transform: scale(1) } }
+
+/* Vòng tròn % điểm — bọc quanh .result-score, vẽ bằng 2 <circle> SVG
+   (track mờ cố định + progress tô theo điểm). stroke-dasharray/offset
+   được JS tính theo chu vi r=54 (2π×54 ≈ 339.3), xem applyResultRing(). */
+.result-ring-wrap {
+  position: relative;
+  width: clamp(9.5rem, 32vw, 13rem);
+  height: clamp(9.5rem, 32vw, 13rem);
+  margin: 0 auto .4rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.result-ring { width: 100%; height: 100%; transform: rotate(-90deg) }
+.result-ring-track, .result-ring-progress {
+  fill: none;
+  stroke-width: 10;
+}
+.result-ring-track { stroke: var(--border) }
+.result-ring-progress {
+  stroke: var(--purple);
+  stroke-linecap: round;
+  transition: stroke-dashoffset .9s cubic-bezier(.16,1,.3,1), stroke 1s ease;
+}
+.result-ring-wrap .result-score { margin-bottom: 0 }
+
+/* Thanh tỉ lệ Đúng/Sai/Bỏ qua — 1 hàng 3 đoạn màu, độ rộng = % tương ứng
+   (JS set inline style width), trực quan hơn hẳn so với chỉ 3 con số. */
+.result-bar {
+  display: flex;
+  width: 100%;
+  height: .6rem;
+  border-radius: 100px;
+  overflow: hidden;
+  background: var(--card2);
+  margin: -.6rem 0 1.3rem;
+}
+.result-bar-seg {
+  height: 100%;
+  width: 0;
+  transition: width .7s cubic-bezier(.16,1,.3,1);
+}
+.result-bar-seg.correct   { background: var(--teal) }
+.result-bar-seg.incorrect { background: var(--red) }
+.result-bar-seg.skipped   { background: var(--yellow) }
+
+/* Badge "so với lần trước" — ẩn (có [hidden] trong HTML) nếu đây là lần
+   đầu làm đúng bài này, không có gì để so sánh. */
+.result-compare {
+  display: flex; align-items: center; justify-content: center; gap: .4rem;
+  font-size: .82rem; font-weight: 700;
+  color: var(--muted);
+  margin-bottom: .9rem;
+}
+.result-compare .rc-up   { color: var(--accent5) }
+.result-compare .rc-down { color: var(--red) }
+.result-compare .rc-same { color: var(--muted) }
+
 .result-label {
   font-size: clamp(.95rem, 2.5vw, 1.1rem);
   font-weight: 700;

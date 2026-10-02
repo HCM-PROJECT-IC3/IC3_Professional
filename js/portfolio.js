@@ -431,14 +431,18 @@
       if (p && p.avatar) el.innerHTML = `<img src="${p.avatar}" alt="">`;
     });
   }
-  db.collection('gvlab_profiles').onSnapshot((snap) => {
-    snap.docChanges().forEach((chg) => {
-      if (chg.type === 'removed') delete avatarCache[chg.doc.id];
-      else avatarCache[chg.doc.id] = chg.doc.data();
-    });
+  // Đọc 1 LẦN (không onSnapshot) — toàn bộ collection gvlab_profiles vốn
+  // không cần ĐỒNG BỘ TRỰC TIẾP cho avatar (giáo viên hiếm khi đổi ảnh đại
+  // diện, và tải lại trang là đủ thấy ảnh mới); giữ onSnapshot ở đây nghĩa
+  // là MỌI người đang mở trang Social đều duy trì 1 listener sống trên
+  // TOÀN BỘ collection, cứ 1 giáo viên bất kỳ đổi hồ sơ là bắn lại snapshot
+  // cho TẤT CẢ các tab đang mở — tốn lượt đọc tăng dần vô thời hạn theo cả
+  // số người xem lẫn số thay đổi, trong khi dữ liệu này không hề cấp bách.
+  db.collection('gvlab_profiles').get().then((snap) => {
+    snap.forEach((doc) => { avatarCache[doc.id] = doc.data(); });
     applyAvatars(document);
     if (typeof refreshProfileBarDisplay === 'function') refreshProfileBarDisplay();
-  }, (err) => console.warn('[Trang Social Media] Không tải được hồ sơ (gvlab_profiles):', err.message));
+  }).catch((err) => console.warn('[Trang Social Media] Không tải được hồ sơ (gvlab_profiles):', err.message));
 
   // ════════════════════════════════════════════════════════════
   // PfFeed — feed kiểu blog/mạng xã hội: đăng bài/thích/bình luận/xoá/

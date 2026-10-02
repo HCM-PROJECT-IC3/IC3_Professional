@@ -49,6 +49,7 @@
   'use strict';
 
   const BRAND = [79, 107, 255]; // #4f6bff — khớp --purple trong css/theme.css
+  const TEAL = [14, 148, 136]; // cùng tông với dải màu 2 tông của Thời Khoá Biểu PDF
   const GRAY = [110, 110, 120];
   const MARGIN = 56;
   const DEPARTMENT = 'Dự Án HCM'; // cố định theo đúng mẫu Word gốc
@@ -266,8 +267,15 @@
     const contentWidth = pageWidth - MARGIN * 2;
     const teacherName = oneLine(teacher.name) || '(chưa rõ tên)';
 
+    // Dải màu 2 tông ở mép trên — cùng ngôn ngữ thị giác với Thời Khoá
+    // Biểu PDF (xem js/export/teaching-timetable-pdf.js). CHỈ đổi dải màu
+    // trang trí này — toàn bộ nội dung bên dưới (tiêu đề/nhãn/giá trị/chữ
+    // ký) giữ NGUYÊN khớp đúng mẫu "Phiếu công tác" .doc gốc, không đụng
+    // vào để không phá fidelity với văn bản hành chính thật dùng để ký/nộp.
     doc.setFillColor(...BRAND);
-    doc.rect(0, 0, pageWidth, 5, 'F');
+    doc.rect(0, 0, pageWidth * 0.65, 5, 'F');
+    doc.setFillColor(...TEAL);
+    doc.rect(pageWidth * 0.65, 0, pageWidth * 0.35, 5, 'F');
 
     // Logo IIG — cùng cỡ tỉ lệ với file gốc, đặt lề trái ngay dưới dải màu
     // thương hiệu; tiêu đề canh giữa CẢ TRANG (không chỉ phần còn lại sau
