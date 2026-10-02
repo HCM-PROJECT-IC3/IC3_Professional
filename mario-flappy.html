@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🐥 Chim Vượt Ải — Mini Game</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/mario-flappy.css">
+  <link rel="stylesheet" href="css/accessibility.css">
+  <link rel="stylesheet" href="css/motion.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+
+<body class="mf-body">
+<style>
+  /* Neumorphism + nút chuyển sáng/tối — gắn nhanh cho trang mini-game này,
+     cùng pattern với sort-game.html/memory-game.html (không phụ thuộc
+     css/theme.css để trang chạy độc lập khi nhúng qua iframe). */
+  body { background: #e9ecf2 !important; transition: background .4s ease; }
+  [data-theme="dark"] body { background: #20232b !important; }
+  .theme-toggle-quick {
+    position: fixed; top: 12px; right: 12px; z-index: 99999;
+    width: 56px; height: 30px; border-radius: 999px; border: none;
+    background: #e9ecf2; cursor: pointer;
+    box-shadow: 6px 6px 14px rgba(163,177,198,.5), -6px -6px 14px rgba(255,255,255,.85);
+    transition: box-shadow .3s ease, background .3s ease;
+  }
+  [data-theme="dark"] .theme-toggle-quick {
+    background: #262b36;
+    box-shadow: 6px 6px 14px rgba(0,0,0,.55), -6px -6px 14px rgba(255,255,255,.05);
+  }
+  .theme-toggle-quick::after {
+    content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%;
+    background:
+      radial-gradient(circle, #ffb938 0 36%, transparent 37%),
+      radial-gradient(circle, #ffffff 0 60%, transparent 61%),
+      repeating-conic-gradient(#ffb938 0deg 7deg, transparent 7deg 45deg);
+    box-shadow: 2px 3px 6px rgba(163,177,198,.7), -1px -1px 3px rgba(255,255,255,.8);
+    transition: transform .55s cubic-bezier(.34,1.56,.64,1), box-shadow .4s ease;
+  }
+  [data-theme="dark"] .theme-toggle-quick::after {
+    transform: translateX(26px) rotate(200deg);
+    background:
+      radial-gradient(.6px .6px at 30% 33%, rgba(255,255,255,.85) 99%, transparent 100%),
+      radial-gradient(.5px .5px at 58% 28%, rgba(255,255,255,.7) 99%, transparent 100%),
+      radial-gradient(.5px .5px at 44% 55%, rgba(255,255,255,.75) 99%, transparent 100%),
+      radial-gradient(circle, #313650 0 36%, transparent 37%),
+      radial-gradient(circle, #e7eaf2 0 60%, transparent 61%),
+      repeating-conic-gradient(#aab0c4 0deg 7deg, transparent 7deg 45deg);
+    box-shadow: 2px 3px 6px rgba(0,0,0,.6), -1px -1px 3px rgba(255,255,255,.08);
+  }
+</style>
+<button type="button" class="theme-toggle-quick" id="themeToggleQuick" title="Chuyển đổi sáng/tối"></button>
+<script>
+(function () {
+  try {
+    var saved = localStorage.getItem('ic3_theme');
+    if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+  } catch (e) {}
+  document.getElementById('themeToggleQuick').addEventListener('click', function () {
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var next = isDark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('ic3_theme', next); } catch (e) {}
+  });
+})();
+</script>
+
+  <!-- Trang này được nhúng qua modal (js/game-modal.js), cùng pattern với
+       sort-game.html — chỉ chứa đúng 1 mini-game độc lập, không đụng vào
+       quiz-engine.js / gamification.js (chỉ ĐỌC XP qua EduGamification
+       giống sort-game.js).
+
+       CƠ CHẾ — "Mario vượt màn" + "Flappy Bird":
+         • Bay (vỗ cánh chống trọng lực) né cột ống như Flappy Bird.
+         • Thế giới chia thành 5 MÀN cố định (không phải vô hạn) — mỗi
+           màn có số cột ống tăng dần, kết thúc bằng 1 CỘT CỜ như Mario:
+           chạm cờ = qua màn, hiện bảng tổng kết + nút "Màn tiếp theo".
+         • Giữa mỗi màn có 1 "cổng câu hỏi" (khối ?) — chạm vào sẽ DỪNG
+           game và hiện 1 câu hỏi trắc nghiệm IC3 (lấy ngẫu nhiên từ
+           data/ic3/minitests/, có fallback câu hỏi cục bộ nếu không tải
+           được JSON — ví dụ khi mở file trực tiếp không qua server).
+           Trả lời đúng = +điểm + khiên bất tử tạm thời; trả lời sai = mất
+           1 mạng.
+         • 3 mạng (trái tim) — va cột ống/trần/đất mất 1 mạng, hết mạng =
+           Game Over.
+       Toàn bộ logic khai báo trong js/mario-flappy.js. -->
+
+  <div class="mf-wrap">
+    <div class="mf-header">
+      <div class="mf-title">🐥 Chim Vượt Ải</div>
+      <div class="mf-subtitle" id="mfSubtitle">Chọn độ khó để bắt đầu hành trình 5 màn</div>
+    </div>
+
+    <!-- Chủ đề/điểm bài Quiz vừa thi (nếu được mở từ Quiz — xem
+         js/quiz-engine.js § _writeMiniGameContext() + js/mario-flappy.js
+         § readQuizContext()). Ẩn khi chơi trực tiếp từ Khu Vui Chơi. -->
+    <div class="mf-context-banner" id="mfContextBanner" style="display:none;"></div>
+
+    <!-- Màn hình chọn độ khó -->
+    <div class="mf-picker" id="mfPicker"></div>
+
+    <!-- Bật/tắt cổng câu hỏi IC3 giữa màn — mặc định TẮT (gameplay thuần,
+         không bắt làm quiz lại), học sinh có thể tự bật để vừa chơi vừa
+         ôn. Xem js/mario-flappy.js § state.enableKnowledgeGate. -->
+    <label class="mf-gate-toggle" id="mfGateToggleWrap">
+      <input type="checkbox" id="mfGateToggle"> Bật "cổng câu hỏi" IC3 giữa màn (ôn lại kiến thức)
+    </label>
+
+    <!-- Màn hình chơi -->
+    <div class="mf-play" id="mfPlay" style="display:none;">
+      <div class="mf-hud">
+        <div class="mf-stat">
+          <div class="mf-stat-label">Mạng</div>
+          <div class="mf-stat-value mf-hearts" id="mfHearts">❤️❤️❤️</div>
+        </div>
+        <div class="mf-stat">
+          <div class="mf-stat-label">Điểm</div>
+          <div class="mf-stat-value" id="mfScore">0</div>
+        </div>
+        <div class="mf-stat">
+          <div class="mf-stat-label">Màn</div>
+          <div class="mf-stat-value" id="mfLevel">1/5</div>
+        </div>
+      </div>
+
+      <div class="mf-canvas-frame">
+        <canvas id="mfCanvas" width="800" height="420"></canvas>
+
+        <!-- Cổng câu hỏi IC3 -->
+        <div class="mf-overlay" id="mfQuestionOverlay">
+          <div class="mf-overlay-card">
+            <div class="mf-question-badge"><i class="fa-solid fa-circle-question"></i> Cổng câu hỏi IC3</div>
+            <div class="mf-question-text" id="mfQuestionText">—</div>
+            <div class="mf-options" id="mfQuestionOptions"></div>
+            <div class="mf-question-explain" id="mfQuestionExplain" style="display:none;"></div>
+            <div class="mf-footer" id="mfQuestionFooter" style="display:none;">
+              <button type="button" class="mf-btn mf-btn-primary" id="mfQuestionContinueBtn">Tiếp tục bay ➜</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Qua màn -->
+        <div class="mf-overlay" id="mfLevelCompleteOverlay">
+          <div class="mf-overlay-card">
+            <div class="mf-overlay-icon" id="mfLevelCompleteIcon">🏁</div>
+            <div class="mf-overlay-title" id="mfLevelCompleteTitle">Qua màn!</div>
+            <div class="mf-overlay-sub" id="mfLevelCompleteSub"></div>
+            <div class="mf-overlay-stats" id="mfLevelCompleteStats"></div>
+            <div class="mf-footer">
+              <button type="button" class="mf-btn mf-btn-primary" id="mfNextLevelBtn">Màn tiếp theo ➜</button>
+              <button type="button" class="mf-btn" id="mfLevelPickerBtn">🔀 Đổi độ khó</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hoàn thành cả 5 màn -->
+        <div class="mf-overlay" id="mfGameClearOverlay">
+          <div class="mf-overlay-card">
+            <div class="mf-overlay-icon">👑</div>
+            <div class="mf-overlay-title">Chinh phục cả 5 màn!</div>
+            <div class="mf-overlay-sub" id="mfGameClearSub"></div>
+            <div class="mf-overlay-stats" id="mfGameClearStats"></div>
+            <div class="mf-footer">
+              <button type="button" class="mf-btn mf-btn-primary" id="mfClearRestartBtn">🔄 Chơi lại từ Màn 1</button>
+              <button type="button" class="mf-btn" id="mfClearPickerBtn">🔀 Đổi độ khó</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Game Over -->
+        <div class="mf-overlay" id="mfGameOverOverlay">
+          <div class="mf-overlay-card">
+            <div class="mf-overlay-icon">💥</div>
+            <div class="mf-overlay-title">Hết mạng rồi!</div>
+            <div class="mf-overlay-sub" id="mfGameOverSub"></div>
+            <div class="mf-overlay-stats" id="mfGameOverStats"></div>
+            <div class="mf-footer">
+              <button type="button" class="mf-btn mf-btn-primary" id="mfRetryBtn">🔄 Thử lại Màn này</button>
+              <button type="button" class="mf-btn" id="mfGameOverPickerBtn">🔀 Đổi độ khó</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mf-hint">Bấm / chạm vào khung chơi hoặc nhấn phím <strong>Space</strong> để vỗ cánh bay lên</div>
+
+      <div class="mf-footer">
+        <button type="button" class="mf-btn" id="mfRestartBtn">🔄 Chơi lại màn này</button>
+        <button type="button" class="mf-btn" id="mfPickerBtn">🔀 Đổi độ khó</button>
+        <!-- Chỉ hiện khi được mở từ bài Quiz (gamebreak hoặc sau khi nộp
+             bài) — đóng mini-game và quay lại đúng chỗ trong Quiz. Xem
+             js/mario-flappy.js § bindBackToQuiz(). -->
+        <button type="button" class="mf-btn mf-btn-primary" id="mfBackToQuizBtn" style="display:none;">⬅ Về bài Quiz</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/gamification.js"></script>
+  <script src="js/game-sfx.js"></script>
+  <script src="js/mario-flappy.js"></script>
+  <script src="js/motion.js"></script>
+</body>
+
+</html>

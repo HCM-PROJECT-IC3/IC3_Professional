@@ -39,10 +39,26 @@
     return String(a).localeCompare(String(b), 'vi');
   }
 
+  // Escape đầy đủ (không chỉ dấu ") trước khi nội suy vào innerHTML — values
+  // đến từ data/roster/students-active.json, do Điều phối đào tạo NHẬP/NẠP
+  // TỪ EXCEL ở roster-manager.html (tên trường/lớp/học sinh), nên vẫn là dữ
+  // liệu "người dùng nhập" theo nghĩa rộng: 1 ô Excel chứa "<img
+  // src=x onerror=...>" (gõ nhầm/dán nhầm, hoặc file Excel từ nguồn không
+  // tin cậy) trước đây sẽ chạy thẳng trong trình duyệt của MỌI học sinh mở
+  // trang chọn bài — chỉ escape dấu " là không đủ.
+  function escHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   function fillSelect(sel, values, placeholder) {
     const current = sel.value;
-    sel.innerHTML = `<option value="">${placeholder}</option>` +
-      values.map((v) => `<option value="${String(v).replace(/"/g, '&quot;')}">${v}</option>`).join('');
+    sel.innerHTML = `<option value="">${escHtml(placeholder)}</option>` +
+      values.map((v) => `<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('');
     if (values.includes(current)) sel.value = current;
   }
 

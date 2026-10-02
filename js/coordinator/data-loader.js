@@ -126,7 +126,15 @@
     data.teachers.forEach((t) => teacherSel.insertAdjacentHTML('beforeend', `<option value="${esc(t.id)}">${esc(t.name || t.email)}</option>`));
     data.classes.forEach((c) => classSel.insertAdjacentHTML('beforeend', `<option value="${esc(c.id)}">${esc(c.name)}</option>`));
 
-    const examNames = [...new Set(data.results.map((r) => r.testName).filter(Boolean))].sort();
+    // Sắp theo thứ tự "Bài N" hợp lý (không phải bảng chữ cái) — dùng
+    // CHUNG window.EduAnalytics.compareNatural() thay vì tự định nghĩa lại
+    // ở đây, để sửa 1 chỗ là áp dụng cho MỌI nơi dùng dropdown "Bài thi"
+    // (coordinator/teacher/admin dashboard đều gọi cùng 1 hàm — xem
+    // js/services/analytics-service.js). Nạp SAU analytics-service.js nên
+    // window.EduAnalytics luôn sẵn sàng ở đây; .sort() mặc định (so chuỗi)
+    // là lưới an toàn nếu vì lý do gì đó file kia chưa nạp được.
+    const examNames = [...new Set(data.results.map((r) => r.testName).filter(Boolean))]
+      .sort(global.EduAnalytics?.compareNatural || undefined);
     examNames.forEach((name) => examSel.insertAdjacentHTML('beforeend', `<option value="${esc(name)}">${esc(name)}</option>`));
   }
 

@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /login.html
+Disallow: /admin-users.html
+Disallow: /roster-manager.html
+Disallow: /coordinator-dashboard.html
+Disallow: /teacher-dashboard.html
+Disallow: /ic3-dashboard.html
+Disallow: /image-manager.html
+Disallow: /teaching-schedule.html
+Disallow: /data/

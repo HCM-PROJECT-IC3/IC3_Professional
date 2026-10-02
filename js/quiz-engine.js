@@ -32,6 +32,39 @@
 window.quizRepository = null;
 
 /* ============================================================
+   § 0a — FETCH CÓ TIMEOUT + THỬ LẠI
+   ────────────────────────────────────────────────────────────
+   fetch() trần KHÔNG có timeout mặc định — trên mạng trường học chập
+   chờn (wifi đông học sinh, 4G yếu), 1 request bị treo lơ lửng khiến
+   màn hình kẹt mãi ở "Đang tải..." không có cách nào thoát ra, học sinh
+   tưởng trang bị "sập". Helper này giới hạn thời gian chờ mỗi lần thử
+   (AbortController) và tự thử lại 1 lần trước khi thật sự báo lỗi, để
+   lỗi mạng tạm thời (1 gói tin rớt) không làm hỏng cả lượt tải.
+   ============================================================ */
+async function _fetchJsonWithTimeout(url, { cache = 'default', timeoutMs = 12000, retries = 1 } = {}) {
+  let lastErr;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, { cache, signal: controller.signal });
+      clearTimeout(timer);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      clearTimeout(timer);
+      lastErr = err?.name === 'AbortError'
+        ? new Error(`Quá thời gian chờ (${timeoutMs / 1000}s): ${url}`)
+        : err;
+      // Thử lại NGAY (không delay) — lần đầu thất bại ở mạng trường học
+      // thường do nghẽn tức thời, chờ thêm không giúp ích bằng gửi lại
+      // request mới; nếu vẫn lỗi ở lần thử cuối mới thực sự throw.
+    }
+  }
+  throw lastErr;
+}
+
+/* ============================================================
    § 0b — LAZY DATA LOADING (data/ic3/meta.json + data/ic3/<file>.json)
    ────────────────────────────────────────────────────────────
    Thay vì tải toàn bộ quiz_data.json (~1MB) ngay khi mở trang, ta:
@@ -79,10 +112,7 @@ async function _fetchLevelData(catId, levelId) {
     const metaLevel = _findMetaLevel(catId, levelId);
     if (metaLevel?.file) {
       try {
-        const res = await fetch(`data/ic3/${metaLevel.file}`, { cache: 'no-store' });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const full = await res.json();
-        return full;
+        return await _fetchJsonWithTimeout(`data/ic3/${metaLevel.file}`, { cache: 'no-store' });
       } catch (err) {
         console.warn(`[EduQuiz] Không tải được data/ic3/${metaLevel.file}, thử fallback quiz_data.json`, err.message);
       }
@@ -98,8 +128,7 @@ async function _fetchLevelData(catId, levelId) {
     // ── Bước 4b: tải nguyên quiz_data.json 1 lần rồi tự cache ──
     if (!window.quizFullData) {
       try {
-        const res = await fetch('quiz_data.json', { cache: 'no-store' });
-        if (res.ok) window.quizFullData = await res.json();
+        window.quizFullData = await _fetchJsonWithTimeout('quiz_data.json', { cache: 'no-store' });
       } catch (err) {
         console.warn('[EduQuiz] Không tải được quiz_data.json (fallback cuối):', err.message);
       }
@@ -116,15 +145,93 @@ async function _fetchLevelData(catId, levelId) {
   return result;
 }
 
+/* ============================================================
+   § 0c — LAZY-LOAD TỪNG MINITEST RIÊNG (thay vì cả file level)
+   ────────────────────────────────────────────────────────────
+   File data/ic3/<CAT>__<LV>.json gộp CHUNG mọi minitest của 1 khối
+   (7 chủ đề + 8 "Tiết N" + 35 "Bài N") — sau khi thêm bộ "Theo Tên bài"
+   cho cả 35 bài × 6 khối, mỗi file này nặng 0.5-1.2MB dù học sinh chỉ
+   chọn ĐÚNG 1 bài (~15 câu, thường chỉ 10-50KB thật sự cần dùng). Học
+   sinh mạng chậm/4G trường học phải tải cả file nặng đó trước khi được
+   vào thi → đúng kiểu "file nặng, dễ lag/đứng hình" mà cần tối ưu.
+
+   Khắc phục: scripts/split-minitests tách SẴN mỗi minitest ra 1 file
+   JSON riêng nhỏ (data/ic3/minitests/<cat>_<lv>/<slug>.json), kèm 1
+   file mục lục data/ic3/minitests-manifest.json ánh xạ
+   "CAT__LV" → { "Tên minitest": "đường dẫn file nhỏ" }. Học sinh chọn
+   minitest nào, CHỈ tải đúng file nhỏ đó — nhanh hơn 10-50 LẦN so với
+   tải cả file level cho trường hợp phổ biến nhất (chọn 1 bài cụ thể).
+
+   AN TOÀN NGƯỢC: nếu thiếu manifest, thiếu entry, hay fetch file nhỏ
+   lỗi (404/mạng) — tự động rơi về _fetchLevelData() (cách cũ, luôn
+   đúng) để không bao giờ làm học sinh KHÔNG vào thi được chỉ vì thiếu
+   bước build. "Tổng hợp"/"Tổng hợp Vui" vẫn cần toàn bộ CÁC CHỦ ĐỀ
+   THẬT (không cần Tiết N/Bài N) nên fetch song song đúng các file chủ
+   đề nhỏ, vẫn nhẹ hơn nhiều so với tải cả file level.
+   ============================================================ */
+let _minitestManifestPromise = null;
+function _loadMinitestManifest() {
+  if (!_minitestManifestPromise) {
+    _minitestManifestPromise = _fetchJsonWithTimeout('data/ic3/minitests-manifest.json', { cache: 'no-store', timeoutMs: 8000 })
+      .catch(() => ({})); // manifest là tối ưu "nice-to-have" — lỗi thì rơi về _fetchLevelData(), không chặn học sinh
+  }
+  return _minitestManifestPromise;
+}
+
+const _minitestCache = new Map(); // "CAT__LV__Tên minitest" → Promise<question[]>
+
 /**
- * Tải trước (prefetch) dữ liệu của 1 khối ngay khi học sinh vừa chọn xong
- * category/level trong lobby — tận dụng thời gian họ gõ tên/lớp/trường để
- * tải ngầm, giúp lúc bấm "Bắt đầu thi" gần như tức thì (0 chờ đợi).
- * Không throw lỗi ra ngoài vì đây chỉ là tối ưu UX, không phải luồng chính.
+ * Tải CHỈ đúng 1 minitest (nhẹ) thay vì cả file level (nặng). Luôn trả
+ * về mảng câu hỏi (rỗng nếu không tìm thấy ở cả 2 nguồn).
  */
-function _prefetchLevelData(catId, levelId) {
-  if (!catId || !levelId) return;
-  _fetchLevelData(catId, levelId).catch(() => {});
+async function _fetchMinitestQuestions(catId, levelId, name) {
+  const cacheKey = `${catId}__${levelId}__${name}`;
+  if (_minitestCache.has(cacheKey)) return _minitestCache.get(cacheKey);
+
+  const promise = (async () => {
+    try {
+      const manifest = await _loadMinitestManifest();
+      const relPath  = manifest?.[_levelKey(catId, levelId)]?.[name];
+      if (relPath) {
+        return await _fetchJsonWithTimeout(`data/ic3/${relPath}`, { cache: 'default', timeoutMs: 8000 });
+      }
+    } catch (err) {
+      console.warn(`[EduQuiz] Không tải được minitest tách nhỏ cho "${name}", rơi về file level đầy đủ:`, err.message);
+    }
+    // ── Rơi về cách cũ: tải cả file level rồi lọc đúng minitest ──
+    const fullLevel = await _fetchLevelData(catId, levelId);
+    return fullLevel?.minitests?.[name] || [];
+  })();
+
+  _minitestCache.set(cacheKey, promise);
+  return promise;
+}
+
+/**
+ * Tải song song ĐÚNG các minitest "chủ đề thật" (loại Tiết N/Bài N) để
+ * ghép bài "Tổng hợp"/"Tổng hợp Vui" — dùng meta.json (đã có sẵn trong
+ * State.quizData, không cần fetch gì thêm) để biết DANH SÁCH tên chủ đề
+ * trước, rồi mới tải đúng các file nhỏ tương ứng.
+ */
+async function _fetchTopicsForMix(catId, levelId) {
+  const lv = _findCategory(catId)?.levels?.find(l => l.id === levelId);
+  const topicNames = Object.keys(lv?.minitests || {}).filter(_isRealTopic);
+  const entries = await Promise.all(topicNames.map(async (name) => [name, await _fetchMinitestQuestions(catId, levelId, name)]));
+  return Object.fromEntries(entries);
+}
+
+/**
+ * Tải trước (prefetch) ĐÚNG minitest đang được chọn sẵn trong dropdown,
+ * ngay khi học sinh vừa chọn xong category/level (hoặc đổi lựa chọn
+ * minitest) — tận dụng thời gian họ gõ tên/lớp/trường để tải ngầm, giúp
+ * lúc bấm "Bắt đầu thi" gần như tức thì. Chỉ prefetch đúng 1 file nhỏ
+ * (không phải cả file level) — nhẹ hơn hẳn bản cũ. Không throw lỗi ra
+ * ngoài vì đây chỉ là tối ưu UX, không phải luồng chính.
+ */
+function _prefetchLevelData(catId, levelId, minitestName) {
+  if (!catId || !levelId || !minitestName) return;
+  if (minitestName === RANDOM_MIX_KEY || minitestName === RANDOM_MIX_PLAY_KEY) return; // mix tải lúc "Bắt đầu" là đủ
+  _fetchMinitestQuestions(catId, levelId, minitestName).catch(() => {});
 }
 
 function _findMetaLevel(catId, levelId) {
@@ -843,9 +950,7 @@ async function loadData() {
 
   try {
     // ── Ưu tiên: meta.json nhẹ (vài KB) để dựng lobby ─────────
-    const res = await fetch('data/ic3/meta.json', { cache: 'no-store' });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const meta = await res.json();
+    const meta = await _fetchJsonWithTimeout('data/ic3/meta.json', { cache: 'no-store' });
 
     window.quizRepository = meta;
     State.quizData = meta;
@@ -861,9 +966,7 @@ async function loadData() {
     //    → quay lại tải nguyên quiz_data.json như bản cũ ────────
     console.warn('[EduQuiz] ⚠ Không tải được data/ic3/meta.json, thử quiz_data.json...', err.message);
     try {
-      const res2 = await fetch('quiz_data.json', { cache: 'no-store' });
-      if (!res2.ok) throw new Error(`HTTP ${res2.status}`);
-      const data = await res2.json();
+      const data = await _fetchJsonWithTimeout('quiz_data.json', { cache: 'no-store' });
       window.quizFullData = data; // dùng làm nguồn cho _fetchLevelData()
       window.quizRepository = data;
       State.quizData = data;
@@ -1025,7 +1128,7 @@ function initLobby() {
       lvlSel.appendChild(new Option(lv.name, lv.id));
     });
     refreshMinitests();
-    _prefetchLevelData(catSel.value, lvlSel.value); // tải ngầm trước khi bấm "Bắt đầu thi"
+    _prefetchLevelData(catSel.value, lvlSel.value, mtSel.value); // tải ngầm ĐÚNG minitest đang chọn sẵn, trước khi bấm "Bắt đầu thi"
   };
 
   // ── Hàm cập nhật Minitest khi đổi Level ───────────────────
@@ -1115,6 +1218,10 @@ function initLobby() {
     const cat = _findCategory(catSel.value);
     const lv  = cat?.levels?.find(l => l.id === lvlSel.value);
     const isRandomMix = mtSel.value === RANDOM_MIX_KEY || mtSel.value === RANDOM_MIX_PLAY_KEY;
+    // Học sinh vừa đổi sang 1 minitest cụ thể khác (vd đổi "Bài 5" →
+    // "Bài 9") → tranh thủ tải ngầm luôn file nhỏ của lựa chọn MỚI, không
+    // đợi đến lúc bấm "Bắt đầu thi" mới tải.
+    _prefetchLevelData(catSel.value, lvlSel.value, mtSel.value);
     const minitests   = lv?.minitests || {};
     const mt    = isRandomMix ? null : minitests[mtSel.value];
     const count = isRandomMix
@@ -1181,7 +1288,7 @@ function initLobby() {
       if (lvlSel.value !== desiredLevel && [...lvlSel.options].some((o) => o.value === desiredLevel)) {
         lvlSel.value = desiredLevel;
         refreshMinitests();
-        _prefetchLevelData(catSel.value, lvlSel.value);
+        _prefetchLevelData(catSel.value, lvlSel.value, mtSel.value);
       }
     }
 
@@ -1258,17 +1365,19 @@ async function startExam() {
   const cat = _findCategory(catId);
   const lv  = cat?.levels?.find(l => l.id === lvlId);
 
-  // ── Tải câu hỏi đầy đủ của ĐÚNG khối này (lazy-load) ──────
+  // ── Tải ĐÚNG minitest cần dùng (lazy-load từng minitest, KHÔNG tải cả
+  // file level nặng — xem § 0c _fetchMinitestQuestions/_fetchTopicsForMix).
+  // "Tổng hợp"/"Tổng hợp Vui" vẫn cần nhiều chủ đề cùng lúc nên tải song
+  // song đúng các chủ đề thật, vẫn nhẹ hơn nhiều so với cả file level.
   const btn = document.getElementById('btnStart');
   const btnPrevText = btn?.innerHTML;
   if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải câu hỏi...'; }
 
-  const fullLevel = await _fetchLevelData(catId, lvlId);
   const isGameBreak = mtName === RANDOM_MIX_PLAY_KEY;
   const isRandomMix = mtName === RANDOM_MIX_KEY || isGameBreak;
   const rawQs = isRandomMix
-    ? buildRandomMixQuestions(fullLevel?.minitests, _randomMixTotalFor(catId, lvlId))
-    : fullLevel?.minitests?.[mtName];
+    ? buildRandomMixQuestions(await _fetchTopicsForMix(catId, lvlId), _randomMixTotalFor(catId, lvlId))
+    : await _fetchMinitestQuestions(catId, lvlId, mtName);
 
   if (btn) { btn.disabled = false; btn.innerHTML = btnPrevText; }
 
@@ -1281,10 +1390,15 @@ async function startExam() {
   // KHÔNG nhét icon HTML vào đây — chuỗi này còn được LƯU THẲNG vào
   // State.session.minitest (báo cáo/Firestore) lẫn hiện qua textContent
   // (dòng topbarInfo bên dưới, không render được HTML).
+  // Đếm số CHỦ ĐỀ THẬT từ meta (đã có sẵn trong `lv`, không cần fetch gì
+  // thêm) — trước đây đếm nhầm TOÀN BỘ khoá (gồm cả "Tiết N"/"Bài N"),
+  // sau khi thêm 35 "Bài N"/khối số này sai lệch rất xa (vd in ra "50 chủ
+  // đề" thay vì đúng 7).
+  const topicCountForLabel = Object.keys(lv?.minitests || {}).filter(_isRealTopic).length;
   const mtDisplayName = isGameBreak
-    ? `Tổng hợp Vui — ngẫu nhiên (${rawQs.length} câu, chia đều ${Object.keys(fullLevel?.minitests || {}).length} chủ đề, xen kẽ mini-game)`
+    ? `Tổng hợp Vui — ngẫu nhiên (${rawQs.length} câu, chia đều ${topicCountForLabel} chủ đề, xen kẽ mini-game)`
     : isRandomMix
-    ? `Tổng hợp — ngẫu nhiên (${rawQs.length} câu, chia đều ${Object.keys(fullLevel?.minitests || {}).length} chủ đề)`
+    ? `Tổng hợp — ngẫu nhiên (${rawQs.length} câu, chia đều ${topicCountForLabel} chủ đề)`
     : mtName;
 
   // ── Deep clone + chuẩn bị (shuffle order & options) ───────
@@ -1314,6 +1428,13 @@ async function startExam() {
     studentSchool: school,
     category:      cat?.name  || catId,
     level:         lv?.name   || lvlId,
+    // Giữ lại ID "thô" (khớp đúng key data/ic3/minitests-manifest.json,
+    // ví dụ "IC3__LV1") bên cạnh category/level (tên hiển thị thân thiện
+    // ở trên) — để mini-game "Chim Vượt Ải" tái sử dụng ĐÚNG file câu hỏi
+    // IC3 của chủ đề vừa thi (không tự suy ngược từ tên hiển thị, dễ sai
+    // lệch dấu câu/khoảng trắng). Xem _writeMiniGameContext() + § 9b.
+    catId:         catId,
+    levelId:       lvlId,
     minitest:      mtDisplayName,
     isRandomMix:   isRandomMix, // true = bài "Tổng hợp" (ngẫu nhiên chia đều chủ đề) — dùng để xét mở khóa Khu Vui Chơi
     examMode:      State.examMode, // 'practice' | 'test' — ghi lại để lịch sử/báo cáo phân biệt được 2 dạng
@@ -1620,7 +1741,34 @@ function nextQ() {
    ============================================================ */
 const GAME_BREAK_GAMES = [
   { file: 'memory-game.html', label: '<i class="fa-solid fa-brain"></i> Trí Nhớ Thiết Bị' },
+  { file: 'mario-flappy.html', label: '<i class="fa-solid fa-dove"></i> Chim Vượt Ải' },
 ];
+
+/**
+ * Ghi "bối cảnh" bài thi ĐANG/VỪA làm vào localStorage để mini-game mở ra
+ * sau đó (qua <iframe>, cùng origin) tự đọc lại — KHÔNG tạo bộ câu hỏi
+ * riêng cho mini-game: Chim Vượt Ải dùng key này để biết đúng
+ * category/level/topic vừa thi, rồi tự tải lại ĐÚNG file câu hỏi IC3 nhỏ
+ * tương ứng trong data/ic3/minitests/ (xem _fetchMinitestQuestions() ở
+ * trên) cho "cổng câu hỏi" trong game — y hệt cách js/game-zone-gate.js
+ * đã dùng 'eduquiz_current_student' để truyền học sinh đang chọn.
+ * @param {string} source — 'gamebreak' (giữa bài, chưa có điểm) | 'result' (sau khi nộp bài, có điểm)
+ * @param {Object} [extra] — override thêm (vd. scorePercent/correct/total lúc source='result')
+ */
+function _writeMiniGameContext(source, extra) {
+  const s = State.session || {};
+  const ctx = Object.assign({
+    source,
+    catId:        s.catId || '',
+    levelId:      s.levelId || '',
+    topic:        s.minitest || '',
+    isRandomMix:  !!s.isRandomMix,
+    enableKnowledgeGate: false, // mặc định TẮT — mini-game chỉ để giải trí, không bắt làm quiz lại; bật lại ở extra nếu muốn
+    updatedAt:    Date.now(),
+  }, extra || {});
+  try { localStorage.setItem('eduquiz_minigame_context', JSON.stringify(ctx)); }
+  catch (e) { /* không chặn mở mini-game chỉ vì ghi context thất bại */ }
+}
 
 /** Mốc (các) câu hỏi (0-based, tính theo "current" NGAY TRƯỚC khi bấm
  * Câu tiếp) để chèn mini-game — chia bài làm 3 chặng ~đều nhau (~1/3 và
@@ -1685,6 +1833,7 @@ function showGameBreak(onContinue) {
   // innerHTML (không phải textContent) — pick.label chứa sẵn thẻ <i> Font
   // Awesome (đọc từ GAME_BREAK_GAMES, hằng số tự viết, an toàn).
   document.getElementById('gameBreakTitle').innerHTML = `<i class="fa-solid fa-gamepad"></i> Giải lao chút nhé! — ${pick.label}`;
+  _writeMiniGameContext('gamebreak'); // bài đang làm dở — chưa có điểm, chỉ truyền chủ đề (xem _writeMiniGameContext())
   const frame = document.getElementById('gameBreakFrame');
   frame.src = pick.file;
   ov.classList.add('show');
@@ -3506,6 +3655,14 @@ function submitExam() {
       if ((!res || res.success === false) && window.EduPendingSync) {
         window.EduPendingSync.enqueue('google_sheet', sheetData);
       }
+    }).catch(err => {
+      // Phòng thủ thêm: saveToGoogleSheet() tự bắt lỗi bên trong (trả về
+      // {success:false}) nên nhánh này hiếm khi chạy, nhưng nếu có lỗi lọt
+      // ra ngoài (promise reject thật) thì vẫn phải đẩy vào hàng đợi gửi
+      // lại — không được để 1 unhandled rejection làm mất bản ghi Google
+      // Sheet mà học sinh không hề biết.
+      console.warn('[EduQuiz] saveToGoogleSheet() reject ngoài dự kiến:', err);
+      if (window.EduPendingSync) window.EduPendingSync.enqueue('google_sheet', sheetData);
     });
   }
 
@@ -3543,6 +3700,13 @@ function submitExam() {
       if (!res.success && window.EduPendingSync) {
         window.EduPendingSync.enqueue('firestore_quiz_result', firestorePayload);
       }
+    }).catch(err => {
+      // Tương tự nhánh Google Sheet ở trên — saveResultToFirestore() tự
+      // bắt lỗi nội bộ nên đây là lưới an toàn cho trường hợp lọt ngoài dự
+      // kiến, đảm bảo bài thi KHÔNG BAO GIỜ "biến mất" khỏi ic3-dashboard
+      // chỉ vì 1 promise reject không ai bắt.
+      console.warn('[EduQuiz] saveResultToFirestore() reject ngoài dự kiến:', err);
+      if (window.EduPendingSync) window.EduPendingSync.enqueue('firestore_quiz_result', firestorePayload);
     });
   }
 }
@@ -3811,7 +3975,18 @@ function saveRecord(result, elapsedSec, integrity) {
   const s   = State.session;
   const pct = Math.round((result.correct / result.total) * 100);
   const rec = {
-    id:            Date.now(),
+    // Date.now() thô có thể TRÙNG nếu 2 tab/thiết bị cùng nộp bài trong
+    // đúng cùng 1 mili-giây (vd. 2 tab cùng F5 lại trang gần như đồng
+    // thời) — rec.id còn được dùng làm KHOÁ SO SÁNH (vd.
+    // js/game-zone-gate.js § latestRandomMixRecord() sort theo
+    // `(b.id||0)-(a.id||0)` để tìm bài Tổng hợp GẦN NHẤT) nên 2 bản ghi
+    // trùng id có thể khiến bài làm sau bị coi "cùng lúc" với bài trước,
+    // sai lệch thứ tự. Nhân thêm 1000 + số ngẫu nhiên 0-999 để giữ
+    // NGUYÊN tính chất số + thứ tự tăng dần theo thời gian (vẫn trừ được
+    // bình thường) nhưng giảm xác suất trùng từ "gần như chắc chắn" (2
+    // request cùng 1ms) xuống còn 1/1000 — không đổi kiểu dữ liệu (vẫn
+    // là number) nên không cần sửa bất kỳ chỗ nào khác đang đọc rec.id.
+    id:            Date.now() * 1000 + Math.floor(Math.random() * 1000),
     studentName:   s.studentName,
     studentClass:  s.studentClass  || '',
     studentSchool: s.studentSchool || '',
@@ -3870,6 +4045,66 @@ function saveRecord(result, elapsedSec, integrity) {
 }
 
 /* ============================================================
+   § 18b — VÒNG TRÒN % ĐIỂM + THANH TỈ LỆ + SO SÁNH LẦN TRƯỚC
+   (UI thuần SVG/CSS, không thêm thư viện chart nào vào trang học sinh)
+   ============================================================ */
+const RESULT_RING_CIRC = 2 * Math.PI * 54; // khớp bán kính r=54 của <circle> trong index.html
+
+/** Tô vòng tròn % điểm — màu đổi theo mốc điểm giống logo/emoji kết quả. */
+function applyResultRing(pct) {
+  const ring = document.getElementById('resultRingProgress');
+  if (!ring) return;
+  const clamped = Math.max(0, Math.min(100, pct));
+  ring.style.strokeDasharray  = `${RESULT_RING_CIRC}`;
+  ring.style.strokeDashoffset = `${RESULT_RING_CIRC * (1 - clamped / 100)}`;
+  ring.style.stroke =
+    clamped >= 90 ? 'var(--teal)'  :
+    clamped >= 70 ? 'var(--purple)':
+    clamped >= 50 ? 'var(--yellow)': 'var(--red)';
+}
+
+/** Thanh tỉ lệ Đúng/Sai/Bỏ qua — trực quan hơn 3 con số thô ở trên. */
+function applyResultBar(correct, incorrect, skipped, total) {
+  const safeTotal = total || (correct + incorrect + skipped) || 1;
+  const pctOf = (n) => `${(n / safeTotal * 100).toFixed(1)}%`;
+  const elC = document.getElementById('resultBarCorrect');
+  const elI = document.getElementById('resultBarIncorrect');
+  const elS = document.getElementById('resultBarSkipped');
+  if (elC) elC.style.width = pctOf(correct);
+  if (elI) elI.style.width = pctOf(incorrect);
+  if (elS) elS.style.width = pctOf(skipped);
+}
+
+/**
+ * So điểm lần này với lần làm GẦN NHẤT của ĐÚNG cùng học sinh + cùng
+ * Chương trình/Cấp độ/Minitest — đọc từ lịch sử local 'eduquiz_records'
+ * (không cần tài khoản). saveRecord() đã unshift bản ghi VỪA LƯU lên
+ * đầu mảng TRƯỚC KHI showResult() chạy, nên phải bỏ qua phần tử [0]
+ * (chính là bài vừa nộp) khi tìm "lần trước" — nếu không sẽ luôn so
+ * sánh 1 bài với chính nó (chênh lệch = 0).
+ */
+function renderResultCompare(currentPct) {
+  const el = document.getElementById('resultCompare');
+  if (!el) return;
+  const s = State.session || {};
+  const records = _readRecordsSafe();
+  const prev = records.slice(1).find(r =>
+    r.studentName === s.studentName &&
+    r.category === s.category &&
+    r.level === s.level &&
+    r.minitest === s.minitest
+  );
+
+  if (!prev) { el.hidden = true; el.innerHTML = ''; return; }
+
+  const diff = currentPct - prev.score;
+  const iconClass = diff > 0 ? 'fa-arrow-up rc-up' : diff < 0 ? 'fa-arrow-down rc-down' : 'fa-equals rc-same';
+  const diffText  = diff === 0 ? 'bằng lần trước' : `${diff > 0 ? '+' : ''}${diff} điểm so với lần trước`;
+  el.hidden = false;
+  el.innerHTML = `<i class="fa-solid ${iconClass}"></i> Lần trước: ${prev.score}% — ${diffText}`;
+}
+
+/* ============================================================
    § 19 — SHOW RESULT
    ============================================================ */
 
@@ -3880,6 +4115,13 @@ function showResult(result, integrity) {
   document.getElementById('result').style.display = 'flex';
 
   const pct = Math.round((correct / total) * 100);
+  // Lưu lại để openMarioFlappyReward() (nút "Giải lao: Chim Vượt Ải" ở
+  // màn Kết quả) dùng — không đọc lại từ 'eduquiz_records' vì bản ghi đó
+  // còn lẫn các trường nội bộ (integrity/flags...) không cần cho mini-game.
+  State.lastResultSummary = { correct, incorrect, skipped, total, scorePercent: pct };
+  applyResultRing(pct);
+  applyResultBar(correct, incorrect, skipped, total);
+  renderResultCompare(pct);
 
   document.getElementById('resultScore').textContent = `${pct}%`;
   document.getElementById('rCorrect').textContent    = correct;
@@ -3933,6 +4175,40 @@ function showResult(result, integrity) {
   }
 
   if (pct >= 70) launchConfetti();
+}
+
+/**
+ * Nút "🐥 Giải lao: Chim Vượt Ải" ở màn Kết quả (xem index.html, gần
+ * #openGameZoneBtn) — KHÔNG bị khóa như Khu Vui Chơi (không yêu cầu
+ * ≥90%/bài Tổng hợp), vì đây chỉ là gợi ý giải trí tùy chọn sau MỌI bài
+ * thi, không phải phần thưởng cần "mở khóa".
+ *
+ * QUAN TRỌNG: KHÔNG được bấm hộ nút gốc #openMarioFlappyBtn (dù nút đó
+ * đã có sẵn toàn bộ logic mở modal/nạp iframe qua js/game-modal.js) — nút
+ * đó còn nằm trong GAME_BTN_IDS của js/game-zone-gate.js, vốn gắn thêm 1
+ * listener "click" riêng để TIÊU THỤ lượt mở khóa Khu Vui Chơi (single-use,
+ * cần ≥90% bài Tổng hợp) mỗi khi nó được bấm. Nếu gọi `.click()` ở đây,
+ * 1 học sinh VỪA đạt ≥90% (đang ở trạng thái "đã mở khóa, CHƯA dùng") mà
+ * bấm nút "Giải lao" này sẽ bị tiêu mất lượt mở khóa Khu Vui Chơi oan —
+ * dù họ chưa hề mở Khu Vui Chơi. Vì vậy tự mở modal/nạp iframe TRỰC TIẾP ở
+ * đây (y hệt logic openModal() không-persist của js/game-modal.js) thay vì
+ * tái dùng nút gốc, để 2 lối vào (Khu Vui Chơi vs "Giải lao" ở đây) hoàn
+ * toàn độc lập với nhau.
+ */
+function openMarioFlappyReward() {
+  const r = State.lastResultSummary;
+  _writeMiniGameContext('result', r ? {
+    scorePercent: r.scorePercent,
+    correct:      r.correct,
+    total:        r.total,
+  } : null);
+
+  const overlay = document.getElementById('marioFlappyModalOverlay');
+  const frame    = document.getElementById('marioFlappyModalFrame');
+  if (!overlay || !frame) return;
+  if (frame.dataset.src) frame.setAttribute('src', frame.dataset.src); // luôn nạp lại (persist:false, ván chơi mới mỗi lần mở)
+  overlay.classList.add('show');
+  document.body.style.overflow = 'hidden';
 }
 
 /* ============================================================

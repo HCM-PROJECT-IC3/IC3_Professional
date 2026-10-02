@@ -49,7 +49,8 @@
     'openBattleQuizBtn',
     'openCyberDetectiveBtn',
     'openComputerSimBtn',
-    'openSortGameBtn'
+    'openSortGameBtn',
+    'openMarioFlappyBtn'
   ];
 
   function init() {

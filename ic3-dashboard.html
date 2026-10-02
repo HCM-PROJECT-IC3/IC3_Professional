@@ -2,6 +2,7 @@
 <html lang="vi" data-theme="light">
 <head>
 <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IC3 Quiz Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&amp;family=Baloo+2:wght@700;800&amp;display=swap" rel="stylesheet">
@@ -228,7 +229,7 @@
             <option value="all">Toàn bộ</option>
           </select>
         </div>
-        <button type="button" class="btn-refresh" onclick="updateReportTab()" title="Tải lại dữ liệu"><i class="fa-solid fa-arrow-rotate-right"></i> Làm mới</button>
+        <button type="button" class="btn-refresh" onclick="updateReportTab(true)" title="Tải lại dữ liệu"><i class="fa-solid fa-arrow-rotate-right"></i> Làm mới</button>
       </div>
 
       <!-- Stats Row -->
@@ -434,6 +435,12 @@
      hàm phụ thuộc examHistories (topStudents/studentsNeedingSupport/
      completionRate). -->
 <script src="js/services/analytics-service.js"></script>
+<!-- Cache tạm (sessionStorage, TTL ngắn) cho tab "Báo cáo kết quả" — xem
+     js/dashboard.js § updateReportTab(). Tránh đọc lại TOÀN BỘ collection
+     "quiz_results" mỗi lần F5/mở lại trang (trước đây chỉ cache bằng biến
+     JS _reportRawDocs nên mất ngay khi tải lại trang — nguyên nhân chính
+     gây đột biến lượt đọc Firestore). Nạp TRƯỚC dashboard.js. -->
+<script src="js/services/data-cache-service.js"></script>
 <script src="js/dashboard.js"></script>
 <script src="js/motion.js"></script>
 </body>

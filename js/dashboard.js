@@ -543,13 +543,36 @@ let _reportFiltered  = [];    // bản ghi sau khi áp bộ lọc (dùng để x
 let _reportCharts    = {};    // instance Chart.js đang hiển thị (để destroy trước khi vẽ lại)
 let _reportFiltersBuilt = false;
 
-/** Tải dữ liệu (nếu chưa có cache) rồi áp bộ lọc + vẽ lại toàn bộ báo cáo. */
-async function updateReportTab() {
+// Cache phụ (sessionStorage, TTL ngắn) qua js/services/data-cache-service.js
+// — SỐNG QUA F5/mở lại trang, khác với _reportRawDocs (chỉ là biến JS, mất
+// ngay khi tải lại trang). Đây là nguyên nhân từng gây đột biến lượt đọc
+// Firestore: mỗi lần F5 tab "Báo cáo kết quả" đều đọc lại TOÀN BỘ collection
+// "quiz_results" (không có where, tới 10.000 bản ghi) dù dữ liệu chưa đổi.
+// TTL 3 phút khớp đúng quy ước RESULTS_CACHE_TTL_MS của
+// coordinator/teacher data-loader.js cho cùng collection này.
+const REPORT_CACHE_KEY = 'ic3_dashboard_report_quiz_results';
+const REPORT_CACHE_TTL_MS = 3 * 60 * 1000;
+
+/**
+ * Tải dữ liệu (nếu chưa có cache) rồi áp bộ lọc + vẽ lại toàn bộ báo cáo.
+ * @param {boolean} [forceRefresh] true khi bấm nút "🔄 Làm mới" — bỏ qua cả
+ *   cache trong biến JS lẫn cache sessionStorage, luôn đọc lại từ Firestore.
+ */
+async function updateReportTab(forceRefresh = false) {
   const body = document.getElementById('reportBody');
 
   if (!window.EduFirebase || !window.EduFirebase.db) {
     body.innerHTML = `<tr><td colspan="6" class="table-empty-cell"><i class="fa-solid fa-triangle-exclamation"></i> Chưa kết nối được Firestore.</td></tr>`;
     return;
+  }
+
+  if (forceRefresh) {
+    _reportRawDocs = null;
+    if (window.EduDataCache) window.EduDataCache.clear(REPORT_CACHE_KEY);
+  }
+
+  if (_reportRawDocs === null && window.EduDataCache) {
+    _reportRawDocs = window.EduDataCache.get(REPORT_CACHE_KEY);
   }
 
   if (_reportRawDocs === null) {
@@ -569,11 +592,16 @@ async function updateReportTab() {
         .limit(10000)
         .get();
       _reportRawDocs = snap.docs.map(doc => {
-        const d = doc.data();
+        // KHÔNG giữ lại field "submittedAt" thô (Firestore Timestamp) trong
+        // bản ghi cache — JSON.stringify (lúc EduDataCache.set() lưu vào
+        // sessionStorage) làm mất method .toMillis(), và không chỗ nào khác
+        // trong file này đọc lại field thô đó (chỉ dùng submittedAtMs).
+        const { submittedAt, ...d } = doc.data();
         return Object.assign({ id: doc.id }, d, {
-          submittedAtMs: d.submittedAt && d.submittedAt.toMillis ? d.submittedAt.toMillis() : Date.now(),
+          submittedAtMs: submittedAt && submittedAt.toMillis ? submittedAt.toMillis() : Date.now(),
         });
       });
+      if (window.EduDataCache) window.EduDataCache.set(REPORT_CACHE_KEY, _reportRawDocs, REPORT_CACHE_TTL_MS);
     } catch (err) {
       console.error('[EduQuiz] Lỗi tải báo cáo Firestore:', err);
       body.innerHTML = `<tr><td colspan="6" class="table-empty-cell"><i class="fa-solid fa-circle-xmark"></i> Không tải được dữ liệu: ${err.message}</td></tr>`;
@@ -592,7 +620,11 @@ function buildReportFilterOptions(docs) {
   const testSel  = document.getElementById('filterTest');
 
   const classes = [...new Set(docs.map(d => d.studentClass).filter(Boolean))].sort();
-  const tests   = [...new Set(docs.map(d => d.testName).filter(Boolean))].sort();
+  // So theo SỐ "Bài N" thay vì bảng chữ cái (tránh Bài 1, Bài 10, Bài 11,
+  // Bài 2...) — dùng chung window.EduAnalytics.compareNatural() với
+  // coordinator/teacher dashboard thay vì tự viết lại. .sort() mặc định
+  // (so chuỗi) là lưới an toàn nếu analytics-service.js chưa kịp nạp.
+  const tests   = [...new Set(docs.map(d => d.testName).filter(Boolean))].sort(window.EduAnalytics?.compareNatural);
 
   classes.forEach(c => classSel.insertAdjacentHTML('beforeend', `<option value="${escHtml(c)}">${escHtml(c)}</option>`));
   tests.forEach(t => testSel.insertAdjacentHTML('beforeend', `<option value="${escHtml(t)}">${escHtml(t)}</option>`));

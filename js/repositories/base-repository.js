@@ -14,6 +14,19 @@
 (function (global) {
   'use strict';
 
+  // Trần mặc định cho list() khi gọi KHÔNG truyền options.limit — phòng
+  // ngừa 1 lời gọi quên truyền limit đọc nguyên cả collection nếu sau này
+  // nó phình to ngoài dự tính. LƯU Ý: studentRoster.list({where: status ==
+  // active}) (coordinator/teacher data-loader.js) hiện ĐANG gọi không
+  // limit để lấy ĐỦ roster toàn trường (có thể hàng nghìn học sinh) — nên
+  // trần này PHẢI đặt bằng đúng mức trần TỐI ĐA Firestore cho phép mỗi
+  // query (10.000, giống hằng số đã dùng ở js/dashboard.js §
+  // updateReportTab()), KHÔNG đặt thấp hơn, nếu không sẽ âm thầm cắt bớt
+  // danh sách học sinh của các trường lớn. Đây chỉ là lưới an toàn cho lời
+  // gọi THỰC SỰ quên truyền limit (vd. collection nhỏ như
+  // "classes"/"courses"), không nhằm giới hạn dữ liệu cần thiết.
+  const DEFAULT_LIST_LIMIT = 10000;
+
   class BaseRepository {
     /** @param {string} collectionName Tên collection Firestore */
     constructor(collectionName) {
@@ -44,8 +57,17 @@
       let q = this.col();
       (options.where || []).forEach(([field, op, value]) => { q = q.where(field, op, value); });
       if (options.orderBy) q = q.orderBy(options.orderBy, options.direction || 'asc');
-      if (options.limit) q = q.limit(options.limit);
+      const appliedLimit = options.limit || DEFAULT_LIST_LIMIT;
+      q = q.limit(appliedLimit);
       const snap = await q.get();
+      // Số bản ghi trả về CHẠM ĐÚNG trần đã áp (nhất là khi trần là
+      // DEFAULT_LIST_LIMIT ngầm định, không phải limit cố ý của caller) rất
+      // có thể là dấu hiệu bị CẮT BỚT (collection còn nhiều hơn) chứ không
+      // phải trùng hợp — cảnh báo ra console để không âm thầm thiếu dữ liệu
+      // mà không ai biết, thay vì phải đoán sau này.
+      if (snap.docs.length === appliedLimit) {
+        console.warn(`[EduRepository] list('${this.collectionName}') trả về đúng ${appliedLimit} bản ghi (chạm trần limit) — có thể còn dữ liệu bị cắt bớt, cân nhắc truyền limit cao hơn hoặc phân trang.`);
+      }
       return snap.docs.map((doc) => Object.assign({ id: doc.id }, doc.data()));
     }
 
