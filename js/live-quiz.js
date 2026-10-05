@@ -47,6 +47,17 @@
       delete button.dataset.originalLabel;
     }
   }
+  // Hạn mức Firebase Spark đặt lại lúc 0h giờ Thái Bình Dương ≈ 14h-15h chiều giờ Việt Nam.
+  var QUOTA_MSG = 'Firebase đã hết lượt miễn phí hôm nay. Thử lại sau khoảng 14-15h chiều (giờ VN).';
+  // Âm thanh/hiệu ứng (js/game-sfx.js, js/game-fx.js — chạy trên máy, không tốn lượt Firebase).
+  // Mỗi khoảnh khắc chỉ phát 1 lần dù document phòng được vẽ lại nhiều lần.
+  var playedFx = {};
+  function fxOnce(key, fn) {
+    if (playedFx[key]) return;
+    playedFx[key] = true;
+    try { fn(); } catch (e) { /* hiệu ứng chỉ là phụ */ }
+  }
+  function sfx(name) { if (window.EduSFX) window.EduSFX.play(name); }
   function cleanName(value) { return String(value || '').replace(/[<>]/g, '').trim().slice(0, 24); }
   function createCode() {
     var bytes = new Uint8Array(8);
@@ -230,6 +241,7 @@
   }
   function submitAnswer(choiceIndex, button) {
     if (!roomData || roomData.status !== 'question' || !button || button.disabled) return;
+    sfx('click');
     Array.prototype.forEach.call(el.answerGrid.querySelectorAll('button'), function (item) { item.disabled = true; });
     roomRef.collection('answers').doc(currentUser.uid).set({
       uid: currentUser.uid, questionIndex: roomData.questionIndex, choiceIndex: choiceIndex, submittedAt: serverTimestamp()
@@ -270,8 +282,12 @@
     if (top.length) el.revealSubtext.textContent += ' Top: ' + top.map(function (pl, i) { return (i + 1) + '. ' + (pl.name || 'Người chơi') + ' (' + (pl.score || 0) + ')'; }).join(' · ');
     if (isHost) return;
     var mine = myAnswer && myAnswer.questionIndex === roomData.questionIndex ? myAnswer.choiceIndex : null;
+    var right = mine !== null && correctIndexes.indexOf(mine) !== -1;
     if (mine === null) el.revealTitle.textContent = 'Bạn chưa trả lời kịp';
-    else el.revealTitle.textContent = correctIndexes.indexOf(mine) !== -1 ? 'Chính xác! 🎉' : 'Chưa đúng — cố lên!';
+    else el.revealTitle.textContent = right ? 'Chính xác! 🎉' : 'Chưa đúng — cố lên!';
+    var streak = roomData.streaks && currentUser ? (roomData.streaks[currentUser.uid] || 0) : 0;
+    if (right && streak >= 2) el.revealTitle.textContent = '🔥 Chuỗi ' + streak + ' câu đúng! +' + Math.min(500, 100 * (streak - 1)) + ' điểm thưởng';
+    fxOnce(roomRef.id + ':reveal:' + roomData.questionIndex, function () { if (mine !== null) sfx(right ? (streak >= 3 ? 'combo' : 'correct') : 'wrong'); });
   }
   function renderFinalScores() {
     el.finalScores.textContent = '';
@@ -282,7 +298,36 @@
       score.textContent = String(player.score || 0) + ' điểm';
       item.appendChild(score); el.finalScores.appendChild(item);
     });
+    el.exportScoresButton.hidden = !isHost;
+    var board = roomData.leaderboard || [];
+    var myRank = -1;
+    if (!isHost && currentUser && roomData.scores) {
+      var myPoints = myScore();
+      myRank = board.findIndex(function (row) { return row.score === myPoints; });
+    }
+    fxOnce(roomRef.id + ':finish', function () {
+      if (isHost || (myRank >= 0 && myRank < 3)) {
+        sfx('win');
+        if (window.EduFX) window.EduFX.confetti();
+      } else sfx('flip');
+    });
     el.finishTitle.textContent = !isHost && currentUser && roomData.scores && roomData.scores[currentUser.uid] !== undefined ? 'Bạn đạt ' + myScore() + ' điểm' : 'Cảm ơn cả lớp đã chơi!';
+  }
+  // Bảng điểm ĐẦY ĐỦ cả phòng (không chỉ top 10) từ dữ liệu người dẫn đã có sẵn — không tốn lượt Firebase.
+  function exportScores() {
+    if (!isHost || !roomData) return;
+    var pts = roomData.scores || {};
+    var rows = players.map(function (p) { return { name: p.name || 'Người chơi', score: pts[p.id] || 0 }; })
+      .sort(function (a, b) { return b.score - a.score; });
+    var quote = function (v) { return '"' + String(v).replace(/"/g, '""') + '"'; };
+    var lines = ['Hạng,Biệt danh,Điểm'].concat(rows.map(function (r, i) { return (i + 1) + ',' + quote(r.name) + ',' + r.score; }));
+    // BOM để Excel đọc đúng tiếng Việt (UTF-8).
+    var blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    var link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'bang-diem-phong-' + roomRef.id + '-' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(link); link.click(); link.remove();
+    setTimeout(function () { URL.revokeObjectURL(link.href); }, 1000);
   }
   function scheduleFinalize() {
     var index = roomData.questionIndex;
@@ -306,16 +351,26 @@
     });
     var deadlineMs = latest.deadline.toMillis();
     var scores = Object.assign({}, latest.scores || {});
+    // Chuỗi đúng liên tiếp (kiểu Kahoot): từ câu đúng thứ 2 liên tiếp được thưởng +100/câu
+    // trong chuỗi, tối đa +500. Sai/không trả lời → về 0. Nằm chung document phòng, không tốn thêm lượt ghi.
+    var streaks = Object.assign({}, latest.streaks || {});
     var board = [];
     players.forEach(function (player) {
       var answer = liveAnswers[player.uid];
       var score = scores[player.uid] || 0;
+      var correct = false;
       if (answer && answer.questionIndex === index) {
         var submittedMs = answer.submittedAt && answer.submittedAt.toMillis ? answer.submittedAt.toMillis() : deadlineMs;
         var qMs = questionMs();
         var elapsed = Math.max(0, Math.min(qMs, submittedMs - (deadlineMs - qMs)));
-        if (correctIndexes.indexOf(answer.choiceIndex) !== -1) score = Math.min(25000, score + 1000 + Math.round(500 * (qMs - elapsed) / qMs));
+        correct = correctIndexes.indexOf(answer.choiceIndex) !== -1;
+        if (correct) {
+          var streak = (streaks[player.uid] || 0) + 1;
+          var bonus = Math.min(500, 100 * (streak - 1));
+          score = Math.min(25000, score + 1000 + Math.round(500 * (qMs - elapsed) / qMs) + bonus);
+        }
       }
+      streaks[player.uid] = correct ? (streaks[player.uid] || 0) + 1 : 0;
       scores[player.uid] = score;
       board.push({ name: player.name || 'Người chơi', score: score });
     });
@@ -325,11 +380,12 @@
       currentQuestion: Object.assign({}, latest.currentQuestion, { correctIndexes: correctIndexes }),
       leaderboard: board.slice(0, 10),
       scores: scores,
+      streaks: streaks,
       deadline: null
     }).catch(function (error) {
       console.error('[LiveQuiz] Không thể chốt câu trả lời:', error);
       scheduledKey = '';
-      showStatus('Không chốt được câu (' + (error.code || 'lỗi') + '). Kiểm tra Rules và kết nối Firebase.', true);
+      showStatus(error.code === 'resource-exhausted' ? QUOTA_MSG : 'Không chốt được câu (' + (error.code || 'lỗi') + '). Kiểm tra Rules và kết nối Firebase.', true);
     });
   }
   function scheduleAdvance() {
@@ -339,7 +395,15 @@
     clearTimeout(timerHandle); scheduledKey = key;
     timerHandle = setTimeout(function () {
       if (index + 1 >= roomData.questionCount) {
-        roomRef.update({ status: 'finished', deadline: null }).catch(function (error) { showStatus(error.message, true); });
+        var room = roomRef;
+        room.update({ status: 'finished', deadline: null }).then(function () {
+          // Câu trả lời không còn cần sau khi chốt điểm (điểm + top 10 nằm trong document phòng).
+          // TTL không xoá subcollection nên tự dọn ở đây: id answer = uid người chơi đã biết sẵn
+          // → xoá thẳng, không tốn lượt đọc. Người chơi giữ lại để còn tải bảng điểm đầy đủ.
+          var batch = firebase.firestore().batch();
+          players.slice(0, 450).forEach(function (p) { batch.delete(room.collection('answers').doc(p.id)); });
+          return batch.commit();
+        }).catch(function (error) { showStatus(error.message, true); });
       } else publishQuestion(index + 1);
     }, REVEAL_MS);
   }
@@ -385,7 +449,7 @@
     lobbyView: byId('lobbyView'), questionView: byId('questionView'), revealView: byId('revealView'), finishedView: byId('finishedView'),
     closedView: byId('closedView'), questionProgress: byId('questionProgress'), timerText: byId('timerText'), timerBar: byId('timerBar'),
     questionText: byId('questionText'), answerGrid: byId('answerGrid'), revealTitle: byId('revealTitle'), revealAnswer: byId('revealAnswer'),
-    revealSubtext: byId('revealSubtext'), finishTitle: byId('finishTitle'), finalScores: byId('finalScores'), toast: byId('toast')
+    revealSubtext: byId('revealSubtext'), finishTitle: byId('finishTitle'), finalScores: byId('finalScores'), exportScoresButton: byId('exportScoresButton'), toast: byId('toast')
   };
 
   el.createForm.addEventListener('submit', async function (event) {
@@ -423,7 +487,7 @@
     } catch (error) {
       console.error('[LiveQuiz] Tạo phòng lỗi:', error);
       showStatus(error.message || 'Không tạo được phòng. Kiểm tra cấu hình Firebase.', true);
-      notify(error.code === 'permission-denied' ? 'Không tạo được: đợi 30 giây giữa 2 lần tạo phòng, hoặc kiểm tra Rules/Anonymous Auth.' : (error.message || 'Không tạo được phòng.'));
+      notify(error.code === 'resource-exhausted' ? QUOTA_MSG : error.code === 'permission-denied' ? 'Không tạo được: đợi 30 giây giữa 2 lần tạo phòng, hoặc kiểm tra Rules/Anonymous Auth.' : (error.message || 'Không tạo được phòng.'));
     } finally { setBusy(button, false); }
   });
 
@@ -447,7 +511,7 @@
       enterRoom(code, false);
     } catch (error) {
       showStatus(error.message || 'Không vào được phòng.', true);
-      notify(error.code === 'permission-denied' ? 'Không được phép tham gia. Kiểm tra Firestore Rules.' : (error.message || 'Không vào được phòng.'));
+      notify(error.code === 'resource-exhausted' ? QUOTA_MSG : error.code === 'permission-denied' ? 'Không được phép tham gia. Kiểm tra Firestore Rules.' : (error.message || 'Không vào được phòng.'));
     } finally { setBusy(button, false); }
   });
 
@@ -459,6 +523,7 @@
     navigator.clipboard.writeText(link).then(function () { notify('Đã sao chép link mời. Dán cho cả lớp!'); }).catch(function () { notify('Link mời: ' + link); });
   });
   el.deleteRoomButton.addEventListener('click', deleteRoomData);
+  el.exportScoresButton.addEventListener('click', exportScores);
   byId('staffLoginLink').addEventListener('click', function (event) {
     event.preventDefault();
     EduFirebase.auth.signOut().finally(function () { window.location.href = 'login.html?next=live-quiz.html'; });

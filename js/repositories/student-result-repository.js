@@ -43,7 +43,19 @@
       if (entry && Array.isArray(entry.rows) && entry.rows.length) {
         const lastMs = entry.rows.reduce((m, r) => Math.max(m, r.submittedAtMs || 0), 0);
         const where = lastMs ? [['submittedAt', '>', global.firebase.firestore.Timestamp.fromMillis(lastMs - 1)]] : [];
-        const fresh = await this.listRecent({ schools, limit, extraWhere: where });
+        let fresh;
+        try {
+          fresh = await this.listRecent({ schools, limit, extraWhere: where });
+        } catch (err) {
+          // Hết hạn mức đọc trong ngày / mất mạng: vẫn hiện dữ liệu đã có thay vì báo lỗi trắng.
+          console.warn('[EduRepository] Không tải được kết quả mới, dùng dữ liệu đã lưu:', err.message);
+          global.dispatchEvent(new CustomEvent('edu:toast', {
+            detail: err.code === 'resource-exhausted'
+              ? '⚠️ Firebase đã hết lượt đọc hôm nay — đang hiện dữ liệu đã lưu, chưa có bài nộp mới.'
+              : '⚠️ Chưa tải được bài nộp mới — đang hiện dữ liệu đã lưu.',
+          }));
+          return entry.rows;
+        }
         const byId = new Map(entry.rows.map((r) => [r.id, r]));
         fresh.forEach((r) => byId.set(r.id, r));
         rows = Array.from(byId.values())

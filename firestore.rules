@@ -381,12 +381,14 @@ service cloud.firestore {
         request.resource.data.questionIndex >= -1 &&
         request.resource.data.questionIndex < request.resource.data.questionCount &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'status', 'questionIndex', 'currentQuestion', 'deadline', 'leaderboard', 'scores'
+          'status', 'questionIndex', 'currentQuestion', 'deadline', 'leaderboard', 'scores', 'streaks'
         ]) &&
         (!('leaderboard' in request.resource.data) ||
           (request.resource.data.leaderboard is list && request.resource.data.leaderboard.size() <= 10)) &&
         (!('scores' in request.resource.data) ||
-          (request.resource.data.scores is map && request.resource.data.scores.size() <= 100));
+          (request.resource.data.scores is map && request.resource.data.scores.size() <= 100)) &&
+        (!('streaks' in request.resource.data) ||
+          (request.resource.data.streaks is map && request.resource.data.streaks.size() <= 100));
       allow delete: if isRoomHost();
 
       match /players/{playerUid} {

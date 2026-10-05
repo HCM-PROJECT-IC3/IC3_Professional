@@ -43,6 +43,20 @@
 - `auth-guard.js`: chỉ bắn `edu:ready` một lần cho mỗi tài khoản (trước đây onAuthStateChanged bắn lại làm dashboard quay về "Đang tải...").
 - `auth.js` `onAuthReady()`: không gọi lại callback khi cùng uid; hồ sơ `users/{uid}` dùng chung giữa các nơi trên cùng 1 trang (cache 5 phút, chỉ hồ sơ đã tồn tại) — mỗi lần mở trang giảm 2-3 lượt đọc xuống 1.
 
+## 0i. Khi hết hạn mức Firebase trong ngày
+
+- Dashboard giáo viên/điều phối và Báo cáo IC3: nếu không tải được bài nộp mới (hết lượt đọc, mất mạng) thì vẫn hiện dữ liệu đã lưu kèm thông báo, thay vì lỗi trắng.
+- Phòng chơi trực tiếp: báo rõ "hết lượt miễn phí hôm nay, thử lại sau khoảng 14-15h (giờ VN)".
+- `teaching-schedule.js`: ảnh đại diện giáo viên đọc 1 lần thay vì listener realtime trên toàn bộ `gvlab_profiles` (mỗi hồ sơ kèm avatar base64 tới ~300KB).
+- Đã kiểm tra: bài nộp của học sinh không mất khi hết lượt ghi (SDK giữ trong IndexedDB và tự gửi lại; có thêm bản Google Sheet).
+
+## 0j. Phòng chơi: tải bảng điểm
+
+- Màn kết thúc của người dẫn có nút "Tải bảng điểm (Excel/CSV)": đủ mọi người chơi (không chỉ top 10), xếp hạng theo điểm, mở được bằng Excel (UTF-8 có BOM). Tạo ngay trên máy, không tốn lượt Firebase.
+- Âm thanh + pháo giấy (dùng lại `js/game-sfx.js`, `js/game-fx.js`): tiếng bấm khi chọn đáp án, âm đúng/sai khi xem đáp án, pháo giấy khi kết thúc cho top 3 và người dẫn. Phát 1 lần mỗi khoảnh khắc; tôn trọng nút tắt tiếng chung của các mini-game.
+- Kết thúc ván: máy người dẫn tự xoá subcollection `answers` (xoá theo uid đã biết, không tốn lượt đọc) vì TTL không dọn subcollection.
+- Chuỗi đúng liên tiếp: từ câu đúng thứ 2 liên tiếp thưởng +100/câu (tối đa +500), hiện "🔥 Chuỗi N câu đúng" + âm combo. Lưu trong map `streaks` của document phòng (cần publish lại rules).
+
 ## 0 (mới nhất). Click trực tiếp trên ảnh cho câu nối cột (thay vì đọc chữ)
 
 ### Tính năng mới: `q.regions` — vùng bấm trên ảnh cho câu "matching"
