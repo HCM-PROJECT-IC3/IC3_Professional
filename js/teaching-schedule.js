@@ -164,9 +164,8 @@
   // không liên quan trực tiếp tới uid, nên phải bắc cầu: users/{uid} nào
   // có field "teacherCode" → gvlab_profiles/{uid} có field "avatar". Đọc
   // bảng users 1 LẦN (nhỏ, ~18 GV) để dựng map teacherCode -> uid, sau đó
-  // GẮN LISTENER SỐNG trên gvlab_profiles (giống avatarCache của
-  // js/portfolio.js) để ảnh cập nhật ngay khi giáo viên vừa đổi ở Trang Social Media,
-  // không cần tải lại trang. Mọi ô avatar render động đều gắn sẵn
+  // đọc gvlab_profiles 1 LẦN (giống avatarCache của js/portfolio.js) — ảnh
+  // vừa đổi ở Trang Social Media hiện sau khi tải lại trang. Mọi ô avatar render động đều gắn sẵn
   // data-teacher-code="<mã NV>" để patchScheduleAvatars() tìm và vá lại
   // sau mỗi lần render.
   let teacherCodeToUid = {};
@@ -183,12 +182,13 @@
         patchScheduleAvatars();
       })
       .catch((err) => console.warn('[Lịch giảng dạy] Không dựng được map giáo viên → tài khoản:', err.message));
-    db.collection('gvlab_profiles').onSnapshot((snap) => {
-      snap.docChanges().forEach((chg) => {
-        scheduleAvatarByUid[chg.doc.id] = chg.doc.data().avatar || null;
-      });
+    // Đọc 1 LẦN (như js/portfolio.js) thay vì onSnapshot: listener sống trên TOÀN BỘ
+    // gvlab_profiles (mỗi hồ sơ kèm avatar base64 tới ~300KB) bắn lại cho mọi tab đang mở
+    // mỗi khi 1 giáo viên bất kỳ sửa hồ sơ. Ảnh mới hiện sau khi tải lại trang là đủ.
+    db.collection('gvlab_profiles').get().then((snap) => {
+      snap.forEach((doc) => { scheduleAvatarByUid[doc.id] = doc.data().avatar || null; });
       patchScheduleAvatars();
-    }, (err) => console.warn('[Lịch giảng dạy] Không theo dõi được ảnh đại diện Trang Social Media:', err.message));
+    }).catch((err) => console.warn('[Lịch giảng dạy] Không tải được ảnh đại diện Trang Social Media:', err.message));
   }
   /** Vá lại MỌI ô avatar đang hiện trên trang (thẻ + ma trận Tổng quan)
    * bằng ảnh thật nếu có — gọi lại sau mỗi lần render lại danh sách/tuần,

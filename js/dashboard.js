@@ -584,7 +584,16 @@ async function updateReportTab(forceRefresh = false) {
         query = query.where('submittedAt', '>', firebase.firestore.Timestamp.fromMillis(Math.max(0, lastMs - 1)));
       }
       // Trần 10.000 là mức tối đa Firestore cho phép cho 1 query (20.000 từng bị từ chối).
-      const snap = await query.orderBy('submittedAt', 'desc').limit(10000).get();
+      let snap;
+      try {
+        snap = await query.orderBy('submittedAt', 'desc').limit(10000).get();
+      } catch (err) {
+        // Hết lượt đọc trong ngày / mất mạng: dùng dữ liệu đã lưu nếu có, thay vì báo lỗi trắng.
+        if (!base) throw err;
+        console.warn('[EduQuiz] Không tải được bài nộp mới, dùng dữ liệu đã lưu:', err.message);
+        if (typeof showToast === 'function') showToast(err.code === 'resource-exhausted' ? 'Firebase đã hết lượt đọc hôm nay — đang hiện dữ liệu đã lưu' : 'Chưa tải được bài nộp mới — đang hiện dữ liệu đã lưu', 'fa-triangle-exclamation');
+        snap = { docs: [] };
+      }
       const fresh = snap.docs.map(doc => {
         // KHÔNG giữ field "submittedAt" thô (Timestamp mất .toMillis() sau JSON.stringify).
         const { submittedAt, ...d } = doc.data();

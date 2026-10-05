@@ -73,6 +73,7 @@ input:focus, select:focus { border-color: var(--green); box-shadow: 0 0 0 3px rg
 #playerList li { display: flex; justify-content: space-between; gap: 8px; padding: 8px 9px; border: 1px solid #e7efea; border-radius: 4px; font-size: .8rem; }
 #playerList li span:last-child { color: var(--green); font-weight: 800; }
 .start-button { margin-top: auto; }
+#exportScoresButton { margin-top: 16px; }
 .delete-room-button { margin-top: 9px; padding: 7px 0; border: 0; color: #a14031; background: transparent; cursor: pointer; font-size: .72rem; font-weight: 700; }
 .side-hint { margin: 10px 0 0; color: var(--muted); font-size: .72rem; line-height: 1.45; }
 .play-area { display: grid; min-width: 0; place-items: center; padding: clamp(18px, 4vw, 44px); }

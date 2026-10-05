@@ -104,6 +104,9 @@ Sau đó mở `http://localhost:5000/index.html`.
 
 ## Cấu hình Firebase
 
+> Các bước bắt buộc trên Firebase Console (publish Rules, Anonymous Auth, App Check,
+> TTL, hạn mức): xem [docs/FIREBASE-CHECKLIST.md](docs/FIREBASE-CHECKLIST.md).
+
 Cấu hình Firebase (project `data-ic3`) đã có sẵn trong
 `js/firebase-config.js` — không cần tạo project riêng để chạy thử đọc.
 Nếu fork dự án để triển khai độc lập (project Firebase riêng):

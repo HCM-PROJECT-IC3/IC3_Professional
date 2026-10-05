@@ -113,6 +113,7 @@
             <div class="finish-icon">★</div><p class="eyebrow">THỬ THÁCH HOÀN TẤT</p>
             <h3 id="finishTitle">Tuyệt vời!</h3><p id="finishSubtitle">Bảng điểm của phòng</p>
             <ol class="final-scores" id="finalScores"></ol>
+            <button class="primary-button" id="exportScoresButton" type="button" hidden>Tải bảng điểm (Excel/CSV) <span>↓</span></button>
           </div>
           <div id="closedView" class="state-view" hidden>
             <div class="finish-icon muted-icon">↗</div><h3>Phòng đã kết thúc</h3><p>Hãy quay lại để tạo hoặc tham gia phòng khác.</p>
@@ -130,6 +131,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-check-compat.js"></script>
   <script src="js/firebase-config.js"></script>
+  <script src="js/game-sfx.js"></script>
+  <script src="js/game-fx.js"></script>
   <script src="js/live-quiz.js"></script>
 </body>
 </html>
