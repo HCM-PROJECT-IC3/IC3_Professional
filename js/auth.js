@@ -106,14 +106,43 @@
    * user = firebase.auth() user object hoặc null.
    * profile = document Firestore users/{uid} hoặc null.
    */
+  // Hồ sơ dùng chung cho mọi onAuthReady() trên cùng 1 trang (auth-guard, game-zone-gate,
+  // portfolio... mỗi nơi từng tự đọc users/{uid} → 2-3 lượt đọc/lần mở trang). Chỉ lưu hồ sơ
+  // ĐÃ TỒN TẠI, hết hạn sau 5 phút (đổi vai trò/duyệt tài khoản vẫn có hiệu lực sau tối đa 5 phút).
+  const PROFILE_TTL_MS = 5 * 60 * 1000;
+  let profileMemo = { uid: null, at: 0, promise: null };
+
+  function memoProfile(uid) {
+    const now = Date.now();
+    if (profileMemo.uid === uid && profileMemo.promise && now - profileMemo.at < PROFILE_TTL_MS) {
+      return profileMemo.promise;
+    }
+    const promise = fetchProfile(uid).then((p) => {
+      if (!p && profileMemo.promise === promise) profileMemo = { uid: null, at: 0, promise: null };
+      return p;
+    }, (e) => {
+      if (profileMemo.promise === promise) profileMemo = { uid: null, at: 0, promise: null };
+      throw e;
+    });
+    profileMemo = { uid, at: now, promise };
+    return promise;
+  }
+
   function onAuthReady(callback) {
+    // Mỗi người đăng ký chỉ được gọi lại khi người dùng THỰC SỰ đổi (đăng nhập/đăng xuất/đổi
+    // tài khoản) — onAuthStateChanged có thể bắn lại cho cùng 1 uid (khôi phục phiên, mạng...).
+    let lastUid;
     auth().onAuthStateChanged(async (user) => {
-      if (!user) return callback(null, null);
+      const uid = user ? user.uid : null;
+      if (lastUid !== undefined && lastUid === uid && uid !== null) return;
+      lastUid = uid;
+      if (!user) { profileMemo = { uid: null, at: 0, promise: null }; return callback(null, null); }
       try {
-        const profile = await fetchProfile(user.uid);
+        const profile = await memoProfile(user.uid);
         callback(user, profile);
       } catch (e) {
         console.error('[EduAuth] Không đọc được hồ sơ người dùng', e);
+        lastUid = undefined; // cho phép thử lại ở lần bắn kế tiếp
         callback(user, null);
       }
     });

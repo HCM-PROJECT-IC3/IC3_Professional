@@ -1864,6 +1864,7 @@ function renderQuestion(idx) {
   State.current = idx;
   const q = State.questions[idx];
   if (!q) return;
+  _preloadNextImage(idx);
 
   const panel = document.getElementById('qPanel');
   if (!panel) return;
@@ -2013,6 +2014,37 @@ function _renderCheckResult(d) {
  * Xây dựng khối hình ảnh cho câu hỏi.
  * Task 3: ưu tiên img/ từ image_file, sau đó SVG tự động.
  */
+/** Ảnh câu hỏi lỗi (mạng yếu/ảnh thiếu): hiện thông báo + nút "Tải lại hình" thay vì
+ *  ẩn lặng lẽ — nếu ẩn, học sinh không biết câu hỏi đang thiếu hình để trả lời. */
+function _imgLoadFailed(img) {
+  const box = img.parentElement;
+  if (!box || box.dataset.imgFailed) return;
+  box.dataset.imgFailed = '1';
+  const src = img.getAttribute('src');
+  img.style.display = 'none';
+  const note = document.createElement('div');
+  note.style.cssText = 'padding:.75rem;border:2px dashed var(--border);border-radius:8px;font-size:.9rem;';
+  note.innerHTML = '<i class="fa-solid fa-image"></i> Chưa tải được hình minh họa. ' +
+    '<button type="button" class="btn-nav" style="margin-left:.5rem">Tải lại hình</button>';
+  note.querySelector('button').addEventListener('click', () => {
+    delete box.dataset.imgFailed;
+    note.remove();
+    img.style.display = '';
+    img.src = src + (src.indexOf('?') === -1 ? '?' : '&') + 'r=' + Date.now();
+  });
+  box.appendChild(note);
+}
+
+/** Tải trước hình của câu kế tiếp (+1) để chuyển câu không phải chờ ảnh. */
+function _preloadNextImage(idx) {
+  try {
+    const next = State.questions[idx + 1];
+    if (!next || next.type === 'hotspot') return;
+    const src = next.imageUrl || (next.image_file ? `img/${next.image_file}` : '');
+    if (src) { const im = new Image(); im.decoding = 'async'; im.src = src; }
+  } catch (e) { /* tải trước chỉ là tối ưu, bỏ qua lỗi */ }
+}
+
 function _buildImageBlock(q) {
   // Ưu tiên 1: imageUrl đã set sẵn trong JSON (ví dụ: "img/Picture56.png")
   if (q.imageUrl) {
@@ -2020,10 +2052,10 @@ function _buildImageBlock(q) {
       <div class="img-illus-custom" style="margin:.5rem 0 1rem;text-align:center;">
         <img src="${q.imageUrl}"
              alt="Hình minh họa câu hỏi ${q.id || ''}"
-             loading="lazy"
+             decoding="async"
              style="width:auto;max-width:100%;max-height:min(52vh,520px);
                     border:2px solid var(--border);box-shadow:var(--shadow);"
-             onerror="this.parentElement.style.display='none'"/>
+             onerror="_imgLoadFailed(this)"/>
       </div>`;
   }
 
@@ -2034,10 +2066,10 @@ function _buildImageBlock(q) {
       <div class="img-illus-custom" style="margin:.5rem 0 1rem;text-align:center;">
         <img src="${url}"
              alt="Hình minh họa"
-             loading="lazy"
+             decoding="async"
              style="width:auto;max-width:100%;max-height:min(52vh,520px);
                     border:2px solid var(--border);box-shadow:var(--shadow);"
-             onerror="this.parentElement.style.display='none'"/>
+             onerror="_imgLoadFailed(this)"/>
       </div>`;
   }
 

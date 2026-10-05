@@ -45,6 +45,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
   // nhiều giáo viên khác nhau bị gán CÙNG 1 bộ trường giống hệt nhau).
   let schoolsByTeacherId = {};
 
+  let lookupsLoadedAt = 0;
   async function loadSchools() {
     try {
       const snap = await EduFirebase.db.collection('students_roster').where('status', '==', 'active').get();
@@ -165,12 +166,17 @@ window.EDU_ALLOWED_ROLES = ['admin'];
     }
 
     if (!users) {
+      // Sau mỗi thao tác ghi (duyệt/đổi role/gán trường...) loadUsers(true) chỉ cần đọc lại
+      // danh sách tài khoản (vài chục-trăm doc). Danh sách trường/lớp/GV tra cứu suy ra từ
+      // TOÀN BỘ students_roster đang học (~1.466 doc) nên giữ lại 30 phút, không đọc lại mỗi lần.
+      const lookupsFresh = forceRefresh && lookupsLoadedAt && Date.now() - lookupsLoadedAt < 30 * 60 * 1000;
       const [snap] = await Promise.all([
         EduFirebase.db.collection('users').orderBy('createdAt', 'desc').get(),
-        loadSchools(),
-        loadClasses(),
-        loadTeachingTeachers(),
+        lookupsFresh ? null : loadSchools(),
+        lookupsFresh ? null : loadClasses(),
+        lookupsFresh ? null : loadTeachingTeachers(),
       ]);
+      if (!lookupsFresh) lookupsLoadedAt = Date.now();
       if (snap.empty) {
         tbody.innerHTML = '<tr><td colspan="8">Chưa có tài khoản nào.</td></tr>';
         return;

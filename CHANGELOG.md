@@ -17,6 +17,32 @@
 - `autosave-service.js`: tắt backup Firestore của bài thi MOS (collection `mos_exam_sessions` chưa có rule nên luôn bị từ chối; nếu bật lại dễ ghi ~135 lượt/HS). Khi bật lại: throttle 5 phút + chỉ ghi khi snapshot đổi. IndexedDB vẫn lưu mỗi lần.
 - Ước tính 1.000 HS/ngày: ghi ≈ 1 lượt/bài nộp (quiz_results/mos_submissions); đọc phía học sinh ≈ 0 (dữ liệu câu hỏi/roster là file tĩnh).
 
+## 0d. Quản lý học sinh / Lịch giảng dạy: bớt đọc-ghi thừa
+
+- `roster-manager.js`: thêm/sửa/xoá 1 khoá học-lớp-học sinh không còn đọc lại toàn bộ roster (~1.600 lượt đọc/lần) mà chỉ đọc lại 1 bản ghi và cập nhật cache. Nạp Excel bỏ qua học sinh không đổi (trước đây ghi lại tất cả). Cache trang 15 phút.
+- `teaching-schedule.js`: lưu lịch của 1 giáo viên chỉ đọc lại đúng document đó, không tải lại lịch cả đội.
+
+## 0e. Rà soát đọc/ghi: báo cáo IC3, quản lý câu hỏi, tài khoản, Social
+
+- `dashboard.js` (Báo cáo IC3): tải tăng dần thay vì đọc lại tới 10.000 `quiz_results` mỗi lần cache hết hạn; cache localStorage.
+- `image-manager.js`: sau mỗi lần sửa/xoá/thêm câu hỏi cập nhật cache tại chỗ (trước đây xoá cache → lần mở sau đọc lại cả ngân hàng câu hỏi); TTL 30 phút.
+- `admin-users.js`: thao tác ghi chỉ đọc lại danh sách tài khoản, giữ danh sách trường/lớp/GV (suy ra từ ~1.466 học sinh) 30 phút.
+- `portfolio.js`: feed Social 30→12 bài, chứng chỉ 200→60 (mỗi bài mang ảnh base64, trang công khai tốn băng thông).
+
+## 0f. Hình ảnh câu hỏi nhẹ hơn, tải ổn định hơn
+
+- 34/46 ảnh câu hỏi trong `img/` được thu về tối đa 1200px rộng và nén lại (11,8MB → 8,1MB). Tên file và tỉ lệ ảnh giữ nguyên nên vùng bấm (`regions`, tính theo %) vẫn đúng. Bản gốc lưu ngoài repo.
+- `quiz-engine.js`: tải trước ảnh của câu kế tiếp; ảnh lỗi không còn bị ẩn lặng lẽ mà hiện thông báo + nút "Tải lại hình"; bỏ `loading="lazy"` cho ảnh của câu đang làm.
+
+## 0g. Nén thêm ảnh
+
+- `img/cpu.png`, `mainboard.png`, `ssd.png` → tối đa 900px; 14 ảnh `img/portfolio/*.jpg` → 1280px, chất lượng 80; `img/anim/loading.gif` 1,4MB → 0,5MB (màn "đang kiểm tra đăng nhập" của mọi trang nhân sự). `404.gif` giữ nguyên (chỉ giảm ~15%, không đáng đổi chất lượng).
+
+## 0h. Đăng nhập: hết "tự reload", bớt đọc hồ sơ lặp
+
+- `auth-guard.js`: chỉ bắn `edu:ready` một lần cho mỗi tài khoản (trước đây onAuthStateChanged bắn lại làm dashboard quay về "Đang tải...").
+- `auth.js` `onAuthReady()`: không gọi lại callback khi cùng uid; hồ sơ `users/{uid}` dùng chung giữa các nơi trên cùng 1 trang (cache 5 phút, chỉ hồ sơ đã tồn tại) — mỗi lần mở trang giảm 2-3 lượt đọc xuống 1.
+
 ## 0 (mới nhất). Click trực tiếp trên ảnh cho câu nối cột (thay vì đọc chữ)
 
 ### Tính năng mới: `q.regions` — vùng bấm trên ảnh cho câu "matching"

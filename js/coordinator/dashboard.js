@@ -61,7 +61,14 @@
     // với coordinator đã bị siết phạm vi trường (Commit #7/LMAP).
     window.EduStudentDetailSchoolsScope = myProfile.role === 'admin' ? undefined : rawData.schools;
 
+    // Làm mới dữ liệu dựng lại ô lọc: nhớ lựa chọn hiện tại để không bị reset về "Tất cả".
+    const keptFilters = {};
+    ['f-course', 'f-teacher', 'f-class', 'f-exam', 'f-range'].forEach((id) => { const el = document.getElementById(id); if (el) keptFilters[id] = el.value; });
     window.EduCoordinatorData.buildFilterOptions(rawData);
+    Object.keys(keptFilters).forEach((id) => {
+      const el = document.getElementById(id);
+      if (el && keptFilters[id] && Array.from(el.options).some((o) => o.value === keptFilters[id])) el.value = keptFilters[id];
+    });
     wireFilters();
     document.getElementById('loadingNote').hidden = true;
     document.getElementById('kpiGrid').hidden = false;
@@ -96,7 +103,12 @@
     };
   }
 
+  let filtersWired = false;
   function wireFilters() {
+    // boot() chạy lại mỗi lần "Làm mới dữ liệu" — chỉ gắn listener MỘT lần, nếu không
+    // mỗi lần bấm sẽ nhân đôi số lần render mỗi khi đổi bộ lọc.
+    if (filtersWired) return;
+    filtersWired = true;
     ['f-course', 'f-teacher', 'f-class', 'f-exam', 'f-range'].forEach((id) => {
       document.getElementById(id).addEventListener('change', refresh);
     });

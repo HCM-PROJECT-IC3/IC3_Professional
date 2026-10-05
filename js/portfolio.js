@@ -681,7 +681,9 @@
     db.collection('gvlab_posts')
       .where('category', '==', category)
       .orderBy('createdAt', 'desc')
-      .limit(30)
+      // Trang công khai, mỗi bài mang ảnh base64 (tới ~700KB): 30 bài/lần xem có thể tải
+      // ~20MB (băng thông Firestore Spark chỉ 10GB/tháng) — giữ 12 bài mới nhất.
+      .limit(12)
       .onSnapshot((snap) => {
         commentUnsubs.forEach((unsub) => unsub());
         commentUnsubs.clear();
@@ -850,7 +852,7 @@
       }
     });
 
-    db.collection('gvlab_certs').orderBy('createdAt', 'desc').limit(200)
+    db.collection('gvlab_certs').orderBy('createdAt', 'desc').limit(60)
       .onSnapshot((snap) => {
         dynamicCerts = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
         renderGrid();

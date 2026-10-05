@@ -11,6 +11,10 @@
     constructor() { super(COLLECTION_NAME); }
 
     async record(entry) {
+      // TẮT cho tới khi firestore.rules có rule cho "activity_logs": hiện mọi lần
+      // ghi đều bị từ chối (Missing or insufficient permissions) — chỉ tốn request
+      // và gây cảnh báo console. Bật lại = đổi cờ này + thêm rule (admin đọc, user đã đăng nhập tạo).
+      if (!ActivityLogRepository.ENABLED) return;
       try {
         await this.create(build(entry));
       } catch (err) {
@@ -27,6 +31,8 @@
       return this.list({ where: [['uid', '==', uid]], orderBy: 'createdAt', direction: 'desc', limit });
     }
   }
+
+  ActivityLogRepository.ENABLED = false;
 
   global.EduRepositories = global.EduRepositories || {};
   global.EduRepositories.activityLog = new ActivityLogRepository();

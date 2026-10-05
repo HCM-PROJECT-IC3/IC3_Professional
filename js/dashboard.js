@@ -566,42 +566,42 @@ async function updateReportTab(forceRefresh = false) {
     return;
   }
 
-  if (forceRefresh) {
-    _reportRawDocs = null;
-    if (window.EduDataCache) window.EduDataCache.clear(REPORT_CACHE_KEY);
-  }
-
-  if (_reportRawDocs === null && window.EduDataCache) {
-    _reportRawDocs = window.EduDataCache.get(REPORT_CACHE_KEY);
-  }
-
-  if (_reportRawDocs === null) {
+  // Tải TĂNG DẦN (như listRecentCached): lần đầu đọc tối đa 10.000 bản ghi rồi lưu cache
+  // (localStorage, sống qua nhiều lần mở tab); các lần sau — kể cả bấm làm mới — chỉ đọc
+  // những bài nộp SAU bản ghi mới nhất đã có rồi gộp vào. Trước đây mỗi lần cache hết
+  // hạn (3 phút) là đọc lại toàn bộ tới 10.000 lượt (20% hạn mức đọc/ngày của Spark).
+  const entry = window.EduDataCache ? window.EduDataCache.get(REPORT_CACHE_KEY, true) : null;
+  const freshMs = forceRefresh ? 15 * 1000 : REPORT_CACHE_TTL_MS;
+  if (entry && Array.isArray(entry.docs) && Date.now() - entry.fetchedAt < freshMs) {
+    _reportRawDocs = entry.docs;
+  } else if (_reportRawDocs === null || forceRefresh || entry) {
     body.innerHTML = `<tr><td colspan="8" class="table-empty-cell">Đang tải dữ liệu...</td></tr>`;
     try {
-      // Trước đây .limit(500) cắt bớt dữ liệu cũ hơn khỏi cả báo cáo (không
-      // chỉ bảng chi tiết) — người dùng phản hồi cần ĐẦY ĐỦ số lượt làm bài,
-      // không bị giới hạn. Nâng lên mức trần TỐI ĐA Firestore CHO PHÉP
-      // (10.000 — thử 20.000 trước đó bị chính Firestore từ chối thẳng với
-      // lỗi "Limit value in the structured query is over the maximum value
-      // of 10000", làm sập cả trang báo cáo) thay vì bỏ hẳn .limit() — query
-      // không có limit vẫn có thể tải cả collection nếu 1 ngày nào đó phình
-      // to bất thường, trần này chỉ để chặn tình huống đó, KHÔNG nhằm cắt
-      // bớt dữ liệu thật ở quy mô hiện tại (còn rất xa 10.000 bản ghi).
-      const snap = await window.EduFirebase.db.collection('quiz_results')
-        .orderBy('submittedAt', 'desc')
-        .limit(10000)
-        .get();
-      _reportRawDocs = snap.docs.map(doc => {
-        // KHÔNG giữ lại field "submittedAt" thô (Firestore Timestamp) trong
-        // bản ghi cache — JSON.stringify (lúc EduDataCache.set() lưu vào
-        // sessionStorage) làm mất method .toMillis(), và không chỗ nào khác
-        // trong file này đọc lại field thô đó (chỉ dùng submittedAtMs).
+      const base = entry && Array.isArray(entry.docs) && entry.docs.length ? entry.docs : null;
+      let query = window.EduFirebase.db.collection('quiz_results');
+      if (base) {
+        const lastMs = base.reduce((m, d) => Math.max(m, d.submittedAtMs || 0), 0);
+        query = query.where('submittedAt', '>', firebase.firestore.Timestamp.fromMillis(Math.max(0, lastMs - 1)));
+      }
+      // Trần 10.000 là mức tối đa Firestore cho phép cho 1 query (20.000 từng bị từ chối).
+      const snap = await query.orderBy('submittedAt', 'desc').limit(10000).get();
+      const fresh = snap.docs.map(doc => {
+        // KHÔNG giữ field "submittedAt" thô (Timestamp mất .toMillis() sau JSON.stringify).
         const { submittedAt, ...d } = doc.data();
         return Object.assign({ id: doc.id }, d, {
           submittedAtMs: submittedAt && submittedAt.toMillis ? submittedAt.toMillis() : Date.now(),
         });
       });
-      if (window.EduDataCache) window.EduDataCache.set(REPORT_CACHE_KEY, _reportRawDocs, REPORT_CACHE_TTL_MS);
+      if (base) {
+        const byId = new Map(base.map(d => [d.id, d]));
+        fresh.forEach(d => byId.set(d.id, d));
+        _reportRawDocs = Array.from(byId.values())
+          .sort((x, y) => (y.submittedAtMs || 0) - (x.submittedAtMs || 0))
+          .slice(0, 10000);
+      } else {
+        _reportRawDocs = fresh;
+      }
+      if (window.EduDataCache) window.EduDataCache.set(REPORT_CACHE_KEY, { docs: _reportRawDocs, fetchedAt: Date.now() }, 12 * 60 * 60 * 1000, true);
     } catch (err) {
       console.error('[EduQuiz] Lỗi tải báo cáo Firestore:', err);
       body.innerHTML = `<tr><td colspan="6" class="table-empty-cell"><i class="fa-solid fa-circle-xmark"></i> Không tải được dữ liệu: ${err.message}</td></tr>`;

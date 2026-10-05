@@ -260,6 +260,14 @@
     }
   }
 
+  // Sau khi lưu lịch của 1 giáo viên: chỉ đọc lại ĐÚNG document đó (1 lượt đọc) rồi vẽ lại,
+  // thay vì loadWeekSchedules() đọc lại lịch + TKB + giờ tiết của cả đội (~50-100 lượt đọc).
+  async function refreshOneSchedule(teacherCode, docId) {
+    const fresh = await window.EduRepositories.teachingSchedule.getById(docId);
+    if (fresh) state.schedulesByTeacher[teacherCode] = fresh;
+    renderWeeklyTab();
+  }
+
   async function loadWeekSchedules(weekKey) {
     state.currentWeekKey = weekKey;
     try {
@@ -1092,7 +1100,7 @@
         updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
       });
       toast('✅ Đã lưu lịch tuần của bạn');
-      await loadWeekSchedules(state.currentWeekKey);
+      await refreshOneSchedule(state.myTeacherCode, docId);
     } catch (err) {
       toast('❌ ' + friendlyError(err));
     } finally {
@@ -1504,8 +1512,9 @@
         updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
       });
       toast('✅ Đã lưu lịch tuần');
+      const savedCode = schedModalTeacherCode;
       closeSchedModal();
-      await loadWeekSchedules(state.currentWeekKey);
+      await refreshOneSchedule(savedCode, docId);
     } catch (err) {
       toast('❌ ' + friendlyError(err));
     } finally {
