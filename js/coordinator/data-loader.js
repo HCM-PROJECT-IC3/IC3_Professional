@@ -97,11 +97,11 @@
       if (global.EduDataCache) global.EduDataCache.set(rosterCacheKey, rosterBundle, ROSTER_CACHE_TTL_MS, /* persist */ true);
     }
 
-    let results = !forceRefresh && global.EduDataCache ? global.EduDataCache.get(resultsCacheKey) : null;
-    if (!results) {
-      results = await global.EduRepositories.studentResult.listRecent(isAdmin ? { limit: 1000 } : { schools, limit: 1000 });
-      if (global.EduDataCache) global.EduDataCache.set(resultsCacheKey, results, RESULTS_CACHE_TTL_MS);
-    }
+    // Tải tăng dần (xem listRecentCached): chỉ đọc bài MỚI nộp kể từ lần trước.
+    const results = await global.EduRepositories.studentResult.listRecentCached({
+      cacheKey: resultsCacheKey, schools: isAdmin ? undefined : schools, limit: 1000,
+      freshMs: forceRefresh ? 15 * 1000 : RESULTS_CACHE_TTL_MS
+    });
 
     return Object.assign({}, rosterBundle, { results, schools, noSchoolsAssigned: false });
   }

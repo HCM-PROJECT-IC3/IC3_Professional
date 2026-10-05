@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f3f8f5">
+  <title>Thử thách cùng lớp | EduQuiz</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/live-quiz.css">
+</head>
+<body>
+  <header class="live-header">
+    <a class="back-link" href="index.html" aria-label="Quay về trang chính">← <span>EduQuiz</span></a>
+    <div class="header-mark"><span class="mark-dot"></span> LIVE CLASSROOM</div>
+  </header>
+
+  <main class="live-main">
+    <section class="intro-row">
+      <div>
+        <p class="eyebrow">HỌC CÙNG NHAU, VUI HƠN</p>
+        <h1>Thử thách<br><span>cùng lớp.</span></h1>
+        <p class="intro-copy">Một mã phòng. Mỗi bạn một thiết bị. Cùng trả lời câu hỏi IC3 theo thời gian thực.</p>
+      </div>
+      <div class="intro-stamp" aria-hidden="true"><span>?</span><small>READY<br>SET<br>QUIZ</small></div>
+    </section>
+
+    <p class="connection-status" id="appStatus" role="status">Đang kết nối an toàn…</p>
+
+    <section class="entry-grid" id="entryScreen" hidden>
+      <form class="entry-panel host-panel" id="createForm">
+        <div class="panel-heading"><span class="panel-icon">✦</span><div><p class="eyebrow">DÀNH CHO NGƯỜI DẪN</p><h2>Tạo phòng</h2></div></div>
+        <label for="topicSelect">Chủ đề</label>
+        <select id="topicSelect">
+          <option value="all">Tổng hợp mọi chủ đề</option>
+          <option>1. Căn bản về công nghệ</option>
+          <option>2. Công dân số</option>
+          <option>3. Quản lý thông tin</option>
+          <option>4. Sáng tạo nội dung</option>
+          <option>5. Giao tiếp</option>
+          <option>6. Hợp tác, cộng tác</option>
+          <option>7. An toàn và bảo mật</option>
+        </select>
+        <label for="questionCount">Số câu</label>
+        <select id="questionCount">
+          <option value="5">5 câu · khoảng 2 phút</option>
+          <option value="10" selected>10 câu · khoảng 4 phút</option>
+          <option value="15">15 câu · khoảng 6 phút</option>
+        </select>
+        <label for="questionSeconds">Thời gian mỗi câu</label>
+        <select id="questionSeconds">
+          <option value="10">10 giây · nhanh</option>
+          <option value="20" selected>20 giây</option>
+          <option value="30">30 giây · thong thả</option>
+        </select>
+        <label for="maxPlayers">Số người tối đa</label>
+        <select id="maxPlayers">
+          <option value="20">20 người</option>
+          <option value="40" selected>40 người</option>
+          <option value="60">60 người</option>
+          <option value="100">100 người</option>
+        </select>
+        <p class="privacy-note">Người tạo cần đăng nhập bằng tài khoản nhân sự được cấp quyền.</p>
+        <a class="staff-login-link" id="staffLoginLink" href="login.html?next=live-quiz.html">Đăng nhập tài khoản nhân sự</a>
+        <button class="primary-button" id="createRoomButton" type="submit" disabled>Tạo phòng <span>↗</span></button>
+      </form>
+
+      <form class="entry-panel join-panel" id="joinForm">
+        <div class="panel-heading"><span class="panel-icon coral">↗</span><div><p class="eyebrow">ĐÃ CÓ MÃ PHÒNG?</p><h2>Tham gia</h2></div></div>
+        <label for="playerName">Biệt danh của bạn</label>
+        <input id="playerName" maxlength="24" autocomplete="nickname" placeholder="Không nhập họ tên đầy đủ" required>
+        <label for="roomCodeInput">Mã phòng · 8 ký tự</label>
+        <input id="roomCodeInput" class="code-input" maxlength="8" minlength="8" autocomplete="off" autocapitalize="characters" placeholder="VD: 4H7K9M2P" required>
+        <p class="privacy-note">Không cần tài khoản hay thông tin trường/lớp.</p>
+        <button class="primary-button coral-button" type="submit">Vào phòng <span>→</span></button>
+      </form>
+    </section>
+
+    <section class="room-screen" id="roomScreen" hidden>
+      <div class="room-topline">
+        <div><p class="eyebrow" id="roomEyebrow">PHÒNG TRỰC TIẾP</p><h2 id="roomTitle">Đang vào phòng…</h2></div>
+        <button class="icon-button" type="button" id="leaveButton" title="Rời phòng" aria-label="Rời phòng">×</button>
+      </div>
+      <div class="room-layout">
+        <aside class="room-sidebar">
+          <div class="code-block"><span>MÃ PHÒNG</span><strong id="roomCodeDisplay">--------</strong><button type="button" id="copyCodeButton">Sao chép link mời</button></div>
+          <div class="players-block"><div class="players-heading"><h3>Người chơi</h3><span id="playerCount">0</span></div><ul id="playerList"></ul></div>
+          <button class="primary-button start-button" id="startButton" type="button" hidden>Bắt đầu thử thách <span>→</span></button>
+          <button class="delete-room-button" id="deleteRoomButton" type="button" hidden>Xóa phòng và dữ liệu</button>
+          <p class="side-hint" id="sideHint">Chờ người dẫn bắt đầu.</p>
+        </aside>
+        <section class="play-area" aria-live="polite">
+          <div id="lobbyView" class="state-view">
+            <div class="waiting-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+            <p class="eyebrow">SẴN SÀNG CHƯA?</p><h3>Chờ mọi người vào phòng</h3>
+            <p>Chia sẻ mã phòng để cả lớp cùng tham gia.</p>
+          </div>
+          <div id="questionView" class="state-view" hidden>
+            <div class="question-meta"><span id="questionProgress">CÂU 1 / 10</span><span class="timer-chip" id="timerText">20 giây</span></div>
+            <div class="timer-track"><div id="timerBar"></div></div>
+            <h3 class="question-text" id="questionText"></h3>
+            <div class="answer-grid" id="answerGrid"></div>
+            <p class="answer-feedback" id="answerFeedback" role="status"></p>
+          </div>
+          <div id="revealView" class="state-view" hidden>
+            <p class="eyebrow">ĐÁP ÁN</p><h3 id="revealTitle">Cùng xem kết quả!</h3>
+            <p class="reveal-answer" id="revealAnswer"></p>
+            <p id="revealSubtext">Điểm đang được cập nhật…</p>
+          </div>
+          <div id="finishedView" class="state-view" hidden>
+            <div class="finish-icon">★</div><p class="eyebrow">THỬ THÁCH HOÀN TẤT</p>
+            <h3 id="finishTitle">Tuyệt vời!</h3><p id="finishSubtitle">Bảng điểm của phòng</p>
+            <ol class="final-scores" id="finalScores"></ol>
+          </div>
+          <div id="closedView" class="state-view" hidden>
+            <div class="finish-icon muted-icon">↗</div><h3>Phòng đã kết thúc</h3><p>Hãy quay lại để tạo hoặc tham gia phòng khác.</p>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <p class="fine-print">Phòng chơi là hoạt động ôn tập. Điểm được tính trên thiết bị người dẫn, không phải điểm thi chính thức.</p>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-check-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/live-quiz.js"></script>
+</body>
+</html>

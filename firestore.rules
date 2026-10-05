@@ -155,7 +155,11 @@ service cloud.firestore {
     }
     // ---- Tài khoản người dùng & phân quyền ----
     match /users/{userId} {
-      allow read: if isSignedIn();
+      allow get: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+      allow list: if isAdmin() || (
+        (isApprovedTeacher() || isCoordinator() || isTeachingCoordinator()) &&
+        resource.data.role == 'teacher' && resource.data.approved == true
+      );
 
       // Admin tạo hồ sơ THAY cho người khác — dùng khi admin-users.html
       // (📥 Nhập giáo viên từ Excel) tự tạo tài khoản Auth + hồ sơ Firestore
@@ -166,12 +170,22 @@ service cloud.firestore {
       //
       // Tự đăng ký: chỉ được tạo hồ sơ của chính mình, role student|teacher,
       // và không được tự "approved: true" nếu xin làm teacher.
+      // Schema tạo mới không nhận field phân quyền (schools/teacherCode...).
       // Lưu ý: role "admin", "coordinator" và "teaching_coordinator" KHÔNG
       // nằm trong danh sách này — 3 vai trò này chỉ có thể được ADMIN gán
       // thủ công (admin-users.html).
       allow create: if isAdmin() || (
         isSignedIn() && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly([
+          'name', 'email', 'role', 'approved', 'requestedRole', 'createdAt'
+        ])
         && request.resource.data.role in ['student', 'teacher']
+        && request.resource.data.name is string
+        && request.resource.data.name.size() <= 200
+        && request.resource.data.email is string
+        && request.resource.data.email.size() <= 320
+        && request.resource.data.requestedRole in ['student', 'teacher', 'coordinator', 'teaching_coordinator']
+        && request.resource.data.createdAt == request.time
         && (
           (request.resource.data.role == 'student' && request.resource.data.approved == true) ||
           (request.resource.data.role == 'teacher' && request.resource.data.approved == false)
@@ -179,11 +193,13 @@ service cloud.firestore {
       );
 
       // Admin có thể sửa bất kỳ hồ sơ nào (đổi role, duyệt teacher...).
-      // Người dùng thường chỉ được sửa hồ sơ CHÍNH MÌNH và KHÔNG được đổi role/approved.
+      // Người dùng thường chỉ được sửa tên/email của chính mình; các field
+      // phân quyền như schools/teacherCode/requestedRole luôn do Admin quản lý.
       allow update: if isAdmin() || (
         isSignedIn() && request.auth.uid == userId &&
         request.resource.data.role == resource.data.role &&
-        request.resource.data.approved == resource.data.approved
+        request.resource.data.approved == resource.data.approved &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'email'])
       );
 
       allow delete: if isAdmin();
@@ -200,23 +216,46 @@ service cloud.firestore {
     //      đào tạo / giáo viên / admin xem báo cáo trực quan) ----
     match /quiz_results/{resultId} {
       // Học sinh làm bài KHÔNG đăng nhập Firebase Auth → cho phép tạo mới
-      // mà không cần isSignedIn(), nhưng bắt buộc đúng cấu trúc dữ liệu
-      // tối thiểu để chống ghi rác/giả mạo, và document không được tự sửa
-      // lại (update/delete) sau khi đã tạo.
+      // mà không cần isSignedIn(). Chỉ giới hạn schema/giá trị để giảm ghi
+      // rác; vì điểm được tính ở client, các rule này KHÔNG xác thực điểm thật.
       allow create: if
+        request.resource.data.keys().hasOnly([
+          'studentName', 'studentClass', 'studentSchool', 'category', 'level',
+          'minitest', 'testName', 'score', 'correct', 'incorrect', 'skipped',
+          'total', 'elapsedSec', 'tabSwitches', 'clicks', 'integrityOk',
+          'flags', 'timedOut', 'submittedAt', 'expireAt'
+        ]) &&
         request.resource.data.studentName is string &&
         request.resource.data.studentName.size() > 0 &&
         request.resource.data.studentName.size() < 200 &&
+        request.resource.data.studentClass is string &&
+        request.resource.data.studentClass.size() < 200 &&
         // studentSchool bắt buộc khác rỗng (Commit #6/LMAP): cần field này để
         // Firestore rules lọc được báo cáo theo trường cho giáo viên bên dưới.
         // index.html đã chọn Trường qua dropdown chuẩn hoá (js/lobby-roster.js),
         // không phải gõ tay, nên giá trị luôn khớp với "schools" gán cho giáo viên.
         request.resource.data.studentSchool is string &&
         request.resource.data.studentSchool.size() > 0 &&
+        request.resource.data.studentSchool.size() < 200 &&
+        request.resource.data.category is string &&
+        request.resource.data.level is string &&
+        request.resource.data.minitest is string &&
+        request.resource.data.testName is string &&
         request.resource.data.score is number &&
         request.resource.data.score >= 0 && request.resource.data.score <= 100 &&
         request.resource.data.total is number &&
-        request.resource.data.submittedAt == request.time;
+        request.resource.data.total >= 0 && request.resource.data.total <= 500 &&
+        request.resource.data.correct is number && request.resource.data.correct >= 0 && request.resource.data.correct <= 500 &&
+        request.resource.data.incorrect is number && request.resource.data.incorrect >= 0 && request.resource.data.incorrect <= 500 &&
+        request.resource.data.skipped is number && request.resource.data.skipped >= 0 && request.resource.data.skipped <= 500 &&
+        request.resource.data.elapsedSec is number && request.resource.data.elapsedSec >= 0 && request.resource.data.elapsedSec <= 86400 &&
+        request.resource.data.tabSwitches is number && request.resource.data.tabSwitches >= 0 && request.resource.data.tabSwitches <= 10000 &&
+        request.resource.data.clicks is number && request.resource.data.clicks >= 0 && request.resource.data.clicks <= 100000 &&
+        request.resource.data.integrityOk is bool &&
+        request.resource.data.flags is list && request.resource.data.flags.size() <= 10 &&
+        request.resource.data.timedOut is bool &&
+        request.resource.data.submittedAt == request.time &&
+        request.resource.data.expireAt is timestamp;
 
       // Admin: xem toàn bộ. Coordinator/Giáo viên: CHỈ xem kết quả của học
       // sinh thuộc (các) trường đã được Admin gán ở admin-users.html
@@ -238,18 +277,30 @@ service cloud.firestore {
     //      NGAY TRONG TRÌNH DUYỆT — file .xlsx học sinh nộp KHÔNG được gửi
     //      lên server/Storage, chỉ kết quả chấm được lưu ở đây). Cùng mô
     //      hình xác thực với quiz_results ở trên (học sinh không đăng nhập
-    //      Firebase Auth, chặn giả mạo bằng ràng buộc schema tối thiểu). ----
+    //      Firebase Auth; schema giới hạn chỉ giảm ghi rác, không xác thực điểm). ----
     match /mos_submissions/{submissionId} {
       allow create: if
+        request.resource.data.keys().hasOnly([
+          'studentName', 'studentClass', 'studentSchool', 'projectId', 'projectTitle',
+          'score', 'autoTotal', 'passedCount', 'manualCount', 'taskResults', 'submittedAt'
+        ]) &&
         request.resource.data.studentName is string &&
         request.resource.data.studentName.size() > 0 &&
         request.resource.data.studentName.size() < 200 &&
         request.resource.data.studentSchool is string &&
         request.resource.data.studentSchool.size() > 0 &&
+        request.resource.data.studentSchool.size() < 200 &&
         request.resource.data.projectId is string &&
         request.resource.data.projectId.size() > 0 &&
+        request.resource.data.projectId.size() < 200 &&
+        request.resource.data.projectTitle is string &&
+        request.resource.data.studentClass is string &&
         request.resource.data.score is number &&
         request.resource.data.score >= 0 && request.resource.data.score <= 100 &&
+        request.resource.data.autoTotal is number && request.resource.data.autoTotal >= 0 && request.resource.data.autoTotal <= 500 &&
+        request.resource.data.passedCount is number && request.resource.data.passedCount >= 0 && request.resource.data.passedCount <= 500 &&
+        request.resource.data.manualCount is number && request.resource.data.manualCount >= 0 && request.resource.data.manualCount <= 500 &&
+        request.resource.data.taskResults is list && request.resource.data.taskResults.size() <= 300 &&
         request.resource.data.submittedAt == request.time;
 
       allow read: if isOwnSchoolField('studentSchool');
@@ -257,42 +308,143 @@ service cloud.firestore {
     }
 
     // ---- Lượt chơi mini-game (Battle Quiz/PZ Defense/Cyber Detective...),
-    //      xem js/models/game-session.model.js + js/repositories/
-    //      game-session-repository.js. Collection này TỪNG KHÔNG CÓ rule gì
-    //      ở đây (thiếu sót) — nghĩa là MỌI lượt ghi (recordSessionIfPossible
-    //      ở battle-quiz.js/pz-defense.js/cyber-detective.js) bị Firestore
-    //      từ chối âm thầm từ trước đến giờ (mặc định deny-all cho collection
-    //      không khớp rule nào) — game chạy bình thường vì lỗi bị nuốt có chủ
-    //      đích (catch rỗng, không phá trải nghiệm chơi), nhưng KHÔNG có dữ
-    //      liệu nào thực sự được lưu. Thêm rule này để bật tính năng "🏆 Bảng
-    //      xếp hạng" (đọc CÔNG KHAI, không cần đăng nhập — giống quiz mini-
-    //      game, không phải dữ liệu học tập nhạy cảm như quiz_results).
-    //
-    //      allow list giới hạn request.query.limit <= 50 — CHẶN Ở TẦNG RULE
-    //      (không chỉ ở code phía client) việc 1 client tự ý bỏ .limit() và
-    //      quét cả collection: đúng bài học đã rút ra từ vụ roster/quiz_results
-    //      từng gây nổ quota đọc Firestore (xem ghi chú "students_roster" bên
-    //      dưới) — lần này chặn ngay từ đầu thay vì phải vá sau.
+    //      xem js/models/game-session.model.js và
+    //      js/repositories/game-session-repository.js. Điểm/tên do client
+    //      tự gửi nên không thể coi là kết quả đáng tin; chỉ Admin được đọc/
+    //      ghi collection này. Bảng xếp hạng công khai được thay bằng bảng
+    //      điểm tạm thời theo từng live room.
     match /game_sessions/{sessionId} {
-      allow get: if true;
-      allow list: if request.query.limit <= 50;
+      allow get: if isAdmin();
+      allow list: if isAdmin() && request.query.limit <= 50;
+      allow create, update, delete: if isAdmin();
+    }
 
-      allow create: if
-        request.resource.data.studentName is string &&
-        request.resource.data.studentName.size() > 0 &&
-        request.resource.data.studentName.size() < 200 &&
-        request.resource.data.gameId in
-          ['memory-game', 'pz-defense', 'battle-quiz', 'cyber-detective',
-           'computer-simulator', 'sort-game'] &&
-        request.resource.data.score is number &&
-        request.resource.data.score >= 0 && request.resource.data.score <= 1000000 &&
-        request.resource.data.xp is number &&
-        request.resource.data.xp >= 0 && request.resource.data.xp <= 10000 &&
-        request.resource.data.playedAt == request.time;
+    // ---- Phòng thử thách trực tiếp; chỉ chứa dữ liệu trò chơi tạm thời ----
+    // Anonymous Auth tách UID từng thiết bị. Không lưu điểm thi/roster ở đây.
+    // Rules giới hạn quyền theo phòng và người chơi, nhưng Spark không thể
+    // xác minh logic chấm điểm chạy trên trình duyệt của host.
+    // Chống spam tạo phòng (tốn quota/ghi rác): mỗi người dẫn chỉ tạo được 1
+    // phòng mỗi 30 giây. Phòng chỉ tạo được khi cùng batch ghi live_hosts/{uid}.
+    match /live_hosts/{hostUid} {
+      allow read: if isSignedIn() && request.auth.uid == hostUid;
+      allow create, update: if (isAdmin() || isApprovedTeacher() || isCoordinator()) &&
+        request.auth.uid == hostUid &&
+        request.resource.data.keys().hasOnly(['lastCreatedAt']) &&
+        request.resource.data.lastCreatedAt == request.time &&
+        (resource == null || request.time > resource.data.lastCreatedAt + duration.value(30, 's'));
+      allow delete: if false;
+    }
 
-      // Bất biến sau khi ghi (giống quiz_results/mos_submissions) — chỉ
-      // Admin được sửa/xoá (vd dọn dữ liệu rác/gian lận điểm số).
-      allow update, delete: if isAdmin();
+    match /live_rooms/{roomCode} {
+      function roomData() {
+        return get(/databases/$(database)/documents/live_rooms/$(roomCode)).data;
+      }
+      function isRoomHost() {
+        return isSignedIn() && roomData().hostUid == request.auth.uid;
+      }
+      function isRoomMember() {
+        return isRoomHost() || (isSignedIn() &&
+          exists(/databases/$(database)/documents/live_rooms/$(roomCode)/players/$(request.auth.uid)));
+      }
+
+      allow get: if isSignedIn() &&
+        (resource.data.hostUid == request.auth.uid ||
+          (resource.data.expiresAt is timestamp && resource.data.expiresAt > request.time));
+      allow list: if false;
+      allow create: if (isAdmin() || isApprovedTeacher() || isCoordinator()) &&
+        request.resource.data.keys().hasOnly([
+          'hostUid', 'status', 'topic', 'questionCount', 'questionIndex',
+          'currentQuestion', 'deadline', 'createdAt', 'expiresAt', 'questionMs', 'maxPlayers'
+        ]) &&
+        request.resource.data.questionMs in [10000, 20000, 30000] &&
+        request.resource.data.maxPlayers is number &&
+        request.resource.data.maxPlayers >= 2 && request.resource.data.maxPlayers <= 100 &&
+        request.resource.data.hostUid == request.auth.uid &&
+        getAfter(/databases/$(database)/documents/live_hosts/$(request.auth.uid)).data.lastCreatedAt == request.time &&
+        request.resource.data.status == 'lobby' &&
+        request.resource.data.topic in [
+          'all', '1. Căn bản về công nghệ', '2. Công dân số',
+          '3. Quản lý thông tin', '4. Sáng tạo nội dung', '5. Giao tiếp',
+          '6. Hợp tác, cộng tác', '7. An toàn và bảo mật'
+        ] &&
+        request.resource.data.questionCount >= 5 && request.resource.data.questionCount <= 15 &&
+        request.resource.data.questionIndex == -1 &&
+        request.resource.data.createdAt == request.time &&
+        request.resource.data.expiresAt is timestamp &&
+        request.resource.data.expiresAt > request.time &&
+        request.resource.data.expiresAt < request.time + duration.value(2, 'h');
+      allow update: if isRoomHost() &&
+        request.resource.data.hostUid == resource.data.hostUid &&
+        request.resource.data.createdAt == resource.data.createdAt &&
+        request.resource.data.expiresAt == resource.data.expiresAt &&
+        request.resource.data.status in ['lobby', 'question', 'reveal', 'finished'] &&
+        request.resource.data.questionIndex >= -1 &&
+        request.resource.data.questionIndex < request.resource.data.questionCount &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status', 'questionIndex', 'currentQuestion', 'deadline', 'leaderboard', 'scores'
+        ]) &&
+        (!('leaderboard' in request.resource.data) ||
+          (request.resource.data.leaderboard is list && request.resource.data.leaderboard.size() <= 10)) &&
+        (!('scores' in request.resource.data) ||
+          (request.resource.data.scores is map && request.resource.data.scores.size() <= 100));
+      allow delete: if isRoomHost();
+
+      match /players/{playerUid} {
+        function parentRoom() {
+          return get(/databases/$(database)/documents/live_rooms/$(roomCode)).data;
+        }
+        function parentHost() {
+          return isSignedIn() && parentRoom().hostUid == request.auth.uid;
+        }
+        allow get: if isSignedIn() && (request.auth.uid == playerUid || parentHost());
+        allow list: if isRoomMember() && request.query.limit <= 100;
+        allow create: if isSignedIn() && request.auth.uid == playerUid &&
+          parentRoom().status == 'lobby' && parentRoom().expiresAt > request.time &&
+          request.resource.data.keys().hasOnly(['uid', 'name', 'score', 'correct', 'joinedAt']) &&
+          request.resource.data.uid == request.auth.uid &&
+          request.resource.data.name is string && request.resource.data.name.size() > 0 &&
+          request.resource.data.name.size() <= 24 &&
+          request.resource.data.score == 0 && request.resource.data.correct == 0 &&
+          request.resource.data.joinedAt == request.time;
+        allow update: if parentHost() &&
+          request.resource.data.keys().hasOnly(['uid', 'name', 'score', 'correct', 'joinedAt']) &&
+          request.resource.data.uid == resource.data.uid &&
+          request.resource.data.name == resource.data.name &&
+          request.resource.data.joinedAt == resource.data.joinedAt &&
+          request.resource.data.score is number && request.resource.data.score >= 0 &&
+          request.resource.data.score <= 25000 &&
+          request.resource.data.correct is number && request.resource.data.correct >= 0 &&
+          request.resource.data.correct <= 15;
+        allow delete: if parentHost() || (isSignedIn() && request.auth.uid == playerUid);
+      }
+
+      match /answers/{playerUid} {
+        function parentRoom() {
+          return get(/databases/$(database)/documents/live_rooms/$(roomCode)).data;
+        }
+        function parentHost() {
+          return isSignedIn() && parentRoom().hostUid == request.auth.uid;
+        }
+        function validAnswer() {
+          return isSignedIn() && request.auth.uid == playerUid &&
+            parentRoom().status == 'question' &&
+            request.resource.data.uid == request.auth.uid &&
+            request.resource.data.questionIndex == parentRoom().questionIndex &&
+            request.resource.data.choiceIndex is number &&
+            request.resource.data.choiceIndex >= 0 && request.resource.data.choiceIndex <= 5 &&
+            request.resource.data.submittedAt == request.time &&
+            request.time < parentRoom().deadline &&
+            exists(/databases/$(database)/documents/live_rooms/$(roomCode)/players/$(playerUid));
+        }
+        allow get: if isSignedIn() && (request.auth.uid == playerUid || parentHost());
+        allow list: if parentHost() && request.query.limit <= 100;
+        allow create: if validAnswer() &&
+          request.resource.data.keys().hasOnly(['uid', 'questionIndex', 'choiceIndex', 'submittedAt']);
+        allow update: if validAnswer() &&
+          request.resource.data.keys().hasOnly(['uid', 'questionIndex', 'choiceIndex', 'submittedAt']) &&
+          request.resource.data.questionIndex > resource.data.questionIndex;
+        allow delete: if parentHost();
+      }
     }
 
     // ---- Roster: khoá học / lớp / học sinh thật (Điều phối đào tạo quản lý

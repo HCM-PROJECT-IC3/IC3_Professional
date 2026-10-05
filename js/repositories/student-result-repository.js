@@ -27,11 +27,41 @@
      *   ở đây, Firestore sẽ từ chối toàn bộ query (không tự lọc giúp). Coordinator/Admin
      *   không cần truyền (đọc không giới hạn theo rule).
      */
-    async listRecent({ studentClass, testName, sinceMs, schools, limit = 1000 } = {}) {
+    /**
+     * Danh sách kết quả gần đây theo kiểu TẢI TĂNG DẦN (tiết kiệm lượt đọc Firestore).
+     * Lần đầu đọc đủ `limit` bản ghi rồi lưu cache (localStorage, sống qua nhiều lần mở
+     * tab). Các lần sau chỉ hỏi Firestore những bài NỘP SAU bản ghi mới nhất đã có
+     * (thường 0-50 doc thay vì 1000) rồi gộp vào cache. Trong `freshMs` không gọi gì cả.
+     * @param {string} opts.cacheKey khoá cache theo phạm vi người xem (admin/trường)
+     */
+    async listRecentCached({ cacheKey, schools, limit = 1000, freshMs = 3 * 60 * 1000 } = {}) {
+      const cache = global.EduDataCache;
+      const entry = cache ? cache.get(cacheKey, true) : null;
+      const now = Date.now();
+      if (entry && Array.isArray(entry.rows) && now - entry.fetchedAt < freshMs) return entry.rows;
+      let rows;
+      if (entry && Array.isArray(entry.rows) && entry.rows.length) {
+        const lastMs = entry.rows.reduce((m, r) => Math.max(m, r.submittedAtMs || 0), 0);
+        const where = lastMs ? [['submittedAt', '>', global.firebase.firestore.Timestamp.fromMillis(lastMs - 1)]] : [];
+        const fresh = await this.listRecent({ schools, limit, extraWhere: where });
+        const byId = new Map(entry.rows.map((r) => [r.id, r]));
+        fresh.forEach((r) => byId.set(r.id, r));
+        rows = Array.from(byId.values())
+          .sort((a, b) => (b.submittedAtMs || 0) - (a.submittedAtMs || 0))
+          .slice(0, limit);
+      } else {
+        rows = await this.listRecent({ schools, limit });
+      }
+      if (cache) cache.set(cacheKey, { rows, fetchedAt: now }, 12 * 60 * 60 * 1000, true);
+      return rows;
+    }
+
+    async listRecent({ studentClass, testName, sinceMs, schools, limit = 1000, extraWhere } = {}) {
       const where = [];
       if (studentClass) where.push(['studentClass', '==', studentClass]);
       if (testName) where.push(['testName', '==', testName]);
       if (schools && schools.length) where.push(['studentSchool', 'in', schools.slice(0, 10)]);
+      (extraWhere || []).forEach((w) => where.push(w));
       const rows = await this.list({ where, orderBy: 'submittedAt', direction: 'desc', limit });
       const normalized = rows.map(normalize);
       return sinceMs ? normalized.filter((r) => (r.submittedAtMs || 0) >= sinceMs) : normalized;
