@@ -102,11 +102,44 @@
 
   // Cache 3 phút — giống js/coordinator/data-loader.js: F5/mở lại trang trong
   // 3 phút không tốn thêm lượt đọc Firestore (xem js/services/data-cache-service.js).
-  const CACHE_TTL_MS = 3 * 60 * 1000;
+  const CACHE_TTL_MS = 15 * 60 * 1000; // an toàn vì mọi thao tác ghi đều cập nhật cache tại chỗ (syncOne/dropOne)
   function rosterCacheKey() {
     const isAdmin = myProfile.role === 'admin';
     const schools = Array.isArray(myProfile.schools) ? myProfile.schools.filter(Boolean) : [];
     return isAdmin ? 'roster-manager:admin-all-schools' : 'roster-manager:' + (myProfile.uid || myProfile.id || 'unknown') + ':' + schools.slice().sort().join('|');
+  }
+
+  // Sau khi thêm/sửa/xoá 1 bản ghi: cập nhật state tại chỗ (1 lượt đọc lại đúng bản ghi đó)
+  // thay vì loadEverything(true) — hàm đó đọc LẠI toàn bộ khoá học + lớp + học sinh +
+  // giáo viên (~1.600 lượt đọc với 1.466 học sinh) chỉ vì sửa 1 người.
+  function rerenderAll() {
+    renderCourses();
+    renderClasses();
+    renderStudentClassFilter();
+    renderStudentSchoolFilter();
+    renderStudentTeacherFilter();
+    renderStudents();
+  }
+  function persistState() {
+    if (window.EduDataCache) {
+      window.EduDataCache.set(rosterCacheKey(), { courses: state.courses, classes: state.classes, students: state.students, teachers: state.teachers }, CACHE_TTL_MS);
+    }
+  }
+  function dropOne(key, id) {
+    state[key] = state[key].filter((x) => x.id !== id);
+    rerenderAll();
+    persistState();
+  }
+  async function syncOne(key, repo, id) {
+    if (!id) { await loadEverything(true); return; }
+    const fresh = await repo.getById(id);
+    if (!fresh) { dropOne(key, id); return; }
+    const list = state[key];
+    const i = list.findIndex((x) => x.id === id);
+    if (i >= 0) list[i] = fresh; else list.push(fresh);
+    list.sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'vi'));
+    rerenderAll();
+    persistState();
   }
 
   /** @param {boolean} [forceRefresh] Bỏ qua cache — dùng sau khi ghi (thêm/sửa/xoá)
@@ -365,6 +398,7 @@
       stripDiacritics(c.name) === stripDiacritics(name) && c.id !== modalMode.editingId);
     if (dup) { toast(`⚠️ Đã có khoá học tên "${dup.name}" rồi — sửa khoá học đó thay vì tạo trùng.`); return; }
     const data = { name, level };
+    let savedId = modalMode.editingId;
     try {
       if (modalMode.editingId) {
         await window.EduRepositories.course.update(modalMode.editingId, data);
@@ -372,11 +406,12 @@
       } else {
         data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
         const id = await window.EduRepositories.course.create(data);
+        savedId = id;
         logRosterChange('create_course', id, { name });
       }
       toast('✅ Đã lưu khoá học');
       closeModal();
-      loadEverything(true);
+      await syncOne('courses', window.EduRepositories.course, savedId);
     } catch (err) {
       toast('❌ ' + friendlyError(err));
     }
@@ -390,7 +425,7 @@
       await window.EduRepositories.course.remove(id);
       logRosterChange('delete_course', id);
       toast('🗑️ Đã xoá khoá học');
-      loadEverything(true);
+      dropOne('courses', id);
     } catch (err) {
       toast('❌ ' + friendlyError(err));
     }
@@ -477,6 +512,7 @@
     const teacherName = teacherId ? (state.teachers.find((t) => t.id === teacherId) || {}).name || '' : '';
     if (!name) { toast('⚠️ Vui lòng nhập tên lớp'); return; }
     const data = { name, school, courseId, teacherId, teacherName };
+    let savedId = modalMode.editingId;
     try {
       if (modalMode.editingId) {
         await window.EduRepositories.class.update(modalMode.editingId, data);
@@ -484,12 +520,13 @@
       } else {
         data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
         const id = await window.EduRepositories.class.create(data);
+        savedId = id;
         logRosterChange('create_class', id, { name });
         // Cập nhật classId cho học sinh nếu thêm lớp mới không ảnh hưởng — bỏ qua.
       }
       toast('✅ Đã lưu lớp học');
       closeModal();
-      loadEverything(true);
+      await syncOne('classes', window.EduRepositories.class, savedId);
     } catch (err) {
       toast('❌ ' + friendlyError(err));
     }
@@ -503,7 +540,7 @@
       await window.EduRepositories.class.remove(id);
       logRosterChange('delete_class', id);
       toast('🗑️ Đã xoá lớp học');
-      loadEverything(true);
+      dropOne('classes', id);
     } catch (err) {
       toast('❌ ' + friendlyError(err));
     }
@@ -1127,6 +1164,10 @@
       // (nhiều trường dùng chung tên lớp "4A5"/"4A3") — tránh học sinh khác
       // lớp/khác TRƯỜNG ghi đè lẫn nhau (lỗi thật đã xảy ra, xem chú thích ở
       // studentDocIdFor()).
+      // Bỏ qua học sinh KHÔNG đổi gì so với dữ liệu đang có: nạp lại cùng 1 file Excel
+      // trước đây ghi lại TOÀN BỘ (vd 1.466 lượt ghi = ~7% hạn mức ghi/ngày của Spark).
+      const studentById = new Map(state.students.map((x) => [x.id, x]));
+      let skippedUnchanged = 0;
       for (const r of rows) {
         const key = classKeyOf(r.school, r.className);
         const classId = r.matchedClassId || classIdByKey[key] || '';
@@ -1140,6 +1181,8 @@
           mssv: r.mssv, name: r.name, school: r.school, className: r.className,
           classId, teacherId, teacherName, status: 'active',
         };
+        const prev = studentById.get(r.existingId || r.expectedDocId);
+        if (prev && Object.keys(data).every((k) => (prev[k] || '') === (data[k] || ''))) { skippedUnchanged++; continue; }
         let ref;
         if (r.existingId) {
           ref = studentCol.doc(r.existingId);
@@ -1157,7 +1200,7 @@
       if (ops > 0) await batch.commit();
 
       logRosterChange('import_excel', null, { count: rows.length, newClasses: newClassKeys.length, format: pendingImportFormat });
-      toast(`✅ Đã nạp ${rows.length} học sinh từ Excel`);
+      toast(`✅ Đã nạp ${rows.length} học sinh từ Excel` + (skippedUnchanged ? ` (bỏ qua ${skippedUnchanged} học sinh không thay đổi)` : ''));
       closeImportModal();
       loadEverything(true);
     } catch (err) {
@@ -1226,6 +1269,7 @@
       teacherId: cls ? cls.teacherId || '' : '',
       teacherName: cls ? cls.teacherName || '' : '',
     };
+    let savedId = modalMode.editingId;
     try {
       if (modalMode.editingId) {
         await window.EduRepositories.studentRoster.update(modalMode.editingId, data);
@@ -1233,11 +1277,12 @@
       } else {
         data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
         const id = await window.EduRepositories.studentRoster.create(data);
+        savedId = id;
         logRosterChange('create_student', id, { name });
       }
       toast('✅ Đã lưu học sinh');
       closeModal();
-      loadEverything(true);
+      await syncOne('students', window.EduRepositories.studentRoster, savedId);
     } catch (err) {
       toast('❌ ' + friendlyError(err));
     }
@@ -1250,7 +1295,7 @@
       await window.EduRepositories.studentRoster.remove(id);
       logRosterChange('delete_student', id);
       toast('🗑️ Đã xoá học sinh');
-      loadEverything(true);
+      dropOne('students', id);
     } catch (err) {
       toast('❌ ' + friendlyError(err));
     }

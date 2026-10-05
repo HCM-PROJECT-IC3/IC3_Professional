@@ -212,7 +212,19 @@
     overlay.style.visibility = 'visible';
   }
 
+  // onAuthStateChanged có thể bắn lại cho CÙNG 1 người dùng (khôi phục phiên, đổi trạng thái
+  // mạng/App Check...). Nếu cứ bắn lại "edu:ready" thì mọi trang chạy lại toàn bộ khởi tạo
+  // (dashboard nhảy về "Đang tải...", tải lại dữ liệu, gắn thêm listener) — trông như bị
+  // reload. Chỉ mở khoá + bắn sự kiện MỘT lần cho mỗi tài khoản.
+  let unlockedUid = null;
+
   function unlock(user, profile) {
+    if (unlockedUid === user.uid) {
+      window.EduCurrentUser = user;
+      window.EduCurrentProfile = profile;
+      return;
+    }
+    unlockedUid = user.uid;
     document.documentElement.classList.remove('edu-guard-locked');
     overlay.remove();
     window.EduCurrentUser = user;

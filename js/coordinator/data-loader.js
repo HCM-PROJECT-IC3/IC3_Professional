@@ -80,7 +80,8 @@
     // sống qua nhiều lần mở tab) và quiz_results (sessionStorage, 3 phút).
     // forceRefresh bỏ qua CẢ HAI (nút "🔄 Làm mới dữ liệu" phải luôn thấy
     // dữ liệu mới nhất tuyệt đối, không chỉ mỗi quiz_results).
-    let rosterBundle = !forceRefresh && global.EduDataCache
+    // Roster ít đổi: "Làm mới dữ liệu" KHÔNG đọc lại (cache 30 phút) — chỉ bài nộp mới.
+    let rosterBundle = global.EduDataCache
       ? global.EduDataCache.get(rosterCacheKey, /* persist */ true)
       : null;
     if (!rosterBundle) {

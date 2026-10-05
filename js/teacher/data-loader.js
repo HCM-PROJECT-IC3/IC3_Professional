@@ -74,7 +74,8 @@
     // Cache TÁCH RIÊNG roster (persist=true, 30 phút) và quiz_results
     // (sessionStorage, 3 phút) — xem ROSTER_CACHE_TTL_MS ở trên. Quan
     // trọng nhất ở nhánh isAdmin (tải TOÀN BỘ roster không giới hạn).
-    let students = !forceRefresh && global.EduDataCache
+    // Roster ít đổi: "Làm mới dữ liệu" KHÔNG đọc lại (cache 30 phút) — chỉ bài nộp mới.
+    let students = global.EduDataCache
       ? global.EduDataCache.get(rosterCacheKey, /* persist */ true)
       : null;
     if (!students) {

@@ -55,7 +55,7 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 // trong file này) — nơi đó CỐ TÌNH đọc thẳng Firestore để đảm bảo xuất đúng
 // bản mới nhất, kể cả khi admin khác vừa sửa ở tab/máy khác.
 const QUESTIONS_CACHE_KEY = 'image-manager:questions';
-const QUESTIONS_CACHE_TTL_MS = 3 * 60 * 1000;
+const QUESTIONS_CACHE_TTL_MS = 30 * 60 * 1000; // mọi thao tác ghi cập nhật lại cache tại chỗ
 
 /** @param {boolean} [forceRefresh] Bỏ qua cache — dùng sau khi ghi (migrate/upload/xoá/sửa). */
 async function loadFromFirestore(forceRefresh) {
@@ -598,7 +598,7 @@ function refreshCard(item) {
 async function persistQuestion(item, patch) {
   try {
     await colRef().doc(item.docId).set(patch, { merge: true });
-    if (window.EduDataCache) window.EduDataCache.clear(QUESTIONS_CACHE_KEY);
+    if (window.EduDataCache) window.EduDataCache.set(QUESTIONS_CACHE_KEY, QUESTIONS, QUESTIONS_CACHE_TTL_MS);
   } catch (err) {
     console.error(err);
     toast('❌ Lỗi lưu Firebase: ' + err.message, 4000);
@@ -650,7 +650,7 @@ async function saveCardData(item, card) {
     Object.assign(item.q, localPatch);
     // Xoá cache — tránh lần mở lại trang (tab khác/F5 trong 3 phút) thấy
     // dữ liệu cũ (xem QUESTIONS_CACHE_KEY ở loadFromFirestore()).
-    if (window.EduDataCache) window.EduDataCache.clear(QUESTIONS_CACHE_KEY);
+    if (window.EduDataCache) window.EduDataCache.set(QUESTIONS_CACHE_KEY, QUESTIONS, QUESTIONS_CACHE_TTL_MS);
 
     toast('✅ Đã lưu câu ' + (item.q.id ?? '') + ' lên Firebase');
     refreshCard(item);
@@ -667,7 +667,7 @@ async function deleteQuestion(item) {
   try {
     await colRef().doc(item.docId).delete();
     QUESTIONS = QUESTIONS.filter(x => x.docId !== item.docId);
-    if (window.EduDataCache) window.EduDataCache.clear(QUESTIONS_CACHE_KEY);
+    if (window.EduDataCache) window.EduDataCache.set(QUESTIONS_CACHE_KEY, QUESTIONS, QUESTIONS_CACHE_TTL_MS);
     applyFilters();
     toast('🗑️ Đã xoá câu hỏi khỏi Firebase');
   } catch (err) {
@@ -731,7 +731,7 @@ document.getElementById('addQuestionBtn').addEventListener('click', () => {
 
       await colRef().doc(docId).set(data);
       QUESTIONS.push({ q: data, docId });
-      if (window.EduDataCache) window.EduDataCache.clear(QUESTIONS_CACHE_KEY);
+      if (window.EduDataCache) window.EduDataCache.set(QUESTIONS_CACHE_KEY, QUESTIONS, QUESTIONS_CACHE_TTL_MS);
       scanUsedPictureNumbers();
       buildFilterOptions();
       applyFilters();

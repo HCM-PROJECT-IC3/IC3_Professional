@@ -99,6 +99,10 @@
     }
   } catch (e) { /* cache offline là tính năng "nice-to-have", lỗi ở đây không được làm hỏng app */ }
 
+  // SDK compat 10.13 chưa có API cache mới nên vẫn dùng enablePersistence() ở trên và
+  // in cảnh báo "will be deprecated" (vô hại) — chỉ giữ log mức lỗi cho sạch console.
+  try { firebase.firestore.setLogLevel('error'); } catch (e) { /* bỏ qua */ }
+
   // firebase.auth() chỉ tồn tại nếu trang có nạp firebase-auth-compat.js.
   // index.html (trang học sinh làm bài) không yêu cầu đăng nhập nên có thể
   // không nạp Auth SDK — tránh throw lỗi làm hỏng cả Firestore.
