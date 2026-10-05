@@ -539,6 +539,11 @@
     el.leaderboardOverlay.hidden = false;
     el.leaderboardList.innerHTML = '<div class="bq-leaderboard-empty">⏳ Đang tải…</div>';
 
+    if (!window.EduFirebase || !EduFirebase.auth || !EduFirebase.auth.currentUser) {
+      el.leaderboardList.innerHTML = '<div class="bq-leaderboard-error">Bảng xếp hạng liên thiết bị đang tạm khóa để chống giả điểm. Hãy chơi thử thách trong phòng để xem điểm của cả lớp.</div>';
+      return;
+    }
+
     try {
       var raw = localStorage.getItem(LEADERBOARD_CACHE_KEY);
       if (raw) {
@@ -561,7 +566,7 @@
       renderLeaderboard(rows);
     }).catch(function (err) {
       console.warn('[BattleQuiz] Không tải được bảng xếp hạng:', err);
-      el.leaderboardList.innerHTML = '<div class="bq-leaderboard-error">Không tải được bảng xếp hạng (lỗi mạng). Thử lại sau.</div>';
+      el.leaderboardList.innerHTML = '<div class="bq-leaderboard-error">Bảng xếp hạng liên thiết bị đang tạm khóa để chống giả điểm. Hãy chơi thử thách trong phòng để xem điểm của cả lớp.</div>';
     });
   }
 

@@ -41,7 +41,16 @@
   // đổi), nên khôi phục sau F5/mất mạng trên CÙNG máy không bị ảnh hưởng,
   // chỉ có bản backup "đổi máy giữa chừng" trên Firestore là kém tươi hơn
   // vài chục giây — đánh đổi hợp lý cho 1 tính năng phụ/dự phòng.
-  var MIN_FIRESTORE_WRITE_INTERVAL_MS = 20000;
+  var MIN_FIRESTORE_WRITE_INTERVAL_MS = 300000;
+  // TẮT backup Firestore theo mặc định: firestore.rules KHÔNG có rule cho
+  // collection "mos_exam_sessions" nên mọi lần ghi/đọc đều bị từ chối (không
+  // phải bản backup nào cũng chạy được), chỉ tốn request mạng mỗi vài chục giây
+  // trên từng máy học sinh. Nếu bật lại, PHẢI thêm rule cho collection này và
+  // giữ throttle 5 phút + chỉ ghi khi snapshot đổi: 45 phút thi ≈ 9 lượt ghi/HS,
+  // 1.000 HS/ngày ≈ 9.000 ghi (so với trần 20.000/ngày của Spark). IndexedDB
+  // (khôi phục sau F5/mất mạng cùng máy) vẫn chạy như cũ.
+  var FIRESTORE_BACKUP_ENABLED = false;
+  var lastSnapshotJsonBySession = {};
   var lastFirestoreWriteAtBySession = {};
 
   function openDb() {
@@ -99,7 +108,7 @@
   }
 
   function firestoreSave(sessionId, record) {
-    if (!firestoreAvailable()) return Promise.resolve(false);
+    if (!FIRESTORE_BACKUP_ENABLED || !firestoreAvailable()) return Promise.resolve(false);
     return global.EduFirebase.db.collection(FIRESTORE_COLLECTION).doc(sessionId).set(
       Object.assign({}, record, { updatedAt: firebase.firestore.FieldValue.serverTimestamp() }),
       { merge: true }
@@ -110,7 +119,7 @@
   }
 
   function firestoreLoad(sessionId) {
-    if (!firestoreAvailable()) return Promise.resolve(null);
+    if (!FIRESTORE_BACKUP_ENABLED || !firestoreAvailable()) return Promise.resolve(null);
     return global.EduFirebase.db.collection(FIRESTORE_COLLECTION).doc(sessionId).get()
       .then(function (doc) { return doc.exists ? doc.data() : null; })
       .catch(function (e) {
@@ -142,9 +151,13 @@
     // autosave() được gọi dồn dập.
     var now = Date.now();
     var lastWriteAt = lastFirestoreWriteAtBySession[sessionId] || 0;
-    if (now - lastWriteAt >= MIN_FIRESTORE_WRITE_INTERVAL_MS) {
-      lastFirestoreWriteAtBySession[sessionId] = now;
-      firestoreSave(sessionId, record);
+    if (FIRESTORE_BACKUP_ENABLED && now - lastWriteAt >= MIN_FIRESTORE_WRITE_INTERVAL_MS) {
+      var json = JSON.stringify(snapshot);
+      if (json !== lastSnapshotJsonBySession[sessionId]) {
+        lastSnapshotJsonBySession[sessionId] = json;
+        lastFirestoreWriteAtBySession[sessionId] = now;
+        firestoreSave(sessionId, record);
+      }
     }
 
     return localWrite;
@@ -171,7 +184,7 @@
   function clear(sessionId) {
     delete lastFirestoreWriteAtBySession[sessionId];
     var localClear = hasIndexedDB ? idbDelete(sessionId).catch(function () { return false; }) : Promise.resolve(false);
-    var remoteClear = firestoreAvailable()
+    var remoteClear = FIRESTORE_BACKUP_ENABLED && firestoreAvailable()
       ? global.EduFirebase.db.collection(FIRESTORE_COLLECTION).doc(sessionId).delete().catch(function () { return false; })
       : Promise.resolve(false);
     return Promise.all([localClear, remoteClear]);

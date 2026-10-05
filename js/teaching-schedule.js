@@ -174,7 +174,7 @@
   function initScheduleAvatars() {
     if (!window.EduFirebase || !window.EduFirebase.db) return;
     const db = window.EduFirebase.db;
-    db.collection('users').where('role', '==', 'teacher').get()
+    db.collection('users').where('role', '==', 'teacher').where('approved', '==', true).get()
       .then((snap) => {
         snap.forEach((doc) => {
           const code = doc.data().teacherCode;

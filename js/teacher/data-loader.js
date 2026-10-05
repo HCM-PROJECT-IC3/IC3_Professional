@@ -84,11 +84,12 @@
       if (global.EduDataCache) global.EduDataCache.set(rosterCacheKey, students, ROSTER_CACHE_TTL_MS, /* persist */ true);
     }
 
-    let resultsRaw = !forceRefresh && global.EduDataCache ? global.EduDataCache.get(resultsCacheKey) : null;
-    if (!resultsRaw) {
-      resultsRaw = await global.EduRepositories.studentResult.listRecent(isAdmin ? { limit: 1000 } : { schools, limit: 1000 });
-      if (global.EduDataCache) global.EduDataCache.set(resultsCacheKey, resultsRaw, RESULTS_CACHE_TTL_MS);
-    }
+    // Tải tăng dần (xem listRecentCached): mỗi lần làm mới chỉ đọc bài MỚI nộp,
+    // không đọc lại 1000 kết quả. forceRefresh vẫn chỉ tải phần mới (rẻ).
+    const resultsRaw = await global.EduRepositories.studentResult.listRecentCached({
+      cacheKey: resultsCacheKey, schools: isAdmin ? undefined : schools, limit: 1000,
+      freshMs: forceRefresh ? 15 * 1000 : RESULTS_CACHE_TTL_MS
+    });
 
     // quiz_results không có field teacherId (chỉ có studentSchool) nên
     // firestore.rules chỉ siết được theo "schools" — nếu dừng ở đó, 1 giáo

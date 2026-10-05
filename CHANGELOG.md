@@ -1,5 +1,22 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## 0a. Thử thách cùng lớp: sửa rò timer, hiện kết quả cá nhân
+
+- `js/live-quiz.js`: vòng đếm giờ không còn nhân đôi theo mỗi snapshot (dùng 1 handle, dọn khi rời phòng).
+- Màn "Đáp án" báo riêng cho từng học sinh: chính xác / chưa đúng / chưa trả lời kịp.
+- Danh sách người chơi tự xếp theo điểm khi phòng đã bắt đầu.
+
+## 0b. Thử thách cùng lớp: chống spam tạo phòng
+
+- `firestore.rules`: thêm `live_hosts/{uid}`; tạo phòng phải kèm ghi `lastCreatedAt` trong cùng batch, cách lần trước ≥ 30 giây. Cần **publish lại rules**.
+- `js/live-quiz.js`: tạo phòng bằng batch (host doc + room).
+
+## 0c. Rà soát quota Firestore cho hàng nghìn học sinh/ngày
+
+- Dashboard giáo viên/điều phối: tải kết quả tăng dần (`listRecentCached`), không đọc lại 1.000 bài mỗi lần làm mới.
+- `autosave-service.js`: tắt backup Firestore của bài thi MOS (collection `mos_exam_sessions` chưa có rule nên luôn bị từ chối; nếu bật lại dễ ghi ~135 lượt/HS). Khi bật lại: throttle 5 phút + chỉ ghi khi snapshot đổi. IndexedDB vẫn lưu mỗi lần.
+- Ước tính 1.000 HS/ngày: ghi ≈ 1 lượt/bài nộp (quiz_results/mos_submissions); đọc phía học sinh ≈ 0 (dữ liệu câu hỏi/roster là file tĩnh).
+
 ## 0 (mới nhất). Click trực tiếp trên ảnh cho câu nối cột (thay vì đọc chữ)
 
 ### Tính năng mới: `q.regions` — vùng bấm trên ảnh cho câu "matching"

@@ -29,11 +29,13 @@ dashboard theo dõi tiến độ cho điều phối đào tạo/giáo viên.
   sinh luyện thao tác trước khi thi thật.
 - **Mini-game ôn tập** trong "Khu Vui Chơi": Trí Nhớ Thiết Bị, Phòng Thủ
   Dữ Liệu, Battle Quiz, Cyber Detective, Phân Loại Thần Tốc, Chim Vượt
-  Ải (Mario + Flappy Bird kết hợp cổng câu hỏi IC3)... — mở khóa theo
+  Ải (Mario + Flappy Bird kết hợp cổng câu hỏi IC3), Thử thách cùng lớp
+  (quiz trực tiếp nhiều thiết bị)... — mở khóa theo
   kết quả bài thi, không có bộ câu hỏi riêng (dùng lại đúng ngân hàng
   câu hỏi của Quiz).
-- **Gamification**: XP, streak, huy hiệu, bảng xếp hạng — lưu local-first
-  (hoạt động không cần tài khoản), đồng bộ phụ lên Firestore khi có.
+- **Gamification**: XP, streak, huy hiệu — lưu local-first (không cần tài
+  khoản); bảng điểm nhiều người hiển thị trong từng phòng. Bảng xếp hạng
+  mini-game toàn hệ thống đang tắt vì client có thể tự giả mạo điểm.
 - **Dashboard báo cáo** (điều phối đào tạo / giáo viên / admin): thống
   kê điểm theo lớp/chủ đề/thời gian, quản lý danh sách học sinh (nạp từ
   Excel), quản lý lịch giảng dạy, trang Social nội bộ cho giáo viên.
@@ -44,7 +46,7 @@ dashboard theo dõi tiến độ cho điều phối đào tạo/giáo viên.
   là 1 file `.html` độc lập nạp các `<script>` cần dùng trực tiếp.
 - **Firebase** (gói Spark — free tier): Firestore (lưu kết quả thi,
   roster, bài đăng Social...), Authentication (đăng nhập admin/giáo
-  viên), App Check (chống request giả mạo).
+  viên và Anonymous Auth cho phòng chơi), App Check.
 - **Chart.js** (biểu đồ dashboard, nạp theo trang cần dùng, không nạp
   toàn site), **jsPDF/ExcelJS/SheetJS** (xuất PDF/Excel, chỉ ở các
   trang cần).
@@ -107,13 +109,31 @@ Cấu hình Firebase (project `data-ic3`) đã có sẵn trong
 Nếu fork dự án để triển khai độc lập (project Firebase riêng):
 
 1. Tạo project Firebase mới, bật **Firestore** + **Authentication**
-   (Email/Password) + **App Check**.
+  (Email/Password; bật thêm provider **Anonymous** nếu dùng phòng chơi)
+  + **App Check**.
 2. Thay `firebaseConfig` trong `js/firebase-config.js` bằng config
    project mới.
 3. Deploy `firestore.rules` lên project đó (`firebase deploy --only firestore:rules`
    nếu dùng Firebase CLI, hoặc dán tay qua Console).
 4. Làm theo hướng dẫn App Check ngay trong comment đầu file
    `js/firebase-config.js` (đăng ký site key reCAPTCHA Enterprise).
+5. Để dùng `live-quiz.html`, vào Firebase Console → Authentication →
+  Sign-in method và bật **Anonymous**. Phòng chỉ lưu biệt danh, câu trả
+  lời và điểm trò chơi tạm thời; không ghi `quiz_results`. Trên Spark,
+  chỉ Admin, giáo viên đã duyệt hoặc điều phối được tạo phòng; client
+  không thể tự xác minh đáp án/điểm do host tính, nên không dùng
+  kết quả này làm điểm thi chính thức. Phòng hết hạn sau 90 phút nhưng
+  Firestore không tự xóa subcollection; người dẫn dùng nút **Xóa phòng
+  và dữ liệu** để dọn người chơi/câu trả lời sau khi kết thúc.
+   Chống lạm dụng: mã phòng 8 ký tự ngẫu nhiên (~8,5×10¹¹ khả năng, không
+   liệt kê được phòng); chỉ nhân sự được duyệt tạo phòng, tối đa 1 phòng/30 giây
+   (`live_hosts`); phòng hết hạn sau 90 phút. Nên bật thêm: App Check *Enforce*
+   cho Firestore và Auth, TTL policy trên trường `expiresAt` của `live_rooms`
+   (Firestore → TTL), và đặt ngân sách/cảnh báo quota.
+6. Bài thi quiz/MOS hiện vẫn cho phép học sinh nộp ẩn danh để giữ luồng
+  không cần tài khoản. Rules giới hạn schema và giá trị, nhưng không thể
+  xác minh điểm do trình duyệt gửi; muốn chống giả mạo điểm chính thức
+  cần chấm bài ở backend đáng tin cậy.
 
 ## Triển khai (Deploy)
 
