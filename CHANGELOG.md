@@ -1,5 +1,13 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## 0000. Quản lý câu hỏi: sửa thẳng data/ic3 (đủ 6.071 mục), bỏ Firestore
+
+- **Vì sao trang chỉ hiện 1.102 câu:** collection Firestore `questions` được nhập 1 lần từ `quiz_data.json` cũ (04/09, 3.160 mục) với id = `uid`; các bản chép cùng uid (Tiết 1–8 dùng lại câu của chủ đề) bị gộp → 1.102 doc. Mọi câu thêm sau đó (Spark, Bài 1–35, MOS) không có trên Firestore, trong khi `data/ic3/` (học sinh dùng) có 6.071 mục / 4.013 câu khác nhau.
+- **Rủi ro đã chặn:** nút "📤 Xuất ra data/ic3" cũ đẩy bản Firestore đó **đè** lên `data/ic3/` → học sinh mất phần lớn câu hỏi. Nút cũng không ghi `data/ic3/minitests/*.json` (file quiz-engine ưu tiên tải) nên câu đã sửa có thể không tới học sinh.
+- `image-manager.js` viết lại phần dữ liệu: đọc thẳng `data/ic3/` (qua GitHub API nếu có token → luôn mới nhất), **0 lượt đọc/ghi Firestore**. Sửa/thêm/xoá/gắn ảnh lưu **bản nháp** IndexedDB (F5/đóng tab vẫn còn). "🚀 Đẩy thay đổi cho học sinh" chỉ commit file thật sự đổi (khối, minitest tách nhỏ, manifest, `meta.json` + version mới, ảnh "file riêng" vào `img/`), định dạng giống hệt file cũ; **từ chối đẩy** nếu GitHub đã đổi kể từ lúc mở trang. Sửa 1 câu cập nhật luôn các bản chép cùng uid trong khối. Thống kê hiện số mục + số câu khác nhau.
+- `github-publish.js`: sửa lỗi tràn stack khi mã hoá file ~1MB (mọi lần đẩy data/ic3 trước đây đều rơi về tải zip); thêm `fetchRaw`, `gitBlobSha`, kiểm tra `expectedShas`, hỗ trợ file nhị phân.
+- Bỏ `js/services/collection-sync-service.js` (không còn dùng). Collection Firestore `questions` không còn trang nào đọc — có thể xoá trong Console khi muốn.
+
 ## 000. Sửa cache bị tràn — nguyên nhân các đỉnh 4K–6K lượt đọc/giờ
 
 - **Quản lý câu hỏi** (`image-manager.js`): ngân hàng ~6.071 câu (~5 triệu ký tự) vượt trần ~5 triệu ký tự của sessionStorage → cache ghi hỏng âm thầm → **mỗi lần mở trang đọc lại ~6.071 lượt** (khớp đỉnh 6K). Giờ giữ bản sao IndexedDB + đồng bộ delta theo `updatedAt` (`js/services/collection-sync-service.js`): mở lại ≈ 1 lượt đọc. Mọi lần ghi câu hỏi đặt `updatedAt`; nhập/tải JSON lên không còn đọc lại toàn bộ; đọc lại toàn bộ mỗi 7 ngày (bắt câu bị xoá ở máy khác) hoặc khi xuất file tĩnh. `updatedAt` không đưa vào file xuất.

@@ -75,17 +75,59 @@
     return res.json();
   }
 
+  // Mã hoá theo từng đoạn: String.fromCharCode(...bytes) với file ~1MB (data/ic3/*.json)
+  // vượt giới hạn số tham số của hàm → "Maximum call stack size exceeded".
+  function bytesToBase64(bytes) {
+    let bin = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) {
+      bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    }
+    return btoa(bin);
+  }
+
   function utf8ToBase64(str) {
-    return btoa(String.fromCharCode(...new TextEncoder().encode(str)));
+    return bytesToBase64(new TextEncoder().encode(str));
+  }
+
+  /** SHA git của 1 blob ("blob <độ dài>\0<nội dung>") — so được với sha GitHub trả về
+   *  mà KHÔNG cần token, để biết file đang mở có còn khớp bản trên GitHub không. */
+  async function gitBlobSha(text) {
+    const body = new TextEncoder().encode(text);
+    const head = new TextEncoder().encode(`blob ${body.length}\0`);
+    const all = new Uint8Array(head.length + body.length);
+    all.set(head, 0);
+    all.set(body, head.length);
+    const digest = await crypto.subtle.digest('SHA-1', all);
+    return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  function hasToken() {
+    try { return !!localStorage.getItem(GH_TOKEN_KEY); } catch (e) { return false; }
+  }
+
+  /** Nội dung MỚI NHẤT của 1 file trên nhánh (không qua cache GitHub Pages ~10 phút). */
+  async function fetchRaw(path, token) {
+    const tok = token || getToken(false);
+    if (!tok) throw new Error('Cần token GitHub.');
+    const res = await fetch(`${API_BASE}/contents/${path.split('/').map(encodeURIComponent).join('/')}?ref=${GH_BRANCH}`, {
+      headers: { Authorization: `Bearer ${tok}`, Accept: 'application/vnd.github.raw+json' },
+      cache: 'no-store',
+    });
+    if (res.status === 401 || res.status === 403) { forgetToken(); throw new Error(`Token GitHub không hợp lệ/hết quyền (${res.status})`); }
+    if (!res.ok) throw new Error(`GitHub API lỗi ${res.status} khi đọc ${path}`);
+    return res.text();
   }
 
   /**
-   * Đẩy 1 hoặc nhiều file text (JSON...) lên GitHub trong ĐÚNG 1 commit.
-   * @param {Array<{path: string, content: string}>} files path tương đối gốc repo (vd "data/roster/students-active.json")
+   * Đẩy 1 hoặc nhiều file lên GitHub trong ĐÚNG 1 commit.
+   * @param {Array<{path: string, content?: string, base64?: string}>} files path tương đối gốc repo;
+   *   `content` cho file text, `base64` cho file nhị phân (ảnh).
    * @param {string} message nội dung commit message
    * @param {string} [token] truyền sẵn nếu đã có (tránh hỏi lại), mặc định tự lấy/hỏi
+   * @param {{expectedShas?: Object<string,string>}} [opts] path → sha git của bản đã mở; nếu
+   *   file trên nhánh đã khác (ai đó vừa đẩy bằng script/máy khác) thì DỪNG, không ghi đè.
    */
-  async function publishFiles(files, message, token) {
+  async function publishFiles(files, message, token, opts) {
     const tok = token || getToken(false);
     if (!tok) throw new Error('Đã huỷ — cần token GitHub để tự động cập nhật.');
 
@@ -94,15 +136,29 @@
     const baseCommit = await call(`git/commits/${baseCommitSha}`, tok);
     const baseTreeSha = baseCommit.tree.sha;
 
+    const expected = (opts && opts.expectedShas) || {};
+    const expectedPaths = Object.keys(expected);
+    if (expectedPaths.length) {
+      const tree = await call(`git/trees/${baseTreeSha}?recursive=1`, tok);
+      const current = {};
+      (tree.tree || []).forEach((t) => { current[t.path] = t.sha; });
+      const changed = expectedPaths.filter((p) => expected[p] && current[p] && current[p] !== expected[p]);
+      if (changed.length) {
+        const err = new Error('Dữ liệu trên GitHub đã thay đổi sau khi bạn mở trang: ' + changed.join(', '));
+        err.code = 'conflict';
+        err.paths = changed;
+        throw err;
+      }
+    }
+
     const blobs = await Promise.all(files.map(async (f) => {
       const blob = await call('git/blobs', tok, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: utf8ToBase64(f.content), encoding: 'base64' }),
+        body: JSON.stringify({ content: f.base64 != null ? f.base64 : utf8ToBase64(f.content), encoding: 'base64' }),
       });
       return { path: f.path, mode: '100644', type: 'blob', sha: blob.sha };
     }));
-
     const newTree = await call('git/trees', tok, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -124,5 +180,5 @@
     return newCommit.sha;
   }
 
-  global.EduGitHubPublish = { publishFiles, getToken, forgetToken, OWNER: GH_OWNER, REPO: GH_REPO, BRANCH: GH_BRANCH };
+  global.EduGitHubPublish = { publishFiles, fetchRaw, gitBlobSha, hasToken, getToken, forgetToken, OWNER: GH_OWNER, REPO: GH_REPO, BRANCH: GH_BRANCH };
 })(window);
