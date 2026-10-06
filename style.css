@@ -3452,3 +3452,40 @@ body {
   border-color: var(--yellow);
   color: #7a5800;
 }
+
+/* ── Kết quả theo chủ đề + "Luyện lại câu sai" (js/quiz-engine.js § 19b) ── */
+.result-topics {
+  width: 100%;
+  margin: -.4rem 0 1.2rem;
+  padding: .85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  text-align: left;
+}
+.result-topics .rt-title { font-weight: 800; margin-bottom: .55rem; color: var(--text); }
+.result-topics .rt-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .6rem;
+  padding: .22rem 0;
+  font-size: .88rem;
+}
+.result-topics .rt-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+.result-topics .rt-track { height: .5rem; border-radius: 100px; background: var(--card2, var(--border)); overflow: hidden; }
+.result-topics .rt-fill { display: block; height: 100%; border-radius: inherit; background: var(--teal); transition: width .7s cubic-bezier(.16,1,.3,1); }
+.result-topics .rt-row.mid .rt-fill { background: var(--yellow); }
+.result-topics .rt-row.low .rt-fill { background: var(--red); }
+.result-topics .rt-val { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--muted); }
+.result-topics .rt-hint { margin-top: .6rem; font-size: .85rem; color: var(--muted); }
+.btn-retry.btn-retry-wrong {
+  margin-bottom: .6rem;
+  background: linear-gradient(135deg, var(--yellow), #e08a00);
+  box-shadow: 0 4px 18px rgba(246,167,35,.35);
+}
+.btn-retry.btn-retry-wrong small { font-weight: 600; opacity: .85; }
+@media (max-width: 520px) {
+  .result-topics .rt-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .result-topics .rt-track { grid-column: 1 / -1; grid-row: 2; }
+}
