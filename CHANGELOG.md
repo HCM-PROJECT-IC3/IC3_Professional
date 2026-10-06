@@ -1,5 +1,11 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## 00000. Trang làm bài: luyện lại câu sai, kết quả theo chủ đề, phím tắt (0 lượt Firebase thêm)
+
+- **🔁 Luyện lại N câu sai** ở màn kết quả: mở phiên Ôn luyện chỉ gồm các câu sai/bỏ qua (xáo lại đáp án, có "Kiểm tra đáp án", không đếm giờ). Phiên này **không** ghi Firestore, Google Sheet, lịch sử hay XP và không autosave — bài thật vẫn chỉ ghi đúng 1 lần lúc nộp. Làm xong có thể luyện tiếp phần còn sai; về sảnh trả lại chế độ Ôn luyện/Kiểm tra đã chọn.
+- **📊 Kết quả theo chủ đề** (bài Tổng hợp): đúng/tổng từng chủ đề, xếp chủ đề yếu nhất lên đầu, gợi ý chủ đề nên ôn (< 70%). Câu bài Tổng hợp được gắn `_topic` lúc trộn.
+- **Phím tắt khi làm bài:** ← → chuyển câu, 1–9 / A–E chọn đáp án (câu 1 hoặc nhiều đáp án), F gắn cờ; không chạy khi đang gõ chữ, đang mở ảnh phóng to/mini-game. Gợi ý hiện 1 lần trên máy có chuột.
+
 ## 0000. Quản lý câu hỏi: sửa thẳng data/ic3 (đủ 6.071 mục), bỏ Firestore
 
 - **Vì sao trang chỉ hiện 1.102 câu:** collection Firestore `questions` được nhập 1 lần từ `quiz_data.json` cũ (04/09, 3.160 mục) với id = `uid`; các bản chép cùng uid (Tiết 1–8 dùng lại câu của chủ đề) bị gộp → 1.102 doc. Mọi câu thêm sau đó (Spark, Bài 1–35, MOS) không có trên Firestore, trong khi `data/ic3/` (học sinh dùng) có 6.071 mục / 4.013 câu khác nhau.

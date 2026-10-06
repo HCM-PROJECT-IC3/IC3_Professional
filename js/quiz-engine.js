@@ -365,7 +365,8 @@ function buildRandomMixQuestions(minitestsFull, totalWanted) {
 
   let pool = [];
   topics.forEach(t => {
-    pool = pool.concat(_shuffleArr(minitestsFull[t] || []).slice(0, want[t]));
+    // _topic: để màn kết quả thống kê đúng/sai theo từng chủ đề (§ 19b).
+    pool = pool.concat(_shuffleArr(minitestsFull[t] || []).slice(0, want[t]).map(q => Object.assign({}, q, { _topic: t })));
   });
   return _shuffleArr(pool);
 }
@@ -430,6 +431,7 @@ function saveInProgress() {
   // đúng bản autosave vừa bị clearInProgress() xoá trong submitExam() —
   // khiến lần mở trang kế tiếp lại hỏi "làm tiếp?" một bài ĐÃ NỘP XONG.
   if (!State.session || !State.session.startTime || !State.questions?.length || State.submitted) return;
+  if (State.session.isRetry) return; // § 19b — "Luyện lại câu sai" không cần khôi phục
   try {
     const snapshot = {
       v: 1,
@@ -1471,6 +1473,7 @@ async function startExam() {
   // Bật lớp bảo vệ chống gian lận CHỈ cho chế độ "Kiểm tra" (§ 2b) — Ôn
   // luyện không bị ràng buộc gì, giữ nguyên trải nghiệm thoải mái.
   if (State.examMode === 'test') acStartGuard();
+  _maybeShowKeyHint();
 }
 
 /* ============================================================
@@ -3645,8 +3648,11 @@ function submitExam() {
   const elapsed   = Math.round((Date.now() - State.session.startTime) / 1000);
   const result    = gradeExam();
   const integrity = computeIntegrity(result, elapsed);
-  const gameResult = saveRecord(result, elapsed, integrity);
+  const isRetry = !!State.session.isRetry;
+  const gameResult = isRetry ? null : saveRecord(result, elapsed, integrity);
   showResult(result, integrity);
+  // § 19b — lượt "Luyện lại câu sai" chỉ để ôn: không ghi lịch sử, XP, Google Sheet hay Firestore.
+  if (isRetry) return;
 
   // ── Thông báo huy hiệu mới (nếu có) ────────────────────────
   if (gameResult?.newBadges?.length) {
@@ -4153,7 +4159,10 @@ function showResult(result, integrity) {
   State.lastResultSummary = { correct, incorrect, skipped, total, scorePercent: pct };
   applyResultRing(pct);
   applyResultBar(correct, incorrect, skipped, total);
-  renderResultCompare(pct);
+  if (!State.session.isRetry) renderResultCompare(pct);
+  else document.getElementById('resultCompare')?.setAttribute('hidden', '');
+  _renderTopicStats(details);
+  _updateRetryWrongButton(details);
 
   document.getElementById('resultScore').textContent = `${pct}%`;
   document.getElementById('rCorrect').textContent    = correct;
@@ -4207,6 +4216,173 @@ function showResult(result, integrity) {
   }
 
   if (pct >= 70) launchConfetti();
+}
+
+/* ============================================================
+   § 19b — KẾT QUẢ THEO CHỦ ĐỀ + "LUYỆN LẠI CÂU SAI"
+   ────────────────────────────────────────────────────────────
+   Hoàn toàn chạy trên máy — KHÔNG thêm lượt đọc/ghi Firebase:
+   - Bảng theo chủ đề dựng từ chính kết quả vừa chấm (câu bài "Tổng hợp"
+     được gắn _topic trong buildRandomMixQuestions()).
+   - Lượt "Luyện lại câu sai" là phiên Ôn luyện (có "Kiểm tra đáp án",
+     không đếm giờ, không chống gian lận) và KHÔNG ghi Firestore/Google
+     Sheet/lịch sử/XP (xem State.session.isRetry trong submitExam(),
+     saveInProgress()) — bài thật đã được ghi đúng 1 lần lúc nộp.
+   ============================================================ */
+
+function _renderTopicStats(details) {
+  let box = document.getElementById('resultTopics');
+  const byTopic = new Map();
+  details.forEach((d, i) => {
+    const topic = State.questions[i]?._topic;
+    if (!topic) return;
+    const t = byTopic.get(topic) || { correct: 0, total: 0 };
+    t.total++;
+    if (d.status === 'correct') t.correct++;
+    byTopic.set(topic, t);
+  });
+  if (byTopic.size < 2) { if (box) box.hidden = true; return; }
+
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'resultTopics';
+    box.className = 'result-topics';
+    document.getElementById('resultBar')?.insertAdjacentElement('afterend', box);
+  }
+  const rows = [...byTopic.entries()]
+    .map(([name, t]) => ({ name, ...t, pct: Math.round((t.correct / t.total) * 100) }))
+    .sort((a, b) => a.pct - b.pct || a.name.localeCompare(b.name, 'vi'));
+  const weak = rows.filter(r => r.pct < 70).map(r => r.name.replace(/^\d+\.\s*/, ''));
+
+  box.hidden = false;
+  box.innerHTML = `
+    <div class="rt-title"><i class="fa-solid fa-chart-column"></i> Kết quả theo chủ đề</div>
+    ${rows.map(r => `
+      <div class="rt-row ${r.pct >= 70 ? 'good' : r.pct >= 50 ? 'mid' : 'low'}">
+        <span class="rt-name">${_acEscapeHtml(r.name)}</span>
+        <span class="rt-track"><span class="rt-fill" style="width:${r.pct}%"></span></span>
+        <span class="rt-val">${r.correct}/${r.total}</span>
+      </div>`).join('')}
+    <div class="rt-hint">${weak.length
+      ? `<i class="fa-solid fa-lightbulb"></i> Nên ôn thêm: <b>${weak.map(_acEscapeHtml).join(', ')}</b> — chọn đúng chủ đề đó ở mục "Theo chủ đề".`
+      : '<i class="fa-solid fa-star"></i> Chủ đề nào cũng đạt từ 70% — rất đều tay!'}</div>`;
+}
+
+/** Câu sai/bỏ qua của lượt vừa nộp, ở dạng "gốc" (bỏ field _ do prepareQuestions tạo, giữ _topic). */
+function _wrongQuestionsOf(details) {
+  return details
+    .map((d, i) => (d.status === 'correct' ? null : State.questions[i]))
+    .filter(Boolean)
+    .map(q => {
+      const clone = JSON.parse(JSON.stringify(q));
+      Object.keys(clone).forEach(k => { if (k.startsWith('_') && k !== '_topic') delete clone[k]; });
+      return clone;
+    });
+}
+
+function _updateRetryWrongButton(details) {
+  let btn = document.getElementById('btnRetryWrong');
+  const wrong = _wrongQuestionsOf(details);
+  State.lastWrongQuestions = wrong;
+  if (!btn) {
+    btn = document.createElement('button');
+    btn.type = 'button';
+    btn.id = 'btnRetryWrong';
+    btn.className = 'btn-retry btn-retry-wrong';
+    btn.addEventListener('click', startRetryWrong);
+    document.querySelector('#result .btn-retry')?.insertAdjacentElement('beforebegin', btn);
+  }
+  btn.hidden = wrong.length === 0;
+  btn.innerHTML = `<i class="fa-solid fa-rotate-left"></i> Luyện lại ${wrong.length} câu sai <small>(không tính điểm)</small>`;
+}
+
+function startRetryWrong() {
+  const wrong = State.lastWrongQuestions || [];
+  if (!wrong.length) return;
+  // Phiên luyện lại luôn là "Ôn luyện" — nhớ lựa chọn ở sảnh để trả lại khi về sảnh.
+  if (State._lobbyExamMode === undefined) State._lobbyExamMode = State.examMode;
+  State.examMode = 'practice';
+
+  const prev = State.session || {};
+  State.questions = prepareQuestions(wrong);
+  State.answers   = {};
+  State.flags     = new Set();
+  State.current   = 0;
+  State.submitted = false;
+  State.matching  = {};
+  State.matchSel  = {};
+  State.hotspot   = {};
+  State.list      = {};
+  State.classify  = {};
+  State.ordering  = {};
+  State.fillblank = {};
+  State.timeLeft  = Infinity;
+  const baseName = String(prev.minitest || '').replace(/ — Luyện lại câu sai$/, '');
+  State.session = Object.assign({}, prev, {
+    minitest:     `${baseName} — Luyện lại câu sai`,
+    isRetry:      true,
+    isRandomMix:  false,
+    examMode:     'practice',
+    startTime:    Date.now(),
+    totalTime:    Infinity,
+    tabSwitches:  0,
+    clicks:       0,
+    qTimes:       {},
+    qStart:       { 0: Date.now() },
+    timedOut:     false,
+    gameBreakPoints: [],
+    gameBreaksDone:  new Set(),
+  });
+
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('exam').style.display   = 'flex';
+  const info = document.getElementById('topbarInfo');
+  if (info) info.innerHTML = `<i class="fa-solid fa-rotate-left"></i> ${_acEscapeHtml(prev.studentName || '')} · Luyện lại ${State.questions.length} câu sai (không tính điểm)`;
+
+  buildSidebar();
+  _restoreSidebarState();
+  renderQuestion(0);
+  startTimer();
+  showNotification('Luyện lại các câu sai — bấm "Kiểm tra đáp án" để xem đúng/sai từng câu. Lượt này không tính điểm.', 'info');
+}
+
+/* ============================================================
+   § 19c — PHÍM TẮT KHI LÀM BÀI
+   ← / →   câu trước / câu tiếp
+   1–9, A–E chọn đáp án (câu 1 đáp án / nhiều đáp án)
+   F       gắn / bỏ cờ câu hiện tại
+   Bỏ qua khi đang gõ trong ô nhập, có phím Ctrl/Alt/Meta, hoặc đã nộp bài.
+   ============================================================ */
+const KEY_HINT_SHOWN = 'eduquiz_key_hint_shown';
+
+function _onExamKeydown(e) {
+  if (e.defaultPrevented || e.ctrlKey || e.altKey || e.metaKey) return;
+  const exam = document.getElementById('exam');
+  if (!exam || exam.style.display === 'none' || State.submitted || !State.questions?.length) return;
+  const tag = (e.target && e.target.tagName) || '';
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test(tag) || e.target?.isContentEditable) return;
+  if (document.querySelector('.game-modal-overlay.show, #imgZoomOverlay, .game-break-overlay.show')) return;
+
+  if (e.key === 'ArrowRight') { e.preventDefault(); nextQ(); return; }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); prevQ(); return; }
+  if (e.key === 'f' || e.key === 'F') { e.preventDefault(); toggleFlag(State.current); return; }
+
+  let idx = -1;
+  if (/^[1-9]$/.test(e.key)) idx = Number(e.key) - 1;
+  else if (/^[a-eA-E]$/.test(e.key)) idx = e.key.toUpperCase().charCodeAt(0) - 65;
+  if (idx < 0) return;
+  const opts = document.querySelectorAll('#q-body .option-btn');
+  if (opts[idx] && !opts[idx].disabled) { e.preventDefault(); opts[idx].click(); opts[idx].focus({ preventScroll: true }); }
+}
+document.addEventListener('keydown', _onExamKeydown);
+
+function _maybeShowKeyHint() {
+  try {
+    if (localStorage.getItem(KEY_HINT_SHOWN)) return;
+    localStorage.setItem(KEY_HINT_SHOWN, '1');
+  } catch (e) { return; }
+  if (window.matchMedia && !window.matchMedia('(pointer: fine)').matches) return; // máy cảm ứng — không có bàn phím
+  setTimeout(() => showNotification('Mẹo: dùng phím ← → để chuyển câu, 1–9 hoặc A–E để chọn đáp án, F để gắn cờ.', 'info'), 1200);
 }
 
 /**
@@ -4386,6 +4562,7 @@ function fmtTime(s) {
 
 function backToLobby() {
   clearInterval(State.timer);
+  if (State._lobbyExamMode !== undefined) { State.examMode = State._lobbyExamMode; State._lobbyExamMode = undefined; }
   acStopGuard(); // an toàn khi gọi lại dù submitExam() đã gọi trước đó (no-op nếu đã tắt)
   document.getElementById('exam').style.display    = 'none';
   document.getElementById('result').style.display  = 'none';
