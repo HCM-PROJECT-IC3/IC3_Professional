@@ -570,7 +570,7 @@ async function updateReportTab(forceRefresh = false) {
   // (localStorage, sống qua nhiều lần mở tab); các lần sau — kể cả bấm làm mới — chỉ đọc
   // những bài nộp SAU bản ghi mới nhất đã có rồi gộp vào. Trước đây mỗi lần cache hết
   // hạn (3 phút) là đọc lại toàn bộ tới 10.000 lượt (20% hạn mức đọc/ngày của Spark).
-  const entry = window.EduDataCache ? window.EduDataCache.get(REPORT_CACHE_KEY, true) : null;
+  const entry = window.EduDataCache ? await window.EduDataCache.getAsync(REPORT_CACHE_KEY, true) : null;
   const freshMs = forceRefresh ? 15 * 1000 : REPORT_CACHE_TTL_MS;
   if (entry && Array.isArray(entry.docs) && Date.now() - entry.fetchedAt < freshMs) {
     _reportRawDocs = entry.docs;
@@ -610,7 +610,7 @@ async function updateReportTab(forceRefresh = false) {
       } else {
         _reportRawDocs = fresh;
       }
-      if (window.EduDataCache) window.EduDataCache.set(REPORT_CACHE_KEY, { docs: _reportRawDocs, fetchedAt: Date.now() }, 12 * 60 * 60 * 1000, true);
+      if (window.EduDataCache) window.EduDataCache.setAsync(REPORT_CACHE_KEY, { docs: _reportRawDocs, fetchedAt: Date.now() }, 12 * 60 * 60 * 1000, true);
     } catch (err) {
       console.error('[EduQuiz] Lỗi tải báo cáo Firestore:', err);
       body.innerHTML = `<tr><td colspan="6" class="table-empty-cell"><i class="fa-solid fa-circle-xmark"></i> Không tải được dữ liệu: ${err.message}</td></tr>`;

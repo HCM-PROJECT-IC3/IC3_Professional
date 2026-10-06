@@ -69,11 +69,17 @@
   function set(key, value, ttlMs, persist) {
     try {
       storageFor(persist).setItem(PREFIX + key, JSON.stringify({ value, expiresAt: Date.now() + ttlMs }));
-    } catch (e) { /* hết quota hoặc bị chặn — bỏ qua, không ảnh hưởng chức năng chính */ }
+    } catch (e) {
+      // localStorage/sessionStorage chỉ ~5 triệu ký tự CHO CẢ TRANG — dữ liệu lớn phải
+      // dùng setAsync() (IndexedDB). Báo ra console thay vì im lặng: cache ghi hỏng
+      // nghĩa là lần sau lại đọc lại toàn bộ từ Firestore.
+      console.warn('[EduDataCache] Không lưu được cache "' + key + '" (' + e.name + ') — dùng setAsync() cho dữ liệu lớn.');
+    }
   }
 
   function clear(key, persist) {
     try { storageFor(persist).removeItem(PREFIX + key); } catch (e) { /* ignore */ }
+    idbDelete(key);
   }
 
   /** Xoá toàn bộ cache Dashboard (cả sessionStorage lẫn localStorage) —
@@ -86,7 +92,77 @@
           .forEach((k) => storage.removeItem(k));
       } catch (e) { /* ignore */ }
     });
+    idbClear();
   }
 
-  global.EduDataCache = { get, set, clear, clearAll };
+  // ── Cache LỚN trong IndexedDB (getAsync/setAsync) ──
+  // Dùng cho dữ liệu hàng nghìn bản ghi (roster, quiz_results, câu hỏi...): không
+  // bị trần ~5 triệu ký tự của localStorage. persist=false giữ đúng nghĩa "theo
+  // tab" bằng 1 mã phiên lưu trong sessionStorage — tab khác/đóng tab = cache miss.
+  const IDB_NAME = 'eduDataCache';
+  const IDB_STORE = 'kv';
+  let idbPromise = null;
+
+  function openIdb() {
+    if (!idbPromise) {
+      idbPromise = new Promise((resolve) => {
+        try {
+          const req = global.indexedDB.open(IDB_NAME, 1);
+          req.onupgradeneeded = () => req.result.createObjectStore(IDB_STORE);
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => resolve(null);
+          req.onblocked = () => resolve(null);
+        } catch (e) { resolve(null); }
+      });
+    }
+    return idbPromise;
+  }
+
+  function idbRequest(mode, fn) {
+    return openIdb().then((idb) => new Promise((resolve) => {
+      if (!idb) return resolve(undefined);
+      try {
+        const req = fn(idb.transaction(IDB_STORE, mode).objectStore(IDB_STORE));
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => resolve(undefined);
+      } catch (e) { resolve(undefined); }
+    }));
+  }
+
+  function idbDelete(key) { return idbRequest('readwrite', (s) => s.delete(key)); }
+  function idbClear() { return idbRequest('readwrite', (s) => s.clear()); }
+
+  function sessionTag() {
+    try {
+      let tag = sessionStorage.getItem(PREFIX + '__session');
+      if (!tag) {
+        tag = Date.now().toString(36) + Math.random().toString(36).slice(2);
+        sessionStorage.setItem(PREFIX + '__session', tag);
+      }
+      return tag;
+    } catch (e) { return 'no-session-storage'; }
+  }
+
+  /** Như get() nhưng đọc từ IndexedDB (rơi về get() cho dữ liệu cũ còn trong storage). */
+  async function getAsync(key, persist) {
+    const entry = await idbRequest('readonly', (s) => s.get(key));
+    if (entry) {
+      const valid = Date.now() <= entry.expiresAt && (persist || entry.tag === sessionTag());
+      if (valid) return entry.value;
+      idbDelete(key);
+      return null;
+    }
+    return get(key, persist);
+  }
+
+  /** Như set() nhưng lưu vào IndexedDB — không giới hạn ~5 triệu ký tự. */
+  async function setAsync(key, value, ttlMs, persist) {
+    // Xoá bản cũ trong localStorage/sessionStorage (nếu có) để trả lại quota cho trang.
+    try { storageFor(persist).removeItem(PREFIX + key); } catch (e) { /* ignore */ }
+    const entry = { value, expiresAt: Date.now() + ttlMs, tag: persist ? null : sessionTag() };
+    const ok = await idbRequest('readwrite', (s) => s.put(entry, key));
+    if (ok === undefined) set(key, value, ttlMs, persist); // IndexedDB bị chặn → thử storage thường
+  }
+
+  global.EduDataCache = { get, set, clear, clearAll, getAsync, setAsync };
 })(window);

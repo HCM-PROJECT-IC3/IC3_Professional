@@ -76,13 +76,13 @@
     // trọng nhất ở nhánh isAdmin (tải TOÀN BỘ roster không giới hạn).
     // Roster ít đổi: "Làm mới dữ liệu" KHÔNG đọc lại (cache 30 phút) — chỉ bài nộp mới.
     let students = global.EduDataCache
-      ? global.EduDataCache.get(rosterCacheKey, /* persist */ true)
+      ? await global.EduDataCache.getAsync(rosterCacheKey, /* persist */ true)
       : null;
     if (!students) {
       students = isAdmin
         ? await global.EduRepositories.studentRoster.list({ where: [['status', '==', 'active']] })
         : await global.EduRepositories.studentRoster.listByTeacher(uid);
-      if (global.EduDataCache) global.EduDataCache.set(rosterCacheKey, students, ROSTER_CACHE_TTL_MS, /* persist */ true);
+      if (global.EduDataCache) global.EduDataCache.setAsync(rosterCacheKey, students, ROSTER_CACHE_TTL_MS, /* persist */ true);
     }
 
     // Tải tăng dần (xem listRecentCached): mỗi lần làm mới chỉ đọc bài MỚI nộp,

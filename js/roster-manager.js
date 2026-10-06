@@ -102,6 +102,7 @@
 
   // Cache 3 phút — giống js/coordinator/data-loader.js: F5/mở lại trang trong
   // 3 phút không tốn thêm lượt đọc Firestore (xem js/services/data-cache-service.js).
+  // Cache IndexedDB dùng chung mọi tab (persist) — mở thêm tab không đọc lại ~1.600 học sinh.
   const CACHE_TTL_MS = 15 * 60 * 1000; // an toàn vì mọi thao tác ghi đều cập nhật cache tại chỗ (syncOne/dropOne)
   function rosterCacheKey() {
     const isAdmin = myProfile.role === 'admin';
@@ -122,7 +123,7 @@
   }
   function persistState() {
     if (window.EduDataCache) {
-      window.EduDataCache.set(rosterCacheKey(), { courses: state.courses, classes: state.classes, students: state.students, teachers: state.teachers }, CACHE_TTL_MS);
+      window.EduDataCache.setAsync(rosterCacheKey(), { courses: state.courses, classes: state.classes, students: state.students, teachers: state.teachers }, CACHE_TTL_MS, /* persist */ true);
     }
   }
   function dropOne(key, id) {
@@ -148,7 +149,7 @@
     try {
       const cacheKey = rosterCacheKey();
       if (!forceRefresh && window.EduDataCache) {
-        const cached = window.EduDataCache.get(cacheKey);
+        const cached = await window.EduDataCache.getAsync(cacheKey, /* persist */ true);
         if (cached) {
           state.courses = cached.courses;
           state.classes = cached.classes;
@@ -200,7 +201,7 @@
       state.students = students;
       state.teachers = teacherSnap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
       if (window.EduDataCache) {
-        window.EduDataCache.set(cacheKey, { courses: state.courses, classes: state.classes, students: state.students, teachers: state.teachers }, CACHE_TTL_MS);
+        window.EduDataCache.setAsync(cacheKey, { courses: state.courses, classes: state.classes, students: state.students, teachers: state.teachers }, CACHE_TTL_MS, /* persist */ true);
       }
 
       renderCourses();
