@@ -16,10 +16,12 @@ window.addEventListener('edu:ready', ({ detail }) => {
   // Trang Social Media. Đọc thêm 1 lần đúng document của user hiện tại (1 lượt đọc,
   // không phải listener sống) để hiện ảnh thật nếu có; còn không thì
   // giữ nguyên icon mặc định như cũ.
-  if (window.EduFirebase && window.EduFirebase.db) {
-    window.EduFirebase.db.collection('gvlab_profiles').doc(user.uid).get()
-      .then((snap) => {
-        const avatar = snap.exists ? snap.data().avatar : null;
+  // Qua EduProfileCache (js/services/profile-cache-service.js): chuyển qua lại
+  // giữa các trang quản trị không đọc lại document này mỗi lần.
+  if (window.EduProfileCache) {
+    window.EduProfileCache.get(user.uid)
+      .then((p) => {
+        const avatar = p ? p.avatar : null;
         if (!avatar) return;
         const avatarBox = document.querySelector('#userChip .user-avatar');
         if (avatarBox) avatarBox.innerHTML = `<img src="${avatar}" alt="">`;

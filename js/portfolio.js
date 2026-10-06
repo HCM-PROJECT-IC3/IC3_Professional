@@ -438,8 +438,18 @@
   // TOÀN BỘ collection, cứ 1 giáo viên bất kỳ đổi hồ sơ là bắn lại snapshot
   // cho TẤT CẢ các tab đang mở — tốn lượt đọc tăng dần vô thời hạn theo cả
   // số người xem lẫn số thay đổi, trong khi dữ liệu này không hề cấp bách.
-  db.collection('gvlab_profiles').get().then((snap) => {
-    snap.forEach((doc) => { avatarCache[doc.id] = doc.data(); });
+  // Qua EduProfileCache (IndexedDB + đồng bộ delta theo updatedAt — xem
+  // js/services/profile-cache-service.js): mở lại trang chỉ tốn ~1 lượt đọc
+  // thay vì đọc lại toàn bộ hồ sơ kèm avatar base64.
+  const profilesPromise = window.EduProfileCache
+    ? window.EduProfileCache.getAll()
+    : db.collection('gvlab_profiles').get().then((snap) => {
+      const all = {};
+      snap.forEach((doc) => { all[doc.id] = doc.data(); });
+      return all;
+    });
+  profilesPromise.then((all) => {
+    Object.assign(avatarCache, all);
     applyAvatars(document);
     if (typeof refreshProfileBarDisplay === 'function') refreshProfileBarDisplay();
   }).catch((err) => console.warn('[Trang Social Media] Không tải được hồ sơ (gvlab_profiles):', err.message));
@@ -931,6 +941,7 @@
       if (pendingAvatar) data.avatar = pendingAvatar;
       try {
         await db.collection('gvlab_profiles').doc(currentUser.uid).set(data, { merge: true });
+        if (window.EduProfileCache) window.EduProfileCache.put(currentUser.uid, Object.assign({}, data, pendingAvatar ? { avatar: pendingAvatar } : {}));
         // Cập nhật cache cục bộ NGAY (không cần đợi onSnapshot dội lại) để
         // avatar/trạng thái mới thấy liền trên thanh hồ sơ + ô soạn bài.
         avatarCache[currentUser.uid] = Object.assign({}, avatarCache[currentUser.uid], data, pendingAvatar ? { avatar: pendingAvatar } : {});

@@ -88,6 +88,7 @@
   }
 
   async function logoutUser() {
+    clearStoredProfiles();
     await auth().signOut();
   }
 
@@ -112,13 +113,45 @@
   const PROFILE_TTL_MS = 5 * 60 * 1000;
   let profileMemo = { uid: null, at: 0, promise: null };
 
+  // Lưu thêm vào sessionStorage (theo tab) để chuyển qua lại giữa các trang quản trị
+  // không tốn thêm 1 lượt đọc users/{uid} mỗi lần tải trang — cùng TTL 5 phút. Quyền
+  // thật vẫn do firestore.rules chốt, cache này chỉ phục vụ hiển thị/điều hướng UI.
+  const PROFILE_SS_PREFIX = 'eduAuthProfile:';
+
+  function readStoredProfile(uid) {
+    try {
+      const entry = JSON.parse(sessionStorage.getItem(PROFILE_SS_PREFIX + uid) || 'null');
+      if (entry && entry.profile && Date.now() - entry.at < PROFILE_TTL_MS) return entry;
+    } catch (e) { /* storage bị chặn/hỏng — coi như miss */ }
+    return null;
+  }
+
+  function storeProfile(uid, profile) {
+    try { sessionStorage.setItem(PROFILE_SS_PREFIX + uid, JSON.stringify({ at: Date.now(), profile })); }
+    catch (e) { /* ignore */ }
+  }
+
+  function clearStoredProfiles() {
+    try {
+      Object.keys(sessionStorage)
+        .filter((k) => k.startsWith(PROFILE_SS_PREFIX))
+        .forEach((k) => sessionStorage.removeItem(k));
+    } catch (e) { /* ignore */ }
+  }
+
   function memoProfile(uid) {
     const now = Date.now();
     if (profileMemo.uid === uid && profileMemo.promise && now - profileMemo.at < PROFILE_TTL_MS) {
       return profileMemo.promise;
     }
+    const stored = readStoredProfile(uid);
+    if (stored) {
+      profileMemo = { uid, at: stored.at, promise: Promise.resolve(stored.profile) };
+      return profileMemo.promise;
+    }
     const promise = fetchProfile(uid).then((p) => {
       if (!p && profileMemo.promise === promise) profileMemo = { uid: null, at: 0, promise: null };
+      if (p) storeProfile(uid, p);
       return p;
     }, (e) => {
       if (profileMemo.promise === promise) profileMemo = { uid: null, at: 0, promise: null };
@@ -136,7 +169,7 @@
       const uid = user ? user.uid : null;
       if (lastUid !== undefined && lastUid === uid && uid !== null) return;
       lastUid = uid;
-      if (!user) { profileMemo = { uid: null, at: 0, promise: null }; return callback(null, null); }
+      if (!user) { profileMemo = { uid: null, at: 0, promise: null }; clearStoredProfiles(); return callback(null, null); }
       try {
         const profile = await memoProfile(user.uid);
         callback(user, profile);

@@ -1,5 +1,12 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## 0. Giảm lượt đọc Firestore: hồ sơ Social, hồ sơ đăng nhập, tra cứu admin
+
+- Mới `js/services/profile-cache-service.js` (`EduProfileCache`): cache `gvlab_profiles` trong IndexedDB + đồng bộ delta theo `updatedAt`. `portfolio.js`, `teaching-schedule.js` không còn đọc lại toàn bộ hồ sơ (kèm avatar base64 ~300KB/hồ sơ) mỗi lần mở trang: trong 2 phút = 0 lượt đọc, sau đó chỉ đọc hồ sơ có thay đổi (~1 lượt), đọc lại toàn bộ mỗi 24 giờ. Avatar trên topbar (`dashboard-page.js`, `teacher/dashboard.js`, `teaching-schedule.js`) dùng chung cache.
+- `auth.js`: hồ sơ `users/{uid}` lưu thêm sessionStorage 5 phút — chuyển qua lại giữa các trang quản trị không tốn 1 lượt đọc/trang. Xoá khi đăng xuất.
+- `teaching-schedule.js`: map Mã NV → tài khoản cache localStorage 30 phút (admin đổi Mã NV thì tự xoá).
+- `admin-users.js`: danh sách trường/lớp/GV (suy từ ~1.466 học sinh) lưu localStorage 30 phút, mở lại trang không đọc lại cả roster. Vòng tự sửa "Trường được xem" chỉ chạy với dữ liệu roster vừa đọc; gán lớp xong thì đọc lại roster.
+
 ## 0a. Thử thách cùng lớp: sửa rò timer, hiện kết quả cá nhân
 
 - `js/live-quiz.js`: vòng đếm giờ không còn nhân đôi theo mỗi snapshot (dùng 1 handle, dọn khi rời phòng).

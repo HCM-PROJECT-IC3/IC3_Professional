@@ -48,10 +48,10 @@
     if (avatarBox) {
       const name = profile.name || user.email || '';
       avatarBox.textContent = name.trim().charAt(0).toUpperCase();
-      if (window.EduFirebase && window.EduFirebase.db) {
-        window.EduFirebase.db.collection('gvlab_profiles').doc(user.uid).get()
-          .then((snap) => {
-            const avatar = snap.exists ? snap.data().avatar : null;
+      if (window.EduProfileCache) {
+        window.EduProfileCache.get(user.uid)
+          .then((p) => {
+            const avatar = p ? p.avatar : null;
             if (avatar) avatarBox.innerHTML = `<img src="${avatar}" alt="">`;
           })
           .catch((err) => console.warn('[Teacher Dashboard] Không tải được ảnh đại diện Trang Social Media:', err.message));
