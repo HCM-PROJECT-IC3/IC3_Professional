@@ -13,6 +13,13 @@
 
   const { COLLECTION_NAME, normalize } = global.EduModels.StudentResult;
 
+  // Giữ bản tải tăng dần trong IndexedDB 7 ngày (trước: 12 giờ). Mỗi lần mở trang
+  // đã tự hỏi bài MỚI (thường 0-50 lượt) nên dữ liệu luôn tươi; hết hạn mới phải
+  // đọc lại tới `limit` (1.000) lượt — 12 giờ nghĩa là mỗi giáo viên tốn ~1.000
+  // lượt đọc/NGÀY chỉ cho lần mở đầu tiên (50 GV ≈ 50.000 = trọn hạn mức Spark).
+  // Hết hạn 7 ngày vẫn cần để bỏ bài đã bị xoá ở máy khác / đã hết TTL.
+  const RESULTS_KEEP_MS = 7 * 24 * 60 * 60 * 1000;
+
   class StudentResultRepository extends global.EduBaseRepository {
     constructor() { super(COLLECTION_NAME); }
 
@@ -33,10 +40,21 @@
      * tab). Các lần sau chỉ hỏi Firestore những bài NỘP SAU bản ghi mới nhất đã có
      * (thường 0-50 doc thay vì 1000) rồi gộp vào cache. Trong `freshMs` không gọi gì cả.
      * @param {string} opts.cacheKey khoá cache theo phạm vi người xem (admin/trường)
+     * @param {string[]} [opts.classes] Chỉ lấy bài của các lớp này (≤10, kèm ĐÚNG 1 trường)
+     *   — xem js/teacher/data-loader.js.
+     * @param {string} [opts.seedKey] Khoá cache cũ (phạm vi rộng hơn) dùng làm nền khi
+     *   khoá mới chưa có gì — tránh đọc lại toàn bộ `limit` bản ghi chỉ vì đổi khoá.
      */
-    async listRecentCached({ cacheKey, schools, limit = 1000, freshMs = 3 * 60 * 1000 } = {}) {
+    async listRecentCached({ cacheKey, schools, classes, seedKey, limit = 1000, freshMs = 3 * 60 * 1000 } = {}) {
       const cache = global.EduDataCache;
-      const entry = cache ? await cache.getAsync(cacheKey, true) : null;
+      let entry = cache ? await cache.getAsync(cacheKey, true) : null;
+      if (!entry && seedKey && cache) {
+        const old = await cache.getAsync(seedKey, true, /* allowStale */ true);
+        if (old && Array.isArray(old.rows)) {
+          const keep = classes ? new Set(classes) : null;
+          entry = { rows: keep ? old.rows.filter((r) => keep.has(r.studentClass)) : old.rows, fetchedAt: 0 };
+        }
+      }
       const now = Date.now();
       if (entry && Array.isArray(entry.rows) && now - entry.fetchedAt < freshMs) return entry.rows;
       let rows;
@@ -45,13 +63,14 @@
         const where = lastMs ? [['submittedAt', '>', global.firebase.firestore.Timestamp.fromMillis(lastMs - 1)]] : [];
         let fresh;
         try {
-          fresh = await this.listRecent({ schools, limit, extraWhere: where });
+          fresh = await this.listRecent({ schools, classes, limit, extraWhere: where });
         } catch (err) {
           // Hết hạn mức đọc trong ngày / mất mạng: vẫn hiện dữ liệu đã có thay vì báo lỗi trắng.
           console.warn('[EduRepository] Không tải được kết quả mới, dùng dữ liệu đã lưu:', err.message);
+          const F = global.EduFirebase;
           global.dispatchEvent(new CustomEvent('edu:toast', {
-            detail: err.code === 'resource-exhausted'
-              ? '⚠️ Firebase đã hết lượt đọc hôm nay — đang hiện dữ liệu đã lưu, chưa có bài nộp mới.'
+            detail: F && F.isQuotaOrOffline && F.isQuotaOrOffline(err)
+              ? '⚠️ ' + F.QUOTA_HINT + ' — đang hiện dữ liệu đã lưu, chưa có bài nộp mới.'
               : '⚠️ Chưa tải được bài nộp mới — đang hiện dữ liệu đã lưu.',
           }));
           return entry.rows;
@@ -62,17 +81,32 @@
           .sort((a, b) => (b.submittedAtMs || 0) - (a.submittedAtMs || 0))
           .slice(0, limit);
       } else {
-        rows = await this.listRecent({ schools, limit });
+        try {
+          rows = await this.listRecent({ schools, classes, limit });
+        } catch (err) {
+          // Bản lưu đã quá 7 ngày nhưng Firebase đang hết lượt/mất mạng: dùng tạm bản cũ.
+          const F = global.EduFirebase;
+          const stale = cache && F && F.isQuotaOrOffline(err) ? await cache.getAsync(cacheKey, true, /* allowStale */ true) : null;
+          if (!stale || !Array.isArray(stale.rows)) throw err;
+          global.dispatchEvent(new CustomEvent('edu:toast', { detail: '⚠️ ' + F.QUOTA_HINT + ' — đang hiện dữ liệu cũ đã lưu.' }));
+          return stale.rows;
+        }
       }
-      if (cache) cache.setAsync(cacheKey, { rows, fetchedAt: now }, 12 * 60 * 60 * 1000, true);
+      if (cache) cache.setAsync(cacheKey, { rows, fetchedAt: now }, RESULTS_KEEP_MS, true);
       return rows;
     }
 
-    async listRecent({ studentClass, testName, sinceMs, schools, limit = 1000, extraWhere } = {}) {
+    async listRecent({ studentClass, testName, sinceMs, schools, classes, limit = 1000, extraWhere } = {}) {
       const where = [];
       if (studentClass) where.push(['studentClass', '==', studentClass]);
       if (testName) where.push(['testName', '==', testName]);
-      if (schools && schools.length) where.push(['studentSchool', 'in', schools.slice(0, 10)]);
+      // Lọc theo lớp ngay trên máy chủ (chỉ đọc bài của lớp mình, không đọc cả trường rồi
+      // bỏ bớt ở máy): 1 trường dùng '==' để không phải 2 mệnh đề 'in' trong 1 query;
+      // khớp composite index (studentClass, studentSchool, submittedAt) đã có.
+      if (classes && classes.length && schools && schools.length === 1) {
+        where.push(['studentClass', 'in', classes.slice(0, 10)]);
+        where.push(['studentSchool', '==', schools[0]]);
+      } else if (schools && schools.length) where.push(['studentSchool', 'in', schools.slice(0, 10)]);
       (extraWhere || []).forEach((w) => where.push(w));
       const rows = await this.list({ where, orderBy: 'submittedAt', direction: 'desc', limit });
       const normalized = rows.map(normalize);

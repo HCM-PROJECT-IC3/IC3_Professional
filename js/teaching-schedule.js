@@ -181,7 +181,7 @@
     if (cachedMap) {
       teacherCodeToUid = cachedMap;
     } else {
-      db.collection('users').where('role', '==', 'teacher').where('approved', '==', true).get()
+      db.collection('users').where('role', '==', 'teacher').where('approved', '==', true).limit(1000).get()
         .then((snap) => {
           snap.forEach((doc) => {
             const code = doc.data().teacherCode;
@@ -197,7 +197,7 @@
     // Ảnh mới hiện sau khi tải lại trang là đủ.
     const profilesPromise = window.EduProfileCache
       ? window.EduProfileCache.getAll()
-      : db.collection('gvlab_profiles').get().then((snap) => {
+      : db.collection('gvlab_profiles').limit(500).get().then((snap) => {
         const all = {};
         snap.forEach((doc) => { all[doc.id] = doc.data(); });
         return all;

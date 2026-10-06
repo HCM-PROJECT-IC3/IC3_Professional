@@ -1,5 +1,15 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## 000000. Hạn mức Spark cho hàng nghìn học sinh/ngày (10/2026)
+
+⚠️ Phải publish `firestore.rules` + `firestore.indexes.json` cùng lúc deploy code — xem `docs/FIREBASE-CHECKLIST.md` § 1.
+
+- **Phòng thử thách** (`live-quiz.js`): mỗi câu chỉ ghi document phòng 1 lần (lần chốt câu i mang luôn câu i+1 + `phaseAt` giờ máy chủ; máy học sinh tự mở câu sau màn đáp án). Rules câu trả lời bỏ `get()`/`exists()` (2 lượt đọc/câu trả lời) — người dẫn tự kiểm tra người chơi, câu, khung giờ theo giờ máy chủ. 1 listener câu trả lời cả ván; ngừng nghe trước khi xoá; xoá phòng theo id đã biết (không đọc để xoá); học sinh ngừng nghe khi ván xong; tự đóng khi hết hạn; tối đa 60 người/phòng; `expiresAt` trên `players`/`answers` cho TTL. Đo 1 host + 6 HS × 5 câu: 160 → 101 lượt đọc (chưa kể rules); 40 HS × 20 câu ≈ 4.500 → 1.870.
+- **Bài nộp** (`firestore-results.js`, `mos-submissions.js`, `pending-sync-queue.js`): mã document tạo ở máy (`EduFirebase.createOnce`) → gửi lại không tạo bài trùng; chờ quá 20 giây (hết lượt ghi/mất mạng) thì vào hàng đợi; hàng đợi **không bỏ bài** sau 8 lần thử nữa (giữ tới 30 ngày). TTL `quiz_results` 365 → **45 ngày** (dung lượng 1 GiB), thêm TTL `mos_submissions`.
+- **Dashboard:** cache tải tăng dần giữ 7 ngày (trước 12 giờ → mỗi ngày đọc lại 1.000–10.000 bài); roster giữ 12 giờ ("Làm mới" chỉ đọc lại roster khi bản lưu > 30 phút); giáo viên 1 trường chỉ đọc bài của lớp mình (`studentClass in`); hết lượt/mất mạng → dùng bản lưu kể cả quá hạn, có thông báo; `fromCache` không còn bị lưu nhầm thành dữ liệu rỗng. Báo cáo IC3: xoá bài cập nhật luôn cache.
+- **Rules:** query danh sách `quiz_results`/`students_roster`/`mos_submissions` bắt buộc `limit ≤ 10.000`, `users` ≤ 1.000, `gvlab_profiles` ≤ 500; thêm `limit()` cho mọi query còn thiếu. `firestore.indexes.json`: tắt index field không lọc (~5,3 → ~1,9 KB/bài) + khai báo 5 TTL policy; thêm `firebase.json`.
+- **Giám sát:** console in `[trang] N lượt đọc Firestore — <nguồn>` mỗi lần tải dữ liệu (`EduFirebase.countReads/countSnap`).
+
 ## 00000. Trang làm bài: luyện lại câu sai, kết quả theo chủ đề, phím tắt (0 lượt Firebase thêm)
 
 - **🔁 Luyện lại N câu sai** ở màn kết quả: mở phiên Ôn luyện chỉ gồm các câu sai/bỏ qua (xáo lại đáp án, có "Kiểm tra đáp án", không đếm giờ). Phiên này **không** ghi Firestore, Google Sheet, lịch sử hay XP và không autosave — bài thật vẫn chỉ ghi đúng 1 lần lúc nộp. Làm xong có thể luyện tiếp phần còn sai; về sảnh trả lại chế độ Ôn luyện/Kiểm tra đã chọn.

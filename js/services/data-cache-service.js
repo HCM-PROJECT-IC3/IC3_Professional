@@ -143,16 +143,19 @@
     } catch (e) { return 'no-session-storage'; }
   }
 
-  /** Như get() nhưng đọc từ IndexedDB (rơi về get() cho dữ liệu cũ còn trong storage). */
-  async function getAsync(key, persist) {
+  /** Như get() nhưng đọc từ IndexedDB (rơi về get() cho dữ liệu cũ còn trong storage).
+   *  allowStale=true: trả về cả bản ĐÃ HẾT HẠN — chỉ dùng làm phương án cuối khi
+   *  Firebase hết lượt đọc/mất mạng (trang vẫn chạy bằng dữ liệu cũ, kèm thông báo).
+   *  Vì vậy bản hết hạn (persist) KHÔNG bị xoá khi đọc — lần ghi sau sẽ đè lên. */
+  async function getAsync(key, persist, allowStale) {
     const entry = await idbRequest('readonly', (s) => s.get(key));
     if (entry) {
-      const valid = Date.now() <= entry.expiresAt && (persist || entry.tag === sessionTag());
-      if (valid) return entry.value;
-      idbDelete(key);
+      const sameScope = persist || entry.tag === sessionTag();
+      if (sameScope && (allowStale || Date.now() <= entry.expiresAt)) return entry.value;
+      if (!sameScope) idbDelete(key);
       return null;
     }
-    return get(key, persist);
+    return allowStale ? null : get(key, persist);
   }
 
   /** Như set() nhưng lưu vào IndexedDB — không giới hạn ~5 triệu ký tự. */

@@ -6,6 +6,22 @@
   var DEFAULT_QUESTION_MS = 20000;
   var REVEAL_MS = 3000;
   var ROOM_LIFETIME_MS = 90 * 60 * 1000;
+  // ── Ngân sách lượt Firebase (gói Spark: 50.000 đọc / 20.000 ghi mỗi ngày) ──
+  // Mỗi lần document phòng đổi = 1 lượt đọc cho MỖI người đang nghe (cả lớp). Vì vậy
+  // mỗi câu chỉ ghi document phòng 1 LẦN: lần ghi "chốt câu i" mang luôn câu i+1
+  // (nextQuestion) và deadline của câu i+1; máy từng người tự chuyển từ màn đáp án
+  // sang câu mới khi tới giờ (deadline - questionMs). Trước đây 2 lần/câu (mở câu +
+  // chốt câu) → 2 × số người lượt đọc (xem docs/FIREBASE-CHECKLIST.md § ngân sách).
+  // Câu trả lời KHÔNG còn bị firestore.rules đọc document phòng/người chơi để kiểm
+  // tra (mỗi get()/exists() trong rules = 1 lượt đọc, nhân với mọi câu trả lời) —
+  // người dẫn tự kiểm tra: chỉ chấm câu trả lời của người có trong danh sách, đúng
+  // câu, và gửi trong khung giờ của câu đó (thời điểm do máy chủ ghi, submittedAt).
+  // Khung giờ hợp lệ của 1 câu tính theo GIỜ MÁY CHỦ: phaseAt (serverTimestamp ghi
+  // cùng lần mở câu) + REVEAL_MS (nếu câu mở sau màn đáp án) → + questionMs. Không
+  // dùng đồng hồ máy người dẫn (máy trường hay lệch giờ). Dung sai 2 giây cho trễ mạng
+  // / lệch giờ máy học sinh; vẫn chặn được việc đọc trước nextQuestion trong lúc chiếu
+  // đáp án rồi trả lời sớm để ăn điểm tốc độ.
+  var ANSWER_GRACE_MS = 2000;
   var currentUser = null;
   var roomRef = null;
   var roomData = null;
@@ -20,6 +36,10 @@
   var scheduledKey = '';
   var toastHandle = null;
   var tickHandle = null;
+  var phaseHandle = null;   // hẹn giờ tự chuyển màn đáp án → câu kế tiếp (không cần ghi Firebase)
+  var expiryHandle = null;  // hẹn giờ tự đóng phòng khi hết hạn (ngừng nghe → 0 lượt đọc)
+  var finishRevealUntil = 0; // đang chiếu đáp án câu cuối trước khi sang bảng tổng kết
+  var lastStatus = null;
   var myAnswer = null;
   var liveAnswers = {};
   var el = {};
@@ -103,8 +123,25 @@
     answersUnsubscribe = null;
     clearTimeout(timerHandle);
     clearTimeout(tickHandle);
+    clearTimeout(phaseHandle);
+    clearTimeout(expiryHandle);
     timerHandle = null;
+    expiryHandle = null;
     scheduledKey = '';
+  }
+  // Trạng thái HIỂN THỊ suy ra từ document phòng + đồng hồ máy: "reveal" kèm
+  // nextQuestion tự thành "question" của câu kế tiếp khi tới giờ mở câu.
+  function phase() {
+    var d = roomData;
+    if (!d) return { status: null, index: -1 };
+    var deadlineMs = d.deadline && d.deadline.toMillis ? d.deadline.toMillis() : 0;
+    if (d.status === 'reveal' && d.nextQuestion && deadlineMs) {
+      var openAt = deadlineMs - questionMs();
+      if (Date.now() >= openAt) return { status: 'question', index: d.questionIndex + 1, question: d.nextQuestion, deadline: deadlineMs };
+      return { status: 'reveal', index: d.questionIndex, openAt: openAt };
+    }
+    if (d.status === 'finished' && Date.now() < finishRevealUntil) return { status: 'reveal', index: d.questionIndex, openAt: finishRevealUntil };
+    return { status: d.status, index: d.questionIndex, question: d.currentQuestion, deadline: deadlineMs };
   }
   function showEntry() {
     stopListeners();
@@ -123,21 +160,33 @@
     el.roomCodeDisplay.textContent = code;
     el.startButton.hidden = !host;
     el.deleteRoomButton.hidden = !host;
+    finishRevealUntil = 0; lastStatus = null;
     roomUnsubscribe = roomRef.onSnapshot(function (snapshot) {
+      if (snapshot.metadata && !snapshot.metadata.fromCache) EduFirebase.countReads('live_rooms/' + code, 1);
       if (!snapshot.exists) {
         showEntry();
         showStatus('Phòng đã được xoá hoặc không còn tồn tại.', true);
         return;
       }
       roomData = snapshot.data();
+      // Vừa chốt câu cuối: chiếu đáp án câu đó REVEAL_MS rồi mới sang bảng tổng kết
+      // (trước đây là 2 lần ghi riêng: reveal rồi finished).
+      if (roomData.status === 'finished' && lastStatus && lastStatus !== 'finished') finishRevealUntil = Date.now() + REVEAL_MS;
+      lastStatus = roomData.status;
+      if (!expiryHandle && roomData.expiresAt && roomData.expiresAt.toMillis) {
+        expiryHandle = setTimeout(closeExpiredRoom, Math.max(0, roomData.expiresAt.toMillis() - Date.now()));
+      }
       renderRoom();
-      if (isHost && roomData.status === 'question') scheduleFinalize();
-      if (isHost && roomData.status === 'reveal') scheduleAdvance();
+      if (isHost) scheduleFinalize();
+      // Học sinh: ván đã xong → ngừng nghe document phòng (người dẫn xoá phòng sau
+      // đó sẽ không tốn thêm 1 lượt đọc cho mỗi người).
+      if (!isHost && roomData.status === 'finished' && roomUnsubscribe) { roomUnsubscribe(); roomUnsubscribe = null; }
     }, function (error) { showStatus(error.message || 'Mất kết nối với phòng.', true); });
     // Tiết kiệm lượt đọc: chỉ người dẫn nghe cả danh sách người chơi; học sinh chỉ nghe
     // document của chính mình + bảng top nằm trong document phòng (leaderboard).
     if (host) {
       playersUnsubscribe = roomRef.collection('players').orderBy('joinedAt').limit(100).onSnapshot(function (snapshot) {
+        if (!snapshot.metadata.fromCache) EduFirebase.countReads('players (thay đổi)', snapshot.docChanges().length);
         players = snapshot.docs.map(function (doc) { return Object.assign({ id: doc.id }, doc.data()); });
         var cap = roomData && roomData.maxPlayers;
         if (cap && players.length > cap) {
@@ -149,7 +198,26 @@
         }
         renderPlayers();
       }, function (error) { showStatus(error.message || 'Không tải được danh sách người chơi.', true); });
+      // 1 listener câu trả lời cho CẢ VÁN (trước: tạo lại mỗi câu, mỗi lần tốn thêm
+      // lượt đọc khởi tạo + lượt đọc rules). Mỗi người chỉ có 1 document (id = uid)
+      // nên mỗi câu trả lời = đúng 1 lượt đọc cho người dẫn.
+      answersUnsubscribe = roomRef.collection('answers').limit(100).onSnapshot(function (snapshot) {
+        if (!snapshot.metadata.fromCache) EduFirebase.countReads('answers (thay đổi)', snapshot.docChanges().length);
+        liveAnswers = {};
+        snapshot.forEach(function (doc) { liveAnswers[doc.id] = doc.data(); });
+        updateAnswerCount();
+      }, function (error) { showStatus(error.message || 'Không tải được tiến độ trả lời.', true); });
     }
+  }
+  function closeExpiredRoom() {
+    // Phòng hết hạn (90 phút): ngừng nghe để không tốn thêm lượt đọc; TTL sẽ tự xoá dữ liệu.
+    var wasRoom = roomRef;
+    stopListeners();
+    if (!wasRoom) return;
+    hideViews();
+    el.closedView.hidden = false;
+    el.startButton.hidden = true;
+    showStatus('Phòng đã hết hạn và tự đóng.', true);
   }
   function myScore() {
     return currentUser && roomData && roomData.scores ? (roomData.scores[currentUser.uid] || 0) : 0;
@@ -166,12 +234,13 @@
       score.textContent = String(row.score || 0) + ' đ';
       item.appendChild(name); item.appendChild(score); el.playerList.appendChild(item);
     });
-    if (roomData.status !== 'lobby') el.sideHint.textContent = 'Điểm của bạn: ' + myScore();
+    if (phase().status !== 'lobby') el.sideHint.textContent = 'Điểm của bạn: ' + myScore();
   }
   function renderPlayers() {
     el.playerCount.textContent = String(players.length);
     el.playerList.textContent = '';
-    var playing = roomData && roomData.status !== 'lobby';
+    var status = phase().status;
+    var playing = roomData && status !== 'lobby';
     var pts = (roomData && roomData.scores) || {};
     var ordered = playing ? players.slice().sort(function (a, b) { return (pts[b.id] || 0) - (pts[a.id] || 0); }) : players;
     ordered.forEach(function (player) {
@@ -179,43 +248,44 @@
       var name = document.createElement('span');
       var score = document.createElement('span');
       name.textContent = player.name || 'Người chơi';
-      score.textContent = roomData && roomData.status !== 'lobby' ? String(pts[player.id] || 0) + ' đ' : 'Sẵn sàng';
+      score.textContent = playing ? String(pts[player.id] || 0) + ' đ' : 'Sẵn sàng';
       item.appendChild(name); item.appendChild(score); el.playerList.appendChild(item);
     });
     el.startButton.disabled = players.length === 0;
-    if (roomData && roomData.status === 'lobby') el.sideHint.textContent = players.length ? 'Đã đủ người? Bắt đầu khi cả lớp sẵn sàng.' : 'Chia sẻ mã phòng để mời người chơi.';
-    else if (roomData && roomData.status === 'question') el.sideHint.textContent = 'Người chơi đã gửi: ' + (el.answerFeedback.dataset.count || 'đang chờ');
-    else if (roomData && roomData.status === 'reveal') el.sideHint.textContent = 'Điểm của cả phòng đã được cập nhật.';
+    if (status === 'lobby') el.sideHint.textContent = players.length ? 'Đã đủ người? Bắt đầu khi cả lớp sẵn sàng.' : 'Chia sẻ mã phòng để mời người chơi.';
+    else if (status === 'question') el.sideHint.textContent = 'Người chơi đã gửi: ' + (el.answerFeedback.dataset.count || 'đang chờ');
+    else if (status === 'reveal') el.sideHint.textContent = 'Điểm của cả phòng đã được cập nhật.';
   }
   function hideViews() {
     ['lobbyView', 'questionView', 'revealView', 'finishedView', 'closedView'].forEach(function (id) { byId(id).hidden = true; });
   }
   function renderRoom() {
-    if (!roomData) return;
+    if (!roomData || !roomRef) return;
     hideViews();
-    if (roomData.status !== 'question' && answersUnsubscribe) {
-      answersUnsubscribe();
-      answersUnsubscribe = null;
-    }
+    var p = phase();
+    // Đang chiếu đáp án: hẹn giờ tự mở câu kế tiếp / bảng tổng kết trên máy (0 lượt Firebase).
+    clearTimeout(phaseHandle);
+    if (p.status === 'reveal' && p.openAt) phaseHandle = setTimeout(renderRoom, Math.max(0, p.openAt - Date.now()) + 20);
     if (!isHost) renderBoard(); else renderPlayers();
     el.roomEyebrow.textContent = isHost ? 'NGƯỜI DẪN PHÒNG' : 'NGƯỜI CHƠI';
-    el.roomTitle.textContent = roomData.status === 'finished' ? 'Thử thách đã xong' : 'Phòng ' + roomRef.id;
-    if (roomData.status === 'lobby') {
+    el.roomTitle.textContent = p.status === 'finished' ? 'Thử thách đã xong' : 'Phòng ' + roomRef.id;
+    if (p.status === 'lobby') {
       el.lobbyView.hidden = false; el.startButton.hidden = !isHost;
       el.sideHint.textContent = isHost ? 'Chia sẻ mã phòng để mời người chơi.' : 'Đã vào phòng. Chờ người dẫn bắt đầu.';
-    } else if (roomData.status === 'question') {
+    } else if (p.status === 'question') {
       el.questionView.hidden = false; el.startButton.hidden = true; renderQuestion();
-    } else if (roomData.status === 'reveal') {
+    } else if (p.status === 'reveal') {
       el.revealView.hidden = false; el.startButton.hidden = true; renderReveal();
-    } else if (roomData.status === 'finished') {
+    } else if (p.status === 'finished') {
       el.finishedView.hidden = false; el.startButton.hidden = true; renderFinalScores();
     } else {
       el.closedView.hidden = false; el.startButton.hidden = true;
     }
   }
   function renderQuestion() {
-    var question = roomData.currentQuestion || {};
-    var index = roomData.questionIndex;
+    var p = phase();
+    var question = p.question || {};
+    var index = p.index;
     el.questionProgress.textContent = 'CÂU ' + (index + 1) + ' / ' + roomData.questionCount;
     el.questionText.textContent = question.text || '';
     el.answerGrid.textContent = '';
@@ -229,47 +299,48 @@
         el.answerGrid.appendChild(button);
       });
       if (myAnswer && myAnswer.questionIndex === index) lockAnswer(myAnswer.choiceIndex);
-    } else loadAnswerCount(index);
+    } else updateAnswerCount();
     updateTimer();
   }
   function lockAnswer(choiceIndex) {
     Array.prototype.forEach.call(el.answerGrid.querySelectorAll('button'), function (button, index) {
       button.disabled = true;
-      if (index === choiceIndex) { button.classList.add('is-selected'); myAnswer = { questionIndex: roomData ? roomData.questionIndex : -1, choiceIndex: choiceIndex }; }
+      if (index === choiceIndex) { button.classList.add('is-selected'); myAnswer = { questionIndex: phase().index, choiceIndex: choiceIndex }; }
     });
     el.answerFeedback.textContent = 'Đã nhận câu trả lời. Chờ cả lớp nhé!';
   }
   function submitAnswer(choiceIndex, button) {
-    if (!roomData || roomData.status !== 'question' || !button || button.disabled) return;
+    var p = phase();
+    if (!roomData || p.status !== 'question' || Date.now() > p.deadline || !button || button.disabled) return;
+    var index = p.index;
     sfx('click');
     Array.prototype.forEach.call(el.answerGrid.querySelectorAll('button'), function (item) { item.disabled = true; });
+    // expiresAt: để TTL tự xoá (TTL không xoá subcollection theo phòng cha).
     roomRef.collection('answers').doc(currentUser.uid).set({
-      uid: currentUser.uid, questionIndex: roomData.questionIndex, choiceIndex: choiceIndex, submittedAt: serverTimestamp()
-    }).then(function () { myAnswer = { questionIndex: roomData.questionIndex, choiceIndex: choiceIndex }; el.answerFeedback.textContent = 'Đã nhận câu trả lời. Chờ cả lớp nhé!'; })
+      uid: currentUser.uid, questionIndex: index, choiceIndex: choiceIndex, submittedAt: serverTimestamp(), expiresAt: roomData.expiresAt
+    }).then(function () { myAnswer = { questionIndex: index, choiceIndex: choiceIndex }; el.answerFeedback.textContent = 'Đã nhận câu trả lời. Chờ cả lớp nhé!'; })
       .catch(function (error) {
         Array.prototype.forEach.call(el.answerGrid.querySelectorAll('button'), function (item) { item.disabled = false; });
         el.answerFeedback.textContent = error.code === 'permission-denied' ? 'Hết giờ, đã gửi rồi, hoặc phòng đã đủ người.' : 'Không gửi được. Kiểm tra kết nối rồi thử lại.';
       });
   }
-  function loadAnswerCount(index) {
-    if (answersUnsubscribe) answersUnsubscribe();
-    liveAnswers = {};
-    answersUnsubscribe = roomRef.collection('answers').where('questionIndex', '==', index).limit(100).onSnapshot(function (snapshot) {
-      liveAnswers = {};
-      snapshot.forEach(function (doc) { liveAnswers[doc.data().uid] = doc.data(); });
-      var count = snapshot.size + '/' + players.length;
-      el.answerFeedback.dataset.count = count + ' người';
-      el.answerFeedback.textContent = 'Đã trả lời: ' + count;
-      el.sideHint.textContent = 'Người chơi đã gửi: ' + count + ' người';
-    }, function (error) { showStatus(error.message || 'Không tải được tiến độ trả lời.', true); });
+  function updateAnswerCount() {
+    var p = phase();
+    if (!isHost || p.status !== 'question') return;
+    var answered = Object.keys(liveAnswers).filter(function (uid) { return liveAnswers[uid].questionIndex === p.index; }).length;
+    var count = answered + '/' + players.length;
+    el.answerFeedback.dataset.count = count + ' người';
+    el.answerFeedback.textContent = 'Đã trả lời: ' + count;
+    el.sideHint.textContent = 'Người chơi đã gửi: ' + count + ' người';
   }
   function updateTimer() {
-    if (!roomData || !roomData.deadline || !roomData.deadline.toMillis) return;
-    var remaining = Math.max(0, roomData.deadline.toMillis() - Date.now());
+    var p = phase();
+    if (p.status !== 'question' || !p.deadline) return;
+    var remaining = Math.max(0, p.deadline - Date.now());
     el.timerText.textContent = Math.ceil(remaining / 1000) + ' giây';
     el.timerBar.style.transform = 'scaleX(' + Math.max(0, Math.min(1, remaining / questionMs())) + ')';
     clearTimeout(tickHandle);
-    if (remaining > 0) tickHandle = setTimeout(function () { if (roomData && roomData.status === 'question') updateTimer(); }, Math.min(500, remaining));
+    if (remaining > 0) tickHandle = setTimeout(function () { if (phase().status === 'question') updateTimer(); }, Math.min(500, remaining));
   }
   function renderReveal() {
     var question = roomData.currentQuestion || {};
@@ -329,27 +400,37 @@
     document.body.appendChild(link); link.click(); link.remove();
     setTimeout(function () { URL.revokeObjectURL(link.href); }, 1000);
   }
+  // Câu đang mở (chờ người dẫn chốt): 'question' = câu questionIndex (câu đầu tiên);
+  // 'reveal' kèm nextQuestion = câu questionIndex + 1 (mở tự động trên máy học sinh).
+  function openQuestion(data) {
+    if (!data || !data.deadline || !data.deadline.toMillis) return null;
+    var phaseMs = data.phaseAt && data.phaseAt.toMillis ? data.phaseAt.toMillis() : 0;
+    if (data.status === 'question') return { index: data.questionIndex, question: data.currentQuestion, deadlineMs: data.deadline.toMillis(), serverOpenMs: phaseMs };
+    if (data.status === 'reveal' && data.nextQuestion) return { index: data.questionIndex + 1, question: data.nextQuestion, deadlineMs: data.deadline.toMillis(), serverOpenMs: phaseMs && phaseMs + REVEAL_MS };
+    return null;
+  }
   function scheduleFinalize() {
-    var index = roomData.questionIndex;
-    var key = 'question:' + index;
+    var open = openQuestion(roomData);
+    if (!open) return;
+    var key = 'finalize:' + open.index;
     if (scheduledKey === key) return;
     clearTimeout(timerHandle); scheduledKey = key;
-    var deadline = roomData.deadline && roomData.deadline.toMillis ? roomData.deadline.toMillis() : Date.now();
-    timerHandle = setTimeout(function () { finalizeQuestion(index); }, Math.max(0, deadline - Date.now()) + 800);
+    timerHandle = setTimeout(function () { finalizeQuestion(open.index); }, Math.max(0, open.deadlineMs - Date.now()) + 800);
   }
   function finalizeQuestion(index) {
     if (!isHost || !roomRef || !questions[index]) return;
     var latest = roomData;
-    if (!latest || latest.status !== 'question' || latest.questionIndex !== index || !latest.deadline) return;
+    var open = openQuestion(latest);
+    if (!open || open.index !== index) return;
     // 0 lượt đọc: dùng document phòng + câu trả lời đã nghe sẵn. Điểm cả lớp nằm trong
     // 1 map `scores` của document phòng nên chỉ tốn 1 lượt ghi mỗi câu (không ghi từng người chơi).
-    var options = latest.currentQuestion.options;
+    var options = open.question.options;
     var correctIndexes = [];
     questions[index].correct.forEach(function (answer) {
       var correctIndex = options.indexOf(answer);
       if (correctIndex >= 0 && correctIndexes.indexOf(correctIndex) === -1) correctIndexes.push(correctIndex);
     });
-    var deadlineMs = latest.deadline.toMillis();
+    var deadlineMs = open.deadlineMs;
     var scores = Object.assign({}, latest.scores || {});
     // Chuỗi đúng liên tiếp (kiểu Kahoot): từ câu đúng thứ 2 liên tiếp được thưởng +100/câu
     // trong chuỗi, tối đa +500. Sai/không trả lời → về 0. Nằm chung document phòng, không tốn thêm lượt ghi.
@@ -359,10 +440,17 @@
       var answer = liveAnswers[player.uid];
       var score = scores[player.uid] || 0;
       var correct = false;
-      if (answer && answer.questionIndex === index) {
-        var submittedMs = answer.submittedAt && answer.submittedAt.toMillis ? answer.submittedAt.toMillis() : deadlineMs;
-        var qMs = questionMs();
-        var elapsed = Math.max(0, Math.min(qMs, submittedMs - (deadlineMs - qMs)));
+      var qMs = questionMs();
+      var submittedMs = answer && answer.submittedAt && answer.submittedAt.toMillis ? answer.submittedAt.toMillis() : deadlineMs;
+      // Rules không còn kiểm tra giờ/câu (để khỏi tốn lượt đọc) → người dẫn kiểm tra:
+      // đúng câu, gửi trong khung giờ câu này theo giờ máy chủ (submittedAt vs phaseAt).
+      // Hạn chót: lấy mốc muộn hơn giữa giờ máy chủ và deadline (giờ máy người dẫn, đúng
+      // mốc rules cũ từng dùng) — không chặt hơn trước.
+      var openMs = open.serverOpenMs || deadlineMs - qMs;
+      var closeMs = Math.max(openMs + qMs, deadlineMs);
+      if (answer && answer.questionIndex === index &&
+          submittedMs >= openMs - ANSWER_GRACE_MS && submittedMs <= closeMs + ANSWER_GRACE_MS) {
+        var elapsed = Math.max(0, Math.min(qMs, submittedMs - openMs));
         correct = correctIndexes.indexOf(answer.choiceIndex) !== -1;
         if (correct) {
           var streak = (streaks[player.uid] || 0) + 1;
@@ -375,38 +463,38 @@
       board.push({ name: player.name || 'Người chơi', score: score });
     });
     board.sort(function (x, y) { return y.score - x.score; });
-    roomRef.update({
-      status: 'reveal',
-      currentQuestion: Object.assign({}, latest.currentQuestion, { correctIndexes: correctIndexes }),
+    // 1 LẦN GHI cho cả "chốt câu này" lẫn "mở câu sau" (câu sau mở trên máy học sinh
+    // sau REVEAL_MS). Câu cuối: chuyển thẳng 'finished' rồi dọn câu trả lời.
+    var next = questions[index + 1];
+    var last = !next;
+    var room = roomRef;
+    room.update({
+      status: last ? 'finished' : 'reveal',
+      questionIndex: index,
+      currentQuestion: Object.assign({}, open.question, { correctIndexes: correctIndexes }),
+      nextQuestion: last ? null : { text: next.question, options: next.options },
+      phaseAt: serverTimestamp(),
       leaderboard: board.slice(0, 10),
       scores: scores,
       streaks: streaks,
-      deadline: null
+      deadline: last ? null : firebase.firestore.Timestamp.fromMillis(Date.now() + REVEAL_MS + questionMs())
+    }).then(function () {
+      if (!last) return;
+      // Câu trả lời không còn cần sau khi chốt điểm (điểm + top 10 nằm trong document phòng).
+      // id answer = uid người chơi đã biết sẵn → xoá thẳng, không tốn lượt đọc. Ngừng nghe
+      // câu trả lời TRƯỚC khi xoá (mỗi document bị xoá = 1 lượt đọc cho người đang nghe).
+      // Người chơi giữ lại để còn tải bảng điểm đầy đủ; TTL (expiresAt) dọn sau.
+      if (answersUnsubscribe) { answersUnsubscribe(); answersUnsubscribe = null; }
+      var batch = firebase.firestore().batch();
+      players.slice(0, 450).forEach(function (p) { batch.delete(room.collection('answers').doc(p.id)); });
+      return batch.commit();
     }).catch(function (error) {
       console.error('[LiveQuiz] Không thể chốt câu trả lời:', error);
       scheduledKey = '';
       showStatus(error.code === 'resource-exhausted' ? QUOTA_MSG : 'Không chốt được câu (' + (error.code || 'lỗi') + '). Kiểm tra Rules và kết nối Firebase.', true);
     });
   }
-  function scheduleAdvance() {
-    var index = roomData.questionIndex;
-    var key = 'reveal:' + index;
-    if (scheduledKey === key) return;
-    clearTimeout(timerHandle); scheduledKey = key;
-    timerHandle = setTimeout(function () {
-      if (index + 1 >= roomData.questionCount) {
-        var room = roomRef;
-        room.update({ status: 'finished', deadline: null }).then(function () {
-          // Câu trả lời không còn cần sau khi chốt điểm (điểm + top 10 nằm trong document phòng).
-          // TTL không xoá subcollection nên tự dọn ở đây: id answer = uid người chơi đã biết sẵn
-          // → xoá thẳng, không tốn lượt đọc. Người chơi giữ lại để còn tải bảng điểm đầy đủ.
-          var batch = firebase.firestore().batch();
-          players.slice(0, 450).forEach(function (p) { batch.delete(room.collection('answers').doc(p.id)); });
-          return batch.commit();
-        }).catch(function (error) { showStatus(error.message, true); });
-      } else publishQuestion(index + 1);
-    }, REVEAL_MS);
-  }
+  // Chỉ dùng mở CÂU ĐẦU TIÊN — các câu sau đi kèm lần ghi chốt câu trước (finalizeQuestion).
   function publishQuestion(index) {
     var item = questions[index];
     if (!item || !roomRef) return;
@@ -414,7 +502,8 @@
     roomRef.update({
       status: 'question', questionIndex: index,
       currentQuestion: { text: item.question, options: item.options },
-      deadline: firebase.firestore.Timestamp.fromMillis(Date.now() + questionMs())
+      deadline: firebase.firestore.Timestamp.fromMillis(Date.now() + questionMs()),
+      phaseAt: serverTimestamp()
     }).catch(function (error) { showStatus(error.message || 'Không thể mở câu hỏi tiếp theo.', true); });
   }
   function restoreHostQuestions(code) {
@@ -423,18 +512,23 @@
   }
   async function deleteRoomData() {
     if (!isHost || !roomRef || !window.confirm('Xóa phòng cùng danh sách người chơi và câu trả lời?')) return;
+    // 0 lượt đọc: id người chơi/câu trả lời = uid đã có sẵn trong danh sách đang nghe
+    // (trước: đọc lại tới 2 × 100 document rồi mới xoá). Ngừng nghe TRƯỚC khi xoá —
+    // mỗi document bị xoá = 1 lượt đọc cho người đang nghe. Phần sót (nếu có) để TTL dọn.
+    var room = roomRef;
+    var ids = players.map(function (p) { return p.id; });
+    // Ván đã xong thì câu trả lời đã được xoá lúc chốt câu cuối — không xoá lại (mỗi lệnh xoá đều tính lượt).
+    var answersLeft = !roomData || roomData.status !== 'finished';
+    stopListeners();
     try {
-      var paths = [roomRef.collection('players'), roomRef.collection('answers')];
-      for (var p = 0; p < paths.length; p += 1) {
-        var snapshot = await paths[p].limit(100).get();
-        for (var i = 0; i < snapshot.docs.length; i += 10) {
-          var batch = firebase.firestore().batch();
-          snapshot.docs.slice(i, i + 10).forEach(function (doc) { batch.delete(doc.ref); });
-          await batch.commit();
-        }
-      }
-      await roomRef.delete();
-      localStorage.removeItem('eduquiz_live_host:' + roomRef.id);
+      var batch = firebase.firestore().batch();
+      ids.slice(0, 240).forEach(function (id) {
+        batch.delete(room.collection('players').doc(id));
+        if (answersLeft) batch.delete(room.collection('answers').doc(id));
+      });
+      batch.delete(room);
+      await batch.commit();
+      localStorage.removeItem('eduquiz_live_host:' + room.id);
       showEntry();
       notify('Đã xóa dữ liệu phòng.');
     } catch (error) { showStatus(error.message || 'Không xóa được dữ liệu phòng.', true); }
@@ -501,12 +595,14 @@
     try {
       var ref = firebase.firestore().collection(ROOM_COLLECTION).doc(code);
       var snapshot = await ref.get();
+      EduFirebase.countReads('live_rooms/' + code + ' (kiểm tra mã)', 1);
       if (!snapshot.exists || snapshot.data().expiresAt.toMillis() <= Date.now()) throw new Error('Mã phòng không đúng hoặc đã hết hạn.');
       var playerRef = ref.collection('players').doc(currentUser.uid);
       var oldPlayer = await playerRef.get();
+      EduFirebase.countReads('players/{uid} (đã vào phòng chưa)', 1);
       if (!oldPlayer.exists && snapshot.data().status !== 'lobby') throw new Error('Phòng đã bắt đầu; chỉ thành viên cũ mới có thể vào lại.');
       if (!oldPlayer.exists) {
-        await playerRef.set({ uid: currentUser.uid, name: name, score: 0, correct: 0, joinedAt: serverTimestamp() });
+        await playerRef.set({ uid: currentUser.uid, name: name, score: 0, correct: 0, joinedAt: serverTimestamp(), expiresAt: snapshot.data().expiresAt });
       }
       enterRoom(code, false);
     } catch (error) {

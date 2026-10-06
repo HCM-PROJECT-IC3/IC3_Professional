@@ -156,10 +156,12 @@ service cloud.firestore {
     // ---- Tài khoản người dùng & phân quyền ----
     match /users/{userId} {
       allow get: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
-      allow list: if isAdmin() || (
+      // Query danh sách BẮT BUỘC có limit() ≤ 1000 (đợt tối ưu hạn mức 10/2026) —
+      // chặn query quên limit đọc nguyên collection.
+      allow list: if request.query.limit <= 1000 && (isAdmin() || (
         (isApprovedTeacher() || isCoordinator() || isTeachingCoordinator()) &&
         resource.data.role == 'teacher' && resource.data.approved == true
-      );
+      ));
 
       // Admin tạo hồ sơ THAY cho người khác — dùng khi admin-users.html
       // (📥 Nhập giáo viên từ Excel) tự tạo tài khoản Auth + hồ sơ Firestore
@@ -263,7 +265,12 @@ service cloud.firestore {
       // trước (lỗ hổng Commit #6 sửa cho teacher, ĐỢT NÀY sửa tiếp cho
       // coordinator — trước đây coordinator luôn qua được vế isCoordinator()
       // đứng riêng nên bỏ qua hẳn scope trường, xem isOwnSchoolField()).
-      allow read: if isOwnSchoolField('studentSchool');
+      // Query BẮT BUỘC có limit() ≤ 10.000 (mức tối đa dashboard dùng, xem
+      // js/dashboard.js § updateReportTab / base-repository.js DEFAULT_LIST_LIMIT) —
+      // collection lớn nhất dự án, 1 query không limit có thể đốt trọn hạn mức đọc
+      // 50.000/ngày của gói Spark.
+      allow get: if isOwnSchoolField('studentSchool');
+      allow list: if request.query.limit <= 10000 && isOwnSchoolField('studentSchool');
       // Coordinator cũng được XOÁ (dùng ở ic3-dashboard.html → "🗂️ Chi tiết
       // lượt làm bài" → nút xoá từng lượt, vd dọn bản ghi test/trùng) — CHỈ
       // trong (các) trường mình hỗ trợ. KHÔNG thêm coordinator vào update:
@@ -282,7 +289,7 @@ service cloud.firestore {
       allow create: if
         request.resource.data.keys().hasOnly([
           'studentName', 'studentClass', 'studentSchool', 'projectId', 'projectTitle',
-          'score', 'autoTotal', 'passedCount', 'manualCount', 'taskResults', 'submittedAt'
+          'score', 'autoTotal', 'passedCount', 'manualCount', 'taskResults', 'submittedAt', 'expireAt'
         ]) &&
         request.resource.data.studentName is string &&
         request.resource.data.studentName.size() > 0 &&
@@ -301,9 +308,12 @@ service cloud.firestore {
         request.resource.data.passedCount is number && request.resource.data.passedCount >= 0 && request.resource.data.passedCount <= 500 &&
         request.resource.data.manualCount is number && request.resource.data.manualCount >= 0 && request.resource.data.manualCount <= 500 &&
         request.resource.data.taskResults is list && request.resource.data.taskResults.size() <= 300 &&
-        request.resource.data.submittedAt == request.time;
+        request.resource.data.submittedAt == request.time &&
+        // expireAt (TTL) không bắt buộc — bản ghi cũ trong hàng đợi gửi lại chưa có field này.
+        (!('expireAt' in request.resource.data) || request.resource.data.expireAt is timestamp);
 
-      allow read: if isOwnSchoolField('studentSchool');
+      allow get: if isOwnSchoolField('studentSchool');
+      allow list: if request.query.limit <= 10000 && isOwnSchoolField('studentSchool');
       allow update, delete: if isAdmin();
     }
 
@@ -347,6 +357,12 @@ service cloud.firestore {
           exists(/databases/$(database)/documents/live_rooms/$(roomCode)/players/$(request.auth.uid)));
       }
 
+      // Chủ phòng so trực tiếp resource.data.hostUid (document đang ghi) thay vì
+      // isRoomHost() (get() lại chính document phòng = thêm 1 lượt đọc MỖI lần ghi).
+      function isHostOfThisRoom() {
+        return isSignedIn() && resource.data.hostUid == request.auth.uid;
+      }
+
       allow get: if isSignedIn() &&
         (resource.data.hostUid == request.auth.uid ||
           (resource.data.expiresAt is timestamp && resource.data.expiresAt > request.time));
@@ -358,7 +374,9 @@ service cloud.firestore {
         ]) &&
         request.resource.data.questionMs in [10000, 20000, 30000] &&
         request.resource.data.maxPlayers is number &&
-        request.resource.data.maxPlayers >= 2 && request.resource.data.maxPlayers <= 100 &&
+        // Tối đa 60 người/phòng: mỗi người thêm tốn ~(số câu + 1) lượt ghi và
+        // ~2 × số câu lượt đọc của hạn mức chung.
+        request.resource.data.maxPlayers >= 2 && request.resource.data.maxPlayers <= 60 &&
         request.resource.data.hostUid == request.auth.uid &&
         getAfter(/databases/$(database)/documents/live_hosts/$(request.auth.uid)).data.lastCreatedAt == request.time &&
         request.resource.data.status == 'lobby' &&
@@ -373,23 +391,33 @@ service cloud.firestore {
         request.resource.data.expiresAt is timestamp &&
         request.resource.data.expiresAt > request.time &&
         request.resource.data.expiresAt < request.time + duration.value(2, 'h');
-      allow update: if isRoomHost() &&
+      allow update: if isHostOfThisRoom() &&
         request.resource.data.hostUid == resource.data.hostUid &&
         request.resource.data.createdAt == resource.data.createdAt &&
         request.resource.data.expiresAt == resource.data.expiresAt &&
         request.resource.data.status in ['lobby', 'question', 'reveal', 'finished'] &&
         request.resource.data.questionIndex >= -1 &&
         request.resource.data.questionIndex < request.resource.data.questionCount &&
+        // nextQuestion: câu kế tiếp gửi kèm lần chốt câu trước (js/live-quiz.js —
+        // mỗi câu chỉ 1 lần ghi document phòng thay vì 2).
         request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'status', 'questionIndex', 'currentQuestion', 'deadline', 'leaderboard', 'scores', 'streaks'
+          'status', 'questionIndex', 'currentQuestion', 'nextQuestion', 'phaseAt', 'deadline', 'leaderboard', 'scores', 'streaks'
         ]) &&
+        // phaseAt = giờ máy chủ lúc mở câu — người dẫn dùng để chấm khung giờ trả lời.
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['phaseAt']) ||
+          request.resource.data.phaseAt == request.time) &&
+        (!('nextQuestion' in request.resource.data) || request.resource.data.nextQuestion == null ||
+          (request.resource.data.nextQuestion is map &&
+            request.resource.data.nextQuestion.keys().hasOnly(['text', 'options']) &&
+            request.resource.data.nextQuestion.options is list &&
+            request.resource.data.nextQuestion.options.size() <= 6)) &&
         (!('leaderboard' in request.resource.data) ||
           (request.resource.data.leaderboard is list && request.resource.data.leaderboard.size() <= 10)) &&
         (!('scores' in request.resource.data) ||
           (request.resource.data.scores is map && request.resource.data.scores.size() <= 100)) &&
         (!('streaks' in request.resource.data) ||
           (request.resource.data.streaks is map && request.resource.data.streaks.size() <= 100));
-      allow delete: if isRoomHost();
+      allow delete: if isHostOfThisRoom();
 
       match /players/{playerUid} {
         function parentRoom() {
@@ -400,16 +428,18 @@ service cloud.firestore {
         }
         allow get: if isSignedIn() && (request.auth.uid == playerUid || parentHost());
         allow list: if isRoomMember() && request.query.limit <= 100;
+        // expiresAt = đúng hạn của phòng → TTL policy collection group "players" tự dọn.
         allow create: if isSignedIn() && request.auth.uid == playerUid &&
           parentRoom().status == 'lobby' && parentRoom().expiresAt > request.time &&
-          request.resource.data.keys().hasOnly(['uid', 'name', 'score', 'correct', 'joinedAt']) &&
+          request.resource.data.keys().hasOnly(['uid', 'name', 'score', 'correct', 'joinedAt', 'expiresAt']) &&
+          (!('expiresAt' in request.resource.data) || request.resource.data.expiresAt == parentRoom().expiresAt) &&
           request.resource.data.uid == request.auth.uid &&
           request.resource.data.name is string && request.resource.data.name.size() > 0 &&
           request.resource.data.name.size() <= 24 &&
           request.resource.data.score == 0 && request.resource.data.correct == 0 &&
           request.resource.data.joinedAt == request.time;
         allow update: if parentHost() &&
-          request.resource.data.keys().hasOnly(['uid', 'name', 'score', 'correct', 'joinedAt']) &&
+          request.resource.data.keys().hasOnly(['uid', 'name', 'score', 'correct', 'joinedAt', 'expiresAt']) &&
           request.resource.data.uid == resource.data.uid &&
           request.resource.data.name == resource.data.name &&
           request.resource.data.joinedAt == resource.data.joinedAt &&
@@ -427,23 +457,31 @@ service cloud.firestore {
         function parentHost() {
           return isSignedIn() && parentRoom().hostUid == request.auth.uid;
         }
+        // KHÔNG get()/exists() document phòng/người chơi ở đây (đợt tối ưu 10/2026):
+        // mỗi lệnh đó = 1 lượt đọc tính phí, nhân với MỌI câu trả lời của MỌI học
+        // sinh (40 người × 15 câu × 2 = 1.200 lượt đọc/phòng chỉ để kiểm tra). Người
+        // dẫn (js/live-quiz.js § finalizeQuestion) tự bỏ câu trả lời của người ngoài
+        // danh sách, sai câu, hoặc gửi ngoài khung giờ (so submittedAt = giờ máy chủ).
+        // Rules vẫn chốt: đúng chủ, đúng schema, giờ máy chủ, mỗi câu chỉ gửi 1 lần
+        // (update phải tăng questionIndex), và chỉ 1 document/người (id = uid).
         function validAnswer() {
           return isSignedIn() && request.auth.uid == playerUid &&
-            parentRoom().status == 'question' &&
             request.resource.data.uid == request.auth.uid &&
-            request.resource.data.questionIndex == parentRoom().questionIndex &&
+            request.resource.data.questionIndex is number &&
+            request.resource.data.questionIndex >= 0 && request.resource.data.questionIndex < 15 &&
             request.resource.data.choiceIndex is number &&
             request.resource.data.choiceIndex >= 0 && request.resource.data.choiceIndex <= 5 &&
             request.resource.data.submittedAt == request.time &&
-            request.time < parentRoom().deadline &&
-            exists(/databases/$(database)/documents/live_rooms/$(roomCode)/players/$(playerUid));
+            (!('expiresAt' in request.resource.data) ||
+              (request.resource.data.expiresAt is timestamp &&
+                request.resource.data.expiresAt < request.time + duration.value(3, 'h')));
         }
         allow get: if isSignedIn() && (request.auth.uid == playerUid || parentHost());
         allow list: if parentHost() && request.query.limit <= 100;
         allow create: if validAnswer() &&
-          request.resource.data.keys().hasOnly(['uid', 'questionIndex', 'choiceIndex', 'submittedAt']);
+          request.resource.data.keys().hasOnly(['uid', 'questionIndex', 'choiceIndex', 'submittedAt', 'expiresAt']);
         allow update: if validAnswer() &&
-          request.resource.data.keys().hasOnly(['uid', 'questionIndex', 'choiceIndex', 'submittedAt']) &&
+          request.resource.data.keys().hasOnly(['uid', 'questionIndex', 'choiceIndex', 'submittedAt', 'expiresAt']) &&
           request.resource.data.questionIndex > resource.data.questionIndex;
         allow delete: if parentHost();
       }
@@ -497,7 +535,9 @@ service cloud.firestore {
       // không có field "school" (chỉ có teacherId/courseId) — teacher-dashboard.html
       // không cần đọc trực tiếp collection "classes", chỉ cần "className" đã
       // denormalize sẵn trên từng document students_roster.
-      allow read: if canAccessRosterStudent();
+      // Query BẮT BUỘC có limit() ≤ 10.000 (base-repository.js luôn tự thêm limit).
+      allow get: if canAccessRosterStudent();
+      allow list: if request.query.limit <= 10000 && canAccessRosterStudent();
       // Ghi (tạo/sửa lớp-học sinh mới, đổi trạng thái...) vẫn là việc của
       // Điều phối đào tạo/Admin (roster-manager.html) — giáo viên KHÔNG ghi
       // được, kể cả học sinh của chính lớp mình. Coordinator CHỈ ghi được
@@ -655,7 +695,10 @@ service cloud.firestore {
     //      Ảnh đại diện base64 giới hạn nhỏ hơn nhiều ảnh bài đăng (avatar
     //      không cần nét cao) — xem AVATAR_MAX_CHARS trong js/portfolio.js.
     match /gvlab_profiles/{uid} {
-      allow read: if true;
+      // Đọc công khai nhưng query danh sách phải có limit() ≤ 500 (ảnh đại diện base64
+      // nặng tới ~300 KB/hồ sơ — chặn kéo cả collection, tốn băng thông 10 GiB/tháng).
+      allow get: if true;
+      allow list: if request.query.limit <= 500;
       allow write: if isEditor() && (uid == request.auth.uid || isAdmin())
         && (!('avatar' in request.resource.data) || (request.resource.data.avatar is string && request.resource.data.avatar.size() < 300000));
     }

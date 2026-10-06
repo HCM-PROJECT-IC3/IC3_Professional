@@ -27,6 +27,11 @@
   // "classes"/"courses"), không nhằm giới hạn dữ liệu cần thiết.
   const DEFAULT_LIST_LIMIT = 10000;
 
+  /** In "[trang] N lượt đọc Firestore — <nhãn>" (xem countSnap() trong firebase-config.js). */
+  function meter(label, snap) {
+    if (global.EduFirebase && global.EduFirebase.countSnap) global.EduFirebase.countSnap(label, snap);
+  }
+
   class BaseRepository {
     /** @param {string} collectionName Tên collection Firestore */
     constructor(collectionName) {
@@ -43,6 +48,7 @@
 
     async getById(id) {
       const snap = await this.col().doc(id).get();
+      meter(`${this.collectionName}/${id}`, snap);
       return snap.exists ? Object.assign({ id: snap.id }, snap.data()) : null;
     }
 
@@ -60,6 +66,17 @@
       const appliedLimit = options.limit || DEFAULT_LIST_LIMIT;
       q = q.limit(appliedLimit);
       const snap = await q.get();
+      // SDK đang offline (mất mạng HOẶC hết lượt đọc trong ngày — SDK coi
+      // resource-exhausted là lỗi tạm thời và tự chuyển offline) thì get() KHÔNG
+      // báo lỗi mà trả về những gì còn trong cache máy, thường là RỖNG/THIẾU.
+      // Trả lỗi thay vì trả mảng thiếu: nơi gọi sẽ dùng cache của chính nó (IndexedDB)
+      // — tránh lưu nhầm "roster rỗng" vào cache rồi hiện trống suốt 12 giờ.
+      if (snap.metadata && snap.metadata.fromCache) {
+        const err = new Error(`[EduRepository] list('${this.collectionName}') không lấy được từ máy chủ (offline / hết lượt đọc).`);
+        err.code = 'unavailable';
+        throw err;
+      }
+      meter(this.collectionName, snap);
       // Số bản ghi trả về CHẠM ĐÚNG trần đã áp (nhất là khi trần là
       // DEFAULT_LIST_LIMIT ngầm định, không phải limit cố ý của caller) rất
       // có thể là dấu hiệu bị CẮT BỚT (collection còn nhiều hơn) chứ không

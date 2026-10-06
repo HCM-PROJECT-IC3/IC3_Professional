@@ -99,6 +99,7 @@
   /** Lấy hồ sơ Firestore (role, approved, name...) của 1 uid. */
   async function fetchProfile(uid) {
     const snap = await db().collection(USERS_COL).doc(uid).get();
+    if (global.EduFirebase && global.EduFirebase.countSnap) global.EduFirebase.countSnap('users/{uid} (hồ sơ đăng nhập)', snap);
     return snap.exists ? Object.assign({ uid }, snap.data()) : null;
   }
 

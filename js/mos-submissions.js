@@ -19,6 +19,7 @@
   'use strict';
 
   const COLLECTION = 'mos_submissions';
+  const MOS_TTL_DAYS = 45; // xem RESULT_TTL_DAYS trong js/firestore-results.js
 
   /**
    * Lưu 1 kết quả nộp bài MOS Practice vào Firestore.
@@ -54,8 +55,18 @@
           note: String(r.note || '').slice(0, 300),
         })),
         submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        // TTL (Firestore tự xoá, cần bật policy "mos_submissions/expireAt" — xem
+        // docs/FIREBASE-CHECKLIST.md). Cùng lý do dung lượng 1 GiB như quiz_results.
+        expireAt: firebase.firestore.Timestamp.fromMillis(Date.now() + MOS_TTL_DAYS * 24 * 60 * 60 * 1000),
       };
 
+      // Mã tạo sẵn lúc nộp (mos-practice.js) → gửi lại từ hàng đợi không tạo bài trùng.
+      if (rec.submissionId && global.EduFirebase.createOnce) {
+        const res = await global.EduFirebase.createOnce(COLLECTION, rec.submissionId, payload);
+        if (res.success) console.log('✅ [MosPractice] Đã lưu kết quả nộp bài:', res.id);
+        if (!res.success && res.permanent && rec._retry) return { success: true, id: rec.submissionId, duplicate: true };
+        return res;
+      }
       const docRef = await global.EduFirebase.db.collection(COLLECTION).add(payload);
       console.log('✅ [MosPractice] Đã lưu kết quả nộp bài:', docRef.id);
       return { success: true, id: docRef.id };

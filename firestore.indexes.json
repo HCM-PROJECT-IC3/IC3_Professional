@@ -26,5 +26,34 @@
       ]
     }
   ],
-  "fieldOverrides": []
+  "fieldOverrides": [
+    { "collectionGroup": "quiz_results", "fieldPath": "expireAt", "ttl": true, "indexes": [] },
+    { "collectionGroup": "quiz_results", "fieldPath": "studentName", "indexes": [] },
+    { "collectionGroup": "quiz_results", "fieldPath": "category", "indexes": [] },
+    { "collectionGroup": "quiz_results", "fieldPath": "level", "indexes": [] },
+    { "collectionGroup": "quiz_results", "fieldPath": "minitest", "indexes": [] },
+    { "collectionGroup": "quiz_results", "fieldPath": "score", "indexes": [] },
+    { "collectionGroup": "quiz_results", "fieldPath": "correct", "indexes": [] },
+    { "collectionGroup": "quiz_results", "fieldPath": "incorrect", "indexes": [] },
+    { "collectionGroup": "quiz_results", "fieldPath": "skipped", "indexes": [] },
+    { "collectionGroup": "quiz_results", "fieldPath": "total", "indexes": [] },
+    { "collectionGroup": "quiz_results", "fieldPath": "elapsedSec", "indexes": [] },
+    { "collectionGroup": "quiz_results", "fieldPath": "tabSwitches", "indexes": [] },
+    { "collectionGroup": "quiz_results", "fieldPath": "clicks", "indexes": [] },
+    { "collectionGroup": "quiz_results", "fieldPath": "integrityOk", "indexes": [] },
+    { "collectionGroup": "quiz_results", "fieldPath": "flags", "indexes": [] },
+    { "collectionGroup": "quiz_results", "fieldPath": "timedOut", "indexes": [] },
+    { "collectionGroup": "mos_submissions", "fieldPath": "expireAt", "ttl": true, "indexes": [] },
+    { "collectionGroup": "mos_submissions", "fieldPath": "taskResults", "indexes": [] },
+    { "collectionGroup": "live_rooms", "fieldPath": "expiresAt", "ttl": true, "indexes": [] },
+    { "collectionGroup": "live_rooms", "fieldPath": "currentQuestion", "indexes": [] },
+    { "collectionGroup": "live_rooms", "fieldPath": "nextQuestion", "indexes": [] },
+    { "collectionGroup": "live_rooms", "fieldPath": "leaderboard", "indexes": [] },
+    { "collectionGroup": "live_rooms", "fieldPath": "scores", "indexes": [] },
+    { "collectionGroup": "live_rooms", "fieldPath": "streaks", "indexes": [] },
+    { "collectionGroup": "live_rooms", "fieldPath": "deadline", "indexes": [] },
+    { "collectionGroup": "live_rooms", "fieldPath": "phaseAt", "indexes": [] },
+    { "collectionGroup": "players", "fieldPath": "expiresAt", "ttl": true, "indexes": [] },
+    { "collectionGroup": "answers", "fieldPath": "expiresAt", "ttl": true, "indexes": [] }
+  ]
 }
