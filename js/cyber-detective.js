@@ -296,7 +296,7 @@
       var student = null;
       try { student = JSON.parse(localStorage.getItem('eduquiz_current_student') || 'null'); }
       catch (e) { student = null; }
-      if (!student || !student.name || !student.class) return;
+      student = student || {}; // XP chỉ lưu trên máy (js/gamification.js) — chưa chọn học sinh ở lobby vẫn được cộng
 
       EduGamification.recordGameSession('cyber-detective', {
         score: scorePct,
@@ -307,8 +307,8 @@
         topic: '7. An toàn và bảo mật',
         difficulty: null,
         durationSec: Math.max(0, Math.round((Date.now() - state.sessionStartedAtMs) / 1000)),
-        studentName: student.name,
-        studentClass: student.class,
+        studentName: student.name || '',
+        studentClass: student.class || '',
         studentSchool: student.school || '',
       });
     } catch (e) { /* ghi XP là phụ — không được làm hỏng màn kết quả */ }

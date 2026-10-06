@@ -339,7 +339,7 @@
       var student = null;
       try { student = JSON.parse(localStorage.getItem('eduquiz_current_student') || 'null'); }
       catch (e) { student = null; }
-      if (!student || !student.name || !student.class) return;
+      student = student || {}; // XP chỉ lưu trên máy (js/gamification.js) — chưa chọn học sinh ở lobby vẫn được cộng
 
       EduGamification.recordGameSession('sort-game', {
         score: accuracyPct,
@@ -349,8 +349,8 @@
         wrongAnswers: state.wrongCount,
         difficulty: state.difficulty.id,
         durationSec: state.difficulty.roundSec,
-        studentName: student.name,
-        studentClass: student.class,
+        studentName: student.name || '',
+        studentClass: student.class || '',
         studentSchool: student.school || ''
       });
     } catch (e) { /* ghi XP là phụ — không được làm hỏng màn kết quả */ }

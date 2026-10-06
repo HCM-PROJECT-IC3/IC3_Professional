@@ -989,7 +989,7 @@
       var student = null;
       try { student = JSON.parse(localStorage.getItem('eduquiz_current_student') || 'null'); }
       catch (e) { student = null; }
-      if (!student || !student.name || !student.class) return; // chưa chọn học sinh ở lobby — bỏ qua, không ghi ẩn danh
+      student = student || {}; // XP chỉ lưu trên máy (js/gamification.js) — chưa chọn học sinh ở lobby vẫn được cộng
 
       var scorePct = win ? 100 : Math.round((wavesCleared / TOTAL_WAVES) * 100);
       EduGamification.recordGameSession('pz-defense', {
@@ -1001,8 +1001,8 @@
         topic: 'Cybersecurity',
         difficulty: null,
         durationSec: Math.max(0, Math.round((Date.now() - sessionStartedAtMs) / 1000)),
-        studentName: student.name,
-        studentClass: student.class,
+        studentName: student.name || '',
+        studentClass: student.class || '',
         studentSchool: student.school || '',
       });
     } catch (e) { /* ghi XP là phụ — không được làm hỏng trải nghiệm xem kết quả game */ }

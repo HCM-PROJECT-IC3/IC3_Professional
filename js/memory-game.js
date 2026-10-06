@@ -263,6 +263,29 @@
     overlaySubEl.textContent = 'Xong sau ' + state.moves + ' lượt lật · ' + fmtTime(sec) +
       (isNewBest ? ' — nhanh nhất từ trước đến nay!' : '');
     overlayEl.classList.add('show');
+    recordSession(stars, sec);
+  }
+
+  /** Cộng XP/nhiệm vụ ngày qua js/gamification.js (chỉ lưu trên máy) — cùng
+   *  pattern các mini-game khác. XP theo số sao: 1★ = 25, 2★ = 35, 3★ = 45. */
+  function recordSession(stars, sec) {
+    try {
+      if (typeof EduGamification === 'undefined' || !EduGamification.recordGameSession) return;
+      var student = null;
+      try { student = JSON.parse(localStorage.getItem('eduquiz_current_student') || 'null'); }
+      catch (e) { student = null; }
+      student = student || {};
+      EduGamification.recordGameSession('memory-game', {
+        xp: 15 + stars * 10,
+        score: stars,
+        scoreType: 'stars',
+        topic: state.catId || null,
+        durationSec: sec,
+        studentName: student.name || '',
+        studentClass: student.class || '',
+        studentSchool: student.school || '',
+      });
+    } catch (e) { /* XP là phụ — không làm hỏng màn kết quả */ }
   }
 
   function resetGame() {

@@ -139,18 +139,11 @@
 
   </div>
 
-  <!-- (Phase 3/4/6/7 — Game Hub) Ghi nhận lượt chơi để cộng XP + đồng bộ
-       Firestore đa thiết bị, cùng pattern battle-quiz.html/pz-defense.html.
-       Không bắt buộc — thiếu mạng/script vẫn chơi bình thường. -->
-  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-check-compat.js"></script>
-  <script src="js/firebase-config.js"></script>
-  <script src="js/repositories/base-repository.js"></script>
-  <script src="js/models/exam-history.model.js"></script>
-  <script src="js/models/game-session.model.js"></script>
-  <script src="js/repositories/game-session-repository.js"></script>
+  <!-- XP / nhiệm vụ ngày / huy hiệu tính hoàn toàn trên máy (js/gamification.js) —
+       game KHÔNG nạp Firebase: không tốn lượt đọc/ghi, trang nhẹ hơn. -->
   <script src="js/gamification.js"></script>
+  <script src="js/game-sfx.js"></script>
+  <script src="js/game-fx.js"></script>
   <script src="js/game-engine/question-topic-map.js"></script>
 
   <script src="js/cyber-detective.js"></script>
