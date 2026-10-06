@@ -82,7 +82,7 @@
     // dữ liệu mới nhất tuyệt đối, không chỉ mỗi quiz_results).
     // Roster ít đổi: "Làm mới dữ liệu" KHÔNG đọc lại (cache 30 phút) — chỉ bài nộp mới.
     let rosterBundle = global.EduDataCache
-      ? global.EduDataCache.get(rosterCacheKey, /* persist */ true)
+      ? await global.EduDataCache.getAsync(rosterCacheKey, /* persist */ true)
       : null;
     if (!rosterBundle) {
       const [courses, classes, students, teacherSnap] = await Promise.all([
@@ -95,7 +95,7 @@
       ]);
       const teachers = teacherSnap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
       rosterBundle = { courses, classes, students, teachers };
-      if (global.EduDataCache) global.EduDataCache.set(rosterCacheKey, rosterBundle, ROSTER_CACHE_TTL_MS, /* persist */ true);
+      if (global.EduDataCache) global.EduDataCache.setAsync(rosterCacheKey, rosterBundle, ROSTER_CACHE_TTL_MS, /* persist */ true);
     }
 
     // Tải tăng dần (xem listRecentCached): chỉ đọc bài MỚI nộp kể từ lần trước.

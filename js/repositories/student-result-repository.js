@@ -36,7 +36,7 @@
      */
     async listRecentCached({ cacheKey, schools, limit = 1000, freshMs = 3 * 60 * 1000 } = {}) {
       const cache = global.EduDataCache;
-      const entry = cache ? cache.get(cacheKey, true) : null;
+      const entry = cache ? await cache.getAsync(cacheKey, true) : null;
       const now = Date.now();
       if (entry && Array.isArray(entry.rows) && now - entry.fetchedAt < freshMs) return entry.rows;
       let rows;
@@ -64,7 +64,7 @@
       } else {
         rows = await this.listRecent({ schools, limit });
       }
-      if (cache) cache.set(cacheKey, { rows, fetchedAt: now }, 12 * 60 * 60 * 1000, true);
+      if (cache) cache.setAsync(cacheKey, { rows, fetchedAt: now }, 12 * 60 * 60 * 1000, true);
       return rows;
     }
 

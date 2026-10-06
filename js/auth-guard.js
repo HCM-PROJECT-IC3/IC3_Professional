@@ -185,12 +185,14 @@
 
   function showDenied(message, needsSignOut) {
     const btnLabel = needsSignOut ? 'Đăng xuất & về trang đăng nhập' : 'Về trang đăng nhập';
-    const card = document.getElementById('edu-guard-card');
+    // Tìm trong overlay (không qua document): auth có thể trả lời TRƯỚC DOMContentLoaded,
+    // lúc overlay chưa gắn vào trang → getElementById trả null và trang kẹt ở màn chờ.
+    const card = overlay.querySelector('#edu-guard-card');
     card.innerHTML = `
       <div id="edu-guard-screen"></div>
       <div class="msg">${message}</div>
       <button class="btn" id="edu-guard-back">${btnLabel}</button>`;
-    const screen = document.getElementById('edu-guard-screen');
+    const screen = overlay.querySelector('#edu-guard-screen');
     screen.appendChild(buildImg('img/anim/404.gif'));
     // Rung nhẹ khung màn hình 1 lần khi vừa hiện lỗi, rồi tự tắt animation
     // (khỏi lặp lại mỗi lần re-render) — báo hiệu "có gì đó sai" rõ ràng
@@ -207,7 +209,7 @@
       }
       window.location.href = 'login.html?next=' + encodeURIComponent(location.pathname + location.search);
     };
-    document.getElementById('edu-guard-back')?.addEventListener('click', back);
+    overlay.querySelector('#edu-guard-back')?.addEventListener('click', back);
     document.documentElement.classList.remove('edu-guard-locked');
     overlay.style.visibility = 'visible';
   }

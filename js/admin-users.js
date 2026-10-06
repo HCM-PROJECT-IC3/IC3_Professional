@@ -59,11 +59,11 @@ window.EDU_ALLOWED_ROLES = ['admin'];
     if (!window.EduDataCache) return;
     const byTeacher = {};
     Object.keys(schoolsByTeacherId).forEach((k) => { byTeacher[k] = [...schoolsByTeacherId[k]]; });
-    window.EduDataCache.set(LOOKUPS_CACHE_KEY, { allSchools, allClasses, allTeachingTeachers, byTeacher }, LOOKUPS_TTL_MS, true);
+    window.EduDataCache.setAsync(LOOKUPS_CACHE_KEY, { allSchools, allClasses, allTeachingTeachers, byTeacher }, LOOKUPS_TTL_MS, true);
   }
 
-  function restoreLookupsCache() {
-    const c = window.EduDataCache ? window.EduDataCache.get(LOOKUPS_CACHE_KEY, true) : null;
+  async function restoreLookupsCache() {
+    const c = window.EduDataCache ? await window.EduDataCache.getAsync(LOOKUPS_CACHE_KEY, true) : null;
     if (!c) return false;
     allSchools = c.allSchools || [];
     allClasses = c.allClasses || [];
@@ -189,7 +189,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
     // vòng tự sửa TỰ ĐỘNG bên dưới nên bỏ qua an toàn khi có cache).
     let users;
     if (!forceRefresh && window.EduDataCache) {
-      const cached = window.EduDataCache.get(USERS_CACHE_KEY);
+      const cached = await window.EduDataCache.getAsync(USERS_CACHE_KEY);
       if (cached) {
         allSchools = cached.allSchools;
         allClasses = cached.allClasses;
@@ -203,7 +203,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
       // danh sách tài khoản (vài chục-trăm doc). Danh sách trường/lớp/GV tra cứu suy ra từ
       // TOÀN BỘ students_roster đang học (~1.466 doc) nên giữ lại 30 phút, không đọc lại mỗi lần.
       const lookupsInMemory = !!(forceRefresh && lookupsLoadedAt && Date.now() - lookupsLoadedAt < LOOKUPS_TTL_MS);
-      const lookupsFromStorage = !lookupsInMemory && restoreLookupsCache();
+      const lookupsFromStorage = !lookupsInMemory && await restoreLookupsCache();
       const lookupsFresh = lookupsInMemory || lookupsFromStorage;
       const [snap] = await Promise.all([
         EduFirebase.db.collection('users').orderBy('createdAt', 'desc').get(),
@@ -253,7 +253,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
       }
 
       if (window.EduDataCache) {
-        window.EduDataCache.set(USERS_CACHE_KEY, {
+        window.EduDataCache.setAsync(USERS_CACHE_KEY, {
           allSchools, allClasses, allTeachingTeachers,
           users: users.map(({ doc, u }) => ({ id: doc.id, u })),
         }, USERS_CACHE_TTL_MS);

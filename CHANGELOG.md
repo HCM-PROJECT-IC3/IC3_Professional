@@ -1,5 +1,12 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## 000. Sửa cache bị tràn — nguyên nhân các đỉnh 4K–6K lượt đọc/giờ
+
+- **Quản lý câu hỏi** (`image-manager.js`): ngân hàng ~6.071 câu (~5 triệu ký tự) vượt trần ~5 triệu ký tự của sessionStorage → cache ghi hỏng âm thầm → **mỗi lần mở trang đọc lại ~6.071 lượt** (khớp đỉnh 6K). Giờ giữ bản sao IndexedDB + đồng bộ delta theo `updatedAt` (`js/services/collection-sync-service.js`): mở lại ≈ 1 lượt đọc. Mọi lần ghi câu hỏi đặt `updatedAt`; nhập/tải JSON lên không còn đọc lại toàn bộ; đọc lại toàn bộ mỗi 7 ngày (bắt câu bị xoá ở máy khác) hoặc khi xuất file tĩnh. `updatedAt` không đưa vào file xuất.
+- `data-cache-service.js`: thêm `getAsync/setAsync` (IndexedDB, không giới hạn ~5MB); `set()` giờ báo console khi tràn quota thay vì im lặng. Chuyển sang IndexedDB: báo cáo `quiz_results` (tới 10.000 bài ≈ 4,5 triệu ký tự), kết quả gần đây giáo viên/điều phối, roster điều phối/giáo viên, danh sách tài khoản + tra cứu admin, roster-manager (nay dùng chung mọi tab).
+- Ghi chú: Battle Quiz bản cũ (trước commit mini-game) đọc tới 300 câu/chủ đề/giờ/học sinh — đã bỏ ở bản trước.
+- `auth-guard.js`: sửa lỗi kẹt màn "Đang kiểm tra đăng nhập..." khi auth trả lời trước DOMContentLoaded (`showDenied` tìm `#edu-guard-card` trong overlay chưa gắn vào trang).
+
 ## 00. Mini-game: hấp dẫn hơn, không dùng Firebase
 
 - Gỡ Firebase SDK + App Check khỏi `battle-quiz`, `pz-defense`, `cyber-detective`, `computer-simulator`. Trước đây mỗi lượt chơi ghi `game_sessions` nhưng rules chỉ cho admin ghi → luôn bị từ chối, vẫn tốn request. Giờ 7 game = 0 request Firebase.

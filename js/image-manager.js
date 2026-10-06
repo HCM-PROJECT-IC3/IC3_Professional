@@ -48,14 +48,25 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
   window.location.href = 'login.html';
 });
 
-// Cache 3 phút cho TOÀN BỘ ngân hàng câu hỏi ("questions", có thể lên tới
-// hàng trăm/nghìn document) — F5/mở lại trang công cụ này trong 3 phút
-// không tốn thêm lượt đọc Firestore (xem js/services/data-cache-service.js).
-// KHÔNG áp dụng cho lần đọc "exportStaticBtn" (dòng có colRef().get() thứ 2
-// trong file này) — nơi đó CỐ TÌNH đọc thẳng Firestore để đảm bảo xuất đúng
-// bản mới nhất, kể cả khi admin khác vừa sửa ở tab/máy khác.
-const QUESTIONS_CACHE_KEY = 'image-manager:questions';
-const QUESTIONS_CACHE_TTL_MS = 30 * 60 * 1000; // mọi thao tác ghi cập nhật lại cache tại chỗ
+// Ngân hàng câu hỏi (~6.000 doc, ~5 triệu ký tự) KHÔNG vừa sessionStorage/localStorage
+// (trần ~5 triệu ký tự/trang) — cache cũ ghi hỏng âm thầm nên MỖI lần mở trang đọc lại
+// toàn bộ ~6.000 lượt. Giờ giữ bản sao trong IndexedDB và chỉ hỏi Firestore các câu có
+// updatedAt mới hơn (js/services/collection-sync-service.js) → thường ~1 lượt đọc/lần mở.
+// Mọi chỗ GHI "questions" trong file này đều đặt updatedAt = serverTimestamp().
+const questionsSync = window.EduCollectionSync
+  ? window.EduCollectionSync.create({ name: 'questions', query: () => colRef() })
+  : null;
+
+function serverNow() { return firebase.firestore.FieldValue.serverTimestamp(); }
+
+/** Ghi nhớ bản mới nhất của 1 câu vào bản sao cục bộ sau khi lưu lên Firestore. */
+function rememberQuestion(item) {
+  if (questionsSync) questionsSync.put(item.docId, item.q);
+}
+
+function docsToQuestions(docs) {
+  return Object.keys(docs).sort().map(docId => ({ q: docs[docId], docId }));
+}
 
 /** @param {boolean} [forceRefresh] Bỏ qua cache — dùng sau khi ghi (migrate/upload/xoá/sửa). */
 async function loadFromFirestore(forceRefresh) {
@@ -64,20 +75,17 @@ async function loadFromFirestore(forceRefresh) {
   document.getElementById('app').style.display = 'none';
   document.getElementById('migrateBox').style.display = 'none';
   try {
-    if (!forceRefresh && window.EduDataCache) {
-      const cached = window.EduDataCache.get(QUESTIONS_CACHE_KEY);
-      if (cached) {
-        QUESTIONS = cached;
-        scanUsedPictureNumbers();
-        document.getElementById('loadState').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
-        buildFilterOptions();
-        applyFilters();
-        return;
-      }
+    let docs;
+    if (questionsSync) {
+      const res = await questionsSync.sync({ force: !!forceRefresh });
+      console.info(`[image-manager] Câu hỏi: ${res.mode} (${res.reads} lượt đọc Firestore)`);
+      docs = res.docs;
+    } else {
+      const snap = await colRef().get();
+      docs = {};
+      snap.docs.forEach(doc => { docs[doc.id] = doc.data(); });
     }
-    const snap = await colRef().get();
-    if (snap.empty) {
+    if (!Object.keys(docs).length) {
       document.getElementById('loadState').style.display = 'none';
       const isAdmin = window.EduCurrentProfile && window.EduCurrentProfile.role === 'admin';
       if (isAdmin) {
@@ -88,8 +96,7 @@ async function loadFromFirestore(forceRefresh) {
       }
       return;
     }
-    QUESTIONS = snap.docs.map(doc => ({ q: doc.data(), docId: doc.id }));
-    if (window.EduDataCache) window.EduDataCache.set(QUESTIONS_CACHE_KEY, QUESTIONS, QUESTIONS_CACHE_TTL_MS);
+    QUESTIONS = docsToQuestions(docs);
     scanUsedPictureNumbers();
     document.getElementById('loadState').style.display = 'none';
     document.getElementById('app').style.display = 'block';
@@ -194,9 +201,10 @@ async function batchWriteQuestions(flat, onProgress) {
   for (let i = 0; i < flat.length; i += 450) {
     const batch = db().batch();
     flat.slice(i, i + 450).forEach(item => {
-      batch.set(colRef().doc(item.docId), item.data);
+      batch.set(colRef().doc(item.docId), Object.assign({}, item.data, { updatedAt: serverNow() }));
     });
     await batch.commit();
+    if (questionsSync) flat.slice(i, i + 450).forEach(item => questionsSync.put(item.docId, item.data));
     done += Math.min(450, flat.length - i);
     onProgress?.(done, flat.length);
   }
@@ -220,7 +228,7 @@ document.getElementById('migrateBtn').addEventListener('click', async () => {
       btn.textContent = `⏳ Đã nhập ${done}/${total}...`;
     });
     toast(`✅ Đã nhập ${flat.length} câu hỏi lên Firebase`);
-    loadFromFirestore(true);
+    loadFromFirestore(!questionsSync);
   } catch (err) {
     console.error(err);
     toast('❌ Lỗi nhập dữ liệu: ' + err.message, 5000);
@@ -281,7 +289,7 @@ document.getElementById('uploadJsonInput').addEventListener('change', async (e) 
       btn.textContent = `⏳ Đang ghi ${done}/${total}...`;
     });
     toast(`✅ Đã cập nhật ${flat.length} câu hỏi (${overwriteCount} ghi đè, ${newCount} mới) lên Firebase`, 5000);
-    loadFromFirestore(true);
+    loadFromFirestore(!questionsSync);
   } catch (err) {
     console.error(err);
     toast('❌ Lỗi tải JSON lên: ' + err.message, 6000);
@@ -597,8 +605,8 @@ function refreshCard(item) {
    ============================================================ */
 async function persistQuestion(item, patch) {
   try {
-    await colRef().doc(item.docId).set(patch, { merge: true });
-    if (window.EduDataCache) window.EduDataCache.set(QUESTIONS_CACHE_KEY, QUESTIONS, QUESTIONS_CACHE_TTL_MS);
+    await colRef().doc(item.docId).set(Object.assign({}, patch, { updatedAt: serverNow() }), { merge: true });
+    rememberQuestion(item);
   } catch (err) {
     console.error(err);
     toast('❌ Lỗi lưu Firebase: ' + err.message, 4000);
@@ -643,14 +651,13 @@ async function saveCardData(item, card) {
     Object.assign(patch, localPatch);
     deleteKeys.forEach(k => { patch[k] = firebase.firestore.FieldValue.delete(); });
 
+    patch.updatedAt = serverNow();
     await colRef().doc(item.docId).set(patch, { merge: true });
 
     // cập nhật bản sao cục bộ để card hiển thị đúng ngay sau khi lưu
     deleteKeys.forEach(k => delete item.q[k]);
     Object.assign(item.q, localPatch);
-    // Xoá cache — tránh lần mở lại trang (tab khác/F5 trong 3 phút) thấy
-    // dữ liệu cũ (xem QUESTIONS_CACHE_KEY ở loadFromFirestore()).
-    if (window.EduDataCache) window.EduDataCache.set(QUESTIONS_CACHE_KEY, QUESTIONS, QUESTIONS_CACHE_TTL_MS);
+    rememberQuestion(item);
 
     toast('✅ Đã lưu câu ' + (item.q.id ?? '') + ' lên Firebase');
     refreshCard(item);
@@ -667,7 +674,7 @@ async function deleteQuestion(item) {
   try {
     await colRef().doc(item.docId).delete();
     QUESTIONS = QUESTIONS.filter(x => x.docId !== item.docId);
-    if (window.EduDataCache) window.EduDataCache.set(QUESTIONS_CACHE_KEY, QUESTIONS, QUESTIONS_CACHE_TTL_MS);
+    if (questionsSync) questionsSync.remove(item.docId);
     applyFilters();
     toast('🗑️ Đã xoá câu hỏi khỏi Firebase');
   } catch (err) {
@@ -729,9 +736,10 @@ document.getElementById('addQuestionBtn').addEventListener('click', () => {
         catName, gradeName, minitestName,
       }, TYPE_TEMPLATES[type] || {});
 
-      await colRef().doc(docId).set(data);
-      QUESTIONS.push({ q: data, docId });
-      if (window.EduDataCache) window.EduDataCache.set(QUESTIONS_CACHE_KEY, QUESTIONS, QUESTIONS_CACHE_TTL_MS);
+      await colRef().doc(docId).set(Object.assign({}, data, { updatedAt: serverNow() }));
+      const created = { q: data, docId };
+      QUESTIONS.push(created);
+      rememberQuestion(created);
       scanUsedPictureNumbers();
       buildFilterOptions();
       applyFilters();
@@ -884,6 +892,7 @@ document.getElementById('exportStaticBtn').addEventListener('click', async () =>
     //    vừa sửa ở tab/máy khác.
     const snap = await colRef().get();
     const freshQuestions = snap.docs.map(doc => doc.data());
+    if (questionsSync) questionsSync.replaceAll(snap.docs);
 
     // 2) Tải meta.json hiện có trên site để lấy bảng tra cứu
     //    catName → { id, color }, "catName::gradeName" → { id, grade }
@@ -934,6 +943,7 @@ document.getElementById('exportStaticBtn').addEventListener('click', async () =>
 
       const clone = Object.assign({}, q);
       delete clone.catName; delete clone.gradeName; delete clone.minitestName;
+      delete clone.updatedAt; // chỉ dùng cho đồng bộ delta, không đưa vào file tĩnh
       lvl.minitests[mtName].push(clone);
     });
 
