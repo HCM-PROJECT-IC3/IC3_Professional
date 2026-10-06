@@ -246,3 +246,8 @@ a{color:inherit}
 .link-plain-flex { text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
 .mt-sm { margin-top: .6rem; }
 .banner.banner-warn { background: var(--yellow-lt); border-color: rgba(246,167,35,.4); }
+
+/* Nút "🚀 Đẩy thay đổi" nhấp nháy nhẹ khi còn bản nháp chưa đẩy (js/image-manager.js § updatePublishButton). */
+.btn-pulse { animation: btnPulse 1.6s ease-in-out infinite; }
+@keyframes btnPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, .55); } 50% { box-shadow: 0 0 0 8px rgba(99, 102, 241, 0); } }
+@media (prefers-reduced-motion: reduce) { .btn-pulse { animation: none; outline: 2px solid #fbbf24; } }

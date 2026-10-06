@@ -20,45 +20,36 @@
 <div class="topbar">
   <a href="ic3-dashboard.html" class="btn btn-ghost btn-sm link-plain-flex">← Dashboard</a>
   <h1>🖼️ Quản lý câu hỏi &amp; hình ảnh</h1>
-  <span class="sub">EduQuiz IC3 · Lưu trực tiếp lên Firebase</span>
+  <span class="sub">EduQuiz IC3 · Sửa trực tiếp data/ic3 (file học sinh dùng)</span>
   <div class="spacer"></div>
   <span class="whoami" id="whoami"></span>
   <button type="button" class="btn btn-ghost btn-sm" id="logoutBtn">Đăng xuất</button>
   <button type="button" class="theme-toggle" id="themeToggle" title="Chuyển đổi sáng/tối"></button>
   <button type="button" class="btn btn-ghost btn-sm" id="backupBtn">⬇️ Sao lưu JSON</button>
-  <!-- Upload 1 file JSON (bản sao lưu đã sửa offline, quiz_data.json mới,
-       hoặc 1 file data/ic3/<cat>__<lvl>.json lẻ) để GHI ĐÈ lên Firebase —
+  <!-- Upload 1 file JSON (bản sao lưu đã sửa offline, bản nháp tải về,
+       hoặc 1 file data/ic3/<cat>__<lvl>.json lẻ) để THAY nội dung các khối đó (bản nháp) —
        xem js/image-manager.js § UPLOAD JSON. input file ẩn, bấm nút mới
        mở hộp thoại chọn file (mẫu chuẩn: click nút proxy click input). -->
   <input type="file" id="uploadJsonInput" accept="application/json,.json" hidden>
   <button type="button" class="btn btn-ghost btn-sm" id="uploadJsonBtn">⬆️ Tải JSON cập nhật</button>
-  <button type="button" class="btn btn-primary btn-sm" id="exportStaticBtn">📤 Xuất ra data/ic3 (đồng bộ học sinh)</button>
+  <button type="button" class="btn btn-primary btn-sm" id="exportStaticBtn">🚀 Đẩy thay đổi cho học sinh</button>
 </div>
 
 <div class="wrap">
 
   <div class="banner">
-    Trang này đọc/ghi trực tiếp trên <b>Firebase Firestore</b> (collection <code>questions</code>).
-    Mọi thay đổi (thêm / xoá / sửa nội dung / sửa ảnh) đều được <b>lưu ngay lập tức</b> lên Firebase.
-    <b>Lưu ý quan trọng:</b> trang bài thi học sinh làm (<code>index.html</code>) <b>không đọc Firestore</b> —
-    nó chỉ đọc file JSON tĩnh trong <code>data/ic3/</code>. Sau khi sửa xong trên trang này, bạn phải bấm
-    <b>"📤 Xuất ra data/ic3"</b> rồi deploy lại thì học sinh mới thấy thay đổi. Nút "Sao lưu JSON" chỉ tải 1
-    bản dự phòng gộp chung, không dùng để deploy.
+    Trang này sửa trực tiếp <b>ngân hàng câu hỏi học sinh đang dùng</b> (<code>data/ic3/</code>) —
+    <b>không tốn lượt đọc/ghi Firebase</b>. Mọi thay đổi được lưu tạm thành <b>bản nháp</b> trên máy này
+    (đóng tab vẫn còn); bấm <b>"🚀 Đẩy thay đổi cho học sinh"</b> để đưa lên GitHub — học sinh thấy sau
+    khoảng 1–2 phút. Sửa 1 câu sẽ cập nhật luôn các bản chép của nó ở Tiết 1–8 (cùng mã câu).
+    Lần đầu đẩy sẽ hỏi GitHub token (quyền <i>Contents: Read and write</i> trên repo); có token thì trang
+    luôn tải bản mới nhất từ GitHub.
   </div>
-
-  <div id="migrateBox" class="banner banner-warn hidden">
-    Chưa có dữ liệu câu hỏi nào trên Firebase. Bấm nút bên dưới để nhập dữ liệu từ
-    <code>quiz_data.json</code> hiện có (chỉ cần làm 1 lần).
-    <div class="mt-sm">
-      <button type="button" class="btn btn-primary btn-sm" id="migrateBtn">📥 Nhập dữ liệu từ quiz_data.json</button>
-    </div>
-  </div>
-
-  <div id="loadState" class="loadbar">⏳ Đang tải dữ liệu câu hỏi từ Firebase…</div>
+  <div id="loadState" class="loadbar">⏳ Đang tải ngân hàng câu hỏi (data/ic3)…</div>
 
   <div id="app" class="hidden">
     <div class="stats">
-      <div class="stat-card"><div class="n" id="statTotal">0</div><div class="l">Tổng số câu</div></div>
+      <div class="stat-card"><div class="n" id="statTotal">0</div><div class="l">Tổng mục câu hỏi · <span id="statUnique">0</span> câu khác nhau</div></div>
       <div class="stat-card need"><div class="n" id="statNeed">0</div><div class="l">Cần ảnh (chưa có)</div></div>
       <div class="stat-card have"><div class="n" id="statHave">0</div><div class="l">Đã có ảnh thật</div></div>
       <div class="stat-card skip"><div class="n" id="statSkip">0</div><div class="l">Không cần minh hoạ</div></div>
@@ -107,7 +98,6 @@
 <script src="js/auth-guard.js"></script>
 <script src="js/idle-logout.js"></script>
 <script src="js/services/data-cache-service.js"></script>
-<script src="js/services/collection-sync-service.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <!-- Đẩy thẳng data/ic3/*.json + quiz_data.json lên GitHub qua API, thay
      cho tải zip + giải nén + copy đè + git commit/push thủ công — xem nút
