@@ -2,8 +2,8 @@
    js/battle-quiz.js — Mini-game "Battle Quiz" (Player vs AI).
 
    Cơ chế (mục 12 yêu cầu gốc):
-   - Mỗi câu hỏi type "single" (đọc thật từ Firestore/quiz_data.json,
-     KHÔNG bịa câu hỏi mới) có 1 mốc thời gian trả lời (bqCONFIG.timePerQuestionSec).
+   - Mỗi câu hỏi type "single" (đọc thật từ ngân hàng câu hỏi tĩnh
+     data/ic3/minitests, KHÔNG bịa câu hỏi mới) có 1 mốc thời gian trả lời (bqCONFIG.timePerQuestionSec).
    - Trả lời ĐÚNG → tấn công AI. Combo càng cao, sát thương càng lớn:
        combo 1-2  → Tấn công thường   (10 dmg)
        combo 3-4  → Combo Attack      (16 dmg)
@@ -12,11 +12,10 @@
    - Trả lời SAI hoặc hết giờ → mất combo, AI phản công (12 dmg cố định).
    - Ai về 0 HP trước thua; hết câu hỏi mà chưa ai về 0 → so HP còn lại.
 
-   KHÔNG tạo Question Engine mới: đọc câu hỏi trực tiếp từ Firestore
-   collection "questions" (cùng cách image-manager.html đọc), lọc theo
-   chủ đề qua js/game-engine/question-topic-map.js. Nếu Firestore lỗi/
-   offline, tự rơi về đọc quiz_data.json tĩnh — đúng fallback mà
-   index.html/quiz-engine.js đã dùng.
+   KHÔNG tạo Question Engine mới và KHÔNG gọi Firebase: đọc đúng các file
+   data/ic3/minitests-manifest.json + data/ic3/minitests/*.json mà
+   js/quiz-engine.js / mario-flappy.js đang dùng (file tĩnh trên GitHub
+   Pages — 0 lượt đọc Firestore, trình duyệt tự cache).
    ════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -139,70 +138,54 @@
     el.leaderboardList = qs('bqLeaderboardList');
   }
 
-  // ── Nạp câu hỏi ──
+  // ── Nạp câu hỏi (file tĩnh, không tốn Firebase) ──
 
-  // startMatch() gọi loadQuestions() MỖI VÁN (bấm "Chơi lại" cũng tính 1
-  // ván mới) — nếu không cache, mỗi ván tốn tới 300 lượt đọc Firestore
-  // (query .limit(300)) dù ngân hàng câu hỏi hầu như không đổi giữa các
-  // ván. Với hàng nghìn học sinh chơi nhiều ván/ngày, không cache sẽ vượt
-  // xa 50.000 lượt đọc/ngày miễn phí của gói Spark chỉ riêng từ game này.
-  // Cache theo topic trong localStorage (sống qua nhiều ván/nhiều lần mở
-  // lại trang), TTL 1 giờ — đủ ngắn để câu hỏi mới thêm/sửa (qua
-  // image-manager.html) sớm được thấy, đủ dài để 1 buổi chơi (thường vài
-  // chục ván liên tiếp) chỉ tốn ĐÚNG 1 lần đọc thật cho mỗi chủ đề.
-  var FIRESTORE_QUESTIONS_CACHE_PREFIX = 'bqQuestionsCache:';
-  var FIRESTORE_QUESTIONS_CACHE_TTL_MS = 60 * 60 * 1000;
+  var _manifestPromise = null;
+  var _fileCache = {}; // path -> Promise<Array> (dùng lại giữa các ván trong cùng phiên)
 
-  function loadFromFirestore(topic) {
-    if (typeof firebase === 'undefined' || !firebase.firestore) return Promise.reject(new Error('no-firebase'));
-    try {
-      var db = firebase.firestore();
-      var query = db.collection('questions').where('type', '==', 'single');
-      if (topic) query = query.where('minitestName', '==', topic);
-      return query.limit(300).get().then(function (snap) {
-        if (snap.empty) throw new Error('empty');
-        return snap.docs.map(function (d) { return d.data(); });
-      });
-    } catch (e) {
-      return Promise.reject(e);
+  function fetchJson(url) {
+    var controller = new AbortController();
+    var timer = setTimeout(function () { controller.abort(); }, 10000);
+    return fetch(url, { signal: controller.signal })
+      .then(function (r) { if (!r.ok) throw new Error(url + ' ' + r.status); return r.json(); })
+      .finally(function () { clearTimeout(timer); });
+  }
+
+  function loadManifest() {
+    if (!_manifestPromise) {
+      _manifestPromise = fetchJson('data/ic3/minitests-manifest.json').catch(function (e) { _manifestPromise = null; throw e; });
     }
+    return _manifestPromise;
   }
 
-  function loadFromFirestoreCached(topic) {
-    var cacheKey = FIRESTORE_QUESTIONS_CACHE_PREFIX + (topic || '__all__');
-    try {
-      var raw = localStorage.getItem(cacheKey);
-      if (raw) {
-        var entry = JSON.parse(raw);
-        if (entry && Date.now() < entry.expiresAt && Array.isArray(entry.data) && entry.data.length) {
-          return Promise.resolve(entry.data);
-        }
-      }
-    } catch (e) { /* localStorage bị chặn/lỗi parse — coi như cache miss, không chặn game */ }
-
-    return loadFromFirestore(topic).then(function (data) {
-      try {
-        localStorage.setItem(cacheKey, JSON.stringify({ data: data, expiresAt: Date.now() + FIRESTORE_QUESTIONS_CACHE_TTL_MS }));
-      } catch (e) { /* hết quota localStorage — bỏ qua, không ảnh hưởng chức năng chính */ }
-      return data;
-    });
+  function loadTopicFile(path) {
+    if (!_fileCache[path]) {
+      _fileCache[path] = fetchJson('data/ic3/' + path).catch(function () { delete _fileCache[path]; return []; });
+    }
+    return _fileCache[path];
   }
 
-  function loadFromStaticJson(topic) {
-    return fetch('quiz_data.json').then(function (r) { return r.json(); }).then(function (data) {
-      var out = [];
-      (data.categories || []).forEach(function (c) {
-        (c.levels || []).forEach(function (lv) {
-          Object.keys(lv.minitests || {}).forEach(function (mtName) {
-            if (topic && mtName !== topic) return;
-            (lv.minitests[mtName] || []).forEach(function (q) {
-              if (q.type === 'single') {
-                out.push(Object.assign({}, q, { minitestName: mtName, catName: c.name, gradeName: lv.name }));
-              }
-            });
-          });
+  // Câu "single" + câu "multi" chỉ có 1 đáp án đúng (cùng cách mario-flappy.js lọc).
+  function isPlayable(q) {
+    if (!q || !Array.isArray(q.options) || q.options.length < 2 || !Array.isArray(q.correct)) return false;
+    return q.type === 'single' || (q.type === 'multi' && q.correct.length === 1);
+  }
+
+  /** topic = 1 trong 7 chủ đề chuẩn (lấy ở mọi chương trình Spark/IC3) hoặc null = ngẫu nhiên. */
+  function loadFromStaticMinitests(topic) {
+    return loadManifest().then(function (manifest) {
+      var paths = [];
+      Object.keys(manifest).forEach(function (program) {
+        var topics = manifest[program];
+        Object.keys(topics).forEach(function (name) {
+          if (topic ? name === topic : /^\d+\.\s/.test(name)) paths.push(topics[name]);
         });
       });
+      if (!topic) paths = shuffle(paths).slice(0, 6); // ngẫu nhiên: 6 file chủ đề là đủ 15 câu, không tải cả ngân hàng
+      return Promise.all(paths.map(loadTopicFile));
+    }).then(function (lists) {
+      var out = [];
+      lists.forEach(function (list) { (list || []).forEach(function (q) { if (isPlayable(q)) out.push(q); }); });
       return out;
     });
   }
@@ -217,9 +200,7 @@
   }
 
   function loadQuestions(topic) {
-    return loadFromFirestoreCached(topic).catch(function () {
-      return loadFromStaticJson(topic);
-    }).then(function (list) {
+    return loadFromStaticMinitests(topic).then(function (list) {
       var shuffled = shuffle(list).slice(0, CONFIG.maxQuestionsPerMatch);
       // Xáo cả thứ tự đáp án trong mỗi câu, giữ nguyên nội dung.
       return shuffled.map(function (q) {
@@ -434,7 +415,8 @@
 
     // XP: base theo % chính xác, không phụ thuộc thắng/thua tuyệt đối —
     // khuyến khích trả lời đúng nhiều hơn là "ăn may" thắng với ít câu.
-    state.xp = Math.round(accuracyPct * 0.5) + (win ? 20 : 0);
+    // Tối thiểu 10 XP/ván: thua vẫn có thưởng nhỏ để muốn chơi lại.
+    state.xp = Math.max(10, Math.round(accuracyPct * 0.5) + (win ? 20 : 0));
     updateHud();
 
     var rankUpNote = '';
@@ -457,6 +439,17 @@
       if (window.EduFX) EduFX.shake(el.resultOverlay);
     }
 
+    var recordRank = state.score > 0 ? saveRecord({
+      score: state.score, accuracy: accuracyPct, maxCombo: state.maxCombo,
+      enemy: state.enemy.name, win: win, at: Date.now(),
+    }) : 0;
+    if (recordRank === 1) rankUpNote += '\n\n🌟 KỶ LỤC MỚI của bạn trên máy này!';
+    else if (recordRank > 1) rankUpNote += '\n\n📈 Lọt top ' + recordRank + ' kỷ lục của bạn.';
+
+    // XP thật = XP game + thưởng điểm cao/nhiệm vụ ngày do js/gamification.js cộng thêm.
+    var reward = recordSessionIfPossible(win, accuracyPct);
+    if (reward) { state.xp = reward.xpGained; updateHud(); }
+
     el.resultIcon.textContent = win ? '🏆' : '💥';
     el.resultTitle.textContent = win ? 'Chiến Thắng trước ' + state.enemy.name + '!' : 'Bạn Đã Thua!';
     el.resultStats.textContent =
@@ -466,8 +459,6 @@
       'XP nhận được: +' + state.xp +
       rankUpNote;
     el.resultOverlay.hidden = false;
-
-    recordSessionIfPossible(win, accuracyPct);
   }
 
   /**
@@ -481,9 +472,10 @@
       var student = null;
       try { student = JSON.parse(localStorage.getItem('eduquiz_current_student') || 'null'); }
       catch (e) { student = null; }
-      if (!student || !student.name || !student.class) return;
+      student = student || {}; // XP chỉ lưu trên máy (js/gamification.js) — chưa chọn học sinh ở lobby vẫn được cộng
 
-      EduGamification.recordGameSession('battle-quiz', {
+      return EduGamification.recordGameSession('battle-quiz', {
+        xp: state.xp,
         score: accuracyPct,
         scoreType: 'percent',
         accuracy: accuracyPct,
@@ -492,24 +484,37 @@
         topic: state.topic || null,
         difficulty: null,
         durationSec: Math.max(0, Math.round((Date.now() - state.sessionStartedAtMs) / 1000)),
-        studentName: student.name,
-        studentClass: student.class,
+        studentName: student.name || '',
+        studentClass: student.class || '',
         studentSchool: student.school || '',
       });
     } catch (e) { /* ghi XP là phụ — không được làm hỏng màn kết quả */ }
+    return null;
   }
 
-  // ── Bảng xếp hạng ──
+  // ── Kỷ lục cá nhân (lưu trên máy, không tốn Firebase) ──
+  // Bảng xếp hạng liên thiết bị trước đây đọc "game_sessions" — firestore.rules
+  // chỉ cho admin đọc nên học sinh luôn thấy "tạm khóa". Thay bằng top 10 ván
+  // hay nhất CỦA MÁY NÀY (điểm, độ chính xác, combo, đối thủ) để có mục tiêu phá kỷ lục.
+  var RECORDS_KEY = 'eduquiz_battlequiz_records';
+  var MAX_RECORDS = 10;
 
-  // Top 10 điểm cao nhất, cache localStorage 5 phút — mở bảng xếp hạng
-  // nhiều lần trong 1 buổi (sau mỗi ván, hoặc tò mò bấm lại) KHÔNG tốn
-  // thêm lượt đọc Firestore mỗi lần, dù có hàng nghìn học sinh cùng mở.
-  // firestore.rules đã tự chặn request.query.limit <= 50 ở tầng server
-  // (xem match /game_sessions/{sessionId}) nên dù cache này có bị bỏ qua
-  // vì lý do gì, mỗi lần mở tối đa vẫn chỉ 10 lượt đọc (limit truyền vào
-  // listTopScores), không thể vô tình quét cả collection.
-  var LEADERBOARD_CACHE_KEY = 'bqLeaderboardCache:battle-quiz';
-  var LEADERBOARD_CACHE_TTL_MS = 5 * 60 * 1000;
+  function loadRecords() {
+    try {
+      var list = JSON.parse(localStorage.getItem(RECORDS_KEY) || '[]');
+      return Array.isArray(list) ? list : [];
+    } catch (e) { return []; }
+  }
+
+  /** Lưu ván vừa chơi, trả về hạng của ván đó (1..10) hoặc 0 nếu không lọt top. */
+  function saveRecord(rec) {
+    var list = loadRecords();
+    list.push(rec);
+    list.sort(function (a, b) { return (b.score - a.score) || (b.accuracy - a.accuracy) || (b.at - a.at); });
+    list = list.slice(0, MAX_RECORDS);
+    try { localStorage.setItem(RECORDS_KEY, JSON.stringify(list)); } catch (e) { /* ignore */ }
+    return list.indexOf(rec) + 1;
+  }
 
   function escapeHtml(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -519,55 +524,26 @@
 
   function renderLeaderboard(rows) {
     if (!rows || !rows.length) {
-      el.leaderboardList.innerHTML = '<div class="bq-leaderboard-empty">Chưa có ai lập kỷ lục — hãy là người đầu tiên!</div>';
+      el.leaderboardList.innerHTML = '<div class="bq-leaderboard-empty">Chưa có kỷ lục nào trên máy này — chơi 1 ván để lập kỷ lục đầu tiên!</div>';
       return;
     }
     el.leaderboardList.innerHTML = rows.map(function (r, i) {
       var rank = i + 1;
       var medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : String(rank);
       var cls = 'bq-leaderboard-row' + (rank <= 3 ? ' bq-leaderboard-top3' : '');
+      var date = new Date(r.at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
       return '<div class="' + cls + '">' +
         '<div class="bq-leaderboard-rank">' + medal + '</div>' +
-        '<div class="bq-leaderboard-name">' + escapeHtml(r.studentName || 'Ẩn danh') +
-          (r.studentClass ? ' <span class="bq-leaderboard-meta">(' + escapeHtml(r.studentClass) + ')</span>' : '') + '</div>' +
-        '<div class="bq-leaderboard-score">' + Math.round(r.score || 0) + '%</div>' +
+        '<div class="bq-leaderboard-name">' + (r.win ? '🏆 ' : '') + escapeHtml(r.enemy || '') +
+          ' <span class="bq-leaderboard-meta">(' + r.accuracy + '% · combo ' + r.maxCombo + ' · ' + date + ')</span></div>' +
+        '<div class="bq-leaderboard-score">' + r.score + '</div>' +
         '</div>';
     }).join('');
   }
 
   function openLeaderboard() {
     el.leaderboardOverlay.hidden = false;
-    el.leaderboardList.innerHTML = '<div class="bq-leaderboard-empty">⏳ Đang tải…</div>';
-
-    if (!window.EduFirebase || !EduFirebase.auth || !EduFirebase.auth.currentUser) {
-      el.leaderboardList.innerHTML = '<div class="bq-leaderboard-error">Bảng xếp hạng liên thiết bị đang tạm khóa để chống giả điểm. Hãy chơi thử thách trong phòng để xem điểm của cả lớp.</div>';
-      return;
-    }
-
-    try {
-      var raw = localStorage.getItem(LEADERBOARD_CACHE_KEY);
-      if (raw) {
-        var entry = JSON.parse(raw);
-        if (entry && Date.now() < entry.expiresAt) {
-          renderLeaderboard(entry.data);
-          return;
-        }
-      }
-    } catch (e) { /* cache lỗi/bị chặn — coi như miss, tải lại bình thường */ }
-
-    if (!window.EduRepositories || !window.EduRepositories.gameSession) {
-      el.leaderboardList.innerHTML = '<div class="bq-leaderboard-error">Không tải được bảng xếp hạng.</div>';
-      return;
-    }
-    window.EduRepositories.gameSession.listTopScores('battle-quiz', 10).then(function (rows) {
-      try {
-        localStorage.setItem(LEADERBOARD_CACHE_KEY, JSON.stringify({ data: rows, expiresAt: Date.now() + LEADERBOARD_CACHE_TTL_MS }));
-      } catch (e) { /* hết quota localStorage — bỏ qua */ }
-      renderLeaderboard(rows);
-    }).catch(function (err) {
-      console.warn('[BattleQuiz] Không tải được bảng xếp hạng:', err);
-      el.leaderboardList.innerHTML = '<div class="bq-leaderboard-error">Bảng xếp hạng liên thiết bị đang tạm khóa để chống giả điểm. Hãy chơi thử thách trong phòng để xem điểm của cả lớp.</div>';
-    });
+    renderLeaderboard(loadRecords());
   }
 
   function closeLeaderboard() {

@@ -1,5 +1,13 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## 00. Mini-game: hấp dẫn hơn, không dùng Firebase
+
+- Gỡ Firebase SDK + App Check khỏi `battle-quiz`, `pz-defense`, `cyber-detective`, `computer-simulator`. Trước đây mỗi lượt chơi ghi `game_sessions` nhưng rules chỉ cho admin ghi → luôn bị từ chối, vẫn tốn request. Giờ 7 game = 0 request Firebase.
+- `battle-quiz.js`: câu hỏi lấy từ `data/ic3/minitests` (file tĩnh, bỏ đọc collection `questions` và `quiz_data.json` cũ). "Bảng xếp hạng" (học sinh không đọc được) → **Kỷ lục của bạn**: top 10 ván trên máy, báo "Kỷ lục mới". Mỗi ván tối thiểu 10 XP; XP màn kết quả khớp XP thật được cộng.
+- `gamification.js`: thẻ phần thưởng cuối ván (+XP, thanh cấp độ chạy, LÊN CẤP + pháo giấy, huy hiệu mới); **nhiệm vụ hằng ngày** chơi 3 ván → +30 XP; 6 huy hiệu mới (10/50 lượt, Nhà thám hiểm 5 game, nhiệm vụ ngày ×1/×7, cấp 5). Không còn ghi Firestore.
+- Mọi game cộng XP kể cả khi chưa chọn tên ở sảnh; Memory Game bắt đầu cộng XP (theo số sao). Thêm âm thanh/pháo giấy chung cho các game chưa có.
+- `index.html`: thêm dải Cấp/XP/huy hiệu/nhiệm vụ hôm nay ở đầu Khu Vui Chơi (trước đây `#lobbyGameStrip` không tồn tại nên học sinh không thấy XP); tự cập nhật khi đóng game.
+
 ## 0. Giảm lượt đọc Firestore: hồ sơ Social, hồ sơ đăng nhập, tra cứu admin
 
 - Mới `js/services/profile-cache-service.js` (`EduProfileCache`): cache `gvlab_profiles` trong IndexedDB + đồng bộ delta theo `updatedAt`. `portfolio.js`, `teaching-schedule.js` không còn đọc lại toàn bộ hồ sơ (kèm avatar base64 ~300KB/hồ sơ) mỗi lần mở trang: trong 2 phút = 0 lượt đọc, sau đó chỉ đọc hồ sơ có thay đổi (~1 lượt), đọc lại toàn bộ mỗi 24 giờ. Avatar trên topbar (`dashboard-page.js`, `teacher/dashboard.js`, `teaching-schedule.js`) dùng chung cache.

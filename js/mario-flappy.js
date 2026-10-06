@@ -584,7 +584,7 @@
       if (typeof EduGamification === 'undefined' || !EduGamification.recordGameSession) return;
       var student = null;
       try { student = JSON.parse(localStorage.getItem('eduquiz_current_student') || 'null'); } catch (e) { student = null; }
-      if (!student || !student.name || !student.class) return;
+      student = student || {}; // XP chỉ lưu trên máy (js/gamification.js) — chưa chọn học sinh ở lobby vẫn được cộng
 
       EduGamification.recordGameSession('mario-flappy', {
         score: state.score, // miniGameScore — TÁCH RIÊNG khỏi điểm Quiz, không ghi đè/ảnh hưởng eduquiz_records
@@ -597,8 +597,8 @@
         // KHÔNG dùng để tính lại điểm Quiz hay thay thế quizScore.
         quizTopic: (quizContext && quizContext.topic) || null,
         quizScorePercent: (quizContext && typeof quizContext.scorePercent === 'number') ? quizContext.scorePercent : null,
-        studentName: student.name,
-        studentClass: student.class,
+        studentName: student.name || '',
+        studentClass: student.class || '',
         studentSchool: student.school || ''
       });
     } catch (e) { /* ghi XP là phụ — không được làm hỏng màn kết quả */ }
