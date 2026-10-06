@@ -48,12 +48,13 @@ window.EDU_ALLOWED_ROLES = ['admin'];
   let lookupsLoadedAt = 0;
 
   // Lookups (trường/lớp/GV Lịch giảng dạy) suy từ TOÀN BỘ students_roster đang học
-  // (~1.466 doc) — lưu localStorage 30 phút (js/services/data-cache-service.js) để
+  // (~1.466 doc) — lưu IndexedDB 12 giờ (js/services/data-cache-service.js; trước: 30 phút
+  // → mỗi lần admin mở trang cách nhau >30 phút tốn lại ~1.466 lượt đọc) để
   // mở lại admin-users.html không đọc lại cả roster mỗi lần. Lookups lấy từ cache
   // này KHÔNG dùng cho vòng tự sửa "Trường được xem" (xem loadUsers()) vì roster có
   // thể vừa đổi ở máy khác (roster-manager.html) — tránh ghi đè bằng dữ liệu cũ.
   const LOOKUPS_CACHE_KEY = 'admin-users:lookups';
-  const LOOKUPS_TTL_MS = 30 * 60 * 1000;
+  const LOOKUPS_TTL_MS = 12 * 60 * 60 * 1000;
 
   function saveLookupsCache() {
     if (!window.EduDataCache) return;
@@ -81,7 +82,8 @@ window.EDU_ALLOWED_ROLES = ['admin'];
   }
   async function loadSchools() {
     try {
-      const snap = await EduFirebase.db.collection('students_roster').where('status', '==', 'active').get();
+      const snap = await EduFirebase.db.collection('students_roster').where('status', '==', 'active').limit(10000).get();
+      EduFirebase.countSnap('students_roster (tra cứu trường)', snap);
       const set = new Set();
       schoolsByTeacherId = {};
       snap.docs.forEach(d => {
@@ -123,7 +125,8 @@ window.EDU_ALLOWED_ROLES = ['admin'];
 
   async function loadClasses() {
     try {
-      const snap = await EduFirebase.db.collection('classes').get();
+      const snap = await EduFirebase.db.collection('classes').limit(5000).get();
+      EduFirebase.countSnap('classes', snap);
       allClasses = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
     } catch (err) {
       console.warn('[EduAdminUsers] Không tải được danh sách lớp (classes):', err.message);
@@ -157,7 +160,8 @@ window.EDU_ALLOWED_ROLES = ['admin'];
 
   async function loadTeachingTeachers() {
     try {
-      const snap = await EduFirebase.db.collection('teaching_teachers').get();
+      const snap = await EduFirebase.db.collection('teaching_teachers').limit(1000).get();
+      EduFirebase.countSnap('teaching_teachers', snap);
       allTeachingTeachers = snap.docs
         .map(d => ({ code: d.id, name: (d.data().name || '').trim() }))
         .sort((a, b) => a.name.localeCompare(b.name, 'vi'));
@@ -206,7 +210,8 @@ window.EDU_ALLOWED_ROLES = ['admin'];
       const lookupsFromStorage = !lookupsInMemory && await restoreLookupsCache();
       const lookupsFresh = lookupsInMemory || lookupsFromStorage;
       const [snap] = await Promise.all([
-        EduFirebase.db.collection('users').orderBy('createdAt', 'desc').get(),
+        EduFirebase.db.collection('users').orderBy('createdAt', 'desc').limit(1000).get()
+          .then((s) => { EduFirebase.countSnap('users', s); return s; }),
         lookupsFresh ? null : loadSchools(),
         lookupsFresh ? null : loadClasses(),
         lookupsFresh ? null : loadTeachingTeachers(),
@@ -439,7 +444,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
             // là bản sao (denormalize) dùng để lọc trực tiếp ở
             // js/teacher/data-loader.js, không tự suy từ "classes" lúc đọc.
             const studentsSnap = await EduFirebase.db.collection('students_roster')
-              .where('classId', '==', classId).where('status', '==', 'active').get();
+              .where('classId', '==', classId).where('status', '==', 'active').limit(2000).get();
             for (const d of studentsSnap.docs) {
               batch.set(d.ref, { teacherId: teacherIdVal, teacherName: teacherNameVal }, { merge: true });
               ops++; await flushIfNeeded();

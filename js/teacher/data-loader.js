@@ -31,7 +31,28 @@
   // mở tab, quan trọng nhất ở nhánh admin (tải TOÀN BỘ roster, không giới
   // hạn) khi trường có hàng chục nghìn học sinh — mỗi lần KHÔNG cache sẽ
   // tốn lại toàn bộ số lượt đọc đó, dễ chạm trần 50.000 đọc/ngày (Spark).
-  const ROSTER_CACHE_TTL_MS = 30 * 60 * 1000;
+  const ROSTER_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
+  // Đợt tối ưu hạn mức 10/2026: trước đây 30 phút → mỗi lần mở dashboard cách nhau
+  // >30 phút lại đọc lại CẢ roster (hàng trăm-nghìn lượt). Giờ giữ 12 giờ; nút
+  // "🔄 Làm mới dữ liệu" chỉ đọc lại roster khi bản lưu đã cũ hơn 30 phút (đúng
+  // ngưỡng cũ) — không luồng nào đọc roster nhiều hơn trước.
+  const ROSTER_FORCE_MIN_AGE_MS = 30 * 60 * 1000;
+
+  /** Đọc roster từ Firestore; nếu Firebase hết lượt đọc/mất mạng thì dùng bản
+   *  roster đã lưu trên máy dù đã quá hạn (kèm thông báo) thay vì báo lỗi trắng. */
+  async function fetchRosterOrStale(cacheKey, fetchFn) {
+    try {
+      return await fetchFn();
+    } catch (err) {
+      const F = global.EduFirebase;
+      const stale = F && F.isQuotaOrOffline(err) && global.EduDataCache
+        ? await global.EduDataCache.getAsync(cacheKey, /* persist */ true, /* allowStale */ true)
+        : null;
+      if (!stale) throw err;
+      global.dispatchEvent(new CustomEvent('edu:toast', { detail: '⚠️ ' + F.QUOTA_HINT + ' — đang dùng danh sách học sinh đã lưu trên máy.' }));
+      return stale;
+    }
+  }
 
   /**
    * Tải dữ liệu cho 1 giáo viên, giới hạn đúng các trường trong profile.schools.
@@ -75,20 +96,36 @@
     // (sessionStorage, 3 phút) — xem ROSTER_CACHE_TTL_MS ở trên. Quan
     // trọng nhất ở nhánh isAdmin (tải TOÀN BỘ roster không giới hạn).
     // Roster ít đổi: "Làm mới dữ liệu" KHÔNG đọc lại (cache 30 phút) — chỉ bài nộp mới.
-    let students = global.EduDataCache
+    // Lưu dạng { students, cachedAt } (bản cũ là mảng trần — coi như cachedAt = 0).
+    const cachedRoster = global.EduDataCache
       ? await global.EduDataCache.getAsync(rosterCacheKey, /* persist */ true)
       : null;
+    let students = cachedRoster && (Array.isArray(cachedRoster) ? cachedRoster : cachedRoster.students);
+    const rosterAt = cachedRoster && !Array.isArray(cachedRoster) ? cachedRoster.cachedAt || 0 : 0;
+    if (students && forceRefresh && Date.now() - rosterAt > ROSTER_FORCE_MIN_AGE_MS) students = null;
     if (!students) {
-      students = isAdmin
-        ? await global.EduRepositories.studentRoster.list({ where: [['status', '==', 'active']] })
-        : await global.EduRepositories.studentRoster.listByTeacher(uid);
-      if (global.EduDataCache) global.EduDataCache.setAsync(rosterCacheKey, students, ROSTER_CACHE_TTL_MS, /* persist */ true);
+      const fetched = await fetchRosterOrStale(rosterCacheKey, async () => {
+        const list = isAdmin
+          ? await global.EduRepositories.studentRoster.list({ where: [['status', '==', 'active']] })
+          : await global.EduRepositories.studentRoster.listByTeacher(uid);
+        const bundle = { students: list, cachedAt: Date.now() };
+        if (global.EduDataCache) global.EduDataCache.setAsync(rosterCacheKey, bundle, ROSTER_CACHE_TTL_MS, /* persist */ true);
+        return bundle;
+      });
+      students = Array.isArray(fetched) ? fetched : fetched.students;
     }
 
     // Tải tăng dần (xem listRecentCached): mỗi lần làm mới chỉ đọc bài MỚI nộp,
     // không đọc lại 1000 kết quả. forceRefresh vẫn chỉ tải phần mới (rẻ).
+    // Giáo viên 1 trường, ≤10 lớp: chỉ hỏi Firestore bài của ĐÚNG các lớp mình dạy (trước:
+    // đọc mọi bài của cả trường rồi mới lọc ở máy — trường có 3 giáo viên = đọc gấp 3).
+    // Khoá cache kèm danh sách lớp; lần đầu lấy cache cũ theo trường làm nền (seedKey).
+    const ownClasses = [...new Set(students.map((s) => s.className).filter(Boolean))].sort();
+    const narrow = !isAdmin && schools.length === 1 && ownClasses.length > 0 && ownClasses.length <= 10;
     const resultsRaw = await global.EduRepositories.studentResult.listRecentCached({
-      cacheKey: resultsCacheKey, schools: isAdmin ? undefined : schools, limit: 1000,
+      cacheKey: narrow ? resultsCacheKey + ':classes:' + ownClasses.join('|') : resultsCacheKey,
+      seedKey: narrow ? resultsCacheKey : undefined,
+      schools: isAdmin ? undefined : schools, classes: narrow ? ownClasses : undefined, limit: 1000,
       freshMs: forceRefresh ? 15 * 1000 : RESULTS_CACHE_TTL_MS
     });
 

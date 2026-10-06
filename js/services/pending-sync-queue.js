@@ -39,6 +39,13 @@
   const BASE_DELAY_MS = 15000;        // 15 giây
   const MAX_DELAY_MS = 10 * 60 * 1000; // trần 10 phút giữa các lần thử
   const PERIODIC_FLUSH_MS = 20000;
+  // Bài nộp lên Firestore KHÔNG bị bỏ sau MAX_ATTEMPTS lần: lý do thất bại thường
+  // gặp nhất là HẾT LƯỢT GHI TRONG NGÀY (gói Spark, đặt lại ~14-15h chiều giờ VN)
+  // — 8 lần thử với backoff chỉ kéo dài ~35 phút, trước đây bài nộp bị BỎ trong lúc
+  // chờ hạn mức đặt lại. Giữ tới khi gửi được (hoặc rules từ chối hẳn), tối đa 30
+  // ngày. An toàn vì mỗi bài có mã cố định (createOnce) — gửi lại không tạo trùng.
+  const KEEP_UNTIL_SENT = { firestore_quiz_result: true, mos_submission: true };
+  const KEEP_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
   // type -> tên hàm TOÀN CỤC nhận đúng 1 payload và trả về Promise<{success}>
   const SENDER_FN_NAMES = {
@@ -83,6 +90,7 @@
     const items = _readQueue();
     items.push({
       id: `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
+      createdAt: Date.now(),
       type,
       payload,
       attempts: 0,
@@ -110,22 +118,35 @@
         const fn = global[fnName];
         if (typeof fn !== 'function') { remaining.push(item); continue; } // module gửi chưa nạp trên trang này — thử lại lượt sau
 
+        const keep = KEEP_UNTIL_SENT[item.type];
         let ok = false;
+        let permanent = false;
         try {
-          const res = await fn(item.payload);
+          // _retry: báo hàm gửi biết đây là lần gửi lại (bị rules từ chối = đã có sẵn).
+          const res = await fn(keep ? Object.assign({}, item.payload, { _retry: true }) : item.payload);
           ok = !res || res.success !== false; // không trả gì hoặc success !== false đều coi là thành công
+          permanent = !!(res && res.permanent);
         } catch (e) {
           ok = false;
         }
 
         if (ok) continue; // xong — không đưa lại vào remaining
+        if (permanent) {
+          console.warn(`[EduPendingSync] Bỏ 1 mục "${item.type}" — máy chủ từ chối hẳn (dữ liệu không hợp lệ), gửi lại cũng không được.`);
+          continue;
+        }
 
         item.attempts += 1;
-        if (item.attempts >= MAX_ATTEMPTS) {
+        if (keep) {
+          if (now - (item.createdAt || now) > KEEP_MAX_AGE_MS) {
+            console.warn(`[EduPendingSync] Bỏ 1 mục "${item.type}" sau 30 ngày không gửi được.`);
+            continue;
+          }
+        } else if (item.attempts >= MAX_ATTEMPTS) {
           console.warn(`[EduPendingSync] Bỏ 1 mục "${item.type}" sau ${MAX_ATTEMPTS} lần gửi lại thất bại.`);
           continue; // bỏ hẳn — tránh hàng đợi phình vô hạn nếu backend hỏng dài hạn
         }
-        item.nextAttemptAt = now + _backoffDelay(item.attempts);
+        item.nextAttemptAt = now + _backoffDelay(Math.min(item.attempts, MAX_ATTEMPTS));
         remaining.push(item);
       }
       _writeQueue(remaining);

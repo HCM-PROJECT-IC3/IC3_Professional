@@ -200,8 +200,9 @@
       projectTitle: currentProject.title,
       ...graded,
     };
+    if (window.EduFirebase && window.EduFirebase.newDocId) mosPayload.submissionId = window.EduFirebase.newDocId('mos_submissions');
     window.saveMosSubmission(mosPayload).then(saveRes => {
-      if (!saveRes.success) {
+      if (!saveRes.success && !saveRes.permanent) {
         console.warn('[MosPractice] Không lưu được kết quả lên Firestore:', saveRes.message);
         if (window.EduPendingSync) window.EduPendingSync.enqueue('mos_submission', mosPayload);
       }

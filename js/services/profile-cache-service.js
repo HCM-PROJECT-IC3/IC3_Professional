@@ -116,7 +116,8 @@
   }
 
   async function fullSync(state) {
-    const snap = await db().collection(COLLECTION).get();
+    const snap = await db().collection(COLLECTION).limit(500).get();
+    if (global.EduFirebase.countSnap) global.EduFirebase.countSnap('gvlab_profiles (toàn bộ)', snap);
     const fresh = emptyState();
     absorb(fresh, snap);
     fresh.syncedAt = fresh.fullAt = Date.now();
@@ -125,7 +126,8 @@
 
   async function deltaSync(state) {
     const since = firebase.firestore.Timestamp.fromMillis(state.watermark);
-    const snap = await db().collection(COLLECTION).where('updatedAt', '>', since).get();
+    const snap = await db().collection(COLLECTION).where('updatedAt', '>', since).limit(500).get();
+    if (global.EduFirebase.countSnap) global.EduFirebase.countSnap('gvlab_profiles (thay đổi)', snap);
     absorb(state, snap);
     state.syncedAt = Date.now();
     return state;

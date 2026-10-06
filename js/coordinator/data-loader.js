@@ -39,7 +39,12 @@
   // LẦN mở tab (persist=true, xem data-cache-service.js) — quan trọng khi
   // roster có hàng chục nghìn học sinh: tách khỏi cache quiz_results để
   // không phải đọc lại TOÀN BỘ roster mỗi 3 phút chỉ vì cần kết quả tươi.
-  const ROSTER_CACHE_TTL_MS = 30 * 60 * 1000;
+  const ROSTER_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
+  // Đợt tối ưu hạn mức 10/2026: trước đây 30 phút → mỗi lần mở dashboard cách nhau
+  // >30 phút lại đọc lại CẢ roster (hàng trăm-nghìn lượt). Giờ giữ 12 giờ; nút
+  // "🔄 Làm mới dữ liệu" chỉ đọc lại roster khi bản lưu đã cũ hơn 30 phút (đúng
+  // ngưỡng cũ) — không luồng nào đọc roster nhiều hơn trước.
+  const ROSTER_FORCE_MIN_AGE_MS = 30 * 60 * 1000;
 
   /** where('in', ...) tối đa 10 giá trị — chia nhỏ "schools" thành từng
    * nhóm ≤10 rồi gộp kết quả lại, phòng khi 1 coordinator được gán > 10
@@ -48,6 +53,22 @@
     const out = [];
     for (let i = 0; i < arr.length; i += 10) out.push(arr.slice(i, i + 10));
     return out;
+  }
+
+  /** Đọc roster từ Firestore; nếu Firebase hết lượt đọc/mất mạng thì dùng bản
+   *  roster đã lưu trên máy dù đã quá hạn (kèm thông báo) thay vì báo lỗi trắng. */
+  async function fetchRosterOrStale(cacheKey, fetchFn) {
+    try {
+      return await fetchFn();
+    } catch (err) {
+      const F = global.EduFirebase;
+      const stale = F && F.isQuotaOrOffline(err) && global.EduDataCache
+        ? await global.EduDataCache.getAsync(cacheKey, /* persist */ true, /* allowStale */ true)
+        : null;
+      if (!stale) throw err;
+      global.dispatchEvent(new CustomEvent('edu:toast', { detail: '⚠️ ' + F.QUOTA_HINT + ' — đang dùng danh sách học sinh đã lưu trên máy.' }));
+      return stale;
+    }
   }
 
   async function studentsByChunkedSchools(schools) {
@@ -84,19 +105,22 @@
     let rosterBundle = global.EduDataCache
       ? await global.EduDataCache.getAsync(rosterCacheKey, /* persist */ true)
       : null;
-    if (!rosterBundle) {
+    if (rosterBundle && forceRefresh && Date.now() - (rosterBundle.cachedAt || 0) > ROSTER_FORCE_MIN_AGE_MS) rosterBundle = null;
+    if (!rosterBundle) rosterBundle = await fetchRosterOrStale(rosterCacheKey, async () => {
       const [courses, classes, students, teacherSnap] = await Promise.all([
         global.EduRepositories.course.list(),
         global.EduRepositories.class.list(),
         isAdmin
           ? global.EduRepositories.studentRoster.list({ where: [['status', '==', 'active']] })
           : studentsByChunkedSchools(schools),
-        global.EduFirebase.db.collection('users').where('role', '==', 'teacher').where('approved', '==', true).get(),
+        global.EduFirebase.db.collection('users').where('role', '==', 'teacher').where('approved', '==', true).limit(1000).get(),
       ]);
+      if (global.EduFirebase.countSnap) global.EduFirebase.countSnap('users (giáo viên)', teacherSnap);
       const teachers = teacherSnap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
-      rosterBundle = { courses, classes, students, teachers };
-      if (global.EduDataCache) global.EduDataCache.setAsync(rosterCacheKey, rosterBundle, ROSTER_CACHE_TTL_MS, /* persist */ true);
-    }
+      const bundle = { courses, classes, students, teachers, cachedAt: Date.now() };
+      if (global.EduDataCache) global.EduDataCache.setAsync(rosterCacheKey, bundle, ROSTER_CACHE_TTL_MS, /* persist */ true);
+      return bundle;
+    });
 
     // Tải tăng dần (xem listRecentCached): chỉ đọc bài MỚI nộp kể từ lần trước.
     const results = await global.EduRepositories.studentResult.listRecentCached({

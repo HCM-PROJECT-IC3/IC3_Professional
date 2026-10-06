@@ -194,7 +194,7 @@
           // gộp các chunk thay vì nhờ Firestore sắp xếp.
           : Promise.all(chunk10(schools).map((part) => window.EduRepositories.studentRoster.list({ where: [['school', 'in', part]] })))
               .then((parts) => parts.flat().sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'vi'))),
-        EduFirebase.db.collection('users').where('role', '==', 'teacher').where('approved', '==', true).get(),
+        EduFirebase.db.collection('users').where('role', '==', 'teacher').where('approved', '==', true).limit(1000).get(),
       ]);
       state.courses = courses;
       state.classes = classes;

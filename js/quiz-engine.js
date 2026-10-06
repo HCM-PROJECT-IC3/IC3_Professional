@@ -3708,6 +3708,9 @@ function submitExam() {
   // ic3-dashboard.html — điều phối đào tạo / giáo viên / admin xem)
   if (typeof saveResultToFirestore === 'function') {
     const firestorePayload = {
+      // Mã document tạo SẴN ở máy (0 lượt đọc) — đi theo payload vào hàng đợi gửi lại
+      // nên gửi lại bao nhiêu lần cũng chỉ ra 1 bài trên Firestore (không trùng).
+      resultId:      window.EduFirebase && window.EduFirebase.newDocId ? window.EduFirebase.newDocId('quiz_results') : undefined,
       studentName:   s.studentName,
       studentClass:  s.studentClass  || '',
       studentSchool: s.studentSchool || '',
@@ -3735,7 +3738,8 @@ function submitExam() {
       printAttempts:   integrity.printAttempts,
     };
     saveResultToFirestore(firestorePayload).then(res => {
-      if (!res.success && window.EduPendingSync) {
+      // res.permanent = dữ liệu bị rules từ chối — gửi lại cũng vô ích, không xếp hàng.
+      if (!res.success && !res.permanent && window.EduPendingSync) {
         window.EduPendingSync.enqueue('firestore_quiz_result', firestorePayload);
       }
     }).catch(err => {

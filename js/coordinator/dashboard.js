@@ -44,7 +44,10 @@
     try {
       rawData = await window.EduCoordinatorData.loadAll(myProfile, { forceRefresh: !!forceRefresh });
     } catch (err) {
-      document.getElementById('loadingNote').textContent = '❌ Không tải được dữ liệu: ' + err.message;
+      const F = window.EduFirebase;
+      document.getElementById('loadingNote').textContent = F && F.isQuotaOrOffline(err)
+        ? '⚠️ ' + F.QUOTA_HINT + '. Máy này chưa có dữ liệu đã lưu — thử lại sau.'
+        : '❌ Không tải được dữ liệu: ' + err.message;
       return;
     }
     // Chưa được Admin gán trường nào để hỗ trợ (Commit #7/LMAP) — không còn

@@ -552,6 +552,14 @@ let _reportFiltersBuilt = false;
 // coordinator/teacher data-loader.js cho cùng collection này.
 const REPORT_CACHE_KEY = 'ic3_dashboard_report_quiz_results';
 const REPORT_CACHE_TTL_MS = 3 * 60 * 1000;
+// Bản tải tăng dần giữ 7 ngày trong IndexedDB (trước: 12 giờ → mỗi ngày mở tab này
+// lần đầu là đọc lại toàn bộ tới 10.000 lượt = 20% hạn mức đọc/ngày của Spark).
+// Mỗi lần mở vẫn hỏi bài MỚI nên dữ liệu luôn tươi; 7 ngày để bỏ bài đã xoá ở máy khác.
+const REPORT_KEEP_MS = 7 * 24 * 60 * 60 * 1000;
+
+function saveReportCache(fetchedAt) {
+  if (window.EduDataCache) window.EduDataCache.setAsync(REPORT_CACHE_KEY, { docs: _reportRawDocs, fetchedAt }, REPORT_KEEP_MS, true);
+}
 
 /**
  * Tải dữ liệu (nếu chưa có cache) rồi áp bộ lọc + vẽ lại toàn bộ báo cáo.
@@ -571,6 +579,8 @@ async function updateReportTab(forceRefresh = false) {
   // những bài nộp SAU bản ghi mới nhất đã có rồi gộp vào. Trước đây mỗi lần cache hết
   // hạn (3 phút) là đọc lại toàn bộ tới 10.000 lượt (20% hạn mức đọc/ngày của Spark).
   const entry = window.EduDataCache ? await window.EduDataCache.getAsync(REPORT_CACHE_KEY, true) : null;
+  // Bản đã quá 7 ngày chỉ dùng khi Firebase hết lượt/mất mạng (xem nhánh catch bên dưới).
+  const staleEntry = !entry && window.EduDataCache ? await window.EduDataCache.getAsync(REPORT_CACHE_KEY, true, /* allowStale */ true) : null;
   const freshMs = forceRefresh ? 15 * 1000 : REPORT_CACHE_TTL_MS;
   if (entry && Array.isArray(entry.docs) && Date.now() - entry.fetchedAt < freshMs) {
     _reportRawDocs = entry.docs;
@@ -585,32 +595,43 @@ async function updateReportTab(forceRefresh = false) {
       }
       // Trần 10.000 là mức tối đa Firestore cho phép cho 1 query (20.000 từng bị từ chối).
       let snap;
+      let failed = false;
       try {
         snap = await query.orderBy('submittedAt', 'desc').limit(10000).get();
+        // SDK offline (mất mạng / hết lượt đọc → SDK tự chuyển offline) trả về cache máy
+        // thay vì báo lỗi — coi như thất bại để không ghi đè cache bằng dữ liệu thiếu.
+        if (snap.metadata && snap.metadata.fromCache) throw Object.assign(new Error('offline'), { code: 'unavailable' });
+        window.EduFirebase.countSnap && window.EduFirebase.countSnap('quiz_results (báo cáo' + (base ? ', phần mới' : ', lần đầu') + ')', snap);
       } catch (err) {
-        // Hết lượt đọc trong ngày / mất mạng: dùng dữ liệu đã lưu nếu có, thay vì báo lỗi trắng.
-        if (!base) throw err;
+        // Hết lượt đọc trong ngày / mất mạng: dùng dữ liệu đã lưu nếu có (kể cả bản đã
+        // quá hạn), thay vì báo lỗi trắng.
+        const fallback = base || (staleEntry && Array.isArray(staleEntry.docs) ? staleEntry.docs : null);
+        if (!fallback) throw err;
         console.warn('[EduQuiz] Không tải được bài nộp mới, dùng dữ liệu đã lưu:', err.message);
-        if (typeof showToast === 'function') showToast(err.code === 'resource-exhausted' ? 'Firebase đã hết lượt đọc hôm nay — đang hiện dữ liệu đã lưu' : 'Chưa tải được bài nộp mới — đang hiện dữ liệu đã lưu', 'fa-triangle-exclamation');
-        snap = { docs: [] };
+        const quota = window.EduFirebase.isQuotaOrOffline && window.EduFirebase.isQuotaOrOffline(err);
+        if (typeof showToast === 'function') showToast(quota ? window.EduFirebase.QUOTA_HINT + ' — đang hiện dữ liệu đã lưu' : 'Chưa tải được bài nộp mới — đang hiện dữ liệu đã lưu', 'fa-triangle-exclamation');
+        _reportRawDocs = fallback;
+        failed = true;
       }
-      const fresh = snap.docs.map(doc => {
-        // KHÔNG giữ field "submittedAt" thô (Timestamp mất .toMillis() sau JSON.stringify).
-        const { submittedAt, ...d } = doc.data();
-        return Object.assign({ id: doc.id }, d, {
-          submittedAtMs: submittedAt && submittedAt.toMillis ? submittedAt.toMillis() : Date.now(),
+      if (!failed) {
+        const fresh = snap.docs.map(doc => {
+          // KHÔNG giữ field "submittedAt" thô (Timestamp mất .toMillis() sau JSON.stringify).
+          const { submittedAt, ...d } = doc.data();
+          return Object.assign({ id: doc.id }, d, {
+            submittedAtMs: submittedAt && submittedAt.toMillis ? submittedAt.toMillis() : Date.now(),
+          });
         });
-      });
-      if (base) {
-        const byId = new Map(base.map(d => [d.id, d]));
-        fresh.forEach(d => byId.set(d.id, d));
-        _reportRawDocs = Array.from(byId.values())
-          .sort((x, y) => (y.submittedAtMs || 0) - (x.submittedAtMs || 0))
-          .slice(0, 10000);
-      } else {
-        _reportRawDocs = fresh;
+        if (base) {
+          const byId = new Map(base.map(d => [d.id, d]));
+          fresh.forEach(d => byId.set(d.id, d));
+          _reportRawDocs = Array.from(byId.values())
+            .sort((x, y) => (y.submittedAtMs || 0) - (x.submittedAtMs || 0))
+            .slice(0, 10000);
+        } else {
+          _reportRawDocs = fresh;
+        }
+        saveReportCache(Date.now());
       }
-      if (window.EduDataCache) window.EduDataCache.setAsync(REPORT_CACHE_KEY, { docs: _reportRawDocs, fetchedAt: Date.now() }, 12 * 60 * 60 * 1000, true);
     } catch (err) {
       console.error('[EduQuiz] Lỗi tải báo cáo Firestore:', err);
       body.innerHTML = `<tr><td colspan="6" class="table-empty-cell"><i class="fa-solid fa-circle-xmark"></i> Không tải được dữ liệu: ${err.message}</td></tr>`;
@@ -777,6 +798,10 @@ async function deleteReportRows(ids) {
 
     const idSet = new Set(ids);
     _reportRawDocs = (_reportRawDocs || []).filter(d => !idSet.has(d.id));
+    // Ghi lại cache tăng dần — nếu không, lần mở trang sau bài vừa xoá lại hiện ra
+    // (tải tăng dần chỉ hỏi bài MỚI, không biết bài cũ đã bị xoá).
+    const cached = window.EduDataCache ? await window.EduDataCache.getAsync(REPORT_CACHE_KEY, true) : null;
+    saveReportCache(cached ? cached.fetchedAt : 0);
     applyReportFiltersAndRender();
   } catch (err) {
     console.error('[EduQuiz] Lỗi xoá lượt làm bài:', err);

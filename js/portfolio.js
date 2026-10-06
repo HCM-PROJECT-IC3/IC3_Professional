@@ -443,7 +443,7 @@
   // thay vì đọc lại toàn bộ hồ sơ kèm avatar base64.
   const profilesPromise = window.EduProfileCache
     ? window.EduProfileCache.getAll()
-    : db.collection('gvlab_profiles').get().then((snap) => {
+    : db.collection('gvlab_profiles').limit(500).get().then((snap) => {
       const all = {};
       snap.forEach((doc) => { all[doc.id] = doc.data(); });
       return all;

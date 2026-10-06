@@ -23,6 +23,15 @@
 
   const COLLECTION = 'quiz_results';
 
+  // Số ngày giữ 1 bài nộp trên Firestore trước khi TTL tự xoá (field expireAt).
+  // Trước đây 365 ngày — nhưng mỗi document quiz_results chiếm ~1,9 KB (sau khi
+  // tắt index các field không lọc, xem fieldOverrides trong firestore.indexes.json;
+  // ~5,3 KB nếu để index mặc định). Với 9.000 bài/ngày học, 60% của 1 GiB (gói
+  // Spark) chỉ chứa được ~340.000 bài ≈ 38 ngày học ≈ 53 ngày lịch. 45 ngày là mức
+  // an toàn; bản lưu lâu dài nằm ở Google Sheet (js/googleSheet.js, mỗi bài 1 dòng).
+  // Muốn giữ lâu hơn: giảm lưu lượng hoặc nâng gói — đừng chỉ tăng số này.
+  const RESULT_TTL_DAYS = 45;
+
   /**
    * Lưu 1 kết quả bài thi vào Firestore.
    * @param {Object} rec - Bản ghi kết quả (cùng cấu trúc với saveRecord() trong quiz-engine.js)
@@ -57,17 +66,31 @@
         flags:         Array.isArray(rec.flags) ? rec.flags.slice(0, 10) : [],
         timedOut:      !!rec.timedOut,
         submittedAt:   firebase.firestore.FieldValue.serverTimestamp(),
-        // Trường TTL — Firestore sẽ TỰ XÓA document này sau 365 ngày, KHÔNG
+        // Trường TTL — Firestore sẽ TỰ XÓA document này sau RESULT_TTL_DAYS ngày, KHÔNG
         // tốn thao tác thủ công/Cloud Function. Chỉ có tác dụng SAU KHI bật
         // TTL policy 1 lần trong Console (miễn phí, không cần code):
         // Firebase Console → Firestore → tab "TTL" → Create policy →
         // collection group "quiz_results" → field "expireAt". Không bật thì
         // field này chỉ nằm im, không ảnh hưởng gì. Mục đích: quiz_results
         // tích lũy vô thời hạn sẽ chạm trần 1GB storage free của gói Spark
-        // sớm muộn — TTL giữ dữ liệu ~1 năm gần nhất là đủ cho báo cáo.
-        expireAt:      firebase.firestore.Timestamp.fromMillis(Date.now() + 365 * 24 * 60 * 60 * 1000),
+        // sớm muộn — xem RESULT_TTL_DAYS ở đầu file (vì sao 45 ngày).
+        expireAt:      firebase.firestore.Timestamp.fromMillis(Date.now() + RESULT_TTL_DAYS * 24 * 60 * 60 * 1000),
       };
 
+      // rec.resultId: mã tạo sẵn lúc nộp (quiz-engine.js § submitExam) → gửi lại từ
+      // hàng đợi không tạo bài trùng (xem createOnce() trong firebase-config.js).
+      // Bản ghi cũ còn trong hàng đợi từ trước đợt này không có mã → add() như cũ.
+      if (rec.resultId && global.EduFirebase.createOnce) {
+        const res = await global.EduFirebase.createOnce(COLLECTION, rec.resultId, payload);
+        if (res.success) console.log('✅ [EduQuiz] Đã lưu báo cáo vào Firestore:', res.id);
+        else if (res.pending) console.warn('⏳ [EduQuiz] Chưa lưu được báo cáo (Firebase chưa phản hồi) — sẽ tự gửi lại:', rec.resultId);
+        else if (res.permanent && rec._retry) {
+          // Gửi lại mà bị từ chối = document mã này ĐÃ tồn tại (lần gửi trước thật ra đã tới).
+          console.log('✅ [EduQuiz] Báo cáo đã có sẵn trên Firestore (lần gửi trước đã thành công):', rec.resultId);
+          return { success: true, id: rec.resultId, duplicate: true };
+        } else console.error('❌ [EduQuiz] Lỗi lưu báo cáo Firestore:', res.code, res.message);
+        return res;
+      }
       const docRef = await global.EduFirebase.db.collection(COLLECTION).add(payload);
       console.log('✅ [EduQuiz] Đã lưu báo cáo vào Firestore:', docRef.id);
       return { success: true, id: docRef.id };
