@@ -149,10 +149,10 @@
     const box = document.getElementById('whoamiAvatar');
     if (!box) return;
     box.textContent = String(name || '').trim().charAt(0).toUpperCase();
-    if (window.EduFirebase && window.EduFirebase.db) {
-      window.EduFirebase.db.collection('gvlab_profiles').doc(uid).get()
-        .then((snap) => {
-          const avatar = snap.exists ? snap.data().avatar : null;
+    if (window.EduProfileCache) {
+      window.EduProfileCache.get(uid)
+        .then((p) => {
+          const avatar = p ? p.avatar : null;
           if (avatar) box.innerHTML = `<img src="${avatar}" alt="">`;
         })
         .catch((err) => console.warn('[Lịch giảng dạy] Không tải được ảnh đại diện Trang Social Media:', err.message));
@@ -173,20 +173,37 @@
   function initScheduleAvatars() {
     if (!window.EduFirebase || !window.EduFirebase.db) return;
     const db = window.EduFirebase.db;
-    db.collection('users').where('role', '==', 'teacher').where('approved', '==', true).get()
-      .then((snap) => {
-        snap.forEach((doc) => {
-          const code = doc.data().teacherCode;
-          if (code) teacherCodeToUid[code] = doc.id;
-        });
-        patchScheduleAvatars();
-      })
-      .catch((err) => console.warn('[Lịch giảng dạy] Không dựng được map giáo viên → tài khoản:', err.message));
-    // Đọc 1 LẦN (như js/portfolio.js) thay vì onSnapshot: listener sống trên TOÀN BỘ
-    // gvlab_profiles (mỗi hồ sơ kèm avatar base64 tới ~300KB) bắn lại cho mọi tab đang mở
-    // mỗi khi 1 giáo viên bất kỳ sửa hồ sơ. Ảnh mới hiện sau khi tải lại trang là đủ.
-    db.collection('gvlab_profiles').get().then((snap) => {
-      snap.forEach((doc) => { scheduleAvatarByUid[doc.id] = doc.data().avatar || null; });
+    // Map mã NV → uid chỉ đổi khi admin gán teacherCode cho tài khoản — cache
+    // localStorage 30 phút (js/services/data-cache-service.js) để F5/chuyển trang
+    // không đọc lại cả bảng users giáo viên.
+    const TEACHER_MAP_CACHE_KEY = 'teaching-schedule:teacherCodeToUid';
+    const cachedMap = window.EduDataCache ? window.EduDataCache.get(TEACHER_MAP_CACHE_KEY, true) : null;
+    if (cachedMap) {
+      teacherCodeToUid = cachedMap;
+    } else {
+      db.collection('users').where('role', '==', 'teacher').where('approved', '==', true).get()
+        .then((snap) => {
+          snap.forEach((doc) => {
+            const code = doc.data().teacherCode;
+            if (code) teacherCodeToUid[code] = doc.id;
+          });
+          if (window.EduDataCache) window.EduDataCache.set(TEACHER_MAP_CACHE_KEY, teacherCodeToUid, 30 * 60 * 1000, true);
+          patchScheduleAvatars();
+        })
+        .catch((err) => console.warn('[Lịch giảng dạy] Không dựng được map giáo viên → tài khoản:', err.message));
+    }
+    // Đọc qua EduProfileCache (IndexedDB + đồng bộ delta theo updatedAt) thay vì
+    // đọc lại TOÀN BỘ gvlab_profiles (avatar base64 tới ~300KB/hồ sơ) mỗi lần mở trang.
+    // Ảnh mới hiện sau khi tải lại trang là đủ.
+    const profilesPromise = window.EduProfileCache
+      ? window.EduProfileCache.getAll()
+      : db.collection('gvlab_profiles').get().then((snap) => {
+        const all = {};
+        snap.forEach((doc) => { all[doc.id] = doc.data(); });
+        return all;
+      });
+    profilesPromise.then((all) => {
+      Object.keys(all).forEach((uid) => { scheduleAvatarByUid[uid] = all[uid].avatar || null; });
       patchScheduleAvatars();
     }).catch((err) => console.warn('[Lịch giảng dạy] Không tải được ảnh đại diện Trang Social Media:', err.message));
   }

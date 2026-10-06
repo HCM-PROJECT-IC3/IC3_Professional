@@ -46,6 +46,39 @@ window.EDU_ALLOWED_ROLES = ['admin'];
   let schoolsByTeacherId = {};
 
   let lookupsLoadedAt = 0;
+
+  // Lookups (trường/lớp/GV Lịch giảng dạy) suy từ TOÀN BỘ students_roster đang học
+  // (~1.466 doc) — lưu localStorage 30 phút (js/services/data-cache-service.js) để
+  // mở lại admin-users.html không đọc lại cả roster mỗi lần. Lookups lấy từ cache
+  // này KHÔNG dùng cho vòng tự sửa "Trường được xem" (xem loadUsers()) vì roster có
+  // thể vừa đổi ở máy khác (roster-manager.html) — tránh ghi đè bằng dữ liệu cũ.
+  const LOOKUPS_CACHE_KEY = 'admin-users:lookups';
+  const LOOKUPS_TTL_MS = 30 * 60 * 1000;
+
+  function saveLookupsCache() {
+    if (!window.EduDataCache) return;
+    const byTeacher = {};
+    Object.keys(schoolsByTeacherId).forEach((k) => { byTeacher[k] = [...schoolsByTeacherId[k]]; });
+    window.EduDataCache.set(LOOKUPS_CACHE_KEY, { allSchools, allClasses, allTeachingTeachers, byTeacher }, LOOKUPS_TTL_MS, true);
+  }
+
+  function restoreLookupsCache() {
+    const c = window.EduDataCache ? window.EduDataCache.get(LOOKUPS_CACHE_KEY, true) : null;
+    if (!c) return false;
+    allSchools = c.allSchools || [];
+    allClasses = c.allClasses || [];
+    allTeachingTeachers = c.allTeachingTeachers || [];
+    schoolsByTeacherId = {};
+    Object.keys(c.byTeacher || {}).forEach((k) => { schoolsByTeacherId[k] = new Set(c.byTeacher[k]); });
+    return true;
+  }
+
+  /** Buộc lần loadUsers() kế tiếp đọc lại roster thật (sau khi chính trang này đổi
+   *  phân công lớp → schoolsByTeacherId cũ không còn đúng). */
+  function invalidateLookups() {
+    lookupsLoadedAt = 0;
+    if (window.EduDataCache) window.EduDataCache.clear(LOOKUPS_CACHE_KEY, true);
+  }
   async function loadSchools() {
     try {
       const snap = await EduFirebase.db.collection('students_roster').where('status', '==', 'active').get();
@@ -169,14 +202,16 @@ window.EDU_ALLOWED_ROLES = ['admin'];
       // Sau mỗi thao tác ghi (duyệt/đổi role/gán trường...) loadUsers(true) chỉ cần đọc lại
       // danh sách tài khoản (vài chục-trăm doc). Danh sách trường/lớp/GV tra cứu suy ra từ
       // TOÀN BỘ students_roster đang học (~1.466 doc) nên giữ lại 30 phút, không đọc lại mỗi lần.
-      const lookupsFresh = forceRefresh && lookupsLoadedAt && Date.now() - lookupsLoadedAt < 30 * 60 * 1000;
+      const lookupsInMemory = !!(forceRefresh && lookupsLoadedAt && Date.now() - lookupsLoadedAt < LOOKUPS_TTL_MS);
+      const lookupsFromStorage = !lookupsInMemory && restoreLookupsCache();
+      const lookupsFresh = lookupsInMemory || lookupsFromStorage;
       const [snap] = await Promise.all([
         EduFirebase.db.collection('users').orderBy('createdAt', 'desc').get(),
         lookupsFresh ? null : loadSchools(),
         lookupsFresh ? null : loadClasses(),
         lookupsFresh ? null : loadTeachingTeachers(),
       ]);
-      if (!lookupsFresh) lookupsLoadedAt = Date.now();
+      if (!lookupsFresh) { lookupsLoadedAt = Date.now(); saveLookupsCache(); }
       if (snap.empty) {
         tbody.innerHTML = '<tr><td colspan="8">Chưa có tài khoản nào.</td></tr>';
         return;
@@ -198,6 +233,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
       const batch = EduFirebase.db.batch();
       let fixedCount = 0;
       users.forEach(({ doc, u }) => {
+        if (lookupsFromStorage) return;
         if (u.role !== 'teacher') return;
         const saved = Array.isArray(u.schools) ? [...u.schools].sort((a, b) => a.localeCompare(b, 'vi')) : [];
         const actual = actualSchoolsOf(doc.id);
@@ -425,6 +461,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
           await EduFirebase.db.collection('users').doc(uid).set({ schools: newSchools }, { merge: true });
 
           toast(`✅ Đã cập nhật lớp đang dạy (${toAssign.length} gán thêm, ${toUnassign.length} bỏ gán)`);
+          invalidateLookups();
           loadUsers(true);
         } catch (err) {
           toast('❌ Lỗi: ' + err.message);
@@ -445,6 +482,8 @@ window.EDU_ALLOWED_ROLES = ['admin'];
           await EduFirebase.db.collection('users').doc(uid).set(
             { teacherCode: code || firebase.firestore.FieldValue.delete() }, { merge: true }
           );
+          // Map Mã NV → uid của Lịch giảng dạy (js/teaching-schedule.js) được cache 30 phút.
+          if (window.EduDataCache) window.EduDataCache.clear('teaching-schedule:teacherCodeToUid', true);
           toast(code ? '✅ Đã liên kết Mã NV cho giáo viên' : '✅ Đã bỏ liên kết Mã NV');
           loadUsers(true);
         } catch (err) {
