@@ -1,5 +1,17 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## 0000000. Rà soát bảo mật/hạn mức theo `docs/AUDIT-PROMPT.md` (10/2026)
+
+⚠️ Chỉ đổi `firestore.rules` — phải **publish** (`firebase deploy --only firestore:rules --project data-ic3`).
+
+- **Thêm `docs/AUDIT-PROMPT.md`:** prompt kiểm tra chuẩn hoá 3 mảng (bảo mật, lượt đọc/ghi Firebase, UX/UI) kèm bối cảnh dự án, tiêu chí mức độ và mẫu báo cáo — dùng lại mỗi đợt deploy.
+- **`questions`:** bỏ đọc công khai (không trang nào còn dùng; trước đây ai cầm apiKey cũng kéo được ~1.100 doc/lần).
+- **`gvlab_posts` / `likes` / `comments` / `gvlab_certs`:** query danh sách công khai bắt buộc `limit` (50 / 200 / 200 / 100 — client dùng 12 / — / 200 / 60). `likes` chỉ editor ghi, đúng schema `{createdAt}` (trước đây mọi tài khoản kể cả Anonymous Auth của live-quiz ghi được dữ liệu tuỳ ý). `comments` giới hạn field + 300 ký tự; bài đăng giới hạn caption 500 ký tự; `likeCount` chỉ đổi ±1/lần.
+- **`gvlab_chat`:** tính năng đã gỡ khỏi `portfolio.js` → đóng ghi; admin vẫn đọc/xoá để dọn dữ liệu cũ.
+- **`quiz_results` / `mos_submissions`:** `expireAt` phải < 400 ngày tới (chặn né TTL để chiếm dung lượng 1 GiB).
+- **`courses` / `classes` / 6 collection `teaching_*`:** query danh sách bắt buộc `limit ≤ 10.000` (client đã luôn có limit).
+- **A11y:** thêm `aria-label` cho 3 nút chỉ có icon (menu + đóng modal ở `ic3-dashboard.html`, đóng Lịch sử ở `index.html`).
+
 ## 000000. Hạn mức Spark cho hàng nghìn học sinh/ngày (10/2026)
 
 ⚠️ Phải publish `firestore.rules` + `firestore.indexes.json` cùng lúc deploy code — xem `docs/FIREBASE-CHECKLIST.md` § 1.
