@@ -110,7 +110,7 @@
   <!-- TOPBAR -->
   <header id="topbar">
     <div class="topbar-actions-left">
-      <button type="button" id="hamburger" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+      <button type="button" id="hamburger" onclick="toggleSidebar()" aria-label="Mở/đóng menu"><i class="fa-solid fa-bars" aria-hidden="true"></i></button>
       <div class="topbar-title" id="topbar-title"><i class="fa-solid fa-book-open"></i> Bộ đề của tôi</div>
     </div>
     <div class="topbar-right">
@@ -371,7 +371,7 @@
   <div class="modal" id="modal-box">
     <div class="modal-header">
       <h3 id="modal-title"><i class="fa-solid fa-plus"></i> Tạo bộ đề mới</h3>
-      <button type="button" class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+      <button type="button" class="modal-close" onclick="closeModal()" aria-label="Đóng"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
     </div>
     <div class="modal-body" id="modal-body">
       <!-- dynamically filled -->

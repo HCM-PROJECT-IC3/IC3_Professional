@@ -208,8 +208,12 @@ service cloud.firestore {
     }
 
     // ---- Ngân hàng câu hỏi (dùng bởi image-manager.html) ----
+    // Không còn trang nào đọc collection này (đề nằm ở data/ic3 tĩnh, xem
+    // js/image-manager.js) — đóng đọc công khai: trước đây ai cầm apiKey cũng
+    // kéo được cả ngân hàng câu hỏi, đốt hạn mức đọc 50.000/ngày.
     match /questions/{questionId} {
-      allow read: if true; // trang học sinh / app quiz có thể đọc công khai
+      allow get: if isEditor();
+      allow list: if isEditor() && request.query.limit <= 1000;
       allow write: if isEditor();
     }
 
@@ -257,7 +261,10 @@ service cloud.firestore {
         request.resource.data.flags is list && request.resource.data.flags.size() <= 10 &&
         request.resource.data.timedOut is bool &&
         request.resource.data.submittedAt == request.time &&
-        request.resource.data.expireAt is timestamp;
+        request.resource.data.expireAt is timestamp &&
+        // Chặn đặt expireAt quá xa để né TTL (chiếm dung lượng 1 GiB mãi mãi).
+        // 400 ngày: còn chỗ cho bài cũ trong hàng đợi gửi lại mang hạn 365 ngày.
+        request.resource.data.expireAt < request.time + duration.value(400, 'd');
 
       // Admin: xem toàn bộ. Coordinator/Giáo viên: CHỈ xem kết quả của học
       // sinh thuộc (các) trường đã được Admin gán ở admin-users.html
@@ -310,7 +317,8 @@ service cloud.firestore {
         request.resource.data.taskResults is list && request.resource.data.taskResults.size() <= 300 &&
         request.resource.data.submittedAt == request.time &&
         // expireAt (TTL) không bắt buộc — bản ghi cũ trong hàng đợi gửi lại chưa có field này.
-        (!('expireAt' in request.resource.data) || request.resource.data.expireAt is timestamp);
+        (!('expireAt' in request.resource.data) || (request.resource.data.expireAt is timestamp &&
+          request.resource.data.expireAt < request.time + duration.value(400, 'd')));
 
       allow get: if isOwnSchoolField('studentSchool');
       allow list: if request.query.limit <= 10000 && isOwnSchoolField('studentSchool');
@@ -513,12 +521,14 @@ service cloud.firestore {
     // đọc "courses" để hiện tên khoá học trên roster; hạn chế thật sự về
     // trường vẫn nằm ở students_roster (nơi thật sự có PII học sinh).
     match /courses/{courseId} {
-      allow read: if isAdmin() || isCoordinator();
+      allow get: if isAdmin() || isCoordinator();
+      allow list: if request.query.limit <= 10000 && (isAdmin() || isCoordinator());
       allow write: if isAdmin() || isCoordinator();
     }
 
     match /classes/{classId} {
-      allow read: if isAdmin() || isCoordinator();
+      allow get: if isAdmin() || isCoordinator();
+      allow list: if request.query.limit <= 10000 && (isAdmin() || isCoordinator());
       allow write: if isAdmin() || isCoordinator();
     }
 
@@ -570,20 +580,23 @@ service cloud.firestore {
       // đủ như admin), không còn giới hạn chỉ đúng document của chính mình
       // — CHỈ nới quyền ĐỌC; quyền GHI vẫn chốt ở teaching_schedule bên
       // dưới (mỗi giáo viên chỉ sửa được đúng lịch của mình).
-      allow read: if isAdmin() || isTeachingCoordinator() || isApprovedTeacher();
+      allow get: if isAdmin() || isTeachingCoordinator() || isApprovedTeacher();
+      allow list: if request.query.limit <= 10000 && (isAdmin() || isTeachingCoordinator() || isApprovedTeacher());
       allow write: if isAdmin();
     }
     match /teaching_weeks/{weekKey} {
       // Nhãn tuần (vd "7.9 - 12.9.2026") không phải dữ liệu nhạy cảm và cần
       // đọc được để giáo viên chọn đúng tuần xem lịch của mình → cho phép
       // mọi giáo viên đã duyệt đọc toàn bộ danh sách tuần (không cần scope).
-      allow read: if isAdmin() || isTeachingCoordinator() || isApprovedTeacher();
+      allow get: if isAdmin() || isTeachingCoordinator() || isApprovedTeacher();
+      allow list: if request.query.limit <= 10000 && (isAdmin() || isTeachingCoordinator() || isApprovedTeacher());
       allow write: if isAdmin();
     }
     match /teaching_schedule/{scheduleId} {
       // Đọc: mọi giáo viên đã duyệt xem được lịch của CẢ ĐỘI (giống hệt
       // admin) — không còn lọc theo teacherCode == chính mình nữa.
-      allow read: if isAdmin() || isTeachingCoordinator() || isApprovedTeacher();
+      allow get: if isAdmin() || isTeachingCoordinator() || isApprovedTeacher();
+      allow list: if request.query.limit <= 10000 && (isAdmin() || isTeachingCoordinator() || isApprovedTeacher());
       // Giáo viên được TỰ CẬP NHẬT đúng lịch của chính mình (teaching-schedule.html
       // → khối "Lịch của tôi") — chỉ tạo/sửa bản ghi có teacherCode == chính mình,
       // không đụng được lịch giáo viên khác. Xoá vẫn chỉ Admin (không có nút xoá
@@ -605,14 +618,16 @@ service cloud.firestore {
     //      viên" (isTeachingCoordinator()) CỐ TÌNH không có ở allow write —
     //      vẫn chỉ đọc như trước, chỉ mở thêm quyền ghi cho ĐÚNG giáo viên. ----
     match /teaching_timetable_periods/{teacherCode} {
-      allow read: if isAdmin() || isTeachingCoordinator() || isApprovedTeacher();
+      allow get: if isAdmin() || isTeachingCoordinator() || isApprovedTeacher();
+      allow list: if request.query.limit <= 10000 && (isAdmin() || isTeachingCoordinator() || isApprovedTeacher());
       allow write: if isAdmin() || (isApprovedTeacher() && teacherCode == myTeacherCode());
     }
     match /teaching_timetable/{docId} {
       // Đọc: mở cho cả đội giáo viên (cần để bảng "Tổng quan" hiện đúng mã
       // lớp của TỪNG giáo viên khác, không riêng gì chính mình) — ghi vẫn
       // chỉ Admin như cũ.
-      allow read: if isAdmin() || isTeachingCoordinator() || isApprovedTeacher();
+      allow get: if isAdmin() || isTeachingCoordinator() || isApprovedTeacher();
+      allow list: if request.query.limit <= 10000 && (isAdmin() || isTeachingCoordinator() || isApprovedTeacher());
       allow write: if isAdmin();
     }
 
@@ -625,7 +640,8 @@ service cloud.firestore {
     //      CHỈ ĐỌC đúng khoảng cách của chính mình (minh bạch số liệu dùng
     //      để tính tiền hỗ trợ cho họ), không tự sửa được. ----
     match /teaching_travel_distances/{teacherCode} {
-      allow read: if isAdmin() || isTeachingCoordinator() || (isApprovedTeacher() && teacherCode == myTeacherCode());
+      allow get: if isAdmin() || isTeachingCoordinator() || (isApprovedTeacher() && teacherCode == myTeacherCode());
+      allow list: if request.query.limit <= 10000 && (isAdmin() || isTeachingCoordinator() || (isApprovedTeacher() && teacherCode == myTeacherCode()));
       allow write: if isAdmin() || isTeachingCoordinator();
     }
 
@@ -641,28 +657,52 @@ service cloud.firestore {
     //      1MiB/document của Firestore — xem MAX_IMAGE_CHARS trong
     //      js/portfolio.js § PfFeed (nén ảnh phía client trước khi ghi).
     match /gvlab_posts/{postId} {
-      allow read: if true;
+      // Mỗi bài mang ảnh base64 tới ~900 KB — query danh sách công khai phải có
+      // limit() (client dùng 12) để không ai kéo cả collection, đốt băng thông 10 GiB/tháng.
+      allow get: if true;
+      allow list: if request.query.limit <= 50;
       allow create: if isEditor()
         && request.resource.data.authorUid == request.auth.uid
         && request.resource.data.category in ['life', 'certification']
         && request.resource.data.image is string
-        && request.resource.data.image.size() < 900000;
+        && request.resource.data.image.size() < 900000
+        && (!('caption' in request.resource.data) || (request.resource.data.caption is string && request.resource.data.caption.size() <= 500))
+        && (!('authorName' in request.resource.data) || (request.resource.data.authorName is string && request.resource.data.authorName.size() <= 200))
+        && (!('likeCount' in request.resource.data) || request.resource.data.likeCount == 0);
       // Cho phép: (a) chính chủ sửa/xoá bài của mình, (b) BẤT KỲ editor nào
       // cập nhật ĐÚNG 1 field "likeCount" (toggle thích — xem transaction
-      // trong js/portfolio.js, không cho sửa field nào khác qua đường này).
+      // trong js/portfolio.js), mỗi lần chỉ ±1 — không đặt được số tuỳ ý.
       allow update: if isEditor() && (
         resource.data.authorUid == request.auth.uid
-        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount'])
+        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount'])
+          && request.resource.data.likeCount is int
+          && request.resource.data.likeCount >= 0
+          && request.resource.data.likeCount - resource.data.get('likeCount', 0) <= 1
+          && request.resource.data.likeCount - resource.data.get('likeCount', 0) >= -1)
       );
       allow delete: if isEditor() && (resource.data.authorUid == request.auth.uid || isAdmin());
 
       match /likes/{uid} {
-        allow read: if true;
-        allow write: if isSignedIn() && uid == request.auth.uid; // chỉ tự thích/bỏ thích cho chính mình
+        allow get: if true;
+        allow list: if request.query.limit <= 200;
+        // Chỉ editor (đúng như nút Thích ở js/portfolio.js) tự thích/bỏ thích cho chính
+        // mình. Trước đây mọi tài khoản đã đăng nhập — kể cả Anonymous Auth của
+        // live-quiz — ghi được document tuỳ ý ở đây (ghi rác, phình dung lượng).
+        allow create: if isEditor() && uid == request.auth.uid
+          && request.resource.data.keys().hasOnly(['createdAt'])
+          && request.resource.data.createdAt == request.time;
+        allow delete: if isSignedIn() && uid == request.auth.uid;
+        allow update: if false;
       }
       match /comments/{commentId} {
-        allow read: if true;
-        allow create: if isEditor() && request.resource.data.authorUid == request.auth.uid;
+        allow get: if true;
+        allow list: if request.query.limit <= 200;
+        allow create: if isEditor() && request.resource.data.authorUid == request.auth.uid
+          && request.resource.data.keys().hasOnly(['text', 'authorUid', 'authorName', 'createdAt'])
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 300
+          && request.resource.data.authorName is string && request.resource.data.authorName.size() <= 200
+          && request.resource.data.createdAt == request.time;
         allow delete: if isEditor() && (resource.data.authorUid == request.auth.uid || isAdmin());
       }
     }
@@ -675,7 +715,8 @@ service cloud.firestore {
     //      hạn cỡ field — xem MAX_CERT_IMAGE_CHARS trong js/portfolio.js
     //      § PfCerts).
     match /gvlab_certs/{certId} {
-      allow read: if true;
+      allow get: if true;
+      allow list: if request.query.limit <= 100; // client dùng limit(60), ảnh base64 nặng
       allow create: if isEditor()
         && request.resource.data.teacherUid == request.auth.uid
         && request.resource.data.title is string
@@ -703,37 +744,14 @@ service cloud.firestore {
         && (!('avatar' in request.resource.data) || (request.resource.data.avatar is string && request.resource.data.avatar.size() < 300000));
     }
 
-    // ---- Trang Social Media — chat nhóm nội bộ (portfolio.html). KHÁC "Teacher
-    //      Feed" (gvlab_posts, đọc công khai): đây là kênh trò chuyện
-    //      RIÊNG của đội ngũ, nên CẢ ĐỌC LẪN GHI đều yêu cầu isEditor()
-    //      — khách xem trang công khai không đọc được nội dung chat.
-    //      Ảnh/file/ghi âm đính kèm cũng mã hoá base64 giống gvlab_posts
-    //      (không dùng Cloud Storage — KHÔNG có hạ tầng nén video, nên
-    //      video thật hầu như luôn vượt hạn mức này, xem ghi chú
-    //      MAX_CHAT_ATTACH_CHARS trong js/portfolio.js § PfChat).
+    // ---- Trang Social Media — chat nhóm nội bộ (gvlab_chat): ĐÃ BỎ khỏi
+    //      js/portfolio.js (thay bằng A11yAssistant). Đóng ghi để không ai dùng
+    //      collection này làm kho chứa base64 (tới 700 KB/tin); admin vẫn đọc/
+    //      xoá được để dọn dữ liệu cũ.
     match /gvlab_chat/{messageId} {
-      allow read: if isEditor();
-      allow create: if isEditor()
-        && request.resource.data.authorUid == request.auth.uid
-        && (!('attachment' in request.resource.data) || (request.resource.data.attachment is string && request.resource.data.attachment.size() < 700000));
-      // "Xoá hẳn" (khác "thu hồi" bên dưới) — xoá luôn document, không
-      // ai còn thấy kể cả trong lịch sử. Tác giả HOẶC admin đều xoá được.
-      allow delete: if isEditor() && (resource.data.authorUid == request.auth.uid || isAdmin());
-      // Cho phép 2 kiểu update:
-      // (a) BẤT KỲ editor nào sửa ĐÚNG field "reactions" (thả/bỏ cảm
-      //     xúc trên tin của người khác) — denormalized ngay trên tin
-      //     nhắn thay vì subcollection riêng, giống "likeCount" của
-      //     gvlab_posts.
-      // (b) CHÍNH TÁC GIẢ sửa tin của mình — dùng cho "Thu hồi" (client
-      //     xoá field "attachment*" + đổi "text" thành rỗng + đặt
-      //     "recalled: true", xem js/portfolio.js § PfChat recallMessage()).
-      //     Cho phép author toàn quyền sửa tin CỦA CHÍNH MÌNH (không
-      //     giới hạn field) — đơn giản hơn liệt kê từng field, và hợp
-      //     lý cho 1 công cụ nội bộ nhỏ (không phải mạng xã hội công khai).
-      allow update: if isEditor() && (
-        resource.data.authorUid == request.auth.uid
-        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions'])
-      );
+      allow get, delete: if isAdmin();
+      allow list: if isAdmin() && request.query.limit <= 500;
+      allow create, update: if false;
     }
 
     // gvlab_chat_typing / gvlab_presence (đang nhập.../đang hoạt động cho chat
