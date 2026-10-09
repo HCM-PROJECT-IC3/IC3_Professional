@@ -3489,3 +3489,17 @@ body {
   .result-topics .rt-row { grid-template-columns: minmax(0, 1fr) auto; }
   .result-topics .rt-track { grid-column: 1 / -1; grid-row: 2; }
 }
+
+/* Đề giáo viên soạn (index.html?de=...) — thay khối chọn Chương trình/
+   Minitest, xem js/quiz-engine.js § 5b. */
+.custom-exam-banner {
+  display: flex; align-items: center; gap: .75rem;
+  margin: .2rem 0 .9rem; padding: .8rem 1rem;
+  border-radius: var(--radius-sm); border: 1.5px solid var(--purple);
+  background: var(--purple-lt); color: var(--text);
+}
+.custom-exam-banner > i { font-size: 1.3rem; color: var(--purple) }
+.custom-exam-banner b { display: block; font-size: .95rem }
+.custom-exam-banner span { font-size: .78rem; color: var(--muted); font-weight: 600 }
+.custom-exam-due { margin-top: .25rem; font-size: .78rem; font-weight: 800; color: var(--teal) }
+.custom-exam-due.is-late { color: var(--red) }

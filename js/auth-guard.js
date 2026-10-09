@@ -180,7 +180,7 @@
       <div id="edu-guard-dots"><span></span><span></span><span></span></div>
       <div class="msg">🔐 Đang kiểm tra đăng nhập...</div>
     </div>`;
-  overlay.querySelector('#edu-guard-screen').appendChild(buildImg('img/anim/loading.gif'));
+  overlay.querySelector('#edu-guard-screen').appendChild(buildImg('img/anim/loading.webp'));
   document.addEventListener('DOMContentLoaded', () => document.body.appendChild(overlay));
 
   function showDenied(message, needsSignOut) {
@@ -193,7 +193,7 @@
       <div class="msg">${message}</div>
       <button class="btn" id="edu-guard-back">${btnLabel}</button>`;
     const screen = overlay.querySelector('#edu-guard-screen');
-    screen.appendChild(buildImg('img/anim/404.gif'));
+    screen.appendChild(buildImg('img/anim/404.webp'));
     // Rung nhẹ khung màn hình 1 lần khi vừa hiện lỗi, rồi tự tắt animation
     // (khỏi lặp lại mỗi lần re-render) — báo hiệu "có gì đó sai" rõ ràng
     // hơn là đứng yên hoàn toàn.

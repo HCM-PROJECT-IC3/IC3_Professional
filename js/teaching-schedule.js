@@ -99,8 +99,7 @@
   let teacherModalEditingCode = null; // null = đang thêm mới
   let schedModalTeacherCode = null;   // mã GV đang mở lưới sửa
   let schedModalDraftDays = null;     // bản nháp days{} đang sửa trong modal (chưa lưu)
-  let pendingImport = null;           // { weeks:[{weekKey,label,teachers:[...]}], skippedSheets:[] }
-  let pendingConflicts = null;        // [{teacherCode, teacherName, weekKey, day, session, periodIdx, newCell, text}] — xem importOverrideBtn
+  let pendingImport = null;           // { weeks, skippedSheets, selected:Set<weekKey>, existingByWeek:Map, plan } — xem parseWorkbookArrayBufferAndOpenImport()
 
   // ============================================================
   // TIỆN ÍCH DÙNG CHUNG
@@ -1753,10 +1752,11 @@
    * modal xác nhận nhập — dùng CHUNG cho cả 2 nguồn: chọn file .xlsx thủ
    * công (importExcelInput) và tải trực tiếp từ SharePoint
    * (syncSharePointBtn, xem js/services/sharepoint-sync.js) để không lặp
-   * lại logic đọc/parse Excel. */
+   * lại logic đọc/parse Excel. Bước này KHÔNG đọc Firestore — chỉ đọc khi
+   * bấm "Nhập dữ liệu", và chỉ đúng các tuần được tick. */
   function parseWorkbookArrayBufferAndOpenImport(arrayBuffer) {
     if (!window.XLSX) { toast('⚠️ Chưa tải được thư viện đọc Excel, kiểm tra mạng rồi thử lại.'); return; }
-    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+    const workbook = XLSX.read(arrayBuffer, { type: 'array', cellStyles: false, cellHTML: false, cellFormula: false });
     const weeks = [];
     const skippedSheets = [];
     workbook.SheetNames.forEach((sheetName) => {
@@ -1768,28 +1768,95 @@
     });
     if (!weeks.length) { toast('⚠️ Không tìm thấy sheet lịch tuần hợp lệ nào trong file (thiếu cột "MÃ NV").'); return; }
 
-    pendingImport = { weeks, skippedSheets };
-    const teacherCount = new Set(weeks.flatMap((w) => w.teachers.map((t) => t.code))).size;
-    document.getElementById('importSummary').classList.remove('force-hide');
-    document.getElementById('importWeekCount').textContent = weeks.length;
-    document.getElementById('importTeacherCount').textContent = teacherCount;
-    const skippedStat = document.getElementById('importSkippedStat');
-    skippedStat.hidden = skippedSheets.length === 0;
-    document.getElementById('importSkippedCount').textContent = skippedSheets.length;
-    const REASON_LABEL = {
-      'no-header': 'Không thấy hàng tiêu đề "MÃ NV" — thường là sheet mẫu/ghi chú/hướng dẫn, không phải lịch tuần.',
-      'no-teachers': 'Có hàng "MÃ NV" nhưng không đọc được giáo viên nào — kiểm tra lại cấu trúc file (đúng khối 14 dòng/GV, 6 cột Thứ2-Thứ7 cách nhau 2 cột).',
-    };
-    const skippedList = document.getElementById('importSkippedList');
-    if (skippedList) {
-      skippedList.innerHTML = skippedSheets.map((s) =>
-        `<li><b>${esc(s.name)}</b> — ${esc(REASON_LABEL[s.reason] || s.reason)}</li>`
-      ).join('');
-      skippedList.hidden = skippedSheets.length === 0;
-    }
-    document.getElementById('importConfirmBtn').disabled = false;
+    // 2 sheet cùng 1 tuần (vd sheet chép tay) → giữ sheet ĐỨNG SAU trong
+    // file, tránh ghi 2 lần vào cùng document trong 1 batch.
+    const byKey = new Map();
+    weeks.forEach((w) => byKey.set(w.weekKey, w));
+    const uniqueWeeks = [...byKey.values()].sort((a, b) => (a.weekKey < b.weekKey ? -1 : a.weekKey > b.weekKey ? 1 : 0));
+
+    // Mặc định CHỈ tick tuần chưa có trên hệ thống + tuần hiện tại/tương
+    // lai — tuần cũ đã nhập rồi thường không đổi, đọc/ghi lại chỉ tốn
+    // lượt Firestore. Muốn cập nhật tuần cũ thì tick thêm.
+    const knownWeekKeys = new Set(state.weeks.map((w) => w.id));
+    const todayKey = M.todayWeekKey();
+    const selected = new Set(uniqueWeeks
+      .filter((w) => !knownWeekKeys.has(w.weekKey) || w.weekKey >= todayKey)
+      .map((w) => w.weekKey));
+    if (!selected.size) selected.add(uniqueWeeks[uniqueWeeks.length - 1].weekKey);
+
+    pendingImport = { weeks: uniqueWeeks, skippedSheets, selected, existingByWeek: new Map(), plan: null };
+    renderImportPreview();
     document.getElementById('importModalOverlay').classList.add('show');
   }
+
+  const IMPORT_REASON_LABEL = {
+    'no-header': 'không có hàng "MÃ NV" (sheet mẫu/hướng dẫn)',
+    'no-teachers': 'có hàng "MÃ NV" nhưng không đọc được giáo viên nào — kiểm tra lại cấu trúc (khối 14 dòng/GV, 6 cột Thứ 2-7 cách nhau 2 cột)',
+  };
+
+  function renderImportPreview() {
+    const imp = pendingImport;
+    const knownWeekKeys = new Set(state.weeks.map((w) => w.id));
+    const teacherCount = new Set(imp.weeks.flatMap((w) => w.teachers.map((t) => t.code))).size;
+    document.getElementById('importSummary').classList.remove('force-hide');
+    document.getElementById('importWeekCount').textContent = imp.weeks.length;
+    document.getElementById('importTeacherCount').textContent = teacherCount;
+
+    // Sheet bỏ qua: gọn trong <details>; chỉ tự mở khi có sheet lỗi cấu
+    // trúc thật ('no-teachers') — sheet mẫu/hướng dẫn không cần làm phiền.
+    const skipped = imp.skippedSheets;
+    const details = document.getElementById('importSkippedDetails');
+    details.hidden = skipped.length === 0;
+    details.open = skipped.some((s) => s.reason === 'no-teachers');
+    document.getElementById('importSkippedCount').textContent = skipped.length;
+    document.getElementById('importSkippedList').innerHTML = skipped.map((s) =>
+      `<li class="${s.reason === 'no-teachers' ? 'is-error' : ''}"><b>${esc(s.name)}</b> — ${esc(IMPORT_REASON_LABEL[s.reason] || s.reason)}</li>`
+    ).join('');
+
+    document.getElementById('importWeekPicker').hidden = false;
+    document.getElementById('importWeekList').innerHTML = imp.weeks.map((w) => {
+      const isNew = !knownWeekKeys.has(w.weekKey);
+      return `<label class="import-week-item">
+        <input type="checkbox" data-week="${esc(w.weekKey)}" ${imp.selected.has(w.weekKey) ? 'checked' : ''}>
+        <span class="import-week-label">${esc(w.weekLabel)}</span>
+        <span class="import-week-meta">${w.teachers.length} GV</span>
+        <span class="import-week-badge ${isNew ? 'is-new' : ''}">${isNew ? 'Mới' : 'Đã có'}</span>
+      </label>`;
+    }).join('');
+    resetImportPlan();
+  }
+
+  /** Đổi lựa chọn tuần → bỏ kế hoạch cũ (dữ liệu hiện có đã đọc vẫn giữ
+   * trong existingByWeek, tick lại tuần đó không đọc lại lần nữa). */
+  function resetImportPlan() {
+    if (!pendingImport) return;
+    pendingImport.plan = null;
+    document.getElementById('importPlanSummary').classList.add('force-hide');
+    document.getElementById('importConflictBox').hidden = true;
+    document.getElementById('importOverrideChk').checked = false;
+    const btn = document.getElementById('importConfirmBtn');
+    const n = pendingImport.selected.size;
+    btn.disabled = n === 0;
+    btn.textContent = n ? `💾 Nhập ${n} tuần` : 'Chưa chọn tuần nào';
+  }
+
+  document.getElementById('importWeekList').addEventListener('change', (e) => {
+    const cb = e.target.closest('input[data-week]');
+    if (!cb || !pendingImport) return;
+    if (cb.checked) pendingImport.selected.add(cb.dataset.week);
+    else pendingImport.selected.delete(cb.dataset.week);
+    resetImportPlan();
+  });
+  document.querySelectorAll('[data-import-select]').forEach((b) => b.addEventListener('click', () => {
+    if (!pendingImport) return;
+    const mode = b.dataset.importSelect;
+    const knownWeekKeys = new Set(state.weeks.map((w) => w.id));
+    const todayKey = M.todayWeekKey();
+    pendingImport.selected = new Set(pendingImport.weeks
+      .filter((w) => mode === 'all' || (mode === 'recent' && (!knownWeekKeys.has(w.weekKey) || w.weekKey >= todayKey)))
+      .map((w) => w.weekKey));
+    renderImportPreview();
+  }));
 
   document.getElementById('importExcelBtn').addEventListener('click', () => document.getElementById('importExcelInput').click());
   document.getElementById('importExcelInput').addEventListener('change', (e) => {
@@ -1831,15 +1898,19 @@
     });
   }
 
+
   function closeImportModal() {
     document.getElementById('importModalOverlay').classList.remove('show');
     document.getElementById('importSummary').classList.add('force-hide');
-    document.getElementById('importConflictSummary').classList.add('force-hide');
-    document.getElementById('importConflictList').hidden = true;
-    document.getElementById('importOverrideBtn').classList.add('force-hide');
-    document.getElementById('importConfirmBtn').disabled = true;
+    document.getElementById('importSkippedDetails').hidden = true;
+    document.getElementById('importWeekPicker').hidden = true;
+    document.getElementById('importPlanSummary').classList.add('force-hide');
+    document.getElementById('importConflictBox').hidden = true;
+    document.getElementById('importOverrideChk').checked = false;
+    const btn = document.getElementById('importConfirmBtn');
+    btn.disabled = true;
+    btn.textContent = '💾 Nhập dữ liệu';
     pendingImport = null;
-    pendingConflicts = null;
   }
   document.getElementById('importModalCloseBtn').addEventListener('click', closeImportModal);
   document.getElementById('importCancelBtn').addEventListener('click', closeImportModal);
@@ -1851,8 +1922,7 @@
    * 1 buổi, từ ĐÚNG session đã đọc ở "Lịch tuần" (periods[] + periodSchools[]
    * nếu buổi đó dạy 2 trường, xem mergeSecondarySchoolColumn()) — dùng để tự
    * điền tab "🗓️ TKB lớp" NGAY LÚC NHẬP EXCEL, khỏi phải mở riêng tab đó rồi
-   * bấm Lưu thêm 1 lần nữa mới ra đúng "Trường" từng tiết (đúng điều người
-   * dùng phản hồi: "phải cập nhật thủ công" sau khi nhập Excel). */
+   * bấm Lưu thêm 1 lần nữa mới ra đúng "Trường" từng tiết. */
   function sessionToTimetableCells(sess) {
     const periods = sess.periods || [];
     const periodSchools = sess.periodSchools || [];
@@ -1864,199 +1934,247 @@
     });
   }
 
-  document.getElementById('importConfirmBtn').addEventListener('click', async () => {
-    if (!pendingImport) return;
-    const btn = document.getElementById('importConfirmBtn');
-    btn.disabled = true;
-    btn.textContent = '⏳ Đang nhập...';
-    try {
-      const db = window.EduFirebase.db;
-      const teacherCol = window.EduRepositories.teachingTeacher.col();
-      const weekCol = window.EduRepositories.teachingWeek.col();
-      const schedCol = window.EduRepositories.teachingSchedule.col();
-      const TTM = window.EduModels.TeachingTimetable;
-      const ttCol = TTM ? window.EduRepositories.teachingTimetable.col() : null;
-
-      const knownTeacherCodes = new Set(state.teachers.map((t) => t.id));
-      const knownWeekKeys = new Set(state.weeks.map((w) => w.id));
-
-      // Đọc TRƯỚC toàn bộ TKB lớp ĐÃ CÓ của đúng các giáo viên/tuần sắp
-      // nhập — CHỈ điền vào Ô-TIẾT nào TKB lớp đang TRỐNG (không mã lớp),
-      // giữ nguyên mọi ô Admin đã gõ tay khác đi trước đó (TKB lớp vẫn là
-      // nguồn chi tiết hơn — nhập Excel không được phép ghi đè dữ liệu đã
-      // tinh chỉnh thủ công ở đó, chỉ tự điền chỗ còn thiếu).
-      const existingTtById = new Map();
-      if (ttCol) {
-        const pairs = [];
-        pendingImport.weeks.forEach((week) => week.teachers.forEach((t) => pairs.push({ code: t.code, weekKey: week.weekKey })));
-        await Promise.all(pairs.map(async ({ code, weekKey }) => {
-          const id = TTM.docId(code, weekKey);
-          const doc = await window.EduRepositories.teachingTimetable.getById(id);
-          if (doc) existingTtById.set(id, doc);
-        }));
-      }
-
-      let batch = db.batch();
-      let ops = 0;
-      const flushIfNeeded = async () => { if (ops >= 400) { await batch.commit(); batch = db.batch(); ops = 0; } };
-
-      // Ghi lại mọi ô-tiết TKB lớp bị GIỮ NGUYÊN dù khác với Excel vừa nhập
-      // (xem nhánh "existing.maLop" bên dưới) — để hiện danh sách cho người
-      // nhập biết chỗ nào cần tự kiểm tra lại, đúng loại lỗi "1 Thứ không
-      // khớp Excel" mà trước đây không có cách nào phát hiện ngoài so sánh
-      // thủ công từng ô.
-      const conflicts = [];
-
-      for (const week of pendingImport.weeks) {
-        if (!knownWeekKeys.has(week.weekKey)) {
-          batch.set(weekCol.doc(week.weekKey), M.buildWeek({ label: week.weekLabel }));
-          knownWeekKeys.add(week.weekKey);
-          ops++; await flushIfNeeded();
-        }
-        for (const t of week.teachers) {
-          if (!knownTeacherCodes.has(t.code)) {
-            batch.set(teacherCol.doc(t.code), M.buildTeacher(t));
-            knownTeacherCodes.add(t.code);
-            ops++; await flushIfNeeded();
-          }
-          const docId = M.scheduleDocId(t.code, week.weekKey);
-          batch.set(schedCol.doc(docId), {
-            teacherCode: t.code, teacherName: t.name,
-            weekKey: week.weekKey, weekLabel: week.weekLabel,
-            days: t.days, updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-          });
-          ops++; await flushIfNeeded();
-
-          if (ttCol) {
-            const ttId = TTM.docId(t.code, week.weekKey);
-            const existingTt = existingTtById.get(ttId);
-            const existingDays = (existingTt && existingTt.days) || {};
-            const ttDays = {};
-            M.WEEKDAYS.forEach((d) => {
-              const daySess = t.days[String(d)] || {};
-              const existingDay = existingDays[String(d)] || {};
-              ttDays[String(d)] = {};
-              ['morning', 'afternoon'].forEach((s) => {
-                const fromExcel = sessionToTimetableCells(daySess[s] || {});
-                const existingCells = (existingDay[s] || []).map((c) => TTM.cellOf(c));
-                // Ô nào TKB lớp đã có mã lớp thì GIỮ NGUYÊN; ô nào đang
-                // trống mới lấy dữ liệu vừa đọc từ Excel — merge tự nhiên,
-                // không mất dữ liệu Admin đã tinh chỉnh riêng ở TKB lớp.
-                ttDays[String(d)][s] = fromExcel.map((cell, i) => {
-                  const existing = existingCells[i];
-                  if (existing && existing.maLop) {
-                    if (cell.maLop && cell.maLop !== existing.maLop) {
-                      conflicts.push({
-                        teacherCode: t.code, teacherName: t.name, weekKey: week.weekKey,
-                        day: d, session: s, periodIdx: i, newCell: cell,
-                        text: `${esc(t.name)} (${esc(t.code)}) — ${M.WEEKDAY_LABELS[d]} ${M.SESSION_LABELS[s]}, tiết ${i + 1}: `
-                          + `TKB lớp đang giữ "${esc(existing.maLop)}"${existing.truong ? ' (' + esc(existing.truong) + ')' : ''}, `
-                          + `Excel ghi "${esc(cell.maLop)}"${cell.truong ? ' (' + esc(cell.truong) + ')' : ''} — KHÔNG cập nhật.`,
-                      });
-                    }
-                    return existing;
-                  }
-                  return cell;
-                });
-              });
-            });
-            batch.set(ttCol.doc(ttId), {
-              teacherCode: t.code, teacherName: t.name,
-              weekKey: week.weekKey, weekLabel: week.weekLabel,
-              days: ttDays, updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            }, { merge: true });
-            ops++; await flushIfNeeded();
-          }
-        }
-      }
-      if (ops > 0) await batch.commit();
-
-      const teacherCount = new Set(pendingImport.weeks.flatMap((w) => w.teachers.map((t) => t.code))).size;
-      toast(`✅ Đã nhập ${pendingImport.weeks.length} tuần / ${teacherCount} giáo viên`
-        + (conflicts.length ? ` — ⚠️ ${conflicts.length} ô TKB lớp GIỮ NGUYÊN, xem danh sách bên dưới.` : (ttCol ? ' (đã tự điền cả TKB lớp)' : '')));
-
-      if (conflicts.length) {
-        // KHÔNG tự đóng modal khi có xung đột — người nhập cần đọc danh
-        // sách này trước khi quyết định có ghi đè theo Excel không (đúng
-        // nguyên nhân lỗi "1 Thứ không khớp Excel" đã gặp).
-        pendingConflicts = conflicts;
-        document.getElementById('importConflictCount').textContent = conflicts.length;
-        document.getElementById('importConflictSummary').classList.remove('force-hide');
-        const list = document.getElementById('importConflictList');
-        list.innerHTML = conflicts.map((c) => `<li>${c.text}</li>`).join('');
-        list.hidden = false;
-        document.getElementById('importOverrideBtn').classList.remove('force-hide');
-        await loadEverything();
-        return;
-      }
-
-      closeImportModal();
-      await loadEverything();
-    } catch (err) {
-      toast('❌ ' + friendlyError(err));
-    } finally {
-      btn.disabled = false;
-      btn.textContent = '💾 Nhập dữ liệu';
+  /** JSON với khoá đã sắp xếp — so sánh 2 object theo NỘI DUNG, không phụ
+   * thuộc thứ tự field Firestore trả về. */
+  function stableJson(v) {
+    if (Array.isArray(v)) return '[' + v.map(stableJson).join(',') + ']';
+    if (v && typeof v === 'object') {
+      return '{' + Object.keys(v).sort().map((k) => JSON.stringify(k) + ':' + stableJson(v[k])).join(',') + '}';
     }
+    return JSON.stringify(v === undefined ? null : v);
+  }
+
+  /** Đọc dữ liệu HIỆN CÓ (Lịch tuần + TKB lớp) của các tuần đã tick — mỗi
+   * tuần đúng 2 query theo weekKey, tuần chưa có trên hệ thống thì không
+   * đọc gì. Tuần đã đọc rồi được giữ lại trong existingByWeek, tick/bỏ tick
+   * nhiều lần cũng không đọc lại. */
+  async function loadExistingForSelectedWeeks() {
+    const imp = pendingImport;
+    const knownWeekKeys = new Set(state.weeks.map((w) => w.id));
+    const TT = window.EduModels.TeachingTimetable ? window.EduRepositories.teachingTimetable : null;
+    const todo = [...imp.selected].filter((wk) => !imp.existingByWeek.has(wk));
+    await Promise.all(todo.map(async (wk) => {
+      if (!knownWeekKeys.has(wk)) { imp.existingByWeek.set(wk, { sched: new Map(), tt: new Map() }); return; }
+      const [schedRows, ttRows] = await Promise.all([
+        window.EduRepositories.teachingSchedule.listByWeek(wk),
+        TT ? TT.listByWeek(wk) : Promise.resolve([]),
+      ]);
+      imp.existingByWeek.set(wk, {
+        sched: new Map(schedRows.map((r) => [r.teacherCode, r])),
+        tt: new Map(ttRows.map((r) => [r.teacherCode, r])),
+      });
+    }));
+  }
+
+  /** So file Excel với dữ liệu hiện có → danh sách document CẦN GHI (chỉ
+   * những gì thực sự khác) + các ô TKB lớp đang khác Excel. Không gọi
+   * Firestore — đổi tuỳ chọn "Ghi đè" chỉ tính lại, không đọc thêm.
+   * TKB lớp: ô đang trống lấy theo Excel; ô đã có mã lớp khác Excel thì
+   * giữ nguyên, trừ khi override=true. */
+  function buildImportPlan(override) {
+    const imp = pendingImport;
+    const TTM = window.EduModels.TeachingTimetable;
+    const hasTT = !!(TTM && window.EduRepositories.teachingTimetable);
+    const knownTeacherCodes = new Set(state.teachers.map((t) => t.id));
+    const knownWeekKeys = new Set(state.weeks.map((w) => w.id));
+    const writes = []; // { kind:'week'|'teacher'|'sched'|'tt', id, weekKey, teacherCode, data, merge }
+    const conflicts = [];
+    const stats = { newWeeks: 0, newTeachers: 0, schedNew: 0, schedChanged: 0, schedSame: 0, ttWrites: 0 };
+
+    imp.weeks.filter((w) => imp.selected.has(w.weekKey)).forEach((week) => {
+      if (!knownWeekKeys.has(week.weekKey)) {
+        writes.push({ kind: 'week', id: week.weekKey, data: M.buildWeek({ label: week.weekLabel }) });
+        knownWeekKeys.add(week.weekKey);
+        stats.newWeeks++;
+      }
+      const existing = imp.existingByWeek.get(week.weekKey) || { sched: new Map(), tt: new Map() };
+
+      week.teachers.forEach((t) => {
+        if (!knownTeacherCodes.has(t.code)) {
+          writes.push({ kind: 'teacher', id: t.code, data: M.buildTeacher(t) });
+          knownTeacherCodes.add(t.code);
+          stats.newTeachers++;
+        }
+
+        const oldSched = existing.sched.get(t.code);
+        const sameSched = oldSched && oldSched.teacherName === t.name && oldSched.weekLabel === week.weekLabel
+          && stableJson(oldSched.days || {}) === stableJson(t.days);
+        if (sameSched) stats.schedSame++;
+        else {
+          if (oldSched) stats.schedChanged++; else stats.schedNew++;
+          writes.push({
+            kind: 'sched', id: M.scheduleDocId(t.code, week.weekKey), weekKey: week.weekKey, teacherCode: t.code,
+            data: { teacherCode: t.code, teacherName: t.name, weekKey: week.weekKey, weekLabel: week.weekLabel, days: t.days },
+          });
+        }
+
+        if (!hasTT) return;
+        const oldTt = existing.tt.get(t.code);
+        const oldDays = (oldTt && oldTt.days) || {};
+        const ttDays = {};
+        let ttChanged = !oldTt || oldTt.teacherName !== t.name || oldTt.weekLabel !== week.weekLabel;
+        let anyClass = false;
+        M.WEEKDAYS.forEach((d) => {
+          const daySess = t.days[String(d)] || {};
+          const oldDay = oldDays[String(d)] || {};
+          ttDays[String(d)] = {};
+          ['morning', 'afternoon'].forEach((s) => {
+            const oldCells = (oldDay[s] || []).map((c) => TTM.cellOf(c));
+            const cells = sessionToTimetableCells(daySess[s] || {}).map((cell, i) => {
+              const old = oldCells[i];
+              if (!old || !old.maLop) return cell;
+              if (cell.maLop && cell.maLop !== old.maLop) {
+                conflicts.push({ teacherCode: t.code, teacherName: t.name, weekLabel: week.weekLabel, day: d, session: s, periodIdx: i, old, cell });
+                if (override) return cell;
+              }
+              return old;
+            });
+            if (cells.some((c) => c.maLop)) anyClass = true;
+            if (stableJson(cells) !== stableJson(oldCells)) ttChanged = true;
+            ttDays[String(d)][s] = cells;
+          });
+        });
+        // Chưa có TKB lớp và Excel cũng không có mã lớp nào → khỏi tạo doc rỗng.
+        if (!oldTt && !anyClass) ttChanged = false;
+        if (ttChanged) {
+          stats.ttWrites++;
+          writes.push({
+            kind: 'tt', id: TTM.docId(t.code, week.weekKey), weekKey: week.weekKey, teacherCode: t.code, merge: true,
+            data: { teacherCode: t.code, teacherName: t.name, weekKey: week.weekKey, weekLabel: week.weekLabel, days: ttDays },
+          });
+        }
+      });
+    });
+    return { writes, conflicts, stats, override };
+  }
+
+  function renderImportPlan(plan) {
+    const s = plan.stats;
+    const box = document.getElementById('importPlanSummary');
+    box.innerHTML = `
+      <div class="import-stat ok"><b>${s.schedNew}</b><span>Lịch mới</span></div>
+      <div class="import-stat ok"><b>${s.schedChanged}</b><span>Lịch thay đổi</span></div>
+      <div class="import-stat"><b>${s.schedSame}</b><span>Không đổi (bỏ qua)</span></div>
+      <div class="import-stat"><b>${s.ttWrites}</b><span>TKB lớp cập nhật</span></div>`;
+    box.classList.remove('force-hide');
+
+    const cBox = document.getElementById('importConflictBox');
+    cBox.hidden = plan.conflicts.length === 0;
+    if (plan.conflicts.length) {
+      document.getElementById('importConflictCount').textContent = plan.conflicts.length;
+      const fmt = (c) => `"${esc(c.maLop)}"${c.truong ? ' <small>(' + esc(c.truong) + ')</small>' : ''}`;
+      document.getElementById('importConflictList').innerHTML = plan.conflicts.map((c) =>
+        `<li><b>${esc(c.teacherName)}</b> · ${esc(c.weekLabel)} · ${M.WEEKDAY_LABELS[c.day]} ${M.SESSION_LABELS[c.session]}, tiết ${c.periodIdx + 1}: `
+        + `TKB lớp ${fmt(c.old)} → Excel ${fmt(c.cell)}</li>`
+      ).join('');
+    }
+    updateImportConfirmLabel();
+  }
+
+  function updateImportConfirmLabel() {
+    const btn = document.getElementById('importConfirmBtn');
+    if (!pendingImport) return;
+    const plan = pendingImport.plan;
+    if (!plan) { resetImportPlan(); return; }
+    btn.disabled = false;
+    btn.textContent = plan.writes.length ? `💾 Ghi ${plan.writes.length} thay đổi` : 'Đóng (không có gì để ghi)';
+  }
+
+  document.getElementById('importOverrideChk').addEventListener('change', (e) => {
+    if (!pendingImport || !pendingImport.plan) return;
+    pendingImport.plan = buildImportPlan(e.target.checked);
+    renderImportPlan(pendingImport.plan);
   });
 
-  /** Ghi đè THẲNG các ô TKB lớp đã bị "giữ nguyên" (xem importConfirmBtn ở
-   * trên) bằng đúng giá trị trong Excel — người nhập chủ động xác nhận
-   * (đọc danh sách xong mới bấm), khác với lượt nhập tự động ở trên vốn
-   * CỐ TÌNH không ghi đè để tránh mất dữ liệu gõ tay ngoài ý muốn.
-   * Đọc LẠI dữ liệu mới nhất từng giáo viên/tuần ngay trước khi ghi (không
-   * dùng lại bản đã đọc lúc nãy) — phòng trường hợp ai đó vừa sửa tay ô
-   * khác trong lúc modal đang mở, tránh ghi đè nhầm lên thay đổi mới đó. */
-  document.getElementById('importOverrideBtn').addEventListener('click', async () => {
-    if (!pendingConflicts || !pendingConflicts.length) return;
-    const btn = document.getElementById('importOverrideBtn');
-    btn.disabled = true;
-    const originalText = btn.textContent;
-    btn.textContent = '⏳ Đang ghi đè...';
-    try {
-      const TTM = window.EduModels.TeachingTimetable;
-      const ttCol = window.EduRepositories.teachingTimetable.col();
-
-      // Gom theo (teacherCode, weekKey) — 1 giáo viên/tuần có thể có nhiều
-      // ô xung đột ở nhiều Thứ/buổi khác nhau, chỉ cần đọc + ghi 1 lần.
-      const byTeacherWeek = new Map(); // ttId -> { teacherCode, teacherName, weekKey, items:[conflict,...] }
-      pendingConflicts.forEach((c) => {
-        const ttId = TTM.docId(c.teacherCode, c.weekKey);
-        if (!byTeacherWeek.has(ttId)) byTeacherWeek.set(ttId, { teacherCode: c.teacherCode, teacherName: c.teacherName, weekKey: c.weekKey, items: [] });
-        byTeacherWeek.get(ttId).items.push(c);
+  async function commitImportWrites(writes) {
+    const db = window.EduFirebase.db;
+    const cols = {
+      week: window.EduRepositories.teachingWeek.col(),
+      teacher: window.EduRepositories.teachingTeacher.col(),
+      sched: window.EduRepositories.teachingSchedule.col(),
+      tt: writes.some((w) => w.kind === 'tt') ? window.EduRepositories.teachingTimetable.col() : null,
+    };
+    const ts = firebase.firestore.FieldValue.serverTimestamp();
+    for (let i = 0; i < writes.length; i += 450) {
+      const batch = db.batch();
+      writes.slice(i, i + 450).forEach((w) => {
+        const data = (w.kind === 'sched' || w.kind === 'tt') ? Object.assign({}, w.data, { updatedAt: ts }) : w.data;
+        if (w.merge) batch.set(cols[w.kind].doc(w.id), data, { merge: true });
+        else batch.set(cols[w.kind].doc(w.id), data);
       });
+      await batch.commit();
+    }
+  }
 
-      let batch = window.EduFirebase.db.batch();
-      let ops = 0;
-      const flushIfNeeded = async () => { if (ops >= 400) { await batch.commit(); batch = window.EduFirebase.db.batch(); ops = 0; } };
-
-      for (const [ttId, group] of byTeacherWeek.entries()) {
-        const fresh = await window.EduRepositories.teachingTimetable.getById(ttId);
-        const freshDays = (fresh && fresh.days) || {};
-        const daysPatch = {};
-        group.items.forEach((c) => {
-          const dKey = String(c.day);
-          const cells = ((freshDays[dKey] || {})[c.session] || []).map((cell) => TTM.cellOf(cell));
-          while (cells.length <= c.periodIdx) cells.push({ maLop: '', truong: '' });
-          cells[c.periodIdx] = c.newCell;
-          daysPatch[dKey] = daysPatch[dKey] || {};
-          daysPatch[dKey][c.session] = cells;
-        });
-        batch.set(ttCol.doc(ttId), {
-          teacherCode: group.teacherCode, teacherName: group.teacherName, weekKey: group.weekKey,
-          days: daysPatch, updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        }, { merge: true });
-        ops++; await flushIfNeeded();
+  /** Cập nhật state ngay tại máy từ đúng những gì vừa ghi — KHÔNG gọi
+   * loadEverything() (vốn đọc lại toàn bộ giáo viên + tuần + lịch/TKB/giờ
+   * tiết của tuần đang xem chỉ để thấy lại dữ liệu mình vừa ghi). */
+  function applyImportToLocalState(plan) {
+    const byName = (a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'vi');
+    let teachersChanged = false;
+    plan.writes.forEach((w) => {
+      if (w.kind === 'week') {
+        state.weeks.push({ id: w.id, label: w.data.label });
+      } else if (w.kind === 'teacher') {
+        const { createdAt, ...rest } = w.data;
+        state.teachers.push(Object.assign({ id: w.id }, rest));
+        teachersChanged = true;
+      } else if (w.weekKey === state.currentWeekKey) {
+        if (w.kind === 'sched') {
+          state.schedulesByTeacher[w.teacherCode] = Object.assign({ id: w.id }, w.data);
+        } else if (w.kind === 'tt') {
+          const old = state.timetablesByTeacher[w.teacherCode] || {};
+          state.timetablesByTeacher[w.teacherCode] = Object.assign({}, old, { id: w.id }, w.data,
+            { days: Object.assign({}, old.days || {}, w.data.days) });
+        }
       }
-      if (ops > 0) await batch.commit();
+    });
+    state.weeks.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+    if (teachersChanged) { state.teachers.sort(byName); renderTeacherTab(); }
+    const prevWeek = state.currentWeekKey;
+    renderWeekSelect();
+    if (state.currentWeekKey === prevWeek) renderWeeklyTab();
+  }
 
-      toast(`✅ Đã ghi đè ${pendingConflicts.length} ô theo Excel.`);
+  document.getElementById('importConfirmBtn').addEventListener('click', async () => {
+    const imp = pendingImport;
+    if (!imp || !imp.selected.size) return;
+    const btn = document.getElementById('importConfirmBtn');
+    btn.disabled = true;
+    try {
+      if (!imp.plan) {
+        btn.textContent = '⏳ Đang so sánh với dữ liệu hiện có...';
+        await loadExistingForSelectedWeeks();
+        if (pendingImport !== imp) return; // modal đã đóng trong lúc chờ
+        imp.plan = buildImportPlan(document.getElementById('importOverrideChk').checked);
+        renderImportPlan(imp.plan);
+        // Có ô TKB lớp khác Excel → dừng lại cho người nhập xem danh sách
+        // và chọn giữ/ghi đè TRƯỚC khi ghi (1 lần ghi duy nhất, không phải
+        // ghi xong mới phát hiện rồi ghi đè thêm lượt nữa như trước).
+        if (imp.plan.conflicts.length) return;
+      }
+      const plan = imp.plan;
+      if (!plan.writes.length) {
+        toast('✅ Dữ liệu trong file giống hệt hệ thống — không cần ghi gì.');
+        closeImportModal();
+        return;
+      }
+      btn.textContent = `⏳ Đang ghi ${plan.writes.length} thay đổi...`;
+      await commitImportWrites(plan.writes);
+      applyImportToLocalState(plan);
+      const s = plan.stats;
+      const keptConflicts = plan.override ? 0 : plan.conflicts.length;
+      toast(`✅ Đã nhập: ${s.schedNew} lịch mới, ${s.schedChanged} lịch đổi, ${s.schedSame} không đổi`
+        + (s.ttWrites ? `, ${s.ttWrites} TKB lớp` : '')
+        + (keptConflicts ? ` — giữ nguyên ${keptConflicts} ô TKB lớp` : ''));
       closeImportModal();
-      await loadEverything();
     } catch (err) {
       toast('❌ ' + friendlyError(err));
-      btn.disabled = false;
-      btn.textContent = originalText;
+      // Lỗi giữa chừng có thể đã ghi được 1 phần → bỏ kế hoạch + dữ liệu đã
+      // đọc, lần bấm sau so sánh lại từ đầu với dữ liệu mới nhất.
+      if (pendingImport === imp) { imp.existingByWeek.clear(); resetImportPlan(); }
+    } finally {
+      if (pendingImport === imp) updateImportConfirmLabel();
     }
   });
 })();

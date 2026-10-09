@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&amp;family=Baloo+2:wght@700;800&amp;display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/theme.css">
 <link rel="stylesheet" href="css/dashboard.css">
+<link rel="stylesheet" href="css/exam-builder.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/accessibility.css">
@@ -30,6 +31,10 @@
     <div class="nav-item active" data-section="my-sets" id="navMySets" title="Bộ đề của tôi">
       <span class="nav-icon"><i class="fa-solid fa-book-open"></i></span>
       <span>Bộ đề của tôi</span>
+    </div>
+    <div class="nav-item" data-section="builder" id="navBuilder" title="Soạn đề">
+      <span class="nav-icon"><i class="fa-solid fa-file-pen"></i></span>
+      <span>Soạn đề</span>
     </div>
     <div class="nav-item" data-section="reports" id="navReports" title="Báo cáo kết quả">
       <span class="nav-icon"><i class="fa-solid fa-chart-column"></i></span>
@@ -115,7 +120,7 @@
     </div>
     <div class="topbar-right">
       <a href="index.html" target="_blank" rel="noopener" class="pill-link">
-        <i class="fa-solid fa-graduation-cap"></i> Xem trang học sinh
+        <i class="fa-solid fa-graduation-cap"></i><span class="pill-text"> Xem trang học sinh</span>
       </a>
       <div class="theme-toggle" id="themeToggle" title="Chuyển đổi sáng/tối"></div>
     </div>
@@ -137,7 +142,7 @@
                hover (mặc định paused, xem .btn-create i.fa-beat trong
                css/dashboard.css), không tự chạy liên tục để tránh cảm giác
                "web AI" nhấp nháy vô tội vạ. -->
-          <button type="button" class="btn-create" onclick="openModal('create')"><i class="fa-solid fa-plus fa-beat"></i> Tạo bộ đề mới</button>
+          <button type="button" class="btn-create" onclick="openExamBuilder({ fresh: true })"><i class="fa-solid fa-plus fa-beat"></i> Soạn đề mới</button>
           <div class="search-box">
             <input type="text" id="searchInput" placeholder="Tìm kiếm bộ đề..." oninput="filterCards()">
           </div>
@@ -198,6 +203,109 @@
             ></iframe>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- ========================================
+         BUILDER SECTION — "Soạn đề" từ ngân hàng câu hỏi data/ic3
+         (js/exam-builder.js). 3 cột: Nguồn (bài/tiết/chủ đề) → Ngân
+         hàng câu (xem trước + thêm) → Đề đang soạn (sắp xếp + cài đặt).
+         ======================================== -->
+    <section class="section" id="section-builder">
+      <div class="eb-root" id="ebRoot">
+        <!-- Thanh trên: nhận diện đề (bấm để mở Cài đặt) + hành động -->
+        <header class="eb-top">
+          <button type="button" class="eb-btn eb-btn-ghost eb-icon-btn" id="ebBackBtn" title="Về Bộ đề của tôi" aria-label="Về Bộ đề của tôi"><i class="fa-solid fa-arrow-left"></i></button>
+          <button type="button" class="eb-identity" id="ebIdentity" title="Cài đặt đề: tên, mô tả, ảnh bìa, thời gian">
+            <span class="eb-cover" id="ebCover">📝</span>
+            <span class="eb-identity-text">
+              <b id="ebTitleText">Đề chưa đặt tên</b>
+              <small id="ebSubText">0 câu</small>
+            </span>
+            <i class="fa-solid fa-pen eb-identity-pen"></i>
+          </button>
+          <span class="eb-status" id="ebStatus">Đề mới</span>
+          <div class="eb-top-actions">
+            <button type="button" class="eb-btn eb-btn-ghost" id="ebPreviewBtn" title="Xem thử như học sinh"><i class="fa-solid fa-eye"></i><span> Xem trước</span></button>
+            <button type="button" class="eb-btn eb-btn-ghost" id="ebPresentBtn" title="Chiếu lên màn hình lớn, đếm giờ, chấm điểm theo nhóm — không tốn lượt Firebase"><i class="fa-solid fa-chalkboard-user"></i><span> Trình chiếu</span></button>
+            <button type="button" class="eb-btn eb-btn-ghost" id="ebLiveBtn" title="Mở phòng thi đấu trực tiếp kiểu Kahoot"><i class="fa-solid fa-tower-broadcast"></i><span> Chơi trực tiếp</span></button>
+            <button type="button" class="eb-btn eb-btn-ghost" id="ebCopyLinkBtn" title="Sao chép link làm bài cho học sinh"><i class="fa-solid fa-link"></i><span> Link làm bài</span></button>
+            <div class="eb-menu-wrap">
+              <button type="button" class="eb-btn eb-btn-ghost eb-icon-btn" id="ebMoreBtn" title="Thêm" aria-label="Thêm" aria-haspopup="true"><i class="fa-solid fa-ellipsis"></i></button>
+              <div class="eb-menu" id="ebMoreMenu" hidden>
+                <button type="button" data-more="new"><i class="fa-solid fa-file-circle-plus"></i> Đề mới</button>
+                <button type="button" data-more="open-link"><i class="fa-solid fa-link"></i> Mở đề từ link (sửa trên máy khác)</button>
+                <button type="button" data-more="print"><i class="fa-solid fa-print"></i> In đề / đáp án</button>
+                <button type="button" data-more="link-set"><i class="fa-solid fa-arrow-up-right-from-square"></i> Thêm bộ đề bằng link ngoài</button>
+              </div>
+            </div>
+            <button type="button" class="eb-btn eb-btn-primary" id="ebSaveBtn"><i class="fa-solid fa-floppy-disk"></i> Lưu</button>
+          </div>
+        </header>
+
+        <div class="eb-studio">
+          <!-- Trái: danh sách câu (kéo thả để sắp xếp) -->
+          <aside class="eb-rail" aria-label="Danh sách câu hỏi">
+            <ol class="eb-rail-list" id="ebRailList"></ol>
+            <div class="eb-rail-foot">
+              <div class="eb-menu-wrap">
+                <button type="button" class="eb-btn eb-btn-primary eb-block" id="ebAddBtn" aria-haspopup="true"><i class="fa-solid fa-plus"></i> Thêm câu hỏi</button>
+                <div class="eb-menu eb-menu-up eb-type-menu" id="ebAddMenu" hidden></div>
+              </div>
+              <div class="eb-rail-foot-row">
+                <button type="button" class="eb-btn eb-btn-soft" id="ebBankOpenBtn" title="Lấy câu từ ngân hàng câu hỏi IC3/Spark/MOS"><i class="fa-solid fa-database"></i> Ngân hàng</button>
+                <button type="button" class="eb-btn eb-btn-soft" id="ebImportBtn" title="Dán nhiều câu hỏi cùng lúc từ Word/văn bản"><i class="fa-solid fa-paste"></i> Nhập nhanh</button>
+              </div>
+            </div>
+          </aside>
+
+          <!-- Giữa: khung soạn câu đang chọn -->
+          <main class="eb-stage" id="ebStage"></main>
+
+          <!-- Phải: loại câu + tình trạng đề -->
+          <aside class="eb-inspector" id="ebInspector"></aside>
+        </div>
+
+        <!-- Ngăn kéo "Ngân hàng câu hỏi" (data/ic3 — file tĩnh, 0 lượt Firestore) -->
+        <div class="eb-drawer" id="ebDrawer" hidden>
+          <div class="eb-drawer-panel" role="dialog" aria-modal="true" aria-label="Ngân hàng câu hỏi">
+            <div class="eb-drawer-head">
+              <b><i class="fa-solid fa-database"></i> Ngân hàng câu hỏi</b>
+              <span class="eb-drawer-note" id="ebDrawerNote"></span>
+              <button type="button" class="eb-btn eb-btn-primary" id="ebDrawerDone"><i class="fa-solid fa-check"></i> Xong</button>
+            </div>
+            <div class="eb-drawer-body">
+              <aside class="eb-col eb-source">
+                <div class="eb-field-row">
+                  <label class="eb-field"><span>Chương trình</span><select id="ebCat"></select></label>
+                  <label class="eb-field"><span>Cấp độ</span><select id="ebLevel"></select></label>
+                </div>
+                <div class="eb-chips" id="ebGroups"></div>
+                <input type="search" id="ebMtSearch" class="eb-input" placeholder="Lọc tên bài / chủ đề...">
+                <div class="eb-mt-list" id="ebMtList"></div>
+                <button type="button" class="eb-btn eb-btn-soft eb-block" id="ebMatrixBtn"><i class="fa-solid fa-table-cells"></i> Ma trận đề (bốc ngẫu nhiên)</button>
+              </aside>
+              <section class="eb-col eb-bank" id="ebBank">
+                <div class="eb-bank-head" id="ebBankHead" hidden>
+                  <div class="eb-bank-title"><b id="ebBankTitle"></b><span id="ebBankMeta"></span></div>
+                  <div class="eb-bank-tools">
+                    <input type="search" id="ebBankSearch" class="eb-input" placeholder="Tìm trong câu hỏi...">
+                    <select id="ebBankType" class="eb-input"></select>
+                  </div>
+                  <div class="eb-bank-tools">
+                    <span class="eb-random">Thêm ngẫu nhiên <input type="number" id="ebRandomN" class="eb-input" min="1" value="5"> câu
+                      <button type="button" class="eb-btn eb-btn-soft" id="ebRandomBtn"><i class="fa-solid fa-shuffle"></i> Thêm</button></span>
+                    <button type="button" class="eb-btn eb-btn-ghost" id="ebAddAllBtn"><i class="fa-solid fa-plus"></i> Thêm tất cả</button>
+                  </div>
+                </div>
+                <div class="eb-bank-list" id="ebBankList"></div>
+              </section>
+            </div>
+          </div>
+        </div>
+
+        <!-- Xem trước kiểu Kahoot (chạy trên máy, không ghi kết quả) -->
+        <div class="eb-preview" id="ebPreview" hidden role="dialog" aria-modal="true" aria-label="Xem trước đề"></div>
       </div>
     </section>
 
@@ -443,6 +551,9 @@
 <script src="js/services/data-cache-service.js"></script>
 <script src="js/services/profile-cache-service.js"></script>
 <script src="js/dashboard.js"></script>
+<script src="js/custom-exam-codec.js"></script>
+<script src="js/exam-builder.js"></script>
+<script src="js/sw-register.js"></script>
 <script src="js/motion.js"></script>
 </body>
 </html>

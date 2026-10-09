@@ -68,7 +68,7 @@
     }
   }
   // Hạn mức Firebase Spark đặt lại lúc 0h giờ Thái Bình Dương ≈ 14h-15h chiều giờ Việt Nam.
-  var QUOTA_MSG = 'Firebase đã hết lượt miễn phí hôm nay. Thử lại sau khoảng 14-15h chiều (giờ VN).';
+  var QUOTA_MSG = 'Firebase đã hết lượt miễn phí hôm nay. Thử lại sau khoảng 14-15h chiều (giờ VN) — hoặc dùng "Trình chiếu" trong Soạn đề (không cần Firebase).';
   // Âm thanh/hiệu ứng (js/game-sfx.js, js/game-fx.js — chạy trên máy, không tốn lượt Firebase).
   // Mỗi khoảnh khắc chỉ phát 1 lần dù document phòng được vẽ lại nhiều lần.
   var playedFx = {};
@@ -92,18 +92,36 @@
     }
     return output;
   }
-  function flattenQuestions(data, topic) {
+  /* Ngân hàng câu cho phòng thử thách: đọc ĐÚNG các file chủ đề nhỏ trong
+     data/ic3/minitests (nguồn đang được "Quản lý câu hỏi" cập nhật) thay vì
+     quiz_data.json cũ ~3MB (bản 04/09, đã lỗi thời). Chủ đề "1.–7." của
+     Spark/IC3 × LV1–3; 1 chủ đề = 6 file nhỏ, "Tổng hợp" = 42 file tải song
+     song (trình duyệt cache lại cho các lần tạo phòng sau). */
+  var LIVE_LEVELS = ['Spark__LV1', 'Spark__LV2', 'Spark__LV3', 'IC3__LV1', 'IC3__LV2', 'IC3__LV3'];
+  async function loadLiveBank(topic) {
+    var res = await fetch('data/ic3/minitests-manifest.json');
+    if (!res.ok) throw new Error('Không tải được ngân hàng câu hỏi.');
+    var manifest = await res.json();
+    var paths = [];
+    LIVE_LEVELS.forEach(function (lv) {
+      var map = manifest[lv] || {};
+      Object.keys(map).forEach(function (name) {
+        if (/^\d+\. /.test(name) && (topic === 'all' || name === topic)) paths.push(map[name]);
+      });
+    });
+    var lists = await Promise.all(paths.map(function (p) {
+      return fetch('data/ic3/' + p).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; });
+    }));
+    var seen = {};
     var output = [];
-    (data.categories || []).forEach(function (category) {
-      (category.levels || []).forEach(function (level) {
-        Object.keys(level.minitests || {}).forEach(function (topicName) {
-          if (topic !== 'all' && topicName !== topic) return;
-          (level.minitests[topicName] || []).forEach(function (item) {
-            if (item.type !== 'single' || !item.question || !Array.isArray(item.options) || item.options.length < 2 || item.options.length > 6) return;
-            if (!Array.isArray(item.correct) || !item.correct.length) return;
-            output.push({ question: item.question, options: item.options.map(String), correct: item.correct.map(String) });
-          });
-        });
+    lists.forEach(function (list) {
+      (Array.isArray(list) ? list : []).forEach(function (item) {
+        if (item.type !== 'single' || !item.question || !Array.isArray(item.options) || item.options.length < 2 || item.options.length > 6) return;
+        if (!Array.isArray(item.correct) || !item.correct.length) return;
+        var key = item.uid || item.question;
+        if (seen[key]) return; // bản chép cùng uid ở nhiều chủ đề/khối
+        seen[key] = true;
+        output.push({ question: item.question, options: item.options.map(String), correct: item.correct.map(String) });
       });
     });
     return output;
@@ -550,14 +568,25 @@
     event.preventDefault();
     var button = el.createForm.querySelector('button[type="submit"]');
     if (!canHostRoom) { notify('Cần tài khoản Admin, giáo viên đã duyệt hoặc điều phối để tạo phòng.'); return; }
+    await customReady;
+    if (customLive && customLive.tooFew) { notify('Đề cần ít nhất 5 câu trắc nghiệm 1 đáp án để chơi trực tiếp.'); return; }
     setBusy(button, true, 'Đang tạo phòng…');
     try {
-      var response = await fetch('quiz_data.json');
-      if (!response.ok) throw new Error('Không tải được ngân hàng câu hỏi.');
-      var data = await response.json();
       var topic = el.topicSelect.value;
       var count = Number(el.questionCount.value);
-      questions = prepareQuestions(flattenQuestions(data, topic), count);
+      if (customLive) {
+        // Đề giáo viên soạn (live-quiz.html?de=..., xem loadCustomExam()) —
+        // giữ thứ tự giáo viên sắp (trừ khi đề bật "trộn câu"), luôn trộn lựa
+        // chọn. "topic" vẫn ghi 'all' để khớp firestore.rules sẵn có.
+        topic = 'all';
+        var pool = customLive.shuffle ? shuffle(customLive.questions) : customLive.questions.slice();
+        questions = pool.slice(0, count).map(function (item) {
+          var options = shuffle(item.options);
+          return { question: item.question, options: options, correct: item.correct.filter(function (a) { return options.indexOf(a) !== -1; }) };
+        });
+      } else {
+        questions = prepareQuestions(await loadLiveBank(topic), count);
+      }
       if (questions.length < 5) throw new Error('Chủ đề này cần tối thiểu 5 câu trắc nghiệm phù hợp.');
       var code = '';
       var ref = null;
@@ -628,6 +657,39 @@
     if (roomRef && !isHost && currentUser) roomRef.collection('players').doc(currentUser.uid).delete().catch(function () {});
     showEntry();
   });
+  // ── Đề giáo viên soạn (js/exam-builder.js → nút "Chơi trực tiếp") ──
+  // Câu nằm sẵn trong link (js/custom-exam-codec.js) — không tốn thêm lượt
+  // Firebase so với phòng thường; chỉ dùng câu trắc nghiệm 1 đáp án.
+  var customLive = null;
+  async function loadCustomExam() {
+    var code = new URLSearchParams(window.location.search).get('de');
+    if (!code || !window.EduCustomExam) return;
+    var exam = await EduCustomExam.decode(code);
+    if (!exam) { notify('Link đề không hợp lệ — dùng chủ đề có sẵn.'); return; }
+    await EduCustomExam.attachBankQuestions(exam);
+    var qs = exam.items.map(EduCustomExam.toLiveQuestion).filter(Boolean);
+    customLive = { title: exam.title, shuffle: exam.shuffle, questions: qs };
+    el.topicSelect.innerHTML = '';
+    var opt = document.createElement('option');
+    opt.value = 'all';
+    opt.textContent = 'Đề: ' + exam.title + ' (' + qs.length + ' câu trắc nghiệm)';
+    el.topicSelect.appendChild(opt);
+    el.topicSelect.disabled = true;
+    var bestCount = null;
+    Array.prototype.forEach.call(el.questionCount.options, function (o) {
+      o.disabled = Number(o.value) > Math.max(5, qs.length);
+      if (!o.disabled) bestCount = o.value;
+    });
+    if (bestCount) el.questionCount.value = bestCount;
+    var link = byId('staffLoginLink');
+    if (link) link.href = 'login.html?next=' + encodeURIComponent('live-quiz.html' + window.location.search);
+    if (qs.length < 5) {
+      customLive.tooFew = true;
+      notify('Đề cần ít nhất 5 câu trắc nghiệm 1 đáp án để chơi trực tiếp (đề này có ' + qs.length + ').');
+    }
+  }
+  var customReady = loadCustomExam().catch(function (e) { console.warn('[LiveQuiz] Không đọc được đề tự soạn:', e); });
+
   el.roomCodeInput.addEventListener('input', function () { this.value = this.value.toUpperCase().replace(/[^2-9A-HJKMNP-Z]/g, '').slice(0, 8); });
 
   if (!window.EduFirebase || !EduFirebase.auth || !EduFirebase.db) {

@@ -1430,6 +1430,18 @@ tr:hover td { background: var(--sidebar-active-bg); }
      bề rộng khả dụng trên điện thoại — đổi 1 cột cùng mốc với cards-grid. */
   .settings-grid { grid-template-columns: 1fr; }
 }
+/* Thanh trên cùng trên điện thoại: trước đây "Xem trang học sinh" + nút
+   sáng/tối không co lại → cả trang tràn ngang ~100px. Chỉ giữ icon, tiêu
+   đề tự cắt "…" khi hẹp. */
+@media (max-width: 640px) {
+  #topbar { padding: 12px 14px; gap: 10px; }
+  .topbar-actions-left { min-width: 0; gap: 10px; }
+  .topbar-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 18px; }
+  .pill-link { padding: .5rem .7rem; }
+  .pill-link .pill-text { display: none; }
+  /* Nền trang trí inset:-18px lố ra ngoài lề 16px của #content → tràn 2px. */
+  #section-my-sets::before { inset: -12px; }
+}
 @media (max-width: 480px) {
   .cards-grid { grid-template-columns: 1fr; }
   .toolbar { flex-direction: column; align-items: stretch; }

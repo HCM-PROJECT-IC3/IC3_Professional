@@ -9,11 +9,7 @@ Thay thế cho bộ câu hỏi THCS/TIH cũ (K3-K8). Nguồn gốc: 6 file `.qui
 - `meta.json` — chỉ 2 category: `Spark` và `IC3`, mỗi category 3 level
   (`LV1/LV2/LV3`, giữ nguyên tên gốc "GS6 LV1/2/3", **không** tương ứng
   K3-K8 hay K6-K8 như quy ước cũ).
-- `../manual_review/*.json` — 61/1070 câu hỏi gốc (dạng Hotspot, kéo-thả
-  WordBank/DND, sắp xếp Sequence, hoặc MultipleChoiceText có >2 lựa chọn)
-  **không** có type tương ứng trong schema hiện tại (`single/multi/
-  truefalse/matching`) nên chưa đưa vào quiz — để tham khảo, bổ sung thủ
-  công sau nếu cần.
+- *(Đã gỡ 10/2026)* `../manual_review/*.json` — dữ liệu rà soát thủ công của đợt nhập đầu, đã gộp vào `data/ic3`; còn trong lịch sử git nếu cần.
 
 ## Loại câu hỏi đã chuyển tự động
 - `MultipleChoice` → `single`

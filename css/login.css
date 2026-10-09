@@ -14,6 +14,9 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
 
+/* Blob nền (body::before, inset:-10% + trôi/phóng) lố ra ngoài khung → trên
+   điện thoại trang bị kéo ngang ~40px. clip không tạo vùng cuộn mới. */
+html { overflow-x: clip; }
 body {
   font-family: 'Nunito', sans-serif;
   color: var(--text);

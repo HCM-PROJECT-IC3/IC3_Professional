@@ -74,6 +74,7 @@ window.addEventListener('edu:ready', ({ detail }) => {
   // 3 mục trong chính trang này (SPA, không phải link riêng): Bộ đề của tôi
   // / Báo cáo kết quả / Cài đặt hệ thống.
   show('navMySets', role === 'admin' || role === 'teacher');
+  show('navBuilder', role === 'admin' || role === 'teacher');
   show('navReports', role === 'admin' || role === 'coordinator');
   show('navSettings', role === 'admin');
 

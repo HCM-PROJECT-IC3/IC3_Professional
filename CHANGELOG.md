@@ -1,5 +1,44 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## CI tự kiểm tra + lộ trình phát triển (10/2026)
+
+- **`.github/workflows/ci.yml`** (GitHub Actions, mỗi lần push `main` / Pull Request — chỉ kiểm tra, không deploy, không Firebase): `scripts/validate-data.js` (ngân hàng `data/ic3`: JSON hỏng, file thiếu, đáp án đúng không có trong lựa chọn, uid trùng trong minitest, thiếu ảnh, dạng câu lạ... → chặn; số câu meta lệch, chưa có giải thích → cảnh báo) + `scripts/check-js.js` (cú pháp 133 file JS, kể cả ES module) + 7 unit test mô phỏng Word/Excel/PowerPoint. Hiện tại: 6.071 câu / 324 file minitest / 604 ảnh hợp lệ, 133/133 JS, 7/7 test.
+- **`docs/ROADMAP-PHAT-TRIEN.md`**: việc cần làm theo từng ngưỡng tăng trưởng (học sinh/ngày, phòng trực tiếp, phân tích câu sai, đồng bộ nhiều thiết bị, đa đơn vị, ngân hàng lớn, lưu trữ dài hạn), chi phí Firebase ước lượng và file cần sửa.
+
+## Dọn dự án nhẹ hơn, chống lag/mất mạng, mục tiêu tuần (10/2026)
+
+**Nhẹ hơn (~5,6 MB):**
+- Gỡ `quiz_data.json` (3 MB, bản gộp cũ 04/09 — lỗi thời so với `data/ic3`). Trang làm bài không còn dự phòng tải file này (lỗi meta.json → DEMO_DATA như trước).
+- **Phòng thử thách** (`live-quiz.js`) trước đây tải nguyên `quiz_data.json` 3 MB mỗi lần tạo phòng và dùng câu hỏi cũ → giờ chỉ tải đúng file chủ đề nhỏ trong `data/ic3/minitests` (1 chủ đề = 6 file; "Tổng hợp" = 42 file, 452 câu không trùng uid; chủ đề ít nhất 23 câu ≥ 15 câu/phòng).
+- Ảnh động màn chờ/từ chối: GIF → WebP động (`loading` 512 KB → 121 KB, `404` 1,37 MB → 424 KB); trang đăng nhập chỉ tải ảnh 404 khi đăng nhập lỗi (trước đây tải 1,3 MB mỗi lần mở).
+- 10 ảnh câu hỏi > 1000px thu về 1000px (giữ tỉ lệ → toạ độ % câu "chọn vùng" không đổi; cùng tên file), 3,0 MB → 2,0 MB, đã so chất lượng bằng mắt. Ảnh khác giữ nguyên (lượng tử màu làm xấu ảnh chụp).
+- Gỡ file không còn dùng: `data/manual_review/*` (đã gộp), 4 script chỉ chạy trên `quiz_data.json` (`split-quiz-data.py`, `merge_hotspot_questions.py`, `add_hotspot_distractors.py`, `generate_explanations.py`), `tkb-import/*.xlsx` (file nhập TKB 1 lần, chứa tên/lịch giáo viên thật — đang công khai trên GitHub Pages). Tất cả còn trong lịch sử git.
+
+**Bền hơn:** `sw.js` + `js/sw-register.js` (nạp ở `index.html`, `login.html`, `ic3-dashboard.html`) — chỉ xử lý GET cùng tên miền (Firebase/Google/CDN đi thẳng mạng, 0 lượt Firebase thêm). HTML/JS/CSS/JSON: mạng trước, mạng chậm > 4 s (trang) / 2,5 s (file) hoặc mất mạng → dùng bản lưu; ảnh: hiện bản lưu ngay rồi cập nhật ngầm (≤ 400 file). Đo: mất mạng hẳn vẫn mở trang với dữ liệu thật và làm được bài đã mở; mạng 8 s/file → trang hiện sau ~9 s. Đổi `CACHE_VERSION` trong `sw.js` để xoá bản lưu cũ trên mọi máy.
+
+**Hứng thú hơn:** *Mục tiêu tuần* trong Góc học tập (3/5/7/10 bài/tuần, thanh tiến độ ở Góc học tập + ngay trên nút ở sảnh, chúc mừng khi đạt) — `localStorage` `eduquiz_goals_v1`.
+
+## Trình chiếu lớp học, thẻ ghi nhớ, giao bài có hạn nộp (10/2026) — 0 lượt Firebase
+
+- **Trình chiếu lớp học** (Soạn đề → "Trình chiếu", `js/exam-builder.js` § TRÌNH CHIẾU): chiếu đề toàn màn hình kiểu Kahoot, chữ to cho máy chiếu, đếm ngược 10/20/30/60 giây hoặc không giới hạn (hết giờ tự hiện đáp án), 0–6 nhóm thi đua đặt tên được, giáo viên cộng điểm nhóm trả lời đúng (bấm hoặc phím 1–6), Space = hiện đáp án / câu sau, bảng xếp hạng cuối + chơi lại. Thay cho phòng "Chơi trực tiếp" khi hạn mức ghi Firebase đã gần hết — ghi chú ở `docs/FIREBASE-CHECKLIST.md` § 6; thông báo hết lượt ở `live-quiz.js` gợi ý dùng Trình chiếu.
+- **Thẻ ghi nhớ** (Góc học tập → Sổ tay câu sai → "Thẻ ghi nhớ"): lật thẻ câu hỏi ↔ đáp án + giải thích cho mọi dạng câu (trắc nghiệm, đúng/sai, nối, sắp xếp, phân loại, điền...), tự đánh giá "Đã nhớ"/"Chưa nhớ" (phím Space, 1, 2) → cập nhật hộp Leitner như khi ôn bằng bài làm.
+- **Giao bài có hạn nộp** (Cài đặt đề → "Hạn nộp"): hạn nằm trong link (`custom-exam-codec.js`, trường `h` tính bằng phút); trang làm bài hiện hạn, quá hạn vẫn làm được nhưng tên bài thêm "(nộp muộn)" → giáo viên thấy ngay trong Báo cáo kết quả. Thẻ đề trên carousel hiện hạn.
+
+## Góc học tập cho học sinh + sửa tràn ngang trên điện thoại (10/2026)
+
+- **Góc học tập** (`js/learning-hub.js`, `css/learning-hub.css`, nút ở sảnh `index.html` kèm số câu đến hạn): 3 tab — *Tổng quan* (số bài, điểm TB 10 bài gần nhất, chuỗi ngày học, biểu đồ xu hướng SVG, gợi ý hôm nay), *Theo bài* (TB 3 lần gần nhất, xu hướng ↑↓, yếu → vững, "Ôn ngay" chọn sẵn đúng bài qua `window.lobbySelectMinitest`), *Sổ tay câu sai* (tự gom câu sai qua mọi bài, hộp Leitner 1→4: ngay / 1 / 3 / 7 ngày → thuộc; sai lại về hộp 1; tối đa 200 câu/học sinh). Tách theo Họ tên + Lớp + Trường (máy trường dùng chung). 0 lượt Firebase — localStorage `eduquiz_wrongbook_v1`.
+- **`quiz-engine.js`:** phát sự kiện `edu:exam-graded` sau khi chấm; `startWrongbookReview()` (phiên ôn không tính điểm, như "Luyện lại câu sai": không ghi lịch sử/XP/Sheet/Firestore); lịch sử máy lưu thêm `catId`/`levelId`/`mtKey`.
+- **Tràn ngang trên điện thoại (390px):** `ic3-dashboard.html` 101px → 0 (thanh trên chỉ còn icon "Xem trang học sinh", nền trang trí `#section-my-sets::before`), `login.html` 39px → 0 (`html { overflow-x: clip }`), `image-manager.html` 138px → 0 (select bộ lọc). Đã quét 21 trang, đều 0px.
+
+## Soạn đề từ ngân hàng câu hỏi + nhập lịch Excel tiết kiệm lượt (10/2026)
+
+- **Soạn đề** (`ic3-dashboard.html` tab mới, `js/exam-builder.js`, `css/exam-builder.css`): duyệt `data/ic3` theo Chương trình → Cấp độ → Bài/Tiết/Chủ đề, xem đáp án + giải thích, thêm từng câu / ngẫu nhiên N câu / ma trận đề (chia đều, không trùng uid), sắp xếp kéo-thả, thời gian Kiểm tra, trộn câu, in đề (có/không đáp án). Lưu thành bộ đề trên carousel (localStorage `ic3_custom_sets`, bản nháp `ic3_exam_builder_draft`); nút "Tạo bộ đề mới" → "Soạn đề mới", tạo bằng link ngoài vẫn còn.
+- **Soạn đề kiểu Kahoot** (viết lại `js/exam-builder.js` + `css/exam-builder.css`): danh sách câu bên trái (kéo thả, nhân bản, xoá, phím ↑↓/Alt+↑↓), khung soạn giữa với ô đáp án 6 màu + hình, ảnh minh hoạ (tải lên tự nén ≤ ~30KB / dán Ctrl+V / kéo thả / link https), giải thích; bảng phải đổi dạng câu + tình trạng đề (câu lỗi, số câu chơi trực tiếp được, độ dài link). 5 dạng tự soạn: trắc nghiệm, nhiều đáp án, Đúng/Sai, sắp xếp, nối cặp. Cài đặt đề (tên, mô tả, màu bìa + biểu tượng, cấp học, thời gian, trộn câu), Xem trước kiểu Kahoot, Nhập nhanh từ văn bản (`*` = đáp án đúng), câu ngân hàng → "Chuyển thành câu tự soạn", Mở đề từ link (sửa trên máy khác).
+- **Chơi trực tiếp** (`live-quiz.html?de=...`): phòng thi đấu dùng đề tự soạn (câu 1 đáp án / Đúng-Sai, 5–15 câu). Không đổi `firestore.rules`, số lượt Firebase như phòng thường.
+- **Link v2** (`js/custom-exam-codec.js`): nén deflate, chứa cả câu tự soạn; link v1 cũ vẫn mở được. Câu tự soạn được escape khi mở rộng cho trang làm bài, ảnh chỉ nhận https/`img/`/data:image.
+- **Link làm bài** `index.html?de=...` (`js/custom-exam-codec.js`): link chứa tham chiếu câu (minitest + uid), trang làm bài tải file tĩnh, khoá Chương trình/Cấp độ/thời gian theo đề. **0 lượt đọc/ghi Firestore** cho soạn/mở đề; kết quả vẫn vào `quiz_results` như bài thường.
+- **Nhập lịch từ Excel** (`teaching-schedule.js`): chọn tuần cần nhập (mặc định tuần mới + hiện tại), so với dữ liệu hiện có rồi chỉ ghi document thay đổi, hiện ô TKB lớp khác Excel *trước* khi ghi (1 lần ghi, bỏ nút ghi đè riêng), cập nhật màn hình tại chỗ thay vì `loadEverything()`.
+
 ## 0000000. Rà soát bảo mật/hạn mức theo `docs/AUDIT-PROMPT.md` (10/2026)
 
 ⚠️ Chỉ đổi `firestore.rules` — phải **publish** (`firebase deploy --only firestore:rules --project data-ic3`).

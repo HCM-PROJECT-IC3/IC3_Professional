@@ -181,7 +181,11 @@
     // dưới thông báo (xem .fail-art trong css/login.css), mượt bằng
     // transition thay vì hiện/ẩn đột ngột. Mọi trường hợp khác (thành
     // công/rỗng) đều ẩn đi ngay.
-    document.getElementById('failArt').classList.toggle('show', type === 'err');
+    const failArt = document.getElementById('failArt');
+    // Ảnh động chỉ tải khi thật sự đăng nhập lỗi (trước đây tải sẵn 1,3MB mỗi lần mở trang).
+    const failImg = failArt.querySelector('img[data-src]');
+    if (type === 'err' && failImg && !failImg.src) failImg.src = failImg.dataset.src;
+    failArt.classList.toggle('show', type === 'err');
   }
 
   function friendlyError(err) {

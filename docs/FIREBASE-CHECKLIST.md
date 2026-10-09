@@ -131,6 +131,11 @@ Số đo bằng Chrome headless + SDK giả có bộ đếm tính phí; lượt 
 - **Báo cáo IC3 của admin:** mỗi admin xem bảng thô phải đọc **mọi** bài nộp mới (9.000/ngày).
   5 admin = 45.000. Nên để 1 admin dùng tab này; admin khác xem theo trường ở Dashboard
   điều phối (tối đa 1.000 bài/lần) hoặc xem Google Sheet.
+- **Thay thế 0 lượt khi hạn mức ghi đã gần hết:** "Trình chiếu" trong Soạn đề
+  (`ic3-dashboard.html` → Soạn đề → Trình chiếu, `js/exam-builder.js` § TRÌNH CHIẾU) —
+  chiếu đề lên máy chiếu, đếm giờ từng câu, học sinh trả lời bằng thẻ màu/giơ tay,
+  giáo viên cộng điểm theo nhóm. Không Firestore, không Anonymous Auth. Ưu tiên dùng
+  cho các lớp vượt quá ~3 phòng thử thách/ngày ở trên.
 - Học sinh + 50 giáo viên + **1** admin ≈ 25.700 đọc (51%) / 9.000 ghi (45%). Thêm 3 phòng
   40 × 20 câu → ≈ 31.300 đọc (63%) / 11.600 ghi (58%).
 

@@ -94,6 +94,8 @@ a{color:inherit}
 }
 .theme-toggle:hover{box-shadow:var(--shadow-neu-raised),0 0 0 3px rgba(47,64,178,.15)}
 .filters input[type=text]{flex:1;min-width:180px}
+/* Tên minitest dài (vd "Bài 12. …") làm select giãn quá bề ngang điện thoại. */
+.filters select{max-width:100%;min-width:0}
 .chip-group{display:flex;gap:.4rem;flex-wrap:wrap}
 .chip{
   padding:.4rem .85rem;border-radius:999px;border:1.5px solid var(--border);
