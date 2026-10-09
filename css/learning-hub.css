@@ -1,0 +1,176 @@
+/* ============================================================
+   css/learning-hub.css — "Góc học tập" (js/learning-hub.js, index.html)
+   Dùng token của css/theme.css → tự theo sáng/tối.
+   ============================================================ */
+.lh-open { position: relative; }
+.lh-badge {
+  display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; margin-left: 6px;
+  border-radius: 999px; background: var(--red); color: #fff; font-size: .72rem; font-weight: 800;
+}
+.lh-badge[hidden] { display: none; }
+
+.lh-box { max-width: 860px; padding: 1.4rem 1.5rem 1rem; }
+.lh-head { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; margin-bottom: .9rem; }
+.lh-head h3 { margin: 0; flex: 1 1 auto; font-size: 1.25rem; }
+.lh-head h3 i { color: var(--teal); }
+.lh-student {
+  min-width: 220px;
+  max-width: 260px; padding: .45rem .7rem; border-radius: 10px; border: 1.5px solid var(--border);
+  background: var(--card2); color: var(--text); font: inherit; font-weight: 700; font-size: .85rem;
+}
+.lh-head .modal-close { position: static; }
+
+.lh-tabs { display: flex; gap: .4rem; flex-wrap: wrap; padding: .3rem; border-radius: 14px; background: var(--card2); margin-bottom: 1rem; }
+.lh-tabs button {
+  flex: 1 1 auto; display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+  padding: .6rem .8rem; border: none; border-radius: 11px; background: transparent; cursor: pointer;
+  font: inherit; font-weight: 800; font-size: .86rem; color: var(--muted);
+}
+.lh-tabs button.is-active { background: var(--card); color: var(--purple); box-shadow: var(--shadow); }
+.lh-tab-badge:not(:empty) { background: var(--red); color: #fff; border-radius: 999px; padding: 0 .45rem; font-size: .7rem; }
+
+.lh-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: .6rem; margin-bottom: 1rem; }
+.lh-kpis-3 { grid-template-columns: repeat(3, 1fr); }
+.lh-kpi { padding: .8rem .9rem; border-radius: 14px; background: var(--card2); border: 1.5px solid var(--border); }
+.lh-kpi b { display: block; font-size: 1.55rem; font-weight: 900; color: var(--text); line-height: 1.15; }
+.lh-kpi b small { font-size: .8rem; font-weight: 700; color: var(--muted); }
+.lh-kpi span { font-size: .74rem; font-weight: 700; color: var(--muted); }
+.lh-kpi.is-good { background: var(--green-lt); border-color: color-mix(in srgb, var(--green) 30%, transparent); }
+.lh-kpi.is-good b { color: var(--green); }
+.lh-kpi.is-warn { background: var(--yellow-lt); border-color: color-mix(in srgb, var(--yellow) 35%, transparent); }
+.lh-kpi.is-warn b { color: #b26b00; }
+
+.lh-card { border: 1.5px solid var(--border); border-radius: 16px; padding: .9rem 1rem; margin-bottom: .9rem; background: var(--card); }
+.lh-card-title { font-weight: 800; font-size: .9rem; margin-bottom: .6rem; color: var(--text); }
+.lh-card-title i { color: var(--purple); margin-right: .3rem; }
+.lh-spark { width: 100%; height: auto; display: block; }
+.lh-spark-line { fill: none; stroke: var(--purple); stroke-width: 2.5; stroke-linejoin: round; }
+.lh-spark-area { fill: color-mix(in srgb, var(--purple) 12%, transparent); }
+.lh-spark-pass { stroke: var(--green); stroke-dasharray: 5 5; stroke-width: 1.2; }
+.lh-spark-label { fill: var(--green); font-size: 11px; font-weight: 800; }
+.lh-spark circle { stroke: var(--card); stroke-width: 2; }
+.lh-spark circle.is-pass { fill: var(--teal); }
+.lh-spark circle.is-fail { fill: var(--red); }
+.lh-spark-empty { padding: .9rem; text-align: center; color: var(--muted); font-weight: 600; font-size: .88rem; }
+
+.lh-tip { display: flex; align-items: center; gap: .8rem; padding: .7rem .8rem; border-radius: 12px; background: var(--card2); margin-bottom: .5rem; }
+.lh-tip > i { flex-shrink: 0; width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--purple-lt); color: var(--purple); }
+.lh-tip.is-hot > i { background: var(--red-lt); color: var(--red); }
+.lh-tip.is-good > i { background: var(--green-lt); color: var(--green); }
+.lh-tip > div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.lh-tip b { font-size: .9rem; color: var(--text); }
+.lh-tip span { font-size: .78rem; color: var(--muted); font-weight: 600; }
+
+.lh-btn {
+  flex-shrink: 0; display: inline-flex; align-items: center; gap: .35rem; padding: .5rem .9rem; border-radius: 10px;
+  border: none; background: var(--purple); color: #fff; font: inherit; font-weight: 800; font-size: .82rem; cursor: pointer;
+}
+.lh-btn:hover:not(:disabled) { filter: brightness(1.1); }
+.lh-btn:disabled { opacity: .45; cursor: not-allowed; }
+.lh-btn-ghost { background: var(--card2); color: var(--text); border: 1.5px solid var(--border); }
+.lh-btn-sm { padding: .35rem .65rem; font-size: .75rem; }
+
+.lh-note { font-size: .8rem; color: var(--muted); font-weight: 600; margin: 0 0 .7rem; line-height: 1.5; }
+.lh-note i { color: var(--purple); }
+.lh-topics { display: flex; flex-direction: column; gap: .5rem; }
+.lh-topic { display: flex; gap: .8rem; align-items: center; padding: .7rem .85rem; border-radius: 13px; border: 1.5px solid var(--border); border-left-width: 5px; background: var(--card); }
+.lh-topic.is-bad { border-left-color: var(--red); }
+.lh-topic.is-warn { border-left-color: var(--yellow); }
+.lh-topic.is-good { border-left-color: var(--purple); }
+.lh-topic.is-great { border-left-color: var(--green); }
+.lh-topic-main { flex: 1; min-width: 0; }
+.lh-topic-name { font-weight: 800; font-size: .9rem; color: var(--text); }
+.lh-topic-meta { font-size: .74rem; color: var(--muted); font-weight: 600; margin: .15rem 0 .4rem; }
+.lh-up { color: var(--green); } .lh-down { color: var(--red); }
+.lh-bar { height: 7px; border-radius: 999px; background: var(--card2); overflow: hidden; }
+.lh-bar i { display: block; height: 100%; border-radius: inherit; background: var(--purple); }
+.lh-topic.is-bad .lh-bar i { background: var(--red); }
+.lh-topic.is-warn .lh-bar i { background: var(--yellow); }
+.lh-topic.is-great .lh-bar i { background: var(--green); }
+.lh-topic-side { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: .25rem; }
+.lh-topic-side > b { font-size: 1.15rem; font-weight: 900; color: var(--text); }
+.lh-chip { font-size: .68rem; font-weight: 800; padding: .1rem .5rem; border-radius: 999px; background: var(--card2); color: var(--muted); }
+.lh-topic.is-bad .lh-chip { background: var(--red-lt); color: var(--red); }
+.lh-topic.is-great .lh-chip { background: var(--green-lt); color: var(--green); }
+
+.lh-book-actions { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: .7rem; }
+.lh-book { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .45rem; }
+.lh-book li { display: flex; align-items: center; gap: .7rem; padding: .6rem .75rem; border-radius: 12px; border: 1.5px solid var(--border); background: var(--card); }
+.lh-book li.is-due { border-color: color-mix(in srgb, var(--red) 40%, var(--border)); background: color-mix(in srgb, var(--red-lt) 45%, var(--card)); }
+.lh-leit { flex-shrink: 0; display: grid; grid-template-columns: repeat(2, 8px); gap: 3px; }
+.lh-leit i { width: 8px; height: 8px; border-radius: 2px; background: var(--border); }
+.lh-leit i.on { background: var(--teal); }
+.lh-book-main { flex: 1; min-width: 0; }
+.lh-book-q { font-size: .86rem; font-weight: 700; color: var(--text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.lh-book-meta { font-size: .72rem; color: var(--muted); font-weight: 600; margin-top: .15rem; }
+.lh-due { flex-shrink: 0; font-size: .72rem; font-weight: 800; color: var(--muted); }
+.lh-book li.is-due .lh-due { color: var(--red); }
+.lh-icon { flex-shrink: 0; width: 30px; height: 30px; border-radius: 9px; border: 1.5px solid var(--border); background: var(--card2); color: var(--muted); cursor: pointer; }
+.lh-icon:hover { color: var(--green); border-color: var(--green); }
+
+.lh-empty { text-align: center; padding: 2.2rem 1rem; color: var(--muted); }
+.lh-empty i { font-size: 2.2rem; color: var(--teal); opacity: .7; }
+.lh-empty p { max-width: 440px; margin: .8rem auto 0; font-weight: 600; line-height: 1.6; }
+.lh-foot { margin: .8rem 0 0; font-size: .72rem; color: var(--muted); font-weight: 600; text-align: center; }
+
+@media (max-width: 640px) {
+  .lh-box { padding: 1rem; }
+  .lh-kpis, .lh-kpis-3 { grid-template-columns: repeat(2, 1fr); }
+  .lh-student { max-width: none; flex: 1 1 100%; order: 3; }
+  .lh-tabs button { font-size: .78rem; padding: .5rem; }
+  .lh-tip { flex-wrap: wrap; }
+  .lh-topic { flex-wrap: wrap; }
+  .lh-topic-side { flex-direction: row; align-items: center; width: 100%; justify-content: flex-end; }
+  .lh-due { display: none; }
+}
+
+/* ── Thẻ ghi nhớ (lật thẻ) ── */
+.lh-fc-top { display: flex; align-items: center; gap: .7rem; margin-bottom: .8rem; font-weight: 800; font-size: .82rem; color: var(--muted); }
+.lh-fc-top .lh-bar { flex: 1; }
+.lh-fc {
+  position: relative; min-height: 260px; padding: 1.4rem 1.5rem; border-radius: 20px; cursor: pointer; outline: none;
+  background: linear-gradient(160deg, var(--purple-lt), var(--card)); border: 2px solid color-mix(in srgb, var(--purple) 30%, var(--border));
+  box-shadow: 0 8px 0 color-mix(in srgb, var(--purple) 18%, transparent), var(--shadow);
+  animation: lh-flip-in .28s ease-out;
+}
+.lh-fc:focus-visible { box-shadow: 0 0 0 3px var(--purple); }
+.lh-fc.is-flipped { cursor: default; background: linear-gradient(160deg, var(--teal-lt), var(--card)); border-color: color-mix(in srgb, var(--teal) 40%, var(--border)); box-shadow: 0 8px 0 color-mix(in srgb, var(--teal) 20%, transparent), var(--shadow); }
+@keyframes lh-flip-in { from { transform: perspective(900px) rotateY(-14deg); opacity: .4; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .lh-fc { animation: none; } }
+.lh-fc-q { font-size: 1.15rem; font-weight: 800; line-height: 1.45; color: var(--text); margin-bottom: .8rem; }
+.lh-fc-img { display: block; max-width: 100%; max-height: 200px; margin: 0 auto .8rem; border-radius: 12px; }
+.lh-fc-opts { margin: 0; padding-left: 1.4rem; display: flex; flex-direction: column; gap: .35rem; font-weight: 600; color: var(--text); }
+.lh-fc-opts.is-front { list-style: upper-alpha; }
+.lh-fc-opts li.is-ok { color: var(--green); font-weight: 800; }
+.lh-fc-list { margin: 0; padding-left: 1.3rem; display: flex; flex-direction: column; gap: .35rem; font-weight: 600; color: var(--text); }
+.lh-fc-list b { color: var(--green); }
+.lh-fc-list b.is-f { color: var(--red); }
+.lh-fc-label { font-size: .78rem; font-weight: 800; color: var(--teal); text-transform: uppercase; letter-spacing: .04em; margin-bottom: .4rem; }
+.lh-fc-expl { margin-top: .8rem; padding: .6rem .8rem; border-radius: 12px; background: var(--yellow-lt); font-size: .86rem; line-height: 1.5; color: var(--text); }
+.lh-fc-expl i { color: var(--yellow); }
+.lh-fc-hint { position: absolute; left: 0; right: 0; bottom: .8rem; text-align: center; font-size: .78rem; font-weight: 700; color: var(--muted); }
+.lh-fc-actions { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; margin-top: 1rem; }
+.lh-fc-actions .lh-btn { justify-content: center; padding: .75rem; font-size: .92rem; }
+.lh-btn-again { background: var(--red); }
+.lh-btn-ok { background: var(--green); }
+.lh-fc-actions kbd { font: 700 .7rem ui-monospace, Consolas, monospace; background: rgba(255,255,255,.25); padding: 0 .35rem; border-radius: 4px; }
+
+/* ── Mục tiêu tuần ── */
+.lh-goal-picks { display: flex; gap: .45rem; flex-wrap: wrap; }
+.lh-goal-pick { padding: .45rem .9rem; border-radius: 999px; border: 1.5px solid var(--border); background: var(--card2); color: var(--text); font: inherit; font-weight: 800; font-size: .82rem; cursor: pointer; }
+.lh-goal-pick:hover { border-color: var(--purple); }
+.lh-goal-pick.is-active { background: var(--purple); border-color: var(--purple); color: #fff; }
+.lh-goal-count { float: right; font-weight: 900; color: var(--purple); }
+.lh-goal-bar { height: 12px; border-radius: 999px; background: var(--card2); overflow: hidden; margin: .2rem 0 .55rem; }
+.lh-goal-bar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--purple), var(--teal)); transition: width .5s ease; }
+.lh-goal.is-done { border-color: color-mix(in srgb, var(--green) 40%, var(--border)); background: color-mix(in srgb, var(--green-lt) 55%, var(--card)); }
+.lh-goal.is-done .lh-goal-bar i { background: var(--green); }
+.lh-goal.is-done .lh-goal-count { color: var(--green); }
+.lh-goal .lh-note { margin-bottom: .2rem; }
+.lh-goal-edit summary { cursor: pointer; font-size: .76rem; font-weight: 800; color: var(--muted); margin-top: .3rem; }
+.lh-goal-edit .lh-goal-picks { margin-top: .5rem; }
+/* Tiến độ tuần nhỏ ngay trên nút "Góc học tập" ở sảnh */
+.lh-open-goal { display: inline-flex; align-items: center; gap: .35rem; margin-left: .6rem; font-size: .72rem; font-weight: 800; color: var(--muted); }
+.lh-open-goal[hidden] { display: none; }
+.lh-open-goal b { display: block; width: 46px; height: 6px; border-radius: 999px; background: var(--border); overflow: hidden; }
+.lh-open-goal b i { display: block; height: 100%; background: var(--teal); }

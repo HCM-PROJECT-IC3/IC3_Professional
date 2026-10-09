@@ -6,6 +6,9 @@ nghiệm theo chủ đề, mô phỏng thao tác thực hành, mini-game ôn t�
 dashboard theo dõi tiến độ cho điều phối đào tạo/giáo viên.
 
 > Đổi log các bản nâng cấp theo thời gian: xem [CHANGELOG.md](CHANGELOG.md).
+> Lộ trình khi dự án lớn lên: [docs/ROADMAP-PHAT-TRIEN.md](docs/ROADMAP-PHAT-TRIEN.md).
+> Trước khi đẩy code/dữ liệu: `node scripts/validate-data.js && node scripts/check-js.js`
+> (CI GitHub Actions chạy tự động — `.github/workflows/ci.yml`).
 
 ## Mục lục
 
@@ -36,6 +39,24 @@ dashboard theo dõi tiến độ cho điều phối đào tạo/giáo viên.
 - **Gamification**: XP, streak, huy hiệu — lưu local-first (không cần tài
   khoản); bảng điểm nhiều người hiển thị trong từng phòng. Bảng xếp hạng
   mini-game toàn hệ thống đang tắt vì client có thể tự giả mạo điểm.
+- **Góc học tập** (học sinh, `js/learning-hub.js`): tiến độ & xu hướng
+  điểm, mức nắm vững từng bài (yếu nhất lên đầu, nút "Ôn ngay"), gợi ý
+  hôm nay, và **Sổ tay câu sai** tự gom câu làm sai qua mọi bài — ôn
+  theo phương pháp lặp lại ngắt quãng (hộp Leitner: ngay → 1 → 3 → 7
+  ngày → thuộc), thẻ ghi nhớ lật mặt, mục tiêu học mỗi tuần. Chạy hoàn
+  toàn trên máy, 0 lượt Firebase.
+- **Chống lag / mất mạng** (`sw.js`): lưu đệm file tĩnh của chính web
+  (không đụng Firebase); mạng trường chập chờn vẫn mở trang và làm bài
+  đã tải.
+- **Soạn đề kiểu Kahoot** (giáo viên, tab "Soạn đề" trong
+  `ic3-dashboard.html`, `js/exam-builder.js`): tự soạn 5 dạng câu (trắc
+  nghiệm, nhiều đáp án, Đúng/Sai, sắp xếp, nối cặp) kèm ảnh + giải thích,
+  lấy câu từ ngân hàng / ma trận đề, nhập nhanh từ văn bản, xem trước,
+  in đề. Đề nằm gọn trong link (`index.html?de=…`, nén deflate —
+  `js/custom-exam-codec.js`) nên soạn/chia sẻ/mở đề không tốn lượt
+  Firebase; mở được ở phòng thi đấu trực tiếp (`live-quiz.html?de=…`)
+  hoặc **Trình chiếu lớp học** (máy chiếu + đếm giờ + điểm theo nhóm, 0
+  lượt Firebase). Giao bài về nhà có hạn nộp (bài trễ ghi "nộp muộn").
 - **Dashboard báo cáo** (điều phối đào tạo / giáo viên / admin): thống
   kê điểm theo lớp/chủ đề/thời gian, quản lý danh sách học sinh (nạp từ
   Excel), quản lý lịch giảng dạy, trang Social nội bộ cho giáo viên.

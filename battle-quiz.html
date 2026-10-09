@@ -80,11 +80,9 @@
        mỗi câu trả lời ĐÚNG = tấn công AI, trả lời SAI/hết giờ = AI phản
        công. Combo 3 câu đúng liên tiếp = Combo Attack (dmg cao hơn), combo
        5 = Critical, combo 10 = Ultimate. Ai về 0 HP trước thì thua.
-       KHÔNG tạo Question Engine mới — câu hỏi đọc trực tiếp từ Firestore
-       collection "questions" (giống image-manager.html), lọc theo chủ đề
-       qua js/game-engine/question-topic-map.js; nếu Firestore lỗi/offline,
-       tự rơi về đọc quiz_data.json tĩnh (đúng fallback mà index.html/
-       quiz-engine.js đã dùng). Chỉ dùng câu hỏi type "single" (câu hỏi 1
+       KHÔNG tạo Question Engine mới — câu hỏi đọc từ file tĩnh
+       data/ic3/minitests (cùng nguồn với trang làm bài, 0 lượt Firestore),
+       lọc theo chủ đề qua js/game-engine/question-topic-map.js. Chỉ dùng câu hỏi type "single" (câu hỏi 1
        đáp án đúng) — phù hợp nhất với nhịp độ "trả lời nhanh, đúng/sai rõ
        ràng" của thể loại battle, không cần dựng lại renderer cho matching/
        hotspot/truefalse (vốn đã có sẵn trong quiz-engine.js cho trang thi

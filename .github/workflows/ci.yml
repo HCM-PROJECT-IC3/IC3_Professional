@@ -1,0 +1,32 @@
+# Kiểm tra tự động mỗi lần đẩy code / mở Pull Request.
+# Chỉ KIỂM TRA (không deploy, không đụng Firebase, không cần secret).
+# Lỗi ở bước nào → dấu ✗ đỏ trên GitHub, xem log để biết file/câu nào hỏng.
+name: Kiểm tra dự án
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Ngân hàng câu hỏi data/ic3 hợp lệ
+        run: node scripts/validate-data.js
+
+      - name: Cú pháp mọi file JS
+        run: node scripts/check-js.js
+
+      - name: Unit test mô phỏng Word/Excel/PowerPoint
+        run: |
+          for t in js/*/__tests__/*.test.js; do
+            echo "▶ $t"
+            node "$t"
+          done

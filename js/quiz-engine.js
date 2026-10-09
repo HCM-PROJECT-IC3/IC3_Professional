@@ -114,28 +114,13 @@ async function _fetchLevelData(catId, levelId) {
       try {
         return await _fetchJsonWithTimeout(`data/ic3/${metaLevel.file}`, { cache: 'no-store' });
       } catch (err) {
-        console.warn(`[EduQuiz] Không tải được data/ic3/${metaLevel.file}, thử fallback quiz_data.json`, err.message);
+        console.warn(`[EduQuiz] Không tải được data/ic3/${metaLevel.file}, dùng dữ liệu rỗng`, err.message);
       }
     }
 
-    // ── Bước 4a: đã có sẵn toàn bộ dữ liệu trong quizFullData ───────
-    if (window.quizFullData) {
-      const cat = window.quizFullData.categories?.find(c => c.id === catId);
-      const lv  = cat?.levels?.find(l => l.id === levelId);
-      if (lv) return lv;
-    }
-
-    // ── Bước 4b: tải nguyên quiz_data.json 1 lần rồi tự cache ──
-    if (!window.quizFullData) {
-      try {
-        window.quizFullData = await _fetchJsonWithTimeout('quiz_data.json', { cache: 'no-store' });
-      } catch (err) {
-        console.warn('[EduQuiz] Không tải được quiz_data.json (fallback cuối):', err.message);
-      }
-    }
-    const cat = window.quizFullData?.categories?.find(c => c.id === catId);
-    const lv  = cat?.levels?.find(l => l.id === levelId);
-    return lv || { minitests: {} };
+    // quiz_data.json (bản gộp cũ 04/09, ~3MB, đã lỗi thời so với data/ic3)
+    // đã bị gỡ khỏi dự án — không còn bước dự phòng tải cả file nặng đó.
+    return { minitests: {} };
   })();
 
   _levelPending.set(key, promise);
@@ -218,6 +203,35 @@ async function _fetchTopicsForMix(catId, levelId) {
   const topicNames = Object.keys(lv?.minitests || {}).filter(_isRealTopic);
   const entries = await Promise.all(topicNames.map(async (name) => [name, await _fetchMinitestQuestions(catId, levelId, name)]));
   return Object.fromEntries(entries);
+}
+
+/* § 5b — ĐỀ GIÁO VIÊN SOẠN (index.html?de=..., xem js/custom-exam-codec.js)
+   Tải song song đúng các minitest nguồn (file tĩnh, 0 lượt Firestore) rồi
+   lấy câu theo uid, đúng thứ tự giáo viên sắp. Câu nào đã bị xoá khỏi
+   ngân hàng thì bỏ qua (đề vẫn làm được với các câu còn lại). */
+async function _fetchCustomExamQuestions(ce) {
+  const names = [...new Set(ce.items.filter((it) => !it.custom).map((it) => it.mt))];
+  const lists = await Promise.all(names.map((n) => _fetchMinitestQuestions(ce.cat, ce.level, n)));
+  const byKey = new Map();
+  names.forEach((n, i) => (lists[i] || []).forEach((q) => { if (q.uid) byKey.set(`${n}\u0000${q.uid}`, q); }));
+  // Câu giáo viên tự soạn: nội dung nằm sẵn trong link, đã escape ở
+  // EduCustomExam.toEngineQuestion() (link ai cũng tạo được).
+  const qs = ce.items.map((it, i) => (it.custom
+    ? window.EduCustomExam.toEngineQuestion(it.custom, i)
+    : byKey.get(`${it.mt}\u0000${it.uid}`))).filter(Boolean);
+  if (qs.length < ce.items.length) {
+    console.warn(`[EduQuiz] Đề giáo viên soạn: ${ce.items.length - qs.length} câu không còn trong ngân hàng, đã bỏ qua.`);
+  }
+  return qs;
+}
+
+async function _readCustomExamFromUrl() {
+  try {
+    const code = new URLSearchParams(location.search).get('de');
+    if (!code || !window.EduCustomExam) return;
+    State.customExam = await window.EduCustomExam.decode(code);
+    if (!State.customExam) alert('Link đề không hợp lệ hoặc đã bị cắt mất 1 phần — hãy xin lại link từ giáo viên.');
+  } catch (e) { /* URL lạ — bỏ qua, vào lobby bình thường */ }
 }
 
 /**
@@ -398,7 +412,10 @@ const State = {
   classify:  {},     // qi → { itemText: zoneLabel }                (type = "classify")
   ordering:  {},     // qi → [itemText, ...] thứ tự hiện tại         (type = "ordering")
   fillblank: {},     // qi → { blankIndex: chosenText }             (type = "dragfill" | "selectfill")
-  session:   {}
+  session:   {},
+  // Đề giáo viên tự soạn (index.html?de=..., xem js/custom-exam-codec.js
+  // + § 5b) — null = học sinh tự chọn bài như bình thường.
+  customExam: null,
 };
 
 /* ============================================================
@@ -964,24 +981,15 @@ async function loadData() {
     _logRepositorySummary(meta);
 
   } catch (err) {
-    // ── Fallback 1: dự án chưa chạy scripts/split-quiz-data.py
-    //    → quay lại tải nguyên quiz_data.json như bản cũ ────────
-    console.warn('[EduQuiz] ⚠ Không tải được data/ic3/meta.json, thử quiz_data.json...', err.message);
-    try {
-      const data = await _fetchJsonWithTimeout('quiz_data.json', { cache: 'no-store' });
-      window.quizFullData = data; // dùng làm nguồn cho _fetchLevelData()
-      window.quizRepository = data;
-      State.quizData = data;
-      _logRepositorySummary(data);
-    } catch (err2) {
-      // ── Fallback 2: dùng dữ liệu demo để trang không trắng ────
-      console.warn('[EduQuiz] ⚠ Không tải được quiz_data.json. Dùng DEMO_DATA.', err2.message);
-      window.quizRepository = DEMO_DATA;
-      State.quizData = DEMO_DATA;
-    }
+    // ── Dự phòng: dữ liệu demo để trang không trắng (mạng hỏng/thiếu file).
+    //    quiz_data.json cũ (~3MB, lỗi thời) đã gỡ — không tải nữa.
+    console.warn('[EduQuiz] ⚠ Không tải được data/ic3/meta.json. Dùng DEMO_DATA.', err.message);
+    window.quizRepository = DEMO_DATA;
+    State.quizData = DEMO_DATA;
   }
 
   _setLoadingState(false);
+  await _readCustomExamFromUrl();
   initLobby();
 }
 
@@ -1226,7 +1234,9 @@ function initLobby() {
     _prefetchLevelData(catSel.value, lvlSel.value, mtSel.value);
     const minitests   = lv?.minitests || {};
     const mt    = isRandomMix ? null : minitests[mtSel.value];
-    const count = isRandomMix
+    const count = State.customExam
+      ? State.customExam.items.length
+      : isRandomMix
       ? Math.min(_randomMixTotalFor(catSel.value, lvlSel.value), Object.keys(minitests).reduce((s, n) => s + _mtCount(minitests[n]), 0))
       : _mtCount(mt);
     const el  = document.getElementById('minitestMeta');
@@ -1277,6 +1287,8 @@ function initLobby() {
   const applyClassGradeDefaults = () => {
     const grade = parseInt((studentClassSel?.value || '').match(/\d+/)?.[0], 10);
     if (!grade) return;
+    // Đề giáo viên soạn đã chốt sẵn Chương trình/Cấp độ/thời gian — không tự đổi theo lớp.
+    if (State.customExam) return;
     const isElementary = grade <= 5;
 
     const desiredCat = isElementary ? 'Spark' : 'IC3';
@@ -1320,6 +1332,65 @@ function initLobby() {
 
   // Khởi tạo lần đầu
   refreshLevels();
+
+  // "Góc học tập" → nút "Ôn ngay": chọn sẵn đúng Chương trình/Cấp độ/Minitest
+  // trên sảnh (cùng logic 2 bước chế độ lọc + select như học sinh bấm tay).
+  window.lobbySelectMinitest = (catId, lvlId, name) => {
+    if (State.customExam) return false;
+    if (![...catSel.options].some((o) => o.value === catId)) return false;
+    catSel.value = catId; refreshLevels();
+    if (![...lvlSel.options].some((o) => o.value === lvlId)) return false;
+    lvlSel.value = lvlId;
+    mtMode = BAI_NAME_RE.test(name) ? 'bai' : LESSON_KEY_RE.test(name) ? 'lesson' : 'topic';
+    refreshMinitests();
+    if (![...mtSel.options].some((o) => o.value === name)) return false;
+    mtSel.value = name;
+    refreshMeta();
+    return true;
+  };
+
+  // § 5b — mở bằng link đề giáo viên soạn: chốt Chương trình/Cấp độ, ẩn
+  // khối chọn Minitest, đặt sẵn chế độ Kiểm tra + số phút giáo viên chọn.
+  if (State.customExam) {
+    const ce = State.customExam;
+    if (ce.cat && [...catSel.options].some((o) => o.value === ce.cat)) { catSel.value = ce.cat; refreshLevels(); }
+    if (ce.level && [...lvlSel.options].some((o) => o.value === ce.level)) { lvlSel.value = ce.level; refreshMinitests(); }
+    catSel.closest('.form-row')?.setAttribute('hidden', '');
+    mtSel.closest('.form-group')?.setAttribute('hidden', '');
+    const banner = document.createElement('div');
+    banner.className = 'custom-exam-banner';
+    banner.innerHTML = `<i class="fa-solid fa-file-pen"></i><div><b></b><span></span></div>`;
+    banner.querySelector('b').textContent = ce.title;
+    banner.querySelector('span').textContent = (ce.desc ? ce.desc + ' · ' : '') + `${ce.items.length} câu`
+      + (ce.duration ? ` · Kiểm tra ${ce.duration} phút` : '');
+    // Giao bài có hạn nộp (js/exam-builder.js § Cài đặt đề) — chỉ nhắc, không
+    // khoá: làm sau hạn vẫn được, bài ghi "(nộp muộn)" để giáo viên thấy.
+    if (ce.deadline) {
+      const late = Date.now() > ce.deadline;
+      const due = document.createElement('div');
+      due.className = 'custom-exam-due' + (late ? ' is-late' : '');
+      due.innerHTML = `<i class="fa-solid ${late ? 'fa-triangle-exclamation' : 'fa-calendar-check'}"></i> `;
+      due.append(late ? `Đã quá hạn nộp (${new Date(ce.deadline).toLocaleString('vi-VN')}) — vẫn làm được, bài sẽ ghi "nộp muộn".`
+        : `Hạn nộp: ${new Date(ce.deadline).toLocaleString('vi-VN')}`);
+      banner.querySelector('div').appendChild(due);
+    }
+    document.getElementById('btnStart')?.before(banner);
+    if (ce.duration) {
+      examModeWrap?.querySelector('[data-exam-mode="test"]')?.click();
+      const preset = durationToggle?.querySelector(`.mt-mode-btn[data-duration="${ce.duration}"]`);
+      if (preset) preset.click();
+      else if (durationToggle) {
+        durationToggle.querySelector('.mt-mode-btn[data-duration="custom"]')?.click();
+        if (durationCustom) durationCustom.value = ce.duration;
+        setExamDuration(ce.duration);
+      }
+      // Giáo viên đã chốt thời gian → khoá, không cho học sinh đổi chế độ/số phút.
+      examModeWrap?.querySelectorAll('.mt-mode-btn').forEach((b) => { b.disabled = true; });
+      durationToggle?.querySelectorAll('.mt-mode-btn').forEach((b) => { b.disabled = true; });
+      if (durationCustom) durationCustom.disabled = true;
+    }
+    refreshMeta();
+  }
 
   // § 1b — dựng lobby XONG như bình thường trước (để khi học sinh nộp bài
   // dở dang này xong và bấm "Quay lại trang chọn bài", lobby vẫn hoạt
@@ -1375,9 +1446,12 @@ async function startExam() {
   const btnPrevText = btn?.innerHTML;
   if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải câu hỏi...'; }
 
-  const isGameBreak = mtName === RANDOM_MIX_PLAY_KEY;
-  const isRandomMix = mtName === RANDOM_MIX_KEY || isGameBreak;
-  const rawQs = isRandomMix
+  const customExam  = State.customExam;
+  const isGameBreak = !customExam && mtName === RANDOM_MIX_PLAY_KEY;
+  const isRandomMix = !customExam && (mtName === RANDOM_MIX_KEY || isGameBreak);
+  const rawQs = customExam
+    ? await _fetchCustomExamQuestions(customExam)
+    : isRandomMix
     ? buildRandomMixQuestions(await _fetchTopicsForMix(catId, lvlId), _randomMixTotalFor(catId, lvlId))
     : await _fetchMinitestQuestions(catId, lvlId, mtName);
 
@@ -1397,14 +1471,16 @@ async function startExam() {
   // sau khi thêm 35 "Bài N"/khối số này sai lệch rất xa (vd in ra "50 chủ
   // đề" thay vì đúng 7).
   const topicCountForLabel = Object.keys(lv?.minitests || {}).filter(_isRealTopic).length;
-  const mtDisplayName = isGameBreak
+  const mtDisplayName = customExam
+    ? customExam.title + (customExam.deadline && Date.now() > customExam.deadline ? ' (nộp muộn)' : '')
+    : isGameBreak
     ? `Tổng hợp Vui — ngẫu nhiên (${rawQs.length} câu, chia đều ${topicCountForLabel} chủ đề, xen kẽ mini-game)`
     : isRandomMix
     ? `Tổng hợp — ngẫu nhiên (${rawQs.length} câu, chia đều ${topicCountForLabel} chủ đề)`
     : mtName;
 
   // ── Deep clone + chuẩn bị (shuffle order & options) ───────
-  State.questions = prepareQuestions(rawQs);
+  State.questions = prepareQuestions(rawQs, { keepOrder: !!customExam && !customExam.shuffle });
   State.answers   = {};
   State.flags     = new Set();
   State.current   = 0;
@@ -1428,8 +1504,8 @@ async function startExam() {
     studentName:   name,
     studentClass:  cls,
     studentSchool: school,
-    category:      cat?.name  || catId,
-    level:         lv?.name   || lvlId,
+    category:      customExam && !customExam.cat ? 'Đề tự soạn' : (cat?.name || catId),
+    level:         customExam && !customExam.level ? '' : (lv?.name || lvlId),
     // Giữ lại ID "thô" (khớp đúng key data/ic3/minitests-manifest.json,
     // ví dụ "IC3__LV1") bên cạnh category/level (tên hiển thị thân thiện
     // ở trên) — để mini-game "Chim Vượt Ải" tái sử dụng ĐÚNG file câu hỏi
@@ -1437,6 +1513,9 @@ async function startExam() {
     // lệch dấu câu/khoảng trắng). Xem _writeMiniGameContext() + § 9b.
     catId:         catId,
     levelId:       lvlId,
+    // Tên minitest gốc (khoá trong meta.json) — chỉ có với bài 1 minitest cụ thể;
+    // "Góc học tập" (js/learning-hub.js) dùng để nút "Ôn ngay" chọn lại đúng bài.
+    mtKey:         (customExam || isRandomMix) ? '' : mtName,
     minitest:      mtDisplayName,
     isRandomMix:   isRandomMix, // true = bài "Tổng hợp" (ngẫu nhiên chia đều chủ đề) — dùng để xét mở khóa Khu Vui Chơi
     examMode:      State.examMode, // 'practice' | 'test' — ghi lại để lịch sử/báo cáo phân biệt được 2 dạng
@@ -1481,8 +1560,9 @@ async function startExam() {
    Shuffle thứ tự câu hỏi và options, giữ nguyên correct[]
    ============================================================ */
 
-function prepareQuestions(rawQs) {
-  const qs = shuffle(JSON.parse(JSON.stringify(rawQs)));
+function prepareQuestions(rawQs, { keepOrder = false } = {}) {
+  const cloned = JSON.parse(JSON.stringify(rawQs));
+  const qs = keepOrder ? cloned : shuffle(cloned);
 
   qs.forEach(q => {
     // Xử lý imageUrl từ image_file nếu chưa có
@@ -3651,6 +3731,11 @@ function submitExam() {
   const isRetry = !!State.session.isRetry;
   const gameResult = isRetry ? null : saveRecord(result, elapsed, integrity);
   showResult(result, integrity);
+  // "Góc học tập" (js/learning-hub.js): gom câu sai vào Sổ tay / cập nhật lịch ôn
+  // lặp lại ngắt quãng — chỉ ghi localStorage, 0 lượt Firebase.
+  window.dispatchEvent(new CustomEvent('edu:exam-graded', {
+    detail: { questions: State.questions, details: result.details, session: State.session },
+  }));
   // § 19b — lượt "Luyện lại câu sai" chỉ để ôn: không ghi lịch sử, XP, Google Sheet hay Firestore.
   if (isRetry) return;
 
@@ -4035,6 +4120,9 @@ function saveRecord(result, elapsedSec, integrity) {
     category:      s.category,
     level:         s.level,
     minitest:      s.minitest,
+    catId:         s.catId  || '',  // chỉ lưu ở máy (lịch sử) — Firestore/Sheet tự dựng payload riêng
+    levelId:       s.levelId || '',
+    mtKey:         s.mtKey  || '',
     isRandomMix:   !!s.isRandomMix, // chỉ bài "Tổng hợp" mới được tính để mở khóa Khu Vui Chơi
     examMode:      s.examMode || 'test', // 'practice' (Ôn luyện) | 'test' (Kiểm tra)
     date:          new Date().toLocaleString('vi-VN'),
@@ -4348,6 +4436,52 @@ function startRetryWrong() {
   renderQuestion(0);
   startTimer();
   showNotification('Luyện lại các câu sai — bấm "Kiểm tra đáp án" để xem đúng/sai từng câu. Lượt này không tính điểm.', 'info');
+}
+
+/**
+ * § 19b' — Ôn "Sổ tay câu sai" (js/learning-hub.js) ngay từ sảnh: phiên
+ * Ôn luyện không tính điểm, giống "Luyện lại câu sai" (isRetry → không ghi
+ * lịch sử/XP/Google Sheet/Firestore). Kết quả từng câu chỉ dùng để dời lịch
+ * ôn (hộp Leitner) trong localStorage.
+ */
+function startWrongbookReview(qs, student) {
+  if (!qs || !qs.length) return;
+  if (State._lobbyExamMode === undefined) State._lobbyExamMode = State.examMode;
+  State.examMode = 'practice';
+  State.questions = prepareQuestions(qs);
+  State.answers   = {};
+  State.flags     = new Set();
+  State.current   = 0;
+  State.submitted = false;
+  State.matching  = {};
+  State.matchSel  = {};
+  State.hotspot   = {};
+  State.list      = {};
+  State.classify  = {};
+  State.ordering  = {};
+  State.fillblank = {};
+  State.timeLeft  = Infinity;
+  State.session = {
+    studentName:   (student && student.name) || 'Học sinh',
+    studentClass:  (student && student.cls) || '',
+    studentSchool: (student && student.school) || '',
+    category: 'Góc học tập', level: '', minitest: 'Ôn Sổ tay câu sai',
+    isRetry: true, isWrongbook: true, isRandomMix: false, examMode: 'practice',
+    startTime: Date.now(), totalTime: Infinity, tabSwitches: 0, clicks: 0,
+    qTimes: {}, qStart: { 0: Date.now() }, timedOut: false,
+    gameBreakPoints: [], gameBreaksDone: new Set(),
+  };
+  document.getElementById('lobby').style.display  = 'none';
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('exam').style.display   = 'flex';
+  document.getElementById('adminEntryLink')?.style.setProperty('display', 'none');
+  const info = document.getElementById('topbarInfo');
+  if (info) info.innerHTML = `<i class="fa-solid fa-book-bookmark"></i> ${_acEscapeHtml(State.session.studentName)} · Ôn ${State.questions.length} câu trong Sổ tay (không tính điểm)`;
+  buildSidebar();
+  _restoreSidebarState();
+  renderQuestion(0);
+  startTimer();
+  showNotification('Ôn Sổ tay câu sai — bấm "Kiểm tra đáp án" ở từng câu. Câu trả lời đúng sẽ được hẹn ôn lại thưa dần.', 'info');
 }
 
 /* ============================================================

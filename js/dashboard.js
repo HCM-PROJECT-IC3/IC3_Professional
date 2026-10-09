@@ -978,8 +978,15 @@ function openManageModal(id, event) {
   if (!set) return;
 
   const sessions = getSessions().filter(s => s.setId === id);
-  document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-gear"></i> Quản lý – ${set.title}`;
-  document.getElementById('modal-footer').innerHTML = `<button class="btn-cancel" onclick="closeModal()">Đóng</button>`;
+  document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-gear"></i> Quản lý – ${escHtml(set.title)}`;
+  // Bộ đề tự tạo (lưu ở localStorage) có thêm Sửa/Link/Xoá; đề soạn từ
+  // ngân hàng (set.builder, xem js/exam-builder.js) mở lại được trong "Soạn đề".
+  const isCustom = !QUIZ_SETS.some(s => s.id === id);
+  document.getElementById('modal-footer').innerHTML = `
+    ${isCustom ? `<button class="btn-cancel" style="margin-right:auto;color:var(--red);white-space:nowrap" onclick="deleteCustomSet('${id}')"><i class="fa-solid fa-trash"></i> Xoá</button>` : ''}
+    ${set.builder ? `<button class="btn-cancel" style="white-space:nowrap" title="Sao chép link làm bài cho học sinh" onclick="EduExamBuilder.copySetLink('${id}')"><i class="fa-solid fa-link"></i> Link</button>
+      <button class="btn-save" style="white-space:nowrap" onclick="closeModal();openExamBuilder({ editSetId: '${id}' })"><i class="fa-solid fa-pen"></i> Sửa đề</button>` : ''}
+    <button class="btn-cancel" onclick="closeModal()">Đóng</button>`;
 
   const items = sessions.length === 0
     ? `<div style="text-align:center;color:var(--text-muted);padding:24px 0;">Chưa có học sinh nào làm bài này.</div>`
@@ -1152,9 +1159,34 @@ function showToast(msg, iconClass) {
 // thẻ <i> Font Awesome bên trong thật sự RENDER thành icon.
 const SECTION_TITLES = {
   'my-sets': '<i class="fa-solid fa-book-open"></i> Bộ đề của tôi',
+  'builder': '<i class="fa-solid fa-file-pen"></i> Soạn đề',
   'reports': '<i class="fa-solid fa-chart-column"></i> Báo cáo kết quả',
   'settings': '<i class="fa-solid fa-gear"></i> Cài đặt hệ thống'
 };
+
+/* Mở tab "Soạn đề" (js/exam-builder.js) — từ nút "Soạn đề mới" ({fresh:true})
+   hoặc "Sửa đề" trong modal Quản lý ({editSetId}). */
+let _builderOpenOpts = null;
+function openExamBuilder(opts) {
+  _builderOpenOpts = opts || {};
+  document.getElementById('navBuilder')?.click();
+}
+
+/** Đọc lại bộ đề tự tạo từ localStorage rồi vẽ lại carousel (gọi sau khi lưu đề). */
+function refreshSetsFromStorage() {
+  allSets = loadSets();
+  renderCards();
+}
+
+function deleteCustomSet(id) {
+  const set = allSets.find(s => s.id === id);
+  if (!set || !confirm(`Xoá bộ đề "${set.title}"? Link làm bài đã gửi cho học sinh vẫn dùng được, chỉ mất khỏi danh sách này.`)) return;
+  const saved = JSON.parse(localStorage.getItem('ic3_custom_sets') || '[]').filter(s => s.id !== id);
+  localStorage.setItem('ic3_custom_sets', JSON.stringify(saved));
+  refreshSetsFromStorage();
+  closeModal();
+  showToast('Đã xoá bộ đề: ' + set.title, 'fa-trash');
+}
 
 document.querySelectorAll('.nav-item').forEach(item => {
   item.addEventListener('click', () => {
@@ -1168,6 +1200,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
     document.getElementById('topbar-title').innerHTML = SECTION_TITLES[section];
 
     if (section === 'reports') updateReportTab();
+    if (section === 'builder') { window.EduExamBuilder?.show(_builderOpenOpts || {}); _builderOpenOpts = null; }
 
     // Close sidebar on mobile
     if (window.innerWidth <= 900) closeSidebar();

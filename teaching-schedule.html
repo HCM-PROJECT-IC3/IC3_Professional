@@ -423,30 +423,43 @@
     </div>
     <div class="modal-body">
       <div class="import-hint">
-        Đọc <b>mọi sheet tuần</b> trong file (mỗi sheet = 1 tuần, đúng cấu trúc file gốc
-        <code>LỊCH GIẢNG DẠY TEAM GVTH...xlsx</code>). Giáo viên/tuần <b>chưa có</b> sẽ được tạo mới; đã có
-        (trùng Mã NV + Tuần) sẽ <b>ghi đè</b> bằng dữ liệu trong file — RIÊNG tab "🗓️ TKB lớp" chỉ tự điền vào
-        ô-tiết ĐANG TRỐNG, ô nào đã có mã lớp (gõ tay hoặc từ lần nhập trước) sẽ được <b>giữ nguyên</b>
-        dù khác với file — xem danh sách "ô giữ nguyên" sau khi nhập để biết chỗ nào cần tự kiểm tra lại.
+        Tick các <b>tuần cần nhập</b> rồi bấm Nhập. Hệ thống so với dữ liệu đang có và <b>chỉ ghi
+        những lịch thực sự thay đổi</b> (giống hệt file thì bỏ qua). Tab "🗓️ TKB lớp" chỉ tự điền ô đang
+        trống — ô đã có mã lớp khác Excel sẽ được liệt kê để bạn chọn <b>giữ</b> hay <b>ghi đè</b> trước khi ghi.
       </div>
       <div class="import-summary force-hide" id="importSummary">
-        <div class="import-stat ok"><b id="importWeekCount">0</b><span>Tuần</span></div>
+        <div class="import-stat ok"><b id="importWeekCount">0</b><span>Tuần trong file</span></div>
         <div class="import-stat ok"><b id="importTeacherCount">0</b><span>Giáo viên</span></div>
-        <div class="import-stat warn" id="importSkippedStat" hidden><b id="importSkippedCount">0</b><span>Sheet bỏ qua</span></div>
       </div>
-      <ul class="import-skipped-list" id="importSkippedList" hidden></ul>
+      <details class="import-skipped" id="importSkippedDetails" hidden>
+        <summary><b id="importSkippedCount">0</b> sheet bỏ qua (không phải lịch tuần)</summary>
+        <ul class="import-skipped-list" id="importSkippedList"></ul>
+      </details>
 
-      <!-- Chỉ hiện SAU KHI đã bấm "Nhập dữ liệu" và phát hiện ô-tiết TKB lớp
-           khác với Excel vừa nhập nhưng bị giữ nguyên (xem sessionToTimetableCells()
-           trong teaching-schedule.js) — đúng loại lỗi "thứ Ba không khớp" đã gặp:
-           dữ liệu cũ ở TKB lớp lặng lẽ chặn dữ liệu mới từ Excel. -->
-      <div class="import-summary force-hide" id="importConflictSummary">
-        <div class="import-stat warn"><b id="importConflictCount">0</b><span>Ô TKB lớp GIỮ NGUYÊN (khác Excel)</span></div>
+      <div class="import-weeks" id="importWeekPicker" hidden>
+        <div class="import-weeks-head">
+          <b>Tuần sẽ nhập</b>
+          <span class="import-weeks-actions">
+            <button type="button" class="link-btn" data-import-select="recent">Tuần mới &amp; hiện tại</button>
+            <button type="button" class="link-btn" data-import-select="all">Tất cả</button>
+            <button type="button" class="link-btn" data-import-select="none">Bỏ chọn</button>
+          </span>
+        </div>
+        <div class="import-week-list" id="importWeekList"></div>
       </div>
-      <ul class="import-skipped-list" id="importConflictList" hidden></ul>
+
+      <!-- Hiện sau khi bấm Nhập lần đầu: kết quả so sánh file với dữ liệu
+           hiện có (xem buildImportPlan() trong js/teaching-schedule.js). -->
+      <div class="import-summary force-hide" id="importPlanSummary"></div>
+      <div class="import-conflict" id="importConflictBox" hidden>
+        <div class="import-conflict-head">⚠️ <b id="importConflictCount">0</b> ô TKB lớp đang khác Excel</div>
+        <label class="import-conflict-toggle">
+          <input type="checkbox" id="importOverrideChk"> Ghi đè các ô này theo Excel (bỏ tick = giữ nguyên TKB lớp)
+        </label>
+        <ul class="import-skipped-list" id="importConflictList"></ul>
+      </div>
     </div>
     <div class="modal-footer">
-      <button type="button" class="btn btn-warn force-hide" id="importOverrideBtn">⚠️ Ghi đè toàn bộ ô trên theo Excel</button>
       <button type="button" class="btn btn-ghost" id="importCancelBtn">Huỷ</button>
       <button type="button" class="btn btn-primary" id="importConfirmBtn" disabled>💾 Nhập dữ liệu</button>
     </div>
