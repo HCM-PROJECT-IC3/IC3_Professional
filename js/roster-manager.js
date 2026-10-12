@@ -88,6 +88,8 @@
   window.addEventListener('edu:ready', ({ detail }) => {
     const { user, profile } = detail;
     myProfile = profile;
+    // Đẩy danh sách chung cho mọi trường → chỉ Admin (Apps Script cũng chặn ở phía server).
+    document.getElementById('publishRosterBtn').hidden = !(profile.role === 'admin' && window.EduAppsScript);
     document.getElementById('whoami').textContent = `${profile.name || user.email} · ${EduAuth.ROLE_LABEL[profile.role]}`;
     loadEverything();
   });
@@ -728,6 +730,31 @@
   }
 
   document.getElementById('exportRosterJsonBtn').addEventListener('click', exportRosterJson);
+
+  /** Đưa danh sách lên trang làm bài qua Apps Script (apps/src/70-github.gs → publishRoster_),
+   *  thay cho tải file + commit + push tay. Apps Script tự ghi nhật ký publish_roster. */
+  async function publishRoster() {
+    const payload = buildRosterExportPayload();
+    if (!payload.count) {
+      toast('⚠️ Chưa có học sinh "Đang học" nào để cập nhật.');
+      return;
+    }
+    if (!confirm(`Cập nhật danh sách ${payload.count} học sinh "Đang học" cho trang làm bài? Học sinh thấy sau khoảng 1–2 phút.`)) return;
+    const btn = document.getElementById('publishRosterBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Đang cập nhật…';
+    try {
+      await window.EduAppsScript.call('publishRoster', { content: JSON.stringify(payload, null, 2) }, { timeoutMs: 2 * 60 * 1000 });
+      toast(`🚀 Đã cập nhật ${payload.count} học sinh — trang làm bài thấy sau khoảng 1–2 phút.`);
+    } catch (err) {
+      console.error('[roster-manager] Cập nhật roster thất bại:', err);
+      toast('❌ Cập nhật thất bại: ' + err.message + ' — dùng "🗂️ Xuất JSON (thủ công)" để dự phòng.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '🚀 Cập nhật cho học sinh';
+    }
+  }
+  document.getElementById('publishRosterBtn').addEventListener('click', publishRoster);
 
   // ============================================================
   // NẠP HỌC SINH TỪ FILE EXCEL (.xlsx/.xls) — đọc bằng SheetJS ngay

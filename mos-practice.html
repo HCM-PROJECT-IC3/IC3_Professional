@@ -126,10 +126,12 @@
   <script src="js/mos-grading-engine.js"></script>
   <script src="js/mos-grading-engine-pptx.js"></script>
 
-  <!-- Firebase nạp lúc lưu kết quả (js/services/firebase-loader.js), không nạp lúc mở trang. -->
+  <!-- Kết quả lưu vào Google Sheet qua Apps Script (mặc định) — Firebase chỉ nạp nếu
+       js/backend-config.js bật mosResults.firestore. -->
   <script src="js/backend-config.js"></script>
   <script src="js/services/lazy-script-loader.js"></script>
   <script src="js/services/firebase-loader.js"></script>
+  <script src="js/services/apps-script-client.js"></script>
   <script src="js/mos-submissions.js"></script>
   <!-- Hàng đợi gửi lại khi mất mạng — xem index.html cho chú thích đầy đủ.
        QUAN TRỌNG ở trang này: mos-submissions.js là nơi DUY NHẤT lưu kết

@@ -80,13 +80,14 @@
       </div>
       <button type="button" class="btn btn-secondary" id="importExcelBtn">📥 Nạp từ Excel</button>
       <input type="file" id="importExcelInput" accept=".xlsx,.xls" hidden>
+      <button type="button" class="btn btn-primary" id="publishRosterBtn" hidden>🚀 Cập nhật cho học sinh</button>
       <button type="button" class="btn btn-secondary" id="exportRosterJsonBtn">🗂️ Xuất JSON (thủ công)</button>
       <button type="button" class="btn btn-primary" id="addStudentBtn">➕ Thêm học sinh</button>
     </div>
     <div class="export-hint" id="exportRosterHint">
-      💡 Sau khi thêm/sửa/xoá/nạp Excel, bấm <b>"🗂️ Xuất JSON (thủ công)"</b> để tải file, rồi
-      chép đè vào <code>data/roster/students-active.json</code> và commit + push lên GitHub —
-      học sinh thấy danh sách mới sau khi GitHub Pages build lại.
+      💡 Sau khi thêm/sửa/xoá/nạp Excel: Admin bấm <b>"🚀 Cập nhật cho học sinh"</b> — Apps Script tự đưa
+      danh sách lên trang làm bài (học sinh thấy sau 1–2 phút). Điều phối đào tạo bấm <b>"🗂️ Xuất JSON (thủ công)"</b>
+      rồi gửi file cho Admin (file dùng chung cho mọi trường).
     </div>
     <div class="table-scroll">
       <table id="studentsRosterTable">
@@ -138,6 +139,9 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-check-compat.js"></script>
 <script src="js/firebase-config.js"></script>
+<!-- Apps Script: nhật ký hoạt động + nút "🚀 Cập nhật cho học sinh" (js/backend-config.js) -->
+<script src="js/backend-config.js"></script>
+<script src="js/services/apps-script-client.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/auth-guard.js"></script>
 <script src="js/idle-logout.js"></script>

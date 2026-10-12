@@ -69,6 +69,7 @@
       status:      integrity.valid ? 'OK' : '⚠️ ' + (flags[0] || 'Nghi vấn'),
       timestamp:   (now || new Date()).toLocaleString('vi-VN'),
       note:        flags.length > 1 ? flags.slice(1).join('; ') : (s.timedOut ? 'Hết giờ' : ''),
+      examMode:    s.examMode || 'test',
     };
     const firestore = {
       resultId:      id,

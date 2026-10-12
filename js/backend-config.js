@@ -17,6 +17,19 @@
   'use strict';
 
   global.EduBackend = {
+    // URL Apps Script mặc định (apps/Code.gs): nhận bài nộp + trả kết quả cho dashboard.
+    appsScriptUrl: 'https://script.google.com/macros/s/AKfycbyxiqIjwDotYLobFSf11RvosrW9FksEHCQEz8lNm2uU8_8QQJtw9eDM5gBsW_Ga4JLa/exec',
+
+    // ── Dashboard đọc kết quả từ đâu (teacher / coordinator / ic3-dashboard Báo cáo) ──
+    //   'auto'      : Firestore khi quizResults.firestore = 'all', ngược lại Google Sheet
+    //                 (Sheet luôn có ĐỦ mọi bài, Firestore thì không).
+    //   'sheet'     : luôn đọc Sheet qua Apps Script — 0 lượt đọc Firebase cho kết quả
+    //                 (chỉ 1 lượt đọc hồ sơ/giờ/người để xác thực, trong Apps Script).
+    //   'firestore' : luôn đọc Firestore quiz_results (như trước).
+    dashboard: {
+      readFrom: 'auto',
+    },
+
     // ── Bài nộp IC3/Spark ở index.html ──
     quizResults: {
       // Ghi Firestore (quiz_results — nguồn của các dashboard) cho bài nào:
@@ -42,6 +55,20 @@
       // Ví dụ: sheetEndpoints: { 'THCS Nguyễn Du': 'https://script.google.com/macros/s/XXX/exec' }
       sheetEndpoints: {},
     },
+
+    // ── Kết quả MOS Practice (mos-practice.html) ──
+    // Không trang nào đọc lại mos_submissions trên Firestore → mặc định chỉ ghi Google
+    // Sheet (tab NhatKyMOS, giáo viên mở Sheet là xem được), 0 lượt ghi Firebase.
+    mosResults: {
+      firestore: false,
+      sheet: true,
+    },
+
+    // ── Nhật ký hoạt động của tài khoản quản trị (đăng nhập, xem chi tiết HS, sửa roster...) ──
+    //   'sheet' : ghi tab NhatKyHoatDong qua Apps Script (0 lượt Firebase)
+    //   'off'   : không ghi
+    // Thao tác nhạy cảm (đẩy câu hỏi/roster lên GitHub, xoá bài nộp) Apps Script luôn tự ghi.
+    activityLog: 'sheet',
 
     // ── Firebase SDK trên trang học sinh ──
     // Trang học sinh KHÔNG nạp Firebase lúc mở trang nữa: chỉ nạp khi thật sự cần

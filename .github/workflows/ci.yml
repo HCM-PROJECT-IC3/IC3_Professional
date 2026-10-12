@@ -24,9 +24,15 @@ jobs:
       - name: Cú pháp mọi file JS
         run: node scripts/check-js.js
 
-      - name: Unit test mô phỏng Word/Excel/PowerPoint
+      - name: Unit test (mô phỏng Word/Excel/PowerPoint, lưu bài nộp, gọi Apps Script)
         run: |
           for t in js/*/__tests__/*.test.js; do
             echo "▶ $t"
             node "$t"
           done
+
+      - name: Apps Script — apps/Code.gs khớp apps/src/*.gs
+        run: node scripts/build-apps-script.js --check
+
+      - name: Apps Script — test với Google/Firebase/GitHub giả lập
+        run: node apps/__tests__/code-gs.test.js

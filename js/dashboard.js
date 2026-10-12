@@ -557,8 +557,13 @@ const REPORT_CACHE_TTL_MS = 3 * 60 * 1000;
 // Mỗi lần mở vẫn hỏi bài MỚI nên dữ liệu luôn tươi; 7 ngày để bỏ bài đã xoá ở máy khác.
 const REPORT_KEEP_MS = 7 * 24 * 60 * 60 * 1000;
 
+/** Khoá cache theo nguồn (Firestore / Google Sheet) — 2 nguồn không trộn lẫn. */
+function reportCacheKey() {
+  return window.EduSheetResults && window.EduSheetResults.enabled() ? REPORT_CACHE_KEY + ':sheet' : REPORT_CACHE_KEY;
+}
+
 function saveReportCache(fetchedAt) {
-  if (window.EduDataCache) window.EduDataCache.setAsync(REPORT_CACHE_KEY, { docs: _reportRawDocs, fetchedAt }, REPORT_KEEP_MS, true);
+  if (window.EduDataCache) window.EduDataCache.setAsync(reportCacheKey(), { docs: _reportRawDocs, fetchedAt }, REPORT_KEEP_MS, true);
 }
 
 /**
@@ -578,9 +583,9 @@ async function updateReportTab(forceRefresh = false) {
   // (localStorage, sống qua nhiều lần mở tab); các lần sau — kể cả bấm làm mới — chỉ đọc
   // những bài nộp SAU bản ghi mới nhất đã có rồi gộp vào. Trước đây mỗi lần cache hết
   // hạn (3 phút) là đọc lại toàn bộ tới 10.000 lượt (20% hạn mức đọc/ngày của Spark).
-  const entry = window.EduDataCache ? await window.EduDataCache.getAsync(REPORT_CACHE_KEY, true) : null;
+  const entry = window.EduDataCache ? await window.EduDataCache.getAsync(reportCacheKey(), true) : null;
   // Bản đã quá 7 ngày chỉ dùng khi Firebase hết lượt/mất mạng (xem nhánh catch bên dưới).
-  const staleEntry = !entry && window.EduDataCache ? await window.EduDataCache.getAsync(REPORT_CACHE_KEY, true, /* allowStale */ true) : null;
+  const staleEntry = !entry && window.EduDataCache ? await window.EduDataCache.getAsync(reportCacheKey(), true, /* allowStale */ true) : null;
   const freshMs = forceRefresh ? 15 * 1000 : REPORT_CACHE_TTL_MS;
   if (entry && Array.isArray(entry.docs) && Date.now() - entry.fetchedAt < freshMs) {
     _reportRawDocs = entry.docs;
@@ -588,6 +593,7 @@ async function updateReportTab(forceRefresh = false) {
     body.innerHTML = `<tr><td colspan="8" class="table-empty-cell">Đang tải dữ liệu...</td></tr>`;
     try {
       const base = entry && Array.isArray(entry.docs) && entry.docs.length ? entry.docs : null;
+      const fromSheet = window.EduSheetResults && window.EduSheetResults.enabled();
       let query = window.EduFirebase.db.collection('quiz_results');
       if (base) {
         const lastMs = base.reduce((m, d) => Math.max(m, d.submittedAtMs || 0), 0);
@@ -595,13 +601,20 @@ async function updateReportTab(forceRefresh = false) {
       }
       // Trần 10.000 là mức tối đa Firestore cho phép cho 1 query (20.000 từng bị từ chối).
       let snap;
+      let sheetRows = null;
       let failed = false;
       try {
-        snap = await query.orderBy('submittedAt', 'desc').limit(10000).get();
-        // SDK offline (mất mạng / hết lượt đọc → SDK tự chuyển offline) trả về cache máy
-        // thay vì báo lỗi — coi như thất bại để không ghi đè cache bằng dữ liệu thiếu.
-        if (snap.metadata && snap.metadata.fromCache) throw Object.assign(new Error('offline'), { code: 'unavailable' });
-        window.EduFirebase.countSnap && window.EduFirebase.countSnap('quiz_results (báo cáo' + (base ? ', phần mới' : ', lần đầu') + ')', snap);
+        if (fromSheet) {
+          // Google Sheet qua Apps Script (js/services/sheet-results-api.js) — 0 lượt đọc Firebase.
+          const lastMs = base ? base.reduce((m, d) => Math.max(m, d.submittedAtMs || 0), 0) : 0;
+          sheetRows = await window.EduSheetResults.list({ sinceMs: lastMs, limit: 10000 });
+        } else {
+          snap = await query.orderBy('submittedAt', 'desc').limit(10000).get();
+          // SDK offline (mất mạng / hết lượt đọc → SDK tự chuyển offline) trả về cache máy
+          // thay vì báo lỗi — coi như thất bại để không ghi đè cache bằng dữ liệu thiếu.
+          if (snap.metadata && snap.metadata.fromCache) throw Object.assign(new Error('offline'), { code: 'unavailable' });
+          window.EduFirebase.countSnap && window.EduFirebase.countSnap('quiz_results (báo cáo' + (base ? ', phần mới' : ', lần đầu') + ')', snap);
+        }
       } catch (err) {
         // Hết lượt đọc trong ngày / mất mạng: dùng dữ liệu đã lưu nếu có (kể cả bản đã
         // quá hạn), thay vì báo lỗi trắng.
@@ -614,7 +627,7 @@ async function updateReportTab(forceRefresh = false) {
         failed = true;
       }
       if (!failed) {
-        const fresh = snap.docs.map(doc => {
+        const fresh = sheetRows || snap.docs.map(doc => {
           // KHÔNG giữ field "submittedAt" thô (Timestamp mất .toMillis() sau JSON.stringify).
           const { submittedAt, ...d } = doc.data();
           return Object.assign({ id: doc.id }, d, {
@@ -791,16 +804,21 @@ async function deleteReportRows(ids) {
   if (!confirm(msg)) return;
 
   try {
-    const db = window.EduFirebase.db;
-    const batch = db.batch();
-    ids.forEach(id => batch.delete(db.collection('quiz_results').doc(id)));
-    await batch.commit();
+    if (window.EduSheetResults && window.EduSheetResults.enabled()) {
+      // Đang đọc từ Google Sheet → xoá dòng trong Sheet (Apps Script kiểm tra quyền).
+      await window.EduSheetResults.remove(ids);
+    } else {
+      const db = window.EduFirebase.db;
+      const batch = db.batch();
+      ids.forEach(id => batch.delete(db.collection('quiz_results').doc(id)));
+      await batch.commit();
+    }
 
     const idSet = new Set(ids);
     _reportRawDocs = (_reportRawDocs || []).filter(d => !idSet.has(d.id));
     // Ghi lại cache tăng dần — nếu không, lần mở trang sau bài vừa xoá lại hiện ra
     // (tải tăng dần chỉ hỏi bài MỚI, không biết bài cũ đã bị xoá).
-    const cached = window.EduDataCache ? await window.EduDataCache.getAsync(REPORT_CACHE_KEY, true) : null;
+    const cached = window.EduDataCache ? await window.EduDataCache.getAsync(reportCacheKey(), true) : null;
     saveReportCache(cached ? cached.fetchedAt : 0);
     applyReportFiltersAndRender();
   } catch (err) {

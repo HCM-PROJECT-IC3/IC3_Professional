@@ -18,8 +18,8 @@
    data/ic3/ → học sinh sẽ mất phần lớn câu hỏi.
 
    QUY TRÌNH MỚI (0 lượt đọc/ghi Firestore cho câu hỏi):
-     1. Mở trang: tải data/ic3/ (qua GitHub API nếu đã có token → luôn là
-        bản mới nhất; nếu chưa có token thì tải từ chính trang web).
+     1. Mở trang: tải data/ic3/ qua Apps Script → GitHub (luôn là bản mới nhất,
+        js/github-publish.js); Apps Script chưa có GITHUB_TOKEN thì tải từ chính trang web.
      2. Sửa/thêm/xoá/gắn ảnh: chỉ đổi trong trình duyệt + tự lưu BẢN NHÁP
         (IndexedDB) — đóng tab mở lại vẫn còn.
      3. Bấm "🚀 Đẩy thay đổi cho học sinh": chỉ các file THỰC SỰ đổi được

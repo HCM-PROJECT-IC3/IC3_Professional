@@ -357,7 +357,7 @@
       </div>
       <div class="panel-toolbar" style="padding:0 0 .6rem">
         <button type="button" class="btn btn-secondary" id="travelGmapsAllBtn">🌍 Tính tất cả (miễn phí)</button>
-        <span class="panel-toolbar-info">Cần địa chỉ nhà (tab "👤 Giáo viên") — dùng OpenStreetMap, không cần API Key/thẻ ngân hàng, nhưng chạy chậm hơn Google (giới hạn ~1 dòng/giây)</span>
+        <span class="panel-toolbar-info">Cần địa chỉ nhà (tab "👤 Giáo viên") — dùng bản đồ Google qua Apps Script, không cần API Key/thẻ ngân hàng (tối đa ~150 lượt tính/ngày/người)</span>
       </div>
       <div class="table-scroll">
         <table class="report-pivot" id="travelDistanceTable">
@@ -690,10 +690,11 @@
 <script src="js/repositories/teaching-timetable-repository.js"></script>
 <script src="js/models/teaching-travel.model.js"></script>
 <script src="js/repositories/teaching-travel-repository.js"></script>
-<!-- Tự tính khoảng cách nhà→trường MIỄN PHÍ qua OpenStreetMap/OSRM, không
-     cần API Key (nút "🌍 Tính tất cả (miễn phí)" ở tab "🚗 Hỗ trợ xăng
-     xe") — xem chi tiết đầu file. -->
-<script src="js/services/free-map-distance.js"></script>
+<!-- Tự tính khoảng cách nhà→trường qua Apps Script (dịch vụ Maps của Google, không
+     cần API key — nút "🌍 Tính tất cả (miễn phí)" ở tab "🚗 Hỗ trợ xăng xe"). -->
+<script src="js/backend-config.js"></script>
+<script src="js/services/apps-script-client.js"></script>
+<script src="js/services/apps-script-map-distance.js"></script>
 
 <!-- Đọc file Excel (.xlsx/.xls) ngay trên trình duyệt bằng SheetJS, cùng
      thư viện/CDN đã dùng ở roster-manager.html (đã kiểm chứng hoạt động). -->
