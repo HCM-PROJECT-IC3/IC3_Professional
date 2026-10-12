@@ -1,5 +1,16 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## Tách trang học sinh khỏi Firebase cho mùa ôn thi (10/2026)
+
+Phân tích đầy đủ: **`docs/architecture/SCALING-SPARK.md`** (vì sao hàng trăm nghìn bài/ngày không thể nằm trên Firestore Spark, các cách chia đã cân nhắc, điểm nghẽn reCAPTCHA / Apps Script / GitHub Pages).
+
+- **`js/backend-config.js`** (mới): nơi duy nhất chọn đích lưu bài nộp — `quizResults.firestore`: `all` (mặc định, như cũ) / `test-only` (chỉ bài Kiểm tra lên Firestore) / `off` (chỉ Google Sheet, 0 lượt ghi Firebase); `sheetEndpoints` chia Google Sheet theo trường; `sheetJitterMs` rải lượt gửi Sheet 0–4 s.
+- **`js/services/result-submitter.js`** (mới): dựng payload + gửi + xếp hàng gửi lại — tách khỏi `quiz-engine.js` (bỏ ~90 dòng). Sheet và Firestore dùng chung 1 mã bài → gửi lại không trùng ở cả 2 nơi.
+- **`js/services/firebase-loader.js`** (mới): `index.html` và `mos-practice.html` không còn tải Firebase SDK lúc mở trang (~300 KB + 1 lượt reCAPTCHA/học sinh); chỉ nạp khi ghi Firestore hoặc máy có sẵn phiên đăng nhập giáo viên/admin (Khu Vui Chơi vẫn cho vào thẳng).
+- **`js/googleSheet.js`**: dùng mã bài cố định; trước đây học sinh làm lại cùng 1 bài trong cùng phiên bị bỏ qua không gửi Sheet. **`pending-sync-queue.js`**: bài Sheet có mã cố định được giữ tới khi gửi được (trước bỏ sau ~35 phút).
+- **`apps/Code.gs`** (phải deploy lại — *New version*, giữ URL): chống trùng bằng CacheService thay cho đọc lại toàn bộ cột mã bài mỗi lượt nộp trong lúc giữ khoá; tự tạo file nhật ký mới khi vượt 300.000 dòng (trần 10 triệu ô/file), danh sách ở tab `DanhMucNhatKy`.
+- Test mới `js/services/__tests__/result-submitter.test.js` (CI tự chạy).
+
 ## CI tự kiểm tra + lộ trình phát triển (10/2026)
 
 - **`.github/workflows/ci.yml`** (GitHub Actions, mỗi lần push `main` / Pull Request — chỉ kiểm tra, không deploy, không Firebase): `scripts/validate-data.js` (ngân hàng `data/ic3`: JSON hỏng, file thiếu, đáp án đúng không có trong lựa chọn, uid trùng trong minitest, thiếu ảnh, dạng câu lạ... → chặn; số câu meta lệch, chưa có giải thích → cảnh báo) + `scripts/check-js.js` (cú pháp 133 file JS, kể cả ES module) + 7 unit test mô phỏng Word/Excel/PowerPoint. Hiện tại: 6.071 câu / 324 file minitest / 604 ảnh hợp lệ, 133/133 JS, 7/7 test.

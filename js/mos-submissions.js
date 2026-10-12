@@ -30,6 +30,8 @@
    */
   async function saveMosSubmission(rec) {
     try {
+      // mos-practice.html nạp Firebase theo yêu cầu (js/services/firebase-loader.js).
+      if (global.EduFirebaseLoader) await global.EduFirebaseLoader.ready();
       if (!global.EduFirebase || !global.EduFirebase.db) {
         console.warn('[MosPractice] Firestore chưa sẵn sàng — bỏ qua lưu kết quả.');
         return { success: false, message: 'Firestore chưa cấu hình' };

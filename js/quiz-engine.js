@@ -3746,95 +3746,12 @@ function submitExam() {
     });
   }
 
-  // § Nhóm E — build payload TỰ CHỨA ĐỦ DỮ LIỆU (không phụ thuộc
-  // State.session tại thời điểm gọi) 1 LẦN DUY NHẤT ở đây, dùng chung
-  // cho cả lần gửi đầu tiên lẫn lần gửi lại từ hàng đợi (js/services/
-  // pending-sync-queue.js) — nếu mạng down lúc nộp bài, hàng đợi có thể
-  // gọi lại đúng dữ liệu này NHIỀU PHÚT SAU, khi State đã chuyển sang
-  // bài khác hoặc học sinh đã rời trang.
-  const s   = State.session;
-  const pct = Math.round((result.correct / result.total) * 100);
-
-  // Gửi lên Google Sheet (chạy nền, chỉ để đối chiếu/dự phòng) — gọi
-  // THẲNG saveToGoogleSheet() (không qua wrapper submitToGoogleSheet(),
-  // vốn tự đọc lại State.session bên trong — không an toàn cho việc gửi
-  // lại trễ) để đảm bảo payload gửi lại luôn khớp đúng lúc nộp bài gốc.
-  if (typeof saveToGoogleSheet === 'function') {
-    const sheetData = {
-      studentName:   s.studentName,
-      studentClass:  s.studentClass  || '',
-      studentSchool: s.studentSchool || '',
-      testName:    [s.category, s.level, s.minitest].filter(Boolean).join(' › '),
-      score:       pct,
-      correct:     `${result.correct}/${result.total}`,
-      time:        `${String(Math.floor(elapsed / 60)).padStart(2, '0')}:${String(elapsed % 60).padStart(2, '0')}`,
-      tabSwitch:   integrity.tabSwitches,
-      clickCount:  integrity.clicks,
-      status:      integrity.valid ? 'OK' : '⚠️ ' + (integrity.flags[0] || 'Nghi vấn'),
-      timestamp:   new Date().toLocaleString('vi-VN'),
-      note:        integrity.flags.length > 1 ? integrity.flags.slice(1).join('; ') : (s.timedOut ? 'Hết giờ' : ''),
-    };
-    saveToGoogleSheet(sheetData).then(res => {
-      if ((!res || res.success === false) && window.EduPendingSync) {
-        window.EduPendingSync.enqueue('google_sheet', sheetData);
-      }
-    }).catch(err => {
-      // Phòng thủ thêm: saveToGoogleSheet() tự bắt lỗi bên trong (trả về
-      // {success:false}) nên nhánh này hiếm khi chạy, nhưng nếu có lỗi lọt
-      // ra ngoài (promise reject thật) thì vẫn phải đẩy vào hàng đợi gửi
-      // lại — không được để 1 unhandled rejection làm mất bản ghi Google
-      // Sheet mà học sinh không hề biết.
-      console.warn('[EduQuiz] saveToGoogleSheet() reject ngoài dự kiến:', err);
-      if (window.EduPendingSync) window.EduPendingSync.enqueue('google_sheet', sheetData);
-    });
-  }
-
-  // Lưu vào Firestore (nguồn dữ liệu CHÍNH cho trang Báo cáo trực quan
-  // ic3-dashboard.html — điều phối đào tạo / giáo viên / admin xem)
-  if (typeof saveResultToFirestore === 'function') {
-    const firestorePayload = {
-      // Mã document tạo SẴN ở máy (0 lượt đọc) — đi theo payload vào hàng đợi gửi lại
-      // nên gửi lại bao nhiêu lần cũng chỉ ra 1 bài trên Firestore (không trùng).
-      resultId:      window.EduFirebase && window.EduFirebase.newDocId ? window.EduFirebase.newDocId('quiz_results') : undefined,
-      studentName:   s.studentName,
-      studentClass:  s.studentClass  || '',
-      studentSchool: s.studentSchool || '',
-      category:      s.category,
-      level:         s.level,
-      minitest:      s.minitest,
-      examMode:      s.examMode || 'test', // 'practice' (Ôn luyện) | 'test' (Kiểm tra)
-      score:         pct,
-      correct:       result.correct,
-      incorrect:     result.incorrect,
-      skipped:       result.skipped,
-      total:         result.total,
-      elapsedSec:    elapsed,
-      tabSwitches:   integrity.tabSwitches,
-      clicks:        integrity.clicks,
-      integrityOk:   integrity.valid,
-      flags:         integrity.flags,
-      timedOut:      s.timedOut,
-      // Vi phạm nâng cao chỉ có ý nghĩa ở chế độ "Kiểm tra" — xem § 2b
-      multiTabHits:    integrity.multiTabHits,
-      fullscreenExits: integrity.fullscreenExits,
-      appSwitches:     integrity.appSwitches,
-      devtoolsHits:    integrity.devtoolsHits,
-      shortcutBlocks:  integrity.shortcutBlocks,
-      printAttempts:   integrity.printAttempts,
-    };
-    saveResultToFirestore(firestorePayload).then(res => {
-      // res.permanent = dữ liệu bị rules từ chối — gửi lại cũng vô ích, không xếp hàng.
-      if (!res.success && !res.permanent && window.EduPendingSync) {
-        window.EduPendingSync.enqueue('firestore_quiz_result', firestorePayload);
-      }
-    }).catch(err => {
-      // Tương tự nhánh Google Sheet ở trên — saveResultToFirestore() tự
-      // bắt lỗi nội bộ nên đây là lưới an toàn cho trường hợp lọt ngoài dự
-      // kiến, đảm bảo bài thi KHÔNG BAO GIỜ "biến mất" khỏi ic3-dashboard
-      // chỉ vì 1 promise reject không ai bắt.
-      console.warn('[EduQuiz] saveResultToFirestore() reject ngoài dự kiến:', err);
-      if (window.EduPendingSync) window.EduPendingSync.enqueue('firestore_quiz_result', firestorePayload);
-    });
+  // Lưu bài: dựng payload + chọn đích (Google Sheet / Firestore theo
+  // js/backend-config.js) + hàng đợi gửi lại — xem js/services/result-submitter.js.
+  if (window.EduResultSubmitter) {
+    window.EduResultSubmitter.submitQuiz({ session: State.session, result, integrity, elapsed });
+  } else {
+    console.warn('[EduQuiz] Thiếu js/services/result-submitter.js — bài nộp chỉ lưu trên máy.');
   }
 }
 

@@ -15,6 +15,16 @@
 // 🔗 URL Google Apps Script Web App (apps/Code.gs — bản mới, thay Apps Script cũ)
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyxiqIjwDotYLobFSf11RvosrW9FksEHCQEz8lNm2uU8_8QQJtw9eDM5gBsW_Ga4JLa/exec';
 
+/**
+ * URL Apps Script cho 1 trường: js/backend-config.js → quizResults.sheetEndpoints
+ * (chia Google Sheet theo trường khi lưu lượng lớn), không có thì URL mặc định.
+ */
+function resolveAppsScriptUrl(school) {
+  const map = window.EduBackend && window.EduBackend.quizResults && window.EduBackend.quizResults.sheetEndpoints;
+  const url = map && school && Object.prototype.hasOwnProperty.call(map, school) ? map[school] : '';
+  return url || APPS_SCRIPT_URL;
+}
+
 // ⏱️ Timeout: Nếu request quá 10 giây → báo lỗi (đơn vị: ms)
 const REQUEST_TIMEOUT_MS = 10000;
 
@@ -64,17 +74,23 @@ function generateSubmissionId(studentName, testName) {
  */
 async function saveToGoogleSheet(data) {
   // ── Kiểm tra URL đã được cấu hình chưa ──────────────────
-  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('PASTE_YOUR')) {
+  const endpoint = resolveAppsScriptUrl(data.studentSchool);
+  if (!endpoint || endpoint.includes('PASTE_YOUR')) {
     console.error('❌ [GoogleSheet] Chưa cấu hình APPS_SCRIPT_URL!');
     showNotification('Chưa cấu hình Google Sheet URL. Liên hệ giáo viên.', 'warning');
     return { success: false, message: 'Chưa cấu hình URL' };
   }
 
-  // ── Tạo Submission ID để chống gửi trùng ────────────────
-  const submissionId = generateSubmissionId(data.studentName, data.testName);
+  // ── Submission ID để chống gửi trùng ────────────────────
+  // Có mã cố định từ lúc nộp (js/services/result-submitter.js — trùng với mã
+  // document Firestore) thì dùng luôn: gửi lại từ hàng đợi, kể cả sau khi tải lại
+  // trang, vẫn cùng mã → apps/Code.gs bỏ qua bản trùng. Bản ghi cũ trong hàng đợi
+  // (trước đợt này) không có mã → tự sinh như trước.
+  const submissionId = data.submissionId || generateSubmissionId(data.studentName, data.testName);
 
-  // Kiểm tra phía client (bảo vệ thêm)
-  const clientKey = `${data.studentName}__${data.testName}`;
+  // Kiểm tra phía client (bảo vệ thêm). Theo mã bài nếu có — trước đây theo
+  // tên+bài thi nên học sinh làm LẠI cùng 1 bài trong cùng phiên bị bỏ qua.
+  const clientKey = data.submissionId || `${data.studentName}__${data.testName}`;
   if (_submittedIds.has(clientKey)) {
     console.warn('⚠️ [GoogleSheet] Phát hiện gửi trùng, bỏ qua:', clientKey);
     showNotification('Bài thi đã được lưu trước đó.', 'info');
@@ -116,7 +132,7 @@ async function saveToGoogleSheet(data) {
     // (có ContentService trả JSON + Access-Control-Allow-Origin: * khi deploy
     // "Anyone") cho phép đọc được response thật — biết chắc ghi thành công
     // hay lỗi, thay vì đoán mù như trước.
-    const res = await fetch(APPS_SCRIPT_URL, {
+    const res = await fetch(endpoint, {
       method:  'POST',
       signal:  controller.signal,
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
