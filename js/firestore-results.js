@@ -7,10 +7,12 @@
    Đây là nơi lưu CHÍNH (song song với Google Sheet ở js/googleSheet.js
    vốn chỉ dùng làm bản sao lưu/đối chiếu thủ công).
 
-   NẠP FILE NÀY SAU js/services/firebase-loader.js (trang học sinh: Firebase SDK
-   được nạp theo yêu cầu ngay trong saveResultToFirestore()) HOẶC sau các thẻ
-   <script> Firebase SDK + js/firebase-config.js (trang đã nạp sẵn Firebase).
-   Nơi gọi: js/services/result-submitter.js và hàng đợi gửi lại.
+   NẠP FILE NÀY SAU:
+     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+     <script src="js/firebase-config.js"></script>
+     <script src="js/firestore-results.js"></script>
+   VÀ TRƯỚC js/quiz-engine.js (quiz-engine gọi saveResultToFirestore()).
 
    Học sinh làm bài KHÔNG cần đăng nhập Firebase Auth, nên hàm này ghi
    dữ liệu ở chế độ "public write" — xem firestore.rules để biết các
