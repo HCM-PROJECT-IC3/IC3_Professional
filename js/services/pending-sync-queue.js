@@ -45,6 +45,12 @@
   // chờ hạn mức đặt lại. Giữ tới khi gửi được (hoặc rules từ chối hẳn), tối đa 30
   // ngày. An toàn vì mỗi bài có mã cố định (createOnce) — gửi lại không tạo trùng.
   const KEEP_UNTIL_SENT = { firestore_quiz_result: true, mos_submission: true };
+  // Bài gửi Google Sheet có mã cố định (submissionId — js/services/result-submitter.js)
+  // cũng giữ tới khi gửi được: khi js/backend-config.js tắt Firestore, Sheet là nơi
+  // lưu DUY NHẤT; apps/Code.gs bỏ qua bản trùng mã nên gửi lại không tạo dòng thừa.
+  function keepUntilSent(item) {
+    return !!KEEP_UNTIL_SENT[item.type] || (item.type === 'google_sheet' && !!(item.payload && item.payload.submissionId));
+  }
   const KEEP_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
   // type -> tên hàm TOÀN CỤC nhận đúng 1 payload và trả về Promise<{success}>
@@ -118,7 +124,7 @@
         const fn = global[fnName];
         if (typeof fn !== 'function') { remaining.push(item); continue; } // module gửi chưa nạp trên trang này — thử lại lượt sau
 
-        const keep = KEEP_UNTIL_SENT[item.type];
+        const keep = keepUntilSent(item);
         let ok = false;
         let permanent = false;
         try {

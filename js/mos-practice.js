@@ -200,7 +200,9 @@
       projectTitle: currentProject.title,
       ...graded,
     };
-    if (window.EduFirebase && window.EduFirebase.newDocId) mosPayload.submissionId = window.EduFirebase.newDocId('mos_submissions');
+    // Mã bài tạo ở máy (không cần Firebase SDK — trang này nạp Firebase lúc lưu).
+    if (window.EduFirebaseLoader) mosPayload.submissionId = window.EduFirebaseLoader.newDocId();
+    else if (window.EduFirebase && window.EduFirebase.newDocId) mosPayload.submissionId = window.EduFirebase.newDocId('mos_submissions');
     window.saveMosSubmission(mosPayload).then(saveRes => {
       if (!saveRes.success && !saveRes.permanent) {
         console.warn('[MosPractice] Không lưu được kết quả lên Firestore:', saveRes.message);

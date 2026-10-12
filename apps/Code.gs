@@ -27,6 +27,13 @@ const SHEET_REPORT_SUMMARY = 'TongHop'; // nơi ghi báo cáo tổng hợp do da
 // Firestore quiz_results) — KHÔNG dùng để tính getDashboard ở trên.
 const SHEET_SUBMISSION_LOG = 'NhatKyNopBai'; // cột: xem writeSubmissionLog_()
 
+// Xoay vòng file nhật ký khi quá lớn — xem getSubmissionLogSheet_(). 300.000 dòng × 13
+// cột ≈ 3,9 triệu ô: còn xa trần 10 triệu ô/file, và file nhỏ thì appendRow vẫn nhanh.
+const MAX_LOG_ROWS = 300000;
+const LOG_SPREADSHEET_PROP = 'LOG_SPREADSHEET_ID'; // Script Properties: ID file nhật ký đang ghi
+const SHEET_LOG_CATALOG = 'DanhMucNhatKy';          // tab ở file chính: danh sách các file nhật ký
+const DEDUPE_TTL_SEC = 6 * 60 * 60;                   // CacheService giữ tối đa 6 giờ
+
 // Email nhận cảnh báo khi phát hiện nghi vấn gian lận (status chứa ⚠️) —
 // điền email thật của giáo viên/điều phối vào đây (có thể để nhiều email,
 // cách nhau bằng dấu phẩy). Để mảng rỗng thì tắt tính năng gửi email,
@@ -229,26 +236,21 @@ function writeSubmissionLog_(payload) {
     throw new Error('Thiếu submissionId trong payload nộp bài');
   }
 
+  // Chống trùng bằng CacheService (giữ mã đã ghi 6 giờ — DEDUPE_TTL_SEC) thay cho đọc
+  // lại TOÀN BỘ cột SubmissionId mỗi lượt nộp: cách cũ chậm dần theo số dòng (100.000
+  // dòng = đọc 100.000 ô mỗi bài, trong lúc giữ khoá chung) → mùa ôn thi các lượt nộp
+  // xếp hàng chờ khoá rồi hết giờ. Gửi lại từ hàng đợi phía học sinh dùng cùng mã
+  // (js/services/result-submitter.js) và thường diễn ra trong vài phút - vài giờ.
+  const cache = CacheService.getScriptCache();
+  const dedupeKey = 'sub:' + String(payload.submissionId).slice(0, 200);
+  if (cache.get(dedupeKey)) return { written: false, duplicate: true };
+
   const lock = LockService.getScriptLock();
-  lock.waitLock(10000); // đợi tối đa 10s nếu có request khác đang ghi
+  lock.waitLock(20000); // chỉ giữ khoá trong lúc chọn file + appendRow (rất ngắn)
 
   try {
-    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID_REPORT).getSheetByName(SHEET_SUBMISSION_LOG);
-    if (!sheet) {
-      throw new Error('Chưa có tab "' + SHEET_SUBMISSION_LOG + '" trong Sheet báo cáo — xem HUONG_DAN.md để tạo.');
-    }
-
-    // Chống trùng: kiểm tra cột A (SubmissionId) đã có giá trị này chưa.
-    // Nếu chỉ mới có dòng tiêu đề (lastRow <= 1), chưa có dữ liệu để so,
-    // getRange với 0 dòng sẽ báo lỗi — bỏ qua kiểm tra trong trường hợp này.
-    const dataRowCount = sheet.getLastRow() - 1;
-    const existingIds = dataRowCount > 0
-      ? sheet.getRange(2, 1, dataRowCount, 1).getValues().flat()
-      : [];
-    if (existingIds.includes(payload.submissionId)) {
-      return { written: false, duplicate: true };
-    }
-
+    if (cache.get(dedupeKey)) return { written: false, duplicate: true }; // request song song vừa ghi xong
+    const sheet = getSubmissionLogSheet_();
     sheet.appendRow([
       payload.submissionId,
       payload.studentName   || '',
@@ -264,20 +266,54 @@ function writeSubmissionLog_(payload) {
       new Date(), // Dùng giờ server (đáng tin cậy hơn giờ máy học sinh) - lưu dạng Date thật để sort/lọc được
       payload.note              || ''
     ]);
-
-    // Cảnh báo gian lận qua email — CHỈ khi có dấu ⚠️ trong status (do
-    // js/googleSheet.js gắn khi integrity.valid == false), và chỉ với
-    // dòng MỚI ghi (không gửi lại khi request retry trùng submissionId,
-    // vì nhánh đó đã return ở trên rồi). Đặt SAU appendRow để lỗi gửi mail
-    // (nếu có) không bao giờ làm mất dòng log đã ghi.
-    if (payload.status && String(payload.status).indexOf('⚠️') !== -1) {
-      sendCheatAlertEmail_(payload);
-    }
-
-    return { written: true, duplicate: false };
+    cache.put(dedupeKey, '1', DEDUPE_TTL_SEC);
   } finally {
     lock.releaseLock();
   }
+
+  // Cảnh báo gian lận qua email — CHỈ khi có dấu ⚠️ trong status (do
+  // js/googleSheet.js gắn khi integrity.valid == false), và chỉ với
+  // dòng MỚI ghi (bản trùng đã return ở trên). Ngoài khoá để không giữ
+  // khoá trong lúc gửi mail; lỗi gửi mail không làm mất dòng log đã ghi.
+  if (payload.status && String(payload.status).indexOf('⚠️') !== -1) {
+    sendCheatAlertEmail_(payload);
+  }
+
+  return { written: true, duplicate: false };
+}
+
+/**
+ * Tab nhật ký đang nhận bài nộp. Mỗi file Google Sheet tối đa 10 triệu ô (mọi tab
+ * cộng lại); 13 cột × 100.000 bài/ngày đầy 1 file sau ~1 tuần. Khi tab hiện tại
+ * vượt MAX_LOG_ROWS dòng, tự tạo FILE MỚI "NhatKyNopBai <ngày>" (cùng dòng tiêu đề),
+ * ghi tiếp vào đó và thêm 1 dòng vào tab DanhMucNhatKy của file chính để tra cứu.
+ * Chưa có file mới nào thì dùng tab NhatKyNopBai của file chính như trước.
+ * Gọi BÊN TRONG khoá của writeSubmissionLog_().
+ */
+function getSubmissionLogSheet_() {
+  const props = PropertiesService.getScriptProperties();
+  const currentId = props.getProperty(LOG_SPREADSHEET_PROP);
+  const sheet = currentId
+    ? SpreadsheetApp.openById(currentId).getSheetByName(SHEET_SUBMISSION_LOG)
+    : SpreadsheetApp.openById(SPREADSHEET_ID_REPORT).getSheetByName(SHEET_SUBMISSION_LOG);
+  if (!sheet) {
+    throw new Error('Chưa có tab "' + SHEET_SUBMISSION_LOG + '" trong Sheet báo cáo — xem HUONG_DAN.md để tạo.');
+  }
+  if (sheet.getLastRow() < MAX_LOG_ROWS) return sheet;
+
+  const stamp = Utilities.formatDate(new Date(), 'Asia/Ho_Chi_Minh', 'yyyy-MM-dd HH:mm');
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues();
+  const file = SpreadsheetApp.create(SHEET_SUBMISSION_LOG + ' ' + stamp);
+  const fresh = file.getSheets()[0].setName(SHEET_SUBMISSION_LOG);
+  fresh.getRange(1, 1, 1, headers[0].length).setValues(headers).setFontWeight('bold');
+  fresh.setFrozenRows(1);
+  props.setProperty(LOG_SPREADSHEET_PROP, file.getId());
+
+  const main = SpreadsheetApp.openById(SPREADSHEET_ID_REPORT);
+  const catalog = main.getSheetByName(SHEET_LOG_CATALOG) || main.insertSheet(SHEET_LOG_CATALOG);
+  if (catalog.getLastRow() === 0) catalog.appendRow(['TaoLuc', 'TenFile', 'DuongDan']);
+  catalog.appendRow([new Date(), file.getName(), file.getUrl()]);
+  return fresh;
 }
 
 /**

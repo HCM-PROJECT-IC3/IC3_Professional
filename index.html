@@ -799,22 +799,25 @@
   <script src="js/googleSheet.js" defer></script>
   <script src="js/gamification.js" defer></script>
 
-  <!-- Firestore: lưu kết quả bài thi cho trang Báo cáo trực quan (ic3-dashboard.html) -->
-  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js" defer></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js" defer></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js" defer></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-check-compat.js" defer></script>
-  <script src="js/firebase-config.js" defer></script>
+  <!-- Lưu bài nộp: js/backend-config.js chọn đích (Google Sheet / Firestore) cho mỗi
+       bài. Firebase SDK KHÔNG nạp lúc mở trang — js/services/firebase-loader.js nạp
+       khi thật sự ghi Firestore hoặc máy có sẵn phiên đăng nhập giáo viên/admin.
+       Xem docs/architecture/SCALING-SPARK.md. -->
+  <script src="js/backend-config.js" defer></script>
+  <script src="js/services/lazy-script-loader.js" defer></script>
+  <script src="js/services/firebase-loader.js" defer></script>
   <script src="js/firestore-results.js" defer></script>
+  <script src="js/services/result-submitter.js" defer></script>
   <!-- Hàng đợi gửi lại khi mất mạng (Firestore/Google Sheet) — nạp SAU
        googleSheet.js/firestore-results.js (tra cứu hàm gửi theo tên lúc
        flush(), không bắt buộc thứ tự nghiêm ngặt) và TRƯỚC quiz-engine.js
        (quiz-engine gọi window.EduPendingSync.enqueue() khi lưu thất bại). -->
   <script src="js/services/pending-sync-queue.js" defer></script>
 
-  <!-- Nạp Auth SDK để js/game-zone-gate.js biết được nếu người đang mở trang
+  <!-- Module tài khoản để js/game-zone-gate.js biết được nếu người đang mở trang
        (do đã đăng nhập sẵn từ login.html ở tab/phiên khác) là admin/giáo viên
        → những vai trò này được vào thẳng Khu Vui Chơi, không cần làm bài thi.
+       auth.js chỉ khai báo hàm; Firebase Auth được nạp khi có phiên (game-zone-gate.js).
        Trang này KHÔNG bắt buộc đăng nhập (học sinh vẫn vào bình thường không
        cần tài khoản) — chỉ tận dụng phiên đăng nhập NẾU CÓ SẴN. -->
   <script src="js/auth.js" defer></script>

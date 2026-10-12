@@ -75,7 +75,21 @@
     var staffBypass = false;
 
     function initStaffBypass() {
-      if (!window.EduAuth || !window.EduFirebase || !window.EduFirebase.auth) return;
+      if (!window.EduAuth) return;
+      if (!window.EduFirebase || !window.EduFirebase.auth) {
+        // index.html không nạp Firebase lúc mở trang (js/services/firebase-loader.js):
+        // chỉ nạp khi máy này có sẵn phiên đăng nhập — học sinh không tốn gì thêm.
+        var loader = window.EduFirebaseLoader;
+        if (!loader) return;
+        loader.hasStoredSession().then(function (has) {
+          if (has) return loader.ensure().then(function () { if (window.EduFirebase.auth) listenStaff(); });
+        }).catch(function (e) { console.warn('[GameZone] Không kiểm tra được phiên đăng nhập:', e); });
+        return;
+      }
+      listenStaff();
+    }
+
+    function listenStaff() {
       EduAuth.onAuthReady(function (user, profile) {
         staffBypass = !!profile && (
           profile.role === 'admin' ||
