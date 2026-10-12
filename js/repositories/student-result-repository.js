@@ -20,8 +20,21 @@
   // Hết hạn 7 ngày vẫn cần để bỏ bài đã bị xoá ở máy khác / đã hết TTL.
   const RESULTS_KEEP_MS = 7 * 24 * 60 * 60 * 1000;
 
+  /** Dashboard đọc kết quả từ Google Sheet (js/services/sheet-results-api.js) thay Firestore? */
+  function fromSheet() { return !!(global.EduSheetResults && global.EduSheetResults.enabled()); }
+
   class StudentResultRepository extends global.EduBaseRepository {
     constructor() { super(COLLECTION_NAME); }
+
+    /**
+     * Bài nộp mới nhất trước từ nguồn đang chọn (js/backend-config.js → dashboard.readFrom).
+     * @param {number} [afterMs] chỉ lấy bài nộp từ thời điểm này (tải tăng dần)
+     */
+    async fetchRecent({ schools, classes, limit, afterMs }) {
+      if (fromSheet()) return global.EduSheetResults.list({ schools, classes, limit, sinceMs: afterMs || 0 });
+      const where = afterMs ? [['submittedAt', '>', global.firebase.firestore.Timestamp.fromMillis(afterMs - 1)]] : [];
+      return this.listRecent({ schools, classes, limit, extraWhere: where });
+    }
 
     /**
      * Lấy danh sách kết quả gần nhất, có thể lọc theo lớp/bài thi/khoảng thời gian.
@@ -46,6 +59,9 @@
      *   khoá mới chưa có gì — tránh đọc lại toàn bộ `limit` bản ghi chỉ vì đổi khoá.
      */
     async listRecentCached({ cacheKey, schools, classes, seedKey, limit = 1000, freshMs = 3 * 60 * 1000 } = {}) {
+      // Cache tách theo nguồn: mã bài Sheet/Firestore không khớp nhau ở dữ liệu cũ, trộn
+      // 2 nguồn sẽ ra bài trùng.
+      if (fromSheet()) { cacheKey += ':sheet'; if (seedKey) seedKey += ':sheet'; }
       const cache = global.EduDataCache;
       let entry = cache ? await cache.getAsync(cacheKey, true) : null;
       if (!entry && seedKey && cache) {
@@ -60,10 +76,9 @@
       let rows;
       if (entry && Array.isArray(entry.rows) && entry.rows.length) {
         const lastMs = entry.rows.reduce((m, r) => Math.max(m, r.submittedAtMs || 0), 0);
-        const where = lastMs ? [['submittedAt', '>', global.firebase.firestore.Timestamp.fromMillis(lastMs - 1)]] : [];
         let fresh;
         try {
-          fresh = await this.listRecent({ schools, classes, limit, extraWhere: where });
+          fresh = await this.fetchRecent({ schools, classes, limit, afterMs: lastMs });
         } catch (err) {
           // Hết hạn mức đọc trong ngày / mất mạng: vẫn hiện dữ liệu đã có thay vì báo lỗi trắng.
           console.warn('[EduRepository] Không tải được kết quả mới, dùng dữ liệu đã lưu:', err.message);
@@ -82,7 +97,7 @@
           .slice(0, limit);
       } else {
         try {
-          rows = await this.listRecent({ schools, classes, limit });
+          rows = await this.fetchRecent({ schools, classes, limit });
         } catch (err) {
           // Bản lưu đã quá 7 ngày nhưng Firebase đang hết lượt/mất mạng: dùng tạm bản cũ.
           const F = global.EduFirebase;
@@ -132,6 +147,11 @@
      *   truyền (rule của họ không yêu cầu).
      */
     async listByStudent({ studentName, studentClass, schools }) {
+      const wantKey = global.EduModels.ExamHistory.keyOf({ studentName, studentClass });
+      if (fromSheet()) {
+        const rows = await global.EduSheetResults.list({ schools, classes: [studentClass], studentName, limit: 2000 });
+        return rows.filter((r) => global.EduModels.ExamHistory.keyOf(r) === wantKey);
+      }
       const where = [['studentClass', '==', studentClass]];
       if (schools && schools.length) where.push(['studentSchool', 'in', schools.slice(0, 10)]);
       const rows = await this.list({
@@ -140,7 +160,6 @@
         direction: 'desc',
       });
       const normalized = rows.map(normalize);
-      const wantKey = global.EduModels.ExamHistory.keyOf({ studentName, studentClass });
       return normalized.filter((r) => global.EduModels.ExamHistory.keyOf(r) === wantKey);
     }
   }

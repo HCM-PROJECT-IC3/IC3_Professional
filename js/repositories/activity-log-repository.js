@@ -1,6 +1,7 @@
 /* ============================================================
    js/repositories/activity-log-repository.js
-   Ghi/đọc collection MỚI "activity_logs".
+   Nhật ký hoạt động: ghi Google Sheet qua Apps Script khi js/backend-config.js đặt
+   activityLog = 'sheet' (mặc định); nhánh Firestore "activity_logs" cũ vẫn TẮT (ENABLED).
    ============================================================ */
 (function (global) {
   'use strict';
@@ -11,7 +12,20 @@
     constructor() { super(COLLECTION_NAME); }
 
     async record(entry) {
-      // TẮT cho tới khi firestore.rules có rule cho "activity_logs": hiện mọi lần
+      // Ghi vào Google Sheet qua Apps Script (tab NhatKyHoatDong) — 0 lượt Firebase. Apps
+      // Script tự lấy uid/vai trò từ tài khoản đăng nhập, không tin uid/role gửi lên.
+      const mode = global.EduBackend && global.EduBackend.activityLog;
+      if (mode === 'sheet' && global.EduAppsScript) {
+        try {
+          const page = (location.pathname.split('/').pop() || '').replace(/\.html$/, '');
+          await global.EduAppsScript.call('logActivity',
+            { activity: entry.action, targetId: entry.targetId || '', meta: entry.meta || {}, page }, { timeoutMs: 20 * 1000 });
+        } catch (err) {
+          console.warn('[EduActivityLog] Không ghi được nhật ký:', err.message);
+        }
+        return;
+      }
+      // Nhánh Firestore cũ: TẮT cho tới khi firestore.rules có rule cho "activity_logs": hiện mọi lần
       // ghi đều bị từ chối (Missing or insufficient permissions) — chỉ tốn request
       // và gây cảnh báo console. Bật lại = đổi cờ này + thêm rule (admin đọc, user đã đăng nhập tạo).
       if (!ActivityLogRepository.ENABLED) return;

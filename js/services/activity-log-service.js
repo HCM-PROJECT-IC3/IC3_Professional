@@ -21,6 +21,12 @@
     try {
       const { user, profile } = detail;
       if (!global.EduRepositories || !global.EduRepositories.activityLog) return; // repo chưa được nạp trên trang này
+      // 1 dòng "login" cho mỗi phiên tab (không phải mỗi lần F5 / chuyển trang quản trị).
+      const onceKey = 'eduActivityLogin:' + user.uid;
+      try {
+        if (sessionStorage.getItem(onceKey)) return;
+        sessionStorage.setItem(onceKey, '1');
+      } catch (e) { /* storage bị chặn — vẫn ghi */ }
       global.EduRepositories.activityLog.record({
         uid: user.uid,
         role: profile.role,

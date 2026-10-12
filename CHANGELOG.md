@@ -1,5 +1,29 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## Chia việc rõ giữa Firebase và Apps Script (10/2026)
+
+Sơ đồ đầy đủ: **`docs/architecture/BACKEND-MAP.md`** (dữ liệu nào nằm ở đâu, vì sao, công tắc cấu hình, thứ tự deploy).
+
+- **Kết quả MOS Practice → Google Sheet** (tab `NhatKyMOS`, API `mosSubmit`, `apps/src/35-mos.gs`): trước mỗi bài ghi 1 lượt Firestore `mos_submissions` mà không trang nào đọc lại; nay giáo viên mở Sheet là xem được, 0 lượt Firebase, trang MOS không nạp Firebase nữa. Bật lại Firestore: `mosResults.firestore: true` trong `js/backend-config.js`.
+- **Nhật ký hoạt động bật lại qua Apps Script** (tab `NhatKyHoatDong`, `apps/src/45-activity.gs`): đăng nhập (1 dòng/phiên tab), xem chi tiết học sinh, sửa roster... — trước phải tắt vì mỗi lần mở dashboard tốn 1 lượt ghi Firebase. Apps Script tự ghi (không bỏ qua được) khi đẩy câu hỏi, cập nhật roster, xoá bài nộp; ai làm lấy từ tài khoản đã xác thực.
+- **roster-manager: nút "🚀 Cập nhật cho học sinh"** (chỉ Admin, API `publishRoster`): đưa `data/roster/students-active.json` lên trang làm bài qua Apps Script, thay cho tải file + commit + push tay. Chỉ Admin vì file dùng chung cho mọi trường.
+- Test: `apps/__tests__/code-gs.test.js` 73 kiểm tra; `js/services/__tests__/apps-script-client.test.js` thêm phần MOS.
+
+## Backend chỉ còn Apps Script + Firebase; vá API Apps Script công khai (10/2026)
+
+- **Bảo mật — `apps/Code.gs`:** `getRoster`/`getScores`/`getDashboard` trước chạy bằng GET **không cần đăng nhập** (ai có URL Web App đọc được danh sách học sinh kèm email và điểm; `getDashboard` còn tin tham số `role` do web tự khai) và `writeReport` cho bất kỳ ai ghi tab TongHop. Nay mọi API qua doPost + Firebase ID token + bảng quyền theo vai trò (`routes_()`), điều phối chỉ thấy trường mình; GET chỉ còn kiểm tra sống. `submitExam` (công khai) kiểm tra dữ liệu (mã bài, độ dài, điểm 0–100…); bài sai bị bỏ khỏi hàng đợi thay vì gửi lại 30 ngày.
+- **Apps Script tách module** `apps/src/00-config … 90-utils.gs` (mỗi file 1 nhiệm vụ) → `node scripts/build-apps-script.js` gộp thành `apps/Code.gs` để dán; CI kiểm tra đã gộp + chạy `apps/__tests__/code-gs.test.js` (61 kiểm tra với Google/Firebase/GitHub giả lập).
+- **Tính km xăng xe qua Apps Script** (`mapDistance`, `js/services/apps-script-map-distance.js`): dịch vụ Maps có sẵn của Google — có số nhà/hẻm, không cần API key/thẻ, không còn giới hạn 1 lượt/giây; 150 lượt/ngày/người, nhớ kết quả 6 giờ; hết lượt thì dừng loạt tính. Gỡ `js/services/free-map-distance.js` (OpenStreetMap/OSRM).
+- **Đẩy câu hỏi lên GitHub qua Apps Script** (`githubPublish`/`githubReadFile`, chỉ admin, chỉ ghi `data/` `img/`): token GitHub nằm ở Script Properties `GITHUB_TOKEN`, không còn dán vào trình duyệt (token cũ trong localStorage tự bị xoá). `js/github-publish.js` giữ nguyên hàm cho image-manager.
+- **`js/services/apps-script-client.js`** (mới): 1 chỗ gọi Apps Script cho mọi trang quản trị (ID token, timeout, mã lỗi kiểu Firestore) — dashboard, bản đồ, GitHub dùng chung.
+- **Deploy:** dán `apps/Code.gs` → Save → Run `doGet` (cấp quyền Maps + kết nối ngoài) → New version; thêm `GITHUB_TOKEN` trong Script Properties.
+
+## Dashboard đọc kết quả từ Google Sheet — không cần Firebase cho bài nộp (10/2026)
+
+- **`apps/Code.gs`** — API mới `listResults` / `deleteResults` (doPost): xác thực bằng Firebase ID token (đọc `users/{uid}` qua Firestore REST bằng chính token người xem, giữ 1 giờ), phân quyền theo trường giống `firestore.rules`, quét tab nhật ký từ cuối lên và dừng ở bài cũ hơn lần tải trước. Ghi bài: thêm dấu ' cho giá trị Sheet hay tự đổi (số câu "7/24", lớp "3/12", thời gian "5:05" từng bị thành ngày/giờ; tên bắt đầu "=" thành công thức), cột mới **N – CheDo**, cột giờ nộp định dạng `HH:mm:ss d/M/yyyy`. Dữ liệu cũ bị đổi định dạng vẫn đọc ra đúng. **Deploy lại + Run `doGet` 1 lần để cấp quyền `UrlFetchApp`.**
+- **`js/services/sheet-results-api.js`** (mới) + **`js/backend-config.js → dashboard.readFrom`** (`auto` / `sheet` / `firestore`): teacher-dashboard, coordinator-dashboard (qua `student-result-repository.js`) và tab Báo cáo của ic3-dashboard đọc/xoá kết quả từ Sheet khi bật; `auto` = đọc Sheet khi Firestore không nhận mọi bài. Hỗ trợ nhiều Apps Script theo trường (`sheetEndpoints`).
+- Test: `js/services/__tests__/sheet-results-api.test.js`; `Code.gs` chạy thử với SpreadsheetApp/Firestore giả lập (36 kiểm tra: quyền, token giả/hết hạn, tải tăng dần, phục hồi dữ liệu cũ, xoá).
+
 ## Tách trang học sinh khỏi Firebase cho mùa ôn thi (10/2026)
 
 Phân tích đầy đủ: **`docs/architecture/SCALING-SPARK.md`** (vì sao hàng trăm nghìn bài/ngày không thể nằm trên Firestore Spark, các cách chia đã cân nhắc, điểm nghẽn reCAPTCHA / Apps Script / GitHub Pages).

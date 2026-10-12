@@ -62,6 +62,58 @@ khi Firestore cũng không nhận bài thì code vẫn gửi Sheet, để bài k
 (Mỗi `quiz_results` ~1,9 KB sau khi tắt index, theo `js/firestore-results.js`. TTL xoá cũng
 tính vào hạn mức **20.000 lượt xoá/ngày**, đây là trần thứ hai mà trước đây chưa tính.)
 
+## 3b. Dashboard đọc kết quả từ Google Sheet (0 lượt đọc Firebase)
+
+`EduBackend.dashboard.readFrom`: `'auto'` (mặc định: Firestore khi `firestore: 'all'`, ngược lại
+Sheet), `'sheet'`, `'firestore'`. Khi đọc Sheet, Dashboard giáo viên / điều phối / tab Báo
+cáo của ic3-dashboard gọi `apps/Code.gs → listResults_` (`js/services/sheet-results-api.js`):
+
+- **Xác thực:** gửi kèm Firebase ID token; Apps Script dùng chính token đó đọc `users/{uid}`
+  qua Firestore REST (Firestore chỉ trả về khi token thật và đúng chủ hồ sơ). Phân quyền giống
+  `firestore.rules`: admin mọi trường; điều phối đào tạo / giáo viên đã duyệt theo `schools`.
+  Kết quả xác thực giữ 1 giờ → ~1 lượt đọc Firebase/giờ/người xem.
+- **Đọc nhanh:** quét từ cuối tab lên theo khối 5.000 dòng, dừng khi gặp bài cũ hơn lần tải
+  trước (dashboard vẫn tải tăng dần như cũ). Trần 60.000 dòng/lượt.
+- **Xoá** (nút xoá ở Báo cáo): `deleteResults_`, chỉ admin / điều phối (trường của mình).
+- **Dữ liệu cũ bị Sheet tự đổi định dạng** ("7/24" → ngày 24/7, lớp "3/12", "68:08" → giờ) được
+  đọc lại đúng; bài mới ghi kèm dấu ' nên không bị đổi nữa. Cột mới **N – CheDo**
+  (Ôn luyện/Kiểm tra) tự thêm tiêu đề; bài cũ để trống.
+- Khác Firestore: không có tách số câu sai/bỏ qua (Sheet chỉ lưu "đúng/tổng" → sai = tổng − đúng),
+  không có các bộ đếm vi phạm chi tiết (multiTab, devtools…) — chỉ trạng thái + ghi chú.
+- Nếu sau này bật **Enforce App Check cho Firestore**, bước xác thực REST ở trên sẽ bị chặn
+  (Apps Script không có token App Check) → phải đổi cách xác thực.
+
+## 3c. Backend chỉ gồm Apps Script + Firebase
+
+| Phần | Lo việc gì |
+|---|---|
+| **Firebase** | Đăng nhập (Auth), tài khoản + vai trò (`users`), roster, lịch dạy, phòng thi trực tiếp, `quiz_results` khi bật |
+| **Apps Script** (`apps/src/*.gs` → gộp thành `apps/Code.gs`) | Nhận bài nộp, kết quả cho dashboard, roster/điểm/báo cáo tab Sheet, bản đồ tính km, đẩy dữ liệu lên GitHub |
+
+Mã nguồn Apps Script tách theo nhiệm vụ: `00-config` (cấu hình), `10-router` (bảng API + quyền),
+`20-auth` (xác thực Firebase ID token), `30-submissions` (ghi bài nộp), `40-results` (đọc/xoá
+kết quả), `50-reports` (HocSinh/KetQua/TongHop), `60-maps`, `70-github`, `80-sheet-setup`
+(menu định dạng Sheet), `90-utils`. Sửa file nguồn rồi chạy `node scripts/build-apps-script.js`
+→ dán `apps/Code.gs`. CI báo đỏ nếu quên gộp; `apps/__tests__/code-gs.test.js` chạy toàn bộ API
+với Google/Firebase/GitHub giả lập.
+
+| API (doPost) | Ai gọi được |
+|---|---|
+| `submitExam` | công khai (học sinh) — có kiểm tra dữ liệu, sai thì bỏ khỏi hàng đợi |
+| `listResults` | admin, điều phối, giáo viên đã duyệt (theo trường) |
+| `deleteResults`, `getRoster`, `getScores`, `getDashboard`, `writeReport` | admin, điều phối (theo trường) |
+| `mapDistance` | admin, điều phối giáo viên, điều phối, giáo viên — tối đa 150 lượt/ngày/người |
+| `githubReadFile`, `githubPublish` | admin — chỉ ghi dưới `data/`, `img/` |
+
+GET chỉ còn kiểm tra sống. **Đã vá:** trước đây `getRoster`/`getScores`/`getDashboard` chạy bằng
+GET không cần đăng nhập — ai có URL Web App đều đọc được danh sách học sinh (kể cả email) và điểm,
+và `writeReport` cho bất kỳ ai ghi vào tab TongHop.
+
+Dịch vụ ngoài còn lại (không phải backend của dự án): GitHub Pages (hosting), SharePoint của IIG
+(`js/services/sharepoint-sync.js` — đọc file Excel lịch dạy của tổ chức, Apps Script không truy
+cập được SharePoint), CDN thư viện. Đã bỏ: OpenStreetMap/OSRM (thay bằng `mapDistance`), gọi
+GitHub API trực tiếp từ trình duyệt bằng token cá nhân (thay bằng `githubPublish`).
+
 ## 4. Các cách "chia" đã cân nhắc
 
 ### A. Nhiều project Firebase (chia theo trường) — không khuyến nghị
@@ -131,8 +183,11 @@ gzip nên thực tế ước chừng 0,4–0,5 MB, chưa tính ảnh câu hỏi 
 
 ## 6. Việc cần làm khi deploy đợt này
 
-1. **Apps Script:** dán `apps/Code.gs` mới → Deploy → *Manage deployments* → Edit → *New
-   version* (giữ nguyên URL). Lần chạy đầu sẽ xin quyền tạo file Sheet (`SpreadsheetApp.create`).
+1. **Apps Script:** dán `apps/Code.gs` mới → **Save** → chọn hàm `doGet` → **Run** để cấp quyền
+   mới ("kết nối dịch vụ bên ngoài" cho xác thực + GitHub, "Maps" cho tính km) — thiếu bước này
+   các API mới báo lỗi quyền. Project Settings → Script Properties → thêm `GITHUB_TOKEN`
+   (fine-grained, "Contents: Read and write" trên đúng repo) nếu dùng nút đẩy câu hỏi. Sau đó Deploy → *Manage deployments* → ✏️ → *New
+   version* (giữ nguyên URL). Chạy menu **Công cụ IC3 → Định dạng NhatKyNopBai** 1 lần.
 2. Deploy web như thường lệ. Mặc định `firestore: 'all'` nên dashboard hoạt động như cũ.
 3. Trước mùa ôn thi: chọn chế độ theo §3, cân nhắc chia Sheet theo trường (§5.2) và chuyển
    host trang học sinh (§5.3).

@@ -22,7 +22,7 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyxiqIjwDotYLob
 function resolveAppsScriptUrl(school) {
   const map = window.EduBackend && window.EduBackend.quizResults && window.EduBackend.quizResults.sheetEndpoints;
   const url = map && school && Object.prototype.hasOwnProperty.call(map, school) ? map[school] : '';
-  return url || APPS_SCRIPT_URL;
+  return url || (window.EduBackend && window.EduBackend.appsScriptUrl) || APPS_SCRIPT_URL;
 }
 
 // ⏱️ Timeout: Nếu request quá 10 giây → báo lỗi (đơn vị: ms)
@@ -111,7 +111,8 @@ async function saveToGoogleSheet(data) {
     clickCount:  data.clickCount   ?? 0,
     status:      data.status       || 'OK',
     timestamp:   data.timestamp    || new Date().toLocaleString('vi-VN'),
-    note:        data.note         || ''
+    note:        data.note         || '',
+    examMode:    data.examMode     || ''  // cột CheDo — dashboard đọc từ Sheet cần biết Ôn luyện/Kiểm tra
   };
 
   // Code.gs mới định tuyến theo "action" — bọc payload gốc vào đây.
@@ -142,6 +143,12 @@ async function saveToGoogleSheet(data) {
     clearTimeout(timeoutId);
 
     const json = await res.json();
+    // Dữ liệu bị Apps Script từ chối hẳn (apps/src/30-submissions.gs → validateSubmission_):
+    // gửi lại cũng vô ích — permanent để hàng đợi bỏ qua, không thử lại suốt 30 ngày.
+    if (!json.ok && json.code === 'invalid-argument') {
+      console.error('❌ [GoogleSheet] Apps Script từ chối bài nộp:', json.error);
+      return { success: false, permanent: true, message: json.error };
+    }
     if (!json.ok) throw new Error(json.error || 'Apps Script báo lỗi không rõ');
 
     _submittedIds.add(clientKey);

@@ -42,8 +42,8 @@
     <b>không tốn lượt đọc/ghi Firebase</b>. Mọi thay đổi được lưu tạm thành <b>bản nháp</b> trên máy này
     (đóng tab vẫn còn); bấm <b>"🚀 Đẩy thay đổi cho học sinh"</b> để đưa lên GitHub — học sinh thấy sau
     khoảng 1–2 phút. Sửa 1 câu sẽ cập nhật luôn các bản chép của nó ở Tiết 1–8 (cùng mã câu).
-    Lần đầu đẩy sẽ hỏi GitHub token (quyền <i>Contents: Read and write</i> trên repo); có token thì trang
-    luôn tải bản mới nhất từ GitHub.
+    Việc đẩy đi qua Apps Script (token GitHub do admin cài 1 lần trong Script Properties của Apps Script,
+    không cần dán vào trình duyệt); trang luôn tải bản mới nhất từ GitHub.
   </div>
   <div id="loadState" class="loadbar">⏳ Đang tải ngân hàng câu hỏi (data/ic3)…</div>
 
@@ -99,9 +99,10 @@
 <script src="js/idle-logout.js"></script>
 <script src="js/services/data-cache-service.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<!-- Đẩy thẳng data/ic3/*.json + quiz_data.json lên GitHub qua API, thay
-     cho tải zip + giải nén + copy đè + git commit/push thủ công — xem nút
-     "📤 Xuất ra data/ic3 (đồng bộ học sinh)". -->
+<!-- Đẩy data/ic3/*.json + ảnh lên GitHub QUA APPS SCRIPT (token GitHub nằm ở Apps Script,
+     không ở trình duyệt) — xem nút "📤 Xuất ra data/ic3 (đồng bộ học sinh)". -->
+<script src="js/backend-config.js"></script>
+<script src="js/services/apps-script-client.js"></script>
 <script src="js/github-publish.js"></script>
 <script src="js/image-manager.js"></script>
 <script src="js/motion.js"></script>
