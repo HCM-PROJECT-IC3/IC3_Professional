@@ -1,7 +1,7 @@
 {
-  "version": "20261006055757",
-  "generatedAt": "2026-10-06T05:57:57.987Z",
-  "count": 2081,
+  "version": "20261014133928",
+  "generatedAt": "2026-10-14T13:39:28.978Z",
+  "count": 2838,
   "students": [
     {
       "school": "THCS Huỳnh Tấn Phát",
@@ -3097,6 +3097,3791 @@
       "school": "THCS Huỳnh Tấn Phát",
       "className": "8A9",
       "name": "Vũ Ngọc Gia Hân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Đinh Thái Khang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Huỳnh Kiều Trinh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Huỳnh Thủy Tiên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "La Uyển Du"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Lê Mỹ Lan"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Lê Nguyễn Hoàng Phi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Lê Văn Phúc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Lưu Ngọc Minh Long"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Ngụy Thúy Hân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Nguyễn Gia Khải"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Nguyễn Gia Long"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Nguyễn Hoàng Lam Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Nguyễn Hoàng Thịnh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Nguyễn Lê Ngọc Bích"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Nguyễn Lư Đăng Khoa"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Nguyễn Nhật Trâm Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Nguyễn Quốc Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Nguyễn Thái Phúc Thịnh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Nguyễn Thanh Ngọc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Nguyễn Trí Đạt"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Nur Ri Pharida"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Phạm Hoàng Tấn"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Phạm Ngọc Hoàng Yến"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Phạm Ngọc Hợp"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Phạm Oanh Oanh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Phạm Quý Khánh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Quan Gia Phú"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Thái Bảo"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Tô Gia Khang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Tôn Nữ Thúy Tâm"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Trần Đặng Đông Dương"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Trần Ngọc Liên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Trần Nguyễn Thanh Tú"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Trần Quang Minh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A1",
+      "name": "Vũ Ngô Bảo Nhi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Bùi Diệp Linh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Đào Ngọc Bảo My"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Đào Ngọc Kim Long"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Đặng Nguyễn Nam Cường"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Huỳnh Bảo An"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Huỳnh Thiên Bảo"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Khou Minh Tân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Khôi Nguyên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Lê Hoàng Phúc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Lương Diệu Đạt"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Ngô Hoàng Ngọc Bích"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Ngô Trần Ngọc Vy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Nguyễn Hồng Gia Hân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Nguyễn Minh Khang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Nguyễn Ngọc Bảo Nhi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Nguyễn Ngọc Kiều Ngân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Nguyễn Ngọc Tùng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Nguyễn Như Ngọc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Nguyễn Tấn Nguyên Khang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Nguyễn Trần Nhật Minh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Nguyễn Trọng Nghĩa"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Phạm Gia Phú"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Phạm Hoàng Vinh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Quách Tú Thanh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Quan Tuấn Hào"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Trần Gia Dinh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Trần Minh Chiến"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Trần Phúc Khang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Trần Thị Minh Tâm"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Trịnh Bảo Ngọc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A2",
+      "name": "Trương Hoài An"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Bành Kiện Hưng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Bùi Ngọc Như Phương"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Dương Hoàng Đình Bảo"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Dương Thiên Vũ"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Đỗ Khánh Đan"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Hà Phương Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Hồ Xuân Nghi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Kim Yến Mi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Lê Hoàng Quân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Lê Nguyễn Gia Bảo"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Lê Quốc Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Lương Uyển Ly"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Lý Minh Thiện"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Ngô Kiến Hòa"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Nguyễn Hồ Bảo Nhi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Nguyễn Khánh Toàn"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Nguyễn Phước Khang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Nguyễn Tấn Lộc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Nguyễn Thế Bảo Long"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Phạm Gia Khang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Phạm Lê Cẩm Tiên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Phạm Vũ Hải Yến"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Phan Kiến Thành"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Phùng Bảo Tuấn"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Quách Khả Hân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Trần Lê Quốc Danh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Trần Ngọc Bảo Trân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Trần Tiến Văn"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Trương Ngọc Hân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A4",
+      "name": "Vũ Lê Quỳnh Chi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Dương Khải Yến"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Điền Nguyễn Tuyết Nhi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Đỗ Duy Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Hoàng Trần Mỹ Hương"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Hoàng Trúc Lâm"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Hồ Vĩnh Nguyên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Huỳnh Bảo Nam"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "La Sở Mi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Lăng Nhã Di"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Lâm Chí Hải"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Lâm Tuấn Hào"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Lê Gia Hưng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Lê Gia Phúc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Lê Lâm Hiếu"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Lê Phạm Nhật Vy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Lục Siêu Gia Bảo"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Mai Nguyễn Tiến Đạt"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Nguyễn Đinh Trí Đức"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Nguyễn Đức Tài"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Nguyễn Gia Phong"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Nguyễn Lê Quốc Khánh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Nguyễn Ngọc Bảo Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Nguyễn Ngọc Như Ý"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Nguyễn Ngọc Tỷ"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Nguyễn Ngọc Vy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Nguyễn Tấn Lộc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Nguyễn Thái Phương Vy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Nguyễn Thị Ngọc My"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Nguyễn Thiên Kim"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Nguyễn Thiên Phúc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Nguyễn Tuấn Kiệt"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Phạm Gia Hân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Phạm Gia Huy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Phạm Quốc Huy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Phạm Tấn Long"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Phùng Gia Tiến"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Trang Mạn Ngọc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Trần Bảo Huân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Trần Diệp Lam Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A5",
+      "name": "Vũ Hoàng Khải"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Bùi Trọng Hiếu"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Bùi Tuấn Kiệt"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Châu Hoàng Diệu Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Diêu Gia Bảo"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Đinh Bùi Ngọc Trâm"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Đinh Nguyễn Tuấn Kiệt"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Hàng Chí Hào"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Hoàng Hải Yến"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Huỳnh Trương Minh Triết"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Huỳnh Tuấn Hoằng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Lê Gia Hân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Lê Minh Khôi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Lê Ngọc Bảo Hân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Lê Nguyễn Uyên Nhi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Lê Tiến Lộc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Lê Trương Nhật Cường"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Lữ Đức Vĩ"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Lương Đình Ngọc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Ngô Phạm Thảo Vy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Nguyễn An Vũ"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Nguyễn Bảo Ngọc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Nguyễn Đức Thảo Vy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Nguyễn Huỳnh Đức Trí"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Nguyễn Nhật Nam"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Nguyễn Tiến Lộc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Nguyễn Trang Thư"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Nguyễn Trần Ngọc Hân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Nguyễn Vũ Thảo Nghi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Phạm Đoàn Minh Dương"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Phạm Ngọc Gia Nghi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Phan Nguyễn Gia Hân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Quảng Lê Bảo Sơn"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Tchen Viên Hảo"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Trang Hải Nguyên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Trần Phan Bích Xuân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Trần Thiên Bảo"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Trần Tuấn An"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Trần Vũ Trí Hào"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Võ Hoàng Ý My"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A6",
+      "name": "Vương Quán Long"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Bùi Hoàng Hà Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Bùi Lê Uyên Linh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Bùi Ngọc Bảo Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Cấn Phương Nghi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Dương Ngọc Tài"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Dương Phát Đạt"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Đinh Gia Hân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Giang Trấn Phong"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Hồ Nguyễn Khánh Vy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Huỳnh Anh Kiệt"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Huỳnh Minh Khang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Hứa Nguyễn Ánh Dương"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Lê Bảo Duy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Lê Hoàng Trọng Phúc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Lê Nguyễn Bảo Ngọc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Lê Võ Kim Thy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Lý Minh Khôi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Nguyễn Bảo Hân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Nguyễn Khánh Linh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Nguyễn Khánh Ngọc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Nguyễn Lam Ngọc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Nguyễn Minh Khôi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Nguyễn Phúc Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Nguyễn Thái Hòa"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Nguyễn Trần Khánh Ngân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Nguyễn Ý Nhung"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Ô Tuấn Nguyên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Phạm An Nhiên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Phan Thành Trí"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Quách Phú Thành"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Tạ Ngọc Quế Trân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Thái Nguyên Khang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Thi Bảo Trâm"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Tô Thụy Phương Minh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Trần Gia Hưng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Trần Hoàng Thanh Nhàn"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Trần Huyền My"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Trần Huỳnh Thiên Ân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Vũ Khánh Băng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A7",
+      "name": "Vương Mỹ Khuê"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Châu Viên Tuấn"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Đỗ Bội Chi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Hà Thiện Tấn"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Hà Tuấn Nam"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Hoàng Dương Bảo Ngọc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Huỳnh Bảo Nghi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Huỳnh Chí Hùng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Huỳnh Thái An"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "La Giai Doanh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Lâm Ngọc Hoàn"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Lâm Tuấn Hào"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Lê Bảo Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Liêu Hiên Vũ"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Lưu Khánh Hy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Lưu Thanh Hải"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Ngô Gia Mẫn"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Ngô Hòa Hào"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Ngô Ngọc Minh Châu"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Ngô Vĩ Khang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Nguyễn Gia Hân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Nguyễn Huy Hoàng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Nguyễn Ngọc Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Nguyễn Thế Khải"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Phan Vĩnh Tân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Quách Gia Phúc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Quang Huệ Mẫn"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Tạ Tuyết My"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Tăng Bác Hiên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Tăng Gia Phú"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Trần Cẩm Thuyên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Trần Hiểu Đình"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Trần Kiến Dân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Trần Ngọc Bội"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Trần Phú Danh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Triệu Lương Minh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Trịnh Văn Kiệt"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Trương Tuyết Như"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Văn Thục Hỷ Điền"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "6A8",
+      "name": "Viên Vân Nhi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Cao Khởi My"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Cao Nguyễn Phúc Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Cao Nguyễn Thùy Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Châu Gia Tuấn"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Diệp Quý San"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Đặng Hồng Nghi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Đinh Bình Minh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Đinh Hoàng Kim"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Hoàng Hoài Lam"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Huỳnh Khánh Hào"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Lai Trần Kim Phúc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Lâm Phát Đạt"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Lê Gia Phúc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Lê Nhã Ca"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Liêu Bữu Thuận"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Lương Thiều Loan"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Nguyễn Chí Thiện"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Nguyễn Hoàng Anh Thư"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Nguyễn Hồng Bảo Ngọc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Nguyễn Khánh Đăng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Nguyễn Minh Khang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Nguyễn Mỹ Trân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Nguyễn Ngọc Như Ý"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Nguyễn Quách Ngọc Diệp"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Nguyễn Thanh Cường"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Nguyễn Vũ Minh Hiền"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Phạm Gia Tuấn"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Phạm Hoàng Quang Minh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Phạm Nhã Đình"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Phan Ngọc Minh Tuyết"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Quan Tuấn Đạt"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Tăng Vĩnh Khải"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Thi Ngọc Thịnh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Trần Chí Nguyên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Trần Hoàng Minh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Trần Khánh An"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Trần Khánh Thi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Trần Lai Phát"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Trần Nguyên Khang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Trương Quỳnh Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Văn Phương Nhu"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Võ Lý Thiện Nhân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A1",
+      "name": "Vy Hạo Nhiên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Bành Tuấn Kiệt"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Bùi Khánh Hưng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Dương Gia Hân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Dương Minh Hải"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Đặng Tuấn Hữu"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Đinh Trường Mãn"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Đoàn Lê Minh Thái"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Đỗ Ngọc Khánh Vân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Đỗ Thanh Huyền"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Đỗ Thế Hiển"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Đỗ Tường Vy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Giang Phú Thuận"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Hà Bảo Châu"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Hồ Đức Minh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Hồ Trí Thông"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Huỳnh Ngọc Thiên Kim"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Huỳnh Nhã Thư"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Huỳnh Nhật Khang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Huỳnh Thiên Hào"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Lâm Nguyễn Ngọc Bích"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Lê Minh Thư"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Lê Quang Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Lê Thanh Vân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Ngô Nguyên Khôi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Nguyễn Bảo Trân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Nguyễn Lâm Hạo Nhiên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Nguyễn Minh Quân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Nguyễn Ngọc Bảo Nhi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Nguyễn Ngọc Yến Nhi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Nguyễn Quang Đông"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Nguyễn Thị Bảo Ngọc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Nguyễn Trần Bảo Như"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Nguyễn Vĩnh Khang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Nguyễn Vĩnh Kỳ"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Nguyễn Vũ Bảo Phương"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Nguyễn Xuân Bách"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Phan Võ Như Quỳnh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Tăng Ái My"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Trần Gia Huy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Trần Ngọc Hân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Trịnh Duy Minh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Trương Phú Nhi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Trương Triển Luân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Võ Phú Danh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A2",
+      "name": "Vương Vĩ Thiện"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Bùi Thế Thành"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Du Duy Mỹ"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Dư Định Ngân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Đinh Quốc Huy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Đinh Quốc Lâm"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Đinh Vĩ Kỳ"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Đỗ Ngọc Thùy Tâm"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Hoàng Đình Dương"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Hoàng Nhật Minh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Hoàng Nhật Tâm"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Lâm Thái Phúc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Lê Khả Hoàng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Lê Ngọc Thiên Kim"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Lê Tuấn Kiệt"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Li Quán Hưng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Lưu Hoàng Vi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Lý Hán Thành"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Ngô Gia Huy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Nguy Ngọc Tuyết"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Nguyễn Đức Duy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Nguyễn Hoàng Phúc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Nguyễn Lâm Nhựt Tiến"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Nguyễn Lân Phát"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Nguyễn Lê Duy Khánh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Nguyễn Long Khoa"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Nguyễn Minh Huy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Nguyễn Ngọc Huyền My"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Nguyễn Nhật Huy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Nguyễn Như Ý"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Nguyễn Tấn Phát"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Nguyễn Thị Trà My"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Nguyễn Trọng Tuấn"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Nguyễn Trung Thành"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Phạm Khôi Nguyên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Phạm Nguyễn Thanh Trí"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Phạm Trung Hiếu"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Phan Minh Luân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Quách Thuấn Hoa"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Trần Thanh Thái"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Vi Khang Tín"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Võ Trung Hiếu"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Vũ Châu Trường An"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A3",
+      "name": "Vũ Hoàng My"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Bùi Tiến Thành"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Chiêm Tuấn Đạt"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Đàm Thuận Thăng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Đoàn Nguyên Nhật"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Huỳnh Bá Khang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Huỳnh Bùi Yến Phụng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Huỳnh Gia Long"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Huỳnh Minh Khuê"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Lâm Mẫn Nghi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Lê Ngọc Thảo"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Lê Thiên Phúc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Lý Mỹ Lệ"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Ngô Bùi Hoàng Thùy Dương"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Nguyễn Đỗ Quỳnh Hương"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Nguyễn Gia Minh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Nguyễn Huỳnh Long"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Nguyễn Khánh Ngọc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Nguyễn Ngọc Anh Vy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Nguyễn Ngọc Bảo Châu"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Nguyễn Quốc Huy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Nguyễn Quốc Thông"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Nguyễn Thị Quỳnh Trang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Nguyễn Trường Minh An"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Nguyễn Tuấn Phúc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Phạm An Nhiên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Phạm Mỹ Tâm"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Phạm Tấn Kế"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Tạ Bội Đình"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Tăng Bảo Nghi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Tăng Gia Hỷ"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Tiêu Minh Phú"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Trần Bảo Châu"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Trần Bảo Khang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Trần Bảo Khang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Trần Bảo Ngọc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Trần Kim Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Trần Quốc Vĩ Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Trần Văn Minh Đức"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Triệu Tuấn Thông"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Trương Hoàng Khôi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Võ Thế Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Vũ Chính Liêm"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A4",
+      "name": "Vũ Trần Thiên Kim"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Bạch Gia Minh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Bùi Gia Bảo"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Cai Quốc Khang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Châu Khôi Nguyên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Dương Thuận Phát"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Đàm Phúc Nghi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Đặng Quế Mai"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Đỗ Lý Khắc Kiệt"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Đỗ Lý Trường Thịnh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Hồ Anh Việt"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Hồ Đông Nghi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Hồng Trần Gia Hỷ"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Lê Gia Khang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Lê Nguyễn Kiến Minh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Lê Thị Ngọc Quyên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Lê Vân Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Lý Kim Phụng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Mai Hồ Trung Dũng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Ngô Hoàng Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Nguyễn Ái Như"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Nguyễn Anh Thư"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Nguyễn Bảo Khang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Nguyễn Bảo Ngọc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Nguyễn Đông Nhi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Nguyễn Ngọc Cát Tiên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Nguyễn Ngọc Gia Nghi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Nguyễn Ngọc Kim Ngân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Nguyễn Nhật Trường"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Nguyễn Phạm Hoàng Dung"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Nguyễn Phương Kiệt"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Nguyễn Trần Đình Khôi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Nguyễn Trường Minh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Nguyễn Võ Hoàng Dương"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Ong Gia Minh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Phạm Nguyễn Thiên Kim"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Phó Gia Hân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Tăng Nhật Hào"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Tô Phú Hưng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Trang Bội Ngọc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Trần Đức Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Trần Nguyễn Anh Tài"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Trần Phúc Quân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Trần Vĩ Hào"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A5",
+      "name": "Võ Hạo Nhiên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Bùi Thiện Nhân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Đào Phúc Nghĩa"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Đặng Thái Lê Phương"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Đặng Tôn Nghị"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Đoàn Khánh Quỳnh Như"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Hà Minh Long"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Hồ Phúc Đại"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Huỳnh Anh Thơ"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Huỳnh Gia Minh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Huỳnh Hải Phong"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Huỳnh Lê Tuấn Huy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Huỳnh Vũ Minh Thư"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Huỳnh Ý Kim"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Lê Huệ Mẫn"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Lê Huy Khôi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Lê Ngọc Phương Quỳnh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Lê Xuân Phúc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Luân Tâm Kỳ Khiêm"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Luân Tâm Kỳ Phong"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Mã Đức Thịnh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Mai Trung Quân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Ngô Thế Bảo"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Nguyễn Đình Nguyên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Nguyễn Đỗ Tuấn Hùng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Nguyễn Đỗ Xuân Trường"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Nguyễn Đức Thanh Thảo"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Nguyễn Ngọc Bảo Nghi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Nguyễn Phạm Công Tú"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Nguyễn Phương Nga"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Nguyễn Tâm Như Ngọc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Nguyễn Thị Mỹ Huyền"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Nguyễn Trương Hoài Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Phạm Ngọc Bảo Ngân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Phương Thế Hào"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Trần Anh Khôi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Trần Kim Thảo Như"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Trần Phạm Minh Thơ"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Trần Ravin"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Trần Vĩ Kỳ"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Trịnh Phương Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Trương Gia Linh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Vũ Hải Đăng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Vũ Trần Ngọc Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A6",
+      "name": "Vương Bích Ngân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Âu Dĩnh Ân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Bành Huệ Tâm"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Chau Mỹ Tâm"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Châu Kiến Hy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Dương Kiến Dĩnh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Đặng Vịnh Nghi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Đỗ Gia Ân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Hà Bội Phương"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Hấu Gia Nguyên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Huang Vi Phong"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Lâm Quý Thành"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Lê Ánh Di"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Loy Jia Xin"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Lưu Gia Quân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Lý Công Thành"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Lý Văn Long"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Phù Vĩnh My"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Phùng Thiên Bích"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Quan Bội Nghi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Quan Thiên Di"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Thái Mỹ Vân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Trần Huy Khanh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Trần Nguyễn Phương Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Trần Thúy Mẫn"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Trần Viên Xuân Nghi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Trương Ái My"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Trương Văn Tài"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Văn Phụng Linh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Võ Cẩm Thái"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "7A7",
+      "name": "Vương Kiến Long"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Bùi Nguyễn Anh Tuấn"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Bùi Nguyễn Uyên Phương"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Cao Nguyễn Thiên Kim"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Châu Thành Đạt"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Cheam Hoàng Yến Nhi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Chềnh Trí Thuận"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Dương Nguyễn Hoàng Kim"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Dương Tôn Quyền"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Đào Xuân Kiên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Đặng Minh Vy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Hoàng Trần Mỹ Hạnh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Huỳnh Ngọc Huyền"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Huỳnh Quế San"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Huỳnh Trọng Thoại"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Hứa Minh Đăng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Lâm Chí Hậu"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Lâm Khả Hân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Lê Gia Bảo"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Lê Minh Đăng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Lê Nguyễn Ngọc Thảo"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Lê Nguyên Nhạc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Lương Chí Thông"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Lương Gia Tiến"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Lương Thiên Ân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Lý Huỳnh Khánh Duy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Lý Phúc Nguyên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Nguyễn Gia Tuấn"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Nguyễn Hoàng Gia Bảo"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Nguyễn Hoàng Phúc Lộc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Nguyễn Lam Khánh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Nguyễn Lê Mai Thy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Nguyễn Quốc Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Nguyễn Thùy Duyên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Nguyễn Trần Gia Hân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Nguyễn Võ Phương Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Phan Văn Hoàng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Thái Phúc Đại"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Trần Gia Tuấn"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Trần Phú Bang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Triệu Phú Vinh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Trương Công Nhật"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Võ Ngọc Tuyết Nhi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Vũ Khắc Hoàng Minh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A1",
+      "name": "Yến Bội San"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Âu Dương Phát"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Cam Chấn Duy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Châu Huỳnh Yến Lam"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Cổ Kiến Văn"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Đoàn Kim Ngân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Hồ Ân Đình"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Huỳnh Duy Khương"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Huỳnh Hoành Hy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Lâm Gia Ân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Lê Đoàn Gia Hân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Lê Nhật Duy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Lê Trần Kim Ngân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Lê Uyên Vy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Lư Khải Văn"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Lưu Lâm Ngọc Phương"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Lý An Phát"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "MSaLiêm Al Abdul Aziz"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Ngô Gia Nghi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Nguyễn Bảo Trân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Nguyễn Hữu Trung"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Nguyễn Kiến Phúc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Nguyễn Ngô Ngọc Trân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Nguyễn Nhật Tiến"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Nguyễn Quốc Bảo"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Nguyễn Thành Tài"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Nguyễn Võ Sơn Tùng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Phạm Thiên Tuệ"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Tạ Minh Hoàng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Tăng Hiến Trung"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Tăng Huệ Nguyên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Trần Đại Quang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Trần Hải Long"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Trần Kim Lộc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Trần Ngọc Hoa"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Trần Trương Bích Thùy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Trần Vi Na"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Trịnh Nguyễn Trà My"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Trịnh Triết Khang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Trương Yến Đình"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Từ Gia Ngọc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A2",
+      "name": "Võ Lai Nguyên Khang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Cao Thục Nhi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Châu Cảm Ân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Chung Quí Lâm"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Diệc Kỳ"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Đặng Mỹ Vân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Đặng Tú Uyên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Đỗ Quốc Huy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Đỗ Thiên Kim"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Hong Ân Diệu"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Huỳnh Bội Ân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Huỳnh Gia Hân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Huỳnh Gia Huệ"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Huỳnh Minh Quyền"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Lai La Tuyết Vân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Lê Quang Huy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Lim Tuấn Đạt"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Lư Phước Hy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Lương Khánh Mãn"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Lương Kiến Lâm"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Lưu Gia Hân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Lưu Vinh Phong"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Lý Kiến Bách"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Lý Thể Oanh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Lý Vĩ Thuận"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Ngũ Gia Ý"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Nguyễn Anh Như"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Nìm Tỉ Uyên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Phạm Chí Phong"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Phan Trần Trung Minh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Quách Bảo Nhi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Siu Uyển Trân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Tiên Tuấn Hoành"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Tô Gia Nhi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Trần Cẩm Lực"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Trần Lan Chi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Trần Minh Lương"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Trần Tuyết Linh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Trương Hữu Khang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Trương Minh Tùng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Trương Quốc Hùng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Từ Quý Lam"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Vưu Dư Tuấn"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A3",
+      "name": "Yên Tuấn Thành"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Đào Nguyễn Duy Long"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Đặng Phú Quý"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Hà Thúy Dư"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Hoàng Nhã Uyên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Hồ Gia Khang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Hồ Hoàng Hiền Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Hồ Vĩnh Tín"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Huỳnh Gia Tuệ"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Huỳnh Khánh Phương Nghi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Lâm Quốc An"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Lâm Thiện Mỹ"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Lê Hoàng Nam"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Lê Huỳnh Đức"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Lê Lư Phước Sang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Lý Nguyễn Tường Vi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Ngô Trọng Hiếu"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Nguyễn Cao Tường Vy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Nguyễn Đăng Khôi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Nguyễn Đình Khôi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Nguyễn Đỗ Tú Nhi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Nguyễn Đường Châu Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Nguyễn Gia Hân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Nguyễn Gia Khiêm"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Nguyễn Hữu Nghĩa"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Nguyễn Khánh Hưng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Nguyễn Khoa Minh Nhân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Nguyễn Khoa Nhật"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Nguyễn Trần Thiên Bảo"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Nguyễn Vĩnh Phát"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Phạm Minh Vũ"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Tạ Yến Nhi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Thái Hiểu Đan"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Trần Bảo An"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Trần Gia Bảo"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Trần Hoàng Nguyên Vương"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Trần Ngọc Chi Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Trần Thái Phong"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Trần Thắng Nam"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Trần Thùy Dung"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Trương Hà Khang"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Trương Hữu Tín"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A4",
+      "name": "Trương Quốc Anh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Bùi Nam Phương"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Bùi Xuân Trúc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Dương Tuệ Mẫn"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Đặng Bảo Vy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Đặng Gia Thành"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Đặng Thế Hào"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Hồ Khánh Ân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "La Khánh Lương"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Lai Tú Linh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Lê Bảo Hà Vi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Lê Hoàng Anh Thư"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Lê Hoàng Lan Phương"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Lượng Vũ Gia Cát"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Lưu Nguyễn Đan Thy"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Lưu Tuệ Nghi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Nguyễn Gia Ân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Nguyễn Gia Hân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Nguyễn Hữu Chiêu Nghi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Nguyễn Minh Tâm"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Nguyễn Ngọc Thanh Tâm"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Nguyễn Phương Linh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Nguyễn Quốc Long"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Nguyễn Thái Phương Uyên"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Nguyễn Thảo Phương"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Nguyễn Viết Lê"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Phạm Huỳnh Thanh Trúc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Phạm Lê Minh Hoàng"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Phạm Ngọc Gia Mỹ"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Phạm Nguyễn Gia Phúc"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Phạm Phúc Tường"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Tạ Thị Hoài Thương"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Tăng Bội Ngân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Thái Ngọc Phương Nhi"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Trần Anh Khoa"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Trần Mai Hương"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Trần Nguyễn Quỳnh Như"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Trương Gia Hân"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Trương Ngọc Thiên Ý"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Trương Tấn Thịnh"
+    },
+    {
+      "school": "THCS Mạch Kiếm Hùng",
+      "className": "8A5",
+      "name": "Vũ Lê Ngọc Diệp"
     },
     {
       "school": "TIH NGUYỄN TRUNG NGẠN",
