@@ -112,7 +112,9 @@ async function saveToGoogleSheet(data) {
     status:      data.status       || 'OK',
     timestamp:   data.timestamp    || new Date().toLocaleString('vi-VN'),
     note:        data.note         || '',
-    examMode:    data.examMode     || ''  // cột CheDo — dashboard đọc từ Sheet cần biết Ôn luyện/Kiểm tra
+    examMode:    data.examMode     || '', // cột CheDo — dashboard đọc từ Sheet cần biết Ôn luyện/Kiểm tra
+    // cột CauSai — uid câu sai "a,b,c" ('' = không sai câu nào); bài cũ trong hàng đợi không có → bỏ trống
+    wrong:       typeof data.wrong === 'string' ? data.wrong : undefined
   };
 
   // Code.gs mới định tuyến theo "action" — bọc payload gốc vào đây.

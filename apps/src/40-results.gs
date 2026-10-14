@@ -41,8 +41,46 @@ function logRowToResult_(r, ms) {
     elapsedSec: (Number(t[0]) || 0) * 60 + (Number(t[1]) || 0),
     tabSwitches: Number(r[8]) || 0, clicks: Number(r[9]) || 0,
     integrityOk: integrityOk, flags: flags, timedOut: note.indexOf('Hết giờ') !== -1,
-    examMode: r[13] || '', submittedAtMs: ms, source: 'sheet'
+    // O — CauSai: "a,b" | "-" (không sai câu nào) | trống (bài do web cũ gửi, không có dữ liệu).
+    examMode: r[13] || '', wrong: r[14] && r[14] !== '-' ? String(r[14]).split(',') : [], wrongTracked: !!r[14],
+    submittedAtMs: ms, source: 'sheet'
   };
+}
+
+/**
+ * "Câu cả lớp hay sai" — tổng hợp cột O (CauSai) NGAY TRÊN SERVER rồi trả về bảng gọn
+ * (≤ WRONG_STATS_TOP câu), thay vì gửi hàng nghìn bài về trình duyệt. Dùng chung bộ
+ * lọc/quyền với listResults_. Không đụng Firestore (chỉ xác thực người gọi như mọi API).
+ * p: { schools?, classes?, sinceMs?, testName? }
+ * @returns {{ submissions, withData, truncated, items: [{uid, count, students, tests}] }}
+ *   submissions = số bài trong phạm vi; withData = số bài có dữ liệu cột CauSai (mẫu số để
+ *   tính % sai — bài cũ trước khi có cột O không tính); students = số HS khác nhau làm sai.
+ */
+function wrongStats_(p, who) {
+  const res = listResults_({ schools: p.schools, classes: p.classes, sinceMs: p.sinceMs, limit: READ_MAX_ROWS }, who);
+  const wantTest = p.testName ? String(p.testName) : '';
+  const byUid = {};
+  let submissions = 0;
+  let withData = 0;
+  res.rows.forEach(function (r) {
+    if (wantTest && r.testName !== wantTest) return;
+    submissions++;
+    if (!r.wrongTracked) return;
+    withData++;
+    const student = nameKey_(r.studentName) + '|' + String(r.studentClass || '').toLowerCase();
+    r.wrong.forEach(function (uid) {
+      const e = byUid[uid] || (byUid[uid] = { uid: uid, count: 0, students: {}, tests: {} });
+      e.count++;
+      e.students[student] = 1;
+      e.tests[r.testName] = (e.tests[r.testName] || 0) + 1;
+    });
+  });
+  const items = Object.keys(byUid).map(function (k) {
+    const e = byUid[k];
+    const tests = Object.keys(e.tests).sort(function (a, b) { return e.tests[b] - e.tests[a]; });
+    return { uid: e.uid, count: e.count, students: Object.keys(e.students).length, tests: tests.slice(0, 3) };
+  }).sort(function (a, b) { return (b.count - a.count) || (b.students - a.students) || (a.uid < b.uid ? -1 : 1); });
+  return { submissions: submissions, withData: withData, truncated: res.truncated, items: items.slice(0, WRONG_STATS_TOP) };
 }
 
 /**

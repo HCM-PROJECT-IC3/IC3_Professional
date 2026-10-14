@@ -1,0 +1,944 @@
+{
+ "Spark__LV1": {
+  "spark__lv1__hotspot__q2": {
+   "to": 3,
+   "reason": "Trình duyệt / trang web / dấu trang / lịch sử / đánh giá thông tin trực tuyến — PPCT Spark LV1 Bài 13–16 (Quản lý thông tin)"
+  },
+  "spark__lv1__hotspot__q3": {
+   "to": 3,
+   "reason": "Trình duyệt / trang web / dấu trang / lịch sử / đánh giá thông tin trực tuyến — PPCT Spark LV1 Bài 13–16 (Quản lý thông tin)"
+  },
+  "spark__lv1__hotspot__q4": {
+   "to": 3,
+   "reason": "Trình duyệt / trang web / dấu trang / lịch sử / đánh giá thông tin trực tuyến — PPCT Spark LV1 Bài 13–16 (Quản lý thông tin)"
+  },
+  "spark__lv1__t1__q13": {
+   "to": 3,
+   "reason": "Trình duyệt / trang web / dấu trang / lịch sử / đánh giá thông tin trực tuyến — PPCT Spark LV1 Bài 13–16 (Quản lý thông tin)"
+  },
+  "spark__lv1__t1__q14": {
+   "to": 3,
+   "reason": "Trình duyệt / trang web / dấu trang / lịch sử / đánh giá thông tin trực tuyến — PPCT Spark LV1 Bài 13–16 (Quản lý thông tin)"
+  },
+  "spark__lv1__t2__q16": {
+   "to": 3,
+   "reason": "Trình duyệt / trang web / dấu trang / lịch sử / đánh giá thông tin trực tuyến — PPCT Spark LV1 Bài 13–16 (Quản lý thông tin)"
+  },
+  "spark__lv1__t2__q17": {
+   "to": 3,
+   "reason": "Trình duyệt / trang web / dấu trang / lịch sử / đánh giá thông tin trực tuyến — PPCT Spark LV1 Bài 13–16 (Quản lý thông tin)"
+  },
+  "spark__lv1__t4__q2": {
+   "to": 3,
+   "reason": "Trình duyệt / trang web / dấu trang / lịch sử / đánh giá thông tin trực tuyến — PPCT Spark LV1 Bài 13–16 (Quản lý thông tin)"
+  },
+  "spark__lv1__t4__q85": {
+   "to": 3,
+   "reason": "Trình duyệt / trang web / dấu trang / lịch sử / đánh giá thông tin trực tuyến — PPCT Spark LV1 Bài 13–16 (Quản lý thông tin)"
+  },
+  "spark__lv1__t6__q7": {
+   "to": 3,
+   "reason": "Trình duyệt / trang web / dấu trang / lịch sử / đánh giá thông tin trực tuyến — PPCT Spark LV1 Bài 13–16 (Quản lý thông tin)"
+  },
+  "spark__lv1__t6__q12": {
+   "to": 3,
+   "reason": "Trình duyệt / trang web / dấu trang / lịch sử / đánh giá thông tin trực tuyến — PPCT Spark LV1 Bài 13–16 (Quản lý thông tin)"
+  },
+  "spark__lv1__t1__q11": {
+   "to": 7,
+   "reason": "Mật khẩu, người lạ trực tuyến, thời gian dùng thiết bị, cân bằng sức khoẻ — PPCT Bài 9–12 (An toàn và bảo mật)"
+  },
+  "spark__lv1__t6__q1": {
+   "to": 7,
+   "reason": "Mật khẩu, người lạ trực tuyến, thời gian dùng thiết bị, cân bằng sức khoẻ — PPCT Bài 9–12 (An toàn và bảo mật)"
+  },
+  "spark__lv1__t6__q2": {
+   "to": 7,
+   "reason": "Mật khẩu, người lạ trực tuyến, thời gian dùng thiết bị, cân bằng sức khoẻ — PPCT Bài 9–12 (An toàn và bảo mật)"
+  },
+  "spark__lv1__t6__q3": {
+   "to": 7,
+   "reason": "Mật khẩu, người lạ trực tuyến, thời gian dùng thiết bị, cân bằng sức khoẻ — PPCT Bài 9–12 (An toàn và bảo mật)"
+  },
+  "spark__lv1__t6__q6": {
+   "to": 7,
+   "reason": "Mật khẩu, người lạ trực tuyến, thời gian dùng thiết bị, cân bằng sức khoẻ — PPCT Bài 9–12 (An toàn và bảo mật)"
+  },
+  "spark__lv1__t6__q4": {
+   "to": 2,
+   "reason": "Bạn bè trực tuyến, ứng xử khi tranh cãi — PPCT Bài 29–30 (Công dân số)"
+  },
+  "spark__lv1__t6__q10": {
+   "to": 2,
+   "reason": "Bạn bè trực tuyến, ứng xử khi tranh cãi — PPCT Bài 29–30 (Công dân số)"
+  },
+  "spark__lv1__t6__q5": {
+   "to": 1,
+   "reason": "Thiết bị di động / pin máy tính bảng — PPCT Bài 7 (Căn bản về công nghệ)"
+  },
+  "spark__lv1__t6__q8": {
+   "to": 4,
+   "reason": "Ứng dụng trình chiếu, phông chữ — PPCT Bài 17–27 (Sáng tạo nội dung)"
+  },
+  "spark__lv1__t6__q9": {
+   "to": 4,
+   "reason": "Ứng dụng trình chiếu, phông chữ — PPCT Bài 17–27 (Sáng tạo nội dung)"
+  },
+  "spark__lv1__t4__q5": {
+   "to": 5,
+   "reason": "Email, tin nhắn, video chat, chọn phương thức truyền thông — PPCT Bài 32–35 (Giao tiếp)"
+  },
+  "spark__lv1__t6__q11": {
+   "to": 5,
+   "reason": "Email, tin nhắn, video chat, chọn phương thức truyền thông — PPCT Bài 32–35 (Giao tiếp)"
+  },
+  "spark__lv1__t6__q13": {
+   "to": 5,
+   "reason": "Email, tin nhắn, video chat, chọn phương thức truyền thông — PPCT Bài 32–35 (Giao tiếp)"
+  },
+  "spark__lv1__t6__q14": {
+   "to": 5,
+   "reason": "Email, tin nhắn, video chat, chọn phương thức truyền thông — PPCT Bài 32–35 (Giao tiếp)"
+  },
+  "spark__lv1__t6__q15": {
+   "to": 5,
+   "reason": "Email, tin nhắn, video chat, chọn phương thức truyền thông — PPCT Bài 32–35 (Giao tiếp)"
+  },
+  "spark__lv1__t6__q16": {
+   "to": 5,
+   "reason": "Email, tin nhắn, video chat, chọn phương thức truyền thông — PPCT Bài 32–35 (Giao tiếp)"
+  },
+  "spark__lv1__t6__q17": {
+   "to": 5,
+   "reason": "Email, tin nhắn, video chat, chọn phương thức truyền thông — PPCT Bài 32–35 (Giao tiếp)"
+  },
+  "spark__lv1__t6__q18": {
+   "to": 5,
+   "reason": "Email, tin nhắn, video chat, chọn phương thức truyền thông — PPCT Bài 32–35 (Giao tiếp)"
+  },
+  "spark__lv1__t6__q23": {
+   "to": 5,
+   "reason": "Email, tin nhắn, video chat, chọn phương thức truyền thông — PPCT Bài 32–35 (Giao tiếp)"
+  },
+  "spark__lv1__t6__q74_new": {
+   "to": 5,
+   "reason": "Email, tin nhắn, video chat, chọn phương thức truyền thông — PPCT Bài 32–35 (Giao tiếp)"
+  }
+ },
+ "Spark__LV2": {
+  "spark__lv2__t1__q16": {
+   "to": 3,
+   "reason": "Trình duyệt, dấu trang, điều hướng, phân loại nội dung trực tuyến, tìm kiếm — PPCT Spark LV2 Bài 9–14 (Quản lý thông tin)"
+  },
+  "spark__lv2__t1__q17": {
+   "to": 3,
+   "reason": "Trình duyệt, dấu trang, điều hướng, phân loại nội dung trực tuyến, tìm kiếm — PPCT Spark LV2 Bài 9–14 (Quản lý thông tin)"
+  },
+  "spark__lv2__t1__q23": {
+   "to": 3,
+   "reason": "Trình duyệt, dấu trang, điều hướng, phân loại nội dung trực tuyến, tìm kiếm — PPCT Spark LV2 Bài 9–14 (Quản lý thông tin)"
+  },
+  "spark__lv2__t2__q1": {
+   "to": 3,
+   "reason": "Trình duyệt, dấu trang, điều hướng, phân loại nội dung trực tuyến, tìm kiếm — PPCT Spark LV2 Bài 9–14 (Quản lý thông tin)"
+  },
+  "spark__lv2__t2__q2": {
+   "to": 3,
+   "reason": "Trình duyệt, dấu trang, điều hướng, phân loại nội dung trực tuyến, tìm kiếm — PPCT Spark LV2 Bài 9–14 (Quản lý thông tin)"
+  },
+  "spark__lv2__t4__q1": {
+   "to": 3,
+   "reason": "Trình duyệt, dấu trang, điều hướng, phân loại nội dung trực tuyến, tìm kiếm — PPCT Spark LV2 Bài 9–14 (Quản lý thông tin)"
+  },
+  "spark__lv2__t6__q1": {
+   "to": 3,
+   "reason": "Trình duyệt, dấu trang, điều hướng, phân loại nội dung trực tuyến, tìm kiếm — PPCT Spark LV2 Bài 9–14 (Quản lý thông tin)"
+  },
+  "spark__lv2__t6__q2": {
+   "to": 3,
+   "reason": "Trình duyệt, dấu trang, điều hướng, phân loại nội dung trực tuyến, tìm kiếm — PPCT Spark LV2 Bài 9–14 (Quản lý thông tin)"
+  },
+  "spark__lv2__t6__q3": {
+   "to": 3,
+   "reason": "Trình duyệt, dấu trang, điều hướng, phân loại nội dung trực tuyến, tìm kiếm — PPCT Spark LV2 Bài 9–14 (Quản lý thông tin)"
+  },
+  "spark__lv2__t6__q14": {
+   "to": 3,
+   "reason": "Trình duyệt, dấu trang, điều hướng, phân loại nội dung trực tuyến, tìm kiếm — PPCT Spark LV2 Bài 9–14 (Quản lý thông tin)"
+  },
+  "spark__lv2__t6__q15": {
+   "to": 3,
+   "reason": "Trình duyệt, dấu trang, điều hướng, phân loại nội dung trực tuyến, tìm kiếm — PPCT Spark LV2 Bài 9–14 (Quản lý thông tin)"
+  },
+  "spark__lv2__t1__q19": {
+   "to": 7,
+   "reason": "Ảnh hưởng của xem màn hình lâu đến sức khoẻ — PPCT Bài 30–31 (An toàn và bảo mật)"
+  },
+  "spark__lv2__t1__q20": {
+   "to": 7,
+   "reason": "Ảnh hưởng của xem màn hình lâu đến sức khoẻ — PPCT Bài 30–31 (An toàn và bảo mật)"
+  },
+  "spark__lv2__t2__q23": {
+   "to": 7,
+   "reason": "Ảnh hưởng của xem màn hình lâu đến sức khoẻ — PPCT Bài 30–31 (An toàn và bảo mật)"
+  },
+  "spark__lv2__t1__q24": {
+   "to": 4,
+   "reason": "Danh sách, định dạng, hình ảnh, chú thích trong tài liệu/bài trình chiếu — PPCT Bài 15–21 (Sáng tạo nội dung)"
+  },
+  "spark__lv2__t3__q9": {
+   "to": 4,
+   "reason": "Danh sách, định dạng, hình ảnh, chú thích trong tài liệu/bài trình chiếu — PPCT Bài 15–21 (Sáng tạo nội dung)"
+  },
+  "spark__lv2__t3__q10": {
+   "to": 4,
+   "reason": "Danh sách, định dạng, hình ảnh, chú thích trong tài liệu/bài trình chiếu — PPCT Bài 15–21 (Sáng tạo nội dung)"
+  },
+  "spark__lv2__t3__q12": {
+   "to": 4,
+   "reason": "Danh sách, định dạng, hình ảnh, chú thích trong tài liệu/bài trình chiếu — PPCT Bài 15–21 (Sáng tạo nội dung)"
+  },
+  "spark__lv2__t6__q5": {
+   "to": 4,
+   "reason": "Danh sách, định dạng, hình ảnh, chú thích trong tài liệu/bài trình chiếu — PPCT Bài 15–21 (Sáng tạo nội dung)"
+  },
+  "spark__lv2__t2__q27": {
+   "to": 5,
+   "reason": "Phép xã giao, chọn phương thức giao tiếp, ứng xử khi trực tuyến — PPCT Bài 25–27 (Giao tiếp)"
+  },
+  "spark__lv2__t6__q6": {
+   "to": 5,
+   "reason": "Phép xã giao, chọn phương thức giao tiếp, ứng xử khi trực tuyến — PPCT Bài 25–27 (Giao tiếp)"
+  },
+  "spark__lv2__t6__q7": {
+   "to": 5,
+   "reason": "Phép xã giao, chọn phương thức giao tiếp, ứng xử khi trực tuyến — PPCT Bài 25–27 (Giao tiếp)"
+  },
+  "spark__lv2__t6__q8": {
+   "to": 5,
+   "reason": "Phép xã giao, chọn phương thức giao tiếp, ứng xử khi trực tuyến — PPCT Bài 25–27 (Giao tiếp)"
+  },
+  "spark__lv2__t6__q9": {
+   "to": 5,
+   "reason": "Phép xã giao, chọn phương thức giao tiếp, ứng xử khi trực tuyến — PPCT Bài 25–27 (Giao tiếp)"
+  },
+  "spark__lv2__t6__q10": {
+   "to": 5,
+   "reason": "Phép xã giao, chọn phương thức giao tiếp, ứng xử khi trực tuyến — PPCT Bài 25–27 (Giao tiếp)"
+  },
+  "spark__lv2__t6__q24": {
+   "to": 5,
+   "reason": "Phép xã giao, chọn phương thức giao tiếp, ứng xử khi trực tuyến — PPCT Bài 25–27 (Giao tiếp)"
+  },
+  "spark__lv2__t6__q25": {
+   "to": 5,
+   "reason": "Phép xã giao, chọn phương thức giao tiếp, ứng xử khi trực tuyến — PPCT Bài 25–27 (Giao tiếp)"
+  },
+  "spark__lv2__t6__q11": {
+   "to": 2,
+   "reason": "Hành vi đúng đắn khi dùng công nghệ ở trường — PPCT Bài 22–23 (Công dân số)"
+  },
+  "spark__lv2__t1__q22": {
+   "remove": true,
+   "keep": "spark__lv2__t2__q48",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "spark__lv2__t5__q73_new": {
+   "remove": true,
+   "keep": "spark__lv2__t6__q24",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "spark__lv2__t5__q74_new": {
+   "remove": true,
+   "keep": "spark__lv2__t6__q25",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "spark__lv2__t4__q109_new2": {
+   "remove": true,
+   "keep": "spark__lv2__t4__q4",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "spark__lv2__t2__q48": {
+   "to": 7,
+   "reason": "Phản ứng khi bị bắt nạt trực tuyến — PPCT Spark LV2 Bài 32 (An toàn và bảo mật)"
+  }
+ },
+ "Spark__LV3": {
+  "spark__lv3__t1__q7": {
+   "to": 2,
+   "reason": "Ẩn danh, tin tặc, lừa đảo/mạo danh (rủi ro trực tuyến), quyền riêng tư — PPCT Spark LV3 Bài 16–20 (Công dân số)"
+  },
+  "spark__lv3__t4__q1": {
+   "to": 2,
+   "reason": "Ẩn danh, tin tặc, lừa đảo/mạo danh (rủi ro trực tuyến), quyền riêng tư — PPCT Spark LV3 Bài 16–20 (Công dân số)"
+  },
+  "spark__lv3__t4__q5": {
+   "to": 2,
+   "reason": "Ẩn danh, tin tặc, lừa đảo/mạo danh (rủi ro trực tuyến), quyền riêng tư — PPCT Spark LV3 Bài 16–20 (Công dân số)"
+  },
+  "spark__lv3__t7__q2": {
+   "to": 2,
+   "reason": "Ẩn danh, tin tặc, lừa đảo/mạo danh (rủi ro trực tuyến), quyền riêng tư — PPCT Spark LV3 Bài 16–20 (Công dân số)"
+  },
+  "spark__lv3__t7__q3": {
+   "to": 2,
+   "reason": "Ẩn danh, tin tặc, lừa đảo/mạo danh (rủi ro trực tuyến), quyền riêng tư — PPCT Spark LV3 Bài 16–20 (Công dân số)"
+  },
+  "spark__lv3__t7__q4": {
+   "to": 2,
+   "reason": "Ẩn danh, tin tặc, lừa đảo/mạo danh (rủi ro trực tuyến), quyền riêng tư — PPCT Spark LV3 Bài 16–20 (Công dân số)"
+  },
+  "spark__lv3__t7__q123_new": {
+   "to": 2,
+   "reason": "Ẩn danh, tin tặc, lừa đảo/mạo danh (rủi ro trực tuyến), quyền riêng tư — PPCT Spark LV3 Bài 16–20 (Công dân số)"
+  },
+  "spark__lv3__t7__q128_new": {
+   "remove": true,
+   "keep": "spark__lv3__t4__q1",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "spark__lv3__t7__q129_new": {
+   "remove": true,
+   "keep": "spark__lv3__t7__q3",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "spark__lv3__t7__q135_new2": {
+   "to": 2,
+   "reason": "Ẩn danh, tin tặc, lừa đảo/mạo danh (rủi ro trực tuyến), quyền riêng tư — PPCT Spark LV3 Bài 16–20 (Công dân số)"
+  },
+  "spark__lv3__t2__q19": {
+   "to": 7,
+   "reason": "Bắt nạt trực tuyến, đe doạ, xử lý thông tin không phù hợp đã đăng — PPCT Bài 30, 34 (An toàn và bảo mật)"
+  },
+  "spark__lv3__t2__q20": {
+   "to": 7,
+   "reason": "Bắt nạt trực tuyến, đe doạ, xử lý thông tin không phù hợp đã đăng — PPCT Bài 30, 34 (An toàn và bảo mật)"
+  },
+  "spark__lv3__t2__q24": {
+   "to": 7,
+   "reason": "Bắt nạt trực tuyến, đe doạ, xử lý thông tin không phù hợp đã đăng — PPCT Bài 30, 34 (An toàn và bảo mật)"
+  },
+  "spark__lv3__t2__q69_new2": {
+   "to": 7,
+   "reason": "Bắt nạt trực tuyến, đe doạ, xử lý thông tin không phù hợp đã đăng — PPCT Bài 30, 34 (An toàn và bảo mật)"
+  },
+  "spark__lv3__t6__q5": {
+   "to": 7,
+   "reason": "Bắt nạt trực tuyến, đe doạ, xử lý thông tin không phù hợp đã đăng — PPCT Bài 30, 34 (An toàn và bảo mật)"
+  },
+  "spark__lv3__t6__q7": {
+   "to": 7,
+   "reason": "Bắt nạt trực tuyến, đe doạ, xử lý thông tin không phù hợp đã đăng — PPCT Bài 30, 34 (An toàn và bảo mật)"
+  },
+  "spark__lv3__t3__q2": {
+   "to": 1,
+   "reason": "Ứng dụng công nghệ (định vị), trình duyệt truy cập URL, xử lí sự cố máy chậm — PPCT Bài 1, 5–8 (Căn bản về công nghệ)"
+  },
+  "spark__lv3__t3__q93_new2": {
+   "to": 1,
+   "reason": "Ứng dụng công nghệ (định vị), trình duyệt truy cập URL, xử lí sự cố máy chậm — PPCT Bài 1, 5–8 (Căn bản về công nghệ)"
+  },
+  "spark__lv3__t7__q1": {
+   "to": 1,
+   "reason": "Ứng dụng công nghệ (định vị), trình duyệt truy cập URL, xử lí sự cố máy chậm — PPCT Bài 1, 5–8 (Căn bản về công nghệ)"
+  },
+  "spark__lv3__t3__q26": {
+   "to": 6,
+   "reason": "Lợi ích cộng tác, cộng tác kĩ thuật số trong học tập/giải trí — PPCT Bài 27–29 (Hợp tác)"
+  },
+  "spark__lv3__t4__q6": {
+   "to": 6,
+   "reason": "Lợi ích cộng tác, cộng tác kĩ thuật số trong học tập/giải trí — PPCT Bài 27–29 (Hợp tác)"
+  },
+  "spark__lv3__t5__q112": {
+   "to": 6,
+   "reason": "Lợi ích cộng tác, cộng tác kĩ thuật số trong học tập/giải trí — PPCT Bài 27–29 (Hợp tác)"
+  },
+  "spark__lv3__t4__q2": {
+   "to": 3,
+   "reason": "Dữ liệu–thông tin–kiến thức, xác định tác giả/nguồn tin cậy, quyền sử dụng hình ảnh — PPCT Bài 9–14 (Quản lý thông tin)"
+  },
+  "spark__lv3__t5__q2": {
+   "to": 3,
+   "reason": "Dữ liệu–thông tin–kiến thức, xác định tác giả/nguồn tin cậy, quyền sử dụng hình ảnh — PPCT Bài 9–14 (Quản lý thông tin)"
+  },
+  "spark__lv3__t5__q4": {
+   "remove": true,
+   "keep": "spark__lv3__t5__q2",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "spark__lv3__t5__q110_new2": {
+   "remove": true,
+   "keep": "spark__lv3__t3__q24",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "spark__lv3__t6__q1": {
+   "to": 3,
+   "reason": "Dữ liệu–thông tin–kiến thức, xác định tác giả/nguồn tin cậy, quyền sử dụng hình ảnh — PPCT Bài 9–14 (Quản lý thông tin)"
+  },
+  "spark__lv3__t6__q8": {
+   "to": 5,
+   "reason": "Giao tiếp đồng bộ/không đồng bộ, ứng xử trong hội thảo/lớp học video — PPCT Bài 24–26 (Giao tiếp)"
+  },
+  "spark__lv3__t6__q9": {
+   "to": 5,
+   "reason": "Giao tiếp đồng bộ/không đồng bộ, ứng xử trong hội thảo/lớp học video — PPCT Bài 24–26 (Giao tiếp)"
+  },
+  "spark__lv3__t6__q10": {
+   "to": 5,
+   "reason": "Giao tiếp đồng bộ/không đồng bộ, ứng xử trong hội thảo/lớp học video — PPCT Bài 24–26 (Giao tiếp)"
+  },
+  "spark__lv3__t2__q6": {
+   "remove": true,
+   "keep": "spark__lv3__t3__q94_new2",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "spark__lv3__t2__q63_new": {
+   "remove": true,
+   "keep": "spark__lv3__t2__q27",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "spark__lv3__t3__q25": {
+   "remove": true,
+   "keep": "spark__lv3__t7__q137_new2",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "spark__lv3__t6__q114_new": {
+   "remove": true,
+   "keep": "spark__lv3__t6__q11",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "spark__lv3__t6__q112_new": {
+   "remove": true,
+   "keep": "spark__lv3__t6__q13",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "spark__lv3__t7__q134_new": {
+   "remove": true,
+   "keep": "spark__lv3__t7__q11",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "spark__lv3__t6__q110_new": {
+   "remove": true,
+   "keep": "spark__lv3__t6__q15",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "spark__lv3__t2__q73_new2": {
+   "remove": true,
+   "keep": "spark__lv3__t2__q22",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "spark__lv3__t5__q100_new": {
+   "remove": true,
+   "keep": "spark__lv3__t6__q10",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "spark__lv3__t5__q109_new2": {
+   "remove": true,
+   "keep": "spark__lv3__t6__q6",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "spark__lv3__t1__q43_new2": {
+   "remove": true,
+   "keep": "spark__lv3__t1__q4",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "spark__lv3__t3__q88_new": {
+   "remove": true,
+   "keep": "spark__lv3__t2__q76",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "spark__lv3__t2__q74_new2": {
+   "remove": true,
+   "keep": "spark__lv3__t4__q5",
+   "reason": "Trùng tình huống với t4__q5 nhưng ĐÁP ÁN BỊ ĐẢO NGƯỢC (lấy tên nhân vật hoạt hình / dãy số làm tên tác giả là ẩn danh) — bỏ bản sai"
+  },
+  "spark__lv3__t6__q6": {
+   "to": 2,
+   "reason": "Xin phép trước khi đăng ảnh người khác lên blog — quyền riêng tư, PPCT Spark LV3 Bài 19–20 (Công dân số)"
+  }
+ },
+ "IC3__LV1": {
+  "ic3__lv1__t4__q16": {
+   "to": 1,
+   "reason": "Sao lưu dữ liệu, tập tin .exe/hệ điều hành, bản sao hệ thống — PPCT IC3 LV1 Bài 5, 7 (Căn bản về công nghệ)"
+  },
+  "ic3__lv1__t4__q17": {
+   "to": 1,
+   "reason": "Sao lưu dữ liệu, tập tin .exe/hệ điều hành, bản sao hệ thống — PPCT IC3 LV1 Bài 5, 7 (Căn bản về công nghệ)"
+  },
+  "ic3__lv1__t4__q18": {
+   "to": 1,
+   "reason": "Sao lưu dữ liệu, tập tin .exe/hệ điều hành, bản sao hệ thống — PPCT IC3 LV1 Bài 5, 7 (Căn bản về công nghệ)"
+  },
+  "ic3__lv1__t4__q19": {
+   "to": 3,
+   "reason": "Giấy phép Creative Commons — PPCT Bài 13 (Quản lý thông tin)"
+  },
+  "ic3__lv1__t6__q19": {
+   "remove": true,
+   "keep": "ic3__lv1__t6__q9",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "ic3__lv1__t6__q21": {
+   "remove": true,
+   "keep": "ic3__lv1__t1__q180",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "ic3__lv1__t1__q169_new2": {
+   "remove": true,
+   "keep": "ic3__lv1__t1__q42",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  }
+ },
+ "IC3__LV2": {
+  "ic3__lv2__hotspot__q1": {
+   "to": 1,
+   "reason": "Lịch kĩ thuật số, máy in, điện toán đám mây/lưu trữ, nén tập tin — PPCT IC3 LV2 Bài 1–7 (Căn bản về công nghệ)"
+  },
+  "ic3__lv2__hotspot__q2": {
+   "to": 1,
+   "reason": "Lịch kĩ thuật số, máy in, điện toán đám mây/lưu trữ, nén tập tin — PPCT IC3 LV2 Bài 1–7 (Căn bản về công nghệ)"
+  },
+  "ic3__lv2__hotspot__q3": {
+   "to": 1,
+   "reason": "Lịch kĩ thuật số, máy in, điện toán đám mây/lưu trữ, nén tập tin — PPCT IC3 LV2 Bài 1–7 (Căn bản về công nghệ)"
+  },
+  "ic3__lv2__hotspot__q4": {
+   "to": 1,
+   "reason": "Lịch kĩ thuật số, máy in, điện toán đám mây/lưu trữ, nén tập tin — PPCT IC3 LV2 Bài 1–7 (Căn bản về công nghệ)"
+  },
+  "ic3__lv2__t3__q1": {
+   "to": 1,
+   "reason": "Lịch kĩ thuật số, máy in, điện toán đám mây/lưu trữ, nén tập tin — PPCT IC3 LV2 Bài 1–7 (Căn bản về công nghệ)"
+  },
+  "ic3__lv2__t3__q3": {
+   "to": 1,
+   "reason": "Lịch kĩ thuật số, máy in, điện toán đám mây/lưu trữ, nén tập tin — PPCT IC3 LV2 Bài 1–7 (Căn bản về công nghệ)"
+  },
+  "ic3__lv2__t4__q1": {
+   "to": 1,
+   "reason": "Lịch kĩ thuật số, máy in, điện toán đám mây/lưu trữ, nén tập tin — PPCT IC3 LV2 Bài 1–7 (Căn bản về công nghệ)"
+  },
+  "ic3__lv2__t4__q6": {
+   "to": 1,
+   "reason": "Lịch kĩ thuật số, máy in, điện toán đám mây/lưu trữ, nén tập tin — PPCT IC3 LV2 Bài 1–7 (Căn bản về công nghệ)"
+  },
+  "ic3__lv2__t4__q8": {
+   "to": 1,
+   "reason": "Lịch kĩ thuật số, máy in, điện toán đám mây/lưu trữ, nén tập tin — PPCT IC3 LV2 Bài 1–7 (Căn bản về công nghệ)"
+  },
+  "ic3__lv2__t5__q1": {
+   "to": 1,
+   "reason": "Lịch kĩ thuật số, máy in, điện toán đám mây/lưu trữ, nén tập tin — PPCT IC3 LV2 Bài 1–7 (Căn bản về công nghệ)"
+  },
+  "ic3__lv2__t7__q12": {
+   "to": 1,
+   "reason": "Lịch kĩ thuật số, máy in, điện toán đám mây/lưu trữ, nén tập tin — PPCT IC3 LV2 Bài 1–7 (Căn bản về công nghệ)"
+  },
+  "ic3__lv2__t1__q218": {
+   "to": 4,
+   "reason": "Bản quyền/nhãn hiệu, Creative Commons, số trang, chỉnh sửa video, hiệu ứng trình chiếu — PPCT Bài 14–29 (Sáng tạo nội dung)"
+  },
+  "ic3__lv2__t2__q28": {
+   "to": 4,
+   "reason": "Bản quyền/nhãn hiệu, Creative Commons, số trang, chỉnh sửa video, hiệu ứng trình chiếu — PPCT Bài 14–29 (Sáng tạo nội dung)"
+  },
+  "ic3__lv2__t2__q59_new": {
+   "to": 4,
+   "reason": "Bản quyền/nhãn hiệu, Creative Commons, số trang, chỉnh sửa video, hiệu ứng trình chiếu — PPCT Bài 14–29 (Sáng tạo nội dung)"
+  },
+  "ic3__lv2__t3__q12": {
+   "to": 4,
+   "reason": "Bản quyền/nhãn hiệu, Creative Commons, số trang, chỉnh sửa video, hiệu ứng trình chiếu — PPCT Bài 14–29 (Sáng tạo nội dung)"
+  },
+  "ic3__lv2__t3__q17": {
+   "to": 4,
+   "reason": "Bản quyền/nhãn hiệu, Creative Commons, số trang, chỉnh sửa video, hiệu ứng trình chiếu — PPCT Bài 14–29 (Sáng tạo nội dung)"
+  },
+  "ic3__lv2__t3__q20": {
+   "to": 4,
+   "reason": "Bản quyền/nhãn hiệu, Creative Commons, số trang, chỉnh sửa video, hiệu ứng trình chiếu — PPCT Bài 14–29 (Sáng tạo nội dung)"
+  },
+  "ic3__lv2__t3__q194": {
+   "to": 4,
+   "reason": "Bản quyền/nhãn hiệu, Creative Commons, số trang, chỉnh sửa video, hiệu ứng trình chiếu — PPCT Bài 14–29 (Sáng tạo nội dung)"
+  },
+  "ic3__lv2__t6__q15": {
+   "to": 4,
+   "reason": "Bản quyền/nhãn hiệu, Creative Commons, số trang, chỉnh sửa video, hiệu ứng trình chiếu — PPCT Bài 14–29 (Sáng tạo nội dung)"
+  },
+  "ic3__lv2__t6__q37": {
+   "to": 4,
+   "reason": "Bản quyền/nhãn hiệu, Creative Commons, số trang, chỉnh sửa video, hiệu ứng trình chiếu — PPCT Bài 14–29 (Sáng tạo nội dung)"
+  },
+  "ic3__lv2__t1__q226": {
+   "to": 7,
+   "reason": "Chặn quyền camera, quyền truy cập tập tin, mã hoá — PPCT Bài 34–35 (Bảo mật thông tin và thiết bị)"
+  },
+  "ic3__lv2__t4__q4": {
+   "to": 7,
+   "reason": "Chặn quyền camera, quyền truy cập tập tin, mã hoá — PPCT Bài 34–35 (Bảo mật thông tin và thiết bị)"
+  },
+  "ic3__lv2__t4__q25": {
+   "to": 7,
+   "reason": "Chặn quyền camera, quyền truy cập tập tin, mã hoá — PPCT Bài 34–35 (Bảo mật thông tin và thiết bị)"
+  },
+  "ic3__lv2__t4__q38": {
+   "to": 7,
+   "reason": "Chặn quyền camera, quyền truy cập tập tin, mã hoá — PPCT Bài 34–35 (Bảo mật thông tin và thiết bị)"
+  },
+  "ic3__lv2__t2__q30": {
+   "to": 6,
+   "reason": "Kĩ năng/lợi ích cộng tác, ứng dụng đồng tác giả (Microsoft 365, Google) — PPCT Bài 30–31 (Hợp tác)"
+  },
+  "ic3__lv2__t3__q15": {
+   "to": 6,
+   "reason": "Kĩ năng/lợi ích cộng tác, ứng dụng đồng tác giả (Microsoft 365, Google) — PPCT Bài 30–31 (Hợp tác)"
+  },
+  "ic3__lv2__t3__q16": {
+   "to": 6,
+   "reason": "Kĩ năng/lợi ích cộng tác, ứng dụng đồng tác giả (Microsoft 365, Google) — PPCT Bài 30–31 (Hợp tác)"
+  },
+  "ic3__lv2__t3__q187_new": {
+   "remove": true,
+   "keep": "ic3__lv2__t3__q16",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "ic3__lv2__t4__q11": {
+   "to": 5,
+   "reason": "Nghi thức email, phương thức giao tiếp ngắn/không đồng bộ — PPCT Bài 8–9 (Giao tiếp kĩ thuật số)"
+  },
+  "ic3__lv2__t6__q5": {
+   "to": 5,
+   "reason": "Nghi thức email, phương thức giao tiếp ngắn/không đồng bộ — PPCT Bài 8–9 (Giao tiếp kĩ thuật số)"
+  },
+  "ic3__lv2__t6__q7": {
+   "to": 5,
+   "reason": "Nghi thức email, phương thức giao tiếp ngắn/không đồng bộ — PPCT Bài 8–9 (Giao tiếp kĩ thuật số)"
+  },
+  "ic3__lv2__t6__q21": {
+   "to": 5,
+   "reason": "Nghi thức email, phương thức giao tiếp ngắn/không đồng bộ — PPCT Bài 8–9 (Giao tiếp kĩ thuật số)"
+  },
+  "ic3__lv2__t6__q24": {
+   "to": 5,
+   "reason": "Nghi thức email, phương thức giao tiếp ngắn/không đồng bộ — PPCT Bài 8–9 (Giao tiếp kĩ thuật số)"
+  },
+  "ic3__lv2__t1__q200_new2": {
+   "remove": true,
+   "keep": "ic3__lv2__t1__q11",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "ic3__lv2__t1__q201_new2": {
+   "remove": true,
+   "keep": "ic3__lv2__t1__q13",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "ic3__lv2__t1__q20": {
+   "remove": true,
+   "keep": "ic3__lv2__t7__q192_new2",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "ic3__lv2__t1__q202_new2": {
+   "remove": true,
+   "keep": "ic3__lv2__t1__q23",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "ic3__lv2__t1__q230": {
+   "remove": true,
+   "keep": "ic3__lv2__t1__q229",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "ic3__lv2__t3__q188_new2": {
+   "remove": true,
+   "keep": "ic3__lv2__t2__q9",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "ic3__lv2__t3__q189_new2": {
+   "remove": true,
+   "keep": "ic3__lv2__t3__q8",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "ic3__lv2__t7__q193_new2": {
+   "remove": true,
+   "keep": "ic3__lv2__t4__q25",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "ic3__lv2__t6__q189_new": {
+   "remove": true,
+   "keep": "ic3__lv2__t6__q31",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "ic3__lv2__t5__q129_new2": {
+   "remove": true,
+   "keep": "ic3__lv2__t6__q38",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "ic3__lv2__t1__q210": {
+   "remove": true,
+   "keep": "ic3__lv2__t1__q14",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "ic3__lv2__t4__q32": {
+   "remove": true,
+   "keep": "ic3__lv2__t4__q15",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "ic3__lv2__t4__q191": {
+   "remove": true,
+   "keep": "ic3__lv2__t4__q22",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  }
+ },
+ "IC3__LV3": {
+  "ic3__lv3__t1__q10": {
+   "to": 3,
+   "reason": "Loại tìm kiếm, ngụy biện/thiên vị, nguồn đáng tin — PPCT IC3 LV3 Bài 3–6 (Quản lý thông tin)"
+  },
+  "ic3__lv3__t1__q190": {
+   "to": 3,
+   "reason": "Loại tìm kiếm, ngụy biện/thiên vị, nguồn đáng tin — PPCT IC3 LV3 Bài 3–6 (Quản lý thông tin)"
+  },
+  "ic3__lv3__t2__q12": {
+   "to": 3,
+   "reason": "Loại tìm kiếm, ngụy biện/thiên vị, nguồn đáng tin — PPCT IC3 LV3 Bài 3–6 (Quản lý thông tin)"
+  },
+  "ic3__lv3__t4__q31": {
+   "to": 3,
+   "reason": "Loại tìm kiếm, ngụy biện/thiên vị, nguồn đáng tin — PPCT IC3 LV3 Bài 3–6 (Quản lý thông tin)"
+  },
+  "ic3__lv3__t1__q12": {
+   "to": 4,
+   "reason": "Lưu đồ, trực quan hoá dữ liệu, phương tiện/video, khả năng tiếp cận & độ dễ đọc, sở hữu trí tuệ/Creative Commons — PPCT Bài 14–21 (Sáng tạo nội dung)"
+  },
+  "ic3__lv3__t1__q13": {
+   "to": 4,
+   "reason": "Lưu đồ, trực quan hoá dữ liệu, phương tiện/video, khả năng tiếp cận & độ dễ đọc, sở hữu trí tuệ/Creative Commons — PPCT Bài 14–21 (Sáng tạo nội dung)"
+  },
+  "ic3__lv3__t1__q14": {
+   "to": 4,
+   "reason": "Lưu đồ, trực quan hoá dữ liệu, phương tiện/video, khả năng tiếp cận & độ dễ đọc, sở hữu trí tuệ/Creative Commons — PPCT Bài 14–21 (Sáng tạo nội dung)"
+  },
+  "ic3__lv3__t1__q15": {
+   "to": 4,
+   "reason": "Lưu đồ, trực quan hoá dữ liệu, phương tiện/video, khả năng tiếp cận & độ dễ đọc, sở hữu trí tuệ/Creative Commons — PPCT Bài 14–21 (Sáng tạo nội dung)"
+  },
+  "ic3__lv3__t1__q16": {
+   "to": 4,
+   "reason": "Lưu đồ, trực quan hoá dữ liệu, phương tiện/video, khả năng tiếp cận & độ dễ đọc, sở hữu trí tuệ/Creative Commons — PPCT Bài 14–21 (Sáng tạo nội dung)"
+  },
+  "ic3__lv3__t1__q23": {
+   "to": 4,
+   "reason": "Lưu đồ, trực quan hoá dữ liệu, phương tiện/video, khả năng tiếp cận & độ dễ đọc, sở hữu trí tuệ/Creative Commons — PPCT Bài 14–21 (Sáng tạo nội dung)"
+  },
+  "ic3__lv3__t2__q11": {
+   "to": 4,
+   "reason": "Lưu đồ, trực quan hoá dữ liệu, phương tiện/video, khả năng tiếp cận & độ dễ đọc, sở hữu trí tuệ/Creative Commons — PPCT Bài 14–21 (Sáng tạo nội dung)"
+  },
+  "ic3__lv3__t3__q1": {
+   "to": 4,
+   "reason": "Lưu đồ, trực quan hoá dữ liệu, phương tiện/video, khả năng tiếp cận & độ dễ đọc, sở hữu trí tuệ/Creative Commons — PPCT Bài 14–21 (Sáng tạo nội dung)"
+  },
+  "ic3__lv3__t3__q11": {
+   "to": 4,
+   "reason": "Lưu đồ, trực quan hoá dữ liệu, phương tiện/video, khả năng tiếp cận & độ dễ đọc, sở hữu trí tuệ/Creative Commons — PPCT Bài 14–21 (Sáng tạo nội dung)"
+  },
+  "ic3__lv3__t3__q12": {
+   "to": 4,
+   "reason": "Lưu đồ, trực quan hoá dữ liệu, phương tiện/video, khả năng tiếp cận & độ dễ đọc, sở hữu trí tuệ/Creative Commons — PPCT Bài 14–21 (Sáng tạo nội dung)"
+  },
+  "ic3__lv3__t3__q16": {
+   "to": 4,
+   "reason": "Lưu đồ, trực quan hoá dữ liệu, phương tiện/video, khả năng tiếp cận & độ dễ đọc, sở hữu trí tuệ/Creative Commons — PPCT Bài 14–21 (Sáng tạo nội dung)"
+  },
+  "ic3__lv3__t3__q18": {
+   "to": 4,
+   "reason": "Lưu đồ, trực quan hoá dữ liệu, phương tiện/video, khả năng tiếp cận & độ dễ đọc, sở hữu trí tuệ/Creative Commons — PPCT Bài 14–21 (Sáng tạo nội dung)"
+  },
+  "ic3__lv3__t3__q22": {
+   "to": 4,
+   "reason": "Lưu đồ, trực quan hoá dữ liệu, phương tiện/video, khả năng tiếp cận & độ dễ đọc, sở hữu trí tuệ/Creative Commons — PPCT Bài 14–21 (Sáng tạo nội dung)"
+  },
+  "ic3__lv3__t3__q86": {
+   "to": 4,
+   "reason": "Lưu đồ, trực quan hoá dữ liệu, phương tiện/video, khả năng tiếp cận & độ dễ đọc, sở hữu trí tuệ/Creative Commons — PPCT Bài 14–21 (Sáng tạo nội dung)"
+  },
+  "ic3__lv3__t6__q6": {
+   "to": 4,
+   "reason": "Lưu đồ, trực quan hoá dữ liệu, phương tiện/video, khả năng tiếp cận & độ dễ đọc, sở hữu trí tuệ/Creative Commons — PPCT Bài 14–21 (Sáng tạo nội dung)"
+  },
+  "ic3__lv3__t6__q8": {
+   "to": 4,
+   "reason": "Lưu đồ, trực quan hoá dữ liệu, phương tiện/video, khả năng tiếp cận & độ dễ đọc, sở hữu trí tuệ/Creative Commons — PPCT Bài 14–21 (Sáng tạo nội dung)"
+  },
+  "ic3__lv3__t6__q46": {
+   "to": 4,
+   "reason": "Lưu đồ, trực quan hoá dữ liệu, phương tiện/video, khả năng tiếp cận & độ dễ đọc, sở hữu trí tuệ/Creative Commons — PPCT Bài 14–21 (Sáng tạo nội dung)"
+  },
+  "ic3__lv3__t7__q10": {
+   "to": 4,
+   "reason": "Lưu đồ, trực quan hoá dữ liệu, phương tiện/video, khả năng tiếp cận & độ dễ đọc, sở hữu trí tuệ/Creative Commons — PPCT Bài 14–21 (Sáng tạo nội dung)"
+  },
+  "ic3__lv3__t1__q17": {
+   "to": 7,
+   "reason": "Tác động môi trường/rác thải điện tử, ảnh hưởng của phụ thuộc công nghệ, xác thực đa yếu tố — PPCT Bài 30, 34–35 (An toàn và bảo mật)"
+  },
+  "ic3__lv3__t1__q18": {
+   "to": 7,
+   "reason": "Tác động môi trường/rác thải điện tử, ảnh hưởng của phụ thuộc công nghệ, xác thực đa yếu tố — PPCT Bài 30, 34–35 (An toàn và bảo mật)"
+  },
+  "ic3__lv3__t1__q188": {
+   "to": 7,
+   "reason": "Tác động môi trường/rác thải điện tử, ảnh hưởng của phụ thuộc công nghệ, xác thực đa yếu tố — PPCT Bài 30, 34–35 (An toàn và bảo mật)"
+  },
+  "ic3__lv3__t5__q2": {
+   "to": 7,
+   "reason": "Tác động môi trường/rác thải điện tử, ảnh hưởng của phụ thuộc công nghệ, xác thực đa yếu tố — PPCT Bài 30, 34–35 (An toàn và bảo mật)"
+  },
+  "ic3__lv3__t2__q7": {
+   "to": 7,
+   "reason": "Tác động môi trường/rác thải điện tử, ảnh hưởng của phụ thuộc công nghệ, xác thực đa yếu tố — PPCT Bài 30, 34–35 (An toàn và bảo mật)"
+  },
+  "ic3__lv3__t2__q23": {
+   "to": 7,
+   "reason": "Tác động môi trường/rác thải điện tử, ảnh hưởng của phụ thuộc công nghệ, xác thực đa yếu tố — PPCT Bài 30, 34–35 (An toàn và bảo mật)"
+  },
+  "ic3__lv3__t2__q28": {
+   "to": 7,
+   "reason": "Tác động môi trường/rác thải điện tử, ảnh hưởng của phụ thuộc công nghệ, xác thực đa yếu tố — PPCT Bài 30, 34–35 (An toàn và bảo mật)"
+  },
+  "ic3__lv3__t2__q63_new2": {
+   "to": 7,
+   "reason": "Tác động môi trường/rác thải điện tử, ảnh hưởng của phụ thuộc công nghệ, xác thực đa yếu tố — PPCT Bài 30, 34–35 (An toàn và bảo mật)"
+  },
+  "ic3__lv3__t6__q1": {
+   "to": 7,
+   "reason": "Tác động môi trường/rác thải điện tử, ảnh hưởng của phụ thuộc công nghệ, xác thực đa yếu tố — PPCT Bài 30, 34–35 (An toàn và bảo mật)"
+  },
+  "ic3__lv3__t6__q2": {
+   "to": 7,
+   "reason": "Tác động môi trường/rác thải điện tử, ảnh hưởng của phụ thuộc công nghệ, xác thực đa yếu tố — PPCT Bài 30, 34–35 (An toàn và bảo mật)"
+  },
+  "ic3__lv3__t1__q193": {
+   "to": 6,
+   "reason": "Làm việc nhóm, vai trò, phản hồi khách hàng, họp nhóm trực tuyến — PPCT Bài 27–29 (Hợp tác)"
+  },
+  "ic3__lv3__t1__q194": {
+   "to": 6,
+   "reason": "Làm việc nhóm, vai trò, phản hồi khách hàng, họp nhóm trực tuyến — PPCT Bài 27–29 (Hợp tác)"
+  },
+  "ic3__lv3__t1__q200": {
+   "to": 6,
+   "reason": "Làm việc nhóm, vai trò, phản hồi khách hàng, họp nhóm trực tuyến — PPCT Bài 27–29 (Hợp tác)"
+  },
+  "ic3__lv3__t2__q20": {
+   "to": 6,
+   "reason": "Làm việc nhóm, vai trò, phản hồi khách hàng, họp nhóm trực tuyến — PPCT Bài 27–29 (Hợp tác)"
+  },
+  "ic3__lv3__t2__q66": {
+   "to": 6,
+   "reason": "Làm việc nhóm, vai trò, phản hồi khách hàng, họp nhóm trực tuyến — PPCT Bài 27–29 (Hợp tác)"
+  },
+  "ic3__lv3__t2__q67": {
+   "to": 6,
+   "reason": "Làm việc nhóm, vai trò, phản hồi khách hàng, họp nhóm trực tuyến — PPCT Bài 27–29 (Hợp tác)"
+  },
+  "ic3__lv3__t5__q122": {
+   "to": 6,
+   "reason": "Làm việc nhóm, vai trò, phản hồi khách hàng, họp nhóm trực tuyến — PPCT Bài 27–29 (Hợp tác)"
+  },
+  "ic3__lv3__t1__q197": {
+   "to": 2,
+   "reason": "Nhận diện/báo cáo bắt nạt và hành vi gây hại — PPCT Bài 7–9 (Công dân số)"
+  },
+  "ic3__lv3__t1__q201": {
+   "to": 2,
+   "reason": "Nhận diện/báo cáo bắt nạt và hành vi gây hại — PPCT Bài 7–9 (Công dân số)"
+  },
+  "ic3__lv3__t6__q7": {
+   "to": 2,
+   "reason": "Nhận diện/báo cáo bắt nạt và hành vi gây hại — PPCT Bài 7–9 (Công dân số)"
+  },
+  "ic3__lv3__t7__q185": {
+   "remove": true,
+   "keep": "ic3__lv3__t2__q8",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "ic3__lv3__t2__q2": {
+   "to": 1,
+   "reason": "Khắc phục sự cố, giấy phép phần mềm, ứng dụng/trình duyệt mặc định, lưu tập tin — PPCT Bài 2, 12–13 (Căn bản về công nghệ)"
+  },
+  "ic3__lv3__t3__q19": {
+   "to": 1,
+   "reason": "Khắc phục sự cố, giấy phép phần mềm, ứng dụng/trình duyệt mặc định, lưu tập tin — PPCT Bài 2, 12–13 (Căn bản về công nghệ)"
+  },
+  "ic3__lv3__t4__q1": {
+   "to": 1,
+   "reason": "Khắc phục sự cố, giấy phép phần mềm, ứng dụng/trình duyệt mặc định, lưu tập tin — PPCT Bài 2, 12–13 (Căn bản về công nghệ)"
+  },
+  "ic3__lv3__t4__q2": {
+   "to": 1,
+   "reason": "Khắc phục sự cố, giấy phép phần mềm, ứng dụng/trình duyệt mặc định, lưu tập tin — PPCT Bài 2, 12–13 (Căn bản về công nghệ)"
+  },
+  "ic3__lv3__t4__q4": {
+   "to": 1,
+   "reason": "Khắc phục sự cố, giấy phép phần mềm, ứng dụng/trình duyệt mặc định, lưu tập tin — PPCT Bài 2, 12–13 (Căn bản về công nghệ)"
+  },
+  "ic3__lv3__t4__q9": {
+   "to": 1,
+   "reason": "Khắc phục sự cố, giấy phép phần mềm, ứng dụng/trình duyệt mặc định, lưu tập tin — PPCT Bài 2, 12–13 (Căn bản về công nghệ)"
+  },
+  "ic3__lv3__t2__q15": {
+   "to": 5,
+   "reason": "Gửi tập tin qua email, giao tiếp với khách hàng, chọn cách phân phối thông tin — PPCT Bài 23–26 (Giao tiếp)"
+  },
+  "ic3__lv3__t4__q17": {
+   "to": 5,
+   "reason": "Gửi tập tin qua email, giao tiếp với khách hàng, chọn cách phân phối thông tin — PPCT Bài 23–26 (Giao tiếp)"
+  },
+  "ic3__lv3__t4__q129": {
+   "to": 5,
+   "reason": "Gửi tập tin qua email, giao tiếp với khách hàng, chọn cách phân phối thông tin — PPCT Bài 23–26 (Giao tiếp)"
+  },
+  "ic3__lv3__t6__q30": {
+   "to": 5,
+   "reason": "Gửi tập tin qua email, giao tiếp với khách hàng, chọn cách phân phối thông tin — PPCT Bài 23–26 (Giao tiếp)"
+  },
+  "ic3__lv3__t7__q8": {
+   "to": 5,
+   "reason": "Gửi tập tin qua email, giao tiếp với khách hàng, chọn cách phân phối thông tin — PPCT Bài 23–26 (Giao tiếp)"
+  },
+  "ic3__lv3__t2__q62_new2": {
+   "remove": true,
+   "keep": "ic3__lv3__t2__q5",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "ic3__lv3__t7__q184_new2": {
+   "remove": true,
+   "keep": "ic3__lv3__t2__q23",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "ic3__lv3__t2__q61_new2": {
+   "remove": true,
+   "keep": "ic3__lv3__t6__q7",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "ic3__lv3__t4__q130": {
+   "remove": true,
+   "keep": "ic3__lv3__t4__q127",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "ic3__lv3__t5__q117_new2": {
+   "remove": true,
+   "keep": "ic3__lv3__t7__q8",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "ic3__lv3__t4__q118_new2": {
+   "remove": true,
+   "keep": "ic3__lv3__t4__q15",
+   "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  }
+ },
+ "_doc": "Rà soát bộ 'Theo chủ đề' (10/2026). {to:N} = chuyển sang chủ đề N theo PPCT của cấp đó; {remove:true, keep} = bỏ khỏi bộ chủ đề vì trùng với câu 'keep'. Áp dụng: node scripts/apply-topic-reassign.js rồi python scripts/split-minitests.py."
+}

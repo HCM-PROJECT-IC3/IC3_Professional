@@ -27,6 +27,7 @@ máy có phiên giáo viên).
 | Phòng thử thách trực tiếp (`live_rooms`, `players`, `answers`) | Firebase | Giáo viên + học sinh (ẩn danh) | Thời gian thực |
 | Cộng đồng giáo viên (`gvlab_*`) | Firebase | Giáo viên | Giáo viên |
 | **Bài nộp IC3/Spark** | **Sheet `NhatKyNopBai`** (+ Firestore `quiz_results` tuỳ chế độ) | Học sinh → `submitExam` | Dashboard (`listResults` hoặc Firestore) |
+| **Câu sai từng bài** (uid, ≤ 30/bài) | **Chỉ Sheet** — cột O `CauSai` của `NhatKyNopBai` | Học sinh → `submitExam` (trường `wrong`) | Dashboard giáo viên → `wrongStats` (tổng hợp trên server) |
 | **Kết quả MOS Practice** | **Sheet `NhatKyMOS`** | Học sinh → `mosSubmit` | Giáo viên mở Sheet |
 | **Nhật ký hoạt động (audit)** | **Sheet `NhatKyHoatDong`** | Trang quản trị → `logActivity`; Apps Script tự ghi khi đẩy GitHub / xoá bài | Admin mở Sheet |
 | Khoảng cách nhà → trường (tính) | Apps Script `mapDistance` (Maps của Google) → lưu Firebase `teaching_travel_distances` | Điều phối GV | teaching-schedule |

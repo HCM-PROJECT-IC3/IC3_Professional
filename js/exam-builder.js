@@ -276,6 +276,8 @@
     const n = B.slides.length;
     const live = B.slides.filter(liveOk).length;
     $('ebLiveBtn').disabled = live < 5;
+    $('ebArenaBtn').disabled = !live;
+    $('ebArenaBtn').title = live ? `Chép link Đấu trường (${live} câu chơi được): học sinh tự chơi kiểu Kahoot/Blooket trên máy mình — 0 lượt Firebase` : 'Cần ít nhất 1 câu trắc nghiệm 1 đáp án / Đúng-Sai';
     $('ebLiveBtn').title = live < 5 ? `Cần ≥ 5 câu trắc nghiệm 1 đáp án / Đúng-Sai để chơi trực tiếp (đang có ${live})` : `Mở phòng thi đấu trực tiếp (${Math.min(15, live)} câu)`;
     $('ebPreviewBtn').disabled = !n;
     $('ebPresentBtn').disabled = !n;
@@ -745,6 +747,13 @@
     const url = await absLink('index.html');
     try { await navigator.clipboard.writeText(url); toast('Đã sao chép link làm bài — gửi cho học sinh.', 'fa-link'); }
     catch (e) { prompt('Sao chép link làm bài:', url); }
+  }
+  /** Đấu trường (arena.html): học sinh tự chơi đề kiểu Kahoot/Blooket trên máy mình — đề nằm trong link, 0 Firebase. */
+  async function copyArenaLink() {
+    if (!ensureValid('chia sẻ')) return;
+    const url = await absLink('arena.html');
+    try { await navigator.clipboard.writeText(url); toast('Đã sao chép link Đấu trường — học sinh chơi Tốc độ / Săn vàng / Đua về đích với đề này.', 'fa-gamepad'); }
+    catch (e) { prompt('Sao chép link Đấu trường:', url); }
   }
   async function openLive() {
     if (B.slides.filter(liveOk).length < 5) return;
@@ -1507,6 +1516,7 @@
     $('ebSaveBtn').addEventListener('click', save);
     $('ebCopyLinkBtn').addEventListener('click', copyLink);
     $('ebLiveBtn').addEventListener('click', openLive);
+    $('ebArenaBtn').addEventListener('click', copyArenaLink);
     $('ebPreviewBtn').addEventListener('click', () => openPreview(B.cur));
     $('ebPresentBtn').addEventListener('click', openPresentSetup);
     $('ebBankOpenBtn').addEventListener('click', openBank);

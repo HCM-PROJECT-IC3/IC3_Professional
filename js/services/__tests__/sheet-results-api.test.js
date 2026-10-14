@@ -17,7 +17,11 @@ globalThis.fetch = function (url, opt) {
   var rows = url === 'B'
     ? [{ id: 'b1', submittedAtMs: 20 }]
     : [{ id: 'a1', submittedAtMs: 30 }, { id: 'a2', submittedAtMs: 10 }];
-  var data = body.action === 'deleteResults' ? { deleted: body.ids.length } : { rows: rows, truncated: false };
+  var data = body.action === 'deleteResults' ? { deleted: body.ids.length }
+    : body.action === 'wrongStats' ? (url === 'B'
+      ? { submissions: 3, withData: 2, truncated: true, items: [{ uid: 'q2', count: 5, students: 3, tests: ['T2'] }, { uid: 'q1', count: 1, students: 1, tests: ['T3'] }] }
+      : { submissions: 10, withData: 8, truncated: false, items: [{ uid: 'q1', count: 4, students: 4, tests: ['T1'] }, { uid: 'q3', count: 1, students: 1, tests: ['T1'] }] })
+    : { rows: rows, truncated: false };
   return Promise.resolve({ json: function () { return Promise.resolve({ ok: true, data: data }); } });
 };
 globalThis.EduFirebase = { auth: { currentUser: { getIdToken: function () { return Promise.resolve('TOKEN'); } } } };
@@ -51,6 +55,11 @@ S.list({ limit: 2 }).then(function (rows) {
   return S.remove(['x', 'y']);
 }).then(function (n) {
   assertEq('xoá gửi tới mọi Apps Script, cộng số đã xoá', n, 4);
+  return S.wrongStats({ testName: 'T1' });
+}).then(function (w) {
+  assertEq('wrongStats: cộng mẫu số các Apps Script', [w.submissions, w.withData, w.truncated], [13, 10, true]);
+  assertEq('wrongStats: gộp cùng uid, sắp nhiều lượt sai trước', w.items.map(function (x) { return [x.uid, x.count, x.students, x.tests]; }),
+    [['q1', 5, 5, ['T1', 'T3']], ['q2', 5, 3, ['T2']], ['q3', 1, 1, ['T1']]]);
   globalThis.EduFirebase.auth.currentUser = null;
   return S.list({}).then(function () { return 'ok'; }, function (e) { return 'lỗi'; });
 }).then(function (r) {

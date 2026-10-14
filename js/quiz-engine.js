@@ -1047,7 +1047,8 @@ function initLobby() {
   // vì để cứng "50 phút" như bản cũ (giờ có thể là 35/45/tuỳ chỉnh).
   const applyExamDurationLabel = () => {
     if (examTestBtn) {
-      examTestBtn.innerHTML = `<i class="fa-solid fa-stopwatch"></i> Kiểm tra — ${State.testDurationMinutes} phút/bài`;
+      // 2 dòng (tên chế độ to + số phút nhỏ) — khớp nút "Ôn luyện" trong index.html.
+      examTestBtn.innerHTML = `<i class="fa-solid fa-stopwatch"></i> <b>Kiểm tra</b><small>${State.testDurationMinutes} phút/bài</small>`;
     }
   };
 
@@ -1374,7 +1375,9 @@ function initLobby() {
         : `Hạn nộp: ${new Date(ce.deadline).toLocaleString('vi-VN')}`);
       banner.querySelector('div').appendChild(due);
     }
-    document.getElementById('btnStart')?.before(banner);
+    // Đặt ngay trong bước "2 Chọn bài" (ô Chương trình/Bài đã ẩn) — form cũ không có bước → trước nút Bắt đầu.
+    const step2 = document.getElementById('lobbyStep2');
+    if (step2) step2.after(banner); else document.getElementById('btnStart')?.before(banner);
     if (ce.duration) {
       examModeWrap?.querySelector('[data-exam-mode="test"]')?.click();
       const preset = durationToggle?.querySelector(`.mt-mode-btn[data-duration="${ce.duration}"]`);
@@ -3749,7 +3752,7 @@ function submitExam() {
   // Lưu bài: dựng payload + chọn đích (Google Sheet / Firestore theo
   // js/backend-config.js) + hàng đợi gửi lại — xem js/services/result-submitter.js.
   if (window.EduResultSubmitter) {
-    window.EduResultSubmitter.submitQuiz({ session: State.session, result, integrity, elapsed });
+    window.EduResultSubmitter.submitQuiz({ session: State.session, result, integrity, elapsed, questions: State.questions });
   } else {
     console.warn('[EduQuiz] Thiếu js/services/result-submitter.js — bài nộp chỉ lưu trên máy.');
   }

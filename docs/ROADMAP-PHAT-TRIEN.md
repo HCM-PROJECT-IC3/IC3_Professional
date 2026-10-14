@@ -35,14 +35,12 @@ Mỗi bài nộp là 1 lượt ghi, không giảm được nữa → vượt h�
   Sửa ở `js/live-quiz.js` + rule `live_rooms/{code}/answers` trong `firestore.rules`.
 - Hoặc Blaze (như ngưỡng A).
 
-### Ngưỡng C — giáo viên cần biết "câu nào cả lớp hay sai"
-Hiện `quiz_results` chỉ lưu điểm tổng (cố ý, để tiết kiệm dung lượng).
-- Thêm field gọn `wrong` = danh sách uid câu sai, cắt tối đa 30 uid (~300–600 byte/bài). Với 9.000
-  bài/ngày × 45 ngày ≈ thêm 120–240 MB → vẫn dưới 1 GiB nhưng sát hơn; nên giảm TTL hoặc lên Blaze.
-- **Không tốn thêm lượt đọc**: dashboard giáo viên đã đọc các bài này, chỉ cần tính thêm "Top câu sai"
-  của lớp và nối sang Soạn đề ("Tạo đề ôn từ câu cả lớp hay sai").
-- Phải: thêm `wrong` vào `fieldOverrides` (không đánh index) trong `firestore.indexes.json`, thêm vào
-  danh sách field cho phép trong rule `quiz_results`, publish rules trước khi deploy code.
+### Ngưỡng C — giáo viên cần biết "câu nào cả lớp hay sai" ✅ (10/2026, qua Google Sheet)
+Đã làm **không qua Firestore** (`quiz_results` vẫn chỉ lưu điểm tổng → không thêm dung lượng, không
+đổi rules): uid câu sai (≤ 30/bài) đi kèm bài nộp lên Sheet, cột O `CauSai`; Apps Script `wrongStats`
+tổng hợp trên server; dashboard giáo viên → thẻ "❌ Câu cả lớp hay sai" (bấm Phân tích) + "Tạo đề ôn"
+(link đề, 0 Firebase). Xem CHANGELOG 10/2026. Việc còn có thể làm: đưa thẻ này sang coordinator-dashboard
+và tab Báo cáo của ic3-dashboard.
 
 ### Ngưỡng D — học sinh dùng nhiều thiết bị / muốn giữ tiến độ khi đổi máy
 Góc học tập, Sổ tay câu sai, mục tiêu tuần đang nằm trong `localStorage` từng máy.
@@ -86,19 +84,20 @@ Góc học tập, Sổ tay câu sai, mục tiêu tuần đang nằm trong `local
 
 ## 4. Tạo hứng thú học tập — việc nên làm tiếp (đều 0 hoặc rất ít Firebase)
 
-1. **Thi đua lớp theo tuần** — bảng xếp hạng lớp tính từ dữ liệu dashboard giáo viên *đã đọc sẵn*
-   (0 lượt thêm), giáo viên chiếu bằng Trình chiếu vào đầu giờ.
-2. **Chứng nhận hoàn thành chủ đề** — PDF tạo ngay trên máy (jsPDF đã có trong dự án) khi học sinh
-   đạt ≥ 90% 2 lần ở mọi bài của 1 chủ đề.
-3. **Lộ trình học thích ứng** — Góc học tập gợi ý bài kế tiếp theo mức nắm vững + Sổ tay (đã có dữ
-   liệu trên máy, chỉ cần quy tắc gợi ý).
-4. **Đề "ôn từ câu cả lớp hay sai"** — sau khi làm Ngưỡng C.
-5. **Nhiệm vụ theo mùa thi** — gói đề theo lịch thi IC3 thật, đếm ngược ngày thi trên sảnh.
+1. ✅ **Thi đua lớp theo tuần** (10/2026) — thẻ "🏅 Thi đua lớp tuần này" + nút Trình chiếu trên
+   dashboard giáo viên, tính từ dữ liệu *đã đọc sẵn* (0 lượt thêm).
+2. ✅ **Chứng nhận hoàn thành lộ trình** (10/2026) — ảnh PNG vẽ bằng canvas trên máy khi học sinh đạt
+   mọi bài của 1 cấp độ (không dùng jsPDF: font mặc định của jsPDF thiếu dấu tiếng Việt).
+3. ✅ **Lộ trình học thích ứng** (10/2026) — Góc học tập → tab "Lộ trình", gợi ý bài nên làm tiếp.
+4. ✅ **Đề "ôn từ câu cả lớp hay sai"** (10/2026) — nút "Tạo đề ôn" trên thẻ Câu cả lớp hay sai.
+5. ✅ **Đấu trường kiểu Kahoot/Blooket** (10/2026) — `arena.html`: Tốc độ, Săn vàng, Đua về đích, Linh vật; chơi một mình với đối thủ máy, 0 Firebase.
+   Tiếp theo có thể làm: thêm chế độ (Phòng thủ tháp, Quán cà phê), sự kiện theo mùa cho Linh vật, chế độ "đấu nhóm trên 1 máy chiếu" dùng Đấu trường.
+6. **Nhiệm vụ theo mùa thi** — gói đề theo lịch thi IC3 thật, đếm ngược ngày thi trên sảnh.
 
 ## 5. Thứ tự đề xuất
 
 1. Bật bảo vệ nhánh `main` với CI (làm ngay, 0 chi phí).
 2. Theo dõi số đo hạn mức hằng tuần; khi chạm 60% liên tục → Ngưỡng A (Blaze + ngân sách cảnh báo).
-3. Ngưỡng C (phân tích câu sai) — giá trị sư phạm cao nhất cho giáo viên.
+3. ✅ Ngưỡng C (phân tích câu sai) — đã làm qua Google Sheet, 0 Firebase.
 4. Mục 4.1–4.3 để tăng hứng thú học sinh.
 5. Ngưỡng D, E, G khi thực sự có nhu cầu — không làm trước.

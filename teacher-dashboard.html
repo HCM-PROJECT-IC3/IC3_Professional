@@ -159,9 +159,25 @@
       <ul class="watchlist-list" id="topStudentsList"></ul>
       <div class="watchlist-more" id="topStudentsMore"></div>
     </div>
+    <div class="watchlist-card">
+      <div class="watchlist-title">🏅 Thi đua lớp tuần này <span class="watchlist-count" id="classRaceCount"></span>
+        <button type="button" class="race-present-btn" id="classRacePresent" title="Chiếu bảng thi đua toàn màn hình (đầu giờ học)" hidden>📽 Trình chiếu</button></div>
+      <ul class="watchlist-list" id="classRaceList"></ul>
+      <div class="watchlist-more">Điểm thi đua = điểm TB × % học sinh của lớp đã làm bài (từ thứ Hai)</div>
+    </div>
   </div>
 
   <!-- ============ BẢNG QUẢN LÝ HỌC SINH (dùng lại nguyên js/coordinator/student-table.js) ============ -->
+  <!-- ============ CÂU CẢ LỚP HAY SAI (Google Sheet cột CauSai — js/teacher/wrong-questions.js) ============ -->
+  <div class="watchlist-card wq-card" id="wrongQCard" hidden>
+    <div class="watchlist-title">❌ Câu cả lớp hay sai
+      <button type="button" class="race-present-btn" id="wqAnalyze" title="Tổng hợp câu sai từ Google Sheet theo bộ lọc đang chọn (không tốn lượt Firebase)">🔍 Phân tích</button>
+      <button type="button" class="race-present-btn" id="wqMakeExam" title="Tạo link đề ôn từ các câu sai nhiều nhất (cùng cấp độ), chép sẵn để gửi học sinh" hidden>📝 Tạo đề ôn</button>
+    </div>
+    <div class="wq-status" id="wqStatus"></div>
+    <ol class="wq-list" id="wqList"></ol>
+  </div>
+
   <div class="student-table-card" id="studentTableCard" hidden>
     <div class="student-table-header">
       <h2>🎓 Danh sách học sinh <span class="watchlist-count" id="studentTableCount"></span></h2>
@@ -331,6 +347,7 @@
 <script src="js/coordinator/charts.js"></script>
 <script src="js/coordinator/student-table.js"></script>
 <script src="js/coordinator/student-detail.js"></script>
+<script src="js/teacher/wrong-questions.js"></script>
 <script src="js/teacher/dashboard.js"></script>
 <script src="js/motion.js"></script>
 

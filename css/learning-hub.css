@@ -174,3 +174,34 @@
 .lh-open-goal[hidden] { display: none; }
 .lh-open-goal b { display: block; width: 46px; height: 6px; border-radius: 999px; background: var(--border); overflow: hidden; }
 .lh-open-goal b i { display: block; height: 100%; background: var(--teal); }
+
+/* ── Lộ trình học thích ứng + giấy chứng nhận ── */
+.lh-path-head { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; margin-bottom: .4rem; }
+.lh-path-head .lh-goal-count { float: none; margin-left: auto; }
+.lh-path-name { font-size: 1rem; font-weight: 900; color: var(--text); }
+.lh-path-level { min-width: 0; }
+.lh-path { list-style: none; margin: .8rem 0 0; padding: 0; display: flex; flex-direction: column; gap: .4rem; }
+.lh-step { display: flex; align-items: center; gap: .7rem; padding: .55rem .75rem; border-radius: 12px; border: 1.5px solid var(--border); background: var(--card); }
+.lh-step-dot {
+  flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+  font-size: .78rem; font-weight: 900; background: var(--card2); color: var(--muted); border: 2px solid var(--border);
+}
+.lh-step-main { flex: 1; min-width: 0; }
+.lh-step-name { font-weight: 800; font-size: .86rem; color: var(--text); }
+.lh-step .lh-topic-meta { margin: .1rem 0 0; }
+.lh-step.is-great .lh-step-dot { background: var(--green); border-color: var(--green); color: #fff; }
+.lh-step.is-good .lh-step-dot { background: var(--purple); border-color: var(--purple); color: #fff; }
+.lh-step.is-warn .lh-step-dot { border-color: var(--yellow); color: var(--text); }
+.lh-step.is-bad .lh-step-dot { border-color: var(--red); color: var(--red); }
+.lh-step.is-great .lh-chip { background: var(--green-lt); color: var(--green); }
+.lh-step.is-bad .lh-chip { background: var(--red-lt); color: var(--red); }
+.lh-step.is-warn .lh-chip { background: var(--yellow-lt); color: var(--text); }
+.lh-step.is-next { border-color: var(--teal); box-shadow: 0 0 0 2px color-mix(in srgb, var(--teal) 35%, transparent); }
+.lh-cert img { display: block; width: 100%; height: auto; border-radius: 12px; border: 1.5px solid var(--border); margin-bottom: .8rem; }
+a.lh-btn { text-decoration: none; }
+@media (max-width: 640px) {
+  .lh-step { flex-wrap: wrap; }
+  .lh-step-main { flex-basis: calc(100% - 44px); }
+  .lh-step .lh-chip { margin-left: 42px; }
+  .lh-step .lh-btn { margin-left: auto; }
+}

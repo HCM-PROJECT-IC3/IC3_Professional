@@ -20,7 +20,7 @@
  */
 
 // ====== CẤU HÌNH - THAY BẰNG ID THẬT CỦA BẠN ======
-const BACKEND_VERSION = '2026-10-12';
+const BACKEND_VERSION = '2026-10-14';
 const SPREADSHEET_ID_DATA = '16ty8LB6pnk5Xai1VauUAKfMbIaT88ewfNUAhWM0z5ck';      // Sheet chứa HocSinh + KetQua
 const SPREADSHEET_ID_REPORT = '16ty8LB6pnk5Xai1VauUAKfMbIaT88ewfNUAhWM0z5ck';    // Sheet chứa báo cáo tổng hợp (có thể trùng với ID trên nếu để chung 1 file, khác tab)
 
@@ -32,16 +32,19 @@ const SHEET_REPORT_SUMMARY = 'TongHop'; // nơi ghi báo cáo tổng hợp do da
 // js/backend-config.js chọn đọc từ Sheet. Cột: xem LOG_HEADERS.
 const SHEET_SUBMISSION_LOG = 'NhatKyNopBai';
 
-// Xoay vòng file nhật ký khi quá lớn — xem getSubmissionLogSheet_(). 300.000 dòng × 14
-// cột ≈ 4,2 triệu ô: còn xa trần 10 triệu ô/file, và file nhỏ thì appendRow vẫn nhanh.
+// Xoay vòng file nhật ký khi quá lớn — xem getSubmissionLogSheet_(). 300.000 dòng × 15
+// cột ≈ 4,5 triệu ô: còn xa trần 10 triệu ô/file, và file nhỏ thì appendRow vẫn nhanh.
 const MAX_LOG_ROWS = 300000;
 const LOG_SPREADSHEET_PROP = 'LOG_SPREADSHEET_ID'; // Script Properties: ID file nhật ký đang ghi
 const SHEET_LOG_CATALOG = 'DanhMucNhatKy';          // tab ở file chính: danh sách các file nhật ký
 const DEDUPE_TTL_SEC = 6 * 60 * 60;                   // CacheService giữ tối đa 6 giờ
 const LOG_HISTORY_PROP = 'LOG_SPREADSHEET_HISTORY';  // Script Properties: ID các file nhật ký đã tạo (cũ → mới)
-// Cột A..N của tab nhật ký. N (CheDo) thêm 10/2026 — tự ghi tiêu đề nếu tab cũ chưa có.
+// Cột A..O của tab nhật ký. N (CheDo), O (CauSai — uid câu sai "a,b,c") thêm 10/2026 —
+// tự ghi tiêu đề nếu tab cũ chưa có.
 const LOG_HEADERS = ['SubmissionId', 'HoTen', 'Lop', 'Truong', 'BaiThi', 'Diem', 'SoCauDung',
-  'ThoiGianLam', 'SoLanChuyenTab', 'SoLanClick', 'TrangThai', 'ThoiGianNop', 'GhiChu', 'CheDo'];
+  'ThoiGianLam', 'SoLanChuyenTab', 'SoLanClick', 'TrangThai', 'ThoiGianNop', 'GhiChu', 'CheDo', 'CauSai'];
+const WRONG_MAX_UIDS = 30;     // tối đa số câu sai lưu mỗi bài (khớp js/services/result-submitter.js)
+const WRONG_STATS_TOP = 60;    // số câu hay sai nhất trả về cho dashboard
 
 // Xác thực người gọi bằng Firebase ID token (xem 20-auth.gs).
 const FIREBASE_PROJECT_ID = 'data-ic3';

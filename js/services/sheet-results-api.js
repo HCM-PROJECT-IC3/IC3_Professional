@@ -78,5 +78,34 @@
     return parts.reduce((n, p) => n + ((p && p.deleted) || 0), 0);
   }
 
-  global.EduSheetResults = { enabled, readFrom, list, remove, endpointGroups };
+  /**
+   * "Câu cả lớp hay sai" — Apps Script tổng hợp cột CauSai trên server (wrongStats_),
+   * ở đây chỉ gộp khi Sheet chia theo trường. Gọi được bất kể dashboard đọc kết quả từ
+   * Firestore hay Sheet (câu sai chỉ nằm trên Sheet). 0 lượt đọc Firestore cho dữ liệu.
+   * @returns {Promise<{submissions:number, withData:number, truncated:boolean, items:{uid,count,students,tests}[]}>}
+   */
+  async function wrongStats({ schools, classes, sinceMs, testName } = {}) {
+    const parts = await Promise.all(endpointGroups(schools).map((g) => global.EduAppsScript.call('wrongStats',
+      { schools: g.schools, classes, sinceMs, testName }, { url: g.url })));
+    const byUid = new Map();
+    const out = { submissions: 0, withData: 0, truncated: false, items: [] };
+    parts.forEach((p) => {
+      if (!p) return;
+      out.submissions += p.submissions || 0;
+      out.withData += p.withData || 0;
+      out.truncated = out.truncated || !!p.truncated;
+      (p.items || []).forEach((it) => {
+        const e = byUid.get(it.uid);
+        if (!e) byUid.set(it.uid, Object.assign({}, it, { tests: (it.tests || []).slice() }));
+        else {
+          e.count += it.count; e.students += it.students;
+          (it.tests || []).forEach((t) => { if (!e.tests.includes(t)) e.tests.push(t); });
+        }
+      });
+    });
+    out.items = [...byUid.values()].sort((a, b) => (b.count - a.count) || (b.students - a.students));
+    return out;
+  }
+
+  global.EduSheetResults = { enabled, readFrom, list, remove, endpointGroups, wrongStats };
 })(window);

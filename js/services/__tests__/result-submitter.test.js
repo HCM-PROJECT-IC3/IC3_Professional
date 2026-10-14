@@ -50,6 +50,18 @@ assertEq('thời gian mm:ss', p.sheet.time, '02:05');
 assertEq('trạng thái nghi vấn', p.sheet.status, '⚠️ Chuyển tab');
 assertEq('ghi chú = cờ còn lại', p.sheet.note, 'Thoát toàn màn hình');
 assertEq('examMode giữ nguyên', p.firestore.examMode, 'practice');
+// ── Câu sai → chỉ Google Sheet ──
+var qs = [{ uid: 'ic3__lv1__t1__q1' }, { uid: 'ic3__lv1__t1__q2' }, { uid: 'custom__abc' }, { uid: 'ic3__lv1__t1__q1' }, {}, { uid: 'bad<uid>' }, { uid: 'ic3__lv1__t1__q3' }, { uid: 'Bài 2: Xây dựng dữ liệu trong ô_3__v3' }];
+var det = [{ status: 'incorrect' }, { status: 'correct' }, { status: 'incorrect' }, { status: 'incorrect' }, { status: 'incorrect' }, { status: 'incorrect' }, { status: 'skipped' }, { status: 'incorrect' }];
+assertEq('wrongUids: chỉ câu sai, bỏ câu tự soạn/không uid/uid lạ/trùng, giữ uid MOS có dấu', S.wrongUids(qs, det), 'ic3__lv1__t1__q1,Bài 2: Xây dựng dữ liệu trong ô_3__v3');
+var many = []; var manyDet = [];
+for (var k = 0; k < 40; k++) { many.push({ uid: 'u_' + k }); manyDet.push({ status: 'incorrect' }); }
+assertEq('wrongUids: tối đa 30 câu', S.wrongUids(many, manyDet).split(',').length, 30);
+assertEq('wrongUids: thiếu dữ liệu → rỗng', S.wrongUids(undefined, undefined), '');
+var pw = S.buildPayloads({ session: session, result: Object.assign({ details: det }, result), integrity: integrity, elapsed: 1, id: 'W', questions: qs });
+assertEq('câu sai có trong payload Sheet', pw.sheet.wrong, 'ic3__lv1__t1__q1,Bài 2: Xây dựng dữ liệu trong ô_3__v3');
+assertEq('câu sai KHÔNG có trong payload Firestore', 'wrong' in pw.firestore, false);
+assertEq('không sai câu nào → chuỗi rỗng (Apps Script ghi "-")', S.buildPayloads({ session: session, result: { correct: 1, total: 1, details: [{ status: 'correct' }] }, integrity: integrity, elapsed: 1, id: 'W2', questions: [{ uid: 'a_1' }] }).sheet.wrong, '');
 assertEq('bài 0 câu không chia 0', S.buildPayloads({ session: session, result: { correct: 0, total: 0 }, integrity: { valid: true, flags: [] }, elapsed: 0, id: 'X' }).sheet.score, 0);
 
 // ── Gửi theo chính sách ──

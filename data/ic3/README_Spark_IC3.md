@@ -23,3 +23,14 @@ Thay thế cho bộ câu hỏi THCS/TIH cũ (K3-K8). Nguồn gốc: 6 file `.qui
 
 ## uid
 `{cat}__{lv}__mt{n}__q{sort}` viết thường, vd `spark__lv1__mt1__q1`.
+
+## Bộ "Theo chủ đề" (7 minitest "N. Tên chủ đề")
+Chủ đề của từng câu bám **PPCT của cấp đó** (không chỉ theo số `tN` trong uid — uid giữ nguyên
+khi chuyển chủ đề để link đề/lịch sử cũ không vỡ). Mọi chuyển/bỏ câu ghi ở `topic-reassign.json`
+(kèm lý do); sửa dữ liệu chủ đề → cập nhật file đó → `node scripts/apply-topic-reassign.js` →
+`python scripts/split-minitests.py`. `scripts/validate-data.js` chặn câu trùng / câu ở 2 chủ đề.
+
+## Đồng bộ với đáp án gốc "All Key" (iSpring .quiz NH2025-2026)
+`allkey-sync.json` ghi các câu thêm từ khoá (`adds`) và các câu sửa theo khoá (`updates`, giữ uid),
+kèm nguồn `All Key › <file> › <nhóm>#<số>` và lý do. Câu khoá có nhiều phiên bản thì giữ bản cũ và
+thêm bản mới (không ghi đè). Áp dụng: `node scripts/apply-allkey-sync.js` → `python scripts/split-minitests.py`.

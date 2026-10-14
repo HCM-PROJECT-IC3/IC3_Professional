@@ -80,72 +80,9 @@
      LOBBY — Two-column layout
      ═══════════════════════════════════ -->
   <div id="lobby">
-    <!-- Toggle Giới thiệu ⇄ Form — chỉ hiển thị khi màn hình hẹp (≤900px),
-       nơi 2 khối không còn đủ chỗ hiện song song. Xem setLobbyView()
-       trong js/main.js. Ẩn hoàn toàn ở màn rộng (CSS display:none). -->
-    <div class="lobby-view-toggle" role="tablist" aria-label="Chuyển đổi màn giới thiệu và màn làm bài">
-      <button type="button" class="view-toggle-btn" id="toggleIntroBtn" role="tab" aria-selected="false"
-        onclick="setLobbyView('intro')"><i class="fa-solid fa-graduation-cap"></i> Giới thiệu</button>
-      <button type="button" class="view-toggle-btn active" id="toggleFormBtn" role="tab" aria-selected="true"
-        onclick="setLobbyView('form')"><i class="fa-solid fa-pen-to-square"></i> Làm bài</button>
-    </div>
-
-    <!-- Left: Animated 3D Carousel -->
-    <div class="lobby-left">
-      <!-- Signature element: carousel 3D thuần CSS/JS (vòng ảnh xoay
-         quanh trục Y bằng transform 3D, không dùng thư viện ngoài).
-         Kéo chuột/chạm để xoay tự do, thả ra tự "trôi" chậm dần
-         (easing/damping) rồi quay lại tự động xoay chậm; hover từng
-         panel để phóng to/sáng rõ, các panel còn lại mờ dần tạo chiều
-         sâu. Toàn bộ logic nằm trong js/carousel-3d.js. Nội dung mỗi
-         panel là ảnh nền gradient trừu tượng phong cách "4K wallpaper"
-         khai báo thuần CSS (không nhúng ảnh ngoài để tránh vấn đề bản
-         quyền và giữ ảnh luôn sắc nét ở mọi độ phân giải). -->
-      <div class="lobby-mockup" aria-hidden="true">
-        <div class="carousel-3d" id="carousel3d">
-          <!-- Badge nổi cố định — KHÔNG xoay theo ring, đứng yên trên
-             mặt phẳng màn hình như badge "78 WPM"/"98% chính xác" ở
-             hero tuhoc.cc, tạo cảm giác lớp UI nổi phía trước khối
-             bàn phím 3D đang xoay phía sau. -->
-          <!-- <div class="carousel-3d-badge carousel-3d-badge-tl" aria-hidden="true">
-            <span class="badge-dot dot-cyan"></span> <strong>6</strong> chủ đề
-          </div> -->
-          <!-- <div class="carousel-3d-badge carousel-3d-badge-tr" aria-hidden="true">
-            <span class="badge-dot dot-green"></span> Học nhanh · nhớ lâu
-          </div> -->
-          <div class="carousel-3d-stage" id="carouselStage">
-            <div class="carousel-3d-ring" id="carouselRing">
-              <div class="carousel-3d-cell"><div class="wallpaper-art wallpaper-1"><div class="kb-card" data-kb-card></div></div></div>
-              <div class="carousel-3d-cell"><div class="wallpaper-art wallpaper-2"><div class="kb-card" data-kb-card></div></div></div>
-              <div class="carousel-3d-cell"><div class="wallpaper-art wallpaper-3"><div class="kb-card" data-kb-card></div></div></div>
-              <div class="carousel-3d-cell"><div class="wallpaper-art wallpaper-4"><div class="kb-card" data-kb-card></div></div></div>
-              <div class="carousel-3d-cell"><div class="wallpaper-art wallpaper-5"><div class="kb-card" data-kb-card></div></div></div>
-              <div class="carousel-3d-cell"><div class="wallpaper-art wallpaper-6"><div class="kb-card" data-kb-card></div></div></div>
-            </div>
-          </div>
-          <div class="carousel-3d-footer">
-            <!-- <div class="carousel-3d-badge carousel-3d-badge-bottom" aria-hidden="true">
-              <span class="badge-dot dot-amber"></span> IC3 Test Prep · Ôn theo chủ đề
-            </div> -->
-            <div class="carousel-3d-hint"><i class="fa-solid fa-arrows-left-right"></i> Kéo để xoay</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Lối vào khu quản trị/giáo viên — trước đây là badge nổi cố
-         định ở góc trên-trái toàn trang ("🔑 Tạo tài khoản"), giờ đổi
-         tên thành "Chuyển tài khoản" và đặt hẳn trong panel Giới thiệu
-         (lobby-left) để luôn thấy được kể cả ở màn hẹp/tab Giới thiệu
-         trên di động — không còn bị trôi ra ngoài màn hình. Vẫn giữ
-         id="adminEntryLink" vì js/quiz-engine.js dùng id này để tự ẩn
-         nút lúc đang làm bài và hiện lại khi quay về lobby. -->
-      <a href="ic3-dashboard.html" target="_blank" rel="noopener" id="adminEntryLink"
-        title="Dành cho giáo viên / quản trị viên" class="switch-account-link">
-        <i class="fa-solid fa-arrows-rotate"></i> <span>Chuyển tài khoản</span>
-      </a>
-
-    </div>
-
+    <!-- Sảnh chỉ còn FORM (10/2026): khối bàn phím 3D trang trí bên trái + nút chuyển
+         "Giới thiệu ⇄ Làm bài" đã gỡ để học sinh không bị phân tâm (và máy trường
+         không phải chạy hoạt ảnh liên tục). Link giáo viên chuyển xuống dưới form. -->
     <!-- Right: form -->
     <div class="lobby-right">
       <a class="lobby-brand" href="portfolio.html" title="Xem trang giới thiệu EduQuiz IC3">
@@ -153,8 +90,10 @@
         <span class="lobby-brand-name">EduQuiz IC3</span>
       </a>
       <div class="lobby-card">
+        <!-- Mỗi bước 1 cột: ≥1400px 3 cột · 1100–1399px 2 cột (1+2 | 3) · hẹp hơn 1 cột (style.css § FORM KHÔNG LÃNG PHÍ) -->
+        <div class="lobby-col lobby-col-1">
         <!-- Nhóm 1: Thông tin học sinh -->
-        <div class="form-section-label"><i class="fa-solid fa-user"></i> Thông tin học sinh</div>
+        <div class="form-section-label lobby-step" id="lobbyStep1"><span class="step-num" aria-hidden="true">1</span> Em là ai? <span class="step-done" aria-label="đã xong">✓</span></div>
 
         <!-- Trường (full width) — chọn trước để lọc Lớp/Tên bên dưới -->
         <div class="form-group">
@@ -183,7 +122,48 @@
         </div>
 
         <!-- Nhóm 2: Chọn bài thi -->
-        <div class="form-section-label"><i class="fa-solid fa-pen-to-square"></i> Chọn bài thi</div>
+        </div>
+        <div class="lobby-col lobby-col-2">
+        <div class="form-section-label lobby-step" id="lobbyStep2"><span class="step-num" aria-hidden="true">2</span> Chọn bài <span class="step-done" aria-label="đã xong">✓</span></div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label><i class="fa-solid fa-book"></i> Chương trình</label>
+            <select id="categorySelect"></select>
+          </div>
+          <div class="form-group">
+            <label><i class="fa-solid fa-bullseye"></i> Cấp độ</label>
+            <select id="levelSelect"></select>
+          </div>
+        </div>
+
+        <!-- Minitest (thời gian tính theo "Chế độ làm bài" chọn ở trên —
+             Ôn luyện = không giới hạn, Kiểm tra = 50 phút, không cho học
+             sinh tự chọn mốc khác). Chọn theo 2 bước: bấm 1 trong các nút
+             "chế độ" (Theo Tên bài/Ôn tập cuối kỳ/Theo chủ đề/Tổng hợp/Tổng
+             hợp Vui) trước để LỌC bớt, rồi mới chọn cụ thể trong select
+             bên dưới — tránh 1 dropdown xổ ra hàng chục dòng liền một lúc,
+             khó quét/dễ chọn nhầm trên di động. "Theo Tên bài" (bộ đề CỦNG
+             CỐ bám sát từng bài giảng, vd "Bài 6. Kiểm chứng thông tin")
+             là chế độ mặc định khi cấp/chương trình đó đã có sẵn — phù hợp
+             nhất để ôn ngay sau buổi học. "Ôn tập cuối kỳ" (trước đây ghi
+             nhầm là "Theo tiết") là các gói câu hỏi ĐÃ TRỘN SẴN nhiều chủ
+             đề, dùng để ôn diện rộng trước kỳ thi — không phải 1 tiết học
+             cụ thể nào, đổi tên cho đúng bản chất. Xem js/quiz-engine.js §
+             refreshMinitests() (biến BAI_NAME_RE quyết định nhận diện tên
+             bài dạng "Bài N. …", LESSON_KEY_RE nhận diện "Tiết N"). -->
+        <div class="form-group">
+          <label><i class="fa-solid fa-layer-group"></i> Bài luyện tập
+            <span class="label-hint">Bấm 1 nhóm, rồi chọn bài ở ô bên dưới</span>
+          </label>
+          <div class="mt-mode-toggle" id="mtModeToggle"></div>
+          <select id="minitestSelect"></select>
+          <div class="minitest-meta" id="minitestMeta"></div>
+        </div>
+
+        </div>
+        <div class="lobby-col lobby-col-3">
+        <div class="form-section-label lobby-step" id="lobbyStep3"><span class="step-num" aria-hidden="true">3</span> Cách làm bài <span class="step-done" aria-label="đã xong">✓</span></div>
 
         <!-- Chế độ làm bài: Ôn luyện (không giới hạn thời gian, để học sinh
              học/thực hành thoải mái) và Kiểm tra (đếm ngược, thời lượng chọn
@@ -194,10 +174,10 @@
              khác cách tính giờ khi vào làm bài. Xem js/quiz-engine.js §
              startExam()/startTimer()/applyExamDurationLabel(). -->
         <div class="form-group">
-          <label><i class="fa-solid fa-hourglass-half"></i> Chế độ làm bài</label>
+          <label class="sr-only"><i class="fa-solid fa-hourglass-half"></i> Chế độ làm bài</label>
           <div class="mt-mode-toggle" id="examModeToggle">
-            <button type="button" class="mt-mode-btn is-active" data-exam-mode="practice"><i class="fa-solid fa-dove"></i> Ôn luyện — không giới hạn giờ</button>
-            <button type="button" class="mt-mode-btn" data-exam-mode="test" id="examModeTestBtn"><i class="fa-solid fa-stopwatch"></i> Kiểm tra — 50 phút/bài</button>
+            <button type="button" class="mt-mode-btn is-active" data-exam-mode="practice"><i class="fa-solid fa-dove"></i> <b>Ôn luyện</b><small>Không giới hạn giờ</small></button>
+            <button type="button" class="mt-mode-btn" data-exam-mode="test" id="examModeTestBtn"><i class="fa-solid fa-stopwatch"></i> <b>Kiểm tra</b><small>50 phút/bài</small></button>
           </div>
         </div>
 
@@ -246,47 +226,19 @@
           </label>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label><i class="fa-solid fa-book"></i> Chương trình</label>
-            <select id="categorySelect"></select>
-          </div>
-          <div class="form-group">
-            <label><i class="fa-solid fa-bullseye"></i> Cấp độ</label>
-            <select id="levelSelect"></select>
-          </div>
-        </div>
-
-        <!-- Minitest (thời gian tính theo "Chế độ làm bài" chọn ở trên —
-             Ôn luyện = không giới hạn, Kiểm tra = 50 phút, không cho học
-             sinh tự chọn mốc khác). Chọn theo 2 bước: bấm 1 trong các nút
-             "chế độ" (Theo Tên bài/Ôn tập cuối kỳ/Theo chủ đề/Tổng hợp/Tổng
-             hợp Vui) trước để LỌC bớt, rồi mới chọn cụ thể trong select
-             bên dưới — tránh 1 dropdown xổ ra hàng chục dòng liền một lúc,
-             khó quét/dễ chọn nhầm trên di động. "Theo Tên bài" (bộ đề CỦNG
-             CỐ bám sát từng bài giảng, vd "Bài 6. Kiểm chứng thông tin")
-             là chế độ mặc định khi cấp/chương trình đó đã có sẵn — phù hợp
-             nhất để ôn ngay sau buổi học. "Ôn tập cuối kỳ" (trước đây ghi
-             nhầm là "Theo tiết") là các gói câu hỏi ĐÃ TRỘN SẴN nhiều chủ
-             đề, dùng để ôn diện rộng trước kỳ thi — không phải 1 tiết học
-             cụ thể nào, đổi tên cho đúng bản chất. Xem js/quiz-engine.js §
-             refreshMinitests() (biến BAI_NAME_RE quyết định nhận diện tên
-             bài dạng "Bài N. …", LESSON_KEY_RE nhận diện "Tiết N"). -->
-        <div class="form-group">
-          <label><i class="fa-solid fa-layer-group"></i> Minitest
-            <span class="label-hint">— chọn cách lọc, rồi chọn bài cụ thể bên dưới</span>
-          </label>
-          <div class="mt-mode-toggle" id="mtModeToggle"></div>
-          <select id="minitestSelect"></select>
-          <div class="minitest-meta" id="minitestMeta"></div>
-        </div>
-
+        <!-- "Bài em sắp làm" — tóm tắt lựa chọn ngay trên nút Bắt đầu (màn rộng; js/lobby-form-ux.js) -->
+        <div class="lobby-summary" id="lobbySummary" aria-live="polite"></div>
         <!-- fa-beat (https://docs.fontawesome.com/web/style/animate —
              "Scale an icon up or down" để thu hút chú ý vào nút hành động
              chính) — chỉ chạy lúc hover (paused mặc định, xem #btnStart
              i.fa-beat trong style.css), tắt hẳn khi disabled. -->
         <button type="button" class="btn-start" id="btnStart" onclick="onStartExamClick()" disabled><i class="fa-solid fa-play fa-beat"></i> Bắt đầu</button>
-        <button type="button" class="btn-secondary" onclick="showRecords()"><i class="fa-solid fa-clock-rotate-left"></i> Xem lịch sử bài làm</button>
+        <!-- Nhắc học sinh còn thiếu bước nào khi nút Bắt đầu đang khoá (js/lobby-form-ux.js) -->
+        <p class="start-hint" id="startHint" aria-live="polite"></p>
+        <!-- Nút phụ gom 1 hàng (Góc học tập / Đấu trường do JS chèn trước nút Lịch sử) -->
+        <div class="lobby-extras">
+          <button type="button" class="btn-secondary" onclick="showRecords()"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử bài làm</button>
+        </div>
 
         <!-- MOS Word 2019 — mô phỏng thao tác Ribbon, 10 tiết ôn luyện cuối
              khóa (không khóa như Khu Vui Chơi, đây là nội dung học chính).
@@ -330,7 +282,13 @@
         <a class="game-zone-open-btn" id="openExamSimBtn" href="#" target="_blank" rel="noopener" hidden>
           <i class="fa-solid fa-flask"></i> MOS Exam Simulator — Thi thử chấm theo trạng thái thật (Beta)
         </a>
+        </div>
       </div>
+      <!-- Lối vào khu giáo viên/quản trị — giữ id="adminEntryLink" (quiz-engine.js ẩn khi làm bài, hiện lại ở sảnh) -->
+      <a href="ic3-dashboard.html" target="_blank" rel="noopener" id="adminEntryLink"
+        title="Dành cho giáo viên / quản trị viên" class="switch-account-link lobby-staff-link">
+        <i class="fa-solid fa-key"></i> <span>Giáo viên / Quản trị</span>
+      </a>
     </div>
   </div>
 
@@ -832,12 +790,10 @@
   <script src="js/custom-exam-codec.js" defer></script>
   <script src="js/quiz-engine.js" defer></script>
   <script src="js/learning-hub.js" defer></script>
+  <script src="js/arena/arena-entry.js" defer></script>
+  <script src="js/lobby-form-ux.js" defer></script>
   <script src="js/sw-register.js" defer></script>
   <script src="js/main.js" defer></script>
-  <!-- Animated 3D Carousel ở lobby-left — thuần vanilla JS, không phụ
-       thuộc thư viện ngoài. Xem js/carousel-3d.js. -->
-  <script src="js/carousel-3d.js" defer></script>
-  <script src="js/carousel-keyboard-cards.js" defer></script>
   <!-- Thay cho 9 file js/*-modal.js cũ (trùng lặp ~90%, chỉ khác id) —
        nay dùng chung 1 factory js/game-modal.js, mỗi mini-game chỉ khai
        báo id DOM của mình. Xem js/game-modal.js để biết chi tiết. -->

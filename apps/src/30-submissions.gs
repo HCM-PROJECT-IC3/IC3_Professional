@@ -21,6 +21,13 @@ function validateSubmission_(p) {
     if (p[k] !== undefined && p[k] !== '' && !(Number(p[k]) >= 0 && Number(p[k]) < 1e6)) bad(k);
   });
   if (p.examMode && ['practice', 'test'].indexOf(p.examMode) === -1) bad('examMode');
+  // CauSai: "uid1,uid2" — uid ngân hàng câu hỏi (ic3__lv1__t1__q1; MOS có dấu/khoảng trắng),
+  // cấm ký tự HTML/xuống dòng; khớp UID_RE ở js/services/result-submitter.js.
+  if (p.wrong !== undefined && p.wrong !== null && p.wrong !== '') {
+    if (typeof p.wrong !== 'string' || p.wrong.length > 2700) bad('wrong');
+    const uids = p.wrong.split(',');
+    if (uids.length > WRONG_MAX_UIDS || uids.some(function (u) { return !/^[^,<>"'`&\r\n]{3,80}$/.test(u); })) bad('wrong');
+  }
 }
 
 /**
@@ -31,7 +38,7 @@ function validateSubmission_(p) {
  *
  * payload khớp với payload gửi từ js/googleSheet.js:
  * { submissionId, studentName, studentClass, studentSchool, testName,
- *   score, correct, time, tabSwitch, clickCount, status, timestamp, note, examMode }
+ *   score, correct, time, tabSwitch, clickCount, status, timestamp, note, examMode, wrong }
  */
 function writeSubmissionLog_(payload) {
   validateSubmission_(payload);
@@ -67,7 +74,9 @@ function writeSubmissionLog_(payload) {
       asText_(payload.status),
       new Date(), // Dùng giờ server (đáng tin cậy hơn giờ máy học sinh) - lưu dạng Date thật để sort/lọc được
       asText_(payload.note),
-      asText_(payload.examMode) // N — CheDo: 'practice' (Ôn luyện) | 'test' (Kiểm tra); bài cũ để trống
+      asText_(payload.examMode), // N — CheDo: 'practice' (Ôn luyện) | 'test' (Kiểm tra); bài cũ để trống
+      // O — CauSai: uid câu sai "a,b,c"; "-" = không sai câu nào; trống = web cũ chưa gửi.
+      payload.wrong === '' ? '-' : asText_(payload.wrong)
     ]);
     cache.put(dedupeKey, '1', DEDUPE_TTL_SEC);
   } finally {
@@ -126,16 +135,18 @@ function getSubmissionLogSheet_() {
 }
 
 /**
- * Tiêu đề cột N (CheDo) + định dạng giờ nộp (L) kiểu Việt Nam. Chạy tối đa 1 lần/6 giờ
- * cho mỗi tab (cờ trong CacheService) — không tốn thêm thời gian cho từng bài nộp.
+ * Tiêu đề các cột thêm sau (N CheDo, O CauSai...) + định dạng giờ nộp (L) kiểu Việt Nam.
+ * Chạy tối đa 1 lần/6 giờ cho mỗi tab (cờ trong CacheService) — không tốn thêm thời
+ * gian cho từng bài nộp.
  */
 function ensureLogSheetLayout_(sheet) {
   const cache = CacheService.getScriptCache();
   const flag = 'layout:' + sheet.getParent().getId();
   if (cache.get(flag)) return;
-  if (sheet.getRange(1, LOG_HEADERS.length).getValue() === '') {
-    sheet.getRange(1, LOG_HEADERS.length).setValue(LOG_HEADERS[LOG_HEADERS.length - 1]);
-  }
+  const head = sheet.getRange(1, 1, 1, LOG_HEADERS.length).getDisplayValues()[0];
+  LOG_HEADERS.forEach(function (h, i) {
+    if (i >= 13 && !head[i]) sheet.getRange(1, i + 1).setValue(h); // chỉ cột thêm sau, không đè tiêu đề cũ
+  });
   sheet.getRange('L2:L').setNumberFormat('HH:mm:ss d/M/yyyy');
   cache.put(flag, '1', DEDUPE_TTL_SEC);
 }
