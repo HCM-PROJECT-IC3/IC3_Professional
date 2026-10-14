@@ -3503,3 +3503,261 @@ body {
 .custom-exam-banner span { font-size: .78rem; color: var(--muted); font-weight: 600 }
 .custom-exam-due { margin-top: .25rem; font-size: .78rem; font-weight: 800; color: var(--teal) }
 .custom-exam-due.is-late { color: var(--red) }
+
+/* ── Nút "🏟️ Đấu trường" ở sảnh (js/arena/arena-entry.js → arena.html) ── */
+a.arena-open {
+  display: flex; align-items: center; justify-content: center; gap: .4rem;
+  text-decoration: none; text-align: center; box-sizing: border-box;
+}
+a.arena-open small {
+  font-size: .68rem; font-weight: 800; padding: .05rem .45rem; border-radius: 999px;
+  background: linear-gradient(90deg, #864cbf, #f5a300); color: #fff;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FORM SẢNH TO, RÕ (10/2026) — học sinh tiểu học/THCS chọn bài trên
+   máy chiếu/màn hình nhỏ: 3 bước có số (js/lobby-form-ux.js đánh ✓),
+   chữ/ô chọn lớn hơn, trạng thái "đang chọn" tô đặc màu, nút Bắt đầu
+   nổi bật nhất + dòng nhắc còn thiếu gì, 3 nút phụ gom 1 hàng.
+   Ghi đè các quy tắc .lobby-card / .form-group / .mt-mode-btn phía trên.
+   ══════════════════════════════════════════════════════════════ */
+.lobby-card { max-width: 680px; padding: clamp(1.1rem, 2.2vw, 1.8rem); }
+
+/* Bước 1 · 2 · 3 */
+.form-section-label.lobby-step {
+  display: flex; align-items: center; gap: .6rem;
+  font-size: 1.05rem; text-transform: none; letter-spacing: 0;
+  color: var(--text); margin: 1.3rem 0 .7rem; padding-bottom: .5rem;
+}
+.form-section-label.lobby-step:first-child { margin-top: 0; }
+.step-num {
+  flex-shrink: 0; width: 2rem; height: 2rem; border-radius: 50%; display: grid; place-items: center;
+  background: var(--purple); color: #fff; font-size: 1rem; font-weight: 900;
+  box-shadow: 0 3px 10px rgba(47,64,178,.35);
+}
+.step-done {
+  margin-left: auto; width: 1.7rem; height: 1.7rem; border-radius: 50%; display: grid; place-items: center;
+  background: var(--green); color: #fff; font-weight: 900; font-size: .95rem;
+  transform: scale(0); transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+.lobby-step.is-done .step-done { transform: scale(1); }
+.lobby-step.is-done .step-num { background: var(--green); box-shadow: 0 3px 10px rgba(33,179,107,.35); }
+
+/* Nhãn + ô chọn lớn, đủ tương phản cả nền tối (tím đậm trên nền tối rất khó đọc) */
+.lobby-card .form-group { margin-bottom: .85rem; }
+.lobby-card .form-row { gap: 0 .9rem; }
+.lobby-card .form-group label {
+  font-size: .95rem; font-weight: 800; color: var(--text); margin-bottom: .35rem;
+}
+.lobby-card .form-group label > i { color: var(--purple); width: 1.25em; margin-right: .25rem; text-align: center; }
+[data-theme="dark"] .lobby-card .form-group label > i { color: #8ea0ff; }
+.lobby-card .form-group label .label-hint { display: block; font-size: .8rem; font-weight: 600; margin-top: .1rem; }
+.lobby-card .form-group input,
+.lobby-card .form-group select { font-size: 1.05rem; padding: .8rem 1rem; min-height: 3.1rem; }
+.lobby-card .form-group select { padding-right: 2.6rem; background-size: 22px; background-position: right 12px center; }
+.lobby-card .form-group select:disabled { opacity: .5; }
+
+/* Nút chọn (chế độ làm bài, nhóm bài, thời gian) — to, đang chọn = tô đặc */
+.lobby-card .mt-mode-btn { font-size: .92rem; padding: .7rem .9rem; min-height: 3rem; }
+.lobby-card .mt-mode-btn.is-active,
+.lobby-card #mtModeToggle .mt-mode-btn.is-active {
+  background: var(--purple); color: #fff;
+  box-shadow: 0 4px 14px rgba(47,64,178,.4), inset 0 0 0 2px rgba(255,255,255,.25);
+}
+.lobby-card #mtModeToggle { grid-template-columns: repeat(auto-fit, minmax(7.4rem, 1fr)); gap: .55rem; }
+.lobby-card #mtModeToggle .mt-mode-btn { min-height: 3.6rem; font-size: .9rem; }
+.lobby-card #mtModeToggle .mt-mode-btn i { font-size: 1.15rem; }
+/* Ôn luyện / Kiểm tra: 2 thẻ lớn, tên chế độ to + chú thích nhỏ */
+#examModeToggle { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+#examModeToggle .mt-mode-btn {
+  display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: .55rem;
+  align-items: center; text-align: left; white-space: normal; border-radius: var(--radius-sm); padding: .75rem .9rem;
+}
+#examModeToggle .mt-mode-btn i { grid-row: 1 / span 2; font-size: 1.5rem; }
+#examModeToggle .mt-mode-btn b { font-size: 1.1rem; line-height: 1.1; }
+#examModeToggle .mt-mode-btn small { font-size: .78rem; font-weight: 600; opacity: .85; }
+.lobby-card .minitest-meta .chip { font-size: .85rem; }
+
+/* Nút Bắt đầu: hành động chính, to nhất */
+.lobby-card .btn-start { padding: 1rem; font-size: 1.3rem; margin-top: .6rem; border-radius: calc(var(--radius) * 1.1); }
+.lobby-card .btn-start:disabled { opacity: .55; filter: grayscale(.35); }
+.start-hint { margin: .55rem 0 0; min-height: 1.4em; text-align: center; font-size: .98rem; font-weight: 800; color: var(--orange); }
+.start-hint.is-ready { color: var(--green); }
+
+/* 3 nút phụ (Góc học tập · Đấu trường · Lịch sử) gom 1 hàng ô nhỏ */
+.lobby-extras { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; margin-top: .8rem; }
+.lobby-extras > .btn-secondary {
+  margin-top: 0; min-height: 3.3rem; padding: .5rem .4rem; font-size: .85rem; line-height: 1.2;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .2rem; text-align: center;
+}
+.lobby-extras > .btn-secondary > i, .lobby-extras > .btn-secondary > span[aria-hidden] { font-size: 1.15rem; }
+.lobby-extras .lh-open .lh-open-goal { margin-left: 0; }
+.lobby-extras .lh-badge { position: absolute; top: .3rem; right: .4rem; margin: 0; }
+.lobby-extras a.arena-open small { font-size: .6rem; }
+
+@media (max-width: 520px) {
+  .lobby-card .form-row { grid-template-columns: 1fr; }
+  #examModeToggle .mt-mode-btn { padding: .65rem .6rem; }
+  #examModeToggle .mt-mode-btn i { font-size: 1.2rem; }
+  .lobby-extras > .btn-secondary { font-size: .78rem; }
+}
+/* Gọn chiều cao để nút Bắt đầu thấy được không cần cuộn trên màn 1366×768 trở lên */
+.lobby-card #mtModeToggle { grid-template-columns: repeat(auto-fit, minmax(6.4rem, 1fr)); }
+.lobby-card #mtModeToggle .mt-mode-btn { min-height: 3.3rem; padding: .45rem .3rem; font-size: .86rem; }
+.form-section-label.lobby-step { margin: 1rem 0 .6rem; }
+.lobby-card .form-group { margin-bottom: .7rem; }
+@media (max-width: 520px) {
+  .lobby-card #mtModeToggle { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+/* Ẩn khỏi mắt nhưng giữ cho trình đọc màn hình (nhãn "Chế độ làm bài" đã có tiêu đề bước 3) */
+.lobby-card .sr-only {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+/* Căn giữa dọc AN TOÀN: justify-content:center làm phần đầu form tràn lên trên
+   và không cuộn tới được khi form cao hơn màn hình (màn 1366×768, máy chiếu).
+   margin:auto trên phần tử đầu/cuối vẫn căn giữa khi đủ chỗ, thiếu chỗ thì cuộn từ đầu. */
+.lobby-right { justify-content: flex-start; }
+.lobby-right > :first-child { margin-top: auto; }
+.lobby-right > :last-child { margin-bottom: auto; }
+/* Màn thấp (≤ 820px): thu khoảng cách, giữ cỡ chữ lớn */
+@media (max-height: 820px) and (min-width: 901px) {
+  .lobby-right { padding-top: .8rem; padding-bottom: .8rem; }
+  .lobby-card { padding: 1rem 1.3rem; }
+  .form-section-label.lobby-step { margin: .7rem 0 .45rem; padding-bottom: .35rem; }
+  .step-num { width: 1.75rem; height: 1.75rem; }
+  .lobby-card .form-group { margin-bottom: .5rem; }
+  .lobby-card .form-group label { margin-bottom: .2rem; }
+  .lobby-card .form-group input, .lobby-card .form-group select { min-height: 2.75rem; padding: .6rem .9rem; }
+  .lobby-card #mtModeToggle .mt-mode-btn { min-height: 2.9rem; }
+  .lobby-card .form-group label .label-hint { display: inline; margin-left: .3rem; }
+  .lobby-card .btn-start { padding: .8rem; }
+  .lobby-extras > .btn-secondary { min-height: 2.9rem; }
+}
+/* quiz-engine.js ẩn ô Chương trình/Cấp độ/Bài bằng [hidden] khi mở link đề giáo viên —
+   display:grid/block ở trên từng thắng [hidden] nên các ô này vẫn hiện (học sinh tưởng phải chọn thêm). */
+.lobby-card .form-row[hidden], .lobby-card .form-group[hidden] { display: none !important; }
+
+/* ══════════════════════════════════════════════════════════════
+   SẢNH CHỈ CÒN FORM (10/2026) — bỏ khối trang trí bên trái, nền tĩnh,
+   form nằm giữa; màn rộng chia 2 cột để cả form vừa 1 màn hình.
+   ══════════════════════════════════════════════════════════════ */
+#lobby { grid-template-columns: 1fr; }
+#lobby .lobby-right { display: flex; max-height: none; min-height: 100vh; min-height: 100dvh; }
+/* Nền tĩnh: tắt "bong bóng" trôi + chữ thương hiệu đổi màu liên tục (gây phân tâm) */
+#lobby::after { animation: none; }
+.lobby-brand-name { animation: none; background-position: 0 50%; }
+.lobby-brand { margin-bottom: .8rem; }
+.lobby-brand-name { font-size: clamp(1.3rem, 2.2vw, 1.7rem); }
+
+/* Link giáo viên/quản trị: nhỏ, kín đáo, dưới form */
+.lobby-staff-link { margin: 1rem auto 0; font-size: .78rem; padding: .4rem .85rem; opacity: .8; box-shadow: none; animation: none; }
+.lobby-staff-link:hover { opacity: 1; }
+
+/* Màn hẹp: form chiếm gần hết bề ngang, bỏ khoảng trống thừa */
+@media (max-width: 900px) {
+  #lobby { grid-template-rows: 1fr; }
+  .lobby-right { padding: 1rem clamp(.6rem, 3vw, 1.5rem) 1.5rem; }
+}
+@media (max-width: 520px) {
+  .lobby-card { padding: 1rem .9rem; border-radius: var(--radius); }
+  .lobby-brand { margin-bottom: .5rem; }
+}
+/* 5 nhóm bài luôn 1 hàng ở cột trái màn rộng (trước rớt "Tổng hợp Vui" xuống dòng riêng) */
+
+/* Điện thoại: chừa chỗ cho nút sáng/tối cố định góc phải, không đè tiêu đề/form */
+@media (max-width: 520px) {
+  .lobby-right { padding-top: 3.2rem; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FORM KHÔNG LÃNG PHÍ KHOẢNG TRỐNG (10/2026) — mỗi bước 1 cột:
+     ≥ 1400px  : 3 cột  [1 Em là ai?] [2 Chọn bài] [3 Cách làm bài + tóm tắt + Bắt đầu]
+     960–1399  : 2 cột  [1 + 2] | [3 + tóm tắt + Bắt đầu]  (tóm tắt lấp phần trống cột phải)
+     < 960     : 1 cột, ẩn thẻ tóm tắt (tránh dài thêm trên điện thoại)
+   ══════════════════════════════════════════════════════════════ */
+.lobby-col { min-width: 0; }
+.lobby-col-2 > .form-section-label.lobby-step:first-child,
+.lobby-col-3 > .form-section-label.lobby-step:first-child { margin-top: 1rem; }
+.lobby-summary { display: none; }
+
+@media (min-width: 960px) {
+  .lobby-card {
+    max-width: 1100px; display: grid; column-gap: 2.2rem; align-items: start;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    grid-template-areas: "c1 c3" "c2 c3";
+  }
+  .lobby-col-1 { grid-area: c1; }
+  .lobby-col-2 { grid-area: c2; }
+  .lobby-col-3 { grid-area: c3; padding-left: 2.2rem; margin-left: -1.1rem; border-left: 1.5px solid var(--border); align-self: stretch; display: flex; flex-direction: column; }
+  .lobby-col-3 > .form-section-label.lobby-step:first-child { margin-top: 0; }
+  .lobby-col-3 .btn-start { margin-top: .8rem; padding: 1.1rem; font-size: 1.4rem; }
+  .lobby-card #mtModeToggle { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .45rem; }
+  .lobby-card #mtModeToggle .mt-mode-btn { font-size: .8rem; padding: .45rem .2rem; }
+
+  /* Thẻ "Bài em sắp làm" */
+  .lobby-summary {
+    display: block; margin-top: 1rem; padding: .9rem 1rem; border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--purple) 9%, var(--neu-surface)); border: 1.5px dashed color-mix(in srgb, var(--purple) 35%, var(--border));
+  }
+  .ls-head { font-size: .78rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+  .ls-head i { color: var(--purple); }
+  .ls-title { display: block; margin: .3rem 0 .45rem; font-size: 1.12rem; line-height: 1.3; color: var(--text); }
+  .ls-meta { display: flex; flex-wrap: wrap; gap: .35rem; }
+  .ls-meta span { padding: .2rem .6rem; border-radius: 999px; background: var(--neu-surface); font-size: .8rem; font-weight: 700; color: var(--text); box-shadow: var(--shadow-neu-flat); }
+  .ls-meta span.is-test { background: var(--orange); color: #fff; }
+  .ls-who { margin-top: .5rem; font-size: .88rem; font-weight: 700; color: var(--text); }
+  .ls-who.is-missing { color: var(--orange); }
+  [data-theme="dark"] .ls-head i { color: #8ea0ff; }
+}
+
+@media (min-width: 1400px) {
+  .lobby-card {
+    max-width: min(1520px, 94vw);
+    grid-template-columns: minmax(0, .9fr) minmax(0, 1.2fr) minmax(0, 1fr);
+    grid-template-areas: "c1 c2 c3";
+  }
+  .lobby-col-2 { padding-left: 2.2rem; margin-left: -1.1rem; border-left: 1.5px solid var(--border); align-self: stretch; }
+  .lobby-col-2 > .form-section-label.lobby-step:first-child { margin-top: 0; }
+  /* Cột 1 hẹp: Lớp + Họ tên xếp dọc cho dễ đọc tên dài */
+  .lobby-col-1 .form-row { grid-template-columns: 1fr; }
+  /* 3 cột đã cân (mỗi cột ~1 bước) — thẻ tóm tắt sẽ làm cột 3 cao vượt 2 cột kia → ẩn */
+  .lobby-summary { display: none; }
+}
+/* 960–1099px: cột hẹp hơn → bớt khoảng cách giữa 2 cột */
+@media (min-width: 960px) and (max-width: 1099px) {
+  .lobby-card { column-gap: 1.6rem; padding: 1.1rem 1.2rem; }
+  .lobby-col-3 { padding-left: 1.6rem; margin-left: -.8rem; }
+  .lobby-card #mtModeToggle .mt-mode-btn { font-size: .74rem; }
+}
+/* Chế độ Kiểm tra: cột 3 đã có ô thời gian + cam kết (đủ cho biết chế độ/số phút) → ẩn tóm tắt để 2 cột không lệch */
+.lobby-card.is-test-mode .lobby-summary { display: none; }
+/* 2 cột: chiều cao dư của cột 3 dồn xuống hàng dưới (trước chia đều → hở giữa bước 1 và 2) */
+@media (min-width: 960px) and (max-width: 1399px) {
+  .lobby-card { grid-template-rows: auto 1fr; }
+}
+/* Màn rộng + cao (máy chiếu, 1600×900 trở lên): form 3 cột thấp → phóng to chữ/ô chọn
+   để dùng hết khoảng trống dọc và đọc rõ từ cuối lớp */
+@media (min-width: 1400px) and (min-height: 850px) {
+  .lobby-card { padding: 2rem 2.2rem; }
+  .form-section-label.lobby-step { font-size: 1.25rem; margin-bottom: 1rem; padding-bottom: .7rem; }
+  .step-num, .step-done { width: 2.3rem; height: 2.3rem; font-size: 1.1rem; }
+  .lobby-card .form-group { margin-bottom: 1.1rem; }
+  .lobby-card .form-group label { font-size: 1.05rem; margin-bottom: .45rem; }
+  .lobby-card .form-group input, .lobby-card .form-group select { font-size: 1.18rem; min-height: 3.6rem; }
+  .lobby-card #mtModeToggle .mt-mode-btn { min-height: 4rem; font-size: .9rem; }
+  #examModeToggle .mt-mode-btn { padding: 1rem 1.1rem; }
+  #examModeToggle .mt-mode-btn b { font-size: 1.3rem; }
+  .lobby-col-3 .btn-start { padding: 1.4rem; font-size: 1.6rem; margin-top: 1.2rem; }
+  .start-hint { font-size: 1.1rem; margin-top: .8rem; }
+  .lobby-extras { margin-top: 1.2rem; gap: .7rem; }
+  .lobby-extras > .btn-secondary { min-height: 4.2rem; font-size: .95rem; }
+  .lobby-brand-name { font-size: 2rem; }
+}
+/* 3 cột: cột giữa (5 nhóm bài + tên bài dài) cần rộng nhất */
+@media (min-width: 1400px) {
+  .lobby-card { grid-template-columns: minmax(0, .82fr) minmax(0, 1.4fr) minmax(0, .95fr); }
+}
+@media (min-width: 1400px) and (min-height: 850px) {
+  .lobby-card #mtModeToggle .mt-mode-btn { font-size: .82rem; min-height: 3.7rem; }
+}

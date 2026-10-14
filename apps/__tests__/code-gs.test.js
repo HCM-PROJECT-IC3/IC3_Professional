@@ -216,7 +216,8 @@ const sub = (p) => call('submitExam', { payload: Object.assign({ submissionId: '
   studentSchool: 'TH X', testName: 'T', score: 50, correct: '7/24', time: '5:05', tabSwitch: 0, clickCount: 1, status: 'OK', note: '', examMode: 'practice' }, p) });
 eq('nộp bài hợp lệ', sub({}).data, { written: true, duplicate: false });
 const w = sheet.data[sheet.data.length - 1].rawIn;
-eq('lớp/số câu/thời gian ghi thành chữ + cột CheDo', [w[2], w[6], w[7], w[13], w.length], ["'3/12", "'7/24", "'5:05", 'practice', 14]);
+eq('lớp/số câu/thời gian ghi thành chữ + cột CheDo', [w[2], w[6], w[7], w[13], w.length], ["'3/12", "'7/24", "'5:05", 'practice', 15]);
+eq('web cũ không gửi câu sai → cột CauSai trống', w[14], '');
 eq('gửi lại cùng mã → trùng, không ghi thêm', sub({}).data.duplicate, true);
 eq('tab cũ được thêm tiêu đề CheDo', sheet.data[0].disp[13], 'CheDo');
 eq('điểm ngoài 0-100 bị từ chối', sub({ submissionId: 'zz1234567', score: 500 }).code, 'invalid-argument');
@@ -282,6 +283,29 @@ eq('roster: sai cấu trúc bị từ chối', call('publishRoster', Object.assi
 const rp = call('publishRoster', Object.assign(as('admin1'), { content: roster }));
 eq('roster: admin đẩy đúng 1 file data/roster/students-active.json', [rp.ok, github.lastTree.tree.map((t) => t.path)], [true, ['data/roster/students-active.json']]);
 eq('nhật ký server: đẩy roster/câu hỏi + xoá bài đều được ghi', ['publish_roster', 'publish_questions', 'delete_results'].every((a) => tabs.NhatKyHoatDong.rows.some((r) => r[3] === a)), true);
+
+// ── Câu cả lớp hay sai (cột O CauSai + API wrongStats) ──
+eq('tab cũ được thêm tiêu đề CauSai', sheet.data[0].disp[14], 'CauSai');
+eq('CauSai: ký tự lạ bị từ chối', sub({ submissionId: 'wr9999991', wrong: 'ic3__lv1__q1,<script>' }).code, 'invalid-argument');
+eq('CauSai: uid MOS có dấu/khoảng trắng hợp lệ', sub({ submissionId: 'wr9999990', testName: 'MOS', wrong: 'mos_word__bài1,Bài 2: Xây dựng dữ liệu trong ô_3__v3' }).data.written, true);
+eq('CauSai: quá 30 câu bị từ chối', sub({ submissionId: 'wr9999992', wrong: Array.from({ length: 31 }, (_, i) => 'u' + i).join(',') }).code, 'invalid-argument');
+eq('CauSai: không phải chuỗi bị từ chối', sub({ submissionId: 'wr9999993', wrong: ['a'] }).code, 'invalid-argument');
+sub({ submissionId: 'wr0000001', studentName: 'Ann', wrong: 'ic3__lv1__t1__q1,ic3__lv1__t1__q2' });
+eq('CauSai ghi đúng uid', sheet.data[sheet.data.length - 1].rawIn[14], 'ic3__lv1__t1__q1,ic3__lv1__t1__q2');
+sub({ submissionId: 'wr0000002', studentName: 'Bob', wrong: 'ic3__lv1__t1__q1' });
+sub({ submissionId: 'wr0000003', studentName: 'Ann', wrong: '' });
+eq('không sai câu nào → ghi "-"', sheet.data[sheet.data.length - 1].rawIn[14], '-');
+sub({ submissionId: 'wr0000004', studentName: 'ann ', wrong: 'ic3__lv1__t1__q1' });
+sub({ submissionId: 'wr0000005', studentName: 'Cy', testName: 'Khác', wrong: 'ic3__lv1__t1__q9' });
+const ws = call('wrongStats', Object.assign(as('teachX'), { testName: 'T' })).data;
+eq('wrongStats: mẫu số chỉ gồm bài có dữ liệu', [ws.submissions, ws.withData], [5, 4]);
+eq('wrongStats: câu sai nhiều nhất trước, đếm HS khác nhau', ws.items, [
+  { uid: 'ic3__lv1__t1__q1', count: 3, students: 2, tests: ['T'] },
+  { uid: 'ic3__lv1__t1__q2', count: 1, students: 1, tests: ['T'] }]);
+eq('wrongStats: không lọc bài → gồm cả bài khác', call('wrongStats', as('teachX')).data.items.map((x) => x.uid).includes('ic3__lv1__t1__q9'), true);
+eq('wrongStats: trường khác không thấy', call('wrongStats', as('coordY')).data.withData, 0);
+eq('wrongStats: cần đăng nhập', call('wrongStats').code, 'unauthenticated');
+eq('listResults trả câu sai', call('listResults', as('teachX')).data.rows.find((r) => r.id === 'wr0000001').wrong, ['ic3__lv1__t1__q1', 'ic3__lv1__t1__q2']);
 
 console.log(fails ? `\n${fails} FAIL` : '\nTất cả PASS');
 process.exit(fails ? 1 : 0);

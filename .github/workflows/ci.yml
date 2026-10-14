@@ -21,6 +21,12 @@ jobs:
       - name: Ngân hàng câu hỏi data/ic3 hợp lệ
         run: node scripts/validate-data.js
 
+      - name: Bộ "Theo chủ đề" khớp data/ic3/topic-reassign.json
+        run: node scripts/apply-topic-reassign.js --check
+
+      - name: Ngân hàng câu hỏi khớp đáp án All Key (data/ic3/allkey-sync.json)
+        run: node scripts/apply-allkey-sync.js --check
+
       - name: Cú pháp mọi file JS
         run: node scripts/check-js.js
 

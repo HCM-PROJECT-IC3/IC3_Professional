@@ -220,6 +220,17 @@
     const map = new Map();
     names.forEach((n, i) => lists[i].forEach((q) => map.set(n + '\u0000' + q.uid, q)));
     refs.forEach((r) => { r.q = map.get(r.mt + '\u0000' + r.uid) || null; });
+    // Câu đã được chuyển sang chủ đề khác (data/ic3/topic-reassign.json) → link đề cũ vẫn
+    // trỏ tên chủ đề cũ: tìm theo uid trong cả file khối của cấp độ (1 lần tải, chỉ khi thiếu).
+    if (refs.some((r) => !r.q)) {
+      try {
+        const res = await fetch(`data/ic3/${exam.cat}__${exam.level}.json`);
+        const block = res.ok ? await res.json() : null;
+        const byUid = new Map();
+        Object.values((block && block.minitests) || {}).forEach((list) => (list || []).forEach((q) => { if (q && q.uid && !byUid.has(q.uid)) byUid.set(q.uid, q); }));
+        refs.forEach((r) => { if (!r.q) r.q = byUid.get(r.uid) || null; });
+      } catch (e) { /* mất mạng — giữ như cũ (câu thiếu bị bỏ qua) */ }
+    }
     return exam;
   }
 

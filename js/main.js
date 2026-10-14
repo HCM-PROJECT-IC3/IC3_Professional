@@ -89,11 +89,10 @@ function setLobbyView(view) {
   catch (e) { /* localStorage có thể bị chặn — bỏ qua, không ảnh hưởng chức năng */ }
 }
 
+// Sảnh chỉ còn form (khối "Giới thiệu" đã gỡ khỏi index.html 10/2026) → luôn mở form.
+// Không đọc lại 'ic3_lobby_view' cũ: máy từng lưu 'intro' sẽ bị ẩn mất form ở màn hẹp.
 document.addEventListener('DOMContentLoaded', () => {
-  let saved = 'form';
-  try { saved = localStorage.getItem('ic3_lobby_view') || 'form'; }
-  catch (e) { /* ignore */ }
-  setLobbyView(saved);
+  setLobbyView('form');
 });
 
 /* ── Bàn phím 3D nổi ở lobby-left: từ bản này trở đi là scene WebGL

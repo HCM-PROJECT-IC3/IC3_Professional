@@ -159,6 +159,21 @@
     window.EduCoordinatorCharts.renderAll(scoped);
     renderWatchlists(scoped);
     if (window.EduCoordinatorStudentTable) window.EduCoordinatorStudentTable.render(scoped);
+    if (window.EduWrongQuestions) window.EduWrongQuestions.setContext(wrongQuestionsScope(filters));
+  }
+
+  /** Bộ lọc dashboard → phạm vi hỏi Apps Script (wrongStats). Admin không gán trường = mọi trường. */
+  function wrongQuestionsScope(f) {
+    const days = { '7': 7, '30': 30, '90': 90 }[f.rangeDays];
+    const schools = f.school ? [f.school] : (currentProfile.role === 'admin' ? undefined : rawData.schools);
+    return {
+      schools,
+      classes: f.classId ? [f.classId] : undefined,
+      sinceMs: days ? Date.now() - days * 86400000 - (Date.now() % 3600000) : undefined, // làm tròn giờ → đổi bộ lọc khác mới coi là phạm vi mới
+      testName: f.examName || '',
+      label: [f.classId ? 'Lớp ' + f.classId : (f.school || 'Mọi lớp'), f.examName ? f.examName.split(' › ').pop() : 'mọi bài',
+        days ? days + ' ngày qua' : 'toàn bộ'].join(' · '),
+    };
   }
 
   // ============================================================
@@ -210,7 +225,51 @@
       `<span class="name">${esc(e.studentName)}</span><span class="meta">${esc(e.studentClass || '—')}</span>` +
       `<span class="score-chip" style="background:var(--green-lt);color:var(--green)">${e.avgScore}%</span>`,
       'Chưa có dữ liệu.');
+
+    renderClassRace(scoped);
   }
+
+  // ============================================================
+  // THI ĐUA LỚP THEO TUẦN — tính trên kết quả đã tải (0 lượt Firestore thêm)
+  // ============================================================
+  const MEDALS = ['🥇', '🥈', '🥉'];
+  let classRace = [];
+
+  function renderClassRace(scoped) {
+    classRace = window.EduAnalytics.classLeaderboard(scoped.filteredResults, scoped.filteredStudents);
+    document.getElementById('classRaceCount').textContent = `(${classRace.length} lớp)`;
+    document.getElementById('classRacePresent').hidden = !classRace.length;
+    const ul = document.getElementById('classRaceList');
+    ul.innerHTML = classRace.length
+      ? classRace.map((c, i) => `<li class="watchlist-item race-item"><span class="name">${MEDALS[i] || `${i + 1}.`} ${esc(c.className)}</span>`
+        + `<span class="meta">TB ${c.avg}% · ${c.active}${c.rosterSize ? '/' + c.rosterSize : ''} HS · ${c.submissions} bài</span>`
+        + `<span class="score-chip" style="background:var(--purple-lt);color:var(--purple)">${c.points}</span></li>`).join('')
+      : '<li class="watchlist-empty">Tuần này chưa có bài nộp nào (theo bộ lọc đang chọn).</li>';
+  }
+
+  function presentClassRace() {
+    if (!classRace.length) return;
+    const ov = document.createElement('div');
+    ov.className = 'race-overlay';
+    ov.setAttribute('role', 'dialog');
+    ov.setAttribute('aria-label', 'Bảng thi đua lớp tuần này');
+    const top = classRace[0].points || 1;
+    ov.innerHTML = `<button type="button" class="race-close" aria-label="Đóng">✕</button>
+      <h2>🏅 Thi đua lớp tuần này</h2>
+      <p class="race-sub">Từ thứ Hai ${new Date(window.EduAnalytics.weekStartMs()).toLocaleDateString('vi-VN')} · Điểm thi đua = điểm TB × % học sinh tham gia</p>
+      <ol class="race-list">${classRace.slice(0, 10).map((c, i) => `<li style="--w:${Math.max(6, Math.round((c.points / top) * 100))}%">
+        <span class="race-rank">${MEDALS[i] || i + 1}</span><span class="race-name">${esc(c.className)}</span>
+        <span class="race-bar"><i></i></span><b class="race-pts">${c.points}</b>
+        <span class="race-meta">TB ${c.avg}% · ${c.participation}% tham gia</span></li>`).join('')}</ol>`;
+    const close = () => { ov.remove(); document.removeEventListener('keydown', onKey); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); };
+    const onKey = (e) => { if (e.key === 'Escape') close(); };
+    ov.querySelector('.race-close').addEventListener('click', close);
+    document.addEventListener('keydown', onKey);
+    document.body.appendChild(ov);
+    ov.querySelector('.race-close').focus();
+    if (ov.requestFullscreen) ov.requestFullscreen().catch(() => {});
+  }
+  document.getElementById('classRacePresent').addEventListener('click', presentClassRace);
 
   function renderList(prefix, list, rowHtml, emptyMsg) {
     document.getElementById(`${prefix}Count`).textContent = `(${list.length})`;

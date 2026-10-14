@@ -1,5 +1,81 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## Đối chiếu ngân hàng câu hỏi với đáp án gốc "All Key" (10/2026)
+
+- **Nguồn đối chiếu**: 6 file iSpring `All Key/*.quiz` (IC3 LV1–3, Spark LV1–3, NH2025-2026 — kể cả nhóm "Cập nhật/Bổ sung 10/04/2026"), 830 câu. Đọc `document.json` trong file .quiz (chỉ đọc), so từng câu với `data/ic3` theo nội dung câu hỏi + lựa chọn (chuẩn hóa chính tả kĩ/kỹ, lí/lý…; nhận cả câu được dịch/biên tập lại) và so đáp án theo từng dạng (trắc nghiệm, Đúng/Sai nhiều dòng, ghép nối, sắp xếp). **Mọi ca lệch/thiếu đều được đọc tay** trước khi sửa.
+- **Thêm 19 câu còn thiếu** (vào bộ "Theo chủ đề" đúng PPCT, kèm giải thích): IC3 LV1 9 (hạ tầng mạng, chuẩn bị họp số, nguyên tắc mật khẩu, HĐH di động, in nhiều trang chiếu/tờ, khô mắt, lợi ích cộng tác, 2 bản mới câu duyệt web ẩn danh), IC3 LV2 3 (Webinar, đồng tác giả = đồng bộ, bản mới nguyên tắc thiết kế phần cứng), IC3 LV3 3 (Excel/Access, toán tử Boolean AND/OR/NOT, ngụy biện bản 2), Spark LV1–3 4.
+- **Sửa 14 câu lệch đáp án / phiên bản cũ** (giữ nguyên uid, sửa ở mọi bản sao trong bộ chủ đề/Bài/Tiết, viết lại giải thích) — vd IC3 LV1 `t6__q2` (nhìn vào camera), `t3__q13` (thêm "xuất bản trước 1924", chọn 2); IC3 LV2 `t4__q15`/`t4__q32` (tạo Macro bằng viết lệnh là Đúng), `t6__q42` (thiếu dòng 4, nhãn Có/Không bị đảo); IC3 LV3 `t6__q41`, `t6__q44`, `t3__q23`, `t7__q20` (bỏ lựa chọn nhiễu "dùng trình quản lý mật khẩu" vốn là biện pháp tốt), `t2__q2` (thiếu cặp thứ 4); Spark LV3 `t6__q7` (lựa chọn đúng dính chữ ": Đây là lựa chọn tốt nhất." — lộ đáp án).
+- Câu có **nhiều phiên bản trong khoá** (vd duyệt web ẩn danh 4 bản, nguyên tắc thiết kế 2 bản) → giữ bản cũ, thêm bản mới thành câu riêng (không ghi đè).
+- Kết quả: khớp 633 → 664/830; phần còn lại đã rà: câu có sẵn nhưng diễn đạt khác, câu dạng ảnh (chọn vùng/kéo thả hình — so được câu, không so được đáp án), hoặc các ca cần giáo viên quyết (dưới).
+- Quyết định + nguồn từng câu ở **`data/ic3/allkey-sync.json`**; áp dụng `node scripts/apply-allkey-sync.js` → `python scripts/split-minitests.py`; CI `--check`.
+- **Cần giáo viên xác nhận (chưa sửa — khoá có vẻ sai hoặc mâu thuẫn với data có giải thích):** IC3 LV2 `t3__q8` (khoá: "Tổ chức tài trợ nghiên cứu" KHÔNG ảnh hưởng độ tin cậy, "Mức độ phổ biến" CÓ — ngược logic); IC3 LV2 `t4__q1` (khoá: lưu trữ đám mây kém an toàn hơn cục bộ = Đúng); IC3 LV1 `t1__q30` ↔ câu khoá Test3#8 (khoá nói phần mềm độc quyền kém an toàn hơn nguồn mở, data nói ngược lại); IC3 LV3 khoá BaiOnSo3#31 ghi "Hai kỹ năng… (Chọn 3)".
+- **Chưa thêm được (cần ảnh gốc):** IC3 LV1 Test2#40 (kéo hình hướng trang), Spark LV1 Test 3#9 (chọn thẻ có lệnh Close/Quit), Test 3#18 (vị trí ô địa chỉ email lớp trưởng).
+
+## Bộ "Theo chủ đề" đúng chủ đề, không trùng lặp — bám PPCT (10/2026)
+
+- **Rà soát 1.102 câu** của 7 chủ đề × 6 cấp (Spark/IC3 LV1–3). Chuẩn đối chiếu = **PPCT 2026–2027 của từng cấp** (bảng "Bài N → Chủ đề IC3" trong `Tài Liệu Bàn Giao/…/PPCT_*.xlsx`) + ngân hàng câu "Củng cố" theo bài (`Quiz/*_CungCo.xlsx`, đã có trong bộ "Theo tên bài"): so nội dung từng câu chủ đề với câu Củng cố của các bài thuộc mỗi chủ đề, **đọc từng câu lệch rõ** rồi mới quyết định (không chuyển tự động).
+- **176 câu chuyển đúng chủ đề** — vd Spark LV1 "6. Hợp tác, cộng tác" trước có 25 câu nhưng chỉ 5 câu về cộng tác (còn lại: người lạ hỏi địa chỉ, thời gian dùng màn hình → An toàn; email/tin nhắn/video chat → Giao tiếp; dấu trang/lịch sử duyệt web → Quản lý thông tin…). Ranh giới theo PPCT từng cấp (vd "Sở hữu trí tuệ" là Sáng tạo nội dung ở IC3 LV3 nhưng Quản lý thông tin ở Spark LV3).
+- **45 câu trùng bị bỏ khỏi bộ chủ đề** (cùng câu hỏi + đáp án, chỉ đổi dạng câu/thứ tự — phần lớn là bản `_new`/`_new2` của câu gốc); câu vẫn còn trong bộ "Ôn tập cuối kỳ" (Tiết). Trong đó `spark__lv3__t2__q74_new2` có **đáp án bị đảo ngược** so với `t4__q5` (cùng 3 tình huống "ẩn danh") — bỏ bản sai.
+- Kết quả: 0 câu trùng / 0 câu ở 2 chủ đề (trước: 50 cặp gần trùng); câu khớp nội dung nhất với đúng chủ đề 54% → 69%.
+- Mọi quyết định + lý do nằm ở **`data/ic3/topic-reassign.json`** (sửa/hoàn tác được); áp dụng bằng **`node scripts/apply-topic-reassign.js`** rồi `python scripts/split-minitests.py`. CI: `apply-topic-reassign.js --check` + `validate-data.js` báo lỗi nếu 1 câu nằm ở 2 chủ đề hoặc có câu trùng nội dung trong bộ chủ đề.
+- Link đề giáo viên cũ (`?de=` trỏ "chủ đề cũ + uid") vẫn mở đủ câu: `custom-exam-codec.js` tìm theo uid trong cả cấp độ khi không thấy ở chủ đề cũ.
+- **Cần giáo viên xem lại** (cùng câu hỏi nhưng đáp án khác nhau, chưa sửa): IC3 LV3 `t1__q192` ↔ `t4__q7` (sửa từ điển/AutoCorrect trong Word), `t6__q14` ↔ `t6__q18` (trao đổi với khách hàng).
+
+## Form sảnh không lãng phí khoảng trống (10/2026)
+
+- **Mỗi bước 1 cột** (`index.html`: `.lobby-col-1/2/3`, `style.css` § FORM KHÔNG LÃNG PHÍ KHOẢNG TRỐNG):
+  - **≥ 1400px — 3 cột** [1 Em là ai?] [2 Chọn bài] [3 Cách làm bài + Bắt đầu]: form rộng tới 1520px, cao chỉ ~460px (1 cột trước đây ~945px); 3 cột cao gần bằng nhau (393/358/399px). Cột giữa rộng nhất cho 5 nhóm bài + tên bài dài.
+  - **Màn rộng + cao (≥1400×850, máy chiếu)**: phóng to chữ/ô chọn/nút Bắt đầu để dùng khoảng trống dọc, đọc rõ từ cuối lớp.
+  - **960–1399px — 2 cột** [1 + 2] | [3]: thêm thẻ **"Bài em sắp làm"** (tên bài, cấp độ, số câu, chế độ/thời gian, tên học sinh — `js/lobby-form-ux.js`) lấp phần trống cột phải, giúp kiểm tra lại trước khi bấm Bắt đầu; ẩn khi chọn Kiểm tra (ô thời gian + cam kết đã đủ). Phần dư chiều cao dồn xuống cuối (trước bị hở giữa bước 1 và 2). Tablet ngang 1024px giờ 2 cột thay vì 1 cột hẹp giữa màn.
+  - **< 960px — 1 cột**, không có thẻ tóm tắt (không dài thêm trên điện thoại).
+- Đã đo trên Chrome headless ở 1918×914, 1600×900, 1366×768, 1024×768, 960×600, 820×1180, 390×844: không tràn ngang, nút Bắt đầu thấy ngay không cần cuộn trên mọi màn ≥ 960px.
+
+## Sảnh chỉ còn form — bỏ chi tiết thừa, responsive (10/2026)
+
+- **Gỡ khối trang trí bên trái** (bàn phím 3D xoay + chữ tự gõ + "Kéo để xoay") và nút chuyển "Giới thiệu ⇄ Làm bài" khỏi `index.html`; bỏ nạp `js/carousel-3d.js`, `js/carousel-keyboard-cards.js` (vòng `requestAnimationFrame` chạy liên tục — nặng cho máy trường). File vẫn còn trong repo, không trang nào khác dùng.
+- **Nền tĩnh**: tắt "bong bóng" trôi phía sau và chữ thương hiệu đổi màu liên tục.
+- **Form nằm giữa trang**; màn ≥ 1100px chia **2 cột** (trái: 1 Em là ai? + 2 Chọn bài · phải: 3 Cách làm bài + Bắt đầu + nút phụ) → cả form vừa 1 màn hình 1366×768 / 1918×914, không cần cuộn; màn hẹp hơn: 1 cột. 5 nhóm bài luôn 1 hàng ở màn rộng.
+- "Chuyển tài khoản" → link nhỏ "🔑 Giáo viên / Quản trị" dưới form (giữ `id="adminEntryLink"`).
+- `js/main.js`: luôn mở form — máy từng lưu `ic3_lobby_view = 'intro'` trước đây sẽ bị ẩn mất form ở màn hẹp.
+- Đã thử 1918×914, 1366×768, 1024×768, 768×1024, 390×844, 360×640 (sáng/tối): form luôn hiện, bước 1 không bị che, không tràn ngang; màn rộng thấy nút Bắt đầu không cần cuộn.
+
+## Form chọn bài ở sảnh to, rõ, ít rối (10/2026)
+
+- **3 bước có số** thay cho 2 nhãn nhỏ: **1 Em là ai?** (Trường/Lớp/Họ tên) → **2 Chọn bài** (Chương trình/Cấp độ/Bài luyện tập) → **3 Cách làm bài** (Ôn luyện/Kiểm tra, thời gian, cam kết). "Chế độ làm bài" chuyển xuống sau phần chọn bài (chọn *bài gì* rồi mới *làm thế nào*). Mỗi bước hiện ✓ xanh khi xong (`js/lobby-form-ux.js`).
+- **Dòng nhắc dưới nút Bắt đầu**: "👉 Chọn Trường / Lớp / Họ và tên / Tick ô cam kết… để bắt đầu" → "✅ Sẵn sàng" — học sinh biết ngay vì sao nút còn mờ. Chỉ đọc form, quy tắc bật nút vẫn ở `quiz-engine.js § refreshMeta()`.
+- **To hơn, tương phản hơn** (`style.css` § FORM SẢNH TO, RÕ): thẻ rộng 680px, nhãn 0.95rem màu chữ chính (trước: tím đậm trên nền tối gần như không đọc được), ô chọn cao ~50px chữ 1.05rem, nút đang chọn **tô đặc màu tím chữ trắng**, Ôn luyện/Kiểm tra thành 2 thẻ lớn (tên to + chú thích), 5 nhóm bài 1 hàng, nút Bắt đầu 1.3rem. Góc học tập · Đấu trường · Lịch sử gom 1 hàng ô nhỏ bên dưới để nút Bắt đầu nổi bật nhất.
+- **Sửa lỗi có sẵn**: (1) panel căn giữa dọc làm phần đầu form tràn lên trên và **không cuộn tới được** khi màn hình thấp (1366×768, máy chiếu) — nay luôn thấy bước 1, nút Bắt đầu nằm trong màn hình ở 1366×768 và 1906×918; (2) mở link đề giáo viên, ô Chương trình/Cấp độ lẽ ra bị ẩn nhưng vẫn hiện (`display:grid` thắng `[hidden]`) — nay ẩn đúng, khung tên đề nằm ngay trong bước 2.
+- Đã thử trên Chrome headless (sáng/tối, 1906×918, 1366×768, 390px): đi đủ các bước, dòng nhắc và ✓ đúng, nhãn "Kiểm tra · N phút/bài" vẫn đổi theo thời gian, không tràn ngang.
+
+## Đấu trường — chơi bộ câu hỏi kiểu Kahoot / Blooket (10/2026) — 0 lượt Firebase
+
+- **Trang mới `arena.html`** (`js/arena/arena.js`, `css/arena.css`; logic thuần `js/arena/arena-core.js`): học sinh chơi 1 bộ câu với 3–5 đối thủ máy (Dễ/Vừa/Khó), ngay trên máy mình — không tài khoản, không gửi gì ra ngoài.
+  - **⚡ Tốc độ** (kiểu Kahoot): 4–6 ô màu + hình ▲◆●■ (phím 1–6), điểm 500–1000 theo tốc độ, thưởng chuỗi đúng (+100…+500), bảng xếp hạng sau mỗi câu, "▲ lên hạng", **bóng ma kỷ lục** (👻 chạy lại điểm lần tốt nhất của chính em trên cùng bộ câu), bục vinh quang.
+  - **💰 Săn vàng** (kiểu Blooket Gold Quest): đúng → chọn 1 trong 3 rương (+vàng, ×2, ×3, mất 25/50%, lấy 10/25% của người giàu nhất, đổi vàng); đối thủ máy cũng mở rương và có thể cướp/đổi vàng của em.
+  - **🏁 Đua về đích** (kiểu Blooket Racing): đúng → +1 bước, 3 câu đúng liền → tăng tốc +2; đường đua hiển thị trực tiếp.
+  - Sai thì hiện đáp án đúng + giải thích; cuối trận xem lại câu sai. Âm thanh/hiệu ứng dùng chung `game-sfx.js`/`game-fx.js`, XP qua `EduGamification`.
+- **Linh vật** (kiểu "Blook"): xu kiếm theo số câu đúng + thứ hạng (tối đa 60/ván) → mở 4 hộp (Phần cứng, Internet, An toàn, Thú cưng; 36 linh vật, 5 độ hiếm Thường → Bí ẩn), trùng thì hoàn xu; chọn làm ảnh đại diện trong trận. Lưu localStorage `eduquiz_arena_v1` theo biệt danh; hồ sơ mới 0 xu (đổi biệt danh không "cày" được xu).
+- **Nguồn câu**: ngân hàng `data/ic3` (Chương trình/Cấp độ/Bài, hoặc trộn mọi chủ đề) hoặc **link đề giáo viên** `arena.html?de=…` (cùng mã đề của Soạn đề, có cả câu tự soạn). Câu trắc nghiệm 1 đáp án dùng nguyên; Đúng/Sai nhiều mệnh đề → mỗi mệnh đề 1 câu; dạng kéo-thả/chọn vùng bỏ qua (~73% câu ngân hàng chơi được).
+- **Lối vào**: nút "🏟️ Đấu trường" ở sảnh `index.html` (`js/arena/arena-entry.js`, mang theo bài đang chọn / đề đang mở); nút "Đấu trường" trong Soạn đề (`ic3-dashboard.html`) chép link giao bài về nhà kiểu Blooket Homework.
+- Test: `js/arena/__tests__/arena-core.test.js` (đổi câu, điểm Kahoot, rương, đua, xếp hạng, xu, tỉ lệ độ hiếm, ngân hàng thật). Đã chạy thử 3 chế độ + mở hộp + link đề trên Chrome headless (chặn mọi máy chủ ngoài: 0 yêu cầu ra ngoài), 390px không tràn ngang.
+
+## "Câu cả lớp hay sai" lưu trên Google Sheet (10/2026) — 0 lượt Firebase
+
+⚠️ **Deploy Apps Script TRƯỚC khi push web:** dán `apps/Code.gs` → Save → Deploy → Manage deployments → ✏️ → *New version* (giữ URL). Không đổi `firestore.rules`. Bản Apps Script cũ vẫn nhận bài từ web mới (bỏ qua trường `wrong`), chỉ là chưa có dữ liệu câu sai và nút Phân tích báo cần deploy.
+
+- **Bài nộp gửi kèm câu sai — chỉ lên Sheet** (`js/services/result-submitter.js → wrongUids`, `js/googleSheet.js`, `js/quiz-engine.js`): uid các câu trả lời sai (bỏ câu bỏ trống, câu tự soạn; tối đa 30, có cả uid MOS có dấu). Firestore `quiz_results` **không** thêm trường nào → không thêm dung lượng/lượt ghi, không phải sửa rules.
+- **Apps Script** (`apps/src/30-submissions.gs`, `40-results.gs`, `10-router.gs`; `BACKEND_VERSION` 2026-10-14): cột mới **O – CauSai** (`a,b,c`; `-` = không sai câu nào; trống = bài từ web cũ) — tab cũ tự thêm tiêu đề; kiểm tra dữ liệu (≤ 30 uid, cấm ký tự HTML/xuống dòng) vì `submitExam` công khai. API mới **`wrongStats`** (admin/điều phối/giáo viên đã duyệt, cùng quyền theo trường như `listResults`): tổng hợp ngay trên server → trả ≤ 60 câu sai nhiều nhất kèm số lượt sai, số học sinh khác nhau, bài thi. `listResults` trả thêm `wrong`.
+- **Dashboard giáo viên → "❌ Câu cả lớp hay sai"** (`js/teacher/wrong-questions.js`, `EduSheetResults.wrongStats`): theo bộ lọc Trường/Lớp/Bài thi/Thời gian; chỉ gọi Apps Script khi bấm **🔍 Phân tích** (không tự gọi lúc mở trang). Nội dung câu + đáp án + giải thích tra từ file tĩnh `data/ic3/*.json`. **📝 Tạo đề ôn**: link đề (`index.html?de=…`) gồm ≤ 20 câu hay sai nhất cùng cấp độ, tự chép vào clipboard — đề nằm trong link. Chạy được cả khi dashboard đọc kết quả từ Firestore (câu sai luôn đọc từ Sheet).
+- Chi phí Firebase: 0 lượt cho dữ liệu; Apps Script chỉ đọc hồ sơ người gọi để xác thực (dùng chung bộ nhớ 1 giờ với `listResults`).
+- Test: `apps/__tests__/code-gs.test.js` (+15 kiểm tra CauSai/wrongStats), `result-submitter.test.js` (câu sai chỉ vào payload Sheet), `sheet-results-api.test.js` (gộp nhiều Apps Script). Đã chạy thử trên Chrome headless (chặn mọi máy chủ ngoài): payload gửi Apps Script có `wrong`, thẻ dashboard hiện đúng câu/đáp án, link đề ôn 20/20 câu mở được trên `index.html`.
+
+## Lộ trình học thích ứng, giấy chứng nhận, thi đua lớp theo tuần (10/2026) — 0 lượt Firebase
+
+- **Góc học tập → tab "Lộ trình"** (`js/learning-hub.js`, `css/learning-hub.css`): đi theo đúng thứ tự "Bài N" của cấp độ (cấp chưa có bộ "Bài N" → theo chủ đề), mỗi bài có mức Chưa làm / Yếu / Cần ôn / Đạt / Vững (TB 3 lần gần nhất, như tab "Theo bài"). **Bài nên làm tiếp** chọn theo thứ tự: bài đã làm còn yếu nhất → bài chưa làm kế tiếp theo mạch → bài "Đạt" thấp nhất để lên "Vững"; nút "Làm bài" chọn sẵn đúng bài ở sảnh. Đổi cấp độ trong tab (các cấp đã làm + cấp đang chọn ở sảnh). Tab Tổng quan có thêm gợi ý lộ trình.
+- **Giấy chứng nhận hoàn thành lộ trình**: đạt mọi bài của 1 cấp độ → vẽ bằng canvas ngay trên máy (font hệ thống, đúng dấu tiếng Việt; không tải thư viện/font), tải về PNG. Ghi rõ là chứng nhận tự luyện, không thay chứng chỉ IC3/MOS của Certiport.
+- **Dashboard giáo viên → "🏅 Thi đua lớp tuần này"** (`teacher-dashboard.html`, `js/teacher/dashboard.js`, `EduAnalytics.classLeaderboard`): xếp hạng lớp từ thứ Hai theo *điểm TB × % học sinh của lớp đã làm bài* (roster), tính trên kết quả dashboard **đã tải sẵn** — không đọc thêm Firestore/Sheet. Nút "📽 Trình chiếu" mở bảng toàn màn hình để chiếu đầu giờ (Esc để đóng). Theo bộ lọc đang chọn.
+- Test: `js/services/__tests__/analytics-class-race.test.js` (CI tự chạy). Đã chạy thử Lộ trình/chứng nhận/thi đua trên Chrome headless với mọi máy chủ ngoài bị chặn: 0 yêu cầu ra ngoài, không tràn ngang ở 390px.
+
 ## Chia việc rõ giữa Firebase và Apps Script (10/2026)
 
 Sơ đồ đầy đủ: **`docs/architecture/BACKEND-MAP.md`** (dữ liệu nào nằm ở đâu, vì sao, công tắc cấu hình, thứ tự deploy).

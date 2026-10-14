@@ -125,9 +125,42 @@
     return Object.keys(byDay).sort().map((day) => ({ date: day, avg: avgScore(byDay[day]), count: byDay[day].length }));
   }
 
+  /** 0h thứ Hai của tuần chứa thời điểm ts (giờ máy). */
+  function weekStartMs(ts = Date.now()) {
+    const d = new Date(ts); d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    return d.getTime();
+  }
+
+  /**
+   * Thi đua lớp — tính trên kết quả dashboard ĐÃ tải (0 lượt đọc thêm).
+   * Điểm thi đua = điểm TB × tỉ lệ học sinh tham gia (theo roster), để lớp
+   * đông người làm bài không thua lớp chỉ vài em giỏi làm. Lớp không có
+   * trong roster → tính tham gia 100%.
+   * @returns [{ className, avg, submissions, active, rosterSize, participation, points }] sắp giảm dần theo points.
+   */
+  function classLeaderboard(results, students = [], sinceMs = weekStartMs()) {
+    const roster = {};
+    students.forEach((s) => { if (s.className) roster[s.className] = (roster[s.className] || 0) + 1; });
+    const groups = {};
+    results.forEach((r) => {
+      if (!r.studentClass || typeof r.score !== 'number' || (r.submittedAtMs || 0) < sinceMs) return;
+      const g = groups[r.studentClass] = groups[r.studentClass] || { scores: [], names: new Set() };
+      g.scores.push(r.score);
+      g.names.add(String(r.studentName || '').trim().toLowerCase());
+    });
+    return Object.keys(groups).map((className) => {
+      const g = groups[className];
+      const avg = Math.round(g.scores.reduce((a, b) => a + b, 0) / g.scores.length);
+      const rosterSize = roster[className] || 0;
+      const participation = rosterSize ? Math.min(100, Math.round((g.names.size / rosterSize) * 100)) : 100;
+      return { className, avg, submissions: g.scores.length, active: g.names.size, rosterSize, participation, points: Math.round((avg * participation) / 100) };
+    }).sort((a, b) => (b.points - a.points) || (b.submissions - a.submissions) || compareNatural(a.className, b.className));
+  }
+
   global.EduAnalytics = {
     avgScore, avgTime, passRate, completionRate,
-    topStudents, studentsNeedingSupport,
+    topStudents, studentsNeedingSupport, classLeaderboard, weekStartMs,
     scoreDistribution, groupAvgBy, heatmapMatrix, trendByDay,
     compareNatural, // lộ ra để nơi khác (vd dropdown lọc "Bài thi") dùng chung 1 kiểu sắp xếp
   };

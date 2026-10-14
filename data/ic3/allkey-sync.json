@@ -1,0 +1,810 @@
+{
+ "_doc": "Đồng bộ data/ic3 với file đáp án All Key (iSpring .quiz NH2025-2026, đã rà soát từng câu 10/2026). adds = câu khoá chưa có trong data (thêm vào bộ \"Theo chủ đề\" theo PPCT); updates = câu đã có nhưng lệch đáp án/phiên bản (giữ nguyên uid). Áp dụng: node scripts/apply-allkey-sync.js rồi python scripts/split-minitests.py.",
+ "adds": [
+  {
+   "level": "IC3__LV1",
+   "topic": 1,
+   "src": "All Key › LV1 › Test1#10",
+   "question": {
+    "question": "Với mỗi câu phát biểu về những lợi ích của cơ sở hạ tầng mạng chất lượng, hãy chọn Đúng hoặc Sai.",
+    "type": "truefalse",
+    "statements": [
+     {
+      "text": "Đảm bảo rằng học sinh có thể kết nối liên tục với mạng của nhà trường.",
+      "answer": "true"
+     },
+     {
+      "text": "Cho phép học sinh kết nối với phòng máy tính của nhà trường từ bất kì đâu.",
+      "answer": "false"
+     },
+     {
+      "text": "Hỗ trợ mở rộng hệ thống mạng của nhà trường mà không cần thiết kế lại khi số lượng học sinh tăng lên",
+      "answer": "true"
+     }
+    ],
+    "label_true": "Đúng",
+    "label_false": "Sai",
+    "image": false,
+    "image_file": null,
+    "image_id": null,
+    "uid": "ic3__lv1__t1__k_test1_10",
+    "explanation": "Hạ tầng mạng chất lượng giúp học sinh kết nối ổn định, liên tục với mạng của trường và dễ mở rộng khi số người dùng tăng mà không phải thiết kế lại. Việc truy cập phòng máy của trường \"từ bất kì đâu\" phụ thuộc vào dịch vụ truy cập từ xa và quyền được cấp, không phải là lợi ích tự nhiên của hạ tầng mạng tốt."
+   }
+  },
+  {
+   "level": "IC3__LV1",
+   "topic": 6,
+   "src": "All Key › LV1 › Test2#1",
+   "question": {
+    "question": "Ba cách để chuẩn bị cho một cuộc họp kỹ thuật số chuyên nghiệp là gì? (Chọn 3)",
+    "type": "multi",
+    "options": [
+     "Đăng xuất khỏi tài khoản của nền tảng cuộc họp",
+     "Đến đúng giờ",
+     "Chuẩn bị thiết bị",
+     "Gửi khiếu nại đến người thuyết trình",
+     "Ăn mặc chuyên nghiệp"
+    ],
+    "correct": [
+     "Đến đúng giờ",
+     "Chuẩn bị thiết bị",
+     "Ăn mặc chuyên nghiệp"
+    ],
+    "image": false,
+    "image_file": null,
+    "image_id": null,
+    "uid": "ic3__lv1__t6__k_test2_1",
+    "explanation": "Cuộc họp kỹ thuật số chuyên nghiệp cần: vào đúng giờ, kiểm tra thiết bị (máy tính, micro, camera, mạng) trước và ăn mặc chỉnh tề như họp trực tiếp. Đăng xuất khỏi nền tảng hay gửi khiếu nại đến người thuyết trình không phải là bước chuẩn bị."
+   }
+  },
+  {
+   "level": "IC3__LV1",
+   "topic": 7,
+   "src": "All Key › LV1 › Test2#36",
+   "question": {
+    "question": "Bạn cần đảm bảo an toàn cho mật khẩu của mình. Đâu là ba nguyên tắc bạn cần tuân thủ? (Chọn 3)",
+    "type": "multi",
+    "options": [
+     "Sử dụng xác thực đa yếu tố, nếu có.",
+     "Sử dụng mật khẩu dài nhất hoặc cụm mật khẩu được hệ thống mật khẩu cho phép.",
+     "Sử dụng mật khẩu khác nhau cho mỗi tài khoản.",
+     "Sử dụng mật khẩu dựa trên thông tin riêng tư cá nhân.",
+     "Sử dụng các từ có thể tìm thấy trong từ điển của một ngôn ngữ khác với ngôn ngữ chính của bạn.",
+     "Sử dụng mật khẩu phức tạp và ghi vào một cuốn sổ mà bạn luôn mang theo bên mình."
+    ],
+    "correct": [
+     "Sử dụng xác thực đa yếu tố, nếu có.",
+     "Sử dụng mật khẩu dài nhất hoặc cụm mật khẩu được hệ thống mật khẩu cho phép.",
+     "Sử dụng mật khẩu khác nhau cho mỗi tài khoản."
+    ],
+    "image": false,
+    "image_file": null,
+    "image_id": null,
+    "uid": "ic3__lv1__t7__k_test2_36",
+    "explanation": "Mật khẩu an toàn: bật xác thực đa yếu tố khi có, dùng mật khẩu/cụm mật khẩu dài nhất hệ thống cho phép và mỗi tài khoản một mật khẩu riêng. Không dùng thông tin cá nhân, từ có trong từ điển (dù là ngôn ngữ khác) hay ghi mật khẩu vào sổ mang theo người."
+   }
+  },
+  {
+   "level": "IC3__LV1",
+   "topic": 1,
+   "src": "All Key › LV1 › Test3#15",
+   "question": {
+    "question": "Đối với mỗi phát biểu liên quan đến Hệ điều hành trên thiết bị di động, hãy chọn Đúng hoặc Sai với mỗi phát biểu sau:",
+    "type": "truefalse",
+    "statements": [
+     {
+      "text": "Hệ điều hành cài trên khoảng 70% thiết bị di động trên thế giới là Android",
+      "answer": "true"
+     },
+     {
+      "text": "iOS có nhiều ứng dụng hơn cho Android",
+      "answer": "false"
+     },
+     {
+      "text": "Apps trên iOS thường gặp ít vấn đề bảo mật hơn Apps trên Android",
+      "answer": "true"
+     },
+     {
+      "text": "Hệ điều hành iOS được cài trên thiết bị di động trên thế giới khoảng 30%",
+      "answer": "true"
+     }
+    ],
+    "label_true": "Đúng",
+    "label_false": "Sai",
+    "image": false,
+    "image_file": null,
+    "image_id": null,
+    "uid": "ic3__lv1__t1__k_test3_15",
+    "explanation": "Android chiếm khoảng 70% thiết bị di động trên thế giới, iOS khoảng 30%. Ứng dụng trên iOS được Apple kiểm duyệt chặt hơn nên thường ít vấn đề bảo mật hơn. Kho ứng dụng của iOS không nhiều hơn Android, nên phát biểu đó Sai."
+   }
+  },
+  {
+   "level": "IC3__LV1",
+   "topic": 4,
+   "src": "All Key › LV1 › Capnhat10_04_2026#16",
+   "question": {
+    "question": "Tùy chọn cài đặt nào giúp in nhiều trang trình chiếu trên cùng một trang giấy?",
+    "type": "single",
+    "options": [
+     "In nhiều trang trên một tờ (Page Per Sheet)",
+     "Bố cục trang chiếu (Slide Layout)",
+     "Bộ sắp xếp trang chiếu (Slide Sorter)",
+     "Hai mặt hoặc Duplex (Double-sided or Duplex)"
+    ],
+    "correct": [
+     "In nhiều trang trên một tờ (Page Per Sheet)"
+    ],
+    "image": false,
+    "image_file": null,
+    "image_id": null,
+    "uid": "ic3__lv1__t4__k_cn16",
+    "explanation": "Tùy chọn \"Page Per Sheet\" (số trang trên một tờ) trong hộp thoại In cho phép in nhiều trang chiếu trên cùng một tờ giấy. Slide Layout và Slide Sorter dùng để bố cục/sắp xếp trang chiếu, còn Duplex là in hai mặt."
+   }
+  },
+  {
+   "level": "IC3__LV1",
+   "topic": 7,
+   "src": "All Key › LV1 › Capnhat10_04_2026#17",
+   "question": {
+    "question": "Hội chứng nào thường gặp nhất khi sử dụng máy tính trong thời gian dài?",
+    "type": "single",
+    "options": [
+     "Tê tay",
+     "Khô mắt",
+     "Đau lưng",
+     "Mất ngủ"
+    ],
+    "correct": [
+     "Khô mắt"
+    ],
+    "image": false,
+    "image_file": null,
+    "image_id": null,
+    "uid": "ic3__lv1__t7__k_cn17",
+    "explanation": "Nhìn màn hình liên tục làm giảm số lần chớp mắt, khiến mắt bị khô — đây là hội chứng thường gặp nhất (hội chứng thị giác màn hình). Nên áp dụng quy tắc 20-20-20 và nghỉ mắt thường xuyên."
+   }
+  },
+  {
+   "level": "IC3__LV1",
+   "topic": 6,
+   "src": "All Key › LV1 › Capnhat10_04_2026#36",
+   "question": {
+    "question": "Hai lựa chọn nào là lợi ích của cộng tác kỹ thuật số? (Chọn 2)",
+    "type": "multi",
+    "options": [
+     "Ý tưởng và phản hồi được chia sẻ nhanh chóng.",
+     "Người cộng tác có thể làm việc với người khác từ bất kì vị trí địa lý nào.",
+     "Những người cộng tác có thể dễ dàng tránh sự xao nhãng khi làm việc.",
+     "Dữ liệu tuyệt mật được đảm bảo an toàn hơn khỏi nguy cơ lấy trộm và xâm nhập."
+    ],
+    "correct": [
+     "Ý tưởng và phản hồi được chia sẻ nhanh chóng.",
+     "Người cộng tác có thể làm việc với người khác từ bất kì vị trí địa lý nào."
+    ],
+    "image": false,
+    "image_file": null,
+    "image_id": null,
+    "uid": "ic3__lv1__t6__k_cn36",
+    "explanation": "Cộng tác kỹ thuật số giúp chia sẻ ý tưởng và phản hồi nhanh, và cho phép làm việc cùng nhau từ bất kì đâu. Nó không tự loại bỏ sự xao nhãng hay làm dữ liệu tuyệt mật an toàn hơn."
+   }
+  },
+  {
+   "level": "IC3__LV1",
+   "topic": 7,
+   "src": "All Key › LV1 › Capnhat10_04_2026#8",
+   "question": {
+    "question": "Đâu là lợi ích của việc duyệt web \"ở chế độ riêng tư\"(\"in private\") hoặc \"ẩn danh\" (\"incognito\")?",
+    "type": "single",
+    "options": [
+     "Trình duyệt sẽ không lưu giữ cookie, lịch sử duyệt web, hoặc dữ liệu biểu mẫu sau khi bạn đóng cửa sổ.",
+     "Khi mở cửa sổ ẩn danh, người dùng hoàn toàn vô hình trên Internet, không ai có thể theo dõi.",
+     "Việc dùng tab ẩn danh sẽ tự động ngăn chặn virus và phần mềm độc hại.",
+     "Duyệt web bằng cửa sổ ẩn danh giúp tốc độ truy cập tăng lên đáng kể."
+    ],
+    "correct": [
+     "Trình duyệt sẽ không lưu giữ cookie, lịch sử duyệt web, hoặc dữ liệu biểu mẫu sau khi bạn đóng cửa sổ."
+    ],
+    "image": false,
+    "image_file": null,
+    "image_id": null,
+    "uid": "ic3__lv1__t7__k_cn8",
+    "explanation": "Chế độ riêng tư/ẩn danh chỉ giúp trình duyệt không lưu cookie, lịch sử và dữ liệu biểu mẫu sau khi đóng cửa sổ. Nó không làm bạn vô hình trên Internet (nhà mạng, trang web vẫn thấy), không chặn virus và không làm tăng tốc độ."
+   }
+  },
+  {
+   "level": "IC3__LV1",
+   "topic": 7,
+   "src": "All Key › LV1 › Capnhat10_04_2026#34",
+   "question": {
+    "question": "Lợi ích của việc duyệt web ở chế độ “riêng tư” hoặc “ẩn danh” là gì?",
+    "type": "single",
+    "options": [
+     "Trình duyệt web của bạn cho phép bạn thay đổi địa chỉ IP của mình.",
+     "Trình duyệt web của bạn chặn quảng cáo.",
+     "Trình duyệt web của bạn ẩn các hoạt động khỏi những người khác sử dụng cùng thiết bị.",
+     "Trình duyệt web của bạn cho phép truy cập các trang web thường bị chặn ở quốc gia của bạn."
+    ],
+    "correct": [
+     "Trình duyệt web của bạn ẩn các hoạt động khỏi những người khác sử dụng cùng thiết bị."
+    ],
+    "image": false,
+    "image_file": null,
+    "image_id": null,
+    "uid": "ic3__lv1__t7__k_cn34",
+    "explanation": "Duyệt web ẩn danh không lưu lịch sử trên máy, nên người khác dùng chung thiết bị sẽ không thấy hoạt động của bạn. Nó không đổi địa chỉ IP, không chặn quảng cáo và không giúp vượt qua các trang web bị chặn."
+   }
+  },
+  {
+   "level": "IC3__LV2",
+   "topic": 1,
+   "src": "All Key › LV2 › OntapSo1#29",
+   "question": {
+    "question": "Hai nguyên tắc thiết kế chung cho phần cứng máy tính là gì? (Chọn 2)",
+    "type": "multi",
+    "options": [
+     "Sử dụng hợp lí: Thiết kế hữu ích và có thể bán được cho nhiều người có các khả năng thể chất/tinh thần khác nhau.",
+     "Kích thước và không gian để tiếp cận và sử dụng: Thiết kế cung cấp không gian để tiếp cận, với, thao tác và sử dụng, không phân biệt kích thước, tư thế hoặc khả năng di chuyển của người dùng.",
+     "Dễ làm sạch: Thiết kế hạn chế tối đa việc sử dụng các gam màu nhạt để tránh hiện tượng bám bẩn và ố vàng.",
+     "Liên kết với Internet Vạn vật: Thiết kế triển khai chức năng trực tuyến bất cứ khi nào có thể để cải thiện trải nghiệm người dùng."
+    ],
+    "correct": [
+     "Sử dụng hợp lí: Thiết kế hữu ích và có thể bán được cho nhiều người có các khả năng thể chất/tinh thần khác nhau.",
+     "Kích thước và không gian để tiếp cận và sử dụng: Thiết kế cung cấp không gian để tiếp cận, với, thao tác và sử dụng, không phân biệt kích thước, tư thế hoặc khả năng di chuyển của người dùng."
+    ],
+    "image": false,
+    "image_file": null,
+    "image_id": null,
+    "uid": "ic3__lv2__t1__k_ots1_29",
+    "explanation": "Hai nguyên tắc của thiết kế phổ quát (Universal Design) là: sử dụng hợp lí (hữu ích cho nhiều người với khả năng khác nhau) và đảm bảo kích thước, không gian để tiếp cận và sử dụng với mọi tư thế, vóc dáng. Dễ làm sạch hay kết nối IoT không phải nguyên tắc thiết kế chung."
+   }
+  },
+  {
+   "level": "IC3__LV2",
+   "topic": 6,
+   "src": "All Key › LV2 › OnTapSo3#26",
+   "question": {
+    "question": "Phát biểu nào là đúng về tổ chức hội thảo trên Web (Webinar)? (Chọn 2)",
+    "type": "multi",
+    "options": [
+     "Khán giả hoàn toàn có quyền tự do đặt câu hỏi",
+     "Micrô và loa phải luôn được kiểm tra",
+     "Bài trình chiếu nên có các slide chi tiết",
+     "Người thuyết trình phải cảm thấy thoải mái với phần mềm được sử dụng cho bài trình chiếu"
+    ],
+    "correct": [
+     "Micrô và loa phải luôn được kiểm tra",
+     "Người thuyết trình phải cảm thấy thoải mái với phần mềm được sử dụng cho bài trình chiếu"
+    ],
+    "image": false,
+    "image_file": null,
+    "image_id": null,
+    "uid": "ic3__lv2__t6__k_ots3_26",
+    "explanation": "Khi tổ chức Webinar, cần kiểm tra micro và loa trước, và người thuyết trình phải sử dụng thành thạo phần mềm. Không nên để khán giả hỏi tùy ý làm gián đoạn (thường có phần hỏi đáp riêng), và slide nên ngắn gọn thay vì quá chi tiết."
+   }
+  },
+  {
+   "level": "IC3__LV2",
+   "topic": 6,
+   "src": "All Key › LV2 › OnTapSo3#28",
+   "question": {
+    "question": "Bạn hãy cho biết kiểu chỉnh sửa nào sau đây cũng được biết đến như là hợp tác đồng tác giả (Co-authoring)?",
+    "type": "single",
+    "options": [
+     "Không đồng bộ (Asynchronous)",
+     "Đồng thời (Simultaneous)",
+     "So le (Staggered)",
+     "Đồng bộ (Synchronous)"
+    ],
+    "correct": [
+     "Đồng bộ (Synchronous)"
+    ],
+    "image": false,
+    "image_file": null,
+    "image_id": null,
+    "uid": "ic3__lv2__t6__k_ots3_28",
+    "explanation": "Đồng tác giả (Co-authoring) là nhiều người cùng chỉnh sửa một tài liệu trong cùng thời gian thực — tức là chỉnh sửa đồng bộ (Synchronous). Chỉnh sửa không đồng bộ là mỗi người làm vào thời điểm khác nhau."
+   }
+  },
+  {
+   "level": "IC3__LV3",
+   "topic": 4,
+   "src": "All Key › LV3 › BaiOnSo3#37",
+   "question": {
+    "question": "Nếu một người dùng có nhiều dữ liệu để hiển thị thì ứng dụng nào là phù hợp nhất để họ sử dụng? (chọn 2)",
+    "type": "multi",
+    "options": [
+     "Teams",
+     "Google Docs",
+     "Powerpoint",
+     "Excel",
+     "Access"
+    ],
+    "correct": [
+     "Excel",
+     "Access"
+    ],
+    "image": false,
+    "image_file": null,
+    "image_id": null,
+    "uid": "ic3__lv3__t4__k_bos3_37",
+    "explanation": "Excel (bảng tính) và Access (cơ sở dữ liệu) được thiết kế để lưu trữ, tổ chức và hiển thị lượng dữ liệu lớn. Teams, Google Docs và PowerPoint dùng cho giao tiếp, soạn văn bản và trình chiếu."
+   }
+  },
+  {
+   "level": "IC3__LV3",
+   "topic": 3,
+   "src": "All Key › LV3 › BaiOnSo1#35",
+   "question": {
+    "question": "Bạn đang thực hiện một nghiên cứu trên nền tảng trực tuyến. Khi nào bạn nên sử dụng toán tử tìm kiếm (Boolean)? Hoàn thành các câu sau đây bằng cách lựa chọn đúng tùy chọn từ mỗi danh sách thả xuống.",
+    "type": "list",
+    "hint": "Chọn 1 đáp án cho mỗi dòng.",
+    "items": [
+     {
+      "text": "Để ___ kết quả tìm kiếm, sử dụng toán tử AND",
+      "options": [
+       "thu hẹp",
+       "mở rộng"
+      ],
+      "correct": "thu hẹp"
+     },
+     {
+      "text": "Để ___ kết quả tìm kiếm, sử dụng toán tử OR",
+      "options": [
+       "thu hẹp",
+       "mở rộng"
+      ],
+      "correct": "mở rộng"
+     },
+     {
+      "text": "Để ___ kết quả tìm kiếm, sử dụng toán tử NOT",
+      "options": [
+       "thu hẹp",
+       "mở rộng"
+      ],
+      "correct": "thu hẹp"
+     }
+    ],
+    "image": false,
+    "image_file": null,
+    "image_id": null,
+    "uid": "ic3__lv3__t3__k_bos1_35",
+    "explanation": "AND yêu cầu kết quả chứa tất cả các từ khóa nên thu hẹp kết quả; NOT loại bỏ kết quả chứa một từ nên cũng thu hẹp; OR chấp nhận kết quả chứa một trong các từ nên mở rộng kết quả."
+   }
+  },
+  {
+   "level": "IC3__LV3",
+   "topic": 3,
+   "src": "All Key › LV3 › BaiOnSo2#7",
+   "question": {
+    "question": "Câu chuyện về đề cương ôn tập cho bài kiểm tra tại trường đại học xuất hiện trên trang tin tức mạng xã hội của bạn. Câu chuyện chứa thông tin sau: Một nghiên cứu gần đây được thực hiện trên 10 sinh viên cho thấy sinh viên đã cải thiện 25% điểm thi khi họ sử dụng đề cương ôn tập cụ thể này. Khi được thăm dò ý kiến, nhiều chuyên gia khảo thí đã đồng ý với tuyên bố \"Nếu học sinh không sử dụng hướng dẫn này, các em có thể không đạt được điểm số cần thiết để được nhận vào một trường cao đẳng hoặc đại học.\" Bạn xác định hai sai lầm logic phổ biến trong nội dung và nhận ra rằng câu chuyện có thể không chính xác hoặc thiên vị. Hai ngụy biện logic nào mà câu chuyện chứa đựng? (Chọn 2)",
+    "type": "multi",
+    "options": [
+     "Cá trích đỏ (Red herring) - trình bày một chủ đề không liên quan để chuyển hướng sự chú ý khỏi vấn đề ban đầu.",
+     "Ngụy biện vin vào truyền thống (Appeal to tradition) - bỏ qua những vấn đề trong quá khứ và cho rằng mọi thứ trong quá khứ đều tốt hơn hiện tại",
+     "Song đề sai (False dilemma) - hạn chế các lựa chọn có thể để tránh xem xét một lựa chọn khác.",
+     "Khái quát hóa vội vàng (Hasty generalization) - rút ra kết luận về dân số dựa trên một mẫu nhỏ."
+    ],
+    "correct": [
+     "Song đề sai (False dilemma) - hạn chế các lựa chọn có thể để tránh xem xét một lựa chọn khác.",
+     "Khái quát hóa vội vàng (Hasty generalization) - rút ra kết luận về dân số dựa trên một mẫu nhỏ."
+    ],
+    "image": false,
+    "image_file": null,
+    "image_id": null,
+    "uid": "ic3__lv3__t3__k_bos2_7",
+    "explanation": "Kết luận dựa trên chỉ 10 sinh viên là khái quát hóa vội vàng (mẫu quá nhỏ). Câu \"nếu không dùng hướng dẫn này thì không đạt điểm vào đại học\" chỉ đưa ra hai khả năng, bỏ qua các cách ôn tập khác — đó là song đề sai."
+   }
+  },
+  {
+   "level": "Spark__LV1",
+   "topic": 5,
+   "src": "All Key › Spark_Lv1 › Test 2#26",
+   "question": {
+    "question": "Bạn đang thực hiện một dự án nhóm về động vật. Bạn cần gửi hai bức ảnh và hai đoạn về thằn lằn cho bạn cùng lớp của bạn, người đang làm áp phích cho nhóm. Bạn nên gửi thông tin cho bạn cùng lớp của mình như thế nào?",
+    "type": "single",
+    "options": [
+     "Gửi bằng Email",
+     "Gửi bằng tin nhắn văn bản",
+     "Trò chuyện Video",
+     "Gửi bằng cách đăng trên phương tiện truyền thông xã hội"
+    ],
+    "correct": [
+     "Gửi bằng Email"
+    ],
+    "image": false,
+    "image_file": null,
+    "image_id": null,
+    "uid": "spark__lv1__t5__k_t2_26",
+    "explanation": "Email cho phép gửi kèm nhiều ảnh và đoạn văn bản dài dưới dạng tệp đính kèm để bạn làm áp phích lưu lại và sử dụng. Tin nhắn văn bản phù hợp với nội dung ngắn, trò chuyện video không gửi được tệp, còn đăng lên mạng xã hội thì công khai không cần thiết."
+   }
+  },
+  {
+   "level": "Spark__LV2",
+   "topic": 5,
+   "src": "All Key › Spark_Lv2 › On Tap 3#33",
+   "question": {
+    "question": "Em hãy cho biết, hai tùy chọn nào sau đây là ví dụ về nghi thức trực tuyến phù hợp? (Chọn 2)",
+    "type": "multi",
+    "options": [
+     "Sử dụng dấu câu và định dạng thích hợp.",
+     "Tôn trọng người khác.",
+     "Đăng bình luận châm biếm để người khác biết em hài hước.",
+     "Chỉ đăng biểu tượng cảm xúc thay vì lời nói.",
+     "Nếu em không đồng ý với bài đăng của ai đó, hãy trả lời rằng: Họ thật ngu ngốc và không nên tham gia thảo luận."
+    ],
+    "correct": [
+     "Sử dụng dấu câu và định dạng thích hợp.",
+     "Tôn trọng người khác."
+    ],
+    "image": false,
+    "image_file": null,
+    "image_id": null,
+    "uid": "spark__lv2__t5__k_ot3_33",
+    "explanation": "Nghi thức trực tuyến phù hợp là viết đúng dấu câu, định dạng rõ ràng và luôn tôn trọng người khác. Bình luận châm biếm, chỉ dùng biểu tượng cảm xúc hay xúc phạm người có ý kiến khác đều không phù hợp."
+   }
+  },
+  {
+   "level": "Spark__LV3",
+   "topic": 4,
+   "src": "All Key › Spark_Lv3 › On Tap 2#14",
+   "question": {
+    "question": "Em hãy nối các thuật ngữ ở bên phải với mô tả tương ứng ở bên trái.",
+    "type": "matching",
+    "pairs": [
+     {
+      "left": "Nêu rõ nguồn lấy thông tin.",
+      "right": "Trích dẫn (Citation)"
+     },
+     {
+      "left": "Sử dụng một nguồn và không chia sẻ nguồn này đến từ đâu.",
+      "right": "Đạo văn (Plagiarism)"
+     },
+     {
+      "left": "Một sơ đồ thể hiện các dữ liệu dạng số một cách có tổ chức.",
+      "right": "Đồ thị (Graph)"
+     },
+     {
+      "left": "Thông tin được sắp xếp và trình bày theo hàng và cột.",
+      "right": "Bảng (Table)"
+     }
+    ],
+    "image": false,
+    "image_file": null,
+    "image_id": null,
+    "uid": "spark__lv3__t4__k_ot2_14",
+    "explanation": "Trích dẫn là nêu rõ nguồn thông tin; Đạo văn là dùng nguồn mà không ghi xuất xứ; Đồ thị biểu diễn dữ liệu số một cách trực quan có tổ chức; Bảng sắp xếp thông tin theo hàng và cột."
+   }
+  },
+  {
+   "level": "Spark__LV3",
+   "topic": 6,
+   "src": "All Key › Spark_Lv3 › On Tap 2#41",
+   "question": {
+    "question": "Em hãy ghép các công nghệ ở cột bên phải với cách sử dụng phù hợp ở cột bên trái.",
+    "type": "matching",
+    "pairs": [
+     {
+      "left": "Mọi người có thể cộng tác và chia sẻ thông tin theo thời gian thực, bất kể vị trí địa lí",
+      "right": "Video Conferencing (Hội nghị truyền hình)"
+     },
+     {
+      "left": "Các tập tin có thể được truy cập từ bất cứ nơi nào có kết nối Internet.",
+      "right": "Cloud Storage (Lưu trữ đám mây)"
+     },
+     {
+      "left": "Người dùng có thể luôn tổ chức và quản lí công việc giữa nhiều người",
+      "right": "Calendars & Scheduling Software (Phần mềm Quản lí lịch)"
+     },
+     {
+      "left": "Nhân viên có thể gửi và nhận thông tin liên lạc mọi lúc, mọi nơi.",
+      "right": "Email"
+     }
+    ],
+    "image": false,
+    "image_file": null,
+    "image_id": null,
+    "uid": "spark__lv3__t6__k_ot2_41",
+    "explanation": "Hội nghị truyền hình giúp cộng tác thời gian thực từ xa; Lưu trữ đám mây cho phép truy cập tệp ở bất kì đâu có Internet; Phần mềm quản lí lịch giúp tổ chức công việc nhiều người; Email giúp gửi nhận thông tin liên lạc mọi lúc, mọi nơi."
+   }
+  }
+ ],
+ "updates": [
+  {
+   "level": "IC3__LV1",
+   "uid": "ic3__lv1__t6__q2",
+   "src": "All Key › LV1 › Test3#12",
+   "reason": "Đáp án đúng theo khoá: nhìn vào Camera (giao tiếp bằng mắt), không phải nhìn hình người đang nói",
+   "set": {
+    "options": [
+     "Không sử dụng tất cả các chữ hoa khi đến lượt bạn nói vì nó giống như la hét.",
+     "Không sử dụng textspeak.",
+     "Hạn chế sử dụng biểu tượng cảm xúc.",
+     "Khi đến lượt bạn phát biểu, hãy giới thiệu bản thân và nhìn vào Camera của máy tính."
+    ],
+    "correct": [
+     "Khi đến lượt bạn phát biểu, hãy giới thiệu bản thân và nhìn vào Camera của máy tính."
+    ],
+    "explanation": "Trong lớp học video, khi đến lượt phát biểu hãy giới thiệu bản thân và nhìn thẳng vào camera để người nghe cảm nhận bạn đang giao tiếp bằng mắt. Các lựa chọn còn lại là nghi thức khi nhắn tin bằng văn bản, không phải khi cộng tác bằng hình ảnh."
+   }
+  },
+  {
+   "level": "IC3__LV1",
+   "uid": "ic3__lv1__t3__q13",
+   "src": "All Key › LV1 › Test2#23",
+   "reason": "Khoá có thêm lựa chọn \"xuất bản trước năm 1924\" và chọn 2 đáp án",
+   "set": {
+    "question": "Bạn cần thêm một tác phẩm nghệ thuật vào bài trình bày mà bạn đang làm cho lớp học của mình. Bạn không có thời gian để xin giấy phép sử dụng tác phẩm. Với mỗi câu phát biểu, hãy chọn phát biểu đúng nếu bạn có thể sử dụng tác phẩm nghệ thuật một cách hợp pháp mà không cần phải xin giấy phép (Chọn 2)",
+    "type": "multi",
+    "options": [
+     "Tác phẩm nghệ thuật của người bạn của bạn.",
+     "Các tác phẩm nghệ thuật được bảo vệ bởi bản quyền.",
+     "Tác phẩm nghệ thuật được xuất bản trước năm 1924.",
+     "Chủ sở hữu bản quyền dành riêng tác phẩm nghệ thuật cho phạm vi công cộng."
+    ],
+    "correct": [
+     "Tác phẩm nghệ thuật được xuất bản trước năm 1924.",
+     "Chủ sở hữu bản quyền dành riêng tác phẩm nghệ thuật cho phạm vi công cộng."
+    ],
+    "explanation": "Tác phẩm xuất bản trước năm 1924 đã hết thời hạn bảo hộ bản quyền (tại Mỹ) và thuộc phạm vi công cộng; tác phẩm mà chủ sở hữu tự nguyện đưa vào phạm vi công cộng cũng dùng được mà không cần xin phép. Tác phẩm của người quen hay tác phẩm còn bản quyền vẫn phải xin phép."
+   }
+  },
+  {
+   "level": "IC3__LV2",
+   "uid": "ic3__lv2__t4__q15",
+   "src": "All Key › LV2 › OnTapSo3#16",
+   "reason": "Khoá: tạo Macro bằng cách viết lệnh trong trình soạn thảo là ĐÚNG (VBA/Office Scripts)",
+   "set": {
+    "question": "Với mỗi phát biểu về Macro trong một trang tính Excel, hãy chọn Đúng hoặc Sai",
+    "statements": [
+     {
+      "text": "Mỗi Macro được lưu trữ thành một tập tin văn bản.",
+      "answer": "false"
+     },
+     {
+      "text": "Bạn có thể tạo ra Macro bằng cách viết lệnh trong trình soạn thảo lệnh.",
+      "answer": "true"
+     },
+     {
+      "text": "Macro là chuỗi sự kiện có thể được phát lại, giúp thực hiện các tác vụ lặp lại.",
+      "answer": "true"
+     },
+     {
+      "text": "Bạn có thể tạo một Macro bằng cách ghi lại một loạt lệnh, nhấn phím và bấm chuột.",
+      "answer": "true"
+     }
+    ],
+    "label_true": "Đúng",
+    "label_false": "Sai",
+    "explanation": "Macro là chuỗi thao tác có thể phát lại để tự động hóa công việc lặp lại. Có hai cách tạo: ghi lại thao tác (lệnh, phím, chuột) hoặc viết lệnh trong trình soạn thảo (VBA Editor / Script Editor). Macro không được lưu thành tệp văn bản riêng mà nằm trong sổ làm việc."
+   }
+  },
+  {
+   "level": "IC3__LV2",
+   "uid": "ic3__lv2__t4__q32",
+   "src": "All Key › LV2 › OnTapSo3#16",
+   "reason": "Bản trắc nghiệm của câu Macro — đồng bộ với khoá (3 phát biểu đúng)",
+   "set": {
+    "question": "Chọn câu lệnh đúng về Macro trong sổ làm việc Excel (Chọn 3)",
+    "correct": null,
+    "explanation": "Macro là chuỗi thao tác có thể phát lại; có thể tạo bằng cách ghi lại thao tác hoặc viết lệnh trong trình soạn thảo (VBA/Script Editor). Macro không được lưu thành tệp văn bản riêng."
+   },
+   "correctAllExcept": "Mỗi macro được lưu dưới dạng tập tin văn bản."
+  },
+  {
+   "level": "IC3__LV2",
+   "uid": "ic3__lv2__t4__q19",
+   "src": "All Key › LV2 › Cap nhat 10_04_2026#45",
+   "reason": "Bộ lựa chọn mới trong nhóm Cập nhật 10/04/2026 (1 đáp án)",
+   "set": {
+    "type": "single",
+    "options": [
+     "Để tạo cấu trúc và cho phép tạo mục lục trong tài liệu.",
+     "Để thêm màu sắc nhằm làm nổi bật văn bản.",
+     "Để thay đổi kích thước phông chữ để phân biệt trực quan.",
+     "Để nhấn mạnh các từ khóa quan trọng có trong tài liệu."
+    ],
+    "correct": [
+     "Để tạo cấu trúc và cho phép tạo mục lục trong tài liệu."
+    ],
+    "explanation": "Heading Styles tạo cấu trúc cấp bậc cho tài liệu, nhờ đó Word có thể tự động tạo mục lục và Navigation Pane. Tô màu, đổi cỡ chữ hay nhấn mạnh từ khóa chỉ là định dạng trực quan, không phải mục đích chính của Heading Styles."
+   }
+  },
+  {
+   "level": "IC3__LV2",
+   "uid": "ic3__lv2__t6__q42",
+   "src": "All Key › LV2 › Cap nhat 10_04_2026#42",
+   "reason": "Bổ sung phát biểu thứ 4 + chuẩn hóa nhãn Có/Không (trước bị đảo nhãn, giải thích mâu thuẫn)",
+   "set": {
+    "statements": [
+     {
+      "text": "Sửa lỗi cho người khác khi ý kiến và ý tưởng của họ sai.",
+      "answer": "false"
+     },
+     {
+      "text": "Đưa ra lời phê bình công bằng và góp ý mang tính xây dựng, nhưng hãy diễn đạt một cách tôn trọng.",
+      "answer": "true"
+     },
+     {
+      "text": "Sử dụng chữ viết tắt, tiếng lóng và biểu tượng cảm xúc (emoji) để làm cho bình luận của bạn thêm cá tính.",
+      "answer": "false"
+     },
+     {
+      "text": "Dùng đúng chính tả và ngữ pháp để bình luận của bạn rõ ràng và dễ hiểu hơn",
+      "answer": "true"
+     }
+    ],
+    "label_true": "Có",
+    "label_false": "Không",
+    "explanation": "Phản hồi kỹ thuật số phù hợp: phê bình công bằng, mang tính xây dựng, lời lẽ tôn trọng và viết đúng chính tả, ngữ pháp. Không nên \"sửa lỗi\" người khác theo kiểu phủ nhận ý kiến của họ, và tránh viết tắt, tiếng lóng, emoji tùy tiện."
+   }
+  },
+  {
+   "level": "IC3__LV3",
+   "uid": "ic3__lv3__t2__q2",
+   "src": "All Key › LV3 › BaiOnSo1#16",
+   "reason": "Bổ sung cặp thứ 4 còn thiếu (tiếng tích tắc → kiểm tra đầu đọc ổ cứng)",
+   "set": {
+    "pairs": [
+     {
+      "left": "Màn hình máy tính bị đóng băng khi bạn đang làm việc với tập tin dự án.",
+      "right": "Kiểm tra mức độ sử dụng tài nguyên trên trình quản lí tác vụ (Task Manager)."
+     },
+     {
+      "left": "Các trang Web hiển thị nội dung chậm khi bạn đang tìm kiếm thông tin trên Internet.",
+      "right": "Kiểm tra kết nối mạng."
+     },
+     {
+      "left": "Màn trập máy ảnh trên điện thoại thông minh của bạn phát ra âm thanh, nhưng hiện tại bạn đang không chụp ảnh.",
+      "right": "Kiểm tra quyền ứng dụng."
+     },
+     {
+      "left": "Khi bạn khởi động máy tính, bạn nghe thấy tiếng tích tắc nhịp nhàng bên trong thùng máy.",
+      "right": "Kiểm tra hiện tượng mòn đầu đọc/ghi trên ổ đĩa cứng."
+     }
+    ],
+    "explanation": "Máy đóng băng → kiểm tra tài nguyên trong Task Manager; trang web tải chậm → kiểm tra kết nối mạng; camera tự phát tiếng chụp → kiểm tra quyền ứng dụng; tiếng tích tắc đều trong thùng máy khi khởi động → dấu hiệu đầu đọc/ghi ổ cứng bị mòn."
+   }
+  },
+  {
+   "level": "IC3__LV3",
+   "uid": "ic3__lv3__t6__q41",
+   "src": "All Key › LV3 › Bo Sung 10042026#9",
+   "reason": "Đáp án theo khoá Bổ sung 10/04/2026: cho phép tất cả mọi người trò chuyện",
+   "set": {
+    "question": "Nhóm bạn đang tạo một trang web cho một doanh nghiệp địa phương. Bạn đồng ý làm người đại diện phát ngôn cho nhóm, dù chưa nắm đầy đủ thông tin. Bạn sắp xếp cuộc họp với doanh nghiệp địa Phương. Phần mềm họp cho phép bạn bật và tắt tính năng trò chuyện của những người khác. Bạn nên đặt cấu hình trò chuyện như thế nào?",
+    "options": [
+     "Tắt chức năng trò chuyện",
+     "Chỉ cho phép trò chuyện giữa bạn và các thành viên trong nhóm.",
+     "Chỉ cho phép trò chuyện giữa bạn và doanh nghiệp.",
+     "Cho phép tất cả mọi người tham gia được trò chuyện."
+    ],
+    "correct": [
+     "Cho phép tất cả mọi người tham gia được trò chuyện."
+    ],
+    "explanation": "Khi chưa nắm đầy đủ thông tin, bạn nên cho phép tất cả mọi người trò chuyện để các thành viên trong nhóm có thể bổ sung thông tin và doanh nghiệp đặt câu hỏi trực tiếp — cuộc họp minh bạch và hiệu quả hơn."
+   }
+  },
+  {
+   "level": "IC3__LV3",
+   "uid": "ic3__lv3__t3__q23",
+   "src": "All Key › LV3 › Bo Sung 10042026#18",
+   "reason": "Theo khoá: \"Lịch sử ngành nông nghiệp trồng táo\" → Không (Boolean không giúp nhanh hơn)",
+   "set": {
+    "question": "Bạn đang tìm kiếm thông tin về quả táo trên Internet. Đối với mỗi chủ đề nghiên cứu, hãy chọn Có nếu tìm kiếm Boolean sẽ giúp xác định kết quả có liên quan nhanh hơn hoặc Không nếu tìm kiếm Boolean không giúp xác định kết quả có liên quan nhanh hơn.",
+    "statements": [
+     {
+      "text": "Các loại táo",
+      "answer": "false"
+     },
+     {
+      "text": "Lịch sử của ngành nông nghiệp trồng táo",
+      "answer": "false"
+     },
+     {
+      "text": "Công thức làm bánh táo hoặc bánh ngọt",
+      "answer": "true"
+     },
+     {
+      "text": "Táo Macintosh, nhưng không phải máy tính Macintosh",
+      "answer": "true"
+     }
+    ],
+    "label_true": "Có",
+    "label_false": "Không",
+    "explanation": "Toán tử Boolean hữu ích khi cần kết hợp (OR: bánh táo HOẶC bánh ngọt) hoặc loại trừ (NOT: táo Macintosh NOT máy tính). Các chủ đề đơn giản như \"các loại táo\" hay \"lịch sử ngành trồng táo\" chỉ cần nhập cụm từ tìm kiếm thông thường."
+   }
+  },
+  {
+   "level": "IC3__LV3",
+   "uid": "ic3__lv3__t2__q29",
+   "src": "All Key › LV3 › Bo Sung 10042026#4",
+   "reason": "Lựa chọn đúng thứ 2 theo khoá: theo dõi bài đăng về tấn công mạng và bảo mật",
+   "set": {
+    "options": [
+     "Mỗi năm vào trang web của nhà phát hành ứng dụng 1 lần để xem thông tin và tin tức được cập nhật",
+     "Chú ý thông báo của ứng dụng về các bản phần mềm cập nhật và thay đổi điều khoản sử dụng của nhà phát hành",
+     "Đặng ký nhận thông báo qua email về ưu đãi giảm giá của nhà phát hành",
+     "Theo dõi các bài đăng trên mạng xã hội để biết các thông tin về tấn công mạng và bảo mật"
+    ],
+    "correct": [
+     "Chú ý thông báo của ứng dụng về các bản phần mềm cập nhật và thay đổi điều khoản sử dụng của nhà phát hành",
+     "Theo dõi các bài đăng trên mạng xã hội để biết các thông tin về tấn công mạng và bảo mật"
+    ],
+    "explanation": "Để cập nhật mối đe dọa và lỗ hổng bảo mật, hãy chú ý thông báo cập nhật phần mềm và thay đổi điều khoản của nhà phát hành, đồng thời theo dõi các nguồn tin về tấn công mạng và bảo mật. Mỗi năm xem 1 lần là quá thưa, còn email khuyến mãi không liên quan đến bảo mật."
+   }
+  },
+  {
+   "level": "IC3__LV3",
+   "uid": "ic3__lv3__t3__q22",
+   "src": "All Key › LV3 › Bo Sung 10042026#11",
+   "reason": "Bộ lựa chọn/đáp án theo khoá Bổ sung 10/04/2026",
+   "set": {
+    "options": [
+     "Tạo giấy phép tài sản sáng tạo công cộng để mọi người sử dụng và ghi công tác giả.",
+     "Công khai các sản phẩm trí tuệ trên mạng xã hội",
+     "Thêm tên của bạn vào siêu dữ liệu (meta data) vào mỗi tập tin kỹ thuật số với tư cách chủ sở hữu bản quyền.",
+     "Tạo danh mục kỹ thuật số để mọi người trên Internet có thể truy cập"
+    ],
+    "correct": [
+     "Tạo giấy phép tài sản sáng tạo công cộng để mọi người sử dụng và ghi công tác giả.",
+     "Thêm tên của bạn vào siêu dữ liệu (meta data) vào mỗi tập tin kỹ thuật số với tư cách chủ sở hữu bản quyền."
+    ],
+    "explanation": "Giấy phép Creative Commons quy định rõ cách người khác được dùng tác phẩm và bắt buộc ghi công tác giả; thêm tên chủ sở hữu vào siêu dữ liệu (metadata) giúp chứng minh quyền tác giả. Công khai sản phẩm trên mạng xã hội hay tạo danh mục cho mọi người truy cập không bảo vệ tài sản trí tuệ."
+   }
+  },
+  {
+   "level": "IC3__LV3",
+   "uid": "ic3__lv3__t7__q20",
+   "src": "All Key › LV3 › Bo Sung 10042026#31",
+   "reason": "Thay lựa chọn nhiễu \"Sử dụng trình quản lý mật khẩu\" (vốn là biện pháp tốt) theo khoá",
+   "set": {
+    "options": [
+     "Tắt máy vào ban đêm",
+     "Sử dụng mật khẩu mạnh",
+     "Báo cáo email đáng ngờ",
+     "Cho phép nhân viên chia sẻ máy tính."
+    ],
+    "correct": [
+     "Sử dụng mật khẩu mạnh",
+     "Báo cáo email đáng ngờ"
+    ],
+    "explanation": "Mật khẩu mạnh và báo cáo email đáng ngờ (lừa đảo) giúp bảo vệ dữ liệu cá nhân tại công ty. Tắt máy ban đêm không bảo vệ dữ liệu, còn cho nhân viên dùng chung máy tính làm tăng nguy cơ lộ dữ liệu."
+   }
+  },
+  {
+   "level": "IC3__LV3",
+   "uid": "ic3__lv3__t6__q44",
+   "src": "All Key › LV3 › Bo Sung 10042026#34",
+   "reason": "Đáp án theo khoá: gửi tin nhắn ngắn cho nhóm",
+   "set": {
+    "options": [
+     "Gửi tin nhắn ngắn cho nhóm để nhắc nhở về bài tập về nhà.",
+     "Đăng lên trang Instagram của trường.",
+     "Gọi điện cho từng người và nhắc nhở họ.",
+     "Yêu cầu giáo viên gửi email nhắc nhở tới nhóm học tập của cô ấy."
+    ],
+    "correct": [
+     "Gửi tin nhắn ngắn cho nhóm để nhắc nhở về bài tập về nhà."
+    ],
+    "explanation": "Để nhắc nhanh cả nhóm, gửi một tin nhắn ngắn tới nhóm là cách nhanh và đủ. Đăng lên Instagram của trường là không phù hợp, gọi từng người mất thời gian, còn nhờ giáo viên gửi email là không cần thiết."
+   }
+  },
+  {
+   "level": "Spark__LV3",
+   "uid": "spark__lv3__t6__q7",
+   "src": "All Key › Spark_Lv3 › On Tap 3#30",
+   "reason": "Lựa chọn đúng bị dính chữ \": Đây là lựa chọn tốt nhất.\" (lộ đáp án) — sửa theo khoá",
+   "set": {
+    "options": [
+     "Xóa cuộc trò chuyện.",
+     "Nói với bạn của mình đừng trò chuyện nữa và tập trung vào trò chơi.",
+     "Thoát trò chơi.",
+     "Chụp ảnh màn hình và chia sẻ với bố mẹ của mình"
+    ],
+    "correct": [
+     "Chụp ảnh màn hình và chia sẻ với bố mẹ của mình"
+    ]
+   }
+  }
+ ]
+}

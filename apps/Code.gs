@@ -25,7 +25,7 @@
  */
 
 // ====== CẤU HÌNH - THAY BẰNG ID THẬT CỦA BẠN ======
-const BACKEND_VERSION = '2026-10-12';
+const BACKEND_VERSION = '2026-10-14';
 const SPREADSHEET_ID_DATA = '16ty8LB6pnk5Xai1VauUAKfMbIaT88ewfNUAhWM0z5ck';      // Sheet chứa HocSinh + KetQua
 const SPREADSHEET_ID_REPORT = '16ty8LB6pnk5Xai1VauUAKfMbIaT88ewfNUAhWM0z5ck';    // Sheet chứa báo cáo tổng hợp (có thể trùng với ID trên nếu để chung 1 file, khác tab)
 
@@ -37,16 +37,19 @@ const SHEET_REPORT_SUMMARY = 'TongHop'; // nơi ghi báo cáo tổng hợp do da
 // js/backend-config.js chọn đọc từ Sheet. Cột: xem LOG_HEADERS.
 const SHEET_SUBMISSION_LOG = 'NhatKyNopBai';
 
-// Xoay vòng file nhật ký khi quá lớn — xem getSubmissionLogSheet_(). 300.000 dòng × 14
-// cột ≈ 4,2 triệu ô: còn xa trần 10 triệu ô/file, và file nhỏ thì appendRow vẫn nhanh.
+// Xoay vòng file nhật ký khi quá lớn — xem getSubmissionLogSheet_(). 300.000 dòng × 15
+// cột ≈ 4,5 triệu ô: còn xa trần 10 triệu ô/file, và file nhỏ thì appendRow vẫn nhanh.
 const MAX_LOG_ROWS = 300000;
 const LOG_SPREADSHEET_PROP = 'LOG_SPREADSHEET_ID'; // Script Properties: ID file nhật ký đang ghi
 const SHEET_LOG_CATALOG = 'DanhMucNhatKy';          // tab ở file chính: danh sách các file nhật ký
 const DEDUPE_TTL_SEC = 6 * 60 * 60;                   // CacheService giữ tối đa 6 giờ
 const LOG_HISTORY_PROP = 'LOG_SPREADSHEET_HISTORY';  // Script Properties: ID các file nhật ký đã tạo (cũ → mới)
-// Cột A..N của tab nhật ký. N (CheDo) thêm 10/2026 — tự ghi tiêu đề nếu tab cũ chưa có.
+// Cột A..O của tab nhật ký. N (CheDo), O (CauSai — uid câu sai "a,b,c") thêm 10/2026 —
+// tự ghi tiêu đề nếu tab cũ chưa có.
 const LOG_HEADERS = ['SubmissionId', 'HoTen', 'Lop', 'Truong', 'BaiThi', 'Diem', 'SoCauDung',
-  'ThoiGianLam', 'SoLanChuyenTab', 'SoLanClick', 'TrangThai', 'ThoiGianNop', 'GhiChu', 'CheDo'];
+  'ThoiGianLam', 'SoLanChuyenTab', 'SoLanClick', 'TrangThai', 'ThoiGianNop', 'GhiChu', 'CheDo', 'CauSai'];
+const WRONG_MAX_UIDS = 30;     // tối đa số câu sai lưu mỗi bài (khớp js/services/result-submitter.js)
+const WRONG_STATS_TOP = 60;    // số câu hay sai nhất trả về cho dashboard
 
 // Xác thực người gọi bằng Firebase ID token (xem 20-auth.gs).
 const FIREBASE_PROJECT_ID = 'data-ic3';
@@ -100,6 +103,7 @@ function routes_() {
     submitExam:    { roles: null,          handler: function (p) { return writeSubmissionLog_(p.payload); } },
     mosSubmit:     { roles: null,          handler: function (p) { return writeMosLog_(p.payload); } },
     listResults:   { roles: ROLES_RESULTS, handler: listResults_ },
+    wrongStats:    { roles: ROLES_RESULTS, handler: wrongStats_ },
     deleteResults: { roles: ROLES_MANAGE,  handler: deleteResults_ },
     getRoster:     { roles: ROLES_MANAGE,  handler: function (p, who) { return getRoster_(p.lop, who); } },
     getScores:     { roles: ROLES_MANAGE,  handler: function (p, who) { return getScores_(p.lop, p.baiThi, who); } },
@@ -245,6 +249,13 @@ function validateSubmission_(p) {
     if (p[k] !== undefined && p[k] !== '' && !(Number(p[k]) >= 0 && Number(p[k]) < 1e6)) bad(k);
   });
   if (p.examMode && ['practice', 'test'].indexOf(p.examMode) === -1) bad('examMode');
+  // CauSai: "uid1,uid2" — uid ngân hàng câu hỏi (ic3__lv1__t1__q1; MOS có dấu/khoảng trắng),
+  // cấm ký tự HTML/xuống dòng; khớp UID_RE ở js/services/result-submitter.js.
+  if (p.wrong !== undefined && p.wrong !== null && p.wrong !== '') {
+    if (typeof p.wrong !== 'string' || p.wrong.length > 2700) bad('wrong');
+    const uids = p.wrong.split(',');
+    if (uids.length > WRONG_MAX_UIDS || uids.some(function (u) { return !/^[^,<>"'`&\r\n]{3,80}$/.test(u); })) bad('wrong');
+  }
 }
 
 /**
@@ -255,7 +266,7 @@ function validateSubmission_(p) {
  *
  * payload khớp với payload gửi từ js/googleSheet.js:
  * { submissionId, studentName, studentClass, studentSchool, testName,
- *   score, correct, time, tabSwitch, clickCount, status, timestamp, note, examMode }
+ *   score, correct, time, tabSwitch, clickCount, status, timestamp, note, examMode, wrong }
  */
 function writeSubmissionLog_(payload) {
   validateSubmission_(payload);
@@ -291,7 +302,9 @@ function writeSubmissionLog_(payload) {
       asText_(payload.status),
       new Date(), // Dùng giờ server (đáng tin cậy hơn giờ máy học sinh) - lưu dạng Date thật để sort/lọc được
       asText_(payload.note),
-      asText_(payload.examMode) // N — CheDo: 'practice' (Ôn luyện) | 'test' (Kiểm tra); bài cũ để trống
+      asText_(payload.examMode), // N — CheDo: 'practice' (Ôn luyện) | 'test' (Kiểm tra); bài cũ để trống
+      // O — CauSai: uid câu sai "a,b,c"; "-" = không sai câu nào; trống = web cũ chưa gửi.
+      payload.wrong === '' ? '-' : asText_(payload.wrong)
     ]);
     cache.put(dedupeKey, '1', DEDUPE_TTL_SEC);
   } finally {
@@ -350,16 +363,18 @@ function getSubmissionLogSheet_() {
 }
 
 /**
- * Tiêu đề cột N (CheDo) + định dạng giờ nộp (L) kiểu Việt Nam. Chạy tối đa 1 lần/6 giờ
- * cho mỗi tab (cờ trong CacheService) — không tốn thêm thời gian cho từng bài nộp.
+ * Tiêu đề các cột thêm sau (N CheDo, O CauSai...) + định dạng giờ nộp (L) kiểu Việt Nam.
+ * Chạy tối đa 1 lần/6 giờ cho mỗi tab (cờ trong CacheService) — không tốn thêm thời
+ * gian cho từng bài nộp.
  */
 function ensureLogSheetLayout_(sheet) {
   const cache = CacheService.getScriptCache();
   const flag = 'layout:' + sheet.getParent().getId();
   if (cache.get(flag)) return;
-  if (sheet.getRange(1, LOG_HEADERS.length).getValue() === '') {
-    sheet.getRange(1, LOG_HEADERS.length).setValue(LOG_HEADERS[LOG_HEADERS.length - 1]);
-  }
+  const head = sheet.getRange(1, 1, 1, LOG_HEADERS.length).getDisplayValues()[0];
+  LOG_HEADERS.forEach(function (h, i) {
+    if (i >= 13 && !head[i]) sheet.getRange(1, i + 1).setValue(h); // chỉ cột thêm sau, không đè tiêu đề cũ
+  });
   sheet.getRange('L2:L').setNumberFormat('HH:mm:ss d/M/yyyy');
   cache.put(flag, '1', DEDUPE_TTL_SEC);
 }
@@ -515,8 +530,46 @@ function logRowToResult_(r, ms) {
     elapsedSec: (Number(t[0]) || 0) * 60 + (Number(t[1]) || 0),
     tabSwitches: Number(r[8]) || 0, clicks: Number(r[9]) || 0,
     integrityOk: integrityOk, flags: flags, timedOut: note.indexOf('Hết giờ') !== -1,
-    examMode: r[13] || '', submittedAtMs: ms, source: 'sheet'
+    // O — CauSai: "a,b" | "-" (không sai câu nào) | trống (bài do web cũ gửi, không có dữ liệu).
+    examMode: r[13] || '', wrong: r[14] && r[14] !== '-' ? String(r[14]).split(',') : [], wrongTracked: !!r[14],
+    submittedAtMs: ms, source: 'sheet'
   };
+}
+
+/**
+ * "Câu cả lớp hay sai" — tổng hợp cột O (CauSai) NGAY TRÊN SERVER rồi trả về bảng gọn
+ * (≤ WRONG_STATS_TOP câu), thay vì gửi hàng nghìn bài về trình duyệt. Dùng chung bộ
+ * lọc/quyền với listResults_. Không đụng Firestore (chỉ xác thực người gọi như mọi API).
+ * p: { schools?, classes?, sinceMs?, testName? }
+ * @returns {{ submissions, withData, truncated, items: [{uid, count, students, tests}] }}
+ *   submissions = số bài trong phạm vi; withData = số bài có dữ liệu cột CauSai (mẫu số để
+ *   tính % sai — bài cũ trước khi có cột O không tính); students = số HS khác nhau làm sai.
+ */
+function wrongStats_(p, who) {
+  const res = listResults_({ schools: p.schools, classes: p.classes, sinceMs: p.sinceMs, limit: READ_MAX_ROWS }, who);
+  const wantTest = p.testName ? String(p.testName) : '';
+  const byUid = {};
+  let submissions = 0;
+  let withData = 0;
+  res.rows.forEach(function (r) {
+    if (wantTest && r.testName !== wantTest) return;
+    submissions++;
+    if (!r.wrongTracked) return;
+    withData++;
+    const student = nameKey_(r.studentName) + '|' + String(r.studentClass || '').toLowerCase();
+    r.wrong.forEach(function (uid) {
+      const e = byUid[uid] || (byUid[uid] = { uid: uid, count: 0, students: {}, tests: {} });
+      e.count++;
+      e.students[student] = 1;
+      e.tests[r.testName] = (e.tests[r.testName] || 0) + 1;
+    });
+  });
+  const items = Object.keys(byUid).map(function (k) {
+    const e = byUid[k];
+    const tests = Object.keys(e.tests).sort(function (a, b) { return e.tests[b] - e.tests[a]; });
+    return { uid: e.uid, count: e.count, students: Object.keys(e.students).length, tests: tests.slice(0, 3) };
+  }).sort(function (a, b) { return (b.count - a.count) || (b.students - a.students) || (a.uid < b.uid ? -1 : 1); });
+  return { submissions: submissions, withData: withData, truncated: res.truncated, items: items.slice(0, WRONG_STATS_TOP) };
 }
 
 /**

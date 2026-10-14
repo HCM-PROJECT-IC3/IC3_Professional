@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Đấu trường EduQuiz — chơi bộ câu hỏi IC3/MOS theo kiểu Kahoot và Blooket: Tốc độ, Săn vàng, Đua về đích, sưu tập Linh vật. Chạy trên máy, không cần tài khoản.">
+<title>🏟️ Đấu trường — EduQuiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/theme-inherit.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="css/accessibility.css">
+<link rel="stylesheet" href="css/arena.css">
+</head>
+<body class="ar-body">
+<!--
+  Đấu trường (js/arena/arena.js + arena-core.js): chơi 1 bộ câu hỏi theo kiểu
+  Kahoot / Blooket, đấu với đối thủ máy NGAY TRÊN MÁY HỌC SINH.
+  Nguồn câu: ngân hàng tĩnh data/ic3 hoặc link đề giáo viên (arena.html?de=...).
+  0 lượt Firebase, 0 Apps Script — không gửi gì ra ngoài; xu, linh vật, kỷ lục
+  nằm trong localStorage ('eduquiz_arena_v1').
+-->
+<header class="ar-top">
+  <a class="ar-back" href="index.html" title="Về trang chọn bài"><i class="fa-solid fa-arrow-left"></i><span> Trang chủ</span></a>
+  <div class="ar-brand"><span aria-hidden="true">🏟️</span> Đấu trường</div>
+  <div class="ar-wallet" id="arWallet" title="Xu — kiếm khi chơi, dùng để mở hộp Linh vật"><span aria-hidden="true">🪙</span> <b id="arCoins">0</b></div>
+  <button type="button" class="ar-icon-btn" id="arSound" title="Bật/tắt âm thanh" aria-label="Bật/tắt âm thanh"><i class="fa-solid fa-volume-high"></i></button>
+  <button type="button" class="ar-icon-btn" id="arTheme" title="Sáng/tối" aria-label="Chuyển sáng/tối"><i class="fa-solid fa-circle-half-stroke"></i></button>
+</header>
+
+<main id="arMain" class="ar-main" tabindex="-1">
+  <!-- ===== MÀN CHỌN ===== -->
+  <section id="arHome" class="ar-screen">
+    <div class="ar-hero">
+      <button type="button" class="ar-avatar ar-avatar-lg" id="arAvatarBtn" title="Đổi Linh vật đại diện"></button>
+      <div class="ar-hero-main">
+        <label class="ar-label" for="arNick">Biệt danh</label>
+        <input id="arNick" class="ar-input" maxlength="24" autocomplete="off" placeholder="Nhập biệt danh của em">
+        <p class="ar-hint">Xu, Linh vật và kỷ lục lưu riêng theo biệt danh, chỉ trên máy này.</p>
+      </div>
+      <button type="button" class="ar-btn ar-btn-pack" id="arOpenPacks"><span aria-hidden="true">🥚</span> Linh vật</button>
+    </div>
+
+    <div class="ar-card">
+      <h2 class="ar-h2"><i class="fa-solid fa-book-open"></i> Bộ câu hỏi</h2>
+      <div id="arSourceDe" class="ar-de" hidden></div>
+      <div id="arSourceBank" class="ar-grid3">
+        <label class="ar-field"><span>Chương trình</span><select id="arCat" class="ar-input"></select></label>
+        <label class="ar-field"><span>Cấp độ</span><select id="arLvl" class="ar-input"></select></label>
+        <label class="ar-field"><span>Bài / chủ đề</span><select id="arMt" class="ar-input"></select></label>
+      </div>
+    </div>
+
+    <div class="ar-card">
+      <h2 class="ar-h2"><i class="fa-solid fa-gamepad"></i> Chế độ chơi</h2>
+      <div class="ar-modes" id="arModes" role="radiogroup" aria-label="Chế độ chơi">
+        <button type="button" class="ar-mode m-speed" data-mode="speed" role="radio">
+          <span class="ar-mode-ico" aria-hidden="true">⚡</span><b>Tốc độ</b>
+          <small>Kiểu Kahoot — trả lời càng nhanh càng nhiều điểm, chuỗi đúng được thưởng, đua với bóng ma kỷ lục của chính em.</small></button>
+        <button type="button" class="ar-mode m-gold" data-mode="gold" role="radio">
+          <span class="ar-mode-ico" aria-hidden="true">💰</span><b>Săn vàng</b>
+          <small>Kiểu Blooket — trả lời đúng được chọn 1 trong 3 rương: nhân vàng, cướp vàng, đổi vàng... Coi chừng bị cướp lại!</small></button>
+        <button type="button" class="ar-mode m-race" data-mode="race" role="radio">
+          <span class="ar-mode-ico" aria-hidden="true">🏁</span><b>Đua về đích</b>
+          <small>Mỗi câu đúng tiến 1 bước, đúng 3 câu liên tiếp được tăng tốc. Về đích trước để thắng.</small></button>
+      </div>
+      <div class="ar-grid3 ar-opts">
+        <div class="ar-field"><span>Số câu</span><div class="ar-chips" id="arCount">
+          <button type="button" data-v="10">10</button><button type="button" data-v="15">15</button><button type="button" data-v="20">20</button></div></div>
+        <div class="ar-field"><span>Đối thủ máy</span><div class="ar-chips" id="arLevel">
+          <button type="button" data-v="easy">Dễ</button><button type="button" data-v="normal">Vừa</button><button type="button" data-v="hard">Khó</button></div></div>
+        <div class="ar-field"><span>Giây mỗi câu</span><div class="ar-chips" id="arSecs">
+          <button type="button" data-v="10">10</button><button type="button" data-v="20">20</button><button type="button" data-v="30">30</button></div></div>
+      </div>
+      <button type="button" class="ar-btn ar-btn-play" id="arPlay"><i class="fa-solid fa-play"></i> Vào trận</button>
+      <p class="ar-hint ar-center" id="arDeckInfo"></p>
+    </div>
+  </section>
+
+  <!-- ===== LINH VẬT ===== -->
+  <section id="arPacks" class="ar-screen" hidden>
+    <div class="ar-card">
+      <div class="ar-row"><h2 class="ar-h2"><span aria-hidden="true">🥚</span> Mở hộp Linh vật</h2>
+        <button type="button" class="ar-btn ar-btn-ghost" data-go="home"><i class="fa-solid fa-arrow-left"></i> Quay lại</button></div>
+      <p class="ar-hint">Mỗi hộp <b>25 xu</b>. Trùng Linh vật đã có thì được hoàn lại xu. Bấm vào Linh vật đã có để chọn làm ảnh đại diện.</p>
+      <div class="ar-pack-list" id="arPackList"></div>
+      <div class="ar-reveal" id="arReveal" hidden aria-live="polite"></div>
+    </div>
+    <div class="ar-card"><h2 class="ar-h2"><i class="fa-solid fa-table-cells"></i> Bộ sưu tập <span class="ar-muted" id="arCollCount"></span></h2>
+      <div id="arCollection"></div></div>
+  </section>
+
+  <!-- ===== TRẬN ĐẤU ===== -->
+  <section id="arGame" class="ar-screen" hidden>
+    <div class="ar-hud">
+      <span class="ar-pill" id="arQNum"></span>
+      <span class="ar-pill ar-pill-main" id="arStat"></span>
+      <span class="ar-pill" id="arStreak" hidden></span>
+      <button type="button" class="ar-btn ar-btn-ghost ar-btn-sm" id="arQuit"><i class="fa-solid fa-flag"></i> Bỏ cuộc</button>
+    </div>
+    <div class="ar-timer" id="arTimerWrap"><i id="arTimer"></i></div>
+    <div class="ar-track" id="arTrack" hidden></div>
+    <div class="ar-stage">
+      <div class="ar-qbox">
+        <div class="ar-q" id="arQ"></div>
+        <img class="ar-qimg" id="arQImg" alt="" hidden>
+        <div class="ar-answers" id="arAnswers"></div>
+        <div class="ar-feedback" id="arFeedback" hidden aria-live="assertive"></div>
+      </div>
+      <aside class="ar-side" id="arSide" aria-label="Bảng xếp hạng"></aside>
+    </div>
+  </section>
+
+  <!-- ===== KẾT QUẢ ===== -->
+  <section id="arEnd" class="ar-screen" hidden>
+    <div class="ar-card ar-end">
+      <h2 class="ar-h2 ar-center" id="arEndTitle"></h2>
+      <div class="ar-podium" id="arPodium"></div>
+      <div class="ar-end-stats" id="arEndStats"></div>
+      <div class="ar-row ar-center-row">
+        <button type="button" class="ar-btn ar-btn-play" id="arAgain"><i class="fa-solid fa-rotate-right"></i> Chơi lại</button>
+        <button type="button" class="ar-btn ar-btn-ghost" data-go="home"><i class="fa-solid fa-gamepad"></i> Đổi chế độ</button>
+        <button type="button" class="ar-btn ar-btn-pack" data-go="packs"><span aria-hidden="true">🥚</span> Mở hộp</button>
+      </div>
+      <details class="ar-review" id="arReview"></details>
+    </div>
+  </section>
+</main>
+
+<div class="ar-toast" id="arToast" role="status" aria-live="polite" hidden></div>
+
+<script src="js/game-sfx.js"></script>
+<script src="js/game-fx.js"></script>
+<script src="js/gamification.js"></script>
+<script src="js/services/lazy-script-loader.js"></script>
+<script src="js/arena/arena-core.js"></script>
+<script src="js/arena/arena.js"></script>
+</body>
+</html>

@@ -41,6 +41,24 @@
 
   function pad2(n) { return String(n).padStart(2, '0'); }
 
+  // Câu sai gửi kèm bài lên Google Sheet (cột CauSai) để giáo viên xem "câu cả lớp
+  // hay sai" — KHÔNG đưa vào Firestore (thêm dung lượng quiz_results, sát trần 1 GiB).
+  const WRONG_MAX = 30;
+  // uid ngân hàng: "ic3__lv1__t1__q1", MOS có cả dấu/khoảng trắng ("mos_word__bài1") —
+  // chỉ cấm dấu phẩy (phân cách) và ký tự HTML/xuống dòng. Khớp validateSubmission_ (Apps Script).
+  const UID_RE = /^[^,<>"'`&\r\n]{3,80}$/;
+  /** uid các câu trả lời SAI (bỏ câu bỏ trống, câu tự soạn) → "uid1,uid2" (tối đa 30). */
+  function wrongUids(questions, details) {
+    if (!Array.isArray(questions) || !Array.isArray(details)) return '';
+    const out = [];
+    details.forEach((d, i) => {
+      const uid = questions[i] && questions[i].uid;
+      if (!d || d.status !== 'incorrect' || !uid || !UID_RE.test(uid) || /^custom__/i.test(uid)) return;
+      if (out.length < WRONG_MAX && out.indexOf(uid) === -1) out.push(uid);
+    });
+    return out.join(',');
+  }
+
   /**
    * Dựng 2 payload từ kết quả đã chấm. Hàm thuần (không gửi gì) — test được ở Node.
    * @param {Object} a
@@ -49,9 +67,10 @@
    * @param {Object} a.integrity kết quả computeIntegrity()
    * @param {number} a.elapsed   số giây làm bài
    * @param {string} a.id        mã bài (20 ký tự)
+   * @param {Object[]} [a.questions] State.questions (cùng thứ tự result.details) — lấy uid câu sai
    * @param {Date}   [a.now]
    */
-  function buildPayloads({ session: s, result, integrity, elapsed, id, now }) {
+  function buildPayloads({ session: s, result, integrity, elapsed, id, questions, now }) {
     const pct = result.total ? Math.round((result.correct / result.total) * 100) : 0;
     const testName = [s.category, s.level, s.minitest].filter(Boolean).join(' › ');
     const flags = integrity.flags || [];
@@ -70,6 +89,7 @@
       timestamp:   (now || new Date()).toLocaleString('vi-VN'),
       note:        flags.length > 1 ? flags.slice(1).join('; ') : (s.timedOut ? 'Hết giờ' : ''),
       examMode:    s.examMode || 'test',
+      wrong:       wrongUids(questions, result.details),
     };
     const firestore = {
       resultId:      id,
@@ -125,12 +145,12 @@
    * Gửi 1 bài nộp IC3/Spark theo EduBackend.quizResults.
    * @returns {{id:string, firestore:boolean, sheet:boolean}} đích đã chọn (để log/test)
    */
-  function submitQuiz({ session, result, integrity, elapsed }) {
+  function submitQuiz({ session, result, integrity, elapsed, questions }) {
     const p = policy();
     const loader = global.EduFirebaseLoader;
     const id = loader ? loader.newDocId()
       : (global.EduFirebase && global.EduFirebase.newDocId ? global.EduFirebase.newDocId('quiz_results') : undefined);
-    const payloads = buildPayloads({ session, result, integrity, elapsed, id });
+    const payloads = buildPayloads({ session, result, integrity, elapsed, id, questions });
     const examMode = payloads.firestore.examMode;
     const toFirestore = wantsFirestore(examMode, p);
     const toSheet = wantsSheet(examMode, p);
@@ -144,5 +164,5 @@
     return { id, firestore: toFirestore, sheet: toSheet };
   }
 
-  global.EduResultSubmitter = { submitQuiz, buildPayloads, wantsFirestore, wantsSheet };
+  global.EduResultSubmitter = { submitQuiz, buildPayloads, wantsFirestore, wantsSheet, wrongUids };
 })(typeof window !== 'undefined' ? window : globalThis);

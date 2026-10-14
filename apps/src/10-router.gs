@@ -17,6 +17,7 @@ function routes_() {
     submitExam:    { roles: null,          handler: function (p) { return writeSubmissionLog_(p.payload); } },
     mosSubmit:     { roles: null,          handler: function (p) { return writeMosLog_(p.payload); } },
     listResults:   { roles: ROLES_RESULTS, handler: listResults_ },
+    wrongStats:    { roles: ROLES_RESULTS, handler: wrongStats_ },
     deleteResults: { roles: ROLES_MANAGE,  handler: deleteResults_ },
     getRoster:     { roles: ROLES_MANAGE,  handler: function (p, who) { return getRoster_(p.lop, who); } },
     getScores:     { roles: ROLES_MANAGE,  handler: function (p, who) { return getScores_(p.lop, p.baiThi, who); } },

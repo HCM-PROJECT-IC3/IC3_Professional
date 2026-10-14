@@ -195,6 +195,154 @@
   }
 
   // ============================================================
+  // LỘ TRÌNH HỌC THÍCH ỨNG — đi theo đúng thứ tự "Bài N" của cấp độ (mạch
+  // PPCT), xếp hạng từng bài theo mức nắm vững của chính học sinh (lịch sử
+  // trên máy) rồi chọn "bài nên làm tiếp". Hoàn thành mọi bài ở mức Đạt →
+  // giấy chứng nhận vẽ bằng canvas ngay trên máy (0 mạng, 0 Firebase).
+  // ============================================================
+  const BAI_RE = /^Bài \d+[.:]/;
+  const LESSON_RE = /^Tiết \d+$/;
+  function levelInfo(catId, levelId) {
+    const cat = (global.quizRepository?.categories || []).find((c) => c.id === catId);
+    const lv = cat?.levels?.find((l) => l.id === levelId);
+    return lv ? { cat, lv } : null;
+  }
+  /** Các bài của lộ trình: bộ "Bài N" theo số bài; cấp chưa có bộ này → các chủ đề. */
+  function pathNames(lv) {
+    const names = Object.keys(lv.minitests || {});
+    const bai = names.filter((n) => BAI_RE.test(n));
+    if (bai.length) return bai.sort((a, b) => (parseInt(a.match(/\d+/)[0], 10) || 0) - (parseInt(b.match(/\d+/)[0], 10) || 0));
+    return names.filter((n) => !LESSON_RE.test(n));
+  }
+  /** Mức nắm vững 1 bài: TB 3 lần gần nhất (giống tab "Theo bài"). */
+  function mastery(scores) {
+    if (!scores.length) return { state: 'new', avg: null, attempts: 0, best: 0 };
+    const recent = scores.slice(-3);
+    const avg = Math.round(recent.reduce((s, x) => s + x, 0) / recent.length);
+    const state = avg >= 90 && scores.length >= 2 ? 'great' : avg >= PASS ? 'good' : avg >= 50 ? 'warn' : 'bad';
+    return { state, avg, attempts: scores.length, best: Math.max(...scores) };
+  }
+  /** Cấp độ học sinh có thể xem lộ trình: các cấp đã làm (mới nhất trước) + cấp đang chọn ở sảnh. */
+  function pathLevels(recs) {
+    const out = [];
+    const add = (catId, levelId) => {
+      if (!catId || !levelId || out.some((x) => x.catId === catId && x.levelId === levelId)) return;
+      const info = levelInfo(catId, levelId);
+      if (info && pathNames(info.lv).length) out.push({ catId, levelId, name: info.lv.name || `${info.cat.name} ${levelId}` });
+    };
+    recs.slice().reverse().forEach((r) => { const ids = resolveIds(r); add(ids.catId, ids.levelId); });
+    add($('categorySelect')?.value, $('levelSelect')?.value);
+    return out;
+  }
+  function buildPath(recs, catId, levelId) {
+    const info = levelInfo(catId, levelId);
+    if (!info) return null;
+    const byName = new Map();
+    recs.forEach((r) => {
+      const ids = resolveIds(r);
+      if (ids.catId !== catId || ids.levelId !== levelId || !ids.mtKey) return;
+      if (!byName.has(ids.mtKey)) byName.set(ids.mtKey, []);
+      byName.get(ids.mtKey).push(Number(r.score) || 0);
+    });
+    const steps = pathNames(info.lv).map((name, i) => Object.assign({ name, i }, mastery(byName.get(name) || [])));
+    // Ưu tiên: bài đã làm nhưng còn yếu nhất → bài chưa làm kế tiếp theo mạch → bài "Đạt" thấp nhất để lên "Vững".
+    const weak = steps.filter((s) => s.state === 'bad' || s.state === 'warn').sort((a, b) => a.avg - b.avg)[0];
+    const fresh = steps.find((s) => s.state === 'new');
+    const polish = steps.filter((s) => s.state === 'good').sort((a, b) => a.avg - b.avg)[0];
+    const next = weak || fresh || polish || null;
+    const passed = steps.filter((s) => s.state === 'good' || s.state === 'great').length;
+    const done = steps.filter((s) => s.attempts).map((s) => s.avg);
+    return {
+      catId, levelId, info, steps, next,
+      reason: !next ? '' : next === weak ? `Điểm TB gần đây ${next.avg}% — chưa đạt ${PASS}%, củng cố trước khi học tiếp.`
+        : next === fresh ? (passed ? 'Bài kế tiếp trong chương trình mà em chưa làm.' : 'Bắt đầu lộ trình từ bài đầu tiên.')
+        : `Đã đạt (${next.avg}%) — làm lại để lên mức Vững (≥ 90%, ít nhất 2 lần).`,
+      passed, great: steps.filter((s) => s.state === 'great').length,
+      avg: done.length ? Math.round(done.reduce((s, x) => s + x, 0) / done.length) : null,
+      complete: steps.length > 0 && passed === steps.length,
+    };
+  }
+
+  const STEP_LABEL = { new: 'Chưa làm', bad: 'Yếu', warn: 'Cần ôn', good: 'Đạt', great: 'Vững' };
+  function pathHtml(recs) {
+    const levels = pathLevels(recs);
+    if (!levels.length) return '<div class="lh-empty"><i class="fa-solid fa-route"></i><p>Chọn Chương trình và Cấp độ ở trang chọn bài để xem lộ trình.</p></div>';
+    if (!levels.some((l) => l.catId === H.pathCat && l.levelId === H.pathLvl)) { H.pathCat = levels[0].catId; H.pathLvl = levels[0].levelId; }
+    const P = buildPath(recs, H.pathCat, H.pathLvl);
+    const pick = levels.length > 1
+      ? `<select class="lh-student lh-path-level" data-act="path-level" aria-label="Chọn cấp độ">${levels.map((l) => `<option value="${esc(l.catId + '|' + l.levelId)}"${l.catId === H.pathCat && l.levelId === H.pathLvl ? ' selected' : ''}>${esc(l.name)}</option>`).join('')}</select>`
+      : `<b class="lh-path-name">${esc(levels[0].name)}</b>`;
+    const pct = Math.round((P.passed / P.steps.length) * 100);
+    const practiceBtn = (s, cls) => `<button type="button" class="lh-btn ${cls || ''}" data-act="practice" data-cat="${esc(P.catId)}" data-lvl="${esc(P.levelId)}" data-mt="${esc(s.name)}">${s.attempts ? 'Làm lại' : 'Làm bài'}</button>`;
+    const nextCard = P.complete
+      ? `<div class="lh-tip is-good"><i class="fa-solid fa-award"></i><div><b>Em đã hoàn thành lộ trình ${esc(P.info.lv.name)}!</b><span>${P.great}/${P.steps.length} bài ở mức Vững. Nhận giấy chứng nhận hoặc tiếp tục nâng các bài lên mức Vững.</span></div><button type="button" class="lh-btn" data-act="cert"><i class="fa-solid fa-certificate"></i> Nhận chứng nhận</button></div>`
+      : P.next ? `<div class="lh-tip is-hot"><i class="fa-solid fa-location-arrow"></i><div><b>Bài nên làm tiếp: ${esc(P.next.name)}</b><span>${esc(P.reason)}</span></div>${practiceBtn(P.next)}</div>` : '';
+    return `<div class="lh-path-head">${pick}<span class="lh-goal-count">${P.passed}/${P.steps.length} bài đạt</span></div>
+      <div class="lh-goal-bar lh-path-bar"><i style="width:${pct}%"></i></div>
+      <p class="lh-note">Đạt mọi bài (TB 3 lần gần nhất ≥ ${PASS}%) để nhận giấy chứng nhận hoàn thành lộ trình.</p>
+      ${nextCard}
+      <ol class="lh-path">${P.steps.map((s) => `<li class="lh-step is-${s.state}${P.next && s.name === P.next.name && !P.complete ? ' is-next' : ''}">
+          <span class="lh-step-dot" aria-hidden="true">${s.state === 'great' ? '<i class="fa-solid fa-star"></i>' : s.state === 'good' ? '<i class="fa-solid fa-check"></i>' : s.i + 1}</span>
+          <div class="lh-step-main"><div class="lh-step-name">${esc(s.name)}</div>
+            <div class="lh-topic-meta">${s.attempts ? `${s.attempts} lần · TB ${s.avg}% · cao nhất ${s.best}%` : 'Chưa làm'}</div></div>
+          <span class="lh-chip">${STEP_LABEL[s.state]}</span>
+          ${practiceBtn(s, 'lh-btn-sm lh-btn-ghost')}
+        </li>`).join('')}</ol>`;
+  }
+
+  /** Giấy chứng nhận PNG vẽ bằng canvas (font hệ thống → hiển thị đúng tiếng Việt, không cần tải font/thư viện). */
+  function drawCertificate(st, P) {
+    const W = 1600, Hh = 1131;
+    const c = document.createElement('canvas');
+    c.width = W; c.height = Hh;
+    const g = c.getContext('2d');
+    const FONT = '"Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+    // Không dùng Georgia: thiếu glyph dựng sẵn (Ấ, Ậ...) → dấu bị tách rời.
+    const SERIF = '"Times New Roman", "Noto Serif", "DejaVu Serif", serif';
+    g.fillStyle = '#fffdf7'; g.fillRect(0, 0, W, Hh);
+    g.strokeStyle = '#0f766e'; g.lineWidth = 18; g.strokeRect(36, 36, W - 72, Hh - 72);
+    g.strokeStyle = '#c9a227'; g.lineWidth = 4; g.strokeRect(70, 70, W - 140, Hh - 140);
+    const center = (text, y, font, color) => {
+      g.font = font; g.fillStyle = color; g.textAlign = 'center';
+      let t = String(text);
+      while (g.measureText(t).width > W - 260 && t.length > 4) t = t.slice(0, -2) + '…';
+      g.fillText(t, W / 2, y);
+    };
+    center('GIẤY CHỨNG NHẬN', 230, `bold 92px ${SERIF}`, '#0f766e');
+    center('HOÀN THÀNH LỘ TRÌNH ÔN LUYỆN', 300, `600 34px ${FONT}`, '#8a6d1a');
+    center('Chứng nhận học sinh', 400, `italic 34px ${SERIF}`, '#444');
+    center(st.name, 500, `bold 80px ${SERIF}`, '#1f2937');
+    const who = [st.cls && `Lớp ${st.cls}`, st.school].filter(Boolean).join(' · ');
+    if (who) center(who, 565, `500 32px ${FONT}`, '#555');
+    center(`đã hoàn thành ${P.steps.length} bài của lộ trình ${P.info.lv.name}`, 665, `500 38px ${FONT}`, '#1f2937');
+    center(`Điểm trung bình ${P.avg}% · ${P.great}/${P.steps.length} bài ở mức Vững`, 725, `500 32px ${FONT}`, '#0f766e');
+    const d = new Date();
+    center(`Ngày ${d.getDate()} tháng ${d.getMonth() + 1} năm ${d.getFullYear()}`, 850, `italic 30px ${SERIF}`, '#444');
+    // Huy hiệu
+    g.beginPath(); g.arc(W / 2, 960, 52, 0, Math.PI * 2); g.fillStyle = '#c9a227'; g.fill();
+    g.beginPath(); g.arc(W / 2, 960, 40, 0, Math.PI * 2); g.fillStyle = '#fffdf7'; g.fill();
+    center('★', 977, `bold 46px ${FONT}`, '#c9a227');
+    center('EduQuiz · Chứng nhận tự luyện tập, không thay thế chứng chỉ IC3/MOS chính thức của Certiport', 1052, `400 22px ${FONT}`, '#888');
+    return c;
+  }
+  function showCertificate() {
+    const recs = studentRecords(H.key);
+    const P = buildPath(recs, H.pathCat, H.pathLvl);
+    const st = knownStudents().find((s) => s.key === H.key) || lobbyStudent();
+    if (!P || !P.complete || !st) return;
+    const canvas = drawCertificate(st, P);
+    const url = canvas.toDataURL('image/png');
+    const file = `chung-nhan-${P.info.lv.name}-${st.name}`.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D')
+      .replace(/[^\w-]+/g, '-').replace(/-+/g, '-').toLowerCase() + '.png';
+    $('lhBody').innerHTML = `<div class="lh-cert">
+        <img src="${url}" alt="Giấy chứng nhận hoàn thành lộ trình ${esc(P.info.lv.name)} của ${esc(st.name)}">
+        <div class="lh-book-actions">
+          <a class="lh-btn" href="${url}" download="${esc(file)}"><i class="fa-solid fa-download"></i> Tải ảnh chứng nhận</a>
+          <button type="button" class="lh-btn lh-btn-ghost" data-act="path-back">Về lộ trình</button>
+        </div></div>`;
+  }
+
+  // ============================================================
   // THẺ GHI NHỚ (lật thẻ) — ôn nhanh Sổ tay không cần làm lại cả câu:
   // mặt trước = câu hỏi, mặt sau = đáp án + giải thích; học sinh tự đánh
   // giá "Đã nhớ" (lên hộp sau) / "Chưa nhớ" (về hộp 1).
@@ -278,7 +426,7 @@
   // ============================================================
   // GIAO DIỆN
   // ============================================================
-  const H = { key: '', tab: 'overview', flash: null };
+  const H = { key: '', tab: 'overview', flash: null, pathCat: '', pathLvl: '' };
 
   function ensureModal() {
     if ($('learningHub')) return;
@@ -294,6 +442,7 @@
       </div>
       <div class="lh-tabs" role="tablist">
         <button type="button" role="tab" data-tab="overview"><i class="fa-solid fa-chart-line"></i> Tổng quan</button>
+        <button type="button" role="tab" data-tab="path"><i class="fa-solid fa-route"></i> Lộ trình</button>
         <button type="button" role="tab" data-tab="topics"><i class="fa-solid fa-layer-group"></i> Theo bài</button>
         <button type="button" role="tab" data-tab="book"><i class="fa-solid fa-book-bookmark"></i> Sổ tay câu sai <span class="lh-tab-badge" id="lhTabBadge"></span></button>
       </div>
@@ -309,6 +458,11 @@
       if (b) { H.tab = b.dataset.tab; H.flash = null; render(); }
     });
     $('lhBody').addEventListener('click', onBodyClick);
+    $('lhBody').addEventListener('change', (e) => {
+      if (e.target.dataset.act !== 'path-level') return;
+      [H.pathCat, H.pathLvl] = e.target.value.split('|');
+      render();
+    });
     document.addEventListener('keydown', (e) => {
       if (wrap.style.display === 'none') return;
       if (e.key === 'Escape') { if (H.flash) { H.flash = null; render(); } else close(); return; }
@@ -328,6 +482,7 @@
     H.key = cur ? cur.key : (students[0]?.key || '');
     H.tab = tab || 'overview';
     H.flash = null;
+    H.pathCat = ''; H.pathLvl = '';
     $('lhStudent').innerHTML = students.length
       ? students.map((s) => `<option value="${esc(s.key)}">${esc(s.name)}${s.cls ? ' · ' + esc(s.cls) : ''}</option>`).join('')
       : '<option value="">Chưa có học sinh nào trên máy này</option>';
@@ -358,6 +513,7 @@
     }
     const recs = studentRecords(H.key);
     if (H.tab === 'overview') body.innerHTML = overviewHtml(recs, sb);
+    else if (H.tab === 'path') body.innerHTML = pathHtml(recs);
     else if (H.tab === 'topics') body.innerHTML = topicsHtml(recs);
     else body.innerHTML = H.flash ? flashHtml(sb) : bookHtml(sb);
   }
@@ -420,6 +576,12 @@
     const tips = [];
     if (due) tips.push(`<div class="lh-tip is-hot"><i class="fa-solid fa-book-bookmark"></i><div><b>Ôn ${due} câu đến hạn trong Sổ tay</b><span>Ôn đúng lúc sắp quên giúp nhớ lâu gấp nhiều lần học dồn.</span></div><button type="button" class="lh-btn" data-act="review">Ôn ngay</button></div>`);
     if (weak) tips.push(`<div class="lh-tip"><i class="fa-solid fa-bullseye"></i><div><b>Củng cố "${esc(weak.label)}"</b><span>Điểm TB gần đây ${weak.avg}% — dưới mức đạt ${PASS}%.</span></div><button type="button" class="lh-btn" data-act="practice" data-cat="${esc(weak.ids.catId)}" data-lvl="${esc(weak.ids.levelId)}" data-mt="${esc(weak.ids.mtKey)}">Làm lại</button></div>`);
+    if (!weak && recs.length) {
+      const lvl = pathLevels(recs)[0];
+      const P = lvl && buildPath(recs, lvl.catId, lvl.levelId);
+      if (P && P.complete) tips.push(`<div class="lh-tip is-good"><i class="fa-solid fa-award"></i><div><b>Hoàn thành lộ trình ${esc(P.info.lv.name)}</b><span>Mở tab Lộ trình để nhận giấy chứng nhận.</span></div><button type="button" class="lh-btn" data-act="goto-path">Xem</button></div>`);
+      else if (P && P.next) tips.push(`<div class="lh-tip"><i class="fa-solid fa-route"></i><div><b>Lộ trình ${esc(P.info.lv.name)}: ${P.passed}/${P.steps.length} bài đạt</b><span>Bài nên làm tiếp: ${esc(P.next.name)}</span></div><button type="button" class="lh-btn" data-act="goto-path">Xem lộ trình</button></div>`);
+    }
     const lastTs = recs.length ? recTime(recs[recs.length - 1]) : 0;
     if (recs.length && Date.now() - lastTs > 3 * DAY) tips.push(`<div class="lh-tip"><i class="fa-solid fa-calendar-day"></i><div><b>Đã ${Math.floor((Date.now() - lastTs) / DAY)} ngày chưa luyện tập</b><span>Mỗi ngày 1 bài ngắn 10–15 phút hiệu quả hơn 1 buổi dài mỗi tuần.</span></div></div>`);
     const strong = topics.filter((t) => t.avg >= 90 && t.attempts >= 2);
@@ -503,6 +665,9 @@
       render();
       return;
     }
+    if (act === 'cert') { showCertificate(); return; }
+    if (act === 'path-back') { render(); return; }
+    if (act === 'goto-path') { H.tab = 'path'; render(); return; }
     if (act === 'flip') { H.flash.flipped = true; render(); return; }
     if (act === 'flash-ok' || act === 'flash-again') { flashGrade(act === 'flash-ok'); return; }
     if (act === 'flash-exit') { H.flash = null; render(); return; }

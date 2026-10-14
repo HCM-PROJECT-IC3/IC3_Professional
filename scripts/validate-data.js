@@ -87,6 +87,22 @@ let levelFiles = 0, questions = 0;
       if (q.uid) { if (uids.has(q.uid)) err(`${lv.file} › ${name}`, `uid trùng ${q.uid}`); uids.add(q.uid); }
     });
   });
+
+  // Bộ "Theo chủ đề" (minitest "N. Tên chủ đề") phải sạch: 1 câu chỉ thuộc 1 chủ đề và không
+  // có 2 câu cùng nội dung (kể cả khác dạng câu / đảo thứ tự đáp án) — xem data/ic3/topic-reassign.json.
+  const topicOf = new Map(), seen = new Map();
+  const words = (s) => String(s || '').replace(/<[^>]+>/g, ' ').toLowerCase().normalize('NFC').split(/[^\p{L}\p{N}]+/u).filter(Boolean).sort().join(' ');
+  const answerOf = (q) => [(q.options || []).join(' '), (q.statements || []).map((s) => s.text).join(' '), (q.pairs || []).map((p) => p.left + ' ' + p.right).join(' '),
+    (q.items || []).map((x) => (typeof x === 'string' ? x : x.text || '')).join(' ')].join(' ');
+  Object.entries(data.minitests || {}).filter(([n]) => /^\d\.\s/.test(n)).forEach(([name, list]) => (list || []).forEach((q) => {
+    if (q.uid) {
+      if (topicOf.has(q.uid) && topicOf.get(q.uid) !== name) err(`${lv.file}`, `câu ${q.uid} nằm ở 2 chủ đề: "${topicOf.get(q.uid)}" và "${name}"`);
+      topicOf.set(q.uid, name);
+    }
+    const k = words(q.question) + '#' + words(answerOf(q));
+    if (k.length > 20 && seen.has(k) && seen.get(k) !== q.uid) err(`${lv.file} › bộ Theo chủ đề`, `câu trùng nội dung: ${seen.get(k)} = ${q.uid}`);
+    seen.set(k, q.uid);
+  }));
 }));
 
 // ── 2. manifest + file minitest nhỏ (nguồn trang làm bài ưu tiên dùng) ──
