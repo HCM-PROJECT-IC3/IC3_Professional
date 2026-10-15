@@ -36,10 +36,12 @@
     return Math.round((examHistories.length / totalStudentsInRoster) * 100);
   }
 
-  /** Top N học sinh theo điểm trung bình (dùng cho "Học sinh xuất sắc"). */
-  function topStudents(examHistories, topN = 10) {
+  /** Top N học sinh theo điểm trung bình (dùng cho "Học sinh xuất sắc"). Chỉ tính em đạt
+   *  ≥ minScore — trước đây lấy top N bất kể điểm, lớp ít học sinh thì em 40% (cũng đang ở
+   *  danh sách "cần hỗ trợ") vẫn hiện là "xuất sắc". */
+  function topStudents(examHistories, topN = 10, minScore = 80) {
     return [...examHistories]
-      .filter((e) => typeof e.avgScore === 'number')
+      .filter((e) => typeof e.avgScore === 'number' && e.avgScore >= minScore)
       .sort((a, b) => b.avgScore - a.avgScore)
       .slice(0, topN);
   }

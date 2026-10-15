@@ -33,7 +33,7 @@ dashboard theo dõi tiến độ cho điều phối đào tạo/giáo viên.
 - **Mini-game ôn tập** trong "Khu Vui Chơi": Trí Nhớ Thiết Bị, Phòng Thủ
   Dữ Liệu, Battle Quiz, Cyber Detective, Phân Loại Thần Tốc, Chim Vượt
   Ải (Mario + Flappy Bird kết hợp cổng câu hỏi IC3), Thử thách cùng lớp
-  (quiz trực tiếp nhiều thiết bị)... — mở khóa theo
+  (Phòng cả lớp trong Đấu trường — xem dưới)... — mở khóa theo
   kết quả bài thi, không có bộ câu hỏi riêng (dùng lại đúng ngân hàng
   câu hỏi của Quiz).
 - **Gamification**: XP, streak, huy hiệu — lưu local-first (không cần tài
@@ -54,9 +54,22 @@ dashboard theo dõi tiến độ cho điều phối đào tạo/giáo viên.
   lấy câu từ ngân hàng / ma trận đề, nhập nhanh từ văn bản, xem trước,
   in đề. Đề nằm gọn trong link (`index.html?de=…`, nén deflate —
   `js/custom-exam-codec.js`) nên soạn/chia sẻ/mở đề không tốn lượt
-  Firebase; mở được ở phòng thi đấu trực tiếp (`live-quiz.html?de=…`)
+  Firebase; mở được ở Phòng cả lớp của Đấu trường (`arena.html?de=…`)
   hoặc **Trình chiếu lớp học** (máy chiếu + đếm giờ + điểm theo nhóm, 0
   lượt Firebase). Giao bài về nhà có hạn nộp (bài trễ ghi "nộp muộn").
+- **Đấu trường** (`arena.html`, `js/arena/`): chơi bộ câu hỏi kiểu
+  Kahoot/Blooket (Tốc độ, Săn vàng, Đua về đích) với đối thủ máy, sưu tập
+  Linh vật. **Phòng cả lớp** (thay `live-quiz.html` cũ): giáo viên bấm
+  "Tạo phòng" → máy chiếu hiện mã 6 ký tự → học sinh nhập mã (hoặc mở
+  `arena.html?phong=MÃ`) để cùng chơi Tốc độ / Đua về đích, tới 80 người.
+  Chạy **ngang hàng WebRTC** (PeerJS, `js/vendor/peerjs.min.js`): máy giáo
+  viên làm máy chủ, tự chấm điểm, đáp án chỉ gửi xuống sau khi chốt câu —
+  **0 lượt Firebase**. Học sinh rớt mạng/tải lại trang tự vào lại, giữ
+  điểm; máy giáo viên tải lại trang vẫn điều khiển tiếp. Kết quả lưu trên
+  máy giáo viên (20 phòng gần nhất, tải CSV có Đ/S từng câu) và — tuỳ chọn
+  — 1 lượt Apps Script/phòng lên tab `NhatKyDauTruong` (cần đăng nhập giáo
+  viên). Máy chủ "bắt tay" mặc định `0.peerjs.com`; tự chạy máy chủ riêng:
+  `EduBackend.arenaRoom` trong `js/backend-config.js`.
 - **Dashboard báo cáo** (điều phối đào tạo / giáo viên / admin): thống
   kê điểm theo lớp/chủ đề/thời gian, quản lý danh sách học sinh (nạp từ
   Excel), quản lý lịch giảng dạy, trang Social nội bộ cho giáo viên.
@@ -141,19 +154,13 @@ Nếu fork dự án để triển khai độc lập (project Firebase riêng):
    nếu dùng Firebase CLI, hoặc dán tay qua Console).
 4. Làm theo hướng dẫn App Check ngay trong comment đầu file
    `js/firebase-config.js` (đăng ký site key reCAPTCHA Enterprise).
-5. Để dùng `live-quiz.html`, vào Firebase Console → Authentication →
-  Sign-in method và bật **Anonymous**. Phòng chỉ lưu biệt danh, câu trả
-  lời và điểm trò chơi tạm thời; không ghi `quiz_results`. Trên Spark,
-  chỉ Admin, giáo viên đã duyệt hoặc điều phối được tạo phòng; client
-  không thể tự xác minh đáp án/điểm do host tính, nên không dùng
-  kết quả này làm điểm thi chính thức. Phòng hết hạn sau 90 phút nhưng
-  Firestore không tự xóa subcollection; người dẫn dùng nút **Xóa phòng
-  và dữ liệu** để dọn người chơi/câu trả lời sau khi kết thúc.
-   Chống lạm dụng: mã phòng 8 ký tự ngẫu nhiên (~8,5×10¹¹ khả năng, không
-   liệt kê được phòng); chỉ nhân sự được duyệt tạo phòng, tối đa 1 phòng/30 giây
-   (`live_hosts`); phòng hết hạn sau 90 phút. Nên bật thêm: App Check *Enforce*
-   cho Firestore và Auth, TTL policy trên trường `expiresAt` của `live_rooms`
-   (Firestore → TTL), và đặt ngân sách/cảnh báo quota.
+5. Phòng chơi trực tiếp **không còn dùng Firebase** (đã gộp vào Phòng cả lớp
+  của `arena.html`, chạy WebRTC). Không cần bật Anonymous Auth cho tính năng
+  này nữa; `live-quiz.html` chỉ chuyển hướng link cũ. Collection `live_rooms`
+  / `live_hosts` và rules tương ứng trong `firestore.rules` giờ không trang
+  nào dùng — giữ lại chỉ để phòng cũ (nếu còn) được TTL dọn; có thể xoá ở
+  lần sửa rules sau. Điểm phòng là điểm trò chơi do máy giáo viên tính,
+  không dùng làm điểm thi chính thức.
 6. Bài thi quiz/MOS hiện vẫn cho phép học sinh nộp ẩn danh để giữ luồng
   không cần tài khoản. Rules giới hạn schema và giá trị, nhưng không thể
   xác minh điểm do trình duyệt gửi; muốn chống giả mạo điểm chính thức

@@ -12,6 +12,7 @@ function onOpen() {
     .addItem('📊 Cập nhật bảng Thống Kê + biểu đồ', 'setupThongKeSheet_')
     .addSeparator()
     .addItem('🚀 Chạy tất cả', 'runAllSetup_')
+    .addItem('🩺 Kiểm tra sau khi deploy', 'kiemTraSauDeploy')
     .addToUi();
 }
 

@@ -59,6 +59,15 @@ service cloud.firestore {
     function isSignedIn() {
       return request.auth != null;
     }
+
+    // Trang học sinh có được TỰ GHI quiz_results không (không cần đăng nhập). Từ 15/10/2026
+    // bài nộp mặc định chỉ lên Google Sheet (js/backend-config.js → quizResults.firestore =
+    // 'off') → ĐÓNG: trước đây ai cầm apiKey công khai cũng ghi được rác vào đây, đốt hạn mức
+    // 20.000 lượt ghi/ngày + dung lượng 1 GiB dù web không còn dùng. Đổi firestore về 'all' /
+    // 'test-only' thì sửa false → true RỒI publish rules (trước khi đẩy web).
+    function quizResultsOpen() {
+      return false;
+    }
     function myProfile() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
@@ -224,7 +233,7 @@ service cloud.firestore {
       // Học sinh làm bài KHÔNG đăng nhập Firebase Auth → cho phép tạo mới
       // mà không cần isSignedIn(). Chỉ giới hạn schema/giá trị để giảm ghi
       // rác; vì điểm được tính ở client, các rule này KHÔNG xác thực điểm thật.
-      allow create: if
+      allow create: if quizResultsOpen() &&
         request.resource.data.keys().hasOnly([
           'studentName', 'studentClass', 'studentSchool', 'category', 'level',
           'minitest', 'testName', 'score', 'correct', 'incorrect', 'skipped',

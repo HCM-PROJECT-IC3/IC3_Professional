@@ -4,6 +4,30 @@ Tài liệu trả lời 2 câu hỏi: **(1) có thể chia website để không 
 Spark không**, và **(2) code đã được tách để mỗi tác vụ ghi đúng 1 nơi chưa**. Số liệu đo
 10/2026; các con số ước lượng được ghi rõ là ước lượng.
 
+## 0. Cập nhật 15/10/2026 — mặc định bài nộp CHỈ lưu Google Sheet
+
+- `EduBackend.quizResults.firestore` mặc định **`'off'`** (trước: `'all'`). Học sinh mở trang và
+  nộp bài **không nạp Firebase**: 0 lượt ghi Firestore, 0 lượt reCAPTCHA (App Check).
+- Sheet nay **đủ mọi trường như `quiz_results`**: thêm cột **P – ChiTiet** (JSON gọn: số câu sai /
+  bỏ qua, giây làm bài, chương trình / cấp / bài tách riêng, hết giờ, 6 bộ đếm vi phạm nâng cao).
+  Dashboard (`readFrom: 'auto'`) tự đọc Sheet qua `listResults_`. Bài cũ (trước cột P) vẫn hiển thị
+  như trước (sai = tổng − đúng).
+- **An toàn khi deploy lệch thứ tự:** Apps Script bản cũ chưa có `listResults` trả `not-found` →
+  dashboard tự đọc Firestore cho phiên tab đó (`EduSheetResults.noteError`).
+- Muốn quay lại như cũ: đặt `firestore: 'all'` (dashboard tự đọc Firestore) **và** đổi `quizResultsOpen()` trong
+  `firestore.rules` thành `true` rồi publish rules (rules mặc định đóng ghi `quiz_results`; test CI
+  `backend-consistency.test.js` báo đỏ nếu 2 chỗ lệch nhau).
+- Sau khi dán `apps/Code.gs` mới: chạy hàm **`kiemTraSauDeploy`** (hoặc menu 🎯 Công cụ IC3 → 🩺) — phải đủ ✅
+  trước khi Deploy *New version* và push web.
+
+Giới hạn Apps Script đã xử lý thêm trong đợt này:
+
+| Giới hạn | Trước | Nay |
+|---|---|---|
+| PropertiesService **50.000 lượt đọc/ghi/ngày** (Gmail thường) | Mỗi bài nộp + mỗi lần dashboard tải đọc 1 lượt → mùa thi vượt trần, mọi bài sau đó lỗi | Đọc qua CacheService (`cachedProp_`), ~1 lượt/6 giờ |
+| **10 triệu ô/file, tính cả ô trống** | Tab mới mặc định 26 cột (300.000 dòng = 7,8 triệu ô); NhatKyMOS / NhatKyHoatDong / NhatKyDauTruong không xoay vòng, chung file chính | Cắt cột trống; MỌI tab nhật ký xoay sang file mới khi tab > 300.000 dòng **hoặc cả file > 8 triệu ô** (`logTab_`, `FILE_CELL_BUDGET`) |
+| 30 lượt chạy song song | Dashboard làm mới luôn đọc khối 5.000 dòng; hàng đợi gửi lại rải ±1 giây | Làm mới đọc khối 200 dòng rồi tăng ×4; gửi lại rải ±50% thời gian chờ, trễ 0–8 giây khi có mạng lại |
+
 ## 1. Kết luận ngắn
 
 - **Không thể** giữ mọi bài nộp trên Firestore gói Spark khi có hàng trăm nghìn bài/ngày:

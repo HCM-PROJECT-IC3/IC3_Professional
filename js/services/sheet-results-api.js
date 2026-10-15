@@ -30,7 +30,20 @@
     return ((b.quizResults && b.quizResults.firestore) || 'all') === 'all' ? 'firestore' : 'sheet';
   }
 
-  function enabled() { return readFrom() === 'sheet' && !!cfg().appsScriptUrl; }
+  // Apps Script đang chạy bản CŨ chưa có listResults (web lên trước khi deploy Apps Script)
+  // → trả 'not-found'. Đánh dấu cho cả phiên tab để dashboard tự đọc Firestore thay vì
+  // trống trơn; deploy Apps Script xong, mở tab mới là quay lại đọc Sheet.
+  const MISSING_KEY = 'eduquiz_sheet_api_missing';
+  function apiMissing() { try { return sessionStorage.getItem(MISSING_KEY) === '1'; } catch (e) { return false; } }
+  /** @returns {boolean} true nếu lỗi này nghĩa là "Apps Script chưa có API" (đã đánh dấu, nên đọc lại từ Firestore). */
+  function noteError(err) {
+    if (!err || err.code !== 'not-found') return false;
+    try { sessionStorage.setItem(MISSING_KEY, '1'); } catch (e) { /* ignore */ }
+    console.warn('[EduSheetResults] Apps Script chưa có API đọc kết quả (cần deploy bản mới apps/Code.gs) — tạm đọc Firestore.');
+    return true;
+  }
+
+  function enabled() { return readFrom() === 'sheet' && !!cfg().appsScriptUrl && !apiMissing(); }
 
   /**
    * Nhóm trường theo Apps Script phụ trách.
@@ -107,5 +120,5 @@
     return out;
   }
 
-  global.EduSheetResults = { enabled, readFrom, list, remove, endpointGroups, wrongStats };
+  global.EduSheetResults = { enabled, readFrom, list, remove, endpointGroups, wrongStats, noteError };
 })(window);

@@ -28,6 +28,7 @@ function routes_() {
     githubPublish: { roles: ROLES_ADMIN,   handler: githubPublish_ },
     publishRoster: { roles: ROLES_ADMIN,   handler: publishRoster_ },
     logActivity:   { roles: ROLES_STAFF,   handler: logActivity_ },
+    arenaRoomLog:  { roles: ROLES_STAFF,   handler: arenaRoomLog_ },
   };
 }
 

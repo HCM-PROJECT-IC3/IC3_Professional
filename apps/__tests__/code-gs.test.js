@@ -21,7 +21,12 @@ function mkSheet(rows) {
     data,
     getLastRow: () => data.length,
     getLastColumn: () => 14,
-    getParent: () => ({ getId: () => 'MAIN' }),
+    getParent: () => mainFile,
+    getName: () => 'NhatKyNopBai',
+    maxCols: 26, // tab thật mặc định 26 cột
+    getMaxColumns: () => sheet.maxCols,
+    getMaxRows: () => data.length,
+    deleteColumns: (from, n) => { sheet.maxCols -= n; sheet.deletedCols = [from, n]; },
     appendRow: (v) => data.push({ disp: v.map((x) => (x instanceof Date ? 'DATE' : String(x).replace(/^'/, ''))), L: v[11], rawIn: v }),
     deleteRow: (r) => data.splice(r - 1, 1),
     getRange(a, b, n, c) {
@@ -66,27 +71,64 @@ const scoresSheet = tableSheet([['Timestamp', 'MSHS', 'HoTen', 'Lop', 'BaiThi', 
   ['t', '1', 'A', '4A6', 'B1', 8, 5, 'Đã nộp', ''], ['t', '2', 'B', '5A1', 'B1', 6, 5, 'Đã nộp', '']]);
 
 // Tab tạo mới bằng ensureTab_ (NhatKyMOS, NhatKyHoatDong...)
-function plainTab() {
-  const t = { rows: [], header: null };
+function plainTab(name, file) {
+  const t = { rows: [], header: null, maxCols: 26, name: name || 'Sheet1' };
   t.appendRow = (v) => t.rows.push(v);
   t.setFrozenRows = () => {};
-  t.getRange = () => ({ setValues: (v) => { t.header = v[0]; return { setFontWeight: () => {} }; } });
+  // Dòng 1 = tiêu đề, dòng 2.. = t.rows. Đủ cho ensureLogSheetLayout_ + listResults_ đọc lại.
+  const cell = (r, c) => (r === 1 ? (t.header || [])[c - 1] : (t.rows[r - 2] || [])[c - 1]);
+  t.getRange = (a, b, n, c) => ({
+    setValues: (v) => { t.header = v[0]; return { setFontWeight: () => {} }; },
+    setValue: (v) => { if (a === 1) { t.header = t.header || []; t.header[b - 1] = v; } },
+    setNumberFormat: () => {},
+    getDisplayValues: () => Array.from({ length: n || 1 }, (_, i) => Array.from({ length: c || 1 }, (_, j) => {
+      const v = cell(a + i, (b || 1) + j);
+      return v === undefined || v === null ? '' : v instanceof Date ? 'DATE' : String(v).replace(/^'/, '');
+    })),
+    getValues: () => Array.from({ length: n || 1 }, (_, i) => [cell(a + i, b || 1)]),
+  });
+  t.getLastRow = () => t.rows.length + (t.header ? 1 : 0);
+  t.getMaxColumns = () => t.maxCols;
+  t.getMaxRows = () => Math.max(1000, t.rows.length + 1);
+  t.deleteColumns = (from, n) => { t.maxCols -= n; };
+  t.getName = () => t.name;
+  t.setName = (n) => { t.name = n; return t; };
+  t.getParent = () => file || mainFile;
   return t;
 }
 const tabs = { NhatKyNopBai: sheet, HocSinh: rosterSheet, KetQua: scoresSheet };
+// File chính + các file nhật ký mới tạo khi xoay vòng (SpreadsheetApp.create).
+const mainFile = { getId: () => 'MAIN', getSheetByName: (n) => tabs[n] || null, insertSheet: (n) => (tabs[n] = plainTab(n)),
+  getSheets: () => Object.values(tabs).filter((t) => t.getMaxColumns), getName: () => 'MAIN', getUrl: () => 'url:MAIN' };
+const createdFiles = {};
+function newFile(name) {
+  const id = 'F' + (Object.keys(createdFiles).length + 1);
+  const f = { id, name, tabs: {} };
+  const first = plainTab('Sheet1', null);
+  Object.assign(f, {
+    getId: () => id, getName: () => name, getUrl: () => 'url:' + id,
+    getSheets: () => [first].concat(Object.values(f.tabs)),
+    getSheetByName: (n) => (first.name === n ? first : f.tabs[n] || null),
+    insertSheet: (n) => (f.tabs[n] = plainTab(n, f)),
+  });
+  first.getParent = () => f;
+  createdFiles[id] = f;
+  return f;
+}
 
 // ── Dịch vụ Apps Script giả ──
 const cacheStore = new Map();
 const props = new Map();
+let propReads = 0;
 let firestoreCalls = 0;
 const github = { calls: [], files: {}, headSha: 'c0', treeShas: { 'data/ic3/meta.json': 'sha-meta' } };
 let users = {};
 let geocodeCalls = 0;
 const ctx = {
   console, Date, JSON, Math, Set, Map, String, Number, Array, Object, encodeURIComponent, Error,
-  SpreadsheetApp: { openById: () => ({ getSheetByName: (n) => tabs[n] || null, insertSheet: (n) => (tabs[n] = plainTab()) }) },
-  CacheService: { getScriptCache: () => ({ get: (k) => cacheStore.get(k) || null, put: (k, v) => cacheStore.set(k, v) }) },
-  PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => props.get(k) || null, setProperty: (k, v) => props.set(k, v) }) },
+  SpreadsheetApp: { openById: (id) => createdFiles[id] || mainFile, create: (name) => newFile(name) },
+  CacheService: { getScriptCache: () => ({ get: (k) => cacheStore.get(k) || null, put: (k, v) => cacheStore.set(k, v), remove: (k) => cacheStore.delete(k) }) },
+  PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => { propReads++; return props.get(k) || null; }, setProperty: (k, v) => props.set(k, v) }) },
   LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }), getUserLock: () => ({ waitLock() {}, releaseLock() {} }) },
   ContentService: { MimeType: { JSON: 'json' }, createTextOutput: (t) => ({ setMimeType: () => ({ text: t }) }) },
   Utilities: {
@@ -145,7 +187,7 @@ const ctx = {
 };
 vm.createContext(ctx);
 const src = fs.readFileSync(path.join(__dirname, '..', 'Code.gs'), 'utf8');
-vm.runInContext(src + '\n;this.__api = { handleRequest_, asText_, submittedMs_, doGet, noFormula_ };', ctx);
+vm.runInContext(src + '\n;this.__api = { handleRequest_, asText_, submittedMs_, doGet, noFormula_, kiemTraSauDeploy };', ctx);
 const api = ctx.__api;
 const call = (action, p) => JSON.parse(JSON.stringify(api.handleRequest_(Object.assign({ action }, p || {}))));
 
@@ -216,13 +258,31 @@ const sub = (p) => call('submitExam', { payload: Object.assign({ submissionId: '
   studentSchool: 'TH X', testName: 'T', score: 50, correct: '7/24', time: '5:05', tabSwitch: 0, clickCount: 1, status: 'OK', note: '', examMode: 'practice' }, p) });
 eq('nộp bài hợp lệ', sub({}).data, { written: true, duplicate: false });
 const w = sheet.data[sheet.data.length - 1].rawIn;
-eq('lớp/số câu/thời gian ghi thành chữ + cột CheDo', [w[2], w[6], w[7], w[13], w.length], ["'3/12", "'7/24", "'5:05", 'practice', 15]);
+eq('lớp/số câu/thời gian ghi thành chữ + cột CheDo', [w[2], w[6], w[7], w[13], w.length], ["'3/12", "'7/24", "'5:05", 'practice', 16]);
+eq('web cũ không gửi ChiTiet → cột P trống', w[15], '');
 eq('web cũ không gửi câu sai → cột CauSai trống', w[14], '');
 eq('gửi lại cùng mã → trùng, không ghi thêm', sub({}).data.duplicate, true);
 eq('tab cũ được thêm tiêu đề CheDo', sheet.data[0].disp[13], 'CheDo');
 eq('điểm ngoài 0-100 bị từ chối', sub({ submissionId: 'zz1234567', score: 500 }).code, 'invalid-argument');
 eq('tên quá dài bị từ chối', sub({ submissionId: 'zz1234568', studentName: 'x'.repeat(500) }).code, 'invalid-argument');
 eq('mã bài lạ bị từ chối', sub({ submissionId: '../../etc' }).code, 'invalid-argument');
+// ── Quota PropertiesService (50.000 lượt/ngày): bài nộp đọc qua cache ──
+const readsBefore = propReads;
+for (let k = 0; k < 20; k++) sub({ submissionId: 'quota' + String(k).padStart(5, '0'), testName: 'QuotaTest' });
+call('listResults', as('teachX')); call('listResults', as('teachX'));
+eq('20 bài nộp + 2 lần tải dashboard → ≤ 2 lượt đọc Properties', propReads - readsBefore <= 2, true);
+
+// ── Cột P ChiTiet: Sheet đủ dữ liệu như quiz_results ──
+const det = { i: 5, s: 2, e: 754, c: 'IC3 (GS6)', l: 'IC3 LV1', m: 'Bài 1. A › B', to: 1, v: [3, 1, 0, 2, 4, 0], hack: '<x>' };
+eq('ChiTiet hợp lệ được ghi', sub({ submissionId: 'det1234567', studentSchool: 'TH X', testName: 'DetTest', detail: det }).data.written, true);
+eq('ChiTiet chỉ giữ khoá biết trước (bỏ khoá lạ)', JSON.parse(sheet.data[sheet.data.length - 1].rawIn[15]).hack, undefined);
+eq('ChiTiet sai kiểu bị từ chối', sub({ submissionId: 'det1234568', detail: { i: -1 } }).code, 'invalid-argument');
+eq('ChiTiet chữ thay object bị từ chối', sub({ submissionId: 'det1234569', detail: 'x' }).code, 'invalid-argument');
+eq('tab cũ được thêm tiêu đề ChiTiet', sheet.data[0].disp[15], 'ChiTiet');
+const dr = call('listResults', as('teachX')).data.rows.find((r) => r.id === 'det1234567');
+eq('listResults dùng ChiTiet: sai/bỏ qua/giây/bài/hết giờ/vi phạm',
+  [dr.incorrect, dr.skipped, dr.elapsedSec, dr.category, dr.level, dr.minitest, dr.timedOut, dr.multiTabHits, dr.devtoolsHits, dr.shortcutBlocks],
+  [5, 2, 754, 'IC3 (GS6)', 'IC3 LV1', 'Bài 1. A › B', true, 3, 2, 4]);
 eq('mã cũ dạng sub_… vẫn nhận', sub({ submissionId: 'sub_123_1791194357301' }).ok, true);
 
 // ── Xoá ──
@@ -276,6 +336,18 @@ call('logActivity', Object.assign(as('teachX'), { activity: 'login', page: 'teac
 const logRow = tabs.NhatKyHoatDong.rows.find((r) => r[3] === 'login');
 eq('nhật ký: uid/vai trò lấy từ tài khoản thật', [logRow[1], logRow[2], logRow[3], logRow[6]], ['teachX', 'teacher', 'login', 'teacher-dashboard']);
 
+// ── Đấu trường: kết quả phòng cả lớp (1 lượt gọi/phòng) ──
+const arenaSum = { code: 'ABC234', mode: 'speed', title: '=Bộ 1', startedAt: 1760500000000, endedAt: 1760500600000, questions: 10,
+  players: [{ rank: 1, name: 'Lan', value: 8200, correct: 9, bestStreak: 6 }, { rank: 2, name: '+Minh', value: 5100, correct: 6, bestStreak: 3 }] };
+eq('đấu trường: cần đăng nhập', call('arenaRoomLog', { summary: arenaSum }).code, 'unauthenticated');
+eq('đấu trường: học sinh không ghi được', call('arenaRoomLog', Object.assign(as('student'), { summary: arenaSum })).code, 'permission-denied');
+eq('đấu trường: mã phòng lạ bị từ chối', call('arenaRoomLog', Object.assign(as('teachX'), { summary: Object.assign({}, arenaSum, { code: 'x' }) })).code, 'invalid-argument');
+eq('đấu trường: ghi mỗi người 1 dòng', call('arenaRoomLog', Object.assign(as('teachX'), { summary: arenaSum })).data, { written: 2 });
+eq('đấu trường: gửi lại cùng phòng không ghi trùng', call('arenaRoomLog', Object.assign(as('teachX'), { summary: arenaSum })).data.duplicate, true);
+const ar = tabs.NhatKyDauTruong.rows;
+eq('đấu trường: tiêu đề + nội dung dòng (chặn công thức)', [tabs.NhatKyDauTruong.header[5], ar.length, ar[1][1], ar[1][2], ar[1][3], ar[1][5], ar[1][6], ar[1][10]],
+  ['BietDanh', 2, 'ABC234', 'Tốc độ', "'=Bộ 1", "'+Minh", 5100, 'teachX']);
+
 // ── Cập nhật roster cho trang học sinh ──
 const roster = JSON.stringify({ count: 1, students: [{ school: 'TH X', className: '4A6', name: 'A' }] });
 eq('roster: điều phối không đẩy được', call('publishRoster', Object.assign(as('coordY'), { content: roster })).code, 'permission-denied');
@@ -306,6 +378,30 @@ eq('wrongStats: không lọc bài → gồm cả bài khác', call('wrongStats',
 eq('wrongStats: trường khác không thấy', call('wrongStats', as('coordY')).data.withData, 0);
 eq('wrongStats: cần đăng nhập', call('wrongStats').code, 'unauthenticated');
 eq('listResults trả câu sai', call('listResults', as('teachX')).data.rows.find((r) => r.id === 'wr0000001').wrong, ['ic3__lv1__t1__q1', 'ic3__lv1__t1__q2']);
+
+// ── Hàm kiểm tra sau deploy (người dùng chạy tay trên Apps Script thật) ──
+const rowsBeforeSelf = sheet.data.length;
+const selfOut = api.kiemTraSauDeploy();
+eq('kiemTraSauDeploy: mọi mục ✅', selfOut.filter((x) => x.indexOf('❌') === 0), []);
+eq('kiemTraSauDeploy: tự xoá bài mẫu', [sheet.data.length, sheet.data.some((d) => /^SELFTEST/.test(d.disp[0]))], [rowsBeforeSelf, false]);
+
+// ── Trần 10 triệu ô/file (tính cả ô trống) ──
+eq('tab nhật ký bài nộp: cắt cột trống 26 → 16', [sheet.maxCols, sheet.deletedCols], [16, [17, 10]]);
+eq('tab nhật ký phụ (Đấu trường) cũng được cắt cột', tabs.NhatKyDauTruong.maxCols, 13);
+// File chính "đầy" (giả lập 9 triệu ô) → MOS chuyển sang file riêng, bài nộp cũng vậy.
+const realCells = mainFile.getSheets;
+mainFile.getSheets = () => [{ getMaxRows: () => 1000000, getMaxColumns: () => 9 }];
+cacheStore.forEach((v, k) => { if (String(k).indexOf('cells:') === 0) cacheStore.delete(k); });
+mos({ submissionId: 'mosRot0001', score: 50 });
+const mosFile = Object.values(createdFiles).find((f) => /^NhatKyMOS /.test(f.name));
+eq('MOS: file chính sắp đầy → tạo file riêng NhatKyMOS <ngày>, ghi dòng vào đó', [!!mosFile, mosFile && mosFile.getSheets()[0].rows.length], [true, 1]);
+eq('MOS: file mới chỉ giữ đúng số cột', mosFile.getSheets()[0].maxCols, mosFile.getSheets()[0].header.length);
+eq('danh mục file nhật ký có thêm file MOS', tabs.DanhMucNhatKy.rows.some((r) => /^NhatKyMOS /.test(r[1])), true);
+sub({ submissionId: 'rot0000001', testName: 'RotTest' });
+const subFile = Object.values(createdFiles).find((f) => /^NhatKyNopBai /.test(f.name));
+eq('bài nộp: file chính sắp đầy → sang file mới', [!!subFile, subFile && subFile.getSheets()[0].rows.length], [true, 1]);
+mainFile.getSheets = realCells;
+eq('listResults đọc được cả file mới', call('listResults', as('admin1')).data.rows.some((r) => r.id === 'rot0000001'), true);
 
 console.log(fails ? `\n${fails} FAIL` : '\nTất cả PASS');
 process.exit(fails ? 1 : 0);

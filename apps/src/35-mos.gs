@@ -38,7 +38,7 @@ function writeMosLog_(p) {
   lock.waitLock(20000);
   try {
     if (cache.get(dedupeKey)) return { written: false, duplicate: true };
-    const sheet = ensureTab_(SPREADSHEET_ID_REPORT, SHEET_MOS_LOG, MOS_HEADERS);
+    const sheet = logTab_(SHEET_MOS_LOG, MOS_HEADERS); // tự sang file mới khi đầy — xem logTab_
     sheet.appendRow([
       asText_(p.submissionId), asText_(p.studentName), asText_(p.studentClass), asText_(p.studentSchool),
       asText_(p.projectTitle), asText_(p.projectId),

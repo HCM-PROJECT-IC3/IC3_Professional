@@ -13,7 +13,7 @@ const ACTIVITY_ACTIONS = ['login', 'logout', 'view_student_detail', 'export_exce
 function logActivity_(p, who) {
   const activity = String(p.activity || '');
   if (ACTIVITY_ACTIONS.indexOf(activity) === -1) throw appError_('invalid-argument', 'Hành động không hợp lệ: ' + activity);
-  const sheet = ensureTab_(SPREADSHEET_ID_REPORT, SHEET_ACTIVITY_LOG, ACTIVITY_HEADERS);
+  const sheet = logTab_(SHEET_ACTIVITY_LOG, ACTIVITY_HEADERS);
   // appendRow tự an toàn khi nhiều lượt gọi cùng lúc; không cần khoá (không chống trùng).
   sheet.appendRow([
     new Date(), who.uid, who.role, activity,

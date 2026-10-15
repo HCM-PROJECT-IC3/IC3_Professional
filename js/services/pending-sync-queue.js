@@ -83,8 +83,10 @@
   }
 
   function _backoffDelay(attempts) {
-    const jitter = Math.random() * 1000; // rải đều tránh nhiều máy cùng retry đúng 1 giây
-    return Math.min(MAX_DELAY_MS, BASE_DELAY_MS * Math.pow(2, attempts)) + jitter;
+    // Rải ±50% (trước: chỉ +0..1 giây): cả lớp cùng lỗi 1 lúc (Apps Script quá 30 lượt chạy
+    // song song) thì lần thử lại cũng dàn ra nhiều giây, không dồn lại đúng 1 thời điểm.
+    const base = Math.min(MAX_DELAY_MS, BASE_DELAY_MS * Math.pow(2, attempts));
+    return Math.round(base * (0.5 + Math.random()));
   }
 
   /** Thêm 1 payload thất bại vào hàng đợi để thử gửi lại sau. */
@@ -162,8 +164,12 @@
   }
 
   function init() {
-    flush(); // có thể còn sót từ lần trước (tab đóng đột ngột lúc đang chờ retry)
-    window.addEventListener('online', flush);
+    // Có thể còn sót từ lần trước (tab đóng đột ngột lúc đang chờ retry). Trễ ngẫu nhiên
+    // 0–8 giây: cả lớp mở trang / Wi-Fi phòng máy có lại CÙNG LÚC thì không dồn hết bài
+    // còn treo vào Apps Script trong cùng 1 giây.
+    const later = () => setTimeout(flush, Math.random() * 8000);
+    later();
+    window.addEventListener('online', later);
     setInterval(flush, PERIODIC_FLUSH_MS); // dự phòng — 'online' không phải lúc nào cũng bắn đáng tin cậy trên mobile
   }
 

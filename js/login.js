@@ -14,7 +14,17 @@
   })();
 
   const params = new URLSearchParams(location.search);
-  const nextUrl = params.get('next') || 'ic3-dashboard.html';
+  // ?next= chỉ được trỏ tới trang CÙNG tên miền (vd "arena.html?de=..."): chặn
+  // "javascript:..." (chạy mã ngay sau khi đăng nhập) và link sang web lạ (lừa đảo).
+  function safeNext(raw) {
+    if (!raw) return 'ic3-dashboard.html';
+    try {
+      const u = new URL(raw, location.href);
+      if (u.origin === location.origin && /^https?:$/.test(u.protocol)) return u.pathname + u.search + u.hash;
+    } catch (e) { /* link hỏng */ }
+    return 'ic3-dashboard.html';
+  }
+  const nextUrl = safeNext(params.get('next'));
 
   if (params.get('reason') === 'idle') {
     const msgEl = document.getElementById('msg');

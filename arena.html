@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Đấu trường EduQuiz — chơi bộ câu hỏi IC3/MOS theo kiểu Kahoot và Blooket: Tốc độ, Săn vàng, Đua về đích, sưu tập Linh vật. Chạy trên máy, không cần tài khoản.">
+<meta name="description" content="Đấu trường EduQuiz — chơi bộ câu hỏi IC3/MOS theo kiểu Kahoot và Blooket: Tốc độ, Săn vàng, Đua về đích, sưu tập Linh vật, và Phòng cả lớp nhiều người chơi cùng lúc. Không cần tài khoản.">
 <title>🏟️ Đấu trường — EduQuiz</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -19,8 +19,12 @@
   Đấu trường (js/arena/arena.js + arena-core.js): chơi 1 bộ câu hỏi theo kiểu
   Kahoot / Blooket, đấu với đối thủ máy NGAY TRÊN MÁY HỌC SINH.
   Nguồn câu: ngân hàng tĩnh data/ic3 hoặc link đề giáo viên (arena.html?de=...).
-  0 lượt Firebase, 0 Apps Script — không gửi gì ra ngoài; xu, linh vật, kỷ lục
-  nằm trong localStorage ('eduquiz_arena_v1').
+  Xu, linh vật, kỷ lục nằm trong localStorage ('eduquiz_arena_v1').
+
+  Phòng cả lớp (js/arena/arena-room.js + arena-room-core.js) — thay live-quiz.html:
+  máy giáo viên làm "máy chủ", học sinh nối thẳng vào bằng WebRTC (arena.html?phong=MÃ).
+  0 lượt Firebase. Kết quả lưu trên máy giáo viên (lịch sử + CSV), tuỳ chọn 1 lượt
+  Apps Script/phòng lên Google Sheet (tab NhatKyDauTruong).
 -->
 <header class="ar-top">
   <a class="ar-back" href="index.html" title="Về trang chọn bài"><i class="fa-solid fa-arrow-left"></i><span> Trang chủ</span></a>
@@ -77,6 +81,31 @@
       <button type="button" class="ar-btn ar-btn-play" id="arPlay"><i class="fa-solid fa-play"></i> Vào trận</button>
       <p class="ar-hint ar-center" id="arDeckInfo"></p>
     </div>
+
+    <div class="ar-card ar-room-card" id="arRoomCard">
+      <h2 class="ar-h2"><i class="fa-solid fa-users"></i> Phòng cả lớp <span class="ar-badge">Nhiều người chơi</span></h2>
+      <div class="ar-room-resume" id="arRoomResume" hidden></div>
+      <div class="ar-room-split">
+        <div class="ar-room-pane">
+          <h3 class="ar-h3"><span aria-hidden="true">🙋</span> Học sinh — vào phòng</h3>
+          <label class="ar-label" for="arJoinCode">Mã phòng (6 ký tự, xem trên máy chiếu)</label>
+          <div class="ar-join-row">
+            <input id="arJoinCode" class="ar-input ar-code-input" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="VD: 4H7K9M" inputmode="text">
+            <button type="button" class="ar-btn ar-btn-play" id="arJoinBtn"><i class="fa-solid fa-right-to-bracket"></i> Vào phòng</button>
+          </div>
+          <p class="ar-hint">Dùng biệt danh và Linh vật ở trên. Không cần tài khoản.</p>
+        </div>
+        <div class="ar-room-pane">
+          <h3 class="ar-h3"><span aria-hidden="true">🧑‍🏫</span> Người dẫn — tạo phòng</h3>
+          <div class="ar-field"><span>Số người tối đa</span><div class="ar-chips" id="arRoomMax">
+            <button type="button" data-v="30">30</button><button type="button" data-v="45">45</button><button type="button" data-v="60">60</button><button type="button" data-v="80">80</button></div></div>
+          <button type="button" class="ar-btn" id="arHostBtn"><i class="fa-solid fa-tower-broadcast"></i> Tạo phòng cho cả lớp</button>
+          <p class="ar-hint" id="arRoomModeNote"></p>
+          <p class="ar-hint">Máy này làm máy chủ của phòng — giữ tab mở tới hết trận. Không tốn lượt Firebase.</p>
+        </div>
+      </div>
+      <details class="ar-review" id="arRoomHist" hidden></details>
+    </div>
   </section>
 
   <!-- ===== LINH VẬT ===== -->
@@ -113,6 +142,16 @@
     </div>
   </section>
 
+  <!-- ===== PHÒNG CẢ LỚP (người dẫn + học sinh; nội dung do js/arena/arena-room.js vẽ) ===== -->
+  <section id="arRoom" class="ar-screen" hidden>
+    <div class="ar-row ar-room-top">
+      <span class="ar-pill ar-pill-main" id="arRoomCode"></span>
+      <button type="button" class="ar-btn ar-btn-ghost ar-btn-sm" id="arRoomLeave"><i class="fa-solid fa-arrow-left"></i> Thoát phòng</button>
+    </div>
+    <div class="ar-room-net" id="arRoomNet" role="status" aria-live="polite" hidden></div>
+    <div id="arRoomBody"></div>
+  </section>
+
   <!-- ===== KẾT QUẢ ===== -->
   <section id="arEnd" class="ar-screen" hidden>
     <div class="ar-card ar-end">
@@ -137,5 +176,8 @@
 <script src="js/services/lazy-script-loader.js"></script>
 <script src="js/arena/arena-core.js"></script>
 <script src="js/arena/arena.js"></script>
+<script src="js/backend-config.js"></script>
+<script src="js/arena/arena-room-core.js"></script>
+<script src="js/arena/arena-room.js"></script>
 </body>
 </html>

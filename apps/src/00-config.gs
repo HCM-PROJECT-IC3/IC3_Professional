@@ -1,8 +1,7 @@
 /**
  * IC3_Professional — Backend Apps Script (Google Sheet + Firebase Auth)
  *
- * Backend của dự án chỉ gồm 2 phần: Firebase (tài khoản, roster, lịch dạy, phòng thi
- * trực tiếp) và Apps Script này (bài nộp, kết quả cho dashboard, bản đồ, đẩy dữ liệu
+ * Backend của dự án chỉ gồm 2 phần: Firebase (tài khoản, roster, lịch dạy) và Apps Script này (bài nộp, kết quả cho dashboard, bản đồ, đẩy dữ liệu
  * lên GitHub). Mọi API đi qua doPost — xem routes_() trong 10-router.gs.
  *
  * MÃ NGUỒN: apps/src/*.gs (mỗi file 1 nhiệm vụ). apps/Code.gs là bản GỘP để dán vào
@@ -20,7 +19,7 @@
  */
 
 // ====== CẤU HÌNH - THAY BẰNG ID THẬT CỦA BẠN ======
-const BACKEND_VERSION = '2026-10-14';
+const BACKEND_VERSION = '2026-10-15';
 const SPREADSHEET_ID_DATA = '16ty8LB6pnk5Xai1VauUAKfMbIaT88ewfNUAhWM0z5ck';      // Sheet chứa HocSinh + KetQua
 const SPREADSHEET_ID_REPORT = '16ty8LB6pnk5Xai1VauUAKfMbIaT88ewfNUAhWM0z5ck';    // Sheet chứa báo cáo tổng hợp (có thể trùng với ID trên nếu để chung 1 file, khác tab)
 
@@ -32,17 +31,19 @@ const SHEET_REPORT_SUMMARY = 'TongHop'; // nơi ghi báo cáo tổng hợp do da
 // js/backend-config.js chọn đọc từ Sheet. Cột: xem LOG_HEADERS.
 const SHEET_SUBMISSION_LOG = 'NhatKyNopBai';
 
-// Xoay vòng file nhật ký khi quá lớn — xem getSubmissionLogSheet_(). 300.000 dòng × 15
-// cột ≈ 4,5 triệu ô: còn xa trần 10 triệu ô/file, và file nhỏ thì appendRow vẫn nhanh.
+// Xoay vòng file nhật ký khi quá lớn — xem getSubmissionLogSheet_() / logTab_(). 300.000
+// dòng × 16 cột ≈ 4,8 triệu ô (sau khi cắt cột trống — tab mới mặc định 26 cột). Ngoài ra
+// còn xoay khi CẢ FILE vượt FILE_CELL_BUDGET (90-utils.gs) vì các tab nhật ký khác ở chung file.
 const MAX_LOG_ROWS = 300000;
 const LOG_SPREADSHEET_PROP = 'LOG_SPREADSHEET_ID'; // Script Properties: ID file nhật ký đang ghi
 const SHEET_LOG_CATALOG = 'DanhMucNhatKy';          // tab ở file chính: danh sách các file nhật ký
 const DEDUPE_TTL_SEC = 6 * 60 * 60;                   // CacheService giữ tối đa 6 giờ
 const LOG_HISTORY_PROP = 'LOG_SPREADSHEET_HISTORY';  // Script Properties: ID các file nhật ký đã tạo (cũ → mới)
-// Cột A..O của tab nhật ký. N (CheDo), O (CauSai — uid câu sai "a,b,c") thêm 10/2026 —
-// tự ghi tiêu đề nếu tab cũ chưa có.
+// Cột A..P của tab nhật ký. N (CheDo), O (CauSai — uid câu sai "a,b,c"), P (ChiTiet — JSON
+// gọn: sai/bỏ qua, giây làm bài, chương trình/cấp/bài, hết giờ, vi phạm nâng cao) thêm 10/2026 —
+// tự ghi tiêu đề nếu tab cũ chưa có. Có P thì Sheet đủ mọi trường của quiz_results.
 const LOG_HEADERS = ['SubmissionId', 'HoTen', 'Lop', 'Truong', 'BaiThi', 'Diem', 'SoCauDung',
-  'ThoiGianLam', 'SoLanChuyenTab', 'SoLanClick', 'TrangThai', 'ThoiGianNop', 'GhiChu', 'CheDo', 'CauSai'];
+  'ThoiGianLam', 'SoLanChuyenTab', 'SoLanClick', 'TrangThai', 'ThoiGianNop', 'GhiChu', 'CheDo', 'CauSai', 'ChiTiet'];
 const WRONG_MAX_UIDS = 30;     // tối đa số câu sai lưu mỗi bài (khớp js/services/result-submitter.js)
 const WRONG_STATS_TOP = 60;    // số câu hay sai nhất trả về cho dashboard
 

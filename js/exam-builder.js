@@ -10,7 +10,7 @@
      • Phải  — đổi dạng câu, tình trạng đề (câu lỗi, số câu chơi trực
                tiếp được, độ dài link).
    Cài đặt đề (tên, mô tả, ảnh bìa màu + biểu tượng, cấp học, thời gian,
-   trộn câu), Xem trước kiểu Kahoot, Chơi trực tiếp (live-quiz.html),
+   trộn câu), Xem trước kiểu Kahoot, Chơi trực tiếp (Phòng cả lớp ở arena.html),
    In đề, Mở đề từ link.
 
    Dạng câu tự soạn: single (1 đáp án) · multi (nhiều đáp án) · tf
@@ -759,11 +759,12 @@
     if (B.slides.filter(liveOk).length < 5) return;
     const bad = firstInvalid();
     if (bad >= 0 && !confirm(`Có câu chưa hoàn chỉnh (câu ${bad + 1}) — các câu lỗi sẽ bị bỏ qua khi chơi trực tiếp. Tiếp tục?`)) return;
-    window.open(await absLink('live-quiz.html'), '_blank', 'noopener');
+    // Phòng cả lớp của Đấu trường (WebRTC, 0 lượt Firebase) — đề nằm sẵn trong link.
+    window.open((await absLink('arena.html')) + '#arRoomCard', '_blank', 'noopener');
   }
 
   async function openFromLink() {
-    const raw = prompt('Dán link đề (index.html?de=… hoặc live-quiz.html?de=…) để mở và chỉnh sửa trên máy này:');
+    const raw = prompt('Dán link đề (index.html?de=… hoặc arena.html?de=…) để mở và chỉnh sửa trên máy này:');
     if (!raw) return;
     let code = '';
     try { code = new URL(raw.trim(), location.href).searchParams.get('de') || ''; } catch (e) { code = ''; }

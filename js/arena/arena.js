@@ -42,7 +42,7 @@
     toast.t = setTimeout(() => { t.hidden = true; }, 2600);
   }
   function show(screen) {
-    ['arHome', 'arPacks', 'arGame', 'arEnd'].forEach((id) => { $(id).hidden = id !== screen; });
+    document.querySelectorAll('.ar-screen').forEach((el) => { el.hidden = el.id !== screen; });
     global.scrollTo(0, 0);
     $('arMain').focus({ preventScroll: true });
   }
@@ -75,6 +75,7 @@
         SRC.exam = exam;
         SRC.questions = exam.items.map((it, k) => (it.custom ? global.EduCustomExam.toEngineQuestion(it.custom, k) : it.q)).filter(Boolean);
         SRC.key = 'de:' + hashStr(SRC.de);
+        SRC.title = exam.title;
         box.innerHTML = `<span class="ar-de-ico">📝</span><div><b>${esc(exam.title)}</b><small>Đề giáo viên soạn · ${exam.items.length} câu</small></div>`;
       } catch (e) {
         box.innerHTML = '⚠️ Không mở được link đề. <a href="arena.html">Chơi với ngân hàng câu hỏi</a>';
@@ -122,6 +123,7 @@
     const seq = ++loadSeq;
     const cat = $('arCat').value, lvl = $('arLvl').value, mt = $('arMt').value;
     SRC.key = `${cat}|${lvl}|${mt}`;
+    SRC.title = [curCat()?.name, curCat()?.levels.find((l) => l.id === lvl)?.name, mt === ALL ? 'Trộn mọi chủ đề' : mt].filter(Boolean).join(' › ');
     SRC.questions = null;
     $('arDeckInfo').textContent = 'Đang tải câu hỏi...';
     const files = SRC.manifest[`${cat}__${lvl}`] || {};
@@ -138,6 +140,7 @@
     const n = playableCount();
     $('arDeckInfo').textContent = n ? `${n} câu chơi được (trắc nghiệm 1 đáp án và Đúng/Sai).` : '⚠️ Bộ này không có câu trắc nghiệm 1 đáp án / Đúng/Sai — chọn bài khác.';
     $('arPlay').disabled = !n;
+    document.dispatchEvent(new CustomEvent('arena:deck', { detail: { playable: n } }));
   }
   function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
 
@@ -549,5 +552,17 @@
   refreshWallet();
   initSource();
 
-  global.EduArena = { _state: () => G, _store: () => S };
+  // Dùng chung với "Phòng cả lớp" (js/arena/arena-room.js — nạp SAU file này).
+  global.EduArena = {
+    _state: () => G, _store: () => S,
+    api: {
+      esc, sfx, toast, show, rng, SHAPES, prefs: S.prefs, save, profile, avatarOf, refreshWallet,
+      /** Lưu biệt danh đang gõ; trả biệt danh (rỗng nếu chưa nhập). */
+      saveNick() { S.last = $('arNick').value.trim().slice(0, 24); save(); refreshWallet(); return S.last; },
+      nickName, avatar: () => avatarOf(profile()),
+      /** Bộ câu đang chọn ở màn chọn: { questions, key, title } (questions null = đang tải). */
+      deckSource: () => ({ questions: SRC.questions, key: SRC.key, title: SRC.title || '' }),
+      inGame: () => !!G && G.phase !== 'end' && !$('arGame').hidden,
+    },
+  };
 })(window);

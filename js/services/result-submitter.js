@@ -90,6 +90,15 @@
       note:        flags.length > 1 ? flags.slice(1).join('; ') : (s.timedOut ? 'Hết giờ' : ''),
       examMode:    s.examMode || 'test',
       wrong:       wrongUids(questions, result.details),
+      // Cột P ChiTiet: phần quiz_results có mà các cột cũ của Sheet không có → dashboard
+      // đọc từ Sheet đủ dữ liệu như Firestore (sai/bỏ qua tách riêng, bài chính xác, hết giờ,
+      // vi phạm nâng cao). Gọn (khoá 1-2 chữ) vì mỗi bài là 1 dòng Sheet.
+      detail: {
+        i: result.incorrect || 0, s: result.skipped || 0, e: elapsed || 0,
+        c: s.category || '', l: s.level || '', m: s.minitest || '', to: s.timedOut ? 1 : 0,
+        v: [integrity.multiTabHits, integrity.fullscreenExits, integrity.appSwitches,
+          integrity.devtoolsHits, integrity.shortcutBlocks, integrity.printAttempts].map((n) => Number(n) || 0),
+      },
     };
     const firestore = {
       resultId:      id,

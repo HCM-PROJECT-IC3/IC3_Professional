@@ -1,9 +1,9 @@
 /* ============================================================
    js/custom-exam-codec.js
    Mã hoá / giải mã "đề giáo viên tự soạn" thành 1 tham số URL
-   (index.html?de=... / live-quiz.html?de=...) — dùng CHUNG cho trình
+   (index.html?de=... / arena.html?de=...) — dùng CHUNG cho trình
    soạn đề (js/exam-builder.js), trang làm bài (js/quiz-engine.js) và
-   phòng thi đấu trực tiếp (js/live-quiz.js).
+   Đấu trường + Phòng cả lớp (js/arena/arena.js, js/arena/arena-room.js).
 
    Đề KHÔNG lưu trên Firestore — toàn bộ nằm trong link:
      • câu lấy từ ngân hàng: chỉ tham chiếu (tên minitest + uid câu trong
@@ -187,9 +187,9 @@
     }
   }
 
-  /** Câu (tự soạn hoặc ngân hàng) → câu cho phòng thi đấu trực tiếp
-   *  (js/live-quiz.js: chỉ trắc nghiệm 1 đáp án, 2-6 lựa chọn, hiển thị
-   *  bằng textContent nên giữ chữ THÔ, không escape). null = không dùng được. */
+  /** Câu (tự soạn hoặc ngân hàng) → câu trắc nghiệm 1 đáp án, 2-6 lựa chọn (chữ THÔ,
+   *  không escape). null = không dùng được. Trình soạn đề dùng để đếm câu chơi trực
+   *  tiếp được (nút "Chơi trực tiếp" → Phòng cả lớp của arena.html). */
   function toLiveQuestion(it) {
     let question, options, correct;
     if (it.custom) {

@@ -28,6 +28,30 @@ function validateSubmission_(p) {
     const uids = p.wrong.split(',');
     if (uids.length > WRONG_MAX_UIDS || uids.some(function (u) { return !/^[^,<>"'`&\r\n]{3,80}$/.test(u); })) bad('wrong');
   }
+  if (p.detail !== undefined && p.detail !== null) p.detail = cleanDetail_(p.detail, bad);
+}
+
+/**
+ * Cột P ChiTiet (js/services/result-submitter.js → detail): chỉ giữ đúng các khoá biết
+ * trước, số trong giới hạn, chữ ngắn → JSON gọn ≤ ~600 ký tự. Sai kiểu → từ chối bài.
+ */
+function cleanDetail_(d, bad) {
+  if (typeof d !== 'object' || Array.isArray(d)) bad('detail');
+  const n = function (v, max) {
+    const x = Number(v);
+    if (v !== undefined && v !== null && !(x >= 0 && x <= max)) bad('detail');
+    return Math.round(x || 0);
+  };
+  const t = function (v) {
+    if (v !== undefined && v !== null && typeof v !== 'string') bad('detail');
+    return String(v || '').slice(0, 160);
+  };
+  const v = Array.isArray(d.v) ? d.v.slice(0, 6) : [];
+  return {
+    i: n(d.i, 10000), s: n(d.s, 10000), e: n(d.e, 864000),
+    c: t(d.c), l: t(d.l), m: t(d.m), to: d.to ? 1 : 0,
+    v: v.map(function (x) { return n(x, 1e6); }),
+  };
 }
 
 /**
@@ -38,7 +62,7 @@ function validateSubmission_(p) {
  *
  * payload khớp với payload gửi từ js/googleSheet.js:
  * { submissionId, studentName, studentClass, studentSchool, testName,
- *   score, correct, time, tabSwitch, clickCount, status, timestamp, note, examMode, wrong }
+ *   score, correct, time, tabSwitch, clickCount, status, timestamp, note, examMode, wrong, detail }
  */
 function writeSubmissionLog_(payload) {
   validateSubmission_(payload);
@@ -76,7 +100,8 @@ function writeSubmissionLog_(payload) {
       asText_(payload.note),
       asText_(payload.examMode), // N — CheDo: 'practice' (Ôn luyện) | 'test' (Kiểm tra); bài cũ để trống
       // O — CauSai: uid câu sai "a,b,c"; "-" = không sai câu nào; trống = web cũ chưa gửi.
-      payload.wrong === '' ? '-' : asText_(payload.wrong)
+      payload.wrong === '' ? '-' : asText_(payload.wrong),
+      payload.detail ? JSON.stringify(payload.detail) : '' // P — ChiTiet (đã lọc ở cleanDetail_)
     ]);
     cache.put(dedupeKey, '1', DEDUPE_TTL_SEC);
   } finally {
@@ -103,35 +128,24 @@ function writeSubmissionLog_(payload) {
  * Gọi BÊN TRONG khoá của writeSubmissionLog_().
  */
 function getSubmissionLogSheet_() {
-  const props = PropertiesService.getScriptProperties();
-  const currentId = props.getProperty(LOG_SPREADSHEET_PROP);
+  const currentId = cachedProp_(LOG_SPREADSHEET_PROP); // qua cache — xem cachedProp_ (quota Properties)
   const sheet = currentId
     ? SpreadsheetApp.openById(currentId).getSheetByName(SHEET_SUBMISSION_LOG)
     : SpreadsheetApp.openById(SPREADSHEET_ID_REPORT).getSheetByName(SHEET_SUBMISSION_LOG);
   if (!sheet) {
     throw new Error('Chưa có tab "' + SHEET_SUBMISSION_LOG + '" trong Sheet báo cáo — xem HUONG_DAN.md để tạo.');
   }
-  if (sheet.getLastRow() < MAX_LOG_ROWS) {
-    ensureLogSheetLayout_(sheet);
-    return sheet;
-  }
+  ensureLogSheetLayout_(sheet);
+  if (!logTabFull_(sheet)) return sheet; // đầy theo số dòng HOẶC file sắp chạm trần 10 triệu ô
 
-  const stamp = Utilities.formatDate(new Date(), 'Asia/Ho_Chi_Minh', 'yyyy-MM-dd HH:mm');
-  const file = SpreadsheetApp.create(SHEET_SUBMISSION_LOG + ' ' + stamp);
-  const fresh = file.getSheets()[0].setName(SHEET_SUBMISSION_LOG);
-  fresh.getRange(1, 1, 1, LOG_HEADERS.length).setValues([LOG_HEADERS]).setFontWeight('bold');
-  fresh.setFrozenRows(1);
-  props.setProperty(LOG_SPREADSHEET_PROP, file.getId());
-  const history = JSON.parse(props.getProperty(LOG_HISTORY_PROP) || '[]');
-  history.push(file.getId());
-  props.setProperty(LOG_HISTORY_PROP, JSON.stringify(history));
-
-  const main = SpreadsheetApp.openById(SPREADSHEET_ID_REPORT);
-  const catalog = main.getSheetByName(SHEET_LOG_CATALOG) || main.insertSheet(SHEET_LOG_CATALOG);
-  if (catalog.getLastRow() === 0) catalog.appendRow(['TaoLuc', 'TenFile', 'DuongDan']);
-  catalog.appendRow([new Date(), file.getName(), file.getUrl()]);
-  ensureLogSheetLayout_(fresh);
-  return fresh;
+  const made = newLogFile_(SHEET_SUBMISSION_LOG, LOG_HEADERS);
+  setCachedProp_(LOG_SPREADSHEET_PROP, made.file.getId());
+  // Lịch sử file đọc thẳng Properties (không qua cache) để không mất file nào khi ghi lại.
+  const history = JSON.parse(PropertiesService.getScriptProperties().getProperty(LOG_HISTORY_PROP) || '[]');
+  history.push(made.file.getId());
+  setCachedProp_(LOG_HISTORY_PROP, JSON.stringify(history));
+  ensureLogSheetLayout_(made.sheet);
+  return made.sheet;
 }
 
 /**
@@ -148,6 +162,8 @@ function ensureLogSheetLayout_(sheet) {
     if (i >= 13 && !head[i]) sheet.getRange(1, i + 1).setValue(h); // chỉ cột thêm sau, không đè tiêu đề cũ
   });
   sheet.getRange('L2:L').setNumberFormat('HH:mm:ss d/M/yyyy');
+  const max = sheet.getMaxColumns(); // cột trống thừa vẫn tính vào trần 10 triệu ô/file
+  if (max > LOG_HEADERS.length) sheet.deleteColumns(LOG_HEADERS.length + 1, max - LOG_HEADERS.length);
   cache.put(flag, '1', DEDUPE_TTL_SEC);
 }
 
