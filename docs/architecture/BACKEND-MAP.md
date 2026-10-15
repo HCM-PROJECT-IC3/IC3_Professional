@@ -24,12 +24,13 @@ máy có phiên giáo viên).
 | Tài khoản, vai trò, trường phụ trách (`users`) | Firebase | Đăng ký / Admin | Mọi trang quản trị; Apps Script (xác thực) |
 | Roster quản lý (`students_roster`, `classes`, `courses`) | Firebase | Điều phối / Admin | Dashboard |
 | Lịch dạy, TKB, khoảng cách xăng xe (`teaching_*`) | Firebase | Giáo viên / Điều phối GV | teaching-schedule |
-| Phòng thử thách trực tiếp (`live_rooms`, `players`, `answers`) | Firebase | Giáo viên + học sinh (ẩn danh) | Thời gian thực |
+| Phòng cả lớp của Đấu trường (thay `live_rooms` cũ) | **Không lưu ở server** — máy giáo viên giữ trạng thái, học sinh nối WebRTC (máy chủ bắt tay `0.peerjs.com`, 0 lượt Firebase) | Giáo viên (máy chủ phòng) | Học sinh trong phòng |
 | Cộng đồng giáo viên (`gvlab_*`) | Firebase | Giáo viên | Giáo viên |
-| **Bài nộp IC3/Spark** | **Sheet `NhatKyNopBai`** (+ Firestore `quiz_results` tuỳ chế độ) | Học sinh → `submitExam` | Dashboard (`listResults` hoặc Firestore) |
+| **Bài nộp IC3/Spark** | **Sheet `NhatKyNopBai`** (cột P `ChiTiet` = đủ trường như `quiz_results`); Firestore `quiz_results` chỉ khi đổi `quizResults.firestore` (mặc định `'off'` từ 15/10/2026) | Học sinh → `submitExam` | Dashboard → `listResults` (tự đọc Firestore nếu Apps Script cũ chưa có API) |
 | **Câu sai từng bài** (uid, ≤ 30/bài) | **Chỉ Sheet** — cột O `CauSai` của `NhatKyNopBai` | Học sinh → `submitExam` (trường `wrong`) | Dashboard giáo viên → `wrongStats` (tổng hợp trên server) |
 | **Kết quả MOS Practice** | **Sheet `NhatKyMOS`** | Học sinh → `mosSubmit` | Giáo viên mở Sheet |
 | **Nhật ký hoạt động (audit)** | **Sheet `NhatKyHoatDong`** | Trang quản trị → `logActivity`; Apps Script tự ghi khi đẩy GitHub / xoá bài | Admin mở Sheet |
+| **Kết quả Phòng cả lớp (Đấu trường)** | Máy giáo viên (localStorage, 20 phòng + CSV); tuỳ chọn **Sheet `NhatKyDauTruong`** | Giáo viên đăng nhập → `arenaRoomLog` (1 lượt/phòng, mỗi học sinh 1 dòng) | Giáo viên mở Sheet / tải CSV |
 | Khoảng cách nhà → trường (tính) | Apps Script `mapDistance` (Maps của Google) → lưu Firebase `teaching_travel_distances` | Điều phối GV | teaching-schedule |
 | Tiến độ học, sổ tay câu sai, XP | localStorage máy học sinh | Học sinh | Học sinh |
 

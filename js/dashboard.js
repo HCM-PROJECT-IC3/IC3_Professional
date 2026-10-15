@@ -616,6 +616,8 @@ async function updateReportTab(forceRefresh = false) {
           window.EduFirebase.countSnap && window.EduFirebase.countSnap('quiz_results (báo cáo' + (base ? ', phần mới' : ', lần đầu') + ')', snap);
         }
       } catch (err) {
+        // Apps Script bản cũ chưa có listResults → đánh dấu rồi tải lại từ Firestore.
+        if (fromSheet && window.EduSheetResults.noteError(err)) return updateReportTab(forceRefresh);
         // Hết lượt đọc trong ngày / mất mạng: dùng dữ liệu đã lưu nếu có (kể cả bản đã
         // quá hạn), thay vì báo lỗi trắng.
         const fallback = base || (staleEntry && Array.isArray(staleEntry.docs) ? staleEntry.docs : null);

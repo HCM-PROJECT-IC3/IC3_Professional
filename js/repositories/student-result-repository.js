@@ -22,6 +22,14 @@
 
   /** Dashboard đọc kết quả từ Google Sheet (js/services/sheet-results-api.js) thay Firestore? */
   function fromSheet() { return !!(global.EduSheetResults && global.EduSheetResults.enabled()); }
+  /** Apps Script chưa có listResults (bản cũ) → đánh dấu rồi chạy lại fn với Firestore. */
+  async function withSheetFallback(fn) {
+    try { return await fn(); } catch (err) {
+      if (fromSheet() && global.EduSheetResults.noteError(err)) return fn();
+      throw err;
+    }
+  }
+  const isApiMissing = (err) => !!(err && err.code === 'not-found' && fromSheet());
 
   class StudentResultRepository extends global.EduBaseRepository {
     constructor() { super(COLLECTION_NAME); }
@@ -58,7 +66,9 @@
      * @param {string} [opts.seedKey] Khoá cache cũ (phạm vi rộng hơn) dùng làm nền khi
      *   khoá mới chưa có gì — tránh đọc lại toàn bộ `limit` bản ghi chỉ vì đổi khoá.
      */
-    async listRecentCached({ cacheKey, schools, classes, seedKey, limit = 1000, freshMs = 3 * 60 * 1000 } = {}) {
+    listRecentCached(opts) { return withSheetFallback(() => this._listRecentCached(opts)); }
+
+    async _listRecentCached({ cacheKey, schools, classes, seedKey, limit = 1000, freshMs = 3 * 60 * 1000 } = {}) {
       // Cache tách theo nguồn: mã bài Sheet/Firestore không khớp nhau ở dữ liệu cũ, trộn
       // 2 nguồn sẽ ra bài trùng.
       if (fromSheet()) { cacheKey += ':sheet'; if (seedKey) seedKey += ':sheet'; }
@@ -80,6 +90,7 @@
         try {
           fresh = await this.fetchRecent({ schools, classes, limit, afterMs: lastMs });
         } catch (err) {
+          if (isApiMissing(err)) throw err; // để withSheetFallback đọc lại từ Firestore
           // Hết hạn mức đọc trong ngày / mất mạng: vẫn hiện dữ liệu đã có thay vì báo lỗi trắng.
           console.warn('[EduRepository] Không tải được kết quả mới, dùng dữ liệu đã lưu:', err.message);
           const F = global.EduFirebase;
@@ -99,6 +110,7 @@
         try {
           rows = await this.fetchRecent({ schools, classes, limit });
         } catch (err) {
+          if (isApiMissing(err)) throw err;
           // Bản lưu đã quá 7 ngày nhưng Firebase đang hết lượt/mất mạng: dùng tạm bản cũ.
           const F = global.EduFirebase;
           const stale = cache && F && F.isQuotaOrOffline(err) ? await cache.getAsync(cacheKey, true, /* allowStale */ true) : null;
@@ -146,7 +158,9 @@
      *   where khớp rule scoping theo studentSchool. Coordinator/Admin không cần
      *   truyền (rule của họ không yêu cầu).
      */
-    async listByStudent({ studentName, studentClass, schools }) {
+    listByStudent(opts) { return withSheetFallback(() => this._listByStudent(opts)); }
+
+    async _listByStudent({ studentName, studentClass, schools }) {
       const wantKey = global.EduModels.ExamHistory.keyOf({ studentName, studentClass });
       if (fromSheet()) {
         const rows = await global.EduSheetResults.list({ schools, classes: [studentClass], studentName, limit: 2000 });

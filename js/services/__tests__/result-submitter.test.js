@@ -50,6 +50,9 @@ assertEq('thời gian mm:ss', p.sheet.time, '02:05');
 assertEq('trạng thái nghi vấn', p.sheet.status, '⚠️ Chuyển tab');
 assertEq('ghi chú = cờ còn lại', p.sheet.note, 'Thoát toàn màn hình');
 assertEq('examMode giữ nguyên', p.firestore.examMode, 'practice');
+assertEq('ChiTiet (cột P Sheet): sai/bỏ qua/giây/bài/hết giờ — đủ như Firestore', [p.sheet.detail.i, p.sheet.detail.s, p.sheet.detail.e, p.sheet.detail.c, p.sheet.detail.l, p.sheet.detail.m, p.sheet.detail.to], [2, 1, 125, 'IC3', 'LV1', 'Test 1', 1]);
+assertEq('ChiTiet: vi phạm thiếu → 0 (6 số)', p.sheet.detail.v, [0, 0, 0, 0, 0, 0]);
+assertEq('ChiTiet: vi phạm có → đúng thứ tự', S.buildPayloads({ session: session, result: result, integrity: { valid: true, flags: [], multiTabHits: 2, devtoolsHits: 1, printAttempts: 4 }, elapsed: 1, id: 'V' }).sheet.detail.v, [2, 0, 0, 1, 0, 4]);
 // ── Câu sai → chỉ Google Sheet ──
 var qs = [{ uid: 'ic3__lv1__t1__q1' }, { uid: 'ic3__lv1__t1__q2' }, { uid: 'custom__abc' }, { uid: 'ic3__lv1__t1__q1' }, {}, { uid: 'bad<uid>' }, { uid: 'ic3__lv1__t1__q3' }, { uid: 'Bài 2: Xây dựng dữ liệu trong ô_3__v3' }];
 var det = [{ status: 'incorrect' }, { status: 'correct' }, { status: 'incorrect' }, { status: 'incorrect' }, { status: 'incorrect' }, { status: 'incorrect' }, { status: 'skipped' }, { status: 'incorrect' }];

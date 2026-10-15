@@ -335,9 +335,15 @@
     render();
   }
 
-  function currentFolder() { return FS.findById(state.root, state.currentFolderId); }
+  function currentFolder() {
+    // Thư mục đang mở vừa bị xoá (vd xoá từ ô Tìm kiếm) → quay về gốc thay vì vẽ lỗi.
+    var f = FS.findById(state.root, state.currentFolderId);
+    if (!f) { state.currentFolderId = state.root.id; f = state.root; }
+    return f;
+  }
 
   function render() {
+    if (!state.root) return; // chưa chọn nhiệm vụ (nút toolbar bấm bằng bàn phím xuyên lớp phủ)
     renderBreadcrumb();
     renderContent();
     updateToolbarState();
@@ -476,6 +482,7 @@
   // ── Toolbar actions ──
 
   function onNewFolder() {
+    if (!state.root) return;
     state.creatingFolder = true;
     render();
   }
@@ -485,7 +492,7 @@
     render();
   }
   function onDelete() {
-    if (!state.selectedId) return;
+    if (!state.selectedId || !state.root) return;
     FS.removeNode(state.root, state.selectedId);
     state.selectedId = null;
     render();
@@ -494,7 +501,7 @@
   function onCopy() { openPicker('copy'); }
 
   function openPicker(action) {
-    if (!state.selectedId) return;
+    if (!state.selectedId || !state.root) return;
     state.pendingAction = action;
     el.pickerTitle.textContent = action === 'move' ? 'Chọn thư mục ĐÍCH để DI CHUYỂN đến' : 'Chọn thư mục ĐÍCH để SAO CHÉP đến';
     el.pickerTree.innerHTML = '';
@@ -529,6 +536,7 @@
     if (!targetId) return;
     var targetFolder = FS.findById(state.root, targetId);
     var sourceNode = FS.findById(state.root, state.selectedId);
+    if (!targetFolder || !sourceNode) { el.pickerOverlay.hidden = true; state.pendingAction = null; render(); return; }
     if (state.pendingAction === 'move') {
       FS.removeNode(state.root, state.selectedId);
       FS.addChild(targetFolder, sourceNode);
@@ -542,6 +550,7 @@
 
   // ── Search ──
   function onSearchInput() {
+    if (!state.root) return;
     var q = el.searchInput.value;
     el.searchResults.innerHTML = '';
     if (!q.trim()) return;
@@ -573,7 +582,7 @@
 
   // ── Kiểm tra kết quả nhiệm vụ ──
   function onCheck() {
-    if (state.submitted) return;
+    if (state.submitted || !state.mission) return;
     var result = state.mission.check(state.root);
     if (result.passed) {
       state.submitted = true;

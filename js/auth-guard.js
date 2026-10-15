@@ -181,7 +181,10 @@
       <div class="msg">🔐 Đang kiểm tra đăng nhập...</div>
     </div>`;
   overlay.querySelector('#edu-guard-screen').appendChild(buildImg('img/anim/loading.webp'));
-  document.addEventListener('DOMContentLoaded', () => document.body.appendChild(overlay));
+  // Chỉ gắn nếu CHƯA mở khoá: đăng nhập có thể được xác nhận trước DOMContentLoaded (phiên
+  // có sẵn, máy nhanh) — unlock() gỡ overlay lúc nó chưa nằm trong trang, rồi gắn vào sau
+  // sẽ che kín dashboard mãi ở "Đang kiểm tra đăng nhập...".
+  document.addEventListener('DOMContentLoaded', () => { if (!unlockedUid) document.body.appendChild(overlay); });
 
   function showDenied(message, needsSignOut) {
     const btnLabel = needsSignOut ? 'Đăng xuất & về trang đăng nhập' : 'Về trang đăng nhập';

@@ -35,18 +35,15 @@ CLI hỏi "xoá index không có trong file?" → chọn **No**.
 - Admin → `coordinator-dashboard.html`, `ic3-dashboard.html` (tab Báo cáo), `admin-users.html`
   đều tải được (rules mới từ chối query thiếu `limit()` — nếu trang nào báo `permission-denied`,
   gửi lại dòng lỗi).
-- Tạo phòng ở `live-quiz.html`, cho 1–2 cửa sổ ẩn danh vào chơi trọn 1 ván: câu sau tự mở sau
-  màn đáp án, điểm cộng đúng, cuối ván hiện bảng tổng kết.
 
 Lỗi `permission-denied` ở chức năng nào → gửi lại thông báo lỗi. Cần quay lại tạm: bảng lịch sử
-bên trái tab Rules cho phép chọn bản cũ (nhớ: code mới + rules cũ thì live-quiz không chạy).
+bên trái tab Rules cho phép chọn bản cũ.
 
-## 2. Bật Anonymous Auth (cho phòng chơi trực tiếp)
+## 2. Anonymous Auth — không còn cần
 
-Authentication → Sign-in method → **Anonymous** → Enable.
-
-**Kiểm tra:** mở `live-quiz.html` ở cửa sổ ẩn danh → dòng trạng thái báo "Đã kết nối",
-không phải "Chưa bật Firebase Anonymous Auth".
+Phòng chơi trực tiếp đã chuyển sang Phòng cả lớp của `arena.html` (WebRTC ngang hàng, 0 lượt
+Firebase); không trang nào gọi `signInAnonymously` nữa. Có thể **tắt** provider Anonymous
+(Authentication → Sign-in method) để bớt bề mặt lạm dụng.
 
 ## 3. App Check — khai báo tên miền rồi Enforce
 

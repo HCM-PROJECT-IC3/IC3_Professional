@@ -36,10 +36,14 @@
       //   'all'       : mọi bài (như trước đây). An toàn tới ~10.000 bài/ngày.
       //   'test-only' : chỉ bài chế độ "Kiểm tra"; bài "Ôn luyện" chỉ lên Google
       //                 Sheet. Dùng khi phần lớn lưu lượng là ôn luyện.
-      //   'off'       : không ghi Firestore; mọi bài chỉ lên Google Sheet. Dùng cho
-      //                 ngày cao điểm hàng chục nghìn bài trở lên — dashboard giáo
-      //                 viên không có bài mới, xem kết quả ở Google Sheet.
-      firestore: 'all',
+      //   'off'       : không ghi Firestore; mọi bài chỉ lên Google Sheet (MẶC ĐỊNH từ
+      //                 15/10/2026). Dashboard (readFrom 'auto') tự đọc Sheet qua Apps
+      //                 Script — Sheet có cột P ChiTiet nên đủ mọi trường như quiz_results
+      //                 (sai/bỏ qua, bài, hết giờ, vi phạm). Học sinh mở trang và nộp bài
+      //                 KHÔNG nạp Firebase → 0 lượt ghi, 0 lượt reCAPTCHA (App Check).
+      //                 Apps Script bản cũ chưa có listResults → dashboard tự đọc Firestore.
+      // Đổi về 'all' chỉ khi muốn dashboard đọc Firestore (≤ ~9.000 bài/ngày).
+      firestore: 'off',
       // Gửi kèm lên Google Sheet (bản lưu lâu dài, không tốn hạn mức Firebase).
       // Khi firestore khác 'all', Sheet là nơi DUY NHẤT giữ bài không lên Firestore.
       sheet: true,
@@ -69,6 +73,17 @@
     //   'off'   : không ghi
     // Thao tác nhạy cảm (đẩy câu hỏi/roster lên GitHub, xoá bài nộp) Apps Script luôn tự ghi.
     activityLog: 'sheet',
+
+    // ── Phòng cả lớp của Đấu trường (arena.html, js/arena/arena-room.js) ──
+    // Chạy ngang hàng (WebRTC): máy giáo viên làm máy chủ, học sinh nối thẳng vào → 0 lượt
+    // Firebase. Máy chủ "bắt tay" mặc định là 0.peerjs.com (miễn phí, chỉ giúp 2 máy tìm
+    // nhau, không thấy câu hỏi/điểm). Nếu mạng trường chặn hoặc muốn tự chủ: tự chạy
+    // PeerServer (npx peer --port 9000) rồi khai báo ở đây, vd:
+    //   peer: { host: 'peer.truong.edu.vn', port: 443, path: '/', secure: true }
+    // Thêm máy TURN riêng (mạng chặn kết nối trực tiếp): peer: { config: { iceServers: [...] } }
+    arenaRoom: {
+      peer: {},
+    },
 
     // ── Firebase SDK trên trang học sinh ──
     // Trang học sinh KHÔNG nạp Firebase lúc mở trang nữa: chỉ nạp khi thật sự cần

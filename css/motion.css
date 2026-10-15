@@ -153,3 +153,9 @@ body.mo-page-exit {
     transform: none !important;
   }
 }
+
+/* Thuộc tính [hidden] LUÔN thắng: nhiều chỗ JS ẩn/hiện bằng el.hidden, nhưng quy tắc
+   display:flex/grid/block của class cùng phần tử đè mất display:none mặc định của trình
+   duyệt → phần tử "đã ẩn" vẫn hiện (vd đồng hồ 50:00 ở chế độ Ôn luyện, bảng KPI rỗng
+   trước khi tải xong). Có ở theme.css + motion.css + exam-simulator.css để phủ mọi trang. */
+[hidden] { display: none !important; }

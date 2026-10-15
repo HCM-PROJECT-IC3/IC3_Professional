@@ -34,6 +34,20 @@ require(path.join(__dirname, '..', 'apps-script-client.js'));
 require(path.join(__dirname, '..', 'sheet-results-api.js'));
 var S = globalThis.EduSheetResults;
 
+// ── Apps Script bản cũ chưa có listResults → tự quay về Firestore cho cả phiên tab ──
+(function () {
+  var store = {};
+  globalThis.sessionStorage = { getItem: function (k) { return k in store ? store[k] : null; }, setItem: function (k, v) { store[k] = String(v); }, removeItem: function (k) { delete store[k]; } };
+  var saved = JSON.stringify(EduBackend);
+  EduBackend.dashboard.readFrom = 'sheet';
+  assertEq('đọc Sheet được bật', S.enabled(), true);
+  assertEq('lỗi khác (mạng) không tắt Sheet', [S.noteError({ code: 'unavailable' }), S.enabled()], [false, true]);
+  assertEq("'not-found' → tắt Sheet cho phiên này (đọc Firestore)", [S.noteError({ code: 'not-found' }), S.enabled()], [true, false]);
+  delete store.eduquiz_sheet_api_missing;
+  assertEq('phiên mới → thử Sheet lại', S.enabled(), true);
+  globalThis.EduBackend = JSON.parse(saved);
+})();
+
 assertEq("auto + firestore 'all' → đọc Firestore", S.readFrom(), 'firestore');
 EduBackend.quizResults.firestore = 'test-only';
 assertEq("auto + 'test-only' → đọc Sheet", S.readFrom(), 'sheet');

@@ -52,5 +52,10 @@ var tie = A.classLeaderboard([
 ], [], mon);
 assertEq('hoà điểm → nhiều bài hơn đứng trước', tie.map(function (c) { return c.className; }), ['A', 'B']);
 
+// ── Học sinh xuất sắc: chỉ em đạt ≥ 80% (không phải top N bất kể điểm) ──
+var hs = [{ name: 'An', avgScore: 80 }, { name: 'Bình', avgScore: 40 }, { name: 'Chi', avgScore: 100 }, { name: 'Dũng' }];
+assertEq('xuất sắc: bỏ em dưới 80% và em chưa có điểm', A.topStudents(hs, 20).map(function (e) { return e.name; }), ['Chi', 'An']);
+assertEq('xuất sắc: ngưỡng tuỳ chỉnh', A.topStudents(hs, 20, 30).length, 3);
+
 console.log(failures ? '\n' + failures + ' FAIL' : '\nTất cả PASS');
 process.exit(failures ? 1 : 0);

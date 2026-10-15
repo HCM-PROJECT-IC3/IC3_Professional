@@ -1,13 +1,12 @@
 // ⚠️ FILE TẠO TỰ ĐỘNG từ apps/src/*.gs — đừng sửa tay ở đây.
 // Sửa file nguồn tương ứng rồi chạy: node scripts/build-apps-script.js
-// Thứ tự: 00-config.gs, 10-router.gs, 20-auth.gs, 30-submissions.gs, 35-mos.gs, 40-results.gs, 45-activity.gs, 50-reports.gs, 60-maps.gs, 70-github.gs, 80-sheet-setup.gs, 90-utils.gs
+// Thứ tự: 00-config.gs, 10-router.gs, 20-auth.gs, 30-submissions.gs, 35-mos.gs, 40-results.gs, 45-activity.gs, 47-arena.gs, 50-reports.gs, 60-maps.gs, 70-github.gs, 80-sheet-setup.gs, 90-utils.gs, 95-selftest.gs
 
 // ──────────────── 00-config.gs ────────────────
 /**
  * IC3_Professional — Backend Apps Script (Google Sheet + Firebase Auth)
  *
- * Backend của dự án chỉ gồm 2 phần: Firebase (tài khoản, roster, lịch dạy, phòng thi
- * trực tiếp) và Apps Script này (bài nộp, kết quả cho dashboard, bản đồ, đẩy dữ liệu
+ * Backend của dự án chỉ gồm 2 phần: Firebase (tài khoản, roster, lịch dạy) và Apps Script này (bài nộp, kết quả cho dashboard, bản đồ, đẩy dữ liệu
  * lên GitHub). Mọi API đi qua doPost — xem routes_() trong 10-router.gs.
  *
  * MÃ NGUỒN: apps/src/*.gs (mỗi file 1 nhiệm vụ). apps/Code.gs là bản GỘP để dán vào
@@ -25,7 +24,7 @@
  */
 
 // ====== CẤU HÌNH - THAY BẰNG ID THẬT CỦA BẠN ======
-const BACKEND_VERSION = '2026-10-14';
+const BACKEND_VERSION = '2026-10-15';
 const SPREADSHEET_ID_DATA = '16ty8LB6pnk5Xai1VauUAKfMbIaT88ewfNUAhWM0z5ck';      // Sheet chứa HocSinh + KetQua
 const SPREADSHEET_ID_REPORT = '16ty8LB6pnk5Xai1VauUAKfMbIaT88ewfNUAhWM0z5ck';    // Sheet chứa báo cáo tổng hợp (có thể trùng với ID trên nếu để chung 1 file, khác tab)
 
@@ -37,17 +36,19 @@ const SHEET_REPORT_SUMMARY = 'TongHop'; // nơi ghi báo cáo tổng hợp do da
 // js/backend-config.js chọn đọc từ Sheet. Cột: xem LOG_HEADERS.
 const SHEET_SUBMISSION_LOG = 'NhatKyNopBai';
 
-// Xoay vòng file nhật ký khi quá lớn — xem getSubmissionLogSheet_(). 300.000 dòng × 15
-// cột ≈ 4,5 triệu ô: còn xa trần 10 triệu ô/file, và file nhỏ thì appendRow vẫn nhanh.
+// Xoay vòng file nhật ký khi quá lớn — xem getSubmissionLogSheet_() / logTab_(). 300.000
+// dòng × 16 cột ≈ 4,8 triệu ô (sau khi cắt cột trống — tab mới mặc định 26 cột). Ngoài ra
+// còn xoay khi CẢ FILE vượt FILE_CELL_BUDGET (90-utils.gs) vì các tab nhật ký khác ở chung file.
 const MAX_LOG_ROWS = 300000;
 const LOG_SPREADSHEET_PROP = 'LOG_SPREADSHEET_ID'; // Script Properties: ID file nhật ký đang ghi
 const SHEET_LOG_CATALOG = 'DanhMucNhatKy';          // tab ở file chính: danh sách các file nhật ký
 const DEDUPE_TTL_SEC = 6 * 60 * 60;                   // CacheService giữ tối đa 6 giờ
 const LOG_HISTORY_PROP = 'LOG_SPREADSHEET_HISTORY';  // Script Properties: ID các file nhật ký đã tạo (cũ → mới)
-// Cột A..O của tab nhật ký. N (CheDo), O (CauSai — uid câu sai "a,b,c") thêm 10/2026 —
-// tự ghi tiêu đề nếu tab cũ chưa có.
+// Cột A..P của tab nhật ký. N (CheDo), O (CauSai — uid câu sai "a,b,c"), P (ChiTiet — JSON
+// gọn: sai/bỏ qua, giây làm bài, chương trình/cấp/bài, hết giờ, vi phạm nâng cao) thêm 10/2026 —
+// tự ghi tiêu đề nếu tab cũ chưa có. Có P thì Sheet đủ mọi trường của quiz_results.
 const LOG_HEADERS = ['SubmissionId', 'HoTen', 'Lop', 'Truong', 'BaiThi', 'Diem', 'SoCauDung',
-  'ThoiGianLam', 'SoLanChuyenTab', 'SoLanClick', 'TrangThai', 'ThoiGianNop', 'GhiChu', 'CheDo', 'CauSai'];
+  'ThoiGianLam', 'SoLanChuyenTab', 'SoLanClick', 'TrangThai', 'ThoiGianNop', 'GhiChu', 'CheDo', 'CauSai', 'ChiTiet'];
 const WRONG_MAX_UIDS = 30;     // tối đa số câu sai lưu mỗi bài (khớp js/services/result-submitter.js)
 const WRONG_STATS_TOP = 60;    // số câu hay sai nhất trả về cho dashboard
 
@@ -114,6 +115,7 @@ function routes_() {
     githubPublish: { roles: ROLES_ADMIN,   handler: githubPublish_ },
     publishRoster: { roles: ROLES_ADMIN,   handler: publishRoster_ },
     logActivity:   { roles: ROLES_STAFF,   handler: logActivity_ },
+    arenaRoomLog:  { roles: ROLES_STAFF,   handler: arenaRoomLog_ },
   };
 }
 
@@ -256,6 +258,30 @@ function validateSubmission_(p) {
     const uids = p.wrong.split(',');
     if (uids.length > WRONG_MAX_UIDS || uids.some(function (u) { return !/^[^,<>"'`&\r\n]{3,80}$/.test(u); })) bad('wrong');
   }
+  if (p.detail !== undefined && p.detail !== null) p.detail = cleanDetail_(p.detail, bad);
+}
+
+/**
+ * Cột P ChiTiet (js/services/result-submitter.js → detail): chỉ giữ đúng các khoá biết
+ * trước, số trong giới hạn, chữ ngắn → JSON gọn ≤ ~600 ký tự. Sai kiểu → từ chối bài.
+ */
+function cleanDetail_(d, bad) {
+  if (typeof d !== 'object' || Array.isArray(d)) bad('detail');
+  const n = function (v, max) {
+    const x = Number(v);
+    if (v !== undefined && v !== null && !(x >= 0 && x <= max)) bad('detail');
+    return Math.round(x || 0);
+  };
+  const t = function (v) {
+    if (v !== undefined && v !== null && typeof v !== 'string') bad('detail');
+    return String(v || '').slice(0, 160);
+  };
+  const v = Array.isArray(d.v) ? d.v.slice(0, 6) : [];
+  return {
+    i: n(d.i, 10000), s: n(d.s, 10000), e: n(d.e, 864000),
+    c: t(d.c), l: t(d.l), m: t(d.m), to: d.to ? 1 : 0,
+    v: v.map(function (x) { return n(x, 1e6); }),
+  };
 }
 
 /**
@@ -266,7 +292,7 @@ function validateSubmission_(p) {
  *
  * payload khớp với payload gửi từ js/googleSheet.js:
  * { submissionId, studentName, studentClass, studentSchool, testName,
- *   score, correct, time, tabSwitch, clickCount, status, timestamp, note, examMode, wrong }
+ *   score, correct, time, tabSwitch, clickCount, status, timestamp, note, examMode, wrong, detail }
  */
 function writeSubmissionLog_(payload) {
   validateSubmission_(payload);
@@ -304,7 +330,8 @@ function writeSubmissionLog_(payload) {
       asText_(payload.note),
       asText_(payload.examMode), // N — CheDo: 'practice' (Ôn luyện) | 'test' (Kiểm tra); bài cũ để trống
       // O — CauSai: uid câu sai "a,b,c"; "-" = không sai câu nào; trống = web cũ chưa gửi.
-      payload.wrong === '' ? '-' : asText_(payload.wrong)
+      payload.wrong === '' ? '-' : asText_(payload.wrong),
+      payload.detail ? JSON.stringify(payload.detail) : '' // P — ChiTiet (đã lọc ở cleanDetail_)
     ]);
     cache.put(dedupeKey, '1', DEDUPE_TTL_SEC);
   } finally {
@@ -331,35 +358,24 @@ function writeSubmissionLog_(payload) {
  * Gọi BÊN TRONG khoá của writeSubmissionLog_().
  */
 function getSubmissionLogSheet_() {
-  const props = PropertiesService.getScriptProperties();
-  const currentId = props.getProperty(LOG_SPREADSHEET_PROP);
+  const currentId = cachedProp_(LOG_SPREADSHEET_PROP); // qua cache — xem cachedProp_ (quota Properties)
   const sheet = currentId
     ? SpreadsheetApp.openById(currentId).getSheetByName(SHEET_SUBMISSION_LOG)
     : SpreadsheetApp.openById(SPREADSHEET_ID_REPORT).getSheetByName(SHEET_SUBMISSION_LOG);
   if (!sheet) {
     throw new Error('Chưa có tab "' + SHEET_SUBMISSION_LOG + '" trong Sheet báo cáo — xem HUONG_DAN.md để tạo.');
   }
-  if (sheet.getLastRow() < MAX_LOG_ROWS) {
-    ensureLogSheetLayout_(sheet);
-    return sheet;
-  }
+  ensureLogSheetLayout_(sheet);
+  if (!logTabFull_(sheet)) return sheet; // đầy theo số dòng HOẶC file sắp chạm trần 10 triệu ô
 
-  const stamp = Utilities.formatDate(new Date(), 'Asia/Ho_Chi_Minh', 'yyyy-MM-dd HH:mm');
-  const file = SpreadsheetApp.create(SHEET_SUBMISSION_LOG + ' ' + stamp);
-  const fresh = file.getSheets()[0].setName(SHEET_SUBMISSION_LOG);
-  fresh.getRange(1, 1, 1, LOG_HEADERS.length).setValues([LOG_HEADERS]).setFontWeight('bold');
-  fresh.setFrozenRows(1);
-  props.setProperty(LOG_SPREADSHEET_PROP, file.getId());
-  const history = JSON.parse(props.getProperty(LOG_HISTORY_PROP) || '[]');
-  history.push(file.getId());
-  props.setProperty(LOG_HISTORY_PROP, JSON.stringify(history));
-
-  const main = SpreadsheetApp.openById(SPREADSHEET_ID_REPORT);
-  const catalog = main.getSheetByName(SHEET_LOG_CATALOG) || main.insertSheet(SHEET_LOG_CATALOG);
-  if (catalog.getLastRow() === 0) catalog.appendRow(['TaoLuc', 'TenFile', 'DuongDan']);
-  catalog.appendRow([new Date(), file.getName(), file.getUrl()]);
-  ensureLogSheetLayout_(fresh);
-  return fresh;
+  const made = newLogFile_(SHEET_SUBMISSION_LOG, LOG_HEADERS);
+  setCachedProp_(LOG_SPREADSHEET_PROP, made.file.getId());
+  // Lịch sử file đọc thẳng Properties (không qua cache) để không mất file nào khi ghi lại.
+  const history = JSON.parse(PropertiesService.getScriptProperties().getProperty(LOG_HISTORY_PROP) || '[]');
+  history.push(made.file.getId());
+  setCachedProp_(LOG_HISTORY_PROP, JSON.stringify(history));
+  ensureLogSheetLayout_(made.sheet);
+  return made.sheet;
 }
 
 /**
@@ -376,6 +392,8 @@ function ensureLogSheetLayout_(sheet) {
     if (i >= 13 && !head[i]) sheet.getRange(1, i + 1).setValue(h); // chỉ cột thêm sau, không đè tiêu đề cũ
   });
   sheet.getRange('L2:L').setNumberFormat('HH:mm:ss d/M/yyyy');
+  const max = sheet.getMaxColumns(); // cột trống thừa vẫn tính vào trần 10 triệu ô/file
+  if (max > LOG_HEADERS.length) sheet.deleteColumns(LOG_HEADERS.length + 1, max - LOG_HEADERS.length);
   cache.put(flag, '1', DEDUPE_TTL_SEC);
 }
 
@@ -470,7 +488,7 @@ function writeMosLog_(p) {
   lock.waitLock(20000);
   try {
     if (cache.get(dedupeKey)) return { written: false, duplicate: true };
-    const sheet = ensureTab_(SPREADSHEET_ID_REPORT, SHEET_MOS_LOG, MOS_HEADERS);
+    const sheet = logTab_(SHEET_MOS_LOG, MOS_HEADERS); // tự sang file mới khi đầy — xem logTab_
     sheet.appendRow([
       asText_(p.submissionId), asText_(p.studentName), asText_(p.studentClass), asText_(p.studentSchool),
       asText_(p.projectTitle), asText_(p.projectId),
@@ -493,7 +511,7 @@ function writeMosLog_(p) {
 
 /** Các file nhật ký, MỚI NHẤT trước (file chính là cũ nhất). */
 function logSpreadsheetIds_() {
-  const history = JSON.parse(PropertiesService.getScriptProperties().getProperty(LOG_HISTORY_PROP) || '[]');
+  const history = JSON.parse(cachedProp_(LOG_HISTORY_PROP) || '[]');
   return history.slice().reverse().concat([SPREADSHEET_ID_REPORT]);
 }
 
@@ -521,7 +539,7 @@ function logRowToResult_(r, ms) {
   const flags = [];
   if (!integrityOk) flags.push(status.replace(/^⚠️\s*/, ''));
   if (note && note !== 'Hết giờ') note.split('; ').forEach(function (x) { if (x) flags.push(x); });
-  return {
+  const out = {
     id: r[0], studentName: r[1], studentClass: r[2], studentSchool: r[3], testName: r[4],
     category: parts[0] || '', level: parts[1] || '', minitest: parts.slice(2).join(' › '),
     score: Number(r[5]) || 0, correct: correct, total: total,
@@ -534,6 +552,24 @@ function logRowToResult_(r, ms) {
     examMode: r[13] || '', wrong: r[14] && r[14] !== '-' ? String(r[14]).split(',') : [], wrongTracked: !!r[14],
     submittedAtMs: ms, source: 'sheet'
   };
+  return applyDetail_(out, r[15]);
+}
+
+/** Cột P ChiTiet (bài nộp từ 10/2026): ghi đè các trường ở trên bằng số liệu chính xác. */
+function applyDetail_(out, raw) {
+  if (!raw) return out;
+  let d;
+  try { d = JSON.parse(raw); } catch (e) { return out; }
+  if (!d || typeof d !== 'object') return out;
+  out.incorrect = Number(d.i) || 0;
+  out.skipped = Number(d.s) || 0;
+  if (Number(d.e) > 0) out.elapsedSec = Number(d.e);
+  if (d.c || d.l || d.m) { out.category = String(d.c || ''); out.level = String(d.l || ''); out.minitest = String(d.m || ''); }
+  out.timedOut = !!d.to;
+  const v = Array.isArray(d.v) ? d.v : [];
+  ['multiTabHits', 'fullscreenExits', 'appSwitches', 'devtoolsHits', 'shortcutBlocks', 'printAttempts']
+    .forEach(function (k, i) { out[k] = Number(v[i]) || 0; });
+  return out;
 }
 
 /**
@@ -599,8 +635,13 @@ function listResults_(p, who) {
     const sheet = SpreadsheetApp.openById(ids[f]).getSheetByName(SHEET_SUBMISSION_LOG);
     if (!sheet) continue;
     let end = sheet.getLastRow();
+    // Dashboard làm mới (sinceMs) thường chỉ có vài chục bài mới: đọc khối nhỏ trước rồi
+    // tăng ×4 — trước đây luôn đọc 5.000 dòng × 16 cột (~1–2 giây Apps Script/lần làm mới,
+    // chiếm 1 trong 30 lượt chạy song song mà học sinh nộp bài cũng cần).
+    let chunk = sinceMs ? 200 : READ_CHUNK_ROWS;
     while (end >= 2 && !done) {
-      const start = Math.max(2, end - READ_CHUNK_ROWS + 1);
+      const start = Math.max(2, end - chunk + 1);
+      chunk = Math.min(READ_CHUNK_ROWS, chunk * 4);
       const n = end - start + 1;
       const shown = sheet.getRange(start, 1, n, LOG_HEADERS.length).getDisplayValues();
       const times = sheet.getRange(start, 12, n, 1).getValues();
@@ -678,7 +719,7 @@ const ACTIVITY_ACTIONS = ['login', 'logout', 'view_student_detail', 'export_exce
 function logActivity_(p, who) {
   const activity = String(p.activity || '');
   if (ACTIVITY_ACTIONS.indexOf(activity) === -1) throw appError_('invalid-argument', 'Hành động không hợp lệ: ' + activity);
-  const sheet = ensureTab_(SPREADSHEET_ID_REPORT, SHEET_ACTIVITY_LOG, ACTIVITY_HEADERS);
+  const sheet = logTab_(SHEET_ACTIVITY_LOG, ACTIVITY_HEADERS);
   // appendRow tự an toàn khi nhiều lượt gọi cùng lúc; không cần khoá (không chống trùng).
   sheet.appendRow([
     new Date(), who.uid, who.role, activity,
@@ -697,6 +738,51 @@ function auditServer_(activity, who, meta) {
   } catch (e) {
     console.warn('Không ghi được nhật ký ' + activity + ': ' + e);
   }
+}
+
+// ──────────────── 47-arena.gs ────────────────
+// ====== ĐẤU TRƯỜNG — PHÒNG CẢ LỚP (arena.html) ======
+// Router: arenaRoomLog (tài khoản quản trị đã đăng nhập — người dẫn phòng). Ghi tab NhatKyDauTruong.
+// Phòng cả lớp chạy NGANG HÀNG trên máy người dẫn (WebRTC, js/arena/arena-room.js) — 0 lượt
+// Firebase. Hết trận, người dẫn bấm "Lưu lên Google Sheet" → ĐÚNG 1 lượt gọi cho cả phòng
+// (thay vì mỗi câu trả lời 1 lượt ghi Firestore như live-quiz.html cũ). Mỗi người chơi 1 dòng.
+
+const SHEET_ARENA_LOG = 'NhatKyDauTruong';
+const ARENA_HEADERS = ['ThoiGian', 'MaPhong', 'CheDo', 'BoCau', 'Hang', 'BietDanh', 'Diem', 'SoCauDung',
+  'SoCauHoi', 'ChuoiDungDaiNhat', 'NguoiDan', 'BatDau', 'KetThuc'];
+const ARENA_MAX_PLAYERS = 80;   // khớp EduArenaRoomCore.MAX_PLAYERS
+const ARENA_MAX_QUESTIONS = 200;
+
+/** p: { summary: EduArenaRoomCore.summary(room) } */
+function arenaRoomLog_(p, who) {
+  const s = p.summary || {};
+  const code = String(s.code || '');
+  if (!/^[2-9A-HJKMNP-Z]{6}$/.test(code)) throw appError_('invalid-argument', 'Mã phòng không hợp lệ.');
+  if (s.mode !== 'speed' && s.mode !== 'race') throw appError_('invalid-argument', 'Chế độ không hợp lệ.');
+  const players = Array.isArray(s.players) ? s.players : [];
+  if (!players.length || players.length > ARENA_MAX_PLAYERS) throw appError_('invalid-argument', 'Danh sách người chơi không hợp lệ.');
+  const questions = Math.max(0, Math.min(ARENA_MAX_QUESTIONS, Number(s.questions) || 0));
+  const num = (v, max) => Math.max(0, Math.min(max, Math.round(Number(v) || 0)));
+  const time = (v) => (Number(v) > 0 ? new Date(Number(v)) : '');
+
+  // Gửi lại cùng 1 phòng (bấm 2 lần, mạng chập chờn) → không ghi trùng.
+  const cache = CacheService.getScriptCache();
+  const key = 'arena:' + code + ':' + (Number(s.endedAt) || 0);
+  if (cache.get(key)) return { written: 0, duplicate: true };
+
+  const sheet = logTab_(SHEET_ARENA_LOG, ARENA_HEADERS);
+  const now = new Date();
+  const mode = s.mode === 'speed' ? 'Tốc độ' : 'Đua về đích';
+  players.forEach(function (pl, i) {
+    sheet.appendRow([
+      now, code, mode, asText_(String(s.title || '').slice(0, 150)),
+      num(pl.rank || i + 1, ARENA_MAX_PLAYERS), asText_(String(pl.name || '').slice(0, 30)),
+      num(pl.value, 100000), num(pl.correct, ARENA_MAX_QUESTIONS), questions, num(pl.bestStreak, ARENA_MAX_QUESTIONS),
+      who.uid, time(s.startedAt), time(s.endedAt),
+    ]);
+  });
+  cache.put(key, '1', DEDUPE_TTL_SEC);
+  return { written: players.length };
 }
 
 // ──────────────── 50-reports.gs ────────────────
@@ -1037,6 +1123,7 @@ function onOpen() {
     .addItem('📊 Cập nhật bảng Thống Kê + biểu đồ', 'setupThongKeSheet_')
     .addSeparator()
     .addItem('🚀 Chạy tất cả', 'runAllSetup_')
+    .addItem('🩺 Kiểm tra sau khi deploy', 'kiemTraSauDeploy')
     .addToUi();
 }
 
@@ -1382,5 +1469,144 @@ function ensureTab_(spreadsheetId, name, headers) {
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight('bold');
     sheet.setFrozenRows(1);
   }
+  trimColumnsOnce_(sheet, headers.length);
   return sheet;
+}
+
+// ====== TRẦN 10 TRIỆU Ô / FILE ======
+// Google Sheet tính CẢ Ô TRỐNG vào trần 10 triệu ô mỗi file. Tab mới mặc định 26 cột →
+// tab nhật ký 300.000 dòng thật ra chiếm 7,8 triệu ô (không phải 300.000 × 16), và các tab
+// nhật ký khác (MOS, hoạt động, Đấu trường) cùng nằm trong file chính → file đầy trước khi
+// kịp xoay vòng, mọi lần ghi sau đó báo lỗi. Nay: cắt cột trống thừa + xoay vòng theo TỔNG
+// số ô của cả file (FILE_CELL_BUDGET), áp dụng cho mọi tab nhật ký.
+const FILE_CELL_BUDGET = 8000000; // chừa 2 triệu ô cho tab khác + phần tăng giữa 2 lần đo
+
+/** Xoá cột trống phía sau `n` cột dữ liệu (tối đa 1 lần/6 giờ mỗi tab — cờ trong cache). */
+function trimColumnsOnce_(sheet, n) {
+  const cache = CacheService.getScriptCache();
+  const flag = 'trim:' + sheet.getParent().getId() + ':' + sheet.getName();
+  if (cache.get(flag)) return;
+  const max = sheet.getMaxColumns();
+  if (max > n) sheet.deleteColumns(n + 1, max - n);
+  cache.put(flag, '1', DEDUPE_TTL_SEC);
+}
+
+/** Tổng số ô (kể cả trống) của file — đo lại tối đa 15 phút/lần (getSheets tốn thời gian). */
+function fileCells_(ss) {
+  const cache = CacheService.getScriptCache();
+  const key = 'cells:' + ss.getId();
+  const hit = cache.get(key);
+  if (hit) return Number(hit);
+  const n = ss.getSheets().reduce(function (sum, sh) { return sum + sh.getMaxRows() * sh.getMaxColumns(); }, 0);
+  cache.put(key, String(n), 900);
+  return n;
+}
+
+/** Tab nhật ký đầy (quá MAX_LOG_ROWS dòng) hoặc file chứa nó sắp chạm trần ô → cần file mới. */
+function logTabFull_(sheet) {
+  return sheet.getLastRow() >= MAX_LOG_ROWS || fileCells_(sheet.getParent()) >= FILE_CELL_BUDGET;
+}
+
+/** Tạo file mới chỉ có 1 tab `name` (đúng số cột), ghi vào DanhMucNhatKy của file chính. */
+function newLogFile_(name, headers) {
+  const stamp = Utilities.formatDate(new Date(), 'Asia/Ho_Chi_Minh', 'yyyy-MM-dd HH:mm');
+  const file = SpreadsheetApp.create(name + ' ' + stamp);
+  const fresh = file.getSheets()[0].setName(name);
+  fresh.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight('bold');
+  fresh.setFrozenRows(1);
+  const max = fresh.getMaxColumns();
+  if (max > headers.length) fresh.deleteColumns(headers.length + 1, max - headers.length);
+  const main = SpreadsheetApp.openById(SPREADSHEET_ID_REPORT);
+  const catalog = main.getSheetByName(SHEET_LOG_CATALOG) || main.insertSheet(SHEET_LOG_CATALOG);
+  if (catalog.getLastRow() === 0) catalog.appendRow(['TaoLuc', 'TenFile', 'DuongDan']);
+  catalog.appendRow([new Date(), file.getName(), file.getUrl()]);
+  return { file: file, sheet: fresh };
+}
+
+/**
+ * Tab nhật ký phụ (NhatKyMOS, NhatKyHoatDong, NhatKyDauTruong...) để appendRow: nằm ở file
+ * chính cho tới khi đầy, rồi tự chuyển sang file riêng "<tên tab> <ngày giờ>" (Script
+ * Property LOGFILE_<tên tab>, đọc qua cache). Bài nộp IC3 có hàm riêng getSubmissionLogSheet_.
+ */
+function logTab_(name, headers) {
+  const key = 'LOGFILE_' + name;
+  const sheet = ensureTab_(cachedProp_(key) || SPREADSHEET_ID_REPORT, name, headers);
+  if (!logTabFull_(sheet)) return sheet;
+  const made = newLogFile_(name, headers);
+  setCachedProp_(key, made.file.getId());
+  return made.sheet;
+}
+
+/**
+ * Script Property đọc qua CacheService. PropertiesService của tài khoản Gmail thường chỉ
+ * cho 50.000 lượt đọc/ghi MỖI NGÀY — trước đây MỖI bài nộp đọc LOG_SPREADSHEET_ID (và mỗi
+ * lần dashboard tải đọc lịch sử file nhật ký) → mùa thi 100.000 bài/ngày vượt trần, Apps
+ * Script báo lỗi quota cho mọi bài nộp sau đó. CacheService không giới hạn lượt; hết hạn /
+ * bị dọn thì đọc lại Properties 1 lần. Giá trị null lưu thành '\u0000'.
+ */
+function cachedProp_(key) {
+  const cache = CacheService.getScriptCache();
+  const hit = cache.get('prop:' + key);
+  if (hit !== null && hit !== undefined) return hit === '\u0000' ? null : hit;
+  const v = PropertiesService.getScriptProperties().getProperty(key);
+  cache.put('prop:' + key, v === null || v === undefined ? '\u0000' : v, DEDUPE_TTL_SEC);
+  return v === undefined ? null : v;
+}
+
+/** Ghi Script Property + cập nhật luôn bản trong cache (các lượt chạy khác thấy ngay). */
+function setCachedProp_(key, value) {
+  PropertiesService.getScriptProperties().setProperty(key, value);
+  CacheService.getScriptCache().put('prop:' + key, value, DEDUPE_TTL_SEC);
+}
+
+// ──────────────── 95-selftest.gs ────────────────
+// ====== KIỂM TRA SAU KHI DEPLOY (chạy tay trong editor hoặc menu 🎯 Công cụ IC3) ======
+// Dán apps/Code.gs mới → Save → chọn hàm kiemTraSauDeploy → Run → xem "Execution log".
+// Ghi 1 bài nộp MẪU (mã SELFTEST...), đọc lại qua listResults_ để chắc cột P ChiTiet được
+// ghi/đọc đúng, rồi XOÁ ngay dòng mẫu đó. Không đụng Firestore, không gửi email (status OK).
+
+function kiemTraSauDeploy() {
+  const out = [];
+  const ok = function (label, cond, detail) { out.push((cond ? '✅ ' : '❌ ') + label + (detail ? ' — ' + detail : '')); return cond; };
+  const id = 'SELFTEST' + Date.now();
+  let written = false;
+  try {
+    ok('Phiên bản backend', true, BACKEND_VERSION);
+    ok('Có đủ API mới', ['listResults', 'wrongStats', 'arenaRoomLog'].every(function (k) { return !!routes_()[k]; }));
+
+    const res = writeSubmissionLog_({
+      submissionId: id, studentName: 'Kiểm tra hệ thống', studentClass: 'SELFTEST', studentSchool: 'SELFTEST',
+      testName: 'Kiểm tra › sau › deploy', score: 50, correct: '5/10', time: '01:40', tabSwitch: 0, clickCount: 1,
+      status: 'OK', timestamp: '', note: '', examMode: 'test', wrong: '',
+      detail: { i: 3, s: 2, e: 100, c: 'Kiểm tra', l: 'sau', m: 'deploy', to: 0, v: [1, 0, 0, 0, 0, 0] },
+    });
+    written = ok('Ghi bài nộp mẫu', res.written === true);
+
+    const rows = listResults_({ schools: ['SELFTEST'], limit: 5 }, { uid: 'selftest', role: 'admin', schools: null }).rows;
+    const r = rows.filter(function (x) { return x.id === id; })[0];
+    ok('Đọc lại bài mẫu qua listResults_', !!r);
+    ok('Cột P ChiTiet ghi + đọc đúng', !!r && r.incorrect === 3 && r.skipped === 2 && r.elapsedSec === 100 && r.minitest === 'deploy' && r.multiTabHits === 1,
+      r ? 'sai=' + r.incorrect + ', bỏ qua=' + r.skipped + ', giây=' + r.elapsedSec : '');
+
+    const sheet = getSubmissionLogSheet_();
+    const head = sheet.getRange(1, 1, 1, LOG_HEADERS.length).getDisplayValues()[0];
+    ok('Tiêu đề cột P = ChiTiet', head[15] === 'ChiTiet', head[15] || '(trống)');
+    ok('Không thừa cột trống (trần 10 triệu ô tính cả ô trống)', sheet.getMaxColumns() === LOG_HEADERS.length, sheet.getMaxColumns() + ' cột');
+    const cells = fileCells_(sheet.getParent());
+    ok('File nhật ký còn dưới ngưỡng xoay vòng', cells < FILE_CELL_BUDGET, cells.toLocaleString() + ' / ' + FILE_CELL_BUDGET.toLocaleString() + ' ô');
+    const a = cachedProp_(LOG_SPREADSHEET_PROP);
+    ok('Đọc Script Properties qua cache', a === cachedProp_(LOG_SPREADSHEET_PROP), a ? 'đang ghi file ' + a : 'đang ghi file chính');
+  } catch (e) {
+    ok('Lỗi khi kiểm tra', false, String(e && e.message || e));
+  } finally {
+    if (written) {
+      const del = deleteResults_({ ids: [id] }, { uid: 'selftest', role: 'admin', schools: null });
+      ok('Xoá bài mẫu', del.deleted === 1);
+      CacheService.getScriptCache().remove('sub:' + id);
+    }
+  }
+  const text = out.join('\n');
+  console.log(text);
+  try { SpreadsheetApp.getUi().alert('Kiểm tra sau deploy', text, SpreadsheetApp.getUi().ButtonSet.OK); } catch (e) { /* chạy trong editor: xem Execution log */ }
+  return out;
 }

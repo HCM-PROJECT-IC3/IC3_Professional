@@ -4,7 +4,7 @@
 
 /** Các file nhật ký, MỚI NHẤT trước (file chính là cũ nhất). */
 function logSpreadsheetIds_() {
-  const history = JSON.parse(PropertiesService.getScriptProperties().getProperty(LOG_HISTORY_PROP) || '[]');
+  const history = JSON.parse(cachedProp_(LOG_HISTORY_PROP) || '[]');
   return history.slice().reverse().concat([SPREADSHEET_ID_REPORT]);
 }
 
@@ -32,7 +32,7 @@ function logRowToResult_(r, ms) {
   const flags = [];
   if (!integrityOk) flags.push(status.replace(/^⚠️\s*/, ''));
   if (note && note !== 'Hết giờ') note.split('; ').forEach(function (x) { if (x) flags.push(x); });
-  return {
+  const out = {
     id: r[0], studentName: r[1], studentClass: r[2], studentSchool: r[3], testName: r[4],
     category: parts[0] || '', level: parts[1] || '', minitest: parts.slice(2).join(' › '),
     score: Number(r[5]) || 0, correct: correct, total: total,
@@ -45,6 +45,24 @@ function logRowToResult_(r, ms) {
     examMode: r[13] || '', wrong: r[14] && r[14] !== '-' ? String(r[14]).split(',') : [], wrongTracked: !!r[14],
     submittedAtMs: ms, source: 'sheet'
   };
+  return applyDetail_(out, r[15]);
+}
+
+/** Cột P ChiTiet (bài nộp từ 10/2026): ghi đè các trường ở trên bằng số liệu chính xác. */
+function applyDetail_(out, raw) {
+  if (!raw) return out;
+  let d;
+  try { d = JSON.parse(raw); } catch (e) { return out; }
+  if (!d || typeof d !== 'object') return out;
+  out.incorrect = Number(d.i) || 0;
+  out.skipped = Number(d.s) || 0;
+  if (Number(d.e) > 0) out.elapsedSec = Number(d.e);
+  if (d.c || d.l || d.m) { out.category = String(d.c || ''); out.level = String(d.l || ''); out.minitest = String(d.m || ''); }
+  out.timedOut = !!d.to;
+  const v = Array.isArray(d.v) ? d.v : [];
+  ['multiTabHits', 'fullscreenExits', 'appSwitches', 'devtoolsHits', 'shortcutBlocks', 'printAttempts']
+    .forEach(function (k, i) { out[k] = Number(v[i]) || 0; });
+  return out;
 }
 
 /**
@@ -110,8 +128,13 @@ function listResults_(p, who) {
     const sheet = SpreadsheetApp.openById(ids[f]).getSheetByName(SHEET_SUBMISSION_LOG);
     if (!sheet) continue;
     let end = sheet.getLastRow();
+    // Dashboard làm mới (sinceMs) thường chỉ có vài chục bài mới: đọc khối nhỏ trước rồi
+    // tăng ×4 — trước đây luôn đọc 5.000 dòng × 16 cột (~1–2 giây Apps Script/lần làm mới,
+    // chiếm 1 trong 30 lượt chạy song song mà học sinh nộp bài cũng cần).
+    let chunk = sinceMs ? 200 : READ_CHUNK_ROWS;
     while (end >= 2 && !done) {
-      const start = Math.max(2, end - READ_CHUNK_ROWS + 1);
+      const start = Math.max(2, end - chunk + 1);
+      chunk = Math.min(READ_CHUNK_ROWS, chunk * 4);
       const n = end - start + 1;
       const shown = sheet.getRange(start, 1, n, LOG_HEADERS.length).getDisplayValues();
       const times = sheet.getRange(start, 12, n, 1).getValues();
