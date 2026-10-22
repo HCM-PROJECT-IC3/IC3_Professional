@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Gom kết quả bài làm của học sinh từ mã/file học sinh gửi — chạy trên máy giáo viên, không cần mạng, không cần tài khoản.">
+<title>Gom kết quả — EduQuiz</title>
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/theme-inherit.js"></script>
+<link rel="stylesheet" href="css/accessibility.css">
+<link rel="stylesheet" href="css/result-pack.css">
+</head>
+<body class="gk-body">
+<!--
+  Giáo viên gom kết quả học sinh gửi bằng mã/file (từ nút "Lưu kết quả để nộp cho thầy/cô"
+  ở màn Kết quả của index.html). Toàn bộ chạy trong trình duyệt: không gọi Firebase, không
+  gọi Google Sheet, không đăng nhập, không lưu gì lên máy chủ — dữ liệu chỉ nằm trong tab này.
+  Logic mã/CSV: js/services/result-pack.js. Giao diện: js/gom-ket-qua.js.
+-->
+<main class="gk-wrap">
+  <div class="gk-head">
+    <h1>📥 Gom kết quả học sinh</h1>
+    <a class="gk-btn" href="index.html">← Về trang làm bài</a>
+  </div>
+
+  <section class="gk-card" aria-labelledby="gkAddTitle">
+    <h2 id="gkAddTitle">1. Thêm kết quả</h2>
+    <p class="gk-note">Học sinh làm xong bài → bấm <b>Lưu kết quả để nộp cho thầy/cô</b> → gửi cho thầy/cô mã hoặc file. Thầy/cô dán mã (nhiều học sinh cùng lúc cũng được) hoặc chọn nhiều file vào đây. Trang này không cần mạng.</p>
+    <label class="gk-drop" id="gkDrop" for="gkFiles">
+      <b>Chọn file kết quả</b> (.txt) hoặc kéo thả vào đây — chọn được nhiều file một lúc
+      <input type="file" id="gkFiles" accept=".txt,.eqr,text/plain" multiple hidden>
+    </label>
+    <label for="gkText" class="gk-note" style="display:block;margin-top:.7rem">Hoặc dán mã vào ô dưới (mỗi học sinh một dòng, dán lẫn lời nhắn cũng được):</label>
+    <textarea class="gk-text" id="gkText" spellcheck="false" placeholder="EQR1.eyJ2IjoxLC4uLg.1a2b3c4d"></textarea>
+    <div class="gk-row">
+      <button type="button" class="gk-btn primary" id="gkAddText">Thêm vào bảng</button>
+      <button type="button" class="gk-btn" id="gkClear">Xoá hết, làm lại</button>
+    </div>
+    <p class="gk-note" id="gkMsg" aria-live="polite"></p>
+    <p class="gk-note">Kết quả đã gom được <b>lưu ngay trên trình duyệt này</b> để lần sau mở lại vẫn còn. Dùng máy chung (phòng máy, máy mượn)? Tải CSV xong hãy bấm <b>Xoá hết, làm lại</b> để không để lại tên học sinh trên máy.</p>
+    <ul class="gk-errors" id="gkErrors" hidden></ul>
+  </section>
+
+  <section class="gk-card" aria-labelledby="gkStatTitle">
+    <h2 id="gkStatTitle">2. Tổng quan</h2>
+    <div class="gk-stats" id="gkStats"></div>
+    <div class="gk-row">
+      <label for="gkFilterClass" class="gk-note">Lọc theo lớp:</label>
+      <select id="gkFilterClass" class="gk-btn"><option value="">Tất cả lớp</option></select>
+      <label for="gkFilterTest" class="gk-note">Bài:</label>
+      <select id="gkFilterTest" class="gk-btn"><option value="">Tất cả bài</option></select>
+    </div>
+  </section>
+
+  <section class="gk-card" aria-labelledby="gkTableTitle">
+    <h2 id="gkTableTitle">3. Bảng điểm</h2>
+    <div class="gk-row" style="margin:0 0 .6rem">
+      <button type="button" class="gk-btn primary" id="gkCsv" disabled>Tải bảng điểm (Excel/CSV)</button>
+      <span class="gk-note">Bấm vào tiêu đề cột để sắp xếp. Điểm dưới 50% tô đỏ.</span>
+    </div>
+    <div class="gk-table-wrap">
+      <table class="gk-table" id="gkTable">
+        <thead><tr id="gkHead"></tr></thead>
+        <tbody id="gkBody"><tr><td colspan="9" class="gk-note">Chưa có kết quả nào.</td></tr></tbody>
+      </table>
+    </div>
+    <p class="gk-note" style="margin-top:.8rem">Lưu ý: mã chỉ có phần kiểm tra lỗi chép (thiếu/sai ký tự). Mã này <b>không chống</b> học sinh cố tình tự tạo mã giả — với kỳ kiểm tra cần chống gian lận, dùng đường nộp bài có tài khoản hoặc Phòng cả lớp ở Đấu trường.</p>
+  </section>
+</main>
+<script src="js/services/result-pack.js"></script>
+<script src="js/gom-ket-qua.js"></script>
+</body>
+</html>

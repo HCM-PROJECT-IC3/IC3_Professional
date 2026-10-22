@@ -1,0 +1,41 @@
+/* Xuất mã kết quả (index.html #resultPack) + trang gom kết quả (gom-ket-qua.html). Dùng biến màu của theme.css. */
+.result-pack { margin-top: .6rem; }
+.result-pack[hidden], .result-pack-panel[hidden] { display: none; }
+.result-pack > .btn-secondary { width: 100%; }
+.result-pack-panel { margin-top: .6rem; padding: .8rem; border-radius: 12px; background: var(--card, rgba(127,127,127,.08)); border: 1px solid rgba(127,127,127,.25); text-align: left; }
+.result-pack-hint { margin: 0 0 .5rem; font-size: .85rem; line-height: 1.45; opacity: .85; }
+.result-pack-code { width: 100%; box-sizing: border-box; min-height: 4.5rem; padding: .5rem; border-radius: 8px; border: 1px solid rgba(127,127,127,.35); background: transparent; color: inherit; font: .72rem/1.35 'Space Mono', ui-monospace, monospace; word-break: break-all; resize: vertical; }
+.result-pack-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .5rem; }
+.result-pack-actions .btn-secondary { flex: 1 1 8rem; }
+.result-pack-link { background: none; border: 0; padding: .3rem 0 0; color: inherit; text-decoration: underline; font-size: .8rem; cursor: pointer; opacity: .8; }
+.result-pack-msg { margin: .4rem 0 0; font-size: .82rem; min-height: 1.1em; }
+
+/* Trang gom kết quả */
+.gk-wrap { max-width: 1100px; margin: 0 auto; padding: 1rem; }
+.gk-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: 1rem; }
+.gk-head h1 { margin: 0; font-size: 1.4rem; }
+.gk-card { padding: 1rem; border-radius: 14px; border: 1px solid rgba(127,127,127,.25); background: var(--card, rgba(127,127,127,.06)); margin-bottom: 1rem; }
+.gk-card h2 { margin: 0 0 .6rem; font-size: 1.05rem; }
+.gk-drop { display: block; padding: 1.1rem; border: 2px dashed rgba(127,127,127,.5); border-radius: 12px; text-align: center; cursor: pointer; }
+.gk-drop.is-over { background: rgba(127,127,127,.12); }
+.gk-text { width: 100%; box-sizing: border-box; min-height: 6rem; margin-top: .6rem; padding: .5rem; border-radius: 8px; border: 1px solid rgba(127,127,127,.35); background: transparent; color: inherit; font: .78rem/1.35 'Space Mono', ui-monospace, monospace; }
+.gk-row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-top: .6rem; }
+.gk-btn { padding: .5rem .9rem; border-radius: 10px; border: 1px solid rgba(127,127,127,.4); background: transparent; color: inherit; font: inherit; font-weight: 700; cursor: pointer; }
+.gk-btn.primary { background: var(--purple, #6c5ce7); border-color: transparent; color: #fff; }
+.gk-btn:disabled { opacity: .45; cursor: not-allowed; }
+.gk-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: .6rem; }
+.gk-stat { padding: .6rem; border-radius: 10px; background: rgba(127,127,127,.1); text-align: center; }
+.gk-stat b { display: block; font-size: 1.4rem; }
+.gk-stat span { font-size: .78rem; opacity: .8; }
+.gk-table-wrap { overflow-x: auto; }
+.gk-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.gk-table th, .gk-table td { padding: .45rem .55rem; border-bottom: 1px solid rgba(127,127,127,.2); text-align: left; white-space: nowrap; }
+.gk-table th { cursor: pointer; user-select: none; position: sticky; top: 0; background: var(--card, #fff); }
+.gk-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.gk-low { color: #d63031; font-weight: 700; }
+.gk-warn { color: #b7791f; }
+.gk-errors { margin: .5rem 0 0; padding-left: 1.1rem; font-size: .82rem; color: #d63031; }
+.gk-note { font-size: .82rem; opacity: .8; line-height: 1.5; }
+.gk-body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; line-height: 1.5; }
+.gk-body a.gk-btn { text-decoration: none; display: inline-block; }
+.gk-body .gk-table th { background: var(--card); }

@@ -81,8 +81,14 @@
     // PeerServer (npx peer --port 9000) rồi khai báo ở đây, vd:
     //   peer: { host: 'peer.truong.edu.vn', port: 443, path: '/', secure: true }
     // Thêm máy TURN riêng (mạng chặn kết nối trực tiếp): peer: { config: { iceServers: [...] } }
+    //
+    // Mạng trường chặn WebRTC trực tiếp? PeerJS đã kèm sẵn TURN miễn phí; muốn thêm TURN riêng
+    // (ổn định hơn cho lớp đông) khai ở `turn` — danh sách được GỘP với máy chủ mặc định, không
+    // thay thế. Ví dụ:
+    //   turn: [{ urls: 'turn:turn.truong.edu.vn:3478', username: 'user', credential: 'pass' }]
     arenaRoom: {
       peer: {},
+      turn: [],
     },
 
     // ── Firebase SDK trên trang học sinh ──
