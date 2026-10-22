@@ -100,7 +100,10 @@ body {
    thay cho ảnh nền cũ, vẫn giữ cảm giác "có chiều sâu" cho gradient. */
 #lobby::after {
   content: '';
-  position: absolute;
+  /* fixed (không còn absolute theo chiều cao #lobby): lobby cao lên khi JS đổ danh sách trường/lớp/bài
+     vào ô chọn làm lớp nền 120% này đổi kích thước → bị tính là dịch chuyển bố cục (CLS 0,13) từ khi
+     nội dung hiện sớm hơn. Neo theo khung nhìn thì kích thước cố định, trông vẫn như cũ. */
+  position: fixed;
   inset: -10%;
   z-index: 0;
   pointer-events: none;
@@ -3761,3 +3764,6 @@ a.arena-open small {
 @media (min-width: 1400px) and (min-height: 850px) {
   .lobby-card #mtModeToggle .mt-mode-btn { font-size: .82rem; min-height: 3.7rem; }
 }
+
+/* Nút "Tải sẵn để dùng offline" (js/offline-pack.js): nằm riêng 1 hàng đầy đủ dưới 3 nút phụ cho khỏi lẻ cột. */
+.lobby-extras > #btnOfflinePack { grid-column: 1 / -1; }

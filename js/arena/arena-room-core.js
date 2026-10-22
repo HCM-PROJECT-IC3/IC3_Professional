@@ -9,6 +9,12 @@
    Điểm dùng đúng công thức của Đấu trường 1 người (js/arena/arena-core.js):
      • speed — Tốc độ kiểu Kahoot: 500..1000 theo tốc độ + thưởng chuỗi đúng
      • race  — Đua về đích: đúng +1 bước, 3 câu đúng liên tiếp +2 bước
+   Thẻ thưởng (chỉ chế độ Tốc độ, kiểu Gimkit/Blooket, máy người dẫn cấp và áp dụng — học
+   sinh không gửi gì thêm nên không gian lận được):
+     • cứ đúng liền 3 · 6 · 9... câu → nhận 1 thẻ, lần lượt 🃏 x2 rồi 🛡️ Khiên
+     • 🃏 x2: câu ĐÚNG kế tiếp được nhân đôi điểm (cả điểm chuỗi)
+     • 🛡️ Khiên: câu trả lời SAI kế tiếp không làm mất chuỗi (không trừ điểm — vốn đã không trừ)
+     • thẻ vừa nhận chỉ dùng được từ câu sau; tự dùng, không cần bấm
    ============================================================ */
 (function (global) {
   'use strict';
@@ -20,6 +26,9 @@
   const ANSWER_GRACE_MS = 1500; // trễ mạng: câu trả lời tới muộn tối đa chừng này vẫn nhận
   const MAX_PLAYERS = 80;
   const KEY_OF = { speed: 'score', race: 'pos' };
+  const CARD_EVERY = 3;                 // đúng liền bao nhiêu câu thì nhận 1 thẻ
+  const CARD_CYCLE = ['x2', 'shield'];  // thứ tự thẻ nhận được
+  const newCards = () => ({ x2: 0, shield: 0 });
 
   function makeCode(rng) {
     let s = '';
@@ -75,7 +84,7 @@
     const player = {
       cid, name: uniqueName(room, clean, cid), face: String(face || '🙂').slice(0, 8),
       // log[i]: vào giữa chừng thì các câu trước để trống = "không trả lời"
-      score: 0, pos: 0, streak: 0, bestStreak: 0, correct: 0, log: [], online: true, kicked: false,
+      score: 0, pos: 0, streak: 0, bestStreak: 0, correct: 0, log: [], online: true, kicked: false, cards: newCards(),
     };
     room.players[cid] = player;
     room.order.push(cid);
@@ -154,9 +163,15 @@
       const a = room.answers[id];
       const ok = !!a && a.k === q.correctIdx;
       if (a) counts[a.k]++;
-      let pts = 0, bonus = 0, step = 0;
+      let pts = 0, bonus = 0, step = 0, card = '', used = '';
       if (room.mode === 'speed') {
-        if (ok) { p.streak++; pts = C.speedPoints(true, a.ms, limit); bonus = C.streakBonus(p.streak); } else p.streak = 0;
+        const cards = p.cards || (p.cards = newCards());
+        if (ok) {
+          p.streak++; pts = C.speedPoints(true, a.ms, limit); bonus = C.streakBonus(p.streak);
+          if (cards.x2 > 0) { cards.x2--; used = 'x2'; pts *= 2; bonus *= 2; }              // dùng thẻ đang giữ TRƯỚC khi nhận thẻ mới
+          if (p.streak % CARD_EVERY === 0) { card = CARD_CYCLE[(p.streak / CARD_EVERY - 1) % CARD_CYCLE.length]; cards[card]++; }
+        } else if (a && cards.shield > 0) { cards.shield--; used = 'shield'; }              // trả lời sai nhưng có Khiên → giữ chuỗi
+        else p.streak = 0;
         p.score += pts + bonus;
       } else {
         step = C.raceStep(p, ok, room.goal); // raceStep tự cập nhật p.streak
@@ -165,6 +180,7 @@
       p.bestStreak = Math.max(p.bestStreak, p.streak);
       p.log[room.i] = a ? (ok ? 1 : 0) : -1; // 1 đúng, 0 sai, -1 không trả lời
       results[id] = { ok, k: a ? a.k : null, pts, bonus, step, streak: p.streak };
+      if (room.mode === 'speed') Object.assign(results[id], { card, used, cards: { x2: p.cards.x2, shield: p.cards.shield } });
     });
     room.phase = 'reveal';
     const board = leaderboard(room);
@@ -189,7 +205,7 @@
     const key = KEY_OF[room.mode];
     return activeIds(room).map((id, idx) => {
       const p = room.players[id];
-      return { cid: id, name: p.name, face: p.face, value: p[key], correct: p.correct, online: p.online, idx };
+      return { cid: id, name: p.name, face: p.face, value: p[key], correct: p.correct, streak: p.streak || 0, online: p.online, idx };
     }).sort((a, b) => (b.value - a.value) || (b.correct - a.correct) || (a.idx - b.idx));
   }
 
@@ -277,13 +293,13 @@
     let r;
     try { r = typeof json === 'string' ? JSON.parse(json) : json; } catch (e) { return null; }
     if (!r || r.v !== 1 || !Array.isArray(r.deck) || !r.players || !Array.isArray(r.order)) return null;
-    Object.values(r.players).forEach((p) => { p.online = false; });
+    Object.values(r.players).forEach((p) => { p.online = false; if (!p.cards) p.cards = newCards(); });
     if (r.phase === 'q') reveal(r); // đang dở câu → chốt luôn với câu trả lời đã nhận
     return r;
   }
 
   global.EduArenaRoomCore = {
-    CODE_LEN, ANSWER_GRACE_MS, MAX_PLAYERS, KEY_OF,
+    CODE_LEN, ANSWER_GRACE_MS, MAX_PLAYERS, KEY_OF, CARD_EVERY, CARD_CYCLE,
     makeCode, normCode, peerId, cleanName, createRoom, join, leave, kick, setOnline, activeIds,
     publicQuestion, openNext, canAdvance, submit, allAnswered, answeredCount, reveal, leaderboard,
     isDone, finish, asked, personalEnd, toCsv, summary, snapshot, restore, current,

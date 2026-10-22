@@ -47,7 +47,18 @@ dashboard theo dõi tiến độ cho điều phối đào tạo/giáo viên.
   toàn trên máy, 0 lượt Firebase.
 - **Chống lag / mất mạng** (`sw.js`): lưu đệm file tĩnh của chính web
   (không đụng Firebase); mạng trường chập chờn vẫn mở trang và làm bài
-  đã tải.
+  đã tải. Nút **"Tải sẵn để dùng offline"** ở sảnh (`js/offline-pack.js`) tải
+  trọn câu hỏi + ảnh của khối đang chọn vào bộ nhớ máy để làm bài khi mất
+  mạng; có `manifest.webmanifest` + icon (`img/pwa/`) nên học sinh **cài lên
+  màn hình chính** điện thoại như 1 ứng dụng. Font Google/icon CDN không lưu
+  được (offline dùng font hệ thống).
+- **Nộp kết quả bằng mã/file, giáo viên gom** (`js/services/result-pack.js`,
+  `gom-ket-qua.html`): nộp bài xong máy học sinh giữ mã `EQR1.…`; màn Kết quả
+  có nút Chép mã / Tải file. Giáo viên mở `gom-ket-qua.html`, dán mã hoặc chọn
+  nhiều file → bảng điểm + CSV, **không cần mạng/tài khoản**, kết quả đã gom
+  được giữ trên trình duyệt đó. Mã chỉ có CRC32 bắt lỗi chép sai — **không
+  chống làm giả có chủ ý**; kỳ kiểm tra cần chống gian lận dùng đường nộp có
+  tài khoản (Sheet/Firestore) hoặc Phòng cả lớp.
 - **Soạn đề kiểu Kahoot** (giáo viên, tab "Soạn đề" trong
   `ic3-dashboard.html`, `js/exam-builder.js`): tự soạn 5 dạng câu (trắc
   nghiệm, nhiều đáp án, Đúng/Sai, sắp xếp, nối cặp) kèm ảnh + giải thích,
@@ -68,8 +79,12 @@ dashboard theo dõi tiến độ cho điều phối đào tạo/giáo viên.
   điểm; máy giáo viên tải lại trang vẫn điều khiển tiếp. Kết quả lưu trên
   máy giáo viên (20 phòng gần nhất, tải CSV có Đ/S từng câu) và — tuỳ chọn
   — 1 lượt Apps Script/phòng lên tab `NhatKyDauTruong` (cần đăng nhập giáo
-  viên). Máy chủ "bắt tay" mặc định `0.peerjs.com`; tự chạy máy chủ riêng:
-  `EduBackend.arenaRoom` trong `js/backend-config.js`.
+  viên). Sảnh phòng hiện **mã QR** (`js/vendor/qrcode.min.js`) để học sinh
+  quét bằng camera. Chế độ Tốc độ có **thẻ thưởng**: đúng liền 3 câu → 🃏 x2
+  (nhân đôi điểm câu đúng kế tiếp), liền 6 → 🛡️ Khiên (giữ chuỗi khi sai); bảng
+  xếp hạng hiện 🔥 chuỗi. Máy chủ "bắt tay" mặc định `0.peerjs.com`; tự chạy máy
+  chủ riêng hoặc thêm TURN cho mạng chặn WebRTC: `EduBackend.arenaRoom`
+  (`peer`, `turn`) trong `js/backend-config.js`.
 - **Dashboard báo cáo** (điều phối đào tạo / giáo viên / admin): thống
   kê điểm theo lớp/chủ đề/thời gian, quản lý danh sách học sinh (nạp từ
   Excel), quản lý lịch giảng dạy, trang Social nội bộ cho giáo viên.
@@ -102,7 +117,7 @@ js/                         Toàn bộ logic — 1 file/tính năng (không bund
   ├─ quiz-engine.js          Lõi: chọn bài, chấm điểm, chống gian lận
   ├─ coordinator/, teacher/  Data loader + dashboard riêng từng vai trò
   ├─ repositories/           Lớp truy cập Firestore dùng chung (CRUD)
-  ├─ services/                Cache, analytics, hàng đợi gửi lại khi mất mạng
+  ├─ services/                Cache, analytics, hàng đợi gửi lại khi mất mạng, mã kết quả (result-pack)
   ├─ exam-engine/, word-engine/, excel-engine/, ppt-engine/
   │                           Mô phỏng thao tác thực hành theo từng ứng dụng
   └─ game-*.js                Hạ tầng dùng chung cho mini-game (modal, SFX...)

@@ -164,6 +164,10 @@
     const toFirestore = wantsFirestore(examMode, p);
     const toSheet = wantsSheet(examMode, p);
 
+    // Luôn giữ 1 mã kết quả ngay trên máy học sinh (xuất cho giáo viên gom khi mạng yếu — xem
+    // js/services/result-pack.js). Chỉ ghi localStorage, không mạng; lỗi bị nuốt bên trong.
+    if (global.EduResultPack) global.EduResultPack.remember(payloads.sheet);
+
     if (toSheet) {
       const jitter = Math.max(0, Number(p.sheetJitterMs) || 0) * Math.random();
       setTimeout(() => sendOrQueue('google_sheet', 'saveToGoogleSheet', payloads.sheet), jitter);

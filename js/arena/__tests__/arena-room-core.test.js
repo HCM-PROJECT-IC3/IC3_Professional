@@ -126,5 +126,50 @@ var back = R.restore(R.snapshot(mid));
 assertEq('khôi phục: câu đang dở được chốt với câu trả lời đã nhận', [back.phase, back.players.x.score, back.players.x.online], ['reveal', 1000, false]);
 assertEq('khôi phục: dữ liệu hỏng → null', [R.restore('{bad'), R.restore({ v: 2 })], [null, null]);
 
+// ── Thẻ thưởng (Tốc độ): đúng liền 3 → 🃏 x2, liền 6 → 🛡️ Khiên ──
+function cardDeck(n) { var d = []; for (var i = 0; i < n; i++) d.push({ text: 'C' + i, options: ['a', 'b'], correctIdx: 0, img: '', uid: 'k' + i, expl: '' }); return d; }
+function play(rm, answers) {   // answers[cid] = chỉ số đáp án, null = bỏ trống; trả kết quả riêng của từng người
+  R.openNext(rm, 0);
+  Object.keys(answers).forEach(function (cid) { if (answers[cid] !== null) R.submit(rm, cid, rm.i, answers[cid], 0); });
+  return R.reveal(rm).results;
+}
+var cr = R.createRoom({ code: 'CRD234', mode: 'speed', deck: cardDeck(9), count: 9, secs: 20 });
+R.join(cr, { cid: 'a', name: 'A' });
+var out = [];
+for (var q = 0; q < 3; q++) out.push(play(cr, { a: 0 }).a);
+assertEq('câu 1-2: chưa có thẻ', [out[0].card, out[1].card], ['', '']);
+assertEq('câu 3 (đúng liền 3): nhận thẻ x2, 1000 + 200', [out[2].card, out[2].pts + out[2].bonus, out[2].cards], ['x2', 1200, { x2: 1, shield: 0 }]);
+var r4 = play(cr, { a: 0 }).a;
+assertEq('câu 4: tự dùng x2 → nhân đôi (1000+300)×2', [r4.used, r4.pts, r4.bonus, r4.cards.x2], ['x2', 2000, 600, 0]);
+play(cr, { a: 0 });
+var r6 = play(cr, { a: 0 }).a;
+assertEq('câu 6 (đúng liền 6): nhận thẻ Khiên', [r6.card, r6.streak, r6.cards.shield], ['shield', 6, 1]);
+var r7 = play(cr, { a: 1 }).a;
+assertEq('câu 7 sai + có Khiên: giữ chuỗi, dùng Khiên, 0 điểm', [r7.ok, r7.used, r7.streak, r7.pts + r7.bonus, r7.cards.shield], [false, 'shield', 6, 0, 0]);
+var r8 = play(cr, { a: 1 }).a;
+assertEq('câu 8 sai lần nữa (hết Khiên): mất chuỗi', [r8.used, r8.streak], ['', 0]);
+assertEq('bảng xếp hạng có chuỗi hiện tại', R.leaderboard(cr)[0].streak, 0);
+assertEq('chuỗi dài nhất vẫn được ghi nhận', cr.players.a.bestStreak, 6);
+
+// Thẻ vừa nhận KHÔNG áp dụng cho chính câu vừa nhận; bỏ trống không được Khiên bảo vệ
+var c2 = R.createRoom({ code: 'CRE234', mode: 'speed', deck: cardDeck(8), count: 8, secs: 20 });
+R.join(c2, { cid: 'b', name: 'B' });
+for (var j = 0; j < 6; j++) play(c2, { b: 0 });                       // đang giữ x2 đã dùng + 1 Khiên
+var skip = play(c2, { b: null }).b;
+assertEq('không trả lời: Khiên không cứu chuỗi', [skip.used, skip.streak, skip.cards.shield], ['', 0, 1]);
+
+// Chế độ Đua: không có thẻ; người vào giữa chừng / phòng khôi phục từ bản cũ vẫn chạy
+var race = R.createRoom({ code: 'RCE234', mode: 'race', deck: cardDeck(6), count: 3, secs: 20 });
+R.join(race, { cid: 'r', name: 'R' });
+var rr = play(race, { r: 0 }).r;
+assertEq('Đua: kết quả không có trường thẻ', [rr.card, rr.used, rr.cards], [undefined, undefined, undefined]);
+var legacy = R.createRoom({ code: 'OLD234', mode: 'speed', deck: cardDeck(3), count: 3, secs: 20 });
+R.join(legacy, { cid: 'o', name: 'O' });
+var snap = JSON.parse(R.snapshot(legacy));
+delete snap.players.o.cards;                                         // bản lưu trước khi có thẻ thưởng
+var old = R.restore(snap);
+assertEq('khôi phục bản cũ: tự có túi thẻ rỗng', old.players.o.cards, { x2: 0, shield: 0 });
+assertEq('… và chơi tiếp bình thường', play(old, { o: 0 }).o.pts, 1000);
+
 console.log(failures ? '\n' + failures + ' test FAIL' : '\nTất cả test PASS');
 process.exit(failures ? 1 : 0);

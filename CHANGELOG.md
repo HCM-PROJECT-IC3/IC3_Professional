@@ -1,5 +1,44 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## Cài như ứng dụng (PWA) + trang gom kết quả giữ dữ liệu (21/10/2026)
+
+- **Cài lên màn hình chính** (`manifest.webmanifest`, `img/pwa/*`, gắn vào `index.html` và `arena.html`): Chrome báo đủ điều kiện cài (không lỗi manifest/installability). Icon từ `favicon.svg`: 192/512 bo góc, bản maskable 512 và `apple-touch-icon` 180 nền tràn (dấu tick nằm trong vùng an toàn 80%). Có lối tắt "Đấu trường". Kết hợp nút "Tải sẵn để dùng offline": cài rồi mở từ màn hình chính vẫn chạy khi mất mạng. Nút tải sẵn nay cũng lưu `gom-ket-qua.html`, manifest và icon.
+- **`gom-ket-qua.html` giữ dữ liệu khi đóng tab** (`js/gom-ket-qua.js`): các mã đã gom lưu vào `localStorage` của trình duyệt giáo viên (tối đa 2.000 bài) và nạp lại khi mở lần sau. Chỉ lưu **mã gốc** và kiểm tra lại từng mã mỗi lần nạp (dữ liệu bị sửa tay hoặc hỏng JSON bị bỏ qua, không vỡ trang). Nút "Xoá hết, làm lại" xoá cả bộ nhớ; trang có dòng nhắc dùng máy chung thì xoá sau khi tải CSV. `localStorage` bị chặn → vẫn dùng được và cảnh báo nhớ tải CSV.
+- `EduResultPack.parseMany` trả thêm `codes` (mã gốc từng dòng) — tương thích ngược; thêm 1 kiểm tra trong `result-pack.test.js`.
+- README cập nhật: tải sẵn offline/PWA, mã kết quả + trang gom, QR, thẻ thưởng, cấu hình TURN.
+
+## Tải trang sảnh nhanh hơn: hiện nội dung sớm ~0,9 giây (21/10/2026)
+
+Đo bằng Lighthouse mobile (giả lập Slow 4G + CPU chậm 4×) trên máy chủ tĩnh có gzip, mạng ngoài bị chặn nên **không đo được font Google/icon CDN**; số đo chỉ để so sánh trước/sau, chạy 3 lần lấy trung vị.
+
+| Chỉ số | Trước | Sau |
+|---|---|---|
+| Performance | 79 | ~87 (85–89) |
+| FCP | 3,3 s | 1,7 s |
+| Speed Index | 4,8 s | ~2,8 s |
+| CLS | 0 | 0,009 |
+| Accessibility / Best Practices / SEO | 100 / 96 / 100 | 100 / 96 / 100 |
+
+- **Nguyên nhân chính**: các hiệu ứng mở trang (`moPageEnter` của `body` ở `css/motion.css`, `lobbyFadeIn` của `#lobby`, `cardRise`/`lobbyRise` của thẻ form, logo, link giáo viên) đều bắt đầu từ `opacity:0` nên trình duyệt chưa tính là đã hiển thị nội dung cho tới khi chạy xong (~0,9 s). `index.html` có khối `<style>` cuối `<head>` tắt các hiệu ứng mờ dần này; chỉ còn thẻ form trượt nhẹ lên (chỉ `transform`, không đụng opacity), tắt hẳn khi `prefers-reduced-motion`. Các trang khác không đổi.
+- **CSS không cần cho lần vẽ đầu tải không chặn** (`review-detail`, `learning-hub`, `result-pack`, `motion`): `media="print"` + `onload` đổi sang `all`, có `<noscript>` dự phòng. Vị trí trong DOM giữ nguyên nên thứ tự cascade không đổi. `style.css`, `theme.css`, `accessibility.css`, `a11y-assistant.css` vẫn chặn render như cũ.
+- **`global-error-handler.js` thêm `defer`**: vẫn chạy đầu tiên trong dãy script defer và `index.html` không có script nội tuyến chạy sớm hơn, nên vẫn bắt lỗi của mọi script còn lại; bỏ ~0,3 s chặn render.
+- **Chống dịch chuyển bố cục** (`style.css` § `#lobby::after`): lớp nền blob màu đổi `absolute` → `fixed`. Khi nội dung hiện sớm hơn, lobby cao lên lúc JS đổ danh sách vào ô chọn làm lớp nền 120% này đổi kích thước (CLS 0,13). Giao diện nhìn như cũ.
+- Nút "Tải sẵn để dùng offline" nằm trọn 1 hàng thay vì lẻ 1 cột.
+- **Chưa làm (có chủ ý)**: tách `style.css` (36 KB gzip, ~86% chưa dùng ở sảnh) thành phần sảnh + phần bài thi, và minify JS/CSS. Tách CSS làm đổi thứ tự cascade nên cần so sánh giao diện từng dạng câu hỏi trước khi đưa lên; minify chỉ giảm vài KB gzip. Lighthouse sau đây vẫn báo "chưa nén" và "cache ngắn" (GitHub Pages cố định `max-age=600`).
+- Đã kiểm tra lại: toàn bộ unit test, `check-js`, 27 + 12 kiểm tra trình duyệt cũ, và một lượt thật sảnh → làm bài → nộp → màn kết quả (CSS tải không chặn vẫn áp dụng, bảng xuất mã hiển thị đúng).
+
+## Phòng thi P2P: QR, offline-first, gom kết quả, thẻ thưởng (19/10/2026)
+
+- **QR vào phòng** (`js/arena/arena-room.js`, `js/vendor/qrcode.min.js` — qrcode-generator 1.4.4, MIT): sảnh phòng của giáo viên hiện mã QR của link `arena.html?phong=MÃ`; học sinh quét bằng camera điện thoại. Thư viện chỉ nạp khi mở sảnh phòng. Đã quét thử bằng bộ giải mã QR thật.
+- **TURN riêng** (`js/backend-config.js` → `arenaRoom.turn`): mạng trường chặn WebRTC thì khai thêm máy TURN; danh sách được GỘP với STUN/TURN mặc định của PeerJS (không đè mất). Để trống = chạy y như trước. Thông báo lỗi khi không nối được máy chủ trung gian nay có gợi ý cách xử lý.
+- **Tải sẵn để dùng offline** (`js/offline-pack.js`, `sw.js`, nút ở sảnh `index.html`): tải trọn ngân hàng câu hỏi của khối đang chọn + từng bài + ảnh trong câu hỏi + khung trang (index, arena) vào Cache Storage. Mất mạng vẫn mở trang, làm bài, chơi Đấu trường tự chơi. `CACHE_VERSION` v1 → v2 (xoá cache cũ). Font Google/icon CDN không lưu được (offline dùng font hệ thống). `arena.html` nay cũng đăng ký Service Worker.
+- **Xuất kết quả thành mã/file** (`js/services/result-pack.js`, `js/result-pack-ui.js`): nộp bài xong, máy học sinh tự lưu mã `EQR1.…` (60 bài gần nhất, chỉ localStorage); màn Kết quả có nút Chép mã / Tải file / Tải tất cả. Không đổi đường nộp hiện có (Sheet/Firestore, hàng đợi gửi lại).
+- **Trang giáo viên gom kết quả** (`gom-ket-qua.html`, `js/gom-ket-qua.js`): dán mã hoặc chọn nhiều file → bảng điểm (sắp xếp, lọc lớp/bài, tô đỏ < 50%) + tải CSV. Chạy hoàn toàn trên máy, không mạng, không đăng nhập; tên học sinh đưa lên trang bằng `textContent` (không chèn HTML); CSV chặn công thức độc. Link từ sảnh index.
+  - **Giới hạn trung thực**: mã chỉ có CRC32 để bắt lỗi chép sai/thiếu — KHÔNG chống học sinh cố tình tự tạo mã giả. Kỳ kiểm tra cần chống gian lận vẫn dùng đường nộp có tài khoản hoặc Phòng cả lớp.
+- **Thẻ thưởng + chuỗi trong Phòng cả lớp, chế độ Tốc độ** (`js/arena/arena-room-core.js`): đúng liền 3 câu → thẻ 🃏 x2 (câu đúng kế tiếp nhân đôi điểm), liền 6 → 🛡️ Khiên (câu sai kế tiếp không mất chuỗi), cứ 3 câu đúng nhận 1 thẻ luân phiên. Máy giáo viên cấp và áp dụng, học sinh không gửi thêm gì nên không gian lận được. Bảng xếp hạng hiện 🔥 chuỗi từ 3. Phòng lưu từ bản cũ tự có túi thẻ rỗng. Chế độ Đua không đổi.
+- **Sảnh `index.html`**: thêm `role="main"` và gắn `for=` cho 7 nhãn ô chọn (a11y). Ảnh `img/` đã tối ưu sẵn (thử nén chỉ giảm 1,5%) nên giữ nguyên, không đánh đổi chất lượng.
+- Test: thêm `js/services/__tests__/result-pack.test.js` (27 kiểm tra) và 13 kiểm tra thẻ thưởng trong `arena-room-core.test.js`; `validate-data`, `check-js` (158 file), toàn bộ unit test đều đạt. Đã chạy thử trong Chromium: tải sẵn → tắt hẳn máy chủ → vẫn mở trang/đọc câu hỏi/ảnh từ cache; xuất mã → trang gom → CSV; QR → giải mã đúng link; giao diện thẻ thưởng.
+
 ## Bài nộp chỉ lưu Google Sheet + vá giới hạn Apps Script (15/10/2026)
 
 - **Mặc định `quizResults.firestore: 'off'`** (`js/backend-config.js`): học sinh làm bài/nộp bài không nạp Firebase → 0 lượt ghi Firestore, 0 lượt reCAPTCHA (trần 10.000/tháng). Dashboard giáo viên / điều phối / tab Báo cáo tự đọc Google Sheet qua Apps Script.
