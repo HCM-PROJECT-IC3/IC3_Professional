@@ -3654,8 +3654,6 @@ a.arena-open small {
 .lobby-brand-name { font-size: clamp(1.3rem, 2.2vw, 1.7rem); }
 
 /* Link giáo viên/quản trị: nhỏ, kín đáo, dưới form */
-.lobby-staff-link { margin: 1rem auto 0; font-size: .78rem; padding: .4rem .85rem; opacity: .8; box-shadow: none; animation: none; }
-.lobby-staff-link:hover { opacity: 1; }
 
 /* Màn hẹp: form chiếm gần hết bề ngang, bỏ khoảng trống thừa */
 @media (max-width: 900px) {
@@ -3855,3 +3853,60 @@ a.arena-open small { background: var(--orange); }
 }
 .exam-countdown .xc-edit:hover { color: var(--purple); border-color: var(--purple); }
 .exam-countdown .xc-input { position: absolute; right: .5rem; top: 100%; z-index: 5; margin-top: .25rem; padding: .35rem .5rem; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); font: inherit; }
+
+/* ══════════════════════════════════════════════════════════════
+   SẢNH: KHỐI "VIỆC THÊM" + DẢI "DÀNH CHO THẦY CÔ" (10/2026)
+   Trước: mọi nút phụ nằm trong cột 3 → cột 3 dài gấp đôi, cột 1–2 để trống
+   cả mảng lớn; 2 link giáo viên là nút nhỏ mờ dưới thẻ, khó thấy.
+     ≥1400 (3 cột): "c1 c2 c3" / "x x x" — việc thêm thành 1 hàng ngang dưới cả 3 cột.
+     960–1399 (2 cột): "c1 c3" / "c2 c3" / "x x" — việc thêm 2 hàng dưới cả 2 cột.
+     <960: 1 cột, thứ tự như cũ.
+   Ghi đè grid-template-areas/rows ở § FORM KHÔNG LÃNG PHÍ phía trên.
+   ══════════════════════════════════════════════════════════════ */
+.lobby-col-more .lobby-extras { margin-top: .8rem; }
+.lobby-staff {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .5rem .7rem;
+  margin-top: 1.1rem; padding-top: 1rem; border-top: 1px solid var(--border);
+}
+.lobby-staff-label { font-size: .85rem; font-weight: 700; color: var(--muted); margin-right: .2rem; }
+.lobby-staff-label i { margin-right: .25rem; }
+.lobby-staff-btn {
+  display: inline-flex; align-items: center; gap: .45rem; min-height: 2.6rem; padding: .45rem 1rem;
+  border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--text);
+  font-size: .9rem; font-weight: 700; text-decoration: none;
+}
+.lobby-staff-btn i { color: var(--purple); }
+[data-theme="dark"] .lobby-staff-btn i { color: #aab6ff; }
+.lobby-staff-btn:hover { border-color: var(--purple); color: var(--purple); }
+.lobby-staff-btn:focus-visible { outline: 3px solid var(--purple); outline-offset: 2px; }
+@media (max-width: 520px) {
+  .lobby-staff-label { flex-basis: 100%; text-align: center; }
+  .lobby-staff-btn { flex: 1 1 100%; justify-content: center; }
+}
+
+@media (min-width: 960px) {
+  .lobby-col-more { grid-area: x; }
+  .lobby-staff { grid-area: f; }
+}
+@media (min-width: 960px) and (max-width: 1399px) {
+  /* Giữ "c1 c3 / c2 c3" + hàng 1fr như cũ (cột 3 kéo dài không tạo khe giữa bước 1 và 2) */
+  .lobby-card { grid-template-areas: "c1 c3" "c2 c3" "x x" "f f"; grid-template-rows: auto 1fr auto auto; }
+}
+@media (min-width: 1400px) {
+  /* 1 hàng ngang dưới cả 3 cột: Thử thách (2) · Đếm ngược (2) · 4 nút phụ (1 mỗi nút) */
+  .lobby-card { grid-template-areas: "c1 c2 c3" "x x x" "f f f"; grid-template-rows: auto auto auto; }
+  .lobby-card .lobby-col-more .lobby-extras { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+}
+@media (min-width: 960px) {
+  .lobby-col-more { margin-top: 1.2rem; padding-top: 1.2rem; border-top: 1px solid var(--border); }
+  .lobby-col-more .lobby-extras { margin-top: 0; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .lobby-col-more .lobby-extras > .dc-open-btn,
+  .lobby-col-more .lobby-extras > .exam-countdown { grid-column: span 2; }
+  .lobby-col-more .lobby-extras > #btnOfflinePack { grid-column: auto; }
+}
+.lobby-col-more #offlinePackStatus:empty { display: none; }
+/* Chế độ Kiểm tra: cột 3 có thêm ô thời gian + cam kết (cao hơn hẳn) → việc thêm lên dưới cột 1–2 */
+@media (min-width: 1400px) {
+  .lobby-card.is-test-mode { grid-template-areas: "c1 c2 c3" "x x c3" "f f f"; }
+  .lobby-card.is-test-mode .lobby-col-more .lobby-extras { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}

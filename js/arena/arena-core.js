@@ -7,6 +7,8 @@
      • speed — "Tốc độ" kiểu Kahoot: điểm theo tốc độ, chuỗi đúng, bóng ma kỷ lục
      • gold  — "Săn vàng" kiểu Blooket Gold Quest: đúng → mở 1 trong 3 rương
      • race  — "Đua về đích" kiểu Blooket Racing: đúng → tiến 1 bước
+     • tug   — "Kéo co" 2 đội · spell — "Đấu phép" · heist — "Giải mã" (kiểu Wayground)
+     • board — "Bảng điểm" kiểu Board Battle: giáo viên trình chiếu, các đội không cần máy
    + Linh vật: xu kiếm được khi chơi → mở hộp → sưu tập (localStorage).
    0 lượt Firebase, 0 Apps Script — không gửi gì ra ngoài.
    ============================================================ */
@@ -454,6 +456,180 @@
   }
 
   // ============================================================
+  // KÉO CO (kiểu Tug of War của Wayground) — 2 đội, dùng chung 1 người + Phòng cả lớp
+  // ============================================================
+  const TUG_GOAL = 100;  // dây lệch hẳn về 1 phía 100 vạch → đội đó thắng ngay
+  const TUG_K = 30;      // chênh lệch lực kéo TRUNG BÌNH mỗi câu × hệ số này = số vạch dây dịch
+  const TEAMS = { red: { name: 'Đội Đỏ', icon: '🔴' }, blue: { name: 'Đội Xanh', icon: '🔵' } };
+  /** Lực kéo 1 người ở 1 câu: sai/bỏ trống 0 · đúng 1 · đúng trong nửa đầu thời gian 2. */
+  function tugPull(ok, ms, limitMs) { return ok ? (limitMs && ms <= limitMs / 2 ? 2 : 1) : 0; }
+  /**
+   * Dịch dây sau 1 câu. red/blue = mảng lực kéo từng thành viên (vắng = 0). Lấy trung bình mỗi đội
+   * nên đội đông hơn không được lợi. rope > 0 = nghiêng về Đội Đỏ.
+   */
+  function tugStep(rope, red, blue) {
+    const avg = (a) => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0);
+    const next = Math.max(-TUG_GOAL, Math.min(TUG_GOAL, rope + Math.round((avg(red) - avg(blue)) * TUG_K)));
+    return { rope: next, delta: next - rope };
+  }
+  function tugWinner(rope) { return rope > 0 ? 'red' : rope < 0 ? 'blue' : ''; }
+  /** Người mới vào đội đang ít người hơn (bằng nhau → Đỏ). */
+  function tugTeamFor(counts) { return (counts.blue || 0) < (counts.red || 0) ? 'blue' : 'red'; }
+
+  // ============================================================
+  // ĐẤU PHÉP (kiểu WayArena) — đúng thì chọn 1 trong 3 phép: tấn công, phòng thủ, hồi máu
+  // ============================================================
+  const SPELL_HP = 100;
+  const SPELLS = {
+    fire: { icon: '🔥', name: 'Cầu lửa', tip: 'Gây 25 sát thương cho 1 đối thủ', kind: 'hit', power: 25, w: 30 },
+    bolt: { icon: '⚡', name: 'Sấm sét', tip: 'Gây 12 sát thương cho mọi đối thủ', kind: 'all', power: 12, w: 18 },
+    drain: { icon: '🌀', name: 'Hút máu', tip: 'Lấy 15 máu của 1 đối thủ', kind: 'drain', power: 15, w: 14 },
+    shield: { icon: '🛡️', name: 'Khiên phép', tip: 'Chặn trọn đòn đánh kế tiếp nhắm vào em', kind: 'shield', power: 0, w: 20 },
+    heal: { icon: '💚', name: 'Hồi phục', tip: 'Hồi 25 máu', kind: 'heal', power: 25, w: 18 },
+  };
+  const ATTACKS = ['fire', 'bolt', 'drain'];
+  /** 3 phép khác nhau, luôn có ít nhất 1 phép tấn công. */
+  function rollSpells(rng) {
+    const pool = Object.keys(SPELLS).map((id) => ({ id, w: SPELLS[id].w }));
+    const out = [];
+    while (out.length < 3) {
+      const id = pickWeighted(pool.filter((x) => !out.includes(x.id)), rng).id;
+      out.push(id);
+    }
+    if (!out.some((id) => ATTACKS.includes(id))) out[Math.floor(rng() * 3)] = 'fire';
+    return out;
+  }
+  /** Trả lời càng nhanh phép càng mạnh: ×1.0 (hết giờ) … ×1.5 (tức thì). */
+  function spellBoost(ms, limitMs) { return limitMs ? 1 + 0.5 * Math.max(0, 1 - ms / limitMs) : 1; }
+  const alive = (p) => p.hp > 0;
+  /**
+   * Thi triển phép. Sửa trực tiếp hp/shield/dmg/outAt. target chỉ cần cho fire/drain.
+   * Trả { hits:[{ target, amount, blocked, ko }], heal } để hiện thông báo.
+   */
+  function castSpell(caster, id, target, players, boost, i) {
+    const S = SPELLS[id];
+    const res = { hits: [], heal: 0 };
+    if (!S || !alive(caster)) return res;
+    const hit = (t) => {
+      if (!t || t === caster || !alive(t)) return 0;
+      if (t.shield) { t.shield = false; res.hits.push({ target: t, amount: 0, blocked: true, ko: false }); return 0; }
+      const amount = Math.min(t.hp, Math.round(S.power * boost));
+      t.hp -= amount;
+      caster.dmg = (caster.dmg || 0) + amount;
+      if (t.hp <= 0) { t.hp = 0; t.outAt = i; }
+      res.hits.push({ target: t, amount, blocked: false, ko: t.hp <= 0 });
+      return amount;
+    };
+    if (S.kind === 'hit') hit(target);
+    else if (S.kind === 'all') players.forEach((p) => { if (p !== caster) hit(p); });
+    else if (S.kind === 'drain') { const got = hit(target); res.heal = Math.min(SPELL_HP - caster.hp, got); caster.hp += res.heal; }
+    else if (S.kind === 'heal') { res.heal = Math.min(SPELL_HP - caster.hp, Math.round(S.power * boost)); caster.hp += res.heal; }
+    else if (S.kind === 'shield') caster.shield = true;
+    return res;
+  }
+  /** Máy chọn phép: máu thấp thì ưu tiên hồi/khiên, còn lại đánh người nhiều máu nhất (hay chính em). */
+  function botSpell(bot, players, rng) {
+    const ids = rollSpells(rng);
+    const foes = players.filter((p) => p !== bot && alive(p) && !p.ghost);
+    const defend = ids.find((id) => id === 'heal' || id === 'shield');
+    if (defend && bot.hp <= 40 && !(defend === 'shield' && bot.shield)) return { id: defend, target: null };
+    const atk = ids.find((id) => ATTACKS.includes(id));
+    if (!foes.length) return { id: defend || ids[0], target: null };
+    const sorted = foes.slice().sort((a, b) => b.hp - a.hp);
+    const target = rng() < 0.6 ? sorted[0] : foes[Math.floor(rng() * foes.length)];
+    return { id: atk || ids[0], target };
+  }
+  /** Xếp hạng Đấu phép: còn trụ → bị hạ muộn hơn → nhiều máu → gây nhiều sát thương. */
+  function spellOrder(a, b) {
+    const outA = alive(a) ? Infinity : (a.outAt ?? -1), outB = alive(b) ? Infinity : (b.outAt ?? -1);
+    return (outA === outB ? 0 : outB > outA ? 1 : -1) || (b.hp - a.hp) || ((b.dmg || 0) - (a.dmg || 0));
+  }
+
+  // ============================================================
+  // GIẢI MÃ (kiểu "Những người giải mã" của Wayground) — đào đá quý, đoán mã phá két của nhau
+  // Mỗi người có 1 két khoá bằng mã 3 ký hiệu (▲ ◆ ● ■). Trả lời đúng → chọn 1 việc:
+  //   • Đào đá quý (nhanh thì được nhiều hơn)
+  //   • Phá két 1 bạn: đoán ký hiệu ở ô đang mở; đúng → sang ô sau, đủ 3 ô → lấy 50% đá quý của bạn đó
+  //   • Đổi mã két của mình: mọi tiến độ người khác đang phá két em về 0
+  // Tiến độ phá: crack[attackerId][targetId] = { pos, wrong:[ký hiệu đã thử sai ở ô pos] }.
+  // ============================================================
+  const VAULT_LEN = 3;
+  const VAULT_SYMS = 4;
+  const HEIST_STEAL = 0.5;
+  const GEMS = [{ v: 10, w: 26 }, { v: 15, w: 24 }, { v: 20, w: 20 }, { v: 25, w: 14 }, { v: 35, w: 10 }, { v: 50, w: 6 }];
+  function newVault(rng) { return Array.from({ length: VAULT_LEN }, () => Math.floor(rng() * VAULT_SYMS)); }
+  function mineGems(rng, boost) { return Math.round(pickWeighted(GEMS, rng).v * (boost || 1)); }
+  function crackOf(crack, a, t) {
+    const row = crack[a] || (crack[a] = {});
+    return row[t] || (row[t] = { pos: 0, wrong: [] });
+  }
+  /** Đổi mã két của `target`: mã mới + xoá mọi tiến độ đang phá két này. */
+  function rekey(crack, target, rng) {
+    target.vault = newVault(rng);
+    Object.keys(crack).forEach((a) => { delete crack[a][target.id]; });
+  }
+  /** Đoán 1 ký hiệu. Trả { hit, pos (ô đã mở sau lượt), opened, take }. */
+  function crackTry(crack, attacker, target, sym, rng) {
+    const pr = crackOf(crack, attacker.id, target.id);
+    if (target.vault[pr.pos] !== sym) {
+      if (!pr.wrong.includes(sym)) pr.wrong.push(sym);
+      return { hit: false, pos: pr.pos, opened: false, take: 0 };
+    }
+    pr.pos++; pr.wrong = [];
+    if (pr.pos < VAULT_LEN) return { hit: true, pos: pr.pos, opened: false, take: 0 };
+    const take = Math.floor((target.gems || 0) * HEIST_STEAL);
+    target.gems -= take;
+    attacker.gems = (attacker.gems || 0) + take;
+    rekey(crack, target, rng);
+    return { hit: true, pos: VAULT_LEN, opened: true, take };
+  }
+  /** Người đang tiến gần nhất tới két của `target` (để cảnh báo / quyết định đổi mã). */
+  function vaultThreat(crack, target) {
+    return Object.keys(crack).reduce((m, a) => Math.max(m, (crack[a][target.id] || { pos: 0 }).pos), 0);
+  }
+  /** Máy chọn việc: bị đe doạ (2/3 ô) → đổi mã; đang phá dở hoặc thấy két giàu → phá; còn lại đào. */
+  function botHeist(bot, players, crack, rng) {
+    if (vaultThreat(crack, bot) >= VAULT_LEN - 1 && rng() < 0.7) return { act: 'rekey' };
+    const foes = players.filter((p) => p !== bot);
+    const going = foes.filter((p) => crackOf(crack, bot.id, p.id).pos > 0);
+    const rich = foes.slice().sort((a, b) => b.gems - a.gems)[0];
+    const target = going[0] || (rich && rich.gems >= 40 && rng() < 0.45 ? rich : null);
+    if (!target) return { act: 'mine' };
+    const pr = crackOf(crack, bot.id, target.id);
+    const left = Array.from({ length: VAULT_SYMS }, (_, k) => k).filter((k) => !pr.wrong.includes(k));
+    return { act: 'crack', target, sym: left[Math.floor(rng() * left.length)] };
+  }
+
+  // ============================================================
+  // BẢNG ĐIỂM (kiểu Board Battle) — giáo viên trình chiếu, các đội trả lời không cần máy
+  // ============================================================
+  const BOARD_VALUES = [100, 200, 300, 400, 500];
+  /**
+   * Bảng n ô (mỗi ô 1 câu của bộ đã xáo, lặp nếu thiếu). Khoảng 1/6 số ô là ô đặc biệt:
+   *   x2   — điểm gấp đôi
+   *   risk — đội trả lời SAI bị trừ một nửa giá trị ô
+   */
+  function makeBoard(deck, n, rng) {
+    const count = Math.max(1, Math.min(n, 30));
+    const values = shuffle(Array.from({ length: count }, (_, i) => BOARD_VALUES[i % BOARD_VALUES.length]), rng);
+    const special = Math.max(1, Math.round(count / 6));
+    const slots = shuffle(Array.from({ length: count }, (_, i) => i), rng).slice(0, Math.min(count, special * 2));
+    return values.map((value, i) => {
+      const si = slots.indexOf(i);
+      return { i, q: deck[i % deck.length], value, special: si < 0 ? '' : si % 2 ? 'risk' : 'x2', open: false };
+    });
+  }
+  /** Điểm cộng/trừ của mỗi đội sau 1 ô. rightIds = các đội trả lời đúng. Trả { [teamId]: delta }. */
+  function boardScore(tile, teamIds, rightIds) {
+    const out = {};
+    teamIds.forEach((id) => {
+      if (rightIds.includes(id)) out[id] = tile.value * (tile.special === 'x2' ? 2 : 1);
+      else out[id] = tile.special === 'risk' ? -Math.round(tile.value / 2) : 0;
+    });
+    return out;
+  }
+
+  // ============================================================
   // XẾP HẠNG
   // ============================================================
   function rank(players, key) {
@@ -544,6 +720,10 @@
     CHESTS, rollChests, applyChest, chestLabel, raceStep, rank,
     LIVES, HEAL_EVERY, survivalStep, survivalOrder, hearts, FISH, castLine,
     POWERUPS, POWER_EVERY, POWER_MAX, earnPowerup, fiftyFifty,
+    TUG_GOAL, TUG_K, TEAMS, tugPull, tugStep, tugWinner, tugTeamFor,
+    SPELL_HP, SPELLS, rollSpells, spellBoost, castSpell, botSpell, spellOrder,
+    VAULT_LEN, VAULT_SYMS, HEIST_STEAL, newVault, mineGems, crackOf, rekey, crackTry, vaultThreat, botHeist,
+    BOARD_VALUES, makeBoard, boardScore,
     coinsFor, PACK_PRICE, RARITY, PACKS, blookById, openPack, newProfile, buyPack, ghostScoreAt,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

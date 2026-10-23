@@ -226,5 +226,84 @@ assertEq('ghép đôi: chấm từng cặp', [kg.results.a.ok, kg.results.b.ok],
 var kcsv = R.toCsv(kr);
 assertEq('CSV ghi đáp án đúng dạng chữ', [kcsv.indexOf('1. s1 | 2. s2 | 3. s3') > 0, kcsv.indexOf('L1 → R1 | L2 → R2') > 0], [true, true]);
 
+
+// ── Kéo co trong Phòng cả lớp ──
+var tdeck = [{ text: 'Q1', options: ['a', 'b'], correctIdx: 0 }, { text: 'Q2', options: ['a', 'b'], correctIdx: 1 }, { text: 'Q3', options: ['a', 'b'], correctIdx: 0 }];
+var tr = R.createRoom({ code: 'TUGTUG', mode: 'tug', deck: tdeck, count: 3, secs: 20 });
+['a', 'b', 'c', 'd', 'e'].forEach(function (id) { R.join(tr, { cid: id, name: 'HS ' + id }); });
+assertEq('kéo co: chia đội xen kẽ, luôn cân số người', ['a', 'b', 'c', 'd', 'e'].map(function (id) { return tr.players[id].team; }), ['red', 'blue', 'red', 'blue', 'red']);
+R.openNext(tr, 0);
+R.submit(tr, 'a', 0, 0, 2000); R.submit(tr, 'c', 0, 0, 15000); R.submit(tr, 'b', 0, 1, 1000);
+var tl = R.reveal(tr);
+// Đỏ [2,1,0] tb 1 · Xanh [0,0] tb 0 → dây +30 về Đỏ
+assertEq('kéo co: dây dịch theo chênh lệch trung bình', [tl.rope, tl.delta, tl.results.a.pts, tl.results.c.pts, tl.results.a.team], [30, 30, 2, 1, 'red']);
+assertEq('kéo co: bảng xếp hạng theo lực kéo, có đội', [R.leaderboard(tr)[0].cid, R.leaderboard(tr)[0].value, R.leaderboard(tr)[0].team], ['a', 2, 'red']);
+tr.rope = 100;
+assertEq('kéo co: dây chạm vạch → kết thúc sớm', R.isDone(tr), true);
+R.finish(tr, 5000);
+var pe = R.personalEnd(tr, 'b');
+assertEq('kéo co: kết quả riêng có đội và đội thắng', [pe.team, pe.won], ['blue', 'red']);
+assertEq('kéo co: CSV có cột Đội và dòng kết quả', [R.toCsv(tr).indexOf(',Đội,') > 0, R.toCsv(tr).indexOf('Đội Đỏ thắng') > 0], [true, true]);
+
+
+// ── Đấu phép trong Phòng cả lớp ──
+var spr = R.createRoom({ code: 'SPELLX', mode: 'spell', deck: tdeck, count: 3, secs: 20 });
+['a', 'b', 'c'].forEach(function (id) { R.join(spr, { cid: id, name: 'P ' + id }); });
+assertEq('đấu phép: vào phòng đủ 100 máu', ['a', 'b', 'c'].map(function (id) { return spr.players[id].hp; }), [100, 100, 100]);
+R.openNext(spr, 0);
+R.submit(spr, 'a', 0, 0, 1000); R.submit(spr, 'b', 0, 0, 9000); R.submit(spr, 'c', 0, 1, 500);
+var sl = R.reveal(spr);
+assertEq('đấu phép: ai đúng mới nhận 3 phép', [sl.results.a.spells.length, sl.results.b.spells.length, sl.results.c.spells], [3, 3, undefined]);
+var offA = sl.results.a.spells;
+assertEq('đấu phép: chỉ chọn được phép đã cấp', [R.pickSpell(spr, 'a', 0, 'nope'), R.pickSpell(spr, 'c', 0, offA[0]), R.pickSpell(spr, 'a', 0, offA[1])], [false, false, true]);
+assertEq('đấu phép: đếm số em đã chọn', R.pickedCount(spr), 1);
+var before = ['a', 'b', 'c'].map(function (id) { return spr.players[id].hp; }).reduce(function (s, x) { return s + x; }, 0);
+var log = R.resolveSpells(spr);
+assertEq('đấu phép: nổ theo thứ tự nhanh trước, đúng phép đã chọn / phép đầu', [log.length, log[0].by, log[0].spell, log[1].spell], [2, 'P a', offA[1], sl.results.b.spells[0]]);
+assertEq('đấu phép: gọi lần 2 trong cùng câu không nổ lại', R.resolveSpells(spr), null);
+var hpSum = ['a', 'b', 'c'].map(function (id) { return spr.players[id].hp; }).reduce(function (s, x) { return s + x; }, 0);
+assertEq('đấu phép: có ghi chú riêng cho từng em', ['a', 'b', 'c'].every(function (id) { return spr.players[id].note && typeof spr.players[id].note.taken === 'number'; }), true);
+assertEq('đấu phép: máu thay đổi đúng bằng ghi chú (sát thương − hồi)', before - hpSum, ['a', 'b', 'c'].reduce(function (s, id) { var n = spr.players[id].note; return s + n.taken - n.healed; }, 0));
+assertEq('đấu phép: bảng xếp hạng có máu (mp), không lẫn tim Sinh tồn', [R.leaderboard(spr)[0].mp !== undefined, R.leaderboard(spr)[0].hp], [true, undefined]);
+spr.players.b.hp = 0; spr.players.c.hp = 0;
+assertEq('đấu phép: còn 1 người trụ → kết thúc', R.isDone(spr), true);
+assertEq('đấu phép: CSV có máu còn lại', R.toCsv(spr).indexOf('Máu còn lại') > 0, true);
+
+// ── Giải mã trong Phòng cả lớp ──
+var hr = R.createRoom({ code: 'HEISTX', mode: 'heist', deck: tdeck, count: 3, secs: 20 });
+['a', 'b', 'c', 'd', 'e'].forEach(function (id) { R.join(hr, { cid: id, name: 'P ' + id }); });
+assertEq('giải mã: mỗi em có két 3 ký hiệu, 0 đá quý', ['a', 'b'].map(function (id) { return [hr.players[id].vault.length, hr.players[id].gems]; }), [[3, 0], [3, 0]]);
+R.openNext(hr, 0);
+R.submit(hr, 'a', 0, 0, 1000); R.submit(hr, 'b', 0, 0, 5000); R.submit(hr, 'c', 0, 1, 500);
+var hl = R.reveal(hr);
+assertEq('giải mã: ai đúng mới được chọn việc, gợi ý 3 két không có chính mình', [hl.results.a.heist.targets.length, hl.results.c.heist, hl.results.a.heist.targets.some(function (t) { return t.cid === 'a'; })], [3, undefined, false]);
+assertEq('giải mã: không gửi mã két cho học sinh', JSON.stringify(hl.results.a).indexOf('vault'), -1);
+assertEq('giải mã: chưa ai dòm két thì không đổi mã được', R.heistAct(hr, 'a', 0, 'rekey'), null);
+var tA = hl.results.a.heist.targets[0].cid;
+var symOk = hr.players[tA].vault[0];
+assertEq('giải mã: chỉ phá được két đã gợi ý', R.heistAct(hr, 'a', 0, 'crack', 'zz', 0), null);
+var cr = R.heistAct(hr, 'a', 0, 'crack', tA, symOk);
+assertEq('giải mã: đoán đúng ô 1', [cr.hit, cr.pos, cr.opened], [true, 1, false]);
+assertEq('giải mã: mỗi câu chỉ 1 việc', R.heistAct(hr, 'a', 0, 'mine'), null);
+assertEq('giải mã: bạn bị dòm ngó có cảnh báo', hr.players[tA].note.threat, 1);
+assertEq('giải mã: đếm số em đã chọn', R.pickedCount(hr), 1);
+R.resolveHeist(hr);
+assertEq('giải mã: không chọn kịp thì tự đào', [hr.players.b.gems > 0, hr.players.b.note.auto, hr.players.c.gems], [true, hr.players.b.gems, 0]);
+var bGems = hr.players.b.gems;
+R.resolveHeist(hr);
+assertEq('giải mã: gọi lần 2 không đào thêm', hr.players.b.gems, bGems);
+// Câu 2: a phá tiếp két cũ (gợi ý đầu tiên), mở đủ 3 ô → lấy 50%
+R.openNext(hr, 30000);
+hr.players[tA].gems = 100;
+R.submit(hr, 'a', 1, 1, 31000);
+var hl2 = R.reveal(hr);
+assertEq('giải mã: két đang phá dở được gợi ý đầu tiên', [hl2.results.a.heist.targets[0].cid, hl2.results.a.heist.targets[0].pos], [tA, 1]);
+hr.crack.a[tA].pos = 2; // giả lập đã mở 2/3 ô
+var cr2 = R.heistAct(hr, 'a', 1, 'crack', tA, hr.players[tA].vault[2]);
+assertEq('giải mã: mở đủ 3 ô lấy 50% đá quý, ghi lên màn chiếu', [cr2.opened, cr2.take, hr.players[tA].gems, hr.players.a.opened, hr.heistLog.length, hr.players[tA].note.robbed.length], [true, 50, 50, 1, 1, 1]);
+assertEq('giải mã: két bị phá được đổi mã, tiến độ về 0', globalThis.EduArenaCore.vaultThreat(hr.crack, hr.players[tA]), 0);
+assertEq('giải mã: xếp hạng theo đá quý', R.leaderboard(hr)[0].value >= R.leaderboard(hr)[1].value, true);
+assertEq('giải mã: kết quả riêng + CSV có số két phá', [R.personalEnd(hr, 'a').opened, R.toCsv(hr).indexOf('Két phá được') > 0], [1, true]);
+
 console.log(failures ? '\n' + failures + ' test FAIL' : '\nTất cả test PASS');
 process.exit(failures ? 1 : 0);

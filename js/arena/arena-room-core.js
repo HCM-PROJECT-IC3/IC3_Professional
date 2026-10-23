@@ -9,6 +9,17 @@
    Điểm dùng đúng công thức của Đấu trường 1 người (js/arena/arena-core.js):
      • speed — Tốc độ kiểu Kahoot: 500..1000 theo tốc độ + thưởng chuỗi đúng
      • race  — Đua về đích: đúng +1 bước, 3 câu đúng liên tiếp +2 bước
+     • tug   — Kéo co: chia 2 đội Đỏ/Xanh theo lượt vào phòng (luôn cân số người); mỗi câu
+               lực kéo = 0 sai · 1 đúng · 2 đúng trong nửa đầu thời gian, dây dịch theo chênh
+               lệch lực kéo TRUNG BÌNH của 2 đội; dây chạm 1 đầu → đội đó thắng ngay
+     • spell — Đấu phép (kiểu WayArena): 100 máu/người. Chốt câu → ai đúng nhận 3 phép (máy
+               người dẫn bốc) và chọn 1 trong lúc xem đáp án; phép NỔ khi sang câu sau, ai trả
+               lời nhanh nổ trước, không chọn thì dùng phép đầu. Mục tiêu bốc ngẫu nhiên có hạt
+               giống (mã + câu) trong các bạn còn trụ → không dồn đánh 1 người. Còn ≤ 1 người → hết.
+     • heist — Giải mã: mỗi em 1 két khoá mã 3 ký hiệu (mã chỉ nằm ở máy người dẫn). Chốt câu → ai đúng
+               chọn ngay 1 việc: ⛏️ đào đá quý · 🔓 đoán 1 ký hiệu két của 1 trong 3 bạn máy người dẫn gợi ý
+               (bạn đang phá dở trước, còn lại bốc có hạt giống) · 🔁 đổi mã khi có người đã mở được ô két em.
+               Kết quả có ngay; không chọn kịp thì sang câu sau tự đào.
    Thẻ thưởng (chỉ chế độ Tốc độ, kiểu Gimkit/Blooket, máy người dẫn cấp và áp dụng — học
    sinh không gửi gì thêm nên không gian lận được):
      • cứ đúng liền 3 · 6 · 9... câu → nhận 1 thẻ, lần lượt 🃏 x2 rồi 🛡️ Khiên
@@ -25,9 +36,11 @@
   const PEER_PREFIX = 'eduquiz-arena-v1-';
   const ANSWER_GRACE_MS = 1500; // trễ mạng: câu trả lời tới muộn tối đa chừng này vẫn nhận
   const MAX_PLAYERS = 80;
-  const KEY_OF = { speed: 'score', race: 'pos', survival: 'score' };
+  const KEY_OF = { speed: 'score', race: 'pos', survival: 'score', tug: 'pull', spell: 'dmg', heist: 'gems' };
+  const ROOM_MODES = ['speed', 'race', 'survival', 'tug', 'spell', 'heist'];
   const CARD_EVERY = 3;                 // đúng liền bao nhiêu câu thì nhận 1 thẻ
   const CARD_CYCLE = ['x2', 'shield'];  // thứ tự thẻ nhận được
+  const HEIST_TARGETS = 3;              // Giải mã: số két gợi ý để phá mỗi lượt
   const newCards = () => ({ x2: 0, shield: 0 });
 
   function makeCode(rng) {
@@ -52,10 +65,10 @@
 
   /**
    * Tạo phòng ở máy người dẫn.
-   * opts: { code, mode:'speed'|'race'|'survival', deck (EduArenaCore.buildDeck), count, secs, maxPlayers, title, setKey }
+   * opts: { code, mode:'speed'|'race'|'survival'|'tug', deck (EduArenaCore.buildDeck), count, secs, maxPlayers, title, setKey }
    */
   function createRoom(opts) {
-    const mode = opts.mode === 'race' || opts.mode === 'survival' ? opts.mode : 'speed';
+    const mode = ROOM_MODES.includes(opts.mode) ? opts.mode : 'speed';
     const count = Math.max(1, opts.count | 0);
     return {
       v: 1, code: opts.code, mode, title: String(opts.title || '').slice(0, 120), setKey: opts.setKey || '',
@@ -64,7 +77,7 @@
       total: mode === 'race' ? count * 2 : Math.min(count, opts.deck.length),
       goal: mode === 'race' ? count : 0,
       max: Math.min(MAX_PLAYERS, Math.max(2, opts.maxPlayers | 0 || 60)),
-      players: {}, order: [], i: -1, phase: 'lobby', qStartAt: 0, answers: {}, last: null,
+      players: {}, order: [], i: -1, phase: 'lobby', qStartAt: 0, answers: {}, last: null, rope: 0, offers: {}, spellLog: [], crack: {}, heistLog: [],
       createdAt: opts.now || Date.now(), endedAt: 0,
     };
   }
@@ -99,11 +112,20 @@
     };
     // Sinh tồn: vào giữa trận vẫn đủ tim (chưa bỏ lỡ câu nào được tính là sai).
     if (room.mode === 'survival') player.hp = C.LIVES;
+    if (room.mode === 'tug') { player.pull = 0; player.team = C.tugTeamFor(teamCounts(room)); }
+    if (room.mode === 'spell') Object.assign(player, { hp: C.SPELL_HP, dmg: 0, shield: false, note: null });
+    // Giải mã: `id` để dùng chung crackTry/rekey của EduArenaCore; mã két KHÔNG bao giờ gửi cho học sinh.
+    if (room.mode === 'heist') Object.assign(player, { id: cid, gems: 0, opened: 0, vault: C.newVault(C.rngFrom(seedOf(room.code + '|v|' + cid))), note: null });
     room.players[cid] = player;
     room.order.push(cid);
     return { ok: true, player, rejoin: false };
   }
   function activeIds(room) { return room.order.filter((id) => !room.players[id].kicked); }
+  function teamCounts(room) {
+    const n = { red: 0, blue: 0 };
+    activeIds(room).forEach((id) => { const t = room.players[id].team; if (t) n[t]++; });
+    return n;
+  }
   function setOnline(room, cid, on) { if (room.players[cid]) room.players[cid].online = on; }
   /** Tự rời phòng: còn ở sảnh chờ → xoá hẳn (nhường chỗ); đang chơi → giữ điểm, coi như rớt mạng. */
   function leave(room, cid) {
@@ -135,6 +157,8 @@
   function canAdvance(room) { return room.phase === 'lobby' || room.phase === 'reveal'; }
   /** Mở câu kế tiếp. Trả câu (không đáp án) để phát cho cả lớp, hoặc null nếu hết. */
   function openNext(room, now) {
+    resolveSpells(room);
+    resolveHeist(room);
     if (!canAdvance(room) || isDone(room)) return null;
     room.i++;
     room.phase = 'q';
@@ -176,6 +200,8 @@
     const before = rankMap(room);
     const results = {};
     let right = 0;
+    const pulls = { red: [], blue: [] };
+    if (room.mode === 'heist') { room.offers = {}; room.heistLog = []; activeIds(room).forEach((id) => { room.players[id].note = newHeistNote(); }); }
     activeIds(room).forEach((id) => {
       const p = room.players[id];
       const a = room.answers[id];
@@ -199,6 +225,30 @@
         const st = C.survivalStep(p, ok, room.i);
         if (!wasOut && ok) { pts = C.speedPoints(true, a.ms, limit); p.score += pts; }
         Object.assign(life, { hp: p.hp, lost: st.lost, healed: st.healed, out: st.out, wasOut });
+      } else if (room.mode === 'tug') {
+        if (ok) p.streak++; else p.streak = 0;
+        pts = C.tugPull(ok, a ? a.ms : limit, limit);
+        p.pull += pts;
+        // Người mất kết nối mà không trả lời: không kéo đội xuống (chỉ tính người đang chơi).
+        if (a || p.online) pulls[p.team].push(pts);
+        life.team = p.team;
+      } else if (room.mode === 'spell') {
+        const wasOut = p.hp <= 0;
+        if (ok) p.streak++; else p.streak = 0;
+        if (ok && !wasOut) {
+          const offer = C.rollSpells(C.rngFrom(seedOf(room.code + '|' + id + '|' + room.i)));
+          room.offers[id] = { ms: a.ms, offer, pick: '' };
+          life.spells = offer;
+        }
+        Object.assign(life, { mp: p.hp, wasOut });
+      } else if (room.mode === 'heist') {
+        if (ok) p.streak++; else p.streak = 0;
+        if (ok) {
+          const targets = heistTargets(room, id);
+          room.offers[id] = { ms: a.ms, targets, done: null };
+          life.heist = heistChoices(room, p, targets);
+        }
+        life.gems = p.gems;
       } else {
         step = C.raceStep(p, ok, room.goal); // raceStep tự cập nhật p.streak
       }
@@ -208,6 +258,12 @@
       results[id] = Object.assign({ ok, k: a ? a.k : null, pts, bonus, step, streak: p.streak }, life);
       if (room.mode === 'speed') Object.assign(results[id], { card, used, cards: { x2: p.cards.x2, shield: p.cards.shield } });
     });
+    let tug = null;
+    if (room.mode === 'tug') {
+      tug = C.tugStep(room.rope, pulls.red, pulls.blue);
+      room.rope = tug.rope;
+      Object.values(results).forEach((r) => { r.rope = room.rope; });
+    }
     room.phase = 'reveal';
     const board = leaderboard(room);
     board.forEach((row, idx) => {
@@ -218,7 +274,127 @@
       r.up = before[row.cid] ? before[row.cid] - (idx + 1) : 0;
     });
     room.last = { i: room.i, kind: C.kindOf(q), correctIdx: q.correctIdx, correct: q.correct, counts, right, answered: answeredCount(room), results, expl: q.expl || '' };
+    if (tug) Object.assign(room.last, { rope: room.rope, delta: tug.delta });
     return room.last;
+  }
+  function seedOf(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+  /** Học sinh chọn phép trong lúc xem đáp án (chỉ chọn trong 3 phép được cấp, đổi ý được tới khi sang câu). */
+  function pickSpell(room, cid, i, id) {
+    const o = room.offers && room.offers[cid];
+    if (room.mode !== 'spell' || room.phase !== 'reveal' || i !== room.i || !o || !o.offer.includes(id)) return false;
+    o.pick = id;
+    return true;
+  }
+  function pickedCount(room) { return Object.values(room.offers || {}).filter((o) => o.pick || o.done).length; }
+
+  // ── Giải mã ──
+  const newHeistNote = () => ({ robbed: [], threat: 0, auto: 0 });
+  /** Người đang mở được nhiều ô nhất két của `p` (để cảnh báo, cho phép đổi mã). */
+  function threatOf(room, p) { return C.vaultThreat(room.crack, p); }
+  /**
+   * 3 két gợi ý cho `cid`: két em đang phá dở (mở nhiều ô trước), rồi bốc có hạt giống trong các bạn
+   * còn lại (bạn có đá quý trước) → cả lớp không dồn phá 1 người, máy tính lại vẫn ra cùng kết quả.
+   */
+  function heistTargets(room, cid) {
+    const rng = C.rngFrom(seedOf(room.code + '|h|' + cid + '|' + room.i));
+    const others = activeIds(room).filter((id) => id !== cid).map((id) => ({ id, pos: C.crackOf(room.crack, cid, id).pos, gems: room.players[id].gems || 0, r: rng() }));
+    const going = others.filter((o) => o.pos > 0).sort((a, b) => b.pos - a.pos || a.r - b.r);
+    const rest = others.filter((o) => o.pos === 0).sort((a, b) => (b.gems > 0) - (a.gems > 0) || a.r - b.r);
+    return going.concat(rest).slice(0, HEIST_TARGETS).map((o) => o.id);
+  }
+  /** Lựa chọn gửi riêng cho máy em: két gợi ý (tên, đá quý, số ô em đã mở, ký hiệu đã thử sai) + mức bị dòm ngó. */
+  function heistChoices(room, p, targets) {
+    return {
+      threat: threatOf(room, p),
+      targets: targets.map((id) => {
+        const t = room.players[id];
+        const pr = C.crackOf(room.crack, p.cid, id);
+        return { cid: id, name: t.name, face: t.face, gems: t.gems || 0, pos: pr.pos, wrong: pr.wrong.slice() };
+      }),
+    };
+  }
+  /**
+   * Em chọn việc lúc xem đáp án — có kết quả ngay, mỗi câu 1 việc.
+   * act: 'mine' | 'rekey' | 'crack' (kèm to = cid két, sym = 0..VAULT_SYMS-1).
+   * @returns kết quả để gửi về máy em, hoặc null nếu không hợp lệ.
+   */
+  function heistAct(room, cid, i, act, to, sym) {
+    const o = room.offers && room.offers[cid];
+    const p = room.players[cid];
+    if (room.mode !== 'heist' || room.phase !== 'reveal' || i !== room.i || !o || o.done || !p || p.kicked) return null;
+    const boost = C.spellBoost(o.ms, room.secs * 1000);
+    let res;
+    if (act === 'mine') {
+      const g = C.mineGems(C.rngFrom(seedOf(room.code + '|m|' + cid + '|' + room.i)), boost);
+      p.gems += g;
+      res = { act, gems: g };
+    } else if (act === 'rekey') {
+      if (!threatOf(room, p)) return null;
+      C.rekey(room.crack, p, C.rngFrom(seedOf(room.code + '|k|' + cid + '|' + room.i)));
+      res = { act };
+      room.heistLog.push({ by: p.name, face: p.face, act });
+    } else if (act === 'crack') {
+      const t = room.players[to];
+      if (!o.targets.includes(to) || !t || t.kicked || !Number.isInteger(sym) || sym < 0 || sym >= C.VAULT_SYMS) return null;
+      const r = C.crackTry(room.crack, p, t, sym, C.rngFrom(seedOf(room.code + '|k|' + to + '|' + room.i + '|' + cid)));
+      res = Object.assign({ act, to, name: t.name, face: t.face, sym }, r);
+      if (r.opened) p.opened++;
+      if (r.opened && r.take) { // két trống: vẫn tính đã phá, nhưng không báo "bị lấy 0 đá quý"
+        if (t.note) t.note.robbed.push({ by: p.name, take: r.take });
+        room.heistLog.push({ by: p.name, face: p.face, act, name: t.name, take: r.take });
+      } else if (r.hit && t.note) t.note.threat = Math.max(t.note.threat, r.pos);
+    } else return null;
+    res.total = p.gems;
+    o.done = res;
+    return res;
+  }
+  /** Sang câu sau / kết thúc: em trả lời đúng mà chưa chọn việc → tự đào (như chọn ⛏️). */
+  function resolveHeist(room) {
+    if (room.mode !== 'heist' || room.phase !== 'reveal' || room.heistAt === room.i) return;
+    room.heistAt = room.i;
+    Object.keys(room.offers || {}).forEach((id) => {
+      const r = heistAct(room, id, room.i, 'mine');
+      if (r && room.players[id].note) room.players[id].note.auto = r.gems;
+    });
+  }
+  /**
+   * Cho nổ các phép đang chờ (gọi lúc sang câu sau / kết thúc). Ai trả lời nhanh nổ trước.
+   * Ghi room.spellLog (đòn đáng chú ý cho màn chiếu) + p.note (kết quả riêng gửi về máy em).
+   */
+  function resolveSpells(room) {
+    // Mỗi câu chỉ nổ 1 lần (hostNext và openNext đều gọi) — lần gọi thứ 2 không được xoá kết quả lần đầu.
+    if (room.mode !== 'spell' || room.phase !== 'reveal' || room.spellAt === room.i) return null;
+    room.spellAt = room.i;
+    const offers = room.offers || {};
+    const ids = Object.keys(offers).filter((id) => room.players[id] && !room.players[id].kicked);
+    room.offers = {};
+    const all = activeIds(room).map((id) => room.players[id]);
+    all.forEach((p) => { p.note = { dealt: 0, taken: 0, healed: 0, blocked: 0, shield: false, ko: '', spell: '' }; });
+    const log = [];
+    room.spellLog = log;
+    if (!ids.length) return log;
+    ids.sort((a, b) => offers[a].ms - offers[b].ms).forEach((id) => {
+      const p = room.players[id];
+      if (!(p.hp > 0)) return; // bị hạ trước khi tới lượt nổ
+      const o = offers[id];
+      const spell = o.pick || o.offer[0];
+      const kind = C.SPELLS[spell].kind;
+      const foes = all.filter((x) => x !== p && x.hp > 0);
+      const target = (kind === 'hit' || kind === 'drain') && foes.length
+        ? foes[Math.floor(C.rngFrom(seedOf(room.code + '|t|' + id + '|' + room.i))() * foes.length)] : null;
+      const r = C.castSpell(p, spell, target, all, C.spellBoost(o.ms, room.secs * 1000), room.i);
+      p.note.spell = spell;
+      p.note.healed += r.heal;
+      if (kind === 'shield') p.note.shield = true;
+      r.hits.forEach((h) => {
+        if (h.blocked) { h.target.note.blocked++; return; }
+        p.note.dealt += h.amount;
+        h.target.note.taken += h.amount;
+        if (h.ko) h.target.note.ko = p.name;
+      });
+      log.push({ by: p.name, face: p.face, spell, heal: r.heal, hits: r.hits.map((h) => ({ name: h.target.name, amount: h.amount, blocked: h.blocked, ko: h.ko })) });
+    });
+    return log;
   }
   function rankMap(room) {
     const m = {};
@@ -233,9 +409,13 @@
       const p = room.players[id];
       const row = { cid: id, name: p.name, face: p.face, value: p[key], correct: p.correct, streak: p.streak || 0, online: p.online, idx };
       if (room.mode === 'survival') Object.assign(row, { hp: p.hp, outAt: p.outAt, score: p.score });
+      if (room.mode === 'tug') row.team = p.team;
+      if (room.mode === 'spell') Object.assign(row, { mp: p.hp, hp: p.hp, outAt: p.outAt, dmg: p.dmg || 0 });
+      if (room.mode === 'heist') row.opened = p.opened || 0;
       return row;
     });
     if (room.mode === 'survival') return rows.sort((a, b) => C.survivalOrder(a, b) || (b.correct - a.correct) || (a.idx - b.idx));
+    if (room.mode === 'spell') return rows.sort((a, b) => C.spellOrder(a, b) || (b.correct - a.correct) || (a.idx - b.idx)).map((r) => { delete r.hp; return r; });
     return rows.sort((a, b) => (b.value - a.value) || (b.correct - a.correct) || (a.idx - b.idx));
   }
 
@@ -247,10 +427,18 @@
       const alive = ids.filter((id) => room.players[id].hp > 0).length;
       return alive === 0 || (ids.length >= 2 && alive <= 1);
     }
+    if (room.mode === 'tug') return Math.abs(room.rope || 0) >= C.TUG_GOAL;
+    if (room.mode === 'spell' && room.i >= 0) {
+      const ids = activeIds(room);
+      const alive = ids.filter((id) => room.players[id].hp > 0).length;
+      return alive === 0 || (ids.length >= 2 && alive <= 1);
+    }
     return room.mode === 'race' && activeIds(room).some((id) => room.players[id].pos >= room.goal);
   }
   function finish(room, now) {
     if (room.phase === 'q') reveal(room);
+    resolveSpells(room);
+    resolveHeist(room);
     room.phase = 'end';
     room.endedAt = now || Date.now();
     return leaderboard(room);
@@ -265,7 +453,11 @@
     const idx = board.findIndex((r) => r.cid === cid);
     const p = room.players[cid];
     if (!p || idx < 0) return null;
-    return { rank: idx + 1, players: board.length, value: board[idx].value, correct: p.correct, total: asked(room), bestStreak: p.bestStreak, hp: p.hp };
+    const out = { rank: idx + 1, players: board.length, value: board[idx].value, correct: p.correct, total: asked(room), bestStreak: p.bestStreak, hp: p.hp };
+    if (room.mode === 'tug') Object.assign(out, { team: p.team, rope: room.rope, won: C.tugWinner(room.rope) });
+    if (room.mode === 'spell') Object.assign(out, { mp: p.hp, hp: undefined });
+    if (room.mode === 'heist') out.opened = p.opened || 0;
+    return out;
   }
 
   // ============================================================
@@ -278,16 +470,22 @@
   };
   function toCsv(room) {
     const n = asked(room);
-    const unit = room.mode === 'race' ? 'Bước' : 'Điểm';
+    const unit = room.mode === 'race' ? 'Bước' : room.mode === 'tug' ? 'Lực kéo' : room.mode === 'spell' ? 'Sát thương' : room.mode === 'heist' ? 'Đá quý' : 'Điểm';
     const head = ['Hạng', 'Biệt danh', unit, 'Số câu đúng', 'Số câu đã hỏi', 'Tỉ lệ đúng (%)', 'Chuỗi đúng dài nhất'];
-    const surv = room.mode === 'survival';
+    const surv = room.mode === 'survival', tug = room.mode === 'tug', spell = room.mode === 'spell', heist = room.mode === 'heist';
     if (surv) head.push('Tim còn lại', 'Bị loại ở câu');
+    if (spell) head.push('Máu còn lại', 'Bị hạ ở câu');
+    if (tug) head.push('Đội');
+    if (heist) head.push('Két phá được');
     for (let i = 0; i < n; i++) head.push('C' + (i + 1));
     const lines = [head.map(csvCell).join(',')];
     leaderboard(room).forEach((row, idx) => {
       const p = room.players[row.cid];
       const cells = [idx + 1, p.name, row.value, p.correct, n, n ? Math.round((p.correct / n) * 100) : 0, p.bestStreak];
       if (surv) cells.push(p.hp || 0, p.hp > 0 ? '' : 'C' + ((p.outAt || 0) + 1));
+      if (tug) cells.push(C.TEAMS[p.team] ? C.TEAMS[p.team].name : '');
+      if (spell) cells.push(p.hp || 0, p.hp > 0 ? '' : 'C' + ((p.outAt || 0) + 1));
+      if (heist) cells.push(p.opened || 0);
       for (let i = 0; i < n; i++) cells.push(p.log[i] === 1 ? 'Đ' : p.log[i] === 0 ? 'S' : '-');
       lines.push(cells.map(csvCell).join(','));
     });
@@ -298,7 +496,8 @@
       const ok = ids.filter((id) => room.players[id].log[i] === 1).length;
       pct.push(ids.length ? Math.round((ok / ids.length) * 100) + '%' : '');
     }
-    lines.push(['', 'Cả lớp đúng', '', '', '', '', ''].concat(surv ? ['', ''] : [], pct).map(csvCell).join(','));
+    lines.push(['', 'Cả lớp đúng', '', '', '', '', ''].concat(surv || spell ? ['', ''] : [], tug || heist ? [''] : [], pct).map(csvCell).join(','));
+    if (tug) lines.push(['', 'Kết quả kéo co', C.tugWinner(room.rope) ? C.TEAMS[C.tugWinner(room.rope)].name + ' thắng' : 'Hoà', 'Dây lệch ' + Math.abs(room.rope || 0) + '/' + C.TUG_GOAL].map(csvCell).join(','));
     lines.push('');
     lines.push(['Câu', 'Nội dung', 'Đáp án đúng'].map(csvCell).join(','));
     for (let i = 0; i < n; i++) {
@@ -333,14 +532,17 @@
     try { r = typeof json === 'string' ? JSON.parse(json) : json; } catch (e) { return null; }
     if (!r || r.v !== 1 || !Array.isArray(r.deck) || !r.players || !Array.isArray(r.order)) return null;
     Object.values(r.players).forEach((p) => { p.online = false; if (!p.cards) p.cards = newCards(); });
+    if (!r.offers) r.offers = {};
+    if (!r.crack) r.crack = {};
+    if (!r.heistLog) r.heistLog = [];
     if (r.phase === 'q') reveal(r); // đang dở câu → chốt luôn với câu trả lời đã nhận
     return r;
   }
 
   global.EduArenaRoomCore = {
-    CODE_LEN, ANSWER_GRACE_MS, MAX_PLAYERS, KEY_OF, CARD_EVERY, CARD_CYCLE,
+    CODE_LEN, ANSWER_GRACE_MS, MAX_PLAYERS, KEY_OF, ROOM_MODES, CARD_EVERY, CARD_CYCLE, teamCounts,
     makeCode, normCode, peerId, cleanName, cidFor, createRoom, join, leave, kick, setOnline, activeIds,
-    publicQuestion, openNext, canAdvance, submit, allAnswered, answeredCount, reveal, leaderboard,
+    publicQuestion, openNext, canAdvance, submit, allAnswered, answeredCount, reveal, leaderboard, pickSpell, pickedCount, resolveSpells, heistAct, resolveHeist, heistChoices, HEIST_TARGETS,
     isDone, finish, asked, personalEnd, toCsv, summary, snapshot, restore, current,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

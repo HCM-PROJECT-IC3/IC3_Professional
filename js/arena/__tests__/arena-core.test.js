@@ -168,5 +168,51 @@ var bank = 0, playable = 0;
 console.log('      (ngân hàng mẫu: ' + playable + '/' + bank + ' câu chơi được trong Đấu trường)');
 assertEq('đa số câu ngân hàng chơi được (> 60%)', playable / bank > 0.6, true);
 
+
+// ── Kéo co / Đấu phép / Giải mã / Bảng điểm (kiểu Wayground) ──
+assertEq('kéo co: lực kéo sai 0 · đúng chậm 1 · đúng nhanh 2', [A.tugPull(false, 1000, 20000), A.tugPull(true, 15000, 20000), A.tugPull(true, 5000, 20000)], [0, 1, 2]);
+assertEq('kéo co: tính trung bình nên đội đông không lợi', A.tugStep(0, [2, 0, 0, 0], [1]), { rope: -15, delta: -15 });
+assertEq('kéo co: dây không vượt vạch thắng', A.tugStep(90, [2, 2], [0]).rope, A.TUG_GOAL);
+assertEq('kéo co: người mới vào đội ít người hơn', [A.tugTeamFor({ red: 2, blue: 1 }), A.tugTeamFor({ red: 1, blue: 1 })], ['blue', 'red']);
+assertEq('kéo co: đội thắng theo phía dây', [A.tugWinner(5), A.tugWinner(-1), A.tugWinner(0)], ['red', 'blue', '']);
+
+var sr = A.rngFrom(9);
+var okRoll = true;
+for (var t = 0; t < 200; t++) { var rs = A.rollSpells(sr); if (new Set(rs).size !== 3 || !rs.some(function (id) { return ['fire', 'bolt', 'drain'].indexOf(id) >= 0; })) okRoll = false; }
+assertEq('đấu phép: 3 phép khác nhau, luôn có 1 phép tấn công', okRoll, true);
+assertEq('đấu phép: trả lời càng nhanh phép càng mạnh', [A.spellBoost(0, 20000), A.spellBoost(20000, 20000)], [1.5, 1]);
+var w1 = { id: 'a', hp: 100, dmg: 0 }, w2 = { id: 'b', hp: 20, dmg: 0, shield: true }, w3 = { id: 'c', hp: 100, dmg: 0 };
+var fb = A.castSpell(w1, 'fire', w2, [w1, w2, w3], 1, 0);
+assertEq('đấu phép: khiên chặn trọn 1 đòn rồi mất', [fb.hits[0].blocked, w2.hp, w2.shield], [true, 20, false]);
+A.castSpell(w1, 'fire', w2, [w1, w2, w3], 1, 3);
+assertEq('đấu phép: hết máu bị hạ, ghi câu bị hạ, cộng sát thương', [w2.hp, w2.outAt, w1.dmg], [0, 3, 20]);
+w1.hp = 90;
+var hl = A.castSpell(w1, 'heal', null, [w1, w2, w3], 1.5, 4);
+assertEq('đấu phép: hồi máu không vượt tối đa', [hl.heal, w1.hp], [10, 100]);
+var bo = A.castSpell(w3, 'bolt', null, [w1, w2, w3], 1, 5);
+assertEq('đấu phép: sấm sét đánh mọi đối thủ còn trụ', [bo.hits.length, w1.hp], [1, 88]);
+assertEq('đấu phép: còn trụ xếp trên người bị hạ', [w2, w1, w3].sort(A.spellOrder).map(function (p) { return p.id; }), ['c', 'a', 'b']);
+
+var hr = A.rngFrom(3);
+var crack = {};
+var thief = { id: 'me', gems: 0 }, vic = { id: 'v', gems: 101, vault: [2, 0, 3] };
+assertEq('giải mã: đoán sai ghi lại ký hiệu đã loại', [A.crackTry(crack, thief, vic, 1, hr).hit, A.crackOf(crack, 'me', 'v').wrong], [false, [1]]);
+A.crackTry(crack, thief, vic, 2, hr); A.crackTry(crack, thief, vic, 0, hr);
+assertEq('giải mã: đúng 2 ô → cảnh báo bị dòm 2/3', A.vaultThreat(crack, vic), 2);
+var op = A.crackTry(crack, thief, vic, 3, hr);
+assertEq('giải mã: mở đủ 3 ô lấy 50% đá quý, két đổi mã, tiến độ về 0', [op.opened, op.take, thief.gems, vic.gems, A.vaultThreat(crack, vic)], [true, 50, 50, 51, 0]);
+A.crackTry(crack, thief, vic, vic.vault[0], hr);
+A.rekey(crack, vic, hr);
+assertEq('giải mã: đổi mã xoá tiến độ người khác', A.crackOf(crack, 'me', 'v').pos, 0);
+
+var bd = A.makeBoard([{ text: 'a' }, { text: 'b' }], 12, A.rngFrom(4));
+assertEq('bảng điểm: đủ ô, lặp câu nếu thiếu, có ô x2 và ô rủi ro', [bd.length, bd[2].q.text, bd.some(function (t) { return t.special === 'x2'; }), bd.some(function (t) { return t.special === 'risk'; })], [12, 'a', true, true]);
+assertEq('bảng điểm: giá trị 100…500', bd.every(function (t) { return A.BOARD_VALUES.indexOf(t.value) >= 0; }), true);
+assertEq('bảng điểm: ô thường / x2 / rủi ro', [
+  A.boardScore({ value: 300, special: '' }, ['t0', 't1'], ['t0']),
+  A.boardScore({ value: 300, special: 'x2' }, ['t0', 't1'], ['t1']),
+  A.boardScore({ value: 300, special: 'risk' }, ['t0', 't1'], ['t0']),
+], [{ t0: 300, t1: 0 }, { t0: 0, t1: 600 }, { t0: 300, t1: -150 }]);
+
 console.log(failures ? '\n' + failures + ' FAIL' : '\nTất cả PASS');
 process.exit(failures ? 1 : 0);

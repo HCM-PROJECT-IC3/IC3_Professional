@@ -1,5 +1,63 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## Đấu trường: Giải mã cho cả lớp trong Phòng cả lớp (23/10/2026) — 0 Firebase
+
+- **🔐 Giải mã** nay chơi được ở **Phòng cả lớp** (vai Giáo viên) — cả 6 chế độ phòng: Tốc độ, Đua, Sinh tồn, Kéo co, Đấu phép, Giải mã. Mỗi em có 1 két khoá mã 3 ký hiệu; **mã két chỉ nằm trên máy giáo viên**, không bao giờ gửi cho học sinh.
+- Chốt câu: em nào trả lời đúng chọn ngay 1 việc trên màn xem đáp án (bấm hoặc phím 1–3), **có kết quả liền**:
+  - ⛏️ Đào đá quý — trả lời nhanh đào nhiều hơn (tới ×1,5).
+  - 🔓 Phá két — chọn 1 trong 3 két máy giáo viên gợi ý (két em đang phá dở luôn đứng đầu, còn lại bốc ngẫu nhiên cố định theo mã phòng + câu, ưu tiên bạn có đá quý → cả lớp không dồn phá 1 người), rồi đoán ký hiệu ô đang mở; ký hiệu đã đoán sai bị khoá lại. Mở đủ 3 ô lấy 50% đá quý, két đó tự đổi mã. Két trống thì báo "két đang trống", không bắn pháo hoa.
+  - 🔁 Đổi mã — chỉ bấm được khi đã có bạn mở được ô két em.
+  - Không chọn kịp → sang câu sau máy tự đào.
+- **Máy học sinh**: HUD "💎 52 · két em 🔓🔓🔒"; đầu câu sau báo "HS Chi phá két em, lấy 40 💎", "Có bạn đã mở 2/3 ô két em — chọn 🔁 Đổi mã!", "máy tự đào +22 💎". Hiệu ứng: đá quý bùng ra, ô két rung mở, đoán sai rung đỏ.
+- **Màn chiếu**: số em đã chọn việc, khung "Két vừa bị phá" cập nhật ngay khi có em phá được két; màn kết quả "… là Vua giải mã!". CSV thêm cột Két phá được.
+- Học sinh chỉ gửi tên việc + két + ký hiệu; máy giáo viên kiểm tra (đúng câu, đúng két được gợi ý, mỗi câu 1 việc) và tự chấm → không gian lận được.
+- Có unit test mới cho Giải mã trong phòng. Đã chạy trong Chromium: phòng 1 giáo viên + 4 học sinh (PeerJS giả lập) với 3 kiểu chơi khác nhau, máy tính và điện thoại; chạy lại phòng Đấu phép, Kéo co, Bảng điểm và Giải mã/Tốc độ/Đấu phép Chơi một mình. `check-js` 167/167 và mọi unit test đạt.
+
+## Đấu trường: hiệu ứng chuyển động cho mọi chế độ chơi (23/10/2026)
+
+- **`js/arena/arena-fx.js` mới** (~130 dòng, Web Animations API, không thư viện): số bay lên (viên bo tròn nền trắng, đọc được trên mọi màu ô), vật bay theo đường cong, hạt bùng, lớp CSS tự gỡ, bảng xếp hạng trượt (FLIP), nút dây trượt. Phần tử hiệu ứng tự dọn sau ~1 giây (đã đo: 0 phần tử sót).
+- **Chung**: trả lời đúng → ô đúng nảy, điểm "+850" bay lên từ ô em chọn, ô điểm trên HUD nảy; chuỗi ≥ 3 → 🔥 nảy; **bảng xếp hạng trượt lên/xuống** khi đổi hạng, dòng của em sáng viền vàng khi lên hạng.
+- **Đua về đích**: nhân vật nhảy và trượt tới chỗ mới. Trước đây cả đường đua vẽ lại mỗi câu nên nhân vật nhảy cóc; transition sẵn có chưa từng chạy. **Kéo co**: nút dây trượt, cả dây giật về phía đội vừa kéo, tên đội đó nảy.
+- **Đấu phép**: phép (🔥 ⚡ 🌀) bay từ người dùng tới mục tiêu; trúng đích thì dòng đỏ rung kèm "−25"; bị hạ thì nổ tia lửa; khiên/hồi máu sáng xanh. Đòn của bạn máy nối tiếp nhau, không chồng lên. Em bị đánh thì ô máu rung.
+- **Giải mã**: đào → "+20 💎" và đá quý bùng ra; đoán đúng ô → dòng két rung mở 🔓; đoán sai → dòng báo rung; phá được két → 5 viên 💎 bay từ két bị phá sang người phá (cả khi bạn máy phá két em).
+- **Săn vàng**: rương mở → vàng bùng ra + "+50"; mất vàng → rương rung đỏ; lấy vàng của bạn → 🪙 bay từ dòng bạn đó về em. **Câu cá**: cá lên kèm bọt nước 💦.
+- **Bảng điểm**: các ô xuất hiện lần lượt khi mở bảng; ô vừa chọn **phóng to** thành khung câu hỏi; đáp án đúng nảy; chấm xong thẻ đội nảy, "+300"/"−150" bay lên, đội đúng có sao.
+- **Phòng cả lớp**: dây kéo co trên màn chiếu/máy học sinh trượt từ vị trí cũ sang mới; kết quả câu ở máy học sinh nảy (đúng) hoặc rung (sai), số bay lên; dòng kết quả phép lượt trước sáng/đỏ lên.
+- Máy đặt **giảm chuyển động** (Windows/macOS/điện thoại): bỏ mọi chuyển động, chỉ còn đổi màu (đã thử bằng `reducedMotion: 'reduce'`).
+- Đã chạy lại cả 8 chế độ Chơi một mình, Bảng điểm, phòng Kéo co và phòng Đấu phép (PeerJS giả lập); `check-js` 167/167 và mọi unit test đạt.
+
+## Đấu trường: Đấu phép cho cả lớp trong Phòng cả lớp (23/10/2026) — 0 Firebase
+
+- **🔮 Đấu phép** nay chơi được ở **Phòng cả lớp** (vai Giáo viên). Mỗi em có 100 máu. Chốt câu: em nào trả lời đúng (và chưa bị hạ) nhận 3 phép do **máy giáo viên** bốc, rồi chọn 1 phép ngay trên màn xem đáp án (bấm hoặc phím 1–3, đổi ý được). Phép **nổ khi giáo viên sang câu sau**: em nào trả lời nhanh hơn thì phép nổ trước và mạnh hơn (tới ×1,5). Em không kịp chọn thì máy tự dùng phép đầu tiên.
+- Cầu lửa và Hút máu đánh 1 bạn còn trụ, chọn ngẫu nhiên nhưng cố định theo mã phòng + câu, nên cả lớp không dồn đánh 1 người và máy tính lại vẫn ra cùng kết quả. Sấm sét đánh tất cả. Khiên chặn trọn 1 đòn. Mỗi câu chỉ nổ 1 lần.
+- **Học sinh không gửi được gì ngoài tên phép**, và chỉ được chọn trong 3 phép đã cấp. Máy giáo viên tự tính sát thương như các chế độ phòng khác, nên không gian lận được.
+- **Màn chiếu**: khung "Phép vừa nổ" (ưu tiên đòn hạ gục, tối đa 6 dòng), thanh máu trên bảng xếp hạng, số em đã chọn phép, và tên người trụ lại cuối cùng ở màn kết quả.
+- **Máy học sinh**: thanh máu trên HUD, dòng kết quả phép lượt trước ("Phép của em gây 30 sát thương · Em bị đánh −25 máu · Khiên đã chặn 1 đòn"). Em bị hạ vẫn trả lời tiếp để luyện tập.
+- Kết thúc khi còn ≤ 1 người trụ lại hoặc hết câu. CSV thêm cột Máu còn lại và Bị hạ ở câu.
+- Nút Hồi phục ghi rõ "Em đang đầy máu — chọn phép khác lợi hơn" khi em đang đầy máu (cả Chơi một mình).
+- Có unit test mới cho Đấu phép trong phòng. Đã chạy trong Chromium: phòng 1 giáo viên + 4 học sinh (PeerJS giả lập), cùng toàn bộ chế độ trước đó. `check-js` 166/166 và mọi unit test đạt.
+
+## Đấu trường: 4 chế độ kiểu Wayground — Kéo co · Đấu phép · Giải mã · Bảng điểm (23/10/2026) — 0 Firebase
+
+- **🪢 Kéo co** (Chơi một mình + Phòng cả lớp): 2 đội Đỏ – Xanh. Mỗi câu: sai/bỏ trống kéo 0, đúng kéo 1, đúng trong nửa đầu thời gian kéo 2. Dây dịch theo chênh lệch lực kéo **trung bình** của 2 đội (× 30 vạch) nên đội đông không được lợi; dây chạm vạch 100 → đội đó thắng ngay, hết câu thì đội đang được dây thắng. Phòng cả lớp: máy giáo viên tự chia đội xen kẽ theo lượt vào (luôn cân người); người rớt mạng mà không trả lời thì không kéo đội xuống. Màn chiếu, màn học sinh và màn kết thúc đều có sợi dây; CSV thêm cột Đội + dòng kết quả. Chơi một mình: em + 2 bạn máy đấu 3 bạn máy.
+- **🔮 Đấu phép** (kiểu WayArena, Chơi một mình): mỗi người 100 máu. Trả lời đúng được chọn 1 trong 3 phép ngẫu nhiên: 🔥 Cầu lửa, ⚡ Sấm sét (đánh tất cả), 🌀 Hút máu, 🛡️ Khiên phép (chặn trọn 1 đòn), 💚 Hồi phục. Trả lời nhanh phép mạnh tới ×1,5. Bạn máy cũng thi triển (máu thấp thì ưu tiên hồi/khiên). Bị hạ là thua; xếp hạng: còn trụ → bị hạ muộn → máu → sát thương.
+- **🔐 Giải mã** (kiểu "Những người giải mã", Chơi một mình): két mỗi người khoá bằng mã 3 ký hiệu ▲ ◆ ● ■. Trả lời đúng chọn: ⛏️ Đào đá quý, 🔓 Phá két 1 bạn (đoán ký hiệu ô đang mở, ký hiệu đoán sai được ghi lại; mở đủ 3 ô lấy 50% đá quý), hoặc 🔁 Đổi mã khi có người đã mở được ô két em (mọi tiến độ phá két em về 0). Bạn máy cũng phá két em — có cảnh báo "đã mở 2/3 ô".
+- **🧩 Bảng điểm** (kiểu Board Battle, vai Giáo viên, `js/arena/arena-board.js` mới): chiếu bảng ô 100…500 (số ô = Số câu), 2–6 đội đặt tên được; đội đến lượt chọn ô, cả lớp trả lời ra giấy/bảng con, giáo viên bấm **Hiện đáp án** rồi bấm các đội trả lời đúng (phím 1–6, Enter). Ô ✖️2 gấp đôi điểm, ô ⚠️ Rủi ro trừ một nửa nếu sai — chỉ lộ khi mở ô. Có nút toàn màn hình, bảng kết quả và "câu nhiều đội sai nhất". Học sinh không cần máy: chạy hoàn toàn trên máy giáo viên, không mạng, không Firebase.
+- Logic thuần ở `js/arena/arena-core.js` (+ `arena-room-core.js` cho Kéo co trong phòng), có unit test. Vai Giáo viên chỉ hiện các chế độ chơi được ở phòng (Tốc độ, Đua, Sinh tồn, Kéo co) + Bảng điểm; Đấu phép, Giải mã chỉ ở Chơi một mình.
+- Đã chạy trong Chromium (chặn mạng ngoài): 3 chế độ Chơi một mình chơi tới hết trận ở máy tính và điện thoại nền tối; Bảng điểm 10 ô; Phòng Kéo co 1 giáo viên + 4 học sinh (PeerJS giả lập giữa các tab). `check-js` 166/166 + toàn bộ unit test đạt.
+
+## Sảnh: hết khoảng trống ở màn rộng + lối vào cho thầy cô rõ ràng (23/10/2026)
+
+- **Nguyên nhân khoảng trống**: mọi nút phụ (Thử thách hôm nay, đếm ngược, Góc học tập, Đấu trường, Lịch sử, Tải sẵn offline) nằm trong cột 3 → ở màn 3 cột, cột 3 dài gấp đôi, cột 1–2 để trống cả mảng lớn.
+- **`index.html`**: khối nút phụ tách khỏi cột 3 thành `.lobby-col-more` (vẫn trong `.lobby-card`, nên các module tìm `.lobby-card .lobby-extras` không phải sửa). Bố cục (`style.css`, khối "SẢNH: KHỐI VIỆC THÊM…" cuối file):
+  - ≥ 1400 px: 1 hàng ngang dưới cả 3 cột — Thử thách · Đếm ngược · 4 nút phụ. Chế độ Kiểm tra (cột 3 cao hơn): khối này lên ngay dưới cột 1–2.
+  - 960–1399 px: 2 hàng dưới cả 2 cột; cột 1–2 vẫn liền nhau như trước.
+  - < 960 px (điện thoại): thứ tự như cũ.
+  - Đo ở 1888×916 (đúng cỡ ảnh báo lỗi): 3 cột kết thúc cùng 1 đường, thẻ thấp hơn ~100 px, vừa 1 màn hình. Không có cuộn ngang ở 1888 / 1366 / 1100 / 390 px.
+- **Dải "Dành cho thầy cô"** ở cuối thẻ thay cho 2 nút nhỏ mờ (opacity .8, chữ .78rem) nằm lẻ dưới thẻ: nhãn + 2 nút viền rõ "Đăng nhập trang quản lý" và "Gom kết quả học sinh gửi", cao 2,6rem, có viền focus khi dùng bàn phím; điện thoại xếp dọc, rộng hết. Giữ `id="adminEntryLink"` nên `quiz-engine.js` vẫn ẩn khi làm bài và hiện lại ở sảnh (đã thử).
+- Dòng trạng thái "Tải sẵn offline" rỗng không còn chừa khoảng trống.
+- Đã chạy lại: Thử thách hôm nay, làm bài → nộp → thẻ thưởng, chế độ Kiểm tra, quay về sảnh; `check-js` + unit test đạt.
+
 ## Rà soát toàn trang + bớt ~830 KB thư viện tải sẵn + đếm ngược kỳ thi (23/10/2026) — 0 Firebase
 
 - **Rà 30 trang HTML** trong Chromium (chặn mạng ngoài, giả lập đăng nhập cho trang quản trị): không có lỗi JS, không file 404.
