@@ -137,11 +137,17 @@
           <span class="ar-mode-ico" aria-hidden="true">🔐</span><b>Giải mã</b>
           <small class="only-teacher">Kiểu "Những người giải mã" — cả lớp đào đá quý và đoán mã két của nhau. Mã két chỉ máy giáo viên biết. Nhiều đá quý nhất thắng.</small>
           <small class="only-solo">Đào đá quý, đoán mã 3 ký hiệu để phá két đối thủ và lấy một nửa kho báu. Bị dòm ngó thì đổi mã!</small></button>
+        <button type="button" class="ar-mode m-dino" data-mode="dino" role="radio">
+          <span class="ar-mode-ico" aria-hidden="true">🦖</span><b>Đào hoá thạch</b>
+          <small>Kiểu Blooket Deceptive Dinos — trả lời đúng được đào 1 trong 3 tảng đá. Ăn gian được gấp 3 nhưng bị kiểm tra là mất 40%. Bắt quả tang bạn ăn gian để lấy hoá thạch!</small></button>
+        <button type="button" class="ar-mode m-moon" data-mode="moon" role="radio">
+          <span class="ar-mode-ico" aria-hidden="true">🚀</span><b>Lên Mặt Trăng</b>
+          <small>Kiểu leo đỉnh của Wayground — đúng nhanh tên lửa bay cao, đúng liền 3 câu bật tầng đẩy ×1,5 (5 câu ×2). Sai thì tụt nhưng không dưới trạm đã qua. Chạm Mặt Trăng trước thắng!</small></button>
         <button type="button" class="ar-mode m-board only-teacher" data-mode="board" role="radio">
           <span class="ar-mode-ico" aria-hidden="true">🧩</span><b>Bảng điểm</b>
           <small>Kiểu Board Battle — chiếu bảng ô 100…500 lên màn hình, các đội chọn ô và trả lời. Học sinh không cần máy.</small></button>
       </div>
-      <p class="ar-hint ar-power-note only-solo">🎁 <b>Tốc độ</b> và <b>Sinh tồn</b>: đúng liền 3 câu nhận 1 vật phẩm (kiểu Wayground) — ✂️ 50:50 · ⏳ Thêm giờ · ✖️2 Nhân đôi. Bấm để dùng (phím Q, W, E).</p>
+      <p class="ar-hint ar-power-note only-solo">🎁 <b>Tốc độ</b>, <b>Sinh tồn</b> và <b>Lên Mặt Trăng</b>: đúng liền 3 câu nhận 1 vật phẩm (kiểu Wayground) — ✂️ 50:50 · ⏳ Thêm giờ · ✖️2 Nhân đôi. Bấm để dùng (phím Q, W, E).</p>
       <div class="ar-field ar-kinds-field"><span>Dạng câu hỏi <em>(bấm để bật/tắt — số nhỏ là số câu có trong bài)</em></span>
         <div class="ar-chips ar-kinds" id="arKinds" role="group" aria-label="Dạng câu hỏi"></div></div>
       <div class="ar-grid3 ar-opts">
@@ -197,10 +203,11 @@
     <div class="ar-card">
       <div class="ar-row"><h2 class="ar-h2"><span aria-hidden="true">🥚</span> Mở hộp Linh vật</h2>
         <button type="button" class="ar-btn ar-btn-ghost" data-go="home"><i class="fa-solid fa-arrow-left"></i> Quay lại</button></div>
-      <p class="ar-hint">Mỗi hộp <b>25 xu</b>. Trùng Linh vật đã có thì được hoàn lại xu. Bấm vào Linh vật đã có để chọn làm ảnh đại diện.</p>
+      <div class="ar-quests" id="arQuests"></div>
       <div class="ar-pack-list" id="arPackList"></div>
-      <div class="ar-reveal" id="arReveal" hidden aria-live="polite"></div>
+      <p class="ar-hint ar-pack-rules">Mỗi hộp <b>25 xu</b> · trùng Linh vật thì hoàn xu và lên sao ★ · bấm Linh vật đã có để làm ảnh đại diện.</p>
     </div>
+    <div class="ar-reveal" id="arReveal" hidden role="dialog" aria-modal="true" aria-label="Mở hộp Linh vật"></div>
     <div class="ar-card"><h2 class="ar-h2"><i class="fa-solid fa-table-cells"></i> Bộ sưu tập <span class="ar-muted" id="arCollCount"></span></h2>
       <div id="arCollection"></div></div>
   </section>
@@ -216,6 +223,7 @@
     <div class="ar-timer" id="arTimerWrap"><i id="arTimer"></i></div>
     <div class="ar-powers" id="arPowers" hidden aria-label="Vật phẩm hỗ trợ"></div>
     <div class="ar-track" id="arTrack" hidden></div>
+    <div class="ar-scene" id="arScene" hidden aria-hidden="true"></div>
     <div class="ar-stage">
       <div class="ar-qbox">
         <div class="ar-q" id="arQ"></div>
@@ -262,6 +270,8 @@
 <script src="js/services/lazy-script-loader.js"></script>
 <script src="js/arena/arena-fx.js"></script>
 <script src="js/arena/arena-core.js"></script>
+<script src="js/name-picker/np-art.js"></script>
+<script src="js/arena/arena-scene.js"></script>
 <script src="js/arena/arena-kinds.js"></script>
 <script src="js/arena/arena.js"></script>
 <script src="js/backend-config.js"></script>

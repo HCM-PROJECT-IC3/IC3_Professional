@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#d9472b">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Gọi tên học sinh ngẫu nhiên trên máy chiếu với 10 trò: Trộm trứng, Đường đua, Câu cá, Bóng bay, Khủng long, Tên lửa, Đèn pin, Hộp quà, Thẻ đỏ, UFO. Dùng danh sách lớp có sẵn hoặc dán danh sách.">
+<title>Gọi tên học sinh — EduQuiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="js/theme-inherit.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="css/accessibility.css">
+<link rel="stylesheet" href="css/name-picker.css">
+</head>
+<body class="np-body">
+<!--
+  Gọi tên học sinh (js/name-picker/): chạy hoàn toàn trên máy giáo viên.
+  Tranh vẽ: SVG tự vẽ trong js/name-picker/np-art.js (không tải ảnh ngoài). Trò chơi: np-games.js.
+  Nguồn tên: data/roster/students-active.json (file tĩnh, như ô chọn tên ở sảnh) · danh sách thầy cô dán vào · số thứ tự.
+  Không Firebase, không Apps Script, không gửi dữ liệu đi đâu. Cài đặt, danh sách dán vào và
+  lịch sử "đã gọi" chỉ nằm trong localStorage ('eduquiz_goiten_v1') của máy này.
+-->
+<div class="np-wrap">
+  <header class="np-head">
+    <a class="np-back" href="index.html" title="Về trang chủ"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Trang chủ</a>
+    <div class="np-tools">
+      <button type="button" class="np-icon-btn" id="npSound" title="Bật/tắt âm thanh" aria-label="Bật/tắt âm thanh"><i class="fa-solid fa-volume-high"></i></button>
+      <button type="button" class="np-icon-btn" id="npTheme" title="Sáng/tối" aria-label="Chuyển sáng/tối"><i class="fa-solid fa-circle-half-stroke"></i></button>
+    </div>
+    <h1>Gọi Tên Vui</h1>
+    <p class="np-sub">10 trò chơi gọi tên ngẫu nhiên cho lớp học. Chọn trò, bấm <b>Bắt đầu</b>, và chờ xem ai "trúng thưởng"!</p>
+  </header>
+
+  <div class="np-picker" id="npGames" role="radiogroup" aria-label="Chọn trò chơi"></div>
+
+  <section class="np-card np-play" aria-label="Sân khấu">
+    <div class="np-stagewrap" id="npStageWrap">
+      <div class="np-stage" id="npStage" aria-live="polite" tabindex="0" role="button" aria-label="Bấm để gọi tên"></div>
+    </div>
+    <div class="np-bar">
+      <p class="np-count" id="npStatus"></p>
+      <button type="button" class="np-go" id="npGo">Bắt đầu!</button>
+    </div>
+    <div class="np-opts">
+      <label><input type="checkbox" id="npNoRepeat"> Bạn đã được gọi thì nghỉ lượt sau</label>
+      <label><input type="checkbox" id="npTwist"> Lật kèo: tưởng bắt được rồi nhưng cuối cùng là người khác</label>
+      <label><input type="checkbox" id="npRandom"> Mỗi lượt đổi trò ngẫu nhiên</label>
+      <button type="button" class="np-small" id="npFull"><i class="fa-solid fa-expand" aria-hidden="true"></i> Toàn màn hình <kbd>F</kbd></button>
+    </div>
+    <div class="np-timeset">
+      <div class="np-tl"><span>Thời gian chọn</span><output id="npSecsOut"></output></div>
+      <input type="range" id="npSecs" min="5" max="30" step="1" aria-label="Thời gian chọn (giây)">
+      <p class="np-hint">Trong lúc chờ sẽ có vài lần "bắt hụt rồi nhả ra". Người được gọi thật chỉ lộ diện ở những giây cuối. Phím tắt: <kbd>Space</kbd> gọi tên · <kbd>F</kbd> toàn màn hình.</p>
+    </div>
+  </section>
+
+  <div class="np-two">
+    <section class="np-card" aria-label="Người chơi">
+      <h2 class="np-step">Người chơi <small id="npPlayers"></small></h2>
+      <div class="np-modes" id="npSrcTabs" role="radiogroup" aria-label="Nguồn tên">
+        <button type="button" role="radio" data-src="class"><i class="fa-solid fa-school" aria-hidden="true"></i> Lớp có sẵn</button>
+        <button type="button" role="radio" data-src="paste"><i class="fa-solid fa-paste" aria-hidden="true"></i> Dán danh sách</button>
+        <button type="button" role="radio" data-src="number"><i class="fa-solid fa-hashtag" aria-hidden="true"></i> Số thứ tự</button>
+      </div>
+      <div data-pane="class">
+        <div class="np-row2">
+          <label class="np-field"><span>Trường</span><select id="npSchool"></select></label>
+          <label class="np-field"><span>Lớp</span><select id="npClass"></select></label>
+        </div>
+        <p class="np-hint" id="npRosterNote">Đang tải danh sách lớp...</p>
+        <div class="np-chips" id="npRoster"></div>
+      </div>
+      <div data-pane="paste" hidden>
+        <label class="np-field"><span>Mỗi dòng 1 tên — dán thẳng từ Excel, Word, Zalo được</span>
+          <textarea id="npPaste" rows="7" spellcheck="false" placeholder="1. Nguyễn Văn An&#10;2. Trần Thị Bình&#10;3. Lê Minh Châu"></textarea></label>
+        <div class="np-row">
+          <button type="button" class="np-add" id="npPasteUse">Dùng danh sách này</button>
+          <button type="button" class="np-small" id="npPasteClear">Xoá hết tên</button>
+        </div>
+        <p class="np-hint" id="npPasteNote">Tự bỏ số thứ tự, cột lớp và tên trùng. Danh sách chỉ lưu trên máy này.</p>
+      </div>
+      <div data-pane="number" hidden>
+        <div class="np-numhead"><span>Số học sinh</span><output id="npNumOut"></output></div>
+        <input type="range" id="npNum" min="2" max="50" aria-label="Số học sinh">
+        <div class="np-numstep"><button type="button" class="np-small" data-num="-1">− 1</button><p class="np-hint">Kéo để chọn từ 2 đến 50 bạn, mỗi bạn mang một số.</p><button type="button" class="np-small" data-num="1">+ 1</button></div>
+      </div>
+    </section>
+
+    <section class="np-card" aria-label="Đã được gọi">
+      <div class="np-step"><h2>Đã được gọi <small id="npCalledCount"></small></h2><button type="button" class="np-small" id="npReset">Làm lại từ đầu</button></div>
+      <ol class="np-called" id="npCalled"></ol>
+    </section>
+  </div>
+</div>
+<div class="np-toast" id="npToast" role="status" hidden></div>
+
+<script src="js/game-sfx.js"></script>
+<script src="js/game-fx.js"></script>
+<script src="js/name-picker/name-picker-core.js"></script>
+<script src="js/name-picker/np-art.js"></script>
+<script src="js/name-picker/np-games.js"></script>
+<script src="js/name-picker/name-picker.js"></script>
+</body>
+</html>

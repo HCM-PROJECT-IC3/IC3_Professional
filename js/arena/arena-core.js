@@ -8,6 +8,7 @@
      • gold  — "Săn vàng" kiểu Blooket Gold Quest: đúng → mở 1 trong 3 rương
      • race  — "Đua về đích" kiểu Blooket Racing: đúng → tiến 1 bước
      • tug   — "Kéo co" 2 đội · spell — "Đấu phép" · heist — "Giải mã" (kiểu Wayground)
+     • dino  — "Đào hoá thạch" kiểu Blooket Deceptive Dinos · moon — "Lên Mặt Trăng" kiểu Mastery Peak
      • board — "Bảng điểm" kiểu Board Battle: giáo viên trình chiếu, các đội không cần máy
    + Linh vật: xu kiếm được khi chơi → mở hộp → sưu tập (localStorage).
    0 lượt Firebase, 0 Apps Script — không gửi gì ra ngoài.
@@ -601,6 +602,90 @@
   }
 
   // ============================================================
+  // ĐÀO HOÁ THẠCH (kiểu Deceptive Dinos của Blooket) — đào đá, có thể ăn gian, kiểm tra nhau
+  // Trả lời đúng → chọn 1 việc:
+  //   • Đào thật: chọn 1 trong 3 tảng đá, được số hoá thạch trong đó
+  //   • Ăn gian: được gấp DINO_CHEAT lần, nhưng bị gắn cờ "đang ăn gian" DINO_CHEAT_TURNS lượt
+  //   • Kiểm tra 1 bạn: bạn đó đang ăn gian → lấy DINO_FINE phần hoá thạch của bạn đó; trung thực → mất lượt
+  // ============================================================
+  const DINO_CHEAT = 3;
+  const DINO_CHEAT_TURNS = 2;
+  const DINO_FINE = 0.4;
+  const ROCKS = [{ v: 0, w: 8 }, { v: 10, w: 24 }, { v: 20, w: 22 }, { v: 30, w: 18 }, { v: 50, w: 12 }, { v: 80, w: 6 }, { v: 120, w: 2 }];
+  /** 3 tảng đá — luôn có ít nhất 1 tảng có hoá thạch. */
+  function rollRocks(rng) {
+    const out = [0, 1, 2].map(() => pickWeighted(ROCKS, rng).v);
+    if (!out.some((v) => v > 0)) out[Math.floor(rng() * 3)] = 20;
+    return out;
+  }
+  function rockLabel(v) { return v >= 120 ? { icon: '🦖', title: 'Bộ xương khủng long!' } : v >= 50 ? { icon: '🦕', title: 'Hoá thạch quý' } : v > 0 ? { icon: '🦴', title: 'Hoá thạch' } : { icon: '🪨', title: 'Đá trống' }; }
+  /** Đào 1 tảng (sửa p.fossils / p.cheat). Trả số hoá thạch được. */
+  function digRock(p, v, cheat) {
+    const gain = cheat ? v * DINO_CHEAT : v;
+    p.fossils = (p.fossils || 0) + gain;
+    if (cheat) p.cheat = DINO_CHEAT_TURNS;
+    return gain;
+  }
+  /** Kiểm tra `target`: đang ăn gian → mất DINO_FINE số hoá thạch cho người kiểm tra, xoá cờ. */
+  function inspect(actor, target) {
+    if (!target || target === actor || !(target.cheat > 0)) return { caught: false, take: 0 };
+    const take = Math.floor((target.fossils || 0) * DINO_FINE);
+    target.fossils -= take;
+    actor.fossils = (actor.fossils || 0) + take;
+    target.cheat = 0;
+    target.caught = (target.caught || 0) + 1;
+    return { caught: true, take };
+  }
+  /** Hết 1 lượt: cờ ăn gian của mọi người giảm 1. */
+  function tickCheat(players) { players.forEach((p) => { if (p.cheat > 0) p.cheat--; }); }
+  /** Máy chọn việc: đôi khi kiểm tra người vừa tăng vọt; còn lại đào, có lúc ăn gian. */
+  function botDino(bot, players, rng) {
+    const foes = players.filter((p) => p !== bot && !p.ghost);
+    const sus = foes.filter((p) => (p.lastGain || 0) >= 60).sort((a, b) => b.lastGain - a.lastGain)[0];
+    if (sus && rng() < 0.45) return { act: 'inspect', target: sus };
+    if (foes.length && rng() < 0.1) return { act: 'inspect', target: foes[Math.floor(rng() * foes.length)] };
+    return { act: 'dig', cheat: rng() < 0.3, rock: Math.floor(rng() * 3) };
+  }
+
+  // ============================================================
+  // LÊN MẶT TRĂNG (kiểu leo đỉnh Mastery Peak của Wayground) — tên lửa bay theo câu đúng
+  // Đúng: bay lên theo tốc độ trả lời; chuỗi đúng bật tầng đẩy (×1.5 từ 3 câu, ×2 từ 5 câu).
+  // Sai/hết giờ: chết máy, tụt MOON_FALL nghìn km nhưng không tụt dưới trạm đã qua (mỗi 1/4 đường).
+  // Ai chạm Mặt Trăng (MOON_KM nghìn km) trước thắng.
+  // ============================================================
+  const MOON_KM = 384;
+  const MOON_FALL = 30;
+  const MOON_STAGES = [96, 192, 288];
+  /** Bậc tầng đẩy theo chuỗi đúng. */
+  function moonBoost(streak) { return streak >= 5 ? 2 : streak >= 3 ? 1.5 : 1; }
+  function moonFloor(km) { return MOON_STAGES.filter((s) => km >= s).pop() || 0; }
+  /**
+   * 1 câu cho 1 tên lửa (sửa p.km / p.streak / p.landedAt). n = số câu của trận (đúng hết, thật nhanh
+   * thì tới nơi sau khoảng 7/10 số câu). Trả { gain, fell, stage (trạm mới qua, 0 = không), landed }.
+   */
+  function moonStep(p, ok, ms, limitMs, n, i) {
+    const before = p.km || 0;
+    if (before >= MOON_KM) return { gain: 0, fell: 0, stage: 0, landed: true };
+    if (!ok) {
+      p.streak = 0;
+      const km = Math.max(moonFloor(before), before - MOON_FALL);
+      p.km = km;
+      return { gain: 0, fell: before - km, stage: 0, landed: false };
+    }
+    p.streak = (p.streak || 0) + 1;
+    const fast = limitMs ? 1 - 0.5 * Math.min(1, Math.max(0, ms / limitMs)) : 1;
+    const km = Math.min(MOON_KM, before + Math.round((MOON_KM / Math.max(1, n)) * fast * moonBoost(p.streak)));
+    p.km = km;
+    if (km >= MOON_KM && p.landedAt === undefined) p.landedAt = i;
+    return { gain: km - before, fell: 0, stage: MOON_STAGES.find((s) => before < s && km >= s) || 0, landed: km >= MOON_KM };
+  }
+  /** Xếp hạng: đã đáp trước → bay cao hơn. */
+  function moonOrder(a, b) {
+    const la = a.landedAt ?? Infinity, lb = b.landedAt ?? Infinity;
+    return (la - lb) || ((b.km || 0) - (a.km || 0)) || (a.bot === b.bot ? 0 : a.bot ? 1 : -1);
+  }
+
+  // ============================================================
   // BẢNG ĐIỂM (kiểu Board Battle) — giáo viên trình chiếu, các đội trả lời không cần máy
   // ============================================================
   const BOARD_VALUES = [100, 200, 300, 400, 500];
@@ -679,11 +764,22 @@
     for (const p of PACKS) { const b = p.blooks.find((x) => x.id === id); if (b) return b; }
     return null;
   }
-  /** Mở 1 hộp: chọn độ hiếm theo trọng số rồi chọn đều trong độ hiếm đó. */
-  function openPack(packId, rng) {
+  // Thử thách quanh việc mở hộp (kiểu gacha "bảo hiểm" + sưu tập):
+  //   • Bảo hiểm: mở PITY_MAX hộp liền không ra Sử thi trở lên → hộp kế chắc chắn Sử thi trở lên
+  //   • Hoàn thành 1 hộp (đủ 9 Linh vật) → thưởng SET_BONUS xu, 1 lần
+  //   • Trùng Linh vật → lên sao (★ 1 con · ★★ 3 con · ★★★ 6 con) + hoàn xu
+  //   • Nhiệm vụ ngày: đúng DAILY_GOAL câu trong Đấu trường hôm nay → 1 vé mở hộp miễn phí
+  const PITY_MAX = 10;
+  const HIGH = ['epic', 'legendary', 'mystery'];
+  const SET_BONUS = 60;
+  const STAR_AT = [1, 3, 6];
+  const DAILY_GOAL = 20;
+  const starsOf = (count) => STAR_AT.filter((n) => (count || 0) >= n).length;
+  /** Mở 1 hộp: chọn độ hiếm theo trọng số rồi chọn đều trong độ hiếm đó. `high` → chỉ Sử thi trở lên (bảo hiểm). */
+  function openPack(packId, rng, high) {
     const pack = PACKS.find((p) => p.id === packId);
     if (!pack) return null;
-    const avail = Object.keys(RARITY).filter((r) => pack.blooks.some((b) => b.rarity === r)).map((r) => ({ r, w: RARITY[r].w }));
+    const avail = Object.keys(RARITY).filter((r) => (!high || HIGH.includes(r)) && pack.blooks.some((b) => b.rarity === r)).map((r) => ({ r, w: RARITY[r].w }));
     const r = pickWeighted(avail, rng).r;
     const pool = pack.blooks.filter((b) => b.rarity === r);
     return pool[Math.floor(rng() * pool.length)];
@@ -694,17 +790,50 @@
    */
   // Bắt đầu 0 xu: đổi biệt danh không "cày" được xu; 1 ván đầu đã đủ mở hộp đầu tiên.
   function newProfile() { return { coins: 0, owned: {}, avatar: '', best: {}, games: 0 }; }
-  function buyPack(profile, packId, rng) {
-    if (profile.coins < PACK_PRICE) return { ok: false, reason: 'coins' };
-    const blook = openPack(packId, rng);
+  /**
+   * opts.ticket → dùng vé miễn phí (nhiệm vụ ngày) thay cho xu.
+   * Trả thêm: pity (hộp này nhờ bảo hiểm), stars + starUp (lên sao), set (hoàn thành hộp → {bonus}).
+   */
+  function buyPack(profile, packId, rng, opts) {
+    const ticket = !!(opts && opts.ticket);
+    if (ticket ? !(profile.tickets > 0) : profile.coins < PACK_PRICE) return { ok: false, reason: ticket ? 'ticket' : 'coins' };
+    const pity = (profile.pity || 0) >= PITY_MAX - 1;
+    const blook = openPack(packId, rng, pity);
     if (!blook) return { ok: false, reason: 'pack' };
-    profile.coins -= PACK_PRICE;
-    const dupe = !!profile.owned[blook.id];
-    profile.owned[blook.id] = (profile.owned[blook.id] || 0) + 1;
+    if (ticket) profile.tickets--; else profile.coins -= PACK_PRICE;
+    profile.pity = HIGH.includes(blook.rarity) ? 0 : (profile.pity || 0) + 1;
+    profile.opened = (profile.opened || 0) + 1;
+    const before = profile.owned[blook.id] || 0;
+    const dupe = before > 0;
+    profile.owned[blook.id] = before + 1;
     const refund = dupe ? RARITY[blook.rarity].refund : 0;
     profile.coins += refund;
     if (!profile.avatar) profile.avatar = blook.id;
-    return { ok: true, blook, dupe, refund };
+    const stars = starsOf(before + 1);
+    let set = null;
+    const pack = PACKS.find((p) => p.id === packId);
+    profile.sets = profile.sets || {};
+    if (!dupe && !profile.sets[packId] && pack.blooks.every((b) => profile.owned[b.id])) {
+      profile.sets[packId] = Date.now();
+      profile.coins += SET_BONUS;
+      set = { bonus: SET_BONUS };
+    }
+    return { ok: true, blook, dupe, refund, pity, stars, starUp: dupe && stars > starsOf(before), set };
+  }
+  /** Nhiệm vụ ngày: cộng số câu đúng (day = 'YYYY-MM-DD' giờ máy). Đủ DAILY_GOAL lần đầu trong ngày → +1 vé. */
+  function addDaily(profile, correct, day) {
+    if (!profile.daily || profile.daily.day !== day) profile.daily = { day, correct: 0, done: false };
+    profile.daily.correct += Math.max(0, correct | 0);
+    if (!profile.daily.done && profile.daily.correct >= DAILY_GOAL) {
+      profile.daily.done = true;
+      profile.tickets = (profile.tickets || 0) + 1;
+      return true;
+    }
+    return false;
+  }
+  function dailyOf(profile, day) {
+    const d = profile.daily && profile.daily.day === day ? profile.daily : { correct: 0, done: false };
+    return { correct: Math.min(DAILY_GOAL, d.correct), goal: DAILY_GOAL, done: d.done };
   }
 
   /** Bóng ma kỷ lục (Kahoot ghost mode): điểm cộng dồn sau mỗi câu của lần chơi tốt nhất. */
@@ -723,7 +852,9 @@
     TUG_GOAL, TUG_K, TEAMS, tugPull, tugStep, tugWinner, tugTeamFor,
     SPELL_HP, SPELLS, rollSpells, spellBoost, castSpell, botSpell, spellOrder,
     VAULT_LEN, VAULT_SYMS, HEIST_STEAL, newVault, mineGems, crackOf, rekey, crackTry, vaultThreat, botHeist,
+    DINO_CHEAT, DINO_CHEAT_TURNS, DINO_FINE, rollRocks, rockLabel, digRock, inspect, tickCheat, botDino,
+    MOON_KM, MOON_FALL, MOON_STAGES, moonBoost, moonFloor, moonStep, moonOrder,
     BOARD_VALUES, makeBoard, boardScore,
-    coinsFor, PACK_PRICE, RARITY, PACKS, blookById, openPack, newProfile, buyPack, ghostScoreAt,
+    coinsFor, PACK_PRICE, RARITY, PACKS, blookById, openPack, newProfile, buyPack, PITY_MAX, SET_BONUS, STAR_AT, DAILY_GOAL, starsOf, addDaily, dailyOf, ghostScoreAt,
   };
 })(typeof window !== 'undefined' ? window : globalThis);
