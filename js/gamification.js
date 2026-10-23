@@ -138,6 +138,8 @@
    */
   function recordResult(rec) {
     const state = getState();
+    const prevXp = state.xp;
+    const prevStreak = state.streak;
     _updateStreak(state);
 
     const correct = rec.correct || 0;
@@ -159,7 +161,8 @@
     });
 
     _saveState(state);
-    return { xpGained, newBadges, state };
+    // kind 'quiz' → thẻ thưởng hiện chuỗi ngày học thay cho nhiệm vụ mini-game (quiz-engine.js gọi showGameReward)
+    return { xpGained, newBadges, state, prevXp, kind: 'quiz', streakUp: state.streak > prevStreak };
   }
 
   /**
@@ -304,21 +307,24 @@
     card.append(top, bar, _el('div', 'edu-reward-sub',
       s.xp + ' XP' + (toNext !== null ? ' · còn ' + toNext + ' XP để lên cấp ' + (lvl + 1) : ' · Cấp tối đa!')));
 
-    if (leveledUp) card.appendChild(_el('div', 'edu-reward-up', '🎉 LÊN CẤP ' + lvl + '!'));
+    if (leveledUp) card.appendChild(_el('div', 'edu-reward-up', 'Lên cấp ' + lvl));
 
     if (r.newBadges.length) {
       const row = _el('div', 'edu-reward-row');
-      r.newBadges.forEach(b => row.appendChild(_el('span', 'edu-reward-chip', '🏅 ' + b.label)));
+      r.newBadges.forEach(b => row.appendChild(_el('span', 'edu-reward-chip', 'Huy hiệu: ' + b.label)));
       card.appendChild(row);
     }
 
     const quest = _el('div', 'edu-reward-quest');
-    if (r.dailyJustDone) {
-      quest.append('✅ Hoàn thành nhiệm vụ hôm nay! ', _el('b', null, '+' + XP_DAILY_QUEST_BONUS + ' XP'));
+    if (r.kind === 'quiz') {
+      quest.append(_el('b', null, 'Chuỗi ' + s.streak + ' ngày'),
+        r.streakUp && s.streak > 1 ? ' học liên tiếp. Mai làm thêm 1 bài để giữ chuỗi.' : '. Mai làm thêm 1 bài để nối chuỗi.');
+    } else if (r.dailyJustDone) {
+      quest.append('Xong nhiệm vụ hôm nay ', _el('b', null, '+' + XP_DAILY_QUEST_BONUS + ' XP'));
     } else if (d.done) {
-      quest.textContent = '✅ Nhiệm vụ hôm nay đã xong — chơi tiếp để lên cấp!';
+      quest.textContent = 'Nhiệm vụ hôm nay đã xong.';
     } else {
-      quest.append('🎯 Nhiệm vụ hôm nay: chơi ' + DAILY_GAME_GOAL + ' ván (', _el('b', null, d.games + '/' + DAILY_GAME_GOAL),
+      quest.append('Nhiệm vụ hôm nay: chơi ' + DAILY_GAME_GOAL + ' ván (', _el('b', null, d.games + '/' + DAILY_GAME_GOAL),
         ') → thưởng ', _el('b', null, '+' + XP_DAILY_QUEST_BONUS + ' XP'));
     }
     card.appendChild(quest);

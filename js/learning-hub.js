@@ -138,7 +138,7 @@
       const goal = goalOf(st.key);
       // Lịch sử ('eduquiz_records') đã có bài vừa nộp (saveRecord chạy trước sự kiện này).
       if (goal && weekDone(studentRecords(st.key)) === goal) {
-        setTimeout(() => notify(`🎉 Chúc mừng! Em đã hoàn thành mục tiêu ${goal} bài tuần này.`, 'success'), 2400);
+        setTimeout(() => notify(`Em đã làm đủ ${goal} bài theo mục tiêu tuần này.`, 'success'), 2400);
       }
     }
     updateBadge();
@@ -539,7 +539,7 @@
     }
     const pct = Math.min(100, Math.round((done / goal) * 100));
     const daysLeft = 7 - ((new Date().getDay() + 6) % 7) - 1;
-    const msg = done >= goal ? '🎉 Hoàn thành mục tiêu tuần! Giữ phong độ nhé.'
+    const msg = done >= goal ? 'Đã đạt mục tiêu tuần.'
       : `Còn ${goal - done} bài${daysLeft > 0 ? ` trong ${daysLeft + 1} ngày` : ' — hôm nay là ngày cuối tuần'}.`;
     return `<div class="lh-card lh-goal ${done >= goal ? 'is-done' : ''}"><div class="lh-card-title"><i class="fa-solid fa-flag"></i> Mục tiêu tuần này
         <span class="lh-goal-count">${done}/${goal} bài</span></div>

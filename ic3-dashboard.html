@@ -226,6 +226,10 @@
           </button>
           <span class="eb-status" id="ebStatus">Đề mới</span>
           <div class="eb-top-actions">
+            <div class="eb-hist" role="group" aria-label="Hoàn tác">
+              <button type="button" class="eb-btn eb-btn-ghost eb-icon-btn" id="ebUndoBtn" title="Hoàn tác (Ctrl+Z)" aria-label="Hoàn tác" disabled><i class="fa-solid fa-rotate-left"></i></button>
+              <button type="button" class="eb-btn eb-btn-ghost eb-icon-btn" id="ebRedoBtn" title="Làm lại (Ctrl+Y)" aria-label="Làm lại" disabled><i class="fa-solid fa-rotate-right"></i></button>
+            </div>
             <button type="button" class="eb-btn eb-btn-ghost" id="ebPreviewBtn" title="Xem thử như học sinh"><i class="fa-solid fa-eye"></i><span> Xem trước</span></button>
             <button type="button" class="eb-btn eb-btn-ghost" id="ebPresentBtn" title="Chiếu lên màn hình lớn, đếm giờ, chấm điểm theo nhóm — không tốn lượt Firebase"><i class="fa-solid fa-chalkboard-user"></i><span> Trình chiếu</span></button>
             <button type="button" class="eb-btn eb-btn-ghost" id="ebLiveBtn" title="Mở phòng thi đấu trực tiếp kiểu Kahoot"><i class="fa-solid fa-tower-broadcast"></i><span> Chơi trực tiếp</span></button>
@@ -236,8 +240,9 @@
               <div class="eb-menu" id="ebMoreMenu" hidden>
                 <button type="button" data-more="new"><i class="fa-solid fa-file-circle-plus"></i> Đề mới</button>
                 <button type="button" data-more="open-link"><i class="fa-solid fa-link"></i> Mở đề từ link (sửa trên máy khác)</button>
-                <button type="button" data-more="print"><i class="fa-solid fa-print"></i> In đề / đáp án</button>
+                <button type="button" data-more="print"><i class="fa-solid fa-print"></i> In đề · trộn mã đề · tải Word</button>
                 <button type="button" data-more="link-set"><i class="fa-solid fa-arrow-up-right-from-square"></i> Thêm bộ đề bằng link ngoài</button>
+                <button type="button" data-more="keys"><i class="fa-regular fa-keyboard"></i> Phím tắt</button>
               </div>
             </div>
             <button type="button" class="eb-btn eb-btn-primary" id="ebSaveBtn"><i class="fa-solid fa-floppy-disk"></i> Lưu</button>
@@ -255,7 +260,7 @@
               </div>
               <div class="eb-rail-foot-row">
                 <button type="button" class="eb-btn eb-btn-soft" id="ebBankOpenBtn" title="Lấy câu từ ngân hàng câu hỏi IC3/Spark/MOS"><i class="fa-solid fa-database"></i> Ngân hàng</button>
-                <button type="button" class="eb-btn eb-btn-soft" id="ebImportBtn" title="Dán nhiều câu hỏi cùng lúc từ Word/văn bản"><i class="fa-solid fa-paste"></i> Nhập nhanh</button>
+                <button type="button" class="eb-btn eb-btn-soft" id="ebImportBtn" title="Dán nhiều câu hỏi từ Word, Excel hoặc chọn file .xlsx/.csv"><i class="fa-solid fa-paste"></i> Nhập nhanh</button>
               </div>
             </div>
           </aside>
@@ -556,6 +561,7 @@
 <script src="js/services/data-cache-service.js"></script>
 <script src="js/services/profile-cache-service.js"></script>
 <script src="js/dashboard.js"></script>
+<script src="js/services/lazy-script-loader.js"></script>
 <script src="js/custom-exam-codec.js"></script>
 <script src="js/exam-builder.js"></script>
 <script src="js/sw-register.js"></script>

@@ -36,7 +36,7 @@
     });
     $('btnPackCopy').addEventListener('click', () => {
       box.focus(); box.select();
-      const done = () => say('✓ Đã chép mã — dán vào Zalo/email gửi thầy/cô.');
+      const done = () => say('Đã chép mã. Dán vào Zalo hoặc email để gửi thầy/cô.');
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(box.value).then(done, () => { document.execCommand('copy'); done(); });
       else { try { document.execCommand('copy'); done(); } catch (e) { say('Bấm giữ vào ô mã rồi chọn Sao chép.'); } }
     });
@@ -44,13 +44,13 @@
       const last = P.last();
       if (!last) return;
       download('ket-qua-' + P.safeName(last.name) + '.txt', last.code + '\r\n');
-      say('✓ Đã tải file — gửi file này cho thầy/cô.');
+      say('Đã tải file. Gửi file này cho thầy/cô.');
     });
     $('btnPackAll').addEventListener('click', () => {
       const all = P.list();
       if (!all.length) { say('Chưa có kết quả nào được lưu trên máy này.'); return; }
       download('ket-qua-tat-ca-' + P.safeName(all[0].name) + '.txt', all.map((x) => x.code).join('\r\n') + '\r\n');
-      say('✓ Đã tải ' + all.length + ' kết quả gần nhất trên máy này.');
+      say('Đã tải ' + all.length + ' kết quả gần nhất trên máy này.');
     });
   }
 

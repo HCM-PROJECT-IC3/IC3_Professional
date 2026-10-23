@@ -172,7 +172,7 @@
 .eb-media-actions { display: flex; gap: 8px; margin-top: 6px; }
 
 /* Ô đáp án kiểu Kahoot */
-.eb-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.eb-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .eb-tile {
   position: relative; display: flex; align-items: center; gap: 10px; min-height: 74px;
   padding: 10px 46px 10px 10px; border-radius: 14px; background: var(--bg-card);
@@ -532,3 +532,19 @@ ol[type="a"].eb-opts { list-style: lower-alpha; padding-left: 20px; }
 .eb-pt-names { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-bottom: 12px; }
 .eb-pt-name { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 10px; background: var(--tc); color: #fff; }
 .eb-pt-name input { flex: 1; min-width: 0; border: none; border-radius: 7px; padding: 6px 8px; font: 700 13px 'Nunito', sans-serif; background: rgba(255,255,255,.92); color: #1b1b2f; }
+
+/* ── Hoàn tác / Làm lại · phím tắt · in nhiều mã đề · nhập Excel (10/2026) ── */
+.eb-hist { display: inline-flex; gap: 2px; padding-right: 6px; margin-right: 2px; border-right: 1px solid var(--border-color); }
+.eb-hist .eb-btn:disabled { opacity: .35; cursor: default; }
+.eb-print-choice.is-active { border-color: var(--accent-purple); box-shadow: inset 0 0 0 1px var(--accent-purple); background: var(--accent-purple-light); }
+.eb-print-opts { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 2px 0 10px; }
+.eb-import-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.eb-keys { width: 100%; border-collapse: collapse; font-size: 13.5px; color: var(--text-primary); margin-bottom: 8px; }
+.eb-keys td { padding: 7px 4px; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+.eb-keys td:first-child { width: 44%; white-space: nowrap; }
+.eb-keys kbd {
+  display: inline-block; min-width: 1.6em; padding: 2px 7px; border-radius: 6px; text-align: center;
+  font: 700 12px/1.4 ui-monospace, Consolas, monospace; color: var(--text-primary);
+  background: var(--input-bg); border: 1px solid var(--border-color); box-shadow: inset 0 -1px 0 var(--border-color);
+}
+.eb-import-ta.is-table { white-space: pre; overflow-x: auto; tab-size: 18; }

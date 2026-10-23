@@ -35,6 +35,7 @@
       ext: '.xlsx',
       label: 'Excel',
       async grade(file, tasks) {
+        await window.EduLazyLoad.loadScripts(['js/vendor/exceljs.min.js']);
         const buffer = await file.arrayBuffer();
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.load(buffer);
@@ -45,6 +46,7 @@
       ext: '.pptx',
       label: 'PowerPoint',
       async grade(file, tasks) {
+        await window.EduLazyLoad.loadScripts(['js/vendor/jszip.min.js']);
         const buffer = await file.arrayBuffer();
         const zip = await JSZip.loadAsync(buffer);
         return MosGradingEnginePptx.gradePptx(zip, tasks);

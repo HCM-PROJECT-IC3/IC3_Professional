@@ -231,6 +231,7 @@
     B.slides = slides.filter((s) => s.custom || s.q);
     B.cur = Math.min(Math.max(0, data.cur || 0), Math.max(0, B.slides.length - 1));
     B.dirty = dirty;
+    histReset();
     if (missing) toast(`${missing} câu ngân hàng không còn tồn tại — đã bỏ khỏi đề.`, 'fa-triangle-exclamation');
   }
 
@@ -239,6 +240,7 @@
     B.type = ''; B.duration = 0; B.shuffle = true; B.deadline = 0;
     B.slides = [{ id: newId(), custom: blankCustom('single') }];
     B.cur = 0; B.dirty = false;
+    histReset();
     saveDraft();
   }
 
@@ -253,6 +255,101 @@
     renderTop();
     if (rail) renderRailItem(B.cur);
     if (health) { renderHealth(); refreshLinkSize(); }
+    // rail=false = thao tác cấu trúc (thêm/xoá/kéo câu) → ghi lịch sử ngay; gõ chữ → gộp theo đợt.
+    if (rail) histCommitSoon(); else histCommit();
+  }
+
+  // ============================================================
+  // HOÀN TÁC / LÀM LẠI (Ctrl+Z · Ctrl+Y) — chỉ trong bộ nhớ trang
+  // H.base = trạng thái đã ghi gần nhất; mỗi lần đổi thì base cũ vào H.past.
+  // Gõ liền nhau được gộp thành 1 bước (HIST_IDLE_MS). Câu ngân hàng không
+  // bao giờ bị sửa tại chỗ nên giữ nguyên tham chiếu, chỉ sao chép câu tự soạn.
+  // ============================================================
+  const HIST_MAX = 80;
+  const HIST_IDLE_MS = 700;
+  const H = { past: [], future: [], base: null, key: '', timer: 0 };
+  function histCapture() {
+    return {
+      title: B.title, desc: B.desc, theme: clone(B.theme), type: B.type, duration: B.duration, shuffle: B.shuffle, deadline: B.deadline, cur: B.cur,
+      slides: B.slides.map((s) => (s.custom ? { id: s.id, custom: clone(s.custom) } : s)),
+    };
+  }
+  function histKey(st) {
+    return JSON.stringify(Object.assign({}, st, { cur: 0, slides: st.slides.map((s) => (s.custom ? s.custom : s.uid)) }));
+  }
+  function histReset() {
+    clearTimeout(H.timer);
+    H.timer = 0;
+    H.past = []; H.future = [];
+    H.base = histCapture(); H.key = histKey(H.base);
+    renderHistButtons();
+  }
+  function histCommit() {
+    clearTimeout(H.timer);
+    H.timer = 0;
+    if (!H.base) { histReset(); return; }
+    const now = histCapture();
+    const key = histKey(now);
+    if (key === H.key) { H.base = now; return; }
+    H.past.push(H.base);
+    if (H.past.length > HIST_MAX) H.past.shift();
+    H.future = [];
+    H.base = now; H.key = key;
+    renderHistButtons();
+  }
+  function histCommitSoon() { clearTimeout(H.timer); H.timer = setTimeout(histCommit, HIST_IDLE_MS); renderHistButtons(); }
+  function histApply(st) {
+    Object.assign(B, { title: st.title, desc: st.desc, theme: clone(st.theme), type: st.type, duration: st.duration, shuffle: st.shuffle, deadline: st.deadline });
+    B.slides = st.slides.map((s) => (s.custom ? { id: s.id, custom: clone(s.custom) } : s));
+    B.cur = Math.min(Math.max(0, st.cur), Math.max(0, B.slides.length - 1));
+    H.base = st; H.key = histKey(st);
+    B.dirty = true;
+    saveDraft();
+    renderAll();
+    renderHistButtons();
+  }
+  function undo() {
+    histCommit(); // đợt gõ đang dở cũng thành 1 bước, hoàn tác được ngay
+    if (!H.past.length) { toast('Không còn gì để hoàn tác.', 'fa-rotate-left'); return; }
+    H.future.push(H.base);
+    histApply(H.past.pop());
+  }
+  function redo() {
+    histCommit();
+    if (!H.future.length) { toast('Không còn gì để làm lại.', 'fa-rotate-right'); return; }
+    H.past.push(H.base);
+    histApply(H.future.pop());
+  }
+  /** Hoàn tác vẽ lại khung soạn → đặt con trỏ lại đúng ô đang gõ (nếu ô đó còn). */
+  function withFocusKept(fn) {
+    const a = document.activeElement;
+    const f = a?.dataset?.f;
+    const i = a?.dataset?.i;
+    fn();
+    if (!f) return;
+    const el = $('ebStage').querySelector(`[data-f="${f}"]${i != null ? `[data-i="${i}"]` : ''}`);
+    if (el) { el.focus(); if (typeof el.value === 'string') el.setSelectionRange?.(el.value.length, el.value.length); }
+  }
+  function openKeys() {
+    const row = (keys, what) => `<tr><td>${keys.map((k) => `<kbd>${k}</kbd>`).join(' ')}</td><td>${what}</td></tr>`;
+    modal('<i class="fa-regular fa-keyboard"></i> Phím tắt khi soạn đề', `
+      <table class="eb-keys"><tbody>
+        ${row(['Ctrl', 'Z'], 'Hoàn tác')}
+        ${row(['Ctrl', 'Y'], 'Làm lại (hoặc Ctrl + Shift + Z)')}
+        ${row(['Ctrl', 'S'], 'Lưu đề')}
+        ${row(['Ctrl', 'Enter'], 'Thêm câu mới cùng dạng, ngay sau câu đang soạn')}
+        ${row(['Ctrl', 'D'], 'Nhân bản câu đang soạn')}
+        ${row(['Alt', '↑ / ↓'], 'Sang câu trước / câu sau')}
+        ${row(['Alt', 'Shift', '↑ / ↓'], 'Đưa câu đang soạn lên / xuống')}
+        ${row(['Ctrl', 'V'], 'Dán ảnh vào câu đang soạn')}
+        ${row(['?'], 'Mở bảng này (khi không đang gõ chữ)')}
+      </tbody></table>
+      <p class="eb-matrix-hint">Trên máy Mac dùng phím ⌘ thay cho Ctrl.</p>`,
+    '<button class="btn-save" onclick="closeModal()">Đóng</button>');
+  }
+  function renderHistButtons() {
+    if ($('ebUndoBtn')) $('ebUndoBtn').disabled = !H.past.length && !H.timer;
+    if ($('ebRedoBtn')) $('ebRedoBtn').disabled = !H.future.length;
   }
 
   // ============================================================
@@ -597,7 +694,9 @@
     if (c.type === to) return c;
     const n = blankCustom(to);
     n.q = c.q; n.expl = c.expl; if (c.img) n.img = c.img;
-    const texts = c.type === 'tf' ? ['Đúng', 'Sai']
+    // "Đúng"/"Sai" chỉ có nghĩa khi sang trắc nghiệm; sang Sắp xếp/Nối cặp thì để trống
+    // (trước đây vế trái Nối cặp bị điền sẵn "Đúng", "Sai").
+    const texts = c.type === 'tf' ? (to === 'single' || to === 'multi' ? ['Đúng', 'Sai'] : [])
       : c.type === 'ordering' ? (c.items || [])
       : c.type === 'matching' ? (c.pairs || []).map((p) => p[0])
       : (c.options || []);
@@ -835,7 +934,137 @@
   }
 
   /** Nhập nhanh: dán nhiều câu, mỗi câu cách nhau 1 dòng trống. */
+  // ── Nhập từ bảng (Excel / Google Sheets / CSV) ──
+  // Mỗi dòng 1 câu: Câu hỏi | Đáp án A | B | C | D (tới F) | Đáp án đúng | Giải thích.
+  // "Đáp án đúng" ghi chữ cái (B, AC, "A, C") hoặc Đúng/Sai cho câu Đúng/Sai.
+  // Có dòng tiêu đề thì đọc cột theo tên; không có thì cột đáp án đúng là ô
+  // cuối cùng (tính từ phải) trông giống đáp án.
+  const SHEET_HEADERS = ['Câu hỏi', 'Đáp án A', 'Đáp án B', 'Đáp án C', 'Đáp án D', 'Đáp án E', 'Đáp án F', 'Đáp án đúng', 'Giải thích'];
+  function parseDelimited(text) {
+    const src = String(text || '').replace(/^\ufeff/, '').replace(/\r\n?/g, '\n');
+    const first = src.split('\n').find((l) => l.trim()) || '';
+    const delim = first.includes('\t') ? '\t' : (first.split(';').length > first.split(',').length ? ';' : ',');
+    const rows = [];
+    let row = [], cell = '', quoted = false;
+    for (let i = 0; i < src.length; i++) {
+      const ch = src[i];
+      if (quoted) {
+        if (ch === '"' && src[i + 1] === '"') { cell += '"'; i++; }
+        else if (ch === '"') quoted = false;
+        else cell += ch;
+      } else if (ch === '"' && cell === '') quoted = true;
+      else if (ch === delim) { row.push(cell); cell = ''; }
+      else if (ch === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; }
+      else cell += ch;
+    }
+    row.push(cell); rows.push(row);
+    return rows;
+  }
+  function parseAnswerCell(v) {
+    const t = String(v || '').trim();
+    if (/^(đúng|sai|true|false|đ|s)$/i.test(t)) return { tf: /^(đúng|true|đ)$/i.test(t) ? 0 : 1 };
+    const m = t.toUpperCase().replace(/VÀ|[\s,;/&+.]/g, '');
+    if (m && /^[A-F]+$/.test(m)) return { idx: [...new Set([...m].map((ch) => ch.charCodeAt(0) - 65))] };
+    return null;
+  }
+  function parseRows(rows0) {
+    let rows = rows0.map((r) => r.map((c) => String(c ?? '').replace(/\s+/g, ' ').trim())).filter((r) => r.some(Boolean));
+    let map = null;
+    if (rows.length && /câu hỏi|cau hoi|question|nội dung/i.test(rows[0][0] || '')) {
+      const h = rows[0].map((x) => x.toLowerCase());
+      map = {
+        q: 0,
+        ans: h.findIndex((x) => /đáp án đúng|dap an dung|đúng|answer|key/.test(x)),
+        expl: h.findIndex((x) => /giải thích|giai thich|explain/.test(x)),
+        opts: h.map((x, i) => (/^(đáp án|dap an|phương án|phuong an|option)?\s*[a-f]$/.test(x) ? i : -1)).filter((i) => i > 0),
+      };
+      rows = rows.slice(1);
+    }
+    const out = [];
+    let skipped = 0;
+    rows.forEach((r) => {
+      const q = (r[0] || '').replace(/^(câu|cau)\s*\d+\s*[:.)]\s*/i, '');
+      let k = -1;
+      if (map && map.ans > 0) k = map.ans;
+      else for (let i = r.length - 1; i >= 1; i--) if (parseAnswerCell(r[i])) { k = i; break; }
+      const ans = k > 0 ? parseAnswerCell(r[k]) : null;
+      const raw = map && map.opts.length ? map.opts.map((i) => r[i] || '') : r.slice(1, Math.max(1, k));
+      const expl = map ? (map.expl > 0 ? r[map.expl] || '' : '') : r.slice(k + 1).filter(Boolean).join(' ');
+      const filled = raw.filter(Boolean);
+      const low = filled.map((o) => o.toLowerCase());
+      if (!q || !ans) { skipped++; return; }
+      if (ans.tf != null && (!filled.length || (filled.length === 2 && low[0] === 'đúng' && low[1] === 'sai'))) {
+        out.push({ type: 'tf', q, correct: [ans.tf], expl }); return;
+      }
+      if (ans.tf != null) { // "Đúng"/"Sai" ghi trong cột đáp án nhưng có phương án riêng → tìm phương án trùng chữ
+        const j = low.indexOf(ans.tf ? 'sai' : 'đúng');
+        if (j < 0) { skipped++; return; }
+        ans.idx = [raw.indexOf(filled[j])];
+      }
+      // Bỏ ô phương án trống, đánh lại chỉ số đáp án đúng theo vị trí còn lại.
+      const keep = raw.map((o, i) => (o ? i : -1)).filter((i) => i >= 0).slice(0, MAX_OPTIONS);
+      const options = keep.map((i) => raw[i]);
+      const correct = ans.idx.map((i) => keep.indexOf(i)).filter((i) => i >= 0);
+      if (options.length < 2 || !correct.length) { skipped++; return; }
+      out.push({ type: correct.length > 1 ? 'multi' : 'single', q, options, correct, expl });
+    });
+    return { out, skipped };
+  }
+  function rowsToTsv(rows) {
+    return rows.map((r) => r.map((c) => {
+      const t = String(c ?? '');
+      return /[\t\n"]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t;
+    }).join('\t')).join('\n');
+  }
+  async function loadExcelJs() {
+    if (global.ExcelJS) return global.ExcelJS;
+    if (!global.EduLazyLoad) throw new Error('Thiếu bộ tải thư viện.');
+    await global.EduLazyLoad.loadScripts(['js/vendor/exceljs.min.js']);
+    return global.ExcelJS;
+  }
+  /** File .xlsx / .csv → các dòng ô (mảng chuỗi). Chỉ đọc trang tính đầu tiên. */
+  async function readSheetFile(file) {
+    if (/\.(csv|tsv|txt)$/i.test(file.name)) return parseDelimited(await file.text());
+    if (!/\.xlsx$/i.test(file.name)) throw new Error('Chỉ đọc được file .xlsx hoặc .csv (file .xls cũ: mở bằng Excel rồi "Lưu thành" .xlsx).');
+    const ExcelJS = await loadExcelJs();
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(await file.arrayBuffer());
+    const ws = wb.worksheets[0];
+    if (!ws) return [];
+    const rows = [];
+    ws.eachRow({ includeEmpty: false }, (row) => {
+      const cells = [];
+      for (let c = 1; c <= Math.max(row.cellCount, SHEET_HEADERS.length); c++) cells.push(row.getCell(c).text || '');
+      rows.push(cells);
+    });
+    return rows;
+  }
+  async function downloadSheetTemplate() {
+    try {
+      const ExcelJS = await loadExcelJs();
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet('Câu hỏi');
+      ws.addRow(SHEET_HEADERS);
+      ws.addRow(['Thiết bị nào là thiết bị nhập?', 'Màn hình', 'Bàn phím', 'Loa', 'Máy in', '', '', 'B', 'Bàn phím dùng để nhập dữ liệu vào máy tính.']);
+      ws.addRow(['Những thiết bị nào lưu trữ dữ liệu? (Chọn 2)', 'Ổ cứng', 'Chuột', 'USB', 'Loa', '', '', 'A, C', '']);
+      ws.addRow(['RAM là bộ nhớ trong.', '', '', '', '', '', '', 'Đúng', 'RAM nằm trên bo mạch chủ, là bộ nhớ trong.']);
+      ws.getRow(1).font = { bold: true };
+      ws.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE7EAF6' } };
+      ws.columns.forEach((col, i) => { col.width = i === 0 ? 48 : i === 8 ? 44 : i === 7 ? 14 : 18; col.alignment = { wrapText: true, vertical: 'top' }; });
+      ws.views = [{ state: 'frozen', ySplit: 1 }];
+      const buf = await wb.xlsx.writeBuffer();
+      downloadBlob(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), 'mau-nhap-cau-hoi.xlsx');
+    } catch (e) {
+      // Không tải được ExcelJS (mất mạng...) → mẫu CSV, Excel vẫn mở được.
+      const csv = '\ufeff' + [SHEET_HEADERS, ['Thiết bị nào là thiết bị nhập?', 'Màn hình', 'Bàn phím', 'Loa', 'Máy in', '', '', 'B', '']]
+        .map((r) => r.map((c) => `"${c}"`).join(',')).join('\r\n');
+      downloadBlob(new Blob([csv], { type: 'text/csv' }), 'mau-nhap-cau-hoi.csv');
+    }
+  }
+
   function parseQuick(text) {
+    // Dán từ Excel/Google Sheets: các ô cách nhau bằng phím Tab.
+    if ((String(text || '').split('\n').find((l) => l.trim()) || '').includes('\t')) return parseRows(parseDelimited(text));
     const blocks = String(text || '').replace(/\r/g, '').split(/\n\s*\n/).map((b) => b.split('\n').map((l) => l.trim()).filter(Boolean)).filter((b) => b.length);
     const out = [];
     let skipped = 0;
@@ -868,15 +1097,37 @@
   function openImport() {
     const sample = 'Câu 1: Thiết bị nào là thiết bị nhập?\nA. Màn hình\n*B. Bàn phím\nC. Loa\nD. Máy in\nGiải thích: Bàn phím dùng để nhập dữ liệu vào máy tính.\n\nCâu 2: RAM là bộ nhớ trong.\n*Đúng\nSai';
     const body = modal('<i class="fa-solid fa-paste"></i> Nhập nhanh nhiều câu', `
-      <p class="eb-matrix-hint">Dán câu hỏi từ Word/Google Docs. Mỗi câu cách nhau <b>1 dòng trống</b>; đánh dấu đáp án đúng bằng <b>*</b> ở đầu dòng (nhiều dấu * = câu nhiều đáp án); 2 đáp án "Đúng/Sai" thành câu Đúng/Sai; dòng "Giải thích:" là phần giải thích.</p>
+      <div class="eb-import-tabs">
+        <button type="button" class="eb-btn eb-btn-soft" id="ebImportFile"><i class="fa-solid fa-file-excel"></i> Chọn file Excel / CSV</button>
+        <button type="button" class="eb-btn eb-btn-ghost" id="ebImportTpl"><i class="fa-solid fa-download"></i> Tải file mẫu</button>
+      </div>
+      <p class="eb-matrix-hint"><b>Từ Word/Google Docs:</b> mỗi câu cách nhau 1 dòng trống; đánh dấu đáp án đúng bằng <b>*</b> ở đầu dòng (nhiều dấu * = câu nhiều đáp án); 2 đáp án "Đúng/Sai" thành câu Đúng/Sai; dòng "Giải thích:" là phần giải thích.<br>
+      <b>Từ Excel/Google Sheets:</b> bôi đen các ô rồi dán vào đây, mỗi dòng 1 câu theo cột: Câu hỏi · Đáp án A–F · Đáp án đúng (B, AC hoặc Đúng/Sai) · Giải thích.</p>
       <textarea id="ebImportText" class="eb-input eb-import-ta" rows="12" placeholder="${esc(sample)}"></textarea>
       <div class="eb-import-status" id="ebImportStatus">Chưa có nội dung.</div>`,
     `<button class="btn-cancel" onclick="closeModal()">Huỷ</button><button class="btn-save" id="ebImportGo" disabled><i class="fa-solid fa-plus"></i> Thêm câu</button>`);
     const ta = $('ebImportText');
+    $('ebImportTpl').addEventListener('click', downloadSheetTemplate);
+    $('ebImportFile').addEventListener('click', () => {
+      const inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = '.xlsx,.csv,.tsv,.txt';
+      inp.onchange = async () => {
+        const f = inp.files[0];
+        if (!f) return;
+        $('ebImportStatus').textContent = `Đang đọc ${f.name}…`;
+        try {
+          ta.value = rowsToTsv(await readSheetFile(f));
+          upd();
+        } catch (e) { $('ebImportStatus').innerHTML = `<span class="eb-warn">${esc(e.message)}</span>`; }
+      };
+      inp.click();
+    });
     const upd = () => {
       const { out, skipped } = parseQuick(ta.value);
+      const tsv = ta.value.includes('\t');
+      ta.classList.toggle('is-table', tsv);
       $('ebImportStatus').innerHTML = ta.value.trim()
-        ? `Đọc được <b>${out.length}</b> câu${skipped ? ` · <span class="eb-warn">${skipped} khối bỏ qua (thiếu câu hỏi, &lt; 2 đáp án hoặc chưa đánh dấu *)</span>` : ''}`
+        ? `Đọc được <b>${out.length}</b> câu${skipped ? ` · <span class="eb-warn">${skipped} ${tsv ? 'dòng' : 'khối'} bỏ qua (${tsv ? 'thiếu câu hỏi, &lt; 2 đáp án hoặc ô "Đáp án đúng" không phải A–F / Đúng / Sai' : 'thiếu câu hỏi, &lt; 2 đáp án hoặc chưa đánh dấu *'})</span>` : ''}`
         : 'Chưa có nội dung.';
       $('ebImportGo').disabled = !out.length;
       $('ebImportGo').innerHTML = `<i class="fa-solid fa-plus"></i> Thêm ${out.length || ''} câu`;
@@ -903,50 +1154,176 @@
     return !!(String(c.q || '').trim() || c.img || (c.options || []).some((o) => String(o).trim()) || (c.items || []).some((o) => String(o).trim()) || (c.pairs || []).some(([l, r]) => String(l).trim() || String(r).trim()));
   }
 
+  // ============================================================
+  // IN ĐỀ · TRỘN MÃ ĐỀ · TẢI WORD
+  // Mỗi mã đề trộn thứ tự câu và/hoặc thứ tự đáp án (chỉ câu trắc nghiệm;
+  // Đúng/Sai giữ nguyên thứ tự). Trang cuối là bảng đáp án theo từng mã đề.
+  // "Tải Word" = cùng nội dung HTML lưu thành .doc — Word mở và sửa được.
+  // ============================================================
+  const PRINT_PREF_KEY = 'ic3_print_prefs';
   function openPrint() {
     if (!B.slides.length) return;
-    const body = modal('<i class="fa-solid fa-print"></i> In đề', `
-      <div class="eb-print-choices">
-        <button type="button" class="eb-print-choice" data-print="student"><i class="fa-solid fa-file-lines"></i><b>Đề cho học sinh</b><span>Không có đáp án</span></button>
-        <button type="button" class="eb-print-choice" data-print="key"><i class="fa-solid fa-file-circle-check"></i><b>Đề kèm đáp án</b><span>Đánh dấu đáp án + giải thích</span></button>
+    const pref = Object.assign({ school: '', first: 101 }, lsGet(PRINT_PREF_KEY, {}));
+    const body = modal('<i class="fa-solid fa-print"></i> In đề · trộn mã đề · tải Word', `
+      <div class="eb-print-choices" role="radiogroup" aria-label="Loại bản in">
+        <button type="button" class="eb-print-choice is-active" data-print="student" role="radio" aria-checked="true"><i class="fa-solid fa-file-lines"></i><b>Đề cho học sinh</b><span>Không có đáp án</span></button>
+        <button type="button" class="eb-print-choice" data-print="key" role="radio" aria-checked="false"><i class="fa-solid fa-file-circle-check"></i><b>Đề kèm đáp án</b><span>Đánh dấu đáp án + giải thích</span></button>
       </div>
-      <p class="eb-matrix-hint">Câu chọn vùng ảnh / kéo thả nên làm trên máy — bản in chỉ để tham khảo cho các dạng này.</p>`,
-    '<button class="btn-cancel" onclick="closeModal()">Đóng</button>');
-    body.querySelectorAll('[data-print]').forEach((b) => b.addEventListener('click', () => { printExam(b.dataset.print === 'key'); global.closeModal?.(); }));
+      <label class="eb-field"><span>Tên trường / đơn vị (in ở góc trên)</span>
+        <input class="eb-input" id="ebPrSchool" maxlength="80" placeholder="VD: TRƯỜNG THCS HUỲNH TẤN PHÁT" value="${esc(pref.school)}"></label>
+      <div class="eb-field-row">
+        <label class="eb-field"><span>Số mã đề</span><input class="eb-input" id="ebPrCodes" type="number" min="1" max="8" value="1"></label>
+        <label class="eb-field"><span>Mã đề đầu tiên</span><input class="eb-input" id="ebPrFirst" type="number" min="1" max="9999" value="${esc(pref.first)}"></label>
+      </div>
+      <div class="eb-print-opts">
+        <label class="eb-check"><input type="checkbox" id="ebPrShufQ"> Trộn thứ tự câu</label>
+        <label class="eb-check"><input type="checkbox" id="ebPrShufO"> Trộn đáp án A, B, C, D</label>
+        <label class="eb-check"><input type="checkbox" id="ebPrKeys" checked> Thêm trang bảng đáp án ở cuối</label>
+      </div>
+      <p class="eb-matrix-hint" id="ebPrHint"></p>`,
+    `<button class="btn-cancel" onclick="closeModal()">Đóng</button>
+     <button class="btn-cancel" id="ebPrWord"><i class="fa-solid fa-file-word"></i> Tải Word</button>
+     <button class="btn-save" id="ebPrGo"><i class="fa-solid fa-print"></i> In</button>`);
+    let mode = 'student';
+    const opts = () => ({
+      withAnswer: mode === 'key',
+      school: $('ebPrSchool').value.trim(),
+      codes: Math.min(8, Math.max(1, parseInt($('ebPrCodes').value, 10) || 1)),
+      first: Math.min(9999, Math.max(1, parseInt($('ebPrFirst').value, 10) || 101)),
+      shufQ: $('ebPrShufQ').checked, shufO: $('ebPrShufO').checked, keys: $('ebPrKeys').checked,
+    });
+    const bad = B.slides.filter((s) => slideErrors(s).length).length;
+    const hint = () => {
+      const o = opts();
+      $('ebPrHint').innerHTML = (bad ? `<b class="eb-warn">Còn ${bad} câu chưa hoàn chỉnh — sẽ in đúng như đang soạn.</b> ` : '') + esc((o.codes > 1
+        ? `Sẽ tạo ${o.codes} mã đề: ${Array.from({ length: o.codes }, (_, k) => o.first + k).join(', ')}, mỗi mã sang trang mới.`
+        : 'Một mã đề.') + ' Câu chọn vùng ảnh / kéo thả nên làm trên máy; bản in chỉ để tham khảo cho các dạng này. Ảnh dán từ máy có thể không hiện trong Word.');
+    };
+    body.querySelectorAll('[data-print]').forEach((b) => b.addEventListener('click', () => {
+      mode = b.dataset.print;
+      body.querySelectorAll('[data-print]').forEach((x) => { x.classList.toggle('is-active', x === b); x.setAttribute('aria-checked', String(x === b)); });
+    }));
+    // Nhiều mã đề mà không trộn thì các mã giống hệt nhau → bật sẵn trộn khi tăng số mã (trừ khi thầy cô đã tự bỏ chọn).
+    $('ebPrCodes').addEventListener('input', () => {
+      ['ebPrShufQ', 'ebPrShufO'].forEach((id) => { if (opts().codes > 1 && !$(id).dataset.touched) $(id).checked = true; });
+      hint();
+    });
+    ['ebPrShufQ', 'ebPrShufO'].forEach((id) => $(id).addEventListener('change', () => { $(id).dataset.touched = '1'; }));
+    $('ebPrFirst').addEventListener('input', hint);
+    hint();
+    const remember = (o) => lsSet(PRINT_PREF_KEY, { school: o.school, first: o.first });
+    $('ebPrGo').addEventListener('click', () => { const o = opts(); remember(o); printExam(o); global.closeModal?.(); });
+    $('ebPrWord').addEventListener('click', () => { const o = opts(); remember(o); downloadWord(o); });
   }
   /** Câu tự soạn → dạng câu ngân hàng (chưa escape) để dùng chung renderQuestionDetail. */
   function customAsBankQ(c0) {
     const c = cleanCustom(c0);
     const q = { question: c.q, explanation: c.expl, imageUrl: c.img };
     if (c.type === 'single' || c.type === 'multi') return Object.assign(q, { type: c.type, options: c.options, correct: c.correct.map((i) => c.options[i]) });
-    if (c.type === 'tf') return Object.assign(q, { type: 'single', options: ['Đúng', 'Sai'], correct: [c.correct[0] === 1 ? 'Sai' : 'Đúng'] });
+    if (c.type === 'tf') return Object.assign(q, { type: 'single', options: ['Đúng', 'Sai'], correct: [c.correct[0] === 1 ? 'Sai' : 'Đúng'], isTf: true });
     if (c.type === 'ordering') return Object.assign(q, { type: 'ordering', items: c.items });
     return Object.assign(q, { type: 'matching', pairs: c.pairs.map(([l, r]) => ({ left: l, right: r })) });
   }
-  function printExam(withAnswer) {
-    const title = B.title.trim() || 'Đề kiểm tra';
-    const w = window.open('', '_blank');
-    if (!w) { toast('Trình duyệt chặn cửa sổ in — cho phép popup rồi thử lại.', 'fa-triangle-exclamation'); return; }
-    const base = new URL('.', location.href).href;
-    const qsHtml = B.slides.map((s, i) => {
-      const q = s.custom ? customAsBankQ(s.custom) : s.q;
-      return `<section class="q"><div class="qh"><b>Câu ${i + 1}.</b> ${esc(stripHtml(q.question))}</div>${renderQuestionDetail(q, { answer: withAnswer })}</section>`;
+  /** Đáp án gọn của 1 câu cho bảng đáp án ("B", "AC", "ĐSĐ", "1b 2a", "c→a→b"). */
+  function keyOf(q) {
+    const correct = new Set(q.correct || []);
+    if (q.isTf) return correct.has('Sai') ? 'S' : 'Đ';
+    switch (q.type) {
+      case 'single':
+      case 'multi': return (q.options || []).map((o, i) => (correct.has(o) ? letter(i) : '')).join('') || '—';
+      case 'truefalse': return (q.statements || []).map((st) => (st.answer === 'true' ? 'Đ' : 'S')).join('');
+      case 'matching': {
+        const pairs = q.pairs || [];
+        const rights = [...new Set(pairs.map((p) => p.right))].sort((a, b) => String(a).localeCompare(String(b), 'vi'));
+        return pairs.map((p, i) => `${i + 1}${letter(rights.indexOf(p.right)).toLowerCase()}`).join(' ');
+      }
+      case 'ordering': {
+        const items = q.items || [];
+        const disp = items.slice().sort((a, b) => String(a).localeCompare(String(b), 'vi'));
+        return items.map((x) => letter(disp.indexOf(x)).toLowerCase()).join('→');
+      }
+      default: return '—';
+    }
+  }
+  /** Các mã đề: mỗi mã là danh sách câu (dạng câu ngân hàng) đã trộn theo tuỳ chọn. */
+  function buildPrintCodes({ codes, first, shufQ, shufO }) {
+    const base = B.slides.map((s) => ({ q: s.custom ? customAsBankQ(s.custom) : s.q, keepOpts: s.custom?.type === 'tf' }));
+    return Array.from({ length: codes }, (_, k) => {
+      const order = shufQ ? shuffled(base.map((_, i) => i)) : base.map((_, i) => i);
+      const qs = order.map((i) => {
+        const { q, keepOpts } = base[i];
+        return shufO && !keepOpts && (q.type === 'single' || q.type === 'multi') ? Object.assign({}, q, { options: shuffled(q.options || []) }) : q;
+      });
+      return { code: first + k, qs };
+    });
+  }
+  function keyTablesHtml(sets) {
+    const COLS = 10;
+    return sets.map(({ code, qs }) => {
+      const chunks = [];
+      for (let i = 0; i < qs.length; i += COLS) chunks.push(qs.slice(i, i + COLS).map((q, j) => [i + j + 1, keyOf(q)]));
+      return (sets.length > 1 ? `<h3>Mã đề ${code}</h3>` : '') + chunks.map((ch) => `<table class="key"><tr><th>Câu</th>${ch.map(([n]) => `<th>${n}</th>`).join('')}</tr><tr><th>Đáp án</th>${ch.map(([, k]) => `<td>${esc(k)}</td>`).join('')}</tr></table>`).join('');
     }).join('');
-    w.document.write(`<!doctype html><html lang="vi"><head><meta charset="utf-8"><base href="${esc(base)}"><title>${esc(title)}</title><style>
+  }
+  const PRINT_CSS = `
       body{font-family:"Times New Roman",serif;font-size:13pt;color:#000;margin:18mm 16mm;line-height:1.45}
-      h1{font-size:16pt;text-align:center;margin:0 0 4px}.sub{text-align:center;font-size:11pt;margin-bottom:10px}
-      .info{display:flex;gap:24px;border-bottom:1px solid #000;padding-bottom:8px;margin-bottom:12px;font-size:12pt}.info span{flex:1}
-      .q{break-inside:avoid;margin:0 0 12px}.eb-opts{margin:4px 0 0 18px;padding:0;list-style:none}.eb-opts li{margin:2px 0}
+      .head{width:100%;border-collapse:collapse;margin-bottom:6px}.head td{vertical-align:top;text-align:center;font-size:12pt;padding:0}
+      .head .school{width:40%;font-weight:bold;text-transform:uppercase}.head .ttl{font-weight:bold;font-size:14pt}
+      .sub{font-size:11.5pt;font-weight:normal}
+      .info{width:100%;border-collapse:collapse;border-bottom:1px solid #000;margin:6px 0 12px}.info td{padding:2px 0 6px;font-size:12pt}
+      .code{border:1px solid #000;padding:1px 8px;font-weight:bold;white-space:nowrap}
+      .q{break-inside:avoid;page-break-inside:avoid;margin:0 0 12px}.eb-opts{margin:4px 0 0 18px;padding:0;list-style:none}.eb-opts li{margin:2px 0}
       ol[type=a].eb-opts{list-style:lower-alpha}.is-correct{font-weight:bold;text-decoration:underline}
       .eb-tf{border-collapse:collapse;margin-top:4px;width:100%}.eb-tf td,.eb-tf th{border:1px solid #555;padding:3px 6px;font-size:11.5pt}.eb-tf td+td,.eb-tf th+th{width:44px;text-align:center}
       .eb-match{display:flex;gap:30px}.eb-match ol{flex:1;margin:4px 0}.eb-pill{border:1px solid #777;border-radius:4px;padding:0 5px;margin-right:3px;display:inline-block}
       .eb-blank{border-bottom:1px solid #000;padding:0 14px}.eb-answer,.eb-expl{margin-top:4px;font-size:11.5pt}.eb-expl{font-style:italic;color:#333}
-      .eb-qimg{display:block;max-width:60%;max-height:220px;margin:6px 0}.eb-muted{color:#555;font-style:italic}.eb-line{margin-top:4px}.fa-regular{display:none}@media print{body{margin:0}}
-      </style></head><body><h1>${esc(title)}</h1>
-      <div class="sub">${esc(B.desc)}${B.desc ? ' · ' : ''}${B.slides.length} câu${B.duration ? ` · Thời gian: ${B.duration} phút` : ''}${withAnswer ? ' · BẢN CÓ ĐÁP ÁN' : ''}</div>
-      <div class="info"><span>Họ và tên: ..............................................</span><span>Lớp: ..............</span><span>Điểm: ..........</span></div>
-      ${qsHtml}<script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>`);
+      .eb-qimg{display:block;max-width:60%;max-height:220px;margin:6px 0}.eb-muted{color:#555;font-style:italic}.eb-line{margin-top:4px}.fa-regular{display:none}
+      .end{text-align:center;margin-top:14px;font-style:italic}
+      h2{text-align:center;font-size:15pt;margin:0 0 10px}h3{font-size:13pt;margin:12px 0 4px}
+      .key{border-collapse:collapse;margin:0 0 8px}.key th,.key td{border:1px solid #000;padding:3px 7px;text-align:center;font-size:12pt;min-width:34px}
+      .pb{page-break-before:always;break-before:page}
+      @media print{body{margin:0}}`;
+  function examDocHtml(o, { forWord = false } = {}) {
+    const title = B.title.trim() || 'Đề kiểm tra';
+    const base = new URL('.', location.href).href;
+    const sets = buildPrintCodes(o);
+    const multi = o.codes > 1;
+    const pages = sets.map(({ code, qs }, k) => {
+      const qsHtml = qs.map((q, i) => `<section class="q"><div class="qh"><b>Câu ${i + 1}.</b> ${esc(stripHtml(q.question))}</div>${renderQuestionDetail(q, { answer: o.withAnswer })}</section>`).join('');
+      return `<div class="${k ? 'pb' : ''}">
+        <table class="head"><tr>
+          ${o.school ? `<td class="school">${esc(o.school)}</td>` : ''}
+          <td><div class="ttl">${esc(title.toUpperCase())}</div><div class="sub">${esc(B.desc)}${B.desc ? '<br>' : ''}${qs.length} câu${B.duration ? ` · Thời gian làm bài: ${B.duration} phút` : ''}${o.withAnswer ? ' · BẢN CÓ ĐÁP ÁN' : ''}</div></td>
+        </tr></table>
+        <table class="info"><tr><td>Họ và tên: ......................................................</td><td>Lớp: ..............</td><td>Điểm: ..........</td>${multi ? `<td style="text-align:right"><span class="code">Mã đề ${code}</span></td>` : ''}</tr></table>
+        ${qsHtml}<div class="end">— Hết —</div></div>`;
+    }).join('');
+    const keys = o.keys ? `<div class="pb"><h2>BẢNG ĐÁP ÁN — ${esc(title.toUpperCase())}</h2>${keyTablesHtml(sets)}</div>` : '';
+    const wordNs = forWord ? ' xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"' : '';
+    const auto = forWord ? '' : '<script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script>';
+    return `<!doctype html><html lang="vi"${wordNs}><head><meta charset="utf-8"><base href="${esc(base)}"><title>${esc(title)}</title><style>${PRINT_CSS}</style></head><body>${pages}${keys}${auto}</body></html>`;
+  }
+  function printExam(o) {
+    const w = window.open('', '_blank');
+    if (!w) { toast('Trình duyệt chặn cửa sổ in — cho phép popup rồi thử lại.', 'fa-triangle-exclamation'); return; }
+    w.document.write(examDocHtml(o));
     w.document.close();
+  }
+  function fileSlug(t) {
+    return String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D')
+      .replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase().slice(0, 60) || 'de-kiem-tra';
+  }
+  function downloadBlob(blob, name) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }
+  function downloadWord(o) {
+    const name = `${fileSlug(B.title)}${o.withAnswer ? '-dap-an' : ''}${o.codes > 1 ? `-${o.codes}-ma-de` : ''}.doc`;
+    downloadBlob(new Blob(['\ufeff', examDocHtml(o, { forWord: true })], { type: 'application/msword' }), name);
+    toast('Đã tải file Word. Mở bằng Word để chỉnh sửa hoặc in.', 'fa-file-word');
   }
 
   // ============================================================
@@ -1486,6 +1863,7 @@
       } else if (a === 'open-link') openFromLink();
       else if (a === 'print') openPrint();
       else if (a === 'link-set') global.openModal?.('create');
+      else if (a === 'keys') openKeys();
     });
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.eb-menu-wrap')) { $('ebAddMenu').hidden = true; $('ebMoreMenu').hidden = true; }
@@ -1522,6 +1900,30 @@
     $('ebPresentBtn').addEventListener('click', openPresentSetup);
     $('ebBankOpenBtn').addEventListener('click', openBank);
     $('ebImportBtn').addEventListener('click', openImport);
+    $('ebUndoBtn').addEventListener('click', () => withFocusKept(undo));
+    $('ebRedoBtn').addEventListener('click', () => withFocusKept(redo));
+
+    // ── Phím tắt (chỉ khi đang ở Soạn đề, không mở Xem trước/Ngân hàng/hộp thoại) ──
+    document.addEventListener('keydown', (e) => {
+      if (!$('section-builder')?.classList.contains('active') || !$('ebPreview').hidden || !$('ebDrawer').hidden) return;
+      if ($('modal-overlay')?.classList.contains('open')) return;
+      if (e.key.startsWith('Arrow') && e.target.closest?.('#ebRailList')) return; // danh sách câu tự xử lý mũi tên
+      const mod = e.ctrlKey || e.metaKey;
+      const k = e.key.toLowerCase();
+      const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || '');
+      let handled = true;
+      if (mod && k === 'z' && !e.shiftKey) withFocusKept(undo);
+      else if (mod && (k === 'y' || (k === 'z' && e.shiftKey))) withFocusKept(redo);
+      else if (mod && k === 's') save();
+      else if (mod && k === 'enter') addCustom(B.slides[B.cur]?.custom?.type || 'single');
+      else if (mod && k === 'd') dupSlide(B.cur);
+      else if (e.altKey && !mod && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+        const j = B.cur + (e.key === 'ArrowDown' ? 1 : -1);
+        if (e.shiftKey) moveSlide(B.cur, j); else if (j >= 0 && j < B.slides.length) select(j);
+      } else if (e.key === '?' && !typing) openKeys();
+      else handled = false;
+      if (handled) e.preventDefault();
+    });
 
     // ── Xem trước ──
     const pv = $('ebPreview');

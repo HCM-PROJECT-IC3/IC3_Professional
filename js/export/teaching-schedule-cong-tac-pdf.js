@@ -413,5 +413,7 @@
     doc.save(`Phieu_Cong_Tac_Tat_Ca${fileSuffix ? `_${slugName(fileSuffix)}` : ''}.pdf`);
   }
 
-  global.EduCongTacPdf = { exportOne, exportMany };
+  // Thư viện PDF tải khi bấm xuất lần đầu (teaching-schedule.html § EduPdfVendorScripts).
+  const lazy = (fn) => (global.EduLazyLoad ? global.EduLazyLoad.lazyCall(global.EduPdfVendorScripts || [], fn) : fn);
+  global.EduCongTacPdf = { exportOne: lazy(exportOne), exportMany: lazy(exportMany) };
 })(window);

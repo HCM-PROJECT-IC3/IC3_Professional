@@ -91,6 +91,13 @@
       turn: [],
     },
 
+    // ── Đếm ngược kỳ thi trên sảnh index.html (js/exam-countdown.js) — chỉ là hiển thị ──
+    // Mỗi mục: program = id Chương trình ở sảnh ('Spark' | 'IC3' | 'MOS'; bỏ trống = mọi
+    // chương trình), date = 'YYYY-MM-DD', label = tên kỳ thi. Sảnh hiện kỳ thi GẦN NHẤT chưa
+    // qua của chương trình đang chọn. Danh sách trống → học sinh tự đặt ngày thi (lưu trên máy).
+    // Ví dụ: examSeason: [{ program: 'IC3', date: '2026-12-12', label: 'Thi IC3 GS6 đợt 1' }]
+    examSeason: [],
+
     // ── Firebase SDK trên trang học sinh ──
     // Trang học sinh KHÔNG nạp Firebase lúc mở trang nữa: chỉ nạp khi thật sự cần
     // ghi Firestore (lúc nộp bài theo chế độ ở trên) hoặc máy này đang có sẵn phiên

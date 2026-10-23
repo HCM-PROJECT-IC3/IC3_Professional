@@ -407,3 +407,21 @@ form.hidden { display: none }
 @media (prefers-reduced-motion: reduce) {
   body::before, .card, input, .logo-icon, form, .tab-indicator { animation: none !important; transition: none !important }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   GIAO DIỆN PHẲNG (10/2026) — bỏ nền loang trôi, nút gradient phát sáng,
+   logo nhún. Giữ bộ 3 màu IIG (xanh lá · cam · navy) nhưng là 3 sọc màu
+   đặc trên đầu thẻ, giống 3 sọc chéo của logo thật, thay vì dải chuyển màu
+   trên nút. Ghi đè các quy tắc cùng tên phía trên.
+   ══════════════════════════════════════════════════════════════ */
+body::before { display: none; }
+.card { position: relative; overflow: hidden; }
+.card::after {
+  content: ''; position: absolute; left: 0; right: 0; top: 0; height: 4px;
+  background: linear-gradient(90deg, var(--iig-green) 0 33.33%, var(--orange) 33.33% 66.66%, var(--purple) 66.66% 100%);
+}
+.logo-img { animation: none; }
+.tab-indicator { background: var(--purple); box-shadow: none; transition: transform .2s ease; }
+.btn-submit { background: var(--purple); box-shadow: none; border-radius: 10px; }
+.btn-submit::before { display: none; }
+.btn-submit:hover:not(:disabled) { background: #26359a; transform: none; box-shadow: none; }
