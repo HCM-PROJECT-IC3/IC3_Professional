@@ -18,7 +18,28 @@ var rng = A.rngFrom(42);
 var single = { uid: 'u1', type: 'single', question: '<b>RAM</b> là gì?', options: ['Bộ nhớ tạm', 'Ổ cứng', 'Chuột'], correct: ['Bộ nhớ tạm'], explanation: 'RAM &amp; ROM', image_file: 'a/b.png' };
 assertEq('single → 1 câu, bỏ thẻ HTML, giữ ảnh/giải thích', A.convert(single), [{ text: 'RAM là gì?', options: ['Bộ nhớ tạm', 'Ổ cứng', 'Chuột'], answer: 'Bộ nhớ tạm', img: 'img/a/b.png', uid: 'u1', expl: 'RAM & ROM' }]);
 assertEq('multi 1 đáp án đúng → dùng được', A.convert({ type: 'multi', question: 'Q', options: ['a', 'b'], correct: ['b'] }).length, 1);
-assertEq('multi 2 đáp án đúng → bỏ', A.convert({ type: 'multi', question: 'Q', options: ['a', 'b', 'c'], correct: ['a', 'b'] }), []);
+assertEq('multi 2 đáp án đúng → câu Chọn nhiều', A.convert({ type: 'multi', question: 'Q', options: ['a', 'b', 'c'], correct: ['a', 'b'] }).map(function (c) { return [c.kind, c.answers]; }), [['multi', ['a', 'b']]]);
+assertEq('multi chọn tất cả / đáp án không có trong lựa chọn → bỏ', [A.convert({ type: 'multi', question: 'Q', options: ['a', 'b'], correct: ['a', 'b'] }).length, A.convert({ type: 'multi', question: 'Q', options: ['a', 'b', 'c'], correct: ['a', 'x'] }).length], [0, 0]);
+
+// ── Dạng câu mới: chọn nhiều / sắp xếp / ghép đôi / list / selectfill ──
+var kr = A.rngFrom(5);
+var mq = A.buildDeck([{ type: 'multi', question: 'Chọn 2', options: ['a', 'b', 'c', 'd'], correct: ['b', 'd'] }], kr)[0];
+assertEq('chọn nhiều: đáp án đúng trỏ đúng chữ', mq.correct.map(function (i) { return mq.options[i]; }).sort(), ['b', 'd']);
+assertEq('chọn nhiều: chấm không phụ thuộc thứ tự bấm, thiếu/thừa là sai', [A.grade(mq, mq.correct.slice().reverse()), A.grade(mq, [mq.correct[0]]), A.grade(mq, [0, 1, 2, 3])], [true, false, false]);
+var oq = A.buildDeck([{ type: 'ordering', question: 'Xếp', items: ['B1', 'B2', 'B3', 'B4'] }], kr)[0];
+assertEq('sắp xếp: các bước bị xáo (không đúng sẵn)', oq.options.join() !== 'B1,B2,B3,B4', true);
+assertEq('sắp xếp: thứ tự đúng ra B1..B4', oq.correct.map(function (i) { return oq.options[i]; }), ['B1', 'B2', 'B3', 'B4']);
+assertEq('sắp xếp: chấm đúng/sai + đúng mấy bước', [A.grade(oq, oq.correct), A.grade(oq, oq.correct.slice().reverse()), A.partial(oq, [oq.correct[0], oq.correct[1], oq.correct[3], oq.correct[2]])], [true, false, { right: 2, of: 4 }]);
+var gq = A.buildDeck([{ type: 'matching', question: 'Ghép', pairs: [{ left: 'CPU', right: 'xử lý' }, { left: 'RAM', right: 'nhớ tạm' }, { left: 'SSD', right: 'lưu trữ' }] }], kr)[0];
+assertEq('ghép đôi: mỗi mục trái trỏ đúng vế phải', gq.left.map(function (l, i) { return l + '=' + gq.options[gq.correct[i]]; }).sort(), ['CPU=xử lý', 'RAM=nhớ tạm', 'SSD=lưu trữ']);
+assertEq('ghép đôi: dòng đáp án', A.answerLines(gq).length, 3);
+assertEq('khuôn câu trả lời sai dạng → không nhận', [A.isAnswer(gq, [0, 1]), A.isAnswer(oq, [0, 0, 1, 2]), A.isAnswer(mq, 2), A.isAnswer(mq, [9])], [false, false, false, false]);
+assertEq('list: mỗi dòng 1 câu chọn 1', A.convert({ type: 'list', question: 'Chọn', items: [{ text: 'Dòng 1', options: ['Đúng', 'Sai'], correct: 'Sai' }, { text: 'Dòng 2', options: ['Đúng', 'Sai'], correct: 'Đúng' }] }).map(function (c) { return c.text + '=' + c.answer; }), ['Chọn — Dòng 1=Sai', 'Chọn — Dòng 2=Đúng']);
+assertEq('selectfill: mỗi dòng 1 câu, bỏ dòng 2 chỗ trống', A.convert({ type: 'selectfill', question: 'Hỏi', segments: ['Câu A ', '\nCâu B ', ' và ', '\n'], blanks: ['CÓ', 'KHÔNG', 'CÓ'], wordBank: ['CÓ', 'KHÔNG'] }).map(function (c) { return c.text + '=' + c.answer; }), ['Hỏi — Câu A=CÓ']);
+assertEq('lọc theo dạng câu', A.buildDeck([{ type: 'single', question: 'S', options: ['x', 'y'], correct: ['x'] }, { type: 'ordering', question: 'Xếp', items: ['1', '2', '3'] }], kr, 0, ['order']).map(A.kindOf), ['order']);
+var pdk = A.practiceDeck([{ q: oq, ok: false }, { q: gq, ok: false }, { q: mq, ok: false }], A.rngFrom(8));
+assertEq('luyện câu sai giữ được dạng sắp xếp/ghép/chọn nhiều và vẫn chấm đúng', pdk.map(function (q) { return A.kindOf(q) + ':' + A.grade(q, q.correct); }).sort(), ['match:true', 'multi:true', 'order:true']);
+assertEq('50:50 không dùng cho câu không phải chọn 1', A.fiftyFifty(mq, kr), []);
 assertEq('đáp án đúng không có trong lựa chọn → bỏ', A.convert({ type: 'single', question: 'Q', options: ['a', 'b'], correct: ['z'] }), []);
 assertEq('quá 6 lựa chọn → bỏ', A.convert({ type: 'single', question: 'Q', options: '1234567'.split(''), correct: ['1'] }), []);
 var tf = A.convert({ type: 'truefalse', question: 'Chọn Đúng/Sai', statements: [{ text: 'A', answer: 'true' }, { text: 'B', answer: 'false' }, { text: '', answer: 'true' }] });
@@ -91,6 +112,52 @@ var d = A.buyPack(prof, 'pets', A.rngFrom(11));
 assertEq('trùng → hoàn xu theo độ hiếm', [d.dupe, prof.coins], [true, A.RARITY[d.blook.rarity].refund]);
 assertEq('tra linh vật theo mã', A.blookById('security:dragon').emoji, '🐉');
 assertEq('bóng ma kỷ lục', [A.ghostScoreAt({ trail: [500, 1400] }, 0), A.ghostScoreAt({ trail: [500, 1400] }, 5), A.ghostScoreAt(null, 0)], [500, 1400, null]);
+
+// ── Luyện câu sai ──
+var qa = { text: 'Q1', options: ['A', 'B', 'C', 'D'], correctIdx: 2, expl: 'vì C' };
+var qtf = { text: 'Q2', options: ['Đúng', 'Sai'], correctIdx: 1 };
+var pd = A.practiceDeck([{ q: qa, ok: false }, { q: { text: 'Q3', options: ['x', 'y'], correctIdx: 0 }, ok: true }, { q: qtf, ok: false }, { q: qa, ok: false }, null], A.rngFrom(3));
+assertEq('luyện câu sai: chỉ câu sai, bỏ trùng', pd.map(function (q) { return q.text; }).sort(), ['Q1', 'Q2']);
+assertEq('luyện câu sai: đáp án đúng vẫn đúng sau khi xáo', pd.every(function (q) { return q.options[q.correctIdx] === (q.text === 'Q1' ? 'C' : 'Sai'); }), true);
+assertEq('luyện câu sai: Đúng/Sai giữ thứ tự, giữ giải thích', [pd.find(function (q) { return q.text === 'Q2'; }).options, pd.find(function (q) { return q.text === 'Q1'; }).expl], [['Đúng', 'Sai'], 'vì C']);
+assertEq('luyện câu sai: không có câu sai → bộ rỗng', A.practiceDeck([{ q: qa, ok: true }], A.rngFrom(1)).length, 0);
+
+// ── Sinh tồn ──
+var sv = { streak: 0 };
+assertEq('sinh tồn: bắt đầu 3 tim, sai mất 1', [A.survivalStep(sv, false, 0).lost, sv.hp], [true, 2]);
+A.survivalStep(sv, true, 1); A.survivalStep(sv, true, 2); var heal = A.survivalStep(sv, true, 3);
+assertEq('sinh tồn: đúng liền 3 câu hồi 1 tim', [heal.healed, sv.hp], [true, 3]);
+assertEq('sinh tồn: không vượt quá 3 tim', [A.survivalStep(sv, true, 4).healed, A.survivalStep(sv, true, 5).healed, sv.hp], [false, false, 3]);
+A.survivalStep(sv, false, 6); A.survivalStep(sv, false, 7); var dead = A.survivalStep(sv, false, 8);
+assertEq('sinh tồn: hết tim → bị loại, ghi câu bị loại', [dead.out, sv.hp, sv.outAt], [true, 0, 8]);
+assertEq('sinh tồn: đã loại thì không chấm nữa', [A.survivalStep(sv, true, 9).already, sv.hp], [true, 0]);
+var order = [{ n: 'outEarly', hp: 0, outAt: 2, score: 9000 }, { n: 'alive1', hp: 1, score: 100 }, { n: 'outLate', hp: 0, outAt: 5, score: 10 }, { n: 'alive3', hp: 3, score: 50 }, { n: 'alive1b', hp: 1, score: 900 }];
+assertEq('sinh tồn: xếp theo tim → trụ lâu → điểm', order.sort(A.survivalOrder).map(function (p) { return p.n; }), ['alive3', 'alive1b', 'alive1', 'outLate', 'outEarly']);
+assertEq('sinh tồn: vẽ tim', [A.hearts(2), A.hearts(0)], ['❤️❤️🖤', '💀']);
+
+// ── Câu cá ──
+var fr = A.rngFrom(42), total = 0, sawFrenzy = false, okRange = true;
+for (var c = 0; c < 2000; c++) {
+  var r1 = A.castLine(fr, 0);
+  total += r1.kg;
+  if (r1.fish.frenzy) sawFrenzy = r1.frenzy === 3;
+  if (r1.kg < r1.fish.min || r1.kg > r1.fish.max) okRange = false;
+}
+assertEq('câu cá: cân nặng nằm trong khoảng của từng loài', okRange, true);
+assertEq('câu cá: có Mồi thần (3 lần nhân đôi)', sawFrenzy, true);
+var dbl = A.castLine(A.rngFrom(7), 2);
+assertEq('câu cá: đang nhân đôi → kg chẵn, trừ 1 lượt', [dbl.kg % 2, dbl.frenzy >= 1], [0, true]);
+
+// ── Vật phẩm hỗ trợ ──
+var held = [];
+assertEq('vật phẩm: chưa đủ chuỗi → không nhận', A.earnPowerup(held, 2, A.rngFrom(1)), '');
+assertEq('vật phẩm: chuỗi 3 → nhận 1 món hợp lệ', !!A.POWERUPS[A.earnPowerup(held, 3, A.rngFrom(1))], true);
+A.earnPowerup(held, 6, A.rngFrom(2)); A.earnPowerup(held, 9, A.rngFrom(3));
+assertEq('vật phẩm: giữ tối đa 3 món', [A.earnPowerup(held, 12, A.rngFrom(4)), held.length], ['', 3]);
+var q4 = { options: ['a', 'b', 'c', 'd'], correctIdx: 1 };
+var hid = A.fiftyFifty(q4, A.rngFrom(9));
+assertEq('50:50: ẩn 2 đáp án sai, không ẩn đáp án đúng', [hid.length, hid.indexOf(1)], [2, -1]);
+assertEq('50:50: câu 3 lựa chọn ẩn 1, Đúng/Sai không ẩn', [A.fiftyFifty({ options: ['a', 'b', 'c'], correctIdx: 0 }, A.rngFrom(1)).length, A.fiftyFifty({ options: ['Đúng', 'Sai'], correctIdx: 0 }, A.rngFrom(1)).length], [1, 0]);
 
 // ── Toàn bộ ngân hàng: bao nhiêu câu chơi được ──
 var bank = 0, playable = 0;

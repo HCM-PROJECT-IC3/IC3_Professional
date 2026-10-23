@@ -23,6 +23,7 @@
   const C = global.EduArenaCore;
   const R = global.EduArenaRoomCore;
   const A = global.EduArena.api;
+  const K = global.EduArenaKinds;
   const $ = (id) => document.getElementById(id);
   const esc = A.esc;
   const SHAPES = A.SHAPES;
@@ -36,8 +37,8 @@
   const HOST_TTL_MS = 3 * 60 * 60 * 1000;
   const AUTO_NEXT_MS = 6000;
   const JOIN_TIMEOUT_MS = 15000;
-  const UNIT = { speed: 'điểm', race: 'bước' };
-  const MODE_LABEL = { speed: '⚡ Tốc độ', race: '🏁 Đua về đích' };
+  const UNIT = { speed: 'điểm', race: 'bước', survival: 'điểm' };
+  const MODE_LABEL = { speed: '⚡ Tốc độ', race: '🏁 Đua về đích', survival: '❤️ Sinh tồn' };
 
   const store = {
     get(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } },
@@ -97,12 +98,20 @@
   // ============================================================
   const H = { peer: null, room: null, conns: new Map(), timer: 0, tick: 0, auto: 0, closing: 0, lobbyT: 0, saveT: 0, ready: false };
 
+  /** Chỉ tài khoản giáo viên đã xác minh (js/arena/arena-teacher.js) mới tạo/khôi phục phòng. */
+  function teacherOk() {
+    if (global.EduArenaTeacher && global.EduArenaTeacher.ok()) return true;
+    A.toast('Cần đăng nhập tài khoản giáo viên để tạo phòng.');
+    A.setRole('teacher', true);
+    return false;
+  }
   function hostCreate() {
+    if (!teacherOk()) return;
     A.saveNick();
     const src = A.deckSource();
-    const deck = C.buildDeck(src.questions || [], A.rng);
+    const deck = C.buildDeck(src.questions || [], A.rng, 0, A.kinds());
     if (!deck.length) { A.toast('Chọn bộ câu hỏi có câu trắc nghiệm trước nhé.'); return; }
-    const mode = A.prefs.mode === 'race' ? 'race' : 'speed';
+    const mode = ['race', 'survival'].includes(A.effMode()) ? A.effMode() : 'speed';
     const room = R.createRoom({
       code: R.makeCode(cryptoRng), mode, deck, count: A.prefs.count, secs: A.prefs.secs,
       maxPlayers: A.prefs.roomMax || 60, title: src.title, setKey: src.key,
@@ -168,7 +177,7 @@
   }
   function broadcast(build) { H.conns.forEach((conn, cid) => { const m = build(cid); if (m) send(conn, m); }); }
   function roomInfo() { const r = H.room; return { code: r.code, mode: r.mode, title: r.title, total: r.total, goal: r.goal, secs: r.secs }; }
-  function topN(n) { return R.leaderboard(H.room).slice(0, n).map((r) => ({ name: r.name, face: r.face, value: r.value, streak: r.streak })); }
+  function topN(n) { return R.leaderboard(H.room).slice(0, n).map((r) => ({ name: r.name, face: r.face, value: r.value, streak: r.streak, hp: r.hp })); }
   function lobbyMsg() {
     const ids = R.activeIds(H.room);
     return { t: 'lobby', count: ids.length, players: ids.slice(0, 80).map((id) => ({ name: H.room.players[id].name, face: H.room.players[id].face })) };
@@ -178,11 +187,13 @@
     m.answered = H.room.answers[cid] ? H.room.answers[cid].k : null;
     const mine = H.room.players[cid];
     if (mine && mine.cards && H.room.mode === 'speed') m.cards = { x2: mine.cards.x2, shield: mine.cards.shield };
+    if (mine && H.room.mode === 'survival') m.hp = mine.hp;
     return m;
   }
   function revealMsg(cid) {
     const r = H.room, L = r.last, q = R.current(r);
     return { t: 'reveal', i: L.i, total: r.total, mode: r.mode, goal: r.goal, correctIdx: L.correctIdx, text: q.text, options: q.options,
+      kind: L.kind, correct: L.correct, left: q.left, right: L.right,
       expl: L.expl, counts: L.counts, you: L.results[cid] || null, top: topN(5), last: R.isDone(r) };
   }
   function endMsg(cid) { return { t: 'end', you: R.personalEnd(H.room, cid), top: topN(5), mode: H.room.mode, code: H.room.code }; }
@@ -329,7 +340,7 @@
     const link = joinLink(room.code);
     body().innerHTML = `<div class="ar-room-lobby">
       <div class="ar-card ar-room-join-info">
-        <p class="ar-muted">Học sinh mở <b>Đấu trường</b> → <b>Phòng cả lớp</b> → nhập mã:</p>
+        <p class="ar-muted ar-room-how">Học sinh <b>quét mã QR</b> hoặc mở link bên dưới — mã phòng đã điền sẵn, em chỉ cần nhập <b>họ và tên</b>.<br>Hoặc mở <b>Đấu trường</b> → tab <b>Học sinh</b> → nhập mã:</p>
         <div class="ar-room-bigcode" aria-label="Mã phòng">${room.code.split('').map((ch) => `<span>${ch}</span>`).join('')}</div>
         <div class="ar-room-qr" id="arRoomQr" role="img" aria-label="Mã QR để vào phòng ${room.code}" hidden></div>
         <p class="ar-hint ar-room-qr-hint">Hoặc quét mã QR bằng camera điện thoại</p>
@@ -337,6 +348,7 @@
           <button type="button" class="ar-btn ar-btn-ghost ar-btn-sm" data-act="copy"><i class="fa-regular fa-copy"></i> Chép link</button></p>
         <p class="ar-hint">${MODE_LABEL[room.mode]} · ${room.mode === 'race' ? `về đích sau ${room.goal} bước` : `${room.total} câu`} · ${room.secs} giây/câu · ${esc(room.title)}</p>
         ${room.mode === 'speed' ? '<p class="ar-hint">🎁 Đúng liền 3 câu → thẻ 🃏 x2 · liền 6 câu → thẻ 🛡️ Khiên (tự dùng, cứ 3 câu đúng nhận 1 thẻ)</p>' : ''}
+        ${room.mode === 'survival' ? `<p class="ar-hint">❤️ Mỗi em có ${C.LIVES} tim · sai hoặc bỏ trống mất 1 tim · đúng liền ${C.HEAL_EVERY} câu hồi 1 tim · hết tim bị loại. Người trụ lại cuối cùng thắng!</p>` : ''}
         ${H.ready ? '' : '<p class="ar-hint"><i class="fa-solid fa-spinner fa-spin"></i> Đang mở cổng kết nối...</p>'}
       </div>
       <div class="ar-card">
@@ -352,7 +364,8 @@
   function playerChips(ids) {
     return ids.map((id) => {
       const p = H.room.players[id];
-      return `<span class="ar-room-chip${p.online ? '' : ' is-off'}" title="${p.online ? 'Đang kết nối' : 'Mất kết nối'}"><span aria-hidden="true">${esc(p.face)}</span> ${esc(p.name)}
+      const out = H.room.mode === 'survival' && H.room.i >= 0 && p.hp <= 0;
+      return `<span class="ar-room-chip${p.online ? '' : ' is-off'}${out ? ' is-out' : ''}" title="${p.online ? 'Đang kết nối' : 'Mất kết nối'}"><span aria-hidden="true">${esc(p.face)}</span> ${esc(p.name)}
         <button type="button" data-kick="${esc(id)}" aria-label="Mời ${esc(p.name)} ra khỏi phòng" title="Mời ra khỏi phòng">×</button></span>`;
     }).join('');
   }
@@ -371,7 +384,9 @@
     </div>`;
   }
   function questionBlock(q, opts) {
-    return `<div class="ar-q">${esc(q.text)}</div>${q.img ? `<img class="ar-qimg" src="${esc(q.img)}" alt="">` : ''}
+    const head = `<div class="ar-q">${esc(q.text)}</div>${q.img ? `<img class="ar-qimg" src="${esc(q.img)}" alt="">` : ''}`;
+    if (C.kindOf(q) !== 'choice') return head + `<div class="ar-kind">${K.viewHtml(q, opts)}</div>`;
+    return `${head}
       <div class="ar-answers n${q.options.length}">${q.options.map((o, k) => {
         const cls = opts && opts.reveal ? (k === q.correctIdx ? ' is-correct' : ' is-dim') : '';
         const bar = opts && opts.counts ? `<span class="ar-room-count"><i style="width:${opts.total ? Math.round((opts.counts[k] / opts.total) * 100) : 0}%"></i><b>${opts.counts[k]}</b></span>` : '';
@@ -408,7 +423,7 @@
   }
   function boardHtml(rows, unit, meName) {
     return `<ol class="ar-board">${rows.map((r, i) => `<li class="${meName && r.name === meName ? 'is-me' : ''}"><span class="ar-board-rank">${i + 1}</span>
-      <span class="ar-board-face">${esc(r.face)}</span><span class="ar-board-name">${esc(r.name)}${r.streak >= 3 ? ` <span class="ar-board-streak" title="Đúng liên tiếp ${r.streak} câu">🔥${r.streak}</span>` : ''}</span><b>${fmt(r.value)}</b><small>${unit}</small></li>`).join('')}</ol>`;
+      <span class="ar-board-face">${esc(r.face)}</span><span class="ar-board-name">${esc(r.name)}${r.hp !== undefined && r.hp !== null ? ` <span class="ar-board-hp" title="${r.hp} tim">${C.hearts(r.hp)}</span>` : ''}${r.streak >= 3 ? ` <span class="ar-board-streak" title="Đúng liên tiếp ${r.streak} câu">🔥${r.streak}</span>` : ''}</span><b>${fmt(r.value)}</b><small>${unit}</small></li>`).join('')}</ol>`;
   }
   function lanesHtml(rows, goal, meName) {
     return `<div class="ar-track">${rows.map((p) => `<div class="ar-lane${meName && p.name === meName ? ' is-me' : ''}"><span class="ar-lane-name">${esc(p.name)}</span>
@@ -423,7 +438,7 @@
       + `<div class="ar-stage">
         <div class="ar-qbox">${questionBlock(q, { reveal: true, counts: L.counts, total: L.answered })}
           ${L.expl ? `<div class="ar-feedback is-ok"><div class="ar-fb-expl">💡 ${esc(L.expl)}</div></div>` : ''}
-          <p class="ar-hint ar-center">${L.answered} người trả lời · ${L.counts[L.correctIdx]} người đúng</p></div>
+          <p class="ar-hint ar-center">${L.answered} người trả lời · ${L.right ?? L.counts[L.correctIdx]} người đúng${room.mode === 'survival' ? ` · ❤️ còn ${R.activeIds(room).filter((id) => room.players[id].hp > 0).length} người trụ lại` : ''}</p></div>
         <aside class="ar-side"><h3>${MODE_LABEL[room.mode]}</h3>${room.mode === 'race' ? lanesHtml(rows, room.goal) : boardHtml(rows, UNIT[room.mode])}</aside>
       </div>`;
     hostTick();
@@ -520,9 +535,10 @@
   // ============================================================
   // HỌC SINH
   // ============================================================
-  const P = { peer: null, conn: null, code: '', joined: false, stopped: true, retry: 0, retryT: 0, room: null, me: null, q: null, myK: null, timer: 0, sentAt: 0 };
+  // log/imgs: câu hỏi + đáp án em đã gặp (ghi lúc công bố đáp án) → "Xem lại câu sai" + "Luyện lại" ở cuối trận.
+  const P = { peer: null, conn: null, code: '', joined: false, stopped: true, retry: 0, retryT: 0, room: null, me: null, q: null, myK: null, timer: 0, sentAt: 0, log: [], imgs: {} };
 
-  function myCid() {
+  function machineId() {
     let id = store.get(CID_KEY, '');
     if (!/^[a-z0-9]{12,40}$/.test(id)) {
       id = Array.from(global.crypto.getRandomValues(new Uint8Array(12)), (b) => (b % 36).toString(36)).join('');
@@ -530,11 +546,15 @@
     }
     return id;
   }
+  /** Mã người chơi gắn với họ tên: phòng máy nhiều em dùng chung 1 trình duyệt vẫn là những người khác nhau. */
+  function myCid() { return R.cidFor(machineId(), A.nickName()); }
   async function playerJoin(raw) {
     const code = R.normCode(raw);
+    const name = A.setNick($('arJoinName').value);
+    if (name.length < 2) { A.toast('Em nhập họ và tên của mình nhé!'); $('arJoinName').focus(); return; }
     if (code.length !== R.CODE_LEN) { A.toast(`Mã phòng gồm ${R.CODE_LEN} ký tự.`); $('arJoinCode').focus(); return; }
-    if (!A.saveNick()) { A.toast('Nhập biệt danh trước khi vào phòng nhé!'); $('arNick').focus(); return; }
     playerStop(false);
+    if (code !== P.code) { P.log = []; P.imgs = {}; } // vào lại đúng phòng cũ (rớt mạng) thì giữ nhật ký
     Object.assign(P, { code, joined: false, stopped: false, retry: 0, room: null, me: null, q: null, myK: null });
     try { sessionStorage.setItem(JOIN_SS, code); } catch (e) { /* ignore */ }
     history.replaceState(null, '', location.pathname + '?phong=' + code);
@@ -618,7 +638,7 @@
         $('arRoomCode').textContent = `Phòng ${m.room.code} · ${m.you.face} ${m.you.name}`;
         break;
       case 'deny': {
-        const why = { full: 'Phòng đã đủ người.', kicked: 'Em đã được mời ra khỏi phòng này.', ended: 'Phòng này đã kết thúc.', name: 'Biệt danh không hợp lệ.' }[m.reason] || 'Không vào được phòng.';
+        const why = { full: 'Phòng đã đủ người.', kicked: 'Em đã được mời ra khỏi phòng này.', ended: 'Phòng này đã kết thúc.', name: 'Họ tên không hợp lệ — em nhập lại nhé.' }[m.reason] || 'Không vào được phòng.';
         playerError(why);
         break;
       }
@@ -651,14 +671,17 @@
     clearInterval(P.timer);
     P.q = m;
     P.myK = m.answered;
+    if (m.img) P.imgs[m.i] = m.img;
     P.qStart = performance.now() - (m.secs * 1000 - m.ms);
     body().innerHTML = `<div class="ar-hud"><span class="ar-pill">${m.mode === 'race' ? `Câu ${m.i + 1}` : `Câu ${m.i + 1}/${m.total}`}</span>
-        <span class="ar-pill" id="arPSecs"></span>${holdingsText(m.cards) ? `<span class="ar-pill" title="Thẻ thưởng đang giữ — tự dùng ở câu phù hợp">${holdingsText(m.cards)}</span>` : ''}</div>
+        <span class="ar-pill" id="arPSecs"></span>${m.hp !== undefined ? `<span class="ar-pill ar-pill-hp" title="Số tim còn lại">${C.hearts(m.hp)}</span>` : ''}${holdingsText(m.cards) ? `<span class="ar-pill" title="Thẻ thưởng đang giữ — tự dùng ở câu phù hợp">${holdingsText(m.cards)}</span>` : ''}</div>
       <div class="ar-timer"><i id="arPTimer"></i></div>
       <div class="ar-q">${esc(m.text)}</div>${m.img ? `<img class="ar-qimg" src="${esc(m.img)}" alt="">` : ''}
-      <div class="ar-answers n${m.options.length}" id="arPAnswers">${m.options.map((o, k) => `<button type="button" class="ar-ans c${k}" data-pk="${k}">
+      <div class="ar-answers n${m.options.length}" id="arPAnswers">${C.kindOf(m) !== 'choice' ? '' : m.options.map((o, k) => `<button type="button" class="ar-ans c${k}" data-pk="${k}">
         <span class="ar-shape" aria-hidden="true">${SHAPES[k]}</span><span class="ar-ans-text">${esc(o)}</span><kbd>${k + 1}</kbd></button>`).join('')}</div>
       <p class="ar-room-status" id="arPStatus" aria-live="polite"></p>`;
+    // Chọn nhiều / Sắp xếp / Ghép đôi — js/arena/arena-kinds.js
+    P.picker = C.kindOf(m) !== 'choice' ? K.mount($('arPAnswers'), m, { onAnswer: playerAnswer }) : null;
     if (P.myK !== null && P.myK !== undefined) lockAnswers(P.myK, 'Đã gửi ✓ — chờ cả lớp...');
     const tick = () => {
       const left = Math.max(0, m.secs * 1000 - (performance.now() - P.qStart));
@@ -673,7 +696,8 @@
     P.timer = setInterval(tick, 150);
   }
   function lockAnswers(k, msg) {
-    document.querySelectorAll('#arPAnswers .ar-ans').forEach((b) => {
+    if (P.picker) P.picker.lock();
+    else document.querySelectorAll('#arPAnswers .ar-ans').forEach((b) => {
       b.disabled = true;
       b.classList.toggle('is-picked', +b.dataset.pk === k);
       b.classList.toggle('is-dim', k !== null && +b.dataset.pk !== k);
@@ -685,7 +709,7 @@
     const q = P.q;
     if (!q || P.myK != null || !P.conn) return;
     const left = q.secs * 1000 - (performance.now() - P.qStart);
-    if (left < -R.ANSWER_GRACE_MS || k < 0 || k >= q.options.length) return;
+    if (left < -R.ANSWER_GRACE_MS || !C.isAnswer(q, k)) return;
     P.myK = k;
     A.sfx('click');
     lockAnswers(k, 'Đang gửi...');
@@ -710,12 +734,26 @@
     if (c && c.shield > 0) parts.push(`🛡️ Khiên ×${c.shield}`);
     return parts.join(' · ');
   }
+  /** Dòng kết quả câu ở chế độ Sinh tồn: điểm + tim mất/hồi/bị loại. */
+  function survivalNote(y) {
+    if (y.wasOut) return `👻 Em đã bị loại — vẫn trả lời để luyện tập nhé! <span class="ar-tag">${C.hearts(0)}</span>`;
+    const parts = [y.ok ? `+${fmt(y.pts)} điểm` : '+0 điểm'];
+    if (y.healed) parts.push('<span class="ar-tag up">💚 Hồi 1 tim!</span>');
+    if (y.out) parts.push('<span class="ar-tag">💀 Hết tim — em bị loại!</span>');
+    else if (y.lost) parts.push('<span class="ar-tag">💔 Mất 1 tim</span>');
+    parts.push(`<span class="ar-room-hp">${C.hearts(y.hp)}</span>`);
+    return parts.join(' ');
+  }
   function renderPlayerReveal(m) {
     clearInterval(P.timer);
-    P.q = null;
+    P.q = null; P.picker = null;
     const y = m.you || { ok: false, k: null, pts: 0, bonus: 0, step: 0, rank: 0, value: 0, streak: 0 };
+    if (m.you && m.text && Array.isArray(m.options)) {
+      P.log[m.i] = { q: { kind: m.kind, text: m.text, options: m.options, correctIdx: m.correctIdx, correct: m.correct, left: m.left, expl: m.expl || '', img: P.imgs[m.i] || '' }, chosen: y.k, ok: !!y.ok };
+    }
     const head = y.ok ? '✅ Chính xác!' : y.k === null ? '⏰ Em chưa trả lời kịp' : '❌ Chưa đúng';
-    const gain = m.mode === 'race'
+    const gain = m.mode === 'survival' ? survivalNote(y)
+      : m.mode === 'race'
       ? (y.ok ? (y.step === 2 ? '⚡ Tăng tốc! +2 bước' : '+1 bước') : 'Đứng yên')
       : (y.ok ? `+${fmt(y.pts + y.bonus)} điểm${y.bonus ? ` <span class="ar-tag">🔥 chuỗi ${y.streak} +${y.bonus}</span>` : ''}` : '+0 điểm');
     body().innerHTML = `<div class="ar-feedback ${y.ok ? 'is-ok' : 'is-bad'} ar-room-result">
@@ -723,12 +761,18 @@
         <div class="ar-fb-head">${gain}${y.up > 0 ? ` <span class="ar-tag up">▲ lên ${y.up} hạng</span>` : ''}</div>
         ${m.mode === 'speed' ? cardNoteHtml(y) : ''}
         ${y.rank ? `<p class="ar-room-rank">Hạng <b>${y.rank}</b> · ${fmt(y.value)} ${UNIT[m.mode]}${m.mode === 'race' ? `/${m.goal}` : ''}</p>` : ''}
-        ${!y.ok ? `<div class="ar-fb-ans">Đáp án đúng: <b>${SHAPES[m.correctIdx]} ${esc(m.options[m.correctIdx])}</b></div>` : ''}
+        ${!y.ok ? (C.kindOf(m) === 'choice' ? `<div class="ar-fb-ans">Đáp án đúng: <b>${SHAPES[m.correctIdx]} ${esc(m.options[m.correctIdx])}</b></div>`
+          : `<div class="ar-fb-ans">${y.k != null ? `<span class="ar-tag">em đúng ${C.partial(m, y.k).right}/${C.partial(m, y.k).of}</span> ` : ''}Đáp án đúng:<ul class="ar-fb-list">${C.answerLines(m).map((t) => `<li>${esc(t)}</li>`).join('')}</ul></div>`) : ''}
         ${m.expl ? `<div class="ar-fb-expl">💡 ${esc(m.expl)}</div>` : ''}
       </div>
       <div class="ar-side ar-room-top5"><h3>Top 5</h3>${boardHtml(m.top, UNIT[m.mode], P.me && P.me.name)}</div>
       <p class="ar-hint ar-center">${m.last ? 'Câu cuối — chờ giáo viên công bố kết quả...' : 'Chờ giáo viên chuyển câu tiếp...'}</p>`;
-    A.sfx(y.ok ? (y.streak >= 3 ? 'combo' : 'correct') : 'wrong');
+    A.sfx(y.out && !y.wasOut ? 'lose' : y.ok ? (y.streak >= 3 ? 'combo' : 'correct') : 'wrong');
+  }
+  function endTitle(mode, y) {
+    if (mode === 'survival' && !(y.hp > 0)) return `💀 Em đã bị loại — hạng ${y.rank}/${y.players}. Lần sau cố lên nhé!`;
+    if (y.rank === 1) return mode === 'survival' ? '🏆 Em là người sống sót cuối cùng!' : '🏆 Em vô địch cả phòng!';
+    return `Em về hạng ${y.rank}/${y.players}`;
   }
   function renderPlayerEnd(m) {
     clearInterval(P.timer);
@@ -754,30 +798,37 @@
         });
       } catch (e) { /* XP chỉ là phần thêm */ }
     }
+    const seen = P.log.filter(Boolean);
+    const wrong = seen.filter((x) => !x.ok);
     body().innerHTML = `<div class="ar-card ar-end">
-      <h2 class="ar-h2 ar-center">${y.rank === 1 ? '🏆 Em vô địch cả phòng!' : `Em về hạng ${y.rank}/${y.players}`}</h2>
+      <h2 class="ar-h2 ar-center">${endTitle(m.mode, y)}</h2>
       ${podiumHtml(m.top.slice(0, 3), UNIT[m.mode], P.me && P.me.name)}
       <div class="ar-end-stats">
         <div><b>${y.correct}/${y.total}</b><span>câu đúng</span></div>
         <div><b>${y.bestStreak}</b><span>chuỗi đúng dài nhất</span></div>
         <div><b>${fmt(y.value)}</b><span>${UNIT[m.mode]}</span></div>
+        ${m.mode === 'survival' ? `<div><b>${C.hearts(y.hp || 0)}</b><span>${y.hp > 0 ? 'em trụ đến cuối!' : 'tim còn lại'}</span></div>` : ''}
         <div class="is-coin"><b>+${coins} 🪙</b><span>xu (đang có ${A.profile().coins})</span></div>
       </div>
-      <div class="ar-row ar-center-row"><button type="button" class="ar-btn" data-act="home"><i class="fa-solid fa-gamepad"></i> Về Đấu trường</button>
-        <button type="button" class="ar-btn ar-btn-pack" data-act="packs"><span aria-hidden="true">🥚</span> Mở hộp</button></div></div>`;
+      ${wrong.length ? '' : y.total && y.correct === y.total ? '<p class="ar-center ar-room-perfect">🌟 Em không sai câu nào — xuất sắc!</p>' : ''}
+      <div class="ar-row ar-center-row">${wrong.length ? '<button type="button" class="ar-btn ar-btn-play ar-btn-practice" data-act="practice"></button>' : ''}
+        <button type="button" class="ar-btn" data-act="home"><i class="fa-solid fa-gamepad"></i> Về Đấu trường</button>
+        <button type="button" class="ar-btn ar-btn-pack" data-act="packs"><span aria-hidden="true">🥚</span> Mở hộp</button></div>
+      ${wrong.length ? `<details class="ar-review" open>${A.reviewHtml(wrong)}</details>` : ''}</div>`;
+    const pb = body().querySelector('[data-act="practice"]');
+    if (pb) A.paintPracticeBtn(pb, wrong.length);
     playerStop(false);
-    A.sfx(y.rank === 1 ? 'win' : y.rank <= 3 ? 'match' : 'flip');
-    if (y.rank <= 3 && global.EduFX) global.EduFX.confetti({ count: y.rank === 1 ? 140 : 70 });
+    const out = m.mode === 'survival' && !(y.hp > 0); // bị loại: không bắn pháo hoa dù đứng hạng cao
+    A.sfx(out ? 'lose' : y.rank === 1 ? 'win' : y.rank <= 3 ? 'match' : 'flip');
+    if (!out && y.rank <= 3 && global.EduFX) global.EduFX.confetti({ count: y.rank === 1 ? 140 : 70 });
   }
 
   // ============================================================
   // MÀN CHỌN: thẻ "Phòng cả lớp" + sự kiện chung
   // ============================================================
   function paintHostCard() {
-    const mode = A.prefs.mode;
-    $('arRoomModeNote').textContent = mode === 'gold'
-      ? '💰 Săn vàng chỉ chơi 1 người — phòng cả lớp sẽ chơi ⚡ Tốc độ.'
-      : `Dùng bộ câu, chế độ (${MODE_LABEL[mode]}), số câu và giây mỗi câu đã chọn ở trên.`;
+    const mode = A.effMode();
+    $('arRoomModeNote').textContent = `Phòng sẽ chơi ${MODE_LABEL[mode]} với bộ câu, số câu và giây mỗi câu đã chọn ở trên.`;
     $('arHostBtn').disabled = !(A.deckSource().questions || []).length || $('arPlay').disabled;
     document.querySelectorAll('#arRoomMax button').forEach((b) => b.classList.toggle('is-on', +b.dataset.v === (A.prefs.roomMax || 60)));
     const saved = store.get(HOST_KEY, null);
@@ -792,6 +843,7 @@
     }
   }
   function resumeHost() {
+    if (!teacherOk()) return;
     const saved = store.get(HOST_KEY, null);
     const room = saved && R.restore(saved.room);
     if (!room) { store.del(HOST_KEY); paintHostCard(); A.toast('Không khôi phục được phòng cũ.'); return; }
@@ -805,7 +857,7 @@
     A.show('arHome');
     A.refreshWallet();
     paintHostCard();
-    if (location.search.includes('phong=')) history.replaceState(null, '', location.pathname);
+    if (location.search.includes('phong=')) { history.replaceState(null, '', location.pathname); A.setInvite(false); }
   }
 
   function onAction(act, el) {
@@ -825,16 +877,30 @@
       case 'resume': resumeHost(); break;
       case 'drop': if (confirm('Bỏ phòng đang dở? Điểm của phòng này sẽ mất.')) { store.del(HOST_KEY); paintHostCard(); } break;
       case 'rejoin': playerJoin(P.code); break;
+      case 'practice': A.practice(P.log); break;
       case 'leave': goHome(); break;
       default: break;
     }
   }
 
+  /** Tick xanh từng ô + nút "Vào phòng" sáng lên khi đã nhập đủ — học sinh biết ngay mình còn thiếu gì. */
+  function paintJoinReady() {
+    const nameOk = $('arJoinName').value.trim().length >= 2;
+    const codeOk = R.normCode($('arJoinCode').value).length === R.CODE_LEN;
+    $('arJoinNameField').classList.toggle('is-filled', nameOk);
+    $('arJoinCodeField').classList.toggle('is-filled', codeOk);
+    $('arJoinBtn').classList.toggle('is-ready', nameOk && codeOk);
+  }
+
   function init() {
     $('arHostBtn').addEventListener('click', hostCreate);
-    $('arJoinBtn').addEventListener('click', () => playerJoin($('arJoinCode').value));
-    $('arJoinCode').addEventListener('input', (e) => { e.target.value = R.normCode(e.target.value); });
-    $('arJoinCode').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); playerJoin(e.target.value); } });
+    // Học sinh: Họ và tên → Mã phòng → Vào phòng (Enter ở ô tên chuyển sang ô mã nếu mã chưa đủ).
+    $('arJoinForm').addEventListener('submit', (e) => { e.preventDefault(); playerJoin($('arJoinCode').value); });
+    $('arJoinName').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && R.normCode($('arJoinCode').value).length < R.CODE_LEN) { e.preventDefault(); $('arJoinCode').focus(); }
+    });
+    $('arJoinCode').addEventListener('input', (e) => { e.target.value = R.normCode(e.target.value); $('arJoinFromLink').hidden = true; paintJoinReady(); });
+    $('arJoinName').addEventListener('input', paintJoinReady);
     $('arRoomMax').addEventListener('click', (e) => {
       const b = e.target.closest('button');
       if (!b) return;
@@ -860,10 +926,16 @@
     document.addEventListener('keydown', (e) => {
       if ($('arRoom').hidden || /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
       const n = parseInt(e.key, 10);
-      if (P.q && !P.stopped && n >= 1 && n <= P.q.options.length) { e.preventDefault(); playerAnswer(n - 1); return; }
-      if (H.room && (e.key === 'Enter' || e.key === ' ') && R.canAdvance(H.room) && !e.target.closest('button')) { e.preventDefault(); hostNext(); }
+      if (P.q && !P.stopped && P.picker) {
+        if (n >= 1 && n <= P.q.options.length) { e.preventDefault(); P.picker.key(n); return; }
+        if (e.key === 'Enter' && !(e.target.closest && e.target.closest('button'))) { e.preventDefault(); P.picker.submit(); return; }
+      }
+      if (P.q && !P.stopped && !P.picker && n >= 1 && n <= P.q.options.length) { e.preventDefault(); playerAnswer(n - 1); return; }
+      if (H.room && (e.key === 'Enter' || e.key === ' ') && R.canAdvance(H.room) && !(e.target.closest && e.target.closest('button'))) { e.preventDefault(); hostNext(); }
     });
     document.addEventListener('arena:deck', paintHostCard);
+    document.addEventListener('arena:role', paintHostCard);
+    document.addEventListener('arena:mode', paintHostCard);
     // Người dẫn lỡ đóng/tải lại tab giữa trận: trình duyệt hỏi lại (trạng thái vẫn được lưu để khôi phục).
     global.addEventListener('beforeunload', (e) => {
       if (H.room && H.room.phase !== 'lobby' && H.room.phase !== 'end') { persist(); e.preventDefault(); e.returnValue = ''; }
@@ -875,11 +947,15 @@
     const code = R.normCode(new URLSearchParams(location.search).get('phong') || '');
     if (code.length === R.CODE_LEN) {
       $('arJoinCode').value = code;
+      $('arJoinFromLink').hidden = false;
       let again = '';
       try { again = sessionStorage.getItem(JOIN_SS) || ''; } catch (e) { /* ignore */ }
-      if (again === code && A.nickName() && $('arNick').value.trim()) playerJoin(code);
-      else { $('arRoomCard').scrollIntoView({ block: 'center' }); ($('arNick').value.trim() ? $('arJoinBtn') : $('arNick')).focus(); }
+      if (again === code && A.nickName() !== 'Em' && $('arNick').value.trim()) { A.setNick($('arNick').value); $('arJoinName').value = A.nickName(); playerJoin(code); }
+      else $('arJoinName').focus(); // học sinh chỉ cần gõ họ tên rồi Enter
+    } else if (new URLSearchParams(location.search).get('phong')) {
+      A.toast('Mã phòng trong link chưa đúng — nhập lại mã nhé.'); $('arJoinCode').focus();
     }
+    paintJoinReady();
   }
   init();
 

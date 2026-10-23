@@ -25,7 +25,7 @@
   const PEER_PREFIX = 'eduquiz-arena-v1-';
   const ANSWER_GRACE_MS = 1500; // trễ mạng: câu trả lời tới muộn tối đa chừng này vẫn nhận
   const MAX_PLAYERS = 80;
-  const KEY_OF = { speed: 'score', race: 'pos' };
+  const KEY_OF = { speed: 'score', race: 'pos', survival: 'score' };
   const CARD_EVERY = 3;                 // đúng liền bao nhiêu câu thì nhận 1 thẻ
   const CARD_CYCLE = ['x2', 'shield'];  // thứ tự thẻ nhận được
   const newCards = () => ({ x2: 0, shield: 0 });
@@ -36,21 +36,32 @@
     return s;
   }
   function normCode(s) { return String(s || '').toUpperCase().replace(/[^2-9A-HJKMNP-Z]/g, '').slice(0, CODE_LEN); }
+  /**
+   * Mã người chơi = mã máy + băm của họ tên. Phòng máy: nhiều em dùng chung 1 trình duyệt → nếu chỉ dùng mã máy,
+   * em sau sẽ "vào lại" đúng chỗ của em trước (mất tên, thừa kế điểm). Cùng máy + cùng tên (không phân biệt hoa/thường,
+   * khoảng trắng) vẫn nhận ra là 1 người để giữ điểm khi rớt mạng / tải lại trang.
+   */
+  function cidFor(machineId, name) {
+    const norm = String(name || '').normalize('NFC').toLowerCase().replace(/\s+/g, ' ').trim();
+    let h = 2166136261;
+    for (let i = 0; i < norm.length; i++) { h ^= norm.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return String(machineId || '').replace(/[^a-z0-9]/g, '').slice(0, 20) + (h >>> 0).toString(36);
+  }
   function peerId(code) { return PEER_PREFIX + code; }
-  function cleanName(s) { return String(s || '').replace(/[<>\u0000-\u001f]/g, '').replace(/\s+/g, ' ').trim().slice(0, 24); }
+  function cleanName(s) { return String(s || '').replace(/[<>\u0000-\u001f]/g, '').replace(/\s+/g, ' ').trim().slice(0, 30); }
 
   /**
    * Tạo phòng ở máy người dẫn.
-   * opts: { code, mode:'speed'|'race', deck (EduArenaCore.buildDeck), count, secs, maxPlayers, title, setKey }
+   * opts: { code, mode:'speed'|'race'|'survival', deck (EduArenaCore.buildDeck), count, secs, maxPlayers, title, setKey }
    */
   function createRoom(opts) {
-    const mode = opts.mode === 'race' ? 'race' : 'speed';
+    const mode = opts.mode === 'race' || opts.mode === 'survival' ? opts.mode : 'speed';
     const count = Math.max(1, opts.count | 0);
     return {
       v: 1, code: opts.code, mode, title: String(opts.title || '').slice(0, 120), setKey: opts.setKey || '',
       deck: opts.deck.slice(), secs: Math.max(5, opts.secs | 0 || 20),
-      // Tốc độ: số câu = số câu chọn (≤ số câu có). Đua: về đích sau `count` bước, tối đa 2×count câu (lặp bộ nếu thiếu).
-      total: mode === 'speed' ? Math.min(count, opts.deck.length) : count * 2,
+      // Tốc độ/Sinh tồn: số câu = số câu chọn (≤ số câu có). Đua: về đích sau `count` bước, tối đa 2×count câu (lặp bộ nếu thiếu).
+      total: mode === 'race' ? count * 2 : Math.min(count, opts.deck.length),
       goal: mode === 'race' ? count : 0,
       max: Math.min(MAX_PLAYERS, Math.max(2, opts.maxPlayers | 0 || 60)),
       players: {}, order: [], i: -1, phase: 'lobby', qStartAt: 0, answers: {}, last: null,
@@ -86,6 +97,8 @@
       // log[i]: vào giữa chừng thì các câu trước để trống = "không trả lời"
       score: 0, pos: 0, streak: 0, bestStreak: 0, correct: 0, log: [], online: true, kicked: false, cards: newCards(),
     };
+    // Sinh tồn: vào giữa trận vẫn đủ tim (chưa bỏ lỡ câu nào được tính là sai).
+    if (room.mode === 'survival') player.hp = C.LIVES;
     room.players[cid] = player;
     room.order.push(cid);
     return { ok: true, player, rejoin: false };
@@ -112,7 +125,11 @@
   function publicQuestion(room, now) {
     const q = current(room);
     const left = Math.max(0, room.secs * 1000 - ((now || Date.now()) - room.qStartAt));
-    return { t: 'q', i: room.i, total: room.total, text: q.text, options: q.options, img: q.img || '', ms: left, secs: room.secs, mode: room.mode, goal: room.goal };
+    const m = { t: 'q', i: room.i, total: room.total, text: q.text, options: q.options, img: q.img || '', ms: left, secs: room.secs, mode: room.mode, goal: room.goal };
+    // Dạng câu khác "chọn 1": gửi khung câu (vế trái ghép đôi, số ô cần chọn) — KHÔNG gửi đáp án.
+    const kind = C.kindOf(q);
+    if (kind !== 'choice') Object.assign(m, { kind, left: q.left, need: kind === 'multi' ? q.correct.length : undefined });
+    return m;
   }
 
   function canAdvance(room) { return room.phase === 'lobby' || room.phase === 'reveal'; }
@@ -137,7 +154,7 @@
     if (room.phase !== 'q' || i !== room.i) return { ok: false, reason: 'phase' };
     if (room.answers[cid]) return { ok: false, reason: 'dupe' };
     const q = current(room);
-    if (!Number.isInteger(k) || k < 0 || k >= q.options.length) return { ok: false, reason: 'choice' };
+    if (!C.isAnswer(q, k)) return { ok: false, reason: 'choice' };
     const ms = now - room.qStartAt;
     if (ms > room.secs * 1000 + ANSWER_GRACE_MS) return { ok: false, reason: 'late' };
     room.answers[cid] = { k, ms: Math.max(0, Math.min(room.secs * 1000, ms)) };
@@ -158,12 +175,16 @@
     const counts = q.options.map(() => 0);
     const before = rankMap(room);
     const results = {};
+    let right = 0;
     activeIds(room).forEach((id) => {
       const p = room.players[id];
       const a = room.answers[id];
-      const ok = !!a && a.k === q.correctIdx;
-      if (a) counts[a.k]++;
+      const ok = !!a && C.grade(q, a.k);
+      if (a && Number.isInteger(a.k)) counts[a.k]++;
+      else if (a && C.kindOf(q) === 'multi') a.k.forEach((v) => { counts[v]++; });
+      if (ok) right++;
       let pts = 0, bonus = 0, step = 0, card = '', used = '';
+      const life = {};
       if (room.mode === 'speed') {
         const cards = p.cards || (p.cards = newCards());
         if (ok) {
@@ -173,13 +194,18 @@
         } else if (a && cards.shield > 0) { cards.shield--; used = 'shield'; }              // trả lời sai nhưng có Khiên → giữ chuỗi
         else p.streak = 0;
         p.score += pts + bonus;
+      } else if (room.mode === 'survival') {
+        const wasOut = p.hp <= 0;
+        const st = C.survivalStep(p, ok, room.i);
+        if (!wasOut && ok) { pts = C.speedPoints(true, a.ms, limit); p.score += pts; }
+        Object.assign(life, { hp: p.hp, lost: st.lost, healed: st.healed, out: st.out, wasOut });
       } else {
         step = C.raceStep(p, ok, room.goal); // raceStep tự cập nhật p.streak
       }
       if (ok) p.correct++;
       p.bestStreak = Math.max(p.bestStreak, p.streak);
       p.log[room.i] = a ? (ok ? 1 : 0) : -1; // 1 đúng, 0 sai, -1 không trả lời
-      results[id] = { ok, k: a ? a.k : null, pts, bonus, step, streak: p.streak };
+      results[id] = Object.assign({ ok, k: a ? a.k : null, pts, bonus, step, streak: p.streak }, life);
       if (room.mode === 'speed') Object.assign(results[id], { card, used, cards: { x2: p.cards.x2, shield: p.cards.shield } });
     });
     room.phase = 'reveal';
@@ -191,7 +217,7 @@
       r.value = row.value;
       r.up = before[row.cid] ? before[row.cid] - (idx + 1) : 0;
     });
-    room.last = { i: room.i, correctIdx: q.correctIdx, counts, answered: answeredCount(room), results, expl: q.expl || '' };
+    room.last = { i: room.i, kind: C.kindOf(q), correctIdx: q.correctIdx, correct: q.correct, counts, right, answered: answeredCount(room), results, expl: q.expl || '' };
     return room.last;
   }
   function rankMap(room) {
@@ -203,14 +229,24 @@
   /** Bảng xếp hạng (bằng điểm → ai đúng nhiều hơn, rồi ai vào trước). */
   function leaderboard(room) {
     const key = KEY_OF[room.mode];
-    return activeIds(room).map((id, idx) => {
+    const rows = activeIds(room).map((id, idx) => {
       const p = room.players[id];
-      return { cid: id, name: p.name, face: p.face, value: p[key], correct: p.correct, streak: p.streak || 0, online: p.online, idx };
-    }).sort((a, b) => (b.value - a.value) || (b.correct - a.correct) || (a.idx - b.idx));
+      const row = { cid: id, name: p.name, face: p.face, value: p[key], correct: p.correct, streak: p.streak || 0, online: p.online, idx };
+      if (room.mode === 'survival') Object.assign(row, { hp: p.hp, outAt: p.outAt, score: p.score });
+      return row;
+    });
+    if (room.mode === 'survival') return rows.sort((a, b) => C.survivalOrder(a, b) || (b.correct - a.correct) || (a.idx - b.idx));
+    return rows.sort((a, b) => (b.value - a.value) || (b.correct - a.correct) || (a.idx - b.idx));
   }
 
   function isDone(room) {
     if (room.i + 1 >= room.total) return true;
+    if (room.mode === 'survival' && room.i >= 0) {
+      // Còn ≤ 1 người trụ lại (phòng ≥ 2 người) hoặc ai cũng đã bị loại → kết thúc.
+      const ids = activeIds(room);
+      const alive = ids.filter((id) => room.players[id].hp > 0).length;
+      return alive === 0 || (ids.length >= 2 && alive <= 1);
+    }
     return room.mode === 'race' && activeIds(room).some((id) => room.players[id].pos >= room.goal);
   }
   function finish(room, now) {
@@ -229,7 +265,7 @@
     const idx = board.findIndex((r) => r.cid === cid);
     const p = room.players[cid];
     if (!p || idx < 0) return null;
-    return { rank: idx + 1, players: board.length, value: board[idx].value, correct: p.correct, total: asked(room), bestStreak: p.bestStreak };
+    return { rank: idx + 1, players: board.length, value: board[idx].value, correct: p.correct, total: asked(room), bestStreak: p.bestStreak, hp: p.hp };
   }
 
   // ============================================================
@@ -242,13 +278,16 @@
   };
   function toCsv(room) {
     const n = asked(room);
-    const unit = room.mode === 'speed' ? 'Điểm' : 'Bước';
+    const unit = room.mode === 'race' ? 'Bước' : 'Điểm';
     const head = ['Hạng', 'Biệt danh', unit, 'Số câu đúng', 'Số câu đã hỏi', 'Tỉ lệ đúng (%)', 'Chuỗi đúng dài nhất'];
+    const surv = room.mode === 'survival';
+    if (surv) head.push('Tim còn lại', 'Bị loại ở câu');
     for (let i = 0; i < n; i++) head.push('C' + (i + 1));
     const lines = [head.map(csvCell).join(',')];
     leaderboard(room).forEach((row, idx) => {
       const p = room.players[row.cid];
       const cells = [idx + 1, p.name, row.value, p.correct, n, n ? Math.round((p.correct / n) * 100) : 0, p.bestStreak];
+      if (surv) cells.push(p.hp || 0, p.hp > 0 ? '' : 'C' + ((p.outAt || 0) + 1));
       for (let i = 0; i < n; i++) cells.push(p.log[i] === 1 ? 'Đ' : p.log[i] === 0 ? 'S' : '-');
       lines.push(cells.map(csvCell).join(','));
     });
@@ -259,12 +298,12 @@
       const ok = ids.filter((id) => room.players[id].log[i] === 1).length;
       pct.push(ids.length ? Math.round((ok / ids.length) * 100) + '%' : '');
     }
-    lines.push(['', 'Cả lớp đúng', '', '', '', '', ''].concat(pct).map(csvCell).join(','));
+    lines.push(['', 'Cả lớp đúng', '', '', '', '', ''].concat(surv ? ['', ''] : [], pct).map(csvCell).join(','));
     lines.push('');
     lines.push(['Câu', 'Nội dung', 'Đáp án đúng'].map(csvCell).join(','));
     for (let i = 0; i < n; i++) {
       const q = room.deck[i % room.deck.length];
-      lines.push(['C' + (i + 1), q.text, q.options[q.correctIdx]].map(csvCell).join(','));
+      lines.push(['C' + (i + 1), q.text, C.answerText(q)].map(csvCell).join(','));
     }
     return '﻿' + lines.join('\r\n'); // BOM → Excel đọc đúng tiếng Việt
   }
@@ -300,7 +339,7 @@
 
   global.EduArenaRoomCore = {
     CODE_LEN, ANSWER_GRACE_MS, MAX_PLAYERS, KEY_OF, CARD_EVERY, CARD_CYCLE,
-    makeCode, normCode, peerId, cleanName, createRoom, join, leave, kick, setOnline, activeIds,
+    makeCode, normCode, peerId, cleanName, cidFor, createRoom, join, leave, kick, setOnline, activeIds,
     publicQuestion, openNext, canAdvance, submit, allAnswered, answeredCount, reveal, leaderboard,
     isDone, finish, asked, personalEnd, toCsv, summary, snapshot, restore, current,
   };

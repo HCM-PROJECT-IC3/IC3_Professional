@@ -67,6 +67,20 @@ assertEq('CSV chặn công thức độc (ô bắt đầu bằng =)', evil.index
 assertEq('thống kê', P.summary(many.rows), { count: 2, avg: 63, min: 40, max: 85, below50: 1 });
 assertEq('thống kê rỗng', P.summary([]).count, 0);
 
+// ── Câu cả lớp hay sai ──
+var R = function (n, c, w, t) { return { n: n, c: c, s: 'THPT A', t: t || 'IC3 › LV1 › Bài 1', w: w }; };
+var ws = P.wrongStats([
+  R('An', '10A1', 'u1,u2,u2'),            // uid lặp trong 1 bài chỉ tính 1 lượt
+  R('An', '10A1', 'u1'),                  // cùng em nộp lại: +1 lượt, vẫn 1 HS
+  R('Bình', '10A1', 'u2, u3', 'IC3 › LV1 › Bài 2'),
+  R('Chi', '10A2', ''),                   // không sai câu nào
+]);
+assertEq('wrongStats: đếm bài, bài có câu sai', [ws.submissions, ws.withWrong], [4, 3]);
+assertEq('wrongStats: xếp theo lượt sai, rồi số HS, rồi uid', ws.items.map(function (i) { return [i.uid, i.count, i.students]; }), [['u2', 2, 2], ['u1', 2, 1], ['u3', 1, 1]]);
+assertEq('wrongStats: gom tên bài chứa câu', ws.items.find(function (i) { return i.uid === 'u2'; }).tests, ['IC3 › LV1 › Bài 1', 'IC3 › LV1 › Bài 2']);
+assertEq('wrongStats rỗng', P.wrongStats([]), { submissions: 0, withWrong: 0, items: [] });
+assertEq('wrongStats đọc được trường w của mã đã giải', P.wrongStats([d.rec]).items.map(function (i) { return i.uid; }), ['ic3__lv1__t1__q3', 'ic3__lv1__t1__q9']);
+
 // ── Lưu trên máy học sinh ──
 var c1 = P.remember(sheet);
 assertEq('remember trả mã', c1, code);

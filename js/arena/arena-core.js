@@ -37,10 +37,21 @@
   }
 
   // ============================================================
-  // CÂU HỎI — đổi câu ngân hàng / câu tự soạn sang dạng 1 đáp án đúng
-  // (ô màu ▲ ◆ ● ■ như Kahoot). Đúng/Sai nhiều mệnh đề → mỗi mệnh đề 1 câu.
+  // CÂU HỎI — đổi câu ngân hàng / câu tự soạn sang câu Đấu trường. 4 dạng (q.kind):
+  //   choice — 1 đáp án đúng (ô màu ▲ ◆ ● ■ như Kahoot): { options, correctIdx }
+  //            (single, multi có 1 đáp án, mỗi mệnh đề Đúng/Sai, mỗi dòng của list/selectfill)
+  //   multi  — chọn nhiều (Kahoot "multi-select"): { options, correct:[chỉ số đúng, tăng dần] }
+  //   order  — sắp xếp (Kahoot "Puzzle"):          { options: các bước đã xáo, correct:[chỉ số theo đúng thứ tự] }
+  //   match  — ghép đôi:                            { left, options: vế phải đã xáo, correct:[ô phải của từng mục trái] }
+  // Câu trả lời `a`: choice → số; multi → mảng chỉ số đã chọn; order → mảng chỉ số theo thứ tự bấm;
+  // match → mảng: a[i] = ô phải ghép với mục trái i. Câu cũ không có `kind` = choice.
   // ============================================================
   const MAX_OPTIONS = 6;
+  const MAX_PAIRS = 6;   // = số màu ô đáp án
+  const MAX_STEPS = 6;
+  const KINDS = ['choice', 'multi', 'order', 'match'];
+  const KIND_LABEL = { choice: 'Chọn 1', multi: 'Chọn nhiều', order: 'Sắp xếp', match: 'Ghép đôi' };
+  const KIND_ICON = { choice: '🔘', multi: '☑️', order: '🔢', match: '🔗' };
   function strip(html) {
     return String(html ?? '').replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]*>/g, '')
       .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
@@ -50,40 +61,216 @@
     const src = q.imageUrl || (q.image_file ? 'img/' + q.image_file : '');
     return /^(img\/[\w\-./]+|https:\/\/[^\s"'<>`\\]+)$/i.test(src) && !src.includes('..') ? src : '';
   }
-  /** 1 câu (dạng engine data/ic3) → 0..n câu Đấu trường {text, options, correctIdx, img, uid, expl}. */
+  const unique = (arr) => new Set(arr).size === arr.length;
+  /** Câu dẫn ngắn đặt trước từng dòng (câu dẫn dài quá thì bỏ để câu không quá dài trên máy chiếu). */
+  const lead = (intro, dflt) => (intro && intro.length < 120 ? intro + ' — ' : dflt || '');
+  /**
+   * Tách đoạn có chỗ trống thành từng dòng theo "\n" (giống _splitFillBlankLines ở js/quiz-engine.js):
+   * mỗi dòng là mảng token {t:'text', v} | {t:'blank', i}.
+   */
+  function fillLines(segments, nBlanks) {
+    const lines = [[]];
+    (segments || []).forEach((seg, i) => {
+      String(seg || '').split('\n').forEach((part, pi) => {
+        if (pi > 0) lines.push([]);
+        if (strip(part)) lines[lines.length - 1].push({ t: 'text', v: strip(part) });
+      });
+      if (i < nBlanks) lines[lines.length - 1].push({ t: 'blank', i });
+    });
+    return lines.filter((l) => l.length);
+  }
+
+  /** 1 câu (dạng engine data/ic3) → 0..n câu Đấu trường (chưa xáo — buildDeck xáo). */
   function convert(q) {
     if (!q || typeof q !== 'object') return [];
     const base = { img: imageOf(q), uid: q.uid || '', expl: strip(q.explanation) };
+    const text = strip(q.question);
     if (q.type === 'single' || q.type === 'multi') {
       const options = (q.options || []).map(strip);
       const ok = new Set((q.correct || []).map(strip));
       const hits = options.filter((o) => ok.has(o));
-      if (hits.length !== 1 || options.length < 2 || options.length > MAX_OPTIONS || options.some((o) => !o)) return [];
-      const text = strip(q.question);
-      return text ? [Object.assign({ text, options, answer: hits[0] }, base)] : [];
+      if (!text || options.length < 2 || options.length > MAX_OPTIONS || options.some((o) => !o) || !unique(options)) return [];
+      if (hits.length === 1 && (q.type === 'single' || ok.size === 1)) return [Object.assign({ text, options, answer: hits[0] }, base)];
+      // Chọn nhiều: mọi đáp án đúng phải có trong danh sách, và không phải "chọn tất cả".
+      if (q.type === 'multi' && hits.length >= 2 && hits.length === ok.size && hits.length < options.length) {
+        return [Object.assign({ kind: 'multi', text, options, answers: hits }, base)];
+      }
+      return [];
     }
     if (q.type === 'truefalse') {
       const t = q.label_true || 'Đúng', f = q.label_false || 'Sai';
-      const intro = strip(q.question);
       return (q.statements || []).map((s) => strip(s.text) && (s.answer === 'true' || s.answer === 'false') && Object.assign({
-        text: (intro && intro.length < 120 ? intro + ' — ' : 'Đúng hay sai? ') + strip(s.text),
+        text: lead(text, 'Đúng hay sai? ') + strip(s.text),
         options: [t, f], answer: s.answer === 'true' ? t : f, keepOrder: true,
       }, base)).filter(Boolean);
     }
+    if (q.type === 'list') {
+      // Mỗi dòng có lựa chọn riêng → mỗi dòng 1 câu chọn 1.
+      return (q.items || []).map((it) => {
+        const options = (it && it.options || []).map(strip), answer = strip(it && it.correct), line = strip(it && it.text);
+        if (!line || options.length < 2 || options.length > MAX_OPTIONS || !unique(options) || !options.includes(answer)) return null;
+        return Object.assign({ text: lead(text) + line, options, answer, keepOrder: options.length === 2 }, base);
+      }).filter(Boolean);
+    }
+    if (q.type === 'selectfill') {
+      // Dạng "mỗi dòng 1 phát biểu + 1 ô chọn" → mỗi dòng 1 câu; dòng có ≥ 2 ô trống (câu liền mạch) thì bỏ qua.
+      const bank = [...new Set((q.wordBank || []).map(strip).filter(Boolean))];
+      const blanks = (q.blanks || []).map(strip);
+      if (bank.length < 2 || bank.length > MAX_OPTIONS) return [];
+      return fillLines(q.segments, blanks.length).map((line) => {
+        const holes = line.filter((tk) => tk.t === 'blank');
+        if (holes.length !== 1 || !bank.includes(blanks[holes[0].i])) return null;
+        const last = line[line.length - 1].t === 'blank';
+        const sentence = line.map((tk) => (tk.t === 'text' ? tk.v : last ? '' : '_____')).join(' ').replace(/\s+/g, ' ').trim();
+        if (!sentence) return null;
+        return Object.assign({ text: lead(text) + sentence, options: bank, answer: blanks[holes[0].i], keepOrder: true }, base);
+      }).filter(Boolean);
+    }
+    if (q.type === 'ordering') {
+      const items = (q.items || []).map(strip);
+      if (!text || items.length < 3 || items.length > MAX_STEPS || items.some((x) => !x) || !unique(items)) return [];
+      return [Object.assign({ kind: 'order', text, items }, base)];
+    }
+    if (q.type === 'matching') {
+      const pairs = (q.pairs || []).map((p) => ({ l: strip(p && p.left), r: strip(p && p.right) }));
+      if (!text || pairs.length < 2 || pairs.length > MAX_PAIRS || pairs.some((p) => !p.l || !p.r)
+        || !unique(pairs.map((p) => p.r)) || !unique(pairs.map((p) => p.l))) return [];
+      return [Object.assign({ kind: 'match', text, left: pairs.map((p) => p.l), right: pairs.map((p) => p.r) }, base)];
+    }
     return [];
   }
-  /** Danh sách câu → bộ câu chơi: trộn câu + trộn đáp án (Đúng/Sai giữ thứ tự). */
-  function buildDeck(questions, rng, max) {
+  function kindOf(q) { return (q && q.kind) || 'choice'; }
+  /** Hoán vị 0..n-1 khác thứ tự gốc (nếu n ≥ 2) — câu sắp xếp/ghép đôi không bao giờ "đúng sẵn". */
+  function scramble(n, rng) {
+    const idx = Array.from({ length: n }, (_, i) => i);
+    for (let t = 0; t < 8; t++) {
+      const p = shuffle(idx, rng);
+      if (n < 2 || p.some((v, i) => v !== i)) return p;
+    }
+    return idx.slice(1).concat(0);
+  }
+  /** Câu đã đổi (convert) → câu chơi: xáo đáp án, tính chỉ số đáp án đúng. */
+  function finalize(c, rng) {
+    const common = { text: c.text, img: c.img, uid: c.uid, expl: c.expl };
+    if (c.kind === 'multi') {
+      const options = shuffle(c.options, rng);
+      return Object.assign({ kind: 'multi', options, correct: c.answers.map((a) => options.indexOf(a)).sort((a, b) => a - b) }, common);
+    }
+    if (c.kind === 'order') {
+      const p = scramble(c.items.length, rng); // p[k] = bước gốc nằm ở ô k
+      return Object.assign({ kind: 'order', options: p.map((i) => c.items[i]), correct: c.items.map((_, i) => p.indexOf(i)) }, common);
+    }
+    if (c.kind === 'match') {
+      const rows = shuffle(c.left.map((_, i) => i), rng);
+      const left = rows.map((i) => c.left[i]), right = rows.map((i) => c.right[i]);
+      const p = scramble(right.length, rng);
+      return Object.assign({ kind: 'match', left, options: p.map((i) => right[i]), correct: left.map((_, i) => p.indexOf(i)) }, common);
+    }
+    const options = c.keepOrder ? c.options : shuffle(c.options, rng);
+    return Object.assign({ options, correctIdx: options.indexOf(c.answer) }, common);
+  }
+  /**
+   * Danh sách câu → bộ câu chơi: trộn câu + trộn đáp án (Đúng/Sai giữ thứ tự).
+   * kinds (tuỳ chọn): chỉ lấy các dạng này, vd ['choice','match'].
+   */
+  function buildDeck(questions, rng, max, kinds) {
     const out = [];
     const seen = new Set();
+    const want = Array.isArray(kinds) && kinds.length ? new Set(kinds) : null;
     (questions || []).forEach((q) => convert(q).forEach((c) => {
-      const k = c.text + '\u0000' + c.answer;
+      if (want && !want.has(c.kind || 'choice')) return;
+      const k = c.text + '\u0000' + JSON.stringify(c.answer ?? c.answers ?? c.items ?? c.right);
       if (!seen.has(k)) { seen.add(k); out.push(c); }
     }));
-    return shuffle(out, rng).slice(0, max || out.length).map((c) => {
-      const options = c.keepOrder ? c.options : shuffle(c.options, rng);
-      return { text: c.text, options, correctIdx: options.indexOf(c.answer), img: c.img, uid: c.uid, expl: c.expl };
+    return shuffle(out, rng).slice(0, max || out.length).map((c) => finalize(c, rng));
+  }
+  /** Đếm số câu chơi được theo từng dạng: { choice, multi, order, match }. */
+  function countKinds(questions) {
+    const n = { choice: 0, multi: 0, order: 0, match: 0 };
+    buildDeck(questions, rngFrom(1)).forEach((q) => { n[kindOf(q)]++; });
+    return n;
+  }
+
+  /** Câu trả lời có đúng khuôn dạng của câu không (máy chủ phòng kiểm tra trước khi nhận). */
+  function isAnswer(q, a) {
+    const n = (q.options || []).length;
+    const inRange = (v) => Number.isInteger(v) && v >= 0 && v < n;
+    switch (kindOf(q)) {
+      case 'choice': return inRange(a);
+      case 'multi': return Array.isArray(a) && a.length >= 1 && a.length <= n && a.every(inRange) && unique(a);
+      case 'order': return Array.isArray(a) && a.length === n && a.every(inRange) && unique(a);
+      case 'match': return Array.isArray(a) && a.length === (q.left || []).length && a.every(inRange);
+      default: return false;
+    }
+  }
+  /** Chấm đúng/sai (cả câu — kiểu Kahoot: sai 1 phần là sai). */
+  function grade(q, a) {
+    if (a === null || a === undefined || !isAnswer(q, a)) return false;
+    if (kindOf(q) === 'choice') return a === q.correctIdx;
+    const want = q.correct || [];
+    const got = kindOf(q) === 'multi' ? a.slice().sort((x, y) => x - y) : a;
+    return got.length === want.length && got.every((v, i) => v === want[i]);
+  }
+  /** Đúng bao nhiêu phần (để báo "đúng 3/4 cặp"): { right, of }. Câu chọn 1 → 0/1 hoặc 1/1. */
+  function partial(q, a) {
+    const k = kindOf(q);
+    if (k === 'choice') return { right: grade(q, a) ? 1 : 0, of: 1 };
+    const want = q.correct || [];
+    if (!Array.isArray(a)) return { right: 0, of: want.length };
+    if (k === 'multi') return { right: a.filter((v) => want.includes(v)).length, of: want.length };
+    return { right: want.filter((v, i) => a[i] === v).length, of: want.length };
+  }
+  /** Các dòng mô tả đáp án đúng (hiện ở phần xem lại / CSV). */
+  function answerLines(q) {
+    const o = q.options || [];
+    switch (kindOf(q)) {
+      case 'multi': return (q.correct || []).map((i) => o[i]);
+      case 'order': return (q.correct || []).map((i, n) => `${n + 1}. ${o[i]}`);
+      case 'match': return (q.left || []).map((l, i) => `${l} → ${o[(q.correct || [])[i]]}`);
+      default: return [o[q.correctIdx]];
+    }
+  }
+  /** Các dòng mô tả câu trả lời của em (rỗng nếu không trả lời). */
+  function chosenLines(q, a) {
+    if (a === null || a === undefined || !isAnswer(q, a)) return [];
+    const o = q.options || [];
+    switch (kindOf(q)) {
+      case 'multi': return a.map((i) => o[i]);
+      case 'order': return a.map((i, n) => `${n + 1}. ${o[i]}`);
+      case 'match': return (q.left || []).map((l, i) => `${l} → ${o[a[i]]}`);
+      default: return [o[a]];
+    }
+  }
+  function answerText(q) { return answerLines(q).join(kindOf(q) === 'choice' ? '' : ' | '); }
+
+  /**
+   * Bộ "Luyện câu sai": từ nhật ký [{ q, ok }] lấy các câu chưa đúng (bỏ trùng), xáo lại đáp án
+   * để em không nhớ vị trí. Câu 2 lựa chọn (Đúng/Sai) giữ nguyên thứ tự.
+   */
+  function practiceDeck(log, rng) {
+    const out = [];
+    const seen = new Set();
+    (log || []).forEach((x) => {
+      if (!x || x.ok || !x.q || !Array.isArray(x.q.options) || seen.has(x.q.text)) return;
+      const q = x.q, k = kindOf(q);
+      if (k === 'choice') {
+        const answer = q.options[q.correctIdx];
+        if (answer === undefined) return;
+        seen.add(q.text);
+        const options = q.options.length <= 2 ? q.options.slice() : shuffle(q.options, rng);
+        out.push({ text: q.text, options, correctIdx: options.indexOf(answer), img: q.img, uid: q.uid, expl: q.expl });
+        return;
+      }
+      if (!Array.isArray(q.correct) || (k === 'match' && !Array.isArray(q.left))) return;
+      seen.add(q.text);
+      // Dựng lại dạng gốc rồi xáo lại như lúc tạo bộ câu.
+      const o = q.options;
+      const c = k === 'multi' ? { kind: k, options: o.slice(), answers: q.correct.map((i) => o[i]) }
+        : k === 'order' ? { kind: k, items: q.correct.map((i) => o[i]) }
+        : { kind: k, left: q.left.slice(), right: q.correct.map((i) => o[i]) };
+      out.push(finalize(Object.assign(c, { text: q.text, img: q.img, uid: q.uid, expl: q.expl }), rng));
     });
+    return shuffle(out, rng);
   }
 
   // ============================================================
@@ -187,6 +374,86 @@
   }
 
   // ============================================================
+  // SINH TỒN (kiểu Battle Royale của Blooket) — dùng chung 1 người + Phòng cả lớp
+  // ============================================================
+  const LIVES = 3;        // số tim lúc đầu (cũng là tối đa)
+  const HEAL_EVERY = 3;   // đúng liền bao nhiêu câu thì hồi 1 tim
+  /**
+   * Chấm 1 câu cho người chơi Sinh tồn (sửa trực tiếp p.hp / p.streak / p.outAt).
+   * Đã bị loại thì không đổi gì. i = số thứ tự câu (để biết ai trụ lâu hơn).
+   */
+  function survivalStep(p, ok, i) {
+    if (p.hp === undefined) p.hp = LIVES;
+    if (p.hp <= 0) return { lost: false, healed: false, out: true, already: true };
+    let lost = false, healed = false;
+    if (ok) {
+      p.streak = (p.streak || 0) + 1;
+      if (p.streak % HEAL_EVERY === 0 && p.hp < LIVES) { p.hp++; healed = true; }
+    } else {
+      p.streak = 0; p.hp--; lost = true;
+      if (p.hp <= 0) { p.hp = 0; p.outAt = i; }
+    }
+    return { lost, healed, out: p.hp <= 0, already: false };
+  }
+  /** So sánh xếp hạng Sinh tồn: nhiều tim hơn → trụ lâu hơn (bị loại muộn hơn) → nhiều điểm hơn. */
+  function survivalOrder(a, b) {
+    const outA = a.hp > 0 ? Infinity : (a.outAt ?? -1), outB = b.hp > 0 ? Infinity : (b.outAt ?? -1);
+    return ((b.hp || 0) - (a.hp || 0)) || (outA === outB ? 0 : outB > outA ? 1 : -1) || ((b.score || 0) - (a.score || 0));
+  }
+  function hearts(hp) { return hp > 0 ? '❤️'.repeat(hp) + '🖤'.repeat(Math.max(0, LIVES - hp)) : '💀'; }
+
+  // ============================================================
+  // CÂU CÁ (kiểu Fishing Frenzy của Blooket) — đúng thì được thả câu
+  // ============================================================
+  const FISH = [
+    { id: 'boot', icon: '👢', name: 'Chiếc ủng cũ', min: 0, max: 0, w: 8 },
+    { id: 'small', icon: '🐟', name: 'Cá rô', min: 1, max: 3, w: 30 },
+    { id: 'clown', icon: '🐠', name: 'Cá hề', min: 2, max: 5, w: 22 },
+    { id: 'puffer', icon: '🐡', name: 'Cá nóc', min: 3, max: 7, w: 14 },
+    { id: 'squid', icon: '🦑', name: 'Mực ống', min: 5, max: 10, w: 10 },
+    { id: 'octo', icon: '🐙', name: 'Bạch tuộc', min: 6, max: 12, w: 7 },
+    { id: 'shark', icon: '🦈', name: 'Cá mập', min: 15, max: 30, w: 4 },
+    { id: 'whale', icon: '🐋', name: 'Cá voi xanh', min: 40, max: 60, w: 1 },
+    { id: 'frenzy', icon: '⚡', name: 'Mồi thần — 3 lần câu tới nhân đôi!', min: 2, max: 4, w: 4, frenzy: 3 },
+  ];
+  /**
+   * Thả câu 1 lần. frenzy = số lần còn được nhân đôi. Trả { fish, kg, frenzy } (frenzy mới, đã trừ lần này).
+   */
+  function castLine(rng, frenzy) {
+    const fish = pickWeighted(FISH, rng);
+    let kg = fish.min + Math.floor(rng() * (fish.max - fish.min + 1));
+    let left = frenzy || 0;
+    if (left > 0) { kg *= 2; left--; }
+    if (fish.frenzy) left = Math.max(left, fish.frenzy);
+    return { fish, kg, frenzy: left };
+  }
+
+  // ============================================================
+  // VẬT PHẨM HỖ TRỢ (kiểu power-up của Wayground/Quizizz) — đúng liền 3 câu nhận 1 món
+  // ============================================================
+  const POWERUPS = {
+    fifty: { icon: '✂️', name: '50:50', tip: 'Bỏ bớt 2 đáp án sai' },
+    time: { icon: '⏳', name: 'Thêm giờ', tip: 'Thêm một nửa thời gian cho câu này' },
+    x2: { icon: '✖️2', name: 'Nhân đôi', tip: 'Câu đúng kế tiếp được gấp đôi điểm' },
+  };
+  const POWER_EVERY = 3;
+  const POWER_MAX = 3;
+  /** Đúng liền đủ POWER_EVERY câu → 1 vật phẩm ngẫu nhiên (giữ tối đa POWER_MAX). Trả id hoặc ''. */
+  function earnPowerup(held, streak, rng) {
+    if (!streak || streak % POWER_EVERY !== 0 || held.length >= POWER_MAX) return '';
+    const ids = Object.keys(POWERUPS);
+    const id = ids[Math.floor(rng() * ids.length)];
+    held.push(id);
+    return id;
+  }
+  /** 50:50 — chỉ số các đáp án SAI cần ẩn (để lại đáp án đúng + 1 đáp án sai). Câu ≤ 2 lựa chọn: không ẩn gì. */
+  function fiftyFifty(q, rng) {
+    if (kindOf(q) !== 'choice' || q.options.length <= 2) return [];
+    const wrong = q.options.map((_, k) => k).filter((k) => k !== q.correctIdx);
+    return shuffle(wrong, rng).slice(0, Math.min(2, wrong.length - 1));
+  }
+
+  // ============================================================
   // XẾP HẠNG
   // ============================================================
   function rank(players, key) {
@@ -271,9 +538,12 @@
   }
 
   global.EduArenaCore = {
-    rngFrom, shuffle, strip, convert, buildDeck,
+    rngFrom, shuffle, strip, convert, buildDeck, practiceDeck,
+    KINDS, KIND_LABEL, KIND_ICON, kindOf, countKinds, isAnswer, grade, partial, answerLines, chosenLines, answerText,
     speedPoints, streakBonus, makeBots, botAnswer,
     CHESTS, rollChests, applyChest, chestLabel, raceStep, rank,
+    LIVES, HEAL_EVERY, survivalStep, survivalOrder, hearts, FISH, castLine,
+    POWERUPS, POWER_EVERY, POWER_MAX, earnPowerup, fiftyFifty,
     coinsFor, PACK_PRICE, RARITY, PACKS, blookById, openPack, newProfile, buyPack, ghostScoreAt,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

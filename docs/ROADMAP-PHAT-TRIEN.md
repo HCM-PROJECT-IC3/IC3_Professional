@@ -39,7 +39,7 @@ Mỗi bài nộp là 1 lượt ghi, không giảm được nữa → vượt h�
 Đã làm **không qua Firestore** (`quiz_results` vẫn chỉ lưu điểm tổng → không thêm dung lượng, không
 đổi rules): uid câu sai (≤ 30/bài) đi kèm bài nộp lên Sheet, cột O `CauSai`; Apps Script `wrongStats`
 tổng hợp trên server; dashboard giáo viên → thẻ "❌ Câu cả lớp hay sai" (bấm Phân tích) + "Tạo đề ôn"
-(link đề, 0 Firebase). Xem CHANGELOG 10/2026. Việc còn có thể làm: đưa thẻ này sang coordinator-dashboard
+(link đề, 0 Firebase). Xem CHANGELOG 10/2026. Trang `gom-ket-qua.html` cũng có thẻ này, tính từ mã kết quả học sinh gửi (offline, 0 backend — 23/10/2026). Việc còn có thể làm: đưa thẻ này sang coordinator-dashboard
 và tab Báo cáo của ic3-dashboard.
 
 ### Ngưỡng D — học sinh dùng nhiều thiết bị / muốn giữ tiến độ khi đổi máy

@@ -39,3 +39,18 @@
 .gk-body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; line-height: 1.5; }
 .gk-body a.gk-btn { text-decoration: none; display: inline-block; }
 .gk-body .gk-table th { background: var(--card); }
+
+/* Trang gom kết quả — 4. Câu cả lớp hay sai (cùng cấu trúc thẻ wq của teacher-dashboard) */
+.gk-link { min-height: 0; margin-top: 0; flex: 1 1 18rem; }
+.gk-body .wq-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .45rem; }
+.gk-body .wq-item details { border-radius: 10px; background: var(--card2, rgba(127,127,127,.1)); padding: .55rem .7rem; }
+.gk-body .wq-item summary { display: grid; grid-template-columns: 1.8rem 1fr; gap: .1rem .5rem; cursor: pointer; list-style: none; }
+.gk-body .wq-item summary::-webkit-details-marker { display: none; }
+.gk-body .wq-rank { grid-row: 1 / span 2; width: 1.6rem; height: 1.6rem; border-radius: 50%; display: grid; place-items: center; background: var(--red-lt, rgba(214,48,49,.15)); color: var(--red, #d63031); font-weight: 900; font-size: .75rem; }
+.gk-body .wq-q { font-size: .9rem; font-weight: 700; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.gk-body .wq-item details[open] .wq-q { -webkit-line-clamp: unset; }
+.gk-body .wq-meta { font-size: .76rem; color: var(--muted); font-weight: 600; }
+.gk-body .wq-ans { margin: .55rem 0 0 2.3rem; padding-left: 1rem; font-size: .84rem; display: flex; flex-direction: column; gap: .2rem; }
+.gk-body .wq-ans li.is-ok { color: var(--green, #00b894); font-weight: 800; }
+.gk-body .wq-expl { margin: .45rem 0 0 2.3rem; font-size: .82rem; line-height: 1.5; }
+.gk-body .wq-note { color: var(--muted); font-size: .78rem; }

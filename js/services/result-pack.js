@@ -168,6 +168,33 @@
     };
   }
 
+  /**
+   * "Câu cả lớp hay sai" từ các mã đã gom (trường w = uid câu sai, tối đa 30/bài) —
+   * cùng dạng với wrongStats của Apps Script để giáo viên đọc giống dashboard.
+   * Học sinh tính theo Họ tên + Lớp + Trường (1 em nộp 2 lần vẫn là 1 HS).
+   * @returns {{submissions:number, withWrong:number, items:{uid:string,count:number,students:number,tests:string[]}[]}}
+   *   items xếp theo lượt sai giảm dần, rồi số HS giảm dần, rồi uid.
+   */
+  function wrongStats(rows) {
+    const by = new Map();
+    let withWrong = 0;
+    for (const r of rows) {
+      const uids = Array.from(new Set(String(r.w || '').split(',').map((u) => u.trim()).filter(Boolean)));
+      if (uids.length) withWrong++;
+      const who = [r.n, r.c, r.s].join('|').toLowerCase();
+      for (const uid of uids) {
+        let it = by.get(uid);
+        if (!it) { it = { uid, count: 0, who: new Set(), tests: new Set() }; by.set(uid, it); }
+        it.count++;
+        it.who.add(who);
+        if (r.t) it.tests.add(r.t);
+      }
+    }
+    const items = Array.from(by.values()).map((it) => ({ uid: it.uid, count: it.count, students: it.who.size, tests: Array.from(it.tests) }))
+      .sort((a, b) => b.count - a.count || b.students - a.students || (a.uid < b.uid ? -1 : a.uid > b.uid ? 1 : 0));
+    return { submissions: rows.length, withWrong, items };
+  }
+
   // ── Phía học sinh: lưu mã các bài đã làm trên máy ──
   function list() {
     try { const a = JSON.parse(global.localStorage.getItem(STORE_KEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; }
@@ -191,7 +218,7 @@
       .replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase().slice(0, 40) || 'hoc-sinh';
   }
 
-  const api = { encode, decode, extractCodes, parseMany, toCsv, summary, toRecord, crc32, list, remember, last, safeName, PREFIX };
+  const api = { encode, decode, extractCodes, parseMany, toCsv, summary, wrongStats, toRecord, crc32, list, remember, last, safeName, PREFIX };
   global.EduResultPack = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

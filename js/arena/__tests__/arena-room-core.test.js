@@ -27,6 +27,11 @@ assertEq('chuẩn hoá mã gõ tay', R.normCode(' ab-c 1o9xyz '), 'ABC9XY');
 assertEq('peer id có tiền tố riêng', R.peerId('ABC234'), 'eduquiz-arena-v1-ABC234');
 assertEq('biệt danh bỏ thẻ HTML / ký tự điều khiển', R.cleanName('  <b>Lan\u0007  Anh</b> '), 'bLan Anh/b');
 
+assertEq('họ tên dài 30 ký tự không bị cắt', R.cleanName('Nguyễn Thị Khánh Huyền Trang'), 'Nguyễn Thị Khánh Huyền Trang');
+assertEq('cid: cùng máy + cùng tên (khác hoa/thường, dấu cách) → cùng người', R.cidFor('abc123def456', 'Nguyễn  Văn An'), R.cidFor('abc123def456', ' nguyễn văn an '));
+assertEq('cid: cùng máy, khác tên → khác người (phòng máy dùng chung)', R.cidFor('abc123def456', 'An') !== R.cidFor('abc123def456', 'Bình'), true);
+assertEq('cid: hợp lệ, ≤ 40 ký tự', /^[a-z0-9]{13,40}$/.test(R.cidFor('abc123def456', 'Lê Văn Tâm')), true);
+
 // ── Vào phòng ──
 var room = R.createRoom({ code: 'ABC234', mode: 'speed', deck: deck, count: 10, secs: 20, maxPlayers: 3, title: 'Bộ thử', now: 0 });
 assertEq('Tốc độ: số câu ≤ số câu có', room.total, 3);
@@ -170,6 +175,56 @@ delete snap.players.o.cards;                                         // bản l�
 var old = R.restore(snap);
 assertEq('khôi phục bản cũ: tự có túi thẻ rỗng', old.players.o.cards, { x2: 0, shield: 0 });
 assertEq('… và chơi tiếp bình thường', play(old, { o: 0 }).o.pts, 1000);
+
+// ── Sinh tồn (Battle Royale) ──
+var sr = R.createRoom({ code: 'SRV234', mode: 'survival', deck: cardDeck(10), count: 10, secs: 20 });
+assertEq('sinh tồn: số câu = số câu chọn', [sr.mode, sr.total], ['survival', 10]);
+['a', 'b', 'c'].forEach(function (id) { R.join(sr, { cid: id, name: id.toUpperCase() }); });
+assertEq('sinh tồn: vào phòng có 3 tim', sr.players.a.hp, 3);
+var s1 = play(sr, { a: 0, b: 1, c: null });
+assertEq('câu 1: đúng giữ tim + có điểm, sai/bỏ trống mất 1 tim', [s1.a.hp, s1.a.pts > 0, s1.b.hp, s1.b.lost, s1.c.hp], [3, true, 2, true, 2]);
+play(sr, { a: 0, b: 1, c: 1 });
+var s3 = play(sr, { a: 0, b: 1, c: 0 });
+assertEq('câu 3: B hết tim → bị loại ở câu 3', [s3.b.out, s3.b.hp, sr.players.b.outAt], [true, 0, 2]);
+assertEq('chưa kết thúc khi còn 2 người trụ', R.isDone(sr), false);
+var s4 = play(sr, { a: 0, b: 0, c: 1 });
+assertEq('đã bị loại: trả lời đúng vẫn 0 điểm, không hồi tim', [s4.b.wasOut, s4.b.pts, s4.b.hp], [true, 0, 0]);
+assertEq('bảng xếp hạng: tim nhiều → bị loại muộn', R.leaderboard(sr).map(function (r) { return r.name; }), ['A', 'C', 'B']);
+play(sr, { a: 0, c: 1 });
+assertEq('còn 1 người trụ lại → kết thúc', R.isDone(sr), true);
+assertEq('kết quả riêng có số tim', R.personalEnd(sr, 'a').hp, 3);
+var srCsv = R.toCsv(sr).split('\r\n');
+assertEq('CSV sinh tồn có cột tim + câu bị loại', [srCsv[0].indexOf('Tim còn lại') > 0, srCsv[3].split(',').slice(7, 9)], [true, ['0', 'C3']]);
+var solo = R.createRoom({ code: 'SRW234', mode: 'survival', deck: cardDeck(5), count: 5, secs: 20 });
+R.join(solo, { cid: 'x', name: 'X' });
+play(solo, { x: 1 });
+assertEq('phòng 1 người: chưa hết tim thì chưa kết thúc', R.isDone(solo), false);
+
+// ── Dạng câu mới trong phòng: chọn nhiều / sắp xếp / ghép đôi ──
+var kdeck = [
+  { kind: 'multi', text: 'M', options: ['a', 'b', 'c', 'd'], correct: [1, 3], img: '', uid: 'm1', expl: '' },
+  { kind: 'order', text: 'O', options: ['s3', 's1', 's2'], correct: [1, 2, 0], img: '', uid: 'o1', expl: '' },
+  { kind: 'match', text: 'G', left: ['L1', 'L2'], options: ['R2', 'R1'], correct: [1, 0], img: '', uid: 'g1', expl: '' },
+];
+var kr = R.createRoom({ code: 'KND234', mode: 'speed', deck: kdeck, count: 3, secs: 20 });
+R.join(kr, { cid: 'a', name: 'A' }); R.join(kr, { cid: 'b', name: 'B' });
+var pq = R.openNext(kr, 0);
+assertEq('câu chọn nhiều gửi đi: có kind + số ô cần chọn, KHÔNG có đáp án', [pq.kind, pq.need, pq.correct], ['multi', 2, undefined]);
+assertEq('câu trả lời sai khuôn bị từ chối', R.submit(kr, 'a', 0, 1, 0).reason, 'choice');
+R.submit(kr, 'a', 0, [3, 1], 0); R.submit(kr, 'b', 0, [1, 2], 0);
+var kres = R.reveal(kr);
+assertEq('chọn nhiều: A đúng (thứ tự bấm không quan trọng), B sai; đếm số em chọn từng ô', [kres.results.a.ok, kres.results.b.ok, kres.counts, kres.right], [true, false, [0, 2, 1, 1], 1]);
+R.openNext(kr, 0);
+R.submit(kr, 'a', 1, [1, 2, 0], 0); R.submit(kr, 'b', 1, [0, 1, 2], 0);
+var ko = R.reveal(kr);
+assertEq('sắp xếp: chấm theo thứ tự', [ko.results.a.ok, ko.results.b.ok, ko.kind], [true, false, 'order']);
+var pg = R.openNext(kr, 0);
+assertEq('ghép đôi gửi đi có vế trái', pg.left, ['L1', 'L2']);
+R.submit(kr, 'a', 2, [1, 0], 0); R.submit(kr, 'b', 2, [0, 0], 0);
+var kg = R.reveal(kr);
+assertEq('ghép đôi: chấm từng cặp', [kg.results.a.ok, kg.results.b.ok], [true, false]);
+var kcsv = R.toCsv(kr);
+assertEq('CSV ghi đáp án đúng dạng chữ', [kcsv.indexOf('1. s1 | 2. s2 | 3. s3') > 0, kcsv.indexOf('L1 → R1 | L2 → R2') > 0], [true, true]);
 
 console.log(failures ? '\n' + failures + ' test FAIL' : '\nTất cả test PASS');
 process.exit(failures ? 1 : 0);

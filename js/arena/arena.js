@@ -11,6 +11,7 @@
   'use strict';
 
   const C = global.EduArenaCore;
+  const K = global.EduArenaKinds;
   const STORE = 'eduquiz_arena_v1';
   const SHAPES = ['▲', '◆', '●', '■', '★', '⬟'];
   const AVATAR_DEFAULT = '🙂';
@@ -49,6 +50,7 @@
   function refreshWallet() {
     $('arCoins').textContent = profile().coins;
     $('arAvatarBtn').textContent = avatarOf(profile());
+    $('arJoinAvatarFace').textContent = avatarOf(profile());
   }
 
   // ============================================================
@@ -134,11 +136,23 @@
     SRC.questions = lists.flat();
     updateDeckInfo();
   }
-  function playableCount() { return C.buildDeck(SRC.questions || [], C.rngFrom(1)).length; }
+  /** Các dạng câu em/giáo viên chọn chơi (mặc định: tất cả). */
+  function kinds() { return (S.prefs.kinds || []).filter((k) => C.KINDS.includes(k)).length ? S.prefs.kinds : C.KINDS; }
+  function playableCount() { return C.buildDeck(SRC.questions || [], C.rngFrom(1), 0, kinds()).length; }
+  /** Vẽ các chip "Dạng câu hỏi" kèm số câu từng dạng trong bộ đang chọn. */
+  function paintKinds() {
+    const n = SRC.questions ? C.countKinds(SRC.questions) : null;
+    const on = kinds();
+    $('arKinds').innerHTML = C.KINDS.map((k) => `<button type="button" data-kind="${k}" class="${on.includes(k) ? 'is-on' : ''}" aria-pressed="${on.includes(k)}"
+      ${n && !n[k] ? 'disabled title="Bộ này không có dạng câu này"' : ''}>${C.KIND_ICON[k]} ${C.KIND_LABEL[k]}${n ? ` <small>${n[k]}</small>` : ''}</button>`).join('');
+  }
   function updateDeckInfo() {
     if (!SRC.questions) return;
     const n = playableCount();
-    $('arDeckInfo').textContent = n ? `${n} câu chơi được (trắc nghiệm 1 đáp án và Đúng/Sai).` : '⚠️ Bộ này không có câu trắc nghiệm 1 đáp án / Đúng/Sai — chọn bài khác.';
+    paintKinds();
+    const info = n ? `${n} câu chơi được với các dạng câu đã chọn.` : '⚠️ Bộ này không có câu thuộc các dạng đã chọn — chọn thêm dạng câu hoặc bài khác.';
+    $('arDeckInfo').textContent = info;
+    $('arDeckInfoTeacher').textContent = info;
     $('arPlay').disabled = !n;
     document.dispatchEvent(new CustomEvent('arena:deck', { detail: { playable: n } }));
   }
@@ -157,22 +171,80 @@
     });
     paint();
   }
+  // Phòng cả lớp có Tốc độ / Đua về đích / Sinh tồn; Săn vàng + Câu cá chỉ chơi 1 người → ở vai Giáo viên hiểu là Tốc độ.
+  const ROOM_MODES = ['speed', 'race', 'survival'];
+  function effMode() { return role() === 'teacher' && !ROOM_MODES.includes(S.prefs.mode) ? 'speed' : S.prefs.mode; }
   function paintModes() {
+    const m = effMode();
     document.querySelectorAll('.ar-mode').forEach((b) => {
-      const on = b.dataset.mode === S.prefs.mode;
+      const on = b.dataset.mode === m;
       b.classList.toggle('is-on', on); b.setAttribute('aria-checked', on);
     });
-    $('arSecs').closest('.ar-field').hidden = S.prefs.mode === 'gold'; // Săn vàng không giới hạn giờ (như Blooket)
+    $('arSecs').closest('.ar-field').hidden = m === 'gold'; // Săn vàng không giới hạn giờ (như Blooket)
+  }
+
+  // ============================================================
+  // VAI: học sinh / giáo viên / chơi một mình
+  // ============================================================
+  const ROLES = ['student', 'teacher', 'solo'];
+  function role() { return $('arHome').dataset.role; }
+  function setRole(r, persist) {
+    if (!ROLES.includes(r)) r = 'student';
+    $('arHome').dataset.role = r;
+    document.querySelectorAll('#arRoles .ar-role').forEach((b) => {
+      const on = b.dataset.role === r;
+      b.classList.toggle('is-on', on); b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1;
+    });
+    if (persist) { S.role = r; save(); }
+    paintModes();
+    document.dispatchEvent(new CustomEvent('arena:role', { detail: { role: r } }));
+  }
+  /** Mở bằng link giáo viên gửi → chỉ còn ô nhập tên (ẩn thanh chọn vai). */
+  function setInvite(on) { $('arHome').classList.toggle('is-invite', !!on); if (on) setRole('student', false); }
+  /** Lưu tên đang dùng (họ tên của học sinh hoặc biệt danh chơi một mình) và đồng bộ 2 ô nhập. */
+  function setNick(v) {
+    S.last = String(v || '').replace(/\s+/g, ' ').trim().slice(0, 30); save();
+    // Không viết đè ô đang gõ (sẽ nuốt dấu cách giữa các chữ khi em đang nhập họ tên).
+    [$('arNick'), $('arJoinName')].forEach((el) => { if (el !== document.activeElement && el.value.trim() !== S.last) el.value = S.last; });
+    refreshWallet();
+    return S.last;
+  }
+  function initRoles() {
+    const bar = $('arRoles');
+    bar.addEventListener('click', (e) => { const b = e.target.closest('.ar-role'); if (b) { setRole(b.dataset.role, true); sfx('click'); } });
+    bar.addEventListener('keydown', (e) => { // ← → đổi vai khi đang ở thanh chọn
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      const i = ROLES.indexOf(role()) + (e.key === 'ArrowRight' ? 1 : -1);
+      setRole(ROLES[(i + ROLES.length) % ROLES.length], true);
+      bar.querySelector('.ar-role.is-on').focus();
+    });
+    const deep = ['de', 'cat', 'lvl', 'mt', 'mode'].some((k) => params.get(k));
+    if (params.get('phong')) setInvite(true);
+    else setRole(S.role === 'teacher' ? 'teacher' : deep ? 'solo' : (ROLES.includes(S.role) ? S.role : 'student'), false);
   }
   function initHome() {
     $('arNick').value = S.last;
-    $('arNick').addEventListener('change', () => { S.last = $('arNick').value.trim().slice(0, 24); save(); refreshWallet(); });
-    $('arModes').addEventListener('click', (e) => { const b = e.target.closest('.ar-mode'); if (!b) return; S.prefs.mode = b.dataset.mode; save(); paintModes(); sfx('click'); });
-    if (['speed', 'gold', 'race'].includes(params.get('mode'))) S.prefs.mode = params.get('mode');
+    // Máy phòng học dùng chung: KHÔNG điền sẵn tên người dùng trước vào ô họ tên của học sinh
+    // (chỉ điền khi tải lại trang giữa chừng — xem arena-room.js init).
+    $('arJoinName').value = '';
+    $('arNick').addEventListener('change', () => { S.last = $('arNick').value.trim().slice(0, 30); save(); refreshWallet(); });
+    $('arJoinAvatar').addEventListener('click', () => openPacks());
+    initRoles();
+    $('arModes').addEventListener('click', (e) => { const b = e.target.closest('.ar-mode'); if (!b) return; S.prefs.mode = b.dataset.mode; save(); paintModes(); sfx('click'); document.dispatchEvent(new CustomEvent('arena:mode')); });
+    if (Object.keys(MODE_LABEL).includes(params.get('mode'))) S.prefs.mode = params.get('mode');
     paintModes();
     chipGroup('arCount', 'count', Number);
     chipGroup('arLevel', 'level', String);
     chipGroup('arSecs', 'secs', Number);
+    $('arKinds').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-kind]');
+      if (!b || b.disabled) return;
+      const cur = kinds().slice();
+      const i = cur.indexOf(b.dataset.kind);
+      if (i >= 0) { if (cur.length === 1) { toast('Cần giữ ít nhất 1 dạng câu.'); return; } cur.splice(i, 1); } else cur.push(b.dataset.kind);
+      S.prefs.kinds = C.KINDS.filter((k) => cur.includes(k)); save(); sfx('click');
+      updateDeckInfo();
+    });
     $('arPlay').addEventListener('click', start);
     $('arAvatarBtn').addEventListener('click', () => openPacks());
     $('arOpenPacks').addEventListener('click', () => openPacks());
@@ -185,7 +257,8 @@
   // LINH VẬT
   // ============================================================
   function openPacks() {
-    S.last = $('arNick').value.trim().slice(0, 24); save();
+    const src = role() === 'student' ? $('arJoinName') : $('arNick');
+    if (src.value.trim()) setNick(src.value); else { S.last = ''; save(); }
     renderPacks();
     $('arReveal').hidden = true;
     show('arPacks');
@@ -244,30 +317,39 @@
   // TRẬN ĐẤU
   // ============================================================
   let G = null;
-  const MODE_LABEL = { speed: '⚡ Tốc độ', gold: '💰 Săn vàng', race: '🏁 Đua về đích' };
-  const KEY_OF = { speed: 'score', gold: 'gold', race: 'pos' };
+  const MODE_LABEL = { speed: '⚡ Tốc độ', gold: '💰 Săn vàng', race: '🏁 Đua về đích', survival: '❤️ Sinh tồn', fish: '🎣 Câu cá' };
+  const KEY_OF = { speed: 'score', gold: 'gold', race: 'pos', survival: 'score', fish: 'kg' };
+  const UNIT_OF = { score: 'điểm', gold: 'vàng', pos: 'bước', kg: 'kg' };
+  const POWER_MODES = ['speed', 'survival']; // chế độ có vật phẩm hỗ trợ (kiểu Wayground)
 
-  function start() {
-    S.last = $('arNick').value.trim().slice(0, 24); save();
-    const deck = C.buildDeck(SRC.questions || [], rng);
+  /**
+   * Vào trận. `drill` (mảng câu từ C.practiceDeck) = lượt "Luyện câu sai": Tốc độ, 1 mình, hết câu là xong,
+   * không ghi kỷ lục — chỉ để em sửa lại đúng những câu vừa sai.
+   */
+  function start(drill) {
+    drill = Array.isArray(drill) && drill.length ? drill : null;
+    if (!drill) { S.last = $('arNick').value.trim().slice(0, 30); save(); }
+    const deck = drill || C.buildDeck(SRC.questions || [], rng, 0, kinds());
     if (!deck.length) return;
-    const mode = S.prefs.mode;
-    const n = mode === 'speed' ? Math.min(S.prefs.count, deck.length) : S.prefs.count;
+    const mode = drill ? 'speed' : S.prefs.mode;
+    const n = drill ? deck.length : mode === 'speed' ? Math.min(S.prefs.count, deck.length) : S.prefs.count;
     const p = profile();
     const me = { id: 'me', name: nickName(), face: avatarOf(p), score: 0, gold: 0, pos: 0, streak: 0, me: true };
-    const players = [me].concat(C.makeBots(mode === 'race' ? 3 : 4, rng, S.prefs.level));
-    const bestKey = `${SRC.key}|${mode}|${n}`;
-    const best = p.best[bestKey] || null;
+    const players = drill ? [me] : [me].concat(C.makeBots(mode === 'race' ? 3 : 4, rng, S.prefs.level));
+    players.forEach((pl) => { pl.kg = 0; pl.frenzy = 0; pl.hp = C.LIVES; });
+    const bestKey = drill ? '' : `${SRC.key}|${mode}|${n}`;
+    const best = (bestKey && p.best[bestKey]) || null;
     let ghost = null;
     if (mode === 'speed' && best && best.trail) {
       ghost = { id: 'ghost', name: 'Kỷ lục của em', face: '👻', score: 0, ghost: true, bot: true };
       players.push(ghost);
     }
     G = {
-      mode, deck, n, i: 0, players, me, ghost, best, bestKey,
+      mode, deck, n, i: 0, players, me, ghost, best, bestKey, practice: !!drill,
       limitMs: mode === 'gold' ? 0 : S.prefs.secs * 1000,
       goal: n, maxRounds: mode === 'race' ? n * 3 : n,
       log: [], trail: [], bestStreak: 0, correct: 0, startedAt: Date.now(), locked: false, phase: 'q',
+      powers: [], x2: false,
     };
     $('arTrack').hidden = mode !== 'race';
     $('arTimerWrap').hidden = !G.limitMs;
@@ -286,11 +368,17 @@
     $('arQ').textContent = q.text;
     const img = $('arQImg');
     if (q.img) { img.src = q.img; img.hidden = false; } else { img.hidden = true; img.removeAttribute('src'); }
-    $('arAnswers').className = 'ar-answers n' + q.options.length;
-    $('arAnswers').innerHTML = q.options.map((o, k) => `<button type="button" class="ar-ans c${k}" data-k="${k}">
-      <span class="ar-shape" aria-hidden="true">${SHAPES[k]}</span><span class="ar-ans-text">${esc(o)}</span><kbd>${k + 1}</kbd></button>`).join('');
+    G.picker = null;
+    if (C.kindOf(q) === 'choice') {
+      $('arAnswers').className = 'ar-answers n' + q.options.length;
+      $('arAnswers').innerHTML = q.options.map((o, k) => `<button type="button" class="ar-ans c${k}" data-k="${k}">
+        <span class="ar-shape" aria-hidden="true">${SHAPES[k]}</span><span class="ar-ans-text">${esc(o)}</span><kbd>${k + 1}</kbd></button>`).join('');
+    } else {
+      // Chọn nhiều / Sắp xếp / Ghép đôi — js/arena/arena-kinds.js
+      G.picker = K.mount($('arAnswers'), q, { onAnswer: (a) => answer(a) });
+    }
     $('arFeedback').hidden = true;
-    renderHud(); renderSide(); renderTrack();
+    renderHud(); renderSide(); renderTrack(); renderPowers();
     G.qStart = performance.now();
     startTimer();
   }
@@ -313,29 +401,57 @@
     clearInterval(G.timer);
     const q = cur();
     const ms = Math.min(G.limitMs || Infinity, performance.now() - G.qStart);
-    const ok = k === q.correctIdx;
+    const ok = C.grade(q, k);
     const me = G.me;
     G.log.push({ q, chosen: k, ok });
-    if (ok) { G.correct++; me.streak++; G.bestStreak = Math.max(G.bestStreak, me.streak); } else if (G.mode !== 'race') me.streak = 0;
-    document.querySelectorAll('.ar-ans').forEach((b) => {
+    if (ok) G.correct++;
+    // Chuỗi đúng: Đua (raceStep) và Sinh tồn (survivalStep) tự đếm — tránh cộng 2 lần.
+    if (G.mode !== 'race' && G.mode !== 'survival') me.streak = ok ? me.streak + 1 : 0;
+    const life = G.mode === 'survival' ? C.survivalStep(me, ok, G.i) : null;
+    if (G.picker) G.picker.result(k);
+    else document.querySelectorAll('#arAnswers .ar-ans').forEach((b) => {
       const kk = +b.dataset.k;
       b.disabled = true;
       b.classList.toggle('is-correct', kk === q.correctIdx);
       b.classList.toggle('is-wrong', kk === k && !ok);
       b.classList.toggle('is-dim', kk !== q.correctIdx && kk !== k);
     });
-    sfx(ok ? (me.streak >= 3 ? 'combo' : 'correct') : 'wrong');
+    sfx(life && life.out ? 'lose' : ok ? (me.streak >= 3 ? 'combo' : 'correct') : 'wrong');
     if (!ok && global.EduFX) global.EduFX.shake($('arAnswers'));
 
     const prevRank = rankOf(me);
     let fb = '';
+    const events = [];
+    // Vật phẩm ✖️2: nhân đôi điểm của câu ĐÚNG kế tiếp.
+    const dbl = ok && G.x2 ? 2 : 1;
+    if (dbl === 2) G.x2 = false;
+    const x2Tag = dbl === 2 ? ' <span class="ar-tag up">✖️2 nhân đôi!</span>' : '';
     if (G.mode === 'speed') {
-      const pts = C.speedPoints(ok, ms, G.limitMs);
-      const bonus = ok ? C.streakBonus(me.streak) : 0;
+      const pts = C.speedPoints(ok, ms, G.limitMs) * dbl;
+      const bonus = ok ? C.streakBonus(me.streak) * dbl : 0;
       me.score += pts + bonus;
       G.trail.push(me.score);
       botsSpeed();
-      fb = ok ? `<b>+${pts + bonus}</b> điểm${bonus ? ` <span class="ar-tag">🔥 chuỗi ${me.streak} +${bonus}</span>` : ''}` : (k === null ? 'Hết giờ!' : 'Chưa đúng');
+      fb = ok ? `<b>+${pts + bonus}</b> điểm${bonus ? ` <span class="ar-tag">🔥 chuỗi ${me.streak} +${bonus}</span>` : ''}${x2Tag}` : (k === null ? 'Hết giờ!' : 'Chưa đúng');
+    } else if (G.mode === 'survival') {
+      const pts = ok ? C.speedPoints(true, ms, G.limitMs) * dbl : 0;
+      me.score += pts;
+      botsSurvival(events);
+      fb = (ok ? `<b>+${pts}</b> điểm${x2Tag}` : (k === null ? 'Hết giờ!' : 'Chưa đúng'))
+        + (life.healed ? ' <span class="ar-tag up">💚 Hồi 1 tim!</span>' : '')
+        + (life.out ? ' <span class="ar-tag">💀 Hết tim — em bị loại!</span>' : life.lost ? ' <span class="ar-tag">💔 Mất 1 tim</span>' : '')
+        + ` <span class="ar-fb-hp">${C.hearts(me.hp)}</span>`;
+    } else if (G.mode === 'fish') {
+      if (ok) {
+        const doubled = me.frenzy > 0;
+        const c = C.castLine(rng, me.frenzy);
+        me.frenzy = c.frenzy;
+        me.kg += c.kg;
+        fb = `<span class="ar-catch" aria-hidden="true">${c.fish.icon}</span> Em câu được <b>${esc(c.fish.name)}</b>${c.kg ? ` — <b>+${c.kg} kg</b>` : ' — 0 kg 😅'}`
+          + (doubled ? ' <span class="ar-tag up">⚡ x2</span>' : '') + (c.fish.frenzy ? ' <span class="ar-tag up">⚡ Mồi thần!</span>' : '');
+        if (c.kg >= 15 && global.EduFX) global.EduFX.confetti({ count: 50 });
+      } else fb = k === null ? 'Hết giờ — cá sổng mất 🎣' : 'Chưa đúng — cá sổng mất 🎣';
+      botsFish(events);
     } else if (G.mode === 'race') {
       const step = C.raceStep(me, ok, G.goal);
       botsRace();
@@ -343,28 +459,41 @@
     } else {
       fb = ok ? '<b>Chính xác!</b> Chọn 1 rương:' : 'Chưa đúng — không có rương lần này';
     }
+    G.bestStreak = Math.max(G.bestStreak, me.streak);
     const newRank = rankOf(me);
     const move = G.mode !== 'gold' && newRank < prevRank ? ` <span class="ar-tag up">▲ lên hạng ${newRank}</span>` : '';
-    showFeedback(ok, fb + move, q, k);
-    renderHud(); renderSide(); renderTrack();
+    // Kiểu Wayground: đúng liền 3 câu → nhận 1 vật phẩm hỗ trợ.
+    const got = ok && POWER_MODES.includes(G.mode) ? C.earnPowerup(G.powers, me.streak, rng) : '';
+    const gotTag = got ? ` <span class="ar-tag up">🎁 Nhận ${C.POWERUPS[got].icon} ${C.POWERUPS[got].name}</span>` : '';
+    showFeedback(ok, fb + move + gotTag, q, k);
+    if (events.length) $('arFbExtra').insertAdjacentHTML('beforeend', `<ul class="ar-events">${events.map((e) => `<li>${e}</li>`).join('')}</ul>`);
+    renderHud(); renderSide(); renderTrack(); renderPowers();
     if (G.mode === 'gold' && ok) { showChests(); return; }
     if (G.mode === 'gold') botsGold([]);
     afterAnswer();
   }
 
+  /** "Đáp án đúng: ..." — câu chọn 1 hiện 1 dòng; dạng khác hiện danh sách + "em đúng 2/4". */
+  function answerHtml(q, k) {
+    if (C.kindOf(q) === 'choice') return `<div class="ar-fb-ans">Đáp án đúng: <b>${SHAPES[q.correctIdx]} ${esc(q.options[q.correctIdx])}</b></div>`;
+    const part = C.partial(q, k);
+    const unit = { multi: 'đáp án', order: 'bước', match: 'cặp' }[C.kindOf(q)];
+    return `<div class="ar-fb-ans">${k !== null && k !== undefined ? `<span class="ar-tag">em đúng ${part.right}/${part.of} ${unit}</span> ` : ''}Đáp án đúng:
+      <ul class="ar-fb-list">${C.answerLines(q).map((t) => `<li>${esc(t)}</li>`).join('')}</ul></div>`;
+  }
   function showFeedback(ok, html, q, k) {
     const f = $('arFeedback');
     f.hidden = false;
     f.className = 'ar-feedback ' + (ok ? 'is-ok' : 'is-bad');
     f.innerHTML = `<div class="ar-fb-head">${ok ? '✅' : '❌'} ${html}</div>`
-      + (!ok ? `<div class="ar-fb-ans">Đáp án đúng: <b>${SHAPES[q.correctIdx]} ${esc(q.options[q.correctIdx])}</b></div>` : '')
+      + (!ok ? answerHtml(q, k) : '')
       + (!ok && q.expl ? `<div class="ar-fb-expl">💡 ${esc(q.expl)}</div>` : '')
       + '<div class="ar-fb-extra" id="arFbExtra"></div>';
   }
 
   function afterAnswer() {
     G.phase = 'next';
-    const done = G.mode === 'race' ? (G.players.some((p) => p.pos >= G.goal) || G.i + 1 >= G.maxRounds) : G.i + 1 >= G.maxRounds;
+    const done = isOver();
     const extra = $('arFbExtra');
     extra.insertAdjacentHTML('beforeend', `<button type="button" class="ar-btn ar-btn-play ar-next" id="arNext">${done ? '🏆 Xem kết quả' : 'Câu tiếp ▶'} <kbd>Enter</kbd></button>`);
     $('arNext').addEventListener('click', next);
@@ -372,13 +501,69 @@
   }
   function next() {
     if (!G || G.phase !== 'next') return;
-    const done = G.mode === 'race' ? (G.players.some((p) => p.pos >= G.goal) || G.i + 1 >= G.maxRounds) : G.i + 1 >= G.maxRounds;
-    if (done) { finish(); return; }
+    if (isOver()) { finish(); return; }
     G.i++;
     nextQuestion();
   }
 
+  function isOver() {
+    if (G.i + 1 >= G.maxRounds) return true;
+    if (G.mode === 'race') return G.players.some((p) => p.pos >= G.goal);
+    // Sinh tồn: em hết tim, hoặc mọi đối thủ đã bị loại (lượt 1 mình → chơi hết câu).
+    if (G.mode === 'survival') return G.me.hp <= 0 || (G.players.length > 1 && G.players.every((p) => p.me || p.hp <= 0));
+    return false;
+  }
+
+  // ── Vật phẩm hỗ trợ (kiểu Wayground) ──
+  function renderPowers() {
+    const box = $('arPowers');
+    box.hidden = !G || !POWER_MODES.includes(G.mode) || (!G.powers.length && !G.x2);
+    if (box.hidden) return;
+    box.innerHTML = G.powers.map((id, i) => {
+      const P = C.POWERUPS[id];
+      return `<button type="button" class="ar-power p-${id}" data-pw="${i}" title="${esc(P.tip)}" ${G.phase === 'q' ? '' : 'disabled'}>
+        <span aria-hidden="true">${P.icon}</span><b>${esc(P.name)}</b></button>`;
+    }).join('') + (G.x2 ? '<span class="ar-tag up ar-power-on">✖️2 đang bật — câu đúng kế tiếp gấp đôi</span>' : '');
+  }
+  function usePower(i) {
+    if (!G || G.phase !== 'q' || G.locked) return;
+    const id = G.powers[i];
+    if (!id) return;
+    if (id === 'fifty') {
+      const hide = C.fiftyFifty(cur(), rng);
+      if (!hide.length) { toast(C.kindOf(cur()) === 'choice' ? 'Câu này chỉ có 2 lựa chọn — để dành 50:50 cho câu sau nhé.' : '50:50 chỉ dùng cho câu chọn 1 đáp án — để dành cho câu sau nhé.'); return; }
+      hide.forEach((k) => { const b = document.querySelector(`.ar-ans[data-k="${k}"]`); if (b) { b.disabled = true; b.classList.add('is-gone'); } });
+    } else if (id === 'time') {
+      if (!G.limitMs) return;
+      G.qStart = Math.min(performance.now(), G.qStart + G.limitMs / 2);
+    } else if (id === 'x2') {
+      if (G.x2) { toast('✖️2 đang bật rồi — trả lời đúng để dùng nhé.'); return; }
+      G.x2 = true;
+    }
+    G.powers.splice(i, 1);
+    sfx('critical');
+    renderPowers();
+  }
+
   // ── Bot từng chế độ ──
+  function botsSurvival(events) {
+    G.players.forEach((p) => {
+      if (!p.bot || p.hp <= 0) return;
+      const a = C.botAnswer(p, G.limitMs, rng);
+      const st = C.survivalStep(p, a.correct, G.i);
+      if (a.correct) p.score += C.speedPoints(true, a.ms, G.limitMs);
+      if (st.out) events.push(`💀 ${p.face} ${esc(p.name)} hết tim — bị loại!`);
+    });
+  }
+  function botsFish(events) {
+    G.players.forEach((p) => {
+      if (!p.bot || rng() > p.accuracy) return;
+      const c = C.castLine(rng, p.frenzy);
+      p.frenzy = c.frenzy;
+      p.kg += c.kg;
+      if (c.kg >= 15) events.push(`${c.fish.icon} ${p.face} ${esc(p.name)} câu được ${esc(c.fish.name)} ${c.kg} kg!`);
+    });
+  }
   function botsSpeed() {
     G.players.forEach((p) => {
       if (p.ghost) { p.score = C.ghostScoreAt(G.best, G.i) || 0; return; }
@@ -441,21 +626,27 @@
   }
 
   // ── Bảng xếp hạng / HUD / đường đua ──
-  function rankOf(p) { return C.rank(G.players, KEY_OF[G.mode]).indexOf(p) + 1; }
+  /** Xếp hạng theo chế độ (Sinh tồn: tim → trụ lâu → điểm). */
+  function ranked(list) { return G.mode === 'survival' ? list.slice().sort(C.survivalOrder) : C.rank(list, KEY_OF[G.mode]); }
+  function rankOf(p) { return ranked(G.players).indexOf(p) + 1; }
   function renderHud() {
     const me = G.me;
     $('arStat').innerHTML = G.mode === 'speed' ? `⭐ ${me.score.toLocaleString('vi-VN')} điểm`
-      : G.mode === 'gold' ? `🪙 ${me.gold.toLocaleString('vi-VN')} vàng` : `🏁 ${me.pos}/${G.goal} bước`;
+      : G.mode === 'gold' ? `🪙 ${me.gold.toLocaleString('vi-VN')} vàng`
+      : G.mode === 'survival' ? `<span class="ar-hud-hp">${C.hearts(me.hp)}</span> ⭐ ${me.score.toLocaleString('vi-VN')}`
+      : G.mode === 'fish' ? `🎣 ${me.kg.toLocaleString('vi-VN')} kg${me.frenzy ? ` <span class="ar-tag up">⚡ x2 ×${me.frenzy}</span>` : ''}`
+      : `🏁 ${me.pos}/${G.goal} bước`;
     const s = $('arStreak');
     s.hidden = me.streak < 2;
     s.textContent = `🔥 Chuỗi ${me.streak}`;
   }
   function renderSide() {
     const key = KEY_OF[G.mode];
-    const unit = { score: 'điểm', gold: 'vàng', pos: 'bước' }[key];
-    $('arSide').innerHTML = `<h3>${MODE_LABEL[G.mode]}</h3><ol class="ar-board">${C.rank(G.players, key).map((p, i) => `<li class="${p.me ? 'is-me' : ''}${p.ghost ? ' is-ghost' : ''}">
+    const unit = UNIT_OF[key];
+    const surv = G.mode === 'survival';
+    $('arSide').innerHTML = `<h3>${G.practice ? '🔁 Luyện câu sai' : MODE_LABEL[G.mode]}</h3><ol class="ar-board">${ranked(G.players).map((p, i) => `<li class="${p.me ? 'is-me' : ''}${p.ghost ? ' is-ghost' : ''}${surv && p.hp <= 0 ? ' is-out' : ''}">
       <span class="ar-board-rank">${i + 1}</span><span class="ar-board-face">${p.face}</span>
-      <span class="ar-board-name">${esc(p.name)}</span><b>${p[key].toLocaleString('vi-VN')}</b><small>${unit}</small></li>`).join('')}</ol>`;
+      <span class="ar-board-name">${esc(p.name)}${surv ? ` <span class="ar-board-hp">${C.hearts(p.hp)}</span>` : ''}</span><b>${p[key].toLocaleString('vi-VN')}</b><small>${unit}</small></li>`).join('')}</ol>`;
   }
   function renderTrack() {
     if (G.mode !== 'race') return;
@@ -468,29 +659,37 @@
   function finish() {
     clearInterval(G.timer);
     const key = KEY_OF[G.mode];
-    const ranked = C.rank(G.players.filter((p) => !p.ghost), key);
-    const place = ranked.indexOf(G.me) + 1;
+    const board = ranked(G.players.filter((p) => !p.ghost));
+    const place = board.indexOf(G.me) + 1;
     const total = G.log.length;
     const p = profile();
-    const coins = C.coinsFor({ correct: G.correct, place, players: ranked.length });
+    const coins = C.coinsFor({ correct: G.correct, place, players: board.length });
     p.coins += coins;
     p.games = (p.games || 0) + 1;
     const value = G.me[key];
     const old = p.best[G.bestKey];
-    const record = !old || value > old.value;
+    const record = !G.practice && (!old || value > old.value);
     if (record) p.best[G.bestKey] = { value, at: Date.now(), trail: G.mode === 'speed' ? G.trail.slice(0, 40) : undefined };
     save();
     try {
-      global.EduGamification && global.EduGamification.recordGameSession('arena-' + G.mode, {
+      global.EduGamification && global.EduGamification.recordGameSession(G.practice ? 'arena-practice' : 'arena-' + G.mode, {
         score: total ? Math.round((G.correct / total) * 100) : 0, scoreType: 'percent', accuracy: total ? Math.round((G.correct / total) * 100) : 0,
         correctAnswers: G.correct, wrongAnswers: total - G.correct, durationSec: Math.round((Date.now() - G.startedAt) / 1000), showReward: false,
       });
     } catch (e) { /* XP chỉ là phần thêm */ }
 
-    $('arEndTitle').textContent = place === 1 ? `🏆 ${nickName()} vô địch ${MODE_LABEL[G.mode]}!` : `${MODE_LABEL[G.mode]} — em về hạng ${place}/${ranked.length}`;
-    const top = ranked.slice(0, 3);
+    const wrong = G.log.filter((x) => !x.ok);
+    $('arEndTitle').textContent = G.practice
+      ? (wrong.length ? `🔁 Luyện câu sai — em đã sửa được ${G.correct}/${total} câu` : '🎉 Tuyệt vời! Em đã sửa hết các câu sai!')
+      : G.mode === 'survival' && place === 1 ? `🏆 ${nickName()} là người sống sót cuối cùng!`
+      : G.mode === 'survival' && G.me.hp <= 0 ? `💀 Em đã bị loại — về hạng ${place}/${board.length}. Thử lại nhé!`
+      : G.mode === 'fish' && place === 1 ? `🏆 ${nickName()} là Vua câu cá!`
+      : place === 1 ? `🏆 ${nickName()} vô địch ${MODE_LABEL[G.mode]}!` : `${MODE_LABEL[G.mode]} — em về hạng ${place}/${board.length}`;
+    $('arPodium').hidden = G.practice;
+    $('arAgain').hidden = G.practice;
+    const top = board.slice(0, 3);
     const order = [1, 0, 2].filter((i) => top[i]);
-    const unit = { score: 'điểm', gold: 'vàng', pos: 'bước' }[key];
+    const unit = UNIT_OF[key];
     $('arPodium').innerHTML = order.map((i) => `<div class="ar-pod p${i + 1}${top[i].me ? ' is-me' : ''}" style="--d:${(2 - i) * 0.35}s">
       <span class="ar-pod-face">${top[i].face}</span><b class="ar-pod-name">${esc(top[i].name)}</b>
       <span class="ar-pod-val">${top[i][key].toLocaleString('vi-VN')} ${unit}</span><div class="ar-pod-block">${i + 1}</div></div>`).join('');
@@ -498,19 +697,37 @@
       <div><b>${G.correct}/${total}</b><span>câu đúng</span></div>
       <div><b>${G.bestStreak}</b><span>chuỗi đúng dài nhất</span></div>
       <div><b>${value.toLocaleString('vi-VN')}</b><span>${unit}${record && old ? ' · <em>kỷ lục mới!</em>' : ''}</span></div>
+      ${G.mode === 'survival' ? `<div><b>${C.hearts(G.me.hp)}</b><span>${G.me.hp > 0 ? 'em trụ đến cuối!' : 'hết tim'}</span></div>` : ''}
       <div class="is-coin"><b>+${coins} 🪙</b><span>xu (đang có ${p.coins})</span></div>`;
-    const wrong = G.log.filter((x) => !x.ok);
     const rv = $('arReview');
     rv.hidden = !wrong.length;
-    rv.open = false;
-    rv.innerHTML = `<summary>📒 Xem lại ${wrong.length} câu sai</summary><ol>${wrong.map((x) => `<li><b>${esc(x.q.text)}</b>
-      <span>Đáp án: ${esc(x.q.options[x.q.correctIdx])}${x.chosen !== null && x.chosen !== undefined ? ` · em chọn: ${esc(x.q.options[x.chosen])}` : ' · hết giờ'}</span>
-      ${x.q.expl ? `<small>💡 ${esc(x.q.expl)}</small>` : ''}</li>`).join('')}</ol>`;
+    rv.open = G.practice;
+    rv.innerHTML = reviewHtml(wrong);
+    paintPracticeBtn($('arPractice'), wrong.length);
     show('arEnd');
     refreshWallet();
-    sfx(place === 1 ? 'win' : place <= 3 ? 'match' : 'lose');
-    if (place === 1 && global.EduFX) global.EduFX.confetti({ count: 120 });
+    const win = G.practice ? !wrong.length : place === 1;
+    sfx(win ? 'win' : G.practice || place <= 3 ? 'match' : 'lose');
+    if (win && global.EduFX) global.EduFX.confetti({ count: 120 });
     G.phase = 'end';
+  }
+
+  /** Danh sách câu sai (dùng chung cho màn kết thúc 1 người và Phòng cả lớp). log: [{ q, chosen, ok }]. */
+  function reviewHtml(wrong) {
+    return `<summary>📒 Xem lại ${wrong.length} câu sai</summary><ol>${wrong.map((x) => `<li><b>${esc(x.q.text)}</b>
+      <span>${C.kindOf(x.q) === 'choice' ? '' : `<i class="ar-review-kind">${C.KIND_ICON[C.kindOf(x.q)]} ${C.KIND_LABEL[C.kindOf(x.q)]}</i> `}Đáp án đúng: <em class="ar-review-ok">${C.answerLines(x.q).map(esc).join(' · ')}</em>${C.chosenLines(x.q, x.chosen).length ? ` · em chọn: ${C.chosenLines(x.q, x.chosen).map(esc).join(' · ')}` : ' · em chưa trả lời'}</span>
+      ${x.q.expl ? `<small>💡 ${esc(x.q.expl)}</small>` : ''}</li>`).join('')}</ol>`;
+  }
+  function paintPracticeBtn(btn, n) {
+    btn.hidden = !n;
+    btn.innerHTML = `<span aria-hidden="true">🔁</span> Luyện lại ${n} câu sai`;
+  }
+  /** Bắt đầu lượt "Luyện câu sai" từ nhật ký [{ q, ok }]; false nếu không còn câu sai. */
+  function practice(log) {
+    const deck = C.practiceDeck(log, rng);
+    if (!deck.length) { toast('Không còn câu sai nào — giỏi lắm!'); return false; }
+    start(deck);
+    return true;
   }
 
   function quit() {
@@ -527,13 +744,24 @@
   document.addEventListener('keydown', (e) => {
     if (!G || $('arGame').hidden || /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
     const n = parseInt(e.key, 10);
-    if (G.phase === 'q' && n >= 1 && n <= cur().options.length) { e.preventDefault(); answer(n - 1); }
+    const pw = ['q', 'w', 'e'].indexOf(String(e.key).toLowerCase());
+    if (G.phase === 'q' && pw >= 0 && G.powers[pw]) { e.preventDefault(); usePower(pw); return; }
+    if (G.phase === 'q' && G.picker) {
+      if (n >= 1 && n <= cur().options.length) { e.preventDefault(); G.picker.key(n); }
+      else if (e.key === 'Enter' && !(e.target.closest && e.target.closest('button'))) { e.preventDefault(); G.picker.submit(); }
+    } else if (G.phase === 'q' && n >= 1 && n <= cur().options.length) {
+      e.preventDefault();
+      const b = document.querySelector(`.ar-ans[data-k="${n - 1}"]`);
+      if (b && !b.disabled) answer(n - 1); // không chọn được đáp án đã bị 50:50 ẩn
+    }
     else if (G.phase === 'chest' && n >= 1 && n <= 3) { e.preventDefault(); pickChest(n - 1); }
     else if (G.phase === 'next' && (e.key === 'Enter' || e.key === ' ') && e.target.id !== 'arNext') { e.preventDefault(); next(); }
   });
-  $('arAnswers').addEventListener('click', (e) => { const b = e.target.closest('.ar-ans'); if (b) answer(+b.dataset.k); });
+  $('arAnswers').addEventListener('click', (e) => { const b = e.target.closest('.ar-ans[data-k]'); if (b) answer(+b.dataset.k); });
+  $('arPowers').addEventListener('click', (e) => { const b = e.target.closest('[data-pw]'); if (b) usePower(+b.dataset.pw); });
   $('arQuit').addEventListener('click', quit);
-  $('arAgain').addEventListener('click', start);
+  $('arAgain').addEventListener('click', () => start());
+  $('arPractice').addEventListener('click', () => { if (G) practice(G.log); });
   $('arSound').addEventListener('click', () => {
     if (!global.EduSFX) return;
     global.EduSFX.toggleMuted();
@@ -558,7 +786,11 @@
     api: {
       esc, sfx, toast, show, rng, SHAPES, prefs: S.prefs, save, profile, avatarOf, refreshWallet,
       /** Lưu biệt danh đang gõ; trả biệt danh (rỗng nếu chưa nhập). */
-      saveNick() { S.last = $('arNick').value.trim().slice(0, 24); save(); refreshWallet(); return S.last; },
+      saveNick() { S.last = $('arNick').value.trim().slice(0, 30); save(); refreshWallet(); return S.last; },
+      /** Lưu họ tên (hoặc biệt danh) và đồng bộ các ô nhập; trả tên đã chuẩn hoá (rỗng nếu chưa nhập). */
+      setNick, role, setRole, setInvite, effMode,
+      /** Luyện câu sai: reviewHtml(wrong) vẽ danh sách, practice(log) vào lượt luyện. */
+      reviewHtml, paintPracticeBtn, practice, kinds,
       nickName, avatar: () => avatarOf(profile()),
       /** Bộ câu đang chọn ở màn chọn: { questions, key, title } (questions null = đang tải). */
       deckSource: () => ({ questions: SRC.questions, key: SRC.key, title: SRC.title || '' }),
