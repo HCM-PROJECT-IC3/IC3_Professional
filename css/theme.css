@@ -79,7 +79,9 @@
   --shadow:    0 4px 20px rgba(47,64,178,.10);
   --shadow-lg: 0 10px 40px rgba(47,64,178,.16);
 
-  --lobby-bg: linear-gradient(160deg,#eef0f9 0%,#eafbf7 50%,#fff8ea 100%);
+  /* 10/2026: bỏ nền loang pastel + chữ gradient + bóng phát sáng — trông "đúc khuôn AI".
+     Giữ tên biến để các trang cũ không vỡ, chỉ đổi giá trị về phẳng, 1 màu. */
+  --lobby-bg: var(--bg);
   --lobby-blob1: rgba(47,64,178,.16);
   --lobby-blob2: rgba(23,179,163,.16);
 
@@ -89,12 +91,12 @@
      cũ) sang xanh dương-chàm đậm hơn (#4a4fd6/#4438c7) — bắc cầu màu hợp
      lý hơn từ navy IIG (--purple) sang teal, không bị lệch tím lạc tông
      với bộ nhận diện mới. */
-  --gradient-hero: linear-gradient(120deg, var(--purple) 0%, #4a4fd6 32%, var(--teal) 68%, var(--orange) 100%);
-  --gradient-cta:  linear-gradient(135deg, var(--purple) 0%, #4438c7 55%, var(--teal) 100%);
-  --glow-purple: 0 8px 30px rgba(47,64,178,.35);
-  --glow-teal:   0 8px 30px rgba(23,179,163,.32);
-  --glow-orange: 0 8px 30px rgba(255,138,61,.32);
-  --shine: linear-gradient(115deg, transparent 20%, rgba(255,255,255,.55) 42%, rgba(255,255,255,.55) 48%, transparent 70%);
+  --gradient-hero: linear-gradient(var(--purple), var(--purple));
+  --gradient-cta:  linear-gradient(var(--purple), var(--purple));
+  --glow-purple: 0 1px 2px rgba(16,24,40,.08);
+  --glow-teal:   0 1px 2px rgba(16,24,40,.08);
+  --glow-orange: 0 1px 2px rgba(16,24,40,.08);
+  --shine: none;
 
   /* ── Alias cho tên biến cũ của ic3-dashboard.html ──
      Giữ lại để không phải sửa từng chỗ dùng trong file đó.
@@ -112,8 +114,8 @@
   --sidebar-active-bg:   var(--purple-lt);
   --input-bg:            var(--card2);
   --modal-overlay:       rgba(17, 24, 39, 0.6);
-  --shadow-card:       0 4px 0 #6f7bca, 0 6px 20px rgba(47,64,178,0.12);
-  --shadow-card-hover: 0 6px 0 #959dd8, 0 10px 30px rgba(47,64,178,0.2);
+  --shadow-card:       0 0 0 1px var(--border), 0 1px 2px rgba(16,24,40,.05);
+  --shadow-card-hover: 0 0 0 1px #c5cce3, 0 4px 12px rgba(16,24,40,.08);
   --shadow-btn:        0 3px 0 rgba(0,0,0,0.25);
   --tag-elementary-bg:   #d1fae5;
   --tag-elementary-text: #065f46;
@@ -128,10 +130,13 @@
      kiểu cũ. --shadow-neu-raised = bề mặt lồi lên (thẻ/nút ở trạng thái
      nghỉ); --shadow-neu-pressed = bề mặt lõm xuống (ô nhập liệu, nút đang
      nhấn/đang chọn); --shadow-neu-flat = phẳng nhẹ (hover trung gian). */
-  --neu-surface:    #e9ecf2;
-  --shadow-neu-raised:  6px 6px 14px rgba(163,177,198,.5), -6px -6px 14px rgba(255,255,255,.85);
-  --shadow-neu-pressed: inset 4px 4px 8px rgba(163,177,198,.5), inset -4px -4px 8px rgba(255,255,255,.85);
-  --shadow-neu-flat:    3px 3px 7px rgba(163,177,198,.4), -3px -3px 7px rgba(255,255,255,.7);
+  /* 10/2026: neumorphism (bóng đôi sáng/tối, không viền) → bề mặt phẳng có viền mảnh như phần mềm
+     thi thật: dễ thấy ranh giới ô bấm hơn, nhất là trên máy chiếu và màn hình phòng máy độ tương phản thấp.
+     Tên biến giữ nguyên (8 file CSS đang dùng). */
+  --neu-surface:    #ffffff;
+  --shadow-neu-raised:  0 0 0 1px var(--border), 0 1px 2px rgba(16,24,40,.05);
+  --shadow-neu-pressed: inset 0 0 0 1px #cfd5e6, inset 0 1px 2px rgba(16,24,40,.05);
+  --shadow-neu-flat:    0 0 0 1px var(--border);
 }
 
 /* ── Dark Mode ── */
@@ -152,13 +157,13 @@
   --blue-lt:   rgba(46,140,240,.15);
   --shadow:    0 4px 24px rgba(0,0,0,.4);
   --shadow-lg: 0 8px 40px rgba(0,0,0,.5);
-  --lobby-bg:  linear-gradient(160deg,#0d0f1a 0%,#111428 50%,#160f1a 100%);
+  --lobby-bg:  var(--bg);
   --lobby-blob1: rgba(58,78,210,.28);
   --lobby-blob2: rgba(23,179,163,.2);
-  --glow-purple: 0 8px 34px rgba(58,78,210,.5);
-  --glow-teal:   0 8px 34px rgba(23,179,163,.42);
-  --glow-orange: 0 8px 34px rgba(255,138,61,.42);
-  --shine: linear-gradient(115deg, transparent 20%, rgba(255,255,255,.18) 42%, rgba(255,255,255,.18) 48%, transparent 70%);
+  --glow-purple: none;
+  --glow-teal:   none;
+  --glow-orange: none;
+  --shine: none;
   --color-text-primary:   #e8eaf6;
   --color-text-secondary: #8892c8;
 
@@ -174,10 +179,11 @@
   --input-bg: var(--card2);
   --modal-overlay: rgba(0,0,0,.7);
 
-  --neu-surface: #262b36;
-  --shadow-neu-raised:  6px 6px 14px rgba(0,0,0,.55), -6px -6px 14px rgba(255,255,255,.045);
-  --shadow-neu-pressed: inset 4px 4px 8px rgba(0,0,0,.55), inset -4px -4px 8px rgba(255,255,255,.045);
-  --shadow-neu-flat:    3px 3px 7px rgba(0,0,0,.45), -3px -3px 7px rgba(255,255,255,.035);
+  --neu-surface: var(--card);
+  --shadow-card-hover: 0 0 0 1px #4a5190, 0 4px 12px rgba(0,0,0,.3);
+  --shadow-neu-raised:  0 0 0 1px var(--border);
+  --shadow-neu-pressed: inset 0 0 0 1px #3a4068;
+  --shadow-neu-flat:    0 0 0 1px var(--border);
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -198,7 +204,6 @@
   color: var(--purple);
   background: color-mix(in srgb, var(--purple) 12%, transparent);
   border: 1.5px solid color-mix(in srgb, var(--purple) 30%, transparent);
-  animation: chipPulse 2.6s ease-in-out infinite;
 }
 .eyebrow-chip .dot {
   width: 7px; height: 7px; border-radius: 50%;

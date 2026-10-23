@@ -3767,3 +3767,91 @@ a.arena-open small {
 
 /* Nút "Tải sẵn để dùng offline" (js/offline-pack.js): nằm riêng 1 hàng đầy đủ dưới 3 nút phụ cho khỏi lẻ cột. */
 .lobby-extras > #btnOfflinePack { grid-column: 1 / -1; }
+
+/* ══════════════════════════════════════════════════════════════
+   GIAO DIỆN PHẲNG KIỂU PHẦN MỀM THI (10/2026)
+   Bỏ các chi tiết "đúc khuôn": nền loang pastel trôi, chữ tô gradient
+   chuyển màu, nút gradient tím→tím phát sáng, viền cầu vồng, icon nhún
+   nhảy, mọi thứ nhấc lên khi rê chuột. Thay bằng: nền 1 màu, chữ 1 màu,
+   nút chính navy đặc, nút phụ có viền, chỉ 1 nút chính mỗi màn.
+   Token chung (bóng neumorphism, glow, gradient-hero) đổi ở css/theme.css.
+   Ghi đè các quy tắc cùng tên phía trên.
+   ══════════════════════════════════════════════════════════════ */
+#lobby::after, #lobby::before { display: none; }
+.lobby-brand-name {
+  background: none; -webkit-text-fill-color: currentColor; color: var(--purple);
+  animation: none; text-shadow: none; letter-spacing: -.3px;
+}
+[data-theme="dark"] .lobby-brand-name, [data-theme="dark"] .lobby-brand i { color: #aab6ff; }
+.lobby-brand-emoji { filter: none; }
+
+/* Nút: phẳng, không phát sáng, không nhảy lên khi rê chuột */
+.btn-start, .btn-next-primary, .q-badge, .q-btn.active, .view-toggle-btn.active { background: var(--purple); }
+.btn-start { box-shadow: none; }
+.btn-start::after { display: none; }
+.btn-start:hover:not(:disabled) { background: #26359a; transform: none; box-shadow: none; }
+.btn-start i.fa-beat, .btn-start:hover:not(:disabled) i.fa-beat { animation: none; }
+.btn-next-primary { box-shadow: none; }
+.btn-next-primary:hover { background: #26359a; transform: none !important; box-shadow: none !important; }
+.btn-submit-top { background: var(--red); box-shadow: none; }
+.btn-submit-top:hover { background: #d63a31; transform: none; box-shadow: none; }
+.q-badge { box-shadow: none; border-radius: 10px; }
+.q-btn:hover { transform: none; }
+.q-btn.active { transform: none; box-shadow: 0 0 0 3px var(--purple-lt); animation: none; }
+.progress-bar-fill { background: var(--purple); animation: none; }
+.play-game-btn, .game-zone-open-btn { background: var(--card); border-color: var(--border); }
+.play-game-btn:hover, .game-zone-open-btn:hover { transform: none; box-shadow: none; border-color: var(--purple); }
+a.arena-open small { background: var(--orange); }
+
+/* Màn Kết quả: điểm là trọng tâm, không icon to nhún nhảy, không viền cầu vồng */
+#result { background: var(--bg); }
+.result-card { box-shadow: 0 1px 2px rgba(16,24,40,.05), 0 8px 24px rgba(16,24,40,.06); border-width: 1px; }
+.result-card::before { display: none; }
+.result-emoji { display: none; }
+.result-score {
+  background: none; -webkit-text-fill-color: currentColor; color: var(--text);
+  font-family: inherit; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -1px;
+  animation: none;
+}
+/* Số % nằm GIỮA vòng tròn (trước đây thiếu quy tắc này nên vòng và số đứng cạnh nhau) */
+.result-ring { position: absolute; inset: 0; }
+.result-ring-wrap .result-score { position: relative; font-size: clamp(2.3rem, 7vw, 3.1rem); }
+.result-label { color: var(--text); font-weight: 600; }
+.result-stat { animation: none; border-width: 1px; }
+.result-stat:hover, .result-stat.correct:hover, .result-stat.incorrect:hover, .result-stat.skipped:hover {
+  transform: none; box-shadow: none; border-color: var(--border);
+}
+.result-stat-val { font-family: inherit; font-weight: 800; font-variant-numeric: tabular-nums; }
+.result-stat-lbl { text-transform: none; letter-spacing: 0; font-size: .82rem; }
+.review-list { border-width: 1px; }
+
+/* Thứ bậc nút ở màn Kết quả: "Làm lại / Chọn bài khác" là nút chính (đặc),
+   các việc ôn tập (luyện lại câu sai, thẻ ghi nhớ) là nút viền màu. */
+.btn-retry { background: var(--purple); box-shadow: none; }
+.btn-retry:hover { background: #26359a; transform: none; box-shadow: none; }
+.btn-retry.btn-retry-wrong {
+  background: var(--card); color: #9a5b00; border: 1.5px solid var(--yellow); box-shadow: none;
+}
+.btn-retry.btn-retry-wrong:hover { background: var(--yellow-lt); }
+[data-theme="dark"] .btn-retry.btn-retry-wrong { color: #fcd34d; }
+
+/* Đếm ngược kỳ thi ở sảnh (js/exam-countdown.js) — hàng nhỏ dưới "Thử thách hôm nay" */
+.lobby-extras > .exam-countdown {
+  grid-column: 1 / -1; position: relative; display: flex; align-items: center; gap: .7rem;
+  padding: .45rem .6rem .45rem .9rem; border-radius: var(--radius-sm);
+  background: var(--card); box-shadow: 0 0 0 1px var(--border); font-size: .85rem; line-height: 1.3;
+}
+.exam-countdown .xc-ico { color: var(--purple); font-size: 1.05rem; flex-shrink: 0; }
+[data-theme="dark"] .exam-countdown .xc-ico { color: #aab6ff; }
+.exam-countdown .xc-text { flex: 1; min-width: 0; }
+.exam-countdown .xc-main b { font-weight: 800; font-variant-numeric: tabular-nums; }
+.exam-countdown .xc-main span, .exam-countdown .xc-sub { color: var(--muted); font-weight: 600; }
+.exam-countdown .xc-sub { font-size: .78rem; }
+.exam-countdown.is-unset .xc-text { cursor: pointer; }
+.exam-countdown.is-near .xc-main b { color: var(--red); }
+.exam-countdown .xc-edit {
+  flex-shrink: 0; width: 2rem; height: 2rem; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: .8rem;
+}
+.exam-countdown .xc-edit:hover { color: var(--purple); border-color: var(--purple); }
+.exam-countdown .xc-input { position: absolute; right: .5rem; top: 100%; z-index: 5; margin-top: .25rem; padding: .35rem .5rem; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); font: inherit; }

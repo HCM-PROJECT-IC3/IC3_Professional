@@ -60,12 +60,15 @@
   <noscript><link rel="stylesheet" href="css/review-detail.css"></noscript>
   <link rel="stylesheet" href="css/learning-hub.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="css/learning-hub.css"></noscript>
+  <link rel="stylesheet" href="css/daily-challenge.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="css/daily-challenge.css"></noscript>
   <link rel="stylesheet" href="css/result-pack.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="css/result-pack.css"></noscript>
 <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
   <link rel="stylesheet" href="css/accessibility.css">
   <link rel="stylesheet" href="css/a11y-assistant.css">
+  <link rel="stylesheet" href="css/kid-mode.css">
 <link rel="stylesheet" href="css/motion.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="css/motion.css"></noscript>
 <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" onload="this.onload=null;this.rel='stylesheet'">
@@ -378,9 +381,6 @@
      ═══════════════════════════════════ -->
   <div id="result"
     style="display:none;min-height:100vh;align-items:center;justify-content:center;padding:2rem 1rem;flex-direction:column;position:relative;overflow:hidden;">
-    <div
-      style="position:absolute;inset:0;background:radial-gradient(ellipse at center top,rgba(79,107,255,.15),transparent 60%);pointer-events:none;">
-    </div>
     <div class="result-card">
       <span class="result-emoji" id="resultEmoji"><i class="fa-solid fa-face-laugh-beam"></i></span>
 
@@ -840,6 +840,11 @@
   <script src="js/review-detail.js" defer></script>
   <script src="js/custom-exam-codec.js" defer></script>
   <script src="js/quiz-engine.js" defer></script>
+  <script src="js/kid-mode.js" defer></script>
+  <script src="js/memory-cards.js" defer></script>
+  <script src="js/game-sfx.js" defer></script>
+  <script src="js/daily-challenge.js" defer></script>
+  <script src="js/exam-countdown.js" defer></script>
   <script src="js/learning-hub.js" defer></script>
   <script src="js/arena/arena-entry.js" defer></script>
   <script src="js/lobby-form-ux.js" defer></script>

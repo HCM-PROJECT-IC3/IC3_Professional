@@ -92,7 +92,11 @@ Góc học tập, Sổ tay câu sai, mục tiêu tuần đang nằm trong `local
 4. ✅ **Đề "ôn từ câu cả lớp hay sai"** (10/2026) — nút "Tạo đề ôn" trên thẻ Câu cả lớp hay sai.
 5. ✅ **Đấu trường kiểu Kahoot/Blooket** (10/2026) — `arena.html`: Tốc độ, Săn vàng, Đua về đích, Linh vật; chơi một mình với đối thủ máy, 0 Firebase.
    Tiếp theo có thể làm: thêm chế độ (Phòng thủ tháp, Quán cà phê), sự kiện theo mùa cho Linh vật, chế độ "đấu nhóm trên 1 máy chiếu" dùng Đấu trường.
-6. **Nhiệm vụ theo mùa thi** — gói đề theo lịch thi IC3 thật, đếm ngược ngày thi trên sảnh.
+6. ✅ **Thử thách hôm nay** (10/2026) — 5 câu chung cả lớp mỗi ngày, điểm tốc độ, chuỗi ngày, mã chia sẻ kiểu Wordle; 0 Firebase.
+   Tiếp theo có thể làm: bảng xếp hạng thử thách trong ngày qua trang gom kết quả (dán mã chia sẻ).
+7. ✅ **Đếm ngược kỳ thi** (10/2026) — sảnh hiện số ngày còn lại + số ngày ôn trong tuần + gợi ý; ngày thi khai ở `js/backend-config.js` → `examSeason`.
+   Còn lại của mục này: gói đề theo lịch thi IC3 thật.
+8. **Nhiệm vụ theo mùa thi** — gói đề theo lịch thi IC3 thật, đếm ngược ngày thi trên sảnh.
 
 ## 5. Thứ tự đề xuất
 

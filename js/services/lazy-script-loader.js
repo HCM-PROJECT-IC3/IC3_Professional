@@ -37,5 +37,14 @@
     for (const src of srcs) await loadOne(src);
   }
 
-  global.EduLazyLoad = { loadScripts };
+  /** Bọc 1 hàm để lần gọi đầu tự tải `srcs` trước rồi mới chạy (các lần sau chạy ngay).
+   * Tải lỗi (mất mạng) vẫn gọi hàm — hàm tự kiểm tra thư viện và báo lỗi như cũ. */
+  function lazyCall(srcs, fn) {
+    return function (...args) {
+      return loadScripts(srcs).catch((err) => console.warn('[EduLazyLoad]', err.message))
+        .then(() => fn.apply(this, args));
+    };
+  }
+
+  global.EduLazyLoad = { loadScripts, lazyCall };
 })(window);

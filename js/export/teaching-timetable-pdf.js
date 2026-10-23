@@ -364,5 +364,7 @@
     result.doc.save(`tkb-${slug(teacherName)}-${slug(weekLabel)}.pdf`);
   }
 
-  global.EduTeachingTimetablePdf = { exportTimetablePdf };
+  // Thư viện PDF tải khi bấm xuất lần đầu (teaching-schedule.html § EduPdfVendorScripts).
+  const lazy = (fn) => (global.EduLazyLoad ? global.EduLazyLoad.lazyCall(global.EduPdfVendorScripts || [], fn) : fn);
+  global.EduTeachingTimetablePdf = { exportTimetablePdf: lazy(exportTimetablePdf) };
 })(window);

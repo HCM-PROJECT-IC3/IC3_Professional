@@ -1727,6 +1727,8 @@ function updateSidebar() {
   const done = State.questions.filter((_, i) => isAnswered(i)).length;
   const fill = document.getElementById('progressFill');
   if (fill) fill.style.width = `${(done / State.questions.length) * 100}%`;
+  // js/kid-mode.js: cập nhật dòng "Em đã chọn…" (gọi sau mỗi lần dựng câu / đổi đáp án, mọi dạng câu).
+  window.dispatchEvent(new CustomEvent('edu:quiz-updated'));
 }
 
 /**
@@ -2062,6 +2064,7 @@ function checkCurrentAnswer() {
     el.innerHTML = '';
     el.dataset.shown = '0';
     if (btn) btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Kiểm tra đáp án';
+    window.dispatchEvent(new CustomEvent('edu:answer-checked', { detail: null }));
     return;
   }
 
@@ -2080,6 +2083,7 @@ function _renderCheckResult(d) {
     el.innerHTML = `<div class="q-check-banner q-check-skip">
       <i class="fa-solid fa-hand"></i> Bạn chưa trả lời câu này — hãy chọn đáp án rồi bấm lại "Kiểm tra đáp án" nhé.
     </div>`;
+    window.dispatchEvent(new CustomEvent('edu:answer-checked', { detail: d }));
     return;
   }
 
@@ -2094,6 +2098,8 @@ function _renderCheckResult(d) {
     ? _rdBuildDetailBody(d, { showQuestionText: false })
     : '';
   el.innerHTML = banner + body;
+  // js/kid-mode.js: tô đúng/sai ngay trên đáp án + thẻ "Nhớ nhé" cho học sinh tiểu học.
+  window.dispatchEvent(new CustomEvent('edu:answer-checked', { detail: d }));
 }
 
 /**
@@ -3742,8 +3748,12 @@ function submitExam() {
   // § 19b — lượt "Luyện lại câu sai" chỉ để ôn: không ghi lịch sử, XP, Google Sheet hay Firestore.
   if (isRetry) return;
 
-  // ── Thông báo huy hiệu mới (nếu có) ────────────────────────
-  if (gameResult?.newBadges?.length) {
+  // ── Thẻ phần thưởng: +XP, thanh cấp độ, lên cấp, huy hiệu mới, chuỗi ngày ──
+  if (gameResult && window.EduGamification?.showGameReward) {
+    setTimeout(() => {
+      try { window.EduGamification.showGameReward(gameResult); } catch (e) { /* chỉ là phụ */ }
+    }, 900);
+  } else if (gameResult?.newBadges?.length) {
     gameResult.newBadges.forEach((badge, i) => {
       setTimeout(() => showNotification(`Huy hiệu mới: ${badge.label}`, 'success'), 600 * (i + 1));
     });
@@ -4187,11 +4197,12 @@ function showResult(result, integrity) {
     pct >= 90 ? '<i class="fa-solid fa-trophy"></i>' : pct >= 70 ? '<i class="fa-solid fa-face-laugh-beam"></i>' : pct >= 50 ? '<i class="fa-solid fa-thumbs-up"></i>' : '<i class="fa-solid fa-book"></i>';
 
   document.getElementById('resultLabel').textContent =
-    (pct >= 90 ? 'Xuất sắc! Bạn đã làm rất tốt!' :
-     pct >= 70 ? 'Tốt lắm! Cố gắng thêm nữa nhé!' :
-     pct >= 50 ? 'Khá! Tiếp tục luyện tập!' :
-                 'Cần ôn tập thêm. Đừng nản lòng!') +
-    ` — ${correct}/${total} câu đúng`;
+    `Đúng ${correct}/${total} câu. ` +
+    (correct === total ? 'Không sai câu nào.' :
+     pct >= 90 ? 'Rất tốt, chỉ còn vài câu cần xem lại.' :
+     pct >= 70 ? 'Khá. Xem lại các câu sai bên dưới.' :
+     pct >= 50 ? 'Đạt. Nên luyện lại các câu sai.' :
+                 'Chưa đạt. Luyện lại các câu sai rồi làm lại bài.');
 
   const badge = document.getElementById('integrityBadge');
   if (integrity.valid) {
@@ -4305,7 +4316,7 @@ function _updateRetryWrongButton(details) {
     document.querySelector('#result .btn-retry')?.insertAdjacentElement('beforebegin', btn);
   }
   btn.hidden = wrong.length === 0;
-  btn.innerHTML = `<i class="fa-solid fa-rotate-left"></i> Luyện lại ${wrong.length} câu sai <small>(không tính điểm)</small>`;
+  btn.innerHTML = `<i class="fa-solid fa-rotate-left"></i> Luyện lại ${wrong.length} câu sai <small>· không tính điểm</small>`;
 }
 
 function startRetryWrong() {

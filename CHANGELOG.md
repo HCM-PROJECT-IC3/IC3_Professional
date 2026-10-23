@@ -1,5 +1,62 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## Rà soát toàn trang + bớt ~830 KB thư viện tải sẵn + đếm ngược kỳ thi (23/10/2026) — 0 Firebase
+
+- **Rà 30 trang HTML** trong Chromium (chặn mạng ngoài, giả lập đăng nhập cho trang quản trị): không có lỗi JS, không file 404.
+- **Lịch giảng dạy (`teaching-schedule.html`)**: jsPDF + AutoTable + 2 font tiếng Việt (NotoSans, Tinos) — ~1,3 MB, ~575 KB nén — **không nạp lúc mở trang nữa**, chỉ tải khi bấm xuất PDF lần đầu (Lịch tuần, Phiếu công tác, Thời khoá biểu). Thêm `EduLazyLoad.lazyCall(srcs, fn)` vào `js/services/lazy-script-loader.js`; 3 file `js/export/*-pdf.js` chỉ đổi dòng xuất API. Danh sách thư viện + thứ tự (jsPDF → AutoTable → font) khai ở `window.EduPdfVendorScripts` trong trang. Đã kiểm: gọi xuất → nạp đủ 4 file, `getFontList()` có NotoSans + Tinos. Lần bấm đầu chậm hơn ~1 giây (tải thư viện), các lần sau như cũ.
+- **Luyện MOS (`mos-practice.html`)**: ExcelJS (~925 KB, 252 KB nén) và JSZip chỉ tải khi chấm file Excel/PowerPoint lần đầu. Đã chấm thử file đề mẫu cả 2 môn qua giao diện.
+- **Giữ nguyên (có lý do)**: `data/roster/students-active.json` 324 KB nhưng nén còn 23 KB; SheetJS + MSAL ở Lịch giảng dạy (MSAL phải có sẵn để nhận phản hồi đăng nhập Microsoft khi trang mở lại sau chuyển hướng).
+- **Đếm ngược kỳ thi** ở sảnh (`js/exam-countdown.js`, hàng nhỏ dưới "Thử thách hôm nay"): "Còn 10 ngày · Thi IC3 GS6 · 2/11", "Tuần này đã ôn 3/5 ngày" (đếm ngày có bài nộp hoặc có làm Thử thách của học sinh đang chọn) và gợi ý theo số ngày còn lại (≤ 14 ngày: nước rút làm bài Kiểm tra; ≤ 3 ngày: ôn Sổ tay câu sai). Ngày thi do thầy cô khai trong `js/backend-config.js` → `examSeason` theo Chương trình (cả trường cùng thấy, học sinh không sửa được); chưa khai thì học sinh tự đặt bằng nút bút (lưu `eduquiz_examdate` theo học sinh + chương trình). Còn ≤ 14 ngày số ngày tô đỏ. Chỉ đọc localStorage + cấu hình tĩnh.
+- `check-js`, toàn bộ unit test, Thử thách hôm nay và lượt dò 30 trang chạy lại đều đạt.
+
+## Soạn đề: hoàn tác, phím tắt, in nhiều mã đề, tải Word, nhập từ Excel (23/10/2026) — 0 Firebase
+
+Tất cả trong `js/exam-builder.js` (+ `css/exam-builder.css`, `ic3-dashboard.html`), chạy trên máy giáo viên.
+
+- **Hoàn tác / Làm lại** (nút ↶ ↷ trên thanh trên, Ctrl+Z · Ctrl+Y · Ctrl+Shift+Z): mọi thao tác — gõ chữ (gõ liền nhau gộp thành 1 bước), thêm/xoá/nhân bản/kéo câu, đổi dạng, sửa cài đặt đề, thêm từ ngân hàng/nhập nhanh. Tối đa 80 bước, chỉ trong bộ nhớ trang (mở đề khác hoặc tạo đề mới thì làm sạch). Hoàn tác xong con trỏ quay về đúng ô đang gõ.
+- **Phím tắt**: Ctrl+S lưu · Ctrl+Enter thêm câu cùng dạng ngay sau câu đang soạn · Ctrl+D nhân bản · Alt+↑/↓ sang câu trước/sau · Alt+Shift+↑/↓ đưa câu lên/xuống · `?` mở bảng phím tắt (cũng có trong menu ⋯). Không chạy khi đang mở Xem trước/Ngân hàng/hộp thoại; mũi tên trong danh sách câu giữ cách cũ.
+- **In đề · trộn mã đề · tải Word** (menu ⋯): chọn Đề cho học sinh / Đề kèm đáp án; tên trường in góc trên; **1–8 mã đề** (mã đầu tiên tuỳ chọn, mặc định 101), **trộn thứ tự câu** và **trộn đáp án A–D** (tự bật khi tăng số mã; câu Đúng/Sai giữ thứ tự); mỗi mã sang trang mới, có ô "Mã đề", dòng "— Hết —"; **trang bảng đáp án** theo từng mã (B, AC, Đ/S, nối cặp "1b 2a", sắp xếp "c→a→b"). **Tải Word** lưu cùng nội dung thành `.doc` để sửa tiếp trong Word. Cảnh báo nếu còn câu chưa hoàn chỉnh. Tên trường + mã đầu nhớ theo máy (`ic3_print_prefs`).
+- **Nhập từ Excel** (Nhập nhanh): bôi đen ô trong Excel/Google Sheets rồi dán, hoặc **Chọn file .xlsx/.csv**, hoặc **Tải file mẫu** (.xlsx có sẵn 3 câu ví dụ; mất mạng thì mẫu .csv). Mỗi dòng: Câu hỏi · Đáp án A–F · Đáp án đúng (B, "A, C", Đúng/Sai) · Giải thích; có dòng tiêu đề thì đọc theo tên cột. Dòng sai báo số dòng bỏ qua kèm lý do. ExcelJS chỉ tải khi bấm (`js/services/lazy-script-loader.js` nay nạp ở dashboard). Cách dán từ Word (dấu *) giữ nguyên.
+- **Sửa lỗi**: đổi câu Đúng/Sai sang Nối cặp/Sắp xếp bị điền sẵn "Đúng", "Sai" vào vế trái — nay để trống. Cột đáp án bên phải trong khung soạn bị cắt mép khi đáp án dài (lưới `1fr` giãn theo nội dung) — nay chia đều 2 cột.
+- Chạy thử trong Chromium (giả lập đăng nhập giáo viên, chặn Firebase/mạng ngoài): gõ → hoàn tác → làm lại; đổi dạng; 3 lần hoàn tác xoá câu vừa thêm; dán bảng 4 dòng (đọc 3, bỏ 1 dòng lỗi); tải mẫu .xlsx rồi chọn lại chính file đó (đọc 3 câu); bảng phím tắt; in 2 mã đề (đáp án trộn khác nhau, bảng đáp án đúng) + tải Word. `check-js`, toàn bộ unit test đạt.
+
+## Giao diện phẳng kiểu phần mềm thi — bỏ các chi tiết "đúc khuôn AI" (23/10/2026)
+
+Mục tiêu: trông như phần mềm thi chuyên nghiệp (Certiport/IIG) thay vì mẫu giao diện tạo tự động. Không đổi chức năng, không thêm lượt Firebase/Apps Script.
+
+- **Token chung `css/theme.css` (nạp ở cả 24 trang)**: bóng neumorphism (đôi sáng/tối, không viền) → bề mặt phẳng viền mảnh; `--glow-*` → bóng rất nhẹ; `--gradient-hero`/`--gradient-cta` → 1 màu navy; `--shine` tắt; `--lobby-bg` → nền phẳng; `--shadow-card` bỏ bóng "khối 3D" lệch 4px. Tên biến giữ nguyên nên 8 file CSS đang dùng không phải sửa. Chip "eyebrow" thôi nhún.
+- **Trang học sinh (`style.css`, khối "GIAO DIỆN PHẲNG KIỂU PHẦN MỀM THI" cuối file)**: bỏ nền loang pastel trôi ở sảnh, chữ "EduQuiz IC3" tô gradient chuyển màu, nút tím→tím phát sáng (Bắt đầu, Câu tiếp, số câu, ô câu đang chọn), thanh tiến độ gradient chạy, mọi thứ nhấc lên khi rê chuột, icon Bắt đầu nhấp nháy.
+- **Màn Kết quả**: bỏ icon to nhún nhảy, viền cầu vồng trên thẻ, chữ % gradient, quầng tím nền (style inline trong `index.html`). Sửa lỗi cũ: số % **nằm giữa vòng tròn** (chú thích nói vậy nhưng thiếu CSS nên vòng và số đứng cạnh nhau). Thứ bậc nút rõ: "Làm lại / Chọn bài khác" là nút chính navy; "Luyện lại câu sai" và "Ôn bằng thẻ ghi nhớ" là nút viền màu. Câu nhận xét viết lại kiểu giáo viên ("Đúng 9/14 câu. Khá. Xem lại các câu sai bên dưới.") thay vì khen chung chung và xưng "Bạn" lệch với "em" ở mọi chỗ khác.
+- **Emoji làm icon → Font Awesome** cho đồng bộ: Thử thách hôm nay, Thẻ ghi nhớ, thẻ phần thưởng XP, nút Chữ to, dòng nhắc sảnh, thông báo Góc học tập, lưu mã kết quả. Mã chia sẻ Thử thách vẫn giữ ô 🟩🟥 (để dán vào Zalo), trên màn hình là ô màu vẽ bằng CSS.
+- **Thử thách hôm nay**: nút sảnh thành thẻ trắng có vạch cam bên trái (hết nền gradient cam + tia sét nhấp nháy); hộp chơi tiêu đề phẳng; thanh thời gian 1 màu; luật chơi ghi rõ con số (500 điểm/câu đúng, +100 khi đúng liền).
+- **Đăng nhập (`css/login.css`)**: bỏ nền loang trôi, logo nhún, nút gradient xanh lá→cam→navy phát sáng. **Giữ bộ 3 màu IIG** (từng được chọn theo logo) dưới dạng 3 sọc màu đặc trên đầu thẻ, nút navy đặc. **Màn chờ đăng nhập (`js/auth-guard.js`)**: nền phẳng, thẻ trắng viền mảnh, giữ ảnh minh hoạ.
+- Không đổi: Đấu trường và các mini-game (phong cách game có chủ đích), màu 4 đáp án kiểu Kahoot trong Thử thách hôm nay, chế độ Chữ to vẫn dùng lời thân thiện cho học sinh tiểu học.
+- Chụp kiểm tra trong Chromium (chặn mọi request ra ngoài): sảnh sáng/tối, làm bài, Kết quả, Thử thách hôm nay (1366×768, 390×844 tối), đăng nhập, màn chờ đăng nhập, Đấu trường, gom kết quả. `check-js` và toàn bộ unit test đạt.
+
+## ⚡ Thử thách hôm nay + thẻ phần thưởng sau mỗi bài (23/10/2026) — 0 Firebase, 0 Apps Script
+
+- **⚡ Thử thách hôm nay** (`js/daily-challenge.js`, `css/daily-challenge.css`): nút cam nổi bật hàng đầu khu nút phụ ở sảnh. Mỗi ngày 5 câu trắc nghiệm 1 đáp án (không ảnh) chọn theo **ngày + Chương trình/Cấp độ đang chọn** bằng hạt giống cố định → **cả lớp cùng đề trong ngày** (cùng thứ tự đáp án), so điểm với nhau được.
+  - 20 giây/câu, thanh thời gian chạy; điểm theo tốc độ 500–1.000/câu + thưởng chuỗi đúng liền (tối đa +300). Đáp án 4 màu kiểu Kahoot, phím A–D/1–4, Enter qua câu, 🔊 nghe câu hỏi. Sau mỗi câu: đúng/sai + đáp án đúng + lời giải.
+  - Kết quả: tổng điểm, lưới 🟩🟥, số giây, **chuỗi ngày 🔥**, kỷ lục, +XP; nút **📋 Chép kết quả gửi nhóm lớp** (kiểu Wordle, vd. "⚡ EduQuiz · Thử thách #53 (23/10) / IC3 LV3 · 4/5 câu · 3.420 điểm / 🟩🟩🟥🟩🟩 🔥5 ngày"); trình duyệt chặn clipboard thì khung kết quả bôi đen được để chép tay.
+  - Chỉ lượt đầu trong ngày tính điểm/chuỗi/XP; làm lại = luyện tập. **Thoát giữa chừng** phải xác nhận và các câu chưa làm tính sai (không xem trước đề rồi làm lại được). Nút ở sảnh hiện "Đã xong hôm nay: 4/5 · 3.420 điểm" + 🔥 chuỗi.
+  - Lưu `localStorage` `eduquiz_daily` theo học sinh đang chọn ở sảnh (chưa chọn tên → "Khách"), giữ 40 kết quả gần nhất mỗi em. Ngày tính theo giờ máy (không dùng UTC). Câu lấy từ file tĩnh `data/ic3` qua bộ tải sẵn có của `quiz-engine.js`; đã tải sẵn offline thì chơi được khi mất mạng. XP ghi qua `EduGamification.recordGameSession('daily-challenge')` (tính như 1 lượt game cho nhiệm vụ ngày).
+- **Thẻ phần thưởng sau khi nộp bài** (`js/gamification.js`, `js/quiz-engine.js`): trước đây chỉ mini-game có thẻ +XP; bài thi chỉ có thông báo nhỏ khi được huy hiệu. Nay nộp bài (không tính lượt "Luyện lại câu sai") hiện thẻ +XP, thanh cấp độ chạy, 🎉 lên cấp, huy hiệu mới và **🔥 chuỗi ngày học liên tiếp**. `recordResult` trả thêm `prevXp`, `kind`, `streakUp` (tương thích ngược).
+- `index.html` nạp thêm `js/game-sfx.js` (4,6 KB, âm thanh tự tổng hợp, tôn trọng nút tắt tiếng chung) để có tiếng đúng/sai/combo; CSS thử thách tải không chặn render như `learning-hub.css`.
+- Chạy thử trong Chromium (chặn mọi request ra ngoài): 1366×768 sáng, 390×844 tối; đủ 5 câu bằng phím, hết giờ tự chấm, chuỗi 4 → 5 khi hôm qua đã làm, mở lại trong ngày hiện kết quả cũ, thoát giữa chừng, nộp bài thường → thẻ thưởng. `check-js`, `validate-data`, toàn bộ unit test đạt. Font: thêm Segoe UI/system-ui dự phòng vì offline không có font Google và "sans-serif" đậm trên Windows ra Arial Black làm xấu dấu tiếng Việt.
+
+## Trang làm bài "Chữ to" cho học sinh tiểu học + Thẻ ghi nhớ (23/10/2026)
+
+- **Chế độ Chữ to** (`js/kid-mode.js`, `css/kid-mode.css`): tự bật khi lớp ≤ 5 (hoặc chương trình Spark); nút **🔠 Chữ to** trên thanh trên cùng cho bật/tắt tay (nhớ theo máy, `localStorage` `eduquiz_kidmode`; bấm về đúng mặc định theo lớp thì xoá ưu tiên).
+  - Chữ câu hỏi ~1,5rem, đáp án ~1,3rem, ô đáp án cao ~4,4rem, chữ A/B/C/D to; Đúng/Sai, nối cột, điền chỗ trống, dòng hướng dẫn đầu câu cũng to hơn.
+  - **Đáp án đang chọn tô đặc màu + nhãn "✓ Em chọn"** (trước chỉ viền nhạt, các em khó nhận ra mình đã chọn chưa).
+  - **Dòng nhắc dưới đáp án**: "👉 Em đã chọn: (B) Máy quét" / "👆 Em hãy bấm vào 1 đáp án" / "còn 1 đáp án nữa" / "đã trả lời 2/4 dòng" — mọi dạng câu, cả chế độ Kiểm tra (không lộ đúng/sai).
+  - **🔊 Nghe câu hỏi**: đọc to câu hỏi + đáp án bằng giọng tiếng Việt của máy (Web Speech, không cần mạng ở Windows/Android có giọng vi-VN).
+  - **Ôn luyện → Kiểm tra đáp án**: tô xanh "✓ Đáp án đúng" / đỏ "✗ Em chọn" ngay trên đáp án (bỏ danh sách đáp án lặp lại bên dưới), lời khen/động viên to, thẻ **⭐ Nhớ nhé** ghi câu hỏi ➜ đáp án đúng + nút 🔊 Nghe lại, tự cuộn tới kết quả. Đổi đáp án thì tô cũ tự xoá.
+  - Dạng "Bấm vào hình" giữ chữ vừa phải để ảnh không bị thu nhỏ.
+- **🃏 Thẻ ghi nhớ ở màn Kết quả** (`js/memory-cards.js`): mỗi câu sai/bỏ qua thành 1 thẻ lật — mặt trước câu hỏi (em tự nhớ lại), lật ra đáp án đúng + giải thích + 🔊. "😊 Em nhớ rồi" bỏ thẻ, "🤔 Chưa nhớ" đưa thẻ xuống cuối xấp để gặp lại; cuối buổi báo số thẻ nhớ ngay lần đầu và nhắc ôn tiếp ở Sổ tay câu sai (lặp lại ngắt quãng nhiều ngày). Dùng cho mọi lớp. Phím Esc/nút ✕ đóng.
+- `js/quiz-engine.js` chỉ thêm 2 tín hiệu: `edu:quiz-updated` (cuối `updateSidebar`) và `edu:answer-checked` (`_renderCheckResult` / khi ẩn kết quả). Không đổi chấm điểm, không thêm lượt Firebase/Apps Script, không ghi gì mới ngoài 1 khoá ưu tiên.
+- Đã chạy thử trong Chromium (học sinh lớp 3 và 4, 1366×768 và 390×844, sáng/tối): chọn đáp án, kiểm tra đúng/sai, mọi dạng câu trong bài Tổng hợp, nộp bài → ôn hết 10 thẻ, bật/tắt Chữ to. `check-js` và toàn bộ unit test đạt.
+
 ## Trang gom kết quả: "Câu cả lớp hay sai" + tạo đề ôn — chạy offline (23/10/2026)
 
 - **Mục mới "4. Câu cả lớp hay sai"** ở `gom-ket-qua.html`: mã kết quả `EQR1` vốn đã mang uid câu sai (trường `w`, ≤ 30 câu/bài) nhưng trước đây trang gom bỏ qua. Nay bấm **🔍 Phân tích câu sai** → 15 câu sai nhiều nhất theo bộ lọc lớp/bài đang chọn, mỗi câu có số lượt sai, số học sinh, % bài, bấm mở xem đáp án đúng + giải thích. Đổi bộ lọc hoặc thêm mã thì tự tính lại; bấm sắp xếp cột bảng điểm thì giữ nguyên.

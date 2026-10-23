@@ -34,23 +34,9 @@
       justify-content: center; overflow: hidden;
       font-family: 'Baloo 2', sans-serif; visibility: visible !important;
       color: #333;
-      /* Nền pastel động nhẹ, ĐỒNG BỘ cảm giác thương hiệu với login.html
-         (xem body::before trong css/login.css) thay vì nền trắng phẳng
-         cũ, đỡ "chết" khi người dùng phải nhìn màn hình này vài giây. */
-      background: linear-gradient(135deg, #f3f4fb 0%, #eef3f2 50%, #fdf3e9 100%);
-    }
-    #edu-guard-overlay::before {
-      content: ''; position: absolute; inset: -10%; pointer-events: none; z-index: 0;
-      background:
-        radial-gradient(32% 36% at 15% 20%, rgba(47,64,178,.16) 0%, transparent 70%),
-        radial-gradient(30% 34% at 85% 15%, rgba(93,147,61,.16) 0%, transparent 70%),
-        radial-gradient(34% 38% at 80% 88%, rgba(255,143,31,.14) 0%, transparent 70%);
-      filter: blur(2px);
-      animation: edu-guard-blob 9s ease-in-out infinite alternate;
-    }
-    @keyframes edu-guard-blob {
-      from { transform: translate(0,0) scale(1) }
-      to   { transform: translate(-2%, 2%) scale(1.05) }
+      /* 10/2026: nền phẳng cùng màu --bg như login.html (trước là nền pastel
+         loang màu trôi — trông "đúc khuôn"). */
+      background: #f3f5fc;
     }
     /* Kích thước card/khung ảnh dùng clamp() để to hơn hẳn bản trước
        (theo đúng vùng khung vàng người dùng khoanh — to gần gấp đôi)
@@ -62,9 +48,9 @@
       position: relative; z-index: 1;
       display: flex; flex-direction: column; align-items: center; gap: .9rem;
       padding: clamp(2.1rem, 4vw, 3.1rem) clamp(2rem, 4vw, 2.9rem);
-      background: #eef0f6;
-      border-radius: 28px;
-      box-shadow: 9px 9px 20px rgba(163,177,198,.55), -9px -9px 20px rgba(255,255,255,.85);
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 0 0 1px #e1e6f4, 0 8px 24px rgba(16,24,40,.06);
       animation: edu-guard-card-in .45s cubic-bezier(.16,1,.3,1) both;
       width: 100%;
       max-width: clamp(460px, 62vw, 760px);
@@ -178,7 +164,7 @@
     <div id="edu-guard-card">
       <div id="edu-guard-screen"></div>
       <div id="edu-guard-dots"><span></span><span></span><span></span></div>
-      <div class="msg">🔐 Đang kiểm tra đăng nhập...</div>
+      <div class="msg">Đang kiểm tra đăng nhập...</div>
     </div>`;
   overlay.querySelector('#edu-guard-screen').appendChild(buildImg('img/anim/loading.webp'));
   // Chỉ gắn nếu CHƯA mở khoá: đăng nhập có thể được xác nhận trước DOMContentLoaded (phiên

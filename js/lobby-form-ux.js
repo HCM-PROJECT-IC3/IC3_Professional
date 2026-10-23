@@ -68,7 +68,7 @@
     const hint = $('startHint');
     if (!hint) return;
     // Nút khoá vì lý do khác (vd bài 0 câu, đang tải) → không đoán bừa.
-    hint.textContent = btn.disabled ? (need ? '👉 ' + need + ' để bắt đầu' : '') : '✅ Sẵn sàng — bấm Bắt đầu!';
+    hint.textContent = btn.disabled ? (need ? need + ' để bắt đầu.' : '') : 'Đã chọn đủ. Bấm Bắt đầu.';
     hint.classList.toggle('is-ready', !btn.disabled);
   }
 
