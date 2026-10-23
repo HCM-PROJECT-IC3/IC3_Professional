@@ -1,8 +1,8 @@
 /* ============================================================
    js/gom-ket-qua.js — giao diện trang gom-ket-qua.html (giáo viên).
-   Toàn bộ chạy trong trình duyệt; dữ liệu học sinh chỉ nằm trong bộ nhớ
-   của tab này. Mọi chữ đưa lên trang đi qua textContent (mã là dữ liệu
-   không đáng tin) → không có đường chèn HTML.
+   Toàn bộ chạy trong trình duyệt; dữ liệu học sinh chỉ nằm trên máy này.
+   Mọi chữ lấy từ mã đưa lên trang đi qua textContent hoặc esc() (mã là dữ
+   liệu không đáng tin) → không có đường chèn HTML.
    ============================================================ */
 (function () {
   'use strict';
@@ -134,6 +134,7 @@
       body.appendChild(tr);
     });
     $('gkCsv').disabled = !rows.length;
+    wqReset();
   }
 
   function renderHead() {
@@ -153,6 +154,92 @@
     });
   }
 
+  // ── 4. Câu cả lớp hay sai — đếm trên máy (EduResultPack.wrongStats), tra nội dung câu từ
+  // data/ic3 (EduQuestionLookup) chỉ khi bấm Phân tích (file khối ~1 MB). Đã phân tích 1 lần
+  // thì đổi bộ lọc / thêm mã sẽ tự tính lại (file đã nạp nằm trong bộ nhớ). ──
+  const WQ_SHOW = 15, WQ_EXAM_MAX = 20;
+  const wq = { on: false, run: 0, key: '', stats: null, resolved: null, label: '' };
+  const L = window.EduQuestionLookup;
+  function wqScopeLabel() {
+    return [state.fClass || 'Tất cả lớp', state.fTest || 'tất cả bài'].join(' · ');
+  }
+  const WQ_HINT = $('wqStatus').textContent;
+  /** Gọi sau mỗi lần vẽ bảng: chỉ tính lại khi bộ lọc / số bài đổi (bấm sắp xếp cột thì giữ nguyên). */
+  function wqReset() {
+    $('wqAnalyze').disabled = !state.rows.length || !L;
+    const key = [state.fClass, state.fTest, state.rows.length].join('|');
+    if (key === wq.key) return;
+    wq.key = key;
+    if (wq.on && state.rows.length) { wqAnalyze(); return; }
+    wq.on = false;
+    wq.stats = null;
+    $('wqStatus').textContent = WQ_HINT;
+    $('wqList').textContent = '';
+    $('wqMakeExam').hidden = true;
+    $('wqLinkRow').hidden = true;
+  }
+  async function wqAnalyze() {
+    const run = ++wq.run;
+    wq.on = true;
+    const stats = P.wrongStats(visibleRows());
+    const label = wqScopeLabel();
+    $('wqStatus').textContent = '⏳ Đang tra nội dung câu hỏi…';
+    const resolved = await L.resolve(stats.items.slice(0, Math.max(WQ_SHOW, WQ_EXAM_MAX)));
+    if (run !== wq.run) return;   // bộ lọc đổi trong lúc đang tra → lượt mới lo
+    Object.assign(wq, { stats, resolved, label });
+    wqRender();
+  }
+  function wqRender() {
+    const { stats, resolved } = wq;
+    const esc = L.esc, plain = L.plain;
+    // Cùng số lượt sai thì câu tra được nội dung đứng trước câu đã đổi/xoá (sort ổn định).
+    const items = stats.items.slice(0, Math.max(WQ_SHOW, WQ_EXAM_MAX))
+      .sort((a, b) => b.count - a.count || resolved.has(b.uid) - resolved.has(a.uid)).slice(0, WQ_SHOW);
+    $('wqStatus').textContent = 'Phạm vi: ' + wq.label + ' — ' + stats.submissions + ' bài, ' + stats.withWrong + ' bài có câu sai.'
+      + (items.length && resolved.size < items.length ? ' Câu không tra được nội dung: chưa tải sẵn ngân hàng câu hỏi khi mất mạng, hoặc câu đã đổi/xoá.' : '');
+    $('wqList').innerHTML = items.length ? items.map((it, i) => {
+      const r = resolved.get(it.uid);
+      const text = r ? plain(r.q.question) : '(Không tìm thấy câu ' + it.uid + ' trong ngân hàng)';
+      const pct = stats.submissions ? Math.round((it.count / stats.submissions) * 100) : 0;
+      return `<li class="wq-item"><details>
+          <summary><span class="wq-rank">${i + 1}</span><span class="wq-q">${esc(text)}</span>
+            <span class="wq-meta">${it.count} lượt sai · ${it.students} HS · ${pct}% bài${r ? ` · ${esc(r.levelName)} › ${esc(r.mt)}` : ''}</span></summary>
+          ${r ? L.answerHtml(r.q) + (r.q.explanation ? `<p class="wq-expl">💡 ${esc(plain(r.q.explanation))}</p>` : '') : ''}
+        </details></li>`;
+    }).join('') : '<li class="gk-note">Không có câu sai nào trong phạm vi này.</li>';
+    $('wqMakeExam').hidden = !items.some((it) => resolved.has(it.uid));
+    $('wqLinkRow').hidden = true;
+  }
+  /** Đề ôn từ các câu hay sai nhất — cùng Chương trình/Cấp độ với câu sai nhiều nhất (link đề chỉ chứa 1 cấp độ). */
+  async function wqMakeExam() {
+    const picks = wq.stats.items.map((it) => wq.resolved.get(it.uid) && Object.assign({ uid: it.uid }, wq.resolved.get(it.uid))).filter(Boolean);
+    if (!picks.length) return;
+    const head = picks[0];
+    const items = picks.filter((p) => p.catId === head.catId && p.levelId === head.levelId).slice(0, WQ_EXAM_MAX).map((p) => ({ mt: p.mt, uid: p.uid }));
+    const btn = $('wqMakeExam');
+    btn.disabled = true;
+    try {
+      await window.EduLazyLoad.loadScripts(['js/custom-exam-codec.js']);
+      const url = new URL(await window.EduCustomExam.buildLink({
+        title: ('Ôn câu hay sai — ' + wq.label).slice(0, 120),
+        desc: items.length + ' câu ' + head.levelName + ' học sinh sai nhiều nhất',
+        cat: head.catId, level: head.levelId, duration: 0, shuffle: true, items,
+      }, 'index.html'), location.href).href;
+      $('wqLink').value = url;
+      $('wqLinkRow').hidden = false;
+      let copied = false;
+      try { await navigator.clipboard.writeText(url); copied = true; } catch (e) { /* trình duyệt chặn clipboard */ }
+      $('wqLinkLabel').textContent = copied ? '✅ Đã chép link đề ôn ' + items.length + ' câu — gửi cho học sinh:' : 'Link đề ôn ' + items.length + ' câu — chép gửi cho học sinh:';
+      if (!copied) $('wqLink').select();
+    } catch (err) {
+      $('wqLinkRow').hidden = false;
+      $('wqLink').value = '';
+      $('wqLinkLabel').textContent = '❌ Không tạo được đề: ' + err.message;
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
   function readFiles(fileList) {
     const files = Array.from(fileList || []).slice(0, 300);
     if (!files.length) return;
@@ -164,6 +251,7 @@
     renderHead();
     $('gkAddText').addEventListener('click', () => { addTexts([$('gkText').value]); $('gkText').value = ''; });
     $('gkClear').addEventListener('click', () => {
+      wq.on = false;
       state.rows = []; state.codes = []; state.ids = new Set(); state.fClass = ''; state.fTest = ''; persist();
       $('gkText').value = ''; $('gkFiles').value = ''; showErrors([]); msg(''); refreshFilters(); render();
     });
@@ -175,6 +263,9 @@
     drop.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('gkFiles').click(); } });
     $('gkFilterClass').addEventListener('change', (e) => { state.fClass = e.target.value; render(); });
     $('gkFilterTest').addEventListener('change', (e) => { state.fTest = e.target.value; render(); });
+    $('wqAnalyze').addEventListener('click', wqAnalyze);
+    $('wqMakeExam').addEventListener('click', wqMakeExam);
+    $('wqLink').addEventListener('focus', (e) => e.target.select());
     $('gkCsv').addEventListener('click', () => {
       const rows = visibleRows();
       const blob = new Blob([P.toCsv(rows)], { type: 'text/csv;charset=utf-8' });

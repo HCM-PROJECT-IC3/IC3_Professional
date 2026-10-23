@@ -13,7 +13,8 @@
    "Tạo đề ôn" dựng link đề (js/custom-exam-codec.js, nạp lười) từ các câu hay
    sai nhất — đề nằm trong link, 0 Firebase.
 
-   Nạp SAU js/services/sheet-results-api.js, js/services/lazy-script-loader.js.
+   Nạp SAU js/services/sheet-results-api.js, js/services/lazy-script-loader.js,
+   js/services/question-bank-lookup.js (tra uid → câu, dùng chung với gom-ket-qua).
    dashboard.js gọi EduWrongQuestions.setContext(...) mỗi lần đổi bộ lọc.
    ============================================================ */
 (function (global) {
@@ -22,72 +23,10 @@
   const SHOW = 15;          // số câu hiện trên thẻ
   const EXAM_MAX = 20;      // số câu tối đa đưa vào đề ôn
   const $ = (id) => document.getElementById(id);
-  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const plain = (html) => { const d = document.createElement('div'); d.innerHTML = String(html ?? ''); return (d.textContent || '').trim(); };
+  const { esc, plain, answerHtml, resolve } = global.EduQuestionLookup;   // js/services/question-bank-lookup.js
 
   let ctx = null;           // { schools, classes, sinceMs, testName, label }
   let last = null;          // { stats, resolved: Map uid → {q, mt, catId, levelId, levelName} }
-
-  // ── Ngân hàng câu hỏi tĩnh: uid → câu ──
-  let metaP = null;
-  const levelFiles = new Map(); // file → Promise<Map uid → {q, mt}>
-  function meta() {
-    if (!metaP) metaP = fetch('data/ic3/meta.json').then((r) => (r.ok ? r.json() : { categories: [] })).catch(() => ({ categories: [] }));
-    return metaP;
-  }
-  function levelIndex(file) {
-    if (!levelFiles.has(file)) {
-      levelFiles.set(file, fetch('data/ic3/' + file).then((r) => (r.ok ? r.json() : {})).catch(() => ({})).then((d) => {
-        const idx = new Map();
-        Object.entries(d.minitests || {}).forEach(([mt, qs]) => (qs || []).forEach((q) => { if (q && q.uid && !idx.has(q.uid)) idx.set(q.uid, { q, mt }); }));
-        return idx;
-      }));
-    }
-    return levelFiles.get(file);
-  }
-  /** Cấp độ chứa câu: theo tên bài nộp ("Chương trình › Cấp độ › Bài"), dự phòng theo tiền tố uid. */
-  function candidateLevels(m, item) {
-    const out = [];
-    const push = (cat, lv) => { if (lv && lv.file && !out.some((x) => x.lv === lv)) out.push({ cat, lv }); };
-    (item.tests || []).forEach((t) => {
-      const [cn, ln] = String(t).split(' › ');
-      const cat = m.categories.find((c) => c.name === cn || c.id === cn);
-      push(cat, cat && cat.levels.find((l) => l.name === ln || l.id === ln));
-    });
-    const uid = String(item.uid).toLowerCase();
-    m.categories.forEach((c) => c.levels.forEach((l) => { if (uid.startsWith(`${c.id}__${l.id}__`.toLowerCase())) push(c, l); }));
-    return out;
-  }
-  async function resolve(items) {
-    const m = await meta();
-    const map = new Map();
-    await Promise.all(items.map(async (it) => {
-      for (const { cat, lv } of candidateLevels(m, it)) {
-        const hit = (await levelIndex(lv.file)).get(it.uid);
-        if (hit) { map.set(it.uid, Object.assign({ catId: cat.id, levelId: lv.id, levelName: lv.name }, hit)); return; }
-      }
-    }));
-    return map;
-  }
-
-  // ── Đáp án gọn để giáo viên xem nhanh ──
-  function answerHtml(q) {
-    const P = (s) => esc(plain(s));
-    switch (q.type) {
-      case 'single': case 'multi': {
-        const ok = new Set((q.correct || []).map(plain));
-        return `<ul class="wq-ans">${(q.options || []).map((o) => `<li class="${ok.has(plain(o)) ? 'is-ok' : ''}">${ok.has(plain(o)) ? '✔ ' : ''}${P(o)}</li>`).join('')}</ul>`;
-      }
-      case 'truefalse':
-        return `<ul class="wq-ans">${(q.statements || []).map((s) => `<li><b>${s.answer === 'true' ? 'Đúng' : 'Sai'}</b> — ${P(s.text)}</li>`).join('')}</ul>`;
-      case 'matching':
-        return `<ul class="wq-ans">${(q.pairs || []).map((p) => `<li>${P(p.left)} → <b>${P(p.right)}</b></li>`).join('')}</ul>`;
-      case 'ordering':
-        return `<ol class="wq-ans">${(q.items || []).map((s) => `<li>${P(s)}</li>`).join('')}</ol>`;
-      default:
-        return '<p class="wq-note">Xem đáp án đầy đủ trong Soạn đề / Quản lý câu hỏi.</p>';
-    }
-  }
 
   function setStatus(html) { $('wqStatus').innerHTML = html; }
 

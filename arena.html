@@ -42,74 +42,119 @@
 
 <main id="arMain" class="ar-main" tabindex="-1">
   <!-- ===== MÀN CHỌN ===== -->
-  <section id="arHome" class="ar-screen">
-    <div class="ar-hero">
+  <!-- 3 vai: Học sinh (chỉ cần Họ tên + Mã phòng) · Giáo viên (soạn + tạo phòng) · Chơi một mình.
+       data-role quyết định khối nào hiện (css/arena.css: .only-student / .only-teacher / .only-solo / .not-student).
+       Mở bằng link giáo viên gửi (?phong=MÃ) → class is-invite: ẩn thanh chọn vai, học sinh chỉ thấy ô nhập tên. -->
+  <section id="arHome" class="ar-screen" data-role="student">
+    <nav class="ar-roles" id="arRoles" role="tablist" aria-label="Em là ai?">
+      <button type="button" class="ar-role" role="tab" data-role="student"><span class="ar-role-ico" aria-hidden="true">🙋</span><b>Học sinh</b><small>Vào phòng của lớp</small></button>
+      <button type="button" class="ar-role" role="tab" data-role="teacher"><span class="ar-role-ico" aria-hidden="true">🧑‍🏫</span><b>Giáo viên</b><small>Tạo phòng cho cả lớp</small></button>
+      <button type="button" class="ar-role" role="tab" data-role="solo"><span class="ar-role-ico" aria-hidden="true">🎮</span><b>Chơi một mình</b><small>Đấu với máy, sưu tập Linh vật</small></button>
+    </nav>
+
+    <!-- ── HỌC SINH: sân khấu nhiều màu (hình ▲◆●■ bay như Kahoot) + thẻ vào phòng kiểu "Game PIN" ── -->
+    <div class="ar-join-stage only-student">
+      <div class="ar-fx-shapes" aria-hidden="true"><span class="f0">▲</span><span class="f1">◆</span><span class="f2">●</span><span class="f3">■</span><span class="f4">★</span><span class="f5">▲</span><span class="f6">●</span><span class="f7">◆</span><span class="f8">■</span></div>
+      <div class="ar-card ar-join-card" id="arJoinCard">
+        <div class="ar-join-badge" aria-hidden="true"><span id="arJoinAvatarFace">🙂</span></div>
+        <h2 class="ar-join-title">Vào trận cùng cả lớp!</h2>
+        <p class="ar-join-lead">Nhập <b>họ tên</b> và <b>mã phòng</b> trên bảng là chơi ngay — không cần tài khoản.</p>
+        <form class="ar-join-form" id="arJoinForm" novalidate autocomplete="on">
+          <label class="ar-field ar-join-field" for="arJoinName" id="arJoinNameField"><span><i class="ar-join-num" aria-hidden="true">1</i> Họ và tên <i class="fa-solid fa-circle-check ar-join-ok" aria-hidden="true"></i></span>
+            <input id="arJoinName" class="ar-input ar-join-input" name="name" maxlength="30" autocomplete="name" autocapitalize="words" enterkeyhint="next" placeholder="VD: Nguyễn Văn An"></label>
+          <label class="ar-field ar-join-field" for="arJoinCode" id="arJoinCodeField"><span><i class="ar-join-num" aria-hidden="true">2</i> Mã phòng <em>(6 ký tự trên bảng)</em> <i class="fa-solid fa-circle-check ar-join-ok" aria-hidden="true"></i></span>
+            <input id="arJoinCode" class="ar-input ar-code-input" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="go" placeholder="4H7K9M" inputmode="text" aria-describedby="arJoinCodeHint">
+            <small class="ar-join-hint" id="arJoinCodeHint">Chỉ có chữ và số — không có số 0, 1 và chữ O, I, L.</small></label>
+          <p class="ar-join-link" id="arJoinFromLink" hidden><i class="fa-solid fa-circle-check"></i> Mã phòng đã được điền sẵn từ link của thầy/cô — em chỉ cần nhập họ tên.</p>
+          <button type="submit" class="ar-btn ar-btn-play ar-join-go" id="arJoinBtn"><i class="fa-solid fa-right-to-bracket"></i> Vào phòng</button>
+        </form>
+        <button type="button" class="ar-join-avatar" id="arJoinAvatar" title="Đổi Linh vật đại diện (không bắt buộc)">
+          <span aria-hidden="true">🥚</span><span>Đổi Linh vật đại diện</span></button>
+      </div>
+      <ol class="ar-join-steps" aria-label="Cách chơi">
+        <li><span aria-hidden="true">📺</span><b>Nhìn mã</b><small>trên bảng / máy chiếu</small></li>
+        <li><span aria-hidden="true">⌨️</span><b>Nhập tên + mã</b><small>rồi bấm Vào phòng</small></li>
+        <li><span aria-hidden="true">🏆</span><b>Trả lời nhanh</b><small>đúng + nhanh = lên top</small></li>
+      </ol>
+    </div>
+
+    <!-- ── CHƠI MỘT MÌNH ── -->
+    <div class="ar-hero only-solo">
       <button type="button" class="ar-avatar ar-avatar-lg" id="arAvatarBtn" title="Đổi Linh vật đại diện"></button>
       <div class="ar-hero-main">
         <label class="ar-label" for="arNick">Biệt danh</label>
-        <input id="arNick" class="ar-input" maxlength="24" autocomplete="off" placeholder="Nhập biệt danh của em">
+        <input id="arNick" class="ar-input" maxlength="30" autocomplete="off" placeholder="Nhập biệt danh của em">
         <p class="ar-hint">Xu, Linh vật và kỷ lục lưu riêng theo biệt danh, chỉ trên máy này.</p>
       </div>
       <button type="button" class="ar-btn ar-btn-pack" id="arOpenPacks"><span aria-hidden="true">🥚</span> Linh vật</button>
     </div>
 
-    <div class="ar-card">
-      <h2 class="ar-h2"><i class="fa-solid fa-book-open"></i> Bộ câu hỏi</h2>
+    <!-- ── GIÁO VIÊN: phải đăng nhập tài khoản giáo viên mới thấy các bước tạo phòng (js/arena/arena-teacher.js) ── -->
+    <div class="ar-card ar-teacher-gate only-teacher" id="arTeacherGate" aria-live="polite"></div>
+    <div class="ar-teacher-who only-teacher" id="arTeacherWho" hidden></div>
+
+    <!-- ── GIÁO VIÊN + CHƠI MỘT MÌNH: chọn bộ câu hỏi ── -->
+    <div class="ar-card not-student needs-teacher" id="arDeckCard">
+      <h2 class="ar-h2"><span class="ar-step only-teacher" aria-hidden="true">1</span><i class="fa-solid fa-book-open"></i> Bộ câu hỏi</h2>
       <div id="arSourceDe" class="ar-de" hidden></div>
       <div id="arSourceBank" class="ar-grid3">
         <label class="ar-field"><span>Chương trình</span><select id="arCat" class="ar-input"></select></label>
         <label class="ar-field"><span>Cấp độ</span><select id="arLvl" class="ar-input"></select></label>
         <label class="ar-field"><span>Bài / chủ đề</span><select id="arMt" class="ar-input"></select></label>
       </div>
+      <p class="ar-hint only-teacher" id="arDeckInfoTeacher"></p>
     </div>
 
-    <div class="ar-card">
-      <h2 class="ar-h2"><i class="fa-solid fa-gamepad"></i> Chế độ chơi</h2>
+    <div class="ar-card not-student needs-teacher" id="arModeCard">
+      <h2 class="ar-h2"><span class="ar-step only-teacher" aria-hidden="true">2</span><i class="fa-solid fa-gamepad"></i> Chế độ chơi</h2>
       <div class="ar-modes" id="arModes" role="radiogroup" aria-label="Chế độ chơi">
         <button type="button" class="ar-mode m-speed" data-mode="speed" role="radio">
           <span class="ar-mode-ico" aria-hidden="true">⚡</span><b>Tốc độ</b>
-          <small>Kiểu Kahoot — trả lời càng nhanh càng nhiều điểm, chuỗi đúng được thưởng, đua với bóng ma kỷ lục của chính em.</small></button>
+          <small class="only-solo">Kiểu Kahoot — trả lời càng nhanh càng nhiều điểm, chuỗi đúng được thưởng, đua với bóng ma kỷ lục của chính em.</small>
+          <small class="only-teacher">Kiểu Kahoot — cả lớp trả lời cùng lúc, nhanh và đúng thì nhiều điểm; chuỗi đúng nhận thẻ thưởng.</small></button>
         <button type="button" class="ar-mode m-gold" data-mode="gold" role="radio">
           <span class="ar-mode-ico" aria-hidden="true">💰</span><b>Săn vàng</b>
           <small>Kiểu Blooket — trả lời đúng được chọn 1 trong 3 rương: nhân vàng, cướp vàng, đổi vàng... Coi chừng bị cướp lại!</small></button>
         <button type="button" class="ar-mode m-race" data-mode="race" role="radio">
           <span class="ar-mode-ico" aria-hidden="true">🏁</span><b>Đua về đích</b>
-          <small>Mỗi câu đúng tiến 1 bước, đúng 3 câu liên tiếp được tăng tốc. Về đích trước để thắng.</small></button>
+          <small class="only-solo">Mỗi câu đúng tiến 1 bước, đúng 3 câu liên tiếp được tăng tốc. Về đích trước để thắng.</small>
+          <small class="only-teacher">Mỗi câu đúng tiến 1 bước, đúng liền 3 câu được tăng tốc. Ai về đích trước thắng.</small></button>
+        <button type="button" class="ar-mode m-survival" data-mode="survival" role="radio">
+          <span class="ar-mode-ico" aria-hidden="true">❤️</span><b>Sinh tồn</b>
+          <small>Kiểu Battle Royale — mỗi người 3 tim, sai mất 1 tim, đúng liền 3 câu hồi tim. Người trụ lại cuối cùng thắng!</small></button>
+        <button type="button" class="ar-mode m-fish" data-mode="fish" role="radio">
+          <span class="ar-mode-ico" aria-hidden="true">🎣</span><b>Câu cá</b>
+          <small>Kiểu Blooket Fishing Frenzy — trả lời đúng được thả câu: cá rô, mực, cá mập, cá voi... Ai câu nặng ký nhất thắng!</small></button>
       </div>
+      <p class="ar-hint ar-power-note only-solo">🎁 <b>Tốc độ</b> và <b>Sinh tồn</b>: đúng liền 3 câu nhận 1 vật phẩm (kiểu Wayground) — ✂️ 50:50 · ⏳ Thêm giờ · ✖️2 Nhân đôi. Bấm để dùng (phím Q, W, E).</p>
+      <div class="ar-field ar-kinds-field"><span>Dạng câu hỏi <em>(bấm để bật/tắt — số nhỏ là số câu có trong bài)</em></span>
+        <div class="ar-chips ar-kinds" id="arKinds" role="group" aria-label="Dạng câu hỏi"></div></div>
       <div class="ar-grid3 ar-opts">
         <div class="ar-field"><span>Số câu</span><div class="ar-chips" id="arCount">
           <button type="button" data-v="10">10</button><button type="button" data-v="15">15</button><button type="button" data-v="20">20</button></div></div>
-        <div class="ar-field"><span>Đối thủ máy</span><div class="ar-chips" id="arLevel">
+        <div class="ar-field only-solo"><span>Đối thủ máy</span><div class="ar-chips" id="arLevel">
           <button type="button" data-v="easy">Dễ</button><button type="button" data-v="normal">Vừa</button><button type="button" data-v="hard">Khó</button></div></div>
         <div class="ar-field"><span>Giây mỗi câu</span><div class="ar-chips" id="arSecs">
           <button type="button" data-v="10">10</button><button type="button" data-v="20">20</button><button type="button" data-v="30">30</button></div></div>
       </div>
-      <button type="button" class="ar-btn ar-btn-play" id="arPlay"><i class="fa-solid fa-play"></i> Vào trận</button>
-      <p class="ar-hint ar-center" id="arDeckInfo"></p>
+      <button type="button" class="ar-btn ar-btn-play only-solo" id="arPlay"><i class="fa-solid fa-play"></i> Vào trận</button>
+      <p class="ar-hint ar-center only-solo" id="arDeckInfo"></p>
     </div>
 
-    <div class="ar-card ar-room-card" id="arRoomCard">
-      <h2 class="ar-h2"><i class="fa-solid fa-users"></i> Phòng cả lớp <span class="ar-badge">Nhiều người chơi</span></h2>
+    <!-- ── GIÁO VIÊN: tạo phòng ── -->
+    <div class="ar-card ar-room-card only-teacher needs-teacher" id="arRoomCard">
+      <h2 class="ar-h2"><span class="ar-step" aria-hidden="true">3</span><i class="fa-solid fa-users"></i> Tạo phòng cho cả lớp <span class="ar-badge">Nhiều người chơi</span></h2>
       <div class="ar-room-resume" id="arRoomResume" hidden></div>
-      <div class="ar-room-split">
-        <div class="ar-room-pane">
-          <h3 class="ar-h3"><span aria-hidden="true">🙋</span> Học sinh — vào phòng</h3>
-          <label class="ar-label" for="arJoinCode">Mã phòng (6 ký tự, xem trên máy chiếu)</label>
-          <div class="ar-join-row">
-            <input id="arJoinCode" class="ar-input ar-code-input" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="VD: 4H7K9M" inputmode="text">
-            <button type="button" class="ar-btn ar-btn-play" id="arJoinBtn"><i class="fa-solid fa-right-to-bracket"></i> Vào phòng</button>
-          </div>
-          <p class="ar-hint">Dùng biệt danh và Linh vật ở trên. Không cần tài khoản.</p>
-        </div>
-        <div class="ar-room-pane">
-          <h3 class="ar-h3"><span aria-hidden="true">🧑‍🏫</span> Người dẫn — tạo phòng</h3>
-          <div class="ar-field"><span>Số người tối đa</span><div class="ar-chips" id="arRoomMax">
-            <button type="button" data-v="30">30</button><button type="button" data-v="45">45</button><button type="button" data-v="60">60</button><button type="button" data-v="80">80</button></div></div>
-          <button type="button" class="ar-btn" id="arHostBtn"><i class="fa-solid fa-tower-broadcast"></i> Tạo phòng cho cả lớp</button>
-          <p class="ar-hint" id="arRoomModeNote"></p>
-          <p class="ar-hint">Máy này làm máy chủ của phòng — giữ tab mở tới hết trận. Không tốn lượt Firebase.</p>
-        </div>
-      </div>
+      <div class="ar-field"><span>Số học sinh tối đa</span><div class="ar-chips ar-chips-inline" id="arRoomMax">
+        <button type="button" data-v="30">30</button><button type="button" data-v="45">45</button><button type="button" data-v="60">60</button><button type="button" data-v="80">80</button></div></div>
+      <button type="button" class="ar-btn ar-btn-play ar-host-go" id="arHostBtn"><i class="fa-solid fa-tower-broadcast"></i> Tạo phòng và lấy mã</button>
+      <p class="ar-hint" id="arRoomModeNote"></p>
+      <ol class="ar-howto" aria-label="Các bước">
+        <li><b>Tạo phòng</b> — máy này hiện mã phòng + mã QR để chiếu lên bảng.</li>
+        <li><b>Học sinh quét QR</b> (hoặc mở link / chọn tab Học sinh), chỉ cần nhập <b>họ và tên</b> — mã phòng điền sẵn.</li>
+        <li><b>Bấm Bắt đầu</b> khi cả lớp đã vào. Kết quả lưu trên máy này, tải được file CSV.</li>
+      </ol>
+      <p class="ar-hint">Máy này làm máy chủ của phòng — giữ tab mở tới hết trận. Không tốn lượt Firebase.</p>
       <details class="ar-review" id="arRoomHist" hidden></details>
     </div>
   </section>
@@ -136,6 +181,7 @@
       <button type="button" class="ar-btn ar-btn-ghost ar-btn-sm" id="arQuit"><i class="fa-solid fa-flag"></i> Bỏ cuộc</button>
     </div>
     <div class="ar-timer" id="arTimerWrap"><i id="arTimer"></i></div>
+    <div class="ar-powers" id="arPowers" hidden aria-label="Vật phẩm hỗ trợ"></div>
     <div class="ar-track" id="arTrack" hidden></div>
     <div class="ar-stage">
       <div class="ar-qbox">
@@ -165,6 +211,7 @@
       <div class="ar-podium" id="arPodium"></div>
       <div class="ar-end-stats" id="arEndStats"></div>
       <div class="ar-row ar-center-row">
+        <button type="button" class="ar-btn ar-btn-play ar-btn-practice" id="arPractice" hidden></button>
         <button type="button" class="ar-btn ar-btn-play" id="arAgain"><i class="fa-solid fa-rotate-right"></i> Chơi lại</button>
         <button type="button" class="ar-btn ar-btn-ghost" data-go="home"><i class="fa-solid fa-gamepad"></i> Đổi chế độ</button>
         <button type="button" class="ar-btn ar-btn-pack" data-go="packs"><span aria-hidden="true">🥚</span> Mở hộp</button>
@@ -181,8 +228,10 @@
 <script src="js/gamification.js"></script>
 <script src="js/services/lazy-script-loader.js"></script>
 <script src="js/arena/arena-core.js"></script>
+<script src="js/arena/arena-kinds.js"></script>
 <script src="js/arena/arena.js"></script>
 <script src="js/backend-config.js"></script>
+<script src="js/arena/arena-teacher.js"></script>
 <script src="js/arena/arena-room-core.js"></script>
 <script src="js/arena/arena-room.js"></script>
 <script src="js/sw-register.js"></script>

@@ -15,7 +15,8 @@
 <!--
   Giáo viên gom kết quả học sinh gửi bằng mã/file (từ nút "Lưu kết quả để nộp cho thầy/cô"
   ở màn Kết quả của index.html). Toàn bộ chạy trong trình duyệt: không gọi Firebase, không
-  gọi Google Sheet, không đăng nhập, không lưu gì lên máy chủ — dữ liệu chỉ nằm trong tab này.
+  gọi Google Sheet, không đăng nhập, không lưu gì lên máy chủ — dữ liệu chỉ nằm trên trình duyệt này.
+  "Câu cả lớp hay sai" tra nội dung câu từ file tĩnh data/ic3 (js/services/question-bank-lookup.js).
   Logic mã/CSV: js/services/result-pack.js. Giao diện: js/gom-ket-qua.js.
 -->
 <main class="gk-wrap">
@@ -67,8 +68,24 @@
     </div>
     <p class="gk-note" style="margin-top:.8rem">Lưu ý: mã chỉ có phần kiểm tra lỗi chép (thiếu/sai ký tự). Mã này <b>không chống</b> học sinh cố tình tự tạo mã giả — với kỳ kiểm tra cần chống gian lận, dùng đường nộp bài có tài khoản hoặc Phòng cả lớp ở Đấu trường.</p>
   </section>
+
+  <section class="gk-card" aria-labelledby="gkWqTitle">
+    <h2 id="gkWqTitle">4. Câu cả lớp hay sai</h2>
+    <p class="gk-note" id="wqStatus">Gom kết quả xong, bấm <b>Phân tích</b> để xem câu học sinh sai nhiều nhất (theo bộ lọc lớp/bài ở mục 2).</p>
+    <div class="gk-row" style="margin:0 0 .6rem">
+      <button type="button" class="gk-btn primary" id="wqAnalyze" disabled>🔍 Phân tích câu sai</button>
+      <button type="button" class="gk-btn" id="wqMakeExam" hidden title="Tạo link đề ôn từ các câu sai nhiều nhất (cùng cấp độ) để gửi học sinh">📝 Tạo đề ôn</button>
+    </div>
+    <div class="gk-row" id="wqLinkRow" hidden>
+      <label for="wqLink" class="gk-note" id="wqLinkLabel">Link đề ôn:</label>
+      <input type="text" id="wqLink" class="gk-text gk-link" readonly>
+    </div>
+    <ol class="wq-list" id="wqList"></ol>
+  </section>
 </main>
 <script src="js/services/result-pack.js"></script>
+<script src="js/services/lazy-script-loader.js"></script>
+<script src="js/services/question-bank-lookup.js"></script>
 <script src="js/gom-ket-qua.js"></script>
 </body>
 </html>

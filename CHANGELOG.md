@@ -1,5 +1,13 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## Trang gom kết quả: "Câu cả lớp hay sai" + tạo đề ôn — chạy offline (23/10/2026)
+
+- **Mục mới "4. Câu cả lớp hay sai"** ở `gom-ket-qua.html`: mã kết quả `EQR1` vốn đã mang uid câu sai (trường `w`, ≤ 30 câu/bài) nhưng trước đây trang gom bỏ qua. Nay bấm **🔍 Phân tích câu sai** → 15 câu sai nhiều nhất theo bộ lọc lớp/bài đang chọn, mỗi câu có số lượt sai, số học sinh, % bài, bấm mở xem đáp án đúng + giải thích. Đổi bộ lọc hoặc thêm mã thì tự tính lại; bấm sắp xếp cột bảng điểm thì giữ nguyên.
+- **📝 Tạo đề ôn**: dựng link đề `index.html?de=…` từ ≤ 20 câu sai nhiều nhất (cùng cấp độ với câu đứng đầu), chép sẵn vào clipboard và hiện ô link để chép tay khi trình duyệt chặn clipboard. Giống nút cùng tên ở dashboard giáo viên.
+- **0 Firebase, 0 Apps Script, không cần đăng nhập**: đếm trên máy (`EduResultPack.wrongStats`, có test), nội dung câu tra từ file tĩnh `data/ic3`. File khối (~1 MB) chỉ tải khi bấm Phân tích. Mất mạng mà máy chưa tải sẵn ngân hàng câu hỏi thì vẫn hiện uid + số lượt sai, kèm dòng giải thích. Dữ liệu học sinh (uid trong mã) đưa lên trang đều được escape.
+- **Tách `js/services/question-bank-lookup.js`** (tra uid → câu + hiển thị đáp án gọn) khỏi `js/teacher/wrong-questions.js` để dashboard giáo viên và trang gom dùng chung; dashboard giữ nguyên hành vi.
+- Test: thêm 5 kiểm tra `wrongStats` trong `result-pack.test.js` (uid lặp trong 1 bài chỉ tính 1, 1 em nộp 2 lần vẫn tính 1 HS, thứ tự xếp hạng). Đã chạy thử trong Chrome: gom 4 mã → phân tích → lọc lớp → tạo đề ôn → link mở đúng đề ở trang làm bài; tải lại trang vẫn khôi phục; Xoá hết thì mục 4 trở về trạng thái ban đầu. Dashboard giáo viên vẫn tra được câu. `check-js`, `validate-data`, toàn bộ unit test, test Apps Script đều đạt.
+
 ## Cài như ứng dụng (PWA) + trang gom kết quả giữ dữ liệu (21/10/2026)
 
 - **Cài lên màn hình chính** (`manifest.webmanifest`, `img/pwa/*`, gắn vào `index.html` và `arena.html`): Chrome báo đủ điều kiện cài (không lỗi manifest/installability). Icon từ `favicon.svg`: 192/512 bo góc, bản maskable 512 và `apple-touch-icon` 180 nền tràn (dấu tick nằm trong vùng an toàn 80%). Có lối tắt "Đấu trường". Kết hợp nút "Tải sẵn để dùng offline": cài rồi mở từ màn hình chính vẫn chạy khi mất mạng. Nút tải sẵn nay cũng lưu `gom-ket-qua.html`, manifest và icon.
