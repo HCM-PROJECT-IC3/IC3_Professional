@@ -12,6 +12,7 @@
 
   const C = global.EduArenaCore;
   const K = global.EduArenaKinds;
+  const FX = global.EduArenaFX;
   const STORE = 'eduquiz_arena_v1';
   const SHAPES = ['▲', '◆', '●', '■', '★', '⬟'];
   const AVATAR_DEFAULT = '🙂';
@@ -171,9 +172,14 @@
     });
     paint();
   }
-  // Phòng cả lớp có Tốc độ / Đua về đích / Sinh tồn; Săn vàng + Câu cá chỉ chơi 1 người → ở vai Giáo viên hiểu là Tốc độ.
-  const ROOM_MODES = ['speed', 'race', 'survival'];
-  function effMode() { return role() === 'teacher' && !ROOM_MODES.includes(S.prefs.mode) ? 'speed' : S.prefs.mode; }
+  // Vai Giáo viên: Tốc độ / Đua / Sinh tồn / Kéo co / Đấu phép (Phòng cả lớp) + Bảng điểm (trình chiếu, js/arena/arena-board.js).
+  // Săn vàng, Câu cá, Giải mã chỉ chơi 1 người → ở vai Giáo viên hiểu là Tốc độ; Bảng điểm ở vai khác cũng vậy.
+  const ROOM_MODES = ['speed', 'race', 'survival', 'tug', 'spell', 'heist', 'board'];
+  function effMode() {
+    const m = S.prefs.mode;
+    if (role() === 'teacher') return ROOM_MODES.includes(m) ? m : 'speed';
+    return m === 'board' ? 'speed' : m;
+  }
   function paintModes() {
     const m = effMode();
     document.querySelectorAll('.ar-mode').forEach((b) => {
@@ -317,9 +323,10 @@
   // TRẬN ĐẤU
   // ============================================================
   let G = null;
-  const MODE_LABEL = { speed: '⚡ Tốc độ', gold: '💰 Săn vàng', race: '🏁 Đua về đích', survival: '❤️ Sinh tồn', fish: '🎣 Câu cá' };
-  const KEY_OF = { speed: 'score', gold: 'gold', race: 'pos', survival: 'score', fish: 'kg' };
-  const UNIT_OF = { score: 'điểm', gold: 'vàng', pos: 'bước', kg: 'kg' };
+  const MODE_LABEL = { speed: '⚡ Tốc độ', gold: '💰 Săn vàng', race: '🏁 Đua về đích', survival: '❤️ Sinh tồn', fish: '🎣 Câu cá',
+    tug: '🪢 Kéo co', spell: '🔮 Đấu phép', heist: '🔐 Giải mã' };
+  const KEY_OF = { speed: 'score', gold: 'gold', race: 'pos', survival: 'score', fish: 'kg', tug: 'pull', spell: 'dmg', heist: 'gems' };
+  const UNIT_OF = { score: 'điểm', gold: 'vàng', pos: 'bước', kg: 'kg', pull: 'lực kéo', dmg: 'sát thương', gems: 'đá quý' };
   const POWER_MODES = ['speed', 'survival']; // chế độ có vật phẩm hỗ trợ (kiểu Wayground)
 
   /**
@@ -331,12 +338,17 @@
     if (!drill) { S.last = $('arNick').value.trim().slice(0, 30); save(); }
     const deck = drill || C.buildDeck(SRC.questions || [], rng, 0, kinds());
     if (!deck.length) return;
-    const mode = drill ? 'speed' : S.prefs.mode;
+    const mode = drill ? 'speed' : effMode();
     const n = drill ? deck.length : mode === 'speed' ? Math.min(S.prefs.count, deck.length) : S.prefs.count;
     const p = profile();
     const me = { id: 'me', name: nickName(), face: avatarOf(p), score: 0, gold: 0, pos: 0, streak: 0, me: true };
-    const players = drill ? [me] : [me].concat(C.makeBots(mode === 'race' ? 3 : 4, rng, S.prefs.level));
-    players.forEach((pl) => { pl.kg = 0; pl.frenzy = 0; pl.hp = C.LIVES; });
+    const nBots = { race: 3, heist: 3, tug: 5 }[mode] || 4;
+    const players = drill ? [me] : [me].concat(C.makeBots(nBots, rng, S.prefs.level));
+    players.forEach((pl, i) => {
+      Object.assign(pl, { kg: 0, frenzy: 0, hp: mode === 'spell' ? C.SPELL_HP : C.LIVES, pull: 0, dmg: 0, shield: false, gems: 0 });
+      if (mode === 'tug') pl.team = i < 3 ? 'red' : 'blue'; // em + 2 bạn máy (Đỏ) đấu 3 bạn máy (Xanh)
+      if (mode === 'heist') pl.vault = C.newVault(rng);
+    });
     const bestKey = drill ? '' : `${SRC.key}|${mode}|${n}`;
     const best = (bestKey && p.best[bestKey]) || null;
     let ghost = null;
@@ -349,9 +361,9 @@
       limitMs: mode === 'gold' ? 0 : S.prefs.secs * 1000,
       goal: n, maxRounds: mode === 'race' ? n * 3 : n,
       log: [], trail: [], bestStreak: 0, correct: 0, startedAt: Date.now(), locked: false, phase: 'q',
-      powers: [], x2: false,
+      powers: [], x2: false, rope: 0, crack: {}, opened: 0, boost: 1, trackDrawn: false,
     };
-    $('arTrack').hidden = mode !== 'race';
+    $('arTrack').hidden = mode !== 'race' && mode !== 'tug';
     $('arTimerWrap').hidden = !G.limitMs;
     document.body.dataset.mode = mode;
     show('arGame');
@@ -421,6 +433,7 @@
 
     const prevRank = rankOf(me);
     let fb = '';
+    let pop = ''; // số bay lên từ ô em chọn
     const events = [];
     // Vật phẩm ✖️2: nhân đôi điểm của câu ĐÚNG kế tiếp.
     const dbl = ok && G.x2 ? 2 : 1;
@@ -432,10 +445,12 @@
       me.score += pts + bonus;
       G.trail.push(me.score);
       botsSpeed();
+      if (ok) pop = `+${pts + bonus}`;
       fb = ok ? `<b>+${pts + bonus}</b> điểm${bonus ? ` <span class="ar-tag">🔥 chuỗi ${me.streak} +${bonus}</span>` : ''}${x2Tag}` : (k === null ? 'Hết giờ!' : 'Chưa đúng');
     } else if (G.mode === 'survival') {
       const pts = ok ? C.speedPoints(true, ms, G.limitMs) * dbl : 0;
       me.score += pts;
+      if (ok) pop = `+${pts}`;
       botsSurvival(events);
       fb = (ok ? `<b>+${pts}</b> điểm${x2Tag}` : (k === null ? 'Hết giờ!' : 'Chưa đúng'))
         + (life.healed ? ' <span class="ar-tag up">💚 Hồi 1 tim!</span>' : '')
@@ -447,6 +462,7 @@
         const c = C.castLine(rng, me.frenzy);
         me.frenzy = c.frenzy;
         me.kg += c.kg;
+        pop = c.kg ? `+${c.kg} kg` : '👢';
         fb = `<span class="ar-catch" aria-hidden="true">${c.fish.icon}</span> Em câu được <b>${esc(c.fish.name)}</b>${c.kg ? ` — <b>+${c.kg} kg</b>` : ' — 0 kg 😅'}`
           + (doubled ? ' <span class="ar-tag up">⚡ x2</span>' : '') + (c.fish.frenzy ? ' <span class="ar-tag up">⚡ Mồi thần!</span>' : '');
         if (c.kg >= 15 && global.EduFX) global.EduFX.confetti({ count: 50 });
@@ -454,8 +470,20 @@
       botsFish(events);
     } else if (G.mode === 'race') {
       const step = C.raceStep(me, ok, G.goal);
+      if (ok) pop = step === 2 ? '⚡ +2' : '+1';
       botsRace();
       fb = ok ? (step === 2 ? '<b>⚡ Tăng tốc! +2 bước</b>' : '<b>+1 bước</b>') : (k === null ? 'Hết giờ — đứng yên' : 'Sai — đứng yên');
+    } else if (G.mode === 'tug') {
+      const pull = C.tugPull(ok, ms, G.limitMs);
+      me.pull += pull;
+      if (ok) pop = pull === 2 ? '💪 +2' : '+1';
+      const st = botsTug(pull);
+      fb = (ok ? `<b>+${pull}</b> lực kéo${pull === 2 ? ' <span class="ar-tag up">⚡ nhanh — kéo gấp đôi</span>' : ''}` : (k === null ? 'Hết giờ — đội em hụt 1 nhịp' : 'Chưa đúng — đội em hụt 1 nhịp'))
+        + ` <span class="ar-tag${st.delta > 0 ? ' up' : ''}">${st.delta > 0 ? `Dây dịch về Đội Đỏ ${st.delta} vạch` : st.delta < 0 ? `Dây dịch về Đội Xanh ${-st.delta} vạch` : 'Dây đứng yên'}</span>`;
+    } else if (G.mode === 'spell' || G.mode === 'heist') {
+      G.boost = C.spellBoost(ms, G.limitMs);
+      const fast = G.boost >= 1.25 ? ` <span class="ar-tag up">⚡ nhanh ×${G.boost.toFixed(1)}</span>` : '';
+      fb = ok ? `<b>Chính xác!</b> ${G.mode === 'spell' ? 'Chọn 1 phép' : 'Chọn việc làm'}${fast}:` : `${k === null ? 'Hết giờ' : 'Chưa đúng'} — mất lượt này`;
     } else {
       fb = ok ? '<b>Chính xác!</b> Chọn 1 rương:' : 'Chưa đúng — không có rương lần này';
     }
@@ -468,9 +496,30 @@
     showFeedback(ok, fb + move + gotTag, q, k);
     if (events.length) $('arFbExtra').insertAdjacentHTML('beforeend', `<ul class="ar-events">${events.map((e) => `<li>${e}</li>`).join('')}</ul>`);
     renderHud(); renderSide(); renderTrack(); renderPowers();
+    answerFx(q, k, ok, pop, life, newRank < prevRank);
     if (G.mode === 'gold' && ok) { showChests(); return; }
+    if (G.mode === 'spell' && ok) { showSpells(); return; }
+    if (G.mode === 'heist' && ok) { showHeist(); return; }
     if (G.mode === 'gold') botsGold([]);
+    if (G.mode === 'spell') botsSpell();
+    if (G.mode === 'heist') botsHeist();
     afterAnswer();
+  }
+
+  /** Hiệu ứng sau khi chấm: ô đúng nảy, số bay lên từ ô em chọn, HUD nảy/đỏ/xanh theo kết quả. */
+  function answerFx(q, k, ok, pop, life, rankUp) {
+    const tile = Number.isInteger(k) ? document.querySelector(`#arAnswers .ar-ans[data-k="${k}"]`) : $('arAnswers').querySelector('.ar-kind-go');
+    if (ok) {
+      FX.flash(C.kindOf(q) === 'choice' ? document.querySelector(`#arAnswers .ar-ans[data-k="${q.correctIdx}"]`) : $('arAnswers'), 'fx-correct');
+      if (pop) FX.float(tile || $('arAnswers'), pop, 'up');
+      FX.flash($('arStat'), 'fx-bump');
+      if (G.me.streak >= 3) FX.flash($('arStreak'), 'fx-fire');
+    }
+    if (life && life.lost) FX.flash($('arStat'), 'fx-hit');
+    if (life && life.healed) { FX.flash($('arStat'), 'fx-heal'); FX.float($('arStat'), '💚 +1', 'heal'); }
+    const fish = $('arFeedback').querySelector('.ar-catch');
+    if (fish && ok) FX.burst(fish, ['💦', '💧'], 7);
+    if (rankUp) FX.flash($('arSide').querySelector('li.is-me'), 'fx-rankup');
   }
 
   /** "Đáp án đúng: ..." — câu chọn 1 hiện 1 dòng; dạng khác hiện danh sách + "em đúng 2/4". */
@@ -511,6 +560,8 @@
     if (G.mode === 'race') return G.players.some((p) => p.pos >= G.goal);
     // Sinh tồn: em hết tim, hoặc mọi đối thủ đã bị loại (lượt 1 mình → chơi hết câu).
     if (G.mode === 'survival') return G.me.hp <= 0 || (G.players.length > 1 && G.players.every((p) => p.me || p.hp <= 0));
+    if (G.mode === 'spell') return G.me.hp <= 0 || G.players.every((p) => p.me || p.hp <= 0);
+    if (G.mode === 'tug') return Math.abs(G.rope) >= C.TUG_GOAL;
     return false;
   }
 
@@ -619,15 +670,251 @@
       : c.kind === 'swap' ? '🔄 Em đang giàu nhất — không đổi được'
       : `${L.icon} ${L.title}${r.delta ? ` (${r.delta > 0 ? '+' : ''}${r.delta})` : ''}`;
     $('arFbExtra').insertAdjacentHTML('beforeend', `<p class="ar-chest-msg ${r.delta >= 0 ? 'up' : 'down'}">${msg}</p>`);
+    // Rương mở: vàng bùng ra (được) hoặc ô đỏ rung (mất); lấy/đổi của bạn → vàng bay từ dòng bạn đó về em.
+    if (r.delta > 0) { FX.float(boxes[k], `+${r.delta}`, 'gold'); FX.burst(boxes[k], ['🪙', '✨'], c.kind === 'mult' ? 12 : 7); }
+    else if (r.delta < 0) { FX.float(boxes[k], `${r.delta}`, 'down'); FX.flash(boxes[k], 'fx-wrong'); }
+    if (r.target && r.delta > 0) for (let n = 0; n < 4; n++) FX.fly(anchorOf(r.target), $('arStat'), '🪙', { delay: n * 90, ms: 550 });
+    FX.flash($('arStat'), r.delta < 0 ? 'fx-hit' : 'fx-bump');
     sfx(r.delta > 0 ? (c.kind === 'mult' ? 'critical' : 'match') : r.delta < 0 ? 'lose' : 'flip');
     if (c.kind === 'mult' && c.factor === 3 && global.EduFX) global.EduFX.confetti({ count: 60 });
     botsGold([]);
     afterAnswer();
   }
 
+  // ── Kéo co ──
+  /** Bạn máy cùng trả lời câu này (em ở Đội Đỏ). Dịch dây và trả { rope, delta }. */
+  function botsTug(myPull) {
+    const pulls = { red: [], blue: [] };
+    G.players.forEach((p) => {
+      let pull = myPull;
+      if (p.bot) { const a = C.botAnswer(p, G.limitMs, rng); pull = C.tugPull(a.correct, a.ms, G.limitMs); p.pull += pull; }
+      pulls[p.team].push(pull);
+    });
+    const st = C.tugStep(G.rope, pulls.red, pulls.blue);
+    G.rope = st.rope;
+    return st;
+  }
+  /** Sợi dây kéo co (dùng chung với Phòng cả lớp). rope > 0 = nghiêng về Đội Đỏ (bên trái). from: vẽ nút dây ở vị trí cũ rồi EduArenaFX.settle() trượt tới. */
+  function ropeHtml(rope, red, blue, from) {
+    const side = (t, list) => `<div class="ar-rope-team is-${t}"><b>${C.TEAMS[t].icon} ${C.TEAMS[t].name}</b><small>${list}</small></div>`;
+    const lean = rope > 0 ? `nghiêng về Đội Đỏ ${rope}/${C.TUG_GOAL}` : rope < 0 ? `nghiêng về Đội Xanh ${-rope}/${C.TUG_GOAL}` : 'đang cân bằng';
+    return `<div class="ar-rope" role="img" aria-label="Dây kéo co ${lean}">${side('red', red)}
+      <div class="ar-rope-field"><span class="ar-rope-line"></span><span class="ar-rope-mid" aria-hidden="true"></span>
+        <span class="ar-rope-knot" data-rope="${rope}" style="left:${50 - (from ?? rope) / 2}%"${from !== undefined && from !== rope ? ` data-to="${50 - rope / 2}%"` : ''} aria-hidden="true"></span></div>${side('blue', blue)}</div>`;
+  }
+
+  // ── Chọn trong khung phản hồi (phép / mục tiêu / việc làm / ký hiệu) — phím 1..n bấm ô data-hot ──
+  // Mỗi bước chỉ giữ 1 hàng nút (bước trước bị gỡ) để khung không dài ra; dòng kết quả (.ar-chest-msg) thì giữ lại.
+  function lockPicks() { $('arFbExtra').querySelectorAll('.ar-pick, .ar-pick-prompt').forEach((el) => el.remove()); }
+  function pickRow(cls, items, prompt) {
+    lockPicks();
+    if (prompt) $('arFbExtra').insertAdjacentHTML('beforeend', `<p class="ar-chest-msg up ar-pick-prompt">${prompt}</p>`);
+    $('arFbExtra').insertAdjacentHTML('beforeend', `<div class="ar-chests ar-pick ${cls}">${items.map((it, k) => `<button type="button" class="ar-chest${it.cls ? ' ' + it.cls : ''}" data-hot="${k + 1}" ${it.off ? 'disabled' : ''}>
+      <span aria-hidden="true">${it.icon}</span>${it.name ? `<b>${esc(it.name)}</b>` : ''}${it.sub ? `<small>${it.sub}</small>` : ''}<kbd>${k + 1}</kbd></button>`).join('')}</div>`);
+    const row = $('arFbExtra').lastElementChild;
+    const first = row.querySelector('[data-hot]:not(:disabled)');
+    if (first) first.focus({ preventScroll: true });
+    return [...row.querySelectorAll('.ar-chest')];
+  }
+  function fbMsg(html, up) { $('arFbExtra').insertAdjacentHTML('beforeend', `<p class="ar-chest-msg ${up ? 'up' : 'down'}">${html}</p>`); return $('arFbExtra').lastElementChild; }
+  /** Chỗ neo hiệu ứng của 1 người: em = ô điểm trên HUD, bạn khác = dòng trên bảng xếp hạng (tìm lại mỗi lần vì bảng hay vẽ lại). */
+  const anchorOf = (p) => (p.me ? $('arStat') : $('arSide').querySelector(`li[data-key="${p.id}"]`));
+  function fbEvents(events) { if (events.length) $('arFbExtra').insertAdjacentHTML('beforeend', `<ul class="ar-events">${events.map((e) => `<li>${e}</li>`).join('')}</ul>`); }
+  const who = (p) => (p.me ? 'Em' : `${p.face} ${esc(p.name)}`);
+
+  // ── Đấu phép ──
+  function showSpells() {
+    G.phase = 'pick';
+    G.spells = C.rollSpells(rng);
+    $('arFbExtra').innerHTML = '';
+    pickRow('ar-spells', G.spells.map((id) => ({ icon: C.SPELLS[id].icon, name: C.SPELLS[id].name, cls: 's-' + id,
+      sub: esc(id === 'heal' && G.me.hp >= C.SPELL_HP ? 'Em đang đầy máu — chọn phép khác lợi hơn' : C.SPELLS[id].tip) })))
+      .forEach((b, k) => b.addEventListener('click', () => pickSpell(G.spells[k])));
+  }
+  function pickSpell(id) {
+    if (!G || G.phase !== 'pick') return;
+    const kind = C.SPELLS[id].kind;
+    const foes = G.players.filter((p) => !p.me && p.hp > 0);
+    if ((kind === 'hit' || kind === 'drain') && foes.length > 1) {
+      pickRow('ar-targets', foes.map((p) => ({ icon: p.face, name: p.name, sub: `${p.hp} máu${p.shield ? ' · 🛡️ có khiên' : ''}` })),
+        `${C.SPELLS[id].icon} ${C.SPELLS[id].name} — chọn đối thủ:`)
+        .forEach((b, k) => b.addEventListener('click', () => castMine(id, foes[k])));
+      return;
+    }
+    castMine(id, foes[0] || null);
+  }
+  function spellLine(caster, id, r) {
+    const P = C.SPELLS[id];
+    if (P.kind === 'shield') return `${P.icon} ${who(caster)} dựng Khiên phép`;
+    if (P.kind === 'heal') return `${P.icon} ${who(caster)} ${r.heal ? `hồi ${r.heal} máu` : 'dùng Hồi phục khi đang đầy máu'}`;
+    const parts = r.hits.map((h) => (h.blocked ? `${who(h.target)} chặn bằng 🛡️` : `${who(h.target)} −${h.amount}${h.ko ? ' 💥 bị hạ!' : ''}`));
+    return `${P.icon} ${who(caster)} dùng ${P.name}: ${parts.join(', ') || 'trượt'}${r.heal ? ` · hồi ${r.heal} máu` : ''}`;
+  }
+  function castMine(id, target) {
+    if (!G || G.phase !== 'pick') return;
+    G.phase = 'chosen';
+    lockPicks();
+    const r = C.castSpell(G.me, id, target, G.players, G.boost, G.i);
+    fbMsg(spellLine(G.me, id, r), true);
+    spellFx(G.me, id, r, 0);
+    const kind = C.SPELLS[id].kind;
+    sfx(r.hits.some((h) => h.ko) ? 'critical' : kind === 'heal' || kind === 'shield' ? 'match' : 'combo');
+    botsSpell();
+    afterAnswer();
+  }
+  /**
+   * Phép bay từ người dùng tới mục tiêu; tới nơi thì dòng bị trúng đỏ lên + "−25" (khiên: sáng xanh),
+   * bị hạ thì nổ tia lửa. Hồi máu/khiên: sáng tại chỗ. delay (ms) để các đòn nối nhau, không chồng lên.
+   */
+  function spellFx(caster, id, r, delay) {
+    const P = C.SPELLS[id];
+    setTimeout(() => {
+      const from = anchorOf(caster);
+      if (P.kind === 'heal' || P.kind === 'shield') {
+        FX.flash(from, P.kind === 'heal' ? 'fx-heal' : 'fx-shield');
+        FX.float(from, P.kind === 'heal' ? `💚 +${r.heal}` : '🛡️', P.kind === 'heal' ? 'heal' : 'info');
+        return;
+      }
+      r.hits.forEach((h, n) => {
+        FX.fly(from, anchorOf(h.target), P.icon, { delay: n * 90, spin: P.kind === 'drain' }).then(() => {
+          const el = anchorOf(h.target);
+          if (h.blocked) { FX.flash(el, 'fx-shield'); FX.float(el, '🛡️ chặn!', 'info'); return; }
+          FX.flash(el, 'fx-hit');
+          FX.float(el, `−${h.amount}`, 'down');
+          if (h.ko) FX.burst(el, ['💥', '✨', '⭐'], 9);
+          if (h.target.me && global.EduFX) global.EduFX.shake($('arStat'));
+        });
+      });
+      if (r.heal) setTimeout(() => FX.float(anchorOf(caster), `🌀 +${r.heal}`, 'heal'), 700);
+    }, delay || 0);
+  }
+  /** Bạn máy còn trụ trả lời; đúng thì thi triển. Chỉ báo đòn nhắm vào em hoặc hạ gục ai đó. */
+  function botsSpell() {
+    const events = [];
+    G.players.forEach((p) => {
+      if (!p.bot || p.hp <= 0) return;
+      const a = C.botAnswer(p, G.limitMs, rng);
+      if (!a.correct) return;
+      const pick = C.botSpell(p, G.players, rng);
+      const r = C.castSpell(p, pick.id, pick.target, G.players, C.spellBoost(a.ms, G.limitMs), G.i);
+      if (r.hits.some((h) => h.target.me || h.ko)) { events.push(spellLine(p, pick.id, r)); spellFx(p, pick.id, r, 450 + events.length * 350); }
+    });
+    if (G.me.hp <= 0) sfx('lose');
+    fbEvents(events);
+    renderHud(); renderSide();
+  }
+
+  // ── Giải mã ──
+  const SYM = (k) => `<span class="ar-sym c${k}">${SHAPES[k]}</span>`;
+  const locks = (n) => '🔓'.repeat(n) + '🔒'.repeat(C.VAULT_LEN - n);
+  function showHeist() {
+    G.phase = 'pick';
+    const threat = C.vaultThreat(G.crack, G.me);
+    const acts = ['mine', 'crack', 'rekey'];
+    $('arFbExtra').innerHTML = '';
+    pickRow('ar-heist', [
+      { icon: '⛏️', name: 'Đào đá quý', sub: 'Trả lời càng nhanh đào càng nhiều' },
+      { icon: '🔓', name: 'Phá két', sub: `Đoán 1 ký hiệu mã két của 1 bạn — mở đủ ${C.VAULT_LEN} ô lấy ${C.HEIST_STEAL * 100}% đá quý` },
+      { icon: '🔁', name: 'Đổi mã két', sub: threat ? `Có bạn đã mở ${threat}/${C.VAULT_LEN} ô két em!` : 'Chưa ai mở được ô nào', off: !threat },
+    ]).forEach((b, k) => b.addEventListener('click', () => pickHeist(acts[k])));
+  }
+  function pickHeist(act) {
+    if (!G || G.phase !== 'pick') return;
+    const me = G.me;
+    if (act === 'mine') {
+      const g = C.mineGems(rng, G.boost);
+      me.gems += g;
+      fbMsg(`⛏️ Em đào được <b>${g} 💎</b>`, true);
+      FX.float($('arStat'), `+${g} 💎`, 'gem');
+      FX.burst($('arStat'), ['💎', '✨'], 6);
+      sfx('match');
+    } else if (act === 'rekey') {
+      C.rekey(G.crack, me, rng);
+      fbMsg('🔁 Em đã đổi mã két — mọi người phải đoán lại từ đầu', true);
+      FX.flash($('arStat'), 'fx-shield');
+      sfx('flip');
+    } else {
+      const foes = G.players.filter((p) => !p.me);
+      pickRow('ar-targets', foes.map((p) => ({ icon: p.face, name: p.name, sub: `${p.gems} 💎 · ${locks(C.crackOf(G.crack, me.id, p.id).pos)}` })), '🔓 Chọn két muốn phá:')
+        .forEach((b, k) => b.addEventListener('click', () => pickSymbol(foes[k])));
+      return;
+    }
+    endHeistTurn();
+  }
+  function pickSymbol(target) {
+    if (!G || G.phase !== 'pick') return;
+    const pr = C.crackOf(G.crack, G.me.id, target.id);
+    const syms = Array.from({ length: C.VAULT_SYMS }, (_, k) => k);
+    pickRow('ar-syms', syms.map((k) => ({ icon: SYM(k), off: pr.wrong.includes(k) })),
+      `Ô ${pr.pos + 1}/${C.VAULT_LEN} két của ${who(target)} là ký hiệu nào?${pr.wrong.length ? ` <small>(đã loại ${pr.wrong.map(SYM).join(' ')})</small>` : ''}`)
+      .forEach((b, k) => b.addEventListener('click', () => {
+        if (!G || G.phase !== 'pick') return;
+        const r = C.crackTry(G.crack, G.me, target, k, rng);
+        if (r.opened && !r.take) {
+          G.opened++;
+          FX.flash(fbMsg(`🔓 Em mở được két của ${who(target)} — nhưng két đang trống, chưa có đá quý nào`, true), 'fx-unlock');
+          sfx('flip');
+        } else if (r.opened) {
+          G.opened++;
+          fbMsg(`💥 Em phá được két của ${who(target)} — lấy <b>${r.take} 💎</b>!`, true);
+          gemsFly(target, G.me, r.take);
+          sfx('critical');
+          if (global.EduFX) global.EduFX.confetti({ count: 60 });
+        } else if (r.hit) {
+          FX.flash(fbMsg(`✅ Đúng ô ${r.pos}! Két ${who(target)}: ${locks(r.pos)}`, true), 'fx-unlock');
+          setTimeout(() => { FX.flash(anchorOf(target), 'fx-unlock'); FX.float(anchorOf(target), '🔓', 'info'); }, 50);
+          sfx('correct');
+        } else { FX.flash(fbMsg(`✖️ Không phải ${SYM(k)} — lần sau thử ký hiệu khác`, false), 'fx-wrong'); sfx('wrong'); }
+        endHeistTurn();
+      }));
+  }
+  function endHeistTurn() {
+    G.phase = 'chosen';
+    lockPicks();
+    botsHeist();
+    afterAnswer();
+  }
+  /** Két bị phá: vài viên đá quý bay từ két bị phá sang người phá + "−N"/"+N". */
+  function gemsFly(fromP, toP, take, delay) {
+    setTimeout(() => {
+      const from = anchorOf(fromP), to = anchorOf(toP);
+      FX.flash(from, 'fx-hit');
+      FX.float(from, `−${take} 💎`, 'down');
+      for (let n = 0; n < 5; n++) FX.fly(from, to, '💎', { delay: n * 80, ms: 600 }).then(() => { if (n === 4) { FX.flash(anchorOf(toP), 'fx-bump'); FX.float(anchorOf(toP), `+${take} 💎`, 'gem'); } });
+    }, delay || 30);
+  }
+  function botsHeist() {
+    const events = [];
+    let robbed = false;
+    G.players.forEach((p) => {
+      if (!p.bot) return;
+      const a = C.botAnswer(p, G.limitMs, rng);
+      if (!a.correct) return;
+      const d = C.botHeist(p, G.players, G.crack, rng);
+      if (d.act === 'mine') p.gems += C.mineGems(rng, C.spellBoost(a.ms, G.limitMs));
+      else if (d.act === 'rekey') C.rekey(G.crack, p, rng);
+      else {
+        const r = C.crackTry(G.crack, p, d.target, d.sym, rng);
+        if (r.opened && r.take) {
+          events.push(`💥 ${who(p)} phá két của ${d.target.me ? 'em' : who(d.target)}, lấy ${r.take} 💎!`);
+          robbed = robbed || d.target.me;
+          if (d.target.me) gemsFly(G.me, p, r.take, 500);
+        }
+        else if (r.hit && d.target.me) events.push(`⚠️ ${who(p)} đoán đúng ô ${r.pos} két của em (${locks(r.pos)}) — cân nhắc đổi mã!`);
+      }
+    });
+    if (robbed) sfx('lose');
+    fbEvents(events);
+    renderHud(); renderSide();
+  }
+
   // ── Bảng xếp hạng / HUD / đường đua ──
   /** Xếp hạng theo chế độ (Sinh tồn: tim → trụ lâu → điểm). */
-  function ranked(list) { return G.mode === 'survival' ? list.slice().sort(C.survivalOrder) : C.rank(list, KEY_OF[G.mode]); }
+  function ranked(list) {
+    if (G.mode === 'survival') return list.slice().sort(C.survivalOrder);
+    if (G.mode === 'spell') return list.slice().sort(C.spellOrder);
+    return C.rank(list, KEY_OF[G.mode]);
+  }
   function rankOf(p) { return ranked(G.players).indexOf(p) + 1; }
   function renderHud() {
     const me = G.me;
@@ -635,6 +922,9 @@
       : G.mode === 'gold' ? `🪙 ${me.gold.toLocaleString('vi-VN')} vàng`
       : G.mode === 'survival' ? `<span class="ar-hud-hp">${C.hearts(me.hp)}</span> ⭐ ${me.score.toLocaleString('vi-VN')}`
       : G.mode === 'fish' ? `🎣 ${me.kg.toLocaleString('vi-VN')} kg${me.frenzy ? ` <span class="ar-tag up">⚡ x2 ×${me.frenzy}</span>` : ''}`
+      : G.mode === 'tug' ? `🔴 Đội Đỏ · em kéo ${me.pull}`
+      : G.mode === 'spell' ? `<span class="ar-hpbar" aria-hidden="true"><i style="width:${me.hp}%"></i></span> ${me.hp}/${C.SPELL_HP} máu${me.shield ? ' · 🛡️' : ''}`
+      : G.mode === 'heist' ? `💎 ${me.gems.toLocaleString('vi-VN')} · két em ${locks(C.vaultThreat(G.crack, me))}`
       : `🏁 ${me.pos}/${G.goal} bước`;
     const s = $('arStreak');
     s.hidden = me.streak < 2;
@@ -643,16 +933,50 @@
   function renderSide() {
     const key = KEY_OF[G.mode];
     const unit = UNIT_OF[key];
-    const surv = G.mode === 'survival';
-    $('arSide').innerHTML = `<h3>${G.practice ? '🔁 Luyện câu sai' : MODE_LABEL[G.mode]}</h3><ol class="ar-board">${ranked(G.players).map((p, i) => `<li class="${p.me ? 'is-me' : ''}${p.ghost ? ' is-ghost' : ''}${surv && p.hp <= 0 ? ' is-out' : ''}">
+    const surv = G.mode === 'survival', spell = G.mode === 'spell';
+    const extra = (p) => (surv ? ` <span class="ar-board-hp">${C.hearts(p.hp)}</span>`
+      : G.mode === 'tug' ? ` <span class="ar-team-dot is-${p.team}" title="${C.TEAMS[p.team].name}"></span>` : '');
+    // Dòng phụ dưới tên (không bị cắt khi tên dài): thanh máu / số ô két em đã mở.
+    const sub = (p) => (spell ? `<span class="ar-board-sub"><span class="ar-hpbar" title="${p.hp} máu"><i style="width:${p.hp}%"></i></span> ${p.hp}${p.shield ? ' 🛡️' : ''}</span>`
+      : G.mode === 'heist' && !p.me ? `<span class="ar-board-sub" title="Em đã mở ${C.crackOf(G.crack, 'me', p.id).pos}/${C.VAULT_LEN} ô két bạn này">${locks(C.crackOf(G.crack, 'me', p.id).pos)}</span>` : '');
+    FX.flip($('arSide'), () => { $('arSide').innerHTML = `<h3>${G.practice ? '🔁 Luyện câu sai' : MODE_LABEL[G.mode]}</h3><ol class="ar-board">${ranked(G.players).map((p, i) => `<li data-key="${p.id}" class="${p.me ? 'is-me' : ''}${p.ghost ? ' is-ghost' : ''}${(surv || spell) && p.hp <= 0 ? ' is-out' : ''}">
       <span class="ar-board-rank">${i + 1}</span><span class="ar-board-face">${p.face}</span>
-      <span class="ar-board-name">${esc(p.name)}${surv ? ` <span class="ar-board-hp">${C.hearts(p.hp)}</span>` : ''}</span><b>${p[key].toLocaleString('vi-VN')}</b><small>${unit}</small></li>`).join('')}</ol>`;
+      <span class="ar-board-name">${esc(p.name)}${extra(p)}</span><b>${p[key].toLocaleString('vi-VN')}</b><small>${unit}</small>${sub(p)}</li>`).join('')}</ol>`; });
   }
   function renderTrack() {
+    if (G.mode === 'tug') {
+      const knot = $('arTrack').querySelector('.ar-rope-knot');
+      if (knot && G.trackDrawn) {
+        const was = +knot.dataset.rope || 0;
+        knot.dataset.rope = G.rope;
+        knot.style.left = (50 - G.rope / 2) + '%';
+        if (G.rope !== was) {
+          FX.flash($('arTrack').querySelector('.ar-rope'), G.rope > was ? 'fx-pull-red' : 'fx-pull-blue');
+          FX.flash($('arTrack').querySelector(`.ar-rope-team.is-${G.rope > was ? 'red' : 'blue'}`), 'fx-bump');
+        }
+        return;
+      }
+      const faces = (t) => G.players.filter((p) => p.team === t).map((p) => (p.me ? `<b>${p.face}</b>` : p.face)).join(' ');
+      $('arTrack').innerHTML = ropeHtml(G.rope, faces('red'), faces('blue'));
+      G.trackDrawn = true;
+      return;
+    }
     if (G.mode !== 'race') return;
+    const lanes = $('arTrack').querySelectorAll('.ar-lane');
+    if (lanes.length === G.players.length && G.trackDrawn) {
+      G.players.forEach((p, i) => {
+        const r = lanes[i].querySelector('.ar-runner');
+        if (+r.dataset.pos === p.pos) return;
+        r.dataset.pos = p.pos;
+        r.style.left = `calc(${(p.pos / G.goal) * 100}% - ${(p.pos / G.goal) * 2}rem)`;
+        FX.flash(r, 'fx-hop');
+      });
+      return;
+    }
     $('arTrack').innerHTML = G.players.map((p) => `<div class="ar-lane${p.me ? ' is-me' : ''}">
       <span class="ar-lane-name">${esc(p.name)}</span>
-      <div class="ar-lane-road"><span class="ar-runner" style="left:calc(${(p.pos / G.goal) * 100}% - ${(p.pos / G.goal) * 2}rem)">${p.face}</span><span class="ar-flag" aria-hidden="true">🏁</span></div></div>`).join('');
+      <div class="ar-lane-road"><span class="ar-runner" data-pos="${p.pos}" style="left:calc(${(p.pos / G.goal) * 100}% - ${(p.pos / G.goal) * 2}rem)">${p.face}</span><span class="ar-flag" aria-hidden="true">🏁</span></div></div>`).join('');
+    G.trackDrawn = true;
   }
 
   // ── Kết thúc ──
@@ -660,10 +984,12 @@
     clearInterval(G.timer);
     const key = KEY_OF[G.mode];
     const board = ranked(G.players.filter((p) => !p.ghost));
-    const place = board.indexOf(G.me) + 1;
+    const won = C.tugWinner(G.rope);
+    // Kéo co tính theo đội: đội em thắng (hoặc hoà) = hạng 1, thua = hạng 2.
+    const place = G.mode === 'tug' ? (won === 'blue' ? 2 : 1) : board.indexOf(G.me) + 1;
     const total = G.log.length;
     const p = profile();
-    const coins = C.coinsFor({ correct: G.correct, place, players: board.length });
+    const coins = C.coinsFor({ correct: G.correct, place, players: G.mode === 'tug' ? 2 : board.length });
     p.coins += coins;
     p.games = (p.games || 0) + 1;
     const value = G.me[key];
@@ -684,6 +1010,10 @@
       : G.mode === 'survival' && place === 1 ? `🏆 ${nickName()} là người sống sót cuối cùng!`
       : G.mode === 'survival' && G.me.hp <= 0 ? `💀 Em đã bị loại — về hạng ${place}/${board.length}. Thử lại nhé!`
       : G.mode === 'fish' && place === 1 ? `🏆 ${nickName()} là Vua câu cá!`
+      : G.mode === 'tug' ? (won === 'red' ? `🏆 Đội Đỏ thắng! Em góp ${G.me.pull} lực kéo` : won === 'blue' ? `🔵 Đội Xanh thắng lần này — em góp ${G.me.pull} lực kéo` : `🤝 Hai đội hoà — em góp ${G.me.pull} lực kéo`)
+      : G.mode === 'spell' && G.me.hp <= 0 ? `💥 Em bị hạ — về hạng ${place}/${board.length}. Thử lại nhé!`
+      : G.mode === 'spell' && place === 1 ? `🏆 ${nickName()} là pháp sư trụ lại cuối cùng!`
+      : G.mode === 'heist' && place === 1 ? `🏆 ${nickName()} là Vua giải mã!`
       : place === 1 ? `🏆 ${nickName()} vô địch ${MODE_LABEL[G.mode]}!` : `${MODE_LABEL[G.mode]} — em về hạng ${place}/${board.length}`;
     $('arPodium').hidden = G.practice;
     $('arAgain').hidden = G.practice;
@@ -698,6 +1028,9 @@
       <div><b>${G.bestStreak}</b><span>chuỗi đúng dài nhất</span></div>
       <div><b>${value.toLocaleString('vi-VN')}</b><span>${unit}${record && old ? ' · <em>kỷ lục mới!</em>' : ''}</span></div>
       ${G.mode === 'survival' ? `<div><b>${C.hearts(G.me.hp)}</b><span>${G.me.hp > 0 ? 'em trụ đến cuối!' : 'hết tim'}</span></div>` : ''}
+      ${G.mode === 'spell' ? `<div><b>${G.me.hp}</b><span>máu còn lại</span></div>` : ''}
+      ${G.mode === 'heist' ? `<div><b>${G.opened}</b><span>két em phá được</span></div>` : ''}
+      ${G.mode === 'tug' ? `<div><b>${Math.abs(G.rope)}/${C.TUG_GOAL}</b><span>${won ? `dây lệch về ${C.TEAMS[won].name}` : 'dây cân bằng'}</span></div>` : ''}
       <div class="is-coin"><b>+${coins} 🪙</b><span>xu (đang có ${p.coins})</span></div>`;
     const rv = $('arReview');
     rv.hidden = !wrong.length;
@@ -706,7 +1039,7 @@
     paintPracticeBtn($('arPractice'), wrong.length);
     show('arEnd');
     refreshWallet();
-    const win = G.practice ? !wrong.length : place === 1;
+    const win = G.practice ? !wrong.length : place === 1 && !(G.mode === 'tug' && !won);
     sfx(win ? 'win' : G.practice || place <= 3 ? 'match' : 'lose');
     if (win && global.EduFX) global.EduFX.confetti({ count: 120 });
     G.phase = 'end';
@@ -755,6 +1088,10 @@
       if (b && !b.disabled) answer(n - 1); // không chọn được đáp án đã bị 50:50 ẩn
     }
     else if (G.phase === 'chest' && n >= 1 && n <= 3) { e.preventDefault(); pickChest(n - 1); }
+    else if (G.phase === 'pick' && n >= 1) { // Đấu phép / Giải mã: các ô đang chọn được (data-hot)
+      const b = $('arFbExtra').querySelector(`[data-hot="${n}"]:not(:disabled)`);
+      if (b) { e.preventDefault(); b.click(); }
+    }
     else if (G.phase === 'next' && (e.key === 'Enter' || e.key === ' ') && e.target.id !== 'arNext') { e.preventDefault(); next(); }
   });
   $('arAnswers').addEventListener('click', (e) => { const b = e.target.closest('.ar-ans[data-k]'); if (b) answer(+b.dataset.k); });
@@ -790,7 +1127,7 @@
       /** Lưu họ tên (hoặc biệt danh) và đồng bộ các ô nhập; trả tên đã chuẩn hoá (rỗng nếu chưa nhập). */
       setNick, role, setRole, setInvite, effMode,
       /** Luyện câu sai: reviewHtml(wrong) vẽ danh sách, practice(log) vào lượt luyện. */
-      reviewHtml, paintPracticeBtn, practice, kinds,
+      reviewHtml, paintPracticeBtn, practice, kinds, ropeHtml,
       nickName, avatar: () => avatarOf(profile()),
       /** Bộ câu đang chọn ở màn chọn: { questions, key, title } (questions null = đang tải). */
       deckSource: () => ({ questions: SRC.questions, key: SRC.key, title: SRC.title || '' }),

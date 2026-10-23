@@ -657,3 +657,184 @@ div.ar-mrow { cursor: default; }
   #arGame .ar-qbox > .ar-kind { flex: 1 1 auto; }
   #arGame .ar-qbox > .ar-kind > .ar-answers:not(.ar-match-right) { flex: 1 1 auto; grid-auto-rows: 1fr; max-height: 46vh; }
 }
+
+/* ============================================================
+   CHẾ ĐỘ KIỂU WAYGROUND (10/2026): Kéo co · Đấu phép · Giải mã · Bảng điểm
+   ============================================================ */
+.ar-card[hidden] { display: none; }
+.ar-mode.m-tug { background: linear-gradient(150deg, #e11d48 0 50%, #1d4ed8 50% 100%); }
+.ar-mode.m-spell { background: linear-gradient(150deg, #7c3aed, #3b0764); }
+.ar-mode.m-heist { background: linear-gradient(150deg, #0f766e, #134e4a); }
+.ar-mode.m-board { background: linear-gradient(150deg, #1e3a8a, #0b1f4d); }
+
+/* Ô chọn trong khung phản hồi (phép / mục tiêu / việc làm / ký hiệu): khung .ar-chest, đổi màu để khỏi giống rương vàng */
+.ar-chests:is(.ar-spells, .ar-heist, .ar-targets, .ar-syms) .ar-chest {
+  animation: none; font-size: 1.9rem; min-height: 88px; padding: .55rem .5rem .6rem;
+  background: var(--card); color: var(--text); border: 2px solid var(--border); box-shadow: 0 4px 0 var(--border);
+}
+.ar-chests:is(.ar-spells, .ar-heist, .ar-targets, .ar-syms) .ar-chest:hover:not(:disabled) { border-color: var(--purple); transform: translateY(-2px); }
+.ar-chests:is(.ar-spells, .ar-heist, .ar-targets, .ar-syms) .ar-chest b { font-size: .95rem; }
+.ar-chests:is(.ar-spells, .ar-heist, .ar-targets, .ar-syms) .ar-chest small { font-weight: 600; color: var(--muted); line-height: 1.35; }
+.ar-chests:is(.ar-spells, .ar-heist, .ar-targets, .ar-syms) .ar-chest:disabled { opacity: .45; }
+.ar-chests:is(.ar-spells, .ar-heist, .ar-targets, .ar-syms) .ar-chest kbd { background: var(--card2); color: var(--muted); }
+.ar-chests.ar-targets { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+.ar-chests.ar-syms { grid-template-columns: repeat(4, 1fr); }
+.ar-spells .s-fire { border-color: #f97316; } .ar-spells .s-bolt { border-color: #eab308; } .ar-spells .s-drain { border-color: #8b5cf6; }
+.ar-spells .s-shield { border-color: #0ea5e9; } .ar-spells .s-heal { border-color: #22c55e; }
+.ar-sym { display: inline-grid; place-items: center; width: 1.7em; height: 1.7em; border-radius: 8px; color: #fff; font-size: .9em; vertical-align: middle; }
+.ar-sym.c0 { background: var(--ar-c0); } .ar-sym.c1 { background: var(--ar-c1); } .ar-sym.c2 { background: var(--ar-c2); } .ar-sym.c3 { background: var(--ar-c3); }
+.ar-syms .ar-sym { width: 2.2em; height: 2.2em; font-size: 1.4rem; }
+.ar-chest-msg small { font-weight: 600; color: var(--muted); }
+
+/* Thanh máu (Đấu phép) */
+.ar-hpbar { display: inline-block; width: 4.2rem; height: .5rem; border-radius: 999px; background: color-mix(in srgb, var(--red) 25%, var(--card2)); overflow: hidden; vertical-align: middle; }
+.ar-hpbar i { display: block; height: 100%; background: var(--green); transition: width .4s; }
+.ar-pill-main .ar-hpbar { background: rgba(255,255,255,.3); }
+.ar-board li.is-out { opacity: .45; text-decoration: line-through; }
+.ar-board li .ar-board-sub { grid-column: 3; grid-row: 2; margin-top: -.2rem; font-size: .72rem; font-weight: 700; white-space: nowrap; }
+.ar-board li.is-me .ar-board-sub .ar-hpbar { background: rgba(255,255,255,.3); }
+
+/* Kéo co */
+.ar-team-dot { display: inline-block; width: .6rem; height: .6rem; border-radius: 50%; vertical-align: middle; }
+.ar-team-dot.is-red { background: #e11d48; } .ar-team-dot.is-blue { background: #1d4ed8; }
+.ar-track:has(.ar-rope) { padding: .6rem .8rem; }
+.ar-rope { display: grid; grid-template-columns: minmax(5.5rem, auto) 1fr minmax(5.5rem, auto); align-items: center; gap: .7rem; margin-bottom: .8rem; }
+.ar-track .ar-rope { margin: 0; }
+.ar-rope-team { display: flex; flex-direction: column; gap: .1rem; font-size: .85rem; }
+.ar-rope-team.is-red { color: #e11d48; } .ar-rope-team.is-blue { color: #1d4ed8; text-align: right; }
+.ar-rope-team small { color: var(--text); font-size: 1.05rem; letter-spacing: .05em; }
+.ar-rope-field {
+  position: relative; height: 2.6rem; border-radius: 12px;
+  background: linear-gradient(90deg, color-mix(in srgb, #e11d48 16%, var(--card2)) 0 50%, color-mix(in srgb, #1d4ed8 16%, var(--card2)) 50% 100%);
+}
+.ar-rope-field::before, .ar-rope-field::after { content: ""; position: absolute; top: 0; bottom: 0; width: 4px; border-radius: 2px; }
+.ar-rope-field::before { left: 0; background: #e11d48; } .ar-rope-field::after { right: 0; background: #1d4ed8; }
+.ar-rope-line { position: absolute; left: 4px; right: 4px; top: 50%; height: 6px; margin-top: -3px; border-radius: 3px; background: repeating-linear-gradient(135deg, #a16207 0 6px, #ca8a04 6px 12px); }
+.ar-rope-mid { position: absolute; left: 50%; top: 4px; bottom: 4px; width: 2px; margin-left: -1px; background: var(--muted); opacity: .5; }
+.ar-rope-knot { position: absolute; top: 50%; width: 1.3rem; height: 1.3rem; margin: -.65rem 0 0 -.65rem; border-radius: 50%; background: #fff; border: 4px solid #f59e0b; box-shadow: 0 2px 6px rgba(0,0,0,.25); transition: left .7s cubic-bezier(.34,1.56,.64,1); }
+.ar-room-chip.team-red { border-color: #e11d48; } .ar-room-chip.team-blue { border-color: #1d4ed8; }
+.ar-pill-team.is-red { background: #e11d48; border-color: #e11d48; color: #fff; }
+.ar-pill-team.is-blue { background: #1d4ed8; border-color: #1d4ed8; color: #fff; }
+.ar-room-result .ar-rope { margin: .7rem 0 0; }
+
+/* Bảng điểm (Board Battle) */
+.ar-board-names { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .45rem; }
+.ar-board-names .ar-board-name { display: flex; align-items: center; gap: .35rem; font-size: 1.3rem; overflow: visible; white-space: normal; }
+.ar-board-names input { flex: 1; min-width: 0; font-size: .9rem; }
+.ar-bhud { flex-wrap: wrap; }
+.ar-bteams { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: .6rem; margin-bottom: .8rem; }
+.ar-bteam {
+  position: relative; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; align-items: center; column-gap: .5rem;
+  padding: .6rem .8rem; border-radius: 14px; color: #fff; border: 3px solid transparent;
+}
+.ar-bteam.c0 { background: var(--ar-c0); } .ar-bteam.c1 { background: var(--ar-c1); } .ar-bteam.c2 { background: var(--ar-c2); }
+.ar-bteam.c3 { background: var(--ar-c3); } .ar-bteam.c4 { background: var(--ar-c4); } .ar-bteam.c5 { background: var(--ar-c5); }
+.ar-bteam.is-turn { border-color: var(--text); box-shadow: 0 0 0 3px var(--card), 0 0 0 6px var(--ar-gold); }
+.ar-bteam-face { grid-row: span 2; font-size: 2rem; }
+.ar-bteam b { font-size: .9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ar-bteam-score { font: 800 1.6rem/1.1 "Baloo 2", Inter, sans-serif; }
+.ar-bteam.is-lead .ar-bteam-score::after { content: " 👑"; font-size: 1rem; }
+.ar-bteam-delta { position: absolute; top: .3rem; right: .5rem; padding: 0 .4rem; border-radius: 999px; background: #fff; font-weight: 900; font-size: .8rem; animation: ar-pop .4s; }
+.ar-bteam-delta.up { color: var(--green); } .ar-bteam-delta.down { color: var(--red); }
+.ar-bturn { margin: 0 0 .6rem; text-align: center; font-size: 1.05rem; }
+.ar-bgrid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .6rem; }
+.ar-btile {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 88px; border-radius: 14px;
+  border: none; background: #1e3a8a; color: #fde68a; font: 800 clamp(1.4rem, 3vw, 2.2rem) "Baloo 2", Inter, sans-serif;
+  box-shadow: 0 5px 0 #0b1f4d; cursor: pointer; transition: transform .1s;
+}
+button.ar-btile:hover { transform: translateY(-3px); background: #1d4ed8; }
+.ar-btile.is-open { background: var(--card2); color: var(--muted); box-shadow: none; cursor: default; font-size: 1.1rem; border: 1px dashed var(--border); }
+.ar-btile.is-open small { font-size: 1rem; }
+.ar-btile.is-open.sp-x2 span, .ar-btile.is-open.sp-risk span { color: var(--text); }
+.ar-bspecial { margin: 0 0 .6rem; padding: .55rem .9rem; border-radius: 12px; text-align: center; font-weight: 800; animation: ar-pop .4s; }
+.ar-bspecial.sp-x2 { background: color-mix(in srgb, var(--green) 18%, var(--card)); color: var(--green); }
+.ar-bspecial.sp-risk { background: color-mix(in srgb, var(--red) 14%, var(--card)); color: var(--red); }
+.ar-bstage .ar-q { font-size: clamp(1.3rem, 2.8vw, 2rem); }
+.ar-bstage + .ar-row { margin-top: 1rem; }
+.ar-bmark { margin-top: 1rem; }
+.ar-bmark h3 { margin: 0 0 .6rem; text-align: center; }
+.ar-bpick { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .5rem; margin-bottom: .8rem; }
+.ar-bpick-btn { position: relative; padding: .8rem; border-radius: 14px; border: 3px solid transparent; color: #fff; font-weight: 800; cursor: pointer; opacity: .55; }
+.ar-bpick-btn.c0 { background: var(--ar-c0); } .ar-bpick-btn.c1 { background: var(--ar-c1); } .ar-bpick-btn.c2 { background: var(--ar-c2); }
+.ar-bpick-btn.c3 { background: var(--ar-c3); } .ar-bpick-btn.c4 { background: var(--ar-c4); } .ar-bpick-btn.c5 { background: var(--ar-c5); }
+.ar-bpick-btn.is-on { opacity: 1; border-color: var(--text); }
+.ar-bpick-btn.is-on::after { content: "✔"; margin-left: .4rem; }
+.ar-bpick-btn kbd { position: absolute; top: .3rem; right: .4rem; }
+@media (max-width: 760px) {
+  .ar-bgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ar-rope { grid-template-columns: 1fr 1fr; }
+  .ar-rope-field { grid-column: 1 / -1; grid-row: 2; }
+  .ar-chests.ar-syms { grid-template-columns: repeat(2, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) { .ar-rope-knot, .ar-hpbar i { transition: none; } }
+
+/* Đấu phép trong Phòng cả lớp */
+.ar-spell-log { padding: .6rem .9rem; margin-bottom: .8rem; font-size: .88rem; }
+.ar-spell-log ul { margin: .3rem 0 0; padding-left: 1.1rem; }
+.ar-spell-log li.is-ko { color: var(--red); font-weight: 700; }
+.ar-spell-note { margin: 0 0 .7rem; padding: .5rem .8rem; border-radius: 12px; background: color-mix(in srgb, var(--purple) 10%, var(--card)); font-weight: 700; font-size: .9rem; text-align: center; }
+.ar-spell-note.is-out { background: color-mix(in srgb, var(--red) 12%, var(--card)); }
+.ar-room-spells { margin-top: .7rem; }
+.ar-room-spells .ar-chest.is-picked { border-color: var(--purple); box-shadow: 0 0 0 3px var(--purple); }
+.ar-pill .ar-hpbar { width: 3rem; }
+#arPHeist .ar-pick-prompt { margin: .2rem 0 .5rem; font-weight: 800; }
+#arPHeist > .ar-btn { margin-top: .5rem; }
+.ar-heist-log li.is-ko { color: var(--text); }
+
+/* ============================================================
+   HIỆU ỨNG (js/arena/arena-fx.js) — số bay lên, vật bay, hạt bùng, dòng sáng/đỏ/xanh
+   ============================================================ */
+.fx-float, .fx-fly, .fx-particle { position: fixed; z-index: 80; pointer-events: none; transform: translate(-50%, -50%); white-space: nowrap; }
+.fx-float {
+  padding: .2rem .65rem; border-radius: 999px; background: #fff; border: 2px solid currentColor;
+  font: 900 1.4rem/1.1 "Baloo 2", Inter, sans-serif; box-shadow: 0 6px 16px rgba(0,0,0,.22);
+}
+.fx-float.fx-up { color: var(--green); }
+.fx-float.fx-down { color: var(--red); }
+.fx-float.fx-gold { color: #d99a00; }
+.fx-float.fx-gem { color: #0ea5a4; }
+.fx-float.fx-heal { color: #16a34a; }
+.fx-float.fx-info { color: var(--purple); font-size: 1.2rem; }
+.fx-fly { font-size: 2rem; filter: drop-shadow(0 4px 6px rgba(0,0,0,.3)); }
+.fx-particle { font-size: 1.1rem; }
+
+@keyframes arfx-bump { 0% { transform: scale(1); } 35% { transform: scale(1.12); } 100% { transform: scale(1); } }
+@keyframes arfx-correct { 0% { transform: scale(1); } 30% { transform: scale(1.05); filter: brightness(1.2); } 100% { transform: scale(1); } }
+@keyframes arfx-hit {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-7px); box-shadow: 0 0 0 3px var(--red); } 35% { transform: translateX(6px); }
+  55% { transform: translateX(-4px); box-shadow: 0 0 0 3px var(--red); } 75% { transform: translateX(2px); }
+}
+@keyframes arfx-heal { 0%, 100% { box-shadow: 0 0 0 0 transparent; } 40% { box-shadow: 0 0 0 4px #22c55e, 0 0 18px 4px rgba(34,197,94,.45); } }
+@keyframes arfx-shield { 0%, 100% { box-shadow: 0 0 0 0 transparent; } 40% { box-shadow: 0 0 0 4px #0ea5e9, 0 0 22px 6px rgba(14,165,233,.45); } }
+@keyframes arfx-rankup { 0% { box-shadow: 0 0 0 0 var(--ar-gold); } 30% { box-shadow: 0 0 0 3px var(--ar-gold); } 100% { box-shadow: 0 0 0 0 transparent; } }
+@keyframes arfx-fire { 0%, 100% { transform: scale(1); } 30% { transform: scale(1.25) rotate(-4deg); } 60% { transform: scale(1.1) rotate(3deg); } }
+@keyframes arfx-hop { 0%, 100% { transform: translateY(-50%); } 40% { transform: translateY(-110%) scale(1.15); } }
+@keyframes arfx-unlock { 0% { transform: scale(1); } 30% { transform: scale(1.08) rotate(-3deg); } 60% { transform: scale(1.02) rotate(2deg); } 100% { transform: none; } }
+@keyframes arfx-wrong { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-8px); } 40% { transform: translateX(8px); } 60% { transform: translateX(-5px); } 80% { transform: translateX(4px); } }
+@keyframes arfx-pull-red { 0%, 100% { transform: translateX(0); } 30% { transform: translateX(-6px); } 60% { transform: translateX(2px); } }
+@keyframes arfx-pull-blue { 0%, 100% { transform: translateX(0); } 30% { transform: translateX(6px); } 60% { transform: translateX(-2px); } }
+@keyframes arfx-tile-in { from { transform: translateY(14px) scale(.85); opacity: 0; } }
+
+.fx-bump { animation: arfx-bump .45s ease-out; }
+.fx-correct { animation: arfx-correct .5s ease-out; }
+.fx-hit { animation: arfx-hit .5s ease-out; }
+.fx-heal { animation: arfx-heal .9s ease-out; }
+.fx-shield { animation: arfx-shield .9s ease-out; }
+.fx-rankup { animation: arfx-rankup 1s ease-out; }
+.fx-fire { animation: arfx-fire .5s ease-out; }
+.ar-runner.fx-hop { animation: arfx-hop .5s ease-out; }
+.fx-unlock { animation: arfx-unlock .55s ease-out; }
+.fx-wrong { animation: arfx-wrong .45s ease-out; }
+.ar-rope.fx-pull-red .ar-rope-field { animation: arfx-pull-red .45s ease-out; }
+.ar-rope.fx-pull-blue .ar-rope-field { animation: arfx-pull-blue .45s ease-out; }
+.ar-rope-knot { transition: left .8s cubic-bezier(.34,1.56,.64,1); }
+.ar-bgrid.is-new .ar-btile { animation: arfx-tile-in .35s cubic-bezier(.3,1.4,.5,1) backwards; animation-delay: calc(var(--i, 0) * 28ms); }
+.ar-btile:active { transform: scale(.95); }
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-bump, .fx-correct, .fx-hit, .fx-fire, .ar-runner.fx-hop, .fx-unlock, .fx-wrong,
+  .ar-rope.fx-pull-red .ar-rope-field, .ar-rope.fx-pull-blue .ar-rope-field, .ar-bgrid.is-new .ar-btile { animation: none; }
+  .fx-heal, .fx-shield, .fx-rankup { animation-duration: .01s; }
+}

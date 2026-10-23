@@ -125,6 +125,21 @@
         <button type="button" class="ar-mode m-fish" data-mode="fish" role="radio">
           <span class="ar-mode-ico" aria-hidden="true">🎣</span><b>Câu cá</b>
           <small>Kiểu Blooket Fishing Frenzy — trả lời đúng được thả câu: cá rô, mực, cá mập, cá voi... Ai câu nặng ký nhất thắng!</small></button>
+        <button type="button" class="ar-mode m-tug" data-mode="tug" role="radio">
+          <span class="ar-mode-ico" aria-hidden="true">🪢</span><b>Kéo co</b>
+          <small class="only-solo">Đội Đỏ đấu Đội Xanh. Mỗi câu đúng kéo dây về phía đội em, đúng nhanh kéo mạnh gấp đôi.</small>
+          <small class="only-teacher">Cả lớp chia 2 đội Đỏ – Xanh. Câu đúng kéo dây về phía đội mình, tính trung bình nên đội đông không được lợi.</small></button>
+        <button type="button" class="ar-mode m-spell" data-mode="spell" role="radio">
+          <span class="ar-mode-ico" aria-hidden="true">🔮</span><b>Đấu phép</b>
+          <small class="only-teacher">Kiểu WayArena — cả lớp đấu phép với nhau. Trả lời đúng được chọn phép tấn công, khiên hoặc hồi máu; phép nổ khi sang câu sau. Người trụ lại thắng.</small>
+          <small class="only-solo">Kiểu WayArena — trả lời đúng được chọn phép: cầu lửa, sấm sét, khiên, hồi máu. Trả lời nhanh phép mạnh hơn. Người trụ lại thắng.</small></button>
+        <button type="button" class="ar-mode m-heist" data-mode="heist" role="radio">
+          <span class="ar-mode-ico" aria-hidden="true">🔐</span><b>Giải mã</b>
+          <small class="only-teacher">Kiểu "Những người giải mã" — cả lớp đào đá quý và đoán mã két của nhau. Mã két chỉ máy giáo viên biết. Nhiều đá quý nhất thắng.</small>
+          <small class="only-solo">Đào đá quý, đoán mã 3 ký hiệu để phá két đối thủ và lấy một nửa kho báu. Bị dòm ngó thì đổi mã!</small></button>
+        <button type="button" class="ar-mode m-board only-teacher" data-mode="board" role="radio">
+          <span class="ar-mode-ico" aria-hidden="true">🧩</span><b>Bảng điểm</b>
+          <small>Kiểu Board Battle — chiếu bảng ô 100…500 lên màn hình, các đội chọn ô và trả lời. Học sinh không cần máy.</small></button>
       </div>
       <p class="ar-hint ar-power-note only-solo">🎁 <b>Tốc độ</b> và <b>Sinh tồn</b>: đúng liền 3 câu nhận 1 vật phẩm (kiểu Wayground) — ✂️ 50:50 · ⏳ Thêm giờ · ✖️2 Nhân đôi. Bấm để dùng (phím Q, W, E).</p>
       <div class="ar-field ar-kinds-field"><span>Dạng câu hỏi <em>(bấm để bật/tắt — số nhỏ là số câu có trong bài)</em></span>
@@ -157,7 +172,25 @@
       <p class="ar-hint">Máy này làm máy chủ của phòng — giữ tab mở tới hết trận. Không tốn lượt Firebase.</p>
       <details class="ar-review" id="arRoomHist" hidden></details>
     </div>
+
+    <!-- ── GIÁO VIÊN: Bảng điểm (trình chiếu, không cần máy học sinh — js/arena/arena-board.js) ── -->
+    <div class="ar-card ar-room-card only-teacher needs-teacher" id="arBoardCard" hidden>
+      <h2 class="ar-h2"><span class="ar-step" aria-hidden="true">3</span><i class="fa-solid fa-chalkboard"></i> Trình chiếu Bảng điểm <span class="ar-badge">Không cần máy học sinh</span></h2>
+      <div class="ar-field"><span>Số đội</span><div class="ar-chips ar-chips-inline" id="arBoardTeams">
+        <button type="button" data-v="2">2</button><button type="button" data-v="3">3</button><button type="button" data-v="4">4</button><button type="button" data-v="5">5</button><button type="button" data-v="6">6</button></div></div>
+      <div class="ar-field"><span>Tên các đội <em>(bấm để sửa)</em></span><div class="ar-board-names" id="arBoardNames"></div></div>
+      <button type="button" class="ar-btn ar-btn-play ar-host-go" id="arBoardGo"><i class="fa-solid fa-display"></i> Bắt đầu trình chiếu</button>
+      <ol class="ar-howto" aria-label="Cách chơi">
+        <li>Số ô trên bảng = <b>Số câu</b> ở trên. Mỗi ô giấu 1 câu hỏi, giá trị 100 → 500. Ô <b>✖️2</b> gấp đôi điểm, ô <b>⚠️ Rủi ro</b> trừ một nửa nếu trả lời sai.</li>
+        <li>Đến lượt đội nào thì đội đó <b>chọn ô</b>. Cả lớp cùng trả lời ra giấy/bảng con trong thời gian quy định.</li>
+        <li>Bấm <b>Hiện đáp án</b>, rồi bấm tên các đội trả lời đúng. Màn hình tự cộng điểm.</li>
+      </ol>
+      <p class="ar-hint">Chạy hoàn toàn trên máy này — không cần mạng sau khi đã tải bộ câu, không tốn lượt Firebase.</p>
+    </div>
   </section>
+
+  <!-- ===== BẢNG ĐIỂM (trình chiếu) ===== -->
+  <section id="arBoard" class="ar-screen" hidden></section>
 
   <!-- ===== LINH VẬT ===== -->
   <section id="arPacks" class="ar-screen" hidden>
@@ -227,6 +260,7 @@
 <script src="js/game-fx.js"></script>
 <script src="js/gamification.js"></script>
 <script src="js/services/lazy-script-loader.js"></script>
+<script src="js/arena/arena-fx.js"></script>
 <script src="js/arena/arena-core.js"></script>
 <script src="js/arena/arena-kinds.js"></script>
 <script src="js/arena/arena.js"></script>
@@ -234,6 +268,7 @@
 <script src="js/arena/arena-teacher.js"></script>
 <script src="js/arena/arena-room-core.js"></script>
 <script src="js/arena/arena-room.js"></script>
+<script src="js/arena/arena-board.js"></script>
 <script src="js/sw-register.js"></script>
 </body>
 </html>

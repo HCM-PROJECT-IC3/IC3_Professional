@@ -266,13 +266,6 @@
         <button type="button" class="btn-start" id="btnStart" onclick="onStartExamClick()" disabled><i class="fa-solid fa-play fa-beat"></i> Bắt đầu</button>
         <!-- Nhắc học sinh còn thiếu bước nào khi nút Bắt đầu đang khoá (js/lobby-form-ux.js) -->
         <p class="start-hint" id="startHint" aria-live="polite"></p>
-        <!-- Nút phụ gom 1 hàng (Góc học tập / Đấu trường do JS chèn trước nút Lịch sử) -->
-        <div class="lobby-extras">
-          <button type="button" class="btn-secondary" onclick="showRecords()"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử bài làm</button>
-          <button type="button" class="btn-secondary" id="btnOfflinePack" title="Tải trọn câu hỏi của khối đang chọn về máy để làm bài khi mất mạng"><i class="fa-solid fa-cloud-arrow-down"></i> Tải sẵn để dùng offline</button>
-        </div>
-        <!-- Tiến độ / kết quả tải sẵn (js/offline-pack.js) -->
-        <p class="start-hint" id="offlinePackStatus" aria-live="polite"></p>
 
         <!-- MOS Word 2019 — mô phỏng thao tác Ribbon, 10 tiết ôn luyện cuối
              khóa (không khóa như Khu Vui Chơi, đây là nội dung học chính).
@@ -317,16 +310,31 @@
           <i class="fa-solid fa-flask"></i> MOS Exam Simulator — Thi thử chấm theo trạng thái thật (Beta)
         </a>
         </div>
+        <!-- Việc thêm cho học sinh (Thử thách hôm nay, đếm ngược, Góc học tập, Đấu trường, Lịch sử, offline).
+             Tách khỏi cột 3 (10/2026): màn 3 cột nằm dưới cột 1–2 (trước để trống), màn 2 cột nằm dưới cột 3.
+             Các module JS tìm theo ".lobby-card .lobby-extras" nên không phải sửa. -->
+        <div class="lobby-col lobby-col-more">
+          <!-- Nút phụ gom 1 hàng (Góc học tập / Đấu trường do JS chèn trước nút Lịch sử) -->
+          <div class="lobby-extras">
+            <button type="button" class="btn-secondary" onclick="showRecords()"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử bài làm</button>
+            <button type="button" class="btn-secondary" id="btnOfflinePack" title="Tải trọn câu hỏi của khối đang chọn về máy để làm bài khi mất mạng"><i class="fa-solid fa-cloud-arrow-down"></i> Tải sẵn để dùng offline</button>
+          </div>
+          <!-- Tiến độ / kết quả tải sẵn (js/offline-pack.js) -->
+          <p class="start-hint" id="offlinePackStatus" aria-live="polite"></p>
+        </div>
+        <!-- Dành cho thầy cô — giữ id="adminEntryLink" (quiz-engine.js ẩn khi làm bài, hiện lại ở sảnh) -->
+        <div class="lobby-staff">
+          <span class="lobby-staff-label"><i class="fa-solid fa-chalkboard-user" aria-hidden="true"></i> Dành cho thầy cô</span>
+          <a href="ic3-dashboard.html" target="_blank" rel="noopener" id="adminEntryLink" class="lobby-staff-btn"
+            title="Đăng nhập trang quản lý: soạn đề, báo cáo kết quả, danh sách học sinh">
+            <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i> <span>Đăng nhập trang quản lý</span>
+          </a>
+          <a href="gom-ket-qua.html" target="_blank" rel="noopener" id="gatherResultsLink" class="lobby-staff-btn"
+            title="Gom kết quả học sinh gửi bằng mã/file — không cần đăng nhập, chạy cả khi mất mạng">
+            <i class="fa-solid fa-inbox" aria-hidden="true"></i> <span>Gom kết quả học sinh gửi</span>
+          </a>
+        </div>
       </div>
-      <!-- Lối vào khu giáo viên/quản trị — giữ id="adminEntryLink" (quiz-engine.js ẩn khi làm bài, hiện lại ở sảnh) -->
-      <a href="ic3-dashboard.html" target="_blank" rel="noopener" id="adminEntryLink"
-        title="Dành cho giáo viên / quản trị viên" class="switch-account-link lobby-staff-link">
-        <i class="fa-solid fa-key"></i> <span>Giáo viên / Quản trị</span>
-      </a>
-      <a href="gom-ket-qua.html" target="_blank" rel="noopener" id="gatherResultsLink"
-        title="Giáo viên: gom kết quả học sinh gửi bằng mã/file (không cần mạng)" class="switch-account-link lobby-staff-link">
-        <i class="fa-solid fa-inbox"></i> <span>Gom kết quả học sinh gửi</span>
-      </a>
     </div>
   </div>
 

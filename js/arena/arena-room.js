@@ -24,6 +24,7 @@
   const R = global.EduArenaRoomCore;
   const A = global.EduArena.api;
   const K = global.EduArenaKinds;
+  const FX = global.EduArenaFX;
   const $ = (id) => document.getElementById(id);
   const esc = A.esc;
   const SHAPES = A.SHAPES;
@@ -37,8 +38,8 @@
   const HOST_TTL_MS = 3 * 60 * 60 * 1000;
   const AUTO_NEXT_MS = 6000;
   const JOIN_TIMEOUT_MS = 15000;
-  const UNIT = { speed: 'điểm', race: 'bước', survival: 'điểm' };
-  const MODE_LABEL = { speed: '⚡ Tốc độ', race: '🏁 Đua về đích', survival: '❤️ Sinh tồn' };
+  const UNIT = { speed: 'điểm', race: 'bước', survival: 'điểm', tug: 'lực kéo', spell: 'sát thương', heist: 'đá quý' };
+  const MODE_LABEL = { speed: '⚡ Tốc độ', race: '🏁 Đua về đích', survival: '❤️ Sinh tồn', tug: '🪢 Kéo co', spell: '🔮 Đấu phép', heist: '🔐 Giải mã' };
 
   const store = {
     get(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } },
@@ -111,7 +112,7 @@
     const src = A.deckSource();
     const deck = C.buildDeck(src.questions || [], A.rng, 0, A.kinds());
     if (!deck.length) { A.toast('Chọn bộ câu hỏi có câu trắc nghiệm trước nhé.'); return; }
-    const mode = ['race', 'survival'].includes(A.effMode()) ? A.effMode() : 'speed';
+    const mode = R.ROOM_MODES.includes(A.effMode()) ? A.effMode() : 'speed';
     const room = R.createRoom({
       code: R.makeCode(cryptoRng), mode, deck, count: A.prefs.count, secs: A.prefs.secs,
       maxPlayers: A.prefs.roomMax || 60, title: src.title, setKey: src.key,
@@ -121,6 +122,7 @@
 
   async function startHosting(room, resumed) {
     H.room = room;
+    H.ropeShown = undefined;
     H.ready = false;
     openRoomScreen('Phòng ' + room.code);
     body().innerHTML = `<div class="ar-card ar-center"><p><i class="fa-solid fa-spinner fa-spin"></i> Đang mở phòng <b>${room.code}</b>...</p></div>`;
@@ -177,7 +179,15 @@
   }
   function broadcast(build) { H.conns.forEach((conn, cid) => { const m = build(cid); if (m) send(conn, m); }); }
   function roomInfo() { const r = H.room; return { code: r.code, mode: r.mode, title: r.title, total: r.total, goal: r.goal, secs: r.secs }; }
-  function topN(n) { return R.leaderboard(H.room).slice(0, n).map((r) => ({ name: r.name, face: r.face, value: r.value, streak: r.streak, hp: r.hp })); }
+  function topN(n) { return R.leaderboard(H.room).slice(0, n).map((r) => ({ name: r.name, face: r.face, value: r.value, streak: r.streak, hp: r.hp, team: r.team, mp: r.mp })); }
+  /** Dây kéo co + sĩ số 2 đội (máy người dẫn). */
+  function hostRope() {
+    const n = R.teamCounts(H.room);
+    const cur = H.room.rope || 0;
+    const from = H.ropeShown === undefined ? cur : H.ropeShown; // dây trượt từ vị trí đang chiếu tới vị trí mới
+    H.ropeShown = cur;
+    return A.ropeHtml(cur, `${n.red} bạn`, `${n.blue} bạn`, from);
+  }
   function lobbyMsg() {
     const ids = R.activeIds(H.room);
     return { t: 'lobby', count: ids.length, players: ids.slice(0, 80).map((id) => ({ name: H.room.players[id].name, face: H.room.players[id].face })) };
@@ -188,13 +198,18 @@
     const mine = H.room.players[cid];
     if (mine && mine.cards && H.room.mode === 'speed') m.cards = { x2: mine.cards.x2, shield: mine.cards.shield };
     if (mine && H.room.mode === 'survival') m.hp = mine.hp;
+    if (mine && H.room.mode === 'tug') Object.assign(m, { team: mine.team, rope: H.room.rope || 0 });
+    if (mine && H.room.mode === 'spell') Object.assign(m, { mp: mine.hp, shield: !!mine.shield, note: mine.note || null });
+    if (mine && H.room.mode === 'heist') Object.assign(m, { gems: mine.gems, threat: C.vaultThreat(H.room.crack, mine), hnote: mine.note || null });
     return m;
   }
   function revealMsg(cid) {
     const r = H.room, L = r.last, q = R.current(r);
     return { t: 'reveal', i: L.i, total: r.total, mode: r.mode, goal: r.goal, correctIdx: L.correctIdx, text: q.text, options: q.options,
       kind: L.kind, correct: L.correct, left: q.left, right: L.right,
-      expl: L.expl, counts: L.counts, you: L.results[cid] || null, top: topN(5), last: R.isDone(r) };
+      expl: L.expl, counts: L.counts, you: L.results[cid] || null, top: topN(5), last: R.isDone(r),
+      rope: r.rope || 0, delta: L.delta || 0, teams: r.mode === 'tug' ? R.teamCounts(r) : undefined,
+      heistDone: r.mode === 'heist' && r.offers[cid] ? r.offers[cid].done : undefined };
   }
   function endMsg(cid) { return { t: 'end', you: R.personalEnd(H.room, cid), top: topN(5), mode: H.room.mode, code: H.room.code }; }
   function stateFor(cid) {
@@ -231,6 +246,23 @@
         if (r.allIn) closeSoon();
       } else if (r.reason === 'dupe') send(conn, { t: 'got', i: msg.i, k: room.answers[cid].k });
       else if (r.reason === 'late') send(conn, { t: 'late', i: msg.i });
+    } else if (msg.t === 'spell') {
+      if (R.pickSpell(room, cid, msg.i, msg.id)) {
+        send(conn, { t: 'spellok', i: msg.i, id: msg.id });
+        const el = $('arRSpells');
+        if (el) el.textContent = `${R.pickedCount(room)}/${Object.keys(room.offers).length}`;
+        persistSoon();
+      }
+    } else if (msg.t === 'heist') {
+      const res = R.heistAct(room, cid, msg.i, msg.act, msg.to, msg.sym);
+      // Không hợp lệ (bấm 2 lần, gói tin lặp): gửi lại kết quả đã có để máy em không treo ở "Đang gửi".
+      send(conn, { t: 'heistok', i: msg.i, r: res || (room.offers[cid] && room.offers[cid].done) || null });
+      if (res) {
+        const el = $('arRSpells'), lg = $('arRHeistLog');
+        if (el) el.textContent = `${R.pickedCount(room)}/${Object.keys(room.offers).length}`;
+        if (lg && (res.opened || res.act === 'rekey')) { lg.innerHTML = heistLogHtml(room.heistLog); FX.flash(lg.firstElementChild, 'fx-bump'); }
+        persistSoon();
+      }
     } else if (msg.t === 'bye') {
       H.conns.delete(cid);
       R.leave(room, cid);
@@ -263,6 +295,7 @@
     if (!room || !R.canAdvance(room)) return;
     clearTimeout(H.auto);
     if (room.phase === 'lobby' && !R.activeIds(room).length) { A.toast('Chưa có học sinh nào vào phòng.'); return; }
+    R.resolveSpells(room); // Đấu phép: phép đã chọn nổ trước khi xét "còn ai trụ lại"
     if (room.phase !== 'lobby' && R.isDone(room)) { hostFinish(); return; }
     R.openNext(room, Date.now());
     broadcast(questionMsg);
@@ -333,6 +366,7 @@
     else if (room.phase === 'q') renderHostQuestion();
     else if (room.phase === 'reveal') renderHostReveal();
     else renderHostEnd();
+    FX.settle(body()); // dây kéo co trượt từ vị trí cũ
   }
   function renderHostLobby() {
     const room = H.room;
@@ -349,6 +383,9 @@
         <p class="ar-hint">${MODE_LABEL[room.mode]} · ${room.mode === 'race' ? `về đích sau ${room.goal} bước` : `${room.total} câu`} · ${room.secs} giây/câu · ${esc(room.title)}</p>
         ${room.mode === 'speed' ? '<p class="ar-hint">🎁 Đúng liền 3 câu → thẻ 🃏 x2 · liền 6 câu → thẻ 🛡️ Khiên (tự dùng, cứ 3 câu đúng nhận 1 thẻ)</p>' : ''}
         ${room.mode === 'survival' ? `<p class="ar-hint">❤️ Mỗi em có ${C.LIVES} tim · sai hoặc bỏ trống mất 1 tim · đúng liền ${C.HEAL_EVERY} câu hồi 1 tim · hết tim bị loại. Người trụ lại cuối cùng thắng!</p>` : ''}
+        ${room.mode === 'spell' ? `<p class="ar-hint">🔮 Mỗi em ${C.SPELL_HP} máu · trả lời đúng được chọn 1 trong 3 phép (tấn công, khiên, hồi máu) lúc xem đáp án · phép nổ khi sang câu sau, ai trả lời nhanh nổ trước và mạnh hơn · người trụ lại cuối cùng thắng</p>` : ''}
+        ${room.mode === 'heist' ? `<p class="ar-hint">🔐 Mỗi em có 1 két khoá mã ${C.VAULT_LEN} ký hiệu · trả lời đúng được chọn ngay 1 việc: ⛏️ đào đá quý (nhanh được nhiều hơn) · 🔓 đoán 1 ký hiệu két của bạn, mở đủ ${C.VAULT_LEN} ô lấy ${C.HEIST_STEAL * 100}% đá quý · 🔁 đổi mã khi bị dòm ngó · nhiều đá quý nhất thắng</p>` : ''}
+        ${room.mode === 'tug' ? '<p class="ar-hint">🪢 Máy tự chia 2 đội Đỏ – Xanh đều người theo lượt vào phòng · đúng kéo 1, đúng trong nửa đầu thời gian kéo 2 · dây chạm vạch 1 bên → đội đó thắng ngay</p>' : ''}
         ${H.ready ? '' : '<p class="ar-hint"><i class="fa-solid fa-spinner fa-spin"></i> Đang mở cổng kết nối...</p>'}
       </div>
       <div class="ar-card">
@@ -364,8 +401,8 @@
   function playerChips(ids) {
     return ids.map((id) => {
       const p = H.room.players[id];
-      const out = H.room.mode === 'survival' && H.room.i >= 0 && p.hp <= 0;
-      return `<span class="ar-room-chip${p.online ? '' : ' is-off'}${out ? ' is-out' : ''}" title="${p.online ? 'Đang kết nối' : 'Mất kết nối'}"><span aria-hidden="true">${esc(p.face)}</span> ${esc(p.name)}
+      const out = (H.room.mode === 'survival' || H.room.mode === 'spell') && H.room.i >= 0 && p.hp <= 0;
+      return `<span class="ar-room-chip${p.online ? '' : ' is-off'}${out ? ' is-out' : ''}${p.team ? ' team-' + p.team : ''}" title="${p.online ? 'Đang kết nối' : 'Mất kết nối'}${p.team ? ' · ' + C.TEAMS[p.team].name : ''}"><span aria-hidden="true">${esc(p.face)}</span> ${esc(p.name)}
         <button type="button" data-kick="${esc(id)}" aria-label="Mời ${esc(p.name)} ra khỏi phòng" title="Mời ra khỏi phòng">×</button></span>`;
     }).join('');
   }
@@ -398,6 +435,9 @@
     body().innerHTML = hostBar(`<span class="ar-pill" id="arRSecs"></span>
         <button type="button" class="ar-btn ar-btn-ghost ar-btn-sm" data-act="reveal"><i class="fa-solid fa-forward"></i> Chốt ngay</button>`)
       + `<div class="ar-timer"><i id="arRTimer"></i></div>
+      ${room.mode === 'tug' ? hostRope() : ''}
+      ${room.mode === 'spell' ? spellLogHtml(room.spellLog) : ''}
+      ${room.mode === 'heist' ? heistLogHtml(room.heistLog) : ''}
       <div class="ar-room-stage">${questionBlock(R.current(room))}</div>
       <div class="ar-card ar-room-mini"><div class="ar-room-players" id="arRoomPlayers">${playerChips(R.activeIds(room))}</div></div>`;
     hostTick();
@@ -423,11 +463,33 @@
   }
   function boardHtml(rows, unit, meName) {
     return `<ol class="ar-board">${rows.map((r, i) => `<li class="${meName && r.name === meName ? 'is-me' : ''}"><span class="ar-board-rank">${i + 1}</span>
-      <span class="ar-board-face">${esc(r.face)}</span><span class="ar-board-name">${esc(r.name)}${r.hp !== undefined && r.hp !== null ? ` <span class="ar-board-hp" title="${r.hp} tim">${C.hearts(r.hp)}</span>` : ''}${r.streak >= 3 ? ` <span class="ar-board-streak" title="Đúng liên tiếp ${r.streak} câu">🔥${r.streak}</span>` : ''}</span><b>${fmt(r.value)}</b><small>${unit}</small></li>`).join('')}</ol>`;
+      <span class="ar-board-face">${esc(r.face)}</span><span class="ar-board-name">${esc(r.name)}${r.team ? ` <span class="ar-team-dot is-${r.team}" title="${C.TEAMS[r.team].name}"></span>` : ''}${r.hp !== undefined && r.hp !== null ? ` <span class="ar-board-hp" title="${r.hp} tim">${C.hearts(r.hp)}</span>` : ''}${r.mp !== undefined && r.mp !== null ? ` <span class="ar-hpbar" title="${r.mp} máu"><i style="width:${r.mp}%"></i></span>` : ''}${r.streak >= 3 ? ` <span class="ar-board-streak" title="Đúng liên tiếp ${r.streak} câu">🔥${r.streak}</span>` : ''}</span><b>${fmt(r.value)}</b><small>${unit}</small></li>`).join('')}</ol>`;
   }
   function lanesHtml(rows, goal, meName) {
     return `<div class="ar-track">${rows.map((p) => `<div class="ar-lane${meName && p.name === meName ? ' is-me' : ''}"><span class="ar-lane-name">${esc(p.name)}</span>
       <div class="ar-lane-road"><span class="ar-runner" style="left:calc(${(p.value / goal) * 100}% - ${(p.value / goal) * 2}rem)">${esc(p.face)}</span><span class="ar-flag" aria-hidden="true">🏁</span></div></div>`).join('')}</div>`;
+  }
+  /** Các đòn phép vừa nổ (màn chiếu): ưu tiên đòn hạ gục, tối đa 6 dòng. */
+  function spellLine(e) {
+    const S = C.SPELLS[e.spell];
+    if (S.kind === 'shield') return `${S.icon} ${esc(e.face)} ${esc(e.by)} dựng Khiên phép`;
+    if (S.kind === 'heal') return `${S.icon} ${esc(e.face)} ${esc(e.by)} ${e.heal ? `hồi ${e.heal} máu` : 'dùng Hồi phục khi đang đầy máu'}`;
+    return `${S.icon} ${esc(e.face)} ${esc(e.by)} dùng ${S.name}: ${e.hits.map((h) => (h.blocked ? `${esc(h.name)} chặn bằng 🛡️` : `${esc(h.name)} −${h.amount}${h.ko ? ' 💥 bị hạ!' : ''}`)).join(', ') || 'trượt'}`;
+  }
+  function spellLogHtml(log) {
+    if (!log || !log.length) return '';
+    const top = log.slice().sort((a, b) => (b.hits.some((h) => h.ko) - a.hits.some((h) => h.ko))).slice(0, 6);
+    return `<div class="ar-card ar-spell-log"><b>🔮 Phép vừa nổ</b><ul>${top.map((e) => `<li${e.hits.some((h) => h.ko) ? ' class="is-ko"' : ''}>${spellLine(e)}</li>`).join('')}</ul>${log.length > 6 ? `<small class="ar-muted">… và ${log.length - 6} phép khác</small>` : ''}</div>`;
+  }
+  /** Két vừa bị phá / đổi mã (màn chiếu) — phá két trước, tối đa 6 dòng. */
+  const SYM = (k) => `<span class="ar-sym c${k}">${SHAPES[k]}</span>`;
+  const locks = (n) => '🔓'.repeat(n) + '🔒'.repeat(C.VAULT_LEN - n);
+  function heistLogHtml(log) {
+    if (!log || !log.length) return '';
+    const top = log.slice().sort((a, b) => (b.act === 'crack') - (a.act === 'crack')).slice(0, 6);
+    return `<div class="ar-card ar-spell-log ar-heist-log"><b>🔐 Két vừa bị phá</b><ul>${top.map((e) => (e.act === 'crack'
+      ? `<li class="is-ko">💥 ${esc(e.face)} ${esc(e.by)} phá két của ${esc(e.name)} — lấy ${fmt(e.take)} 💎</li>`
+      : `<li>🔁 ${esc(e.face)} ${esc(e.by)} đổi mã két</li>`)).join('')}</ul>${log.length > 6 ? `<small class="ar-muted">… và ${log.length - 6} việc khác</small>` : ''}</div>`;
   }
   function renderHostReveal() {
     const room = H.room, L = room.last, q = R.current(room);
@@ -435,10 +497,11 @@
     const rows = R.leaderboard(room).slice(0, 10);
     body().innerHTML = hostBar(`<label class="ar-room-auto"><input type="checkbox" id="arRAuto" ${A.prefs.roomAuto ? 'checked' : ''}> Tự chuyển câu sau ${AUTO_NEXT_MS / 1000} giây</label>
         <button type="button" class="ar-btn ar-btn-play" data-act="next">${done ? '🏆 Xem kết quả' : 'Câu tiếp ▶'} <kbd>Enter</kbd></button>`)
-      + `<div class="ar-stage">
+      + `${room.mode === 'tug' ? hostRope() : ''}<div class="ar-stage">
         <div class="ar-qbox">${questionBlock(q, { reveal: true, counts: L.counts, total: L.answered })}
           ${L.expl ? `<div class="ar-feedback is-ok"><div class="ar-fb-expl">💡 ${esc(L.expl)}</div></div>` : ''}
-          <p class="ar-hint ar-center">${L.answered} người trả lời · ${L.right ?? L.counts[L.correctIdx]} người đúng${room.mode === 'survival' ? ` · ❤️ còn ${R.activeIds(room).filter((id) => room.players[id].hp > 0).length} người trụ lại` : ''}</p></div>
+          <p class="ar-hint ar-center">${L.answered} người trả lời · ${L.right ?? L.counts[L.correctIdx]} người đúng${room.mode === 'survival' ? ` · ❤️ còn ${R.activeIds(room).filter((id) => room.players[id].hp > 0).length} người trụ lại` : ''}${room.mode === 'spell' ? ` · 🔮 <b id="arRSpells">${R.pickedCount(room)}/${Object.keys(room.offers || {}).length}</b> em đã chọn phép (sang câu sau thì phép nổ)` : ''}${room.mode === 'heist' ? ` · 🔐 <b id="arRSpells">${R.pickedCount(room)}/${Object.keys(room.offers || {}).length}</b> em đã chọn việc (chưa chọn thì tự đào)` : ''}</p>
+          ${room.mode === 'heist' ? `<div id="arRHeistLog">${heistLogHtml(room.heistLog)}</div>` : ''}</div>
         <aside class="ar-side"><h3>${MODE_LABEL[room.mode]}</h3>${room.mode === 'race' ? lanesHtml(rows, room.goal) : boardHtml(rows, UNIT[room.mode])}</aside>
       </div>`;
     hostTick();
@@ -455,8 +518,12 @@
     const n = R.asked(room);
     const sum = R.summary(room);
     const hard = sum.perQuestion.map((x, i) => Object.assign({ i }, x)).filter((x) => x.of).sort((a, b) => a.correct / a.of - b.correct / b.of).slice(0, 3);
+    const won = room.mode === 'tug' ? C.tugWinner(room.rope) : '';
     body().innerHTML = `<div class="ar-card ar-end">
-      <h2 class="ar-h2 ar-center">🏆 Kết quả phòng ${room.code}</h2>
+      <h2 class="ar-h2 ar-center">${room.mode === 'tug' ? (won ? `🏆 ${C.TEAMS[won].icon} ${C.TEAMS[won].name} thắng! ·` : '🤝 Hai đội hoà ·')
+        : room.mode === 'spell' && board[0] && board[0].mp > 0 ? `🏆 ${esc(board[0].face)} ${esc(board[0].name)} trụ lại cuối cùng! ·`
+        : room.mode === 'heist' && board[0] && board[0].value > 0 ? `🏆 ${esc(board[0].face)} ${esc(board[0].name)} là Vua giải mã! ·` : '🏆'} Kết quả phòng ${room.code}</h2>
+      ${room.mode === 'tug' ? hostRope() : ''}
       ${podiumHtml(board.slice(0, 3), UNIT[room.mode])}
       <div class="ar-row ar-center-row">
         <button type="button" class="ar-btn ar-btn-play" data-act="csv"><i class="fa-solid fa-file-csv"></i> Tải bảng điểm (Excel)</button>
@@ -549,6 +616,7 @@
   /** Mã người chơi gắn với họ tên: phòng máy nhiều em dùng chung 1 trình duyệt vẫn là những người khác nhau. */
   function myCid() { return R.cidFor(machineId(), A.nickName()); }
   async function playerJoin(raw) {
+    P.ropeShown = undefined;
     const code = R.normCode(raw);
     const name = A.setNick($('arJoinName').value);
     if (name.length < 2) { A.toast('Em nhập họ và tên của mình nhé!'); $('arJoinName').focus(); return; }
@@ -651,6 +719,13 @@
         if (P.q && m.i === P.q.i) lockAnswers(null, '⏰ Hết giờ — câu trả lời tới muộn.');
         break;
       case 'reveal': renderPlayerReveal(m); break;
+      case 'spellok': {
+        document.querySelectorAll('[data-spell]').forEach((b) => b.classList.toggle('is-picked', b.dataset.spell === m.id));
+        const s = $('arPSpell');
+        if (s) s.textContent = `Đã chọn ${C.SPELLS[m.id].icon} ${C.SPELLS[m.id].name} ✓ — đổi ý được tới khi sang câu sau.`;
+        break;
+      }
+      case 'heistok': heistDone(m); break;
       case 'end': renderPlayerEnd(m); break;
       case 'kick': playerError('Em đã được giáo viên mời ra khỏi phòng.'); break;
       case 'closed': playerError('Giáo viên đã đóng phòng.'); break;
@@ -674,8 +749,10 @@
     if (m.img) P.imgs[m.i] = m.img;
     P.qStart = performance.now() - (m.secs * 1000 - m.ms);
     body().innerHTML = `<div class="ar-hud"><span class="ar-pill">${m.mode === 'race' ? `Câu ${m.i + 1}` : `Câu ${m.i + 1}/${m.total}`}</span>
-        <span class="ar-pill" id="arPSecs"></span>${m.hp !== undefined ? `<span class="ar-pill ar-pill-hp" title="Số tim còn lại">${C.hearts(m.hp)}</span>` : ''}${holdingsText(m.cards) ? `<span class="ar-pill" title="Thẻ thưởng đang giữ — tự dùng ở câu phù hợp">${holdingsText(m.cards)}</span>` : ''}</div>
+        <span class="ar-pill" id="arPSecs"></span>${m.team ? `<span class="ar-pill ar-pill-team is-${m.team}">${C.TEAMS[m.team].icon} ${C.TEAMS[m.team].name}</span>` : ''}${m.gems !== undefined ? `<span class="ar-pill" title="Đá quý · số ô két em đã bị mở">💎 ${fmt(m.gems)} · két em ${locks(m.threat || 0)}</span>` : ''}${m.mp !== undefined ? `<span class="ar-pill" title="Máu còn lại"><span class="ar-hpbar"><i style="width:${m.mp}%"></i></span> ${m.mp} máu${m.shield ? ' · 🛡️' : ''}</span>` : ''}${m.hp !== undefined ? `<span class="ar-pill ar-pill-hp" title="Số tim còn lại">${C.hearts(m.hp)}</span>` : ''}${holdingsText(m.cards) ? `<span class="ar-pill" title="Thẻ thưởng đang giữ — tự dùng ở câu phù hợp">${holdingsText(m.cards)}</span>` : ''}</div>
       <div class="ar-timer"><i id="arPTimer"></i></div>
+      ${m.note ? spellNoteHtml(m.note, m.mp) : ''}
+      ${m.hnote ? heistNoteHtml(m.hnote, m.threat) : ''}
       <div class="ar-q">${esc(m.text)}</div>${m.img ? `<img class="ar-qimg" src="${esc(m.img)}" alt="">` : ''}
       <div class="ar-answers n${m.options.length}" id="arPAnswers">${C.kindOf(m) !== 'choice' ? '' : m.options.map((o, k) => `<button type="button" class="ar-ans c${k}" data-pk="${k}">
         <span class="ar-shape" aria-hidden="true">${SHAPES[k]}</span><span class="ar-ans-text">${esc(o)}</span><kbd>${k + 1}</kbd></button>`).join('')}</div>
@@ -683,6 +760,8 @@
     // Chọn nhiều / Sắp xếp / Ghép đôi — js/arena/arena-kinds.js
     P.picker = C.kindOf(m) !== 'choice' ? K.mount($('arPAnswers'), m, { onAnswer: playerAnswer }) : null;
     if (P.myK !== null && P.myK !== undefined) lockAnswers(P.myK, 'Đã gửi ✓ — chờ cả lớp...');
+    const note = body().querySelector('.ar-spell-note');
+    if (note) FX.flash(note, (m.note && (m.note.taken || m.note.ko)) || (m.hnote && m.hnote.robbed.length) ? 'fx-hit' : 'fx-bump');
     const tick = () => {
       const left = Math.max(0, m.secs * 1000 - (performance.now() - P.qStart));
       const bar = $('arPTimer'), s = $('arPSecs');
@@ -744,6 +823,89 @@
     parts.push(`<span class="ar-room-hp">${C.hearts(y.hp)}</span>`);
     return parts.join(' ');
   }
+  /** Kết quả phép lượt trước của riêng em (gửi kèm câu hỏi). */
+  function spellNoteHtml(n, mp) {
+    const parts = [];
+    if (n.spell) parts.push(`${C.SPELLS[n.spell].icon} Phép của em: ${n.dealt ? `gây ${n.dealt} sát thương` : C.SPELLS[n.spell].kind === 'heal' ? `hồi ${n.healed} máu` : n.shield ? 'dựng khiên' : 'bị chặn'}${n.healed && C.SPELLS[n.spell].kind === 'drain' ? `, hồi ${n.healed} máu` : ''}`);
+    if (n.taken) parts.push(`💢 Em bị đánh −${n.taken} máu`);
+    if (n.blocked) parts.push('🛡️ Khiên đã chặn 1 đòn');
+    if (n.ko) parts.push(`💥 Em bị ${esc(n.ko)} hạ — vẫn trả lời để luyện tập nhé`);
+    return parts.length ? `<p class="ar-spell-note${mp <= 0 ? ' is-out' : ''}">${parts.join(' · ')}</p>` : '';
+  }
+  /** Giải mã: chuyện xảy ra với két em ở lượt trước (gửi kèm câu hỏi). */
+  function heistNoteHtml(n, threat) {
+    const parts = [];
+    n.robbed.forEach((r) => parts.push(`💥 ${esc(r.by)} phá két em, lấy ${fmt(r.take)} 💎`));
+    if (threat > 0 && n.threat) parts.push(`⚠️ Có bạn đã mở ${threat}/${C.VAULT_LEN} ô két em — trả lời đúng rồi chọn 🔁 Đổi mã!`);
+    if (n.auto) parts.push(`⛏️ Em chưa chọn việc nên máy tự đào +${n.auto} 💎`);
+    return parts.length ? `<p class="ar-spell-note${n.robbed.length ? ' is-out' : ''}">${parts.join(' · ')}</p>` : '';
+  }
+  /** Giải mã: 3 bước chọn ngay trên màn xem đáp án — việc → két → ký hiệu. Số trên nút = phím tắt. */
+  function heistPanel(step) {
+    const H2 = P.heist, box = $('arPHeist');
+    if (!H2 || !box) return;
+    const btn = (val, icon, name, sub, k, off) => `<button type="button" class="ar-chest" data-heist="${val}" data-hot="${k}"${off ? ' disabled' : ''}>
+      <span aria-hidden="true">${icon}</span>${name ? `<b>${name}</b>` : ''}${sub ? `<small>${sub}</small>` : ''}<kbd>${k}</kbd></button>`;
+    const back = '<button type="button" class="ar-btn ar-btn-ghost ar-btn-sm" data-heist="back">↩ Chọn việc khác</button>';
+    const c = H2.choices;
+    if (step === 'acts') {
+      box.innerHTML = `<div class="ar-chests ar-heist">${btn('mine', '⛏️', 'Đào đá quý', 'Trả lời càng nhanh đào càng nhiều', 1)}
+        ${btn('crack', '🔓', 'Phá két', c.targets.length ? `Đoán 1 ký hiệu két của bạn — mở đủ ${C.VAULT_LEN} ô lấy ${C.HEIST_STEAL * 100}% đá quý` : 'Chưa có bạn nào để phá', 2, !c.targets.length)}
+        ${btn('rekey', '🔁', 'Đổi mã két', c.threat ? `Có bạn đã mở ${c.threat}/${C.VAULT_LEN} ô két em!` : 'Chưa ai mở được ô nào', 3, !c.threat)}</div>
+        <p class="ar-hint">Chưa chọn — sang câu sau mà chưa chọn thì máy tự đào.</p>`;
+    } else if (step === 'targets') {
+      box.innerHTML = `<p class="ar-pick-prompt">🔓 Chọn két muốn phá:</p><div class="ar-chests ar-targets">${c.targets.map((t, k) => btn('t' + k, esc(t.face), esc(t.name), `${fmt(t.gems)} 💎 · ${locks(t.pos)}`, k + 1)).join('')}</div>${back}`;
+    } else {
+      const t = c.targets[H2.to];
+      box.innerHTML = `<p class="ar-pick-prompt">Ô ${t.pos + 1}/${C.VAULT_LEN} két của ${esc(t.name)} là ký hiệu nào?${t.wrong.length ? ` <small>(đã loại ${t.wrong.map(SYM).join(' ')})</small>` : ''}</p>
+        <div class="ar-chests ar-syms">${Array.from({ length: C.VAULT_SYMS }, (_, k) => btn('s' + k, SYM(k), '', '', k + 1, t.wrong.includes(k))).join('')}</div>${back}`;
+    }
+  }
+  function playerHeist(btn) {
+    const H2 = P.heist;
+    if (!H2 || H2.sent || !P.conn || P.stopped || btn.disabled) return;
+    const v = btn.dataset.heist;
+    A.sfx('click');
+    if (v === 'back') { heistPanel('acts'); return; }
+    if (v === 'crack') { heistPanel('targets'); return; }
+    if (v[0] === 't') { H2.to = +v.slice(1); heistPanel('syms'); return; }
+    const msg = { t: 'heist', i: H2.i, act: v };
+    if (v[0] === 's') Object.assign(msg, { act: 'crack', to: H2.choices.targets[H2.to].cid, sym: +v.slice(1) });
+    H2.sent = true;
+    $('arPHeist').querySelectorAll('button').forEach((b) => { b.disabled = true; });
+    send(P.conn, msg);
+  }
+  /** Kết quả việc em vừa chọn (máy người dẫn chấm) + hiệu ứng. */
+  function heistDone(m) {
+    const box = $('arPHeist');
+    if (!box || !P.heist || m.i !== P.heist.i) return;
+    const r = m.r;
+    P.heist.sent = true;
+    if ($('arPHeistHead')) $('arPHeistHead').textContent = 'Lượt của em:';
+    if (!r) { box.innerHTML = '<p class="ar-spell-note">Lượt này không thực hiện được — chờ câu sau nhé.</p>'; return; }
+    const total = ` <span class="ar-muted">· Em đang có ${fmt(r.total)} 💎</span>`;
+    const line = r.act === 'mine' ? `⛏️ Em đào được <b>${fmt(r.gems)} 💎</b>`
+      : r.act === 'rekey' ? '🔁 Em đã đổi mã két — mọi người phải đoán lại từ đầu'
+      : r.opened && !r.take ? `🔓 Em mở được két của ${esc(r.name)} — nhưng két đang trống, chưa có đá quý nào`
+      : r.opened ? `💥 Em phá được két của ${esc(r.name)} — lấy <b>${fmt(r.take)} 💎</b>!`
+      : r.hit ? `✅ Đúng ô ${r.pos}! Két ${esc(r.name)}: ${locks(r.pos)}`
+      : `✖️ Ô đó không phải ${SYM(r.sym)} — câu sau thử ký hiệu khác`;
+    box.innerHTML = `<p class="ar-spell-note ar-heist-res${r.act === 'crack' && !r.hit ? ' is-out' : ''}">${line}${total}</p>`;
+    const el = box.firstElementChild;
+    if (r.act === 'mine') { FX.float(el, `+${r.gems} 💎`, 'gem'); FX.burst(el, ['💎', '✨'], 6); A.sfx('match'); }
+    else if (r.act === 'rekey') { FX.flash(el, 'fx-shield'); A.sfx('flip'); }
+    else if (r.opened && r.take) { FX.flash(el, 'fx-bump'); FX.float(el, `+${r.take} 💎`, 'gem'); FX.burst(el, ['💎', '🪙', '✨'], 10); A.sfx('critical'); if (global.EduFX) global.EduFX.confetti({ count: 60 }); }
+    else if (r.hit) { FX.flash(el, 'fx-unlock'); if (r.opened) { A.sfx('flip'); return; } FX.float(el, '🔓', 'info'); A.sfx('correct'); }
+    else { FX.flash(el, 'fx-wrong'); A.sfx('wrong'); }
+  }
+  /** Đấu phép: em chọn 1 phép trong lúc xem đáp án (gửi máy người dẫn; đổi ý được). */
+  function playerSpell(btn) {
+    if (!P.conn || P.stopped) return;
+    A.sfx('click');
+    btn.classList.add('is-picked');
+    send(P.conn, { t: 'spell', i: +btn.dataset.i, id: btn.dataset.spell });
+  }
+  const teamTag = (t) => (C.TEAMS[t] ? ` · ${C.TEAMS[t].icon} ${C.TEAMS[t].name}` : '');
   function renderPlayerReveal(m) {
     clearInterval(P.timer);
     P.q = null; P.picker = null;
@@ -753,6 +915,13 @@
     }
     const head = y.ok ? '✅ Chính xác!' : y.k === null ? '⏰ Em chưa trả lời kịp' : '❌ Chưa đúng';
     const gain = m.mode === 'survival' ? survivalNote(y)
+      : m.mode === 'heist'
+      ? (y.ok ? '<span id="arPHeistHead">Chọn 1 việc:</span>' : `Lượt này không được chọn việc · 💎 ${fmt(y.gems || 0)}`)
+      : m.mode === 'spell'
+      ? (y.wasOut ? '👻 Em đã bị hạ — vẫn trả lời để luyện tập nhé!' : y.ok ? 'Chọn 1 phép — phép nổ khi sang câu sau:' : 'Lượt này không có phép')
+      : m.mode === 'tug'
+      ? (y.ok ? `+${y.pts} lực kéo${teamTag(y.team)}${y.pts === 2 ? ' <span class="ar-tag up">⚡ nhanh — kéo gấp đôi</span>' : ''}`
+        : `Nhịp này em chưa kéo được${teamTag(y.team)}`)
       : m.mode === 'race'
       ? (y.ok ? (y.step === 2 ? '⚡ Tăng tốc! +2 bước' : '+1 bước') : 'Đứng yên')
       : (y.ok ? `+${fmt(y.pts + y.bonus)} điểm${y.bonus ? ` <span class="ar-tag">🔥 chuỗi ${y.streak} +${y.bonus}</span>` : ''}` : '+0 điểm');
@@ -760,6 +929,11 @@
         <div class="ar-room-result-head">${head}</div>
         <div class="ar-fb-head">${gain}${y.up > 0 ? ` <span class="ar-tag up">▲ lên ${y.up} hạng</span>` : ''}</div>
         ${m.mode === 'speed' ? cardNoteHtml(y) : ''}
+        ${m.mode === 'spell' && y.spells ? `<div class="ar-chests ar-spells ar-room-spells">${y.spells.map((id, k) => `<button type="button" class="ar-chest s-${id}" data-spell="${id}" data-i="${m.i}">
+          <span aria-hidden="true">${C.SPELLS[id].icon}</span><b>${C.SPELLS[id].name}</b><small>${esc(id === 'heal' && y.mp >= C.SPELL_HP ? 'Em đang đầy máu — chọn phép khác lợi hơn' : C.SPELLS[id].tip)}</small><kbd>${k + 1}</kbd></button>`).join('')}</div>
+          <p class="ar-hint" id="arPSpell">Chưa chọn — sang câu sau mà chưa chọn thì dùng ${C.SPELLS[y.spells[0]].icon} ${C.SPELLS[y.spells[0]].name}.</p>` : ''}
+        ${m.mode === 'heist' && y.heist ? '<div class="ar-room-spells" id="arPHeist"></div>' : ''}
+        ${m.mode === 'tug' && m.teams ? A.ropeHtml(m.rope, `${m.teams.red} bạn`, `${m.teams.blue} bạn`, P.ropeShown ?? m.rope) : ''}
         ${y.rank ? `<p class="ar-room-rank">Hạng <b>${y.rank}</b> · ${fmt(y.value)} ${UNIT[m.mode]}${m.mode === 'race' ? `/${m.goal}` : ''}</p>` : ''}
         ${!y.ok ? (C.kindOf(m) === 'choice' ? `<div class="ar-fb-ans">Đáp án đúng: <b>${SHAPES[m.correctIdx]} ${esc(m.options[m.correctIdx])}</b></div>`
           : `<div class="ar-fb-ans">${y.k != null ? `<span class="ar-tag">em đúng ${C.partial(m, y.k).right}/${C.partial(m, y.k).of}</span> ` : ''}Đáp án đúng:<ul class="ar-fb-list">${C.answerLines(m).map((t) => `<li>${esc(t)}</li>`).join('')}</ul></div>`) : ''}
@@ -768,8 +942,29 @@
       <div class="ar-side ar-room-top5"><h3>Top 5</h3>${boardHtml(m.top, UNIT[m.mode], P.me && P.me.name)}</div>
       <p class="ar-hint ar-center">${m.last ? 'Câu cuối — chờ giáo viên công bố kết quả...' : 'Chờ giáo viên chuyển câu tiếp...'}</p>`;
     A.sfx(y.out && !y.wasOut ? 'lose' : y.ok ? (y.streak >= 3 ? 'combo' : 'correct') : 'wrong');
+    // Hiệu ứng: đúng → khung nảy + số bay lên; sai → rung; dây kéo co trượt; lên hạng → dòng của em sáng.
+    if (m.mode === 'tug') P.ropeShown = m.rope;
+    P.heist = m.mode === 'heist' && y.heist ? { i: m.i, choices: y.heist, to: 0, sent: false } : null;
+    if (P.heist) { heistPanel('acts'); if (m.heistDone) heistDone({ i: m.i, r: m.heistDone }); }
+    const box = body().querySelector('.ar-room-result');
+    FX.settle(box);
+    if (y.ok) {
+      FX.flash(box, 'fx-correct');
+      const gain = m.mode === 'race' ? `+${y.step}` : m.mode === 'tug' ? `💪 +${y.pts}` : m.mode === 'spell' ? '🔮' : m.mode === 'heist' ? '🔐' : `+${fmt(y.pts + (y.bonus || 0))}`;
+      FX.float(box.querySelector('.ar-room-result-head'), gain, 'up');
+    } else if (global.EduFX) global.EduFX.shake(box);
+    if (y.up > 0) FX.flash(body().querySelector('.ar-room-top5 li.is-me'), 'fx-rankup');
   }
   function endTitle(mode, y) {
+    if (mode === 'spell') {
+      if (!(y.mp > 0)) return `💥 Em bị hạ — hạng ${y.rank}/${y.players}. Lần sau cố lên nhé!`;
+      if (y.rank === 1) return '🏆 Em là pháp sư trụ lại cuối cùng!';
+    }
+    if (mode === 'heist' && y.rank === 1 && y.value > 0) return '🏆 Em là Vua giải mã của cả phòng!';
+    if (mode === 'tug') {
+      if (!y.won) return '🤝 Hai đội hoà — trận kéo co rất sát!';
+      return y.won === y.team ? `🏆 ${C.TEAMS[y.team].name} của em thắng!` : `${C.TEAMS[y.won].icon} ${C.TEAMS[y.won].name} thắng lần này — đội em cố lên nhé!`;
+    }
     if (mode === 'survival' && !(y.hp > 0)) return `💀 Em đã bị loại — hạng ${y.rank}/${y.players}. Lần sau cố lên nhé!`;
     if (y.rank === 1) return mode === 'survival' ? '🏆 Em là người sống sót cuối cùng!' : '🏆 Em vô địch cả phòng!';
     return `Em về hạng ${y.rank}/${y.players}`;
@@ -808,6 +1003,8 @@
         <div><b>${y.bestStreak}</b><span>chuỗi đúng dài nhất</span></div>
         <div><b>${fmt(y.value)}</b><span>${UNIT[m.mode]}</span></div>
         ${m.mode === 'survival' ? `<div><b>${C.hearts(y.hp || 0)}</b><span>${y.hp > 0 ? 'em trụ đến cuối!' : 'tim còn lại'}</span></div>` : ''}
+        ${m.mode === 'spell' ? `<div><b>${y.mp || 0}</b><span>máu còn lại</span></div>` : ''}
+        ${m.mode === 'heist' ? `<div><b>${y.opened || 0}</b><span>két em phá được</span></div>` : ''}
         <div class="is-coin"><b>+${coins} 🪙</b><span>xu (đang có ${A.profile().coins})</span></div>
       </div>
       ${wrong.length ? '' : y.total && y.correct === y.total ? '<p class="ar-center ar-room-perfect">🌟 Em không sai câu nào — xuất sắc!</p>' : ''}
@@ -818,7 +1015,7 @@
     const pb = body().querySelector('[data-act="practice"]');
     if (pb) A.paintPracticeBtn(pb, wrong.length);
     playerStop(false);
-    const out = m.mode === 'survival' && !(y.hp > 0); // bị loại: không bắn pháo hoa dù đứng hạng cao
+    const out = (m.mode === 'survival' && !(y.hp > 0)) || (m.mode === 'spell' && !(y.mp > 0)); // bị loại: không bắn pháo hoa dù đứng hạng cao
     A.sfx(out ? 'lose' : y.rank === 1 ? 'win' : y.rank <= 3 ? 'match' : 'flip');
     if (!out && y.rank <= 3 && global.EduFX) global.EduFX.confetti({ count: y.rank === 1 ? 140 : 70 });
   }
@@ -828,7 +1025,7 @@
   // ============================================================
   function paintHostCard() {
     const mode = A.effMode();
-    $('arRoomModeNote').textContent = `Phòng sẽ chơi ${MODE_LABEL[mode]} với bộ câu, số câu và giây mỗi câu đã chọn ở trên.`;
+    $('arRoomModeNote').textContent = `Phòng sẽ chơi ${MODE_LABEL[mode] || MODE_LABEL.speed} với bộ câu, số câu và giây mỗi câu đã chọn ở trên.`;
     $('arHostBtn').disabled = !(A.deckSource().questions || []).length || $('arPlay').disabled;
     document.querySelectorAll('#arRoomMax button').forEach((b) => b.classList.toggle('is-on', +b.dataset.v === (A.prefs.roomMax || 60)));
     const saved = store.get(HOST_KEY, null);
@@ -919,7 +1116,11 @@
       const k = e.target.closest('[data-kick]');
       if (k) { hostKick(k.dataset.kick); return; }
       const a = e.target.closest('[data-pk]');
-      if (a) playerAnswer(+a.dataset.pk);
+      if (a) { playerAnswer(+a.dataset.pk); return; }
+      const sp = e.target.closest('[data-spell]');
+      if (sp) { playerSpell(sp); return; }
+      const hb = e.target.closest('[data-heist]');
+      if (hb) playerHeist(hb);
     });
     $('arRoom').addEventListener('change', (e) => { if (e.target.id === 'arRAuto') { A.prefs.roomAuto = e.target.checked; A.save(); } });
     $('arRoomLeave').addEventListener('click', goHome);
@@ -931,6 +1132,10 @@
         if (e.key === 'Enter' && !(e.target.closest && e.target.closest('button'))) { e.preventDefault(); P.picker.submit(); return; }
       }
       if (P.q && !P.stopped && !P.picker && n >= 1 && n <= P.q.options.length) { e.preventDefault(); playerAnswer(n - 1); return; }
+      const sp = !P.q && n >= 1 && document.querySelectorAll('#arRoomBody [data-spell]')[n - 1];
+      if (sp) { e.preventDefault(); playerSpell(sp); return; }
+      const hb = !P.q && n >= 1 && document.querySelector(`#arPHeist [data-hot="${n}"]`);
+      if (hb) { e.preventDefault(); playerHeist(hb); return; }
       if (H.room && (e.key === 'Enter' || e.key === ' ') && R.canAdvance(H.room) && !(e.target.closest && e.target.closest('button'))) { e.preventDefault(); hostNext(); }
     });
     document.addEventListener('arena:deck', paintHostCard);
