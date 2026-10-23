@@ -1,5 +1,80 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## Đấu trường: đủ 10 chế độ Chơi một mình — thêm 🦖 Đào hoá thạch và 🚀 Lên Mặt Trăng (24/10/2026) — 0 Firebase
+
+- **🦖 Đào hoá thạch** (kiểu Blooket Deceptive Dinos): trả lời đúng được chọn 1 việc — ⛏️ **Đào thật** (chọn 1 trong 3 tảng đá, lật ra 0–120 🦴) · 🤫 **Ăn gian** (được ×3 nhưng 2 lượt tới ai kiểm tra trúng là mất 40%) · 🔍 **Kiểm tra 1 bạn** (bạn đó đang ăn gian → lấy 40% hoá thạch của bạn đó; trung thực → em mất lượt). Bảng xếp hạng ghi "vừa đào +N" làm manh mối (đào nhiều bất thường có 🤨). Bạn máy cũng ăn gian và kiểm tra lẫn nhau, có thể bắt quả tang em.
+  - Cảnh: chân núi lửa bốc khói (tranh Gọi tên), **khủng long đứng canh** bên phải — thỉnh thoảng lè lưỡi "Hít hít...", "Ai ăn gian đấy?"; bắt quả tang thì đớp + rướn người, bong bóng "Gừm! Bắt quả tang!"; người bị bắt rung đỏ "🚨 −N 🦴". Đào được thì nhảy lên, 🦴/🪨 bùng ra (bộ xương 120 → 🦖 + pháo giấy). Chỉ em thấy 🤫 trên đầu mình khi đang ăn gian.
+- **🚀 Lên Mặt Trăng** (kiểu leo đỉnh Mastery Peak của Wayground): đúng thì tên lửa bay lên theo tốc độ trả lời (384 nghìn km, như khoảng cách thật); đúng liền 3 câu **tầng đẩy ×1,5**, 5 câu **×2**; sai/hết giờ chết máy tụt 30 nghìn km nhưng **không tụt dưới trạm đã qua** (3 trạm, mỗi 1/4 đường). Ai chạm Mặt Trăng trước thắng (tối đa 2× số câu). Có vật phẩm ✂️ 50:50 · ⏳ Thêm giờ · ✖️2 (bay thêm 1 lần) như Tốc độ/Sinh tồn.
+  - Cảnh: vũ trụ có Mặt Trăng lớn phía trên (tranh Gọi tên), bệ phóng, vạch 3 trạm + vạch Mặt Trăng; mỗi người là 1 **tên lửa** màu riêng (em màu đỏ, vòng vàng), **phụt lửa khi bay**, tụt thì rung + 💨, chạm Mặt Trăng thì ⭐ bùng ra + "Tới nơi rồi!"; 🔥×1,5/×2 trên đầu khi có tầng đẩy. Dải sân khấu chế độ này cao hơn (bay dọc).
+- **Bong bóng lời thoại** kiểu trang Gọi tên dùng chung cho sân khấu (`EduArenaScene.talk`) — dùng ở 2 chế độ mới (bị lộ "Ối, bị lộ rồi!", "Mình trung thực mà!").
+- Vai Giáo viên (Phòng cả lớp) không hiện 2 chế độ này (chỉ chơi một mình, như Săn vàng/Câu cá); link `?mode=dino` / `?mode=moon` mở thẳng ở Chơi một mình.
+- Logic thuần ở `js/arena/arena-core.js` (`rollRocks`, `digRock`, `inspect`, `tickCheat`, `botDino`, `moonStep`, `moonOrder`...) + 13 test mới; cảnh ở `js/arena/arena-scene.js`; không thêm file, không ảnh ngoài.
+- Đã chạy trong Chromium: chơi hết trận **cả 10 chế độ** (1280×900), 2 chế độ mới thêm ở điện thoại 390×844 nền tối, 1600×900 và giảm chuyển động; vai Giáo viên chỉ hiện 7 chế độ phòng; 0 lỗi JS, 0 request ra ngoài, không cuộn ngang. `check-js` và mọi unit test đạt.
+
+## Đấu trường: sân khấu có tranh, nhân vật chuyển động trong trận (24/10/2026) — 0 Firebase
+
+- **Dải sân khấu có tranh** phía trên câu hỏi ở cả 8 chế độ Chơi một mình (`js/arena/arena-scene.js`, dùng chung tranh SVG của trang Gọi tên `js/name-picker/np-art.js`). Mỗi người chơi là 1 bạn nhỏ đồng phục (em có vòng vàng + nhãn "⭐ Em", bạn máy có tên + biểu tượng); thay cho đường đua / dây kéo co dạng chữ cũ.
+
+  | Chế độ | Cảnh | Chuyển động |
+  |---|---|---|
+  | ⚡ Tốc độ | Sân bóng | Xếp theo hạng — đổi hạng thì **chạy nghiêng** sang chỗ mới; được điểm nhảy lên + "+850" |
+  | 🏁 Đua về đích | Đường chạy có vạch đích | Mỗi bạn 1 làn, chạy tới trước theo số bước (+1 / ⚡ +2) |
+  | 🪢 Kéo co | Đồi cỏ | 2 đội nghiêng người kéo dây; dây lệch → cả 2 đội **trượt** theo, mỗi nhịp kéo cả đội rướn người |
+  | 🎣 Câu cá | Bờ ao | Cá bơi lững thững; ai câu được thì 1 con cá **bay vòng cung** lên tay bạn đó, bắn bọt nước |
+  | 💰 Săn vàng | Nông trại | Được vàng: nhảy + 🪙 bùng ra; bị lấy vàng: rung đỏ |
+  | ❤️ Sinh tồn | Rừng | Tim trên đầu mỗi bạn; mất tim rung đỏ "💔"; bị loại thì nằm xám mờ |
+  | 🔮 Đấu phép | Vũ trụ | Thanh máu trên đầu; trúng phép rung đỏ "−25"; bị hạ thì xám mờ |
+  | 🔐 Giải mã | Phố | Được đá quý: nhảy + 💎 bùng ra |
+- Em trả lời đúng → nhân vật của em nhảy lên; sai/hết giờ → mặt hoảng, lắc người. Nhân vật đứng thì nhún nhẹ, đi thì đổi sang **dáng chạy nghiêng** (vung chân tay); mây trôi, nắng xoay, sao lấp lánh.
+- Sân khấu tự co theo chiều cao màn hình (máy chiếu vẫn đủ chỗ cho câu hỏi) và tự xếp nhân vật trong phần nhìn thấy; điện thoại thu gọn. Máy đặt giảm chuyển động: vẫn có cảnh, bỏ chuyển động. Lượt "Luyện câu sai" giữ gọn, không có cảnh.
+- Chỉ thêm 1 file JS (~12 KB) + CSS; không ảnh ngoài, không mạng. `arena.js` chỉ gọi 4 chỗ: vào trận (`mount`), sau mỗi lần cập nhật bảng xếp hạng (`sync` tự so trước/sau), em trả lời (`mood`), kết thúc/bỏ cuộc (`clear`).
+- Đã chạy trong Chromium: 8 chế độ (máy tính, điện thoại, giảm chuyển động), chơi hết trận cả 8 chế độ, Phòng cả lớp không ảnh hưởng; 0 lỗi JS, 0 request ra ngoài. `check-js` 173/173 và mọi unit test đạt.
+
+## Gọi tên học sinh: làm lại theo "Gọi Tên Vui" — 10 trò có tranh minh hoạ + nhân vật chuyển động (24/10/2026) — 0 Firebase
+
+- **Thay toàn bộ 5 trò cũ** (vòng quay, thẻ tên phẳng) bằng **10 trò có cảnh vẽ**, cùng thứ tự với trang tham khảo: 🥚 Trộm trứng (gà mẹ ngủ, các bạn lén lấy trứng, gà thức dậy rượt) · 🏁 Đường đua (mỗi bạn 1 làn, "Đi!") · 🎣 Câu cá (cá bơi, lưỡi câu thả xuống, cá cắn hụt, con cuối bị kéo lên) · 🎈 Bóng bay (chim mổ nổ từng quả, "Ơ, không nổ!") · 🦖 Khủng long (các bạn cầm bánh, khủng long "Hít hít...", ăn mất bánh 1 bạn) · 🚀 Tên lửa (đếm ngược, phóng, chạm Mặt Trăng trước) · 🔦 Đèn pin (lớp tắt đèn, vệt sáng đi tìm) · 🎁 Hộp quà (hộp đổi chỗ, mở thử hộp trống) · 🟥 Thẻ đỏ (trọng tài rút thẻ vàng rồi thẻ đỏ) · 🛸 UFO (phố cổ lúc hoàng hôn, tia hút thử rồi bắt cóc).
+- **Tranh tự vẽ bằng SVG** (`js/name-picker/np-art.js`, ~30 KB, không tải ảnh ngoài, không lấy ảnh của trang tham khảo): 10 cảnh nền 1000×600 (trời, nắng xoay, mây trôi, đồi, hàng rào, chuồng gà; đường chạy có khán đài; ao sen + cầu gỗ; núi lửa bốc khói; vũ trụ có Mặt Trăng, sao lấp lánh; lớp học; phòng tiệc; sân bóng trước trường; phố có mái hiên, đèn lồng, xe buýt chạy ngang). Học sinh mặc **đồng phục áo trắng, khăn quàng đỏ, quần/váy xanh** — 8 kiểu (trai/gái, tóc buộc, mũ, kính), mỗi bạn giữ 1 kiểu cố định.
+- **Chuyển động**: nhân vật đi/chạy bằng CSS transition (vung chân tay, nhún), mặt hoảng/khóc khi bị bắt, người thắng nhảy lên; gà mẹ ngủ/thức, khủng long đớp, chim vỗ cánh, cá quẫy đuôi, tên lửa phụt lửa, nắp hộp quà bật, đèn UFO nhấp nháy + tia hút. Lời thoại bong bóng ("Nhầm rồi, đi tiếp!", "Thẻ vàng thôi!", "Tuột mất rồi!"...), đồng hồ đếm ngược góc trái (đỏ, đập nhịp 3 giây cuối), chữ "Đi!".
+- **Lật kèo** ở cả 10 trò: bắt được 1 bạn → khung tên "Bắt được rồi!" bị **đóng dấu NHẦM RỒI!**, tên gạch đỏ → chuyển sang bạn khác. Đường đua/Tên lửa: bạn đang dẫn đầu "Về nhất chắc rồi!" rồi "Ơ... bị vượt rồi!".
+- **Bố cục giống trang tham khảo**: nền giấy kem, viền nét, nút đỏ cam "Bắt đầu!", lưới 10 thẻ trò có hình; tuỳ chọn "nghỉ lượt sau", "Lật kèo", "mỗi lượt đổi trò"; thanh **Thời gian chọn 5–30 giây**; thẻ **Người chơi** (Lớp có sẵn · Dán danh sách · Số thứ tự 2–50) và **Đã được gọi**. Khung tên kết quả nằm ngay trên sân khấu (Gọi tiếp · Bạn này vắng — gọi bạn khác · Đóng). Bấm vào sân khấu hoặc Space để gọi; F toàn màn hình (chỉ sân khấu, giữ tỉ lệ 5:3). Có chế độ tối.
+- Lớp đông: mỗi trò có giới hạn nhân vật trên sân khấu (Đường đua/Tên lửa 20, Khủng long/Hộp quà 24, Câu cá 30, Bóng bay 40; trò khác cả lớp) — luôn có người được gọi trong nhóm. Điện thoại: khung tên, nút, đồng hồ tự to lên để bấm được.
+- **Không còn tên đè nhau khi lớp đông**: trên 24 bạn thì nhãn dưới chân là **huy hiệu số thứ tự** trong danh sách lớp (như trang tham khảo), khung kết quả ghi "Số thứ tự 16 · 8A1 · Trường"; nhân vật đi lang thang/chạy trốn chỉ tới chỗ còn trống; Tên lửa xếp tên so le 2 hàng; UFO mở rộng vùng chạy xuống lòng đường khi đông. Đo trên lớp 44 bạn: cảnh chờ 0 cặp nhãn đè nhau ở cả 10 trò (trước: hàng chục), giữa trận chỉ còn 0–2 lần chạm thoáng qua khi nhân vật chạy cắt nhau.
+- So ảnh cạnh nhau với trang tham khảo (cùng 20 bạn, 20 giây, chụp ở giây thứ 2,5) rồi bổ sung tiền cảnh: bụi cây, cỏ, đá, hoa; ao thêm lá sen, cỏ lau; phố thêm ban công, đèn lồng, chậu hoa, cột đèn; bóng bay to hơn khi ≤ 20 bạn.
+- **Vẽ lại toàn bộ tranh theo nét của trang tham khảo** (`np-art.js`): mọi hình có **viền nâu sẫm** + mảng sáng/tối; học sinh **chibi đầu to, mắt to long lanh**, có **2 dáng** — đứng chính diện và **chạy nghiêng sải chân, tay vươn trước** (tự đổi dáng khi di chuyển/bị bắt), **đĩa màu dưới chân** (cam: nữ · xanh: nam) như tranh mẫu; cây tán nhiều lớp; chuồng gà 3D mái ngói; đất/cỏ/sàn gỗ có vân; ao có ánh nước; vũ trụ có tinh vân mờ; khán đài có khán giả; phố có cây hoa, cột đèn. Vẫn là SVG tự vẽ, không tải ảnh ngoài.
+- Giữ nguyên: nguồn tên (roster tĩnh / dán / số), vắng hôm nay, không gọi trùng, lịch sử — chỉ localStorage trên máy giáo viên.
+- Đã chạy trong Chromium: cả 10 trò thường + Lật kèo (máy tính 1280×1000, điện thoại 390×844 nền tối, giảm chuyển động), vắng → gọi bạn khác, dán từ Excel, số thứ tự, toàn màn hình; 0 lỗi JS, **0 request ra ngoài**, không cuộn ngang. `check-js` 172/172 và mọi unit test đạt.
+
+## Trang mới: Gọi tên học sinh — `goi-ten.html` (24/10/2026) — 0 Firebase, 0 Apps Script
+
+- Gọi tên ngẫu nhiên trên máy chiếu, lấy ý tưởng từ trang "Gọi Tên Vui" (dựng lại từ đầu trong dự án, không chép mã). Lối vào: sảnh → dải **Dành cho thầy cô** → **Gọi tên học sinh**.
+- **Nguồn tên** (bảng bên phải):
+  - **Lớp có sẵn**: chọn Trường → Lớp từ `data/roster/students-active.json` (file tĩnh sẵn có, như ô chọn tên ở sảnh). Bấm tên để đánh dấu **vắng hôm nay** — tự bỏ đánh dấu sang ngày mai.
+  - **Tự dán**: mỗi dòng 1 tên, dán thẳng từ Excel/Word/Zalo; tự bỏ số thứ tự, cột STT/lớp khi dán từ Excel, tên trùng; 1 dòng có dấu phẩy cũng tách được.
+  - **Số thứ tự**: 2–60 bạn.
+- **5 trò** (+ "Mỗi lần 1 trò"): 🎡 Vòng quay (tên dưới kim cập nhật khi quay) · 🎰 Xổ số · 🔦 Đèn pin (sân khấu tối, đèn nhảy chậm dần) · 🏁 Đường đua (6 bạn, đổi người dẫn đầu, người được gọi bứt lên về nhất) · 🎈 Bóng bay (8 bạn, bóng nổ dần, quả cuối còn lại).
+- **Cách gọi**: không gọi lại bạn đã được gọi (hết lượt tự sang vòng mới); **Lật kèo** — dừng ở 1 bạn, hiện "Ơ... khoan đã!" rồi chuyển sang bạn khác; thời gian hồi hộp 3/5/8/12 giây.
+- **Màn công bố**: tên thật to + lớp/trường, pháo giấy. Nút **Gọi tiếp** (Space), **Bạn này vắng — gọi bạn khác** (bỏ khỏi "Đã gọi", đánh dấu vắng, gọi ngay bạn khác), **Đóng** (Esc).
+- **Đã gọi**: danh sách theo giờ, bỏ từng bạn hoặc **Làm lại từ đầu**. Có nút ẩn bảng bên (sân khấu rộng hết màn hình), toàn màn hình (phím F), sáng/tối, tắt tiếng.
+- **Dữ liệu**: người được gọi chọn trước bằng `Math.random`, trò chơi chỉ diễn tới kết quả đó. Danh sách dán vào, vắng, đã gọi, cài đặt chỉ lưu `localStorage` (`eduquiz_goiten_v1`) trên máy giáo viên — không gửi đi đâu, không đụng dữ liệu bài làm/roster.
+- File mới: `goi-ten.html`, `css/name-picker.css`, `js/name-picker/name-picker-core.js` (logic thuần) + `name-picker.js` (giao diện), test `js/name-picker/__tests__/name-picker-core.test.js` (20 test).
+- Đã chạy trong Chromium (1600×900, điện thoại 390×844 nền tối, giảm chuyển động): đủ 5 trò, Lật kèo cả 5 trò, bạn vắng không bao giờ được gọi, không gọi trùng, vắng → gọi bạn khác, dán từ Excel, số thứ tự; **0 request ra ngoài, 0 Firebase/Apps Script**; không cuộn ngang. `check-js` 170/170 và mọi unit test đạt.
+
+## Đấu trường: Mở hộp Linh vật có thử thách + hiệu ứng, bớt khoảng trống (24/10/2026) — 0 Firebase
+
+- **Màn mở hộp toàn màn hình** (trước đây là khung nhỏ dưới danh sách hộp, dễ bị khuất): hộp rung → ánh sáng đổi sang màu độ hiếm (hồi hộp, Sử thi trở lên rung lâu hơn) → nổ hạt → thẻ Linh vật lật ra, Sử thi trở lên có vệt sáng quét qua + pháo hoa. Bấm/Space để mở nhanh, Esc để đóng. Ngay trên thẻ có nút **Mở tiếp**, **Làm ảnh đại diện**, **Đóng**. Máy đặt giảm chuyển động: hiện thẻ ngay.
+- **Thử thách mới** (logic thuần ở `arena-core.js`, có unit test):
+  - 🎯 **Nhiệm vụ hôm nay**: đúng 20 câu trong Đấu trường (Chơi một mình + Phòng cả lớp, cộng dồn) → 1 🎟️ vé mở hộp miễn phí, mỗi ngày 1 lần. Màn kết thúc ván hiện "8/20 câu đúng hôm nay".
+  - 🛡️ **Bảo hiểm Sử thi**: 9 hộp liền không ra Sử thi trở lên → hộp thứ 10 chắc chắn Sử thi trở lên.
+  - 📚 **Đủ bộ**: có đủ 9 Linh vật của 1 hộp → thưởng 60 xu (1 lần), hộp và bộ sưu tập gắn 🏆.
+  - ★ **Lên sao**: trùng Linh vật vẫn hoàn xu như cũ, thêm sao (★ 1 con · ★★ 3 con · ★★★ 6 con), thẻ báo "Lên sao!".
+- **Bớt khoảng trống / phần thừa**:
+  - Bộ sưu tập: ô giãn đủ chiều ngang (trước dư ~6 cột trống bên phải ở màn rộng).
+  - Trận đấu (máy tính): cột xếp hạng kéo dài bằng khu câu hỏi, các dòng giãn ra; ô đáp án lấp tới đáy (không còn mảng trống dưới nút Chốt). Đơn vị ("đá quý", "điểm"…) ghi 1 lần ở tiêu đề thay vì lặp ở mỗi dòng.
+  - Câu Chọn nhiều đã ghi "(Chọn 2)" thì bỏ dòng "☑️ Chọn 2 đáp án đúng rồi bấm Chốt" (nút Chốt vẫn hiện 0/2).
+  - Dòng hướng dẫn đầu màn Mở hộp gọn lại thành 1 dòng dưới danh sách hộp, thay bằng 3 ô tiến độ (nhiệm vụ · bảo hiểm · sưu tập).
+- Dữ liệu vẫn chỉ ở localStorage theo biệt danh (thêm `pity`, `tickets`, `daily`, `sets`, `opened` vào hồ sơ; hồ sơ cũ dùng tiếp được).
+- Đã chạy trong Chromium ở 1893×920 (đúng cỡ ảnh báo), 390×844 và chế độ giảm chuyển động: mở ~14 hộp liên tiếp tới khi đủ bộ, bảo hiểm, lên sao, nhiệm vụ ngày cộng qua 6 ván Chơi một mình + Phòng cả lớp Giải mã; hiệu ứng tự dọn (0 phần tử sót). `check-js` 167/167 và mọi unit test đạt.
+
 ## Đấu trường: Giải mã cho cả lớp trong Phòng cả lớp (23/10/2026) — 0 Firebase
 
 - **🔐 Giải mã** nay chơi được ở **Phòng cả lớp** (vai Giáo viên) — cả 6 chế độ phòng: Tốc độ, Đua, Sinh tồn, Kéo co, Đấu phép, Giải mã. Mỗi em có 1 két khoá mã 3 ký hiệu; **mã két chỉ nằm trên máy giáo viên**, không bao giờ gửi cho học sinh.

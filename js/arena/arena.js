@@ -13,6 +13,7 @@
   const C = global.EduArenaCore;
   const K = global.EduArenaKinds;
   const FX = global.EduArenaFX;
+  const SC = global.EduArenaScene; // dải sân khấu có tranh (js/arena/arena-scene.js)
   const STORE = 'eduquiz_arena_v1';
   const SHAPES = ['▲', '◆', '●', '■', '★', '⬟'];
   const AVATAR_DEFAULT = '🙂';
@@ -173,7 +174,7 @@
     paint();
   }
   // Vai Giáo viên: Tốc độ / Đua / Sinh tồn / Kéo co / Đấu phép (Phòng cả lớp) + Bảng điểm (trình chiếu, js/arena/arena-board.js).
-  // Săn vàng, Câu cá, Giải mã chỉ chơi 1 người → ở vai Giáo viên hiểu là Tốc độ; Bảng điểm ở vai khác cũng vậy.
+  // Săn vàng, Câu cá, Đào hoá thạch, Lên Mặt Trăng chỉ chơi 1 người → ở vai Giáo viên hiểu là Tốc độ; Bảng điểm ở vai khác cũng vậy.
   const ROOM_MODES = ['speed', 'race', 'survival', 'tug', 'spell', 'heist', 'board'];
   function effMode() {
     const m = S.prefs.mode;
@@ -266,49 +267,142 @@
     const src = role() === 'student' ? $('arJoinName') : $('arNick');
     if (src.value.trim()) setNick(src.value); else { S.last = ''; save(); }
     renderPacks();
-    $('arReveal').hidden = true;
+    closeReveal();
     show('arPacks');
   }
-  function renderPacks() {
+  /** Ngày theo giờ máy, dạng YYYY-MM-DD (nhiệm vụ ngày). */
+  const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+  const starsHtml = (n) => `<span class="ar-stars" aria-label="${n} sao">${'★'.repeat(n)}<i>${'★'.repeat(C.STAR_AT.length - n)}</i></span>`;
+  const bar = (v, max) => `<span class="ar-qbar"><i style="width:${Math.min(100, Math.round((v / max) * 100))}%"></i></span>`;
+  /** Cộng câu đúng vào nhiệm vụ ngày (Chơi một mình + Phòng cả lớp). Đủ mục tiêu → báo nhận vé. */
+  function addDaily(correct) {
+    if (C.addDaily(profile(), correct, today())) { save(); toast('🎯 Xong nhiệm vụ hôm nay — em nhận 1 🎟️ vé mở hộp miễn phí!'); return true; }
+    return false;
+  }
+  function renderPacks(fresh) {
     const p = profile();
     refreshWallet();
+    const d = C.dailyOf(p, today());
+    const tickets = p.tickets || 0;
+    const left = C.PITY_MAX - (p.pity || 0);
+    const total = C.PACKS.reduce((n, pk) => n + pk.blooks.length, 0);
+    const owned = Object.keys(p.owned).length;
+    const sets = C.PACKS.filter((pk) => p.sets && p.sets[pk.id]).length;
+    $('arQuests').innerHTML = `
+      <div class="ar-quest${d.done ? ' is-done' : ''}"><span class="ar-quest-ico" aria-hidden="true">🎯</span><div>
+        <b>Nhiệm vụ hôm nay</b><small>${d.done ? 'Đã xong — mai quay lại nhận vé mới nhé' : `Trả lời đúng ${d.goal} câu trong Đấu trường → 1 vé mở hộp miễn phí`}</small>
+        ${bar(d.correct, d.goal)}<em>${d.correct}/${d.goal} câu${tickets ? ` · <strong>🎟️ ${tickets} vé</strong>` : ''}</em></div></div>
+      <div class="ar-quest"><span class="ar-quest-ico" aria-hidden="true">🛡️</span><div>
+        <b>Bảo hiểm Sử thi</b><small>${left <= 1 ? 'Hộp kế tiếp <strong>chắc chắn</strong> ra Sử thi trở lên!' : `Còn ${left} hộp nữa chắc chắn ra Sử thi trở lên`}</small>
+        ${bar(p.pity || 0, C.PITY_MAX - 1)}<em>${p.pity || 0}/${C.PITY_MAX - 1} hộp chưa ra Sử thi</em></div></div>
+      <div class="ar-quest"><span class="ar-quest-ico" aria-hidden="true">📚</span><div>
+        <b>Sưu tập</b><small>Đủ 9 Linh vật của 1 hộp → thưởng ${C.SET_BONUS} xu</small>
+        ${bar(owned, total)}<em>${owned}/${total} Linh vật · ${sets}/${C.PACKS.length} hộp đã đủ</em></div></div>`;
     $('arPackList').innerHTML = C.PACKS.map((pk) => {
       const own = pk.blooks.filter((b) => p.owned[b.id]).length;
-      return `<button type="button" class="ar-pack" data-pack="${pk.id}" ${p.coins < C.PACK_PRICE ? 'disabled' : ''}>
+      const done = p.sets && p.sets[pk.id];
+      const can = tickets > 0 || p.coins >= C.PACK_PRICE;
+      return `<button type="button" class="ar-pack${done ? ' is-done' : ''}" data-pack="${pk.id}" ${can ? '' : 'disabled'}>
         <span class="ar-pack-ico" aria-hidden="true">${pk.icon}</span><b>${esc(pk.name)}</b>
-        <small>${own}/${pk.blooks.length} đã có</small><span class="ar-price">🪙 ${C.PACK_PRICE}</span></button>`;
+        <small>${done ? '🏆 Đã đủ bộ' : `${own}/${pk.blooks.length} · đủ bộ +${C.SET_BONUS} 🪙`}</small>${bar(own, pk.blooks.length)}
+        <span class="ar-price">${tickets ? '🎟️ Miễn phí' : `🪙 ${C.PACK_PRICE}`}</span></button>`;
     }).join('');
-    const total = C.PACKS.reduce((s, pk) => s + pk.blooks.length, 0);
-    const owned = Object.keys(p.owned).length;
     $('arCollCount').textContent = `${owned}/${total}`;
-    $('arCollection').innerHTML = C.PACKS.map((pk) => `<h3 class="ar-h3">${pk.icon} ${esc(pk.name)}</h3><div class="ar-blooks">${pk.blooks.map((b) => {
+    $('arCollection').innerHTML = C.PACKS.map((pk) => `<h3 class="ar-h3">${pk.icon} ${esc(pk.name)}${p.sets && p.sets[pk.id] ? ' <span class="ar-set-done">🏆 Đủ bộ</span>' : ''}</h3><div class="ar-blooks">${pk.blooks.map((b) => {
       const has = p.owned[b.id];
-      return `<button type="button" class="ar-blook r-${b.rarity}${has ? '' : ' is-locked'}${p.avatar === b.id ? ' is-avatar' : ''}" data-blook="${has ? b.id : ''}"
+      return `<button type="button" class="ar-blook r-${b.rarity}${has ? '' : ' is-locked'}${p.avatar === b.id ? ' is-avatar' : ''}${fresh === b.id ? ' is-new' : ''}" data-blook="${has ? b.id : ''}"
         title="${has ? esc(b.name) + ' · ' + C.RARITY[b.rarity].label + (has > 1 ? ' · x' + has : '') : 'Chưa có — ' + C.RARITY[b.rarity].label}" ${has ? '' : 'disabled'}>
-        <span class="ar-blook-emoji">${has ? b.emoji : '❔'}</span><small>${has ? esc(b.name) : C.RARITY[b.rarity].label}</small></button>`;
+        <span class="ar-blook-emoji">${has ? b.emoji : '❔'}</span><small>${has ? esc(b.name) : C.RARITY[b.rarity].label}</small>${has ? starsHtml(C.starsOf(has)) : ''}</button>`;
     }).join('')}</div>`).join('');
+  }
+
+  // ── Mở hộp: hộp rung (ánh sáng đổi màu theo độ hiếm) → nổ → thẻ lật ra. Bấm/Space để mở nhanh. ──
+  const R_HIGH = ['epic', 'legendary', 'mystery'];
+  const R_SPARK = { common: ['✨'], rare: ['✨', '💠'], epic: ['✨', '⭐', '💜'], legendary: ['⭐', '🌟', '✨', '💛'], mystery: ['🌟', '💖', '✨', '⭐'] };
+  let RV = null;
+  /** Ô "Nhiệm vụ hôm nay" ở màn kết thúc (Chơi một mình + Phòng cả lớp). */
+  function dailyStat() {
+    const d = C.dailyOf(profile(), today());
+    return `<div class="is-quest"><b>${d.done ? '🎟️' : `${d.correct}/${d.goal}`}</b><span>${d.done ? 'nhiệm vụ hôm nay xong — có vé mở hộp' : 'câu đúng hôm nay · đủ thì nhận vé mở hộp'}</span></div>`;
+  }
+  function closeReveal() {
+    if (RV) clearTimeout(RV.t);
+    RV = null;
+    $('arReveal').hidden = true;
+    $('arReveal').innerHTML = '';
+  }
+  function buy(packId) {
+    const p = profile();
+    const ticket = (p.tickets || 0) > 0;
+    const res = C.buyPack(p, packId, rng, { ticket });
+    if (!res.ok) { toast('Chưa đủ xu — chơi thêm vài ván nhé!'); return; }
+    save();
+    renderPacks(res.blook.id);
+    const pk = C.PACKS.find((x) => x.id === packId);
+    const r = $('arReveal');
+    if (RV) clearTimeout(RV.t);
+    RV = { res, pk, ticket, stage: 'shake' };
+    r.hidden = false;
+    r.className = `ar-reveal r-${res.blook.rarity}${R_HIGH.includes(res.blook.rarity) ? ' is-high' : ''}`;
+    r.innerHTML = `<div class="ar-reveal-box">
+      <button type="button" class="ar-reveal-pack" data-rv="skip" aria-label="Mở nhanh"><span class="ar-reveal-glow" aria-hidden="true"></span><span class="ar-reveal-ico">${pk.icon}</span></button>
+      <p class="ar-reveal-tip">${res.pity ? '🛡️ Bảo hiểm kích hoạt — chắc chắn Sử thi trở lên!' : 'Đang mở hộp... bấm để mở nhanh'}</p></div>`;
+    sfx('flip');
+    if (FX.reduced()) { revealCard(); return; }
+    RV.t = setTimeout(() => { if (RV) { r.classList.add('is-tease'); sfx(R_HIGH.includes(res.blook.rarity) ? 'combo' : 'click'); RV.t = setTimeout(revealCard, R_HIGH.includes(res.blook.rarity) ? 1000 : 650); } }, 700);
+  }
+  function revealCard() {
+    if (!RV || RV.stage === 'card') return;
+    clearTimeout(RV.t);
+    RV.stage = 'card';
+    const { res, pk } = RV;
+    const b = res.blook, p = profile();
+    const r = $('arReveal');
+    const pack = r.querySelector('.ar-reveal-pack');
+    if (pack) FX.burst(pack, R_SPARK[b.rarity], R_HIGH.includes(b.rarity) ? 14 : 8);
+    const again = (p.tickets || 0) > 0 ? '🎟️ Mở tiếp (miễn phí)' : `Mở tiếp · 🪙 ${C.PACK_PRICE}`;
+    const canAgain = (p.tickets || 0) > 0 || p.coins >= C.PACK_PRICE;
+    r.classList.add('is-open');
+    r.innerHTML = `<div class="ar-reveal-box">
+      <div class="ar-reveal-card r-${b.rarity}"><span class="ar-reveal-shine" aria-hidden="true"></span>
+        <span class="ar-reveal-badge">${res.dupe ? (res.starUp ? '⬆️ Lên sao!' : 'Đã có') : '✨ MỚI!'}</span>
+        <span class="ar-reveal-emoji">${b.emoji}</span><b>${esc(b.name)}</b>
+        <span class="ar-rarity">${C.RARITY[b.rarity].label}</span>${starsHtml(res.stars)}
+        <small>${res.dupe ? `Trùng — hoàn lại 🪙 ${res.refund}` : `Linh vật mới trong ${esc(pk.name)}`}</small>
+        ${res.set ? `<p class="ar-reveal-set">🏆 Đủ bộ ${esc(pk.name)}! +${res.set.bonus} 🪙</p>` : ''}
+        ${res.pity ? '<p class="ar-reveal-note">🛡️ Nhờ bảo hiểm Sử thi</p>' : ''}</div>
+      <div class="ar-row ar-center-row">
+        <button type="button" class="ar-btn ar-btn-play" data-rv="again" ${canAgain ? '' : 'disabled'}>${again}</button>
+        ${p.avatar === b.id ? '' : '<button type="button" class="ar-btn" data-rv="avatar">Làm ảnh đại diện</button>'}
+        <button type="button" class="ar-btn ar-btn-ghost" data-rv="close">Đóng</button></div></div>`;
+    const card = r.querySelector('.ar-reveal-card');
+    FX.burst(card, R_SPARK[b.rarity], R_HIGH.includes(b.rarity) ? 16 : 6);
+    if (res.set) setTimeout(() => FX.float(r.querySelector('.ar-reveal-set'), `+${res.set.bonus} 🪙`, 'gold'), 500);
+    sfx(['legendary', 'mystery'].includes(b.rarity) ? 'critical' : res.set ? 'win' : 'match');
+    if ((R_HIGH.includes(b.rarity) || res.set) && global.EduFX) global.EduFX.confetti({ count: b.rarity === 'epic' ? 70 : 130 });
+    r.querySelector('[data-rv="again"]').focus();
+    const tile = document.querySelector(`#arCollection [data-blook="${b.id}"]`);
+    if (tile) FX.flash(tile, 'fx-bump');
   }
   function initPacks() {
     $('arPackList').addEventListener('click', (e) => {
       const b = e.target.closest('[data-pack]');
-      if (!b || b.disabled) return;
-      const res = C.buyPack(profile(), b.dataset.pack, rng);
-      if (!res.ok) { toast('Chưa đủ xu — chơi thêm vài ván nhé!'); return; }
-      save();
-      const r = $('arReveal');
-      r.hidden = false;
-      r.className = 'ar-reveal is-shaking';
-      r.innerHTML = '<span class="ar-egg" aria-hidden="true">🥚</span><p>Đang mở hộp...</p>';
-      sfx('flip');
-      setTimeout(() => {
-        r.className = `ar-reveal is-open r-${res.blook.rarity}`;
-        r.innerHTML = `<span class="ar-reveal-emoji">${res.blook.emoji}</span><b>${esc(res.blook.name)}</b>
-          <span class="ar-rarity">${C.RARITY[res.blook.rarity].label}</span>
-          <small>${res.dupe ? `Đã có rồi — hoàn lại 🪙 ${res.refund}` : 'Linh vật mới!'}</small>`;
-        sfx(['legendary', 'mystery'].includes(res.blook.rarity) ? 'critical' : 'match');
-        if (['epic', 'legendary', 'mystery'].includes(res.blook.rarity) && global.EduFX) global.EduFX.confetti({ count: 90 });
-        renderPacks();
-      }, 900);
+      if (b && !b.disabled) buy(b.dataset.pack);
+    });
+    $('arReveal').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-rv]');
+      if (!b && e.target === $('arReveal') && RV && RV.stage === 'card') { closeReveal(); return; }
+      if (!b || !RV) return;
+      const act = b.dataset.rv;
+      if (act === 'skip') revealCard();
+      else if (act === 'again') buy(RV.pk.id);
+      else if (act === 'close') closeReveal();
+      else if (act === 'avatar') { profile().avatar = RV.res.blook.id; save(); renderPacks(); b.remove(); toast('Đã đổi Linh vật đại diện ' + RV.res.blook.emoji); }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (!RV) return;
+      if (e.key === 'Escape') { closeReveal(); return; }
+      if (RV.stage !== 'card' && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); revealCard(); }
     });
     $('arCollection').addEventListener('click', (e) => {
       const b = e.target.closest('[data-blook]');
@@ -324,10 +418,10 @@
   // ============================================================
   let G = null;
   const MODE_LABEL = { speed: '⚡ Tốc độ', gold: '💰 Săn vàng', race: '🏁 Đua về đích', survival: '❤️ Sinh tồn', fish: '🎣 Câu cá',
-    tug: '🪢 Kéo co', spell: '🔮 Đấu phép', heist: '🔐 Giải mã' };
-  const KEY_OF = { speed: 'score', gold: 'gold', race: 'pos', survival: 'score', fish: 'kg', tug: 'pull', spell: 'dmg', heist: 'gems' };
-  const UNIT_OF = { score: 'điểm', gold: 'vàng', pos: 'bước', kg: 'kg', pull: 'lực kéo', dmg: 'sát thương', gems: 'đá quý' };
-  const POWER_MODES = ['speed', 'survival']; // chế độ có vật phẩm hỗ trợ (kiểu Wayground)
+    tug: '🪢 Kéo co', spell: '🔮 Đấu phép', heist: '🔐 Giải mã', dino: '🦖 Đào hoá thạch', moon: '🚀 Lên Mặt Trăng' };
+  const KEY_OF = { speed: 'score', gold: 'gold', race: 'pos', survival: 'score', fish: 'kg', tug: 'pull', spell: 'dmg', heist: 'gems', dino: 'fossils', moon: 'km' };
+  const UNIT_OF = { score: 'điểm', gold: 'vàng', pos: 'bước', kg: 'kg', pull: 'lực kéo', dmg: 'sát thương', gems: 'đá quý', fossils: 'hoá thạch', km: 'nghìn km' };
+  const POWER_MODES = ['speed', 'survival', 'moon']; // chế độ có vật phẩm hỗ trợ (kiểu Wayground)
 
   /**
    * Vào trận. `drill` (mảng câu từ C.practiceDeck) = lượt "Luyện câu sai": Tốc độ, 1 mình, hết câu là xong,
@@ -345,7 +439,7 @@
     const nBots = { race: 3, heist: 3, tug: 5 }[mode] || 4;
     const players = drill ? [me] : [me].concat(C.makeBots(nBots, rng, S.prefs.level));
     players.forEach((pl, i) => {
-      Object.assign(pl, { kg: 0, frenzy: 0, hp: mode === 'spell' ? C.SPELL_HP : C.LIVES, pull: 0, dmg: 0, shield: false, gems: 0 });
+      Object.assign(pl, { kg: 0, frenzy: 0, hp: mode === 'spell' ? C.SPELL_HP : C.LIVES, pull: 0, dmg: 0, shield: false, gems: 0, fossils: 0, cheat: 0, lastGain: 0, km: 0 });
       if (mode === 'tug') pl.team = i < 3 ? 'red' : 'blue'; // em + 2 bạn máy (Đỏ) đấu 3 bạn máy (Xanh)
       if (mode === 'heist') pl.vault = C.newVault(rng);
     });
@@ -359,14 +453,18 @@
     G = {
       mode, deck, n, i: 0, players, me, ghost, best, bestKey, practice: !!drill,
       limitMs: mode === 'gold' ? 0 : S.prefs.secs * 1000,
-      goal: n, maxRounds: mode === 'race' ? n * 3 : n,
+      goal: n, maxRounds: mode === 'race' ? n * 3 : mode === 'moon' ? n * 2 : n,
       log: [], trail: [], bestStreak: 0, correct: 0, startedAt: Date.now(), locked: false, phase: 'q',
-      powers: [], x2: false, rope: 0, crack: {}, opened: 0, boost: 1, trackDrawn: false,
+      powers: [], x2: false, rope: 0, crack: {}, opened: 0, boost: 1, trackDrawn: false, busted: 0, cheats: 0,
     };
-    $('arTrack').hidden = mode !== 'race' && mode !== 'tug';
     $('arTimerWrap').hidden = !G.limitMs;
     document.body.dataset.mode = mode;
     show('arGame');
+    // Sân khấu có tranh thay cho đường đua/dây kéo co dạng chữ; lượt Luyện câu sai giữ gọn (không có cảnh)
+    const scene = SC && !drill;
+    $('arTrack').hidden = scene || (mode !== 'race' && mode !== 'tug');
+    $('arScene').hidden = !scene;
+    if (scene) SC.mount($('arScene'), G); else if (SC) SC.clear();
     sfx('click');
     nextQuestion();
   }
@@ -376,7 +474,7 @@
   function nextQuestion() {
     G.phase = 'q'; G.locked = false;
     const q = cur();
-    $('arQNum').textContent = G.mode === 'race' ? `Câu ${G.i + 1}` : `Câu ${G.i + 1}/${G.maxRounds}`;
+    $('arQNum').textContent = G.mode === 'race' || G.mode === 'moon' ? `Câu ${G.i + 1}` : `Câu ${G.i + 1}/${G.maxRounds}`;
     $('arQ').textContent = q.text;
     const img = $('arQImg');
     if (q.img) { img.src = q.img; img.hidden = false; } else { img.hidden = true; img.removeAttribute('src'); }
@@ -417,8 +515,8 @@
     const me = G.me;
     G.log.push({ q, chosen: k, ok });
     if (ok) G.correct++;
-    // Chuỗi đúng: Đua (raceStep) và Sinh tồn (survivalStep) tự đếm — tránh cộng 2 lần.
-    if (G.mode !== 'race' && G.mode !== 'survival') me.streak = ok ? me.streak + 1 : 0;
+    // Chuỗi đúng: Đua (raceStep), Sinh tồn (survivalStep), Mặt Trăng (moonStep) tự đếm — tránh cộng 2 lần.
+    if (G.mode !== 'race' && G.mode !== 'survival' && G.mode !== 'moon') me.streak = ok ? me.streak + 1 : 0;
     const life = G.mode === 'survival' ? C.survivalStep(me, ok, G.i) : null;
     if (G.picker) G.picker.result(k);
     else document.querySelectorAll('#arAnswers .ar-ans').forEach((b) => {
@@ -429,6 +527,7 @@
       b.classList.toggle('is-dim', kk !== q.correctIdx && kk !== k);
     });
     sfx(life && life.out ? 'lose' : ok ? (me.streak >= 3 ? 'combo' : 'correct') : 'wrong');
+    if (SC) SC.mood('me', ok);
     if (!ok && global.EduFX) global.EduFX.shake($('arAnswers'));
 
     const prevRank = rankOf(me);
@@ -480,10 +579,24 @@
       const st = botsTug(pull);
       fb = (ok ? `<b>+${pull}</b> lực kéo${pull === 2 ? ' <span class="ar-tag up">⚡ nhanh — kéo gấp đôi</span>' : ''}` : (k === null ? 'Hết giờ — đội em hụt 1 nhịp' : 'Chưa đúng — đội em hụt 1 nhịp'))
         + ` <span class="ar-tag${st.delta > 0 ? ' up' : ''}">${st.delta > 0 ? `Dây dịch về Đội Đỏ ${st.delta} vạch` : st.delta < 0 ? `Dây dịch về Đội Xanh ${-st.delta} vạch` : 'Dây đứng yên'}</span>`;
-    } else if (G.mode === 'spell' || G.mode === 'heist') {
+    } else if (G.mode === 'moon') {
+      const st = C.moonStep(me, ok, ms, G.limitMs, G.n, G.i);
+      const gain = st.gain * (dbl === 2 && st.gain ? 1 : 0); // ✖️2: bay thêm 1 lần nữa (không vượt Mặt Trăng)
+      if (gain) me.km = Math.min(C.MOON_KM, me.km + gain);
+      if (me.km >= C.MOON_KM && me.landedAt === undefined) me.landedAt = G.i;
+      const up = st.gain + gain;
+      if (ok) pop = `🚀 +${up}`;
+      botsMoon(events);
+      const boost = C.moonBoost(me.streak);
+      fb = ok ? `<b>+${up}</b> nghìn km${boost > 1 ? ` <span class="ar-tag up">🔥 tầng đẩy ×${boost}</span>` : ''}${x2Tag}`
+          + (st.stage ? ` <span class="ar-tag up">🛰️ Qua Trạm ${C.MOON_STAGES.indexOf(st.stage) + 1}!</span>` : '')
+          + (me.km >= C.MOON_KM ? ' <span class="ar-tag up">🌕 Em đã chạm Mặt Trăng!</span>' : '')
+        : `${k === null ? 'Hết giờ' : 'Chưa đúng'} — chết máy${st.fell ? `, tụt <b>${st.fell}</b> nghìn km` : ' — đứng yên ở trạm'}`;
+    } else if (G.mode === 'spell' || G.mode === 'heist' || G.mode === 'dino') {
       G.boost = C.spellBoost(ms, G.limitMs);
-      const fast = G.boost >= 1.25 ? ` <span class="ar-tag up">⚡ nhanh ×${G.boost.toFixed(1)}</span>` : '';
+      const fast = G.boost >= 1.25 && G.mode !== 'dino' ? ` <span class="ar-tag up">⚡ nhanh ×${G.boost.toFixed(1)}</span>` : '';
       fb = ok ? `<b>Chính xác!</b> ${G.mode === 'spell' ? 'Chọn 1 phép' : 'Chọn việc làm'}${fast}:` : `${k === null ? 'Hết giờ' : 'Chưa đúng'} — mất lượt này`;
+      if (G.mode === 'dino') me.lastGain = 0;
     } else {
       fb = ok ? '<b>Chính xác!</b> Chọn 1 rương:' : 'Chưa đúng — không có rương lần này';
     }
@@ -500,9 +613,11 @@
     if (G.mode === 'gold' && ok) { showChests(); return; }
     if (G.mode === 'spell' && ok) { showSpells(); return; }
     if (G.mode === 'heist' && ok) { showHeist(); return; }
+    if (G.mode === 'dino' && ok) { showDino(); return; }
     if (G.mode === 'gold') botsGold([]);
     if (G.mode === 'spell') botsSpell();
     if (G.mode === 'heist') botsHeist();
+    if (G.mode === 'dino') botsDino();
     afterAnswer();
   }
 
@@ -558,6 +673,7 @@
   function isOver() {
     if (G.i + 1 >= G.maxRounds) return true;
     if (G.mode === 'race') return G.players.some((p) => p.pos >= G.goal);
+    if (G.mode === 'moon') return G.players.some((p) => p.km >= C.MOON_KM);
     // Sinh tồn: em hết tim, hoặc mọi đối thủ đã bị loại (lượt 1 mình → chơi hết câu).
     if (G.mode === 'survival') return G.me.hp <= 0 || (G.players.length > 1 && G.players.every((p) => p.me || p.hp <= 0));
     if (G.mode === 'spell') return G.me.hp <= 0 || G.players.every((p) => p.me || p.hp <= 0);
@@ -908,11 +1024,114 @@
     renderHud(); renderSide();
   }
 
+  // ── Lên Mặt Trăng ──
+  function botsMoon(events) {
+    G.players.forEach((p) => {
+      if (!p.bot) return;
+      const a = C.botAnswer(p, G.limitMs, rng);
+      const st = C.moonStep(p, a.correct, a.ms, G.limitMs, G.n, G.i);
+      if (st.landed && st.gain) events.push(`🌕 ${who(p)} đã chạm Mặt Trăng!`);
+      else if (st.stage) events.push(`🛰️ ${who(p)} qua Trạm ${C.MOON_STAGES.indexOf(st.stage) + 1}`);
+    });
+  }
+
+  // ── Đào hoá thạch ──
+  function showDino() {
+    G.phase = 'pick';
+    $('arFbExtra').innerHTML = '';
+    const acts = ['dig', 'cheat', 'inspect'];
+    pickRow('ar-dino', [
+      { icon: '⛏️', name: 'Đào thật', sub: 'Chọn 1 trong 3 tảng đá' },
+      { icon: '🤫', name: 'Ăn gian', sub: `Hoá thạch ×${C.DINO_CHEAT} — nhưng ${C.DINO_CHEAT_TURNS} lượt tới bị kiểm tra là mất ${C.DINO_FINE * 100}%` },
+      { icon: '🔍', name: 'Kiểm tra 1 bạn', sub: `Bắt quả tang bạn ăn gian → lấy ${C.DINO_FINE * 100}% hoá thạch của bạn đó` },
+    ]).forEach((b, k) => b.addEventListener('click', () => pickDino(acts[k])));
+  }
+  function pickDino(act) {
+    if (!G || G.phase !== 'pick') return;
+    const me = G.me;
+    if (act === 'inspect') {
+      const foes = G.players.filter((p) => !p.me);
+      pickRow('ar-targets', foes.map((p) => ({ icon: p.face, name: p.name,
+        sub: `${p.fossils} 🦴${p.lastGain ? ` · vừa đào <b>+${p.lastGain}</b>${p.lastGain >= 90 ? ' 🤨' : ''}` : ''}` })), '🔍 Kiểm tra ai? <small>(bạn vừa đào được nhiều bất thường có thể đang ăn gian)</small>')
+        .forEach((b, k) => b.addEventListener('click', () => {
+          if (!G || G.phase !== 'pick') return;
+          const t = foes[k];
+          const r = C.inspect(me, t);
+          if (r.caught) {
+            G.busted++;
+            fbMsg(`🚨 Bắt quả tang ${who(t)} ăn gian — em lấy <b>${r.take} 🦴</b>!`, true);
+            for (let n = 0; n < 4; n++) FX.fly(anchorOf(t), $('arStat'), '🦴', { delay: n * 90, ms: 550 });
+            if (SC) SC.talk(t.id, 'Ối, bị lộ rồi!', 1500, true);
+            sfx('critical');
+          } else {
+            FX.flash(fbMsg(`😇 ${who(t)} đào trung thực — em mất lượt này`, false), 'fx-wrong');
+            if (SC) SC.talk(t.id, 'Mình trung thực mà!', 1400);
+            sfx('wrong');
+          }
+          endDinoTurn();
+        }));
+      return;
+    }
+    const rocks = C.rollRocks(rng);
+    const cheat = act === 'cheat';
+    const btns = pickRow('ar-rocks', rocks.map((_, k) => ({ icon: '🪨', name: `Tảng ${k + 1}` })), cheat ? '🤫 Ăn gian — chọn 1 tảng (được ×3):' : '⛏️ Chọn 1 tảng đá để đào:');
+    btns.forEach((b, k) => b.addEventListener('click', () => {
+      if (!G || G.phase !== 'pick') return;
+      G.phase = 'chosen';
+      const gain = C.digRock(me, rocks[k], cheat);
+      me.lastGain = gain;
+      if (cheat) G.cheats++;
+      // Lật cả 3 tảng (như rương Săn vàng) để em thấy mình chọn hên hay xui
+      rocks.forEach((v, j) => {
+        const L = C.rockLabel(v);
+        btns[j].disabled = true;
+        btns[j].classList.add(j === k ? 'is-picked' : 'is-other');
+        btns[j].innerHTML = `<span aria-hidden="true">${L.icon}</span><b>${v} 🦴</b><small>${esc(L.title)}</small>`;
+      });
+      fbMsg(gain ? `${C.rockLabel(rocks[k]).icon} Em đào được <b>${gain} 🦴</b>${cheat ? ` <span class="ar-tag">🤫 ×${C.DINO_CHEAT} — cẩn thận bị kiểm tra!</span>` : ''}` : '🪨 Tảng đá trống — lần sau may hơn!', gain > 0);
+      if (gain) { FX.float(btns[k], `+${gain}`, 'gold'); FX.burst(btns[k], ['🦴', '✨'], gain >= 90 ? 12 : 6); }
+      if (rocks[k] >= 120 && global.EduFX) global.EduFX.confetti({ count: 60 });
+      sfx(gain ? (gain >= 90 ? 'critical' : 'match') : 'flip');
+      $('arFbExtra').querySelectorAll('.ar-pick-prompt').forEach((el) => el.remove());
+      endDinoTurn(true);
+    }));
+  }
+  function endDinoTurn(keepRocks) {
+    G.phase = 'chosen';
+    if (!keepRocks) lockPicks();
+    else $('arFbExtra').querySelectorAll('.ar-pick').forEach((el) => el.classList.remove('ar-pick')); // giữ 3 tảng đã lật
+    botsDino();
+    afterAnswer();
+  }
+  /** Bạn máy: đào (có lúc ăn gian) hoặc kiểm tra người vừa đào nhiều — có thể bắt quả tang em. */
+  function botsDino() {
+    const events = [];
+    const acts = G.players.filter((p) => p.bot).map((p) => {
+      p.lastGain = 0;
+      const a = C.botAnswer(p, G.limitMs, rng);
+      return a.correct ? { p, d: C.botDino(p, G.players, rng) } : null;
+    }).filter(Boolean);
+    acts.forEach(({ p, d }) => {
+      if (d.act === 'dig') { p.lastGain = C.digRock(p, C.rollRocks(rng)[d.rock], d.cheat); return; }
+      const r = C.inspect(p, d.target);
+      if (r.caught && d.target.me) {
+        events.push(`🚨 ${who(p)} kiểm tra em — bắt quả tang em ăn gian, lấy ${r.take} 🦴!`);
+        sfx('lose');
+        for (let n = 0; n < 4; n++) FX.fly($('arStat'), anchorOf(p), '🦴', { delay: 400 + n * 90, ms: 550 });
+      } else if (r.caught) events.push(`🚨 ${who(p)} bắt quả tang ${who(d.target)} ăn gian, lấy ${r.take} 🦴`);
+      else if (d.target.me) events.push(`🔍 ${who(p)} kiểm tra em — em trung thực, bạn ấy mất lượt`);
+    });
+    C.tickCheat(G.players);
+    fbEvents(events);
+    renderHud(); renderSide();
+  }
+
   // ── Bảng xếp hạng / HUD / đường đua ──
   /** Xếp hạng theo chế độ (Sinh tồn: tim → trụ lâu → điểm). */
   function ranked(list) {
     if (G.mode === 'survival') return list.slice().sort(C.survivalOrder);
     if (G.mode === 'spell') return list.slice().sort(C.spellOrder);
+    if (G.mode === 'moon') return list.slice().sort(C.moonOrder);
     return C.rank(list, KEY_OF[G.mode]);
   }
   function rankOf(p) { return ranked(G.players).indexOf(p) + 1; }
@@ -925,6 +1144,8 @@
       : G.mode === 'tug' ? `🔴 Đội Đỏ · em kéo ${me.pull}`
       : G.mode === 'spell' ? `<span class="ar-hpbar" aria-hidden="true"><i style="width:${me.hp}%"></i></span> ${me.hp}/${C.SPELL_HP} máu${me.shield ? ' · 🛡️' : ''}`
       : G.mode === 'heist' ? `💎 ${me.gems.toLocaleString('vi-VN')} · két em ${locks(C.vaultThreat(G.crack, me))}`
+      : G.mode === 'dino' ? `🦴 ${me.fossils.toLocaleString('vi-VN')} hoá thạch${me.cheat > 0 ? ` <span class="ar-tag">🤫 đang ăn gian · còn ${me.cheat} lượt</span>` : ''}`
+      : G.mode === 'moon' ? `🚀 ${me.km}/${C.MOON_KM} nghìn km${C.moonBoost(me.streak) > 1 ? ` <span class="ar-tag up">🔥 ×${C.moonBoost(me.streak)}</span>` : ''}`
       : `🏁 ${me.pos}/${G.goal} bước`;
     const s = $('arStreak');
     s.hidden = me.streak < 2;
@@ -938,10 +1159,13 @@
       : G.mode === 'tug' ? ` <span class="ar-team-dot is-${p.team}" title="${C.TEAMS[p.team].name}"></span>` : '');
     // Dòng phụ dưới tên (không bị cắt khi tên dài): thanh máu / số ô két em đã mở.
     const sub = (p) => (spell ? `<span class="ar-board-sub"><span class="ar-hpbar" title="${p.hp} máu"><i style="width:${p.hp}%"></i></span> ${p.hp}${p.shield ? ' 🛡️' : ''}</span>`
-      : G.mode === 'heist' && !p.me ? `<span class="ar-board-sub" title="Em đã mở ${C.crackOf(G.crack, 'me', p.id).pos}/${C.VAULT_LEN} ô két bạn này">${locks(C.crackOf(G.crack, 'me', p.id).pos)}</span>` : '');
-    FX.flip($('arSide'), () => { $('arSide').innerHTML = `<h3>${G.practice ? '🔁 Luyện câu sai' : MODE_LABEL[G.mode]}</h3><ol class="ar-board">${ranked(G.players).map((p, i) => `<li data-key="${p.id}" class="${p.me ? 'is-me' : ''}${p.ghost ? ' is-ghost' : ''}${(surv || spell) && p.hp <= 0 ? ' is-out' : ''}">
+      : G.mode === 'heist' && !p.me ? `<span class="ar-board-sub" title="Em đã mở ${C.crackOf(G.crack, 'me', p.id).pos}/${C.VAULT_LEN} ô két bạn này">${locks(C.crackOf(G.crack, 'me', p.id).pos)}</span>`
+      : G.mode === 'dino' && p.lastGain ? `<span class="ar-board-sub">vừa đào +${p.lastGain}${p.lastGain >= 90 && !p.me ? ' 🤨' : ''}</span>`
+      : G.mode === 'moon' ? `<span class="ar-board-sub">${p.km >= C.MOON_KM ? '🌕 đã tới Mặt Trăng' : `<span class="ar-hpbar is-moon"><i style="width:${Math.round((p.km / C.MOON_KM) * 100)}%"></i></span> ${C.moonFloor(p.km) ? `Trạm ${C.MOON_STAGES.indexOf(C.moonFloor(p.km)) + 1}` : 'bệ phóng'}`}</span>` : '');
+    FX.flip($('arSide'), () => { $('arSide').innerHTML = `<h3>${G.practice ? '🔁 Luyện câu sai' : MODE_LABEL[G.mode]} <small>· ${unit}</small></h3><ol class="ar-board">${ranked(G.players).map((p, i) => `<li data-key="${p.id}" class="${p.me ? 'is-me' : ''}${p.ghost ? ' is-ghost' : ''}${(surv || spell) && p.hp <= 0 ? ' is-out' : ''}">
       <span class="ar-board-rank">${i + 1}</span><span class="ar-board-face">${p.face}</span>
-      <span class="ar-board-name">${esc(p.name)}${extra(p)}</span><b>${p[key].toLocaleString('vi-VN')}</b><small>${unit}</small>${sub(p)}</li>`).join('')}</ol>`; });
+      <span class="ar-board-name">${esc(p.name)}${extra(p)}</span><b>${p[key].toLocaleString('vi-VN')}</b>${sub(p)}</li>`).join('')}</ol>`; });
+    if (SC && G && !G.practice) SC.sync(G);
   }
   function renderTrack() {
     if (G.mode === 'tug') {
@@ -981,6 +1205,7 @@
 
   // ── Kết thúc ──
   function finish() {
+    if (SC) SC.clear();
     clearInterval(G.timer);
     const key = KEY_OF[G.mode];
     const board = ranked(G.players.filter((p) => !p.ghost));
@@ -992,6 +1217,7 @@
     const coins = C.coinsFor({ correct: G.correct, place, players: G.mode === 'tug' ? 2 : board.length });
     p.coins += coins;
     p.games = (p.games || 0) + 1;
+    addDaily(G.correct);
     const value = G.me[key];
     const old = p.best[G.bestKey];
     const record = !G.practice && (!old || value > old.value);
@@ -1014,6 +1240,9 @@
       : G.mode === 'spell' && G.me.hp <= 0 ? `💥 Em bị hạ — về hạng ${place}/${board.length}. Thử lại nhé!`
       : G.mode === 'spell' && place === 1 ? `🏆 ${nickName()} là pháp sư trụ lại cuối cùng!`
       : G.mode === 'heist' && place === 1 ? `🏆 ${nickName()} là Vua giải mã!`
+      : G.mode === 'dino' && place === 1 ? `🏆 ${nickName()} là Nhà khảo cổ số 1!`
+      : G.mode === 'moon' && place === 1 && G.me.km >= C.MOON_KM ? `🚀 ${nickName()} chạm Mặt Trăng đầu tiên!`
+      : G.mode === 'moon' && place === 1 ? `🏆 ${nickName()} bay cao nhất!`
       : place === 1 ? `🏆 ${nickName()} vô địch ${MODE_LABEL[G.mode]}!` : `${MODE_LABEL[G.mode]} — em về hạng ${place}/${board.length}`;
     $('arPodium').hidden = G.practice;
     $('arAgain').hidden = G.practice;
@@ -1030,8 +1259,11 @@
       ${G.mode === 'survival' ? `<div><b>${C.hearts(G.me.hp)}</b><span>${G.me.hp > 0 ? 'em trụ đến cuối!' : 'hết tim'}</span></div>` : ''}
       ${G.mode === 'spell' ? `<div><b>${G.me.hp}</b><span>máu còn lại</span></div>` : ''}
       ${G.mode === 'heist' ? `<div><b>${G.opened}</b><span>két em phá được</span></div>` : ''}
+      ${G.mode === 'dino' ? `<div><b>${G.busted}</b><span>lần em bắt quả tang${G.cheats ? ` · em ăn gian ${G.cheats} lần` : ''}</span></div>` : ''}
+      ${G.mode === 'moon' ? `<div><b>${Math.round((G.me.km / C.MOON_KM) * 100)}%</b><span>${G.me.km >= C.MOON_KM ? 'đã tới Mặt Trăng' : 'quãng đường tới Mặt Trăng'}</span></div>` : ''}
       ${G.mode === 'tug' ? `<div><b>${Math.abs(G.rope)}/${C.TUG_GOAL}</b><span>${won ? `dây lệch về ${C.TEAMS[won].name}` : 'dây cân bằng'}</span></div>` : ''}
-      <div class="is-coin"><b>+${coins} 🪙</b><span>xu (đang có ${p.coins})</span></div>`;
+      <div class="is-coin"><b>+${coins} 🪙</b><span>xu (đang có ${p.coins})</span></div>
+      ${dailyStat()}`;
     const rv = $('arReview');
     rv.hidden = !wrong.length;
     rv.open = G.practice;
@@ -1067,6 +1299,7 @@
     if (!G || G.phase === 'end') return;
     if (!confirm('Bỏ cuộc trận này? Em sẽ không nhận được xu.')) return;
     clearInterval(G.timer);
+    if (SC) SC.clear();
     G = null;
     show('arHome');
   }
@@ -1088,7 +1321,7 @@
       if (b && !b.disabled) answer(n - 1); // không chọn được đáp án đã bị 50:50 ẩn
     }
     else if (G.phase === 'chest' && n >= 1 && n <= 3) { e.preventDefault(); pickChest(n - 1); }
-    else if (G.phase === 'pick' && n >= 1) { // Đấu phép / Giải mã: các ô đang chọn được (data-hot)
+    else if (G.phase === 'pick' && n >= 1) { // Đấu phép / Giải mã / Đào hoá thạch: các ô đang chọn được (data-hot)
       const b = $('arFbExtra').querySelector(`[data-hot="${n}"]:not(:disabled)`);
       if (b) { e.preventDefault(); b.click(); }
     }
@@ -1127,7 +1360,7 @@
       /** Lưu họ tên (hoặc biệt danh) và đồng bộ các ô nhập; trả tên đã chuẩn hoá (rỗng nếu chưa nhập). */
       setNick, role, setRole, setInvite, effMode,
       /** Luyện câu sai: reviewHtml(wrong) vẽ danh sách, practice(log) vào lượt luyện. */
-      reviewHtml, paintPracticeBtn, practice, kinds, ropeHtml,
+      reviewHtml, paintPracticeBtn, practice, kinds, ropeHtml, addDaily, dailyStat,
       nickName, avatar: () => avatarOf(profile()),
       /** Bộ câu đang chọn ở màn chọn: { questions, key, title } (questions null = đang tải). */
       deckSource: () => ({ questions: SRC.questions, key: SRC.key, title: SRC.title || '' }),

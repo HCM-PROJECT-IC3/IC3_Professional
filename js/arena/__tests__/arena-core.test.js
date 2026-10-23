@@ -111,6 +111,32 @@ prof.coins = 25;
 var d = A.buyPack(prof, 'pets', A.rngFrom(11));
 assertEq('trùng → hoàn xu theo độ hiếm', [d.dupe, prof.coins], [true, A.RARITY[d.blook.rarity].refund]);
 assertEq('tra linh vật theo mã', A.blookById('security:dragon').emoji, '🐉');
+// Bảo hiểm Sử thi: hộp thứ PITY_MAX liền không ra Sử thi+ → chắc chắn Sử thi+
+var pp = A.newProfile(); pp.coins = 10000;
+var low = function () { return 0.01; }; // luôn bốc Thường
+for (var k = 0; k < A.PITY_MAX - 1; k++) A.buyPack(pp, 'hardware', low);
+assertEq('bảo hiểm: đếm số hộp liền không ra Sử thi', pp.pity, A.PITY_MAX - 1);
+var pr = A.buyPack(pp, 'hardware', low);
+assertEq('bảo hiểm: hộp thứ 10 ra Sử thi trở lên, đếm lại từ 0', [pr.pity, ['epic', 'legendary', 'mystery'].indexOf(pr.blook.rarity) >= 0, pp.pity], [true, true, 0]);
+assertEq('sao theo số con', [A.starsOf(1), A.starsOf(2), A.starsOf(3), A.starsOf(6)], [1, 1, 2, 3]);
+// Hoàn thành hộp → thưởng 1 lần
+var ps = A.newProfile(); ps.coins = 25;
+var hw = A.PACKS[0].blooks;
+hw.slice(0, 8).forEach(function (bk) { ps.owned[bk.id] = 1; });
+var last = hw[8]; // Bí ẩn — ép bốc đúng con còn thiếu
+var pick = function () { return 0.9999; };
+var rs = A.buyPack(ps, 'hardware', pick);
+assertEq('hoàn thành hộp: +60 xu một lần', [rs.blook.id === last.id, rs.set && rs.set.bonus, ps.coins, !!ps.sets.hardware], [true, A.SET_BONUS, A.SET_BONUS, true]);
+ps.coins = 25;
+assertEq('hoàn thành hộp: mở tiếp không thưởng lại', A.buyPack(ps, 'hardware', pick).set, null);
+// Nhiệm vụ ngày → vé mở hộp miễn phí
+var pd2 = A.newProfile();
+assertEq('nhiệm vụ ngày: chưa đủ', [A.addDaily(pd2, 12, '2026-10-24'), A.dailyOf(pd2, '2026-10-24').correct, pd2.tickets || 0], [false, 12, 0]);
+assertEq('nhiệm vụ ngày: đủ 20 → 1 vé, chỉ 1 lần/ngày', [A.addDaily(pd2, 10, '2026-10-24'), A.addDaily(pd2, 30, '2026-10-24'), pd2.tickets], [true, false, 1]);
+assertEq('nhiệm vụ ngày: sang ngày mới đếm lại', A.dailyOf(pd2, '2026-10-25').correct, 0);
+var tk = A.buyPack(pd2, 'pets', A.rngFrom(3), { ticket: true });
+assertEq('vé: mở hộp không mất xu', [tk.ok, pd2.tickets, pd2.coins], [true, 0, 0]);
+assertEq('vé: hết vé thì từ chối', A.buyPack(pd2, 'pets', A.rngFrom(3), { ticket: true }).reason, 'ticket');
 assertEq('bóng ma kỷ lục', [A.ghostScoreAt({ trail: [500, 1400] }, 0), A.ghostScoreAt({ trail: [500, 1400] }, 5), A.ghostScoreAt(null, 0)], [500, 1400, null]);
 
 // ── Luyện câu sai ──
@@ -204,6 +230,40 @@ assertEq('giải mã: mở đủ 3 ô lấy 50% đá quý, két đổi mã, ti�
 A.crackTry(crack, thief, vic, vic.vault[0], hr);
 A.rekey(crack, vic, hr);
 assertEq('giải mã: đổi mã xoá tiến độ người khác', A.crackOf(crack, 'me', 'v').pos, 0);
+
+// ── Đào hoá thạch ──
+var dr = A.rngFrom(11);
+var okRocks = true;
+for (var t2 = 0; t2 < 200; t2++) { var rk = A.rollRocks(dr); if (rk.length !== 3 || !rk.some(function (v) { return v > 0; })) okRocks = false; }
+assertEq('hoá thạch: 3 tảng đá, luôn có 1 tảng có hoá thạch', okRocks, true);
+var d1 = { id: 'a', fossils: 0 }, d2 = { id: 'b', fossils: 0 };
+assertEq('hoá thạch: đào thật / ăn gian ×3 + gắn cờ', [A.digRock(d1, 30, false), A.digRock(d2, 30, true), d1.cheat || 0, d2.cheat], [30, 90, 0, A.DINO_CHEAT_TURNS]);
+assertEq('hoá thạch: kiểm tra người trung thực → không được gì', A.inspect(d2, d1), { caught: false, take: 0 });
+var ins = A.inspect(d1, d2);
+assertEq('hoá thạch: bắt được người ăn gian → lấy 40%, xoá cờ', [ins.caught, ins.take, d1.fossils, d2.fossils, d2.cheat], [true, 36, 66, 54, 0]);
+A.digRock(d1, 10, true); A.tickCheat([d1, d2]); A.tickCheat([d1, d2]);
+assertEq('hoá thạch: cờ ăn gian hết sau 2 lượt', [d1.cheat, A.inspect(d2, d1).caught], [0, false]);
+
+// ── Lên Mặt Trăng ──
+var m1 = { id: 'm', km: 0, streak: 0 };
+var st1 = A.moonStep(m1, true, 0, 20000, 10, 0);
+assertEq('mặt trăng: đúng tức thì bay 384/10', [st1.gain, m1.km], [38, 38]);
+A.moonStep(m1, true, 20000, 20000, 10, 1);
+assertEq('mặt trăng: đúng sát giờ bay một nửa', m1.km, 38 + 19);
+var st3 = A.moonStep(m1, true, 0, 20000, 10, 2);
+assertEq('mặt trăng: chuỗi 3 → tầng đẩy ×1.5, qua trạm 96', [st3.gain, st3.stage, A.moonBoost(5)], [58, 96, 2]);
+var fl = A.moonStep(m1, false, 0, 20000, 10, 3);
+assertEq('mặt trăng: sai tụt nhưng không dưới trạm đã qua', [fl.fell, m1.km, m1.streak], [19, 96, 0]);
+var mp = { id: 'p', km: 0, streak: 0 }, nq = 0;
+while (mp.km < A.MOON_KM && nq < 20) A.moonStep(mp, true, 0, 20000, 10, nq++);
+assertEq('mặt trăng: đúng hết, thật nhanh → tới nơi ở câu 7/10', nq, 7);
+var m2 = { id: 'n', km: 110, streak: 0 };
+A.moonStep(m2, false, 0, 20000, 10, 0);
+assertEq('mặt trăng: sai gần trạm thì dừng ở trạm', m2.km, 96);
+var m3 = { id: 'o', km: 380, streak: 4 };
+var ld = A.moonStep(m3, true, 0, 20000, 10, 7);
+assertEq('mặt trăng: chạm Mặt Trăng → dừng ở 384, ghi câu đáp', [ld.landed, m3.km, m3.landedAt], [true, 384, 7]);
+assertEq('mặt trăng: đáp trước xếp trên, rồi tới bay cao', [{ id: 'x', km: 300 }, { id: 'y', km: 384, landedAt: 9 }, { id: 'z', km: 384, landedAt: 4 }].sort(A.moonOrder).map(function (p) { return p.id; }), ['z', 'y', 'x']);
 
 var bd = A.makeBoard([{ text: 'a' }, { text: 'b' }], 12, A.rngFrom(4));
 assertEq('bảng điểm: đủ ô, lặp câu nếu thiếu, có ô x2 và ô rủi ro', [bd.length, bd[2].q.text, bd.some(function (t) { return t.special === 'x2'; }), bd.some(function (t) { return t.special === 'risk'; })], [12, 'a', true, true]);

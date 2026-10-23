@@ -985,6 +985,7 @@
       prof.games = (prof.games || 0) + 1;
       A.save();
       store.set(AWARD_KEY, awarded.concat(key).slice(-50));
+      A.addDaily(y.correct);
       A.refreshWallet();
       try {
         const pct = y.total ? Math.round((y.correct / y.total) * 100) : 0;
@@ -1006,6 +1007,7 @@
         ${m.mode === 'spell' ? `<div><b>${y.mp || 0}</b><span>máu còn lại</span></div>` : ''}
         ${m.mode === 'heist' ? `<div><b>${y.opened || 0}</b><span>két em phá được</span></div>` : ''}
         <div class="is-coin"><b>+${coins} 🪙</b><span>xu (đang có ${A.profile().coins})</span></div>
+        ${A.dailyStat()}
       </div>
       ${wrong.length ? '' : y.total && y.correct === y.total ? '<p class="ar-center ar-room-perfect">🌟 Em không sai câu nào — xuất sắc!</p>' : ''}
       <div class="ar-row ar-center-row">${wrong.length ? '<button type="button" class="ar-btn ar-btn-play ar-btn-practice" data-act="practice"></button>' : ''}

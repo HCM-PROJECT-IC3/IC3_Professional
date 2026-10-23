@@ -21,7 +21,8 @@
   /** Dòng hướng dẫn ngắn cho từng dạng. */
   function hint(q) {
     switch (C.kindOf(q)) {
-      case 'multi': return `☑️ Chọn <b>${needOf(q)}</b> đáp án đúng rồi bấm <b>Chốt</b>`;
+      // Câu đã ghi "(Chọn 2)" và nút Chốt đã hiện (0/2) → không lặp thêm dòng hướng dẫn.
+      case 'multi': return /chọn\s*\d/i.test(q.text || '') ? '' : `☑️ Chọn <b>${needOf(q)}</b> đáp án đúng rồi bấm <b>Chốt</b>`;
       case 'order': return '🔢 Bấm các bước theo <b>đúng thứ tự</b> (bước 1 bấm trước) rồi bấm <b>Chốt</b>';
       case 'match': return '🔗 Bấm 1 mục <b>bên trái</b> rồi bấm ô màu <b>bên phải</b> để ghép — ghép đủ rồi bấm <b>Chốt</b>';
       default: return '';
