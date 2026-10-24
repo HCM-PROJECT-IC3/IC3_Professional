@@ -91,6 +91,7 @@
     el.className = 'np-sp ' + (o.cls || '');
     el.innerHTML = `<div class="np-sp-in" style="width:${o.w || 60}px">${html}</div>${o.tag ? `<span class="np-tag${/^\d+$/.test(o.tag) ? ' is-num' : ''}">${esc(o.tag)}</span>` : ''}`;
     layer.appendChild(el);
+    if (o.data) el.dataset.name = o.data.name; // để soi đèn đúng người lúc công bố (spotlight)
     const sp = { el, x, y, w: o.w || 60, h: o.h || (o.w || 60) * 1.6, frozen: false, data: o.data };
     place(sp, x, y, 0);
     return sp;
@@ -135,10 +136,14 @@
     c.className = 'np-clock';
     fx.appendChild(c);
     const end = performance.now() + ms;
+    let last = -1;
     const tick = () => {
       const s = Math.max(0, Math.ceil((end - performance.now()) / 1000));
       c.innerHTML = `<i class="fa-solid fa-stopwatch" aria-hidden="true"></i><b>${String(s).padStart(2, '0')}</b><small>giây</small>`;
       c.classList.toggle('is-low', s <= 3);
+      // 5 giây cuối tích tắc, 3 giây cuối tim đập + viền sân khấu nhấp nháy
+      if (s > 0 && s <= 5 && s !== last) { last = s; sfx(s <= 3 ? 'heartbeat' : 'tick'); }
+      world.classList.toggle('is-tense', s > 0 && s <= 3);
     };
     tick();
     every(250, tick);
@@ -850,6 +855,7 @@
     const c = A.FUN[it.idx % A.FUN.length], c2 = A.FUN[(it.idx + 3) % A.FUN.length];
     const el = document.createElement('div');
     el.className = 'np-mb';
+    el.dataset.name = it.name;
     el.style.setProperty('--r', r + 'px');
     el.innerHTML = `<div class="np-mb-ball" style="width:${2 * r}px;height:${2 * r}px"><svg viewBox="-20 -20 40 40" aria-hidden="true">
       <g class="np-mb-roll"><circle r="18" fill="${c}"/><path d="M-17 -5q17 -10 34 4" stroke="${c2}" stroke-width="6" fill="none"/><path d="M-12 12q12 -6 24 2" stroke="#fff" stroke-width="3" fill="none" opacity=".7"/></g>
@@ -1111,13 +1117,36 @@
     const items = cast(game, plan.list, plan, numeric, allNames);
     plan.t0 = performance.now();
     clock(plan.ms);
-    try { await PLAY[game](items, plan, plan.ms); } finally { stopAll(); }
+    try {
+      await PLAY[game](items, plan, plan.ms);
+      world.classList.remove('is-tense');
+      await spotlight(plan.winner);
+    } finally { stopAll(); world.classList.remove('is-tense'); }
     // Đồng hồ dừng ở 00
     const c = fx.querySelector('.np-clock b'); if (c) c.textContent = '00';
   }
   /** Khung tên kết quả trên sân khấu (trang thêm nút hành động vào trong). */
+  /** Trước khi công bố: sân khấu tối dần, vòng sáng thu lại quanh người được gọi + trống dồn. */
+  async function spotlight(name) {
+    const el = [...layer.querySelectorAll('[data-name]')].find((e) => e.dataset.name === name);
+    const tgt = el && (el.querySelector('.np-sp-in, .np-mb-ball') || el);
+    if (!tgt) return;
+    const wr = world.getBoundingClientRect(), er = tgt.getBoundingClientRect(), k = wr.width / W;
+    if (!er.width || !er.height || !k) return; // bị UFO bắt mất... → bỏ qua soi đèn
+    const x = (er.left + er.width / 2 - wr.left) / k, y = (er.top + er.height / 2 - wr.top) / k;
+    const sp = document.createElement('div');
+    sp.className = 'np-spot';
+    sp.style.setProperty('--x', x + 'px'); sp.style.setProperty('--y', y + 'px');
+    fx.appendChild(sp);
+    void sp.offsetWidth;
+    sp.style.setProperty('--r', Math.max(56, (er.height / k) * .7 + 24) + 'px');
+    sp.classList.add('is-on');
+    el.classList.add('is-spot');
+    sfx('drumroll');
+    await sleep(1250);
+  }
   function result(name, sub, twisted) {
-    fx.querySelectorAll('.np-banner, .np-say, .np-hint-pill').forEach((e) => e.remove());
+    fx.querySelectorAll('.np-banner, .np-say, .np-hint-pill, .np-spot').forEach((e) => e.remove());
     const b = document.createElement('div');
     b.className = 'np-banner is-final';
     b.innerHTML = `<div class="np-banner-box">${twisted ? '<span class="np-twist-tag">Lật kèo!</span>' : ''}<p class="np-banner-lbl">Mời bạn</p>

@@ -148,6 +148,7 @@
           <small>Kiểu Board Battle — chiếu bảng ô 100…500 lên màn hình, các đội chọn ô và trả lời. Học sinh không cần máy.</small></button>
       </div>
       <p class="ar-hint ar-power-note only-solo">🎁 <b>Tốc độ</b>, <b>Sinh tồn</b> và <b>Lên Mặt Trăng</b>: đúng liền 3 câu nhận 1 vật phẩm (kiểu Wayground) — ✂️ 50:50 · ⏳ Thêm giờ · ✖️2 Nhân đôi. Bấm để dùng (phím Q, W, E).</p>
+      <p class="ar-hint ar-card-note only-solo"><i class="fa-solid fa-layer-group" aria-hidden="true"></i> <b>Thẻ bài</b> (mọi chế độ): cứ 3 câu, đúng từ 2 câu được bốc 1 trong 3 lá úp — 50:50, Thêm giờ, Nhân đôi, Khiên chuỗi, Câu vàng, Đặt cược, Túi xu, lá hiếm Kho báu. Mỗi trận còn có <b>Câu hỏi vàng</b> và <b>Thử thách tốc độ</b> thưởng xu.</p>
       <div class="ar-field ar-kinds-field"><span>Dạng câu hỏi <em>(bấm để bật/tắt — số nhỏ là số câu có trong bài)</em></span>
         <div class="ar-chips ar-kinds" id="arKinds" role="group" aria-label="Dạng câu hỏi"></div></div>
       <div class="ar-grid3 ar-opts">
@@ -218,6 +219,8 @@
       <span class="ar-pill" id="arQNum"></span>
       <span class="ar-pill ar-pill-main" id="arStat"></span>
       <span class="ar-pill" id="arStreak" hidden></span>
+      <span class="ar-pill ar-pill-bonus" id="arBonus" hidden></span>
+      <span class="ar-pill ar-pill-card" id="arCardFx" hidden></span>
       <button type="button" class="ar-btn ar-btn-ghost ar-btn-sm" id="arQuit"><i class="fa-solid fa-flag"></i> Bỏ cuộc</button>
     </div>
     <div class="ar-timer" id="arTimerWrap"><i id="arTimer"></i></div>
@@ -226,6 +229,7 @@
     <div class="ar-scene" id="arScene" hidden aria-hidden="true"></div>
     <div class="ar-stage">
       <div class="ar-qbox">
+        <div class="ar-chal" id="arChal" hidden></div>
         <div class="ar-q" id="arQ"></div>
         <img class="ar-qimg" id="arQImg" alt="" hidden>
         <div class="ar-answers" id="arAnswers"></div>
@@ -270,6 +274,8 @@
 <script src="js/services/lazy-script-loader.js"></script>
 <script src="js/arena/arena-fx.js"></script>
 <script src="js/arena/arena-core.js"></script>
+<script src="js/arena/arena-drama.js"></script>
+<script src="js/arena/arena-cards.js"></script>
 <script src="js/name-picker/np-art.js"></script>
 <script src="js/arena/arena-covers.js"></script>
 <script src="js/arena/arena-scene.js"></script>

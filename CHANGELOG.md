@@ -1,5 +1,29 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## Đấu trường: Bốc thẻ bài trong trận — cả 10 chế độ (24/10/2026) — 0 Firebase
+
+- **Mốc bốc thẻ**: cứ mỗi 3 câu, đúng **từ 2/3 câu** thì hiện nút **Bốc thẻ bài!** (nhấp nháy vàng); dưới 2 câu đúng thì lỡ lượt bốc. Bàn bài phủ toàn màn hình: chia 3 lá úp → tráo 4 lần → em chọn 1 lá (bấm hoặc phím 1/2/3) → lật ra, 2 lá kia lật theo → **Nhận thẻ** (Enter) → chữ lớn báo hiệu ứng.
+- **8 lá** (rút theo độ hiếm, luôn 3 lá khác nhau, chỉ ra lá dùng được ở trận đó): **50:50** · **Thêm giờ** (chỉ khi có giới hạn giờ) · **Nhân đôi** (chỉ Tốc độ/Sinh tồn/Mặt Trăng) — 3 lá này thành vật phẩm bấm dùng (phím Q/W/E), nay có ở **mọi chế độ**, không ra khi đã giữ đủ 3 vật phẩm · **Khiên chuỗi** (sai 1 câu vẫn giữ chuỗi đúng) · **Câu vàng** (câu kế tiếp thành Câu hỏi vàng +5 xu) · **Đặt cược** (câu kế tiếp: đúng +8 xu, sai −3 xu thưởng) · **Túi xu** +3 · lá hiếm **Kho báu** +10.
+- Thanh trên có ô đen-vàng báo thẻ đang hiệu lực (Khiên chuỗi · Đặt cược · Câu vàng kế tiếp); xu từ thẻ + thử thách gom vào ô "xu thưởng", cộng vào ví khi xong trận.
+- Logic thuần ở `js/arena/arena-core.js` (`CARDS`, `cardCheckpoint`, `drawCards`) + 4 test mới; bàn bài `js/arena/arena-cards.js`; nối vào `arena.js` (`drawCard`, `applyCard`, `paintBonus`, `paintCardFx`). Mỗi mốc chỉ bốc 1 lần; bỏ cuộc giữa lúc bốc vẫn an toàn.
+- Đã chạy bằng Chrome thời gian thật với đề giáo viên tự soạn (`?de=`) ở Kéo co: 3 lần bốc trong 1 trận (Túi xu, Thêm giờ...), vật phẩm hiện và dùng được ở chế độ trước đây không có — 0 lỗi JS; `check-js` và test đạt.
+
+## Đấu trường + Gọi tên: kịch tính, thử thách, hoạt ảnh lúc chơi (24/10/2026) — 0 Firebase
+
+**Đấu trường (Chơi một mình, cả 10 chế độ)** — `js/arena/arena-drama.js` + `arena.js`
+- **Câu hỏi hiện ra**: thẻ câu hỏi phóng to vào, các ô đáp án bật lên lần lượt; **giờ chỉ bắt đầu tính khi đã hiện xong** (chưa bấm được trong lúc hiện).
+- **Căng thẳng giây cuối**: 5 giây cuối có tiếng tích tắc, 3 giây cuối tiếng tim đập + viền đỏ nhấp nháy, thanh giờ rung.
+- **Chữ lớn giữa màn hình**: CÂU CUỐI! (chế độ biết trước số câu) · EM DẪN ĐẦU! · BỊ VƯỢT MẶT! · CHUỖI 3 / 5 / 8 CÂU!
+- **Thử thách có thưởng xu**: mỗi trận 1–2 **Câu hỏi VÀNG** (viền vàng, vệt sáng lướt) và 1 **Thử thách tốc độ** (đếm 5 giây trên thẻ) — đúng được **+5 xu**, xu bay lên ô "xu thưởng" trên thanh trên; cộng vào ví khi xong trận (bỏ cuộc thì mất, như xu thường), màn kết quả có dòng "xu thử thách". Vật phẩm Thêm giờ không kéo dài Thử thách tốc độ. Không có ở lượt Luyện câu sai.
+- Màn kết quả: các con số đếm dần lên.
+
+**Gọi tên (cả 11 trò)** — `np-games.js` + `js/name-picker/np-challenge.js`
+- 5 giây cuối tích tắc, 3 giây cuối tim đập + viền sân khấu đỏ nhấp nháy.
+- **Soi đèn trước khi công bố**: sân khấu tối dần, vòng sáng thu lại quanh người được gọi + tiếng trống dồn, nhân vật nhún lên → khung tên + kèn công bố (trò mà người được gọi đã biến mất như UFO thì bỏ qua soi đèn).
+- **Bốc thử thách** (nút vàng trên khung tên): chia 3 lá bài úp → tráo 4 lần → bạn được gọi chọn 1 lá (bấm hoặc phím 1/2/3) → lật ra; 2 lá còn lại lật theo. 3 loại lá: **Hỏi nhanh IC3** (22 câu: phím tắt, thiết bị nhập/xuất, CPU/RAM, hệ điều hành, đuôi tệp, Excel, mật khẩu mạnh, lừa đảo trực tuyến, bản quyền... — có nút "Xem đáp án" cho giáo viên), **Thử thách vui**, **Thẻ may mắn** (miễn lượt, được nhờ bạn, được gọi bạn tiếp theo).
+- Âm thanh mới (tạo bằng Web Audio, không tải tệp): tick · heartbeat · whoosh · drumroll · fanfare (`js/game-sfx.js`).
+- Đã chạy bằng Chrome thời gian thật: Đấu trường Tốc độ (Câu hỏi vàng, câu hiện ra, 3 giây cuối), Gọi tên Trộm trứng (soi đèn → khung tên → bốc thử thách → xem đáp án) và 6 trò khác — 0 lỗi JS; `check-js` và test đạt.
+
 ## Gọi tên Vui: thêm trò thứ 11 — 🔮 Đua bi (marble race) (24/10/2026) — 0 Firebase
 
 - **Bản nâng cấp "kịch tính"**: đường đua khó hơn với 6 loại bất ngờ — **Trộn bi** (phễu rung, bi đảo chỗ 3 lần trước khi thả) · **cối xay** hất bi ngược lại · **bệ tăng tốc** (bi phát sáng lao vút) · **MÁY TRỘN** (bi bị hút vào trống quay, xoay vòng một lúc rồi ra theo thứ tự mới) · **LÒ XO TUNG BI** (bi bị bắn lên trời: rơi ngược về dốc trên hoặc bay tắt qua bẫy) · **BẪY SẬP** (nắp mở theo nhịp, bi rơi xuống **ống hút** chạy vòng về đầu dốc). Bi đuổi kịp thì nhảy qua đầu bi khác.

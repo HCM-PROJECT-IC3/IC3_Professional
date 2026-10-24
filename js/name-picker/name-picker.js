@@ -9,6 +9,7 @@
 
   const N = global.EduNamePicker;
   const G = global.EduNamePickerGames;
+  const CH = global.EduNamePickerChallenge; // "Bốc thử thách" sau khi gọi tên (np-challenge.js)
   const $ = (id) => document.getElementById(id);
   const STORE = 'eduquiz_goiten_v1';
   const ROSTER_URL = 'data/roster/students-active.json';
@@ -185,13 +186,21 @@
     const sub = [stt ? `Số thứ tự ${stt}` : '', S.src === 'class' ? `${S.cls} · ${S.school}` : ''].filter(Boolean).join(' · ');
     const acts = G.result(label(plan.winner), sub, !!plan.twist);
     acts.innerHTML = `<button type="button" class="np-go np-go-sm" data-rv="next">Gọi tiếp <kbd>Space</kbd></button>
+      <button type="button" class="np-small np-chal-btn" data-rv="chal"><i class="fa-solid fa-layer-group" aria-hidden="true"></i> Bốc thử thách</button>
       <button type="button" class="np-small" data-rv="absent"><i class="fa-solid fa-user-xmark" aria-hidden="true"></i> Bạn này vắng — gọi bạn khác</button>
       <button type="button" class="np-small" data-rv="close">Đóng <kbd>Esc</kbd></button>`;
-    sfx('win');
+    sfx('fanfare');
     if (global.EduFX) global.EduFX.confetti({ count: 140 });
     acts.querySelector('[data-rv="next"]').focus({ preventScroll: true });
   }
-  function closeReveal() { showing = false; G.clearResult(); idle(); }
+  function closeReveal() { if (CH) CH.close(); showing = false; G.clearResult(); idle(); }
+  /** Bốc thử thách: ẩn khung tên, chia 3 lá bài trên sân khấu; xong thì hiện lại khung tên. */
+  function openChallenge() {
+    const fxEl = $('npStage').querySelector('.np-fx'), bn = fxEl && fxEl.querySelector('.np-banner');
+    if (!CH || !fxEl || !lastPlan) return;
+    if (bn) bn.hidden = true;
+    CH.open(fxEl, label(lastPlan.winner), () => { if (bn) { bn.hidden = false; const n = bn.querySelector('[data-rv="next"]'); if (n) n.focus({ preventScroll: true }); } });
+  }
 
   // ============================================================
   // SỰ KIỆN
@@ -273,6 +282,7 @@
     });
     document.addEventListener('keydown', (e) => {
       if (/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
+      if (CH && CH.isOpen()) { if (CH.key(e)) e.preventDefault(); return; } // đang bốc thử thách: 1/2/3, Enter, Esc
       if (e.key === 'Escape' && showing) { closeReveal(); return; }
       if (e.key === ' ' || (e.key === 'Enter' && !(e.target.closest && e.target.closest('button')))) {
         e.preventDefault();
@@ -284,6 +294,7 @@
     paintSource();
   }
   function onReveal(act) {
+    if (act === 'chal') { openChallenge(); return; }
     if (act === 'close') closeReveal();
     else if (act === 'next') go();
     else if (act === 'absent') {

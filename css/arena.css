@@ -1144,3 +1144,99 @@ body[data-mode="moon"] .ar-scene { height: clamp(170px, min(30vw, 40vh), 360px);
   .ar-mode.has-cover.is-on > small:not([hidden]) { display: block; }
 }
 @media (prefers-reduced-motion: reduce) { .ar-cover *, .ar-cover > svg { animation: none !important; transition: none !important; } }
+
+/* ── Kịch tính trong trận (js/arena/arena-drama.js + arena.js) ── */
+/* Chữ lớn đập vào giữa màn hình */
+.ar-drama { position: fixed; left: 50%; top: 40%; z-index: 80; pointer-events: none; opacity: 0;
+  transform: translate(-50%, -50%) scale(2.1) rotate(-6deg); transition: opacity .22s, transform .25s ease-in; }
+.ar-drama.is-on { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(-2deg); transition: opacity .15s, transform .42s cubic-bezier(.2, 1.6, .4, 1); }
+.ar-drama-in { display: grid; justify-items: center; gap: 2px; padding: 14px 36px 16px; border-radius: 22px; border: 4px solid #2d2416;
+  box-shadow: 0 9px 0 rgba(0, 0, 0, .3); background: #fff; color: #2d2416; text-align: center; white-space: nowrap; }
+.ar-drama-in b { font: 800 clamp(30px, 5.4vw, 60px)/1.05 'Baloo 2', Inter, sans-serif; letter-spacing: .02em; }
+.ar-drama-in i { font-size: 28px; }
+.ar-drama-in small { font: 700 15px/1.3 Inter, sans-serif; opacity: .92; }
+.ar-drama.t-gold .ar-drama-in { background: #ffd23f; }
+.ar-drama.t-speed .ar-drama-in { background: #2f7be0; color: #fff; }
+.ar-drama.t-final .ar-drama-in { background: #e5484d; color: #fff; }
+.ar-drama.t-up .ar-drama-in { background: #16a37f; color: #fff; }
+.ar-drama.t-down .ar-drama-in { background: #3d4456; color: #fff; }
+.ar-drama.t-fire .ar-drama-in { background: #f19a1a; color: #fff; }
+/* Câu hỏi + ô đáp án hiện ra (giờ chỉ bắt đầu tính sau khi hiện xong) */
+.ar-qbox.is-intro .ar-q, .ar-qbox.is-intro .ar-qimg:not([hidden]) { animation: ar-q-in .45s cubic-bezier(.2, 1.4, .4, 1) both; }
+.ar-qbox.is-intro .ar-answers > * { animation: ar-ans-in .38s cubic-bezier(.2, 1.5, .4, 1) both; pointer-events: none; }
+.ar-qbox.is-intro .ar-answers > :nth-child(2) { animation-delay: .07s; }
+.ar-qbox.is-intro .ar-answers > :nth-child(3) { animation-delay: .14s; }
+.ar-qbox.is-intro .ar-answers > :nth-child(4) { animation-delay: .21s; }
+.ar-qbox.is-intro .ar-answers > :nth-child(n+5) { animation-delay: .28s; }
+@keyframes ar-q-in { from { transform: scale(.72); opacity: 0; } }
+@keyframes ar-ans-in { from { transform: translateY(20px) scale(.85); opacity: 0; } }
+/* Thử thách: Câu hỏi vàng (viền vàng, vệt sáng lướt qua) · Thử thách tốc độ (đếm 5 giây) */
+.ar-chal { display: inline-flex; width: fit-content; justify-self: start; align-items: center; gap: 6px; margin-bottom: .5rem; padding: 4px 12px; border-radius: 999px;
+  font: 800 .85rem/1.4 Inter, sans-serif; background: #ffd23f; color: #2d2416; border: 2px solid #a87a00; }
+.ar-chal[hidden] { display: none; }
+.ar-chal.t-speed { background: #2f7be0; color: #fff; border-color: #1c4f9c; }
+.ar-chal.t-speed b { min-width: 1ch; font-size: 1.05rem; }
+.ar-chal.is-miss { opacity: .5; text-decoration: line-through; }
+.ar-qbox.is-gold .ar-q { position: relative; overflow: hidden; border-color: #f2c94c; box-shadow: 0 0 0 3px #f2c94c, 0 0 26px rgba(242, 201, 76, .55); }
+.ar-qbox.is-gold .ar-q::after { content: ''; position: absolute; top: 0; bottom: 0; width: 30%; left: -40%; pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(255, 236, 160, .55), transparent); animation: ar-shine 2.2s ease-in-out infinite; }
+@keyframes ar-shine { 60%, 100% { left: 120%; } }
+.ar-pill-bonus { background: #ffd23f; border-color: #a87a00; color: #2d2416; }
+.ar-pill-bonus small { font-weight: 700; }
+.ar-coin-fly { position: fixed; left: 0; top: 0; z-index: 90; margin: -12px 0 0 -12px; font-size: 24px; pointer-events: none; }
+/* 3 giây cuối: viền đỏ nhấp nháy theo nhịp tim, thanh giờ rung */
+#arGame.is-tense::after { content: ''; position: fixed; inset: 0; z-index: 70; pointer-events: none; box-shadow: inset 0 0 90px 12px rgba(229, 72, 77, .55); animation: ar-tense .5s ease-in-out infinite alternate; }
+#arGame.is-tense .ar-timer { animation: ar-timer-shake .16s linear infinite; }
+@keyframes ar-tense { from { opacity: .45; } to { opacity: 1; } }
+@keyframes ar-timer-shake { 25% { transform: translateX(-2px); } 75% { transform: translateX(2px); } }
+@media (prefers-reduced-motion: reduce) {
+  .ar-drama, .ar-drama.is-on { transition: opacity .2s; transform: translate(-50%, -50%); }
+  .ar-qbox.is-intro *, .ar-qbox.is-gold .ar-q::after, #arGame.is-tense::after, #arGame.is-tense .ar-timer { animation: none !important; }
+}
+
+/* ── Bốc thẻ bài (js/arena/arena-cards.js) ── */
+.ar-draw { animation: ar-draw-pulse 1s ease-in-out infinite alternate; }
+.ar-draw small { font-weight: 700; opacity: .9; }
+@keyframes ar-draw-pulse { from { box-shadow: 0 5px 0 rgba(0, 0, 0, .25); } to { box-shadow: 0 5px 0 rgba(0, 0, 0, .25), 0 0 0 5px rgba(255, 210, 63, .55); } }
+.ar-pill-card { background: #2d2416; border-color: #2d2416; color: #ffd34d; }
+.ar-pill-card[hidden] { display: none; }
+.ar-cards { position: fixed; inset: 0; z-index: 85; display: grid; place-items: center; background: rgba(16, 12, 36, .82); perspective: 1400px; animation: ar-cards-fade .25s; }
+@keyframes ar-cards-fade { from { opacity: 0; } }
+.ar-cards-in { display: grid; justify-items: center; gap: 10px; width: min(760px, 94vw); }
+.ar-cards-title { margin: 0; color: #fff; font: 800 clamp(28px, 4.4vw, 44px)/1.1 'Baloo 2', Inter, sans-serif; }
+.ar-cards-title i { color: #ffd34d; }
+.ar-cards-hint { margin: 0; color: #e8e2ff; font: 700 17px/1.3 Inter, sans-serif; min-height: 1.3em; }
+.ar-cards-table { --gap: min(230px, 30vw); position: relative; width: 100%; height: min(300px, 62vw); margin: 8px 0 6px; }
+.ar-card3 { --slot: 0; position: absolute; left: 50%; top: 0; width: min(190px, 27vw); height: min(270px, 38vw); margin-left: calc(min(190px, 27vw) / -2);
+  padding: 0; border: 0; background: none; cursor: pointer; font: inherit; color: inherit;
+  transform: translateX(calc(var(--slot) * var(--gap))); }
+.ar-card3:disabled { cursor: default; }
+.ar-card3.is-dealing { transform: translate(0, 70vh) rotate(-14deg); opacity: 0; }
+.ar-card3.is-lift { transform: translateX(calc(var(--slot) * var(--gap))) translateY(-24px) scale(1.04); z-index: 2; }
+.ar-card3.is-ready:hover, .ar-card3.is-ready:focus-visible { transform: translateX(calc(var(--slot) * var(--gap))) translateY(-10px); outline: none; }
+.ar-card3.is-ready .ar-card3-back { animation: ar-card-glow 1.2s ease-in-out infinite alternate; }
+.ar-card3.is-pick { z-index: 3; }
+.ar-card3-in { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .6s cubic-bezier(.3, 1.3, .5, 1); }
+.ar-card3.is-flip .ar-card3-in { transform: rotateY(180deg); }
+.ar-card3.is-pick.is-flip .ar-card3-in { transform: rotateY(180deg) scale(1.1); }
+.ar-card3.is-other { opacity: .5; }
+.ar-card3-back, .ar-card3-face { position: absolute; inset: 0; border-radius: 18px; border: 4px solid #2d2416; box-shadow: 0 8px 0 rgba(0, 0, 0, .35);
+  backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.ar-card3-back { display: grid; place-items: center; background: repeating-linear-gradient(45deg, #2f40b2 0 14px, #26369a 14px 28px); }
+.ar-card3-back i { width: 46%; aspect-ratio: 1; display: grid; place-items: center; border-radius: 50%; background: #2d2416; border: 4px solid #ffd34d; color: #ffd34d; font-size: clamp(28px, 5vw, 52px); }
+.ar-card3-face { transform: rotateY(180deg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 14px 12px; text-align: center; background: #fffdf7; color: #2d2416; }
+.ar-card3-face i { width: 64px; height: 64px; display: grid; place-items: center; border-radius: 50%; font-size: 30px; color: #fff; border: 3px solid #2d2416; }
+.ar-card3-face b { font: 800 clamp(18px, 2.6vw, 24px)/1.1 'Baloo 2', Inter, sans-serif; }
+.ar-card3-face small { font: 600 clamp(11px, 1.6vw, 13.5px)/1.35 Inter, sans-serif; }
+.ar-card3.t-power .ar-card3-face i { background: #2f7be0; }
+.ar-card3.t-guard .ar-card3-face i { background: #16a37f; }
+.ar-card3.t-gold .ar-card3-face i, .ar-card3.t-coin .ar-card3-face i { background: #f2b51d; }
+.ar-card3.t-risk .ar-card3-face i { background: #e5484d; }
+.ar-card3.t-rare .ar-card3-face { background: linear-gradient(160deg, #fff6c9, #ffe08a); }
+.ar-card3.t-rare .ar-card3-face i { background: #8b4fd6; box-shadow: 0 0 18px #ffd34d; }
+@keyframes ar-card-glow { from { box-shadow: 0 8px 0 rgba(0, 0, 0, .35); } to { box-shadow: 0 8px 0 rgba(0, 0, 0, .35), 0 0 0 5px #ffd34d, 0 0 26px #ffd34d; } }
+.ar-cards-ok[hidden] { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .ar-draw, .ar-card3.is-ready .ar-card3-back, .ar-cards { animation: none !important; }
+  .ar-card3-in { transition: none; }
+}
