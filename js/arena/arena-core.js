@@ -449,6 +449,47 @@
     held.push(id);
     return id;
   }
+  // ── Thẻ bài: cứ mỗi CARD_EVERY câu, đúng ≥ CARD_NEED câu trong nhóm đó thì được bốc 1 trong 3 lá úp ──
+  const CARD_EVERY = 3, CARD_NEED = 2;
+  /** tone: màu mặt lá · w: trọng số rút (càng nhỏ càng hiếm) · fa: icon Font Awesome. */
+  const CARDS = {
+    fifty: { name: '50:50', fa: 'fa-scissors', tone: 'power', w: 16, desc: 'Bỏ bớt 2 đáp án sai ở 1 câu — bấm để dùng' },
+    time: { name: 'Thêm giờ', fa: 'fa-hourglass-half', tone: 'power', w: 14, desc: 'Thêm nửa thời gian cho 1 câu — bấm để dùng' },
+    x2: { name: 'Nhân đôi', fa: 'fa-angles-up', tone: 'power', w: 12, desc: 'Câu đúng kế tiếp được gấp đôi điểm' },
+    shield: { name: 'Khiên chuỗi', fa: 'fa-shield-halved', tone: 'guard', w: 12, desc: 'Sai 1 câu vẫn giữ nguyên chuỗi đúng' },
+    gold: { name: 'Câu vàng', fa: 'fa-crown', tone: 'gold', w: 12, desc: 'Câu kế tiếp thành Câu hỏi vàng — đúng +5 xu' },
+    bet: { name: 'Đặt cược', fa: 'fa-dice', tone: 'risk', w: 9, desc: 'Câu kế tiếp: đúng +8 xu, sai −3 xu thưởng' },
+    coins: { name: 'Túi xu', fa: 'fa-sack-dollar', tone: 'coin', w: 18, desc: '+3 xu thưởng ngay' },
+    jackpot: { name: 'Kho báu', fa: 'fa-gem', tone: 'rare', w: 4, desc: '+10 xu thưởng ngay — lá hiếm!' },
+  };
+  const CARD_XU = { coins: 3, jackpot: 10, betWin: 8, betLose: 3 };
+  /** Vừa xong 1 nhóm CARD_EVERY câu và đúng đủ CARD_NEED câu trong nhóm đó? log: [{ ok }]. */
+  function cardCheckpoint(log) {
+    if (!log.length || log.length % CARD_EVERY !== 0) return false;
+    return log.slice(-CARD_EVERY).filter((x) => x.ok).length >= CARD_NEED;
+  }
+  /**
+   * 3 lá KHÁC NHAU, rút theo trọng số trong các lá dùng được ở trận này.
+   * ctx: { x2 (chế độ có điểm nhân đôi), time (có giới hạn giờ), full (đã giữ đủ POWER_MAX vật phẩm) }.
+   */
+  function drawCards(rng, ctx) {
+    const c = ctx || {};
+    let pool = Object.keys(CARDS).filter((id) => {
+      if ((id === 'fifty' || id === 'time' || id === 'x2') && c.full) return false;
+      if (id === 'x2' && !c.x2) return false;
+      if (id === 'time' && !c.time) return false;
+      return true;
+    });
+    const out = [];
+    while (out.length < 3 && pool.length) {
+      const total = pool.reduce((s, id) => s + CARDS[id].w, 0);
+      let r = rng() * total, pick = pool[pool.length - 1];
+      for (const id of pool) { r -= CARDS[id].w; if (r < 0) { pick = id; break; } }
+      out.push(pick);
+      pool = pool.filter((id) => id !== pick);
+    }
+    return out;
+  }
   /** 50:50 — chỉ số các đáp án SAI cần ẩn (để lại đáp án đúng + 1 đáp án sai). Câu ≤ 2 lựa chọn: không ẩn gì. */
   function fiftyFifty(q, rng) {
     if (kindOf(q) !== 'choice' || q.options.length <= 2) return [];
@@ -849,6 +890,7 @@
     CHESTS, rollChests, applyChest, chestLabel, raceStep, rank,
     LIVES, HEAL_EVERY, survivalStep, survivalOrder, hearts, FISH, castLine,
     POWERUPS, POWER_EVERY, POWER_MAX, earnPowerup, fiftyFifty,
+    CARDS, CARD_EVERY, CARD_NEED, CARD_XU, cardCheckpoint, drawCards,
     TUG_GOAL, TUG_K, TEAMS, tugPull, tugStep, tugWinner, tugTeamFor,
     SPELL_HP, SPELLS, rollSpells, spellBoost, castSpell, botSpell, spellOrder,
     VAULT_LEN, VAULT_SYMS, HEIST_STEAL, newVault, mineGems, crackOf, rekey, crackTry, vaultThreat, botHeist,

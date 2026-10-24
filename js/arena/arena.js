@@ -14,6 +14,11 @@
   const K = global.EduArenaKinds;
   const FX = global.EduArenaFX;
   const SC = global.EduArenaScene; // dải sân khấu có tranh (js/arena/arena-scene.js)
+  const D = global.EduArenaDrama;  // chữ lớn giữa màn hình, xu bay, số đếm dần (js/arena/arena-drama.js)
+  const CD = global.EduArenaCards; // bàn bốc thẻ bài mỗi 3 câu (js/arena/arena-cards.js)
+  const reducedMotion = () => { try { return global.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } };
+  const CHAL_XU = 5;     // xu thưởng mỗi thử thách (Câu hỏi vàng / Thử thách tốc độ)
+  const CHAL_MS = 5000;  // Thử thách tốc độ: đúng trong 5 giây
   const STORE = 'eduquiz_arena_v1';
   const SHAPES = ['▲', '◆', '●', '■', '★', '⬟'];
   const AVATAR_DEFAULT = '🙂';
@@ -457,6 +462,19 @@
       log: [], trail: [], bestStreak: 0, correct: 0, startedAt: Date.now(), locked: false, phase: 'q',
       powers: [], x2: false, rope: 0, crack: {}, opened: 0, boost: 1, trackDrawn: false, busted: 0, cheats: 0,
     };
+    // Thử thách có thưởng xu (không có ở lượt Luyện câu sai): 1–2 Câu hỏi VÀNG + 1 Thử thách tốc độ (khi có giới hạn giờ).
+    // Đua/Mặt Trăng không biết trước câu cuối → rải trong n câu đầu.
+    G.goldAt = []; G.speedAt = -1; G.bonus = 0; G.chal = '';
+    G.shield = false; G.goldNext = false; G.bet = false; G.betQ = false; // hiệu ứng thẻ bài đang chờ
+    G.drawnAt = -1; // số câu đã trả lời lúc bốc thẻ gần nhất (mỗi mốc chỉ bốc 1 lần)
+    if (!drill) {
+      const span = Math.max(2, Math.min(G.maxRounds, n));
+      const pool = Array.from({ length: span - 1 }, (_, k) => k + 1);
+      for (let k = pool.length - 1; k > 0; k--) { const j = Math.floor(rng() * (k + 1)); [pool[k], pool[j]] = [pool[j], pool[k]]; }
+      G.goldAt = pool.slice(0, span >= 10 ? 2 : 1);
+      if (G.limitMs && pool.length > G.goldAt.length) G.speedAt = pool[G.goldAt.length];
+    }
+    paintBonus(); paintCardFx();
     $('arTimerWrap').hidden = !G.limitMs;
     document.body.dataset.mode = mode;
     show('arGame');
@@ -472,7 +490,7 @@
   function cur() { return G.deck[G.i % G.deck.length]; }
 
   function nextQuestion() {
-    G.phase = 'q'; G.locked = false;
+    G.phase = 'intro'; G.locked = false; // 'intro': câu hỏi + ô đáp án đang hiện ra, chưa bấm được, chưa tính giờ
     const q = cur();
     $('arQNum').textContent = G.mode === 'race' || G.mode === 'moon' ? `Câu ${G.i + 1}` : `Câu ${G.i + 1}/${G.maxRounds}`;
     $('arQ').textContent = q.text;
@@ -488,19 +506,56 @@
       G.picker = K.mount($('arAnswers'), q, { onAnswer: (a) => answer(a) });
     }
     $('arFeedback').hidden = true;
+    // Thử thách của câu này · câu cuối (chế độ biết trước số câu) → chữ lớn giữa màn hình trước khi tính giờ
+    G.chal = G.goldAt.includes(G.i) || G.goldNext ? 'gold' : G.i === G.speedAt ? 'speed' : '';
+    G.goldNext = false;
+    G.betQ = G.bet; G.bet = false; // thẻ Đặt cược áp dụng cho câu này
+    paintCardFx();
+    const box = document.querySelector('#arGame .ar-qbox'), chal = $('arChal');
+    box.classList.toggle('is-gold', G.chal === 'gold');
+    chal.hidden = !G.chal;
+    chal.className = 'ar-chal t-' + (G.chal || 'gold');
+    chal.innerHTML = G.chal === 'gold' ? `<i class="fa-solid fa-crown" aria-hidden="true"></i> Câu hỏi vàng · đúng +${CHAL_XU} xu`
+      : G.chal === 'speed' ? `<i class="fa-solid fa-bolt" aria-hidden="true"></i> Còn <b id="arChalS">${CHAL_MS / 1000}</b> giây · đúng +${CHAL_XU} xu` : '';
+    const last = !G.practice && G.mode !== 'race' && G.mode !== 'moon' && G.maxRounds > 1 && G.i === G.maxRounds - 1;
+    let big = true;
+    if (D && G.chal === 'gold') D.banner('CÂU HỎI VÀNG', { tone: 'gold', icon: 'fa-crown', sub: `Trả lời đúng: +${CHAL_XU} xu` });
+    else if (D && G.chal === 'speed') D.banner('THỬ THÁCH TỐC ĐỘ', { tone: 'speed', icon: 'fa-bolt', sub: `Đúng trong ${CHAL_MS / 1000} giây: +${CHAL_XU} xu` });
+    else if (D && last) D.banner('CÂU CUỐI!', { tone: 'final', icon: 'fa-flag-checkered', sub: 'Câu quyết định thứ hạng' });
+    else if (D && G.betQ) D.banner('ĐẶT CƯỢC!', { tone: 'final', icon: 'fa-dice', sub: `Đúng +${C.CARD_XU.betWin} xu · Sai −${C.CARD_XU.betLose} xu` });
+    else big = false;
+    if (big) sfx('whoosh');
+    box.classList.remove('is-intro'); void box.offsetWidth; box.classList.add('is-intro');
     renderHud(); renderSide(); renderTrack(); renderPowers();
-    G.qStart = performance.now();
-    startTimer();
+    const g = G, i = G.i;
+    setTimeout(() => {
+      if (G !== g || G.i !== i || G.phase !== 'intro') return;
+      box.classList.remove('is-intro');
+      G.phase = 'q';
+      renderPowers();
+      G.qStart = G.chalStart = performance.now(); // chalStart: vật phẩm Thêm giờ không kéo dài Thử thách tốc độ
+      startTimer();
+    }, reducedMotion() ? 0 : big ? 1350 : 600);
   }
 
   function startTimer() {
     clearInterval(G.timer);
     if (!G.limitMs) return;
     const bar = $('arTimer');
+    let lastSec = -1;
     G.timer = setInterval(() => {
       const left = Math.max(0, 1 - (performance.now() - G.qStart) / G.limitMs);
       bar.style.width = (left * 100) + '%';
       bar.classList.toggle('is-low', left < 0.25);
+      // 5 giây cuối: tích tắc; 3 giây cuối: tim đập + viền đỏ nhấp nháy
+      const sec = Math.ceil((left * G.limitMs) / 1000);
+      if (left > 0 && sec <= 5 && sec !== lastSec) { lastSec = sec; sfx(sec <= 3 ? 'heartbeat' : 'tick'); }
+      $('arGame').classList.toggle('is-tense', left > 0 && sec <= 3);
+      if (G.chal === 'speed') {
+        const s = Math.max(0, CHAL_MS - (performance.now() - G.chalStart));
+        const el = $('arChalS'); if (el) el.textContent = Math.ceil(s / 1000);
+        $('arChal').classList.toggle('is-miss', s <= 0);
+      }
       if (left <= 0) answer(null);
     }, 100);
   }
@@ -509,10 +564,13 @@
     if (!G || G.locked || G.phase !== 'q') return;
     G.locked = true;
     clearInterval(G.timer);
+    $('arGame').classList.remove('is-tense');
+    const chalMs = performance.now() - (G.chalStart || 0);
     const q = cur();
     const ms = Math.min(G.limitMs || Infinity, performance.now() - G.qStart);
     const ok = C.grade(q, k);
     const me = G.me;
+    const streak0 = me.streak; // thẻ Khiên chuỗi: sai thì trả lại chuỗi này
     G.log.push({ q, chosen: k, ok });
     if (ok) G.correct++;
     // Chuỗi đúng: Đua (raceStep), Sinh tồn (survivalStep), Mặt Trăng (moonStep) tự đếm — tránh cộng 2 lần.
@@ -606,10 +664,37 @@
     // Kiểu Wayground: đúng liền 3 câu → nhận 1 vật phẩm hỗ trợ.
     const got = ok && POWER_MODES.includes(G.mode) ? C.earnPowerup(G.powers, me.streak, rng) : '';
     const gotTag = got ? ` <span class="ar-tag up">🎁 Nhận ${C.POWERUPS[got].icon} ${C.POWERUPS[got].name}</span>` : '';
-    showFeedback(ok, fb + move + gotTag, q, k);
+    // Thử thách: đúng (và đủ nhanh với Thử thách tốc độ) → +xu, cộng vào ví khi xong trận (bỏ cuộc thì mất như xu thường)
+    let chalTag = '', chalWon = false;
+    if (G.chal) {
+      chalWon = ok && (G.chal === 'gold' || chalMs <= CHAL_MS);
+      if (chalWon) { G.bonus += CHAL_XU; chalTag = ` <span class="ar-tag up">🪙 +${CHAL_XU} xu thử thách</span>`; }
+      else chalTag = ` <span class="ar-tag">${G.chal === 'gold' ? 'Hụt Câu hỏi vàng' : ok ? 'Đúng nhưng quá 5 giây — hụt thử thách' : 'Hụt thử thách tốc độ'}</span>`;
+    }
+    // Thẻ bài đang có hiệu lực: Khiên chuỗi (sai vẫn giữ chuỗi) · Đặt cược (đúng +8 / sai −3 xu thưởng)
+    let cardTag = '', betWon = false;
+    if (!ok && G.shield && streak0 > 0) { me.streak = streak0; G.shield = false; cardTag += ` <span class="ar-tag up">🛡️ Khiên chuỗi giữ chuỗi ${streak0} câu</span>`; }
+    if (G.betQ) {
+      G.betQ = false;
+      if (ok) { betWon = true; G.bonus += C.CARD_XU.betWin; cardTag += ` <span class="ar-tag up">🎲 Thắng cược +${C.CARD_XU.betWin} xu</span>`; }
+      else { G.bonus = Math.max(0, G.bonus - C.CARD_XU.betLose); cardTag += ` <span class="ar-tag">🎲 Thua cược −${C.CARD_XU.betLose} xu</span>`; }
+    }
+    showFeedback(ok, fb + move + gotTag + chalTag + cardTag, q, k);
     if (events.length) $('arFbExtra').insertAdjacentHTML('beforeend', `<ul class="ar-events">${events.map((e) => `<li>${e}</li>`).join('')}</ul>`);
     renderHud(); renderSide(); renderTrack(); renderPowers();
     answerFx(q, k, ok, pop, life, newRank < prevRank);
+    paintBonus(); paintCardFx();
+    if (chalWon || betWon) {
+      if (D) D.coinFly(chalWon ? $('arChal') : $('arFeedback'), $('arBonus'), 7);
+      sfx('match');
+    }
+    // Chữ lớn: lên/mất ngôi đầu (từ câu 2, không tính Kéo co theo đội) · mốc chuỗi đúng 3/5/8
+    if (D && !G.practice) {
+      const solo = G.mode !== 'tug' && G.i >= 1;
+      if (solo && newRank === 1 && prevRank > 1) { D.banner('EM DẪN ĐẦU!', { tone: 'up', icon: 'fa-crown', sub: 'Giữ vững ngôi đầu nhé!' }); sfx('critical'); }
+      else if (solo && prevRank === 1 && newRank > 1) D.banner('BỊ VƯỢT MẶT!', { tone: 'down', icon: 'fa-person-running', sub: `Tụt xuống hạng ${newRank} — gỡ lại ngay!` });
+      else if (ok && [3, 5, 8].includes(me.streak)) D.banner(`CHUỖI ${me.streak} CÂU!`, { tone: 'fire', icon: 'fa-fire', sub: me.streak >= 8 ? 'Không ai cản nổi!' : me.streak >= 5 ? 'Bất bại!' : 'Đang nóng tay!' });
+    }
     if (G.mode === 'gold' && ok) { showChests(); return; }
     if (G.mode === 'spell' && ok) { showSpells(); return; }
     if (G.mode === 'heist' && ok) { showHeist(); return; }
@@ -659,9 +744,63 @@
     G.phase = 'next';
     const done = isOver();
     const extra = $('arFbExtra');
+    // Mỗi 3 câu, đúng ≥ 2 câu → được bốc 1 thẻ bài trước khi sang câu sau
+    if (!done && !G.practice && CD && G.drawnAt !== G.log.length && C.cardCheckpoint(G.log)) {
+      const right = G.log.slice(-C.CARD_EVERY).filter((x) => x.ok).length;
+      G.phase = 'draw';
+      extra.insertAdjacentHTML('beforeend', `<button type="button" class="ar-btn ar-btn-play ar-draw" id="arDraw"><i class="fa-solid fa-layer-group" aria-hidden="true"></i> Bốc thẻ bài! <small>đúng ${right}/${C.CARD_EVERY} câu</small> <kbd>Enter</kbd></button>`);
+      $('arDraw').addEventListener('click', drawCard);
+      $('arDraw').focus({ preventScroll: true });
+      sfx('whoosh');
+      return;
+    }
     extra.insertAdjacentHTML('beforeend', `<button type="button" class="ar-btn ar-btn-play ar-next" id="arNext">${done ? '🏆 Xem kết quả' : 'Câu tiếp ▶'} <kbd>Enter</kbd></button>`);
     $('arNext').addEventListener('click', next);
     $('arNext').focus({ preventScroll: true });
+  }
+  /** Bốc thẻ: 3 lá hợp với trận này (EduArenaCore.drawCards) → em chọn → áp hiệu ứng → hiện nút Câu tiếp. */
+  async function drawCard() {
+    if (!G || G.phase !== 'draw') return;
+    G.phase = 'cards';
+    G.drawnAt = G.log.length;
+    const g = G;
+    const ids = C.drawCards(rng, { x2: POWER_MODES.includes(G.mode), time: !!G.limitMs, full: G.powers.length >= C.POWER_MAX });
+    const id = await CD.open(ids);
+    if (G !== g) return; // đã bỏ cuộc trong lúc bốc
+    const btn = $('arDraw'); if (btn) btn.remove();
+    applyCard(id);
+    afterAnswer();
+  }
+  function applyCard(id) {
+    const c = C.CARDS[id];
+    if (id === 'fifty' || id === 'time' || id === 'x2') G.powers.push(id);
+    else if (id === 'shield') G.shield = true;
+    else if (id === 'gold') G.goldNext = true;
+    else if (id === 'bet') G.bet = true;
+    else if (C.CARD_XU[id]) {
+      G.bonus += C.CARD_XU[id];
+      paintBonus();
+      if (D) D.coinFly($('arFeedback'), $('arBonus'), id === 'jackpot' ? 12 : 6);
+      sfx('match');
+    }
+    renderPowers(); paintCardFx();
+    const tone = { power: 'speed', guard: 'up', gold: 'gold', risk: 'final', coin: 'gold', rare: 'fire' }[c.tone];
+    if (D) D.banner(c.name, { tone, icon: c.fa, sub: c.desc, ms: 1600 });
+  }
+  /** Ô xu thưởng trên thanh trên (thử thách + thẻ bài) — cộng vào ví khi xong trận. */
+  function paintBonus() {
+    const el = $('arBonus');
+    el.hidden = !G || !G.bonus;
+    if (!el.hidden) el.innerHTML = `🪙 +${G.bonus} <small>xu thưởng</small>`;
+  }
+  /** Thẻ đang có hiệu lực (Khiên chuỗi · Đặt cược · Câu vàng kế tiếp) trên thanh trên. */
+  function paintCardFx() {
+    const el = $('arCardFx');
+    const on = G ? [G.shield && '<i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Khiên chuỗi',
+      (G.bet || G.betQ) && '<i class="fa-solid fa-dice" aria-hidden="true"></i> Đặt cược',
+      G.goldNext && '<i class="fa-solid fa-crown" aria-hidden="true"></i> Câu vàng kế tiếp'].filter(Boolean) : [];
+    el.hidden = !on.length;
+    el.innerHTML = on.join(' · ');
   }
   function next() {
     if (!G || G.phase !== 'next') return;
@@ -684,7 +823,7 @@
   // ── Vật phẩm hỗ trợ (kiểu Wayground) ──
   function renderPowers() {
     const box = $('arPowers');
-    box.hidden = !G || !POWER_MODES.includes(G.mode) || (!G.powers.length && !G.x2);
+    box.hidden = !G || (!G.powers.length && !G.x2); // vật phẩm tự có (Tốc độ/Sinh tồn/Mặt Trăng) hoặc từ thẻ bài (mọi chế độ)
     if (box.hidden) return;
     box.innerHTML = G.powers.map((id, i) => {
       const P = C.POWERUPS[id];
@@ -1215,7 +1354,7 @@
     const total = G.log.length;
     const p = profile();
     const coins = C.coinsFor({ correct: G.correct, place, players: G.mode === 'tug' ? 2 : board.length });
-    p.coins += coins;
+    p.coins += coins + (G.bonus || 0);
     p.games = (p.games || 0) + 1;
     addDaily(G.correct);
     const value = G.me[key];
@@ -1263,6 +1402,7 @@
       ${G.mode === 'moon' ? `<div><b>${Math.round((G.me.km / C.MOON_KM) * 100)}%</b><span>${G.me.km >= C.MOON_KM ? 'đã tới Mặt Trăng' : 'quãng đường tới Mặt Trăng'}</span></div>` : ''}
       ${G.mode === 'tug' ? `<div><b>${Math.abs(G.rope)}/${C.TUG_GOAL}</b><span>${won ? `dây lệch về ${C.TEAMS[won].name}` : 'dây cân bằng'}</span></div>` : ''}
       <div class="is-coin"><b>+${coins} 🪙</b><span>xu (đang có ${p.coins})</span></div>
+      ${G.bonus ? `<div class="is-coin"><b>+${G.bonus} 🪙</b><span>xu thử thách</span></div>` : ''}
       ${dailyStat()}`;
     const rv = $('arReview');
     rv.hidden = !wrong.length;
@@ -1270,6 +1410,7 @@
     rv.innerHTML = reviewHtml(wrong);
     paintPracticeBtn($('arPractice'), wrong.length);
     show('arEnd');
+    if (D) { D.hide(); D.countUp($('arEndStats')); }
     refreshWallet();
     const win = G.practice ? !wrong.length : place === 1 && !(G.mode === 'tug' && !won);
     sfx(win ? 'win' : G.practice || place <= 3 ? 'match' : 'lose');
@@ -1300,6 +1441,9 @@
     if (!confirm('Bỏ cuộc trận này? Em sẽ không nhận được xu.')) return;
     clearInterval(G.timer);
     if (SC) SC.clear();
+    if (D) D.hide();
+    if (CD) CD.close();
+    $('arGame').classList.remove('is-tense');
     G = null;
     show('arHome');
   }
@@ -1309,6 +1453,7 @@
   // ============================================================
   document.addEventListener('keydown', (e) => {
     if (!G || $('arGame').hidden || /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
+    if (CD && CD.isOpen()) { if (CD.key(e)) e.preventDefault(); return; } // đang bốc thẻ: 1/2/3, Enter
     const n = parseInt(e.key, 10);
     const pw = ['q', 'w', 'e'].indexOf(String(e.key).toLowerCase());
     if (G.phase === 'q' && pw >= 0 && G.powers[pw]) { e.preventDefault(); usePower(pw); return; }
@@ -1325,6 +1470,7 @@
       const b = $('arFbExtra').querySelector(`[data-hot="${n}"]:not(:disabled)`);
       if (b) { e.preventDefault(); b.click(); }
     }
+    else if (G.phase === 'draw' && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); drawCard(); }
     else if (G.phase === 'next' && (e.key === 'Enter' || e.key === ' ') && e.target.id !== 'arNext') { e.preventDefault(); next(); }
   });
   $('arAnswers').addEventListener('click', (e) => { const b = e.target.closest('.ar-ans[data-k]'); if (b) answer(+b.dataset.k); });

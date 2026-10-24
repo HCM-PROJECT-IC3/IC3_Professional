@@ -274,5 +274,33 @@ assertEq('bảng điểm: ô thường / x2 / rủi ro', [
   A.boardScore({ value: 300, special: 'risk' }, ['t0', 't1'], ['t0']),
 ], [{ t0: 300, t1: 0 }, { t0: 0, t1: 600 }, { t0: 300, t1: -150 }]);
 
+// ── Thẻ bài ──
+assertEq('bốc thẻ: chỉ ở mốc 3 câu và đúng ≥ 2/3', [
+  A.cardCheckpoint([{ ok: true }, { ok: true }]),
+  A.cardCheckpoint([{ ok: true }, { ok: false }, { ok: true }]),
+  A.cardCheckpoint([{ ok: true }, { ok: false }, { ok: false }]),
+  A.cardCheckpoint([{ ok: false }, { ok: false }, { ok: false }, { ok: true }, { ok: true }, { ok: false }]),
+  A.cardCheckpoint([]),
+], [false, true, false, true, false]);
+(function () {
+  var r = A.rngFrom(7), okDistinct = true, okCtx = true, seen = {};
+  for (var k = 0; k < 400; k++) {
+    var full = k % 3 === 0, x2 = k % 2 === 0, time = k % 5 !== 0;
+    var d = A.drawCards(r, { full: full, x2: x2, time: time });
+    if (d.length !== 3 || new Set(d).size !== 3) okDistinct = false;
+    d.forEach(function (id) {
+      seen[id] = (seen[id] || 0) + 1;
+      if (!A.CARDS[id]) okCtx = false;
+      if (full && (id === 'fifty' || id === 'time' || id === 'x2')) okCtx = false;
+      if (!x2 && id === 'x2') okCtx = false;
+      if (!time && id === 'time') okCtx = false;
+    });
+  }
+  assertEq('bốc thẻ: luôn 3 lá khác nhau', okDistinct, true);
+  assertEq('bốc thẻ: không ra lá vô dụng (đầy vật phẩm / không có giờ / chế độ không nhân điểm)', okCtx, true);
+  assertEq('bốc thẻ: Kho báu hiếm hơn Túi xu', seen.jackpot < seen.coins, true);
+})();
+
 console.log(failures ? '\n' + failures + ' FAIL' : '\nTất cả PASS');
 process.exit(failures ? 1 : 0);
+

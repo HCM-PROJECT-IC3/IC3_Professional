@@ -87,6 +87,14 @@
       [523.25, 659.25, 783.99, 1046.5].forEach(function (f, i) { tone(f, 0.22, 'triangle', 0.16, i * 0.1); });
     },
     lose:     function () { sweep(500, 160, 0.5, 'sawtooth', 0.16); },
+    // Kịch tính (Đấu trường, Gọi tên): đồng hồ tích tắc · tim đập 3 giây cuối · vụt chữ lớn · trống dồn · kèn công bố
+    tick:      function () { tone(1250, 0.03, 'square', 0.06); },
+    heartbeat: function () { tone(70, 0.13, 'sine', 0.32); tone(62, 0.16, 'sine', 0.26, 0.16); },
+    whoosh:    function () { sweep(260, 1100, 0.22, 'sawtooth', 0.07); sweep(900, 300, 0.2, 'triangle', 0.06, 0.18); },
+    drumroll:  function () { for (var i = 0; i < 18; i++) tone(170 + (i % 2) * 18, 0.05, 'triangle', 0.05 + i * 0.006, i * 0.06); },
+    fanfare:   function () {
+      [[523.25, 0], [659.25, 0.12], [783.99, 0.24], [1046.5, 0.36], [783.99, 0.54], [1046.5, 0.66]].forEach(function (n) { tone(n[0], n[1] >= 0.54 ? 0.35 : 0.14, 'square', 0.09, n[1]); tone(n[0] / 2, 0.14, 'triangle', 0.08, n[1]); });
+    },
   };
 
   function play(name) {
