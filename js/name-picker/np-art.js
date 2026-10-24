@@ -3,6 +3,8 @@
    Phong cách tranh thiếu nhi có viền nâu sẫm, mảng sáng/tối (theo trang tham khảo "Gọi Tên Vui"),
    nhưng là SVG tự vẽ — không tải ảnh ngoài, không lấy ảnh của trang tham khảo.
      scene(id)   cảnh nền 1000×600: farm · track · pond · sky · jungle · space · classroom · party · field · street
+                 · castle (sân đấu phép) · island (đảo hoang) — 2 cảnh riêng cho Đấu trường
+                 · pegboard (ván gỗ đục lỗ) — trò Đua bi
      kid(i)      học sinh chibi đồng phục (áo trắng, khăn quàng đỏ, quần/váy xanh) — 2 dáng: đứng (chính diện)
                  và chạy (nghiêng, tay vươn trước); CSS .is-run đổi dáng. Đĩa màu dưới chân: cam (nữ) · xanh (nam).
      hen, dino, bird, fish(c), balloon(c), rocket(c), gift(c), referee, card(c), ufo, bus, egg, cake
@@ -357,6 +359,62 @@
       <rect y="350" width="1000" height="120" fill="#ddd2c6" stroke="${INK}" stroke-width="2.5"/>${Array.from({ length: 12 }, (_, k) => `<path d="M${k * 90} 350v120" stroke="#c2b6a8" stroke-width="3"/>`).join('')}<path d="M0 410h1000" stroke="#c2b6a8" stroke-width="3"/>
       <rect y="468" width="1000" height="12" fill="#9b8f84" stroke="${INK}" stroke-width="2"/><rect y="480" width="1000" height="120" fill="#55555f"/>
       ${Array.from({ length: 7 }, (_, k) => `<rect x="${k * 160 + 10}" y="532" width="70" height="8" fill="#f2c94c"/>`).join('')}${Array.from({ length: 6 }, (_, k) => `<rect x="${360 + k * 46}" y="488" width="30" height="110" fill="#f4f4f4"/>`).join('')}`),
+
+    // Gọi tên · Đua bi: tấm ván gỗ đục lỗ treo tường (đường bi gắn lên ván), bên phải là tường phòng có cửa sổ
+    pegboard: () => svg(`<rect width="1000" height="600" fill="#f3e1bf"/>${Array.from({ length: 26 }, (_, k) => `<rect x="${k * 40}" width="20" height="600" fill="#ecd4aa" opacity=".6"/>`).join('')}
+      <g stroke="${INK}" stroke-width="3"><rect x="828" y="290" width="144" height="150" rx="8" fill="#9fd8f5"/><path d="M900 290v150M828 365h144" stroke-width="4" fill="none"/></g>
+      ${cloud(836, 300, .45, 'd1')}<path d="M814 284h172v12H814z" fill="#c99a62" stroke="${INK}" stroke-width="2.5"/>
+      <g stroke="${INK}" stroke-width="2.5"><path d="M884 546l8-46h40l8 46z" fill="#d9734a"/><circle cx="912" cy="486" r="20" fill="#4f9a3a"/><circle cx="896" cy="496" r="14" fill="#5fae45"/><circle cx="930" cy="494" r="14" fill="#5fae45"/></g>
+      <rect y="556" width="1000" height="44" fill="url(#npWood)" stroke="${INK}" stroke-width="2.5"/>
+      <rect x="18" y="8" width="776" height="560" rx="16" fill="#d9a46a" stroke="${INK}" stroke-width="4"/>
+      <rect x="30" y="20" width="752" height="536" rx="10" fill="#e0b27c"/>
+      ${Array.from({ length: 13 }, (_, r) => Array.from({ length: 19 }, (_, c) => `<circle cx="${50 + c * 40}" cy="${40 + r * 40}" r="4.2" fill="#a8743f"/>`).join('')).join('')}
+      <path d="M30 520h752" stroke="#c48d55" stroke-width="2" opacity=".6"/>`, 'np-scene-pegboard'),
+
+    // Đấu trường · Đấu phép: sân đấu phép trước lâu đài lúc chạng vạng, sàn đá có vòng phép phát sáng
+    castle: () => svg(`${skyGrad('skyC', '#2a1f5e', '#f0956a')}<rect width="1000" height="600" fill="url(#skyC)"/>
+      <g class="np-stars">${Array.from({ length: 40 }, (_, k) => `<circle cx="${(k * 173) % 1000}" cy="${(k * 61) % 200}" r="${.8 + (k % 3) * .7}" fill="#fff6d8" style="animation-delay:${(k % 6) * .4}s"/>`).join('')}</g>
+      <circle cx="860" cy="280" r="34" fill="#fff1c2" stroke="#e8c97a" stroke-width="3"/><circle cx="878" cy="268" r="31" fill="#93597a"/>
+      <path d="M0 380l90-90 70 50 110-120 90 90 80-60 120 110 100-80 90 70 120-110 130 120V600H0z" fill="#4b3a86" stroke="#2f2560" stroke-width="2.5"/>
+      <path d="M0 420l120-60 90 40 140-70 120 70 150-80 130 60 120-40 130 50V600H0z" fill="#5d4a9c" opacity=".9"/>
+      <g stroke="${INK}" stroke-width="4" stroke-linejoin="round" transform="translate(500 470) scale(.58) translate(-500 -470)">
+        ${[[150, 360, 180], [670, 360, 180]].map(([x, y, w]) => `<rect x="${x}" y="${y}" width="${w}" height="120" fill="#8f86b6"/>${Array.from({ length: 6 }, (_, k) => `<rect x="${x + 4 + k * 30}" y="${y - 16}" width="20" height="18" fill="#8f86b6"/>`).join('')}`).join('')}
+        <rect x="400" y="250" width="200" height="230" fill="#a39bc6"/>${Array.from({ length: 7 }, (_, k) => `<rect x="${404 + k * 28}" y="232" width="18" height="20" fill="#a39bc6"/>`).join('')}
+        ${[[320, 180], [600, 180]].map(([x, y]) => `<rect x="${x}" y="${y}" width="80" height="300" fill="#b3abd2"/><path d="M${x - 10} ${y + 2}L${x + 40} ${y - 86}L${x + 90} ${y + 2}z" fill="#6a3fb0"/>
+          <path d="M${x + 40} ${y - 86}v-34" stroke-width="2.5"/><path d="M${x + 40} ${y - 120}l30 10-30 10z" fill="${x < 500 ? '#e5484d' : '#2f7be0'}"/>
+          <path d="M${x + 26} ${y + 70}q14-26 28 0v34h-28z" fill="#ffd27a"/><path d="M${x + 26} ${y + 170}q14-26 28 0v34h-28z" fill="#ffd27a"/>`).join('')}
+        <path d="M455 480v-90q45-60 90 0v90z" fill="#4a3424"/><path d="M500 340v140M455 420h90" stroke-width="2" fill="none"/>
+        ${[470, 530].map((x) => `<path d="M${x - 10} 300q10-20 20 0v28h-20z" fill="#ffd27a"/>`).join('')}
+      </g>
+      <path d="M0 470h1000v130H0z" fill="#8c8170" stroke="${INK}" stroke-width="3"/>
+      <path d="M0 478h1000" stroke="#a79d8b" stroke-width="6"/>
+      ${Array.from({ length: 11 }, (_, k) => `<path d="M${k * 100} 480l${(k - 5) * 30} 120" stroke="#6f6556" stroke-width="2.5"/>`).join('')}
+      <path d="M0 528h1000M0 572h1000" stroke="#6f6556" stroke-width="2"/>
+      <ellipse cx="500" cy="540" rx="380" ry="44" fill="none" stroke="#c6a2ff" stroke-width="5" opacity=".8"/>
+      <ellipse cx="500" cy="540" rx="330" ry="34" fill="none" stroke="#e6d4ff" stroke-width="2.5" stroke-dasharray="14 10" opacity=".8"/>
+      ${[[90, 470], [910, 470]].map(([x, y]) => `<g stroke="${INK}" stroke-width="2.5"><rect x="${x - 6}" y="${y - 110}" width="12" height="110" fill="#5a4030"/><path d="M${x - 16} ${y - 112}h32l-6 14h-20z" fill="#7a7a86"/></g>
+        <path class="np-torch" d="M${x} ${y - 160}q-20 26-6 44h12q14-18-6-44z" fill="#ff9a2a" stroke="#c2410c" stroke-width="2"/><path d="M${x} ${y - 140}q-8 14-2 22h4q6-8-2-22z" fill="#ffe08a"/>`).join('')}`, 'np-scene-castle'),
+
+    // Đấu trường · Sinh tồn: đảo hoang giữa biển (kiểu Battle Royale) — biển, bãi cát, dừa
+    island: () => {
+      const palm = (x, y, s, flip) => `<g transform="translate(${x} ${y}) scale(${flip ? -s : s} ${s})" stroke="${INK}" stroke-width="3" stroke-linejoin="round">
+        <path d="M-8 0q-4-90 34-170l14 6q-34 80-30 164z" fill="#a8743f"/>${Array.from({ length: 8 }, (_, k) => `<path d="M${-6 + k * 4.5} ${-20 - k * 19}q8 2 14 -2" fill="none" stroke="#7d5229" stroke-width="2"/>`).join('')}
+        ${[[-110, -150], [-70, -210], [40, -225], [100, -170], [70, -120], [-60, -110]].map(([lx, ly]) => `<path d="M32 -170Q${(32 + lx) / 2} ${ly - 40} ${lx} ${ly}Q${(32 + lx) / 2 + 6} ${ly - 8} 32 -164z" fill="#3f9a3a"/>`).join('')}
+        <circle cx="26" cy="-160" r="9" fill="#7a4f22"/><circle cx="40" cy="-156" r="9" fill="#7a4f22"/></g>`;
+      return svg(`${skyGrad('skyI', '#42a8ee', '#d6f1ff')}<rect width="1000" height="600" fill="url(#skyI)"/>${sun(170, 90, 40)}
+      ${cloud(380, 40, .9, 'd1')}${cloud(720, 90, .7, 'd2')}
+      <defs><linearGradient id="seaI" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f8fd0"/><stop offset="1" stop-color="#45c1e8"/></linearGradient></defs>
+      <rect y="360" width="1000" height="240" fill="url(#seaI)"/><path d="M0 360h1000" stroke="#1d6fa8" stroke-width="3"/>
+      <path d="M640 362q50-40 110-34 50 4 80 34z" fill="#4f9a3a" stroke="${INK}" stroke-width="2.5"/><path d="M700 334q-2-26 10-46" stroke="#8a5a30" stroke-width="4" fill="none"/><path d="M710 288q-20-4-30 8M710 288q16-10 28-2M710 288q-4-16-16-20" stroke="#3f9a3a" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <path d="M90 362q30-18 70-14 30 2 50 14z" fill="#6b8f5a" opacity=".8"/>
+      ${[400, 430, 460].map((y, k) => `<path class="np-wave" d="M${-40 + k * 30} ${y}${Array.from({ length: 14 }, () => 'q20-8 40 0t40 0').join('')}" stroke="#bfefff" stroke-width="3" fill="none" opacity="${.9 - k * .2}"/>`).join('')}
+      <path d="M0 482q120-26 260-12t280 6 260-14 200 10V600H0z" fill="#e7c58a"/>
+      <path d="M0 470q120-26 260-12t280 6 260-14 200 10" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity=".85"/>
+      <path d="M0 490q120-24 260-10t280 6 260-14 200 10V600H0z" fill="#f3dba6" stroke="${INK}" stroke-width="3"/>
+      ${Array.from({ length: 30 }, (_, k) => `<circle cx="${(k * 97) % 1000}" cy="${510 + (k * 37) % 80}" r="${1.5 + k % 2}" fill="#d9bb80"/>`).join('')}
+      <g stroke="${INK}" stroke-width="2"><path d="M300 560l6-12 6 12-12-8h12z" fill="#f28b5b"/><path d="M712 580q8-14 16 0z" fill="#fbe1ec"/><path d="M180 586l5-10 5 10-10-6h10z" fill="#f7c331"/></g>
+      ${palm(60, 560, 1.15)}${palm(950, 560, 1.05, true)}${rock(860, 596, .55)}${rock(150, 600, .45)}`, 'np-scene-island');
+    },
   };
 
   global.EduNamePickerArt = { kid, hen, egg, cake, dino, bird, fish, balloon, rocket, gift, referee, card, ufo, bus, scene: (id) => SCENES[id](), FUN };

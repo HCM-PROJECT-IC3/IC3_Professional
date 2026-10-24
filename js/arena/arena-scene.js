@@ -3,7 +3,7 @@
    Dùng chung tranh SVG của trang Gọi tên (js/name-picker/np-art.js): mỗi người chơi là 1 bạn nhỏ
    đồng phục; nhân vật di chuyển bằng CSS transition (chạy nghiêng khi đi), phản ứng theo kết quả.
      mount(el, G)     dựng cảnh theo chế độ (Tốc độ: sân bóng · Đua: đường chạy · Kéo co: đồi · Câu cá: ao ·
-                      Săn vàng: nông trại · Sinh tồn: rừng · Đấu phép: vũ trụ · Giải mã: phố ·
+                      Săn vàng: nông trại · Sinh tồn: đảo hoang · Đấu phép: sân lâu đài · Giải mã: phố ·
                       Đào hoá thạch: chân núi lửa có khủng long canh · Lên Mặt Trăng: tên lửa bay lên, có trạm dừng)
      sync(G)          so trạng thái trước/sau → chạy tới chỗ mới, nhảy (+điểm), rung (mất máu), nằm mờ (bị loại)
      mood(id, ok)     em trả lời đúng (nhảy) / sai (hoảng)
@@ -25,8 +25,8 @@
     tug: { scene: 'sky', oy: 300, gy: 262 },
     fish: { scene: 'pond', oy: 300, gy: 266 },
     gold: { scene: 'farm', oy: 300, gy: 264 },
-    survival: { scene: 'jungle', oy: 300, gy: 264 },
-    spell: { scene: 'space', oy: 300, gy: 264 },
+    survival: { scene: 'island', oy: 250, gy: 264 },
+    spell: { scene: 'castle', oy: 240, gy: 264 },
     heist: { scene: 'street', oy: 228, gy: 236 },
     dino: { scene: 'jungle', oy: 150, gy: 262 },
     moon: { scene: 'space', oy: 0, gy: 272 },
@@ -41,13 +41,22 @@
     clear();
     const set = SET[G.mode] || SET.speed;
     el.hidden = false;
-    el.innerHTML = `<div class="ar-sc-world"><div class="ar-sc-bg" style="transform:translateY(${-set.oy}px)">${A.scene(set.scene)}</div><div class="ar-sc-layer"></div><div class="ar-sc-fx"></div></div>`;
+    const art = A.scene(set.scene);
+    // .ar-sc-amb: cùng cảnh, làm mờ + tối, phủ kín cả dải — chỉ lộ ra 2 bên khi dải rộng hơn 10:3 (máy tính)
+    const amb = art.replace('viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice"', `viewBox="0 ${set.oy} 1000 300" preserveAspectRatio="xMidYMax slice"`)
+      .replace(/id="([^"]+)"/g, 'id="amb-$1"').replace(/url\(#([^)]+)\)/g, 'url(#amb-$1)');
+    el.innerHTML = `<div class="ar-sc-amb" aria-hidden="true">${amb}</div><div class="ar-sc-world"><div class="ar-sc-bg" style="transform:translateY(${-set.oy}px)">${art}</div><div class="ar-sc-layer"></div><div class="ar-sc-fx"></div></div>`;
     S = { el, world: el.querySelector('.ar-sc-world'), layer: el.querySelector('.ar-sc-layer'), fx: el.querySelector('.ar-sc-fx'), mode: G.mode, set, sp: {}, prev: {}, timers: [] };
+    // Dải hẹp (điện thoại): khớp chiều ngang, dư chiều cao thì lộ thêm trời phía trên.
+    // Dải rộng (máy tính): khớp chiều cao để thấy trọn tranh, khung 1000 đặt giữa, mép tranh mờ dần vào nền mờ 2 bên
+    // (không soi gương/lặp tranh — lặp sẽ thấy 2 núi lửa, 2 lâu đài...).
     const fit = () => {
       if (!S) return;
-      const sc = S.el.clientWidth / W;
-      S.world.style.transform = `scale(${sc})`;
-      S.top = Math.max(0, H - S.el.clientHeight / sc); // y nhỏ nhất còn nhìn thấy
+      const cw = S.el.clientWidth, ch = S.el.clientHeight;
+      const sc = Math.min(cw / W, ch / H);
+      S.world.style.transform = `translate(${(cw - W * sc) / 2}px, 0) scale(${sc})`;
+      S.top = Math.max(0, H - ch / sc); // y nhỏ nhất còn nhìn thấy
+      S.el.classList.toggle('is-wide', cw / ch > W / H + .02);
       if (S.ready && S.G) layout(S.G, true);
     };
     S.ro = new ResizeObserver(fit);
@@ -229,8 +238,11 @@
     if (G.mode === 'tug') {
       const shift = -(G.rope || 0) * 3.2; // dây nghiêng về Đỏ (rope > 0) → cả 2 đội trượt sang trái
       const red = list.filter((p) => p.team === 'red'), blue = list.filter((p) => p.team === 'blue');
-      red.forEach((p, k) => { const s = S.sp[p.id]; place(s, 330 - k * 78 + shift, set.gy, first ? 0 : 900); s.el.classList.add('is-left', 'is-pull'); });
-      blue.forEach((p, k) => { const s = S.sp[p.id]; place(s, 670 + k * 78 + shift, set.gy, first ? 0 : 900); s.el.classList.remove('is-left'); s.el.classList.add('is-pull'); });
+      // Mỗi đội QUAY MẶT vào dây (Đỏ nhìn sang phải, Xanh nhìn sang trái) và ngả người ra sau (CSS .is-pull).
+      // place() tự lật mặt theo hướng chạy → đặt lại hướng sau khi place.
+      const gap = Math.min(86, 300 / Math.max(1, red.length, blue.length));
+      red.forEach((p, k) => { const s = S.sp[p.id]; place(s, 330 - k * gap + shift, set.gy, first ? 0 : 900); s.el.classList.remove('is-left'); s.el.classList.add('is-pull'); });
+      blue.forEach((p, k) => { const s = S.sp[p.id]; place(s, 670 + k * gap + shift, set.gy, first ? 0 : 900); s.el.classList.add('is-left', 'is-pull'); });
       const rope = S.layer.querySelector('.ar-sc-rope');
       rope.style.transition = first || reduced() ? 'none' : 'transform .9s cubic-bezier(.45,.05,.35,1)';
       rope.style.transform = `translateX(${shift}px)`;
