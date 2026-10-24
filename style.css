@@ -643,14 +643,9 @@ body {
   gap: .4rem;
   margin-bottom: .5rem;
   animation: lobbyRise .5s .05s cubic-bezier(.16,1,.3,1) both;
-  /* Giờ là <a href="portfolio.html"> (trước là <div> tĩnh) — link sang
-     trang giới thiệu dự án, giữ nguyên hình thức cũ (không gạch chân,
-     không đổi màu chữ vì lobby-brand-name đã tự tô gradient riêng). */
-  text-decoration: none;
-  cursor: pointer;
+  /* <div> tĩnh — từng là link sang portfolio.html, bỏ 10/2026 (xem index.html). */
   width: fit-content;
 }
-.lobby-brand:hover .lobby-brand-emoji { transform: scale(1.08); transition: transform .2s ease; }
 .lobby-brand-emoji {
   font-size: 1.35rem;
   filter: drop-shadow(0 3px 8px rgba(0,0,0,.18));
@@ -3864,37 +3859,47 @@ a.arena-open small { background: var(--orange); }
    Ghi đè grid-template-areas/rows ở § FORM KHÔNG LÃNG PHÍ phía trên.
    ══════════════════════════════════════════════════════════════ */
 .lobby-col-more .lobby-extras { margin-top: .8rem; }
+/* Nhãn nhóm "Ôn tập thêm cho em" — cho biết cả hàng nút dưới là việc của học sinh */
+.lobby-more-label { margin: 1.2rem 0 .6rem; font-size: .85rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+.lobby-more-label i { margin-right: .3rem; color: var(--purple); }
+[data-theme="dark"] .lobby-more-label i { color: #aab6ff; }
+.lobby-col-more .lobby-more-label + .lobby-extras { margin-top: 0; }
+@media (min-width: 960px) { .lobby-more-label { margin-top: 0; } }
+/* Dải "Dành cho thầy cô": nằm NGOÀI thẻ học sinh (10/2026), cùng bề ngang thẻ,
+   nền trong suốt + viền nét đứt để đọc ra ngay là khu riêng, không phải bước làm bài. */
 .lobby-staff {
-  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .5rem .7rem;
-  margin-top: 1.1rem; padding-top: 1rem; border-top: 1px solid var(--border);
+  display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .6rem;
+  width: 100%; max-width: 680px; margin: 1rem auto 0; padding: .7rem 1rem;
+  border: 1px dashed var(--border); border-radius: var(--radius-sm); background: transparent;
 }
-.lobby-staff-label { font-size: .85rem; font-weight: 700; color: var(--muted); margin-right: .2rem; }
+.lobby-staff-label { font-size: .85rem; font-weight: 700; color: var(--muted); margin-right: auto; }
 .lobby-staff-label i { margin-right: .25rem; }
 .lobby-staff-btn {
-  display: inline-flex; align-items: center; gap: .45rem; min-height: 2.6rem; padding: .45rem 1rem;
-  border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--text);
-  font-size: .9rem; font-weight: 700; text-decoration: none;
+  display: inline-flex; align-items: center; gap: .45rem; min-height: 2.4rem; padding: .4rem .9rem;
+  border-radius: 10px; border: 1px solid var(--border); background: transparent; color: var(--muted);
+  font-size: .85rem; font-weight: 700; text-decoration: none;
 }
+@media (min-width: 960px) { .lobby-staff { max-width: 1100px; } }
+@media (min-width: 1400px) { .lobby-staff { max-width: min(1520px, 94vw); } }
 .lobby-staff-btn i { color: var(--purple); }
 [data-theme="dark"] .lobby-staff-btn i { color: #aab6ff; }
 .lobby-staff-btn:hover { border-color: var(--purple); color: var(--purple); }
 .lobby-staff-btn:focus-visible { outline: 3px solid var(--purple); outline-offset: 2px; }
 @media (max-width: 520px) {
-  .lobby-staff-label { flex-basis: 100%; text-align: center; }
+  .lobby-staff-label { flex-basis: 100%; text-align: center; margin-right: 0; }
   .lobby-staff-btn { flex: 1 1 100%; justify-content: center; }
 }
 
 @media (min-width: 960px) {
   .lobby-col-more { grid-area: x; }
-  .lobby-staff { grid-area: f; }
 }
 @media (min-width: 960px) and (max-width: 1399px) {
   /* Giữ "c1 c3 / c2 c3" + hàng 1fr như cũ (cột 3 kéo dài không tạo khe giữa bước 1 và 2) */
-  .lobby-card { grid-template-areas: "c1 c3" "c2 c3" "x x" "f f"; grid-template-rows: auto 1fr auto auto; }
+  .lobby-card { grid-template-areas: "c1 c3" "c2 c3" "x x"; grid-template-rows: auto 1fr auto; }
 }
 @media (min-width: 1400px) {
   /* 1 hàng ngang dưới cả 3 cột: Thử thách (2) · Đếm ngược (2) · 4 nút phụ (1 mỗi nút) */
-  .lobby-card { grid-template-areas: "c1 c2 c3" "x x x" "f f f"; grid-template-rows: auto auto auto; }
+  .lobby-card { grid-template-areas: "c1 c2 c3" "x x x"; grid-template-rows: auto auto; }
   .lobby-card .lobby-col-more .lobby-extras { grid-template-columns: repeat(8, minmax(0, 1fr)); }
 }
 @media (min-width: 960px) {
@@ -3905,8 +3910,29 @@ a.arena-open small { background: var(--orange); }
   .lobby-col-more .lobby-extras > #btnOfflinePack { grid-column: auto; }
 }
 .lobby-col-more #offlinePackStatus:empty { display: none; }
+/* Dòng trạng thái tải offline: thông tin phụ → nhỏ, không dùng màu cam đậm của dòng nhắc "còn thiếu" */
+.lobby-col-more #offlinePackStatus { min-height: 0; margin-top: .6rem; font-size: .85rem; font-weight: 600; color: var(--muted); }
+.lobby-col-more #offlinePackStatus.is-ready { color: var(--green); }
+[data-theme="dark"] .lobby-col-more #offlinePackStatus.is-ready { color: #86efac; }
+
+/* Hàng nút phụ của học sinh: chữ màu chính (trước màu mờ, khó đọc trên nền tối), icon màu nhấn */
+.lobby-extras > .btn-secondary { color: var(--text); }
+.lobby-extras > .btn-secondary > i { color: var(--purple); }
+[data-theme="dark"] .lobby-extras > .btn-secondary > i { color: #aab6ff; }
+.lobby-extras > .btn-secondary:hover { color: var(--purple); }
+.lobby-extras > .btn-secondary:focus-visible { outline: 3px solid var(--purple); outline-offset: 2px; }
+
+/* Ô còn thiếu tiếp theo (js/lobby-form-ux.js): viền cam, khớp màu dòng nhắc dưới nút Bắt đầu */
+.lobby-card .is-next-field { border-color: var(--orange) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--orange) 30%, transparent) !important; }
+.lobby-card input[type="checkbox"].is-next-field { outline: 3px solid var(--orange); outline-offset: 2px; }
 /* Chế độ Kiểm tra: cột 3 có thêm ô thời gian + cam kết (cao hơn hẳn) → việc thêm lên dưới cột 1–2 */
 @media (min-width: 1400px) {
-  .lobby-card.is-test-mode { grid-template-areas: "c1 c2 c3" "x x c3" "f f f"; }
+  .lobby-card.is-test-mode { grid-template-areas: "c1 c2 c3" "x x c3"; }
   .lobby-card.is-test-mode .lobby-col-more .lobby-extras { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* Điện thoại: nút sáng/tối ở sảnh cuộn đi cùng trang (trước cố định góc phải nên đè lên
+   các nút nhóm bài / ô chọn khi cuộn xuống). Màn rộng vẫn cố định như cũ. */
+@media (max-width: 520px) {
+  .theme-toggle { position: absolute; }
 }

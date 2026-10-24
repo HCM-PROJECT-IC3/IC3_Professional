@@ -8,11 +8,9 @@
    tạo ở Commit #1 (js/repositories/roster-repository.js). KHÔNG đụng
    tới quiz-engine.js / dashboard.js / firestore.rules hiện có.
 
-   LƯU Ý QUAN TRỌNG: các thao tác ghi ở trang này (thêm/sửa/xoá) chỉ
-   thành công SAU KHI bạn đã publish phần bổ sung Firestore Rules trong
-   docs/architecture/firestore.rules.PROPOSED-ADDITIONS.txt (Commit #2).
-   Trước đó, các nút Lưu/Xoá sẽ báo lỗi "Missing or insufficient
-   permissions" — đây là hành vi ĐÚNG (an toàn), không phải lỗi trang.
+   Quyền ghi (thêm/sửa/xoá) do firestore.rules chốt (courses/classes/
+   students_roster) — tài khoản thiếu quyền sẽ thấy "Missing or insufficient
+   permissions", đây là hành vi ĐÚNG (an toàn), không phải lỗi trang.
    ============================================================ */
 (function () {
   'use strict';

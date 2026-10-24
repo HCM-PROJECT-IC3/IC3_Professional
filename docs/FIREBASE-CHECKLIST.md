@@ -45,20 +45,17 @@ Phòng chơi trực tiếp đã chuyển sang Phòng cả lớp của `arena.htm
 Firebase); không trang nào gọi `signInAnonymously` nữa. Có thể **tắt** provider Anonymous
 (Authentication → Sign-in method) để bớt bề mặt lạm dụng.
 
-## 3. App Check — khai báo tên miền rồi Enforce
+## 3. App Check — ĐÃ GỠ (10/2026), KHÔNG Enforce
 
-Console đang báo `AppCheck: ReCAPTCHA error` vì tên miền chạy trang chưa được cho phép.
+Web không còn nạp App Check/reCAPTCHA (gói miễn phí chỉ 10.000 lượt xác minh/THÁNG, mỗi lần
+mở trang có Firebase tốn 1 lượt → báo `AppCheck: ReCAPTCHA error`). Firestore được bảo vệ bằng
+`firestore.rules`; trang học sinh không ghi Firestore (`quizResults.firestore: 'off'`).
 
-1. Google Cloud Console → reCAPTCHA → key `6LeWKNMt...` → thêm tên miền GitHub Pages
-   của site (và `localhost` nếu muốn thử ở máy).
-2. Firebase Console → App Check → tab **APIs** → xem biểu đồ "Verified requests" của
-   Cloud Firestore vài ngày. Khi gần như 100% request là *verified* → bấm **Enforce** cho
-   Firestore và Authentication. Bật Enforce trước khi hết lỗi sẽ chặn luôn người dùng thật.
-   ⚠️ **reCAPTCHA chưa bật thanh toán chỉ có 10.000 lượt xác minh/THÁNG**, vượt mức là trả lỗi.
-   Mỗi phiên học sinh ghi Firestore tốn 1 lượt → mùa ôn thi đừng Enforce Firestore khi học sinh
-   còn ghi Firestore ở quy mô lớn. Xem `docs/architecture/SCALING-SPARK.md` §5.1.
-3. Sau khi Enforce: script lạ cầm `apiKey` công khai không còn ghi rác/đọc trộm được — đây là
-   lớp chống lạm dụng quota quan trọng nhất khi trang học sinh cho ghi không cần đăng nhập.
+1. Firebase Console → App Check → tab **APIs**: Cloud Firestore và Authentication phải ở
+   trạng thái **Unenforced**. Bấm Enforce là mọi trang bị chặn (web không gửi token nữa),
+   và Apps Script đọc `users/{uid}` qua REST cũng hỏng.
+2. Tuỳ chọn: Firebase Console → App Check → Apps → gỡ provider của app web; Google Cloud
+   Console → reCAPTCHA → xoá key `6LeWKNMt...`.
 
 ## 4. TTL — tự xoá dữ liệu cũ (miễn phí)
 

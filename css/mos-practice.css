@@ -66,6 +66,12 @@ body.mos-body {
 /* .lobby-card mặc định max-width:560px (vừa cho form đăng nhập hẹp) —
    trang này cần rộng hơn để chứa danh sách task/kết quả. */
 .mos-card { max-width: 100%; }
+/* Thẻ MOS dùng lại .lobby-card của sảnh, nhưng sảnh ≥ 960px là lưới 2–3 cột (style.css §
+   FORM KHÔNG LÃNG PHÍ) → tiêu đề/ô chọn bị xếp lệch: "Trường" lẻ bên phải, Lớp + Họ tên ép
+   hẹp bên trái. Thẻ MOS luôn là 1 cột. */
+.lobby-card.mos-card { display: block; }
+.mos-card .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+@media (max-width: 520px) { .mos-card .form-row { grid-template-columns: 1fr; } }
 
 /* ── Bước 2: danh sách dự án ────────────────────────── */
 .mos-project-list { display: flex; flex-direction: column; gap: .7rem }

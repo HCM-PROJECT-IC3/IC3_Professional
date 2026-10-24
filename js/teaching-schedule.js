@@ -261,15 +261,20 @@
       // isApprovedTeacher(), không riêng gì đúng document của chính mình
       // nữa) — dùng CHUNG 1 đường tải dữ liệu với admin/điều phối giáo
       // viên, không cần nhánh riêng đọc "chỉ đúng 1 GV" như trước.
+      // Qua js/services/schedule-read-cache.js: mở lại trang trong 10 phút = 0 lượt đọc.
+      const RC = window.EduScheduleReadCache;
+      const cached = (key, loader) => (RC ? RC.read(key, loader) : loader());
       const [teachers, weeks] = await Promise.all([
-        window.EduRepositories.teachingTeacher.list({ orderBy: 'name' }),
-        window.EduRepositories.teachingWeek.listAll(),
+        cached('teachers', () => window.EduRepositories.teachingTeacher.list({ orderBy: 'name' })),
+        cached('weeks', () => window.EduRepositories.teachingWeek.listAll()),
       ]);
       state.teachers = teachers;
       state.weeks = weeks;
       renderTeacherTab();
-      renderWeekSelect();
-      if (state.currentWeekKey) await loadWeekSchedules(state.currentWeekKey);
+      // renderWeekSelect() tự tải tuần khi vừa chọn tuần mặc định — trước đây dòng dưới
+      // tải LẠI đúng tuần đó (lịch + TKB + giờ tiết bị đọc 2 lần mỗi lần mở trang).
+      const weekLoadStarted = renderWeekSelect();
+      if (!weekLoadStarted && state.currentWeekKey) await loadWeekSchedules(state.currentWeekKey);
       else renderWeeklyTab(); // hiện bảng/khối rỗng "chưa chọn tuần"
     } catch (err) {
       toast('❌ ' + friendlyError(err));
@@ -298,14 +303,16 @@
       // Giáo viên giờ tải lịch của CẢ ĐỘI giống admin/điều phối giáo viên
       // (firestore.rules đã nới quyền đọc) — dùng chung 1 đường tải, không
       // còn nhánh riêng "chỉ đúng 1 GV" như trước.
+      const RC = window.EduScheduleReadCache;
+      const cached = (key, loader) => (RC ? RC.read(key, loader) : loader());
       const [rows, ttRows, ptRows] = await Promise.all([
-        window.EduRepositories.teachingSchedule.listByWeek(weekKey),
-        TT ? TT.listByWeek(weekKey) : Promise.resolve([]),
+        cached('schedule:' + weekKey, () => window.EduRepositories.teachingSchedule.listByWeek(weekKey)),
+        TT ? cached('timetable:' + weekKey, () => TT.listByWeek(weekKey)) : Promise.resolve([]),
         // Giờ tiết KHÔNG lặp lại theo tuần (áp dụng mọi tuần, xem
         // js/models/teaching-timetable.model.js) — tải trọn collection 1
         // lần (18 giáo viên, rất nhỏ) để dựng đúng số hàng/giờ giấc cho
         // ma trận "📊 Tổng quan" bên dưới.
-        PT ? PT.list() : Promise.resolve([]),
+        PT ? cached('periodTimes', () => PT.list()) : Promise.resolve([]),
       ]);
       rows.forEach((r) => { state.schedulesByTeacher[r.teacherCode] = r; });
       ttRows.forEach((r) => { state.timetablesByTeacher[r.teacherCode] = r; });
@@ -462,7 +469,9 @@
     if (sel.value !== state.currentWeekKey) {
       state.currentWeekKey = sel.value;
       loadWeekSchedules(sel.value);
+      return true;
     }
+    return false;
   }
 
   /** Chọn tuần mặc định khi mới mở trang (chưa có lựa chọn nào trước đó):

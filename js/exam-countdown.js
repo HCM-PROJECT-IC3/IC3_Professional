@@ -92,7 +92,7 @@
     row.classList.toggle('is-near', !!ex && left <= 14);
     row.querySelector('.xc-main').innerHTML = ex
       ? `<b>${left === 0 ? 'Hôm nay' : `Còn ${left} ngày`}</b> <span>${esc(ex.label)} · ${dd}</span>`
-      : '<b>Đặt ngày thi</b> <span>để đếm ngược và nhận gợi ý ôn tập</span>';
+      : '<b>Đặt ngày thi</b> <span>· bấm để đếm ngược</span>';
     row.querySelector('.xc-sub').textContent = `Tuần này đã ôn ${wk.n}/${wk.of} ngày` + (ex ? ` · ${advice(left)}` : '');
     const edit = row.querySelector('.xc-edit');
     edit.hidden = !!ex?.fixed;

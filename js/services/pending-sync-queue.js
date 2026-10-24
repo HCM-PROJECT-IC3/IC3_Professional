@@ -109,9 +109,20 @@
 
   let _flushing = false; // chặn 2 lượt flush() chạy chồng nhau (vd sự kiện 'online' bắn đúng lúc interval cũng chạy)
 
-  async function flush() {
+  // Học sinh mở NHIỀU TAB: mỗi tab có interval flush riêng, cùng đọc 1 hàng đợi trong
+  // localStorage → cùng gửi 1 bài N lần (N lượt Apps Script/Firestore). Web Locks cho
+  // đúng 1 tab flush tại 1 thời điểm; tab khác thấy khoá bận thì bỏ lượt này.
+  function flush() {
+    if (_flushing) return Promise.resolve();
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) return Promise.resolve(); // chắc chắn offline thì khỏi tốn công thử
+    if (typeof navigator !== 'undefined' && navigator.locks && navigator.locks.request) {
+      return navigator.locks.request('eduquiz_pending_sync', { ifAvailable: true }, (lock) => (lock ? _flushNow() : undefined));
+    }
+    return _flushNow();
+  }
+
+  async function _flushNow() {
     if (_flushing) return;
-    if (typeof navigator !== 'undefined' && navigator.onLine === false) return; // chắc chắn offline thì khỏi tốn công thử
     const items = _readQueue();
     if (!items.length) return;
 
@@ -157,7 +168,10 @@
         item.nextAttemptAt = now + _backoffDelay(Math.min(item.attempts, MAX_ATTEMPTS));
         remaining.push(item);
       }
-      _writeQueue(remaining);
+      // Trong lúc chờ mạng ở trên, enqueue() (tab này hoặc tab khác) có thể đã thêm bài
+      // mới — đọc lại và giữ các mục chưa có trong lượt này, không ghi đè mất chúng.
+      const seen = new Set(items.map((i) => i.id));
+      _writeQueue(remaining.concat(_readQueue().filter((i) => !seen.has(i.id))));
     } finally {
       _flushing = false;
     }

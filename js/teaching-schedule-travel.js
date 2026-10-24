@@ -143,9 +143,12 @@
       .map((w) => w.id);
   }
 
+  // Dùng chung cache đọc với Lịch tuần (js/services/schedule-read-cache.js).
+  const cachedRead = (key, loader) => (window.EduScheduleReadCache ? window.EduScheduleReadCache.read(key, loader) : loader());
+
   async function loadWeeks() {
     try {
-      state.weeks = await window.EduRepositories.teachingWeek.listAll();
+      state.weeks = await cachedRead('weeks', () => window.EduRepositories.teachingWeek.listAll());
       const sel = document.getElementById('travelWeekSelect');
       if (sel) {
         if (!state.weeks.length) {
@@ -165,7 +168,7 @@
    * cache lại, không tải lại mỗi lần bấm "Tính hỗ trợ". */
   async function ensureTeachersLoaded() {
     if (state.teachersLoaded) return;
-    const rows = await window.EduRepositories.teachingTeacher.list();
+    const rows = await cachedRead('teachers', () => window.EduRepositories.teachingTeacher.list({ orderBy: 'name' }));
     state.teachersByCode = {};
     rows.forEach((t) => { state.teachersByCode[t.code || t.id] = t; });
     state.teachersLoaded = true;
@@ -200,7 +203,7 @@
     btn.textContent = '⏳ Đang tải...';
     try {
       const [weekResults, distanceDocs] = await Promise.all([
-        Promise.all(weekKeys.map((wk) => window.EduRepositories.teachingSchedule.listByWeek(wk))),
+        Promise.all(weekKeys.map((wk) => cachedRead('schedule:' + wk, () => window.EduRepositories.teachingSchedule.listByWeek(wk)))),
         window.EduRepositories.teachingTravelDistance.listAll().catch(() => []),
         ensureTeachersLoaded().catch((err) => { console.warn('[Hỗ trợ xăng xe] Không tải được danh sách GV (chỉ ảnh hưởng tính khoảng cách tự động):', err); }),
       ]);

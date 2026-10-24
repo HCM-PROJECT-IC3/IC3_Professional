@@ -3,7 +3,7 @@
    Nạp Firebase THEO YÊU CẦU cho trang học sinh (index.html, mos-practice.html).
 
    Trước đây mọi học sinh mở trang đều tải 4 file Firebase SDK (~300 KB) và
-   khởi tạo App Check (1 lượt xác minh reCAPTCHA) dù chỉ làm bài ôn tập, chưa
+   khởi tạo Firebase dù chỉ làm bài ôn tập, chưa
    chắc nộp lên Firestore. Giờ:
      • ensure()            — tải SDK + js/firebase-config.js đúng 1 lần, trả về
                              window.EduFirebase. Gọi lúc thật sự cần ghi.
@@ -27,9 +27,7 @@
   function sdkUrls() {
     const cfg = (global.EduBackend && global.EduBackend.firebaseSdk) || {};
     const base = 'https://www.gstatic.com/firebasejs/' + (cfg.version || '10.13.0') + '/';
-    const names = ['firebase-app-compat.js', 'firebase-auth-compat.js', 'firebase-firestore-compat.js'];
-    if (cfg.appCheck !== false) names.push('firebase-app-check-compat.js');
-    return names.map((n) => base + n);
+    return ['firebase-app-compat.js', 'firebase-auth-compat.js', 'firebase-firestore-compat.js'].map((n) => base + n);
   }
 
   /** @returns {Promise<Object>} window.EduFirebase đã khởi tạo. */

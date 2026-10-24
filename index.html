@@ -116,10 +116,12 @@
          không phải chạy hoạt ảnh liên tục). Link giáo viên chuyển xuống dưới form. -->
     <!-- Right: form -->
     <div class="lobby-right">
-      <a class="lobby-brand" href="portfolio.html" title="Xem trang giới thiệu EduQuiz IC3">
+      <!-- Không còn là link sang portfolio.html (10/2026): trang đó nạp Firebase + App Check và
+           đọc ~85 document Firestore mỗi lần mở — học sinh bấm/F5 liên tục là cạn hạn mức Spark. -->
+      <div class="lobby-brand">
         <span class="lobby-brand-emoji"><i class="fa-solid fa-graduation-cap"></i></span>
         <span class="lobby-brand-name">EduQuiz IC3</span>
-      </a>
+      </div>
       <div class="lobby-card">
         <!-- Mỗi bước 1 cột: ≥1400px 3 cột · 1100–1399px 2 cột (1+2 | 3) · hẹp hơn 1 cột (style.css § FORM KHÔNG LÃNG PHÍ) -->
         <div class="lobby-col lobby-col-1">
@@ -207,7 +209,7 @@
         <div class="form-group">
           <label class="sr-only"><i class="fa-solid fa-hourglass-half"></i> Chế độ làm bài</label>
           <div class="mt-mode-toggle" id="examModeToggle">
-            <button type="button" class="mt-mode-btn is-active" data-exam-mode="practice"><i class="fa-solid fa-dove"></i> <b>Ôn luyện</b><small>Không giới hạn giờ</small></button>
+            <button type="button" class="mt-mode-btn is-active" data-exam-mode="practice"><i class="fa-solid fa-dove"></i> <b>Ôn luyện</b><small>Không tính giờ</small></button>
             <button type="button" class="mt-mode-btn" data-exam-mode="test" id="examModeTestBtn"><i class="fa-solid fa-stopwatch"></i> <b>Kiểm tra</b><small>50 phút/bài</small></button>
           </div>
         </div>
@@ -314,6 +316,7 @@
              Tách khỏi cột 3 (10/2026): màn 3 cột nằm dưới cột 1–2 (trước để trống), màn 2 cột nằm dưới cột 3.
              Các module JS tìm theo ".lobby-card .lobby-extras" nên không phải sửa. -->
         <div class="lobby-col lobby-col-more">
+          <p class="lobby-more-label"><i class="fa-solid fa-user-graduate" aria-hidden="true"></i> Ôn tập thêm cho em</p>
           <!-- Nút phụ gom 1 hàng (Góc học tập / Đấu trường do JS chèn trước nút Lịch sử) -->
           <div class="lobby-extras">
             <button type="button" class="btn-secondary" onclick="showRecords()"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử bài làm</button>
@@ -322,8 +325,10 @@
           <!-- Tiến độ / kết quả tải sẵn (js/offline-pack.js) -->
           <p class="start-hint" id="offlinePackStatus" aria-live="polite"></p>
         </div>
-        <!-- Dành cho thầy cô — giữ id="adminEntryLink" (quiz-engine.js ẩn khi làm bài, hiện lại ở sảnh) -->
-        <div class="lobby-staff">
+      </div>
+      <!-- Dành cho thầy cô — nằm NGOÀI thẻ của học sinh (10/2026) để học sinh không nhầm là việc của mình.
+           Giữ id="adminEntryLink" (quiz-engine.js ẩn khi làm bài, hiện lại ở sảnh) -->
+      <div class="lobby-staff">
           <span class="lobby-staff-label"><i class="fa-solid fa-chalkboard-user" aria-hidden="true"></i> Dành cho thầy cô</span>
           <a href="ic3-dashboard.html" target="_blank" rel="noopener" id="adminEntryLink" class="lobby-staff-btn"
             title="Đăng nhập trang quản lý: soạn đề, báo cáo kết quả, danh sách học sinh">
@@ -337,7 +342,6 @@
             title="Gọi tên học sinh ngẫu nhiên trên máy chiếu — dùng danh sách lớp có sẵn hoặc dán danh sách">
             <i class="fa-solid fa-bullhorn" aria-hidden="true"></i> <span>Gọi tên học sinh</span>
           </a>
-        </div>
       </div>
     </div>
   </div>

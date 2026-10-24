@@ -39,6 +39,24 @@
     return p.sheet !== false || !wantsFirestore(examMode, p);
   }
 
+  // Chặn spam nộp Ôn luyện: 1 máy gửi tối đa `max` bài Ôn luyện lên Sheet trong `windowMin`
+  // phút; vượt thì bài chỉ lưu ở máy (Lịch sử + mã gom kết quả). Bài Kiểm tra luôn gửi.
+  const SHEET_LOG_KEY = 'eduquiz_sheet_sends_v1';
+  /** true nếu bài Ôn luyện này còn trong hạn mức gửi Sheet (và ghi nhận lượt gửi). */
+  function takePracticeSlot(p, now) {
+    const lim = p.practiceSheetLimit;
+    if (!lim || !(lim.max > 0)) return true;
+    const t = now || Date.now();
+    const from = t - (Number(lim.windowMin) || 10) * 60000;
+    let log = [];
+    try { log = JSON.parse(global.localStorage.getItem(SHEET_LOG_KEY) || '[]'); } catch (e) { log = []; }
+    log = (Array.isArray(log) ? log : []).filter((x) => x > from && x <= t);
+    if (log.length >= lim.max) return false;
+    log.push(t);
+    try { global.localStorage.setItem(SHEET_LOG_KEY, JSON.stringify(log)); } catch (e) { /* chặn storage: vẫn gửi */ }
+    return true;
+  }
+
   function pad2(n) { return String(n).padStart(2, '0'); }
 
   // Câu sai gửi kèm bài lên Google Sheet (cột CauSai) để giáo viên xem "câu cả lớp
@@ -161,8 +179,15 @@
       : (global.EduFirebase && global.EduFirebase.newDocId ? global.EduFirebase.newDocId('quiz_results') : undefined);
     const payloads = buildPayloads({ session, result, integrity, elapsed, id, questions });
     const examMode = payloads.firestore.examMode;
-    const toFirestore = wantsFirestore(examMode, p);
-    const toSheet = wantsSheet(examMode, p);
+    const throttled = examMode === 'practice' && !takePracticeSlot(p);
+    const toFirestore = !throttled && wantsFirestore(examMode, p);
+    const toSheet = !throttled && wantsSheet(examMode, p);
+    if (throttled) {
+      console.info('[EduResultSubmitter] Quá hạn mức gửi bài Ôn luyện — bài này chỉ lưu trên máy.');
+      if (typeof global.showNotification === 'function') {
+        global.showNotification('Em vừa nộp nhiều bài Ôn luyện liên tiếp, bài này chỉ lưu trong Lịch sử trên máy.', 'info');
+      }
+    }
 
     // Luôn giữ 1 mã kết quả ngay trên máy học sinh (xuất cho giáo viên gom khi mạng yếu — xem
     // js/services/result-pack.js). Chỉ ghi localStorage, không mạng; lỗi bị nuốt bên trong.
@@ -173,9 +198,9 @@
       setTimeout(() => sendOrQueue('google_sheet', 'saveToGoogleSheet', payloads.sheet), jitter);
     }
     if (toFirestore) sendOrQueue('firestore_quiz_result', 'saveResultToFirestore', payloads.firestore);
-    if (!toFirestore) console.info('[EduResultSubmitter] Chế độ "' + p.firestore + '": bài này chỉ lưu Google Sheet (không tốn lượt ghi Firebase).');
+    if (!toFirestore && !throttled) console.info('[EduResultSubmitter] Chế độ "' + p.firestore + '": bài này chỉ lưu Google Sheet (không tốn lượt ghi Firebase).');
     return { id, firestore: toFirestore, sheet: toSheet };
   }
 
-  global.EduResultSubmitter = { submitQuiz, buildPayloads, wantsFirestore, wantsSheet, wrongUids };
+  global.EduResultSubmitter = { submitQuiz, buildPayloads, wantsFirestore, wantsSheet, wrongUids, takePracticeSlot };
 })(typeof window !== 'undefined' ? window : globalThis);
