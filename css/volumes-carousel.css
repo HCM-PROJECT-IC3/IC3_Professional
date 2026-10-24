@@ -1587,3 +1587,83 @@
         width: 19px;
       }
     }
+
+    /* V3 (10/2026) — chừa chỗ nút sáng/tối cố định góc phải (trước đè lên "Edition 02 · 2026"). */
+    .editorial-header {
+      right: 84px;
+    }
+
+    .detail-controls,
+    .detail-buttons {
+      flex-wrap: wrap;
+    }
+
+    /* Tên sách dài ("Key Applications (PowerPoint)") bị cắt "…" ngay cả ở màn rộng:
+       cho xuống tối đa 2 dòng thay vì cắt. */
+    .selection__title {
+      display: -webkit-box;
+      white-space: normal;
+      text-wrap: balance;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+
+    /* Khung hẹp (iframe trong dashboard, điện thoại): tiêu đề 5rem chiếm hết bảng chi tiết nên
+       nút Mở sách / lật trang / Luyện tập bị đẩy ra ngoài khung. Bảng gọn lại, có nền, cuộn được;
+       sách đẩy lên nửa trên (js/volumes-carousel.js § configureResponsiveTargets). */
+    @media (max-width: 880px) {
+      .editorial-header {
+        right: 84px;
+      }
+
+      .mode-detail .editorial-header {
+        opacity: 0;
+      }
+
+      .detail-panel {
+        max-height: 50vh;
+        padding: 14px 16px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        border-radius: 16px;
+        background: color-mix(in srgb, var(--paper) 90%, transparent);
+      }
+
+      .eyebrow {
+        margin-bottom: 6px;
+      }
+
+      .detail-title {
+        max-width: calc(100% - 52px);
+        font-size: clamp(1.7rem, 6.5vw, 2.6rem);
+        letter-spacing: -0.04em;
+        line-height: 0.95;
+      }
+
+      .detail-deck {
+        display: -webkit-box;
+        margin-top: 10px;
+        overflow: hidden;
+        font-size: 0.92rem;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+      }
+
+      .meta-list {
+        display: none;
+      }
+
+      .page-navigation {
+        margin-top: 12px;
+        padding-top: 10px;
+      }
+
+      .detail-controls {
+        margin-top: 10px;
+      }
+
+      .detail-buttons {
+        gap: 10px 16px;
+        margin-left: 0;
+      }
+    }

@@ -1,0 +1,46 @@
+/* ============================================================
+   css/theme-toggle-quick.css — nút chuyển sáng/tối (đồng hồ mặt trời
+   neumorphism) dùng chung cho các trang mini-game / giả lập.
+   Trước đây chép y nguyên vào <style> của 12 trang HTML; giờ 1 file.
+   Đi kèm js/theme-toggle-quick.js + <button id="themeToggleQuick">.
+   Không phụ thuộc css/theme.css — trang nhúng qua iframe vẫn chạy độc lập.
+   ============================================================ */
+
+/* Nền trang. Game thiết kế nền tối, chữ sáng (body.game-dark-bg: Trí nhớ,
+   Chim vượt ải, Phân loại) KHÔNG bị ép nền sáng — trước đây #e9ecf2 làm chữ
+   trắng trên nền xám nhạt, không đọc được. */
+body { transition: background .4s ease; }
+body:not(.game-dark-bg) { background: #e9ecf2 !important; }
+[data-theme="dark"] body { background: #20232b !important; }
+
+.theme-toggle-quick {
+  position: fixed; top: 12px; right: 12px; z-index: 99999;
+  width: 56px; height: 30px; border-radius: 999px; border: none;
+  background: #e9ecf2; cursor: pointer;
+  box-shadow: 6px 6px 14px rgba(163,177,198,.5), -6px -6px 14px rgba(255,255,255,.85);
+  transition: box-shadow .3s ease, background .3s ease;
+}
+[data-theme="dark"] .theme-toggle-quick {
+  background: #262b36;
+  box-shadow: 6px 6px 14px rgba(0,0,0,.55), -6px -6px 14px rgba(255,255,255,.05);
+}
+.theme-toggle-quick::after {
+  content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%;
+  background:
+    radial-gradient(circle, #ffb938 0 36%, transparent 37%),
+    radial-gradient(circle, #ffffff 0 60%, transparent 61%),
+    repeating-conic-gradient(#ffb938 0deg 7deg, transparent 7deg 45deg);
+  box-shadow: 2px 3px 6px rgba(163,177,198,.7), -1px -1px 3px rgba(255,255,255,.8);
+  transition: transform .55s cubic-bezier(.34,1.56,.64,1), box-shadow .4s ease;
+}
+[data-theme="dark"] .theme-toggle-quick::after {
+  transform: translateX(26px) rotate(200deg);
+  background:
+    radial-gradient(.6px .6px at 30% 33%, rgba(255,255,255,.85) 99%, transparent 100%),
+    radial-gradient(.5px .5px at 58% 28%, rgba(255,255,255,.7) 99%, transparent 100%),
+    radial-gradient(.5px .5px at 44% 55%, rgba(255,255,255,.75) 99%, transparent 100%),
+    radial-gradient(circle, #313650 0 36%, transparent 37%),
+    radial-gradient(circle, #e7eaf2 0 60%, transparent 61%),
+    repeating-conic-gradient(#aab0c4 0deg 7deg, transparent 7deg 45deg);
+  box-shadow: 2px 3px 6px rgba(0,0,0,.6), -1px -1px 3px rgba(255,255,255,.08);
+}

@@ -5,6 +5,12 @@
 > `IC3_Professional-main.zip` (không suy đoán), để đảm bảo mọi đề xuất
 > đều khớp với hệ thống đang chạy.
 
+> **Cập nhật 10/2026:** đã xoá `firestore.rules.PROPOSED-ADDITIONS.txt` (phần
+> cần dùng đã vào `firestore.rules`), `js/models/game-session.model.js`,
+> `js/repositories/game-session-repository.js` cùng rule/index `game_sessions`
+> (mini-game chỉ lưu XP trên máy — xem `js/gamification.js`). Các mục nhắc tới
+> chúng bên dưới là lịch sử thiết kế.
+
 ---
 
 ## 1. Hiện trạng thật của hệ thống (quan trọng, khác giả định ban đầu)

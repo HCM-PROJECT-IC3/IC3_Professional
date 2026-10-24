@@ -173,8 +173,8 @@
    * chơi + xét huy hiệu liên quan game.
    *
    * @param {string} gameId — 'pz-defense' | 'memory-game' | 'battle-quiz' | 'cyber-detective' | 'computer-simulator' | 'sort-game'
-   * @param {Object} [session] — xem @typedef GameSession trong
-   *   js/models/game-session.model.js. `xp` có thể tự truyền (game tự
+   * @param {Object} [session] — { score, scoreType, accuracy, correctAnswers,
+   *   wrongAnswers, topic, difficulty, durationSec, studentName... }. `xp` có thể tự truyền (game tự
    *   tính XP riêng theo combo/độ khó); nếu không truyền, dùng mặc định
    *   XP_PER_GAME_SESSION (+ thưởng thêm nếu có `score` dạng percent cao).
    * @returns {{ xpGained: number, newBadges: object[], state: object }}

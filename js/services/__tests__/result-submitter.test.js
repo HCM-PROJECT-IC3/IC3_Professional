@@ -67,6 +67,22 @@ assertEq('câu sai KHÔNG có trong payload Firestore', 'wrong' in pw.firestore,
 assertEq('không sai câu nào → chuỗi rỗng (Apps Script ghi "-")', S.buildPayloads({ session: session, result: { correct: 1, total: 1, details: [{ status: 'correct' }] }, integrity: integrity, elapsed: 1, id: 'W2', questions: [{ uid: 'a_1' }] }).sheet.wrong, '');
 assertEq('bài 0 câu không chia 0', S.buildPayloads({ session: session, result: { correct: 0, total: 0 }, integrity: { valid: true, flags: [] }, elapsed: 0, id: 'X' }).sheet.score, 0);
 
+// ── Chống spam bài Ôn luyện ──
+var store = {};
+globalThis.localStorage = { getItem: function (k) { return k in store ? store[k] : null; }, setItem: function (k, v) { store[k] = String(v); } };
+var lim = { practiceSheetLimit: { max: 2, windowMin: 10 } };
+assertEq('hạn mức: 2 bài đầu được gửi, bài 3 bị chặn', [S.takePracticeSlot(lim, 1000), S.takePracticeSlot(lim, 2000), S.takePracticeSlot(lim, 3000)], [true, true, false]);
+assertEq('hạn mức: qua 10 phút lại gửi được', S.takePracticeSlot(lim, 1000 + 10 * 60000 + 1), true);
+assertEq('không cấu hình → không giới hạn', S.takePracticeSlot({}, 1), true);
+store = {};
+globalThis.EduBackend = { quizResults: { firestore: 'off', sheet: true, sheetJitterMs: 0, practiceSheetLimit: { max: 1, windowMin: 10 } } };
+calls = [];
+S.submitQuiz({ session: session, result: result, integrity: integrity, elapsed: 60 });
+var blocked = S.submitQuiz({ session: session, result: result, integrity: integrity, elapsed: 60 });
+var testOk = S.submitQuiz({ session: Object.assign({}, session, { examMode: 'test' }), result: result, integrity: integrity, elapsed: 60 });
+assertEq('vượt hạn mức: bài Ôn luyện không gửi, bài Kiểm tra vẫn gửi', [blocked.sheet, blocked.firestore, testOk.sheet], [false, false, true]);
+delete globalThis.localStorage;
+
 // ── Gửi theo chính sách ──
 function run(mode, examMode) {
   calls = []; queued = [];
@@ -76,7 +92,10 @@ function run(mode, examMode) {
   return new Promise(function (r) { realSetTimeout(function () { r(out); }, 10); });
 }
 
-run('test-only', 'practice').then(function (out) {
+// Đợi các lượt gửi của phần "chống spam" ở trên chạy xong rồi mới đếm lượt gọi.
+new Promise(function (r) { realSetTimeout(r, 10); }).then(function () {
+  return run('test-only', 'practice');
+}).then(function (out) {
   assertEq("test-only + ôn luyện: chỉ Sheet", [out.firestore, out.sheet, calls.length, calls[0].indexOf('sheet:')], [false, true, 1, 0]);
   return run('all', 'test');
 }).then(function (out) {

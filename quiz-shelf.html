@@ -32,60 +32,9 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
-<style>
-  /* Neumorphism + nút chuyển sáng/tối — gắn NHANH cho trang mini-game này
-     (không sửa sâu CSS gốc của game để tránh vỡ layout đã tinh chỉnh kỹ).
-     Dùng fallback trong var(...) nên KHÔNG cần trang này nạp css/theme.css
-     riêng vẫn chạy được độc lập. */
-  body { background: #e9ecf2 !important; transition: background .4s ease; }
-  [data-theme="dark"] body { background: #20232b !important; }
-  .theme-toggle-quick {
-    position: fixed; top: 12px; right: 12px; z-index: 99999;
-    width: 56px; height: 30px; border-radius: 999px; border: none;
-    background: #e9ecf2; cursor: pointer;
-    box-shadow: 6px 6px 14px rgba(163,177,198,.5), -6px -6px 14px rgba(255,255,255,.85);
-    transition: box-shadow .3s ease, background .3s ease;
-  }
-  [data-theme="dark"] .theme-toggle-quick {
-    background: #262b36;
-    box-shadow: 6px 6px 14px rgba(0,0,0,.55), -6px -6px 14px rgba(255,255,255,.05);
-  }
-  .theme-toggle-quick::after {
-    content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%;
-    background:
-      radial-gradient(circle, #ffb938 0 36%, transparent 37%),
-      radial-gradient(circle, #ffffff 0 60%, transparent 61%),
-      repeating-conic-gradient(#ffb938 0deg 7deg, transparent 7deg 45deg);
-    box-shadow: 2px 3px 6px rgba(163,177,198,.7), -1px -1px 3px rgba(255,255,255,.8);
-    transition: transform .55s cubic-bezier(.34,1.56,.64,1), box-shadow .4s ease;
-  }
-  [data-theme="dark"] .theme-toggle-quick::after {
-    transform: translateX(26px) rotate(200deg);
-    background:
-      radial-gradient(.6px .6px at 30% 33%, rgba(255,255,255,.85) 99%, transparent 100%),
-      radial-gradient(.5px .5px at 58% 28%, rgba(255,255,255,.7) 99%, transparent 100%),
-      radial-gradient(.5px .5px at 44% 55%, rgba(255,255,255,.75) 99%, transparent 100%),
-      radial-gradient(circle, #313650 0 36%, transparent 37%),
-      radial-gradient(circle, #e7eaf2 0 60%, transparent 61%),
-      repeating-conic-gradient(#aab0c4 0deg 7deg, transparent 7deg 45deg);
-    box-shadow: 2px 3px 6px rgba(0,0,0,.6), -1px -1px 3px rgba(255,255,255,.08);
-  }
-</style>
+<link rel="stylesheet" href="css/theme-toggle-quick.css">
 <button type="button" class="theme-toggle-quick" id="themeToggleQuick" title="Chuyển đổi sáng/tối"></button>
-<script>
-(function () {
-  try {
-    var saved = localStorage.getItem('ic3_theme');
-    if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
-  } catch (e) {}
-  document.getElementById('themeToggleQuick').addEventListener('click', function () {
-    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    var next = isDark ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
-    try { localStorage.setItem('ic3_theme', next); } catch (e) {}
-  });
-})();
-</script>
+<script src="js/theme-toggle-quick.js"></script>
 
   <main class="experience" id="experience">
     <div class="scene-shell">
@@ -108,7 +57,7 @@
       <strong id="pointer-label-title">Codex</strong>
     </div>
 
-    <section class="browse-ui" id="browse-ui" aria-label="Shelf navigation">
+    <section class="browse-ui" id="browse-ui" aria-label="Điều hướng kệ sách">
       <div class="selection">
         <span class="counter" id="counter">01 / 07</span>
         <div class="selection__copy">
@@ -118,18 +67,18 @@
       </div>
 
       <div class="browse-actions">
-        <button class="round-button" id="previous" type="button" aria-label="Previous volume">
+        <button class="round-button" id="previous" type="button" aria-label="Cuốn trước">
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m10.5 3.5-4.5 4.5 4.5 4.5"></path></svg>
         </button>
-        <button class="text-button" id="inspect" type="button">Open</button>
-        <button class="round-button" id="next" type="button" aria-label="Next volume">
+        <button class="text-button" id="inspect" type="button">Mở sách</button>
+        <button class="round-button" id="next" type="button" aria-label="Cuốn sau">
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m5.5 3.5 4.5 4.5-4.5 4.5"></path></svg>
         </button>
       </div>
 
-      <nav class="index-nav" aria-label="Volume index">
-        <div class="markers" id="markers" role="tablist" aria-label="Choose a volume"></div>
-        <p class="microcopy">Wheel · arrows · select</p>
+      <nav class="index-nav" aria-label="Danh sách sách">
+        <div class="markers" id="markers" role="tablist" aria-label="Chọn sách"></div>
+        <p class="microcopy">Lăn chuột · phím mũi tên · bấm vào sách</p>
       </nav>
     </section>
 
@@ -142,7 +91,7 @@
       aria-hidden="true"
       inert
     >
-      <button class="close-button" id="close-detail" type="button" aria-label="Return volume to shelf">
+      <button class="close-button" id="close-detail" type="button" aria-label="Cất sách lại lên kệ">
         <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 4 8 8M12 4l-8 8"></path></svg>
       </button>
       <p class="eyebrow" id="detail-eyebrow">Volume I · Agentic craft</p>
@@ -152,40 +101,40 @@
       </p>
       <dl class="meta-list">
         <div>
-          <dt>Binding</dt>
+          <dt>Bìa</dt>
           <dd id="detail-binding">Evergreen cloth · antique brass foil</dd>
         </div>
         <div>
-          <dt>Format</dt>
+          <dt>Khổ sách</dt>
           <dd id="detail-format">148 × 216 mm · imagined edition</dd>
         </div>
         <div>
-          <dt>Theme</dt>
+          <dt>Chủ đề</dt>
           <dd id="detail-theme">Intent into implementation</dd>
         </div>
         <div>
-          <dt>Motif</dt>
+          <dt>Hoạ tiết</dt>
           <dd id="detail-motif">Nested brackets</dd>
         </div>
       </dl>
-      <div class="page-navigation" role="group" aria-label="Browse sample pages">
-        <button class="page-button" id="previous-page" type="button" aria-label="Previous sample page" disabled>
+      <div class="page-navigation" role="group" aria-label="Lật trang mẫu">
+        <button class="page-button" id="previous-page" type="button" aria-label="Trang trước" disabled>
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m10.5 3.5-4.5 4.5 4.5 4.5"></path></svg>
         </button>
         <p class="page-status" aria-live="off">
-          <strong id="page-label">Closed</strong>
-          <span id="page-counter">Click book to open</span>
+          <strong id="page-label">Sách đang gập</strong>
+          <span id="page-counter">Bấm vào sách để mở</span>
         </p>
-        <button class="page-button" id="next-page" type="button" aria-label="Next sample page" disabled>
+        <button class="page-button" id="next-page" type="button" aria-label="Trang sau" disabled>
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m5.5 3.5 4.5 4.5-4.5 4.5"></path></svg>
         </button>
       </div>
       <div class="detail-controls">
-        <p class="microcopy">Drag cover or click once to open · Background to orbit</p>
+        <p class="microcopy">Bấm hoặc kéo bìa để mở · Kéo nền để xoay</p>
         <div class="detail-buttons">
           <button class="text-button reset-button practice-button" id="practice-btn" type="button" hidden>Luyện tập Ribbon</button>
-          <button class="text-button reset-button" id="toggle-book" type="button" aria-pressed="false">Open book</button>
-          <button class="text-button reset-button" id="reset-view" type="button">Reset view</button>
+          <button class="text-button reset-button" id="toggle-book" type="button" aria-pressed="false">Mở sách</button>
+          <button class="text-button reset-button" id="reset-view" type="button">Đặt lại góc nhìn</button>
         </div>
       </div>
     </aside>
@@ -199,7 +148,7 @@
           <h2 id="fallback-title">Seven field guides for learners.</h2>
         </div>
         <p class="fallback__status" id="fallback-status">
-          The complete catalog remains readable while the interactive shelf is prepared.
+          Danh mục sách vẫn xem được trong lúc kệ 3D đang dựng.
         </p>
       </div>
       <div class="fallback__grid" aria-label="Seven conceptual hardcovers">
@@ -220,7 +169,7 @@
     <div class="loading" id="loading" hidden aria-live="polite">
       <div class="loading__inner">
         <div class="loading__mark" aria-hidden="true"></div>
-        <p>Binding the collection</p>
+        <p>Đang dựng kệ sách…</p>
       </div>
     </div>
   </main>

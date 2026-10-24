@@ -164,11 +164,16 @@
         // tôi"), nên KHÔNG dùng teachingTeacher.list() ở nhánh này.
         const me = state.myTeacherCode ? await window.EduRepositories.teachingTeacher.getById(state.myTeacherCode) : null;
         teachers = me ? [me] : [];
-        weeks = await window.EduRepositories.teachingWeek.listAll();
+        weeks = window.EduScheduleReadCache
+          ? await window.EduScheduleReadCache.read('weeks', () => window.EduRepositories.teachingWeek.listAll())
+          : await window.EduRepositories.teachingWeek.listAll();
       } else {
+        // Dùng chung cache với js/teaching-schedule.js (cùng khoá) — 0 lượt đọc nếu tab kia vừa tải.
+        const RC = window.EduScheduleReadCache;
+        const cached = (key, loader) => (RC ? RC.read(key, loader) : loader());
         [teachers, weeks] = await Promise.all([
-          window.EduRepositories.teachingTeacher.list({ orderBy: 'name' }),
-          window.EduRepositories.teachingWeek.listAll(),
+          cached('teachers', () => window.EduRepositories.teachingTeacher.list({ orderBy: 'name' })),
+          cached('weeks', () => window.EduRepositories.teachingWeek.listAll()),
         ]);
       }
       state.teachers = teachers;
@@ -314,12 +319,15 @@
    *   tuần) + mã lớp mọi giáo viên KHÁC đã dùng trong ĐÚNG TUẦN đang xem
    *   (thường trùng lặp giữa các GV do cùng quy ước đặt tên lớp toàn
    *   trường, vd "5/1", "4/6"). */
+  const cachedSuggest = (key, loader) => (window.EduScheduleReadCache ? window.EduScheduleReadCache.read(key, loader) : loader());
+
   async function loadSuggestions(teacherCode, weekKey) {
     try {
       const [scheduleRows, ttRowsOfTeacher, ttRowsOfWeek] = await Promise.all([
-        window.EduRepositories.teachingSchedule.listByTeacher(teacherCode).catch(() => []),
-        window.EduRepositories.teachingTimetable.listByTeacher(teacherCode).catch(() => []),
-        window.EduRepositories.teachingTimetable.listByWeek(weekKey).catch(() => []),
+        // Gợi ý ô nhập — qua cache đọc chung (TKB cả tuần trùng khoá với "Lịch tuần" → 0 lượt).
+        cachedSuggest('schedule-by-teacher:' + teacherCode, () => window.EduRepositories.teachingSchedule.listByTeacher(teacherCode)).catch(() => []),
+        cachedSuggest('timetable-by-teacher:' + teacherCode, () => window.EduRepositories.teachingTimetable.listByTeacher(teacherCode)).catch(() => []),
+        cachedSuggest('timetable:' + weekKey, () => window.EduRepositories.teachingTimetable.listByWeek(weekKey)).catch(() => []),
       ]);
       // Bỏ dở nếu người dùng đã đổi giáo viên/tuần trong lúc đang tải.
       if (teacherCode !== state.teacherCode || weekKey !== state.weekKey) return;

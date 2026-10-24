@@ -73,11 +73,16 @@ function generateSubmissionId(studentName, testName) {
  * @returns {Promise<{success: boolean, message: string}>}
  */
 async function saveToGoogleSheet(data) {
+  // Lần gửi lại từ hàng đợi (js/services/pending-sync-queue.js, cờ _retry): KHÔNG bật thông báo
+  // lỗi — trước đây cứ mỗi lượt thử lại lại hiện toast đỏ giữa lúc em đang làm bài khác.
+  const notify = data && data._retry
+    ? (msg, type) => { if (type === 'success') showNotification('Đã gửi được bài làm trước đó lên hệ thống.', 'success'); }
+    : showNotification;
   // ── Kiểm tra URL đã được cấu hình chưa ──────────────────
   const endpoint = resolveAppsScriptUrl(data.studentSchool);
   if (!endpoint || endpoint.includes('PASTE_YOUR')) {
     console.error('❌ [GoogleSheet] Chưa cấu hình APPS_SCRIPT_URL!');
-    showNotification('Chưa cấu hình Google Sheet URL. Liên hệ giáo viên.', 'warning');
+    notify('Chưa cấu hình Google Sheet URL. Liên hệ giáo viên.', 'warning');
     return { success: false, message: 'Chưa cấu hình URL' };
   }
 
@@ -93,7 +98,7 @@ async function saveToGoogleSheet(data) {
   const clientKey = data.submissionId || `${data.studentName}__${data.testName}`;
   if (_submittedIds.has(clientKey)) {
     console.warn('⚠️ [GoogleSheet] Phát hiện gửi trùng, bỏ qua:', clientKey);
-    showNotification('Bài thi đã được lưu trước đó.', 'info');
+    notify('Bài thi đã được lưu trước đó.', 'info');
     return { success: true, message: 'Duplicate - already submitted' };
   }
 
@@ -157,9 +162,9 @@ async function saveToGoogleSheet(data) {
 
     _submittedIds.add(clientKey);
     if (json.data && json.data.duplicate) {
-      showNotification('Bài thi đã được lưu trước đó (trùng submissionId).', 'info');
+      notify('Bài này đã được nộp trước đó.', 'info');
     } else {
-      showNotification('Đã lưu kết quả lên Google Sheet thành công!', 'success');
+      notify('Đã nộp bài lên hệ thống.', 'success');
     }
     return { success: true, message: 'Đã lưu', data: json.data };
 
@@ -169,18 +174,18 @@ async function saveToGoogleSheet(data) {
     // Phân loại lỗi để hiển thị thông báo rõ ràng hơn
     if (err.name === 'AbortError') {
       console.error('⏱️ [GoogleSheet] Request bị timeout');
-      showNotification('Kết nối quá lâu. Kết quả đã lưu offline. Thử lại sau!', 'warning');
+      notify('Mạng chậm, chưa gửi được bài. Kết quả đã lưu trên máy, máy sẽ tự gửi lại — em KHÔNG cần làm lại.', 'warning');
       return { success: false, message: 'Timeout' };
     }
 
     if (!navigator.onLine) {
       console.error('📵 [GoogleSheet] Không có kết nối Internet');
-      showNotification('Mất kết nối Internet. Kết quả đã lưu offline.', 'warning');
+      notify('Đang mất mạng. Kết quả đã lưu trên máy, có mạng lại máy sẽ tự gửi — em KHÔNG cần làm lại.', 'warning');
       return { success: false, message: 'No internet' };
     }
 
     console.error('❌ [GoogleSheet] Lỗi không xác định:', err);
-    showNotification('Không thể lưu kết quả. Vui lòng thử lại.', 'error');
+    notify('Chưa gửi được bài lên hệ thống. Kết quả đã lưu trên máy và sẽ tự gửi lại — em KHÔNG cần làm lại.', 'warning');
     return { success: false, message: err.message };
   }
 }

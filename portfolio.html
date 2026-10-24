@@ -26,12 +26,12 @@
      js/portfolio.js § PfFeed). Trang vẫn xem công khai không cần đăng
      nhập (đúng firestore.rules § gvlab_posts "allow read: if true") —
      chỉ khi bấm đăng bài/thích/bình luận mới cần tài khoản Giáo
-     viên/Admin đã đăng nhập. -->
-<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js" defer></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js" defer></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js" defer></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-check-compat.js" defer></script>
-<script src="js/firebase-config.js" defer></script>
+     viên/Admin đã đăng nhập.
+     SDK Firebase nạp THEO YÊU CẦU (js/services/firebase-loader.js): chỉ khi bấm
+     "Xem bài đăng của giáo viên" hoặc máy đã có phiên đăng nhập — mở/F5 trang 0 lượt Firebase. -->
+<script src="js/backend-config.js" defer></script>
+<script src="js/services/lazy-script-loader.js" defer></script>
+<script src="js/services/firebase-loader.js" defer></script>
 <script src="js/auth.js" defer></script>
 <script src="js/services/profile-cache-service.js" defer></script>
 </head>

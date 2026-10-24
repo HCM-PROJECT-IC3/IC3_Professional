@@ -51,6 +51,10 @@
       // sẽ không dồn vào Apps Script cùng lúc (Apps Script chỉ chạy song song 30
       // lượt/tài khoản — vượt thì bị từ chối, hàng đợi gửi lại lo phần còn lại).
       sheetJitterMs: 4000,
+      // Chống spam: mỗi máy gửi tối đa `max` bài ÔN LUYỆN trong `windowMin` phút (lên Sheet và
+      // Firestore); vượt thì bài chỉ lưu ở máy (Lịch sử + mã gom kết quả). Bài Kiểm tra luôn
+      // được gửi. Bỏ dòng này (hoặc max: 0) = không giới hạn.
+      practiceSheetLimit: { max: 6, windowMin: 10 },
       // Chia Google Sheet theo trường: mỗi trường (hoặc cụm trường) 1 Apps Script +
       // 1 file Sheet riêng, deploy từ TÀI KHOẢN GOOGLE RIÊNG (giới hạn 30 lượt chạy
       // song song tính theo tài khoản chủ script). Khoá = đúng tên trường học sinh
@@ -101,14 +105,10 @@
     // ── Firebase SDK trên trang học sinh ──
     // Trang học sinh KHÔNG nạp Firebase lúc mở trang nữa: chỉ nạp khi thật sự cần
     // ghi Firestore (lúc nộp bài theo chế độ ở trên) hoặc máy này đang có sẵn phiên
-    // đăng nhập giáo viên/admin. Tiết kiệm ~300 KB tải trang/học sinh và — quan trọng
-    // hơn — lượt xác minh reCAPTCHA của App Check (gói miễn phí: 10.000 lượt/THÁNG,
-    // vượt là reCAPTCHA trả lỗi nếu chưa bật thanh toán).
+    // đăng nhập giáo viên/admin. Tiết kiệm ~300 KB tải trang/học sinh.
+    // App Check (reCAPTCHA) đã gỡ khỏi toàn dự án 10/2026 — xem đầu js/firebase-config.js.
     firebaseSdk: {
       version: '10.13.0',
-      // false = không nạp App Check trên trang học sinh. Chỉ đặt false khi App Check
-      // CHƯA Enforce cho Firestore (Enforce rồi mà không có token thì bị từ chối ghi).
-      appCheck: true,
     },
   };
 })(window);

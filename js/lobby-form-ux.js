@@ -13,13 +13,14 @@
   const $ = (id) => document.getElementById(id);
   const visible = (el) => !!el && !el.closest('[hidden]');
 
+  /** Ô còn thiếu đầu tiên: { text, id } — id dùng để tô viền ô đó cho học sinh thấy phải chọn ở đâu. */
   function missing() {
-    if (!$('studentSchool')?.value) return 'Chọn Trường của em';
-    if (!$('studentClass')?.value) return 'Chọn Lớp';
-    if (!$('studentName')?.value) return 'Chọn Họ và tên';
-    if (visible($('minitestSelect')) && !$('minitestSelect').value) return 'Chọn bài luyện tập';
-    if (visible($('antiCheatPledge')) && !$('antiCheatPledge').checked) return 'Tick ô cam kết làm bài nghiêm túc';
-    return '';
+    if (!$('studentSchool')?.value) return { text: 'Chọn Trường của em', id: 'studentSchool' };
+    if (!$('studentClass')?.value) return { text: 'Chọn Lớp', id: 'studentClass' };
+    if (!$('studentName')?.value) return { text: 'Chọn Họ và tên', id: 'studentName' };
+    if (visible($('minitestSelect')) && !$('minitestSelect').value) return { text: 'Chọn bài luyện tập', id: 'minitestSelect' };
+    if (visible($('antiCheatPledge')) && !$('antiCheatPledge').checked) return { text: 'Tick ô cam kết làm bài nghiêm túc', id: 'antiCheatPledge' };
+    return null;
   }
 
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -52,7 +53,7 @@
       <div class="ls-meta">
         ${level && !banner ? `<span><i class="fa-solid fa-layer-group" aria-hidden="true"></i> ${esc(level)}</span>` : ''}
         ${count ? `<span><i class="fa-solid fa-circle-question" aria-hidden="true"></i> ${esc(count)} câu</span>` : ''}
-        <span class="${test ? 'is-test' : ''}"><i class="fa-solid ${test ? 'fa-stopwatch' : 'fa-dove'}" aria-hidden="true"></i> ${test ? 'Kiểm tra · ' + esc(minutes) : 'Ôn luyện · không giới hạn giờ'}</span>
+        <span class="${test ? 'is-test' : ''}"><i class="fa-solid ${test ? 'fa-stopwatch' : 'fa-dove'}" aria-hidden="true"></i> ${test ? 'Kiểm tra · ' + esc(minutes) : 'Ôn luyện · không tính giờ'}</span>
       </div>
       <div class="ls-who ${name ? '' : 'is-missing'}"><i class="fa-solid fa-user" aria-hidden="true"></i> ${name ? esc(name) + (cls ? ' · Lớp ' + esc(cls) : '') : 'Chưa chọn tên'}</div>`;
   }
@@ -65,10 +66,12 @@
     $('lobbyStep1')?.classList.toggle('is-done', !!$('studentName')?.value);
     $('lobbyStep2')?.classList.toggle('is-done', !visible($('minitestSelect')) || !!$('minitestSelect').value);
     $('lobbyStep3')?.classList.toggle('is-done', !visible($('antiCheatPledge')) || $('antiCheatPledge').checked);
+    document.querySelectorAll('.lobby-card .is-next-field').forEach((el) => el.classList.remove('is-next-field'));
+    if (btn.disabled && need) $(need.id)?.classList.add('is-next-field');
     const hint = $('startHint');
     if (!hint) return;
     // Nút khoá vì lý do khác (vd bài 0 câu, đang tải) → không đoán bừa.
-    hint.textContent = btn.disabled ? (need ? need + ' để bắt đầu.' : '') : 'Đã chọn đủ. Bấm Bắt đầu.';
+    hint.textContent = btn.disabled ? (need ? need.text + ' để bắt đầu.' : '') : 'Đã chọn đủ. Bấm Bắt đầu.';
     hint.classList.toggle('is-ready', !btn.disabled);
   }
 

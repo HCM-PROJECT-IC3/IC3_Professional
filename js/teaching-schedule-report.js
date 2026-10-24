@@ -71,9 +71,12 @@
     loadWeeks();
   });
 
+  // Dùng chung cache đọc với Lịch tuần (js/services/schedule-read-cache.js).
+  const cachedRead = (key, loader) => (window.EduScheduleReadCache ? window.EduScheduleReadCache.read(key, loader) : loader());
+
   async function loadWeeks() {
     try {
-      state.weeks = await window.EduRepositories.teachingWeek.listAll();
+      state.weeks = await cachedRead('weeks', () => window.EduRepositories.teachingWeek.listAll());
       renderWeekSelects();
     } catch (err) {
       console.error('[Báo cáo] Không tải được danh sách tuần:', err);
@@ -122,7 +125,7 @@
       // song song, số tuần chọn thường nhỏ (vài tuần đến vài chục), không
       // cần phân trang/giới hạn thêm.
       const perWeekRows = await Promise.all(
-        weeksInRange.map((w) => window.EduRepositories.teachingSchedule.listByWeek(w.id).catch(() => [])),
+        weeksInRange.map((w) => cachedRead('schedule:' + w.id, () => window.EduRepositories.teachingSchedule.listByWeek(w.id)).catch(() => [])),
       );
       renderReport(weeksInRange, perWeekRows);
       document.getElementById('reportEmpty').classList.add('force-hide');

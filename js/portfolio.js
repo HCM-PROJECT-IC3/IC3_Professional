@@ -327,686 +327,723 @@
     });
   })();
 
-  // ════════════════════════════════════════════════════════════
-  // Hạ tầng mạng xã hội dùng CHUNG (Firebase, avatar cache, tiện ích) —
-  // PfFeed/PfProfile bên dưới đều dựa vào đây. Dừng sớm nếu thiếu
-  // Firebase/EduAuth (trang vẫn hiện được Certifications/Life tĩnh +
-  // trợ lý trợ năng, chỉ mất phần tương tác mạng xã hội).
-  // ════════════════════════════════════════════════════════════
-  if (!window.EduFirebase || !window.EduAuth) {
-    console.warn('[Trang Social Media] Thiếu Firebase/EduAuth — feed/hồ sơ/chat sẽ không hoạt động trên trang này.');
-    const yearEl0 = document.getElementById('gvYear');
-    if (yearEl0) yearEl0.textContent = new Date().getFullYear();
-    return;
-  }
-  const db = window.EduFirebase.db;
-
-  let currentUser = null;
-  let currentProfile = null; // users/{uid} — role/approved/name (hồ sơ gốc toàn nền tảng)
-  function canEditFeed() {
-    return !!currentProfile && (currentProfile.role === 'admin' || (currentProfile.role === 'teacher' && currentProfile.approved !== false));
-  }
-
-  function initials(name) {
-    const s = String(name || '').trim();
-    return s ? s.charAt(0).toUpperCase() : '?';
-  }
-
-  function relativeTime(ms) {
-    if (!ms) return 'vừa xong';
-    const diff = Date.now() - ms;
-    const min = Math.floor(diff / 60000);
-    if (min < 1) return 'vừa xong';
-    if (min < 60) return `${min} phút trước`;
-    const hr = Math.floor(min / 60);
-    if (hr < 24) return `${hr} giờ trước`;
-    const day = Math.floor(hr / 24);
-    if (day < 30) return `${day} ngày trước`;
-    return new Date(ms).toLocaleDateString('vi-VN');
-  }
-
-  /** Đọc file ảnh → resize tối đa maxDim px → nén JPEG, giảm dần chất
-   * lượng tới khi vừa hạn mức maxChars. Trả về data URL (base64). Dùng
-   * chung cho ảnh bài đăng (maxDim lớn) VÀ avatar/đính kèm chat (maxDim
-   * nhỏ hơn nhiều — avatar không cần nét cao). */
-  function compressImage(file, maxDim, maxChars) {
-    return new Promise((resolve, reject) => {
-      if (!file.type || file.type.indexOf('image/') !== 0) { reject(new Error('File không phải ảnh.')); return; }
-      const reader = new FileReader();
-      reader.onerror = () => reject(new Error('Không đọc được file.'));
-      reader.onload = (ev) => {
-        const img = new Image();
-        img.onerror = () => reject(new Error('File ảnh hỏng hoặc không hỗ trợ.'));
-        img.onload = () => {
-          let w = img.naturalWidth, h = img.naturalHeight;
-          if (w > maxDim || h > maxDim) {
-            if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
-            else { w = Math.round(w * maxDim / h); h = maxDim; }
-          }
-          const canvas = document.createElement('canvas');
-          canvas.width = w; canvas.height = h;
-          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-          let quality = 0.75;
-          let dataUrl = canvas.toDataURL('image/jpeg', quality);
-          while (dataUrl.length > maxChars && quality > 0.3) {
-            quality -= 0.1;
-            dataUrl = canvas.toDataURL('image/jpeg', quality);
-          }
-          if (dataUrl.length > maxChars) { reject(new Error('Ảnh vẫn quá lớn sau khi nén — thử ảnh khác đơn giản hơn.')); return; }
-          resolve(dataUrl);
-        };
-        img.src = ev.target.result;
-      };
-      reader.readAsDataURL(file);
-    });
-  }
-
-  // ── Cache ảnh đại diện: uid -> { avatar, status, bio } (collection
-  // gvlab_profiles, đọc công khai) — subscribe LIVE 1 lần, dùng chung
-  // cho mọi nơi hiện avatar (thanh hồ sơ, ô soạn bài, bài đăng, bình
-  // luận, chat). Mỗi chỗ hiện avatar đánh dấu data-avatar-uid="{uid}" +
-  // sẵn initials làm nội dung mặc định — applyAvatars() chỉ CẦN GHI ĐÈ
-  // đúng những phần tử đã có ảnh thật trong cache, không phải chờ cache
-  // tải xong mới render được initials. ──
-  const avatarCache = {};
-
-  // ── Cache trạng thái "đã thích" của NGƯỜI DÙNG HIỆN TẠI theo postId —
-  // tránh gọi lại likes/{uid}.get() mỗi lần feed onSnapshot dội lại (bài
-  // đăng bất kỳ trong feed được thích/bình luận bởi AI CŨNG làm listener
-  // dội lại toàn bộ danh sách, và trước đây refreshAuthState() sẽ đọc lại
-  // TỪNG document likes/{uid} của mọi bài đang hiển thị mỗi lần như vậy —
-  // đây là nguồn đọc Firestore lớn nhất của trang). uid đổi (đăng nhập
-  // tài khoản khác) thì xoá cache vì trạng thái thích gắn với uid cũ. ──
-  const likeStatusCache = new Map(); // postId -> boolean
-  let likeStatusCacheUid = null;
-  function resetLikeStatusCacheIfNeeded(uid) {
-    if (likeStatusCacheUid !== uid) {
-      likeStatusCache.clear();
-      likeStatusCacheUid = uid;
-    }
-  }
-  function applyAvatars(root) {
-    (root || document).querySelectorAll('[data-avatar-uid]').forEach((el) => {
-      const p = avatarCache[el.dataset.avatarUid];
-      if (p && p.avatar) el.innerHTML = `<img src="${p.avatar}" alt="">`;
-    });
-  }
-  // Đọc 1 LẦN (không onSnapshot) — toàn bộ collection gvlab_profiles vốn
-  // không cần ĐỒNG BỘ TRỰC TIẾP cho avatar (giáo viên hiếm khi đổi ảnh đại
-  // diện, và tải lại trang là đủ thấy ảnh mới); giữ onSnapshot ở đây nghĩa
-  // là MỌI người đang mở trang Social đều duy trì 1 listener sống trên
-  // TOÀN BỘ collection, cứ 1 giáo viên bất kỳ đổi hồ sơ là bắn lại snapshot
-  // cho TẤT CẢ các tab đang mở — tốn lượt đọc tăng dần vô thời hạn theo cả
-  // số người xem lẫn số thay đổi, trong khi dữ liệu này không hề cấp bách.
-  // Qua EduProfileCache (IndexedDB + đồng bộ delta theo updatedAt — xem
-  // js/services/profile-cache-service.js): mở lại trang chỉ tốn ~1 lượt đọc
-  // thay vì đọc lại toàn bộ hồ sơ kèm avatar base64.
-  const profilesPromise = window.EduProfileCache
-    ? window.EduProfileCache.getAll()
-    : db.collection('gvlab_profiles').limit(500).get().then((snap) => {
-      const all = {};
-      snap.forEach((doc) => { all[doc.id] = doc.data(); });
-      return all;
-    });
-  profilesPromise.then((all) => {
-    Object.assign(avatarCache, all);
-    applyAvatars(document);
-    if (typeof refreshProfileBarDisplay === 'function') refreshProfileBarDisplay();
-  }).catch((err) => console.warn('[Trang Social Media] Không tải được hồ sơ (gvlab_profiles):', err.message));
-
-  // ════════════════════════════════════════════════════════════
-  // PfFeed — feed kiểu blog/mạng xã hội: đăng bài/thích/bình luận/xoá/
-  // chia sẻ THẬT qua Firestore (collection "gvlab_posts").
-  // ════════════════════════════════════════════════════════════
-  const MAX_POST_IMAGE_CHARS = 700000;
-  const MAX_POST_IMAGE_DIM = 1000;
-
-  function renderPost(doc) {
-    const d = doc.data();
-    const ms = d.createdAt && d.createdAt.toMillis ? d.createdAt.toMillis() : null;
-    const canDelete = !!currentUser && (currentUser.uid === d.authorUid || (currentProfile && currentProfile.role === 'admin'));
-    return `
-      <article class="gv-feed-post" data-post-id="${doc.id}">
-        <div class="gv-feed-post-media"><img src="${d.image}" alt="" loading="lazy"></div>
-        <div class="gv-feed-post-body">
-          <div class="gv-feed-post-top">
-            <span class="gv-avatar" data-avatar-uid="${esc(d.authorUid)}">${esc(initials(d.authorName))}</span>
-            <div class="gv-feed-post-who"><b>${esc(d.authorName || 'Giáo viên')}</b><span>${relativeTime(ms)}</span></div>
-            ${canDelete ? `<button type="button" class="gv-feed-delete" data-delete-post data-post-id="${doc.id}" title="Xoá bài đăng"><i class="fa-solid fa-trash"></i></button>` : ''}
-          </div>
-          ${d.caption ? `<p class="gv-feed-post-caption">${esc(d.caption)}</p>` : ''}
-          <div class="gv-feed-post-actions">
-            <button type="button" class="gv-feed-like" data-like-btn data-post-id="${doc.id}"><i class="fa-regular fa-heart"></i> <span>${d.likeCount || 0}</span></button>
-            <button type="button" class="gv-feed-comment-toggle" data-comment-toggle data-post-id="${doc.id}"><i class="fa-regular fa-comment"></i> <span>Bình luận</span></button>
-            <button type="button" class="gv-feed-share" data-share-post data-post-id="${doc.id}" data-caption="${esc(d.caption || '')}"><i class="fa-solid fa-share-nodes"></i> <span>Chia sẻ</span></button>
-          </div>
-          <div class="gv-feed-comments" data-comments-panel data-post-id="${doc.id}" hidden>
-            <div class="gv-feed-comments-list" data-comments-list></div>
-            <form class="gv-feed-comment-form" data-comment-form>
-              <input type="text" placeholder="Viết bình luận…" maxlength="300" data-comment-input>
-              <button type="submit">Gửi</button>
-            </form>
-          </div>
-        </div>
-      </article>
-    `;
-  }
-
-  /** Chia sẻ 1 bài đăng — Web Share API nếu trình duyệt hỗ trợ (đa số
-   * điện thoại), fallback copy nội dung + link vào clipboard trên máy
-   * tính. Không tạo link riêng cho từng bài (trang không có routing
-   * theo id) — chia sẻ thẳng link trang + trích đoạn caption. */
-  async function sharePost(caption) {
-    const url = location.href.split('#')[0];
-    const text = caption ? `"${caption}" — Trang Social Media` : 'Xem bài đăng trên Trang Social Media';
-    if (navigator.share) {
-      try { await navigator.share({ title: 'Trang Social Media', text, url }); } catch (e) { /* người dùng tự huỷ hộp thoại chia sẻ — bỏ qua */ }
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(`${text}\n${url}`);
-      alert('Đã sao chép nội dung + link để chia sẻ.');
-    } catch (e) {
-      alert('Không chia sẻ tự động được — copy link thủ công: ' + url);
-    }
-  }
-
-  function initFeed(root) {
-    const category = root.dataset.feed;
-    const composer = root.querySelector('[data-feed-composer]');
-    const loginHint = root.querySelector('[data-feed-login-hint]');
-    const fileInput = root.querySelector('[data-feed-file]');
-    const fileNameEl = root.querySelector('[data-feed-file-name]');
-    const captionEl = root.querySelector('[data-feed-caption]');
-    const submitBtn = root.querySelector('[data-feed-submit]');
-    const errorEl = root.querySelector('[data-feed-error]');
-    const listEl = root.querySelector('[data-feed-list]');
-    let pendingImage = null;
-    const commentUnsubs = new Map();
-
-    function showError(msg) { errorEl.textContent = msg; errorEl.hidden = false; }
-    function updateSubmitState() { submitBtn.disabled = !pendingImage || !canEditFeed(); }
-
-    fileInput.addEventListener('change', async () => {
-      const file = fileInput.files && fileInput.files[0];
-      if (!file) return;
-      errorEl.hidden = true;
-      fileNameEl.textContent = 'Đang nén ảnh…';
-      try {
-        pendingImage = await compressImage(file, MAX_POST_IMAGE_DIM, MAX_POST_IMAGE_CHARS);
-        fileNameEl.textContent = file.name;
-      } catch (err) {
-        pendingImage = null;
-        fileNameEl.textContent = 'Chưa chọn ảnh';
-        showError(err.message);
-      }
-      updateSubmitState();
-    });
-
-    submitBtn.addEventListener('click', async () => {
-      if (!pendingImage || !currentUser || !canEditFeed()) return;
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Đang đăng…';
-      try {
-        await db.collection('gvlab_posts').add({
-          category,
-          image: pendingImage,
-          caption: (captionEl.value || '').trim().slice(0, 500),
-          authorUid: currentUser.uid,
-          authorName: currentProfile.name || currentUser.email || 'Giáo viên',
-          authorRole: currentProfile.role,
-          likeCount: 0,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        });
-        captionEl.value = '';
-        pendingImage = null;
-        fileInput.value = '';
-        fileNameEl.textContent = 'Chưa chọn ảnh';
-        errorEl.hidden = true;
-      } catch (err) {
-        showError('Đăng bài thất bại: ' + err.message);
-      } finally {
-        submitBtn.textContent = 'Đăng bài';
-        updateSubmitState();
-      }
-    });
-
-    async function toggleLike(postId, btn) {
-      if (!currentUser) { window.location.href = 'login.html'; return; }
-      const postRef = db.collection('gvlab_posts').doc(postId);
-      const likeRef = postRef.collection('likes').doc(currentUser.uid);
-      btn.disabled = true;
-      try {
-        let nowLiked = false;
-        await db.runTransaction(async (tx) => {
-          const likeSnap = await tx.get(likeRef);
-          const postSnap = await tx.get(postRef);
-          const curCount = (postSnap.data() || {}).likeCount || 0;
-          if (likeSnap.exists) {
-            tx.delete(likeRef);
-            tx.update(postRef, { likeCount: Math.max(0, curCount - 1) });
-            nowLiked = false;
-          } else {
-            tx.set(likeRef, { createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-            tx.update(postRef, { likeCount: curCount + 1 });
-            nowLiked = true;
-          }
-        });
-        // Biết ngay kết quả từ transaction — ghi thẳng vào cache thay vì
-        // để refreshAuthState() (chạy lại khi listener dội) phải get() lại.
-        likeStatusCache.set(postId, nowLiked);
-      } catch (err) {
-        console.warn('[Trang Social Media] Lỗi thích bài:', err.message);
-      } finally {
-        btn.disabled = false;
-      }
-    }
-
-    // Xoá bài — CHỈ xoá document chính, subcollection likes/comments của
-    // nó trở thành "mồ côi" (Firestore không tự cascade-delete). Chấp
-    // nhận được ở quy mô nhỏ (feed nội bộ team).
-    async function deletePost(postId, btn) {
-      if (!currentUser) return;
-      if (!confirm('Xoá bài đăng này? Không thể hoàn tác.')) return;
-      btn.disabled = true;
-      try {
-        await db.collection('gvlab_posts').doc(postId).delete();
-      } catch (err) {
-        showError('Xoá bài thất bại: ' + err.message);
-        btn.disabled = false;
-      }
-    }
-
-    function toggleComments(postId) {
-      const panel = listEl.querySelector(`[data-comments-panel][data-post-id="${postId}"]`);
-      if (!panel) return;
-      const show = panel.hidden;
-      panel.hidden = !show;
-      if (show && !commentUnsubs.has(postId)) {
-        const commentsList = panel.querySelector('[data-comments-list]');
-        const unsub = db.collection('gvlab_posts').doc(postId).collection('comments')
-          .orderBy('createdAt', 'asc').limit(200)
-          .onSnapshot((snap) => {
-            commentsList.innerHTML = snap.empty
-              ? '<p class="gv-feed-empty">Chưa có bình luận nào.</p>'
-              : snap.docs.map((d) => {
-                  const c = d.data();
-                  const cms = c.createdAt && c.createdAt.toMillis ? c.createdAt.toMillis() : null;
-                  return `<div class="gv-feed-comment">
-                    <span class="gv-avatar" data-avatar-uid="${esc(c.authorUid)}">${esc(initials(c.authorName))}</span>
-                    <div class="gv-feed-comment-body"><b>${esc(c.authorName || 'Giáo viên')}</b>${esc(c.text)} <span>${relativeTime(cms)}</span></div>
-                  </div>`;
-                }).join('');
-            applyAvatars(commentsList);
-          }, (err) => { commentsList.innerHTML = `<p class="gv-feed-empty">Lỗi tải bình luận: ${esc(err.message)}</p>`; });
-        commentUnsubs.set(postId, unsub);
-        const form = panel.querySelector('[data-comment-form]');
-        form.addEventListener('submit', (e) => {
-          e.preventDefault();
-          if (!currentUser || !canEditFeed()) { window.location.href = 'login.html'; return; }
-          const input = form.querySelector('[data-comment-input]');
-          const text = input.value.trim();
-          if (!text) return;
-          input.disabled = true;
-          db.collection('gvlab_posts').doc(postId).collection('comments').add({
-            text: text.slice(0, 300),
-            authorUid: currentUser.uid,
-            authorName: currentProfile.name || currentUser.email || 'Giáo viên',
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          }).then(() => { input.value = ''; }).catch((err) => showError('Không gửi được bình luận: ' + err.message))
-            .finally(() => { input.disabled = false; });
-        });
-      }
-    }
-
-    function refreshAuthState() {
-      updateSubmitState();
-      if (!currentUser) {
-        listEl.querySelectorAll('[data-like-btn]').forEach((btn) => {
-          btn.disabled = true;
-          btn.classList.remove('is-liked');
-        });
-        return;
-      }
-      resetLikeStatusCacheIfNeeded(currentUser.uid);
-      listEl.querySelectorAll('[data-like-btn]').forEach((btn) => {
-        btn.disabled = false;
-        const postId = btn.dataset.postId;
-        if (likeStatusCache.has(postId)) {
-          // Đã biết trạng thái (từ lần get() trước hoặc từ toggleLike vừa
-          // chạy) — dùng thẳng, KHÔNG gọi lại Firestore. Đây là trường hợp
-          // phổ biến nhất: feed dội lại vì bài đăng KHÁC thay đổi.
-          btn.classList.toggle('is-liked', likeStatusCache.get(postId));
-          return;
-        }
-        db.collection('gvlab_posts').doc(postId).collection('likes').doc(currentUser.uid).get()
-          .then((snap) => {
-            likeStatusCache.set(postId, snap.exists);
-            btn.classList.toggle('is-liked', snap.exists);
-          })
-          .catch(() => {});
-      });
-    }
-
-    db.collection('gvlab_posts')
-      .where('category', '==', category)
-      .orderBy('createdAt', 'desc')
-      // Trang công khai, mỗi bài mang ảnh base64 (tới ~700KB): 30 bài/lần xem có thể tải
-      // ~20MB (băng thông Firestore Spark chỉ 10GB/tháng) — giữ 12 bài mới nhất.
-      .limit(12)
-      .onSnapshot((snap) => {
-        commentUnsubs.forEach((unsub) => unsub());
-        commentUnsubs.clear();
-        listEl.innerHTML = snap.empty
-          ? '<p class="gv-feed-empty">Chưa có bài đăng nào — hãy là người đầu tiên chia sẻ.</p>'
-          : snap.docs.map(renderPost).join('');
-        applyAvatars(listEl);
-        listEl.querySelectorAll('[data-like-btn]').forEach((btn) => btn.addEventListener('click', () => toggleLike(btn.dataset.postId, btn)));
-        listEl.querySelectorAll('[data-comment-toggle]').forEach((btn) => btn.addEventListener('click', () => toggleComments(btn.dataset.postId)));
-        listEl.querySelectorAll('[data-delete-post]').forEach((btn) => btn.addEventListener('click', () => deletePost(btn.dataset.postId, btn)));
-        listEl.querySelectorAll('[data-share-post]').forEach((btn) => btn.addEventListener('click', () => sharePost(btn.dataset.caption)));
-        refreshAuthState();
-      }, (err) => {
-        listEl.innerHTML = `<p class="gv-feed-empty">Không tải được feed: ${esc(err.message)}</p>`;
-      });
-
-    return { composer, loginHint, updateSubmitState: refreshAuthState };
-  }
-
-  const feedInstances = Array.from(document.querySelectorAll('[data-feed]')).map(initFeed);
-
-  // ════════════════════════════════════════════════════════════
-  // PfCerts — mỗi Giáo viên/Admin tự đăng/xoá chứng chỉ CỦA RIÊNG MÌNH
-  // (collection "gvlab_certs", đọc công khai — ai cũng xem được cả
-  // trang, chỉ đăng nhập mới đăng/xoá được, và chỉ xoá được của chính
-  // mình hoặc admin). Gộp hiển thị cùng bộ chứng chỉ tĩnh ban đầu
-  // (CERTS/LEGACY_TEACHER_NAME) trong CÙNG 1 lưới — lọc theo giáo viên
-  // qua <select> dựng từ chính dữ liệu đã tải (không query thêm).
-  // 1 onSnapshot có limit(), giống hệt cơ chế đã tối ưu của PfFeed.
-  // ════════════════════════════════════════════════════════════
-  const MAX_CERT_IMAGE_CHARS = 700000;
-  const MAX_CERT_IMAGE_DIM = 1000;
-  const certsInstance = (function PfCerts() {
-    const teacherFilter = document.getElementById('gvCertsTeacherFilter');
-    const composer = document.getElementById('gvCertsComposer');
-    const loginHint = document.getElementById('gvCertsLoginHint');
-    const titleInput = document.getElementById('gvCertsTitleInput');
-    const fileInput = document.getElementById('gvCertsFileInput');
-    const fileNameEl = document.getElementById('gvCertsFileName');
-    const submitBtn = document.getElementById('gvCertsSubmitBtn');
-    const errorEl = document.getElementById('gvCertsError');
-    if (!certsGrid || !teacherFilter) return;
-
-    let pendingImage = null;
-    let dynamicCerts = []; // [{ id, teacherUid, teacherName, title, image }]
-
-    function showError(msg) { errorEl.textContent = msg; errorEl.hidden = false; }
-    function updateComposerState() {
-      const editor = canEditFeed();
-      composer.hidden = !editor;
-      loginHint.hidden = editor;
-      submitBtn.disabled = !pendingImage;
-    }
-
-    function allCertItems() {
-      const legacy = CERTS.map((c) => ({
-        id: 'legacy:' + c.file,
-        teacherName: LEGACY_TEACHER_NAME,
-        title: c.title,
-        src: `img/portfolio/${c.file}`,
-        canDelete: false,
-      }));
-      const dynamic = dynamicCerts.map((c) => ({
-        id: c.id,
-        teacherName: c.teacherName || 'Giáo viên',
-        title: c.title,
-        src: c.image,
-        canDelete: !!currentUser && (currentUser.uid === c.teacherUid || (currentProfile && currentProfile.role === 'admin')),
-      }));
-      return legacy.concat(dynamic);
-    }
-
-    function renderTeacherFilterOptions(items) {
-      const names = [...new Set(items.map((c) => c.teacherName))].sort((a, b) => a.localeCompare(b, 'vi'));
-      const current = teacherFilter.value;
-      teacherFilter.innerHTML = '<option value="">Tất cả giáo viên</option>' +
-        names.map((n) => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
-      if (names.includes(current)) teacherFilter.value = current;
-    }
-
-    function renderGrid() {
-      const items = allCertItems();
-      renderTeacherFilterOptions(items);
-      const wanted = teacherFilter.value;
-      const shown = wanted ? items.filter((c) => c.teacherName === wanted) : items;
-      certsGrid.innerHTML = shown.length
-        ? shown.map((c) => certCardHtml(
-            c.src, c.title, c.teacherName,
-            c.canDelete ? `data-cert-delete="${esc(c.id)}"` : ''
-          )).join('')
-        : '<p class="gv-feed-empty">Chưa có chứng chỉ nào của giáo viên này.</p>';
-      // Nút xoá nằm TRONG nút xem ảnh (data-cert-src) — chặn nổi bọt để
-      // bấm xoá không mở nhầm lightbox. Vì certCardHtml không có sẵn ô
-      // nút xoá riêng, dùng phím giữ (dbl bấm) là không thân thiện — nên
-      // thêm hẳn 1 nút xoá nhỏ đè lên góc thẻ bằng cách chèn qua DOM sau
-      // khi render (đơn giản hơn sửa lại template dùng chung với lightbox).
-      shown.forEach((c) => {
-        if (!c.canDelete) return;
-        const btn = certsGrid.querySelector(`[data-cert-src][data-cert-delete="${CSS.escape(c.id)}"]`);
-        if (!btn) return;
-        const del = document.createElement('span');
-        del.className = 'gv-cert-delete';
-        del.title = 'Xoá chứng chỉ này';
-        del.innerHTML = '<i class="fa-solid fa-trash"></i>';
-        del.addEventListener('click', (e) => {
-          e.stopPropagation();
-          deleteCert(c.id);
-        });
-        btn.appendChild(del);
-      });
-    }
-
-    async function deleteCert(id) {
-      if (!confirm('Xoá chứng chỉ này? Không thể hoàn tác.')) return;
-      try {
-        await db.collection('gvlab_certs').doc(id).delete();
-      } catch (err) {
-        alert('Xoá chứng chỉ thất bại: ' + err.message);
-      }
-    }
-
-    teacherFilter.addEventListener('change', renderGrid);
-
-    fileInput.addEventListener('change', async () => {
-      const file = fileInput.files && fileInput.files[0];
-      if (!file) return;
-      errorEl.hidden = true;
-      fileNameEl.textContent = 'Đang nén ảnh…';
-      try {
-        pendingImage = await compressImage(file, MAX_CERT_IMAGE_DIM, MAX_CERT_IMAGE_CHARS);
-        fileNameEl.textContent = file.name;
-      } catch (err) {
-        pendingImage = null;
-        fileNameEl.textContent = 'Chưa chọn ảnh';
-        showError(err.message);
-      }
-      updateComposerState();
-    });
-
-    submitBtn.addEventListener('click', async () => {
-      const title = titleInput.value.trim();
-      if (!pendingImage || !title || !currentUser || !canEditFeed()) {
-        if (!title) showError('Nhập tên chứng chỉ trước khi thêm.');
-        return;
-      }
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Đang thêm…';
-      try {
-        await db.collection('gvlab_certs').add({
-          teacherUid: currentUser.uid,
-          teacherName: currentProfile.name || currentUser.email || 'Giáo viên',
-          title: title.slice(0, 120),
-          image: pendingImage,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        });
-        titleInput.value = '';
-        pendingImage = null;
-        fileInput.value = '';
-        fileNameEl.textContent = 'Chưa chọn ảnh';
-        errorEl.hidden = true;
-      } catch (err) {
-        showError('Thêm chứng chỉ thất bại: ' + err.message);
-      } finally {
-        submitBtn.textContent = 'Thêm chứng chỉ';
-        updateComposerState();
-      }
-    });
-
-    db.collection('gvlab_certs').orderBy('createdAt', 'desc').limit(60)
-      .onSnapshot((snap) => {
-        dynamicCerts = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
-        renderGrid();
-      }, (err) => {
-        console.warn('[Trang Social Media] Không tải được chứng chỉ theo giáo viên (gvlab_certs):', err.message);
-      });
-
-    function refreshAuthState() {
-      updateComposerState();
-      renderGrid(); // canDelete phụ thuộc currentUser — vẽ lại để hiện/ẩn đúng nút xoá
-    }
-    return { refreshAuthState };
-  })();
-
-  // ════════════════════════════════════════════════════════════
-  // PfProfile — chỉnh sửa hồ sơ Trang Social Media (ảnh đại diện/trạng thái/tiểu
-  // sử), lưu vào collection RIÊNG "gvlab_profiles" (KHÔNG đụng "users"
-  // dùng chung toàn nền tảng) — xem firestore.rules § gvlab_profiles.
-  // ════════════════════════════════════════════════════════════
-  const MAX_AVATAR_CHARS = 250000;
-  const MAX_AVATAR_DIM = 300;
-  (function PfProfile() {
-    const editBtn = document.getElementById('gvEditProfileBtn');
-    const overlay = document.getElementById('gvProfileModalOverlay');
-    const closeBtn = document.getElementById('gvProfileModalClose');
-    const avatarPreview = document.getElementById('gvProfileFormAvatarPreview');
-    const avatarInput = document.getElementById('gvProfileAvatarInput');
-    const statusInput = document.getElementById('gvProfileStatusInput');
-    const bioInput = document.getElementById('gvProfileBioInput');
-    const formError = document.getElementById('gvProfileFormError');
-    const saveBtn = document.getElementById('gvProfileSaveBtn');
-    if (!editBtn || !overlay) return;
-
-    let pendingAvatar = null; // data URL mới chọn, chờ lưu
-
-    function openModal() {
-      if (!currentUser) return;
-      const p = avatarCache[currentUser.uid] || {};
-      pendingAvatar = null;
-      avatarPreview.innerHTML = p.avatar ? `<img src="${p.avatar}" alt="">` : esc(initials(currentProfile && currentProfile.name));
-      statusInput.value = p.status || '';
-      bioInput.value = p.bio || '';
-      formError.hidden = true;
-      overlay.classList.add('is-open');
-      document.body.style.overflow = 'hidden';
-    }
-    function closeModal() {
-      overlay.classList.remove('is-open');
-      document.body.style.overflow = '';
-    }
-    editBtn.addEventListener('click', openModal);
-    closeBtn.addEventListener('click', closeModal);
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
-
-    avatarInput.addEventListener('change', async () => {
-      const file = avatarInput.files && avatarInput.files[0];
-      if (!file) return;
-      try {
-        pendingAvatar = await compressImage(file, MAX_AVATAR_DIM, MAX_AVATAR_CHARS);
-        avatarPreview.innerHTML = `<img src="${pendingAvatar}" alt="">`;
-      } catch (err) {
-        formError.textContent = err.message;
-        formError.hidden = false;
-      }
-    });
-
-    saveBtn.addEventListener('click', async () => {
-      if (!currentUser) return;
-      saveBtn.disabled = true;
-      saveBtn.textContent = 'Đang lưu…';
-      const data = {
-        status: statusInput.value.trim().slice(0, 60),
-        bio: bioInput.value.trim().slice(0, 220),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      };
-      if (pendingAvatar) data.avatar = pendingAvatar;
-      try {
-        await db.collection('gvlab_profiles').doc(currentUser.uid).set(data, { merge: true });
-        if (window.EduProfileCache) window.EduProfileCache.put(currentUser.uid, Object.assign({}, data, pendingAvatar ? { avatar: pendingAvatar } : {}));
-        // Cập nhật cache cục bộ NGAY (không cần đợi onSnapshot dội lại) để
-        // avatar/trạng thái mới thấy liền trên thanh hồ sơ + ô soạn bài.
-        avatarCache[currentUser.uid] = Object.assign({}, avatarCache[currentUser.uid], data, pendingAvatar ? { avatar: pendingAvatar } : {});
-        applyAvatars(document);
-        refreshProfileBarDisplay();
-        closeModal();
-      } catch (err) {
-        formError.textContent = 'Lưu hồ sơ thất bại: ' + err.message;
-        formError.hidden = false;
-      } finally {
-        saveBtn.disabled = false;
-        saveBtn.textContent = 'Lưu hồ sơ';
-      }
-    });
-  })();
-
-  // ── PfProfileBar — thanh "mạng lưới Trang Social Media" dưới nav: avatar/tên/vai
-  // trò/trạng thái người đang đăng nhập. Không đăng nhập thì ẩn hẳn cả
-  // thanh (trước đây có banner mời đăng nhập ở trạng thái guest — đã bỏ). ──
-  const profileBar = document.getElementById('gvProfileBar');
-  const profileUser = document.getElementById('gvProfileUser');
-  const profileAvatar = document.getElementById('gvProfileAvatar');
-  const profileName = document.getElementById('gvProfileName');
-  const profileRole = document.getElementById('gvProfileRole');
-  const profileStatus = document.getElementById('gvProfileStatus');
-  const ROLE_LABEL_SHORT = { admin: 'Quản trị viên', teacher: 'Giáo viên', coordinator: 'Điều phối đào tạo', teaching_coordinator: 'Điều phối giáo viên', student: 'Học sinh' };
-
-  function refreshProfileBarDisplay() {
-    if (!profileBar || !profileUser) return;
-    const signedIn = !!currentUser;
-    profileBar.hidden = !signedIn;
-    profileUser.hidden = !signedIn;
-    if (!signedIn) return;
-    const displayName = (currentProfile && currentProfile.name) || currentUser.email || '';
-    const p = avatarCache[currentUser.uid] || {};
-    profileAvatar.innerHTML = p.avatar ? `<img src="${p.avatar}" alt="">` : esc(initials(displayName));
-    profileName.textContent = displayName || 'Người dùng';
-    profileRole.textContent = (currentProfile && ROLE_LABEL_SHORT[currentProfile.role]) || '—';
-    if (p.status) { profileStatus.textContent = p.status; profileStatus.hidden = false; }
-    else { profileStatus.hidden = true; }
-  }
-
-
-  // ════════════════════════════════════════════════════════════
-  // Auth state dùng CHUNG cho Feed/Profile/Chat — 1 listener duy nhất.
-  // ════════════════════════════════════════════════════════════
-  window.EduAuth.onAuthReady((user, profile) => {
-    currentUser = user;
-    currentProfile = profile;
-    const editor = canEditFeed();
-
-    feedInstances.forEach((f) => {
-      if (!f) return;
-      f.composer.hidden = !editor;
-      f.loginHint.hidden = editor;
-      f.updateSubmitState();
-    });
-    document.querySelectorAll('[data-composer-avatar]').forEach((el) => {
-      const p = user && avatarCache[user.uid];
-      el.innerHTML = p && p.avatar ? `<img src="${p.avatar}" alt="">` : esc(initials((profile && profile.name) || (user && user.email)));
-    });
-    refreshProfileBarDisplay();
-    if (certsInstance) certsInstance.refreshAuthState();
-  });
-
   const yearEl = document.getElementById('gvYear');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+  // ════════════════════════════════════════════════════════════
+  // Firebase THEO YÊU CẦU (10/2026). Trước đây trang nạp Firebase + App Check ngay khi
+  // mở và đọc ~85 document (2 feed × 12 bài + 60 chứng chỉ + hồ sơ) — ai F5 liên tục
+  // (học sinh vào từ link logo cũ) là cạn 50.000 lượt đọc/ngày và 10.000 lượt
+  // reCAPTCHA/tháng của gói Spark, kéo sập luôn trang quản lý. Giờ phần mạng xã hội
+  // chỉ chạy khi người xem bấm "Xem bài đăng", hoặc tự chạy nếu máy này đã có phiên
+  // đăng nhập giáo viên (js/services/firebase-loader.js § hasStoredSession — 0 lượt Firebase).
+  // ════════════════════════════════════════════════════════════
+  function startSocial() {
+    // ════════════════════════════════════════════════════════════
+    // Hạ tầng mạng xã hội dùng CHUNG (Firebase, avatar cache, tiện ích) —
+    // PfFeed/PfProfile bên dưới đều dựa vào đây. Dừng sớm nếu thiếu
+    // Firebase/EduAuth (trang vẫn hiện được Certifications/Life tĩnh +
+    // trợ lý trợ năng, chỉ mất phần tương tác mạng xã hội).
+    // ════════════════════════════════════════════════════════════
+    if (!window.EduFirebase || !window.EduAuth) {
+      console.warn('[Trang Social Media] Thiếu Firebase/EduAuth — feed/hồ sơ/chat sẽ không hoạt động trên trang này.');
+      return;
+    }
+    const db = window.EduFirebase.db;
+
+    let currentUser = null;
+    let currentProfile = null; // users/{uid} — role/approved/name (hồ sơ gốc toàn nền tảng)
+    function canEditFeed() {
+      return !!currentProfile && (currentProfile.role === 'admin' || (currentProfile.role === 'teacher' && currentProfile.approved !== false));
+    }
+
+    function initials(name) {
+      const s = String(name || '').trim();
+      return s ? s.charAt(0).toUpperCase() : '?';
+    }
+
+    function relativeTime(ms) {
+      if (!ms) return 'vừa xong';
+      const diff = Date.now() - ms;
+      const min = Math.floor(diff / 60000);
+      if (min < 1) return 'vừa xong';
+      if (min < 60) return `${min} phút trước`;
+      const hr = Math.floor(min / 60);
+      if (hr < 24) return `${hr} giờ trước`;
+      const day = Math.floor(hr / 24);
+      if (day < 30) return `${day} ngày trước`;
+      return new Date(ms).toLocaleDateString('vi-VN');
+    }
+
+    /** Đọc file ảnh → resize tối đa maxDim px → nén JPEG, giảm dần chất
+     * lượng tới khi vừa hạn mức maxChars. Trả về data URL (base64). Dùng
+     * chung cho ảnh bài đăng (maxDim lớn) VÀ avatar/đính kèm chat (maxDim
+     * nhỏ hơn nhiều — avatar không cần nét cao). */
+    function compressImage(file, maxDim, maxChars) {
+      return new Promise((resolve, reject) => {
+        if (!file.type || file.type.indexOf('image/') !== 0) { reject(new Error('File không phải ảnh.')); return; }
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('Không đọc được file.'));
+        reader.onload = (ev) => {
+          const img = new Image();
+          img.onerror = () => reject(new Error('File ảnh hỏng hoặc không hỗ trợ.'));
+          img.onload = () => {
+            let w = img.naturalWidth, h = img.naturalHeight;
+            if (w > maxDim || h > maxDim) {
+              if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+              else { w = Math.round(w * maxDim / h); h = maxDim; }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            let quality = 0.75;
+            let dataUrl = canvas.toDataURL('image/jpeg', quality);
+            while (dataUrl.length > maxChars && quality > 0.3) {
+              quality -= 0.1;
+              dataUrl = canvas.toDataURL('image/jpeg', quality);
+            }
+            if (dataUrl.length > maxChars) { reject(new Error('Ảnh vẫn quá lớn sau khi nén — thử ảnh khác đơn giản hơn.')); return; }
+            resolve(dataUrl);
+          };
+          img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // ── Cache ảnh đại diện: uid -> { avatar, status, bio } (collection
+    // gvlab_profiles, đọc công khai) — subscribe LIVE 1 lần, dùng chung
+    // cho mọi nơi hiện avatar (thanh hồ sơ, ô soạn bài, bài đăng, bình
+    // luận, chat). Mỗi chỗ hiện avatar đánh dấu data-avatar-uid="{uid}" +
+    // sẵn initials làm nội dung mặc định — applyAvatars() chỉ CẦN GHI ĐÈ
+    // đúng những phần tử đã có ảnh thật trong cache, không phải chờ cache
+    // tải xong mới render được initials. ──
+    const avatarCache = {};
+
+    // ── Cache trạng thái "đã thích" của NGƯỜI DÙNG HIỆN TẠI theo postId —
+    // tránh gọi lại likes/{uid}.get() mỗi lần feed onSnapshot dội lại (bài
+    // đăng bất kỳ trong feed được thích/bình luận bởi AI CŨNG làm listener
+    // dội lại toàn bộ danh sách, và trước đây refreshAuthState() sẽ đọc lại
+    // TỪNG document likes/{uid} của mọi bài đang hiển thị mỗi lần như vậy —
+    // đây là nguồn đọc Firestore lớn nhất của trang). uid đổi (đăng nhập
+    // tài khoản khác) thì xoá cache vì trạng thái thích gắn với uid cũ. ──
+    const likeStatusCache = new Map(); // postId -> boolean
+    let likeStatusCacheUid = null;
+    function resetLikeStatusCacheIfNeeded(uid) {
+      if (likeStatusCacheUid !== uid) {
+        likeStatusCache.clear();
+        likeStatusCacheUid = uid;
+      }
+    }
+    function applyAvatars(root) {
+      (root || document).querySelectorAll('[data-avatar-uid]').forEach((el) => {
+        const p = avatarCache[el.dataset.avatarUid];
+        if (p && p.avatar) el.innerHTML = `<img src="${p.avatar}" alt="">`;
+      });
+    }
+    // Đọc 1 LẦN (không onSnapshot) — toàn bộ collection gvlab_profiles vốn
+    // không cần ĐỒNG BỘ TRỰC TIẾP cho avatar (giáo viên hiếm khi đổi ảnh đại
+    // diện, và tải lại trang là đủ thấy ảnh mới); giữ onSnapshot ở đây nghĩa
+    // là MỌI người đang mở trang Social đều duy trì 1 listener sống trên
+    // TOÀN BỘ collection, cứ 1 giáo viên bất kỳ đổi hồ sơ là bắn lại snapshot
+    // cho TẤT CẢ các tab đang mở — tốn lượt đọc tăng dần vô thời hạn theo cả
+    // số người xem lẫn số thay đổi, trong khi dữ liệu này không hề cấp bách.
+    // Qua EduProfileCache (IndexedDB + đồng bộ delta theo updatedAt — xem
+    // js/services/profile-cache-service.js): mở lại trang chỉ tốn ~1 lượt đọc
+    // thay vì đọc lại toàn bộ hồ sơ kèm avatar base64.
+    const profilesPromise = window.EduProfileCache
+      ? window.EduProfileCache.getAll()
+      : db.collection('gvlab_profiles').limit(500).get().then((snap) => {
+        const all = {};
+        snap.forEach((doc) => { all[doc.id] = doc.data(); });
+        return all;
+      });
+    profilesPromise.then((all) => {
+      Object.assign(avatarCache, all);
+      applyAvatars(document);
+      if (typeof refreshProfileBarDisplay === 'function') refreshProfileBarDisplay();
+    }).catch((err) => console.warn('[Trang Social Media] Không tải được hồ sơ (gvlab_profiles):', err.message));
+
+    // ════════════════════════════════════════════════════════════
+    // PfFeed — feed kiểu blog/mạng xã hội: đăng bài/thích/bình luận/xoá/
+    // chia sẻ THẬT qua Firestore (collection "gvlab_posts").
+    // ════════════════════════════════════════════════════════════
+    const MAX_POST_IMAGE_CHARS = 700000;
+    const MAX_POST_IMAGE_DIM = 1000;
+
+    function renderPost(doc) {
+      const d = doc.data();
+      const ms = d.createdAt && d.createdAt.toMillis ? d.createdAt.toMillis() : null;
+      const canDelete = !!currentUser && (currentUser.uid === d.authorUid || (currentProfile && currentProfile.role === 'admin'));
+      return `
+        <article class="gv-feed-post" data-post-id="${doc.id}">
+          <div class="gv-feed-post-media"><img src="${d.image}" alt="" loading="lazy"></div>
+          <div class="gv-feed-post-body">
+            <div class="gv-feed-post-top">
+              <span class="gv-avatar" data-avatar-uid="${esc(d.authorUid)}">${esc(initials(d.authorName))}</span>
+              <div class="gv-feed-post-who"><b>${esc(d.authorName || 'Giáo viên')}</b><span>${relativeTime(ms)}</span></div>
+              ${canDelete ? `<button type="button" class="gv-feed-delete" data-delete-post data-post-id="${doc.id}" title="Xoá bài đăng"><i class="fa-solid fa-trash"></i></button>` : ''}
+            </div>
+            ${d.caption ? `<p class="gv-feed-post-caption">${esc(d.caption)}</p>` : ''}
+            <div class="gv-feed-post-actions">
+              <button type="button" class="gv-feed-like" data-like-btn data-post-id="${doc.id}"><i class="fa-regular fa-heart"></i> <span>${d.likeCount || 0}</span></button>
+              <button type="button" class="gv-feed-comment-toggle" data-comment-toggle data-post-id="${doc.id}"><i class="fa-regular fa-comment"></i> <span>Bình luận</span></button>
+              <button type="button" class="gv-feed-share" data-share-post data-post-id="${doc.id}" data-caption="${esc(d.caption || '')}"><i class="fa-solid fa-share-nodes"></i> <span>Chia sẻ</span></button>
+            </div>
+            <div class="gv-feed-comments" data-comments-panel data-post-id="${doc.id}" hidden>
+              <div class="gv-feed-comments-list" data-comments-list></div>
+              <form class="gv-feed-comment-form" data-comment-form>
+                <input type="text" placeholder="Viết bình luận…" maxlength="300" data-comment-input>
+                <button type="submit">Gửi</button>
+              </form>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    /** Chia sẻ 1 bài đăng — Web Share API nếu trình duyệt hỗ trợ (đa số
+     * điện thoại), fallback copy nội dung + link vào clipboard trên máy
+     * tính. Không tạo link riêng cho từng bài (trang không có routing
+     * theo id) — chia sẻ thẳng link trang + trích đoạn caption. */
+    async function sharePost(caption) {
+      const url = location.href.split('#')[0];
+      const text = caption ? `"${caption}" — Trang Social Media` : 'Xem bài đăng trên Trang Social Media';
+      if (navigator.share) {
+        try { await navigator.share({ title: 'Trang Social Media', text, url }); } catch (e) { /* người dùng tự huỷ hộp thoại chia sẻ — bỏ qua */ }
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(`${text}\n${url}`);
+        alert('Đã sao chép nội dung + link để chia sẻ.');
+      } catch (e) {
+        alert('Không chia sẻ tự động được — copy link thủ công: ' + url);
+      }
+    }
+
+    function initFeed(root) {
+      const category = root.dataset.feed;
+      const composer = root.querySelector('[data-feed-composer]');
+      const loginHint = root.querySelector('[data-feed-login-hint]');
+      const fileInput = root.querySelector('[data-feed-file]');
+      const fileNameEl = root.querySelector('[data-feed-file-name]');
+      const captionEl = root.querySelector('[data-feed-caption]');
+      const submitBtn = root.querySelector('[data-feed-submit]');
+      const errorEl = root.querySelector('[data-feed-error]');
+      const listEl = root.querySelector('[data-feed-list]');
+      let pendingImage = null;
+      const commentUnsubs = new Map();
+
+      function showError(msg) { errorEl.textContent = msg; errorEl.hidden = false; }
+      function updateSubmitState() { submitBtn.disabled = !pendingImage || !canEditFeed(); }
+
+      fileInput.addEventListener('change', async () => {
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) return;
+        errorEl.hidden = true;
+        fileNameEl.textContent = 'Đang nén ảnh…';
+        try {
+          pendingImage = await compressImage(file, MAX_POST_IMAGE_DIM, MAX_POST_IMAGE_CHARS);
+          fileNameEl.textContent = file.name;
+        } catch (err) {
+          pendingImage = null;
+          fileNameEl.textContent = 'Chưa chọn ảnh';
+          showError(err.message);
+        }
+        updateSubmitState();
+      });
+
+      submitBtn.addEventListener('click', async () => {
+        if (!pendingImage || !currentUser || !canEditFeed()) return;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Đang đăng…';
+        try {
+          await db.collection('gvlab_posts').add({
+            category,
+            image: pendingImage,
+            caption: (captionEl.value || '').trim().slice(0, 500),
+            authorUid: currentUser.uid,
+            authorName: currentProfile.name || currentUser.email || 'Giáo viên',
+            authorRole: currentProfile.role,
+            likeCount: 0,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+          captionEl.value = '';
+          pendingImage = null;
+          fileInput.value = '';
+          fileNameEl.textContent = 'Chưa chọn ảnh';
+          errorEl.hidden = true;
+        } catch (err) {
+          showError('Đăng bài thất bại: ' + err.message);
+        } finally {
+          submitBtn.textContent = 'Đăng bài';
+          updateSubmitState();
+        }
+      });
+
+      async function toggleLike(postId, btn) {
+        if (!currentUser) { window.location.href = 'login.html'; return; }
+        const postRef = db.collection('gvlab_posts').doc(postId);
+        const likeRef = postRef.collection('likes').doc(currentUser.uid);
+        btn.disabled = true;
+        try {
+          let nowLiked = false;
+          await db.runTransaction(async (tx) => {
+            const likeSnap = await tx.get(likeRef);
+            const postSnap = await tx.get(postRef);
+            const curCount = (postSnap.data() || {}).likeCount || 0;
+            if (likeSnap.exists) {
+              tx.delete(likeRef);
+              tx.update(postRef, { likeCount: Math.max(0, curCount - 1) });
+              nowLiked = false;
+            } else {
+              tx.set(likeRef, { createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+              tx.update(postRef, { likeCount: curCount + 1 });
+              nowLiked = true;
+            }
+          });
+          // Biết ngay kết quả từ transaction — ghi thẳng vào cache thay vì
+          // để refreshAuthState() (chạy lại khi listener dội) phải get() lại.
+          likeStatusCache.set(postId, nowLiked);
+        } catch (err) {
+          console.warn('[Trang Social Media] Lỗi thích bài:', err.message);
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      // Xoá bài — CHỈ xoá document chính, subcollection likes/comments của
+      // nó trở thành "mồ côi" (Firestore không tự cascade-delete). Chấp
+      // nhận được ở quy mô nhỏ (feed nội bộ team).
+      async function deletePost(postId, btn) {
+        if (!currentUser) return;
+        if (!confirm('Xoá bài đăng này? Không thể hoàn tác.')) return;
+        btn.disabled = true;
+        try {
+          await db.collection('gvlab_posts').doc(postId).delete();
+        } catch (err) {
+          showError('Xoá bài thất bại: ' + err.message);
+          btn.disabled = false;
+        }
+      }
+
+      function toggleComments(postId) {
+        const panel = listEl.querySelector(`[data-comments-panel][data-post-id="${postId}"]`);
+        if (!panel) return;
+        const show = panel.hidden;
+        panel.hidden = !show;
+        if (show && !commentUnsubs.has(postId)) {
+          const commentsList = panel.querySelector('[data-comments-list]');
+          const unsub = db.collection('gvlab_posts').doc(postId).collection('comments')
+            .orderBy('createdAt', 'asc').limit(200)
+            .onSnapshot((snap) => {
+              commentsList.innerHTML = snap.empty
+                ? '<p class="gv-feed-empty">Chưa có bình luận nào.</p>'
+                : snap.docs.map((d) => {
+                    const c = d.data();
+                    const cms = c.createdAt && c.createdAt.toMillis ? c.createdAt.toMillis() : null;
+                    return `<div class="gv-feed-comment">
+                      <span class="gv-avatar" data-avatar-uid="${esc(c.authorUid)}">${esc(initials(c.authorName))}</span>
+                      <div class="gv-feed-comment-body"><b>${esc(c.authorName || 'Giáo viên')}</b>${esc(c.text)} <span>${relativeTime(cms)}</span></div>
+                    </div>`;
+                  }).join('');
+              applyAvatars(commentsList);
+            }, (err) => { commentsList.innerHTML = `<p class="gv-feed-empty">Lỗi tải bình luận: ${esc(err.message)}</p>`; });
+          commentUnsubs.set(postId, unsub);
+          const form = panel.querySelector('[data-comment-form]');
+          form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (!currentUser || !canEditFeed()) { window.location.href = 'login.html'; return; }
+            const input = form.querySelector('[data-comment-input]');
+            const text = input.value.trim();
+            if (!text) return;
+            input.disabled = true;
+            db.collection('gvlab_posts').doc(postId).collection('comments').add({
+              text: text.slice(0, 300),
+              authorUid: currentUser.uid,
+              authorName: currentProfile.name || currentUser.email || 'Giáo viên',
+              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            }).then(() => { input.value = ''; }).catch((err) => showError('Không gửi được bình luận: ' + err.message))
+              .finally(() => { input.disabled = false; });
+          });
+        }
+      }
+
+      function refreshAuthState() {
+        updateSubmitState();
+        if (!currentUser) {
+          listEl.querySelectorAll('[data-like-btn]').forEach((btn) => {
+            btn.disabled = true;
+            btn.classList.remove('is-liked');
+          });
+          return;
+        }
+        resetLikeStatusCacheIfNeeded(currentUser.uid);
+        listEl.querySelectorAll('[data-like-btn]').forEach((btn) => {
+          btn.disabled = false;
+          const postId = btn.dataset.postId;
+          if (likeStatusCache.has(postId)) {
+            // Đã biết trạng thái (từ lần get() trước hoặc từ toggleLike vừa
+            // chạy) — dùng thẳng, KHÔNG gọi lại Firestore. Đây là trường hợp
+            // phổ biến nhất: feed dội lại vì bài đăng KHÁC thay đổi.
+            btn.classList.toggle('is-liked', likeStatusCache.get(postId));
+            return;
+          }
+          db.collection('gvlab_posts').doc(postId).collection('likes').doc(currentUser.uid).get()
+            .then((snap) => {
+              likeStatusCache.set(postId, snap.exists);
+              btn.classList.toggle('is-liked', snap.exists);
+            })
+            .catch(() => {});
+        });
+      }
+
+      db.collection('gvlab_posts')
+        .where('category', '==', category)
+        .orderBy('createdAt', 'desc')
+        // Trang công khai, mỗi bài mang ảnh base64 (tới ~700KB): 30 bài/lần xem có thể tải
+        // ~20MB (băng thông Firestore Spark chỉ 10GB/tháng) — giữ 12 bài mới nhất.
+        .limit(12)
+        .onSnapshot((snap) => {
+          commentUnsubs.forEach((unsub) => unsub());
+          commentUnsubs.clear();
+          listEl.innerHTML = snap.empty
+            ? '<p class="gv-feed-empty">Chưa có bài đăng nào — hãy là người đầu tiên chia sẻ.</p>'
+            : snap.docs.map(renderPost).join('');
+          applyAvatars(listEl);
+          listEl.querySelectorAll('[data-like-btn]').forEach((btn) => btn.addEventListener('click', () => toggleLike(btn.dataset.postId, btn)));
+          listEl.querySelectorAll('[data-comment-toggle]').forEach((btn) => btn.addEventListener('click', () => toggleComments(btn.dataset.postId)));
+          listEl.querySelectorAll('[data-delete-post]').forEach((btn) => btn.addEventListener('click', () => deletePost(btn.dataset.postId, btn)));
+          listEl.querySelectorAll('[data-share-post]').forEach((btn) => btn.addEventListener('click', () => sharePost(btn.dataset.caption)));
+          refreshAuthState();
+        }, (err) => {
+          listEl.innerHTML = `<p class="gv-feed-empty">Không tải được feed: ${esc(err.message)}</p>`;
+        });
+
+      return { composer, loginHint, updateSubmitState: refreshAuthState };
+    }
+
+    const feedInstances = Array.from(document.querySelectorAll('[data-feed]')).map(initFeed);
+
+    // ════════════════════════════════════════════════════════════
+    // PfCerts — mỗi Giáo viên/Admin tự đăng/xoá chứng chỉ CỦA RIÊNG MÌNH
+    // (collection "gvlab_certs", đọc công khai — ai cũng xem được cả
+    // trang, chỉ đăng nhập mới đăng/xoá được, và chỉ xoá được của chính
+    // mình hoặc admin). Gộp hiển thị cùng bộ chứng chỉ tĩnh ban đầu
+    // (CERTS/LEGACY_TEACHER_NAME) trong CÙNG 1 lưới — lọc theo giáo viên
+    // qua <select> dựng từ chính dữ liệu đã tải (không query thêm).
+    // 1 onSnapshot có limit(), giống hệt cơ chế đã tối ưu của PfFeed.
+    // ════════════════════════════════════════════════════════════
+    const MAX_CERT_IMAGE_CHARS = 700000;
+    const MAX_CERT_IMAGE_DIM = 1000;
+    const certsInstance = (function PfCerts() {
+      const teacherFilter = document.getElementById('gvCertsTeacherFilter');
+      const composer = document.getElementById('gvCertsComposer');
+      const loginHint = document.getElementById('gvCertsLoginHint');
+      const titleInput = document.getElementById('gvCertsTitleInput');
+      const fileInput = document.getElementById('gvCertsFileInput');
+      const fileNameEl = document.getElementById('gvCertsFileName');
+      const submitBtn = document.getElementById('gvCertsSubmitBtn');
+      const errorEl = document.getElementById('gvCertsError');
+      if (!certsGrid || !teacherFilter) return;
+
+      let pendingImage = null;
+      let dynamicCerts = []; // [{ id, teacherUid, teacherName, title, image }]
+
+      function showError(msg) { errorEl.textContent = msg; errorEl.hidden = false; }
+      function updateComposerState() {
+        const editor = canEditFeed();
+        composer.hidden = !editor;
+        loginHint.hidden = editor;
+        submitBtn.disabled = !pendingImage;
+      }
+
+      function allCertItems() {
+        const legacy = CERTS.map((c) => ({
+          id: 'legacy:' + c.file,
+          teacherName: LEGACY_TEACHER_NAME,
+          title: c.title,
+          src: `img/portfolio/${c.file}`,
+          canDelete: false,
+        }));
+        const dynamic = dynamicCerts.map((c) => ({
+          id: c.id,
+          teacherName: c.teacherName || 'Giáo viên',
+          title: c.title,
+          src: c.image,
+          canDelete: !!currentUser && (currentUser.uid === c.teacherUid || (currentProfile && currentProfile.role === 'admin')),
+        }));
+        return legacy.concat(dynamic);
+      }
+
+      function renderTeacherFilterOptions(items) {
+        const names = [...new Set(items.map((c) => c.teacherName))].sort((a, b) => a.localeCompare(b, 'vi'));
+        const current = teacherFilter.value;
+        teacherFilter.innerHTML = '<option value="">Tất cả giáo viên</option>' +
+          names.map((n) => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+        if (names.includes(current)) teacherFilter.value = current;
+      }
+
+      function renderGrid() {
+        const items = allCertItems();
+        renderTeacherFilterOptions(items);
+        const wanted = teacherFilter.value;
+        const shown = wanted ? items.filter((c) => c.teacherName === wanted) : items;
+        certsGrid.innerHTML = shown.length
+          ? shown.map((c) => certCardHtml(
+              c.src, c.title, c.teacherName,
+              c.canDelete ? `data-cert-delete="${esc(c.id)}"` : ''
+            )).join('')
+          : '<p class="gv-feed-empty">Chưa có chứng chỉ nào của giáo viên này.</p>';
+        // Nút xoá nằm TRONG nút xem ảnh (data-cert-src) — chặn nổi bọt để
+        // bấm xoá không mở nhầm lightbox. Vì certCardHtml không có sẵn ô
+        // nút xoá riêng, dùng phím giữ (dbl bấm) là không thân thiện — nên
+        // thêm hẳn 1 nút xoá nhỏ đè lên góc thẻ bằng cách chèn qua DOM sau
+        // khi render (đơn giản hơn sửa lại template dùng chung với lightbox).
+        shown.forEach((c) => {
+          if (!c.canDelete) return;
+          const btn = certsGrid.querySelector(`[data-cert-src][data-cert-delete="${CSS.escape(c.id)}"]`);
+          if (!btn) return;
+          const del = document.createElement('span');
+          del.className = 'gv-cert-delete';
+          del.title = 'Xoá chứng chỉ này';
+          del.innerHTML = '<i class="fa-solid fa-trash"></i>';
+          del.addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteCert(c.id);
+          });
+          btn.appendChild(del);
+        });
+      }
+
+      async function deleteCert(id) {
+        if (!confirm('Xoá chứng chỉ này? Không thể hoàn tác.')) return;
+        try {
+          await db.collection('gvlab_certs').doc(id).delete();
+        } catch (err) {
+          alert('Xoá chứng chỉ thất bại: ' + err.message);
+        }
+      }
+
+      teacherFilter.addEventListener('change', renderGrid);
+
+      fileInput.addEventListener('change', async () => {
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) return;
+        errorEl.hidden = true;
+        fileNameEl.textContent = 'Đang nén ảnh…';
+        try {
+          pendingImage = await compressImage(file, MAX_CERT_IMAGE_DIM, MAX_CERT_IMAGE_CHARS);
+          fileNameEl.textContent = file.name;
+        } catch (err) {
+          pendingImage = null;
+          fileNameEl.textContent = 'Chưa chọn ảnh';
+          showError(err.message);
+        }
+        updateComposerState();
+      });
+
+      submitBtn.addEventListener('click', async () => {
+        const title = titleInput.value.trim();
+        if (!pendingImage || !title || !currentUser || !canEditFeed()) {
+          if (!title) showError('Nhập tên chứng chỉ trước khi thêm.');
+          return;
+        }
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Đang thêm…';
+        try {
+          await db.collection('gvlab_certs').add({
+            teacherUid: currentUser.uid,
+            teacherName: currentProfile.name || currentUser.email || 'Giáo viên',
+            title: title.slice(0, 120),
+            image: pendingImage,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+          titleInput.value = '';
+          pendingImage = null;
+          fileInput.value = '';
+          fileNameEl.textContent = 'Chưa chọn ảnh';
+          errorEl.hidden = true;
+        } catch (err) {
+          showError('Thêm chứng chỉ thất bại: ' + err.message);
+        } finally {
+          submitBtn.textContent = 'Thêm chứng chỉ';
+          updateComposerState();
+        }
+      });
+
+      db.collection('gvlab_certs').orderBy('createdAt', 'desc').limit(60)
+        .onSnapshot((snap) => {
+          dynamicCerts = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+          renderGrid();
+        }, (err) => {
+          console.warn('[Trang Social Media] Không tải được chứng chỉ theo giáo viên (gvlab_certs):', err.message);
+        });
+
+      function refreshAuthState() {
+        updateComposerState();
+        renderGrid(); // canDelete phụ thuộc currentUser — vẽ lại để hiện/ẩn đúng nút xoá
+      }
+      return { refreshAuthState };
+    })();
+
+    // ════════════════════════════════════════════════════════════
+    // PfProfile — chỉnh sửa hồ sơ Trang Social Media (ảnh đại diện/trạng thái/tiểu
+    // sử), lưu vào collection RIÊNG "gvlab_profiles" (KHÔNG đụng "users"
+    // dùng chung toàn nền tảng) — xem firestore.rules § gvlab_profiles.
+    // ════════════════════════════════════════════════════════════
+    const MAX_AVATAR_CHARS = 250000;
+    const MAX_AVATAR_DIM = 300;
+    (function PfProfile() {
+      const editBtn = document.getElementById('gvEditProfileBtn');
+      const overlay = document.getElementById('gvProfileModalOverlay');
+      const closeBtn = document.getElementById('gvProfileModalClose');
+      const avatarPreview = document.getElementById('gvProfileFormAvatarPreview');
+      const avatarInput = document.getElementById('gvProfileAvatarInput');
+      const statusInput = document.getElementById('gvProfileStatusInput');
+      const bioInput = document.getElementById('gvProfileBioInput');
+      const formError = document.getElementById('gvProfileFormError');
+      const saveBtn = document.getElementById('gvProfileSaveBtn');
+      if (!editBtn || !overlay) return;
+
+      let pendingAvatar = null; // data URL mới chọn, chờ lưu
+
+      function openModal() {
+        if (!currentUser) return;
+        const p = avatarCache[currentUser.uid] || {};
+        pendingAvatar = null;
+        avatarPreview.innerHTML = p.avatar ? `<img src="${p.avatar}" alt="">` : esc(initials(currentProfile && currentProfile.name));
+        statusInput.value = p.status || '';
+        bioInput.value = p.bio || '';
+        formError.hidden = true;
+        overlay.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+      }
+      function closeModal() {
+        overlay.classList.remove('is-open');
+        document.body.style.overflow = '';
+      }
+      editBtn.addEventListener('click', openModal);
+      closeBtn.addEventListener('click', closeModal);
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+
+      avatarInput.addEventListener('change', async () => {
+        const file = avatarInput.files && avatarInput.files[0];
+        if (!file) return;
+        try {
+          pendingAvatar = await compressImage(file, MAX_AVATAR_DIM, MAX_AVATAR_CHARS);
+          avatarPreview.innerHTML = `<img src="${pendingAvatar}" alt="">`;
+        } catch (err) {
+          formError.textContent = err.message;
+          formError.hidden = false;
+        }
+      });
+
+      saveBtn.addEventListener('click', async () => {
+        if (!currentUser) return;
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Đang lưu…';
+        const data = {
+          status: statusInput.value.trim().slice(0, 60),
+          bio: bioInput.value.trim().slice(0, 220),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        };
+        if (pendingAvatar) data.avatar = pendingAvatar;
+        try {
+          await db.collection('gvlab_profiles').doc(currentUser.uid).set(data, { merge: true });
+          if (window.EduProfileCache) window.EduProfileCache.put(currentUser.uid, Object.assign({}, data, pendingAvatar ? { avatar: pendingAvatar } : {}));
+          // Cập nhật cache cục bộ NGAY (không cần đợi onSnapshot dội lại) để
+          // avatar/trạng thái mới thấy liền trên thanh hồ sơ + ô soạn bài.
+          avatarCache[currentUser.uid] = Object.assign({}, avatarCache[currentUser.uid], data, pendingAvatar ? { avatar: pendingAvatar } : {});
+          applyAvatars(document);
+          refreshProfileBarDisplay();
+          closeModal();
+        } catch (err) {
+          formError.textContent = 'Lưu hồ sơ thất bại: ' + err.message;
+          formError.hidden = false;
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Lưu hồ sơ';
+        }
+      });
+    })();
+
+    // ── PfProfileBar — thanh "mạng lưới Trang Social Media" dưới nav: avatar/tên/vai
+    // trò/trạng thái người đang đăng nhập. Không đăng nhập thì ẩn hẳn cả
+    // thanh (trước đây có banner mời đăng nhập ở trạng thái guest — đã bỏ). ──
+    const profileBar = document.getElementById('gvProfileBar');
+    const profileUser = document.getElementById('gvProfileUser');
+    const profileAvatar = document.getElementById('gvProfileAvatar');
+    const profileName = document.getElementById('gvProfileName');
+    const profileRole = document.getElementById('gvProfileRole');
+    const profileStatus = document.getElementById('gvProfileStatus');
+    const ROLE_LABEL_SHORT = { admin: 'Quản trị viên', teacher: 'Giáo viên', coordinator: 'Điều phối đào tạo', teaching_coordinator: 'Điều phối giáo viên', student: 'Học sinh' };
+
+    function refreshProfileBarDisplay() {
+      if (!profileBar || !profileUser) return;
+      const signedIn = !!currentUser;
+      profileBar.hidden = !signedIn;
+      profileUser.hidden = !signedIn;
+      if (!signedIn) return;
+      const displayName = (currentProfile && currentProfile.name) || currentUser.email || '';
+      const p = avatarCache[currentUser.uid] || {};
+      profileAvatar.innerHTML = p.avatar ? `<img src="${p.avatar}" alt="">` : esc(initials(displayName));
+      profileName.textContent = displayName || 'Người dùng';
+      profileRole.textContent = (currentProfile && ROLE_LABEL_SHORT[currentProfile.role]) || '—';
+      if (p.status) { profileStatus.textContent = p.status; profileStatus.hidden = false; }
+      else { profileStatus.hidden = true; }
+    }
+
+
+    // ════════════════════════════════════════════════════════════
+    // Auth state dùng CHUNG cho Feed/Profile/Chat — 1 listener duy nhất.
+    // ════════════════════════════════════════════════════════════
+    window.EduAuth.onAuthReady((user, profile) => {
+      currentUser = user;
+      currentProfile = profile;
+      const editor = canEditFeed();
+
+      feedInstances.forEach((f) => {
+        if (!f) return;
+        f.composer.hidden = !editor;
+        f.loginHint.hidden = editor;
+        f.updateSubmitState();
+      });
+      document.querySelectorAll('[data-composer-avatar]').forEach((el) => {
+        const p = user && avatarCache[user.uid];
+        el.innerHTML = p && p.avatar ? `<img src="${p.avatar}" alt="">` : esc(initials((profile && profile.name) || (user && user.email)));
+      });
+      refreshProfileBarDisplay();
+      if (certsInstance) certsInstance.refreshAuthState();
+    });
+  }
+
+  const loader = window.EduFirebaseLoader;
+  const gates = [];
+  let socialStarted = false;
+  function bootSocial() {
+    if (socialStarted || !loader) return;
+    socialStarted = true;
+    gates.forEach((g) => { g.querySelector('button').disabled = true; g.querySelector('button').textContent = 'Đang tải…'; });
+    loader.ensure().then(() => {
+      gates.forEach((g) => g.remove());
+      startSocial();
+    }).catch((err) => {
+      socialStarted = false;
+      console.warn('[Trang Social Media] Chưa nạp được Firebase:', err.message);
+      gates.forEach((g) => { g.querySelector('button').disabled = false; g.querySelector('button').textContent = 'Thử tải lại'; });
+    });
+  }
+  if (loader) {
+    document.querySelectorAll('[data-feed-list]').forEach((list) => {
+      const g = document.createElement('div');
+      g.className = 'gv-social-gate';
+      g.innerHTML = '<p class="gv-mono">Bài đăng, bình luận và chứng chỉ riêng của giáo viên chỉ tải khi bạn cần xem.</p>'
+        + '<button type="button" class="gv-feed-submit">Xem bài đăng của giáo viên</button>';
+      g.querySelector('button').addEventListener('click', bootSocial);
+      list.before(g);
+      gates.push(g);
+    });
+    loader.hasStoredSession().then((has) => { if (has) bootSocial(); }).catch(() => {});
+  }
 })();

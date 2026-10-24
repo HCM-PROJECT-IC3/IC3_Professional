@@ -334,18 +334,6 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
-    // ---- Lượt chơi mini-game (Battle Quiz/PZ Defense/Cyber Detective...),
-    //      xem js/models/game-session.model.js và
-    //      js/repositories/game-session-repository.js. Điểm/tên do client
-    //      tự gửi nên không thể coi là kết quả đáng tin; chỉ Admin được đọc/
-    //      ghi collection này. Bảng xếp hạng công khai được thay bằng bảng
-    //      điểm tạm thời theo từng live room.
-    match /game_sessions/{sessionId} {
-      allow get: if isAdmin();
-      allow list: if isAdmin() && request.query.limit <= 50;
-      allow create, update, delete: if isAdmin();
-    }
-
     // ---- Phòng thử thách trực tiếp; chỉ chứa dữ liệu trò chơi tạm thời ----
     // Anonymous Auth tách UID từng thiết bị. Không lưu điểm thi/roster ở đây.
     // Rules giới hạn quyền theo phòng và người chơi, nhưng Spark không thể

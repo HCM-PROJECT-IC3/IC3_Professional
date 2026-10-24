@@ -141,8 +141,9 @@
     const sel = () => ({ cat: $('categorySelect') && $('categorySelect').value, lvl: $('levelSelect') && $('levelSelect').value });
     function refreshStatus() {
       const s = sel();
-      if (!s.cat || !s.lvl) { status.textContent = ''; return; }
+      if (!s.cat || !s.lvl) { status.textContent = ''; status.classList.remove('is-ready'); return; }
       const rec = lastPack(s.cat, s.lvl);
+      status.classList.toggle('is-ready', !!rec && !rec.failed);
       status.textContent = rec
         ? '✓ Đã tải sẵn ' + rec.name + ' lúc ' + fmtTime(rec.at) + (rec.failed ? ' (thiếu ' + rec.failed + ' file — thử tải lại khi có mạng tốt)' : ' — dùng được khi mất mạng')
         : '';

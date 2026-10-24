@@ -37,9 +37,11 @@ self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const keep = new Set([PAGES, ASSETS]);
-    for (const key of await caches.keys()) {
-      if (key.startsWith('eduquiz-') && !keep.has(key)) await caches.delete(key);
-    }
+    try {
+      for (const key of await caches.keys()) {
+        if (key.startsWith('eduquiz-') && !keep.has(key)) await caches.delete(key);
+      }
+    } catch (e) { /* kho hỏng: bỏ qua dọn dẹp, vẫn kích hoạt */ }
     await self.clients.claim();
   })());
 });
@@ -51,14 +53,23 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;       // Firebase, Google, CDN: không đụng
   if (NEVER_RE.test(url.pathname)) return;
   if (req.headers.has('range')) return;                   // media cắt đoạn: để trình duyệt tự lo
-  if (ASSET_RE.test(url.pathname)) event.respondWith(staleWhileRevalidate(event, req));
-  else event.respondWith(networkFirst(event, req));
+  const handler = ASSET_RE.test(url.pathname) ? staleWhileRevalidate : networkFirst;
+  // Lưới an toàn: kho lưu hỏng (ổ đầy, hồ sơ máy trường bị khoá, ẩn danh — caches.open()
+  // ném "Unexpected internal error") từng làm MỌI trang báo ERR_FAILED sau lần mở đầu.
+  // Lỗi bất kỳ trong handler → tải thẳng mạng như chưa có service worker.
+  event.respondWith(handler(event, req).catch(() => fetch(req)));
 });
+
+/** caches.open() không ném lỗi: kho hỏng → null, các hàm dưới bỏ qua phần lưu. */
+async function openCache(name) {
+  try { return await caches.open(name); } catch (e) { return null; }
+}
 
 function cacheable(res) { return res && res.ok && res.type === 'basic'; }
 
 async function networkFirst(event, req) {
-  const cache = await caches.open(PAGES);
+  const cache = await openCache(PAGES);
+  if (!cache) return fetch(req);
   // Bỏ query khi tra bản lưu (vd index.html?de=… vẫn dùng được bản index.html đã lưu).
   const cacheKey = req.mode === 'navigate' ? new Request(new URL(req.url).pathname) : req;
   const network = fetch(req).then((res) => {
@@ -70,21 +81,22 @@ async function networkFirst(event, req) {
   try {
     const first = await Promise.race([network, timeout]);
     if (first !== 'timeout') return first;
-    const cached = await cache.match(cacheKey);
+    const cached = await cache.match(cacheKey).catch(() => null);
     if (cached) { event.waitUntil(network.catch(() => {})); return cached; }
     return await network;                                  // chưa có bản lưu → chờ mạng tiếp
   } catch (err) {
-    const cached = await cache.match(cacheKey, { ignoreSearch: req.mode === 'navigate' });
+    const cached = await cache.match(cacheKey, { ignoreSearch: req.mode === 'navigate' }).catch(() => null);
     if (cached) return cached;
     throw err;
   }
 }
 
 async function staleWhileRevalidate(event, req) {
-  const cache = await caches.open(ASSETS);
-  const cached = await cache.match(req);
+  const cache = await openCache(ASSETS);
+  if (!cache) return fetch(req);
+  const cached = await cache.match(req).catch(() => null);
   const network = fetch(req).then(async (res) => {
-    if (cacheable(res)) { await cache.put(req, res.clone()); trim(cache); }
+    if (cacheable(res)) { await cache.put(req, res.clone()).catch(() => {}); trim(cache).catch(() => {}); }
     return res;
   });
   if (cached) { event.waitUntil(network.catch(() => {})); return cached; }
@@ -128,8 +140,9 @@ async function precache(list, client) {
   const total = urls.length;
   let done = 0, failed = 0;
   const say = (type) => { try { client && client.postMessage({ type, done, total, failed }); } catch (e) { /* trang đã đóng */ } };
-  const pages = await caches.open(PAGES);
-  const assets = await caches.open(ASSETS);
+  const pages = await openCache(PAGES);
+  const assets = await openCache(ASSETS);
+  if (!pages || !assets) { failed = total; done = total; say('PRECACHE_DONE'); return; } // kho hỏng: báo lỗi cho nút "Tải sẵn"
   say('PRECACHE_PROGRESS');
   let next = 0;
   async function worker() {
