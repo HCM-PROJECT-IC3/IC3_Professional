@@ -1,0 +1,10 @@
+/* ============================================================
+   css/game-backdrop.css — nền tranh cho mini-game (js/game-backdrop.js).
+   Tranh cố định sau toàn trang, làm mờ nhẹ + phủ tối để thẻ/chữ của trò vẫn đọc rõ.
+   ============================================================ */
+.game-backdrop { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.game-backdrop > svg { position: absolute; inset: -12px; width: calc(100% + 24px); height: calc(100% + 24px); filter: blur(3px) saturate(1.05); }
+.game-backdrop::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(12, 16, 38, .58), rgba(12, 16, 38, .74)); }
+/* Bỏ nền trơn của trang để thấy tranh (theme-toggle-quick.css ép nền bằng !important) */
+html body.has-game-backdrop, [data-theme="dark"] body.has-game-backdrop { background: #141a33 !important; }
+@media (prefers-reduced-motion: reduce) { .game-backdrop * { animation: none !important; } }

@@ -1,5 +1,33 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## Gọi tên Vui: thêm trò thứ 11 — 🔮 Đua bi (marble race) (24/10/2026) — 0 Firebase
+
+- **Bản nâng cấp "kịch tính"**: đường đua khó hơn với 6 loại bất ngờ — **Trộn bi** (phễu rung, bi đảo chỗ 3 lần trước khi thả) · **cối xay** hất bi ngược lại · **bệ tăng tốc** (bi phát sáng lao vút) · **MÁY TRỘN** (bi bị hút vào trống quay, xoay vòng một lúc rồi ra theo thứ tự mới) · **LÒ XO TUNG BI** (bi bị bắn lên trời: rơi ngược về dốc trên hoặc bay tắt qua bẫy) · **BẪY SẬP** (nắp mở theo nhịp, bi rơi xuống **ống hút** chạy vòng về đầu dốc). Bi đuổi kịp thì nhảy qua đầu bi khác.
+- **Dải tin nhanh** báo từng bất ngờ, lời thoại trên bi ("Bị hất văng!", "Áaa! Rơi bẫy!", "Bay tắt luôn!"); **28% cuối chạy chậm + máy quay zoom** theo 2 bi dẫn đầu, **chụp ảnh về đích** (loé sáng), các bi lăn vào **máng đích** xếp theo thứ tự về.
+- Cả trận được **mô phỏng trước theo đúng luật đường đua** (thử tối đa 12 trận, giữ trận nhiều lần đổi người dẫn đầu và có cú vượt cuối trận), rồi mới gán tên: người được gọi nhận đường bi về nhất, Lật kèo nhận bi dẫn đầu gần đích — bất ngờ nào cũng "thật", không dựng.
+- Đã chạy bằng Chrome thời gian thật (script CDP): 16 bi/15 giây có Lật kèo, 30 bi/8 giây, 5 bi/20 giây — 0 lỗi JS, người được gọi luôn về nhất. Sửa lỗi khung hình đầu đọc mốc âm (rAF sớm hơn lúc bắt đầu).
+- Trò "đua bi" đang hot trên mạng xã hội: mỗi bạn là 1 viên bi màu riêng, nằm sẵn trong **phễu**; "Thả bi!" → cửa phễu mở, bi lăn xuống **đường ván zigzag 4 dốc** gắn trên tấm ván gỗ đục lỗ, đập thành chắn ở khúc quặt rồi rơi xuống dốc dưới, qua **cối xay** (dốc 2) và **2 nấm nảy** (dốc 3) thì bị hất lên. Bi **lăn thật** (quay theo quãng đường, đổi chiều theo hướng dốc), ánh sáng trên bi giữ cố định.
+- **Bảng xếp hạng trực tiếp** 5 bạn dẫn đầu ở góc phải; 3 bi dẫn đầu hiện tên trên đầu (đông thì là số thứ tự), bi dẫn đầu có vòng vàng, đổi người dẫn đầu thì "X vượt lên!".
+- Giữ luật chung của trang: người được gọi chọn trước, bi đó về nhất đúng lúc hết giờ; **Lật kèo** — bi dẫn đầu khoe "Về nhất chắc rồi!" rồi bị vượt phút chót. Về đích: bi thắng lăn qua vạch, các bi khác lăn nốt và xếp hàng sau vạch.
+- Tối đa 30 bi/lượt (lớp đông hơn thì chọn 1 nhóm, luôn có người được gọi). Cảnh mới `pegboard` trong `np-art.js` (không trùng trò nào). Chọn trò xếp 6 cột (11 trò = 2 hàng).
+- Đã chạy thử trong Chromium: 12 bi và 25 bi (có Lật kèo) — bi ra phễu, lăn hết 4 dốc, bảng xếp hạng cập nhật, bi người được gọi về nhất; `check-js` và test đạt.
+
+## Đấu trường + mini-game: sửa Kéo co, mỗi trò 1 nền riêng, bỏ nền lặp (24/10/2026) — 0 Firebase
+
+- **Kéo co sai tư thế**: trước 2 đội quay lưng vào dây và ngả về giữa (như đang chạy trốn). Nay mỗi đội **quay mặt vào dây** (Đỏ nhìn phải, Xanh nhìn trái), **ngả người ra sau**, 2 tay vươn trước nắm dây; dây trượt thì lùi chân, không nhún chạy. Tên các bạn giãn ra, không đè nhau. Tranh bìa thẻ Kéo co sửa theo.
+- **10 chế độ = 10 nền khác nhau**: thêm 2 cảnh mới vào `np-art.js` — `castle` (sân đấu phép trước lâu đài, đuốc, vòng phép) cho **Đấu phép**, `island` (đảo hoang: biển, bãi cát, dừa) cho **Sinh tồn**. Trước Sinh tồn/Đào hoá thạch chung rừng, Đấu phép/Lên Mặt Trăng chung vũ trụ. Tranh bìa Đào hoá thạch cắt lên phần núi lửa.
+- **Bỏ nền soi gương 2 bên** (màn rộng thấy 2 núi lửa, 2 cụm lau sậy...). Nay 2 bên là chính cảnh đó **làm mờ + tối**, tranh chính mờ dần ở mép — không lộ hình lặp.
+- **Câu cá**: cá bơi trong ao nằm **sau lưng** các bạn đứng trên bờ (trước đè lên mặt, như đang đứng dưới nước).
+- **6 mini-game hết chung 1 nền xanh đen**: `js/game-backdrop.js` + `css/game-backdrop.css` — Đấu boss: lâu đài · Thám tử mạng: phố đêm · Chim vượt ải: bầu trời · Trí nhớ: lớp học · Phòng thủ: nông trại · Phân loại: tiệc. Tranh mờ nhẹ + phủ tối nên thẻ/chữ vẫn rõ; bỏ viền xám nhạt quanh trò ở chế độ sáng.
+
+## Đấu trường: thẻ chọn chế độ có tranh bìa kiểu thẻ game (24/10/2026) — 0 Firebase
+
+- 11 thẻ chế độ bỏ icon emoji, thay bằng **tranh bìa** vẽ bằng SVG (`js/arena/arena-covers.js`): cảnh nền của trang Gọi tên + nhân vật/đạo cụ riêng từng chế độ (sân bóng + tia sét, 3 rương vàng + gà, đường chạy + cờ đích, 3 tim, ao cá, 2 đội kéo co, cầu lửa giữa vũ trụ, két sắt + đá quý, khủng long canh bãi đào, tên lửa bay lên Mặt Trăng, bảng ô 100–600).
+- Thân thẻ màu đặc của chế độ, bóng nổi; rê chuột / đang chọn thì tranh phóng nhẹ và **nhân vật cử động** (chạy, kéo dây, cá giãy, cầu lửa bay, tên lửa phụt lửa). Máy đặt giảm chuyển động: đứng yên.
+- Điện thoại: 2 cột, chỉ hiện tranh + tên; thẻ đang chọn hiện thêm mô tả.
+- Id gradient/filter trong tranh bìa được đổi tên riêng, không đè lên cảnh trong trận (cùng dùng np-art).
+- **Sửa dải sân khấu trong trận bị cắt trên màn hình rộng**: trước khớp theo chiều ngang nên ở máy tính chỉ thấy dải đất dưới chân (mất trời, hành tinh, Mặt Trăng). Nay dải rộng thì khớp theo chiều cao → thấy trọn tranh; khung chơi đặt giữa. Dải cao hơn một chút ở máy tính (tối đa 320px, Đua/Mặt Trăng 360px). Điện thoại giữ như cũ.
+
 ## Đấu trường: đủ 10 chế độ Chơi một mình — thêm 🦖 Đào hoá thạch và 🚀 Lên Mặt Trăng (24/10/2026) — 0 Firebase
 
 - **🦖 Đào hoá thạch** (kiểu Blooket Deceptive Dinos): trả lời đúng được chọn 1 việc — ⛏️ **Đào thật** (chọn 1 trong 3 tảng đá, lật ra 0–120 🦴) · 🤫 **Ăn gian** (được ×3 nhưng 2 lượt tới ai kiểm tra trúng là mất 40%) · 🔍 **Kiểm tra 1 bạn** (bạn đó đang ăn gian → lấy 40% hoá thạch của bạn đó; trung thực → em mất lượt). Bảng xếp hạng ghi "vừa đào +N" làm manh mối (đào nhiều bất thường có 🤨). Bạn máy cũng ăn gian và kiểm tra lẫn nhau, có thể bắt quả tang em.

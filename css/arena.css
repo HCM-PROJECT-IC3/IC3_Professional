@@ -933,12 +933,18 @@ button.ar-btile:hover { transform: translateY(-3px); background: #1d4ed8; }
    SÂN KHẤU CÓ TRANH trong trận (js/arena/arena-scene.js + tranh js/name-picker/np-art.js)
    Mỗi người chơi là 1 bạn nhỏ đồng phục; chạy nghiêng khi di chuyển, nhảy khi được điểm, rung khi mất máu.
    ============================================================ */
-.ar-scene { position: relative; width: 100%; height: clamp(130px, min(24vw, 26vh), 280px); margin-bottom: .7rem; border-radius: 18px; overflow: hidden;
+.ar-scene { position: relative; width: 100%; height: clamp(150px, min(24vw, 34vh), 320px); margin-bottom: .7rem; border-radius: 18px; overflow: hidden;
   border: 3px solid #3a2a1e; box-shadow: 0 5px 0 rgba(58, 42, 30, .25); background: #9fd4ef; }
 .ar-scene[hidden] { display: none; }
+.ar-scene::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 2; box-shadow: inset 0 0 70px rgba(20, 12, 40, .35); }
 .ar-sc-world { position: absolute; left: 0; bottom: 0; width: 1000px; height: 300px; transform-origin: 0 100%; }
 .ar-sc-bg { position: absolute; left: 0; top: 0; width: 1000px; height: 600px; }
-.ar-sc-bg svg { width: 100%; height: 100%; display: block; }
+.ar-sc-bg > svg { width: 100%; height: 100%; display: block; }
+/* Dải rộng: nền mờ phủ 2 bên, tranh chính mờ dần ở mép (khung 1000 nằm giữa — xem fit() trong arena-scene.js) */
+.ar-sc-amb { position: absolute; inset: -24px; display: none; filter: blur(14px) brightness(.82) saturate(1.1); }
+.ar-sc-amb > svg { width: 100%; height: 100%; display: block; }
+.ar-scene.is-wide .ar-sc-amb { display: block; }
+.ar-scene.is-wide .ar-sc-bg { -webkit-mask-image: linear-gradient(90deg, transparent, #000 90px, #000 910px, transparent); mask-image: linear-gradient(90deg, transparent, #000 90px, #000 910px, transparent); }
 .ar-sc-layer, .ar-sc-fx { position: absolute; inset: 0; }
 .ar-sc-fx { pointer-events: none; z-index: 1000; }
 .ar-sc-sp { position: absolute; left: 0; top: 0; width: 0; height: 0; will-change: transform; }
@@ -963,7 +969,11 @@ button.ar-btile:hover { transform: translateY(-3px); background: #1d4ed8; }
 .ar-sc-sp.is-run .leg-l, .ar-sc-sp.is-run .arm-r { animation: ar-sc-swing .3s ease-in-out infinite alternate; }
 .ar-sc-sp.is-run .leg-r, .ar-sc-sp.is-run .arm-l { animation: ar-sc-swing .3s ease-in-out infinite alternate-reverse; }
 .ar-sc-sp.is-run .np-kid-body { animation: ar-sc-hop .3s ease-in-out infinite alternate; }
-.ar-sc-sp.is-pull:not(.is-run) .np-kid-body { transform: rotate(-12deg); animation: none; }
+/* Kéo co: ngả người ra sau (đầu xa dây), cả 2 tay vươn ra trước nắm dây; khi dây trượt thì lùi chân, không nhún chạy */
+.ar-sc-sp.is-pull .np-kid-body { transform: rotate(-16deg); animation: none; }
+.ar-sc-sp.is-pull .arm { animation: none !important; }
+.ar-sc-sp.is-pull .np-pose-run .arm-r { transform: rotate(-95deg); }
+.ar-sc-sp.is-pull .ar-sc-tag { font-size: 12px; padding: 0 6px; }
 .ar-sc-sp.is-heave .ar-sc-in { animation: ar-sc-heave .6s ease-in-out; }
 .ar-sc-sp.is-happy .ar-sc-in { animation: ar-sc-jump .45s ease-in-out 2 alternate; }
 .ar-sc-sp.is-scared .np-mouth-smile, .ar-sc-sp.is-hit .np-mouth-smile, .ar-sc-sp.is-out .np-mouth-smile { display: none; }
@@ -989,7 +999,8 @@ button.ar-btile:hover { transform: translateY(-3px); background: #1d4ed8; }
 .ar-sc-mid { position: absolute; left: 498px; top: 150px; width: 4px; height: 140px; background: repeating-linear-gradient(#fff 0 10px, transparent 10px 18px); }
 .ar-sc-flag { position: absolute; top: 160px; font-size: 26px; } .ar-sc-flag.is-red { left: 18px; } .ar-sc-flag.is-blue { right: 18px; }
 /* Câu cá */
-.ar-sc-fish { position: absolute; left: -35px; top: -22px; width: 70px; transition: transform 1.3s ease-in-out; }
+.ar-sc-fish { position: absolute; left: -35px; top: -22px; width: 70px; z-index: 1; transition: transform 1.3s ease-in-out; } /* cá bơi trong ao, SAU lưng các bạn đứng trên bờ */
+.ar-sc-fish.is-catch { z-index: 900; } /* cá được câu bay lên tay → nổi trên cùng */
 .ar-sc-fish svg { width: 100%; display: block; }
 .ar-sc-fish.is-left svg { transform: scaleX(-1); }
 .ar-sc-fish .np-fish-tail { transform-box: fill-box; transform-origin: 100% 50%; animation: ar-sc-tail .35s ease-in-out infinite alternate; }
@@ -999,6 +1010,8 @@ button.ar-btile:hover { transform: translateY(-3px); background: #1d4ed8; }
 .ar-scene .np-cloud.d2 { animation: ar-sc-drift 34s linear infinite alternate-reverse; }
 .ar-scene .np-sun-rays { animation: ar-sc-spin 30s linear infinite; transform-box: fill-box; transform-origin: center; }
 .ar-scene .np-stars circle { animation: ar-sc-twinkle 2.4s ease-in-out infinite alternate; }
+.ar-scene .np-torch, .ar-mode:is(:hover, .is-on) .ar-cover .np-torch { transform-box: fill-box; transform-origin: 50% 100%; animation: ar-sc-flame .18s ease-in-out infinite alternate; }
+.ar-scene .np-wave { animation: ar-sc-drift 6s ease-in-out infinite alternate; }
 
 @keyframes ar-sc-breathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
 @keyframes ar-sc-swing { from { transform: rotate(-28deg); } to { transform: rotate(28deg); } }
@@ -1014,7 +1027,7 @@ button.ar-btile:hover { transform: translateY(-3px); background: #1d4ed8; }
 @keyframes ar-sc-spin { to { transform: rotate(360deg); } }
 @keyframes ar-sc-twinkle { from { opacity: .35; } to { opacity: 1; } }
 /* Đua: cần cao hơn để mỗi bạn 1 làn không chồng lên nhau */
-body[data-mode="race"] .ar-scene { height: clamp(170px, min(32vw, 34vh), 330px); }
+body[data-mode="race"] .ar-scene { height: clamp(170px, min(32vw, 40vh), 360px); }
 /* Bong bóng lời thoại (giống trang Gọi tên) */
 .ar-sc-say { position: absolute; transform: translate(-50%, -100%); padding: 4px 14px; border-radius: 14px; background: #fffdf7; color: #2d2416; border: 2.5px solid #2d2416;
   font: 800 18px/1.25 "Baloo 2", Inter, sans-serif; white-space: nowrap; box-shadow: 0 3px 0 rgba(0,0,0,.2); animation: ar-sc-say .3s cubic-bezier(.3,1.6,.5,1); z-index: 2; }
@@ -1041,12 +1054,93 @@ body[data-mode="race"] .ar-scene { height: clamp(170px, min(32vw, 34vh), 330px);
 .ar-sc-sp.is-rocket .ar-sc-tag { font-size: 12px; }
 .ar-sc-sp.is-rocket.is-me .ar-sc-in::after { bottom: -2px; height: 10px; }
 .ar-sc-sp.is-landed .ar-sc-in { animation: none; }
-.ar-sc-pad { position: absolute; left: 0; right: 0; top: 272px; height: 28px; background: repeating-linear-gradient(90deg, #8d8f9c 0 46px, #7a7c88 46px 50px); border-top: 3px solid #3a2a1e; }
+.ar-sc-pad { position: absolute; left: -1000px; right: -1000px; top: 272px; /* bệ phóng kéo dài sang 2 bên khi dải rộng */ height: 28px; background: repeating-linear-gradient(90deg, #8d8f9c 0 46px, #7a7c88 46px 50px); border-top: 3px solid #3a2a1e; }
 .ar-sc-stage { position: absolute; left: 70px; right: 20px; height: 0; border-top: 2px dashed rgba(255, 246, 196, .55); transition: top .6s; }
 .ar-sc-stage b { position: absolute; left: -62px; top: -11px; padding: 0 6px; border-radius: 999px; background: rgba(12, 15, 51, .75); color: #fff6c4; font: 800 12px/1.6 Inter, sans-serif; white-space: nowrap; }
 .ar-sc-stage.is-moon { border-top: 3px solid #f2e2c4; }
 .ar-sc-stage.is-moon b { left: auto; right: 0; top: -24px; background: #f2e2c4; color: #3a2a1e; font-size: 13px; }
 @keyframes ar-sc-flame { from { transform: scaleY(.8); } to { transform: scaleY(1.3); } }
-body[data-mode="moon"] .ar-scene { height: clamp(170px, min(30vw, 34vh), 300px); } /* bay dọc → cần dải cao hơn */
+body[data-mode="moon"] .ar-scene { height: clamp(170px, min(30vw, 40vh), 360px); } /* bay dọc → cần dải cao hơn */
 @media (max-width: 640px) { .ar-scene { height: 34vw; border-width: 2px; } body[data-mode="race"] .ar-scene, body[data-mode="moon"] .ar-scene { height: 48vw; } }
 @media (prefers-reduced-motion: reduce) { .ar-scene * { animation: none !important; transition: none !important; } }
+
+/* ── Thẻ chế độ có tranh bìa (js/arena/arena-covers.js) — kiểu thẻ game Blooket ──
+   Tranh ở trên (khung 660×300 cắt từ cảnh np-art), tên + mô tả ở dưới trên nền màu đặc của chế độ.
+   Nhân vật chỉ cử động khi rê chuột / đang chọn để màn chọn không rối mắt. */
+.ar-mode { --mc: #2f40b2; --mc-d: #1f2c80; }
+.ar-mode.m-speed { --mc: #4b3bc9; --mc-d: #2f2588; }
+.ar-mode.m-gold { --mc: #e08a00; --mc-d: #a35f00; }
+.ar-mode.m-race { --mc: #138f74; --mc-d: #0b5f4d; }
+.ar-mode.m-survival { --mc: #d61f4a; --mc-d: #8f1035; }
+.ar-mode.m-fish { --mc: #1679d8; --mc-d: #0f4f96; }
+.ar-mode.m-tug { --mc: #6a32b0; --mc-d: #43207a; }
+.ar-mode.m-spell { --mc: #6d2fd6; --mc-d: #3b0764; }
+.ar-mode.m-heist { --mc: #0f766e; --mc-d: #0a4a45; }
+.ar-mode.m-dino { --mc: #5a920c; --mc-d: #3f6212; }
+.ar-mode.m-moon { --mc: #3a3596; --mc-d: #191654; }
+.ar-mode.m-board { --mc: #24408c; --mc-d: #0b1f4d; }
+.ar-mode.has-cover {
+  padding: 0; overflow: hidden; gap: 0; background: var(--mc); min-height: 0;
+  box-shadow: 0 5px 0 var(--mc-d); transition: transform .15s, box-shadow .15s;
+}
+.ar-mode.m-tug.has-cover { background: #6a32b0; box-shadow: 0 5px 0 #43207a; }
+.ar-mode.m-tug.has-cover:hover { box-shadow: 0 8px 0 #43207a; }
+.ar-mode.m-tug .ar-cover { border-bottom: 0; }
+.ar-mode.m-tug .ar-cover::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 5px; background: linear-gradient(90deg, #e5484d 50%, #2f7be0 50%); }
+.ar-mode.has-cover > b { padding: .55rem .9rem 0; font-size: 1.22rem; line-height: 1.2; }
+.ar-mode.has-cover > small { padding: .25rem .9rem .85rem; font-size: .76rem; }
+.ar-cover { display: block; position: relative; aspect-ratio: 660 / 300; background: var(--mc-d); border-bottom: 3px solid rgba(0, 0, 0, .28); overflow: hidden; }
+.ar-cover > svg { display: block; width: 100%; height: 100%; transition: transform .35s ease; }
+.ar-mode.has-cover:hover { transform: translateY(-3px); box-shadow: 0 8px 0 var(--mc-d); }
+.ar-mode.has-cover:hover .ar-cover > svg { transform: scale(1.05); }
+.ar-mode.has-cover:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--mc-d); }
+.ar-mode.has-cover.is-on { outline: 4px solid #fff; outline-offset: 0; border-color: transparent; box-shadow: 0 0 0 7px var(--mc), 0 9px 0 4px var(--mc-d); transform: translateY(-3px); }
+.ar-mode.has-cover.is-on::after { top: .5rem; right: .5rem; width: 30px; height: 30px; color: var(--mc); box-shadow: 0 2px 0 rgba(0, 0, 0, .25); z-index: 1; }
+.ar-mode.has-cover:focus-visible { outline: 4px solid #ffd23f; outline-offset: 2px; }
+/* Dáng nhân vật (np-art vẽ sẵn 2 dáng, ở đây chọn 1) */
+.ar-cover .np-pose-run, .ar-cover .np-mouth-o, .ar-cover .np-tears { display: none; }
+.ar-cover .is-run .np-pose-run { display: inline; }
+.ar-cover .is-run .np-pose-stand { display: none; }
+.ar-cover .cv-scared .np-mouth-o { display: inline; }
+.ar-cover .cv-scared .np-mouth-smile { display: none; }
+.ar-cover .np-shadow { fill: rgba(0, 0, 0, .18); }
+.ar-cover .np-flame { transform-box: fill-box; transform-origin: 50% 0; }
+.ar-cover .is-pull .np-kid-body { transform-box: fill-box; transform-origin: 50% 100%; transform: rotate(-16deg); }
+.ar-cover .is-pull .np-pose-run .arm-r { transform: rotate(-95deg); }
+.ar-cover .leg, .ar-cover .arm { transform-box: fill-box; transform-origin: 50% 8%; }
+.ar-cover .cv-cast g[class] { transform-box: fill-box; transform-origin: 50% 100%; }
+/* Cử động khi rê chuột / đang chọn */
+.ar-mode:is(:hover, .is-on) .ar-cover .is-run:not(.is-pull) .leg-l, .ar-mode:is(:hover, .is-on) .ar-cover .is-run:not(.is-pull) .arm-r { animation: ar-sc-swing .3s ease-in-out infinite alternate; }
+.ar-mode:is(:hover, .is-on) .ar-cover .is-run:not(.is-pull) .leg-r, .ar-mode:is(:hover, .is-on) .ar-cover .is-run:not(.is-pull) .arm-l { animation: ar-sc-swing .3s ease-in-out infinite alternate-reverse; }
+.ar-mode:is(:hover, .is-on) .ar-cover .is-run:not(.is-pull) { animation: ar-sc-hop .3s ease-in-out infinite alternate; }
+.ar-mode:is(:hover, .is-on) .ar-cover .cv-lag { animation-delay: -.15s; }
+.ar-mode:is(:hover, .is-on) .ar-cover .is-pull { animation: ar-cv-heave .9s ease-in-out infinite; }
+.ar-mode:is(:hover, .is-on) .ar-cover .cv-bob { animation: ar-cv-bob 1.2s ease-in-out infinite; }
+.ar-mode:is(:hover, .is-on) .ar-cover .cv-flop { animation: ar-cv-flop .8s ease-in-out infinite alternate; transform-origin: 50% 50%; }
+.ar-mode:is(:hover, .is-on) .ar-cover .cv-pulse { animation: ar-cv-pulse .7s ease-in-out infinite alternate; transform-origin: 50% 50%; }
+.ar-mode:is(:hover, .is-on) .ar-cover .cv-float { animation: ar-cv-shoot 1.4s ease-in-out infinite; transform-origin: 50% 50%; }
+.ar-mode:is(:hover, .is-on) .ar-cover .cv-twinkle { animation: ar-sc-twinkle .6s ease-in-out infinite alternate; }
+.ar-mode:is(:hover, .is-on) .ar-cover .cv-scared { animation: ar-cv-shiver .12s linear infinite alternate; }
+.ar-mode:is(:hover, .is-on) .ar-cover .cv-dino { animation: ar-sc-breathe 1.6s ease-in-out infinite; }
+.ar-mode:is(:hover, .is-on) .ar-cover .cv-peek { animation: ar-cv-peek 1.6s ease-in-out infinite; }
+.ar-mode:is(:hover, .is-on) .ar-cover .cv-rocket { animation: ar-cv-fly 1.8s ease-in-out infinite; }
+.ar-mode:is(:hover, .is-on) .ar-cover .cv-rocket .np-flame { animation: ar-sc-flame .12s ease-in-out infinite alternate; }
+.ar-cover .d1 { animation-delay: -.4s !important; }
+.ar-cover .d2 { animation-delay: -.8s !important; }
+@keyframes ar-cv-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes ar-cv-heave { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-6px); } }
+@keyframes ar-cv-flop { from { transform: translateY(0) rotate(-10deg); } to { transform: translateY(-14px) rotate(12deg); } }
+@keyframes ar-cv-pulse { from { transform: scale(.92) rotate(-4deg); } to { transform: scale(1.08) rotate(4deg); } }
+@keyframes ar-cv-shoot { 0% { transform: translateX(-40px) scale(.85); opacity: .3; } 60% { opacity: 1; } 100% { transform: translateX(60px) scale(1.05); opacity: 0; } }
+@keyframes ar-cv-shiver { from { transform: translateX(-1.5px); } to { transform: translateX(1.5px); } }
+@keyframes ar-cv-peek { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(16px); } }
+@keyframes ar-cv-fly { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-16px); } }
+#arHome[data-role="teacher"] .ar-mode.has-cover > small { font-size: .74rem; }
+@media (max-width: 640px) {
+  .ar-modes { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .ar-mode.has-cover { min-width: 0; }
+  .ar-mode.has-cover > b { font-size: 1.05rem; padding: .45rem .65rem 0; }
+  .ar-mode.has-cover > small { display: none; }
+  .ar-mode.has-cover.is-on > small:not([hidden]) { display: block; }
+}
+@media (prefers-reduced-motion: reduce) { .ar-cover *, .ar-cover > svg { animation: none !important; transition: none !important; } }

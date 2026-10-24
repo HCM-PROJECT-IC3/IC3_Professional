@@ -1,6 +1,6 @@
 /* ============================================================
    js/name-picker/name-picker.js — điều khiển trang "Gọi tên học sinh" (goi-ten.html).
-   Nguồn tên · tuỳ chọn · lịch sử "đã gọi" · nút Bắt đầu. Sân khấu và 10 trò: np-games.js; tranh: np-art.js.
+   Nguồn tên · tuỳ chọn · lịch sử "đã gọi" · nút Bắt đầu. Sân khấu và 11 trò: np-games.js; tranh: np-art.js.
    Người được gọi chọn TRƯỚC (name-picker-core.js), trò chơi chỉ "diễn" tới kết quả đó.
    Chỉ đọc file tĩnh data/roster/students-active.json; lưu localStorage trên máy này — không gửi gì đi.
    ============================================================ */
