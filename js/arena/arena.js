@@ -65,8 +65,10 @@
   // ============================================================
   const params = new URLSearchParams(location.search);
   const SRC = { de: params.get('de') || '', exam: null, meta: null, manifest: null, questions: null, key: '' };
-  const LESSON_RE = /^Tiết \d+$/;
-  const BAI_RE = /^Bài \d+[.:]/;
+  // Bộ theo tiết PPCT (câu All Key): Ôn tập / Luyện thi · Kiểm tra ("Tiết N" = tên cũ trước 10/2026)
+  const LESSON_RE = /^(Tiết \d+$|Ôn tập\s|Luyện thi\s)/;
+  const TEST_RE = /^Kiểm tra\s/;
+  const BAI_RE = /^Bài \d+[.:]/; // câu Củng cố theo bài học — không trộn vào "Trộn mọi chủ đề"
   const ALL = '__ALL__';
   const getJson = (u) => fetch(u).then((r) => { if (!r.ok) throw new Error(u + ' ' + r.status); return r.json(); });
 
@@ -118,14 +120,16 @@
   }
   function fillMts() {
     const lv = curCat()?.levels.find((l) => l.id === $('arLvl').value);
-    const names = Object.keys(lv?.minitests || {});
+    const names = Object.keys(lv?.minitests || {}).filter((n) => (lv.minitests[n]?.count ?? 1) > 0); // bỏ bộ chưa có câu
     const num = (n) => parseInt((n.match(/\d+/) || [0])[0], 10);
-    const topics = names.filter((n) => !LESSON_RE.test(n) && !BAI_RE.test(n));
+    const topics = names.filter((n) => !LESSON_RE.test(n) && !TEST_RE.test(n) && !BAI_RE.test(n));
     const bai = names.filter((n) => BAI_RE.test(n)).sort((a, b) => num(a) - num(b));
-    const lessons = names.filter((n) => LESSON_RE.test(n)).sort((a, b) => num(a) - num(b));
+    const finals = names.filter((n) => /^Ôn tập cuối khóa\s/.test(n)); // 8 tiết ôn cuối khóa (All Key)
+    const lessons = names.filter((n) => LESSON_RE.test(n) && !finals.includes(n)); // đã xếp theo tiết trong file
+    const tests = names.filter((n) => TEST_RE.test(n));
     const grp = (label, list) => (list.length ? `<optgroup label="${esc(label)}">${list.map((n) => `<option value="${esc(n)}">${esc(n)}</option>`).join('')}</optgroup>` : '');
     $('arMt').innerHTML = (topics.length > 1 ? `<option value="${ALL}">🎲 Trộn mọi chủ đề</option>` : '')
-      + grp('Theo tên bài', bai) + grp('Theo chủ đề', topics) + grp('Ôn tập cuối kỳ', lessons);
+      + grp('Theo tên bài', bai) + grp('Theo chủ đề', topics) + grp('Ôn tập theo tiết', lessons) + grp('Kiểm tra theo tiết', tests) + grp('Ôn tập cuối khóa', finals);
   }
   let loadSeq = 0;
   async function bankChanged() {
@@ -137,7 +141,7 @@
     $('arDeckInfo').textContent = 'Đang tải câu hỏi...';
     const files = SRC.manifest[`${cat}__${lvl}`] || {};
     const lv = curCat()?.levels.find((l) => l.id === lvl);
-    const names = mt === ALL ? Object.keys(lv?.minitests || {}).filter((n) => !LESSON_RE.test(n) && !BAI_RE.test(n)) : [mt];
+    const names = mt === ALL ? Object.keys(lv?.minitests || {}).filter((n) => !LESSON_RE.test(n) && !TEST_RE.test(n) && !BAI_RE.test(n)) : [mt];
     const lists = await Promise.all(names.map((n) => (files[n] ? getJson('data/ic3/' + files[n]).catch(() => []) : [])));
     if (seq !== loadSeq) return; // người dùng đã chọn bài khác
     SRC.questions = lists.flat();
@@ -423,8 +427,8 @@
   // ============================================================
   let G = null;
   const MODE_LABEL = { speed: '⚡ Tốc độ', gold: '💰 Săn vàng', race: '🏁 Đua về đích', survival: '❤️ Sinh tồn', fish: '🎣 Câu cá',
-    tug: '🪢 Kéo co', spell: '🔮 Đấu phép', heist: '🔐 Giải mã', dino: '🦖 Đào hoá thạch', moon: '🚀 Lên Mặt Trăng' };
-  const KEY_OF = { speed: 'score', gold: 'gold', race: 'pos', survival: 'score', fish: 'kg', tug: 'pull', spell: 'dmg', heist: 'gems', dino: 'fossils', moon: 'km' };
+    tug: '🪢 Kéo co', spell: '🔮 Đấu phép', heist: '🔐 Giải mã', dino: '🦖 Đào hoá thạch', moon: '🚀 Lên Mặt Trăng', boss: '🦠 Diệt Virus' };
+  const KEY_OF = { speed: 'score', gold: 'gold', race: 'pos', survival: 'score', fish: 'kg', tug: 'pull', spell: 'dmg', heist: 'gems', dino: 'fossils', moon: 'km', boss: 'dmg' };
   const UNIT_OF = { score: 'điểm', gold: 'vàng', pos: 'bước', kg: 'kg', pull: 'lực kéo', dmg: 'sát thương', gems: 'đá quý', fossils: 'hoá thạch', km: 'nghìn km' };
   const POWER_MODES = ['speed', 'survival', 'moon']; // chế độ có vật phẩm hỗ trợ (kiểu Wayground)
 
@@ -441,7 +445,7 @@
     const n = drill ? deck.length : mode === 'speed' ? Math.min(S.prefs.count, deck.length) : S.prefs.count;
     const p = profile();
     const me = { id: 'me', name: nickName(), face: avatarOf(p), score: 0, gold: 0, pos: 0, streak: 0, me: true };
-    const nBots = { race: 3, heist: 3, tug: 5 }[mode] || 4;
+    const nBots = { race: 3, heist: 3, tug: 5, boss: 3 }[mode] || 4; // Diệt Virus: đội 4 người
     const players = drill ? [me] : [me].concat(C.makeBots(nBots, rng, S.prefs.level));
     players.forEach((pl, i) => {
       Object.assign(pl, { kg: 0, frenzy: 0, hp: mode === 'spell' ? C.SPELL_HP : C.LIVES, pull: 0, dmg: 0, shield: false, gems: 0, fossils: 0, cheat: 0, lastGain: 0, km: 0 });
@@ -462,6 +466,8 @@
       log: [], trail: [], bestStreak: 0, correct: 0, startedAt: Date.now(), locked: false, phase: 'q',
       powers: [], x2: false, rope: 0, crack: {}, opened: 0, boost: 1, trackDrawn: false, busted: 0, cheats: 0,
     };
+    // Diệt Virus: máu Trùm Virus theo số câu × số người (top = giai đoạn cao nhất đã tới)
+    if (mode === 'boss') { const max = C.bossMaxHp(n, players.length); G.boss = { hp: max, max, top: 0, lastHeal: 0 }; }
     // Thử thách có thưởng xu (không có ở lượt Luyện câu sai): 1–2 Câu hỏi VÀNG + 1 Thử thách tốc độ (khi có giới hạn giờ).
     // Đua/Mặt Trăng không biết trước câu cuối → rải trong n câu đầu.
     G.goldAt = []; G.speedAt = -1; G.bonus = 0; G.chal = '';
@@ -573,9 +579,12 @@
     const streak0 = me.streak; // thẻ Khiên chuỗi: sai thì trả lại chuỗi này
     G.log.push({ q, chosen: k, ok });
     if (ok) G.correct++;
-    // Chuỗi đúng: Đua (raceStep), Sinh tồn (survivalStep), Mặt Trăng (moonStep) tự đếm — tránh cộng 2 lần.
-    if (G.mode !== 'race' && G.mode !== 'survival' && G.mode !== 'moon') me.streak = ok ? me.streak + 1 : 0;
-    const life = G.mode === 'survival' ? C.survivalStep(me, ok, G.i) : null;
+    // Chuỗi đúng: Đua (raceStep), Sinh tồn (survivalStep), Mặt Trăng (moonStep), Diệt Virus (bossHit) tự đếm — tránh cộng 2 lần.
+    if (!['race', 'survival', 'moon', 'boss'].includes(G.mode)) me.streak = ok ? me.streak + 1 : 0;
+    const alive0 = G.mode === 'boss' ? G.players.filter((p) => p.hp > 0).length : 0;
+    const hit = G.mode === 'boss' ? C.bossHit(me, ok, ms, G.limitMs, C.bossPhase(G.boss.hp, G.boss.max), rng, G.i) : null;
+    const life = G.mode === 'survival' ? C.survivalStep(me, ok, G.i) : hit ? hit.life : null;
+    let bossEvt = null;
     if (G.picker) G.picker.result(k);
     else document.querySelectorAll('#arAnswers .ar-ans').forEach((b) => {
       const kk = +b.dataset.k;
@@ -650,6 +659,23 @@
           + (st.stage ? ` <span class="ar-tag up">🛰️ Qua Trạm ${C.MOON_STAGES.indexOf(st.stage) + 1}!</span>` : '')
           + (me.km >= C.MOON_KM ? ' <span class="ar-tag up">🌕 Em đã chạm Mặt Trăng!</span>' : '')
         : `${k === null ? 'Hết giờ' : 'Chưa đúng'} — chết máy${st.fell ? `, tụt <b>${st.fell}</b> nghìn km` : ' — đứng yên ở trạm'}`;
+    } else if (G.mode === 'boss') {
+      let dmg = hit.dmg;
+      if (dbl === 2 && dmg) { me.dmg += dmg; dmg *= 2; } // ✖️2: đánh thêm 1 đòn y hệt
+      me.lastCrit = hit.crit;
+      if (ok) pop = hit.crit ? `💥 −${dmg}` : `⚔️ −${dmg}`;
+      const team = botsBoss(events);
+      bossEvt = C.bossRound(G.boss, dmg + team.total, (dmg ? 1 : 0) + team.ok, alive0);
+      G.boss.lastHeal = bossEvt.heal;
+      const combo = C.bossCombo(me.streak);
+      fb = (ok ? `<b>−${dmg}</b> máu Virus${hit.crit ? ' <span class="ar-tag up">💥 Chí mạng!</span>' : ''}${combo > 1 ? ` <span class="ar-tag up">🔥 combo ×${combo.toFixed(1)}</span>` : ''}${x2Tag}`
+        : `${k === null ? 'Hết giờ' : 'Chưa đúng'} — Virus đánh trả`)
+        + (life.healed ? ' <span class="ar-tag up">💚 Hồi 1 tim!</span>' : '')
+        + (life.out ? ' <span class="ar-tag">😵 Em đã gục!</span>' : life.lost ? ' <span class="ar-tag">💔 Mất 1 tim</span>' : '')
+        + ` <span class="ar-fb-hp">${C.hearts(me.hp)}</span>`;
+      events.unshift(bossEvt.ko ? `🎉 Cả đội gây ${bossEvt.dealt} sát thương — Trùm Virus đã bị diệt!`
+        : `⚔️ Cả đội gây ${bossEvt.dealt} sát thương — Virus còn ${G.boss.hp}/${G.boss.max} máu`);
+      if (bossEvt.heal) events.push(`🧬 Đội đúng chưa tới một nửa — Virus nhân bản, hồi ${bossEvt.heal} máu!`);
     } else if (G.mode === 'spell' || G.mode === 'heist' || G.mode === 'dino') {
       G.boost = C.spellBoost(ms, G.limitMs);
       const fast = G.boost >= 1.25 && G.mode !== 'dino' ? ` <span class="ar-tag up">⚡ nhanh ×${G.boost.toFixed(1)}</span>` : '';
@@ -690,8 +716,10 @@
     }
     // Chữ lớn: lên/mất ngôi đầu (từ câu 2, không tính Kéo co theo đội) · mốc chuỗi đúng 3/5/8
     if (D && !G.practice) {
-      const solo = G.mode !== 'tug' && G.i >= 1;
-      if (solo && newRank === 1 && prevRank > 1) { D.banner('EM DẪN ĐẦU!', { tone: 'up', icon: 'fa-crown', sub: 'Giữ vững ngôi đầu nhé!' }); sfx('critical'); }
+      const solo = G.mode !== 'tug' && G.mode !== 'boss' && G.i >= 1; // 2 chế độ chơi theo đội
+      if (bossEvt && bossEvt.ko) { D.banner('VIRUS ĐÃ BỊ DIỆT!', { tone: 'up', icon: 'fa-shield-virus', sub: 'Dữ liệu của cả đội an toàn!' }); sfx('critical'); }
+      else if (bossEvt && bossEvt.newPhase) { const P = C.BOSS_PHASES[bossEvt.newPhase]; D.banner(`VIRUS ${P.name}!`, { tone: bossEvt.newPhase === 2 ? 'fire' : 'down', icon: 'fa-virus', sub: P.sub }); sfx('whoosh'); }
+      else if (solo && newRank === 1 && prevRank > 1) { D.banner('EM DẪN ĐẦU!', { tone: 'up', icon: 'fa-crown', sub: 'Giữ vững ngôi đầu nhé!' }); sfx('critical'); }
       else if (solo && prevRank === 1 && newRank > 1) D.banner('BỊ VƯỢT MẶT!', { tone: 'down', icon: 'fa-person-running', sub: `Tụt xuống hạng ${newRank} — gỡ lại ngay!` });
       else if (ok && [3, 5, 8].includes(me.streak)) D.banner(`CHUỖI ${me.streak} CÂU!`, { tone: 'fire', icon: 'fa-fire', sub: me.streak >= 8 ? 'Không ai cản nổi!' : me.streak >= 5 ? 'Bất bại!' : 'Đang nóng tay!' });
     }
@@ -764,7 +792,7 @@
     G.phase = 'cards';
     G.drawnAt = G.log.length;
     const g = G;
-    const ids = C.drawCards(rng, { x2: POWER_MODES.includes(G.mode), time: !!G.limitMs, full: G.powers.length >= C.POWER_MAX });
+    const ids = C.drawCards(rng, { x2: POWER_MODES.includes(G.mode) || G.mode === 'boss', time: !!G.limitMs, full: G.powers.length >= C.POWER_MAX });
     const id = await CD.open(ids);
     if (G !== g) return; // đã bỏ cuộc trong lúc bốc
     const btn = $('arDraw'); if (btn) btn.remove();
@@ -813,6 +841,7 @@
     if (G.i + 1 >= G.maxRounds) return true;
     if (G.mode === 'race') return G.players.some((p) => p.pos >= G.goal);
     if (G.mode === 'moon') return G.players.some((p) => p.km >= C.MOON_KM);
+    if (G.mode === 'boss') return G.boss.hp <= 0 || G.me.hp <= 0;
     // Sinh tồn: em hết tim, hoặc mọi đối thủ đã bị loại (lượt 1 mình → chơi hết câu).
     if (G.mode === 'survival') return G.me.hp <= 0 || (G.players.length > 1 && G.players.every((p) => p.me || p.hp <= 0));
     if (G.mode === 'spell') return G.me.hp <= 0 || G.players.every((p) => p.me || p.hp <= 0);
@@ -1163,6 +1192,24 @@
     renderHud(); renderSide();
   }
 
+  // ── Diệt Virus ──
+  /** Đồng đội máy cùng đánh Virus. Trả { total: tổng sát thương, ok: số bạn đánh trúng }. */
+  function botsBoss(events) {
+    const ph = C.bossPhase(G.boss.hp, G.boss.max);
+    let total = 0, ok = 0;
+    G.players.forEach((p) => {
+      if (!p.bot || p.hp <= 0) return;
+      const a = C.botAnswer(p, G.limitMs || 20000, rng);
+      const h = C.bossHit(p, a.correct, a.ms, G.limitMs, ph, rng, G.i);
+      p.lastCrit = h.crit;
+      total += h.dmg;
+      if (h.dmg) ok++;
+      if (h.crit) events.push(`💥 ${who(p)} chí mạng −${h.dmg}!`);
+      if (h.life.out) events.push(`😵 ${who(p)} đã gục — còn ${G.players.filter((x) => x.hp > 0).length} người trụ`);
+    });
+    return { total, ok };
+  }
+
   // ── Lên Mặt Trăng ──
   function botsMoon(events) {
     G.players.forEach((p) => {
@@ -1271,6 +1318,7 @@
     if (G.mode === 'survival') return list.slice().sort(C.survivalOrder);
     if (G.mode === 'spell') return list.slice().sort(C.spellOrder);
     if (G.mode === 'moon') return list.slice().sort(C.moonOrder);
+    if (G.mode === 'boss') return list.slice().sort(C.bossOrder);
     return C.rank(list, KEY_OF[G.mode]);
   }
   function rankOf(p) { return ranked(G.players).indexOf(p) + 1; }
@@ -1285,6 +1333,7 @@
       : G.mode === 'heist' ? `💎 ${me.gems.toLocaleString('vi-VN')} · két em ${locks(C.vaultThreat(G.crack, me))}`
       : G.mode === 'dino' ? `🦴 ${me.fossils.toLocaleString('vi-VN')} hoá thạch${me.cheat > 0 ? ` <span class="ar-tag">🤫 đang ăn gian · còn ${me.cheat} lượt</span>` : ''}`
       : G.mode === 'moon' ? `🚀 ${me.km}/${C.MOON_KM} nghìn km${C.moonBoost(me.streak) > 1 ? ` <span class="ar-tag up">🔥 ×${C.moonBoost(me.streak)}</span>` : ''}`
+      : G.mode === 'boss' ? `<span class="ar-hud-hp">${C.hearts(me.hp)}</span> ⚔️ ${me.dmg} · 🦠 <span class="ar-hpbar is-virus" aria-hidden="true"><i style="width:${(G.boss.hp / G.boss.max) * 100}%"></i></span> ${G.boss.hp}/${G.boss.max}`
       : `🏁 ${me.pos}/${G.goal} bước`;
     const s = $('arStreak');
     s.hidden = me.streak < 2;
@@ -1293,7 +1342,7 @@
   function renderSide() {
     const key = KEY_OF[G.mode];
     const unit = UNIT_OF[key];
-    const surv = G.mode === 'survival', spell = G.mode === 'spell';
+    const surv = G.mode === 'survival' || G.mode === 'boss', spell = G.mode === 'spell'; // Diệt Virus: tim như Sinh tồn
     const extra = (p) => (surv ? ` <span class="ar-board-hp">${C.hearts(p.hp)}</span>`
       : G.mode === 'tug' ? ` <span class="ar-team-dot is-${p.team}" title="${C.TEAMS[p.team].name}"></span>` : '');
     // Dòng phụ dưới tên (không bị cắt khi tên dài): thanh máu / số ô két em đã mở.
@@ -1350,7 +1399,10 @@
     const board = ranked(G.players.filter((p) => !p.ghost));
     const won = C.tugWinner(G.rope);
     // Kéo co tính theo đội: đội em thắng (hoặc hoà) = hạng 1, thua = hạng 2.
-    const place = G.mode === 'tug' ? (won === 'blue' ? 2 : 1) : board.indexOf(G.me) + 1;
+    // Diệt Virus: cả đội diệt được Virus = hạng 1, không diệt được = hạng chót (xu thưởng thấp nhất).
+    const bossWin = G.mode === 'boss' && G.boss.hp <= 0;
+    const place = G.mode === 'tug' ? (won === 'blue' ? 2 : 1) : G.mode === 'boss' ? (bossWin ? 1 : board.length) : board.indexOf(G.me) + 1;
+    const mvp = G.mode === 'boss' && board[0] === G.me;
     const total = G.log.length;
     const p = profile();
     const coins = C.coinsFor({ correct: G.correct, place, players: G.mode === 'tug' ? 2 : board.length });
@@ -1382,6 +1434,9 @@
       : G.mode === 'dino' && place === 1 ? `🏆 ${nickName()} là Nhà khảo cổ số 1!`
       : G.mode === 'moon' && place === 1 && G.me.km >= C.MOON_KM ? `🚀 ${nickName()} chạm Mặt Trăng đầu tiên!`
       : G.mode === 'moon' && place === 1 ? `🏆 ${nickName()} bay cao nhất!`
+      : G.mode === 'boss' && bossWin ? (mvp ? `🏆 Cả đội đã diệt Trùm Virus — ${nickName()} là MVP!` : `🛡️ Cả đội đã diệt Trùm Virus! Em gây ${G.me.dmg} sát thương`)
+      : G.mode === 'boss' && G.me.hp <= 0 ? `😵 Em đã gục — Virus còn ${Math.round((G.boss.hp / G.boss.max) * 100)}% máu. Thử lại nhé!`
+      : G.mode === 'boss' ? `🦠 Hết câu — Virus còn ${Math.round((G.boss.hp / G.boss.max) * 100)}% máu. Lần sau cả đội dồn sức nhé!`
       : place === 1 ? `🏆 ${nickName()} vô địch ${MODE_LABEL[G.mode]}!` : `${MODE_LABEL[G.mode]} — em về hạng ${place}/${board.length}`;
     $('arPodium').hidden = G.practice;
     $('arAgain').hidden = G.practice;
@@ -1400,6 +1455,7 @@
       ${G.mode === 'heist' ? `<div><b>${G.opened}</b><span>két em phá được</span></div>` : ''}
       ${G.mode === 'dino' ? `<div><b>${G.busted}</b><span>lần em bắt quả tang${G.cheats ? ` · em ăn gian ${G.cheats} lần` : ''}</span></div>` : ''}
       ${G.mode === 'moon' ? `<div><b>${Math.round((G.me.km / C.MOON_KM) * 100)}%</b><span>${G.me.km >= C.MOON_KM ? 'đã tới Mặt Trăng' : 'quãng đường tới Mặt Trăng'}</span></div>` : ''}
+      ${G.mode === 'boss' ? `${bossWin ? `<div><b>${total}</b><span>câu để diệt Virus</span></div>` : `<div><b>${Math.round((G.boss.hp / G.boss.max) * 100)}%</b><span>máu Virus còn lại</span></div>`}<div><b>${C.hearts(G.me.hp)}</b><span>${mvp ? 'MVP của đội' : `hạng ${board.indexOf(G.me) + 1}/${board.length} sát thương`}</span></div>` : ''}
       ${G.mode === 'tug' ? `<div><b>${Math.abs(G.rope)}/${C.TUG_GOAL}</b><span>${won ? `dây lệch về ${C.TEAMS[won].name}` : 'dây cân bằng'}</span></div>` : ''}
       <div class="is-coin"><b>+${coins} 🪙</b><span>xu (đang có ${p.coins})</span></div>
       ${G.bonus ? `<div class="is-coin"><b>+${G.bonus} 🪙</b><span>xu thử thách</span></div>` : ''}
@@ -1412,7 +1468,7 @@
     show('arEnd');
     if (D) { D.hide(); D.countUp($('arEndStats')); }
     refreshWallet();
-    const win = G.practice ? !wrong.length : place === 1 && !(G.mode === 'tug' && !won);
+    const win = G.practice ? !wrong.length : G.mode === 'boss' ? bossWin : place === 1 && !(G.mode === 'tug' && !won);
     sfx(win ? 'win' : G.practice || place <= 3 ? 'match' : 'lose');
     if (win && global.EduFX) global.EduFX.confetti({ count: 120 });
     G.phase = 'end';

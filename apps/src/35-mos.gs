@@ -34,22 +34,16 @@ function writeMosLog_(p) {
       note: String(r.note || '').slice(0, 200) };
   })).slice(0, 45000);
 
-  const lock = LockService.getScriptLock();
-  lock.waitLock(20000);
-  try {
-    if (cache.get(dedupeKey)) return { written: false, duplicate: true };
-    const sheet = logTab_(SHEET_MOS_LOG, MOS_HEADERS); // tự sang file mới khi đầy — xem logTab_
-    sheet.appendRow([
-      asText_(p.submissionId), asText_(p.studentName), asText_(p.studentClass), asText_(p.studentSchool),
-      asText_(p.projectTitle), asText_(p.projectId),
-      // score null = không có task tự chấm (toàn thủ công) — để trống thay vì 0.
-      p.score === null || p.score === undefined ? '' : Number(p.score),
-      Number(p.passedCount) || 0, Number(p.autoTotal) || 0, Number(p.manualCount) || 0,
-      new Date(), asText_(detail),
-    ]);
-    cache.put(dedupeKey, '1', DEDUPE_TTL_SEC);
-  } finally {
-    lock.releaseLock();
-  }
+  // Không khoá quanh appendRow (xem withRareLock_ trong 90-utils.gs) — cùng đánh đổi như bài nộp IC3.
+  const sheet = logTab_(SHEET_MOS_LOG, MOS_HEADERS); // tự sang file mới khi đầy — xem logTab_
+  sheet.appendRow([
+    asText_(p.submissionId), asText_(p.studentName), asText_(p.studentClass), asText_(p.studentSchool),
+    asText_(p.projectTitle), asText_(p.projectId),
+    // score null = không có task tự chấm (toàn thủ công) — để trống thay vì 0.
+    p.score === null || p.score === undefined ? '' : Number(p.score),
+    Number(p.passedCount) || 0, Number(p.autoTotal) || 0, Number(p.manualCount) || 0,
+    new Date(), asText_(detail),
+  ]);
+  cache.put(dedupeKey, '1', DEDUPE_TTL_SEC);
   return { written: true, duplicate: false };
 }

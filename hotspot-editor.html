@@ -20,6 +20,9 @@
 
 <header>
   <h1>🎯 Hotspot Editor <span class="tag">EduQuiz Admin</span></h1>
+  <select class="btn" id="levelSelect" title="Mở thẳng câu hỏi của 1 cấp độ trong dự án (ảnh tự tải từ img/)">
+    <option value="">📚 Mở cấp độ trong dự án…</option>
+  </select>
   <button class="btn" id="btnLoadJson">📂 Mở file câu hỏi (.json)</button>
   <input type="file" id="fileJson" accept="application/json">
   <button class="btn" id="btnLoadImages">🖼️ Nạp thư mục ảnh (img/)</button>
@@ -35,6 +38,7 @@
   <div class="pane">
     <div class="pane-pad">
       <input type="text" class="q-search" id="qSearch" placeholder="🔍 Tìm câu hỏi hotspot…">
+      <label class="q-filter"><input type="checkbox" id="qOnlyIssues"> Chỉ câu có cảnh báo</label>
       <div id="qListWrap">
         <div class="empty-hint">Mở một file JSON câu hỏi (vd. <b>IC3__LV1.json</b>) để bắt đầu.<br><br>Công cụ sẽ tự lọc ra tất cả câu dạng <b>hotspot</b> để bạn chỉnh vị trí.</div>
       </div>
@@ -130,20 +134,48 @@ els.fileJson.addEventListener('change', async (e) => {
   }
 });
 
+/* ── Mở thẳng 1 cấp độ trong dự án (data/ic3/meta.json → file khối; ảnh lấy từ img/ trên cùng máy chủ) ── */
+const levelSelect = $('#levelSelect');
+fetch('data/ic3/meta.json').then(r => r.ok ? r.json() : null).then(meta => {
+  (meta?.categories || []).forEach(cat => (cat.levels || []).forEach(lv => {
+    if (lv.file) levelSelect.appendChild(new Option(`${cat.name} › ${lv.name}`, lv.file));
+  }));
+}).catch(() => { levelSelect.hidden = true; }); // mở file trực tiếp (file://) → chỉ dùng nút "Mở file"
+levelSelect.addEventListener('change', async () => {
+  const file = levelSelect.value;
+  if (!file) return;
+  if (state.dirtySet.size && !confirm('Còn thay đổi chưa xuất — mở cấp độ khác sẽ mất. Tiếp tục?')) return;
+  try {
+    const r = await fetch('data/ic3/' + file, { cache: 'no-store' });
+    if (!r.ok) throw new Error(r.status);
+    loadData(await r.json(), file);
+  } catch (err) {
+    alert('Không tải được data/ic3/' + file + ': ' + err.message);
+  }
+});
+
 function loadData(data, fileName) {
   state.fullData = data;
   state.fileName = fileName;
   state.questions = [];
   state.dirtySet.clear();
 
+  // 1 câu (uid) có thể nằm ở nhiều bộ: chủ đề, Ôn tập/Kiểm tra theo tiết, Ôn tập cuối khóa…
+  // → hiện 1 lần (bản ở bộ chủ đề), sửa xong thì chép vùng sang mọi bản (copies) để các bộ luôn khớp.
   const minitests = data.minitests || {};
-  Object.keys(minitests).forEach(mtName => {
+  const byUid = new Map();
+  const names = Object.keys(minitests).sort((a, b) => (/^\d+\.\s/.test(b) ? 1 : 0) - (/^\d+\.\s/.test(a) ? 1 : 0));
+  names.forEach(mtName => {
     const arr = minitests[mtName];
     if (!Array.isArray(arr)) return;
     arr.forEach((q, idx) => {
-      if (q && q.type === 'hotspot') {
-        state.questions.push({ mtName, arr, idx, q });
-      }
+      if (!q || q.type !== 'hotspot') return;
+      const key = q.uid || `${mtName}#${idx}`;
+      const item = byUid.get(key);
+      if (item) { item.copies.push(q); item.sets.push(mtName); return; }
+      const created = { mtName, arr, idx, q, copies: [], sets: [mtName] };
+      byUid.set(key, created);
+      state.questions.push(created);
     });
   });
 
@@ -179,6 +211,7 @@ els.fileImages.addEventListener('change', (e) => {
    QUESTION LIST (sidebar)
    ============================================================ */
 els.qSearch.addEventListener('input', renderQuestionList);
+$('#qOnlyIssues').addEventListener('change', renderQuestionList);
 
 function renderQuestionList() {
   const term = els.qSearch.value.trim().toLowerCase();
@@ -190,6 +223,7 @@ function renderQuestionList() {
   const groups = new Map();
   state.questions.forEach((item, i) => {
     if (term && !item.q.question?.toLowerCase().includes(term) && !item.q.uid?.toLowerCase().includes(term)) return;
+    if ($('#qOnlyIssues').checked && !issuesOf(item.q).length) return;
     if (!groups.has(item.mtName)) groups.set(item.mtName, []);
     groups.get(item.mtName).push(i);
   });
@@ -203,11 +237,12 @@ function renderQuestionList() {
       const dirty = state.dirtySet.has(item.q.uid || i) ? 'dirty' : '';
       const nAreas = (item.q.areas || []).length;
       const nCorrect = (item.q.areas || []).filter(a => a.correct).length;
+      const nIssues = issuesOf(item.q).length;
       html += `<div class="q-item ${active} ${dirty}" data-idx="${i}">
         <div class="qi-idx">${i + 1}</div>
         <div>
           <div class="qi-text">${escHtml(truncate(item.q.question || '(không có nội dung)', 70))}</div>
-          <div class="qi-meta">${nAreas} vùng · ${nCorrect} đúng</div>
+          <div class="qi-meta">${nAreas} vùng · ${nCorrect} đúng${item.copies.length ? ` · dùng ở ${item.sets.length} bộ` : ''}${nIssues ? ` · <b class="qi-warn">⚠ ${nIssues} cảnh báo</b>` : ''}</div>
         </div>
       </div>`;
     });
@@ -270,6 +305,8 @@ function currentQ() {
 function findImageUrl(q) {
   const filename = q.image_file || (q.imageUrl ? q.imageUrl.split('/').pop() : null);
   if (filename && state.images.has(filename)) return state.images.get(filename);
+  // Mở trên máy chủ của dự án (không phải file://) → lấy thẳng ảnh trong img/, không cần nạp thư mục
+  if (location.protocol.startsWith('http') && (q.imageUrl || filename)) return q.imageUrl || 'img/' + filename;
   return null;
 }
 
@@ -301,7 +338,9 @@ function renderEditor() {
 
   wrap.addEventListener('mousedown', onCanvasMouseDownForAdd);
 
-  img.addEventListener('load', () => { /* image ready */ });
+  img.addEventListener('error', () => {
+    wrap.innerHTML = `<div class="no-image-placeholder">🖼️ Không tải được ảnh <b>${escHtml(q.image_file || q.imageUrl || '')}</b><br><span class="note">Kiểm tra file có trong thư mục img/ không, hoặc bấm "Nạp thư mục ảnh (img/)".</span></div>`;
+  });
 }
 
 function buildAreaEl(a, q) {
@@ -447,7 +486,33 @@ function nextAreaId(q) {
 
 function markDirty(q) {
   state.dirtySet.add(q.uid || q.question);
+  syncCopies(state.questions.find(it => it.q === q));
   renderQuestionList();
+}
+/** Chép vùng của bản đang sửa sang mọi bản cùng uid (bộ Ôn tập/Kiểm tra… dùng lại nguyên câu chủ đề). */
+function syncCopies(item) {
+  if (!item) return;
+  item.copies.forEach(c => { c.areas = JSON.parse(JSON.stringify(item.q.areas || [])); });
+}
+
+/** Cảnh báo vùng bấm: không có vùng đúng, tràn ngoài ảnh, quá nhỏ, trùng id, vùng đúng chồng vùng nhiễu. */
+function issuesOf(q) {
+  const out = [];
+  const A = q.areas || [];
+  if (!A.some(a => a.correct)) out.push('Chưa có vùng đúng — học sinh bấm đâu cũng sai');
+  A.forEach(a => {
+    if (a.x < -0.5 || a.y < -0.5 || a.x + a.w > 100.5 || a.y + a.h > 100.5) out.push(`${a.id} tràn ra ngoài ảnh`);
+    if (a.w < 1.5 || a.h < 1.5) out.push(`${a.id} quá nhỏ, khó bấm trên điện thoại`);
+  });
+  const ids = A.map(a => a.id);
+  if (new Set(ids).size !== ids.length) out.push('Có 2 vùng trùng mã (id)');
+  A.filter(a => a.correct).forEach(c => A.filter(x => !x.correct).forEach(x => {
+    const ix = Math.max(0, Math.min(c.x + c.w, x.x + x.w) - Math.max(c.x, x.x));
+    const iy = Math.max(0, Math.min(c.y + c.h, x.y + x.h) - Math.max(c.y, x.y));
+    const small = Math.min(c.w * c.h, x.w * x.h);
+    if (small && (ix * iy) / small > 0.3) out.push(`${c.id} (đúng) chồng lên ${x.id} (nhiễu) ${Math.round((ix * iy / small) * 100)}% — bấm vào chỗ chồng sẽ khó đoán đúng/sai`);
+  }));
+  return out;
 }
 
 /* ============================================================
@@ -496,6 +561,10 @@ function renderRightPanel() {
   const sel = areas.find(a => a.id === state.selectedAreaId);
 
   let html = '';
+  const item = state.questions[state.currentIndex];
+  const issues = issuesOf(q);
+  if (issues.length) html += `<div class="hs-issues"><b>⚠ Cần xem lại</b><ul>${issues.map(t => `<li>${escHtml(t)}</li>`).join('')}</ul></div>`;
+  if (item && item.copies.length) html += `<div class="note hs-copies">Câu này có trong ${item.sets.length} bộ (${escHtml(item.sets.slice(0, 3).join(' · '))}${item.sets.length > 3 ? ' …' : ''}) — sửa ở đây cập nhật cả ${item.sets.length} bộ.</div>`;
 
   if (sel) {
     html += `<div class="panel-title">Vùng đang chọn: ${escHtml(sel.id)}</div>
@@ -574,6 +643,7 @@ function round2(n) { return Math.round(n * 100) / 100; }
    ============================================================ */
 els.btnExport.addEventListener('click', () => {
   if (!state.fullData) return;
+  state.questions.forEach(syncCopies); // phòng hờ: mọi bản cùng uid khớp nhau trước khi ghi
   const jsonStr = JSON.stringify(state.fullData);
   const blob = new Blob([jsonStr], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -586,7 +656,7 @@ els.btnExport.addEventListener('click', () => {
   URL.revokeObjectURL(url);
   state.dirtySet.clear();
   renderQuestionList();
-  toast('Đã xuất file JSON — thay thế file cũ trong data/ic3/');
+  toast('Đã xuất — thay file cũ trong data/ic3/ rồi chạy python scripts/split-minitests.py');
 });
 </script>
 <script src="js/motion.js"></script>

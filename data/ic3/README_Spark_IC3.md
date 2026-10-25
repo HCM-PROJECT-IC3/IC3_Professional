@@ -28,9 +28,23 @@ Thay thế cho bộ câu hỏi THCS/TIH cũ (K3-K8). Nguồn gốc: 6 file `.qui
 Chủ đề của từng câu bám **PPCT của cấp đó** (không chỉ theo số `tN` trong uid — uid giữ nguyên
 khi chuyển chủ đề để link đề/lịch sử cũ không vỡ). Mọi chuyển/bỏ câu ghi ở `topic-reassign.json`
 (kèm lý do); sửa dữ liệu chủ đề → cập nhật file đó → `node scripts/apply-topic-reassign.js` →
-`python scripts/split-minitests.py`. `scripts/validate-data.js` chặn câu trùng / câu ở 2 chủ đề.
+`node scripts/generate-review-minitests.js` → `python scripts/split-minitests.py`. `scripts/validate-data.js` chặn câu trùng / câu ở 2 chủ đề.
 
 ## Đồng bộ với đáp án gốc "All Key" (iSpring .quiz NH2025-2026)
 `allkey-sync.json` ghi các câu thêm từ khoá (`adds`) và các câu sửa theo khoá (`updates`, giữ uid),
 kèm nguồn `All Key › <file> › <nhóm>#<số>` và lý do. Câu khoá có nhiều phiên bản thì giữ bản cũ và
-thêm bản mới (không ghi đè). Áp dụng: `node scripts/apply-allkey-sync.js` → `python scripts/split-minitests.py`.
+thêm bản mới (không ghi đè). Áp dụng: `node scripts/apply-allkey-sync.js` →
+`python scripts/build-allkey-map.py "<thư mục All Key>"` → `node scripts/generate-review-minitests.js` → `python scripts/split-minitests.py`.
+
+## 3 nhóm bộ câu hỏi — không trộn lẫn
+| Nhóm | Tên bộ | Nguồn | Dùng |
+|---|---|---|---|
+| Theo Tên bài | `Bài N. …` | file Củng cố của giáo viên (`Quiz/*_CungCo.xlsx`) | dạy/luyện trên lớp — chỉ chế độ Ôn luyện, không trộn vào bộ khác |
+| Theo chủ đề | `N. Tên chủ đề` | ngân hàng chủ đề (All Key + câu GS6 cũ) | luyện theo chủ đề, Tổng hợp, mini-game |
+| Ôn tập / Kiểm tra theo tiết | `Ôn tập 1 (Tiết 11): …`, `Kiểm tra HK1 (Tiết 24)`, `Luyện thi — …` | **chỉ câu All Key** (`allkey-map.json`), chia theo tiết ôn/kiểm tra trong PPCT từng khối (`ppct-review.json`) | ôn trước kiểm tra, làm bài Kiểm tra |
+
+- `ppct-review.json`: tiết Ôn tập / Kiểm tra / Luyện thi của từng cấp (PPCT 2026-2027 bản Aca HCM, 45 tiết) và các chủ đề mỗi tiết phủ.
+  Ôn tập = mọi câu All Key của các chủ đề đó; Kiểm tra = rút đều (có seed) đúng số câu đề thi thật của khối từ các chủ đề đã học tới tiết đó;
+  Luyện thi = nguyên 1 đề All Key.
+- `allkey-map.json`: câu chủ đề nào trùng câu All Key nào (`"Đề#số câu"`) + danh sách câu All Key chưa tìm thấy trong dữ liệu (`unmatched`).
+- `scripts/validate-data.js` chặn: bộ Ôn tập/Kiểm tra có câu ngoài All Key, có câu "Bài N", hoặc lệch nội dung bộ chủ đề.

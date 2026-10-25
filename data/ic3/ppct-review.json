@@ -1,0 +1,74 @@
+{
+  "_doc": "Tiết Ôn tập / Kiểm tra / Luyện thi của từng cấp theo PPCT 2026-2027 bản Aca HCM (Tài Liệu Bàn Giao/<cấp>/PPCT_*Aca*.xlsx, sheet 45 tiết, cột chương trình IC3). topics = số thứ tự 7 bộ 'Theo chủ đề' (1 Căn bản về công nghệ · 2 Công dân số · 3 Quản lý thông tin · 4 Sáng tạo nội dung · 5 Giao tiếp · 6 Hợp tác, cộng tác · 7 An toàn và bảo mật). PPCT chỉ ghi 'Ôn tập các nội dung đã học' → lấy chủ đề của các bài học từ tiết ôn trước tới tiết này. Kiểm tra = các chủ đề đã học tới tiết đó. test = chỉ lấy câu của đề All Key đó ('Test1'; 'notTest1' = Test2, Test3, Cập nhật — PPCT IC3 LV1 ghi 'Test 1'/'Test 2'). paper = cả 1 đề All Key nguyên bản (Luyện thi). Câu lấy từ ngân hàng chủ đề NHƯNG chỉ câu có trong All Key (data/ic3/allkey-map.json). Sinh bộ: node scripts/generate-review-minitests.js → python scripts/split-minitests.py.",
+  "IC3__LV1": [
+    { "kind": "on", "tiet": 11, "title": "Ôn tập 1", "sub": "Căn bản về công nghệ — Test 1", "topics": [1], "test": "Test1" },
+    { "kind": "kt", "tiet": 12, "title": "Kiểm tra giữa HK1", "topics": [1] },
+    { "kind": "on", "tiet": 18, "title": "Ôn tập 2", "sub": "Căn bản về công nghệ (Test 2) + Công dân số + Quản lý thông tin", "parts": [{ "topics": [1], "test": "notTest1" }, { "topics": [2, 3] }] },
+    { "kind": "kt", "tiet": 24, "title": "Kiểm tra HK1", "topics": [1, 2, 3, 5, 7] },
+    { "kind": "on", "tiet": 25, "title": "Ôn tập 3", "sub": "Giao tiếp + An toàn và bảo mật", "topics": [5, 7] },
+    { "kind": "kt", "tiet": 26, "title": "Kiểm tra giữa HK2", "topics": [1, 2, 3, 5, 7] },
+    { "kind": "on", "tiet": 35, "title": "Ôn tập 4", "sub": "Sáng tạo nội dung — Test 1", "topics": [4], "test": "Test1" },
+    { "kind": "on", "tiet": 44, "title": "Ôn tập 5", "sub": "Hợp tác, cộng tác + Sáng tạo nội dung (Test 2)", "parts": [{ "topics": [6] }, { "topics": [4], "test": "notTest1" }] },
+    { "kind": "kt", "tiet": 45, "title": "Kiểm tra HK2", "topics": [1, 2, 3, 4, 5, 6, 7] },
+    { "kind": "on", "tiet": 45, "title": "Ôn tập tổng hợp", "sub": "Cả 7 chủ đề", "topics": [1, 2, 3, 4, 5, 6, 7] }
+  ],
+  "IC3__LV2": [
+    { "kind": "on", "tiet": 8, "title": "Ôn tập 1", "sub": "Căn bản về công nghệ", "topics": [1] },
+    { "kind": "kt", "tiet": 11, "title": "Kiểm tra giữa HK1", "topics": [1, 5] },
+    { "kind": "on", "tiet": 14, "title": "Ôn tập 2", "sub": "Giao tiếp + Công dân số", "topics": [5, 2] },
+    { "kind": "on", "tiet": 17, "title": "Ôn tập 3", "sub": "Quản lý thông tin", "topics": [3] },
+    { "kind": "on", "tiet": 20, "title": "Ôn tập học kì 1", "sub": "Củng cố nội dung học kì 1", "topics": [1, 2, 3, 4, 5] },
+    { "kind": "kt", "tiet": 21, "title": "Kiểm tra HK1", "topics": [1, 2, 3, 4, 5] },
+    { "kind": "on", "tiet": 36, "title": "Ôn tập 4", "sub": "Sáng tạo nội dung", "topics": [4] },
+    { "kind": "kt", "tiet": 37, "title": "Kiểm tra giữa HK2", "topics": [1, 2, 3, 4, 5] },
+    { "kind": "on", "tiet": 44, "title": "Ôn tập học kì 2", "sub": "Tổng hợp trước kiểm tra cuối kì", "topics": [1, 2, 3, 4, 5, 6, 7] },
+    { "kind": "kt", "tiet": 45, "title": "Kiểm tra HK2", "topics": [1, 2, 3, 4, 5, 6, 7] }
+  ],
+  "IC3__LV3": [
+    { "kind": "on", "tiet": 6, "title": "Ôn tập chủ đề Quản lý thông tin", "topics": [3] },
+    { "kind": "on", "tiet": 10, "title": "Ôn tập chủ đề Công dân số", "topics": [2] },
+    { "kind": "on", "tiet": 13, "title": "Ôn tập chủ đề Căn bản về công nghệ", "topics": [1] },
+    { "kind": "on", "tiet": 22, "title": "Ôn tập chủ đề Sáng tạo nội dung", "topics": [4] },
+    { "kind": "on", "tiet": 26, "title": "Ôn tập chủ đề Giao tiếp", "topics": [5] },
+    { "kind": "on", "tiet": 29, "title": "Ôn tập chủ đề Hợp tác, cộng tác", "topics": [6] },
+    { "kind": "on", "tiet": 35, "title": "Ôn tập chủ đề An toàn và bảo mật", "topics": [7] },
+    { "kind": "lt", "tiet": "36–45", "title": "Luyện thi — Bài ôn số 1", "paper": "BaiOnSo1" },
+    { "kind": "lt", "tiet": "36–45", "title": "Luyện thi — Bài ôn số 2", "paper": "BaiOnSo2" },
+    { "kind": "lt", "tiet": "36–45", "title": "Luyện thi — Bài ôn số 3", "paper": "BaiOnSo3" },
+    { "kind": "lt", "tiet": "36–45", "title": "Luyện thi — Bổ sung 10/04/2026", "paper": "Bo Sung 10042026" }
+  ],
+  "Spark__LV1": [
+    { "kind": "on", "tiet": 10, "title": "Ôn tập 1", "sub": "Căn bản về công nghệ", "topics": [1] },
+    { "kind": "kt", "tiet": 11, "title": "Kiểm tra giữa HK1", "topics": [1] },
+    { "kind": "on", "tiet": 13, "title": "Ôn tập 2", "sub": "An toàn và bảo mật", "topics": [7] },
+    { "kind": "kt", "tiet": 24, "title": "Kiểm tra HK1", "topics": [1, 7, 3, 4] },
+    { "kind": "on", "tiet": 29, "title": "Ôn tập 3", "sub": "Quản lý thông tin + Sáng tạo nội dung", "topics": [3, 4] },
+    { "kind": "kt", "tiet": 30, "title": "Kiểm tra giữa HK2", "topics": [1, 7, 3, 4] },
+    { "kind": "on", "tiet": 38, "title": "Ôn tập 4", "sub": "Sáng tạo nội dung + Công dân số", "topics": [4, 2] },
+    { "kind": "on", "tiet": 44, "title": "Ôn tập 5", "sub": "Công dân số + Giao tiếp", "topics": [2, 5] },
+    { "kind": "kt", "tiet": 45, "title": "Kiểm tra HK2", "topics": [1, 2, 3, 4, 5, 6, 7] }
+  ],
+  "Spark__LV2": [
+    { "kind": "on", "tiet": 7, "title": "Ôn tập 1", "sub": "Căn bản về công nghệ", "topics": [1] },
+    { "kind": "on", "tiet": 21, "title": "Ôn tập 2", "sub": "Quản lý thông tin + Sáng tạo nội dung", "topics": [3, 4] },
+    { "kind": "on", "tiet": 24, "title": "Ôn tập học kì 1", "sub": "Ôn tập kiểm tra học kì 1", "topics": [1, 3, 4, 2] },
+    { "kind": "kt", "tiet": 25, "title": "Kiểm tra HK1", "topics": [1, 2, 3, 4] },
+    { "kind": "on", "tiet": 29, "title": "Ôn tập 3", "sub": "Công dân số", "topics": [2] },
+    { "kind": "on", "tiet": 34, "title": "Ôn tập 4", "sub": "Giao tiếp", "topics": [5] },
+    { "kind": "on", "tiet": 37, "title": "Ôn tập 5", "sub": "Hợp tác, cộng tác", "topics": [6] },
+    { "kind": "on", "tiet": 43, "title": "Ôn tập 6", "sub": "An toàn và bảo mật", "topics": [7] },
+    { "kind": "on", "tiet": 44, "title": "Ôn tập cuối học kì 2", "sub": "Ôn tập kiểm tra học kì 2", "topics": [1, 2, 3, 4, 5, 6, 7] },
+    { "kind": "kt", "tiet": 45, "title": "Kiểm tra HK2", "topics": [1, 2, 3, 4, 5, 6, 7] }
+  ],
+  "Spark__LV3": [
+    { "kind": "on", "tiet": 7, "title": "Ôn tập 1", "sub": "Căn bản về công nghệ", "topics": [1] },
+    { "kind": "kt", "tiet": 8, "title": "Kiểm tra giữa HK1", "topics": [1] },
+    { "kind": "on", "tiet": 15, "title": "Ôn tập 2", "sub": "Quản lý thông tin", "topics": [3] },
+    { "kind": "kt", "tiet": 23, "title": "Kiểm tra HK1", "topics": [1, 3, 2] },
+    { "kind": "on", "tiet": 27, "title": "Ôn tập 3", "sub": "Công dân số + Sáng tạo nội dung", "topics": [2, 4] },
+    { "kind": "kt", "tiet": 28, "title": "Kiểm tra giữa HK2", "topics": [1, 2, 3, 4] },
+    { "kind": "on", "tiet": 37, "title": "Ôn tập 4", "sub": "Giao tiếp + Hợp tác, cộng tác", "topics": [5, 6] },
+    { "kind": "on", "tiet": 44, "title": "Ôn tập 5", "sub": "An toàn và bảo mật", "topics": [7] },
+    { "kind": "kt", "tiet": 45, "title": "Kiểm tra HK2", "topics": [1, 2, 3, 4, 5, 6, 7] }
+  ]
+}

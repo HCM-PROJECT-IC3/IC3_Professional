@@ -82,12 +82,11 @@ window.EDU_ALLOWED_ROLES = ['admin'];
   }
   async function loadSchools() {
     try {
-      const snap = await EduFirebase.db.collection('students_roster').where('status', '==', 'active').limit(10000).get();
-      EduFirebase.countSnap('students_roster (tra cứu trường)', snap);
+      // Bản đệm chung với Dashboard điều phối / giáo viên / Quản lý lớp (js/services/roster-cache-service.js)
+      const students = await window.EduRosterCache.activeAll();
       const set = new Set();
       schoolsByTeacherId = {};
-      snap.docs.forEach(d => {
-        const data = d.data();
+      students.forEach(data => {
         const s = (data.school || '').trim();
         if (!s) return;
         set.add(s);
@@ -453,6 +452,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
           for (const c of toAssign) await applyToClass(c.id, uid, teacherName);
           for (const c of toUnassign) await applyToClass(c.id, '', '');
           if (ops > 0) await batch.commit();
+          if (window.EduRosterCache) window.EduRosterCache.invalidate(); // vừa đổi teacherId của học sinh
 
           // Cập nhật ngay "Trường được xem" theo đúng lớp vừa gán, không cần
           // đợi vòng tự sửa của lần tải trang sau (xem loadUsers()).

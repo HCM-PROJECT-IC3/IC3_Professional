@@ -111,7 +111,8 @@
         global.EduRepositories.course.list(),
         global.EduRepositories.class.list(),
         isAdmin
-          ? global.EduRepositories.studentRoster.list({ where: [['status', '==', 'active']] })
+          // Bản đệm chung với các trang quản lý khác (js/services/roster-cache-service.js)
+          ? global.EduRosterCache.activeAll(forceRefresh ? { maxAgeMs: ROSTER_FORCE_MIN_AGE_MS } : undefined)
           : studentsByChunkedSchools(schools),
         global.EduFirebase.db.collection('users').where('role', '==', 'teacher').where('approved', '==', true).limit(1000).get(),
       ]);

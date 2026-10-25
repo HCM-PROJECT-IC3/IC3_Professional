@@ -67,7 +67,7 @@
         return `<ul class="wq-ans">${(q.options || []).map((o) => `<li class="${ok.has(plain(o)) ? 'is-ok' : ''}">${ok.has(plain(o)) ? '✔ ' : ''}${P(o)}</li>`).join('')}</ul>`;
       }
       case 'truefalse':
-        return `<ul class="wq-ans">${(q.statements || []).map((s) => `<li><b>${s.answer === 'true' ? 'Đúng' : 'Sai'}</b> — ${P(s.text)}</li>`).join('')}</ul>`;
+        return `<ul class="wq-ans">${(q.statements || []).map((s) => `<li><b>${P(s.answer === 'true' ? q.label_true || 'Đúng' : q.label_false || 'Sai')}</b> — ${P(s.text)}</li>`).join('')}</ul>`;
       case 'matching':
         return `<ul class="wq-ans">${(q.pairs || []).map((p) => `<li>${P(p.left)} → <b>${P(p.right)}</b></li>`).join('')}</ul>`;
       case 'ordering':

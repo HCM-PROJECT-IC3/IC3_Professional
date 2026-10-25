@@ -34,6 +34,7 @@
     padding: .75rem 1.25rem; background: var(--surface);
     border-bottom: 1px solid var(--border);
     position: sticky; top: 0; z-index: 50;
+    padding-right: 5.5rem; /* chừa chỗ nút sáng/tối (.theme-toggle-quick, cố định góc phải) */
   }
   header h1 {
     font-size: 1.02rem; margin: 0; font-weight: 800; color: var(--purple);
@@ -133,8 +134,9 @@
     background: rgba(79,107,255,.18) !important; z-index: 5;
   }
   .hotspot-area .area-label {
-    position: absolute; top: -1.35rem; left: -2px; background: var(--text); color: #fff;
-    font-size: .64rem; font-weight: 800; padding: .1rem .4rem; border-radius: 5px; white-space: nowrap;
+    /* Nằm TRONG góc trên-trái của vùng — đặt phía trên (top âm) thì vùng sát mép ảnh bị khung cắt mất nhãn */
+    position: absolute; top: 2px; left: 2px; background: var(--text); color: #fff; opacity: .9;
+    font-size: .64rem; line-height: 1.3; font-weight: 800; padding: .1rem .4rem; border-radius: 5px; white-space: nowrap;
     pointer-events: none;
   }
   .hotspot-area.selected .area-label { background: var(--purple); }
@@ -191,3 +193,11 @@
     .layout { grid-template-columns: 1fr; height: auto; }
     .pane { max-height: 46vh; }
   }
+
+  /* Lọc câu có cảnh báo · cảnh báo vùng bấm · số bộ dùng chung câu (hotspot-editor.html § issuesOf) */
+  .q-filter { display: flex; align-items: center; gap: .4rem; margin: -.25rem 0 .6rem; font-size: .75rem; color: var(--muted); cursor: pointer; }
+  .qi-warn { color: var(--red); font-weight: 700; }
+  .hs-issues { margin-bottom: .75rem; padding: .55rem .7rem; border-radius: 8px; background: var(--red-lt); color: var(--red); font-size: .78rem; }
+  .hs-issues ul { margin: .3rem 0 0 1rem; padding: 0; }
+  .hs-copies { margin-bottom: .75rem; }
+  #levelSelect { max-width: 15rem; }

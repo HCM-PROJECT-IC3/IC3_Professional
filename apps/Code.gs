@@ -24,7 +24,7 @@
  */
 
 // ====== CẤU HÌNH - THAY BẰNG ID THẬT CỦA BẠN ======
-const BACKEND_VERSION = '2026-10-15';
+const BACKEND_VERSION = '2026-10-26';
 const SPREADSHEET_ID_DATA = '16ty8LB6pnk5Xai1VauUAKfMbIaT88ewfNUAhWM0z5ck';      // Sheet chứa HocSinh + KetQua
 const SPREADSHEET_ID_REPORT = '16ty8LB6pnk5Xai1VauUAKfMbIaT88ewfNUAhWM0z5ck';    // Sheet chứa báo cáo tổng hợp (có thể trùng với ID trên nếu để chung 1 file, khác tab)
 
@@ -302,41 +302,37 @@ function writeSubmissionLog_(payload) {
   // dòng = đọc 100.000 ô mỗi bài, trong lúc giữ khoá chung) → mùa ôn thi các lượt nộp
   // xếp hàng chờ khoá rồi hết giờ. Gửi lại từ hàng đợi phía học sinh dùng cùng mã
   // (js/services/result-submitter.js) và thường diễn ra trong vài phút - vài giờ.
+  //
+  // KHÔNG còn khoá chung quanh appendRow (xem withRareLock_): mỗi bài nộp ghi song song.
+  // Đánh đổi: 2 request CÙNG mã tới cùng lúc (< 1 giây) có thể ghi 2 dòng — hiếm, vì máy học
+  // sinh gửi lại sau ≥ 15 giây và chỉ 1 tab gửi (Web Locks); listResults_ bỏ dòng trùng mã.
   const cache = CacheService.getScriptCache();
   const dedupeKey = 'sub:' + String(payload.submissionId).slice(0, 200);
   if (cache.get(dedupeKey)) return { written: false, duplicate: true };
 
-  const lock = LockService.getScriptLock();
-  lock.waitLock(20000); // chỉ giữ khoá trong lúc chọn file + appendRow (rất ngắn)
-
-  try {
-    if (cache.get(dedupeKey)) return { written: false, duplicate: true }; // request song song vừa ghi xong
-    const sheet = getSubmissionLogSheet_();
-    // asText_(): giữ NGUYÊN chữ — trước đây Sheet tự đổi "7/24" (số câu đúng), lớp
-    // "3/12", thời gian "5:05" thành ngày/giờ, và tên bắt đầu bằng "=" thành công thức.
-    sheet.appendRow([
-      asText_(payload.submissionId),
-      asText_(payload.studentName),
-      asText_(payload.studentClass),
-      asText_(payload.studentSchool),
-      asText_(payload.testName),
-      payload.score         ?? '',
-      asText_(payload.correct),
-      asText_(payload.time),
-      payload.tabSwitch     ?? '',
-      payload.clickCount    ?? '',
-      asText_(payload.status),
-      new Date(), // Dùng giờ server (đáng tin cậy hơn giờ máy học sinh) - lưu dạng Date thật để sort/lọc được
-      asText_(payload.note),
-      asText_(payload.examMode), // N — CheDo: 'practice' (Ôn luyện) | 'test' (Kiểm tra); bài cũ để trống
-      // O — CauSai: uid câu sai "a,b,c"; "-" = không sai câu nào; trống = web cũ chưa gửi.
-      payload.wrong === '' ? '-' : asText_(payload.wrong),
-      payload.detail ? JSON.stringify(payload.detail) : '' // P — ChiTiet (đã lọc ở cleanDetail_)
-    ]);
-    cache.put(dedupeKey, '1', DEDUPE_TTL_SEC);
-  } finally {
-    lock.releaseLock();
-  }
+  const sheet = getSubmissionLogSheet_();
+  // asText_(): giữ NGUYÊN chữ — trước đây Sheet tự đổi "7/24" (số câu đúng), lớp
+  // "3/12", thời gian "5:05" thành ngày/giờ, và tên bắt đầu bằng "=" thành công thức.
+  sheet.appendRow([
+    asText_(payload.submissionId),
+    asText_(payload.studentName),
+    asText_(payload.studentClass),
+    asText_(payload.studentSchool),
+    asText_(payload.testName),
+    payload.score         ?? '',
+    asText_(payload.correct),
+    asText_(payload.time),
+    payload.tabSwitch     ?? '',
+    payload.clickCount    ?? '',
+    asText_(payload.status),
+    new Date(), // Dùng giờ server (đáng tin cậy hơn giờ máy học sinh) - lưu dạng Date thật để sort/lọc được
+    asText_(payload.note),
+    asText_(payload.examMode), // N — CheDo: 'practice' (Ôn luyện) | 'test' (Kiểm tra); bài cũ để trống
+    // O — CauSai: uid câu sai "a,b,c"; "-" = không sai câu nào; trống = web cũ chưa gửi.
+    payload.wrong === '' ? '-' : asText_(payload.wrong),
+    payload.detail ? JSON.stringify(payload.detail) : '' // P — ChiTiet (đã lọc ở cleanDetail_)
+  ]);
+  cache.put(dedupeKey, '1', DEDUPE_TTL_SEC);
 
   // Cảnh báo gian lận qua email — CHỈ khi có dấu ⚠️ trong status (do
   // js/googleSheet.js gắn khi integrity.valid == false), và chỉ với
@@ -355,7 +351,7 @@ function writeSubmissionLog_(payload) {
  * vượt MAX_LOG_ROWS dòng, tự tạo FILE MỚI "NhatKyNopBai <ngày>" (cùng dòng tiêu đề),
  * ghi tiếp vào đó và thêm 1 dòng vào tab DanhMucNhatKy của file chính để tra cứu.
  * Chưa có file mới nào thì dùng tab NhatKyNopBai của file chính như trước.
- * Gọi BÊN TRONG khoá của writeSubmissionLog_().
+ * Không giữ khoá; chỉ lúc phải xoay file mới vào withRareLock_.
  */
 function getSubmissionLogSheet_() {
   const currentId = cachedProp_(LOG_SPREADSHEET_PROP); // qua cache — xem cachedProp_ (quota Properties)
@@ -368,14 +364,22 @@ function getSubmissionLogSheet_() {
   ensureLogSheetLayout_(sheet);
   if (!logTabFull_(sheet)) return sheet; // đầy theo số dòng HOẶC file sắp chạm trần 10 triệu ô
 
-  const made = newLogFile_(SHEET_SUBMISSION_LOG, LOG_HEADERS);
-  setCachedProp_(LOG_SPREADSHEET_PROP, made.file.getId());
-  // Lịch sử file đọc thẳng Properties (không qua cache) để không mất file nào khi ghi lại.
-  const history = JSON.parse(PropertiesService.getScriptProperties().getProperty(LOG_HISTORY_PROP) || '[]');
-  history.push(made.file.getId());
-  setCachedProp_(LOG_HISTORY_PROP, JSON.stringify(history));
-  ensureLogSheetLayout_(made.sheet);
-  return made.sheet;
+  return withRareLock_(function () {
+    // Lượt khác vừa xoay file trong lúc chờ khoá → ghi vào file đó, không tạo thêm file
+    const now = cachedProp_(LOG_SPREADSHEET_PROP);
+    if (now && now !== currentId) {
+      const moved = SpreadsheetApp.openById(now).getSheetByName(SHEET_SUBMISSION_LOG);
+      if (moved) return moved;
+    }
+    const made = newLogFile_(SHEET_SUBMISSION_LOG, LOG_HEADERS);
+    setCachedProp_(LOG_SPREADSHEET_PROP, made.file.getId());
+    // Lịch sử file đọc thẳng Properties (không qua cache) để không mất file nào khi ghi lại.
+    const history = JSON.parse(PropertiesService.getScriptProperties().getProperty(LOG_HISTORY_PROP) || '[]');
+    history.push(made.file.getId());
+    setCachedProp_(LOG_HISTORY_PROP, JSON.stringify(history));
+    ensureLogSheetLayout_(made.sheet);
+    return made.sheet;
+  });
 }
 
 /**
@@ -387,14 +391,17 @@ function ensureLogSheetLayout_(sheet) {
   const cache = CacheService.getScriptCache();
   const flag = 'layout:' + sheet.getParent().getId();
   if (cache.get(flag)) return;
-  const head = sheet.getRange(1, 1, 1, LOG_HEADERS.length).getDisplayValues()[0];
-  LOG_HEADERS.forEach(function (h, i) {
-    if (i >= 13 && !head[i]) sheet.getRange(1, i + 1).setValue(h); // chỉ cột thêm sau, không đè tiêu đề cũ
+  withRareLock_(function () { // 6 giờ/lần; 2 lượt cùng xoá cột thì lượt sau báo lỗi → làm trong khoá
+    if (cache.get(flag)) return;
+    const head = sheet.getRange(1, 1, 1, LOG_HEADERS.length).getDisplayValues()[0];
+    LOG_HEADERS.forEach(function (h, i) {
+      if (i >= 13 && !head[i]) sheet.getRange(1, i + 1).setValue(h); // chỉ cột thêm sau, không đè tiêu đề cũ
+    });
+    sheet.getRange('L2:L').setNumberFormat('HH:mm:ss d/M/yyyy');
+    const max = sheet.getMaxColumns(); // cột trống thừa vẫn tính vào trần 10 triệu ô/file
+    if (max > LOG_HEADERS.length) sheet.deleteColumns(LOG_HEADERS.length + 1, max - LOG_HEADERS.length);
+    cache.put(flag, '1', DEDUPE_TTL_SEC);
   });
-  sheet.getRange('L2:L').setNumberFormat('HH:mm:ss d/M/yyyy');
-  const max = sheet.getMaxColumns(); // cột trống thừa vẫn tính vào trần 10 triệu ô/file
-  if (max > LOG_HEADERS.length) sheet.deleteColumns(LOG_HEADERS.length + 1, max - LOG_HEADERS.length);
-  cache.put(flag, '1', DEDUPE_TTL_SEC);
 }
 
 /**
@@ -484,23 +491,17 @@ function writeMosLog_(p) {
       note: String(r.note || '').slice(0, 200) };
   })).slice(0, 45000);
 
-  const lock = LockService.getScriptLock();
-  lock.waitLock(20000);
-  try {
-    if (cache.get(dedupeKey)) return { written: false, duplicate: true };
-    const sheet = logTab_(SHEET_MOS_LOG, MOS_HEADERS); // tự sang file mới khi đầy — xem logTab_
-    sheet.appendRow([
-      asText_(p.submissionId), asText_(p.studentName), asText_(p.studentClass), asText_(p.studentSchool),
-      asText_(p.projectTitle), asText_(p.projectId),
-      // score null = không có task tự chấm (toàn thủ công) — để trống thay vì 0.
-      p.score === null || p.score === undefined ? '' : Number(p.score),
-      Number(p.passedCount) || 0, Number(p.autoTotal) || 0, Number(p.manualCount) || 0,
-      new Date(), asText_(detail),
-    ]);
-    cache.put(dedupeKey, '1', DEDUPE_TTL_SEC);
-  } finally {
-    lock.releaseLock();
-  }
+  // Không khoá quanh appendRow (xem withRareLock_ trong 90-utils.gs) — cùng đánh đổi như bài nộp IC3.
+  const sheet = logTab_(SHEET_MOS_LOG, MOS_HEADERS); // tự sang file mới khi đầy — xem logTab_
+  sheet.appendRow([
+    asText_(p.submissionId), asText_(p.studentName), asText_(p.studentClass), asText_(p.studentSchool),
+    asText_(p.projectTitle), asText_(p.projectId),
+    // score null = không có task tự chấm (toàn thủ công) — để trống thay vì 0.
+    p.score === null || p.score === undefined ? '' : Number(p.score),
+    Number(p.passedCount) || 0, Number(p.autoTotal) || 0, Number(p.manualCount) || 0,
+    new Date(), asText_(detail),
+  ]);
+  cache.put(dedupeKey, '1', DEDUPE_TTL_SEC);
   return { written: true, duplicate: false };
 }
 
@@ -627,6 +628,8 @@ function listResults_(p, who) {
   const limit = Math.max(1, Math.min(Number(p.limit) || 1000, READ_MAX_ROWS));
 
   const rows = [];
+  // Bài nộp ghi song song không khoá (30-submissions.gs) → rất hiếm khi 1 mã có 2 dòng; giữ dòng mới nhất
+  const seenIds = new Set();
   let scanned = 0;
   let done = false;
   let truncated = false;
@@ -649,7 +652,8 @@ function listResults_(p, who) {
         const r = shown[i];
         const ms = submittedMs_(times[i][0]);
         if (sinceMs && ms && ms < sinceMs) { done = true; break; }
-        if (!r[0]) continue;
+        if (!r[0] || seenIds.has(r[0])) continue;
+        seenIds.add(r[0]);
         if (schoolSet && !schoolSet.has(r[3])) continue;
         if (classSet && !classSet.has(r[2])) continue;
         if (wantName && nameKey_(r[1]) !== wantName) continue;
@@ -1460,14 +1464,33 @@ function noFormula_(value) {
   return typeof value === 'string' && /^[=+\-@]/.test(value) ? "'" + value : value;
 }
 
+/**
+ * Khoá chung CHỈ cho việc hiếm (tạo tab, cắt cột, xoay vòng file) — KHÔNG bọc appendRow.
+ * appendRow của Apps Script tự nguyên tử (không 2 lượt ghi đè cùng 1 dòng), nên bài nộp ghi
+ * song song tới trần 30 lượt chạy/tài khoản. Trước 10/2026 mỗi bài nộp giữ khoá này suốt lúc
+ * mở file + đếm dòng + appendRow (~0,5–1 giây) → cả hệ thống chỉ ghi được ~1–2 bài/giây,
+ * cuối tiết nhiều lớp cùng nộp thì xếp hàng chờ khoá 20 giây rồi lỗi, học sinh phải gửi lại.
+ */
+function withRareLock_(fn) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try { return fn(); } finally { lock.releaseLock(); }
+}
+
 /** Tab `name` trong file `spreadsheetId`; chưa có thì tạo kèm dòng tiêu đề (in đậm, cố định). */
 function ensureTab_(spreadsheetId, name, headers) {
   const ss = SpreadsheetApp.openById(spreadsheetId);
   let sheet = ss.getSheetByName(name);
   if (!sheet) {
-    sheet = ss.insertSheet(name);
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight('bold');
-    sheet.setFrozenRows(1);
+    // 2 lượt cùng thấy thiếu tab → lượt sau insertSheet báo "đã có" → tạo trong khoá, xem lại tên
+    sheet = withRareLock_(function () {
+      let s = ss.getSheetByName(name);
+      if (s) return s;
+      s = ss.insertSheet(name);
+      s.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight('bold');
+      s.setFrozenRows(1);
+      return s;
+    });
   }
   trimColumnsOnce_(sheet, headers.length);
   return sheet;
@@ -1486,9 +1509,12 @@ function trimColumnsOnce_(sheet, n) {
   const cache = CacheService.getScriptCache();
   const flag = 'trim:' + sheet.getParent().getId() + ':' + sheet.getName();
   if (cache.get(flag)) return;
-  const max = sheet.getMaxColumns();
-  if (max > n) sheet.deleteColumns(n + 1, max - n);
-  cache.put(flag, '1', DEDUPE_TTL_SEC);
+  withRareLock_(function () { // 2 lượt cùng xoá cột → lượt sau xoá vượt số cột còn lại, báo lỗi
+    if (cache.get(flag)) return;
+    const max = sheet.getMaxColumns();
+    if (max > n) sheet.deleteColumns(n + 1, max - n);
+    cache.put(flag, '1', DEDUPE_TTL_SEC);
+  });
 }
 
 /** Tổng số ô (kể cả trống) của file — đo lại tối đa 15 phút/lần (getSheets tốn thời gian). */
@@ -1530,11 +1556,17 @@ function newLogFile_(name, headers) {
  */
 function logTab_(name, headers) {
   const key = 'LOGFILE_' + name;
-  const sheet = ensureTab_(cachedProp_(key) || SPREADSHEET_ID_REPORT, name, headers);
+  const fileId = cachedProp_(key) || SPREADSHEET_ID_REPORT;
+  const sheet = ensureTab_(fileId, name, headers);
   if (!logTabFull_(sheet)) return sheet;
-  const made = newLogFile_(name, headers);
-  setCachedProp_(key, made.file.getId());
-  return made.sheet;
+  return withRareLock_(function () {
+    // Lượt khác có thể vừa xoay file trong lúc chờ khoá → ghi tiếp vào file đó, không tạo thêm
+    const now = cachedProp_(key) || SPREADSHEET_ID_REPORT;
+    if (now !== fileId) return ensureTab_(now, name, headers);
+    const made = newLogFile_(name, headers);
+    setCachedProp_(key, made.file.getId());
+    return made.sheet;
+  });
 }
 
 /**

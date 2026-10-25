@@ -4,7 +4,8 @@
    đồng phục; nhân vật di chuyển bằng CSS transition (chạy nghiêng khi đi), phản ứng theo kết quả.
      mount(el, G)     dựng cảnh theo chế độ (Tốc độ: sân bóng · Đua: đường chạy · Kéo co: đồi · Câu cá: ao ·
                       Săn vàng: nông trại · Sinh tồn: đảo hoang · Đấu phép: sân lâu đài · Giải mã: phố ·
-                      Đào hoá thạch: chân núi lửa có khủng long canh · Lên Mặt Trăng: tên lửa bay lên, có trạm dừng)
+                      Đào hoá thạch: chân núi lửa có khủng long canh · Lên Mặt Trăng: tên lửa bay lên, có trạm dừng ·
+                      Diệt Virus: phòng máy chủ, cả đội đứng bên trái đánh Trùm Virus bên phải)
      sync(G)          so trạng thái trước/sau → chạy tới chỗ mới, nhảy (+điểm), rung (mất máu), nằm mờ (bị loại)
      mood(id, ok)     em trả lời đúng (nhảy) / sai (hoảng)
    Không mạng, không lưu gì. Máy đặt "giảm chuyển động": vẫn vẽ cảnh, bỏ chuyển động.
@@ -30,9 +31,10 @@
     heist: { scene: 'street', oy: 228, gy: 236 },
     dino: { scene: 'jungle', oy: 150, gy: 262 },
     moon: { scene: 'space', oy: 0, gy: 272 },
+    boss: { scene: 'server', oy: 220, gy: 264 },
   };
-  const KEY = { speed: 'score', gold: 'gold', race: 'pos', survival: 'score', fish: 'kg', tug: 'pull', spell: 'dmg', heist: 'gems', dino: 'fossils', moon: 'km' };
-  const UNIT = { speed: '', gold: ' 🪙', race: '', survival: '', fish: ' kg', tug: '', spell: '', heist: ' 💎', dino: ' 🦴', moon: '' };
+  const KEY = { speed: 'score', gold: 'gold', race: 'pos', survival: 'score', fish: 'kg', tug: 'pull', spell: 'dmg', heist: 'gems', dino: 'fossils', moon: 'km', boss: 'dmg' };
+  const UNIT = { speed: '', gold: ' 🪙', race: '', survival: '', fish: ' kg', tug: '', spell: '', heist: ' 💎', dino: ' 🦴', moon: '', boss: '' };
 
   let S = null; // { el, world, layer, fx, mode, sp: {id: sprite}, prev: {id: {...}}, timers }
 
@@ -44,7 +46,7 @@
     const art = A.scene(set.scene);
     // .ar-sc-amb: cùng cảnh, làm mờ + tối, phủ kín cả dải — chỉ lộ ra 2 bên khi dải rộng hơn 10:3 (máy tính)
     const amb = art.replace('viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice"', `viewBox="0 ${set.oy} 1000 300" preserveAspectRatio="xMidYMax slice"`)
-      .replace(/id="([^"]+)"/g, 'id="amb-$1"').replace(/url\(#([^)]+)\)/g, 'url(#amb-$1)');
+      .replace(/\bid="([^"]+)"/g, 'id="amb-$1"').replace(/url\(#([^)]+)\)/g, 'url(#amb-$1)');
     el.innerHTML = `<div class="ar-sc-amb" aria-hidden="true">${amb}</div><div class="ar-sc-world"><div class="ar-sc-bg" style="transform:translateY(${-set.oy}px)">${art}</div><div class="ar-sc-layer"></div><div class="ar-sc-fx"></div></div>`;
     S = { el, world: el.querySelector('.ar-sc-world'), layer: el.querySelector('.ar-sc-layer'), fx: el.querySelector('.ar-sc-fx'), mode: G.mode, set, sp: {}, prev: {}, timers: [] };
     // Dải hẹp (điện thoại): khớp chiều ngang, dư chiều cao thì lộ thêm trời phía trên.
@@ -76,6 +78,7 @@
     if (G.mode === 'race') raceProps();
     if (G.mode === 'fish') fishProps();
     if (G.mode === 'dino') dinoProps();
+    if (G.mode === 'boss') bossProps(G);
     S.G = G; S.ready = true;
     fit();
     snapshot(G);
@@ -174,6 +177,44 @@
       say(S.dino, ['Hít hít...', 'Ai ăn gian đấy?', 'Đào cẩn thận nhé!'][Math.floor(Math.random() * 3)], 1400);
     }, 5200));
   }
+  /** Phòng máy chủ: Trùm Virus đứng bên phải, thanh máu + tên giai đoạn trên đầu, thỉnh thoảng gầm gừ. */
+  function bossProps(G) {
+    const el = document.createElement('div');
+    el.className = 'ar-sc-boss';
+    el.innerHTML = `<div class="ar-sc-boss-bar"><b>Trùm Virus</b><i><s></s></i></div><div class="ar-sc-boss-in">${A.virus()}</div>`;
+    S.layer.appendChild(el);
+    S.boss = { el, id: 'boss', x: 835, y: S.set.gy + 6, h: 200, hp: G.boss.hp };
+    el.style.transform = `translate(${S.boss.x}px, ${S.boss.y}px)`;
+    paintBoss(G);
+    if (reduced()) return;
+    S.timers.push(setInterval(() => {
+      if (!S || !S.boss || Math.random() > .35 || S.boss.el.classList.contains('is-ko')) return;
+      say(S.boss, ['Gừ gừ... ta sẽ xoá sạch dữ liệu!', 'Các ngươi không qua nổi ta đâu!', 'Mật khẩu yếu quá, hí hí!', 'Bấm vào link lạ đi nào...'][Math.floor(Math.random() * 4)], 1600, true);
+    }, 6500));
+  }
+  function paintBoss(G) {
+    const b = S.boss, B = G.boss;
+    if (!b || !B) return;
+    const ph = C.bossPhase(B.hp, B.max);
+    b.el.querySelector('.ar-sc-boss-bar s').style.width = Math.max(0, (B.hp / B.max) * 100) + '%';
+    b.el.querySelector('.ar-sc-boss-bar b').textContent = B.hp <= 0 ? 'Đã bị diệt!' : ph ? `Trùm Virus · ${C.BOSS_PHASES[ph].name}` : 'Trùm Virus';
+    b.el.classList.toggle('is-p1', ph === 1);
+    b.el.classList.toggle('is-p2', ph === 2);
+    b.el.classList.toggle('is-ko', B.hp <= 0);
+  }
+  /** Tia đánh bay từ người chơi sang Virus (đúng) hoặc cục nhầy từ Virus sang người chơi (sai). */
+  function shot(from, to, cls, delay) {
+    if (!S || reduced()) return;
+    const el = document.createElement('span');
+    el.className = 'ar-sc-shot ' + cls;
+    S.fx.appendChild(el);
+    const a = el.animate([
+      { transform: `translate(${from.x}px, ${from.y - from.h * .55}px) scale(.6)`, opacity: 0 },
+      { transform: `translate(${(from.x + to.x) / 2}px, ${Math.min(from.y, to.y) - Math.max(from.h, to.h) * .8}px) scale(1)`, opacity: 1, offset: .5 },
+      { transform: `translate(${to.x}px, ${to.y - to.h * .5}px) scale(1.2)`, opacity: 1 },
+    ], { duration: 520, delay: delay || 0, easing: 'cubic-bezier(.3,.6,.4,1)', fill: 'both' });
+    a.onfinish = () => el.remove();
+  }
   /** Vũ trụ: bệ phóng dưới đáy + các trạm dừng (mỗi 1/4 đường) + vạch Mặt Trăng. */
   function moonProps() {
     S.layer.insertAdjacentHTML('afterbegin', '<span class="ar-sc-pad" aria-hidden="true"></span>'
@@ -235,6 +276,11 @@
       });
       return;
     }
+    if (G.mode === 'boss') {
+      const gap = 600 / Math.max(1, n);
+      list.forEach((p, k) => { const s = S.sp[p.id]; place(s, 80 + gap * (k + .5), set.gy - (k % 2) * 12, ms); s.el.classList.remove('is-left'); });
+      return;
+    }
     if (G.mode === 'tug') {
       const shift = -(G.rope || 0) * 3.2; // dây nghiêng về Đỏ (rope > 0) → cả 2 đội trượt sang trái
       const red = list.filter((p) => p.team === 'red'), blue = list.filter((p) => p.team === 'blue');
@@ -268,22 +314,28 @@
       const s = S.sp[p.id];
       if (!s) return;
       const o = s.el.querySelector('.ar-sc-over');
-      if (G.mode === 'survival') o.textContent = C.hearts(p.hp);
+      if (G.mode === 'survival' || G.mode === 'boss') o.textContent = C.hearts(p.hp);
       else if (G.mode === 'spell') o.innerHTML = `<i class="ar-sc-hp"><b style="width:${Math.max(0, p.hp)}%"></b></i>`;
       else if (G.mode === 'dino') o.textContent = p.me && p.cheat > 0 ? '🤫' : ''; // chỉ em biết mình đang ăn gian
       else if (G.mode === 'moon') o.textContent = (p.km || 0) >= C.MOON_KM ? '🏁' : C.moonBoost(p.streak || 0) > 1 ? `🔥×${C.moonBoost(p.streak)}` : '';
       else o.textContent = '';
-      s.el.classList.toggle('is-out', (G.mode === 'survival' || G.mode === 'spell') && p.hp <= 0);
+      s.el.classList.toggle('is-out', (G.mode === 'survival' || G.mode === 'spell' || G.mode === 'boss') && p.hp <= 0);
     });
   }
   function sync(G) {
     if (!S || S.mode !== G.mode) return;
     const key = KEY[G.mode];
     layout(G, false);
-    G.players.forEach((p) => {
+    const hits = []; // Diệt Virus: số sát thương hiện trên đầu Virus khi tia đánh tới nơi
+    G.players.forEach((p, k) => {
       const s = S.sp[p.id], pr = S.prev[p.id];
       if (!s || !pr) return;
       const v = p[key] || 0, dv = v - pr.v;
+      if (G.mode === 'boss') {
+        if (dv > 0 && S.boss) { flash(s, 'is-happy'); shot(s, S.boss, p.lastCrit ? 'is-crit' : 'is-hit', k * 90); hits.push({ dv, crit: p.lastCrit, k }); }
+        if (p.hp < pr.hp && S.boss) { shot(S.boss, s, 'is-goo', 380); setTimeout(() => { if (S) { flash(s, 'is-hit'); float(s, '💔', 'down'); } }, 900); }
+        return;
+      }
       if (G.mode === 'moon') {
         if (dv > 0) {
           float(s, `+${dv}`, 'up');
@@ -314,6 +366,22 @@
         float(s, G.mode === 'spell' ? `−${pr.hp - p.hp}` : '💔', 'down');
       }
     });
+    if (G.mode === 'boss' && S.boss) {
+      const b = S.boss;
+      hits.forEach((h) => setTimeout(() => {
+        if (!S || !S.boss) return;
+        flash(b, h.crit ? 'is-crit' : 'is-hurt', 500);
+        float(b, h.crit ? `💥 −${h.dv}` : `−${h.dv}`, h.crit ? 'gold' : 'down');
+        if (h.crit) burst(b.x, b.y - b.h * .5, ['💥', '✨', '⚡'], 8);
+      }, 520 + h.k * 90));
+      setTimeout(() => {
+        if (!S || !S.boss) return;
+        paintBoss(G);
+        if (G.boss.hp <= 0 && b.hp > 0) { burst(b.x, b.y - b.h * .5, ['💥', '⭐', '✨', '🎉'], 14); say(b, 'Khôngggg... dữ liệu an toàn rồi!', 2200, true); }
+        else if (G.boss.lastHeal) { float(b, `🧬 +${G.boss.lastHeal}`, 'heal'); say(b, 'Nhân bản! Hồi máu nào!', 1500, true); }
+        b.hp = G.boss.hp;
+      }, hits.length ? 640 + hits.length * 90 : 0);
+    }
     if (G.mode === 'tug') {
       const was = S.prevRope || 0, now = G.rope || 0;
       if (now !== was) Object.values(S.sp).forEach((s) => flash(s, 'is-heave', 600));

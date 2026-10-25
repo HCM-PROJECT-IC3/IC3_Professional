@@ -106,7 +106,8 @@
     if (!students) {
       const fetched = await fetchRosterOrStale(rosterCacheKey, async () => {
         const list = isAdmin
-          ? await global.EduRepositories.studentRoster.list({ where: [['status', '==', 'active']] })
+          // Bản đệm chung với các trang quản lý khác (js/services/roster-cache-service.js)
+          ? await global.EduRosterCache.activeAll(forceRefresh ? { maxAgeMs: ROSTER_FORCE_MIN_AGE_MS } : undefined)
           : await global.EduRepositories.studentRoster.listByTeacher(uid);
         const bundle = { students: list, cachedAt: Date.now() };
         if (global.EduDataCache) global.EduDataCache.setAsync(rosterCacheKey, bundle, ROSTER_CACHE_TTL_MS, /* persist */ true);

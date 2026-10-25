@@ -1,0 +1,2425 @@
+{
+"_doc": "uid câu chủ đề → các câu All Key trùng (\"Đề#số câu\"). Câu không có ở đây = không thuộc All Key (không vào bộ Ôn tập/Kiểm tra). Sinh bằng scripts/build-allkey-map.py.",
+"unmatched": {
+"IC3__LV1": [],
+"IC3__LV2": [],
+"IC3__LV3": [],
+"Spark__LV1": [],
+"Spark__LV2": [],
+"Spark__LV3": []
+},
+"map": {
+"ic3__lv1__t1__k_test1_10": [
+"Test1#10"
+],
+"ic3__lv1__t1__k_test3_15": [
+"Test3#15"
+],
+"ic3__lv1__t1__q12": [
+"Test1#7"
+],
+"ic3__lv1__t1__q16": [
+"Test2#2"
+],
+"ic3__lv1__t1__q17": [
+"Test1#45",
+"Capnhat10_04_2026#3"
+],
+"ic3__lv1__t1__q171_new2": [
+"Capnhat10_04_2026#33"
+],
+"ic3__lv1__t1__q172_new": [
+"Test1#2"
+],
+"ic3__lv1__t1__q173_new": [
+"Test2#40"
+],
+"ic3__lv1__t1__q174": [
+"Test1#1"
+],
+"ic3__lv1__t1__q175": [
+"Test1#3"
+],
+"ic3__lv1__t1__q176": [
+"Test1#44"
+],
+"ic3__lv1__t1__q177": [
+"Test2#29"
+],
+"ic3__lv1__t1__q178": [
+"Test2#43"
+],
+"ic3__lv1__t1__q179": [
+"Test3#14"
+],
+"ic3__lv1__t1__q18": [
+"Test1#4"
+],
+"ic3__lv1__t1__q180": [
+"Capnhat10_04_2026#27"
+],
+"ic3__lv1__t1__q181": [
+"Capnhat10_04_2026#39"
+],
+"ic3__lv1__t1__q19": [
+"Test1#12"
+],
+"ic3__lv1__t1__q2": [
+"Test2#12"
+],
+"ic3__lv1__t1__q21": [
+"Test2#11"
+],
+"ic3__lv1__t1__q23": [
+"Test2#13"
+],
+"ic3__lv1__t1__q24": [
+"Test1#11"
+],
+"ic3__lv1__t1__q28": [
+"Test2#8"
+],
+"ic3__lv1__t1__q3": [
+"Test1#13",
+"Capnhat10_04_2026#24"
+],
+"ic3__lv1__t1__q30": [
+"Test2#41",
+"Test3#8"
+],
+"ic3__lv1__t1__q32": [
+"Test2#42"
+],
+"ic3__lv1__t1__q33": [
+"Test2#6"
+],
+"ic3__lv1__t1__q34": [
+"Test2#9"
+],
+"ic3__lv1__t1__q35": [
+"Capnhat10_04_2026#20"
+],
+"ic3__lv1__t1__q36": [
+"Capnhat10_04_2026#14",
+"Capnhat10_04_2026#15"
+],
+"ic3__lv1__t1__q37": [
+"Capnhat10_04_2026#1"
+],
+"ic3__lv1__t1__q38": [
+"Capnhat10_04_2026#5"
+],
+"ic3__lv1__t1__q39": [
+"Capnhat10_04_2026#32"
+],
+"ic3__lv1__t1__q4": [
+"Test1#9"
+],
+"ic3__lv1__t1__q40": [
+"Capnhat10_04_2026#18"
+],
+"ic3__lv1__t1__q42": [
+"Test2#10"
+],
+"ic3__lv1__t1__q6": [
+"Test1#8",
+"Test3#9"
+],
+"ic3__lv1__t1__q7": [
+"Test3#16"
+],
+"ic3__lv1__t1__q9": [
+"Test2#5"
+],
+"ic3__lv1__t2__q1": [
+"Test1#5"
+],
+"ic3__lv1__t2__q10": [
+"Test1#26"
+],
+"ic3__lv1__t2__q11": [
+"Test1#25"
+],
+"ic3__lv1__t2__q13": [
+"Test1#23"
+],
+"ic3__lv1__t2__q19": [
+"Test1#22"
+],
+"ic3__lv1__t2__q20": [
+"Test1#21"
+],
+"ic3__lv1__t2__q24": [
+"Test2#16"
+],
+"ic3__lv1__t2__q27": [
+"Test3#18"
+],
+"ic3__lv1__t2__q29": [
+"Test2#14"
+],
+"ic3__lv1__t2__q31": [
+"Capnhat10_04_2026#11"
+],
+"ic3__lv1__t2__q32": [
+"Capnhat10_04_2026#29"
+],
+"ic3__lv1__t2__q33": [
+"Capnhat10_04_2026#23"
+],
+"ic3__lv1__t2__q34": [
+"Capnhat10_04_2026#28"
+],
+"ic3__lv1__t2__q35": [
+"Capnhat10_04_2026#25"
+],
+"ic3__lv1__t2__q4": [
+"Test2#18"
+],
+"ic3__lv1__t2__q78": [
+"Test2#15"
+],
+"ic3__lv1__t2__q79": [
+"Capnhat10_04_2026#37"
+],
+"ic3__lv1__t2__q80": [
+"Capnhat10_04_2026#38"
+],
+"ic3__lv1__t2__q81": [
+"Capnhat10_04_2026#40"
+],
+"ic3__lv1__t3__q1": [
+"Test1#15"
+],
+"ic3__lv1__t3__q10": [
+"Test1#17",
+"Capnhat10_04_2026#2"
+],
+"ic3__lv1__t3__q12": [
+"Test3#2"
+],
+"ic3__lv1__t3__q13": [
+"Test2#23"
+],
+"ic3__lv1__t3__q14": [
+"Test2#24"
+],
+"ic3__lv1__t3__q15": [
+"Test1#18",
+"Test2#21"
+],
+"ic3__lv1__t3__q16": [
+"Capnhat10_04_2026#7"
+],
+"ic3__lv1__t3__q17": [
+"Capnhat10_04_2026#4"
+],
+"ic3__lv1__t3__q2": [
+"Test1#14"
+],
+"ic3__lv1__t3__q3": [
+"Test2#3"
+],
+"ic3__lv1__t3__q7": [
+"Test3#17"
+],
+"ic3__lv1__t3__q8": [
+"Test2#20"
+],
+"ic3__lv1__t3__q9": [
+"Test2#22"
+],
+"ic3__lv1__t3__q95": [
+"Test1#16"
+],
+"ic3__lv1__t3__q96": [
+"Test2#19"
+],
+"ic3__lv1__t3__q97": [
+"Test3#11"
+],
+"ic3__lv1__t3__q98": [
+"Capnhat10_04_2026#22"
+],
+"ic3__lv1__t3__q99": [
+"Capnhat10_04_2026#35"
+],
+"ic3__lv1__t4__k_cn16": [
+"Capnhat10_04_2026#16"
+],
+"ic3__lv1__t4__q1": [
+"Test2#45"
+],
+"ic3__lv1__t4__q10": [
+"Test3#1"
+],
+"ic3__lv1__t4__q11": [
+"Test3#10"
+],
+"ic3__lv1__t4__q12": [
+"Test2#34"
+],
+"ic3__lv1__t4__q16": [
+"Capnhat10_04_2026#6"
+],
+"ic3__lv1__t4__q17": [
+"Capnhat10_04_2026#31"
+],
+"ic3__lv1__t4__q18": [
+"Capnhat10_04_2026#21"
+],
+"ic3__lv1__t4__q19": [
+"Capnhat10_04_2026#19"
+],
+"ic3__lv1__t4__q2": [
+"Test1#19"
+],
+"ic3__lv1__t4__q4": [
+"Test1#43",
+"Test3#3"
+],
+"ic3__lv1__t4__q5": [
+"Test2#44"
+],
+"ic3__lv1__t4__q6": [
+"Test1#42"
+],
+"ic3__lv1__t4__q7": [
+"Test1#38"
+],
+"ic3__lv1__t4__q8": [
+"Test1#20"
+],
+"ic3__lv1__t4__q9": [
+"Test2#4"
+],
+"ic3__lv1__t5__q1": [
+"Test1#30"
+],
+"ic3__lv1__t5__q122": [
+"Test2#31"
+],
+"ic3__lv1__t5__q2": [
+"Test1#31"
+],
+"ic3__lv1__t5__q3": [
+"Test3#7"
+],
+"ic3__lv1__t5__q4": [
+"Test2#17"
+],
+"ic3__lv1__t5__q5": [
+"Test1#41"
+],
+"ic3__lv1__t5__q6": [
+"Test1#27"
+],
+"ic3__lv1__t5__q7": [
+"Test2#39"
+],
+"ic3__lv1__t6__k_cn36": [
+"Capnhat10_04_2026#36"
+],
+"ic3__lv1__t6__k_test2_1": [
+"Test2#1"
+],
+"ic3__lv1__t6__q1": [
+"Test2#28"
+],
+"ic3__lv1__t6__q10": [
+"Test3#6"
+],
+"ic3__lv1__t6__q145": [
+"Capnhat10_04_2026#30"
+],
+"ic3__lv1__t6__q15": [
+"Test2#25"
+],
+"ic3__lv1__t6__q17": [
+"Test2#26"
+],
+"ic3__lv1__t6__q2": [
+"Test3#12"
+],
+"ic3__lv1__t6__q20": [
+"Capnhat10_04_2026#26"
+],
+"ic3__lv1__t6__q23": [
+"Test3#19"
+],
+"ic3__lv1__t6__q24": [
+"Test2#27"
+],
+"ic3__lv1__t6__q5": [
+"Test1#32"
+],
+"ic3__lv1__t6__q7": [
+"Test1#40",
+"Test2#30"
+],
+"ic3__lv1__t6__q8": [
+"Test1#39"
+],
+"ic3__lv1__t6__q9": [
+"Test1#28",
+"Capnhat10_04_2026#12"
+],
+"ic3__lv1__t7__k_cn17": [
+"Capnhat10_04_2026#17"
+],
+"ic3__lv1__t7__k_cn34": [
+"Capnhat10_04_2026#9",
+"Capnhat10_04_2026#34"
+],
+"ic3__lv1__t7__k_cn8": [
+"Test2#7",
+"Capnhat10_04_2026#8"
+],
+"ic3__lv1__t7__k_test2_36": [
+"Test2#36"
+],
+"ic3__lv1__t7__q1": [
+"Test1#6"
+],
+"ic3__lv1__t7__q10": [
+"Test1#34"
+],
+"ic3__lv1__t7__q15": [
+"Test2#35"
+],
+"ic3__lv1__t7__q167": [
+"Test1#24"
+],
+"ic3__lv1__t7__q168": [
+"Test2#33"
+],
+"ic3__lv1__t7__q18": [
+"Test3#4"
+],
+"ic3__lv1__t7__q19": [
+"Capnhat10_04_2026#13"
+],
+"ic3__lv1__t7__q2": [
+"Test3#13"
+],
+"ic3__lv1__t7__q20": [
+"Capnhat10_04_2026#10"
+],
+"ic3__lv1__t7__q22": [
+"Test3#5"
+],
+"ic3__lv1__t7__q3": [
+"Test1#29"
+],
+"ic3__lv1__t7__q4": [
+"Test1#33"
+],
+"ic3__lv1__t7__q5": [
+"Test2#32"
+],
+"ic3__lv1__t7__q7": [
+"Test1#36",
+"Test2#38"
+],
+"ic3__lv1__t7__q8": [
+"Test1#35"
+],
+"ic3__lv1__t7__q9": [
+"Test1#37",
+"Test2#37"
+],
+"ic3__lv2__hotspot__q1": [
+"OntapSo1#1"
+],
+"ic3__lv2__hotspot__q10": [
+"Cap nhat 10_04_2026#1"
+],
+"ic3__lv2__hotspot__q11": [
+"Cap nhat 10_04_2026#24"
+],
+"ic3__lv2__hotspot__q2": [
+"OntapSo1#4"
+],
+"ic3__lv2__hotspot__q6": [
+"OnTapSo3#5"
+],
+"ic3__lv2__hotspot__q8": [
+"OntapSo1#42"
+],
+"ic3__lv2__t1__q1": [
+"OntapSo1#8"
+],
+"ic3__lv2__t1__q10": [
+"OntapSo1#31"
+],
+"ic3__lv2__t1__q11": [
+"OntapSo1#32"
+],
+"ic3__lv2__t1__q12": [
+"OntapSo1#22"
+],
+"ic3__lv2__t1__q13": [
+"OntapSo1#37"
+],
+"ic3__lv2__t1__q14": [
+"OntapSo1#38"
+],
+"ic3__lv2__t1__q15": [
+"OntapSo1#44"
+],
+"ic3__lv2__t1__q195_new": [
+"Cap nhat 10_04_2026#17"
+],
+"ic3__lv2__t1__q196_new": [
+"Cap nhat 10_04_2026#19"
+],
+"ic3__lv2__t1__q197_new": [
+"Cap nhat 10_04_2026#23"
+],
+"ic3__lv2__t1__q2": [
+"OntapSo1#17"
+],
+"ic3__lv2__t1__q203": [
+"OntapSo1#2"
+],
+"ic3__lv2__t1__q204": [
+"OntapSo1#3"
+],
+"ic3__lv2__t1__q205": [
+"OntapSo1#7"
+],
+"ic3__lv2__t1__q206": [
+"OntapSo1#18"
+],
+"ic3__lv2__t1__q207": [
+"OntapSo1#19"
+],
+"ic3__lv2__t1__q208": [
+"OntapSo1#20"
+],
+"ic3__lv2__t1__q209": [
+"OntapSo1#23"
+],
+"ic3__lv2__t1__q21": [
+"OntapSo1#13"
+],
+"ic3__lv2__t1__q211": [
+"OntapSo1#47"
+],
+"ic3__lv2__t1__q212": [
+"OntapSo1#48"
+],
+"ic3__lv2__t1__q213": [
+"OntapSo1#49"
+],
+"ic3__lv2__t1__q214": [
+"OntapSo1#50"
+],
+"ic3__lv2__t1__q215": [
+"OnTapSo2#30"
+],
+"ic3__lv2__t1__q216": [
+"OnTapSo2#31"
+],
+"ic3__lv2__t1__q217": [
+"OnTapSo2#38"
+],
+"ic3__lv2__t1__q218": [
+"OnTapSo2#47"
+],
+"ic3__lv2__t1__q219": [
+"OnTapSo2#48"
+],
+"ic3__lv2__t1__q22": [
+"OnTapSo2#22"
+],
+"ic3__lv2__t1__q220": [
+"OnTapSo2#49"
+],
+"ic3__lv2__t1__q221": [
+"OnTapSo3#9"
+],
+"ic3__lv2__t1__q222": [
+"OnTapSo3#14"
+],
+"ic3__lv2__t1__q223": [
+"OnTapSo3#15"
+],
+"ic3__lv2__t1__q224": [
+"OnTapSo3#17"
+],
+"ic3__lv2__t1__q225": [
+"OnTapSo3#38"
+],
+"ic3__lv2__t1__q226": [
+"OnTapSo3#48"
+],
+"ic3__lv2__t1__q227": [
+"Cap nhat 10_04_2026#14"
+],
+"ic3__lv2__t1__q228": [
+"Cap nhat 10_04_2026#22"
+],
+"ic3__lv2__t1__q229": [
+"Cap nhat 10_04_2026#25",
+"Cap nhat 10_04_2026#26"
+],
+"ic3__lv2__t1__q231": [
+"Cap nhat 10_04_2026#28"
+],
+"ic3__lv2__t1__q232": [
+"Cap nhat 10_04_2026#44"
+],
+"ic3__lv2__t1__q24": [
+"Cap nhat 10_04_2026#9"
+],
+"ic3__lv2__t1__q27": [
+"Cap nhat 10_04_2026#36"
+],
+"ic3__lv2__t1__q28": [
+"Cap nhat 10_04_2026#33"
+],
+"ic3__lv2__t1__q4": [
+"OntapSo1#9"
+],
+"ic3__lv2__t2__q1": [
+"OntapSo1#16"
+],
+"ic3__lv2__t2__q10": [
+"OnTapSo2#17"
+],
+"ic3__lv2__t2__q11": [
+"OnTapSo2#14"
+],
+"ic3__lv2__t2__q13": [
+"OntapSo1#25"
+],
+"ic3__lv2__t2__q15": [
+"OnTapSo2#1"
+],
+"ic3__lv2__t2__q16": [
+"OnTapSo3#35"
+],
+"ic3__lv2__t2__q17": [
+"OnTapSo3#21"
+],
+"ic3__lv2__t2__q18": [
+"OnTapSo3#42"
+],
+"ic3__lv2__t2__q2": [
+"OnTapSo2#23"
+],
+"ic3__lv2__t2__q20": [
+"OnTapSo3#36"
+],
+"ic3__lv2__t2__q21": [
+"OnTapSo3#43"
+],
+"ic3__lv2__t2__q22": [
+"Cap nhat 10_04_2026#2"
+],
+"ic3__lv2__t2__q23": [
+"Cap nhat 10_04_2026#8"
+],
+"ic3__lv2__t2__q24": [
+"Cap nhat 10_04_2026#18"
+],
+"ic3__lv2__t2__q25": [
+"OnTapSo2#18"
+],
+"ic3__lv2__t2__q26": [
+"OnTapSo3#2"
+],
+"ic3__lv2__t2__q27": [
+"Cap nhat 10_04_2026#10"
+],
+"ic3__lv2__t2__q28": [
+"Cap nhat 10_04_2026#30"
+],
+"ic3__lv2__t2__q29": [
+"Cap nhat 10_04_2026#38"
+],
+"ic3__lv2__t2__q30": [
+"Cap nhat 10_04_2026#43"
+],
+"ic3__lv2__t2__q59_new": [
+"OnTapSo3#8"
+],
+"ic3__lv2__t2__q61_new": [
+"OnTapSo2#20"
+],
+"ic3__lv2__t2__q62_new": [
+"OntapSo1#27"
+],
+"ic3__lv2__t2__q63": [
+"OnTapSo2#16"
+],
+"ic3__lv2__t2__q64": [
+"OnTapSo2#24"
+],
+"ic3__lv2__t2__q65": [
+"OnTapSo3#33"
+],
+"ic3__lv2__t2__q66": [
+"OnTapSo3#37"
+],
+"ic3__lv2__t2__q67": [
+"OnTapSo3#39"
+],
+"ic3__lv2__t2__q68": [
+"OnTapSo3#45"
+],
+"ic3__lv2__t2__q69": [
+"Cap nhat 10_04_2026#20"
+],
+"ic3__lv2__t2__q7": [
+"OnTapSo3#44"
+],
+"ic3__lv2__t2__q8": [
+"OntapSo1#39"
+],
+"ic3__lv2__t2__q9": [
+"OnTapSo2#2"
+],
+"ic3__lv2__t3__q12": [
+"OnTapSo2#41"
+],
+"ic3__lv2__t3__q14": [
+"OntapSo1#26"
+],
+"ic3__lv2__t3__q18": [
+"Cap nhat 10_04_2026#4"
+],
+"ic3__lv2__t3__q185_new": [
+"OnTapSo2#35"
+],
+"ic3__lv2__t3__q19": [
+"OnTapSo3#4"
+],
+"ic3__lv2__t3__q190": [
+"OnTapSo2#32"
+],
+"ic3__lv2__t3__q191": [
+"OnTapSo2#36"
+],
+"ic3__lv2__t3__q192": [
+"OnTapSo2#44"
+],
+"ic3__lv2__t3__q193": [
+"OnTapSo2#45"
+],
+"ic3__lv2__t3__q194": [
+"OnTapSo2#50"
+],
+"ic3__lv2__t3__q195": [
+"OnTapSo3#1"
+],
+"ic3__lv2__t3__q196": [
+"OnTapSo3#3"
+],
+"ic3__lv2__t3__q197": [
+"OnTapSo3#7"
+],
+"ic3__lv2__t3__q198": [
+"Cap nhat 10_04_2026#6"
+],
+"ic3__lv2__t3__q20": [
+"Cap nhat 10_04_2026#34"
+],
+"ic3__lv2__t3__q21": [
+"Cap nhat 10_04_2026#35"
+],
+"ic3__lv2__t3__q3": [
+"OntapSo1#36"
+],
+"ic3__lv2__t3__q5": [
+"OnTapSo2#28"
+],
+"ic3__lv2__t3__q7": [
+"OnTapSo3#6"
+],
+"ic3__lv2__t3__q8": [
+"OnTapSo2#34"
+],
+"ic3__lv2__t3__q9": [
+"OnTapSo2#33"
+],
+"ic3__lv2__t4__q1": [
+"OntapSo1#34"
+],
+"ic3__lv2__t4__q10": [
+"OnTapSo2#13"
+],
+"ic3__lv2__t4__q11": [
+"OnTapSo2#15"
+],
+"ic3__lv2__t4__q12": [
+"Cap nhat 10_04_2026#21"
+],
+"ic3__lv2__t4__q13": [
+"OnTapSo2#37"
+],
+"ic3__lv2__t4__q14": [
+"OnTapSo2#43"
+],
+"ic3__lv2__t4__q15": [
+"OnTapSo3#16"
+],
+"ic3__lv2__t4__q17": [
+"OnTapSo3#18"
+],
+"ic3__lv2__t4__q18": [
+"OnTapSo3#19"
+],
+"ic3__lv2__t4__q187_new": [
+"OnTapSo3#10"
+],
+"ic3__lv2__t4__q188": [
+"OntapSo1#15"
+],
+"ic3__lv2__t4__q189": [
+"OnTapSo2#29"
+],
+"ic3__lv2__t4__q19": [
+"Cap nhat 10_04_2026#45"
+],
+"ic3__lv2__t4__q190": [
+"OnTapSo2#39"
+],
+"ic3__lv2__t4__q192": [
+"OnTapSo3#13"
+],
+"ic3__lv2__t4__q193": [
+"OnTapSo3#46"
+],
+"ic3__lv2__t4__q194": [
+"Cap nhat 10_04_2026#12"
+],
+"ic3__lv2__t4__q195": [
+"Cap nhat 10_04_2026#46"
+],
+"ic3__lv2__t4__q2": [
+"OntapSo1#30"
+],
+"ic3__lv2__t4__q20": [
+"OnTapSo3#12"
+],
+"ic3__lv2__t4__q21": [
+"OnTapSo3#11"
+],
+"ic3__lv2__t4__q22": [
+"OnTapSo2#42"
+],
+"ic3__lv2__t4__q24": [
+"OntapSo1#43"
+],
+"ic3__lv2__t4__q25": [
+"OntapSo1#46"
+],
+"ic3__lv2__t4__q26": [
+"Cap nhat 10_04_2026#13"
+],
+"ic3__lv2__t4__q29": [
+"Cap nhat 10_04_2026#27"
+],
+"ic3__lv2__t4__q3": [
+"OntapSo1#10"
+],
+"ic3__lv2__t4__q30": [
+"Cap nhat 10_04_2026#5"
+],
+"ic3__lv2__t4__q33": [
+"OntapSo1#28"
+],
+"ic3__lv2__t4__q36": [
+"Cap nhat 10_04_2026#29"
+],
+"ic3__lv2__t4__q37": [
+"Cap nhat 10_04_2026#37"
+],
+"ic3__lv2__t4__q38": [
+"Cap nhat 10_04_2026#41"
+],
+"ic3__lv2__t4__q4": [
+"OntapSo1#14"
+],
+"ic3__lv2__t4__q5": [
+"OntapSo1#40"
+],
+"ic3__lv2__t4__q7": [
+"OntapSo1#24"
+],
+"ic3__lv2__t4__q8": [
+"OntapSo1#21"
+],
+"ic3__lv2__t4__q9": [
+"OntapSo1#5"
+],
+"ic3__lv2__t5__q126_new": [
+"OnTapSo2#5"
+],
+"ic3__lv2__t5__q127_new": [
+"OnTapSo2#6"
+],
+"ic3__lv2__t5__q130": [
+"OntapSo1#45"
+],
+"ic3__lv2__t5__q131": [
+"OnTapSo2#3"
+],
+"ic3__lv2__t5__q132": [
+"OnTapSo2#46"
+],
+"ic3__lv2__t5__q133": [
+"Cap nhat 10_04_2026#47"
+],
+"ic3__lv2__t5__q6": [
+"OntapSo1#41"
+],
+"ic3__lv2__t5__q7": [
+"Cap nhat 10_04_2026#32"
+],
+"ic3__lv2__t6__k_ots3_26": [
+"OnTapSo3#26"
+],
+"ic3__lv2__t6__k_ots3_28": [
+"OnTapSo3#28"
+],
+"ic3__lv2__t6__q11": [
+"OnTapSo2#26"
+],
+"ic3__lv2__t6__q12": [
+"OnTapSo2#4"
+],
+"ic3__lv2__t6__q15": [
+"OnTapSo3#20"
+],
+"ic3__lv2__t6__q17": [
+"OnTapSo2#27"
+],
+"ic3__lv2__t6__q18": [
+"OnTapSo2#9"
+],
+"ic3__lv2__t6__q19": [
+"OnTapSo3#40"
+],
+"ic3__lv2__t6__q190_new2": [
+"OnTapSo3#25"
+],
+"ic3__lv2__t6__q2": [
+"OnTapSo2#25"
+],
+"ic3__lv2__t6__q20": [
+"OnTapSo3#47"
+],
+"ic3__lv2__t6__q22": [
+"OnTapSo2#8"
+],
+"ic3__lv2__t6__q23": [
+"OnTapSo3#22"
+],
+"ic3__lv2__t6__q24": [
+"OnTapSo2#7"
+],
+"ic3__lv2__t6__q27": [
+"OnTapSo3#29"
+],
+"ic3__lv2__t6__q28": [
+"OnTapSo3#27"
+],
+"ic3__lv2__t6__q29": [
+"OnTapSo3#24"
+],
+"ic3__lv2__t6__q31": [
+"OnTapSo3#30"
+],
+"ic3__lv2__t6__q32": [
+"OnTapSo3#23"
+],
+"ic3__lv2__t6__q33": [
+"OnTapSo3#31"
+],
+"ic3__lv2__t6__q34": [
+"Cap nhat 10_04_2026#16"
+],
+"ic3__lv2__t6__q35": [
+"Cap nhat 10_04_2026#7"
+],
+"ic3__lv2__t6__q36": [
+"Cap nhat 10_04_2026#11"
+],
+"ic3__lv2__t6__q37": [
+"Cap nhat 10_04_2026#15"
+],
+"ic3__lv2__t6__q38": [
+"OnTapSo2#19"
+],
+"ic3__lv2__t6__q4": [
+"OnTapSo2#10"
+],
+"ic3__lv2__t6__q41": [
+"Cap nhat 10_04_2026#31"
+],
+"ic3__lv2__t6__q42": [
+"Cap nhat 10_04_2026#42"
+],
+"ic3__lv2__t6__q6": [
+"OnTapSo2#11"
+],
+"ic3__lv2__t6__q7": [
+"Cap nhat 10_04_2026#3"
+],
+"ic3__lv2__t6__q8": [
+"OnTapSo2#12"
+],
+"ic3__lv2__t6__q9": [
+"OnTapSo2#21"
+],
+"ic3__lv2__t7__q1": [
+"OntapSo1#33"
+],
+"ic3__lv2__t7__q11": [
+"Cap nhat 10_04_2026#39"
+],
+"ic3__lv2__t7__q12": [
+"Cap nhat 10_04_2026#40"
+],
+"ic3__lv2__t7__q190_new": [
+"OntapSo1#35"
+],
+"ic3__lv2__t7__q191_new2": [
+"OnTapSo3#32"
+],
+"ic3__lv2__t7__q192_new2": [
+"OntapSo1#12"
+],
+"ic3__lv2__t7__q195": [
+"Cap nhat 10_04_2026#48"
+],
+"ic3__lv2__t7__q2": [
+"OntapSo1#6"
+],
+"ic3__lv2__t7__q4": [
+"OntapSo1#11",
+"OntapSo1#29"
+],
+"ic3__lv2__t7__q5": [
+"OnTapSo2#40"
+],
+"ic3__lv2__t7__q7": [
+"OnTapSo3#34"
+],
+"ic3__lv2__t7__q9": [
+"OnTapSo3#41"
+],
+"ic3__lv3__hotspot__q1": [
+"BaiOnSo1#12"
+],
+"ic3__lv3__t1__q1": [
+"BaiOnSo2#23",
+"BaiOnSo3#26"
+],
+"ic3__lv3__t1__q12": [
+"BaiOnSo2#14"
+],
+"ic3__lv3__t1__q13": [
+"BaiOnSo2#37"
+],
+"ic3__lv3__t1__q14": [
+"BaiOnSo2#36"
+],
+"ic3__lv3__t1__q15": [
+"BaiOnSo2#13"
+],
+"ic3__lv3__t1__q17": [
+"BaiOnSo1#10"
+],
+"ic3__lv3__t1__q186": [
+"BaiOnSo1#2"
+],
+"ic3__lv3__t1__q187": [
+"BaiOnSo1#19"
+],
+"ic3__lv3__t1__q188": [
+"BaiOnSo1#39"
+],
+"ic3__lv3__t1__q189": [
+"BaiOnSo1#41"
+],
+"ic3__lv3__t1__q190": [
+"BaiOnSo2#5"
+],
+"ic3__lv3__t1__q191": [
+"BaiOnSo2#10"
+],
+"ic3__lv3__t1__q192": [
+"BaiOnSo2#22"
+],
+"ic3__lv3__t1__q193": [
+"BaiOnSo3#7"
+],
+"ic3__lv3__t1__q194": [
+"BaiOnSo3#20"
+],
+"ic3__lv3__t1__q195": [
+"BaiOnSo3#27"
+],
+"ic3__lv3__t1__q196": [
+"BaiOnSo3#30"
+],
+"ic3__lv3__t1__q197": [
+"BaiOnSo3#33"
+],
+"ic3__lv3__t1__q198": [
+"BaiOnSo3#34"
+],
+"ic3__lv3__t1__q199": [
+"Bo Sung 10042026#1"
+],
+"ic3__lv3__t1__q2": [
+"BaiOnSo1#3"
+],
+"ic3__lv3__t1__q200": [
+"Bo Sung 10042026#37"
+],
+"ic3__lv3__t1__q201": [
+"Bo Sung 10042026#40"
+],
+"ic3__lv3__t1__q24": [
+"BaiOnSo1#42"
+],
+"ic3__lv3__t1__q27": [
+"Bo Sung 10042026#14"
+],
+"ic3__lv3__t1__q28": [
+"Bo Sung 10042026#26"
+],
+"ic3__lv3__t1__q3": [
+"BaiOnSo1#24"
+],
+"ic3__lv3__t1__q4": [
+"BaiOnSo3#15"
+],
+"ic3__lv3__t1__q5": [
+"BaiOnSo1#8"
+],
+"ic3__lv3__t1__q6": [
+"BaiOnSo1#11"
+],
+"ic3__lv3__t1__q9": [
+"BaiOnSo1#20"
+],
+"ic3__lv3__t2__q1": [
+"BaiOnSo1#4"
+],
+"ic3__lv3__t2__q10": [
+"BaiOnSo1#31"
+],
+"ic3__lv3__t2__q11": [
+"BaiOnSo1#5"
+],
+"ic3__lv3__t2__q12": [
+"BaiOnSo2#6"
+],
+"ic3__lv3__t2__q13": [
+"BaiOnSo2#2"
+],
+"ic3__lv3__t2__q15": [
+"BaiOnSo3#1"
+],
+"ic3__lv3__t2__q16": [
+"BaiOnSo1#17"
+],
+"ic3__lv3__t2__q17": [
+"BaiOnSo1#32"
+],
+"ic3__lv3__t2__q18": [
+"BaiOnSo2#15"
+],
+"ic3__lv3__t2__q19": [
+"BaiOnSo3#3"
+],
+"ic3__lv3__t2__q2": [
+"BaiOnSo1#16",
+"BaiOnSo1#22"
+],
+"ic3__lv3__t2__q20": [
+"BaiOnSo2#38"
+],
+"ic3__lv3__t2__q21": [
+"BaiOnSo3#11"
+],
+"ic3__lv3__t2__q22": [
+"BaiOnSo3#23"
+],
+"ic3__lv3__t2__q23": [
+"BaiOnSo3#21"
+],
+"ic3__lv3__t2__q24": [
+"BaiOnSo3#10"
+],
+"ic3__lv3__t2__q27": [
+"BaiOnSo3#38"
+],
+"ic3__lv3__t2__q28": [
+"Bo Sung 10042026#2"
+],
+"ic3__lv3__t2__q29": [
+"Bo Sung 10042026#4"
+],
+"ic3__lv3__t2__q3": [
+"BaiOnSo1#37"
+],
+"ic3__lv3__t2__q30": [
+"Bo Sung 10042026#15"
+],
+"ic3__lv3__t2__q31": [
+"Bo Sung 10042026#20"
+],
+"ic3__lv3__t2__q32": [
+"Bo Sung 10042026#35"
+],
+"ic3__lv3__t2__q4": [
+"BaiOnSo1#34"
+],
+"ic3__lv3__t2__q5": [
+"BaiOnSo3#4"
+],
+"ic3__lv3__t2__q64": [
+"BaiOnSo1#38"
+],
+"ic3__lv3__t2__q65": [
+"BaiOnSo2#29"
+],
+"ic3__lv3__t2__q66": [
+"Bo Sung 10042026#38"
+],
+"ic3__lv3__t2__q67": [
+"Bo Sung 10042026#39"
+],
+"ic3__lv3__t2__q8": [
+"BaiOnSo1#29"
+],
+"ic3__lv3__t2__q9": [
+"BaiOnSo2#1"
+],
+"ic3__lv3__t3__k_bos1_35": [
+"BaiOnSo1#35",
+"BaiOnSo2#4"
+],
+"ic3__lv3__t3__k_bos2_7": [
+"BaiOnSo2#7"
+],
+"ic3__lv3__t3__q13": [
+"BaiOnSo2#19"
+],
+"ic3__lv3__t3__q21": [
+"Bo Sung 10042026#12"
+],
+"ic3__lv3__t3__q22": [
+"Bo Sung 10042026#11"
+],
+"ic3__lv3__t3__q23": [
+"Bo Sung 10042026#18"
+],
+"ic3__lv3__t3__q5": [
+"BaiOnSo2#8"
+],
+"ic3__lv3__t3__q7": [
+"BaiOnSo1#28"
+],
+"ic3__lv3__t3__q8": [
+"BaiOnSo3#25"
+],
+"ic3__lv3__t3__q85": [
+"BaiOnSo2#9"
+],
+"ic3__lv3__t3__q86": [
+"BaiOnSo3#24"
+],
+"ic3__lv3__t3__q87": [
+"BaiOnSo3#35"
+],
+"ic3__lv3__t3__q88": [
+"Bo Sung 10042026#13"
+],
+"ic3__lv3__t4__k_bos3_37": [
+"BaiOnSo3#37"
+],
+"ic3__lv3__t4__q1": [
+"BaiOnSo1#14"
+],
+"ic3__lv3__t4__q116_new2": [
+"BaiOnSo2#11"
+],
+"ic3__lv3__t4__q12": [
+"BaiOnSo2#3"
+],
+"ic3__lv3__t4__q121_new2": [
+"Bo Sung 10042026#24"
+],
+"ic3__lv3__t4__q122_moved": [
+"Bo Sung 10042026#29"
+],
+"ic3__lv3__t4__q123": [
+"BaiOnSo2#26"
+],
+"ic3__lv3__t4__q124": [
+"BaiOnSo2#27"
+],
+"ic3__lv3__t4__q125": [
+"BaiOnSo2#28"
+],
+"ic3__lv3__t4__q126": [
+"BaiOnSo2#16",
+"BaiOnSo2#32"
+],
+"ic3__lv3__t4__q127": [
+"BaiOnSo2#35",
+"Bo Sung 10042026#30"
+],
+"ic3__lv3__t4__q128": [
+"BaiOnSo3#29"
+],
+"ic3__lv3__t4__q129": [
+"Bo Sung 10042026#6"
+],
+"ic3__lv3__t4__q13": [
+"BaiOnSo1#21"
+],
+"ic3__lv3__t4__q15": [
+"BaiOnSo2#18"
+],
+"ic3__lv3__t4__q18": [
+"BaiOnSo1#9"
+],
+"ic3__lv3__t4__q19": [
+"BaiOnSo1#7"
+],
+"ic3__lv3__t4__q2": [
+"BaiOnSo2#20"
+],
+"ic3__lv3__t4__q21": [
+"BaiOnSo2#34"
+],
+"ic3__lv3__t4__q22": [
+"BaiOnSo2#30"
+],
+"ic3__lv3__t4__q24": [
+"BaiOnSo3#36"
+],
+"ic3__lv3__t4__q25": [
+"BaiOnSo3#32"
+],
+"ic3__lv3__t4__q26": [
+"Bo Sung 10042026#28"
+],
+"ic3__lv3__t4__q28": [
+"Bo Sung 10042026#10"
+],
+"ic3__lv3__t4__q29": [
+"Bo Sung 10042026#23"
+],
+"ic3__lv3__t4__q3": [
+"BaiOnSo1#18"
+],
+"ic3__lv3__t4__q30": [
+"Bo Sung 10042026#19"
+],
+"ic3__lv3__t4__q31": [
+"Bo Sung 10042026#21"
+],
+"ic3__lv3__t4__q4": [
+"BaiOnSo1#15"
+],
+"ic3__lv3__t4__q6": [
+"BaiOnSo1#13"
+],
+"ic3__lv3__t4__q8": [
+"BaiOnSo2#33"
+],
+"ic3__lv3__t4__q9": [
+"BaiOnSo1#23"
+],
+"ic3__lv3__t5__q1": [
+"BaiOnSo3#2"
+],
+"ic3__lv3__t5__q118": [
+"BaiOnSo1#25"
+],
+"ic3__lv3__t5__q119": [
+"BaiOnSo1#40"
+],
+"ic3__lv3__t5__q120": [
+"BaiOnSo3#5"
+],
+"ic3__lv3__t5__q121": [
+"BaiOnSo3#9"
+],
+"ic3__lv3__t5__q122": [
+"BaiOnSo3#12"
+],
+"ic3__lv3__t6__q1": [
+"BaiOnSo3#31"
+],
+"ic3__lv3__t6__q10": [
+"BaiOnSo2#25"
+],
+"ic3__lv3__t6__q12": [
+"BaiOnSo2#39"
+],
+"ic3__lv3__t6__q16": [
+"BaiOnSo2#21"
+],
+"ic3__lv3__t6__q163": [
+"BaiOnSo3#19"
+],
+"ic3__lv3__t6__q164": [
+"BaiOnSo3#39"
+],
+"ic3__lv3__t6__q165": [
+"Bo Sung 10042026#8"
+],
+"ic3__lv3__t6__q17": [
+"BaiOnSo3#17"
+],
+"ic3__lv3__t6__q18": [
+"BaiOnSo3#16"
+],
+"ic3__lv3__t6__q19": [
+"BaiOnSo2#42"
+],
+"ic3__lv3__t6__q2": [
+"BaiOnSo1#6"
+],
+"ic3__lv3__t6__q20": [
+"BaiOnSo3#13"
+],
+"ic3__lv3__t6__q21": [
+"BaiOnSo3#14"
+],
+"ic3__lv3__t6__q22": [
+"BaiOnSo3#18"
+],
+"ic3__lv3__t6__q24": [
+"BaiOnSo2#40"
+],
+"ic3__lv3__t6__q28": [
+"BaiOnSo2#24"
+],
+"ic3__lv3__t6__q29": [
+"BaiOnSo3#8"
+],
+"ic3__lv3__t6__q3": [
+"BaiOnSo2#17"
+],
+"ic3__lv3__t6__q39": [
+"Bo Sung 10042026#5"
+],
+"ic3__lv3__t6__q4": [
+"BaiOnSo2#31"
+],
+"ic3__lv3__t6__q40": [
+"Bo Sung 10042026#16"
+],
+"ic3__lv3__t6__q41": [
+"Bo Sung 10042026#9"
+],
+"ic3__lv3__t6__q42": [
+"Bo Sung 10042026#7"
+],
+"ic3__lv3__t6__q43": [
+"Bo Sung 10042026#25"
+],
+"ic3__lv3__t6__q44": [
+"Bo Sung 10042026#34"
+],
+"ic3__lv3__t6__q45": [
+"Bo Sung 10042026#36"
+],
+"ic3__lv3__t6__q46": [
+"Bo Sung 10042026#22"
+],
+"ic3__lv3__t6__q6": [
+"BaiOnSo2#12"
+],
+"ic3__lv3__t6__q7": [
+"BaiOnSo3#6"
+],
+"ic3__lv3__t6__q9": [
+"BaiOnSo1#30"
+],
+"ic3__lv3__t7__q12": [
+"BaiOnSo1#1"
+],
+"ic3__lv3__t7__q15": [
+"Bo Sung 10042026#3"
+],
+"ic3__lv3__t7__q16": [
+"Bo Sung 10042026#17"
+],
+"ic3__lv3__t7__q17": [
+"Bo Sung 10042026#27"
+],
+"ic3__lv3__t7__q18": [
+"Bo Sung 10042026#32"
+],
+"ic3__lv3__t7__q186": [
+"BaiOnSo1#33"
+],
+"ic3__lv3__t7__q187": [
+"BaiOnSo3#22"
+],
+"ic3__lv3__t7__q20": [
+"Bo Sung 10042026#31"
+],
+"ic3__lv3__t7__q21": [
+"Bo Sung 10042026#33"
+],
+"ic3__lv3__t7__q3": [
+"BaiOnSo1#36"
+],
+"ic3__lv3__t7__q4": [
+"BaiOnSo1#26"
+],
+"ic3__lv3__t7__q5": [
+"BaiOnSo1#27"
+],
+"ic3__lv3__t7__q8": [
+"BaiOnSo2#41"
+],
+"ic3__lv3__t7__q9": [
+"BaiOnSo3#28"
+],
+"spark__lv1__hotspot__q1": [
+"Test 1#3"
+],
+"spark__lv1__hotspot__q10": [
+"Test 2#23"
+],
+"spark__lv1__hotspot__q11": [
+"Test 3#6"
+],
+"spark__lv1__hotspot__q2": [
+"Test 1#21"
+],
+"spark__lv1__hotspot__q3": [
+"Test 3#15"
+],
+"spark__lv1__hotspot__q4": [
+"Test 3#14"
+],
+"spark__lv1__hotspot__q5": [
+"Test 2#8",
+"Test 3#9"
+],
+"spark__lv1__hotspot__q6": [
+"Test 2#17"
+],
+"spark__lv1__hotspot__q7": [
+"Test 1#24"
+],
+"spark__lv1__hotspot__q8": [
+"Test 3#20"
+],
+"spark__lv1__hotspot__q9": [
+"Test 2#1"
+],
+"spark__lv1__t1__q1": [
+"Test 2#5"
+],
+"spark__lv1__t1__q12": [
+"Test 2#11"
+],
+"spark__lv1__t1__q13": [
+"Test 1#18"
+],
+"spark__lv1__t1__q14": [
+"Test 2#13"
+],
+"spark__lv1__t1__q15": [
+"Test 3#16"
+],
+"spark__lv1__t1__q16": [
+"Test 1#20"
+],
+"spark__lv1__t1__q2": [
+"Test 2#6"
+],
+"spark__lv1__t1__q3": [
+"Test 1#1"
+],
+"spark__lv1__t1__q6": [
+"Test 2#7"
+],
+"spark__lv1__t1__q7": [
+"Test 2#27"
+],
+"spark__lv1__t1__q8": [
+"Test 3#5"
+],
+"spark__lv1__t1__q84_new": [
+"Test 1#2"
+],
+"spark__lv1__t1__q85": [
+"Test 1#5"
+],
+"spark__lv1__t1__q86": [
+"Test 1#6"
+],
+"spark__lv1__t1__q87": [
+"Test 3#7"
+],
+"spark__lv1__t1__q88": [
+"Test 3#10"
+],
+"spark__lv1__t2__q1": [
+"Test 1#28"
+],
+"spark__lv1__t2__q10": [
+"Test 1#12"
+],
+"spark__lv1__t2__q11": [
+"Test 2#29"
+],
+"spark__lv1__t2__q13": [
+"Test 1#14"
+],
+"spark__lv1__t2__q14": [
+"Test 1#16"
+],
+"spark__lv1__t2__q15": [
+"Test 1#13"
+],
+"spark__lv1__t2__q16": [
+"Test 3#1"
+],
+"spark__lv1__t2__q18": [
+"Test 1#29"
+],
+"spark__lv1__t2__q19": [
+"Test 2#18"
+],
+"spark__lv1__t2__q2": [
+"Test 1#27"
+],
+"spark__lv1__t2__q20": [
+"Test 2#19"
+],
+"spark__lv1__t2__q21": [
+"Test 1#30"
+],
+"spark__lv1__t2__q22": [
+"Test 3#13"
+],
+"spark__lv1__t2__q23": [
+"Test 1#15"
+],
+"spark__lv1__t2__q24": [
+"Test 3#17"
+],
+"spark__lv1__t2__q25": [
+"Test 3#21"
+],
+"spark__lv1__t2__q26": [
+"Test 3#3"
+],
+"spark__lv1__t2__q3": [
+"Test 1#25"
+],
+"spark__lv1__t2__q4": [
+"Test 1#11"
+],
+"spark__lv1__t2__q5": [
+"Test 3#12"
+],
+"spark__lv1__t2__q6": [
+"Test 1#10"
+],
+"spark__lv1__t2__q7": [
+"Test 3#11"
+],
+"spark__lv1__t2__q8": [
+"Test 1#26"
+],
+"spark__lv1__t2__q9": [
+"Test 2#31"
+],
+"spark__lv1__t3__q1": [
+"Test 2#20"
+],
+"spark__lv1__t3__q2": [
+"Test 3#2"
+],
+"spark__lv1__t3__q45": [
+"Test 2#15"
+],
+"spark__lv1__t4__q1": [
+"Test 2#3"
+],
+"spark__lv1__t4__q2": [
+"Test 1#19"
+],
+"spark__lv1__t4__q3": [
+"Test 1#22"
+],
+"spark__lv1__t4__q4": [
+"Test 2#16"
+],
+"spark__lv1__t4__q85": [
+"Test 1#17"
+],
+"spark__lv1__t5__k_t2_26": [
+"Test 2#26"
+],
+"spark__lv1__t5__k_t3_18": [
+"Test 3#18"
+],
+"spark__lv1__t5__q89": [
+"Test 2#2"
+],
+"spark__lv1__t5__q90": [
+"Test 3#22"
+],
+"spark__lv1__t6__q1": [
+"Test 2#12"
+],
+"spark__lv1__t6__q12": [
+"Test 2#14"
+],
+"spark__lv1__t6__q13": [
+"Test 2#4"
+],
+"spark__lv1__t6__q14": [
+"Test 3#19"
+],
+"spark__lv1__t6__q15": [
+"Test 2#21"
+],
+"spark__lv1__t6__q16": [
+"Test 2#22"
+],
+"spark__lv1__t6__q17": [
+"Test 1#31"
+],
+"spark__lv1__t6__q2": [
+"Test 1#7"
+],
+"spark__lv1__t6__q21": [
+"Test 2#24"
+],
+"spark__lv1__t6__q22": [
+"Test 2#25"
+],
+"spark__lv1__t6__q4": [
+"Test 3#4"
+],
+"spark__lv1__t6__q5": [
+"Test 2#9"
+],
+"spark__lv1__t6__q6": [
+"Test 2#30"
+],
+"spark__lv1__t6__q7": [
+"Test 2#28"
+],
+"spark__lv1__t6__q8": [
+"Test 1#23"
+],
+"spark__lv1__t7__q1": [
+"Test 2#10"
+],
+"spark__lv1__t7__q2": [
+"Test 1#9"
+],
+"spark__lv1__t7__q3": [
+"Test 1#4"
+],
+"spark__lv1__t7__q4": [
+"Test 3#8"
+],
+"spark__lv1__t7__q78": [
+"Test 1#8"
+],
+"spark__lv2__hotspot__q1": [
+"On Tap 2#16"
+],
+"spark__lv2__hotspot__q2": [
+"On Tap 3#30"
+],
+"spark__lv2__hotspot__q3": [
+"On Tap 2#4"
+],
+"spark__lv2__hotspot__q4": [
+"On Tap 2#3"
+],
+"spark__lv2__hotspot__q5": [
+"On Tap 2#18"
+],
+"spark__lv2__hotspot__q6": [
+"On Tap 2#12"
+],
+"spark__lv2__t1__k_ot1_4": [
+"On Tap 1#4"
+],
+"spark__lv2__t1__q10": [
+"On Tap 1#10"
+],
+"spark__lv2__t1__q11": [
+"On Tap 1#12"
+],
+"spark__lv2__t1__q13": [
+"On Tap 3#11"
+],
+"spark__lv2__t1__q16": [
+"On Tap 1#27"
+],
+"spark__lv2__t1__q17": [
+"On Tap 1#26"
+],
+"spark__lv2__t1__q2": [
+"On Tap 1#1"
+],
+"spark__lv2__t1__q21": [
+"On Tap 1#8"
+],
+"spark__lv2__t1__q23": [
+"On Tap 1#22"
+],
+"spark__lv2__t1__q24": [
+"On Tap 2#8"
+],
+"spark__lv2__t1__q4": [
+"On Tap 1#2"
+],
+"spark__lv2__t1__q5": [
+"On Tap 1#3"
+],
+"spark__lv2__t1__q6": [
+"On Tap 1#5"
+],
+"spark__lv2__t1__q7": [
+"On Tap 1#11"
+],
+"spark__lv2__t1__q8": [
+"On Tap 1#6"
+],
+"spark__lv2__t1__q9": [
+"On Tap 1#7"
+],
+"spark__lv2__t2__q10": [
+"On Tap 3#26"
+],
+"spark__lv2__t2__q11": [
+"On Tap 3#21"
+],
+"spark__lv2__t2__q12": [
+"On Tap 3#18"
+],
+"spark__lv2__t2__q13": [
+"On Tap 3#29"
+],
+"spark__lv2__t2__q14": [
+"On Tap 1#13"
+],
+"spark__lv2__t2__q15": [
+"On Tap 1#19"
+],
+"spark__lv2__t2__q17": [
+"On Tap 1#20"
+],
+"spark__lv2__t2__q18": [
+"On Tap 1#21"
+],
+"spark__lv2__t2__q19": [
+"On Tap 3#12"
+],
+"spark__lv2__t2__q2": [
+"On Tap 1#36"
+],
+"spark__lv2__t2__q20": [
+"On Tap 3#24"
+],
+"spark__lv2__t2__q22": [
+"On Tap 3#19",
+"On Tap 3#25"
+],
+"spark__lv2__t2__q23": [
+"On Tap 3#10",
+"On Tap 3#17",
+"On Tap 3#27"
+],
+"spark__lv2__t2__q24": [
+"On Tap 3#16"
+],
+"spark__lv2__t2__q26": [
+"On Tap 2#33"
+],
+"spark__lv2__t2__q27": [
+"On Tap 2#29"
+],
+"spark__lv2__t2__q3": [
+"On Tap 1#17"
+],
+"spark__lv2__t2__q4": [
+"On Tap 1#18"
+],
+"spark__lv2__t2__q48": [
+"On Tap 1#14",
+"On Tap 3#28"
+],
+"spark__lv2__t2__q49": [
+"On Tap 3#34"
+],
+"spark__lv2__t2__q5": [
+"On Tap 2#26"
+],
+"spark__lv2__t2__q6": [
+"On Tap 2#30"
+],
+"spark__lv2__t2__q7": [
+"On Tap 2#28",
+"On Tap 3#13"
+],
+"spark__lv2__t2__q8": [
+"On Tap 2#32"
+],
+"spark__lv2__t3__q1": [
+"On Tap 1#29"
+],
+"spark__lv2__t3__q10": [
+"On Tap 2#10"
+],
+"spark__lv2__t3__q12": [
+"On Tap 2#7"
+],
+"spark__lv2__t3__q13": [
+"On Tap 2#9"
+],
+"spark__lv2__t3__q3": [
+"On Tap 1#23"
+],
+"spark__lv2__t3__q4": [
+"On Tap 1#9"
+],
+"spark__lv2__t3__q5": [
+"On Tap 1#34"
+],
+"spark__lv2__t3__q6": [
+"On Tap 1#32"
+],
+"spark__lv2__t3__q61_new": [
+"On Tap 1#28"
+],
+"spark__lv2__t3__q62_new2": [
+"On Tap 1#25"
+],
+"spark__lv2__t3__q63": [
+"On Tap 3#32"
+],
+"spark__lv2__t3__q7": [
+"On Tap 1#31"
+],
+"spark__lv2__t3__q8": [
+"On Tap 1#33"
+],
+"spark__lv2__t3__q9": [
+"On Tap 2#2",
+"On Tap 2#15"
+],
+"spark__lv2__t4__q1": [
+"On Tap 1#24"
+],
+"spark__lv2__t4__q10": [
+"On Tap 1#35"
+],
+"spark__lv2__t4__q110": [
+"On Tap 3#31"
+],
+"spark__lv2__t4__q3": [
+"On Tap 2#11"
+],
+"spark__lv2__t4__q5": [
+"On Tap 2#20"
+],
+"spark__lv2__t4__q6": [
+"On Tap 2#13"
+],
+"spark__lv2__t4__q7": [
+"On Tap 2#5"
+],
+"spark__lv2__t4__q8": [
+"On Tap 2#17"
+],
+"spark__lv2__t4__q9": [
+"On Tap 2#19"
+],
+"spark__lv2__t5__k_ot3_33": [
+"On Tap 3#33"
+],
+"spark__lv2__t5__q1": [
+"On Tap 2#34"
+],
+"spark__lv2__t5__q2": [
+"On Tap 3#20"
+],
+"spark__lv2__t5__q75": [
+"On Tap 3#35"
+],
+"spark__lv2__t6__k_ot3_7": [
+"On Tap 3#7"
+],
+"spark__lv2__t6__q1": [
+"On Tap 1#30"
+],
+"spark__lv2__t6__q10": [
+"On Tap 3#22"
+],
+"spark__lv2__t6__q11": [
+"On Tap 1#15"
+],
+"spark__lv2__t6__q13": [
+"On Tap 2#21"
+],
+"spark__lv2__t6__q14": [
+"On Tap 2#22"
+],
+"spark__lv2__t6__q15": [
+"On Tap 2#23"
+],
+"spark__lv2__t6__q16": [
+"On Tap 2#36"
+],
+"spark__lv2__t6__q17": [
+"On Tap 3#3"
+],
+"spark__lv2__t6__q18": [
+"On Tap 3#5"
+],
+"spark__lv2__t6__q19": [
+"On Tap 3#1"
+],
+"spark__lv2__t6__q20": [
+"On Tap 3#2"
+],
+"spark__lv2__t6__q21": [
+"On Tap 3#4"
+],
+"spark__lv2__t6__q22": [
+"On Tap 3#6"
+],
+"spark__lv2__t6__q23": [
+"On Tap 3#8"
+],
+"spark__lv2__t6__q24": [
+"On Tap 2#35"
+],
+"spark__lv2__t6__q25": [
+"On Tap 2#24"
+],
+"spark__lv2__t6__q3": [
+"On Tap 2#1"
+],
+"spark__lv2__t6__q4": [
+"On Tap 2#14"
+],
+"spark__lv2__t6__q5": [
+"On Tap 2#6"
+],
+"spark__lv2__t6__q6": [
+"On Tap 1#16"
+],
+"spark__lv2__t6__q7": [
+"On Tap 2#25"
+],
+"spark__lv2__t6__q8": [
+"On Tap 2#27"
+],
+"spark__lv2__t6__q9": [
+"On Tap 2#31"
+],
+"spark__lv2__t7__q1": [
+"On Tap 3#14"
+],
+"spark__lv2__t7__q2": [
+"On Tap 3#15"
+],
+"spark__lv2__t7__q3": [
+"On Tap 3#23"
+],
+"spark__lv2__t7__q4": [
+"On Tap 3#9"
+],
+"spark__lv3__t1__q1": [
+"On Tap 1#4"
+],
+"spark__lv3__t1__q25": [
+"On Tap 3#31"
+],
+"spark__lv3__t1__q26": [
+"On Tap 2#18"
+],
+"spark__lv3__t1__q3": [
+"On Tap 1#2"
+],
+"spark__lv3__t1__q37_new": [
+"On Tap 2#16"
+],
+"spark__lv3__t1__q4": [
+"On Tap 2#1"
+],
+"spark__lv3__t1__q44": [
+"On Tap 2#17"
+],
+"spark__lv3__t1__q5": [
+"On Tap 2#15"
+],
+"spark__lv3__t1__q6": [
+"On Tap 2#3"
+],
+"spark__lv3__t1__q7": [
+"On Tap 2#24"
+],
+"spark__lv3__t1__q9": [
+"On Tap 1#6"
+],
+"spark__lv3__t2__q1": [
+"On Tap 1#3"
+],
+"spark__lv3__t2__q15": [
+"On Tap 3#23"
+],
+"spark__lv3__t2__q17": [
+"On Tap 1#37"
+],
+"spark__lv3__t2__q18": [
+"On Tap 3#21"
+],
+"spark__lv3__t2__q19": [
+"On Tap 1#38"
+],
+"spark__lv3__t2__q2": [
+"On Tap 2#21"
+],
+"spark__lv3__t2__q20": [
+"On Tap 1#39"
+],
+"spark__lv3__t2__q21": [
+"On Tap 3#43"
+],
+"spark__lv3__t2__q22": [
+"On Tap 1#40"
+],
+"spark__lv3__t2__q23": [
+"On Tap 1#41"
+],
+"spark__lv3__t2__q24": [
+"On Tap 3#17"
+],
+"spark__lv3__t2__q25": [
+"On Tap 1#43"
+],
+"spark__lv3__t2__q28": [
+"On Tap 3#40"
+],
+"spark__lv3__t2__q4": [
+"On Tap 1#14",
+"On Tap 2#32"
+],
+"spark__lv3__t2__q5": [
+"On Tap 1#24"
+],
+"spark__lv3__t2__q57_new": [
+"On Tap 2#20"
+],
+"spark__lv3__t2__q58_new": [
+"On Tap 2#19"
+],
+"spark__lv3__t2__q61_new": [
+"On Tap 3#19"
+],
+"spark__lv3__t2__q62_new": [
+"On Tap 3#18"
+],
+"spark__lv3__t2__q64_new": [
+"On Tap 3#26"
+],
+"spark__lv3__t2__q66_new2": [
+"On Tap 1#15",
+"On Tap 2#22"
+],
+"spark__lv3__t2__q67_new2": [
+"On Tap 2#8"
+],
+"spark__lv3__t2__q7": [
+"On Tap 1#34"
+],
+"spark__lv3__t2__q71_new2": [
+"On Tap 1#44"
+],
+"spark__lv3__t2__q75_new2": [
+"On Tap 1#42"
+],
+"spark__lv3__t2__q76": [
+"On Tap 2#33"
+],
+"spark__lv3__t3__q1": [
+"On Tap 1#1"
+],
+"spark__lv3__t3__q10": [
+"On Tap 2#11"
+],
+"spark__lv3__t3__q11": [
+"On Tap 3#9"
+],
+"spark__lv3__t3__q2": [
+"On Tap 1#9"
+],
+"spark__lv3__t3__q23": [
+"On Tap 3#24"
+],
+"spark__lv3__t3__q24": [
+"On Tap 3#28"
+],
+"spark__lv3__t3__q26": [
+"On Tap 3#42"
+],
+"spark__lv3__t3__q3": [
+"On Tap 2#5"
+],
+"spark__lv3__t3__q4": [
+"On Tap 1#16",
+"On Tap 1#22"
+],
+"spark__lv3__t3__q5": [
+"On Tap 1#18"
+],
+"spark__lv3__t3__q6": [
+"On Tap 2#30"
+],
+"spark__lv3__t3__q7": [
+"On Tap 1#19"
+],
+"spark__lv3__t3__q8": [
+"On Tap 2#31"
+],
+"spark__lv3__t3__q83_new": [
+"On Tap 1#12"
+],
+"spark__lv3__t3__q84_new": [
+"On Tap 3#36"
+],
+"spark__lv3__t3__q86_new": [
+"On Tap 2#12"
+],
+"spark__lv3__t3__q9": [
+"On Tap 2#9"
+],
+"spark__lv3__t3__q91_new": [
+"On Tap 3#38"
+],
+"spark__lv3__t3__q92_new": [
+"On Tap 1#20"
+],
+"spark__lv3__t3__q93_new2": [
+"On Tap 1#7"
+],
+"spark__lv3__t3__q95_new2": [
+"On Tap 3#10",
+"On Tap 3#41"
+],
+"spark__lv3__t4__k_ot2_14": [
+"On Tap 2#14"
+],
+"spark__lv3__t4__q1": [
+"On Tap 2#6"
+],
+"spark__lv3__t4__q100_new2": [
+"On Tap 2#34"
+],
+"spark__lv3__t4__q2": [
+"On Tap 1#21"
+],
+"spark__lv3__t4__q5": [
+"On Tap 2#35"
+],
+"spark__lv3__t4__q6": [
+"On Tap 3#11"
+],
+"spark__lv3__t4__q89_new": [
+"On Tap 1#28"
+],
+"spark__lv3__t4__q92_new": [
+"On Tap 1#26"
+],
+"spark__lv3__t4__q93_new": [
+"On Tap 2#10"
+],
+"spark__lv3__t4__q94_new": [
+"On Tap 1#27"
+],
+"spark__lv3__t4__q95_new": [
+"On Tap 2#37",
+"On Tap 3#33"
+],
+"spark__lv3__t4__q96_new": [
+"On Tap 1#25",
+"On Tap 3#8"
+],
+"spark__lv3__t4__q98_new": [
+"On Tap 2#36"
+],
+"spark__lv3__t4__q99_new": [
+"On Tap 2#13"
+],
+"spark__lv3__t5__q1": [
+"On Tap 2#2"
+],
+"spark__lv3__t5__q101_new": [
+"On Tap 3#4"
+],
+"spark__lv3__t5__q102_new": [
+"On Tap 1#30"
+],
+"spark__lv3__t5__q103_new": [
+"On Tap 1#31"
+],
+"spark__lv3__t5__q105_new2": [
+"On Tap 1#32",
+"On Tap 2#42",
+"On Tap 2#43"
+],
+"spark__lv3__t5__q107_new2": [
+"On Tap 3#5"
+],
+"spark__lv3__t5__q108_new2": [
+"On Tap 1#35"
+],
+"spark__lv3__t5__q111_new2": [
+"On Tap 2#39"
+],
+"spark__lv3__t5__q112": [
+"On Tap 1#36"
+],
+"spark__lv3__t5__q2": [
+"On Tap 1#17",
+"On Tap 2#28",
+"On Tap 2#29"
+],
+"spark__lv3__t5__q93_new": [
+"On Tap 2#38"
+],
+"spark__lv3__t5__q95_new": [
+"On Tap 3#3"
+],
+"spark__lv3__t5__q97_new": [
+"On Tap 3#37"
+],
+"spark__lv3__t6__k_ot2_41": [
+"On Tap 2#41"
+],
+"spark__lv3__t6__q1": [
+"On Tap 1#23"
+],
+"spark__lv3__t6__q10": [
+"On Tap 3#6"
+],
+"spark__lv3__t6__q11": [
+"On Tap 3#2"
+],
+"spark__lv3__t6__q113_new": [
+"On Tap 3#44"
+],
+"spark__lv3__t6__q115_new2": [
+"On Tap 3#39"
+],
+"spark__lv3__t6__q118": [
+"On Tap 3#1"
+],
+"spark__lv3__t6__q12": [
+"On Tap 3#14"
+],
+"spark__lv3__t6__q13": [
+"On Tap 3#13"
+],
+"spark__lv3__t6__q14": [
+"On Tap 1#29",
+"On Tap 3#16"
+],
+"spark__lv3__t6__q15": [
+"On Tap 3#15"
+],
+"spark__lv3__t6__q16": [
+"On Tap 3#12"
+],
+"spark__lv3__t6__q2": [
+"On Tap 1#33"
+],
+"spark__lv3__t6__q5": [
+"On Tap 3#27"
+],
+"spark__lv3__t6__q6": [
+"On Tap 3#25"
+],
+"spark__lv3__t6__q7": [
+"On Tap 3#30"
+],
+"spark__lv3__t6__q8": [
+"On Tap 2#40"
+],
+"spark__lv3__t6__q9": [
+"On Tap 3#7"
+],
+"spark__lv3__t7__q1": [
+"On Tap 1#8"
+],
+"spark__lv3__t7__q11": [
+"On Tap 3#29"
+],
+"spark__lv3__t7__q12": [
+"On Tap 3#22"
+],
+"spark__lv3__t7__q122_new": [
+"On Tap 3#34"
+],
+"spark__lv3__t7__q123_new": [
+"On Tap 2#23"
+],
+"spark__lv3__t7__q124_new": [
+"On Tap 3#35"
+],
+"spark__lv3__t7__q125_new": [
+"On Tap 2#25"
+],
+"spark__lv3__t7__q126_new": [
+"On Tap 2#26"
+],
+"spark__lv3__t7__q127_new": [
+"On Tap 1#10"
+],
+"spark__lv3__t7__q13": [
+"On Tap 3#32"
+],
+"spark__lv3__t7__q130_new": [
+"On Tap 2#27"
+],
+"spark__lv3__t7__q135_new2": [
+"On Tap 2#4"
+],
+"spark__lv3__t7__q136_new2": [
+"On Tap 1#11"
+],
+"spark__lv3__t7__q137_new2": [
+"On Tap 3#20"
+],
+"spark__lv3__t7__q2": [
+"On Tap 1#13"
+],
+"spark__lv3__t7__q3": [
+"On Tap 2#7"
+],
+"spark__lv3__t7__q4": [
+"On Tap 1#5"
+]
+}
+}

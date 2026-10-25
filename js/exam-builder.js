@@ -28,11 +28,16 @@
   const DRAFT_KEY = 'ic3_exam_builder_draft';
   const SETS_KEY = 'ic3_custom_sets';
   const BAI_RE = /^Bài \d+[.:]/;
-  const TIET_RE = /^Tiết \d+$/;
+  // Bộ theo tiết PPCT (câu All Key) — "Tiết N" là tên cũ trước 10/2026
+  const TIET_RE = /^(Tiết \d+$|Ôn tập\s|Luyện thi\s)/;
+  const KT_RE = /^Kiểm tra\s/;
+  const FINAL_RE = /^Ôn tập cuối khóa\s/; // 8 tiết ôn cuối khóa (All Key)
   const GROUPS = [
     { id: 'bai', label: 'Theo bài', test: (n) => BAI_RE.test(n) },
-    { id: 'tiet', label: 'Ôn tập (Tiết)', test: (n) => TIET_RE.test(n) },
-    { id: 'topic', label: 'Chủ đề', test: (n) => !BAI_RE.test(n) && !TIET_RE.test(n) },
+    { id: 'tiet', label: 'Ôn tập (theo tiết)', test: (n) => TIET_RE.test(n) && !FINAL_RE.test(n) },
+    { id: 'final', label: 'Ôn tập cuối khóa', test: (n) => FINAL_RE.test(n) },
+    { id: 'kt', label: 'Kiểm tra (theo tiết)', test: (n) => KT_RE.test(n) },
+    { id: 'topic', label: 'Chủ đề', test: (n) => !BAI_RE.test(n) && !TIET_RE.test(n) && !KT_RE.test(n) },
   ];
   const BANK_TYPE_LABEL = {
     single: '1 đáp án', multi: 'Nhiều đáp án', truefalse: 'Đúng/Sai (bảng)', list: 'Chọn theo dòng',
@@ -1573,7 +1578,7 @@
     const g = GROUPS.find((x) => x.id === bk.group);
     const term = bk.mtSearch.toLowerCase();
     let names = Object.keys(levelMeta(bk.cat, bk.level)?.minitests || {}).filter((n) => g && g.test(n));
-    if (bk.group !== 'topic') names.sort((a, b) => (parseInt(a.match(/\d+/)?.[0], 10) || 0) - (parseInt(b.match(/\d+/)?.[0], 10) || 0));
+    if (bk.group === 'bai') names.sort((a, b) => (parseInt(a.match(/\d+/)?.[0], 10) || 0) - (parseInt(b.match(/\d+/)?.[0], 10) || 0));
     if (term) names = names.filter((n) => n.toLowerCase().includes(term));
     const picked = {};
     bankSlides().forEach((s) => { if (s.cat === bk.cat && s.level === bk.level) picked[s.mt] = (picked[s.mt] || 0) + 1; });
@@ -1658,7 +1663,7 @@
     const draw = () => {
       const g = GROUPS.find((x) => x.id === gid);
       const list = names.filter(g.test);
-      if (gid !== 'topic') list.sort((a, b) => (parseInt(a.match(/\d+/)?.[0], 10) || 0) - (parseInt(b.match(/\d+/)?.[0], 10) || 0));
+      if (gid === 'bai') list.sort((a, b) => (parseInt(a.match(/\d+/)?.[0], 10) || 0) - (parseInt(b.match(/\d+/)?.[0], 10) || 0));
       body.innerHTML = `<p class="eb-matrix-hint">${esc(levelMeta(bk.cat, bk.level)?.name || '')} — nhập số câu cho từng mục, hệ thống bốc ngẫu nhiên, không trùng câu đã có.</p>
         <div class="eb-chips">${groups.map((x) => `<button type="button" class="eb-chip${x.id === gid ? ' is-active' : ''}" data-mgroup="${x.id}">${x.label}</button>`).join('')}</div>
         <div class="eb-matrix-quick">Chia đều <input type="number" id="ebMatrixTotal" min="1" max="200" value="30"> câu <button type="button" class="eb-link" id="ebMatrixSpread">Áp dụng</button></div>

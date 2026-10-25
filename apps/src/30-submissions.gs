@@ -72,41 +72,37 @@ function writeSubmissionLog_(payload) {
   // dòng = đọc 100.000 ô mỗi bài, trong lúc giữ khoá chung) → mùa ôn thi các lượt nộp
   // xếp hàng chờ khoá rồi hết giờ. Gửi lại từ hàng đợi phía học sinh dùng cùng mã
   // (js/services/result-submitter.js) và thường diễn ra trong vài phút - vài giờ.
+  //
+  // KHÔNG còn khoá chung quanh appendRow (xem withRareLock_): mỗi bài nộp ghi song song.
+  // Đánh đổi: 2 request CÙNG mã tới cùng lúc (< 1 giây) có thể ghi 2 dòng — hiếm, vì máy học
+  // sinh gửi lại sau ≥ 15 giây và chỉ 1 tab gửi (Web Locks); listResults_ bỏ dòng trùng mã.
   const cache = CacheService.getScriptCache();
   const dedupeKey = 'sub:' + String(payload.submissionId).slice(0, 200);
   if (cache.get(dedupeKey)) return { written: false, duplicate: true };
 
-  const lock = LockService.getScriptLock();
-  lock.waitLock(20000); // chỉ giữ khoá trong lúc chọn file + appendRow (rất ngắn)
-
-  try {
-    if (cache.get(dedupeKey)) return { written: false, duplicate: true }; // request song song vừa ghi xong
-    const sheet = getSubmissionLogSheet_();
-    // asText_(): giữ NGUYÊN chữ — trước đây Sheet tự đổi "7/24" (số câu đúng), lớp
-    // "3/12", thời gian "5:05" thành ngày/giờ, và tên bắt đầu bằng "=" thành công thức.
-    sheet.appendRow([
-      asText_(payload.submissionId),
-      asText_(payload.studentName),
-      asText_(payload.studentClass),
-      asText_(payload.studentSchool),
-      asText_(payload.testName),
-      payload.score         ?? '',
-      asText_(payload.correct),
-      asText_(payload.time),
-      payload.tabSwitch     ?? '',
-      payload.clickCount    ?? '',
-      asText_(payload.status),
-      new Date(), // Dùng giờ server (đáng tin cậy hơn giờ máy học sinh) - lưu dạng Date thật để sort/lọc được
-      asText_(payload.note),
-      asText_(payload.examMode), // N — CheDo: 'practice' (Ôn luyện) | 'test' (Kiểm tra); bài cũ để trống
-      // O — CauSai: uid câu sai "a,b,c"; "-" = không sai câu nào; trống = web cũ chưa gửi.
-      payload.wrong === '' ? '-' : asText_(payload.wrong),
-      payload.detail ? JSON.stringify(payload.detail) : '' // P — ChiTiet (đã lọc ở cleanDetail_)
-    ]);
-    cache.put(dedupeKey, '1', DEDUPE_TTL_SEC);
-  } finally {
-    lock.releaseLock();
-  }
+  const sheet = getSubmissionLogSheet_();
+  // asText_(): giữ NGUYÊN chữ — trước đây Sheet tự đổi "7/24" (số câu đúng), lớp
+  // "3/12", thời gian "5:05" thành ngày/giờ, và tên bắt đầu bằng "=" thành công thức.
+  sheet.appendRow([
+    asText_(payload.submissionId),
+    asText_(payload.studentName),
+    asText_(payload.studentClass),
+    asText_(payload.studentSchool),
+    asText_(payload.testName),
+    payload.score         ?? '',
+    asText_(payload.correct),
+    asText_(payload.time),
+    payload.tabSwitch     ?? '',
+    payload.clickCount    ?? '',
+    asText_(payload.status),
+    new Date(), // Dùng giờ server (đáng tin cậy hơn giờ máy học sinh) - lưu dạng Date thật để sort/lọc được
+    asText_(payload.note),
+    asText_(payload.examMode), // N — CheDo: 'practice' (Ôn luyện) | 'test' (Kiểm tra); bài cũ để trống
+    // O — CauSai: uid câu sai "a,b,c"; "-" = không sai câu nào; trống = web cũ chưa gửi.
+    payload.wrong === '' ? '-' : asText_(payload.wrong),
+    payload.detail ? JSON.stringify(payload.detail) : '' // P — ChiTiet (đã lọc ở cleanDetail_)
+  ]);
+  cache.put(dedupeKey, '1', DEDUPE_TTL_SEC);
 
   // Cảnh báo gian lận qua email — CHỈ khi có dấu ⚠️ trong status (do
   // js/googleSheet.js gắn khi integrity.valid == false), và chỉ với
@@ -125,7 +121,7 @@ function writeSubmissionLog_(payload) {
  * vượt MAX_LOG_ROWS dòng, tự tạo FILE MỚI "NhatKyNopBai <ngày>" (cùng dòng tiêu đề),
  * ghi tiếp vào đó và thêm 1 dòng vào tab DanhMucNhatKy của file chính để tra cứu.
  * Chưa có file mới nào thì dùng tab NhatKyNopBai của file chính như trước.
- * Gọi BÊN TRONG khoá của writeSubmissionLog_().
+ * Không giữ khoá; chỉ lúc phải xoay file mới vào withRareLock_.
  */
 function getSubmissionLogSheet_() {
   const currentId = cachedProp_(LOG_SPREADSHEET_PROP); // qua cache — xem cachedProp_ (quota Properties)
@@ -138,14 +134,22 @@ function getSubmissionLogSheet_() {
   ensureLogSheetLayout_(sheet);
   if (!logTabFull_(sheet)) return sheet; // đầy theo số dòng HOẶC file sắp chạm trần 10 triệu ô
 
-  const made = newLogFile_(SHEET_SUBMISSION_LOG, LOG_HEADERS);
-  setCachedProp_(LOG_SPREADSHEET_PROP, made.file.getId());
-  // Lịch sử file đọc thẳng Properties (không qua cache) để không mất file nào khi ghi lại.
-  const history = JSON.parse(PropertiesService.getScriptProperties().getProperty(LOG_HISTORY_PROP) || '[]');
-  history.push(made.file.getId());
-  setCachedProp_(LOG_HISTORY_PROP, JSON.stringify(history));
-  ensureLogSheetLayout_(made.sheet);
-  return made.sheet;
+  return withRareLock_(function () {
+    // Lượt khác vừa xoay file trong lúc chờ khoá → ghi vào file đó, không tạo thêm file
+    const now = cachedProp_(LOG_SPREADSHEET_PROP);
+    if (now && now !== currentId) {
+      const moved = SpreadsheetApp.openById(now).getSheetByName(SHEET_SUBMISSION_LOG);
+      if (moved) return moved;
+    }
+    const made = newLogFile_(SHEET_SUBMISSION_LOG, LOG_HEADERS);
+    setCachedProp_(LOG_SPREADSHEET_PROP, made.file.getId());
+    // Lịch sử file đọc thẳng Properties (không qua cache) để không mất file nào khi ghi lại.
+    const history = JSON.parse(PropertiesService.getScriptProperties().getProperty(LOG_HISTORY_PROP) || '[]');
+    history.push(made.file.getId());
+    setCachedProp_(LOG_HISTORY_PROP, JSON.stringify(history));
+    ensureLogSheetLayout_(made.sheet);
+    return made.sheet;
+  });
 }
 
 /**
@@ -157,14 +161,17 @@ function ensureLogSheetLayout_(sheet) {
   const cache = CacheService.getScriptCache();
   const flag = 'layout:' + sheet.getParent().getId();
   if (cache.get(flag)) return;
-  const head = sheet.getRange(1, 1, 1, LOG_HEADERS.length).getDisplayValues()[0];
-  LOG_HEADERS.forEach(function (h, i) {
-    if (i >= 13 && !head[i]) sheet.getRange(1, i + 1).setValue(h); // chỉ cột thêm sau, không đè tiêu đề cũ
+  withRareLock_(function () { // 6 giờ/lần; 2 lượt cùng xoá cột thì lượt sau báo lỗi → làm trong khoá
+    if (cache.get(flag)) return;
+    const head = sheet.getRange(1, 1, 1, LOG_HEADERS.length).getDisplayValues()[0];
+    LOG_HEADERS.forEach(function (h, i) {
+      if (i >= 13 && !head[i]) sheet.getRange(1, i + 1).setValue(h); // chỉ cột thêm sau, không đè tiêu đề cũ
+    });
+    sheet.getRange('L2:L').setNumberFormat('HH:mm:ss d/M/yyyy');
+    const max = sheet.getMaxColumns(); // cột trống thừa vẫn tính vào trần 10 triệu ô/file
+    if (max > LOG_HEADERS.length) sheet.deleteColumns(LOG_HEADERS.length + 1, max - LOG_HEADERS.length);
+    cache.put(flag, '1', DEDUPE_TTL_SEC);
   });
-  sheet.getRange('L2:L').setNumberFormat('HH:mm:ss d/M/yyyy');
-  const max = sheet.getMaxColumns(); // cột trống thừa vẫn tính vào trần 10 triệu ô/file
-  if (max > LOG_HEADERS.length) sheet.deleteColumns(LOG_HEADERS.length + 1, max - LOG_HEADERS.length);
-  cache.put(flag, '1', DEDUPE_TTL_SEC);
 }
 
 /**

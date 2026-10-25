@@ -265,6 +265,29 @@ var ld = A.moonStep(m3, true, 0, 20000, 10, 7);
 assertEq('mặt trăng: chạm Mặt Trăng → dừng ở 384, ghi câu đáp', [ld.landed, m3.km, m3.landedAt], [true, 384, 7]);
 assertEq('mặt trăng: đáp trước xếp trên, rồi tới bay cao', [{ id: 'x', km: 300 }, { id: 'y', km: 384, landedAt: 9 }, { id: 'z', km: 384, landedAt: 4 }].sort(A.moonOrder).map(function (p) { return p.id; }), ['z', 'y', 'x']);
 
+// ── Diệt Virus ──
+assertEq('virus: máu = số câu × số người × hệ số, tối thiểu 40', [A.bossMaxHp(10, 4), A.bossMaxHp(1, 1)], [280, 40]);
+assertEq('virus: giai đoạn theo % máu', [A.bossPhase(100, 100), A.bossPhase(60, 100), A.bossPhase(25, 100), A.bossPhase(0, 100)], [0, 1, 2, 2]);
+var never = function () { return 0.99; }, always = function () { return 0; };
+var b1 = { hp: 3, streak: 0, dmg: 0 };
+var h1 = A.bossHit(b1, true, 0, 20000, 0, never, 0);
+assertEq('virus: đúng tức thì → 16, chưa combo, không chí mạng', [h1.dmg, h1.crit, b1.dmg], [16, false, 16]);
+b1.streak = 4;
+var h2 = A.bossHit(b1, true, 20000, 20000, 0, always, 1);
+assertEq('virus: chuỗi 5 ×1.4, chí mạng ×2', [h2.dmg, h2.crit, b1.streak], [28, true, 5]);
+var h3 = A.bossHit(b1, false, 0, 20000, 0, never, 2);
+assertEq('virus: sai → mất 1 tim, mất chuỗi, 0 sát thương', [h3.dmg, h3.life.lost, b1.hp, b1.streak], [0, true, 2, 0]);
+var b0 = { hp: 0, streak: 0, dmg: 5 };
+assertEq('virus: người đã gục không đánh được', [A.bossHit(b0, true, 0, 20000, 0, never, 3).dmg, b0.dmg], [0, 5]);
+var boss = { hp: 100, max: 100, top: 0 };
+var r1 = A.bossRound(boss, 45, 4, 4);
+assertEq('virus: trừ máu, bước vào Nổi giận (1 lần)', [boss.hp, r1.newPhase, r1.heal], [55, 1, 0]);
+var r2 = A.bossRound(boss, 5, 1, 4);
+assertEq('virus: Nổi giận + đội đúng < nửa → hồi 6%', [boss.hp, r2.heal, r2.newPhase], [56, 6, 0]);
+var r3 = A.bossRound(boss, 80, 4, 4);
+assertEq('virus: không trừ quá 0, hạ gục', [boss.hp, r3.dealt, r3.ko], [0, 56, true]);
+assertEq('virus: xếp hạng theo sát thương, hoà thì em trước', [{ id: 'b', dmg: 30, bot: true }, { id: 'me', dmg: 30 }, { id: 'c', dmg: 50, bot: true }].sort(A.bossOrder).map(function (p) { return p.id; }), ['c', 'me', 'b']);
+
 var bd = A.makeBoard([{ text: 'a' }, { text: 'b' }], 12, A.rngFrom(4));
 assertEq('bảng điểm: đủ ô, lặp câu nếu thiếu, có ô x2 và ô rủi ro', [bd.length, bd[2].q.text, bd.some(function (t) { return t.special === 'x2'; }), bd.some(function (t) { return t.special === 'risk'; })], [12, 'a', true, true]);
 assertEq('bảng điểm: giá trị 100…500', bd.every(function (t) { return A.BOARD_VALUES.indexOf(t.value) >= 0; }), true);

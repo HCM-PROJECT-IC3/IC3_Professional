@@ -173,18 +173,18 @@
         <!-- Minitest (thời gian tính theo "Chế độ làm bài" chọn ở trên —
              Ôn luyện = không giới hạn, Kiểm tra = 50 phút, không cho học
              sinh tự chọn mốc khác). Chọn theo 2 bước: bấm 1 trong các nút
-             "chế độ" (Theo Tên bài/Ôn tập cuối kỳ/Theo chủ đề/Tổng hợp/Tổng
-             hợp Vui) trước để LỌC bớt, rồi mới chọn cụ thể trong select
+             "chế độ" (Theo Tên bài/Ôn tập theo tiết/Kiểm tra theo tiết/Theo chủ
+             đề/Tổng hợp/Tổng hợp Vui) trước để LỌC bớt, rồi mới chọn cụ thể trong select
              bên dưới — tránh 1 dropdown xổ ra hàng chục dòng liền một lúc,
              khó quét/dễ chọn nhầm trên di động. "Theo Tên bài" (bộ đề CỦNG
              CỐ bám sát từng bài giảng, vd "Bài 6. Kiểm chứng thông tin")
              là chế độ mặc định khi cấp/chương trình đó đã có sẵn — phù hợp
-             nhất để ôn ngay sau buổi học. "Ôn tập cuối kỳ" (trước đây ghi
-             nhầm là "Theo tiết") là các gói câu hỏi ĐÃ TRỘN SẴN nhiều chủ
-             đề, dùng để ôn diện rộng trước kỳ thi — không phải 1 tiết học
-             cụ thể nào, đổi tên cho đúng bản chất. Xem js/quiz-engine.js §
-             refreshMinitests() (biến BAI_NAME_RE quyết định nhận diện tên
-             bài dạng "Bài N. …", LESSON_KEY_RE nhận diện "Tiết N"). -->
+             nhất để ôn ngay sau buổi học (chỉ làm ở chế độ Ôn luyện — câu củng
+             cố bài học để dạy, không trộn vào bộ khác). "Ôn tập theo tiết" /
+             "Kiểm tra theo tiết" là các bộ đúng tiết Ôn tập / Kiểm tra trong
+             PPCT từng khối, CHỈ gồm câu All Key (data/ic3/ppct-review.json,
+             scripts/generate-review-minitests.js). Xem js/quiz-engine.js §
+             refreshMinitests() (BAI_NAME_RE, REVIEW_KEY_RE, TEST_KEY_RE). -->
         <div class="form-group">
           <label for="minitestSelect"><i class="fa-solid fa-layer-group"></i> Bài luyện tập
             <span class="label-hint">Bấm 1 nhóm, rồi chọn bài ở ô bên dưới</span>
