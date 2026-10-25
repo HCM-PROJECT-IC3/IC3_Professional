@@ -120,6 +120,8 @@ function listResults_(p, who) {
   const limit = Math.max(1, Math.min(Number(p.limit) || 1000, READ_MAX_ROWS));
 
   const rows = [];
+  // Bài nộp ghi song song không khoá (30-submissions.gs) → rất hiếm khi 1 mã có 2 dòng; giữ dòng mới nhất
+  const seenIds = new Set();
   let scanned = 0;
   let done = false;
   let truncated = false;
@@ -142,7 +144,8 @@ function listResults_(p, who) {
         const r = shown[i];
         const ms = submittedMs_(times[i][0]);
         if (sinceMs && ms && ms < sinceMs) { done = true; break; }
-        if (!r[0]) continue;
+        if (!r[0] || seenIds.has(r[0])) continue;
+        seenIds.add(r[0]);
         if (schoolSet && !schoolSet.has(r[3])) continue;
         if (classSet && !classSet.has(r[2])) continue;
         if (wantName && nameKey_(r[1]) !== wantName) continue;

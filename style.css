@@ -877,6 +877,11 @@ body {
   transition: var(--transition);
 }
 .mt-mode-btn:hover { color: var(--purple) }
+/* Nút "Kiểm tra" bị khoá khi chọn bộ "Theo Tên bài" (câu củng cố chỉ để luyện) — xem applyBaiLock() */
+.mt-mode-btn:disabled { opacity: .45; cursor: not-allowed; color: var(--muted); }
+.exam-lock-note { margin: .4rem 0 0; font-size: .78rem; color: var(--muted); line-height: 1.4; }
+.exam-lock-note[hidden] { display: none; }
+.exam-lock-note i { color: var(--purple); margin-right: .2rem; }
 .mt-mode-btn.is-active {
   background: var(--neu-surface);
   color: var(--purple);

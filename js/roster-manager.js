@@ -125,6 +125,15 @@
     if (window.EduDataCache) {
       window.EduDataCache.setAsync(rosterCacheKey(), { courses: state.courses, classes: state.classes, students: state.students, teachers: state.teachers }, CACHE_TTL_MS, /* persist */ true);
     }
+    shareRoster();
+  }
+  /** Bản đệm học sinh dùng chung (js/services/roster-cache-service.js): Admin đang giữ TOÀN BỘ
+   *  học sinh → ghi lại phần đang học cho các trang khác dùng (0 lượt đọc thêm); Điều phối chỉ
+   *  có học sinh vài trường → bỏ bản đệm chung để lần sau đọc lại cho đúng. */
+  function shareRoster() {
+    if (!window.EduRosterCache) return;
+    if (myProfile && myProfile.role === 'admin') window.EduRosterCache.put(state.students.filter((s) => s.status === 'active'));
+    else window.EduRosterCache.invalidate();
   }
   function dropOne(key, id) {
     state[key] = state[key].filter((x) => x.id !== id);
@@ -203,6 +212,8 @@
       if (window.EduDataCache) {
         window.EduDataCache.setAsync(cacheKey, { courses: state.courses, classes: state.classes, students: state.students, teachers: state.teachers }, CACHE_TTL_MS, /* persist */ true);
       }
+      // Admin vừa đọc toàn bộ → các trang quản lý khác khỏi đọc lại; Điều phối tải lại sau khi ghi → bỏ bản đệm chung
+      if (isAdmin || forceRefresh) shareRoster();
 
       renderCourses();
       renderClasses();

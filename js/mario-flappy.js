@@ -201,7 +201,9 @@
     var allPaths = [];
     Object.keys(manifest).forEach(function (program) {
       var topics = manifest[program];
-      Object.keys(topics).forEach(function (topic) { allPaths.push(topics[topic]); });
+      // Chỉ 7 bộ "N. Tên chủ đề" — không lấy bộ "Bài N" (câu củng cố bài học, để dạy trên lớp)
+      // hay bộ Ôn tập/Kiểm tra (đã trộn từ chủ đề → trùng câu).
+      Object.keys(topics).forEach(function (topic) { if (/^\d+\.\s/.test(topic)) allPaths.push(topics[topic]); });
     });
     // Lấy ngẫu nhiên tối đa 6 file chủ đề để không tải quá nhiều dữ liệu.
     var picked = shuffle(allPaths).slice(0, 6);

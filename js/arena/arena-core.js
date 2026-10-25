@@ -9,6 +9,7 @@
      • race  — "Đua về đích" kiểu Blooket Racing: đúng → tiến 1 bước
      • tug   — "Kéo co" 2 đội · spell — "Đấu phép" · heist — "Giải mã" (kiểu Wayground)
      • dino  — "Đào hoá thạch" kiểu Blooket Deceptive Dinos · moon — "Lên Mặt Trăng" kiểu Mastery Peak
+     • boss  — "Diệt Virus" kiểu Boss Raid: cả đội cùng hạ 1 Trùm Virus có 3 giai đoạn
      • board — "Bảng điểm" kiểu Board Battle: giáo viên trình chiếu, các đội không cần máy
    + Linh vật: xu kiếm được khi chơi → mở hộp → sưu tập (localStorage).
    0 lượt Firebase, 0 Apps Script — không gửi gì ra ngoài.
@@ -727,6 +728,60 @@
   }
 
   // ============================================================
+  // DIỆT VIRUS (kiểu Boss Raid) — em + 3 bạn máy chung 1 đội, cùng hạ "Trùm Virus"
+  // Đúng: tấn công (10, nhanh thêm tới 6) × combo theo chuỗi (×1.1 … ×1.4), 15% chí mạng ×2.
+  // Sai/hết giờ: Virus đánh trả, mất 1 tim (đúng liền 3 câu hồi 1 tim — như Sinh tồn); hết tim = gục.
+  // Giai đoạn theo máu Virus: ≤60% "Nổi giận" — lượt nào cả đội đúng chưa tới một nửa, Virus nhân bản
+  // hồi 6% máu; ≤25% "Liều chết" — chí mạng 30%. Hạ Virus trước khi hết câu → cả đội thắng; MVP = gây nhiều sát thương nhất.
+  // ============================================================
+  const BOSS_PER = 7;        // máu Virus = số câu × số người × BOSS_PER (đội đúng ~70% thì thường hạ được)
+  const BOSS_HEAL = 0.06;
+  const BOSS_PHASES = [
+    { name: 'Trùm Virus', sub: 'Cả đội trả lời đúng để tấn công!' },
+    { name: 'NỔI GIẬN', sub: 'Đội đúng chưa tới một nửa → Virus tự nhân bản hồi máu' },
+    { name: 'LIỀU CHẾT', sub: 'Virus sắp gục — chí mạng dễ hơn, dồn sức!' },
+  ];
+  function bossMaxHp(n, team) { return Math.max(40, Math.round(n * team * BOSS_PER)); }
+  function bossPhase(hp, max) { const r = hp / max; return r <= 0.25 ? 2 : r <= 0.6 ? 1 : 0; }
+  function bossCombo(streak) { return 1 + 0.1 * Math.min(4, Math.max(0, streak - 1)); }
+  /**
+   * Đòn của 1 người ở 1 câu (sửa p.hp / p.streak / p.dmg qua survivalStep). Người đã gục không đánh.
+   * Trả { dmg, crit, life } — life như survivalStep (lost/healed/out).
+   */
+  function bossHit(p, ok, ms, limitMs, phase, rng, i) {
+    if (p.hp <= 0) return { dmg: 0, crit: false, life: { lost: false, healed: false, out: true, already: true } };
+    const life = survivalStep(p, ok, i);
+    if (!ok) return { dmg: 0, crit: false, life };
+    const fast = limitMs ? 6 * Math.max(0, 1 - ms / limitMs) : 3;
+    const crit = rng() < (phase >= 2 ? 0.3 : 0.15);
+    const dmg = Math.round((10 + fast) * bossCombo(p.streak) * (crit ? 2 : 1));
+    p.dmg = (p.dmg || 0) + dmg;
+    return { dmg, crit, life };
+  }
+  /**
+   * Hết 1 lượt: trừ tổng sát thương, Virus "Nổi giận" mà đội đúng < nửa số người còn trụ → hồi máu.
+   * boss = { hp, max, top } (top = giai đoạn cao nhất đã tới, để chữ lớn chỉ hiện 1 lần).
+   * Trả { dealt, heal, phase, newPhase (giai đoạn vừa bước vào, 0 = không), ko }.
+   */
+  function bossRound(boss, total, okCount, alive) {
+    const before = boss.hp, phase0 = bossPhase(before, boss.max);
+    boss.hp = Math.max(0, before - total);
+    let heal = 0;
+    if (boss.hp > 0 && phase0 >= 1 && okCount * 2 < alive) {
+      heal = Math.min(boss.max - boss.hp, Math.round(boss.max * BOSS_HEAL));
+      boss.hp += heal;
+    }
+    const phase = bossPhase(boss.hp, boss.max);
+    const newPhase = phase > (boss.top || 0) ? phase : 0;
+    if (newPhase) boss.top = phase;
+    return { dealt: before - Math.max(0, before - total), heal, phase, newPhase, ko: boss.hp <= 0 };
+  }
+  /** Xếp hạng trong đội: gây nhiều sát thương hơn → còn nhiều tim hơn → em trước bạn máy. */
+  function bossOrder(a, b) {
+    return ((b.dmg || 0) - (a.dmg || 0)) || ((b.hp || 0) - (a.hp || 0)) || (a.bot === b.bot ? 0 : a.bot ? 1 : -1);
+  }
+
+  // ============================================================
   // BẢNG ĐIỂM (kiểu Board Battle) — giáo viên trình chiếu, các đội trả lời không cần máy
   // ============================================================
   const BOARD_VALUES = [100, 200, 300, 400, 500];
@@ -896,6 +951,7 @@
     VAULT_LEN, VAULT_SYMS, HEIST_STEAL, newVault, mineGems, crackOf, rekey, crackTry, vaultThreat, botHeist,
     DINO_CHEAT, DINO_CHEAT_TURNS, DINO_FINE, rollRocks, rockLabel, digRock, inspect, tickCheat, botDino,
     MOON_KM, MOON_FALL, MOON_STAGES, moonBoost, moonFloor, moonStep, moonOrder,
+    BOSS_PER, BOSS_HEAL, BOSS_PHASES, bossMaxHp, bossPhase, bossCombo, bossHit, bossRound, bossOrder,
     BOARD_VALUES, makeBoard, boardScore,
     coinsFor, PACK_PRICE, RARITY, PACKS, blookById, openPack, newProfile, buyPack, PITY_MAX, SET_BONUS, STAR_AT, DAILY_GOAL, starsOf, addDaily, dailyOf, ghostScoreAt,
   };

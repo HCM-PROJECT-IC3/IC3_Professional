@@ -185,9 +185,19 @@ Vượt mức thì reCAPTCHA trả lỗi cho mọi request mới. Mỗi phiên t
   tạo file mới `NhatKyNopBai <ngày giờ>` và ghi đường dẫn vào tab `DanhMucNhatKy` của file chính.
   Tab `ThongKe` (công thức QUERY) chỉ thống kê file chính; muốn thống kê file mới thì chạy lại
   `setupThongKeSheet_` trên file đó.
+- **Đã sửa (26/10/2026, BACKEND_VERSION 2026-10-26):** trước đây mỗi bài nộp giữ **khoá chung**
+  (`LockService.getScriptLock`) suốt lúc mở file + đếm dòng + `appendRow` (~0,5–1 giây). Cả hệ
+  thống vì thế chỉ ghi được **~1–2 bài/giây**. Cuối tiết, nhiều lớp nộp cùng lúc phải xếp hàng chờ
+  khoá 20 giây rồi lỗi và gửi lại.
+  - Nay `appendRow` ghi song song, vì hàm này tự nguyên tử: không 2 lượt nào ghi đè cùng 1 dòng.
+  - Khoá (`withRareLock_`) chỉ còn dùng cho việc hiếm: tạo tab, cắt cột (6 giờ/lần), xoay sang file
+    mới. Lượt chờ khoá kiểm tra lại xem lượt khác đã xoay file chưa, nên không tạo 2 file.
+  - Đánh đổi: 2 request **cùng mã** tới trong cùng 1 giây có thể ghi 2 dòng. `listResults_` bỏ dòng
+    trùng mã. Trường hợp này hiếm, vì máy học sinh gửi lại sau ≥ 15 giây và chỉ 1 tab gửi (Web Locks).
+  - Áp dụng cho cả `mosSubmit`.
 - **Giới hạn còn lại:** mỗi tài khoản Google chỉ chạy song song 30 lượt Apps Script. Ước lượng
-  (chưa đo tải thật) mỗi script ghi được khoảng 3–10 bài/giây, tức chừng vài chục nghìn đến
-  ~100.000 bài/ngày nếu nộp rải đều trong giờ học. Đã giảm dồn cục bằng 2 cách: rải ngẫu nhiên
+  (chưa đo tải thật) khoảng **20–30 bài/giây** sau khi bỏ khoá, tức vài trăm nghìn bài/ngày nếu
+  nộp rải đều trong giờ học. Đã giảm dồn cục bằng 2 cách: rải ngẫu nhiên
   0–4 giây trước khi gửi (`sheetJitterMs`), và hàng đợi giữ bài tới khi gửi được (bài có mã cố định).
 - **Chia theo trường:** `EduBackend.quizResults.sheetEndpoints = { 'Tên trường': 'URL Apps Script' }`.
   Mỗi URL là một bản `apps/Code.gs` deploy từ **tài khoản Google riêng**, vì giới hạn 30 lượt

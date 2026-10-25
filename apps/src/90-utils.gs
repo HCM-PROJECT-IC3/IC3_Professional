@@ -26,14 +26,33 @@ function noFormula_(value) {
   return typeof value === 'string' && /^[=+\-@]/.test(value) ? "'" + value : value;
 }
 
+/**
+ * Khoá chung CHỈ cho việc hiếm (tạo tab, cắt cột, xoay vòng file) — KHÔNG bọc appendRow.
+ * appendRow của Apps Script tự nguyên tử (không 2 lượt ghi đè cùng 1 dòng), nên bài nộp ghi
+ * song song tới trần 30 lượt chạy/tài khoản. Trước 10/2026 mỗi bài nộp giữ khoá này suốt lúc
+ * mở file + đếm dòng + appendRow (~0,5–1 giây) → cả hệ thống chỉ ghi được ~1–2 bài/giây,
+ * cuối tiết nhiều lớp cùng nộp thì xếp hàng chờ khoá 20 giây rồi lỗi, học sinh phải gửi lại.
+ */
+function withRareLock_(fn) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try { return fn(); } finally { lock.releaseLock(); }
+}
+
 /** Tab `name` trong file `spreadsheetId`; chưa có thì tạo kèm dòng tiêu đề (in đậm, cố định). */
 function ensureTab_(spreadsheetId, name, headers) {
   const ss = SpreadsheetApp.openById(spreadsheetId);
   let sheet = ss.getSheetByName(name);
   if (!sheet) {
-    sheet = ss.insertSheet(name);
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight('bold');
-    sheet.setFrozenRows(1);
+    // 2 lượt cùng thấy thiếu tab → lượt sau insertSheet báo "đã có" → tạo trong khoá, xem lại tên
+    sheet = withRareLock_(function () {
+      let s = ss.getSheetByName(name);
+      if (s) return s;
+      s = ss.insertSheet(name);
+      s.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight('bold');
+      s.setFrozenRows(1);
+      return s;
+    });
   }
   trimColumnsOnce_(sheet, headers.length);
   return sheet;
@@ -52,9 +71,12 @@ function trimColumnsOnce_(sheet, n) {
   const cache = CacheService.getScriptCache();
   const flag = 'trim:' + sheet.getParent().getId() + ':' + sheet.getName();
   if (cache.get(flag)) return;
-  const max = sheet.getMaxColumns();
-  if (max > n) sheet.deleteColumns(n + 1, max - n);
-  cache.put(flag, '1', DEDUPE_TTL_SEC);
+  withRareLock_(function () { // 2 lượt cùng xoá cột → lượt sau xoá vượt số cột còn lại, báo lỗi
+    if (cache.get(flag)) return;
+    const max = sheet.getMaxColumns();
+    if (max > n) sheet.deleteColumns(n + 1, max - n);
+    cache.put(flag, '1', DEDUPE_TTL_SEC);
+  });
 }
 
 /** Tổng số ô (kể cả trống) của file — đo lại tối đa 15 phút/lần (getSheets tốn thời gian). */
@@ -96,11 +118,17 @@ function newLogFile_(name, headers) {
  */
 function logTab_(name, headers) {
   const key = 'LOGFILE_' + name;
-  const sheet = ensureTab_(cachedProp_(key) || SPREADSHEET_ID_REPORT, name, headers);
+  const fileId = cachedProp_(key) || SPREADSHEET_ID_REPORT;
+  const sheet = ensureTab_(fileId, name, headers);
   if (!logTabFull_(sheet)) return sheet;
-  const made = newLogFile_(name, headers);
-  setCachedProp_(key, made.file.getId());
-  return made.sheet;
+  return withRareLock_(function () {
+    // Lượt khác có thể vừa xoay file trong lúc chờ khoá → ghi tiếp vào file đó, không tạo thêm
+    const now = cachedProp_(key) || SPREADSHEET_ID_REPORT;
+    if (now !== fileId) return ensureTab_(now, name, headers);
+    const made = newLogFile_(name, headers);
+    setCachedProp_(key, made.file.getId());
+    return made.sheet;
+  });
 }
 
 /**

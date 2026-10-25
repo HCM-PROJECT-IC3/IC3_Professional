@@ -214,6 +214,14 @@ async function _fetchCustomExamQuestions(ce) {
   const lists = await Promise.all(names.map((n) => _fetchMinitestQuestions(ce.cat, ce.level, n)));
   const byKey = new Map();
   names.forEach((n, i) => (lists[i] || []).forEach((q) => { if (q.uid) byKey.set(`${n}\u0000${q.uid}`, q); }));
+  // Link đề cũ trỏ tên bộ đã đổi (vd "Tiết 3" trước 10/2026, câu chuyển chủ đề) → tìm theo uid trong cả khối.
+  const lost = ce.items.filter((it) => !it.custom && !byKey.has(`${it.mt}\u0000${it.uid}`));
+  if (lost.length) {
+    const block = await _fetchLevelData(ce.cat, ce.level).catch(() => null);
+    const byUid = new Map();
+    Object.values(block?.minitests || {}).forEach((list) => (list || []).forEach((q) => { if (q?.uid && !byUid.has(q.uid)) byUid.set(q.uid, q); }));
+    lost.forEach((it) => { const q = byUid.get(it.uid); if (q) byKey.set(`${it.mt}\u0000${it.uid}`, q); });
+  }
   // Câu giáo viên tự soạn: nội dung nằm sẵn trong link, đã escape ở
   // EduCustomExam.toEngineQuestion() (link ai cũng tạo được).
   const qs = ce.items.map((it, i) => (it.custom
@@ -290,7 +298,7 @@ const RANDOM_MIX_TOTAL_DEFAULT = 40; // fallback nếu không tra được số 
 /* ============================================================
    § 1c — CHẾ ĐỘ LÀM BÀI: ÔN LUYỆN vs KIỂM TRA
    2 chế độ dùng chung TOÀN BỘ bộ đề hiện có (Spark/IC3/MOS × LV1-3 ×
-   Theo Tên bài/Ôn tập cuối kỳ/Theo chủ đề/Tổng hợp) — không tách dữ liệu
+   Theo Tên bài/Ôn tập theo tiết/Kiểm tra theo tiết/Theo chủ đề/Tổng hợp) — không tách dữ liệu
    riêng, chỉ khác cách tính giờ khi vào làm bài:
      - 'practice' (Ôn luyện) → không giới hạn thời gian, không auto-nộp.
      - 'test'     (Kiểm tra) → đếm ngược theo State.testDurationMinutes
@@ -325,17 +333,23 @@ function _shuffleArr(arr) {
   return a;
 }
 
-// "Tiết N" (N=1..8) là minitest ĐÃ TỰ TRỘN SẴN từ 7 chủ đề gốc (xem
-// scripts/generate-tiet-minitests.js) — KHÔNG phải 1 chủ đề thật, nên
-// phải loại khỏi mọi chỗ tính "chia đều theo chủ đề" (nếu không, bài
-// "Tổng hợp" sẽ tưởng có 15 chủ đề thay vì 7, chia sai tỉ lệ).
+// Bộ theo TIẾT ÔN trong PPCT từng khối (scripts/generate-review-minitests.js, chỉ câu All Key):
+//   "Ôn tập 1 (Tiết 11): …", "Luyện thi — Bài ôn số 1 (…)" → nhóm "Ôn tập theo tiết"
+//   "Kiểm tra HK1 (Tiết 24)"                              → nhóm "Kiểm tra theo tiết"
+// Đều trộn từ 7 chủ đề gốc nên KHÔNG phải 1 chủ đề thật — loại khỏi mọi chỗ tính "chia đều theo
+// chủ đề" (nếu không, bài "Tổng hợp" sẽ tưởng có hơn 7 chủ đề, chia sai tỉ lệ).
+// "Tiết N" = tên bộ cũ (trước 10/2026), giữ để lịch sử/link cũ vẫn được nhận ra.
 const LESSON_KEY_RE = /^Tiết \d+$/;
-// "Bài N. Tên bài" — bộ đề CỦNG CỐ bám sát 1 bài giảng cụ thể trong PPCT
-// (vd "Bài 6. Kiểm chứng thông tin"), KHÁC với "Tiết N" (đã trộn sẵn nhiều
-// chủ đề) và cũng không phải 1 "chủ đề" IC3 gốc — nên cũng phải loại khỏi
-// _isRealTopic() để không bị tính đúp vào bài "Tổng hợp".
+const REVIEW_KEY_RE = /^(Ôn tập|Luyện thi)\s/;
+const TEST_KEY_RE = /^Kiểm tra\s/;
+// "Ôn tập cuối khóa — Tiết 1…8" (cũng chỉ câu All Key): Tiết 1–4 phủ đủ, Tiết 5–8 đề tổng hợp — nhóm riêng
+const FINAL_KEY_RE = /^Ôn tập cuối khóa\s/;
+// "Bài N. Tên bài" — bộ CỦNG CỐ bám sát 1 bài giảng (file Củng cố của giáo viên) — chỉ để
+// dạy/luyện trên lớp: không trộn vào Tổng hợp/Ôn tập/Kiểm tra, không làm ở chế độ Kiểm tra.
 const BAI_NAME_RE = /^Bài \d+[.:]/;
-function _isRealTopic(name) { return !LESSON_KEY_RE.test(name) && !BAI_NAME_RE.test(name); }
+function _isRealTopic(name) {
+  return !LESSON_KEY_RE.test(name) && !BAI_NAME_RE.test(name) && !REVIEW_KEY_RE.test(name) && !TEST_KEY_RE.test(name);
+}
 
 /**
  * Trộn câu hỏi TỔNG HỢP: chia đều số câu cho từng chủ đề (7 chủ đề IC3),
@@ -1114,12 +1128,28 @@ function initLobby() {
   // chỉ đọc biến LÚC checkbox đổi (đã chắc chắn refreshMeta tồn tại).
   pledgeCheckbox?.addEventListener('change', () => refreshMeta());
 
+  // Bộ "Bài N" (câu Củng cố theo bài học) chỉ để dạy/luyện trên lớp → khoá chế độ "Kiểm tra"
+  // khi đang chọn nhóm "Theo Tên bài" của Spark/IC3 (MOS chỉ có bộ "Bài N" nên không khoá).
+  // Đề giáo viên soạn (?de=) tự chốt chế độ → không đụng tới.
+  const examLockNote = document.createElement('p');
+  examLockNote.className = 'exam-lock-note';
+  examLockNote.hidden = true;
+  examLockNote.innerHTML = '<i class="fa-solid fa-circle-info"></i> Bộ <b>Theo Tên bài</b> là câu củng cố bài học — chỉ làm ở chế độ <b>Ôn luyện</b>. Muốn làm bài Kiểm tra, chọn nhóm <b>Kiểm tra theo tiết</b>.';
+  examModeWrap?.after(examLockNote);
+  const applyBaiLock = (lock) => {
+    if (!examModeWrap || State.customExam) return;
+    const testBtn = examModeWrap.querySelector('[data-exam-mode="test"]');
+    if (lock && State.examMode === 'test') examModeWrap.querySelector('[data-exam-mode="practice"]')?.click();
+    if (testBtn) { testBtn.disabled = lock; testBtn.title = lock ? 'Bộ Theo Tên bài chỉ làm ở chế độ Ôn luyện' : ''; }
+    examLockNote.hidden = !lock;
+  };
+
   // "Chế độ" đang chọn ở khối chọn Minitest — nhớ giữa các lần đổi Level
   // (nếu vẫn còn hợp lệ) để không giật lại chế độ mặc định mỗi lần bấm
   // chọn linh tinh. 'bai' (Theo Tên bài — củng cố đúng 1 bài vừa học) làm
   // mặc định khi có sẵn vì đây là lộ trình ôn tập ngay-sau-buổi-học được
   // khuyến nghị nhất; cấp/chương trình nào chưa có bộ "Theo Tên bài" thì
-  // rơi về modes[0] (thường là 'lesson' — Ôn tập cuối kỳ) như hành vi cũ.
+  // rơi về modes[0] (thường là 'lesson' — Ôn tập theo tiết) như hành vi cũ.
   let mtMode = 'bai';
 
   // ── Đổ danh mục (categories) ───────────────────────────────
@@ -1144,7 +1174,7 @@ function initLobby() {
 
   // ── Hàm cập nhật Minitest khi đổi Level ───────────────────
   // Chọn theo 2 BƯỚC thay vì 1 dropdown dài: bấm nút "chế độ" (Theo Tên
-  // bài / Ôn tập cuối kỳ / Theo chủ đề / Tổng hợp) để LỌC trước, select
+  // bài / Ôn tập · Kiểm tra theo tiết / Theo chủ đề / Tổng hợp) để LỌC trước, select
   // bên dưới chỉ hiện đúng nhóm đó (tối đa 8 dòng thay vì 16) — dễ thao
   // tác hơn hẳn trên di động, không phải cuộn 1 danh sách dài để tìm
   // đúng mục.
@@ -1153,13 +1183,17 @@ function initLobby() {
     const lv  = cat?.levels?.find(l => l.id === lvlSel.value);
 
     const minitests   = lv?.minitests || {};
-    const allNames    = Object.keys(minitests);
+    // Bỏ bộ chưa có câu nào (vd MOS Excel "Bài 1" còn trống) — chọn vào chỉ ra bài làm rỗng.
+    const allNames    = Object.keys(minitests).filter(n => _mtCount(minitests[n]) > 0);
     // Sắp theo đúng thứ tự số bài (Bài 5, Bài 6, Bài 7, …) thay vì thứ tự
     // xuất hiện ngẫu nhiên trong JSON, để select bên dưới đọc từ trên
     // xuống là đúng mạch chương trình.
     const baiNames    = allNames.filter(n => BAI_NAME_RE.test(n))
       .sort((a, b) => (parseInt(a.match(/\d+/)?.[0], 10) || 0) - (parseInt(b.match(/\d+/)?.[0], 10) || 0));
-    const lessonNames = allNames.filter(n => LESSON_KEY_RE.test(n));
+    // Ôn tập / Kiểm tra theo tiết: giữ thứ tự trong file (đã xếp theo tiết PPCT)
+    const finalNames  = allNames.filter(n => FINAL_KEY_RE.test(n) || LESSON_KEY_RE.test(n));
+    const reviewNames = allNames.filter(n => REVIEW_KEY_RE.test(n) && !FINAL_KEY_RE.test(n));
+    const testNames   = allNames.filter(n => TEST_KEY_RE.test(n));
     const topicNames  = allNames.filter(_isRealTopic);
 
     // "Tổng hợp" — random chia đều các CHỦ ĐỀ THẬT (KHÔNG tính "Tiết N"
@@ -1169,13 +1203,14 @@ function initLobby() {
       ? Math.min(_randomMixTotalFor(catSel.value, lvlSel.value), totalAvail)
       : 0;
 
-    // Thứ tự nút hiển thị = thứ tự ưu tiên khuyến nghị: Theo Tên bài (ôn
-    // ngay sau buổi học) → Ôn tập cuối kỳ (gói câu hỏi tổng hợp nhiều chủ
-    // đề, dùng ôn trước kỳ thi) → Theo chủ đề → Tổng hợp / Tổng hợp Vui
-    // (luyện ngẫu nhiên diện rộng, phù hợp trước khi thi).
+    // Thứ tự nút hiển thị = thứ tự ưu tiên khuyến nghị: Theo Tên bài (củng
+    // cố ngay sau buổi học) → Ôn tập / Kiểm tra theo tiết PPCT (câu All Key)
+    // → Theo chủ đề → Tổng hợp / Tổng hợp Vui (luyện ngẫu nhiên diện rộng).
     const modes = [];
     if (baiNames.length)    modes.push({ id: 'bai',    label: '<i class="fa-solid fa-graduation-cap"></i> Theo Tên bài', names: baiNames });
-    if (lessonNames.length) modes.push({ id: 'lesson', label: '<i class="fa-solid fa-flag-checkered"></i> Ôn tập cuối kỳ', names: lessonNames });
+    if (reviewNames.length) modes.push({ id: 'lesson', label: '<i class="fa-solid fa-flag-checkered"></i> Ôn tập theo tiết', names: reviewNames });
+    if (testNames.length)   modes.push({ id: 'exam',   label: '<i class="fa-solid fa-file-signature"></i> Kiểm tra theo tiết', names: testNames });
+    if (finalNames.length)  modes.push({ id: 'final',  label: '<i class="fa-solid fa-trophy"></i> Ôn tập cuối khóa', names: finalNames });
     if (topicNames.length)  modes.push({ id: 'topic',  label: '<i class="fa-solid fa-book-open"></i> Theo chủ đề', names: topicNames });
     if (mixWanted > 0)      modes.push({ id: 'mix',    label: '<i class="fa-solid fa-book"></i> Tổng hợp',   names: [RANDOM_MIX_KEY] });
     // Cần ít nhất 6 câu để chia được 3 chặng ~đều nhau kèm mini-game (xem
@@ -1183,8 +1218,8 @@ function initLobby() {
     if (mixWanted >= 6)     modes.push({ id: 'mixplay', label: '<i class="fa-solid fa-gamepad"></i> Tổng hợp Vui', names: [RANDOM_MIX_PLAY_KEY] });
 
     // Giữ nguyên chế độ đang chọn nếu Level mới vẫn có (vd đổi Level
-    // trong cùng Chương trình, vẫn có "Ôn tập cuối kỳ") — không thì rơi về
-    // chế độ đầu tiên sẵn có (vd MOS không có "Ôn tập cuối kỳ").
+    // trong cùng Chương trình, vẫn có "Ôn tập theo tiết") — không thì rơi về
+    // chế độ đầu tiên sẵn có (vd MOS không có "Ôn tập theo tiết").
     if (!modes.find(m => m.id === mtMode)) mtMode = modes[0]?.id;
 
     const renderModeButtons = () => {
@@ -1207,6 +1242,7 @@ function initLobby() {
     const renderOptions = () => {
       mtSel.innerHTML = '';
       const mode = modes.find(m => m.id === mtMode);
+      applyBaiLock(mtMode === 'bai' && topicNames.length > 0);
       (mode?.names || []).forEach(name => {
         // new Option(...) chỉ render TEXT THUẦN (như <option>) — không thể
         // nhét icon Font Awesome vào đây, bỏ hẳn emoji thay vì để lọt icon "vỡ".
@@ -1342,7 +1378,8 @@ function initLobby() {
     catSel.value = catId; refreshLevels();
     if (![...lvlSel.options].some((o) => o.value === lvlId)) return false;
     lvlSel.value = lvlId;
-    mtMode = BAI_NAME_RE.test(name) ? 'bai' : LESSON_KEY_RE.test(name) ? 'lesson' : 'topic';
+    mtMode = BAI_NAME_RE.test(name) ? 'bai' : TEST_KEY_RE.test(name) ? 'exam'
+      : (FINAL_KEY_RE.test(name) || LESSON_KEY_RE.test(name)) ? 'final' : REVIEW_KEY_RE.test(name) ? 'lesson' : 'topic';
     refreshMinitests();
     if (![...mtSel.options].some((o) => o.value === name)) return false;
     mtSel.value = name;

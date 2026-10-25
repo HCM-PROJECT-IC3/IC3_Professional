@@ -104,6 +104,13 @@ def main():
 
             level_manifest[name] = f"minitests/{cat}_{lv}/{slug}.json"
 
+        # Xoá file của bộ không còn nữa (vd "Tiết 1–8" cũ đã thay bằng bộ Ôn tập/Kiểm tra theo PPCT)
+        # — để lại thì offline-pack/người đọc thư mục vẫn thấy dữ liệu cũ.
+        for old in out_dir.glob("*.json"):
+            if old.stem not in used_slugs:
+                old.unlink()
+                print(f"  − xoá bộ cũ {old.relative_to(ROOT)}")
+
         manifest[f"{cat}__{lv}"] = level_manifest
         total_minitests += len(level_manifest)
         print(f"  ✓ {cat}/{lv}: {len(level_manifest)} minitest → {out_dir.relative_to(ROOT)}")

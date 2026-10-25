@@ -199,6 +199,26 @@
   <circle cx="36" cy="66" r="11" fill="#2b2b33"/><circle cx="124" cy="66" r="11" fill="#2b2b33"/></g>
   <rect x="5" y="42" width="148" height="5" fill="#e23b2e"/><circle cx="36" cy="66" r="4" fill="#bbb"/><circle cx="124" cy="66" r="4" fill="#bbb"/></svg>`;
 
+  /** Trùm Virus (Đấu trường · Diệt Virus): quả cầu gai đội vương miện. Màu thân theo --vc / --vc-d (CSS đổi theo giai đoạn). */
+  const virus = () => `<svg class="np-virus" viewBox="0 0 220 220" aria-hidden="true">
+  <ellipse class="np-shadow" cx="110" cy="212" rx="64" ry="7"/>
+  <g class="np-virus-spikes" ${ol(2.6)}>${Array.from({ length: 12 }, (_, k) => {
+    const a = (k * 30 + 15) * Math.PI / 180, x1 = 110 + Math.cos(a) * 62, y1 = 124 + Math.sin(a) * 62, x2 = 110 + Math.cos(a) * 92, y2 = 124 + Math.sin(a) * 92;
+    return `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)}L${x2.toFixed(1)} ${y2.toFixed(1)}" stroke-width="7" stroke="var(--vc-d, #2f8f3a)"/><circle cx="${x2.toFixed(1)}" cy="${y2.toFixed(1)}" r="9" fill="var(--vc, #5fd068)"/>`;
+  }).join('')}</g>
+  <circle cx="110" cy="124" r="68" fill="var(--vc, #5fd068)" ${ol(3)}/>
+  <circle cx="92" cy="104" r="40" fill="#fff" opacity=".16"/>
+  ${[[72, 160, 9], [150, 150, 7], [140, 176, 5], [62, 120, 6]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="var(--vc-d, #2f8f3a)" opacity=".55"/>`).join('')}
+  <g class="np-virus-face">
+    <path d="M66 98l34 12M154 98l-34 12" stroke="${INK}" stroke-width="7" stroke-linecap="round"/>
+    <ellipse cx="88" cy="122" rx="15" ry="13" fill="#fff" ${ol(2.4)}/><ellipse cx="132" cy="122" rx="15" ry="13" fill="#fff" ${ol(2.4)}/>
+    <circle class="np-virus-eye" cx="92" cy="125" r="6.5" fill="#d0202a"/><circle class="np-virus-eye" cx="128" cy="125" r="6.5" fill="#d0202a"/>
+    <path d="M78 156q32 22 64 0l-8 6-8-8-8 8-8-8-8 8-8-8-8 8z" fill="#3a0d12" ${ol(2.4)}/>
+  </g>
+  <g class="np-virus-crown" ${ol(2.4)}><path d="M78 62l6-34 18 20 8-28 8 28 18-20 6 34z" fill="#ffc21f"/><path d="M80 62h60" stroke-width="5" stroke="#e09a12"/>
+    <circle cx="110" cy="44" r="5" fill="#e5484d"/><circle cx="90" cy="52" r="3.5" fill="#2f7be0"/><circle cx="130" cy="52" r="3.5" fill="#2f7be0"/></g>
+</svg>`;
+
   // ============================================================
   // CẢNH NỀN 1000×600
   // ============================================================
@@ -415,7 +435,33 @@
       <g stroke="${INK}" stroke-width="2"><path d="M300 560l6-12 6 12-12-8h12z" fill="#f28b5b"/><path d="M712 580q8-14 16 0z" fill="#fbe1ec"/><path d="M180 586l5-10 5 10-10-6h10z" fill="#f7c331"/></g>
       ${palm(60, 560, 1.15)}${palm(950, 560, 1.05, true)}${rock(860, 596, .55)}${rock(150, 600, .45)}`, 'np-scene-island');
     },
+
+    // Đấu trường · Diệt Virus: phòng máy chủ bị nhiễm — tủ máy chủ nháy đèn 2 bên, màn hình cảnh báo, sàn mạch điện
+    server: () => {
+      const rack = (x, w) => `<g stroke="${INK}" stroke-width="3"><rect x="${x}" y="150" width="${w}" height="330" rx="6" fill="#26304f"/>
+        ${Array.from({ length: 9 }, (_, k) => `<rect x="${x + 10}" y="${166 + k * 34}" width="${w - 20}" height="24" rx="3" fill="#323e66" stroke-width="2"/>
+          ${[0, 1, 2].map((j) => `<circle class="np-led" cx="${x + 22 + j * 12}" cy="${178 + k * 34}" r="3.5" fill="${['#4ff08a', '#ffc21f', '#4fd2ff'][(k + j) % 3]}" stroke="none" style="animation-delay:${((k * 3 + j) % 7) * .23}s"/>`).join('')}
+          <path d="M${x + w - 46} ${178 + k * 34}h30" stroke="#55628f" stroke-width="3"/>`).join('')}</g>`;
+      return svg(`<defs><linearGradient id="srvBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b1330"/><stop offset="1" stop-color="#1d2c5c"/></linearGradient>
+        <radialGradient id="srvGlow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ff4d5e" stop-opacity=".45"/><stop offset="1" stop-color="#ff4d5e" stop-opacity="0"/></radialGradient></defs>
+      <rect width="1000" height="600" fill="url(#srvBg)"/>
+      <g stroke="#2e4688" stroke-width="3" fill="none" opacity=".8">${[[0, 200, 180, 200, 220, 160, 420, 160], [1000, 230, 820, 230, 780, 190, 600, 190], [0, 330, 140, 330, 180, 290, 330, 290], [1000, 360, 860, 360, 820, 320, 680, 320]].map(([a, b, c, d, e, f, g, h]) => `<path d="M${a} ${b}H${c}L${e} ${f}H${g}"/><circle cx="${g}" cy="${h}" r="6" fill="#3c5bb0"/>`).join('')}</g>
+      <ellipse cx="500" cy="300" rx="260" ry="160" fill="url(#srvGlow)"/>
+      <g stroke="${INK}" stroke-width="4"><rect x="350" y="200" width="300" height="190" rx="12" fill="#1a1f33"/><rect x="368" y="216" width="264" height="158" rx="4" fill="#5a0f1c"/>
+        <path d="M484 406h32l10 26h-52z" fill="#3a4466"/><rect x="440" y="430" width="120" height="12" rx="4" fill="#3a4466"/></g>
+      <g class="np-alert"><path d="M500 236l42 74h-84z" fill="#ffc21f" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/><path d="M500 258v26" stroke="${INK}" stroke-width="7" stroke-linecap="round"/><circle cx="500" cy="296" r="4.5" fill="${INK}"/></g>
+      ${Array.from({ length: 8 }, (_, k) => `<rect x="${372 + k * 34}" y="334" width="18" height="10" fill="${k % 2 ? '#ffc21f' : '#1a1f33'}" transform="skewX(-25)" transform-origin="${380 + k * 34} 339"/>`).join('')}
+      <path d="M612 228l-18 30 14 10-20 34" stroke="#ff9aa6" stroke-width="2.5" fill="none" opacity=".8"/>
+      ${rack(14, 128)}${rack(858, 128)}
+      <rect y="470" width="1000" height="130" fill="#1a2546" stroke="${INK}" stroke-width="3"/>
+      ${Array.from({ length: 11 }, (_, k) => `<path d="M${k * 100} 472l${(k - 5) * 34} 128" stroke="#2c3c70" stroke-width="2.5"/>`).join('')}
+      <path d="M0 512h1000M0 560h1000" stroke="#2c3c70" stroke-width="2"/>
+      <path class="np-trace" d="M60 540H300l30-22h200l30 22h380" stroke="#3fe0ff" stroke-width="3" fill="none" opacity=".7" stroke-dasharray="12 10"/>
+      <path d="M150 600q20-40 60-50t90-10M860 600q-30-36-80-44" stroke="#111a33" stroke-width="9" fill="none" stroke-linecap="round"/>
+      ${[[250, 502, 34], [650, 520, 44], [760, 494, 26]].map(([x, y, r]) => `<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r * .22}" fill="#5fd068" opacity=".45"/>`).join('')}
+      ${[[230, 120], [700, 96], [790, 150], [300, 70], [620, 130]].map(([x, y], k) => `<g class="np-bit" style="animation-delay:${k * .7}s" transform="translate(${x} ${y})"><circle r="9" fill="#5fd068" stroke="${INK}" stroke-width="2"/>${[0, 60, 120, 180, 240, 300].map((a) => `<path d="M0 -9V-15" stroke="#2f8f3a" stroke-width="3" transform="rotate(${a})"/>`).join('')}</g>`).join('')}`, 'np-scene-server');
+    },
   };
 
-  global.EduNamePickerArt = { kid, hen, egg, cake, dino, bird, fish, balloon, rocket, gift, referee, card, ufo, bus, scene: (id) => SCENES[id](), FUN };
+  global.EduNamePickerArt = { kid, hen, egg, cake, dino, bird, fish, balloon, rocket, gift, referee, card, ufo, bus, virus, scene: (id) => SCENES[id](), FUN };
 })(window);

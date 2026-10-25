@@ -301,8 +301,9 @@
       (meta?.categories || []).forEach((cat) => {
         if (cat.id !== "Spark" && cat.id !== "IC3") return;
         (cat.levels || []).forEach((lv) => {
-          Object.values(lv.minitests || {}).forEach((mt) => {
-            questions += mt.count || 0;
+          // Chủ đề + Bài N; bộ Ôn tập/Kiểm tra theo tiết lấy lại câu của chủ đề → không đếm 2 lần
+          Object.entries(lv.minitests || {}).forEach(([name, mt]) => {
+            if (/^(\d+\.\s|Bài \d+[.:])/.test(name)) questions += mt.count || 0;
           });
         });
       });

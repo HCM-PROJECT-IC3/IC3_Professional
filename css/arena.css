@@ -489,7 +489,7 @@ a.ar-btn { text-decoration: none; }
   background: var(--purple); color: #fff; font: 800 .85rem Inter, sans-serif;
 }
 #arHome[data-role="teacher"] .ar-modes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-#arHome[data-role="teacher"] :is(.m-gold, .m-fish, .m-dino, .m-moon) { display: none; }
+#arHome[data-role="teacher"] :is(.m-gold, .m-fish, .m-dino, .m-moon, .m-boss) { display: none; }
 #arHome .ar-opts { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
 .ar-chips-inline button { flex: 0 1 90px; }
 .ar-host-go { width: 100%; margin-top: .9rem; padding: 1rem; font-size: 1.2rem; }
@@ -668,6 +668,7 @@ div.ar-mrow { cursor: default; }
 .ar-mode.m-board { background: linear-gradient(150deg, #1e3a8a, #0b1f4d); }
 .ar-mode.m-dino { background: linear-gradient(150deg, #65a30d, #3f6212); }
 .ar-mode.m-moon { background: linear-gradient(150deg, #312e81, #0c0f33); }
+.ar-mode.m-boss { background: linear-gradient(150deg, #0f6b4a, #0b1330); }
 
 /* Ô chọn trong khung phản hồi (phép / mục tiêu / việc làm / ký hiệu): khung .ar-chest, đổi màu để khỏi giống rương vàng */
 .ar-chests:is(.ar-spells, .ar-heist, .ar-targets, .ar-syms, .ar-dino) .ar-chest {
@@ -686,6 +687,7 @@ div.ar-mrow { cursor: default; }
 .ar-chests.ar-rocks .ar-chest small { color: #3b3f45; }
 .ar-dino .ar-chest:nth-child(2) { border-color: #f59e0b; } .ar-dino .ar-chest:nth-child(3) { border-color: #0ea5e9; }
 .ar-hpbar.is-moon i { background: #818cf8; }
+.ar-hpbar.is-virus i { background: #ef4444; }
 .ar-chests.ar-targets { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
 .ar-chests.ar-syms { grid-template-columns: repeat(4, 1fr); }
 .ar-spells .s-fire { border-color: #f97316; } .ar-spells .s-bolt { border-color: #eab308; } .ar-spells .s-drain { border-color: #8b5cf6; }
@@ -1078,6 +1080,7 @@ body[data-mode="moon"] .ar-scene { height: clamp(170px, min(30vw, 40vh), 360px);
 .ar-mode.m-heist { --mc: #0f766e; --mc-d: #0a4a45; }
 .ar-mode.m-dino { --mc: #5a920c; --mc-d: #3f6212; }
 .ar-mode.m-moon { --mc: #3a3596; --mc-d: #191654; }
+.ar-mode.m-boss { --mc: #127a55; --mc-d: #0b3d2c; }
 .ar-mode.m-board { --mc: #24408c; --mc-d: #0b1f4d; }
 .ar-mode.has-cover {
   padding: 0; overflow: hidden; gap: 0; background: var(--mc); min-height: 0;
@@ -1239,4 +1242,48 @@ body[data-mode="moon"] .ar-scene { height: clamp(170px, min(30vw, 40vh), 360px);
 @media (prefers-reduced-motion: reduce) {
   .ar-draw, .ar-card3.is-ready .ar-card3-back, .ar-cards { animation: none !important; }
   .ar-card3-in { transition: none; }
+}
+
+/* ── Diệt Virus: Trùm Virus trên sân khấu (js/arena/arena-scene.js → bossProps) ── */
+.ar-sc-boss { position: absolute; left: 0; top: 0; width: 0; height: 0; z-index: 400; }
+.ar-sc-boss-in { position: absolute; left: -100px; bottom: -6px; width: 200px; --vc: #5fd068; --vc-d: #2f8f3a; transition: filter .3s; }
+.ar-sc-boss-in > svg { display: block; width: 100%; overflow: visible; animation: ar-boss-float 2.4s ease-in-out infinite; }
+.ar-sc-boss .np-virus-spikes { transform-box: fill-box; transform-origin: center; animation: ar-boss-spin 14s linear infinite; }
+.ar-sc-boss .np-virus-crown { transform-box: fill-box; transform-origin: 50% 100%; }
+.ar-sc-boss-bar { position: absolute; left: -110px; bottom: 214px; width: 220px; display: grid; gap: 3px; text-align: center; }
+.ar-sc-boss-bar b { font: 800 16px/1 "Baloo 2", Inter, sans-serif; color: #fff; text-shadow: 0 2px 0 #0b1330, 0 0 6px #0b1330; white-space: nowrap; }
+.ar-sc-boss-bar i { display: block; height: 14px; border-radius: 999px; background: #3a0d12; border: 3px solid #2d2416; overflow: hidden; }
+.ar-sc-boss-bar s { display: block; height: 100%; width: 100%; background: linear-gradient(#ff6b6b, #dc2626); text-decoration: none; transition: width .6s cubic-bezier(.3,.7,.4,1); }
+/* Nổi giận: tím đỏ, gai quay nhanh · Liều chết: đỏ rực, rung nhẹ */
+.ar-sc-boss.is-p1 .ar-sc-boss-in { --vc: #b45be0; --vc-d: #6d28a8; }
+.ar-sc-boss.is-p1 .np-virus-spikes { animation-duration: 5s; }
+.ar-sc-boss.is-p2 .ar-sc-boss-in { --vc: #f0533f; --vc-d: #9f1d14; filter: drop-shadow(0 0 14px rgba(255, 80, 60, .7)); }
+.ar-sc-boss.is-p2 .np-virus-spikes { animation-duration: 2.4s; }
+.ar-sc-boss.is-p2 .ar-sc-boss-in > svg { animation: ar-boss-float 2.4s ease-in-out infinite, ar-sc-shake .12s linear infinite; }
+.ar-sc-boss.is-hurt .ar-sc-boss-in > svg { animation: ar-boss-hurt .45s ease-out; }
+.ar-sc-boss.is-crit .ar-sc-boss-in { filter: brightness(1.8) drop-shadow(0 0 18px #ffd34d); }
+.ar-sc-boss.is-crit .ar-sc-boss-in > svg { animation: ar-boss-hurt .45s ease-out; }
+.ar-sc-boss.is-ko .ar-sc-boss-in > svg { animation: ar-boss-ko 1.2s ease-in forwards; }
+.ar-sc-boss.is-ko .ar-sc-boss-bar { opacity: .85; }
+@keyframes ar-boss-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes ar-boss-spin { to { transform: rotate(360deg); } }
+@keyframes ar-boss-hurt { 0% { transform: translateX(0) scale(1); } 25% { transform: translateX(14px) scale(.92, 1.06); } 60% { transform: translateX(-6px) scale(1.04, .97); } 100% { transform: none; } }
+@keyframes ar-boss-ko { 0% { transform: none; opacity: 1; } 30% { transform: scale(1.15) rotate(-8deg); } 100% { transform: translateY(40px) scale(.2) rotate(40deg); opacity: 0; } }
+/* Tia đánh (đúng) / chí mạng / cục nhầy Virus phun trả (sai) */
+.ar-sc-shot { position: absolute; left: 0; top: 0; width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; pointer-events: none; z-index: 3; }
+.ar-sc-shot.is-hit { background: radial-gradient(circle, #fff 0 25%, #3fe0ff 45%, rgba(63, 224, 255, 0) 72%); }
+.ar-sc-shot.is-crit { width: 40px; height: 40px; margin: -20px 0 0 -20px; background: radial-gradient(circle, #fff 0 25%, #ffd34d 45%, rgba(255, 140, 30, 0) 72%); }
+.ar-sc-shot.is-goo { background: radial-gradient(circle, #d9ffd0 0 20%, #5fd068 45%, rgba(47, 143, 58, 0) 72%); }
+/* Cảnh phòng máy chủ: đèn tủ nháy, màn hình cảnh báo, virus con lơ lửng */
+.np-scene-server .np-led { animation: ar-led 1.6s steps(2, jump-none) infinite; }
+.np-scene-server .np-alert { animation: ar-alert 1s ease-in-out infinite alternate; }
+.np-scene-server .np-bit { animation: ar-bit 3.2s ease-in-out infinite; }
+.np-scene-server .np-trace { animation: ar-trace 1.4s linear infinite; }
+@keyframes ar-led { 0% { opacity: 1; } 100% { opacity: .25; } }
+@keyframes ar-alert { from { opacity: .55; } to { opacity: 1; } }
+@keyframes ar-bit { 0%, 100% { translate: 0 0; } 50% { translate: 0 -12px; } }
+@keyframes ar-trace { to { stroke-dashoffset: -44; } }
+.ar-mode:is(:hover, .is-on) .ar-cover .cv-boss { animation: ar-cv-bob 1.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .ar-sc-boss-in > svg, .ar-sc-boss .np-virus-spikes, .np-scene-server :is(.np-led, .np-alert, .np-bit, .np-trace) { animation: none !important; }
 }

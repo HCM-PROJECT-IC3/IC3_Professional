@@ -253,3 +253,10 @@ a{color:inherit}
 .btn-pulse { animation: btnPulse 1.6s ease-in-out infinite; }
 @keyframes btnPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, .55); } 50% { box-shadow: 0 0 0 8px rgba(99, 102, 241, 0); } }
 @media (prefers-reduced-motion: reduce) { .btn-pulse { animation: none; outline: 2px solid #fbbf24; } }
+/* Câu dùng ở nhiều bộ (chủ đề + Ôn tập/Kiểm tra theo tiết + Ôn tập cuối khóa) — xem rebuildGroups() */
+.qsets{font-size:.74rem;color:var(--muted);margin:.35rem 0}
+.qsets summary{cursor:pointer;font-weight:700;color:var(--purple,#6c5ce7)}
+.qsets ul{margin:.3rem 0 0 1.1rem;padding:0;line-height:1.55}
+/* Ảnh nằm trong từng ô của câu (phân loại có hình) — xem embeddedImages() */
+.qimg-embedded{display:grid;grid-template-columns:repeat(2,1fr);gap:.4rem;padding:.4rem;width:100%}
+.qimg-embedded img{width:100%;height:auto;max-height:90px;object-fit:contain;background:#fff;border-radius:6px}

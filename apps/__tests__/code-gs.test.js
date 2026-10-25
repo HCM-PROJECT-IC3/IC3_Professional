@@ -124,12 +124,16 @@ let firestoreCalls = 0;
 const github = { calls: [], files: {}, headSha: 'c0', treeShas: { 'data/ic3/meta.json': 'sha-meta' } };
 let users = {};
 let geocodeCalls = 0;
+let lockWaits = 0;
+let onLock = null;
 const ctx = {
   console, Date, JSON, Math, Set, Map, String, Number, Array, Object, encodeURIComponent, Error,
   SpreadsheetApp: { openById: (id) => createdFiles[id] || mainFile, create: (name) => newFile(name) },
   CacheService: { getScriptCache: () => ({ get: (k) => cacheStore.get(k) || null, put: (k, v) => cacheStore.set(k, v), remove: (k) => cacheStore.delete(k) }) },
   PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => { propReads++; return props.get(k) || null; }, setProperty: (k, v) => props.set(k, v) }) },
-  LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }), getUserLock: () => ({ waitLock() {}, releaseLock() {} }) },
+  // lockWaits đếm lượt chờ khoá chung; onLock giả lập 1 lượt chạy KHÁC làm gì đó trong lúc mình chờ khoá.
+  LockService: { getScriptLock: () => ({ waitLock() { lockWaits++; if (onLock) { const f = onLock; onLock = null; f(); } }, releaseLock() {} }),
+    getUserLock: () => ({ waitLock() {}, releaseLock() {} }) },
   ContentService: { MimeType: { JSON: 'json' }, createTextOutput: (t) => ({ setMimeType: () => ({ text: t }) }) },
   Utilities: {
     DigestAlgorithm: { SHA_256: 'sha256' },
@@ -284,6 +288,14 @@ eq('listResults dùng ChiTiet: sai/bỏ qua/giây/bài/hết giờ/vi phạm',
   [dr.incorrect, dr.skipped, dr.elapsedSec, dr.category, dr.level, dr.minitest, dr.timedOut, dr.multiTabHits, dr.devtoolsHits, dr.shortcutBlocks],
   [5, 2, 754, 'IC3 (GS6)', 'IC3 LV1', 'Bài 1. A › B', true, 3, 2, 4]);
 eq('mã cũ dạng sub_… vẫn nhận', sub({ submissionId: 'sub_123_1791194357301' }).ok, true);
+// ── Nhiều lớp nộp cùng lúc: không còn khoá chung quanh appendRow ──
+const lw0 = lockWaits;
+for (let k = 0; k < 5; k++) sub({ submissionId: 'nolock' + String(k).padStart(4, '0'), testName: 'NoLock' });
+eq('nộp bài không chờ khoá chung (ghi song song)', lockWaits - lw0, 0);
+// Không khoá → hiếm khi 2 request cùng mã cùng lúc ghi 2 dòng: listResults chỉ trả 1
+sheet.data.push(row('dup0000001', 'Dup', '4A6', 'TH X', 'DupTest', 10, '1/10', '1:00', 'OK', new Date('2026-10-20T01:00:00Z')));
+sheet.data.push(row('dup0000001', 'Dup', '4A6', 'TH X', 'DupTest', 10, '1/10', '1:00', 'OK', new Date('2026-10-20T01:00:01Z')));
+eq('listResults bỏ dòng trùng mã', call('listResults', as('admin1')).data.rows.filter((r) => r.id === 'dup0000001').length, 1);
 
 // ── Xoá ──
 const del = (uid, list) => call('deleteResults', Object.assign(as(uid), { ids: list }));
@@ -400,6 +412,18 @@ eq('danh mục file nhật ký có thêm file MOS', tabs.DanhMucNhatKy.rows.some
 sub({ submissionId: 'rot0000001', testName: 'RotTest' });
 const subFile = Object.values(createdFiles).find((f) => /^NhatKyNopBai /.test(f.name));
 eq('bài nộp: file chính sắp đầy → sang file mới', [!!subFile, subFile && subFile.getSheets()[0].rows.length], [true, 1]);
+// 2 lượt cùng thấy file đầy: lượt chờ khoá thấy lượt kia đã xoay file → ghi vào đó, không tạo thêm file
+cacheStore.set('cells:' + subFile.getId(), '9000000');
+const filesBefore = Object.keys(createdFiles).length;
+let other = null;
+onLock = () => {
+  other = ctx.SpreadsheetApp.create('NhatKyNopBai lượt khác');
+  other.getSheets()[0].setName('NhatKyNopBai');
+  cacheStore.set('prop:LOG_SPREADSHEET_ID', other.getId());
+};
+sub({ submissionId: 'race000001', testName: 'RaceTest' });
+eq('xoay file đồng thời: chỉ 1 file mới, bài ghi vào file lượt kia vừa tạo',
+  [Object.keys(createdFiles).length - filesBefore, other && other.getSheets()[0].rows.length], [1, 1]);
 mainFile.getSheets = realCells;
 eq('listResults đọc được cả file mới', call('listResults', as('admin1')).data.rows.some((r) => r.id === 'rot0000001'), true);
 

@@ -1,5 +1,5 @@
 {
- "_doc": "Đồng bộ data/ic3 với file đáp án All Key (iSpring .quiz NH2025-2026, đã rà soát từng câu 10/2026). adds = câu khoá chưa có trong data (thêm vào bộ \"Theo chủ đề\" theo PPCT); updates = câu đã có nhưng lệch đáp án/phiên bản (giữ nguyên uid). Áp dụng: node scripts/apply-allkey-sync.js rồi python scripts/split-minitests.py.",
+ "_doc": "Đồng bộ data/ic3 với file đáp án All Key (iSpring .quiz NH2025-2026, đã rà soát từng câu 10/2026). adds = câu khoá chưa có trong data (thêm vào bộ \"Theo chủ đề\" theo PPCT); updates = câu đã có nhưng lệch đáp án/phiên bản (giữ nguyên uid). Áp dụng: node scripts/apply-allkey-sync.js rồi python scripts/split-minitests.py. links = câu khoá đã có trong data nhưng diễn đạt/dạng khác (scripts/build-allkey-map.py dùng để ghép tay).",
  "adds": [
   {
    "level": "IC3__LV1",
@@ -506,6 +506,105 @@
     "uid": "spark__lv3__t6__k_ot2_41",
     "explanation": "Hội nghị truyền hình giúp cộng tác thời gian thực từ xa; Lưu trữ đám mây cho phép truy cập tệp ở bất kì đâu có Internet; Phần mềm quản lí lịch giúp tổ chức công việc nhiều người; Email giúp gửi nhận thông tin liên lạc mọi lúc, mọi nơi."
    }
+  },
+  {
+   "level": "Spark__LV1",
+   "topic": 5,
+   "src": "All Key › Spark_Lv1 › Test 3#18",
+   "question": {
+    "question": "Bạn gửi một Email cho lớp trưởng, bạn sẽ đặt địa chỉ email của lớp trưởng ở đâu? (Chọn vị trí chính xác trong khu vực trả lời)",
+    "type": "hotspot",
+    "image": true,
+    "image_file": "img-f814ba80598220afe612c72996222fd9b56c6315.jpg",
+    "imageUrl": "img/img-f814ba80598220afe612c72996222fd9b56c6315.jpg",
+    "areas": [
+     {
+      "id": "a1",
+      "shape": "rectangle",
+      "x": 2.35,
+      "y": 12.98,
+      "w": 94.31,
+      "h": 11.06,
+      "correct": true
+     },
+     {
+      "id": "a2",
+      "shape": "rectangle",
+      "x": 2.35,
+      "y": 25.2,
+      "w": 94.31,
+      "h": 8.5,
+      "correct": false
+     },
+     {
+      "id": "a3",
+      "shape": "rectangle",
+      "x": 2.35,
+      "y": 35.5,
+      "w": 94.31,
+      "h": 9.5,
+      "correct": false
+     },
+     {
+      "id": "a4",
+      "shape": "rectangle",
+      "x": 2.35,
+      "y": 47.0,
+      "w": 94.31,
+      "h": 32.0,
+      "correct": false
+     }
+    ],
+    "uid": "spark__lv1__t5__k_t3_18",
+    "explanation": "Địa chỉ email của người nhận (lớp trưởng) được nhập vào ô \"Đến\" (To). Ô Cc dùng để gửi bản sao cho người khác, ô Chủ đề ghi tóm tắt nội dung thư, còn phần thân thư là nơi viết nội dung."
+   }
+  },
+  {
+   "level": "Spark__LV2",
+   "topic": 1,
+   "src": "All Key › Spark_Lv2 › On Tap 1#4",
+   "question": {
+    "question": "Đâu là một thiết bị đầu vào (Input Device)?",
+    "type": "single",
+    "options": [
+     "Máy chiếu (Projector)",
+     "Máy in (Printer)",
+     "Micro",
+     "Loa (Speaker)"
+    ],
+    "correct": [
+     "Micro"
+    ],
+    "image": false,
+    "image_file": null,
+    "image_id": null,
+    "uid": "spark__lv2__t1__k_ot1_4",
+    "explanation": "Micro thu âm thanh và đưa vào máy tính nên là thiết bị đầu vào. Máy chiếu, máy in và loa đều đưa thông tin từ máy tính ra ngoài nên là thiết bị đầu ra."
+   }
+  },
+  {
+   "level": "Spark__LV2",
+   "topic": 6,
+   "src": "All Key › Spark_Lv2 › On Tap 3#7",
+   "question": {
+    "question": "Hai yếu tố để cộng tác thành công là gì? (Chọn 2)",
+    "type": "multi",
+    "options": [
+     "Điều chỉnh cấu trúc bài",
+     "Chỉnh sửa câu chữ",
+     "Lắng nghe",
+     "Giao tiếp rõ ràng"
+    ],
+    "correct": [
+     "Lắng nghe",
+     "Giao tiếp rõ ràng"
+    ],
+    "image": false,
+    "image_file": null,
+    "image_id": null,
+    "uid": "spark__lv2__t6__k_ot3_7",
+    "explanation": "Cộng tác thành công cần các thành viên biết lắng nghe ý kiến của nhau và giao tiếp rõ ràng. Điều chỉnh cấu trúc bài hay chỉnh sửa câu chữ là công việc chỉnh sửa nội dung, không phải yếu tố của cộng tác."
+   }
   }
  ],
  "updates": [
@@ -588,7 +687,8 @@
     "correct": null,
     "explanation": "Macro là chuỗi thao tác có thể phát lại; có thể tạo bằng cách ghi lại thao tác hoặc viết lệnh trong trình soạn thảo (VBA/Script Editor). Macro không được lưu thành tệp văn bản riêng."
    },
-   "correctAllExcept": "Mỗi macro được lưu dưới dạng tập tin văn bản."
+   "correctAllExcept": "Mỗi macro được lưu dưới dạng tập tin văn bản.",
+   "obsolete": "Câu đã gỡ vì trùng (topic-reassign 14/10); bản giữ lại ic3__lv2__t4__q15 đã khớp khoá OnTapSo3#16"
   },
   {
    "level": "IC3__LV2",
@@ -805,6 +905,79 @@
      "Chụp ảnh màn hình và chia sẻ với bố mẹ của mình"
     ]
    }
+  },
+  {
+   "level": "IC3__LV2",
+   "uid": "ic3__lv2__t1__q197_new",
+   "src": "All Key › LV2 › Cap nhat 10_04_2026#23",
+   "reason": "Câu đã có (cùng 3 cặp .mp4/.mp3/.wav) nhưng mô tả theo bản cập nhật 10/04/2026 của khoá",
+   "set": {
+    "question": "Lựa chọn mô tả đúng về các kiểu tập tin sau.",
+    "pairs": [
+     {
+      "left": "Một tệp tin video nén tối ưu, thường dùng cho thiết bị có dung lượng lưu trữ hạn chế.",
+      "right": ".mp4"
+     },
+     {
+      "left": "Tệp âm thanh nén tối ưu, thường dùng cho máy tính bảng và điện thoại thông minh.",
+      "right": ".mp3"
+     },
+     {
+      "left": "Định dạng tập tin âm thanh kỹ thuật số để lưu trữ âm thanh nén hoặc chưa nén, thường dùng cho âm thanh CD.",
+      "right": ".wav"
+     }
+    ]
+   }
+  },
+  {
+   "level": "IC3__LV3",
+   "uid": "ic3__lv3__t7__q186",
+   "src": "All Key › LV3 › BaiOnSo1#33",
+   "reason": "Khớp khoá; sửa lỗi gõ thiếu dấu đóng ngoặc \"Logic (Logical\" có sẵn trong khoá",
+   "set": {
+    "blanks": [
+     "Sinh trắc (Biometric)",
+     "Vật lý (Physical)",
+     "Logic (Logical)"
+    ],
+    "wordBank": [
+     "Vật lý (Physical)",
+     "Logic (Logical)",
+     "Sinh trắc (Biometric)"
+    ]
+   }
+  }
+ ],
+ "links": [
+  {
+   "level": "IC3__LV1",
+   "src": "Test1#2",
+   "uid": "ic3__lv1__t1__q172_new",
+   "reason": "Ghép 4 loại cáp USB/Lightning/USB-C/Micro USB với hình — data là dạng phân loại có hình"
+  },
+  {
+   "level": "IC3__LV1",
+   "src": "Test2#40",
+   "uid": "ic3__lv1__t1__q173_new",
+   "reason": "Ghép hình với hướng trang Landscape/Portrait (1 hình gây nhiễu) — data là dạng phân loại có hình"
+  },
+  {
+   "level": "IC3__LV2",
+   "src": "Cap nhat 10_04_2026#23",
+   "uid": "ic3__lv2__t1__q197_new",
+   "reason": "Cùng 3 cặp kiểu tập tin; mô tả đã cập nhật theo khoá (updates)"
+  },
+  {
+   "level": "IC3__LV3",
+   "src": "BaiOnSo1#33",
+   "uid": "ic3__lv3__t7__q186",
+   "reason": "Cùng 3 câu thả xuống Sinh trắc / Vật lý / Logic"
+  },
+  {
+   "level": "Spark__LV2",
+   "src": "On Tap 3#30",
+   "uid": "spark__lv2__hotspot__q2",
+   "reason": "Cùng hình tài liệu, chọn Đề mục (Heading)"
   }
  ]
 }

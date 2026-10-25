@@ -41,6 +41,7 @@ function load(key) {
 
 // ── updates: ghi đè field cho mọi bản của uid ──
 for (const u of plan.updates || []) {
+  if (u.obsolete) continue; // câu đã gỡ (trùng) — lý do ghi trong field obsolete
   const t = load(u.level);
   let found = 0;
   Object.values(t.data.minitests).forEach((list) => list.forEach((q) => {

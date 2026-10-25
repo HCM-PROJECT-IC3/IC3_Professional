@@ -1,5 +1,183 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## Apps Script: bỏ khoá chung khi nộp bài — nhiều lớp nộp cùng lúc không còn xếp hàng (26/10/2026)
+
+- **Vì sao:** trước đây mỗi bài nộp (IC3/Spark và MOS) giữ một khoá chung của Apps Script trong lúc mở file Sheet, đếm dòng và ghi dòng (~0,5–1 giây). Kết quả là cả hệ thống chỉ ghi được **~1–2 bài/giây**, dù Apps Script cho chạy 30 lượt song song.
+  - Ví dụ cuối tiết, 40 lớp × 35 học sinh cùng nộp: khoảng 1.400 bài phải xếp hàng 12–20 phút.
+  - Bài nào chờ khoá quá 20 giây thì báo lỗi và đợi hàng đợi trên máy học sinh gửi lại.
+- **Sửa:** việc ghi dòng chạy song song (`appendRow` tự nguyên tử). Khoá chỉ còn dùng khi tạo tab, cắt cột hoặc xoay sang file Sheet mới.
+  - Ước tính **~20–30 bài/giây**, chưa đo trên Apps Script thật.
+  - `listResults` bỏ dòng trùng mã bài, cho trường hợp rất hiếm 2 lượt gửi cùng mã tới trong cùng 1 giây.
+- Thêm 3 test vào `apps/__tests__/code-gs.test.js`:
+  - nộp bài không chờ khoá;
+  - đọc kết quả bỏ dòng trùng;
+  - 2 lượt cùng thấy file đầy thì chỉ tạo 1 file mới.
+- **Cần deploy Apps Script** (BACKEND_VERSION `2026-10-26`):
+  - dán `apps/Code.gs` → Save → Deploy → Manage deployments → ✏️ → *New version* (giữ URL);
+  - chạy **`kiemTraSauDeploy`**;
+  - không cần cấp quyền mới; web không đổi.
+
+## Tài liệu năm học: xem slide bài giảng từ Google Drive ngay trên trang (25/10/2026)
+
+- Trang **Tài liệu năm học** (`tai-lieu-nam-hoc.html`, chỉ admin/giáo viên) có thêm mục **Slide bài giảng**:
+  - chọn khối (IC3 LV1–3, Spark LV1–3, MOS Word/Excel/PowerPoint) → chọn bài → slide hiện ngay bằng trình xem của Google Drive;
+  - có nút slide trước/sau, **Toàn màn hình** để chiếu lên lớp, **Mở trên Drive**;
+  - nhớ bài đang xem; link sâu `tai-lieu-nam-hoc.html#IC3_LV1/B05` mở thẳng Bài 5.
+- **0 lượt đọc/ghi Firebase, 0 lượt gọi Apps Script.** Danh sách slide là file tĩnh `data/slides-manifest.json` (35 bài × 6 khối IC3/Spark, 109 slide MOS). Drive tự tải và hiển thị slide.
+- Cập nhật danh sách khi thêm, đổi tên hay chuyển file trên Drive: `node scripts/build-slides-manifest.js`. Script đọc trang công khai của thư mục, không cần API key, rồi commit lại file JSON. Sửa nội dung trong cùng một file thì không cần chạy lại.
+  - Thư mục Drive phải chia sẻ **"Bất kỳ ai có đường liên kết – Người xem"**.
+  - Script báo những thư mục không thấy file nào (chưa chia sẻ công khai).
+- Script chỉ lấy slide (.pptx/.pdf/Google Slides). Bỏ qua thư mục Quiz và các thư mục file thực hành của MOS (Tài liệu, Data, Project…). Phần ôn luyện cuối khoá của MOS Excel/PowerPoint là file .xlsx nên không có trong danh sách.
+- Tên bài IC3/Spark lấy từ ngân hàng câu hỏi (`Bài N. …` trong `data/ic3/*.json`).
+- **Bỏ link SharePoint cũ.** Trang chỉ còn slide bài giảng: danh sách khối nằm ngay đầu trang.
+- Bài chỉ có 1 slide (IC3/Spark) hiện 1 dòng mang tên bài, không lặp thêm tên file "K6 B01".
+- **Phím tắt khi chiếu:** `←`/`→` slide trước/sau, `F` toàn màn hình, `L` ẩn/hiện danh sách để khung slide rộng hết trang (trang nhớ lựa chọn này), `/` tìm bài, `Esc` xoá ô tìm.
+- Dán link sâu (`#MOS_Excel/B03`) khi trang đang mở cũng chuyển bài ngay. Nếu không tải được danh sách slide, trang báo rõ thay vì để trống.
+- **Bỏ vùng trống:**
+  - Trang dùng hết bề ngang màn hình (trước đây bị giới hạn 1440px).
+  - Danh sách bài và khung slide cao bằng phần màn hình còn lại dưới thanh trên cùng. Khung slide co giãn theo màn hình thay vì cố định 16:9, nên phía dưới không còn chỗ trống.
+  - Phím tắt chuyển lên cùng hàng với các nút khối.
+  - Ô tìm bài luôn nằm trên cùng khi cuộn danh sách.
+  - Mở khối nào cũng hiện ngay slide đầu tiên, không còn khung xem trống.
+- Nút khối ghi số bài (vd "IC3 LV1 35"); rê chuột vào nút để xem cả số slide.
+- **Trình chiếu từng slide, có hiệu ứng như PowerPoint** (thay cho trang dài phải cuộn của trình xem Drive):
+  - File .pptx nhỏ hơn 50MB mở bằng **Office Online** của Microsoft (miễn phí). Office Online đọc link tải công khai trên Drive.
+  - Mỗi lần hiện 1 slide vừa khung, chạy hiệu ứng chuyển trang và hiệu ứng xuất hiện từng phần. Có dòng "SLIDE 2 OF 27".
+  - Bấm vào slide rồi dùng `←`/`→` hoặc bút trình chiếu để chuyển slide. **Toàn màn hình** (`F`) chiếu slide hết màn hình.
+  - Nút **Xem dạng trang / Trình chiếu** (phím `M`) chuyển về trình xem Drive cũ. Trang nhớ lựa chọn này.
+  - File lớn hơn 50MB tự mở dạng trang: Office Online không mở được (đã thử: file 38MB chạy, file 87MB báo "File not found"). Hiện có 3 file như vậy: MOS Word Bài 6 (131MB), MOS PowerPoint Bài 5 và Bài 8.
+  - `scripts/build-slides-manifest.js` ghi thêm cỡ từng file (`size`) để trang chọn trình xem.
+  - **Đổi phím tắt:** chuyển bài nay là `Shift+←/→`; `←`/`→` dành cho chuyển slide.
+- **Giảm hạn chế của trình chiếu:**
+  - **File quá 50MB chiếu được nhờ "bản chiếu web".** `scripts/make-web-slides.py` tạo `<tên> (web).pptx`, giữ nguyên slide, chữ, hiệu ứng, video và mô hình 3D, chỉ làm nhẹ phần phương tiện:
+    - ảnh thu về tối đa 1920px;
+    - video nén lại H.264 tối đa 1280px (cần ffmpeg);
+    - ảnh texture của mô hình 3D thu về tối đa 1024px.
+  - Kết quả với 3 file nặng: MOS Word Bài 6 từ 131MB còn 7,4MB; MOS PowerPoint Bài 5 từ 79MB còn 16,6MB; Bài 8 từ 87MB còn 12,5MB.
+    - Đã mở thử bằng PowerPoint: đủ số slide, video và mô hình 3D, slide có mô hình 3D giống hệt bản gốc.
+    - Video quay màn hình vẫn đọc rõ chữ, thời lượng giữ nguyên.
+  - Cần làm: tải file "(web)" lên **cùng thư mục với file gốc** trên Drive, rồi chạy `node scripts/build-slides-manifest.js`.
+    - Script gắn bản web vào file gốc (`web` trong manifest), danh sách vẫn hiện 1 dòng.
+    - Trang trình chiếu bằng bản web; "Mở trên Drive" và "Xem dạng trang" vẫn dùng file gốc.
+    - Script cũng báo những file trên 50MB chưa có bản web.
+  - **Đã xác nhận Office Online phát được video nhúng trong slide.** Vì vậy bản web nén lại video chứ không bỏ video đi.
+  - **Lời nhắc "Bấm vào slide một lần, sau đó dùng ← →"** hiện trên khung trình chiếu.
+    - Lời nhắc tự ẩn khi slide đã nhận phím, hiện lại khi quay ra trang.
+    - Cú bấm xuyên qua lời nhắc vào thẳng slide.
+  - Lúc chuyển bài, khung hiện "Đang mở bài…" thay vì nền tối trống.
+
+## Giảm lượt đọc Firebase: 1 bản đệm danh sách học sinh dùng chung cho 4 trang quản lý (25/10/2026)
+
+- **Nguyên nhân đỉnh 9,1K lượt đọc/giờ** (Firestore Usage 24–25/10, cả ngày gần 0, dồn vào khoảng 18h): 4 trang quản lý mỗi trang tự đọc TOÀN BỘ danh sách học sinh `students_roster` (~2.838 học sinh), mỗi trang 1 bản đệm riêng. Admin mở lần lượt 3 trang trong 1 giờ ≈ 3 × 3.000 lượt. Các trang đó là:
+  - Quản lý tài khoản (`admin-users.js`, tra cứu trường giáo viên đang dạy);
+  - Dashboard điều phối và Dashboard giáo viên (nhánh Admin);
+  - Quản lý danh sách lớp (Admin).
+- **Sửa:** `js/services/roster-cache-service.js` (mới) giữ **1 bản đệm học sinh đang học dùng chung** (IndexedDB, hạn 6 giờ). Trang nào đọc trước thì các trang sau dùng lại, **0 lượt đọc thêm**.
+  - Quản lý danh sách lớp (Admin) vừa tải toàn bộ học sinh thì ghi luôn vào bản đệm chung.
+  - Mọi lần sửa học sinh hoặc gán lớp trên máy này (Quản lý lớp, Quản lý tài khoản) đều làm mới bản đệm.
+  - Nút "Làm mới dữ liệu" vẫn đọc lại nếu bản đệm cũ hơn 30 phút.
+  - Hết lượt đọc hoặc mất mạng thì dùng bản đệm cũ thay vì báo lỗi.
+  - Mỗi trang vẫn giữ bản đệm riêng như cũ; bản đệm chung chỉ thay phần đọc toàn bộ học sinh.
+- Ước tính: admin mở cả 4 trang trong ngày tốn **~3.000 lượt mỗi 6 giờ thay vì ~9.000–12.000**. Học sinh làm bài vẫn 0 lượt đọc (danh sách lớp ở trang làm bài là file tĩnh).
+- Test mới `js/services/__tests__/roster-cache.test.js` (6 trường hợp).
+- Lưu ý: số liệu Usage **có tính cả lượt đọc khi xem dữ liệu trong Firebase Console** (tab Data). Mở collection `students_roster` hay `quiz_results` trên Console cũng tốn lượt đọc.
+
+## Quản lý câu hỏi: mỗi câu hiện 1 lần (3.990 câu, không phải 7.999) + lưu được mọi dạng câu (25/10/2026)
+
+- **Vì sao trước đây "7.999 mục"?** Một câu All Key nằm cùng lúc ở bộ chủ đề và các bộ Ôn tập/Kiểm tra theo tiết, Ôn tập cuối khóa (bản chép cùng mã câu). Trang đếm và liệt kê từng bản chép, nên cùng 1 câu hiện 3–6 lần. Ngân hàng thật có **3.990 câu**.
+- Giờ mỗi câu **hiện 1 lần**, lấy bản ở bộ chủ đề hoặc "Bài N". Ô thống kê ghi "3.990 câu hỏi · thêm 4.009 bản chép trong bộ Ôn tập/Kiểm tra".
+  - Mỗi câu có mục mở ra **"📚 Dùng ở N bộ"** liệt kê các bộ đang dùng câu đó.
+  - Lọc theo 1 bộ Ôn tập/Kiểm tra vẫn ra đúng các câu của bộ đó.
+  - Các ô Cần ảnh / Đã có ảnh / Không cần cũng đếm theo câu thật.
+- **Sửa** 1 câu cập nhật mọi bản chép (như trước). **Xoá** 1 câu nay xoá khỏi mọi bộ đang dùng nó; hộp xác nhận liệt kê đủ các bộ. Trước đây chỉ xoá đúng 1 bản, các bộ Ôn tập/Kiểm tra còn trỏ tới câu đã xoá nên `validate-data.js` báo lỗi.
+- **Sửa lỗi có từ trước:** ô "dạng câu" chỉ có 4 dạng. Câu chọn vùng, phân loại, sắp xếp, kéo/chọn điền, chọn theo dòng (165 câu) hiện nhầm thành "Chọn 1 đáp án", và bấm **Lưu câu hỏi** bị báo "Cần ít nhất 1 lựa chọn", không lưu được. Nay ô có đủ 10 dạng, chọn đúng dạng của câu. Các dạng này vẫn sửa nội dung qua ô JSON.
+- **Câu "Cần ảnh" duy nhất (IC3 LV1, chọn tên cổng kết nối) thật ra không thiếu ảnh.** 4 hình cổng kết nối nằm trong từng ô của câu (`zones[].image_file`, đủ file trong `img/`). Câu chỉ bị gắn nhầm `"image": true`; cờ này còn khiến trang làm bài có thể tự vẽ thêm 1 hình minh hoạ không liên quan phía trên câu. Đã đặt `image: false` (cả 6 bản chép).
+  - Trang Quản lý coi câu có ảnh trong từng ô/thẻ là "Đã có ảnh" và hiện các hình đó ở cột ảnh bên trái.
+  - `validate-data.js` kiểm tra luôn ảnh trong ô/thẻ, và chặn trường hợp `image: true` mà ảnh nằm trong ô.
+- Đã chạy thử trong Chrome (chặn Firebase/Apps Script/GitHub): 3.990 câu, lọc "Kiểm tra HK1" đúng, lưu câu chọn vùng "email lớp trưởng" giữ dạng hotspot và cập nhật cả 4 bản chép.
+
+## Trình chỉnh vùng bấm (hotspot-editor.html): mở thẳng từ dự án, sửa 1 lần cập nhật mọi bộ, tự cảnh báo (25/10/2026)
+
+- **Mở thẳng 1 cấp độ trong dự án** bằng ô chọn mới "Mở cấp độ trong dự án…" (đọc `data/ic3/meta.json`). Ảnh tự tải từ `img/`, không còn phải chọn file JSON và thư mục ảnh bằng tay. Nút "Mở file" và "Nạp thư mục ảnh" vẫn giữ để dùng khi mở trang trực tiếp từ ổ đĩa.
+- **Mỗi câu hiện 1 lần.** Trước đây 1 câu lặp lại theo từng bộ chứa nó (chủ đề, Ôn tập/Kiểm tra theo tiết, Ôn tập cuối khóa), ví dụ Spark LV1 có 12 câu nhưng danh sách dài gấp 5–6 lần. Danh sách ghi rõ câu "dùng ở N bộ".
+- **Sửa 1 lần, mọi bản chép đổi theo** (cùng mã câu). Trước đây chỉ bản đang mở được sửa, file xuất ra có các bản lệch nhau nên `validate-data.js` báo lỗi.
+- **Tự cảnh báo vùng bấm:**
+  - chưa có vùng đúng;
+  - vùng tràn ra ngoài ảnh;
+  - vùng quá nhỏ (khó bấm trên điện thoại);
+  - 2 vùng trùng mã;
+  - vùng đúng chồng hơn 30% lên vùng nhiễu.
+
+  Có ô lọc "Chỉ câu có cảnh báo". `validate-data.js` cũng chặn vùng tràn ảnh và báo vùng đúng chồng vùng nhiễu. Rà 36 câu chọn vùng hiện có: không câu nào bị lỗi.
+- **Sửa 2 lỗi hiển thị có từ trước:**
+  - Nhãn vùng (a1 ✓, a2…) bị bẹp thành vệt đen, do một CSS chung ép chiều cao dòng về 0. Nhãn cũng bị cắt ở vùng sát mép ảnh.
+  - Nút sáng/tối đè lên nút "Xuất JSON".
+- Ảnh không tải được thì hiện thông báo rõ tên file. Sau khi xuất, trang nhắc chạy `python scripts/split-minitests.py`.
+
+## Đủ 830/830 câu All Key trong ngân hàng câu hỏi (25/10/2026)
+
+- **8 câu All Key bị coi là "chưa có"** (lần trước ghi nhầm là 9), xử lý như sau (mọi quyết định ghi ở `data/ic3/allkey-sync.json`):
+  - **5 câu đã có sẵn** nhưng diễn đạt hoặc dạng câu khác nên máy không tự nhận ra. Đã ghép tay (mục mới `links`, có lý do):
+    - IC3 LV1: ghép cáp USB/Lightning/USB-C/Micro USB với hình; ghép hình với hướng trang.
+    - IC3 LV2: mô tả kiểu tập tin .mp4/.mp3/.wav. Đã cập nhật lời mô tả theo bản 10/04/2026 của khoá.
+    - IC3 LV3: câu thả xuống Sinh trắc/Vật lý/Logic. Sửa luôn lỗi thiếu dấu ")" trong "Logic (Logical".
+    - Spark LV2: chọn vùng Đề mục (Heading).
+  - **3 câu thật sự thiếu, đã thêm:**
+    - Spark LV1 (chủ đề Giao tiếp): chọn vùng nhập địa chỉ email lớp trưởng. Hình lấy từ file All Key; vùng đúng là ô "Đến", thêm 3 vùng sai (Cc, Chủ đề, thân thư).
+    - Spark LV2 (chủ đề Căn bản về công nghệ): "Đâu là một thiết bị đầu vào?" → Micro.
+    - Spark LV2 (chủ đề Hợp tác): "Hai yếu tố để cộng tác thành công" → Lắng nghe, Giao tiếp rõ ràng.
+  - Sau khi ghép tay và thêm câu, `build-allkey-map.py` báo đủ 830/830 câu All Key.
+- 3 câu mới đã vào đúng các bộ Ôn tập/Kiểm tra theo tiết và Ôn tập cuối khóa của khối. Các bộ Kiểm tra và Ôn tập cuối khóa được sinh lại theo ngân hàng mới.
+- **Sửa CI đang hỏng:** `apply-allkey-sync.js --check` báo lỗi vì 1 mục sửa đáp án trỏ tới câu `ic3__lv2__t4__q32`, câu này đã gỡ vì trùng từ 14/10. Bản giữ lại `q15` đã khớp khoá, nên mục đó được đánh dấu `obsolete` kèm lý do và script bỏ qua.
+
+## 8 tiết Ôn tập cuối khóa — dựng lại chỉ bằng câu All Key (25/10/2026)
+
+- Mỗi cấp Spark/IC3 có lại 8 bộ **"Ôn tập cuối khóa — Tiết 1…8"** (nhóm riêng "Ôn tập cuối khóa" ở sảnh làm bài, Đấu trường và Soạn đề). **Chỉ dùng câu của đáp án gốc All Key**; bộ "Tiết 1–8" trước đây lẫn câu GS6 cũ và câu đã gỡ.
+  - **Tiết 1–4**: phủ đủ **mọi câu All Key** của cấp, mỗi câu đúng 1 lần, chia vòng theo từng chủ đề nên tiết nào cũng có đủ các chủ đề. 4 tiết lệch nhau tối đa 1 câu (vd IC3 LV1 34/33/33/33, IC3 LV2 49/48/48/48).
+  - **Tiết 5–8**: 4 đề tổng hợp đúng số câu đề thi thật của khối (Spark 31/36/42, IC3 45/45/40), rút đều 7 chủ đề, ưu tiên câu chưa ra ở đề trước nên 2 đề chỉ trùng khoảng 5–12 câu.
+- Sinh trong `scripts/generate-review-minitests.js` (cùng các bộ Ôn tập/Kiểm tra theo tiết PPCT), có seed nên chạy lại vẫn ra y hệt. `validate-data.js` chặn nếu Tiết 1–4 thiếu hoặc lặp câu All Key.
+
+## Tách bạch 3 nhóm bộ câu hỏi: Bài học · Chủ đề · Ôn tập/Kiểm tra theo tiết PPCT (All Key) (25/10/2026)
+
+- **Bỏ 8 bộ "Tiết 1–8" cũ.** Đây là các bộ máy tự chia ngẫu nhiên từ ngân hàng chủ đề, có lẫn cả câu không thuộc All Key (câu GS6 cũ). Thay bằng **các bộ đúng tiết Ôn tập / Kiểm tra trong PPCT 2026–2027 (bản Aca HCM) của từng khối**, chỉ gồm câu của đáp án gốc All Key:
+  - **Ôn tập theo tiết**, ví dụ "Ôn tập 1 (Tiết 11): Căn bản về công nghệ — Test 1": gồm mọi câu All Key của các chủ đề PPCT ghi cho tiết đó. IC3 LV1 lọc thêm theo đề vì PPCT ghi "Test 1"/"Test 2". PPCT chỉ ghi "Ôn tập các nội dung đã học" (Spark LV2) thì lấy chủ đề của các bài học từ tiết ôn trước tới tiết này.
+  - **Kiểm tra theo tiết**, ví dụ "Kiểm tra HK1 (Tiết 24)": rút đều đúng số câu đề thi thật của khối (31/36/42/45/45/40) từ các chủ đề đã học tới tiết đó. Có seed nên chạy lại vẫn ra y hệt.
+  - **IC3 LV3:** PPCT có 7 tiết ôn theo chủ đề và 10 tiết "Luyện thi" (tiết 36–45), nên có 4 bộ **Luyện thi** là nguyên 4 đề All Key (Bài ôn số 1/2/3, Bổ sung 10/04/2026), giữ đúng thứ tự câu.
+  - Kế hoạch tiết của 6 khối ở `data/ic3/ppct-review.json`. Bản đồ câu chủ đề ↔ câu All Key ở `data/ic3/allkey-map.json`, sinh bằng `scripts/build-allkey-map.py`: đã tìm thấy 821/830 câu All Key, 9 câu chưa có trong dữ liệu được ghi ở mục `unmatched`. Script sinh bộ mới là `scripts/generate-review-minitests.js`, thay `generate-tiet-minitests.js`.
+- **Bộ "Bài N" (câu Củng cố) chỉ để dạy:**
+  - Sảnh làm bài khoá chế độ **Kiểm tra** khi chọn nhóm "Theo Tên bài" của Spark/IC3, kèm ghi chú hướng dẫn.
+  - Mario Flappy trước đây bốc ngẫu nhiên cả bộ "Bài N" lẫn "Tiết", nay chỉ lấy 7 bộ chủ đề.
+  - Trang bìa sách không còn đếm trùng câu.
+  - Đấu trường "Trộn mọi chủ đề", Tổng hợp và Thử thách hôm nay vẫn chỉ lấy câu từ chủ đề.
+- Sảnh làm bài, Đấu trường và Soạn đề có 2 nhóm mới **Ôn tập theo tiết** và **Kiểm tra theo tiết**, xếp đúng thứ tự tiết. Góc học tập không coi các bộ này là "bài".
+- Link đề giáo viên soạn trước đây có câu lấy từ bộ "Tiết N" cũ vẫn mở được, vì trang tìm lại câu theo mã câu.
+- `split-minitests.py` tự xoá file của bộ không còn nữa.
+- `validate-data.js` chặn từ nay:
+  - còn bộ "Tiết N" cũ;
+  - bộ Ôn tập/Kiểm tra có câu ngoài All Key, câu "Bài N", hoặc câu lệch nội dung với bộ chủ đề.
+- Sửa 1 lỗi cũ ở `arena-scene.js`: một ký tự lạ (backspace) nằm trong biểu thức đổi id của tranh nền mờ làm nó không chạy, nên 2 bản tranh trùng id gradient.
+- Thứ tự cập nhật dữ liệu: `apply-topic-reassign.js` / `apply-allkey-sync.js` → `python scripts/build-allkey-map.py "<thư mục All Key>"` → `node scripts/generate-review-minitests.js` → `python scripts/split-minitests.py`.
+
+## Sửa cách chia bộ câu hỏi + Đấu trường thêm chế độ 🦠 Diệt Virus (25/10/2026) — 0 Firebase
+
+**Bộ "Tiết 1–8" chia sai so với ngân hàng chủ đề** (`scripts/generate-tiet-minitests.js`)
+- Đợt rà chủ đề và đồng bộ All Key (14/10) chỉ sửa 7 bộ "Theo chủ đề" mà chưa chia lại Tiết, nên cả 6 cấp Spark/IC3 vẫn còn **45 câu đã gỡ** trong Tiết. Đó là các câu trùng (`_new`/`_new2`), trong đó có bản đáp án ngược. Tiết 1–4 cũng **thiếu 19 câu mới** thêm theo All Key. Đã chia lại: Tiết 1–4 phủ đủ mỗi câu đúng 1 lần, Tiết 5–8 chỉ lấy câu đang có.
+- Script chia Tiết: chỉ lấy 7 bộ "N. Tên chủ đề" làm ngân hàng. Trước đây nếu chạy lại, script sẽ trộn cả câu "Bài N" vào và xoá thống kê các bộ "Bài N" trong `meta.json`. Script cũng giữ thứ tự Chủ đề → Tiết → Bài, không tạo lại `quiz_data.json` (đã gỡ), và chia vòng nối tiếp nên 4 tiết lệch nhau tối đa 1 câu (trước: 52/49/48/46).
+- `scripts/validate-data.js` chặn từ nay: câu trong Tiết không còn trong chủ đề hoặc lệch nội dung, câu xuất hiện ≠ 1 lần trong Tiết 1–4. **Sau mỗi lần sửa chủ đề: `node scripts/generate-tiet-minitests.js` → `python scripts/split-minitests.py`.**
+- **6 câu Đúng/Sai nhãn đảo** (`label_true="Không"`/`"Sai"`; IC3 LV1 t1__q35, t2__q30, t2__q34, t3__q16, t7__q19; IC3 LV2 t6__q19): đổi nhãn và lật đáp án từng phát biểu, nghĩa không đổi. Trước đây màn tra cứu ngân hàng câu (`question-bank-lookup.js`, cũng đã sửa để dùng nhãn của câu) hiện ngược đáp án. Validate chặn nhãn đảo.
+- Đối chiếu **toàn bộ 2.761 câu "Bài N"** với 210 file Củng cố gốc (`Tài Liệu Bàn Giao/Quiz/*_CungCo.xlsx`): đáp án, lựa chọn và số câu khớp 100%, không phải sửa.
+- Sảnh làm bài và màn chọn Đấu trường **ẩn bộ chưa có câu** (MOS Excel "Bài 1" đang 0 câu, trước đây vẫn chọn được và ra bài rỗng).
+
+**Đấu trường — chế độ thứ 11: 🦠 Diệt Virus (kiểu đánh Boss, Chơi một mình)**
+- Em và 3 bạn máy **chung một đội** đánh **Trùm Virus** trong phòng máy chủ bị nhiễm (cảnh mới `server` trong `np-art.js`: tủ máy chủ nháy đèn, màn hình cảnh báo, sàn mạch điện, virus con lơ lửng).
+- **Trả lời đúng là tấn công**: 10 sát thương, nhanh được thêm tới 6, chuỗi đúng tạo combo ×1,1…×1,4, có 15% chí mạng ×2 (tia vàng, nổ sao). Tia đánh bay từ từng bạn sang Virus, số sát thương hiện trên đầu Virus.
+- **Trả lời sai**: Virus phun nhầy trả đòn, em mất 1 tim; đúng liền 3 câu hồi 1 tim. Hết tim thì gục.
+- **3 giai đoạn** có chữ lớn: còn ≤60% máu Virus **NỔI GIẬN** (chuyển tím, gai quay nhanh; lượt nào cả đội đúng chưa tới một nửa thì Virus nhân bản hồi 6% máu); còn ≤25% **LIỀU CHẾT** (đỏ rực, rung; chí mạng 30%).
+- **Thắng/thua**: hạ Virus trước khi hết câu thì cả đội thắng. Em gục hoặc hết câu mà Virus còn sống thì thua. Xếp hạng trong đội theo sát thương, người cao nhất là **MVP**.
+- Máu Virus = số câu × số người × 7, đã cân bằng bằng mô phỏng 2.000 trận: em đúng 70% thì thắng khoảng 70%, đúng 90% thì thắng 95%. Thẻ Nhân đôi cũng xuất hiện ở chế độ này.
+- Logic thuần ở `arena-core.js` (`bossMaxHp`, `bossPhase`, `bossHit`, `bossRound`, `bossOrder`), có 10 test mới. Sân khấu ở `arena-scene.js` (`bossProps`, `shot`), bìa thẻ ở `arena-covers.js`. Chế độ này ẩn với vai Giáo viên (Phòng cả lớp không có).
+- Đã chạy bằng Chrome thời gian thật (chặn Apps Script/Firebase): 1 trận thắng ở câu 8/15 (qua Nổi giận → Liều chết → hạ gục, 2 lần bốc thẻ) và 1 trận em gục. Giao diện điện thoại 390px không lỗi JS.
+
 ## Đấu trường: Bốc thẻ bài trong trận — cả 10 chế độ (24/10/2026) — 0 Firebase
 
 - **Mốc bốc thẻ**: cứ mỗi 3 câu, đúng **từ 2/3 câu** thì hiện nút **Bốc thẻ bài!** (nhấp nháy vàng); dưới 2 câu đúng thì lỡ lượt bốc. Bàn bài phủ toàn màn hình: chia 3 lá úp → tráo 4 lần → em chọn 1 lá (bấm hoặc phím 1/2/3) → lật ra, 2 lá kia lật theo → **Nhận thẻ** (Enter) → chữ lớn báo hiệu ứng.

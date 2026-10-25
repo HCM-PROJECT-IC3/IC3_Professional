@@ -1,0 +1,3376 @@
+{
+ "version": 1,
+ "generatedAt": "2026-10-25T17:54:35.178Z",
+ "rootFolderId": "1fC5DKxZWXVbq3C9YYrtA53O4TiC8PDNl",
+ "courses": {
+  "IC3_LV1": {
+   "label": "IC3 LV1",
+   "lessons": [
+    {
+     "key": "B01",
+     "title": "Bài 1. Tìm hiểu phần cứng cơ bản của máy tính",
+     "files": [
+      {
+       "id": "1EBCRauBYcSdyJtWIRQiXNd9e4nBqEeIn",
+       "name": "K6 B01",
+       "kind": "pptx",
+       "size": 5983818
+      }
+     ]
+    },
+    {
+     "key": "B02",
+     "title": "Bài 2. Các thiết bị nhập xuất cơ bản",
+     "files": [
+      {
+       "id": "1_ks5UwMLzfL53nuC08xEt2Wl1l-dy5nC",
+       "name": "K6 B02",
+       "kind": "pptx",
+       "size": 15421388
+      }
+     ]
+    },
+    {
+     "key": "B03",
+     "title": "Bài 3. Tìm hiểu các loại máy tính",
+     "files": [
+      {
+       "id": "1IZPCJGXBrLijCnX4dA-nVbuaoQQq_KXE",
+       "name": "K6 B03",
+       "kind": "pptx",
+       "size": 2200310
+      }
+     ]
+    },
+    {
+     "key": "B04",
+     "title": "Bài 4. Tìm hiểu về phần mềm và ứng dụng",
+     "files": [
+      {
+       "id": "1vcPqf8149aXl9vopucaqYzK136xsFAZS",
+       "name": "K6 B04",
+       "kind": "pptx",
+       "size": 4931852
+      }
+     ]
+    },
+    {
+     "key": "B05",
+     "title": "Bài 5. Tìm hiểu về hệ điều hành",
+     "files": [
+      {
+       "id": "1NPDcAcVfOPSD-uM5SErZbqLH_U9eNbsF",
+       "name": "K6 B05",
+       "kind": "pptx",
+       "size": 6978548
+      }
+     ]
+    },
+    {
+     "key": "B06",
+     "title": "Bài 6. Tài khoản đăng nhập và điều hướng",
+     "files": [
+      {
+       "id": "1p-kW11DkRBpIB5Y97RtIebm5UGc80oHo",
+       "name": "K6 B06",
+       "kind": "pptx",
+       "size": 4299373
+      }
+     ]
+    },
+    {
+     "key": "B07",
+     "title": "Bài 7. Quản lí tập tin và sao lưu dự phòng",
+     "files": [
+      {
+       "id": "1lWm6zfUkjAlUDrQIIaJfEln9yyHxE6Rt",
+       "name": "K6 B07",
+       "kind": "pptx",
+       "size": 2206833
+      }
+     ]
+    },
+    {
+     "key": "B08",
+     "title": "Bài 8. Tìm hiểu về mạng và cơ sở hạ tầng",
+     "files": [
+      {
+       "id": "1n9ny5g_OXzPPNM4KUxJgG_2dq-2Sy53E",
+       "name": "K6 B08",
+       "kind": "pptx",
+       "size": 6230528
+      }
+     ]
+    },
+    {
+     "key": "B09",
+     "title": "Bài 9. Tìm hiểu về kết nối mạng không dây",
+     "files": [
+      {
+       "id": "1VxtkvxnFOVddSs1Nd_g7JWASjjf3GEfA",
+       "name": "K6 B09",
+       "kind": "pptx",
+       "size": 4611834
+      }
+     ]
+    },
+    {
+     "key": "B10",
+     "title": "Bài 10. Làm quen với trình duyệt Web",
+     "files": [
+      {
+       "id": "1Hlc0d-RA2zJWyx1-Oc9_DgqBtOZjZo14",
+       "name": "K6 B10",
+       "kind": "pptx",
+       "size": 3027741
+      }
+     ]
+    },
+    {
+     "key": "B11",
+     "title": "Bài 11. Các trình duyệt Web phổ biến",
+     "files": [
+      {
+       "id": "1pDZOxpPhiByFuVlYK6H8rmB_UgXLr0QF",
+       "name": "K6 B11",
+       "kind": "pptx",
+       "size": 9045788
+      }
+     ]
+    },
+    {
+     "key": "B12",
+     "title": "Bài 12. Tìm kiếm thông tin",
+     "files": [
+      {
+       "id": "1KoiS6KEDHiNBYK9yDybvjSRc_fHmFFhe",
+       "name": "K6 B12",
+       "kind": "pptx",
+       "size": 5823230
+      }
+     ]
+    },
+    {
+     "key": "B13",
+     "title": "Bài 13. Tìm hiểu về giấy phép Creative Commons",
+     "files": [
+      {
+       "id": "1PfEYYXat7uk0V20SSliRcoRstEcqHc-q",
+       "name": "K6 B13",
+       "kind": "pptx",
+       "size": 5375238
+      }
+     ]
+    },
+    {
+     "key": "B14",
+     "title": "Bài 14. Danh tính kĩ thuật số",
+     "files": [
+      {
+       "id": "1kw0tMBUSvG1g_5tGfmKMrYHjpYLrFXm8",
+       "name": "K6 B14",
+       "kind": "pptx",
+       "size": 4804713
+      }
+     ]
+    },
+    {
+     "key": "B15",
+     "title": "Bài 15. Các hành vi trực tuyến",
+     "files": [
+      {
+       "id": "1o80oDUMU1LZC3B0xNg3P0rgHzw1o9RK_",
+       "name": "K6 B15",
+       "kind": "pptx",
+       "size": 2551143
+      }
+     ]
+    },
+    {
+     "key": "B16",
+     "title": "Bài 16. Các mạng truyền thông xã hội phổ biến",
+     "files": [
+      {
+       "id": "1CBucuDp3xUG9gB_ssOcN1trfXtqdor0Z",
+       "name": "K6 B16",
+       "kind": "pptx",
+       "size": 4047601
+      }
+     ]
+    },
+    {
+     "key": "B17",
+     "title": "Bài 17. Chính sách tham gia mạng xã hội",
+     "files": [
+      {
+       "id": "12rcP2s0NWmpDE0udjUlDlqXRqgmk8TyE",
+       "name": "K6 B17",
+       "kind": "pptx",
+       "size": 3654621
+      }
+     ]
+    },
+    {
+     "key": "B18",
+     "title": "Bài 18. Tương tác trên môi trường kĩ thuật số",
+     "files": [
+      {
+       "id": "1ZgLlFgWoRFBdl-FsCIxRGM-85HFJmMUp",
+       "name": "K6 B18",
+       "kind": "pptx",
+       "size": 1376535
+      }
+     ]
+    },
+    {
+     "key": "B19",
+     "title": "Bài 19. Sự cần thiết của bảo mật",
+     "files": [
+      {
+       "id": "1cYinwiItivZhKnPvDW3XamNEr7QDVPNN",
+       "name": "K6 B19",
+       "kind": "pptx",
+       "size": 2835855
+      }
+     ]
+    },
+    {
+     "key": "B20",
+     "title": "Bài 20. Xác định rủi ro",
+     "files": [
+      {
+       "id": "1OVrmgjoTWPWGZagaWJnBXZSOu8U7514s",
+       "name": "K6 B20",
+       "kind": "pptx",
+       "size": 4768798
+      }
+     ]
+    },
+    {
+     "key": "B21",
+     "title": "Bài 21. Phòng chống và giảm thiểu rủi ro",
+     "files": [
+      {
+       "id": "1LiJyM65tLRGUQnuLfsvK-_VqQfU0G8M7",
+       "name": "K6 B21",
+       "kind": "pptx",
+       "size": 3004949
+      }
+     ]
+    },
+    {
+     "key": "B22",
+     "title": "Bài 22. Công nghệ thu thập dữ liệu",
+     "files": [
+      {
+       "id": "1DzsajCwhvfKKiZpEsGWWUvG7Sl_QaH5B",
+       "name": "K6 B22",
+       "kind": "pptx",
+       "size": 2983589
+      }
+     ]
+    },
+    {
+     "key": "B23",
+     "title": "Bài 23. Máy tính và sức khỏe",
+     "files": [
+      {
+       "id": "1dO8IjYIGgSX26Bq5znOy2GccZYDX83IA",
+       "name": "K6 B23",
+       "kind": "pptx",
+       "size": 4910822
+      }
+     ]
+    },
+    {
+     "key": "B24",
+     "title": "Bài 24. Giới thiệu Microsoft Word",
+     "files": [
+      {
+       "id": "13xnuzpHOWpzFJ1heKtE4DFYge2xnZNHY",
+       "name": "K6 B24",
+       "kind": "pptx",
+       "size": 5077558
+      }
+     ]
+    },
+    {
+     "key": "B25",
+     "title": "Bài 25. Tìm kiếm và thay thế",
+     "files": [
+      {
+       "id": "1LeOZt1FrdXvTVntkCFwkAprX3khjmmay",
+       "name": "K6 B25",
+       "kind": "pptx",
+       "size": 1600772
+      }
+     ]
+    },
+    {
+     "key": "B26",
+     "title": "Bài 26. Các thao tác định dạng trong văn bản",
+     "files": [
+      {
+       "id": "11LVnrUSUf7f5_CCSeKemkbCM4Wdmecuv",
+       "name": "K6 B26",
+       "kind": "pptx",
+       "size": 3035351
+      }
+     ]
+    },
+    {
+     "key": "B27",
+     "title": "Bài 27. Làm việc với trang văn bản",
+     "files": [
+      {
+       "id": "1bo0qSASw0XH4LlY73OB_Sv4oIxABWXro",
+       "name": "K6 B27",
+       "kind": "pptx",
+       "size": 2319625
+      }
+     ]
+    },
+    {
+     "key": "B28",
+     "title": "Bài 28. Sử dụng Style trong văn bản",
+     "files": [
+      {
+       "id": "1u2xnrh_mox99eyvDBhbDYZAfpRIceTnW",
+       "name": "K6 B28",
+       "kind": "pptx",
+       "size": 2176223
+      }
+     ]
+    },
+    {
+     "key": "B29",
+     "title": "Bài 29. Giới thiệu Microsoft PowerPoint",
+     "files": [
+      {
+       "id": "1oiyEOn4uRi-wO7F3u7JjjNAOeBVBNn8_",
+       "name": "K6 B29",
+       "kind": "pptx",
+       "size": 3447956
+      }
+     ]
+    },
+    {
+     "key": "B30",
+     "title": "Bài 30. Làm việc với trang chiếu",
+     "files": [
+      {
+       "id": "15WJJ4DF-rgXY_PjDEHXVlImlflunorm7",
+       "name": "K6 B30",
+       "kind": "pptx",
+       "size": 1849540
+      }
+     ]
+    },
+    {
+     "key": "B31",
+     "title": "Bài 31. Quản lí các trang chiếu",
+     "files": [
+      {
+       "id": "1CwcdxR_LB5r5sGOthhKiQ5fOJe4gOx3y",
+       "name": "K6 B31",
+       "kind": "pptx",
+       "size": 2036234
+      }
+     ]
+    },
+    {
+     "key": "B32",
+     "title": "Bài 32. Trích dẫn nguồn thông tin",
+     "files": [
+      {
+       "id": "1dotbpHRLJ7Q-sZ8x1IA5I2FhEaoSNIeY",
+       "name": "K6 B32",
+       "kind": "pptx",
+       "size": 1991332
+      }
+     ]
+    },
+    {
+     "key": "B33",
+     "title": "Bài 33. In bài trình chiếu",
+     "files": [
+      {
+       "id": "1-mRp1DY3Tdz-01mNsdJDHYRDbnjN92rg",
+       "name": "K6 B33",
+       "kind": "pptx",
+       "size": 1456896
+      }
+     ]
+    },
+    {
+     "key": "B34",
+     "title": "Bài 34. Cộng tác kĩ thuật số",
+     "files": [
+      {
+       "id": "1UT3PAeoQ2oYXP2wZ2EZS3FQObn5jx_tO",
+       "name": "K6 B34",
+       "kind": "pptx",
+       "size": 1066383
+      }
+     ]
+    },
+    {
+     "key": "B35",
+     "title": "Bài 35. Các nghi thức cộng tác",
+     "files": [
+      {
+       "id": "17VTw9DXsKNKUsEkdOie6h_v3cOpTBmVn",
+       "name": "K6 B35",
+       "kind": "pptx",
+       "size": 2253509
+      }
+     ]
+    }
+   ]
+  },
+  "IC3_LV2": {
+   "label": "IC3 LV2",
+   "lessons": [
+    {
+     "key": "B01",
+     "title": "Bài 1. Phần cứng máy tính",
+     "files": [
+      {
+       "id": "17bijdJvweF2oEBE10AdoHsi-b8BwtYlG",
+       "name": "K7 B01",
+       "kind": "pptx",
+       "size": 6050742
+      }
+     ]
+    },
+    {
+     "key": "B02",
+     "title": "Bài 2. Thiết lập và tùy chỉnh phần cứng (1)",
+     "files": [
+      {
+       "id": "174-DF9OtkrJcF_rI0LIwUfKdaWrF9LUr",
+       "name": "K7 B02",
+       "kind": "pptx",
+       "size": 9009479
+      }
+     ]
+    },
+    {
+     "key": "B03",
+     "title": "Bài 3. Thiết lập và tùy chỉnh phần cứng (2)",
+     "files": [
+      {
+       "id": "1_Js3KjCdjJfwPmH23V-2ytkylH43Usqt",
+       "name": "K7 B03",
+       "kind": "pptx",
+       "size": 4750261
+      }
+     ]
+    },
+    {
+     "key": "B04",
+     "title": "Bài 4. Tập tin và thư mục",
+     "files": [
+      {
+       "id": "1m-Qaye5VBFEqAvinlp4uydYsP9ehIso4",
+       "name": "K7 B04",
+       "kind": "pptx",
+       "size": 6981658
+      }
+     ]
+    },
+    {
+     "key": "B05",
+     "title": "Bài 5. Lưu trữ và truy cập dữ liệu",
+     "files": [
+      {
+       "id": "16BvMeyF4ml0VVLizgwSlFCZaGSuAvViL",
+       "name": "K7 B05",
+       "kind": "pptx",
+       "size": 13366720
+      }
+     ]
+    },
+    {
+     "key": "B06",
+     "title": "Bài 6. Trình duyệt Web",
+     "files": [
+      {
+       "id": "1ZqrPXpzlw0FX7_D4wxJIf9luTtMQVI9f",
+       "name": "K7 B06",
+       "kind": "pptx",
+       "size": 6837171
+      }
+     ]
+    },
+    {
+     "key": "B07",
+     "title": "Bài 7. Lịch kĩ thuật số",
+     "files": [
+      {
+       "id": "1ANVHJI0waYao7TwG8pWR8ONaFwlrk8G3",
+       "name": "K7 B07",
+       "kind": "pptx",
+       "size": 4202438
+      }
+     ]
+    },
+    {
+     "key": "B08",
+     "title": "Bài 8. Giao tiếp kĩ thuật số (1)",
+     "files": [
+      {
+       "id": "15CLJYbtGzBUurJCm4dRdALZA_EDoxkfi",
+       "name": "K7 B08",
+       "kind": "pptx",
+       "size": 3791970
+      }
+     ]
+    },
+    {
+     "key": "B09",
+     "title": "Bài 9. Giao tiếp kĩ thuật số (2)",
+     "files": [
+      {
+       "id": "1HlUk3LyAoM3huqVtrHrUBRTDzseLYxz_",
+       "name": "K7 B09",
+       "kind": "pptx",
+       "size": 7254255
+      }
+     ]
+    },
+    {
+     "key": "B10",
+     "title": "Bài 10. Danh tính kĩ thuật số",
+     "files": [
+      {
+       "id": "1kIm8Laa_Qt211OtsKuxMYhQ0n1APevUS",
+       "name": "K7 B10",
+       "kind": "pptx",
+       "size": 4547718
+      }
+     ]
+    },
+    {
+     "key": "B11",
+     "title": "Bài 11. Quy tắc ứng xử trên môi trường số",
+     "files": [
+      {
+       "id": "1Pud64fJVxo0gQgPpYn9MctbAAH9-XPi-",
+       "name": "K7 B11",
+       "kind": "pptx",
+       "size": 6494176
+      }
+     ]
+    },
+    {
+     "key": "B12",
+     "title": "Bài 12. Tìm kiếm thông tin (1)",
+     "files": [
+      {
+       "id": "1nRu6P60wJZEAxKaedAi8bjzkONLhO30z",
+       "name": "K7 B12",
+       "kind": "pptx",
+       "size": 7485979
+      }
+     ]
+    },
+    {
+     "key": "B13",
+     "title": "Bài 13. Tìm kiếm thông tin (2)",
+     "files": [
+      {
+       "id": "1HwSRBmjbjc77ffrXmST71g8b4OM2cdzH",
+       "name": "K7 B13",
+       "kind": "pptx",
+       "size": 8190560
+      }
+     ]
+    },
+    {
+     "key": "B14",
+     "title": "Bài 14. Một số tính năng chung trong Microsoft Office (1)",
+     "files": [
+      {
+       "id": "12fWnK6s5a4w3VU8uW2IUAKCmsDAD0Pmh",
+       "name": "K7 B14",
+       "kind": "pptx",
+       "size": 4705262
+      }
+     ]
+    },
+    {
+     "key": "B15",
+     "title": "Bài 15. Một số tính năng chung trong Microsoft Office (2)",
+     "files": [
+      {
+       "id": "1Gjjdsy_ihi7QjzLR4ARu9FMQRfTSMJj0",
+       "name": "K7 B15",
+       "kind": "pptx",
+       "size": 4445003
+      }
+     ]
+    },
+    {
+     "key": "B16",
+     "title": "Bài 16. Làm quen với phần mềm bảng tính Microsoft Excel",
+     "files": [
+      {
+       "id": "1_FYwJ_nrz8p8Fp-DPInbNaDaBqE-UDKj",
+       "name": "K7 B16",
+       "kind": "pptx",
+       "size": 3843911
+      }
+     ]
+    },
+    {
+     "key": "B17",
+     "title": "Bài 17. Một số thao tác cơ bản trên Microsoft Excel",
+     "files": [
+      {
+       "id": "14KvYkKvEYHL8b51Xz3vU55wjnG0cjRjx",
+       "name": "K7 B17",
+       "kind": "pptx",
+       "size": 6299597
+      }
+     ]
+    },
+    {
+     "key": "B18",
+     "title": "Bài 18. Một số tính năng phổ biến trên Microsoft Excel",
+     "files": [
+      {
+       "id": "1fQ3HMVCQMtrIV1fjZqZb_V-ABCqXsAjF",
+       "name": "K7 B18",
+       "kind": "pptx",
+       "size": 2321564
+      }
+     ]
+    },
+    {
+     "key": "B19",
+     "title": "Bài 19. Áp dụng Style trong Microsoft Word",
+     "files": [
+      {
+       "id": "1NpT5qiUMqfF5OOLjIxkX03bA9ppIDTH_",
+       "name": "K7 B19",
+       "kind": "pptx",
+       "size": 3339899
+      }
+     ]
+    },
+    {
+     "key": "B20",
+     "title": "Bài 20. Một số thành phần cơ bản của một tài liệu",
+     "files": [
+      {
+       "id": "1RcSublqIVlehUwHxbnt5wgkNXFKRImwR",
+       "name": "K7 B20",
+       "kind": "pptx",
+       "size": 1703914
+      }
+     ]
+    },
+    {
+     "key": "B21",
+     "title": "Bài 21. Tính năng Track Changes trong Microsoft Word",
+     "files": [
+      {
+       "id": "1k_eyS7JXpCgY1MNPNWMXSvXlEGvzTLvx",
+       "name": "K7 B21",
+       "kind": "pptx",
+       "size": 1946608
+      }
+     ]
+    },
+    {
+     "key": "B22",
+     "title": "Bài 22. Sở hữu trí tuệ và bản quyền",
+     "files": [
+      {
+       "id": "1wAHzhwjo8Dr6Sna3hvLepiy5_ENsjnwM",
+       "name": "K7 B22",
+       "kind": "pptx",
+       "size": 11318059
+      }
+     ]
+    },
+    {
+     "key": "B23",
+     "title": "Bài 23. Phạm vi công cộng và giấy phép CC",
+     "files": [
+      {
+       "id": "1plvP7rQSkVn9hyh1oJq1268Kk7WCCDV-",
+       "name": "K7 B23",
+       "kind": "pptx",
+       "size": 3614092
+      }
+     ]
+    },
+    {
+     "key": "B24",
+     "title": "Bài 24. Hiệu ứng hoạt hình trong Microsoft PowerPoint (1)",
+     "files": [
+      {
+       "id": "1iBHQaEZ_mqT-SW-7i9T7wEHRTVMJM0oa",
+       "name": "K7 B24",
+       "kind": "pptx",
+       "size": 13912786
+      }
+     ]
+    },
+    {
+     "key": "B25",
+     "title": "Bài 25. Hiệu ứng hoạt hình trong Microsoft PowerPoint (2)",
+     "files": [
+      {
+       "id": "15WUorUglzzfPYGbwnYdMEH5WlsFOSEZu",
+       "name": "K7 B25",
+       "kind": "pptx",
+       "size": 2038235
+      }
+     ]
+    },
+    {
+     "key": "B26",
+     "title": "Bài 26. Tùy chỉnh hiệu ứng hoạt hình (1)",
+     "files": [
+      {
+       "id": "1KWEzPjNfgRN1T-UtPclP_MNw_Z4y8N4_",
+       "name": "K7 B26",
+       "kind": "pptx",
+       "size": 1273137
+      }
+     ]
+    },
+    {
+     "key": "B27",
+     "title": "Bài 27. Tùy chỉnh hiệu ứng hoạt hình (2)",
+     "files": [
+      {
+       "id": "1NddYkWgBxxOL3Wvj_UATZttrfcU6tUro",
+       "name": "K7 B27",
+       "kind": "pptx",
+       "size": 1100383
+      }
+     ]
+    },
+    {
+     "key": "B28",
+     "title": "Bài 28. Định dạng hình ảnh và Video trong Microsoft PowerPoint",
+     "files": [
+      {
+       "id": "1aPaSc0Des9RfW3KbfA1LO3tEay4_Zqpe",
+       "name": "K7 B28",
+       "kind": "pptx",
+       "size": 3753924
+      }
+     ]
+    },
+    {
+     "key": "B29",
+     "title": "Bài 29. Hiệu ứng chuyển Slide trong Microsoft PowerPoint",
+     "files": [
+      {
+       "id": "1Oj5lW8Zz79tv_pcf6fdg5SkTLb2Lp70d",
+       "name": "K7 B29",
+       "kind": "pptx",
+       "size": 2374225
+      }
+     ]
+    },
+    {
+     "key": "B30",
+     "title": "Bài 30. Cộng tác trong Microsoft 365",
+     "files": [
+      {
+       "id": "1KzQi2IzO0RPeHpWJybnfrbD2zDmLEjoU",
+       "name": "K7 B30",
+       "kind": "pptx",
+       "size": 11472305
+      }
+     ]
+    },
+    {
+     "key": "B31",
+     "title": "Bài 31. Sử dụng cuộc họp ảo trong cộng tác kĩ thuật số",
+     "files": [
+      {
+       "id": "1_CCG9R1SUk5Eo9dW6FuOu7nqM2-3Qxbt",
+       "name": "K7 B31",
+       "kind": "pptx",
+       "size": 2574213
+      }
+     ]
+    },
+    {
+     "key": "B32",
+     "title": "Bài 32. Máy tính và sức khỏe thể chất",
+     "files": [
+      {
+       "id": "11A-vCHxpwe6VvDwSsbbMqG38Xq8LEvI0",
+       "name": "K7 B32",
+       "kind": "pptx",
+       "size": 5843129
+      }
+     ]
+    },
+    {
+     "key": "B33",
+     "title": "Bài 33. Máy tính và sức khỏe tinh thần",
+     "files": [
+      {
+       "id": "1UyDuB2pJWpkUD_pCHDKQT59AJ_vTsChR",
+       "name": "K7 B33",
+       "kind": "pptx",
+       "size": 5331174
+      }
+     ]
+    },
+    {
+     "key": "B34",
+     "title": "Bài 34. Bảo mật thông tin và thiết bị (1)",
+     "files": [
+      {
+       "id": "1B5YChqBbsG1nzC-XbnDg70rbjY6WZIfV",
+       "name": "K7 B34",
+       "kind": "pptx",
+       "size": 4544026
+      }
+     ]
+    },
+    {
+     "key": "B35",
+     "title": "Bài 35. Bảo mật thông tin và thiết bị (2)",
+     "files": [
+      {
+       "id": "12HPloj5TYfVlxJu7C2IXWkWKXaH-dYTJ",
+       "name": "K7 B35",
+       "kind": "pptx",
+       "size": 1974556
+      }
+     ]
+    }
+   ]
+  },
+  "IC3_LV3": {
+   "label": "IC3 LV3",
+   "lessons": [
+    {
+     "key": "B01",
+     "title": "Bài 1. Tìm hiểu phần cứng cơ bản của máy tính",
+     "files": [
+      {
+       "id": "1EBdJ-R-oE7OphLxtaZeK-e238HW_JJg9",
+       "name": "K8 B01",
+       "kind": "pptx",
+       "size": 10355317
+      }
+     ]
+    },
+    {
+     "key": "B02",
+     "title": "Bài 2. Khắc phục sự cố máy tính",
+     "files": [
+      {
+       "id": "1X2mIlXPGDSo9Ll8lPVHPXKaTa0LRKy-p",
+       "name": "K8 B02",
+       "kind": "pptx",
+       "size": 9661763
+      }
+     ]
+    },
+    {
+     "key": "B03",
+     "title": "Bài 3. Từ khóa và toán tử Boolean trong tìm kiếm",
+     "files": [
+      {
+       "id": "1Ydm606N_Lt0F5nunTwERL1tsFDMO8y2q",
+       "name": "K8 B03",
+       "kind": "pptx",
+       "size": 4391081
+      }
+     ]
+    },
+    {
+     "key": "B04",
+     "title": "Bài 4. Tìm kiếm nâng cao với bộ lọc và prompt",
+     "files": [
+      {
+       "id": "1503mn2k957VOUKRWSU1to-4M6lWDdNK1",
+       "name": "K8 B04",
+       "kind": "pptx",
+       "size": 4659171
+      }
+     ]
+    },
+    {
+     "key": "B05",
+     "title": "Bài 5. Đánh giá thông tin",
+     "files": [
+      {
+       "id": "1PA4YJICaGKmLo4380Ptix1qDUGMrSKtn",
+       "name": "K8 B05",
+       "kind": "pptx",
+       "size": 38146669
+      }
+     ]
+    },
+    {
+     "key": "B06",
+     "title": "Bài 6. Kiểm chứng thông tin",
+     "files": [
+      {
+       "id": "1F_qGYBdG3Tfq3l19E5uqU-n4fViCAOXO",
+       "name": "K8 B06",
+       "kind": "pptx",
+       "size": 14567112
+      }
+     ]
+    },
+    {
+     "key": "B07",
+     "title": "Bài 7. Nhận diện và báo cáo hành vi gây hại",
+     "files": [
+      {
+       "id": "1Zs-jHY0KWbPHZBAPG1T75CM4kAWFtuiC",
+       "name": "K8 B07",
+       "kind": "pptx",
+       "size": 6951339
+      }
+     ]
+    },
+    {
+     "key": "B08",
+     "title": "Bài 8. Viết báo cáo hành vi gây hại",
+     "files": [
+      {
+       "id": "1d76M-iBymr9JJ3k-8vyiyHuhv7fL3OKl",
+       "name": "K8 B08",
+       "kind": "pptx",
+       "size": 7138342
+      }
+     ]
+    },
+    {
+     "key": "B09",
+     "title": "Bài 9. Một số hành vi bất hợp pháp trên môi trường kĩ thuật số",
+     "files": [
+      {
+       "id": "1zcKC8psAuUvMFMyG2P1Ztcw0OErwqzNx",
+       "name": "K8 B09",
+       "kind": "pptx",
+       "size": 7475464
+      }
+     ]
+    },
+    {
+     "key": "B10",
+     "title": "Bài 10. Tìm hiểu và lựa chọn sản phẩm trực tuyến",
+     "files": [
+      {
+       "id": "1bmwlwtZ3j4T75mipYyiyW-e8wP3tr9iq",
+       "name": "K8 B10",
+       "kind": "pptx",
+       "size": 6212280
+      }
+     ]
+    },
+    {
+     "key": "B11",
+     "title": "Bài 11. Cập nhật kiến thức số và đánh giá công cụ AI mới",
+     "files": [
+      {
+       "id": "1efMqh1xoqstKe7FQDLqK0Aeh3EXOAd_C",
+       "name": "K8 B11",
+       "kind": "pptx",
+       "size": 4564151
+      }
+     ]
+    },
+    {
+     "key": "B12",
+     "title": "Bài 12. Cấp phép phần mềm",
+     "files": [
+      {
+       "id": "1dF6x0ur-DS6E4ZkjzIPKPcAHv2oI_oRT",
+       "name": "K8 B12",
+       "kind": "pptx",
+       "size": 7749236
+      }
+     ]
+    },
+    {
+     "key": "B13",
+     "title": "Bài 13. Cài đặt mặc định phần mềm",
+     "files": [
+      {
+       "id": "1uHfc2gFfI4VVufOk3chOKrFeHWfhnPsu",
+       "name": "K8 B13",
+       "kind": "pptx",
+       "size": 2271257
+      }
+     ]
+    },
+    {
+     "key": "B14",
+     "title": "Bài 14. Làm việc với phương tiện truyền thông kĩ thuật số",
+     "files": [
+      {
+       "id": "1jcsin-BYKZY_LI9xhPl7faOUP3b81rbw",
+       "name": "K8 B14",
+       "kind": "pptx",
+       "size": 8978030
+      }
+     ]
+    },
+    {
+     "key": "B15",
+     "title": "Bài 15. Trực quan hóa dữ liệu bằng biểu đồ",
+     "files": [
+      {
+       "id": "1IOKQet0Fmqq9JPma-Kvx4HtCgaJj6GIO",
+       "name": "K8 B15",
+       "kind": "pptx",
+       "size": 1847922
+      }
+     ]
+    },
+    {
+     "key": "B16",
+     "title": "Bài 16. Sơ đồ quy trình (Flowchart)",
+     "files": [
+      {
+       "id": "1R5XRnK1AQKCoft0IYzvGR-vGUZrT4Qu9",
+       "name": "K8 B16",
+       "kind": "pptx",
+       "size": 2724564
+      }
+     ]
+    },
+    {
+     "key": "B17",
+     "title": "Bài 17. Quản lí thông tin kĩ thuật số",
+     "files": [
+      {
+       "id": "1eTmTSp4r1b2Gxg2m04pYlSSB7VKwfPWr",
+       "name": "K8 B17",
+       "kind": "pptx",
+       "size": 4779014
+      }
+     ]
+    },
+    {
+     "key": "B18",
+     "title": "Bài 18. Khả năng tiếp cận",
+     "files": [
+      {
+       "id": "1irpDkrO7V3olSHj7J2sH92Ggg9nRYiRV",
+       "name": "K8 B18",
+       "kind": "pptx",
+       "size": 11900174
+      }
+     ]
+    },
+    {
+     "key": "B19",
+     "title": "Bài 19. Hiểu về sở hữu trí tuệ",
+     "files": [
+      {
+       "id": "1ZfGGBIoh2qJBOzYgaUEVazUqUy4lCOwI",
+       "name": "K8 B19",
+       "kind": "pptx",
+       "size": 10748947
+      }
+     ]
+    },
+    {
+     "key": "B20",
+     "title": "Bài 20. Bảo vệ bằng bản quyền và bằng sáng chế",
+     "files": [
+      {
+       "id": "1tYzYavxyqwjK3y3bwjfOm5p7WWw2XRbc",
+       "name": "K8 B20",
+       "kind": "pptx",
+       "size": 9506250
+      }
+     ]
+    },
+    {
+     "key": "B21",
+     "title": "Bài 21. Bảo vệ bằng nhãn hiệu và liêm chính học thuật",
+     "files": [
+      {
+       "id": "1DLwx6szPgOeNd1cM_dS6SE9ZlbY-QvA_",
+       "name": "K8 B21",
+       "kind": "pptx",
+       "size": 18645322
+      }
+     ]
+    },
+    {
+     "key": "B22",
+     "title": "Bài 22. Lập kế hoạch cho một dự án kĩ thuật số",
+     "files": [
+      {
+       "id": "1omm4XsJvQ5Dl0oIAphPkSz2-LEbaxTQ1",
+       "name": "K8 B22",
+       "kind": "pptx",
+       "size": 8627214
+      }
+     ]
+    },
+    {
+     "key": "B23",
+     "title": "Bài 23. Sự mơ hồ (Ambiguity) trong giao tiếp kĩ thuật số",
+     "files": [
+      {
+       "id": "108eJDPWOh0yVO4LKmhanJxOWyWtP-rS7",
+       "name": "K8 B23",
+       "kind": "pptx",
+       "size": 12205788
+      }
+     ]
+    },
+    {
+     "key": "B24",
+     "title": "Bài 24. Chọn phương thức giao tiếp số phù hợp",
+     "files": [
+      {
+       "id": "1JI7281wo7UC289BOcZaS7A2AJu3SXsJH",
+       "name": "K8 B24",
+       "kind": "pptx",
+       "size": 8251021
+      }
+     ]
+    },
+    {
+     "key": "B25",
+     "title": "Bài 25. Soạn thông điệp giải quyết vấn đề hiệu quả",
+     "files": [
+      {
+       "id": "1G2GLIr7c0_3AFjTR71ZWEPP2YRWvVUEw",
+       "name": "K8 B25",
+       "kind": "pptx",
+       "size": 7310768
+      }
+     ]
+    },
+    {
+     "key": "B26",
+     "title": "Bài 26. Tương tác trên môi trường kĩ thuật số",
+     "files": [
+      {
+       "id": "1cAe4RBk0Hpgmbli6r9D_7i0J9i48cUxC",
+       "name": "K8 B26",
+       "kind": "pptx",
+       "size": 9783621
+      }
+     ]
+    },
+    {
+     "key": "B27",
+     "title": "Bài 27. Cộng tác để giải quyết vấn đề",
+     "files": [
+      {
+       "id": "1XTxEIbgMnoVX1WRaDeU4If_Whf39kDd_",
+       "name": "K8 B27",
+       "kind": "pptx",
+       "size": 7054232
+      }
+     ]
+    },
+    {
+     "key": "B28",
+     "title": "Bài 28. Chu trình dự án và vai trò thành viên",
+     "files": [
+      {
+       "id": "1_XhzbkMNmu2NqpQ1Rqn59cH0xtjyCp9m",
+       "name": "K8 B28",
+       "kind": "pptx",
+       "size": 6080410
+      }
+     ]
+    },
+    {
+     "key": "B29",
+     "title": "Bài 29. Cho và nhận phản hồi để hoàn thiện sản phẩm",
+     "files": [
+      {
+       "id": "1sPiLkDs64qNajOzQGIQSU_-XH-NgUHMj",
+       "name": "K8 B29",
+       "kind": "pptx",
+       "size": 6673845
+      }
+     ]
+    },
+    {
+     "key": "B30",
+     "title": "Bài 30. Bảo mật thiết bị của bạn",
+     "files": [
+      {
+       "id": "1egWgfjXmJv5JmlFDZX6qCUbjuRLxEqEm",
+       "name": "K8 B30",
+       "kind": "pptx",
+       "size": 8844815
+      }
+     ]
+    },
+    {
+     "key": "B31",
+     "title": "Bài 31. Nhận biết virus và tập tin đáng ngờ",
+     "files": [
+      {
+       "id": "1MhjSMbJJjG6KDnpa0_mxxJeMruVB-b8I",
+       "name": "K8 B31",
+       "kind": "pptx",
+       "size": 3787153
+      }
+     ]
+    },
+    {
+     "key": "B32",
+     "title": "Bài 32. Sử dụng phần mềm chống virus",
+     "files": [
+      {
+       "id": "1T77Zl0ba-smnOdLj6SJa_whCePuE_nIp",
+       "name": "K8 B32",
+       "kind": "pptx",
+       "size": 4338250
+      }
+     ]
+    },
+    {
+     "key": "B33",
+     "title": "Bài 33. Đặt lại thiết bị",
+     "files": [
+      {
+       "id": "1yVHp-XnjPp9JmvTcSMmUQrhN7VKKcl5B",
+       "name": "K8 B33",
+       "kind": "pptx",
+       "size": 5407366
+      }
+     ]
+    },
+    {
+     "key": "B34",
+     "title": "Bài 34. Tác động của công nghệ số đến sức khỏe",
+     "files": [
+      {
+       "id": "1PK6lIW4TaJI3OXq0WAnDILwYZuliUXCM",
+       "name": "K8 B34",
+       "kind": "pptx",
+       "size": 32809749
+      }
+     ]
+    },
+    {
+     "key": "B35",
+     "title": "Bài 35. Tác động của công nghệ số đến môi trường",
+     "files": [
+      {
+       "id": "1WojAwxS2Vo94TpSYvha8fRYbOtZWcopQ",
+       "name": "K8 B35",
+       "kind": "pptx",
+       "size": 5319182
+      }
+     ]
+    }
+   ]
+  },
+  "Spark_LV1": {
+   "label": "Spark LV1",
+   "lessons": [
+    {
+     "key": "B01",
+     "title": "Bài 1. Phần cứng và thiết bị nhập, xuất, kết nối",
+     "files": [
+      {
+       "id": "12r1J7ZtCw3GhqjcNe5Dso0CwRkZQryvh",
+       "name": "K3 B01",
+       "kind": "pptx",
+       "size": 3969386
+      }
+     ]
+    },
+    {
+     "key": "B02",
+     "title": "Bài 2. Các loại máy tính và thiết bị nhập tích hợp",
+     "files": [
+      {
+       "id": "1O8N9NdmZZHt9RD6JmJZHCUZ1O2AulN08",
+       "name": "K3 B02",
+       "kind": "pptx",
+       "size": 7339358
+      }
+     ]
+    },
+    {
+     "key": "B03",
+     "title": "Bài 3. Phần mềm và các loại phần mềm",
+     "files": [
+      {
+       "id": "10ANwL79c8D6z0-3cp9DKpw4ZmIHPohVi",
+       "name": "K3 B03",
+       "kind": "pptx",
+       "size": 1569739
+      }
+     ]
+    },
+    {
+     "key": "B04",
+     "title": "Bài 4. Hệ điều hành và chương trình ứng dụng",
+     "files": [
+      {
+       "id": "1yLH-4JymrPiUm_wvRXc3i_T7sfCUh-Eg",
+       "name": "K3 B04",
+       "kind": "pptx",
+       "size": 2336055
+      }
+     ]
+    },
+    {
+     "key": "B05",
+     "title": "Bài 5. Tập tin và cách đặt tên tập tin",
+     "files": [
+      {
+       "id": "1-hWCtHw7z9NoPtHEi_F45gaUXLv2IOj4",
+       "name": "K3 B05",
+       "kind": "pptx",
+       "size": 16091617
+      }
+     ]
+    },
+    {
+     "key": "B06",
+     "title": "Bài 6. Thư mục và cây thư mục",
+     "files": [
+      {
+       "id": "1zZtec_zTra3phtUfx6lIFoJEdUXVdSuo",
+       "name": "K3 B06",
+       "kind": "pptx",
+       "size": 3477605
+      }
+     ]
+    },
+    {
+     "key": "B07",
+     "title": "Bài 7. Thiết bị di động",
+     "files": [
+      {
+       "id": "1MSlvxXt9XS4OBJAYZSNxPPX1LVraHouY",
+       "name": "K3 B07",
+       "kind": "pptx",
+       "size": 21112330
+      }
+     ]
+    },
+    {
+     "key": "B08",
+     "title": "Bài 8. Mạng và Internet",
+     "files": [
+      {
+       "id": "1nZY-21F7Wy2i097U9w_S9SMIxG33k9gV",
+       "name": "K3 B08",
+       "kind": "pptx",
+       "size": 20480569
+      }
+     ]
+    },
+    {
+     "key": "B09",
+     "title": "Bài 9. Bắt nạt trực tuyến và ứng xử có trách nhiệm",
+     "files": [
+      {
+       "id": "15EkNzr0Lk1PCkghPLCOla5VccVlqPWNj",
+       "name": "K3 B09",
+       "kind": "pptx",
+       "size": 7957487
+      }
+     ]
+    },
+    {
+     "key": "B10",
+     "title": "Bài 10. Mật khẩu và dữ liệu cá nhân",
+     "files": [
+      {
+       "id": "1qA3PXH8fCj0Q4BKNvWMAKX7LwSP3jMiK",
+       "name": "K3 B10",
+       "kind": "pptx",
+       "size": 13403061
+      }
+     ]
+    },
+    {
+     "key": "B11",
+     "title": "Bài 11. Bảo mật máy tính, thiết bị và tài khoản",
+     "files": [
+      {
+       "id": "1d4O2rqDKU7VQ9LV5vXwZLYtaCS1pbZAA",
+       "name": "K3 B11",
+       "kind": "pptx",
+       "size": 28498565
+      }
+     ]
+    },
+    {
+     "key": "B12",
+     "title": "Bài 12. Máy tính và sức khỏe",
+     "files": [
+      {
+       "id": "1vXdqH8ZAmGBNkImXEsdh7Qv_C-w2bfSx",
+       "name": "K3 B12",
+       "kind": "pptx",
+       "size": 3887589
+      }
+     ]
+    },
+    {
+     "key": "B13",
+     "title": "Bài 13. Thông tin trực tuyến",
+     "files": [
+      {
+       "id": "1XSo1A3sUOVTRq3Q1OIZITyfaS-WRWmZ-",
+       "name": "K3 B13",
+       "kind": "pptx",
+       "size": 7026178
+      }
+     ]
+    },
+    {
+     "key": "B14",
+     "title": "Bài 14. Trình duyệt Web và thanh địa chỉ",
+     "files": [
+      {
+       "id": "1y6AHkJ5HmNu2UvFIjntDsHYs9jUPYaAu",
+       "name": "K3 B14",
+       "kind": "pptx",
+       "size": 15865564
+      }
+     ]
+    },
+    {
+     "key": "B15",
+     "title": "Bài 15. Thẻ trình duyệt và quản lí trang học tập",
+     "files": [
+      {
+       "id": "1UUTrRs_bH-D8N_n-4xnQVK0g2H9lIk4d",
+       "name": "K3 B15",
+       "kind": "pptx",
+       "size": 5719614
+      }
+     ]
+    },
+    {
+     "key": "B16",
+     "title": "Bài 16. Lịch sử duyệt Web và dấu trang",
+     "files": [
+      {
+       "id": "1aTiL1oz4shk2CP2ZLDVNx4gBW4FfrE2M",
+       "name": "K3 B16",
+       "kind": "pptx",
+       "size": 7320842
+      }
+     ]
+    },
+    {
+     "key": "B17",
+     "title": "Bài 17. Tài liệu và bản trình chiếu",
+     "files": [
+      {
+       "id": "1Rb0n9Z5zTeDOdN5J8Hsam1rPI-pMgU6I",
+       "name": "K3 B17",
+       "kind": "pptx",
+       "size": 7117555
+      }
+     ]
+    },
+    {
+     "key": "B18",
+     "title": "Bài 18. Làm quen với phần mềm tạo tài liệu và xử lí văn bản (Microsoft Word)",
+     "files": [
+      {
+       "id": "1hW1ReszRait02W2GctyWmKKra7mUL_3_",
+       "name": "K3 B18",
+       "kind": "pptx",
+       "size": 9762617
+      }
+     ]
+    },
+    {
+     "key": "B19",
+     "title": "Bài 19. Khám phá giao diện Word",
+     "files": [
+      {
+       "id": "1-5-C8X_Q8fhO4-gonlmCZwfVlNUWg_qJ",
+       "name": "K3 B19",
+       "kind": "pptx",
+       "size": 4390255
+      }
+     ]
+    },
+    {
+     "key": "B20",
+     "title": "Bài 20. Khám phá các nút lệnh",
+     "files": [
+      {
+       "id": "1nQfOpe2vt4th99TkxYIgXDJLy3TbbDt1",
+       "name": "K3 B20",
+       "kind": "pptx",
+       "size": 7188900
+      }
+     ]
+    },
+    {
+     "key": "B21",
+     "title": "Bài 21. Nhập, chọn và tìm kiếm văn bản",
+     "files": [
+      {
+       "id": "1_uld2W_TXAJsGyzF9cWGadBax4LG1LYv",
+       "name": "K3 B21",
+       "kind": "pptx",
+       "size": 10478021
+      }
+     ]
+    },
+    {
+     "key": "B22",
+     "title": "Bài 22. Làm quen với Microsoft PowerPoint",
+     "files": [
+      {
+       "id": "1JHTzLYwOpAw0iF4dEJVTeHAMh5XhWB81",
+       "name": "K3 B22",
+       "kind": "pptx",
+       "size": 6562064
+      }
+     ]
+    },
+    {
+     "key": "B23",
+     "title": "Bài 23. Bắt đầu một bài trình chiếu mới",
+     "files": [
+      {
+       "id": "1WXT5FaNKcToDBG5BKYs-N3wtmfEYoUmC",
+       "name": "K3 B23",
+       "kind": "pptx",
+       "size": 9104706
+      }
+     ]
+    },
+    {
+     "key": "B24",
+     "title": "Bài 24. Cấu trúc cơ bản bài trình chiếu",
+     "files": [
+      {
+       "id": "11W1rJQAsHoMaGC90HQ-WRR-jTWW3iieN",
+       "name": "K3 B24",
+       "kind": "pptx",
+       "size": 7213061
+      }
+     ]
+    },
+    {
+     "key": "B25",
+     "title": "Bài 25. Quản lí các trang chiếu",
+     "files": [
+      {
+       "id": "1oH733ynD_b4-TT3r6CPhQco6NStBBoUU",
+       "name": "K3 B25",
+       "kind": "pptx",
+       "size": 10646593
+      }
+     ]
+    },
+    {
+     "key": "B26",
+     "title": "Bài 26. Tạo nội dung bài trình chiếu",
+     "files": [
+      {
+       "id": "1PKkMPxeI64J832Xpx4fmq6-L6aYLNdCK",
+       "name": "K3 B26",
+       "kind": "pptx",
+       "size": 8254586
+      }
+     ]
+    },
+    {
+     "key": "B27",
+     "title": "Bài 27. Lựa chọn tài liệu hay bài trình chiếu",
+     "files": [
+      {
+       "id": "1gYFEbLh8ErFaKBxhwS3IgP9W5EuRSyNv",
+       "name": "K3 B27",
+       "kind": "pptx",
+       "size": 12682605
+      }
+     ]
+    },
+    {
+     "key": "B28",
+     "title": "Bài 28. Công dân số",
+     "files": [
+      {
+       "id": "1j8gsrwBwIA_GNH_XeG8f3ChuyEuMqlm0",
+       "name": "K3 B28",
+       "kind": "pptx",
+       "size": 12544316
+      }
+     ]
+    },
+    {
+     "key": "B29",
+     "title": "Bài 29. Giao tiếp và ứng xử trên môi trường số",
+     "files": [
+      {
+       "id": "1ms50HHfdV6R3poR2K3km5bjnL8VpSK9t",
+       "name": "K3 B29",
+       "kind": "pptx",
+       "size": 18550643
+      }
+     ]
+    },
+    {
+     "key": "B30",
+     "title": "Bài 30. Hành vi trực tuyến",
+     "files": [
+      {
+       "id": "1LsVnQtqHqibFuoyvRwen_0H_VdT1ncPF",
+       "name": "K3 B30",
+       "kind": "pptx",
+       "size": 32537918
+      }
+     ]
+    },
+    {
+     "key": "B31",
+     "title": "Bài 31. Danh tính kĩ thuật số",
+     "files": [
+      {
+       "id": "1dMH2b9yIylP97UcCaDj9gNoYe4C9qDI2",
+       "name": "K3 B31",
+       "kind": "pptx",
+       "size": 7434828
+      }
+     ]
+    },
+    {
+     "key": "B32",
+     "title": "Bài 32. Truyền thông điện tử",
+     "files": [
+      {
+       "id": "1pPP3N4uXwLTrE8tD4DM9d6pBWBDIK-Bq",
+       "name": "K3 B32",
+       "kind": "pptx",
+       "size": 7554686
+      }
+     ]
+    },
+    {
+     "key": "B33",
+     "title": "Bài 33. Địa chỉ và hộp thư điện tử",
+     "files": [
+      {
+       "id": "160lrsbUphGPWlB4Wwi-SF8tgck59G3ir",
+       "name": "K3 B33",
+       "kind": "pptx",
+       "size": 2644786
+      }
+     ]
+    },
+    {
+     "key": "B34",
+     "title": "Bài 34. Soạn, trả lời và gửi thư điện tử",
+     "files": [
+      {
+       "id": "1kP6hCo_uC_dF2Nu4y0vWHEshGOdGpQp7",
+       "name": "K3 B34",
+       "kind": "pptx",
+       "size": 7296141
+      }
+     ]
+    },
+    {
+     "key": "B35",
+     "title": "Bài 35. Các phương pháp truyền thông điện tử",
+     "files": [
+      {
+       "id": "1oAfK2TvOk1CQeB4tRxwXr4sPGN8aKiDg",
+       "name": "K3 B35",
+       "kind": "pptx",
+       "size": 7758991
+      }
+     ]
+    }
+   ]
+  },
+  "Spark_LV2": {
+   "label": "Spark LV2",
+   "lessons": [
+    {
+     "key": "B01",
+     "title": "Bài 1. Giới thiệu về Hệ điều hành",
+     "files": [
+      {
+       "id": "1RbID3dEg8OU74IQpmdJXdAaGkRIMaw94",
+       "name": "K4 B01",
+       "kind": "pptx",
+       "size": 10995122
+      }
+     ]
+    },
+    {
+     "key": "B02",
+     "title": "Bài 2. Các hệ điều hành thông dụng",
+     "files": [
+      {
+       "id": "1SxOfDKI3DVvW1qDptZE8bb-VmujdnltB",
+       "name": "K4 B02",
+       "kind": "pptx",
+       "size": 9110393
+      }
+     ]
+    },
+    {
+     "key": "B03",
+     "title": "Bài 3. Thông tin đầu vào và thông tin đầu ra",
+     "files": [
+      {
+       "id": "1wUpTOuNhQQbOwED7X2HGwg-QN-_qf9m8",
+       "name": "K4 B03",
+       "kind": "pptx",
+       "size": 4997633
+      }
+     ]
+    },
+    {
+     "key": "B04",
+     "title": "Bài 4. Các vấn đề liên quan đến Ứng dụng (App)",
+     "files": [
+      {
+       "id": "1pjiVZx4QzMODx33k8sVgWKUPFFvKhYPy",
+       "name": "K4 B04",
+       "kind": "pptx",
+       "size": 12477106
+      }
+     ]
+    },
+    {
+     "key": "B05",
+     "title": "Bài 5. Thiết bị nhập",
+     "files": [
+      {
+       "id": "1TY-GJOQWhpHzP2Ri6Q2N6PUQfda4KyH8",
+       "name": "K4 B05",
+       "kind": "pptx",
+       "size": 10409073
+      }
+     ]
+    },
+    {
+     "key": "B06",
+     "title": "Bài 6. Thiết bị xuất",
+     "files": [
+      {
+       "id": "18HBolKKO1436VB8KllGTrYTUG5bjW17f",
+       "name": "K4 B06",
+       "kind": "pptx",
+       "size": 21824602
+      }
+     ]
+    },
+    {
+     "key": "B07",
+     "title": "Bài 7. Mạng",
+     "files": [
+      {
+       "id": "1iyCVHMl4WYuIp4jgP1om6dd3pJJjYULJ",
+       "name": "K4 B07",
+       "kind": "pptx",
+       "size": 19794487
+      }
+     ]
+    },
+    {
+     "key": "B08",
+     "title": "Bài 8. Kết nối các thiết bị",
+     "files": [
+      {
+       "id": "15IgFjrFF1dgv2BJg3UQMx5gte4Yz0_mH",
+       "name": "K4 B08",
+       "kind": "pptx",
+       "size": 12130364
+      }
+     ]
+    },
+    {
+     "key": "B09",
+     "title": "Bài 9. Các khái niệm cơ bản của trình duyệt Web",
+     "files": [
+      {
+       "id": "1U1LnvKDs4nLk6umwA7ef8XZ8Vt2xlWxL",
+       "name": "K4 B09",
+       "kind": "pptx",
+       "size": 25885527
+      }
+     ]
+    },
+    {
+     "key": "B10",
+     "title": "Bài 10. Đánh dấu trang",
+     "files": [
+      {
+       "id": "11GEY2AAEc-w19xBUwCkPcPk9vl9gmCYR",
+       "name": "K4 B10",
+       "kind": "pptx",
+       "size": 20801441
+      }
+     ]
+    },
+    {
+     "key": "B11",
+     "title": "Bài 11. Phân loại nội dung trực tuyến",
+     "files": [
+      {
+       "id": "1nxc3IQ7ac8CeTTO9x_B5w-2hfoNp7y5C",
+       "name": "K4 B11",
+       "kind": "pptx",
+       "size": 7502768
+      }
+     ]
+    },
+    {
+     "key": "B12",
+     "title": "Bài 12. Tìm hiểu URL của một trang Web",
+     "files": [
+      {
+       "id": "191rnOvpNNMm43ZWVtZX_D5X4aOrU40Oc",
+       "name": "K4 B12",
+       "kind": "pptx",
+       "size": 11430825
+      }
+     ]
+    },
+    {
+     "key": "B13",
+     "title": "Bài 13. Xác định nguồn thông tin trực tuyến tin cậy",
+     "files": [
+      {
+       "id": "11ZKxFX5IfRcLUEvMTTDEfzYoJfqPYJ-0",
+       "name": "K4 B13",
+       "kind": "pptx",
+       "size": 11802606
+      }
+     ]
+    },
+    {
+     "key": "B14",
+     "title": "Bài 14. Tìm kiếm thông tin trực tuyến",
+     "files": [
+      {
+       "id": "1O_HwAdZr803HGn3McBeXVBMdLSBm5bU5",
+       "name": "K4 B14",
+       "kind": "pptx",
+       "size": 11262841
+      }
+     ]
+    },
+    {
+     "key": "B15",
+     "title": "Bài 15. Các khái niệm cơ bản trong sáng tạo nội dung",
+     "files": [
+      {
+       "id": "1xnWq4BQFmFqagj81ogpcC1UfBfrkEiVn",
+       "name": "K4 B15",
+       "kind": "pptx",
+       "size": 16620960
+      }
+     ]
+    },
+    {
+     "key": "B16",
+     "title": "Bài 16. Ứng dụng tạo bài trình chiếu và ứng dụng tạo tài liệu",
+     "files": [
+      {
+       "id": "1eL1TR8p0vie-iryM_mK_4f6Y_KHXk_nZ",
+       "name": "K4 B16",
+       "kind": "pptx",
+       "size": 6602635
+      }
+     ]
+    },
+    {
+     "key": "B17",
+     "title": "Bài 17. Các thành phần của tài liệu",
+     "files": [
+      {
+       "id": "1PpyJM23y_3hwYq2xJU1vT1nmx1nDTsmn",
+       "name": "K4 B17",
+       "kind": "pptx",
+       "size": 11205885
+      }
+     ]
+    },
+    {
+     "key": "B18",
+     "title": "Bài 18. Danh sách Bullets và Numbering",
+     "files": [
+      {
+       "id": "1JwoBe2MWC7ybyO-ThKgJxuWjAU47CpZv",
+       "name": "K4 B18",
+       "kind": "pptx",
+       "size": 10552724
+      }
+     ]
+    },
+    {
+     "key": "B19",
+     "title": "Bài 19. Định dạng văn bản cơ bản",
+     "files": [
+      {
+       "id": "1gzjewpAOLS6k94mAP69xsXZfYtsG6t1o",
+       "name": "K4 B19",
+       "kind": "pptx",
+       "size": 8904302
+      }
+     ]
+    },
+    {
+     "key": "B20",
+     "title": "Bài 20. Thao tác với hình ảnh",
+     "files": [
+      {
+       "id": "11xZ63nmkerZz0oiqRjJ6RkRWlsnIafGp",
+       "name": "K4 B20",
+       "kind": "pptx",
+       "size": 8399413
+      }
+     ]
+    },
+    {
+     "key": "B21",
+     "title": "Bài 21. Tạo chú thích cho hình ảnh",
+     "files": [
+      {
+       "id": "1lIKAoZgD3OOb8M-rO0EcKz744v3Pf3MO",
+       "name": "K4 B21",
+       "kind": "pptx",
+       "size": 11186881
+      }
+     ]
+    },
+    {
+     "key": "B22",
+     "title": "Bài 22. Quyền công dân kĩ thuật số",
+     "files": [
+      {
+       "id": "1dXZGPBCXDVSMKHUzWNM4gVDqmGkCy_C_",
+       "name": "K4 B22",
+       "kind": "pptx",
+       "size": 12746054
+      }
+     ]
+    },
+    {
+     "key": "B23",
+     "title": "Bài 23. Ứng xử trực tuyến",
+     "files": [
+      {
+       "id": "1-1J3FDKBOWEnpHNlbDlSI_D013vvxala",
+       "name": "K4 B23",
+       "kind": "pptx",
+       "size": 9642020
+      }
+     ]
+    },
+    {
+     "key": "B24",
+     "title": "Bài 24. Dấu chân kĩ thuật số",
+     "files": [
+      {
+       "id": "1Ue_sRKdjLHWHFxjGK67j-VwTIDQvzKR_",
+       "name": "K4 B24",
+       "kind": "pptx",
+       "size": 9772444
+      }
+     ]
+    },
+    {
+     "key": "B25",
+     "title": "Bài 25. Qui tắc ứng xử trong giao tiếp kĩ thuật số",
+     "files": [
+      {
+       "id": "1dV6PYJDJACKUqmiNar0sgayDpU2dnwrE",
+       "name": "K4 B25",
+       "kind": "pptx",
+       "size": 16029541
+      }
+     ]
+    },
+    {
+     "key": "B26",
+     "title": "Bài 26. Lựa chọn phương thức giao tiếp kĩ thuật số phù hợp",
+     "files": [
+      {
+       "id": "1sMX0LiOKNitgJWOYe7ZBpeoj-jdATuyV",
+       "name": "K4 B26",
+       "kind": "pptx",
+       "size": 12730370
+      }
+     ]
+    },
+    {
+     "key": "B27",
+     "title": "Bài 27. Giao tiếp và ứng xử khi trực tuyến",
+     "files": [
+      {
+       "id": "1WxCt0fJSW_dNG-bajF7AyYC3yotVo8Ka",
+       "name": "K4 B27",
+       "kind": "pptx",
+       "size": 16377458
+      }
+     ]
+    },
+    {
+     "key": "B28",
+     "title": "Bài 28. Cộng tác kĩ thuật số",
+     "files": [
+      {
+       "id": "1n8Xwe6iS5F6GTmDqFxngGCjCy1IBrJs9",
+       "name": "K4 B28",
+       "kind": "pptx",
+       "size": 9543336
+      }
+     ]
+    },
+    {
+     "key": "B29",
+     "title": "Bài 29. Kĩ năng cộng tác",
+     "files": [
+      {
+       "id": "1NrT6RpIGpIddMufy1Wi2eu8c4SU9QcVa",
+       "name": "K4 B29",
+       "kind": "pptx",
+       "size": 16917004
+      }
+     ]
+    },
+    {
+     "key": "B30",
+     "title": "Bài 30. Ánh sáng xanh và công thái học",
+     "files": [
+      {
+       "id": "1cMaS2aTIXEOMYZ05UtzJJIAbOOsnYxFp",
+       "name": "K4 B30",
+       "kind": "pptx",
+       "size": 13126328
+      }
+     ]
+    },
+    {
+     "key": "B31",
+     "title": "Bài 31. Ảnh hưởng của sử dụng thiết bị điện tử đến sức khỏe",
+     "files": [
+      {
+       "id": "1v1udG5UNcq3x1vmVEItBdsPbfYpD4O98",
+       "name": "K4 B31",
+       "kind": "pptx",
+       "size": 14846877
+      }
+     ]
+    },
+    {
+     "key": "B32",
+     "title": "Bài 32. Các hành vi bắt nạt trực tuyến",
+     "files": [
+      {
+       "id": "1o4ymIu_yjC0PkotRVD0JeS6O4fTJdlEg",
+       "name": "K4 B32",
+       "kind": "pptx",
+       "size": 10125017
+      }
+     ]
+    },
+    {
+     "key": "B33",
+     "title": "Bài 33. Các thiết bị thông minh",
+     "files": [
+      {
+       "id": "1mUYjjWMwlRqyHtnWxGcK1Fmua-CC4E_8",
+       "name": "K4 B33",
+       "kind": "pptx",
+       "size": 11255064
+      }
+     ]
+    },
+    {
+     "key": "B34",
+     "title": "Bài 34. Phân loại nội dung kĩ thuật số",
+     "files": [
+      {
+       "id": "1f57DTjYHqFPU3R45TCfuy1U4afHT2Y1K",
+       "name": "K4 B34",
+       "kind": "pptx",
+       "size": 14475335
+      }
+     ]
+    },
+    {
+     "key": "B35",
+     "title": "Bài 35. Thông tin cá nhân và sử dung thông tin trực tuyến",
+     "files": [
+      {
+       "id": "1Igjoh6e2q1XCkZxqPZoGi6xIzDEeShor",
+       "name": "K4 B35",
+       "kind": "pptx",
+       "size": 22113459
+      }
+     ]
+    }
+   ]
+  },
+  "Spark_LV3": {
+   "label": "Spark LV3",
+   "lessons": [
+    {
+     "key": "B01",
+     "title": "Bài 1. Ứng dụng công nghệ đa dạng",
+     "files": [
+      {
+       "id": "1R-cxOfICUDqQNPvDm-xjzfC_3rSfKysT",
+       "name": "K5 B01",
+       "kind": "pptx",
+       "size": 6613447
+      }
+     ]
+    },
+    {
+     "key": "B02",
+     "title": "Bài 2. Lưu trữ thông tin",
+     "files": [
+      {
+       "id": "19KwQPJJEzEsbuHWfJgoQhVi3uG11-VHh",
+       "name": "K5 B02",
+       "kind": "pptx",
+       "size": 4542528
+      }
+     ]
+    },
+    {
+     "key": "B03",
+     "title": "Bài 3. Máy học",
+     "files": [
+      {
+       "id": "1tOZC5xGcvcVeTb2dEir6eh1lk_X1EV3P",
+       "name": "K5 B03",
+       "kind": "pptx",
+       "size": 4316120
+      }
+     ]
+    },
+    {
+     "key": "B04",
+     "title": "Bài 4. Mạng máy tính",
+     "files": [
+      {
+       "id": "1sCUw2hjBAjghZO69tc2g2F043dpEy-5w",
+       "name": "K5 B04",
+       "kind": "pptx",
+       "size": 5588727
+      }
+     ]
+    },
+    {
+     "key": "B05",
+     "title": "Bài 5. Bộ định vị tài nguyên thống nhất",
+     "files": [
+      {
+       "id": "1TQKvtjEFRyms7L1geIvOYtIqHekw26v5",
+       "name": "K5 B05",
+       "kind": "pptx",
+       "size": 2267159
+      }
+     ]
+    },
+    {
+     "key": "B06",
+     "title": "Bài 6. Trình duyệt Web (1)",
+     "files": [
+      {
+       "id": "1RgMGNOl2TEl3OkCNw3DilHwmUQq2JhHe",
+       "name": "K5 B06",
+       "kind": "pptx",
+       "size": 3102976
+      }
+     ]
+    },
+    {
+     "key": "B07",
+     "title": "Bài 7. Trình duyệt Web (2)",
+     "files": [
+      {
+       "id": "1ERHGtqPZUbPbm8oeJUKxdeJ8a-E-XXgK",
+       "name": "K5 B07",
+       "kind": "pptx",
+       "size": 6773202
+      }
+     ]
+    },
+    {
+     "key": "B08",
+     "title": "Bài 8. Xử lí sự cố công nghệ",
+     "files": [
+      {
+       "id": "1Ep-cB_lzyMJ7XBZaYxuklmjDmFR73YYQ",
+       "name": "K5 B08",
+       "kind": "pptx",
+       "size": 4449387
+      }
+     ]
+    },
+    {
+     "key": "B09",
+     "title": "Bài 9. Dữ liệu, thông tin và kiến thức",
+     "files": [
+      {
+       "id": "1AgXyq_ZxQMAjGplcWszgIw2Aebvv23Jh",
+       "name": "K5 B09",
+       "kind": "pptx",
+       "size": 3077976
+      }
+     ]
+    },
+    {
+     "key": "B10",
+     "title": "Bài 10. Đánh giá thông tin",
+     "files": [
+      {
+       "id": "1YGaKXRwAZXfkr932jztUbdV5aBqVICrz",
+       "name": "K5 B10",
+       "kind": "pptx",
+       "size": 2859228
+      }
+     ]
+    },
+    {
+     "key": "B11",
+     "title": "Bài 11. Quan điểm và thiên kiến",
+     "files": [
+      {
+       "id": "1kaHXw8kuXHm6STPvgh6ukp-coIOSQXoW",
+       "name": "K5 B11",
+       "kind": "pptx",
+       "size": 3847820
+      }
+     ]
+    },
+    {
+     "key": "B12",
+     "title": "Bài 12. Nguồn thông tin đáng tin cậy",
+     "files": [
+      {
+       "id": "1c9eGnwoeQdZvZgdI61Z7oTO4B269LEUs",
+       "name": "K5 B12",
+       "kind": "pptx",
+       "size": 8681604
+      }
+     ]
+    },
+    {
+     "key": "B13",
+     "title": "Bài 13. Xác định độ tin cậy của các nguồn thông tin",
+     "files": [
+      {
+       "id": "18i4yP91kDDGrwVXkrPj6CJDNPiG3NPxk",
+       "name": "K5 B13",
+       "kind": "pptx",
+       "size": 4263805
+      }
+     ]
+    },
+    {
+     "key": "B14",
+     "title": "Bài 14. Bảo vệ sở hữu trí tuệ",
+     "files": [
+      {
+       "id": "1U4eiGzcnqAg2if4VG5mIFBXoCooRh2T-",
+       "name": "K5 B14",
+       "kind": "pptx",
+       "size": 6497830
+      }
+     ]
+    },
+    {
+     "key": "B15",
+     "title": "Bài 15. Khám phá Creative Commons",
+     "files": [
+      {
+       "id": "1aA_hcthy3rer7i9oXo3J2iAVnbCsVJlq",
+       "name": "K5 B15",
+       "kind": "pptx",
+       "size": 4135414
+      }
+     ]
+    },
+    {
+     "key": "B16",
+     "title": "Bài 16. Đạo đức và hợp pháp",
+     "files": [
+      {
+       "id": "1bruroS9H8wUxsFRPZNU14F9TxCqIItjy",
+       "name": "K5 B16",
+       "kind": "pptx",
+       "size": 2442493
+      }
+     ]
+    },
+    {
+     "key": "B17",
+     "title": "Bài 17. Tin tặc",
+     "files": [
+      {
+       "id": "1IIPANZBSc3ISxUhnXAiyBU8Fr0n7OnMJ",
+       "name": "K5 B17",
+       "kind": "pptx",
+       "size": 7181365
+      }
+     ]
+    },
+    {
+     "key": "B18",
+     "title": "Bài 18. Rủi ro trực tuyến",
+     "files": [
+      {
+       "id": "1wJxGkM58tPy2u4824TfCKsxJ9uff5aP8",
+       "name": "K5 B18",
+       "kind": "pptx",
+       "size": 6968256
+      }
+     ]
+    },
+    {
+     "key": "B19",
+     "title": "Bài 19. Quyền riêng tư (1)",
+     "files": [
+      {
+       "id": "1PEeI2P6dyRzVFPIq9CHfLa3PykJdQmn6",
+       "name": "K5 B19",
+       "kind": "pptx",
+       "size": 11019607
+      }
+     ]
+    },
+    {
+     "key": "B20",
+     "title": "Bài 20. Quyền riêng tư (2)",
+     "files": [
+      {
+       "id": "1Z_sd7WCGXTzCUvfbku55WUiWlFvn5-FO",
+       "name": "K5 B20",
+       "kind": "pptx",
+       "size": 4641033
+      }
+     ]
+    },
+    {
+     "key": "B21",
+     "title": "Bài 21. Trích dẫn nguồn thông tin",
+     "files": [
+      {
+       "id": "1EiCO7r6t3sRa2fnSpCHQK0ggp2MisfdW",
+       "name": "K5 B21",
+       "kind": "pptx",
+       "size": 11141489
+      }
+     ]
+    },
+    {
+     "key": "B22",
+     "title": "Bài 22. Tính năng tiện ích",
+     "files": [
+      {
+       "id": "149JP6HgIYzZ5nsXHUDK8cQ3DRHv9XaIp",
+       "name": "K5 B22",
+       "kind": "pptx",
+       "size": 6877823
+      }
+     ]
+    },
+    {
+     "key": "B23",
+     "title": "Bài 23. Trực quan hóa dữ liệu",
+     "files": [
+      {
+       "id": "1eletvbHHIvLoM_iNLwGdk5nSOX1nrf7K",
+       "name": "K5 B23",
+       "kind": "pptx",
+       "size": 4921429
+      }
+     ]
+    },
+    {
+     "key": "B24",
+     "title": "Bài 24. Giao tiếp kĩ thuật số",
+     "files": [
+      {
+       "id": "1FBnPgdx5Jog5MdLqCoyRp0v207XiS2Qz",
+       "name": "K5 B24",
+       "kind": "pptx",
+       "size": 4628699
+      }
+     ]
+    },
+    {
+     "key": "B25",
+     "title": "Bài 25. Thư điện tử",
+     "files": [
+      {
+       "id": "1wwoeLJPjM8h1c3-ZZ_OQjsKRkBdM5iY9",
+       "name": "K5 B25",
+       "kind": "pptx",
+       "size": 13590133
+      }
+     ]
+    },
+    {
+     "key": "B26",
+     "title": "Bài 26. Kĩ năng giao tiếp kĩ thuật số phù hợp",
+     "files": [
+      {
+       "id": "1VRNroh6_QQWQbL3fbokC0sox0aA5cMFY",
+       "name": "K5 B26",
+       "kind": "pptx",
+       "size": 6362359
+      }
+     ]
+    },
+    {
+     "key": "B27",
+     "title": "Bài 27. Cộng tác",
+     "files": [
+      {
+       "id": "1vWONfvMoF6JzKVmw_RyzeB6820-bcLHp",
+       "name": "K5 B27",
+       "kind": "pptx",
+       "size": 7971221
+      }
+     ]
+    },
+    {
+     "key": "B28",
+     "title": "Bài 28. Lợi ích cộng tác",
+     "files": [
+      {
+       "id": "1uFaw2QeT7fp5EtPRnniibotccHkcCfnt",
+       "name": "K5 B28",
+       "kind": "pptx",
+       "size": 9762363
+      }
+     ]
+    },
+    {
+     "key": "B29",
+     "title": "Bài 29. Cộng tác kĩ thuật số trong học tập và giải trí",
+     "files": [
+      {
+       "id": "1keD0KzzJH1Z2E5NXrJpj4MI5EUACqILF",
+       "name": "K5 B29",
+       "kind": "pptx",
+       "size": 11075437
+      }
+     ]
+    },
+    {
+     "key": "B30",
+     "title": "Bài 30. Bắt nạt trực tuyến",
+     "files": [
+      {
+       "id": "1ojHoAFKRYrhuIyEU4pVuOBBAeP4PYdDw",
+       "name": "K5 B30",
+       "kind": "pptx",
+       "size": 7261438
+      }
+     ]
+    },
+    {
+     "key": "B31",
+     "title": "Bài 31. Dấu chân kĩ thuật số",
+     "files": [
+      {
+       "id": "1-yu752gEcuNFOldlrZZaWvMKL0w9iG-q",
+       "name": "K5 B31",
+       "kind": "pptx",
+       "size": 8012860
+      }
+     ]
+    },
+    {
+     "key": "B32",
+     "title": "Bài 32. Thu thập dữ liệu",
+     "files": [
+      {
+       "id": "1UFJiqebM-1MDfUSY36dLjYwN28kDJDTa",
+       "name": "K5 B32",
+       "kind": "pptx",
+       "size": 5351754
+      }
+     ]
+    },
+    {
+     "key": "B33",
+     "title": "Bài 33. An toàn và bảo mật trên môi trường kĩ thuật số",
+     "files": [
+      {
+       "id": "1Net0OUA6KxSYT8JW66m4X0XQpIwFxLp2",
+       "name": "K5 B33",
+       "kind": "pptx",
+       "size": 7632812
+      }
+     ]
+    },
+    {
+     "key": "B34",
+     "title": "Bài 34. Ứng xử với thông tin không phù hợp",
+     "files": [
+      {
+       "id": "1q2aSMzN6mrqKJ6atiSOcTK8wNx6L9Wjl",
+       "name": "K5 B34",
+       "kind": "pptx",
+       "size": 5010348
+      }
+     ]
+    },
+    {
+     "key": "B35",
+     "title": "Bài 35. Đảm bảo sức khỏe khi sử dụng kĩ thuật số",
+     "files": [
+      {
+       "id": "1xNzibOdfia4N3dOUZSQuRFgi9fRdiYBd",
+       "name": "K5 B35",
+       "kind": "pptx",
+       "size": 5083973
+      }
+     ]
+    }
+   ]
+  },
+  "MOS_Word": {
+   "label": "MOS Word",
+   "lessons": [
+    {
+     "key": "B01",
+     "title": "Bài 1. Làm việc với tài liệu (4 tiết)",
+     "files": [
+      {
+       "id": "10-sO7Edzk6qymlNKnilFJyOZAAbOp61z",
+       "name": "Tiet01 Bai1 LamViecVoiTaiLieu",
+       "kind": "pptx",
+       "size": 1953499
+      },
+      {
+       "id": "14ernImFD2hRSKjWKMQAlldpMHT3Dizgs",
+       "name": "Tiet02 Bai1 LamViecVoiTaiLieu",
+       "kind": "pptx",
+       "size": 2498414
+      },
+      {
+       "id": "1piBp4R1qGp-eyyuy9hcrd1IIgK2vX2jN",
+       "name": "Tiet03 Bai1 LamViecVoiTaiLieu",
+       "kind": "pptx",
+       "size": 1041435
+      },
+      {
+       "id": "13jqmc2wtax_HPTi0Lex8M5lVWVosDyt5",
+       "name": "Tiet04 Bai1 Thuchanh LamViecVoiTaiLieu",
+       "kind": "pptx",
+       "size": 3938936
+      }
+     ]
+    },
+    {
+     "key": "B02",
+     "title": "Bài 2. Thao tác với văn bản (4 tiết)",
+     "files": [
+      {
+       "id": "16jrEa1IfhVImwEAOb_4907gFx3XqZL4S",
+       "name": "Tiet05 Bai2 ThaoTacVoiVanBan",
+       "kind": "pptx",
+       "size": 4478417
+      },
+      {
+       "id": "1rcQnv5PPDgkt8W4YOEz0MJ9G_N2Lrji1",
+       "name": "Tiet06 Bai2 ThaoTacVoiVanBan",
+       "kind": "pptx",
+       "size": 4443863
+      },
+      {
+       "id": "1Khs5G-Kh0zWYVqnlDGu0dZpNDHRK--h8",
+       "name": "Tiet07 Bai2 ThaoTacVoiVanBan",
+       "kind": "pptx",
+       "size": 4413542
+      },
+      {
+       "id": "1rrIUuYcP7DUB3ebuScJCtW4yXENnU3vl",
+       "name": "Tiet08 Bai2 ThucHanh ThaoTacVoiVanBan",
+       "kind": "pptx",
+       "size": 3856141
+      }
+     ]
+    },
+    {
+     "key": "B03",
+     "title": "Bài 3. Định dạng văn bản (7 tiết)",
+     "files": [
+      {
+       "id": "17SBp0QlZBKvvsNDwOH6NSvDSvlvtbTbl",
+       "name": "Bài 3-Tiết 9-Định Dạng Ký Tự",
+       "kind": "pptx",
+       "size": 5703657
+      },
+      {
+       "id": "1DUgg_2Kn-VZAI5YF5tNmw442h2T8lWOb",
+       "name": "Bài 3-Tiết 10-11-Định Dạng Đoạn Văn Bản",
+       "kind": "pptx",
+       "size": 6368604
+      },
+      {
+       "id": "18UWhazQTrcMq0wg_mGYun96YWoH3jzOZ",
+       "name": "Bài 3-Tiết 12-Định dạng kiểu (Style)",
+       "kind": "pptx",
+       "size": 4960788
+      },
+      {
+       "id": "1Ov7l1ZIY-bbpkPhsxTOnrtMlUItaeSrM",
+       "name": "Bài 3-Tiết 13-Tổ chức thông tin danh sách",
+       "kind": "pptx",
+       "size": 4101480
+      },
+      {
+       "id": "1bvGvUJwanJxn5G2xJfPeH3oDeXV6YjdV",
+       "name": "Bài 3-Tiết 14-15-Bài tập thực hành tổng hợp",
+       "kind": "pptx",
+       "size": 3748092
+      }
+     ]
+    },
+    {
+     "key": "B04",
+     "title": "Bài 4. Định dạng tài liệu để xuất bản (5 tiết)",
+     "files": [
+      {
+       "id": "1mLLxnHzvXirqC9NeGo6TiQLt8PvzWhat",
+       "name": "Tiet16&17 Bai4 Hieuchinhthietlaptrang",
+       "kind": "pptx",
+       "size": 4905009
+      },
+      {
+       "id": "1gX2IzLom-u5TWE3Rcpx_uoPcoMPSA1sD",
+       "name": "Tiet18 Bai4 SudungHeader&Footer",
+       "kind": "pptx",
+       "size": 6194191
+      },
+      {
+       "id": "1ISvz6EzJGRsLjyvIyLKEQjIPkj-w_uMC",
+       "name": "Tiet19 Bai4 LamviecvoiPhongcachTaiLieu",
+       "kind": "pptx",
+       "size": 7268238
+      },
+      {
+       "id": "181sXR0Gx8G5nJi7JaF6hoWsnTGCuRVsP",
+       "name": "Tiet20 Bai4 ThucHanh",
+       "kind": "pptx",
+       "size": 3483265
+      }
+     ]
+    },
+    {
+     "key": "B05",
+     "title": "Bài 5. Phân phối tài liệu",
+     "files": [
+      {
+       "id": "18XCjzbu6HxZ2LqvFVW02czpQFP2giNOD",
+       "name": "Tiet21 Bai5 PhanPhoiTaiLieu",
+       "kind": "pptx",
+       "size": 15022889
+      },
+      {
+       "id": "1T5lKgoC-Sob4YWyP-GtcrBLXgkg6bArf",
+       "name": "Tiet22 Bai5 PhanPhoiTaiLieu",
+       "kind": "pptx",
+       "size": 15402144
+      },
+      {
+       "id": "1xnEog0phjxxe6HyOelHu5gBUtIOcdKzN",
+       "name": "Tiet23 Bai5 PhanPhoiTaiLieu",
+       "kind": "pptx",
+       "size": 14484530
+      },
+      {
+       "id": "1XNlDpLHW8G-3_eV1ioi9at75ESicnP5f",
+       "name": "Tiet24,25 Bai5 BaiTapThucHanhTongHop",
+       "kind": "pptx",
+       "size": 5820618
+      }
+     ]
+    },
+    {
+     "key": "B06",
+     "title": "Bài 6. Sử dụng bảng (6 tiết)",
+     "files": [
+      {
+       "id": "1KGXWTUQh9duYM_tXirsc389DUhYLn5B0",
+       "name": "Tiet26 Bai6 SuDungBang",
+       "kind": "pptx",
+       "size": 131395700
+      },
+      {
+       "id": "19UqeHvHJ6HDNcjLsnuNoww3ej9Dv0taW",
+       "name": "Tiet27 Bai6 SuDungBang",
+       "kind": "pptx",
+       "size": 5995647
+      },
+      {
+       "id": "1PfU9r1ZtJ2rnC_EtEzSCBVC8VWZ1fwgj",
+       "name": "Tiet29 Bai6 SuDungBang",
+       "kind": "pptx",
+       "size": 6721247
+      },
+      {
+       "id": "1Rai_L-5omJ9Auo5UH5n9j3jaVkakx-hw",
+       "name": "Tiet3031 Bai6 SuDungBang Thuchanh",
+       "kind": "pptx",
+       "size": 10614358
+      }
+     ]
+    },
+    {
+     "key": "B07",
+     "title": "Bài 7. Làm việc với hình ảnh minh họa",
+     "files": [
+      {
+       "id": "1tGBvWXEMvxz4oV59MAJ2ONp6RkiKLH1V",
+       "name": "Bài 7 Tiết 32 Thao tác đồ họa",
+       "kind": "pptx",
+       "size": 11710800
+      },
+      {
+       "id": "1kTxrsFJCaNIP9XJfRRDQ9OaMKvwjhAAt",
+       "name": "Bai7 Tiết 33 Làm việc với hình ảnh",
+       "kind": "pptx",
+       "size": 16659867
+      },
+      {
+       "id": "1C0oABov73HmJ55xlUKmgHtqKalU-e1q0",
+       "name": "Bai7 Tiết 34 Làm việc với đối tượng hình dạng",
+       "kind": "pptx",
+       "size": 4547302
+      },
+      {
+       "id": "1-rvmsiIzGBnPE9uG65Yvbz1ILBdwAHx5",
+       "name": "Bài 7 Tiết 35 Làm việc với SmartArt",
+       "kind": "pptx",
+       "size": 4219430
+      },
+      {
+       "id": "13ThhcSN5dbH99aZzQszqD_pQoSLvmoQe",
+       "name": "Bài 7 Tiết 36 Làm việc với mô hình 3D",
+       "kind": "pptx",
+       "size": 14819874
+      },
+      {
+       "id": "1kR5mewRpJcEOn_2y-YlXg6rwNq_0pB8W",
+       "name": "Bài 7 Tiết 37 ThucHanh",
+       "kind": "pptx",
+       "size": 7682539
+      }
+     ]
+    },
+    {
+     "key": "B08",
+     "title": "Bài 8. Tài liệu tham khảo và cộng tác",
+     "files": [
+      {
+       "id": "12EPGqjxH0BoYfZ5dC1FIY3eUtUgCCu69",
+       "name": "Bài 8 Tiết 39 40 Tạo tài liệu tham khảo và trích dẫn tài liệu",
+       "kind": "pptx",
+       "size": 4063912
+      },
+      {
+       "id": "14onPWG19fCz4Zm-S8OnOdVPIymfU0Nk0",
+       "name": "Bài 8 Tiết 41 Làm việc với mục lục",
+       "kind": "pptx",
+       "size": 13669874
+      },
+      {
+       "id": "11ryBSV2wGtiTBVbscTwEYhibzGBk_8so",
+       "name": "Bài 8 Tiết 42 Sử dụng tính năng nhận xét và track changes",
+       "kind": "pptx",
+       "size": 8371392
+      },
+      {
+       "id": "1ODRSBbpXbRFI5KCyL3XN5YB_k0tTGDhs",
+       "name": "Bài 8 Tiết 43 44 Thực hành",
+       "kind": "pptx",
+       "size": 3675850
+      }
+     ]
+    },
+    {
+     "key": "ON",
+     "title": "Ôn luyện cuối khoá",
+     "files": [
+      {
+       "id": "1p-CG8LYld80xjiX17-ogI6zLNZxAHoAF",
+       "name": "Tiết 1 — BaiOn1 HoanThien",
+       "kind": "pptx",
+       "size": 7457653
+      },
+      {
+       "id": "1zf8Bg2RhKArnwTAhRaVoXapAUc0xtdfQ",
+       "name": "Tiết 2 — BaiOn2 HoanThien",
+       "kind": "pptx",
+       "size": 7147620
+      },
+      {
+       "id": "1YzTWSqcwoKJ_ITD0Qbi6sD7WeWb6q7t5",
+       "name": "Tiết 3 — BaiOn3 HoanThien",
+       "kind": "pptx",
+       "size": 7169525
+      },
+      {
+       "id": "13zmLEITZmC1VNSF3u5hjoXKdX9vuv-tR",
+       "name": "Tiết 4 — BaiOn4 HoanThien",
+       "kind": "pptx",
+       "size": 10100513
+      },
+      {
+       "id": "1s4_DNV_90oDP2EQ3MEOuNcSKa33xHU1b",
+       "name": "Tiết 5 — BaiOn5 HoanThien",
+       "kind": "pptx",
+       "size": 7079079
+      },
+      {
+       "id": "1Xg7vLsoFZuM_42vmYPKyKBCmNP_hvTl0",
+       "name": "Tiết 6 — BaiOn6 HoanThien",
+       "kind": "pptx",
+       "size": 7218899
+      },
+      {
+       "id": "17j27GvUK7UsOdvm7s2Vs8hFYtfHMdXwN",
+       "name": "Tiết 7 — BaiOn7 HoanThien",
+       "kind": "pptx",
+       "size": 11848618
+      },
+      {
+       "id": "13MZd6EwhjFTMO5v547hbD1EbDTzglpfp",
+       "name": "Tiết 8 — BaiOn8 HoanThien",
+       "kind": "pptx",
+       "size": 8206269
+      },
+      {
+       "id": "1_Tdu28DY38jDEvOPyQpb1uvDeHkWSn6a",
+       "name": "Tiết 9 — BaiOn9 HoanThien",
+       "kind": "pptx",
+       "size": 8739990
+      },
+      {
+       "id": "1ucrJieKdCY7STM1rPKMEofKxmvSiftqT",
+       "name": "Tiết 10 — BaiOn10 HoanThien",
+       "kind": "pptx",
+       "size": 11039105
+      }
+     ]
+    }
+   ]
+  },
+  "MOS_Excel": {
+   "label": "MOS Excel",
+   "lessons": [
+    {
+     "key": "B01",
+     "title": "Bài 1. Gioi Thieu MS Excel 2019",
+     "files": [
+      {
+       "id": "1Hz_K_RfWXbNcm9HMZpvF98qpOkkT3m2p",
+       "name": "Tiet 01 Bai1 GioiThieuMSExcel2019",
+       "kind": "pptx",
+       "size": 4069984
+      },
+      {
+       "id": "1CAQuhrPcvnzbZp8klKSa_AZNB16l2tSR",
+       "name": "Tiet 02-03 Bai1 GioiThieuMSExcel2019",
+       "kind": "pptx",
+       "size": 4932472
+      },
+      {
+       "id": "14RP52f4QzlhVu8nhfxafp3ebnnkr0O6Y",
+       "name": "Tiet 04 Bai1 GioiThieuMSExcel2019",
+       "kind": "pptx",
+       "size": 5396150
+      },
+      {
+       "id": "1t8ZbMwaDg_3oThum1SQzHhiaokh20KuW",
+       "name": "Tiet 05-06 Bai1 GioiThieuMSExcel2019",
+       "kind": "pptx",
+       "size": 5013477
+      }
+     ]
+    },
+    {
+     "key": "B02",
+     "title": "Bài 2. Xay dung du lieu trong o (6 tiet)",
+     "files": [
+      {
+       "id": "18R-CrCkpS4Oy2S8XrZ7uFLxZYvQjzeH-",
+       "name": "Tiet07-08 Bai2 XayDungDuLieuTrongO",
+       "kind": "pptx",
+       "size": 11671485
+      },
+      {
+       "id": "132ULjJ6GwltAeVYB4uHFr1FV743Xgl6w",
+       "name": "Tiet09 Bai2 XayDungDuLieuTrongO",
+       "kind": "pptx",
+       "size": 10280901
+      },
+      {
+       "id": "14faIxz_pB_pvMPKPTlLyU7auyyX7m8Z2",
+       "name": "Tiet10 Bai2 XayDungDuLieuTrongO",
+       "kind": "pptx",
+       "size": 8926854
+      },
+      {
+       "id": "1W9tPmNVfbsDJSiewM_shxA5KaFBMIEvo",
+       "name": "Tiet11-12 Bai2 XayDungDuLieuTrongO",
+       "kind": "pptx",
+       "size": 6460759
+      }
+     ]
+    },
+    {
+     "key": "B03",
+     "title": "Bài 3. sử dụng các công thức",
+     "files": [
+      {
+       "id": "1PoxonJ_dJFD-mGZ_penr05rr6QaQJbo-",
+       "name": "Bài 3-Tiết 13-Sử dụng tham chiếu ô - hiển thị công thức",
+       "kind": "pptx",
+       "size": 6966870
+      },
+      {
+       "id": "17DcUAFDU69v7Z-U2DuaCh4Kl-BDMmZlt",
+       "name": "Bài 3-Tiết 14-Sử dụng công thức (Formulas)",
+       "kind": "pptx",
+       "size": 4952789
+      },
+      {
+       "id": "1RWMVEF25v26Tb88DIDJzisJHTKaAqm8V",
+       "name": "Bài 3-Tiết 15-CacHamToanHocVaThongKe",
+       "kind": "pptx",
+       "size": 5090259
+      },
+      {
+       "id": "1noFeLVRL1Fhyroj5SnY9HyO0OKM3P6GM",
+       "name": "Bài 3-Tiết 16-Sử dụng các hàm văn bản",
+       "kind": "pptx",
+       "size": 5015579
+      },
+      {
+       "id": "1B10oXheKNPVAETvfFW4sPmjEAPS-LNDP",
+       "name": "Bài 3-Tiết 17-18-Bài tập thực hành tổng hợp",
+       "kind": "pptx",
+       "size": 4882614
+      }
+     ]
+    },
+    {
+     "key": "B04",
+     "title": "Bài 4. định dạng trang tính",
+     "files": [
+      {
+       "id": "1X_RTxpQxetN3uzOXE8YVuG5MVuNhDbLx",
+       "name": "Tiet 19-20 Bai4 DinhdangCanchinhXoaSDkieuo",
+       "kind": "pptx",
+       "size": 9476136
+      },
+      {
+       "id": "1LfZWVNtHFb2xGdr8X1ySQHw-xdcqnkJz",
+       "name": "Tiet 21 Bai4 Thuchanh",
+       "kind": "pptx",
+       "size": 4508010
+      },
+      {
+       "id": "1TmPLDmBIn1ehDeOjZR3IEm4YHGmxuqDh",
+       "name": "Tiet 22 Bai4 DinhdangCanchinhXoaSDkieuo",
+       "kind": "pptx",
+       "size": 6633684
+      },
+      {
+       "id": "1XkW_rV_yy2ts1OMRP5IM5T2c3Xt-c1em",
+       "name": "Tiet 23 Bai4 Thuchanh",
+       "kind": "pptx",
+       "size": 4507488
+      }
+     ]
+    },
+    {
+     "key": "B05",
+     "title": "Bài 5. In va xem so tinh",
+     "files": [
+      {
+       "id": "1LDXFiDBY7svqzR7MwLe3Qah8UUhEyQAz",
+       "name": "Tiet24 Bai5 Invaxemsotinh",
+       "kind": "pptx",
+       "size": 4332861
+      },
+      {
+       "id": "1vhClAqN2o2NYmS1MwT0Ts03BSYfQzpjj",
+       "name": "Tiet25 Bai5 Invaxemsotinh",
+       "kind": "pptx",
+       "size": 5449091
+      },
+      {
+       "id": "1k7ORruPy5J9lUFAeJljZuZ0kTU9aX8wV",
+       "name": "Tiet26 Bai5 BaiTapThucHanhTongHop",
+       "kind": "pptx",
+       "size": 4498779
+      }
+     ]
+    },
+    {
+     "key": "B06",
+     "title": "Bài 6. Lam viec voi bieu do",
+     "files": [
+      {
+       "id": "17qdN45tZiZMVW8O_tryfK350M5NN-KSM",
+       "name": "Bai6 Tiet27 Taobieudocoban",
+       "kind": "pptx",
+       "size": 5459543
+      },
+      {
+       "id": "18oHbK-vCI1Kr9LNC4IcWGPpEkR23CN78",
+       "name": "Tiet 28+29 Bai6 Lamviecvoibieudo",
+       "kind": "pptx",
+       "size": 12358325
+      },
+      {
+       "id": "1weaMCzOFPUYItaM1-kS2j191XVfUlnK2",
+       "name": "Bai6 Tiet30 Sparklines",
+       "kind": "pptx",
+       "size": 6187264
+      },
+      {
+       "id": "1Ls5SGTX2oDTadvSHWtnY9Hjw9PluRxOI",
+       "name": "Tiet3132 Bai6 Thuchanh",
+       "kind": "pptx",
+       "size": 4106583
+      }
+     ]
+    },
+    {
+     "key": "B07",
+     "title": "Bài 7. To chuc du lieu",
+     "files": [
+      {
+       "id": "1fZXRoO9Vud609gXttkc7S5S3DDRU6bRg",
+       "name": "Tiet33 Làm việc với vùng ô",
+       "kind": "pptx",
+       "size": 7820462
+      },
+      {
+       "id": "1hg-HvtZAQKQFBNMJYGk3z9r8c0NwKwre",
+       "name": "Tiet 34-35 Bai7 LamviecvoivungoBang",
+       "kind": "pptx",
+       "size": 7081627
+      },
+      {
+       "id": "1yhNbq1kqhmGnc0Ry_mpOocZHW5knWkLN",
+       "name": "Tiet 36 37 Bai7 SapxepDLLocthongtin",
+       "kind": "pptx",
+       "size": 6842933
+      },
+      {
+       "id": "1Rb8NVAw00SSY9b5oLzXCBPPsBtQB2ysG",
+       "name": "Tiet 38 39 Bai7 ThucHanh1",
+       "kind": "pptx",
+       "size": 3910054
+      }
+     ]
+    },
+    {
+     "key": "B08",
+     "title": "Bài 8. Su dung cong cu du lieu",
+     "files": [
+      {
+       "id": "1ly76lA-J6lg3CNFecUYqz8Bh-SfmIyw5",
+       "name": "Bài 8 Tiết 1",
+       "kind": "pptx",
+       "size": 5835006
+      },
+      {
+       "id": "1NQwg0xCWnEiNXBVnTy5WAntHQKMpWeD6",
+       "name": "Bài 8 Tiết 2",
+       "kind": "pptx",
+       "size": 5693091
+      },
+      {
+       "id": "1SQg_ShMdhFUtfeikz4PGok7xQfflv2Ln",
+       "name": "Bai 8 Tiet 3",
+       "kind": "pptx",
+       "size": 5446490
+      },
+      {
+       "id": "1xjptWmdMPQ6SQFatI_HLjClViVn0o827",
+       "name": "BAI 8 Tiett 4 5 THUC HANH",
+       "kind": "pptx",
+       "size": 4427952
+      },
+      {
+       "id": "1PeZMnHCBLz9TFqJHESI98QRrpR_BqqFn",
+       "name": "Diem Thi",
+       "kind": "pdf",
+       "size": 144722
+      }
+     ]
+    }
+   ]
+  },
+  "MOS_PowerPoint": {
+   "label": "MOS PowerPoint",
+   "lessons": [
+    {
+     "key": "B01",
+     "title": "Bài 1. Bắt đầu với Powerpoint",
+     "files": [
+      {
+       "id": "1cQPavEHyOcpzNRqTZ12saw77od33-E-E",
+       "name": "Bài1 Tiết 1 Bắt đầu với PowerPoint",
+       "kind": "pptx",
+       "size": 20114788
+      },
+      {
+       "id": "1pvdA1dJOEipcenKu5bzWqllJR8SmJ4LF",
+       "name": "Bài1 Tiết 2 Thiết lập bài trình chiếu",
+       "kind": "pptx",
+       "size": 12996524
+      },
+      {
+       "id": "1y54FrKTY8JH135sXSnWNycgP2hpcM6Kj",
+       "name": "Bài1 Tiết 3 Bài tập thực hành tổng hợp",
+       "kind": "pptx",
+       "size": 6653450
+      }
+     ]
+    },
+    {
+     "key": "B02",
+     "title": "Bài 2. Làm việc với trang chiếu",
+     "files": [
+      {
+       "id": "1K3cQdNZRrkSN6rqbMHZCB7KAaJilowUR",
+       "name": "Bài2 Tiết 4 Thiết kế giao diện trang chiếu",
+       "kind": "pptx",
+       "size": 12834180
+      },
+      {
+       "id": "1gRLca8UvOTnnytDfeqpV8-cj6ZCc2M8I",
+       "name": "Bài2 Tiết 5-6 Thiết kế và chỉnh sửa bố cục trang chiếu",
+       "kind": "pptx",
+       "size": 10495548
+      },
+      {
+       "id": "1wm4q0L0bdnKYVM-18pPOHgrExinzd0WZ",
+       "name": "Bài2 Tiết 7 Quản lý trang chiếu",
+       "kind": "pptx",
+       "size": 13309535
+      },
+      {
+       "id": "1iuve2dS2YJIUR9aEe5K5ycLQ2LAa2TKz",
+       "name": "Bài2 Tiết 8 Sắp xếp trang chiếu",
+       "kind": "pptx",
+       "size": 7937377
+      },
+      {
+       "id": "1Uw6ZU16Lpya-BsGzjCESaCFy5lb27qJ9",
+       "name": "Bài2 Tiết 9-10 Bài tập thực hành tổng hợp",
+       "kind": "pptx",
+       "size": 6658474
+      }
+     ]
+    },
+    {
+     "key": "B03",
+     "title": "Bài 3. Làm việc với văn bản",
+     "files": [
+      {
+       "id": "1MhhyjQGrz-MVi5kp3GTOFRtKIUZvUPfk",
+       "name": "Bài3 Tiết 11 Sử dụng Hộp văn bản",
+       "kind": "pptx",
+       "size": 7739212
+      },
+      {
+       "id": "1OtawIes1cGUD5K7FbgTdGAsTMWXtXbLa",
+       "name": "Bài3 Tiết 12 Định dạng văn bản",
+       "kind": "pptx",
+       "size": 7533430
+      },
+      {
+       "id": "1M9ETUQTEOykuJF4yVEaQu6XePyQiF7il",
+       "name": "Bài3 Tiết 13 Định dạng đoạn văn bản",
+       "kind": "pptx",
+       "size": 9664425
+      },
+      {
+       "id": "1sfBOXOtIKeMOg4zlWPx0SBEJlg07yOqM",
+       "name": "Bài3 Tiết 14 Tạo và quản lý danh sách",
+       "kind": "pptx",
+       "size": 12477543
+      },
+      {
+       "id": "17DIn5hxq_xdVcifmFUmNlD3LD_S48fW4",
+       "name": "Bài3 Tiết 15 Bài tập thực hành tổng hợp",
+       "kind": "pptx",
+       "size": 6661309
+      }
+     ]
+    },
+    {
+     "key": "B04",
+     "title": "Bài 4. Làm việc với biểu đồ và bảng",
+     "files": [
+      {
+       "id": "16_SspLKl8fB9AVMRmVH0vnSqUDNg1QUw",
+       "name": "Tiết 16-17 - Làm việc với biểu đồ",
+       "kind": "pptx",
+       "size": 10438329
+      },
+      {
+       "id": "11GIfoTWdv0QKU0FZ09DLLdPidk1NfUfV",
+       "name": "Tiết 18-19 - Làm việc với bảng",
+       "kind": "pptx",
+       "size": 10041159
+      },
+      {
+       "id": "1zaAsdj3Dn4jXaYcDXH1MXJgP8K2ReUh2",
+       "name": "Tiết 20-21 - Bài tập thực hành tổng hợp",
+       "kind": "pptx",
+       "size": 8033748
+      }
+     ]
+    },
+    {
+     "key": "B05",
+     "title": "Bài 5. Thêm các yếu tố đa phương tiện",
+     "files": [
+      {
+       "id": "1WCXhi9zmBxsmbdI056JQ8vXnN-jslipD",
+       "name": "Tiết 22 - Làm việc với hình ảnh (Pictures)",
+       "kind": "pptx",
+       "size": 21880966
+      },
+      {
+       "id": "1NDP2gs0qdz2YYHcUaCNtZLB9pUbyqw7o",
+       "name": "Tiết 23-24 - Làm việc với Shapes - Icons - 3D Models",
+       "kind": "pptx",
+       "size": 79490502
+      },
+      {
+       "id": "1WVuht1bjBBNg1G9EsWDGBvVkb4aoNWrp",
+       "name": "Tiết 25 - Làm việc với SmartArt",
+       "kind": "pptx",
+       "size": 9160317
+      },
+      {
+       "id": "1KMt7ct_bs9vUqtQ6dZJAZsCn42tOGCSI",
+       "name": "Tiết 26 - Quản lí đối tượng trên trang chiếu (Objects)",
+       "kind": "pptx",
+       "size": 26089917
+      },
+      {
+       "id": "1tXcVADRrSSCpX-2chrrj6S53M475ssYi",
+       "name": "Tiết 27- Chèn và chỉnh sửa siêu liên kết - nút hành động",
+       "kind": "pptx",
+       "size": 8251946
+      },
+      {
+       "id": "1qVp53eH3zs7UyVgT3MlAKYx5_tWQk-is",
+       "name": "Tiết 28-29-30 - Bài tập thực hành tổng hợp",
+       "kind": "pptx",
+       "size": 8055356
+      }
+     ]
+    },
+    {
+     "key": "B06",
+     "title": "Bài 6. Tạo bài thuyết trình nâng cao",
+     "files": [
+      {
+       "id": "1U7shSZXGPoh9MO2ZrbNnV5m3FoNqsuON",
+       "name": "B6 Tiet 31 Tao bai thuyet trinh nang cao",
+       "kind": "pptx",
+       "size": 25213408
+      },
+      {
+       "id": "1PnUFX503q10S21oRUp34ER7wfiEJzsvN",
+       "name": "B6 Tiet 32 33 Tao bai thuyet trinh nang cao",
+       "kind": "pptx",
+       "size": 17290089
+      },
+      {
+       "id": "1aBj7AjssTVnG3xQNR8Qkfz9pS_ZPnQGx",
+       "name": "B6 On tap",
+       "kind": "pptx",
+       "size": 6843914
+      }
+     ]
+    },
+    {
+     "key": "B07",
+     "title": "Bài 7. Chuẩn bị bài trình chiếu",
+     "files": [
+      {
+       "id": "1GrizW3Vn6T9zYdM_UpFV7IIILJgL2hD1",
+       "name": "B7 Tiet 36 Chuẩn bị bài trình chiếu",
+       "kind": "pptx",
+       "size": 12820949
+      },
+      {
+       "id": "1wPRvHK9E4SmH9IojRHbTr4En8TSNDFER",
+       "name": "B7 Tiet 37 38 Chuẩn bị bài trình chiếu",
+       "kind": "pptx",
+       "size": 31719525
+      },
+      {
+       "id": "1CTNgfVD2kT11g8ibrUr2lr6xTnaNT8dC",
+       "name": "B7 On tap",
+       "kind": "pptx",
+       "size": 6689756
+      }
+     ]
+    },
+    {
+     "key": "B08",
+     "title": "Bài 8. Chia sẻ bài trình chiếu",
+     "files": [
+      {
+       "id": "1uJwNGuSNl6eVdsj3aPr56itIRnLAIA7Z",
+       "name": "B8 Tiet 41 Chia sẻ bài trình chiếu",
+       "kind": "pptx",
+       "size": 87497261
+      },
+      {
+       "id": "13pQsI84yVhVlkEobVU-FKgyRx7CHp2jI",
+       "name": "B8 Tiet 42 43 Chia sẻ bài trình chiếu",
+       "kind": "pptx",
+       "size": 11651740
+      },
+      {
+       "id": "1KyXZvZ4qQ1e4UDCj6ymYKINV6BBRsWbX",
+       "name": "B8 On tap",
+       "kind": "pptx",
+       "size": 6674488
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

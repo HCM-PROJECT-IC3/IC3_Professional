@@ -36,6 +36,15 @@ const TYPE_TEMPLATES = {
   matching:  { pairs: [{ left: '', right: '' }] },
   truefalse: { statements: [{ text: '', answer: 'true' }], label_true: 'ĐÚNG', label_false: 'SAI' },
 };
+// Đủ 10 dạng câu trang làm bài hỗ trợ (scripts/validate-data.js → TYPES). Trước đây ô chọn dạng chỉ có 4
+// dạng đầu → câu hotspot/phân loại/điền… hiện nhầm "Chọn 1 đáp án" và bấm Lưu bị báo "Cần ít nhất 1 lựa chọn".
+const TYPE_LABEL = {
+  single: 'Chọn 1 đáp án', multi: 'Chọn nhiều đáp án', matching: 'Nối cặp (matching)', truefalse: 'Đúng / Sai',
+  hotspot: 'Chọn vùng trên ảnh (hotspot)', classify: 'Phân loại (kéo vào nhóm)', ordering: 'Sắp xếp thứ tự',
+  dragfill: 'Kéo thả điền chỗ trống', selectfill: 'Chọn điền chỗ trống', list: 'Chọn theo từng dòng',
+};
+const typeOptionsHtml = (cur) => Object.entries(TYPE_LABEL)
+  .map(([v, l]) => `<option value="${v}" ${cur === v ? 'selected' : ''}>${l}</option>`).join('');
 
 /* ============================================================
    STATE
@@ -377,8 +386,15 @@ function buildFilterOptions() {
     mts.map(m => `<option value="${escAttr(m)}">${esc(m)}</option>`).join('');
 }
 
+function embeddedImages(q) {
+  return ['zones', 'items', 'distractors'].flatMap((k) => (Array.isArray(q[k]) ? q[k] : []))
+    .map((x) => x && typeof x === 'object' && x.image_file).filter(Boolean);
+}
+
 function questionStatus(q) {
   if (q.imageUrl) return 'have';
+  // Ảnh nằm trong từng ô/thẻ (câu phân loại: zones/items/distractors có image_file) cũng là "đã có ảnh"
+  if (embeddedImages(q).length) return 'have';
   if (q.image === true) return 'need';
   return 'skip';
 }
@@ -386,11 +402,30 @@ function questionStatus(q) {
 /* ============================================================
    FILTER + RENDER
    ============================================================ */
+/* 1 câu (uid) nằm ở nhiều bộ cùng lúc: bộ chủ đề + Ôn tập/Kiểm tra theo tiết + Ôn tập cuối khóa (bản chép,
+   sinh bằng scripts/generate-review-minitests.js). Danh sách chỉ hiện 1 BẢN CHÍNH mỗi câu (bản ở bộ chủ đề
+   hoặc "Bài N"), kèm các bộ đang dùng nó (item.sets) — sửa/xoá áp dụng cho mọi bản. */
+const groupKeyOf = (x) => x.fileKey + '|' + (x.q.uid || x.docId);
+const isHomeSet = (name) => /^(\d+\.\s|Bài \d+[.:])/.test(name || '');
+let PRIMARY = [];
+function rebuildGroups() {
+  const groups = new Map();
+  QUESTIONS.forEach((x) => {
+    const k = groupKeyOf(x);
+    const g = groups.get(k);
+    if (!g) { groups.set(k, { main: x, sets: [x.q.minitestName] }); return; }
+    g.sets.push(x.q.minitestName);
+    if (!isHomeSet(g.main.q.minitestName) && isHomeSet(x.q.minitestName)) g.main = x;
+  });
+  PRIMARY = [...groups.values()].map((g) => { g.main.sets = g.sets; return g.main; });
+}
+
 function applyFilters() {
   const s = state.search.trim().toLowerCase();
-  filtered = QUESTIONS.filter(item => {
+  rebuildGroups();
+  filtered = PRIMARY.filter(item => {
     if (state.grade && item.q.gradeName !== state.grade) return false;
-    if (state.minitest && item.q.minitestName !== state.minitest) return false;
+    if (state.minitest && !item.sets.includes(state.minitest)) return false; // chọn bộ Ôn tập/Kiểm tra vẫn ra đúng câu của bộ đó
     if (state.status && questionStatus(item.q) !== state.status) return false;
     if (s && !(item.q.question || '').toLowerCase().includes(s)) return false;
     return true;
@@ -402,15 +437,16 @@ function applyFilters() {
 
 function renderStats() {
   let need = 0, have = 0, skip = 0;
-  QUESTIONS.forEach(({ q }) => {
+  if (!PRIMARY.length && QUESTIONS.length) rebuildGroups();
+  PRIMARY.forEach(({ q }) => {
     const st = questionStatus(q);
     if (st === 'need') need++;
     else if (st === 'have') have++;
     else skip++;
   });
-  document.getElementById('statTotal').textContent = QUESTIONS.length;
+  document.getElementById('statTotal').textContent = PRIMARY.length;
   const uniqueEl = document.getElementById('statUnique');
-  if (uniqueEl) uniqueEl.textContent = new Set(QUESTIONS.map(({ q, fileKey }) => fileKey + '|' + (q.uid || q.question))).size;
+  if (uniqueEl) uniqueEl.textContent = QUESTIONS.length - PRIMARY.length;
   document.getElementById('statNeed').textContent = need;
   document.getElementById('statHave').textContent = have;
   document.getElementById('statSkip').textContent = skip;
@@ -459,9 +495,12 @@ function renderCard(item) {
       : '<span class="qtag skip">— Không cần</span>';
 
   const imgSrc = PENDING_IMAGES[q.imageUrl] || q.imageUrl;
+  const emb = embeddedImages(q);
   const imgHtml = q.imageUrl
     ? `<img src="${escAttr(imgSrc)}" alt="preview">`
-    : `<div class="qimg-placeholder">🖼️</div>`;
+    : emb.length
+      ? `<div class="qimg-embedded" title="Ảnh nằm trong từng ô/thẻ của câu (sửa qua JSON)">${emb.map(f => `<img src="img/${escAttr(f)}" alt="${escAttr(f)}">`).join('')}</div>`
+      : `<div class="qimg-placeholder">🖼️</div>`;
   const fname = q.image_file ? `<div class="fname">${esc(q.image_file)}</div>` : '';
 
   const isStructured = q.type === 'single' || q.type === 'multi';
@@ -491,12 +530,7 @@ function renderCard(item) {
         <input class="metaInput" data-field="minitestName" value="${escAttr(q.minitestName || '')}" placeholder="Minitest">
       </div>
       <textarea class="questionInput" placeholder="Nội dung câu hỏi...">${esc(q.question || '')}</textarea>
-      <select class="typeSelect">
-        <option value="single" ${q.type === 'single' ? 'selected' : ''}>Chọn 1 đáp án</option>
-        <option value="multi" ${q.type === 'multi' ? 'selected' : ''}>Chọn nhiều đáp án</option>
-        <option value="matching" ${q.type === 'matching' ? 'selected' : ''}>Nối cặp (matching)</option>
-        <option value="truefalse" ${q.type === 'truefalse' ? 'selected' : ''}>Đúng / Sai</option>
-      </select>
+      <select class="typeSelect">${typeOptionsHtml(q.type)}</select>
 
       <div class="optionsEditor" style="${isStructured ? '' : 'display:none'}">
         ${optionsHtml}
@@ -509,6 +543,7 @@ function renderCard(item) {
       </div>
 
       <div class="qbreadcrumb"><span>Câu ${esc(q.id ?? '?')}</span><span>${esc(q.uid || '')}</span>${changedIds.has(docId) ? '<span class="qtag need">✏️ Chưa đẩy</span>' : ''}</div>
+      ${(item.sets || []).length > 1 ? `<details class="qsets"><summary>📚 Dùng ở ${item.sets.length} bộ — sửa ở đây cập nhật cả ${item.sets.length}</summary><ul>${item.sets.map(n => `<li>${esc(n)}</li>`).join('')}</ul></details>` : ''}
       ${tagHtml}
 
       <div class="qactions">
@@ -646,7 +681,7 @@ function refreshCard(item) {
    "🚀 Đẩy thay đổi" để ghi lên data/ic3/ cho học sinh.
    ============================================================ */
 
-/** Các bản chép CÙNG uid trong cùng khối (Tiết 1–8 dùng lại nguyên câu của chủ đề) —
+/** Các bản chép CÙNG uid trong cùng khối (bộ Ôn tập/Kiểm tra theo tiết dùng lại nguyên câu của chủ đề) —
  *  sửa 1 bản thì cập nhật luôn các bản kia để mọi bài thi hiện cùng 1 nội dung. */
 function copiesOf(item) {
   if (!item.q.uid) return [];
@@ -732,13 +767,15 @@ async function saveCardData(item, card) {
 }
 
 function deleteQuestion(item) {
-  const others = copiesOf(item).length;
-  if (!confirm(`Xoá câu này khỏi "${item.q.minitestName}"?` +
-      (others ? `\n(Câu này còn ${others} bản chép ở bài khác — các bản đó GIỮ NGUYÊN.)` : '') +
+  // Xoá cả các bản chép (bộ Ôn tập/Kiểm tra dùng lại câu chủ đề) — để lại thì các bộ đó trỏ tới câu đã xoá.
+  const copies = copiesOf(item);
+  if (!confirm('Xoá câu này?' +
+      (copies.length ? `\nCâu này đang dùng ở ${copies.length + 1} bộ (${[item, ...copies].map(x => x.q.minitestName).join(' · ')}) — sẽ xoá khỏi tất cả.` : '') +
       '\n\nChỉ xoá trong bản nháp — bấm "🚀 Đẩy thay đổi" để áp dụng cho học sinh.')) return;
-  QUESTIONS = QUESTIONS.filter(x => x.docId !== item.docId);
-  if (changedIds.has(item.docId)) changedIds.delete(item.docId);
-  deletedCount++;
+  const gone = new Set([item, ...copies].map(x => x.docId));
+  QUESTIONS = QUESTIONS.filter(x => !gone.has(x.docId));
+  gone.forEach(id => changedIds.delete(id));
+  deletedCount += gone.size;
   markChanged();
   applyFilters();
   toast('🗑️ Đã xoá câu hỏi (bản nháp)');

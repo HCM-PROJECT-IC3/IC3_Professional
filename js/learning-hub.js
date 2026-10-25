@@ -201,7 +201,7 @@
   // giấy chứng nhận vẽ bằng canvas ngay trên máy (0 mạng, 0 Firebase).
   // ============================================================
   const BAI_RE = /^Bài \d+[.:]/;
-  const LESSON_RE = /^Tiết \d+$/;
+  const LESSON_RE = /^(Tiết \d+$|Ôn tập\s|Luyện thi\s|Kiểm tra\s)/; // bộ theo tiết ôn/kiểm tra — không phải 1 bài
   function levelInfo(catId, levelId) {
     const cat = (global.quizRepository?.categories || []).find((c) => c.id === catId);
     const lv = cat?.levels?.find((l) => l.id === levelId);
