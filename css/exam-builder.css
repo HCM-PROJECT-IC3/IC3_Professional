@@ -275,6 +275,26 @@
 .eb-health-row.is-bad > i { color: var(--red); }
 .eb-health-row.is-muted > i { color: var(--text-muted); }
 .eb-health-row .eb-link { margin-left: auto; }
+.eb-health-row.is-warn > i { color: #a86400; }
+.eb-sim-dot { color: #a86400; margin-left: auto; }
+.eb-slide:hover .eb-sim-dot { visibility: hidden; }
+.eb-sim-list { display: flex; flex-direction: column; gap: 5px; margin: -2px 0 6px 22px; }
+.eb-sim-list small { font-size: 11px; font-weight: 600; color: var(--text-secondary); }
+.eb-sim-group { display: flex; flex-wrap: wrap; gap: 4px; }
+.eb-sim-no {
+  min-width: 30px; height: 24px; padding: 0 6px; border-radius: 6px; cursor: pointer;
+  border: 1.5px solid var(--border-color); background: var(--input-bg); color: var(--text-primary);
+  font: 800 11.5px 'Nunito', sans-serif;
+}
+.eb-sim-no:hover { border-color: var(--accent-purple); color: var(--accent-purple); }
+.eb-sim-no.is-cur { border-color: var(--accent-purple); background: var(--accent-purple-light); }
+.eb-sim-hint { margin: 0 0 8px 22px; font-size: 11px; font-weight: 600; line-height: 1.4; color: var(--text-secondary); }
+.eb-dist { margin-top: 12px; }
+.eb-dist-title { font-size: 11px; font-weight: 800; color: var(--text-secondary); margin-bottom: 6px; }
+.eb-dist-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; font-size: 11.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+.eb-dist-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.eb-dist-row b { font-variant-numeric: tabular-nums; }
+.eb-dist-row i { grid-column: 1 / -1; height: 4px; border-radius: 999px; background: linear-gradient(var(--accent-purple), var(--accent-purple)) 0 0 / var(--w) 100% no-repeat, var(--border-color); }
 .eb-linkmeter { margin-top: 6px; padding: 9px 10px; border-radius: 11px; background: var(--input-bg); }
 .eb-linkmeter-top { display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; color: var(--text-primary); }
 .eb-linkmeter-top i { color: var(--accent-purple); }
@@ -452,7 +472,7 @@ ol[type="a"].eb-opts { list-style: lower-alpha; padding-left: 20px; }
 [data-theme="dark"] .eb-status.is-saved { background: rgba(34,197,94,.16); color: #86efac; }
 [data-theme="dark"] .eb-stage-errors span { background: rgba(240,72,62,.16); color: #fca5a5; }
 [data-theme="dark"] .eb-link, [data-theme="dark"] .eb-menu button > i, [data-theme="dark"] .eb-type-btn i { color: #a5b4fc; }
-[data-theme="dark"] .eb-warn { color: #fde047; }
+[data-theme="dark"] .eb-warn, [data-theme="dark"] .eb-sim-dot, [data-theme="dark"] .eb-health-row.is-warn > i { color: #fde047; }
 
 /* ── Responsive ── */
 @media (max-width: 1280px) {
@@ -548,3 +568,24 @@ ol[type="a"].eb-opts { list-style: lower-alpha; padding-left: 20px; }
   background: var(--input-bg); border: 1px solid var(--border-color); box-shadow: inset 0 -1px 0 var(--border-color);
 }
 .eb-import-ta.is-table { white-space: pre; overflow-x: auto; tab-size: 18; }
+
+/* ── Nguồn dữ liệu câu ngân hàng: All Key · Theo bài (Quiz Drive) · Ngoài All Key ── */
+.eb-src-note { margin-top: 12px; padding: 8px 12px; border-radius: 10px; font-size: 12.5px; font-weight: 700; line-height: 1.45; background: var(--input-bg); color: var(--text-secondary); border-left: 3px solid var(--border-color); }
+.eb-src-note.is-ak { border-left-color: var(--green); color: var(--text-primary); }
+.eb-src-note.is-ak i { color: var(--green); }
+.eb-src-note.is-bai { border-left-color: var(--accent-purple); }
+.eb-src-note.is-bai i { color: var(--accent-purple); }
+.eb-swap-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.eb-swap-row .eb-btn { padding: 7px 12px; font-size: 12.5px; }
+.eb-insp-src { margin: 6px 0 0; font-size: 11.5px; font-weight: 700; line-height: 1.4; color: var(--text-secondary); }
+.eb-insp-src.is-ak i { color: var(--green); }
+.eb-insp-src.is-bai i { color: var(--accent-purple); }
+.eb-src-chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 0 0 9px; }
+.eb-src-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; color: var(--text-secondary); background: var(--input-bg); border: 1px solid var(--border-color); }
+.eb-src-chip b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.eb-src-chip.is-ak i { color: var(--green); }
+.eb-src-chip.is-bai i { color: var(--accent-purple); }
+.eb-src-fix { width: 100%; justify-content: center; margin: -2px 0 10px; padding: 7px 10px; font-size: 12px; }
+.eb-tag-ak { color: var(--green); }
+.eb-matrix-ak { margin: 4px 0 10px; }
+.eb-matrix-ak i { color: var(--green); }

@@ -9,18 +9,15 @@
    ở 2 trang kia.
    ======================================== */
 :root {
-  /* ── Neumorphism / soft-UI tokens ──
-     Đổ bóng đôi (sáng trên-trái + tối dưới-phải) mô phỏng bề mặt lồi
-     nhẹ trên nền --bg-main, thay cho kiểu "3D pixel button" cũ
-     (offset màu đặc + viền dày 2px). Card/nút không còn viền cứng —
-     chiều sâu chỉ đến từ đổ bóng, đúng tinh thần neumorphism. */
-  --neu-light: rgba(255,255,255,0.85);
-  --neu-dark:  rgba(163,177,198,0.45);
-  --shadow-card:        7px 7px 14px var(--neu-dark), -7px -7px 14px var(--neu-light);
-  --shadow-card-hover:  9px 9px 18px var(--neu-dark), -9px -9px 18px var(--neu-light);
-  --shadow-card-inset:  inset 4px 4px 8px var(--neu-dark), inset -4px -4px 8px var(--neu-light);
-  --shadow-btn:         5px 5px 10px var(--neu-dark), -5px -5px 10px var(--neu-light);
-  --shadow-btn-active:  inset 3px 3px 6px var(--neu-dark), inset -3px -3px 6px var(--neu-light);
+  /* ── Bóng PHẲNG (10/2026) ──
+     Trước đây là neumorphism (bóng đôi sáng/tối giả bề mặt lồi) — trông "đúc khuôn".
+     Nay thẻ/nút chỉ có viền mảnh 1px + bóng rất nhẹ, giống phần mềm thi; ô nhập/nút
+     đang bấm dùng viền trong. Tên biến giữ nguyên để các quy tắc bên dưới không phải sửa. */
+  --shadow-card:        0 0 0 1px var(--border), 0 1px 2px rgba(16,24,40,.05);
+  --shadow-card-hover:  0 0 0 1px #c5cce3, 0 2px 6px rgba(16,24,40,.07);
+  --shadow-card-inset:  inset 0 0 0 1px var(--border);
+  --shadow-btn:         0 0 0 1px var(--border);
+  --shadow-btn-active:  inset 0 0 0 1px #c5cce3;
   --tag-elementary-bg: #d1fae5;
   --tag-elementary-text: #065f46;
   --tag-middle-bg: #dbeafe;
@@ -29,13 +26,11 @@
 }
 
 [data-theme="dark"] {
-  --neu-light: rgba(255,255,255,0.045);
-  --neu-dark:  rgba(0,0,0,0.55);
-  --shadow-card:        7px 7px 14px var(--neu-dark), -7px -7px 14px var(--neu-light);
-  --shadow-card-hover:  9px 9px 18px var(--neu-dark), -9px -9px 18px var(--neu-light);
-  --shadow-card-inset:  inset 4px 4px 8px var(--neu-dark), inset -4px -4px 8px var(--neu-light);
-  --shadow-btn:         5px 5px 10px var(--neu-dark), -5px -5px 10px var(--neu-light);
-  --shadow-btn-active:  inset 3px 3px 6px var(--neu-dark), inset -3px -3px 6px var(--neu-light);
+  --shadow-card:        0 0 0 1px var(--border);
+  --shadow-card-hover:  0 0 0 1px #4a5187;
+  --shadow-card-inset:  inset 0 0 0 1px var(--border);
+  --shadow-btn:         0 0 0 1px var(--border);
+  --shadow-btn-active:  inset 0 0 0 1px #4a5187;
   --tag-elementary-bg: #064e3b;
   --tag-elementary-text: #6ee7b7;
   --tag-middle-bg: #1e3a5f;
@@ -630,7 +625,7 @@ body {
   border-radius: 50%;
   border: none;
   padding: 0;
-  background: var(--neu-dark);
+  background: var(--border);
   cursor: pointer;
   transition: var(--transition);
 }
@@ -1483,3 +1478,29 @@ tr:hover td { background: var(--sidebar-active-bg); }
 .info-value { font-weight: 800; font-size: 13px; }
 .table-empty-cell { text-align: center; color: var(--text-muted); padding: 32px; }
 .table-scroll-x { overflow-x: auto; }
+
+
+/* ══════════════════════════════════════════════════════════════
+   GIAO DIỆN PHẲNG KIỂU PHẦN MỀM THI (10/2026) — cùng quy ước khối cuối style.css.
+   Bỏ: nền loang đốm pastel mờ sau "Bộ đề của tôi", vạch gradient trôi trên thanh đầu trang,
+   ô icon/nút/chấm carousel tô gradient tím→tím, avatar gradient cam→đỏ có bóng màu.
+   Thay bằng: nền 1 màu, màu đặc, nút chính navy var(--purple). Ghi đè các quy tắc cùng tên phía trên.
+   ══════════════════════════════════════════════════════════════ */
+#section-my-sets::before { display: none; }
+#topbar::before { background: var(--purple); animation: none; }
+.user-avatar { background: #f19a1a; box-shadow: none; }
+.carousel-dot.is-active { background: var(--purple); }
+.shelf-promo-card:hover { transform: none; }
+.shelf-promo-icon { background: var(--purple-lt); color: var(--purple); box-shadow: none; }
+.shelf-promo-icon i { animation: none; }
+.shelf-promo-cta { background: none; color: var(--purple); border: 1.5px solid var(--purple); box-shadow: none; }
+.shelf-promo-card:hover .shelf-promo-cta { background: var(--purple); color: #fff; }
+[data-theme="dark"] .shelf-promo-icon { background: #252a4d; color: #aab6ff; }
+[data-theme="dark"] .shelf-promo-cta { color: #aab6ff; border-color: #aab6ff; }
+.score-bar-fill { background: var(--purple); }
+/* Nút chính "Soạn đề mới": navy đặc, không bóng đôi phát sáng (nền tối thành quầng xanh), không nhấc lên, icon không nhún */
+.btn-create { box-shadow: none; border-radius: 10px; }
+.btn-create:hover { background: #26359a; transform: none; box-shadow: none; }
+.btn-create:active { box-shadow: none; }
+.btn-create i.fa-beat, .btn-create:hover i.fa-beat { animation: none; }
+.btn-create.btn-create-ghost:hover { background: var(--accent-purple); }

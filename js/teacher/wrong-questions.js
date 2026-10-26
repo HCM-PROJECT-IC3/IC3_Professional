@@ -44,7 +44,7 @@
       return `<li class="wq-item"><details>
           <summary><span class="wq-rank">${i + 1}</span><span class="wq-q">${esc(text)}</span>
             <span class="wq-meta">${it.count} lượt sai · ${it.students} HS${pct(it.count)}${r ? ` · ${esc(r.levelName)} › ${esc(r.mt)}` : ''}</span></summary>
-          ${r ? answerHtml(r.q) + (r.q.explanation ? `<p class="wq-expl">💡 ${esc(plain(r.q.explanation))}</p>` : '') : ''}
+          ${r ? answerHtml(r.q) + (r.q.explanation ? `<p class="wq-expl"><i class="fa-solid fa-lightbulb" aria-hidden="true"></i> ${esc(plain(r.q.explanation))}</p>` : '') : ''}
         </details></li>`;
     }).join('') : '<li class="watchlist-empty">Chưa có câu sai nào trong phạm vi này (hoặc học sinh chưa nộp bài từ khi bật tính năng).</li>';
     $('wqMakeExam').hidden = !items.some((it) => resolved.has(it.uid));
@@ -54,7 +54,7 @@
     if (!ctx || !global.EduSheetResults) return;
     const btn = $('wqAnalyze');
     btn.disabled = true;
-    setStatus('⏳ Đang tổng hợp câu sai từ Google Sheet...');
+    setStatus('Đang tổng hợp câu sai từ Google Sheet...');
     $('wqList').innerHTML = '';
     $('wqMakeExam').hidden = true;
     try {
@@ -64,8 +64,8 @@
     } catch (err) {
       last = null;
       setStatus(err.code === 'not-found'
-        ? '⚠️ Apps Script chưa có API "wrongStats" — Admin cần dán apps/Code.gs mới rồi Deploy → New version.'
-        : '❌ Không tải được: ' + esc(err.message));
+        ? 'Apps Script chưa có API "wrongStats" — Admin cần dán apps/Code.gs mới rồi Deploy → New version.'
+        : 'Không tải được: ' + esc(err.message));
     } finally {
       btn.disabled = false;
     }
@@ -90,10 +90,10 @@
       const url = new URL(await global.EduCustomExam.buildLink(exam, 'index.html'), location.href).href;
       let copied = false;
       try { await navigator.clipboard.writeText(url); copied = true; } catch (e) { /* trình duyệt chặn clipboard */ }
-      global.dispatchEvent(new CustomEvent('edu:toast', { detail: copied ? `✅ Đã chép link đề ôn ${items.length} câu — gửi cho học sinh.` : `Đề ôn ${items.length} câu đã mở ở tab mới.` }));
+      global.dispatchEvent(new CustomEvent('edu:toast', { detail: copied ? `Đã chép link đề ôn ${items.length} câu — gửi cho học sinh.` : `Đề ôn ${items.length} câu đã mở ở tab mới.` }));
       global.open(url, '_blank', 'noopener');
     } catch (err) {
-      global.dispatchEvent(new CustomEvent('edu:toast', { detail: '❌ Không tạo được đề: ' + err.message }));
+      global.dispatchEvent(new CustomEvent('edu:toast', { detail: 'Không tạo được đề: ' + err.message }));
     } finally {
       btn.disabled = false;
     }

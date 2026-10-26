@@ -27,6 +27,7 @@
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const sfx = (n) => { try { global.EduSFX && global.EduSFX.play(n); } catch (e) { /* không có âm thanh cũng chơi được */ } };
+  const music = (lv) => { try { global.EduSFX && global.EduSFX.music && global.EduSFX.music(lv); } catch (e) { /* ignore */ } }; // nhạc nền trận (game-sfx.js)
   const rng = C.rngFrom((Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0);
 
   // ============================================================
@@ -52,6 +53,7 @@
     toast.t = setTimeout(() => { t.hidden = true; }, 2600);
   }
   function show(screen) {
+    if (screen !== 'arGame') music(0); // rời màn chơi (kết quả, bỏ cuộc, sảnh) → tắt nhạc nền
     document.querySelectorAll('.ar-screen').forEach((el) => { el.hidden = el.id !== screen; });
     global.scrollTo(0, 0);
     $('arMain').focus({ preventScroll: true });
@@ -484,6 +486,7 @@
     const deck = drill || C.buildDeck(SRC.questions || [], rng, 0, kinds());
     if (!deck.length) return;
     const mode = drill ? 'speed' : effMode();
+    $('arGame').classList.remove('is-fever'); // trận trước bỏ ngang lúc đang bùng cháy
     // Số câu thật: không vượt số câu bộ có (trước đây mọi chế độ trừ Tốc độ lấy thẳng số câu chọn → lặp câu)
     const n = drill ? deck.length : C.playCount(S.prefs.count, deck.length);
     const p = profile();
@@ -589,6 +592,7 @@
       G.phase = 'q';
       renderPowers();
       G.qStart = G.chalStart = performance.now(); // chalStart: vật phẩm Thêm giờ không kéo dài Thử thách tốc độ
+      music(1);
       startTimer();
       liveStart();
     }, reducedMotion() ? 0 : big ? 1350 : 600);
@@ -606,6 +610,7 @@
       // 5 giây cuối: tích tắc; 3 giây cuối: tim đập + viền đỏ nhấp nháy
       const sec = Math.ceil((left * G.limitMs) / 1000);
       if (left > 0 && sec <= 5 && sec !== lastSec) { lastSec = sec; sfx(sec <= 3 ? 'heartbeat' : 'tick'); }
+      if (left > 0) music(sec > 5 ? 1 : sec > 2 ? 2 : 3);
       $('arGame').classList.toggle('is-tense', left > 0 && sec <= 3);
       if (G.chal === 'speed') {
         const s = Math.max(0, CHAL_MS - (performance.now() - G.chalStart));
@@ -620,6 +625,7 @@
     if (!G || G.locked || G.phase !== 'q') return;
     G.locked = true;
     clearInterval(G.timer);
+    music(0); // tắt nhạc để nghe trống dồn + đúng/sai
     $('arGame').classList.remove('is-tense');
     const now = performance.now();
     const chalMs = now - (G.chalStart || 0);
@@ -808,8 +814,15 @@
   /** Hiệu ứng sau khi chấm: ô đúng nảy, số bay lên từ ô em chọn, HUD nảy/đỏ/xanh theo kết quả. */
   function answerFx(q, k, ok, pop, life, rankUp) {
     const tile = Number.isInteger(k) ? document.querySelector(`#arAnswers .ar-ans[data-k="${k}"]`) : $('arAnswers').querySelector('.ar-kind-go');
+    const P = global.EduParty;
+    const right = C.kindOf(q) === 'choice' ? document.querySelector(`#arAnswers .ar-ans[data-k="${q.correctIdx}"]`) : $('arAnswers');
+    // Chuỗi ≥ 5 câu: viền khung câu hỏi bốc lửa cho tới khi sai (js/arena/arena.css .is-fever)
+    $('arGame').classList.toggle('is-fever', ok && G.me.streak >= 5);
+    if (P) P.flash(ok ? (G.me.streak >= 5 ? 'gold' : 'good') : 'bad');
     if (ok) {
-      FX.flash(C.kindOf(q) === 'choice' ? document.querySelector(`#arAnswers .ar-ans[data-k="${q.correctIdx}"]`) : $('arAnswers'), 'fx-correct');
+      FX.flash(right, 'fx-correct');
+      FX.burst(right, G.me.streak >= 5 ? ['🔥', '⭐', '✨'] : ['✨', '⭐'], G.me.streak >= 3 ? 12 : 8);
+      if (G.me.streak >= 3) sfx('sparkle');
       if (pop) FX.float(tile || $('arAnswers'), pop, 'up');
       FX.flash($('arStat'), 'fx-bump');
       if (G.me.streak >= 3) FX.flash($('arStreak'), 'fx-fire');
@@ -823,7 +836,7 @@
 
   /** "Đáp án đúng: ..." — câu chọn 1 hiện 1 dòng; dạng khác hiện danh sách + "em đúng 2/4". */
   function answerHtml(q, k) {
-    if (C.kindOf(q) === 'choice') return `<div class="ar-fb-ans">Đáp án đúng: <b>${SHAPES[q.correctIdx]} ${esc(q.options[q.correctIdx])}</b></div>`;
+    if (C.kindOf(q) === 'choice') return `<div class="ar-fb-ans">Đáp án đúng: <b class="ar-hl">${SHAPES[q.correctIdx]} ${esc(q.options[q.correctIdx])}</b><span class="ar-memo">Ghi nhớ!</span></div>`;
     const part = C.partial(q, k);
     const unit = { multi: 'đáp án', order: 'bước', match: 'cặp' }[C.kindOf(q)];
     return `<div class="ar-fb-ans">${k !== null && k !== undefined ? `<span class="ar-tag">em đúng ${part.right}/${part.of} ${unit}</span> ` : ''}Đáp án đúng:
@@ -1596,7 +1609,7 @@
       ${dailyStat()}`;
     const rv = $('arReview');
     rv.hidden = !wrong.length;
-    rv.open = G.practice;
+    rv.open = true; // mở sẵn để em thấy xấp thẻ lật ôn
     const booked = toBook(nickName(), G.log, (G.practice ? 'Đấu trường · Luyện câu sai' : 'Đấu trường · ' + (SRC.title || '')));
     rv.innerHTML = reviewHtml(wrong);
     $('arBookNote').innerHTML = bookNoteHtml(booked);
@@ -1606,8 +1619,17 @@
     refreshWallet();
     const win = G.practice ? !wrong.length : G.mode === 'boss' ? bossWin : place === 1 && !(G.mode === 'tug' && !won);
     sfx(win ? 'win' : G.practice || place <= 3 ? 'match' : 'lose');
-    if (win && global.EduFX) global.EduFX.confetti({ count: 120 });
+    $('arGame').classList.remove('is-fever');
+    celebrate(win ? 1 : G.practice ? 0 : place);
     G.phase = 'end';
+  }
+
+  /** Kết trận: hạng 1 → pháo hoa + mưa ruy băng + vỗ tay; hạng 2–3 → mưa ruy băng; còn lại im lặng. Dùng chung cho Phòng cả lớp. */
+  function celebrate(place) {
+    const P = global.EduParty;
+    if (!P) { if (place === 1 && global.EduFX) global.EduFX.confetti({ count: 120 }); return; }
+    if (place === 1) { P.flash('gold'); P.fireworks({ shells: 9, ms: 3000 }); P.rain({ count: 120 }); setTimeout(() => sfx('cheer'), 500); }
+    else if (place === 2 || place === 3) { P.rain({ count: 80 }); setTimeout(() => sfx('cheer'), 300); }
   }
 
   /** Danh sách câu sai (dùng chung cho màn kết thúc 1 người và Phòng cả lớp). log: [{ q, chosen, ok }]. */
@@ -1653,9 +1675,12 @@
     if (n) el.innerHTML = `<i class="fa-solid fa-book-bookmark" aria-hidden="true"></i> Em có <b>${n}</b> câu trong Sổ tay đến hạn ôn — <a href="${esc(bookLink(st))}">ôn ngay</a> cho nhớ lâu, rồi quay lại chiến tiếp!`;
   }
   function reviewHtml(wrong) {
-    return `<summary>📒 Xem lại ${wrong.length} câu sai</summary><ol>${wrong.map((x) => `<li><b>${esc(x.q.text)}</b>
+    const F = global.EduArenaFlash; // xấp thẻ lật ôn nhanh (js/arena/arena-flash.js)
+    // Có xấp thẻ: danh sách đáp án thu gọn — để em tự nhớ lại trước khi xem (thẻ lật mới là chỗ ôn chính)
+    const flash = F ? F.html(wrong) : '';
+    return `<summary>📒 Xem lại ${wrong.length} câu sai</summary>${flash}${flash ? '<details class="ar-review-all"><summary>Xem cả danh sách đáp án</summary>' : ''}<ol>${wrong.map((x) => `<li><b>${esc(x.q.text)}</b>
       <span>${C.kindOf(x.q) === 'choice' ? '' : `<i class="ar-review-kind">${C.KIND_ICON[C.kindOf(x.q)]} ${C.KIND_LABEL[C.kindOf(x.q)]}</i> `}Đáp án đúng: <em class="ar-review-ok">${C.answerLines(x.q).map(esc).join(' · ')}</em>${C.chosenLines(x.q, x.chosen).length ? ` · em chọn: ${C.chosenLines(x.q, x.chosen).map(esc).join(' · ')}` : ' · em chưa trả lời'}</span>
-      ${x.q.expl ? `<small>💡 ${esc(x.q.expl)}</small>` : ''}</li>`).join('')}</ol>`;
+      ${x.q.expl ? `<small>💡 ${esc(x.q.expl)}</small>` : ''}</li>`).join('')}</ol>${flash ? '</details>' : ''}`;
   }
   function paintPracticeBtn(btn, n) {
     btn.hidden = !n;
@@ -1740,7 +1765,7 @@
       /** Lưu họ tên (hoặc biệt danh) và đồng bộ các ô nhập; trả tên đã chuẩn hoá (rỗng nếu chưa nhập). */
       setNick, role, setRole, setInvite, effMode,
       /** Luyện câu sai: reviewHtml(wrong) vẽ danh sách, practice(log) vào lượt luyện. */
-      reviewHtml, paintPracticeBtn, practice, kinds, toBook, bookNoteHtml, ropeHtml, addDaily, dailyStat,
+      reviewHtml, paintPracticeBtn, practice, kinds, toBook, bookNoteHtml, ropeHtml, addDaily, dailyStat, celebrate,
       nickName, avatar: () => avatarOf(profile()),
       /** Bộ câu đang chọn ở màn chọn: { questions, key, title } (questions null = đang tải). */
       deckSource: () => ({ questions: SRC.questions, key: SRC.key, title: SRC.title || '' }),

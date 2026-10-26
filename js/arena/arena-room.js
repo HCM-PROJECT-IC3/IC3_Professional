@@ -417,6 +417,7 @@
     const room = H.room;
     if (!room || room.phase !== 'q') return;
     H.prev = RH.snap(room);
+    if (global.EduSFX && global.EduSFX.music) global.EduSFX.music(0); // không đợi nhịp đồng hồ sau mới tắt
     R.reveal(room);
     broadcast(revealMsg);
     persist();
@@ -451,7 +452,7 @@
     renderHost();
     // Bục vinh danh lên dần hạng 3 → 2 → 1 (CSS .is-slow), trống dồn rồi mới pháo hoa
     A.sfx('drumroll');
-    setTimeout(() => { if (H.room !== room) return; A.sfx('win'); if (global.EduFX) global.EduFX.confetti({ count: 160 }); }, reduced() ? 0 : 2000);
+    setTimeout(() => { if (H.room !== room) return; A.sfx('win'); if (A.celebrate) A.celebrate(1); else if (global.EduFX) global.EduFX.confetti({ count: 160 }); }, reduced() ? 0 : 2000);
   }
   /** "🔁 Đấu lại câu sai": cùng mã phòng, cùng kết nối — cả lớp quay về sảnh, chỉ còn các câu vừa có bạn sai. */
   function hostRematch() {
@@ -494,6 +495,7 @@
   function hostStop(ask) {
     if (ask && H.room && H.room.phase !== 'end' && !confirm('Đóng phòng? Học sinh sẽ bị ngắt khỏi phòng' + (H.room.phase !== 'lobby' ? ' và trận đang chơi không được lưu.' : '.'))) return false;
     clearTimeout(H.timer); clearTimeout(H.auto); clearTimeout(H.closing); clearInterval(H.tick); H.closing = 0;
+    if (global.EduSFX && global.EduSFX.music) global.EduSFX.music(0);
     broadcast(() => ({ t: 'closed' }));
     const peer = H.peer;
     setTimeout(() => { try { peer && peer.destroy(); } catch (e) { /* ignore */ } }, 500);
@@ -624,8 +626,11 @@
     const a = $('arRAnswered'), o = $('arROnline');
     if (a) a.textContent = room.phase === 'q' ? `✋ ${R.answeredCount(room)}/${online} đã trả lời` : `👥 ${ids.length} người chơi`;
     if (o) o.textContent = `🟢 ${online}/${ids.length} đang kết nối`;
-    if (room.phase !== 'q') return;
+    const music = (lv) => { try { global.EduSFX && global.EduSFX.music && global.EduSFX.music(lv); } catch (e) { /* ignore */ } };
+    if (room.phase !== 'q') { music(0); return; }
     const left = Math.max(0, room.secs * 1000 - (Date.now() - room.qStartAt));
+    // Nhạc nền chỉ phát trên loa máy chiếu (máy giáo viên), máy học sinh không phát → lớp không bị loạn tiếng
+    music(left <= 0 ? 0 : left > 5000 ? 1 : left > 2000 ? 2 : 3);
     const bar = $('arRTimer'), s = $('arRSecs');
     if (bar) { bar.style.width = (left / (room.secs * 1000)) * 100 + '%'; bar.classList.toggle('is-low', left < room.secs * 250); }
     if (s) s.textContent = `⏱ ${Math.ceil(left / 1000)} giây`;
@@ -1251,7 +1256,7 @@
         ${m.mode === 'tug' && m.teams ? A.ropeHtml(m.rope, `${m.teams.red} bạn`, `${m.teams.blue} bạn`, P.ropeShown ?? m.rope) : ''}
         ${y.rank ? `<p class="ar-room-rank">Hạng <b>${y.rank}</b> · ${fmt(y.value)} ${UNIT[m.mode]}${m.mode === 'race' ? `/${m.goal}` : ''}</p>` : ''}
         ${rival ? `<p class="ar-rival ar-room-rival">${esc(rival)}</p>` : ''}
-        ${!y.ok ? (C.kindOf(m) === 'choice' ? `<div class="ar-fb-ans">Đáp án đúng: <b>${SHAPES[m.correctIdx]} ${esc(m.options[m.correctIdx])}</b></div>`
+        ${!y.ok ? (C.kindOf(m) === 'choice' ? `<div class="ar-fb-ans">Đáp án đúng: <b class="ar-hl">${SHAPES[m.correctIdx]} ${esc(m.options[m.correctIdx])}</b><span class="ar-memo">Ghi nhớ!</span></div>`
           : `<div class="ar-fb-ans">${y.k != null ? `<span class="ar-tag">em đúng ${C.partial(m, y.k).right}/${C.partial(m, y.k).of}</span> ` : ''}Đáp án đúng:<ul class="ar-fb-list">${C.answerLines(m).map((t) => `<li>${esc(t)}</li>`).join('')}</ul></div>`) : ''}
         ${m.expl ? `<div class="ar-fb-expl">💡 ${esc(m.expl)}</div>` : ''}
       </div>
@@ -1264,8 +1269,10 @@
     if (P.heist) { heistPanel('acts'); if (m.heistDone) heistDone({ i: m.i, r: m.heistDone }); }
     const box = body().querySelector('.ar-room-result');
     FX.settle(box);
+    if (global.EduParty) global.EduParty.flash(y.ok ? (y.streak >= 5 ? 'gold' : 'good') : 'bad');
     if (y.ok) {
       FX.flash(box, 'fx-correct');
+      FX.burst(box.querySelector('.ar-room-result-head'), y.streak >= 5 ? ['🔥', '⭐', '✨'] : ['✨', '⭐'], y.streak >= 3 ? 12 : 8);
       const gain = m.mode === 'race' ? `+${y.step}` : m.mode === 'tug' ? `💪 +${y.pts}` : m.mode === 'spell' ? '🔮' : m.mode === 'heist' ? '🔐' : `+${fmt(y.pts + (y.bonus || 0))}`;
       FX.float(box.querySelector('.ar-room-result-head'), gain, 'up');
     } else if (global.EduFX) global.EduFX.shake(box);
@@ -1299,7 +1306,8 @@
     const awarded = store.get(AWARD_KEY, []);
     const key = m.code + ':' + myCid();
     let coins = 0;
-    if (!awarded.includes(key)) {
+    const first = !awarded.includes(key); // vẽ lại màn này (tải lại trang) thì không bắn pháo lần nữa
+    if (first) {
       coins = C.coinsFor({ correct: y.correct, place: y.rank, players: y.players });
       const prof = A.profile();
       prof.coins += coins;
@@ -1342,6 +1350,7 @@
       ${wrong.length ? `<details class="ar-review" open>${A.reviewHtml(wrong)}</details>` : ''}</div>`;
     const pb = body().querySelector('[data-act="practice"]');
     if (pb) A.paintPracticeBtn(pb, wrong.length);
+    if (first && A.celebrate) A.celebrate(y.rank);
     // Nối thẳng (0 Firebase): giữ kết nối thêm một lúc — thầy cô bấm "Đấu lại câu sai" là cả lớp về sảnh luôn.
     // Đường dự phòng (Firestore) thì ngắt ngay để không tốn lượt đọc.
     clearTimeout(P.endT);

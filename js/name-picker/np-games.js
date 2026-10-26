@@ -18,6 +18,17 @@
   const rand = (a, b) => a + rng() * (b - a);
   const pickOne = (arr) => arr[Math.floor(rng() * arr.length)];
   const sfx = (n) => { try { global.EduSFX && global.EduSFX.play(n); } catch (e) { /* ignore */ } };
+  const music = (lv) => { try { global.EduSFX && global.EduSFX.music && global.EduSFX.music(lv); } catch (e) { /* ignore */ } };
+  const P = global.EduParty; // pháo hoa, tia sáng, chữ nảy (js/fx-party.js)
+  // Câu khen khi công bố — vui, đúng chính tả, không chê ai (cùng tinh thần TREND ở js/arena/arena-hype.js)
+  const CHEER = ['Đỉnh nóc, kịch trần, bay phấp phới!', 'Người được chọn đã xuất hiện!', 'Sân khấu này là của em!', 'Tự tin toả sáng nào!',
+    'Cả lớp cho một tràng pháo tay nào!', 'Trúng thưởng rồi nha!', 'Chuẩn bị trổ tài nào!'];
+  const CHEER_TWIST = ['Lật kèo ngoạn mục!', 'Bất ngờ chưa!', 'Cú quay xe đỉnh cao!'];
+  /** Biểu tượng rơi cùng ruy băng lúc công bố — mỗi trò một bộ, hợp với cảnh của trò đó. */
+  const THEME = {
+    egg: ['🥚', '🐣', '🐥'], race: ['🏁', '🏆', '⭐'], fish: ['🐟', '🐠', '💧'], balloon: ['🎈', '🎈', '⭐'], dino: ['🦖', '🍰', '🦕'],
+    rocket: ['🚀', '⭐', '🌙'], light: ['🔦', '✨', '⭐'], gift: ['🎁', '🎀', '⭐'], card: ['🟥', '⚽', '📣'], ufo: ['🛸', '👽', '⭐'], marble: ['🔴', '🔵', '🟢', '🟠'],
+  };
   const flashlight = '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 30l14-14 10 10-14 14z" fill="#5b6478"/><path d="M22 16l8-8 10 10-8 8z" fill="#ffd34d"/><path d="M30 8l10 10" stroke="#fff3b0" stroke-width="3"/><path d="M8 30l10 10-4 4-10-10z" fill="#3a4052"/></svg>';
   const marbleIcon = '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M4 32l40-12" stroke="#3a2a1e" stroke-width="5" stroke-linecap="round"/><path d="M4 32l40-12" stroke="#2f7be0" stroke-width="2.5" stroke-linecap="round"/>' + [[12, 21, '#e5484d'], [24, 17.5, '#f19a1a'], [36, 14, '#16a37f']].map(([x, y, c]) => `<circle cx="${x}" cy="${y}" r="6.5" fill="${c}" stroke="#3a2a1e" stroke-width="2"/><circle cx="${x - 2}" cy="${y - 2.5}" r="2" fill="#fff" opacity=".8"/>`).join('') + '</svg>';
   const flag = '<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="6" width="4" height="38" rx="2" fill="#6b4a2a"/>' + Array.from({ length: 12 }, (_, k) => `<rect x="${12 + (k % 4) * 7}" y="${6 + Math.floor(k / 4) * 7}" width="7" height="7" fill="${(k + Math.floor(k / 4)) % 2 ? '#fff' : '#222'}"/>`).join('') + '</svg>';
@@ -143,6 +154,7 @@
       c.classList.toggle('is-low', s <= 3);
       // 5 giây cuối tích tắc, 3 giây cuối tim đập + viền sân khấu nhấp nháy
       if (s > 0 && s <= 5 && s !== last) { last = s; sfx(s <= 3 ? 'heartbeat' : 'tick'); }
+      if (s > 0) music(s > 5 ? 1 : s > 2 ? 2 : 3); // nhạc nền dồn dập dần theo đồng hồ
       world.classList.toggle('is-tense', s > 0 && s <= 3);
     };
     tick();
@@ -169,7 +181,15 @@
     fx.appendChild(b);
     return {
       el: b,
-      async wrong() { b.querySelector('.np-banner-nm').classList.add('is-wrong'); b.querySelector('.np-banner-box').insertAdjacentHTML('beforeend', '<span class="np-stamp">NHẦM RỒI!</span>'); sfx('wrong'); await sleep(1300); b.remove(); },
+      async wrong() {
+        b.querySelector('.np-banner-nm').classList.add('is-wrong');
+        b.querySelector('.np-banner-box').insertAdjacentHTML('beforeend', '<span class="np-stamp">NHẦM RỒI!</span>');
+        sfx('wrong');
+        // Rung khung sân khấu (không rung .np-world vì nó đang mang transform phóng to)
+        if (global.EduFX) global.EduFX.shake(stage);
+        if (P) P.flash('bad');
+        await sleep(1300); b.remove();
+      },
     };
   }
 
@@ -1111,8 +1131,22 @@
     fx.appendChild(hint);
   }
   /** Chơi 1 lượt. plan: { list, winner, twist, ms }. Trả Promise khi diễn xong (khung tên do trang vẽ). */
+  /** 3 · 2 · 1 · Đi! trên cảnh chờ (nhân vật đang đứng sẵn) trước khi trò bắt đầu. */
+  async function countdown() {
+    fx.querySelectorAll('.np-banner, .np-hint-pill, .np-say').forEach((e) => e.remove());
+    for (const t of ['3', '2', '1', 'Đi!']) {
+      const c = document.createElement('div');
+      c.className = 'np-cd' + (t.length > 1 ? ' is-go' : '');
+      c.textContent = t;
+      fx.appendChild(c);
+      sfx(t.length > 1 ? 'go' : 'count');
+      await sleep(t.length > 1 ? 480 : 560);
+      c.remove();
+    }
+  }
   async function play(game, plan, numeric, allNames) {
     const g = byId(game);
+    await countdown();
     reset(g.scene);
     const items = cast(game, plan.list, plan, numeric, allNames);
     plan.t0 = performance.now();
@@ -1120,8 +1154,9 @@
     try {
       await PLAY[game](items, plan, plan.ms);
       world.classList.remove('is-tense');
+      music(0); // im lặng để nghe trống dồn lúc soi đèn
       await spotlight(plan.winner);
-    } finally { stopAll(); world.classList.remove('is-tense'); }
+    } finally { stopAll(); music(0); world.classList.remove('is-tense'); }
     // Đồng hồ dừng ở 00
     const c = fx.querySelector('.np-clock b'); if (c) c.textContent = '00';
   }
@@ -1149,12 +1184,15 @@
     fx.querySelectorAll('.np-banner, .np-say, .np-hint-pill, .np-spot').forEach((e) => e.remove());
     const b = document.createElement('div');
     b.className = 'np-banner is-final';
+    const cheer = pickOne(twisted ? CHEER_TWIST : CHEER);
     b.innerHTML = `<div class="np-banner-box">${twisted ? '<span class="np-twist-tag">Lật kèo!</span>' : ''}<p class="np-banner-lbl">Mời bạn</p>
-      <p class="np-banner-nm" id="npRevealName">${esc(name)}</p>${sub ? `<p class="np-banner-sub">${esc(sub)}</p>` : ''}<div class="np-banner-acts"></div></div>`;
+      <p class="np-banner-nm" id="npRevealName">${esc(name)}</p><p class="np-banner-cheer">${esc(cheer)}</p>${sub ? `<p class="np-banner-sub">${esc(sub)}</p>` : ''}<div class="np-banner-acts"></div></div>`;
     fx.appendChild(b);
+    b.classList.add('is-party');
+    if (P) { P.rays(b); P.letters(b.querySelector('.np-banner-nm'), { step: 70, delay: 150 }); }
     return b.querySelector('.np-banner-acts');
   }
   function clearResult() { if (fx) fx.querySelectorAll('.np-banner').forEach((e) => e.remove()); }
 
-  global.EduNamePickerGames = { GAMES, CAP, mount, idle, play, result, clearResult, labels, stop: stopAll };
+  global.EduNamePickerGames = { GAMES, CAP, THEME, mount, idle, play, result, clearResult, labels, stop: stopAll };
 })(window);

@@ -9,15 +9,14 @@
         id: "computing-fundamentals",
         title: "Computing Fundamentals",
         roman: "I",
-        discipline: "Digital Literacy",
-        note: "The building blocks of computers, devices, and operating systems.",
-        deck: "A foundational guide to Computing Fundamentals: understand hardware and software, navigate operating systems, and build the digital literacy every IC3 candidate starts with.",
-        binding: "Meadow-green cloth · bronze foil",
-        format: "148 × 216 mm · IC3 GS6 edition",
-        theme: "Computing Fundamentals · the building blocks of digital literacy",
-        motif: "Monitor and circuit trace",
+        discipline: "Máy tính căn bản",
+        note: "Phần cứng, phần mềm, thiết bị và hệ điều hành.",
+        deck: "Ôn phần Căn bản về công nghệ: phân biệt phần cứng với phần mềm, dùng hệ điều hành, quản lý tệp và thư mục. Phần nền mà bài thi IC3 nào cũng hỏi.",
+        binding: "IC3 GS6 · Computing Fundamentals",
+        format: "Phần cứng · Phần mềm · Hệ điều hành",
+        theme: "Chủ đề 1. Căn bản về công nghệ",
+        motif: "Màn hình và đường mạch",
         motifKey: "monitor",
-        paletteLabel: "Meadow green · bone · bronze",
         color: "#5e8134",
         foil: "#8a6a3a",
         palette: {
@@ -35,24 +34,23 @@
         width: 1.02,
         height: 1.58,
         depth: 0.26,
-        chapters: ["Hardware", "Software", "Operating systems"],
+        chapters: ["Phần cứng", "Phần mềm", "Hệ điều hành"],
         seed: 11
       },
       {
         id: "key-apps-word",
         title: "Key Applications (Word)",
         roman: "II",
-        discipline: "Document Processing",
-        note: "Formatting, structuring, and producing polished documents.",
+        discipline: "Soạn thảo văn bản",
+        note: "Định dạng, bố cục và hoàn thiện một văn bản.",
         practiceUrl: "word-simulator.html",
         practiceLabel: "Luyện tập Ribbon",
-        deck: "A working guide to word processing: format text with purpose, structure long documents, and produce professional files worth handing in.",
-        binding: "Navy cloth · silver foil",
-        format: "156 × 228 mm · IC3 GS6 edition",
-        theme: "Key Applications · document processing",
-        motif: "Ruled document page",
+        deck: "Ôn Word: định dạng chữ và đoạn, chia bố cục tài liệu dài, chèn bảng và hình rồi in ấn. Có phòng luyện Ribbon giống phần mềm thật.",
+        binding: "IC3 GS6 · Key Applications (Word)",
+        format: "Định dạng · Bố cục · Xuất bản",
+        theme: "MOS · Word",
+        motif: "Trang giấy có dòng kẻ",
         motifKey: "document",
-        paletteLabel: "Navy · cream · silver",
         color: "#313c64",
         foil: "#c7cbd6",
         palette: {
@@ -70,24 +68,23 @@
         width: 1.1,
         height: 1.46,
         depth: 0.29,
-        chapters: ["Formatting", "Structure", "Publishing"],
+        chapters: ["Định dạng", "Bố cục", "Xuất bản"],
         seed: 22
       },
       {
         id: "key-apps-excel",
         title: "Key Applications (Excel)",
         roman: "III",
-        discipline: "Spreadsheets",
-        note: "Organizing data, building formulas, and reading the results.",
+        discipline: "Bảng tính",
+        note: "Nhập dữ liệu, viết công thức và đọc kết quả.",
         practiceUrl: "excel-simulator.html",
         practiceLabel: "Luyện tập Ribbon",
-        deck: "A compact handbook for spreadsheets: organize raw data into tables, write formulas that hold up, and turn rows and columns into an answer.",
-        binding: "Forest-green cloth · gold foil",
-        format: "140 × 210 mm · IC3 GS6 edition",
-        theme: "Key Applications · spreadsheets",
-        motif: "Grid and formula bar",
+        deck: "Ôn Excel: sắp dữ liệu thành bảng, viết công thức và hàm cho đúng, lọc, sắp xếp và vẽ biểu đồ để trả lời câu hỏi.",
+        binding: "IC3 GS6 · Key Applications (Excel)",
+        format: "Nhập liệu · Công thức · Phân tích",
+        theme: "MOS · Excel",
+        motif: "Lưới ô và thanh công thức",
         motifKey: "grid",
-        paletteLabel: "Forest green · ivory · gold",
         color: "#4c7936",
         foil: "#d1a941",
         palette: {
@@ -105,24 +102,23 @@
         width: 0.92,
         height: 1.52,
         depth: 0.22,
-        chapters: ["Data entry", "Formulas", "Analysis"],
+        chapters: ["Nhập liệu", "Công thức", "Phân tích"],
         seed: 33
       },
       {
         id: "key-apps-powerpoint",
         title: "Key Applications (PowerPoint)",
         roman: "IV",
-        discipline: "Presentation Skills",
-        note: "Turning ideas into slides an audience can follow.",
+        discipline: "Trình chiếu",
+        note: "Biến ý tưởng thành slide người xem dễ theo dõi.",
         practiceUrl: "powerpoint-simulator.html",
         practiceLabel: "Luyện tập Ribbon",
-        deck: "A practical guide to presentation skills: shape an argument into slides, design for readability, and deliver an idea an audience can follow.",
-        binding: "Burnt-orange cloth · charcoal foil",
-        format: "162 × 240 mm · IC3 GS6 edition",
-        theme: "Key Applications · presentation skills",
-        motif: "Slide layout grid",
+        deck: "Ôn PowerPoint: dựng dàn ý thành slide, chọn bố cục dễ đọc, thêm hiệu ứng vừa phải và trình bày tự tin trước lớp.",
+        binding: "IC3 GS6 · Key Applications (PowerPoint)",
+        format: "Dàn ý · Thiết kế · Trình bày",
+        theme: "MOS · PowerPoint",
+        motif: "Lưới bố cục slide",
         motifKey: "slide",
-        paletteLabel: "Burnt orange · cream · charcoal",
         color: "#ab5121",
         foil: "#3a3530",
         palette: {
@@ -140,22 +136,21 @@
         width: 1.08,
         height: 1.68,
         depth: 0.25,
-        chapters: ["Structure", "Design", "Delivery"],
+        chapters: ["Dàn ý", "Thiết kế", "Trình bày"],
         seed: 44
       },
       {
         id: "living-online",
         title: "Living Online",
         roman: "V",
-        discipline: "Online Safety and Responsibility",
-        note: "Staying safe, private, and responsible in connected spaces.",
-        deck: "A field guide to living online: protect personal information, spot manipulation and misinformation, and act responsibly across networks and platforms.",
-        binding: "Plum cloth · rose-gold foil",
-        format: "150 × 220 mm · IC3 GS6 edition",
-        theme: "Living Online · safety and responsibility",
-        motif: "Shield and network",
+        discipline: "An toàn trên mạng",
+        note: "Giữ an toàn, riêng tư và cư xử đúng mực khi lên mạng.",
+        deck: "Ôn An toàn và bảo mật: bảo vệ thông tin cá nhân, nhận ra lừa đảo và tin giả, dùng mạng xã hội có trách nhiệm.",
+        binding: "IC3 GS6 · Living Online",
+        format: "Riêng tư · An toàn · Trách nhiệm",
+        theme: "Chủ đề 7. An toàn và bảo mật",
+        motif: "Khiên và mạng lưới",
         motifKey: "shield",
-        paletteLabel: "Plum · lilac · rose gold",
         color: "#674c75",
         foil: "#c9a0c4",
         palette: {
@@ -173,22 +168,21 @@
         width: 1,
         height: 1.48,
         depth: 0.3,
-        chapters: ["Privacy", "Safety", "Responsibility"],
+        chapters: ["Riêng tư", "An toàn", "Trách nhiệm"],
         seed: 55
       },
       {
         id: "computational-thinking",
         title: "Computational Thinking",
         roman: "VI",
-        discipline: "Problem Solving and Programming Concepts",
-        note: "Breaking problems apart and thinking in steps and systems.",
-        deck: "A studio notebook for computational thinking: decompose problems, recognize patterns, and reason through algorithms and basic programming concepts.",
-        binding: "Teal cloth · slate foil",
-        format: "146 × 224 mm · IC3 GS6 edition",
-        theme: "Computational Thinking · problem solving and programming concepts",
-        motif: "Flowchart nodes",
+        discipline: "Tư duy máy tính",
+        note: "Chia nhỏ vấn đề, tìm quy luật, nghĩ theo từng bước.",
+        deck: "Ôn Tư duy máy tính: chia bài toán thành phần nhỏ, nhận ra mẫu lặp lại, viết thuật toán và làm quen khái niệm lập trình cơ bản.",
+        binding: "IC3 GS6 · Computational Thinking",
+        format: "Chia nhỏ · Quy luật · Thuật toán",
+        theme: "Chưa có bộ câu riêng, ôn qua đề tổng hợp",
+        motif: "Sơ đồ khối",
         motifKey: "flowchart",
-        paletteLabel: "Teal · mist · slate",
         color: "#357485",
         foil: "#8fa9b0",
         palette: {
@@ -206,22 +200,21 @@
         width: 0.96,
         height: 1.57,
         depth: 0.24,
-        chapters: ["Decomposition", "Patterns", "Algorithms"],
+        chapters: ["Chia nhỏ", "Quy luật", "Thuật toán"],
         seed: 66
       },
       {
         id: "digital-citizenship",
         title: "Digital Citizenship",
         roman: "VII",
-        discipline: "Technology in Society",
-        note: "Technology's impact on people, communities, and society.",
-        deck: "A closing survey of digital citizenship: weigh technology's impact on communities and society, and practice the judgment good digital citizens rely on.",
-        binding: "Goldenrod cloth · walnut foil",
-        format: "158 × 232 mm · IC3 GS6 edition",
-        theme: "Digital Citizenship · technology in society",
-        motif: "Connected people",
+        discipline: "Công dân số",
+        note: "Công nghệ tác động đến con người và xã hội ra sao.",
+        deck: "Ôn Công dân số: hiểu công nghệ ảnh hưởng tới cộng đồng thế nào, tôn trọng bản quyền và cư xử văn minh trên mạng.",
+        binding: "IC3 GS6 · Digital Citizenship",
+        format: "Tác động · Đạo đức · Công dân số",
+        theme: "Chủ đề 2. Công dân số",
+        motif: "Những người kết nối",
         motifKey: "people",
-        paletteLabel: "Goldenrod · cream · walnut",
         color: "#c59237",
         foil: "#6b4a2a",
         palette: {
@@ -239,7 +232,7 @@
         width: 1.12,
         height: 1.63,
         depth: 0.28,
-        chapters: ["Impact", "Ethics", "Citizenship"],
+        chapters: ["Tác động", "Đạo đức", "Công dân số"],
         seed: 77
       }
     ];
@@ -1303,7 +1296,7 @@
           const chapterIndex = pageIndex === 1 ? 0 : 1;
           ctx.font = '500 11px Inter, "Helvetica Neue", Arial, sans-serif';
           ctx.letterSpacing = "2px";
-          ctx.fillText(`CHAPTER ${pad(chapterIndex + 1)}`, 54, 166);
+          ctx.fillText(`CHƯƠNG ${pad(chapterIndex + 1)}`, 54, 166);
           ctx.font = '400 49px "Iowan Old Style", Baskerville, Georgia, serif';
           ctx.letterSpacing = "0px";
           drawWrappedCanvasText(ctx, book.chapters[chapterIndex], 52, 244, 18, 54, 3);
@@ -1321,7 +1314,7 @@
         } else if (pageIndex === 2) {
           ctx.font = '500 11px Inter, "Helvetica Neue", Arial, sans-serif';
           ctx.letterSpacing = "2px";
-          ctx.fillText("PLATE 01  /  SYSTEM MOTIF", 54, 146);
+          ctx.fillText("HÌNH 01  /  HÌNH BÌA", 54, 146);
           ctx.save();
           ctx.globalAlpha = 0.58;
           drawMotif(ctx, { ...book, foil: ink }, logicalWidth, logicalHeight * 0.92);
@@ -1332,7 +1325,7 @@
         } else if (pageIndex === 4) {
           ctx.font = '500 11px Inter, "Helvetica Neue", Arial, sans-serif';
           ctx.letterSpacing = "2px";
-          ctx.fillText(`NOTES  /  ${book.chapters[1].toUpperCase()}`, 54, 138);
+          ctx.fillText(`GHI CHÚ  /  ${book.chapters[1].toUpperCase()}`, 54, 138);
           ctx.globalAlpha = 0.44;
           for (let column = 0; column < 2; column += 1) {
             const left = 54 + column * 214;
@@ -1349,7 +1342,7 @@
         } else if (pageIndex === 5) {
           ctx.font = '500 11px Inter, "Helvetica Neue", Arial, sans-serif';
           ctx.letterSpacing = "2px";
-          ctx.fillText("CHAPTER 03", 54, 166);
+          ctx.fillText("CHƯƠNG 03", 54, 166);
           ctx.font = '400 49px "Iowan Old Style", Baskerville, Georgia, serif';
           ctx.letterSpacing = "0px";
           drawWrappedCanvasText(ctx, book.chapters[2], 52, 244, 18, 54, 3);
@@ -1359,7 +1352,7 @@
         } else if (pageIndex === 6) {
           ctx.font = '500 11px Inter, "Helvetica Neue", Arial, sans-serif';
           ctx.letterSpacing = "2px";
-          ctx.fillText("PLATE 02  /  TECHNICAL SYSTEM", 54, 146);
+          ctx.fillText("HÌNH 02  /  SƠ ĐỒ", 54, 146);
           ctx.save();
           ctx.translate(logicalWidth * 0.5, 380);
           ctx.globalAlpha = 0.55;
@@ -1383,7 +1376,7 @@
         } else {
           ctx.font = '500 11px Inter, "Helvetica Neue", Arial, sans-serif';
           ctx.letterSpacing = "2px";
-          ctx.fillText("COLOPHON", 54, 164);
+          ctx.fillText("THÔNG TIN CUỐN SÁCH", 54, 164);
           ctx.font = '400 32px "Iowan Old Style", Baskerville, Georgia, serif';
           ctx.letterSpacing = "0px";
           ctx.fillText(book.title, 54, 230);
@@ -1391,7 +1384,7 @@
           ctx.font = '400 18px "Iowan Old Style", Baskerville, Georgia, serif';
           drawWrappedCanvasText(
             ctx,
-            `${book.binding}. ${book.format}. Part of the IC3 GS6 seven field guides for learners.`,
+            `${book.binding}. Gồm: ${book.format}. Bộ 7 cuốn ôn thi IC3 GS6.`,
             54,
             306,
             44,
@@ -1407,7 +1400,7 @@
             ctx.globalAlpha = 0.9;
             ctx.font = '600 11px Inter, "Helvetica Neue", Arial, sans-serif';
             ctx.letterSpacing = "1.8px";
-            ctx.fillText("SỐ LIỆU THẬT · IC3 QUIZ", 54, 552);
+            ctx.fillText("TRONG KHO ĐỀ", 54, 552);
             ctx.globalAlpha = 0.68;
             ctx.font = '400 17px "Iowan Old Style", Baskerville, Georgia, serif';
             ctx.letterSpacing = "0px";
@@ -1416,7 +1409,7 @@
           ctx.globalAlpha = 0.74;
           ctx.font = '500 10px Inter, "Helvetica Neue", Arial, sans-serif';
           ctx.letterSpacing = "1.8px";
-          ctx.fillText(`SPECIMEN ${book.roman} / ${book.seed}  ·  IMAGINED EDITION`, 54, 676);
+          ctx.fillText(`IC3 GS6  ·  CUỐN ${book.roman} / VII`, 54, 676);
         }
 
         ctx.globalAlpha = 0.62;
@@ -1740,7 +1733,7 @@
       ctx.fillRect(68, 1040, 632, 1.5);
       ctx.globalAlpha = 1;
       ctx.textAlign = "right";
-      ctx.fillText("AN IMAGINED EDITION", 700, 1080);
+      ctx.fillText("BẢN ÔN THI · IC3 QUIZ", 700, 1080);
 
       return configureCanvasTexture(new THREE.CanvasTexture(foilCanvas));
     }
@@ -2852,7 +2845,7 @@
       selectionTitle.textContent = book.title;
       selectionNote.textContent = book.note;
       counter.textContent = `${pad(selectedIndex + 1)} / ${pad(BOOKS.length)}`;
-      paletteLabel.textContent = book.paletteLabel;
+      if (paletteLabel) paletteLabel.textContent = book.discipline;
       inspectButton.setAttribute("aria-label", `Mở cuốn ${book.title}`);
       applyBookTheme(book);
 
@@ -3862,7 +3855,7 @@
       }
       detailPanel.setAttribute("aria-hidden", "true");
       detailPanel.inert = true;
-      liveRegion.textContent = `Returning ${activeBook.data.title} to the shelf.`;
+      liveRegion.textContent = `Đang cất ${activeBook.data.title} lên kệ.`;
       if (reducedMotion) {
         finishClosing();
       }

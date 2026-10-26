@@ -190,7 +190,10 @@
       <button type="button" class="np-small" data-rv="absent"><i class="fa-solid fa-user-xmark" aria-hidden="true"></i> Bạn này vắng — gọi bạn khác</button>
       <button type="button" class="np-small" data-rv="close">Đóng <kbd>Esc</kbd></button>`;
     sfx('fanfare');
-    if (global.EduFX) global.EduFX.confetti({ count: 140 });
+    // Pháo hoa + mưa ruy băng + cả lớp vỗ tay (js/fx-party.js); thiếu file thì về pháo giấy cũ
+    const P = global.EduParty;
+    if (P) { P.flash('gold'); P.fireworks({ shells: 8 }); P.rain({ count: 110, glyphs: G.THEME && G.THEME[plan.game] }); setTimeout(() => sfx('cheer'), 450); }
+    else if (global.EduFX) global.EduFX.confetti({ count: 140 });
     acts.querySelector('[data-rv="next"]').focus({ preventScroll: true });
   }
   function closeReveal() { if (CH) CH.close(); showing = false; G.clearResult(); idle(); }

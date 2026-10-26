@@ -250,7 +250,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
       if (fixedCount) {
         try {
           await batch.commit();
-          toast(`🔧 Đã tự đồng bộ lại "Trường được xem" cho ${fixedCount} giáo viên theo đúng lớp đang dạy`);
+          toast(`Đã tự đồng bộ lại "Trường được xem" cho ${fixedCount} giáo viên theo đúng lớp đang dạy`);
         } catch (err) {
           console.warn('[EduAdminUsers] Không tự đồng bộ được "Trường được xem":', err.message);
         }
@@ -283,11 +283,11 @@ window.EDU_ALLOWED_ROLES = ['admin'];
         <td><span class="badge ${esc(u.role)}">${esc(EduAuth.ROLE_LABEL[u.role] || u.role)}</span>${pending ? `<span class="badge pending">${pendingLabel}</span>` : ''}</td>
         <td>
           <select class="roleSelect">
-            <option value="student" ${u.role === 'student' ? 'selected' : ''}>🎓 Học sinh</option>
-            <option value="teacher" ${u.role === 'teacher' ? 'selected' : ''}>📖 Giáo viên</option>
-            <option value="coordinator" ${u.role === 'coordinator' ? 'selected' : ''}>🧭 Điều phối đào tạo</option>
-            <option value="teaching_coordinator" ${u.role === 'teaching_coordinator' ? 'selected' : ''}>🚗 Điều phối giáo viên</option>
-            <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>👑 Quản trị viên</option>
+            <option value="student" ${u.role === 'student' ? 'selected' : ''}>Học sinh</option>
+            <option value="teacher" ${u.role === 'teacher' ? 'selected' : ''}>Giáo viên</option>
+            <option value="coordinator" ${u.role === 'coordinator' ? 'selected' : ''}>Điều phối đào tạo</option>
+            <option value="teaching_coordinator" ${u.role === 'teaching_coordinator' ? 'selected' : ''}>Điều phối giáo viên</option>
+            <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Quản trị viên</option>
           </select>
         </td>
         <td class="schoolsCell" ${(u.role === 'teacher' || u.role === 'coordinator') ? '' : 'hidden'}>
@@ -295,17 +295,17 @@ window.EDU_ALLOWED_ROLES = ['admin'];
             <select class="schoolsSelect" multiple size="${Math.min(4, Math.max(2, allSchools.length))}" title="Giữ Ctrl (hoặc Cmd) để chọn nhiều trường${u.role === 'teacher' ? ' — trang đã TỰ ĐỘNG đồng bộ theo lớp đang dạy thật mỗi lần tải trang, chỉ sửa tay ở đây nếu cần thêm ngoại lệ' : ''}">
               ${allSchools.map(s => `<option value="${esc(s)}" ${userSchools.includes(s) ? 'selected' : ''}>${esc(s)}</option>`).join('')}
             </select>
-            <button type="button" class="saveSchoolsBtn">💾 Lưu trường</button>
-            ${u.role === 'teacher' ? `<button type="button" class="syncSchoolsBtn" title="Đặt lại đúng theo trường giáo viên này ĐANG DẠY THẬT (students_roster), bỏ mọi chỉnh tay">🔄 Đồng bộ theo lớp đang dạy</button>` : ''}
+            <button type="button" class="saveSchoolsBtn"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Lưu trường</button>
+            ${u.role === 'teacher' ? `<button type="button" class="syncSchoolsBtn" title="Đặt lại đúng theo trường giáo viên này ĐANG DẠY THẬT (students_roster), bỏ mọi chỉnh tay"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Đồng bộ theo lớp đang dạy</button>` : ''}
           ` : `<span class="hint">Chưa có trường nào trong danh sách học sinh (roster-manager.html)</span>`}
-          ${userSchools.length ? `<div class="schoolsCurrent">${u.role === 'coordinator' ? 'Đang hỗ trợ' : 'Đang xem'}: ${userSchools.map(esc).join(', ')}</div>` : (u.role === 'coordinator' ? `<div class="schoolsCurrent hint">⚠️ Chưa gán trường nào — điều phối đào tạo này CHƯA xem/sửa được trường nào cả (khác trước đây, mặc định thấy hết)</div>` : '')}
+          ${userSchools.length ? `<div class="schoolsCurrent">${u.role === 'coordinator' ? 'Đang hỗ trợ' : 'Đang xem'}: ${userSchools.map(esc).join(', ')}</div>` : (u.role === 'coordinator' ? `<div class="schoolsCurrent hint"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Chưa gán trường nào — điều phối đào tạo này CHƯA xem/sửa được trường nào cả (khác trước đây, mặc định thấy hết)</div>` : '')}
         </td>
         <td class="classesCell" ${u.role === 'teacher' ? '' : 'hidden'}>
           ${allClasses.length ? `
             <select class="classesSelect" multiple size="${Math.min(6, Math.max(3, allClasses.length))}" title="Giữ Ctrl (hoặc Cmd) để chọn nhiều lớp — gán TRỰC TIẾP lớp giáo viên này dạy, không cần đợi khớp tên lúc Nạp Excel">
               ${classOptionsHtml(doc.id)}
             </select>
-            <button type="button" class="saveClassesBtn">💾 Lưu lớp</button>
+            <button type="button" class="saveClassesBtn"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Lưu lớp</button>
           ` : `<span class="hint">Chưa có lớp nào (roster-manager.html)</span>`}
           ${(() => {
             const mine = allClasses.filter(c => c.teacherId === doc.id);
@@ -320,10 +320,10 @@ window.EDU_ALLOWED_ROLES = ['admin'];
               <option value="">-- Chưa liên kết --</option>
               ${allTeachingTeachers.map(tc => `<option value="${esc(tc.code)}" ${u.teacherCode === tc.code ? 'selected' : ''}>${esc(tc.code)} — ${esc(tc.name)}</option>`).join('')}
             </select>
-            <button type="button" class="saveTeacherCodeBtn">💾 Lưu</button>
+            <button type="button" class="saveTeacherCodeBtn"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Lưu</button>
           ` : `<span class="hint">Chưa có giáo viên nào trong Lịch giảng dạy (teaching-schedule.html)</span>`}
         </td>
-        <td>${pending ? `<button class="approveBtn" data-requested-role="${esc(u.requestedRole || '')}">✅ Duyệt${wantsOtherRole ? ' làm ' + esc(EduAuth.ROLE_LABEL[u.requestedRole] || '') : ' ngay'}</button>` : '—'}</td>
+        <td>${pending ? `<button class="approveBtn" data-requested-role="${esc(u.requestedRole || '')}"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Duyệt${wantsOtherRole ? ' làm ' + esc(EduAuth.ROLE_LABEL[u.requestedRole] || '') : ' ngay'}</button>` : '—'}</td>
       </tr>`;
     }).join('');
 
@@ -335,10 +335,10 @@ window.EDU_ALLOWED_ROLES = ['admin'];
           await EduFirebase.db.collection('users').doc(uid).set(
             { role: newRole, approved: true }, { merge: true }
           );
-          toast('✅ Đã cập nhật vai trò');
+          toast('Đã cập nhật vai trò');
           loadUsers(true);
         } catch (err) {
-          toast('❌ Lỗi: ' + err.message);
+          toast('Lỗi: ' + err.message);
         }
       });
     });
@@ -357,10 +357,10 @@ window.EDU_ALLOWED_ROLES = ['admin'];
         }
         try {
           await EduFirebase.db.collection('users').doc(uid).set(patch, { merge: true });
-          toast('✅ Đã duyệt tài khoản' + (patch.role ? ` làm ${EduAuth.ROLE_LABEL[patch.role]}` : ''));
+          toast('Đã duyệt tài khoản' + (patch.role ? ` làm ${EduAuth.ROLE_LABEL[patch.role]}` : ''));
           loadUsers(true);
         } catch (err) {
-          toast('❌ Lỗi: ' + err.message);
+          toast('Lỗi: ' + err.message);
         }
       });
     });
@@ -372,15 +372,15 @@ window.EDU_ALLOWED_ROLES = ['admin'];
         const sel = tr.querySelector('.schoolsSelect');
         const chosen = Array.from(sel.selectedOptions).map(o => o.value);
         if (!chosen.length) {
-          toast('⚠️ Chọn ít nhất 1 trường trước khi lưu (nếu muốn giáo viên không xem trường nào, đổi vai trò tạm thời)');
+          toast('Chọn ít nhất 1 trường trước khi lưu (nếu muốn giáo viên không xem trường nào, đổi vai trò tạm thời)');
           return;
         }
         try {
           await EduFirebase.db.collection('users').doc(uid).set({ schools: chosen }, { merge: true });
-          toast(`✅ Đã gán ${chosen.length} trường cho giáo viên`);
+          toast(`Đã gán ${chosen.length} trường cho giáo viên`);
           loadUsers(true);
         } catch (err) {
-          toast('❌ Lỗi: ' + err.message);
+          toast('Lỗi: ' + err.message);
         }
       });
     });
@@ -390,15 +390,15 @@ window.EDU_ALLOWED_ROLES = ['admin'];
         const uid = e.target.closest('tr').dataset.uid;
         const actual = actualSchoolsOf(uid);
         if (!actual.length) {
-          toast('⚠️ Giáo viên này chưa có lớp nào đang học trong danh sách học sinh (roster-manager.html) — không có gì để đồng bộ.');
+          toast('Giáo viên này chưa có lớp nào đang học trong danh sách học sinh (roster-manager.html) — không có gì để đồng bộ.');
           return;
         }
         try {
           await EduFirebase.db.collection('users').doc(uid).set({ schools: actual }, { merge: true });
-          toast(`✅ Đã đặt lại đúng ${actual.length} trường đang dạy thật`);
+          toast(`Đã đặt lại đúng ${actual.length} trường đang dạy thật`);
           loadUsers(true);
         } catch (err) {
-          toast('❌ Lỗi: ' + err.message);
+          toast('Lỗi: ' + err.message);
         }
       });
     });
@@ -429,7 +429,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
 
         btn.disabled = true;
         const oldLabel = btn.textContent;
-        btn.textContent = '⏳ Đang lưu...';
+        btn.innerHTML = '<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Đang lưu...';
         try {
           let batch = EduFirebase.db.batch();
           let ops = 0;
@@ -465,11 +465,11 @@ window.EDU_ALLOWED_ROLES = ['admin'];
             .sort((a, b) => a.localeCompare(b, 'vi'));
           await EduFirebase.db.collection('users').doc(uid).set({ schools: newSchools }, { merge: true });
 
-          toast(`✅ Đã cập nhật lớp đang dạy (${toAssign.length} gán thêm, ${toUnassign.length} bỏ gán)`);
+          toast(`Đã cập nhật lớp đang dạy (${toAssign.length} gán thêm, ${toUnassign.length} bỏ gán)`);
           invalidateLookups();
           loadUsers(true);
         } catch (err) {
-          toast('❌ Lỗi: ' + err.message);
+          toast('Lỗi: ' + err.message);
         } finally {
           btn.disabled = false;
           btn.textContent = oldLabel;
@@ -489,10 +489,10 @@ window.EDU_ALLOWED_ROLES = ['admin'];
           );
           // Map Mã NV → uid của Lịch giảng dạy (js/teaching-schedule.js) được cache 30 phút.
           if (window.EduDataCache) window.EduDataCache.clear('teaching-schedule:teacherCodeToUid', true);
-          toast(code ? '✅ Đã liên kết Mã NV cho giáo viên' : '✅ Đã bỏ liên kết Mã NV');
+          toast(code ? 'Đã liên kết Mã NV cho giáo viên' : 'Đã bỏ liên kết Mã NV');
           loadUsers(true);
         } catch (err) {
-          toast('❌ Lỗi: ' + err.message);
+          toast('Lỗi: ' + err.message);
         }
       });
     });

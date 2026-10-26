@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📖 Dashboard Giáo viên — EduQuiz</title>
+<title>Dashboard Giáo viên — EduQuiz</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/theme.css">
@@ -23,9 +23,9 @@
 <div class="topbar">
   <a href="ic3-dashboard.html" class="btn btn-ghost">← Dashboard</a>
   <div class="spacer"></div>
-  <button type="button" class="btn btn-ghost" id="openShelfBtn" title="Xem bộ đề dạng kệ sách 3D">🧊 Kệ sách 3D</button>
-  <a class="btn btn-ghost" href="tai-lieu-nam-hoc.html" title="Slide bài giảng năm học 2026-2027 (Google Drive), chia theo từng khối">📁 Tài liệu năm học 2026-2027</a>
-  <a class="btn btn-ghost" href="portfolio.html" target="_blank" rel="noopener" title="Trang Social Media nội bộ — đăng bài/thích/bình luận">📱 Trang Social Media</a>
+  <button type="button" class="btn btn-ghost" id="openShelfBtn" title="Xem bộ đề dạng kệ sách 3D"><i class="fa-solid fa-cube" aria-hidden="true"></i> Kệ sách 3D</button>
+  <a class="btn btn-ghost" href="tai-lieu-nam-hoc.html" title="Slide bài giảng năm học 2026-2027 (Google Drive), chia theo từng khối"><i class="fa-solid fa-folder-open" aria-hidden="true"></i> Tài liệu năm học 2026-2027</a>
+  <a class="btn btn-ghost" href="portfolio.html" target="_blank" rel="noopener" title="Trang Social Media nội bộ — đăng bài/thích/bình luận"><i class="fa-solid fa-mobile-screen" aria-hidden="true"></i> Trang Social Media</a>
   <div class="whoami-chip" id="whoamiChip">
     <span class="whoami-avatar" id="whoamiAvatar"></span>
     <span class="whoami" id="whoami"></span>
@@ -76,7 +76,7 @@
       </select>
     </div>
     <button type="button" class="btn btn-ghost" id="resetFiltersBtn" title="Xoá bộ lọc">↺ Đặt lại</button>
-    <button type="button" class="btn btn-ghost" id="refreshDataBtn" title="Đọc lại dữ liệu mới nhất từ máy chủ (dữ liệu hiện đang cache tạm 3 phút để đỡ tốn băng thông)">🔄 Làm mới dữ liệu</button>
+    <button type="button" class="btn btn-ghost" id="refreshDataBtn" title="Đọc lại dữ liệu mới nhất từ máy chủ (dữ liệu hiện đang cache tạm 3 phút để đỡ tốn băng thông)"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Làm mới dữ liệu</button>
   </div>
 
   <div class="loading-note" id="loadingNote">⏳ Đang tải dữ liệu học sinh &amp; kết quả bài thi của trường bạn...</div>
@@ -84,27 +84,27 @@
   <!-- ============ 6 KPI (không có "Tổng số giáo viên" như bản Điều phối) ============ -->
   <div class="kpi-grid" id="kpiGrid" hidden>
     <div class="kpi-card">
-      <div class="kpi-icon">🎓</div>
+      <div class="kpi-icon"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i></div>
       <div class="kpi-label">Tổng số học sinh</div>
       <div class="kpi-value" id="kpiStudents">—</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-icon">📝</div>
+      <div class="kpi-icon"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></div>
       <div class="kpi-label">Số bài thi</div>
       <div class="kpi-value" id="kpiExams">—</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-icon">⭐</div>
+      <div class="kpi-icon"><i class="fa-solid fa-star" aria-hidden="true"></i></div>
       <div class="kpi-label">Điểm trung bình</div>
       <div class="kpi-value" id="kpiAvgScore">—</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-icon">✅</div>
+      <div class="kpi-icon"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></div>
       <div class="kpi-label">Tỷ lệ đạt</div>
       <div class="kpi-value" id="kpiPassRate">—</div>
     </div>
     <div class="kpi-card kpi-warn">
-      <div class="kpi-icon">🚩</div>
+      <div class="kpi-icon"><i class="fa-solid fa-flag" aria-hidden="true"></i></div>
       <div class="kpi-label">Học sinh chưa làm bài</div>
       <div class="kpi-value" id="kpiNotSubmitted">—</div>
     </div>
@@ -118,27 +118,27 @@
   <!-- ============ 6 LOẠI BIỂU ĐỒ (dùng lại nguyên js/coordinator/charts.js) ============ -->
   <div class="charts-grid" id="chartsGrid" hidden>
     <div class="chart-card">
-      <div class="chart-card-title">📊 Điểm trung bình theo lớp (Bar)</div>
+      <div class="chart-card-title"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Điểm trung bình theo lớp (Bar)</div>
       <div class="chart-card-body"><canvas id="chartBar"></canvas></div>
     </div>
     <div class="chart-card">
-      <div class="chart-card-title">📈 Xu hướng điểm TB theo ngày (Line)</div>
+      <div class="chart-card-title"><i class="fa-solid fa-chart-line" aria-hidden="true"></i> Xu hướng điểm TB theo ngày (Line)</div>
       <div class="chart-card-body"><canvas id="chartLine"></canvas></div>
     </div>
     <div class="chart-card">
-      <div class="chart-card-title">🥧 Tỷ lệ Đạt / Chưa đạt (Pie)</div>
+      <div class="chart-card-title"><i class="fa-solid fa-chart-pie" aria-hidden="true"></i> Tỷ lệ Đạt / Chưa đạt (Pie)</div>
       <div class="chart-card-body"><canvas id="chartPie"></canvas></div>
     </div>
     <div class="chart-card">
-      <div class="chart-card-title">🕸️ So sánh điểm TB giữa các lớp (Radar)</div>
+      <div class="chart-card-title"><i class="fa-solid fa-circle-nodes" aria-hidden="true"></i> So sánh điểm TB giữa các lớp (Radar)</div>
       <div class="chart-card-body"><canvas id="chartRadar"></canvas></div>
     </div>
     <div class="chart-card chart-card-wide">
-      <div class="chart-card-title">🌡️ Ma trận điểm TB: Lớp × Bài thi (Heatmap)</div>
+      <div class="chart-card-title"><i class="fa-solid fa-temperature-half" aria-hidden="true"></i> Ma trận điểm TB: Lớp × Bài thi (Heatmap)</div>
       <div class="chart-card-body" id="chartHeatmap"><div class="chart-empty">Chưa đủ dữ liệu.</div></div>
     </div>
     <div class="chart-card">
-      <div class="chart-card-title">🎯 Tiến độ tổng quan (Progress)</div>
+      <div class="chart-card-title"><i class="fa-solid fa-bullseye" aria-hidden="true"></i> Tiến độ tổng quan (Progress)</div>
       <div class="chart-card-body" id="chartProgress"></div>
     </div>
   </div>
@@ -146,7 +146,7 @@
   <!-- ============ DANH SÁCH CẦN CHÚ Ý ============ -->
   <div class="watchlists-grid" id="watchlistsGrid" hidden>
     <div class="watchlist-card">
-      <div class="watchlist-title">🚩 Học sinh chưa làm bài <span class="watchlist-count" id="notSubmittedCount"></span></div>
+      <div class="watchlist-title"><i class="fa-solid fa-flag" aria-hidden="true"></i> Học sinh chưa làm bài <span class="watchlist-count" id="notSubmittedCount"></span></div>
       <ul class="watchlist-list" id="notSubmittedList"></ul>
       <div class="watchlist-more" id="notSubmittedMore"></div>
     </div>
@@ -156,13 +156,13 @@
       <div class="watchlist-more" id="needsSupportMore"></div>
     </div>
     <div class="watchlist-card">
-      <div class="watchlist-title">🏆 Học sinh xuất sắc <span class="watchlist-count" id="topStudentsCount"></span></div>
+      <div class="watchlist-title"><i class="fa-solid fa-trophy" aria-hidden="true"></i> Học sinh xuất sắc <span class="watchlist-count" id="topStudentsCount"></span></div>
       <ul class="watchlist-list" id="topStudentsList"></ul>
       <div class="watchlist-more" id="topStudentsMore"></div>
     </div>
     <div class="watchlist-card">
-      <div class="watchlist-title">🏅 Thi đua lớp tuần này <span class="watchlist-count" id="classRaceCount"></span>
-        <button type="button" class="race-present-btn" id="classRacePresent" title="Chiếu bảng thi đua toàn màn hình (đầu giờ học)" hidden>📽 Trình chiếu</button></div>
+      <div class="watchlist-title"><i class="fa-solid fa-medal" aria-hidden="true"></i> Thi đua lớp tuần này <span class="watchlist-count" id="classRaceCount"></span>
+        <button type="button" class="race-present-btn" id="classRacePresent" title="Chiếu bảng thi đua toàn màn hình (đầu giờ học)" hidden><i class="fa-solid fa-film" aria-hidden="true"></i> Trình chiếu</button></div>
       <ul class="watchlist-list" id="classRaceList"></ul>
       <div class="watchlist-more">Điểm thi đua = điểm TB × % học sinh của lớp đã làm bài (từ thứ Hai)</div>
     </div>
@@ -171,9 +171,9 @@
   <!-- ============ BẢNG QUẢN LÝ HỌC SINH (dùng lại nguyên js/coordinator/student-table.js) ============ -->
   <!-- ============ CÂU CẢ LỚP HAY SAI (Google Sheet cột CauSai — js/teacher/wrong-questions.js) ============ -->
   <div class="watchlist-card wq-card" id="wrongQCard" hidden>
-    <div class="watchlist-title">❌ Câu cả lớp hay sai
-      <button type="button" class="race-present-btn" id="wqAnalyze" title="Tổng hợp câu sai từ Google Sheet theo bộ lọc đang chọn (không tốn lượt Firebase)">🔍 Phân tích</button>
-      <button type="button" class="race-present-btn" id="wqMakeExam" title="Tạo link đề ôn từ các câu sai nhiều nhất (cùng cấp độ), chép sẵn để gửi học sinh" hidden>📝 Tạo đề ôn</button>
+    <div class="watchlist-title"><i class="fa-solid fa-circle-xmark" aria-hidden="true"></i> Câu cả lớp hay sai
+      <button type="button" class="race-present-btn" id="wqAnalyze" title="Tổng hợp câu sai từ Google Sheet theo bộ lọc đang chọn (không tốn lượt Firebase)"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Phân tích</button>
+      <button type="button" class="race-present-btn" id="wqMakeExam" title="Tạo link đề ôn từ các câu sai nhiều nhất (cùng cấp độ), chép sẵn để gửi học sinh" hidden><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> Tạo đề ôn</button>
     </div>
     <div class="wq-status" id="wqStatus"></div>
     <ol class="wq-list" id="wqList"></ol>
@@ -181,9 +181,9 @@
 
   <div class="student-table-card" id="studentTableCard" hidden>
     <div class="student-table-header">
-      <h2>🎓 Danh sách học sinh <span class="watchlist-count" id="studentTableCount"></span></h2>
+      <h2><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i> Danh sách học sinh <span class="watchlist-count" id="studentTableCount"></span></h2>
       <div class="student-table-toolbar">
-        <input type="search" id="studentSearchInput" placeholder="🔍 Tìm theo tên hoặc MSSV…" autocomplete="off">
+        <input type="search" id="studentSearchInput" placeholder="Tìm theo tên hoặc MSSV…" autocomplete="off">
         <select id="studentStatusFilter">
           <option value="">Tất cả trạng thái</option>
           <option value="active">Đang học</option>
@@ -194,8 +194,8 @@
           <option value="25">25 / trang</option>
           <option value="50">50 / trang</option>
         </select>
-        <button type="button" class="btn btn-ghost" id="exportExcelBtn" title="Xuất workbook Excel 7 sheet (KPI, danh sách, biểu đồ, pivot)">⬇️ Excel</button>
-        <button type="button" class="btn btn-ghost" id="exportPdfBtn" title="Xuất báo cáo PDF (logo, header/footer, biểu đồ)">🖨️ PDF</button>
+        <button type="button" class="btn btn-ghost" id="exportExcelBtn" title="Xuất workbook Excel 7 sheet (KPI, danh sách, biểu đồ, pivot)"><i class="fa-solid fa-download" aria-hidden="true"></i> Excel</button>
+        <button type="button" class="btn btn-ghost" id="exportPdfBtn" title="Xuất báo cáo PDF (logo, header/footer, biểu đồ)"><i class="fa-solid fa-print" aria-hidden="true"></i> PDF</button>
       </div>
     </div>
     <div class="table-scroll">
@@ -249,7 +249,7 @@
 <div class="shelf-modal-overlay" id="shelfModalOverlay">
   <div class="shelf-modal">
     <div class="shelf-modal-bar">
-      <span class="shelf-modal-title">🧊 Chế độ kệ sách 3D</span>
+      <span class="shelf-modal-title"><i class="fa-solid fa-cube" aria-hidden="true"></i> Chế độ kệ sách 3D</span>
       <button type="button" class="shelf-modal-close" id="closeShelfModalBtn">✕ Đóng</button>
     </div>
     <div class="shelf-modal-frame">

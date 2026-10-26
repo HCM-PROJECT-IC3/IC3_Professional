@@ -237,7 +237,7 @@
     // Giáo viên tự nhập ĐÚNG lịch của mình từ file Excel tổ (xem isSelfImport()).
     const importBtn = document.getElementById('importExcelBtn');
     if (importBtn) {
-      importBtn.textContent = '📥 Nhập lịch của tôi từ Excel';
+      importBtn.innerHTML = '<i class="fa-solid fa-file-import" aria-hidden="true"></i> Nhập lịch của tôi từ Excel';
       importBtn.title = 'Chọn file Excel lịch giảng dạy (file của tổ cũng được) — chỉ lấy đúng khối có mã NV của bạn, giáo viên khác trong file được bỏ qua';
     }
     hide('newWeekBtn');
@@ -288,7 +288,7 @@
       if (!weekLoadStarted && state.currentWeekKey) await loadWeekSchedules(state.currentWeekKey);
       else renderWeeklyTab(); // hiện bảng/khối rỗng "chưa chọn tuần"
     } catch (err) {
-      toast('❌ ' + friendlyError(err));
+      toast(friendlyError(err));
     }
   }
 
@@ -331,7 +331,7 @@
       ptRows.forEach((r) => { state.periodTimesByTeacher[r.id] = r; });
       renderWeeklyTab();
     } catch (err) {
-      toast('❌ ' + friendlyError(err));
+      toast(friendlyError(err));
     }
   }
 
@@ -371,7 +371,7 @@
     const tbody = document.getElementById('teacherRows');
     document.getElementById('teacherCount').textContent = state.teachers.length;
     if (!state.teachers.length) {
-      tbody.innerHTML = '<tr><td colspan="6" class="empty-cell">Chưa có giáo viên nào — bấm "➕ Thêm giáo viên" hoặc nhập từ Excel.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-cell">Chưa có giáo viên nào — bấm "<i class="fa-solid fa-plus" aria-hidden="true"></i> Thêm giáo viên" hoặc nhập từ Excel.</td></tr>';
       return;
     }
     tbody.innerHTML = state.teachers.map((t) => `
@@ -394,7 +394,7 @@
   function openTeacherModal(code) {
     const t = code ? state.teachers.find((x) => x.id === code) : null;
     teacherModalEditingCode = code || null;
-    document.getElementById('teacherModalTitle').textContent = code ? '✏️ Sửa giáo viên' : '➕ Thêm giáo viên';
+    document.getElementById('teacherModalTitle').textContent = code ? 'Sửa giáo viên' : 'Thêm giáo viên';
     document.getElementById('f-teacher-code').value = t ? t.code : '';
     document.getElementById('f-teacher-code').disabled = !!code; // mã NV là ID, không đổi được sau khi tạo
     document.getElementById('f-teacher-name').value = t ? t.name : '';
@@ -418,7 +418,7 @@
     const name = document.getElementById('f-teacher-name').value.trim();
     const phone = document.getElementById('f-teacher-phone').value.trim();
     const address = document.getElementById('f-teacher-address').value.trim();
-    if (!code || !name) { toast('⚠️ Cần nhập Mã NV và Họ tên.'); return; }
+    if (!code || !name) { toast('Cần nhập Mã NV và Họ tên.'); return; }
 
     const btn = document.getElementById('teacherModalSaveBtn');
     btn.disabled = true;
@@ -426,14 +426,14 @@
       if (teacherModalEditingCode) {
         await window.EduRepositories.teachingTeacher.update(teacherModalEditingCode, { name, phone, address });
       } else {
-        if (state.teachers.some((t) => t.id === code)) { toast('⚠️ Mã NV này đã tồn tại.'); btn.disabled = false; return; }
+        if (state.teachers.some((t) => t.id === code)) { toast('Mã NV này đã tồn tại.'); btn.disabled = false; return; }
         await window.EduRepositories.teachingTeacher.createWithId(code, M.buildTeacher({ code, name, phone, address }));
       }
-      toast('✅ Đã lưu giáo viên');
+      toast('Đã lưu giáo viên');
       closeTeacherModal();
       await loadEverything();
     } catch (err) {
-      toast('❌ ' + friendlyError(err));
+      toast(friendlyError(err));
     } finally {
       btn.disabled = false;
     }
@@ -444,10 +444,10 @@
     if (!confirm(`Xoá giáo viên "${t ? t.name : code}"? Lịch đã nhập của giáo viên này ở các tuần vẫn còn trong hệ thống (không tự xoá theo), chỉ ẩn khỏi danh sách quản lý.`)) return;
     try {
       await window.EduRepositories.teachingTeacher.remove(code);
-      toast('🗑️ Đã xoá giáo viên');
+      toast('Đã xoá giáo viên');
       await loadEverything();
     } catch (err) {
-      toast('❌ ' + friendlyError(err));
+      toast(friendlyError(err));
     }
   }
 
@@ -588,7 +588,7 @@
     const cardsContainer = document.getElementById('weeklyCards');
     const progressBar = document.getElementById('weekProgressBar');
     if (!state.currentWeekKey) {
-      const msg = '<div class="empty-cell">Chưa có tuần nào — bấm "🧬 Tuần mới" hoặc "📥 Nhập từ Excel" để bắt đầu.</div>';
+      const msg = '<div class="empty-cell">Chưa có tuần nào — bấm "Tuần mới" hoặc "Nhập từ Excel" để bắt đầu.</div>';
       cardsContainer.innerHTML = msg;
       document.getElementById('dashMatrixBody').innerHTML = `<tr><td colspan="8" class="empty-cell">${msg.replace(/<[^>]+>/g, '')}</td></tr>`;
       if (progressBar) progressBar.classList.add('force-hide');
@@ -613,7 +613,7 @@
       progressBar.classList.toggle('force-hide', total === 0 || state.viewMode !== 'cards');
       progressBar.innerHTML = total ? `
         <div class="wk-progress-track"><div class="wk-progress-fill" style="width:${pct}%"></div></div>
-        <span class="wk-progress-label"><b>${done}/${total}</b> giáo viên đã nhập lịch tuần này${missing ? ` · <b class="wk-progress-warn">${missing}</b> chưa nhập` : ' · 🎉 đã đủ'}</span>` : '';
+        <span class="wk-progress-label"><b>${done}/${total}</b> giáo viên đã nhập lịch tuần này${missing ? ` · <b class="wk-progress-warn">${missing}</b> chưa nhập` : ' · đã đủ'}</span>` : '';
     }
 
     if (state.viewMode === 'dashboard') {
@@ -672,9 +672,9 @@
           <span><b>${stats.sessionsPrep}</b> soạn bài</span>
         </div>
         <div class="teacher-card-actions">
-          <button type="button" class="btn btn-ghost" data-edit-sched="${esc(t.code)}" ${canEdit ? '' : 'disabled title="Chỉ sửa được đúng lịch của chính mình"'}>✏️ Sửa lịch</button>
-          <button type="button" class="btn btn-ghost" data-pdf-sched="${esc(t.code)}" title="Xuất lịch tuần của ${esc(t.name)} ra PDF">🖨️ PDF</button>
-          <button type="button" class="btn btn-ghost" data-congtac-sched="${esc(t.code)}" title="Xuất Phiếu công tác của ${esc(t.name)} (tự điền theo lịch tuần này)">📋 Phiếu công tác</button>
+          <button type="button" class="btn btn-ghost" data-edit-sched="${esc(t.code)}" ${canEdit ? '' : 'disabled title="Chỉ sửa được đúng lịch của chính mình"'}><i class="fa-solid fa-pen" aria-hidden="true"></i> Sửa lịch</button>
+          <button type="button" class="btn btn-ghost" data-pdf-sched="${esc(t.code)}" title="Xuất lịch tuần của ${esc(t.name)} ra PDF"><i class="fa-solid fa-print" aria-hidden="true"></i> PDF</button>
+          <button type="button" class="btn btn-ghost" data-congtac-sched="${esc(t.code)}" title="Xuất Phiếu công tác của ${esc(t.name)} (tự điền theo lịch tuần này)"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i> Phiếu công tác</button>
         </div>
       </div>`;
     }).join('');
@@ -788,9 +788,9 @@
               <div class="dash-matrix-code">${esc(t.code)}${missingT ? ' · <span class="tc-missing-tag">chưa có lịch</span>' : ''}</div>
             </div>
             <div class="dash-matrix-name-actions">
-              <button type="button" class="dash-name-action-btn" data-edit-sched="${esc(t.code)}" title="${canEditRow ? `Sửa lịch của ${esc(t.name)}` : 'Chỉ sửa được đúng lịch của chính mình'}" ${canEditRow ? '' : 'disabled'}>✏️</button>
-              <button type="button" class="dash-name-action-btn" data-pdf-sched="${esc(t.code)}" title="Xuất PDF lịch của ${esc(t.name)}">🖨️</button>
-              <button type="button" class="dash-name-action-btn" data-congtac-sched="${esc(t.code)}" title="Xuất Phiếu công tác của ${esc(t.name)}">📋</button>
+              <button type="button" class="dash-name-action-btn" data-edit-sched="${esc(t.code)}" title="${canEditRow ? `Sửa lịch của ${esc(t.name)}` : 'Chỉ sửa được đúng lịch của chính mình'}" ${canEditRow ? '' : 'disabled'}><i class="fa-solid fa-pen" aria-hidden="true"></i></button>
+              <button type="button" class="dash-name-action-btn" data-pdf-sched="${esc(t.code)}" title="Xuất PDF lịch của ${esc(t.name)}"><i class="fa-solid fa-print" aria-hidden="true"></i></button>
+              <button type="button" class="dash-name-action-btn" data-congtac-sched="${esc(t.code)}" title="Xuất Phiếu công tác của ${esc(t.name)}"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i></button>
             </div>
           </div>
           <div class="dash-matrix-stats">
@@ -858,7 +858,7 @@
             const nameCellHtml = isVeryFirstRow ? `<td class="dash-matrix-name-col" rowspan="${totalRows}">${nameCellContent}</td>` : '';
             nameCellWritten = true;
             const buoiCellHtml = pi === 0
-              ? `<td class="dash-matrix-buoi-cell dash-sess-${block.sessionKey}" rowspan="${block.periods.length}">${block.sessionKey === 'morning' ? '☀️ Sáng' : '🌙 Chiều'}</td>`
+              ? `<td class="dash-matrix-buoi-cell dash-sess-${block.sessionKey}" rowspan="${block.periods.length}">${block.sessionKey === 'morning' ? '<i class="fa-solid fa-sun" aria-hidden="true"></i> Sáng' : '<i class="fa-solid fa-moon" aria-hidden="true"></i> Chiều'}</td>`
               : '';
             // Gắn class buổi NGAY TRÊN <tr> (không chỉ ô "Buổi") — để CSS tô
             // nền vàng nhạt (Sáng)/xanh lá nhạt (Chiều) cho CẢ HÀNG giống
@@ -900,14 +900,14 @@
     if (!t) return;
     const week = state.weeks.find((w) => w.id === state.currentWeekKey);
     const days = (state.schedulesByTeacher[teacherCode] && state.schedulesByTeacher[teacherCode].days) || M.emptyDays();
-    if (!window.EduTeachingSchedulePdf) { toast('⚠️ Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
+    if (!window.EduTeachingSchedulePdf) { toast('Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
     try {
       const extra = computeExtraWeekEvidence();
       const extraWeek = extra ? { days: await fetchExtraWeekDaysFor(teacherCode, extra), weekLabel: extra.label } : null;
       window.EduTeachingSchedulePdf.exportOne(t, days, week ? (week.label || week.id) : state.currentWeekKey, M, extraWeek);
     } catch (err) {
       console.error('[Lịch giảng dạy] Lỗi khi xuất PDF:', err);
-      toast('❌ Xuất PDF thất bại: ' + (err && err.message ? err.message : String(err)));
+      toast('Xuất PDF thất bại: ' + (err && err.message ? err.message : String(err)));
     }
   }
 
@@ -966,10 +966,10 @@
    * phụ minh chứng "tuần cuối tháng" — nút "🖨️ Xuất PDF tất cả" trên thanh
    * công cụ. */
   async function exportAllPdf() {
-    if (!state.currentWeekKey) { toast('⚠️ Hãy chọn 1 tuần trước.'); return; }
-    if (!window.EduTeachingSchedulePdf) { toast('⚠️ Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
+    if (!state.currentWeekKey) { toast('Hãy chọn 1 tuần trước.'); return; }
+    if (!window.EduTeachingSchedulePdf) { toast('Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
     const list = filteredTeachersWithDays();
-    if (!list.length) { toast('⚠️ Không có giáo viên nào để xuất (kiểm tra lại bộ lọc/tìm kiếm).'); return; }
+    if (!list.length) { toast('Không có giáo viên nào để xuất (kiểm tra lại bộ lọc/tìm kiếm).'); return; }
     const week = state.weeks.find((w) => w.id === state.currentWeekKey);
     const weekLabel = week ? (week.label || week.id) : state.currentWeekKey;
     // TRƯỚC ĐÂY không có try/catch quanh đây — 1 lỗi bất kỳ khi build PDF
@@ -995,7 +995,7 @@
       window.EduTeachingSchedulePdf.exportMany(fullList, weekLabel, M, extra ? extra.label : undefined);
     } catch (err) {
       console.error('[Lịch giảng dạy] Lỗi khi xuất PDF tất cả:', err);
-      toast('❌ Xuất PDF thất bại: ' + (err && err.message ? err.message : String(err)));
+      toast('Xuất PDF thất bại: ' + (err && err.message ? err.message : String(err)));
     }
   }
   document.getElementById('exportAllPdfBtn')?.addEventListener('click', exportAllPdf);
@@ -1116,7 +1116,7 @@
     const btn = document.getElementById('myWeekSaveBtn');
     const originalLabel = btn.textContent;
     btn.disabled = true;
-    btn.textContent = '⏳ Đang lưu...';
+    btn.innerHTML = '<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Đang lưu...';
     try {
       await window.EduRepositories.teachingSchedule.upsert(docId, {
         teacherCode: state.myTeacherCode,
@@ -1126,10 +1126,10 @@
         days: state.myWeekDraft,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
       });
-      toast('✅ Đã lưu lịch tuần của bạn');
+      toast('Đã lưu lịch tuần của bạn');
       await refreshOneSchedule(state.myTeacherCode, docId);
     } catch (err) {
-      toast('❌ ' + friendlyError(err));
+      toast(friendlyError(err));
     } finally {
       btn.disabled = false;
       btn.textContent = originalLabel;
@@ -1140,7 +1140,7 @@
     if (!state.myTeacherCode || !state.currentWeekKey || !state.myWeekDraft) return;
     const t = state.teachers.find((x) => x.id === state.myTeacherCode);
     const week = state.weeks.find((w) => w.id === state.currentWeekKey);
-    if (!window.EduTeachingSchedulePdf) { toast('⚠️ Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
+    if (!window.EduTeachingSchedulePdf) { toast('Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
     try {
       // Xuất đúng những gì đang hiển thị trên màn hình (kể cả thay đổi CHƯA
       // lưu) — giáo viên có thể muốn xem trước bản in trước khi bấm Lưu.
@@ -1151,7 +1151,7 @@
       window.EduTeachingSchedulePdf.exportOne(t || { code: state.myTeacherCode, name: '' }, state.myWeekDraft, week ? (week.label || week.id) : state.currentWeekKey, M, extraWeek);
     } catch (err) {
       console.error('[Lịch giảng dạy] Lỗi khi xuất PDF:', err);
-      toast('❌ Xuất PDF thất bại: ' + (err && err.message ? err.message : String(err)));
+      toast('Xuất PDF thất bại: ' + (err && err.message ? err.message : String(err)));
     }
   });
 
@@ -1340,7 +1340,7 @@
   document.getElementById('congTacRangeConfirmBtn')?.addEventListener('click', async () => {
     const r1s = document.getElementById('congTacRange1Start').value;
     const r1e = document.getElementById('congTacRange1End').value;
-    if (!r1s || !r1e) { toast('⚠️ Chọn đủ ngày bắt đầu/kết thúc của tuần hiện tại.'); return; }
+    if (!r1s || !r1e) { toast('Chọn đủ ngày bắt đầu/kết thúc của tuần hiện tại.'); return; }
     const ranges = [{ start: parseIsoDate(r1s), end: parseIsoDate(r1e) }];
     const week2Visible = !document.getElementById('congTacRange2Wrap').classList.contains('force-hide');
     if (week2Visible) {
@@ -1354,8 +1354,8 @@
   });
 
   document.getElementById('myWeekCongTacBtn')?.addEventListener('click', () => {
-    if (!state.myTeacherCode || !state.currentWeekKey || !state.myWeekDraft) { toast('⚠️ Chưa có lịch tuần để xuất.'); return; }
-    if (!window.EduCongTacPdf) { toast('⚠️ Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
+    if (!state.myTeacherCode || !state.currentWeekKey || !state.myWeekDraft) { toast('Chưa có lịch tuần để xuất.'); return; }
+    if (!window.EduCongTacPdf) { toast('Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
     openCongTacRangeModal(async (ranges) => {
       const t = state.teachers.find((x) => x.id === state.myTeacherCode);
       try {
@@ -1365,7 +1365,7 @@
         window.EduCongTacPdf.exportOne(t || { code: state.myTeacherCode, name: '' }, weekEntries, M);
       } catch (err) {
         console.error('[Lịch giảng dạy] Lỗi khi xuất Phiếu công tác:', err);
-        toast('❌ Xuất PDF thất bại: ' + (err && err.message ? err.message : String(err)));
+        toast('Xuất PDF thất bại: ' + (err && err.message ? err.message : String(err)));
       }
     });
   });
@@ -1375,8 +1375,8 @@
   function openCongTacModalFor(teacherCode) {
     const t = state.teachers.find((x) => x.id === teacherCode || x.code === teacherCode);
     if (!t) return;
-    if (!state.currentWeekKey) { toast('⚠️ Hãy chọn 1 tuần trước.'); return; }
-    if (!window.EduCongTacPdf) { toast('⚠️ Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
+    if (!state.currentWeekKey) { toast('Hãy chọn 1 tuần trước.'); return; }
+    if (!window.EduCongTacPdf) { toast('Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
     openCongTacRangeModal(async (ranges) => {
       try {
         const weekKeys = weekKeysOverlappingRanges(ranges);
@@ -1385,7 +1385,7 @@
         window.EduCongTacPdf.exportOne(t, weekEntries, M);
       } catch (err) {
         console.error('[Lịch giảng dạy] Lỗi khi xuất Phiếu công tác:', err);
-        toast('❌ Xuất PDF thất bại: ' + (err && err.message ? err.message : String(err)));
+        toast('Xuất PDF thất bại: ' + (err && err.message ? err.message : String(err)));
       }
     });
   }
@@ -1394,10 +1394,10 @@
    * tác, gộp mọi giáo viên (+ khoảng ngày đã chọn) vào 1 file duy nhất (xem
    * exportMany() trong js/export/teaching-schedule-cong-tac-pdf.js). */
   document.getElementById('exportAllCongTacBtn')?.addEventListener('click', () => {
-    if (!state.currentWeekKey) { toast('⚠️ Hãy chọn 1 tuần trước.'); return; }
-    if (!window.EduCongTacPdf) { toast('⚠️ Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
+    if (!state.currentWeekKey) { toast('Hãy chọn 1 tuần trước.'); return; }
+    if (!window.EduCongTacPdf) { toast('Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
     const list = filteredTeachersWithDays();
-    if (!list.length) { toast('⚠️ Không có giáo viên nào để xuất (kiểm tra lại bộ lọc/tìm kiếm).'); return; }
+    if (!list.length) { toast('Không có giáo viên nào để xuất (kiểm tra lại bộ lọc/tìm kiếm).'); return; }
     const week = state.weeks.find((w) => w.id === state.currentWeekKey);
     const weekLabel = week ? (week.label || week.id) : state.currentWeekKey;
     openCongTacRangeModal(async (ranges) => {
@@ -1413,7 +1413,7 @@
         window.EduCongTacPdf.exportMany(fullList, M, weekLabel);
       } catch (err) {
         console.error('[Lịch giảng dạy] Lỗi khi xuất PDF tất cả Phiếu công tác:', err);
-        toast('❌ Xuất PDF thất bại: ' + (err && err.message ? err.message : String(err)));
+        toast('Xuất PDF thất bại: ' + (err && err.message ? err.message : String(err)));
       }
     });
   });
@@ -1424,7 +1424,7 @@
   function openSchedModal(teacherCode) {
     const t = state.teachers.find((x) => x.id === teacherCode);
     if (!t) return;
-    if (!state.currentWeekKey) { toast('⚠️ Hãy chọn 1 tuần trước.'); return; }
+    if (!state.currentWeekKey) { toast('Hãy chọn 1 tuần trước.'); return; }
     schedModalTeacherCode = teacherCode;
     const existing = state.schedulesByTeacher[teacherCode];
     // Deep clone để sửa trong modal KHÔNG ảnh hưởng state cho tới khi bấm Lưu.
@@ -1432,7 +1432,7 @@
     schedModalSavedJson = JSON.stringify(schedModalDraftDays);
 
     const week = state.weeks.find((w) => w.id === state.currentWeekKey);
-    document.getElementById('schedModalTitle').textContent = `📅 ${t.name} — ${week ? week.label || week.id : state.currentWeekKey}`;
+    document.getElementById('schedModalTitle').textContent = `${t.name} — ${week ? week.label || week.id : state.currentWeekKey}`;
     renderSchedGrid();
     document.getElementById('schedModalOverlay').classList.add('show');
   }
@@ -1586,12 +1586,12 @@
         days: schedModalDraftDays,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
       });
-      toast('✅ Đã lưu lịch tuần');
+      toast('Đã lưu lịch tuần');
       const savedCode = schedModalTeacherCode;
       closeSchedModal();
       await refreshOneSchedule(savedCode, docId);
     } catch (err) {
-      toast('❌ ' + friendlyError(err));
+      toast(friendlyError(err));
     } finally {
       btn.disabled = false;
     }
@@ -1634,8 +1634,8 @@
     const weekKey = document.getElementById('f-week-date').value;
     const label = document.getElementById('f-week-label').value.trim();
     const cloneFrom = document.getElementById('f-week-clone').value;
-    if (!weekKey) { toast('⚠️ Chọn ngày Thứ 2 đầu tuần.'); return; }
-    if (state.weeks.some((w) => w.id === weekKey)) { toast('⚠️ Tuần này đã tồn tại — chọn ngày khác hoặc sửa trực tiếp ở tuần đó.'); return; }
+    if (!weekKey) { toast('Chọn ngày Thứ 2 đầu tuần.'); return; }
+    if (state.weeks.some((w) => w.id === weekKey)) { toast('Tuần này đã tồn tại — chọn ngày khác hoặc sửa trực tiếp ở tuần đó.'); return; }
 
     const btn = document.getElementById('newWeekConfirmBtn');
     btn.disabled = true;
@@ -1668,12 +1668,12 @@
         }
       }
 
-      toast(`✅ Đã tạo tuần "${weekLabel}"${clonedCount ? ` (đã sao chép lịch của ${clonedCount} giáo viên)` : ''}`);
+      toast(`Đã tạo tuần "${weekLabel}"${clonedCount ? ` (đã sao chép lịch của ${clonedCount} giáo viên)` : ''}`);
       closeNewWeekModal();
       state.currentWeekKey = weekKey;
       await loadEverything();
     } catch (err) {
-      toast('❌ ' + friendlyError(err));
+      toast(friendlyError(err));
     } finally {
       btn.disabled = false;
     }
@@ -1814,7 +1814,7 @@
    * lại logic đọc/parse Excel. Bước này KHÔNG đọc Firestore — chỉ đọc khi
    * bấm "Nhập dữ liệu", và chỉ đúng các tuần được tick. */
   function parseWorkbookArrayBufferAndOpenImport(arrayBuffer) {
-    if (!window.XLSX) { toast('⚠️ Chưa tải được thư viện đọc Excel, kiểm tra mạng rồi thử lại.'); return; }
+    if (!window.XLSX) { toast('Chưa tải được thư viện đọc Excel, kiểm tra mạng rồi thử lại.'); return; }
     const workbook = XLSX.read(arrayBuffer, { type: 'array', cellStyles: false, cellHTML: false, cellFormula: false });
     const weeks = [];
     const skippedSheets = [];
@@ -1825,10 +1825,10 @@
       if (parsed && parsed.teachers && parsed.teachers.length) weeks.push(parsed);
       else skippedSheets.push({ name: sheetName, reason: (parsed && parsed.reason) || 'no-header' });
     });
-    if (!weeks.length) { toast('⚠️ Không tìm thấy sheet lịch tuần hợp lệ nào trong file (thiếu cột "MÃ NV").'); return; }
+    if (!weeks.length) { toast('Không tìm thấy sheet lịch tuần hợp lệ nào trong file (thiếu cột "MÃ NV").'); return; }
 
     if (isSelfImport()) {
-      if (!state.myTeacherCode) { toast('⚠️ Tài khoản chưa được Admin liên kết mã NV — chưa nhập lịch được.'); return; }
+      if (!state.myTeacherCode) { toast('Tài khoản chưa được Admin liên kết mã NV — chưa nhập lịch được.'); return; }
       const knownWeekKeys = new Set(state.weeks.map((w) => w.id));
       const mine = [];
       weeks.forEach((w) => {
@@ -1843,7 +1843,7 @@
         mine.push(Object.assign({}, w, { teachers: own }));
       });
       if (!mine.length) {
-        toast(`⚠️ Không thấy mã NV "${state.myTeacherCode}" trong file — kiểm tra cột MÃ NV hoặc nhờ Admin nhập giúp.`);
+        toast(`Không thấy mã NV "${state.myTeacherCode}" trong file — kiểm tra cột MÃ NV hoặc nhờ Admin nhập giúp.`);
         return;
       }
       weeks.length = 0;
@@ -1931,7 +1931,7 @@
     const btn = document.getElementById('importConfirmBtn');
     const n = pendingImport.selected.size;
     btn.disabled = n === 0;
-    btn.textContent = n ? `💾 Nhập ${n} tuần` : 'Chưa chọn tuần nào';
+    btn.textContent = n ? `Nhập ${n} tuần` : 'Chưa chọn tuần nào';
   }
 
   document.getElementById('importWeekList').addEventListener('change', (e) => {
@@ -1957,14 +1957,14 @@
     const file = e.target.files && e.target.files[0];
     e.target.value = '';
     if (!file) return;
-    if (!window.XLSX) { toast('⚠️ Chưa tải được thư viện đọc Excel, kiểm tra mạng rồi thử lại.'); return; }
+    if (!window.XLSX) { toast('Chưa tải được thư viện đọc Excel, kiểm tra mạng rồi thử lại.'); return; }
     const reader = new FileReader();
-    reader.onerror = () => toast('⚠️ Không đọc được file, thử lại.');
+    reader.onerror = () => toast('Không đọc được file, thử lại.');
     reader.onload = (ev) => {
       try {
         parseWorkbookArrayBufferAndOpenImport(ev.target.result);
       } catch (err) {
-        toast('⚠️ ' + err.message);
+        toast(err.message);
       }
     };
     reader.readAsArrayBuffer(file);
@@ -1976,15 +1976,15 @@
   const syncSharePointBtn = document.getElementById('syncSharePointBtn');
   if (syncSharePointBtn) {
     syncSharePointBtn.addEventListener('click', async () => {
-      if (!window.EduSharePointSync) { toast('⚠️ Chưa tải được module đồng bộ SharePoint.'); return; }
+      if (!window.EduSharePointSync) { toast('Chưa tải được module đồng bộ SharePoint.'); return; }
       syncSharePointBtn.disabled = true;
       const originalText = syncSharePointBtn.textContent;
-      syncSharePointBtn.textContent = '⏳ Đang tải từ SharePoint...';
+      syncSharePointBtn.innerHTML = '<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Đang tải từ SharePoint...';
       try {
         const arrayBuffer = await window.EduSharePointSync.fetchLatestWorkbookArrayBuffer();
         parseWorkbookArrayBufferAndOpenImport(arrayBuffer);
       } catch (err) {
-        toast('⚠️ ' + err.message);
+        toast(err.message);
       } finally {
         syncSharePointBtn.disabled = false;
         syncSharePointBtn.textContent = originalText;
@@ -2003,7 +2003,7 @@
     document.getElementById('importOverrideChk').checked = false;
     const btn = document.getElementById('importConfirmBtn');
     btn.disabled = true;
-    btn.textContent = '💾 Nhập dữ liệu';
+    btn.innerHTML = '<i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Nhập dữ liệu';
     pendingImport = null;
   }
   document.getElementById('importModalCloseBtn').addEventListener('click', closeImportModal);
@@ -2184,7 +2184,7 @@
     const plan = pendingImport.plan;
     if (!plan) { resetImportPlan(); return; }
     btn.disabled = false;
-    btn.textContent = plan.writes.length ? `💾 Ghi ${plan.writes.length} thay đổi` : 'Đóng (không có gì để ghi)';
+    btn.textContent = plan.writes.length ? `Ghi ${plan.writes.length} thay đổi` : 'Đóng (không có gì để ghi)';
   }
 
   document.getElementById('importOverrideChk').addEventListener('change', (e) => {
@@ -2250,7 +2250,7 @@
     btn.disabled = true;
     try {
       if (!imp.plan) {
-        btn.textContent = '⏳ Đang so sánh với dữ liệu hiện có...';
+        btn.innerHTML = '<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Đang so sánh với dữ liệu hiện có...';
         await loadExistingForSelectedWeeks();
         if (pendingImport !== imp) return; // modal đã đóng trong lúc chờ
         imp.plan = buildImportPlan(document.getElementById('importOverrideChk').checked);
@@ -2262,21 +2262,21 @@
       }
       const plan = imp.plan;
       if (!plan.writes.length) {
-        toast('✅ Dữ liệu trong file giống hệt hệ thống — không cần ghi gì.');
+        toast('Dữ liệu trong file giống hệt hệ thống — không cần ghi gì.');
         closeImportModal();
         return;
       }
-      btn.textContent = `⏳ Đang ghi ${plan.writes.length} thay đổi...`;
+      btn.textContent = `Đang ghi ${plan.writes.length} thay đổi...`;
       await commitImportWrites(plan.writes);
       applyImportToLocalState(plan);
       const s = plan.stats;
       const keptConflicts = plan.override ? 0 : plan.conflicts.length;
-      toast(`✅ Đã nhập: ${s.schedNew} lịch mới, ${s.schedChanged} lịch đổi, ${s.schedSame} không đổi`
+      toast(`Đã nhập: ${s.schedNew} lịch mới, ${s.schedChanged} lịch đổi, ${s.schedSame} không đổi`
         + (s.ttWrites ? `, ${s.ttWrites} TKB lớp` : '')
         + (keptConflicts ? ` — giữ nguyên ${keptConflicts} ô TKB lớp` : ''));
       closeImportModal();
     } catch (err) {
-      toast('❌ ' + friendlyError(err));
+      toast(friendlyError(err));
       // Lỗi giữa chừng có thể đã ghi được 1 phần → bỏ kế hoạch + dữ liệu đã
       // đọc, lần bấm sau so sánh lại từ đầu với dữ liệu mới nhất.
       if (pendingImport === imp) { imp.existingByWeek.clear(); resetImportPlan(); }

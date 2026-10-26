@@ -43,3 +43,8 @@
 .theme-toggle:hover { box-shadow: var(--shadow-neu-raised), 0 0 0 3px rgba(47,64,178,.15) }
 
 .toast.show { opacity: 1 }
+
+/* Icon Font Awesome đứng trước chữ (thay cho emoji, 10/2026): emoji cũ tự có lề 2 bên, icon thì không
+   → 1 dấu cách là quá sát (trong nút flex còn bị bỏ hẳn). Thêm lề phải nhỏ cho icon đứng đầu. */
+:is(.tab-btn, .view-toggle-btn, .btn, button, label, h1, h2, h3, th, .detail-section-title) > i.fa-solid[aria-hidden="true"]:first-child { margin-right: .3em; }
+.info-btn > i.fa-solid[aria-hidden="true"]:first-child { margin-right: 0; } /* nút chỉ có icon */

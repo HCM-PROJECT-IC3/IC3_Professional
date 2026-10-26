@@ -108,18 +108,18 @@
   async function loadReport() {
     const fromKey = document.getElementById('reportFromWeek').value;
     const toKey = document.getElementById('reportToWeek').value;
-    if (!fromKey || !toKey) { toast('⚠️ Chọn đủ Từ tuần/Đến tuần trước.'); return; }
+    if (!fromKey || !toKey) { toast('Chọn đủ Từ tuần/Đến tuần trước.'); return; }
     // weekKey dạng "YYYY-MM-DD" nên so sánh CHUỖI == so sánh ngày, không
     // cần parse Date — cho phép chọn ngược (Đến tuần < Từ tuần) mà vẫn ra
     // đúng khoảng, đỡ bắt người dùng phải nhớ thứ tự.
     const [lo, hi] = fromKey <= toKey ? [fromKey, toKey] : [toKey, fromKey];
     const weeksInRange = state.weeks.filter((w) => w.id >= lo && w.id <= hi);
-    if (!weeksInRange.length) { toast('⚠️ Không có tuần nào trong khoảng đã chọn.'); return; }
+    if (!weeksInRange.length) { toast('Không có tuần nào trong khoảng đã chọn.'); return; }
 
     const btn = document.getElementById('reportLoadBtn');
     const originalLabel = btn.textContent;
     btn.disabled = true;
-    btn.textContent = '⏳ Đang tải...';
+    btn.innerHTML = '<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Đang tải...';
     try {
       // 1 lượt listByWeek()/tuần (đã có sẵn cho "📊 Tổng quan") — Promise.all
       // song song, số tuần chọn thường nhỏ (vài tuần đến vài chục), không
@@ -131,7 +131,7 @@
       document.getElementById('reportEmpty').classList.add('force-hide');
       document.getElementById('reportBody').classList.remove('force-hide');
     } catch (err) {
-      toast('❌ ' + (err && err.message ? err.message : String(err)));
+      toast((err && err.message ? err.message : String(err)));
     } finally {
       btn.disabled = false;
       btn.textContent = originalLabel;
@@ -181,7 +181,7 @@
       : `${first.label || first.id} → ${last.label || last.id} (${weeksInRange.length} tuần)`;
     const totalBuoi = Object.values(byType).reduce((a, b) => a + b, 0);
     const info = document.getElementById('reportRangeInfo');
-    if (info) info.textContent = `📆 ${rangeLabel} · 👤 ${teacherList.length} giáo viên có lịch · 🔢 ${totalBuoi} buổi ghi nhận`;
+    if (info) info.textContent = `${rangeLabel} · ${teacherList.length} giáo viên có lịch · ${totalBuoi} buổi ghi nhận`;
 
     renderTypeChart(byType);
     renderTeacherChart(teacherList);
@@ -292,7 +292,7 @@
     if (!msg) {
       msg = document.createElement('div');
       msg.className = 'chart-lib-error chart-empty';
-      msg.textContent = '⚠️ Không tải được thư viện biểu đồ (Chart.js). Kiểm tra kết nối mạng rồi thử lại.';
+      msg.innerHTML = '<i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Không tải được thư viện biểu đồ (Chart.js). Kiểm tra kết nối mạng rồi thử lại.';
       canvas.parentElement.appendChild(msg);
     }
     msg.style.display = 'flex';

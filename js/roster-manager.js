@@ -169,7 +169,7 @@
 
 Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần khi người khác vừa sửa danh sách trên máy khác — thao tác trên máy này đã tự cập nhật.`)) return;
     reloadBtn.disabled = true;
-    try { await loadEverything(true); toast('✅ Đã tải lại dữ liệu mới nhất.'); } finally { reloadBtn.disabled = false; }
+    try { await loadEverything(true); toast('Đã tải lại dữ liệu mới nhất.'); } finally { reloadBtn.disabled = false; }
   });
 
   /** @param {boolean} [forceRefresh] Bỏ qua cache — dùng sau khi ghi (thêm/sửa/xoá)
@@ -205,7 +205,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
       const isAdmin = myProfile.role === 'admin';
       const schools = Array.isArray(myProfile.schools) ? myProfile.schools.filter(Boolean) : [];
       if (!isAdmin && !schools.length) {
-        toast('⚠️ Bạn chưa được Admin gán trường nào để hỗ trợ — liên hệ Admin (Quản lý tài khoản → Trường được xem/hỗ trợ).');
+        toast('Bạn chưa được Admin gán trường nào để hỗ trợ — liên hệ Admin (Quản lý tài khoản → Trường được xem/hỗ trợ).');
         state.courses = []; state.classes = []; state.students = []; state.teachers = [];
         renderCourses(); renderClasses(); renderStudentClassFilter(); renderStudentSchoolFilter(); renderStudentTeacherFilter(); renderStudents();
         return;
@@ -250,7 +250,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
       await renameGenericCourseNames();
       await repairDuplicateCourses();
     } catch (err) {
-      toast('❌ Lỗi tải dữ liệu: ' + friendlyError(err));
+      toast('Lỗi tải dữ liệu: ' + friendlyError(err));
     }
   }
 
@@ -275,7 +275,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
     }
     if (renamed) {
       renderCourses();
-      toast(`🔧 Đã đổi tên ${renamed} khoá học "Khối N" → "Khoá học Khối N" cho rõ nghĩa (không nhầm với tên lớp)`);
+      toast(`Đã đổi tên ${renamed} khoá học "Khối N" → "Khoá học Khối N" cho rõ nghĩa (không nhầm với tên lớp)`);
     }
   }
 
@@ -322,7 +322,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
     if (deletedCount) {
       renderCourses();
       renderClasses();
-      toast(`🔧 Đã gộp ${deletedCount} khoá học trùng tên (chuyển ${mergedCount} lớp về khoá học giữ lại)`);
+      toast(`Đã gộp ${deletedCount} khoá học trùng tên (chuyển ${mergedCount} lớp về khoá học giữ lại)`);
     }
   }
 
@@ -358,7 +358,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
       renderClasses();
       renderStudentTeacherFilter();
       renderStudents();
-      toast(`🔧 Đã tự sửa GV → "${CORRECT_NAME}" cho ${badStudents.length} học sinh + ${badClasses.length} lớp (${SCHOOL}, ${CLASS_NAMES.join(' & ')})`);
+      toast(`Đã tự sửa GV → "${CORRECT_NAME}" cho ${badStudents.length} học sinh + ${badClasses.length} lớp (${SCHOOL}, ${CLASS_NAMES.join(' & ')})`);
     }
   }
 
@@ -408,7 +408,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
   function openCourseModal(id) {
     const course = id ? state.courses.find((c) => c.id === id) : null;
     modalMode = { type: 'course', editingId: id };
-    document.getElementById('modalTitle').textContent = id ? '✏️ Sửa khoá học' : '➕ Thêm khoá học';
+    document.getElementById('modalTitle').textContent = id ? 'Sửa khoá học' : 'Thêm khoá học';
     document.getElementById('modalBody').innerHTML = `
       <div class="form-group">
         <label for="f-course-name">Tên khoá học</label>
@@ -427,12 +427,12 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
   async function saveCourse() {
     const name = document.getElementById('f-course-name').value.trim();
     const level = document.getElementById('f-course-level').value;
-    if (!name) { toast('⚠️ Vui lòng nhập tên khoá học'); return; }
+    if (!name) { toast('Vui lòng nhập tên khoá học'); return; }
     // Chặn trùng tên (đã xảy ra thật — xem repairDuplicateCourses): 1 khối
     // chỉ nên có 1 khoá học, trùng tên chỉ gây rối chứ không có tác dụng gì.
     const dup = state.courses.find((c) =>
       stripDiacritics(c.name) === stripDiacritics(name) && c.id !== modalMode.editingId);
-    if (dup) { toast(`⚠️ Đã có khoá học tên "${dup.name}" rồi — sửa khoá học đó thay vì tạo trùng.`); return; }
+    if (dup) { toast(`Đã có khoá học tên "${dup.name}" rồi — sửa khoá học đó thay vì tạo trùng.`); return; }
     const data = { name, level };
     let savedId = modalMode.editingId;
     try {
@@ -445,11 +445,11 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
         savedId = id;
         logRosterChange('create_course', id, { name });
       }
-      toast('✅ Đã lưu khoá học');
+      toast('Đã lưu khoá học');
       closeModal();
       await syncOne('courses', window.EduRepositories.course, savedId);
     } catch (err) {
-      toast('❌ ' + friendlyError(err));
+      toast(friendlyError(err));
     }
   }
 
@@ -460,10 +460,10 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
     try {
       await window.EduRepositories.course.remove(id);
       logRosterChange('delete_course', id);
-      toast('🗑️ Đã xoá khoá học');
+      toast('Đã xoá khoá học');
       dropOne('courses', id);
     } catch (err) {
-      toast('❌ ' + friendlyError(err));
+      toast(friendlyError(err));
     }
   }
 
@@ -502,7 +502,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
   function openClassModal(id) {
     const cls = id ? state.classes.find((c) => c.id === id) : null;
     modalMode = { type: 'class', editingId: id };
-    document.getElementById('modalTitle').textContent = id ? '✏️ Sửa lớp học' : '➕ Thêm lớp học';
+    document.getElementById('modalTitle').textContent = id ? 'Sửa lớp học' : 'Thêm lớp học';
 
     const courseOptions = state.courses.map((c) =>
       `<option value="${c.id}" ${cls && cls.courseId === c.id ? 'selected' : ''}>${esc(c.name)}</option>`
@@ -546,7 +546,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
     const courseId = document.getElementById('f-class-course').value;
     const teacherId = document.getElementById('f-class-teacher').value;
     const teacherName = teacherId ? (state.teachers.find((t) => t.id === teacherId) || {}).name || '' : '';
-    if (!name) { toast('⚠️ Vui lòng nhập tên lớp'); return; }
+    if (!name) { toast('Vui lòng nhập tên lớp'); return; }
     const data = { name, school, courseId, teacherId, teacherName };
     let savedId = modalMode.editingId;
     try {
@@ -560,11 +560,11 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
         logRosterChange('create_class', id, { name });
         // Cập nhật classId cho học sinh nếu thêm lớp mới không ảnh hưởng — bỏ qua.
       }
-      toast('✅ Đã lưu lớp học');
+      toast('Đã lưu lớp học');
       closeModal();
       await syncOne('classes', window.EduRepositories.class, savedId);
     } catch (err) {
-      toast('❌ ' + friendlyError(err));
+      toast(friendlyError(err));
     }
   }
 
@@ -575,10 +575,10 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
     try {
       await window.EduRepositories.class.remove(id);
       logRosterChange('delete_class', id);
-      toast('🗑️ Đã xoá lớp học');
+      toast('Đã xoá lớp học');
       dropOne('classes', id);
     } catch (err) {
-      toast('❌ ' + friendlyError(err));
+      toast(friendlyError(err));
     }
   }
 
@@ -746,7 +746,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
   function exportRosterJson() {
     const payload = buildRosterExportPayload();
     if (!payload.count) {
-      toast('⚠️ Chưa có học sinh "Đang học" nào để xuất.');
+      toast('Chưa có học sinh "Đang học" nào để xuất.');
       return;
     }
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -759,7 +759,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
     a.remove();
     URL.revokeObjectURL(url);
     logRosterChange('export_json', null, { count: payload.count });
-    toast(`📤 Đã tải file — chép đè vào data/roster/students-active.json rồi commit + push lên GitHub (${payload.count} học sinh).`);
+    toast(`Đã tải file — chép đè vào data/roster/students-active.json rồi commit + push lên GitHub (${payload.count} học sinh).`);
   }
 
   document.getElementById('exportRosterJsonBtn').addEventListener('click', exportRosterJson);
@@ -769,22 +769,22 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
   async function publishRoster() {
     const payload = buildRosterExportPayload();
     if (!payload.count) {
-      toast('⚠️ Chưa có học sinh "Đang học" nào để cập nhật.');
+      toast('Chưa có học sinh "Đang học" nào để cập nhật.');
       return;
     }
     if (!confirm(`Cập nhật danh sách ${payload.count} học sinh "Đang học" cho trang làm bài? Học sinh thấy sau khoảng 1–2 phút.`)) return;
     const btn = document.getElementById('publishRosterBtn');
     btn.disabled = true;
-    btn.textContent = '⏳ Đang cập nhật…';
+    btn.innerHTML = '<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Đang cập nhật…';
     try {
       await window.EduAppsScript.call('publishRoster', { content: JSON.stringify(payload, null, 2) }, { timeoutMs: 2 * 60 * 1000 });
-      toast(`🚀 Đã cập nhật ${payload.count} học sinh — trang làm bài thấy sau khoảng 1–2 phút.`);
+      toast(`Đã cập nhật ${payload.count} học sinh — trang làm bài thấy sau khoảng 1–2 phút.`);
     } catch (err) {
       console.error('[roster-manager] Cập nhật roster thất bại:', err);
-      toast('❌ Cập nhật thất bại: ' + err.message + ' — dùng "🗂️ Xuất JSON (thủ công)" để dự phòng.');
+      toast('Cập nhật thất bại: ' + err.message + ' — dùng "Xuất JSON (thủ công)" để dự phòng.');
     } finally {
       btn.disabled = false;
-      btn.textContent = '🚀 Cập nhật cho học sinh';
+      btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i> Cập nhật cho học sinh';
     }
   }
   document.getElementById('publishRosterBtn').addEventListener('click', publishRoster);
@@ -1096,7 +1096,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
 
     const confirmBtn = document.getElementById('importConfirmBtn');
     confirmBtn.disabled = !(nNew + nUpdate);
-    confirmBtn.textContent = `💾 Nạp ${nNew + nUpdate} học sinh`;
+    confirmBtn.textContent = `Nạp ${nNew + nUpdate} học sinh`;
   }
 
   function openImportModal() {
@@ -1118,9 +1118,9 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
     const file = e.target.files && e.target.files[0];
     e.target.value = '';
     if (!file) return;
-    if (!window.XLSX) { toast('⚠️ Chưa tải được thư viện đọc Excel, kiểm tra mạng rồi thử lại.'); return; }
+    if (!window.XLSX) { toast('Chưa tải được thư viện đọc Excel, kiểm tra mạng rồi thử lại.'); return; }
     const reader = new FileReader();
-    reader.onerror = () => toast('⚠️ Không đọc được file, thử lại.');
+    reader.onerror = () => toast('Không đọc được file, thử lại.');
     reader.onload = (ev) => {
       try {
         const workbook = XLSX.read(ev.target.result, { type: 'array' });
@@ -1130,7 +1130,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
         renderImportPreview();
         openImportModal();
       } catch (err) {
-        toast('⚠️ ' + err.message);
+        toast(err.message);
       }
     };
     reader.readAsArrayBuffer(file);
@@ -1141,7 +1141,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
     if (!rows.length) return;
     const btn = document.getElementById('importConfirmBtn');
     btn.disabled = true;
-    btn.textContent = '⏳ Đang nạp...';
+    btn.innerHTML = '<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Đang nạp...';
     const isClassSheet = pendingImportFormat === 'classSheet';
     try {
       const db = window.EduFirebase.db;
@@ -1261,11 +1261,11 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
       if (ops > 0) await batch.commit();
 
       logRosterChange('import_excel', null, { count: rows.length, newClasses: newClassKeys.length, format: pendingImportFormat });
-      toast(`✅ Đã nạp ${rows.length} học sinh từ Excel` + (skippedUnchanged ? ` (bỏ qua ${skippedUnchanged} học sinh không thay đổi)` : ''));
+      toast(`Đã nạp ${rows.length} học sinh từ Excel` + (skippedUnchanged ? ` (bỏ qua ${skippedUnchanged} học sinh không thay đổi)` : ''));
       closeImportModal();
       loadEverything(true);
     } catch (err) {
-      toast('❌ ' + friendlyError(err));
+      toast(friendlyError(err));
     } finally {
       btn.disabled = false;
     }
@@ -1274,7 +1274,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
   function openStudentModal(id) {
     const student = id ? state.students.find((s) => s.id === id) : null;
     modalMode = { type: 'student', editingId: id };
-    document.getElementById('modalTitle').textContent = id ? '✏️ Sửa học sinh' : '➕ Thêm học sinh';
+    document.getElementById('modalTitle').textContent = id ? 'Sửa học sinh' : 'Thêm học sinh';
 
     const classOptions = state.classes.map((c) =>
       `<option value="${c.id}" ${student && student.classId === c.id ? 'selected' : ''}>${esc(c.name)}</option>`
@@ -1320,7 +1320,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
     const classId = document.getElementById('f-student-class').value;
     const avatarUrl = document.getElementById('f-student-avatar').value.trim();
     const status = document.getElementById('f-student-status').value;
-    if (!name) { toast('⚠️ Vui lòng nhập họ tên học sinh'); return; }
+    if (!name) { toast('Vui lòng nhập họ tên học sinh'); return; }
 
     const cls = state.classes.find((c) => c.id === classId);
     const data = {
@@ -1341,11 +1341,11 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
         savedId = id;
         logRosterChange('create_student', id, { name });
       }
-      toast('✅ Đã lưu học sinh');
+      toast('Đã lưu học sinh');
       closeModal();
       await syncOne('students', window.EduRepositories.studentRoster, savedId);
     } catch (err) {
-      toast('❌ ' + friendlyError(err));
+      toast(friendlyError(err));
     }
   }
 
@@ -1355,10 +1355,10 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
     try {
       await window.EduRepositories.studentRoster.remove(id);
       logRosterChange('delete_student', id);
-      toast('🗑️ Đã xoá học sinh');
+      toast('Đã xoá học sinh');
       dropOne('students', id);
     } catch (err) {
-      toast('❌ ' + friendlyError(err));
+      toast(friendlyError(err));
     }
   }
 

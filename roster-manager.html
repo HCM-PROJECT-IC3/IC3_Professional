@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🎓 Quản lý danh sách học sinh — EduQuiz</title>
+<title>Quản lý danh sách học sinh — EduQuiz</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/theme.css">
@@ -20,7 +20,7 @@
 
 <div class="topbar">
   <a href="ic3-dashboard.html" class="btn btn-ghost">← Dashboard</a>
-  <h1>🎓 Quản lý danh sách học sinh</h1>
+  <h1><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i> Quản lý danh sách học sinh</h1>
   <div class="spacer"></div>
   <span class="whoami" id="whoami"></span>
   <button type="button" class="theme-toggle" id="themeToggle" title="Chuyển đổi sáng/tối"></button>
@@ -36,16 +36,16 @@
 
   <!-- ============ TABS ============ -->
   <div class="tabs" role="tablist">
-    <button type="button" class="tab-btn active" data-tab="courses" role="tab">🏫 Khoá học</button>
-    <button type="button" class="tab-btn" data-tab="classes" role="tab">👥 Lớp học</button>
-    <button type="button" class="tab-btn" data-tab="students" role="tab">👤 Học sinh</button>
+    <button type="button" class="tab-btn active" data-tab="courses" role="tab"><i class="fa-solid fa-school" aria-hidden="true"></i> Khoá học</button>
+    <button type="button" class="tab-btn" data-tab="classes" role="tab"><i class="fa-solid fa-users" aria-hidden="true"></i> Lớp học</button>
+    <button type="button" class="tab-btn" data-tab="students" role="tab"><i class="fa-solid fa-user" aria-hidden="true"></i> Học sinh</button>
   </div>
 
   <!-- ============ TAB: COURSES ============ -->
   <section class="tab-panel active" id="panel-courses">
     <div class="panel-toolbar">
       <div class="panel-toolbar-info"><span id="courseCount">0</span> khoá học</div>
-      <button type="button" class="btn btn-primary" id="addCourseBtn">➕ Thêm khoá học</button>
+      <button type="button" class="btn btn-primary" id="addCourseBtn"><i class="fa-solid fa-plus" aria-hidden="true"></i> Thêm khoá học</button>
     </div>
     <div class="table-scroll">
       <table>
@@ -59,7 +59,7 @@
   <section class="tab-panel" id="panel-classes">
     <div class="panel-toolbar">
       <div class="panel-toolbar-info"><span id="classCount">0</span> lớp học</div>
-      <button type="button" class="btn btn-primary" id="addClassBtn">➕ Thêm lớp học</button>
+      <button type="button" class="btn btn-primary" id="addClassBtn"><i class="fa-solid fa-plus" aria-hidden="true"></i> Thêm lớp học</button>
     </div>
     <div class="table-scroll">
       <table id="classesTable">
@@ -74,22 +74,22 @@
     <div class="panel-toolbar">
       <div class="panel-toolbar-info"><span id="studentCount">0</span> học sinh</div>
       <div class="panel-toolbar-filters">
-        <input type="text" id="studentSearch" placeholder="🔍 Tìm theo tên hoặc MSSV...">
+        <input type="text" id="studentSearch" placeholder="Tìm theo tên hoặc MSSV...">
         <select id="studentSchoolFilter"><option value="">Tất cả trường</option></select>
         <select id="studentClassFilter"><option value="">Tất cả lớp</option></select>
         <select id="studentTeacherFilter"><option value="">Tất cả GV phụ trách</option></select>
       </div>
-      <button type="button" class="btn btn-secondary" id="importExcelBtn">📥 Nạp từ Excel</button>
+      <button type="button" class="btn btn-secondary" id="importExcelBtn"><i class="fa-solid fa-file-import" aria-hidden="true"></i> Nạp từ Excel</button>
       <input type="file" id="importExcelInput" accept=".xlsx,.xls" hidden>
-      <button type="button" class="btn btn-primary" id="publishRosterBtn" hidden>🚀 Cập nhật cho học sinh</button>
-      <button type="button" class="btn btn-secondary" id="exportRosterJsonBtn">🗂️ Xuất JSON (thủ công)</button>
-      <button type="button" class="btn btn-ghost" id="reloadRosterBtn" title="Đọc lại dữ liệu mới nhất từ máy chủ — chỉ cần khi người khác vừa sửa trên máy khác (tốn lượt đọc Firebase)">🔄 Tải lại</button>
+      <button type="button" class="btn btn-primary" id="publishRosterBtn" hidden><i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i> Cập nhật cho học sinh</button>
+      <button type="button" class="btn btn-secondary" id="exportRosterJsonBtn"><i class="fa-solid fa-folder-tree" aria-hidden="true"></i> Xuất JSON (thủ công)</button>
+      <button type="button" class="btn btn-ghost" id="reloadRosterBtn" title="Đọc lại dữ liệu mới nhất từ máy chủ — chỉ cần khi người khác vừa sửa trên máy khác (tốn lượt đọc Firebase)"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Tải lại</button>
       <span class="data-age" id="rosterDataAge"></span>
-      <button type="button" class="btn btn-primary" id="addStudentBtn">➕ Thêm học sinh</button>
+      <button type="button" class="btn btn-primary" id="addStudentBtn"><i class="fa-solid fa-plus" aria-hidden="true"></i> Thêm học sinh</button>
     </div>
     <div class="export-hint" id="exportRosterHint">
-      💡 Sau khi thêm/sửa/xoá/nạp Excel: Admin bấm <b>"🚀 Cập nhật cho học sinh"</b> — Apps Script tự đưa
-      danh sách lên trang làm bài (học sinh thấy sau 1–2 phút). Điều phối đào tạo bấm <b>"🗂️ Xuất JSON (thủ công)"</b>
+      <i class="fa-solid fa-lightbulb" aria-hidden="true"></i> Sau khi thêm/sửa/xoá/nạp Excel: Admin bấm <b>"<i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i> Cập nhật cho học sinh"</b> — Apps Script tự đưa
+      danh sách lên trang làm bài (học sinh thấy sau 1–2 phút). Điều phối đào tạo bấm <b>"<i class="fa-solid fa-folder-tree" aria-hidden="true"></i> Xuất JSON (thủ công)"</b>
       rồi gửi file cho Admin (file dùng chung cho mọi trường).
     </div>
     <div class="table-scroll">
@@ -105,13 +105,13 @@
 <div class="modal-overlay" id="importModalOverlay">
   <div class="modal-box">
     <div class="modal-header">
-      <h3>📥 Nạp học sinh từ Excel</h3>
+      <h3><i class="fa-solid fa-file-import" aria-hidden="true"></i> Nạp học sinh từ Excel</h3>
       <button type="button" class="modal-close" id="importModalCloseBtn">✕</button>
     </div>
     <div class="modal-body" id="importModalBody"><!-- điền động bằng JS --></div>
     <div class="modal-footer">
       <button type="button" class="btn btn-ghost" id="importCancelBtn">Huỷ bỏ</button>
-      <button type="button" class="btn btn-primary" id="importConfirmBtn">💾 Nạp danh sách</button>
+      <button type="button" class="btn btn-primary" id="importConfirmBtn"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Nạp danh sách</button>
     </div>
   </div>
 </div>
@@ -126,7 +126,7 @@
     <div class="modal-body" id="modalBody"><!-- điền động bằng JS --></div>
     <div class="modal-footer">
       <button type="button" class="btn btn-ghost" id="modalCancelBtn">Huỷ bỏ</button>
-      <button type="button" class="btn btn-primary" id="modalSaveBtn">💾 Lưu</button>
+      <button type="button" class="btn btn-primary" id="modalSaveBtn"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Lưu</button>
     </div>
   </div>
 </div>
