@@ -30,6 +30,7 @@
   const FRESH_MS = 2 * 60 * 1000;
   const FULL_RESYNC_MS = 24 * 60 * 60 * 1000;
   const SINGLE_TTL_MS = 10 * 60 * 1000;
+  const MISSING_TTL_MS = 6 * 60 * 60 * 1000; // uid chưa có hồ sơ (chỉ ảnh hưởng ảnh đại diện)
 
   const IDB_NAME = 'eduProfileCache';
   const IDB_STORE = 'kv';
@@ -175,7 +176,11 @@
     if (inflight) return (await inflight)[uid] || null;
     const state = await loadState();
     if (state.fullAt) return (await getAll())[uid] || null;
-    if (state.docs[uid] && Date.now() - (state.docAt[uid] || 0) < SINGLE_TTL_MS) return state.docs[uid];
+    // Nhớ cả kết quả "chưa có hồ sơ" (đa số giáo viên chưa tạo Trang Social Media): trước đây
+    // chỉ nhớ khi CÓ hồ sơ → mỗi lần mở ic3-dashboard/teacher-dashboard/teaching-schedule tốn
+    // 1 lượt đọc. Chính người đó tạo hồ sơ thì put() cập nhật cache ngay.
+    const age = Date.now() - (state.docAt[uid] || 0);
+    if (state.docAt[uid] && (state.docs[uid] ? age < SINGLE_TTL_MS : age < MISSING_TTL_MS)) return state.docs[uid] || null;
     const snap = await db().collection(COLLECTION).doc(uid).get();
     const data = snap.exists ? toPlain(snap.data()) : null;
     // Lấy lại state HIỆN TẠI (getAll() có thể vừa thay state mới trong lúc
@@ -200,6 +205,7 @@
       clean[k] = v;
     });
     state.docs[uid] = Object.assign({}, state.docs[uid], clean);
+    state.docAt[uid] = Date.now(); // vừa ghi → bản mới nhất, get() không cần hỏi lại
     saveState(state);
   }
 

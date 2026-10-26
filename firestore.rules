@@ -357,171 +357,38 @@ service cloud.firestore {
         // Chỉ máy giáo viên chủ phòng đọc tin học sinh gửi (1 lượt get() khi bắt đầu nghe)
         allow get, list: if isSignedIn()
           && get(/databases/$(database)/documents/arena_relay/$(code)).data.hostUid == request.auth.uid;
+        // Chống đốt lượt ghi bằng tài khoản ẩn danh (26/10/2026):
+        //   • at == giờ máy chủ, 2 lần ghi cách nhau > 0,5 giây (máy em tự giãn ≥ 1 giây,
+        //     js/arena/arena-relay.js UP_GAP_MS) — lệnh ghi bị rules từ chối không tính lượt ghi;
+        //   • chỉ ghi được vào phòng ĐANG MỞ (get() phòng = 1 lượt đọc/lần ghi) — trước đây ghi
+        //     được vào mã phòng bất kỳ, tạo document rác không ai xoá.
+        // Document up/{uid} không bị xoá theo phòng → TTL trên exp (firestore.indexes.json).
         allow create, update: if isSignedIn() && request.auth.uid == uid
-          && request.resource.data.keys().hasOnly(['m', 'exp'])
+          && request.resource.data.keys().hasOnly(['m', 'exp', 'at'])
           && request.resource.data.m is list && request.resource.data.m.size() <= 4
           && request.resource.data.exp is timestamp
-          && request.resource.data.exp < request.time + duration.value(1, 'd');
+          && request.resource.data.exp < request.time + duration.value(1, 'd')
+          && request.resource.data.at == request.time
+          && (resource == null || !('at' in resource.data)
+              || request.time > resource.data.at + duration.value(500, 'ms'))
+          && get(/databases/$(database)/documents/arena_relay/$(code)).data.exp > request.time;
         allow delete: if false;
       }
     }
 
-    // ---- Phòng thử thách trực tiếp; chỉ chứa dữ liệu trò chơi tạm thời ----
-    // Anonymous Auth tách UID từng thiết bị. Không lưu điểm thi/roster ở đây.
-    // Rules giới hạn quyền theo phòng và người chơi, nhưng Spark không thể
-    // xác minh logic chấm điểm chạy trên trình duyệt của host.
-    // Chống spam tạo phòng (tốn quota/ghi rác): mỗi người dẫn chỉ tạo được 1
-    // phòng mỗi 30 giây. Phòng chỉ tạo được khi cùng batch ghi live_hosts/{uid}.
+    // ---- Phòng "Thử thách cùng lớp" cũ (live-quiz.html) — ĐÃ BỎ ----
+    // live-quiz.html chỉ còn chuyển hướng sang arena.html (Phòng cả lớp, WebRTC, 0 Firebase);
+    // không trang nào đọc/ghi live_rooms/live_hosts nữa. Đóng hẳn (26/10/2026): trước đây
+    // players/answers cho tài khoản ẨN DANH ghi → bề mặt đốt lượt ghi không cần thiết.
+    // Dữ liệu cũ còn sót do TTL (expiresAt) tự xoá.
     match /live_hosts/{hostUid} {
-      allow read: if isSignedIn() && request.auth.uid == hostUid;
-      allow create, update: if (isAdmin() || isApprovedTeacher() || isCoordinator()) &&
-        request.auth.uid == hostUid &&
-        request.resource.data.keys().hasOnly(['lastCreatedAt']) &&
-        request.resource.data.lastCreatedAt == request.time &&
-        (resource == null || request.time > resource.data.lastCreatedAt + duration.value(30, 's'));
-      allow delete: if false;
+      allow read, write: if false;
     }
-
+    match /live_rooms/{roomCode}/{document=**} {
+      allow read, write: if false;
+    }
     match /live_rooms/{roomCode} {
-      function roomData() {
-        return get(/databases/$(database)/documents/live_rooms/$(roomCode)).data;
-      }
-      function isRoomHost() {
-        return isSignedIn() && roomData().hostUid == request.auth.uid;
-      }
-      function isRoomMember() {
-        return isRoomHost() || (isSignedIn() &&
-          exists(/databases/$(database)/documents/live_rooms/$(roomCode)/players/$(request.auth.uid)));
-      }
-
-      // Chủ phòng so trực tiếp resource.data.hostUid (document đang ghi) thay vì
-      // isRoomHost() (get() lại chính document phòng = thêm 1 lượt đọc MỖI lần ghi).
-      function isHostOfThisRoom() {
-        return isSignedIn() && resource.data.hostUid == request.auth.uid;
-      }
-
-      allow get: if isSignedIn() &&
-        (resource.data.hostUid == request.auth.uid ||
-          (resource.data.expiresAt is timestamp && resource.data.expiresAt > request.time));
-      allow list: if false;
-      allow create: if (isAdmin() || isApprovedTeacher() || isCoordinator()) &&
-        request.resource.data.keys().hasOnly([
-          'hostUid', 'status', 'topic', 'questionCount', 'questionIndex',
-          'currentQuestion', 'deadline', 'createdAt', 'expiresAt', 'questionMs', 'maxPlayers'
-        ]) &&
-        request.resource.data.questionMs in [10000, 20000, 30000] &&
-        request.resource.data.maxPlayers is number &&
-        // Tối đa 60 người/phòng: mỗi người thêm tốn ~(số câu + 1) lượt ghi và
-        // ~2 × số câu lượt đọc của hạn mức chung.
-        request.resource.data.maxPlayers >= 2 && request.resource.data.maxPlayers <= 60 &&
-        request.resource.data.hostUid == request.auth.uid &&
-        getAfter(/databases/$(database)/documents/live_hosts/$(request.auth.uid)).data.lastCreatedAt == request.time &&
-        request.resource.data.status == 'lobby' &&
-        request.resource.data.topic in [
-          'all', '1. Căn bản về công nghệ', '2. Công dân số',
-          '3. Quản lý thông tin', '4. Sáng tạo nội dung', '5. Giao tiếp',
-          '6. Hợp tác, cộng tác', '7. An toàn và bảo mật'
-        ] &&
-        request.resource.data.questionCount >= 5 && request.resource.data.questionCount <= 15 &&
-        request.resource.data.questionIndex == -1 &&
-        request.resource.data.createdAt == request.time &&
-        request.resource.data.expiresAt is timestamp &&
-        request.resource.data.expiresAt > request.time &&
-        request.resource.data.expiresAt < request.time + duration.value(2, 'h');
-      allow update: if isHostOfThisRoom() &&
-        request.resource.data.hostUid == resource.data.hostUid &&
-        request.resource.data.createdAt == resource.data.createdAt &&
-        request.resource.data.expiresAt == resource.data.expiresAt &&
-        request.resource.data.status in ['lobby', 'question', 'reveal', 'finished'] &&
-        request.resource.data.questionIndex >= -1 &&
-        request.resource.data.questionIndex < request.resource.data.questionCount &&
-        // nextQuestion: câu kế tiếp gửi kèm lần chốt câu trước (js/live-quiz.js —
-        // mỗi câu chỉ 1 lần ghi document phòng thay vì 2).
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'status', 'questionIndex', 'currentQuestion', 'nextQuestion', 'phaseAt', 'deadline', 'leaderboard', 'scores', 'streaks'
-        ]) &&
-        // phaseAt = giờ máy chủ lúc mở câu — người dẫn dùng để chấm khung giờ trả lời.
-        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['phaseAt']) ||
-          request.resource.data.phaseAt == request.time) &&
-        (!('nextQuestion' in request.resource.data) || request.resource.data.nextQuestion == null ||
-          (request.resource.data.nextQuestion is map &&
-            request.resource.data.nextQuestion.keys().hasOnly(['text', 'options']) &&
-            request.resource.data.nextQuestion.options is list &&
-            request.resource.data.nextQuestion.options.size() <= 6)) &&
-        (!('leaderboard' in request.resource.data) ||
-          (request.resource.data.leaderboard is list && request.resource.data.leaderboard.size() <= 10)) &&
-        (!('scores' in request.resource.data) ||
-          (request.resource.data.scores is map && request.resource.data.scores.size() <= 100)) &&
-        (!('streaks' in request.resource.data) ||
-          (request.resource.data.streaks is map && request.resource.data.streaks.size() <= 100));
-      allow delete: if isHostOfThisRoom();
-
-      match /players/{playerUid} {
-        function parentRoom() {
-          return get(/databases/$(database)/documents/live_rooms/$(roomCode)).data;
-        }
-        function parentHost() {
-          return isSignedIn() && parentRoom().hostUid == request.auth.uid;
-        }
-        allow get: if isSignedIn() && (request.auth.uid == playerUid || parentHost());
-        allow list: if isRoomMember() && request.query.limit <= 100;
-        // expiresAt = đúng hạn của phòng → TTL policy collection group "players" tự dọn.
-        allow create: if isSignedIn() && request.auth.uid == playerUid &&
-          parentRoom().status == 'lobby' && parentRoom().expiresAt > request.time &&
-          request.resource.data.keys().hasOnly(['uid', 'name', 'score', 'correct', 'joinedAt', 'expiresAt']) &&
-          (!('expiresAt' in request.resource.data) || request.resource.data.expiresAt == parentRoom().expiresAt) &&
-          request.resource.data.uid == request.auth.uid &&
-          request.resource.data.name is string && request.resource.data.name.size() > 0 &&
-          request.resource.data.name.size() <= 24 &&
-          request.resource.data.score == 0 && request.resource.data.correct == 0 &&
-          request.resource.data.joinedAt == request.time;
-        allow update: if parentHost() &&
-          request.resource.data.keys().hasOnly(['uid', 'name', 'score', 'correct', 'joinedAt', 'expiresAt']) &&
-          request.resource.data.uid == resource.data.uid &&
-          request.resource.data.name == resource.data.name &&
-          request.resource.data.joinedAt == resource.data.joinedAt &&
-          request.resource.data.score is number && request.resource.data.score >= 0 &&
-          request.resource.data.score <= 25000 &&
-          request.resource.data.correct is number && request.resource.data.correct >= 0 &&
-          request.resource.data.correct <= 15;
-        allow delete: if parentHost() || (isSignedIn() && request.auth.uid == playerUid);
-      }
-
-      match /answers/{playerUid} {
-        function parentRoom() {
-          return get(/databases/$(database)/documents/live_rooms/$(roomCode)).data;
-        }
-        function parentHost() {
-          return isSignedIn() && parentRoom().hostUid == request.auth.uid;
-        }
-        // KHÔNG get()/exists() document phòng/người chơi ở đây (đợt tối ưu 10/2026):
-        // mỗi lệnh đó = 1 lượt đọc tính phí, nhân với MỌI câu trả lời của MỌI học
-        // sinh (40 người × 15 câu × 2 = 1.200 lượt đọc/phòng chỉ để kiểm tra). Người
-        // dẫn (js/live-quiz.js § finalizeQuestion) tự bỏ câu trả lời của người ngoài
-        // danh sách, sai câu, hoặc gửi ngoài khung giờ (so submittedAt = giờ máy chủ).
-        // Rules vẫn chốt: đúng chủ, đúng schema, giờ máy chủ, mỗi câu chỉ gửi 1 lần
-        // (update phải tăng questionIndex), và chỉ 1 document/người (id = uid).
-        function validAnswer() {
-          return isSignedIn() && request.auth.uid == playerUid &&
-            request.resource.data.uid == request.auth.uid &&
-            request.resource.data.questionIndex is number &&
-            request.resource.data.questionIndex >= 0 && request.resource.data.questionIndex < 15 &&
-            request.resource.data.choiceIndex is number &&
-            request.resource.data.choiceIndex >= 0 && request.resource.data.choiceIndex <= 5 &&
-            request.resource.data.submittedAt == request.time &&
-            (!('expiresAt' in request.resource.data) ||
-              (request.resource.data.expiresAt is timestamp &&
-                request.resource.data.expiresAt < request.time + duration.value(3, 'h')));
-        }
-        allow get: if isSignedIn() && (request.auth.uid == playerUid || parentHost());
-        allow list: if parentHost() && request.query.limit <= 100;
-        allow create: if validAnswer() &&
-          request.resource.data.keys().hasOnly(['uid', 'questionIndex', 'choiceIndex', 'submittedAt', 'expiresAt']);
-        allow update: if validAnswer() &&
-          request.resource.data.keys().hasOnly(['uid', 'questionIndex', 'choiceIndex', 'submittedAt', 'expiresAt']) &&
-          request.resource.data.questionIndex > resource.data.questionIndex;
-        allow delete: if parentHost();
-      }
+      allow read, write: if false;
     }
 
     // ---- Roster: khoá học / lớp / học sinh thật (Điều phối đào tạo quản lý

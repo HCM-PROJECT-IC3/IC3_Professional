@@ -1,107 +1,25 @@
 /* ic3-dashboard.html — JS riêng cho trang Dashboard (tách từ inline <script>) */
 /* ========================================
-   ICON SET — cắt trực tiếp từ hình minh hoạ 7 chủ đề IC3
-   (Nội dung cơ bản, Công dân số, Quản lý thông tin,
-   Tạo nội dung, Giao tiếp, Cộng tác, Bảo mật) do người dùng cung
-   cấp — ảnh đặt tại img/deck-icon-*.png, mỗi ảnh là 1 ô vuông
-   icon 3D lấy nguyên từ tấm hình gốc.
-   ======================================== */
-/* ĐẶT TÊN KHỚP VỚI FILE ẢNH THẬT (trước đây tên key — monitor/shield/
-   lock/folder/palette/megaphone — không khớp icon thật sự render ra,
-   vd. key "lock" lại trỏ tới ảnh info-icon, dễ gây nhầm khi đọc code
-   lẫn khi gán icon cho từng bộ đề bên dưới). 6 bộ đề khối lớp không map
-   1-1 với 7 chủ đề IC3 nên KHÔNG gán icon theo đúng tên chủ đề (khối
-   lớp nào cũng học đủ 7 chủ đề) — chỉ chọn ảnh có TÔNG MÀU/SẮC THÁI phù
-   hợp với đối tượng: khối lớn (THCS) dùng icon nghiêm túc hơn (màn
-   hình, cộng đồng, bảo mật), khối nhỏ (Tiểu học) dùng icon vui tươi
-   hơn (bút vẽ, hội thoại, tài liệu) — tránh ví dụ icon khoá bảo mật
-   nghiêm trọng gán cho học sinh Tiểu học như trước. */
-const DECK_ICONS = {
-  tech:        'img/topic-icon-1-tech.png',        // màn hình máy tính
-  citizenship: 'img/topic-icon-2-citizenship.png',  // nhóm người / cộng đồng
-  info:        'img/topic-icon-3-info.png',         // tài liệu / thông tin
-  content:     'img/topic-icon-4-content.png',       // bút vẽ / sáng tạo nội dung
-  comm:        'img/topic-icon-5-comm.png',          // bong bóng hội thoại
-  safety:      'img/topic-icon-7-safety.png'         // khiên/khoá bảo mật
-};
-
-/* ========================================
    DATA STORE
+   Không còn bộ đề viết cứng: 6 bộ "THCS – Khối 6/7/8, Tiểu học – Khối 3/4/5" cũ
+   trỏ tới link ngoài wit.id.vn/20252026/... đã ngừng hoạt động → gỡ (26/10/2026).
+   "Bộ đề của tôi" giờ chỉ gồm đề giáo viên soạn từ ngân hàng câu hỏi (js/exam-builder.js)
+   và bộ đề tự thêm bằng link (lưu localStorage ic3_custom_sets).
    ======================================== */
-const QUIZ_SETS = [
-  {
-    id: 'class6',
-    title: 'THCS – Khối 6',
-    subtitle: 'IC3 GS5 – Trung học cơ sở',
-    questions: 30,
-    type: 'middle',
-    icon: DECK_ICONS.tech,
-    iconColor: '#5B8DEF',
-    coverGradient: 'linear-gradient(135deg, #CFE3FF 0%, #EAF3FF 100%)',
-    coverBg: '#CFE3FF',
-    link: 'https://wit.id.vn/20252026/THCS/Class6'
-  },
-  {
-    id: 'class7',
-    title: 'THCS – Khối 7',
-    subtitle: 'IC3 GS5 – Trung học cơ sở',
-    questions: 30,
-    type: 'middle',
-    icon: DECK_ICONS.citizenship,
-    iconColor: '#2FBF9B',
-    coverGradient: 'linear-gradient(135deg, #C9F3E6 0%, #E9FBF5 100%)',
-    coverBg: '#C9F3E6',
-    link: 'https://wit.id.vn/20252026/THCS/Class7'
-  },
-  {
-    id: 'class8',
-    title: 'THCS – Khối 8',
-    subtitle: 'IC3 GS5 – Trung học cơ sở',
-    questions: 30,
-    type: 'middle',
-    icon: DECK_ICONS.safety,
-    iconColor: '#8B5CF6',
-    coverGradient: 'linear-gradient(135deg, #E4D6FF 0%, #F3EBFF 100%)',
-    coverBg: '#E4D6FF',
-    link: 'https://wit.id.vn/20252026/THCS/Class8'
-  },
-  {
-    id: 'tiH3',
-    title: 'Tiểu học – Khối 3',
-    subtitle: 'IC3 GS5 – Tiểu học LV1',
-    questions: 25,
-    type: 'elementary',
-    icon: DECK_ICONS.content,
-    iconColor: '#34B368',
-    coverGradient: 'linear-gradient(135deg, #D4F5DC 0%, #EEFBF1 100%)',
-    coverBg: '#D4F5DC',
-    link: 'https://wit.id.vn/20252026/TiH/LV1_Class3'
-  },
-  {
-    id: 'tiH4',
-    title: 'Tiểu học – Khối 4',
-    subtitle: 'IC3 GS5 – Tiểu học LV2',
-    questions: 25,
-    type: 'elementary',
-    icon: DECK_ICONS.comm,
-    iconColor: '#E8A93D',
-    coverGradient: 'linear-gradient(135deg, #FFECC2 0%, #FFF8E6 100%)',
-    coverBg: '#FFECC2',
-    link: 'https://wit.id.vn/20252026/TiH/LV2_Class4'
-  },
-  {
-    id: 'tiH5',
-    title: 'Tiểu học – Khối 5',
-    subtitle: 'IC3 GS5 – Tiểu học LV3',
-    questions: 25,
-    type: 'elementary',
-    icon: DECK_ICONS.info,
-    iconColor: '#F2795A',
-    coverGradient: 'linear-gradient(135deg, #FFDCCF 0%, #FFEFE8 100%)',
-    coverBg: '#FFDCCF',
-    link: 'https://wit.id.vn/20252026/TiH/LV3_Class5'
-  }
-];
+const QUIZ_SETS = [];
+
+/* Lượt làm bài (ic3_sessions) còn lưu trên máy của 6 bộ đề đã gỡ — dọn 1 lần cho gọn
+   tab Báo cáo/Quản lý (không còn thẻ nào để xem các lượt này). */
+const RETIRED_SET_IDS = ['class6', 'class7', 'class8', 'tiH3', 'tiH4', 'tiH5'];
+(function pruneRetiredSessions() {
+  try {
+    const raw = localStorage.getItem('ic3_sessions');
+    if (!raw) return;
+    const list = JSON.parse(raw);
+    const kept = Array.isArray(list) ? list.filter(x => !x || RETIRED_SET_IDS.indexOf(x.setId) === -1) : [];
+    if (!Array.isArray(list) || kept.length !== list.length) localStorage.setItem('ic3_sessions', JSON.stringify(kept));
+  } catch (e) { /* storage bị chặn/hỏng — bỏ qua */ }
+})();
 
 /* Load custom sets from localStorage */
 function loadSets() {
@@ -122,8 +40,7 @@ let currentSearch = '';
 /* ========================================
    RENDER CARDS
    ======================================== */
-/* set.icon có thể là đường dẫn ảnh (img/deck-icon-*.png, dùng cho
-   6 bộ đề mặc định) hoặc 1 emoji do người dùng nhập khi tạo bộ đề
+/* set.icon có thể là đường dẫn ảnh (img/*.png) hoặc 1 emoji do người dùng nhập khi tạo bộ đề
    mới (modal "Tạo bộ đề mới") — hàm này render đúng loại tương ứng. */
 function renderDeckIcon(set) {
   const icon = set.icon || '🎯';
@@ -136,7 +53,7 @@ function renderDeckIcon(set) {
 /* Số "lượt" hiển thị trên thẻ = số phiên làm bài THẬT được ghi nhận
    trong localStorage (mỗi lần bấm "Bắt đầu làm bài" tạo 1 phiên) —
    trước đây là số hardcode cố định (124, 98...), không phản ánh gì
-   thực tế. Không có endpoint nhận điểm thật từ link ngoài (wit.id.vn)
+   thực tế. Không có endpoint nhận điểm thật từ link ngoài
    nên đây là số liệu THẬT duy nhất mà app tự ghi nhận được. */
 function getAttemptCount(setId) {
   return getSessions().filter(s => s.setId === setId).length;
@@ -163,8 +80,14 @@ function renderCards() {
   if (carouselObserver) { carouselObserver.disconnect(); carouselObserver = null; }
 
   if (sets.length === 0) {
-    track.innerHTML = `<div class="no-results"><span class="emoji"><i class="fa-solid fa-magnifying-glass"></i></span><p>Không tìm thấy bộ đề nào phù hợp.</p></div>`;
+    track.innerHTML = allSets.length === 0
+      // Chưa có bộ đề nào (không phải do lọc/tìm kiếm) → mời soạn đề đầu tiên
+      ? `<div class="no-results no-sets"><span class="emoji"><i class="fa-solid fa-book-open"></i></span>
+          <p><b>Chưa có bộ đề nào.</b><br>Soạn đề từ ngân hàng câu hỏi IC3/Spark, hoặc lấy ngay 1 bộ Ôn tập / Kiểm tra theo tiết có sẵn, rồi gửi link cho học sinh làm bài.</p>
+          <div class="no-sets-actions"><button type="button" class="btn-create" onclick="openExamBuilder({ fresh: true })"><i class="fa-solid fa-plus"></i> Soạn đề đầu tiên</button><button type="button" class="btn-create btn-create-ghost" onclick="EduExamBuilder.quickCreate()"><i class="fa-solid fa-wand-magic-sparkles"></i> Lấy đề Ôn tập / Kiểm tra có sẵn</button></div></div>`
+      : `<div class="no-results"><span class="emoji"><i class="fa-solid fa-magnifying-glass"></i></span><p>Không tìm thấy bộ đề nào phù hợp.</p></div>`;
     if (dotsWrap) dotsWrap.innerHTML = '';
+    track.style.paddingLeft = track.style.paddingRight = '';
     return;
   }
 
@@ -517,7 +440,7 @@ function getSessions() {
   try { return JSON.parse(localStorage.getItem('ic3_sessions') || '[]'); } catch { return []; }
 }
 
-/* Bộ đề dùng link ngoài (wit.id.vn) nên app không có cách nào nhận điểm
+/* Bộ đề dùng link ngoài nên app không có cách nào nhận điểm
    thật tự động — trước đây có 1 hàm simulateScore() BỊA điểm ngẫu nhiên
    sau 5s để demo, trông như thật nhưng hoàn toàn giả. Đã bỏ hàm đó;
    thay vào đó giáo viên tự nhập điểm thật (recordScore, gọi từ modal
@@ -1083,7 +1006,7 @@ function openModal(type) {
     </div>
     <div class="form-group">
       <label>Link ôn tập *</label>
-      <input id="newSetLink" type="url" placeholder="https://wit.id.vn/...">
+      <input id="newSetLink" type="url" placeholder="https://...">
     </div>
     <div class="form-group">
       <label>Biểu tượng (emoji)</label>

@@ -1,5 +1,54 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## "Bộ đề của tôi": gỡ 6 bộ đề link ngoài đã chết (26/10/2026)
+
+- Gỡ 6 bộ đề viết cứng "THCS – Khối 6/7/8", "Tiểu học – Khối 3/4/5" trong `js/dashboard.js` — chúng mở link `wit.id.vn/20252026/...` đã ngừng hoạt động. Lượt làm bài cũ của 6 bộ này (lưu trên máy, `ic3_sessions`) tự dọn khi mở trang.
+- "Bộ đề của tôi" giờ chỉ còn đề soạn từ ngân hàng câu hỏi (Soạn đề) và bộ đề tự thêm. Chưa có đề nào → hiện hướng dẫn + nút **"Soạn đề đầu tiên"** thay vì dải thẻ trống.
+- **Mới: nút "✨ Đề có sẵn"** (cạnh "Soạn đề mới", và trong màn hình trống): chọn cấp (IC3/Spark LV1-3) → chọn 1 bộ Ôn tập / Kiểm tra theo tiết PPCT hoặc Ôn tập cuối khóa (toàn câu All Key) → lưu ngay thành bộ đề có link làm bài. Bộ Kiểm tra đặt sẵn 45 phút. Lưu xong vẫn Sửa đề / đặt hạn nộp / in đề / mở Đấu trường như đề tự soạn (`EduExamBuilder.quickCreate`). **0 lượt Firebase** — chỉ đọc file tĩnh data/ic3, đề nằm trong link (bộ lớn nhất 194 câu → link ~930 ký tự).
+- Sửa mô tả banner "Kệ sách 3D": kệ là 7 cuốn sách chủ đề IC3, không phải danh sách bộ đề.
+- **Lỗi lãng phí Firebase đã sửa (`js/services/profile-cache-service.js`):** giáo viên CHƯA có hồ sơ Trang Social Media (đa số) tốn 1 lượt đọc `gvlab_profiles/{uid}` ở MỌI lần mở ic3-dashboard / teacher-dashboard / teaching-schedule — cache chỉ nhớ khi có hồ sơ. Nay nhớ cả "chưa có hồ sơ" 6 giờ; tự lưu hồ sơ thì hiện ngay. Đo bằng Chrome headless + Firebase giả: trước 1 lượt/lần mở, sau 0 lượt khi F5. Test: `profile-cache.test.js` (đỏ trên code cũ).
+- **Lỗi: Dashboard điều phối treo mãi ở "⏳ Đang tải dữ liệu…"** khi vừa mở trang quản trị khác (hồ sơ đăng nhập lấy từ cache phiên): `auth-guard.js` bắn `edu:ready` trước khi `js/coordinator/dashboard.js` (nạp sau ~45 script) kịp lắng nghe. Sửa tận gốc cho mọi trang: auth-guard chỉ mở khoá + bắn `edu:ready` sau `DOMContentLoaded`.
+- **Lỗi: báo nhầm "Firebase hết lượt — đặt lại 14-15h"** khi thực ra Google Sheet / Apps Script lỗi mạng (kết quả bài nộp đọc từ Sheet). Lỗi từ `apps-script-client.js` nay mang `source: 'apps-script'`; Dashboard giáo viên / điều phối báo đúng "Không đọc được kết quả bài nộp từ Google Sheet… bấm Làm mới dữ liệu". Lỗi cầu dao đọc hiện đúng lời giải thích của nó. Không gọi Firestore thay thế khi Sheet lỗi (giữ nguyên, tránh tốn lượt).
+- Test `js/services/__tests__/auth-guard.test.js` (DOM giả): tái hiện lỗi treo — đỏ trên code cũ, xanh trên code mới.
+- **Quản lý danh sách học sinh (roster-manager):** cache tăng 15 phút → **2 giờ** (mỗi lần hết hạn = đọc lại toàn bộ ~2.800 học sinh + lớp + khoá học; mọi thao tác trên máy này vẫn tự cập nhật cache ngay). Thêm nút **"🔄 Tải lại"** + dòng "Dữ liệu lúc HH:MM" để chủ động lấy thay đổi từ máy khác — hỏi xác nhận kèm số lượt đọc ước tính.
+- **Lịch giảng dạy:** bỏ 1 lượt đọc thừa `gvlab_profiles/{uid}` lúc mở trang (ảnh của chính mình lấy từ lần đọc toàn bộ hồ sơ mà trang vốn đã làm) — lần đầu 6 → 5 lệnh.
+- Đo lại số lệnh Firestore (Chrome headless + Firebase giả có dữ liệu mẫu, Apps Script bị chặn) — 9 trang quản trị đều mở khoá, 0 lỗi JS, **mọi lần F5: 0 lệnh**. Lần đầu: ic3-dashboard 2, admin-users 4-5, coordinator 3-5, teacher-dashboard 1-3, roster-manager 4, teaching-schedule 4 (danh sách học sinh dùng chung bản đệm giữa các trang). Trang học sinh (index, arena, mos-practice, battle-quiz, gom-ket-qua) và portfolio khi chưa bấm: không nạp Firebase.
+
+## Bộ "Bài N" đối chiếu lại với thư mục Quiz trên Drive; IC3 LV3 Bài 6 thêm 15 câu (26/10/2026)
+
+- Đối chiếu 211 file trong thư mục Drive "Quiz" (IC3 + Spark, mỗi cấp 35 bài) — giống hệt từng byte bản trong `Tài Liệu Bàn Giao NH 2026-2027/Quiz`. Cả 2.761 câu Củng cố **đã nằm đúng bộ Bài của mình** (0 câu lạc bài, 0 câu thừa, cột "Phần" khớp tên file).
+- Riêng `IC3 Level3/Quiz_Bai6_Kiem_chung_thong_tin.xlsx` (quiz thứ 2 của bài, không phải file Củng cố) có 15 câu chưa có ở bộ nào → thêm vào **"Bài 6. Kiểm chứng thông tin"** (20 → 35 câu; uid `ic3__lv3__bai6__q21`–`q35`, id 694–708): tiêu chí tác giả/trang web, ngụy biện (Ad Hominem, Red Herring, Appeal to Tradition/Authority, False Dilemma, Hasty Generalization), kiểm chứng thông tin do AI tạo.
+- Không đụng bộ chủ đề, Ôn tập/Kiểm tra theo tiết, Ôn tập cuối khóa (câu "Bài N" vẫn không được trộn vào các bộ đó).
+
+## Chống đốt hạn mức Firebase: cầu dao đọc + siết rules + TTL Đấu trường (26/10/2026)
+
+- **Cầu dao chống vòng lặp đọc (`js/firebase-config.js`):** mọi truy vấn (`Query.get`) được đếm lượt đọc tính phí, cộng chung mọi tab trên máy. Máy nào đọc ≥ 6.000 lượt trong 10 phút (dấu hiệu trang gọi truy vấn lặp / F5 liên hồi) thì truy vấn mới bị từ chối bằng lỗi `resource-exhausted` — nơi gọi xử lý như hết lượt (dùng cache của nó) — tới khi qua 10 phút. Trước đây 1 lỗi vòng lặp có thể đốt cạn 50.000 lượt đọc của **cả trường** trong vài phút. Đọc 1 document (hồ sơ đăng nhập) và kết quả từ cache máy không bị chặn. Xem nhanh: `EduFirebase.readBreaker.total()` trong F12. Test: `js/services/__tests__/read-breaker.test.js`.
+- **Lỗi: dữ liệu đường dự phòng Đấu trường không bao giờ bị xoá.** `arena_relay/{mã}/up/{uid}` (mỗi em dự phòng 1 document) không mất khi xoá phòng, phòng cũng còn mãi nếu tab giáo viên đóng ngang. Thêm TTL `arena_relay.exp` + `up.exp` và tắt index các map lớn (`out`, `blobs`, `m`) trong `firestore.indexes.json`.
+- **Rules `arena_relay/up`:** trước đây tài khoản ẩn danh bất kỳ ghi được vào **mã phòng không tồn tại** với tốc độ tuỳ ý → nay chỉ ghi được vào phòng đang mở, và 2 lần ghi phải cách nhau > 0,5 giây (`at` = giờ máy chủ; máy em tự giãn ≥ 1 giây, thường chỉ 1 lần ghi/câu nên không chậm hơn). Lệnh bị rules từ chối không tính lượt ghi. Đổi lại: thêm 1 lượt đọc (rules kiểm phòng) mỗi lần em ghi.
+- **Rules `live_rooms`/`live_hosts` đóng hẳn:** trang "Thử thách cùng lớp" cũ đã chuyển sang Phòng cả lớp WebRTC, không trang nào dùng nữa nhưng rules vẫn cho tài khoản ẩn danh ghi.
+- CI (`backend-consistency.test.js`) chặn gỡ nhầm các điểm trên.
+- **Thứ tự triển khai:** đẩy web trước (máy học sinh cần gửi trường `at`) → publish `firestore.rules` → `firebase deploy --only firestore:indexes` (hoặc tạo tay 2 TTL policy `arena_relay`/`exp`, `up`/`exp` — xem docs/FIREBASE-CHECKLIST.md §4). Không cần deploy lại Apps Script.
+
+## Phòng cả lớp: 🔁 "Đấu lại câu sai" ngay sau trận (26/10/2026)
+
+- Màn kết quả của giáo viên có nút **"Đấu lại N câu sai"**: 1 bấm là mở trận mới **cùng mã phòng, cùng kết nối** — cả lớp tự về sảnh, không phải nhập lại mã/tên. Trận mới chỉ gồm câu có ít nhất 1 bạn sai/bỏ trống, câu sai nhiều nhất hỏi trước, giữ chế độ chơi và số giây; điểm về 0, bạn bị mời ra không được đưa vào lại.
+- Máy học sinh kết nối thẳng giữ kết nối thêm 3 phút sau trận để nhận lượt đấu lại (có dòng nhắc "Giữ màn hình này"); em đi đường dự phòng Firestore vẫn ngắt ngay như cũ, khi đấu lại em nhập lại mã phòng là vào (vẫn đúng tên, đúng chỗ). Nhật ký câu sai / Sổ tay của em tính riêng cho từng trận; xu chỉ nhận ở trận đầu (tránh "cày" xu).
+- 0 lượt Firebase thêm (đường dự phòng chỉ mở lại khi có em cần, như trước). Hàm thuần `EduArenaRoomCore.missedDeck` / `rematch` có test trong `arena-room-core.test.js`; đã chạy thử thật qua WebRTC (1 giáo viên + 2 học sinh).
+
+## Sửa lỗi "đang làm vẫn tự đăng xuất sau 10 phút" (26/10/2026)
+
+- **Nguyên nhân:** mỗi tab đếm giờ riêng, nhưng đăng xuất Firebase áp dụng cho MỌI tab — đang sửa lịch ở tab này, tab khác để yên 10 phút là bị đăng xuất cả hai. Trình chiếu toàn màn hình/xem video (không đụng chuột) cũng bị tính là "không hoạt động".
+- **Sửa (`js/idle-logout.js`):** thời điểm thao tác cuối dùng chung mọi tab (localStorage); toàn màn hình hoặc video đang phát = đang dùng; tính theo giờ thật nên tab nền/máy ngủ dậy vẫn đúng. Không đọc/ghi Firebase.
+- **Thời gian theo ô "Ghi nhớ đăng nhập":** có tích (máy cá nhân) 60 phút; bỏ tích (máy dùng chung) 15 phút. Trang nào cần khác vẫn đặt `window.EDU_IDLE_LIMIT_MIN`. Tài khoản đang đăng nhập sẵn tính là có tích.
+- Bị đăng xuất thì đăng nhập lại sẽ **quay về đúng trang đang làm**; thông báo ghi đúng số phút.
+
+## Lịch giảng dạy: sửa lịch xong "Tổng quan" vẫn hiện tiết cũ + gợi ý khi sửa lịch (26/10/2026)
+
+- **Lỗi:** giáo viên sửa Thứ 3 còn 2 tiết nhưng "📊 Tổng quan" / thẻ vẫn hiện 3 tiết (lớp cũ ở tiết 2). Nguyên nhân: bảng luôn ưu tiên ô của tab "🗓️ TKB lớp", mà TKB không tự xoá ô khi Lịch tuần bớt tiết.
+- **Sửa:** Lịch tuần là nguồn gốc — buổi nào đã gõ mã lớp ở Lịch tuần thì tiết 1-5 lấy đúng theo đó (tiết trống = không dạy); chỉ buổi chưa gõ lớp, hoặc tiết > 5, mới lấy từ TKB (`EduModels.TeachingSchedule.effectivePeriods`). Mở tab TKB lớp cũng tự xoá các ô cũ đó (lưu TKB là sạch hẳn). Không thêm lượt đọc/ghi Firestore.
+- **Hộp Sửa lịch:** số tiết từng ngày ngay dưới nhãn Thứ (tự cập nhật khi gõ); ô tiết đã gõ lớp được tô; buổi có lớp mà chưa chọn "Loại hình" viền đỏ (các tiết đó chưa được tính vào thống kê); đóng khi chưa lưu sẽ hỏi lại; Ctrl+S lưu, Esc đóng.
+- Test: `js/models/__tests__/teaching-schedule.model.test.js`.
+
 ## Sảnh chờ Phòng cả lớp: bỏ "Khởi động 3 câu" (lộ đề trước), thay bằng 🔗 Nối từ và 🔤 Ghép chữ (27/10/2026)
 
 - **Vì sao bỏ:** "Khởi động 3 câu" lấy câu từ Sổ tay câu sai và bộ câu đang có trên máy. Bộ đó thường trùng bộ giáo viên sắp chiếu, nên học sinh có thể **xem/làm trước câu sắp thi**. Nay sảnh chờ **không dùng câu hỏi bài học** nữa. Test `arena-lobby-fun.test.js` chặn: `arena-lobby-fun.js` không được nhắc tới ngân hàng câu / Sổ tay; `arena-room.js` không được truyền bộ câu vào sảnh.

@@ -100,7 +100,8 @@
       // Đường dự phòng Firestore cho em không nối thẳng được (js/arena/arena-relay.js). false = tắt hẳn.
       relay: true,
       // Tối đa số em/phòng đi đường dự phòng. Trần chung mỗi ngày cho cả dự án đặt ở Apps Script
-      // (Script Properties RELAY_DAILY_SLOTS, mặc định 150 lượt em-trận ≈ 3.200 ghi + 10.000 đọc).
+      // (Script Properties RELAY_DAILY_SLOTS, mặc định 150 lượt em-trận ≈ 3.200 ghi + 13.000 đọc —
+      // gồm 1 lượt đọc rules kiểm "phòng còn mở" cho mỗi lần em ghi, thêm từ 26/10/2026).
       relayRoomMax: 25,
     },
 

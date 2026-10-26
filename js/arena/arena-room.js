@@ -28,6 +28,7 @@
   const D = global.EduArenaDrama;     // chữ lớn giữa màn hình (js/arena/arena-drama.js)
   const RH = global.EduArenaRoomHype; // không khí gameshow: lời bình, vinh danh, câu trend (js/arena/arena-room-hype.js)
   const LF = global.EduArenaLobbyFun; // trò khởi động lúc chờ: phản xạ, nối từ, ghép chữ, thả cảm xúc (js/arena/arena-lobby-fun.js)
+  const REMATCH_WAIT_MS = 3 * 60 * 1000; // hết trận: máy em giữ kết nối thẳng 3 phút để nhận "Đấu lại câu sai"
   const SUSPENSE_MS = 900;            // chốt câu → trống dồn rồi mới lộ đáp án (màn chiếu + máy học sinh, tính tại chỗ)
   const reduced = () => FX.reduced();
   const $ = (id) => document.getElementById(id);
@@ -452,6 +453,31 @@
     A.sfx('drumroll');
     setTimeout(() => { if (H.room !== room) return; A.sfx('win'); if (global.EduFX) global.EduFX.confetti({ count: 160 }); }, reduced() ? 0 : 2000);
   }
+  /** "🔁 Đấu lại câu sai": cùng mã phòng, cùng kết nối — cả lớp quay về sảnh, chỉ còn các câu vừa có bạn sai. */
+  function hostRematch() {
+    const old = H.room;
+    if (!old || old.phase !== 'end') return;
+    const missed = R.missedDeck(old);
+    if (!missed.length) { A.toast('Cả lớp đúng hết — không còn câu sai để đấu lại 🎉'); return; }
+    const count = missed.length;
+    const deck = old.mode === 'race' ? C.extendDeck(missed, count * 2, A.rng) : missed;
+    const room = R.rematch(old, deck, { count });
+    H.room = room;
+    resetHype();
+    H.ropeShown = undefined;
+    $('arRoom').classList.remove('is-climax', 'is-tense');
+    persist();
+    startRelay(room); // đường dự phòng đã tự đóng 20 giây sau khi hết trận → mở lại cho sảnh mới
+    const info = roomInfo();
+    H.conns.forEach((conn, cid) => {
+      const p = room.players[cid];
+      if (!p) return;
+      send(conn, { t: 'welcome', room: info, you: { name: p.name, face: p.face } });
+      send(conn, lobbyMsg());
+    });
+    renderHost();
+    A.toast(`Đấu lại ${count} câu cả lớp vừa sai — bấm Bắt đầu khi sẵn sàng.`);
+  }
   function hostKick(cid) {
     const room = H.room;
     const p = room && room.players[cid];
@@ -704,6 +730,7 @@
     const n = R.asked(room);
     const sum = R.summary(room);
     const hard = sum.perQuestion.map((x, i) => Object.assign({ i }, x)).filter((x) => x.of).sort((a, b) => a.correct / a.of - b.correct / b.of).slice(0, 3);
+    const missedN = R.missedDeck(room).length;
     const won = room.mode === 'tug' ? C.tugWinner(room.rope) : '';
     body().innerHTML = `<div class="ar-card ar-end">
       <h2 class="ar-h2 ar-center">${room.mode === 'tug' ? (won ? `🏆 ${C.TEAMS[won].icon} ${C.TEAMS[won].name} thắng! ·` : '🤝 Hai đội hoà ·')
@@ -713,7 +740,8 @@
       ${podiumHtml(board.slice(0, 3), UNIT[room.mode]).replace('class="ar-podium"', 'class="ar-podium is-slow"')}
       ${awardsHtml(RH.endAwards(room))}
       <div class="ar-row ar-center-row">
-        <button type="button" class="ar-btn ar-btn-play" data-act="csv"><i class="fa-solid fa-file-csv"></i> Tải bảng điểm (Excel)</button>
+        ${missedN ? `<button type="button" class="ar-btn ar-btn-play" data-act="rematch" title="Cùng mã phòng — học sinh không phải vào lại"><i class="fa-solid fa-rotate-right"></i> Đấu lại ${missedN} câu sai</button>` : ''}
+        <button type="button" class="ar-btn${missedN ? '' : ' ar-btn-play'}" data-act="csv"><i class="fa-solid fa-file-csv"></i> Tải bảng điểm (Excel)</button>
         <button type="button" class="ar-btn" data-act="sheet"><i class="fa-solid fa-table"></i> Lưu lên Google Sheet</button>
         <button type="button" class="ar-btn ar-btn-ghost" data-act="home"><i class="fa-solid fa-plus"></i> Phòng mới</button>
       </div>
@@ -790,7 +818,7 @@
   // HỌC SINH
   // ============================================================
   // log/imgs: câu hỏi + đáp án em đã gặp (ghi lúc công bố đáp án) → "Xem lại câu sai" + "Luyện lại" ở cuối trận.
-  const P = { peer: null, conn: null, code: '', joined: false, stopped: true, retry: 0, retryT: 0, room: null, me: null, q: null, myK: null, timer: 0, sentAt: 0, log: [], imgs: {} };
+  const P = { peer: null, conn: null, code: '', joined: false, stopped: true, retry: 0, retryT: 0, room: null, me: null, q: null, myK: null, timer: 0, sentAt: 0, log: [], imgs: {}, ended: false, endT: 0 };
 
   function machineId() {
     let id = store.get(CID_KEY, '');
@@ -810,6 +838,7 @@
     if (code.length !== R.CODE_LEN) { A.toast(`Mã phòng gồm ${R.CODE_LEN} ký tự.`); $('arJoinCode').focus(); return; }
     playerStop(false);
     if (code !== P.code) { P.log = []; P.imgs = {}; } // vào lại đúng phòng cũ (rớt mạng) thì giữ nhật ký
+    P.ended = false;
     Object.assign(P, { code, joined: false, stopped: false, retry: 0, room: null, me: null, q: null, myK: null, viaRelay: relayRemembered(code) });
     try { sessionStorage.setItem(JOIN_SS, code); } catch (e) { /* ignore */ }
     history.replaceState(null, '', location.pathname + '?phong=' + code);
@@ -912,7 +941,7 @@
   }
   function playerStop(sayBye) {
     P.stopped = true;
-    clearTimeout(P.retryT); clearInterval(P.timer);
+    clearTimeout(P.retryT); clearTimeout(P.endT); clearInterval(P.timer);
     if (sayBye) send(P.conn, { t: 'bye' });
     const peer = P.peer, conn = P.conn;
     P.peer = null; P.conn = null;
@@ -933,6 +962,12 @@
     if (m.t !== 'reveal' && m.t !== 'got' && m.t !== 'late' && m.t !== 'spellok' && m.t !== 'heistok') clearTimeout(P.revealT); // câu mới / kết thúc tới giữa lúc trống dồn
     switch (m.t) {
       case 'welcome':
+        // Hết trận rồi lại được chào → giáo viên bấm "Đấu lại câu sai": trận mới, nhật ký mới, tải lại trang vẫn tự vào lại
+        if (P.ended) {
+          clearTimeout(P.endT);
+          P.ended = false; P.log = []; P.imgs = {};
+          try { sessionStorage.setItem(JOIN_SS, m.room.code); } catch (e) { /* ignore */ }
+        }
         P.joined = true; P.retry = 0; P.room = m.room; P.me = m.you;
         if (P.conn && P.conn.relay) rememberRelay(P.code);
         setNet('');
@@ -1257,6 +1292,7 @@
   function renderPlayerEnd(m) {
     clearInterval(P.timer);
     const y = m.you;
+    P.ended = true;
     try { sessionStorage.removeItem(JOIN_SS); } catch (e) { /* ignore */ }
     if (!y) { playerStatus('<p>Trận đã kết thúc.</p><button type="button" class="ar-btn" data-act="home">Về Đấu trường</button>'); return; }
     // Xu thưởng (tính ở máy em như chơi 1 người) — mỗi phòng chỉ nhận 1 lần dù nối lại nhiều lần.
@@ -1306,7 +1342,13 @@
       ${wrong.length ? `<details class="ar-review" open>${A.reviewHtml(wrong)}</details>` : ''}</div>`;
     const pb = body().querySelector('[data-act="practice"]');
     if (pb) A.paintPracticeBtn(pb, wrong.length);
-    playerStop(false);
+    // Nối thẳng (0 Firebase): giữ kết nối thêm một lúc — thầy cô bấm "Đấu lại câu sai" là cả lớp về sảnh luôn.
+    // Đường dự phòng (Firestore) thì ngắt ngay để không tốn lượt đọc.
+    clearTimeout(P.endT);
+    if (P.conn && !P.conn.relay) {
+      body().querySelector('.ar-end').insertAdjacentHTML('beforeend', '<p class="ar-hint ar-center ar-room-staywait">Giữ màn hình này một lúc — thầy cô có thể mở <b>lượt đấu lại các câu cả lớp hay sai</b>.</p>');
+      P.endT = setTimeout(() => { if (P.ended) playerStop(false); }, REMATCH_WAIT_MS);
+    } else playerStop(false);
     const out = (m.mode === 'survival' && !(y.hp > 0)) || (m.mode === 'spell' && !(y.mp > 0)); // bị loại: không bắn pháo hoa dù đứng hạng cao
     A.sfx(out ? 'lose' : y.rank === 1 ? 'win' : y.rank <= 3 ? 'match' : 'flip');
     if (!out && y.rank <= 3 && global.EduFX) global.EduFX.confetti({ count: y.rank === 1 ? 140 : 70 });
@@ -1340,7 +1382,7 @@
   }
   function goHome() {
     if (H.room && !hostStop(true)) return;
-    if (!P.stopped && P.joined && !confirm('Rời phòng? Điểm đã có vẫn được giữ nếu em vào lại bằng mã phòng.')) return;
+    if (!P.stopped && P.joined && !P.ended && !confirm('Rời phòng? Điểm đã có vẫn được giữ nếu em vào lại bằng mã phòng.')) return;
     if (!P.stopped) playerStop(true);
     setNet('');
     A.show('arHome');
@@ -1360,6 +1402,7 @@
         break;
       }
       case 'csv': if (H.lastEntry) downloadCsv(H.lastEntry); break;
+      case 'rematch': hostRematch(); break;
       case 'sheet': saveToSheet(H.lastEntry, el); break;
       case 'home': goHome(); break;
       case 'packs': goHome(); $('arOpenPacks').click(); break;

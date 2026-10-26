@@ -84,6 +84,8 @@
       : firebase.auth.Auth.Persistence.LOCAL;
     await auth().setPersistence(persistence);
     const cred = await auth().signInWithEmailAndPassword(email, password);
+    // js/idle-logout.js: máy cá nhân (có tích) cho phép để yên lâu hơn máy dùng chung.
+    try { localStorage.setItem('edu_idle_remember', remember === false ? '0' : '1'); } catch (e) { /* bỏ qua */ }
     return cred.user;
   }
 

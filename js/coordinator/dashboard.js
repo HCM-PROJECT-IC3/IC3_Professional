@@ -45,7 +45,11 @@
       rawData = await window.EduCoordinatorData.loadAll(myProfile, { forceRefresh: !!forceRefresh });
     } catch (err) {
       const F = window.EduFirebase;
-      document.getElementById('loadingNote').textContent = F && F.isQuotaOrOffline(err)
+      document.getElementById('loadingNote').textContent = err && err.source === 'apps-script'
+        // Kết quả bài nộp đọc từ Google Sheet — lỗi ở đây KHÔNG phải Firebase hết lượt
+        ? '⚠️ Không đọc được kết quả bài nộp từ Google Sheet (' + err.message + '). Mạng chập chờn hoặc Apps Script đang bận — bấm "🔄 Làm mới dữ liệu" để thử lại.'
+        : err && err.breaker ? '⚠️ ' + err.message
+        : F && F.isQuotaOrOffline(err)
         ? '⚠️ ' + F.QUOTA_HINT + '. Máy này chưa có dữ liệu đã lưu — thử lại sau.'
         : '❌ Không tải được dữ liệu: ' + err.message;
       return;

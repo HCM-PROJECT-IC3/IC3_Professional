@@ -130,6 +130,67 @@
     });
     return Promise.race([write, timeout]).finally(() => clearTimeout(timer));
   }
+  // ── Cầu dao chống vòng lặp đọc (26/10/2026) ──
+  // 1 lỗi vòng lặp (trang gọi lại truy vấn liên tục, F5 liên hồi, mở lại tab hàng chục lần)
+  // đốt cạn 50.000 lượt đọc/ngày của CẢ dự án trong vài phút → mọi giáo viên bị khoá tới
+  // 14-15h chiều. Mỗi máy cộng dồn lượt đọc tính phí của mọi truy vấn (Query.get, chung mọi
+  // tab qua localStorage); vượt BURST_MAX_READS trong BURST_WINDOW_MS thì từ chối truy vấn
+  // MỚI bằng lỗi 'resource-exhausted' (nơi gọi coi như hết lượt → dùng cache của nó) tới khi
+  // cửa sổ trôi qua. Đọc 1 document (hồ sơ lúc đăng nhập...) và onSnapshot không bị chặn.
+  // Mức bình thường: trang nặng nhất ~3.000 lượt/lần mở (cả roster, sau đó cache 6 giờ).
+  const BURST_KEY = 'edu_fs_read_burst';
+  const BURST_WINDOW_MS = 10 * 60 * 1000;
+  const BURST_MAX_READS = 6000;
+  let burstMem = []; // localStorage bị chặn → chỉ đếm trong tab
+  function burstLog(now) {
+    let log = burstMem;
+    try {
+      const raw = localStorage.getItem(BURST_KEY);
+      if (raw !== null) log = JSON.parse(raw);
+    } catch (e) { /* dùng bộ đếm trong tab */ }
+    return (Array.isArray(log) ? log : []).filter((x) => Array.isArray(x) && x[0] > now - BURST_WINDOW_MS);
+  }
+  function burstTotal(now) {
+    return burstLog(now || Date.now()).reduce((s, x) => s + (Number(x[1]) || 0), 0);
+  }
+  function noteBurst(n) {
+    const now = Date.now();
+    const log = burstLog(now);
+    log.push([now, n]);
+    while (log.length > 300) log.shift();
+    burstMem = log;
+    try { localStorage.setItem(BURST_KEY, JSON.stringify(log)); } catch (e) { /* bỏ qua */ }
+  }
+  let burstWarned = false;
+  function burstError() {
+    const mins = Math.round(BURST_WINDOW_MS / 60000);
+    const err = new Error('Máy này vừa đọc Firebase quá nhiều (≥ ' + BURST_MAX_READS + ' lượt trong ' + mins +
+      ' phút) — tạm ngừng để không làm hết lượt miễn phí của cả trường. Thử lại sau vài phút.');
+    err.code = 'resource-exhausted';
+    err.breaker = true;
+    if (!burstWarned) {
+      burstWarned = true;
+      console.error('[EduQuiz] Cầu dao đọc Firestore đã ngắt: ' + burstTotal() + ' lượt trong ' + mins +
+        ' phút trên máy này. Nếu không cố ý tải lại nhiều lần, đây là dấu hiệu 1 trang gọi truy vấn lặp — báo lại cho admin.');
+    }
+    return err;
+  }
+  (function guardQueries() {
+    const Q = firebase.firestore && firebase.firestore.Query;
+    const proto = Q && Q.prototype;
+    if (!proto || typeof proto.get !== 'function' || proto.get.__eduBreaker) return;
+    const orig = proto.get;
+    const guarded = function (options) {
+      if (!(options && options.source === 'cache') && burstTotal() >= BURST_MAX_READS) return Promise.reject(burstError());
+      return orig.call(this, options).then((snap) => {
+        if (snap && !(snap.metadata && snap.metadata.fromCache)) noteBurst(Math.max(1, Number(snap.size) || 0));
+        return snap;
+      });
+    };
+    guarded.__eduBreaker = true;
+    proto.get = guarded;
+  })();
+
   /** Mã document ngẫu nhiên tạo ở máy (không tốn lượt đọc/ghi). */
   function newDocId(collection) {
     return firebase.firestore().collection(collection).doc().id;
@@ -144,6 +205,8 @@
     countSnap,
     isQuotaOrOffline,
     QUOTA_HINT,
+    // Cầu dao chống vòng lặp đọc — xem guardQueries() ở trên.
+    readBreaker: { total: () => burstTotal(), max: BURST_MAX_READS, windowMs: BURST_WINDOW_MS },
     // Lộ config ra ngoài để các trang cần tạo tài khoản HÀNG LOẠT (vd
     // admin-users.html → "📥 Nhập giáo viên từ Excel") có thể khởi tạo
     // THÊM 1 app instance PHỤ (firebase.initializeApp(config, 'ten-khac'))

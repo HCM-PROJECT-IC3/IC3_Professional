@@ -143,6 +143,7 @@
                css/dashboard.css), không tự chạy liên tục để tránh cảm giác
                "web AI" nhấp nháy vô tội vạ. -->
           <button type="button" class="btn-create" onclick="openExamBuilder({ fresh: true })"><i class="fa-solid fa-plus fa-beat"></i> Soạn đề mới</button>
+          <button type="button" class="btn-create btn-create-ghost" onclick="EduExamBuilder.quickCreate()" title="Lưu 1 bộ Ôn tập / Kiểm tra theo tiết (câu All Key) thành bộ đề có link gửi học sinh"><i class="fa-solid fa-wand-magic-sparkles"></i> Đề có sẵn</button>
           <div class="search-box">
             <input type="text" id="searchInput" placeholder="Tìm kiếm bộ đề..." oninput="filterCards()">
           </div>
@@ -181,7 +182,7 @@
           <span class="shelf-promo-icon"><i class="fa-solid fa-cube fa-beat-fade" style="--fa-animation-duration: 2.5s; --fa-beat-fade-opacity: 0.7; --fa-beat-fade-scale: 1.1;"></i></span>
           <span class="shelf-promo-text">
             <span class="shelf-promo-title">Kệ sách 3D tương tác</span>
-            <span class="shelf-promo-desc">Duyệt toàn bộ bộ đề trên kệ sách 3D xoay được — trực quan &amp; thú vị hơn danh sách thường.</span>
+            <span class="shelf-promo-desc">7 cuốn sách chủ đề IC3 trên kệ 3D xoay được — mở sách xem nội dung từng chủ đề, luyện tập Ribbon.</span>
           </span>
           <span class="shelf-promo-cta">Khám phá ngay <i class="fa-solid fa-arrow-right"></i></span>
         </button>

@@ -216,11 +216,19 @@
       return;
     }
     unlockedUid = user.uid;
-    document.documentElement.classList.remove('edu-guard-locked');
-    overlay.remove();
     window.EduCurrentUser = user;
     window.EduCurrentProfile = profile;
-    window.dispatchEvent(new CustomEvent('edu:ready', { detail: { user, profile } }));
+    // Chờ mọi <script> đồng bộ của trang chạy xong mới mở khoá + bắn "edu:ready". Hồ sơ lấy từ
+    // cache phiên (vừa mở trang quản trị khác) → onAuthReady có thể xong TRƯỚC khi các script
+    // nạp sau auth-guard.js (vd. js/coordinator/dashboard.js) kịp gắn listener → trang treo
+    // mãi ở "Đang tải dữ liệu..." (thấy thật trên coordinator-dashboard, 26/10/2026).
+    const fire = () => {
+      document.documentElement.classList.remove('edu-guard-locked');
+      overlay.remove();
+      window.dispatchEvent(new CustomEvent('edu:ready', { detail: { user: window.EduCurrentUser, profile: window.EduCurrentProfile } }));
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fire, { once: true });
+    else fire();
   }
 
   function boot() {

@@ -2044,6 +2044,68 @@
     }
   }
 
+  /**
+   * "Đề có sẵn": lưu 1 bộ Ôn tập / Kiểm tra theo tiết PPCT (toàn câu All Key, data/ic3 tĩnh)
+   * thành bộ đề trong "Bộ đề của tôi" — có link làm bài, Đấu trường, in đề, sửa tiếp được.
+   * 0 lượt Firebase: chỉ đọc meta.json + 1 file minitest, đề nằm gọn trong link.
+   */
+  async function quickCreate() {
+    try { await ensureReady(); } catch (err) { toast('Không tải được ngân hàng câu hỏi: ' + err.message, 'fa-triangle-exclamation'); return; }
+    const isReady = (n) => TIET_RE.test(n) || KT_RE.test(n); // gồm cả Ôn tập cuối khóa
+    const levels = [];
+    (B.meta.categories || []).forEach((c) => (c.levels || []).forEach((l) => {
+      if (Object.keys(l.minitests || {}).some(isReady)) levels.push({ cat: c.id, level: l.id, name: l.name || `${c.id} ${l.id}` });
+    }));
+    if (!levels.length) { toast('Ngân hàng chưa có bộ Ôn tập / Kiểm tra nào.', 'fa-triangle-exclamation'); return; }
+    let pick = levels[0];
+    let chosen = '';
+    const body = modal('<i class="fa-solid fa-wand-magic-sparkles"></i> Tạo nhanh từ đề có sẵn', '',
+      '<button class="btn-cancel" onclick="closeModal()">Huỷ</button><button class="btn-save" id="ebQuickGo" disabled><i class="fa-solid fa-floppy-disk"></i> Lưu vào Bộ đề của tôi</button>');
+    const draw = () => {
+      const names = Object.keys(levelMeta(pick.cat, pick.level)?.minitests || {}).filter(isReady);
+      if (!names.includes(chosen)) chosen = '';
+      body.innerHTML = `<p class="eb-matrix-hint">Bộ Ôn tập / Kiểm tra theo tiết PPCT — chỉ gồm câu đáp án gốc All Key. Lưu xong vẫn sửa, đặt hạn nộp, in đề hay mở Đấu trường như đề tự soạn.</p>
+        <div class="eb-chips">${levels.map((l, i) => `<button type="button" class="eb-chip${l === pick ? ' is-active' : ''}" data-qlevel="${i}">${esc(l.name)}</button>`).join('')}</div>
+        <div class="eb-matrix-table">${names.map((n) => `<label class="eb-matrix-row"><span>${esc(n)}</span><small>${mtCount(pick.cat, pick.level, n)} câu</small><input type="radio" name="ebQuickMt" value="${esc(n)}"${n === chosen ? ' checked' : ''}></label>`).join('')}</div>`;
+      body.querySelectorAll('[data-qlevel]').forEach((b) => b.addEventListener('click', () => { pick = levels[+b.dataset.qlevel]; draw(); }));
+      body.querySelectorAll('input[name="ebQuickMt"]').forEach((r) => r.addEventListener('change', () => { chosen = r.value; $('ebQuickGo').disabled = false; }));
+      $('ebQuickGo').disabled = !chosen;
+    };
+    draw();
+    $('ebQuickGo').addEventListener('click', async (e) => {
+      if (!chosen) return;
+      const btn = e.currentTarget;
+      btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tạo...';
+      try {
+        const list = (await fetchMinitest(pick.cat, pick.level, chosen)).filter((q) => q.uid);
+        if (!list.length) throw new Error('bộ câu trống');
+        const title = `${pick.name} — ${chosen}`.slice(0, 120);
+        const theme = { color: Math.floor(Math.random() * COVERS.length), icon: KT_RE.test(chosen) ? '🏆' : '📚' };
+        const type = pick.cat === 'Spark' ? 'elementary' : 'middle';
+        const duration = KT_RE.test(chosen) ? 45 : 0;
+        const exam = { title, desc: '', cat: pick.cat, level: pick.level, duration, shuffle: true, theme, deadline: 0, items: list.map((q) => ({ mt: chosen, uid: q.uid })) };
+        const set = {
+          id: 'exam_' + Date.now(), title,
+          subtitle: `Đề có sẵn · ${pick.name}`,
+          questions: list.length, type, icon: theme.icon, coverGradient: COVERS[theme.color],
+          link: await global.EduCustomExam.buildLink(exam),
+          builder: { v: 2, type, title, desc: '', theme, duration, shuffle: true, deadline: 0, cur: 0,
+            slides: list.map((q) => ({ cat: pick.cat, level: pick.level, mt: chosen, uid: q.uid })) },
+          updatedAt: Date.now(),
+        };
+        const sets = lsGet(SETS_KEY, []);
+        sets.push(set);
+        if (!lsSet(SETS_KEY, sets)) throw new Error('bộ nhớ trình duyệt đầy');
+        global.closeModal?.();
+        global.refreshSetsFromStorage?.();
+        toast(`Đã lưu "${title}" (${list.length} câu) vào Bộ đề của tôi`, 'fa-circle-check');
+      } catch (err) {
+        toast('Không tạo được đề: ' + err.message, 'fa-triangle-exclamation');
+        btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Lưu vào Bộ đề của tôi';
+      }
+    });
+  }
+
   async function copySetLink(setId) {
     const set = lsGet(SETS_KEY, []).find((s) => s.id === setId);
     if (!set) return;
@@ -2052,5 +2114,5 @@
     catch (e) { prompt('Sao chép link làm bài:', url); }
   }
 
-  global.EduExamBuilder = { show, copySetLink, _parseQuick: parseQuick };
+  global.EduExamBuilder = { show, copySetLink, quickCreate, _parseQuick: parseQuick };
 })(window);
