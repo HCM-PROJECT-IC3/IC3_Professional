@@ -1,5 +1,103 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## Bớt "giống AI": kệ sách tiếng Việt, trang quản trị phẳng, icon thay emoji (27/10/2026)
+
+- **Kệ sách 3D** (`quiz-shelf.html`, `js/volumes-carousel.js`): gỡ phần chữ mẫu tiếng Anh còn sót.
+  - Đã gỡ: "Seven field guides for learners", "Edition 02", "Codex · Agentic craft", "imagined edition", "SPECIMEN", "PLATE 01 / SYSTEM MOTIF". Tên bảng màu "Meadow green · bone · bronze" từng hiện thẳng ra giao diện, nay cũng bỏ.
+  - Mô tả, chương, nhãn trên trang sách nay là tiếng Việt. Tên 7 phần thi (Computing Fundamentals, Key Applications...) giữ nguyên vì là tên thật của IC3 GS6.
+  - Bảng thông tin cuốn sách bỏ các mục bịa (loại vải bìa, khổ sách) và thay bằng thông tin có ích: **Phần thi · Gồm · Trong kho đề · Hình bìa**.
+- **Trang quản trị** (`css/dashboard.css`):
+  - Bộ biến bóng neumorphism (bóng đôi sáng/tối) đổi sang viền mảnh 1px. Tên biến giữ nguyên.
+  - Thêm khối "GIAO DIỆN PHẲNG" cuối file. Khối này bỏ:
+    - nền loang 7 đốm pastel sau "Bộ đề của tôi";
+    - vạch gradient trôi ở đầu trang;
+    - các chỗ tô gradient tím→tím: ô icon, nút "Khám phá ngay", chấm carousel;
+    - avatar gradient cam→đỏ;
+    - quầng xanh phát sáng của nút "Soạn đề mới" ở nền tối.
+  - Thẻ kệ sách: icon không nhấp nháy, nút đổi thành "Mở kệ sách" dạng viền, mô tả cụ thể hơn.
+- **Màn "cần đăng nhập"** (`js/auth-guard.js`): nút gradient 3 màu có bóng phát sáng đổi thành nút navy đặc như nút Đăng nhập. Khung ảnh bỏ bóng lõm neumorphism.
+- **Emoji làm icon → Font Awesome** ở trang quản trị: Dashboard, Điều phối, Giáo viên, Danh sách học sinh, Lịch giảng dạy, Quản lý câu hỏi, Tài khoản, Tài liệu năm học.
+  - Khoảng 190 chỗ trong HTML và 250 chỗ trong JS.
+  - Trong HTML/chuỗi HTML: đổi thành `<i class="fa-solid …">`.
+  - Trong toast, `alert`/`confirm`, thuộc tính, `<option>`: chỉ bỏ emoji, ví dụ "✅ Đã lưu" thành "Đã lưu".
+  - Nút JS tự đặt lại nhãn cố định nay dùng `innerHTML` kèm icon, nên không mất icon sau khi bấm.
+  - Giữ nguyên: ✕ đóng, huy chương 🥇🥈🥉 trong bảng đua, icon bộ đề do giáo viên tự chọn, comment trong mã.
+  - `css/admin-common.css` thêm lề sau icon đứng đầu. Emoji cũ tự có lề hai bên, icon thì không nên chữ bị dính sát.
+  - Không đổi gom-ket-qua.html: trang này chạy offline và không nạp Font Awesome.
+- Đã chạy thử trong Chrome headless với Firebase giả, chặn mạng ngoài: chụp trước/sau ic3-dashboard (sáng + tối), quiz-shelf, lịch giảng dạy, quản lý câu hỏi, danh sách học sinh, điều phối, màn cần đăng nhập. Không có lỗi JS. `check-js` và toàn bộ unit test đạt.
+
+## Gọi Tên Vui + Đấu trường: nhạc nền dồn dập, thẻ lật ôn câu sai, mưa biểu tượng theo trò (26/10/2026) — 0 byte mạng
+
+- **Nhạc nền tự tổng hợp** (`EduSFX.music(level)` trong `js/game-sfx.js`): vòng hợp âm C – Am – F – G có trống, bass và giai điệu rải, tự tổng hợp nên không cần file nhạc. Có 3 mức:
+  - mức 1: vui nhộn, 112 nhịp/phút;
+  - mức 2: hồi hộp, 138 nhịp/phút, thêm trống con (5 giây cuối);
+  - mức 3: nước rút, 166 nhịp/phút, hi-hat dồn, giai điệu lên quãng tám (2 giây cuối).
+  - Gọi tên: chơi từ lúc "Đi!" tới khi soi đèn; lúc soi đèn tắt để nghe trống dồn.
+  - Đấu trường Chơi một mình: chơi trong lúc đọc câu hỏi, tắt khi em chốt đáp án hoặc rời màn chơi.
+  - Phòng cả lớp: chỉ phát trên **máy giáo viên** (loa máy chiếu). Máy học sinh không phát, để lớp không loạn tiếng.
+  - Tắt tiếng là im luôn. Tab bị ẩn thì tạm dừng.
+- **Lật thẻ ôn nhanh** (`js/arena/arena-flash.js`): ở màn kết thúc (Chơi một mình và Phòng cả lớp), mỗi câu sai thành 1 thẻ.
+  - Mặt trước là câu hỏi. Em tự nhớ lại đáp án rồi bấm lật: mặt sau có đáp án đúng và giải thích.
+  - **Nhớ rồi** thì thẻ bay đi. **Chưa nhớ** thì thẻ về cuối xấp để gặp lại.
+  - Hết xấp: pháo giấy và "Em đã nhớ hết N câu!".
+  - Phím tắt: Space lật thẻ, 1 = Chưa nhớ, 2 = Nhớ rồi.
+  - Mục "Xem lại câu sai" mở sẵn. Danh sách đáp án đầy đủ được thu vào "Xem cả danh sách đáp án", để không lộ đáp án trước khi em tự nhớ.
+- **Mưa biểu tượng theo trò** lúc công bố Gọi tên: mỗi trò một bộ, ví dụ Trộm trứng 🥚🐣, Tên lửa 🚀⭐🌙, Bóng bay 🎈, Câu cá 🐟💧, Đua bi 🔴🔵🟢 (`EduNamePickerGames.THEME`). Pháo hoa nay chỉ nổ ở hai bên, chừa khoảng giữa cho tên và chữ lớn.
+- Đã chạy thử trong Chrome headless:
+  - Luyện 3 câu sai: lật, bấm "Chưa nhớ" thì thẻ về cuối, nhớ hết thì ra "Đã nhớ 3/3".
+  - Gọi tên trò Tên lửa: mưa 🚀⭐🌙 hiện đúng.
+  - Bật, đổi mức và tắt nhạc không lỗi.
+  - `check-js` và toàn bộ unit test Đấu trường/Gọi tên đạt.
+
+## Gọi Tên Vui + Đấu trường: hiệu ứng lễ hội "đỉnh nóc, kịch trần" (26/10/2026) — 0 byte mạng
+
+Module mới `js/fx-party.js` (`EduParty`) dùng chung: **pháo hoa** canvas (bay lên có vệt sáng, nổ thành chùm lấp lánh), **mưa ruy băng**, **tia sáng xoay** sau khung, **chữ nảy từng ký tự** (tách theo cụm ký tự nên giữ đúng dấu tiếng Việt), **chớp viền màn hình** xanh/đỏ/vàng. Tự vẽ bằng canvas + CSS, không thư viện, không tải file. Máy đặt "giảm chuyển động" thì bỏ hết hiệu ứng, chỉ hiện chữ tĩnh. `js/game-sfx.js` có thêm âm tự tổng hợp: `boom` (pháo nổ), `cheer` (cả lớp vỗ tay), `sparkle`, `count`, `go`.
+
+- **Gọi Tên Vui**:
+  - Đếm **3 · 2 · 1 · Đi!** to giữa sân khấu, có tiếng, trước mỗi lượt.
+  - Khi "bắt nhầm" thì sân khấu rung và chớp đỏ.
+  - Lúc công bố: tên nảy lên từng chữ, sau khung có tia sáng vàng xoay, viền khung sáng nhịp. Kèm câu khen ngẫu nhiên, lành mạnh, ví dụ "Đỉnh nóc, kịch trần, bay phấp phới!" (khi lật kèo: "Lật kèo ngoạn mục!"). Pháo hoa, mưa ruy băng và tiếng vỗ tay đi cùng.
+  - Pháo giấy (`game-fx.js`) và pháo hoa nay hiện được cả khi sân khấu đang **toàn màn hình**. Trước đây chúng gắn vào `<body>` nên bị che mất.
+- **Đấu trường** (Chơi một mình + Phòng cả lớp):
+  - Chữ lớn (CHUỖI 5 CÂU, CÂU CUỐI, EM DẪN ĐẦU...) nảy từng chữ, có tia sáng phía sau. Riêng "BỊ VƯỢT MẶT" không có tia sáng.
+  - Trả lời đúng: ô đúng bung hạt lấp lánh, viền màn hình chớp xanh. Sai thì chớp đỏ.
+  - **Bùng cháy**: đúng liền từ 5 câu, khung câu hỏi và nhãn Chuỗi rực lửa cho tới khi sai.
+  - **Giúp nhớ lâu**: khi sai, đáp án đúng được tô dạ quang dần từ trái sang và đóng dấu **"Ghi nhớ!"**, để mắt dừng đúng chỗ cần nhớ trước khi đọc giải thích.
+  - Kết trận: hạng 1 có pháo hoa, mưa ruy băng và vỗ tay. Hạng 2–3 có mưa ruy băng. Hàm dùng chung là `EduArena.api.celebrate(place)`. Bục vinh danh của giáo viên và màn kết của học sinh trong phòng chỉ ăn mừng 1 lần, vẽ lại màn thì không bắn lại.
+  - Hiệu ứng của Phòng cả lớp tính tại chỗ từ gói tin có sẵn, không thêm tin nhắn hay byte nào.
+- Đã chạy thử trong Chrome headless:
+  - Gọi tên 6 bạn: chụp được cảnh đếm 3-2-1, cảnh công bố có tia sáng, chữ nảy, câu khen và pháo hoa.
+  - Đấu trường: luyện 7 câu, đúng 5 câu liền thì bật Bùng cháy, câu thứ 6 sai thì tắt và hiện dạ quang + "Ghi nhớ!".
+  - Không có lỗi JS. `check-js` và toàn bộ unit test Đấu trường/Gọi tên đều đạt.
+
+## Soạn đề theo nguồn dữ liệu: All Key · Theo bài (Quiz Drive) · Ngoài All Key (26/10/2026) — 0 Firebase
+
+`data/ic3/allkey-map.json` (791 câu chủ đề ↔ đề gốc All Key, kèm số câu trong đề gốc) trước đây chỉ dùng lúc sinh bộ Ôn tập/Kiểm tra. Nay Soạn đề tải file này (~36 KB, tĩnh) để biết nguồn của từng câu ngân hàng:
+- **All Key**: câu có trong đề gốc .quiz. Hiện cả tên đề và số câu, vd. "Test1 câu 10, OnTapSo2 câu 4".
+- **Bài N**: câu Củng cố theo bài (thư mục Quiz trên Drive), dùng để dạy và luyện tập.
+- **Ngoài All Key**: câu ngân hàng chủ đề cũ (GS6).
+
+Nhận biết câu Bài N theo uid `__baiN__`. Không tải được bản đồ thì chỉ mất nhãn, trình soạn vẫn chạy như cũ.
+
+- **Danh sách câu và khung soạn**: nhãn "Ngân hàng" đổi thành "All Key" / "Bài 12" / "Ngoài All Key". Dưới đáp án có dòng nguồn, bảng phải ghi đề gốc All Key.
+- **Tình trạng đề**: đếm câu theo nguồn (All Key · Theo bài · Ngoài All Key · Tự soạn). Đề có **thời gian Kiểm tra** mà lẫn câu không thuộc All Key thì hiện "Đề kiểm tra có N câu không thuộc All Key" kèm nút tới câu đó, và nút **"Đổi N câu ngoài All Key sang All Key"**. Nút này đổi cả loạt trong 1 bước, Ctrl+Z hoàn tác được. Câu Bài N không tự đổi, vì bộ Bài không có câu All Key (đúng quy ước không trộn câu Bài vào đề ôn/kiểm tra).
+- **Đổi câu khác / Đổi sang câu All Key** (khung soạn câu ngân hàng): lấy 1 câu cùng bộ nguồn, chưa có trong đề, không na ná câu nào khác trong đề, ưu tiên cùng dạng câu. Câu All Key chỉ đổi sang câu All Key. Hết câu phù hợp thì báo rõ.
+- **Ngăn Ngân hàng**: câu All Key có nhãn 🔑 All Key (rê chuột thấy đề gốc). Bộ chủ đề có thêm ô lọc **Mọi nguồn / Chỉ All Key (20) / Ngoài All Key (8)**. "Thêm ngẫu nhiên" và "Thêm tất cả" theo bộ lọc. Ô lọc ẩn với bộ toàn All Key (Ôn tập/Kiểm tra theo tiết) và bộ Bài N.
+- **Ma trận đề**: với nhóm Chủ đề có tuỳ chọn **"Chỉ bốc câu đáp án gốc All Key"** (bật sẵn). Cột số câu đổi thành "42/61 All Key", "Chia đều" không chia vượt số câu All Key của từng chủ đề, và thiếu câu thì báo "thiếu N câu All Key".
+- `EduQuestionSimilarity.matcher()` mới: kiểm tra 1 câu với cả đề, tính tập từ 1 lần (dùng khi chọn câu thay thế). Đã thêm test.
+- Chạy thử trong Chrome headless, Firebase giả, chặn mạng ngoài:
+  - Đề 11 câu (5 All Key, 1 Bài, 4 ngoài All Key, 1 tự soạn, có 15 phút): hiện đúng cảnh báo. Bấm "Đổi 4 câu…" thì còn 9 All Key, giữ nguyên câu Bài 1 và câu tự soạn.
+  - Ngân hàng chủ đề 7 (IC3 LV1) lọc ra 20/28 câu All Key, thêm ngẫu nhiên 8 câu đều là All Key.
+  - Ma trận "5. Giao tiếp" xin 9 câu thì bốc 8 câu All Key và báo thiếu.
+  - `check-js`, `validate-data`, toàn bộ unit test đạt.
+
+## Soạn đề: báo câu "na ná nhau" + phân bố câu theo bộ nguồn (26/10/2026) — 0 Firebase
+
+- **Câu na ná nhau** (Tình trạng đề, bảng phải): ngân hàng All Key có nhiều biến thể cùng ý nhưng khác uid (vd. IC3 LV1 · 7. An toàn và bảo mật có 4 bản "Lợi ích của việc duyệt web ở chế độ riêng tư/ẩn danh"), nên việc chặn trùng uid không bắt được. Nay bảng phải hiện "5 câu na ná nhau (2 nhóm)", mỗi nhóm là các nút số câu (bấm để tới câu đó), và danh sách câu bên trái có dấu ⧉ kèm chú thích "Na ná câu 6, 10". Đây chỉ là lời nhắc: vẫn lưu được, thầy cô tự quyết giữ lại để ôn kỹ hay xoá bớt.
+- Cách so khớp (`js/services/question-similarity.js`, thuần): so tập từ của câu hỏi (Jaccard ≥ 0,75, hoặc câu ngắn nằm ≥ 85% trong câu dài), **và** phần đáp án/mệnh đề phải chung ≥ 25% từ. Nhờ điều kiện thứ hai, các câu mở đầu giống nhau nhưng hỏi chuyện khác ("Với mỗi câu phát biểu…, hãy chọn Đúng hoặc Sai", "Ghép nối đúng ý nghĩa của các thuật ngữ sau") không bị báo nhầm. Chạy trên toàn bộ bộ chủ đề của 6 cấp: còn 35 nhóm, đều là cùng một tình huống (thường là cùng câu ở 2 dạng: chọn nhiều / dropdown). Có tính kết quả tạm, chỉ tính lại khi đề đổi.
+- **Phân bố câu**: dưới Độ dài link hiện số câu theo từng bộ nguồn (bài/chủ đề/tiết) và "Câu tự soạn", có thanh tỉ lệ, để thấy ngay đề có bị lệch về 1 chủ đề không. Từ 7 bộ trở lên thì gộp thành "Bộ khác". Đề chỉ có 1 nguồn thì không hiện.
+- Test: `js/services/__tests__/question-similarity.test.js` (4 biến thể thật gom 1 nhóm; câu mở đầu chung nhưng khác nội dung không bị gom; khác thẻ HTML; câu Đúng/Sai tự soạn). Chạy thử trong Chrome headless với Firebase giả, chặn mạng ngoài: đề 11 câu → đúng 2 nhóm, bấm số câu thì tới đúng câu, chế độ sáng/tối đều ổn. `check-js` và toàn bộ unit test đạt.
+
 ## "Bộ đề của tôi": gỡ 6 bộ đề link ngoài đã chết (26/10/2026)
 
 - Gỡ 6 bộ đề viết cứng "THCS – Khối 6/7/8", "Tiểu học – Khối 3/4/5" trong `js/dashboard.js` — chúng mở link `wit.id.vn/20252026/...` đã ngừng hoạt động. Lượt làm bài cũ của 6 bộ này (lưu trên máy, `ic3_sessions`) tự dọn khi mở trang.

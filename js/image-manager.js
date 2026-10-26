@@ -121,8 +121,8 @@ async function loadQuestions() {
   const gh = window.EduGitHubPublish;
   LOADED_FROM = gh && gh.hasToken() ? 'github' : 'site';
   loadState.textContent = LOADED_FROM === 'github'
-    ? '⏳ Đang tải ngân hàng câu hỏi mới nhất từ GitHub (data/ic3)…'
-    : '⏳ Đang tải ngân hàng câu hỏi (data/ic3)…';
+    ? 'Đang tải ngân hàng câu hỏi mới nhất từ GitHub (data/ic3)…'
+    : 'Đang tải ngân hàng câu hỏi (data/ic3)…';
   try {
     let metaText;
     try {
@@ -189,7 +189,7 @@ async function loadQuestions() {
     console.info(`[image-manager] Đã tải ${QUESTIONS.length} mục câu hỏi từ data/ic3 (${LOADED_FROM}) — 0 lượt đọc Firestore.`);
   } catch (err) {
     console.error(err);
-    loadState.textContent = '⚠️ Lỗi tải ngân hàng câu hỏi: ' + err.message;
+    loadState.innerHTML = '<i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Lỗi tải ngân hàng câu hỏi: ' + err.message;
   }
 }
 
@@ -239,12 +239,12 @@ async function restoreDraftIfAny() {
     changedIds = new Set(draft.changedIds || []);
     deletedCount = draft.deletedCount || 0;
     PENDING_IMAGES = draft.pendingImages || {};
-    toast(`📝 Đã khôi phục bản nháp chưa đẩy (${changedIds.size} câu sửa/thêm, ${deletedCount} câu xoá)`, 6000);
+    toast(`Đã khôi phục bản nháp chưa đẩy (${changedIds.size} câu sửa/thêm, ${deletedCount} câu xoá)`, 6000);
     return;
   }
   // Dữ liệu gốc đã đổi (ai đó vừa đẩy) — không tự áp bản nháp lên dữ liệu mới, cho tải về để không mất.
   if (confirm('Có BẢN NHÁP chưa đẩy, nhưng ngân hàng câu hỏi trên GitHub đã thay đổi kể từ lúc tạo bản nháp.\n\n' +
-      'Bấm OK để TẢI bản nháp về máy (file JSON — có thể nhập lại bằng "⬆️ Tải JSON cập nhật"), rồi bỏ bản nháp.\n' +
+      'Bấm OK để TẢI bản nháp về máy (file JSON — có thể nhập lại bằng "Tải JSON cập nhật"), rồi bỏ bản nháp.\n' +
       'Bấm Huỷ để giữ bản nháp (chưa làm gì).')) {
     downloadJson(buildBackupTree(draft.questions), `ban-nhap-cau-hoi-${new Date().toISOString().slice(0, 10)}.json`);
     window.EduDataCache.clear(DRAFT_KEY, true);
@@ -330,7 +330,7 @@ document.getElementById('uploadJsonInput').addEventListener('change', async (e) 
       return `- ${key}: ${before} → ${byFile.get(key).length} mục`;
     });
     if (!confirm(`File "${file.name}" sẽ THAY TOÀN BỘ câu hỏi của ${byFile.size} khối:\n${lines.join('\n')}\n\n` +
-        'Chỉ đổi trong trình duyệt (bản nháp) — sau đó bấm "🚀 Đẩy thay đổi" để học sinh thấy. Tiếp tục?')) return;
+        'Chỉ đổi trong trình duyệt (bản nháp) — sau đó bấm "Đẩy thay đổi" để học sinh thấy. Tiếp tục?')) return;
 
     byFile.forEach((qs, key) => {
       deletedCount += QUESTIONS.filter(x => x.fileKey === key).length;
@@ -345,10 +345,10 @@ document.getElementById('uploadJsonInput').addEventListener('change', async (e) 
     scanUsedPictureNumbers();
     buildFilterOptions();
     applyFilters();
-    toast(`✅ Đã nạp ${flat.length} mục vào ${byFile.size} khối (bản nháp) — bấm "🚀 Đẩy thay đổi" khi xong.`, 6000);
+    toast(`Đã nạp ${flat.length} mục vào ${byFile.size} khối (bản nháp) — bấm "Đẩy thay đổi" khi xong.`, 6000);
   } catch (err) {
     console.error(err);
-    toast('❌ Lỗi tải JSON lên: ' + err.message, 6000);
+    toast('Lỗi tải JSON lên: ' + err.message, 6000);
   }
 });
 
@@ -489,9 +489,9 @@ function renderCard(item) {
   const { q, docId } = item;
   const status = questionStatus(q);
   const tagHtml = status === 'have'
-    ? '<span class="qtag have">✅ Đã có ảnh</span>'
+    ? '<span class="qtag have"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Đã có ảnh</span>'
     : status === 'need'
-      ? '<span class="qtag need">🟡 Cần ảnh</span>'
+      ? '<span class="qtag need"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> Cần ảnh</span>'
       : '<span class="qtag skip">— Không cần</span>';
 
   const imgSrc = PENDING_IMAGES[q.imageUrl] || q.imageUrl;
@@ -500,7 +500,7 @@ function renderCard(item) {
     ? `<img src="${escAttr(imgSrc)}" alt="preview">`
     : emb.length
       ? `<div class="qimg-embedded" title="Ảnh nằm trong từng ô/thẻ của câu (sửa qua JSON)">${emb.map(f => `<img src="img/${escAttr(f)}" alt="${escAttr(f)}">`).join('')}</div>`
-      : `<div class="qimg-placeholder">🖼️</div>`;
+      : `<div class="qimg-placeholder"><i class="fa-solid fa-image" aria-hidden="true"></i></div>`;
   const fname = q.image_file ? `<div class="fname">${esc(q.image_file)}</div>` : '';
 
   const isStructured = q.type === 'single' || q.type === 'multi';
@@ -534,29 +534,29 @@ function renderCard(item) {
 
       <div class="optionsEditor" style="${isStructured ? '' : 'display:none'}">
         ${optionsHtml}
-        <button type="button" class="addOptBtn">➕ Thêm lựa chọn</button>
+        <button type="button" class="addOptBtn"><i class="fa-solid fa-plus" aria-hidden="true"></i> Thêm lựa chọn</button>
       </div>
 
-      <button type="button" class="advToggle">${isStructured ? '🛠️ Sửa dữ liệu nâng cao (JSON)' : '🛠️ Sửa dữ liệu (JSON) — loại câu hỏi này chỉnh qua đây'}</button>
+      <button type="button" class="advToggle">${isStructured ? '<i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i> Sửa dữ liệu nâng cao (JSON)' : '<i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i> Sửa dữ liệu (JSON) — loại câu hỏi này chỉnh qua đây'}</button>
       <div class="advBox ${isStructured ? '' : 'open'}">
         <textarea class="advTextarea" spellcheck="false">${advJson}</textarea>
       </div>
 
-      <div class="qbreadcrumb"><span>Câu ${esc(q.id ?? '?')}</span><span>${esc(q.uid || '')}</span>${changedIds.has(docId) ? '<span class="qtag need">✏️ Chưa đẩy</span>' : ''}</div>
-      ${(item.sets || []).length > 1 ? `<details class="qsets"><summary>📚 Dùng ở ${item.sets.length} bộ — sửa ở đây cập nhật cả ${item.sets.length}</summary><ul>${item.sets.map(n => `<li>${esc(n)}</li>`).join('')}</ul></details>` : ''}
+      <div class="qbreadcrumb"><span>Câu ${esc(q.id ?? '?')}</span><span>${esc(q.uid || '')}</span>${changedIds.has(docId) ? '<span class="qtag need"><i class="fa-solid fa-pen" aria-hidden="true"></i> Chưa đẩy</span>' : ''}</div>
+      ${(item.sets || []).length > 1 ? `<details class="qsets"><summary><i class="fa-solid fa-book" aria-hidden="true"></i> Dùng ở ${item.sets.length} bộ — sửa ở đây cập nhật cả ${item.sets.length}</summary><ul>${item.sets.map(n => `<li>${esc(n)}</li>`).join('')}</ul></details>` : ''}
       ${tagHtml}
 
       <div class="qactions">
         <label class="upload-label">
-          📤 Tải ảnh lên
+          Tải ảnh lên
           <input type="file" accept="image/*" class="fileInput">
         </label>
-        ${q.imageUrl ? `<button type="button" class="btn btn-danger btn-sm removeImgBtn">🗑️ Xoá ảnh</button>` : ''}
+        ${q.imageUrl ? `<button type="button" class="btn btn-danger btn-sm removeImgBtn"><i class="fa-solid fa-trash-can" aria-hidden="true"></i> Xoá ảnh</button>` : ''}
         <button type="button" class="btn btn-ghost btn-sm toggleSkipBtn">
-          ${status === 'skip' ? '➕ Đánh dấu cần minh hoạ' : '🚫 Không cần minh hoạ'}
+          ${status === 'skip' ? 'Đánh dấu cần minh hoạ' : 'Không cần minh hoạ'}
         </button>
-        <button type="button" class="btn saveBtn btn-sm saveQBtn">💾 Lưu câu hỏi</button>
-        <button type="button" class="btn btn-danger btn-sm deleteQBtn">🗑️ Xoá câu hỏi</button>
+        <button type="button" class="btn saveBtn btn-sm saveQBtn"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Lưu câu hỏi</button>
+        <button type="button" class="btn btn-danger btn-sm deleteQBtn"><i class="fa-solid fa-trash-can" aria-hidden="true"></i> Xoá câu hỏi</button>
       </div>
       <div class="url-row">
         <input type="text" class="urlInput" placeholder="...hoặc dán link ảnh (URL) rồi nhấn Enter" value="${q.imageUrl && !q.imageUrl.startsWith('data:') && !q.imageUrl.startsWith('img/') ? escAttr(q.imageUrl) : ''}">
@@ -644,7 +644,7 @@ function wireCard(item) {
         ta.value = JSON.stringify(TYPE_TEMPLATES[t] || {}, null, 2);
       }
     }
-    advToggleBtn.textContent = structured ? '🛠️ Sửa dữ liệu nâng cao (JSON)' : '🛠️ Sửa dữ liệu (JSON) — loại câu hỏi này chỉnh qua đây';
+    advToggleBtn.textContent = structured ? 'Sửa dữ liệu nâng cao (JSON)' : 'Sửa dữ liệu (JSON) — loại câu hỏi này chỉnh qua đây';
   });
 
   advToggleBtn.addEventListener('click', () => advBox.classList.toggle('open'));
@@ -703,7 +703,7 @@ function syncCopies(item) {
 function persistQuestion(item) {
   const n = syncCopies(item);
   markChanged(item);
-  if (n) toast(`✏️ Đã áp dụng cho cả ${n} bản chép của câu này (cùng mã ${item.q.uid}) — nhớ "🚀 Đẩy thay đổi"`);
+  if (n) toast(`Đã áp dụng cho cả ${n} bản chép của câu này (cùng mã ${item.q.uid}) — nhớ "Đẩy thay đổi"`);
 }
 
 async function saveCardData(item, card) {
@@ -756,13 +756,13 @@ async function saveCardData(item, card) {
     const n = syncCopies(item);
     markChanged(item);
     buildFilterOptions();
-    toast(`✅ Đã lưu câu ${item.q.id ?? ''}${n ? ` (+ ${n} bản chép)` : ''} vào bản nháp — bấm "🚀 Đẩy thay đổi" để học sinh thấy`);
+    toast(`Đã lưu câu ${item.q.id ?? ''}${n ? ` (+ ${n} bản chép)` : ''} vào bản nháp — bấm "Đẩy thay đổi" để học sinh thấy`);
     refreshCard(item);
   } catch (err) {
     console.error(err);
-    toast('❌ ' + err.message, 6000);
+    toast(err.message, 6000);
     btn.disabled = false;
-    btn.textContent = '💾 Lưu câu hỏi';
+    btn.innerHTML = '<i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Lưu câu hỏi';
   }
 }
 
@@ -771,14 +771,14 @@ function deleteQuestion(item) {
   const copies = copiesOf(item);
   if (!confirm('Xoá câu này?' +
       (copies.length ? `\nCâu này đang dùng ở ${copies.length + 1} bộ (${[item, ...copies].map(x => x.q.minitestName).join(' · ')}) — sẽ xoá khỏi tất cả.` : '') +
-      '\n\nChỉ xoá trong bản nháp — bấm "🚀 Đẩy thay đổi" để áp dụng cho học sinh.')) return;
+      '\n\nChỉ xoá trong bản nháp — bấm "Đẩy thay đổi" để áp dụng cho học sinh.')) return;
   const gone = new Set([item, ...copies].map(x => x.docId));
   QUESTIONS = QUESTIONS.filter(x => !gone.has(x.docId));
   gone.forEach(id => changedIds.delete(id));
   deletedCount += gone.size;
   markChanged();
   applyFilters();
-  toast('🗑️ Đã xoá câu hỏi (bản nháp)');
+  toast('Đã xoá câu hỏi (bản nháp)');
 }
 
 /* ============================================================
@@ -805,7 +805,7 @@ document.getElementById('addQuestionBtn').addEventListener('click', () => {
         <option value="truefalse">Đúng / Sai</option>
       </select>
       <div class="row2">
-        <button type="button" class="btn btn-primary btn-sm" id="createQBtn">✅ Tạo câu hỏi (bản nháp)</button>
+        <button type="button" class="btn btn-primary btn-sm" id="createQBtn"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Tạo câu hỏi (bản nháp)</button>
         <button type="button" class="btn btn-ghost btn-sm" id="cancelQBtn">Huỷ</button>
       </div>
     </div>`;
@@ -817,10 +817,10 @@ document.getElementById('addQuestionBtn').addEventListener('click', () => {
     const minitestName = document.getElementById('newMinitest').value.trim();
     const question = document.getElementById('newQuestionText').value.trim();
     const type = document.getElementById('newType').value;
-    if (!question) { toast('❌ Cần nhập nội dung câu hỏi'); return; }
-    if (!minitestName) { toast('❌ Cần nhập tên Minitest/bài'); return; }
+    if (!question) { toast('Cần nhập nội dung câu hỏi'); return; }
+    if (!minitestName) { toast('Cần nhập tên Minitest/bài'); return; }
     const target = findLevelByNames(catName, gradeName);
-    if (!target) { toast('❌ Khối không hợp lệ'); return; }
+    if (!target) { toast('Khối không hợp lệ'); return; }
 
     const fileKey = fileKeyOf(target.cat, target.lvl);
     const nextLocalId = QUESTIONS.reduce((m, x) => x.fileKey === fileKey ? Math.max(m, Number(x.q.id) || 0) : m, 0) + 1;
@@ -839,7 +839,7 @@ document.getElementById('addQuestionBtn').addEventListener('click', () => {
     buildFilterOptions();
     applyFilters();
     box.innerHTML = '';
-    toast('✅ Đã tạo câu hỏi mới (bản nháp) — điền đáp án rồi "💾 Lưu câu hỏi"');
+    toast('Đã tạo câu hỏi mới (bản nháp) — điền đáp án rồi "Lưu câu hỏi"');
   });
 });
 
@@ -862,14 +862,14 @@ function onFilePicked(item, file) {
       <div class="row"><img src="${dataUrl}" style="max-height:90px;border-radius:8px" alt="new preview"></div>
       <div class="row" style="font-size:.75rem;color:var(--muted)">Chọn cách lưu ảnh cho câu này:</div>
       <div class="row">
-        <button class="btn btn-green btn-sm embedBtn">✅ Nhúng trực tiếp vào câu hỏi (base64)</button>
+        <button class="btn btn-green btn-sm embedBtn"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Nhúng trực tiếp vào câu hỏi (base64)</button>
       </div>
       <div class="row">
         <input class="fname-edit" value="${suggested}">
-        <button class="btn btn-primary btn-sm fileRefBtn">💾 Lưu thành file riêng (img/)</button>
+        <button class="btn btn-primary btn-sm fileRefBtn"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Lưu thành file riêng (img/)</button>
       </div>
       <div class="row" style="font-size:.7rem;color:var(--muted)">
-        Gợi ý: dùng "Lưu thành file riêng" cho ảnh lớn (file câu hỏi nhẹ hơn, học sinh tải nhanh hơn) — ảnh được đẩy lên <code>img/</code> cùng lần "🚀 Đẩy thay đổi", không cần chép tay.
+        Gợi ý: dùng "Lưu thành file riêng" cho ảnh lớn (file câu hỏi nhẹ hơn, học sinh tải nhanh hơn) — ảnh được đẩy lên <code>img/</code> cùng lần "<i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i> Đẩy thay đổi", không cần chép tay.
       </div>
     `;
 
@@ -881,7 +881,7 @@ function onFilePicked(item, file) {
       box.style.display = 'none';
       renderStats();
       refreshCard(item);
-      toast('✅ Đã nhúng ảnh (base64) cho câu ' + (item.q.id ?? '') + ' — nhớ "🚀 Đẩy thay đổi"');
+      toast('Đã nhúng ảnh (base64) cho câu ' + (item.q.id ?? '') + ' — nhớ "Đẩy thay đổi"');
     });
 
     box.querySelector('.fileRefBtn').addEventListener('click', async () => {
@@ -900,7 +900,7 @@ function onFilePicked(item, file) {
       box.style.display = 'none';
       renderStats();
       refreshCard(item);
-      toast(`✅ Ảnh "${fname}" sẽ được đẩy lên img/ cùng lần "🚀 Đẩy thay đổi"`);
+      toast(`Ảnh "${fname}" sẽ được đẩy lên img/ cùng lần "Đẩy thay đổi"`);
     });
   };
   reader.readAsDataURL(file);
@@ -957,7 +957,7 @@ function downloadJson(obj, filename) {
 
 document.getElementById('backupBtn').addEventListener('click', () => {
   downloadJson(buildBackupTree(QUESTIONS), 'quiz_data_backup.json');
-  toast('✅ Đã tải bản sao lưu JSON');
+  toast('Đã tải bản sao lưu JSON');
 });
 
 /* ============================================================
@@ -1087,7 +1087,7 @@ function updatePublishButton() {
   const btn = document.getElementById('exportStaticBtn');
   if (!btn || btn.dataset.busy) return;
   const n = pendingChangeCount();
-  btn.textContent = n ? `🚀 Đẩy ${n} thay đổi cho học sinh` : '🚀 Đẩy thay đổi cho học sinh';
+  btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i> ' + (n ? `Đẩy ${n} thay đổi cho học sinh` : 'Đẩy thay đổi cho học sinh'); // n là số
   btn.classList.toggle('btn-pulse', n > 0);
 }
 
@@ -1109,7 +1109,7 @@ document.getElementById('exportStaticBtn').addEventListener('click', async () =>
 
   btn.dataset.busy = '1';
   btn.disabled = true;
-  btn.textContent = '⏳ Đang đẩy lên GitHub…';
+  btn.innerHTML = '<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Đang đẩy lên GitHub…';
   try {
     await window.EduGitHubPublish.publishFiles(
       files,
@@ -1121,14 +1121,14 @@ document.getElementById('exportStaticBtn').addEventListener('click', async () =>
     changedIds = new Set();
     deletedCount = 0;
     PENDING_IMAGES = {};
-    toast(`🚀 Đã đẩy ${files.length} file lên GitHub — học sinh thấy sau khoảng 1–2 phút.`, 6000);
+    toast(`Đã đẩy ${files.length} file lên GitHub — học sinh thấy sau khoảng 1–2 phút.`, 6000);
     delete btn.dataset.busy;
     loadQuestions(); // tải lại bản mới nhất (qua GitHub API) làm gốc cho lần sửa tiếp
   } catch (err) {
     console.error('[image-manager] Đẩy GitHub thất bại:', err);
     if (err.code === 'conflict') {
-      alert('⚠️ KHÔNG đẩy — ' + err.message + '\n\nCó người/script vừa đẩy dữ liệu mới. Bản nháp của bạn vẫn được giữ.\n' +
-        'Hãy bấm "⬇️ Sao lưu JSON" để giữ bản của bạn, tải lại trang (sẽ hỏi tải bản nháp về), rồi nhập lại phần đã sửa.');
+      alert('KHÔNG đẩy — ' + err.message + '\n\nCó người/script vừa đẩy dữ liệu mới. Bản nháp của bạn vẫn được giữ.\n' +
+        'Hãy bấm "Sao lưu JSON" để giữ bản của bạn, tải lại trang (sẽ hỏi tải bản nháp về), rồi nhập lại phần đã sửa.');
     } else if (confirm('Đẩy lên GitHub thất bại: ' + err.message + '\n\nTải các file thay đổi về máy (zip) để tự chép vào dự án?')) {
       const zip = new JSZip();
       files.forEach(f => (f.base64 != null ? zip.file(f.path, f.base64, { base64: true }) : zip.file(f.path, f.content)));

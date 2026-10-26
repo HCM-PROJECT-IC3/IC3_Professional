@@ -34,7 +34,7 @@
     if (!msg) {
       msg = document.createElement('div');
       msg.className = 'chart-lib-error chart-empty';
-      msg.innerHTML = '⚠️ Không tải được thư viện biểu đồ (Chart.js).<br>Kiểm tra kết nối mạng, trình chặn quảng cáo, hoặc thử "🔄 Làm mới dữ liệu".';
+      msg.innerHTML = 'Không tải được thư viện biểu đồ (Chart.js).<br>Kiểm tra kết nối mạng, trình chặn quảng cáo, hoặc thử "<i class="fa-solid fa-rotate" aria-hidden="true"></i> Làm mới dữ liệu".';
       canvas.parentElement.appendChild(msg);
     }
     msg.style.display = 'flex';

@@ -79,7 +79,7 @@
       try {
         parseWorkbook(ev.target.result);
       } catch (err) {
-        toast('❌ Không đọc được file: ' + err.message);
+        toast('Không đọc được file: ' + err.message);
       }
     };
     reader.readAsArrayBuffer(file);
@@ -125,7 +125,7 @@
       }
     }
     if (headerRowIdx === -1 || colCccd === -1) {
-      toast('❌ Không tìm thấy cột "Mã GV"/"Số CCCD" trong file — kiểm tra lại đúng file mẫu.');
+      toast('Không tìm thấy cột "Mã GV"/"Số CCCD" trong file — kiểm tra lại đúng file mẫu.');
       return;
     }
 
@@ -181,11 +181,11 @@
         <div class="import-stat"><b>${parsedRows.length}</b><span>Tổng dòng đọc được</span></div>
       `;
     const STATUS_TEXT = {
-      pending: '✅ Sẵn sàng',
+      pending: 'Sẵn sàng',
       skip: (r) => `⏭️ ${esc(r.message)}`,
-      ok: '✅ Đã tạo tài khoản',
-      exists: (r) => `⚠️ ${esc(r.message)}`,
-      err: (r) => `❌ ${esc(r.message)}`,
+      ok: 'Đã tạo tài khoản',
+      exists: (r) => `${esc(r.message)}`,
+      err: (r) => `${esc(r.message)}`,
     };
     const STATUS_CLASS = { pending: 'row-status-ok', skip: 'row-status-skip', ok: 'row-status-ok', exists: 'row-status-exists', err: 'row-status-err' };
     table.querySelector('tbody').innerHTML = parsedRows.map((r) => {
@@ -223,7 +223,7 @@
 
     let created = 0, existed = 0, failed = 0;
     for (const r of rowsToCreate) {
-      btn.textContent = `⏳ Đang tạo... (${created + existed + failed + 1}/${rowsToCreate.length})`;
+      btn.textContent = `Đang tạo... (${created + existed + failed + 1}/${rowsToCreate.length})`;
       const password = `${r.cccd}@IIG`;
       try {
         const cred = await secondaryAuth.createUserWithEmailAndPassword(r.email, password);
@@ -253,9 +253,9 @@
       renderPreview();
     }
 
-    btn.textContent = '✅ Tạo tài khoản';
+    btn.innerHTML = '<i class="fa-solid fa-circle-check" aria-hidden="true"></i> Tạo tài khoản';
     btn.disabled = false;
-    toast(`✅ Đã tạo ${created} tài khoản mới${existed ? `, ${existed} đã tồn tại từ trước` : ''}${failed ? `, ${failed} lỗi` : ''}.`);
+    toast(`Đã tạo ${created} tài khoản mới${existed ? `, ${existed} đã tồn tại từ trước` : ''}${failed ? `, ${failed} lỗi` : ''}.`);
     if (window.EduAdminUsersReload) window.EduAdminUsersReload();
   });
 })();

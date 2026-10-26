@@ -71,17 +71,17 @@
       const F = window.EduFirebase;
       document.getElementById('loadingNote').textContent = err && err.source === 'apps-script'
         // Kết quả bài nộp đọc từ Google Sheet — lỗi ở đây KHÔNG phải Firebase hết lượt
-        ? '⚠️ Không đọc được kết quả bài nộp từ Google Sheet (' + err.message + '). Mạng chập chờn hoặc Apps Script đang bận — bấm "🔄 Làm mới dữ liệu" để thử lại.'
-        : err && err.breaker ? '⚠️ ' + err.message
+        ? 'Không đọc được kết quả bài nộp từ Google Sheet (' + err.message + '). Mạng chập chờn hoặc Apps Script đang bận — bấm "Làm mới dữ liệu" để thử lại.'
+        : err && err.breaker ? err.message
         : F && F.isQuotaOrOffline(err)
-        ? '⚠️ ' + F.QUOTA_HINT + '. Máy này chưa có dữ liệu đã lưu — thử lại sau.'
-        : '❌ Không tải được dữ liệu: ' + err.message;
+        ? F.QUOTA_HINT + '. Máy này chưa có dữ liệu đã lưu — thử lại sau.'
+        : 'Không tải được dữ liệu: ' + err.message;
       return;
     }
 
     if (rawData.noSchoolsAssigned) {
       document.getElementById('loadingNote').textContent =
-        '⚠️ Tài khoản của bạn chưa được gán "Trường được xem". Liên hệ Quản trị viên để được gán trong trang Quản lý tài khoản.';
+        'Tài khoản của bạn chưa được gán "Trường được xem". Liên hệ Quản trị viên để được gán trong trang Quản lý tài khoản.';
       return;
     }
 
@@ -119,10 +119,10 @@
     const btn = document.getElementById('refreshDataBtn');
     btn.disabled = true;
     const oldLabel = btn.textContent;
-    btn.textContent = '⏳ Đang tải...';
+    btn.innerHTML = '<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Đang tải...';
     try {
       await boot(currentProfile, true);
-      toast('✅ Đã cập nhật dữ liệu mới nhất.');
+      toast('Đã cập nhật dữ liệu mới nhất.');
     } finally {
       btn.disabled = false;
       btn.textContent = oldLabel;
@@ -218,12 +218,12 @@
   function renderWatchlists(scoped) {
     renderList('notSubmitted', scoped._notSubmitted || [], (s) =>
       `<span class="name">${esc(s.name)}</span><span class="meta">${esc(s.className || '—')}${s.mssv ? ' · ' + esc(s.mssv) : ''}</span>`,
-      '🎉 Không có học sinh nào — mọi người đã làm bài!');
+      'Không có học sinh nào — mọi người đã làm bài!');
 
     renderList('needsSupport', scoped._needsSupport || [], (e) =>
       `<span class="name">${esc(e.studentName)}</span><span class="meta">${esc(e.studentClass || '—')}</span>` +
       `<span class="score-chip" style="background:var(--red-lt);color:var(--red)">${e.avgScore}%</span>`,
-      '👍 Không có học sinh nào dưới ngưỡng 60%.');
+      'Không có học sinh nào dưới ngưỡng 60%.');
 
     renderList('topStudents', window.EduAnalytics.topStudents(scoped.examHistories, 20), (e) =>
       `<span class="name">${esc(e.studentName)}</span><span class="meta">${esc(e.studentClass || '—')}</span>` +
@@ -259,7 +259,7 @@
     ov.setAttribute('aria-label', 'Bảng thi đua lớp tuần này');
     const top = classRace[0].points || 1;
     ov.innerHTML = `<button type="button" class="race-close" aria-label="Đóng">✕</button>
-      <h2>🏅 Thi đua lớp tuần này</h2>
+      <h2><i class="fa-solid fa-medal" aria-hidden="true"></i> Thi đua lớp tuần này</h2>
       <p class="race-sub">Từ thứ Hai ${new Date(window.EduAnalytics.weekStartMs()).toLocaleDateString('vi-VN')} · Điểm thi đua = điểm TB × % học sinh tham gia</p>
       <ol class="race-list">${classRace.slice(0, 10).map((c, i) => `<li style="--w:${Math.max(6, Math.round((c.points / top) * 100))}%">
         <span class="race-rank">${MEDALS[i] || i + 1}</span><span class="race-name">${esc(c.className)}</span>

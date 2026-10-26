@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>👑 Quản lý tài khoản — EduQuiz</title>
+<title>Quản lý tài khoản — EduQuiz</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/theme.css">
@@ -20,9 +20,9 @@
 
 <div class="topbar">
   <a href="ic3-dashboard.html" class="btn btn-ghost">← Dashboard</a>
-  <h1>👑 Quản lý tài khoản</h1>
+  <h1><i class="fa-solid fa-crown" aria-hidden="true"></i> Quản lý tài khoản</h1>
   <div class="spacer"></div>
-  <a class="btn btn-ghost" href="portfolio.html" target="_blank" rel="noopener" title="Trang Social Media nội bộ — đăng bài/thích/bình luận">📱 Trang Social Media</a>
+  <a class="btn btn-ghost" href="portfolio.html" target="_blank" rel="noopener" title="Trang Social Media nội bộ — đăng bài/thích/bình luận"><i class="fa-solid fa-mobile-screen" aria-hidden="true"></i> Trang Social Media</a>
   <span class="whoami" id="whoami"></span>
   <button type="button" class="theme-toggle" id="themeToggle" title="Chuyển đổi sáng/tối"></button>
   <button type="button" class="btn btn-ghost" id="logoutBtn">Đăng xuất</button>
@@ -30,7 +30,7 @@
 
 <div class="wrap">
   <div class="import-toolbar">
-    <button type="button" class="btn btn-primary" id="importTeachersBtn">📥 Nhập giáo viên từ Excel</button>
+    <button type="button" class="btn btn-primary" id="importTeachersBtn"><i class="fa-solid fa-file-import" aria-hidden="true"></i> Nhập giáo viên từ Excel</button>
     <span class="import-toolbar-hint">File .xlsx có cột "Mã GV" + "Họ Tên" + "Số CCCD" (đúng mẫu Thong_Tin_GV.xlsx) — tự tạo tài khoản đăng nhập, không cần gõ tay từng người.</span>
     <input type="file" id="importTeachersInput" accept=".xlsx,.xls" hidden>
   </div>
@@ -48,7 +48,7 @@
 <div class="modal-overlay" id="importModalOverlay">
   <div class="modal-box modal-wide">
     <div class="modal-header">
-      <h3>📥 Nhập giáo viên từ Excel</h3>
+      <h3><i class="fa-solid fa-file-import" aria-hidden="true"></i> Nhập giáo viên từ Excel</h3>
       <button type="button" class="modal-close" id="importModalCloseBtn">✕</button>
     </div>
     <div class="modal-body">
@@ -67,7 +67,7 @@
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-ghost" id="importModalCancelBtn">Huỷ</button>
-      <button type="button" class="btn btn-primary" id="importConfirmBtn" disabled>✅ Tạo tài khoản</button>
+      <button type="button" class="btn btn-primary" id="importConfirmBtn" disabled><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Tạo tài khoản</button>
     </div>
   </div>
 </div>

@@ -101,7 +101,7 @@
       return;
     }
 
-    document.getElementById('detailDrawerBody').innerHTML = '<div class="loading-note">⏳ Đang tải lịch sử làm bài…</div>';
+    document.getElementById('detailDrawerBody').innerHTML = '<div class="loading-note"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Đang tải lịch sử làm bài…</div>';
 
     global.EduRepositories.studentResult
       // global.EduStudentDetailSchoolsScope: mặc định undefined (coordinator/admin,
@@ -117,7 +117,7 @@
       })
       .catch((err) => {
         document.getElementById('detailDrawerBody').innerHTML =
-          `<div class="detail-empty-note">❌ Không tải được lịch sử làm bài: ${esc(err.message)}</div>`;
+          `<div class="detail-empty-note"><i class="fa-solid fa-circle-xmark" aria-hidden="true"></i> Không tải được lịch sử làm bài: ${esc(err.message)}</div>`;
         void quickHistory; // fallback tối thiểu nếu cần dùng sau này — hiện chưa cần vì đã báo lỗi rõ ràng
       });
   }
@@ -152,7 +152,7 @@
 
     const historySection = `
       <div>
-        <div class="detail-section-title">📝 Lịch sử làm bài ${statusBadge}</div>
+        <div class="detail-section-title"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> Lịch sử làm bài ${statusBadge}</div>
         ${attempts.length ? `
           <div class="table-scroll">
             <table class="detail-history-table">
@@ -173,7 +173,7 @@
 
     const loginSection = `
       <div>
-        <div class="detail-section-title">🔐 Lịch sử đăng nhập</div>
+        <div class="detail-section-title"><i class="fa-solid fa-lock" aria-hidden="true"></i> Lịch sử đăng nhập</div>
         <div class="detail-empty-note">
           Học sinh làm bài <strong>ẩn danh</strong> (không qua tài khoản đăng nhập), nên hệ thống
           hiện tại không có dữ liệu lịch sử đăng nhập cho từng em — chỉ có dữ liệu NỘP BÀI ở trên.

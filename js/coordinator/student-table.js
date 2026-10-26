@@ -116,7 +116,7 @@
           <span class="progress-mini-label">${progress}%</span>
         </td>
         <td>${student.orphan
-          ? '<span class="badge inactive" title="Đã nộp bài nhưng chưa có trong danh sách lớp — vào Quản lý danh sách để thêm">⚠️ Chưa có trong roster</span>'
+          ? '<span class="badge inactive" title="Đã nộp bài nhưng chưa có trong danh sách lớp — vào Quản lý danh sách để thêm"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Chưa có trong roster</span>'
           : `<span class="badge ${student.status === 'inactive' ? 'inactive' : 'active'}">${student.status === 'inactive' ? 'Ngừng học' : 'Đang học'}</span>`}</td>
         <td><button type="button" class="row-view-btn" data-view-student="${esc(row.studentKey)}">Xem chi tiết</button></td>
       </tr>`;
@@ -183,22 +183,22 @@
     if (!state.scoped) return;
     const oldLabel = btn.textContent;
     btn.disabled = true;
-    btn.textContent = '⏳ Đang tải engine...';
+    btn.innerHTML = '<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Đang tải engine...';
     try {
       await ensureExportEnginesLoaded();
     } catch (err) {
-      global.dispatchEvent(new CustomEvent('edu:toast', { detail: '❌ Không tải được engine xuất Excel: ' + err.message }));
+      global.dispatchEvent(new CustomEvent('edu:toast', { detail: 'Không tải được engine xuất Excel: ' + err.message }));
       btn.disabled = false;
       btn.textContent = oldLabel;
       return;
     }
-    btn.textContent = '⏳ Đang tạo...';
+    btn.innerHTML = '<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Đang tạo...';
     try {
       await global.EduExcelExporter.exportWorkbook(state.scoped, exportOpts());
-      global.dispatchEvent(new CustomEvent('edu:toast', { detail: '✅ Đã tải file Excel (7 sheet).' }));
+      global.dispatchEvent(new CustomEvent('edu:toast', { detail: 'Đã tải file Excel (7 sheet).' }));
     } catch (err) {
       console.error('[EduCoordinatorStudentTable] Lỗi xuất Excel:', err);
-      global.dispatchEvent(new CustomEvent('edu:toast', { detail: '❌ Xuất Excel thất bại: ' + err.message }));
+      global.dispatchEvent(new CustomEvent('edu:toast', { detail: 'Xuất Excel thất bại: ' + err.message }));
     } finally {
       btn.disabled = false;
       btn.textContent = oldLabel;
@@ -209,22 +209,22 @@
     if (!state.scoped) return;
     const oldLabel = btn.textContent;
     btn.disabled = true;
-    btn.textContent = '⏳ Đang tải engine...';
+    btn.innerHTML = '<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Đang tải engine...';
     try {
       await ensureExportEnginesLoaded();
     } catch (err) {
-      global.dispatchEvent(new CustomEvent('edu:toast', { detail: '❌ Không tải được engine xuất PDF: ' + err.message }));
+      global.dispatchEvent(new CustomEvent('edu:toast', { detail: 'Không tải được engine xuất PDF: ' + err.message }));
       btn.disabled = false;
       btn.textContent = oldLabel;
       return;
     }
-    btn.textContent = '⏳ Đang tạo...';
+    btn.innerHTML = '<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Đang tạo...';
     try {
       global.EduPdfExporter.exportReport(state.scoped, exportOpts());
-      global.dispatchEvent(new CustomEvent('edu:toast', { detail: '✅ Đã tải file PDF.' }));
+      global.dispatchEvent(new CustomEvent('edu:toast', { detail: 'Đã tải file PDF.' }));
     } catch (err) {
       console.error('[EduCoordinatorStudentTable] Lỗi xuất PDF:', err);
-      global.dispatchEvent(new CustomEvent('edu:toast', { detail: '❌ Xuất PDF thất bại: ' + err.message }));
+      global.dispatchEvent(new CustomEvent('edu:toast', { detail: 'Xuất PDF thất bại: ' + err.message }));
     } finally {
       btn.disabled = false;
       btn.textContent = oldLabel;

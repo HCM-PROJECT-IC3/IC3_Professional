@@ -25,6 +25,8 @@
     clearTimeout(hideT);
     box.className = 'ar-drama t-' + (o.tone || 'up');
     box.innerHTML = `<div class="ar-drama-in">${o.icon ? `<i class="fa-solid ${o.icon}" aria-hidden="true"></i>` : ''}<b>${esc(title)}</b>${o.sub ? `<small>${esc(o.sub)}</small>` : ''}</div>`;
+    const P = global.EduParty; // tia sáng + chữ nảy (js/fx-party.js)
+    if (P) { P.rays(box); P.letters(box.querySelector('.ar-drama-in b'), { step: 38, delay: 90 }); }
     void box.offsetWidth;
     box.classList.add('is-on');
     hideT = setTimeout(() => box.classList.remove('is-on'), o.ms || 1300);

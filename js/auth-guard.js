@@ -61,15 +61,15 @@
       from { opacity: 0; transform: translateY(16px) scale(.96) }
       to   { opacity: 1; transform: translateY(0) scale(1) }
     }
-    /* Khung "màn hình" neumorphism LÕM (giống bezel thiết bị) chứa
+    /* Khung "màn hình" phẳng (nền nhạt + viền mảnh, không bóng lõm neumorphism) chứa
        ảnh/video minh họa — dùng chung cho cả 2 trạng thái chờ/từ chối,
        chỉ đổi nội dung media bên trong qua crossfade (xem #edu-guard-media
        + hàm swapMedia trong JS). */
     #edu-guard-screen {
       position: relative; width: 100%; max-width: clamp(360px, 52vw, 640px); aspect-ratio: 4 / 3;
       border-radius: 16px; overflow: hidden;
-      background: #e2e5ee;
-      box-shadow: inset 5px 5px 12px rgba(163,177,198,.6), inset -5px -5px 12px rgba(255,255,255,.85);
+      background: #f4f6fb;
+      border: 1px solid #e1e6f4;
       display: flex; align-items: center; justify-content: center;
     }
     #edu-guard-media {
@@ -111,25 +111,18 @@
       from { opacity: 0; transform: translateY(6px) }
       to   { opacity: 1; transform: translateY(0) }
     }
-    /* Màu thương hiệu IIG (cam/xanh lá/xanh dương — xem logo thật tại
-       img/iig-logo.png), ĐỒNG BỘ với css/theme.css và css/login.css —
-       file này tự viết CSS riêng (chạy trước khi trang tải xong nên
-       không đợi được theme.css), không dùng var(--purple) được nên phải
-       viết cứng, nhớ SỬA CẢ NHIỀU NƠI (login.css + theme.css) nếu đổi
-       màu thương hiệu lần sau. */
+    /* Nút chính navy đặc như nút "Đăng nhập" ở login.html (không gradient 3 màu, không bóng
+       phát sáng). File này tự viết CSS riêng (chạy trước khi theme.css tải xong) nên không dùng
+       được var(--purple): đổi màu thương hiệu thì sửa cả css/login.css + css/theme.css. */
     #edu-guard-overlay .btn {
-      background: linear-gradient(100deg, #5d933d 0%, #ff8f1f 50%, #2f40b2 100%);
-      color: #fff; border: none; border-radius: 999px; padding: clamp(.7rem, 1.4vw, .85rem) clamp(1.4rem, 3vw, 1.7rem);
+      background: #2f40b2;
+      color: #fff; border: none; border-radius: 10px; padding: clamp(.7rem, 1.4vw, .85rem) clamp(1.4rem, 3vw, 1.7rem);
       font-weight: 800; font-size: clamp(.88rem, 1.3vw, .98rem); cursor: pointer; font-family: inherit;
-      box-shadow: 0 4px 14px rgba(47,64,178,.3);
-      transition: transform .15s ease, box-shadow .15s ease;
+      transition: background-color .15s ease;
       animation: edu-guard-msg-in .4s .2s cubic-bezier(.16,1,.3,1) both;
     }
-    #edu-guard-overlay .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(47,64,178,.4);
-    }
-    #edu-guard-overlay .btn:active { transform: translateY(0) }
+    #edu-guard-overlay .btn:hover { background: #24338f; }
+    #edu-guard-overlay .btn:focus-visible { outline: 3px solid #ff8f1f; outline-offset: 2px; }
     /* Di động — quay lại kích thước gốc (không dùng clamp trần lớn) để
        card/khung ảnh không choán hết màn hình nhỏ, vẫn chừa lề thoáng. */
     @media (max-width: 560px) {

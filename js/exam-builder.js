@@ -78,7 +78,7 @@
     cur: 0,
     dirty: false,
     linkLen: 0,
-    bank: { cat: '', level: '', group: 'bai', mt: '', mtSearch: '', search: '', type: '', expanded: new Set() },
+    bank: { cat: '', level: '', group: 'bai', mt: '', mtSearch: '', search: '', type: '', src: '', expanded: new Set() },
   };
   const qCache = new Map();
   let slideSeq = 0;
@@ -133,7 +133,30 @@
       fetchJson('data/ic3/minitests-manifest.json').catch(() => ({})),
     ]);
     B.meta = meta; B.manifest = manifest; B.ready = true;
+    // Bản đồ câu chủ đề ↔ đề gốc All Key (~36 KB, scripts/build-allkey-map.py). Không tải được
+    // thì chỉ mất nhãn nguồn, trình soạn vẫn chạy.
+    B.allkey = await fetchJson('data/ic3/allkey-map.json').then((d) => d.map || null).catch(() => null);
   }
+
+  // ── Nguồn dữ liệu của câu ngân hàng ──
+  // All Key: đề gốc .quiz (Test1/2/3, OntapSo, BaiOnSo, On Tap, bản 10/04/2026) — chuẩn cho ôn thi/kiểm tra.
+  // Bài N: bộ Củng cố trong thư mục Quiz trên Drive — chỉ để dạy & luyện tập theo bài.
+  // Ngoài All Key: câu ngân hàng chủ đề cũ (GS6), không vào bộ Ôn tập/Kiểm tra theo tiết.
+  const BAI_UID_RE = /__bai(\d+)__/;
+  const SOURCES = {
+    ak: { label: 'All Key', icon: 'fa-key' },
+    bai: { label: 'Theo bài', icon: 'fa-book-open' },
+    old: { label: 'Ngoài All Key', icon: 'fa-database' },
+  };
+  function qSource(uid) {
+    const m = BAI_UID_RE.exec(uid || '');
+    if (m) return { id: 'bai', label: `Bài ${m[1]}` };
+    if (!B.allkey) return { id: '', label: 'Ngân hàng' };
+    const papers = B.allkey[uid];
+    return papers ? { id: 'ak', label: 'All Key', papers } : { id: 'old', label: 'Ngoài All Key' };
+  }
+  /** "Test1#10" → "Test1 câu 10" */
+  function paperText(papers) { return (papers || []).map((p) => p.replace(/#(\d+)$/, ' câu $1')).join(', '); }
 
   // ============================================================
   // ĐỀ ↔ SLIDE
@@ -403,6 +426,8 @@
   // ============================================================
   function railItemHtml(s, i) {
     const errs = slideErrors(s);
+    const sim = similarGroups().find((g) => g.includes(i));
+    const simDot = sim && !errs.length ? ` <i class="fa-regular fa-clone eb-sim-dot" title="Na ná câu ${esc(sim.filter((k) => k !== i).map((k) => k + 1).join(', '))}"></i>` : '';
     let label, icon, text, tiles = '';
     if (s.custom) {
       const t = TYPE_BY_ID[s.custom.type];
@@ -410,12 +435,13 @@
       const n = s.custom.type === 'tf' ? 2 : s.custom.type === 'single' || s.custom.type === 'multi' ? (s.custom.options || []).length : 0;
       if (n) tiles = `<span class="eb-mini-tiles">${Array.from({ length: n }, (_, k) => `<i class="c${k}${(s.custom.correct || []).includes(k) ? ' is-ok' : ''}"></i>`).join('')}</span>`;
     } else {
-      label = 'Ngân hàng'; icon = 'fa-database'; text = stripHtml(s.q?.question);
+      const src = qSource(s.uid);
+      label = src.label; icon = SOURCES[src.id]?.icon || 'fa-database'; text = stripHtml(s.q?.question);
     }
     return `<li class="eb-slide${i === B.cur ? ' is-active' : ''}${errs.length ? ' has-error' : ''}" data-idx="${i}" draggable="true" tabindex="0" aria-label="Câu ${i + 1}">
       <span class="eb-slide-no">${i + 1}</span>
       <div class="eb-slide-card">
-        <div class="eb-slide-type"><i class="fa-solid ${icon}"></i> ${esc(label)}${errs.length ? ' <i class="fa-solid fa-circle-exclamation eb-err-dot" title="' + esc(errs.join('; ')) + '"></i>' : ''}</div>
+        <div class="eb-slide-type"><i class="fa-solid ${icon}"></i> ${esc(label)}${errs.length ? ' <i class="fa-solid fa-circle-exclamation eb-err-dot" title="' + esc(errs.join('; ')) + '"></i>' : ''}${simDot}</div>
         <div class="eb-slide-text${text ? '' : ' is-empty'}">${esc(text || 'Chưa nhập câu hỏi')}</div>
         ${(s.custom?.img || s.q?.imageUrl || s.q?.image_file) ? '<i class="fa-regular fa-image eb-slide-img"></i>' : ''}${tiles}
       </div>
@@ -537,10 +563,19 @@
   function bankCanvas(s) {
     const q = s.q;
     const convertible = ['single', 'multi', 'ordering', 'matching'].includes(q.type);
+    const src = qSource(s.uid);
+    const srcNote = src.id === 'ak' ? `<div class="eb-src-note is-ak"><i class="fa-solid fa-key"></i> Câu đáp án gốc All Key — ${esc(paperText(src.papers))}</div>`
+      : src.id === 'bai' ? '<div class="eb-src-note is-bai"><i class="fa-solid fa-book-open"></i> Câu Củng cố theo bài (thư mục Quiz) — để dạy &amp; luyện tập; đề ôn thi/kiểm tra nên dùng câu All Key.</div>'
+      : src.id === 'old' ? '<div class="eb-src-note is-old"><i class="fa-solid fa-database"></i> Câu ngân hàng cũ, không có trong đề gốc All Key.</div>' : '';
     return `<div class="eb-canvas eb-canvas-bank">
-      <div class="eb-canvas-type"><i class="fa-solid fa-database"></i> Ngân hàng · ${esc(levelMeta(s.cat, s.level)?.name || s.level)} · ${esc(s.mt)} · Câu ${B.cur + 1}/${B.slides.length}</div>
+      <div class="eb-canvas-type"><i class="fa-solid ${SOURCES[src.id]?.icon || 'fa-database'}"></i> ${esc(src.id === 'bai' ? 'Theo bài' : src.label)} · ${esc(levelMeta(s.cat, s.level)?.name || s.level)} · ${esc(s.mt)} · Câu ${B.cur + 1}/${B.slides.length}</div>
       <div class="eb-bank-q">${esc(stripHtml(q.question))} <span class="eb-type eb-type-${esc(q.type)}">${esc(BANK_TYPE_LABEL[q.type] || q.type)}</span></div>
       <div class="eb-q-detail">${renderQuestionDetail(q, { answer: true })}</div>
+      ${srcNote}
+      <div class="eb-swap-row">
+        <button type="button" class="eb-btn eb-btn-ghost" data-act="swap" title="Lấy 1 câu khác cùng bộ &quot;${esc(s.mt)}&quot;, chưa có trong đề${src.id === 'ak' ? ', cũng là câu All Key' : ''}"><i class="fa-solid fa-shuffle"></i> Đổi câu khác</button>
+        ${src.id === 'old' ? '<button type="button" class="eb-btn eb-btn-soft" data-act="swap-ak" title="Lấy 1 câu All Key cùng chủ đề thay cho câu này"><i class="fa-solid fa-key"></i> Đổi sang câu All Key</button>' : ''}
+      </div>
       <div class="eb-bank-note">
         <i class="fa-solid fa-lock"></i>
         <span>Câu ngân hàng tự cập nhật khi "Quản lý câu hỏi" sửa nội dung.${convertible ? ' Muốn chỉnh riêng cho đề này?' : ' Dạng này chỉ dùng nguyên bản.'}</span>
@@ -571,7 +606,8 @@
           <i class="fa-solid ${t.icon}"></i><b>${t.label}</b><small>${t.hint}</small></button>`).join('')}</div></div>`;
     } else if (s) {
       typeBox = `<div class="eb-insp-sec"><div class="eb-insp-title">Câu từ ngân hàng</div>
-        <p class="eb-insp-p">${esc(BANK_TYPE_LABEL[s.q.type] || s.q.type)} · ${esc(s.mt)}</p></div>`;
+        <p class="eb-insp-p">${esc(BANK_TYPE_LABEL[s.q.type] || s.q.type)} · ${esc(s.mt)}</p>
+        ${(() => { const src = qSource(s.uid); return src.id ? `<p class="eb-insp-src is-${src.id}"><i class="fa-solid ${SOURCES[src.id].icon}"></i> ${esc(src.id === 'ak' ? 'All Key: ' + paperText(src.papers) : src.id === 'bai' ? src.label + ' · Củng cố (Quiz)' : src.label)}</p>` : ''; })()}</div>`;
     }
     $('ebInspector').innerHTML = `${typeBox}
       ${s ? `<div class="eb-insp-sec eb-insp-row">
@@ -587,10 +623,69 @@
     renderHealth();
   }
 
+  // ── Câu na ná nhau (js/services/question-similarity.js) ──
+  // Ngân hàng có nhiều biến thể cùng ý khác uid; chỉ nhắc, không chặn lưu.
+  let simMemo = { key: null, groups: [], sig: '' };
+  function slideSimText(s) {
+    if (s.custom) {
+      const c = s.custom;
+      return { q: c.q, body: [...(c.options || []), ...(c.items || []), ...(c.pairs || []).flat()].join(' ') };
+    }
+    return { q: s.q?.question || '', body: global.EduQuestionSimilarity.bodyText(s.q || {}) };
+  }
+  function similarGroups() {
+    const S = global.EduQuestionSimilarity;
+    if (!S) return [];
+    const key = B.slides.map((s) => (s.custom ? JSON.stringify(slideSimText(s)) : s.uid)).join('\n');
+    if (key !== simMemo.key) simMemo = { key, groups: S.groups(B.slides.map(slideSimText)), sig: simMemo.sig };
+    return simMemo.groups;
+  }
+
+  /** Số câu theo bộ nguồn (bài/chủ đề/tiết) — đề lệch hẳn về 1 bộ thì thấy ngay. */
+  function sourceDistHtml() {
+    const by = new Map();
+    B.slides.forEach((s) => { const k = s.custom ? 'Câu tự soạn' : s.mt; by.set(k, (by.get(k) || 0) + 1); });
+    if (by.size < 2) return '';
+    let rows = [...by].sort((a, b) => b[1] - a[1]);
+    if (rows.length > 6) rows = [...rows.slice(0, 5), ['Bộ khác', rows.slice(5).reduce((t, r) => t + r[1], 0)]];
+    const n = B.slides.length;
+    return `<div class="eb-dist" aria-label="Phân bố câu theo bộ nguồn">
+      <div class="eb-dist-title">Phân bố câu</div>
+      ${rows.map(([k, c]) => `<div class="eb-dist-row" title="${esc(k)}: ${c}/${n} câu">
+        <span>${esc(k)}</span><b>${c}</b><i style="--w:${Math.max(3, Math.round((c / n) * 100))}%"></i></div>`).join('')}
+    </div>`;
+  }
+
+  /** Đếm câu theo nguồn dữ liệu; đề có giờ Kiểm tra mà lẫn câu ngoài All Key thì nhắc. */
+  function sourceHealthHtml() {
+    if (!B.allkey) return '';
+    const cnt = { ak: 0, bai: 0, old: 0, custom: 0 };
+    const nonAk = [];
+    B.slides.forEach((s, i) => {
+      if (s.custom) { cnt.custom++; return; }
+      const id = qSource(s.uid).id;
+      cnt[id]++;
+      if (id !== 'ak') nonAk.push(i);
+    });
+    if (!cnt.ak && !cnt.bai && !cnt.old) return '';
+    const chip = (id, label, n) => (n ? `<span class="eb-src-chip is-${id}" title="${esc(label)}: ${n} câu">${SOURCES[id] ? `<i class="fa-solid ${SOURCES[id].icon}"></i> ` : ''}${esc(label)} <b>${n}</b></span>` : '');
+    const swappable = B.slides.filter((s) => !s.custom && qSource(s.uid).id === 'old').length;
+    const warn = B.duration > 0 && nonAk.length
+      ? `<div class="eb-health-row is-warn"><i class="fa-solid fa-key"></i>
+          <span>Đề kiểm tra có ${nonAk.length} câu không thuộc All Key</span>
+          <button type="button" class="eb-link" data-insp="goto" data-i="${nonAk.find((i) => i > B.cur) ?? nonAk[0]}">Tới câu ${(nonAk.find((i) => i > B.cur) ?? nonAk[0]) + 1}</button></div>
+        ${swappable ? `<button type="button" class="eb-btn eb-btn-soft eb-src-fix" data-insp="swap-all-ak"><i class="fa-solid fa-key"></i> Đổi ${swappable} câu ngoài All Key sang All Key</button>` : ''}`
+      : '';
+    return `<div class="eb-src-chips" aria-label="Nguồn dữ liệu">${chip('ak', 'All Key', cnt.ak)}${chip('bai', 'Theo bài', cnt.bai)}${chip('old', 'Ngoài All Key', cnt.old)}${chip('custom', 'Tự soạn', cnt.custom)}</div>${warn}`;
+  }
+
   function renderHealth() {
     const box = $('ebHealth');
     if (!box) return;
     const n = B.slides.length;
+    const sims = similarGroups();
+    const sig = JSON.stringify(sims);
+    if (sig !== simMemo.sig) { simMemo.sig = sig; renderRail(); } // dấu "na ná" ở các câu khác cũng đổi
     const bad = B.slides.map((s, i) => (slideErrors(s).length ? i : -1)).filter((i) => i >= 0);
     const live = B.slides.filter(liveOk).length;
     const kb = (B.linkLen / 1024).toFixed(1).replace('.', ',');
@@ -606,11 +701,19 @@
         <i class="fa-solid fa-tower-broadcast"></i>
         <span>${live} câu chơi trực tiếp được${live < 5 ? ' (cần ≥ 5)' : live > 15 ? ' (mỗi phòng tối đa 15)' : ''}</span>
       </div>
+      ${sourceHealthHtml()}
+      ${sims.length ? `<div class="eb-health-row is-warn">
+        <i class="fa-regular fa-clone"></i>
+        <span>${sims.reduce((t, g) => t + g.length, 0)} câu na ná nhau (${sims.length} nhóm)</span>
+      </div>
+      <div class="eb-sim-list">${sims.slice(0, 6).map((g) => `<div class="eb-sim-group">${g.map((i) => `<button type="button" class="eb-sim-no${i === B.cur ? ' is-cur' : ''}" data-insp="goto" data-i="${i}" title="Tới câu ${i + 1}">${i + 1}</button>`).join('')}</div>`).join('')}${sims.length > 6 ? `<small>+${sims.length - 6} nhóm nữa</small>` : ''}</div>
+      <p class="eb-sim-hint">Cùng ý hỏi, có thể khác dạng hoặc khác đáp án. Giữ lại nếu muốn ôn kỹ, không thì xoá bớt cho đề đa dạng.</p>` : ''}
       <div class="eb-linkmeter is-${lvl}" title="Đề nằm gọn trong link — không tốn lượt Firebase">
         <div class="eb-linkmeter-top"><span><i class="fa-solid fa-link"></i> Độ dài link</span><b>${B.linkLen ? kb + ' KB' : '…'}</b></div>
         <div class="eb-linkmeter-bar"><i style="width:${pct}%"></i></div>
         <small>${lvl === 'ok' ? 'Gọn — gửi qua Zalo/Messenger thoải mái.' : lvl === 'warn' ? 'Hơi dài (thường do ảnh tải lên) — vẫn mở được; nên dùng link ảnh https:// nếu gửi qua ứng dụng chat.' : 'Quá dài — bớt ảnh tải lên hoặc dùng link ảnh để link không bị cắt khi gửi.'}</small>
-      </div>`;
+      </div>
+      ${sourceDistHtml()}`;
   }
 
   function renderAll() { renderTop(); renderRail(); renderStage(); renderInspector(); refreshLinkSize(); }
@@ -753,6 +856,56 @@
     changed({ rail: false });
     renderRail(); renderStage(); renderInspector();
   }
+  /**
+   * Câu thay thế cho câu ngân hàng ở vị trí i: cùng bộ nguồn, chưa có trong đề, không na ná
+   * câu nào khác trong đề; câu All Key thì thay bằng câu All Key; ưu tiên cùng dạng câu.
+   */
+  async function pickReplacement(i, { allKey = false } = {}) {
+    const s = B.slides[i];
+    const list = await fetchMinitest(s.cat, s.level, s.mt);
+    const used = bankUids();
+    const wantAk = allKey || qSource(s.uid).id === 'ak';
+    const Sim = global.EduQuestionSimilarity;
+    const near = Sim ? Sim.matcher(B.slides.filter((_, k) => k !== i).map(slideSimText)) : () => false;
+    const pool = list.filter((q) => q.uid && !used.has(q.uid) && (!wantAk || qSource(q.uid).id === 'ak')
+      && !near({ q: q.question, body: Sim ? Sim.bodyText(q) : '' }));
+    const same = pool.filter((q) => q.type === s.q?.type);
+    return shuffled(same.length ? same : pool)[0] || null;
+  }
+  function replaceSlide(i, q) {
+    const s = B.slides[i];
+    B.slides[i] = { id: newId(), cat: s.cat, level: s.level, mt: s.mt, uid: q.uid, q };
+  }
+  async function swapSlide(i, opts) {
+    const s = B.slides[i];
+    if (!s || s.custom) return;
+    let q;
+    try { q = await pickReplacement(i, opts); } catch (e) { toast('Không tải được bộ câu: ' + e.message, 'fa-triangle-exclamation'); return; }
+    if (!q) {
+      toast(`Bộ "${s.mt}" không còn ${opts?.allKey || qSource(s.uid).id === 'ak' ? 'câu All Key ' : 'câu '}nào chưa dùng mà không na ná câu khác trong đề.`, 'fa-circle-info');
+      return;
+    }
+    replaceSlide(i, q);
+    changed({ rail: false });
+    renderRail(); renderStage(); renderInspector();
+    const src = qSource(q.uid);
+    toast(`Đã đổi câu ${i + 1}${src.id === 'ak' ? ` — All Key: ${paperText(src.papers)}` : ''}. Ctrl+Z để hoàn tác.`, 'fa-shuffle');
+  }
+  /** Đổi mọi câu "Ngoài All Key" sang câu All Key cùng bộ (1 bước hoàn tác). */
+  async function swapAllToAllKey() {
+    const idx = B.slides.map((s, i) => (!s.custom && qSource(s.uid).id === 'old' ? i : -1)).filter((i) => i >= 0);
+    let done = 0;
+    try {
+      for (const i of idx) {
+        const q = await pickReplacement(i, { allKey: true });
+        if (q) { replaceSlide(i, q); done++; }
+      }
+    } catch (e) { toast('Không tải được bộ câu: ' + e.message, 'fa-triangle-exclamation'); }
+    if (done) { changed({ rail: false }); renderRail(); renderStage(); renderInspector(); }
+    const left = idx.length - done;
+    toast(left ? `Đã đổi ${done} câu sang All Key — ${left} câu giữ nguyên vì bộ của nó hết câu All Key chưa dùng.` : `Đã đổi ${done} câu sang All Key. Ctrl+Z để hoàn tác.`, left ? 'fa-triangle-exclamation' : 'fa-key');
+  }
+
   function moveSlide(from, to) {
     if (from === to || to < 0 || to >= B.slides.length) return;
     const [s] = B.slides.splice(from, 1);
@@ -1607,6 +1760,13 @@
     $('ebBankType').innerHTML = '<option value="">Mọi dạng</option>' + types.map((t) => `<option value="${esc(t)}">${esc(BANK_TYPE_LABEL[t] || t)} (${qs.filter((q) => q.type === t).length})</option>`).join('');
     if (!types.includes(bk.type)) bk.type = '';
     $('ebBankType').value = bk.type;
+    // Lọc theo nguồn chỉ hiện khi bộ có cả câu All Key lẫn câu ngoài All Key (bộ chủ đề)
+    const akN = qs.filter((q) => qSource(q.uid).id === 'ak').length;
+    const mixed = akN > 0 && akN < qs.length;
+    $('ebBankSrc').hidden = !mixed;
+    if (!mixed) bk.src = '';
+    $('ebBankSrc').innerHTML = `<option value="">Mọi nguồn</option><option value="ak">Chỉ All Key (${akN})</option><option value="non">Ngoài All Key (${qs.length - akN})</option>`;
+    $('ebBankSrc').value = bk.src;
     const sel = bankUids();
     const shown = visibleBank(qs);
     const free = shown.filter((q) => !sel.has(q.uid)).length;
@@ -1618,16 +1778,21 @@
       return `<article class="eb-q${added ? ' is-added' : ''}${open ? ' is-open' : ''}" data-uid="${esc(q.uid)}">
         <div class="eb-q-row"><span class="eb-q-no">${i + 1}</span>
           <div class="eb-q-main" data-bank="toggle" title="Bấm để xem đáp án">
-            <div class="eb-q-meta"><span class="eb-type eb-type-${esc(q.type)}">${esc(BANK_TYPE_LABEL[q.type] || q.type)}</span>${q.image_file || q.imageUrl ? '<span class="eb-tag"><i class="fa-regular fa-image"></i> Ảnh</span>' : ''}</div>
+            <div class="eb-q-meta"><span class="eb-type eb-type-${esc(q.type)}">${esc(BANK_TYPE_LABEL[q.type] || q.type)}</span>${bankSrcTag(q.uid)}${q.image_file || q.imageUrl ? '<span class="eb-tag"><i class="fa-regular fa-image"></i> Ảnh</span>' : ''}</div>
             <div class="eb-q-text">${esc(stripHtml(q.question))}</div></div>
           <button type="button" class="eb-add" data-bank="${added ? 'remove' : 'add'}" title="${added ? 'Bỏ khỏi đề' : 'Thêm vào đề'}" aria-label="${added ? 'Bỏ khỏi đề' : 'Thêm vào đề'}"><i class="fa-solid ${added ? 'fa-check' : 'fa-plus'}"></i></button>
         </div>${open ? `<div class="eb-q-detail">${renderQuestionDetail(q, { answer: true })}</div>` : ''}</article>`;
     }).join('') : '<div class="eb-empty-sm">Không có câu nào khớp bộ lọc.</div>';
   }
+  function bankSrcTag(uid) {
+    const src = qSource(uid);
+    return src.id === 'ak' ? `<span class="eb-tag eb-tag-ak" title="All Key: ${esc(paperText(src.papers))}"><i class="fa-solid fa-key"></i> All Key</span>` : '';
+  }
   function visibleBank(qs) {
     const bk = B.bank;
     const term = bk.search.toLowerCase();
-    return qs.filter((q) => (!bk.type || q.type === bk.type) && (!term || stripHtml(q.question).toLowerCase().includes(term)));
+    return qs.filter((q) => (!bk.type || q.type === bk.type) && (!term || stripHtml(q.question).toLowerCase().includes(term))
+      && (!bk.src || (qSource(q.uid).id === 'ak') === (bk.src === 'ak')));
   }
   function insertBankQs(list, mt) {
     const bk = B.bank;
@@ -1658,6 +1823,8 @@
     const names = Object.keys(levelMeta(bk.cat, bk.level)?.minitests || {});
     const groups = GROUPS.filter((g) => names.some(g.test));
     let gid = groups.some((g) => g.id === 'topic') ? 'topic' : groups[0]?.id;
+    let akOnly = !!B.allkey; // bộ chủ đề trộn câu All Key + câu cũ; Ôn tập/Kiểm tra vốn toàn All Key, Bài N không có
+    const akCounts = {}; // số câu All Key mỗi bộ chủ đề — tải file bộ khi mở (tĩnh, dùng lại lúc bốc)
     const body = modal('<i class="fa-solid fa-table-cells"></i> Ma trận đề — bốc câu ngẫu nhiên', '',
       '<button class="btn-cancel" onclick="closeModal()">Huỷ</button><button class="btn-save" id="ebMatrixGo"><i class="fa-solid fa-shuffle"></i> Bốc câu</button>');
     const draw = () => {
@@ -1666,11 +1833,31 @@
       if (gid === 'bai') list.sort((a, b) => (parseInt(a.match(/\d+/)?.[0], 10) || 0) - (parseInt(b.match(/\d+/)?.[0], 10) || 0));
       body.innerHTML = `<p class="eb-matrix-hint">${esc(levelMeta(bk.cat, bk.level)?.name || '')} — nhập số câu cho từng mục, hệ thống bốc ngẫu nhiên, không trùng câu đã có.</p>
         <div class="eb-chips">${groups.map((x) => `<button type="button" class="eb-chip${x.id === gid ? ' is-active' : ''}" data-mgroup="${x.id}">${x.label}</button>`).join('')}</div>
+        ${B.allkey && gid === 'topic' ? `<label class="eb-check eb-matrix-ak"><input type="checkbox" id="ebMatrixAk"${akOnly ? ' checked' : ''}> <span><i class="fa-solid fa-key"></i> Chỉ bốc câu đáp án gốc All Key</span></label>` : ''}
         <div class="eb-matrix-quick">Chia đều <input type="number" id="ebMatrixTotal" min="1" max="200" value="30"> câu <button type="button" class="eb-link" id="ebMatrixSpread">Áp dụng</button></div>
         <div class="eb-matrix-table">${list.map((n) => `<label class="eb-matrix-row"><span>${esc(n)}</span><small>${mtCount(bk.cat, bk.level, n)} câu</small><input type="number" min="0" max="${mtCount(bk.cat, bk.level, n)}" value="0" data-mname="${esc(n)}"></label>`).join('')}</div>
         <div class="eb-matrix-foot"><span>Tổng: <b id="ebMatrixSum">0</b> câu</span></div>`;
       body.querySelectorAll('[data-mgroup]').forEach((b) => b.addEventListener('click', () => { gid = b.dataset.mgroup; draw(); }));
       const sum = () => { $('ebMatrixSum').textContent = [...body.querySelectorAll('[data-mname]')].reduce((s, i) => s + (parseInt(i.value, 10) || 0), 0); };
+      // Bật "Chỉ All Key": số câu tối đa mỗi mục = số câu All Key của bộ đó
+      const applyCaps = () => {
+        body.querySelectorAll('[data-mname]').forEach((i) => {
+          const n = i.dataset.mname;
+          const total = mtCount(bk.cat, bk.level, n);
+          const ak = akOnly && gid === 'topic' && akCounts[n] != null;
+          i.max = ak ? akCounts[n] : total;
+          if ((+i.value || 0) > +i.max) i.value = i.max;
+          i.closest('label').querySelector('small').textContent = ak ? `${akCounts[n]}/${total} All Key` : `${total} câu`;
+        });
+        sum();
+      };
+      $('ebMatrixAk')?.addEventListener('change', (e) => { akOnly = e.target.checked; applyCaps(); });
+      if (B.allkey && gid === 'topic' && list.some((n) => akCounts[n] == null)) {
+        Promise.all(list.map((n) => fetchMinitest(bk.cat, bk.level, n))).then((ls) => {
+          ls.forEach((l, k) => { akCounts[list[k]] = l.filter((q) => qSource(q.uid).id === 'ak').length; });
+          if (gid === 'topic' && body.isConnected) applyCaps();
+        }).catch(() => {});
+      } else applyCaps();
       body.querySelectorAll('[data-mname]').forEach((i) => i.addEventListener('input', sum));
       $('ebMatrixSpread').addEventListener('click', () => {
         const inputs = [...body.querySelectorAll('[data-mname]')];
@@ -1699,13 +1886,14 @@
         const picks = [];
         let short = 0;
         plan.forEach((p, k) => {
-          const take = shuffled(lists[k].filter((q) => q.uid && !sel.has(q.uid))).slice(0, p.n);
+          const ak = akOnly && gid === 'topic';
+          const take = shuffled(lists[k].filter((q) => q.uid && !sel.has(q.uid) && (!ak || qSource(q.uid).id === 'ak'))).slice(0, p.n);
           short += p.n - take.length;
           take.forEach((q) => { sel.add(q.uid); picks.push(Object.assign({}, q, { _mt: p.name })); });
         });
         global.closeModal?.();
         const n = insertBankQs(picks, '');
-        toast(short ? `Đã bốc ${n} câu — thiếu ${short} câu vì mục không đủ câu chưa dùng.` : `Đã bốc ${n} câu theo ma trận.`, short ? 'fa-triangle-exclamation' : 'fa-circle-check');
+        toast(short ? `Đã bốc ${n} câu — thiếu ${short} câu vì mục không đủ câu${akOnly && gid === 'topic' ? ' All Key' : ''} chưa dùng.` : `Đã bốc ${n} câu theo ma trận.`, short ? 'fa-triangle-exclamation' : 'fa-circle-check');
       } catch (err) {
         toast('Không tải được câu hỏi: ' + err.message, 'fa-triangle-exclamation');
         btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-shuffle"></i> Bốc câu';
@@ -1762,6 +1950,7 @@
       if (act === 'open-import') return openImport();
       const s = B.slides[B.cur];
       if (!s) return;
+      if (act === 'swap' || act === 'swap-ak') { swapSlide(B.cur, { allKey: act === 'swap-ak' }); return; }
       if (act === 'convert') {
         const c = bankToCustom(s);
         if (!c) return;
@@ -1885,10 +2074,11 @@
         changed(); renderStage(); renderInspector();
       } else if (a === 'dup') dupSlide(B.cur);
       else if (a === 'del') delSlide(B.cur);
-      else if (a === 'goto-bad') select(+b.dataset.i);
+      else if (a === 'goto-bad' || a === 'goto') select(+b.dataset.i);
+      else if (a === 'swap-all-ak') swapAllToAllKey();
     });
     $('ebInspector').addEventListener('input', (e) => {
-      if (e.target.id === 'ebDuration') { B.duration = Math.min(180, Math.max(0, parseInt(e.target.value, 10) || 0)); changed({ rail: false, health: false }); }
+      if (e.target.id === 'ebDuration') { B.duration = Math.min(180, Math.max(0, parseInt(e.target.value, 10) || 0)); changed({ rail: false, health: false }); renderHealth(); }
     });
     $('ebInspector').addEventListener('change', (e) => {
       if (e.target.id === 'ebShuffle') { B.shuffle = e.target.checked; changed({ rail: false }); }
@@ -1978,6 +2168,7 @@
     });
     $('ebBankSearch').addEventListener('input', debounce((e) => { B.bank.search = e.target.value; renderBank(); }, 200));
     $('ebBankType').addEventListener('change', (e) => { B.bank.type = e.target.value; renderBank(); });
+    $('ebBankSrc').addEventListener('change', (e) => { B.bank.src = e.target.value; renderBank(); });
     $('ebAddAllBtn').addEventListener('click', async () => {
       const qs = visibleBank(await fetchMinitest(B.bank.cat, B.bank.level, B.bank.mt));
       const n = insertBankQs(qs, B.bank.mt);

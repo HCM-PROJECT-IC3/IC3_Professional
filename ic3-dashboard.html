@@ -179,12 +179,12 @@
              LUÔN khoảng trống còn lại bên dưới carousel (cũng là phản hồi
              người dùng) thay vì bỏ trống. -->
         <button type="button" class="shelf-promo-card" id="shelfPromoCard" onclick="toggleShelfView()">
-          <span class="shelf-promo-icon"><i class="fa-solid fa-cube fa-beat-fade" style="--fa-animation-duration: 2.5s; --fa-beat-fade-opacity: 0.7; --fa-beat-fade-scale: 1.1;"></i></span>
+          <span class="shelf-promo-icon"><i class="fa-solid fa-cube" aria-hidden="true"></i></span>
           <span class="shelf-promo-text">
             <span class="shelf-promo-title">Kệ sách 3D tương tác</span>
-            <span class="shelf-promo-desc">7 cuốn sách chủ đề IC3 trên kệ 3D xoay được — mở sách xem nội dung từng chủ đề, luyện tập Ribbon.</span>
+            <span class="shelf-promo-desc">7 cuốn theo 7 phần thi IC3 GS6. Mở từng cuốn để xem nội dung, cuốn Word/Excel/PowerPoint có nút vào phòng luyện Ribbon.</span>
           </span>
-          <span class="shelf-promo-cta">Khám phá ngay <i class="fa-solid fa-arrow-right"></i></span>
+          <span class="shelf-promo-cta">Mở kệ sách <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
         </button>
 
         <div class="shelf-embed" id="shelfEmbed" hidden>
@@ -218,7 +218,7 @@
         <header class="eb-top">
           <button type="button" class="eb-btn eb-btn-ghost eb-icon-btn" id="ebBackBtn" title="Về Bộ đề của tôi" aria-label="Về Bộ đề của tôi"><i class="fa-solid fa-arrow-left"></i></button>
           <button type="button" class="eb-identity" id="ebIdentity" title="Cài đặt đề: tên, mô tả, ảnh bìa, thời gian">
-            <span class="eb-cover" id="ebCover">📝</span>
+            <span class="eb-cover" id="ebCover"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></span>
             <span class="eb-identity-text">
               <b id="ebTitleText">Đề chưa đặt tên</b>
               <small id="ebSubText">0 câu</small>
@@ -298,6 +298,7 @@
                   <div class="eb-bank-tools">
                     <input type="search" id="ebBankSearch" class="eb-input" placeholder="Tìm trong câu hỏi...">
                     <select id="ebBankType" class="eb-input"></select>
+                    <select id="ebBankSrc" class="eb-input" aria-label="Lọc theo nguồn dữ liệu" hidden></select>
                   </div>
                   <div class="eb-bank-tools">
                     <span class="eb-random">Thêm ngẫu nhiên <input type="number" id="ebRandomN" class="eb-input" min="1" value="5"> câu
@@ -564,6 +565,7 @@
 <script src="js/dashboard.js"></script>
 <script src="js/services/lazy-script-loader.js"></script>
 <script src="js/custom-exam-codec.js"></script>
+<script src="js/services/question-similarity.js"></script>
 <script src="js/exam-builder.js"></script>
 <script src="js/sw-register.js"></script>
 <script src="js/motion.js"></script>

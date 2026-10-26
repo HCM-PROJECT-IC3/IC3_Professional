@@ -37,7 +37,9 @@
     var dpr = Math.min(global.devicePixelRatio || 1, 2);
     canvas.width = innerWidth * dpr;
     canvas.height = innerHeight * dpr;
-    document.body.appendChild(canvas);
+    // Sân khấu đang toàn màn hình (Gọi tên): phải gắn vào chính phần tử đó mới thấy được
+    var fs = document.fullscreenElement;
+    (fs && !/^(VIDEO|CANVAS|IMG)$/.test(fs.tagName) ? fs : document.body).appendChild(canvas);
     var ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
 

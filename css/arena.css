@@ -1165,6 +1165,54 @@ body[data-mode="moon"] .ar-scene { height: clamp(170px, min(30vw, 40vh), 360px);
 .ar-drama.t-up .ar-drama-in { background: #16a37f; color: #fff; }
 .ar-drama.t-down .ar-drama-in { background: #3d4456; color: #fff; }
 .ar-drama.t-fire .ar-drama-in { background: #f19a1a; color: #fff; }
+/* Tia sáng xoay sau chữ lớn (js/fx-party.js rays) — chữ nảy từng ký tự (letters) */
+.ar-drama > .edp-rays { width: 170%; z-index: 0; }
+.ar-drama-in { position: relative; z-index: 1; }
+.ar-drama.t-down > .edp-rays { display: none; } /* bị vượt: không ăn mừng */
+/* Chuỗi ≥ 5 câu đúng: khung câu hỏi "bốc lửa" (arena.js answerFx), tắt khi sai */
+#arGame.is-fever .ar-q { position: relative; border-color: #f19a1a; animation: ar-fever .45s ease-in-out infinite alternate; }
+#arGame.is-fever #arStreak { background: #e5484d; color: #fff; border-color: #a82a2e; animation: ar-fever-pill .45s ease-in-out infinite alternate; }
+@keyframes ar-fever { from { box-shadow: 0 0 0 3px #f19a1a, 0 0 18px 2px rgba(241, 120, 26, .55); } to { box-shadow: 0 0 0 4px #e5484d, 0 0 34px 8px rgba(255, 190, 40, .7); } }
+@keyframes ar-fever-pill { to { transform: scale(1.08); } }
+/* Sai: đáp án đúng được tô dạ quang dần từ trái sang + dấu "Ghi nhớ!" → mắt dừng lại ở đúng chỗ cần nhớ */
+.ar-hl { background: linear-gradient(transparent 45%, rgba(255, 214, 10, .75) 45%, rgba(255, 214, 10, .75) 92%, transparent 92%) no-repeat 0 0 / 0% 100%;
+  animation: ar-hl .9s ease-out .35s forwards; padding: 0 2px; }
+@keyframes ar-hl { to { background-size: 100% 100%; } }
+[data-theme="dark"] .ar-hl { color: #1a1408; } /* chữ sáng trên nền vàng khó đọc */
+.ar-memo { display: inline-block; margin-left: 8px; padding: 0 8px; border: 2px solid #c8361b; border-radius: 6px; color: #c8361b; font: 800 .78rem/1.5 Inter, sans-serif;
+  text-transform: uppercase; transform: rotate(-6deg); animation: ar-memo .35s cubic-bezier(.2, 1.6, .4, 1) 1.1s both; vertical-align: middle; }
+@keyframes ar-memo { from { transform: rotate(-6deg) scale(2.4); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  #arGame.is-fever .ar-q, #arGame.is-fever #arStreak, .ar-memo { animation: none !important; }
+  .ar-hl { animation: none; background-size: 100% 100%; }
+}
+/* Lật thẻ ôn nhanh câu sai (js/arena/arena-flash.js): xấp thẻ chồng, thẻ trên cùng lật 3D */
+.ar-flash { margin: .6rem 0 1rem; padding: 12px; border-radius: 16px; background: var(--card2); border: 1.5px solid var(--border); overflow: hidden; }
+.ar-review-all summary { font-weight: 700; font-size: .9rem; color: var(--muted); }
+.ar-flash-head { display: flex; justify-content: space-between; gap: 8px; margin: 0 0 10px; font-weight: 800; }
+.ar-flash-prog b { color: var(--green); }
+.ar-flash-deck { display: grid; perspective: 1200px; padding-bottom: 16px; }
+.ar-fcard { grid-area: 1 / 1; position: relative; z-index: 3; transition: transform .42s cubic-bezier(.4, 0, .2, 1), opacity .42s; }
+.ar-fcard:nth-child(2) { z-index: 2; transform: translateY(8px) scale(.96); pointer-events: none; }
+.ar-fcard:nth-child(3) { z-index: 1; transform: translateY(16px) scale(.92); pointer-events: none; }
+.ar-fcard:nth-child(n+4) { visibility: hidden; pointer-events: none; }
+.ar-fcard:nth-child(n+2) .ar-fface { filter: brightness(.94); }
+.ar-fcard.is-got { transform: translateX(120%) rotate(14deg); opacity: 0; }
+.ar-fcard.is-again { transform: translateX(-120%) rotate(-14deg); opacity: 0; }
+.ar-fcard-in { display: grid; width: 100%; padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; transform-style: preserve-3d; transition: transform .55s cubic-bezier(.3, 1.3, .5, 1); }
+.ar-fcard.is-flipped .ar-fcard-in { transform: rotateY(180deg); cursor: default; }
+.ar-fface { grid-area: 1 / 1; display: flex; flex-direction: column; justify-content: center; gap: 8px; min-height: 170px; padding: 16px 20px; border-radius: 16px;
+  border: 3px solid #2d2416; box-shadow: 0 6px 0 rgba(0, 0, 0, .2); text-align: center; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.ar-fface small { font: 800 .75rem/1.3 Inter, sans-serif; text-transform: uppercase; letter-spacing: .04em; opacity: .75; }
+.ar-fface b { font: 800 1.15rem/1.35 'Baloo 2', Inter, sans-serif; }
+.ar-fface em { font-style: normal; font-size: .9rem; opacity: .95; }
+.ar-fface > i { font-style: normal; font-size: .82rem; font-weight: 700; color: #2f7be0; }
+.ar-fface.is-front { background: #fffdf7; color: #2d2416; }
+.ar-fface.is-back { background: #16a37f; color: #fff; transform: rotateY(180deg); }
+.ar-flash-acts { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; animation: ar-ans-in .3s ease both; }
+.ar-flash-acts[hidden], .ar-flash-done[hidden] { display: none; }
+.ar-flash-done { margin: 4px 0 0; text-align: center; font: 800 1.15rem/1.3 'Baloo 2', Inter, sans-serif; color: var(--green); animation: ar-q-in .45s cubic-bezier(.2, 1.4, .4, 1) both; }
+@media (prefers-reduced-motion: reduce) { .ar-fcard, .ar-fcard-in { transition: none; } .ar-flash-acts, .ar-flash-done { animation: none; } }
 /* Câu hỏi + ô đáp án hiện ra (giờ chỉ bắt đầu tính sau khi hiện xong) */
 .ar-qbox.is-intro .ar-q, .ar-qbox.is-intro .ar-qimg:not([hidden]) { animation: ar-q-in .45s cubic-bezier(.2, 1.4, .4, 1) both; }
 .ar-qbox.is-intro .ar-answers > * { animation: ar-ans-in .38s cubic-bezier(.2, 1.5, .4, 1) both; pointer-events: none; }

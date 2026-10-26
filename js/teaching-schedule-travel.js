@@ -183,24 +183,24 @@
 
     if (type === 'week') {
       const weekKey = document.getElementById('travelWeekSelect').value;
-      if (!weekKey) { toast('⚠️ Chọn 1 tuần trước.'); return; }
+      if (!weekKey) { toast('Chọn 1 tuần trước.'); return; }
       weekKeys = [weekKey];
       const week = state.weeks.find((w) => w.id === weekKey);
-      rangeLabel = `📆 ${week ? (week.label || week.id) : weekKey}`;
+      rangeLabel = `${week ? (week.label || week.id) : weekKey}`;
     } else {
       const selId = type === 'month' ? 'travelMonthSelect' : type === 'quarter' ? 'travelQuarterSelect' : 'travelYearSelect';
       const value = document.getElementById(selId)?.value;
-      if (!value) { toast('⚠️ Chọn 1 kỳ trước (chưa có tuần nào thuộc kỳ này).'); return; }
+      if (!value) { toast('Chọn 1 kỳ trước (chưa có tuần nào thuộc kỳ này).'); return; }
       weekKeys = weekKeysForPeriod(type, value);
-      if (!weekKeys.length) { toast('⚠️ Không có tuần nào thuộc kỳ đã chọn.'); return; }
+      if (!weekKeys.length) { toast('Không có tuần nào thuộc kỳ đã chọn.'); return; }
       const label = document.getElementById(selId).selectedOptions[0]?.textContent || value;
-      rangeLabel = `📆 ${label} (gồm ${weekKeys.length} tuần đã có lịch)`;
+      rangeLabel = `${label} (gồm ${weekKeys.length} tuần đã có lịch)`;
     }
 
     const btn = document.getElementById('travelLoadBtn');
     const originalLabel = btn.textContent;
     btn.disabled = true;
-    btn.textContent = '⏳ Đang tải...';
+    btn.innerHTML = '<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Đang tải...';
     try {
       const [weekResults, distanceDocs] = await Promise.all([
         Promise.all(weekKeys.map((wk) => cachedRead('schedule:' + wk, () => window.EduRepositories.teachingSchedule.listByWeek(wk)))),
@@ -214,8 +214,8 @@
       const info = document.getElementById('travelRangeInfo');
       if (info) info.textContent = rangeLabel;
       document.getElementById('travelResultTitle').textContent = type === 'week'
-        ? '🚗 Hỗ trợ xăng xe theo tuần'
-        : '🚗 Tổng hợp hỗ trợ xăng xe theo kỳ đã chọn';
+        ? 'Hỗ trợ xăng xe theo tuần'
+        : 'Tổng hợp hỗ trợ xăng xe theo kỳ đã chọn';
 
       renderDistanceTable();
       if (type === 'week') renderAllowanceTableWeek();
@@ -223,7 +223,7 @@
       document.getElementById('travelEmpty').classList.add('force-hide');
       document.getElementById('travelBody').classList.remove('force-hide');
     } catch (err) {
-      toast('❌ ' + (err && err.message ? err.message : String(err)));
+      toast((err && err.message ? err.message : String(err)));
       return;
     } finally {
       btn.disabled = false;
@@ -292,7 +292,7 @@
         <td class="report-pivot-name">${esc(r.teacherName)}</td>
         <td class="report-pivot-name"${schoolTitle}>${esc(r.school)}${matched ? ' 📍' : ''}</td>
         <td${kmTitle}>${isApprox ? '~' : ''}<input type="number" min="0" step="0.1" class="travel-km-input" data-teacher="${esc(r.teacherCode)}" data-school="${esc(r.school)}" value="${esc(km)}" placeholder="vd 12.5" ${isReadOnly ? 'readonly' : ''}></td>
-        <td>${isReadOnly ? '' : `<button type="button" class="row-gmaps-btn" data-teacher="${esc(r.teacherCode)}" data-school="${esc(r.school)}" title="Tính lại đúng khoảng cách này (miễn phí, qua bản đồ Google trong Apps Script)">🌍</button>`}</td>
+        <td>${isReadOnly ? '' : `<button type="button" class="row-gmaps-btn" data-teacher="${esc(r.teacherCode)}" data-school="${esc(r.school)}" title="Tính lại đúng khoảng cách này (miễn phí, qua bản đồ Google trong Apps Script)"><i class="fa-solid fa-globe" aria-hidden="true"></i></button>`}</td>
       </tr>`;
     }).join('');
     table.innerHTML = `<thead><tr><th>Giáo viên</th><th>Trường</th><th>Khoảng cách (km)</th><th></th></tr></thead><tbody>${body}</tbody>`;
@@ -322,9 +322,9 @@
     if (state.periodType === 'week') renderAllowanceTableWeek(); else renderAllowanceTableSummary();
     try {
       await window.EduRepositories.teachingTravelDistance.setSchoolDistance(teacherCode, school, km);
-      if (!skipToast) toast(`✅ Đã lưu khoảng cách ${esc(school)}: ${km}km`);
+      if (!skipToast) toast(`Đã lưu khoảng cách ${esc(school)}: ${km}km`);
     } catch (err) {
-      toast('❌ ' + (err && err.message ? err.message : String(err)));
+      toast((err && err.message ? err.message : String(err)));
     }
   }
 
@@ -349,7 +349,7 @@
     const teacher = state.teachersByCode[teacherCode];
     const address = teacher && teacher.address && teacher.address.trim();
     if (!address) {
-      toast(`⚠️ ${esc(teacherCode)} chưa có địa chỉ nhà — bổ sung ở tab "👤 Giáo viên" trước.`);
+      toast(`${esc(teacherCode)} chưa có địa chỉ nhà — bổ sung ở tab "Giáo viên" trước.`);
       return null;
     }
     try {
@@ -359,22 +359,22 @@
       // tooltip + toast, phòng trường hợp trùng tên).
       const result = await window.EduMapDistance.computeDistanceKm(address, expandSchoolQuery(school));
       if (result === null) {
-        toast(`⚠️ Không định vị được "${esc(school)}" hoặc địa chỉ nhà — kiểm tra lại, hoặc điền tay.`);
+        toast(`Không định vị được "${esc(school)}" hoặc địa chỉ nhà — kiểm tra lại, hoặc điền tay.`);
         return null;
       }
       const { km, matchedSchoolAddress, approximateHome } = result;
       state.approximateHome[teacherCode] = !!approximateHome;
       await saveDistance(teacherCode, school, km, matchedSchoolAddress, true);
       renderDistanceTable(); // cập nhật ngay dấu "~"/tooltip 📍 vừa có, không cần bấm "Tính hỗ trợ" lại
-      const approxNote = approximateHome ? ' (⚠️ vị trí nhà chỉ xấp xỉ theo tên đường, không đúng số nhà/hẻm — nên xem lại)' : '';
+      const approxNote = approximateHome ? ' (vị trí nhà chỉ xấp xỉ theo tên đường, không đúng số nhà/hẻm — nên xem lại)' : '';
       toast((matchedSchoolAddress
-        ? `✅ ${esc(school)}: ${km}km — đã dò trúng "${esc(matchedSchoolAddress)}"`
-        : `✅ ${esc(school)}: ${km}km (không dò được địa chỉ trường cụ thể, tính theo tên — nên kiểm tra lại)`) + approxNote);
+        ? `${esc(school)}: ${km}km — đã dò trúng "${esc(matchedSchoolAddress)}"`
+        : `${esc(school)}: ${km}km (không dò được địa chỉ trường cụ thể, tính theo tên — nên kiểm tra lại)`) + approxNote);
       return km;
     } catch (err) {
       // Hết lượt tính bản đồ trong ngày: dừng cả loạt (xem fillMissingDistances), không báo lỗi từng dòng.
       if (err && err.code === 'resource-exhausted') state.mapsExhausted = true;
-      toast('❌ Tính khoảng cách thất bại: ' + (err && err.message ? err.message : String(err)));
+      toast('Tính khoảng cách thất bại: ' + (err && err.message ? err.message : String(err)));
       return null;
     }
   }
@@ -392,22 +392,22 @@
     const btn = document.getElementById('travelGmapsAllBtn');
     const rows = [...document.querySelectorAll('.travel-km-input')].filter((el) => !el.value);
     if (!rows.length) {
-      if (!silent) toast('✅ Mọi khoảng cách đang hiện đã có giá trị — không có ô trống nào cần tính.');
+      if (!silent) toast('Mọi khoảng cách đang hiện đã có giá trị — không có ô trống nào cần tính.');
       return;
     }
     if (btn) btn.disabled = true;
     let done = 0, ok = 0;
     const originalLabel = btn ? btn.textContent : '';
-    toast(`🌍 Phát hiện ${rows.length} khoảng cách còn trống — đang tự tính (miễn phí, qua bản đồ Google trong Apps Script)...`);
+    toast(`Phát hiện ${rows.length} khoảng cách còn trống — đang tự tính (miễn phí, qua bản đồ Google trong Apps Script)...`);
     for (const input of rows) {
       done++;
       if (state.mapsExhausted) break; // hết lượt bản đồ hôm nay — phần còn lại điền tay/để mai
-      if (btn) btn.textContent = `⏳ Đang tính (${done}/${rows.length})...`;
+      if (btn) btn.textContent = `Đang tính (${done}/${rows.length})...`;
       const km = await computeOneDistance(input.dataset.teacher, input.dataset.school);
       if (km !== null) ok++;
     }
     if (btn) { btn.disabled = false; btn.textContent = originalLabel; }
-    toast(`🌍 Đã tính xong ${ok}/${rows.length} khoảng cách (miễn phí, qua bản đồ Google trong Apps Script).`);
+    toast(`Đã tính xong ${ok}/${rows.length} khoảng cách (miễn phí, qua bản đồ Google trong Apps Script).`);
   }
   document.getElementById('travelGmapsAllBtn')?.addEventListener('click', () => fillMissingDistances(false));
 
@@ -432,7 +432,7 @@
         if (!schools.length) return '<td class="travel-cell-zero">–</td>';
         const title = `${esc(schools.join(' → '))} (${km}km)${missingDistance ? ' — CHƯA đủ khoảng cách' : ''}`;
         const cls = missingDistance ? 'travel-cell-warn' : (amount > 0 ? 'travel-cell-paid' : 'travel-cell-zero');
-        return `<td class="${cls}" title="${title}">${amount > 0 ? TM.formatVnd(amount) : '0đ'}${missingDistance ? ' ⚠️' : ''}</td>`;
+        return `<td class="${cls}" title="${title}">${amount > 0 ? TM.formatVnd(amount) : '0đ'}${missingDistance ? ' <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>' : ''}</td>`;
       }).join('');
       return `<tr><td class="report-pivot-name">${esc(doc.teacherName || doc.teacherCode)}</td>${dayCells}<td class="report-pivot-total">${TM.formatVnd(weekTotal)}</td></tr>`;
     });
@@ -471,7 +471,7 @@
         <td class="report-pivot-name">${esc(r.name)}</td>
         <td>${r.days}</td>
         <td class="report-pivot-total">${TM.formatVnd(r.total)}</td>
-        <td>${r.missing ? `<span class="travel-cell-warn" style="padding:.15rem .5rem;border-radius:6px" title="Còn ${r.missing} buổi chưa đủ khoảng cách để tính đúng">⚠️ ${r.missing}</span>` : '—'}</td>
+        <td>${r.missing ? `<span class="travel-cell-warn" style="padding:.15rem .5rem;border-radius:6px" title="Còn ${r.missing} buổi chưa đủ khoảng cách để tính đúng"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> ${r.missing}</span>` : '—'}</td>
       </tr>`).join('');
     const footer = `<tr class="report-pivot-footer"><td>Tổng cộng</td><td>${rows.reduce((s, r) => s + r.days, 0)}</td><td class="report-pivot-total">${TM.formatVnd(grandTotal)}</td><td></td></tr>`;
     table.innerHTML = `<thead><tr><th>Giáo viên</th><th>Số buổi có hỗ trợ</th><th>Tổng tiền hỗ trợ</th><th>Thiếu km</th></tr></thead><tbody>${body}${footer}</tbody>`;

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📅 Lịch giảng dạy — EduQuiz IC3</title>
+<title>Lịch giảng dạy — EduQuiz IC3</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/theme.css">
@@ -20,11 +20,11 @@
 
 <div class="topbar">
   <a href="ic3-dashboard.html" class="btn btn-ghost">← Dashboard</a>
-  <h1>📅 Lịch giảng dạy
+  <h1><i class="fa-solid fa-calendar" aria-hidden="true"></i> Lịch giảng dạy
     <!-- Thay khối giới thiệu 3 dòng (chiếm hẳn 1 khối phía trên, đẩy lịch
          18 GV — nội dung quan trọng nhất — xuống dưới) bằng 1 nút info
          nhỏ, xem qua tooltip khi cần, không tốn chỗ thường trực. -->
-    <button type="button" class="info-btn" title="Quản lý lịch làm việc/giảng dạy hàng tuần của đội ngũ giáo viên — thay thế việc cập nhật thủ công trên file Excel LỊCH GIẢNG DẠY TEAM GVTH...xlsx. Mỗi tuần gồm lịch của từng giáo viên theo Thứ 2 → Thứ 7, mỗi ngày chia Sáng/Chiều với loại hình phụ trách + địa điểm + tối đa 5 tiết dạy. Có thể nhập nhanh từ file Excel gốc (nút Nhập từ Excel ở sidebar) rồi chỉnh sửa tiếp trực tiếp trên trang này.">ℹ️</button>
+    <button type="button" class="info-btn" title="Quản lý lịch làm việc/giảng dạy hàng tuần của đội ngũ giáo viên — thay thế việc cập nhật thủ công trên file Excel LỊCH GIẢNG DẠY TEAM GVTH...xlsx. Mỗi tuần gồm lịch của từng giáo viên theo Thứ 2 → Thứ 7, mỗi ngày chia Sáng/Chiều với loại hình phụ trách + địa điểm + tối đa 5 tiết dạy. Có thể nhập nhanh từ file Excel gốc (nút Nhập từ Excel ở sidebar) rồi chỉnh sửa tiếp trực tiếp trên trang này."><i class="fa-solid fa-circle-info" aria-hidden="true"></i></button>
   </h1>
   <div class="spacer"></div>
   <div class="whoami-chip" id="whoamiChip">
@@ -47,15 +47,15 @@
          cấp với #weeklyLayout/#myWeekWrap, để nó LUÔN hiện bất kể đang ở
          chế độ admin hay "Lịch của tôi" của giáo viên. -->
     <div class="tabs main-tabs" role="tablist" id="mainTabs">
-      <button type="button" class="tab-btn active" data-tab="weekly" role="tab">📅 Lịch tuần</button>
-      <button type="button" class="tab-btn" data-tab="timetable" role="tab" id="timetableTabBtn">🗓️ TKB lớp</button>
-      <button type="button" class="tab-btn" data-tab="teachers" role="tab" id="teachersTabBtn">👤 Giáo viên</button>
+      <button type="button" class="tab-btn active" data-tab="weekly" role="tab"><i class="fa-solid fa-calendar" aria-hidden="true"></i> Lịch tuần</button>
+      <button type="button" class="tab-btn" data-tab="timetable" role="tab" id="timetableTabBtn"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> TKB lớp</button>
+      <button type="button" class="tab-btn" data-tab="teachers" role="tab" id="teachersTabBtn"><i class="fa-solid fa-user" aria-hidden="true"></i> Giáo viên</button>
       <!-- 2 tab dưới đây CHỈ admin/🚗 điều phối giáo viên thấy (ẩn với
            teacher — 1 giáo viên không cần xem tổng hợp/quản lý hỗ trợ
            xăng xe CẢ ĐỘI), ẩn qua [data-tab="report"]/[data-tab="travel"]
            trong chính js/teaching-schedule-report.js/js/teaching-schedule-travel.js. -->
-      <button type="button" class="tab-btn" data-tab="report" role="tab" id="reportTabBtn">📊 Báo cáo</button>
-      <button type="button" class="tab-btn" data-tab="travel" role="tab" id="travelTabBtn">🚗 Hỗ trợ xăng xe</button>
+      <button type="button" class="tab-btn" data-tab="report" role="tab" id="reportTabBtn"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Báo cáo</button>
+      <button type="button" class="tab-btn" data-tab="travel" role="tab" id="travelTabBtn"><i class="fa-solid fa-car" aria-hidden="true"></i> Hỗ trợ xăng xe</button>
     </div>
 
     <!-- ============ Menu NẰM NGANG Ở TRÊN (chế độ xem trái/phải; hàng 2:
@@ -73,28 +73,28 @@
                từng người 1 — mặc định mở "📊 Tổng quan" (ma trận), chuyển
                sang "🎴 Thẻ" khi cần đọc chi tiết/sửa lịch từng GV. -->
           <div class="view-toggle" id="viewToggle" role="tablist">
-            <button type="button" class="view-toggle-btn active" data-view="dashboard">📊 Tổng quan</button>
-            <button type="button" class="view-toggle-btn" data-view="cards">🎴 Thẻ</button>
+            <button type="button" class="view-toggle-btn active" data-view="dashboard"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Tổng quan</button>
+            <button type="button" class="view-toggle-btn" data-view="cards"><i class="fa-solid fa-id-card" aria-hidden="true"></i> Thẻ</button>
           </div>
 
           <div class="sidebar-group">
-            <label for="weekSelect">🗓️ Tuần</label>
+            <label for="weekSelect"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> Tuần</label>
             <select id="weekSelect" class="form-input"><option value="">-- Chưa có tuần nào --</option></select>
           </div>
 
           <div class="sidebar-group" id="weeklyFiltersWrap">
-            <label for="teacherSearch">🔍 Tìm kiếm</label>
+            <label for="teacherSearch"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Tìm kiếm</label>
             <input type="text" id="teacherSearch" class="form-input" placeholder="Tìm theo tên hoặc mã NV...">
           </div>
 
           <label class="chk-missing"><input type="checkbox" id="onlyMissingChk"> Chỉ hiện GV chưa có lịch</label>
 
           <div class="sidebar-actions">
-            <button type="button" class="btn btn-secondary" id="newWeekBtn">🧬 Tuần mới</button>
-            <button type="button" class="btn btn-secondary" id="importExcelBtn">📥 Nhập từ Excel</button>
-            <button type="button" class="btn btn-secondary" id="syncSharePointBtn" title="Tải trực tiếp file Excel mới nhất từ SharePoint (cần đăng nhập Microsoft), không cần tải file về máy rồi nhập lại thủ công">🔗 Đồng bộ SharePoint</button>
-            <button type="button" class="btn btn-ghost" id="exportAllPdfBtn" title="Xuất 1 file PDF gồm lịch của tất cả GV đang hiển thị, mỗi người 1 trang">🖨️ Xuất PDF tất cả</button>
-            <button type="button" class="btn btn-ghost" id="exportAllCongTacBtn" title="Xuất 1 file PDF gồm Phiếu công tác của tất cả GV đang hiển thị, mỗi người 1 trang">📋 Xuất PDF tất cả Phiếu công tác</button>
+            <button type="button" class="btn btn-secondary" id="newWeekBtn"><i class="fa-solid fa-clone" aria-hidden="true"></i> Tuần mới</button>
+            <button type="button" class="btn btn-secondary" id="importExcelBtn"><i class="fa-solid fa-file-import" aria-hidden="true"></i> Nhập từ Excel</button>
+            <button type="button" class="btn btn-secondary" id="syncSharePointBtn" title="Tải trực tiếp file Excel mới nhất từ SharePoint (cần đăng nhập Microsoft), không cần tải file về máy rồi nhập lại thủ công"><i class="fa-solid fa-link" aria-hidden="true"></i> Đồng bộ SharePoint</button>
+            <button type="button" class="btn btn-ghost" id="exportAllPdfBtn" title="Xuất 1 file PDF gồm lịch của tất cả GV đang hiển thị, mỗi người 1 trang"><i class="fa-solid fa-print" aria-hidden="true"></i> Xuất PDF tất cả</button>
+            <button type="button" class="btn btn-ghost" id="exportAllCongTacBtn" title="Xuất 1 file PDF gồm Phiếu công tác của tất cả GV đang hiển thị, mỗi người 1 trang"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i> Xuất PDF tất cả Phiếu công tác</button>
             <input type="file" id="importExcelInput" accept=".xlsx,.xls" hidden>
           </div>
         </div>
@@ -158,9 +158,9 @@
         <div class="my-week-footer">
           <div class="sched-stats-bar" id="myWeekStatsBar"></div>
           <div class="my-week-footer-actions">
-            <button type="button" class="btn btn-ghost" id="myWeekPdfBtn">🖨️ Xuất PDF</button>
-            <button type="button" class="btn btn-ghost" id="myWeekCongTacBtn" title="Xuất Phiếu công tác PDF tự điền theo đúng lịch tuần này (mẫu On_Tap_MOS/Phieu cong tac.doc)">📋 Phiếu công tác</button>
-            <button type="button" class="btn btn-primary my-week-save-btn" id="myWeekSaveBtn">💾 Lưu lịch tuần của tôi</button>
+            <button type="button" class="btn btn-ghost" id="myWeekPdfBtn"><i class="fa-solid fa-print" aria-hidden="true"></i> Xuất PDF</button>
+            <button type="button" class="btn btn-ghost" id="myWeekCongTacBtn" title="Xuất Phiếu công tác PDF tự điền theo đúng lịch tuần này (mẫu On_Tap_MOS/Phieu cong tac.doc)"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i> Phiếu công tác</button>
+            <button type="button" class="btn btn-primary my-week-save-btn" id="myWeekSaveBtn"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Lưu lịch tuần của tôi</button>
           </div>
         </div>
       </div>
@@ -174,25 +174,25 @@
   <section class="tab-panel" id="panel-timetable">
     <div class="panel-toolbar" id="ttToolbar">
       <div class="tabs" role="tablist">
-        <button type="button" class="tab-btn" data-tab="weekly" role="tab">📅 Lịch tuần</button>
-        <button type="button" class="tab-btn active" data-tab="timetable" role="tab">🗓️ TKB lớp</button>
-        <button type="button" class="tab-btn" data-tab="teachers" role="tab">👤 Giáo viên</button>
-        <button type="button" class="tab-btn" data-tab="report" role="tab">📊 Báo cáo</button>
-        <button type="button" class="tab-btn" data-tab="travel" role="tab">🚗 Hỗ trợ xăng xe</button>
+        <button type="button" class="tab-btn" data-tab="weekly" role="tab"><i class="fa-solid fa-calendar" aria-hidden="true"></i> Lịch tuần</button>
+        <button type="button" class="tab-btn active" data-tab="timetable" role="tab"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> TKB lớp</button>
+        <button type="button" class="tab-btn" data-tab="teachers" role="tab"><i class="fa-solid fa-user" aria-hidden="true"></i> Giáo viên</button>
+        <button type="button" class="tab-btn" data-tab="report" role="tab"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Báo cáo</button>
+        <button type="button" class="tab-btn" data-tab="travel" role="tab"><i class="fa-solid fa-car" aria-hidden="true"></i> Hỗ trợ xăng xe</button>
       </div>
       <div class="sidebar-group">
-        <label for="ttWeekSelect">🗓️ Tuần</label>
+        <label for="ttWeekSelect"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> Tuần</label>
         <select id="ttWeekSelect" class="form-input"><option value="">-- Chưa có tuần nào --</option></select>
       </div>
       <div class="sidebar-group">
-        <label for="ttTeacherSelect">👤 Giáo viên</label>
+        <label for="ttTeacherSelect"><i class="fa-solid fa-user" aria-hidden="true"></i> Giáo viên</label>
         <select id="ttTeacherSelect" class="form-input"><option value="">-- Chọn giáo viên --</option></select>
       </div>
       <div class="push-right sidebar-actions">
         <button type="button" class="btn btn-secondary" id="ttPeriodTimesBtn" title="Sửa giờ vào/ra từng tiết của riêng giáo viên này — mỗi trường quy định giờ khác nhau nên cập nhật thủ công theo đúng trường đang dạy">⏱️ Giờ tiết</button>
-        <button type="button" class="btn btn-secondary" id="ttImportBtn" title="Nhập hàng loạt mã lớp cho nhiều giáo viên/nhiều ngày cùng lúc từ 1 file Excel">📥 Nhập từ Excel</button>
-        <button type="button" class="btn btn-ghost" id="ttPrintBtn" title="Xuất file PDF đúng thời khoá biểu đang hiển thị, vừa 1 trang A4 ngang, không header/footer trình duyệt">🖨️ Xuất PDF</button>
-        <button type="button" class="btn btn-primary" id="ttSaveBtn">💾 Lưu thời khoá biểu</button>
+        <button type="button" class="btn btn-secondary" id="ttImportBtn" title="Nhập hàng loạt mã lớp cho nhiều giáo viên/nhiều ngày cùng lúc từ 1 file Excel"><i class="fa-solid fa-file-import" aria-hidden="true"></i> Nhập từ Excel</button>
+        <button type="button" class="btn btn-ghost" id="ttPrintBtn" title="Xuất file PDF đúng thời khoá biểu đang hiển thị, vừa 1 trang A4 ngang, không header/footer trình duyệt"><i class="fa-solid fa-print" aria-hidden="true"></i> Xuất PDF</button>
+        <button type="button" class="btn btn-primary" id="ttSaveBtn"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Lưu thời khoá biểu</button>
       </div>
     </div>
 
@@ -207,7 +207,7 @@
       <div class="tt-legend">
         <span class="tt-legend-item"><span class="tt-level-badge tt-level-tieuHoc">TiH</span> Tiểu học · 35’/tiết</span>
         <span class="tt-legend-item"><span class="tt-level-badge tt-level-thcs">THCS</span> THCS · 45’/tiết</span>
-        <span class="tt-legend-item tt-legend-warn">⚠️ Giờ trong ô lệch với khung giờ đang áp dụng cho cả tuần</span>
+        <span class="tt-legend-item tt-legend-warn"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Giờ trong ô lệch với khung giờ đang áp dụng cho cả tuần</span>
       </div>
       <div class="table-scroll">
         <table class="tt-grid" id="ttGrid"></table>
@@ -230,14 +230,14 @@
            xem js/teaching-schedule.js) — để còn đường quay lại "Lịch tuần"
            ngay từ đây, không phải phụ thuộc 1 hàng tab dùng chung riêng. -->
       <div class="tabs" role="tablist">
-        <button type="button" class="tab-btn" data-tab="weekly" role="tab">📅 Lịch tuần</button>
-        <button type="button" class="tab-btn" data-tab="timetable" role="tab">🗓️ TKB lớp</button>
-        <button type="button" class="tab-btn active" data-tab="teachers" role="tab">👤 Giáo viên</button>
-        <button type="button" class="tab-btn" data-tab="report" role="tab">📊 Báo cáo</button>
-        <button type="button" class="tab-btn" data-tab="travel" role="tab">🚗 Hỗ trợ xăng xe</button>
+        <button type="button" class="tab-btn" data-tab="weekly" role="tab"><i class="fa-solid fa-calendar" aria-hidden="true"></i> Lịch tuần</button>
+        <button type="button" class="tab-btn" data-tab="timetable" role="tab"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> TKB lớp</button>
+        <button type="button" class="tab-btn active" data-tab="teachers" role="tab"><i class="fa-solid fa-user" aria-hidden="true"></i> Giáo viên</button>
+        <button type="button" class="tab-btn" data-tab="report" role="tab"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Báo cáo</button>
+        <button type="button" class="tab-btn" data-tab="travel" role="tab"><i class="fa-solid fa-car" aria-hidden="true"></i> Hỗ trợ xăng xe</button>
       </div>
       <div class="panel-toolbar-info"><span id="teacherCount">0</span> giáo viên</div>
-      <button type="button" class="btn btn-primary push-right" id="addTeacherBtn">➕ Thêm giáo viên</button>
+      <button type="button" class="btn btn-primary push-right" id="addTeacherBtn"><i class="fa-solid fa-plus" aria-hidden="true"></i> Thêm giáo viên</button>
     </div>
     <div class="table-scroll">
       <table id="teachersTable">
@@ -255,45 +255,45 @@
   <section class="tab-panel" id="panel-report">
     <div class="panel-toolbar">
       <div class="tabs" role="tablist">
-        <button type="button" class="tab-btn" data-tab="weekly" role="tab">📅 Lịch tuần</button>
-        <button type="button" class="tab-btn" data-tab="timetable" role="tab">🗓️ TKB lớp</button>
-        <button type="button" class="tab-btn" data-tab="teachers" role="tab">👤 Giáo viên</button>
-        <button type="button" class="tab-btn active" data-tab="report" role="tab">📊 Báo cáo</button>
-        <button type="button" class="tab-btn" data-tab="travel" role="tab">🚗 Hỗ trợ xăng xe</button>
+        <button type="button" class="tab-btn" data-tab="weekly" role="tab"><i class="fa-solid fa-calendar" aria-hidden="true"></i> Lịch tuần</button>
+        <button type="button" class="tab-btn" data-tab="timetable" role="tab"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> TKB lớp</button>
+        <button type="button" class="tab-btn" data-tab="teachers" role="tab"><i class="fa-solid fa-user" aria-hidden="true"></i> Giáo viên</button>
+        <button type="button" class="tab-btn active" data-tab="report" role="tab"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Báo cáo</button>
+        <button type="button" class="tab-btn" data-tab="travel" role="tab"><i class="fa-solid fa-car" aria-hidden="true"></i> Hỗ trợ xăng xe</button>
       </div>
       <div class="sidebar-group">
-        <label for="reportFromWeek">🗓️ Từ tuần</label>
+        <label for="reportFromWeek"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> Từ tuần</label>
         <select id="reportFromWeek" class="form-input"><option value="">-- Chưa có tuần nào --</option></select>
       </div>
       <div class="sidebar-group">
-        <label for="reportToWeek">🗓️ Đến tuần</label>
+        <label for="reportToWeek"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> Đến tuần</label>
         <select id="reportToWeek" class="form-input"><option value="">-- Chưa có tuần nào --</option></select>
       </div>
-      <button type="button" class="btn btn-primary push-right" id="reportLoadBtn">🔄 Tải báo cáo</button>
+      <button type="button" class="btn btn-primary push-right" id="reportLoadBtn"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Tải báo cáo</button>
     </div>
 
-    <div class="report-empty" id="reportEmpty">Chọn khoảng tuần rồi bấm "🔄 Tải báo cáo" để tổng hợp số liệu.</div>
+    <div class="report-empty" id="reportEmpty">Chọn khoảng tuần rồi bấm "<i class="fa-solid fa-rotate" aria-hidden="true"></i> Tải báo cáo" để tổng hợp số liệu.</div>
 
     <div class="report-body force-hide" id="reportBody">
       <div class="panel-toolbar-info" id="reportRangeInfo" style="margin-bottom:.9rem"></div>
 
       <div class="report-charts-grid">
         <div class="chart-card">
-          <div class="chart-card-title">📊 Tổng số buổi theo loại hình phụ trách</div>
+          <div class="chart-card-title"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Tổng số buổi theo loại hình phụ trách</div>
           <div class="chart-card-body"><canvas id="reportChartByType"></canvas></div>
         </div>
         <div class="chart-card">
-          <div class="chart-card-title">👤 Số buổi theo giáo viên (Top 15)</div>
+          <div class="chart-card-title"><i class="fa-solid fa-user" aria-hidden="true"></i> Số buổi theo giáo viên (Top 15)</div>
           <div class="chart-card-body"><canvas id="reportChartByTeacher"></canvas></div>
         </div>
         <div class="chart-card chart-card-wide force-hide" id="reportTrendCard">
-          <div class="chart-card-title">📈 Xu hướng tổng số buổi theo tuần</div>
+          <div class="chart-card-title"><i class="fa-solid fa-chart-line" aria-hidden="true"></i> Xu hướng tổng số buổi theo tuần</div>
           <div class="chart-card-body"><canvas id="reportChartTrend"></canvas></div>
         </div>
       </div>
 
       <div class="report-pivot-head">
-        <h3>🧮 Bảng tổng hợp (Pivot table) — Giáo viên × Loại hình phụ trách</h3>
+        <h3><i class="fa-solid fa-calculator" aria-hidden="true"></i> Bảng tổng hợp (Pivot table) — Giáo viên × Loại hình phụ trách</h3>
         <span class="panel-toolbar-info">Đơn vị: số buổi (Sáng/Chiều)</span>
       </div>
       <div class="table-scroll">
@@ -314,14 +314,14 @@
   <section class="tab-panel" id="panel-travel">
     <div class="panel-toolbar">
       <div class="tabs" role="tablist">
-        <button type="button" class="tab-btn" data-tab="weekly" role="tab">📅 Lịch tuần</button>
-        <button type="button" class="tab-btn" data-tab="timetable" role="tab">🗓️ TKB lớp</button>
-        <button type="button" class="tab-btn" data-tab="teachers" role="tab">👤 Giáo viên</button>
-        <button type="button" class="tab-btn" data-tab="report" role="tab">📊 Báo cáo</button>
-        <button type="button" class="tab-btn active" data-tab="travel" role="tab">🚗 Hỗ trợ xăng xe</button>
+        <button type="button" class="tab-btn" data-tab="weekly" role="tab"><i class="fa-solid fa-calendar" aria-hidden="true"></i> Lịch tuần</button>
+        <button type="button" class="tab-btn" data-tab="timetable" role="tab"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> TKB lớp</button>
+        <button type="button" class="tab-btn" data-tab="teachers" role="tab"><i class="fa-solid fa-user" aria-hidden="true"></i> Giáo viên</button>
+        <button type="button" class="tab-btn" data-tab="report" role="tab"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Báo cáo</button>
+        <button type="button" class="tab-btn active" data-tab="travel" role="tab"><i class="fa-solid fa-car" aria-hidden="true"></i> Hỗ trợ xăng xe</button>
       </div>
       <div class="sidebar-group">
-        <label for="travelPeriodType">📆 Xem theo</label>
+        <label for="travelPeriodType"><i class="fa-solid fa-calendar-week" aria-hidden="true"></i> Xem theo</label>
         <select id="travelPeriodType" class="form-input">
           <option value="week">Tuần</option>
           <option value="month">Tháng</option>
@@ -330,35 +330,35 @@
         </select>
       </div>
       <div class="sidebar-group" id="travelWeekWrap">
-        <label for="travelWeekSelect">🗓️ Tuần</label>
+        <label for="travelWeekSelect"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> Tuần</label>
         <select id="travelWeekSelect" class="form-input"><option value="">-- Chưa có tuần nào --</option></select>
       </div>
       <div class="sidebar-group force-hide" id="travelMonthWrap">
-        <label for="travelMonthSelect">🗓️ Tháng</label>
+        <label for="travelMonthSelect"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> Tháng</label>
         <select id="travelMonthSelect" class="form-input"></select>
       </div>
       <div class="sidebar-group force-hide" id="travelQuarterWrap">
-        <label for="travelQuarterSelect">🗓️ Quý</label>
+        <label for="travelQuarterSelect"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> Quý</label>
         <select id="travelQuarterSelect" class="form-input"></select>
       </div>
       <div class="sidebar-group force-hide" id="travelYearWrap">
-        <label for="travelYearSelect">🗓️ Năm</label>
+        <label for="travelYearSelect"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> Năm</label>
         <select id="travelYearSelect" class="form-input"></select>
       </div>
-      <button type="button" class="btn btn-primary push-right" id="travelLoadBtn">🔄 Tính hỗ trợ</button>
-      <button type="button" class="info-btn" title="Hỗ trợ 20.000đ/ngày nếu tổng khoảng cách đi lại trong ngày từ 11-15km; từ 15,1km trở lên: 30.000đ/ngày. Dưới 11km không có hỗ trợ. Khoảng cách tính: nhà → trường 1 (nếu 1 trường); nhà → trường 1 → trường 2 (nếu 2 trường trong cùng 1 ngày). KHÔNG hỗ trợ cho buổi Dự Giảng, Ôn online (Dạy Trực Tuyến), Trợ Giảng. Chọn 'Tháng/Quý/Năm' để cộng dồn nhiều tuần lại thành 1 kỳ.">ℹ️</button>
+      <button type="button" class="btn btn-primary push-right" id="travelLoadBtn"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Tính hỗ trợ</button>
+      <button type="button" class="info-btn" title="Hỗ trợ 20.000đ/ngày nếu tổng khoảng cách đi lại trong ngày từ 11-15km; từ 15,1km trở lên: 30.000đ/ngày. Dưới 11km không có hỗ trợ. Khoảng cách tính: nhà → trường 1 (nếu 1 trường); nhà → trường 1 → trường 2 (nếu 2 trường trong cùng 1 ngày). KHÔNG hỗ trợ cho buổi Dự Giảng, Ôn online (Dạy Trực Tuyến), Trợ Giảng. Chọn 'Tháng/Quý/Năm' để cộng dồn nhiều tuần lại thành 1 kỳ."><i class="fa-solid fa-circle-info" aria-hidden="true"></i></button>
     </div>
 
-    <div class="report-empty" id="travelEmpty">Chọn 1 kỳ rồi bấm "🔄 Tính hỗ trợ" để xem bảng khoảng cách + tiền hỗ trợ.</div>
+    <div class="report-empty" id="travelEmpty">Chọn 1 kỳ rồi bấm "<i class="fa-solid fa-rotate" aria-hidden="true"></i> Tính hỗ trợ" để xem bảng khoảng cách + tiền hỗ trợ.</div>
 
     <div class="report-body force-hide" id="travelBody">
       <div class="report-pivot-head">
-        <h3>📏 Khoảng cách nhà → trường</h3>
+        <h3><i class="fa-solid fa-ruler" aria-hidden="true"></i> Khoảng cách nhà → trường</h3>
         <span class="panel-toolbar-info">Đơn vị: km (1 chiều) — điền/sửa rồi bấm ra ngoài ô để tự lưu, hoặc bấm nút bên dưới để tự tính (miễn phí)</span>
       </div>
       <div class="panel-toolbar" style="padding:0 0 .6rem">
-        <button type="button" class="btn btn-secondary" id="travelGmapsAllBtn">🌍 Tính tất cả (miễn phí)</button>
-        <span class="panel-toolbar-info">Cần địa chỉ nhà (tab "👤 Giáo viên") — dùng bản đồ Google qua Apps Script, không cần API Key/thẻ ngân hàng (tối đa ~150 lượt tính/ngày/người)</span>
+        <button type="button" class="btn btn-secondary" id="travelGmapsAllBtn"><i class="fa-solid fa-globe" aria-hidden="true"></i> Tính tất cả (miễn phí)</button>
+        <span class="panel-toolbar-info">Cần địa chỉ nhà (tab "<i class="fa-solid fa-user" aria-hidden="true"></i> Giáo viên") — dùng bản đồ Google qua Apps Script, không cần API Key/thẻ ngân hàng (tối đa ~150 lượt tính/ngày/người)</span>
       </div>
       <div class="table-scroll">
         <table class="report-pivot" id="travelDistanceTable">
@@ -368,7 +368,7 @@
       </div>
 
       <div class="report-pivot-head">
-        <h3 id="travelResultTitle">🚗 Hỗ trợ xăng xe theo tuần</h3>
+        <h3 id="travelResultTitle"><i class="fa-solid fa-car" aria-hidden="true"></i> Hỗ trợ xăng xe theo tuần</h3>
         <span class="panel-toolbar-info" id="travelRangeInfo"></span>
       </div>
       <div class="table-scroll">
@@ -385,7 +385,7 @@
 <div class="modal-overlay" id="teacherModalOverlay">
   <div class="modal-box">
     <div class="modal-header">
-      <h3 id="teacherModalTitle">➕ Thêm giáo viên</h3>
+      <h3 id="teacherModalTitle"><i class="fa-solid fa-plus" aria-hidden="true"></i> Thêm giáo viên</h3>
       <button type="button" class="modal-close" id="teacherModalCloseBtn">✕</button>
     </div>
     <div class="modal-body">
@@ -410,7 +410,7 @@
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-ghost" id="teacherModalCancelBtn">Huỷ</button>
-      <button type="button" class="btn btn-primary" id="teacherModalSaveBtn">💾 Lưu</button>
+      <button type="button" class="btn btn-primary" id="teacherModalSaveBtn"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Lưu</button>
     </div>
   </div>
 </div>
@@ -419,13 +419,13 @@
 <div class="modal-overlay" id="importModalOverlay">
   <div class="modal-box">
     <div class="modal-header">
-      <h3>📥 Nhập lịch từ Excel</h3>
+      <h3><i class="fa-solid fa-file-import" aria-hidden="true"></i> Nhập lịch từ Excel</h3>
       <button type="button" class="modal-close" id="importModalCloseBtn">✕</button>
     </div>
     <div class="modal-body">
       <div class="import-hint">
         Tick các <b>tuần cần nhập</b> rồi bấm Nhập. Hệ thống so với dữ liệu đang có và <b>chỉ ghi
-        những lịch thực sự thay đổi</b> (giống hệt file thì bỏ qua). Tab "🗓️ TKB lớp" chỉ tự điền ô đang
+        những lịch thực sự thay đổi</b> (giống hệt file thì bỏ qua). Tab "<i class="fa-solid fa-calendar-days" aria-hidden="true"></i> TKB lớp" chỉ tự điền ô đang
         trống — ô đã có mã lớp khác Excel sẽ được liệt kê để bạn chọn <b>giữ</b> hay <b>ghi đè</b> trước khi ghi.
       </div>
       <div class="import-hint" id="importSelfHint" hidden></div>
@@ -454,7 +454,7 @@
            hiện có (xem buildImportPlan() trong js/teaching-schedule.js). -->
       <div class="import-summary force-hide" id="importPlanSummary"></div>
       <div class="import-conflict" id="importConflictBox" hidden>
-        <div class="import-conflict-head">⚠️ <b id="importConflictCount">0</b> ô TKB lớp đang khác Excel</div>
+        <div class="import-conflict-head"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> <b id="importConflictCount">0</b> ô TKB lớp đang khác Excel</div>
         <label class="import-conflict-toggle">
           <input type="checkbox" id="importOverrideChk"> Ghi đè các ô này theo Excel (bỏ tick = giữ nguyên TKB lớp)
         </label>
@@ -463,7 +463,7 @@
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-ghost" id="importCancelBtn">Huỷ</button>
-      <button type="button" class="btn btn-primary" id="importConfirmBtn" disabled>💾 Nhập dữ liệu</button>
+      <button type="button" class="btn btn-primary" id="importConfirmBtn" disabled><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Nhập dữ liệu</button>
     </div>
   </div>
 </div>
@@ -472,7 +472,7 @@
 <div class="modal-overlay" id="newWeekModalOverlay">
   <div class="modal-box">
     <div class="modal-header">
-      <h3>🧬 Tạo tuần mới</h3>
+      <h3><i class="fa-solid fa-clone" aria-hidden="true"></i> Tạo tuần mới</h3>
       <button type="button" class="modal-close" id="newWeekCloseBtn">✕</button>
     </div>
     <div class="modal-body">
@@ -497,7 +497,7 @@
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-ghost" id="newWeekCancelBtn">Huỷ</button>
-      <button type="button" class="btn btn-primary" id="newWeekConfirmBtn">✅ Tạo tuần</button>
+      <button type="button" class="btn btn-primary" id="newWeekConfirmBtn"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Tạo tuần</button>
     </div>
   </div>
 </div>
@@ -510,7 +510,7 @@
 <div class="modal-overlay" id="congTacRangeModalOverlay">
   <div class="modal-box">
     <div class="modal-header">
-      <h3>📋 Khoảng ngày xuất Phiếu công tác</h3>
+      <h3><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i> Khoảng ngày xuất Phiếu công tác</h3>
       <button type="button" class="modal-close" id="congTacRangeCloseBtn">✕</button>
     </div>
     <div class="modal-body">
@@ -541,7 +541,7 @@
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-ghost" id="congTacRangeCancelBtn">Huỷ</button>
-      <button type="button" class="btn btn-primary" id="congTacRangeConfirmBtn">✅ Xuất PDF</button>
+      <button type="button" class="btn btn-primary" id="congTacRangeConfirmBtn"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Xuất PDF</button>
     </div>
   </div>
 </div>
@@ -550,7 +550,7 @@
 <div class="modal-overlay" id="schedModalOverlay">
   <div class="modal-box modal-wide modal-xwide">
     <div class="modal-header">
-      <h3 id="schedModalTitle">📅 Lịch tuần</h3>
+      <h3 id="schedModalTitle"><i class="fa-solid fa-calendar" aria-hidden="true"></i> Lịch tuần</h3>
       <button type="button" class="modal-close" id="schedModalCloseBtn">✕</button>
     </div>
     <div class="modal-body">
@@ -561,7 +561,7 @@
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-ghost" id="schedModalCancelBtn">Huỷ</button>
-      <button type="button" class="btn btn-primary" id="schedModalSaveBtn">💾 Lưu lịch tuần</button>
+      <button type="button" class="btn btn-primary" id="schedModalSaveBtn"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Lưu lịch tuần</button>
     </div>
   </div>
 </div>
@@ -583,11 +583,11 @@
       </div>
       <div class="pt-day-tabs" id="periodTimesDayTabs"></div>
       <div class="pt-cols" id="periodTimesBody"></div>
-      <button type="button" class="btn btn-ghost pt-copy-all-btn" id="periodTimesCopyAllBtn" title="Copy đúng khung giờ của Thứ đang chọn sang cả 6 Thứ còn lại — dùng khi giáo viên dạy giống hệt nhau mọi ngày">📋 Copy khung giờ Thứ này cho tất cả các Thứ còn lại</button>
+      <button type="button" class="btn btn-ghost pt-copy-all-btn" id="periodTimesCopyAllBtn" title="Copy đúng khung giờ của Thứ đang chọn sang cả 6 Thứ còn lại — dùng khi giáo viên dạy giống hệt nhau mọi ngày"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i> Copy khung giờ Thứ này cho tất cả các Thứ còn lại</button>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-ghost" id="periodTimesCancelBtn">Huỷ</button>
-      <button type="button" class="btn btn-primary" id="periodTimesSaveBtn">💾 Lưu giờ tiết</button>
+      <button type="button" class="btn btn-primary" id="periodTimesSaveBtn"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Lưu giờ tiết</button>
     </div>
   </div>
 </div>
@@ -614,7 +614,7 @@
 <div class="modal-overlay" id="ttImportModalOverlay">
   <div class="modal-box modal-wide">
     <div class="modal-header">
-      <h3>📥 Nhập TKB lớp từ Excel</h3>
+      <h3><i class="fa-solid fa-file-import" aria-hidden="true"></i> Nhập TKB lớp từ Excel</h3>
       <button type="button" class="modal-close" id="ttImportCloseBtn">✕</button>
     </div>
     <div class="modal-body">
@@ -628,7 +628,7 @@
         1 giáo viên — áp dụng cho <b>tuần đang chọn</b> ở trên (<span id="ttImportWeekLabel">chưa chọn
         tuần</span>). Có thể gồm nhiều giáo viên/nhiều Thứ trong cùng 1 file để nhập hàng loạt.
       </div>
-      <button type="button" class="btn btn-ghost" id="ttImportTemplateBtn">🧾 Tải file mẫu (.xlsx)</button>
+      <button type="button" class="btn btn-ghost" id="ttImportTemplateBtn"><i class="fa-solid fa-receipt" aria-hidden="true"></i> Tải file mẫu (.xlsx)</button>
       <input type="file" id="ttImportFileInput" accept=".xlsx,.xls" class="form-input">
       <div class="tt-import-progress force-hide" id="ttImportProgress">Đang kiểm duyệt (đối chiếu tên GV/giờ tiết/trường)...</div>
       <div class="import-summary force-hide" id="ttImportSummary">
@@ -648,7 +648,7 @@
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-ghost" id="ttImportCancelBtn">Huỷ</button>
-      <button type="button" class="btn btn-primary" id="ttImportConfirmBtn" disabled>💾 Nhập dữ liệu</button>
+      <button type="button" class="btn btn-primary" id="ttImportConfirmBtn" disabled><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Nhập dữ liệu</button>
     </div>
   </div>
 </div>

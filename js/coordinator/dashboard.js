@@ -47,18 +47,18 @@
       const F = window.EduFirebase;
       document.getElementById('loadingNote').textContent = err && err.source === 'apps-script'
         // Kết quả bài nộp đọc từ Google Sheet — lỗi ở đây KHÔNG phải Firebase hết lượt
-        ? '⚠️ Không đọc được kết quả bài nộp từ Google Sheet (' + err.message + '). Mạng chập chờn hoặc Apps Script đang bận — bấm "🔄 Làm mới dữ liệu" để thử lại.'
-        : err && err.breaker ? '⚠️ ' + err.message
+        ? 'Không đọc được kết quả bài nộp từ Google Sheet (' + err.message + '). Mạng chập chờn hoặc Apps Script đang bận — bấm "Làm mới dữ liệu" để thử lại.'
+        : err && err.breaker ? err.message
         : F && F.isQuotaOrOffline(err)
-        ? '⚠️ ' + F.QUOTA_HINT + '. Máy này chưa có dữ liệu đã lưu — thử lại sau.'
-        : '❌ Không tải được dữ liệu: ' + err.message;
+        ? F.QUOTA_HINT + '. Máy này chưa có dữ liệu đã lưu — thử lại sau.'
+        : 'Không tải được dữ liệu: ' + err.message;
       return;
     }
     // Chưa được Admin gán trường nào để hỗ trợ (Commit #7/LMAP) — không còn
     // mặc định xem hết như trước, dừng ở đây với thông báo rõ ràng thay vì
     // hiện dashboard rỗng khó hiểu.
     if (rawData.noSchoolsAssigned) {
-      document.getElementById('loadingNote').textContent = '⚠️ Bạn chưa được Admin gán trường nào để hỗ trợ (Quản lý tài khoản → Trường được xem/hỗ trợ). Liên hệ Admin để được gán trường.';
+      document.getElementById('loadingNote').innerHTML = '<i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Bạn chưa được Admin gán trường nào để hỗ trợ (Quản lý tài khoản → Trường được xem/hỗ trợ). Liên hệ Admin để được gán trường.';
       return;
     }
     // js/coordinator/student-detail.js dùng biến toàn cục này để lọc đúng
@@ -90,10 +90,10 @@
     const btn = document.getElementById('refreshDataBtn');
     btn.disabled = true;
     const oldLabel = btn.textContent;
-    btn.textContent = '⏳ Đang tải...';
+    btn.innerHTML = '<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Đang tải...';
     try {
       await boot(true);
-      toast('✅ Đã cập nhật dữ liệu mới nhất.');
+      toast('Đã cập nhật dữ liệu mới nhất.');
     } finally {
       btn.disabled = false;
       btn.textContent = oldLabel;
@@ -190,7 +190,7 @@
     document.getElementById('notSubmittedCount').textContent = `(${list.length})`;
     const ul = document.getElementById('notSubmittedList');
     if (!list.length) {
-      ul.innerHTML = '<li class="watchlist-empty">🎉 Không có học sinh nào — mọi người đã làm bài!</li>';
+      ul.innerHTML = '<li class="watchlist-empty">Không có học sinh nào — mọi người đã làm bài!</li>';
       document.getElementById('notSubmittedMore').textContent = '';
       return;
     }
@@ -207,7 +207,7 @@
     document.getElementById('needsSupportCount').textContent = `(${list.length})`;
     const ul = document.getElementById('needsSupportList');
     if (!list.length) {
-      ul.innerHTML = '<li class="watchlist-empty">👍 Không có học sinh nào dưới ngưỡng 60%.</li>';
+      ul.innerHTML = '<li class="watchlist-empty">Không có học sinh nào dưới ngưỡng 60%.</li>';
       document.getElementById('needsSupportMore').textContent = '';
       return;
     }

@@ -49,7 +49,7 @@
         ? await global.EduDataCache.getAsync(cacheKey, /* persist */ true, /* allowStale */ true)
         : null;
       if (!stale) throw err;
-      global.dispatchEvent(new CustomEvent('edu:toast', { detail: '⚠️ ' + F.QUOTA_HINT + ' — đang dùng danh sách học sinh đã lưu trên máy.' }));
+      global.dispatchEvent(new CustomEvent('edu:toast', { detail: F.QUOTA_HINT + ' — đang dùng danh sách học sinh đã lưu trên máy.' }));
       return stale;
     }
   }
