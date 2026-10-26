@@ -29,6 +29,7 @@ function routes_() {
     publishRoster: { roles: ROLES_ADMIN,   handler: publishRoster_ },
     logActivity:   { roles: ROLES_STAFF,   handler: logActivity_ },
     arenaRoomLog:  { roles: ROLES_STAFF,   handler: arenaRoomLog_ },
+    arenaRelayTicket: { roles: ROLES_STAFF, handler: arenaRelayTicket_ },
   };
 }
 

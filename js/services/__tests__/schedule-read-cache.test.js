@@ -60,6 +60,14 @@ function loader() { calls++; return Promise.resolve(['row' + calls]); }
   await new WriteBatch().commit();
   assertEq('batch.commit: xoá cache', [before > 0, mem.size], [true, 0]);
 
+  // Thời hạn theo loại dữ liệu
+  var now = new Date(2026, 9, 28, 9, 0).getTime(); // thứ Tư 28/10/2026
+  var H = 60 * 60 * 1000;
+  assertEq('tuần đã qua: giữ 12 giờ', [RC.ttlFor('schedule:2026-10-19', now), RC.ttlFor('timetable:2026-09-07', now)], [12 * H, 12 * H]);
+  assertEq('tuần hiện tại/tới: 10 phút', [RC.ttlFor('schedule:2026-10-26', now), RC.ttlFor('schedule:2026-11-02', now)], [RC.TTL_MS, RC.TTL_MS]);
+  assertEq('giáo viên/giờ tiết 1 giờ, danh sách tuần 30 phút', [RC.ttlFor('teachers'), RC.ttlFor('periodTimes'), RC.ttlFor('weeks')], [H, H, 30 * 60 * 1000]);
+  assertEq('khoá khác: 10 phút', RC.ttlFor('schedule-by-teacher:GV01', now), RC.TTL_MS);
+
   console.log(failures ? '\n' + failures + ' test FAIL' : '\nTất cả PASS');
   process.exit(failures ? 1 : 0);
 })();

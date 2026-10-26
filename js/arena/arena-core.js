@@ -177,16 +177,52 @@
    * Danh sách câu → bộ câu chơi: trộn câu + trộn đáp án (Đúng/Sai giữ thứ tự).
    * kinds (tuỳ chọn): chỉ lấy các dạng này, vd ['choice','match'].
    */
+  /** Chuẩn hoá để so trùng: cùng chữ (không phân biệt hoa/thường, khoảng trắng, dấu câu 2 đầu). GIỮ dấu tiếng Việt. */
+  function normText(s) {
+    return String(s ?? '').normalize('NFC').toLowerCase().replace(/\s+/g, ' ').replace(/^[\s.,:;!?…"'“”()\-]+|[\s.,:;!?…"'“”()\-]+$/g, '');
+  }
+  /** Khoá trùng của 1 câu: đề + đáp án (chuẩn hoá). Cùng đề + cùng đáp án = 1 câu, dù khác phương án nhiễu/thứ tự. */
+  function dedupeKey(c) {
+    const ans = c.answer ?? c.answers ?? c.items ?? c.right;
+    const norm = (v) => (Array.isArray(v) ? v.map(norm) : v && typeof v === 'object' ? JSON.stringify(v) : normText(v));
+    const a = norm(ans);
+    // Chọn nhiều: thứ tự đáp án không quan trọng
+    const key = Array.isArray(a) && (c.kind === 'multi') ? a.slice().sort() : a;
+    return normText(c.text) + '\u0000' + JSON.stringify(key);
+  }
   function buildDeck(questions, rng, max, kinds) {
     const out = [];
     const seen = new Set();
     const want = Array.isArray(kinds) && kinds.length ? new Set(kinds) : null;
     (questions || []).forEach((q) => convert(q).forEach((c) => {
       if (want && !want.has(c.kind || 'choice')) return;
-      const k = c.text + '\u0000' + JSON.stringify(c.answer ?? c.answers ?? c.items ?? c.right);
+      const k = dedupeKey(c);
       if (!seen.has(k)) { seen.add(k); out.push(c); }
     }));
     return shuffle(out, rng).slice(0, max || out.length).map((c) => finalize(c, rng));
+  }
+  /** Số câu thật của trận: want = số câu chọn (0 = "Tất cả"), không vượt số câu bộ có — KHÔNG lặp câu. */
+  function playCount(want, available) {
+    const n = Math.max(0, available | 0);
+    const w = Math.max(0, want | 0);
+    return w === 0 ? n : Math.min(w, n);
+  }
+  /**
+   * Bộ dài `needed` lượt cho chế độ cần nhiều lượt hơn số câu (Đua về đích, Lên Mặt Trăng): dùng HẾT các
+   * câu rồi mới trộn lại lượt mới, và không bao giờ gặp lại đúng câu vừa hỏi ở chỗ nối 2 lượt.
+   * Bản sao (không dùng chung object) để mỗi lượt độc lập.
+   */
+  function extendDeck(deck, needed, rng) {
+    const src = deck || [];
+    const need = Math.max(0, needed | 0);
+    if (!src.length || need <= src.length) return src.slice(0, need || src.length);
+    const out = src.slice();
+    while (out.length < need) {
+      const pass = shuffle(src.slice(), rng);
+      if (pass.length > 1 && pass[0] === out[out.length - 1]) pass.push(pass.shift()); // không lặp liền nhau
+      pass.forEach((c) => { if (out.length < need) out.push(Object.assign({}, c)); });
+    }
+    return out;
   }
   /** Đếm số câu chơi được theo từng dạng: { choice, multi, order, match }. */
   function countKinds(questions) {
@@ -791,7 +827,7 @@
    *   risk — đội trả lời SAI bị trừ một nửa giá trị ô
    */
   function makeBoard(deck, n, rng) {
-    const count = Math.max(1, Math.min(n, 30));
+    const count = Math.max(1, Math.min(n || deck.length, 30, deck.length || 1));
     const values = shuffle(Array.from({ length: count }, (_, i) => BOARD_VALUES[i % BOARD_VALUES.length]), rng);
     const special = Math.max(1, Math.round(count / 6));
     const slots = shuffle(Array.from({ length: count }, (_, i) => i), rng).slice(0, Math.min(count, special * 2));
@@ -939,7 +975,7 @@
   }
 
   global.EduArenaCore = {
-    rngFrom, shuffle, strip, convert, buildDeck, practiceDeck,
+    rngFrom, shuffle, strip, convert, buildDeck, practiceDeck, normText, dedupeKey, playCount, extendDeck,
     KINDS, KIND_LABEL, KIND_ICON, kindOf, countKinds, isAnswer, grade, partial, answerLines, chosenLines, answerText,
     speedPoints, streakBonus, makeBots, botAnswer,
     CHESTS, rollChests, applyChest, chestLabel, raceStep, rank,

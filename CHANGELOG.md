@@ -1,5 +1,175 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## Chơi Đấu trường xong có lịch ôn: câu sai vào Sổ tay câu sai (Leitner) (27/10/2026)
+
+**0 lượt Firebase, 0 Apps Script** — chỉ localStorage trên máy học sinh.
+
+- Trước đây chỉ bài làm ở trang chủ mới gom câu sai vào "Sổ tay câu sai". Câu sai trong Đấu trường (Chơi một mình, Phòng cả lớp) bị bỏ phí.
+- Nay cuối mỗi trận, câu sai vào Sổ tay của em (hộp 1, ôn ngay). Câu đã có trong sổ mà em trả lời đúng **khi đã tới hạn** thì được lên hộp. Chưa tới hạn thì không: không "cày" sổ bằng game.
+- Câu từ ngân hàng được lưu **nguyên câu gốc** (tra theo uid). Câu Đúng/Sai bị tách thành từng ý trong trận vẫn được ôn đủ mọi ý ở trang chủ. Đúng 1 ý không tính là thuộc cả câu.
+- Câu ở Phòng cả lớp (máy em không có câu gốc) được dựng thành câu chọn 1 đáp án. Phương án được xếp theo chữ, nên chơi lại nhiều lần vẫn là 1 mục.
+- Nhận đúng học sinh: so họ tên/biệt danh với lịch sử bài làm trên máy, lấy lớp + trường của bản mới nhất. Chưa từng làm bài thì tạo mục theo tên — vẫn chọn được trong Góc học tập.
+- Màn kết quả (một mình + phòng): "Sổ tay câu sai: ghi 7 câu sai mới…" kèm link **mở thẳng Sổ tay của em** (`index.html?goc=sotay&hs=…`, trang chủ tự mở rồi xoá tham số khỏi địa chỉ).
+- Màn chọn Đấu trường: "Em có N câu trong Sổ tay đến hạn ôn — ôn ngay".
+- Kỹ thuật:
+  - Tách kho sổ tay + quy tắc Leitner từ `js/learning-hub.js` ra `js/services/wrongbook-store.js` (`EduWrongbook`), dùng chung cho trang chủ và Đấu trường. Góc học tập giữ nguyên hành vi.
+  - 17 test mới: `js/services/__tests__/wrongbook-store.test.js`.
+  - Đã chạy thử thật: chơi → ghi sổ → nhắc ở màn chọn → link mở Sổ tay → "Ôn tất cả" mở bài ôn đủ câu gốc. Phòng cả lớp ghi sổ ở máy học sinh, không lỗi.
+- Rà soát Firestore toàn dự án:
+  - Listener realtime chỉ còn ở đường dự phòng Đấu trường và trang portfolio (chỉ nhân viên, có `limit()`).
+  - Các truy vấn còn lại đều qua repository/cache. Không phát hiện điểm đọc lặp mới.
+
+## Đấu trường — Phòng cả lớp thành "gameshow": trống dồn, vinh danh, bình luận viên, câu trend lành mạnh (27/10/2026)
+
+**Không thêm tin nhắn, không thêm byte nào qua mạng.** Mọi thứ tính tại chỗ từ dữ liệu đã có: máy giáo viên giữ cả phòng; máy học sinh dùng gói `reveal`/`end` như cũ. Đường dự phòng Firestore không tốn thêm lượt.
+Module mới `js/arena/arena-room-hype.js` + 32 test `js/arena/__tests__/arena-room-hype.test.js`; kho câu trend `TREND` trong `js/arena/arena-hype.js`.
+
+- **Màn chiếu (máy giáo viên):**
+  - Sảnh: dòng chào người mới ("Nguyễn An đã vào sân!"), chip mới vào nảy lên, dòng "N chiến binh đã sẵn sàng" + luật ngắn của trò.
+  - Mở câu: chữ lớn **BẮT ĐẦU!** (câu 1) · **CÂU CUỐI!** · cao trào đang chờ.
+  - Trong lúc trả lời: "⚡ An chốt đầu tiên · 1,2 giây", chip người đã trả lời nảy xanh, 5 giây cuối tích tắc, 3 giây cuối tim đập + viền đỏ.
+  - Chốt câu: **trống dồn 0,9 giây "Đáp án là..."** rồi mới lật; cột số người chọn mỗi đáp án mọc dần.
+  - Sau mỗi câu:
+    - nhận xét cả lớp theo tỉ lệ đúng; câu khó thì nhắc "cùng xem giải thích";
+    - bình luận viên theo từng trò: sát nút, nước rút, dây sắp tới vạch, đấu tay đôi, chỉ còn N chiến binh, 3 câu cuối;
+    - vinh danh: ⚡ Tia chớp · 🚀 Bứt phá · 🔥 Chuỗi nóng · 👑 Ngôi đầu đổi chủ · 💀 Bị loại · 💚 Hồi tim · 🪢 Dây dịch.
+  - Cao trào (mỗi loại 1 lần/trận): viền vàng–đỏ quanh câu hỏi tới hết trận.
+  - Cuối trận: bục vinh danh lên dần hạng 3 → 2 → 1, trống dồn rồi pháo hoa. Có **danh hiệu**: 🔥 Chuỗi dài nhất · 🎯 Chính xác nhất · ⚡ Tia chớp (nhanh nhất trung bình, phải đúng ≥ nửa số câu) · 🚀 Bứt phá.
+- **Máy học sinh:**
+  - Sảnh có câu khởi động + luật ngắn của trò.
+  - Chữ lớn ở câu đầu/câu cuối. Ô "🔥 Chuỗi N" khi đang đúng liền.
+  - Trống dồn cùng nhịp màn chiếu.
+  - Sau mỗi câu:
+    - **1 câu trend hợp tình huống**: đúng nhanh, chuỗi 3/5/8, lên hạng, dẫn đầu, sai, hết giờ, bị loại, hồi tim;
+    - **mục tiêu trước mắt** tính từ Top 5: "Còn 500 điểm nữa là vượt An để dẫn đầu" · "Đội em đang kém 20 vạch".
+  - Cuối trận: câu chúc + huy hiệu (💯 Không sai câu nào · 🔥 Chuỗi · 🥇🥈🥉 — phòng ≥ 4 người · 📚 Học bài kỹ).
+- **Câu trend:** vui, bắt kịp mạng xã hội ("Đỉnh nóc, kịch trần!", "Out trình thật sự!", "Lên top như diều gặp gió!") nhưng đúng chính tả, không thô tục, không chê bai. Trả lời sai/hết giờ luôn là lời động viên + hướng về việc học. Có test chặn từ cấm trong kho câu.
+- `arena-room-core.js`: ghi thêm `fastMs/fastN` (tổng thời gian câu đúng) và `bestUp` (lên nhiều hạng nhất trong 1 câu) — chỉ lưu ở máy giáo viên, dùng cho danh hiệu.
+- Đã chạy thử thật (1 máy giáo viên + 3 học sinh, WebRTC) đủ 6 trò: Tốc độ, Đua về đích, Sinh tồn, Kéo co, Đấu phép, Giải mã — không lỗi.
+
+## Đấu trường: trận đấu kịch tính hơn — chốt đáp án, bạn máy "đang trả lời", bình luận viên (27/10/2026)
+
+Áp dụng cho Chơi một mình (không áp dụng cho lượt Luyện câu sai). Module mới `js/arena/arena-hype.js` + 18 test `js/arena/__tests__/arena-hype.test.js`. 0 lượt Firebase.
+
+- **Chốt đáp án kiểu Kahoot:** bấm đáp án → ô em chọn phồng lên, các ô khác mờ, trống dồn 0,75 giây rồi mới lộ đúng/sai. Thời gian trả lời tính lúc bấm nên không bị trừ điểm. Hết giờ hoặc máy đặt "giảm chuyển động" thì lộ ngay.
+- **Bạn máy "đang trả lời":** trong lúc em nghĩ, từng bạn máy lần lượt chốt (dấu ✔ ở thẻ tên trên sân khấu) + ô "Đã chốt 2/4". Khi tất cả đã chốt, ô chuyển đỏ "Mọi người đã chốt — chỉ còn em!". Diệt Virus ghi "Đồng đội". Chỉ là hình — kết quả bạn máy vẫn tính như cũ.
+- **Mục tiêu trước mắt** theo đơn vị từng trò: "Còn 437 điểm nữa là vượt Mèo Wifi để dẫn đầu", "Còn 2 bước nữa là vượt..., còn 5 bước về đích", "Dây lệch về Đội Xanh 50/100 vạch", "Trùm Virus còn 62% máu", Đấu phép so máu.
+- **Bình luận viên** sau mỗi lượt, đúng logic từng trò: đua nước rút, dây sắp nghiêng, chỉ còn 1 tim, máu thấp → nhắc dùng Khiên, Virus vừa hồi máu, bạn máy vượt lên dẫn đầu, có người bám sát sau lưng em.
+- **Cao trào** (mỗi trận mỗi loại 1 lần, chữ lớn ở đầu câu sau + viền sân khấu chuyển vàng–đỏ tới hết trận): NƯỚC RÚT! · SẮP CHẠM MẶT TRĂNG! · GIẰNG CO QUYẾT ĐỊNH! · ĐẤU TAY ĐÔI! · VIRUS SẮP GỤC! · 3 CÂU CUỐI!
+- **Bạn máy trêu:** bạn vừa vượt em nói "Vượt rồi nhé! 😜", bạn bị em vượt kêu "Ơ kìa!".
+- **Hào quang lửa** 🔥 dưới chân nhân vật của em khi đang chuỗi đúng từ 3 câu.
+
+## Đấu trường: màn chọn gọn hơn, ít thao tác hơn (27/10/2026)
+
+- Thẻ chế độ chỉ còn tên + 1 dòng ngắn ("Đúng nhanh = nhiều điểm"); luật đầy đủ của chế độ đang chọn hiện ở 1 khung bên dưới lưới.
+- Chơi một mình: nút **"Vào trận: <tên chế độ>"** dính đáy màn hình — chọn chế độ xong bấm luôn, không phải cuộn. Enter ở ô biệt danh cũng vào trận.
+- Dạng câu hỏi + luật vật phẩm/thẻ bài gom vào mục thu gọn, có dòng tóm tắt đang bật gì; tự mở khi bộ không còn câu vì tắt hết dạng câu.
+- Giáo viên: phần "Cách tổ chức phòng" thu gọn thành 1 dòng bấm mở.
+- Nhớ bộ câu chọn lần trước (Chương trình / Cấp độ / Bài) — link có `?cat=` vẫn được ưu tiên.
+- Chỉ đổi giao diện trên máy (localStorage), **0 lượt Firebase**.
+
+## Đấu trường: số câu không còn bị thiếu, lặp, trùng khi bộ câu ít hoặc nhiều hơn số câu chọn (27/10/2026)
+
+- **Thiếu:**
+  - Trước đây chọn 20 câu với bộ chỉ có 8 câu, trận chỉ có 8 câu mà không báo gì. Bộ ôn tập theo tiết có 30–45 câu thì lại chỉ chơi được tối đa 20.
+  - Nay có thêm nút **"Tất cả (N)"** để chơi hết bộ.
+  - Nút số câu lớn hơn số câu bộ có bị làm mờ, có giải thích (vẫn bấm được).
+  - Dòng thông tin ghi rõ, ví dụ: "Bộ có 8 câu — chọn 20 câu nhưng bộ chỉ có 8, trận sẽ có 8 câu (không lặp câu)".
+- **Lặp:**
+  - Trước đây ở vai Chơi một mình, mọi chế độ trừ Tốc độ lấy thẳng số câu chọn, nên bộ nhỏ phải quay vòng `deck[i % n]` lặp đúng thứ tự cũ. Bảng điểm cũng có thể có 2 ô cùng 1 câu.
+  - Nay mọi chế độ **không lặp câu**.
+  - Riêng Đua về đích (tối đa 3 × số bước khi chơi một mình, 2 × khi chơi cả lớp) và Lên Mặt Trăng (2 ×) thật sự cần nhiều lượt hơn: **dùng hết bộ rồi mới trộn lại**, mỗi câu xuất hiện đều nhau và không bao giờ lặp liền nhau (`EduArenaCore.extendDeck`). Dòng thông tin báo trước số lượt tối đa.
+  - Bảng điểm không tạo nhiều ô hơn số câu (tối đa 30 ô).
+- **Trùng:**
+  - Lọc trùng nay so sau khi chuẩn hoá: không phân biệt chữ hoa/thường, khoảng trắng, dấu câu ở hai đầu. Câu cùng đề và cùng đáp án chỉ giữ 1, dù khác phương án nhiễu hay thứ tự (`dedupeKey`).
+  - Vẫn **giữ dấu tiếng Việt** ("Bàn phím" ≠ "Bán phím"). Câu cùng đề nhưng khác đáp án vẫn là 2 câu.
+- Áp dụng cho Chơi một mình, Phòng cả lớp và Bảng điểm. Thêm 8 test trong `js/arena/__tests__/arena-core.test.js`. Test Bảng điểm cũ ("lặp câu nếu thiếu") đổi theo hành vi mới.
+
+## Đấu trường: nhiều giáo viên cùng mở phòng không ăn hết hạn mức Firebase của dự án (27/10/2026)
+
+- **Vấn đề:** Firestore gói Spark **dùng chung** cho mọi việc: dashboard, lịch dạy, đăng nhập, danh sách lớp… Đường dự phòng của Phòng cả lớp tốn khoảng 21 ghi + 66 đọc cho mỗi em mỗi trận 20 câu. Nhiều giáo viên ở nhiều trường cùng mở phòng, mỗi phòng nhiều em dùng 4G, là có thể đốt hết hạn mức trong ngày và làm hỏng các trang khác. Trước đây không có giới hạn tổng nào.
+- **Trần chung mỗi ngày cho cả dự án:** API Apps Script mới `arenaRelayTicket`, đếm theo ngày giờ VN trong Script Properties.
+  - Máy giáo viên xin gói 5 chỗ, **chỉ khi có em thật sự cần đường dự phòng**. Phòng cả lớp chung Wi-Fi không tốn lượt Apps Script nào.
+  - Mặc định **150 lượt em-trận/ngày** ≈ 3.200 ghi + 10.000 đọc (khoảng 16% ghi, 20% đọc của Spark). Còn lại dành cho các việc khác.
+  - Đổi trần: Script Properties → `RELAY_DAILY_SLOTS`.
+- **Trần mỗi phòng:** tối đa 25 em đi đường dự phòng (`EduBackend.arenaRoom.relayRoomMax`). Muốn tắt hẳn: `relay: false`.
+- **Hết chỗ:** em chưa vào được nhận thông báo dùng chung Wi-Fi với máy giáo viên. Em đã vào rồi, kể cả vào lại sau khi rớt mạng, vẫn chơi tiếp mà không tốn chỗ mới.
+- **Apps Script chưa cập nhật hoặc lỗi mạng:** mỗi phòng tự giới hạn 10 em dự phòng (không có trần chung).
+- **Không lãng phí sau trận:** 20 giây sau khi trận kết thúc, máy giáo viên tự đóng đường dự phòng và xoá document phòng. Không còn máy nào nghe hay ghi vô ích.
+- **Sảnh phòng** hiện "🛰️ X em vào qua đường dự phòng · hôm nay cả hệ thống còn Y/Z chỗ".
+- **Sửa lỗi có từ trước:** "Lưu lên Google Sheet" ở 4 chế độ Sinh tồn, Kéo co, Đấu phép, Giải mã luôn bị Apps Script từ chối (chỉ nhận Tốc độ và Đua về đích).
+- Test: 5 trường hợp hạn mức trong `arena-relay.test.js`, 6 trường hợp trong `apps/__tests__/code-gs.test.js`.
+- **Cần làm:** dán `apps/Code.gs` (BACKEND_VERSION `2026-10-27`) → chạy `kiemTraSauDeploy` → Deploy *New version*. Sau đó publish `firestore.rules` (như mục dưới), rồi push web.
+
+## Đấu trường — Phòng cả lớp: học sinh khác mạng vẫn vào được, không cần dịch vụ ngoài (27/10/2026)
+
+- **Nguyên nhân lỗi "Không nối được tới máy giáo viên":** học sinh khác mạng với máy giáo viên (4G, Wi-Fi khác, Wi-Fi trường có tường lửa) không nối thẳng WebRTC được, mà máy chủ chuyển tiếp (TURN) miễn phí kèm PeerJS đã chết. Kiểm tra 26/10/2026: `eu-0/us-0.turn.peerjs.com` không còn bản ghi DNS. Các TURN miễn phí khác (Metered, Cloudflare) đều đòi đăng ký hoặc thẻ.
+- **Sửa — chỉ dùng thứ dự án đã có (Firebase):**
+  - Học sinh vẫn **nối thẳng trước** (0 lượt Firebase; luôn được khi chung Wi-Fi với máy giáo viên).
+  - Nối thẳng thất bại (hoặc mạng chặn máy chủ bắt tay `0.peerjs.com`): máy em **tự chuyển sang đường dự phòng qua Firestore** (`js/arena/arena-relay.js`), không cần làm gì thêm. Giao thức tin nhắn giữ nguyên, nên luật chơi và chấm điểm không đổi.
+  - Bỏ hết phần TURN (Metered/Cloudflare) và API Apps Script `iceServers` vừa thêm. Apps Script vẫn là bản `2026-10-26` đang chạy, **không cần deploy lại**.
+- **Lượt Firebase — chỉ tính cho học sinh đi đường dự phòng:**
+  - Mở phòng: 1 ghi + 1 đọc.
+  - Mỗi học sinh dự phòng: ~1 ghi/câu (trả lời) + ~2 đọc/câu (câu hỏi, đáp án).
+  - Máy giáo viên: ~2 ghi/câu cho **cả nhóm** dự phòng, gom ≤ 1 lần ghi/giây; ở sảnh chờ gom thưa hơn (2,5 giây).
+  - Tin "đã nhận đáp án" không đi qua Firestore: máy em tự báo khi ghi thành công.
+  - Ví dụ: 10 em dự phòng × 20 câu ≈ 240 ghi + 420 đọc mỗi trận (Spark cho 20.000 ghi, 50.000 đọc mỗi ngày).
+- **Bảo mật** (`firestore.rules` → `arena_relay`):
+  - Chỉ giáo viên đã duyệt hoặc admin tạo được phòng.
+  - Học sinh đăng nhập **ẩn danh** (phiên chỉ trong tab, không tính hạn mức) và chỉ ghi được đúng document `up/{uid}` của mình, tối đa 4 tin.
+  - Chỉ chủ phòng đọc được tin học sinh gửi. Dữ liệu trò chơi tạm có trường `exp`.
+- **Tối ưu khi đông học sinh dự phòng:**
+  - **Phần chung chỉ lưu 1 bản:** câu hỏi, đáp án và bảng điểm giống hệt nhau cho mọi em, nay chỉ lưu 1 bản trong `blobs`. Mỗi em chỉ giữ phần riêng nhỏ (đã trả lời chưa, thẻ, máu, đá quý, kết quả của em).
+    - Đo với 60 em dự phòng: document phòng giảm từ 286 KB xuống **21 KB**.
+    - Dung lượng tải ra mỗi trận giảm từ ~750 MB xuống **~55 MB**. Firestore Spark cho 10 GB tải ra mỗi tháng, nên số trận như vậy tăng từ ~13 lên ~180.
+  - **Sảnh chờ:** cập nhật cho học sinh dự phòng gom 5 giây một lần (trước 2,5 giây). Cả lớp vào phòng liên tục thì mỗi em bớt một nửa lượt đọc.
+  - **Tải lại trang giữa trận:** em nào đã vào bằng đường dự phòng thì vào thẳng đường đó (nhớ trong tab bằng sessionStorage), không mất 12 giây thử nối thẳng.
+  - **Không dùng Apps Script cho phần thời gian thực:** Apps Script chỉ chạy song song 30 lượt mỗi tài khoản. 40 em bấm trả lời trong cùng một giây, hay hỏi trạng thái liên tục, sẽ nghẽn ngay; Firestore chịu được đợt dồn này. Apps Script vẫn lưu kết quả phòng lên Sheet (1 lượt mỗi phòng), localStorage vẫn giữ lịch sử phòng trên máy giáo viên.
+- Test mới `js/arena/__tests__/arena-relay.test.js` (18 trường hợp, Firestore giả lập, có 2 học sinh dự phòng dùng chung phần câu hỏi). Thử 2 tab Chrome qua `0.peerjs.com` thật: nối thẳng vẫn vào phòng sau 3 giây. **Chưa chạy đường dự phòng trên Firestore thật**, vì cần publish rules.
+- **Cần làm:**
+  1. Firebase Console → Firestore → **Rules**: dán `firestore.rules` → Publish.
+  2. Firebase Console → Authentication → Sign-in method: bật **Anonymous** nếu chưa bật.
+  3. Push web.
+  4. (Tuỳ chọn) Firestore → TTL: thêm chính sách trường `exp` cho collection group `arena_relay` và `up` để tự dọn phòng cũ. Không bật thì dữ liệu cũng rất nhỏ; máy giáo viên đã tự xoá document phòng khi đóng phòng.
+
+## Lịch giảng dạy: giáo viên tự nhập lịch của mình từ file Excel — tốn rất ít lượt Firebase (26/10/2026)
+
+- Với tài khoản giáo viên, nút ở sidebar đổi thành **"📥 Nhập lịch của tôi từ Excel"**.
+  - Chọn đúng file Excel như admin vẫn nhập (file cả tổ "LỊCH GIẢNG DẠY TEAM GVTH…" cũng được). Trang **chỉ lấy khối có mã NV của giáo viên đó**, giáo viên khác trong file được bỏ qua.
+  - Vẫn chọn tuần, so sánh và bỏ qua tuần giống hệt như bản admin. TKB lớp được tự điền, ô khác Excel được hỏi giữ hay ghi đè.
+- **Lượt Firebase**:
+  - So với dữ liệu hiện có: mỗi tuần **2 lượt đọc** (đúng lịch và TKB lớp của mình). Luồng của admin đọc lịch cả tổ của tuần đó (2 × số giáo viên).
+  - Ghi: tối đa 2 lượt mỗi tuần **có thay đổi**, cộng 1 lượt nếu tuần chưa có trên hệ thống.
+  - Thử với file thật (18 giáo viên, 12 tuần), vai giáo viên HCM0107:
+    - lần đầu: 0 đọc, 18 ghi (6 tuần mới);
+    - nhập lại 6 tuần: 12 đọc, 2 ghi (5 tuần giống hệt được bỏ qua).
+  - Cùng kịch bản nhập lại, admin tốn 143 lượt đọc.
+- Trước đây nút "Nhập từ Excel" vẫn hiện với giáo viên nhưng **luôn lỗi quyền**, vì nó ghi cho cả tổ trong một batch.
+- **`firestore.rules` — cần Publish**:
+  - `teaching_weeks`: giáo viên được **tạo** tuần chưa có (không sửa, không xoá). Mã tuần phải là ngày thứ Hai `YYYY-MM-DD`, dữ liệu đúng 2 trường `label` và `createdAt`.
+    - Sheet có nhãn tuần không ghi ngày thì bị bỏ qua, kèm lời nhắc nhờ admin tạo tuần.
+  - `teaching_timetable`: giáo viên ghi được TKB lớp của **đúng mình**.
+  - **Vá lỗ hổng** ở `teaching_schedule`: trước đây rules chỉ kiểm `teacherCode` trong dữ liệu. Một giáo viên có thể ghi vào document của người khác (kèm mã của mình) và đè mất lịch của họ.
+    - Nay mã document phải đúng `<mã NV của mình>__<weekKey>`. Cùng ràng buộc này áp dụng cho TKB lớp.
+  - Chưa publish rules thì giáo viên nhập sẽ báo lỗi quyền và không ghi gì (batch nguyên tử). Phần "Lịch của tôi" vẫn sửa tay được như cũ.
+
+## Phòng lỗi lặp lại: cảnh báo Apps Script chưa deploy + Lịch giảng dạy bớt đọc Firebase (26/10/2026)
+
+- **Thanh cảnh báo "Apps Script chưa cập nhật" cho admin** (`js/services/backend-version-check.js`).
+  - Lỗi hay gặp nhất khi đổi cả 2 phía là push web nhưng quên deploy `apps/Code.gs`. Khi đó tính năng mới hỏng âm thầm.
+  - Nay admin mở 6 trang quản trị (Dashboard, Điều phối, Danh sách lớp, Quản lý câu hỏi, Dashboard giáo viên, Lịch giảng dạy) sẽ thấy thanh cảnh báo kèm các bước deploy, nếu bản đang chạy thật cũ hơn bản web cần.
+  - Mỗi máy gọi `ping` công khai tối đa 1 lần/6 giờ (30 phút khi đang lệch). 0 lượt Firebase. Học sinh và giáo viên không bị ảnh hưởng.
+  - Số phiên bản web cần nằm ở `EduBackend.expectedBackendVersion` và phải bằng `BACKEND_VERSION` trong `apps/src/00-config.gs`. Test `backend-consistency` báo đỏ nếu 2 số lệch nhau.
+  - Đã thử trên Chrome với Apps Script thật: đang chạy `2026-10-26`, khớp nên không báo. Giả lập web cần bản mới hơn thì thanh cảnh báo hiện đúng.
+- **Lịch giảng dạy: thời hạn bộ đệm theo loại dữ liệu** (`js/services/schedule-read-cache.js`). Trước đây mọi dữ liệu chỉ giữ 10 phút. Mỗi lần mở trang đọc lại ~4 × số giáo viên + số tuần, tức tổng lượt đọc tăng theo số giáo viên × số lần mở.
+  - Nay giữ lâu hơn với phần gần như không đổi:
+    - lịch và thời khoá biểu **tuần đã qua**: 12 giờ (tab Báo cáo và Xăng xe đọc nhiều tuần cũ);
+    - danh sách giáo viên, giờ tiết: 1 giờ;
+    - danh sách tuần: 30 phút.
+  - Tuần hiện tại và tuần tới vẫn 10 phút. Máy nào tự sửa lịch thì vẫn xoá bộ đệm ngay như cũ.
+  - Ước tính bớt khoảng một nửa lượt đọc khi mở lại trong cùng giờ học, và phần lớn lượt đọc của tab Báo cáo.
+  - Giới hạn: giáo viên hoặc tuần **mới tạo từ máy khác** chậm hiện tối đa 1 giờ / 30 phút.
+
 ## Apps Script: bỏ khoá chung khi nộp bài — nhiều lớp nộp cùng lúc không còn xếp hàng (26/10/2026)
 
 - **Vì sao:** trước đây mỗi bài nộp (IC3/Spark và MOS) giữ một khoá chung của Apps Script trong lúc mở file Sheet, đếm dòng và ghi dòng (~0,5–1 giây). Kết quả là cả hệ thống chỉ ghi được **~1–2 bài/giây**, dù Apps Script cho chạy 30 lượt song song.

@@ -20,11 +20,10 @@
 (function (global) {
   'use strict';
 
-  const BOOK_KEY = 'eduquiz_wrongbook_v1';
+  // Kho sổ tay + quy tắc Leitner dùng chung với Đấu trường: js/services/wrongbook-store.js
+  const W = global.EduWrongbook;
+  const BOOK_KEY = W.BOOK_KEY;
   const DAY = 24 * 60 * 60 * 1000;
-  // Hộp Leitner → khoảng cách tới lần ôn kế tiếp.
-  const BOX_GAP = { 1: 0, 2: DAY, 3: 3 * DAY, 4: 7 * DAY };
-  const MAX_ITEMS = 200;
   const REVIEW_BATCH = 20;
   const PASS = 70;
 
@@ -38,9 +37,7 @@
   function notify(msg, type) { if (typeof global.showNotification === 'function') global.showNotification(msg, type || 'info'); }
 
   // ── Học sinh ──
-  function keyOf(name, cls, school) {
-    return [name, cls, school].map((x) => String(x || '').trim().toLowerCase()).join('|');
-  }
+  const keyOf = W.keyOf;
   function lobbyStudent() {
     const v = (id) => ($(id)?.value || '').trim();
     const name = v('studentName');
@@ -66,69 +63,22 @@
   // ============================================================
   // SỔ TAY CÂU SAI (Leitner)
   // ============================================================
-  function hash(str) {
-    let h = 2166136261;
-    for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
-    return (h >>> 0).toString(36);
-  }
-  function qKey(q) {
-    if (q.uid && !String(q.uid).startsWith('custom__')) return 'u:' + q.uid;
-    return 'c:' + hash([q.question, (q.options || []).join('|'), (q.items || []).join('|'), JSON.stringify(q.pairs || '')].join('#'));
-  }
-  /** Bản gọn của câu để lưu: bỏ trường tạm "_..." (prepareQuestions dựng lại khi ôn). */
-  function slim(q) {
-    const o = {};
-    Object.keys(q).forEach((k) => { if (k[0] !== '_') o[k] = q[k]; });
-    return o;
-  }
-  function loadStudentBook(book, st) {
-    if (!book[st.key]) book[st.key] = { name: st.name, cls: st.cls, school: st.school, items: {}, mastered: 0, updated: 0 };
-    return book[st.key];
-  }
-  function promote(it, now) {
-    if (it.box >= 4) return 'mastered';
-    it.box += 1;
-    it.due = now + BOX_GAP[it.box];
-    it.right = (it.right || 0) + 1;
-    return 'up';
-  }
-  function demote(it, now) { it.box = 1; it.due = now; it.wrong = (it.wrong || 0) + 1; }
+  const { promote, demote } = W;
 
   function onGraded(e) {
     const { questions, details, session } = e.detail || {};
     if (!questions || !details || !session || !session.studentName) return;
     const st = { name: session.studentName, cls: session.studentClass || '', school: session.studentSchool || '' };
     st.key = keyOf(st.name, st.cls, st.school);
-    const book = lsGet(BOOK_KEY, {});
-    const sb = loadStudentBook(book, st);
-    const now = Date.now();
-    let added = 0, up = 0, mastered = 0, again = 0;
     const src = [session.level, session.minitest].filter(Boolean).join(' › ');
+    const results = [];
     questions.forEach((q, i) => {
       const d = details[i];
-      if (!d || !q || q.type === 'hotspot' && String(q.imageUrl || '').startsWith('data:')) return;
-      const k = qKey(q);
-      const it = sb.items[k];
-      if (d.status === 'correct' && it) {
-        if (promote(it, now) === 'mastered') { delete sb.items[k]; sb.mastered = (sb.mastered || 0) + 1; mastered++; } else up++;
-      } else if (d.status === 'incorrect') {
-        if (it) { demote(it, now); again++; }
-        else if (!session.isWrongbook) {
-          // Ảnh nhúng quá lớn (đề tự soạn) — vẫn lưu được nhưng giới hạn để không đầy bộ nhớ.
-          if (String(q.imageUrl || '').length > 60000) return;
-          sb.items[k] = { q: slim(q), box: 1, due: now, wrong: 1, right: 0, added: now, src };
-          added++;
-        }
-      }
+      if (d && q && (d.status === 'correct' || d.status === 'incorrect')) results.push({ q, ok: d.status === 'correct' });
     });
-    // Giới hạn kích thước: bỏ câu đã lên hộp cao nhất / cũ nhất trước.
-    const keys = Object.keys(sb.items);
-    if (keys.length > MAX_ITEMS) {
-      keys.sort((a, b) => (sb.items[b].box - sb.items[a].box) || (sb.items[a].added - sb.items[b].added))
-        .slice(0, keys.length - MAX_ITEMS).forEach((k) => delete sb.items[k]);
-    }
-    sb.updated = now;
-    if (!lsSet(BOOK_KEY, book)) return;
+    const res = W.record(st, results, { src, review: !!session.isWrongbook });
+    if (!res.saved) return;
+    const { added, up, mastered, again } = res;
     if (session.isWrongbook) {
       setTimeout(() => notify(`Sổ tay: ${up + mastered} câu nhớ thêm${mastered ? ` (${mastered} câu đã thuộc hẳn)` : ''}, ${again} câu cần ôn lại.`, 'success'), 900);
     } else if (added) {
@@ -732,9 +682,21 @@
     updateBadge();
   }
 
+  /** Link từ Đấu trường: index.html?goc=sotay&hs=<khoá học sinh> → mở thẳng Sổ tay câu sai của em đó. */
+  function openFromLink() {
+    const p = new URLSearchParams(location.search);
+    if (p.get('goc') !== 'sotay') return;
+    open('book');
+    const k = p.get('hs');
+    if (k && [...$('lhStudent').options].some((o) => o.value === k)) { H.key = k; $('lhStudent').value = k; render(); }
+    p.delete('goc'); p.delete('hs');
+    history.replaceState(null, '', location.pathname + (p.toString() ? '?' + p : '') + location.hash);
+  }
+  function boot() { mountButton(); openFromLink(); }
+
   global.addEventListener('edu:exam-graded', onGraded);
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountButton);
-  else mountButton();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
 
   global.EduLearningHub = { open, updateBadge, _keyOf: keyOf };
 })(window);

@@ -10,7 +10,7 @@ function kiemTraSauDeploy() {
   let written = false;
   try {
     ok('Phiên bản backend', true, BACKEND_VERSION);
-    ok('Có đủ API mới', ['listResults', 'wrongStats', 'arenaRoomLog'].every(function (k) { return !!routes_()[k]; }));
+    ok('Có đủ API mới', ['listResults', 'wrongStats', 'arenaRoomLog', 'arenaRelayTicket'].every(function (k) { return !!routes_()[k]; }));
 
     const res = writeSubmissionLog_({
       submissionId: id, studentName: 'Kiểm tra hệ thống', studentClass: 'SELFTEST', studentSchool: 'SELFTEST',

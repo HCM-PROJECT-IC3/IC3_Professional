@@ -85,6 +85,7 @@
         <label class="ar-label" for="arNick">Biệt danh</label>
         <input id="arNick" class="ar-input" maxlength="30" autocomplete="off" placeholder="Nhập biệt danh của em">
         <p class="ar-hint">Xu, Linh vật và kỷ lục lưu riêng theo biệt danh, chỉ trên máy này.</p>
+        <p class="ar-due" id="arDue" hidden></p>
       </div>
       <button type="button" class="ar-btn ar-btn-pack" id="arOpenPacks"><span aria-hidden="true">🥚</span> Linh vật</button>
     </div>
@@ -109,61 +110,70 @@
       <h2 class="ar-h2"><span class="ar-step only-teacher" aria-hidden="true">2</span><i class="fa-solid fa-gamepad"></i> Chế độ chơi</h2>
       <div class="ar-modes" id="arModes" role="radiogroup" aria-label="Chế độ chơi">
         <button type="button" class="ar-mode m-speed" data-mode="speed" role="radio">
-          <span class="ar-mode-ico" aria-hidden="true">⚡</span><b>Tốc độ</b>
+          <span class="ar-mode-ico" aria-hidden="true">⚡</span><b>Tốc độ</b><span class="ar-mode-tag">Đúng nhanh = nhiều điểm</span>
           <small class="only-solo">Kiểu Kahoot — trả lời càng nhanh càng nhiều điểm, chuỗi đúng được thưởng, đua với bóng ma kỷ lục của chính em.</small>
           <small class="only-teacher">Kiểu Kahoot — cả lớp trả lời cùng lúc, nhanh và đúng thì nhiều điểm; chuỗi đúng nhận thẻ thưởng.</small></button>
         <button type="button" class="ar-mode m-gold" data-mode="gold" role="radio">
-          <span class="ar-mode-ico" aria-hidden="true">💰</span><b>Săn vàng</b>
+          <span class="ar-mode-ico" aria-hidden="true">💰</span><b>Săn vàng</b><span class="ar-mode-tag">Đúng thì mở rương vàng</span>
           <small>Kiểu Blooket — trả lời đúng được chọn 1 trong 3 rương: nhân vàng, cướp vàng, đổi vàng... Coi chừng bị cướp lại!</small></button>
         <button type="button" class="ar-mode m-race" data-mode="race" role="radio">
-          <span class="ar-mode-ico" aria-hidden="true">🏁</span><b>Đua về đích</b>
+          <span class="ar-mode-ico" aria-hidden="true">🏁</span><b>Đua về đích</b><span class="ar-mode-tag">Đúng 1 câu, tiến 1 bước</span>
           <small class="only-solo">Mỗi câu đúng tiến 1 bước, đúng 3 câu liên tiếp được tăng tốc. Về đích trước để thắng.</small>
           <small class="only-teacher">Mỗi câu đúng tiến 1 bước, đúng liền 3 câu được tăng tốc. Ai về đích trước thắng.</small></button>
         <button type="button" class="ar-mode m-survival" data-mode="survival" role="radio">
-          <span class="ar-mode-ico" aria-hidden="true">❤️</span><b>Sinh tồn</b>
+          <span class="ar-mode-ico" aria-hidden="true">❤️</span><b>Sinh tồn</b><span class="ar-mode-tag">3 tim — sai mất 1 tim</span>
           <small>Kiểu Battle Royale — mỗi người 3 tim, sai mất 1 tim, đúng liền 3 câu hồi tim. Người trụ lại cuối cùng thắng!</small></button>
         <button type="button" class="ar-mode m-fish" data-mode="fish" role="radio">
-          <span class="ar-mode-ico" aria-hidden="true">🎣</span><b>Câu cá</b>
+          <span class="ar-mode-ico" aria-hidden="true">🎣</span><b>Câu cá</b><span class="ar-mode-tag">Đúng thì thả câu bắt cá</span>
           <small>Kiểu Blooket Fishing Frenzy — trả lời đúng được thả câu: cá rô, mực, cá mập, cá voi... Ai câu nặng ký nhất thắng!</small></button>
         <button type="button" class="ar-mode m-tug" data-mode="tug" role="radio">
-          <span class="ar-mode-ico" aria-hidden="true">🪢</span><b>Kéo co</b>
+          <span class="ar-mode-ico" aria-hidden="true">🪢</span><b>Kéo co</b><span class="ar-mode-tag">Đội Đỏ đấu Đội Xanh</span>
           <small class="only-solo">Đội Đỏ đấu Đội Xanh. Mỗi câu đúng kéo dây về phía đội em, đúng nhanh kéo mạnh gấp đôi.</small>
           <small class="only-teacher">Cả lớp chia 2 đội Đỏ – Xanh. Câu đúng kéo dây về phía đội mình, tính trung bình nên đội đông không được lợi.</small></button>
         <button type="button" class="ar-mode m-spell" data-mode="spell" role="radio">
-          <span class="ar-mode-ico" aria-hidden="true">🔮</span><b>Đấu phép</b>
+          <span class="ar-mode-ico" aria-hidden="true">🔮</span><b>Đấu phép</b><span class="ar-mode-tag">Đúng thì tung phép</span>
           <small class="only-teacher">Kiểu WayArena — cả lớp đấu phép với nhau. Trả lời đúng được chọn phép tấn công, khiên hoặc hồi máu; phép nổ khi sang câu sau. Người trụ lại thắng.</small>
           <small class="only-solo">Kiểu WayArena — trả lời đúng được chọn phép: cầu lửa, sấm sét, khiên, hồi máu. Trả lời nhanh phép mạnh hơn. Người trụ lại thắng.</small></button>
         <button type="button" class="ar-mode m-heist" data-mode="heist" role="radio">
-          <span class="ar-mode-ico" aria-hidden="true">🔐</span><b>Giải mã</b>
+          <span class="ar-mode-ico" aria-hidden="true">🔐</span><b>Giải mã</b><span class="ar-mode-tag">Đào đá quý, phá két</span>
           <small class="only-teacher">Kiểu "Những người giải mã" — cả lớp đào đá quý và đoán mã két của nhau. Mã két chỉ máy giáo viên biết. Nhiều đá quý nhất thắng.</small>
           <small class="only-solo">Đào đá quý, đoán mã 3 ký hiệu để phá két đối thủ và lấy một nửa kho báu. Bị dòm ngó thì đổi mã!</small></button>
         <button type="button" class="ar-mode m-dino" data-mode="dino" role="radio">
-          <span class="ar-mode-ico" aria-hidden="true">🦖</span><b>Đào hoá thạch</b>
+          <span class="ar-mode-ico" aria-hidden="true">🦖</span><b>Đào hoá thạch</b><span class="ar-mode-tag">Đúng thì đào hoá thạch</span>
           <small>Kiểu Blooket Deceptive Dinos — trả lời đúng được đào 1 trong 3 tảng đá. Ăn gian được gấp 3 nhưng bị kiểm tra là mất 40%. Bắt quả tang bạn ăn gian để lấy hoá thạch!</small></button>
         <button type="button" class="ar-mode m-moon" data-mode="moon" role="radio">
-          <span class="ar-mode-ico" aria-hidden="true">🚀</span><b>Lên Mặt Trăng</b>
+          <span class="ar-mode-ico" aria-hidden="true">🚀</span><b>Lên Mặt Trăng</b><span class="ar-mode-tag">Đúng nhanh, tên lửa bay cao</span>
           <small>Kiểu leo đỉnh của Wayground — đúng nhanh tên lửa bay cao, đúng liền 3 câu bật tầng đẩy ×1,5 (5 câu ×2). Sai thì tụt nhưng không dưới trạm đã qua. Chạm Mặt Trăng trước thắng!</small></button>
         <button type="button" class="ar-mode m-boss" data-mode="boss" role="radio">
-          <span class="ar-mode-ico" aria-hidden="true">🦠</span><b>Diệt Virus</b>
+          <span class="ar-mode-ico" aria-hidden="true">🦠</span><b>Diệt Virus</b><span class="ar-mode-tag">Cả đội hạ Trùm Virus</span>
           <small>Kiểu đánh Boss — em và 3 bạn máy chung đội hạ Trùm Virus. Đúng nhanh, đúng liền đánh mạnh hơn; sai bị Virus đánh trả mất tim. Virus nổi giận sẽ tự hồi máu nếu cả đội trả lời kém!</small></button>
         <button type="button" class="ar-mode m-board only-teacher" data-mode="board" role="radio">
-          <span class="ar-mode-ico" aria-hidden="true">🧩</span><b>Bảng điểm</b>
+          <span class="ar-mode-ico" aria-hidden="true">🧩</span><b>Bảng điểm</b><span class="ar-mode-tag">Chiếu lên bảng, chia đội</span>
           <small>Kiểu Board Battle — chiếu bảng ô 100…500 lên màn hình, các đội chọn ô và trả lời. Học sinh không cần máy.</small></button>
       </div>
-      <p class="ar-hint ar-power-note only-solo">🎁 <b>Tốc độ</b>, <b>Sinh tồn</b> và <b>Lên Mặt Trăng</b>: đúng liền 3 câu nhận 1 vật phẩm (kiểu Wayground) — ✂️ 50:50 · ⏳ Thêm giờ · ✖️2 Nhân đôi. Bấm để dùng (phím Q, W, E).</p>
-      <p class="ar-hint ar-card-note only-solo"><i class="fa-solid fa-layer-group" aria-hidden="true"></i> <b>Thẻ bài</b> (mọi chế độ): cứ 3 câu, đúng từ 2 câu được bốc 1 trong 3 lá úp — 50:50, Thêm giờ, Nhân đôi, Khiên chuỗi, Câu vàng, Đặt cược, Túi xu, lá hiếm Kho báu. Mỗi trận còn có <b>Câu hỏi vàng</b> và <b>Thử thách tốc độ</b> thưởng xu.</p>
-      <div class="ar-field ar-kinds-field"><span>Dạng câu hỏi <em>(bấm để bật/tắt — số nhỏ là số câu có trong bài)</em></span>
-        <div class="ar-chips ar-kinds" id="arKinds" role="group" aria-label="Dạng câu hỏi"></div></div>
+      <!-- Thẻ chỉ hiện 1 dòng ngắn; luật đầy đủ của chế độ đang chọn hiện ở đây (arena.js paintModes). -->
+      <p class="ar-mode-desc" id="arModeDesc" aria-live="polite"></p>
       <div class="ar-grid3 ar-opts">
         <div class="ar-field"><span>Số câu</span><div class="ar-chips" id="arCount">
-          <button type="button" data-v="10">10</button><button type="button" data-v="15">15</button><button type="button" data-v="20">20</button></div></div>
+          <button type="button" data-v="10">10</button><button type="button" data-v="15">15</button><button type="button" data-v="20">20</button><button type="button" data-v="0">Tất cả</button></div></div>
         <div class="ar-field only-solo"><span>Đối thủ máy</span><div class="ar-chips" id="arLevel">
           <button type="button" data-v="easy">Dễ</button><button type="button" data-v="normal">Vừa</button><button type="button" data-v="hard">Khó</button></div></div>
         <div class="ar-field"><span>Giây mỗi câu</span><div class="ar-chips" id="arSecs">
           <button type="button" data-v="10">10</button><button type="button" data-v="20">20</button><button type="button" data-v="30">30</button></div></div>
       </div>
-      <button type="button" class="ar-btn ar-btn-play only-solo" id="arPlay"><i class="fa-solid fa-play"></i> Vào trận</button>
-      <p class="ar-hint ar-center only-solo" id="arDeckInfo"></p>
+      <!-- Tuỳ chọn ít dùng: thu gọn để màn chọn ngắn lại; dòng tóm tắt cho biết đang bật gì. -->
+      <details class="ar-more" id="arMore">
+        <summary><i class="fa-solid fa-sliders" aria-hidden="true"></i> Dạng câu hỏi <span class="only-solo">&amp; luật thưởng</span> <span class="ar-more-sum" id="arMoreSum"></span></summary>
+        <div class="ar-field ar-kinds-field"><span>Dạng câu hỏi <em>(bấm để bật/tắt — số nhỏ là số câu có trong bài)</em></span>
+          <div class="ar-chips ar-kinds" id="arKinds" role="group" aria-label="Dạng câu hỏi"></div></div>
+        <p class="ar-hint ar-power-note only-solo">🎁 <b>Tốc độ</b>, <b>Sinh tồn</b> và <b>Lên Mặt Trăng</b>: đúng liền 3 câu nhận 1 vật phẩm (kiểu Wayground) — ✂️ 50:50 · ⏳ Thêm giờ · ✖️2 Nhân đôi. Bấm để dùng (phím Q, W, E).</p>
+        <p class="ar-hint ar-card-note only-solo"><i class="fa-solid fa-layer-group" aria-hidden="true"></i> <b>Thẻ bài</b> (mọi chế độ): cứ 3 câu, đúng từ 2 câu được bốc 1 trong 3 lá úp — 50:50, Thêm giờ, Nhân đôi, Khiên chuỗi, Câu vàng, Đặt cược, Túi xu, lá hiếm Kho báu. Mỗi trận còn có <b>Câu hỏi vàng</b> và <b>Thử thách tốc độ</b> thưởng xu.</p>
+      </details>
+      <!-- Chơi một mình: nút Vào trận dính đáy màn hình — chọn chế độ xong bấm luôn, không phải cuộn. -->
+      <div class="ar-playbar only-solo">
+        <button type="button" class="ar-btn ar-btn-play" id="arPlay"><i class="fa-solid fa-play"></i> <span id="arPlayLabel">Vào trận</span></button>
+        <p class="ar-hint ar-center" id="arDeckInfo"></p>
+      </div>
     </div>
 
     <!-- ── GIÁO VIÊN: tạo phòng ── -->
@@ -174,12 +184,15 @@
         <button type="button" data-v="30">30</button><button type="button" data-v="45">45</button><button type="button" data-v="60">60</button><button type="button" data-v="80">80</button></div></div>
       <button type="button" class="ar-btn ar-btn-play ar-host-go" id="arHostBtn"><i class="fa-solid fa-tower-broadcast"></i> Tạo phòng và lấy mã</button>
       <p class="ar-hint" id="arRoomModeNote"></p>
-      <ol class="ar-howto" aria-label="Các bước">
-        <li><b>Tạo phòng</b> — máy này hiện mã phòng + mã QR để chiếu lên bảng.</li>
-        <li><b>Học sinh quét QR</b> (hoặc mở link / chọn tab Học sinh), chỉ cần nhập <b>họ và tên</b> — mã phòng điền sẵn.</li>
-        <li><b>Bấm Bắt đầu</b> khi cả lớp đã vào. Kết quả lưu trên máy này, tải được file CSV.</li>
-      </ol>
-      <p class="ar-hint">Máy này làm máy chủ của phòng — giữ tab mở tới hết trận. Không tốn lượt Firebase.</p>
+      <details class="ar-more ar-more-how" id="arRoomHow">
+        <summary><i class="fa-solid fa-circle-question" aria-hidden="true"></i> Cách tổ chức phòng (3 bước)</summary>
+        <ol class="ar-howto" aria-label="Các bước">
+          <li><b>Tạo phòng</b> — máy này hiện mã phòng + mã QR để chiếu lên bảng.</li>
+          <li><b>Học sinh quét QR</b> (hoặc mở link / chọn tab Học sinh), chỉ cần nhập <b>họ và tên</b> — mã phòng điền sẵn.</li>
+          <li><b>Bấm Bắt đầu</b> khi cả lớp đã vào. Kết quả lưu trên máy này, tải được file CSV.</li>
+        </ol>
+        <p class="ar-hint">Máy này làm máy chủ của phòng — giữ tab mở tới hết trận, nên dùng laptop cắm sạc. Học sinh chung Wi-Fi với máy này không tốn lượt Firebase; em dùng 4G/Wi-Fi khác đi đường dự phòng (tối đa 25 em/phòng). Chọn số học sinh tối đa đúng sĩ số lớp để người ngoài lớp không vào được.</p>
+      </details>
       <details class="ar-review" id="arRoomHist" hidden></details>
     </div>
 
@@ -224,12 +237,18 @@
       <span class="ar-pill" id="arStreak" hidden></span>
       <span class="ar-pill ar-pill-bonus" id="arBonus" hidden></span>
       <span class="ar-pill ar-pill-card" id="arCardFx" hidden></span>
+      <span class="ar-pill ar-pill-live" id="arLive" hidden aria-live="polite"></span>
       <button type="button" class="ar-btn ar-btn-ghost ar-btn-sm" id="arQuit"><i class="fa-solid fa-flag"></i> Bỏ cuộc</button>
     </div>
     <div class="ar-timer" id="arTimerWrap"><i id="arTimer"></i></div>
     <div class="ar-powers" id="arPowers" hidden aria-label="Vật phẩm hỗ trợ"></div>
     <div class="ar-track" id="arTrack" hidden></div>
     <div class="ar-scene" id="arScene" hidden aria-hidden="true"></div>
+    <!-- Mục tiêu trước mắt + lời bình viên sau mỗi lượt (js/arena/arena-hype.js) -->
+    <div class="ar-hype">
+      <span class="ar-rival" id="arRival" hidden></span>
+      <p class="ar-caster" id="arCaster" hidden aria-live="polite"></p>
+    </div>
     <div class="ar-stage">
       <div class="ar-qbox">
         <div class="ar-chal" id="arChal" hidden></div>
@@ -258,6 +277,7 @@
       <h2 class="ar-h2 ar-center" id="arEndTitle"></h2>
       <div class="ar-podium" id="arPodium"></div>
       <div class="ar-end-stats" id="arEndStats"></div>
+      <div id="arBookNote"></div>
       <div class="ar-row ar-center-row">
         <button type="button" class="ar-btn ar-btn-play ar-btn-practice" id="arPractice" hidden></button>
         <button type="button" class="ar-btn ar-btn-play" id="arAgain"><i class="fa-solid fa-rotate-right"></i> Chơi lại</button>
@@ -279,14 +299,18 @@
 <script src="js/arena/arena-core.js"></script>
 <script src="js/arena/arena-drama.js"></script>
 <script src="js/arena/arena-cards.js"></script>
+<script src="js/arena/arena-hype.js"></script>
 <script src="js/name-picker/np-art.js"></script>
 <script src="js/arena/arena-covers.js"></script>
 <script src="js/arena/arena-scene.js"></script>
 <script src="js/arena/arena-kinds.js"></script>
+<script src="js/services/wrongbook-store.js"></script>
 <script src="js/arena/arena.js"></script>
 <script src="js/backend-config.js"></script>
 <script src="js/arena/arena-teacher.js"></script>
 <script src="js/arena/arena-room-core.js"></script>
+<script src="js/arena/arena-relay.js"></script>
+<script src="js/arena/arena-room-hype.js"></script>
 <script src="js/arena/arena-room.js"></script>
 <script src="js/arena/arena-board.js"></script>
 <script src="js/sw-register.js"></script>

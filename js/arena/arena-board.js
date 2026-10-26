@@ -74,7 +74,7 @@
     const names = teamNames();
     B = {
       title: src.title || '', secs: A.prefs.secs || 20,
-      tiles: C.makeBoard(deck, A.prefs.count || 15, A.rng),
+      tiles: C.makeBoard(deck, A.prefs.count, A.rng), // 0 = "Tất cả"; không nhiều ô hơn số câu bộ có (tối đa 30)
       teams: names.slice(0, teamCount()).map((name, i) => ({ id: 't' + i, name, face: FACES[i], score: 0, right: 0 })),
       turn: 0, cur: null, phase: 'board', right: [], last: null, fresh: true,
     };
