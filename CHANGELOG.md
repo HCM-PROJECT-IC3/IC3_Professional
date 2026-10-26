@@ -1,5 +1,43 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## Sảnh chờ Phòng cả lớp: bỏ "Khởi động 3 câu" (lộ đề trước), thay bằng 🔗 Nối từ và 🔤 Ghép chữ (27/10/2026)
+
+- **Vì sao bỏ:** "Khởi động 3 câu" lấy câu từ Sổ tay câu sai và bộ câu đang có trên máy. Bộ đó thường trùng bộ giáo viên sắp chiếu, nên học sinh có thể **xem/làm trước câu sắp thi**. Nay sảnh chờ **không dùng câu hỏi bài học** nữa. Test `arena-lobby-fun.test.js` chặn: `arena-lobby-fun.js` không được nhắc tới ngân hàng câu / Sổ tay; `arena-room.js` không được truyền bộ câu vào sảnh.
+- **🔗 Nối từ:**
+  - Chọn từ bắt đầu bằng tiếng cuối của từ trước (máy tính → tính năng → năng lượng...).
+  - Mỗi lượt 4 lựa chọn, đúng 1 từ nối được, kèm **bẫy cùng chữ khác dấu** (chiếu / chiều, tự / từ / tư...) — luyện đọc kỹ dấu.
+  - Đồng hồ 7 giây, ngắn dần 0,35 giây mỗi từ (tối thiểu 2,8 giây). Sai hoặc hết giờ là dừng, hiện từ đúng.
+  - Hết đường nối thì đổi từ mới, vẫn giữ chuỗi.
+- **🔤 Ghép chữ:** xếp chữ cái thành thuật ngữ tin học tiếng Anh theo nghĩa tiếng Việt (MOUSE = Chuột máy tính...). 45 giây, càng nhiều càng giỏi; bỏ qua −3 giây; bấm chữ đã xếp để gỡ.
+- Kho từ riêng `js/arena/arena-words.js`:
+  - 238 từ nối + 68 từ bẫy + 44 thuật ngữ, tách hẳn khỏi `data/ic3`;
+  - ưu tiên đáp án còn nối tiếp được, chuỗi trung bình ~6 từ mới phải đổi từ.
+- **Màn chiếu:** "🏆 Kỷ lục sảnh chờ" gồm ⚡ Tay nhanh nhất · 🔗 Vua nối từ · 🔤 Vua ghép chữ (top 3 mỗi trò), kỷ lục mới bay lên từ tên em.
+- **0 Firebase:** kỷ lục lưu ở `eduquiz_arena_wordfun` (localStorage). Tin `{t:'fun', g, n}` chỉ đi đường nối thẳng WebRTC; máy giáo viên chỉ nhận ở sảnh, 1–300 từ, ≤ 1 lần/giây/em.
+- Đã chạy thử thật (1 giáo viên + 3 học sinh): nối từ → hết giờ → kỷ lục lên màn chiếu; đang nối thì bạn mới vào không mất màn; ghép chữ 45 giây; giáo viên bấm Bắt đầu → trò dừng, câu hỏi hiện, không lỗi.
+
+## Phòng cả lớp: sảnh chờ có trò khởi động — Thử phản xạ, Khởi động 3 câu, Thả cảm xúc lên màn chiếu (27/10/2026)
+
+**0 lượt Firebase.** Kỷ lục và tiến độ lưu ở localStorage. Tin gửi lên màn chiếu chỉ đi đường nối thẳng WebRTC. Em đi đường dự phòng Firestore thì vẫn chơi được, nhưng máy KHÔNG gửi gì.
+Module mới `js/arena/arena-lobby-fun.js` + test `js/arena/__tests__/arena-lobby-fun.test.js`.
+
+- **Máy học sinh, trong lúc chờ giáo viên bấm Bắt đầu:**
+  - ⚡ **Thử phản xạ:**
+    - ô chuyển xanh thì bấm, đo bằng `pointerdown` (nhạy trên điện thoại); bấm Enter/Space cũng được;
+    - bấm trước khi xanh, hoặc dưới 100 ms (đoán trước) → "Sớm quá";
+    - kỷ lục của em + bảng 5 "tay nhanh nhất máy này" lưu ở `eduquiz_arena_reflex`.
+  - 🧠 **Khởi động 3 câu:**
+    - ưu tiên câu **đến hạn ôn trong Sổ tay câu sai** của em, thiếu thì lấy bộ câu đang có trên máy;
+    - có đáp án + giải thích;
+    - kết quả cập nhật Sổ tay (lên hộp chỉ khi tới hạn; câu sai được ghi).
+  - 🎉 **Thả cảm xúc:** 6 biểu tượng cố định (không gõ chữ được), mỗi em tối đa 1 lần / 1,5 giây.
+- **Màn chiếu (máy giáo viên):**
+  - biểu tượng bay lên từ tên em vừa thả, cùng dòng "🎉 N lượt thả cảm xúc";
+  - bảng **⚡ Tay nhanh nhất phòng** (top 3), kỷ lục mới bay lên từ tên em;
+  - máy giáo viên chỉ nhận tin này ở sảnh, từ kết nối thẳng, mỗi loại ≤ 1 lần/giây/em; kỷ lục chỉ nhận 100–1500 ms.
+- **Sửa:** trước đây mỗi khi có bạn mới vào phòng, sảnh của các em bị vẽ lại toàn bộ. Nay chỉ cập nhật sĩ số, trò đang chơi không bị mất. Khi câu hỏi đầu tiên tới, khu khởi động tự dừng.
+- Đã chạy thử thật (1 giáo viên + 3 học sinh): phản xạ → kỷ lục lên màn chiếu, thả cảm xúc, đang làm Khởi động thì bạn mới vào không bị mất màn, giáo viên bấm Bắt đầu → câu hỏi hiện, không lỗi.
+
 ## Chơi Đấu trường xong có lịch ôn: câu sai vào Sổ tay câu sai (Leitner) (27/10/2026)
 
 **0 lượt Firebase, 0 Apps Script** — chỉ localStorage trên máy học sinh.
