@@ -27,6 +27,7 @@
   const FX = global.EduArenaFX;
   const D = global.EduArenaDrama;     // chữ lớn giữa màn hình (js/arena/arena-drama.js)
   const RH = global.EduArenaRoomHype; // không khí gameshow: lời bình, vinh danh, câu trend (js/arena/arena-room-hype.js)
+  const LF = global.EduArenaLobbyFun; // trò khởi động lúc chờ: phản xạ, nối từ, ghép chữ, thả cảm xúc (js/arena/arena-lobby-fun.js)
   const SUSPENSE_MS = 900;            // chốt câu → trống dồn rồi mới lộ đáp án (màn chiếu + máy học sinh, tính tại chỗ)
   const reduced = () => FX.reduced();
   const $ = (id) => document.getElementById(id);
@@ -102,7 +103,7 @@
   // ============================================================
   const H = { peer: null, room: null, conns: new Map(), timer: 0, tick: 0, auto: 0, closing: 0, lobbyT: 0, saveT: 0, ready: false, relay: null, relayCode: '', relayErr: null, slots: null };
   /** Không khí màn chiếu (chỉ ở máy người dẫn, không gửi đi đâu). */
-  function resetHype() { Object.assign(H, { feed: [], newCid: '', firstAns: null, prev: null, story: null, pending: '', seen: {}, lastSec: -1, suspense: false }); }
+  function resetHype() { Object.assign(H, { feed: [], newCid: '', firstAns: null, prev: null, story: null, pending: '', seen: {}, lastSec: -1, suspense: false, reflex: {}, fun: { chain: {}, word: {} }, reacts: 0 }); }
   resetHype();
 
   /** Chỉ tài khoản giáo viên đã xác minh (js/arena/arena-teacher.js) mới tạo/khôi phục phòng. */
@@ -331,6 +332,36 @@
         if (lg && (res.opened || res.act === 'rekey')) { lg.innerHTML = heistLogHtml(room.heistLog); FX.flash(lg.firstElementChild, 'fx-bump'); }
         persistSoon();
       }
+    } else if (msg.t === 'react' || msg.t === 'reflex' || msg.t === 'fun') {
+      // Sảnh chờ: thả cảm xúc / kỷ lục phản xạ — CHỈ nhận từ học sinh nối thẳng (đường dự phòng không gửi, 0 Firebase),
+      // chỉ ở sảnh, có giới hạn tần suất; biểu tượng theo số thứ tự cố định (không nhận chữ tự gõ).
+      const now = Date.now();
+      const gate = 'arFun_' + msg.t; // cảm xúc và kỷ lục giới hạn riêng (mỗi loại ≤ 1 lần/giây/em)
+      if (room.phase !== 'lobby' || conn.relay || now - (conn[gate] || 0) < 1000) return;
+      conn[gate] = now;
+      const chip = [...document.querySelectorAll('#arRoomPlayers [data-kick]')].find((b) => b.dataset.kick === cid);
+      if (msg.t === 'react') {
+        const e = LF.REACTS[msg.e];
+        if (!Number.isInteger(msg.e) || !e) return;
+        H.reacts++;
+        if (chip) FX.float(chip.closest('.ar-room-chip'), e, 'info');
+        const n = $('arRoomReacts'); if (n) n.textContent = `🎉 ${fmt(H.reacts)} lượt thả cảm xúc`;
+      } else if (msg.t === 'fun') {
+        // Kỷ lục Nối từ / Ghép chữ (số từ, 1–300)
+        const n = Math.round(Number(msg.n)), best = H.fun[msg.g];
+        if (!best || !(n >= 1 && n <= 300) || (best[cid] && best[cid] >= n)) return;
+        best[cid] = n;
+        const box = $('arRoomReflex');
+        if (box) { box.innerHTML = reflexHtml(); FX.flash(box, 'fx-bump'); }
+        if (chip) FX.float(chip.closest('.ar-room-chip'), `${LF.GAMES[msg.g].icon} ${n} từ`, 'gold');
+      } else {
+        const ms = Math.round(Number(msg.ms));
+        if (!(ms >= 100 && ms <= 1500) || (H.reflex[cid] && H.reflex[cid] <= ms)) return;
+        H.reflex[cid] = ms;
+        const box = $('arRoomReflex');
+        if (box) { box.innerHTML = reflexHtml(); FX.flash(box, 'fx-bump'); }
+        if (chip) FX.float(chip.closest('.ar-room-chip'), `⚡ ${ms} ms`, 'gold');
+      }
     } else if (msg.t === 'bye') {
       H.conns.delete(cid);
       R.leave(room, cid);
@@ -491,10 +522,27 @@
           </div></div>
         ${H.feed.length ? `<ul class="ar-room-feed" aria-live="polite">${H.feed.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}
         <div class="ar-room-players" id="arRoomPlayers">${ids.length ? playerChips(ids) : '<p class="ar-muted ar-center">Đang chờ học sinh vào phòng...</p>'}</div>
+        <div class="ar-room-fun"><div class="ar-room-reflex" id="arRoomReflex">${reflexHtml()}</div>
+          <p class="ar-room-reacts" id="arRoomReacts" aria-live="polite">${H.reacts ? `🎉 ${fmt(H.reacts)} lượt thả cảm xúc` : ''}</p></div>
         ${ids.length >= 2 ? `<p class="ar-room-crowd">${ids.length >= 20 ? '🎉 Đông vui quá!' : '👀 Còn chờ ai nữa không?'} ${ids.length} chiến binh đã sẵn sàng — ${esc(RH.TAGLINE[room.mode] || '')}</p>` : ''}
       </div></div>`;
     drawQr(link);
     H.newCid = '';
+  }
+  /** Màn chiếu ở sảnh: kỷ lục các trò khởi động của học sinh (Phản xạ · Nối từ · Ghép chữ), mỗi trò top 3. */
+  function reflexHtml() {
+    const room = H.room;
+    const ok = (id) => room.players[id] && !room.players[id].kicked;
+    const medal = ['🥇', '🥈', '🥉'];
+    const list = (map, asc, unit) => Object.keys(map).filter(ok).sort((a, b) => (asc ? map[a] - map[b] : map[b] - map[a])).slice(0, 3)
+      .map((id, i) => `<li><span>${medal[i]} ${esc(room.players[id].face)} ${esc(room.players[id].name)}</span><b>${map[id]} ${unit}</b></li>`).join('');
+    const boards = [
+      ['⚡ Tay nhanh nhất', list(H.reflex, true, 'ms')],
+      [`${LF.GAMES.chain.icon} ${LF.GAMES.chain.name}`, list(H.fun.chain, false, 'từ')],
+      [`${LF.GAMES.word.icon} ${LF.GAMES.word.name}`, list(H.fun.word, false, 'từ')],
+    ].filter((b) => b[1]);
+    if (!boards.length) return '<small class="ar-muted">🎮 Học sinh đang chờ có thể chơi <b>Phản xạ · Nối từ · Ghép chữ</b> — kỷ lục hiện ở đây!</small>';
+    return `<b>🏆 Kỷ lục sảnh chờ</b><div class="ar-room-boards">${boards.map(([t, li]) => `<div><small>${t}</small><ol>${li}</ol></div>`).join('')}</div>`;
   }
   function playerChips(ids) {
     return ids.map((id) => {
@@ -871,7 +919,7 @@
     setTimeout(() => { try { conn && conn.close(); } catch (e) { /* ignore */ } try { peer && peer.destroy(); } catch (e) { /* ignore */ } }, sayBye ? 300 : 0);
     try { sessionStorage.removeItem(JOIN_SS); } catch (e) { /* ignore */ }
   }
-  function playerStatus(html) { body().innerHTML = `<div class="ar-card ar-center ar-room-wait">${html}</div>`; }
+  function playerStatus(html) { if (LF) LF.unmount(); body().innerHTML = `<div class="ar-card ar-center ar-room-wait">${html}</div>`; }
   function playerError(msg) {
     playerStop(false);
     setNet('');
@@ -896,7 +944,7 @@
         break;
       }
       case 'lobby': renderPlayerLobby(m); break;
-      case 'q': renderPlayerQuestion(m); break;
+      case 'q': if (LF) LF.unmount(); renderPlayerQuestion(m); break;
       case 'got':
         if (P.q && m.i === P.q.i) { P.myK = m.k; lockAnswers(m.k, 'Đã gửi ✓ — chờ cả lớp...'); }
         break;
@@ -911,7 +959,7 @@
         break;
       }
       case 'heistok': heistDone(m); break;
-      case 'end': renderPlayerEnd(m); break;
+      case 'end': if (LF) LF.unmount(); renderPlayerEnd(m); break;
       case 'kick': playerError('Em đã được giáo viên mời ra khỏi phòng.'); break;
       case 'closed': playerError('Giáo viên đã đóng phòng.'); break;
       default: break;
@@ -919,6 +967,13 @@
   }
   function renderPlayerLobby(m) {
     clearInterval(P.timer);
+    // Đã ở sảnh (bạn mới vào phòng) → chỉ cập nhật sĩ số, KHÔNG vẽ lại để trò khởi động đang chơi không bị mất
+    const cnt = $('arPLobbyCount');
+    if (cnt) {
+      cnt.textContent = `${m.count} người trong phòng`;
+      $('arPLobbyFaces').innerHTML = m.players.map((p) => `<span title="${esc(p.name)}">${esc(p.face)}</span>`).join('');
+      return;
+    }
     const me = P.me || { face: A.avatar(), name: A.nickName() };
     const mode = P.room && P.room.mode;
     playerStatus(`<div class="ar-room-me"><span>${esc(me.face)}</span><b>${esc(me.name)}</b></div>
@@ -926,9 +981,18 @@
       <p class="ar-room-cheer t-fire">${esc(global.EduArenaHype.say('wait', (me.name || '').length))}</p>
       ${mode ? `<p class="ar-hint">${esc(MODE_LABEL[mode] || '')} — ${esc(RH.TAGLINE[mode] || '')}</p>` : ''}
       <div class="waiting-dots" aria-hidden="true"><i></i><i></i><i></i></div>
-      <p class="ar-muted">${m.count} người trong phòng</p>
-      <div class="ar-room-faces">${m.players.map((p) => `<span title="${esc(p.name)}">${esc(p.face)}</span>`).join('')}</div>
+      <p class="ar-muted" id="arPLobbyCount">${m.count} người trong phòng</p>
+      <div class="ar-room-faces" id="arPLobbyFaces">${m.players.map((p) => `<span title="${esc(p.name)}">${esc(p.face)}</span>`).join('')}</div>
+      <div id="arPFun"></div>
       <button type="button" class="ar-btn ar-btn-ghost ar-btn-sm" data-act="leave">Rời phòng</button>`);
+    if (LF) {
+      const direct = P.conn && !P.conn.relay; // đường dự phòng (Firestore) → không gửi gì từ sảnh
+      LF.mount($('arPFun'), {
+        name: me.name,
+        send: direct ? (msg) => { if (P.conn && !P.conn.relay) send(P.conn, msg); } : null,
+        sfx: A.sfx,
+      });
+    }
   }
   function renderPlayerQuestion(m) {
     clearInterval(P.timer);
