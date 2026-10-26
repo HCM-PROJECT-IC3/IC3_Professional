@@ -229,6 +229,12 @@
   function applyRoleUI() {
     const hide = (id) => { const el = document.getElementById(id); if (el) el.classList.add('force-hide'); };
     if (!isTeacherRole()) return;
+    // Giáo viên tự nhập ĐÚNG lịch của mình từ file Excel tổ (xem isSelfImport()).
+    const importBtn = document.getElementById('importExcelBtn');
+    if (importBtn) {
+      importBtn.textContent = '📥 Nhập lịch của tôi từ Excel';
+      importBtn.title = 'Chọn file Excel lịch giảng dạy (file của tổ cũng được) — chỉ lấy đúng khối có mã NV của bạn, giáo viên khác trong file được bỏ qua';
+    }
     hide('newWeekBtn');
     hide('syncSharePointBtn');
     hide('exportAllPdfBtn');
@@ -1777,6 +1783,29 @@
     });
     if (!weeks.length) { toast('⚠️ Không tìm thấy sheet lịch tuần hợp lệ nào trong file (thiếu cột "MÃ NV").'); return; }
 
+    if (isSelfImport()) {
+      if (!state.myTeacherCode) { toast('⚠️ Tài khoản chưa được Admin liên kết mã NV — chưa nhập lịch được.'); return; }
+      const knownWeekKeys = new Set(state.weeks.map((w) => w.id));
+      const mine = [];
+      weeks.forEach((w) => {
+        const own = w.teachers.filter((t) => t.code === state.myTeacherCode);
+        if (!own.length) return; // sheet không có khối của mình: bỏ qua, khỏi liệt kê
+        // Tuần chưa có trên hệ thống mà nhãn không đọc ra ngày (khoá "sheet-…") → firestore.rules
+        // chỉ cho giáo viên tạo tuần có mã dạng ngày thứ Hai "YYYY-MM-DD".
+        if (!knownWeekKeys.has(w.weekKey) && !/^\d{4}-\d{2}-\d{2}$/.test(w.weekKey)) {
+          skippedSheets.push({ name: w.weekLabel || w.weekKey, reason: 'bad-week-label' });
+          return;
+        }
+        mine.push(Object.assign({}, w, { teachers: own }));
+      });
+      if (!mine.length) {
+        toast(`⚠️ Không thấy mã NV "${state.myTeacherCode}" trong file — kiểm tra cột MÃ NV hoặc nhờ Admin nhập giúp.`);
+        return;
+      }
+      weeks.length = 0;
+      weeks.push(...mine);
+    }
+
     // 2 sheet cùng 1 tuần (vd sheet chép tay) → giữ sheet ĐỨNG SAU trong
     // file, tránh ghi 2 lần vào cùng document trong 1 batch.
     const byKey = new Map();
@@ -1801,13 +1830,25 @@
   const IMPORT_REASON_LABEL = {
     'no-header': 'không có hàng "MÃ NV" (sheet mẫu/hướng dẫn)',
     'no-teachers': 'có hàng "MÃ NV" nhưng không đọc được giáo viên nào — kiểm tra lại cấu trúc (khối 14 dòng/GV, 6 cột Thứ 2-7 cách nhau 2 cột)',
+    'bad-week-label': 'tuần chưa có trên hệ thống và nhãn tuần không ghi ngày (vd "7.9 - 12.9.2026") — nhờ Admin tạo tuần trước',
   };
+
+  /** Giáo viên nhập Excel = chỉ ĐÚNG lịch của mình (firestore.rules: lịch/TKB lớp có teacherCode
+   * của chính mình, tạo tuần mới có mã ngày). Rẻ hơn hẳn bản Admin: so với dữ liệu hiện có bằng
+   * getById ĐÚNG 2 document/tuần (lịch + TKB lớp của mình) thay vì đọc lịch cả đội của tuần đó. */
+  function isSelfImport() { return isTeacherRole(); }
 
   function renderImportPreview() {
     const imp = pendingImport;
     const knownWeekKeys = new Set(state.weeks.map((w) => w.id));
     const teacherCount = new Set(imp.weeks.flatMap((w) => w.teachers.map((t) => t.code))).size;
     document.getElementById('importSummary').classList.remove('force-hide');
+    const selfHint = document.getElementById('importSelfHint');
+    if (selfHint) {
+      selfHint.hidden = !isSelfImport();
+      if (isSelfImport()) selfHint.innerHTML = `Chỉ nhập lịch của <b>mã NV ${esc(state.myTeacherCode)}</b> — giáo viên khác trong file được bỏ qua. `
+        + 'Mỗi tuần chỉ tốn 2 lượt đọc để so sánh, và chỉ ghi tuần thực sự thay đổi.';
+    }
     document.getElementById('importWeekCount').textContent = imp.weeks.length;
     document.getElementById('importTeacherCount').textContent = teacherCount;
 
@@ -1964,6 +2005,19 @@
     const todo = [...imp.selected].filter((wk) => !imp.existingByWeek.has(wk));
     await Promise.all(todo.map(async (wk) => {
       if (!knownWeekKeys.has(wk)) { imp.existingByWeek.set(wk, { sched: new Map(), tt: new Map() }); return; }
+      if (isSelfImport()) {
+        const code = state.myTeacherCode;
+        const TTM = window.EduModels.TeachingTimetable;
+        const [mySched, myTt] = await Promise.all([
+          window.EduRepositories.teachingSchedule.getById(M.scheduleDocId(code, wk)),
+          TT ? TT.getById(TTM.docId(code, wk)) : Promise.resolve(null),
+        ]);
+        imp.existingByWeek.set(wk, {
+          sched: new Map(mySched ? [[code, mySched]] : []),
+          tt: new Map(myTt ? [[code, myTt]] : []),
+        });
+        return;
+      }
       const [schedRows, ttRows] = await Promise.all([
         window.EduRepositories.teachingSchedule.listByWeek(wk),
         TT ? TT.listByWeek(wk) : Promise.resolve([]),
@@ -1999,7 +2053,7 @@
       const existing = imp.existingByWeek.get(week.weekKey) || { sched: new Map(), tt: new Map() };
 
       week.teachers.forEach((t) => {
-        if (!knownTeacherCodes.has(t.code)) {
+        if (!knownTeacherCodes.has(t.code) && !isSelfImport()) {
           writes.push({ kind: 'teacher', id: t.code, data: M.buildTeacher(t) });
           knownTeacherCodes.add(t.code);
           stats.newTeachers++;

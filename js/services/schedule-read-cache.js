@@ -14,12 +14,31 @@
    thì tối đa TTL_MS sau mới thấy (nút tải lại trang vẫn đọc từ cache trong
    thời gian đó — chấp nhận để giữ hạn mức).
 
+   Thời hạn theo loại dữ liệu (ttlFor): tuần ĐÃ QUA gần như không ai sửa → 12 giờ (tab Báo
+   cáo/Xăng xe đọc nhiều tuần cũ: trước đây mỗi 10 phút đọc lại T lượt/tuần); danh sách giáo
+   viên, giờ tiết 1 giờ; danh sách tuần 30 phút; tuần hiện tại/tới vẫn 10 phút. Số lượt đọc mỗi
+   lần mở trang tăng theo số giáo viên × số lần mở, nên phần không đổi phải giữ lâu.
    Nạp SAU firebase SDK + js/services/data-cache-service.js, TRƯỚC js/teaching-*.js.
    ============================================================ */
 (function (global) {
   'use strict';
 
   const TTL_MS = 10 * 60 * 1000;
+  const HOUR = 60 * 60 * 1000;
+  const STATIC_TTL = { teachers: HOUR, periodTimes: HOUR, weeks: 30 * 60 * 1000 };
+  const PAST_WEEK_TTL_MS = 12 * HOUR;
+  const WEEK_KEYED = /^(schedule|timetable):(\d{4})-(\d{2})-(\d{2})$/;
+
+  /** Thời hạn bản lưu cho 1 khoá (now: ms, để test). weekKey = ngày thứ Hai đầu tuần "YYYY-MM-DD". */
+  function ttlFor(key, now) {
+    if (STATIC_TTL[key]) return STATIC_TTL[key];
+    const m = WEEK_KEYED.exec(key);
+    if (m) {
+      const weekEnd = new Date(+m[2], +m[3] - 1, +m[4] + 7).getTime(); // 0 giờ thứ Hai tuần sau (giờ máy)
+      if (weekEnd <= (now || Date.now())) return PAST_WEEK_TTL_MS;
+    }
+    return TTL_MS;
+  }
   const PREFIX = 'schedule-read:';
   const KEYS_INDEX = PREFIX + '__keys';
 
@@ -58,7 +77,7 @@
     const value = await loader();
     if (C) {
       rememberKey(fullKey);
-      C.setAsync(fullKey, value, TTL_MS, true);
+      C.setAsync(fullKey, value, ttlFor(key), true);
     }
     return value;
   }
@@ -99,5 +118,5 @@
   }
 
   installWriteHooks();
-  global.EduScheduleReadCache = { read, invalidate, TTL_MS };
+  global.EduScheduleReadCache = { read, invalidate, ttlFor, TTL_MS };
 })(window);

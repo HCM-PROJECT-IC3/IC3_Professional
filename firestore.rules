@@ -334,6 +334,38 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // ---- Đường dự phòng Phòng cả lớp Đấu trường (js/arena/arena-relay.js) ----
+    // Chỉ dùng cho học sinh KHÔNG nối thẳng WebRTC được tới máy giáo viên (4G, Wi-Fi khác).
+    // Document phòng do máy giáo viên ghi (gom ≤ 1 lần/giây); mỗi học sinh dự phòng ghi đúng
+    // 1 document up/{uid} của mình (đăng nhập ẩn danh). Dữ liệu trò chơi tạm, tự hết hạn (exp).
+    match /arena_relay/{code} {
+      allow get: if isSignedIn();
+      allow list: if false;
+      allow create: if (isAdmin() || isApprovedTeacher())
+        && code.matches('^[A-Z0-9]{6}$')
+        && request.resource.data.keys().hasOnly(['hostUid', 'exp', 'out', 'blobs'])
+        && request.resource.data.hostUid == request.auth.uid
+        && request.resource.data.exp is timestamp
+        && request.resource.data.exp < request.time + duration.value(1, 'd')
+        && request.resource.data.out is map;
+      allow update: if isSignedIn() && resource.data.hostUid == request.auth.uid
+        && request.resource.data.hostUid == resource.data.hostUid
+        && request.resource.data.keys().hasOnly(['hostUid', 'exp', 'out', 'blobs'])
+        && request.resource.data.out is map;
+      allow delete: if isSignedIn() && resource.data.hostUid == request.auth.uid;
+      match /up/{uid} {
+        // Chỉ máy giáo viên chủ phòng đọc tin học sinh gửi (1 lượt get() khi bắt đầu nghe)
+        allow get, list: if isSignedIn()
+          && get(/databases/$(database)/documents/arena_relay/$(code)).data.hostUid == request.auth.uid;
+        allow create, update: if isSignedIn() && request.auth.uid == uid
+          && request.resource.data.keys().hasOnly(['m', 'exp'])
+          && request.resource.data.m is list && request.resource.data.m.size() <= 4
+          && request.resource.data.exp is timestamp
+          && request.resource.data.exp < request.time + duration.value(1, 'd');
+        allow delete: if false;
+      }
+    }
+
     // ---- Phòng thử thách trực tiếp; chỉ chứa dữ liệu trò chơi tạm thời ----
     // Anonymous Auth tách UID từng thiết bị. Không lưu điểm thi/roster ở đây.
     // Rules giới hạn quyền theo phòng và người chơi, nhưng Spark không thể
@@ -587,7 +619,15 @@ service cloud.firestore {
       // mọi giáo viên đã duyệt đọc toàn bộ danh sách tuần (không cần scope).
       allow get: if isAdmin() || isTeachingCoordinator() || isApprovedTeacher();
       allow list: if request.query.limit <= 10000 && (isAdmin() || isTeachingCoordinator() || isApprovedTeacher());
-      allow write: if isAdmin();
+      // Giáo viên tự nhập lịch từ Excel (teaching-schedule.html → "Nhập lịch của tôi") được TẠO
+      // tuần chưa có — chỉ tạo (không sửa/xoá nhãn tuần người khác đã tạo), mã = ngày thứ Hai
+      // "YYYY-MM-DD", đúng 2 trường như M.buildWeek().
+      allow create: if isAdmin() || (isApprovedTeacher()
+        && weekKey.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && request.resource.data.keys().hasOnly(['label', 'createdAt'])
+        && request.resource.data.label is string && request.resource.data.label.size() <= 80
+        && request.resource.data.createdAt == request.time);
+      allow update, delete: if isAdmin();
     }
     match /teaching_schedule/{scheduleId} {
       // Đọc: mọi giáo viên đã duyệt xem được lịch của CẢ ĐỘI (giống hệt
@@ -598,8 +638,12 @@ service cloud.firestore {
       // → khối "Lịch của tôi") — chỉ tạo/sửa bản ghi có teacherCode == chính mình,
       // không đụng được lịch giáo viên khác. Xoá vẫn chỉ Admin (không có nút xoá
       // lịch tuần trên UI, chỉ để phòng thao tác ngoài ý muốn).
+      // Mã document phải đúng "<mã NV của mình>__<weekKey>" — trước đây chỉ kiểm teacherCode
+      // trong dữ liệu, nên ghi set() vào document của giáo viên KHÁC (kèm teacherCode của mình)
+      // vẫn lọt và đè mất lịch của họ.
       allow create, update: if isAdmin()
-        || (isApprovedTeacher() && request.resource.data.teacherCode == myTeacherCode());
+        || (isApprovedTeacher() && request.resource.data.teacherCode == myTeacherCode()
+            && scheduleId == myTeacherCode() + '__' + request.resource.data.weekKey);
       allow delete: if isAdmin();
     }
 
@@ -610,8 +654,9 @@ service cloud.firestore {
     //      RIÊNG "⏱️ Giờ tiết" (teaching_timetable_periods) — giáo viên ĐƯỢC
     //      tự ghi ĐÚNG document của chính mình (thiết lập linh hoạt khung
     //      giờ Sáng/Chiều theo cấp học THCS/TiH cho từng Thứ, xem modal
-    //      "⏱️ Giờ tiết" ở js/teaching-timetable.js) — KHÁC teaching_timetable
-    //      (lưới mã lớp) bên dưới vẫn chỉ admin ghi được. "🚗 Điều phối giáo
+    //      "⏱️ Giờ tiết" ở js/teaching-timetable.js). teaching_timetable
+    //      (lưới mã lớp) bên dưới: giáo viên chỉ ghi được ĐÚNG bản ghi của mình
+    //      khi tự nhập lịch từ Excel (10/2026). "🚗 Điều phối giáo
     //      viên" (isTeachingCoordinator()) CỐ TÌNH không có ở allow write —
     //      vẫn chỉ đọc như trước, chỉ mở thêm quyền ghi cho ĐÚNG giáo viên. ----
     match /teaching_timetable_periods/{teacherCode} {
@@ -625,7 +670,12 @@ service cloud.firestore {
       // chỉ Admin như cũ.
       allow get: if isAdmin() || isTeachingCoordinator() || isApprovedTeacher();
       allow list: if request.query.limit <= 10000 && (isAdmin() || isTeachingCoordinator() || isApprovedTeacher());
-      allow write: if isAdmin();
+      // Giáo viên tự nhập lịch từ Excel cũng tự điền TKB lớp của ĐÚNG mình (như khi Admin nhập) —
+      // cùng ràng buộc mã document với teaching_schedule.
+      allow create, update: if isAdmin()
+        || (isApprovedTeacher() && request.resource.data.teacherCode == myTeacherCode()
+            && docId == myTeacherCode() + '__' + request.resource.data.weekKey);
+      allow delete: if isAdmin();
     }
 
     // ---- Hỗ trợ xăng xe (tab "🚗 Hỗ trợ xăng xe" trong teaching-schedule.html)

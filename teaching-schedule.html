@@ -428,6 +428,7 @@
         những lịch thực sự thay đổi</b> (giống hệt file thì bỏ qua). Tab "🗓️ TKB lớp" chỉ tự điền ô đang
         trống — ô đã có mã lớp khác Excel sẽ được liệt kê để bạn chọn <b>giữ</b> hay <b>ghi đè</b> trước khi ghi.
       </div>
+      <div class="import-hint" id="importSelfHint" hidden></div>
       <div class="import-summary force-hide" id="importSummary">
         <div class="import-stat ok"><b id="importWeekCount">0</b><span>Tuần trong file</span></div>
         <div class="import-stat ok"><b id="importTeacherCount">0</b><span>Giáo viên</span></div>
@@ -694,6 +695,7 @@
 <!-- Tự tính khoảng cách nhà→trường qua Apps Script (dịch vụ Maps của Google, không
      cần API key — nút "🌍 Tính tất cả (miễn phí)" ở tab "🚗 Hỗ trợ xăng xe"). -->
 <script src="js/backend-config.js"></script>
+<script src="js/services/backend-version-check.js"></script>
 <script src="js/services/apps-script-client.js"></script>
 <script src="js/services/apps-script-map-distance.js"></script>
 

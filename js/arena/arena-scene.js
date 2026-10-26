@@ -417,5 +417,17 @@
   /** Lời thoại trên đầu 1 người chơi (id) — dùng cho sự kiện riêng của từng chế độ. */
   function talk(id, text, ms, hot) { if (S && S.sp[id]) say(S.sp[id], text, ms, hot); }
 
-  global.EduArenaScene = { mount, sync, mood, cheer, talk, clear, SET };
+  /** Bạn máy "chốt đáp án" trong lúc em đang nghĩ: dấu ✔ ở thẻ tên. id = null → gỡ hết. */
+  function lockIn(id, on) {
+    if (!S) return;
+    if (id === null) { Object.values(S.sp).forEach((s) => s.el.classList.remove('is-locked')); return; }
+    const s = S.sp[id];
+    if (!s) return;
+    s.el.classList.toggle('is-locked', !!on);
+    if (on) flash(s, 'is-wave', 600);
+  }
+  /** Hào quang lửa dưới chân khi đang chuỗi đúng (em: từ 3 câu). */
+  function aura(id, on) { if (S && S.sp[id]) S.sp[id].el.classList.toggle('is-fire', !!on); }
+
+  global.EduArenaScene = { mount, sync, mood, cheer, talk, clear, lockIn, aura, SET };
 })(window);

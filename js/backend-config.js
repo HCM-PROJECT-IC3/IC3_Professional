@@ -19,6 +19,10 @@
   global.EduBackend = {
     // URL Apps Script mặc định (apps/Code.gs): nhận bài nộp + trả kết quả cho dashboard.
     appsScriptUrl: 'https://script.google.com/macros/s/AKfycbyxiqIjwDotYLobFSf11RvosrW9FksEHCQEz8lNm2uU8_8QQJtw9eDM5gBsW_Ga4JLa/exec',
+    // Bản Apps Script web này cần = BACKEND_VERSION trong apps/src/00-config.gs (đổi CẢ 2 chỗ —
+    // test backend-consistency báo đỏ nếu lệch). Admin thấy thanh cảnh báo khi bản đang chạy thật
+    // cũ hơn (js/services/backend-version-check.js).
+    expectedBackendVersion: '2026-10-27',
 
     // ── Dashboard đọc kết quả từ đâu (teacher / coordinator / ic3-dashboard Báo cáo) ──
     //   'auto'      : Firestore khi quizResults.firestore = 'all', ngược lại Google Sheet
@@ -86,13 +90,18 @@
     //   peer: { host: 'peer.truong.edu.vn', port: 443, path: '/', secure: true }
     // Thêm máy TURN riêng (mạng chặn kết nối trực tiếp): peer: { config: { iceServers: [...] } }
     //
-    // Mạng trường chặn WebRTC trực tiếp? PeerJS đã kèm sẵn TURN miễn phí; muốn thêm TURN riêng
-    // (ổn định hơn cho lớp đông) khai ở `turn` — danh sách được GỘP với máy chủ mặc định, không
-    // thay thế. Ví dụ:
+    // Học sinh khác mạng máy giáo viên (4G, Wi-Fi trường có tường lửa) không nối thẳng được → tự
+    // chuyển sang ĐƯỜNG DỰ PHÒNG qua Firestore (js/arena/arena-relay.js, chỉ tốn lượt cho đúng các em
+    // đó). Có TURN riêng thì khai ở `turn` — GỘP với STUN mặc định, học sinh đó nối thẳng được luôn:
     //   turn: [{ urls: 'turn:turn.truong.edu.vn:3478', username: 'user', credential: 'pass' }]
     arenaRoom: {
       peer: {},
       turn: [],
+      // Đường dự phòng Firestore cho em không nối thẳng được (js/arena/arena-relay.js). false = tắt hẳn.
+      relay: true,
+      // Tối đa số em/phòng đi đường dự phòng. Trần chung mỗi ngày cho cả dự án đặt ở Apps Script
+      // (Script Properties RELAY_DAILY_SLOTS, mặc định 150 lượt em-trận ≈ 3.200 ghi + 10.000 đọc).
+      relayRoomMax: 25,
     },
 
     // ── Đếm ngược kỳ thi trên sảnh index.html (js/exam-countdown.js) — chỉ là hiển thị ──

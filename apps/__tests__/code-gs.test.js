@@ -130,7 +130,8 @@ const ctx = {
   console, Date, JSON, Math, Set, Map, String, Number, Array, Object, encodeURIComponent, Error,
   SpreadsheetApp: { openById: (id) => createdFiles[id] || mainFile, create: (name) => newFile(name) },
   CacheService: { getScriptCache: () => ({ get: (k) => cacheStore.get(k) || null, put: (k, v) => cacheStore.set(k, v), remove: (k) => cacheStore.delete(k) }) },
-  PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => { propReads++; return props.get(k) || null; }, setProperty: (k, v) => props.set(k, v) }) },
+  PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => { propReads++; return props.get(k) || null; }, setProperty: (k, v) => props.set(k, v),
+    getKeys: () => [...props.keys()], deleteProperty: (k) => props.delete(k) }) },
   // lockWaits đếm lượt chờ khoá chung; onLock giả lập 1 lượt chạy KHÁC làm gì đó trong lúc mình chờ khoá.
   LockService: { getScriptLock: () => ({ waitLock() { lockWaits++; if (onLock) { const f = onLock; onLock = null; f(); } }, releaseLock() {} }),
     getUserLock: () => ({ waitLock() {}, releaseLock() {} }) },
@@ -356,9 +357,20 @@ eq('đấu trường: học sinh không ghi được', call('arenaRoomLog', Obje
 eq('đấu trường: mã phòng lạ bị từ chối', call('arenaRoomLog', Object.assign(as('teachX'), { summary: Object.assign({}, arenaSum, { code: 'x' }) })).code, 'invalid-argument');
 eq('đấu trường: ghi mỗi người 1 dòng', call('arenaRoomLog', Object.assign(as('teachX'), { summary: arenaSum })).data, { written: 2 });
 eq('đấu trường: gửi lại cùng phòng không ghi trùng', call('arenaRoomLog', Object.assign(as('teachX'), { summary: arenaSum })).data.duplicate, true);
+// ── Đường dự phòng: trần chung mỗi ngày ──
+eq('xin chỗ dự phòng: cần đăng nhập', call('arenaRelayTicket', { slots: 5 }).code, 'unauthenticated');
+props.set('RELAY_DAILY_SLOTS', '12');
+props.set('RELAY_USED_20000101', '99'); // bộ đếm ngày cũ phải bị dọn
+const tk = (n) => call('arenaRelayTicket', Object.assign(as('teachX'), { slots: n })).data;
+eq('xin chỗ: cấp theo gói, cộng dồn trong ngày', [tk(5), tk(5)], [{ granted: 5, used: 5, cap: 12 }, { granted: 5, used: 10, cap: 12 }]);
+eq('xin chỗ: gần hết trần chỉ cấp phần còn lại, hết thì 0', [tk(5).granted, tk(5).granted], [2, 0]);
+eq('xin chỗ: dọn bộ đếm ngày cũ', props.has('RELAY_USED_20000101'), false);
+eq('xin chỗ: tối đa 10/lần', tk(50).granted <= 10, true);
 const ar = tabs.NhatKyDauTruong.rows;
 eq('đấu trường: tiêu đề + nội dung dòng (chặn công thức)', [tabs.NhatKyDauTruong.header[5], ar.length, ar[1][1], ar[1][2], ar[1][3], ar[1][5], ar[1][6], ar[1][10]],
   ['BietDanh', 2, 'ABC234', 'Tốc độ', "'=Bộ 1", "'+Minh", 5100, 'teachX']);
+eq('đấu trường: chế độ Sinh tồn/Kéo co/Đấu phép/Giải mã lưu được (trước đây bị từ chối)',
+  ['survival', 'tug', 'spell', 'heist'].map((m, i) => call('arenaRoomLog', Object.assign(as('teachX'), { summary: Object.assign({}, arenaSum, { mode: m, endedAt: arenaSum.endedAt + i + 1 }) })).ok), [true, true, true, true]);
 
 // ── Cập nhật roster cho trang học sinh ──
 const roster = JSON.stringify({ count: 1, students: [{ school: 'TH X', className: '4A6', name: 'A' }] });

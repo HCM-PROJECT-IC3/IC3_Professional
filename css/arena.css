@@ -93,6 +93,9 @@
 .ar-chips { display: flex; gap: .35rem; flex-wrap: wrap; }
 .ar-chips button { flex: 1; padding: .5rem .6rem; border-radius: 10px; border: 1.5px solid var(--border); background: var(--card2); color: var(--text); font-weight: 800; cursor: pointer; }
 .ar-chips button.is-on { background: var(--purple); border-color: var(--purple); color: #fff; }
+/* Số câu lớn hơn số câu bộ có: vẫn bấm được (trận tự lấy đúng số câu có), chỉ làm mờ để biết trước */
+.ar-chips button.is-over { opacity: .45; text-decoration: line-through; text-decoration-thickness: 1.5px; }
+.ar-chips button.is-over.is-on { opacity: .7; }
 
 /* ── Linh vật ── */
 .ar-pack-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .7rem; margin-top: .8rem; }
@@ -1143,8 +1146,6 @@ body[data-mode="moon"] .ar-scene { height: clamp(170px, min(30vw, 40vh), 360px);
   .ar-modes { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
   .ar-mode.has-cover { min-width: 0; }
   .ar-mode.has-cover > b { font-size: 1.05rem; padding: .45rem .65rem 0; }
-  .ar-mode.has-cover > small { display: none; }
-  .ar-mode.has-cover.is-on > small:not([hidden]) { display: block; }
 }
 @media (prefers-reduced-motion: reduce) { .ar-cover *, .ar-cover > svg { animation: none !important; transition: none !important; } }
 
@@ -1287,3 +1288,144 @@ body[data-mode="moon"] .ar-scene { height: clamp(170px, min(30vw, 40vh), 360px);
 @media (prefers-reduced-motion: reduce) {
   .ar-sc-boss-in > svg, .ar-sc-boss .np-virus-spikes, .np-scene-server :is(.np-led, .np-alert, .np-bit, .np-trace) { animation: none !important; }
 }
+
+/* ============================================================
+   Màn chọn gọn: thẻ chế độ 1 dòng · luật ở 1 chỗ · tuỳ chọn phụ thu gọn · nút Vào trận dính đáy
+   ============================================================ */
+.ar-modes .ar-mode small { display: none; } /* luật đầy đủ chuyển xuống #arModeDesc */
+.ar-mode-tag { font-size: .86rem; font-weight: 700; line-height: 1.35; opacity: .95; }
+.ar-mode.has-cover > .ar-mode-tag { padding: .15rem .9rem .8rem; }
+.ar-mode-desc { margin: .8rem 0 0; padding: .7rem .9rem; border-radius: 12px; background: var(--card2); border: 1px solid var(--border); font-size: .88rem; line-height: 1.5; }
+.ar-mode-desc:empty { display: none; }
+.ar-more { margin-top: .9rem; border: 1px solid var(--border); border-radius: 12px; padding: .1rem .9rem; background: var(--card2); }
+.ar-more > summary { cursor: pointer; padding: .55rem 0; font-weight: 800; font-size: .88rem; list-style-position: inside; }
+.ar-more[open] > summary { border-bottom: 1px solid var(--border); margin-bottom: .2rem; }
+.ar-more > :last-child { margin-bottom: .7rem; }
+.ar-more-sum { font-weight: 600; color: var(--muted); }
+.ar-more .ar-howto { background: var(--card); }
+.ar-playbar {
+  position: sticky; bottom: 0; z-index: 5; margin: 1rem -1.2rem -1.1rem; padding: .75rem 1.2rem .6rem;
+  background: var(--card); border-top: 1px solid var(--border); border-radius: 0 0 20px 20px;
+}
+.ar-playbar #arPlay { margin-top: 0; }
+.ar-playbar .ar-hint { margin-top: .35rem; }
+@media (max-width: 640px) {
+  #arHome[data-role="teacher"] .ar-modes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ar-mode.has-cover > .ar-mode-tag { padding: .1rem .65rem .6rem; font-size: .76rem; }
+}
+
+/* ============================================================
+   Không khí trận đấu (js/arena/arena-hype.js): chốt đáp án · bạn máy chốt · mục tiêu · bình luận viên · cao trào
+   ============================================================ */
+/* Chốt đáp án: ô em chọn phồng lên + viền sáng nhấp theo nhịp trống, các ô khác mờ đi */
+.ar-ans.is-locked { z-index: 2; outline: 4px solid #fff; animation: ar-lock .25s ease-in-out infinite alternate; }
+.ar-answers:has(.is-locked) .ar-ans:not(.is-locked) { opacity: .45; }
+.ar-answers.is-locking { pointer-events: none; animation: ar-lock .25s ease-in-out infinite alternate; }
+@keyframes ar-lock { from { transform: scale(1.02); } to { transform: scale(1.05); } }
+
+/* Bạn máy đã chốt: dấu ✔ xanh ở thẻ tên */
+.ar-sc-sp.is-locked .ar-sc-tag { background: #dcfce7; border-color: #16a37f; }
+.ar-sc-sp.is-locked .ar-sc-tag::after { content: ' ✔'; color: #16a37f; }
+.ar-pill-live { background: #e7f7ef; border-color: #16a37f; color: #0b6b4f; }
+.ar-pill-live.is-hot { background: #e5484d; border-color: #e5484d; color: #fff; animation: ar-lock .4s ease-in-out infinite alternate; }
+.ar-pill-live[hidden] { display: none; }
+[data-theme="dark"] .ar-pill-live:not(.is-hot) { background: #10392c; color: #8ff0c6; }
+
+/* Đang chuỗi đúng: vòng lửa dưới chân nhân vật của em */
+.ar-sc-sp.is-fire .ar-sc-in { filter: drop-shadow(0 0 0 #ff8a00) drop-shadow(0 -4px 10px rgba(255, 138, 0, .85)); }
+.ar-sc-sp.is-fire::before { content: '🔥'; position: absolute; left: 0; top: -6px; transform: translateX(-50%); font-size: 26px; animation: ar-fire .35s ease-in-out infinite alternate; }
+@keyframes ar-fire { from { transform: translateX(-50%) scale(1); } to { transform: translateX(-50%) scale(1.18) translateY(-2px); } }
+
+/* Mục tiêu trước mắt + bình luận viên */
+.ar-hype { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: -.2rem 0 .7rem; }
+.ar-hype:not(:has(> :not([hidden]))) { display: none; }
+.ar-rival { padding: .35rem .8rem; border-radius: 999px; background: var(--card); border: 1.5px solid var(--border); font-weight: 800; font-size: .88rem; }
+.ar-rival[hidden], .ar-caster[hidden] { display: none; }
+.ar-caster { flex: 1 1 260px; margin: 0; padding: .4rem .85rem; border-radius: 12px; background: #2d2416; color: #ffd34d; font-weight: 800; font-size: .92rem; }
+.ar-caster i { margin-right: .3rem; }
+.fx-caster { animation: ar-caster .5s cubic-bezier(.2, 1.3, .4, 1); }
+@keyframes ar-caster { from { transform: translateX(-14px); opacity: 0; } }
+
+/* Cao trào: viền vàng-đỏ chạy quanh sân khấu tới hết trận */
+#arGame.is-climax .ar-scene { box-shadow: 0 0 0 3px #f19a1a, 0 0 22px rgba(241, 154, 26, .55); animation: ar-climax 1s ease-in-out infinite alternate; }
+@keyframes ar-climax { to { box-shadow: 0 0 0 3px #e5484d, 0 0 30px rgba(229, 72, 77, .6); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ar-ans.is-locked, .ar-answers.is-locking, .ar-pill-live.is-hot, .ar-sc-sp.is-fire::before, .fx-caster, #arGame.is-climax .ar-scene { animation: none !important; }
+}
+
+/* ============================================================
+   Phòng cả lớp — không khí gameshow (js/arena/arena-room-hype.js)
+   ============================================================ */
+/* Sảnh: dòng chào người mới, chip mới vào nảy lên, dòng đếm chiến binh */
+.ar-room-feed { list-style: none; margin: .4rem 0 .6rem; padding: 0; display: flex; flex-direction: column; gap: .2rem; }
+.ar-room-feed li { font-weight: 800; font-size: .92rem; color: var(--muted); }
+.ar-room-feed li:first-child { color: var(--text); font-size: 1.05rem; animation: ar-caster .5s cubic-bezier(.2, 1.3, .4, 1); }
+.ar-room-chip.is-new { animation: ar-chip-new .7s cubic-bezier(.2, 1.6, .4, 1); border-color: #ffb020; box-shadow: 0 0 0 3px rgba(255, 176, 32, .35); }
+@keyframes ar-chip-new { from { transform: scale(.3) rotate(-8deg); opacity: 0; } 60% { transform: scale(1.18); } }
+.ar-room-chip.is-done { transition: background .2s, border-color .2s; animation: ar-chip-done .35s ease-out; }
+@keyframes ar-chip-done { 40% { transform: scale(1.12); } }
+.ar-room-crowd { margin: .8rem 0 0; text-align: center; font-weight: 800; }
+
+/* Trống dồn trước khi lật đáp án */
+.ar-room-stage.is-drum .ar-ans { filter: saturate(.7); }
+.ar-room-drum { display: flex; align-items: center; justify-content: center; gap: .6rem; margin: 1rem auto 0; font: 800 clamp(1.6rem, 4vw, 2.6rem) 'Baloo 2', sans-serif; animation: ar-drum .18s ease-in-out infinite alternate; }
+.ar-room-drum.is-inline { margin: .3rem auto 0; font-size: 1.4rem; }
+@keyframes ar-drum { from { transform: rotate(-2deg) scale(1); } to { transform: rotate(2deg) scale(1.06); } }
+.ar-answers.is-drum { animation: ar-lock .25s ease-in-out infinite alternate; }
+
+/* Dải gameshow trên màn chiếu sau mỗi câu */
+.ar-room-hype { display: flex; flex-direction: column; gap: .5rem; margin-bottom: .8rem; }
+.ar-room-mood { margin: 0; text-align: center; font: 800 clamp(1.15rem, 2.4vw, 1.6rem) 'Baloo 2', sans-serif; animation: ar-caster .5s cubic-bezier(.2, 1.3, .4, 1); }
+.ar-room-hype .ar-caster { flex: none; font-size: clamp(.95rem, 1.6vw, 1.15rem); }
+.ar-room-shouts { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; }
+.ar-room-shout { padding: .4rem .85rem; border-radius: 999px; background: var(--card); border: 2px solid #ffb020; font-weight: 700; font-size: clamp(.85rem, 1.4vw, 1.05rem);
+  animation: ar-shout .55s cubic-bezier(.2, 1.5, .4, 1) both; animation-delay: calc(var(--k) * .25s + .2s); }
+.ar-room-shout b { color: #b26b00; margin-right: .25rem; }
+[data-theme="dark"] .ar-room-shout b { color: #ffd34d; }
+@keyframes ar-shout { from { transform: translateY(14px) scale(.7); opacity: 0; } }
+.ar-qbox .ar-room-count i { animation: ar-bar-grow .8s cubic-bezier(.2, .8, .3, 1) both; }
+@keyframes ar-bar-grow { from { width: 0; } }
+
+/* Đếm ngược 3 giây cuối + cao trào trên màn chiếu */
+#arRoom.is-tense::after { content: ''; position: fixed; inset: 0; z-index: 70; pointer-events: none; box-shadow: inset 0 0 90px 12px rgba(229, 72, 77, .5); animation: ar-tense .5s ease-in-out infinite alternate; }
+#arRoom.is-climax .ar-room-stage, #arRoom.is-climax .ar-stage .ar-qbox { box-shadow: 0 0 0 3px #f19a1a, 0 0 22px rgba(241, 154, 26, .5); border-radius: 18px; animation: ar-climax 1s ease-in-out infinite alternate; }
+
+/* Máy học sinh: câu trend, mục tiêu, chuỗi */
+.ar-room-cheer { margin: .3rem 0 .5rem; font: 800 clamp(1.05rem, 3.6vw, 1.35rem) 'Baloo 2', sans-serif; }
+.ar-room-cheer.t-up { color: #0f8a65; }
+.ar-room-cheer.t-down { color: var(--muted); }
+.ar-room-cheer.t-fire { color: #e06c00; }
+.ar-room-cheer.t-gold { color: #b26b00; }
+[data-theme="dark"] .ar-room-cheer.t-up { color: #5fe0b0; }
+[data-theme="dark"] .ar-room-cheer:is(.t-fire, .t-gold) { color: #ffc24a; }
+.ar-room-rival { display: inline-block; margin: .2rem 0 .4rem; }
+.ar-pill-fire { background: #fff1e0; border-color: #f19a1a; color: #b04e00; }
+[data-theme="dark"] .ar-pill-fire { background: #3a2410; color: #ffc24a; }
+
+/* Cuối trận: bục lên chậm (hạng 3 → 1), danh hiệu, huy hiệu của em */
+.ar-podium.is-slow .ar-pod { animation-delay: calc(var(--d) * 2.6); }
+.ar-room-awards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: .7rem; margin: 1rem 0; }
+.ar-room-award { display: flex; flex-direction: column; align-items: center; gap: .15rem; padding: .8rem; border-radius: 16px; background: var(--card2); border: 2px solid #ffb020; text-align: center;
+  animation: ar-shout .6s cubic-bezier(.2, 1.5, .4, 1) both; animation-delay: calc(var(--k) * .3s + 2.4s); }
+.ar-room-award-ico { font-size: 2rem; }
+.ar-room-award small { font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: #b26b00; }
+[data-theme="dark"] .ar-room-award small { color: #ffd34d; }
+.ar-room-award b { font-size: 1.05rem; }
+.ar-room-badges { display: flex; flex-wrap: wrap; justify-content: center; gap: .4rem; margin-bottom: .6rem; }
+.ar-room-badge { padding: .3rem .75rem; border-radius: 999px; background: #fff1e0; border: 1.5px solid #f19a1a; font-weight: 800; font-size: .88rem; color: #8a3f00;
+  animation: ar-shout .5s cubic-bezier(.2, 1.5, .4, 1) both; animation-delay: calc(var(--k) * .2s + .3s); }
+[data-theme="dark"] .ar-room-badge { background: #3a2410; color: #ffc24a; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ar-room-feed li, .ar-room-chip.is-new, .ar-room-chip.is-done, .ar-room-drum, .ar-answers.is-drum, .ar-room-mood, .ar-room-shout, .ar-qbox .ar-room-count i,
+  #arRoom.is-tense::after, #arRoom.is-climax .ar-room-stage, #arRoom.is-climax .ar-stage .ar-qbox, .ar-podium.is-slow .ar-pod, .ar-room-award, .ar-room-badge { animation: none !important; }
+}
+
+/* Sổ tay câu sai: dòng báo đã ghi câu sai của trận (js/services/wrongbook-store.js) */
+.ar-book-note { margin: .8rem 0 0; padding: .6rem .9rem; border-radius: 12px; background: var(--card2); border: 1px dashed var(--border); font-size: .88rem; text-align: center; }
+.ar-book-note i { color: var(--purple); margin-right: .25rem; }
+.ar-due { margin: .45rem 0 0; padding: .45rem .75rem; border-radius: 10px; background: #fff6e0; border: 1px solid #f1c25a; color: #6b4a00; font-size: .85rem; font-weight: 600; }
+.ar-due[hidden] { display: none; }
+.ar-due i { color: #c98a00; margin-right: .2rem; }
+[data-theme="dark"] .ar-due { background: #3a2c10; border-color: #8a6a1e; color: #ffd98a; }

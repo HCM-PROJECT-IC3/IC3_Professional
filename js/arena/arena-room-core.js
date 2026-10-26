@@ -253,6 +253,7 @@
         step = C.raceStep(p, ok, room.goal); // raceStep tự cập nhật p.streak
       }
       if (ok) p.correct++;
+      if (ok) { p.fastMs = (p.fastMs || 0) + a.ms; p.fastN = (p.fastN || 0) + 1; } // danh hiệu Tia chớp cuối trận
       p.bestStreak = Math.max(p.bestStreak, p.streak);
       p.log[room.i] = a ? (ok ? 1 : 0) : -1; // 1 đúng, 0 sai, -1 không trả lời
       results[id] = Object.assign({ ok, k: a ? a.k : null, pts, bonus, step, streak: p.streak }, life);
@@ -272,6 +273,8 @@
       r.rank = idx + 1;
       r.value = row.value;
       r.up = before[row.cid] ? before[row.cid] - (idx + 1) : 0;
+      const p = room.players[row.cid];
+      if (r.up > (p.bestUp || 0)) p.bestUp = r.up; // danh hiệu Bứt phá cuối trận
     });
     room.last = { i: room.i, kind: C.kindOf(q), correctIdx: q.correctIdx, correct: q.correct, counts, right, answered: answeredCount(room), results, expl: q.expl || '' };
     if (tug) Object.assign(room.last, { rope: room.rope, delta: tug.delta });

@@ -288,8 +288,27 @@ var r3 = A.bossRound(boss, 80, 4, 4);
 assertEq('virus: không trừ quá 0, hạ gục', [boss.hp, r3.dealt, r3.ko], [0, 56, true]);
 assertEq('virus: xếp hạng theo sát thương, hoà thì em trước', [{ id: 'b', dmg: 30, bot: true }, { id: 'me', dmg: 30 }, { id: 'c', dmg: 50, bot: true }].sort(A.bossOrder).map(function (p) { return p.id; }), ['c', 'me', 'b']);
 
-var bd = A.makeBoard([{ text: 'a' }, { text: 'b' }], 12, A.rngFrom(4));
-assertEq('bảng điểm: đủ ô, lặp câu nếu thiếu, có ô x2 và ô rủi ro', [bd.length, bd[2].q.text, bd.some(function (t) { return t.special === 'x2'; }), bd.some(function (t) { return t.special === 'risk'; })], [12, 'a', true, true]);
+// ── Số câu: không thiếu (báo rõ), không lặp, không trùng ──
+assertEq('playCount: không vượt số câu bộ có', [A.playCount(20, 8), A.playCount(10, 35), A.playCount(0, 35), A.playCount(15, 0)], [8, 10, 35, 0]);
+var dupQs = [
+  { type: 'single', question: 'Thiết bị nhập là gì?', options: ['Bàn phím', 'Loa'], correct: ['Bàn phím'] },
+  { type: 'single', question: '  thiết bị nhập là gì  ', options: ['Loa', 'Bàn phím', 'Màn hình'], correct: ['bàn phím'] },
+  { type: 'single', question: 'Thiết bị nhập là gì?', options: ['Bàn phím', 'Chuột'], correct: ['Chuột'] },
+  { type: 'single', question: 'Thiết bị nhập là gì?', options: ['Bán phím', 'Loa'], correct: ['Bán phím'] },
+];
+assertEq('trùng: cùng đề + cùng đáp án (khác hoa/thường, khoảng trắng, dấu câu, phương án nhiễu) → 1 câu; khác đáp án hoặc khác dấu tiếng Việt → giữ',
+  A.buildDeck(dupQs, A.rngFrom(3)).length, 3);
+var base10 = Array.from({ length: 10 }, function (_, i) { return { text: 'q' + i }; });
+var ext = A.extendDeck(base10, 30, A.rngFrom(7));
+var cnt = {}; ext.forEach(function (c) { cnt[c.text] = (cnt[c.text] || 0) + 1; });
+assertEq('extendDeck: 30 lượt từ 10 câu → mỗi câu đúng 3 lần (dùng hết rồi mới lặp)', Object.keys(cnt).map(function (k) { return cnt[k]; }), [3, 3, 3, 3, 3, 3, 3, 3, 3, 3]);
+assertEq('extendDeck: không bao giờ lặp liền nhau', ext.every(function (c, i) { return i === 0 || c.text !== ext[i - 1].text; }), true);
+assertEq('extendDeck: đủ câu thì không lặp', A.extendDeck(base10, 6, A.rngFrom(1)).length, 6);
+var smallBoard = A.makeBoard([{ text: 'a' }, { text: 'b' }, { text: 'c' }], 15, A.rngFrom(2));
+assertEq('Bảng điểm: không nhiều ô hơn số câu (không 2 ô cùng 1 câu)', [smallBoard.length, new Set(smallBoard.map(function (t) { return t.q.text; })).size], [3, 3]);
+assertEq('Bảng điểm "Tất cả" (0): tối đa 30 ô', A.makeBoard(Array.from({ length: 40 }, function (_, i) { return { text: 'x' + i }; }), 0, A.rngFrom(2)).length, 30);
+var bd = A.makeBoard(Array.from({ length: 12 }, function (_, i) { return { text: 'q' + i }; }), 12, A.rngFrom(4));
+assertEq('bảng điểm: đủ ô, mỗi ô 1 câu khác nhau, có ô x2 và ô rủi ro', [bd.length, new Set(bd.map(function (t) { return t.q.text; })).size, bd.some(function (t) { return t.special === 'x2'; }), bd.some(function (t) { return t.special === 'risk'; })], [12, 12, true, true]);
 assertEq('bảng điểm: giá trị 100…500', bd.every(function (t) { return A.BOARD_VALUES.indexOf(t.value) >= 0; }), true);
 assertEq('bảng điểm: ô thường / x2 / rủi ro', [
   A.boardScore({ value: 300, special: '' }, ['t0', 't1'], ['t0']),

@@ -25,6 +25,10 @@
   const A = global.EduArena.api;
   const K = global.EduArenaKinds;
   const FX = global.EduArenaFX;
+  const D = global.EduArenaDrama;     // chữ lớn giữa màn hình (js/arena/arena-drama.js)
+  const RH = global.EduArenaRoomHype; // không khí gameshow: lời bình, vinh danh, câu trend (js/arena/arena-room-hype.js)
+  const SUSPENSE_MS = 900;            // chốt câu → trống dồn rồi mới lộ đáp án (màn chiếu + máy học sinh, tính tại chỗ)
+  const reduced = () => FX.reduced();
   const $ = (id) => document.getElementById(id);
   const esc = A.esc;
   const SHAPES = A.SHAPES;
@@ -37,7 +41,7 @@
   const QRLIB = 'js/vendor/qrcode.min.js';
   const HOST_TTL_MS = 3 * 60 * 60 * 1000;
   const AUTO_NEXT_MS = 6000;
-  const JOIN_TIMEOUT_MS = 15000;
+  const JOIN_TIMEOUT_MS = 12000;
   const UNIT = { speed: 'điểm', race: 'bước', survival: 'điểm', tug: 'lực kéo', spell: 'sát thương', heist: 'đá quý' };
   const MODE_LABEL = { speed: '⚡ Tốc độ', race: '🏁 Đua về đích', survival: '❤️ Sinh tồn', tug: '🪢 Kéo co', spell: '🔮 Đấu phép', heist: '🔐 Giải mã' };
 
@@ -49,19 +53,18 @@
   const cryptoRng = () => global.crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296;
   const fmt = (n) => Number(n || 0).toLocaleString('vi-VN');
   function loadPeer() { return global.Peer ? Promise.resolve() : global.EduLazyLoad.loadScripts([PEERJS]); }
-  // Máy chủ ICE mặc định của PeerJS (1 STUN + TURN miễn phí của PeerJS). Giữ lại khi người dùng
-  // khai báo thêm TURN riêng ở EduBackend.arenaRoom.turn — nếu khai thẳng peer.config.iceServers thì
-  // PeerJS BỎ mặc định, dễ làm hỏng kết nối mạng bình thường.
-  const DEFAULT_ICE = [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: ['turn:eu-0.turn.peerjs.com:3478', 'turn:us-0.turn.peerjs.com:3478'], username: 'peerjs', credential: 'peerjsp' },
-  ];
+  // STUN: tìm địa chỉ công khai để 2 máy nối THẲNG (cùng mạng hoặc mạng dễ tính) — 0 lượt Firebase.
+  // 2 máy khác mạng (4G ↔ Wi-Fi trường) không nối thẳng được; TURN miễn phí của PeerJS đã chết
+  // (10/2026) → học sinh đó tự chuyển sang ĐƯỜNG DỰ PHÒNG qua Firestore (js/arena/arena-relay.js).
+  const STUN_ICE = [{ urls: ['stun:stun.cloudflare.com:3478', 'stun:stun.l.google.com:19302'] }];
+  function roomCfg() { return (global.EduBackend && global.EduBackend.arenaRoom) || {}; }
+  /** Luôn khai iceServers đầy đủ (PeerJS bỏ máy chủ mặc định — giờ đã chết — khi có danh sách riêng). */
   function peerOptions() {
-    const cfg = (global.EduBackend && global.EduBackend.arenaRoom) || {};
+    const cfg = roomCfg();
     const opts = Object.assign({ debug: 0 }, cfg.peer || {});
     const extra = Array.isArray(cfg.turn) ? cfg.turn.filter((x) => x && x.urls) : [];
-    if (extra.length && !(opts.config && opts.config.iceServers)) {
-      opts.config = Object.assign({}, opts.config || {}, { iceServers: extra.concat(DEFAULT_ICE) });
+    if (!(opts.config && opts.config.iceServers)) {
+      opts.config = Object.assign({}, opts.config || {}, { iceServers: extra.concat(STUN_ICE) });
     }
     return opts;
   }
@@ -97,7 +100,10 @@
   // ============================================================
   // NGƯỜI DẪN
   // ============================================================
-  const H = { peer: null, room: null, conns: new Map(), timer: 0, tick: 0, auto: 0, closing: 0, lobbyT: 0, saveT: 0, ready: false };
+  const H = { peer: null, room: null, conns: new Map(), timer: 0, tick: 0, auto: 0, closing: 0, lobbyT: 0, saveT: 0, ready: false, relay: null, relayCode: '', relayErr: null, slots: null };
+  /** Không khí màn chiếu (chỉ ở máy người dẫn, không gửi đi đâu). */
+  function resetHype() { Object.assign(H, { feed: [], newCid: '', firstAns: null, prev: null, story: null, pending: '', seen: {}, lastSec: -1, suspense: false }); }
+  resetHype();
 
   /** Chỉ tài khoản giáo viên đã xác minh (js/arena/arena-teacher.js) mới tạo/khôi phục phòng. */
   function teacherOk() {
@@ -113,8 +119,11 @@
     const deck = C.buildDeck(src.questions || [], A.rng, 0, A.kinds());
     if (!deck.length) { A.toast('Chọn bộ câu hỏi có câu trắc nghiệm trước nhé.'); return; }
     const mode = R.ROOM_MODES.includes(A.effMode()) ? A.effMode() : 'speed';
+    // Số câu thật (0 = "Tất cả", không vượt số câu bộ có → không lặp câu). Đua về đích cần tới 2× số
+    // bước: hết bộ mới trộn lại, không lặp liền nhau (trước: deck[i % n] lặp đúng thứ tự cũ).
+    const count = C.playCount(A.prefs.count, deck.length);
     const room = R.createRoom({
-      code: R.makeCode(cryptoRng), mode, deck, count: A.prefs.count, secs: A.prefs.secs,
+      code: R.makeCode(cryptoRng), mode, deck: mode === 'race' ? C.extendDeck(deck, count * 2, A.rng) : deck.slice(0, count), count, secs: A.prefs.secs,
       maxPlayers: A.prefs.roomMax || 60, title: src.title, setKey: src.key,
     });
     startHosting(room, false);
@@ -122,17 +131,19 @@
 
   async function startHosting(room, resumed) {
     H.room = room;
+    resetHype();
     H.ropeShown = undefined;
     H.ready = false;
     openRoomScreen('Phòng ' + room.code);
     body().innerHTML = `<div class="ar-card ar-center"><p><i class="fa-solid fa-spinner fa-spin"></i> Đang mở phòng <b>${room.code}</b>...</p></div>`;
     try { await loadPeer(); } catch (e) { hostFail('Không tải được thư viện kết nối (js/vendor/peerjs.min.js) — kiểm tra mạng rồi thử lại.'); return; }
     persist();
+    startRelay(room); // mở ngay, không chờ 0.peerjs.com (mạng trường chặn máy chủ bắt tay thì vẫn có đường này)
     let tries = 0;
     const open = () => {
       const peer = new global.Peer(R.peerId(room.code), peerOptions());
       H.peer = peer;
-      peer.on('open', () => { H.ready = true; setNet(''); renderHost(); });
+      peer.on('open', () => { H.ready = true; setNet(''); startRelay(room); renderHost(); });
       peer.on('connection', onConn);
       // Mất kết nối máy chủ trung gian: các học sinh đã nối vẫn chơi được; nối lại để nhận người mới.
       peer.on('disconnected', () => {
@@ -158,6 +169,46 @@
       });
     };
     open();
+  }
+  /** Đường dự phòng Firestore cho học sinh không nối thẳng được (mở khi mã phòng đã chốt). */
+  function startRelay(room) {
+    if (!global.EduArenaRelay || roomCfg().relay === false || (H.relay && H.relayCode === room.code)) return;
+    if (H.relay) { H.relay.close(); H.relay = null; }
+    H.relayCode = room.code;
+    H.relayErr = null;
+    H.slots = newRelaySlots();
+    global.EduArenaRelay.host(room.code, onConn, () => !!H.room && H.room.phase === 'lobby')
+      .then((relay) => { if (H.room === room && H.relayCode === room.code) H.relay = relay; else relay.close(); })
+      .catch((e) => {
+        console.warn('[Phòng cả lớp] Không mở được đường dự phòng:', e);
+        if (H.room !== room) return;
+        H.relayErr = e;
+        if (room.phase === 'lobby') renderHost();
+      });
+  }
+  // ── Hạn mức đường dự phòng: Firestore DÙNG CHUNG cả dự án (dashboard, lịch dạy, đăng nhập…) ──
+  // Mỗi em dự phòng ~21 ghi + ~66 đọc/trận 20 câu. Nhiều giáo viên cùng mở phòng không được ăn hết
+  // hạn mức: (1) trần mỗi phòng relayRoomMax (mặc định 25 em); (2) trần chung mỗi ngày đếm ở Apps
+  // Script (arenaRelayTicket, apps/src/47-arena.gs) — máy người dẫn xin gói 5 chỗ CHỈ khi có em cần
+  // (phòng cả lớp chung Wi-Fi: 0 lượt gọi). Apps Script cũ chưa có API / lỗi mạng → tối đa 10 em/phòng.
+  const relayRoomMax = () => Math.max(1, Number(roomCfg().relayRoomMax) || 25);
+  function newRelaySlots() {
+    return global.EduArenaRelay.slots({
+      roomMax: relayRoomMax(),
+      fetchChunk: async (n) => {
+        await global.EduLazyLoad.loadScripts(['js/services/apps-script-client.js']);
+        return global.EduAppsScript.call('arenaRelayTicket', { slots: n }, { timeoutMs: 15000 });
+      },
+    });
+  }
+  function relayStatusHtml() {
+    if (H.relayErr) {
+      return `<p class="ar-hint ar-room-norelay">⚠️ Chưa mở được đường dự phòng (${esc(H.relayErr.code || H.relayErr.message || 'lỗi')}): học sinh <b>dùng 4G hoặc Wi-Fi khác</b> máy thầy cô có thể không vào được — cho cả lớp dùng <b>chung Wi-Fi</b> với máy này, hoặc nhờ quản trị publish firestore.rules mới.</p>`;
+    }
+    const st = H.slots && H.slots.state;
+    if (!st || (!st.cids.size && !st.out)) return '';
+    const left = st.info ? ` · hôm nay cả hệ thống còn ${Math.max(0, st.info.cap - st.info.used)}/${st.info.cap} chỗ` : '';
+    return `<p class="ar-hint ar-room-relayinfo">🛰️ ${st.cids.size} em vào qua đường dự phòng (Firebase)${left}.${st.out ? ' <b>Đã hết chỗ</b> — em nào chưa vào được hãy dùng chung Wi-Fi với máy này.' : ''}</p>`;
   }
   function hostFail(msg) {
     setNet('');
@@ -220,6 +271,18 @@
   function onHostMsg(conn, msg) {
     const room = H.room;
     if (!room || !msg || typeof msg !== 'object') return;
+    if (msg.t === 'hello' && conn.relay && !conn.arRelayOk) {
+      if (conn.arRelayWait) return; // hello lặp lại trong lúc đang xin chỗ
+      conn.arRelayWait = true;
+      (H.slots ? H.slots.take(String(msg.cid || '')) : Promise.resolve(false)).then((ok) => {
+        conn.arRelayWait = false;
+        if (H.room !== room) return;
+        if (!ok) { send(conn, { t: 'deny', reason: 'relay-full' }); setTimeout(() => conn.close(), 800); if (room.phase === 'lobby') renderHostLobby(); return; }
+        conn.arRelayOk = true;
+        onHostMsg(conn, msg);
+      });
+      return;
+    }
     if (msg.t === 'hello') {
       const res = R.join(room, { cid: msg.cid, name: msg.name, face: msg.face });
       if (!res.ok) { send(conn, { t: 'deny', reason: res.reason }); setTimeout(() => conn.close(), 800); return; }
@@ -230,7 +293,11 @@
       H.conns.set(cid, conn);
       send(conn, { t: 'welcome', room: roomInfo(), you: { name: res.player.name, face: res.player.face } });
       send(conn, stateFor(cid));
-      if (!res.rejoin) A.sfx('click');
+      if (!res.rejoin) {
+        A.sfx('click');
+        H.newCid = cid;
+        H.feed = [RH.joinLine(res.player.name, res.player.face, room.order.length)].concat(H.feed).slice(0, 4);
+      }
       lobbyChanged();
       persistSoon();
       return;
@@ -241,6 +308,7 @@
       const r = R.submit(room, cid, msg.i, msg.k, Date.now());
       if (r.ok) {
         send(conn, { t: 'got', i: msg.i, k: msg.k });
+        if (!H.firstAns) { const p = room.players[cid]; H.firstAns = { face: p.face, name: p.name, ms: room.answers[cid].ms }; }
         hostTick();
         persistSoon();
         if (r.allIn) closeSoon();
@@ -302,7 +370,10 @@
     persist();
     clearTimeout(H.timer);
     H.timer = setTimeout(closeQuestion, room.secs * 1000 + R.ANSWER_GRACE_MS);
-    A.sfx('click');
+    H.firstAns = null; H.lastSec = -1; H.suspense = false;
+    const big = RH.openBanner(room, H.pending);
+    H.pending = '';
+    if (big && D) { D.banner(big.title, { tone: big.tone, icon: big.icon, sub: big.sub, ms: 1400 }); A.sfx('whoosh'); } else A.sfx('click');
     renderHost();
   }
   function closeSoon() {
@@ -313,23 +384,42 @@
     clearTimeout(H.timer); clearTimeout(H.closing); H.closing = 0;
     const room = H.room;
     if (!room || room.phase !== 'q') return;
+    H.prev = RH.snap(room);
     R.reveal(room);
     broadcast(revealMsg);
     persist();
-    A.sfx('flip');
+    H.story = RH.revealStory(room, H.prev);
+    if (H.story.climax && !H.seen[H.story.climax]) { H.seen[H.story.climax] = true; H.pending = H.story.climax; $('arRoom').classList.add('is-climax'); }
+    $('arRoom').classList.remove('is-tense');
+    // Trống dồn: màn chiếu giữ câu hỏi + "Đáp án là..." một nhịp rồi mới lật đáp án (học sinh cũng tự dồn trống ở máy mình)
+    H.suspense = !reduced();
     renderHost();
-    if (A.prefs.roomAuto) H.auto = setTimeout(hostNext, AUTO_NEXT_MS);
+    if (H.suspense) {
+      A.sfx('drumroll');
+      const i = room.i;
+      setTimeout(() => {
+        if (H.room !== room || room.phase !== 'reveal' || room.i !== i || !H.suspense) return;
+        H.suspense = false;
+        renderHost();
+        hypeRevealFx();
+      }, SUSPENSE_MS);
+    } else hypeRevealFx();
+    if (A.prefs.roomAuto) H.auto = setTimeout(hostNext, AUTO_NEXT_MS + (H.suspense ? SUSPENSE_MS : 0));
   }
   function hostFinish() {
     const room = H.room;
     clearTimeout(H.timer); clearTimeout(H.auto);
     R.finish(room, Date.now());
     broadcast(endMsg);
+    // Kết quả đã gửi → 20 giây sau đóng đường dự phòng: các em dự phòng thôi nghe document phòng
+    setTimeout(() => { if (H.room === room && H.relay) { H.relay.close(); H.relay = null; } }, 20000);
     store.del(HOST_KEY);
     addHistory(room);
-    A.sfx('win');
-    if (global.EduFX) global.EduFX.confetti({ count: 140 });
+    $('arRoom').classList.remove('is-climax', 'is-tense');
     renderHost();
+    // Bục vinh danh lên dần hạng 3 → 2 → 1 (CSS .is-slow), trống dồn rồi mới pháo hoa
+    A.sfx('drumroll');
+    setTimeout(() => { if (H.room !== room) return; A.sfx('win'); if (global.EduFX) global.EduFX.confetti({ count: 160 }); }, reduced() ? 0 : 2000);
   }
   function hostKick(cid) {
     const room = H.room;
@@ -350,7 +440,11 @@
     broadcast(() => ({ t: 'closed' }));
     const peer = H.peer;
     setTimeout(() => { try { peer && peer.destroy(); } catch (e) { /* ignore */ } }, 500);
+    if (H.relay) { H.relay.close(); H.relay = null; }
+    H.relayCode = ''; H.relayErr = null;
     H.peer = null; H.room = null; H.conns = new Map();
+    $('arRoom').classList.remove('is-climax', 'is-tense');
+    resetHype();
     store.del(HOST_KEY);
     return true;
   }
@@ -364,7 +458,7 @@
     $('arRoomCode').textContent = 'Phòng ' + room.code;
     if (room.phase === 'lobby') renderHostLobby();
     else if (room.phase === 'q') renderHostQuestion();
-    else if (room.phase === 'reveal') renderHostReveal();
+    else if (room.phase === 'reveal') { if (H.suspense) renderHostSuspense(); else renderHostReveal(); }
     else renderHostEnd();
     FX.settle(body()); // dây kéo co trượt từ vị trí cũ
   }
@@ -387,6 +481,7 @@
         ${room.mode === 'heist' ? `<p class="ar-hint">🔐 Mỗi em có 1 két khoá mã ${C.VAULT_LEN} ký hiệu · trả lời đúng được chọn ngay 1 việc: ⛏️ đào đá quý (nhanh được nhiều hơn) · 🔓 đoán 1 ký hiệu két của bạn, mở đủ ${C.VAULT_LEN} ô lấy ${C.HEIST_STEAL * 100}% đá quý · 🔁 đổi mã khi bị dòm ngó · nhiều đá quý nhất thắng</p>` : ''}
         ${room.mode === 'tug' ? '<p class="ar-hint">🪢 Máy tự chia 2 đội Đỏ – Xanh đều người theo lượt vào phòng · đúng kéo 1, đúng trong nửa đầu thời gian kéo 2 · dây chạm vạch 1 bên → đội đó thắng ngay</p>' : ''}
         ${H.ready ? '' : '<p class="ar-hint"><i class="fa-solid fa-spinner fa-spin"></i> Đang mở cổng kết nối...</p>'}
+        ${relayStatusHtml()}
       </div>
       <div class="ar-card">
         <div class="ar-row"><h2 class="ar-h2"><i class="fa-solid fa-users"></i> Người chơi <span class="ar-muted">${ids.length}/${room.max}</span></h2>
@@ -394,15 +489,18 @@
             <button type="button" class="ar-btn ar-btn-ghost ar-btn-sm" data-act="close"><i class="fa-solid fa-xmark"></i> Đóng phòng</button>
             <button type="button" class="ar-btn ar-btn-play" data-act="next" ${ids.length ? '' : 'disabled'}><i class="fa-solid fa-play"></i> Bắt đầu</button>
           </div></div>
+        ${H.feed.length ? `<ul class="ar-room-feed" aria-live="polite">${H.feed.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}
         <div class="ar-room-players" id="arRoomPlayers">${ids.length ? playerChips(ids) : '<p class="ar-muted ar-center">Đang chờ học sinh vào phòng...</p>'}</div>
+        ${ids.length >= 2 ? `<p class="ar-room-crowd">${ids.length >= 20 ? '🎉 Đông vui quá!' : '👀 Còn chờ ai nữa không?'} ${ids.length} chiến binh đã sẵn sàng — ${esc(RH.TAGLINE[room.mode] || '')}</p>` : ''}
       </div></div>`;
     drawQr(link);
+    H.newCid = '';
   }
   function playerChips(ids) {
     return ids.map((id) => {
       const p = H.room.players[id];
       const out = (H.room.mode === 'survival' || H.room.mode === 'spell') && H.room.i >= 0 && p.hp <= 0;
-      return `<span class="ar-room-chip${p.online ? '' : ' is-off'}${out ? ' is-out' : ''}${p.team ? ' team-' + p.team : ''}" title="${p.online ? 'Đang kết nối' : 'Mất kết nối'}${p.team ? ' · ' + C.TEAMS[p.team].name : ''}"><span aria-hidden="true">${esc(p.face)}</span> ${esc(p.name)}
+      return `<span class="ar-room-chip${p.online ? '' : ' is-off'}${out ? ' is-out' : ''}${id === H.newCid ? ' is-new' : ''}${p.team ? ' team-' + p.team : ''}" title="${p.online ? 'Đang kết nối' : 'Mất kết nối'}${p.team ? ' · ' + C.TEAMS[p.team].name : ''}"><span aria-hidden="true">${esc(p.face)}</span> ${esc(p.name)}
         <button type="button" data-kick="${esc(id)}" aria-label="Mời ${esc(p.name)} ra khỏi phòng" title="Mời ra khỏi phòng">×</button></span>`;
     }).join('');
   }
@@ -417,6 +515,7 @@
       <span class="ar-pill">${room.mode === 'race' ? `Câu ${room.i + 1}` : `Câu ${room.i + 1}/${room.total}`}</span>
       <span class="ar-pill ar-pill-main" id="arRAnswered"></span>
       <span class="ar-pill" id="arROnline"></span>
+      <span class="ar-pill ar-pill-live" id="arRFirst" hidden></span>
       ${extra}
     </div>`;
   }
@@ -456,6 +555,12 @@
     const bar = $('arRTimer'), s = $('arRSecs');
     if (bar) { bar.style.width = (left / (room.secs * 1000)) * 100 + '%'; bar.classList.toggle('is-low', left < room.secs * 250); }
     if (s) s.textContent = `⏱ ${Math.ceil(left / 1000)} giây`;
+    const f = $('arRFirst');
+    if (f && H.firstAns) { f.hidden = false; f.textContent = `⚡ ${H.firstAns.face} ${H.firstAns.name} chốt đầu tiên · ${(H.firstAns.ms / 1000).toFixed(1).replace('.', ',')} giây`; }
+    // 5 giây cuối: tích tắc trên loa máy chiếu; 3 giây cuối: tim đập + viền đỏ
+    const sec = Math.ceil(left / 1000);
+    if (left > 0 && sec <= 5 && sec !== H.lastSec) { H.lastSec = sec; A.sfx(sec <= 3 ? 'heartbeat' : 'tick'); }
+    $('arRoom').classList.toggle('is-tense', left > 0 && sec <= 3);
     document.querySelectorAll('#arRoomPlayers .ar-room-chip').forEach((chip) => {
       const id = chip.querySelector('[data-kick]').dataset.kick;
       chip.classList.toggle('is-done', !!room.answers[id]);
@@ -491,13 +596,40 @@
       ? `<li class="is-ko">💥 ${esc(e.face)} ${esc(e.by)} phá két của ${esc(e.name)} — lấy ${fmt(e.take)} 💎</li>`
       : `<li>🔁 ${esc(e.face)} ${esc(e.by)} đổi mã két</li>`)).join('')}</ul>${log.length > 6 ? `<small class="ar-muted">… và ${log.length - 6} việc khác</small>` : ''}</div>`;
   }
+  /** Màn chiếu lúc trống dồn: câu hỏi còn đó, đáp án chưa lật. */
+  function renderHostSuspense() {
+    const room = H.room;
+    body().innerHTML = hostBar('')
+      + `${room.mode === 'tug' ? hostRope() : ''}<div class="ar-room-stage is-drum">${questionBlock(R.current(room))}
+        <div class="ar-room-drum" role="status"><span aria-hidden="true">🥁</span> Đáp án là...</div></div>`;
+    hostTick();
+  }
+  /** Dải "gameshow" trên màn chiếu sau mỗi câu: cả lớp làm thế nào · bình luận viên · vinh danh. */
+  function storyHtml() {
+    const st = H.story;
+    if (!st) return '';
+    return `<div class="ar-room-hype">
+      <p class="ar-room-mood">${esc(st.mood)}</p>
+      ${st.mc ? `<p class="ar-caster"><i class="fa-solid fa-microphone-lines" aria-hidden="true"></i> ${esc(st.mc)}</p>` : ''}
+      ${st.shouts.length ? `<div class="ar-room-shouts">${st.shouts.map((x, k) => `<span class="ar-room-shout" style="--k:${k}"><b>${x.icon} ${esc(x.label)}</b> ${esc(x.text)}</span>`).join('')}</div>` : ''}
+    </div>`;
+  }
+  function hypeRevealFx() {
+    const room = H.room, L = room && room.last;
+    if (!L) return;
+    const pct = L.answered ? (L.right || 0) / L.answered : 0;
+    A.sfx(pct >= 0.5 ? 'correct' : 'flip');
+    if (pct >= 0.8 && L.answered >= 3 && global.EduFX) global.EduFX.confetti({ count: 60 });
+    const ok = body().querySelector('.ar-ans.is-correct');
+    if (ok) FX.flash(ok, 'fx-correct');
+  }
   function renderHostReveal() {
     const room = H.room, L = room.last, q = R.current(room);
     const done = R.isDone(room);
     const rows = R.leaderboard(room).slice(0, 10);
     body().innerHTML = hostBar(`<label class="ar-room-auto"><input type="checkbox" id="arRAuto" ${A.prefs.roomAuto ? 'checked' : ''}> Tự chuyển câu sau ${AUTO_NEXT_MS / 1000} giây</label>
         <button type="button" class="ar-btn ar-btn-play" data-act="next">${done ? '🏆 Xem kết quả' : 'Câu tiếp ▶'} <kbd>Enter</kbd></button>`)
-      + `${room.mode === 'tug' ? hostRope() : ''}<div class="ar-stage">
+      + `${room.mode === 'tug' ? hostRope() : ''}${storyHtml()}<div class="ar-stage">
         <div class="ar-qbox">${questionBlock(q, { reveal: true, counts: L.counts, total: L.answered })}
           ${L.expl ? `<div class="ar-feedback is-ok"><div class="ar-fb-expl">💡 ${esc(L.expl)}</div></div>` : ''}
           <p class="ar-hint ar-center">${L.answered} người trả lời · ${L.right ?? L.counts[L.correctIdx]} người đúng${room.mode === 'survival' ? ` · ❤️ còn ${R.activeIds(room).filter((id) => room.players[id].hp > 0).length} người trụ lại` : ''}${room.mode === 'spell' ? ` · 🔮 <b id="arRSpells">${R.pickedCount(room)}/${Object.keys(room.offers || {}).length}</b> em đã chọn phép (sang câu sau thì phép nổ)` : ''}${room.mode === 'heist' ? ` · 🔐 <b id="arRSpells">${R.pickedCount(room)}/${Object.keys(room.offers || {}).length}</b> em đã chọn việc (chưa chọn thì tự đào)` : ''}</p>
@@ -512,6 +644,12 @@
       <span class="ar-pod-face">${esc(top[i].face)}</span><b class="ar-pod-name">${esc(top[i].name)}</b>
       <span class="ar-pod-val">${fmt(top[i].value)} ${unit}</span><div class="ar-pod-block">${i + 1}</div></div>`).join('')}</div>`;
   }
+  /** Danh hiệu cuối trận (màn chiếu): Chuỗi dài nhất · Chính xác nhất · Tia chớp · Bứt phá. */
+  function awardsHtml(list) {
+    if (!list.length) return '';
+    return `<div class="ar-room-awards">${list.map((a, k) => `<div class="ar-room-award" style="--k:${k}"><span class="ar-room-award-ico" aria-hidden="true">${a.icon}</span>
+      <small>${esc(a.label)}</small><b>${esc(a.face)} ${esc(a.name)}</b><span class="ar-muted">${esc(a.detail)}</span></div>`).join('')}</div>`;
+  }
   function renderHostEnd() {
     const room = H.room;
     const board = R.leaderboard(room);
@@ -524,7 +662,8 @@
         : room.mode === 'spell' && board[0] && board[0].mp > 0 ? `🏆 ${esc(board[0].face)} ${esc(board[0].name)} trụ lại cuối cùng! ·`
         : room.mode === 'heist' && board[0] && board[0].value > 0 ? `🏆 ${esc(board[0].face)} ${esc(board[0].name)} là Vua giải mã! ·` : '🏆'} Kết quả phòng ${room.code}</h2>
       ${room.mode === 'tug' ? hostRope() : ''}
-      ${podiumHtml(board.slice(0, 3), UNIT[room.mode])}
+      ${podiumHtml(board.slice(0, 3), UNIT[room.mode]).replace('class="ar-podium"', 'class="ar-podium is-slow"')}
+      ${awardsHtml(RH.endAwards(room))}
       <div class="ar-row ar-center-row">
         <button type="button" class="ar-btn ar-btn-play" data-act="csv"><i class="fa-solid fa-file-csv"></i> Tải bảng điểm (Excel)</button>
         <button type="button" class="ar-btn" data-act="sheet"><i class="fa-solid fa-table"></i> Lưu lên Google Sheet</button>
@@ -623,7 +762,7 @@
     if (code.length !== R.CODE_LEN) { A.toast(`Mã phòng gồm ${R.CODE_LEN} ký tự.`); $('arJoinCode').focus(); return; }
     playerStop(false);
     if (code !== P.code) { P.log = []; P.imgs = {}; } // vào lại đúng phòng cũ (rớt mạng) thì giữ nhật ký
-    Object.assign(P, { code, joined: false, stopped: false, retry: 0, room: null, me: null, q: null, myK: null });
+    Object.assign(P, { code, joined: false, stopped: false, retry: 0, room: null, me: null, q: null, myK: null, viaRelay: relayRemembered(code) });
     try { sessionStorage.setItem(JOIN_SS, code); } catch (e) { /* ignore */ }
     history.replaceState(null, '', location.pathname + '?phong=' + code);
     openRoomScreen('Phòng ' + code);
@@ -632,21 +771,54 @@
     if (P.stopped) return;
     connectPlayer();
   }
+  /** Gắn kết nối (WebRTC hoặc đường dự phòng — cùng giao diện) vào màn học sinh. */
+  function attachPlayerConn(conn, timeoutMs) {
+    P.conn = conn;
+    const t = setTimeout(() => { if (!conn.open) { try { conn.close(); } catch (e) { /* ignore */ } playerLost(conn); } }, timeoutMs);
+    conn.on('open', () => {
+      clearTimeout(t);
+      send(conn, { t: 'hello', v: 1, cid: myCid(), name: A.nickName(), face: A.avatar() });
+    });
+    conn.on('data', (m) => { if (conn === P.conn) onPlayerMsg(m); });
+    conn.on('close', () => { clearTimeout(t); playerLost(conn); });
+    conn.on('error', (e) => {
+      clearTimeout(t);
+      if (conn.relay && e && e.type === 'peer-unavailable' && !P.joined && conn === P.conn) {
+        playerError(`Không tìm thấy phòng ${P.code}. Kiểm tra lại mã — hoặc giáo viên chưa mở / đã đóng phòng.`);
+        return;
+      }
+      playerLost(conn);
+    });
+  }
+  // Đã vào phòng này qua đường dự phòng (cùng tab) → tải lại trang vào thẳng đường đó, khỏi chờ
+  // 12 giây thử nối thẳng lần nữa. sessionStorage: đổi mạng/mở tab mới thì thử nối thẳng lại từ đầu.
+  const RELAY_SS = 'ar_relay_room';
+  function relayRemembered(code) { try { return sessionStorage.getItem(RELAY_SS) === code; } catch (e) { return false; } }
+  function rememberRelay(code) { try { sessionStorage.setItem(RELAY_SS, code); } catch (e) { /* ignore */ } }
+  /** Đường dự phòng qua Firestore (js/arena/arena-relay.js) — chỉ khi nối thẳng không được. */
+  async function relayConnect() {
+    if (P.stopped) return;
+    if (!P.joined) playerStatus('<i class="fa-solid fa-spinner fa-spin"></i> Mạng của em không nối thẳng được tới máy giáo viên — đang vào phòng qua <b>đường dự phòng</b>...');
+    let conn;
+    try {
+      conn = await global.EduArenaRelay.connect(P.code);
+    } catch (e) {
+      if (P.stopped) return;
+      const off = e && (e.code === 'auth/operation-not-allowed' || e.code === 'auth/admin-restricted-operation');
+      if (off) { playerError('Đường dự phòng chưa bật (Firebase Authentication → Anonymous). Báo thầy cô — trong lúc chờ, dùng chung Wi-Fi với máy giáo viên rồi bấm Thử lại.'); return; }
+      playerLost(null, true);
+      return;
+    }
+    if (P.stopped) { conn.close(); return; }
+    attachPlayerConn(conn, JOIN_TIMEOUT_MS);
+  }
   function connectPlayer() {
     clearTimeout(P.retryT);
     if (P.stopped) return;
+    if (P.viaRelay) { relayConnect(); return; }
     const go = () => {
       if (P.stopped) return;
-      const conn = P.peer.connect(R.peerId(P.code), { reliable: true, serialization: 'json' });
-      P.conn = conn;
-      const t = setTimeout(() => { if (!conn.open) { try { conn.close(); } catch (e) { /* ignore */ } playerLost(conn); } }, JOIN_TIMEOUT_MS);
-      conn.on('open', () => {
-        clearTimeout(t);
-        send(conn, { t: 'hello', v: 1, cid: myCid(), name: A.nickName(), face: A.avatar() });
-      });
-      conn.on('data', (m) => { if (conn === P.conn) onPlayerMsg(m); });
-      conn.on('close', () => { clearTimeout(t); playerLost(conn); });
-      conn.on('error', () => { clearTimeout(t); playerLost(conn); });
+      attachPlayerConn(P.peer.connect(R.peerId(P.code), { reliable: true, serialization: 'json' }), JOIN_TIMEOUT_MS);
     };
     if (P.peer && !P.peer.destroyed && P.peer.open) { go(); return; }
     try { if (P.peer) P.peer.destroy(); } catch (e) { /* ignore */ }
@@ -656,7 +828,7 @@
     peer.on('disconnected', () => { if (!peer.destroyed && !P.stopped) setTimeout(() => { try { if (!peer.destroyed) peer.reconnect(); } catch (e) { /* ignore */ } }, 1500); });
     peer.on('error', (e) => {
       if (P.peer !== peer || P.stopped) return;
-      if (e.type === 'peer-unavailable' && !P.joined && P.retry >= 1) {
+      if (e.type === 'peer-unavailable' && !P.joined && P.retry >= 1 && !global.EduArenaRelay) {
         playerError(`Không tìm thấy phòng ${P.code}. Kiểm tra lại mã — hoặc giáo viên chưa mở / đã đóng phòng.`);
       } else if (e.type === 'browser-incompatible') {
         playerError('Trình duyệt này không hỗ trợ WebRTC. Dùng Chrome, Edge, Firefox hoặc Safari bản mới.');
@@ -670,8 +842,19 @@
     if (P.stopped || (!force && conn !== P.conn)) return;
     P.conn = null;
     P.retry++;
+    // Nối thẳng thất bại (mạng khác nhau / máy chủ bắt tay bị chặn) → chuyển ngay sang đường dự phòng
+    // qua Firestore, không phí thêm 4 lượt thử WebRTC. Học sinh nối thẳng được thì 0 lượt Firebase.
+    if (!P.joined && !P.viaRelay && global.EduArenaRelay) {
+      P.viaRelay = true;
+      P.retry = 0;
+      try { if (P.peer) P.peer.destroy(); } catch (e) { /* ignore */ }
+      P.peer = null;
+      clearTimeout(P.retryT);
+      P.retryT = setTimeout(connectPlayer, 200);
+      return;
+    }
     if (!P.joined && P.retry > 4) {
-      playerError('Không nối được tới máy giáo viên. Máy em và máy giáo viên đều cần có Internet; nếu mạng trường chặn, thử Wi-Fi khác hoặc 4G.');
+      playerError('Không vào được phòng — cả đường nối thẳng lẫn đường dự phòng đều lỗi. Kiểm tra Internet của máy em và máy giáo viên rồi bấm Thử lại, hoặc dùng chung Wi-Fi với máy giáo viên.');
       return;
     }
     if (P.retry > 60) { playerError('Mất kết nối với phòng quá lâu. Bấm "Thử lại" khi mạng ổn định.'); return; }
@@ -699,14 +882,16 @@
 
   function onPlayerMsg(m) {
     if (!m || typeof m !== 'object') return;
+    if (m.t !== 'reveal' && m.t !== 'got' && m.t !== 'late' && m.t !== 'spellok' && m.t !== 'heistok') clearTimeout(P.revealT); // câu mới / kết thúc tới giữa lúc trống dồn
     switch (m.t) {
       case 'welcome':
         P.joined = true; P.retry = 0; P.room = m.room; P.me = m.you;
+        if (P.conn && P.conn.relay) rememberRelay(P.code);
         setNet('');
         $('arRoomCode').textContent = `Phòng ${m.room.code} · ${m.you.face} ${m.you.name}`;
         break;
       case 'deny': {
-        const why = { full: 'Phòng đã đủ người.', kicked: 'Em đã được mời ra khỏi phòng này.', ended: 'Phòng này đã kết thúc.', name: 'Họ tên không hợp lệ — em nhập lại nhé.' }[m.reason] || 'Không vào được phòng.';
+        const why = { 'relay-full': 'Mạng của em không nối thẳng được tới máy giáo viên và đường dự phòng hôm nay đã hết chỗ (để dành Firebase cho việc khác của trường). Em dùng chung Wi-Fi với máy giáo viên rồi bấm Thử lại nhé.', full: 'Phòng đã đủ người.', kicked: 'Em đã được mời ra khỏi phòng này.', ended: 'Phòng này đã kết thúc.', name: 'Họ tên không hợp lệ — em nhập lại nhé.' }[m.reason] || 'Không vào được phòng.';
         playerError(why);
         break;
       }
@@ -718,7 +903,7 @@
       case 'late':
         if (P.q && m.i === P.q.i) lockAnswers(null, '⏰ Hết giờ — câu trả lời tới muộn.');
         break;
-      case 'reveal': renderPlayerReveal(m); break;
+      case 'reveal': playerRevealSoon(m); break;
       case 'spellok': {
         document.querySelectorAll('[data-spell]').forEach((b) => b.classList.toggle('is-picked', b.dataset.spell === m.id));
         const s = $('arPSpell');
@@ -735,8 +920,11 @@
   function renderPlayerLobby(m) {
     clearInterval(P.timer);
     const me = P.me || { face: A.avatar(), name: A.nickName() };
+    const mode = P.room && P.room.mode;
     playerStatus(`<div class="ar-room-me"><span>${esc(me.face)}</span><b>${esc(me.name)}</b></div>
       <h2 class="ar-h2 ar-center">Đã vào phòng! Chờ giáo viên bắt đầu...</h2>
+      <p class="ar-room-cheer t-fire">${esc(global.EduArenaHype.say('wait', (me.name || '').length))}</p>
+      ${mode ? `<p class="ar-hint">${esc(MODE_LABEL[mode] || '')} — ${esc(RH.TAGLINE[mode] || '')}</p>` : ''}
       <div class="waiting-dots" aria-hidden="true"><i></i><i></i><i></i></div>
       <p class="ar-muted">${m.count} người trong phòng</p>
       <div class="ar-room-faces">${m.players.map((p) => `<span title="${esc(p.name)}">${esc(p.face)}</span>`).join('')}</div>
@@ -748,8 +936,10 @@
     P.myK = m.answered;
     if (m.img) P.imgs[m.i] = m.img;
     P.qStart = performance.now() - (m.secs * 1000 - m.ms);
+    P.ansMs = null;
+    const streak = P.lastY && P.lastY.i === m.i - 1 ? P.lastY.streak : 0;
     body().innerHTML = `<div class="ar-hud"><span class="ar-pill">${m.mode === 'race' ? `Câu ${m.i + 1}` : `Câu ${m.i + 1}/${m.total}`}</span>
-        <span class="ar-pill" id="arPSecs"></span>${m.team ? `<span class="ar-pill ar-pill-team is-${m.team}">${C.TEAMS[m.team].icon} ${C.TEAMS[m.team].name}</span>` : ''}${m.gems !== undefined ? `<span class="ar-pill" title="Đá quý · số ô két em đã bị mở">💎 ${fmt(m.gems)} · két em ${locks(m.threat || 0)}</span>` : ''}${m.mp !== undefined ? `<span class="ar-pill" title="Máu còn lại"><span class="ar-hpbar"><i style="width:${m.mp}%"></i></span> ${m.mp} máu${m.shield ? ' · 🛡️' : ''}</span>` : ''}${m.hp !== undefined ? `<span class="ar-pill ar-pill-hp" title="Số tim còn lại">${C.hearts(m.hp)}</span>` : ''}${holdingsText(m.cards) ? `<span class="ar-pill" title="Thẻ thưởng đang giữ — tự dùng ở câu phù hợp">${holdingsText(m.cards)}</span>` : ''}</div>
+        <span class="ar-pill" id="arPSecs"></span>${streak >= 2 ? `<span class="ar-pill ar-pill-fire">🔥 Chuỗi ${streak}</span>` : ''}${m.team ? `<span class="ar-pill ar-pill-team is-${m.team}">${C.TEAMS[m.team].icon} ${C.TEAMS[m.team].name}</span>` : ''}${m.gems !== undefined ? `<span class="ar-pill" title="Đá quý · số ô két em đã bị mở">💎 ${fmt(m.gems)} · két em ${locks(m.threat || 0)}</span>` : ''}${m.mp !== undefined ? `<span class="ar-pill" title="Máu còn lại"><span class="ar-hpbar"><i style="width:${m.mp}%"></i></span> ${m.mp} máu${m.shield ? ' · 🛡️' : ''}</span>` : ''}${m.hp !== undefined ? `<span class="ar-pill ar-pill-hp" title="Số tim còn lại">${C.hearts(m.hp)}</span>` : ''}${holdingsText(m.cards) ? `<span class="ar-pill" title="Thẻ thưởng đang giữ — tự dùng ở câu phù hợp">${holdingsText(m.cards)}</span>` : ''}</div>
       <div class="ar-timer"><i id="arPTimer"></i></div>
       ${m.note ? spellNoteHtml(m.note, m.mp) : ''}
       ${m.hnote ? heistNoteHtml(m.hnote, m.threat) : ''}
@@ -773,6 +963,12 @@
     };
     tick();
     P.timer = setInterval(tick, 150);
+    // Chữ lớn ngắn (máy em tự biết — không cần gói tin thêm): câu đầu, câu cuối
+    if (D && P.bannerAt !== m.i && m.ms > m.secs * 1000 - 1500) {
+      P.bannerAt = m.i;
+      if (m.i === 0) D.banner('BẮT ĐẦU!', { tone: 'speed', icon: 'fa-play', sub: RH.TAGLINE[m.mode] || '', ms: 1000 });
+      else if (m.mode !== 'race' && m.total > 1 && m.i === m.total - 1) D.banner('CÂU CUỐI!', { tone: 'final', icon: 'fa-flag-checkered', sub: 'Dồn hết sức nào!', ms: 1000 });
+    }
   }
   function lockAnswers(k, msg) {
     if (P.picker) P.picker.lock();
@@ -790,6 +986,7 @@
     const left = q.secs * 1000 - (performance.now() - P.qStart);
     if (left < -R.ANSWER_GRACE_MS || !C.isAnswer(q, k)) return;
     P.myK = k;
+    P.ansMs = performance.now() - P.qStart;
     A.sfx('click');
     lockAnswers(k, 'Đang gửi...');
     send(P.conn, { t: 'ans', i: q.i, k });
@@ -906,6 +1103,20 @@
     send(P.conn, { t: 'spell', i: +btn.dataset.i, id: btn.dataset.spell });
   }
   const teamTag = (t) => (C.TEAMS[t] ? ` · ${C.TEAMS[t].icon} ${C.TEAMS[t].name}` : '');
+  /** Đang ở màn câu hỏi của chính câu này → trống dồn một nhịp rồi mới lật (cùng nhịp với màn chiếu). */
+  function playerRevealSoon(m) {
+    clearTimeout(P.revealT);
+    if (!P.q || P.q.i !== m.i || reduced()) { renderPlayerReveal(m); return; }
+    clearInterval(P.timer);
+    if (P.picker) P.picker.lock();
+    document.querySelectorAll('#arPAnswers .ar-ans').forEach((b) => { b.disabled = true; });
+    const ans = $('arPAnswers');
+    if (ans) ans.classList.add('is-drum');
+    const st = $('arPStatus');
+    if (st) { st.innerHTML = '<span class="ar-room-drum is-inline"><span aria-hidden="true">🥁</span> Đáp án là...</span>'; }
+    A.sfx('drumroll');
+    P.revealT = setTimeout(() => renderPlayerReveal(m), SUSPENSE_MS);
+  }
   function renderPlayerReveal(m) {
     clearInterval(P.timer);
     P.q = null; P.picker = null;
@@ -914,6 +1125,10 @@
       P.log[m.i] = { q: { kind: m.kind, text: m.text, options: m.options, correctIdx: m.correctIdx, correct: m.correct, left: m.left, expl: m.expl || '', img: P.imgs[m.i] || '' }, chosen: y.k, ok: !!y.ok };
     }
     const head = y.ok ? '✅ Chính xác!' : y.k === null ? '⏰ Em chưa trả lời kịp' : '❌ Chưa đúng';
+    const fast = y.ok && P.ansMs != null && P.ansMs < (P.room ? P.room.secs : 20) * 300;
+    const cheer = m.you ? RH.studentCheer(m, y, fast) : { text: '', tone: '' };
+    const rival = m.you ? RH.studentRival(m, y) : '';
+    P.lastY = { i: m.i, streak: y.streak || 0 };
     const gain = m.mode === 'survival' ? survivalNote(y)
       : m.mode === 'heist'
       ? (y.ok ? '<span id="arPHeistHead">Chọn 1 việc:</span>' : `Lượt này không được chọn việc · 💎 ${fmt(y.gems || 0)}`)
@@ -927,6 +1142,7 @@
       : (y.ok ? `+${fmt(y.pts + y.bonus)} điểm${y.bonus ? ` <span class="ar-tag">🔥 chuỗi ${y.streak} +${y.bonus}</span>` : ''}` : '+0 điểm');
     body().innerHTML = `<div class="ar-feedback ${y.ok ? 'is-ok' : 'is-bad'} ar-room-result">
         <div class="ar-room-result-head">${head}</div>
+        ${cheer.text ? `<p class="ar-room-cheer t-${cheer.tone}">${esc(cheer.text)}</p>` : ''}
         <div class="ar-fb-head">${gain}${y.up > 0 ? ` <span class="ar-tag up">▲ lên ${y.up} hạng</span>` : ''}</div>
         ${m.mode === 'speed' ? cardNoteHtml(y) : ''}
         ${m.mode === 'spell' && y.spells ? `<div class="ar-chests ar-spells ar-room-spells">${y.spells.map((id, k) => `<button type="button" class="ar-chest s-${id}" data-spell="${id}" data-i="${m.i}">
@@ -935,6 +1151,7 @@
         ${m.mode === 'heist' && y.heist ? '<div class="ar-room-spells" id="arPHeist"></div>' : ''}
         ${m.mode === 'tug' && m.teams ? A.ropeHtml(m.rope, `${m.teams.red} bạn`, `${m.teams.blue} bạn`, P.ropeShown ?? m.rope) : ''}
         ${y.rank ? `<p class="ar-room-rank">Hạng <b>${y.rank}</b> · ${fmt(y.value)} ${UNIT[m.mode]}${m.mode === 'race' ? `/${m.goal}` : ''}</p>` : ''}
+        ${rival ? `<p class="ar-rival ar-room-rival">${esc(rival)}</p>` : ''}
         ${!y.ok ? (C.kindOf(m) === 'choice' ? `<div class="ar-fb-ans">Đáp án đúng: <b>${SHAPES[m.correctIdx]} ${esc(m.options[m.correctIdx])}</b></div>`
           : `<div class="ar-fb-ans">${y.k != null ? `<span class="ar-tag">em đúng ${C.partial(m, y.k).right}/${C.partial(m, y.k).of}</span> ` : ''}Đáp án đúng:<ul class="ar-fb-list">${C.answerLines(m).map((t) => `<li>${esc(t)}</li>`).join('')}</ul></div>`) : ''}
         ${m.expl ? `<div class="ar-fb-expl">💡 ${esc(m.expl)}</div>` : ''}
@@ -954,6 +1171,10 @@
       FX.float(box.querySelector('.ar-room-result-head'), gain, 'up');
     } else if (global.EduFX) global.EduFX.shake(box);
     if (y.up > 0) FX.flash(body().querySelector('.ar-room-top5 li.is-me'), 'fx-rankup');
+    const ch = body().querySelector('.ar-room-cheer');
+    if (ch) FX.flash(ch, 'fx-caster');
+    if (y.ok && (y.streak === 5 || (y.streak >= 8 && y.streak % 4 === 0)) && D) D.banner(`CHUỖI ${y.streak} CÂU!`, { tone: 'fire', icon: 'fa-fire', sub: cheer.text, ms: 1300 });
+    else if (y.ok && y.rank === 1 && y.up > 0 && D) D.banner('EM DẪN ĐẦU!', { tone: 'up', icon: 'fa-crown', sub: 'Giữ vững ngôi đầu nhé!', ms: 1300 });
   }
   function endTitle(mode, y) {
     if (mode === 'spell') {
@@ -996,8 +1217,12 @@
     }
     const seen = P.log.filter(Boolean);
     const wrong = seen.filter((x) => !x.ok);
+    const booked = A.toBook(P.me ? P.me.name : A.nickName(), seen, 'Phòng cả lớp · ' + ((P.room && P.room.title) || ''));
+    const ec = RH.endCheer(m.mode, y);
     body().innerHTML = `<div class="ar-card ar-end">
       <h2 class="ar-h2 ar-center">${endTitle(m.mode, y)}</h2>
+      ${ec.text ? `<p class="ar-room-cheer t-gold ar-center">${esc(ec.text)}</p>` : ''}
+      ${ec.badges.length ? `<div class="ar-room-badges">${ec.badges.map((b, k) => `<span class="ar-room-badge" style="--k:${k}">${esc(b)}</span>`).join('')}</div>` : ''}
       ${podiumHtml(m.top.slice(0, 3), UNIT[m.mode], P.me && P.me.name)}
       <div class="ar-end-stats">
         <div><b>${y.correct}/${y.total}</b><span>câu đúng</span></div>
@@ -1013,6 +1238,7 @@
       <div class="ar-row ar-center-row">${wrong.length ? '<button type="button" class="ar-btn ar-btn-play ar-btn-practice" data-act="practice"></button>' : ''}
         <button type="button" class="ar-btn" data-act="home"><i class="fa-solid fa-gamepad"></i> Về Đấu trường</button>
         <button type="button" class="ar-btn ar-btn-pack" data-act="packs"><span aria-hidden="true">🥚</span> Mở hộp</button></div>
+      ${A.bookNoteHtml(booked)}
       ${wrong.length ? `<details class="ar-review" open>${A.reviewHtml(wrong)}</details>` : ''}</div>`;
     const pb = body().querySelector('[data-act="practice"]');
     if (pb) A.paintPracticeBtn(pb, wrong.length);
