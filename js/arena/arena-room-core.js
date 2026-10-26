@@ -528,6 +528,32 @@
     };
   }
 
+  /** Câu có bạn sai/bỏ trống trong trận vừa xong (khó nhất trước, không trùng — Đua lặp bộ). */
+  function missedDeck(room) {
+    const seen = new Set();
+    return summary(room).perQuestion
+      .map((x, i) => ({ q: room.deck[i % room.deck.length], rate: x.of ? x.correct / x.of : 1, i }))
+      .filter((x) => x.rate < 1)
+      .sort((a, b) => a.rate - b.rate || a.i - b.i)
+      .filter((x) => { const k = x.q.uid || x.q.text; if (seen.has(k)) return false; seen.add(k); return true; })
+      .map((x) => x.q);
+  }
+  /** "🔁 Đấu lại câu sai": phòng mới CÙNG MÃ, giữ nguyên các bạn đang có (điểm về 0) — không ai phải vào lại. */
+  function rematch(room, deck, opts) {
+    const o = opts || {};
+    const count = Math.max(1, o.count | 0 || deck.length);
+    const next = createRoom({
+      code: room.code, mode: room.mode, deck, count, secs: room.secs, maxPlayers: room.max,
+      title: String(room.title || '').replace(/ · Ôn câu sai$/, '') + ' · Ôn câu sai', setKey: room.setKey, now: o.now,
+    });
+    activeIds(room).forEach((cid) => {
+      const p = room.players[cid];
+      const res = join(next, { cid, name: p.name, face: p.face });
+      if (res.ok) res.player.online = p.online;
+    });
+    return next;
+  }
+
   /** Lưu/khôi phục trạng thái phòng (máy người dẫn tải lại trang vẫn điều khiển tiếp). */
   function snapshot(room) { return JSON.stringify(room); }
   function restore(json) {
@@ -546,6 +572,6 @@
     CODE_LEN, ANSWER_GRACE_MS, MAX_PLAYERS, KEY_OF, ROOM_MODES, CARD_EVERY, CARD_CYCLE, teamCounts,
     makeCode, normCode, peerId, cleanName, cidFor, createRoom, join, leave, kick, setOnline, activeIds,
     publicQuestion, openNext, canAdvance, submit, allAnswered, answeredCount, reveal, leaderboard, pickSpell, pickedCount, resolveSpells, heistAct, resolveHeist, heistChoices, HEIST_TARGETS,
-    isDone, finish, asked, personalEnd, toCsv, summary, snapshot, restore, current,
+    isDone, finish, asked, personalEnd, toCsv, summary, missedDeck, rematch, snapshot, restore, current,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

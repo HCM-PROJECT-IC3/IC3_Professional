@@ -83,6 +83,8 @@
       <input type="file" id="importExcelInput" accept=".xlsx,.xls" hidden>
       <button type="button" class="btn btn-primary" id="publishRosterBtn" hidden>🚀 Cập nhật cho học sinh</button>
       <button type="button" class="btn btn-secondary" id="exportRosterJsonBtn">🗂️ Xuất JSON (thủ công)</button>
+      <button type="button" class="btn btn-ghost" id="reloadRosterBtn" title="Đọc lại dữ liệu mới nhất từ máy chủ — chỉ cần khi người khác vừa sửa trên máy khác (tốn lượt đọc Firebase)">🔄 Tải lại</button>
+      <span class="data-age" id="rosterDataAge"></span>
       <button type="button" class="btn btn-primary" id="addStudentBtn">➕ Thêm học sinh</button>
     </div>
     <div class="export-hint" id="exportRosterHint">

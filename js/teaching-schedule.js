@@ -99,6 +99,7 @@
   let teacherModalEditingCode = null; // null = đang thêm mới
   let schedModalTeacherCode = null;   // mã GV đang mở lưới sửa
   let schedModalDraftDays = null;     // bản nháp days{} đang sửa trong modal (chưa lưu)
+  let schedModalSavedJson = '';      // bản đã lưu (JSON) lúc mở modal — so để biết còn thay đổi chưa lưu
   let pendingImport = null;           // { weeks, skippedSheets, selected:Set<weekKey>, existingByWeek:Map, plan } — xem parseWorkbookArrayBufferAndOpenImport()
 
   // ============================================================
@@ -149,7 +150,11 @@
     if (!box) return;
     box.textContent = String(name || '').trim().charAt(0).toUpperCase();
     if (window.EduProfileCache) {
-      window.EduProfileCache.get(uid)
+      // getAll() (không phải get(uid)): trang này đằng nào cũng đọc mọi hồ sơ cho ảnh các ô giáo
+      // viên (initScheduleAvatars) — get(uid) khi máy chưa có cache tốn thêm 1 lượt đọc lẻ ngay
+      // trước lần đọc toàn bộ. 2 lần gọi getAll() cùng lúc gộp làm 1.
+      window.EduProfileCache.getAll()
+        .then((all) => all[uid] || null)
         .then((p) => {
           const avatar = p ? p.avatar : null;
           if (avatar) box.innerHTML = `<img src="${avatar}" alt="">`;
@@ -336,22 +341,12 @@
    * riêng tab TKB. Trả về mảng mã lớp không rỗng (vd ["5/1"], có thể nhiều
    * hơn 1 nếu các tiết trong buổi đó dạy nhiều lớp khác nhau). */
   function classCodesFor(teacherCode, d, sessionKey) {
-    const tt = state.timetablesByTeacher[teacherCode];
-    const arr = tt && tt.days && tt.days[String(d)] && tt.days[String(d)][sessionKey];
-    if (!Array.isArray(arr)) return [];
+    const sched = state.schedulesByTeacher[teacherCode];
+    const day = sched && sched.days && sched.days[String(d)];
     // Loại trùng (nhiều tiết cùng buổi thường cùng 1 lớp) mà vẫn giữ đúng
-    // thứ tự tiết đầu tiên xuất hiện, để không lặp "5/1, 5/1, 5/1".
-    const seen = new Set();
-    const out = [];
-    // Mỗi ô-tiết của TKB lớp là {maLop, truong} (dữ liệu CŨ có thể vẫn là
-    // string thẳng) — dùng cellOf() để đọc đúng cả 2 dạng, không tự ý đọc
-    // .maLop trực tiếp (xem js/models/teaching-timetable.model.js).
-    const TT = window.EduModels.TeachingTimetable;
-    arr.forEach((v) => {
-      const code = String((TT ? TT.cellOf(v).maLop : v) || '').trim();
-      if (code && !seen.has(code)) { seen.add(code); out.push(code); }
-    });
-    return out;
+    // thứ tự tiết đầu tiên xuất hiện, để không lặp "5/1, 5/1, 5/1". Gộp qua
+    // sessionPeriods() — lớp đã xoá ở Lịch tuần không "sống lại" từ TKB cũ.
+    return Array.from(new Set(sessionPeriods(teacherCode, day, d, sessionKey).filter(Boolean)));
   }
 
   // ============================================================
@@ -706,14 +701,15 @@
    * ở tab "🗓️ TKB lớp" (nguồn chi tiết nhất theo từng tiết), nếu trống thì
    * lấy từ chính "Tiết {n}" của tab Lịch tuần (đã cho gõ mã lớp trực tiếp). */
   function periodValueAt(teacherCode, day, thu, sessionKey, tietIdx) {
+    return sessionPeriods(teacherCode, day, thu, sessionKey)[tietIdx] || '';
+  }
+
+  /** Mã lớp từng tiết của 1 buổi — Lịch tuần thắng TKB lớp (xem M.effectivePeriods). */
+  function sessionPeriods(teacherCode, day, thu, sessionKey) {
     const TTM = window.EduModels.TeachingTimetable;
     const tt = state.timetablesByTeacher[teacherCode];
-    const raw = tt && tt.days && tt.days[String(thu)] && tt.days[String(thu)][sessionKey] && tt.days[String(thu)][sessionKey][tietIdx];
-    const ttVal = raw != null && TTM ? TTM.cellOf(raw).maLop : '';
-    if (ttVal) return ttVal.trim();
-    const sess = day && day[sessionKey];
-    const p = sess && sess.periods && sess.periods[tietIdx];
-    return typeof p === 'string' ? p.trim() : '';
+    const ttCells = tt && tt.days && tt.days[String(thu)] && tt.days[String(thu)][sessionKey];
+    return M.effectivePeriods(day && day[sessionKey], ttCells, TTM ? TTM.cellOf : null);
   }
 
   /** 1 ô Thứ×Tiết trong ma trận "📊 Tổng quan" — CHỈ hiện đúng nội dung
@@ -1433,6 +1429,7 @@
     const existing = state.schedulesByTeacher[teacherCode];
     // Deep clone để sửa trong modal KHÔNG ảnh hưởng state cho tới khi bấm Lưu.
     schedModalDraftDays = JSON.parse(JSON.stringify((existing && existing.days) || M.emptyDays()));
+    schedModalSavedJson = JSON.stringify(schedModalDraftDays);
 
     const week = state.weeks.find((w) => w.id === state.currentWeekKey);
     document.getElementById('schedModalTitle').textContent = `📅 ${t.name} — ${week ? week.label || week.id : state.currentWeekKey}`;
@@ -1443,11 +1440,29 @@
     document.getElementById('schedModalOverlay').classList.remove('show');
     schedModalTeacherCode = null;
     schedModalDraftDays = null;
+    schedModalSavedJson = '';
   }
-  document.getElementById('schedModalCloseBtn').addEventListener('click', closeSchedModal);
-  document.getElementById('schedModalCancelBtn').addEventListener('click', closeSchedModal);
+  // Đóng bằng ✕/Huỷ/bấm ra ngoài khi đang sửa dở → hỏi lại, tránh mất cả buổi gõ lịch.
+  function requestCloseSchedModal() {
+    const dirty = schedModalDraftDays && JSON.stringify(schedModalDraftDays) !== schedModalSavedJson;
+    if (dirty && !window.confirm('Lịch tuần có thay đổi CHƯA LƯU. Đóng và bỏ các thay đổi này?')) return;
+    closeSchedModal();
+  }
+  document.getElementById('schedModalCloseBtn').addEventListener('click', requestCloseSchedModal);
+  document.getElementById('schedModalCancelBtn').addEventListener('click', requestCloseSchedModal);
   document.getElementById('schedModalOverlay').addEventListener('click', (e) => {
-    if (e.target.id === 'schedModalOverlay') closeSchedModal();
+    if (e.target.id === 'schedModalOverlay') requestCloseSchedModal();
+  });
+  // Ctrl+S (⌘S) trong hộp sửa = Lưu lịch tuần, Esc = đóng (có hỏi nếu chưa lưu).
+  document.addEventListener('keydown', (e) => {
+    if (!document.getElementById('schedModalOverlay').classList.contains('show')) return;
+    if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+      e.preventDefault();
+      const btn = document.getElementById('schedModalSaveBtn');
+      if (!btn.disabled) btn.click();
+    } else if (e.key === 'Escape') {
+      requestCloseSchedModal();
+    }
   });
 
   const TYPE_OPTIONS_HTML = ['', ...M.TASK_TYPES].map((t) => `<option value="${esc(t)}">${t ? esc(t) : '— (trống)'}</option>`).join('');
@@ -1457,7 +1472,9 @@
    * schedModalDraftDays qua data-attribute, không cần state riêng cho form. */
   function renderSchedGrid() {
     const table = document.getElementById('schedGrid');
-    const dayHeaders = M.WEEKDAYS.map((d) => `<th>${M.WEEKDAY_LABELS[d]}</th>`).join('');
+    // Số tiết của TỪNG NGÀY ngay dưới nhãn Thứ (tự cập nhật khi gõ) — nhìn là
+    // đối chiếu được với thời khoá biểu thật, không phải tự đếm từng ô.
+    const dayHeaders = M.WEEKDAYS.map((d) => `<th>${M.WEEKDAY_LABELS[d]}<span class="sched-day-count" id="schedDayCount${d}"></span></th>`).join('');
 
     function sessionRows(sessionKey, sessionLabel) {
       const typeRow = `<tr class="sched-session-start">
@@ -1513,7 +1530,34 @@
     renderSchedStatsBar();
   }
 
+  /** Gợi ý ngay trong bảng sửa: số tiết từng ngày, tô ô tiết đã gõ lớp, và báo
+   * buổi CÓ gõ lớp nhưng CHƯA chọn "Loại hình" (các tiết đó không được tính vào
+   * thống kê/tiết chính — lỗi nhập hay gặp nhất). */
+  function paintSchedHints() {
+    const table = document.getElementById('schedGrid');
+    if (!table || !schedModalDraftDays) return;
+    M.WEEKDAYS.forEach((d) => {
+      const day = schedModalDraftDays[String(d)] || M.emptyDay();
+      let total = 0;
+      M.SESSIONS.forEach((s) => {
+        const sess = day[s] || M.emptySession();
+        const n = (sess.periods || []).filter((p) => (typeof p === 'string' ? p.trim() : !!p)).length;
+        total += n;
+        const sel = table.querySelector(`select.sched-type[data-day="${d}"][data-session="${s}"]`);
+        if (sel) {
+          const missing = n > 0 && !sess.type;
+          sel.classList.toggle('is-missing', missing);
+          sel.title = missing ? `Đã gõ ${n} tiết nhưng chưa chọn loại hình — chưa được tính vào thống kê` : '';
+        }
+      });
+      const badge = document.getElementById(`schedDayCount${d}`);
+      if (badge) badge.textContent = total ? `${total} tiết` : '';
+    });
+    table.querySelectorAll('input.sched-period').forEach((el) => el.classList.toggle('has-value', !!el.value.trim()));
+  }
+
   function renderSchedStatsBar() {
+    paintSchedHints();
     const stats = M.computeWeekStats(schedModalDraftDays);
     document.getElementById('schedStatsBar').innerHTML = `
       <div class="import-stat ok"><b>${stats.schoolsMain}</b><span>Trường dạy chính</span></div>

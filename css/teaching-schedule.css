@@ -860,6 +860,11 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
   outline: none; border-color: var(--purple); box-shadow: 0 0 0 3px var(--purple-lt);
 }
 .sched-grid input.sched-period::placeholder { color: var(--border) }
+/* Gợi ý trong hộp Sửa lịch (xem paintSchedHints()): số tiết/ngày dưới nhãn Thứ,
+   ô tiết đã gõ lớp tô nhẹ, buổi có lớp mà chưa chọn Loại hình viền đỏ. */
+.sched-grid th .sched-day-count { display: block; font-size: .68rem; font-weight: 700; color: var(--purple); min-height: 1em }
+.sched-grid input.sched-period.has-value { background: var(--purple-lt); border-color: var(--purple) }
+.sched-grid select.sched-type.is-missing { border-color: var(--red); background: var(--red-lt) }
 /* Chế độ "chỉ xem" (giáo viên) — làm mờ nhẹ + đổi con trỏ để rõ ràng đây
    là dữ liệu không sửa được, tránh nhầm tưởng ô bị lỗi/không phản hồi. */
 .sched-grid select.sched-type:disabled, .sched-grid input:disabled {

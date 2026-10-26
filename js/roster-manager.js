@@ -103,7 +103,10 @@
   // Cache 3 phút — giống js/coordinator/data-loader.js: F5/mở lại trang trong
   // 3 phút không tốn thêm lượt đọc Firestore (xem js/services/data-cache-service.js).
   // Cache IndexedDB dùng chung mọi tab (persist) — mở thêm tab không đọc lại ~1.600 học sinh.
-  const CACHE_TTL_MS = 15 * 60 * 1000; // an toàn vì mọi thao tác ghi đều cập nhật cache tại chỗ (syncOne/dropOne)
+  // 2 giờ (trước 15 phút): mỗi lần hết hạn = đọc lại TOÀN BỘ học sinh (~2.800 lượt). An toàn vì mọi
+  // thao tác ghi trên máy này đều cập nhật cache tại chỗ (syncOne/dropOne, Nạp Excel tải lại); thay
+  // đổi từ máy khác → nút "🔄 Tải lại" (hiện giờ của dữ liệu đang xem).
+  const CACHE_TTL_MS = 2 * 60 * 60 * 1000;
   function rosterCacheKey() {
     const isAdmin = myProfile.role === 'admin';
     const schools = Array.isArray(myProfile.schools) ? myProfile.schools.filter(Boolean) : [];
@@ -123,7 +126,7 @@
   }
   function persistState() {
     if (window.EduDataCache) {
-      window.EduDataCache.setAsync(rosterCacheKey(), { courses: state.courses, classes: state.classes, students: state.students, teachers: state.teachers }, CACHE_TTL_MS, /* persist */ true);
+      window.EduDataCache.setAsync(rosterCacheKey(), { courses: state.courses, classes: state.classes, students: state.students, teachers: state.teachers, cachedAt: state.cachedAt }, CACHE_TTL_MS, /* persist */ true);
     }
     shareRoster();
   }
@@ -152,6 +155,23 @@
     persistState();
   }
 
+  /** "Dữ liệu lúc HH:MM" cạnh nút Tải lại — biết đang xem bản lưu từ lúc nào. */
+  function renderDataAge() {
+    const el = document.getElementById('rosterDataAge');
+    if (!el) return;
+    const d = state.cachedAt ? new Date(state.cachedAt) : null;
+    el.textContent = d ? 'Dữ liệu lúc ' + d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + (Date.now() - state.cachedAt > 86400000 ? ' ' + d.toLocaleDateString('vi-VN') : '') : '';
+  }
+  const reloadBtn = document.getElementById('reloadRosterBtn');
+  if (reloadBtn) reloadBtn.addEventListener('click', async () => {
+    const n = (state.students || []).length + (state.classes || []).length + (state.courses || []).length + (state.teachers || []).length;
+    if (!confirm(`Đọc lại toàn bộ khoá học, lớp, học sinh, giáo viên từ máy chủ?
+
+Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần khi người khác vừa sửa danh sách trên máy khác — thao tác trên máy này đã tự cập nhật.`)) return;
+    reloadBtn.disabled = true;
+    try { await loadEverything(true); toast('✅ Đã tải lại dữ liệu mới nhất.'); } finally { reloadBtn.disabled = false; }
+  });
+
   /** @param {boolean} [forceRefresh] Bỏ qua cache — dùng sau khi ghi (thêm/sửa/xoá)
    * để dữ liệu mới hiện ngay, không đợi cache 3 phút hết hạn. */
   async function loadEverything(forceRefresh) {
@@ -164,6 +184,8 @@
           state.classes = cached.classes;
           state.students = cached.students;
           state.teachers = cached.teachers;
+          state.cachedAt = cached.cachedAt || 0;
+          renderDataAge();
           renderCourses();
           renderClasses();
           renderStudentClassFilter();
@@ -209,8 +231,10 @@
       state.classes = classes;
       state.students = students;
       state.teachers = teacherSnap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+      state.cachedAt = Date.now();
+      renderDataAge();
       if (window.EduDataCache) {
-        window.EduDataCache.setAsync(cacheKey, { courses: state.courses, classes: state.classes, students: state.students, teachers: state.teachers }, CACHE_TTL_MS, /* persist */ true);
+        window.EduDataCache.setAsync(cacheKey, { courses: state.courses, classes: state.classes, students: state.students, teachers: state.teachers, cachedAt: state.cachedAt }, CACHE_TTL_MS, /* persist */ true);
       }
       // Admin vừa đọc toàn bộ → các trang quản lý khác khỏi đọc lại; Điều phối tải lại sau khi ghi → bỏ bản đệm chung
       if (isAdmin || forceRefresh) shareRoster();

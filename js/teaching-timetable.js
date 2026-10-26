@@ -39,6 +39,7 @@
 
   const M = window.EduModels.TeachingTimetable;
   const TS = window.EduModels.TeachingSchedule; // chỉ mượn todayWeekKey() để chọn tuần mặc định
+  const TS_PERIODS = (TS && TS.PERIODS_PER_SESSION) || 5; // số tiết/buổi của Lịch tuần
 
   const state = {
     role: '',
@@ -294,13 +295,24 @@
         // trường để tự điền "Trường" đúng cho từng tiết thay vì để trống.
         const periods = schedSess.periods || [];
         const periodSchools = schedSess.periodSchools || [];
+        // Buổi đã gõ mã lớp ở Lịch tuần → tiết 1-5 để trống ở đó nghĩa là
+        // KHÔNG dạy: xoá ô TKB cũ (lớp đã bỏ/chuyển tiết) thay vì giữ lại —
+        // cùng quy ước TS.effectivePeriods() mà "📊 Tổng quan" dùng.
+        const schedHasCodes = periods.some((p) => typeof p === 'string' && p.trim());
         (state.days[String(d)][s] || []).forEach((cell, i) => {
           const raw = periods[i];
           // Tương thích ngược: dữ liệu Lịch tuần CŨ có thể vẫn là boolean
           // true (giai đoạn chỉ tích chọn, chưa có mã lớp dạng chữ) — bỏ
           // qua, không có mã lớp để điền.
           const maLop = typeof raw === 'string' ? raw.trim() : '';
-          if (!maLop) return;
+          if (!maLop) {
+            if (schedHasCodes && i < TS_PERIODS && cell.maLop) {
+              cell.maLop = '';
+              cell.truong = '';
+              state.autoCells.add(`${d}-${s}-${i}`);
+            }
+            return;
+          }
           cell.maLop = maLop;
           cell.truong = location || (periodSchools[i] || '').trim() || cell.truong;
           state.autoCells.add(`${d}-${s}-${i}`);

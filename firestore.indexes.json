@@ -46,6 +46,11 @@
     { "collectionGroup": "live_rooms", "fieldPath": "deadline", "indexes": [] },
     { "collectionGroup": "live_rooms", "fieldPath": "phaseAt", "indexes": [] },
     { "collectionGroup": "players", "fieldPath": "expiresAt", "ttl": true, "indexes": [] },
-    { "collectionGroup": "answers", "fieldPath": "expiresAt", "ttl": true, "indexes": [] }
+    { "collectionGroup": "answers", "fieldPath": "expiresAt", "ttl": true, "indexes": [] },
+    { "collectionGroup": "arena_relay", "fieldPath": "exp", "ttl": true, "indexes": [] },
+    { "collectionGroup": "arena_relay", "fieldPath": "out", "indexes": [] },
+    { "collectionGroup": "arena_relay", "fieldPath": "blobs", "indexes": [] },
+    { "collectionGroup": "up", "fieldPath": "exp", "ttl": true, "indexes": [] },
+    { "collectionGroup": "up", "fieldPath": "m", "indexes": [] }
   ]
 }

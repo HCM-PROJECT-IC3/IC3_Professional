@@ -69,6 +69,10 @@ mở trang có Firebase tốn 1 lượt → báo `AppCheck: ReCAPTCHA error`). F
 | `live_rooms` | `expiresAt` | xoá phòng chơi sau 90 phút |
 | `players` | `expiresAt` | xoá người chơi của phòng đã hết hạn |
 | `answers` | `expiresAt` | xoá câu trả lời còn sót của phòng đã hết hạn |
+| `arena_relay` | `exp` | xoá phòng dự phòng Đấu trường sau 6 giờ (khi tab giáo viên đóng ngang, không kịp xoá) |
+| `up` | `exp` | xoá tin học sinh dự phòng (`arena_relay/{mã}/up/{uid}`) — **không** tự mất khi xoá phòng |
+
+- `live_rooms`/`players`/`answers`: trang cũ đã bỏ, rules đóng hẳn (26/10/2026); giữ TTL để dọn dữ liệu sót.
 
 - TTL không xoá subcollection theo document cha, nên `players`/`answers` có policy riêng (code
   mới ghi `expiresAt` = hạn của phòng vào mọi người chơi/câu trả lời).
@@ -95,6 +99,9 @@ Ngân sách an toàn của dự án: **≤ 60%** (30.000 đọc / 12.000 ghi / 6
 - **Xem từng trang tốn bao nhiêu:** F12 → Console, lọc chữ `lượt đọc Firestore`. Mỗi lần tải
   dữ liệu in `[trang] N lượt đọc Firestore — <nguồn> (tổng trang: T)`. Không tính lượt đọc
   phát sinh bên trong `firestore.rules` (`get()`/`exists()`).
+- **Cầu dao mỗi máy (tự động):** `js/firebase-config.js` từ chối truy vấn mới khi 1 máy đã đọc
+  ≥ 6.000 lượt trong 10 phút (chặn lỗi vòng lặp đốt cạn hạn mức cả trường). Console in
+  `Cầu dao đọc Firestore đã ngắt` khi xảy ra; xem mức hiện tại: `EduFirebase.readBreaker.total()`.
 - **Cảnh báo tự động (không cần Blaze):** Google Cloud Console (project `data-ic3`) →
   Monitoring → Alerting → **Create policy** → metric *Firestore Instance → Document Reads*
   (`firestore.googleapis.com/document/read_ops_count`), Rolling window 1 ngày, Sum,

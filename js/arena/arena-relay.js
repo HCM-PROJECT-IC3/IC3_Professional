@@ -20,8 +20,8 @@
    trong blobs{mã: JSON phần chung}; out.{uid} chỉ còn {n, b: mã phần chung, p: phần riêng nhỏ}
    (PERSONAL: đã trả lời, thẻ, máu, đá quý...). 60 em: ~480 KB → ~20 KB mỗi lần đọc.
 
-   Lượt Firebase (chỉ khi có học sinh dự phòng): mỗi em ~1 ghi/câu (trả lời) + ~2 đọc/câu
-   (câu hỏi, đáp án); máy giáo viên ~2 ghi/câu cho CẢ nhóm dự phòng. Tin "got" (đã nhận đáp
+   Lượt Firebase (chỉ khi có học sinh dự phòng): mỗi em ~1 ghi/câu (trả lời) + ~3 đọc/câu
+   (câu hỏi, đáp án, rules kiểm phòng còn mở khi em ghi); máy giáo viên ~2 ghi/câu cho CẢ nhóm dự phòng. Tin "got" (đã nhận đáp
    án) KHÔNG đi qua Firestore: máy em tự báo khi ghi thành công. Học sinh nối thẳng: 0 lượt.
    Mở phòng: 1 ghi + 1 đọc (nghe collection up rỗng).
 
@@ -36,6 +36,7 @@
   const FLUSH_MS = 600;           // gom tin trong trận
   const LOBBY_FLUSH_MS = 5000;    // sảnh chờ: người vào liên tục → gom thưa hơn (mỗi em đỡ ~1 lượt đọc/5 giây)
   const MIN_GAP_MS = 1000;        // Firestore: ~1 lần ghi/giây cho 1 document
+  const UP_GAP_MS = 1000;         // máy học sinh: giãn các lần ghi up/{uid} (firestore.rules chặn ≤ 0,5 giây)
   const TTL_MS = 6 * 60 * 60 * 1000;
   // Trường RIÊNG từng học sinh trong tin của arena-room.js (questionMsg/revealMsg/endMsg) — còn lại là phần chung
   const PERSONAL = ['you', 'answered', 'cards', 'hp', 'team', 'mp', 'shield', 'note', 'gems', 'threat', 'hnote', 'heistDone'];
@@ -211,19 +212,35 @@
     let upT = 0;
     let unsub = null;
 
-    function writeUp(acks) {
-      upT = 0;
-      upRef.set({ m: upQ.slice(), exp: ts(Date.now() + TTL_MS) })
-        .then(() => acks.forEach((m) => conn.emit('data', { t: 'got', i: m.i, k: m.k })))
-        .catch((e) => conn.emit('error', Object.assign(e, { type: 'network' })));
-    }
     let pendingAcks = [];
+    let upBusy = false;
+    let upAgain = false;
+    let lastUpDone = 0;
+    function scheduleUp() {
+      clearTimeout(upT);
+      // gom tin bấm liền nhau; firestore.rules chặn 2 lần ghi cách nhau ≤ 0,5 giây
+      upT = setTimeout(writeUp, Math.max(150, UP_GAP_MS - (Date.now() - lastUpDone)));
+    }
+    function writeUp() {
+      upT = 0;
+      if (upBusy) { upAgain = true; return; }
+      upBusy = true;
+      const acks = pendingAcks;
+      pendingAcks = [];
+      upRef.set({ m: upQ.slice(), exp: ts(Date.now() + TTL_MS), at: global.firebase.firestore.FieldValue.serverTimestamp() })
+        .then(() => acks.forEach((m) => conn.emit('data', { t: 'got', i: m.i, k: m.k })))
+        .catch((e) => conn.emit('error', Object.assign(e, { type: 'network' })))
+        .finally(() => {
+          upBusy = false;
+          lastUpDone = Date.now();
+          if (upAgain) { upAgain = false; scheduleUp(); }
+        });
+    }
     const conn = makeConn((msg) => {
       upQ.push({ n: ++upSeq, j: JSON.stringify(msg) });
       while (upQ.length > KEEP) upQ.shift();
       if (msg.t === 'ans') pendingAcks.push(msg);
-      clearTimeout(upT);
-      upT = setTimeout(() => { const a = pendingAcks; pendingAcks = []; writeUp(a); }, 150); // gom tin bấm liền nhau
+      scheduleUp();
     }, () => { if (unsub) unsub(); clearTimeout(upT); });
 
     unsub = ref.onSnapshot((doc) => {

@@ -25,6 +25,18 @@ assertEq("quiz_results create đi qua quizResultsOpen()", /allow create: if quiz
 assertEq("quizResults.firestore là 'all' | 'test-only' | 'off'", ['all', 'test-only', 'off'].indexOf(mode) !== -1, true);
 assertEq("rules mở ⇔ web ghi Firestore (firestore = '" + mode + "')", m && m[1] === 'true', mode !== 'off');
 
+// Chống đốt hạn mức (26/10/2026): bề mặt ghi cho tài khoản ẩn danh phải giữ đóng/giới hạn,
+// và dữ liệu tạm của Đấu trường phải có TTL (không thì tích luỹ mãi, sát trần 1 GiB).
+var liveBlock = rules.slice(rules.indexOf('match /live_hosts/'), rules.indexOf('match /courses/'));
+assertEq('live_rooms/live_hosts (trang cũ đã bỏ) đóng hẳn', /allow\s+(get|list|create|update|delete)\b/.test(liveBlock) || !/allow read, write: if false;/.test(liveBlock), false);
+var upBlock = rules.slice(rules.indexOf('match /up/{uid}'), rules.indexOf('match /live_hosts/'));
+assertEq('arena_relay/up: giãn cách lần ghi (at == request.time, > 0,5 giây)',
+  /request\.resource\.data\.at == request\.time/.test(upBlock) && /resource\.data\.at \+ duration\.value\(500, 'ms'\)/.test(upBlock), true);
+assertEq('arena_relay/up: chỉ ghi vào phòng đang mở', /get\(\/databases\/\$\(database\)\/documents\/arena_relay\/\$\(code\)\)\.data\.exp > request\.time/.test(upBlock), true);
+var ttl = JSON.parse(fs.readFileSync(path.join(ROOT, 'firestore.indexes.json'), 'utf8')).fieldOverrides
+  .filter(function (f) { return f.ttl; }).map(function (f) { return f.collectionGroup + '.' + f.fieldPath; });
+assertEq('TTL có arena_relay.exp và up.exp', ['arena_relay.exp', 'up.exp'].every(function (k) { return ttl.indexOf(k) !== -1; }), true);
+
 // Web và Apps Script cùng 1 số phiên bản: đổi apps/src mà quên số ở web (hoặc ngược lại) thì
 // thanh cảnh báo "Apps Script chưa cập nhật" của admin báo sai (js/services/backend-version-check.js).
 var gsVersion = (fs.readFileSync(path.join(ROOT, 'apps', 'src', '00-config.gs'), 'utf8').match(/BACKEND_VERSION\s*=\s*'([^']+)'/) || [])[1];

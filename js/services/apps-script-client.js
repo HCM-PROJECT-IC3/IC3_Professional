@@ -33,6 +33,8 @@
    * @param {{auth?:boolean, url?:string, timeoutMs?:number}} [opts] auth mặc định true
    * @returns {Promise<*>} json.data
    */
+  // Lỗi mạng/máy chủ mang source: 'apps-script' — nơi gọi phân biệt với Firebase hết lượt
+  // (cùng code 'unavailable'), tránh báo nhầm "Firebase hết lượt, chờ 14-15h".
   async function call(action, body, opts) {
     const o = Object.assign({ auth: true }, opts);
     const url = o.url || defaultUrl();
@@ -52,14 +54,14 @@
       });
       json = await res.json();
     } catch (err) {
-      if (err.name === 'AbortError') throw Object.assign(new Error('Apps Script phản hồi quá lâu'), { code: 'deadline-exceeded' });
+      if (err.name === 'AbortError') throw Object.assign(new Error('Apps Script phản hồi quá lâu'), { code: 'deadline-exceeded', source: 'apps-script' });
       // Mất mạng, hoặc Apps Script quá tải trả trang HTML lỗi thay vì JSON.
-      throw Object.assign(new Error('Không kết nối được Apps Script: ' + err.message), { code: 'unavailable' });
+      throw Object.assign(new Error('Không kết nối được Apps Script: ' + err.message), { code: 'unavailable', source: 'apps-script' });
     } finally {
       clearTimeout(timer);
     }
     if (!json || !json.ok) {
-      throw Object.assign(new Error((json && json.error) || 'Apps Script báo lỗi không rõ'), { code: (json && json.code) || 'internal' });
+      throw Object.assign(new Error((json && json.error) || 'Apps Script báo lỗi không rõ'), { code: (json && json.code) || 'internal', source: 'apps-script' });
     }
     return json.data;
   }

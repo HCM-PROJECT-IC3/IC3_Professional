@@ -28,7 +28,8 @@
 
   if (params.get('reason') === 'idle') {
     const msgEl = document.getElementById('msg');
-    msgEl.textContent = '⏳ Bạn đã bị đăng xuất do không hoạt động trong 10 phút. Vui lòng đăng nhập lại.';
+    const idleMin = Number(params.get('min')) || 10;
+    msgEl.textContent = `⏳ Bạn đã bị đăng xuất do không thao tác trong ${idleMin} phút. Đăng nhập lại để quay về đúng trang đang làm.`;
     msgEl.classList.add('err');
   }
 

@@ -106,6 +106,23 @@
   function emptyDay() {
     return { morning: emptySession(), afternoon: emptySession() };
   }
+
+  /** Mã lớp THẬT của từng tiết trong 1 buổi, gộp "Lịch tuần" (sess.periods) với
+   * "🗓️ TKB lớp" (ttCells, đọc qua cellOf) — Lịch tuần là NGUỒN GỐC: buổi nào
+   * đã gõ ít nhất 1 mã lớp ở Lịch tuần thì tiết 1-5 lấy ĐÚNG theo Lịch tuần
+   * (tiết để trống = không dạy, dù TKB cũ còn lưu lớp), chỉ tiết > 5 (khung giờ
+   * TKB tự thêm) mới lấy từ TKB. Buổi Lịch tuần chưa gõ mã lớp nào → lấy TKB.
+   * Trước đây TKB luôn được ưu tiên: sửa Lịch tuần bớt 1 tiết thì "Tổng quan"
+   * vẫn hiện tiết cũ (TKB không tự xoá ô) — giáo viên báo "sửa rồi vẫn 3 tiết". */
+  function effectivePeriods(sess, ttCells, cellOf) {
+    const own = (sess && Array.isArray(sess.periods) ? sess.periods : [])
+      .map((p) => (typeof p === 'string' ? p.trim() : ''));
+    const tt = (Array.isArray(ttCells) ? ttCells : [])
+      .map((c) => String((cellOf ? cellOf(c).maLop : c) || '').trim());
+    const ownWins = own.some(Boolean);
+    const len = Math.max(PERIODS_PER_SESSION, own.length, tt.length);
+    return Array.from({ length: len }, (_, i) => (ownWins && i < PERIODS_PER_SESSION ? own[i] || '' : tt[i] || ''));
+  }
   /** Khung ngày trống đủ 7 (Thứ2→7) cho 1 giáo viên/tuần mới tinh. */
   function emptyDays() {
     const days = {};
@@ -245,6 +262,7 @@
     emptySession,
     emptyDay,
     emptyDays,
+    effectivePeriods,
     scheduleDocId,
     computeWeekStats,
     buildTeacher,

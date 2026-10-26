@@ -305,5 +305,27 @@ assertEq('giải mã: két bị phá được đổi mã, tiến độ về 0', 
 assertEq('giải mã: xếp hạng theo đá quý', R.leaderboard(hr)[0].value >= R.leaderboard(hr)[1].value, true);
 assertEq('giải mã: kết quả riêng + CSV có số két phá', [R.personalEnd(hr, 'a').opened, R.toCsv(hr).indexOf('Két phá được') > 0], [1, true]);
 
+// ── 🔁 Đấu lại câu sai: chỉ câu có bạn sai, khó nhất trước; cùng mã, giữ người, điểm về 0 ──
+var rm = R.createRoom({ code: 'REM234', mode: 'speed', deck: deck, count: 3, secs: 20, title: 'Bộ thử', now: 0 });
+['a', 'b'].forEach(function (id) { R.join(rm, { cid: id, name: 'Bạn ' + id, face: '🙂' }); });
+R.join(rm, { cid: 'k', name: 'Bạn bị mời ra', face: '🙂' }); R.kick(rm, 'k');
+for (var qi = 0; qi < 3; qi++) { // câu 1 cả 2 đúng; câu 2 cả 2 sai; câu 3 chỉ b sai
+  R.openNext(rm, qi * 30000);
+  var right = deck[qi].correctIdx, wrongK = (right + 1) % deck[qi].options.length;
+  R.submit(rm, 'a', qi, qi === 1 ? wrongK : right, qi * 30000 + 1000);
+  R.submit(rm, 'b', qi, qi === 0 ? right : wrongK, qi * 30000 + 1000);
+  R.reveal(rm);
+}
+R.finish(rm, 99999);
+assertEq('đấu lại: chỉ câu có bạn sai, sai nhiều nhất trước', R.missedDeck(rm).map(function (q) { return q.uid; }), ['u2', 'u3']);
+var rm2 = R.rematch(rm, R.missedDeck(rm), { now: 100000 });
+assertEq('đấu lại: cùng mã, về sảnh, đủ số câu', [rm2.code, rm2.phase, rm2.total, rm2.i], ['REM234', 'lobby', 2, -1]);
+assertEq('đấu lại: giữ người (bỏ bạn bị mời ra), điểm về 0', [rm2.order, rm2.players.a.score, rm2.players.a.log.length, rm2.players.a.name], [['a', 'b'], 0, 0, 'Bạn a']);
+assertEq('đấu lại: tên phòng không lặp hậu tố', R.rematch(rm2, deck, {}).title, 'Bộ thử · Ôn câu sai');
+var perfect = R.createRoom({ code: 'PER234', mode: 'speed', deck: deck, count: 1, secs: 20 });
+R.join(perfect, { cid: 'a', name: 'Bạn a', face: '🙂' });
+R.openNext(perfect, 0); R.submit(perfect, 'a', 0, deck[0].correctIdx, 500); R.reveal(perfect); R.finish(perfect, 1000);
+assertEq('đấu lại: cả lớp đúng hết → không có câu', R.missedDeck(perfect).length, 0);
+
 console.log(failures ? '\n' + failures + ' test FAIL' : '\nTất cả test PASS');
 process.exit(failures ? 1 : 0);

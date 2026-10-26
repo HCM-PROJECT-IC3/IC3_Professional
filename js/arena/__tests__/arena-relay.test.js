@@ -16,6 +16,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const docs = new Map();      // path → data
 const listeners = [];        // { kind: 'doc'|'col', path, cb, known:Set }
 const stat = { reads: 0, writes: 0 };
+const upWrites = [];       // giờ ghi up/{uid} (kiểm giãn cách — firestore.rules chặn ≤ 0,5 giây)
 const clone = (v) => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)));
 function notify(changedPath) {
   listeners.slice().forEach((l) => {
@@ -35,7 +36,7 @@ function docRef(p) {
   return {
     path: p,
     collection: (n) => colRef(p + '/' + n),
-    async set(d) { stat.writes++; docs.set(p, clone(d)); setTimeout(() => notify(p)); },
+    async set(d) { stat.writes++; if (p.includes('/up/')) upWrites.push(Date.now()); docs.set(p, clone(d)); setTimeout(() => notify(p)); },
     async update(upd) {
       if (!docs.has(p)) throw Object.assign(new Error('not-found'), { code: 'not-found' });
       stat.writes++;
@@ -76,7 +77,7 @@ const auth = {
   async signInAnonymously() { auth.currentUser = { uid: 'S' + (++auth.anon), isAnonymous: true }; return { user: auth.currentUser }; },
 };
 global.window = global;
-global.firebase = { firestore: { Timestamp: { fromMillis: (ms) => ({ ms }) } }, auth: { Auth: { Persistence: { SESSION: 'session' } } } };
+global.firebase = { firestore: { Timestamp: { fromMillis: (ms) => ({ ms }) }, FieldValue: { serverTimestamp: () => 'SERVER_TS' } }, auth: { Auth: { Persistence: { SESSION: 'session' } } } };
 global.EduLazyLoad = { loadScripts: async () => {} };
 global.EduFirebaseLoader = { ensure: async () => ({ db: { collection: (n) => colRef(n) }, auth }) };
 require(path.join(__dirname, '..', 'arena-relay.js'));
@@ -127,6 +128,13 @@ const Relay = global.EduArenaRelay;
   await sleep(1800);
   eq('6 tin liền nhau: học sinh 1 lần ghi (gom), máy giáo viên ≤ 1 lần ghi/giây', stat.writes - w1 <= 3, true);
   eq('document up giữ ≤ 4 tin', docs.get('arena_relay/ABC234/up/S1').m.length, 4);
+  eq('document up có at = giờ máy chủ (rules chống spam)', docs.get('arena_relay/ABC234/up/S1').at, 'SERVER_TS');
+  upWrites.length = 0;
+  conn.send({ t: 'ans', i: 20, k: 0 });
+  await sleep(300);
+  conn.send({ t: 'ans', i: 21, k: 0 });
+  await sleep(1500);
+  eq('2 tin cách 0,3 giây: 2 lần ghi cách nhau ≥ 1 giây', upWrites.length === 2 && upWrites[1] - upWrites[0] >= 1000, true);
 
   // ── 2 học sinh dự phòng: câu hỏi (phần chung) chỉ lưu 1 bản ──
   auth.currentUser = null;

@@ -412,6 +412,9 @@ body {
 }
 .btn-create:hover { transform: translateY(-2px); box-shadow: 7px 7px 16px rgba(47,64,178,0.45), -4px -4px 12px rgba(255,255,255,0.55); background: #4f46e5; }
 .btn-create:active { transform: translateY(0); box-shadow: inset 3px 3px 8px rgba(49,46,129,0.5); }
+/* Nút phụ cạnh "Soạn đề mới" — viền, không nền đậm */
+.btn-create.btn-create-ghost { background: transparent; color: var(--accent-purple); border: 2px solid var(--accent-purple); box-shadow: none; }
+.btn-create.btn-create-ghost:hover { background: var(--accent-purple); color: #fff; box-shadow: none; }
 /* .fa-beat (https://docs.fontawesome.com/web/style/animate) tự chạy liên
    tục theo mặc định của Font Awesome — ở đây CHỦ ĐỘNG tạm dừng
    (animation-play-state), chỉ cho chạy lúc rê chuột vào nút CTA chính,
@@ -1028,6 +1031,12 @@ body {
 }
 .no-results .emoji { font-size: 56px; display: block; margin-bottom: 12px; }
 .no-results p { font-size: 16px; font-weight: 700; }
+/* Nằm trong dải carousel (#carouselTrack là flex) → chiếm đủ bề ngang */
+#carouselTrack > .no-results { flex: 1 0 100%; }
+.no-results.no-sets p { font-weight: 500; line-height: 1.6; margin: 0 auto 18px; max-width: 460px; }
+.no-results.no-sets p b { font-weight: 800; color: var(--text-primary); }
+.no-results.no-sets .btn-create { display: inline-flex; }
+.no-sets-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 
 /* ========================================
    REPORTS SECTION
