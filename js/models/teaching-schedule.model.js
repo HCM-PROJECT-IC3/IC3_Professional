@@ -1,6 +1,6 @@
 /* ============================================================
    js/models/teaching-schedule.model.js
-   Model cho tính năng "📅 Lịch giảng dạy" (teaching-schedule.html) —
+   Model cho tính năng "Lịch giảng dạy" (teaching-schedule.html) —
    quản lý lịch làm việc/giảng dạy hàng tuần của đội ngũ giáo viên,
    thay thế việc quản lý thủ công trên file Excel
    "LỊCH GIẢNG DẠY TEAM GVTH_NH ....xlsx".
@@ -29,7 +29,7 @@
      joinLocations()/splitLocations() bên dưới) — field TUỲ CHỌN, chỉ có ý
      nghĩa khi location gộp ≥2 trường; ghi bởi mergeSecondarySchoolColumn()
      khi nhập Excel 2 cột/ngày (js/teaching-schedule.js) HOẶC bởi
-     syncScheduleLocationsFromTimetable() khi lưu lưới "🗓️ TKB lớp"
+     syncScheduleLocationsFromTimetable() khi lưu lưới "TKB lớp"
      (js/teaching-timetable.js) — cả 2 nơi đọc `applyScheduleAutoFill()`
      dùng field này để tự điền ĐÚNG "Trường" cho từng tiết thay vì để
      trống khi chỉ có 1 chuỗi `location` gộp (không đủ để biết tiết nào ở
@@ -38,7 +38,7 @@
      periods[i] = MÃ LỚP đang dạy tiết i+1 (chuỗi, vd "5/1"), '' nếu
      không dạy tiết đó — gõ trực tiếp, không còn chỉ tích chọn có/không
      (đã thử bản chỉ tích chọn, người dùng phản hồi cần biết ngay đang
-     dạy lớp nào ngay tại đây, không muốn phải mở riêng tab "🗓️ TKB lớp").
+     dạy lớp nào ngay tại đây, không muốn phải mở riêng tab "TKB lớp").
      Dữ liệu CŨ (giai đoạn chỉ tích chọn) có thể vẫn là boolean true —
      mọi nơi đọc periods chỉ nên dùng "truthy" (!!p) khi ĐẾM số tiết, và
      kiểm `typeof p === 'string'` khi cần LẤY chữ mã lớp, để tương thích

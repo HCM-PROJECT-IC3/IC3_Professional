@@ -63,6 +63,34 @@
     return arr;
   }
 
+  // Icon nút ribbon: file môn học khai báo bằng emoji cho gọn; khi vẽ thì đổi sang Font Awesome (đồng nhất, phẳng như
+  // ribbon Office thật — emoji màu mè làm giao diện trông "đúc khuôn"). Ký hiệu chữ (≡ ¶ Ω ∑ ⊞...) giữ nguyên như Office.
+  var EMOJI_FA = {
+    '☀': 'sun', '☑': 'square-check', '⚖': 'scale-balanced', '⚙': 'gear', '⚠': 'triangle-exclamation', '⚡': 'bolt',
+    '⛹': 'basketball', '✂': 'scissors', '✅': 'check', '✉': 'envelope', '✏': 'pen', '✒': 'pen-nib', '✔': 'spell-check',
+    '✖': 'xmark', '✨': 'wand-magic-sparkles', '❄': 'snowflake', '❓': 'circle-question', '➕': 'plus', '➖': 'minus',
+    '➡': 'arrow-right', '🌊': 'water', '🌐': 'globe', '🌫': 'smog', '🎓': 'graduation-cap', '🎨': 'palette', '🎬': 'film',
+    '🎭': 'swatchbook', '🎯': 'bullseye', '🏠': 'address-card', '🏷': 'tag', '👁': 'eye', '👋': 'hand', '👤': 'user',
+    '👥': 'users', '💧': 'droplet', '💬': 'comment', '💲': 'dollar-sign', '💻': 'laptop', '💾': 'floppy-disk',
+    '📂': 'folder-open', '📃': 'file-lines', '📄': 'file', '📇': 'address-book', '📈': 'chart-line', '📊': 'chart-column',
+    '📋': 'clipboard', '📍': 'location-dot', '📏': 'ruler-horizontal', '📐': 'ruler-combined', '📑': 'list-ol',
+    '📖': 'book-open', '📚': 'book', '📝': 'pen-to-square', '📤': 'share-from-square', '📦': 'cube', '📧': 'envelopes-bulk',
+    '📸': 'camera', '🔀': 'shuffle', '🔁': 'repeat', '🔃': 'arrows-up-down', '🔄': 'rotate', '🔊': 'volume-high',
+    '🔍': 'magnifying-glass', '🔎': 'magnifying-glass-plus', '🔒': 'lock', '🔖': 'bookmark', '🔗': 'link', '🔠': 'font',
+    '🔢': 'list-ol', '🔤': 'font', '🔪': 'filter', '🔲': 'table-cells-large', '🔷': 'diagram-project', '🔽': 'filter',
+    '🕒': 'clock', '🖊': 'pen', '🖋': 'pen-fancy', '🖌': 'paintbrush', '🖍': 'highlighter', '🖥': 'display', '🖨': 'print',
+    '🖼': 'image', '🗂': 'layer-group', '🗐': 'copy', '🗜': 'compress', '🙈': 'eye-slash', '🚫': 'ban', '🛫': 'plane-departure',
+    '🥧': 'chart-pie', '🧩': 'puzzle-piece', '🧭': 'compass', '🧮': 'calculator', '🧹': 'eraser', '🪟': 'window-restore',
+    '🪣': 'fill-drip', '🆕': 'file-circle-plus', '🅰': 'font', '🗕': 'window-minimize', '🗗': 'window-restore', '🗙': 'xmark',
+  };
+  var SWATCH = { '🟦': '#2f6fbd', '🟧': '#e07a2f', '🟪': '#7a4fb3', '🟫': '#a0784e', '🟩': '#3d8c40', '🟥': '#c0392b', '🟨': '#e0b02f' };
+  function faIcon(v) {
+    var k = String(v).replace(/️/g, '');
+    if (EMOJI_FA[k]) return '<i class="fa-solid fa-' + EMOJI_FA[k] + '" aria-hidden="true"></i>';
+    if (SWATCH[k]) return '<i class="fa-solid fa-square" style="color:' + SWATCH[k] + '" aria-hidden="true"></i>';
+    return v;
+  }
+
   function create(config) {
     var DATA_URL = config.dataUrl;
     var PROGRESS_KEY = config.progressKey;
@@ -77,10 +105,10 @@
     var CONFIRM_LABELS = config.confirmLabels || DEFAULT_CONFIRM_LABELS;
     var DOC_SUFFIX = config.docSuffix || '';
     var DOC_DEFAULT_NAME = config.docDefaultName || 'Document1';
-    var MISSION_FILE_FALLBACK = config.missionFileFallback || '📄 Tài liệu thực hành';
+    var MISSION_FILE_FALLBACK = config.missionFileFallback || 'Tài liệu thực hành';
     var BACKSTAGE_TAB = config.backstageTab || 'File';
 
-    function iconFor(label) { return ICONS[norm(label)] || '▫'; }
+    function iconFor(label) { return faIcon(ICONS[norm(label)] || '▫'); }
     function kindFor(label) {
       var n = norm(label);
       if (SMALL_GLYPH_LABELS[n]) return 'glyph';
@@ -137,7 +165,7 @@
           '<span class="ws-lesson-tile-title">' + escapeHtml(lesson.title) + '</span>' +
           '<span class="ws-lesson-tile-sub">' + escapeHtml(lesson.subtitle || '') + '</span>' +
           '<span class="ws-lesson-tile-progress-bar"><span class="ws-lesson-tile-progress-fill" style="width:' + pct + '%"></span></span>' +
-          '<span class="ws-lesson-tile-progress-label">' + done + '/' + subs.length + ' nhiệm vụ' + (pct === 100 ? ' · Hoàn thành 🎉' : '') + '</span>';
+          '<span class="ws-lesson-tile-progress-label">' + done + '/' + subs.length + ' nhiệm vụ' + (pct === 100 ? ' · Hoàn thành' : '') + '</span>';
         tile.addEventListener('click', function () { openLesson(lesson); });
         grid.appendChild(tile);
       });
@@ -196,7 +224,7 @@
       STATE.currentStepIdx = 0;
       STATE.activeTab = TAB_ORDER[1] || TAB_ORDER[0];
       var s = STATE.currentLesson.subtasks[idx];
-      document.getElementById('wsMissionFile').textContent = s.file ? '📄 ' + s.file : MISSION_FILE_FALLBACK;
+      document.getElementById('wsMissionFile').textContent = s.file ? s.file : MISSION_FILE_FALLBACK;
       document.getElementById('wsMissionDesc').textContent = (s.letter ? s.letter + '. ' : '') + s.desc;
       var docNameEl = document.getElementById('wwDocName');
       if (docNameEl) docNameEl.textContent = (s.file || DOC_DEFAULT_NAME) + DOC_SUFFIX;
@@ -343,7 +371,7 @@
       renderTaskRail();
       renderExamPanel();
       if (config.onCompleteSubtask) config.onCompleteSubtask(sub);
-      showToast('✅ Hoàn thành nhiệm vụ ' + (sub.letter ? sub.letter + '. ' : '') + '— ' + truncate(sub.desc, 60));
+      showToast('Hoàn thành nhiệm vụ ' + (sub.letter ? sub.letter + '. ' : '') + '— ' + truncate(sub.desc, 60));
       var nextIdx = STATE.currentSubtaskIdx + 1;
       setTimeout(function () {
         if (nextIdx < STATE.currentLesson.subtasks.length) {
@@ -351,7 +379,7 @@
         } else if (STATE.examMode) {
           submitExam();
         } else {
-          showToast('🎉 Bạn đã hoàn thành toàn bộ ' + STATE.currentLesson.title + '!');
+          showToast('Bạn đã hoàn thành toàn bộ ' + STATE.currentLesson.title + '!');
         }
       }, 900);
     }
@@ -596,7 +624,7 @@
       btn.type = 'button';
       btn.id = 'wsManualConfirmBtn';
       btn.className = 'ws-manual-confirm-btn';
-      btn.textContent = '✓ Đã thực hiện — Tiếp tục';
+      btn.textContent = 'Đã thực hiện — Tiếp tục';
       btn.addEventListener('click', function () { btn.remove(); advanceStep(); });
       footer.insertBefore(btn, footer.firstChild);
     }
@@ -652,7 +680,7 @@
     function activateExamMode() {
       STATE.examMode = true;
       var btn = document.getElementById('wsExamModeToggle');
-      if (btn) { btn.classList.add('ws-exam-active'); btn.textContent = '🎯 Đang thi — bấm để tắt'; }
+      if (btn) { btn.classList.add('ws-exam-active'); btn.textContent = 'Đang thi — bấm để tắt'; }
       show('wsExamPanel', true);
       setPracticeChromeHidden(true);
       startExamTimer();
@@ -661,7 +689,7 @@
     function deactivateExamMode() {
       STATE.examMode = false;
       var btn = document.getElementById('wsExamModeToggle');
-      if (btn) { btn.classList.remove('ws-exam-active'); btn.textContent = '🎯 Chế độ thi'; }
+      if (btn) { btn.classList.remove('ws-exam-active'); btn.textContent = 'Chế độ thi'; }
       hide('wsExamPanel');
       setPracticeChromeHidden(false);
       stopExamTimer();
@@ -699,7 +727,7 @@
       var flagBtn = document.getElementById('wsExamFlagBtn');
       if (flagBtn) {
         flagBtn.classList.toggle('ws-exam-flag-on', flagged);
-        flagBtn.textContent = flagged ? '🚩 Đã đánh dấu — bấm để bỏ' : '🚩 Đánh dấu xem lại';
+        flagBtn.textContent = flagged ? 'Đã đánh dấu — bấm để bỏ' : 'Đánh dấu xem lại';
       }
 
       var grid = document.getElementById('wsExamTaskGrid');
@@ -736,7 +764,7 @@
 
       var banner = document.getElementById('wsResultsBanner');
       if (banner) {
-        banner.textContent = pass ? '✅ ĐẠT (PASS)' : '❌ CHƯA ĐẠT (FAIL)';
+        banner.textContent = pass ? 'ĐẠT (PASS)' : 'CHƯA ĐẠT (FAIL)';
         banner.className = 'ws-results-banner ' + (pass ? 'ws-pass' : 'ws-fail');
       }
       var scoreEl = document.getElementById('wsResultsScore');
@@ -777,7 +805,7 @@
         toggleBtn.type = 'button';
         toggleBtn.id = 'wsExamModeToggle';
         toggleBtn.className = 'ws-exam-toggle-btn';
-        toggleBtn.textContent = '🎯 Chế độ thi';
+        toggleBtn.textContent = 'Chế độ thi';
         toggleBtn.addEventListener('click', toggleExamMode);
         header.appendChild(toggleBtn);
       }

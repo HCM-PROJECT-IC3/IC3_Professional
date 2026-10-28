@@ -2,11 +2,11 @@
    js/lobby-roster.js
    Đổ 3 select "Trường / Lớp / Họ và tên" ở form "Bắt đầu làm bài"
    (index.html) bằng danh sách roster THẬT — cùng 1 nguồn dữ liệu (gốc)
-   với trang quản trị "🎓 Quản lý danh sách học sinh"
+   với trang quản trị "Quản lý danh sách học sinh"
    (roster-manager.html, collection Firestore "students_roster").
 
    Điều phối đào tạo nạp/chỉnh danh sách ở roster-manager.html (nút
-   "📥 Nạp từ Excel" hoặc "➕ Thêm học sinh") — KHÔNG có nút nạp Excel
+   "Nạp từ Excel" hoặc "Thêm học sinh") — KHÔNG có nút nạp Excel
    nào ở trang công khai index.html nữa, để tránh lộ thao tác quản trị
    ra màn hình học sinh làm bài.
 
@@ -19,9 +19,9 @@
    của GitHub Pages, scale vô hạn, không tốn quota).
 
    File data/roster/students-active.json được cập nhật từ
-   roster-manager.html — nút "🚀 Cập nhật cho học sinh" tự đẩy file này
+   roster-manager.html — nút "Cập nhật cho học sinh" tự đẩy file này
    lên GitHub qua API (xem js/github-publish.js), KHÔNG cần Điều phối
-   đào tạo tải file/commit/push tay nữa. Nút "🗂️ Xuất JSON (thủ công)"
+   đào tạo tải file/commit/push tay nữa. Nút "Xuất JSON (thủ công)"
    vẫn còn để dự phòng khi không dùng được token GitHub.
 
    Luồng chọn: Trường → Lớp (lọc theo Trường) → Họ và tên (lọc theo

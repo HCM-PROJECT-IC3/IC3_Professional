@@ -1,7 +1,7 @@
 /* ============================================================
    js/services/sharepoint-sync.js
    Đồng bộ TRỰC TIẾP từ file Excel trên SharePoint/OneDrive — thay vì
-   tải file về máy rồi bấm "📥 Nhập từ Excel" thủ công. Dùng MSAL.js
+   tải file về máy rồi bấm "Nhập từ Excel" thủ công. Dùng MSAL.js
    (đăng nhập Microsoft ngay trên trình duyệt, popup, KHÔNG cần
    backend/server riêng) + Microsoft Graph API để tải nội dung file
    .xlsx mới nhất, sau đó trả về y hệt một ArrayBuffer như khi đọc

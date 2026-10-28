@@ -10,6 +10,7 @@
 <script src="js/theme-inherit.js"></script>
 <link rel="stylesheet" href="css/accessibility.css">
 <link rel="stylesheet" href="css/result-pack.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body class="gk-body">
 <!--
@@ -21,7 +22,7 @@
 -->
 <main class="gk-wrap">
   <div class="gk-head">
-    <h1>📥 Gom kết quả học sinh</h1>
+    <h1><i class="fa-solid fa-inbox" aria-hidden="true"></i> Gom kết quả học sinh</h1>
     <a class="gk-btn" href="index.html">← Về trang làm bài</a>
   </div>
 
@@ -73,8 +74,8 @@
     <h2 id="gkWqTitle">4. Câu cả lớp hay sai</h2>
     <p class="gk-note" id="wqStatus">Gom kết quả xong, bấm <b>Phân tích</b> để xem câu học sinh sai nhiều nhất (theo bộ lọc lớp/bài ở mục 2).</p>
     <div class="gk-row" style="margin:0 0 .6rem">
-      <button type="button" class="gk-btn primary" id="wqAnalyze" disabled>🔍 Phân tích câu sai</button>
-      <button type="button" class="gk-btn" id="wqMakeExam" hidden title="Tạo link đề ôn từ các câu sai nhiều nhất (cùng cấp độ) để gửi học sinh">📝 Tạo đề ôn</button>
+      <button type="button" class="gk-btn primary" id="wqAnalyze" disabled><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Phân tích câu sai</button>
+      <button type="button" class="gk-btn" id="wqMakeExam" hidden title="Tạo link đề ôn từ các câu sai nhiều nhất (cùng cấp độ) để gửi học sinh"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> Tạo đề ôn</button>
     </div>
     <div class="gk-row" id="wqLinkRow" hidden>
       <label for="wqLink" class="gk-note" id="wqLinkLabel">Link đề ôn:</label>

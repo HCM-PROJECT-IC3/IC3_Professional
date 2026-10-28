@@ -1,7 +1,7 @@
 /* ============================================================
    js/github-publish.js
    Đẩy 1 hoặc nhiều file tĩnh (data/ic3/*.json, ảnh câu hỏi...) lên GitHub
-   trong ĐÚNG 1 commit — nút "📤 Xuất ra data/ic3" ở image-manager.html.
+   trong ĐÚNG 1 commit — nút "Xuất ra data/ic3" ở image-manager.html.
 
    VÌ SAO CẦN FILE TĨNH (không đổi): index.html là trang công khai, không
    đăng nhập — học sinh đọc câu hỏi/roster từ file tĩnh (0 lượt Firebase),

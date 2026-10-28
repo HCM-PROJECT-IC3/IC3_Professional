@@ -28,7 +28,7 @@
    nghìn học sinh: nếu không, MỖI lần mở dashboard admin (kể cả người
    khác, kể cả ngày khác) đều tốn lại toàn bộ số lượt đọc đó, có thể
    chạm trần 50.000 đọc/ngày miễn phí của Firestore (gói Spark) khi
-   trường quá lớn. Có nút "🔄 Làm mới dữ liệu" (forceRefresh) ở mọi
+   trường quá lớn. Có nút "Làm mới dữ liệu" (forceRefresh) ở mọi
    dashboard để bỏ qua cache khi cần thấy roster mới nhất ngay.
 
    Nạp file này TRƯỚC coordinator/data-loader.js và teacher/data-loader.js.

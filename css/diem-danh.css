@@ -1,0 +1,215 @@
+/* ============================================================
+   css/diem-danh.css — trang "Điểm danh & tiến độ" (diem-danh.html).
+   Cùng bộ giao diện với các trang quản trị: màu/nền/viền lấy từ css/theme.css (navy IIG, tự đổi
+   sáng/tối theo [data-theme]), thanh trên cùng như teaching-schedule. Phẳng kiểu phần mềm:
+   viền mảnh, không gradient/bóng phát sáng.
+   ============================================================ */
+:root {
+  --dd-bg: var(--bg); --dd-paper: var(--card); --dd-ink: var(--text); --dd-muted: var(--muted); --dd-line: var(--border);
+  --dd-accent: var(--purple); --dd-accent-ink: #fff; --dd-leaf: #2f8a4c; --dd-gold: #e09a12; --dd-red: #c62f25;
+  --dd-display: 'Baloo 2', 'Inter', system-ui, sans-serif; --dd-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+[data-theme="dark"] { --dd-leaf: #5dbb7b; --dd-gold: #f2b632; --dd-red: #ff7a6e; --dd-accent: #8fa0ff; --dd-accent-ink: #10142b; }
+
+/* ── Khung trang ── */
+.dd-body { min-height: 100dvh; background: var(--dd-bg); color: var(--dd-ink); font: 14.5px/1.5 var(--dd-body); }
+.dd-body button, .dd-body select, .dd-body input, .dd-body textarea { font: inherit; color: inherit; }
+.dd-body button { cursor: pointer; }
+.dd-body :focus-visible { outline: 3px solid color-mix(in srgb, var(--dd-accent) 55%, transparent); outline-offset: 2px; }
+kbd { display: inline-block; padding: 0 .35rem; border-radius: 6px; background: var(--card2); border: 1px solid var(--dd-line); font: 700 .72em/1.6 var(--dd-body); }
+.topbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: .8rem 1rem; flex-wrap: wrap; padding: .75rem 1.6rem;
+  background: var(--surface); border-bottom: 1px solid var(--border); }
+.topbar h1 { font: 800 1.1rem/1.2 var(--dd-display); display: inline-flex; align-items: center; gap: .5rem; }
+.info-btn { background: none; border: none; font-size: .85rem; line-height: 1; cursor: help; opacity: .55; padding: 0; color: inherit; }
+.info-btn:hover { opacity: 1; }
+.whoami { font-size: .78rem; font-weight: 700; background: var(--card2); border: 1.5px solid var(--border); padding: .35rem .8rem; border-radius: 999px; }
+.whoami:empty { display: none; }
+.whoami-chip { display: flex; align-items: center; gap: .5rem; }
+.whoami-avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--purple); color: #fff; font-weight: 800; font-size: .75rem; overflow: hidden; }
+.whoami-avatar:empty { display: none; }
+.btn { border: none; border-radius: 999px; padding: .55rem 1.1rem; font-weight: 700; font-size: .85rem; cursor: pointer; }
+.btn-ghost { background: var(--card2); color: var(--text); border: 1.5px solid var(--border); text-decoration: none; display: inline-flex; align-items: center; gap: .4rem; }
+.btn-ghost:hover { border-color: var(--dd-accent); color: var(--dd-accent); }
+.dd-wrap { max-width: 1320px; margin: 0 auto; padding: 0 1.6rem 2.5rem; display: flex; flex-direction: column; gap: 14px; }
+@media (max-width: 760px) { .topbar { padding: .6rem 1rem; } .dd-wrap { padding: 0 .8rem 2rem; } .topbar .btn-ghost[href="goi-ten.html"] { display: none; } }
+
+/* ── Thẻ, tiêu đề mục, ô nhập, nút ── */
+.dd-card { background: var(--dd-paper); border: 1px solid var(--dd-line); border-radius: var(--radius-sm, 12px); padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.dd-card[hidden] { display: none; }
+.dd-step { margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.dd-step h2 { margin: 0; font: 700 1.08rem/1.2 var(--dd-display); }
+.dd-step small, .dd-step h2 small { font: 500 .8rem var(--dd-body); color: var(--dd-muted); }
+.dd-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.dd-field > span { font-size: .78rem; font-weight: 700; color: var(--dd-muted); }
+.dd-field select, .dd-field textarea, .dd-input { width: 100%; min-width: 0; background: var(--card2); color: var(--dd-ink); border: 1.5px solid var(--dd-line); border-radius: 10px; padding: 8px 10px; }
+.dd-field select:focus, .dd-field textarea:focus, .dd-input:focus { border-color: var(--dd-accent); outline: none; }
+.dd-hint { font-size: .82rem; color: var(--dd-muted); margin: 0; }
+.dd-hint b { color: var(--dd-ink); }
+.dd-small { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; border: 1.5px solid var(--dd-line); background: var(--dd-paper); padding: 6px 14px; font-size: .84rem; font-weight: 600; color: var(--dd-ink); }
+.dd-small:hover:not(:disabled) { border-color: var(--dd-accent); color: var(--dd-accent); }
+.dd-small:disabled, .dd-go:disabled { opacity: .5; cursor: not-allowed; }
+.dd-go { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; border: 1.5px solid var(--dd-accent); background: var(--dd-accent); color: var(--dd-accent-ink) !important; font-weight: 700; padding: 7px 20px; }
+.dd-go:hover:not(:disabled) { filter: brightness(1.08); }
+.dd-go-sm { font-size: .92rem; }
+.dd-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.dd-two { display: grid; gap: 14px; align-items: start; }
+.dd-modes { display: inline-flex; gap: 2px; background: var(--card2); border: 1.5px solid var(--dd-line); border-radius: 999px; padding: 3px; width: fit-content; }
+.dd-modes button { border: 0; background: none; padding: 5px 14px; border-radius: 999px; font-weight: 700; font-size: .84rem; color: var(--dd-muted); }
+.dd-modes button.is-on { background: var(--dd-accent); color: var(--dd-accent-ink); }
+.dd-x { border: 0; background: none; font-size: 1.2rem; line-height: 1; padding: 0 6px; color: var(--dd-muted); }
+.dd-x:hover { color: var(--dd-red); }
+.dd-empty { color: var(--dd-muted); }
+.dd-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 50; max-width: min(92vw, 560px); padding: 10px 18px; border-radius: 12px;
+  background: var(--text); color: var(--bg); font-weight: 600; font-size: .9rem; box-shadow: var(--shadow-lg); }
+.dd-toast[hidden] { display: none; }
+
+.dd-steps { margin: 0; padding-left: 20px; font-size: .9rem; display: grid; gap: 2px; }
+.dd-input { width: 100%; min-width: 0; font: 500 15px/1.4 var(--dd-body); color: var(--dd-ink); background: var(--dd-bg); border: 2px solid var(--dd-line); border-radius: 14px; padding: 8px 12px; }
+/* Trường & sổ lớp */
+#ddSchools { display: grid; gap: 10px; }
+.dd-school { display: grid; gap: 6px; }
+.dd-school h3, .dd-ov h3 { margin: 4px 0 0; font: 700 1rem/1.2 var(--dd-display); }
+.dd-file { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 8px 10px; border: 2px solid var(--dd-line); border-radius: 12px; }
+.dd-file small { color: var(--dd-muted); flex: 1 1 200px; }
+.dd-file.is-folder { border-style: dashed; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Tổng quan các lớp */
+.dd-ov { display: grid; gap: 6px; overflow-x: auto; }
+.dd-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.dd-table th { text-align: left; font-weight: 700; color: var(--dd-muted); font-size: .78rem; padding: 4px 8px; border-bottom: 2px solid var(--dd-line); white-space: nowrap; }
+.dd-table td { padding: 5px 8px; border-bottom: 1px solid var(--dd-line); vertical-align: middle; }
+.dd-table tr.is-today td:nth-child(2) { box-shadow: inset 3px 0 0 var(--dd-accent); }
+.dd-table td.is-stale { color: var(--dd-red); }
+.dd-muted { color: var(--dd-muted); }
+.dd-star { border: 0; background: none; padding: 0 4px; font-size: 1.05rem; color: var(--dd-gold); line-height: 1; }
+.dd-link { border: 0; background: none; padding: 0; font-weight: 700; color: var(--dd-accent); text-decoration: underline; text-underline-offset: 2px; }
+.dd-mini { display: inline-block; width: 46px; height: 7px; border-radius: 999px; vertical-align: middle; border: 1px solid var(--dd-line);
+  background: linear-gradient(90deg, var(--dd-leaf) var(--p), var(--dd-bg) var(--p)); }
+.dd-sessions li.is-me { outline: 2px dotted var(--dd-gold); outline-offset: -4px; }
+.dd-a { color: var(--dd-ink); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.dd-a[hidden] { display: none; }
+.dd-pick { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; }
+.dd-pick .dd-field { flex: 1 1 220px; }
+
+/* Tiến độ */
+.dd-bar { height: 12px; border-radius: 999px; background: var(--dd-bg); border: 1px solid var(--dd-line); overflow: hidden; }
+.dd-bar span { display: block; height: 100%; width: 0; background: var(--dd-leaf); transition: width .4s; }
+.dd-next { margin: 0; }
+.dd-sessions { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 6px; }
+.dd-sessions li { display: flex; flex-direction: column; padding: 6px 8px; border: 1px solid var(--dd-line); border-radius: 10px; font-size: .8rem; line-height: 1.3; min-width: 0; }
+.dd-sessions li span { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dd-sessions li small { color: var(--dd-muted); }
+.dd-sessions li.is-done { background: color-mix(in srgb, var(--dd-leaf) 12%, var(--dd-paper)); border-color: color-mix(in srgb, var(--dd-leaf) 45%, var(--dd-line)); }
+.dd-sessions li.is-done small { color: var(--dd-leaf); }
+.dd-sessions li.is-next { border: 2px solid var(--dd-accent); }
+
+/* Điểm danh */
+.dd-two { grid-template-columns: 1.4fr 1fr; }
+.dd-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; max-height: 560px; overflow: auto; }
+.dd-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 6px; border-radius: 10px; border: 1px solid transparent; }
+.dd-list li:nth-child(odd) { background: color-mix(in srgb, var(--dd-line) 30%, transparent); }
+.dd-list li.m-v { border-color: var(--dd-red); background: color-mix(in srgb, var(--dd-red) 10%, var(--dd-paper)); }
+.dd-list li.m-nl { opacity: .6; }
+.dd-name { border: 0; background: none; padding: 4px; text-align: left; min-width: 0; flex: 1; }
+.dd-name small { display: inline-block; min-width: 22px; color: var(--dd-muted); font-weight: 600; }
+.dd-name em { font-style: normal; font-size: .75rem; color: var(--dd-red); font-weight: 700; }
+.dd-seg { display: inline-flex; border: 2px solid var(--dd-line); border-radius: 999px; overflow: hidden; flex: none; }
+.dd-seg button { border: 0; background: var(--dd-paper); padding: 4px 10px; font-size: .8rem; }
+.dd-seg button + button { border-left: 1px solid var(--dd-line); }
+.dd-seg button[aria-checked="true"][data-m="x"] { background: var(--dd-leaf); color: #fff; }
+.dd-seg button[aria-checked="true"][data-m="v"] { background: var(--dd-red); color: #fff; }
+.dd-seg button[aria-checked="true"][data-m="nl"] { background: var(--dd-muted); color: #fff; }
+.dd-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.dd-acts .dd-go { font-size: 1.05rem !important; padding: 6px 20px; }
+
+/* Chuyên cần */
+.dd-absent { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.dd-absent li { padding: 6px 10px; border: 1px solid var(--dd-line); border-radius: 10px; }
+.dd-absent li span { color: var(--dd-muted); font-size: .85rem; }
+.dd-absent li small { display: block; color: var(--dd-muted); font-size: .78rem; }
+.dd-absent li.is-warn { border-color: var(--dd-red); }
+.dd-absent li.is-warn span { color: var(--dd-red); font-weight: 700; }
+
+@media (max-width: 760px) {
+  .dd-two { grid-template-columns: 1fr; }
+  .dd-list li { flex-wrap: wrap; }
+}
+
+/* Bộ lọc trường / giáo viên + lịch giảng dạy theo tuần */
+.dd-filters .dd-field { flex: 1 1 240px; }
+.dd-weeknav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.dd-week { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 6px; }
+.dd-day { border: 1px solid var(--dd-line); border-radius: 12px; padding: 6px; display: flex; flex-direction: column; gap: 6px; min-width: 0; min-height: 90px; }
+.dd-day.is-today { border: 2px solid var(--dd-accent); }
+.dd-day h4 { margin: 0; font: 700 .9rem/1.2 var(--dd-display); }
+.dd-day h4 small { color: var(--dd-muted); font: 500 .75rem var(--dd-body); }
+.dd-free { margin: 0; color: var(--dd-muted); font-size: .8rem; }
+.dd-ev { display: flex; flex-direction: column; gap: 1px; text-align: left; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--dd-line); background: var(--dd-paper); font-size: .78rem; line-height: 1.3; min-width: 0; }
+.dd-ev b { font-size: .9rem; }
+.dd-ev small { color: var(--dd-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dd-ev span { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.dd-ev em { font-style: normal; font-weight: 700; font-size: .7rem; }
+.dd-ev:hover { border-color: var(--dd-accent); }
+.k-done { border-left: 4px solid var(--dd-leaf); }
+.dd-ev.k-done em, .dd-legend .k-done { color: var(--dd-leaf); }
+.k-planned { border-left: 4px solid var(--dd-gold); }
+.dd-ev.k-planned em { color: #9a6a00; }
+.k-expected { border-left: 4px dashed #2f7be0; }
+.dd-ev.k-expected { background: color-mix(in srgb, #2f7be0 6%, var(--dd-paper)); }
+.dd-ev.k-expected em { color: #2f7be0; }
+.k-missing { border-left: 4px solid var(--dd-red); }
+.dd-ev.k-missing em { color: var(--dd-red); }
+.dd-legend { margin: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .78rem; color: var(--dd-muted); }
+.dd-legend span { padding-left: 6px; }
+@media (max-width: 760px) {
+  .dd-week { grid-template-columns: 1fr; }
+  .dd-day { min-height: 0; }
+}
+
+/* Bố cục 4 thẻ: Lịch dạy · Các lớp · Điểm danh · Cài đặt — thanh thẻ phẳng kiểu phần mềm, gạch chân thẻ đang mở */
+.dd-tabs { position: sticky; top: var(--dd-top, 58px); z-index: 5; display: flex; gap: 2px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; background: var(--dd-bg); border-bottom: 2px solid var(--dd-line); }
+.dd-tabs button { flex: none; display: flex; align-items: center; gap: 8px; border: 0; border-bottom: 3px solid transparent; margin-bottom: -2px; background: none; padding: 10px 16px; font: 700 1rem/1.2 var(--dd-body); color: var(--dd-muted); }
+.dd-tabs button:hover { color: var(--dd-ink); }
+.dd-tabs button.is-on { color: var(--dd-accent); border-bottom-color: var(--dd-accent); }
+.dd-tabs small { font-weight: 500; font-size: .75rem; color: var(--dd-muted); }
+.dd-toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 10px; }
+.dd-toolbar[hidden] { display: none; }
+.dd-toolbar .dd-field { flex: 1 1 220px; }
+.dd-toolbar small { flex-basis: 100%; }
+.dd-panel { display: flex; flex-direction: column; gap: 14px; }
+.dd-panel[hidden] { display: none; }
+.dd-empty { margin: 0; padding: 14px; border: 2px dashed var(--dd-line); border-radius: 14px; }
+.dd-empty[hidden] { display: none; }
+.dd-grow { flex: 1; text-align: right; color: var(--dd-muted); font-size: .85rem; }
+.dd-help { font-size: .85rem; color: var(--dd-muted); }
+.dd-help summary { cursor: pointer; font-weight: 600; color: var(--dd-ink); width: fit-content; }
+.dd-help p { margin: 6px 0 0; }
+.dd-classbar { padding: 10px 14px; gap: 6px; }
+/* Bảng công tháng · Học sinh cần chú ý */
+.dd-month { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.dd-month .dd-hint { margin: 0; flex: 1 1 260px; }
+.dd-watch { margin-top: 18px; border-top: 1px solid var(--dd-line); padding-top: 12px; }
+.dd-watch .dd-step { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.dd-watch li small { display: inline; margin-left: 4px; }
+.dd-watch li span { display: block; margin-top: 2px; color: inherit; }
+/* Ghi vào Sheet */
+.dd-write { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin: 10px 0 4px; font-size: .9rem; }
+.dd-write label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.dd-write label[hidden] { display: none; }
+.dd-write small { margin-left: auto; color: #b5541b; font-weight: 600; }
+/* Hôm nay · Việc cần làm */
+.dd-today[hidden] { display: none; }
+.dd-tasks { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-height: 300px; overflow: auto; }
+.dd-tasks li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 10px; border: 1px solid var(--dd-line); border-radius: 10px; }
+.dd-tasks li > div { min-width: 0; display: flex; flex-direction: column; }
+.dd-tasks li small { color: var(--dd-muted); font-size: .8rem; }
+.dd-tasks li.dd-muted { border-style: dashed; }
+.dd-step h2 i { color: var(--dd-accent); margin-right: .3em; }
+/* Tìm học sinh */
+.dd-find { display: flex; align-items: center; gap: 8px; color: var(--dd-muted); }
+.dd-find .dd-input { padding: 6px 10px; }
+.dd-list li[hidden] { display: none; }
+.dd-tasks li .dd-small { white-space: nowrap; flex: none; }
+.dd-nofind { margin: 0; padding: 8px; color: var(--dd-muted); font-size: .85rem; }
+.dd-nofind[hidden] { display: none; }

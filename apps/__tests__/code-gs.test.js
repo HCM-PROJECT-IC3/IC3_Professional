@@ -133,7 +133,7 @@ const ctx = {
   PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => { propReads++; return props.get(k) || null; }, setProperty: (k, v) => props.set(k, v),
     getKeys: () => [...props.keys()], deleteProperty: (k) => props.delete(k) }) },
   // lockWaits đếm lượt chờ khoá chung; onLock giả lập 1 lượt chạy KHÁC làm gì đó trong lúc mình chờ khoá.
-  LockService: { getScriptLock: () => ({ waitLock() { lockWaits++; if (onLock) { const f = onLock; onLock = null; f(); } }, releaseLock() {} }),
+  LockService: { getScriptLock: () => ({ waitLock() { lockWaits++; if (onLock) { const f = onLock; onLock = null; f(); } }, tryLock() { return true; }, releaseLock() {} }),
     getUserLock: () => ({ waitLock() {}, releaseLock() {} }) },
   ContentService: { MimeType: { JSON: 'json' }, createTextOutput: (t) => ({ setMimeType: () => ({ text: t }) }) },
   Utilities: {
@@ -438,6 +438,50 @@ eq('xoay file đồng thời: chỉ 1 file mới, bài ghi vào file lượt kia
   [Object.keys(createdFiles).length - filesBefore, other && other.getSheets()[0].rows.length], [1, 1]);
 mainFile.getSheets = realCells;
 eq('listResults đọc được cả file mới', call('listResults', as('admin1')).data.rows.some((r) => r.id === 'rot0000001'), true);
+
+// ── Ghi điểm danh vào sổ lớp của điều phối (classSheetWrite) ──
+{
+  const pad = (n) => String(n).padStart(2, '0');
+  const show = (v) => (v instanceof Date ? pad(v.getDate()) + '.' + pad(v.getMonth() + 1) : v === true ? 'TRUE' : v === false ? 'FALSE' : String(v));
+  const rows = [
+    ['TRƯỜNG', 'TH X', '', '', '', '', '', '', ''],
+    ['LỚP:', '3A1', '', '', '', '', '', '', ''],
+    ['', '', '', '', '', '', '', '', ''],
+    ['', '', '', '', '', '', '', '', ''],
+    ['MÃ SỐ HS', 'HỌ & TÊN ', '', '', 'TIẾT', '1', '2', '3', ''],
+    ['', '', '', '', 'THỨ', 'Thứ 3', 'Thứ 4', '', ''],
+    ['', '', '', '', 'NGÀY', new Date(2026, 9, 6), new Date(2026, 9, 7), '', ''],
+    ['', '', '', '', 'TÊN GV Bảo', '', '', '', ''],
+    ['', '', '', '', 'BÀI DẠY', 'Bài 1', 'Bài 2', 'Bài 3', 'Bài 4'],
+    ['', '', '', '', 'ĐÃ HOÀN THÀNH', true, true, false, false],
+    ['HS1', 'Nguyễn An', '', '', '', 'x', 'x', '', ''],
+    ['HS2', 'Trần  Bình', '', '', '', 'x', 'v', '', ''],
+  ].map((r) => r.map((v) => ({ v, f: v instanceof Date ? 'dd.mm' : '' })));
+  const tab = {
+    getSheetId: () => 777, getLastRow: () => rows.length, getLastColumn: () => rows[0].length,
+    getRange(r, c, nr, nc) {
+      if (nr) return { getDisplayValues: () => rows.slice(r - 1, r - 1 + nr).map((x) => x.slice(c - 1, c - 1 + nc).map((y) => show(y.v))) };
+      const cell = rows[r - 1][c - 1];
+      const rg = { getValue: () => cell.v, getNumberFormat: () => cell.f, setValue: (v) => { cell.v = v; return rg; }, setNumberFormat: (f) => { cell.f = f; return rg; } };
+      return rg;
+    },
+  };
+  const CS = 'CLASSFORM_abcdefghijklmnop';
+  createdFiles[CS] = { getSheets: () => [tab] };
+  ctx.SpreadsheetApp.flush = () => {};
+  const w = (who, o) => call('classSheetWrite', Object.assign(as(who), { sheetId: CS, gid: 777, cols: [{ col: 7, tiet: 3 }],
+    marks: [{ row: 10, name: 'Nguyễn An', m: 'v' }, { row: 11, name: 'Trần Bình', m: 'x' }], ngay: '2026-10-13', done: true }, o));
+  eq('sổ lớp: học sinh/điều phối không ghi được', [w('student').code, w('coordY').code], ['permission-denied', 'permission-denied']);
+  eq('sổ lớp: tên trên Sheet đã đổi → từ chối, không ghi lệch', [w('teachX', { marks: [{ row: 10, name: 'Lê Chi', m: 'v' }] }).code, rows[10][7].v], ['conflict', '']);
+  eq('sổ lớp: cột không còn là tiết đó → từ chối', w('teachX', { cols: [{ col: 6, tiet: 3 }] }).code, 'conflict');
+  eq('sổ lớp: ký hiệu lạ / cột ngoài vùng', [w('teachX', { marks: [{ row: 10, name: 'Nguyễn An', m: '=HACK()' }] }).code, w('teachX', { cols: [{ col: 3, tiet: 3 }] }).code], ['invalid-argument', 'invalid-argument']);
+  const ok = w('teachX');
+  eq('sổ lớp: giáo viên ghi điểm danh + ngày (kiểu ngày như ô bên) + tick hoàn thành',
+    [ok.data, rows[10][7].v, rows[11][7].v, show(rows[6][7].v), rows[6][7].f, rows[9][7].v], [{ written: 2, ngay: true, done: true }, 'v', 'x', '13.10', 'dd.mm', true]);
+  eq('sổ lớp: ghi lại y hệt → không ghi gì, không đè ngày đã có', w('teachX', { ngay: '2026-10-20' }).data, { written: 0, ngay: false, done: false });
+  eq('sổ lớp: tiết chưa hiện số (ô TIẾT trống) vẫn ghi được, ký hiệu Mới/NL',
+    [w('teachX', { cols: [{ col: 8, tiet: 4 }], marks: [{ row: 10, name: 'Nguyễn An', m: 'nl' }, { row: 11, name: 'Trần Bình', m: 'moi' }], done: false }).data.written, rows[10][8].v, rows[11][8].v], [2, 'NL', 'Mới']);
+}
 
 console.log(fails ? `\n${fails} FAIL` : '\nTất cả PASS');
 process.exit(fails ? 1 : 0);

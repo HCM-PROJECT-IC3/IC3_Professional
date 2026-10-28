@@ -9,6 +9,7 @@ const ROLES_MANAGE = ['admin', 'coordinator'];                         // xoá b
 const ROLES_MAPS = ['admin', 'teaching_coordinator', 'teacher', 'coordinator'];
 const ROLES_ADMIN = ['admin'];
 const ROLES_STAFF = ['admin', 'coordinator', 'teaching_coordinator', 'teacher']; // mọi tài khoản quản trị
+const ROLES_TEACH = ['admin', 'teacher'];                              // trang Điểm danh (sổ lớp điều phối)
 
 // Hàm (không phải hằng) để không phụ thuộc thứ tự nạp file khi dán thành nhiều file .gs.
 function routes_() {
@@ -30,6 +31,7 @@ function routes_() {
     logActivity:   { roles: ROLES_STAFF,   handler: logActivity_ },
     arenaRoomLog:  { roles: ROLES_STAFF,   handler: arenaRoomLog_ },
     arenaRelayTicket: { roles: ROLES_STAFF, handler: arenaRelayTicket_ },
+    classSheetWrite:  { roles: ROLES_TEACH, handler: classSheetWrite_ },
   };
 }
 

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>💻 Computer Simulator — Mini Game</title>
+<title>Computer Simulator — Mini Game</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/theme.css">
@@ -41,10 +41,10 @@
     <!-- ============ TOPBAR ============ -->
     <div class="cs-topbar">
       <div class="cs-header">
-        <div class="cs-title">💻 Computer Simulator</div>
+        <div class="cs-title"><i class="fa-solid fa-laptop" aria-hidden="true"></i> Computer Simulator</div>
         <div class="cs-subtitle" id="csMissionTitle">Đang tải nhiệm vụ…</div>
       </div>
-      <button type="button" class="cs-restart-btn" id="csRestartBtn" title="Chọn nhiệm vụ khác">🔄 Nhiệm vụ khác</button>
+      <button type="button" class="cs-restart-btn" id="csRestartBtn" title="Chọn nhiệm vụ khác"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Nhiệm vụ khác</button>
     </div>
 
     <!-- ============ MÔ TẢ NHIỆM VỤ ============ -->
@@ -53,12 +53,12 @@
     <!-- ============ FILE EXPLORER ============ -->
     <div class="cs-explorer">
       <div class="cs-toolbar">
-        <button type="button" class="cs-tool-btn" id="csNewFolderBtn" title="Tạo thư mục mới">📁 Thư mục mới</button>
-        <button type="button" class="cs-tool-btn" id="csRenameBtn" disabled title="Đổi tên mục đang chọn">✏️ Đổi tên</button>
-        <button type="button" class="cs-tool-btn" id="csMoveBtn" disabled title="Di chuyển mục đang chọn">✂️ Di chuyển</button>
-        <button type="button" class="cs-tool-btn" id="csCopyBtn" disabled title="Sao chép mục đang chọn">📋 Sao chép</button>
-        <button type="button" class="cs-tool-btn cs-tool-btn-danger" id="csDeleteBtn" disabled title="Xoá mục đang chọn">🗑️ Xoá</button>
-        <input type="text" class="cs-search-input" id="csSearchInput" placeholder="🔍 Tìm kiếm file/thư mục…">
+        <button type="button" class="cs-tool-btn" id="csNewFolderBtn" title="Tạo thư mục mới"><i class="fa-solid fa-folder-plus" aria-hidden="true"></i> Thư mục mới</button>
+        <button type="button" class="cs-tool-btn" id="csRenameBtn" disabled title="Đổi tên mục đang chọn"><i class="fa-solid fa-pen" aria-hidden="true"></i> Đổi tên</button>
+        <button type="button" class="cs-tool-btn" id="csMoveBtn" disabled title="Di chuyển mục đang chọn"><i class="fa-solid fa-scissors" aria-hidden="true"></i> Di chuyển</button>
+        <button type="button" class="cs-tool-btn" id="csCopyBtn" disabled title="Sao chép mục đang chọn"><i class="fa-solid fa-copy" aria-hidden="true"></i> Sao chép</button>
+        <button type="button" class="cs-tool-btn cs-tool-btn-danger" id="csDeleteBtn" disabled title="Xoá mục đang chọn"><i class="fa-solid fa-trash-can" aria-hidden="true"></i> Xoá</button>
+        <input type="text" class="cs-search-input" id="csSearchInput" placeholder="Tìm kiếm file/thư mục…">
       </div>
 
       <div class="cs-breadcrumb" id="csBreadcrumb"></div>
@@ -71,13 +71,13 @@
     <!-- ============ NỘP KẾT QUẢ ============ -->
     <div class="cs-submit-bar">
       <div class="cs-feedback" id="csFeedback"></div>
-      <button type="button" class="cs-btn cs-btn-primary" id="csCheckBtn">✅ Kiểm tra kết quả</button>
+      <button type="button" class="cs-btn cs-btn-primary" id="csCheckBtn"><i class="fa-solid fa-check" aria-hidden="true"></i> Kiểm tra kết quả</button>
     </div>
 
     <!-- ============ MÀN CHỌN NHIỆM VỤ ============ -->
     <div class="cs-overlay" id="csMissionOverlay">
       <div class="cs-overlay-card">
-        <div class="cs-overlay-icon">💻</div>
+        <div class="cs-overlay-icon"><i class="fa-solid fa-laptop" aria-hidden="true"></i></div>
         <div class="cs-overlay-title">Chọn 1 nhiệm vụ</div>
         <div class="cs-overlay-desc">Mỗi nhiệm vụ mô phỏng 1 thao tác quản lý tệp tin thật trên máy tính — làm càng ít lỗi thử-sai, điểm càng cao!</div>
         <div class="cs-mission-list" id="csMissionList"></div>
@@ -87,11 +87,11 @@
     <!-- ============ MÀN KẾT QUẢ ============ -->
     <div class="cs-overlay" id="csResultOverlay" hidden>
       <div class="cs-overlay-card">
-        <div class="cs-overlay-icon" id="csResultIcon">🏆</div>
+        <div class="cs-overlay-icon" id="csResultIcon"><i class="fa-solid fa-trophy" aria-hidden="true"></i></div>
         <div class="cs-overlay-title" id="csResultTitle">Hoàn thành!</div>
         <div class="cs-overlay-desc" id="csResultDesc"></div>
         <div class="cs-overlay-actions">
-          <button type="button" class="cs-btn cs-btn-primary" id="csNextMissionBtn">💻 Nhiệm vụ khác</button>
+          <button type="button" class="cs-btn cs-btn-primary" id="csNextMissionBtn"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Nhiệm vụ khác</button>
         </div>
       </div>
     </div>

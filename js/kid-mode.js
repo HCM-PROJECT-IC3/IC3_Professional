@@ -1,9 +1,9 @@
 /* ============================================================
    js/kid-mode.js — "Chữ to" cho học sinh tiểu học ở trang làm bài (index.html)
 
-   Tự bật khi lớp ≤ 5 (hoặc chương trình Spark); nút "🔠 Chữ to" trên thanh
+   Tự bật khi lớp ≤ 5 (hoặc chương trình Spark); nút "Chữ to" trên thanh
    trên cùng cho bật/tắt tay (nhớ trong localStorage, theo máy).
-     • Chữ câu hỏi/đáp án to, đáp án đang chọn tô đặc + nhãn "✓ Em chọn".
+     • Chữ câu hỏi/đáp án to, đáp án đang chọn tô đặc + nhãn "Em chọn".
      • Dòng nhắc dưới đáp án: "Em đã chọn: B. Máy quét" / "Em hãy bấm 1 đáp án".
      • 🔊 Nghe câu hỏi (đọc to câu hỏi + đáp án, giọng tiếng Việt của máy).
      • Ôn luyện → "Kiểm tra đáp án": tô xanh/đỏ NGAY trên đáp án (không lặp

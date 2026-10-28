@@ -1,6 +1,6 @@
 /* ============================================================
    js/teaching-timetable-import.js
-   Modal "📥 Nhập từ Excel" của tab "🗓️ TKB lớp" — nhập hàng loạt mã lớp
+   Modal "Nhập từ Excel" của tab "TKB lớp" — nhập hàng loạt mã lớp
    (+ tuỳ chọn giờ tiết) cho NHIỀU giáo viên/nhiều ngày cùng lúc từ 1 file
    Excel, thay cho hướng "đọc ảnh" (OCR) đã bỏ vì không đủ tin cậy khi 1
    ảnh có nhiều giáo viên chia nhau theo cột/khoảng tiết.
@@ -18,7 +18,7 @@
      mà tên vẫn để "trùng ngẫu nhiên" đúng hoặc bỏ trống qua mắt).
    - Giờ tiết: nếu khác giờ ĐÃ CẤU HÌNH trước đó cho đúng tiết này (tab
      "⏱️ Giờ tiết") → vẫn cho ghi nhưng CẢNH BÁO rõ trước khi xác nhận.
-   - Trường: nếu có ghi, đối chiếu với "địa điểm" đã lưu ở tab "📅 Lịch
+   - Trường: nếu có ghi, đối chiếu với "địa điểm" đã lưu ở tab "Lịch
      tuần" (teaching_schedule) cho đúng giáo viên/Thứ/buổi/tuần đó — lệch
      thì CẢNH BÁO (không chặn, vì địa điểm ghi tự do nên tên gọi có thể
      không giống hệt nhau dù cùng 1 nơi).
@@ -69,7 +69,7 @@
 
   // ---- 🧾 Tải file mẫu ----
   document.getElementById('ttImportTemplateBtn').addEventListener('click', () => {
-    if (!window.XLSX) { toast('⚠️ Chưa tải được thư viện Excel, kiểm tra mạng rồi thử lại.'); return; }
+    if (!window.XLSX) { toast('Chưa tải được thư viện Excel, kiểm tra mạng rồi thử lại.'); return; }
     const header = ['Mã GV', 'Tên GV', 'Trường', 'Thứ', 'Buổi', 'Tiết', 'Mã lớp', 'Giờ bắt đầu', 'Giờ kết thúc'];
     const sample = [
       ['HCM0092', 'Nguyễn Văn A', 'TiH Tân Tạo A', 2, 'Sáng', 1, '5/1', '07:30', '08:05'],
@@ -85,10 +85,10 @@
 
   // ---- Mở modal ----
   document.getElementById('ttImportBtn').addEventListener('click', () => {
-    if (!window.XLSX) { toast('⚠️ Chưa tải được thư viện đọc Excel, kiểm tra mạng rồi thử lại.'); return; }
-    if (!window.EduTeachingTimetableView) { toast('⚠️ Trang chưa sẵn sàng, thử lại sau giây lát.'); return; }
+    if (!window.XLSX) { toast('Chưa tải được thư viện đọc Excel, kiểm tra mạng rồi thử lại.'); return; }
+    if (!window.EduTeachingTimetableView) { toast('Trang chưa sẵn sàng, thử lại sau giây lát.'); return; }
     const ctx = window.EduTeachingTimetableView.getContext();
-    if (!ctx.weekKey) { toast('⚠️ Chọn 1 tuần ở tab "TKB lớp" trước khi nhập.'); return; }
+    if (!ctx.weekKey) { toast('Chọn 1 tuần ở tab "TKB lớp" trước khi nhập.'); return; }
     resetModal();
     document.getElementById('ttImportWeekLabel').textContent = ctx.weekLabel || ctx.weekKey;
     document.getElementById('ttImportModalOverlay').classList.add('show');
@@ -134,7 +134,7 @@
     const ctx = window.EduTeachingTimetableView.getContext();
     const knownTeachers = new Map((ctx.teachers || []).map((t) => [t.code.toUpperCase(), t]));
     const reader = new FileReader();
-    reader.onerror = () => toast('⚠️ Không đọc được file, thử lại.');
+    reader.onerror = () => toast('Không đọc được file, thử lại.');
     reader.onload = async (ev) => {
       const progressEl = document.getElementById('ttImportProgress');
       try {
@@ -143,13 +143,13 @@
         const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
         const parsed = parseRows(rows, knownTeachers);
         if (!parsed.rowCount) {
-          toast('⚠️ Không có dòng hợp lệ nào trong file (kiểm tra lại Mã GV/Tên GV có khớp hệ thống không).');
+          toast('Không có dòng hợp lệ nào trong file (kiểm tra lại Mã GV/Tên GV có khớp hệ thống không).');
           return;
         }
         progressEl.classList.remove('force-hide');
         await crossCheckAndFinalize(parsed, ctx);
       } catch (err) {
-        toast('⚠️ ' + err.message);
+        toast(err.message);
       } finally {
         progressEl.classList.add('force-hide');
       }
@@ -310,7 +310,7 @@
   document.getElementById('ttImportConfirmBtn').addEventListener('click', async () => {
     if (!pendingImport) return;
     const ctx = window.EduTeachingTimetableView.getContext();
-    if (!ctx.weekKey) { toast('⚠️ Không xác định được tuần đang chọn, đóng modal rồi thử lại.'); return; }
+    if (!ctx.weekKey) { toast('Không xác định được tuần đang chọn, đóng modal rồi thử lại.'); return; }
     const btn = document.getElementById('ttImportConfirmBtn');
     btn.disabled = true;
     btn.textContent = '⏳ Đang nhập...';
@@ -343,14 +343,14 @@
       }
       if (ops > 0) await batch.commit();
 
-      toast(`✅ Đã nhập ${pendingImport.rowCount} dòng cho ${pendingImport.byTeacher.size} giáo viên.`);
+      toast(`Đã nhập ${pendingImport.rowCount} dòng cho ${pendingImport.byTeacher.size} giáo viên.`);
       closeImportModal();
       window.EduTeachingTimetableView.reload();
     } catch (err) {
-      toast('❌ ' + friendlyError(err));
+      toast(friendlyError(err));
     } finally {
       btn.disabled = false;
-      btn.textContent = '💾 Nhập dữ liệu';
+      btn.textContent = 'Nhập dữ liệu';
     }
   });
 })();

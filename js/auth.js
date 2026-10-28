@@ -185,11 +185,11 @@
   }
 
   const ROLE_LABEL = {
-    admin: '👑 Quản trị viên',
-    teacher: '📖 Giáo viên',
-    coordinator: '🧭 Điều phối đào tạo',
-    teaching_coordinator: '🚗 Điều phối giáo viên',
-    student: '🎓 Học sinh',
+    admin: 'Quản trị viên',
+    teacher: 'Giáo viên',
+    coordinator: 'Điều phối đào tạo',
+    teaching_coordinator: 'Điều phối giáo viên',
+    student: 'Học sinh',
   };
 
   global.EduAuth = {

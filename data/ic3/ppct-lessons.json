@@ -1,0 +1,1148 @@
+{
+ "_doc": "Sinh bởi scripts/build-ppct-lessons.py từ PPCT 45 tiết (Aca HCM). Mỗi cấp: các dòng theo thứ tự tiết — {tiet, bai} là bài học IC3/Spark (tên bài lấy từ bộ \"Bài N.\" trong data/ic3); {tiet, kind: on|kt, title} là tiết Ôn tập/Kiểm tra. grade = khối lớp học cấp đó. Dùng ở trang Gọi tên (Bốc thử thách theo bài hôm nay).",
+ "Spark__LV1": {
+  "grade": 3,
+  "rows": [
+   {
+    "tiet": "1-2",
+    "bai": 1
+   },
+   {
+    "tiet": "3",
+    "bai": 2
+   },
+   {
+    "tiet": "3",
+    "bai": 3
+   },
+   {
+    "tiet": "4",
+    "bai": 4
+   },
+   {
+    "tiet": "5-6",
+    "bai": 5
+   },
+   {
+    "tiet": "7-8",
+    "bai": 6
+   },
+   {
+    "tiet": "9",
+    "bai": 7
+   },
+   {
+    "tiet": "9",
+    "bai": 8
+   },
+   {
+    "tiet": "10",
+    "kind": "on",
+    "title": "Ôn tập 1"
+   },
+   {
+    "tiet": "11",
+    "kind": "kt",
+    "title": "Kiểm tra giữa HK1"
+   },
+   {
+    "tiet": "11",
+    "bai": 9
+   },
+   {
+    "tiet": "11",
+    "bai": 10
+   },
+   {
+    "tiet": "12",
+    "bai": 11
+   },
+   {
+    "tiet": "12",
+    "bai": 12
+   },
+   {
+    "tiet": "13",
+    "kind": "on",
+    "title": "Ôn tập 2"
+   },
+   {
+    "tiet": "13",
+    "bai": 13
+   },
+   {
+    "tiet": "14-15",
+    "bai": 14
+   },
+   {
+    "tiet": "14-15",
+    "bai": 15
+   },
+   {
+    "tiet": "16",
+    "bai": 16
+   },
+   {
+    "tiet": "17",
+    "bai": 17
+   },
+   {
+    "tiet": "18-19",
+    "bai": 18
+   },
+   {
+    "tiet": "20",
+    "bai": 19
+   },
+   {
+    "tiet": "21",
+    "bai": 20
+   },
+   {
+    "tiet": "22-23",
+    "bai": 21
+   },
+   {
+    "tiet": "24",
+    "kind": "kt",
+    "title": "Kiểm tra HK1"
+   },
+   {
+    "tiet": "25-26",
+    "bai": 22
+   },
+   {
+    "tiet": "27-28",
+    "bai": 23
+   },
+   {
+    "tiet": "29",
+    "kind": "on",
+    "title": "Ôn tập 3"
+   },
+   {
+    "tiet": "30",
+    "kind": "kt",
+    "title": "Kiểm tra giữa HK2"
+   },
+   {
+    "tiet": "31",
+    "bai": 24
+   },
+   {
+    "tiet": "32-33",
+    "bai": 25
+   },
+   {
+    "tiet": "34-35",
+    "bai": 26
+   },
+   {
+    "tiet": "36",
+    "bai": 27
+   },
+   {
+    "tiet": "36",
+    "bai": 28
+   },
+   {
+    "tiet": "37",
+    "bai": 29
+   },
+   {
+    "tiet": "38",
+    "kind": "on",
+    "title": "Ôn tập 4"
+   },
+   {
+    "tiet": "38",
+    "bai": 30
+   },
+   {
+    "tiet": "38",
+    "bai": 31
+   },
+   {
+    "tiet": "39",
+    "bai": 32
+   },
+   {
+    "tiet": "40",
+    "bai": 33
+   },
+   {
+    "tiet": "41-42",
+    "bai": 34
+   },
+   {
+    "tiet": "43",
+    "bai": 35
+   },
+   {
+    "tiet": "44",
+    "kind": "on",
+    "title": "Ôn tập 5"
+   },
+   {
+    "tiet": "45",
+    "kind": "kt",
+    "title": "Kiểm tra HK2"
+   }
+  ]
+ },
+ "Spark__LV2": {
+  "grade": 4,
+  "rows": [
+   {
+    "tiet": "1",
+    "bai": 1
+   },
+   {
+    "tiet": "2",
+    "bai": 2
+   },
+   {
+    "tiet": "3",
+    "bai": 3
+   },
+   {
+    "tiet": "3",
+    "bai": 4
+   },
+   {
+    "tiet": "3",
+    "bai": 5
+   },
+   {
+    "tiet": "4-5",
+    "bai": 6
+   },
+   {
+    "tiet": "4-5",
+    "bai": 7
+   },
+   {
+    "tiet": "6",
+    "bai": 8
+   },
+   {
+    "tiet": "7",
+    "kind": "on",
+    "title": "Ôn tập 1"
+   },
+   {
+    "tiet": "8",
+    "bai": 9
+   },
+   {
+    "tiet": "9-10",
+    "bai": 10
+   },
+   {
+    "tiet": "11-12",
+    "bai": 11
+   },
+   {
+    "tiet": "13",
+    "bai": 12
+   },
+   {
+    "tiet": "14",
+    "bai": 13
+   },
+   {
+    "tiet": "14",
+    "bai": 14
+   },
+   {
+    "tiet": "15",
+    "bai": 15
+   },
+   {
+    "tiet": "16",
+    "bai": 16
+   },
+   {
+    "tiet": "16",
+    "bai": 17
+   },
+   {
+    "tiet": "17",
+    "bai": 18
+   },
+   {
+    "tiet": "18",
+    "bai": 19
+   },
+   {
+    "tiet": "19-20",
+    "bai": 20
+   },
+   {
+    "tiet": "19-20",
+    "bai": 21
+   },
+   {
+    "tiet": "21",
+    "kind": "on",
+    "title": "Ôn tập 2"
+   },
+   {
+    "tiet": "22-23",
+    "bai": 22
+   },
+   {
+    "tiet": "24",
+    "kind": "on",
+    "title": "Ôn tập học kì 1"
+   },
+   {
+    "tiet": "25",
+    "kind": "kt",
+    "title": "Kiểm tra HK1"
+   },
+   {
+    "tiet": "26",
+    "bai": 23
+   },
+   {
+    "tiet": "27-28",
+    "bai": 24
+   },
+   {
+    "tiet": "29",
+    "kind": "on",
+    "title": "Ôn tập 3"
+   },
+   {
+    "tiet": "30",
+    "bai": 25
+   },
+   {
+    "tiet": "31",
+    "bai": 26
+   },
+   {
+    "tiet": "32-33",
+    "bai": 27
+   },
+   {
+    "tiet": "34",
+    "kind": "on",
+    "title": "Ôn tập 4"
+   },
+   {
+    "tiet": "34",
+    "bai": 28
+   },
+   {
+    "tiet": "35-36",
+    "bai": 29
+   },
+   {
+    "tiet": "37",
+    "kind": "on",
+    "title": "Ôn tập 5"
+   },
+   {
+    "tiet": "37",
+    "bai": 30
+   },
+   {
+    "tiet": "38-39",
+    "bai": 31
+   },
+   {
+    "tiet": "40",
+    "bai": 32
+   },
+   {
+    "tiet": "40",
+    "bai": 33
+   },
+   {
+    "tiet": "41-42",
+    "bai": 34
+   },
+   {
+    "tiet": "41-42",
+    "bai": 35
+   },
+   {
+    "tiet": "43",
+    "kind": "on",
+    "title": "Ôn tập 6"
+   },
+   {
+    "tiet": "44",
+    "kind": "on",
+    "title": "Ôn tập cuối học kì 2"
+   },
+   {
+    "tiet": "45",
+    "kind": "kt",
+    "title": "Kiểm tra HK2"
+   }
+  ]
+ },
+ "Spark__LV3": {
+  "grade": 5,
+  "rows": [
+   {
+    "tiet": "1-2",
+    "bai": 1
+   },
+   {
+    "tiet": "3",
+    "bai": 2
+   },
+   {
+    "tiet": "3",
+    "bai": 3
+   },
+   {
+    "tiet": "3",
+    "bai": 4
+   },
+   {
+    "tiet": "4",
+    "bai": 5
+   },
+   {
+    "tiet": "5",
+    "bai": 6
+   },
+   {
+    "tiet": "5",
+    "bai": 7
+   },
+   {
+    "tiet": "6",
+    "bai": 8
+   },
+   {
+    "tiet": "7",
+    "kind": "on",
+    "title": "Ôn tập 1"
+   },
+   {
+    "tiet": "8",
+    "kind": "kt",
+    "title": "Kiểm tra giữa HK1"
+   },
+   {
+    "tiet": "9",
+    "bai": 9
+   },
+   {
+    "tiet": "9",
+    "bai": 10
+   },
+   {
+    "tiet": "10",
+    "bai": 11
+   },
+   {
+    "tiet": "10",
+    "bai": 12
+   },
+   {
+    "tiet": "11-12",
+    "bai": 13
+   },
+   {
+    "tiet": "11-12",
+    "bai": 14
+   },
+   {
+    "tiet": "13-14",
+    "bai": 15
+   },
+   {
+    "tiet": "15",
+    "kind": "on",
+    "title": "Ôn tập 2"
+   },
+   {
+    "tiet": "15",
+    "bai": 16
+   },
+   {
+    "tiet": "16",
+    "bai": 17
+   },
+   {
+    "tiet": "17-18",
+    "bai": 18
+   },
+   {
+    "tiet": "19",
+    "bai": 19
+   },
+   {
+    "tiet": "20",
+    "bai": 20
+   },
+   {
+    "tiet": "21-22",
+    "bai": 21
+   },
+   {
+    "tiet": "23",
+    "kind": "kt",
+    "title": "Kiểm tra HK1"
+   },
+   {
+    "tiet": "24",
+    "bai": 22
+   },
+   {
+    "tiet": "25-26",
+    "bai": 23
+   },
+   {
+    "tiet": "27",
+    "kind": "on",
+    "title": "Ôn tập 3"
+   },
+   {
+    "tiet": "28",
+    "kind": "kt",
+    "title": "Kiểm tra giữa HK2"
+   },
+   {
+    "tiet": "29-30",
+    "bai": 24
+   },
+   {
+    "tiet": "31",
+    "bai": 25
+   },
+   {
+    "tiet": "32",
+    "bai": 26
+   },
+   {
+    "tiet": "33",
+    "bai": 27
+   },
+   {
+    "tiet": "34",
+    "bai": 28
+   },
+   {
+    "tiet": "35-36",
+    "bai": 29
+   },
+   {
+    "tiet": "37",
+    "kind": "on",
+    "title": "Ôn tập 4"
+   },
+   {
+    "tiet": "38",
+    "bai": 30
+   },
+   {
+    "tiet": "38",
+    "bai": 31
+   },
+   {
+    "tiet": "39-40",
+    "bai": 32
+   },
+   {
+    "tiet": "41-42",
+    "bai": 33
+   },
+   {
+    "tiet": "43",
+    "bai": 34
+   },
+   {
+    "tiet": "43",
+    "bai": 35
+   },
+   {
+    "tiet": "44",
+    "kind": "on",
+    "title": "Ôn tập 5"
+   },
+   {
+    "tiet": "45",
+    "kind": "kt",
+    "title": "Kiểm tra HK2"
+   }
+  ]
+ },
+ "IC3__LV1": {
+  "grade": 6,
+  "rows": [
+   {
+    "tiet": "1-2",
+    "bai": 1
+   },
+   {
+    "tiet": "3-4",
+    "bai": 2
+   },
+   {
+    "tiet": "3-4",
+    "bai": 3
+   },
+   {
+    "tiet": "5",
+    "bai": 4
+   },
+   {
+    "tiet": "5",
+    "bai": 5
+   },
+   {
+    "tiet": "6",
+    "bai": 6
+   },
+   {
+    "tiet": "7-8",
+    "bai": 7
+   },
+   {
+    "tiet": "9-10",
+    "bai": 8
+   },
+   {
+    "tiet": "11",
+    "kind": "on",
+    "title": "Ôn tập"
+   },
+   {
+    "tiet": "12",
+    "kind": "kt",
+    "title": "Kiểm tra giữa HK1"
+   },
+   {
+    "tiet": "13",
+    "bai": 9
+   },
+   {
+    "tiet": "14-15",
+    "bai": 10
+   },
+   {
+    "tiet": "14-15",
+    "bai": 11
+   },
+   {
+    "tiet": "16-17",
+    "bai": 12
+   },
+   {
+    "tiet": "16-17",
+    "bai": 13
+   },
+   {
+    "tiet": "16-17",
+    "bai": 14
+   },
+   {
+    "tiet": "16-17",
+    "bai": 15
+   },
+   {
+    "tiet": "18",
+    "kind": "on",
+    "title": "Ôn tập"
+   },
+   {
+    "tiet": "18",
+    "bai": 16
+   },
+   {
+    "tiet": "18",
+    "bai": 17
+   },
+   {
+    "tiet": "19",
+    "bai": 18
+   },
+   {
+    "tiet": "20-21",
+    "bai": 19
+   },
+   {
+    "tiet": "22",
+    "bai": 20
+   },
+   {
+    "tiet": "23",
+    "bai": 21
+   },
+   {
+    "tiet": "24",
+    "kind": "kt",
+    "title": "Kiểm tra HK1"
+   },
+   {
+    "tiet": "24",
+    "bai": 22
+   },
+   {
+    "tiet": "24",
+    "bai": 23
+   },
+   {
+    "tiet": "25",
+    "kind": "on",
+    "title": "Ôn tập Truyền thông + An toàn bảo mật"
+   },
+   {
+    "tiet": "26",
+    "kind": "kt",
+    "title": "Kiểm tra giữa HK2"
+   },
+   {
+    "tiet": "27-28",
+    "bai": 24
+   },
+   {
+    "tiet": "29",
+    "bai": 25
+   },
+   {
+    "tiet": "30-31",
+    "bai": 26
+   },
+   {
+    "tiet": "32",
+    "bai": 27
+   },
+   {
+    "tiet": "33",
+    "bai": 28
+   },
+   {
+    "tiet": "34",
+    "bai": 29
+   },
+   {
+    "tiet": "34",
+    "kind": "on",
+    "title": "Ôn tập Sáng tạo nội dung Test 1"
+   },
+   {
+    "tiet": "36-37",
+    "bai": 30
+   },
+   {
+    "tiet": "38-39",
+    "bai": 31
+   },
+   {
+    "tiet": "40",
+    "bai": 32
+   },
+   {
+    "tiet": "41",
+    "bai": 33
+   },
+   {
+    "tiet": "42",
+    "bai": 34
+   },
+   {
+    "tiet": "43",
+    "bai": 35
+   },
+   {
+    "tiet": "44",
+    "kind": "on",
+    "title": "Ôn tập Chủ đề Cộng tác + Sáng tạo nội dung Test 2"
+   },
+   {
+    "tiet": "45",
+    "kind": "kt",
+    "title": "Kiểm tra HK2"
+   },
+   {
+    "tiet": "45",
+    "kind": "on",
+    "title": "Ôn tập Tổng hợp"
+   }
+  ]
+ },
+ "IC3__LV2": {
+  "grade": 7,
+  "rows": [
+   {
+    "tiet": "1",
+    "bai": 1
+   },
+   {
+    "tiet": "2",
+    "bai": 2
+   },
+   {
+    "tiet": "3",
+    "bai": 3
+   },
+   {
+    "tiet": "4",
+    "bai": 4
+   },
+   {
+    "tiet": "5",
+    "bai": 5
+   },
+   {
+    "tiet": "6",
+    "bai": 6
+   },
+   {
+    "tiet": "7",
+    "bai": 7
+   },
+   {
+    "tiet": "8",
+    "kind": "on",
+    "title": "Ôn tập 1"
+   },
+   {
+    "tiet": "9",
+    "bai": 8
+   },
+   {
+    "tiet": "10",
+    "bai": 9
+   },
+   {
+    "tiet": "11",
+    "kind": "kt",
+    "title": "Kiểm tra giữa kì I"
+   },
+   {
+    "tiet": "12",
+    "bai": 10
+   },
+   {
+    "tiet": "13",
+    "bai": 11
+   },
+   {
+    "tiet": "14",
+    "kind": "on",
+    "title": "Ôn tập 2"
+   },
+   {
+    "tiet": "15",
+    "bai": 12
+   },
+   {
+    "tiet": "16",
+    "bai": 13
+   },
+   {
+    "tiet": "17",
+    "kind": "on",
+    "title": "Ôn tập 3"
+   },
+   {
+    "tiet": "18",
+    "bai": 14
+   },
+   {
+    "tiet": "19",
+    "bai": 15
+   },
+   {
+    "tiet": "20",
+    "kind": "on",
+    "title": "Ôn tập"
+   },
+   {
+    "tiet": "21",
+    "kind": "kt",
+    "title": "Kiểm tra HK1"
+   },
+   {
+    "tiet": "22",
+    "bai": 16
+   },
+   {
+    "tiet": "23",
+    "bai": 17
+   },
+   {
+    "tiet": "24",
+    "bai": 18
+   },
+   {
+    "tiet": "25",
+    "bai": 19
+   },
+   {
+    "tiet": "26",
+    "bai": 20
+   },
+   {
+    "tiet": "27",
+    "bai": 21
+   },
+   {
+    "tiet": "28",
+    "bai": 22
+   },
+   {
+    "tiet": "29",
+    "bai": 23
+   },
+   {
+    "tiet": "30",
+    "bai": 24
+   },
+   {
+    "tiet": "31",
+    "bai": 25
+   },
+   {
+    "tiet": "32",
+    "bai": 26
+   },
+   {
+    "tiet": "33",
+    "bai": 27
+   },
+   {
+    "tiet": "34",
+    "bai": 28
+   },
+   {
+    "tiet": "35",
+    "bai": 29
+   },
+   {
+    "tiet": "36",
+    "kind": "on",
+    "title": "Ôn tập 4"
+   },
+   {
+    "tiet": "37",
+    "kind": "kt",
+    "title": "Kiểm tra giữa kì II"
+   },
+   {
+    "tiet": "38",
+    "bai": 30
+   },
+   {
+    "tiet": "39",
+    "bai": 31
+   },
+   {
+    "tiet": "40",
+    "bai": 32
+   },
+   {
+    "tiet": "41",
+    "bai": 33
+   },
+   {
+    "tiet": "42",
+    "bai": 34
+   },
+   {
+    "tiet": "43",
+    "bai": 35
+   },
+   {
+    "tiet": "44",
+    "kind": "on",
+    "title": "Ôn tập học kì 2"
+   },
+   {
+    "tiet": "45",
+    "kind": "kt",
+    "title": "Kiểm tra HK2"
+   }
+  ]
+ },
+ "IC3__LV3": {
+  "grade": 8,
+  "rows": [
+   {
+    "tiet": "1",
+    "bai": 1
+   },
+   {
+    "tiet": "2",
+    "bai": 2
+   },
+   {
+    "tiet": "3",
+    "bai": 3
+   },
+   {
+    "tiet": "4",
+    "bai": 4
+   },
+   {
+    "tiet": "5",
+    "bai": 5
+   },
+   {
+    "tiet": "5",
+    "bai": 6
+   },
+   {
+    "tiet": "6",
+    "kind": "on",
+    "title": "Ôn tập chủ đề Quản lý thông tin"
+   },
+   {
+    "tiet": "7",
+    "bai": 7
+   },
+   {
+    "tiet": "7",
+    "bai": 8
+   },
+   {
+    "tiet": "8",
+    "bai": 9
+   },
+   {
+    "tiet": "9",
+    "bai": 10
+   },
+   {
+    "tiet": "9",
+    "bai": 11
+   },
+   {
+    "tiet": "10",
+    "kind": "on",
+    "title": "Ôn tập chủ đề Công dân số"
+   },
+   {
+    "tiet": "11",
+    "bai": 12
+   },
+   {
+    "tiet": "12",
+    "bai": 13
+   },
+   {
+    "tiet": "13",
+    "kind": "on",
+    "title": "Ôn tập chủ đề Căn bản về công nghệ"
+   },
+   {
+    "tiet": "14",
+    "bai": 14
+   },
+   {
+    "tiet": "15",
+    "bai": 15
+   },
+   {
+    "tiet": "16",
+    "bai": 16
+   },
+   {
+    "tiet": "17",
+    "bai": 17
+   },
+   {
+    "tiet": "18",
+    "bai": 18
+   },
+   {
+    "tiet": "19",
+    "bai": 19
+   },
+   {
+    "tiet": "19",
+    "bai": 20
+   },
+   {
+    "tiet": "20",
+    "bai": 21
+   },
+   {
+    "tiet": "21",
+    "bai": 22
+   },
+   {
+    "tiet": "22",
+    "kind": "on",
+    "title": "Ôn tập chủ đề Sáng tạo nội dung"
+   },
+   {
+    "tiet": "23",
+    "bai": 23
+   },
+   {
+    "tiet": "24",
+    "bai": 24
+   },
+   {
+    "tiet": "24",
+    "bai": 25
+   },
+   {
+    "tiet": "25",
+    "bai": 26
+   },
+   {
+    "tiet": "26",
+    "kind": "on",
+    "title": "Ôn tập chủ đề Giao tiếp kĩ thuật số"
+   },
+   {
+    "tiet": "27",
+    "bai": 27
+   },
+   {
+    "tiet": "27",
+    "bai": 28
+   },
+   {
+    "tiet": "28",
+    "bai": 29
+   },
+   {
+    "tiet": "29",
+    "kind": "on",
+    "title": "Ôn tập chủ đề Cộng tác"
+   },
+   {
+    "tiet": "30",
+    "bai": 30
+   },
+   {
+    "tiet": "31",
+    "bai": 31
+   },
+   {
+    "tiet": "32",
+    "bai": 32
+   },
+   {
+    "tiet": "33",
+    "bai": 33
+   },
+   {
+    "tiet": "34",
+    "bai": 34
+   },
+   {
+    "tiet": "34",
+    "bai": 35
+   },
+   {
+    "tiet": "35",
+    "kind": "on",
+    "title": "Ôn tập chủ đề An toàn và bảo mật"
+   }
+  ]
+ }
+}

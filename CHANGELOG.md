@@ -1,5 +1,146 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## Điểm danh: giao diện đồng bộ trang quản trị + Hôm nay, Việc cần làm, tìm học sinh (28/10/2026)
+
+- **Giao diện giống các trang quản trị** (Lịch giảng dạy, Trang quản lý):
+  - Thanh trên cùng: "← Trang quản lý", tên trang, Gọi tên, chip tài khoản (tên · vai trò), nút sáng/tối kiểu chung, Đăng xuất.
+  - Màu navy IIG, chữ Inter/Baloo 2, nền và viền lấy từ `css/theme.css` nên chế độ tối đổi theo cả web. Trang không còn dùng giao diện màu kem của Gọi tên (`css/name-picker.css`); lớp CSS đổi tiền tố `np-` → `dd-`.
+  - Thanh thẻ dính ngay dưới thanh trên cùng khi cuộn.
+- **Hôm nay** (thẻ Lịch dạy): các lớp hôm nay của tôi kèm tiết, bài; nút "Điểm danh" mở thẳng đúng buổi.
+- **Việc cần làm**: tiết đã qua (30 ngày gần nhất) chưa tick "Đã hoàn thành", và ngày thường dạy mà Sheet chưa có buổi. Nút "Mở" vào đúng buổi để ghi vào Sheet.
+- **Tìm học sinh** trong danh sách điểm danh: gõ không dấu cũng được ("gia khai" → Nguyễn Gia Khải). Còn 1 bạn thì Enter đổi Có mặt ↔ Vắng.
+- **Tự điền "Tên của tôi"** từ tên tài khoản giáo viên lần đầu mở trang.
+- Thêm `untickedSessions` vào `js/so-lop/so-lop-core.js`, kèm test.
+
+## Điểm danh: ghi thẳng vào Sheet điều phối, tự đọc lại Sheet, chỉ giáo viên/admin được vào (28/10/2026)
+
+- **Ghi vào Sheet** (thẻ Điểm danh): một nút ghi ký hiệu điểm danh vào đúng cột tiết. Lớp 2 tiết/buổi thì ghi cả 2 cột.
+  - Tuỳ chọn: điền ngày hôm nay vào ô NGÀY (chỉ khi ô đang trống, đúng kiểu ngày như các ô bên cạnh) và tick "Đã hoàn thành".
+  - Ghi xong trang đọc lại Sheet và vẫn ở buổi vừa ghi; bản nháp của buổi đó được xoá.
+  - Chạy qua Apps Script mới `classSheetWrite` (`apps/src/48-class-sheet.gs`), chỉ tài khoản admin/teacher đã duyệt. Máy chủ tự tìm lại dòng nhãn, kiểm cột thuộc vùng tiết, và tên từng học sinh phải khớp tên trên Sheet; điều phối vừa chèn/xoá dòng thì từ chối, không ghi lệch. Chỉ nhận ký hiệu x / v / NL / Mới.
+  - **Cần làm 1 lần**: deploy lại `apps/Code.gs` (BACKEND_VERSION 2026-10-28), và nhờ mỗi điều phối Chia sẻ file FORM cho email Google đã deploy Apps Script với quyền Người chỉnh sửa. Chưa làm thì nút báo lỗi rõ ràng; "Sao chép cột" vẫn dùng được.
+- **Sheet → web**: lớp đang mở tự đọc lại 2 phút/lần khi đang xem thẻ Điểm danh, và khi quay lại tab trình duyệt (bản đọc cũ hơn 1 phút). Có thay đổi thì báo "Sheet vừa có thay đổi". Mỗi lần là 1 file CSV, không dùng Firebase.
+- Hiện số "thay đổi chưa ghi vào Sheet" của bản nháp.
+- **Chỉ giáo viên + admin**: trang dùng `auth-guard.js` như các trang quản trị. Học sinh mở link thẳng thấy màn hình từ chối và trang không đọc Sheet nào. Chi phí: hồ sơ đăng nhập dùng chung cache phiên (tối đa 1 lượt đọc `users/{uid}` mỗi 5 phút).
+
+## Điểm danh đỡ việc tay: tự cập nhật, bảng công tháng, tin nhắn báo vắng, học sinh cần chú ý (28/10/2026)
+
+- **Tự cập nhật lớp của tôi**: mở trang mà bản lưu của lớp có ★ hoặc có tên mình trên Sheet đã cũ hơn 6 giờ thì trang tự đọc lại, không cần bấm "Cập nhật tất cả".
+  - Chỉ đọc lớp của mình (thử thật: 13/26 tab). Mở lại trong 6 giờ thì không đọc gì. Không dùng Firebase.
+- **Sao chép bảng công tháng** (thẻ Lịch dạy): mỗi tiết đã tick Hoàn thành trong tháng là một dòng (STT, Ngày, Thứ, Trường, Lớp, Tiết, Bài dạy), cuối bảng có tổng theo trường. Dán thẳng vào Excel / Google Sheet.
+- **Tin nhắn báo vắng** (thẻ Điểm danh): lớp, trường, ngày, tiết, bài, số có mặt, tên bạn vắng / nghỉ luôn, và bạn cần nhắc chuyên cần. Dán vào Zalo gửi GVCN hoặc điều phối.
+- **Học sinh cần chú ý** (thẻ Các lớp): gom từ mọi lớp đang xem những bạn vắng từ 3 tiết hoặc vắng 2 tiết liền gần nhất (không tính bạn đã nghỉ luôn). Bấm tên lớp để mở điểm danh, có nút sao chép cả danh sách.
+- Thêm `monthLog` và `watchList` vào `js/so-lop/so-lop-core.js`, kèm test.
+
+## Điểm danh gọn theo 4 thẻ + rà toàn bộ trang bớt "giống AI" (28/10/2026)
+
+- **Điểm danh & tiến độ chia 4 thẻ**: **Lịch dạy** · **Các lớp** · **Điểm danh** · **Cài đặt** — mỗi thẻ một việc.
+  - Trước đây 6 khối xếp chồng trên một màn hình.
+  - Bộ lọc Trường / Giáo viên + "Cập nhật tất cả" là một thanh chung cho 2 thẻ đầu.
+  - Chưa có sổ lớp thì mở thẳng thẻ Cài đặt. Thêm link xong tự chuyển sang Lịch dạy. Bấm một lớp ở đâu cũng sang thẻ Điểm danh. Trang nhớ thẻ đang mở.
+  - Các đoạn hướng dẫn dài thu vào mục "Hướng dẫn / Ghi chú" mở khi cần. Bỏ lọc "Hôm nay dạy" ở bảng lớp vì đã có thẻ Lịch dạy.
+  - Phím ← → để chuyển thẻ.
+- **Emoji làm icon → Font Awesome**:
+  - Đăng nhập (chọn vai trò), MOS Practice, Gom kết quả, Hotspot Editor, Computer Simulator (thanh công cụ, icon thư mục/tệp), 3 trang thi thử MOS.
+  - 3 trình mô phỏng Word/Excel/PowerPoint: khoảng 230 nút ribbon đổi qua bảng `EMOJI_FA` trong `js/ribbon-sim-core.js`, cùng thanh tiêu đề và thanh trạng thái. Ký hiệu Office thật (¶ Ω ≡ ⊞) giữ nguyên.
+  - Huy chương 🥇🥈🥉 ở "Đua top lớp" đổi thành ô số 1–2–3.
+- **Bỏ emoji đầu thông báo/nút** (✅ ❌ ⚠️ 🎉 …) ở khoảng 150 chỗ trong JS trang học sinh/quản trị.
+  - Giữ nguyên chỗ có nghĩa: dấu ⚠️ trạng thái gửi Google Sheet (Apps Script dò ký tự này để email cảnh báo gian lận), "+1 ✓", "✓ Đã tải sẵn".
+  - Chỗ emoji là dấu hiệu thì đổi sang icon: ✔ đáp án đúng, ⚠ giờ tiết lệch, 📍 trường đã khớp địa chỉ.
+- **Sửa lỗi PDF**: tiêu đề mục trong file PDF báo cáo có emoji (📊 📈 🏆) mà font PDF không có, nên in ra ký tự rác. Đã bỏ.
+- **"Dashboard" → "Trang quản lý" / "Tổng quan"** ở 9 trang quản trị.
+- **Làm phẳng**:
+  - Đầu trang mô phỏng Word/Excel/PPT (gradient xanh); Computer Simulator (nền loang, **chữ tiêu đề tô gradient**, nút gradient).
+  - Nền đốm pastel ở trình soạn đề và màn trình chiếu.
+  - Thanh vàng→tím ở thời khoá biểu, thanh "đua top" gradient.
+- **Sửa dữ liệu**: 10 mô tả tiết MOS Word có ký tự xuống dòng kiểu Excel (``) hiện thành ô vuông "yếu tố □hình thành".
+- Trang thi thử MOS: nút B/I/U và "Xem gợi ý" chữ tối trên nền tối → đọc rõ. Câu mẫu "Bao cao ket qua…" thêm dấu.
+- Đấu trường và các mini-game giữ phong cách game như đã thống nhất.
+
+## Điểm danh & tiến độ: lọc theo trường, giáo viên + lịch giảng dạy theo tuần (28/10/2026)
+
+- **Bộ lọc Trường + Giáo viên** ở bảng Tổng quan các lớp:
+  - Danh sách GV lấy từ ô TÊN GV trên Sheet của trường đang chọn, gồm cả lớp nhiều GV dạy luân phiên. Mỗi GV hiện số lớp và số tiết đã dạy.
+  - Chọn GV thì bảng chỉ còn các lớp GV đó dạy; "Hôm nay dạy" lọc theo lịch của chính GV đó.
+- **Lịch giảng dạy theo tuần** (thẻ mới), của GV đang lọc hoặc "Tên của tôi":
+  - Lưới Thứ 2 → Thứ 7: mỗi ô là lớp, trường, tiết và bài.
+  - 4 trạng thái: **Đã dạy** · **Chưa tick hoàn thành** · **Dự kiến** (theo thứ GV thường dạy lớp đó; các buổi dự kiến lần lượt nhận tiết/bài tiếp theo) · **Sheet chưa cập nhật** (ngày thường dạy đã qua mà lớp chưa có buổi nào).
+  - Xem tuần trước / tuần sau. Bấm một lớp để mở điểm danh.
+  - **Sao chép lịch** ra chữ để gửi Zalo.
+  - Có **số tiết đã dạy trong tháng theo từng trường** (tiết đã tick Hoàn thành).
+- Đọc tên GV sạch hơn:
+  - Bỏ dấu ":" trong "TÊN GV: …".
+  - Bỏ ghi chú như "Trường nghỉ", "Nghỉ lễ" ở ô GV.
+  - Gộp tên khác hoa/thường hoặc thừa dấu cách.
+  - Lớp dạy luân phiên: hôm đó GV khác dạy thì không báo "Sheet chưa cập nhật".
+- Vẫn 0 Firebase: lịch và bộ lọc tính từ các tab đã đọc trên máy (bảng Tổng quan → "Cập nhật tất cả").
+
+## Điểm danh & tiến độ: nhiều trường, nhiều lớp, nhiều điều phối (28/10/2026)
+
+- **Dán một lần cho nhiều trường** (`diem-danh.html` → "Thêm / quản lý link"):
+  - Mỗi dòng "Tên trường: link"; link ở dòng dưới tên trường cũng được.
+  - Link Sheet đọc ngay. Link thư mục Drive được lưu để bấm "Mở thư mục", vì Google không cho trang tự xem bên trong thư mục.
+  - Sổ lớp nhóm theo **trường** (đọc ô TRƯỜNG trong Sheet), không theo tên file — hai trường cùng tên file "FORM QUẢN LÝ LỚP 4" không bị lẫn.
+- **Tổng quan các lớp** (bảng theo từng trường):
+  - Các cột: đã dạy x/45, tiết gần nhất, tiết tiếp theo (tên bài đầy đủ), lịch học (Thứ mấy, 1 hay 2 tiết/buổi).
+  - Bộ lọc **Hôm nay dạy** / **Lớp của tôi** / **Tất cả**.
+  - Cảnh báo lớp hơn 9 ngày chưa có tiết mới.
+  - "Lớp của tôi" có 2 cách: bấm ☆, hoặc nhập **Tên của tôi** để tự nhận các lớp có tên mình ở ô TÊN GV.
+  - "Cập nhật tất cả" đọc 3 tab một lúc, bỏ qua tab đã đọc trong 6 giờ.
+- **Đọc được mọi kiểu ghi của các điều phối**:
+  - "Bài 4-5", "Bài 4 + 5", "Bài 10+11", "Giới Thiệu + Bài 1", "Bài 12: …".
+  - Chỉ ghi tên bài ("Tìm hiểu cơ bản về phần cứng" → Bài 1, khớp tên bộ "Bài N." đúng cấp).
+  - Ô GV có chữ mẫu "(Tên lót + Tên)"; ô điểm danh ghi chữ khác (số phòng) không bị tính.
+- **Lớp nhiều GV dạy luân phiên**: mỗi ô tiết hiện tên GV dạy tiết đó; tiết của mình có viền chấm.
+- **Lớp 2 tiết/buổi**: "Sao chép cột" ra 2 cột cách nhau Tab — dán 1 lần điền cả 2 tiết.
+- **Điều phối chưa ghi bài tiết tới** → hiện "dự kiến Bài N" (sau bài lớn nhất đã dạy). Bài này cũng chuyển sang Bốc thử thách ở trang Gọi tên.
+- Thanh tiến độ tính trên cả năm (tối đa 45 tiết), không báo 100% khi điều phối chưa xếp tiếp.
+- Mở trang lại: dùng bản đã lưu, 0 request tới Google cho tới khi bấm tải lại. Vẫn 0 Firebase, 0 Apps Script.
+- Sửa lỗi: sổ lớp thêm từ bản trước (chưa lưu tên trường) bị tách thành nhóm riêng theo tên file ("FORM QUẢN LÝ LỚP 3") thay vì gộp vào trường. Giờ trang tự điền tên trường từ ô TRƯỜNG, gộp nhóm không phân biệt hoa thường, và lớp vừa tải lại không còn nhảy sang nhóm khác.
+
+## Điểm danh & tiến độ từ sổ lớp của Điều phối đào tạo (28/10/2026)
+
+- **Trang mới `diem-danh.html`** (sảnh → "Dành cho thầy cô" → **Điểm danh & tiến độ**; ở trang Gọi tên có nút tắt).
+  - Đọc "FORM QUẢN LÝ LỚP" của điều phối (Google Sheet, mỗi tab 1 lớp).
+  - Giáo viên dán link các file một lần; dán nhiều link một lúc được, có thể lưu kèm link thư mục giảng dạy để mở nhanh.
+- **Tiến độ**: thanh tiến độ, các ô Tiết · Bài dạy (đã hoàn thành có ngày, tiết tiếp theo viền đỏ), dòng "Tiết tiếp theo: Tiết 8 · Bài 7. Thiết bị di động".
+- **Điểm danh**:
+  - Tự chọn buổi theo NGÀY hôm nay; chưa có ngày thì chọn tiết chưa hoàn thành đầu tiên.
+  - Mỗi bạn có nút Có mặt / Vắng / Nghỉ luôn; bấm tên để đổi nhanh. Bạn đã ghi NL trước đó thì mặc định Nghỉ luôn.
+  - **Sao chép cột** → **Mở Sheet ở ô M11** (mở đúng tab, đúng ô của tiết) → Ctrl+V. Ký hiệu đúng hướng dẫn của Sheet: x · v · NL · Mới.
+  - Bản nháp giữ trên máy tới khi dán.
+- **Chuyên cần**: tỉ lệ có mặt, danh sách bạn vắng (số buổi, tiết nào). Cảnh báo khi vắng ≥ 3 buổi hoặc 2 buổi liền.
+- **Dùng cho Gọi tên**:
+  - Đánh dấu bạn vắng hôm nay trong trang Gọi tên.
+  - Chọn sẵn tiết PPCT chứa "Bài dạy" của buổi đó, nên "Bốc thử thách" hỏi đúng bài.
+  - Lớp có trong danh sách lớp thì dùng luôn lớp đó; không có thì dán danh sách từ Sheet.
+- **Không tốn Firebase**:
+  - Đọc thẳng `docs.google.com/.../htmlview` (danh sách tab) và `.../export?format=csv&gid=` (bảng lớp); Google cho phép đọc từ trình duyệt.
+  - Không Apps Script, không đăng nhập; chỉ tải tab đang chọn, khi chọn lớp hoặc bấm "Tải lại".
+  - Mất mạng thì dùng bản đã lưu.
+  - Trang không ghi vào Sheet.
+- **Riêng tư**: link Sheet chỉ lưu localStorage (`eduquiz_solop_v1`), không đưa vào repo công khai, vì Sheet có ngày sinh học sinh.
+- Test: `node js/so-lop/__tests__/so-lop-core.test.js`.
+
+## Gọi tên: "Bốc thử thách" hỏi đúng bài hôm nay, đúng khối lớp (28/10/2026)
+
+- **Chọn tiết hôm nay** (`goi-ten.html`, mục "Câu hỏi khi Bốc thử thách"):
+  - Cấp độ tự theo lớp đang chọn, giống sảnh thi: Lớp 3/6 → LV1 · 4/7 → LV2 · 5/8 → LV3. Dùng "Dán danh sách"/"Số thứ tự" thì chọn tay.
+  - Danh sách tiết lấy từ PPCT 45 tiết (cột IC3) — `data/ic3/ppct-lessons.json`, sinh bằng `python scripts/build-ppct-lessons.py "<thư mục Tài Liệu Bàn Giao>"`.
+  - Nhớ tiết đã dạy theo từng lớp. Buổi sau tự gợi ý tiết kế tiếp (VD: buổi trước Tiết 13 → hôm nay Tiết 14); lớp học tiết khác thì chọn lại.
+- **Lá "Hỏi bài"** (`js/name-picker/np-lessons.js`):
+  - Chỉ lấy câu trong bộ "Bài N." của đúng cấp, đúng bài của tiết đó. Tiết Ôn tập/Kiểm tra hỏi lại các bài từ tiết ôn trước tới đó. Không bao giờ hỏi bài chưa học, không lấy bộ Ôn tập/Kiểm tra All Key.
+  - Lọc câu mơ hồ khi hỏi miệng: bỏ câu cần hình ("hình dưới đây", có ảnh), kéo thả/ghép cặp, đáp án không khớp phương án, phương án trùng, câu quá dài (tiểu học ≤ 140 ký tự). Câu nhiều đáp án ghi rõ "Chọn N đáp án đúng".
+  - Lá được chọn phóng to giữa sân khấu với phương án A–D; "Xem đáp án" tô xanh phương án đúng và hiện lời giải thích. Không lặp câu trong buổi.
+  - Có thêm lá Thử thách vui theo bài: "Nói 1 điều em nhớ nhất trong bài hôm nay"...
+- **Sau khi lật lá câu hỏi**, giáo viên có thêm:
+  - **Đúng / Chưa đúng**: ghi ✓/✗ cạnh tên trong "Đã được gọi". Bấm lại để bỏ chấm.
+  - **Bỏ câu này**: câu thấy mơ hồ hoặc chưa hợp lớp sẽ không bị bốc lại trên máy này. Dưới ô "Hôm nay học" có dòng "Đã bỏ N câu · Hiện lại tất cả".
+  - Phím **A** để xem đáp án.
+  - Tất cả chỉ lưu localStorage (`eduquiz_goiten_v1`, `eduquiz_goiten_hidden_v1`). Chạy thử headless: 0 request tới Firebase/Apps Script, chỉ tải file tĩnh của trang, font và icon CDN.
+- **Câu hỏi chung** (khi không chọn bài) giờ lọc theo khối: lớp 3 không gặp câu CPU/RAM, Excel, lừa đảo trực tuyến...
+- Test: `node js/name-picker/__tests__/np-lessons.test.js` — kiểm cả 6 cấp: đủ Bài 1–35, tiết nào cũng có ≥ 2 câu, không lẫn bài chưa học.
+
 ## Bớt "giống AI": kệ sách tiếng Việt, trang quản trị phẳng, icon thay emoji (27/10/2026)
 
 - **Kệ sách 3D** (`quiz-shelf.html`, `js/volumes-carousel.js`): gỡ phần chữ mẫu tiếng Anh còn sót.

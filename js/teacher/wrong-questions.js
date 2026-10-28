@@ -1,6 +1,6 @@
 /* ============================================================
    js/teacher/wrong-questions.js
-   "❌ Câu cả lớp hay sai" — teacher-dashboard.html.
+   "Câu cả lớp hay sai" — teacher-dashboard.html.
 
    Dữ liệu: mỗi bài nộp gửi kèm uid các câu sai lên Google Sheet (cột O
    CauSai — js/services/result-submitter.js); Apps Script tổng hợp ngay trên

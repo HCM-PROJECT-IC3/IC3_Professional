@@ -79,6 +79,7 @@ body {
   border-radius: 8px;
   border: 1px dashed var(--exs-border);
   background: var(--exs-grid-header);
+  color: var(--exs-text);
   cursor: pointer;
 }
 .exs-hint-box ul { padding-left: 18px; color: var(--exs-muted); }
@@ -93,6 +94,7 @@ body {
   width: 32px; height: 32px;
   border: 1px solid var(--exs-border);
   background: var(--exs-panel);
+  color: var(--exs-text);
   border-radius: 6px;
   cursor: pointer;
 }

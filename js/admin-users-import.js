@@ -1,6 +1,6 @@
 /* ============================================================
    js/admin-users-import.js
-   "📥 Nhập giáo viên từ Excel" (admin-users.html) — đọc file .xlsx (đúng
+   "Nhập giáo viên từ Excel" (admin-users.html) — đọc file .xlsx (đúng
    mẫu On_Tap_MOS/Thong_Tin_GV.xlsx: cột "Mã GV" + "Họ Tên" + "Số CCCD",
    các cột khác bỏ qua), TỰ TẠO tài khoản đăng nhập Firebase cho từng giáo
    viên — không cần Admin gõ tay từng người trong Firebase Console.
@@ -20,7 +20,7 @@
    - role = "teacher", approved = true (bỏ qua bước chờ duyệt vì admin là
      người trực tiếp tạo, không phải giáo viên tự đăng ký).
    - teacherCode = đúng "Mã GV" trong file — liên kết ngay với bản ghi
-     trong collection "teaching_teachers" (tab "👤 Giáo viên" của
+     trong collection "teaching_teachers" (tab "Giáo viên" của
      teaching-schedule.html) để giáo viên tự xem được lịch của mình luôn,
      không cần Admin liên kết thủ công thêm 1 bước riêng ở bảng phía trên.
 

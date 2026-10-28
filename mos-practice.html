@@ -9,7 +9,7 @@
        index.html: 1 lỗi JS chưa bắt không được để trang treo/trắng mà
        học sinh không biết phải làm gì). -->
   <script src="js/global-error-handler.js"></script>
-  <title>🧮 MOS Practice — Thực hành Excel</title>
+  <title>MOS Practice — Thực hành Excel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
     href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap"
@@ -28,7 +28,7 @@
 
   <header class="mos-topbar">
     <a href="index.html" class="mos-back-link">← Về trang chủ</a>
-    <div class="mos-topbar-title">🧮 MOS Practice <span class="mos-topbar-badge">Excel &amp; PowerPoint · Phiên bản thử nghiệm</span></div>
+    <div class="mos-topbar-title"><i class="fa-solid fa-table-cells" aria-hidden="true"></i> MOS Practice <span class="mos-topbar-badge">Excel &amp; PowerPoint · Phiên bản thử nghiệm</span></div>
     <div class="theme-toggle" id="themeToggle" title="Chuyển đổi sáng/tối"></div>
   </header>
 
@@ -42,21 +42,21 @@
     <section class="lobby-card mos-card" id="mosStep1">
       <div class="lobby-card-title mos-card-title"><span>1️⃣</span> Xác định học sinh</div>
       <div class="form-group">
-        <label for="studentSchool">🏛️ Trường</label>
+        <label for="studentSchool"><i class="fa-solid fa-school" aria-hidden="true"></i> Trường</label>
         <select id="studentSchool" disabled>
-          <option value="">⚠ Chưa có danh sách — liên hệ Điều phối đào tạo</option>
+          <option value="">Chưa có danh sách — liên hệ Điều phối đào tạo</option>
         </select>
         <div class="roster-status" id="rosterStatus"></div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label for="studentClass">🏫 Lớp</label>
+          <label for="studentClass"><i class="fa-solid fa-users" aria-hidden="true"></i> Lớp</label>
           <select id="studentClass" disabled>
             <option value="">-- Chọn trường trước --</option>
           </select>
         </div>
         <div class="form-group">
-          <label for="studentName">👤 Họ và tên</label>
+          <label for="studentName"><i class="fa-solid fa-user" aria-hidden="true"></i> Họ và tên</label>
           <select id="studentName" disabled>
             <option value="">-- Chọn lớp trước --</option>
           </select>
@@ -96,7 +96,7 @@
 
       <div class="mos-upload-zone">
         <label for="mosFileInput" class="mos-upload-label" id="mosUploadLabel">
-          📤 Chọn file đã làm để nộp bài
+          <i class="fa-solid fa-upload" aria-hidden="true"></i> Chọn file đã làm để nộp bài
         </label>
         <input type="file" id="mosFileInput" accept=".xlsx,.pptx">
         <div id="mosUploadStatus" class="mos-upload-status"></div>
@@ -110,7 +110,7 @@
       <div class="lobby-card-title mos-card-title"><span>4️⃣</span> Kết quả chấm</div>
       <div id="mosResultSummary" class="mos-result-summary"></div>
       <div id="mosResultList" class="mos-result-list"></div>
-      <button type="button" class="btn-secondary" onclick="location.reload()">🔁 Làm lại / chọn dự án khác</button>
+      <button type="button" class="btn-secondary" onclick="location.reload()"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Làm lại / chọn dự án khác</button>
     </section>
 
   </main>

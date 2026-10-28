@@ -1,6 +1,6 @@
 /* ============================================================
    js/repositories/teaching-travel-repository.js
-   Repository cho tab "🚗 Hỗ trợ xăng xe" — cùng mô hình BaseRepository với
+   Repository cho tab "Hỗ trợ xăng xe" — cùng mô hình BaseRepository với
    js/repositories/teaching-schedule-repository.js.
    ============================================================ */
 (function (global) {

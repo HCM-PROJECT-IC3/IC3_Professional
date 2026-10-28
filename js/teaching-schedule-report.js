@@ -1,11 +1,11 @@
 /* ============================================================
    js/teaching-schedule-report.js
-   Tab "📊 Báo cáo" (teaching-schedule.html) — tổng hợp Lịch tuần
+   Tab "Báo cáo" (teaching-schedule.html) — tổng hợp Lịch tuần
    (teaching_schedule) của TOÀN ĐỘI thành biểu đồ + pivot table cho MỘT
-   KHOẢNG TUẦN do người dùng chọn (khác "📊 Tổng quan" ở tab Lịch tuần,
+   KHOẢNG TUẦN do người dùng chọn (khác "Tổng quan" ở tab Lịch tuần,
    vốn chỉ xem đúng 1 tuần dạng lịch treo/ma trận, không tổng hợp số
-   liệu) — phục vụ chính "🚗 Điều phối giáo viên" (role teaching_coordinator
-   — KHÁC "coordinator" tức "🧭 Điều phối đào tạo", role đó không được vào
+   liệu) — phục vụ chính "Điều phối giáo viên" (role teaching_coordinator
+   — KHÁC "coordinator" tức "Điều phối đào tạo", role đó không được vào
    trang này; CHỈ XEM trang này, không sửa gì) làm báo cáo, admin cũng
    dùng được.
 
@@ -21,7 +21,7 @@
 
    Dùng Chart.js (đã nạp qua js/vendor/chart.umd.min.js + fallback CDN,
    xem teaching-schedule.html) — PALETTE màu khớp ĐÚNG với màu chip loại
-   hình đang dùng ở tab "📅 Lịch tuần" (xem TYPE_COLOR_SUFFIX trong
+   hình đang dùng ở tab "Lịch tuần" (xem TYPE_COLOR_SUFFIX trong
    js/teaching-schedule.js + .dash-chip.* trong css/teaching-schedule.css)
    để cùng 1 loại hình luôn ra cùng 1 màu ở MỌI nơi trong trang.
 

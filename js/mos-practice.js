@@ -104,7 +104,7 @@
     document.getElementById('mosDownloadBtn').textContent =
       `⬇️ Tải file đề bài${subj ? ' (' + subj.ext + ')' : ''}`;
     document.getElementById('mosUploadLabel').textContent =
-      `📤 Chọn file ${subj ? subj.ext : ''} đã làm để nộp bài`;
+      `Chọn file ${subj ? subj.ext : ''} đã làm để nộp bài`;
     document.querySelectorAll('#mosSubjectName, #mosSubjectName2').forEach(el => {
       el.textContent = subj ? subj.label : 'Office';
     });
@@ -148,18 +148,18 @@
 
     const student = currentStudent();
     if (!student.school || !student.className || !student.name) {
-      setUploadStatus('⚠ Vui lòng chọn Trường / Lớp / Họ và tên ở Bước 1 trước khi nộp bài.', 'error');
+      setUploadStatus('Vui lòng chọn Trường / Lớp / Họ và tên ở Bước 1 trước khi nộp bài.', 'error');
       document.getElementById('mosFileInput').value = '';
       document.getElementById('mosStep1').scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
     const subj = SUBJECTS[currentProject.subject];
     if (!subj) {
-      setUploadStatus('⚠ Môn học của dự án này chưa được hỗ trợ.', 'error');
+      setUploadStatus('Môn học của dự án này chưa được hỗ trợ.', 'error');
       return;
     }
     if (!file.name.toLowerCase().endsWith(subj.ext)) {
-      setUploadStatus(`⚠ Chỉ chấp nhận file ${subj.ext} (đúng định dạng đề bài đã tải về).`, 'error');
+      setUploadStatus(`Chỉ chấp nhận file ${subj.ext} (đúng định dạng đề bài đã tải về).`, 'error');
       return;
     }
 
@@ -171,10 +171,10 @@
       graded = await subj.grade(file, currentProject.tasks);
       renderResult(graded);
 
-      setUploadStatus('✅ Đã chấm xong — xem kết quả bên dưới.', '');
+      setUploadStatus('Đã chấm xong — xem kết quả bên dưới.', '');
     } catch (err) {
       console.error('[MosPractice] Lỗi khi đọc/chấm file:', err);
-      setUploadStatus(`❌ Không đọc được file — hãy chắc chắn đây đúng là file ${subj.ext} bạn đã lưu từ ${subj.label}. (` + err.message + ')', 'error');
+      setUploadStatus(`Không đọc được file — hãy chắc chắn đây đúng là file ${subj.ext} bạn đã lưu từ ${subj.label}. (` + err.message + ')', 'error');
     } finally {
       // QUAN TRỌNG: mở khoá isGrading NGAY SAU KHI chấm xong (không chờ lưu
       // Firestore) — nếu không, mạng chậm/Firestore treo sẽ khoá cứng nút nộp

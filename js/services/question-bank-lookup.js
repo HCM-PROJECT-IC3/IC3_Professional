@@ -4,7 +4,7 @@
    (0 Firebase, 0 Apps Script — chỉ GET file cùng tên miền, có Service
    Worker thì chạy được cả khi mất mạng).
 
-   Dùng chung cho "❌ Câu cả lớp hay sai" ở teacher-dashboard.html
+   Dùng chung cho "Câu cả lớp hay sai" ở teacher-dashboard.html
    (js/teacher/wrong-questions.js) và gom-ket-qua.html (js/gom-ket-qua.js).
 
    API: window.EduQuestionLookup = { resolve(items), answerHtml(q), plain(html), esc(s) }
@@ -64,7 +64,7 @@
     switch (q.type) {
       case 'single': case 'multi': {
         const ok = new Set((q.correct || []).map(plain));
-        return `<ul class="wq-ans">${(q.options || []).map((o) => `<li class="${ok.has(plain(o)) ? 'is-ok' : ''}">${ok.has(plain(o)) ? '✔ ' : ''}${P(o)}</li>`).join('')}</ul>`;
+        return `<ul class="wq-ans">${(q.options || []).map((o) => `<li class="${ok.has(plain(o)) ? 'is-ok' : ''}">${ok.has(plain(o)) ? '<i class="fa-solid fa-check" aria-hidden="true"></i> ' : ''}${P(o)}</li>`).join('')}</ul>`;
       }
       case 'truefalse':
         return `<ul class="wq-ans">${(q.statements || []).map((s) => `<li><b>${P(s.answer === 'true' ? q.label_true || 'Đúng' : q.label_false || 'Sai')}</b> — ${P(s.text)}</li>`).join('')}</ul>`;

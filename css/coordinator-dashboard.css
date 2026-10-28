@@ -572,7 +572,7 @@ body {
 .race-rank { grid-area: rank; font-size: 1.4em; font-weight: 900; text-align: center; }
 .race-name { grid-area: name; font-weight: 900; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .race-bar { grid-area: bar; height: .9em; border-radius: 999px; background: var(--card2); overflow: hidden; }
-.race-bar i { display: block; height: 100%; width: var(--w); border-radius: inherit; background: linear-gradient(90deg, var(--purple), var(--teal)); animation: race-grow .9s ease-out; }
+.race-bar i { display: block; height: 100%; width: var(--w); border-radius: inherit; background: var(--purple); animation: race-grow .9s ease-out; }
 .race-pts { grid-area: pts; text-align: right; font-weight: 900; color: var(--purple); }
 .race-meta { grid-area: meta; font-size: .6em; font-weight: 700; color: var(--muted); }
 @keyframes race-grow { from { width: 0; } }
@@ -608,3 +608,9 @@ body {
 .wq-ans { margin: .55rem 0 0 2.3rem; padding-left: 1rem; font-size: .8rem; display: flex; flex-direction: column; gap: .2rem; }
 .wq-ans li.is-ok { color: var(--green); font-weight: 800; }
 .wq-expl { margin: .45rem 0 0 2.3rem; font-size: .78rem; line-height: 1.5; }
+
+/* Hạng 1–3 ở "Đua top lớp" (teacher-dashboard) — ô số tô màu, thay huy chương emoji */
+.td-rank { display: inline-grid; place-items: center; width: 1.4em; height: 1.4em; border-radius: 50%; font-size: .8em; color: #fff; margin-right: .2em; }
+.td-rank.r1 { background: #b8860b; }
+.td-rank.r2 { background: #7d8790; }
+.td-rank.r3 { background: #a0522d; }

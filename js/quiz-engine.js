@@ -1854,7 +1854,7 @@ function nextQ() {
 }
 
 /* ============================================================
-   § 9b — GAME BREAK ("🎮 Tổng hợp Vui" — xen kẽ mini-game kiểu Wayground)
+   § 9b — GAME BREAK ("Tổng hợp Vui" — xen kẽ mini-game kiểu Wayground)
    Cứ khoảng mỗi 1/3 chặng đường của bài "Tổng hợp Vui" lại chèn 1 màn
    mini-game NHẸ, chọn ngẫu nhiên trong vài game đã có sẵn của dự án
    (js/memory-game.js — dùng lại NGUYÊN

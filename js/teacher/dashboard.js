@@ -236,7 +236,8 @@
   // ============================================================
   // THI ĐUA LỚP THEO TUẦN — tính trên kết quả đã tải (0 lượt Firestore thêm)
   // ============================================================
-  const MEDALS = ['🥇', '🥈', '🥉'];
+  // Hạng 1–3 tô màu (vàng/bạc/đồng) thay huy chương emoji — css/coordinator-dashboard.css .td-rank
+  const MEDALS = ['<b class="td-rank r1">1</b>', '<b class="td-rank r2">2</b>', '<b class="td-rank r3">3</b>'];
   let classRace = [];
 
   function renderClassRace(scoped) {

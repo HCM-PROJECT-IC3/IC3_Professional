@@ -2,6 +2,7 @@
    js/name-picker/name-picker.js — điều khiển trang "Gọi tên học sinh" (goi-ten.html).
    Nguồn tên · tuỳ chọn · lịch sử "đã gọi" · nút Bắt đầu. Sân khấu và 11 trò: np-games.js; tranh: np-art.js.
    Người được gọi chọn TRƯỚC (name-picker-core.js), trò chơi chỉ "diễn" tới kết quả đó.
+   Câu hỏi "Bốc thử thách" theo tiết/bài hôm nay của lớp: np-lessons.js (PPCT + bộ "Bài N." đúng cấp).
    Chỉ đọc file tĩnh data/roster/students-active.json; lưu localStorage trên máy này — không gửi gì đi.
    ============================================================ */
 (function (global) {
@@ -10,6 +11,7 @@
   const N = global.EduNamePicker;
   const G = global.EduNamePickerGames;
   const CH = global.EduNamePickerChallenge; // "Bốc thử thách" sau khi gọi tên (np-challenge.js)
+  const LS = global.EduNamePickerLessons;   // tiết/bài hôm nay → câu hỏi (np-lessons.js)
   const $ = (id) => document.getElementById(id);
   const STORE = 'eduquiz_goiten_v1';
   const ROSTER_URL = 'data/roster/students-active.json';
@@ -19,7 +21,8 @@
   const reduced = () => { try { return global.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } };
 
   function load() { try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch (e) { return {}; } }
-  const S = Object.assign({ src: 'class', school: '', cls: '', paste: '', num: 20, game: 'egg', random: false, noRepeat: true, twist: false, secs: 12, called: {}, absent: {} }, load());
+  const S = Object.assign({ src: 'class', school: '', cls: '', paste: '', num: 20, game: 'egg', random: false, noRepeat: true, twist: false, secs: 12, called: {}, absent: {}, lesson: {} }, load());
+  if (!S.lesson || typeof S.lesson !== 'object') S.lesson = {};
   if (!G.GAMES.some((g) => g.id === S.game)) S.game = 'egg';   // bản cũ lưu tên trò khác
   S.secs = Math.max(5, Math.min(30, S.secs | 0 || 12));
   S.num = Math.max(2, Math.min(50, S.num | 0 || 20));
@@ -105,9 +108,66 @@
     document.querySelectorAll('#npSrcTabs [data-src]').forEach((b) => { const on = b.dataset.src === S.src; b.classList.toggle('is-on', on); b.setAttribute('aria-checked', on); });
     document.querySelectorAll('[data-pane]').forEach((p) => { p.hidden = p.dataset.pane !== S.src; });
     if (S.src === 'class') { await loadRoster(); paintRosterSelects(); paintRoster(); }
+    paintLesson();
     $('npPaste').value = S.paste;
     $('npNum').value = S.num; $('npNumOut').textContent = S.num;
     refresh(true);
+  }
+
+  // ============================================================
+  // CÂU HỎI THEO TIẾT/BÀI HÔM NAY (Bốc thử thách)
+  // Mỗi danh sách nhớ { lv: 'auto' | 'none' | cấp độ, tiet, day }. Sang buổi khác → gợi ý tiết liền sau buổi trước.
+  // ============================================================
+  const lessonRec = () => S.lesson[listKey()] || (S.lesson[listKey()] = { lv: 'auto', tiet: 0, day: '' });
+  const autoLevel = () => (S.src === 'class' && LS ? LS.levelForClass(S.cls) : '');
+  function curLevel() {
+    const r = lessonRec();
+    if (r.lv === 'none') return '';
+    return r.lv && r.lv !== 'auto' ? r.lv : autoLevel();
+  }
+  let ppct = {};
+  const periods = () => (ppct[curLevel()] && ppct[curLevel()].periods) || [];
+  /** { tiet, suggested } — cùng ngày giữ tiết đã chọn; buổi sau gợi ý tiết kế tiếp. */
+  function curTiet() {
+    const r = lessonRec();
+    if (!r.tiet || r.day === today()) return { tiet: r.tiet || 0, suggested: false };
+    const next = periods().find((p) => p.tiet > r.tiet);
+    return { tiet: next ? next.tiet : r.tiet, suggested: true, prev: r.tiet, prevDay: r.day };
+  }
+  let lessonSets = {};
+  async function paintLesson() {
+    if (!LS || !$('npLevel')) return;
+    ppct = await LS.load();
+    const lv = curLevel(), auto = autoLevel(), r = lessonRec();
+    const levelName = (id) => { const l = LS.levelById(id); return l ? `${l.name} (lớp ${l.grade})` : ''; };
+    const sel = r.lv === 'auto' && !auto ? 'none' : r.lv;
+    $('npLevel').innerHTML = (auto ? `<option value="auto">Theo lớp ${esc(S.cls)} — ${esc(levelName(auto))}</option>` : '')
+      + '<option value="none">Không theo bài (câu hỏi chung)</option>'
+      + LS.LEVELS.map((l) => `<option value="${l.id}">${esc(levelName(l.id))}</option>`).join('');
+    $('npLevel').value = sel;
+    lessonSets = lv ? await LS.lessonSets(lv).catch(() => ({})) : {};
+    const t = curTiet(), ps = periods();
+    $('npTiet').disabled = !lv || !ps.length;
+    $('npTiet').innerHTML = '<option value="0">Câu hỏi chung theo khối (không theo bài)</option>'
+      + ps.map((p) => `<option value="${p.tiet}">${esc(LS.periodLabel(p, lessonSets))}</option>`).join('');
+    $('npTiet').value = String(lv ? t.tiet : 0);
+    const note = $('npLessonNote');
+    if (!lv) { note.textContent = 'Chọn cấp độ để bốc câu hỏi đúng bài đang học. Câu hỏi chung chỉ lấy câu hợp với khối.'; return; }
+    if (!t.tiet) { note.textContent = 'Chọn tiết hôm nay để chỉ hỏi bài vừa học (không hỏi bài chưa học).'; return; }
+    if (t.suggested) { note.textContent = `Gợi ý: buổi trước (${t.prevDay.split('-').reverse().join('/')}) học Tiết ${t.prev} → hôm nay Tiết ${t.tiet}. Lớp học tiết khác thì chọn lại nhé.`; return; }
+    note.textContent = 'Đang tải câu hỏi...';
+    const off = CH && CH.hidden ? CH.hidden() : new Set();
+    const n = (await LS.pool(lv, t.tiet).catch(() => [])).filter((c) => !off.has(c.uid)).length;
+    if (curLevel() !== lv || curTiet().tiet !== t.tiet) return; // đã đổi lớp/tiết trong lúc tải
+    note.textContent = n ? `${n} câu của bài này hợp để hỏi nhanh (rõ ràng, không cần hình, vừa sức khối).` : 'Bài này chưa có câu hợp để hỏi nhanh — sẽ dùng câu hỏi chung theo khối.';
+    paintHidden();
+  }
+  /** Số câu đã "Bỏ câu này" trên máy — kèm nút hiện lại. */
+  function paintHidden() {
+    const el = $('npHidden'), n = CH && CH.hidden ? CH.hidden().size : 0;
+    if (!el) return;
+    el.hidden = !n;
+    el.innerHTML = n ? `Đã bỏ ${n} câu thấy mơ hồ trên máy này. <button type="button" class="np-link" id="npUnhide">Hiện lại tất cả</button>` : '';
   }
 
   // ============================================================
@@ -125,8 +185,9 @@
     $('npPlayers').textContent = all.length ? `${all.length} bạn` : '';
     $('npGo').disabled = busy || !all.length;
     $('npCalledCount').textContent = called.length ? `(${called.length})` : '';
+    const okMark = (c) => (c.ok === true ? '<span class="np-ok is-yes" title="Trả lời đúng">✓</span>' : c.ok === false ? '<span class="np-ok is-no" title="Chưa đúng">✗</span>' : '');
     $('npCalled').innerHTML = called.length
-      ? called.slice().reverse().map((c, i) => `<li><b>${esc(label(c.name))}</b><small>${esc(c.at)}</small>
+      ? called.slice().reverse().map((c, i) => `<li><b>${esc(label(c.name))}</b>${okMark(c)}<small>${esc(c.at)}</small>
           <button type="button" class="np-x" data-uncall="${called.length - 1 - i}" title="Bỏ khỏi danh sách đã gọi" aria-label="Bỏ ${esc(label(c.name))} khỏi danh sách đã gọi">×</button></li>`).join('')
       : '<li class="np-empty">Chưa có ai.</li>';
     document.querySelectorAll('#npGames [data-game]').forEach((b) => { const on = b.dataset.game === S.game; b.setAttribute('aria-checked', on); });
@@ -197,12 +258,36 @@
     acts.querySelector('[data-rv="next"]').focus({ preventScroll: true });
   }
   function closeReveal() { if (CH) CH.close(); showing = false; G.clearResult(); idle(); }
-  /** Bốc thử thách: ẩn khung tên, chia 3 lá bài trên sân khấu; xong thì hiện lại khung tên. */
-  function openChallenge() {
+  /** Bốc thử thách: ẩn khung tên, chia 3 lá bài trên sân khấu; xong thì hiện lại khung tên.
+      Câu hỏi lấy từ tiết đang chọn của đúng cấp độ lớp; bốc xong thì tiết đó thành "đã học hôm nay". */
+  let chalBusy = false;
+  async function openChallenge() {
     const fxEl = $('npStage').querySelector('.np-fx'), bn = fxEl && fxEl.querySelector('.np-banner');
-    if (!CH || !fxEl || !lastPlan) return;
+    if (!CH || !fxEl || !lastPlan || chalBusy) return;
+    const lv = curLevel(), t = curTiet(), l = LS && LS.levelById(lv);
+    const g = parseInt((String(S.src === 'class' ? S.cls : '').match(/\d+/) || [])[0], 10);
+    const ctx = { grade: l ? l.grade : (g >= 3 && g <= 12 ? g : 0), key: `${lv}|${t.tiet}`, pool: [], label: '' };
+    if (l && t.tiet) {
+      chalBusy = true;
+      try { ctx.pool = await LS.pool(lv, t.tiet); } catch (e) { /* lỗi mạng → câu hỏi chung theo khối */ }
+      chalBusy = false;
+      if (!showing) return; // đã đóng khung tên trong lúc tải
+      const p = periods().find((x) => x.tiet === t.tiet);
+      ctx.label = `${l.name} · ${p ? LS.periodLabel(p, lessonSets) : 'Tiết ' + t.tiet}`;
+      const r = lessonRec();
+      if (r.tiet !== t.tiet || r.day !== today()) { if (r.lv === 'auto' && !autoLevel()) r.lv = lv; r.tiet = t.tiet; r.day = today(); save(); paintLesson(); }
+    }
     if (bn) bn.hidden = true;
-    CH.open(fxEl, label(lastPlan.winner), () => { if (bn) { bn.hidden = false; const n = bn.querySelector('[data-rv="next"]'); if (n) n.focus({ preventScroll: true }); } });
+    const winner = lastPlan.winner;
+    CH.open(fxEl, label(winner), (res) => {
+      // Chấm Đúng/Chưa đúng → ghi vào lượt gọi gần nhất của bạn đó (chỉ trên máy này)
+      if (res && res.ok !== null) {
+        const c = calledList().slice().reverse().find((x) => x.name === winner);
+        if (c) { c.ok = res.ok; save(); refresh(false); }
+      }
+      paintLesson(); // cập nhật số câu (trừ câu vừa bỏ) + dòng "Đã bỏ N câu"
+      if (bn) { bn.hidden = false; const n = bn.querySelector('[data-rv="next"]'); if (n) n.focus({ preventScroll: true }); }
+    }, ctx);
   }
 
   // ============================================================
@@ -239,8 +324,14 @@
       if (!b || busy) return;
       S.src = b.dataset.src; save(); showing = false; paintSource();
     });
-    $('npSchool').addEventListener('change', () => { S.school = $('npSchool').value; S.cls = ''; paintRosterSelects(); save(); paintRoster(); refresh(true); });
-    $('npClass').addEventListener('change', () => { S.cls = $('npClass').value; save(); paintRoster(); refresh(true); });
+    $('npSchool').addEventListener('change', () => { S.school = $('npSchool').value; S.cls = ''; paintRosterSelects(); save(); paintRoster(); paintLesson(); refresh(true); });
+    $('npClass').addEventListener('change', () => { S.cls = $('npClass').value; save(); paintRoster(); paintLesson(); refresh(true); });
+    $('npHidden').addEventListener('click', (e) => {
+      if (!e.target.closest('#npUnhide') || !CH) return;
+      CH.unhideAll(); paintHidden(); paintLesson(); toast('Đã hiện lại các câu đã bỏ.');
+    });
+    $('npLevel').addEventListener('change', () => { const r = lessonRec(); r.lv = $('npLevel').value; r.tiet = 0; r.day = ''; save(); paintLesson(); });
+    $('npTiet').addEventListener('change', () => { const r = lessonRec(); r.lv = $('npLevel').value; r.tiet = +$('npTiet').value; r.day = today(); save(); paintLesson(); });
     $('npRoster').addEventListener('click', (e) => {
       const b = e.target.closest('[data-name]');
       if (!b || busy) return;

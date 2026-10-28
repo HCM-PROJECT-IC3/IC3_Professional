@@ -201,7 +201,7 @@
       return '<table class="pwo pwo-table"><tr><td>Under 19</td><td>19 to 34</td><td>35 to 49</td><td>50+</td></tr>' +
         '<tr><td></td><td></td><td></td><td></td></tr></table>';
     },
-    chart: function () { return '<div class="pwo pwo-chart">📊<span>Clustered Column Chart</span></div>'; },
+    chart: function () { return '<div class="pwo pwo-chart"><i class="fa-solid fa-chart-column" aria-hidden="true"></i><span>Clustered Column Chart</span></div>'; },
     chartTitle: function () { return '<div class="pwo pwo-chart-title">Adventure Tour Popularity</div>'; }
   };
 
@@ -228,7 +228,7 @@
     pillLabels: PILL_LABELS,
     docSuffix: ' - PowerPoint',
     docDefaultName: 'Presentation1',
-    missionFileFallback: '🖥️ Bài trình chiếu thực hành',
+    missionFileFallback: 'Bài trình chiếu thực hành',
     backstageTab: 'File',
     onResetLesson: function () { slideObjects = {}; },
     onOpenSubtask: function (s) {

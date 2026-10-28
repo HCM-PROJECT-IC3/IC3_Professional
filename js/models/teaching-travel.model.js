@@ -1,6 +1,6 @@
 /* ============================================================
    js/models/teaching-travel.model.js
-   Model cho tab "🚗 Hỗ trợ xăng xe" (teaching-schedule.html) — tính tiền
+   Model cho tab "Hỗ trợ xăng xe" (teaching-schedule.html) — tính tiền
    hỗ trợ xăng xe cho giáo viên đi dạy xa, dành cho role "teaching_coordinator"
    (🚗 Điều phối giáo viên) quản lý.
 

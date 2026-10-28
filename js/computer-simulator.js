@@ -310,7 +310,7 @@
       var btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'cs-mission-btn';
-      btn.textContent = '💻 ' + m.title;
+      btn.textContent = m.title;
       btn.addEventListener('click', function () { startMission(m); });
       el.missionList.appendChild(btn);
     });
@@ -408,7 +408,7 @@
       input.type = 'text';
       input.className = 'cs-rename-input';
       input.value = node.name;
-      item.innerHTML = '<div class="cs-item-icon">' + (node.type === 'folder' ? '📁' : '📄') + '</div>';
+      item.innerHTML = '<div class="cs-item-icon">' + (node.type === 'folder' ? '<i class="fa-solid fa-folder" aria-hidden="true"></i>' : '<i class="fa-solid fa-file-lines" aria-hidden="true"></i>') + '</div>';
       item.appendChild(input);
       setTimeout(function () { input.focus(); input.select(); }, 0);
       function confirmRename() {
@@ -426,7 +426,7 @@
     }
 
     item.innerHTML =
-      '<div class="cs-item-icon">' + (node.type === 'folder' ? '📁' : '📄') + '</div>' +
+      '<div class="cs-item-icon">' + (node.type === 'folder' ? '<i class="fa-solid fa-folder" aria-hidden="true"></i>' : '<i class="fa-solid fa-file-lines" aria-hidden="true"></i>') + '</div>' +
       '<div class="cs-item-name">' + escapeHtml(node.name) + '</div>';
     item.addEventListener('click', function () { state.selectedId = node.id; render(); });
     if (node.type === 'folder') {
@@ -446,7 +446,7 @@
     input.type = 'text';
     input.className = 'cs-rename-input';
     input.value = 'Thư mục mới';
-    item.innerHTML = '<div class="cs-item-icon">📁</div>';
+    item.innerHTML = '<div class="cs-item-icon"><i class="fa-solid fa-folder" aria-hidden="true"></i></div>';
     item.appendChild(input);
     setTimeout(function () { input.focus(); input.select(); }, 0);
     function confirmCreate() {
@@ -518,7 +518,7 @@
     var row = document.createElement('div');
     row.className = 'cs-picker-row' + (forbidden ? ' is-disabled' : '');
     row.style.paddingLeft = (depth * 16) + 'px';
-    row.textContent = '📁 ' + node.name;
+    row.textContent = node.name;
     if (!forbidden) {
       row.addEventListener('click', function () {
         container.querySelectorAll('.cs-picker-row').forEach(function (r) { r.classList.remove('is-chosen'); });
@@ -566,10 +566,10 @@
       var row = document.createElement('div');
       row.className = 'cs-search-row';
       row.innerHTML =
-        '<span class="cs-search-icon">' + (r.node.type === 'folder' ? '📁' : '📄') + '</span>' +
+        '<span class="cs-search-icon">' + (r.node.type === 'folder' ? '<i class="fa-solid fa-folder" aria-hidden="true"></i>' : '<i class="fa-solid fa-file-lines" aria-hidden="true"></i>') + '</span>' +
         '<span class="cs-search-name">' + escapeHtml(r.node.name) + '</span>' +
         '<span class="cs-search-path">' + escapeHtml(r.path || '/') + '</span>' +
-        '<button type="button" class="cs-search-del-btn" title="Xoá mục này">🗑️</button>';
+        '<button type="button" class="cs-search-del-btn" title="Xoá mục này" aria-label="Xoá mục này"><i class="fa-solid fa-trash-can" aria-hidden="true"></i></button>';
       row.querySelector('.cs-search-del-btn').addEventListener('click', function () {
         FS.removeNode(state.root, r.node.id);
         if (state.selectedId === r.node.id) state.selectedId = null;
@@ -589,7 +589,7 @@
       finishMission(true);
     } else {
       state.mistakeCount += 1;
-      el.feedback.textContent = '❌ ' + result.message;
+      el.feedback.textContent = result.message;
       el.feedback.className = 'cs-feedback is-wrong';
     }
   }
@@ -599,7 +599,7 @@
     // trừ dần theo số lần kiểm tra sai (khuyến khích đọc kỹ nhiệm vụ
     // trước khi nộp, không phải bấm "Kiểm tra" liên tục để dò).
     var scorePct = Math.max(40, 100 - state.mistakeCount * 15);
-    el.resultIcon.textContent = '🏆';
+    el.resultIcon.innerHTML = '<i class="fa-solid fa-trophy" aria-hidden="true"></i>';
     el.resultTitle.textContent = 'Hoàn thành nhiệm vụ!';
     el.resultDesc.textContent =
       state.mission.check(state.root).message + '\n' +

@@ -234,7 +234,7 @@
     if (typeof global.jspdf === 'undefined') {
       const el = document.getElementById('toast');
       if (el) {
-        el.textContent = '❌ Không tải được thư viện PDF (jsPDF). Kiểm tra kết nối mạng rồi thử lại.';
+        el.textContent = 'Không tải được thư viện PDF (jsPDF). Kiểm tra kết nối mạng rồi thử lại.';
         el.classList.add('show');
         setTimeout(() => el.classList.remove('show'), 2800);
       }

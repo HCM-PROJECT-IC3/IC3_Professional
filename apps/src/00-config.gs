@@ -19,7 +19,7 @@
  */
 
 // ====== CẤU HÌNH - THAY BẰNG ID THẬT CỦA BẠN ======
-const BACKEND_VERSION = '2026-10-27';
+const BACKEND_VERSION = '2026-10-28';
 const SPREADSHEET_ID_DATA = '16ty8LB6pnk5Xai1VauUAKfMbIaT88ewfNUAhWM0z5ck';      // Sheet chứa HocSinh + KetQua
 const SPREADSHEET_ID_REPORT = '16ty8LB6pnk5Xai1VauUAKfMbIaT88ewfNUAhWM0z5ck';    // Sheet chứa báo cáo tổng hợp (có thể trùng với ID trên nếu để chung 1 file, khác tab)
 

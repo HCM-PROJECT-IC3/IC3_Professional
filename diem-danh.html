@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2f40b2">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Điểm danh và theo dõi tiến độ lớp từ sổ quản lý lớp (Google Sheet) của Điều phối đào tạo.">
+<title>Điểm danh & tiến độ — EduQuiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="js/theme-inherit.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="css/accessibility.css">
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/admin-common.css">
+<link rel="stylesheet" href="css/diem-danh.css">
+</head>
+<body class="dd-body">
+<!--
+  Điểm danh & tiến độ (js/so-lop/): đọc "FORM QUẢN LÝ LỚP" của Điều phối đào tạo — Google Sheet đã chia sẻ
+  "Bất kỳ ai có đường liên kết" — bằng link xuất CSV công khai của Google (docs.google.com/.../export).
+  Chỉ giáo viên + admin đã đăng nhập (js/auth-guard.js — học sinh mở link thẳng bị chặn). Link Sheet, bản nháp điểm danh
+  và bản lưu tạm chỉ nằm trong localStorage ('eduquiz_solop_v1') của máy này — không đưa link vào repo vì Sheet có ngày sinh học sinh.
+  Đọc: link CSV công khai (0 Firebase), lớp đang mở tự đọc lại 2 phút/lần khi đang xem.
+  Ghi: "Ghi vào Sheet" gửi qua Apps Script (apps/src/48-class-sheet.gs, tài khoản deploy phải là Người chỉnh sửa file);
+  không ghi được thì vẫn còn "Sao chép cột" để dán tay.
+-->
+<!-- Thanh trên cùng giống các trang quản trị (teaching-schedule.html…): về Trang quản lý · tên trang · tài khoản · sáng/tối · Đăng xuất -->
+<div class="topbar">
+  <a href="ic3-dashboard.html" class="btn btn-ghost">← Trang quản lý</a>
+  <h1><i class="fa-solid fa-clipboard-user" aria-hidden="true"></i> Điểm danh & tiến độ
+    <button type="button" class="info-btn" title="Đọc sổ quản lý lớp (Google Sheet) của các điều phối đào tạo: lịch dạy của tôi, tiến độ từng lớp, điểm danh và ghi thẳng vào Sheet."><i class="fa-solid fa-circle-info" aria-hidden="true"></i></button></h1>
+  <div class="spacer"></div>
+  <a href="goi-ten.html" class="btn btn-ghost" title="Gọi tên học sinh trên máy chiếu"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i> Gọi tên</a>
+  <div class="whoami-chip"><span class="whoami-avatar" id="ddAvatar"></span><span class="whoami" id="ddWho"></span></div>
+  <button type="button" class="theme-toggle" id="ddTheme" title="Chuyển đổi sáng/tối" aria-label="Chuyển đổi sáng/tối"></button>
+  <button type="button" class="btn btn-ghost" id="ddLogout">Đăng xuất</button>
+</div>
+<div class="dd-wrap">
+
+  <!-- 4 thẻ, mỗi thẻ 1 việc. Bộ lọc Trường / Giáo viên dùng chung cho Lịch dạy và Các lớp. -->
+  <nav class="dd-tabs" id="ddTabs" role="tablist" aria-label="Chức năng">
+    <button type="button" role="tab" data-tab="week" aria-controls="ddPanelWeek"><i class="fa-solid fa-calendar-week" aria-hidden="true"></i> Lịch dạy</button>
+    <button type="button" role="tab" data-tab="classes" aria-controls="ddPanelClasses"><i class="fa-solid fa-table-list" aria-hidden="true"></i> Các lớp</button>
+    <button type="button" role="tab" data-tab="class" aria-controls="ddPanelClass"><i class="fa-solid fa-clipboard-user" aria-hidden="true"></i> Điểm danh</button>
+    <button type="button" role="tab" data-tab="setup" aria-controls="ddPanelSetup"><i class="fa-solid fa-gear" aria-hidden="true"></i> Cài đặt <small id="ddLinkCount"></small></button>
+  </nav>
+
+  <div class="dd-toolbar" id="ddToolbar">
+    <label class="dd-field"><span>Trường</span><select id="ddFSchool"></select></label>
+    <label class="dd-field"><span>Giáo viên</span><select id="ddFTeacher"></select></label>
+    <button type="button" class="dd-small" id="ddOvLoad" title="Đọc lại mọi tab lớp trên Google Sheet (bỏ qua tab đã đọc trong 6 giờ)"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Cập nhật tất cả</button>
+    <small class="dd-muted" id="ddOvInfo"></small>
+  </div>
+  <p class="dd-empty" id="ddNoLinks" hidden>Chưa có sổ lớp nào. Vào thẻ <button type="button" class="dd-link" data-goto="setup">Cài đặt</button> để dán link sổ lớp của điều phối.</p>
+
+  <!-- LỊCH DẠY -->
+  <div class="dd-panel" id="ddPanelWeek" data-panel="week" role="tabpanel">
+    <!-- Hôm nay + việc cần làm: mở thẳng điểm danh đúng buổi -->
+    <div class="dd-two dd-today" id="ddToday" hidden>
+      <section class="dd-card" aria-label="Hôm nay">
+        <div class="dd-step"><h2><i class="fa-solid fa-sun" aria-hidden="true"></i> Hôm nay <small id="ddTodayDate"></small></h2></div>
+        <ul class="dd-tasks" id="ddTodayList"></ul>
+      </section>
+      <section class="dd-card" aria-label="Việc cần làm">
+        <div class="dd-step"><h2><i class="fa-solid fa-list-check" aria-hidden="true"></i> Việc cần làm <small id="ddTodoN"></small></h2></div>
+        <ul class="dd-tasks" id="ddTodoList"></ul>
+      </section>
+    </div>
+    <section class="dd-card" id="ddWeek" aria-label="Lịch giảng dạy" hidden>
+      <div class="dd-weeknav">
+        <button type="button" class="dd-small" id="ddWeekPrev" aria-label="Tuần trước"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+        <b id="ddWeekRange"></b>
+        <button type="button" class="dd-small" id="ddWeekNext" aria-label="Tuần sau"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+        <button type="button" class="dd-small" id="ddWeekNow">Tuần này</button>
+        <span class="dd-grow" id="ddWeekWho"></span>
+        <button type="button" class="dd-small" id="ddWeekCopy"><i class="fa-solid fa-copy" aria-hidden="true"></i> Sao chép lịch</button>
+      </div>
+      <div id="ddWeekGrid"></div>
+      <p class="dd-legend"><span class="k-done">Đã dạy</span> <span class="k-planned">Chưa tick hoàn thành</span> <span class="k-expected">Dự kiến</span> <span class="k-missing">Sheet chưa cập nhật</span></p>
+      <div class="dd-month"><p class="dd-hint" id="ddMonth"></p>
+        <button type="button" class="dd-small" id="ddMonthCopy" hidden title="Mỗi tiết đã tick Hoàn thành 1 dòng: ngày, trường, lớp, tiết, bài — dán vào Excel"><i class="fa-solid fa-file-excel" aria-hidden="true"></i> Sao chép bảng công tháng</button></div>
+      <details class="dd-help"><summary>Lịch này được tính thế nào?</summary>
+        <p>Lấy từ ngày dạy và tên GV trên Sheet của từng lớp (Sheet không có giờ học). Lớp nhiều GV dạy luân phiên chỉ tính tiết có tên GV đó.
+          "Dự kiến" là thứ GV thường dạy lớp đó trong các buổi gần nhất. "Sheet chưa cập nhật": ngày thường dạy đã qua mà lớp chưa có buổi nào. Bấm 1 lớp để mở điểm danh.</p></details>
+    </section>
+  </div>
+
+  <!-- CÁC LỚP -->
+  <div class="dd-panel" id="ddPanelClasses" data-panel="classes" role="tabpanel" hidden>
+    <section class="dd-card" id="ddOverview" aria-label="Tổng quan các lớp" hidden>
+      <div class="dd-modes dd-scope" id="ddScope" role="radiogroup" aria-label="Lọc lớp">
+        <button type="button" role="radio" data-scope="mine"><i class="fa-solid fa-star" aria-hidden="true"></i> Lớp của tôi</button>
+        <button type="button" role="radio" data-scope="all"><i class="fa-solid fa-layer-group" aria-hidden="true"></i> Tất cả</button>
+      </div>
+      <div class="dd-ov" id="ddOv"></div>
+      <div class="dd-watch">
+        <div class="dd-step"><h2>Học sinh cần chú ý <small id="ddWatchN"></small></h2>
+          <button type="button" class="dd-small" id="ddWatchCopy" hidden><i class="fa-solid fa-copy" aria-hidden="true"></i> Sao chép</button></div>
+        <ul class="dd-absent" id="ddWatchList"></ul>
+      </div>
+      <details class="dd-help"><summary>Ghi chú</summary>
+        <p>Bấm ☆ để đánh dấu lớp của tôi (lớp có tên thầy cô ở ô TÊN GV tự có ★). Chữ đỏ ở cột "Gần nhất": hơn 9 ngày chưa có tiết mới.
+          "Cập nhật tất cả" đọc từng tab lớp trên Google Sheet (không dùng Firebase); bản đọc giữ trên máy 6 giờ.
+          Lớp của tôi tự đọc lại khi mở trang nếu bản trên máy đã cũ hơn 6 giờ.
+          "Học sinh cần chú ý": vắng từ 3 tiết, hoặc vắng 2 tiết liền gần nhất (không tính bạn đã nghỉ luôn).</p></details>
+    </section>
+  </div>
+
+  <!-- ĐIỂM DANH 1 LỚP -->
+  <div class="dd-panel" id="ddPanelClass" data-panel="class" role="tabpanel" hidden>
+    <section class="dd-card dd-classbar">
+      <div class="dd-pick">
+        <label class="dd-field"><span>Lớp</span><select id="ddClass"></select></label>
+        <button type="button" class="dd-small" id="ddReload"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Tải lại từ Sheet</button>
+        <a class="dd-small dd-a" id="ddOpenSheet" target="_blank" rel="noopener" hidden><i class="fa-solid fa-table" aria-hidden="true"></i> Mở Sheet</a>
+        <a class="dd-small dd-a" id="ddOpenFolder" target="_blank" rel="noopener" hidden><i class="fa-brands fa-google-drive" aria-hidden="true"></i> Thư mục trường</a>
+      </div>
+      <p class="dd-hint" id="ddStatus" aria-live="polite"></p>
+    </section>
+
+    <section class="dd-card" id="ddProgress" aria-label="Tiến độ" hidden>
+      <div class="dd-step"><h2>Tiến độ <small id="ddClassInfo"></small></h2></div>
+      <div class="dd-bar" role="progressbar" aria-valuemin="0" id="ddBar"><span></span></div>
+      <p class="dd-next" id="ddNext"></p>
+      <ol class="dd-sessions" id="ddSessions"></ol>
+    </section>
+
+    <div class="dd-two">
+      <section class="dd-card" id="ddAttend" aria-label="Điểm danh" hidden>
+        <div class="dd-step"><h2>Điểm danh</h2><small id="ddCount"></small></div>
+        <div class="dd-pick">
+          <label class="dd-field"><span>Buổi</span><select id="ddSession"></select></label>
+          <button type="button" class="dd-small" id="ddAllIn"><i class="fa-solid fa-user-check" aria-hidden="true"></i> Tất cả có mặt</button>
+        </div>
+        <label class="dd-find"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input type="search" id="ddFind" class="dd-input" placeholder="Tìm học sinh (gõ vài chữ của tên)" autocomplete="off"></label>
+        <ol class="dd-list" id="ddList"></ol>
+        <p class="dd-nofind" id="ddNoFind" hidden>Không thấy học sinh nào có tên như vậy.</p>
+        <div class="dd-write" id="ddWrite">
+          <label id="ddWNgayWrap"><input type="checkbox" id="ddWNgay" checked> <span id="ddWNgayText">Điền ngày dạy hôm nay</span></label>
+          <label id="ddWDoneWrap"><input type="checkbox" id="ddWDone" checked> Tick "Đã hoàn thành"</label>
+          <small class="dd-muted" id="ddDraftInfo"></small>
+        </div>
+        <div class="dd-acts">
+          <button type="button" class="dd-go dd-go-sm" id="ddWriteBtn"><i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i> Ghi vào Sheet</button>
+          <button type="button" class="dd-small" id="ddCopy"><i class="fa-solid fa-copy" aria-hidden="true"></i> Sao chép cột</button>
+          <a class="dd-small dd-a" id="ddOpenCell" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> Mở Sheet ở ô</a>
+          <button type="button" class="dd-small" id="ddNotice" title="Tin nhắn: lớp, buổi, sĩ số có mặt, tên bạn vắng — dán vào Zalo"><i class="fa-solid fa-message" aria-hidden="true"></i> Tin nhắn báo vắng</button>
+          <button type="button" class="dd-small" id="ddToPicker"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i> Dùng cho Gọi tên</button>
+        </div>
+        <details class="dd-help"><summary>Ghi vào Sheet hoạt động thế nào?</summary>
+          <p><b>Ghi vào Sheet</b> điền ký hiệu điểm danh vào đúng cột tiết (lớp 2 tiết/buổi điền cả 2 cột), điền ngày vào ô NGÀY nếu đang trống
+            và tick ô "Đã hoàn thành". Trước khi ghi, máy chủ kiểm lại tên từng học sinh — điều phối vừa chèn/xoá dòng thì báo lỗi, không ghi lệch.
+            Tài khoản Google chạy Apps Script phải được điều phối chia sẻ quyền <b>Người chỉnh sửa</b> trên file.</p>
+          <p>Chiều ngược lại: lớp đang mở tự đọc lại Sheet 2 phút/lần (và khi quay lại tab trình duyệt), nên điều phối sửa trên Sheet thì trang cũng đổi theo.</p>
+          <p id="ddPasteHint"></p>
+          <p>Bấm tên để đổi nhanh Có mặt ↔ Vắng. Chưa ghi vào Sheet thì bản nháp vẫn giữ trên máy này.</p></details>
+      </section>
+
+      <section class="dd-card" id="ddStats" aria-label="Chuyên cần" hidden>
+        <div class="dd-step"><h2>Chuyên cần</h2><small id="ddRate"></small></div>
+        <ul class="dd-absent" id="ddAbsent"></ul>
+      </section>
+    </div>
+  </div>
+
+  <!-- CÀI ĐẶT -->
+  <div class="dd-panel" id="ddPanelSetup" data-panel="setup" role="tabpanel" hidden>
+    <section class="dd-card" id="ddLinks" aria-label="Sổ lớp của điều phối">
+      <div class="dd-step"><h2>Thêm sổ lớp</h2></div>
+      <label class="dd-field"><span>Dán link điều phối gửi — mỗi dòng "Tên trường: link" (Google Sheet hoặc thư mục Drive)</span>
+        <textarea id="ddLinkInput" rows="4" spellcheck="false" placeholder="THCS Mạch Kiếm Hùng: https://drive.google.com/drive/folders/…&#10;TiH Nguyễn Trung Ngạn: https://docs.google.com/spreadsheets/d/…"></textarea></label>
+      <div class="dd-row"><button type="button" class="dd-go dd-go-sm" id="ddLinkAdd">Thêm</button></div>
+      <details class="dd-help"><summary>Link thư mục Drive dùng thế nào?</summary>
+        <p>Google không cho trang tự xem bên trong thư mục. Trang lưu link thư mục để bấm "Mở thư mục"; trong đó chọn các file <b>FORM QUẢN LÝ LỚP</b>
+          → chuột phải → <b>Chia sẻ → Sao chép đường liên kết</b> → dán vào ô trên. File phải để chế độ "Bất kỳ ai có đường liên kết đều xem được".</p></details>
+    </section>
+    <section class="dd-card">
+      <label class="dd-field"><span>Tên của tôi (đúng như ô TÊN GV trên Sheet) — để lọc lớp và lịch của tôi</span>
+        <input type="text" id="ddMe" class="dd-input" placeholder="VD: Nguyễn Hoài Bảo" autocomplete="name"></label>
+    </section>
+    <section class="dd-card">
+      <div class="dd-step"><h2>Trường & sổ lớp đã thêm</h2></div>
+      <div id="ddSchools"></div>
+      <p class="dd-hint">Link và tên chỉ lưu trên máy này, không lưu lên Firebase. Khi bấm "Ghi vào Sheet", mã file và cột điểm danh được gửi qua Apps Script của dự án để ghi vào đúng Sheet.</p>
+    </section>
+  </div>
+</div>
+<div class="dd-toast" id="ddToast" role="status" hidden></div>
+
+<!-- Chỉ giáo viên + admin (khai báo TRƯỚC auth-guard.js). Hồ sơ đăng nhập dùng chung cache phiên với các trang quản trị
+     khác (tối đa 1 lượt đọc users/{uid} mỗi 5 phút); dữ liệu lớp không đi qua Firebase. -->
+<script>window.EDU_ALLOWED_ROLES = ['admin', 'teacher'];</script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/backend-config.js"></script>
+<script src="js/services/apps-script-client.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/auth-guard.js"></script>
+<script src="js/so-lop/so-lop-core.js"></script>
+<script src="js/name-picker/np-lessons.js"></script>
+<script src="js/so-lop/diem-danh.js"></script>
+</body>
+</html>

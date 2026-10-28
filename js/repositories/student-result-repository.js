@@ -96,8 +96,8 @@
           const F = global.EduFirebase;
           global.dispatchEvent(new CustomEvent('edu:toast', {
             detail: F && F.isQuotaOrOffline && F.isQuotaOrOffline(err)
-              ? '⚠️ ' + F.QUOTA_HINT + ' — đang hiện dữ liệu đã lưu, chưa có bài nộp mới.'
-              : '⚠️ Chưa tải được bài nộp mới — đang hiện dữ liệu đã lưu.',
+              ? F.QUOTA_HINT + ' — đang hiện dữ liệu đã lưu, chưa có bài nộp mới.'
+              : 'Chưa tải được bài nộp mới — đang hiện dữ liệu đã lưu.',
           }));
           return entry.rows;
         }
@@ -115,7 +115,7 @@
           const F = global.EduFirebase;
           const stale = cache && F && F.isQuotaOrOffline(err) ? await cache.getAsync(cacheKey, true, /* allowStale */ true) : null;
           if (!stale || !Array.isArray(stale.rows)) throw err;
-          global.dispatchEvent(new CustomEvent('edu:toast', { detail: '⚠️ ' + F.QUOTA_HINT + ' — đang hiện dữ liệu cũ đã lưu.' }));
+          global.dispatchEvent(new CustomEvent('edu:toast', { detail: F.QUOTA_HINT + ' — đang hiện dữ liệu cũ đã lưu.' }));
           return stale.rows;
         }
       }

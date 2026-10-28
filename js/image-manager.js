@@ -22,7 +22,7 @@
         js/github-publish.js); Apps Script chưa có GITHUB_TOKEN thì tải từ chính trang web.
      2. Sửa/thêm/xoá/gắn ảnh: chỉ đổi trong trình duyệt + tự lưu BẢN NHÁP
         (IndexedDB) — đóng tab mở lại vẫn còn.
-     3. Bấm "🚀 Đẩy thay đổi cho học sinh": chỉ các file THỰC SỰ đổi được
+     3. Bấm "Đẩy thay đổi cho học sinh": chỉ các file THỰC SỰ đổi được
         commit lên GitHub (kèm ảnh "lưu thành file riêng"), có kiểm tra
         để KHÔNG ghi đè thay đổi người khác/script vừa đẩy.
    ============================================================ */
@@ -298,7 +298,7 @@ function flattenQuestionTree(data) {
 /* ============================================================
    UPLOAD JSON — THAY nội dung các khối có trong file (bản "Sao lưu JSON"
    đã sửa offline, bản nháp tải về, hoặc 1 file data/ic3/<cat>__<lvl>.json).
-   Chỉ đổi trong trình duyệt — bấm "🚀 Đẩy thay đổi" để học sinh thấy.
+   Chỉ đổi trong trình duyệt — bấm "Đẩy thay đổi" để học sinh thấy.
    ============================================================ */
 document.getElementById('uploadJsonBtn').addEventListener('click', () => {
   document.getElementById('uploadJsonInput').click();
@@ -678,7 +678,7 @@ function refreshCard(item) {
 
 /* ============================================================
    SAVE (Thêm/Sửa) — chỉ đổi trong trình duyệt (bản nháp), bấm
-   "🚀 Đẩy thay đổi" để ghi lên data/ic3/ cho học sinh.
+   "Đẩy thay đổi" để ghi lên data/ic3/ cho học sinh.
    ============================================================ */
 
 /** Các bản chép CÙNG uid trong cùng khối (bộ Ôn tập/Kiểm tra theo tiết dùng lại nguyên câu của chủ đề) —

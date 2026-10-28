@@ -216,7 +216,7 @@
   document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const formEl = e.target;
-    if (!validateForm(formEl)) { setMsg('⚠️ Vui lòng kiểm tra lại các ô được đánh dấu đỏ.', 'err'); return; }
+    if (!validateForm(formEl)) { setMsg('Vui lòng kiểm tra lại các ô được đánh dấu đỏ.', 'err'); return; }
     const btn = document.getElementById('loginBtn');
     btn.disabled = true;
     setMsg('Đang đăng nhập...', '');
@@ -225,10 +225,10 @@
       const pass = document.getElementById('loginPass').value;
       const remember = document.getElementById('rememberMe').checked;
       await EduAuth.loginUser(email, pass, remember);
-      setMsg('✅ Đăng nhập thành công, đang chuyển hướng...', 'ok');
+      setMsg('Đăng nhập thành công, đang chuyển hướng...', 'ok');
       await redirectByRole();
     } catch (err) {
-      setMsg('❌ ' + friendlyError(err), 'err');
+      setMsg(friendlyError(err), 'err');
     } finally {
       btn.disabled = false;
     }
@@ -237,7 +237,7 @@
   document.getElementById('registerForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const formEl = e.target;
-    if (!validateForm(formEl)) { setMsg('⚠️ Vui lòng kiểm tra lại các ô được đánh dấu đỏ.', 'err'); return; }
+    if (!validateForm(formEl)) { setMsg('Vui lòng kiểm tra lại các ô được đánh dấu đỏ.', 'err'); return; }
     const btn = document.getElementById('registerBtn');
     btn.disabled = true;
     setMsg('Đang tạo tài khoản...', '');
@@ -250,14 +250,14 @@
       });
       if (role === 'teacher' && !approved) {
         const label = EduAuth.ROLE_LABEL[requestedRole] || 'giáo viên';
-        setMsg(`✅ Đã tạo tài khoản (đăng ký làm ${label}). Vui lòng chờ quản trị viên duyệt trước khi đăng nhập vào trang quản trị.`, 'ok');
+        setMsg(`Đã tạo tài khoản (đăng ký làm ${label}). Vui lòng chờ quản trị viên duyệt trước khi đăng nhập vào trang quản trị.`, 'ok');
         btn.disabled = false;
         return;
       }
-      setMsg('✅ Tạo tài khoản thành công, đang chuyển hướng...', 'ok');
+      setMsg('Tạo tài khoản thành công, đang chuyển hướng...', 'ok');
       window.location.href = role === 'student' ? 'index.html' : nextUrl;
     } catch (err) {
-      setMsg('❌ ' + friendlyError(err), 'err');
+      setMsg(friendlyError(err), 'err');
       btn.disabled = false;
     }
   });
@@ -267,8 +267,8 @@
     if (!email) { setMsg('Nhập email ở trên trước rồi bấm "Quên mật khẩu?" nhé.', 'err'); return; }
     try {
       await EduAuth.sendResetEmail(email);
-      setMsg('📩 Đã gửi email đặt lại mật khẩu tới ' + email, 'ok');
+      setMsg('Đã gửi email đặt lại mật khẩu tới ' + email, 'ok');
     } catch (err) {
-      setMsg('❌ ' + friendlyError(err), 'err');
+      setMsg(friendlyError(err), 'err');
     }
   });

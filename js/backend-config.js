@@ -22,7 +22,7 @@
     // Bản Apps Script web này cần = BACKEND_VERSION trong apps/src/00-config.gs (đổi CẢ 2 chỗ —
     // test backend-consistency báo đỏ nếu lệch). Admin thấy thanh cảnh báo khi bản đang chạy thật
     // cũ hơn (js/services/backend-version-check.js).
-    expectedBackendVersion: '2026-10-27',
+    expectedBackendVersion: '2026-10-28',
 
     // ── Dashboard đọc kết quả từ đâu (teacher / coordinator / ic3-dashboard Báo cáo) ──
     //   'auto'      : Firestore khi quizResults.firestore = 'all', ngược lại Google Sheet

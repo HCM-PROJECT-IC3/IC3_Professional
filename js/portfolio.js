@@ -291,10 +291,10 @@
     }
 
     const QUICK_CHIPS = [
-      { label: '🔠 Cỡ chữ to hơn', run: () => setFontStep(fontStepIdx + 1) },
-      { label: '🔡 Cỡ chữ nhỏ hơn', run: () => setFontStep(fontStepIdx - 1) },
-      { label: '🌓 Tương phản cao', run: toggleContrast },
-      { label: '🔊 Đọc tóm tắt trang', run: readPageSummary },
+      { label: 'Cỡ chữ to hơn', run: () => setFontStep(fontStepIdx + 1) },
+      { label: 'Cỡ chữ nhỏ hơn', run: () => setFontStep(fontStepIdx - 1) },
+      { label: 'Tương phản cao', run: toggleContrast },
+      { label: 'Đọc tóm tắt trang', run: readPageSummary },
       { label: '⏹ Dừng đọc', run: () => window.speechSynthesis && window.speechSynthesis.cancel() },
       { label: 'Cách vào ôn luyện?', run: () => handleQuestion('ôn luyện') },
       { label: 'Cách đăng bài?', run: () => handleQuestion('đăng bài') },
