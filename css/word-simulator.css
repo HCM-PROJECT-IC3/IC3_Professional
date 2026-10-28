@@ -19,7 +19,7 @@ body {
 
 /* ---------- Lobby ---------- */
 .ws-lobby-header {
-  background: linear-gradient(135deg, var(--ws-accent, #2b579a), var(--ws-accent-deep, #1e3f6f));
+  background: var(--ws-accent, #2b579a); /* phẳng — không gradient */
   color: #fff;
   padding: 28px 24px;
   display: flex;
@@ -473,3 +473,8 @@ body {
   .ww-groups { max-width: 100%; }
   .ws-exam-panel { left: 12px; right: 12px; top: auto; bottom: 12px; width: auto; }
 }
+
+/* Icon môn ở sảnh mô phỏng (Font Awesome thay emoji) */
+.ws-lobby-emoji .fa-file-word { color: #2b579a; }
+.ws-lobby-emoji .fa-file-excel { color: #217346; }
+.ws-lobby-emoji .fa-file-powerpoint { color: #b7472a; }

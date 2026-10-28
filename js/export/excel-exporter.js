@@ -79,7 +79,7 @@
   function buildOverviewSheet(wb, ctx) {
     const ws = wb.addWorksheet('Tổng quan', { properties: { tabColor: { argb: HEADER_FILL } } });
     ws.mergeCells('A1:D1');
-    ws.getCell('A1').value = '📊 Báo cáo tổng quan — Học Liệu Số / IC3';
+    ws.getCell('A1').value = 'Báo cáo tổng quan — Học Liệu Số / IC3';
     ws.getCell('A1').font = { bold: true, size: 16, color: { argb: HEADER_FILL } };
 
     ws.mergeCells('A2:D2');
@@ -253,7 +253,7 @@
    */
   async function exportWorkbook(scoped, opts) {
     if (typeof ExcelJS === 'undefined') {
-      global.dispatchEvent(new CustomEvent('edu:toast', { detail: '❌ Không tải được thư viện Excel (ExcelJS). Kiểm tra kết nối mạng rồi thử lại.' }));
+      global.dispatchEvent(new CustomEvent('edu:toast', { detail: 'Không tải được thư viện Excel (ExcelJS). Kiểm tra kết nối mạng rồi thử lại.' }));
       return;
     }
     const wb = new ExcelJS.Workbook();

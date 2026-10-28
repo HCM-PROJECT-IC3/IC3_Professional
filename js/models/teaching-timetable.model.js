@@ -1,11 +1,11 @@
 /* ============================================================
    js/models/teaching-timetable.model.js
-   Model cho tab "🗓️ TKB lớp" (teaching-schedule.html) — THỜI KHOÁ BIỂU
+   Model cho tab "TKB lớp" (teaching-schedule.html) — THỜI KHOÁ BIỂU
    dạng LƯỚI TIẾT HỌC (Buổi/Tiết/Thời gian × Thứ2-7), phỏng theo đúng mẫu
    thời khoá biểu giấy nhà trường cung cấp (banner "IG VIỆT NAM"): mỗi
    giáo viên có 1 khung giờ tiết riêng (vì mỗi trường quy định giờ khác
    nhau) + với mỗi Thứ/tiết, điền MÃ LỚP đang dạy (vd "5/1") — khác với
-   tab "📅 Lịch tuần" vốn ghi nhận LOẠI HÌNH PHỤ TRÁCH (Dạy chính/Trám/
+   tab "Lịch tuần" vốn ghi nhận LOẠI HÌNH PHỤ TRÁCH (Dạy chính/Trám/
    Cty/WFH...) ở cấp độ cả buổi, không tách theo từng tiết. 2 tab phục vụ
    2 mục đích khác nhau (theo dõi nhân sự vs. thời khoá biểu treo lớp) nên
    tách riêng model/collection, không gộp chung để tránh vỡ dữ liệu cũ.
@@ -23,7 +23,7 @@
      tên trường riêng (không chỉ 1 field mã lớp như bản đầu) vì 1 giáo
      viên có thể dạy LINH HOẠT nhiều trường khác nhau, thậm chí đổi trường
      giữa các tiết trong CÙNG 1 buổi (vd tiết 1-2 dạy trường A, tiết 4-5
-     dạy trường B) — không thể gộp chung "1 trường/buổi" như tab "📅 Lịch
+     dạy trường B) — không thể gộp chung "1 trường/buổi" như tab "Lịch
      tuần" (field `location` ở cấp buổi) mà phải tách theo TỪNG TIẾT.
      Dữ liệu CŨ (trước khi có field `truong`) lưu thẳng STRING thay vì
      Cell — mọi nơi đọc phải qua `cellOf()` để tự quy đổi tương thích

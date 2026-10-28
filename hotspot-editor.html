@@ -19,13 +19,13 @@
 
 
 <header>
-  <h1>🎯 Hotspot Editor <span class="tag">EduQuiz Admin</span></h1>
+  <h1><i class="fa-solid fa-crosshairs" aria-hidden="true"></i> Hotspot Editor <span class="tag">EduQuiz Admin</span></h1>
   <select class="btn" id="levelSelect" title="Mở thẳng câu hỏi của 1 cấp độ trong dự án (ảnh tự tải từ img/)">
-    <option value="">📚 Mở cấp độ trong dự án…</option>
+    <option value="">Mở cấp độ trong dự án…</option>
   </select>
-  <button class="btn" id="btnLoadJson">📂 Mở file câu hỏi (.json)</button>
+  <button class="btn" id="btnLoadJson"><i class="fa-solid fa-folder-open" aria-hidden="true"></i> Mở file câu hỏi (.json)</button>
   <input type="file" id="fileJson" accept="application/json">
-  <button class="btn" id="btnLoadImages">🖼️ Nạp thư mục ảnh (img/)</button>
+  <button class="btn" id="btnLoadImages"><i class="fa-solid fa-images" aria-hidden="true"></i> Nạp thư mục ảnh (img/)</button>
   <input type="file" id="fileImages" webkitdirectory directory multiple>
   <div class="spacer"></div>
   <span class="note" id="statusText"></span>
@@ -37,7 +37,7 @@
   <!-- LEFT: question list -->
   <div class="pane">
     <div class="pane-pad">
-      <input type="text" class="q-search" id="qSearch" placeholder="🔍 Tìm câu hỏi hotspot…">
+      <input type="text" class="q-search" id="qSearch" placeholder="Tìm câu hỏi hotspot…">
       <label class="q-filter"><input type="checkbox" id="qOnlyIssues"> Chỉ câu có cảnh báo</label>
       <div id="qListWrap">
         <div class="empty-hint">Mở một file JSON câu hỏi (vd. <b>IC3__LV1.json</b>) để bắt đầu.<br><br>Công cụ sẽ tự lọc ra tất cả câu dạng <b>hotspot</b> để bạn chỉnh vị trí.</div>
@@ -50,7 +50,7 @@
     <div class="editor-toolbar" id="editorToolbar" style="display:none;">
       <div class="qtext" id="qTextDisplay"></div>
       <div class="width-slider-wrap">
-        📱 <input type="range" id="widthSlider" min="320" max="900" value="640" step="10"> 🖥️
+        <i class="fa-solid fa-mobile-screen" aria-hidden="true"></i> <input type="range" id="widthSlider" min="320" max="900" value="640" step="10"> <i class="fa-solid fa-desktop" aria-hidden="true"></i>
         <span id="widthLabel">640px</span>
       </div>
     </div>
@@ -58,13 +58,13 @@
       <div class="stage" id="stage">
         <div class="hotspot-wrap" id="hotspotWrap">
           <div class="no-image-placeholder" id="noImagePlaceholder">
-            🖼️ Chưa có ảnh cho câu này<br><span class="note">Bấm "Nạp thư mục ảnh (img/)" ở trên và chọn thư mục <b>img</b> của dự án.</span>
+            <i class="fa-solid fa-image" aria-hidden="true"></i> Chưa có ảnh cho câu này<br><span class="note">Bấm "Nạp thư mục ảnh (img/)" ở trên và chọn thư mục <b>img</b> của dự án.</span>
           </div>
         </div>
       </div>
     </div>
     <div class="editor-hint" id="editorHint" style="display:none;">
-      👆 Kéo ô để di chuyển · kéo chấm tím ở góc để đổi kích thước · dùng phím mũi tên để tinh chỉnh (giữ <span class="kbd">Shift</span> để di chuyển nhanh hơn) · <span class="kbd">Delete</span> để xoá vùng đang chọn
+      <i class="fa-solid fa-hand-pointer" aria-hidden="true"></i> Kéo ô để di chuyển · kéo chấm tím ở góc để đổi kích thước · dùng phím mũi tên để tinh chỉnh (giữ <span class="kbd">Shift</span> để di chuyển nhanh hơn) · <span class="kbd">Delete</span> để xoá vùng đang chọn
     </div>
     <div id="emptyCenterHint" class="empty-hint" style="padding-top:4rem;">Chọn một câu hỏi bên trái để bắt đầu chỉnh sửa vị trí các vùng bấm.</div>
   </div>
@@ -321,7 +321,7 @@ function renderEditor() {
   if (!imgUrl) {
     const ph = document.createElement('div');
     ph.className = 'no-image-placeholder';
-    ph.innerHTML = `🖼️ Chưa có ảnh cho câu này<br><span class="note">Tên file cần: <b>${escHtml(q.image_file || '(không rõ)')}</b><br>Bấm "Nạp thư mục ảnh (img/)" ở trên và chọn thư mục <b>img</b> của dự án.</span>`;
+    ph.innerHTML = `<i class="fa-solid fa-image" aria-hidden="true"></i> Chưa có ảnh cho câu này<br><span class="note">Tên file cần: <b>${escHtml(q.image_file || '(không rõ)')}</b><br>Bấm "Nạp thư mục ảnh (img/)" ở trên và chọn thư mục <b>img</b> của dự án.</span>`;
     wrap.appendChild(ph);
     return;
   }

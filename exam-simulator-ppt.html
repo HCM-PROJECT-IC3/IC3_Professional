@@ -7,6 +7,7 @@
 <title>MOS PowerPoint — Exam Simulator (state-based)</title>
 <link rel="stylesheet" href="css/exam-simulator.css" />
 <link rel="stylesheet" href="css/exam-simulator-ppt.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
 <!-- ════════════════════════════════════════════════════════════
@@ -18,7 +19,7 @@
      ════════════════════════════════════════════════════════════ -->
 
   <header class="exs-topbar">
-    <div class="exs-topbar-title"><i>🖥️</i> MOS PowerPoint — Exam Simulator</div>
+    <div class="exs-topbar-title"><i class="fa-solid fa-file-powerpoint" aria-hidden="true"></i> MOS PowerPoint — Exam Simulator</div>
     <div class="exs-timer" id="exsTimer">⏱ --:--</div>
     <button type="button" class="exs-submit-btn" id="exsSubmitBtn">Nộp bài</button>
   </header>
@@ -29,7 +30,7 @@
       <p id="exsInstruction">Đang tải...</p>
       <div class="exs-points" id="exsPoints"></div>
       <div class="exs-hint-box" id="exsHintBox" hidden>
-        <button type="button" id="exsHintBtn">💡 Xem gợi ý (trừ điểm)</button>
+        <button type="button" id="exsHintBtn"><i class="fa-solid fa-lightbulb" aria-hidden="true"></i> Xem gợi ý (trừ điểm)</button>
         <ul id="exsHintList" hidden></ul>
       </div>
     </aside>

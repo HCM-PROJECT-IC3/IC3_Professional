@@ -201,12 +201,12 @@
   }
   var CANVAS_OBJECT_HTML = {
     watermark: function () { return '<div class="wwo wwo-watermark">SAMPLE</div>'; },
-    hyperlink: function (label) { return '<div class="wwo wwo-hyperlink">🔗 ' + RibbonSim.escapeHtml(label) + '</div>'; },
+    hyperlink: function (label) { return '<div class="wwo wwo-hyperlink"><i class="fa-solid fa-link" aria-hidden="true"></i> ' + RibbonSim.escapeHtml(label) + '</div>'; },
     textbox: function (label) { return '<div class="wwo wwo-textbox">' + RibbonSim.escapeHtml(label) + '</div>'; },
     header: function () { return '<div class="wwo wwo-header">Header</div>'; },
     footer: function () { return '<div class="wwo wwo-footer">Footer</div>'; },
     hr: function () { return '<div class="wwo wwo-hr"></div>'; },
-    picture: function () { return '<div class="wwo wwo-picture">🖼️</div>'; },
+    picture: function () { return '<div class="wwo wwo-picture"><i class="fa-solid fa-image" aria-hidden="true"></i></div>'; },
     table: function () {
       return '<table class="wwo wwo-table"><tr><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td></tr></table>';
     }
@@ -233,7 +233,7 @@
     pillLabels: PILL_LABELS,
     docSuffix: ' - Word',
     docDefaultName: 'Document1',
-    missionFileFallback: '📄 Tài liệu thực hành',
+    missionFileFallback: 'Tài liệu thực hành',
     backstageTab: 'File',
     onResetLesson: function () { canvasObjects = {}; },
     onOpenSubtask: function (s) { renderCanvasObjects(s.file || 'Document1'); },

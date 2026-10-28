@@ -9,7 +9,7 @@
    như bản v3 cũ).
 
    Logo: dùng chung window.EduIigLogo (ảnh logo IIG thật, xem
-   js/export/iig-logo.js) — GIỐNG hệt logo dùng ở "📋 Phiếu công tác"
+   js/export/iig-logo.js) — GIỐNG hệt logo dùng ở "Phiếu công tác"
    (js/export/teaching-schedule-cong-tac-pdf.js), không còn vẽ huy hiệu
    vector "IC3" tự chế như bản trước.
 
@@ -101,7 +101,7 @@
   function drawChartsPage(doc, scopeLabel) {
     doc.addPage();
     drawHeader(doc);
-    sectionTitle(doc, '📈 Biểu đồ', 78);
+    sectionTitle(doc, 'Biểu đồ', 78);
 
     const charts = [
       ['chartBar', 'Điểm TB theo lớp'],
@@ -197,19 +197,19 @@
    */
   function exportReport(scoped, opts) {
     if (typeof global.jspdf === 'undefined' || typeof global.autoTable === 'undefined') {
-      global.dispatchEvent(new CustomEvent('edu:toast', { detail: '❌ Không tải được thư viện PDF (jsPDF). Kiểm tra kết nối mạng rồi thử lại.' }));
+      global.dispatchEvent(new CustomEvent('edu:toast', { detail: 'Không tải được thư viện PDF (jsPDF). Kiểm tra kết nối mạng rồi thử lại.' }));
       return;
     }
     const { jsPDF } = global.jspdf;
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
 
     drawHeader(doc);
-    sectionTitle(doc, '📊 Tổng quan', 78);
+    sectionTitle(doc, 'Tổng quan', 78);
     drawKpiTable(doc, opts.kpis, 88, opts.scopeLabel);
 
     drawChartsPage(doc, opts.scopeLabel);
-    drawStudentPivotTable(doc, '📉 Học sinh cần hỗ trợ (điểm TB < 60%)', global.EduAnalytics.studentsNeedingSupport(scoped.examHistories, 60), opts.scopeLabel);
-    drawStudentPivotTable(doc, '🏆 Học sinh xuất sắc (Top 20)', global.EduAnalytics.topStudents(scoped.examHistories, 20), opts.scopeLabel);
+    drawStudentPivotTable(doc, 'Học sinh cần hỗ trợ (điểm TB < 60%)', global.EduAnalytics.studentsNeedingSupport(scoped.examHistories, 60), opts.scopeLabel);
+    drawStudentPivotTable(doc, 'Học sinh xuất sắc (Top 20)', global.EduAnalytics.topStudents(scoped.examHistories, 20), opts.scopeLabel);
     drawStudentListTable(doc, opts.rows, opts.scopeLabel);
 
     doc.save(opts.fileName || `bao-cao-hoc-sinh-${new Date().toISOString().slice(0, 10)}.pdf`);

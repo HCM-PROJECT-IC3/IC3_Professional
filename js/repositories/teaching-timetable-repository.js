@@ -1,6 +1,6 @@
 /* ============================================================
    js/repositories/teaching-timetable-repository.js
-   2 repository nhỏ cho tab "🗓️ TKB lớp" — cùng mô hình BaseRepository
+   2 repository nhỏ cho tab "TKB lớp" — cùng mô hình BaseRepository
    với js/repositories/teaching-schedule-repository.js.
    ============================================================ */
 (function (global) {

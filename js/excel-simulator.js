@@ -197,7 +197,7 @@
     pillLabels: PILL_LABELS,
     docSuffix: ' - Excel',
     docDefaultName: 'Book1',
-    missionFileFallback: '📊 Bảng tính thực hành',
+    missionFileFallback: 'Bảng tính thực hành',
     backstageTab: 'File',
     onResetLesson: function () { highlightedCells = {}; },
     onOpenSubtask: function (s) {

@@ -7,10 +7,10 @@
    ============================================================ */
 #section-builder {
   --t0: #e21b3c; --t1: #1368ce; --t2: #c88a00; --t3: #26890c; --t4: #864cbf; --t5: #0a8f8f;
-  --eb-stage-bg: radial-gradient(circle at 20% 10%, #eef0ff 0, transparent 45%), radial-gradient(circle at 85% 90%, #e6fbf6 0, transparent 40%), #f4f6fd;
+  --eb-stage-bg: #f4f6fd;
 }
 [data-theme="dark"] #section-builder {
-  --eb-stage-bg: radial-gradient(circle at 20% 10%, rgba(99,102,241,.14) 0, transparent 45%), radial-gradient(circle at 85% 90%, rgba(20,184,166,.10) 0, transparent 40%), #171a2b;
+  --eb-stage-bg: #171a2b;
 }
 .c0 { --tc: var(--t0); } .c1 { --tc: var(--t1); } .c2 { --tc: var(--t2); }
 .c3 { --tc: var(--t3); } .c4 { --tc: var(--t4); } .c5 { --tc: var(--t5); }
@@ -417,7 +417,7 @@ ol[type="a"].eb-opts { list-style: lower-alpha; padding-left: 20px; }
 /* ── Xem trước kiểu Kahoot ── */
 .eb-preview {
   position: fixed; inset: 0; z-index: 950; display: flex; flex-direction: column; outline: none;
-  background: radial-gradient(circle at 15% 15%, #5b3fd6 0, transparent 50%), radial-gradient(circle at 85% 85%, #1f8ea8 0, transparent 50%), #2a1f7a;
+  background: #2a1f7a;
   color: #fff; font-family: 'Nunito', sans-serif;
 }
 .eb-preview[hidden] { display: none; }

@@ -1,6 +1,6 @@
 /* ============================================================
    js/teaching-schedule-travel.js
-   Tab "🚗 Hỗ trợ xăng xe" (teaching-schedule.html) — tính tiền hỗ trợ đi
+   Tab "Hỗ trợ xăng xe" (teaching-schedule.html) — tính tiền hỗ trợ đi
    lại cho giáo viên dạy xa, dành cho role "teaching_coordinator" (🚗 Điều
    phối giáo viên) quản lý (admin dùng được luôn).
 
@@ -8,7 +8,7 @@
    công thức người dùng đã cung cấp trực tiếp, KHÔNG tự đổi):
    - 11-15km/ngày: 20.000đ. ≥15,1km/ngày: 30.000đ. Dưới 11km: không hỗ trợ.
    - KHÔNG hỗ trợ cho buổi Dự Giảng/Ôn online (Dạy Trực Tuyến)/Trợ Giảng.
-   - Khoảng cách nhà→trường: điền tay HOẶC bấm "🌍 Tính tất cả (miễn phí)"
+   - Khoảng cách nhà→trường: điền tay HOẶC bấm "Tính tất cả (miễn phí)"
      để tự tính qua Apps Script (dịch vụ Maps của Google, không cần API key —
      xem js/services/apps-script-map-distance.js) — lưu vào collection
      teaching_travel_distances.
@@ -290,7 +290,7 @@
       const kmTitle = isApprox ? ' title="Vị trí NHÀ chỉ xấp xỉ theo tên đường (không tìm được đúng số nhà/hẻm trên bản đồ) — nên kiểm tra lại nếu số km trông bất thường"' : '';
       return `<tr>
         <td class="report-pivot-name">${esc(r.teacherName)}</td>
-        <td class="report-pivot-name"${schoolTitle}>${esc(r.school)}${matched ? ' 📍' : ''}</td>
+        <td class="report-pivot-name"${schoolTitle}>${esc(r.school)}${matched ? ' <i class="fa-solid fa-location-dot" aria-hidden="true"></i>' : ''}</td>
         <td${kmTitle}>${isApprox ? '~' : ''}<input type="number" min="0" step="0.1" class="travel-km-input" data-teacher="${esc(r.teacherCode)}" data-school="${esc(r.school)}" value="${esc(km)}" placeholder="vd 12.5" ${isReadOnly ? 'readonly' : ''}></td>
         <td>${isReadOnly ? '' : `<button type="button" class="row-gmaps-btn" data-teacher="${esc(r.teacherCode)}" data-school="${esc(r.school)}" title="Tính lại đúng khoảng cách này (miễn phí, qua bản đồ Google trong Apps Script)"><i class="fa-solid fa-globe" aria-hidden="true"></i></button>`}</td>
       </tr>`;

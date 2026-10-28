@@ -42,7 +42,7 @@
 
     var title = document.createElement('div');
     title.style.cssText = 'font-size:1.3rem;font-weight:800;margin-bottom:10px;';
-    title.textContent = '⚠️ Trang gặp sự cố ngoài ý muốn';
+    title.textContent = 'Trang gặp sự cố ngoài ý muốn';
     card.appendChild(title);
 
     var msg = document.createElement('p');
@@ -52,7 +52,7 @@
 
     var btn = document.createElement('button');
     btn.type = 'button';
-    btn.textContent = '🔄 Tải lại trang';
+    btn.textContent = 'Tải lại trang';
     btn.style.cssText = 'background:#4f6bff;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-weight:700;font-size:1rem;cursor:pointer;';
     btn.addEventListener('click', function () { location.reload(); });
     card.appendChild(btn);

@@ -18,8 +18,8 @@
      "role-teaching-coordinator" lên <body>, css/teaching-schedule.css dùng class
      này ẩn MỌI nút thêm/sửa/xoá (Tuần mới/Nhập Excel/Sửa lịch/Thêm-Sửa-
      Xoá giáo viên); các nút chỉ ĐỌC (Xuất PDF, Xuất Phiếu công tác) vẫn
-     giữ nguyên. Còn thấy thêm tab "📊 Báo cáo" (biểu đồ + pivot table
-     nhiều tuần, xem js/teaching-schedule-report.js) và "🚗 Hỗ trợ xăng xe"
+     giữ nguyên. Còn thấy thêm tab "Báo cáo" (biểu đồ + pivot table
+     nhiều tuần, xem js/teaching-schedule-report.js) và "Hỗ trợ xăng xe"
      (xem js/teaching-schedule-travel.js) mà admin/teacher không cần tới —
      quyền ghi lịch thật sự luôn do firestore.rules chốt (chỉ isAdmin()),
      đây chỉ là lớp UX (riêng dữ liệu khoảng cách xăng xe thì

@@ -1,7 +1,7 @@
 /* ============================================================
    js/export/teaching-timetable-pdf.js
-   Xuất "🗓️ Thời khoá biểu" (tab TKB lớp → giáo viên) ra PDF bằng jsPDF +
-   AutoTable — THAY THẾ nút "🖨️ In" cũ vốn chỉ gọi window.print() (hộp
+   Xuất "Thời khoá biểu" (tab TKB lớp → giáo viên) ra PDF bằng jsPDF +
+   AutoTable — THAY THẾ nút "In" cũ vốn chỉ gọi window.print() (hộp
    thoại in của trình duyệt, xem css/teaching-schedule.css @media print).
 
    LÝ DO ĐỔI: window.print() không kiểm soát được phần "Headers and
@@ -59,7 +59,7 @@
 
   function ensureLibsLoaded() {
     if (typeof global.jspdf === 'undefined' || typeof global.autoTable === 'undefined') {
-      alert('❌ Không tải được thư viện PDF (jsPDF). Kiểm tra kết nối mạng rồi thử lại.');
+      alert('Không tải được thư viện PDF (jsPDF). Kiểm tra kết nối mạng rồi thử lại.');
       return false;
     }
     return true;

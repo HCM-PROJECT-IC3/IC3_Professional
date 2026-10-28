@@ -229,12 +229,12 @@
       $('wqLinkRow').hidden = false;
       let copied = false;
       try { await navigator.clipboard.writeText(url); copied = true; } catch (e) { /* trình duyệt chặn clipboard */ }
-      $('wqLinkLabel').textContent = copied ? '✅ Đã chép link đề ôn ' + items.length + ' câu — gửi cho học sinh:' : 'Link đề ôn ' + items.length + ' câu — chép gửi cho học sinh:';
+      $('wqLinkLabel').textContent = copied ? 'Đã chép link đề ôn ' + items.length + ' câu — gửi cho học sinh:' : 'Link đề ôn ' + items.length + ' câu — chép gửi cho học sinh:';
       if (!copied) $('wqLink').select();
     } catch (err) {
       $('wqLinkRow').hidden = false;
       $('wqLink').value = '';
-      $('wqLinkLabel').textContent = '❌ Không tạo được đề: ' + err.message;
+      $('wqLinkLabel').textContent = 'Không tạo được đề: ' + err.message;
     } finally {
       btn.disabled = false;
     }

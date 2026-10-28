@@ -1,7 +1,7 @@
 /* ============================================================
    js/services/apps-script-map-distance.js
    Khoảng cách đường bộ (km) từ địa chỉ nhà giáo viên tới trường — tab
-   "🚗 Hỗ trợ xăng xe" (js/teaching-schedule-travel.js).
+   "Hỗ trợ xăng xe" (js/teaching-schedule-travel.js).
 
    Gọi Apps Script (apps/Code.gs → mapDistance_), dùng dịch vụ Maps có sẵn của
    Google: dữ liệu bản đồ Google ở Việt Nam (tới số nhà/hẻm), không cần API key

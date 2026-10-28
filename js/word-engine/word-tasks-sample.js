@@ -33,7 +33,7 @@
     initialState: function () {
       var doc = WD.createDocument();
       WD.setSelection(doc, 0, 0, 0, 0);
-      WD.insertText(doc, 'Bao cao ket qua kinh doanh quy 3');
+      WD.insertText(doc, 'Báo cáo kết quả kinh doanh quý 3');
       WD.setSelection(doc, 0, 0, 0, 0);
       return { doc: doc };
     },

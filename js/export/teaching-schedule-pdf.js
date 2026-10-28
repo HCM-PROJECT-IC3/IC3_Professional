@@ -1,6 +1,6 @@
 /* ============================================================
    js/export/teaching-schedule-pdf.js
-   Engine xuất PDF cho tính năng "📅 Lịch giảng dạy" — xuất lịch làm
+   Engine xuất PDF cho tính năng "Lịch giảng dạy" — xuất lịch làm
    việc/giảng dạy hàng tuần của 1 giáo viên (hoặc nhiều giáo viên, mỗi
    người 1 trang) thành file PDF để in/gửi.
 
@@ -9,7 +9,7 @@
    người dùng yêu cầu "giống từ màu sắc lẫn bố cục" để dễ nhìn/dễ nhớ hơn
    là theo màu tím thương hiệu mặc định của app:
      - Font Tinos (metric-tương thích Times New Roman, đã nhúng sẵn ở
-       js/vendor/tinos-vietnamese-jspdf.js — dùng CHUNG với "📋 Phiếu công
+       js/vendor/tinos-vietnamese-jspdf.js — dùng CHUNG với "Phiếu công
        tác") thay vì NotoSans.
      - Tiêu đề ĐỎ đậm, căn giữa; dòng "Thời gian áp dụng" tô vàng giống ô
        Excel B4.
@@ -25,7 +25,7 @@
    Dùng jsPDF (js/vendor/jspdf.umd.min.js) + jsPDF-AutoTable
    (js/vendor/jspdf.plugin.autotable.min.js, bản v4 — gọi qua hàm toàn
    cục autoTable(doc, opts)) + font Tinos (js/vendor/tinos-vietnamese-jspdf.js,
-   nạp SẴN trong teaching-schedule.html cho "📋 Phiếu công tác").
+   nạp SẴN trong teaching-schedule.html cho "Phiếu công tác").
 
    Nạp SAU: js/vendor/jspdf.umd.min.js, js/vendor/jspdf.plugin.autotable.min.js,
             js/vendor/tinos-vietnamese-jspdf.js,
@@ -389,7 +389,7 @@
     if (typeof global.jspdf === 'undefined' || typeof global.autoTable === 'undefined') {
       const el = document.getElementById('toast');
       if (el) {
-        el.textContent = '❌ Không tải được thư viện PDF (jsPDF). Kiểm tra kết nối mạng rồi thử lại.';
+        el.textContent = 'Không tải được thư viện PDF (jsPDF). Kiểm tra kết nối mạng rồi thử lại.';
         el.classList.add('show');
         setTimeout(() => el.classList.remove('show'), 2800);
       }

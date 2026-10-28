@@ -225,21 +225,21 @@
 
     function buildQuickChips() {
       const chips = [
-        { label: '🔠 Cỡ chữ to hơn', run: () => setFontStep(fontStepIdx + 1) },
-        { label: '🔡 Cỡ chữ nhỏ hơn', run: () => setFontStep(fontStepIdx - 1) },
-        { label: '🌓 Tương phản cao', run: toggleContrast },
+        { label: 'Cỡ chữ to hơn', run: () => setFontStep(fontStepIdx + 1) },
+        { label: 'Cỡ chữ nhỏ hơn', run: () => setFontStep(fontStepIdx - 1) },
+        { label: 'Tương phản cao', run: toggleContrast },
         { label: '⏹ Dừng đọc', run: stopSpeaking },
       ];
       // Chỉ thêm các nút liên quan bài thi khi ĐANG có câu hỏi trên trang —
       // đỡ rối cho các trang khác (vd portfolio.html) không có #qPanel.
       if (findQuestionPanel()) {
-        chips.push({ label: '🔊 Đọc câu hỏi hiện tại', run: readCurrentQuestion });
+        chips.push({ label: 'Đọc câu hỏi hiện tại', run: readCurrentQuestion });
         chips.push({ label: '◀ Câu trước', run: () => clickQuizNav('prev') });
         chips.push({ label: 'Câu tiếp ▶', run: () => clickQuizNav('next') });
-        chips.push({ label: '🚩 Đánh dấu câu này', run: () => clickQuizNav('flag', 'Đã bấm đánh dấu/bỏ đánh dấu câu hiện tại.') });
-        chips.push({ label: '📊 Tiến độ làm bài', run: readProgressSummary });
+        chips.push({ label: 'Đánh dấu câu này', run: () => clickQuizNav('flag', 'Đã bấm đánh dấu/bỏ đánh dấu câu hiện tại.') });
+        chips.push({ label: 'Tiến độ làm bài', run: readProgressSummary });
       } else {
-        chips.push({ label: '🔊 Đọc tóm tắt trang', run: readPageSummary });
+        chips.push({ label: 'Đọc tóm tắt trang', run: readPageSummary });
         chips.push({ label: 'Cách bắt đầu làm bài?', run: () => handleQuestion('bắt đầu làm bài') });
       }
       return chips;

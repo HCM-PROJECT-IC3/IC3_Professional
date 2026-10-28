@@ -20,6 +20,7 @@
   Gọi tên học sinh (js/name-picker/): chạy hoàn toàn trên máy giáo viên.
   Tranh vẽ: SVG tự vẽ trong js/name-picker/np-art.js (không tải ảnh ngoài). Trò chơi: np-games.js.
   Nguồn tên: data/roster/students-active.json (file tĩnh, như ô chọn tên ở sảnh) · danh sách thầy cô dán vào · số thứ tự.
+  Bốc thử thách theo bài hôm nay: data/ic3/ppct-lessons.json + bộ "Bài N." của đúng cấp (np-lessons.js) — cũng là file tĩnh.
   Không Firebase, không Apps Script, không gửi dữ liệu đi đâu. Cài đặt, danh sách dán vào và
   lịch sử "đã gọi" chỉ nằm trong localStorage ('eduquiz_goiten_v1') của máy này.
 -->
@@ -27,6 +28,7 @@
   <header class="np-head">
     <a class="np-back" href="index.html" title="Về trang chủ"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Trang chủ</a>
     <div class="np-tools">
+      <a class="np-icon-btn np-icon-link" href="diem-danh.html" title="Điểm danh & tiến độ (sổ lớp điều phối)" aria-label="Mở trang Điểm danh & tiến độ"><i class="fa-solid fa-clipboard-user"></i></a>
       <button type="button" class="np-icon-btn" id="npSound" title="Bật/tắt âm thanh" aria-label="Bật/tắt âm thanh"><i class="fa-solid fa-volume-high"></i></button>
       <button type="button" class="np-icon-btn" id="npTheme" title="Sáng/tối" aria-label="Chuyển sáng/tối"><i class="fa-solid fa-circle-half-stroke"></i></button>
     </div>
@@ -54,6 +56,15 @@
       <div class="np-tl"><span>Thời gian chọn</span><output id="npSecsOut"></output></div>
       <input type="range" id="npSecs" min="5" max="30" step="1" aria-label="Thời gian chọn (giây)">
       <p class="np-hint">Trong lúc chờ sẽ có vài lần "bắt hụt rồi nhả ra". Người được gọi thật chỉ lộ diện ở những giây cuối. Phím tắt: <kbd>Space</kbd> gọi tên · <kbd>F</kbd> toàn màn hình.</p>
+    </div>
+    <div class="np-timeset" id="npLesson">
+      <div class="np-tl"><span>Câu hỏi khi "Bốc thử thách"</span></div>
+      <div class="np-row2">
+        <label class="np-field"><span>Cấp độ</span><select id="npLevel"></select></label>
+        <label class="np-field"><span>Hôm nay học</span><select id="npTiet"></select></label>
+      </div>
+      <p class="np-hint" id="npLessonNote">Chỉ hỏi câu của bài đã học trong tiết đó, đúng cấp độ của khối lớp.</p>
+      <p class="np-hint" id="npHidden" hidden></p>
     </div>
   </section>
 
@@ -103,6 +114,7 @@
 <script src="js/name-picker/name-picker-core.js"></script>
 <script src="js/name-picker/np-art.js"></script>
 <script src="js/name-picker/np-games.js"></script>
+<script src="js/name-picker/np-lessons.js"></script>
 <script src="js/name-picker/np-challenge.js"></script>
 <script src="js/name-picker/name-picker.js"></script>
 </body>

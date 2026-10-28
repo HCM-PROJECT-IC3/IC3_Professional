@@ -444,7 +444,7 @@ function getSessions() {
    thật tự động — trước đây có 1 hàm simulateScore() BỊA điểm ngẫu nhiên
    sau 5s để demo, trông như thật nhưng hoàn toàn giả. Đã bỏ hàm đó;
    thay vào đó giáo viên tự nhập điểm thật (recordScore, gọi từ modal
-   "⚙️ Quản lý") sau khi học sinh làm xong ở link ngoài. */
+   "Quản lý") sau khi học sinh làm xong ở link ngoài. */
 function recordScore(sessionId, score) {
   score = Math.max(0, Math.min(100, Math.round(score)));
   const sessions = getSessions();

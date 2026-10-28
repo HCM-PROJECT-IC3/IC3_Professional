@@ -12,7 +12,7 @@ html, body.cs-body { height: 100%; }
 body.cs-body {
   margin: 0;
   font-family: 'Baloo 2', sans-serif;
-  background: radial-gradient(ellipse at top, #1c2140 0%, #0e1024 70%);
+  background: #12152b;
   color: #f4eee6;
   padding: 14px;
   overflow-y: auto;
@@ -35,9 +35,7 @@ body.cs-body {
   font-weight: 800;
   font-size: 1.15rem;
   letter-spacing: .02em;
-  background: linear-gradient(90deg, #8fa4ff, #66e0d0, #ffcf80);
-  -webkit-background-clip: text;
-  background-clip: text;
+  color: #f4eee6;
   color: transparent;
 }
 .cs-subtitle { font-size: .78rem; color: #b7bdd6; margin-top: 2px; }
@@ -187,7 +185,7 @@ body.cs-body {
   cursor: pointer;
   transition: .15s;
 }
-.cs-btn-primary { background: linear-gradient(90deg, #8fa4ff, #66e0d0); color: #0e1024; }
+.cs-btn-primary { background: #8fa4ff; color: #0e1024; }
 .cs-btn-primary:hover:not(:disabled) { filter: brightness(1.08); }
 .cs-btn-primary:disabled { opacity: .4; cursor: not-allowed; }
 .cs-btn-secondary { background: rgba(255,255,255,.08); color: #f4eee6; border: 1px solid rgba(255,255,255,.16); }
@@ -238,3 +236,8 @@ body.cs-body {
   .cs-content { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); }
   .cs-search-input { margin-left: 0; width: 100%; }
 }
+
+/* Icon thư mục/tệp (Font Awesome) — màu như File Explorer, thay emoji 📁📄 */
+.cs-item-icon .fa-folder, .cs-search-icon .fa-folder { color: #d9a531; }
+.cs-item-icon .fa-file-lines, .cs-search-icon .fa-file-lines { color: #5b7ba6; }
+.cs-overlay-icon .fa-trophy { color: #c99a1a; }

@@ -1086,7 +1086,7 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
 }
 .tt-session-divider td::before {
   content: ''; display: block; height: 4px; margin: 5px 0;
-  background: linear-gradient(90deg, var(--yellow, #f6a723), var(--purple, #7c5cff));
+  background: var(--line, #d9dce6);
   border-radius: 3px;
 }
 /* Mỗi ô Thứ×Tiết giờ xếp CHỒNG 2 ô nhập (Mã lớp trên, Trường dưới) — 1

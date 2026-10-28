@@ -1,6 +1,6 @@
 /* ============================================================
    js/repositories/teaching-schedule-repository.js
-   3 repository nhỏ cho tính năng "📅 Lịch giảng dạy" — cùng mô hình với
+   3 repository nhỏ cho tính năng "Lịch giảng dạy" — cùng mô hình với
    js/repositories/roster-repository.js (BaseRepository + query riêng).
    ============================================================ */
 (function (global) {

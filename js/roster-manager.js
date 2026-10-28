@@ -862,7 +862,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
      "HỌ & TÊN" và 1 ô "TÊN GV ..." — xem On_Tap_MOS/FORM QUẢN LÝ LỚP
      4.xlsx). Nhận diện TỰ ĐỘNG (không cần người dùng chọn định dạng) để
      tận dụng luôn dữ liệu Trường/Lớp/GV có sẵn trong file thay vì bắt
-     nhập lại — bấm cùng 1 nút "📥 Nạp từ Excel" cho cả 2 kiểu file.
+     nhập lại — bấm cùng 1 nút "Nạp từ Excel" cho cả 2 kiểu file.
      ------------------------------------------------------------ */
   const CLASS_SHEET_SKIP_SHEETS = ['CÔNG CỤ ÔN TẬP', 'BÁO GIẢNG']; // sheet tiện ích, không phải danh sách lớp
 
