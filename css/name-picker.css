@@ -451,8 +451,14 @@ input[type="range"] { width: 100%; accent-color: var(--np-accent); height: 28px;
 .np-cc-o small { grid-column: 1 / -1; font: 800 16px/1.2 Inter, sans-serif; color: #b4271a; }
 .np-cc-o > span { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 3px solid #2d2416; border-radius: 12px; background: #fff; font: 600 21px/1.3 var(--np-body, Inter, sans-serif); }
 .np-cc-o b { flex: none; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: #2f7be0; color: #fff; font-size: 17px; }
-.np-cc-face.show-ans .np-cc-o .is-ok { border-color: #16a37f; background: #e8f6ee; }
+.np-cc.is-big .np-cc-o > span { cursor: pointer; }
+.np-cc.is-big .np-cc-o > span:hover { border-color: #2f7be0; }
+.np-cc-o > span.is-sel { border-color: #2f7be0; background: #e6f0fc; box-shadow: inset 0 0 0 2px #2f7be0; }
+.np-cc-face.show-ans .np-cc-o > span { cursor: default; }
+.np-cc-face.show-ans .np-cc-o .is-ok { border-color: #16a37f; background: #e8f6ee; box-shadow: none; }
 .np-cc-face.show-ans .np-cc-o .is-ok b { background: #16a37f; }
+.np-cc-face.show-ans .np-cc-o .is-bad { border-color: #c0392b; background: #fbe9e7; box-shadow: none; }
+.np-cc-face.show-ans .np-cc-o .is-bad b { background: #c0392b; }
 .np-cc.is-big .np-cc-a { font-size: 17px; }
 .np-chal-acts { position: absolute; left: 0; right: 0; bottom: 34px; display: flex; justify-content: center; gap: 12px; }
 .np-chal.is-big .np-chal-acts { bottom: 22px; }
@@ -462,7 +468,10 @@ input[type="range"] { width: 100%; accent-color: var(--np-accent); height: 28px;
 .np-chal-acts .np-small.is-yes[aria-pressed="true"] { background: #16a37f; border-color: #0d6b53; color: #fff; }
 .np-chal-acts .np-small.is-no[aria-pressed="true"] { background: #c0392b; border-color: #7d241b; color: #fff; }
 .np-chal-acts[hidden] { display: none; }
-.np-chal-acts .np-small { background: #fffdf7; }
+/* Nền lá bài luôn sáng → chữ tối cố định (giao diện tối --np-ink là chữ sáng, nhìn như nút bị khoá) */
+.np-chal-acts .np-small { background: #fffdf7; color: #2d2416; border-color: #d8ccb2; font-size: 17px; }
+.np-chal-acts .np-small:disabled { background: #ece6d8; color: #8a7f6c; cursor: default; }
+.np-cc.is-big:not(:disabled) { cursor: default; }
 @keyframes np-cc-glow { from { box-shadow: 0 8px 0 rgba(0, 0, 0, .35); } to { box-shadow: 0 8px 0 rgba(0, 0, 0, .35), 0 0 0 5px #ffd34d, 0 0 26px #ffd34d; } }
 @media (prefers-reduced-motion: reduce) {
   .np-world.is-tense::before, .np-cc.is-ready .np-cc-back, .np-sp.is-spot .np-sp-in, .np-mb.is-spot .np-mb-ball { animation: none !important; }

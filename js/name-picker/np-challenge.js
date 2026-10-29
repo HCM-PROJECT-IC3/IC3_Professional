@@ -1,12 +1,13 @@
 /* ============================================================
    js/name-picker/np-challenge.js — "Bốc thử thách" cho bạn vừa được gọi (trang Gọi tên).
    Chia 3 lá bài úp → tráo 3 lần → bạn đó chọn 1 lá (bấm hoặc phím 1/2/3) → lật ra thử thách,
-   2 lá còn lại lật theo cho cả lớp xem "suýt nữa thì...". Lá câu hỏi có nút "Xem đáp án" cho giáo viên.
+   2 lá còn lại lật theo cho cả lớp xem "suýt nữa thì...". Phương án A–D được tráo mỗi lần bốc;
+   bạn đó chọn phương án (bấm hoặc phím A–D), giáo viên bấm "Xem đáp án" (phím X) → tự chấm theo lựa chọn.
    Có ctx.pool (câu của tiết/bài hôm nay, np-lessons.js) → lá "Hỏi bài" lấy từ đó, không lặp câu trong phiên;
    lá được chọn phóng to để đọc rõ phương án A–D. Thiếu thì dùng câu hỏi chung, chỉ lấy câu hợp khối (g = khối nhỏ nhất).
      open(fxEl, name, onDone, ctx)   vẽ trong lớp hiệu ứng của sân khấu (toạ độ 1000×600)
                                      ctx = { grade, pool, key, label } — đều tuỳ chọn
-     isOpen() · key(e)          trang chính chuyển phím 1/2/3, A, Enter, Esc vào đây khi đang mở
+     isOpen() · key(e)          trang chính chuyển phím 1/2/3, A–D, X, Enter, Esc vào đây khi đang mở
      onDone(res)                res = { ok: true | false | null } — giáo viên chấm Đúng/Chưa đúng lá câu hỏi
      hidden() · unhideAll()     câu giáo viên bấm "Bỏ câu này" (thấy mơ hồ) — không bốc lại trên máy này
    Không mạng. Chỉ lưu danh sách câu đã bỏ trong localStorage của máy này (không Firebase).
@@ -68,7 +69,15 @@
   function hidden() { try { const a = JSON.parse(localStorage.getItem(HIDE_KEY)); return new Set(Array.isArray(a) ? a : []); } catch (e) { return new Set(); } }
   function setHidden(set) { try { localStorage.setItem(HIDE_KEY, JSON.stringify([...set])); } catch (e) { /* bộ nhớ bị chặn — chỉ bỏ trong phiên */ } }
   function unhideAll() { setHidden(new Set()); }
-  const shuffle = (a) => a.slice().sort(() => Math.random() - .5);
+  const shuffle = (a) => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+  /** Tráo phương án A–D mỗi lần bốc (data gốc hay để đáp án đúng ở A) — đáp án đổi chữ cái theo. */
+  function mixOpts(c) {
+    if (!c.o || c.o.length < 2) return c;
+    const perm = shuffle(c.o.map((_, i) => i));
+    const o = perm.map((j) => c.o[j]);
+    const ok = perm.map((j, i) => ((c.ok || []).includes(j) ? i : -1)).filter((i) => i >= 0);
+    return Object.assign({}, c, { o, ok, a: ok.map((i) => `${'ABCD'[i]}. ${o[i]}`).join(' · ') });
+  }
   /** Thẻ câu hỏi chung hợp khối: không biết khối thì chỉ lấy câu dành cho lớp 3 trở lên đều được (g ≤ 3). */
   const fitGrade = (c, grade) => !c.g || c.g <= (grade || 3);
 
@@ -91,9 +100,9 @@
     const luck = Math.random() < .35;
     let third = luck ? pick('luck', 1) : pick('task', 1);
     if (!luck && ctx.pool && ctx.pool.length && Math.random() < .5) third = [{ k: 'task', t: shuffle(LESSON_TASKS)[0] }];
-    return shuffle(quiz.concat(third));
+    return shuffle(quiz.map(mixOpts).concat(third));
   }
-  const optsHTML = (c) => (c.o ? `<span class="np-cc-o">${c.n ? `<small>Chọn ${c.n} đáp án đúng</small>` : ''}${c.o.map((x, i) => `<span${c.ok && c.ok.includes(i) ? ' class="is-ok"' : ''}><b>${'ABCD'[i]}</b> ${esc(x)}</span>`).join('')}</span>` : '');
+  const optsHTML = (c) => (c.o ? `<span class="np-cc-o">${c.n ? `<small>Chọn ${c.n} đáp án đúng</small>` : ''}${c.o.map((x, i) => `<span data-opt="${i}"><b>${'ABCD'[i]}</b> ${esc(x)}</span>`).join('')}</span>` : '');
 
   let S = null; // { box, cards, slot, picked, done }
   function open(fxEl, name, onDone, ctx) {
@@ -107,17 +116,19 @@
         <span class="np-cc-in"><span class="np-cc-back"><i class="fa-solid fa-question" aria-hidden="true"></i></span>
         <span class="np-cc-face"><em><i class="fa-solid ${KIND[c.k].icon}" aria-hidden="true"></i> ${esc(kindName(c))}</em><span class="np-cc-t">${esc(c.t)}</span>${optsHTML(c)}
         ${c.a ? `<span class="np-cc-a" hidden>Đáp án: ${esc(c.a)}${c.ex ? `<small>${esc(c.ex)}</small>` : ''}</span>` : ''}</span></span></button>`).join('')}
-      <div class="np-chal-acts" hidden><button type="button" class="np-small" data-cc-act="ans" hidden><i class="fa-solid fa-eye" aria-hidden="true"></i> Xem đáp án <kbd>A</kbd></button>
+      <div class="np-chal-acts" hidden><button type="button" class="np-small" data-cc-act="ans" hidden><i class="fa-solid fa-eye" aria-hidden="true"></i> Xem đáp án <kbd>X</kbd></button>
         <span class="np-chal-mark" hidden><button type="button" class="np-small is-yes" data-cc-act="yes" aria-pressed="false"><i class="fa-solid fa-check" aria-hidden="true"></i> Đúng</button>
         <button type="button" class="np-small is-no" data-cc-act="no" aria-pressed="false"><i class="fa-solid fa-xmark" aria-hidden="true"></i> Chưa đúng</button></span>
         <button type="button" class="np-small" data-cc-act="hide" hidden title="Câu này mơ hồ / chưa hợp với lớp — không bốc lại trên máy này"><i class="fa-solid fa-ban" aria-hidden="true"></i> Bỏ câu này</button>
         <button type="button" class="np-go np-go-sm" data-cc-act="done">Xong <kbd>Enter</kbd></button></div>`;
     fxEl.appendChild(box);
-    S = { box, cards, slot: [0, 1, 2], picked: -1, onDone, busy: true, key: ctx && ctx.key, ok: null };
+    S = { box, cards, slot: [0, 1, 2], picked: -1, onDone, busy: true, key: ctx && ctx.key, ok: null, sel: [], shown: false };
     const els = [...box.querySelectorAll('.np-cc')];
     S.els = els;
     box.addEventListener('click', (e) => {
       e.stopPropagation(); // không để sân khấu hiểu là "bấm để gọi tên"
+      const o = e.target.closest('[data-opt]');
+      if (o) { select(+o.dataset.opt); return; }
       const c = e.target.closest('[data-cc]');
       if (c) { choose(+c.dataset.cc); return; }
       const a = e.target.closest('[data-cc-act]');
@@ -158,7 +169,8 @@
     const s = S;
     if (!s || s.busy || s.picked >= 0) return;
     s.picked = i;
-    s.els.forEach((el) => { el.disabled = true; el.classList.remove('is-ready'); });
+    // Lá được chọn vẫn bấm được (chọn phương án bên trong) — nút disabled thì không nhận click
+    s.els.forEach((el, k) => { el.disabled = k !== i; el.classList.remove('is-ready'); });
     s.els[i].classList.add('is-pick', 'is-flip');
     sfx('combo');
     const card = s.cards[i];
@@ -182,10 +194,39 @@
     acts.querySelector('[data-cc-act="hide"]').hidden = card.uid == null; // chỉ câu trong bộ bài học mới bỏ được
     acts.querySelector('[data-cc-act="done"]').focus({ preventScroll: true });
   }
+  /** Bạn được gọi chọn phương án (bấm hoặc phím A–D) — chưa lộ đáp án. Câu 1 đáp án: chọn lại thì đổi; nhiều đáp án: bật/tắt. */
+  function select(i) {
+    const s = S;
+    if (!s || s.picked < 0 || s.shown) return;
+    const card = s.cards[s.picked];
+    if (!card.o || i < 0 || i >= card.o.length) return;
+    if (card.n) s.sel = s.sel.includes(i) ? s.sel.filter((x) => x !== i) : s.sel.concat(i);
+    else s.sel = s.sel[0] === i ? [] : [i];
+    s.els[s.picked].querySelectorAll('[data-opt]').forEach((el) => el.classList.toggle('is-sel', s.sel.includes(+el.dataset.opt)));
+    sfx('click');
+  }
+  /** Lộ đáp án; đã chọn phương án thì tự chấm Đúng/Chưa đúng (giáo viên vẫn bấm đổi được). */
   function showAnswer() {
-    if (!S || S.picked < 0) return;
-    const a = S.els[S.picked].querySelector('.np-cc-a');
-    if (a) { a.hidden = false; a.parentNode.classList.add('show-ans'); sfx('match'); }
+    const s = S;
+    if (!s || s.picked < 0 || s.shown) return;
+    const card = s.cards[s.picked], face = s.els[s.picked].querySelector('.np-cc-face');
+    const a = face.querySelector('.np-cc-a');
+    if (!a) return;
+    s.shown = true;
+    a.hidden = false;
+    face.classList.add('show-ans');
+    face.scrollTop = face.scrollHeight; // lá phóng to có thanh cuộn: kéo xuống cho thấy lời giải
+    face.querySelectorAll('[data-opt]').forEach((el) => {
+      const i = +el.dataset.opt;
+      el.classList.toggle('is-ok', (card.ok || []).includes(i));
+      el.classList.toggle('is-bad', s.sel.includes(i) && !(card.ok || []).includes(i));
+    });
+    const ansBtn = s.box.querySelector('[data-cc-act="ans"]');
+    if (ansBtn) ansBtn.disabled = true;
+    if (card.o && s.sel.length) {
+      const right = s.sel.length === card.ok.length && s.sel.every((i) => card.ok.includes(i));
+      s.ok = null; mark(right);
+    } else sfx('match');
   }
   /** Giáo viên chấm: bấm lại cùng nút để bỏ chấm. */
   function mark(yes) {
@@ -205,12 +246,14 @@
   function finish() { const cb = S && S.onDone, res = { ok: S ? S.ok : null }; close(); if (cb) cb(res); }
   function close() { if (S) { S.box.remove(); S = null; } }
   function isOpen() { return !!S; }
-  /** Phím khi đang mở: 1/2/3 chọn lá (theo vị trí trái → phải), Enter = Xong, Esc = đóng. Trả true nếu đã xử lý. */
+  /** Phím khi đang mở: 1/2/3 chọn lá (theo vị trí trái → phải), A–D chọn phương án, X = Xem đáp án,
+      Enter = Xong, Esc = đóng. Trả true nếu đã xử lý. */
   function key(e) {
     if (!S) return false;
-    const n = parseInt(e.key, 10);
+    const n = parseInt(e.key, 10), k = String(e.key || '').toUpperCase();
     if (n >= 1 && n <= 3 && S.picked < 0) { choose(S.slot.indexOf(n - 1)); return true; }
-    if ((e.key === 'a' || e.key === 'A') && S.picked >= 0) { showAnswer(); return true; }
+    if (k.length === 1 && 'ABCD'.includes(k) && S.picked >= 0) { select('ABCD'.indexOf(k)); return true; }
+    if (k === 'X' && S.picked >= 0) { showAnswer(); return true; }
     if ((e.key === 'Enter' || e.key === ' ') && S.picked >= 0) { finish(); return true; }
     if (e.key === 'Escape') { finish(); return true; }
     return true; // phím khác: nuốt để không "Gọi tiếp" khi đang bốc thử thách
