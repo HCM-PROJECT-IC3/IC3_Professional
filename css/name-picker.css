@@ -451,6 +451,25 @@ input[type="range"] { width: 100%; accent-color: var(--np-accent); height: 28px;
 .np-cc-o small { grid-column: 1 / -1; font: 800 16px/1.2 Inter, sans-serif; color: #b4271a; }
 .np-cc-o > span { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 3px solid #2d2416; border-radius: 12px; background: #fff; font: 600 21px/1.3 var(--np-body, Inter, sans-serif); }
 .np-cc-o b { flex: none; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: #2f7be0; color: #fff; font-size: 17px; }
+/* Công cụ lá phóng to: đồng hồ · đọc · 50:50 (chỉ hiện khi phóng to) */
+.np-cc-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.np-cc-tools { display: none; margin-left: auto; gap: 8px; align-items: center; }
+.np-cc.is-big .np-cc-tools { display: inline-flex; }
+.np-cc-tool { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border: 2px solid #2d2416; border-radius: 999px; background: #fff; font: 700 16px/1.2 Inter, sans-serif; cursor: pointer; }
+.np-cc-tool[hidden] { display: none; }
+.np-cc-tool:hover { border-color: #2f7be0; }
+.np-cc-tool kbd { font-size: 12px; padding: 0 5px; border-radius: 4px; background: #ece6d8; }
+.np-cc-tool.is-used { opacity: .45; text-decoration: line-through; cursor: default; }
+.np-cc-clock b { min-width: 3.2em; text-align: center; font-variant-numeric: tabular-nums; }
+.np-cc-clock.is-low { border-color: #c0392b; color: #c0392b; }
+.np-cc-clock.is-out { border-color: #c0392b; background: #c0392b; color: #fff; }
+.np-cc-clock.is-paused { border-style: dashed; color: #8a7f6c; }
+.np-cc-time { display: none; position: absolute; left: 0; right: 0; top: 0; height: 6px; background: #ece6d8; }
+.np-cc.is-big .np-cc-time { display: block; }
+.np-cc-time i { display: block; height: 100%; width: 100%; background: #2f7be0; transition: width 1s linear; }
+.np-cc-time.is-low i { background: #c0392b; }
+.np-cc-face.show-ans .np-cc-time, .np-cc-face.show-ans .np-cc-clock, .np-cc-face.show-ans [data-cc-act="fifty"] { display: none; }
+.np-cc.np-cc .np-cc-o > span.is-gone { opacity: .25; cursor: default; text-decoration: line-through; }
 .np-cc.is-big .np-cc-o > span { cursor: pointer; }
 .np-cc.is-big .np-cc-o > span:hover { border-color: #2f7be0; }
 .np-cc-o > span.is-sel { border-color: #2f7be0; background: #e6f0fc; box-shadow: inset 0 0 0 2px #2f7be0; }
@@ -472,6 +491,7 @@ input[type="range"] { width: 100%; accent-color: var(--np-accent); height: 28px;
 .np-chal-acts .np-small { background: #fffdf7; color: #2d2416; border-color: #d8ccb2; font-size: 17px; }
 .np-chal-acts .np-small:disabled { background: #ece6d8; color: #8a7f6c; cursor: default; }
 .np-cc.is-big:not(:disabled) { cursor: default; }
+.np-cc.is-big:focus, .np-cc.is-big:focus-visible { outline: none; } /* bấm công cụ/phương án làm lá nhận focus — không vẽ viền quanh cả lá */
 @keyframes np-cc-glow { from { box-shadow: 0 8px 0 rgba(0, 0, 0, .35); } to { box-shadow: 0 8px 0 rgba(0, 0, 0, .35), 0 0 0 5px #ffd34d, 0 0 26px #ffd34d; } }
 @media (prefers-reduced-motion: reduce) {
   .np-world.is-tense::before, .np-cc.is-ready .np-cc-back, .np-sp.is-spot .np-sp-in, .np-mb.is-spot .np-mb-ball { animation: none !important; }

@@ -3,6 +3,7 @@
    Chia 3 lá bài úp → tráo 3 lần → bạn đó chọn 1 lá (bấm hoặc phím 1/2/3) → lật ra thử thách,
    2 lá còn lại lật theo cho cả lớp xem "suýt nữa thì...". Phương án A–D được tráo mỗi lần bốc;
    bạn đó chọn phương án (bấm hoặc phím A–D), giáo viên bấm "Xem đáp án" (phím X) → tự chấm theo lựa chọn.
+   Lá phóng to có đồng hồ suy nghĩ (T dừng/chạy), đọc câu hỏi bằng giọng tiếng Việt của máy (R), trợ giúp 50:50 (5).
    Có ctx.pool (câu của tiết/bài hôm nay, np-lessons.js) → lá "Hỏi bài" lấy từ đó, không lặp câu trong phiên;
    lá được chọn phóng to để đọc rõ phương án A–D. Thiếu thì dùng câu hỏi chung, chỉ lấy câu hợp khối (g = khối nhỏ nhất).
      open(fxEl, name, onDone, ctx)   vẽ trong lớp hiệu ứng của sân khấu (toạ độ 1000×600)
@@ -103,6 +104,23 @@
     return shuffle(quiz.map(mixOpts).concat(third));
   }
   const optsHTML = (c) => (c.o ? `<span class="np-cc-o">${c.n ? `<small>Chọn ${c.n} đáp án đúng</small>` : ''}${c.o.map((x, i) => `<span data-opt="${i}"><b>${'ABCD'[i]}</b> ${esc(x)}</span>`).join('')}</span>` : '');
+  /** Công cụ trên lá phóng to (chỉ câu có phương án): đồng hồ · đọc câu hỏi · 50:50. Lá là <button> nên dùng span. */
+  const toolsHTML = (c) => (c.o ? `<span class="np-cc-tools">
+      <span class="np-cc-tool np-cc-clock" data-cc-act="clock" role="button" title="Tạm dừng / chạy tiếp (phím T)"><i class="fa-solid fa-stopwatch" aria-hidden="true"></i> <b></b></span>
+      <span class="np-cc-tool" data-cc-act="read" role="button" hidden title="Máy đọc to câu hỏi và các phương án"><i class="fa-solid fa-volume-high" aria-hidden="true"></i> Đọc <kbd>R</kbd></span>
+      ${!c.n && c.o.length === 4 ? '<span class="np-cc-tool" data-cc-act="fifty" role="button" title="Bỏ 2 phương án sai (1 lần)">50:50 <kbd>5</kbd></span>' : ''}
+    </span><span class="np-cc-time"><i></i></span>` : '');
+  const canSpeak = 'speechSynthesis' in global;
+  const viVoice = () => (canSpeak ? global.speechSynthesis.getVoices().find((v) => /^vi/i.test(v.lang)) : null);
+  function speak(text) {
+    const v = viVoice();
+    if (!v) return;
+    global.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'vi-VN'; u.rate = 0.95; u.voice = v;
+    global.speechSynthesis.speak(u);
+  }
+  const hush = () => { try { if (canSpeak) global.speechSynthesis.cancel(); } catch (e) { /* ignore */ } };
 
   let S = null; // { box, cards, slot, picked, done }
   function open(fxEl, name, onDone, ctx) {
@@ -114,7 +132,7 @@
       <p class="np-chal-hint">Đang tráo bài...</p>
       ${cards.map((c, i) => `<button type="button" class="np-cc k-${c.k}${c.o ? ' has-o' : ''}" data-cc="${i}" disabled aria-label="Lá bài ${i + 1}">
         <span class="np-cc-in"><span class="np-cc-back"><i class="fa-solid fa-question" aria-hidden="true"></i></span>
-        <span class="np-cc-face"><em><i class="fa-solid ${KIND[c.k].icon}" aria-hidden="true"></i> ${esc(kindName(c))}</em><span class="np-cc-t">${esc(c.t)}</span>${optsHTML(c)}
+        <span class="np-cc-face"><span class="np-cc-head"><em><i class="fa-solid ${KIND[c.k].icon}" aria-hidden="true"></i> ${esc(kindName(c))}</em>${toolsHTML(c)}</span><span class="np-cc-t">${esc(c.t)}</span>${optsHTML(c)}
         ${c.a ? `<span class="np-cc-a" hidden>Đáp án: ${esc(c.a)}${c.ex ? `<small>${esc(c.ex)}</small>` : ''}</span>` : ''}</span></span></button>`).join('')}
       <div class="np-chal-acts" hidden><button type="button" class="np-small" data-cc-act="ans" hidden><i class="fa-solid fa-eye" aria-hidden="true"></i> Xem đáp án <kbd>X</kbd></button>
         <span class="np-chal-mark" hidden><button type="button" class="np-small is-yes" data-cc-act="yes" aria-pressed="false"><i class="fa-solid fa-check" aria-hidden="true"></i> Đúng</button>
@@ -122,19 +140,21 @@
         <button type="button" class="np-small" data-cc-act="hide" hidden title="Câu này mơ hồ / chưa hợp với lớp — không bốc lại trên máy này"><i class="fa-solid fa-ban" aria-hidden="true"></i> Bỏ câu này</button>
         <button type="button" class="np-go np-go-sm" data-cc-act="done">Xong <kbd>Enter</kbd></button></div>`;
     fxEl.appendChild(box);
-    S = { box, cards, slot: [0, 1, 2], picked: -1, onDone, busy: true, key: ctx && ctx.key, ok: null, sel: [], shown: false };
+    S = { box, cards, slot: [0, 1, 2], picked: -1, onDone, busy: true, key: ctx && ctx.key, ok: null, sel: [], gone: [], shown: false };
     const els = [...box.querySelectorAll('.np-cc')];
     S.els = els;
+    viVoice(); // Chrome nạp danh sách giọng đọc lần đầu gọi — gọi sớm để lúc lật lá đã có
     box.addEventListener('click', (e) => {
       e.stopPropagation(); // không để sân khấu hiểu là "bấm để gọi tên"
       const o = e.target.closest('[data-opt]');
       if (o) { select(+o.dataset.opt); return; }
-      const c = e.target.closest('[data-cc]');
-      if (c) { choose(+c.dataset.cc); return; }
-      const a = e.target.closest('[data-cc-act]');
-      if (!a) return;
+      const a = e.target.closest('[data-cc-act]'); // trước [data-cc]: công cụ nằm trong lá bài
+      if (!a) { const c = e.target.closest('[data-cc]'); if (c) choose(+c.dataset.cc); return; }
       const act = a.dataset.ccAct;
-      if (act === 'ans') showAnswer();
+      if (act === 'clock') toggleClock();
+      else if (act === 'read') readCard();
+      else if (act === 'fifty') fifty();
+      else if (act === 'ans') showAnswer();
       else if (act === 'yes' || act === 'no') mark(act === 'yes');
       else if (act === 'hide') hideCard(a);
       else if (act === 'done') finish();
@@ -186,6 +206,9 @@
       s.box.classList.add('is-big');
       s.els[i].classList.add('is-big');
       s.els[i].style.left = '';
+      const rd = s.els[i].querySelector('[data-cc-act="read"]');
+      if (rd) rd.hidden = !viVoice(); // máy không có giọng tiếng Việt thì giọng Anh đọc sai — ẩn nút
+      startClock(s);
     }
     const acts = s.box.querySelector('.np-chal-acts');
     acts.hidden = false;
@@ -199,11 +222,67 @@
     const s = S;
     if (!s || s.picked < 0 || s.shown) return;
     const card = s.cards[s.picked];
-    if (!card.o || i < 0 || i >= card.o.length) return;
+    if (!card.o || i < 0 || i >= card.o.length || s.gone.includes(i)) return;
     if (card.n) s.sel = s.sel.includes(i) ? s.sel.filter((x) => x !== i) : s.sel.concat(i);
     else s.sel = s.sel[0] === i ? [] : [i];
     s.els[s.picked].querySelectorAll('[data-opt]').forEach((el) => el.classList.toggle('is-sel', s.sel.includes(+el.dataset.opt)));
     sfx('click');
+  }
+  // ── Đồng hồ suy nghĩ: chạy khi lá phóng to, tích tắc 5 giây cuối, hết giờ chỉ báo (giáo viên quyết) ──
+  const clockEl = (s) => s.els[s.picked].querySelector('.np-cc-clock');
+  function startClock(s) {
+    if (!clockEl(s)) return;
+    s.total = s.left = s.cards[s.picked].n ? 45 : 30;
+    paintClock(s);
+    s.tm = setInterval(() => {
+      if (S !== s) { clearInterval(s.tm); return; }
+      if (s.paused) return;
+      s.left--;
+      paintClock(s);
+      if (s.left > 0 && s.left <= 5) sfx('tick');
+      if (s.left <= 0) { stopClock(s); sfx('lose'); }
+    }, 1000);
+  }
+  function stopClock(s) { clearInterval(s.tm); s.tm = null; }
+  function paintClock(s) {
+    const el = clockEl(s);
+    if (!el) return;
+    el.querySelector('b').textContent = s.left > 0 ? `${s.left}s` : 'Hết giờ!';
+    el.classList.toggle('is-low', s.left > 0 && s.left <= 5);
+    el.classList.toggle('is-out', s.left <= 0);
+    el.classList.toggle('is-paused', !!s.paused);
+    el.title = s.paused ? 'Đang dừng — bấm để chạy tiếp (phím T)' : 'Tạm dừng / chạy tiếp (phím T)';
+    const bar = s.els[s.picked].querySelector('.np-cc-time i');
+    if (bar) { bar.style.width = `${Math.max(0, s.left / s.total) * 100}%`; bar.parentNode.classList.toggle('is-low', s.left <= 5); }
+  }
+  function toggleClock() {
+    if (!S || !S.tm) return;
+    S.paused = !S.paused;
+    paintClock(S);
+    sfx('click');
+  }
+  /** Máy đọc câu hỏi + phương án còn lại (giọng tiếng Việt của máy, không mạng). Bấm lần nữa khi đang đọc = dừng. */
+  function readCard() {
+    const s = S;
+    if (!s || s.picked < 0) return;
+    if (canSpeak && global.speechSynthesis.speaking) { hush(); return; }
+    const c = s.cards[s.picked];
+    const opts = (c.o || []).map((x, i) => (s.gone.includes(i) ? '' : `${'ABCD'[i]}. ${x}.`)).filter(Boolean).join(' ');
+    speak(`${c.t} ${c.n ? `Chọn ${c.n} đáp án đúng. ` : ''}${opts}`);
+  }
+  /** Trợ giúp 50:50 — câu 1 đáp án, 4 phương án: mờ đi 2 phương án sai, mỗi câu 1 lần. */
+  function fifty() {
+    const s = S;
+    if (!s || s.picked < 0 || s.shown || s.gone.length) return;
+    const c = s.cards[s.picked];
+    if (!c.o || c.n || c.o.length !== 4) return;
+    s.gone = shuffle(c.o.map((_, i) => i).filter((i) => !c.ok.includes(i))).slice(0, 2);
+    s.sel = s.sel.filter((i) => !s.gone.includes(i));
+    const el = s.els[s.picked];
+    el.querySelectorAll('[data-opt]').forEach((o) => { const i = +o.dataset.opt; o.classList.toggle('is-gone', s.gone.includes(i)); o.classList.toggle('is-sel', s.sel.includes(i)); });
+    const t = el.querySelector('[data-cc-act="fifty"]');
+    if (t) t.classList.add('is-used');
+    sfx('whoosh');
   }
   /** Lộ đáp án; đã chọn phương án thì tự chấm Đúng/Chưa đúng (giáo viên vẫn bấm đổi được). */
   function showAnswer() {
@@ -213,6 +292,7 @@
     const a = face.querySelector('.np-cc-a');
     if (!a) return;
     s.shown = true;
+    if (s.tm) { stopClock(s); s.paused = false; paintClock(s); }
     a.hidden = false;
     face.classList.add('show-ans');
     face.scrollTop = face.scrollHeight; // lá phóng to có thanh cuộn: kéo xuống cho thấy lời giải
@@ -244,16 +324,19 @@
     btn.innerHTML = '<i class="fa-solid fa-ban" aria-hidden="true"></i> Đã bỏ câu này';
   }
   function finish() { const cb = S && S.onDone, res = { ok: S ? S.ok : null }; close(); if (cb) cb(res); }
-  function close() { if (S) { S.box.remove(); S = null; } }
+  function close() { if (S) { stopClock(S); hush(); S.box.remove(); S = null; } }
   function isOpen() { return !!S; }
   /** Phím khi đang mở: 1/2/3 chọn lá (theo vị trí trái → phải), A–D chọn phương án, X = Xem đáp án,
-      Enter = Xong, Esc = đóng. Trả true nếu đã xử lý. */
+      T = dừng/chạy đồng hồ, R = đọc câu hỏi, 5 = 50:50, Enter = Xong, Esc = đóng. Trả true nếu đã xử lý. */
   function key(e) {
     if (!S) return false;
     const n = parseInt(e.key, 10), k = String(e.key || '').toUpperCase();
     if (n >= 1 && n <= 3 && S.picked < 0) { choose(S.slot.indexOf(n - 1)); return true; }
     if (k.length === 1 && 'ABCD'.includes(k) && S.picked >= 0) { select('ABCD'.indexOf(k)); return true; }
     if (k === 'X' && S.picked >= 0) { showAnswer(); return true; }
+    if (k === 'T') { toggleClock(); return true; }
+    if (k === 'R' && S.picked >= 0 && S.cards[S.picked].o) { const r = S.els[S.picked].querySelector('[data-cc-act="read"]'); if (r && !r.hidden) readCard(); return true; }
+    if (k === '5') { fifty(); return true; }
     if ((e.key === 'Enter' || e.key === ' ') && S.picked >= 0) { finish(); return true; }
     if (e.key === 'Escape') { finish(); return true; }
     return true; // phím khác: nuốt để không "Gọi tiếp" khi đang bốc thử thách
