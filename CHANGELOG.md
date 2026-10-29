@@ -1,5 +1,12 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## Gọi tên: sửa lá "Hỏi bài" luôn đáp án A, lộ đáp án, nút không dùng được (29/10/2026)
+
+- **Tráo phương án A–D mỗi lần bốc**: data gốc để đáp án đúng ở A (~94% câu Bài N), nay đáp án rơi ngẫu nhiên vào A/B/C/D.
+- **Bạn được gọi chọn phương án** (bấm vào phương án hoặc phím A–D; câu nhiều đáp án bấm bật/tắt). Trước đây phím A là "Xem đáp án" nên bấm chọn A là lộ đáp án — nay "Xem đáp án" là phím **X**.
+- **Xem đáp án tự chấm** Đúng/Chưa đúng theo phương án đã chọn (giáo viên vẫn bấm đổi được); phương án chọn sai tô đỏ, lá tự cuộn tới lời giải.
+- Nút Xem đáp án/Đúng/Chưa đúng/Bỏ câu này ở giao diện tối không còn chữ mờ như bị khoá.
+
 ## Điểm danh: giao diện đồng bộ trang quản trị + Hôm nay, Việc cần làm, tìm học sinh (28/10/2026)
 
 - **Giao diện giống các trang quản trị** (Lịch giảng dạy, Trang quản lý):
