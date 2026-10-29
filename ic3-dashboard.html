@@ -2,6 +2,7 @@
 <html lang="vi" data-theme="light">
 <head>
 <meta charset="UTF-8">
+<script src="js/page-transition-guard.js"></script>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IC3 Quiz Dashboard</title>
@@ -68,6 +69,20 @@
     <a class="nav-item link-plain" href="tai-lieu-nam-hoc.html" id="docsSchoolYearLink" style="display:none;" title="Tài liệu năm học 2026-2027">
       <span class="nav-icon"><i class="fa-solid fa-folder-open"></i></span>
       <span>Tài liệu năm học 2026-2027</span>
+    </a>
+    <!-- Công cụ lớp học — trước đây chỉ mở được từ sảnh học sinh (index.html "Dành cho thầy cô").
+         Gọi tên + Gom kết quả: 0 Firebase; Điểm danh dùng hồ sơ đã lưu đệm (EduProfileCache). -->
+    <a class="nav-item link-plain" href="diem-danh.html" target="_blank" rel="noopener" id="attendanceLink" style="display:none;" title="Điểm danh &amp; tiến độ">
+      <span class="nav-icon"><i class="fa-solid fa-clipboard-user"></i></span>
+      <span>Điểm danh &amp; tiến độ</span>
+    </a>
+    <a class="nav-item link-plain" href="goi-ten.html" target="_blank" rel="noopener" id="namePickerLink" style="display:none;" title="Gọi tên học sinh">
+      <span class="nav-icon"><i class="fa-solid fa-bullhorn"></i></span>
+      <span>Gọi tên học sinh</span>
+    </a>
+    <a class="nav-item link-plain" href="gom-ket-qua.html" target="_blank" rel="noopener" id="gatherResultsNavLink" style="display:none;" title="Gom kết quả học sinh gửi">
+      <span class="nav-icon"><i class="fa-solid fa-inbox"></i></span>
+      <span>Gom kết quả học sinh gửi</span>
     </a>
     <a class="nav-item link-plain" href="roster-manager.html" id="rosterManagerLink" style="display:none;" title="Danh sách học sinh">
       <span class="nav-icon"><i class="fa-solid fa-clipboard-list"></i></span>
@@ -424,56 +439,69 @@
       <h2 class="section-title-lg"><i class="fa-solid fa-gear"></i> Cài đặt hệ thống</h2>
       <div class="settings-grid">
         <div class="settings-card">
-          <h3><i class="fa-solid fa-lock"></i> Bảo mật &amp; Chống gian lận</h3>
+          <h3><i class="fa-solid fa-shield-halved"></i> Chống gian lận khi làm bài</h3>
+          <p class="settings-note">Luôn bật ở trang học sinh, không cần cấu hình. Bài vi phạm được gắn cờ <b>Nghi vấn</b> trong Báo cáo kết quả.</p>
           <div class="settings-row">
-            <label>Chặn tự sửa điểm</label>
-            <button type="button" aria-label="Chặn tự sửa điểm" class="toggle-switch on" onclick="this.classList.toggle('on')"></button>
+            <label>Đếm rời tab, đo tốc độ trả lời</label>
+            <span class="settings-chip">Mọi bài</span>
           </div>
           <div class="settings-row">
-            <label>Ghi nhận phiên làm việc</label>
-            <button type="button" aria-label="Ghi nhận phiên làm việc" class="toggle-switch on" onclick="this.classList.toggle('on')"></button>
+            <label>Toàn màn hình, khoá khi thoát</label>
+            <span class="settings-chip">Kiểm tra</span>
           </div>
           <div class="settings-row">
-            <label>Khoá link sau khi nộp bài</label>
-            <button type="button" aria-label="Khoá link sau khi nộp bài" class="toggle-switch" onclick="this.classList.toggle('on')"></button>
+            <label>Phát hiện mở nhiều tab, DevTools</label>
+            <span class="settings-chip">Kiểm tra</span>
           </div>
           <div class="settings-row">
-            <label>Yêu cầu xác thực học sinh</label>
-            <button type="button" aria-label="Yêu cầu xác thực học sinh" class="toggle-switch on" onclick="this.classList.toggle('on')"></button>
+            <label>Chặn phím tắt sao chép, in</label>
+            <span class="settings-chip">Kiểm tra</span>
+          </div>
+          <div class="settings-row">
+            <label>Chống nộp trùng, tự gửi lại khi mất mạng</label>
+            <span class="settings-chip">Mọi bài</span>
           </div>
         </div>
         <div class="settings-card">
-          <h3><i class="fa-solid fa-palette"></i> Giao diện</h3>
+          <h3><i class="fa-solid fa-palette"></i> Giao diện trên máy này</h3>
           <div class="settings-row">
-            <label>Chế độ tối (Dark Mode)</label>
+            <label for="settingsDark">Chế độ tối (Dark Mode)</label>
             <button type="button" aria-label="Chế độ tối (Dark Mode)" class="toggle-switch" id="settingsDark" onclick="toggleThemeFromSettings(this)"></button>
           </div>
           <div class="settings-row">
-            <label>Hiệu ứng chuyển động</label>
-            <button type="button" aria-label="Hiệu ứng chuyển động" class="toggle-switch on" onclick="this.classList.toggle('on')"></button>
+            <label for="settingsMotion">Hiệu ứng chuyển động</label>
+            <button type="button" aria-label="Hiệu ứng chuyển động" class="toggle-switch on" id="settingsMotion" onclick="toggleDashPref(this, 'motion')"></button>
           </div>
           <div class="settings-row">
-            <label>Hiển thị số câu hỏi</label>
-            <button type="button" aria-label="Hiển thị số câu hỏi" class="toggle-switch on" onclick="this.classList.toggle('on')"></button>
+            <label for="settingsQCount">Hiện số câu hỏi trên thẻ bộ đề</label>
+            <button type="button" aria-label="Hiện số câu hỏi trên thẻ bộ đề" class="toggle-switch on" id="settingsQCount" onclick="toggleDashPref(this, 'qcount')"></button>
           </div>
         </div>
         <div class="settings-card">
-          <h3><i class="fa-solid fa-file-export"></i> Dữ liệu &amp; Xuất file</h3>
-          <div class="settings-row">
-            <label>Tự động lưu kết quả</label>
-            <button type="button" aria-label="Tự động lưu kết quả" class="toggle-switch on" onclick="this.classList.toggle('on')"></button>
-          </div>
-          <div class="settings-row">
-            <label>Lưu vào LocalStorage</label>
-            <button type="button" aria-label="Lưu vào LocalStorage" class="toggle-switch on" onclick="this.classList.toggle('on')"></button>
-          </div>
-          <div class="settings-row settings-row-col">
-            <label>Xóa toàn bộ dữ liệu phiên</label>
+          <h3><i class="fa-solid fa-database"></i> Dữ liệu trên máy này</h3>
+          <p class="settings-note">Bộ đề tự soạn chỉ nằm trong trình duyệt này. Sao lưu ra file trước khi đổi máy hoặc xoá dữ liệu duyệt web.</p>
+          <div class="settings-row"><label>Bộ đề tự soạn</label><span class="settings-val" id="setInfoSets">–</span></div>
+          <div class="settings-row"><label>Lượt làm bài ghi trên máy</label><span class="settings-val" id="setInfoSessions">–</span></div>
+          <div class="settings-row"><label>Dung lượng đang dùng</label><span class="settings-val" id="setInfoStorage">–</span></div>
+          <div class="settings-row settings-actions">
+            <button type="button" class="btn-settings" onclick="exportCustomSets()"><i class="fa-solid fa-download"></i> Sao lưu bộ đề</button>
+            <button type="button" class="btn-settings" onclick="document.getElementById('importSetsFile').click()"><i class="fa-solid fa-upload"></i> Khôi phục</button>
+            <input type="file" id="importSetsFile" accept=".json,application/json" hidden onchange="importCustomSets(this)">
             <button type="button" onclick="clearAllData()" class="btn-danger-outline"><i class="fa-solid fa-trash"></i> Xóa tất cả</button>
           </div>
         </div>
         <div class="settings-card">
           <h3><i class="fa-solid fa-circle-info"></i> Thông tin hệ thống</h3>
+          <div class="settings-row"><label>Tài khoản</label><span class="settings-val" id="sysInfoAccount">–</span></div>
+          <div class="settings-row"><label>Phiên bản web</label><span class="settings-val" id="sysInfoVersion">–</span></div>
+          <div class="settings-row"><label>Bài nộp lưu ở</label><span class="settings-val" id="sysInfoResults">–</span></div>
+          <div class="settings-row"><label>Báo cáo đọc từ</label><span class="settings-val" id="sysInfoReports">–</span></div>
+          <div class="settings-row"><label>Nhật ký hoạt động</label><span class="settings-val" id="sysInfoLog">–</span></div>
+          <div class="settings-row"><label>Apps Script</label><span class="settings-val" id="sysInfoScript">–</span></div>
+          <div class="settings-row settings-actions" id="sysInfoScriptRow" hidden>
+            <button type="button" class="btn-settings" id="sysInfoScriptBtn" onclick="recheckAppsScript(this)"><i class="fa-solid fa-rotate"></i> Kiểm tra Apps Script ngay</button>
+          </div>
+          <p class="settings-note">Cấu hình lưu bài nằm ở <code>js/backend-config.js</code>, áp dụng cho mọi máy sau khi đẩy lên GitHub.</p>
         </div>
       </div>
     </section>
@@ -564,6 +592,7 @@
 <script src="js/services/data-cache-service.js"></script>
 <script src="js/services/profile-cache-service.js"></script>
 <script src="js/dashboard.js"></script>
+<script src="js/dashboard-settings.js"></script>
 <script src="js/services/lazy-script-loader.js"></script>
 <script src="js/custom-exam-codec.js"></script>
 <script src="js/services/question-similarity.js"></script>

@@ -62,6 +62,9 @@
 
   /** Đóng dấu updatedAt cho MỌI lệnh ghi students_roster — trang khác chỉ đọc phần thay đổi. */
   const stamp = (data) => window.EduRosterCache.stampRoster(data);
+  // Mở form "Sửa" rồi bấm Lưu mà không đổi gì: trước đây vẫn tốn 1 lượt ghi Firestore + 1 lượt
+  // Apps Script (nhật ký) + 1 lượt đọc lại (syncOne). So từng trường trước khi ghi.
+  const unchanged = (prev, data) => !!prev && Object.keys(data).every((k) => (prev[k] ?? '') === (data[k] ?? ''));
 
   function logRosterChange(action, targetId, meta) {
     // Ghi audit log — an toàn tuyệt đối, không bao giờ chặn UI nếu lỗi
@@ -461,6 +464,11 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
     const data = { name, level };
     let savedId = modalMode.editingId;
     try {
+      if (modalMode.editingId && unchanged(state.courses.find((x) => x.id === modalMode.editingId), data)) {
+        toast('Không có thay đổi nào để lưu');
+        closeModal();
+        return;
+      }
       if (modalMode.editingId) {
         await window.EduRepositories.course.update(modalMode.editingId, data);
         logRosterChange('update_course', modalMode.editingId, { name });
@@ -575,6 +583,11 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
     const data = { name, school, courseId, teacherId, teacherName };
     let savedId = modalMode.editingId;
     try {
+      if (modalMode.editingId && unchanged(state.classes.find((x) => x.id === modalMode.editingId), data)) {
+        toast('Không có thay đổi nào để lưu');
+        closeModal();
+        return;
+      }
       if (modalMode.editingId) {
         await window.EduRepositories.class.update(modalMode.editingId, data);
         logRosterChange('update_class', modalMode.editingId, { name });
@@ -1357,6 +1370,11 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
     };
     let savedId = modalMode.editingId;
     try {
+      if (modalMode.editingId && unchanged(state.students.find((x) => x.id === modalMode.editingId), data)) {
+        toast('Không có thay đổi nào để lưu');
+        closeModal();
+        return;
+      }
       if (modalMode.editingId) {
         await window.EduRepositories.studentRoster.update(modalMode.editingId, stamp(data));
         logRosterChange('update_student', modalMode.editingId, { name });

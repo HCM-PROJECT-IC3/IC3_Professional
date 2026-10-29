@@ -10,6 +10,47 @@
 4. **Dashboard giáo viên** — bấm xem chi tiết 3 học sinh cùng lớp: lịch sử từng em đúng như trước; lần 2–3 hiện ngay (dùng chung bài của lớp).
 5. **Học sinh, điện thoại thật** — làm 1 bài Ôn luyện: không thấy mẹo phím tắt, chỉ 1 nút sáng/tối, nút tròn trợ năng không đè "Đánh dấu". Bấm bừa thật nhanh rồi nộp: thẻ thưởng ghi "không tính XP"; giáo viên vẫn thấy bài đó trên dashboard/Sheet.
 
+## Kiểm tra trên hệ thống thật — đợt "Cài đặt + liên kết vai trò" (29/10/2026)
+
+Mọi thứ dưới đây đã thử bằng Chrome headless với Firebase/Apps Script/Google Sheet GIẢ (cố ý không đụng dữ liệu thật). Trên bản thật chỉ cần ~10 phút, làm theo thứ tự:
+
+1. **Không cần** deploy lại Apps Script, publish `firestore.rules` hay index.
+2. **Báo cáo không lộ giữa tài khoản**: trên 1 máy, đăng nhập Admin → Báo cáo kết quả (thấy mọi trường) → đăng xuất → đăng nhập 1 tài khoản Điều phối → Báo cáo kết quả: chỉ thấy trường của mình.
+3. **Học sinh chuyển trang**: sảnh → "Thực hành MOS" → quay lại sảnh: không hiện màn hình "Trang gặp sự cố".
+4. **Tài khoản (Admin)**: đổi vai trò 1 tài khoản thử → bảng đổi ngay; F12 → Console không có dòng "lượt đọc Firestore — users" sau thao tác.
+5. **Lịch giảng dạy (giáo viên)**: Sửa lịch → Lưu không đổi gì → báo "Không có thay đổi nào để lưu"; sửa 1 ô → Lưu → thấy đúng ở máy admin.
+6. **Điểm danh**: Ghi 1 buổi vào Sheet → bấm Ghi lần nữa → báo "Sheet đã đúng như vậy rồi"; mở Sheet thấy đúng ký hiệu.
+7. **Cài đặt hệ thống (giáo viên)**: Sao lưu bộ đề → mở máy khác → Khôi phục → bộ đề hiện lại.
+8. **Quản lý câu hỏi (Admin)**: mở trang → Console ghi "(site)"; đẩy 1 thay đổi nhỏ → mở lại trang trong 15 phút → ghi "(github)".
+
+## Cài đặt hệ thống thật + công cụ lớp học trên thanh bên (29/10/2026)
+
+Thử bằng Chrome headless (Firebase/Apps Script giả) với cả 4 vai trò. Mở mục Cài đặt: **0 lượt Firebase, 0 lượt Apps Script**. Không đổi Apps Script, `firestore.rules`, dữ liệu bài nộp.
+
+- **Cài đặt hệ thống** (`js/dashboard-settings.js`): bỏ 7 công tắc giả (bấm chỉ đổi màu, không ảnh hưởng gì). Nay:
+  - *Chống gian lận*: liệt kê đúng cơ chế đang chạy ở trang học sinh, bài nào áp dụng (Mọi bài / Kiểm tra).
+  - *Giao diện*: "Hiệu ứng chuyển động" và "Hiện số câu hỏi trên thẻ bộ đề" có tác dụng thật, nhớ trên máy.
+  - *Dữ liệu trên máy này*: số bộ đề, số lượt, dung lượng; **Sao lưu bộ đề** ra file .json và **Khôi phục** (bộ đề tự soạn chỉ nằm trong trình duyệt, đổi máy là mất). File khôi phục được lọc trước khi lưu (chặn chèn mã qua tên đề/link).
+  - *Thông tin hệ thống* (trước trống): vai trò, phiên bản web, bài nộp lưu ở đâu, báo cáo đọc từ đâu, nhật ký, Apps Script khớp bản chưa — đọc từ `js/backend-config.js` và kết quả kiểm tra đã lưu. Admin có nút "Kiểm tra Apps Script ngay" (1 lượt ping, không đọc/ghi Sheet).
+- **Giáo viên thấy mục Cài đặt** (trước chỉ admin) để sao lưu bộ đề của mình.
+- **Thanh bên trang quản lý** thêm *Điểm danh & tiến độ*, *Gọi tên học sinh*, *Gom kết quả học sinh gửi* cho admin + giáo viên (trước chỉ mở được từ sảnh học sinh).
+- **Lỗi học sinh thấy màn hình "Trang gặp sự cố"** khi chuyển giữa sảnh (`index.html`) ↔ Thực hành MOS: hiệu ứng chuyển trang bị trình duyệt huỷ → lỗi Promise chưa bắt → `js/global-error-handler.js` tưởng trang hỏng. Nay bỏ qua đúng lỗi này (tái hiện + kiểm lại bằng Chrome headless). Điều phối giáo viên tự chuyển sang Lịch giảng dạy không còn báo lỗi console, nút Back không quay về trang trống.
+- **Quản lý câu hỏi đỡ tốn Apps Script**: mỗi lần mở trang trước tốn 11 lượt Apps Script + 11 lượt GitHub API (đọc từng file qua GitHub). Nay đọc bản trên web (0 lượt); chỉ trong 15 phút sau khi máy này đẩy (hoặc bị báo xung đột) mới đọc thẳng GitHub. Đẩy vẫn an toàn: file trên GitHub khác bản đang mở thì Apps Script dừng như cũ.
+- **Lỗi lộ dữ liệu giữa tài khoản — Báo cáo kết quả** (`js/dashboard.js`): bản đệm báo cáo dùng 1 khoá chung cho cả máy. Admin mở Báo cáo (bài mọi trường, giữ 7 ngày) rồi điều phối trường khác đăng nhập cùng máy → thấy ngay bài của mọi trường, không cần tải. Nay khoá theo tài khoản + trường (như dashboard giáo viên/điều phối); bản đệm khoá chung cũ tự xoá. Đã chạy lại với `dashboard.js` cũ để chắc lỗi có thật và bản mới chặn được.
+- **Hiệu ứng chuyển trang** chặn ở 1 chỗ: `js/page-transition-guard.js` nạp đầu `<head>` 18 trang có `css/theme.css` (trước chỉ bắt được ở vài trang, lỗi vẫn hiện trong console mọi trang quản trị).
+- **Quản lý danh sách học sinh — bấm Lưu mà không sửa gì** (khoá học / lớp / học sinh): trước tốn 1 lượt ghi Firestore + 1 lượt Apps Script (nhật ký) + 1 lượt đọc lại; nay báo "Không có thay đổi nào để lưu", 0 lượt. Sửa thật vẫn ghi đúng 1 lượt (thử bằng thao tác thật trên trang, vai trò điều phối).
+- **Quản lý tài khoản (Admin)**: đổi vai trò / duyệt / gán trường / mã NV trước đây đọc lại CẢ collection `users` sau mỗi lần bấm (mỗi tài khoản 1 lượt đọc). Nay chỉ sửa đúng dòng đó trong bản đệm rồi vẽ lại: đổi vai trò = đúng 1 lượt ghi (thử thật trên trang). Lưu trường / mã NV / "Đồng bộ trường" mà không đổi gì: 0 lượt. Gán lớp vẫn đọc lại như cũ (đổi cả lớp + roster).
+- **Lịch giảng dạy**: Sửa lịch rồi Lưu mà không đổi gì (giáo viên hoặc admin), sửa hồ sơ giáo viên không đổi gì → 0 lượt ghi (trước: 1 ghi + 1 đọc lại). Sửa thật vẫn ghi đúng 1 lượt (thử thật vai trò giáo viên).
+- **Điểm danh → Ghi vào Sheet**: Sheet đã đúng y hệt (mọi ô mọi tiết của buổi, không điền ngày/tick hoàn thành) → không gọi Apps Script (trước: bấm Ghi lần 2 vẫn chạy 1 lượt + ghi lại cả cột).
+- **Lịch giảng dạy — gỡ khối "Lịch của tôi"** (~190 dòng JS + HTML): giáo viên đã chuyển sang dùng chung bảng + hộp thoại Sửa lịch với admin từ trước, khối này không còn hiện ở đâu. CSS dùng chung với chỗ khác nên giữ nguyên.
+- Test `apps-script-saving` hết chập chờn (~1/6 lần FAIL do độ hoãn ngẫu nhiên, cả trên bản gốc) — cố định số ngẫu nhiên trong test, không đổi mã chạy thật.
+
+**Kiểm tra đầu-cuối giữa các vai trò** (Chrome headless, Apps Script là `apps/Code.gs` THẬT chạy trong Node với Sheet giả): học sinh nộp bài thật ở sảnh (0 Firebase) → dòng vào Sheet → mở dashboard từng vai trò:
+giáo viên dạy đúng lớp thấy bài; giáo viên cùng trường khác lớp và giáo viên trường khác không thấy; điều phối đúng trường thấy (cả Tổng quan điều phối lẫn Báo cáo), điều phối trường khác không thấy; admin thấy hết — 9/9 đúng.
+Quét 4 vai trò × 12 trang quản trị (nạp lạnh rồi F5, có dữ liệu mẫu): 0 lỗi JS, 0 file 404; F5 mọi trang 0 lượt Firestore, 0 lượt Apps Script.
+Luồng ghi thử bằng thao tác thật trên trang (Firebase/Apps Script/Google Sheet giả): Điểm danh ghi Sheet (lần 1: 1 lượt, Sheet nhận đủ ô + ngày + hoàn thành; lần 2 Sheet đã y hệt: 0 lượt; đổi 1 em sang vắng: 1 lượt, Sheet đúng), học sinh làm bài → mã kết quả → giáo viên dán vào Gom kết quả (thêm đúng 1 bài, dán lại bỏ qua trùng, 0 Firebase/Apps Script), Gọi tên (gọi 1 em, còn 44/45, 0 Firebase/Apps Script), Danh sách học sinh / Tài khoản / Lịch giảng dạy (số lượt ghi như trên).
+Quét 20 trang học sinh (sảnh, MOS, Đấu trường, kệ sách, mini-game, mô phỏng Word/Excel/PowerPoint, đăng nhập...): mở lần đầu lẫn F5 đều 0 lượt Firebase, 0 lượt Apps Script, 0 lỗi.
+
 ## Màn làm bài + thanh bên trang quản lý (29/10/2026)
 
 Chạy thử trọn 1 lượt làm bài bằng Chrome headless (chặn mọi request ra ngoài — không gửi gì lên Sheet/Firebase thật), khổ máy tính và điện thoại. Chỉ đổi giao diện + XP lưu trên máy học sinh; **không đổi dữ liệu bài nộp, Google Sheet, Firestore, Apps Script**.

@@ -182,6 +182,20 @@ window.EDU_ALLOWED_ROLES = ['admin'];
   const USERS_CACHE_KEY = 'admin-users:all';
   const USERS_CACHE_TTL_MS = 3 * 60 * 1000;
 
+  /** Sau khi ghi 1 tài khoản (đổi vai trò/duyệt/gán trường/mã NV): sửa đúng dòng đó trong bản đệm
+   *  rồi vẽ lại — trước đây loadUsers(true) đọc lại CẢ collection users (mỗi tài khoản 1 lượt đọc)
+   *  sau MỖI lần bấm. Không có bản đệm (hết hạn 3 phút) thì mới đọc lại như cũ.
+   *  patch[k] === undefined = trường đã bị xoá (FieldValue.delete()). */
+  async function refreshUserRow(uid, patch) {
+    const c = window.EduDataCache ? await window.EduDataCache.getAsync(USERS_CACHE_KEY) : null;
+    const row = c && Array.isArray(c.users) ? c.users.find((x) => x.id === uid) : null;
+    if (!row) return loadUsers(true);
+    Object.keys(patch).forEach((k) => { if (patch[k] === undefined) delete row.u[k]; else row.u[k] = patch[k]; });
+    await window.EduDataCache.setAsync(USERS_CACHE_KEY, c, USERS_CACHE_TTL_MS);
+    return loadUsers(false);
+  }
+  const sameList = (a, b) => JSON.stringify([...(a || [])].sort()) === JSON.stringify([...(b || [])].sort());
+
   /** @param {boolean} [forceRefresh] Bỏ qua cache — dùng sau khi ghi (duyệt/xoá/đổi role...). */
   async function loadUsers(forceRefresh) {
     const tbody = document.getElementById('userRows');
@@ -336,7 +350,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
             { role: newRole, approved: true }, { merge: true }
           );
           toast('Đã cập nhật vai trò');
-          loadUsers(true);
+          refreshUserRow(uid, { role: newRole, approved: true });
         } catch (err) {
           toast('Lỗi: ' + err.message);
         }
@@ -358,7 +372,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
         try {
           await EduFirebase.db.collection('users').doc(uid).set(patch, { merge: true });
           toast('Đã duyệt tài khoản' + (patch.role ? ` làm ${EduAuth.ROLE_LABEL[patch.role]}` : ''));
-          loadUsers(true);
+          refreshUserRow(uid, patch);
         } catch (err) {
           toast('Lỗi: ' + err.message);
         }
@@ -375,10 +389,12 @@ window.EDU_ALLOWED_ROLES = ['admin'];
           toast('Chọn ít nhất 1 trường trước khi lưu (nếu muốn giáo viên không xem trường nào, đổi vai trò tạm thời)');
           return;
         }
+        const cur = users.find(x => x.doc.id === uid);
+        if (cur && sameList(cur.u.schools, chosen)) { toast('Không có thay đổi để lưu.'); return; }
         try {
           await EduFirebase.db.collection('users').doc(uid).set({ schools: chosen }, { merge: true });
           toast(`Đã gán ${chosen.length} trường cho giáo viên`);
-          loadUsers(true);
+          refreshUserRow(uid, { schools: chosen });
         } catch (err) {
           toast('Lỗi: ' + err.message);
         }
@@ -393,10 +409,12 @@ window.EDU_ALLOWED_ROLES = ['admin'];
           toast('Giáo viên này chưa có lớp nào đang học trong danh sách học sinh (roster-manager.html) — không có gì để đồng bộ.');
           return;
         }
+        const cur = users.find(x => x.doc.id === uid);
+        if (cur && sameList(cur.u.schools, actual)) { toast('Trường được xem đã đúng với lớp đang dạy — không cần đồng bộ.'); return; }
         try {
           await EduFirebase.db.collection('users').doc(uid).set({ schools: actual }, { merge: true });
           toast(`Đã đặt lại đúng ${actual.length} trường đang dạy thật`);
-          loadUsers(true);
+          refreshUserRow(uid, { schools: actual });
         } catch (err) {
           toast('Lỗi: ' + err.message);
         }
@@ -483,6 +501,8 @@ window.EDU_ALLOWED_ROLES = ['admin'];
         const uid = tr.dataset.uid;
         const sel = tr.querySelector('.teacherCodeSelect');
         const code = sel.value;
+        const cur = users.find(x => x.doc.id === uid);
+        if (cur && (cur.u.teacherCode || '') === code) { toast('Không có thay đổi để lưu.'); return; }
         try {
           await EduFirebase.db.collection('users').doc(uid).set(
             { teacherCode: code || firebase.firestore.FieldValue.delete() }, { merge: true }
@@ -490,7 +510,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
           // Map Mã NV → uid của Lịch giảng dạy (js/teaching-schedule.js) được cache 30 phút.
           if (window.EduDataCache) window.EduDataCache.clear('teaching-schedule:teacherCodeToUid', true);
           toast(code ? 'Đã liên kết Mã NV cho giáo viên' : 'Đã bỏ liên kết Mã NV');
-          loadUsers(true);
+          refreshUserRow(uid, { teacherCode: code || undefined });
         } catch (err) {
           toast('Lỗi: ' + err.message);
         }

@@ -362,6 +362,16 @@
       ngay: !$('ddWNgayWrap').hidden && $('ddWNgay').checked ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` : '',
       done: !$('ddWDoneWrap').hidden && $('ddWDone').checked,
     };
+    // Sheet đã y hệt (mọi ô mọi tiết của buổi đã có đúng giá trị, không điền ngày/tick hoàn thành)
+    // → không gọi Apps Script (trước: bấm "Ghi" lần 2 vẫn tốn 1 lượt chạy + ghi lại cả cột).
+    const same = !body.ngay && !body.done
+      && g.every((s) => body.marks.every((x, i) => cls.students[i].marks[s.col] === x.m));
+    if (same) {
+      writing = false; $('ddWriteBtn').disabled = false;
+      delete S.drafts[`${key}|${col}`]; save();
+      toast('Sheet đã đúng như vậy rồi — không cần ghi lại.');
+      return;
+    }
     status(`Đang ghi Tiết ${g.map((s) => s.tiet).join(', ')} vào Sheet...`);
     try {
       const r = await global.EduAppsScript.call('classSheetWrite', body, { timeoutMs: 60e3 });
