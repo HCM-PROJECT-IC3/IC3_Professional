@@ -136,10 +136,24 @@
    * @param {object} rec — bản ghi kết quả, có { correct, total, score }
    * @returns {{ xpGained: number, newBadges: object[], state: object }}
    */
+  /** Bấm bừa cho xong: cùng ngưỡng cảnh báo "Tốc độ làm bài quá nhanh" của quiz-engine.js
+   *  (computeIntegrity: > 3 câu đã trả lời, trung bình < 3 giây/câu). */
+  function isRushed(rec) {
+    const answered = (rec.correct || 0) + (rec.incorrect || 0);
+    const avg = typeof rec.avgSecPerQ === 'number' ? rec.avgSecPerQ
+      : answered > 0 ? (rec.elapsedSec || 0) / answered : 0;
+    return answered > 3 && avg < 3;
+  }
+
   function recordResult(rec) {
     const state = getState();
     const prevXp = state.xp;
     const prevStreak = state.streak;
+    // Làm quá nhanh: không XP, không tính chuỗi ngày / số bài / huy hiệu — trước đây bấm bừa 0,6 giây/câu
+    // vẫn được +70 XP và huy hiệu. Kết quả bài vẫn lưu + gửi thầy cô như thường (quiz-engine.js).
+    if (isRushed(rec)) {
+      return { xpGained: 0, newBadges: [], state, prevXp, kind: 'quiz', streakUp: false, rushed: true };
+    }
     _updateStreak(state);
 
     const correct = rec.correct || 0;
@@ -316,7 +330,9 @@
     }
 
     const quest = _el('div', 'edu-reward-quest');
-    if (r.kind === 'quiz') {
+    if (r.rushed) {
+      quest.textContent = 'Em làm quá nhanh nên bài này không tính XP. Đọc kỹ từng câu rồi chọn nhé.';
+    } else if (r.kind === 'quiz') {
       quest.append(_el('b', null, 'Chuỗi ' + s.streak + ' ngày'),
         r.streakUp && s.streak > 1 ? ' học liên tiếp. Mai làm thêm 1 bài để giữ chuỗi.' : '. Mai làm thêm 1 bài để nối chuỗi.');
     } else if (r.dailyJustDone) {

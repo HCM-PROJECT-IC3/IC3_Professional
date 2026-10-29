@@ -56,7 +56,9 @@
     } catch (err) {
       if (err.name === 'AbortError') throw Object.assign(new Error('Apps Script phản hồi quá lâu'), { code: 'deadline-exceeded', source: 'apps-script' });
       // Mất mạng, hoặc Apps Script quá tải trả trang HTML lỗi thay vì JSON.
-      throw Object.assign(new Error('Không kết nối được Apps Script: ' + err.message), { code: 'unavailable', source: 'apps-script' });
+      // Câu hiện cho người dùng bằng tiếng Việt (trước: lộ "Failed to fetch"); lỗi gốc vẫn ở console.
+      console.warn('[EduAppsScript] ' + action + ':', err.message);
+      throw Object.assign(new Error('mất kết nối tới máy chủ'), { code: 'unavailable', source: 'apps-script', cause: err });
     } finally {
       clearTimeout(timer);
     }

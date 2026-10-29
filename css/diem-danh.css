@@ -213,3 +213,6 @@ kbd { display: inline-block; padding: 0 .35rem; border-radius: 6px; background: 
 .dd-tasks li .dd-small { white-space: nowrap; flex: none; }
 .dd-nofind { margin: 0; padding: 8px; color: var(--dd-muted); font-size: .85rem; }
 .dd-nofind[hidden] { display: none; }
+
+/* Nút phẳng kiểu phần mềm thi — giống khối cuối css/admin-common.css (trang này không nạp file đó). */
+html .btn { border-radius: 8px; }

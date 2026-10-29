@@ -77,9 +77,9 @@
       <div class="mos-project-item" data-id="${escHtml(p.id)}">
         <div>
           <div class="mos-project-item-title">${escHtml(p.title)}</div>
-          <div class="mos-project-item-meta">${subj ? escHtml(subj.label) + ' · ' : ''}${p.tasks.length} task · ${escHtml(p.tietLabel)}</div>
+          <div class="mos-project-item-meta">${subj ? escHtml(subj.label) + ' · ' : ''}${p.tasks.length} yêu cầu · ${escHtml(p.tietLabel)}</div>
         </div>
-        <span class="mos-project-item-arrow">chọn →</span>
+        <span class="mos-project-item-arrow">Chọn <i class="fa-solid fa-chevron-right" aria-hidden="true"></i></span>
       </div>`;
     }).join('');
     list.querySelectorAll('.mos-project-item').forEach(el => {

@@ -267,9 +267,9 @@
     const FAQ = [
       { keys: ['ôn luyện', 'làm bài', 'thi', 'dashboard'], reply: 'Bấm nút "Dashboard" ở góc trên bên phải để vào khu vực ôn luyện/làm bài.' },
       { keys: ['đăng nhập', 'login', 'tài khoản'], reply: 'Chỉ Giáo viên/Admin mới đăng nhập được, qua trang "login.html" — bấm liên kết Đăng nhập ở đầu trang.' },
-      { keys: ['đăng bài', 'feed', 'bình luận', 'thích'], reply: 'Đăng nhập bằng tài khoản Giáo viên/Admin, sau đó dùng ô soạn bài trong mục Certifications hoặc Life để đăng ảnh kèm chú thích, thích và bình luận.' },
+      { keys: ['đăng bài', 'feed', 'bình luận', 'thích'], reply: 'Đăng nhập bằng tài khoản Giáo viên/Admin, sau đó dùng ô soạn bài trong mục Chứng chỉ hoặc Hoạt động để đăng ảnh kèm chú thích, thích và bình luận.' },
       { keys: ['hồ sơ', 'ảnh đại diện', 'avatar'], reply: 'Sau khi đăng nhập, bấm nút "Hồ sơ" cạnh tên bạn để đổi ảnh đại diện, trạng thái, tiểu sử.' },
-      { keys: ['chứng chỉ', 'certification', 'cert'], reply: 'Xem đầy đủ chứng chỉ ở mục "Certifications" — bấm vào từng ảnh để xem cỡ đầy đủ.' },
+      { keys: ['chứng chỉ', 'certification', 'cert'], reply: 'Xem đầy đủ chứng chỉ ở mục "Chứng chỉ" — bấm vào từng ảnh để xem cỡ đầy đủ.' },
       { keys: ['cỡ chữ', 'phóng to', 'to chữ', 'font'], reply: null, action: () => setFontStep(fontStepIdx + 1) },
       { keys: ['thu nhỏ chữ', 'giảm cỡ chữ', 'nhỏ chữ'], reply: null, action: () => setFontStep(fontStepIdx - 1) },
       { keys: ['tương phản', 'contrast'], reply: null, action: toggleContrast },

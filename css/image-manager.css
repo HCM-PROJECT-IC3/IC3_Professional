@@ -260,3 +260,8 @@ a{color:inherit}
 /* Ảnh nằm trong từng ô của câu (phân loại có hình) — xem embeddedImages() */
 .qimg-embedded{display:grid;grid-template-columns:repeat(2,1fr);gap:.4rem;padding:.4rem;width:100%}
 .qimg-embedded img{width:100%;height:auto;max-height:90px;object-fit:contain;background:#fff;border-radius:6px}
+
+/* Nút phẳng kiểu phần mềm thi — giống khối cuối css/admin-common.css (trang này không nạp file đó). */
+html .btn { border-radius: 8px; }
+html .btn-primary { box-shadow: none; }
+html .btn-ghost { border: 1.5px solid var(--border); box-shadow: none; }

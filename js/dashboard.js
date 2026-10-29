@@ -1080,14 +1080,8 @@ function showToast(msg, iconClass) {
   const toast = document.getElementById('session-toast');
   const iconEl = toast.querySelector('.toast-icon i');
   if (iconEl) {
-    // fa-bounce (https://docs.fontawesome.com/web/style/animate —
-    // "Visually bouncing an icon up and down") — CHỈ gắn cho icon báo
-    // THÀNH CÔNG (fa-circle-check), tạo cảm giác "ăn mừng" nhẹ khi tạo bộ
-    // đề mới thành công; các icon khác (fa-thumbtack/fa-download/fa-trash)
-    // đứng yên để không biến MỌI toast thành hoạt hình liên tục — cùng
-    // nguyên tắc "complementary, not the only way" mà tài liệu khuyến nghị.
-    const animateClass = iconClass === 'fa-circle-check' ? ' fa-bounce' : '';
-    iconEl.className = 'fa-solid ' + (iconClass || 'fa-rocket') + animateClass;
+    // Icon đứng yên (trước: fa-bounce nhún khi thành công — kiểu "web AI", xem giao diện phẳng).
+    iconEl.className = 'fa-solid ' + (iconClass || 'fa-rocket');
   }
   document.getElementById('toast-text').textContent = msg;
   toast.classList.add('show');
@@ -1131,7 +1125,13 @@ function deleteCustomSet(id) {
   showToast('Đã xoá bộ đề: ' + set.title, 'fa-trash');
 }
 
-document.querySelectorAll('.nav-item').forEach(item => {
+document.querySelectorAll('.nav-item[data-section]').forEach(item => {
+  // Mục chuyển mục là <div> → cho bấm được bằng bàn phím (Tab rồi Enter/Space) như nút thật.
+  item.tabIndex = 0;
+  item.setAttribute('role', 'button');
+  item.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); item.click(); }
+  });
   item.addEventListener('click', () => {
     const section = item.dataset.section;
 

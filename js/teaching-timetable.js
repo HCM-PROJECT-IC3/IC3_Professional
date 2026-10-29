@@ -155,6 +155,13 @@
     document.getElementById('ttSaveBtn')?.classList.add('force-hide');
   }
 
+  // Đọc 1 document qua cache chung của trang (js/services/schedule-read-cache.js): mở lại trang trong
+  // vài phút = 0 lượt đọc (trước: giáo viên mỗi lần mở tốn 4 lượt — hồ sơ GV, giờ tiết, TKB, lịch tuần).
+  // Bọc { v } để nhớ được cả "chưa có document" (cache coi null là chưa lưu). Ghi teaching_* tự xoá cache.
+  const cachedDoc = (key, loader) => (window.EduScheduleReadCache
+    ? window.EduScheduleReadCache.read('doc:' + key, () => loader().then((v) => ({ v: v || null }))).then((x) => (x ? x.v : null))
+    : loader());
+
   async function loadTeachersAndWeeks() {
     try {
       let teachers, weeks;
@@ -163,7 +170,7 @@
         // teaching_teachers của chính mình — không được list() cả
         // collection (giống cách js/teaching-schedule.js xử lý "Lịch của
         // tôi"), nên KHÔNG dùng teachingTeacher.list() ở nhánh này.
-        const me = state.myTeacherCode ? await window.EduRepositories.teachingTeacher.getById(state.myTeacherCode) : null;
+        const me = state.myTeacherCode ? await cachedDoc('teacher:' + state.myTeacherCode, () => window.EduRepositories.teachingTeacher.getById(state.myTeacherCode)) : null;
         teachers = me ? [me] : [];
         weeks = window.EduScheduleReadCache
           ? await window.EduScheduleReadCache.read('weeks', () => window.EduRepositories.teachingWeek.listAll())
@@ -236,10 +243,11 @@
     }
     try {
       const scheduleId = TS ? TS.scheduleDocId(state.teacherCode, state.weekKey) : null;
+      const ttId = M.docId(state.teacherCode, state.weekKey);
       const [ptDoc, ttDoc, scheduleDoc] = await Promise.all([
-        window.EduRepositories.teachingPeriodTimes.getById(state.teacherCode),
-        window.EduRepositories.teachingTimetable.getById(M.docId(state.teacherCode, state.weekKey)),
-        scheduleId ? window.EduRepositories.teachingSchedule.getById(scheduleId).catch(() => null) : Promise.resolve(null),
+        cachedDoc('periods:' + state.teacherCode, () => window.EduRepositories.teachingPeriodTimes.getById(state.teacherCode)),
+        cachedDoc('timetable:' + ttId, () => window.EduRepositories.teachingTimetable.getById(ttId)),
+        scheduleId ? cachedDoc('schedule:' + scheduleId, () => window.EduRepositories.teachingSchedule.getById(scheduleId)).catch(() => null) : Promise.resolve(null),
       ]);
       state.periodTimesByDay = M.normalizePeriodTimesDoc(ptDoc);
       state.days = M.normalizeDays(ttDoc && ttDoc.days, state.periodTimesByDay);

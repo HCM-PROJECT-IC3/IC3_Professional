@@ -102,3 +102,11 @@ body.a11y-contrast { filter: contrast(1.35) saturate(1.1) }
   .a11y-panel { right: .5rem; left: .5rem; width: auto; bottom: 4.6rem }
   .a11y-fab { right: 1rem; bottom: 1rem }
 }
+
+/* Màn làm bài: hàng "Câu trước / Câu tiếp / Đánh dấu" nằm sát đáy phải → nút nổi mặc định đè lên
+   "Đánh dấu". Đẩy lên trên hàng đó, CHỈ khi học sinh chưa tự kéo nút đi (kéo xong có style bottom riêng). */
+body:has(#exam[style*="flex"]) .a11y-fab:not([style*="bottom"]) { bottom: 116px; }
+@media (max-width: 720px) {
+  /* Điện thoại: hàng nút "Câu trước / Câu tiếp / Đánh dấu" cao hơn → đẩy nút nổi lên thêm. */
+  body:has(#exam[style*="flex"]) .a11y-fab:not([style*="bottom"]) { bottom: 150px; }
+}

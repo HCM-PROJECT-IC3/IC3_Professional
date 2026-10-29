@@ -24,6 +24,13 @@
     // cũ hơn (js/services/backend-version-check.js).
     expectedBackendVersion: '2026-10-28',
 
+    // ── Danh sách học sinh (students_roster) ở trang quản trị: chỉ đọc phần THAY ĐỔI (29/10/2026) ──
+    //   true  : bản đệm quá hạn chỉ hỏi học sinh có updatedAt mới hơn (~1 lượt thay vì ~2.800);
+    //           đọc lại toàn bộ 3 ngày/lần (js/services/roster-cache-service.js § deltaFrom).
+    //   false : CÔNG TẮC TẮT NHANH — luôn đọc toàn bộ như trước đợt tối ưu (nếu thấy danh sách lệch).
+    //           Lệnh ghi vẫn kèm updatedAt (trường thêm vào, không ảnh hưởng gì) để bật lại lúc nào cũng được.
+    rosterDeltaSync: true,
+
     // ── Dashboard đọc kết quả từ đâu (teacher / coordinator / ic3-dashboard Báo cáo) ──
     //   'auto'      : Firestore khi quizResults.firestore = 'all', ngược lại Google Sheet
     //                 (Sheet luôn có ĐỦ mọi bài, Firestore thì không).

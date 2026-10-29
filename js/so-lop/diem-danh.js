@@ -746,8 +746,8 @@
     if (!el) return;
     if (!st || !st.on) { el.textContent = 'Chưa kết nối được tài khoản — dữ liệu vẫn nằm trên máy này. Dùng "Tải tệp sao lưu" để giữ một bản.'; return; }
     const parts = [];
-    if (st.err) parts.push(`Chưa lưu được (${st.err === 'permission-denied' ? 'quy tắc Firestore chưa cập nhật' : st.err}) — dữ liệu vẫn an toàn trên máy này.`);
-    else if (st.dirty) parts.push('Có link mới chưa gửi lên tài khoản (vẫn lưu trên máy này) — tự gửi trong 1 phút hoặc bấm "Lưu ngay".');
+    if (st.err) parts.push(`Chưa lưu được (${st.err === 'permission-denied' ? 'quy tắc Firestore chưa cập nhật — trang tạm ngừng tự thử 30 phút' : st.err}) — dữ liệu vẫn an toàn trên máy này. Bấm "Đồng bộ ngay" để thử lại.`);
+    else if (st.dirty) parts.push('Có link mới chưa gửi lên tài khoản (vẫn lưu trên máy này) — tự gửi trong vài phút, khi rời trang, hoặc bấm "Đồng bộ ngay".');
     else parts.push('Đã lưu hết.');
     if (st.pushedAt) parts.push(`Lần lưu gần nhất: ${hhmm(st.pushedAt)}.`);
     el.textContent = parts.join(' ');
@@ -767,9 +767,10 @@
     T.autoStart({ onApplied: onSyncApplied, onStatus: paintSync }).then((r) => { if (r === null) paintSync(null); });
     $('ddSyncNow').addEventListener('click', async () => {
       save(); // ghi S hiện tại vào máy trước khi gửi
-      const ok = await T.saveNow();
+      const { saved: ok, applied } = await T.syncNow();
       paintSync(T.status());
-      toast(ok ? 'Đã lưu lên tài khoản.' : ok === null ? 'Đã lưu hết — không có gì mới.' : 'Chưa lưu được — thử lại sau.');
+      if (applied.length) { toast('Đã tải link mới từ tài khoản — đang tải lại trang...'); onSyncApplied(); return; }
+      toast(ok ? 'Đã lưu lên tài khoản.' : ok === null ? 'Đã đồng bộ — không có gì mới.' : 'Chưa lưu được — thử lại sau.');
     });
     $('ddSyncExport').addEventListener('click', () => {
       const a = document.createElement('a');
