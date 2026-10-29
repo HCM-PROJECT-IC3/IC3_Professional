@@ -119,27 +119,39 @@
   // Lưu thêm vào sessionStorage (theo tab) để chuyển qua lại giữa các trang quản trị
   // không tốn thêm 1 lượt đọc users/{uid} mỗi lần tải trang — cùng TTL 5 phút. Quyền
   // thật vẫn do firestore.rules chốt, cache này chỉ phục vụ hiển thị/điều hướng UI.
+  // Máy CÁ NHÂN (tích "ghi nhớ" lúc đăng nhập → edu_idle_remember = '1') lưu thêm vào localStorage
+  // 15 phút để tab/cửa sổ MỚI (bấm "Gọi tên", "Trang quản lý", mở lại trình duyệt) cũng không đọc lại.
+  // Máy dùng chung: chỉ sessionStorage như cũ (đóng trình duyệt là hết, không để lại hồ sơ).
+  // Chỉ cache dài hồ sơ ĐÃ DUYỆT — tài khoản chờ duyệt luôn đọc mới để admin vừa duyệt là vào được ngay.
   const PROFILE_SS_PREFIX = 'eduAuthProfile:';
+  const PROFILE_LS_TTL_MS = 15 * 60 * 1000;
+  const personalDevice = () => { try { return localStorage.getItem('edu_idle_remember') === '1'; } catch (e) { return false; } };
+  const settled = (p) => p && p.approved !== false && !(p.role === 'teacher' && p.approved !== true);
 
   function readStoredProfile(uid) {
-    try {
-      const entry = JSON.parse(sessionStorage.getItem(PROFILE_SS_PREFIX + uid) || 'null');
-      if (entry && entry.profile && Date.now() - entry.at < PROFILE_TTL_MS) return entry;
-    } catch (e) { /* storage bị chặn/hỏng — coi như miss */ }
-    return null;
+    const read = (store, ttl) => {
+      try {
+        const entry = JSON.parse(store.getItem(PROFILE_SS_PREFIX + uid) || 'null');
+        if (entry && entry.profile && Date.now() - entry.at < ttl) return entry;
+      } catch (e) { /* storage bị chặn/hỏng — coi như miss */ }
+      return null;
+    };
+    return read(sessionStorage, PROFILE_TTL_MS) || (personalDevice() ? read(localStorage, PROFILE_LS_TTL_MS) : null);
   }
 
   function storeProfile(uid, profile) {
-    try { sessionStorage.setItem(PROFILE_SS_PREFIX + uid, JSON.stringify({ at: Date.now(), profile })); }
-    catch (e) { /* ignore */ }
+    const entry = JSON.stringify({ at: Date.now(), profile });
+    try { sessionStorage.setItem(PROFILE_SS_PREFIX + uid, entry); } catch (e) { /* ignore */ }
+    try { if (personalDevice() && settled(profile)) localStorage.setItem(PROFILE_SS_PREFIX + uid, entry); } catch (e) { /* ignore */ }
   }
 
   function clearStoredProfiles() {
-    try {
-      Object.keys(sessionStorage)
-        .filter((k) => k.startsWith(PROFILE_SS_PREFIX))
-        .forEach((k) => sessionStorage.removeItem(k));
-    } catch (e) { /* ignore */ }
+    [() => sessionStorage, () => localStorage].forEach((get) => {
+      try {
+        const store = get();
+        Object.keys(store).filter((k) => k.startsWith(PROFILE_SS_PREFIX)).forEach((k) => store.removeItem(k));
+      } catch (e) { /* ignore */ }
+    });
   }
 
   function memoProfile(uid) {
@@ -198,6 +210,7 @@
     logoutUser,
     sendResetEmail,
     fetchProfile,
+    getProfile: memoProfile, // như fetchProfile nhưng dùng chung cache — login.js dùng để trang kế tiếp khỏi đọc lại
     onAuthReady,
     ROLE_LABEL,
   };

@@ -33,6 +33,8 @@ máy có phiên giáo viên).
 | **Kết quả Phòng cả lớp (Đấu trường)** | Máy giáo viên (localStorage, 20 phòng + CSV); tuỳ chọn **Sheet `NhatKyDauTruong`** | Giáo viên đăng nhập → `arenaRoomLog` (1 lượt/phòng, mỗi học sinh 1 dòng) | Giáo viên mở Sheet / tải CSV |
 | Khoảng cách nhà → trường (tính) | Apps Script `mapDistance` (Maps của Google) → lưu Firebase `teaching_travel_distances` | Điều phối GV | teaching-schedule |
 | Tiến độ học, sổ tay câu sai, XP | localStorage máy học sinh | Học sinh | Học sinh |
+| **Link sổ lớp của giáo viên** (link Sheet "FORM QUẢN LÝ LỚP" theo trường, thư mục Drive, tên GV, lớp của tôi) | localStorage + Firebase `teacher_sync/{uid}` (1 doc/GV, < 100k ký tự) — CSV Sheet, điểm danh nháp, bộ lọc chỉ ở máy | Giáo viên (`js/services/teacher-sync.js`, trang diem-danh) | Chính giáo viên đó. Chi phí: 1 đọc/lần mở Điểm danh (bỏ qua nếu < 30 phút), ghi chỉ khi thêm/bỏ sổ, "Cập nhật lớp", đổi tên, gắn sao; nhiều tab không ghi trùng; rule không `get()` hồ sơ |
+| Gọi tên (lịch sử gọi, Đúng/Chưa đúng, câu đã bỏ) | Chỉ localStorage máy giáo viên — 0 Firebase | Giáo viên | Giáo viên |
 
 ## 3. Công tắc (`js/backend-config.js`)
 

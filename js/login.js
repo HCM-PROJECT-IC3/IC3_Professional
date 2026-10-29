@@ -41,7 +41,8 @@
   async function redirectByRole() {
     try {
       const user = EduFirebase.auth.currentUser;
-      const profile = await EduAuth.fetchProfile(user.uid);
+      // getProfile (có cache): trang quản trị mở ngay sau đây dùng lại, không đọc users/{uid} lần 2
+      const profile = await (EduAuth.getProfile || EduAuth.fetchProfile)(user.uid);
       if (!profile) return; // hồ sơ chưa kịp tạo (vừa đăng ký) — để luồng register tự điều hướng
       if (profile.role === 'student') {
         window.location.href = 'index.html';
