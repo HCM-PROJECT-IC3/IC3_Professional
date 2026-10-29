@@ -1,5 +1,29 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## Trang mở nhanh hơn: tự lưu bộ icon rút gọn + font (29/10/2026)
+
+- **Trang học sinh lần đầu mở: 731 KB → 459 KB (−37%)**, 0 request ra ngoài (trước: 20 request tới cdnjs + Google Fonts). Đo bằng Chrome, nén như GitHub Pages.
+- **Icon**: 32 trang bỏ Font Awesome từ cdnjs (all.min.css + font solid 153 KB) → bộ rút gọn tự lưu `lib/fontawesome/` chỉ gồm 255 icon dự án dùng (font solid 24 KB, regular 8 KB, brands 1 KB). Mạng trường chặn cdnjs vẫn có icon; nút "Tải sẵn để dùng offline" nay lưu cả font icon → mất mạng vẫn có icon.
+- **Font**: Inter, Baloo 2, Space Mono tự lưu ở `lib/fonts/`, chỉ bộ chữ Latin + tiếng Việt (24 trang). Google tách tiếng Việt sang 2 gói chồng nhau nên chữ "ỳ ỹ" kéo thêm gói latin-ext 83 KB — bản tự lưu không còn gói đó. Bớt 2 tên miền phải kết nối (fonts.googleapis.com, fonts.gstatic.com). Nunito / Be Vietnam Pro / Space Grotesk (vài trang) vẫn từ Google.
+- **Thêm icon mới**: chạy `python scripts/build-fa-subset.py` rồi commit `lib/fontawesome/`. Test `js/services/__tests__/fa-subset.test.js` báo đỏ (kèm tên icon + file) nếu code dùng icon chưa có trong bộ rút gọn, hoặc có trang nạp lại Font Awesome từ cdnjs.
+- Thư mục đặt tên `lib/` (không phải `vendor/`) vì GitHub Pages chạy Jekyll — tránh danh sách loại trừ mặc định của Jekyll.
+
+## Bớt lượt đọc hồ sơ đăng nhập khi mở trang quản trị ở tab mới (29/10/2026)
+
+- **Máy cá nhân** (tích "ghi nhớ" lúc đăng nhập): hồ sơ `users/{uid}` dùng chung cho mọi tab/cửa sổ trong 15 phút — bấm "Gọi tên", "Trang quản lý", mở lại trình duyệt không đọc lại. Trước đây cache chỉ sống trong 1 tab (5 phút), tab mới nào cũng tốn 1 lượt đọc.
+- **Đăng nhập → trang quản trị**: trang đăng nhập đã đọc hồ sơ thì trang kế tiếp dùng lại (trước đây đọc 2 lần mỗi lần đăng nhập).
+- **Máy dùng chung** (không tích "ghi nhớ"): giữ như cũ — hồ sơ chỉ trong tab, đóng trình duyệt là hết, không để lại trên máy. Đăng xuất xoá sạch cả hai nơi.
+- **Tài khoản chờ duyệt** không được cache dài: admin vừa duyệt là giáo viên vào được ngay. Quyền thật vẫn do `firestore.rules` quyết định; cache chỉ để hiển thị giao diện.
+
+## Điểm danh: lưu link sổ lớp lên tài khoản — đăng nhập máy khác không mất (29/10/2026)
+
+- **Link sổ lớp theo trường** (link Sheet "FORM QUẢN LÝ LỚP", link thư mục Drive), **"Tên của tôi"** và các **lớp gắn sao** được lưu vào **1 document Firestore / giáo viên** (`teacher_sync/{uid}`, chỉ chính tài khoản đó đọc/ghi). Đăng nhập máy khác, mở Điểm danh là có lại đủ link. Không dùng Apps Script.
+- **Không lưu lên mạng**: Gọi tên (chỉ ở máy, 0 Firebase như cũ), dữ liệu lớp đã đọc từ Sheet (máy khác tự đọc lại), điểm danh nháp, thẻ/bộ lọc.
+- **Ít lượt Firebase**: 1 lượt đọc khi mở Điểm danh (mở lại trong 30 phút: 0 lượt). Chỉ ghi khi thêm/bỏ sổ, "Cập nhật lớp", đổi tên, gắn sao — gộp ≤ 1 lần/phút, đóng trang gửi nốt. Nhiều tab không ghi trùng (Web Lock). Ghi lỗi không thử lại liên tục. Rule chỉ so uid nên không tốn thêm lượt đọc hồ sơ. Thực tế vài lượt ghi / tuần.
+- **Cài đặt → Lưu trên tài khoản**: trạng thái, "Lưu ngay", "Tải tệp sao lưu" / "Nhập tệp sao lưu" (JSON, không qua mạng).
+- Máy đã có link sẵn mà chưa từng đồng bộ → **gộp** theo mã file (không ghi đè, ô tên trống không đè tên đã có); bản cũ giữ 1 bản dự phòng (`edu_sync_backup_v1`).
+- **Cần publish `firestore.rules`** (thêm `match /teacher_sync/{uid}`) trước khi đẩy web; chưa publish thì trang báo "quy tắc Firestore chưa cập nhật", link vẫn nằm trên máy.
+
 ## Gọi tên: sửa lá "Hỏi bài" luôn đáp án A, lộ đáp án, nút không dùng được (29/10/2026)
 
 - **Tráo phương án A–D mỗi lần bốc**: data gốc để đáp án đúng ở A (~94% câu Bài N), nay đáp án rơi ngẫu nhiên vào A/B/C/D.

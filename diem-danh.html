@@ -8,10 +8,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Điểm danh và theo dõi tiến độ lớp từ sổ quản lý lớp (Google Sheet) của Điều phối đào tạo.">
 <title>Điểm danh & tiến độ — EduQuiz</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="lib/fonts/fonts.css">
 <script src="js/theme-inherit.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="lib/fontawesome/css/fa.min.css">
 <link rel="stylesheet" href="css/accessibility.css">
 <link rel="stylesheet" href="css/theme.css">
 <link rel="stylesheet" href="css/admin-common.css">
@@ -184,7 +183,20 @@
     <section class="dd-card">
       <div class="dd-step"><h2>Trường & sổ lớp đã thêm</h2></div>
       <div id="ddSchools"></div>
-      <p class="dd-hint">Link và tên chỉ lưu trên máy này, không lưu lên Firebase. Khi bấm "Ghi vào Sheet", mã file và cột điểm danh được gửi qua Apps Script của dự án để ghi vào đúng Sheet.</p>
+      <p class="dd-hint">Khi bấm "Ghi vào Sheet", mã file và cột điểm danh được gửi qua Apps Script của dự án để ghi vào đúng Sheet.</p>
+    </section>
+    <section class="dd-card" aria-label="Lưu trên tài khoản">
+      <div class="dd-step"><h2><i class="fa-solid fa-cloud" aria-hidden="true"></i> Lưu trên tài khoản</h2></div>
+      <p class="dd-hint" id="ddSync">Đang kiểm tra...</p>
+      <div class="dd-row">
+        <button type="button" class="dd-small" id="ddSyncNow"><i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i> Lưu ngay</button>
+        <button type="button" class="dd-small" id="ddSyncExport"><i class="fa-solid fa-download" aria-hidden="true"></i> Tải tệp sao lưu</button>
+        <button type="button" class="dd-small" id="ddSyncImportBtn"><i class="fa-solid fa-upload" aria-hidden="true"></i> Nhập tệp sao lưu</button>
+        <input type="file" id="ddSyncImport" accept=".json,application/json" hidden>
+      </div>
+      <p class="dd-hint">Các link sổ lớp và thư mục Drive theo trường, "Tên của tôi" và các lớp gắn sao được lưu vào tài khoản của thầy/cô
+        (chỉ chính tài khoản này đọc được) — đăng nhập máy khác là có lại đủ link. Tự lưu ngay khi thêm/bỏ sổ hoặc "Cập nhật lớp".
+        Dữ liệu lớp đọc từ Sheet, điểm danh nháp và Gọi tên vẫn chỉ ở máy này. Tệp sao lưu tải về máy, không qua mạng.</p>
     </section>
   </div>
 </div>
@@ -203,6 +215,7 @@
 <script src="js/auth-guard.js"></script>
 <script src="js/so-lop/so-lop-core.js"></script>
 <script src="js/name-picker/np-lessons.js"></script>
+<script src="js/services/teacher-sync.js"></script>
 <script src="js/so-lop/diem-danh.js"></script>
 </body>
 </html>

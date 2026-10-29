@@ -20,7 +20,9 @@
   const STORE_KEY = 'eduquiz_offline_pack_v1';
   const IMG_RE = /img\/[A-Za-z0-9_.\-/]+\.(?:png|jpe?g|gif|webp|svg)/g;
   const SHELL_PAGES = ['index.html', 'arena.html', 'gom-ket-qua.html'];   // gom-ket-qua: giáo viên gom kết quả được cả khi mất mạng
-  const EXTRA = ['data/ic3/meta.json', 'data/ic3/minitests-manifest.json', 'data/roster/students-active.json', 'favicon.svg', 'manifest.webmanifest', 'img/pwa/icon-192.png', 'img/pwa/icon-512.png'];
+  const EXTRA = ['data/ic3/meta.json', 'data/ic3/minitests-manifest.json', 'data/roster/students-active.json', 'favicon.svg', 'manifest.webmanifest', 'img/pwa/icon-192.png', 'img/pwa/icon-512.png',
+    // Font của bộ icon tự lưu (scripts/build-fa-subset.py) — nằm trong CSS nên shellFromHtml không thấy; mất mạng vẫn có icon
+    'lib/fontawesome/webfonts/fa-solid-900.woff2', 'lib/fontawesome/webfonts/fa-regular-400.woff2', 'lib/fontawesome/webfonts/fa-brands-400.woff2'];
 
   const $ = (id) => document.getElementById(id);
 

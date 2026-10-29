@@ -50,10 +50,7 @@
        dụng kỹ thuật này cho style.css/theme.css (CSS layout CỐT LÕI) —
        rủi ro FOUC (nội dung không có style) cao hơn nhiều so với lợi ích,
        để lại 2 file này chặn render bình thường như trước. -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preload" as="style"
-    href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap"
-    onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="stylesheet" href="lib/fonts/fonts.css">
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="css/review-detail.css" media="print" onload="this.media='all'">
@@ -64,18 +61,14 @@
   <noscript><link rel="stylesheet" href="css/daily-challenge.css"></noscript>
   <link rel="stylesheet" href="css/result-pack.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="css/result-pack.css"></noscript>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
   <link rel="stylesheet" href="css/accessibility.css">
   <link rel="stylesheet" href="css/a11y-assistant.css">
   <link rel="stylesheet" href="css/kid-mode.css">
 <link rel="stylesheet" href="css/motion.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="css/motion.css"></noscript>
-<link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="preload" as="style" href="lib/fontawesome/css/fa.min.css" onload="this.onload=null;this.rel='stylesheet'">
 <noscript>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="lib/fontawesome/css/fa.min.css">
 </noscript>
   <!-- HIỆU ỨNG MỞ TRANG — đã bỏ phần "mờ dần từ trong suốt" (10/2026).
        Trước đây body (css/motion.css moPageEnter), #lobby (lobbyFadeIn), thẻ form và

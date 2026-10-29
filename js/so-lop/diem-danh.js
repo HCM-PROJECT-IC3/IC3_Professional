@@ -14,6 +14,7 @@
    Giao diện 4 thẻ (showTab): Lịch dạy · Các lớp · Điểm danh · Cài đặt — bộ lọc Trường/GV dùng chung cho 2 thẻ đầu.
    Đỡ việc tay: mở trang tự đọc lại các lớp của tôi đã cũ hơn 6 giờ · "Bảng công tháng" dán Excel · "Tin nhắn báo vắng"
    dán Zalo · "Học sinh cần chú ý" (vắng nhiều/vắng liền) gom từ mọi lớp đã đọc.
+   Lưu trên tài khoản (thẻ Cài đặt): js/services/teacher-sync.js — link sổ lớp, thư mục Drive, tên GV, lớp của tôi vào 1 document teacher_sync/{uid}.
    ============================================================ */
 (function (global) {
   'use strict';
@@ -738,8 +739,61 @@
   }
   // Thanh thẻ dính ngay dưới thanh trên cùng (cao khác nhau khi chữ xuống dòng trên màn hình hẹp)
   function fitTop() { const t = document.querySelector('.topbar'); if (t) document.documentElement.style.setProperty('--dd-top', t.offsetHeight + 'px'); }
+  // ── Lưu trên tài khoản (js/services/teacher-sync.js): 1 document / giáo viên, 1 đọc khi mở, ghi gộp khi đổi ──
+  const hhmm = (t) => (t ? new Date(t).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '');
+  function paintSync(st) {
+    const el = $('ddSync');
+    if (!el) return;
+    if (!st || !st.on) { el.textContent = 'Chưa kết nối được tài khoản — dữ liệu vẫn nằm trên máy này. Dùng "Tải tệp sao lưu" để giữ một bản.'; return; }
+    const parts = [];
+    if (st.err) parts.push(`Chưa lưu được (${st.err === 'permission-denied' ? 'quy tắc Firestore chưa cập nhật' : st.err}) — dữ liệu vẫn an toàn trên máy này.`);
+    else if (st.dirty) parts.push('Có link mới chưa gửi lên tài khoản (vẫn lưu trên máy này) — tự gửi trong 1 phút hoặc bấm "Lưu ngay".');
+    else parts.push('Đã lưu hết.');
+    if (st.pushedAt) parts.push(`Lần lưu gần nhất: ${hhmm(st.pushedAt)}.`);
+    el.textContent = parts.join(' ');
+  }
+  /** Dữ liệu vừa tải từ tài khoản → nạp lại trang 1 lần (S đã đọc lúc mở trang). Chặn vòng lặp trong 30 giây. */
+  function onSyncApplied() {
+    Object.assign(S, load()); // save() sau đó không ghi đè bằng bản cũ trong bộ nhớ
+    let last = 0;
+    try { last = +sessionStorage.getItem('edu_sync_reload') || 0; } catch (e) { /* ignore */ }
+    if (Date.now() - last < 30e3) { toast('Đã tải dữ liệu từ tài khoản — tải lại trang (F5) để thấy.'); return; }
+    try { sessionStorage.setItem('edu_sync_reload', String(Date.now())); } catch (e) { /* ignore */ }
+    global.location.reload();
+  }
+  function initSync() {
+    const T = global.EduTeacherSync;
+    if (!T) { paintSync(null); return; }
+    T.autoStart({ onApplied: onSyncApplied, onStatus: paintSync }).then((r) => { if (r === null) paintSync(null); });
+    $('ddSyncNow').addEventListener('click', async () => {
+      save(); // ghi S hiện tại vào máy trước khi gửi
+      const ok = await T.saveNow();
+      paintSync(T.status());
+      toast(ok ? 'Đã lưu lên tài khoản.' : ok === null ? 'Đã lưu hết — không có gì mới.' : 'Chưa lưu được — thử lại sau.');
+    });
+    $('ddSyncExport').addEventListener('click', () => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([T.exportText()], { type: 'application/json' }));
+      a.download = `sao-luu-link-so-lop-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    });
+    $('ddSyncImportBtn').addEventListener('click', () => $('ddSyncImport').click());
+    $('ddSyncImport').addEventListener('change', async (e) => {
+      const f = e.target.files && e.target.files[0];
+      e.target.value = '';
+      if (!f) return;
+      try {
+        const n = T.importText(await f.text());
+        toast(`Đã nhập ${n} phần — đang tải lại trang...`);
+        setTimeout(() => global.location.reload(), 900);
+      } catch (err) { toast(err.message || 'Tệp không đọc được.'); }
+    });
+  }
+
   function init(ev) {
     paintAccount(ev && ev.detail);
+    initSync();
     fitTop(); global.addEventListener('resize', fitTop);
     paintLinks(); paintPick();
     $('ddTabs').addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) showTab(b.dataset.tab); });

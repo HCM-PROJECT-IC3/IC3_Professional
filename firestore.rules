@@ -658,6 +658,24 @@ service cloud.firestore {
         && (!('avatar' in request.resource.data) || (request.resource.data.avatar is string && request.resource.data.avatar.size() < 300000));
     }
 
+    // ---- Link sổ lớp của giáo viên (js/services/teacher-sync.js, trang diem-danh): link Sheet theo trường, thư mục
+    //      Drive, tên GV, lớp của tôi — 1 document / tài khoản, doc id = uid. CỐ TÌNH chỉ so uid, KHÔNG gọi
+    //      myProfile() — get() hồ sơ users tính thêm 1 lượt đọc mỗi lần đọc/ghi. Chỉ 1 khoá, chuỗi JSON < 100.000 ký tự
+    //      → không làm kho rác được.
+    match /teacher_sync/{uid} {
+      allow get, delete: if isSignedIn() && request.auth.uid == uid;
+      allow create, update: if isSignedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['v', 'at', 'items'])
+        && request.resource.data.items is map
+        && request.resource.data.items.keys().hasOnly(['eduquiz_solop_v1'])
+        && (!('eduquiz_solop_v1' in request.resource.data.items) || (
+          request.resource.data.items.eduquiz_solop_v1 is map
+          && request.resource.data.items.eduquiz_solop_v1.keys().hasOnly(['v', 'at'])
+          && request.resource.data.items.eduquiz_solop_v1.v is string
+          && request.resource.data.items.eduquiz_solop_v1.v.size() < 100000
+          && request.resource.data.items.eduquiz_solop_v1.at is number));
+    }
+
     // ---- Trang Social Media — chat nhóm nội bộ (gvlab_chat): ĐÃ BỎ khỏi
     //      js/portfolio.js (thay bằng A11yAssistant). Đóng ghi để không ai dùng
     //      collection này làm kho chứa base64 (tới 700 KB/tin); admin vẫn đọc/
