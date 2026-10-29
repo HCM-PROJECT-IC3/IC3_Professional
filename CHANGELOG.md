@@ -6,6 +6,9 @@
 - **Bạn được gọi chọn phương án** (bấm vào phương án hoặc phím A–D; câu nhiều đáp án bấm bật/tắt). Trước đây phím A là "Xem đáp án" nên bấm chọn A là lộ đáp án — nay "Xem đáp án" là phím **X**.
 - **Xem đáp án tự chấm** Đúng/Chưa đúng theo phương án đã chọn (giáo viên vẫn bấm đổi được); phương án chọn sai tô đỏ, lá tự cuộn tới lời giải.
 - Nút Xem đáp án/Đúng/Chưa đúng/Bỏ câu này ở giao diện tối không còn chữ mờ như bị khoá.
+- **Đồng hồ suy nghĩ** trên lá phóng to: 30 giây (câu nhiều đáp án 45 giây), thanh thời gian chạy ở mép trên, tích tắc 5 giây cuối, hết giờ chỉ báo "Hết giờ!" (không tự lộ đáp án). Bấm đồng hồ hoặc phím **T** để dừng/chạy tiếp; Xem đáp án thì đồng hồ dừng.
+- **Đọc câu hỏi** (phím **R**): máy đọc to câu hỏi và các phương án bằng giọng tiếng Việt có sẵn trên máy, không cần mạng. Máy không có giọng tiếng Việt thì nút tự ẩn.
+- **Trợ giúp 50:50** (phím **5**): câu 1 đáp án, 4 phương án — mờ đi 2 phương án sai, mỗi câu dùng 1 lần.
 
 ## Điểm danh: giao diện đồng bộ trang quản trị + Hôm nay, Việc cần làm, tìm học sinh (28/10/2026)
 
