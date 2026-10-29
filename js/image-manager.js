@@ -114,12 +114,25 @@ function findLevelByNames(catName, gradeName) {
   return levelsOf(META).find(({ cat, lvl }) => cat.name === catName && lvl.name === gradeName) || null;
 }
 
+/* Đọc qua GitHub API = 11 lượt Apps Script (meta + 9 khối + manifest) + 11 lượt GitHub API mỗi
+   lần mở trang. Chỉ cần khi GitHub Pages chưa kịp cập nhật (~10 phút sau 1 lần đẩy) → mặc định
+   đọc bản trên trang web (0 lượt), chỉ đọc GitHub trong 15 phút sau khi máy này vừa đẩy hoặc
+   vừa bị báo xung đột. Không mất dữ liệu: lúc đẩy Apps Script vẫn so expectedShas, bản trên
+   nhánh khác bản đang mở thì DỪNG (code 'conflict'). */
+const GH_FRESH_KEY = 'image-manager:github-fresh-until';
+function githubFreshNeeded() {
+  try { return Number(localStorage.getItem(GH_FRESH_KEY) || 0) > Date.now(); } catch (e) { return false; }
+}
+function markGithubFresh() {
+  try { localStorage.setItem(GH_FRESH_KEY, String(Date.now() + 15 * 60 * 1000)); } catch (e) { /* bỏ qua */ }
+}
+
 async function loadQuestions() {
   const loadState = document.getElementById('loadState');
   loadState.style.display = 'block';
   document.getElementById('app').style.display = 'none';
   const gh = window.EduGitHubPublish;
-  LOADED_FROM = gh && gh.hasToken() ? 'github' : 'site';
+  LOADED_FROM = gh && gh.hasToken() && githubFreshNeeded() ? 'github' : 'site';
   loadState.textContent = LOADED_FROM === 'github'
     ? 'Đang tải ngân hàng câu hỏi mới nhất từ GitHub (data/ic3)…'
     : 'Đang tải ngân hàng câu hỏi (data/ic3)…';
@@ -1121,12 +1134,14 @@ document.getElementById('exportStaticBtn').addEventListener('click', async () =>
     changedIds = new Set();
     deletedCount = 0;
     PENDING_IMAGES = {};
+    markGithubFresh();
     toast(`Đã đẩy ${files.length} file lên GitHub — học sinh thấy sau khoảng 1–2 phút.`, 6000);
     delete btn.dataset.busy;
     loadQuestions(); // tải lại bản mới nhất (qua GitHub API) làm gốc cho lần sửa tiếp
   } catch (err) {
     console.error('[image-manager] Đẩy GitHub thất bại:', err);
     if (err.code === 'conflict') {
+      markGithubFresh(); // tải lại trang sẽ đọc thẳng GitHub (bản Pages có thể còn cũ)
       alert('KHÔNG đẩy — ' + err.message + '\n\nCó người/script vừa đẩy dữ liệu mới. Bản nháp của bạn vẫn được giữ.\n' +
         'Hãy bấm "Sao lưu JSON" để giữ bản của bạn, tải lại trang (sẽ hỏi tải bản nháp về), rồi nhập lại phần đã sửa.');
     } else if (confirm('Đẩy lên GitHub thất bại: ' + err.message + '\n\nTải các file thay đổi về máy (zip) để tự chép vào dự án?')) {

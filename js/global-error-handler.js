@@ -70,8 +70,19 @@
     showErrorScreen({ type: 'error', message: e.message, filename: e.filename, lineno: e.lineno, stack: e.error && e.error.stack });
   });
 
+  // Hiệu ứng chuyển trang (@view-transition trong css/theme.css) bị trình duyệt huỷ giữa chừng
+  // (vd trang đích đổi giao diện ngay lúc mở) → Promise của nó bị từ chối mà không ai bắt.
+  // Vô hại (trang vẫn chạy bình thường) nhưng trước đây làm hiện màn hình "Trang gặp sự cố"
+  // khi học sinh chuyển giữa index.html ↔ mos-practice.html (thấy bằng Chrome headless, 29/10/2026).
+  // Chặn chính ở js/page-transition-guard.js (đầu <head>); đây là lớp dự phòng.
+  function isViewTransitionAbort(r) {
+    return !!r && (r.name === 'InvalidStateError' || r.name === 'AbortError')
+      && /transition/i.test(String(r.message || ''));
+  }
+
   window.addEventListener('unhandledrejection', function (e) {
     var reason = e.reason;
+    if (isViewTransitionAbort(reason)) { e.preventDefault(); return; }
     showErrorScreen({ type: 'unhandledrejection', message: reason && reason.message || String(reason), stack: reason && reason.stack });
   });
 })();

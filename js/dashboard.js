@@ -110,7 +110,7 @@ function renderCards() {
             </span>
           </div>
           <div class="card-stats">
-            <div class="stat-item"><span><i class="fa-solid fa-file-lines"></i></span><span>${set.questions} câu hỏi</span></div>
+            <div class="stat-item stat-qcount"><span><i class="fa-solid fa-file-lines"></i></span><span>${set.questions} câu hỏi</span></div>
             <div class="stat-item"><span><i class="fa-solid fa-users"></i></span><span>${getAttemptCount(set.id)} lượt</span></div>
           </div>
           <div class="card-actions">
@@ -481,9 +481,18 @@ const REPORT_CACHE_TTL_MS = 3 * 60 * 1000;
 const REPORT_KEEP_MS = 7 * 24 * 60 * 60 * 1000;
 
 /** Khoá cache theo nguồn (Firestore / Google Sheet) — 2 nguồn không trộn lẫn. */
+/* Khoá theo tài khoản + trường (như teacher/coordinator data-loader): trước đây 1 khoá chung cho
+   cả máy → admin mở Báo cáo (bài của MỌI trường, lưu 7 ngày) rồi điều phối trường khác đăng nhập
+   cùng máy thấy luôn bài của mọi trường (thấy bằng Chrome headless, 29/10/2026). */
 function reportCacheKey() {
-  return window.EduSheetResults && window.EduSheetResults.enabled() ? REPORT_CACHE_KEY + ':sheet' : REPORT_CACHE_KEY;
+  const p = window.EduCurrentProfile || {};
+  const schools = Array.isArray(p.schools) ? p.schools.filter(Boolean).slice().sort().join('|') : '';
+  const scope = p.role === 'admin' ? 'admin-all-schools' : (p.uid || p.id || 'unknown') + ':' + schools;
+  return REPORT_CACHE_KEY + (window.EduSheetResults && window.EduSheetResults.enabled() ? ':sheet' : '') + ':' + scope;
 }
+
+// Bản đệm khoá chung cũ (trước khi tách theo tài khoản) — xoá 1 lần, không còn ai đọc.
+if (window.EduDataCache) [REPORT_CACHE_KEY, REPORT_CACHE_KEY + ':sheet'].forEach((k) => window.EduDataCache.clear(k, true));
 
 function saveReportCache(fetchedAt) {
   if (window.EduDataCache) window.EduDataCache.setAsync(reportCacheKey(), { docs: _reportRawDocs, fetchedAt }, REPORT_KEEP_MS, true);
@@ -1261,6 +1270,7 @@ function clearAllData() {
   allSets = loadSets();
   renderCards();
   updateReportTab();
+  if (typeof renderLocalDataInfo === 'function') renderLocalDataInfo();
   showToast('Đã xoá toàn bộ dữ liệu!', 'fa-trash');
 }
 

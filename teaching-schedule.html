@@ -2,6 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
+<script src="js/page-transition-guard.js"></script>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lịch giảng dạy — EduQuiz IC3</title>
@@ -145,23 +146,6 @@
       </div>
     </div>
 
-    <!-- ============ "LỊCH CỦA TÔI" — chỉ hiện với role giáo viên (đã liên
-         kết Mã NV) — thay bảng tổng hợp nhiều GV bằng lưới thẻ theo ngày,
-         sửa/lưu trực tiếp ngay tại đây, không cần mở modal. ============ -->
-    <div class="my-week-wrap force-hide" id="myWeekWrap">
-      <div class="my-week-empty force-hide" id="myWeekEmpty"></div>
-      <div class="my-week-body force-hide" id="myWeekBody">
-        <div class="my-week-cards" id="myWeekCards"></div>
-        <div class="my-week-footer">
-          <div class="sched-stats-bar" id="myWeekStatsBar"></div>
-          <div class="my-week-footer-actions">
-            <button type="button" class="btn btn-ghost" id="myWeekPdfBtn"><i class="fa-solid fa-print" aria-hidden="true"></i> Xuất PDF</button>
-            <button type="button" class="btn btn-ghost" id="myWeekCongTacBtn" title="Xuất Phiếu công tác PDF tự điền theo đúng lịch tuần này (mẫu On_Tap_MOS/Phieu cong tac.doc)"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i> Phiếu công tác</button>
-            <button type="button" class="btn btn-primary my-week-save-btn" id="myWeekSaveBtn"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Lưu lịch tuần của tôi</button>
-          </div>
-        </div>
-      </div>
-    </div>
   </section>
 
   <!-- ============ TAB: TKB LỚP (thời khoá biểu dạng lưới tiết học, treo

@@ -7,9 +7,9 @@
    - admin: toàn quyền quản lý (thêm/sửa/xoá GV, nhập Excel, tạo tuần mới,
      sửa lịch MỌI giáo viên) — bảng tổng hợp nhiều GV + modal lưới lịch
      (renderWeeklyTab/openSchedModal).
-   - teacher (đã được Admin liên kết "Mã NV" ở admin-users.html): khối
-     riêng "Lịch của tôi" — TỰ CẬP NHẬT đúng lịch của chính mình bằng lưới
-     thẻ theo ngày, sửa/lưu trực tiếp không cần modal (renderMyWeekView).
+   - teacher (đã được Admin liên kết "Mã NV" ở admin-users.html): dùng CHUNG
+     bảng "Tổng quan"/"Thẻ" + modal Sửa lịch với admin, chỉ sửa được đúng hàng
+     của mình (canEditTeacherRow). Khối riêng "Lịch của tôi" cũ đã gỡ (29/10/2026).
    - teaching_coordinator (🚗 Điều phối giáo viên — KHÁC HẲN "coordinator"
      tức 🧭 Điều phối đào tạo, role đó quản lý roster/điểm số học sinh ở
      roster-manager.html và KHÔNG được vào trang này nữa): dùng CHUNG bảng
@@ -66,7 +66,6 @@
     periodTimesByTeacher: {}, // teacherCode -> doc "teaching_timetable_periods" (giờ tiết CỦA GIÁO VIÊN
                                 // đó, áp dụng mọi tuần) — dựng đúng số hàng/giờ giấc cho "📊 Tổng quan"
                                 // dạng lưới theo tiết (renderDashboardView()).
-    myWeekDraft: null,     // days{} đang sửa ở khối "Lịch của tôi" (giáo viên) — chưa lưu
     search: '',
     viewMode: 'dashboard', // 'dashboard' (tổng quan, mặc định) | 'cards' (thẻ từng GV) — chỉ áp dụng admin/coordinator
   };
@@ -419,6 +418,10 @@
     const phone = document.getElementById('f-teacher-phone').value.trim();
     const address = document.getElementById('f-teacher-address').value.trim();
     if (!code || !name) { toast('Cần nhập Mã NV và Họ tên.'); return; }
+    const old = teacherModalEditingCode && state.teachers.find((x) => x.id === teacherModalEditingCode);
+    if (old && old.name === name && (old.phone || '') === phone && (old.address || '') === address) {
+      toast('Không có thay đổi nào để lưu'); closeTeacherModal(); return;
+    }
 
     const btn = document.getElementById('teacherModalSaveBtn');
     btn.disabled = true;
@@ -1000,169 +1003,20 @@
   }
   document.getElementById('exportAllPdfBtn')?.addEventListener('click', exportAllPdf);
 
-  // ============================================================
-  // "LỊCH CỦA TÔI" — khối riêng cho role giáo viên: thay bảng tổng hợp
-  // nhiều GV bằng lưới THẺ theo từng ngày (Thứ2→Thứ7), sửa/lưu TRỰC TIẾP
-  // ngay tại trang, không cần mở modal — phù hợp vì giáo viên chỉ quản lý
-  // đúng lịch của chính mình (1 "hàng" duy nhất) nên bảng dài 10 cột như
-  // của admin/coordinator không phù hợp/dễ dùng bằng thẻ theo ngày.
-  // ============================================================
-  function renderMyWeekView() {
-    const emptyEl = document.getElementById('myWeekEmpty');
-    const bodyEl = document.getElementById('myWeekBody');
-
-    // Dùng "force-hide" thay vì thuộc tính hidden — .my-week-body có
-    // "display:flex" riêng, cùng độ ưu tiên CSS với UA-stylesheet của
-    // [hidden] nên thuộc tính hidden không chắc thắng (xem .force-hide).
-    if (!state.myTeacherCode) {
-      emptyEl.classList.remove('force-hide');
-      bodyEl.classList.add('force-hide');
-      emptyEl.textContent = 'Tài khoản của bạn chưa được liên kết với hồ sơ giáo viên trong "Lịch giảng dạy" — vui lòng liên hệ Admin/Điều phối đào tạo để được gán Mã NV (admin-users.html).';
-      return;
-    }
-    if (!state.currentWeekKey) {
-      emptyEl.classList.remove('force-hide');
-      bodyEl.classList.add('force-hide');
-      emptyEl.textContent = 'Chưa có tuần nào được tạo — vui lòng liên hệ Điều phối đào tạo/Admin để tạo tuần mới, sau đó quay lại đây để tự cập nhật lịch.';
-      return;
-    }
-    emptyEl.classList.add('force-hide');
-    bodyEl.classList.remove('force-hide');
-
-    // Nạp lại "bản nháp" đang sửa từ dữ liệu đã lưu MỖI KHI đổi tuần (hàm
-    // này chỉ được gọi lại sau loadWeekSchedules/loadEverything — tức là
-    // đúng lúc dữ liệu tuần đang chọn vừa được tải, không phải mỗi lần gõ
-    // phím, nên không lo mất nội dung đang sửa dở).
-    const existing = state.schedulesByTeacher[state.myTeacherCode];
-    state.myWeekDraft = JSON.parse(JSON.stringify((existing && existing.days) || M.emptyDays()));
-    renderMyWeekCards();
-  }
-
-  function renderMyWeekCards() {
-    const container = document.getElementById('myWeekCards');
-
-    function sessionBlock(d, sessionKey, sessionLabel) {
-      const sess = state.myWeekDraft[String(d)][sessionKey];
-      const colorClass = typeColorSuffix(sess.type) ? ` sess-${typeColorSuffix(sess.type)}` : '';
-      return `<div class="day-card-session${colorClass}">
-        <div class="day-card-session-label">${sessionLabel}</div>
-        <select class="my-week-type" data-day="${d}" data-session="${sessionKey}" data-field="type">
-          ${['', ...M.TASK_TYPES].map((t) => `<option value="${esc(t)}" ${sess.type === t ? 'selected' : ''}>${t ? esc(t) : '— (trống/nghỉ)'}</option>`).join('')}
-        </select>
-        <input type="text" class="my-week-loc" data-day="${d}" data-session="${sessionKey}" data-field="location" value="${esc(sess.location)}" placeholder="Địa điểm / tên trường...">
-        <div class="periods-caption">Lớp đang dạy từng tiết (để trống nếu không dạy):</div>
-        <div class="day-card-periods">
-          ${[0, 1, 2, 3, 4].map((pi) => `
-            <label class="period-cell${sess.periods[pi] ? ' has-value' : ''}">
-              <span class="period-num">T${pi + 1}</span>
-              <input type="text" class="my-week-period" data-day="${d}" data-session="${sessionKey}" data-field="period" data-period-idx="${pi}" value="${esc(sess.periods[pi] || '')}" placeholder="Lớp" title="Lớp đang dạy tiết ${pi + 1} (để trống nếu không dạy)">
-            </label>`).join('')}
-        </div>
-      </div>`;
-    }
-
-    container.innerHTML = M.WEEKDAYS.map((d) => `
-      <div class="day-card">
-        <div class="day-card-title">${M.WEEKDAY_LABELS[d]}</div>
-        ${sessionBlock(d, 'morning', 'Sáng')}
-        ${sessionBlock(d, 'afternoon', 'Chiều')}
-      </div>`).join('');
-
-    // Ghi trực tiếp vào draft khi gõ/chọn (không re-render toàn bộ lưới thẻ
-    // mỗi keystroke — tránh mất focus/con trỏ trong input). Riêng đổi
-    // "Loại hình" thì cập nhật luôn màu của cả khối buổi đó ngay lập tức
-    // (đổi class thay vì render lại toàn bộ, để không mất focus/dữ liệu
-    // đang gõ dở ở các ô khác).
-    container.querySelectorAll('select, input').forEach((el) => {
-      el.addEventListener('input', () => {
-        const d = el.dataset.day, s = el.dataset.session, f = el.dataset.field;
-        const sess = state.myWeekDraft[d][s];
-        if (f === 'type') {
-          sess.type = el.value;
-          const sessionEl = el.closest('.day-card-session');
-          if (sessionEl) {
-            const suffix = typeColorSuffix(sess.type);
-            sessionEl.className = 'day-card-session' + (suffix ? ` sess-${suffix}` : '');
-          }
-        } else if (f === 'location') sess.location = el.value;
-        else if (f === 'period') {
-          sess.periods[Number(el.dataset.periodIdx)] = el.value;
-          el.closest('.period-cell')?.classList.toggle('has-value', !!el.value.trim());
-        }
-        renderMyWeekStatsBar();
-      });
-    });
-    renderMyWeekStatsBar();
-  }
-
-  function renderMyWeekStatsBar() {
-    const stats = M.computeWeekStats(state.myWeekDraft);
-    document.getElementById('myWeekStatsBar').innerHTML = `
-      <div class="import-stat ok"><b>${stats.schoolsMain}</b><span>Trường dạy chính</span></div>
-      <div class="import-stat ok"><b>${stats.periodsMain}</b><span>Tiết dạy chính</span></div>
-      <div class="import-stat"><b>${stats.schoolsSub}</b><span>Trường dạy trám</span></div>
-      <div class="import-stat"><b>${stats.periodsSub}</b><span>Tiết dạy trám</span></div>
-      <div class="import-stat"><b>${stats.periodsReview}</b><span>Tiết ôn thi (TT/Online)</span></div>
-      <div class="import-stat"><b>${stats.sessionsPrep}</b><span>Buổi soạn bài</span></div>
-      <div class="import-stat"><b>${stats.sessionsOffice}</b><span>Buổi làm tại cty</span></div>
-      <div class="import-stat"><b>${stats.sessionsMentor}</b><span>Lần trợ giảng/dự giảng</span></div>`;
-  }
-
-  document.getElementById('myWeekSaveBtn').addEventListener('click', async () => {
-    if (!state.myTeacherCode || !state.currentWeekKey) return;
-    const t = state.teachers.find((x) => x.id === state.myTeacherCode);
-    const week = state.weeks.find((w) => w.id === state.currentWeekKey);
-    const docId = M.scheduleDocId(state.myTeacherCode, state.currentWeekKey);
-    const btn = document.getElementById('myWeekSaveBtn');
-    const originalLabel = btn.textContent;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Đang lưu...';
-    try {
-      await window.EduRepositories.teachingSchedule.upsert(docId, {
-        teacherCode: state.myTeacherCode,
-        teacherName: t ? t.name : '',
-        weekKey: state.currentWeekKey,
-        weekLabel: week ? week.label || week.id : '',
-        days: state.myWeekDraft,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      });
-      toast('Đã lưu lịch tuần của bạn');
-      await refreshOneSchedule(state.myTeacherCode, docId);
-    } catch (err) {
-      toast(friendlyError(err));
-    } finally {
-      btn.disabled = false;
-      btn.textContent = originalLabel;
-    }
-  });
-
-  document.getElementById('myWeekPdfBtn')?.addEventListener('click', async () => {
-    if (!state.myTeacherCode || !state.currentWeekKey || !state.myWeekDraft) return;
-    const t = state.teachers.find((x) => x.id === state.myTeacherCode);
-    const week = state.weeks.find((w) => w.id === state.currentWeekKey);
-    if (!window.EduTeachingSchedulePdf) { toast('Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
-    try {
-      // Xuất đúng những gì đang hiển thị trên màn hình (kể cả thay đổi CHƯA
-      // lưu) — giáo viên có thể muốn xem trước bản in trước khi bấm Lưu.
-      // TỰ ĐỘNG thêm trang phụ "minh chứng tuần cuối tháng" nếu có, khớp
-      // đúng khoảng ngày "Phiếu công tác" đã gộp (xem computeExtraWeekEvidence()).
-      const extra = computeExtraWeekEvidence();
-      const extraWeek = extra ? { days: await fetchExtraWeekDaysFor(state.myTeacherCode, extra), weekLabel: extra.label } : null;
-      window.EduTeachingSchedulePdf.exportOne(t || { code: state.myTeacherCode, name: '' }, state.myWeekDraft, week ? (week.label || week.id) : state.currentWeekKey, M, extraWeek);
-    } catch (err) {
-      console.error('[Lịch giảng dạy] Lỗi khi xuất PDF:', err);
-      toast('Xuất PDF thất bại: ' + (err && err.message ? err.message : String(err)));
-    }
-  });
+  /** Bản nháp lịch tuần y hệt bản đã lưu (hoặc lịch trống khi chưa có) → bấm Lưu không ghi gì
+   *  (trước: mỗi lần bấm 1 lượt ghi + 1 lượt đọc lại refreshOneSchedule). */
+  const sameAsSaved = (code, draft) => {
+    const existing = state.schedulesByTeacher[code];
+    return JSON.stringify(draft) === JSON.stringify((existing && existing.days) || M.emptyDays());
+  };
 
   // ------------------------------------------------------------
   // "📋 Phiếu công tác" — mẫu On_Tap_MOS/Phieu cong tac.doc, tự điền theo
   // đúng Lịch tuần. "Mục đích" từng cho chọn Giảng dạy/Ôn Thi qua modal,
   // nhưng người dùng phản hồi bỏ hẳn lựa chọn đó, cố định luôn "Giảng dạy
   // IC3" (xem hằng số PURPOSE trong js/export/teaching-schedule-cong-tac-pdf.js).
-  // 3 lối vào: giáo viên tự xuất phiếu của chính mình ("Lịch của tôi"),
-  // admin xuất phiếu thay cho 1 giáo viên cụ thể (nút 📋 trên từng thẻ/hàng
-  // ở "📊 Tổng quan"/"🎴 Thẻ"), và admin xuất HÀNG LOẠT mọi giáo viên đang
+  // 2 lối vào: nút 📋 trên từng thẻ/hàng ở "📊 Tổng quan"/"🎴 Thẻ" (giáo viên
+  // chỉ có ở hàng của mình), và admin xuất HÀNG LOẠT mọi giáo viên đang
   // hiển thị vào 1 file duy nhất ("📋 Xuất PDF tất cả Phiếu công tác").
   //
   // GỘP "TUẦN HIỆN TẠI" + "PHẦN CÒN LẠI CỦA THÁNG" (không phải cả tháng từ
@@ -1353,22 +1207,6 @@
     if (run) await run(ranges);
   });
 
-  document.getElementById('myWeekCongTacBtn')?.addEventListener('click', () => {
-    if (!state.myTeacherCode || !state.currentWeekKey || !state.myWeekDraft) { toast('Chưa có lịch tuần để xuất.'); return; }
-    if (!window.EduCongTacPdf) { toast('Chưa tải được thư viện xuất PDF, kiểm tra mạng rồi thử lại.'); return; }
-    openCongTacRangeModal(async (ranges) => {
-      const t = state.teachers.find((x) => x.id === state.myTeacherCode);
-      try {
-        const weekKeys = weekKeysOverlappingRanges(ranges);
-        const byWeek = await fetchScheduleRowsByWeek(weekKeys);
-        const weekEntries = weekEntriesFromByWeek(byWeek, weekKeys, state.myTeacherCode, ranges, state.myWeekDraft);
-        window.EduCongTacPdf.exportOne(t || { code: state.myTeacherCode, name: '' }, weekEntries, M);
-      } catch (err) {
-        console.error('[Lịch giảng dạy] Lỗi khi xuất Phiếu công tác:', err);
-        toast('Xuất PDF thất bại: ' + (err && err.message ? err.message : String(err)));
-      }
-    });
-  });
   /** Admin/điều phối bấm nút 📋 trên 1 thẻ/hàng giáo viên cụ thể (khác
    * "Lịch của tôi" — không có bản nháp đang sửa dở, luôn dùng đúng dữ liệu
    * ĐÃ LƯU trong state.schedulesByTeacher/repository của khoảng ngày đã chọn). */
@@ -1572,6 +1410,7 @@
 
   document.getElementById('schedModalSaveBtn').addEventListener('click', async () => {
     if (!schedModalTeacherCode || !state.currentWeekKey) return;
+    if (sameAsSaved(schedModalTeacherCode, schedModalDraftDays)) { toast('Không có thay đổi nào để lưu'); closeSchedModal(); return; }
     const t = state.teachers.find((x) => x.id === schedModalTeacherCode);
     const week = state.weeks.find((w) => w.id === state.currentWeekKey);
     const docId = M.scheduleDocId(schedModalTeacherCode, state.currentWeekKey);

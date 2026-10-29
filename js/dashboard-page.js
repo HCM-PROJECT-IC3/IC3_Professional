@@ -58,6 +58,11 @@ window.addEventListener('edu:ready', ({ detail }) => {
   show('imageManagerLink', role === 'admin');
   show('teacherDashboardLink', role === 'admin' || role === 'teacher');
   show('docsSchoolYearLink', role === 'admin' || role === 'teacher');
+  // Công cụ lớp học (trước chỉ có ở sảnh học sinh): diem-danh.html chỉ cho admin/teacher
+  // (EDU_ALLOWED_ROLES của trang đó); Gọi tên/Gom kết quả không cần đăng nhập.
+  show('attendanceLink', role === 'admin' || role === 'teacher');
+  show('namePickerLink', role === 'admin' || role === 'teacher');
+  show('gatherResultsNavLink', role === 'admin' || role === 'teacher');
   show('rosterManagerLink', role === 'admin' || role === 'coordinator');
   // "🚗 Điều phối giáo viên" (teaching_coordinator) được XEM (không sửa)
   // Lịch tuần + TKB lớp + tab "📊 Báo cáo"/"🚗 Hỗ trợ xăng xe" ở
@@ -76,7 +81,9 @@ window.addEventListener('edu:ready', ({ detail }) => {
   show('navMySets', role === 'admin' || role === 'teacher');
   show('navBuilder', role === 'admin' || role === 'teacher');
   show('navReports', role === 'admin' || role === 'coordinator');
-  show('navSettings', role === 'admin');
+  // Giáo viên cần mục này để sao lưu/khôi phục bộ đề tự soạn (chỉ nằm trong trình duyệt);
+  // nút "Kiểm tra Apps Script ngay" vẫn chỉ hiện cho admin (js/dashboard-settings.js).
+  show('navSettings', role === 'admin' || role === 'teacher');
 
   // Giáo viên: mặc định vào thẳng "Bộ đề của tôi" (đã active sẵn trong HTML) —
   // không cần làm gì thêm vì đây cũng là mục duy nhất giáo viên còn thấy
@@ -95,7 +102,11 @@ window.addEventListener('edu:ready', ({ detail }) => {
   // thấy 1 khung trang trống/lỗi vì không có quyền + không có dữ liệu phù
   // hợp — điều hướng thẳng sang trang đích duy nhất họ cần luôn cho gọn.
   if (role === 'teaching_coordinator') {
-    window.location.href = 'teaching-schedule.html';
+    // Tự chuyển ngay lúc mở trang: bỏ hiệu ứng chuyển trang (không có gì để "trượt"; để nguyên
+    // thì trình duyệt huỷ giữa chừng và báo lỗi Promise trong console trang đích). replace: nút
+    // Back không quay lại trang trống này.
+    window.addEventListener('pageswap', (e) => { e.viewTransition?.skipTransition(); }, { once: true });
+    window.location.replace('teaching-schedule.html');
     return;
   }
 

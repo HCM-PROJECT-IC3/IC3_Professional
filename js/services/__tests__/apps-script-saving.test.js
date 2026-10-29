@@ -40,6 +40,10 @@ Date.now = function () { return now; };
   var sheetCalls = 0, mosCalls = 0, sheetUp = false;
   globalThis.saveToGoogleSheet = function () { sheetCalls++; return Promise.resolve({ success: sheetUp }); };
   globalThis.saveMosSubmission = function () { mosCalls++; return Promise.resolve({ success: true }); };
+  // Độ hoãn có rải ngẫu nhiên ±50% (30 giây sau 1 lần lỗi → 15..45 giây): cố định ở giữa để
+  // "vòng 20 giây kế tiếp" không thỉnh thoảng rơi vào 15..20 giây (test từng FAIL ~1/6 lần).
+  var realRandom = Math.random;
+  Math.random = function () { return 0.5; };
   for (var i = 0; i < 20; i++) Q.enqueue('google_sheet', { submissionId: 'sub' + i });
   Q.enqueue('mos_submission', { id: 'm1' });
   now += 60 * 1000;
@@ -55,6 +59,7 @@ Date.now = function () { return now; };
   now += 60 * 60 * 1000;
   await Q.flush();
   assertEq('Apps Script hoạt động lại → gửi hết, hàng đợi trống', [sheetCalls, Q._readQueue().length], [21, 0]);
+  Math.random = realRandom;
 
   // ===== 2) Nhật ký hoạt động =====
   var logged = [];
