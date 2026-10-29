@@ -61,7 +61,7 @@
       <span class="nav-icon"><i class="fa-solid fa-crown"></i></span>
       <span>Tài khoản</span>
     </a>
-    <a class="nav-item link-plain" href="teacher-dashboard.html" id="teacherDashboardLink" style="display:none;" title="Dashboard của tôi">
+    <a class="nav-item link-plain" href="teacher-dashboard.html" id="teacherDashboardLink" style="display:none;" title="Tổng quan của tôi">
       <span class="nav-icon"><i class="fa-solid fa-school"></i></span>
       <span>Tổng quan của tôi</span>
     </a>
@@ -77,7 +77,7 @@
       <span class="nav-icon"><i class="fa-solid fa-calendar-days"></i></span>
       <span>Lịch giảng dạy</span>
     </a>
-    <a class="nav-item link-plain" href="coordinator-dashboard.html" id="coordinatorDashboardLink" style="display:none;" title="Dashboard điều phối">
+    <a class="nav-item link-plain" href="coordinator-dashboard.html" id="coordinatorDashboardLink" style="display:none;" title="Tổng quan điều phối">
       <span class="nav-icon"><i class="fa-solid fa-compass"></i></span>
       <span>Tổng quan điều phối</span>
     </a>
@@ -145,7 +145,8 @@
           <button type="button" class="btn-create" onclick="openExamBuilder({ fresh: true })"><i class="fa-solid fa-plus fa-beat"></i> Soạn đề mới</button>
           <button type="button" class="btn-create btn-create-ghost" onclick="EduExamBuilder.quickCreate()" title="Lưu 1 bộ Ôn tập / Kiểm tra theo tiết (câu All Key) thành bộ đề có link gửi học sinh"><i class="fa-solid fa-wand-magic-sparkles"></i> Đề có sẵn</button>
           <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Tìm kiếm bộ đề..." oninput="filterCards()">
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            <input type="text" id="searchInput" placeholder="Tìm kiếm bộ đề..." oninput="filterCards()" aria-label="Tìm kiếm bộ đề">
           </div>
         </div>
         <div class="toolbar-row toolbar-row-filters">

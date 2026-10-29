@@ -3738,16 +3738,26 @@ function confirmSubmit() {
     .map((_, i) => i)
     .filter(i => !isAnswered(i));
 
+  // Liệt kê số câu (tối đa 8) để em biết còn câu nào, khỏi dò từng ô trên bảng câu hỏi.
+  const listNums = (idx) => idx.slice(0, 8).map(i => i + 1).join(', ') + (idx.length > 8 ? '…' : '');
   if (unansweredIdx.length > 0) {
     showNotification(
-      `Bạn còn ${unansweredIdx.length} câu chưa làm đủ. Vui lòng hoàn thành tất cả câu hỏi trước khi nộp bài.`,
+      `Em còn ${unansweredIdx.length} câu chưa làm (câu ${listNums(unansweredIdx)}). Đã chuyển tới câu ${unansweredIdx[0] + 1}.`,
       'warning'
     );
     jumpTo(unansweredIdx[0]);
     return;
   }
 
-  if (confirm('Bạn có chắc muốn nộp bài không?')) submitExam();
+  // Câu đã gắn cờ "xem lại" mà chưa bỏ cờ — nhắc trước khi nộp (hay bị quên).
+  const flagged = [...State.flags].filter(i => i < State.questions.length).sort((a, b) => a - b);
+  const ask = flagged.length
+    ? `Em còn ${flagged.length} câu đánh dấu để xem lại (câu ${listNums(flagged)}).
+
+Vẫn nộp bài? Bấm "Huỷ" để quay lại xem.`
+    : 'Em chắc chắn muốn nộp bài?';
+  if (confirm(ask)) submitExam();
+  else if (flagged.length) jumpTo(flagged[0]);
 }
 
 function autoSubmit() {
@@ -4250,8 +4260,9 @@ function showResult(result, integrity) {
       borderColor: 'rgba(6,214,160,.3)',
     });
   } else {
-    badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Cảnh báo: ${integrity.flags.map(f =>
-      `<span style="display:block">${f}</span>`).join('')}`;
+    // 1 khối chữ duy nhất (khung là flex hàng ngang — trước: mỗi dòng cảnh báo thành 1 cột hẹp).
+    badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <span><b>Cảnh báo:</b>${integrity.flags.map(f =>
+      `<span style="display:block">${f}</span>`).join('')}</span>`;
     Object.assign(badge.style, {
       color: 'var(--accent4)',
       background: 'rgba(255,209,102,.07)',
@@ -4488,7 +4499,9 @@ function _maybeShowKeyHint() {
     localStorage.setItem(KEY_HINT_SHOWN, '1');
   } catch (e) { return; }
   if (window.matchMedia && !window.matchMedia('(pointer: fine)').matches) return; // máy cảm ứng — không có bàn phím
-  setTimeout(() => showNotification('Mẹo: dùng phím ← → để chuyển câu, 1–9 hoặc A–E để chọn đáp án, F để gắn cờ.', 'info'), 1200);
+  // Chỉ máy có bàn phím + chuột (điện thoại/máy tính bảng không có phím để dùng mẹo này).
+  const hasKeyboard = !window.matchMedia || window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  if (hasKeyboard) setTimeout(() => showNotification('Mẹo: dùng phím ← → để chuyển câu, 1–9 hoặc A–E để chọn đáp án, F để gắn cờ.', 'info'), 1200);
 }
 
 /**
@@ -4826,7 +4839,8 @@ function showNotification(message, type = 'info') {
     container = document.createElement('div');
     container.id = 'gs-toast-container';
     container.style.cssText =
-      'position:fixed;top:20px;right:20px;z-index:9999;' +
+      // top 76px: dưới thanh đầu trang làm bài (trước 20px: che nút "Nộp bài" / "Chữ to").
+      'position:fixed;top:76px;right:20px;z-index:9999;' +
       'display:flex;flex-direction:column;gap:10px;pointer-events:none;';
     document.body.appendChild(container);
   }

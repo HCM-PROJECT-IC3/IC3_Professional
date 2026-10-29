@@ -31,6 +31,11 @@
   }
   const isApiMissing = (err) => !!(err && err.code === 'not-found' && fromSheet());
 
+  // Lịch sử theo lớp cho ngăn chi tiết học sinh (xem _classResults): giữ 5 phút trong trang.
+  const CLASS_TTL_MS = 5 * 60 * 1000;
+  const CLASS_SHEET_LIMIT = 5000;
+  const classMemo = new Map(); // khoá lớp → { at, promise }
+
   class StudentResultRepository extends global.EduBaseRepository {
     constructor() { super(COLLECTION_NAME); }
 
@@ -162,19 +167,36 @@
 
     async _listByStudent({ studentName, studentClass, schools }) {
       const wantKey = global.EduModels.ExamHistory.keyOf({ studentName, studentClass });
-      if (fromSheet()) {
-        const rows = await global.EduSheetResults.list({ schools, classes: [studentClass], studentName, limit: 2000 });
-        return rows.filter((r) => global.EduModels.ExamHistory.keyOf(r) === wantKey);
-      }
-      const where = [['studentClass', '==', studentClass]];
-      if (schools && schools.length) where.push(['studentSchool', 'in', schools.slice(0, 10)]);
-      const rows = await this.list({
-        where,
-        orderBy: 'submittedAt',
-        direction: 'desc',
-      });
-      const normalized = rows.map(normalize);
-      return normalized.filter((r) => global.EduModels.ExamHistory.keyOf(r) === wantKey);
+      const mine = (rows) => rows.filter((r) => global.EduModels.ExamHistory.keyOf(r) === wantKey);
+      const cls = await this._classResults({ studentClass, schools });
+      if (cls) return mine(cls);
+      // Lớp quá nhiều bài (chạm trần) → hỏi riêng đúng em này cho đủ lịch sử.
+      return mine(await global.EduSheetResults.list({ schools, classes: [studentClass], studentName, limit: 2000 }));
+    }
+
+    /**
+     * Mọi bài của 1 lớp — DÙNG CHUNG cho mọi học sinh lớp đó trong CLASS_TTL_MS. Trước đây mỗi lần
+     * mở chi tiết 1 em: Firestore đọc lại MỌI bài của lớp (rồi lọc lấy 1 em) / Sheet thêm 1 lượt
+     * Apps Script quét cả file → xem lần lượt 35 em = 35 lần như vậy. Nay: 1 lần/lớp.
+     * Trả null khi (Sheet) lớp chạm trần CLASS_SHEET_LIMIT — nơi gọi hỏi riêng từng em.
+     */
+    _classResults({ studentClass, schools }) {
+      const key = (fromSheet() ? 'sheet|' : 'fs|') + studentClass + '|' + (schools || []).slice().sort().join(',');
+      const hit = classMemo.get(key);
+      if (hit && Date.now() - hit.at < CLASS_TTL_MS) return hit.promise;
+      const promise = (async () => {
+        if (fromSheet()) {
+          const rows = await global.EduSheetResults.list({ schools, classes: [studentClass], limit: CLASS_SHEET_LIMIT });
+          return rows.length >= CLASS_SHEET_LIMIT ? null : rows;
+        }
+        const where = [['studentClass', '==', studentClass]];
+        if (schools && schools.length) where.push(['studentSchool', 'in', schools.slice(0, 10)]);
+        const rows = await this.list({ where, orderBy: 'submittedAt', direction: 'desc' });
+        return rows.map(normalize);
+      })();
+      classMemo.set(key, { at: Date.now(), promise });
+      promise.catch(() => { if (classMemo.get(key) && classMemo.get(key).promise === promise) classMemo.delete(key); });
+      return promise;
     }
   }
 

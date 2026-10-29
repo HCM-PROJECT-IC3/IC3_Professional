@@ -4,9 +4,12 @@
    "Tên của tôi" (me) và "Lớp của tôi" (mine) → ĐÚNG 1 document teacher_sync/{uid}. Gọi tên KHÔNG lưu (chỉ máy này);
    bản CSV Sheet, điểm danh nháp, thẻ/bộ lọc là của từng máy (máy khác tự đọc lại Sheet).
    Tiết kiệm hạn mức Spark (không dùng Apps Script):
-     • Đọc: 1 lần khi mở trang Điểm danh; mở lại (tab nào cũng vậy) trong 30 phút thì không đọc (PULL_MS).
-     • Ghi: chỉ khi 4 phần trên thật sự đổi (so mã băm) — tức là khi thêm/bỏ sổ, "Cập nhật lớp", đổi tên, gắn sao lớp;
-       gộp ≤ 1 lần / phút, đóng trang gửi nốt. localStorage vẫn là bản chính; phần chưa gửi tự gửi ở lần mở sau.
+     • Đọc: 1 lần khi mở trang Điểm danh; mở lại (tab nào cũng vậy) trong 2 giờ thì không đọc (PULL_MS). Máy mới
+       (chưa từng đồng bộ) luôn đọc ngay; vừa sửa ở máy khác muốn thấy liền → nút "Đồng bộ ngay" (syncNow).
+     • Ghi: chỉ khi 4 phần trên thật sự KHÁC bản đã lưu trên tài khoản (so mã băm — bật rồi tắt sao, sửa rồi trả lại
+       như cũ thì không ghi) — tức là khi thêm/bỏ sổ, "Cập nhật lớp", đổi tên, gắn sao lớp;
+       gộp ≤ 1 lần / 3 phút, ẩn/đóng trang gửi nốt. localStorage vẫn là bản chính; phần chưa gửi tự gửi ở lần mở sau.
+     • Bị từ chối hẳn (rule chưa publish...): không tự thử lại trong BLOCK_MS (trước: thử mỗi phút) — bấm nút để thử ngay.
      • Nhiều tab cùng mở: dùng chung trạng thái trong localStorage + Web Lock → 1 thay đổi chỉ ghi 1 lần.
      • Rule chỉ so uid (không get() hồ sơ users) → không tốn thêm lượt đọc.
    Trộn: lấy bản mới hơn. Máy chưa từng đồng bộ → gộp hai bên (link hợp theo mã file, không ghi đè mất).
@@ -21,8 +24,10 @@
   const COL = 'teacher_sync';
   const META = 'edu_sync_meta_v1';
   const BACKUP = 'edu_sync_backup_v1';
-  const PULL_MS = 30 * 60e3;
-  const PUSH_GAP = 60e3;
+  const PULL_MS = 2 * 3600e3;
+  const PUSH_GAP = 3 * 60e3;
+  const BLOCK_MS = 30 * 60e3;
+  const PERMANENT = ['permission-denied', 'invalid-argument', 'unauthenticated'];
   const HIDE_GAP = 15e3;
   const CHECK_MS = 30e3;
   const LOCK = 'edu-teacher-sync';
@@ -38,11 +43,23 @@
   const pickOf = (k, v) => { const o = {}; if (isObj(v)) KEYS[k].pick.forEach((f) => { if (f in v) o[f] = v[f]; }); return o; };
   function hash(s) { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
 
+  /** Không có gì đáng lưu (chưa thêm sổ, thư mục, tên, lớp của tôi). */
+  function isEmptyPick(o) {
+    return !Object.keys(o).some((f) => {
+      const v = o[f];
+      return Array.isArray(v) ? v.length : isObj(v) ? Object.keys(v).length : v != null && v !== '';
+    });
+  }
   /** Bản gửi đi của 1 khoá (chuỗi JSON) — null nếu máy chưa có. */
   function snapshot(k) {
     const v = readJSON(k, null);
     if (!isObj(v)) return null;
-    const s = JSON.stringify(pickOf(k, v));
+    const o = pickOf(k, v);
+    // Máy chưa từng đồng bộ khoá này mà còn trống → không coi là "thay đổi": gửi bản trống lên sẽ ĐÈ MẤT
+    // link trên tài khoản (vd máy mới, lần đọc đầu lỗi mạng). Máy đã đồng bộ thì vẫn gửi (cố ý xoá hết sổ).
+    const m = ctx && ctx.meta.keys[k];
+    if (isEmptyPick(o) && !(m && m.synced)) return null;
+    const s = JSON.stringify(o);
     return s.length < MAX_CHARS ? s : null; // quá lớn: không gửi (rule cũng chặn), vẫn dùng được trong máy
   }
   /** Gộp lần đầu (máy chưa từng đồng bộ): object gộp từng trường, mảng hợp lại (bỏ trùng), còn lại lấy bản trên tài khoản. */
@@ -61,7 +78,8 @@
   }
 
   let ctx = null; // { db, uid, opts, meta, timer, err, busy, inflight }
-  // meta (dùng chung mọi tab qua localStorage): keys{k:{h,at,dirty,synced}} · pulledAt · pushedAt · tryAt (lần thử ghi gần nhất)
+  // meta (dùng chung mọi tab qua localStorage): keys{k:{h,sh,at,dirty,synced}} (sh: mã băm bản đang trên tài khoản)
+  //   · pulledAt · pushedAt · tryAt (lần thử ghi gần nhất) · blockUntil (bị từ chối hẳn → không tự thử tới lúc này)
   const blankMeta = (uid) => ({ uid, keys: {}, pulledAt: 0, pushedAt: 0, tryAt: 0 });
   const saveMeta = () => writeJSON(META, ctx.meta);
   /** Nhận trạng thái tab khác vừa ghi (đã gửi khoá nào, lúc nào) — tránh 2 tab gửi trùng 1 thay đổi. */
@@ -76,7 +94,9 @@
       const s = snapshot(k);
       if (s == null) return;
       const m = ctx.meta.keys[k], h = hash(s);
-      if (!m || m.h !== h) ctx.meta.keys[k] = { h, at: Date.now(), dirty: true };
+      if (m && m.sh === undefined && m.synced && !m.dirty) m.sh = m.h; // meta bản trước: bản sạch = bản trên tài khoản
+      if (m && m.sh === h) { if (m.dirty || m.h !== h) Object.assign(m, { h, dirty: false }); } // trả lại đúng bản đã lưu
+      else if (!m || m.h !== h) ctx.meta.keys[k] = { h, sh: m && m.sh, at: Date.now(), dirty: true };
       if (ctx.meta.keys[k].dirty) n++;
     });
     saveMeta();
@@ -86,10 +106,18 @@
   async function pull(force) {
     scan();
     if (!force && Date.now() - ctx.meta.pulledAt < PULL_MS) return [];
-    const snap = await ctx.db.collection(COL).doc(ctx.uid).get();
+    let snap;
+    try {
+      snap = await ctx.db.collection(COL).doc(ctx.uid).get();
+    } catch (e) {
+      // Bị từ chối hẳn: khỏi đọc lại mỗi lần mở trang (lượt bị từ chối vẫn tính phí) — nút "Đồng bộ ngay" thử lại.
+      if (e && PERMANENT.indexOf(e.code) >= 0) { syncMeta(); ctx.meta.pulledAt = Date.now(); saveMeta(); }
+      throw e;
+    }
     syncMeta();
     const meta = ctx.meta;
     meta.pulledAt = Date.now();
+    meta.pulledOk = true; // đã thấy bản trên tài khoản ít nhất 1 lần → từ giờ mới được gửi lên
     const items = (snap.exists && snap.data().items) || {};
     const applied = [];
     const backup = readJSON(BACKUP, {});
@@ -97,7 +125,7 @@
       const r = items[k];
       if (!KEYS[k] || !r || typeof r.v !== 'string') return;
       const m = meta.keys[k];
-      if (m && !m.dirty && m.h === hash(r.v)) return;      // giống nhau
+      if (m && m.h === hash(r.v)) { m.sh = m.h; m.dirty = false; m.synced = true; return; } // giống nhau
       if (m && m.at >= (r.at || 0) && m.synced) return;      // bản máy này mới hơn → sẽ gửi lên
       let remote;
       try { remote = JSON.parse(r.v); } catch (e) { return; }
@@ -107,7 +135,7 @@
       if (local != null) backup[k] = { at: Date.now(), raw: JSON.stringify(pickOf(k, local)) };
       if (!writeJSON(k, Object.assign(isObj(local) ? local : {}, next))) return; // giữ phần của máy (CSV, nháp, bộ lọc)
       const s = snapshot(k), merged = s != null && hash(s) !== hash(r.v);
-      meta.keys[k] = { h: s != null ? hash(s) : '', at: merged ? Date.now() : (r.at || 0), dirty: merged, synced: true };
+      meta.keys[k] = { h: s != null ? hash(s) : '', sh: hash(r.v), at: merged ? Date.now() : (r.at || 0), dirty: merged, synced: true };
       applied.push(k);
     });
     if (applied.length) writeJSON(BACKUP, backup);
@@ -126,7 +154,11 @@
   async function send(gap) {
     if (!ctx || ctx.busy) return false;
     if (!scan()) return false;
+    // Chưa đọc được tài khoản lần nào (mất mạng, rule chặn...) → chưa biết trên đó có gì: không gửi, tránh đè.
+    // Máy cũ (meta trước bản này) đã từng gửi/nhận thành công thì coi như đã đọc.
+    if (!ctx.meta.pulledOk && !Object.values(ctx.meta.keys).some((m) => m.synced)) return false;
     if (Date.now() - (ctx.meta.tryAt || 0) < gap) return false;
+    if (gap > 0 && Date.now() < (ctx.meta.blockUntil || 0)) return false; // tự động: chờ hết BLOCK_MS; bấm nút (gap 0) thì thử
     const items = {}, sent = {};
     Object.keys(KEYS).forEach((k) => {
       const m = ctx.meta.keys[k];
@@ -141,12 +173,13 @@
     try {
       await (ctx.inflight = ctx.db.collection(COL).doc(ctx.uid).set({ v: 1, at: global.firebase.firestore.FieldValue.serverTimestamp(), items }, { merge: true }));
       syncMeta();
-      Object.keys(sent).forEach((k) => { const m = ctx.meta.keys[k]; if (m && m.h === sent[k]) { m.dirty = false; m.synced = true; } });
-      ctx.meta.pushedAt = Date.now(); ctx.err = '';
+      Object.keys(sent).forEach((k) => { const m = ctx.meta.keys[k]; if (m) m.sh = sent[k]; if (m && m.h === sent[k]) { m.dirty = false; m.synced = true; } });
+      ctx.meta.pushedAt = Date.now(); ctx.meta.blockUntil = 0; ctx.err = '';
       saveMeta();
       return true;
     } catch (e) {
       ctx.err = (e && e.code) || 'error';
+      if (PERMANENT.indexOf(ctx.err) >= 0) { syncMeta(); ctx.meta.blockUntil = Date.now() + BLOCK_MS; saveMeta(); }
       return false;
     } finally { ctx.busy = false; ctx.inflight = null; emit(); }
   }
@@ -188,13 +221,29 @@
     const dirty = ctx.busy ? Object.values(ctx.meta.keys).filter((m) => m.dirty).length : scan(); // dò trong máy, không mạng
     return { on: true, pulledAt: ctx.meta.pulledAt, pushedAt: ctx.meta.pushedAt, dirty, err: ctx.err, busy: ctx.busy };
   }
-  /** Bấm "Lưu ngay": đợi lần lưu tự động đang chạy (nếu có) rồi lưu nốt.
+  /** Gửi ngay (bên trong "Đồng bộ ngay"): đợi lần lưu tự động đang chạy (nếu có) rồi lưu nốt.
       Trả true = vừa lưu · null = không có gì mới (đã lưu hết) · false = chưa lưu được / chưa kết nối. */
   async function saveNow() {
     if (!ctx) return false;
     if (ctx.inflight) { try { await ctx.inflight; } catch (e) { /* lỗi đã ghi ở ctx.err */ } }
     if (await push(0)) return true;
     return ctx.err || status().dirty ? false : null;
+  }
+
+  /** Nút "Đồng bộ ngay": gửi phần chưa lưu rồi đọc bản trên tài khoản ngay (không chờ PULL_MS) — dùng khi vừa sửa
+      ở máy khác. Trả { saved: true|null|false (như saveNow), applied: [khoá vừa tải về] }. */
+  async function syncNow() {
+    if (!ctx) return { saved: false, applied: [] };
+    let applied = [];
+    const read = async () => {
+      try { applied = applied.concat(await pull(true)); return true; } catch (e) { ctx.err = (e && e.code) || 'error'; emit(); return false; }
+    };
+    // Chưa đọc được tài khoản lần nào: đọc TRƯỚC (send() không gửi khi chưa biết trên đó có gì).
+    if (!ctx.meta.pulledOk && !(await read())) return { saved: false, applied };
+    const saved = await saveNow();
+    if (!applied.length && (await read()) && saved !== false) ctx.err = ''; // đọc được → hết lỗi (trừ khi vừa gửi lỗi)
+    emit();
+    return { saved, applied };
   }
 
   /** Tệp sao lưu (0 mạng): đúng phần được lưu lên tài khoản (link, thư mục, tên, lớp của tôi). */
@@ -220,5 +269,5 @@
     return n;
   }
 
-  global.EduTeacherSync = { autoStart, saveNow, status, exportText, importText, KEYS, _mergeFirst: mergeFirst, _hash: hash };
+  global.EduTeacherSync = { autoStart, saveNow, syncNow, status, PULL_MS, exportText, importText, KEYS, _mergeFirst: mergeFirst, _hash: hash };
 })(typeof window !== 'undefined' ? window : globalThis);

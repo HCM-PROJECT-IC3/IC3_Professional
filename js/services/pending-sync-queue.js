@@ -130,8 +130,17 @@
     try {
       const now = Date.now();
       const remaining = [];
+      // Cầu dao theo loại: 1 bài lỗi TẠM THỜI (Apps Script quá tải/hết hạn mức, mất mạng) thì
+      // các bài cùng loại còn lại gần như chắc cũng lỗi → hoãn theo cùng mốc, không gọi tiếp.
+      // Trước đây máy treo 20 bài = 20 lượt gọi thất bại mỗi vòng, nhân với cả phòng máy.
+      const downUntil = {};
       for (const item of items) {
         if (item.nextAttemptAt > now) { remaining.push(item); continue; }
+        if (downUntil[item.type]) {
+          item.nextAttemptAt = downUntil[item.type] + Math.round(Math.random() * BASE_DELAY_MS);
+          remaining.push(item);
+          continue;
+        }
 
         const fnName = SENDER_FN_NAMES[item.type];
         const fn = global[fnName];
@@ -166,6 +175,7 @@
           continue; // bỏ hẳn — tránh hàng đợi phình vô hạn nếu backend hỏng dài hạn
         }
         item.nextAttemptAt = now + _backoffDelay(Math.min(item.attempts, MAX_ATTEMPTS));
+        downUntil[item.type] = item.nextAttemptAt;
         remaining.push(item);
       }
       // Trong lúc chờ mạng ở trên, enqueue() (tab này hoặc tab khác) có thể đã thêm bài

@@ -9,7 +9,7 @@
        index.html: 1 lỗi JS chưa bắt không được để trang treo/trắng mà
        học sinh không biết phải làm gì). -->
   <script src="js/global-error-handler.js"></script>
-  <title>MOS Practice — Thực hành Excel</title>
+  <title>Thực hành MOS — Excel &amp; PowerPoint</title>
   <link rel="stylesheet" href="lib/fonts/fonts.css">
   <!-- Dùng lại theme.css + style.css (class .lobby-card/.form-group/.btn-start...) để phần chọn
        Trường/Lớp/Họ và tên giống hệt index.html — không phát minh lại UI đã có. -->
@@ -25,7 +25,7 @@
 
   <header class="mos-topbar">
     <a href="index.html" class="mos-back-link">← Về trang chủ</a>
-    <div class="mos-topbar-title"><i class="fa-solid fa-table-cells" aria-hidden="true"></i> MOS Practice <span class="mos-topbar-badge">Excel &amp; PowerPoint · Phiên bản thử nghiệm</span></div>
+    <div class="mos-topbar-title"><i class="fa-solid fa-table-cells" aria-hidden="true"></i> Thực hành MOS <span class="mos-topbar-badge">Excel &amp; PowerPoint · bản thử nghiệm</span></div>
     <div class="theme-toggle" id="themeToggle" title="Chuyển đổi sáng/tối"></div>
   </header>
 
@@ -37,7 +37,7 @@
          nạp bởi js/lobby-roster.js — không viết lại logic này).
          ============================================================ -->
     <section class="lobby-card mos-card" id="mosStep1">
-      <div class="lobby-card-title mos-card-title"><span>1️⃣</span> Xác định học sinh</div>
+      <div class="lobby-card-title mos-card-title"><span class="step-num" aria-hidden="true">1</span> Em là ai?</div>
       <div class="form-group">
         <label for="studentSchool"><i class="fa-solid fa-school" aria-hidden="true"></i> Trường</label>
         <select id="studentSchool" disabled>
@@ -65,7 +65,7 @@
          BƯỚC 2 — Chọn dự án thực hành (Phase 1: đúng 1 dự án pilot).
          ============================================================ -->
     <section class="lobby-card mos-card" id="mosStep2">
-      <div class="lobby-card-title mos-card-title"><span>2️⃣</span> Chọn dự án thực hành</div>
+      <div class="lobby-card-title mos-card-title"><span class="step-num" aria-hidden="true">2</span> Chọn bài thực hành</div>
       <div class="mos-project-list" id="mosProjectList"><!-- đổ bởi js/mos-practice.js --></div>
     </section>
 
@@ -73,7 +73,7 @@
          BƯỚC 3 — Đề bài + tải file + nộp bài (ẩn cho tới khi chọn dự án).
          ============================================================ -->
     <section class="lobby-card mos-card" id="mosStep3" hidden>
-      <div class="lobby-card-title mos-card-title"><span>3️⃣</span> <span id="mosProjectTitle"></span></div>
+      <div class="lobby-card-title mos-card-title"><span class="step-num" aria-hidden="true">3</span> <span id="mosProjectTitle"></span></div>
 
       <div class="mos-instructions">
         <p><strong>Cách làm:</strong></p>

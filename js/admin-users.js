@@ -445,7 +445,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
             const studentsSnap = await EduFirebase.db.collection('students_roster')
               .where('classId', '==', classId).where('status', '==', 'active').limit(2000).get();
             for (const d of studentsSnap.docs) {
-              batch.set(d.ref, { teacherId: teacherIdVal, teacherName: teacherNameVal }, { merge: true });
+              batch.set(d.ref, window.EduRosterCache.stampRoster({ teacherId: teacherIdVal, teacherName: teacherNameVal }), { merge: true });
               ops++; await flushIfNeeded();
             }
           };

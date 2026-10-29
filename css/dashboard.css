@@ -136,6 +136,8 @@ body {
 
 .sidebar-nav {
   flex: 1;
+  /* Màn thấp (laptop 720px) có 12 mục: danh sách tự cuộn, khung tài khoản ở đáy không bị đẩy ra ngoài. */
+  min-height: 0; overflow-y: auto; overscroll-behavior: contain;
   padding: 16px 12px;
   display: flex;
   flex-direction: column;
@@ -440,12 +442,12 @@ body {
   box-shadow: var(--shadow-card-inset);
 }
 .search-box input:focus { box-shadow: var(--shadow-card-inset), 0 0 0 2px color-mix(in srgb, var(--accent-purple) 45%, transparent); }
-.search-box::before {
-  content: '🔍';
+.search-box > i { /* fa-magnifying-glass trong HTML (trước: emoji 🔍 qua ::before) */
+  color: var(--text-secondary);
   position: absolute;
-  left: 12px; top: 50%;
+  left: 14px; top: 50%;
   transform: translateY(-50%);
-  font-size: 14px; pointer-events: none;
+  font-size: 13px; pointer-events: none; z-index: 1;
 }
 
 .filter-group { display: flex; gap: 10px; }

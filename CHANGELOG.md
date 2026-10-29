@@ -1,5 +1,69 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## Kiểm tra khi đưa các thay đổi ngày 29/10/2026 lên bản thật
+
+Đã thử bằng test tự động + Chrome headless (Firebase/Apps Script giả, giả lập cảm ứng). Những việc dưới đây chỉ làm được trên hệ thống thật — làm theo thứ tự, mất ~10 phút:
+
+1. **Không cần** deploy lại Apps Script, publish `firestore.rules` hay index: các file đó không đổi.
+2. **Danh sách học sinh (Admin)** — mở Quản lý danh sách học sinh, sửa 1 học sinh bất kỳ (vd thêm dấu cách rồi xoá) → Lưu. Mở F12 → Console ở Quản lý tài khoản sau 30 phút: dòng "lượt đọc Firestore — students_roster (thay đổi)" chỉ vài lượt (không phải ~2.800). Nếu danh sách hiện lệch/thiếu: mở `js/backend-config.js`, đặt `rosterDeltaSync: false` → mọi trang quay về đọc toàn bộ như cũ.
+3. **Lưu link sổ lớp** — trên máy đang có link: Điểm danh → Cài đặt → "Đồng bộ ngay" → báo "Đã lưu hết". Đăng nhập máy khác (hoặc cửa sổ ẩn danh) → mở Điểm danh → có lại đủ link.
+4. **Dashboard giáo viên** — bấm xem chi tiết 3 học sinh cùng lớp: lịch sử từng em đúng như trước; lần 2–3 hiện ngay (dùng chung bài của lớp).
+5. **Học sinh, điện thoại thật** — làm 1 bài Ôn luyện: không thấy mẹo phím tắt, chỉ 1 nút sáng/tối, nút tròn trợ năng không đè "Đánh dấu". Bấm bừa thật nhanh rồi nộp: thẻ thưởng ghi "không tính XP"; giáo viên vẫn thấy bài đó trên dashboard/Sheet.
+
+## Màn làm bài + thanh bên trang quản lý (29/10/2026)
+
+Chạy thử trọn 1 lượt làm bài bằng Chrome headless (chặn mọi request ra ngoài — không gửi gì lên Sheet/Firebase thật), khổ máy tính và điện thoại. Chỉ đổi giao diện + XP lưu trên máy học sinh; **không đổi dữ liệu bài nộp, Google Sheet, Firestore, Apps Script**.
+
+- **Nộp bài khi còn câu trống**: "Em còn 2 câu chưa làm (câu 4, 8). Đã chuyển tới câu 4." (trước: "Bạn còn N câu chưa làm đủ…", không nói câu nào).
+- **Câu đã đánh dấu xem lại**: trước khi nộp nhắc "Em còn 2 câu đánh dấu để xem lại (câu 6, 10). Vẫn nộp bài?" — bấm Huỷ là nhảy tới câu đó.
+- **Bấm bừa không được XP**: bài trung bình < 3 giây/câu (đúng ngưỡng cảnh báo "Tốc độ làm bài quá nhanh") không cộng XP, không tính chuỗi ngày/huy hiệu; thẻ thưởng nhắc "Em làm quá nhanh nên bài này không tính XP". Trước: bấm bừa 0,6 giây/câu vẫn +70 XP và huy hiệu. Kết quả bài vẫn lưu + gửi thầy cô như cũ. Test: `js/services/__tests__/gamification-rushed.test.js`.
+- **Không che nút**: thông báo nổi dời xuống dưới thanh đầu trang (trước che nút "Nộp bài"); nút trợ năng tròn mặc định nằm trên hàng "Câu tiếp / Đánh dấu" (trước đè lên "Đánh dấu"; học sinh đã tự kéo đi chỗ khác thì giữ nguyên).
+- **Điện thoại**: hết 2 nút sáng/tối cùng lúc; mẹo phím tắt chỉ hiện ở máy có bàn phím + chuột; nút "Đánh dấu" không bị cắt chữ.
+- Màn kết quả: khung "Cảnh báo" xếp dọc gọn (trước: mỗi dòng 1 cột hẹp).
+- **Trang quản lý — thanh bên thu gọn**: danh sách mục tự cuộn khi màn thấp, khung tài khoản ở đáy không còn bị cắt; 4 mục "Bộ đề / Soạn đề / Báo cáo / Cài đặt" bấm được bằng bàn phím (Tab + Enter); chú thích "Dashboard…" → "Tổng quan…"; bấm các mục là link không còn lỗi `section-undefined` trong console.
+
+## Đỡ "giống web AI" + sửa lỗi có thể mất link sổ lớp (29/10/2026)
+
+Chụp màn hình 14 trang (Chrome headless, dữ liệu mẫu) rồi sửa những gì nhìn thấy:
+
+- **Lỗi quan trọng — Điểm danh, lưu link lên tài khoản**: máy mới mà lần đọc đầu lỗi mạng thì trang coi danh sách trống là "thay đổi mới" và có thể **gửi bản trống đè mất link trên tài khoản** (các máy khác nhận theo). Nay: chưa đọc được tài khoản lần nào thì không gửi; máy chưa từng đồng bộ không gửi bản trống; "Đồng bộ ngay" ở máy mới đọc trước rồi mới gửi. Máy mới cũng hết báo nhầm "Có link mới chưa gửi".
+- **Chữ mẫu tiếng Anh / văn lập trình viên**: chân trang Kệ sách 3D ("Cover artwork adapted from…") → tiếng Việt; Social Media: "Certifications / Life / Life at Social Media — Không chỉ code" → "Chứng chỉ của đội ngũ / Hoạt động của đội ngũ", bỏ số "/ 01"; Quản lý danh sách học sinh: bỏ đoạn "dữ liệu roster thật, độc lập với luồng làm bài ẩn danh… sắp tới"; MOS Practice → "Thực hành MOS", "6 task" → "6 yêu cầu".
+- **Emoji làm icon**: 1️⃣2️⃣3️⃣ ở Thực hành MOS → vòng số giống trang làm bài; 🔍 ô tìm bộ đề → icon.
+- **Nhún/lơ lửng**: bỏ icon nhún ở thông báo "tạo bộ đề thành công", bỏ hiệu ứng lơ lửng-xoay ở tiêu đề thẻ, bỏ nhấc thẻ chứng chỉ khi rê chuột.
+- **Nút trang quản trị**: bo góc nhỏ 8px kiểu phần mềm thi (trước: bo tròn hẳn + bóng nổi), nút phụ chỉ có viền (trước: nền xanh bạc hà/xanh nhạt). Một khối cuối `css/admin-common.css` — xoá khối đó là về như cũ.
+- **Social Media**: bỏ bóng nổi/lõm neumorphism (đổi thành viền 1px); sửa lỗi nhãn tên chứng chỉ phủ kín cả thẻ làm **ảnh chứng chỉ mờ hẳn** và thành viền đôi.
+- **Lỗi hiển thị**: nút sáng/tối ở Tài liệu năm học chỉ hiện 1 ô rỗng (thiếu `admin-common.css`); thanh trên Tổng quan điều phối tràn dòng ở màn 1300px (rút gọn nhãn); thông báo lỗi lộ "Failed to fetch" → "mất kết nối tới máy chủ".
+
+## Rà soát toàn site bằng trình duyệt thật (29/10/2026)
+
+- Mở **32 trang** bằng Chrome headless (Firebase giả có dữ liệu mẫu, chặn mọi request ra ngoài — không đụng Firebase/Sheet thật), vai trò Admin và Giáo viên, lần đầu + F5: **0 lỗi JavaScript, 0 file thiếu (404)**. Mọi trang mở lại tốn 0 lượt Firestore — trừ 1 chỗ dưới đây, đã sửa.
+- **Lịch giảng dạy → TKB lớp (giáo viên)**: mỗi lần mở trang đọc thẳng 4 document (hồ sơ GV, giờ tiết, TKB, lịch tuần) → nay qua cache chung của trang (10 phút; lưu/sửa lịch trên máy tự xoá cache). F5: 4 → 0 lượt.
+- Ghim thư viện đăng nhập Microsoft (đồng bộ SharePoint, trang Lịch giảng dạy) `msal-browser@3` → `@3.30.0` (đúng bản đang chạy): bản 3.x mới ra không tự đổi hành vi trang.
+- Còn lại, không cần sửa: Chrome báo "ViewTransition aborted" khi trang đăng nhập tự chuyển sang dashboard (đã đăng nhập sẵn) — chỉ là hiệu ứng chuyển trang bị bỏ, người dùng không thấy gì.
+
+## Điểm danh — lưu link lên tài khoản: bớt đọc/ghi Firebase (29/10/2026)
+
+- **Đọc**: tự kiểm tra tài khoản 2 giờ/lần (trước 30 phút). Máy mới đăng nhập vẫn đọc ngay. Vừa sửa link ở máy khác → nút **"Đồng bộ ngay"** (thay "Lưu ngay"): gửi phần chưa lưu rồi tải bản trên tài khoản về luôn.
+- **Ghi**: chỉ khi khác **bản đang trên tài khoản** — bật rồi tắt sao, sửa rồi trả lại như cũ: 0 lượt ghi (trước: vẫn ghi). Gộp ≤ 1 lần / 3 phút (trước 1 phút); ẩn/đóng trang vẫn gửi nốt nên không mất.
+- **Quy tắc Firestore chưa publish** (bị từ chối): ngừng tự thử 30 phút (trước: thử lại mỗi phút khi tab mở, và đọc lại mỗi lần mở trang). Khung "Lưu trên tài khoản" báo rõ; bấm "Đồng bộ ngay" để thử ngay.
+
+## Bớt lượt gọi Apps Script ở dashboard và hàng đợi gửi lại (29/10/2026)
+
+- **Chi tiết học sinh** (Dashboard giáo viên/điều phối): bài làm tải **1 lần cho cả lớp**, các em cùng lớp dùng chung trong 5 phút. Trước: mỗi em 1 lượt Apps Script `listResults` (máy chủ quét cả Sheet); nếu dashboard đọc Firestore thì mỗi em đọc lại **mọi** bài của lớp. Xem lần lượt 35 em: 35 lượt → 1 lượt. Lớp quá 5.000 bài thì vẫn hỏi riêng từng em để không thiếu lịch sử.
+- **Nhật ký hoạt động** (`logActivity`, mỗi dòng 1 lượt chạy Apps Script): "đăng nhập" ghi 1 lần / 6 giờ / máy (trước: mỗi tab mới); mở lại chi tiết cùng 1 học sinh trong 30 phút không ghi thêm. Thao tác sửa danh sách lớp vẫn ghi đủ.
+- **Hàng đợi gửi lại bài** (máy học sinh): Apps Script quá tải / hết hạn mức thì chỉ thử **1 bài** mỗi vòng, các bài cùng loại chờ theo cùng mốc giãn cách. Trước: máy treo 20 bài = 20 lượt gọi thất bại mỗi vòng, nhân với cả phòng máy — đúng lúc Apps Script đang nghẽn. Bài vẫn giữ tới khi gửi được.
+- Test: `js/services/__tests__/apps-script-saving.test.js`.
+
+## Danh sách học sinh: chỉ đọc phần thay đổi thay vì đọc lại cả ~2.800 em (29/10/2026)
+
+- **Nguyên nhân đỉnh ~3,1K lượt đọc/giờ** (Firestore Usage 28/10, 23h): bản đệm học sinh dùng chung (Quản lý tài khoản, Dashboard điều phối/giáo viên khi đăng nhập Admin) hết hạn 6 giờ là đọc lại **toàn bộ** `students_roster`; trang Quản lý lớp (Admin) hết 2 giờ hoặc sau khi Nạp Excel cũng đọc lại toàn bộ.
+- **Nay**: mọi lệnh ghi học sinh (thêm/sửa, Nạp Excel, gán lớp cho giáo viên) đóng dấu `updatedAt`. Bản đệm quá hạn chỉ hỏi học sinh có `updatedAt` mới hơn lần trước — không ai sửa gì = **1 lượt đọc** (trước: ~2.800). Nạp Excel 300 em → ~300 lượt, không phải cả roster.
+- Gán lớp ở Quản lý tài khoản không còn xoá bản đệm (trước: lần mở sau đọc lại cả roster).
+- Bản đệm dùng chung tươi hơn: 30 phút (trước 6 giờ) vì làm mới giờ rẻ.
+- **Đọc lại toàn bộ 3 ngày/lần**, để bỏ học sinh bị **xoá hẳn** ở máy khác (xoá không để lại dấu cho cách đọc phần thay đổi) và nhận học sinh do bản web cũ ghi. Nút "Tải lại" ở Quản lý lớp vẫn đọc toàn bộ (khi cần thấy ngay học sinh vừa bị xoá ở máy khác).
+- Không cần publish lại `firestore.rules`/index: truy vấn `updatedAt >` dùng index đơn mặc định, Admin đã có quyền đọc.
+- Biểu đồ "Billable Metrics" **có tính cả lượt đọc khi xem dữ liệu trong Firebase Console** — mở tab Data duyệt `students_roster`/`quiz_results` cũng tạo đỉnh đọc.
+
 ## Trang mở nhanh hơn: tự lưu bộ icon rút gọn + font (29/10/2026)
 
 - **Trang học sinh lần đầu mở: 731 KB → 459 KB (−37%)**, 0 request ra ngoài (trước: 20 request tới cdnjs + Google Fonts). Đo bằng Chrome, nén như GitHub Pages.

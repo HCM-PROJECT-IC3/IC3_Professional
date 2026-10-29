@@ -36,6 +36,10 @@
     classes: [],
     students: [],
     teachers: [], // danh sách tài khoản role=teacher đã được duyệt (để gán vào lớp)
+    // Admin: lúc đọc TOÀN BỘ học sinh + mốc updatedAt đã đồng bộ — nền để lần sau chỉ hỏi
+    // phần thay đổi (js/services/roster-cache-service.js § deltaFrom).
+    fullAt: 0,
+    watermark: null,
   };
 
   // Sửa hay Thêm mới đang mở trong modal, và loại đối tượng (course|class|student)
@@ -55,6 +59,9 @@
   function esc(s) {
     return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
+
+  /** Đóng dấu updatedAt cho MỌI lệnh ghi students_roster — trang khác chỉ đọc phần thay đổi. */
+  const stamp = (data) => window.EduRosterCache.stampRoster(data);
 
   function logRosterChange(action, targetId, meta) {
     // Ghi audit log — an toàn tuyệt đối, không bao giờ chặn UI nếu lỗi
@@ -126,7 +133,7 @@
   }
   function persistState() {
     if (window.EduDataCache) {
-      window.EduDataCache.setAsync(rosterCacheKey(), { courses: state.courses, classes: state.classes, students: state.students, teachers: state.teachers, cachedAt: state.cachedAt }, CACHE_TTL_MS, /* persist */ true);
+      window.EduDataCache.setAsync(rosterCacheKey(), { courses: state.courses, classes: state.classes, students: state.students, teachers: state.teachers, cachedAt: state.cachedAt, fullAt: state.fullAt, watermark: state.watermark }, CACHE_TTL_MS, /* persist */ true);
     }
     shareRoster();
   }
@@ -135,7 +142,7 @@
    *  có học sinh vài trường → bỏ bản đệm chung để lần sau đọc lại cho đúng. */
   function shareRoster() {
     if (!window.EduRosterCache) return;
-    if (myProfile && myProfile.role === 'admin') window.EduRosterCache.put(state.students.filter((s) => s.status === 'active'));
+    if (myProfile && myProfile.role === 'admin') window.EduRosterCache.put(state.students.filter((s) => s.status === 'active'), state.fullAt, state.watermark);
     else window.EduRosterCache.invalidate();
   }
   function dropOne(key, id) {
@@ -167,14 +174,16 @@
     const n = (state.students || []).length + (state.classes || []).length + (state.courses || []).length + (state.teachers || []).length;
     if (!confirm(`Đọc lại toàn bộ khoá học, lớp, học sinh, giáo viên từ máy chủ?
 
-Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần khi người khác vừa sửa danh sách trên máy khác — thao tác trên máy này đã tự cập nhật.`)) return;
+Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường KHÔNG cần: thao tác trên máy này đã tự cập nhật, học sinh máy khác thêm/sửa sẽ tự hiện khi dữ liệu quá 2 giờ (chỉ tốn vài lượt). Chỉ cần khi máy khác vừa XOÁ HẲN học sinh và muốn thấy ngay.`)) return;
     reloadBtn.disabled = true;
-    try { await loadEverything(true); toast('Đã tải lại dữ liệu mới nhất.'); } finally { reloadBtn.disabled = false; }
+    try { await loadEverything(true, { full: true }); toast('Đã tải lại dữ liệu mới nhất.'); } finally { reloadBtn.disabled = false; }
   });
 
   /** @param {boolean} [forceRefresh] Bỏ qua cache — dùng sau khi ghi (thêm/sửa/xoá)
-   * để dữ liệu mới hiện ngay, không đợi cache 3 phút hết hạn. */
-  async function loadEverything(forceRefresh) {
+   * để dữ liệu mới hiện ngay, không đợi cache 3 phút hết hạn.
+   * @param {{full?: boolean}} [opts] full: Admin đọc lại TOÀN BỘ học sinh (nút "Tải lại");
+   * mặc định chỉ hỏi học sinh thay đổi kể từ lần đọc trước (vài lượt thay vì ~2.800). */
+  async function loadEverything(forceRefresh, opts = {}) {
     try {
       const cacheKey = rosterCacheKey();
       if (!forceRefresh && window.EduDataCache) {
@@ -185,6 +194,8 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
           state.students = cached.students;
           state.teachers = cached.teachers;
           state.cachedAt = cached.cachedAt || 0;
+          state.fullAt = cached.fullAt || 0;
+          state.watermark = cached.watermark || null;
           renderDataAge();
           renderCourses();
           renderClasses();
@@ -211,11 +222,19 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
         return;
       }
 
+      // Admin: bản lưu cũ (kể cả đã hết hạn) làm nền → chỉ hỏi học sinh có updatedAt mới hơn.
+      const base = isAdmin && !opts.full && window.EduDataCache
+        ? await window.EduDataCache.getAsync(cacheKey, /* persist */ true, /* allowStale */ true)
+        : null;
       const [courses, classes, students, teacherSnap] = await Promise.all([
         window.EduRepositories.course.list({ orderBy: 'name' }),
         window.EduRepositories.class.list({ orderBy: 'name' }),
         isAdmin
-          ? window.EduRepositories.studentRoster.list({ orderBy: 'name' })
+          ? window.EduRosterCache.deltaFrom(base, null, 'students_roster (Quản lý lớp, thay đổi)').then((d) => {
+              if (d) return Object.assign(d, { students: d.students.sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'vi')) });
+              return window.EduRepositories.studentRoster.list({ orderBy: 'name' })
+                .then((list) => ({ students: list, fullAt: Date.now(), watermark: window.EduRosterCache.watermarkOf(list) }));
+            })
           // CỐ TÌNH KHÔNG dùng listBySchools() (chỉ lọc status "active") — trang
           // này cần quản lý CẢ học sinh đã nghỉ/đã tốt nghiệp (đổi trạng thái,
           // xem lại lịch sử...), nên lọc trực tiếp theo "school" mà không kèm
@@ -229,12 +248,18 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
       ]);
       state.courses = courses;
       state.classes = classes;
-      state.students = students;
+      if (isAdmin) {
+        state.students = students.students;
+        state.fullAt = students.fullAt;
+        state.watermark = students.watermark;
+      } else {
+        state.students = students;
+      }
       state.teachers = teacherSnap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
       state.cachedAt = Date.now();
       renderDataAge();
       if (window.EduDataCache) {
-        window.EduDataCache.setAsync(cacheKey, { courses: state.courses, classes: state.classes, students: state.students, teachers: state.teachers, cachedAt: state.cachedAt }, CACHE_TTL_MS, /* persist */ true);
+        window.EduDataCache.setAsync(cacheKey, { courses: state.courses, classes: state.classes, students: state.students, teachers: state.teachers, cachedAt: state.cachedAt, fullAt: state.fullAt, watermark: state.watermark }, CACHE_TTL_MS, /* persist */ true);
       }
       // Admin vừa đọc toàn bộ → các trang quản lý khác khỏi đọc lại; Điều phối tải lại sau khi ghi → bỏ bản đệm chung
       if (isAdmin || forceRefresh) shareRoster();
@@ -343,7 +368,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
     const badStudents = state.students.filter((s) =>
       s.school === SCHOOL && CLASS_NAMES.includes(s.className) && BAD_VALUES.includes(s.teacherName));
     for (const s of badStudents) {
-      await window.EduRepositories.studentRoster.update(s.id, { teacherName: CORRECT_NAME });
+      await window.EduRepositories.studentRoster.update(s.id, stamp({ teacherName: CORRECT_NAME }));
       s.teacherName = CORRECT_NAME;
     }
 
@@ -1247,13 +1272,13 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
         let ref;
         if (r.existingId) {
           ref = studentCol.doc(r.existingId);
-          batch.set(ref, data, { merge: true });
+          batch.set(ref, stamp(data), { merge: true });
         } else if (r.expectedDocId) {
           ref = studentCol.doc(r.expectedDocId);
-          batch.set(ref, Object.assign({ createdAt: firebase.firestore.FieldValue.serverTimestamp() }, data), { merge: true });
+          batch.set(ref, Object.assign({ createdAt: firebase.firestore.FieldValue.serverTimestamp() }, stamp(data)), { merge: true });
         } else {
           ref = studentCol.doc();
-          batch.set(ref, Object.assign({ createdAt: firebase.firestore.FieldValue.serverTimestamp() }, data));
+          batch.set(ref, Object.assign({ createdAt: firebase.firestore.FieldValue.serverTimestamp() }, stamp(data)));
         }
         ops++;
         if (ops >= 400) { await batch.commit(); batch = db.batch(); ops = 0; }
@@ -1333,11 +1358,11 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Chỉ cần
     let savedId = modalMode.editingId;
     try {
       if (modalMode.editingId) {
-        await window.EduRepositories.studentRoster.update(modalMode.editingId, data);
+        await window.EduRepositories.studentRoster.update(modalMode.editingId, stamp(data));
         logRosterChange('update_student', modalMode.editingId, { name });
       } else {
         data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-        const id = await window.EduRepositories.studentRoster.create(data);
+        const id = await window.EduRepositories.studentRoster.create(stamp(data));
         savedId = id;
         logRosterChange('create_student', id, { name });
       }

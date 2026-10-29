@@ -702,8 +702,9 @@ body {
 .lobby-card-title span {
   font-size: 1.15rem;
   display: inline-block;
-  animation: rocketFloat 2.4s ease-in-out infinite;
+  /* Trước: animation rocketFloat (lơ lửng + xoay) cho emoji đầu tiêu đề — bỏ theo giao diện phẳng. */
 }
+.lobby-card-title .step-num { font-size: 1rem; display: grid; } /* thắng "span { inline-block }" ở trên */
 @keyframes rocketFloat {
   0%,100% { transform: translateY(0) rotate(0deg) }
   50%     { transform: translateY(-3px) rotate(-6deg) }
@@ -2788,7 +2789,7 @@ body {
     .tf-row-actions { grid-column: 1; justify-self: stretch }
   }
   .q-nav { gap: .5rem }
-  .btn-nav { padding: .75rem 1.2rem; font-size: .92rem }
+  .btn-nav { padding: .75rem 1rem; font-size: .92rem; white-space: nowrap } /* nowrap: "Đánh dấu" từng bị cắt thành 2 dòng */
   .btn-flag { margin-left: 0; flex: 1; justify-content: center }
   .topbar-info { display: none }
   .timer-wrap { padding: .35rem .75rem }
@@ -3941,3 +3942,7 @@ a.arena-open small { background: var(--orange); }
 @media (max-width: 520px) {
   .theme-toggle { position: absolute; }
 }
+
+/* Đang làm bài: ẩn nút sáng/tối của sảnh (cố định góc trên) — thanh đầu trang làm bài đã có nút riêng
+   (#themeToggleExam). Trên điện thoại thanh đầu thấp nên trước đây hiện 2 nút sáng/tối cùng lúc. */
+body:has(#exam[style*="flex"]) #themeToggle { display: none; }
