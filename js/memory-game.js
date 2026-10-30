@@ -231,6 +231,7 @@
           b.el.classList.add('is-matched');
           state.matched++;
           matchesEl.textContent = state.matched + ' / ' + state.items.length;
+          if (window.EduMiniArena) EduMiniArena.live(state.matched / state.items.length);
           state.flipped = [];
           state.lock = false;
           if (state.matched === state.items.length) onWin();
@@ -281,6 +282,7 @@
         scoreType: 'stars',
         topic: state.catId || null,
         durationSec: sec,
+        arena: { stars: stars, pairs: state.items.length, matched: state.matched, moves: state.moves }, // Đấu trường (js/arena/arena-mini-core.js)
         studentName: student.name || '',
         studentClass: student.class || '',
         studentSchool: student.school || '',

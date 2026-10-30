@@ -324,6 +324,7 @@
     state.submitted = false;
     state.mistakeCount = 0;
     state.sessionStartedAtMs = Date.now();
+    if (window.EduMiniArena) EduMiniArena.live(0); // Đấu trường: bắt đầu tính thưởng tốc độ
 
     el.missionOverlay.hidden = true;
     el.resultOverlay.hidden = true;
@@ -589,6 +590,7 @@
       finishMission(true);
     } else {
       state.mistakeCount += 1;
+      if (window.EduSFX) EduSFX.play('wrong');
       el.feedback.textContent = result.message;
       el.feedback.className = 'cs-feedback is-wrong';
     }
@@ -599,6 +601,7 @@
     // trừ dần theo số lần kiểm tra sai (khuyến khích đọc kỹ nhiệm vụ
     // trước khi nộp, không phải bấm "Kiểm tra" liên tục để dò).
     var scorePct = Math.max(40, 100 - state.mistakeCount * 15);
+    if (window.EduSFX) EduSFX.play('win');
     el.resultIcon.innerHTML = '<i class="fa-solid fa-trophy" aria-hidden="true"></i>';
     el.resultTitle.textContent = 'Hoàn thành nhiệm vụ!';
     el.resultDesc.textContent =
@@ -629,6 +632,7 @@
         correctAnswers: 1,
         wrongAnswers: state.mistakeCount,
         topic: '1. Căn bản về công nghệ',
+        arena: { mistakes: state.mistakeCount }, // Đấu trường (js/arena/arena-mini-core.js)
         difficulty: null,
         durationSec: Math.max(0, Math.round((Date.now() - state.sessionStartedAtMs) / 1000)),
         studentName: student.name || '',

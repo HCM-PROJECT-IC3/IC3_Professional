@@ -364,6 +364,7 @@
     skySunTimer = SKY_SUN_INITIAL_DELAY;
     spawnQueue = []; spawnedIdx = 0; spawnTimer = 0;
     gameOver = false; victory = false;
+    if (window.EduMiniArena) EduMiniArena.live(0); // Đấu trường: ván mới bắt đầu → đồng hồ đối thủ chạy từ 0
     defenders = []; zombies = []; projectiles = [];
     suns = []; floatTexts = [];
     mowers = [];
@@ -528,6 +529,7 @@
     if (gameState === 'clearing') {
       if (zombies.length === 0) {
         wavesCleared++;
+        if (window.EduMiniArena) EduMiniArena.live(wavesCleared / TOTAL_WAVES);
         var tip = WAVE_INTRO_TIP[waveIdx];
         waveIdx++;
         if (waveIdx >= TOTAL_WAVES) {
@@ -999,6 +1001,7 @@
         correctAnswers: null,
         wrongAnswers: null,
         topic: 'Cybersecurity',
+        arena: { win: !!win, waves: wavesCleared, total: TOTAL_WAVES, hp: Math.max(0, serverHP), hpMax: serverMaxHP, kills: killCount }, // Đấu trường
         difficulty: null,
         durationSec: Math.max(0, Math.round((Date.now() - sessionStartedAtMs) / 1000)),
         studentName: student.name || '',

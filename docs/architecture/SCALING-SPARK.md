@@ -236,6 +236,7 @@ gzip nên thực tế ước chừng 0,4–0,5 MB, chưa tính ảnh câu hỏi 
 - Chrome headless, **chặn mọi host Google/Firebase** (không ghi dữ liệu thật): mở `index.html`
   không tải SDK Firebase, không lỗi JS; nộp ở `'all'` thì nạp SDK lúc nộp, gửi 2 đích cùng mã
   và xếp hàng khi lỗi; `'off'` không nạp SDK, chỉ gửi Sheet; máy có phiên đăng nhập thì tự nạp
-  Firebase Auth (vào thẳng Khu Vui Chơi như cũ); `mos-practice.html` không nạp SDK lúc mở.
+  Firebase Auth (vào thẳng Khu Vui Chơi như cũ — từ 30/10/2026 Khu Vui Chơi chuyển vào Đấu trường,
+  `index.html` không còn nạp Auth cho việc này); `mos-practice.html` không nạp SDK lúc mở.
 - **Chưa kiểm** trên Firebase/Apps Script thật: phần `Code.gs` mới (chống trùng bằng cache,
   xoay vòng file) cần chạy thử sau khi deploy.

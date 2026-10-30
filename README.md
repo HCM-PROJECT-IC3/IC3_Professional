@@ -30,12 +30,12 @@ dashboard theo dõi tiến độ cho điều phối đào tạo/giáo viên.
   nhiều tab, thoát toàn màn hình...).
 - **Mô phỏng thực hành** Word/Excel/PowerPoint (ribbon giả lập) để học
   sinh luyện thao tác trước khi thi thật.
-- **Mini-game ôn tập** trong "Khu Vui Chơi": Trí Nhớ Thiết Bị, Phòng Thủ
-  Dữ Liệu, Battle Quiz, Cyber Detective, Phân Loại Thần Tốc, Chim Vượt
-  Ải (Mario + Flappy Bird kết hợp cổng câu hỏi IC3), Thử thách cùng lớp
-  (Phòng cả lớp trong Đấu trường — xem dưới)... — mở khóa theo
-  kết quả bài thi, không có bộ câu hỏi riêng (dùng lại đúng ngân hàng
-  câu hỏi của Quiz).
+- **Mini-game ôn tập** trong Đấu trường (`arena.html?vai=minigame`, không khoá):
+  hành trình 5 chặng theo thứ tự học IC3 — Trí Nhớ Thiết Bị → Máy Tính Ảo →
+  Thám Tử Mạng → Phòng Thủ Dữ Liệu → Đấu Boss. Mỗi trò leo 5 hạng đối thủ (Đồng →
+  Huyền thoại), đua điểm trực tiếp với đối thủ, thắng nhận xu mở Linh vật
+  (js/arena/arena-mini*.js). Không có bộ câu hỏi riêng (dùng lại đúng ngân
+  hàng câu hỏi của Quiz).
 - **Gamification**: XP, streak, huy hiệu — lưu local-first (không cần tài
   khoản); bảng điểm nhiều người hiển thị trong từng phòng. Bảng xếp hạng
   mini-game toàn hệ thống đang tắt vì client có thể tự giả mạo điểm.
@@ -112,7 +112,7 @@ dashboard theo dõi tiến độ cho điều phối đào tạo/giáo viên.
 index.html                 Trang chính — học sinh chọn bài & làm Quiz
 *-dashboard.html            Dashboard điều phối/giáo viên/admin
 *-simulator.html            Mô phỏng thực hành Word/Excel/PowerPoint
-battle-quiz.html, ...       Các mini-game trong "Khu Vui Chơi"
+battle-quiz.html, ...       Các mini-game (chơi trong Đấu trường qua iframe ?arena=1)
 js/                         Toàn bộ logic — 1 file/tính năng (không bundler)
   ├─ quiz-engine.js          Lõi: chọn bài, chấm điểm, chống gian lận
   ├─ coordinator/, teacher/  Data loader + dashboard riêng từng vai trò

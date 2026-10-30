@@ -399,6 +399,7 @@
     el.score.textContent = state.score;
     el.combo.textContent = state.combo;
     el.xp.textContent = state.xp;
+    if (window.EduMiniArena && !state.over) EduMiniArena.live(state.score);
     if (window.EduFX) { EduFX.pop(el.score); if (state.combo > 0) EduFX.pop(el.combo); }
     el.playerHpFill.style.width = state.playerHp + '%';
     el.playerHpText.textContent = state.playerHp;
@@ -484,6 +485,7 @@
         topic: state.topic || null,
         difficulty: null,
         durationSec: Math.max(0, Math.round((Date.now() - state.sessionStartedAtMs) / 1000)),
+        arena: { score: state.score, win: !!win, hp: Math.max(0, state.playerHp) }, // Đấu trường (js/arena/arena-mini-core.js)
         studentName: student.name || '',
         studentClass: student.class || '',
         studentSchool: student.school || '',

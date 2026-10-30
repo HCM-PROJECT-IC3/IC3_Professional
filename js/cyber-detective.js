@@ -176,6 +176,7 @@
     state.selectedCause = null;
     state.submitted = false;
     state.sessionStartedAtMs = Date.now();
+    if (window.EduMiniArena) EduMiniArena.live(0); // Đấu trường: bắt đầu tính thưởng tốc độ
 
     el.caseOverlay.hidden = true;
     el.resultOverlay.hidden = true;
@@ -206,6 +207,7 @@
   function revealClue(cat, clue, card) {
     if (state.revealed[cat.id]) return; // đã mở rồi, không tính thêm lượt
     state.revealed[cat.id] = true;
+    if (window.EduSFX) EduSFX.play('flip');
     card.classList.add('is-open');
     if (clue.key) card.classList.add('has-key');
     var body = document.createElement('div');
@@ -273,6 +275,7 @@
       : null;
     var correctLabel = CAUSE_LABELS[state.currentCase.correctCause].name;
 
+    if (window.EduSFX) EduSFX.play(isCorrect ? 'win' : 'wrong');
     el.resultIcon.textContent = isCorrect ? '🏆' : '❌';
     el.resultTitle.textContent = isCorrect ? 'Kết luận chính xác!' : 'Kết luận chưa đúng!';
     el.resultDesc.textContent =
@@ -305,6 +308,7 @@
         correctAnswers: isCorrect ? 1 : 0,
         wrongAnswers: isCorrect ? 0 : 1,
         topic: '7. An toàn và bảo mật',
+        arena: { ok: !!isCorrect, revealed: Object.keys(state.revealed).length }, // Đấu trường (js/arena/arena-mini-core.js)
         difficulty: null,
         durationSec: Math.max(0, Math.round((Date.now() - state.sessionStartedAtMs) / 1000)),
         studentName: student.name || '',
