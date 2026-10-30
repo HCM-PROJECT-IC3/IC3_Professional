@@ -2,7 +2,7 @@
    CHỮ TO CHO HỌC SINH TIỂU HỌC (js/kid-mode.js bật body.kid-mode)
    Trang làm bài: chữ câu hỏi/đáp án to, ô bấm cao, đáp án đang chọn
    tô đặc + nhãn "✓ Em chọn", dòng nhắc "Em đã chọn…", kiểm tra đáp án
-   tô xanh/đỏ ngay trên đáp án, thẻ "⭐ Nhớ nhé".
+   tô xanh/đỏ ngay trên đáp án, thẻ "Nhớ nhé".
    Nạp SAU css/accessibility.css (ở đó .q-text dùng !important).
    ══════════════════════════════════════════════════════════════ */
 

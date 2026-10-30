@@ -18,15 +18,7 @@
 <link rel="stylesheet" href="css/diem-danh.css">
 </head>
 <body class="dd-body">
-<!--
-  Điểm danh & tiến độ (js/so-lop/): đọc "FORM QUẢN LÝ LỚP" của Điều phối đào tạo — Google Sheet đã chia sẻ
-  "Bất kỳ ai có đường liên kết" — bằng link xuất CSV công khai của Google (docs.google.com/.../export).
-  Chỉ giáo viên + admin đã đăng nhập (js/auth-guard.js — học sinh mở link thẳng bị chặn). Link Sheet, bản nháp điểm danh
-  và bản lưu tạm chỉ nằm trong localStorage ('eduquiz_solop_v1') của máy này — không đưa link vào repo vì Sheet có ngày sinh học sinh.
-  Đọc: link CSV công khai (0 Firebase), lớp đang mở tự đọc lại 2 phút/lần khi đang xem.
-  Ghi: "Ghi vào Sheet" gửi qua Apps Script (apps/src/48-class-sheet.gs, tài khoản deploy phải là Người chỉnh sửa file);
-  không ghi được thì vẫn còn "Sao chép cột" để dán tay.
--->
+<!-- Điểm danh & tiến độ (js/so-lop/): đọc sổ lớp Google Sheet của Điều phối qua link CSV công khai, ghi qua Apps Script. Chỉ giáo viên/admin. Link sổ lớp lưu ở localStorage eduquiz_solop_v1 (và teacher_sync trên tài khoản), không đưa vào repo vì Sheet có ngày sinh học sinh. -->
 <!-- Thanh trên cùng giống các trang quản trị (teaching-schedule.html…): về Trang quản lý · tên trang · tài khoản · sáng/tối · Đăng xuất -->
 <div class="topbar">
   <a href="ic3-dashboard.html" class="btn btn-ghost">← Trang quản lý</a>

@@ -1,5 +1,5 @@
 /* ============================================================
-   📡 googleSheet.js – Module gửi kết quả thi lên Google Sheet
+   googleSheet.js – Module gửi kết quả thi lên Google Sheet
    Dành cho: IC3 MiniTest – EduQuiz
    
    HƯỚNG DẪN SỬ DỤNG:
@@ -9,10 +9,10 @@
    ============================================================ */
 
 // ──────────────────────────────────────────────────────────────
-// ⚙️ CẤU HÌNH – CHỈ CẦN SỬA PHẦN NÀY
+// CẤU HÌNH – CHỈ CẦN SỬA PHẦN NÀY
 // ──────────────────────────────────────────────────────────────
 
-// 🔗 URL Google Apps Script Web App (apps/Code.gs — bản mới, thay Apps Script cũ)
+// URL Google Apps Script Web App (apps/Code.gs — bản mới, thay Apps Script cũ)
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyxiqIjwDotYLobFSf11RvosrW9FksEHCQEz8lNm2uU8_8QQJtw9eDM5gBsW_Ga4JLa/exec';
 
 /**
@@ -25,11 +25,11 @@ function resolveAppsScriptUrl(school) {
   return url || (window.EduBackend && window.EduBackend.appsScriptUrl) || APPS_SCRIPT_URL;
 }
 
-// ⏱️ Timeout: Nếu request quá 10 giây → báo lỗi (đơn vị: ms)
+// Timeout: Nếu request quá 10 giây → báo lỗi (đơn vị: ms)
 const REQUEST_TIMEOUT_MS = 10000;
 
 // ──────────────────────────────────────────────────────────────
-// 🔒 CHỐNG GỬI TRÙNG (Duplicate Submit Prevention)
+// CHỐNG GỬI TRÙNG (Duplicate Submit Prevention)
 // Lưu ID bài đã nộp vào bộ nhớ phiên làm việc
 // ──────────────────────────────────────────────────────────────
 const _submittedIds = new Set();
@@ -53,7 +53,7 @@ function generateSubmissionId(studentName, testName) {
 }
 
 // ──────────────────────────────────────────────────────────────
-// 📡 HÀM CHÍNH: Gửi dữ liệu bài thi lên Google Sheet
+// HÀM CHÍNH: Gửi dữ liệu bài thi lên Google Sheet
 // ──────────────────────────────────────────────────────────────
 
 /**
@@ -191,7 +191,7 @@ async function saveToGoogleSheet(data) {
 }
 
 // ──────────────────────────────────────────────────────────────
-// 🔔 HIỂN THỊ THÔNG BÁO (Toast Notification)
+// HIỂN THỊ THÔNG BÁO (Toast Notification)
 // Tự động ẩn sau 4 giây
 // ──────────────────────────────────────────────────────────────
 
@@ -221,10 +221,10 @@ function showNotification(message, type = 'info') {
 
   // Màu sắc theo loại thông báo
   const colors = {
-    success: { bg: '#1b5e20', border: '#4caf50', icon: '✅' },
-    error:   { bg: '#7f0000', border: '#f44336', icon: '❌' },
-    warning: { bg: '#e65100', border: '#ff9800', icon: '⚠️' },
-    info:    { bg: '#0d47a1', border: '#2196f3', icon: 'ℹ️' }
+    success: { bg: '#1b5e20', border: '#4caf50' },
+    error:   { bg: '#7f0000', border: '#f44336' },
+    warning: { bg: '#e65100', border: '#ff9800' },
+    info:    { bg: '#0d47a1', border: '#2196f3' }
   };
   const c = colors[type] || colors.info;
 
@@ -273,7 +273,7 @@ function dismissToast(toast) {
 }
 
 // ──────────────────────────────────────────────────────────────
-// 🎯 HÀM TÍCH HỢP VỚI SUBMITEXAM CỦA EDUQUIZ
+// HÀM TÍCH HỢP VỚI SUBMITEXAM CỦA EDUQUIZ
 // Gọi hàm này thay thế hoặc sau submitExam() hiện tại
 // ──────────────────────────────────────────────────────────────
 

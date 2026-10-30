@@ -20,7 +20,6 @@ function updateMosInlinePractice(catId, levelId) {
   const excelBtn = document.getElementById('openExcelSimBtn');
   const pptBtn = document.getElementById('openPptSimBtn');
   const practiceBtn = document.getElementById('openMosPracticeBtn');
-  const examSimBtn = document.getElementById('openExamSimBtn');
   // MỖI nút được guard RIÊNG (không return sớm nếu thiếu 1 nút) — nếu
   // gộp chung 1 điều kiện "thiếu 1 trong N nút thì return hết", 1 nút bị
   // xoá/đổi id trong tương lai sẽ âm thầm làm hỏng LUÔN cả các nút khác
@@ -44,23 +43,9 @@ function updateMosInlinePractice(catId, levelId) {
       // js/mos-practice.js đọc URLSearchParams lúc khởi tạo.
       practiceBtn.href = `mos-practice.html?subject=${practiceSubject}`;
       practiceBtn.innerHTML = practiceSubject === 'excel'
-        ? '<i class="fa-solid fa-file-export"></i> MOS Practice — Nộp bài Excel chấm điểm thật'
-        : '<i class="fa-solid fa-file-export"></i> MOS Practice — Nộp bài PowerPoint chấm điểm thật';
+        ? '<i class="fa-solid fa-file-export" aria-hidden="true"></i> Thực hành MOS — nộp file Excel để chấm'
+        : '<i class="fa-solid fa-file-export" aria-hidden="true"></i> Thực hành MOS — nộp file PowerPoint để chấm';
     }
-  }
-
-  // MOS Exam Simulator (mới) — chấm theo Application State thật (Document/
-  // Spreadsheet/Slide Object Model), khác với Ribbon simulator ở trên (mô
-  // phỏng thao tác). Xem exam-simulator-{word,excel,ppt}.html.
-  if (examSimBtn) {
-    // "ppt" (không phải "powerpoint") — phải khớp đúng tên file thật
-    // exam-simulator-ppt.html, xem lỗi thật đã bắt được lúc test wiring.
-    const examSubject = isMos && levelId === 'Word' ? 'word'
-      : isMos && levelId === 'Excel' ? 'excel'
-      : isMos && levelId === 'PowerPoint' ? 'ppt'
-      : null;
-    examSimBtn.hidden = !examSubject;
-    if (examSubject) examSimBtn.href = `exam-simulator-${examSubject}.html`;
   }
 }
 window.updateMosInlinePractice = updateMosInlinePractice;

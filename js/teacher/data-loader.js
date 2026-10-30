@@ -1,12 +1,12 @@
 /* ============================================================
    js/teacher/data-loader.js
-   Tầng tải + lọc dữ liệu cho Teacher Dashboard (Commit #8/LMAP).
+   Tầng tải + lọc dữ liệu cho Teacher Dashboard.
 
    KHÁC với js/coordinator/data-loader.js ở đúng 1 điểm quan trọng:
    MỌI query ở đây đều lọc theo "schools" đã được Admin gán cho giáo
    viên (users/{uid}.schools, xem admin-users.html) — không tải "hết
    rồi lọc ở JS" như coordinator, vì:
-   1) firestore.rules (Commit #6/LMAP) chỉ cho giáo viên đọc document
+   1) firestore.rules chỉ cho giáo viên đọc document
       có studentSchool/school nằm trong "schools" của họ — query không
       lọc where sẽ bị Firestore từ chối toàn bộ, không tự lọc giúp.
    2) Kể cả khi kỹ thuật cho phép, tải dữ liệu trường khác về trình
@@ -34,7 +34,7 @@
   const ROSTER_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
   // Đợt tối ưu hạn mức 10/2026: trước đây 30 phút → mỗi lần mở dashboard cách nhau
   // >30 phút lại đọc lại CẢ roster (hàng trăm-nghìn lượt). Giờ giữ 12 giờ; nút
-  // "🔄 Làm mới dữ liệu" chỉ đọc lại roster khi bản lưu đã cũ hơn 30 phút (đúng
+  // "Làm mới dữ liệu" chỉ đọc lại roster khi bản lưu đã cũ hơn 30 phút (đúng
   // ngưỡng cũ) — không luồng nào đọc roster nhiều hơn trước.
   const ROSTER_FORCE_MIN_AGE_MS = 30 * 60 * 1000;
 
@@ -69,7 +69,7 @@
    * @param {Object} profile Hồ sơ Firestore users/{uid} của người đang đăng nhập.
    * @param {Object} [opts]
    * @param {boolean} [opts.forceRefresh] Bỏ qua cache, luôn đọc lại từ Firestore
-   *   (dùng khi bấm nút "🔄 Làm mới dữ liệu").
+   *   (dùng khi bấm nút "Làm mới dữ liệu").
    */
   async function loadAll(profile, { forceRefresh = false } = {}) {
     const isAdmin = profile.role === 'admin';
@@ -88,7 +88,7 @@
     // Roster: lọc theo ĐÚNG teacherId (uid) của giáo viên đang đăng nhập —
     // KHÔNG còn theo "schools" (cả trường) như trước, vì 2 giáo viên có thể
     // dạy chung 1 trường và trước đây mỗi người nhìn thấy CẢ học sinh của
-    // người kia (lỗi người dùng phản hồi, xem listByTeacher() + rule
+    // người kia (xem listByTeacher() + rule
     // canAccessRosterStudent() trong firestore.rules). "schools" vẫn cần
     // giữ lại cho quiz_results bên dưới (collection đó không có teacherId).
     //
@@ -133,7 +133,7 @@
     // quiz_results không có field teacherId (chỉ có studentSchool) nên
     // firestore.rules chỉ siết được theo "schools" — nếu dừng ở đó, 1 giáo
     // viên sẽ thấy LẪN kết quả của các lớp đồng nghiệp khác dạy chung
-    // trường (bug người dùng báo: thấy lớp lạ, không thấy đủ lớp mình dạy
+    // trường (lỗi từng gặp: thấy lớp lạ, không thấy đủ lớp mình dạy
     // vì bị trộn/che khuất bởi dữ liệu ngoài lớp). Lọc tiếp ở client theo
     // đúng tập className mà giáo viên này thực sự phụ trách (suy từ
     // "students" vừa lọc theo teacherId ở trên) — không lộ thêm dữ liệu gì
@@ -157,7 +157,7 @@
 
   /**
    * Đổ option vào 2 dropdown lọc: Lớp (theo className thật, không phải classId) + Bài thi.
-   * An toàn khi gọi lại nhiều lần (vd. sau khi bấm "🔄 Làm mới dữ liệu") — luôn xoá
+   * An toàn khi gọi lại nhiều lần (vd. sau khi bấm "Làm mới dữ liệu") — luôn xoá
    * option cũ trước khi đổ lại, tránh bị nhân đôi.
    */
   function buildFilterOptions(data) {

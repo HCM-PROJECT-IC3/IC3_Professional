@@ -4,11 +4,11 @@
    KHÔNG dùng câu hỏi bài học (ngân hàng data/ic3, Sổ tay câu sai): sảnh chờ không được cho em xem/làm trước
    câu sắp thi. Chỉ dùng kho từ riêng js/arena/arena-words.js.
 
-     ⚡ Thử phản xạ   ô chuyển xanh thì bấm — đo mili-giây
-     🔗 Nối từ        từ sau bắt đầu bằng tiếng cuối của từ trước (máy tính → tính năng → năng lượng...);
+     Thử phản xạ   ô chuyển xanh thì bấm — đo mili-giây
+     Nối từ        từ sau bắt đầu bằng tiếng cuối của từ trước (máy tính → tính năng → năng lượng...);
                       đồng hồ mỗi lượt ngắn dần, bẫy khác dấu (tính / tình / tin); sai hoặc hết giờ là dừng
-     🔤 Ghép chữ      xếp chữ cái thành thuật ngữ tin học tiếng Anh theo nghĩa tiếng Việt — 45 giây, càng nhiều càng tốt
-     🎉 Thả cảm xúc   6 biểu tượng CỐ ĐỊNH (không gõ chữ) bay lên màn chiếu
+     Ghép chữ      xếp chữ cái thành thuật ngữ tin học tiếng Anh theo nghĩa tiếng Việt — 45 giây, càng nhiều càng tốt
+     Thả cảm xúc   6 biểu tượng CỐ ĐỊNH (không gõ chữ) bay lên màn chiếu
    Kỷ lục: localStorage ('eduquiz_arena_reflex', 'eduquiz_arena_wordfun'). Mạng: chỉ thả cảm xúc + kỷ lục MỚI gửi
    máy giáo viên, và CHỈ khi em nối thẳng WebRTC (0 lượt Firebase). Đường dự phòng → ctx.send = null → không gửi gì.
 
@@ -125,7 +125,7 @@
     return `<p class="ar-fun-best">${me ? `Kỷ lục của em: <b>${me} ${GAMES[game].unit}</b>` : 'Chưa có kỷ lục — thử ngay!'}</p>`;
   }
 
-  // ── ⚡ Thử phản xạ ──
+  // ── Thử phản xạ ──
   function store() { return lsGet(REFLEX_KEY, { best: {}, top: [] }); }
   function paintReflex(b) {
     const s = store(), me = F.ctx.name;
@@ -175,7 +175,7 @@
     }
   }
 
-  // ── 🔗 Nối từ ──
+  // ── Nối từ ──
   function chainIntro(b) {
     b.innerHTML = `<div class="ar-fun-game">
       <p class="ar-fun-rule">Chọn từ <b>bắt đầu bằng tiếng cuối</b> của từ trước:<br><span class="ar-fun-eg">máy <u>tính</u> → <u>tính</u> năng → <u>năng</u> lượng...</span><br>Đồng hồ ngắn dần — coi chừng từ <b>khác dấu</b> (tính / tình / tin)!</p>
@@ -255,7 +255,7 @@
     }, 1300);
   }
 
-  // ── 🔤 Ghép chữ ──
+  // ── Ghép chữ ──
   function wordIntro(b) {
     b.innerHTML = `<div class="ar-fun-game">
       <p class="ar-fun-rule">Xếp chữ cái thành <b>thuật ngữ tin học tiếng Anh</b> theo nghĩa cho sẵn.<br>${WORD_ROUND_MS / 1000} giây — ghép được càng nhiều càng giỏi! (Bỏ qua: −${WORD_SKIP_MS / 1000} giây)</p>
@@ -348,7 +348,7 @@
       ${bestLine('word')}</div>`;
   }
 
-  // ── 🎉 Thả cảm xúc ──
+  // ── Thả cảm xúc ──
   function react(i, btn) {
     const now = Date.now();
     if (!F.ctx.send || !REACTS[i]) return;

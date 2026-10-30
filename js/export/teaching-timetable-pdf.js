@@ -7,7 +7,7 @@
    LÝ DO ĐỔI: window.print() không kiểm soát được phần "Headers and
    footers" (ngày giờ, tiêu đề trang, URL, số trang) mà Chrome/Edge TỰ
    CHÈN vào mỗi trang in — đây là tính năng của trình duyệt, KHÔNG có API
-   CSS/JS nào từ 1 trang web tắt được nó. Người dùng phản hồi cần bỏ hẳn
+   CSS/JS nào từ 1 trang web tắt được nó. Cần bỏ hẳn
    phần đó → cách duy nhất là KHÔNG dùng hộp thoại in của trình duyệt nữa,
    xuất thẳng file .pdf bằng jsPDF (giống teaching-schedule-pdf.js/
    teaching-schedule-cong-tac-pdf.js đã làm) — file .pdf này không đi qua
@@ -132,11 +132,11 @@
   }
 
   /** Dựng head/body cho AutoTable — Buổi dùng rowSpan gộp theo từng buổi
-   * (giống ô "Buổi" gộp dòng trên web), chèn 1 hàng "☕ Ra chơi" (colSpan)
+   * (giống ô "Buổi" gộp dòng trên web), chèn 1 hàng "Ra chơi" (colSpan)
    * và 1 hàng vạch màu ngăn cách SÁNG/CHIỀU (colSpan toàn bảng) — đúng yêu
    * cầu "giãn cách phân biệt sáng/chiều" nhưng vẽ chủ động thay vì phụ
-   * thuộc CSS in trình duyệt. KHÔNG chèn hàng "☕ Ra chơi" (bản in PDF bỏ
-   * hẳn, khác bản web) — theo yêu cầu người dùng, giữ bảng gọn hơn.
+   * thuộc CSS in trình duyệt. KHÔNG chèn hàng "Ra chơi" (bản in PDF bỏ
+   * hẳn, khác bản web) — giữ bảng gọn hơn.
    *
    * KHÔNG có cột "Thời gian" riêng (bản gốc Excel không có cột này) — giờ
    * học TỪNG THỨ (periodTimesByDay có thể khác nhau theo ngày) được đưa

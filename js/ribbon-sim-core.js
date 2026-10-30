@@ -64,7 +64,7 @@
   }
 
   // Icon nút ribbon: file môn học khai báo bằng emoji cho gọn; khi vẽ thì đổi sang Font Awesome (đồng nhất, phẳng như
-  // ribbon Office thật — emoji màu mè làm giao diện trông "đúc khuôn"). Ký hiệu chữ (≡ ¶ Ω ∑ ⊞...) giữ nguyên như Office.
+  // ribbon Office thật). Ký hiệu chữ (≡ ¶ Ω ∑ ⊞...) giữ nguyên như Office.
   var EMOJI_FA = {
     '☀': 'sun', '☑': 'square-check', '⚖': 'scale-balanced', '⚙': 'gear', '⚠': 'triangle-exclamation', '⚡': 'bolt',
     '⛹': 'basketball', '✂': 'scissors', '✅': 'check', '✉': 'envelope', '✏': 'pen', '✒': 'pen-nib', '✔': 'spell-check',

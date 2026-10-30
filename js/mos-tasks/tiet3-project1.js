@@ -8,7 +8,7 @@
    js/mos-grading-engine.js), để sau này thêm project khác chỉ cần thêm
    1 file dữ liệu tương tự, không phải sửa engine.
 
-   Task 4 và Task 6 (thao tác biểu đồ) không có checker khả thi ở Phase 1
+   Task 4 và Task 6 (thao tác biểu đồ) không có checker khả thi ở bản đầu
    (ExcelJS đọc chart rất hạn chế) → khai báo type:"manual", LUÔN hiện
    "cần giáo viên xem thủ công", không tự chấm đúng/sai.
    ============================================================ */

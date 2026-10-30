@@ -46,13 +46,7 @@
       <span>Cài đặt hệ thống</span>
     </div>
 
-    <!-- Nhóm 2: trang quản trị/khác (link rời, không phải section trong
-         SPA này) — tách nhãn khỏi 3 mục "Bộ đề của tôi/Báo cáo kết
-         quả/Cài đặt hệ thống" ở trên để không đọc thành 1 danh sách phẳng
-         8 mục. Icon dùng Font Awesome (thay emoji cũ — xem
-         https://docs.fontawesome.com/web/style/animate, phản hồi người
-         dùng "icon emoji nhìn như web AI dị") và không trùng icon với
-         mục nào khác trong menu. -->
+    <!-- Nhóm 2: liên kết sang các trang quản trị khác. -->
     <div class="nav-section-label">Trang khác</div>
     <a class="nav-item link-plain" href="image-manager.html" id="imageManagerLink" style="display:none;" title="Quản lý câu hỏi">
       <span class="nav-icon"><i class="fa-solid fa-image"></i></span>
@@ -96,12 +90,7 @@
       <span class="nav-icon"><i class="fa-solid fa-compass"></i></span>
       <span>Tổng quan điều phối</span>
     </a>
-    <!-- Trang Social Media (portfolio.html) — trang giới thiệu công khai + "Teacher
-         Feed" (đăng bài/thích/bình luận nội bộ, xem js/portfolio.js §
-         PfFeed). Hiện cho MỌI role vào được trang này (không lọc theo
-         role như các mục trên) vì đây không phải công cụ dữ liệu riêng
-         của 1 vai trò, mà là kênh chung cho cả đội — mở tab mới để
-         không mất phiên làm việc đang dở trên dashboard. -->
+    <!-- portfolio.html: kênh chung cho cả đội, mọi vai trò đều thấy; mở tab mới. -->
     <a class="nav-item link-plain" href="portfolio.html" target="_blank" rel="noopener" id="gvLabLink" style="display:none;" title="Trang Social Media">
       <span class="nav-icon"><i class="fa-solid fa-share-nodes"></i></span>
       <span>Trang Social Media</span>
@@ -152,11 +141,7 @@
            hàng 2 = bộ lọc (không còn chen chúc trên 1 dòng như trước) -->
       <div class="toolbar">
         <div class="toolbar-row toolbar-row-primary">
-          <!-- fa-beat: theo https://docs.fontawesome.com/web/style/animate
-               ("Scale an icon up or down" để thu hút chú ý) — CHỈ chạy khi
-               hover (mặc định paused, xem .btn-create i.fa-beat trong
-               css/dashboard.css), không tự chạy liên tục để tránh cảm giác
-               "web AI" nhấp nháy vô tội vạ. -->
+          <!-- fa-beat chỉ chạy khi rê chuột (.btn-create i.fa-beat trong css/dashboard.css). -->
           <button type="button" class="btn-create" onclick="openExamBuilder({ fresh: true })"><i class="fa-solid fa-plus fa-beat"></i> Soạn đề mới</button>
           <button type="button" class="btn-create btn-create-ghost" onclick="EduExamBuilder.quickCreate()" title="Lưu 1 bộ Ôn tập / Kiểm tra theo tiết (câu All Key) thành bộ đề có link gửi học sinh"><i class="fa-solid fa-wand-magic-sparkles"></i> Đề có sẵn</button>
           <div class="search-box">
@@ -174,26 +159,14 @@
         </div>
       </div>
 
-      <!-- Cards Carousel / 3D Shelf (cùng một vùng hiển thị, chuyển đổi qua lại).
-           #cardsGrid GIỮ NGUYÊN id gốc (toggleShelfView() trong js/dashboard.js
-           chỉ ẩn/hiện qua .hidden, không cần sửa) — bọc quanh dải trượt (xem
-           css/dashboard.css mục "CAROUSEL"). Bỏ hẳn 2 nút mũi tên trái/phải
-           (phản hồi người dùng: để kéo trượt bằng tay/chuột chọn từng thẻ
-           cho dễ, không cần bấm mũi tên) — dải trượt vẫn giữ nguyên
-           scroll-snap + chấm điều hướng bên dưới. -->
+      <!-- Bộ đề dạng dải trượt (scroll-snap) hoặc kệ sách 3D; toggleShelfView() trong js/dashboard.js ẩn/hiện #cardsGrid. -->
       <div class="cards-viewport" id="cardsViewport">
         <div class="carousel-wrap" id="cardsGrid">
           <div class="carousel-track" id="carouselTrack" tabindex="0"></div>
         </div>
         <div class="carousel-dots" id="carouselDots"></div>
 
-        <!-- "🧊 Kệ sách 3D" — TRƯỚC ĐÂY chỉ là 1 nút nhỏ lạc lõng ở góc toolbar,
-             không ăn nhập gì với carousel bộ đề bên trên (phản hồi người
-             dùng) — giờ đổi thành 1 banner LỚN cùng ngôn ngữ thiết kế với
-             .quiz-card (bo góc, đổ bóng neumorphism, cover gradient) đặt
-             NGAY DƯỚI carousel, vừa dễ thấy/dễ bấm hơn hẳn, vừa TẬN DỤNG
-             LUÔN khoảng trống còn lại bên dưới carousel (cũng là phản hồi
-             người dùng) thay vì bỏ trống. -->
+        <!-- Lối vào Kệ sách 3D, đặt dưới dải bộ đề. -->
         <button type="button" class="shelf-promo-card" id="shelfPromoCard" onclick="toggleShelfView()">
           <span class="shelf-promo-icon"><i class="fa-solid fa-cube" aria-hidden="true"></i></span>
           <span class="shelf-promo-text">
@@ -223,11 +196,7 @@
       </div>
     </section>
 
-    <!-- ========================================
-         BUILDER SECTION — "Soạn đề" từ ngân hàng câu hỏi data/ic3
-         (js/exam-builder.js). 3 cột: Nguồn (bài/tiết/chủ đề) → Ngân
-         hàng câu (xem trước + thêm) → Đề đang soạn (sắp xếp + cài đặt).
-         ======================================== -->
+    <!-- Soạn đề từ data/ic3 (js/exam-builder.js): Nguồn → Ngân hàng câu → Đề đang soạn. -->
     <section class="section" id="section-builder">
       <div class="eb-root" id="ebRoot">
         <!-- Thanh trên: nhận diện đề (bấm để mở Cài đặt) + hành động -->
@@ -537,11 +506,7 @@
 <!-- ========================================
      JAVASCRIPT
      ======================================== -->
-<!-- Chart.js: ưu tiên bản tự lưu trữ (js/vendor) để không bị Tracking
-     Prevention / adblock của trình duyệt (Edge, Brave...) chặn khi tải từ
-     cdnjs — đây là nguyên nhân khiến 3 biểu đồ ở tab "Báo cáo kết quả" bị
-     trắng trơn trước đây. Nếu vì lý do nào đó file local thiếu, tự động
-     rơi về cdnjs → jsDelivr → unpkg trước khi bỏ cuộc. -->
+<!-- Chart.js: ưu tiên bản trong js/vendor (Edge/Brave hay chặn CDN), không có thì thử cdnjs → jsDelivr → unpkg. -->
 <script src="js/vendor/chart.umd.min.js"></script>
 <script>
   if (typeof Chart === 'undefined') {
@@ -558,10 +523,7 @@
     document.write('<script src="https://unpkg.com/chart.js@4.4.4/dist/chart.umd.min.js"><\/script>');
   }
 </script>
-<!-- Hiệu ứng khối 3D + đổ bóng cho biểu đồ (bar/doughnut/line) — tự đăng ký
-     vào MỌI Chart.js instance của trang, xem js/charts-3d.js. Nạp NGAY SAU
-     khi Chart.js đã sẵn sàng (dù đi qua nhánh local hay fallback CDN nào ở
-     trên), TRƯỚC dashboard.js (nơi thật sự new Chart(...)). -->
+<!-- Hiệu ứng khối cho biểu đồ (js/charts-3d.js). Nạp sau Chart.js, trước dashboard.js. -->
 <script src="js/charts-3d.js"></script>
 <script src="js/dashboard-page.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
@@ -576,19 +538,9 @@
 <script src="js/auth.js"></script>
 <script src="js/auth-guard.js"></script>
 <script src="js/idle-logout.js"></script>
-<!-- Hàm tính điểm TB/tỉ lệ đạt/nhóm theo lớp/xu hướng theo ngày DÙNG CHUNG
-     với Dashboard điều phối (coordinator-dashboard.html) và Dashboard giáo
-     viên (teacher-dashboard.html) — xem js/dashboard.js!renderReportStats()/
-     renderReportCharts(). Chỉ cần đúng file này (không cần
-     models/exam-history.model.js) vì tab "Báo cáo kết quả" không dùng các
-     hàm phụ thuộc examHistories (topStudents/studentsNeedingSupport/
-     completionRate). -->
+<!-- Hàm thống kê dùng chung với dashboard điều phối/giáo viên (renderReportStats/renderReportCharts). -->
 <script src="js/services/analytics-service.js"></script>
-<!-- Cache tạm (sessionStorage, TTL ngắn) cho tab "Báo cáo kết quả" — xem
-     js/dashboard.js § updateReportTab(). Tránh đọc lại TOÀN BỘ collection
-     "quiz_results" mỗi lần F5/mở lại trang (trước đây chỉ cache bằng biến
-     JS _reportRawDocs nên mất ngay khi tải lại trang — nguyên nhân chính
-     gây đột biến lượt đọc Firestore). Nạp TRƯỚC dashboard.js. -->
+<!-- Bản đệm cho tab Báo cáo kết quả (js/dashboard.js updateReportTab). Nạp trước dashboard.js. -->
 <script src="js/services/data-cache-service.js"></script>
 <script src="js/services/profile-cache-service.js"></script>
 <script src="js/dashboard.js"></script>

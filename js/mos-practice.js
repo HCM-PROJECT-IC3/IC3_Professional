@@ -102,7 +102,7 @@
     document.getElementById('mosDownloadBtn').setAttribute('href', currentProject.starterFile);
     document.getElementById('mosDownloadBtn').setAttribute('download', currentProject.starterFile.split('/').pop());
     document.getElementById('mosDownloadBtn').textContent =
-      `⬇️ Tải file đề bài${subj ? ' (' + subj.ext + ')' : ''}`;
+      `Tải file đề bài${subj ? ' (' + subj.ext + ')' : ''}`;
     document.getElementById('mosUploadLabel').textContent =
       `Chọn file ${subj ? subj.ext : ''} đã làm để nộp bài`;
     document.querySelectorAll('#mosSubjectName, #mosSubjectName2').forEach(el => {
@@ -164,7 +164,7 @@
     }
 
     isGrading = true;
-    setUploadStatus('⏳ Đang đọc và chấm điểm file...', 'busy');
+    setUploadStatus('Đang đọc và chấm điểm file...', 'busy');
 
     let graded = null;
     try {
@@ -226,7 +226,7 @@
 
     listEl.innerHTML = graded.results.map(r => {
       const cls = r.manual ? 'is-manual' : (r.passed ? 'is-pass' : 'is-fail');
-      const icon = r.manual ? '👀' : (r.passed ? '✅' : '❌');
+      const icon = r.manual ? '<i class="fa-solid fa-eye" aria-hidden="true"></i>' : (r.passed ? '<i class="fa-solid fa-check" aria-hidden="true"></i>' : '<i class="fa-solid fa-xmark" aria-hidden="true"></i>');
       return `
         <div class="mos-result-item ${cls}">
           <span class="mos-result-icon">${icon}</span>

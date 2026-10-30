@@ -38,7 +38,7 @@
   'use strict';
 
   window.EDU_SHAREPOINT_CONFIG = window.EDU_SHAREPOINT_CONFIG || {
-    // ⚠️ Điền 3 giá trị dưới đây sau khi đăng ký app ở Entra admin center
+    // Điền 3 giá trị dưới đây sau khi đăng ký app ở Entra admin center
     // (xem hướng dẫn phía trên) — để trống thì nút "Đồng bộ SharePoint" sẽ
     // báo lỗi hướng dẫn thay vì âm thầm không chạy được gì.
     clientId: '4f3d02f0-105b-4427-9937-8d00d9442c4e',

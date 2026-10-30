@@ -1,58 +1,19 @@
 rules_version = '2';
 
-// ============================================================
-// Firestore Security Rules — EduQuiz IC3
-// Dán toàn bộ nội dung file này vào Firebase Console → Firestore
-// Database → Rules, rồi bấm "Publish".
+// Firestore Security Rules — EduQuiz IC3 (project data-ic3)
+// Publish: firebase deploy --only firestore:rules --project data-ic3
 //
-// Vai trò (role): "admin" | "teacher" | "coordinator" | "teaching_coordinator" | "student"
-// - admin:       toàn quyền.
-// - teacher:     chỉ được sửa collection "questions" SAU KHI được admin
-//                duyệt (approved == true). Không được tự đổi role/approved
-//                của mình. Được ĐỌC báo cáo kết quả (quiz_results) NHƯNG CHỈ
-//                của (các) trường được Admin gán thủ công vào field "schools"
-//                trên hồ sơ mình (Commit #6/LMAP, gán trong admin-users.html,
-//                từ bản mở rộng sau tự đồng bộ theo lớp đang dạy thật) —
-//                không xem được trường khác. Roster (students_roster) CÒN
-//                SCOPE CHẶT HƠN: ngoài đúng trường, còn phải đúng
-//                "teacherId == chính mình" mới đọc được — TRƯỚC ĐÂY chỉ lọc
-//                theo trường, nên 1 giáo viên xem được CẢ học sinh của giáo
-//                viên KHÁC cùng trường (lỗi đã sửa): 2 giáo viên có thể dạy
-//                chung 1 trường/thậm chí trông giống cùng khối, nhưng mỗi
-//                người chỉ thấy đúng lớp CỦA MÌNH được phân công.
-// - coordinator: "🧭 Điều phối đào tạo" — quản lý roster (students_roster:
-//                tải học sinh lên, điểm số/điểm danh) NHƯNG CHỈ của (các)
-//                trường được Admin gán vào "schools" trên hồ sơ mình (CÙNG
-//                field "schools" dùng cho teacher, xem myCoordinatorSchools()
-//                — trước đây field này KHÔNG được kiểm tra cho coordinator,
-//                tức mọi coordinator tự động xem/sửa được TOÀN BỘ trường,
-//                bất kể "schools" ghi gì — đã sửa: giờ coordinator PHẢI có
-//                trường đó trong "schools" của mình mới đọc/ghi được, ĐÚNG
-//                như tên gọi "trường mình hỗ trợ". Một coordinator có thể
-//                được gán 1 hoặc nhiều trường.) + CHỈ ĐỌC quiz_results (báo
-//                cáo trực quan) trong phạm vi đó. "courses"/"classes" KHÔNG
-//                có field trường (schema không hỗ trợ) nên vẫn để coordinator
-//                truy cập toàn bộ 2 collection này (không scope được).
-//                KHÔNG có quyền gì trên 6 collection teaching_* (lịch
-//                giảng dạy của giáo viên) — đây là việc của role riêng
-//                "teaching_coordinator" bên dưới, 2 phạm vi TÁCH HẲN nhau,
-//                không chồng lấn. Không có quyền sửa questions/users.
-// - teaching_coordinator: "🚗 Điều phối giáo viên" — CHỈ ĐỌC 5 collection
-//                teaching_* (Lịch giảng dạy/TKB của MỌI giáo viên, tổng
-//                hợp báo cáo biểu đồ/pivot table) + ĐỌC/GHI
-//                teaching_travel_distances (khoảng cách nhà→trường từng
-//                giáo viên, để tính hỗ trợ xăng xe) — KHÔNG đụng gì tới
-//                roster/quiz_results/điểm số học sinh (đó là việc của
-//                "coordinator" ở trên), không có quyền sửa
-//                questions/users/teaching_teachers|weeks|schedule|timetable*.
-// - student:     chỉ đọc, không ghi được questions/users của người khác.
-//                Học sinh làm bài KHÔNG cần đăng nhập Firebase Auth — vì
-//                vậy việc ghi kết quả bài thi (quiz_results) phải cho phép
-//                cả người dùng CHƯA đăng nhập, nhưng có kiểm tra dữ liệu
-//                chặt để chống giả mạo.
-// Tài khoản "admin"/"coordinator"/"teaching_coordinator" KHÔNG thể tự đăng
-// ký — chỉ được ADMIN gán thủ công trong admin-users.html.
-// ============================================================
+// Vai trò (users/{uid}.role):
+//   admin                 toàn quyền.
+//   teacher               cần approved == true. Đọc kết quả của các trường trong "schools"
+//                         (Admin gán), đọc roster của học sinh có teacherId == mình,
+//                         đọc lịch giảng dạy cả đội, sửa lịch của chính mình.
+//   coordinator           Điều phối đào tạo: đọc/ghi roster và đọc kết quả trong các trường
+//                         thuộc "schools"; không có quyền với teaching_*.
+//   teaching_coordinator  Điều phối giáo viên: đọc mọi teaching_*, ghi
+//                         teaching_travel_distances; không có quyền với roster/kết quả.
+//   student               không cần tài khoản để làm bài.
+// admin/coordinator/teaching_coordinator chỉ Admin gán được (admin-users.html).
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -60,11 +21,9 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Trang học sinh có được TỰ GHI quiz_results không (không cần đăng nhập). Từ 15/10/2026
-    // bài nộp mặc định chỉ lên Google Sheet (js/backend-config.js → quizResults.firestore =
-    // 'off') → ĐÓNG: trước đây ai cầm apiKey công khai cũng ghi được rác vào đây, đốt hạn mức
-    // 20.000 lượt ghi/ngày + dung lượng 1 GiB dù web không còn dùng. Đổi firestore về 'all' /
-    // 'test-only' thì sửa false → true RỒI publish rules (trước khi đẩy web).
+    // Trang học sinh có tự ghi quiz_results không. Bài nộp hiện chỉ lên Google Sheet
+    // (js/backend-config.js → quizResults.firestore = 'off'). Đổi sang 'all'/'test-only' thì
+    // sửa thành true và publish rules trước khi đẩy web (test backend-consistency kiểm tra).
     function quizResultsOpen() {
       return false;
     }
@@ -80,111 +39,57 @@ service cloud.firestore {
     function isCoordinator() {
       return isSignedIn() && myProfile().role == 'coordinator';
     }
-    // "🚗 Điều phối giáo viên" — role RIÊNG, TÁCH HẲN khỏi isCoordinator()
-    // ("🧭 Điều phối đào tạo" ở trên, quản lý roster/điểm số/điểm danh học
-    // sinh). teaching_coordinator CHỈ đụng tới lịch giảng dạy/TKB/báo cáo/
-    // hỗ trợ xăng xe của giáo viên (teaching-schedule.html) — KHÔNG có
-    // quyền gì trên roster/quiz_results, và ngược lại isCoordinator()
-    // KHÔNG còn quyền gì trên các collection teaching_* nữa (xem bên dưới).
     function isTeachingCoordinator() {
       return isSignedIn() && myProfile().role == 'teaching_coordinator';
     }
     function isEditor() {
       return isAdmin() || isApprovedTeacher();
     }
-    // Danh sách trường mà giáo viên hiện tại ĐƯỢC PHÉP xem — do Admin gán
-    // thủ công trong admin-users.html (field "schools" trên users/{uid}),
-    // KHÔNG do giáo viên tự khai. Giáo viên chưa được gán trường nào
-    // ("schools" thiếu/rỗng) sẽ không đọc được document nào cả (in [] luôn false).
+    // Trường được xem: field "schools" do Admin gán. Thiếu/rỗng → không đọc được gì.
     function myTeacherSchools() {
       return isApprovedTeacher() && ('schools' in myProfile()) ? myProfile().schools : [];
     }
-    // Danh sách trường mà 1 "🧭 Điều phối đào tạo" ĐƯỢC PHÉP hỗ trợ — cùng
-    // field "schools" trên users/{uid} như giáo viên (gán/xem/sửa chung ở
-    // admin-users.html), khác ở chỗ coordinator dùng field này để QUẢN LÝ cả
-    // trường (không chỉ xem), và có thể được gán NHIỀU trường cùng lúc.
-    // Coordinator chưa được gán trường nào ("schools" thiếu/rỗng) sẽ không
-    // đọc/ghi được document nào cả (in [] luôn false) — GIỐNG teacher, không
-    // còn mặc định thấy hết như trước.
     function myCoordinatorSchools() {
       return isCoordinator() && ('schools' in myProfile()) ? myProfile().schools : [];
     }
-    // Điều kiện scoping theo trường cho 1 document có field "school"/"studentSchool".
-    // LƯU Ý: mọi câu lệnh LIST (query) vào các collection dùng hàm này BẮT BUỘC
-    // phải có where(...,'in', myTeacherSchools()/myCoordinatorSchools()) ở phía
-    // client — nếu không, Firestore sẽ từ chối toàn bộ câu query (không lọc
-    // ngầm), vì rule chỉ xác nhận từng document trả về có hợp lệ hay không,
-    // không tự thêm điều kiện lọc giúp client.
+    // Query danh sách dùng hàm này phải có where(field, 'in', schools) ở client,
+    // nếu không Firestore từ chối cả query.
     function isOwnSchoolField(fieldName) {
       return isAdmin()
         || (isCoordinator() && resource.data[fieldName] in myCoordinatorSchools())
         || (isApprovedTeacher() && resource.data[fieldName] in myTeacherSchools());
     }
-    // Riêng cho students_roster: giáo viên phải đúng TEACHERID (chính học
-    // sinh đó do mình phụ trách) mới đọc được — CỐ TÌNH CHỈ dùng teacherId,
-    // KHÔNG thêm điều kiện "school in myTeacherSchools()" nữa (dù về ý
-    // nghĩa 2 điều luôn đi cùng nhau — 1 học sinh do giáo viên X phụ trách
-    // thì trường của học sinh đó đương nhiên là trường X đang dạy): ghép
-    // thêm field thứ 2 buộc client phải where() cả 2 field cùng lúc, tạo
-    // composite index (Firestore tự nhắc tạo lúc chạy) — teacherId đứng 1
-    // mình đã là điều kiện ĐỦ CHẶT (chỉ đúng 1 giáo viên khớp), không cần
-    // field phụ. Coordinator: vẫn chỉ cần đúng trường (được xem/sửa CẢ đội
-    // giáo viên trong trường mình hỗ trợ, đó là việc của điều phối). Tách
-    // riêng khỏi isOwnSchoolField() vì quiz_results/mos_submissions không
-    // có field "teacherId" để so khớp.
+    // students_roster: giáo viên lọc theo teacherId (đủ chặt, khỏi cần composite index
+    // teacherId + school); điều phối lọc theo trường.
     function canAccessRosterStudent() {
       return isAdmin()
         || (isCoordinator() && resource.data.school in myCoordinatorSchools())
         || (isApprovedTeacher() && resource.data.teacherId == request.auth.uid);
     }
-    // Bản dùng cho create (chưa có `resource.data` — request.resource.data mới
-    // là dữ liệu SẮP ghi) — coordinator tạo/sửa học sinh chỉ trong trường mình
-    // hỗ trợ; giáo viên KHÔNG được tạo/sửa roster (đây vẫn là việc của Điều
-    // phối đào tạo/Admin, xem match /students_roster/ bên dưới).
+    // Ghi/xoá roster: chỉ Admin và điều phối của trường đó (giáo viên chỉ đọc).
     function canWriteRosterStudent() {
       return isAdmin()
         || (isCoordinator() && request.resource.data.school in myCoordinatorSchools());
     }
-    // Bản dùng cho DELETE — CỐ TÌNH KHÔNG dùng chung canAccessRosterStudent()
-    // (hàm đó có thêm vế giáo viên, dành cho ĐỌC) vì giáo viên KHÔNG được
-    // xoá roster dù là học sinh lớp mình — việc đó vẫn chỉ của Admin/Điều
-    // phối đào tạo, giữ nguyên hành vi cũ, chỉ siết thêm phạm vi trường cho
-    // coordinator.
     function canDeleteRosterStudent() {
       return isAdmin()
         || (isCoordinator() && resource.data.school in myCoordinatorSchools());
     }
-    // Mã NV (teaching_teachers) mà giáo viên hiện tại được liên kết — do
-    // Admin gán thủ công trong admin-users.html (field "teacherCode" trên
-    // users/{uid}), KHÔNG do giáo viên tự khai. Dùng để giáo viên CHỈ xem
-    // được đúng lịch giảng dạy của chính mình (teaching-schedule.html),
-    // không xem được lịch của giáo viên khác.
+    // Mã NV (teaching_teachers) Admin gán cho giáo viên.
     function myTeacherCode() {
       return (isApprovedTeacher() && ('teacherCode' in myProfile())) ? myProfile().teacherCode : null;
     }
-    // ---- Tài khoản người dùng & phân quyền ----
+
+    // ---- Tài khoản ----
     match /users/{userId} {
       allow get: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
-      // Query danh sách BẮT BUỘC có limit() ≤ 1000 (đợt tối ưu hạn mức 10/2026) —
-      // chặn query quên limit đọc nguyên collection.
       allow list: if request.query.limit <= 1000 && (isAdmin() || (
         (isApprovedTeacher() || isCoordinator() || isTeachingCoordinator()) &&
         resource.data.role == 'teacher' && resource.data.approved == true
       ));
 
-      // Admin tạo hồ sơ THAY cho người khác — dùng khi admin-users.html
-      // (📥 Nhập giáo viên từ Excel) tự tạo tài khoản Auth + hồ sơ Firestore
-      // hàng loạt cho giáo viên (uid vừa tạo KHÁC uid của admin đang đăng
-      // nhập, nên nhánh tự đăng ký bên dưới — bắt buộc uid trùng — không
-      // áp dụng được cho trường hợp này). Cho phép TOÀN QUYỀN vì admin vốn
-      // đã full quyền update/delete collection này.
-      //
-      // Tự đăng ký: chỉ được tạo hồ sơ của chính mình, role student|teacher,
-      // và không được tự "approved: true" nếu xin làm teacher.
-      // Schema tạo mới không nhận field phân quyền (schools/teacherCode...).
-      // Lưu ý: role "admin", "coordinator" và "teaching_coordinator" KHÔNG
-      // nằm trong danh sách này — 3 vai trò này chỉ có thể được ADMIN gán
-      // thủ công (admin-users.html).
+      // Admin tạo hồ sơ hộ (nhập giáo viên từ Excel). Tự đăng ký: chỉ hồ sơ của mình,
+      // role student|teacher, giáo viên chưa được duyệt, không kèm field phân quyền.
       allow create: if isAdmin() || (
         isSignedIn() && request.auth.uid == userId
         && request.resource.data.keys().hasOnly([
@@ -203,9 +108,7 @@ service cloud.firestore {
         )
       );
 
-      // Admin có thể sửa bất kỳ hồ sơ nào (đổi role, duyệt teacher...).
-      // Người dùng thường chỉ được sửa tên/email của chính mình; các field
-      // phân quyền như schools/teacherCode/requestedRole luôn do Admin quản lý.
+      // Người dùng chỉ tự sửa tên/email.
       allow update: if isAdmin() || (
         isSignedIn() && request.auth.uid == userId &&
         request.resource.data.role == resource.data.role &&
@@ -216,23 +119,16 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // ---- Ngân hàng câu hỏi (dùng bởi image-manager.html) ----
-    // Không còn trang nào đọc collection này (đề nằm ở data/ic3 tĩnh, xem
-    // js/image-manager.js) — đóng đọc công khai: trước đây ai cầm apiKey cũng
-    // kéo được cả ngân hàng câu hỏi, đốt hạn mức đọc 50.000/ngày.
+    // ---- Ngân hàng câu hỏi cũ (đề nằm ở data/ic3, không trang học sinh nào đọc) ----
     match /questions/{questionId} {
       allow get: if isEditor();
       allow list: if isEditor() && request.query.limit <= 1000;
       allow write: if isEditor();
     }
 
-    // ---- Kết quả bài thi (dùng bởi index.html sau khi nộp bài, và
-    //      ic3-dashboard.html → mục "Báo cáo kết quả" cho điều phối
-    //      đào tạo / giáo viên / admin xem báo cáo trực quan) ----
+    // ---- Kết quả bài thi ----
     match /quiz_results/{resultId} {
-      // Học sinh làm bài KHÔNG đăng nhập Firebase Auth → cho phép tạo mới
-      // mà không cần isSignedIn(). Chỉ giới hạn schema/giá trị để giảm ghi
-      // rác; vì điểm được tính ở client, các rule này KHÔNG xác thực điểm thật.
+      // Học sinh không đăng nhập → kiểm tra schema/giá trị (điểm tính ở client, không xác thực được).
       allow create: if quizResultsOpen() &&
         request.resource.data.keys().hasOnly([
           'studentName', 'studentClass', 'studentSchool', 'category', 'level',
@@ -245,10 +141,6 @@ service cloud.firestore {
         request.resource.data.studentName.size() < 200 &&
         request.resource.data.studentClass is string &&
         request.resource.data.studentClass.size() < 200 &&
-        // studentSchool bắt buộc khác rỗng (Commit #6/LMAP): cần field này để
-        // Firestore rules lọc được báo cáo theo trường cho giáo viên bên dưới.
-        // index.html đã chọn Trường qua dropdown chuẩn hoá (js/lobby-roster.js),
-        // không phải gõ tay, nên giá trị luôn khớp với "schools" gán cho giáo viên.
         request.resource.data.studentSchool is string &&
         request.resource.data.studentSchool.size() > 0 &&
         request.resource.data.studentSchool.size() < 200 &&
@@ -271,36 +163,18 @@ service cloud.firestore {
         request.resource.data.timedOut is bool &&
         request.resource.data.submittedAt == request.time &&
         request.resource.data.expireAt is timestamp &&
-        // Chặn đặt expireAt quá xa để né TTL (chiếm dung lượng 1 GiB mãi mãi).
-        // 400 ngày: còn chỗ cho bài cũ trong hàng đợi gửi lại mang hạn 365 ngày.
+        // Không cho đặt expireAt quá xa để né TTL (400 ngày: bài cũ trong hàng đợi mang hạn 365 ngày).
         request.resource.data.expireAt < request.time + duration.value(400, 'd');
 
-      // Admin: xem toàn bộ. Coordinator/Giáo viên: CHỈ xem kết quả của học
-      // sinh thuộc (các) trường đã được Admin gán ở admin-users.html
-      // (users/{uid}.schools) — KHÔNG còn được đọc toàn bộ collection như
-      // trước (lỗ hổng Commit #6 sửa cho teacher, ĐỢT NÀY sửa tiếp cho
-      // coordinator — trước đây coordinator luôn qua được vế isCoordinator()
-      // đứng riêng nên bỏ qua hẳn scope trường, xem isOwnSchoolField()).
-      // Query BẮT BUỘC có limit() ≤ 10.000 (mức tối đa dashboard dùng, xem
-      // js/dashboard.js § updateReportTab / base-repository.js DEFAULT_LIST_LIMIT) —
-      // collection lớn nhất dự án, 1 query không limit có thể đốt trọn hạn mức đọc
-      // 50.000/ngày của gói Spark.
+      // Đọc theo trường; query phải có limit() ≤ 10.000.
       allow get: if isOwnSchoolField('studentSchool');
       allow list: if request.query.limit <= 10000 && isOwnSchoolField('studentSchool');
-      // Coordinator cũng được XOÁ (dùng ở ic3-dashboard.html → "🗂️ Chi tiết
-      // lượt làm bài" → nút xoá từng lượt, vd dọn bản ghi test/trùng) — CHỈ
-      // trong (các) trường mình hỗ trợ. KHÔNG thêm coordinator vào update:
-      // vẫn chỉ Admin được SỬA điểm số đã nộp (tránh gian lận sửa điểm),
-      // coordinator chỉ được xoá hẳn bản ghi, không sửa nội dung.
+      // Chỉ Admin sửa điểm; điều phối được xoá bản ghi (dọn bài test/trùng) trong trường mình.
       allow update: if isAdmin();
       allow delete: if isAdmin() || (isCoordinator() && resource.data.studentSchool in myCoordinatorSchools());
     }
 
-    // ---- Kết quả nộp bài MOS Practice (mos-practice.html, chấm bằng ExcelJS
-    //      NGAY TRONG TRÌNH DUYỆT — file .xlsx học sinh nộp KHÔNG được gửi
-    //      lên server/Storage, chỉ kết quả chấm được lưu ở đây). Cùng mô
-    //      hình xác thực với quiz_results ở trên (học sinh không đăng nhập
-    //      Firebase Auth; schema giới hạn chỉ giảm ghi rác, không xác thực điểm). ----
+    // ---- Kết quả MOS Practice (chấm trong trình duyệt, chỉ lưu kết quả) ----
     match /mos_submissions/{submissionId} {
       allow create: if
         request.resource.data.keys().hasOnly([
@@ -334,10 +208,9 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
-    // ---- Đường dự phòng Phòng cả lớp Đấu trường (js/arena/arena-relay.js) ----
-    // Chỉ dùng cho học sinh KHÔNG nối thẳng WebRTC được tới máy giáo viên (4G, Wi-Fi khác).
-    // Document phòng do máy giáo viên ghi (gom ≤ 1 lần/giây); mỗi học sinh dự phòng ghi đúng
-    // 1 document up/{uid} của mình (đăng nhập ẩn danh). Dữ liệu trò chơi tạm, tự hết hạn (exp).
+    // ---- Đường dự phòng Phòng cả lớp (js/arena/arena-relay.js) ----
+    // Cho học sinh không nối thẳng WebRTC được. Máy giáo viên ghi document phòng; mỗi học
+    // sinh (đăng nhập ẩn danh) ghi đúng up/{uid} của mình. Dữ liệu tạm, TTL theo exp.
     match /arena_relay/{code} {
       allow get: if isSignedIn();
       allow list: if false;
@@ -354,15 +227,11 @@ service cloud.firestore {
         && request.resource.data.out is map;
       allow delete: if isSignedIn() && resource.data.hostUid == request.auth.uid;
       match /up/{uid} {
-        // Chỉ máy giáo viên chủ phòng đọc tin học sinh gửi (1 lượt get() khi bắt đầu nghe)
+        // Chỉ máy chủ phòng đọc tin học sinh gửi.
         allow get, list: if isSignedIn()
           && get(/databases/$(database)/documents/arena_relay/$(code)).data.hostUid == request.auth.uid;
-        // Chống đốt lượt ghi bằng tài khoản ẩn danh (26/10/2026):
-        //   • at == giờ máy chủ, 2 lần ghi cách nhau > 0,5 giây (máy em tự giãn ≥ 1 giây,
-        //     js/arena/arena-relay.js UP_GAP_MS) — lệnh ghi bị rules từ chối không tính lượt ghi;
-        //   • chỉ ghi được vào phòng ĐANG MỞ (get() phòng = 1 lượt đọc/lần ghi) — trước đây ghi
-        //     được vào mã phòng bất kỳ, tạo document rác không ai xoá.
-        // Document up/{uid} không bị xoá theo phòng → TTL trên exp (firestore.indexes.json).
+        // Chống đốt lượt ghi: at == giờ máy chủ, 2 lần ghi cách nhau > 0,5 giây (client giãn
+        // ≥ 1 giây), chỉ ghi vào phòng còn hạn. Lệnh bị từ chối không tính lượt ghi.
         allow create, update: if isSignedIn() && request.auth.uid == uid
           && request.resource.data.keys().hasOnly(['m', 'exp', 'at'])
           && request.resource.data.m is list && request.resource.data.m.size() <= 4
@@ -376,11 +245,7 @@ service cloud.firestore {
       }
     }
 
-    // ---- Phòng "Thử thách cùng lớp" cũ (live-quiz.html) — ĐÃ BỎ ----
-    // live-quiz.html chỉ còn chuyển hướng sang arena.html (Phòng cả lớp, WebRTC, 0 Firebase);
-    // không trang nào đọc/ghi live_rooms/live_hosts nữa. Đóng hẳn (26/10/2026): trước đây
-    // players/answers cho tài khoản ẨN DANH ghi → bề mặt đốt lượt ghi không cần thiết.
-    // Dữ liệu cũ còn sót do TTL (expiresAt) tự xoá.
+    // ---- live-quiz cũ (đã chuyển sang arena.html). Đóng hẳn; dữ liệu sót do TTL dọn. ----
     match /live_hosts/{hostUid} {
       allow read, write: if false;
     }
@@ -391,31 +256,9 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // ---- Roster: khoá học / lớp / học sinh thật (Điều phối đào tạo quản lý
-    //      trong roster-manager.html) ----
-    // TRƯỚC ĐÂY 3 collection này "allow read: if true" (đọc công khai, không
-    // cần đăng nhập) vì màn hình học sinh (index.html) từng đọc trực tiếp
-    // "students_roster" mỗi lần tải trang để đổ 3 select Trường/Lớp/Tên.
-    // Việc đó gây nổ quota đọc Firestore (mỗi lần mở/tải lại trang tốn 1 lượt
-    // đọc × số học sinh "Đang học") — chỉ ~100 lượt mở trang là chạm trần
-    // 50.000 lượt đọc/ngày của gói Spark với roster 500 học sinh.
-    // index.html giờ đọc từ file tĩnh data/roster/students-active.json (xuất
-    // thủ công từ roster-manager.html, xem js/lobby-roster.js) thay vì gọi
-    // Firestore, nên CHỈ admin/coordinator (đã đăng nhập, ở roster-manager.html
-    // hoặc coordinator-dashboard.html) mới cần đọc 3 collection này nữa —
-    // đóng luôn quyền đọc công khai để không ai đọc trực tiếp qua Firestore
-    // SDK từ bên ngoài (kể cả khi không dùng index.html).
-    // NHỚ: đổi rule này chỉ có hiệu lực sau khi PUBLISH lại Firestore Rules
-    // (Firebase Console → Firestore Database → Rules → Publish, hoặc
-    // `firebase deploy --only firestore:rules`).
-    // "courses"/"classes" CỐ TÌNH giữ nguyên isCoordinator() KHÔNG scope theo
-    // trường (khác students_roster/quiz_results/mos_submissions ở trên) —
-    // 2 collection này KHÔNG có field "school"/"studentSchool" trong schema
-    // (courses = { name, level }, classes = { name, courseId, teacherId,
-    // teacherName, studentCount } — xem js/models/roster.model.js), nên
-    // không có gì để so khớp với myCoordinatorSchools(). Coordinator vẫn cần
-    // đọc "courses" để hiện tên khoá học trên roster; hạn chế thật sự về
-    // trường vẫn nằm ở students_roster (nơi thật sự có PII học sinh).
+    // ---- Roster (roster-manager.html, coordinator/teacher dashboard) ----
+    // Trang học sinh đọc file tĩnh data/roster/students-active.json, không đọc Firestore.
+    // courses/classes không có field trường nên điều phối truy cập toàn bộ.
     match /courses/{courseId} {
       allow get: if isAdmin() || isCoordinator();
       allow list: if request.query.limit <= 10000 && (isAdmin() || isCoordinator());
@@ -429,66 +272,25 @@ service cloud.firestore {
     }
 
     match /students_roster/{studentId} {
-      // Giáo viên (Commit #6/LMAP, SIẾT LẠI đợt này): chỉ đọc học sinh thuộc
-      // trường đã được gán VÀ do CHÍNH MÌNH phụ trách (teacherId ==
-      // request.auth.uid) — TRƯỚC ĐÂY chỉ lọc theo trường, nên 2 giáo viên
-      // dạy chung 1 trường nhìn thấy roster CỦA NHAU (lỗi người dùng phản
-      // hồi, xem canAccessRosterStudent()). Coordinator: vẫn theo trường
-      // (được xem/sửa roster CẢ đội giáo viên trong (các) trường mình hỗ
-      // trợ, đó đúng là việc của Điều phối đào tạo — không siết theo
-      // teacherId như giáo viên). Dùng cho teacher-dashboard.html/
-      // roster-manager.html. "classes" KHÔNG mở cho giáo viên vì document đó
-      // không có field "school" (chỉ có teacherId/courseId) — teacher-dashboard.html
-      // không cần đọc trực tiếp collection "classes", chỉ cần "className" đã
-      // denormalize sẵn trên từng document students_roster.
-      // Query BẮT BUỘC có limit() ≤ 10.000 (base-repository.js luôn tự thêm limit).
       allow get: if canAccessRosterStudent();
       allow list: if request.query.limit <= 10000 && canAccessRosterStudent();
-      // Ghi (tạo/sửa lớp-học sinh mới, đổi trạng thái...) vẫn là việc của
-      // Điều phối đào tạo/Admin (roster-manager.html) — giáo viên KHÔNG ghi
-      // được, kể cả học sinh của chính lớp mình. Coordinator CHỈ ghi được
-      // trong (các) trường mình hỗ trợ (trước đây không giới hạn gì).
       allow create, update: if canWriteRosterStudent();
       allow delete: if canDeleteRosterStudent();
     }
 
-    // ---- Lịch giảng dạy hàng tuần của đội ngũ giáo viên
-    //      (teaching-schedule.html) — thay thế file Excel
-    //      "LỊCH GIẢNG DẠY TEAM GVTH...xlsx" quản lý thủ công trước đây.
-    //      Admin: toàn quyền quản lý (thêm/sửa/xoá GV, nhập Excel, sửa lịch
-    //      mọi tuần). Giáo viên (đã được Admin liên kết "teacherCode" trong
-    //      admin-users.html): CHỈ ĐỌC (chế độ xem, riêng teaching_schedule
-    //      thì TỰ CẬP NHẬT được), và CHỈ đúng bản ghi của chính mình —
-    //      không xem/sửa được lịch giáo viên khác. "🚗 Điều phối giáo viên"
-    //      (teaching_coordinator): CHỈ ĐỌC toàn bộ (mọi giáo viên/mọi tuần)
-    //      — cần xem lịch cả đội để tổng hợp báo cáo (biểu đồ/pivot table)
-    //      + tính hỗ trợ xăng xe, KHÔNG được ghi gì ở 5 collection này
-    //      (isTeachingCoordinator() cố tình vắng mặt ở mọi allow write —
-    //      quyền ghi chỉ isAdmin()/giáo viên tự cập nhật lịch của chính
-    //      mình). "🧭 Điều phối đào tạo" (isCoordinator()) CỐ TÌNH KHÔNG
-    //      xuất hiện ở bất kỳ rule nào bên dưới — 2 role điều phối tách
-    //      biệt hoàn toàn, coordinator không đụng gì tới lịch giảng dạy.
-    //      teaching-schedule.html/js đã ẩn hết nút thêm/sửa/xoá khi role
-    //      teaching_coordinator (xem applyRoleUI() + body.role-teaching-coordinator
-    //      trong css/teaching-schedule.css) — rule ở đây là chốt chặn thật. ----
+    // ---- Lịch giảng dạy (teaching-schedule.html) ----
+    // Admin quản lý; giáo viên đọc cả đội và sửa lịch của chính mình; điều phối giáo viên
+    // chỉ đọc (ghi được mỗi teaching_travel_distances). Điều phối đào tạo không có quyền.
     match /teaching_teachers/{teacherCode} {
-      // Giáo viên giờ ĐƯỢC XEM lịch của CẢ ĐỘI (bảng "Tổng quan"/"Thẻ" đầy
-      // đủ như admin), không còn giới hạn chỉ đúng document của chính mình
-      // — CHỈ nới quyền ĐỌC; quyền GHI vẫn chốt ở teaching_schedule bên
-      // dưới (mỗi giáo viên chỉ sửa được đúng lịch của mình).
       allow get: if isAdmin() || isTeachingCoordinator() || isApprovedTeacher();
       allow list: if request.query.limit <= 10000 && (isAdmin() || isTeachingCoordinator() || isApprovedTeacher());
       allow write: if isAdmin();
     }
     match /teaching_weeks/{weekKey} {
-      // Nhãn tuần (vd "7.9 - 12.9.2026") không phải dữ liệu nhạy cảm và cần
-      // đọc được để giáo viên chọn đúng tuần xem lịch của mình → cho phép
-      // mọi giáo viên đã duyệt đọc toàn bộ danh sách tuần (không cần scope).
       allow get: if isAdmin() || isTeachingCoordinator() || isApprovedTeacher();
       allow list: if request.query.limit <= 10000 && (isAdmin() || isTeachingCoordinator() || isApprovedTeacher());
-      // Giáo viên tự nhập lịch từ Excel (teaching-schedule.html → "Nhập lịch của tôi") được TẠO
-      // tuần chưa có — chỉ tạo (không sửa/xoá nhãn tuần người khác đã tạo), mã = ngày thứ Hai
-      // "YYYY-MM-DD", đúng 2 trường như M.buildWeek().
+      // Giáo viên tự nhập lịch từ Excel được tạo tuần chưa có (id = thứ Hai "YYYY-MM-DD"),
+      // không sửa/xoá tuần đã có.
       allow create: if isAdmin() || (isApprovedTeacher()
         && weekKey.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
         && request.resource.data.keys().hasOnly(['label', 'createdAt'])
@@ -497,82 +299,40 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
     match /teaching_schedule/{scheduleId} {
-      // Đọc: mọi giáo viên đã duyệt xem được lịch của CẢ ĐỘI (giống hệt
-      // admin) — không còn lọc theo teacherCode == chính mình nữa.
       allow get: if isAdmin() || isTeachingCoordinator() || isApprovedTeacher();
       allow list: if request.query.limit <= 10000 && (isAdmin() || isTeachingCoordinator() || isApprovedTeacher());
-      // Giáo viên được TỰ CẬP NHẬT đúng lịch của chính mình (teaching-schedule.html
-      // → khối "Lịch của tôi") — chỉ tạo/sửa bản ghi có teacherCode == chính mình,
-      // không đụng được lịch giáo viên khác. Xoá vẫn chỉ Admin (không có nút xoá
-      // lịch tuần trên UI, chỉ để phòng thao tác ngoài ý muốn).
-      // Mã document phải đúng "<mã NV của mình>__<weekKey>" — trước đây chỉ kiểm teacherCode
-      // trong dữ liệu, nên ghi set() vào document của giáo viên KHÁC (kèm teacherCode của mình)
-      // vẫn lọt và đè mất lịch của họ.
+      // Giáo viên chỉ ghi document "<mã NV của mình>__<weekKey>".
       allow create, update: if isAdmin()
         || (isApprovedTeacher() && request.resource.data.teacherCode == myTeacherCode()
             && scheduleId == myTeacherCode() + '__' + request.resource.data.weekKey);
       allow delete: if isAdmin();
     }
 
-    // ---- Tab "🗓️ TKB lớp" (thời khoá biểu dạng lưới tiết học, treo lớp) —
-    //      quản lý bởi Admin; giáo viên/điều phối giáo viên chỉ đọc, không
-    //      sửa được (giáo viên CHỈ đúng bản ghi của chính mình, điều phối
-    //      giáo viên đọc HẾT).
-    //      RIÊNG "⏱️ Giờ tiết" (teaching_timetable_periods) — giáo viên ĐƯỢC
-    //      tự ghi ĐÚNG document của chính mình (thiết lập linh hoạt khung
-    //      giờ Sáng/Chiều theo cấp học THCS/TiH cho từng Thứ, xem modal
-    //      "⏱️ Giờ tiết" ở js/teaching-timetable.js). teaching_timetable
-    //      (lưới mã lớp) bên dưới: giáo viên chỉ ghi được ĐÚNG bản ghi của mình
-    //      khi tự nhập lịch từ Excel (10/2026). "🚗 Điều phối giáo
-    //      viên" (isTeachingCoordinator()) CỐ TÌNH không có ở allow write —
-    //      vẫn chỉ đọc như trước, chỉ mở thêm quyền ghi cho ĐÚNG giáo viên. ----
+    // TKB lớp. Giờ tiết: giáo viên tự sửa document của mình.
     match /teaching_timetable_periods/{teacherCode} {
       allow get: if isAdmin() || isTeachingCoordinator() || isApprovedTeacher();
       allow list: if request.query.limit <= 10000 && (isAdmin() || isTeachingCoordinator() || isApprovedTeacher());
       allow write: if isAdmin() || (isApprovedTeacher() && teacherCode == myTeacherCode());
     }
     match /teaching_timetable/{docId} {
-      // Đọc: mở cho cả đội giáo viên (cần để bảng "Tổng quan" hiện đúng mã
-      // lớp của TỪNG giáo viên khác, không riêng gì chính mình) — ghi vẫn
-      // chỉ Admin như cũ.
       allow get: if isAdmin() || isTeachingCoordinator() || isApprovedTeacher();
       allow list: if request.query.limit <= 10000 && (isAdmin() || isTeachingCoordinator() || isApprovedTeacher());
-      // Giáo viên tự nhập lịch từ Excel cũng tự điền TKB lớp của ĐÚNG mình (như khi Admin nhập) —
-      // cùng ràng buộc mã document với teaching_schedule.
+      // Cùng ràng buộc mã document với teaching_schedule (khi giáo viên tự nhập lịch).
       allow create, update: if isAdmin()
         || (isApprovedTeacher() && request.resource.data.teacherCode == myTeacherCode()
             && docId == myTeacherCode() + '__' + request.resource.data.weekKey);
       allow delete: if isAdmin();
     }
 
-    // ---- Hỗ trợ xăng xe (tab "🚗 Hỗ trợ xăng xe" trong teaching-schedule.html)
-    //      — khoảng cách nhà→trường (km, tự tay nhập vì không có toạ độ
-    //      thật để tính) CỦA TỪNG GIÁO VIÊN, dùng suy ra tiền hỗ trợ mỗi
-    //      ngày đi dạy. Admin VÀ "🚗 Điều phối giáo viên" cùng được QUẢN
-    //      LÝ (đọc/ghi) — đây là role vận hành trực tiếp của mảng này,
-    //      khác 4 collection lịch giảng dạy ở trên (chỉ đọc). Giáo viên
-    //      CHỈ ĐỌC đúng khoảng cách của chính mình (minh bạch số liệu dùng
-    //      để tính tiền hỗ trợ cho họ), không tự sửa được. ----
+    // Khoảng cách nhà → trường để tính hỗ trợ xăng xe. Giáo viên chỉ xem của mình.
     match /teaching_travel_distances/{teacherCode} {
       allow get: if isAdmin() || isTeachingCoordinator() || (isApprovedTeacher() && teacherCode == myTeacherCode());
       allow list: if request.query.limit <= 10000 && (isAdmin() || isTeachingCoordinator() || (isApprovedTeacher() && teacherCode == myTeacherCode()));
       allow write: if isAdmin() || isTeachingCoordinator();
     }
 
-    // ---- Trang Social Media — feed kiểu blog/mạng xã hội nội bộ trong portfolio.html
-    //      (mục "Life at Trang Social Media" / "Certifications on File"). Đọc CÔNG KHAI
-    //      (portfolio.html là trang giới thiệu công khai, không yêu cầu
-    //      đăng nhập) — chỉ GHI (đăng bài/thích/bình luận) mới cần là
-    //      isEditor() (admin hoặc giáo viên đã duyệt), đúng yêu cầu "để
-    //      Giáo viên đăng tải/like/comment". Ảnh lưu thẳng base64 trong
-    //      field "image" của document (KHÔNG dùng Cloud Storage — repo
-    //      này chưa có storage.rules quản lý, tránh phụ thuộc thứ chưa
-    //      cấu hình), nên phải giới hạn cỡ field để không vượt hạn mức
-    //      1MiB/document của Firestore — xem MAX_IMAGE_CHARS trong
-    //      js/portfolio.js § PfFeed (nén ảnh phía client trước khi ghi).
+    // ---- portfolio.html: bài đăng giáo viên (đọc công khai, ảnh base64 < 900 KB) ----
     match /gvlab_posts/{postId} {
-      // Mỗi bài mang ảnh base64 tới ~900 KB — query danh sách công khai phải có
-      // limit() (client dùng 12) để không ai kéo cả collection, đốt băng thông 10 GiB/tháng.
       allow get: if true;
       allow list: if request.query.limit <= 50;
       allow create: if isEditor()
@@ -583,9 +343,7 @@ service cloud.firestore {
         && (!('caption' in request.resource.data) || (request.resource.data.caption is string && request.resource.data.caption.size() <= 500))
         && (!('authorName' in request.resource.data) || (request.resource.data.authorName is string && request.resource.data.authorName.size() <= 200))
         && (!('likeCount' in request.resource.data) || request.resource.data.likeCount == 0);
-      // Cho phép: (a) chính chủ sửa/xoá bài của mình, (b) BẤT KỲ editor nào
-      // cập nhật ĐÚNG 1 field "likeCount" (toggle thích — xem transaction
-      // trong js/portfolio.js), mỗi lần chỉ ±1 — không đặt được số tuỳ ý.
+      // Chủ bài sửa được; người khác chỉ đổi likeCount ±1.
       allow update: if isEditor() && (
         resource.data.authorUid == request.auth.uid
         || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount'])
@@ -599,9 +357,6 @@ service cloud.firestore {
       match /likes/{uid} {
         allow get: if true;
         allow list: if request.query.limit <= 200;
-        // Chỉ editor (đúng như nút Thích ở js/portfolio.js) tự thích/bỏ thích cho chính
-        // mình. Trước đây mọi tài khoản đã đăng nhập — kể cả Anonymous Auth của
-        // live-quiz — ghi được document tuỳ ý ở đây (ghi rác, phình dung lượng).
         allow create: if isEditor() && uid == request.auth.uid
           && request.resource.data.keys().hasOnly(['createdAt'])
           && request.resource.data.createdAt == request.time;
@@ -621,16 +376,10 @@ service cloud.firestore {
       }
     }
 
-    // ---- Trang Social Media — chứng chỉ CỦA RIÊNG TỪNG giáo viên (mục
-    //      "Certifications" ở portfolio.html). Trước đây là 1 bộ ảnh tĩnh
-    //      dùng chung cho mọi người xem — đổi sang mỗi giáo viên tự đăng/
-    //      xoá chứng chỉ của chính mình, y hệt cơ chế gvlab_posts (đọc
-    //      công khai, ghi cần isEditor(), ảnh base64 nén phía client giới
-    //      hạn cỡ field — xem MAX_CERT_IMAGE_CHARS trong js/portfolio.js
-    //      § PfCerts).
+    // Chứng chỉ của từng giáo viên.
     match /gvlab_certs/{certId} {
       allow get: if true;
-      allow list: if request.query.limit <= 100; // client dùng limit(60), ảnh base64 nặng
+      allow list: if request.query.limit <= 100;
       allow create: if isEditor()
         && request.resource.data.teacherUid == request.auth.uid
         && request.resource.data.title is string
@@ -640,28 +389,16 @@ service cloud.firestore {
       allow delete: if isEditor() && (resource.data.teacherUid == request.auth.uid || isAdmin());
     }
 
-    // ---- Trang Social Media — hồ sơ cá nhân (ảnh đại diện/trạng thái/tiểu sử) cho
-    //      "Teacher Feed" ở portfolio.html. Doc id = CHÍNH uid của giáo
-    //      viên (không phải id tự sinh) — đảm bảo mỗi người chỉ có đúng
-    //      1 hồ sơ, và rule "chỉ tự sửa hồ sơ của mình" chỉ cần so sánh
-    //      thẳng document id với request.auth.uid, không cần field phụ.
-    //      Đọc CÔNG KHAI (ảnh đại diện cần hiện được cho khách xem feed
-    //      chưa đăng nhập) — CHỈ đúng chủ hồ sơ (hoặc admin) mới ghi được.
-    //      Ảnh đại diện base64 giới hạn nhỏ hơn nhiều ảnh bài đăng (avatar
-    //      không cần nét cao) — xem AVATAR_MAX_CHARS trong js/portfolio.js.
+    // Hồ sơ giáo viên, id = uid. Ảnh đại diện < 300 KB.
     match /gvlab_profiles/{uid} {
-      // Đọc công khai nhưng query danh sách phải có limit() ≤ 500 (ảnh đại diện base64
-      // nặng tới ~300 KB/hồ sơ — chặn kéo cả collection, tốn băng thông 10 GiB/tháng).
       allow get: if true;
       allow list: if request.query.limit <= 500;
       allow write: if isEditor() && (uid == request.auth.uid || isAdmin())
         && (!('avatar' in request.resource.data) || (request.resource.data.avatar is string && request.resource.data.avatar.size() < 300000));
     }
 
-    // ---- Link sổ lớp của giáo viên (js/services/teacher-sync.js, trang diem-danh): link Sheet theo trường, thư mục
-    //      Drive, tên GV, lớp của tôi — 1 document / tài khoản, doc id = uid. CỐ TÌNH chỉ so uid, KHÔNG gọi
-    //      myProfile() — get() hồ sơ users tính thêm 1 lượt đọc mỗi lần đọc/ghi. Chỉ 1 khoá, chuỗi JSON < 100.000 ký tự
-    //      → không làm kho rác được.
+    // ---- Link sổ lớp của giáo viên (js/services/teacher-sync.js), 1 document / tài khoản ----
+    // Chỉ so uid (không gọi myProfile() để khỏi tốn thêm 1 lượt đọc).
     match /teacher_sync/{uid} {
       allow get, delete: if isSignedIn() && request.auth.uid == uid;
       allow create, update: if isSignedIn() && request.auth.uid == uid
@@ -676,20 +413,11 @@ service cloud.firestore {
           && request.resource.data.items.eduquiz_solop_v1.at is number));
     }
 
-    // ---- Trang Social Media — chat nhóm nội bộ (gvlab_chat): ĐÃ BỎ khỏi
-    //      js/portfolio.js (thay bằng A11yAssistant). Đóng ghi để không ai dùng
-    //      collection này làm kho chứa base64 (tới 700 KB/tin); admin vẫn đọc/
-    //      xoá được để dọn dữ liệu cũ.
+    // Chat nhóm cũ (đã bỏ). Admin còn đọc/xoá để dọn dữ liệu.
     match /gvlab_chat/{messageId} {
       allow get, delete: if isAdmin();
       allow list: if isAdmin() && request.query.limit <= 500;
       allow create, update: if false;
     }
-
-    // gvlab_chat_typing / gvlab_presence (đang nhập.../đang hoạt động cho chat
-    // nhóm Trang Social Media) — ĐÃ BỎ tính năng này khỏi js/portfolio.js (tốn
-    // ghi liên tục mỗi ~20s/người mở khung chat, không phục vụ mục đích cốt
-    // lõi), nên cũng bỏ luôn 2 rule tương ứng — không còn client nào đọc/ghi
-    // 2 collection này nữa.
   }
 }

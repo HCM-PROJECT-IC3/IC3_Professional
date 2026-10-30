@@ -20,20 +20,7 @@
 <button type="button" class="theme-toggle-quick" id="themeToggleQuick" title="Chuyển đổi sáng/tối"></button>
 <script src="js/theme-toggle-quick.js"></script>
 
-  <!-- Trang này được nhúng qua modal (js/game-modal.js), cùng
-       pattern với battle-quiz.html / pz-defense.html — chỉ chứa đúng 1
-       mini-game độc lập, không đụng vào quiz-engine.js / gamification.js.
-       Cơ chế (mục 10 yêu cầu gốc "Cyber Detective"): học sinh nhận 1
-       tình huống "tài khoản/máy tính bị xâm nhập", điều tra qua 6 hướng
-       (Email/Website/Mật khẩu/Thiết bị/Mạng/Tệp tin — mỗi hướng có thể ẩn
-       1 "manh mối chính" hoặc chỉ là thông tin trung lập), rồi đưa ra
-       KẾT LUẬN nguyên nhân tấn công. Nội dung 6 tình huống (js/cyber-
-       detective.js § CASES) do trang này tự quản lý (đúng cách pz-
-       defense.js tự quản lý ZOMBIE_TYPES) — KHÔNG bịa nguyên nhân mới:
-       6 "nguyên nhân" trùng đúng 6 trong 12 id tác nhân đã có ở
-       ZOMBIE_TYPES (js/pz-defense.js), và câu gợi ý phòng thủ sau khi kết
-       luận lấy TRỰC TIẾP từ js/game-engine/question-topic-map.js §
-       getWeaknessForEnemy() — không viết lại nội dung đã có. -->
+  <!-- Thám tử mạng: điều tra 6 hướng (email, website, mật khẩu, thiết bị, mạng, tệp) rồi kết luận nguyên nhân tấn công. Tình huống ở js/cyber-detective.js (CASES). Nhúng qua js/game-modal.js. -->
 
   <div class="cd-wrap">
 

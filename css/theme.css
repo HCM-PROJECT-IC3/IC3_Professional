@@ -79,7 +79,7 @@
   --shadow:    0 4px 20px rgba(47,64,178,.10);
   --shadow-lg: 0 10px 40px rgba(47,64,178,.16);
 
-  /* 10/2026: bỏ nền loang pastel + chữ gradient + bóng phát sáng — trông "đúc khuôn AI".
+  /* 10/2026: bỏ nền loang pastel + chữ gradient + bóng phát sáng.
      Giữ tên biến để các trang cũ không vỡ, chỉ đổi giá trị về phẳng, 1 màu. */
   --lobby-bg: var(--bg);
   --lobby-blob1: rgba(47,64,178,.16);
@@ -312,5 +312,5 @@
 /* Thuộc tính [hidden] LUÔN thắng: nhiều chỗ JS ẩn/hiện bằng el.hidden, nhưng quy tắc
    display:flex/grid/block của class cùng phần tử đè mất display:none mặc định của trình
    duyệt → phần tử "đã ẩn" vẫn hiện (vd đồng hồ 50:00 ở chế độ Ôn luyện, bảng KPI rỗng
-   trước khi tải xong). Có ở theme.css + motion.css + exam-simulator.css để phủ mọi trang. */
+   trước khi tải xong). Có ở theme.css + motion.css để phủ mọi trang. */
 [hidden] { display: none !important; }

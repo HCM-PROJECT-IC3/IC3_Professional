@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="lib/fonts/fonts.css">
 <link rel="stylesheet" href="css/theme.css">
 <link rel="stylesheet" href="css/admin-common.css">
-<!-- Dùng lại NGUYÊN css/coordinator-dashboard.css (Commit #4) — cùng layout
+<!-- Dùng lại NGUYÊN css/coordinator-dashboard.css — cùng layout
      KPI/biểu đồ/bảng/drawer, không style riêng nào khác biệt cần thêm. -->
 <link rel="stylesheet" href="css/coordinator-dashboard.css">
 <link rel="stylesheet" href="css/motion.css">
@@ -77,7 +77,7 @@
     <button type="button" class="btn btn-ghost" id="refreshDataBtn" title="Đọc lại dữ liệu mới nhất từ máy chủ (dữ liệu hiện đang cache tạm 3 phút để đỡ tốn băng thông)"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Làm mới dữ liệu</button>
   </div>
 
-  <div class="loading-note" id="loadingNote">⏳ Đang tải dữ liệu học sinh &amp; kết quả bài thi của trường bạn...</div>
+  <div class="loading-note" id="loadingNote">Đang tải dữ liệu học sinh &amp; kết quả bài thi của trường bạn...</div>
 
   <!-- ============ 6 KPI (không có "Tổng số giáo viên" như bản Điều phối) ============ -->
   <div class="kpi-grid" id="kpiGrid" hidden>
@@ -107,7 +107,7 @@
       <div class="kpi-value" id="kpiNotSubmitted">—</div>
     </div>
     <div class="kpi-card kpi-warn">
-      <div class="kpi-icon">🆘</div>
+      <div class="kpi-icon"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i></div>
       <div class="kpi-label">Học sinh cần hỗ trợ</div>
       <div class="kpi-value" id="kpiNeedsSupport">—</div>
     </div>
@@ -149,7 +149,7 @@
       <div class="watchlist-more" id="notSubmittedMore"></div>
     </div>
     <div class="watchlist-card">
-      <div class="watchlist-title">🆘 Học sinh cần hỗ trợ <span class="watchlist-count" id="needsSupportCount"></span></div>
+      <div class="watchlist-title"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> Học sinh cần hỗ trợ <span class="watchlist-count" id="needsSupportCount"></span></div>
       <ul class="watchlist-list" id="needsSupportList"></ul>
       <div class="watchlist-more" id="needsSupportMore"></div>
     </div>
@@ -238,7 +238,7 @@
       <button type="button" class="modal-close" id="detailDrawerCloseBtn" aria-label="Đóng">✕</button>
     </div>
     <div class="detail-drawer-body" id="detailDrawerBody">
-      <div class="loading-note">⏳ Đang tải lịch sử làm bài…</div>
+      <div class="loading-note">Đang tải lịch sử làm bài…</div>
     </div>
   </aside>
 </div>
@@ -266,17 +266,9 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- QUAN TRỌNG: khai báo EDU_ALLOWED_ROLES TRƯỚC auth-guard.js — chỉ admin
-     và teacher (đã duyệt) được vào. Admin vào trang này chỉ để hỗ trợ/kiểm
-     tra; vì admin không có field "schools" nên rule vẫn cho đọc không giới
-     hạn (isAdmin() luôn true trong firestore.rules), nhưng bộ lọc "Trường"
-     sẽ không hiện gì nếu admin không phải giáo viên — trang này chủ yếu
-     dành cho vai trò teacher. -->
+<!-- Admin và giáo viên đã duyệt. Khai báo trước auth-guard.js. -->
 <script>window.EDU_ALLOWED_ROLES = ['admin', 'teacher'];</script>
-<!-- Chart.js: ưu tiên bản tự lưu trữ (js/vendor) để không bị Tracking
-     Prevention / adblock chặn khi tải từ cdnjs. document.write ở các fallback
-     bên dưới chạy đồng bộ ngay trong lúc parse HTML nên vẫn đảm bảo Chart.js
-     (nếu tải được) có mặt TRƯỚC js/teacher/dashboard.js load bên dưới. -->
+<!-- Chart.js: ưu tiên bản trong js/vendor, không có thì thử CDN. Phải có trước js/teacher/dashboard.js. -->
 <script src="js/vendor/chart.umd.min.js"></script>
 <script>
   if (typeof Chart === 'undefined') {
@@ -322,11 +314,7 @@
 <script src="js/services/analytics-service.js"></script>
 <script src="js/services/activity-log-service.js"></script>
 
-<!-- Xuất Excel/PDF (Commit #6, #7) — TÁI DÙNG nguyên bản 2 engine của
-     Coordinator Dashboard (js/export/*), không sửa file nào. ~1.86MB, giờ
-     tải LƯỜI qua js/services/lazy-script-loader.js — CHỈ tải khi bấm nút
-     Xuất Excel/PDF (xem ghi chú đầy đủ ở coordinator-dashboard.html và
-     js/coordinator/student-table.js § handleExportExcel/handleExportPdf). -->
+<!-- Xuất Excel/PDF dùng chung js/export/* với dashboard điều phối, chỉ tải khi bấm nút. -->
 <script src="js/services/lazy-script-loader.js"></script>
 <script>
   window.EduExportVendorScripts = [
@@ -340,9 +328,9 @@
   ];
 </script>
 
-<!-- Teacher dashboard (Commit #8/LMAP) — data-loader riêng, lọc theo trường
+<!-- Teacher dashboard — data-loader riêng, lọc theo trường
      ngay từ Firestore; charts/student-table/student-detail TÁI DÙNG nguyên
-     bản của Coordinator Dashboard (Commit #4/#5), không sửa file nào. -->
+     bản của Coordinator Dashboard, không sửa file nào. -->
 <script src="js/teacher/data-loader.js"></script>
 <script src="js/coordinator/charts.js"></script>
 <script src="js/coordinator/student-table.js"></script>

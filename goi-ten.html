@@ -17,14 +17,7 @@
 <link rel="stylesheet" href="css/name-picker.css">
 </head>
 <body class="np-body">
-<!--
-  Gọi tên học sinh (js/name-picker/): chạy hoàn toàn trên máy giáo viên.
-  Tranh vẽ: SVG tự vẽ trong js/name-picker/np-art.js (không tải ảnh ngoài). Trò chơi: np-games.js.
-  Nguồn tên: data/roster/students-active.json (file tĩnh, như ô chọn tên ở sảnh) · danh sách thầy cô dán vào · số thứ tự.
-  Bốc thử thách theo bài hôm nay: data/ic3/ppct-lessons.json + bộ "Bài N." của đúng cấp (np-lessons.js) — cũng là file tĩnh.
-  Không Firebase, không Apps Script, không gửi dữ liệu đi đâu. Cài đặt, danh sách dán vào và
-  lịch sử "đã gọi" chỉ nằm trong localStorage ('eduquiz_goiten_v1') của máy này.
--->
+<!-- Gọi tên học sinh (js/name-picker/): chạy trên máy giáo viên, tranh SVG trong np-art.js. Tên lấy từ data/roster/students-active.json hoặc danh sách dán vào; thử thách theo bài từ data/ic3/ppct-lessons.json. Không gửi dữ liệu đi đâu (localStorage eduquiz_goiten_v1). -->
 <div class="np-wrap">
   <header class="np-head">
     <a class="np-back" href="index.html" title="Về trang chủ"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Trang chủ</a>

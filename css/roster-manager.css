@@ -320,5 +320,5 @@ tr:last-child td { border-bottom: none }
 .import-tag.update { background: var(--blue-lt);  color: var(--blue) }
 .import-tag.skip   { background: var(--red-lt);   color: var(--red) }
 
-/* "Dữ liệu lúc HH:MM" cạnh nút 🔄 Tải lại (js/roster-manager.js renderDataAge) */
+/* "Dữ liệu lúc HH:MM" cạnh nút Tải lại (js/roster-manager.js renderDataAge) */
 .data-age { font-size: 12px; color: var(--text-muted); white-space: nowrap; align-self: center; }

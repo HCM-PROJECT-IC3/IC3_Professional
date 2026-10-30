@@ -13,7 +13,7 @@
        theo Policy Type = "MP" (Task 2).
      - Sheet "Summary": có 1 biểu đồ cột "Policies" (Task 4 — Alt Text).
 
-   Task 4 (Alt Text cho biểu đồ) không có checker khả thi ở Phase 1
+   Task 4 (Alt Text cho biểu đồ) không có checker khả thi ở bản đầu
    (ExcelJS không đọc được thuộc tính Alt Text của chart) → type:"manual".
    ============================================================ */
 (function (root) {

@@ -21,17 +21,7 @@
 <link rel="stylesheet" href="css/arena.css">
 </head>
 <body class="ar-body">
-<!--
-  Đấu trường (js/arena/arena.js + arena-core.js): chơi 1 bộ câu hỏi theo kiểu
-  Kahoot / Blooket, đấu với đối thủ máy NGAY TRÊN MÁY HỌC SINH.
-  Nguồn câu: ngân hàng tĩnh data/ic3 hoặc link đề giáo viên (arena.html?de=...).
-  Xu, linh vật, kỷ lục nằm trong localStorage ('eduquiz_arena_v1').
-
-  Phòng cả lớp (js/arena/arena-room.js + arena-room-core.js) — thay live-quiz.html:
-  máy giáo viên làm "máy chủ", học sinh nối thẳng vào bằng WebRTC (arena.html?phong=MÃ).
-  0 lượt Firebase. Kết quả lưu trên máy giáo viên (lịch sử + CSV), tuỳ chọn 1 lượt
-  Apps Script/phòng lên Google Sheet (tab NhatKyDauTruong).
--->
+<!-- Đấu trường (js/arena/): chơi bộ câu hỏi với đối thủ máy, dữ liệu ở localStorage eduquiz_arena_v1. Phòng cả lớp: máy giáo viên làm máy chủ, học sinh nối WebRTC (?phong=MÃ); kết quả lưu trên máy giáo viên, tuỳ chọn gửi lên Sheet (NhatKyDauTruong). -->
 <header class="ar-top">
   <a class="ar-back" href="index.html" title="Về trang chọn bài"><i class="fa-solid fa-arrow-left"></i><span> Trang chủ</span></a>
   <div class="ar-brand"><span aria-hidden="true">🏟️</span> Đấu trường</div>
@@ -42,20 +32,17 @@
 
 <main id="arMain" class="ar-main" tabindex="-1">
   <!-- ===== MÀN CHỌN ===== -->
-  <!-- 3 vai: Học sinh (chỉ cần Họ tên + Mã phòng) · Giáo viên (soạn + tạo phòng) · Chơi một mình.
-       data-role quyết định khối nào hiện (css/arena.css: .only-student / .only-teacher / .only-solo / .not-student).
-       Mở bằng link giáo viên gửi (?phong=MÃ) → class is-invite: ẩn thanh chọn vai, học sinh chỉ thấy ô nhập tên. -->
+  <!-- 3 vai: Học sinh · Giáo viên · Chơi một mình (data-role + .only-*/.not-student trong css/arena.css). Link mời ?phong=MÃ → is-invite, chỉ còn ô nhập tên. -->
   <section id="arHome" class="ar-screen" data-role="student">
     <nav class="ar-roles" id="arRoles" role="tablist" aria-label="Em là ai?">
       <button type="button" class="ar-role" role="tab" data-role="student"><span class="ar-role-ico" aria-hidden="true">🙋</span><b>Học sinh</b><small>Vào phòng của lớp</small></button>
       <button type="button" class="ar-role" role="tab" data-role="teacher"><span class="ar-role-ico" aria-hidden="true">🧑‍🏫</span><b>Giáo viên</b><small>Tạo phòng cho cả lớp</small></button>
-      <button type="button" class="ar-role" role="tab" data-role="solo"><span class="ar-role-ico" aria-hidden="true">🎮</span><b>Chơi một mình</b><small>Đấu với máy, sưu tập Linh vật</small></button>
-      <button type="button" class="ar-role" role="tab" data-role="minigame"><span class="ar-role-ico" aria-hidden="true">🕹️</span><b>Mini-game</b><small>5 chặng học IC3, leo hạng</small></button>
+      <button type="button" class="ar-role" role="tab" data-role="solo"><span class="ar-role-ico" aria-hidden="true">🎮</span><b>Chơi một mình</b><small>Hành trình IC3 · đấu tự do</small></button>
     </nav>
 
-    <!-- ── HỌC SINH: sân khấu nhiều màu (hình ▲◆●■ bay như Kahoot) + thẻ vào phòng kiểu "Game PIN" ── -->
+    <!-- ── HỌC SINH: cảnh lớp học vẽ tay (np-art, js/arena/arena-quest.js đổ vào) + thẻ vào phòng ── -->
     <div class="ar-join-stage only-student">
-      <div class="ar-fx-shapes" aria-hidden="true"><span class="f0">▲</span><span class="f1">◆</span><span class="f2">●</span><span class="f3">■</span><span class="f4">★</span><span class="f5">▲</span><span class="f6">●</span><span class="f7">◆</span><span class="f8">■</span></div>
+      <div class="ar-join-scene" id="arJoinScene" aria-hidden="true"></div>
       <div class="ar-card ar-join-card" id="arJoinCard">
         <div class="ar-join-badge" aria-hidden="true"><span id="arJoinAvatarFace">🙂</span></div>
         <h2 class="ar-join-title">Vào trận cùng cả lớp!</h2>
@@ -77,6 +64,7 @@
         <li><span aria-hidden="true">⌨️</span><b>Nhập tên + mã</b><small>rồi bấm Vào phòng</small></li>
         <li><span aria-hidden="true">🏆</span><b>Trả lời nhanh</b><small>đúng + nhanh = lên top</small></li>
       </ol>
+      <button type="button" class="ar-join-wait" data-goto-role="minigame"><i class="fa-solid fa-route" aria-hidden="true"></i> Chưa có mã phòng? <b>Chơi Hành trình IC3</b> trong lúc chờ</button>
     </div>
 
     <!-- ── CHƠI MỘT MÌNH (+ Mini-game dùng chung biệt danh, ví xu, Linh vật) ── -->
@@ -91,12 +79,17 @@
       <button type="button" class="ar-btn ar-btn-pack" id="arOpenPacks"><span aria-hidden="true">🥚</span> Linh vật</button>
     </div>
 
-    <!-- ── MINI-GAME: hành trình 5 trò học tập (bỏ 2 trò Giải trí của Khu Vui Chơi cũ), mỗi trò leo 5 hạng đối thủ (js/arena/arena-mini.js) ── -->
-    <div class="ar-card only-mini" id="arMiniCard">
-      <h2 class="ar-h2"><i class="fa-solid fa-gamepad"></i> Hành trình mini-game IC3</h2>
-      <p class="ar-hint ar-mg-lead">5 chặng đi theo đúng thứ tự học: <b>nhận biết thiết bị → thao tác máy tính → nhận diện tấn công → phòng thủ → trận cuối ôn tổng hợp</b>. Mỗi chặng có 5 đối thủ từ Đồng tới Huyền thoại — thắng để lên hạng, nhận xu mở Linh vật và sang chặng kế.</p>
-      <div class="ar-mg-day" id="arMiniDay"></div>
-      <div class="ar-mg-grid" id="arMiniGrid"></div>
+    <!-- ── CHƠI MỘT MÌNH = Hành trình (data-role="minigame") + Đấu tự do (data-role="solo") ── -->
+    <div class="ar-solo-switch only-solo also-mini" role="tablist" aria-label="Chơi một mình">
+      <button type="button" role="tab" data-view="minigame"><i class="fa-solid fa-route" aria-hidden="true"></i><b>Hành trình IC3</b><small>7 vùng chủ đề, gom sao, mở rương</small></button>
+      <button type="button" role="tab" data-view="solo"><i class="fa-solid fa-gamepad" aria-hidden="true"></i><b>Đấu tự do</b><small>Tự chọn bộ câu và chế độ</small></button>
+    </div>
+
+    <!-- ── HÀNH TRÌNH IC3: bản đồ 7 vùng chủ đề + Trùm cuối, mỗi chặng là 1 trận quiz hoặc 1 mini-game (js/arena/arena-quest.js) ── -->
+    <div class="ar-card ar-journey only-mini" id="arMiniCard">
+      <div class="ar-q-head" id="arQuestHead"></div>
+      <div class="ar-q-day" id="arQuestDaily"></div>
+      <div class="ar-q-map" id="arQuestMap"></div>
     </div>
 
     <!-- ── GIÁO VIÊN: phải đăng nhập tài khoản giáo viên mới thấy các bước tạo phòng (js/arena/arena-teacher.js) ── -->
@@ -113,6 +106,7 @@
         <label class="ar-field"><span>Bài / chủ đề</span><select id="arMt" class="ar-input"></select></label>
       </div>
       <p class="ar-hint only-teacher" id="arDeckInfoTeacher"></p>
+      <div class="ar-recent" id="arRecent" hidden></div>
     </div>
 
     <div class="ar-card not-student needs-teacher" id="arModeCard">
@@ -179,6 +173,10 @@
         <p class="ar-hint ar-card-note only-solo"><i class="fa-solid fa-layer-group" aria-hidden="true"></i> <b>Thẻ bài</b> (mọi chế độ): cứ 3 câu, đúng từ 2 câu được bốc 1 trong 3 lá úp — 50:50, Thêm giờ, Nhân đôi, Khiên chuỗi, Câu vàng, Đặt cược, Túi xu, lá hiếm Kho báu. Mỗi trận còn có <b>Câu hỏi vàng</b> và <b>Thử thách tốc độ</b> thưởng xu.</p>
       </details>
       <!-- Chơi một mình: nút Vào trận dính đáy màn hình — chọn chế độ xong bấm luôn, không phải cuộn. -->
+      <div class="ar-playbar ar-hostbar only-teacher needs-teacher">
+        <p class="ar-hostbar-sum" id="arHostSum"></p>
+        <button type="button" class="ar-btn ar-btn-play" id="arHostQuick"><i class="fa-solid fa-tower-broadcast" aria-hidden="true"></i> Tạo phòng và lấy mã</button>
+      </div>
       <div class="ar-playbar only-solo">
         <button type="button" class="ar-btn ar-btn-play" id="arPlay"><i class="fa-solid fa-play"></i> <span id="arPlayLabel">Vào trận</span></button>
         <p class="ar-hint ar-center" id="arDeckInfo"></p>
@@ -284,7 +282,7 @@
   <section id="arMini" class="ar-screen" hidden>
     <div class="ar-row ar-room-top">
       <span class="ar-pill ar-pill-main" id="arMiniTitle"></span>
-      <button type="button" class="ar-btn ar-btn-ghost ar-btn-sm" id="arMiniLeave"><i class="fa-solid fa-arrow-left"></i> Đổi trò</button>
+      <button type="button" class="ar-btn ar-btn-ghost ar-btn-sm" id="arMiniLeave"><i class="fa-solid fa-route" aria-hidden="true"></i> Về bản đồ</button>
     </div>
     <div id="arMiniBody"></div>
   </section>
@@ -293,12 +291,14 @@
   <section id="arEnd" class="ar-screen" hidden>
     <div class="ar-card ar-end">
       <h2 class="ar-h2 ar-center" id="arEndTitle"></h2>
+      <div class="ar-q-end" id="arQuestEnd" hidden></div>
       <div class="ar-podium" id="arPodium"></div>
       <div class="ar-end-stats" id="arEndStats"></div>
       <div id="arBookNote"></div>
       <div class="ar-row ar-center-row">
         <button type="button" class="ar-btn ar-btn-play ar-btn-practice" id="arPractice" hidden></button>
         <button type="button" class="ar-btn ar-btn-play" id="arAgain"><i class="fa-solid fa-rotate-right"></i> Chơi lại</button>
+        <button type="button" class="ar-btn ar-btn-pack" id="arToMap" hidden><i class="fa-solid fa-route" aria-hidden="true"></i> Về bản đồ</button>
         <button type="button" class="ar-btn ar-btn-ghost" data-go="home"><i class="fa-solid fa-gamepad"></i> Đổi chế độ</button>
         <button type="button" class="ar-btn ar-btn-pack" data-go="packs"><span aria-hidden="true">🥚</span> Mở hộp</button>
       </div>
@@ -306,6 +306,8 @@
     </div>
   </section>
 </main>
+
+<div class="ar-q-sheet" id="arQuestSheet" hidden></div>
 
 <div class="ar-toast" id="arToast" role="status" aria-live="polite" hidden></div>
 
@@ -338,6 +340,8 @@
 <script src="js/arena/arena-mini-core.js"></script>
 <script src="js/arena/arena-mini-art.js"></script>
 <script src="js/arena/arena-mini.js"></script>
+<script src="js/arena/arena-quest-core.js"></script>
+<script src="js/arena/arena-quest.js"></script>
 <script src="js/sw-register.js"></script>
 </body>
 </html>

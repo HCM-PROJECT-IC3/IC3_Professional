@@ -10,7 +10,7 @@
    ======================================== */
 :root {
   /* ── Bóng PHẲNG (10/2026) ──
-     Trước đây là neumorphism (bóng đôi sáng/tối giả bề mặt lồi) — trông "đúc khuôn".
+     Trước đây là neumorphism (bóng đôi sáng/tối giả bề mặt lồi).
      Nay thẻ/nút chỉ có viền mảnh 1px + bóng rất nhẹ, giống phần mềm thi; ô nhập/nút
      đang bấm dùng viền trong. Tên biến giữ nguyên để các quy tắc bên dưới không phải sửa. */
   --shadow-card:        0 0 0 1px var(--border), 0 1px 2px rgba(16,24,40,.05);
@@ -101,7 +101,7 @@ body {
 .sidebar-logo .logo-icon {
   width: 42px; height: 42px;
   /* Logo IIG thật (img/iig-logo.png, cùng ảnh dùng trong header các PDF
-     xuất ra — xem js/export/iig-logo.js) thay cho icon 🎮 tự chọn trước
+     xuất ra — xem js/export/iig-logo.js) thay cho icon tự chọn trước
      đây — nền trắng vì logo gốc có nền trắng, khối gradient tím cũ sẽ
      đè màu lên logo. */
   background: #fff;
@@ -210,7 +210,7 @@ body {
   display: flex; align-items: center; justify-content: center;
   font-size: 16px; flex-shrink: 0;
   box-shadow: 3px 3px 8px rgba(239,68,68,0.35);
-  /* Icon Font Awesome (thay emoji 🧑 cũ) không tự có màu như emoji — cần
+  /* Icon Font Awesome (thay emoji cũ) không tự có màu như emoji — cần
      màu trắng tường minh để đủ tương phản trên nền gradient cam/đỏ. */
   color: #fff;
   overflow: hidden; /* bo tròn đúng khung khi đổi sang ảnh đại diện thật (Trang Social Media) */
@@ -442,7 +442,7 @@ body {
   box-shadow: var(--shadow-card-inset);
 }
 .search-box input:focus { box-shadow: var(--shadow-card-inset), 0 0 0 2px color-mix(in srgb, var(--accent-purple) 45%, transparent); }
-.search-box > i { /* fa-magnifying-glass trong HTML (trước: emoji 🔍 qua ::before) */
+.search-box > i { /* fa-magnifying-glass trong HTML (trước: emoji qua ::before) */
   color: var(--text-secondary);
   position: absolute;
   left: 14px; top: 50%;
@@ -526,7 +526,7 @@ body {
    không cần thư viện ngoài). #cardsGrid GIỮ NGUYÊN làm ID gốc (JS
    toggleShelfView() trong js/dashboard.js chỉ ẩn/hiện qua .hidden, không
    đổi) — bọc quanh track + chấm điều hướng. ĐÃ BỎ 2 nút mũi tên trái/phải
-   (phản hồi người dùng: chỉ cần kéo trượt tay/chuột chọn thẻ cho dễ, mũi
+   (chỉ cần kéo trượt tay/chuột chọn thẻ cho dễ, mũi
    tên thừa) — xem ic3-dashboard.html. */
 .carousel-wrap {
   position: relative;
@@ -649,7 +649,7 @@ body {
 }
 
 /* ========================================
-   "🧊 Kệ sách 3D" — banner quảng bá, cùng ngôn ngữ thiết kế .quiz-card
+   "Kệ sách 3D" — banner quảng bá, cùng ngôn ngữ thiết kế .quiz-card
    (bo góc, đổ bóng neumorphism), đặt NGAY DƯỚI carousel bộ đề — vừa dễ
    thấy/dễ bấm hơn hẳn nút nhỏ trước đây lạc trên toolbar, vừa lấp khoảng
    trống còn lại bên dưới carousel trên màn hình rộng.
@@ -730,11 +730,11 @@ body {
   position: relative;
 }
 
-/* "🧊 Kệ sách 3D" chiếm GẦN TRỌN chiều cao còn lại của màn hình khi bật
+/* "Kệ sách 3D" chiếm GẦN TRỌN chiều cao còn lại của màn hình khi bật
    (áp bởi toggleShelfView()/applyShelfFullscreenSize() trong
-   js/dashboard.js) — TRƯỚC ĐÂY chỉ là 1 khung nhúng cỡ cố định (aspect-
+   js/dashboard.js) — trước đây chỉ là 1 khung nhúng cỡ cố định (aspect-
    ratio 16/10, tối đa 78vh) nằm DƯỚI carousel + banner vẫn còn hiện, phải
-   cuộn xuống mới thấy/dùng hết được (phản hồi người dùng). #section-my-
+   cuộn xuống mới thấy/dùng hết được. #section-my-
    sets.style.height được JS gán bằng px THẬT (viewport − vị trí đỉnh
    section, xem applyShelfFullscreenSize()) — chọn ID+class thay vì chỉ
    class để chắc chắn thắng .section.active{display:block} vốn có độ đặc

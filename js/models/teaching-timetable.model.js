@@ -14,7 +14,7 @@
    - "teaching_timetable_periods" : { id (=mã NV), morning: [{start,end}],
        afternoon: [{start,end}] } — khung giờ tiết CỦA RIÊNG giáo viên đó
        (vì dạy nhiều trường khác nhau, giờ giấc mỗi trường mỗi khác), sửa
-       thủ công qua modal "⏱️ Giờ tiết", áp dụng cho MỌI tuần (không lặp
+       thủ công qua modal "Giờ tiết", áp dụng cho MỌI tuần (không lặp
        lại cấu hình theo từng tuần) — nếu chưa có, dùng DEFAULT_PERIOD_TIMES.
    - "teaching_timetable" : { id (=`${teacherCode}__${weekKey}`), teacherCode,
        teacherName, weekKey, weekLabel, days: { "2".."7": { morning:
@@ -39,7 +39,7 @@
   const TIMETABLE_COLLECTION = 'teaching_timetable';
 
   // Mỗi CẤP HỌC có quy định thời lượng 1 tiết khác nhau (Tiểu học 35 phút,
-  // THCS 45 phút) — TRƯỚC ĐÂY cả app chỉ dùng 1 khung giờ chung
+  // THCS 45 phút) — trước đây cả app chỉ dùng 1 khung giờ chung
   // (DEFAULT_PERIOD_TIMES, thực chất là khung Tiểu học) cho MỌI giáo viên,
   // kể cả khi giáo viên đó dạy cả 2 cấp trong CÙNG 1 tuần (Dạy Trám ở
   // nhiều trường khác nhau) — khiến cột "Thời gian" hiện SAI giờ thực tế
@@ -57,7 +57,7 @@
   /** Khung giờ CHUẨN theo cấp học — 5 tiết Sáng, 4 tiết Chiều, nghỉ giải lao
    * sau tiết 2 mỗi buổi (giống mẫu thời khoá biểu giấy gốc), chỉ khác đúng
    * THỜI LƯỢNG mỗi tiết (35' Tiểu học / 45' THCS). Dùng làm gợi ý áp dụng
-   * nhanh trong modal "⏱️ Giờ tiết" (nút "Áp dụng khung...") và để tính
+   * nhanh trong modal "Giờ tiết" (nút "Áp dụng khung...") và để tính
    * giờ THỰC TẾ hiển thị trong từng ô của lưới TKB — vẫn CHỈ LÀ MẶC ĐỊNH,
    * giáo viên/admin sửa tay lại theo đúng giờ trường quy định nếu khác. */
   const LEVEL_PERIOD_TIMES = Object.freeze({
@@ -104,7 +104,7 @@
 
   // Gợi ý giờ vào/số phút nghỉ giải lao (sau tiết 2) TÍNH RA từ đúng
   // LEVEL_PERIOD_TIMES ở trên — CHỈ dùng để ĐIỀN SẴN (placeholder) vào ô
-  // "Giờ vào"/"Nghỉ giải lao" trong modal "⏱️ Giờ tiết" lúc giáo viên bấm
+  // "Giờ vào"/"Nghỉ giải lao" trong modal "Giờ tiết" lúc giáo viên bấm
   // nút cấp học LẦN ĐẦU (ô đang trống), KHÔNG áp đè lên giá trị giáo viên
   // đã tự gõ — vì thực tế mỗi trường quy định giờ vào/giờ ra chơi khác
   // nhau (7h hoặc 7h30 vào, nghỉ giải lao dài ngắn khác nhau, buổi chiều
@@ -160,7 +160,7 @@
 
   /** Số phút giữa 2 tiết liên tiếp trong 1 mảng periods (kết thúc tiết
    * `idx` → bắt đầu tiết `idx+1`) — dùng để "đọc ngược" lại đúng khoảng
-   * nghỉ/chuyển tiết giáo viên đã tự gõ tay trước đó, cho modal "⏱️ Giờ
+   * nghỉ/chuyển tiết giáo viên đã tự gõ tay trước đó, cho modal "Giờ
    * tiết" gợi ý sẵn giá trị hiện có thay vì luôn hiện số mặc định. Trả về
    * null nếu thiếu tiết hoặc giờ không hợp lệ. */
   function gapMinutesBetween(periods, idx) {
@@ -178,7 +178,7 @@
    * ra chơi cố định X phút...). Mỗi trường quy định giờ vào/giờ ra chơi
    * khác nhau (7h/7h30 vào, buổi chiều vào giờ khác, nghỉ giải lao dài
    * ngắn khác nhau) nên các tham số này do giáo viên/admin tự gõ, nút
-   * "🟢 Tiểu học 35’/🔵 THCS 45’" giờ CHỈ còn gợi ý SỐ PHÚT MỖI TIẾT (đặc
+   * "Tiểu học 35’/THCS 45’" giờ CHỈ còn gợi ý SỐ PHÚT MỖI TIẾT (đặc
    * trưng thật sự cố định theo cấp học) — không còn tự ý áp giờ vào/giờ ra
    * chơi cố định nữa (xem applyLevelPreset() ở js/teaching-timetable.js). */
   function generatePeriodTimes({ startTime, minutesPerPeriod, gapMinutes, breakAfterIndex, breakMinutes, count }) {
@@ -231,7 +231,7 @@
 
   /** Chuẩn hoá 1 bộ khung giờ ĐÃ LƯU (đọc từ Firestore, collection
    * PERIOD_TIMES_COLLECTION) về ĐÚNG 1 khung giờ RIÊNG cho MỖI Thứ 2→7 —
-   * TRƯỚC ĐÂY 1 giáo viên chỉ có 1 khung giờ DUY NHẤT áp cho CẢ TUẦN,
+   * trước đây 1 giáo viên chỉ có 1 khung giờ DUY NHẤT áp cho CẢ TUẦN,
    * nhưng thực tế rất phổ biến 1 giáo viên dạy Tiểu học (35’/tiết) vào
    * mấy ngày, THCS (45’/tiết) vào mấy ngày khác trong CÙNG 1 tuần (dạy
    * trám nhiều trường) — áp 1 khung chung cho mọi Thứ sẽ luôn SAI giờ ở
@@ -240,7 +240,7 @@
    * afternoon}` không có "byDay") được hiểu là ÁP DỤNG GIỐNG NHAU cho mọi
    * Thứ (tương thích ngược, không làm mất cấu hình giáo viên đã lưu
    * trước đó) — admin chỉnh lại riêng từng Thứ khác cần khác đi qua modal
-   * "⏱️ Giờ tiết" (xem tab-chọn-Thứ trong js/teaching-timetable.js). */
+   * "Giờ tiết" (xem tab-chọn-Thứ trong js/teaching-timetable.js). */
   function normalizePeriodTimesDoc(raw) {
     const byDay = raw && raw.byDay && typeof raw.byDay === 'object' ? raw.byDay : null;
     const legacyFlat = !byDay && raw && (raw.morning || raw.afternoon) ? raw : null;

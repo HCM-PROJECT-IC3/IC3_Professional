@@ -41,7 +41,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
   // teacherCode của Lịch giảng dạy) -> Set các trường có học sinh ĐANG HỌC
   // do giáo viên đó phụ trách = "trường giáo viên này THẬT SỰ đang dạy".
   // Dùng để TỰ ĐỘNG suy ra/sửa lại "Trường được xem" thay vì admin phải tự
-  // multi-select tay (dễ gán nhầm/gán sót — người dùng phản hồi đã thấy
+  // multi-select tay (dễ gán nhầm/gán sót — đã thấy
   // nhiều giáo viên khác nhau bị gán CÙNG 1 bộ trường giống hệt nhau).
   let schoolsByTeacherId = {};
 
@@ -118,7 +118,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
   // classifyImportRows() so tên bằng stripDiacritics — 2 GV trùng tên/gõ
   // sai dấu vẫn bị khớp NHẦM, khiến "Đồng bộ theo lớp đang dạy" ở đây lôi
   // theo cả trường/lớp SAI mà admin không có cách nào tự sửa ngoài việc
-  // sửa lại tên trong Lịch giảng dạy). Người dùng phản hồi: cần chọn tay
+  // sửa lại tên trong Lịch giảng dạy). Cần chọn tay
   // được lớp cho từng giáo viên ngay tại đây.
   let allClasses = []; // [{id, name, school, courseId, teacherId, teacherName, ...}]
 

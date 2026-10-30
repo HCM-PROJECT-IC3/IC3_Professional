@@ -1,6 +1,6 @@
 /* ============================================================
    js/coordinator/dashboard.js
-   Điểm vào (entry point) của coordinator-dashboard.html — Commit #4.
+   Điểm vào (entry point) của coordinator-dashboard.html.
    Tải dữ liệu 1 lần (loadAll), sau đó CHỈ lọc lại trong bộ nhớ mỗi
    khi đổi filter (không gọi lại Firestore) để đổi bộ lọc mượt.
 
@@ -54,7 +54,7 @@
         : 'Không tải được dữ liệu: ' + err.message;
       return;
     }
-    // Chưa được Admin gán trường nào để hỗ trợ (Commit #7/LMAP) — không còn
+    // Chưa được Admin gán trường nào để hỗ trợ — không còn
     // mặc định xem hết như trước, dừng ở đây với thông báo rõ ràng thay vì
     // hiện dashboard rỗng khó hiểu.
     if (rawData.noSchoolsAssigned) {
@@ -64,8 +64,8 @@
     // js/coordinator/student-detail.js dùng biến toàn cục này để lọc đúng
     // studentSchool khi tải lịch sử làm bài của 1 học sinh (listByStudent) —
     // giống hệt cơ chế js/teacher/dashboard.js đã dùng cho Teacher Dashboard
-    // (Commit #8/LMAP) — KHÔNG gán thì query đó sẽ bị Firestore từ chối hẳn
-    // với coordinator đã bị siết phạm vi trường (Commit #7/LMAP).
+    // — KHÔNG gán thì query đó sẽ bị Firestore từ chối hẳn
+    // với coordinator đã bị siết phạm vi trường.
     window.EduStudentDetailSchoolsScope = myProfile.role === 'admin' ? undefined : rawData.schools;
 
     // Làm mới dữ liệu dựng lại ô lọc: nhớ lựa chọn hiện tại để không bị reset về "Tất cả".
@@ -84,7 +84,7 @@
     refresh();
   }
 
-  // "🔄 Làm mới dữ liệu": bỏ qua cache 3 phút, đọc lại thẳng từ Firestore —
+  // "Làm mới dữ liệu": bỏ qua cache 3 phút, đọc lại thẳng từ Firestore —
   // dùng khi cần xem số liệu tức thời (vd. đang theo dõi buổi thi trực tiếp).
   document.getElementById('refreshDataBtn').addEventListener('click', async () => {
     const btn = document.getElementById('refreshDataBtn');
@@ -133,7 +133,7 @@
     renderKpis(scoped, filters);
     window.EduCoordinatorCharts.renderAll(scoped);
     renderWatchlists(scoped);
-    // Bảng quản lý học sinh đầy đủ (Commit #5) — dùng lại đúng `scoped` đã
+    // Bảng quản lý học sinh đầy đủ — dùng lại đúng `scoped` đã
     // lọc 5 chiều, không gọi lại Firestore.
     if (window.EduCoordinatorStudentTable) window.EduCoordinatorStudentTable.render(scoped);
   }
@@ -176,7 +176,7 @@
   }
 
   // ============================================================
-  // WATCHLISTS (danh sách rút gọn — bảng đầy đủ + chi tiết học sinh sẽ ở Commit #5)
+  // WATCHLISTS (danh sách rút gọn; bảng đầy đủ + chi tiết học sinh ở student-table.js/student-detail.js)
   // ============================================================
   const WATCHLIST_LIMIT = 8;
 

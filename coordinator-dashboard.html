@@ -77,7 +77,7 @@
     <button type="button" class="btn btn-ghost" id="refreshDataBtn" title="Đọc lại dữ liệu mới nhất từ máy chủ (dữ liệu hiện đang cache tạm 3 phút để đỡ tốn băng thông)"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Làm mới dữ liệu</button>
   </div>
 
-  <div class="loading-note" id="loadingNote">⏳ Đang tải dữ liệu roster &amp; kết quả bài thi...</div>
+  <div class="loading-note" id="loadingNote">Đang tải dữ liệu roster &amp; kết quả bài thi...</div>
 
   <!-- ============ 7 KPI ============ -->
   <div class="kpi-grid" id="kpiGrid" hidden>
@@ -112,7 +112,7 @@
       <div class="kpi-value" id="kpiNotSubmitted">—</div>
     </div>
     <div class="kpi-card kpi-warn">
-      <div class="kpi-icon">🆘</div>
+      <div class="kpi-icon"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i></div>
       <div class="kpi-label">Học sinh cần hỗ trợ</div>
       <div class="kpi-value" id="kpiNeedsSupport">—</div>
     </div>
@@ -154,7 +154,7 @@
       <div class="watchlist-more" id="notSubmittedMore"></div>
     </div>
     <div class="watchlist-card">
-      <div class="watchlist-title">🆘 Học sinh cần hỗ trợ <span class="watchlist-count" id="needsSupportCount"></span></div>
+      <div class="watchlist-title"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> Học sinh cần hỗ trợ <span class="watchlist-count" id="needsSupportCount"></span></div>
       <ul class="watchlist-list" id="needsSupportList"></ul>
       <div class="watchlist-more" id="needsSupportMore"></div>
     </div>
@@ -165,7 +165,7 @@
     </div>
   </div>
 
-  <!-- ============ BẢNG QUẢN LÝ HỌC SINH (đầy đủ) — Commit #5 ============ -->
+  <!-- ============ BẢNG QUẢN LÝ HỌC SINH (đầy đủ) ============ -->
   <div class="student-table-card" id="studentTableCard" hidden>
     <div class="student-table-header">
       <h2><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i> Danh sách học sinh <span class="watchlist-count" id="studentTableCount"></span></h2>
@@ -214,7 +214,7 @@
 
 </div>
 
-<!-- ============ DRAWER CHI TIẾT HỌC SINH — Commit #5 ============ -->
+<!-- ============ DRAWER CHI TIẾT HỌC SINH ============ -->
 <div class="detail-overlay" id="studentDetailOverlay">
   <aside class="detail-drawer" id="studentDetailDrawer" role="dialog" aria-modal="true" aria-labelledby="detailDrawerName">
     <div class="detail-drawer-header">
@@ -227,7 +227,7 @@
       <button type="button" class="modal-close" id="detailDrawerCloseBtn" aria-label="Đóng">✕</button>
     </div>
     <div class="detail-drawer-body" id="detailDrawerBody">
-      <div class="loading-note">⏳ Đang tải lịch sử làm bài…</div>
+      <div class="loading-note">Đang tải lịch sử làm bài…</div>
     </div>
   </aside>
 </div>
@@ -258,10 +258,7 @@
 <!-- QUAN TRỌNG: khai báo EDU_ALLOWED_ROLES TRƯỚC auth-guard.js (đúng quy
      ước ghi trong chính file đó) — chỉ admin và coordinator được vào. -->
 <script>window.EDU_ALLOWED_ROLES = ['admin', 'coordinator'];</script>
-<!-- Chart.js: ưu tiên bản tự lưu trữ (js/vendor) để không bị Tracking
-     Prevention / adblock chặn khi tải từ cdnjs. document.write ở các fallback
-     bên dưới chạy đồng bộ ngay trong lúc parse HTML nên vẫn đảm bảo Chart.js
-     (nếu tải được) có mặt TRƯỚC js/coordinator/charts.js load bên dưới. -->
+<!-- Chart.js: ưu tiên bản trong js/vendor (tránh trình duyệt chặn CDN), không có thì thử CDN. Phải có trước js/coordinator/charts.js. -->
 <script src="js/vendor/chart.umd.min.js"></script>
 <script>
   if (typeof Chart === 'undefined') {
@@ -306,16 +303,7 @@
 <script src="js/services/analytics-service.js"></script>
 <script src="js/services/activity-log-service.js"></script>
 
-<!-- Xuất Excel/PDF (Commit #6, #7) — thư viện tự lưu trữ (js/vendor), không
-     phụ thuộc CDN. ExcelJS thay cho SheetJS vì cần ghi conditional
-     formatting thật (xem ghi chú đầu file excel-exporter.js).
-     ~1.86MB tổng cộng, TRƯỚC ĐÂY nạp thẳng (không "defer") ngay cả khi
-     người dùng chỉ vào xem KPI/biểu đồ, không bấm Xuất Excel/PDF bao giờ
-     — giờ nạp qua js/services/lazy-script-loader.js, CHỈ tải thật khi
-     bấm nút (xem EduExportVendorScripts + js/coordinator/student-table.js
-     § handleExportExcel/handleExportPdf). Font/logo nạp kèm theo, giữ
-     đúng thứ tự phụ thuộc (font phải nạp TRƯỚC pdf-exporter.js để tự
-     đăng ký "NotoSans" vào jsPDF() mới tạo). -->
+<!-- Xuất Excel/PDF (ExcelJS, jsPDF ~1,9 MB): chỉ tải khi bấm nút xuất, qua js/services/lazy-script-loader.js. Font phải nạp trước pdf-exporter.js. -->
 <script src="js/services/lazy-script-loader.js"></script>
 <script>
   window.EduExportVendorScripts = [
@@ -329,7 +317,7 @@
   ];
 </script>
 
-<!-- Coordinator dashboard (Commit #4) -->
+<!-- Coordinator dashboard -->
 <script src="js/coordinator/data-loader.js"></script>
 <script src="js/coordinator/charts.js"></script>
 <script src="js/coordinator/student-table.js"></script>

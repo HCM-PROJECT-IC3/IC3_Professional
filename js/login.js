@@ -29,7 +29,7 @@
   if (params.get('reason') === 'idle') {
     const msgEl = document.getElementById('msg');
     const idleMin = Number(params.get('min')) || 10;
-    msgEl.textContent = `⏳ Bạn đã bị đăng xuất do không thao tác trong ${idleMin} phút. Đăng nhập lại để quay về đúng trang đang làm.`;
+    msgEl.textContent = `Bạn đã bị đăng xuất do không thao tác trong ${idleMin} phút. Đăng nhập lại để quay về đúng trang đang làm.`;
     msgEl.classList.add('err');
   }
 
@@ -53,7 +53,7 @@
       // và trang quản trị. Hiện thông báo tại chỗ và đăng xuất để người dùng có
       // thể thử tài khoản khác ngay.
       if (profile.role === 'teacher' && profile.approved === false) {
-        setMsg('⏳ Tài khoản giáo viên của bạn đang chờ quản trị viên duyệt. Vui lòng thử lại sau, hoặc đăng nhập bằng tài khoản khác.', 'err');
+        setMsg('Tài khoản giáo viên của bạn đang chờ quản trị viên duyệt. Vui lòng thử lại sau, hoặc đăng nhập bằng tài khoản khác.', 'err');
         await EduAuth.logoutUser();
         return;
       }
@@ -98,7 +98,7 @@
     });
   });
 
-  // ---- Ràng buộc/validate real-time (theo yêu cầu người dùng: "tạo thêm
+  // ---- Ràng buộc/validate real-time ("tạo thêm
   // điều kiện ràng buộc cho form đăng ký và nhập") — kiểm tra khi rời ô
   // (blur) + khi gõ lại (input, để tắt lỗi ngay khi sửa đúng), KHÔNG chỉ
   // dựa vào HTML5 required/minlength mặc định (trình duyệt mỗi nơi hiện

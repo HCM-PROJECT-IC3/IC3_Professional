@@ -32,11 +32,7 @@
 
   <main class="mos-wrap">
 
-    <!-- ============================================================
-         BƯỚC 1 — Xác định học sinh (giống hệt cơ chế index.html: không
-         cần đăng nhập, chọn Trường → Lớp → Họ và tên từ roster có sẵn,
-         nạp bởi js/lobby-roster.js — không viết lại logic này).
-         ============================================================ -->
+    <!-- Bước 1 — chọn Trường → Lớp → Họ tên như ở sảnh (js/lobby-roster.js), không cần đăng nhập. -->
     <section class="lobby-card mos-card" id="mosStep1">
       <div class="lobby-card-title mos-card-title"><span class="step-num" aria-hidden="true">1</span> Em là ai?</div>
       <div class="form-group">
@@ -63,7 +59,7 @@
     </section>
 
     <!-- ============================================================
-         BƯỚC 2 — Chọn dự án thực hành (Phase 1: đúng 1 dự án pilot).
+         BƯỚC 2 — Chọn dự án thực hành (đúng 1 dự án pilot).
          ============================================================ -->
     <section class="lobby-card mos-card" id="mosStep2">
       <div class="lobby-card-title mos-card-title"><span class="step-num" aria-hidden="true">2</span> Chọn bài thực hành</div>
@@ -84,10 +80,10 @@
           <li>Lưu file, rồi tải file đã làm lên đây để hệ thống chấm điểm.</li>
         </ol>
         <p class="mos-note">
-          ℹ️ File bạn tải lên chỉ được đọc <strong>ngay trong trình duyệt của bạn</strong> để chấm điểm —
+          <i class="fa-solid fa-circle-info" aria-hidden="true"></i> File bạn tải lên chỉ được đọc <strong>ngay trong trình duyệt của bạn</strong> để chấm điểm —
           KHÔNG gửi lên bất kỳ server nào. Hệ thống chỉ lưu lại điểm số + chi tiết đúng/sai từng Task.
         </p>
-        <a class="btn-start mos-download-btn" id="mosDownloadBtn" href="#" download>⬇️ Tải file đề bài</a>
+        <a class="btn-start mos-download-btn" id="mosDownloadBtn" href="#" download>Tải file đề bài</a>
       </div>
 
       <div class="mos-task-list" id="mosTaskList"><!-- đổ bởi js/mos-practice.js --></div>
@@ -131,10 +127,7 @@
   <script src="js/services/firebase-loader.js"></script>
   <script src="js/services/apps-script-client.js"></script>
   <script src="js/mos-submissions.js"></script>
-  <!-- Hàng đợi gửi lại khi mất mạng — xem index.html cho chú thích đầy đủ.
-       QUAN TRỌNG ở trang này: mos-submissions.js là nơi DUY NHẤT lưu kết
-       quả MOS Practice (không có localStorage dự phòng như bài kiểm tra
-       chính), nên hàng đợi này còn quan trọng hơn ở trang index.html. -->
+  <!-- Hàng đợi gửi lại khi mất mạng. Trang này không có bản lưu dự phòng nào khác nên cần hàng đợi. -->
   <script src="js/services/pending-sync-queue.js"></script>
 
   <script src="js/lobby-roster.js"></script>

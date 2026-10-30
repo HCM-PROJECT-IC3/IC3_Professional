@@ -51,7 +51,7 @@
 
 /* ── Nút phẳng kiểu phần mềm thi (29/10/2026) ──
    Trước: mỗi trang tự khai báo .btn bo tròn hẳn (999px) + bóng nổi khi rê chuột, nút phụ nền
-   pastel (xanh bạc hà/xanh nhạt) — kiểu "web AI". Nay: bo góc nhỏ, nút phụ chỉ có viền, không bóng,
+   pastel (xanh bạc hà/xanh nhạt). Nay: bo góc nhỏ, nút phụ chỉ có viền, không bóng,
    không nhấc lên khi rê. "html" để thắng .btn khai báo sau trong CSS riêng của trang.
    Muốn trở lại như cũ: xoá khối này. */
 html .btn { border-radius: 8px; }

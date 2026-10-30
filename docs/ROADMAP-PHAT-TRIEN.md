@@ -1,7 +1,6 @@
 # Lộ trình phát triển khi dự án lớn lên
 
-> Bổ sung cho [architecture/LMAP-ARCHITECTURE.md](architecture/LMAP-ARCHITECTURE.md) (định hướng nền tảng)
-> và [FIREBASE-CHECKLIST.md](FIREBASE-CHECKLIST.md) (số đo hạn mức). Tài liệu này trả lời câu hỏi:
+> Số đo hạn mức: [FIREBASE-CHECKLIST.md](FIREBASE-CHECKLIST.md). Tài liệu này trả lời câu hỏi:
 > **khi quy mô tăng tới ngưỡng X thì phải làm gì, tốn gì, sửa ở đâu.** Cập nhật lại sau mỗi đợt đo mới.
 
 ## 1. Mốc hiện tại (10/2026)

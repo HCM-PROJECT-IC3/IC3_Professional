@@ -20,11 +20,11 @@
    - Tài khoản "admin", "coordinator" và "teaching_coordinator" KHÔNG thể
      tự đăng ký — chỉ được admin khác nâng cấp thủ công trong
      admin-users.html (hoặc gán tay lần đầu trong Firestore Console).
-     - "coordinator" (🧭 Điều phối đào tạo): quản lý roster/điểm số/điểm
+     - "coordinator" (Điều phối đào tạo): quản lý roster/điểm số/điểm
        danh học sinh (roster-manager.html) + CHỈ ĐỌC báo cáo kết quả (mục
        Báo cáo trong ic3-dashboard.html) — KHÔNG xem được lịch giảng dạy
        của giáo viên (teaching-schedule.html), 2 việc tách biệt hoàn toàn.
-     - "teaching_coordinator" (🚗 Điều phối giáo viên): CHỈ XEM lịch giảng
+     - "teaching_coordinator" (Điều phối giáo viên): CHỈ XEM lịch giảng
        dạy/TKB của MỌI giáo viên + báo cáo biểu đồ/pivot table + tính hỗ
        trợ xăng xe (teaching-schedule.html) — KHÔNG đụng gì tới
        roster/điểm số học sinh. Không có quyền sửa câu hỏi/tài khoản.

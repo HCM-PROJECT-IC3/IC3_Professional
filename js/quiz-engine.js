@@ -11,15 +11,15 @@
  *
  * CÁC CẢI TIẾN SO VỚI VERSION CŨ:
  * ─────────────────────────────────────────────────────────────────
- * ✅ Task 1: fetch() quiz_data.json → window.quizRepository (toàn cục)
- * ✅ Task 2: Render danh mục + cấp độ + minitest từ JSON
- * ✅ Task 3: Xử lý đầy đủ 4 loại câu hỏi (single/multi/truefalse/matching)
+ * Task 1: fetch() quiz_data.json → window.quizRepository (toàn cục)
+ * Task 2: Render danh mục + cấp độ + minitest từ JSON
+ * Task 3: Xử lý đầy đủ 4 loại câu hỏi (single/multi/truefalse/matching)
  *           - Hiển thị image_file từ thư mục img/
  *           - Nút CÓ/KHÔNG hoặc ĐÚNG/SAI động theo label_true/label_false
  *           - Multi: kiểm tra đúng theo mảng correct (thứ tự không quan trọng)
- * ✅ Task 4: Giữ nguyên anti-cheat (tabSwitch, clicks, qTime)
+ * Task 4: Giữ nguyên anti-cheat (tabSwitch, clicks, qTime)
  *           Chấm điểm chính xác theo cấu trúc JSON
- * ✅ BONUS:  window.quizRepository — truy xuất toàn cục từ console/devtools
+ * BONUS:  window.quizRepository — truy xuất toàn cục từ console/devtools
  * ─────────────────────────────────────────────────────────────────
  */
 
@@ -96,7 +96,7 @@ function _levelKey(catId, levelId) {
  *
  * LƯU Ý: trước đây có thêm 1 lớp cache bền trong localStorage (còn sống qua
  * nhiều lần ghé trang, chỉ hết hạn khi đổi field "version" trong meta.json).
- * Lớp này đã bị GỠ BỎ theo yêu cầu — vì khi sửa trực tiếp file JSON câu hỏi
+ * Lớp này đã bị gỡ bỏ — vì khi sửa trực tiếp file JSON câu hỏi
  * (vd. chỉnh lại toạ độ % của câu hotspot) mà không tự tay cập nhật
  * "version" trong meta.json, trình duyệt vẫn âm thầm phát dữ liệu CŨ từ
  * localStorage, khiến tưởng như sửa hoài không lên. Giờ mỗi lần tải trang
@@ -288,7 +288,7 @@ function _mtTypeCounts(mt) {
    ngẫu nhiên và không cần chạy lại split-quiz-data.py.
    ============================================================ */
 const RANDOM_MIX_KEY   = '__RANDOM_MIX__';
-// "🎮 Tổng hợp Vui" — CÙNG bộ câu hỏi/CÙNG cách trộn với "📚 Tổng hợp" ở
+// "Tổng hợp Vui" — CÙNG bộ câu hỏi/CÙNG cách trộn với "Tổng hợp" ở
 // trên (buildRandomMixQuestions), chỉ khác: cứ mỗi ~1/3 chặng đường lại
 // chèn 1 màn mini-game nhanh (kiểu "power-up" giữa các round của
 // Wayground/Quizizz) để đổi không khí — xem § 9b GAME BREAK bên dưới.
@@ -989,7 +989,7 @@ async function loadData() {
     State.quizData = meta;
 
     console.info(
-      `%c[EduQuiz] ✅ meta.json nạp thành công (lazy-load câu hỏi theo khối)!`,
+      `%c[EduQuiz] meta.json nạp thành công (lazy-load câu hỏi theo khối)!`,
       'color:#00c9a0;font-weight:700'
     );
     _logRepositorySummary(meta);
@@ -1017,7 +1017,7 @@ function _logRepositorySummary(data) {
   });
   const categories = data.categories?.map(c => c.name).join(', ');
   console.info(
-    `%c[EduQuiz] 📦 ${data.categories?.length} danh mục · ${totalQ} câu hỏi\n` +
+    `%c[EduQuiz] ${data.categories?.length} danh mục · ${totalQ} câu hỏi\n` +
     `  Danh mục: ${categories}\n` +
     `  Truy xuất tại: window.quizRepository`,
     'color:#6c63ff'
@@ -1566,7 +1566,7 @@ async function startExam() {
     qTimes:        {},
     qStart:        { 0: Date.now() },
     timedOut:      false,
-    // "🎮 Tổng hợp Vui" — mốc câu hỏi (0-based, "current" NGAY TRƯỚC khi
+    // "Tổng hợp Vui" — mốc câu hỏi (0-based, "current" NGAY TRƯỚC khi
     // bấm Câu tiếp) sẽ chèn 1 mini-game giải lao — xem § 9b GAME BREAK.
     gameBreakPoints: isGameBreak ? _computeGameBreakPoints(State.questions.length) : [],
     gameBreaksDone:  new Set(),
@@ -2085,9 +2085,9 @@ function renderQuestion(idx) {
    ============================================================ */
 
 /** Chấm + hiện đúng/sai + giải thích cho ĐÚNG câu đang xem — gọi từ nút
- * "✅ Kiểm tra đáp án" (chỉ render.ở chế độ 'practice', xem renderQuestion()).
+ * "Kiểm tra đáp án" (chỉ render.ở chế độ 'practice', xem renderQuestion()).
  * Bấm lần 2 (khi kết quả đang hiện) sẽ ẨN kết quả đi thay vì kiểm tra lại vô
- * ích — nút tự đổi nhãn thành "🙈 Ẩn kết quả" để vẫn còn tác dụng và học
+ * ích — nút tự đổi nhãn thành "Ẩn kết quả" để vẫn còn tác dụng và học
  * sinh chủ động tắt được gợi ý/giải thích khi không muốn xem nữa. */
 function checkCurrentAnswer() {
   if (State.examMode !== 'practice') return; // phòng hờ — nút này vốn không tồn tại ở chế độ Kiểm tra
@@ -2225,7 +2225,7 @@ function _attachQuestionImageZoom(panel) {
     // Không được bọc lại bằng thumbnail cạnh ảnh vì sẽ làm co ảnh và lệch
     // toàn bộ hệ toạ độ hotspot.
     if (img.dataset.hotspotImage === '1') return;
-    // Ảnh trong câu "Phân loại" (classify) ĐÃ có sẵn nút phóng to 🔍 riêng
+    // Ảnh trong câu "Phân loại" (classify) ĐÃ có sẵn nút phóng to riêng
     // gắn trực tiếp trong renderClassify() + CSS giới hạn kích thước nhỏ
     // gọn (.classify-chip-img img / .classify-zone-chip-img img). Nếu bọc
     // lại lần 2 ở đây, ảnh sẽ bị đổi sang CSS .q-image-zoom-wrap > img
@@ -4255,7 +4255,7 @@ function showResult(result, integrity) {
   if (integrity.valid) {
     badge.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Bài làm hợp lệ';
     Object.assign(badge.style, {
-      color: 'var(--accent5)',
+      color: 'var(--green-text, #067647)',
       background: 'rgba(6,214,160,.08)',
       borderColor: 'rgba(6,214,160,.3)',
     });
@@ -4505,7 +4505,7 @@ function _maybeShowKeyHint() {
 }
 
 /**
- * Nút "🐥 Giải lao: Chim Vượt Ải" ở màn Kết quả (xem index.html, gần
+ * Nút "Giải lao: Chim Vượt Ải" ở màn Kết quả (xem index.html, gần
  * #openGameZoneBtn) — KHÔNG bị khóa như Khu Vui Chơi (không yêu cầu
  * ≥90%/bài Tổng hợp), vì đây chỉ là gợi ý giải trí tùy chọn sau MỌI bài
  * thi, không phải phần thưởng cần "mở khóa".
@@ -4813,7 +4813,7 @@ if (typeof submitToGoogleSheet !== 'function') {
 
 // Nút đổi giờ vẽ mặt trời/mặt trăng hoàn toàn bằng CSS (::after +
 // data-theme, xem .theme-toggle/.theme-toggle-exam trong style.css) —
-// TRƯỚC ĐÂY set icon emoji (☀️/🌙) qua textContent, đổi tức thời không
+// trước đây set icon emoji (/) qua textContent, đổi tức thời không
 // animate được. JS giờ CHỈ còn việc đổi attribute + lưu localStorage.
 function toggleTheme() {
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';

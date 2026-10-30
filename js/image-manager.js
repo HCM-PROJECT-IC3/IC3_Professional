@@ -267,7 +267,7 @@ async function restoreDraftIfAny() {
 /* ============================================================
    GOM CÂY DỮ LIỆU (categories→levels→minitests) THÀNH DANH SÁCH PHẲNG
    ────────────────────────────────────────────────────────────
-   Dùng cho "⬆️ Tải JSON cập nhật". Nhận 2 dạng file:
+   Dùng cho "Tải JSON cập nhật". Nhận 2 dạng file:
      1. Cây đầy đủ  { categories: [ { levels: [ { minitests: {...} } ] } ] }
         — đúng dạng quiz_data.json / file "Sao lưu JSON" tải xuống.
      2. 1 khối lẻ   { id, name, grade, cat_id, minitests: {...} }
@@ -974,7 +974,7 @@ document.getElementById('backupBtn').addEventListener('click', () => {
 });
 
 /* ============================================================
-   🚀 ĐẨY THAY ĐỔI CHO HỌC SINH (data/ic3/ trên GitHub)
+   ĐẨY THAY ĐỔI CHO HỌC SINH (data/ic3/ trên GitHub)
    ────────────────────────────────────────────────────────────
    Dựng lại file từ QUESTIONS rồi CHỈ đẩy file thật sự khác bản đã tải:
      - data/ic3/<cat>__<lvl>.json            khối có câu đổi

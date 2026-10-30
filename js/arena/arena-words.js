@@ -2,9 +2,9 @@
    js/arena/arena-words.js — kho từ cho 2 trò chơi chữ ở sảnh chờ Phòng cả lớp (js/arena/arena-lobby-fun.js).
    CỐ Ý tách khỏi ngân hàng câu hỏi (data/ic3): sảnh chờ không được cho học sinh xem trước câu sắp thi.
 
-     CHAIN      từ 2 tiếng (tin học + đời sống học đường) cho trò 🔗 Nối từ
+     CHAIN      từ 2 tiếng (tin học + đời sống học đường) cho trò Nối từ
      TRAPS      từ chỉ làm bẫy (cùng chữ, khác dấu: chiếu / chiều, tự / từ / tư...)
-     TERMS      [thuật ngữ tiếng Anh, nghĩa tiếng Việt] cho trò 🔤 Ghép chữ
+     TERMS      [thuật ngữ tiếng Anh, nghĩa tiếng Việt] cho trò Ghép chữ
      chainStart(rng)                từ mở đầu (luôn nối tiếp được)
      chainTurn(word, used, rng, n)  { next: từ đúng | null (hết đường), options: n lựa chọn đã trộn }
                                     bẫy: lựa chọn sai ưu tiên từ có tiếng đầu GIỐNG chữ nhưng KHÁC dấu (tính / tình / tin)

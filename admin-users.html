@@ -75,10 +75,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
-<!-- QUAN TRỌNG: khai báo EDU_ALLOWED_ROLES TRƯỚC auth-guard.js — trang quản
-     lý tài khoản chỉ dành cho Admin (trước đây dùng mặc định của
-     auth-guard.js là ['admin','teacher','student'], vô tình cho phép giáo
-     viên vào thẳng bằng URL dù menu đã ẩn — khai báo rõ ở đây để chặn đúng). -->
+<!-- Chỉ Admin. Khai báo trước auth-guard.js (mặc định của nó cho cả teacher/student). -->
 <script>window.EDU_ALLOWED_ROLES = ['admin'];</script>
 <script src="js/firebase-config.js"></script>
 <script src="js/auth.js"></script>
@@ -88,7 +85,7 @@
 <script src="js/backend-config.js"></script>
 <script src="js/services/roster-cache-service.js"></script>
 <script src="js/admin-users.js"></script>
-<!-- "📥 Nhập giáo viên từ Excel" — đọc file bằng SheetJS, cùng CDN/phiên
+<!-- "Nhập giáo viên từ Excel" — đọc file bằng SheetJS, cùng CDN/phiên
      bản đã dùng ở teaching-schedule.html cho đồng bộ toàn hệ thống. -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="js/admin-users-import.js"></script>

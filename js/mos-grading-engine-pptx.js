@@ -1,6 +1,6 @@
 /* ============================================================
    js/mos-grading-engine-pptx.js — Engine chấm điểm MOS Practice cho
-   PowerPoint (Phase 1 mở rộng — pilot thứ 2 sau Excel).
+   PowerPoint (pilot thứ 2 sau Excel).
 
    Khác với Excel (dùng ExcelJS đọc trực tiếp model workbook), PowerPoint
    KHÔNG có thư viện đọc-model vendor sẵn trong repo, nên engine này tự

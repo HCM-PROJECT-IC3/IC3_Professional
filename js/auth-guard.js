@@ -17,7 +17,7 @@
    MÀN HÌNH CHỜ/TỪ CHỐI — dùng đúng ảnh động người dùng cung cấp (img/anim/):
    loading.gif cho lúc "đang kiểm tra đăng nhập", 404.gif (nhân vật hang
    động) cho lúc "từ chối truy cập" — khung màn hình (#edu-guard-screen)
-   phóng to hơn bản trước theo yêu cầu người dùng để ảnh rõ hơn.
+   phóng to hơn bản trước để ảnh rõ hơn.
    ============================================================ */
 (function () {
   'use strict';
@@ -35,7 +35,7 @@
       font-family: 'Baloo 2', sans-serif; visibility: visible !important;
       color: #333;
       /* 10/2026: nền phẳng cùng màu --bg như login.html (trước là nền pastel
-         loang màu trôi — trông "đúc khuôn"). */
+         loang màu trôi). */
       background: #f3f5fc;
     }
     /* Kích thước card/khung ảnh dùng clamp() để to hơn hẳn bản trước

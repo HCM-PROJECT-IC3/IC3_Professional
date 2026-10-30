@@ -6,7 +6,7 @@
 
    THIẾT KẾ PHỎNG THEO ĐÚNG file Excel gốc "LỊCH GIẢNG DẠY TEAM GVTH NH
    2026-2027.xlsx" (On_Tap_MOS) mà người dùng đã quen mắt nhiều năm —
-   người dùng yêu cầu "giống từ màu sắc lẫn bố cục" để dễ nhìn/dễ nhớ hơn
+   cần "giống từ màu sắc lẫn bố cục" để dễ nhìn/dễ nhớ hơn
    là theo màu tím thương hiệu mặc định của app:
      - Font Tinos (metric-tương thích Times New Roman, đã nhúng sẵn ở
        js/vendor/tinos-vietnamese-jspdf.js — dùng CHUNG với "Phiếu công
@@ -415,14 +415,14 @@
     } catch (err) { return; }
     const el = document.getElementById('toast');
     if (!el) return;
-    el.textContent = 'ℹ️ Trên điện thoại/tablet, PDF thường mở ngay trong tab mới — bấm biểu tượng Chia sẻ rồi chọn "Lưu vào Files/Tải xuống" để lưu lại máy.';
+    el.textContent = 'Trên điện thoại/tablet, PDF thường mở ngay trong tab mới — bấm biểu tượng Chia sẻ rồi chọn "Lưu vào Files/Tải xuống" để lưu lại máy.';
     el.classList.add('show');
     clearTimeout(el._mobileHintT);
     el._mobileHintT = setTimeout(() => el.classList.remove('show'), 5200);
   }
 
-  /** Xuất 1 file PDF cho ĐÚNG 1 giáo viên/1 tuần — nút "🖨️ PDF" từng hàng
-   * (admin/coordinator) hoặc "🖨️ Xuất PDF" trong "Lịch của tôi" (giáo viên).
+  /** Xuất 1 file PDF cho ĐÚNG 1 giáo viên/1 tuần — nút "PDF" từng hàng
+   * (admin/coordinator) hoặc "Xuất PDF" trong "Lịch của tôi" (giáo viên).
    * @param {{days:Object, weekLabel:string}} [extraWeek] Khi tuần đang xuất
    *   KHÔNG PHẢI trọn vẹn 1 tuần Excel (vd dính vài ngày đầu tháng sau, đã
    *   bị "Phiếu công tác" gộp coi là "tuần cuối tháng") — thêm 1 TRANG PHỤ
@@ -440,7 +440,7 @@
     doc.save(`lich-${slugify(teacher.name || teacher.code)}-${slugify(weekLabel)}.pdf`);
   }
 
-  /** Xuất 1 file PDF DUY NHẤT gồm lịch của NHIỀU giáo viên — nút "🖨️ Xuất
+  /** Xuất 1 file PDF DUY NHẤT gồm lịch của NHIỀU giáo viên — nút "Xuất
    * PDF tất cả" trên thanh công cụ (chỉ admin/coordinator). Mỗi giáo viên
    * chiếm 1 TRANG CHÍNH + (nếu có `extraDays`, xem exportOne()) 1 TRANG
    * PHỤ minh chứng "tuần cuối tháng" ngay sau đó — không phải cứ 1 GV/1

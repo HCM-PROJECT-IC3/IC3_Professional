@@ -16,17 +16,11 @@
   <!-- Bắt lỗi TOÀN CỤC — nạp SỚM NHẤT có thể (trước mọi script khác) để
        bắt được cả lỗi xảy ra ngay lúc các script sau đang khởi tạo.
        Xem js/global-error-handler.js. -->
-  <!-- defer (10/2026): trước đây chặn render ~0,3 giây. Vẫn chạy ĐẦU TIÊN trong dãy script defer
-       (defer chạy theo thứ tự trong tài liệu) và index.html không có script nội tuyến chạy sớm hơn,
-       nên vẫn bắt được lỗi của mọi script còn lại. -->
+  <!-- defer: vẫn chạy đầu tiên trong các script defer nên bắt được lỗi của mọi script sau. -->
   <script src="js/global-error-handler.js" defer></script>
-  <!-- Ghi phiên bản đang chạy ra console (debug/hỗ trợ) — xem js/app-version.js + file VERSION ở gốc repo.
-       defer (không như global-error-handler.js ở trên — file đó CỐ Ý chặn
-       để bắt lỗi sớm nhất có thể; file này chỉ log debug, không cần gấp). -->
+  <!-- Ghi phiên bản ra console (js/app-version.js, file VERSION). -->
   <script src="js/app-version.js" defer></script>
-  <!-- Trợ lý trợ năng (đọc to câu hỏi, chỉnh cỡ chữ/độ tương phản khi làm
-       bài) — chạy độc lập phía trình duyệt, không phụ thuộc Firebase/auth,
-       không tốn lượt đọc/ghi Firestore nào. Xem js/a11y-assistant.js. -->
+  <!-- Trợ năng khi làm bài: đọc to, cỡ chữ, tương phản (js/a11y-assistant.js). -->
   <script src="js/a11y-assistant.js" defer></script>
   <!-- <title> chỉ render TEXT THUẦN (tiêu đề tab trình duyệt) — bỏ emoji
        thay vì để lọt icon "vỡ", không có cách nào render Font Awesome ở đây. -->
@@ -39,18 +33,7 @@
   <meta property="og:title" content="EduQuiz IC3 — Ôn luyện &amp; Kiểm tra chứng chỉ IC3/MOS">
   <meta property="og:description" content="Ôn luyện và kiểm tra trực tuyến chứng chỉ IC3/MOS — trắc nghiệm theo chủ đề, mô phỏng thực hành, mini-game ôn tập.">
   <meta property="og:image" content="favicon.svg">
-  <!-- ĐỢT TỐI ƯU HIỆU NĂNG: 2 stylesheet Google Fonts + Font Awesome (icon)
-       vốn CHẶN RENDER (Lighthouse render-blocking, ~2.5s trong tổng ~3.1s
-       còn lại sau khi đã defer hết JS) — dùng kỹ thuật preload+swap chuẩn
-       (web.dev "loadCSS"): tải với ưu tiên cao qua rel="preload" (KHÔNG
-       chặn render), rồi tự đổi rel="stylesheet" khi tải xong để áp dụng.
-       An toàn cho 2 loại này vì: (1) font đã có sẵn &display=swap — chữ
-       vẫn hiện ngay bằng font hệ thống, không "trắng chữ" chờ font; (2)
-       icon Font Awesome chỉ là hình trang trí bên cạnh chữ — chậm xuất
-       hiện vài trăm ms không làm vỡ layout hay mất thông tin. KHÔNG áp
-       dụng kỹ thuật này cho style.css/theme.css (CSS layout CỐT LÕI) —
-       rủi ro FOUC (nội dung không có style) cao hơn nhiều so với lợi ích,
-       để lại 2 file này chặn render bình thường như trước. -->
+  <!-- Font và icon tải kiểu preload rồi đổi sang stylesheet để không chặn hiển thị. style.css/theme.css vẫn tải bình thường (tránh trang hiện khi chưa có style). -->
   <link rel="stylesheet" href="lib/fonts/fonts.css">
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="style.css">
@@ -71,13 +54,7 @@
 <noscript>
   <link rel="stylesheet" href="lib/fontawesome/css/fa.min.css">
 </noscript>
-  <!-- HIỆU ỨNG MỞ TRANG — đã bỏ phần "mờ dần từ trong suốt" (10/2026).
-       Trước đây body (css/motion.css moPageEnter), #lobby (lobbyFadeIn), thẻ form và
-       logo đều bắt đầu từ opacity:0 nên trình duyệt KHÔNG tính là đã hiển thị nội dung
-       cho tới khi các hiệu ứng chạy xong → FCP/LCP chậm thêm ~0,9 giây (đo bằng giả lập
-       Slow 4G). Nay nội dung hiện ngay, chỉ còn thẻ form trượt nhẹ lên (chỉ transform,
-       không đụng opacity). Khối <style> này đặt CUỐI <head> để luôn thắng style.css /
-       motion.css dù các file đó tải lúc nào. Tôn trọng prefers-reduced-motion (tắt hẳn). -->
+  <!-- Hiệu ứng mở trang: nội dung hiện ngay, chỉ thẻ form trượt nhẹ (transform, không đổi opacity để không chậm FCP/LCP). Đặt cuối <head> để thắng style.css/motion.css. Tắt khi prefers-reduced-motion. -->
   <style>
     body, #lobby, .lobby-brand, .lobby-tagline, .lobby-stat-row, .switch-account-link { animation: none; }
     .lobby-card { animation: lobbySlideIn .4s cubic-bezier(.16,1,.3,1) both; }
@@ -92,22 +69,13 @@
   <button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()"
     title="Chuyển chế độ sáng/tối" aria-label="Chuyển chế độ sáng/tối"></button>
 
-  <!-- ── Danh sách Trường/Lớp/Họ và tên hiển thị ở form bên dưới do Điều
-     phối đào tạo NẠP TỪ Excel ngay trong khu quản trị (xem trang
-     "🎓 Quản lý danh sách học sinh" → roster-manager.html →
-     nút "📥 Nạp từ Excel"), KHÔNG còn nút nạp Excel ngoài trang công
-     khai này nữa để tránh lộ thao tác quản trị cho học sinh. Trang này
-     đọc danh sách từ file tĩnh data/roster/students-active.json (xuất
-     ra từ roster-manager.html), KHÔNG gọi Firestore trực tiếp — xem
-     js/lobby-roster.js. ── -->
+  <!-- Danh sách Trường/Lớp/Họ tên đọc từ data/roster/students-active.json (js/lobby-roster.js), do Điều phối xuất từ roster-manager.html. -->
 
   <!-- ═══════════════════════════════════
      LOBBY — Two-column layout
      ═══════════════════════════════════ -->
   <div id="lobby" role="main">
-    <!-- Sảnh chỉ còn FORM (10/2026): khối bàn phím 3D trang trí bên trái + nút chuyển
-         "Giới thiệu ⇄ Làm bài" đã gỡ để học sinh không bị phân tâm (và máy trường
-         không phải chạy hoạt ảnh liên tục). Link giáo viên chuyển xuống dưới form. -->
+    <!-- Sảnh chỉ có form; link cho giáo viên ở dưới form. -->
     <!-- Right: form -->
     <div class="lobby-right">
       <!-- Không còn là link sang portfolio.html (10/2026): trang đó nạp Firebase + App Check và
@@ -164,21 +132,7 @@
           </div>
         </div>
 
-        <!-- Minitest (thời gian tính theo "Chế độ làm bài" chọn ở trên —
-             Ôn luyện = không giới hạn, Kiểm tra = 50 phút, không cho học
-             sinh tự chọn mốc khác). Chọn theo 2 bước: bấm 1 trong các nút
-             "chế độ" (Theo Tên bài/Ôn tập theo tiết/Kiểm tra theo tiết/Theo chủ
-             đề/Tổng hợp/Tổng hợp Vui) trước để LỌC bớt, rồi mới chọn cụ thể trong select
-             bên dưới — tránh 1 dropdown xổ ra hàng chục dòng liền một lúc,
-             khó quét/dễ chọn nhầm trên di động. "Theo Tên bài" (bộ đề CỦNG
-             CỐ bám sát từng bài giảng, vd "Bài 6. Kiểm chứng thông tin")
-             là chế độ mặc định khi cấp/chương trình đó đã có sẵn — phù hợp
-             nhất để ôn ngay sau buổi học (chỉ làm ở chế độ Ôn luyện — câu củng
-             cố bài học để dạy, không trộn vào bộ khác). "Ôn tập theo tiết" /
-             "Kiểm tra theo tiết" là các bộ đúng tiết Ôn tập / Kiểm tra trong
-             PPCT từng khối, CHỈ gồm câu All Key (data/ic3/ppct-review.json,
-             scripts/generate-review-minitests.js). Xem js/quiz-engine.js §
-             refreshMinitests() (BAI_NAME_RE, REVIEW_KEY_RE, TEST_KEY_RE). -->
+        <!-- Minitest: chọn chế độ (Theo tên bài / Ôn tập theo tiết / Kiểm tra theo tiết / Theo chủ đề / Tổng hợp) trước, rồi chọn bộ cụ thể. Thời gian theo Chế độ làm bài. -->
         <div class="form-group">
           <label for="minitestSelect"><i class="fa-solid fa-layer-group"></i> Bài luyện tập
             <span class="label-hint">Bấm 1 nhóm, rồi chọn bài ở ô bên dưới</span>
@@ -192,14 +146,7 @@
         <div class="lobby-col lobby-col-3">
         <div class="form-section-label lobby-step" id="lobbyStep3"><span class="step-num" aria-hidden="true">3</span> Cách làm bài <span class="step-done" aria-label="đã xong">✓</span></div>
 
-        <!-- Chế độ làm bài: Ôn luyện (không giới hạn thời gian, để học sinh
-             học/thực hành thoải mái) và Kiểm tra (đếm ngược, thời lượng chọn
-             được ở khối "Thời gian làm bài" bên dưới — KHÔNG còn cố định 50
-             phút/bài như trước, vì mỗi cấp/tiết học có độ dài khác nhau).
-             KHÔNG đụng tới danh sách Chương trình/Cấp độ/Minitest bên dưới —
-             mọi bộ đề hiện có (Spark, IC3, MOS × LV1-3) vẫn dùng chung, chỉ
-             khác cách tính giờ khi vào làm bài. Xem js/quiz-engine.js §
-             startExam()/startTimer()/applyExamDurationLabel(). -->
+        <!-- Chế độ làm bài: Ôn luyện (không giới hạn giờ) hoặc Kiểm tra (đếm ngược). Xem js/quiz-engine.js startExam()/startTimer(). -->
         <div class="form-group">
           <label class="sr-only"><i class="fa-solid fa-hourglass-half"></i> Chế độ làm bài</label>
           <div class="mt-mode-toggle" id="examModeToggle">
@@ -208,16 +155,7 @@
           </div>
         </div>
 
-        <!-- Thời gian làm bài (chỉ áp dụng/hiện khi chọn "Kiểm tra" ở trên) —
-             4 mốc phổ biến (35 phút TiH, 45 phút THCS, 50 phút chuẩn thi
-             thật IC3, "Tuỳ chỉnh" cho GV muốn khớp đúng số phút còn lại của
-             tiết học thực tế) thay vì CỐ ĐỊNH 50 phút cho mọi cấp như trước.
-             Mốc TiH/THCS được TỰ CHỌN SẴN theo Lớp học sinh chọn ở trên (xem
-             applyClassGradeDefaults() trong js/quiz-engine.js) — học sinh
-             vẫn đổi lại tay được nếu tiết học hôm đó khác thường lệ.
-             `hidden` mặc định sẵn trong HTML (khớp State.examMode mặc định
-             'practice' ở js/quiz-engine.js) để không bị loé hiện 1 nhịp
-             trước khi initLobby() kịp chạy applyExamModeUI(). -->
+        <!-- Thời gian làm bài (chỉ ở chế độ Kiểm tra): 35 phút TiH, 45 phút THCS, 50 phút, hoặc tuỳ chỉnh. Tự chọn theo lớp (applyClassGradeDefaults). Ẩn sẵn vì mặc định là Ôn luyện. -->
         <div class="form-group" id="examDurationWrap" hidden>
           <label for="examDurationCustom"><i class="fa-solid fa-clock"></i> Thời gian làm bài (Kiểm tra)</label>
           <div class="mt-mode-toggle" id="examDurationToggle">
@@ -229,15 +167,7 @@
           <input type="number" id="examDurationCustom" min="5" max="180" step="1" placeholder="Nhập số phút (5–180)" hidden>
         </div>
 
-        <!-- Cam kết chống gian lận — CHỈ hiện/bắt buộc tick khi chọn chế độ
-             "Kiểm tra" (Ôn luyện không ràng buộc gì). Bắt buộc vì nút "Bắt
-             đầu" bị khoá disabled cho tới khi tick, xem js/quiz-engine.js
-             § refreshMeta()/wireExamModeToggle(). Nội dung rút gọn còn 1 câu
-             — chi tiết vi phạm cụ thể học sinh sẽ thấy ngay trong lúc làm
-             bài (toast/khoá màn hình), không cần liệt kê hết ở đây. Ô tick
-             tự vẽ (input gốc ẩn nhưng vẫn giữ để bàn phím/screen reader
-             dùng được — không dùng display:none) + hiệu ứng tick/pop khi
-             chọn, xem css .pledge-check*. -->
+        <!-- Cam kết làm bài trung thực: bắt buộc tick ở chế độ Kiểm tra thì nút Bắt đầu mới mở (refreshMeta/wireExamModeToggle). -->
         <div class="form-group anti-cheat-pledge" id="antiCheatPledgeWrap" hidden>
           <label class="pledge-label" for="antiCheatPledge">
             <span class="pledge-check">
@@ -255,28 +185,18 @@
 
         <!-- "Bài em sắp làm" — tóm tắt lựa chọn ngay trên nút Bắt đầu (màn rộng; js/lobby-form-ux.js) -->
         <div class="lobby-summary" id="lobbySummary" aria-live="polite"></div>
-        <!-- fa-beat (https://docs.fontawesome.com/web/style/animate —
-             "Scale an icon up or down" để thu hút chú ý vào nút hành động
-             chính) — chỉ chạy lúc hover (paused mặc định, xem #btnStart
-             i.fa-beat trong style.css), tắt hẳn khi disabled. -->
+        <!-- fa-beat chỉ chạy khi rê chuột (#btnStart i.fa-beat trong style.css), tắt khi nút bị khoá. -->
         <button type="button" class="btn-start" id="btnStart" onclick="onStartExamClick()" disabled><i class="fa-solid fa-play fa-beat"></i> Bắt đầu</button>
         <!-- Nhắc học sinh còn thiếu bước nào khi nút Bắt đầu đang khoá (js/lobby-form-ux.js) -->
         <p class="start-hint" id="startHint" aria-live="polite"></p>
 
-        <!-- MOS Word 2019 — mô phỏng thao tác Ribbon, 10 tiết ôn luyện cuối
-             khóa (không khóa như Khu Vui Chơi, đây là nội dung học chính).
-             Xem js/game-modal.js + word-simulator.html.
-             CHỈ HIỆN khi đang chọn Chương trình = MOS + Cấp độ = Word — gắn
-             chặt với đúng môn đang chọn thay vì luôn hiện không ngữ cảnh,
-             xem hàm updateMosInlinePractice() ở js/main.js. -->
+        <!-- MOS Word: mô phỏng Ribbon, 10 tiết. Chỉ hiện khi chọn MOS + Word (updateMosInlinePractice trong js/main.js). -->
         <button type="button" class="game-zone-open-btn" id="openWordSimBtn" hidden
           title="MOS Word 2019 — 10 tiết ôn luyện thao tác Ribbon">
           <i class="fa-solid fa-pen-to-square"></i> MOS Word — Ôn luyện Ribbon
         </button>
 
-        <!-- MOS Excel/PowerPoint — cùng bộ Ribbon simulator 10 tiết như Word
-             (xem excel-simulator.html / powerpoint-simulator.html), chỉ hiện
-             khi đang chọn đúng Chương trình = MOS + Cấp độ tương ứng. -->
+        <!-- MOS Excel/PowerPoint: mô phỏng Ribbon, chỉ hiện khi chọn đúng cấp độ. -->
         <button type="button" class="game-zone-open-btn" id="openExcelSimBtn" hidden
           title="MOS Excel 2019 — 10 tiết ôn luyện thao tác Ribbon">
           <i class="fa-solid fa-table-cells"></i> MOS Excel — Ôn luyện Ribbon
@@ -286,29 +206,12 @@
           <i class="fa-solid fa-display"></i> MOS PowerPoint — Ôn luyện Ribbon
         </button>
 
-        <!-- MOS Practice (Excel/PowerPoint) — tải đề thật, làm trên Office
-             thật, nộp file để hệ thống tự chấm điểm (mos-practice.html).
-             Bổ sung cho Ribbon simulator ở trên (luyện thao tác) — đây là
-             bước kiểm tra thực chiến trên file .xlsx/.pptx thật. Chỉ hiện
-             khi đang chọn đúng Chương trình = MOS + Cấp độ = Excel/PowerPoint. -->
+        <!-- Thực hành MOS: tải đề, làm trên Office, nộp file để tự chấm (mos-practice.html). -->
         <a class="game-zone-open-btn" id="openMosPracticeBtn" href="mos-practice.html" target="_blank" rel="noopener" hidden>
           <i class="fa-solid fa-file-export"></i> Thực hành MOS — nộp file để chấm
         </a>
-
-        <!-- MOS Exam Simulator (mới) — chấm theo Application State thật
-             (Document/Spreadsheet/Slide Object Model), khác hẳn Ribbon
-             simulator ở trên (mô phỏng thao tác theo kịch bản cố định).
-             Xem exam-simulator-{word,excel,ppt}.html + js/main.js §
-             updateMosInlinePractice(). Mở tab mới (không phải modal) vì
-             có timer/autosave riêng, cần tồn tại độc lập với vòng đời
-             modal iframe. -->
-        <a class="game-zone-open-btn" id="openExamSimBtn" href="#" target="_blank" rel="noopener" hidden>
-          <i class="fa-solid fa-flask"></i> MOS Exam Simulator — Thi thử chấm theo trạng thái thật (Beta)
-        </a>
         </div>
-        <!-- Việc thêm cho học sinh (Thử thách hôm nay, đếm ngược, Góc học tập, Đấu trường, Lịch sử, offline).
-             Tách khỏi cột 3 (10/2026): màn 3 cột nằm dưới cột 1–2 (trước để trống), màn 2 cột nằm dưới cột 3.
-             Các module JS tìm theo ".lobby-card .lobby-extras" nên không phải sửa. -->
+        <!-- Phần thêm cho học sinh (Thử thách hôm nay, đếm ngược, Góc học tập, Đấu trường, Lịch sử). Các module tìm theo ".lobby-card .lobby-extras". -->
         <div class="lobby-col lobby-col-more">
           <p class="lobby-more-label"><i class="fa-solid fa-user-graduate" aria-hidden="true"></i> Ôn tập thêm cho em</p>
           <!-- Nút phụ gom 1 hàng (Góc học tập / Đấu trường do JS chèn trước nút Lịch sử) -->
@@ -398,12 +301,7 @@
     <div class="result-card">
       <span class="result-emoji" id="resultEmoji"><i class="fa-solid fa-face-laugh-beam"></i></span>
 
-      <!-- Vòng tròn % điểm (SVG thuần, không thêm thư viện chart nào) —
-           2 <circle> chồng nhau: 1 làm nền mờ cố định, 1 là vòng tiến độ
-           tô màu theo điểm, vẽ bằng stroke-dasharray/offset. Số % vẫn giữ
-           nguyên #resultScore (đặt đè lên giữa vòng bằng CSS) để không
-           phải sửa logic JS đang set textContent cho id này. Xem
-           js/quiz-engine.js § applyResultRing(). -->
+      <!-- Vòng % điểm bằng SVG (2 circle, stroke-dasharray). Số % vẫn ở #resultScore — js/quiz-engine.js applyResultRing(). -->
       <div class="result-ring-wrap">
         <svg class="result-ring" viewBox="0 0 120 120" aria-hidden="true">
           <circle class="result-ring-track" cx="60" cy="60" r="54"></circle>
@@ -413,10 +311,7 @@
       </div>
 
       <div class="result-label" id="resultLabel">Kết quả bài thi</div>
-      <!-- So với lần làm GẦN NHẤT của ĐÚNG bài này (đọc từ lịch sử local
-           'eduquiz_records', không cần tài khoản/đăng nhập) — rỗng/ẩn nếu
-           đây là lần đầu làm bài này. Xem js/quiz-engine.js §
-           renderResultCompare(). -->
+      <!-- So với lần làm gần nhất của bài này (localStorage eduquiz_records). Ẩn nếu là lần đầu. -->
       <div class="result-compare" id="resultCompare" hidden></div>
       <div class="integrity-badge" id="integrityBadge"></div>
       <div class="result-stats">
@@ -442,18 +337,13 @@
       </div>
       <div class="review-list" id="reviewList"></div>
 
-      <!-- Mini-game (7 trò của Khu Vui Chơi cũ) nay nằm trong Đấu trường, không khoá:
-           mỗi trò leo 5 hạng đối thủ, thắng nhận xu mở Linh vật (js/arena/arena-mini.js). -->
+      <!-- Bản đồ Hành trình IC3 trong Đấu trường: quiz theo chủ đề + mini-game (js/arena/arena-quest.js). -->
       <a class="game-zone-open-btn" id="openGameZoneBtn" href="arena.html?vai=minigame"
-        title="Mini-game trong Đấu trường — leo hạng từng trò, kiếm xu mở Linh vật">
-        <i class="fa-solid fa-gamepad"></i> Mini-game ở Đấu trường
+        title="7 vùng theo 7 chủ đề IC3 — trận quiz và mini-game, gom sao mở rương">
+        <i class="fa-solid fa-route" aria-hidden="true"></i> Hành trình IC3 ở Đấu trường
       </a>
 
-      <!-- "Giải lao: Chim Vượt Ải" — mở ngay trong trang (modal), đây chỉ là gợi ý mini-game
-           giải trí tùy chọn sau MỌI bài thi, tự động lấy đúng chủ đề vừa
-           thi (không có bộ câu hỏi riêng nào cho mini-game — xem
-           js/quiz-engine.js § openMarioFlappyReward() và
-           js/mario-flappy.js). -->
+      <!-- Giải lao: Chim Vượt Ải, lấy chủ đề vừa thi (openMarioFlappyReward, js/mario-flappy.js). -->
       <button type="button" class="game-zone-open-btn" style="margin-top:.5rem" id="openMarioFlappyRewardBtn"
         onclick="openMarioFlappyReward()" title="Giải lao với mini-game Chim Vượt Ải — ôn lại đúng chủ đề vừa thi">
         <i class="fa-solid fa-dove"></i> Giải lao: Chim Vượt Ải
@@ -577,41 +467,21 @@
     </div>
   </div>
 
-  <!-- ĐỢT TỐI ƯU HIỆU NĂNG (Lighthouse Performance 57 → mục tiêu cao hơn
-       nhiều trên mobile/4G chậm): TOÀN BỘ 20 script dưới đây trước kia
-       chặn render (Lighthouse "render-blocking", ước tính ~6.1s trên 4G
-       giả lập) vì không có defer/async. Thêm `defer` đồng loạt — vẫn giữ
-       ĐÚNG thứ tự thực thi tương đối (defer chạy theo đúng thứ tự khai
-       báo, chỉ trì hoãn tới khi parse xong HTML) nên KHÔNG đổi hành vi gì,
-       chỉ đổi THỜI ĐIỂM chạy từ "chặn parser ngay tại vị trí này" sang
-       "tải song song, chạy đúng thứ tự ngay trước DOMContentLoaded".
-       QUAN TRỌNG: khối inline <script> gọi initGameModal(...) ở dưới PHẢI
-       bọc trong DOMContentLoaded — nếu không, nó chạy NGAY LÚC PARSE (inline
-       script không tôn trọng defer) tức là TRƯỚC KHI game-modal.js (giờ đã
-       defer) kịp thực thi, gây lỗi "initGameModal is not defined". -->
+  <!-- Các script đều defer (giữ thứ tự chạy). Script nội tuyến gọi initGameModal(...) phải nằm trong DOMContentLoaded vì script nội tuyến không chờ defer. -->
   <script src="js/googleSheet.js" defer></script>
   <script src="js/gamification.js" defer></script>
 
-  <!-- Lưu bài nộp: js/backend-config.js chọn đích (Google Sheet / Firestore) cho mỗi
-       bài. Firebase SDK KHÔNG nạp lúc mở trang — js/services/firebase-loader.js nạp
-       khi thật sự ghi Firestore hoặc máy có sẵn phiên đăng nhập giáo viên/admin.
-       Xem docs/architecture/SCALING-SPARK.md. -->
+  <!-- Lưu bài nộp: js/backend-config.js chọn Google Sheet/Firestore. Firebase SDK chỉ nạp khi cần (js/services/firebase-loader.js). -->
   <script src="js/backend-config.js" defer></script>
   <script src="js/services/lazy-script-loader.js" defer></script>
   <script src="js/services/firebase-loader.js" defer></script>
   <script src="js/firestore-results.js" defer></script>
   <script src="js/services/result-pack.js" defer></script>
   <script src="js/services/result-submitter.js" defer></script>
-  <!-- Hàng đợi gửi lại khi mất mạng (Firestore/Google Sheet) — nạp SAU
-       googleSheet.js/firestore-results.js (tra cứu hàm gửi theo tên lúc
-       flush(), không bắt buộc thứ tự nghiêm ngặt) và TRƯỚC quiz-engine.js
-       (quiz-engine gọi window.EduPendingSync.enqueue() khi lưu thất bại). -->
+  <!-- Hàng đợi gửi lại khi mất mạng. Nạp trước quiz-engine.js (gọi EduPendingSync.enqueue khi lưu lỗi). -->
   <script src="js/services/pending-sync-queue.js" defer></script>
 
-  <!-- Danh sách Trường/Lớp/Tên: đọc từ file tĩnh data/roster/students-active.json
-     (KHÔNG gọi Firestore trực tiếp — tránh nổ quota đọc mỗi lần tải/tải lại trang).
-     File này do Điều phối đào tạo xuất ra từ roster-manager.html (nút "🗂️ Xuất JSON")
-     mỗi khi danh sách roster thay đổi. Xem js/lobby-roster.js. -->
+  <!-- Danh sách Trường/Lớp/Tên từ file tĩnh data/roster/students-active.json (js/lobby-roster.js). -->
   <script src="js/lobby-roster.js" defer></script>
 
   <script src="js/review-detail.js" defer></script>

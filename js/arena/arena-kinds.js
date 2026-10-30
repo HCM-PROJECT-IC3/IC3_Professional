@@ -1,8 +1,8 @@
 /* ============================================================
    js/arena/arena-kinds.js — giao diện trả lời các dạng câu KHÁC "chọn 1" trong Đấu trường:
-     ☑️ Chọn nhiều (multi)  — bấm chọn đủ N ô rồi Chốt
-     🔢 Sắp xếp (order)     — bấm các bước theo thứ tự 1 → n rồi Chốt (kiểu Kahoot Puzzle)
-     🔗 Ghép đôi (match)    — bấm 1 mục bên trái rồi bấm ô màu bên phải, ghép đủ rồi Chốt
+     Chọn nhiều (multi)  — bấm chọn đủ N ô rồi Chốt
+     Sắp xếp (order)     — bấm các bước theo thứ tự 1 → n rồi Chốt (kiểu Kahoot Puzzle)
+     Ghép đôi (match)    — bấm 1 mục bên trái rồi bấm ô màu bên phải, ghép đủ rồi Chốt
    Dùng chung cho Chơi một mình (js/arena/arena.js) và học sinh trong Phòng cả lớp
    (js/arena/arena-room.js). Chấm điểm ở js/arena/arena-core.js (EduArenaCore.grade).
    Chỉ thao tác bấm (không kéo-thả) → dùng tốt trên điện thoại và bảng tương tác.

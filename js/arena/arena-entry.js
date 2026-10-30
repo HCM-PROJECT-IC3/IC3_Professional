@@ -1,5 +1,5 @@
 /* ============================================================
-   js/arena/arena-entry.js — nút "🏟️ Đấu trường" ở sảnh index.html.
+   js/arena/arena-entry.js — nút "Đấu trường" ở sảnh index.html.
    Mở arena.html với ĐÚNG bộ câu đang chọn ở sảnh (Chương trình / Cấp độ /
    Bài), hoặc đề giáo viên nếu trang đang mở bằng link ?de=. Chỉ dựng link —
    không tải gì thêm, 0 Firebase.
@@ -27,7 +27,7 @@
     a.id = 'arenaBtn';
     a.className = 'btn-secondary arena-open';
     a.href = 'arena.html';
-    a.innerHTML = '<span aria-hidden="true">🏟️</span> Đấu trường <small>Kahoot · Blooket</small>';
+    a.innerHTML = '<i class="fa-solid fa-trophy" aria-hidden="true"></i> Đấu trường';
     a.title = 'Chơi bài đang chọn theo kiểu game: Tốc độ, Săn vàng, Đua về đích — sưu tập Linh vật';
     // Cập nhật href ngay lúc bấm/trỏ chuột → luôn đúng bài đang chọn (mở tab mới bằng chuột giữa cũng đúng).
     const sync = () => { a.href = arenaUrl(); };

@@ -1,7 +1,7 @@
 /* ============================================================
-   js/arena/arena-mini.js — vai "Mini-game" của Đấu trường (arena.html?vai=minigame).
-   7 mini-game cũ của Khu Vui Chơi chơi ngay tại đây, không khoá, thêm lớp thi đấu:
-     1) Lưới trò (#arMiniGrid): tranh bìa riêng mỗi trò, hạng đang leo, kỷ lục, "Trò của ngày ×2 xu".
+   js/arena/arena-mini.js — mini-game trên bản đồ Hành trình IC3 (arena.html?vai=minigame).
+   5 mini-game học tập là các chặng trên bản đồ (js/arena/arena-quest.js), thêm lớp thi đấu:
+     1) Bấm chặng mini-game trên bản đồ → openVs(id).
      2) Màn đối đầu: em vs đối thủ máy của hạng hiện tại + mốc điểm + xu thưởng → đếm 3-2-1.
      3) Trong trận (#arMini): trò chạy trong iframe (…html?arena=1, js/minigame-arena-bridge.js).
         Thanh trên đua điểm với "bóng ma" đối thủ, đếm chuỗi đúng, bình luận câu trend; viền màn
@@ -46,45 +46,6 @@
     const p = 'mg' + (++coverSeq) + '-'; // id riêng: cùng cảnh có thể đang nằm trong iframe/thẻ khác
     return s.replace(/<text[\s\S]*?<\/text>/g, '').replace(/\bid="([^"]+)"/g, `id="${p}$1"`).replace(/url\(#([^)]+)\)/g, `url(#${p}$1)`).replace(/href="#([^"]+)"/g, `href="#${p}$1"`);
   }
-  function coverHtml(g, stage) {
-    return `<span class="ar-mg-cover" aria-hidden="true">${sceneSvg(g.scene)}<span class="ar-mg-art">${ART3D ? ART3D.draw(g.id) : ''}</span>` +
-      `<span class="ar-mg-stage-no"><small>Chặng</small>${stage}</span></span>`;
-  }
-
-  // ============================================================
-  // LƯỚI TRÒ
-  // ============================================================
-  function pips(tier) {
-    return M.TIERS.map((t, i) => `<i class="${i < tier ? 'is-on' : ''}" style="--tc:${t.color}" title="${esc(t.name)}"></i>`).join('');
-  }
-  function paintGrid() {
-    const grid = $('arMiniGrid');
-    if (!grid) return;
-    const P = prog(), feat = M.featured(today());
-    const used = P.day && P.day.date === today() ? P.day.xu : 0;
-    $('arMiniDay').innerHTML =
-      `<span><i class="fa-solid fa-coins" aria-hidden="true"></i> Hôm nay: <b>${used}/${M.DAILY_CAP}</b> xu từ mini-game</span>` +
-      (P.streak >= 2 ? `<span class="is-hot"><i class="fa-solid fa-fire" aria-hidden="true"></i> Chuỗi thắng <b>${P.streak}</b></span>` : '') +
-      `<span><i class="fa-solid fa-star" aria-hidden="true"></i> Trò của ngày: <b>${esc(M.byId(feat).name)}</b> — xu ×2</span>`;
-    coverSeq = 0;
-    grid.innerHTML = M.GAMES.map((g, i) => {
-      const gp = M.gameProg(P, g.id), r = M.rivalFor(g.id, P);
-      const rank = gp.tier >= M.TIERS.length ? `<b style="color:${M.CHAMP.color}">Huyền thoại</b> · giữ ngai vàng` : `Đối thủ: <b>${esc(r.face + ' ' + r.name)}</b> <em style="--tc:${r.tierInfo.color}">${esc(r.tierInfo.name)}</em>`;
-      return `<button type="button" class="ar-mg-tile${g.id === feat ? ' is-feat' : ''}${gp.wins ? ' is-cleared' : ''}" data-game="${esc(g.id)}">
-        ${coverHtml(g, i + 1)}
-        ${g.id === feat ? '<span class="ar-mg-ribbon"><i class="fa-solid fa-star" aria-hidden="true"></i> Trò của ngày ×2</span>' : ''}
-        <span class="ar-mg-body">
-          <span class="ar-mg-name"><i class="fa-solid ${g.fa}" aria-hidden="true"></i> ${esc(g.name)}</span>
-          <span class="ar-mg-tag"><i class="fa-solid fa-book-open" aria-hidden="true"></i> IC3 · ${esc(g.topic)}</span>
-          <span class="ar-mg-desc">${esc(g.desc)}</span>
-          <span class="ar-mg-learn"><b>Em học được:</b> ${esc(g.learn)}</span>
-          <span class="ar-mg-rank">${rank}</span>
-          <span class="ar-mg-foot"><span class="ar-mg-pips" aria-label="Đã hạ ${Math.min(gp.tier, 5)}/5 đối thủ">${pips(gp.tier)}</span>
-            <span class="ar-mg-best">${gp.best ? 'Kỷ lục <b>' + fmt(gp.best) + '</b>' : 'Chưa chơi'}</span></span>
-        </span></button>`;
-    }).join('');
-  }
-
   // ============================================================
   // MÀN ĐỐI ĐẦU (trước trận)
   // ============================================================
@@ -105,7 +66,7 @@
       <div class="ar-mg-vs" style="--tc:${r.tierInfo.color}">
         <div class="ar-mg-vs-bg" aria-hidden="true">${sceneSvg(g.scene)}</div>
         <div class="ar-mg-vs-art" aria-hidden="true">${ART3D ? ART3D.draw(g.id) : ''}</div>
-        <p class="ar-mg-vs-kicker">Chặng ${M.stageOf(g.id)}/${M.GAMES.length} · <i class="fa-solid ${g.fa}" aria-hidden="true"></i> ${esc(g.name)} · ${r.champ ? 'Giữ ngai vàng' : 'Hạng ' + esc(r.tierInfo.name) + ' — đối thủ ' + (r.tier + 1) + '/5'}</p>
+        <p class="ar-mg-vs-kicker">${esc(regionLabel(g.id))} · <i class="fa-solid ${g.fa}" aria-hidden="true"></i> ${esc(g.name)} · ${r.champ ? 'Giữ ngai vàng' : 'Hạng ' + esc(r.tierInfo.name) + ' — đối thủ ' + (r.tier + 1) + '/5'}</p>
         <div class="ar-mg-vs-row">
           <div class="ar-mg-fighter is-me"><span class="ar-mg-face">${esc(A.avatar())}</span><b>${esc(nick)}</b><small>Kỷ lục: ${fmt(M.gameProg(P, g.id).best)}</small></div>
           <div class="ar-mg-vs-mid" aria-hidden="true">VS</div>
@@ -116,7 +77,7 @@
         <p class="ar-mg-vs-prize"><i class="fa-solid fa-coins" aria-hidden="true"></i> Thắng: <b>+${winXu * (isFeat ? 2 : 1)} xu</b>${isFeat ? ' (Trò của ngày ×2)' : ''} · Phá kỷ lục: +5 · Thắng liền 3 trận: thưởng thêm</p>
         <div class="ar-row ar-center-row">
           <button type="button" class="ar-btn ar-btn-play" id="arMgGo"><i class="fa-solid fa-play" aria-hidden="true"></i> Vào trận!</button>
-          <button type="button" class="ar-btn ar-btn-ghost" id="arMgBack"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Chọn trò khác</button>
+          <button type="button" class="ar-btn ar-btn-ghost" id="arMgBack"><i class="fa-solid fa-route" aria-hidden="true"></i> Về bản đồ</button>
         </div>
         <div class="ar-mg-count" id="arMgCount" aria-live="assertive" hidden></div>
       </div>`;
@@ -125,6 +86,14 @@
     $('arMgBack').addEventListener('click', leave);
     $('arMgGo').focus();
     A.sfx('click');
+  }
+
+  /** Vùng của trò trên bản đồ Hành trình (js/arena/arena-quest-core.js). */
+  function regionLabel(gameId) {
+    const Q = global.EduArenaQuestCore;
+    const n = Q && Q.NODES.find((x) => x.game === gameId);
+    const r = n && Q.regionById(n.region);
+    return r ? (r.final ? 'Trùm cuối' : 'Vùng ' + r.no) : 'Mini-game';
   }
 
   function countdown() {
@@ -304,20 +273,21 @@
     A.profile().mini = r.prog;
     if (r.xu) A.profile().coins += r.xu;
     A.save();
+    // Sao chặng trên bản đồ Hành trình (js/arena/arena-quest.js tự lưu + cộng xu rương/nhiệm vụ)
+    const qr = global.EduArenaQuest ? global.EduArenaQuest.onMiniEnd(game, pts) : null;
     cur.race.settled = true;
     $('arMgVig').classList.remove('is-danger');
     line({ tone: 'up', text: 'Hết ván — cùng xem ai thắng!' }, 0);
-    setTimeout(() => showResult(r, before), 1100); // để màn kết quả của chính trò hiện một nhịp
+    setTimeout(() => showResult(r, before, qr), 1100); // để màn kết quả của chính trò hiện một nhịp
   }
 
   // ============================================================
   // CÔNG BỐ KẾT QUẢ
   // ============================================================
-  function showResult(r, rival) {
+  function showResult(r, rival, qr) {
     const box = $('arMgResult');
     if (!box || !cur) return;
     const next = M.rivalFor(cur.g.id, prog());
-    const stage = M.nextStage(cur.g.id); // thắng → mời sang chặng kế trên hành trình
     const title = r.win ? (rival.champ ? 'GIỮ VỮNG NGAI VÀNG!' : 'CHIẾN THẮNG!') : r.near ? 'SÁT NÚT!' : 'CHƯA HẠ ĐƯỢC';
     const tone = r.win ? 'win' : r.near ? 'near' : 'lose';
     const sub = r.win
@@ -335,13 +305,13 @@
           <h3>${esc(title)}</h3>
           <p>${esc(sub)}</p>
           <p class="ar-mg-res-say">${esc(M.verdictLine(r, r.pts + prog().g[cur.g.id].plays))}</p>
+          ${qr ? '<div class="ar-mg-res-quest" id="arMgQuest">' + global.EduArenaQuest.resultHtml(qr) + '</div>' : ''}
           ${r.parts.length ? `<ul class="ar-mg-res-xu">${r.parts.map((x) => `<li><span>${esc(x.label)}</span><b>+${x.xu}</b></li>`).join('')}</ul>` : ''}
           <p class="ar-mg-res-total" id="arMgXu"><i class="fa-solid fa-coins" aria-hidden="true"></i> +${r.xu} xu${r.capped ? ' <small>(đã chạm trần ' + M.DAILY_CAP + ' xu hôm nay — vẫn tính hạng và kỷ lục)</small>' : ''}</p>
           <div class="ar-row ar-center-row">
             <button type="button" class="ar-btn ar-btn-play" id="arMgAgain"><i class="fa-solid ${r.win ? 'fa-forward' : 'fa-rotate-right'}" aria-hidden="true"></i> ${r.win ? (next.champ ? 'Giữ ngai vàng' : 'Đấu ' + esc(next.name)) : 'Phục thù ngay'}</button>
             <button type="button" class="ar-btn ar-btn-ghost" id="arMgPeek"><i class="fa-solid fa-eye" aria-hidden="true"></i> Xem màn của trò</button>
-            ${r.win && stage ? `<button type="button" class="ar-btn ar-btn-pack" id="arMgNext"><i class="fa-solid fa-route" aria-hidden="true"></i> Chặng ${M.stageOf(stage.id)}: ${esc(stage.name)}</button>` : ''}
-            <button type="button" class="ar-btn ar-btn-ghost" id="arMgOther"><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i> Đổi trò</button>
+            <button type="button" class="ar-btn ar-btn-ghost" id="arMgOther"><i class="fa-solid fa-route" aria-hidden="true"></i> Về bản đồ</button>
           </div>
         </div>
       </div>`;
@@ -350,12 +320,12 @@
     $('arMgAgain').addEventListener('click', () => openVs(cur.g.id));
     $('arMgPeek').addEventListener('click', () => { box.hidden = true; resumeRace(); });
     $('arMgOther').addEventListener('click', leave);
-    if ($('arMgNext')) $('arMgNext').addEventListener('click', () => openVs(stage.id));
     revealCols(box, () => {
       $('arMgVerdict').classList.add('is-on');
       A.sfx(r.win ? 'win' : r.near ? 'match' : 'lose');
       if (D) D.banner(title, { tone: r.win ? 'gold' : r.near ? 'final' : 'down', icon: r.win ? 'fa-trophy' : r.near ? 'fa-bolt' : 'fa-heart', ms: 1400 });
       if (r.win) A.celebrate(1);
+      if (qr && $('arMgQuest')) global.EduArenaQuest.animateResult($('arMgQuest'), qr);
       if (r.xu && D) D.coinFly($('arMgXu'), $('arWallet'), Math.min(10, 3 + Math.round(r.xu / 6)));
       $('arMgAgain').focus();
     });
@@ -397,9 +367,7 @@
     cur = null;
     if (D) D.hide();
     $('arMiniBody').innerHTML = '';
-    A.setRole('minigame', true);
-    A.show('arHome');
-    paintGrid();
+    A.toMap();
   }
 
   // ============================================================
@@ -417,17 +385,12 @@
   });
 
   function init() {
-    const grid = $('arMiniGrid');
-    if (!grid) return;
-    grid.addEventListener('click', (e) => { const t = e.target.closest('.ar-mg-tile'); if (t) openVs(t.dataset.game); });
+    if (!$('arMiniLeave')) return;
     $('arMiniLeave').addEventListener('click', leave);
-    document.addEventListener('arena:role', (e) => { if (e.detail && e.detail.role === 'minigame') paintGrid(); });
-    $('arNick').addEventListener('change', paintGrid);
-    paintGrid();
     const want = new URLSearchParams(global.location.search).get('tro');
     if (want && M.byId(want) && A.role() === 'minigame' && String($('arNick').value || '').trim()) openVs(want);
   }
   init();
 
-  global.EduArenaMini = { paintGrid, openVs };
+  global.EduArenaMini = { openVs, prog, sceneSvg };
 })(window);

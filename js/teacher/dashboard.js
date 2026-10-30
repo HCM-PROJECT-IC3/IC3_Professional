@@ -1,6 +1,6 @@
 /* ============================================================
    js/teacher/dashboard.js
-   Điểm vào của teacher-dashboard.html (Commit #8/LMAP).
+   Điểm vào của teacher-dashboard.html.
 
    Tái dùng NGUYÊN VẸN 3 module của Coordinator Dashboard (không sửa):
      js/coordinator/charts.js         → EduCoordinatorCharts.renderAll(scoped)
@@ -112,7 +112,7 @@
     refresh();
   }
 
-  // "🔄 Làm mới dữ liệu": bỏ qua cache 3 phút, đọc lại thẳng từ Firestore —
+  // "Làm mới dữ liệu": bỏ qua cache 3 phút, đọc lại thẳng từ Firestore —
   // dùng khi cần xem số liệu tức thời (vd. đang theo dõi buổi thi trực tiếp).
   document.getElementById('refreshDataBtn').addEventListener('click', async () => {
     if (!currentProfile) return;

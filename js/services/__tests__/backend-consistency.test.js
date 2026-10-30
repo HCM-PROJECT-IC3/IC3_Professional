@@ -50,5 +50,18 @@ assertEq('bản chạy cũ hơn → cảnh báo; bằng/mới hơn/mất mạng 
   [isStale('2026-10-15', '2026-10-26'), isStale('2026-10-26', '2026-10-26'), isStale('2026-11-01', '2026-10-26'), isStale(null, '2026-10-26'), isStale('?', '2026-10-26')],
   [true, false, false, false, true]);
 
+// Rules ↔ code (30/10/2026): 2 chỗ bị Firestore từ chối trên bản thật.
+var dash = fs.readFileSync(path.join(ROOT, 'js', 'dashboard.js'), 'utf8');
+assertEq('Báo cáo (ic3-dashboard) đọc quiz_results: Điều phối lọc where studentSchool in (rules isOwnSchoolField)',
+  /where\('studentSchool', 'in', part\)/.test(dash), true);
+var ts = fs.readFileSync(path.join(ROOT, 'js', 'teaching-schedule.js'), 'utf8');
+assertEq('Giáo viên tự nhập lịch: hỏi máy chủ tuần đã có trước khi "tạo tuần" (rules chỉ cho Admin sửa tuần)',
+  /isSelfImport\(\)\)\s*\{\s*const week = await window\.EduRepositories\.teachingWeek\.getById\(wk\)/.test(ts), true);
+var weekBlock = rules.slice(rules.indexOf('match /teaching_weeks/'), rules.indexOf('match /teaching_schedule/'));
+assertEq('teaching_weeks: giáo viên chỉ được create, không update', /allow update, delete: if isAdmin\(\);/.test(weekBlock), true);
+assertEq('arena-relay dùng signInAnonymously ⇒ checklist không bảo tắt Anonymous',
+  /signInAnonymously/.test(fs.readFileSync(path.join(ROOT, 'js', 'arena', 'arena-relay.js'), 'utf8'))
+    && /Anonymous: Enabled/.test(fs.readFileSync(path.join(ROOT, 'docs', 'FIREBASE-CHECKLIST.md'), 'utf8')), true);
+
 console.log(failures ? '\n' + failures + ' test FAIL' : '\nTất cả PASS');
 process.exit(failures ? 1 : 0);

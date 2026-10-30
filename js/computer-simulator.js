@@ -1,11 +1,11 @@
 /* ════════════════════════════════════════════════════════════
-   js/computer-simulator.js — Mini-game "Computer Simulator" (mục 11
-   yêu cầu gốc). Học sinh thao tác trên 1 "máy tính ảo" (cây thư mục
+   js/computer-simulator.js — Mini-game "Computer Simulator".
+   Học sinh thao tác trên 1 "máy tính ảo" (cây thư mục
    mô phỏng) để hoàn thành nhiệm vụ: Tạo thư mục, Đổi tên, Di chuyển,
    Sao chép, Xoá, Tìm kiếm file — đúng các kỹ năng "File Management"
    thuộc chủ đề IC3 "1. Căn bản về công nghệ" / "3. Quản lý thông tin".
 
-   PHẠM VI PHASE 8 (có chủ đích, không code hết cùng lúc): chỉ 6 thao
+   PHẠM VI (có chủ đích, không code hết cùng lúc): chỉ 6 thao
    tác quản lý TỆP TIN mà spec liệt kê (Create Folder/Rename/Move/Copy/
    Delete/Search) — đây cũng chính là VÍ DỤ MISSION mẫu trong yêu cầu
    gốc (IC3 → Level 1 → Documents/Images). 4 thao tác còn lại
@@ -613,7 +613,7 @@
   }
 
   /**
-   * (Phase 3/4/6/7/8) Ghi 1 lượt chơi vào js/gamification.js §
+   * Ghi 1 lượt chơi vào js/gamification.js §
    * recordGameSession — cùng pattern các mini-game trước. Im lặng bỏ
    * qua nếu thiếu EduGamification hoặc chưa chọn học sinh nào.
    */

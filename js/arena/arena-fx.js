@@ -1,6 +1,6 @@
 /* ============================================================
    js/arena/arena-fx.js — hiệu ứng chuyển động nhỏ cho các chế độ Đấu trường.
-     float(el, html, tone)    số/chữ bay lên từ 1 phần tử ("+850", "−25", "+20 💎")
+     float(el, html, tone)    số/chữ bay lên từ 1 phần tử ("+850", "−25", "+20 ")
      fly(from, to, emoji)     vật bay theo đường cong từ phần tử này sang phần tử kia (phép, đá quý)
      burst(el, emojis, n)     bùng vài hạt quanh 1 phần tử (đá quý, bọt nước, tia lửa)
      flash(el, cls)           gắn 1 lớp CSS chạy animation rồi tự gỡ (fx-bump, fx-hit, fx-heal...)

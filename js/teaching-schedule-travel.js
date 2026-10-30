@@ -1,7 +1,7 @@
 /* ============================================================
    js/teaching-schedule-travel.js
    Tab "Hỗ trợ xăng xe" (teaching-schedule.html) — tính tiền hỗ trợ đi
-   lại cho giáo viên dạy xa, dành cho role "teaching_coordinator" (🚗 Điều
+   lại cho giáo viên dạy xa, dành cho role "teaching_coordinator" (Điều
    phối giáo viên) quản lý (admin dùng được luôn).
 
    Quy tắc tính (xem đầy đủ trong js/models/teaching-travel.model.js, ĐÚNG
@@ -13,7 +13,7 @@
      xem js/services/apps-script-map-distance.js) — lưu vào collection
      teaching_travel_distances.
 
-   XEM THEO Tuần/Tháng/Quý/Năm (Commit mở rộng theo yêu cầu): "Tuần" giữ
+   XEM THEO Tuần/Tháng/Quý/Năm: "Tuần" giữ
    NGUYÊN hành vi cũ (bảng chi tiết Thứ2→7 + tổng tuần/GV). "Tháng/Quý/
    Năm" gộp NHIỀU tuần lại — tải teaching_schedule của TỪNG tuần khớp kỳ
    đã chọn (dựa vào weekKey dạng "YYYY-MM-DD" = Thứ Hai đầu mỗi tuần), rồi
@@ -231,7 +231,7 @@
     }
 
     // TỰ ĐỘNG tính hết mọi khoảng cách còn trống ngay sau khi tải xong —
-    // KHÔNG chờ Điều phối giáo viên tự nhớ bấm "🌍 Tính tất cả" nữa (đây
+    // KHÔNG chờ Điều phối giáo viên tự nhớ bấm "Tính tất cả" nữa (đây
     // là lý do "vẫn còn giáo viên chưa có km" dù nút chạy đúng: phải người
     // dùng tự bấm). Chạy NGẦM (không await ở đây) để không chặn UI — bảng
     // vẫn hiện ngay, km trống sẽ tự lấp dần trong lúc người dùng đang xem.
@@ -330,7 +330,7 @@
 
   // ============================================================
   // TỰ ĐỘNG TÍNH KHOẢNG CÁCH (miễn phí, qua Apps Script — xem
-  // js/services/apps-script-map-distance.js) — nhà (địa chỉ GV, tab "👤 Giáo
+  // js/services/apps-script-map-distance.js) — nhà (địa chỉ GV, tab "Giáo
   // viên") → trường, thay vì Điều phối giáo viên phải tự tra tay từng
   // cặp. "Trường" chỉ là TÊN NGẮN tự do (vd "TiH Tân Tạo A", không phải
   // địa chỉ đầy đủ) — nới rộng thành "Trường Tiểu học ... , Thành phố Hồ
@@ -365,7 +365,7 @@
       const { km, matchedSchoolAddress, approximateHome } = result;
       state.approximateHome[teacherCode] = !!approximateHome;
       await saveDistance(teacherCode, school, km, matchedSchoolAddress, true);
-      renderDistanceTable(); // cập nhật ngay dấu "~"/tooltip 📍 vừa có, không cần bấm "Tính hỗ trợ" lại
+      renderDistanceTable(); // cập nhật ngay dấu "~"/tooltip vừa có, không cần bấm "Tính hỗ trợ" lại
       const approxNote = approximateHome ? ' (vị trí nhà chỉ xấp xỉ theo tên đường, không đúng số nhà/hẻm — nên xem lại)' : '';
       toast((matchedSchoolAddress
         ? `${esc(school)}: ${km}km — đã dò trúng "${esc(matchedSchoolAddress)}"`
@@ -380,9 +380,9 @@
   }
 
   /** Tính hết mọi ô "Khoảng cách (km)" ĐANG TRỐNG trên bảng hiện tại — dùng
-   * chung cho nút "🌍 Tính tất cả (miễn phí)" VÀ tự động chạy ngầm mỗi lần
-   * bấm "🔄 Tính hỗ trợ" (xem loadTravel()) để KHÔNG còn phụ thuộc việc
-   * Điều phối giáo viên nhớ bấm nút thủ công — người dùng phản hồi vẫn còn
+   * chung cho nút "Tính tất cả (miễn phí)" VÀ tự động chạy ngầm mỗi lần
+   * bấm "Tính hỗ trợ" (xem loadTravel()) để KHÔNG còn phụ thuộc việc
+   * Điều phối giáo viên nhớ bấm nút thủ công — vẫn còn
    * giáo viên chưa được cập nhật km dù code đã chạy đúng, nguyên nhân là
    * PHẢI TỰ BẤM nút mới chạy; giờ chạy tự động ngay khi có ô trống.
    * @param {boolean} [silent] true khi gọi tự động ngầm (không có nút để

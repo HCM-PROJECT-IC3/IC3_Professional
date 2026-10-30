@@ -13,7 +13,7 @@
    - admin: toàn quyền xem/sửa/lưu TKB của mọi giáo viên.
    - teacher: chỉ XEM (không sửa) LƯỚI mã lớp của chính mình — teaching_timetable
      chỉ cho phép admin write, nên "Nhập Excel"/"Lưu" (lưới) đều ẩn, ô
-     nhập chuyển readonly (xem applyTeacherReadOnlyUI()). RIÊNG "⏱️ Giờ tiết"
+     nhập chuyển readonly (xem applyTeacherReadOnlyUI()). RIÊNG "Giờ tiết"
      giáo viên ĐƯỢC TỰ SỬA (thiết lập linh hoạt khung giờ Sáng/Chiều theo cấp
      học THCS/TiH cho từng Thứ) — teaching_timetable_periods cho phép giáo
      viên ghi ĐÚNG bản ghi của chính mình (firestore.rules), khác hẳn
@@ -21,10 +21,10 @@
      Vì chỉ xem đúng 1 GV (chính mình) nên KHÔNG list() cả collection
      teaching_teachers (rules không cho), tự chọn sẵn đúng GV đó, khoá cứng
      ô chọn GV luôn (không có ai khác để chọn).
-   - teaching_coordinator (🚗 Điều phối giáo viên — KHÁC "coordinator" tức
+   - teaching_coordinator (Điều phối giáo viên — KHÁC "coordinator" tức
      "Điều phối đào tạo", role đó không được vào trang này nữa): CHỈ
-     XEM, giống hệt teacher ở phần ẩn nút chỉnh sửa (⏱️ Giờ tiết/📥 Nhập
-     Excel/💾 Lưu) + ô nhập readonly (xem applyCoordinatorReadOnlyUI()) —
+     XEM, giống hệt teacher ở phần ẩn nút chỉnh sửa (Giờ tiết/Nhập
+     Excel/Lưu) + ô nhập readonly (xem applyCoordinatorReadOnlyUI()) —
      nhưng KHÁC teacher ở chỗ được xem TKB của MỌI giáo viên (list() cả
      collection teaching_teachers, rules đã cho phép), nên vẫn chọn GV tự
      do qua <select> như admin và vẫn thấy tab "Giáo viên" (chỉ ẩn nút
@@ -60,7 +60,7 @@
     scheduleDoc: null,    // doc teaching_schedule CỦA ĐÚNG giáo viên/tuần đang xem (nạp cùng lưới TKB) — dùng để
                            // so sánh "location" hiện tại khi đồng bộ ngược, xem syncScheduleLocationsFromTimetable()
   };
-  let ptDraft = null; // bản nháp { "2".."7": {morning,afternoon} } đang sửa trong modal "⏱️ Giờ tiết"
+  let ptDraft = null; // bản nháp { "2".."7": {morning,afternoon} } đang sửa trong modal "Giờ tiết"
   let ptEditingDay = '2'; // Thứ đang chọn để sửa trong modal (tab) — mặc định Thứ 2
   // Tham số TỰ SINH giờ tiết (giờ vào/số phút mỗi tiết/số phút chuyển tiết/
   // số phút nghỉ giải lao) CỦA TỪNG Thứ×Buổi đang sửa trong modal — CHỈ là
@@ -116,25 +116,25 @@
     state.role = detail.profile.role;
     state.myTeacherCode = detail.profile.teacherCode || '';
     if (state.role === 'teacher') {
-      // Giáo viên được XEM (không sửa) đúng TKB của chính mình — tab "👤
+      // Giáo viên được XEM (không sửa) đúng TKB của chính mình — tab "
       // Giáo viên" (quản lý toàn bộ đội ngũ) không thuộc quyền teacher nên
-      // vẫn ẩn; tab "🗓️ TKB lớp" thì HIỆN nhưng chuyển hẳn sang chế độ
+      // vẫn ẩn; tab "TKB lớp" thì HIỆN nhưng chuyển hẳn sang chế độ
       // read-only (xem applyTeacherReadOnlyUI()).
       document.querySelectorAll('[data-tab="teachers"]').forEach((b) => b.classList.add('force-hide'));
       applyTeacherReadOnlyUI();
     } else if (state.role === 'teaching_coordinator') {
-      // "🚗 Điều phối giáo viên": CHỈ XEM như teacher nhưng được xem TKB
+      // "Điều phối giáo viên": CHỈ XEM như teacher nhưng được xem TKB
       // của MỌI giáo viên (không tự chọn sẵn 1 người, không khoá ô chọn
-      // GV, không ẩn tab "👤 Giáo viên" — xem applyCoordinatorReadOnlyUI()).
+      // GV, không ẩn tab "Giáo viên" — xem applyCoordinatorReadOnlyUI()).
       applyCoordinatorReadOnlyUI();
     }
     loadTeachersAndWeeks();
   });
 
-  /** Ẩn control CHỈNH SỬA LƯỚI (📥 Nhập Excel/💾 Lưu) — theo firestore.rules,
+  /** Ẩn control CHỈNH SỬA LƯỚI (Nhập Excel/Lưu) — theo firestore.rules,
    * teaching_timetable chỉ cho phép admin ghi, giáo viên chỉ đọc được đúng
    * bản ghi của chính mình. Ô "Mã lớp"/"Trường" trong lưới cũng chuyển
-   * readonly (xem renderGrid()). RIÊNG "⏱️ Giờ tiết" (khung giờ Sáng/Chiều
+   * readonly (xem renderGrid()). RIÊNG "Giờ tiết" (khung giờ Sáng/Chiều
    * theo cấp học THCS/TiH) VẪN HIỆN cho giáo viên — teaching_timetable_periods
    * đã cho phép giáo viên tự ghi ĐÚNG bản ghi của chính mình (firestore.rules),
    * để GV tự thiết lập giờ tiết linh hoạt theo trường mình đang dạy thay vì
@@ -269,11 +269,11 @@
   }
 
   /** Tự động điền "Mã lớp"/"Trường" vào lưới TKB dựa trên dữ liệu đã ghi ở
-   * tab "📅 Lịch tuần" (collection teaching_schedule) của ĐÚNG giáo viên +
+   * tab "Lịch tuần" (collection teaching_schedule) của ĐÚNG giáo viên +
    * tuần đang xem — thay cho việc phải gõ tay/dán bảng từ Excel như trước.
    * Lịch tuần là NGUỒN GỐC (tiết nào có mã lớp thì mã lớp + trường của tiết
    * đó trong TKB được ghi đè theo); những tiết Lịch tuần không có dữ liệu
-   * (vd tiết thứ 5 buổi chiều nếu giáo viên tự thêm qua "⏱️ Giờ tiết", hoặc
+   * (vd tiết thứ 5 buổi chiều nếu giáo viên tự thêm qua "Giờ tiết", hoặc
    * cả tuần đó chưa nhập Lịch tuần) vẫn giữ nguyên giá trị đã lưu/gõ tay
    * trong TKB — không tự xoá dữ liệu mà Lịch tuần không biết tới.
    * state.autoCells ghi lại đúng những ô vừa được tự động điền (KHÔNG lưu
@@ -305,7 +305,7 @@
         const periodSchools = schedSess.periodSchools || [];
         // Buổi đã gõ mã lớp ở Lịch tuần → tiết 1-5 để trống ở đó nghĩa là
         // KHÔNG dạy: xoá ô TKB cũ (lớp đã bỏ/chuyển tiết) thay vì giữ lại —
-        // cùng quy ước TS.effectivePeriods() mà "📊 Tổng quan" dùng.
+        // cùng quy ước TS.effectivePeriods() mà "Tổng quan" dùng.
         const schedHasCodes = periods.some((p) => typeof p === 'string' && p.trim());
         (state.days[String(d)][s] || []).forEach((cell, i) => {
           const raw = periods[i];
@@ -333,7 +333,7 @@
    * nếu không có trong danh sách) — GIỐNG cách chọn từ danh sách có sẵn ở
    * file Excel gốc (data validation dropdown), tránh gõ lệch chính tả
    * cùng 1 trường/lớp giữa các tuần.
-   * - "Trường": map từ ĐỊA ĐIỂM đã ghi ở tab "📅 Lịch tuần" (mọi tuần) +
+   * - "Trường": map từ ĐỊA ĐIỂM đã ghi ở tab "Lịch tuần" (mọi tuần) +
    *   lịch sử "Trường" đã gõ ở chính TKB lớp (mọi tuần) CỦA GIÁO VIÊN này.
    * - "Mã lớp": lịch sử "Mã lớp" đã gõ ở TKB lớp CỦA GIÁO VIÊN này (mọi
    *   tuần) + mã lớp mọi giáo viên KHÁC đã dùng trong ĐÚNG TUẦN đang xem
@@ -404,7 +404,7 @@
     const t = state.teachers.find((x) => x.code === state.teacherCode);
     const week = state.weeks.find((w) => w.id === state.weekKey);
     document.getElementById('ttPosterHead').innerHTML = `
-      <div class="tt-poster-title">🗓️ THỜI KHOÁ BIỂU — ${esc(t ? t.name : state.teacherCode)}</div>
+      <div class="tt-poster-title">THỜI KHOÁ BIỂU — ${esc(t ? t.name : state.teacherCode)}</div>
       <div class="tt-poster-sub">Áp dụng: ${esc(week ? (week.label || week.id) : state.weekKey)}</div>`;
   }
 
@@ -412,7 +412,7 @@
    * xếp chồng: MÃ LỚP (đậm, trên) + TRƯỜNG (nhạt hơn, dưới) — tách riêng
    * vì 1 giáo viên có thể dạy LINH HOẠT nhiều trường khác nhau, kể cả đổi
    * trường giữa các tiết trong CÙNG 1 buổi, nên "trường" phải theo TỪNG
-   * TIẾT chứ không gộp chung 1 ô/buổi được. Chèn 1 dòng "☕ Ra chơi" sau
+   * TIẾT chứ không gộp chung 1 ô/buổi được. Chèn 1 dòng "Ra chơi" sau
    * tiết thứ M.BREAK_AFTER_INDEX+1 của mỗi buổi (nếu buổi đó đủ dài) giống
    * mẫu giấy.
    *
@@ -506,7 +506,7 @@
           // của buổi này (bao trùm cả dòng "Ra chơi") nên dòng này KHÔNG có
           // <td> riêng cho cột đó — colspan chỉ cần che cột "Tiết" + 6 cột
           // Thứ (đã bỏ cột "Thời gian" dùng chung, không còn 2 cột nữa).
-          rows.push(`<tr class="tt-break-row"><td class="tt-break-label" colspan="${1 + M.WEEKDAYS.length}">☕ Ra chơi</td></tr>`);
+          rows.push(`<tr class="tt-break-row"><td class="tt-break-label" colspan="${1 + M.WEEKDAYS.length}">Ra chơi</td></tr>`);
         }
       }
       return rows.join('');
@@ -560,7 +560,7 @@
     return order;
   }
 
-  /** "💡 Dán bảng trực tiếp" — bôi đen 1 vùng ô trong Excel/Google Sheets
+  /** "Dán bảng trực tiếp" — bôi đen 1 vùng ô trong Excel/Google Sheets
    * (Ctrl+C), bấm vào đúng ô Thứ/Tiết muốn bắt đầu rồi Ctrl+V ngay trên
    * lưới: tách theo tab (cột) + xuống dòng (hàng), điền tiếp từ đúng vị
    * trí ô đang bấm — không cần gõ tay từng ô, và KHÔNG có nguy cơ lẫn dữ
@@ -603,7 +603,7 @@
    * HƠN 1 tên trường khác nhau (giáo viên/Admin vừa gõ tay cột "Trường"
    * khác nhau giữa các tiết — đúng tình huống "1 buổi dạy ở 2 trường khác
    * nhau" phát sinh thực tế, xem banner Excel gốc người dùng cung cấp) thì
-   * TỰ ĐỘNG cập nhật lại field `location` (cấp buổi) bên tab "📅 Lịch tuần"
+   * TỰ ĐỘNG cập nhật lại field `location` (cấp buổi) bên tab "Lịch tuần"
    * (collection teaching_schedule) thành "Trường A + Trường B" (xem
    * M.joinLocations() ở teaching-schedule.model.js) — để lịch tuần/thống
    * kê/hỗ trợ xăng xe không còn chỉ thấy ĐÚNG 1 trường trong khi TKB đã ghi
@@ -698,7 +698,7 @@
   });
 
   // ------------------------------------------------------------
-  // In/Xuất PDF — TRƯỚC ĐÂY gọi window.print() (hộp thoại in của trình
+  // In/Xuất PDF — trước đây gọi window.print() (hộp thoại in của trình
   // duyệt, xem css/teaching-schedule.css @media print), nhưng Chrome/Edge
   // tự chèn header/footer (ngày giờ, tiêu đề trang, URL, số trang) vào mỗi
   // trang in mà KHÔNG có cách nào tắt từ phía trang web — người dùng phản
@@ -721,14 +721,14 @@
   });
 
   // ------------------------------------------------------------
-  // MODAL: ⏱️ Giờ tiết — khung giờ riêng của giáo viên đang chọn, MỖI THỨ
+  // MODAL: Giờ tiết — khung giờ riêng của giáo viên đang chọn, MỖI THỨ
   // 2→7 sửa RIÊNG qua tab (không còn 1 khung chung cho cả tuần) — áp dụng
   // cho mọi tuần (không lặp cấu hình theo tuần), chỉ khác theo Thứ.
   // ------------------------------------------------------------
   function openPeriodTimesModal() {
     if (!state.teacherCode) { toast('Chọn giáo viên trước.'); return; }
     const t = state.teachers.find((x) => x.code === state.teacherCode);
-    document.getElementById('periodTimesModalTitle').textContent = `⏱️ Giờ tiết — ${t ? t.name : state.teacherCode}`;
+    document.getElementById('periodTimesModalTitle').textContent = `Giờ tiết — ${t ? t.name : state.teacherCode}`;
     ptDraft = {};
     M.WEEKDAYS.forEach((d) => { ptDraft[String(d)] = M.clonePeriodTimes(state.periodTimesByDay[String(d)]); });
     ptGenState = {};
@@ -794,7 +794,7 @@
 
   /** Sinh lại mảng periods của ĐÚNG 1 Thứ×Buổi từ tham số hiện có
    * (getGenState) — giữ NGUYÊN số tiết đang có (thêm/bớt tiết vẫn qua nút
-   * ➕/✕ như cũ, tách biệt với việc đổi giờ vào/nghỉ giải lao). Thiếu "Giờ
+   * /✕ như cũ, tách biệt với việc đổi giờ vào/nghỉ giải lao). Thiếu "Giờ
    * vào" hoặc "Số phút/tiết" thì bỏ qua (chưa đủ để tính), giữ nguyên
    * periods hiện có cho tới khi giáo viên điền đủ. */
   function regeneratePeriods(day, sessionKey) {
@@ -811,7 +811,7 @@
     });
   }
 
-  /** Nút "🟢 Tiểu học 35’/tiết · 🔵 THCS 45’/tiết" — CHỈ đặt SỐ PHÚT MỖI
+  /** Nút "Tiểu học 35’/tiết · THCS 45’/tiết" — CHỈ đặt SỐ PHÚT MỖI
    * TIẾT (đặc trưng thật sự cố định theo cấp học) cho ĐÚNG 1 buổi
    * (sessionKey) CỦA ĐÚNG 1 THỨ đang chọn (ptEditingDay), KHÔNG đụng tới
    * buổi/Thứ còn lại — giáo viên dạy Thứ 2 ở Tiểu học nhưng Thứ 3 lại ở
@@ -820,7 +820,7 @@
    * gợi ý khi ô đó còn trống — vì mỗi trường quy định giờ vào/giờ ra chơi
    * khác nhau (7h hoặc 7h30 vào, buổi chiều vào giờ khác, nghỉ giải lao
    * dài ngắn khác nhau), không có 1 khung giờ cố định đúng cho mọi nơi
-   * (phản hồi người dùng — bản trước đè thẳng cả khung giờ Excel mẫu, sai
+   * (bản trước đè thẳng cả khung giờ Excel mẫu, sai
    * với những trường vào giờ khác). */
   function applyLevelPreset(sessionKey, levelKey) {
     if (!ptDraft) return;
@@ -852,8 +852,8 @@
           <label class="pt-gen-field"><span>Nghỉ giải lao (phút)</span><input type="number" min="0" class="pt-gen-break form-input" data-session="${sessionKey}" value="${esc(gs.breakMinutes)}"></label>
         </div>
         <div class="pt-preset-row">
-          <button type="button" class="btn btn-ghost pt-preset-btn" data-session="${sessionKey}" data-level="tieuHoc">🟢 Tiểu học · 35’/tiết</button>
-          <button type="button" class="btn btn-ghost pt-preset-btn" data-session="${sessionKey}" data-level="thcs">🔵 THCS · 45’/tiết</button>
+          <button type="button" class="btn btn-ghost pt-preset-btn" data-session="${sessionKey}" data-level="tieuHoc">Tiểu học · 35’/tiết</button>
+          <button type="button" class="btn btn-ghost pt-preset-btn" data-session="${sessionKey}" data-level="thcs">THCS · 45’/tiết</button>
         </div>
         ${periods.map((p, pi) => `
           <div class="pt-row" data-session="${sessionKey}" data-idx="${pi}">
@@ -863,7 +863,7 @@
             <input type="time" class="pt-end form-input" value="${esc(p.end)}">
             <button type="button" class="pt-remove-btn" title="Xoá tiết này">✕</button>
           </div>`).join('')}
-        <button type="button" class="btn btn-ghost pt-add-btn" data-session="${sessionKey}">➕ Thêm tiết</button>
+        <button type="button" class="btn btn-ghost pt-add-btn" data-session="${sessionKey}"><i class="fa-solid fa-plus" aria-hidden="true"></i> Thêm tiết</button>
       </div>`;
     }
     wrap.innerHTML = col('morning', 'Sáng') + col('afternoon', 'Chiều');
@@ -897,7 +897,7 @@
     });
   }
 
-  /** "📋 Copy khung giờ Thứ này cho tất cả các Thứ còn lại" — tiện ích cho
+  /** "Copy khung giờ Thứ này cho tất cả các Thứ còn lại" — tiện ích cho
    * trường hợp giáo viên dạy giống hệt nhau mọi ngày trong tuần (không
    * cần bấm 6 lần), KHÔNG chạy tự động — chỉ khi admin chủ động bấm. */
   document.getElementById('periodTimesCopyAllBtn')?.addEventListener('click', () => {

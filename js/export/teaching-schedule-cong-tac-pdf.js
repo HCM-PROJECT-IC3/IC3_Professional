@@ -17,14 +17,14 @@
        dạy nhiều buổi/nhiều ngày trong tuần, chỉ liệt kê 1 lần), giữ đúng
        thứ tự xuất hiện đầu tiên (Thứ2 → Thứ7, Sáng → Chiều).
      - Thời gian            ← ĐƠN GIẢN, 1 dòng/NGÀY thật sự có dạy (không
-       tách theo buổi Sáng/Chiều/loại hình/trường — người dùng phản hồi chỉ
+       tách theo buổi Sáng/Chiều/loại hình/trường — chỉ
        cần gọn đúng mẫu giấy gốc): "Từ 08:00 đến 17:30, ngày {d} tháng {m}
        năm {y}" — khung giờ hành chính CỐ ĐỊNH (WORKDAY_START/END), CHỈ
        ngày là đổi theo Lịch tuần thật, không tính theo giờ tiết cụ thể
        (từng thử, ra giờ lẻ tẻ khác nhau mỗi ngày — không cần thiết).
      - Mục đích             ← CỐ ĐỊNH "Giảng dạy IC3" (hằng số PURPOSE,
        đúng nguyên văn file .doc gốc) — bản trước từng cho người dùng CHỌN
-       giữa Giảng dạy/Ôn Thi qua modal, nhưng người dùng phản hồi bỏ hẳn
+       giữa Giảng dạy/Ôn Thi qua modal, nhưng bỏ hẳn
        lựa chọn này, không hỏi gì thêm khi xuất nữa.
      - Chữ ký người đi công tác ← tên giáo viên (chữ in, không phải chữ ký
        tay thật — vẫn cần ký tay/đóng dấu sau khi in như quy trình cũ).
@@ -59,7 +59,7 @@
 
   // Khung giờ công tác CỐ ĐỊNH cho mọi ngày có dạy — ban đầu thử tính "Từ
   // ... đến ..." theo ĐÚNG giờ tiết thật của từng giáo viên (khung giờ
-  // tiết ở tab "🗓️ TKB lớp"), nhưng ra giờ lẻ tẻ khác nhau mỗi ngày (vd
+  // tiết ở tab "TKB lớp"), nhưng ra giờ lẻ tẻ khác nhau mỗi ngày (vd
   // "09:20 đến 09:55" nếu hôm đó chỉ dạy 1 tiết giữa buổi) — người dùng
   // phản hồi phiếu công tác chỉ cần 1 khung giờ hành chính CHUẨN, THỐNG
   // NHẤT mọi ngày, không cần khớp chính xác từng tiết. Cố định luôn
@@ -68,7 +68,7 @@
   const WORKDAY_END = '17:30';
 
   // "Mục đích" KHÔNG còn cho chọn nữa (bản trước có modal chọn Giảng dạy/
-  // Ôn Thi — người dùng phản hồi bỏ hẳn lựa chọn, luôn cố định đúng câu
+  // Ôn Thi — bỏ hẳn lựa chọn, luôn cố định đúng câu
   // chữ trong file .doc gốc "Mục đích : Giảng dạy IC3").
   const PURPOSE = 'Giảng dạy IC3';
 
@@ -224,7 +224,7 @@
     } catch (err) { return; }
     const el = document.getElementById('toast');
     if (!el) return;
-    el.textContent = 'ℹ️ Trên điện thoại/tablet, PDF thường mở ngay trong tab mới — bấm biểu tượng Chia sẻ rồi chọn "Lưu vào Files/Tải xuống" để lưu lại máy.';
+    el.textContent = 'Trên điện thoại/tablet, PDF thường mở ngay trong tab mới — bấm biểu tượng Chia sẻ rồi chọn "Lưu vào Files/Tải xuống" để lưu lại máy.';
     el.classList.add('show');
     clearTimeout(el._mobileHintT);
     el._mobileHintT = setTimeout(() => el.classList.remove('show'), 5200);
@@ -252,7 +252,7 @@
    * đợt) — thay vì phải bấm xuất riêng từng tuần rồi tự ghép/nộp 2 phiếu.
    * Tách riêng khỏi việc tạo jsPDF/lưu file để exportMany có thể gộp NHIỀU
    * giáo viên vào 1 file PDF DUY NHẤT thay vì tải về từng file lẻ (giống
-   * hệt cách js/export/teaching-schedule-pdf.js đã làm với "🖨️ Xuất PDF
+   * hệt cách js/export/teaching-schedule-pdf.js đã làm với "Xuất PDF
    * tất cả" của Lịch tuần).
    * @param {{name:string, code?:string, id?:string}} teacher
    * @param {Array<{weekKey:string, days:Object}>} weekEntries Danh sách 1
@@ -341,7 +341,7 @@
     doc.setFontSize(BODY_SIZE);
     // GHI THÊM khoảng ngày công tác vào "Mục đích" khi phiếu GỘP NHIỀU TUẦN
     // (vd tuần vừa dạy xong + vài ngày còn lại dính qua tuần sau/tháng sau)
-    // — người dùng phản hồi cần thấy ngay khoảng ngày ở đây, không phải tự
+    // — cần thấy ngay khoảng ngày ở đây, không phải tự
     // dò lại từng dòng "Thời gian" mới biết phiếu này gộp từ ngày nào đến
     // ngày nào. CHỈ thêm khi thật sự gộp >1 tuần (weekEntries.length > 1)
     // — phiếu 1 tuần như cũ giữ nguyên "Mục đích: Giảng dạy IC3", không đổi.
@@ -394,8 +394,8 @@
 
   /** Xuất "Phiếu công tác" của NHIỀU giáo viên (mỗi người có thể gộp
    * NHIỀU tuần riêng, xem weekEntries) thành 1 file PDF DUY NHẤT, mỗi giáo
-   * viên 1 trang — nút "📋 Xuất PDF tất cả" trên thanh công cụ (chỉ admin),
-   * song song với "🖨️ Xuất PDF tất cả" của Lịch tuần đã có sẵn.
+   * viên 1 trang — nút "Xuất PDF tất cả" trên thanh công cụ (chỉ admin),
+   * song song với "Xuất PDF tất cả" của Lịch tuần đã có sẵn.
    * @param {Array<{teacher, weekEntries}>} list Danh sách GV/dữ liệu kỳ đang hiển thị
    * @param {Object} M
    * @param {string} [fileSuffix] Hậu tố tên file (thường là nhãn kỳ đã slug hoá)

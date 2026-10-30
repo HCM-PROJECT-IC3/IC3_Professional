@@ -129,7 +129,7 @@ function renderCards() {
   // Bấm THẲNG vào thẻ 2 bên (chưa phải thẻ chính giữa) để đưa nó vào giữa
   // luôn — trước đây CHỈ chọn được bằng cách kéo trượt tay/chuột hoặc bấm
   // đúng chấm nhỏ bên dưới (9px, khó bấm trúng), khiến cảm giác "khó tương
-  // tác để chọn bộ đề". 2 nút "Bắt đầu làm bài"/⚙️ bên trong thẻ đã tự
+  // tác để chọn bộ đề". 2 nút "Bắt đầu làm bài"/bên trong thẻ đã tự
   // event.stopPropagation() (xem openStartModal()/openManageModal()) nên
   // không xung đột với click chọn thẻ ở đây.
   track.querySelectorAll('.carousel-item').forEach((item, i) => {
@@ -149,7 +149,7 @@ function renderCards() {
  * CHẶN TRẦN padding ở 60% bề rộng thẻ (thay vì đúng công thức "canh giữa
  * tuyệt đối" = (khung nhìn − thẻ)/2) — trên màn hình RỘNG, khung nhìn lớn
  * hơn thẻ (cỡ tối đa 340px) rất nhiều, canh giữa tuyệt đối tạo ra khoảng
- * trống 2 bên khổng lồ (phản hồi người dùng: "chỗ bị trống") trong khi lẽ
+ * trống 2 bên khổng lồ ("chỗ bị trống") trong khi lẽ
  * ra màn rộng phải thấy được NHIỀU thẻ liền kề hơn. Có trần, thẻ đầu/cuối
  * chỉ lệch nhẹ khỏi tâm (không còn tuyệt đối giữa) nhưng đổi lại lộ thêm
  * hàng xóm — đúng cảm giác carousel "phủ kín" thay vì carousel "1 thẻ giữa
@@ -500,7 +500,7 @@ function saveReportCache(fetchedAt) {
 
 /**
  * Tải dữ liệu (nếu chưa có cache) rồi áp bộ lọc + vẽ lại toàn bộ báo cáo.
- * @param {boolean} [forceRefresh] true khi bấm nút "🔄 Làm mới" — bỏ qua cả
+ * @param {boolean} [forceRefresh] true khi bấm nút "Làm mới" — bỏ qua cả
  *   cache trong biến JS lẫn cache sessionStorage, luôn đọc lại từ Firestore.
  */
 async function updateReportTab(forceRefresh = false) {
@@ -541,11 +541,19 @@ async function updateReportTab(forceRefresh = false) {
           const lastMs = base ? base.reduce((m, d) => Math.max(m, d.submittedAtMs || 0), 0) : 0;
           sheetRows = await window.EduSheetResults.list({ sinceMs: lastMs, limit: 10000 });
         } else {
-          snap = await query.orderBy('submittedAt', 'desc').limit(10000).get();
+          // Điều phối đào tạo: firestore.rules chỉ cho đọc bài thuộc trường được gán → query PHẢI
+          // lọc where('studentSchool','in',…) (≤10 giá trị/lần), không thì bị từ chối cả query.
+          const p = window.EduCurrentProfile || {};
+          const schools = p.role === 'admin' ? null : (Array.isArray(p.schools) ? p.schools.filter(Boolean) : []);
+          if (schools && !schools.length) throw Object.assign(new Error('Tài khoản chưa được Admin gán trường nào (Quản lý tài khoản → Trường được xem/hỗ trợ).'), { code: 'no-schools' });
+          const parts = schools ? Array.from({ length: Math.ceil(schools.length / 10) }, (_, i) => schools.slice(i * 10, i * 10 + 10)) : [null];
+          const snaps = await Promise.all(parts.map((part) => (part ? query.where('studentSchool', 'in', part) : query)
+            .orderBy('submittedAt', 'desc').limit(10000).get()));
           // SDK offline (mất mạng / hết lượt đọc → SDK tự chuyển offline) trả về cache máy
           // thay vì báo lỗi — coi như thất bại để không ghi đè cache bằng dữ liệu thiếu.
-          if (snap.metadata && snap.metadata.fromCache) throw Object.assign(new Error('offline'), { code: 'unavailable' });
-          window.EduFirebase.countSnap && window.EduFirebase.countSnap('quiz_results (báo cáo' + (base ? ', phần mới' : ', lần đầu') + ')', snap);
+          if (snaps.some((s) => s.metadata && s.metadata.fromCache)) throw Object.assign(new Error('offline'), { code: 'unavailable' });
+          snaps.forEach((s) => window.EduFirebase.countSnap && window.EduFirebase.countSnap('quiz_results (báo cáo' + (base ? ', phần mới' : ', lần đầu') + ')', s));
+          snap = { docs: snaps.flatMap((s) => s.docs) };
         }
       } catch (err) {
         // Apps Script bản cũ chưa có listResults → đánh dấu rồi tải lại từ Firestore.
@@ -553,7 +561,7 @@ async function updateReportTab(forceRefresh = false) {
         // Hết lượt đọc trong ngày / mất mạng: dùng dữ liệu đã lưu nếu có (kể cả bản đã
         // quá hạn), thay vì báo lỗi trắng.
         const fallback = base || (staleEntry && Array.isArray(staleEntry.docs) ? staleEntry.docs : null);
-        if (!fallback) throw err;
+        if (!fallback || err.code === 'no-schools') throw err;
         console.warn('[EduQuiz] Không tải được bài nộp mới, dùng dữ liệu đã lưu:', err.message);
         const quota = window.EduFirebase.isQuotaOrOffline && window.EduFirebase.isQuotaOrOffline(err);
         if (typeof showToast === 'function') showToast(quota ? window.EduFirebase.QUOTA_HINT + ' — đang hiện dữ liệu đã lưu' : 'Chưa tải được bài nộp mới — đang hiện dữ liệu đã lưu', 'fa-triangle-exclamation');
@@ -666,7 +674,7 @@ function renderReportTable(rows) {
     body.innerHTML = `<tr><td colspan="8" class="table-empty-cell">Chưa có dữ liệu phù hợp bộ lọc. Học sinh bắt đầu làm bài để xem kết quả.</td></tr>`;
     return;
   }
-  // KHÔNG còn .slice(0, 200) — người dùng phản hồi cần thấy ĐẦY ĐỦ số lượt
+  // KHÔNG còn .slice(0, 200) — cần thấy ĐẦY ĐỦ số lượt
   // làm bài khớp bộ lọc hiện tại, không bị cắt bớt.
   body.innerHTML = rows.map(r => {
     const dateStr = new Date(r.submittedAtMs).toLocaleString('vi-VN');
@@ -944,7 +952,7 @@ function openManageModal(id, event) {
     ? `<div style="text-align:center;color:var(--text-muted);padding:24px 0;">Chưa có học sinh nào làm bài này.</div>`
     : sessions.map((s, i) => {
         // Icon avatar XOAY VÒNG cho mỗi học sinh (chỉ để phân biệt trực quan
-        // giữa các hàng, không mang nghĩa gì) — đổi từ emoji (😊🦊🐼...) sang
+        // giữa các hàng, không mang nghĩa gì) — đổi từ emoji (...) sang
         // Font Awesome cho đồng bộ giao diện, tránh cảm giác "vườn thú emoji"
         // thường thấy ở web tự sinh bằng AI.
         const icons = ['fa-face-smile','fa-star','fa-bolt','fa-heart','fa-gem','fa-fire','fa-crown','fa-certificate'];
@@ -1089,7 +1097,7 @@ function showToast(msg, iconClass) {
   const toast = document.getElementById('session-toast');
   const iconEl = toast.querySelector('.toast-icon i');
   if (iconEl) {
-    // Icon đứng yên (trước: fa-bounce nhún khi thành công — kiểu "web AI", xem giao diện phẳng).
+    // Icon đứng yên (trước: fa-bounce nhún khi thành công, xem giao diện phẳng).
     iconEl.className = 'fa-solid ' + (iconClass || 'fa-rocket');
   }
   document.getElementById('toast-text').textContent = msg;

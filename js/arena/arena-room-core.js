@@ -17,14 +17,14 @@
                lời nhanh nổ trước, không chọn thì dùng phép đầu. Mục tiêu bốc ngẫu nhiên có hạt
                giống (mã + câu) trong các bạn còn trụ → không dồn đánh 1 người. Còn ≤ 1 người → hết.
      • heist — Giải mã: mỗi em 1 két khoá mã 3 ký hiệu (mã chỉ nằm ở máy người dẫn). Chốt câu → ai đúng
-               chọn ngay 1 việc: ⛏️ đào đá quý · 🔓 đoán 1 ký hiệu két của 1 trong 3 bạn máy người dẫn gợi ý
-               (bạn đang phá dở trước, còn lại bốc có hạt giống) · 🔁 đổi mã khi có người đã mở được ô két em.
+               chọn ngay 1 việc: đào đá quý · đoán 1 ký hiệu két của 1 trong 3 bạn máy người dẫn gợi ý
+               (bạn đang phá dở trước, còn lại bốc có hạt giống) · đổi mã khi có người đã mở được ô két em.
                Kết quả có ngay; không chọn kịp thì sang câu sau tự đào.
    Thẻ thưởng (chỉ chế độ Tốc độ, kiểu Gimkit/Blooket, máy người dẫn cấp và áp dụng — học
    sinh không gửi gì thêm nên không gian lận được):
-     • cứ đúng liền 3 · 6 · 9... câu → nhận 1 thẻ, lần lượt 🃏 x2 rồi 🛡️ Khiên
-     • 🃏 x2: câu ĐÚNG kế tiếp được nhân đôi điểm (cả điểm chuỗi)
-     • 🛡️ Khiên: câu trả lời SAI kế tiếp không làm mất chuỗi (không trừ điểm — vốn đã không trừ)
+     • cứ đúng liền 3 · 6 · 9... câu → nhận 1 thẻ, lần lượt x2 rồi Khiên
+     • x2: câu ĐÚNG kế tiếp được nhân đôi điểm (cả điểm chuỗi)
+     • Khiên: câu trả lời SAI kế tiếp không làm mất chuỗi (không trừ điểm — vốn đã không trừ)
      • thẻ vừa nhận chỉ dùng được từ câu sau; tự dùng, không cần bấm
    ============================================================ */
 (function (global) {
@@ -351,7 +351,7 @@
     o.done = res;
     return res;
   }
-  /** Sang câu sau / kết thúc: em trả lời đúng mà chưa chọn việc → tự đào (như chọn ⛏️). */
+  /** Sang câu sau / kết thúc: em trả lời đúng mà chưa chọn việc → tự đào (như chọn ). */
   function resolveHeist(room) {
     if (room.mode !== 'heist' || room.phase !== 'reveal' || room.heistAt === room.i) return;
     room.heistAt = room.i;
@@ -538,7 +538,7 @@
       .filter((x) => { const k = x.q.uid || x.q.text; if (seen.has(k)) return false; seen.add(k); return true; })
       .map((x) => x.q);
   }
-  /** "🔁 Đấu lại câu sai": phòng mới CÙNG MÃ, giữ nguyên các bạn đang có (điểm về 0) — không ai phải vào lại. */
+  /** "Đấu lại câu sai": phòng mới CÙNG MÃ, giữ nguyên các bạn đang có (điểm về 0) — không ai phải vào lại. */
   function rematch(room, deck, opts) {
     const o = opts || {};
     const count = Math.max(1, o.count | 0 || deck.length);

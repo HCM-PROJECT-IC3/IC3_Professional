@@ -121,7 +121,7 @@
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Đang tải...';
     try {
-      // 1 lượt listByWeek()/tuần (đã có sẵn cho "📊 Tổng quan") — Promise.all
+      // 1 lượt listByWeek()/tuần (đã có sẵn cho "Tổng quan") — Promise.all
       // song song, số tuần chọn thường nhỏ (vài tuần đến vài chục), không
       // cần phân trang/giới hạn thêm.
       const perWeekRows = await Promise.all(

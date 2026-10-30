@@ -12,7 +12,7 @@
    3 collection MỚI:
    - "courses"  : { id, name, level("thcs"|"tieu_hoc"), createdAt }
    - "classes"  : { id, name, school, courseId, teacherId, teacherName, studentCount, createdAt }
-     ("school" thêm sau — TRƯỚC ĐÂY thiếu field này khiến 2 trường cùng
+     ("school" thêm sau — trước đây thiếu field này khiến 2 trường cùng
      đặt tên lớp giống nhau (rất phổ biến, VD "4A1") bị GỘP CHUNG 1 document
      "classes" toàn hệ thống, kéo theo teacherId của lớp đó bị dùng SAI cho
      học sinh ở TRƯỜNG KHÁC khi Nạp Excel — xem classifyImportRows() +

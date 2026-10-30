@@ -1,6 +1,6 @@
 /* ============================================================
    js/arena/arena-hype.js — "bình luận viên" cho trận Đấu trường (Chơi một mình). Chỉ tính chữ, không đụng DOM.
-     rivalLine(G, order)            mục tiêu trước mắt: "Còn 437 điểm nữa là vượt 🐱 Mèo Wifi" / "Em dẫn đầu, hơn ..."
+     rivalLine(G, order)            mục tiêu trước mắt: "Còn 437 điểm nữa là vượt Mèo Wifi" / "Em dẫn đầu, hơn ..."
      commentary(G, before, order)   sau mỗi lượt: { text, climax, taunt: { id, text } } — lời bình hợp với từng trò,
                                     climax = khoảnh khắc cao trào (mỗi trận hiện 1 lần), taunt = bạn máy vừa vượt / bị vượt nói 1 câu
      before(G, order)               chụp hạng + người dẫn đầu TRƯỚC khi chấm câu để so

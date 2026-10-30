@@ -1,6 +1,6 @@
 /* ============================================================
    js/export/pdf-exporter.js
-   Engine xuất PDF (Commit #7) cho bảng "Danh sách học sinh" ở
+   Engine xuất PDF cho bảng "Danh sách học sinh" ở
    Coordinator Dashboard & Teacher Dashboard.
 
    Dùng jsPDF (js/vendor/jspdf.umd.min.js) + jsPDF-AutoTable
@@ -40,7 +40,7 @@
   }
 
   // Logo IIG thật (window.EduIigLogo, xem js/export/iig-logo.js) — GIỐNG
-  // hệt logo dùng ở "📋 Phiếu công tác", thay cho huy hiệu vector "IC3"
+  // hệt logo dùng ở "Phiếu công tác", thay cho huy hiệu vector "IC3"
   // tự vẽ trước đây.
   function drawLogoBadge(doc, x, y) {
     const logo = global.EduIigLogo;
@@ -139,7 +139,7 @@
   function drawStudentListTable(doc, rows, scopeLabel) {
     doc.addPage();
     drawHeader(doc);
-    sectionTitle(doc, '🧑\u200d🎓 Danh sách học sinh', 78);
+    sectionTitle(doc, 'Danh sách học sinh', 78);
 
     const body = rows.map(({ student, history, progress }) => [
       student.mssv || '—',

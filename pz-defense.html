@@ -19,23 +19,7 @@
 <button type="button" class="theme-toggle-quick" id="themeToggleQuick" title="Chuyển đổi sáng/tối"></button>
 <script src="js/theme-toggle-quick.js"></script>
 
-  <!-- Trang này được nhúng qua modal (js/game-modal.js), cùng pattern
-       với memory-game.html / sort-game.html — chỉ
-       chứa đúng 1 mini-game độc lập, không đụng vào quiz-engine.js /
-       gamification.js.
-       Cơ chế: tower-defense — đặt 1 trong 19 "lá chắn" gồm 12 PHẦN MỀM
-       (Word/Excel/Chrome/Outlook/Teams/Gemini/PowerPoint/Gmail/Zoom/
-       Copilot/Windows/Ổ cứng ngoài) + 6 PHẦN CỨNG (Bàn phím/Chuột/Máy in/
-       Màn hình/CPU/Vỏ máy) + 1 lá chắn NỔ dùng-1-lần (Công Tắc Ngắt Khẩn)
-       — mỗi lá chắn minh họa bằng 1 icon SVG gốc (tự vẽ, không dùng asset
-       của bên thứ ba) trong img/pz-defense/defenders/ — lên lưới 5 hàng để
-       chặn & tiêu diệt các tác nhân mã độc bò từ bên phải sang trước khi
-       chúng xâm nhập Server bên trái. Đã bổ sung 4 cơ chế: Sun ☀️ rơi từ
-       trời (phải bấm để hứng, lá chắn "sinh Dữ liệu" cũng chỉ nảy Sun ra
-       chứ không tự cộng), 🚜 Xe cắt cỏ (mạng chót/hàng), lá chắn nổ dùng-
-       1-lần, và cooldown hồi chiêu riêng từng lá chắn sau khi đặt. Toàn
-       bộ logic khai báo trong js/pz-defense.js (canvas 2D thuần, không
-       dùng thư viện vật lý ngoài). -->
+  <!-- Phòng thủ dữ liệu: đặt lá chắn (phần mềm, phần cứng, công tắc ngắt khẩn) lên lưới 5 hàng để chặn mã độc. Icon SVG trong img/pz-defense/defenders/. Nhúng qua js/game-modal.js. -->
 
   <div class="pz-wrap">
     <div class="pz-topbar">
@@ -72,10 +56,7 @@
         <canvas id="pzCanvas" class="pz-canvas"></canvas>
         <div class="pz-toast" id="pzToast"></div>
 
-        <!-- (Phase 9 — Cyber Tower Defense) Panel nâng cấp lá chắn: hiện
-             ra khi bấm vào 1 lá chắn ĐÃ ĐẶT trên bàn (không phải ô
-             trống, không phải đang chọn shop). Render/ẩn bằng JS trong
-             js/pz-defense.js § renderUpgradePanel(). -->
+        <!-- Bảng nâng cấp khi bấm lá chắn đã đặt — js/pz-defense.js renderUpgradePanel(). -->
         <div class="pz-upgrade-panel" id="pzUpgradePanel" hidden>
           <button type="button" class="pz-upgrade-close" id="pzUpgradeCloseBtn">✕</button>
           <div class="pz-upgrade-name" id="pzUpgradeName"></div>

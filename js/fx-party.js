@@ -1,7 +1,7 @@
 /* ============================================================
    js/fx-party.js — hiệu ứng "lễ hội" DÙNG CHUNG cho Gọi tên vui + Đấu trường + mini-game.
      fireworks(opts)    pháo hoa bắn từ dưới lên, nổ thành chùm sáng (canvas, tự dọn)   opts: { shells, ms, sound }
-     rain(opts)         mưa ruy băng + giấy màu rơi từ trên xuống, đung đưa (canvas)       opts: { count, ms, glyphs: ['🥚', '🐣'] }
+     rain(opts)         mưa ruy băng + giấy màu rơi từ trên xuống, đung đưa (canvas)       opts: { count, ms, glyphs: ['', ''] }
                         glyphs: ~1/3 số hạt là biểu tượng hợp với trò (trứng, tên lửa, bóng bay...)
      rays(el)           vầng tia sáng xoay chậm phía sau 1 khung (chèn làm con đầu tiên)
      letters(el, opts)  chữ trong el nảy lên từng ký tự (giữ nguyên textContent)            opts: { step, delay }
