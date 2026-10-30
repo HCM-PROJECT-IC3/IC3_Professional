@@ -39,11 +39,19 @@ CLI hỏi "xoá index không có trong file?" → chọn **No**.
 Lỗi `permission-denied` ở chức năng nào → gửi lại thông báo lỗi. Cần quay lại tạm: bảng lịch sử
 bên trái tab Rules cho phép chọn bản cũ.
 
-## 2. Anonymous Auth — không còn cần
+## 2. Anonymous Auth — GIỮ BẬT (đường dự phòng Phòng cả lớp)
 
-Phòng chơi trực tiếp đã chuyển sang Phòng cả lớp của `arena.html` (WebRTC ngang hàng, 0 lượt
-Firebase); không trang nào gọi `signInAnonymously` nữa. Có thể **tắt** provider Anonymous
-(Authentication → Sign-in method) để bớt bề mặt lạm dụng.
+Phòng cả lớp của `arena.html` chạy WebRTC ngang hàng (0 lượt Firebase). Riêng học sinh **không
+nối thẳng được** tới máy giáo viên (4G, Wi-Fi khác, tường lửa trường) vào phòng qua đường dự
+phòng Firestore (`js/arena/arena-relay.js`), đăng nhập bằng `signInAnonymously` để
+`firestore.rules` chặn ghi giả người khác (`arena_relay/{mã}/up/{uid}`).
+
+- Authentication → Sign-in method → **Anonymous: Enabled**.
+- Tắt Anonymous → học sinh khác mạng thấy "Đường dự phòng chưa bật (Firebase Authentication →
+  Anonymous)"; học sinh cùng Wi-Fi với máy giáo viên vẫn chơi được.
+- Lạm dụng đã được chặn ở rules: tài khoản ẩn danh chỉ ghi được đúng 1 document `up/{uid}` của
+  mình, ≤ 4 tin, cách nhau > 0,5 giây, chỉ vào phòng đang mở (có TTL `exp`); không đọc/ghi được
+  collection nào khác.
 
 ## 3. App Check — ĐÃ GỠ (10/2026), KHÔNG Enforce
 

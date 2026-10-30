@@ -45,20 +45,20 @@
     const res = L.results || {};
     const P = (id) => room.players[id];
     const shouts = [];
-    // ⚡ Tia chớp: đúng nhanh nhất câu này
+    // Tia chớp: đúng nhanh nhất câu này
     let fast = null;
     Object.keys(res).forEach((id) => {
       const a = room.answers[id];
       if (res[id].ok && a && (!fast || a.ms < fast.ms)) fast = { id, ms: a.ms };
     });
     if (fast) shouts.push({ icon: '⚡', label: 'Tia chớp', text: `${who(P(fast.id))} · ${sec(fast.ms)} giây` });
-    // 🚀 Bứt phá: lên nhiều hạng nhất
+    // Bứt phá: lên nhiều hạng nhất
     const up = Object.keys(res).filter((id) => res[id].up >= 2).sort((a, b) => res[b].up - res[a].up)[0];
     if (up && room.mode !== 'tug') shouts.push({ icon: '🚀', label: 'Bứt phá', text: `${who(P(up))} +${res[up].up} hạng` });
-    // 🔥 Chuỗi nóng
+    // Chuỗi nóng
     const hot = Object.keys(res).filter((id) => res[id].streak >= 3).sort((a, b) => res[b].streak - res[a].streak)[0];
     if (hot) shouts.push({ icon: '🔥', label: 'Chuỗi nóng', text: `${who(P(hot))} · ${res[hot].streak} câu liền` });
-    // 👑 Ngôi đầu đổi chủ
+    // Ngôi đầu đổi chủ
     if (prev && prev.leader && board[0] && board[0].cid !== prev.leader && room.mode !== 'tug' && room.i > 0) {
       shouts.push({ icon: '👑', label: 'Ngôi đầu đổi chủ', text: who(board[0]) });
     }

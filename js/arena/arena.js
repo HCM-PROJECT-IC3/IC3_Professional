@@ -200,6 +200,42 @@
     $('arPlay').disabled = !n;
     if (!n) $('arMore').open = true; // thiếu câu vì tắt dạng câu → mở sẵn chỗ bật lại
     document.dispatchEvent(new CustomEvent('arena:deck', { detail: { playable: n } }));
+    paintRecent();
+  }
+
+  // ── Bộ câu dùng gần đây (đã vào trận / tạo phòng): giáo viên dạy nhiều lớp cùng bài khỏi chọn lại 3 ô ──
+  const RECENT_MAX = 4;
+  /** Ghi bộ câu đang chọn vào đầu danh sách (gọi khi vào trận đấu tự do hoặc tạo phòng). */
+  function rememberDeck() {
+    const d = S.prefs.deck;
+    if (SRC.de || !d || !d.cat) return;
+    const lv = curCat()?.levels.find((l) => l.id === d.lvl);
+    const label = `${lv ? lv.name : d.lvl} · ${d.mt === ALL ? 'Trộn mọi chủ đề' : d.mt}`;
+    S.prefs.recent = [{ cat: d.cat, lvl: d.lvl, mt: d.mt, label }]
+      .concat((S.prefs.recent || []).filter((x) => !(x.cat === d.cat && x.lvl === d.lvl && x.mt === d.mt))).slice(0, RECENT_MAX);
+    save();
+    paintRecent();
+  }
+  function paintRecent() {
+    const box = $('arRecent');
+    const list = SRC.de ? [] : (S.prefs.recent || []).filter((x) => x && x.cat);
+    box.hidden = !list.length;
+    if (!list.length) return;
+    const d = S.prefs.deck || {};
+    box.innerHTML = `<span class="ar-recent-lbl"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Dùng gần đây</span>` +
+      list.map((x, i) => {
+        const on = x.cat === d.cat && x.lvl === d.lvl && x.mt === d.mt;
+        return `<button type="button" class="ar-recent-chip${on ? ' is-on' : ''}" data-recent="${i}" aria-pressed="${on}">${esc(x.label)}</button>`;
+      }).join('');
+  }
+  function useRecent(i) {
+    const x = (S.prefs.recent || [])[i];
+    if (!x || !SRC.meta || !SRC.meta.categories.some((c) => c.id === x.cat)) return;
+    $('arCat').value = x.cat;
+    fillLevels(x.lvl);
+    if ([...$('arMt').options].some((o) => o.value === x.mt)) $('arMt').value = x.mt;
+    bankChanged();
+    sfx('click');
   }
   function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
 
@@ -243,13 +279,20 @@
   // ============================================================
   const ROLES = ['student', 'teacher', 'solo', 'minigame'];
   function role() { return $('arHome').dataset.role; }
+  // Thẻ "Chơi một mình" gồm 2 chế độ con: Hành trình (vai "minigame") và Đấu tự do (vai "solo").
+  const tabOf = (r) => (r === 'minigame' ? 'solo' : r);
   function setRole(r, persist) {
     if (!ROLES.includes(r)) r = 'student';
     $('arHome').dataset.role = r;
     document.querySelectorAll('#arRoles .ar-role').forEach((b) => {
-      const on = b.dataset.role === r;
+      const on = b.dataset.role === tabOf(r);
       b.classList.toggle('is-on', on); b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1;
     });
+    document.querySelectorAll('.ar-solo-switch [data-view]').forEach((b) => {
+      const on = b.dataset.view === r;
+      b.classList.toggle('is-on', on); b.setAttribute('aria-selected', on);
+    });
+    if (r === 'solo' || r === 'minigame') S.soloView = r;
     if (persist) { S.role = r; save(); }
     paintModes();
     document.dispatchEvent(new CustomEvent('arena:role', { detail: { role: r } }));
@@ -266,13 +309,21 @@
   }
   function initRoles() {
     const bar = $('arRoles');
-    bar.addEventListener('click', (e) => { const b = e.target.closest('.ar-role'); if (b) { setRole(b.dataset.role, true); sfx('click'); } });
+    // Bấm "Chơi một mình" → mở lại chế độ con lần trước (mặc định Hành trình)
+    const open = (r) => setRole(r === 'solo' ? (S.soloView === 'solo' ? 'solo' : 'minigame') : r, true);
+    bar.addEventListener('click', (e) => { const b = e.target.closest('.ar-role'); if (b) { open(b.dataset.role); sfx('click'); } });
     bar.addEventListener('keydown', (e) => { // ← → đổi vai khi đang ở thanh chọn
       if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-      const i = ROLES.indexOf(role()) + (e.key === 'ArrowRight' ? 1 : -1);
-      setRole(ROLES[(i + ROLES.length) % ROLES.length], true);
+      const tabs = [...bar.querySelectorAll('.ar-role')].map((b) => b.dataset.role);
+      const i = tabs.indexOf(tabOf(role())) + (e.key === 'ArrowRight' ? 1 : -1);
+      open(tabs[(i + tabs.length) % tabs.length]);
       bar.querySelector('.ar-role.is-on').focus();
     });
+    document.querySelectorAll('[data-goto-role]').forEach((b) => b.addEventListener('click', () => { setRole(b.dataset.gotoRole, true); sfx('click'); global.scrollTo(0, 0); }));
+    document.querySelectorAll('.ar-solo-switch').forEach((sw) => sw.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-view]');
+      if (b) { setRole(b.dataset.view, true); sfx('click'); }
+    }));
     const deep = ['de', 'cat', 'lvl', 'mt', 'mode'].some((k) => params.get(k));
     if (params.get('phong')) setInvite(true);
     else if (ROLES.includes(params.get('vai'))) setRole(params.get('vai'), false); // link từ trang chủ: arena.html?vai=minigame
@@ -306,11 +357,13 @@
       S.prefs.kinds = C.KINDS.filter((k) => cur.includes(k)); save(); sfx('click');
       updateDeckInfo();
     });
-    $('arPlay').addEventListener('click', start);
+    $('arPlay').addEventListener('click', () => { rememberDeck(); start(); });
+    $('arRecent').addEventListener('click', (e) => { const b = e.target.closest('[data-recent]'); if (b) useRecent(+b.dataset.recent); });
     $('arAvatarBtn').addEventListener('click', () => openPacks());
     $('arOpenPacks').addEventListener('click', () => openPacks());
     document.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => {
-      if (b.dataset.go === 'packs') openPacks(); else { show('arHome'); refreshWallet(); paintDue(); }
+      if (b.dataset.go === 'packs') openPacks();
+      else { show('arHome'); refreshWallet(); paintDue(); if (role() === 'minigame' && global.EduArenaQuest) global.EduArenaQuest.paint(); }
     }));
   }
 
@@ -478,18 +531,40 @@
   const POWER_MODES = ['speed', 'survival', 'moon']; // chế độ có vật phẩm hỗ trợ (kiểu Wayground)
 
   /**
+   * Trận quiz của 1 chặng trên bản đồ Hành trình. q: { cat, lvl, mt: tiền tố bộ "Theo chủ đề" ('1.'…'7.')
+   * hoặc ALL (trộn 7 chủ đề), mode, n, title, quest: { node, map } }. Tải bộ câu riêng rồi vào trận.
+   */
+  async function playQuest(q) {
+    try {
+      if (!SRC.meta || !SRC.manifest) [SRC.meta, SRC.manifest] = await Promise.all([getJson('data/ic3/meta.json'), getJson('data/ic3/minitests-manifest.json')]);
+    } catch (e) { toast('Không tải được ngân hàng câu hỏi — kiểm tra mạng rồi thử lại.'); return false; }
+    const lv = (SRC.meta.categories.find((c) => c.id === q.cat)?.levels || []).find((l) => l.id === q.lvl);
+    const files = SRC.manifest[`${q.cat}__${q.lvl}`] || {};
+    const topics = Object.keys(lv?.minitests || {}).filter((n) => !LESSON_RE.test(n) && !TEST_RE.test(n) && !BAI_RE.test(n));
+    const names = q.mt === ALL ? topics : topics.filter((n) => n.startsWith(q.mt));
+    const lists = await Promise.all(names.map((n) => (files[n] ? getJson('data/ic3/' + files[n]).catch(() => []) : [])));
+    const questions = lists.flat();
+    if (!questions.length) { toast('Chủ đề này chưa có câu hỏi ở cấp đang chọn.'); return false; }
+    start(null, { questions, mode: q.mode, n: q.n, key: `quest|${q.cat}|${q.lvl}|${q.mt}`, title: q.title, quest: q.quest });
+    return true;
+  }
+
+  /**
    * Vào trận. `drill` (mảng câu từ C.practiceDeck) = lượt "Luyện câu sai": Tốc độ, 1 mình, hết câu là xong,
    * không ghi kỷ lục — chỉ để em sửa lại đúng những câu vừa sai.
    */
-  function start(drill) {
+  function start(drill, force) {
     drill = Array.isArray(drill) && drill.length ? drill : null;
+    // force = chặng trên bản đồ Hành trình (js/arena/arena-quest.js): bộ câu, chế độ, số câu riêng —
+    // không đụng bộ câu / chế độ em đang chọn ở Chơi một mình.
+    force = !drill && force && Array.isArray(force.questions) ? force : null;
     if (!drill) { S.last = $('arNick').value.trim().slice(0, 30); save(); }
-    const deck = drill || C.buildDeck(SRC.questions || [], rng, 0, kinds());
-    if (!deck.length) return;
-    const mode = drill ? 'speed' : effMode();
+    const deck = drill || C.buildDeck((force ? force.questions : SRC.questions) || [], rng, 0, kinds());
+    if (!deck.length) { if (force) toast('Bộ câu của chặng này chưa có câu chơi được.'); return; }
+    const mode = drill ? 'speed' : force ? force.mode : effMode();
     $('arGame').classList.remove('is-fever'); // trận trước bỏ ngang lúc đang bùng cháy
     // Số câu thật: không vượt số câu bộ có (trước đây mọi chế độ trừ Tốc độ lấy thẳng số câu chọn → lặp câu)
-    const n = drill ? deck.length : C.playCount(S.prefs.count, deck.length);
+    const n = drill ? deck.length : C.playCount(force ? force.n : S.prefs.count, deck.length);
     const p = profile();
     const me = { id: 'me', name: nickName(), face: avatarOf(p), score: 0, gold: 0, pos: 0, streak: 0, me: true };
     const nBots = { race: 3, heist: 3, tug: 5, boss: 3 }[mode] || 4; // Diệt Virus: đội 4 người
@@ -499,7 +574,7 @@
       if (mode === 'tug') pl.team = i < 3 ? 'red' : 'blue'; // em + 2 bạn máy (Đỏ) đấu 3 bạn máy (Xanh)
       if (mode === 'heist') pl.vault = C.newVault(rng);
     });
-    const bestKey = drill ? '' : `${SRC.key}|${mode}|${n}`;
+    const bestKey = drill ? '' : `${force ? force.key : SRC.key}|${mode}|${n}`;
     const best = (bestKey && p.best[bestKey]) || null;
     let ghost = null;
     if (mode === 'speed' && best && best.trail) {
@@ -507,7 +582,7 @@
       players.push(ghost);
     }
     G = {
-      mode, n, i: 0, players, me, ghost, best, bestKey, practice: !!drill,
+      mode, n, i: 0, players, me, ghost, best, bestKey, practice: !!drill, force,
       // Đua về đích / Lên Mặt Trăng cần nhiều lượt hơn số câu: hết bộ mới trộn lại, không lặp liền nhau
       deck: mode === 'race' ? C.extendDeck(deck, n * 3, rng) : mode === 'moon' ? C.extendDeck(deck, n * 2, rng) : deck.slice(0, n),
       limitMs: mode === 'gold' ? 0 : S.prefs.secs * 1000,
@@ -679,7 +754,7 @@
     let fb = '';
     let pop = ''; // số bay lên từ ô em chọn
     const events = [];
-    // Vật phẩm ✖️2: nhân đôi điểm của câu ĐÚNG kế tiếp.
+    // Vật phẩm 2: nhân đôi điểm của câu ĐÚNG kế tiếp.
     const dbl = ok && G.x2 ? 2 : 1;
     if (dbl === 2) G.x2 = false;
     const x2Tag = dbl === 2 ? ' <span class="ar-tag up">✖️2 nhân đôi!</span>' : '';
@@ -726,7 +801,7 @@
         + ` <span class="ar-tag${st.delta > 0 ? ' up' : ''}">${st.delta > 0 ? `Dây dịch về Đội Đỏ ${st.delta} vạch` : st.delta < 0 ? `Dây dịch về Đội Xanh ${-st.delta} vạch` : 'Dây đứng yên'}</span>`;
     } else if (G.mode === 'moon') {
       const st = C.moonStep(me, ok, ms, G.limitMs, G.n, G.i);
-      const gain = st.gain * (dbl === 2 && st.gain ? 1 : 0); // ✖️2: bay thêm 1 lần nữa (không vượt Mặt Trăng)
+      const gain = st.gain * (dbl === 2 && st.gain ? 1 : 0); // 2: bay thêm 1 lần nữa (không vượt Mặt Trăng)
       if (gain) me.km = Math.min(C.MOON_KM, me.km + gain);
       if (me.km >= C.MOON_KM && me.landedAt === undefined) me.landedAt = G.i;
       const up = st.gain + gain;
@@ -739,7 +814,7 @@
         : `${k === null ? 'Hết giờ' : 'Chưa đúng'} — chết máy${st.fell ? `, tụt <b>${st.fell}</b> nghìn km` : ' — đứng yên ở trạm'}`;
     } else if (G.mode === 'boss') {
       let dmg = hit.dmg;
-      if (dbl === 2 && dmg) { me.dmg += dmg; dmg *= 2; } // ✖️2: đánh thêm 1 đòn y hệt
+      if (dbl === 2 && dmg) { me.dmg += dmg; dmg *= 2; } // 2: đánh thêm 1 đòn y hệt
       me.lastCrit = hit.crit;
       if (ok) pop = hit.crit ? `💥 −${dmg}` : `⚔️ −${dmg}`;
       const team = botsBoss(events);
@@ -1562,6 +1637,10 @@
     const record = !G.practice && (!old || value > old.value);
     if (record) p.best[G.bestKey] = { value, at: Date.now(), trail: G.mode === 'speed' ? G.trail.slice(0, 40) : undefined };
     save();
+    // Chặng trên bản đồ Hành trình: chấm sao, rương, nhiệm vụ (js/arena/arena-quest.js tự lưu + cộng xu)
+    const QU = G.force && G.force.quest && global.EduArenaQuest;
+    const qWin = G.mode === 'boss' ? bossWin : place === 1 && !(G.mode === 'tug' && !won);
+    const questRes = QU ? QU.onQuizEnd(G.force.quest, { correct: G.correct, total, win: qWin }) : null;
     try {
       global.EduGamification && global.EduGamification.recordGameSession(G.practice ? 'arena-practice' : 'arena-' + G.mode, {
         score: total ? Math.round((G.correct / total) * 100) : 0, scoreType: 'percent', accuracy: total ? Math.round((G.correct / total) * 100) : 0,
@@ -1611,7 +1690,11 @@
     const rv = $('arReview');
     rv.hidden = !wrong.length;
     rv.open = true; // mở sẵn để em thấy xấp thẻ lật ôn
-    const booked = toBook(nickName(), G.log, (G.practice ? 'Đấu trường · Luyện câu sai' : 'Đấu trường · ' + (SRC.title || '')));
+    const booked = toBook(nickName(), G.log, (G.practice ? 'Đấu trường · Luyện câu sai' : 'Đấu trường · ' + ((G.force ? G.force.title : SRC.title) || '')), G.force && G.force.questions);
+    const qBox = $('arQuestEnd');
+    qBox.hidden = !questRes;
+    qBox.innerHTML = questRes ? global.EduArenaQuest.resultHtml(questRes) : '';
+    $('arToMap').hidden = !G.force;
     rv.innerHTML = reviewHtml(wrong);
     $('arBookNote').innerHTML = bookNoteHtml(booked);
     paintPracticeBtn($('arPractice'), wrong.length);
@@ -1622,6 +1705,7 @@
     sfx(win ? 'win' : G.practice || place <= 3 ? 'match' : 'lose');
     $('arGame').classList.remove('is-fever');
     celebrate(win ? 1 : G.practice ? 0 : place);
+    if (questRes) global.EduArenaQuest.animateResult(qBox, questRes);
     G.phase = 'end';
   }
 
@@ -1640,11 +1724,11 @@
    * Câu bộ ngân hàng: lưu nguyên câu gốc (tra theo uid) để ôn ở trang chủ y như bài làm; còn lại dựng câu chọn 1.
    * log: [{ q: câu Đấu trường, ok }]. Trả { added, up, mastered }.
    */
-  function toBook(name, log, src) {
+  function toBook(name, log, src, pool) {
     const W = global.EduWrongbook;
     const nm = String(name || '').trim();
     if (!W || !nm || nm === 'Em' || !log || !log.length) return null;
-    const raw = new Map((SRC.questions || []).filter((q) => q && q.uid && q.question).map((q) => [q.uid, q]));
+    const raw = new Map((pool || SRC.questions || []).filter((q) => q && q.uid && q.question).map((q) => [q.uid, q]));
     const results = log.map((x) => {
       const c = x.q || {};
       const r = c.uid && raw.get(c.uid);
@@ -1704,8 +1788,16 @@
     if (CD) CD.close();
     liveStop();
     $('arGame').classList.remove('is-tense', 'is-climax');
+    const fromMap = !!G.force;
     G = null;
+    if (fromMap) toMap(); else show('arHome');
+  }
+  /** Về bản đồ Hành trình IC3 (vai "minigame"), vẽ lại sao. */
+  function toMap() {
+    setRole('minigame', true);
     show('arHome');
+    refreshWallet();
+    if (global.EduArenaQuest) global.EduArenaQuest.paint(true);
   }
 
   // ============================================================
@@ -1736,7 +1828,8 @@
   $('arAnswers').addEventListener('click', (e) => { const b = e.target.closest('.ar-ans[data-k]'); if (b) answer(+b.dataset.k); });
   $('arPowers').addEventListener('click', (e) => { const b = e.target.closest('[data-pw]'); if (b) usePower(+b.dataset.pw); });
   $('arQuit').addEventListener('click', quit);
-  $('arAgain').addEventListener('click', () => start());
+  $('arAgain').addEventListener('click', () => start(null, G && G.force));
+  $('arToMap').addEventListener('click', toMap);
   $('arPractice').addEventListener('click', () => { if (G) practice(G.log); });
   $('arSound').addEventListener('click', () => {
     if (!global.EduSFX) return;
@@ -1767,7 +1860,7 @@
       setNick, role, setRole, setInvite, effMode,
       /** Luyện câu sai: reviewHtml(wrong) vẽ danh sách, practice(log) vào lượt luyện. */
       reviewHtml, paintPracticeBtn, practice, kinds, toBook, bookNoteHtml, ropeHtml, addDaily, dailyStat, celebrate,
-      nickName, avatar: () => avatarOf(profile()),
+      nickName, avatar: () => avatarOf(profile()), playQuest, toMap, MODE_LABEL, rememberDeck,
       /** Bộ câu đang chọn ở màn chọn: { questions, key, title } (questions null = đang tải). */
       deckSource: () => ({ questions: SRC.questions, key: SRC.key, title: SRC.title || '' }),
       inGame: () => !!G && G.phase !== 'end' && !$('arGame').hidden,

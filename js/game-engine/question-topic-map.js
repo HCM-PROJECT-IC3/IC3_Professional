@@ -1,8 +1,8 @@
 /* ============================================================
    js/game-engine/question-topic-map.js
    Bảng ánh xạ: tác nhân/lá chắn trong Cyber Defense → chủ đề IC3
-   thật (yêu cầu gốc mục 8: "question → topic → enemy → defender →
-   game"). Hạ tầng cho Battle Quiz / Cyber Detective (Phase 6-7) —
+   thật ("question → topic → enemy → defender →
+   game"). Hạ tầng cho Battle Quiz / Cyber Detective —
    CHƯA có game nào gọi module này.
 
    QUAN TRỌNG — không phát minh taxonomy mới: 7 CANONICAL_TOPICS bên

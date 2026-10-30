@@ -19,25 +19,7 @@
 <button type="button" class="theme-toggle-quick" id="themeToggleQuick" title="Chuyển đổi sáng/tối"></button>
 <script src="js/theme-toggle-quick.js"></script>
 
-  <!-- Trang này được nhúng qua modal (js/game-modal.js), cùng pattern với
-       sort-game.html — chỉ chứa đúng 1 mini-game độc lập, không đụng vào
-       quiz-engine.js / gamification.js (chỉ ĐỌC XP qua EduGamification
-       giống sort-game.js).
-
-       CƠ CHẾ — "Mario vượt màn" + "Flappy Bird":
-         • Bay (vỗ cánh chống trọng lực) né cột ống như Flappy Bird.
-         • Thế giới chia thành 5 MÀN cố định (không phải vô hạn) — mỗi
-           màn có số cột ống tăng dần, kết thúc bằng 1 CỘT CỜ như Mario:
-           chạm cờ = qua màn, hiện bảng tổng kết + nút "Màn tiếp theo".
-         • Giữa mỗi màn có 1 "cổng câu hỏi" (khối ?) — chạm vào sẽ DỪNG
-           game và hiện 1 câu hỏi trắc nghiệm IC3 (lấy ngẫu nhiên từ
-           data/ic3/minitests/, có fallback câu hỏi cục bộ nếu không tải
-           được JSON — ví dụ khi mở file trực tiếp không qua server).
-           Trả lời đúng = +điểm + khiên bất tử tạm thời; trả lời sai = mất
-           1 mạng.
-         • 3 mạng (trái tim) — va cột ống/trần/đất mất 1 mạng, hết mạng =
-           Game Over.
-       Toàn bộ logic khai báo trong js/mario-flappy.js. -->
+  <!-- Chim Vượt Ải: bay né cột qua 5 màn, mỗi màn có 1 cổng câu hỏi và cột cờ cuối màn. Nhúng qua js/game-modal.js, chỉ đọc XP. -->
 
   <div class="mf-wrap">
     <div class="mf-header">

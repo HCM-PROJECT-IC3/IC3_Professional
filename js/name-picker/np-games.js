@@ -294,7 +294,7 @@
   // ============================================================
   const PLAY = {};
 
-  // 🥚 Trộm trứng — gà mẹ ngủ, các bạn lén lấy trứng, gà thức dậy rượt
+  // Trộm trứng — gà mẹ ngủ, các bạn lén lấy trứng, gà thức dậy rượt
   PLAY.egg = async (items, plan, D) => {
     const pos = scatter(items.length, 340, 385, 975, 585);
     const list = kids(items, pos);
@@ -343,7 +343,7 @@
     if (t > .95 && !plan.saidB) { plan.saidB = true; say(d, 'Ơ... bị vượt rồi!', 1200, 'hot'); sfx('wrong'); }
   }
 
-  // 🏁 Đường đua — mỗi bạn 1 làn, đổi người dẫn đầu, người được gọi về nhất
+  // Đường đua — mỗi bạn 1 làn, đổi người dẫn đầu, người được gọi về nhất
   PLAY.race = async (items, plan, D) => {
     const n = items.length, top = 86, laneH = 500 / n;
     const w = Math.max(18, Math.min(44, laneH * .8));
@@ -381,7 +381,7 @@
     sfx('combo');
   };
 
-  // 🎣 Câu cá — cá bơi, lưỡi câu thả xuống, cá cắn hụt, con cuối bị kéo lên
+  // Câu cá — cá bơi, lưỡi câu thả xuống, cá cắn hụt, con cuối bị kéo lên
   PLAY.fish = async (items, plan, D) => {
     const pos = scatter(items.length, 130, 230, 880, 520);
     const list = items.map((it, k) => sprite(A.fish(A.FUN[it.idx % A.FUN.length]), pos[k].x, pos[k].y, { w: 70, h: 44, tag: it.label, cls: 'np-fish-sp', data: it }));
@@ -420,7 +420,7 @@
     });
   };
 
-  // 🎈 Bóng bay — chim mổ nổ từng quả, quả cuối cùng còn lại
+  // Bóng bay — chim mổ nổ từng quả, quả cuối cùng còn lại
   PLAY.balloon = async (items, plan, D) => {
     const pos = scatter(items.length, 70, 140, 930, 470);
     const bw = items.length <= 20 ? 80 : 56;
@@ -465,7 +465,7 @@
     sfx('combo');
   };
 
-  // 🦖 Khủng long — các bạn cầm bánh, khủng long đi ngửi, ăn mất bánh của 1 bạn
+  // Khủng long — các bạn cầm bánh, khủng long đi ngửi, ăn mất bánh của 1 bạn
   PLAY.dino = async (items, plan, D) => {
     const n = items.length, cols = Math.min(8, Math.ceil(Math.sqrt(n * 2.2))), rows = Math.ceil(n / cols);
     const pos = items.map((_, k) => ({ x: 130 + (k % cols + .5) * (820 / cols), y: 330 + (Math.floor(k / cols) + 1) * (250 / rows) }));
@@ -493,7 +493,7 @@
     });
   };
 
-  // 🚀 Tên lửa — phóng cùng lúc, chiếc nào chạm Mặt Trăng trước
+  // Tên lửa — phóng cùng lúc, chiếc nào chạm Mặt Trăng trước
   PLAY.rocket = async (items, plan, D) => {
     const n = items.length, cw = 940 / n, w = Math.max(28, Math.min(58, cw * .82));
     const list = items.map((it, k) => sprite(A.rocket(A.FUN[it.idx % A.FUN.length]), 30 + cw * (k + .5), 540, { w, h: w * 1.86, tag: it.label, cls: 'np-rocket-sp' + (k % 2 ? ' is-alt' : ''), data: it }));
@@ -528,7 +528,7 @@
     sfx('combo');
   };
 
-  // 🔦 Đèn pin — lớp học tắt đèn, vệt sáng đi tìm, bạn bị chiếu thì chạy
+  // Đèn pin — lớp học tắt đèn, vệt sáng đi tìm, bạn bị chiếu thì chạy
   PLAY.light = async (items, plan, D) => {
     const pos = scatter(items.length, 60, 330, 940, 585);
     const list = kids(items, pos);
@@ -562,7 +562,7 @@
     } finally { mo.disconnect(); }
   };
 
-  // 🎁 Hộp quà — các hộp đổi chỗ, mở thử vài hộp trống, hộp cuối có tên
+  // Hộp quà — các hộp đổi chỗ, mở thử vài hộp trống, hộp cuối có tên
   PLAY.gift = async (items, plan, D) => {
     const n = items.length;
     const pos = scatter(n, 90, 170, 910, 520);
@@ -605,7 +605,7 @@
     w.el.classList.add('is-win');
   };
 
-  // 🟥 Thẻ đỏ — các bạn chạy quanh sân, trọng tài rút thẻ vàng (hụt) rồi thẻ đỏ
+  // Thẻ đỏ — các bạn chạy quanh sân, trọng tài rút thẻ vàng (hụt) rồi thẻ đỏ
   PLAY.card = async (items, plan, D) => {
     const pos = scatter(items.length, 120, 230, 880, 560);
     const list = kids(items, pos);
@@ -631,7 +631,7 @@
     });
   };
 
-  // 🛸 UFO — các bạn chạy trên vỉa hè, đĩa bay chiếu tia hút thử rồi bắt cóc 1 bạn
+  // UFO — các bạn chạy trên vỉa hè, đĩa bay chiếu tia hút thử rồi bắt cóc 1 bạn
   PLAY.ufo = async (items, plan, D) => {
     const big = items.length > CROWD;
     const pos = scatter(items.length, 40, 385, 960, big ? 585 : 468);
@@ -658,7 +658,7 @@
     });
   };
 
-  // 🔮 Đua bi (kiểu "marble race" đang hot trên mạng xã hội) — mỗi bạn 1 viên bi; trộn trong phễu rồi thả xuống
+  // Đua bi (kiểu "marble race" đang hot trên mạng xã hội) — mỗi bạn 1 viên bi; trộn trong phễu rồi thả xuống
   // đường ván zigzag 4 dốc đầy bẫy: cối xay hất ngược, bệ tăng tốc, MÁY TRỘN đảo thứ tự, LÒ XO tung bi lên trời,
   // BẪY SẬP rơi xuống ống hút về lại đầu dốc. Gần đích chạy chậm + máy quay zoom theo bi dẫn đầu, chụp ảnh về đích.
   // Cả trận được MÔ PHỎNG TRƯỚC theo đúng luật đường đua (mbSim), chọn trận kịch tính nhất trong vài lần thử,

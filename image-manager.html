@@ -24,10 +24,7 @@
   <button type="button" class="btn btn-ghost btn-sm" id="logoutBtn">Đăng xuất</button>
   <button type="button" class="theme-toggle" id="themeToggle" title="Chuyển đổi sáng/tối"></button>
   <button type="button" class="btn btn-ghost btn-sm" id="backupBtn"><i class="fa-solid fa-download" aria-hidden="true"></i> Sao lưu JSON</button>
-  <!-- Upload 1 file JSON (bản sao lưu đã sửa offline, bản nháp tải về,
-       hoặc 1 file data/ic3/<cat>__<lvl>.json lẻ) để THAY nội dung các khối đó (bản nháp) —
-       xem js/image-manager.js § UPLOAD JSON. input file ẩn, bấm nút mới
-       mở hộp thoại chọn file (mẫu chuẩn: click nút proxy click input). -->
+  <!-- Tải lên file JSON (bản sao lưu, bản nháp hoặc 1 file data/ic3/<cat>__<lvl>.json) để thay các khối tương ứng — js/image-manager.js. -->
   <input type="file" id="uploadJsonInput" accept="application/json,.json" hidden>
   <button type="button" class="btn btn-ghost btn-sm" id="uploadJsonBtn"><i class="fa-solid fa-upload" aria-hidden="true"></i> Tải JSON cập nhật</button>
   <button type="button" class="btn btn-primary btn-sm" id="exportStaticBtn"><i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i> Đẩy thay đổi cho học sinh</button>
@@ -43,7 +40,7 @@
     Việc đẩy đi qua Apps Script (token GitHub do admin cài 1 lần trong Script Properties của Apps Script,
     không cần dán vào trình duyệt); trang tải bản trên web (0 lượt Apps Script), riêng 15 phút sau khi đẩy thì tải thẳng từ GitHub để thấy ngay bản vừa đẩy.
   </div>
-  <div id="loadState" class="loadbar">⏳ Đang tải ngân hàng câu hỏi (data/ic3)…</div>
+  <div id="loadState" class="loadbar">Đang tải ngân hàng câu hỏi (data/ic3)…</div>
 
   <div id="app" class="hidden">
     <div class="stats">
@@ -85,10 +82,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
-<!-- QUAN TRỌNG: khai báo EDU_ALLOWED_ROLES TRƯỚC auth-guard.js (đúng quy
-     ước của js/auth-guard.js) — trang này chỉ dành cho Admin (chặn ở tầng
-     trang, không chỉ ẩn link ở sidebar, để đúng nguyên tắc client-side RBAC
-     phải đi kèm chặn truy cập trực tiếp bằng URL, xem js/core/rbac.js). -->
+<!-- Chỉ Admin. Khai báo trước auth-guard.js để chặn cả khi mở thẳng bằng URL. -->
 <script>window.EDU_ALLOWED_ROLES = ['admin'];</script>
 <script src="js/firebase-config.js"></script>
 <script src="js/auth.js"></script>
@@ -97,7 +91,7 @@
 <script src="js/services/data-cache-service.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <!-- Đẩy data/ic3/*.json + ảnh lên GitHub QUA APPS SCRIPT (token GitHub nằm ở Apps Script,
-     không ở trình duyệt) — xem nút "📤 Xuất ra data/ic3 (đồng bộ học sinh)". -->
+     không ở trình duyệt) — xem nút "Xuất ra data/ic3 (đồng bộ học sinh)". -->
 <script src="js/backend-config.js"></script>
 <script src="js/services/backend-version-check.js"></script>
 <script src="js/services/apps-script-client.js"></script>

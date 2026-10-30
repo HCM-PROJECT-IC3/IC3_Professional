@@ -24,8 +24,8 @@
 
   const ROLES = Object.freeze({
     ADMIN: 'admin',
-    COORDINATOR: 'coordinator',                   // 🧭 Điều phối đào tạo — roster/điểm số/điểm danh học sinh
-    TEACHING_COORDINATOR: 'teaching_coordinator',  // 🚗 Điều phối giáo viên — lịch giảng dạy/báo cáo/hỗ trợ xăng xe
+    COORDINATOR: 'coordinator',                   // Điều phối đào tạo — roster/điểm số/điểm danh học sinh
+    TEACHING_COORDINATOR: 'teaching_coordinator',  // Điều phối giáo viên — lịch giảng dạy/báo cáo/hỗ trợ xăng xe
     TEACHER: 'teacher',
     STUDENT: 'student',
   });

@@ -1,6 +1,6 @@
 /* ============================================================
    js/coordinator/charts.js
-   Vẽ 6 loại biểu đồ cho Coordinator Dashboard (Commit #4):
+   Vẽ 6 loại biểu đồ cho Coordinator Dashboard:
    Bar, Line, Pie, Radar (dùng Chart.js — đã có sẵn qua CDN trong
    ic3-dashboard.html/dashboard.js nên dùng lại đúng cách cũ) +
    Heatmap, Progress (tự vẽ bằng DOM/CSS, KHÔNG cần thêm plugin

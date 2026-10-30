@@ -1,10 +1,10 @@
 /* ============================================================
    js/export/excel-exporter.js
-   Engine xuất Excel (Commit #6) cho bảng "Danh sách học sinh" ở
+   Engine xuất Excel cho bảng "Danh sách học sinh" ở
    Coordinator Dashboard & Teacher Dashboard.
 
-   GHI CHÚ KỸ THUẬT (khác 1 chữ so với LMAP-ARCHITECTURE.md):
-   Tài liệu gốc ghi "engine SheetJS". Khi triển khai thật, SheetJS bản
+   Ghi chú kỹ thuật:
+   Kế hoạch ban đầu dùng SheetJS. Khi triển khai thật, SheetJS bản
    miễn phí (js-xlsx Community) KHÔNG ghi được style/tô màu/conditional
    formatting khi xuất file .xlsx (chỉ đọc được, không ghi được — giới
    hạn đã biết của bản Community, xem sheetjs.com/pro để so sánh). Vì

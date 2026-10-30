@@ -337,7 +337,7 @@ function renderEditor() {
   wrap.addEventListener('mousedown', onCanvasMouseDownForAdd);
 
   img.addEventListener('error', () => {
-    wrap.innerHTML = `<div class="no-image-placeholder">🖼️ Không tải được ảnh <b>${escHtml(q.image_file || q.imageUrl || '')}</b><br><span class="note">Kiểm tra file có trong thư mục img/ không, hoặc bấm "Nạp thư mục ảnh (img/)".</span></div>`;
+    wrap.innerHTML = `<div class="no-image-placeholder"><i class="fa-solid fa-image" aria-hidden="true"></i> Không tải được ảnh <b>${escHtml(q.image_file || q.imageUrl || '')}</b><br><span class="note">Kiểm tra file có trong thư mục img/ không, hoặc bấm "Nạp thư mục ảnh (img/)".</span></div>`;
   });
 }
 
@@ -590,7 +590,7 @@ function renderRightPanel() {
   }
 
   html += `<div class="panel-title">Tất cả vùng (${areas.length})</div>
-  <button class="btn ${state.addMode ? 'primary' : ''}" id="btnAddArea" style="width:100%;margin-bottom:.75rem;">${state.addMode ? '✏️ Đang vẽ — kéo trên ảnh…' : '+ Thêm vùng mới'}</button>
+  <button class="btn ${state.addMode ? 'primary' : ''}" id="btnAddArea" style="width:100%;margin-bottom:.75rem;">${state.addMode ? 'Đang vẽ — kéo trên ảnh…' : '+ Thêm vùng mới'}</button>
   <div class="area-list">`;
   areas.forEach(a => {
     const dotColor = a.id === state.selectedAreaId ? 'var(--purple)' : (a.correct ? 'var(--teal)' : 'var(--orange)');
@@ -603,7 +603,7 @@ function renderRightPanel() {
   });
   html += `</div>
   <hr class="sep">
-  <div class="note">💡 Vị trí lưu theo % kích thước ảnh — khớp đúng với cách trang quiz hiển thị (ảnh co giãn 100% chiều rộng khung chứa, không bị vỡ hình hay lệch vị trí ở bất kỳ kích thước màn hình nào). Kéo thanh 📱↔🖥️ phía trên ảnh để thử các độ rộng khác nhau và kiểm tra vùng bấm luôn khớp đúng icon/nút trong ảnh.</div>`;
+  <div class="note"><i class="fa-solid fa-lightbulb" aria-hidden="true"></i> Vị trí lưu theo % kích thước ảnh — khớp đúng với cách trang quiz hiển thị (ảnh co giãn 100% chiều rộng khung chứa, không bị vỡ hình hay lệch vị trí ở bất kỳ kích thước màn hình nào). Kéo thanh 📱↔🖥️ phía trên ảnh để thử các độ rộng khác nhau và kiểm tra vùng bấm luôn khớp đúng icon/nút trong ảnh.</div>`;
 
   els.rightPanel.innerHTML = html;
 

@@ -208,7 +208,7 @@ body.pz-body {
 }
 .pz-toast.show { opacity: 1; transform: translate(-50%, 0); }
 
-/* ── (Phase 9) Panel nâng cấp lá chắn ── */
+/* ── Panel nâng cấp lá chắn ── */
 .pz-upgrade-panel {
   position: absolute;
   top: 12px;

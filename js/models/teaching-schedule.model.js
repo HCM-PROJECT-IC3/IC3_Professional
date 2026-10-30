@@ -37,7 +37,7 @@
      mọi nơi đọc đều coi thiếu = mảng rỗng.
      periods[i] = MÃ LỚP đang dạy tiết i+1 (chuỗi, vd "5/1"), '' nếu
      không dạy tiết đó — gõ trực tiếp, không còn chỉ tích chọn có/không
-     (đã thử bản chỉ tích chọn, người dùng phản hồi cần biết ngay đang
+     (đã thử bản chỉ tích chọn, cần biết ngay đang
      dạy lớp nào ngay tại đây, không muốn phải mở riêng tab "TKB lớp").
      Dữ liệu CŨ (giai đoạn chỉ tích chọn) có thể vẫn là boolean true —
      mọi nơi đọc periods chỉ nên dùng "truthy" (!!p) khi ĐẾM số tiết, và
@@ -80,7 +80,7 @@
   }
 
   // Dấu nối dùng khi 1 buổi PHÁT SINH dạy ở NHIỀU TRƯỜNG khác nhau (vd tiết
-  // 1-2 trường A, tiết 3-5 trường B — xem tab "🗓️ TKB lớp", nơi mỗi tiết
+  // 1-2 trường A, tiết 3-5 trường B — xem tab "TKB lớp", nơi mỗi tiết
   // giữ riêng tên trường) — field `location` (vốn chỉ 1 trường/buổi) khi đó
   // được TỰ ĐỘNG đồng bộ ngược thành "Trường A + Trường B" (xem
   // js/teaching-timetable.js!syncScheduleLocationsFromTimetable(), chạy mỗi
@@ -108,7 +108,7 @@
   }
 
   /** Mã lớp THẬT của từng tiết trong 1 buổi, gộp "Lịch tuần" (sess.periods) với
-   * "🗓️ TKB lớp" (ttCells, đọc qua cellOf) — Lịch tuần là NGUỒN GỐC: buổi nào
+   * "TKB lớp" (ttCells, đọc qua cellOf) — Lịch tuần là NGUỒN GỐC: buổi nào
    * đã gõ ít nhất 1 mã lớp ở Lịch tuần thì tiết 1-5 lấy ĐÚNG theo Lịch tuần
    * (tiết để trống = không dạy, dù TKB cũ còn lưu lớp), chỉ tiết > 5 (khung giờ
    * TKB tự thêm) mới lấy từ TKB. Buổi Lịch tuần chưa gõ mã lớp nào → lấy TKB.
@@ -208,7 +208,7 @@
 
   /** Suy ra nhãn hiển thị "dd.mm - dd.mm.yyyy" (Thứ2→Thứ7) từ ngày Thứ 2
    * đầu tuần (chuỗi "YYYY-MM-DD" của input type=date) — dùng khi tạo tuần
-   * mới thủ công (nút "🧬 Tuần mới"), tự gợi ý nhãn giống format của file
+   * mới thủ công (nút "Tuần mới"), tự gợi ý nhãn giống format của file
    * Excel gốc để không phải gõ tay. */
   function labelFromMonday(mondayStr) {
     const d = new Date(`${mondayStr}T00:00:00`);

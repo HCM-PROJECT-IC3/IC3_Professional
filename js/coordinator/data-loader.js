@@ -1,20 +1,18 @@
 /* ============================================================
    js/coordinator/data-loader.js
-   Tầng tải + lọc dữ liệu cho Coordinator Dashboard (Commit #4, siết
-   phạm vi trường ở Commit #7/LMAP).
+   Tầng tải + lọc dữ liệu cho Coordinator Dashboard (chỉ đọc   trong phạm vi trường được gán).
 
    Nguồn dữ liệu:
-   - Roster thật (courses/classes/students_roster) — Commit #1/#3.
+   - Roster thật (courses/classes/students_roster).
    - quiz_results (đã có sẵn, chỉ ĐỌC qua studentResultRepository).
 
    Đối chiếu roster ↔ quiz_results qua TÊN LỚP (class.name ==
-   studentClass trong quiz_results) — đúng nguyên tắc đã ghi trong
-   docs/architecture/LMAP-ARCHITECTURE.md (chưa có mssv bắt buộc lúc
+   studentClass trong quiz_results) (chưa có mssv bắt buộc lúc
    làm bài nên phải đối chiếu qua tên).
 
-   Commit #7/LMAP: students_roster + quiz_results giờ CHỈ tải trong
+   students_roster + quiz_results giờ CHỈ tải trong
    (các) trường ở users/{uid}.schools của Điều phối đào tạo đang đăng
-   nhập (myCoordinatorSchools() trong firestore.rules) — TRƯỚC ĐÂY tải
+   nhập (myCoordinatorSchools() trong firestore.rules) — trước đây tải
    TOÀN BỘ 2 collection này không lọc gì (coordinator mặc định xem hết),
    giờ firestore.rules đã siết theo trường nên 1 query không where(...,
    'in', schools) sẽ bị Firestore TỪ CHỐI HẲN, không tự lọc giúp — xem
@@ -42,7 +40,7 @@
   const ROSTER_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
   // Đợt tối ưu hạn mức 10/2026: trước đây 30 phút → mỗi lần mở dashboard cách nhau
   // >30 phút lại đọc lại CẢ roster (hàng trăm-nghìn lượt). Giờ giữ 12 giờ; nút
-  // "🔄 Làm mới dữ liệu" chỉ đọc lại roster khi bản lưu đã cũ hơn 30 phút (đúng
+  // "Làm mới dữ liệu" chỉ đọc lại roster khi bản lưu đã cũ hơn 30 phút (đúng
   // ngưỡng cũ) — không luồng nào đọc roster nhiều hơn trước.
   const ROSTER_FORCE_MIN_AGE_MS = 30 * 60 * 1000;
 
@@ -78,7 +76,7 @@
 
   /**
    * Tải toàn bộ dữ liệu nền cần cho dashboard — gọi 1 lần lúc khởi động trang
-   * (hoặc lại khi cache hết hạn / bấm "🔄 Làm mới dữ liệu").
+   * (hoặc lại khi cache hết hạn / bấm "Làm mới dữ liệu").
    * @param {Object} profile Hồ sơ Firestore users/{uid} của người đang đăng nhập.
    * @param {Object} [opts]
    * @param {boolean} [opts.forceRefresh] Bỏ qua cache, luôn đọc lại từ Firestore.
@@ -99,7 +97,7 @@
 
     // 2 cache TÁCH RIÊNG, đọc song song — roster (persist=true, 30 phút,
     // sống qua nhiều lần mở tab) và quiz_results (sessionStorage, 3 phút).
-    // forceRefresh bỏ qua CẢ HAI (nút "🔄 Làm mới dữ liệu" phải luôn thấy
+    // forceRefresh bỏ qua CẢ HAI (nút "Làm mới dữ liệu" phải luôn thấy
     // dữ liệu mới nhất tuyệt đối, không chỉ mỗi quiz_results).
     // Roster ít đổi: "Làm mới dữ liệu" KHÔNG đọc lại (cache 30 phút) — chỉ bài nộp mới.
     let rosterBundle = global.EduDataCache
@@ -139,7 +137,7 @@
 
   /**
    * Đổ các option vào 5 dropdown lọc. An toàn khi gọi lại nhiều lần (vd. sau
-   * khi bấm "🔄 Làm mới dữ liệu") — luôn xoá option cũ trước, tránh nhân đôi.
+   * khi bấm "Làm mới dữ liệu") — luôn xoá option cũ trước, tránh nhân đôi.
    */
   function buildFilterOptions(data) {
     const courseSel = document.getElementById('f-course');

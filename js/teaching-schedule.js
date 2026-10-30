@@ -10,10 +10,10 @@
    - teacher (đã được Admin liên kết "Mã NV" ở admin-users.html): dùng CHUNG
      bảng "Tổng quan"/"Thẻ" + modal Sửa lịch với admin, chỉ sửa được đúng hàng
      của mình (canEditTeacherRow). Khối riêng "Lịch của tôi" cũ đã gỡ (29/10/2026).
-   - teaching_coordinator (🚗 Điều phối giáo viên — KHÁC HẲN "coordinator"
-     tức 🧭 Điều phối đào tạo, role đó quản lý roster/điểm số học sinh ở
+   - teaching_coordinator (Điều phối giáo viên — KHÁC HẲN "coordinator"
+     tức Điều phối đào tạo, role đó quản lý roster/điểm số học sinh ở
      roster-manager.html và KHÔNG được vào trang này nữa): dùng CHUNG bảng
-     tổng hợp nhiều GV với admin (📊 Tổng quan/🎴 Thẻ, danh sách 👤 Giáo
+     tổng hợp nhiều GV với admin (Tổng quan/Thẻ, danh sách Giáo
      viên) NHƯNG chỉ XEM — applyCoordinatorReadOnlyUI() gắn class
      "role-teaching-coordinator" lên <body>, css/teaching-schedule.css dùng class
      này ẩn MỌI nút thêm/sửa/xoá (Tuần mới/Nhập Excel/Sửa lịch/Thêm-Sửa-
@@ -34,7 +34,7 @@
   'use strict';
 
   // ---- Nút chuyển sáng/tối (đồng hồ mặt trời neumorphism, xem
-  // .theme-toggle trong css/teaching-schedule.css) — trang này TRƯỚC ĐÂY
+  // .theme-toggle trong css/teaching-schedule.css) — trang này trước đây
   // chưa có, thêm mới đồng bộ với ic3-dashboard.html/index.html. ----
   (function initThemeToggle() {
     const saved = localStorage.getItem('ic3_theme');
@@ -62,9 +62,9 @@
     timetablesByTeacher: {}, // teacherCode -> doc "teaching_timetable" (TKB lớp, CỦA TUẦN ĐANG CHỌN) —
                               // nạp cùng lúc với schedulesByTeacher để "áp dụng TKB lớp vào Lịch tuần":
                               // mỗi chip Sáng/Chiều ở Tổng quan/Thẻ giờ kèm luôn MÃ LỚP đã điền ở tab
-                              // "🗓️ TKB lớp" (xem classCodesFor()), không cần mở riêng tab kia mới biết.
+                              // "TKB lớp" (xem classCodesFor()), không cần mở riêng tab kia mới biết.
     periodTimesByTeacher: {}, // teacherCode -> doc "teaching_timetable_periods" (giờ tiết CỦA GIÁO VIÊN
-                                // đó, áp dụng mọi tuần) — dựng đúng số hàng/giờ giấc cho "📊 Tổng quan"
+                                // đó, áp dụng mọi tuần) — dựng đúng số hàng/giờ giấc cho "Tổng quan"
                                 // dạng lưới theo tiết (renderDashboardView()).
     search: '',
     viewMode: 'dashboard', // 'dashboard' (tổng quan, mặc định) | 'cards' (thẻ từng GV) — chỉ áp dụng admin/coordinator
@@ -72,12 +72,12 @@
   /** true khi tài khoản đăng nhập là giáo viên — giờ dùng CHUNG bảng tổng
    * hợp "Tổng quan"/"Thẻ" nhiều GV với admin (đã được cấp quyền ĐỌC cả đội
    * qua firestore.rules, KHÔNG còn giới hạn chỉ đọc đúng 1 GV như trước) —
-   * chỉ khác ở chỗ nút "✏️ Sửa lịch" bị khoá với hàng KHÔNG PHẢI của chính
+   * chỉ khác ở chỗ nút "Sửa lịch" bị khoá với hàng KHÔNG PHẢI của chính
    * mình (xem canEditTeacherRow()) + ẩn vài nút hành động cấp-đội chỉ
    * Admin mới cần (xem applyRoleUI()). Quyền GHI thật sự vẫn luôn do
    * firestore.rules chốt (chỉ đúng teacherCode == chính mình). */
   function isTeacherRole() { return state.role === 'teacher'; }
-  /** true nếu tài khoản hiện tại được phép bấm "✏️ Sửa lịch" của hàng GV
+  /** true nếu tài khoản hiện tại được phép bấm "Sửa lịch" của hàng GV
    * này — Admin/Điều phối giáo viên (đọc-hết, xem isCoordinatorRole())
    * không có quyền sửa gì ở đây nên trả false luôn (nút vốn đã ẩn hết với
    * role đó); Admin có toàn quyền; giáo viên chỉ đúng hàng của chính mình. */
@@ -86,8 +86,8 @@
     if (isTeacherRole()) return teacherCode === state.myTeacherCode;
     return true;
   }
-  /** true khi tài khoản đăng nhập là "🚗 Điều phối giáo viên"
-   * (teaching_coordinator — KHÁC "coordinator" tức "🧭 Điều phối đào tạo",
+  /** true khi tài khoản đăng nhập là "Điều phối giáo viên"
+   * (teaching_coordinator — KHÁC "coordinator" tức "Điều phối đào tạo",
    * role đó không được vào trang này nữa) — dùng CHUNG bảng tổng hợp
    * nhiều GV với admin (khác hẳn teacher, vốn có khối riêng "Lịch của
    * tôi") nhưng CHỈ XEM, không có nút thêm/sửa/xoá gì — xem
@@ -243,7 +243,7 @@
     hide('syncSharePointBtn');
     hide('exportAllPdfBtn');
     hide('exportAllCongTacBtn');
-    // Tab "👤 Giáo viên" có tới 3 BẢN SAO nút (mỗi tab-panel 1 bản, đồng bộ
+    // Tab "Giáo viên" có tới 3 BẢN SAO nút (mỗi tab-panel 1 bản, đồng bộ
     // theo data-tab — xem HTML) — phải ẩn CẢ 3, chỉ ẩn #teachersTabBtn
     // (bản ở panel-weekly) thì giáo viên vẫn lách được qua bản sao ở
     // panel-timetable/panel-teachers.
@@ -304,7 +304,7 @@
     try {
       state.schedulesByTeacher = {};
       state.timetablesByTeacher = {};
-      // teaching_timetable/teaching_timetable_periods (tab "🗓️ TKB lớp") là
+      // teaching_timetable/teaching_timetable_periods (tab "TKB lớp") là
       // tính năng thêm sau — repo có thể chưa kịp nạp trong 1 số ngữ cảnh
       // test, nên luôn kiểm tra tồn tại trước khi gọi, tránh vỡ cả trang
       // "Lịch tuần" chỉ vì thiếu 1 phần bổ trợ.
@@ -321,7 +321,7 @@
         // Giờ tiết KHÔNG lặp lại theo tuần (áp dụng mọi tuần, xem
         // js/models/teaching-timetable.model.js) — tải trọn collection 1
         // lần (18 giáo viên, rất nhỏ) để dựng đúng số hàng/giờ giấc cho
-        // ma trận "📊 Tổng quan" bên dưới.
+        // ma trận "Tổng quan" bên dưới.
         PT ? cached('periodTimes', () => PT.list()) : Promise.resolve([]),
       ]);
       rows.forEach((r) => { state.schedulesByTeacher[r.teacherCode] = r; });
@@ -334,7 +334,7 @@
     }
   }
 
-  /** Mã lớp đã điền ở tab "🗓️ TKB lớp" cho ĐÚNG giáo viên/Thứ/buổi này (tuần
+  /** Mã lớp đã điền ở tab "TKB lớp" cho ĐÚNG giáo viên/Thứ/buổi này (tuần
    * đang chọn) — "áp dụng thời khoá biểu vào lịch tuần": ghép dữ liệu 2 tab
    * lại để xem "Lịch tuần" là biết luôn đang dạy lớp nào, không cần mở
    * riêng tab TKB. Trả về mảng mã lớp không rỗng (vd ["5/1"], có thể nhiều
@@ -528,7 +528,7 @@
    * chip cho buổi CÓ lịch (bỏ qua buổi trống) — giáo viên bận nhiều thì
    * thấy nhiều chip, rảnh thì thẻ ngắn gọn, không có ô trống chiếm chỗ. */
   /** Mã lớp đọc THẲNG từ chính "Tiết 1-5" của buổi này (giờ là ô nhập chữ,
-   * không còn chỉ tích chọn) — gộp với mã lớp lấy từ tab "🗓️ TKB lớp"
+   * không còn chỉ tích chọn) — gộp với mã lớp lấy từ tab "TKB lớp"
    * (tham số classCodes) để dù điền ở bên nào cũng hiện ra đủ, không sót. */
   function ownPeriodClassCodes(sess) {
     if (!sess || !Array.isArray(sess.periods)) return [];
@@ -539,7 +539,7 @@
     return out;
   }
 
-  /** Chip lịch — CẤU TRÚC NHIỀU DÒNG giống hệt cách tab "🗓️ TKB lớp" trình
+  /** Chip lịch — CẤU TRÚC NHIỀU DÒNG giống hệt cách tab "TKB lớp" trình
    * bày (mỗi ô: Mã lớp trên/Trường dưới, nhãn rõ ràng), thay vì nhồi hết
    * "Loại hình · mã lớp" vào 1 dòng như bản trước — nhìn 1 lần thấy đủ cả
    * 3 lớp thông tin (loại hình / mã lớp / trường) mà không cần hover. */
@@ -570,7 +570,7 @@
     return scheduleChip(d, sess, classCodes) || `<span class="tc-chip-off">T${d} —</span>`;
   }
 
-  // Chuyển "📊 Tổng quan" ⇄ "🎴 Thẻ" — điều phối đào tạo cần thấy CẢ ĐỘI
+  // Chuyển "Tổng quan" ⇄ "Thẻ" — điều phối đào tạo cần thấy CẢ ĐỘI
   // cùng lúc (tổng quan) hoặc đọc/sửa chi tiết TỪNG giáo viên (thẻ).
   document.getElementById('viewToggle')?.addEventListener('click', (e) => {
     const btn = e.target.closest('.view-toggle-btn');
@@ -688,7 +688,7 @@
     patchScheduleAvatars();
   }
 
-  // TRƯỚC ĐÂY hiện viết tắt (vd "Chính", "TG", "DG"...) kèm 1 bảng chú
+  // trước đây hiện viết tắt (vd "Chính", "TG", "DG"...) kèm 1 bảng chú
   // thích riêng bên dưới để tra "viết tắt = tên đầy đủ" — người dùng phản
   // hồi cứ phải tra đi tra lại rất mất công. Đổi sang hiện NGUYÊN VĂN tên
   // loại hình đầy đủ ngay trong chip (chip đã đủ rộng vì nằm cả hàng
@@ -701,7 +701,7 @@
   const NON_PERIOD_TYPES = new Set(['Làm việc tại cty', 'WFH', 'Soạn bài', 'Nghỉ phép/ lễ', 'Khám SK']);
 
   /** Mã lớp CỦA ĐÚNG 1 TIẾT (không phải cả buổi) — ưu tiên dữ liệu đã điền
-   * ở tab "🗓️ TKB lớp" (nguồn chi tiết nhất theo từng tiết), nếu trống thì
+   * ở tab "TKB lớp" (nguồn chi tiết nhất theo từng tiết), nếu trống thì
    * lấy từ chính "Tiết {n}" của tab Lịch tuần (đã cho gõ mã lớp trực tiếp). */
   function periodValueAt(teacherCode, day, thu, sessionKey, tietIdx) {
     return sessionPeriods(teacherCode, day, thu, sessionKey)[tietIdx] || '';
@@ -715,7 +715,7 @@
     return M.effectivePeriods(day && day[sessionKey], ttCells, TTM ? TTM.cellOf : null);
   }
 
-  /** 1 ô Thứ×Tiết trong ma trận "📊 Tổng quan" — CHỈ hiện đúng nội dung
+  /** 1 ô Thứ×Tiết trong ma trận "Tổng quan" — CHỈ hiện đúng nội dung
    * của TIẾT ĐÓ (mã lớp nếu có dạy), Buổi/Thời gian đã có cột riêng bên
    * trái nên không cần nhắc lại trong từng ô nữa (khác bản trước dồn cả
    * Buổi+Loại hình+Mã lớp+Trường vào 1 ô, dễ vỡ dòng). */
@@ -737,9 +737,9 @@
     return '<span class="dash-chip-off">—</span>';
   }
 
-  /** "📊 Tổng quan" — MỖI GIÁO VIÊN TÁCH THÀNH NHIỀU HÀNG, 1 hàng/tiết,
-   * đúng số tiết + giờ giấc lấy từ khung giờ đã cấu hình ở tab "🗓️ TKB
-   * lớp" (⏱️ Giờ tiết — mặc định 5 tiết Sáng/4 tiết Chiều nếu GV chưa tự
+  /** "Tổng quan" — MỖI GIÁO VIÊN TÁCH THÀNH NHIỀU HÀNG, 1 hàng/tiết,
+   * đúng số tiết + giờ giấc lấy từ khung giờ đã cấu hình ở tab "TKB
+   * lớp" (Giờ tiết — mặc định 5 tiết Sáng/4 tiết Chiều nếu GV chưa tự
    * cấu hình riêng). Cột "Buổi" (tô cam/xanh lá như TKB) ghim ngay cạnh
    * cột tên — mỗi chip trong ô đã tự hiện nguyên văn loại hình + mã lớp
    * nên KHÔNG cần thêm cột "Thời gian"/bảng chú thích màu riêng nữa (đã
@@ -760,7 +760,7 @@
         // không (không phải là ranh giới giữa 2 GV khác nhau).
         const teacherStartClass = tIdx > 0 ? ' dash-teacher-start' : '';
         const days = daysOf(t);
-        // GV đã điền mã lớp bên tab "🗓️ TKB lớp" (dù chưa chọn "loại hình
+        // GV đã điền mã lớp bên tab "TKB lớp" (dù chưa chọn "loại hình
         // phụ trách" bên đây) thì KHÔNG tính là "chưa có lịch" nữa — 2 tab
         // giờ đã liên thông dữ liệu, tránh báo sai "thiếu" trong khi thật ra
         // đã có TKB.
@@ -835,7 +835,7 @@
         blocks.forEach((block, blockIdx) => {
           // Thứ nào có loại hình KHÔNG tách theo tiết (Soạn bài/WFH/Cty/
           // Nghỉ phép.../Khám SK — NON_PERIOD_TYPES) VÀ không có mã lớp gõ
-          // ở tiết nào — TRƯỚC ĐÂY chỉ hiện chip ở đúng tiết 1, các tiết
+          // ở tiết nào — trước đây chỉ hiện chip ở đúng tiết 1, các tiết
           // 2-5 để trống "—" trông như còn dư tiết/mất dữ liệu, dù thực ra
           // loại hình đó áp dụng CẢ buổi. Giờ GỘP các Thứ đó thành 1 ô
           // rowSpan xuyên suốt cả buổi (giống ô "Buổi") — Thứ nào có mã lớp
@@ -885,7 +885,7 @@
     // (viền dưới, xem .dash-matrix th.today-col trong CSS) — trước đây còn
     // gắn class lên TỪNG Ô thân cột để tô nền tím, nhưng nền đó đè lên
     // đúng chỗ màu vàng/xanh lá theo buổi, tạo mảng trắng/tím lạc tông
-    // giữa cột (phản hồi người dùng) — bỏ hẳn, 1 dấu hiệu ở header là đủ.
+    // giữa cột — bỏ hẳn, 1 dấu hiệu ở header là đủ.
     const isCurrentWeek = state.currentWeekKey === M.todayWeekKey();
     const jsDow = new Date().getDay(); // 0=CN,1=T2,...6=T7
     const todayDayNum = isCurrentWeek && jsDow >= 1 && jsDow <= 6 ? jsDow + 1 : null;
@@ -894,7 +894,7 @@
     });
   }
 
-  /** Xuất PDF lịch tuần của ĐÚNG 1 giáo viên (nút "🖨️ PDF" từng hàng) —
+  /** Xuất PDF lịch tuần của ĐÚNG 1 giáo viên (nút "PDF" từng hàng) —
    * TỰ ĐỘNG thêm 1 trang phụ "minh chứng tuần cuối tháng" nếu có (xem
    * computeExtraWeekEvidence()), để khớp đúng khoảng ngày "Phiếu công tác"
    * đã gộp (tuần hiện tại + phần còn lại của tháng). */
@@ -920,7 +920,7 @@
   }
 
   /** Khoảng ngày + weekKey của "tuần cuối tháng" (đoạn 2 trong
-   * defaultCongTacRanges(), xem đó — cùng quy tắc gộp với "📋 Phiếu công
+   * defaultCongTacRanges(), xem đó — cùng quy tắc gộp với "Phiếu công
    * tác": tuần đang chọn KHÔNG PHẢI tuần cuối tháng thì phần còn lại của
    * tháng, từ Thứ2 tuần sau đến hết tháng, mới cần minh chứng thêm) — CHỈ
    * trả về khi tuần kế tiếp đó ĐÃ CÓ trong hệ thống (state.weeks, tức đã
@@ -948,10 +948,10 @@
     return clippedDaysForWeek(rawDays, extra.weekKey, [extra.range], M);
   }
 
-  /** Danh sách giáo viên ĐANG HIỂN THỊ ở "🎴 Thẻ"/"📊 Tổng quan" của tuần
+  /** Danh sách giáo viên ĐANG HIỂN THỊ ở "Thẻ"/"Tổng quan" của tuần
    * đang chọn (đã áp đúng bộ lọc tìm kiếm + "chỉ hiện GV chưa có lịch"
    * hiện tại) kèm sẵn `days` — dùng chung cho cả 2 nút xuất PDF hàng loạt
-   * ("🖨️ Xuất PDF tất cả" của Lịch tuần và "📋 Xuất PDF tất cả Phiếu công
+   * ("Xuất PDF tất cả" của Lịch tuần và "Xuất PDF tất cả Phiếu công
    * tác"), tránh lặp lại đúng 1 đoạn lọc ở 2 nơi. */
   function filteredTeachersWithDays() {
     const q = state.search;
@@ -966,7 +966,7 @@
   /** Xuất 1 file PDF DUY NHẤT gồm lịch của TOÀN BỘ giáo viên đang hiển thị
    * (đã áp bộ lọc tìm kiếm/"chỉ hiện GV chưa có lịch" hiện tại) — mỗi giáo
    * viên 1 trang chính + (nếu có, xem computeExtraWeekEvidence()) 1 trang
-   * phụ minh chứng "tuần cuối tháng" — nút "🖨️ Xuất PDF tất cả" trên thanh
+   * phụ minh chứng "tuần cuối tháng" — nút "Xuất PDF tất cả" trên thanh
    * công cụ. */
   async function exportAllPdf() {
     if (!state.currentWeekKey) { toast('Hãy chọn 1 tuần trước.'); return; }
@@ -975,7 +975,7 @@
     if (!list.length) { toast('Không có giáo viên nào để xuất (kiểm tra lại bộ lọc/tìm kiếm).'); return; }
     const week = state.weeks.find((w) => w.id === state.currentWeekKey);
     const weekLabel = week ? (week.label || week.id) : state.currentWeekKey;
-    // TRƯỚC ĐÂY không có try/catch quanh đây — 1 lỗi bất kỳ khi build PDF
+    // trước đây không có try/catch quanh đây — 1 lỗi bất kỳ khi build PDF
     // (dữ liệu 1 giáo viên nào đó lệch dạng...) sẽ throw NGAY TRONG handler
     // click, không có gì báo cho người dùng biết — bấm nút xong không thấy
     // gì xảy ra, dễ hiểu lầm "không xuất được" trong khi thực ra có lỗi cụ
@@ -1011,16 +1011,16 @@
   };
 
   // ------------------------------------------------------------
-  // "📋 Phiếu công tác" — mẫu On_Tap_MOS/Phieu cong tac.doc, tự điền theo
+  // "Phiếu công tác" — mẫu On_Tap_MOS/Phieu cong tac.doc, tự điền theo
   // đúng Lịch tuần. "Mục đích" từng cho chọn Giảng dạy/Ôn Thi qua modal,
-  // nhưng người dùng phản hồi bỏ hẳn lựa chọn đó, cố định luôn "Giảng dạy
+  // nhưng bỏ hẳn lựa chọn đó, cố định luôn "Giảng dạy
   // IC3" (xem hằng số PURPOSE trong js/export/teaching-schedule-cong-tac-pdf.js).
-  // 2 lối vào: nút 📋 trên từng thẻ/hàng ở "📊 Tổng quan"/"🎴 Thẻ" (giáo viên
+  // 2 lối vào: nút trên từng thẻ/hàng ở "Tổng quan"/"Thẻ" (giáo viên
   // chỉ có ở hàng của mình), và admin xuất HÀNG LOẠT mọi giáo viên đang
-  // hiển thị vào 1 file duy nhất ("📋 Xuất PDF tất cả Phiếu công tác").
+  // hiển thị vào 1 file duy nhất ("Xuất PDF tất cả Phiếu công tác").
   //
   // GỘP "TUẦN HIỆN TẠI" + "PHẦN CÒN LẠI CỦA THÁNG" (không phải cả tháng từ
-  // đầu, và KHÔNG qua tháng sau): người dùng phản hồi — giữa tháng làm
+  // đầu, và KHÔNG qua tháng sau): giữa tháng làm
   // phiếu cho tuần vừa dạy xong rồi cuối tháng lại phải làm tiếp cho những
   // ngày còn lại, ra 2 phiếu/2 lần xuất, khá lòng vòng; nhưng gộp NGUYÊN
   // CẢ THÁNG (kể cả các tuần ĐÃ LÀM PHIẾU TỪ TRƯỚC, và lỡ dính qua tận
@@ -1062,7 +1062,7 @@
    * tuần cuối cùng và Thứ7 rơi sang tháng sau); {week2} = Thứ2 tuần KẾ TIẾP
    * → hết ngày cuối tháng.
    * CHỈ gộp thêm week2 khi tuần đang chọn ĐÚNG LÀ TUẦN ÁP CHÓT của tháng
-   * (2 tuần cuối tháng) — người dùng phản hồi: nếu đang ở tuần ĐẦU/GIỮA
+   * (2 tuần cuối tháng) — nếu đang ở tuần ĐẦU/GIỮA
    * tháng (còn ≥ 2 tuần trọn vẹn nữa mới hết tháng) thì KHÔNG được tự gộp
    * thêm phần cuối tháng vào, chỉ xuất đúng 1 tuần đang chọn như bình
    * thường — tránh gộp nhầm/gộp quá xa so với tuần đang xem. Điều kiện:
@@ -1154,7 +1154,7 @@
    * (từ `byWeek`, xem fetchScheduleRowsByWeek()) thành weekEntries cho
    * js/export/teaching-schedule-cong-tac-pdf.js. `draftForCurrentWeek` cho
    * phép ưu tiên bản nháp CHƯA LƯU của "Lịch của tôi" ở tuần đang chọn
-   * (nhất quán với nút "🖨️ Xuất PDF" lịch tuần bên cạnh, luôn xuất đúng
+   * (nhất quán với nút "Xuất PDF" lịch tuần bên cạnh, luôn xuất đúng
    * những gì đang hiển thị trên màn hình). */
   function weekEntriesFromByWeek(byWeek, weekKeys, teacherCode, ranges, draftForCurrentWeek) {
     return weekKeys.map((wk) => {
@@ -1207,7 +1207,7 @@
     if (run) await run(ranges);
   });
 
-  /** Admin/điều phối bấm nút 📋 trên 1 thẻ/hàng giáo viên cụ thể (khác
+  /** Admin/điều phối bấm nút trên 1 thẻ/hàng giáo viên cụ thể (khác
    * "Lịch của tôi" — không có bản nháp đang sửa dở, luôn dùng đúng dữ liệu
    * ĐÃ LƯU trong state.schedulesByTeacher/repository của khoảng ngày đã chọn). */
   function openCongTacModalFor(teacherCode) {
@@ -1227,8 +1227,8 @@
       }
     });
   }
-  /** Nút "📋 Xuất PDF tất cả Phiếu công tác" — cùng bộ lọc GV đang hiển thị
-   * với "🖨️ Xuất PDF tất cả" (Lịch tuần), chỉ khác đầu ra là Phiếu công
+  /** Nút "Xuất PDF tất cả Phiếu công tác" — cùng bộ lọc GV đang hiển thị
+   * với "Xuất PDF tất cả" (Lịch tuần), chỉ khác đầu ra là Phiếu công
    * tác, gộp mọi giáo viên (+ khoảng ngày đã chọn) vào 1 file duy nhất (xem
    * exportMany() trong js/export/teaching-schedule-cong-tac-pdf.js). */
   document.getElementById('exportAllCongTacBtn')?.addEventListener('click', () => {
@@ -1437,7 +1437,7 @@
   });
 
   // ============================================================
-  // TỰ ĐỘNG HOÁ: "🧬 Tuần mới" — tạo tuần kế tiếp trong 1 bước, có thể tự
+  // TỰ ĐỘNG HOÁ: "Tuần mới" — tạo tuần kế tiếp trong 1 bước, có thể tự
   // SAO CHÉP lịch từ 1 tuần đã có sang tuần mới (giáo viên dạy lặp lại lịch
   // theo tuần chỉ cần sửa phần thay đổi thay vì nhập lại từ đầu/qua Excel).
   // ============================================================
@@ -1552,7 +1552,7 @@
    * `periodSchools[i]` = ĐÚNG trường của riêng tiết i (cột nào có mã lớp ở
    * tiết đó thì lấy trường của cột đó) — field `location` gộp
    * ("Trường A + Trường B") không đủ để biết tiết nào ở trường nào, nên
-   * giữ thêm mảng này để tab "🗓️ TKB lớp" tự điền ĐÚNG "Trường" cho từng
+   * giữ thêm mảng này để tab "TKB lớp" tự điền ĐÚNG "Trường" cho từng
    * tiết khi auto-fill (xem applyScheduleAutoFill() ở teaching-timetable.js
    * — trước đây chỉ có `location` gộp nên KHÔNG tự điền được, để trống
    * "Trường" ở mọi tiết của buổi 2-trường, đúng lỗi người dùng gặp: tiết
@@ -1592,7 +1592,7 @@
     // Không tìm thấy hàng tiêu đề "MÃ NV" — KHÔNG hẳn là lỗi, sheet mẫu/ghi
     // chú/hướng dẫn kèm trong file gốc cũng rơi vào đây. reason:'no-header'
     // để modal xác nhận hiện rõ TÊN + LÝ DO thay vì chỉ 1 con số như trước
-    // (người dùng phản hồi không biết "7 Sheet bỏ qua" là sheet nào/vì sao).
+    // (không biết "7 Sheet bỏ qua" là sheet nào/vì sao).
     if (headerRowIdx === -1) return { reason: 'no-header' };
 
     let weekLabel = '';
@@ -1854,7 +1854,7 @@
   /** Dựng 5 ô-tiết {maLop,truong} (đúng schema TeachingTimetable Cell) cho
    * 1 buổi, từ ĐÚNG session đã đọc ở "Lịch tuần" (periods[] + periodSchools[]
    * nếu buổi đó dạy 2 trường, xem mergeSecondarySchoolColumn()) — dùng để tự
-   * điền tab "🗓️ TKB lớp" NGAY LÚC NHẬP EXCEL, khỏi phải mở riêng tab đó rồi
+   * điền tab "TKB lớp" NGAY LÚC NHẬP EXCEL, khỏi phải mở riêng tab đó rồi
    * bấm Lưu thêm 1 lần nữa mới ra đúng "Trường" từng tiết. */
   function sessionToTimetableCells(sess) {
     const periods = sess.periods || [];
@@ -1887,6 +1887,17 @@
     const TT = window.EduModels.TeachingTimetable ? window.EduRepositories.teachingTimetable : null;
     const todo = [...imp.selected].filter((wk) => !imp.existingByWeek.has(wk));
     await Promise.all(todo.map(async (wk) => {
+      // Giáo viên tự nhập: danh sách tuần trên máy có thể cũ (bản đệm tới 30 phút) trong khi đồng
+      // nghiệp vừa tạo đúng tuần này từ cùng file Excel tổ. Ghi "tạo tuần" lên tuần đã có = sửa →
+      // firestore.rules từ chối (chỉ Admin sửa tuần) → hỏng CẢ lượt nhập. Hỏi máy chủ 1 lượt đọc.
+      if (!knownWeekKeys.has(wk) && isSelfImport()) {
+        const week = await window.EduRepositories.teachingWeek.getById(wk);
+        if (week && !state.weeks.some((w) => w.id === wk)) {
+          state.weeks.push(week);
+          state.weeks.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+          knownWeekKeys.add(wk);
+        }
+      }
       if (!knownWeekKeys.has(wk)) { imp.existingByWeek.set(wk, { sched: new Map(), tt: new Map() }); return; }
       if (isSelfImport()) {
         const code = state.myTeacherCode;

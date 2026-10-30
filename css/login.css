@@ -3,7 +3,7 @@
    Dùng chung css/theme.css cho biến màu; file này chỉ chứa
    layout & component riêng của trang login.
 
-   THIẾT KẾ LẠI (theo phản hồi người dùng): nền động (blob trôi nổi pastel,
+   THIẾT KẾ LẠI: nền động (blob trôi nổi pastel,
    TÁI SỬ DỤNG đúng --lobby-bg/--lobby-blob1/2 đã dùng cho index.html để
    đồng bộ thương hiệu, xem css/theme.css) thay cho nền phẳng 1 màu trước
    đây — vừa lấp khoảng trống thị giác quanh thẻ đăng nhập (trước đây nền
@@ -97,9 +97,9 @@ body::before {
   cursor: pointer;
   gap: .55rem;
 }
-/* Logo IIG THẬT (img/iig-logo.png — trước đây chỉ có emoji 🎮 không liên
+/* Logo IIG THẬT (img/iig-logo.png — trước đây chỉ có emoji không liên
    quan gì tới thương hiệu thật) "bồng bềnh" nhẹ, cùng kiểu chuyển động với
-   icon 🚀 ở .lobby-card-title trong style.css (đồng bộ ngôn ngữ animation
+   icon ở .lobby-card-title trong style.css (đồng bộ ngôn ngữ animation
    toàn app). Nền trắng nhỏ + bo góc vì file gốc là ảnh nền trắng, đặt trực
    tiếp lên nền xám neumorphism sẽ thấy viền vuông trắng lộ liễu. */
 .logo-img {
@@ -265,7 +265,7 @@ form:not(.hidden) { animation: formSlideIn .4s cubic-bezier(.16,1,.3,1) both }
 }
 
 /* "Bạn là?" — 4 lựa chọn (Học sinh/Giáo viên/Điều phối đào tạo/Điều phối
-   giáo viên, thêm mới theo yêu cầu) nên chuyển lưới 2×2 thay vì 1 hàng
+   giáo viên) nên chuyển lưới 2×2 thay vì 1 hàng
    ngang (4 ô 1 hàng sẽ quá chật, chữ dài như "Điều phối đào tạo" bị vỡ
    dòng xấu). Kiểu neumorphism: nổi khi chưa chọn, lõm khi active — đồng
    bộ ẩn dụ "bấm nút vật lý" với .mt-mode-btn (style.css)/.btn-ghost. */

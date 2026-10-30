@@ -33,7 +33,7 @@
     /**
      * Học sinh "Đang học" (status active) do ĐÚNG giáo viên `teacherId` (uid
      * tài khoản, không phải mã NV Lịch giảng dạy) phụ trách — dùng cho
-     * teacher-dashboard.html (LMAP, đợt siết quyền theo teacherId): TRƯỚC
+     * teacher-dashboard.html (đợt siết quyền theo teacherId): TRƯỚC
      * ĐÂY trang này lọc theo listBySchools() (cả trường), khiến 1 giáo viên
      * nhìn thấy CẢ học sinh của đồng nghiệp dạy chung trường — đã sửa để
      * chỉ trả về đúng lớp giáo viên này phụ trách, khớp firestore.rules
@@ -47,7 +47,7 @@
 
     /**
      * Học sinh đang học ("active") thuộc 1 trong các trường truyền vào.
-     * Dùng cho teacher-dashboard.html (Commit #6/LMAP) — BẮT BUỘC truyền
+     * Dùng cho teacher-dashboard.html — BẮT BUỘC truyền
      * đúng "schools" đã được Admin gán cho giáo viên (users/{uid}.schools),
      * vì firestore.rules chỉ cho giáo viên đọc document "school" nằm trong
      * danh sách đó; where('in', ...) tối đa 10 giá trị.

@@ -128,6 +128,7 @@
       code: R.makeCode(cryptoRng), mode, deck: mode === 'race' ? C.extendDeck(deck, count * 2, A.rng) : deck.slice(0, count), count, secs: A.prefs.secs,
       maxPlayers: A.prefs.roomMax || 60, title: src.title, setKey: src.key,
     });
+    A.rememberDeck(); // hiện ở "Dùng gần đây" cho lớp sau
     startHosting(room, false);
   }
 
@@ -454,7 +455,7 @@
     A.sfx('drumroll');
     setTimeout(() => { if (H.room !== room) return; A.sfx('win'); if (A.celebrate) A.celebrate(1); else if (global.EduFX) global.EduFX.confetti({ count: 160 }); }, reduced() ? 0 : 2000);
   }
-  /** "🔁 Đấu lại câu sai": cùng mã phòng, cùng kết nối — cả lớp quay về sảnh, chỉ còn các câu vừa có bạn sai. */
+  /** "Đấu lại câu sai": cùng mã phòng, cùng kết nối — cả lớp quay về sảnh, chỉ còn các câu vừa có bạn sai. */
   function hostRematch() {
     const old = H.room;
     if (!old || old.phase !== 'end') return;
@@ -1366,10 +1367,25 @@
   // ============================================================
   // MÀN CHỌN: thẻ "Phòng cả lớp" + sự kiện chung
   // ============================================================
+  /** Thanh dính đáy của giáo viên: tóm tắt phòng sắp tạo + nút tạo — khỏi cuộn xuống cuối trang. */
+  function paintHostBar(mode) {
+    const bar = document.querySelector('.ar-hostbar');
+    if (!bar) return;
+    bar.hidden = mode === 'board'; // Bảng điểm có thẻ riêng, không tạo phòng
+    const src = A.deckSource();
+    const n = C.buildDeck(src.questions || [], A.rng, 0, A.kinds()).length;
+    const count = n ? C.playCount(A.prefs.count, n) : 0;
+    const title = String(src.title || '').split(' › ').slice(-1)[0] || 'Chưa chọn bộ câu';
+    $('arHostSum').innerHTML = `<span><i class="fa-solid fa-book-open" aria-hidden="true"></i> ${A.esc(title)}</span>` +
+      `<span>${A.esc(MODE_LABEL[mode] || MODE_LABEL.speed)}</span><span>${count} câu · ${A.prefs.secs} giây/câu</span>` +
+      `<span><i class="fa-solid fa-users" aria-hidden="true"></i> tối đa ${A.prefs.roomMax || 60} em</span>`;
+    $('arHostQuick').disabled = $('arHostBtn').disabled;
+  }
   function paintHostCard() {
     const mode = A.effMode();
     $('arRoomModeNote').textContent = `Phòng sẽ chơi ${MODE_LABEL[mode] || MODE_LABEL.speed} với bộ câu, số câu và giây mỗi câu đã chọn ở trên.`;
     $('arHostBtn').disabled = !(A.deckSource().questions || []).length || $('arPlay').disabled;
+    paintHostBar(mode);
     document.querySelectorAll('#arRoomMax button').forEach((b) => b.classList.toggle('is-on', +b.dataset.v === (A.prefs.roomMax || 60)));
     const saved = store.get(HOST_KEY, null);
     const box = $('arRoomResume');
@@ -1435,6 +1451,7 @@
 
   function init() {
     $('arHostBtn').addEventListener('click', hostCreate);
+    $('arHostQuick').addEventListener('click', hostCreate);
     // Học sinh: Họ và tên → Mã phòng → Vào phòng (Enter ở ô tên chuyển sang ô mã nếu mã chưa đủ).
     $('arJoinForm').addEventListener('submit', (e) => { e.preventDefault(); playerJoin($('arJoinCode').value); });
     $('arJoinName').addEventListener('keydown', (e) => {

@@ -1,6 +1,6 @@
 /* ============================================================
    js/coordinator/student-table.js
-   Bảng quản lý học sinh ĐẦY ĐỦ cho Coordinator Dashboard (Commit #5).
+   Bảng quản lý học sinh ĐẦY ĐỦ cho Coordinator Dashboard.
    Thay thế 3 danh sách rút gọn (watchlists) bằng 1 bảng chi tiết:
    avatar, MSSV, họ tên, lớp, giáo viên, điểm gần nhất, điểm TB,
    tiến độ học, trạng thái — có tìm kiếm, lọc trạng thái, phân trang.
@@ -8,7 +8,7 @@
    NGUYÊN TẮC: không gọi lại Firestore khi tìm kiếm/lọc/phân trang —
    chỉ lọc trong bộ nhớ trên dữ liệu đã có từ `scoped` (kết quả của
    EduCoordinatorData.applyFilters, xem data-loader.js), đúng tinh
-   thần "bộ lọc 5 chiều không refetch" đã áp dụng ở Commit #4.
+   thần "bộ lọc 5 chiều không refetch" đã áp dụng ở data-loader.js.
 
    Nạp SAU: analytics-service.js, roster.model.js, exam-history.model.js.
    Nạp TRƯỚC: dashboard.js (dashboard.js gọi render() mỗi khi refresh()).
@@ -131,7 +131,7 @@
   }
 
   // ============================================================
-  // EXPORT EXCEL/PDF (Commit #6, #7) — dùng đúng `state.rows`/`state.scoped`
+  // EXPORT EXCEL/PDF — dùng đúng `state.rows`/`state.scoped`
   // hiện có trong bảng (đã áp bộ lọc 5 chiều của dashboard), KHÔNG áp thêm
   // search/status/trang cục bộ của riêng bảng — export toàn bộ tập đang xem.
   // ============================================================
@@ -281,7 +281,7 @@
       state.page += 1;
       renderTable();
     });
-    // Excel/PDF export thật — Commit #6 (js/export/excel-exporter.js) và
+    // Excel/PDF export thật (js/export/excel-exporter.js) và
     // #7 (js/export/pdf-exporter.js). Xuất TOÀN BỘ tập đang xem trên dashboard
     // (đã áp bộ lọc 5 chiều), không bị giới hạn bởi search/trang cục bộ của bảng.
     document.getElementById('exportExcelBtn').addEventListener('click', (e) => handleExportExcel(e.currentTarget));

@@ -1,5 +1,5 @@
 /* ============================================================
-   📊 js/firestore-results.js
+   js/firestore-results.js
    Module ghi kết quả bài thi vào Firestore (collection "quiz_results")
    để phục vụ trang Báo cáo trực quan (ic3-dashboard.html → Báo cáo
    kết quả), dành cho Admin / Giáo viên / Điều phối đào tạo xem.

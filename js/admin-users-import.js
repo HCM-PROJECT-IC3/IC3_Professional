@@ -182,7 +182,7 @@
       `;
     const STATUS_TEXT = {
       pending: 'Sẵn sàng',
-      skip: (r) => `⏭️ ${esc(r.message)}`,
+      skip: (r) => `Bỏ qua: ${esc(r.message)}`,
       ok: 'Đã tạo tài khoản',
       exists: (r) => `${esc(r.message)}`,
       err: (r) => `${esc(r.message)}`,

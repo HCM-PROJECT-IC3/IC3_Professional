@@ -8,7 +8,7 @@
    ZOMBIE_TYPES (js/pz-defense.js) — không bịa tác nhân mới, dùng
    lại icon ảnh (img/pz-defense/zom_*.png) đã có. Câu gợi ý phòng
    thủ sau khi kết luận lấy TRỰC TIẾP từ
-   EduGameEngine.QuestionTopicMap.getWeaknessForEnemy() (Phase 5) —
+   EduGameEngine.QuestionTopicMap.getWeaknessForEnemy() —
    không viết lại nội dung đã có.
 
    Chỉ 6 file CASES bên dưới là nội dung MỚI của riêng game này
@@ -289,7 +289,7 @@
   }
 
   /**
-   * (Phase 3/4/6/7) Ghi 1 lượt chơi vào js/gamification.js §
+   * Ghi 1 lượt chơi vào js/gamification.js §
    * recordGameSession — cùng pattern battle-quiz.js/pz-defense.js. Im
    * lặng bỏ qua nếu thiếu EduGamification hoặc chưa chọn học sinh nào.
    */

@@ -250,7 +250,7 @@ body {
 }
 
 /* ============================================================
-   BẢNG QUẢN LÝ HỌC SINH (đầy đủ) — Commit #5
+   BẢNG QUẢN LÝ HỌC SINH (đầy đủ)
    Tái sử dụng pattern .table-scroll / table / .badge / .avatar-cell
    đã có sẵn trong css/roster-manager.css để đồng nhất giao diện.
    ============================================================ */
@@ -356,7 +356,7 @@ body {
 }
 
 /* ============================================================
-   DRAWER CHI TIẾT HỌC SINH — Commit #5
+   DRAWER CHI TIẾT HỌC SINH
    ============================================================ */
 .detail-overlay {
   display: none;

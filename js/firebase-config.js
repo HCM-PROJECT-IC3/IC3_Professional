@@ -208,7 +208,7 @@
     // Cầu dao chống vòng lặp đọc — xem guardQueries() ở trên.
     readBreaker: { total: () => burstTotal(), max: BURST_MAX_READS, windowMs: BURST_WINDOW_MS },
     // Lộ config ra ngoài để các trang cần tạo tài khoản HÀNG LOẠT (vd
-    // admin-users.html → "📥 Nhập giáo viên từ Excel") có thể khởi tạo
+    // admin-users.html → "Nhập giáo viên từ Excel") có thể khởi tạo
     // THÊM 1 app instance PHỤ (firebase.initializeApp(config, 'ten-khac'))
     // dùng RIÊNG cho createUserWithEmailAndPassword — SDK Compat luôn tự
     // đăng nhập làm user vừa tạo trên CHÍNH app instance gọi hàm đó, nên

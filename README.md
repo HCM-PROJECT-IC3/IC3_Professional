@@ -95,7 +95,7 @@ dashboard theo dõi tiến độ cho điều phối đào tạo/giáo viên.
   là 1 file `.html` độc lập nạp các `<script>` cần dùng trực tiếp.
 - **Firebase** (gói Spark — free tier): Firestore (lưu kết quả thi,
   roster, bài đăng Social...), Authentication (đăng nhập admin/giáo
-  viên và Anonymous Auth cho phòng chơi), App Check.
+  viên; Anonymous Auth cho đường dự phòng Phòng cả lớp). Không dùng App Check.
 - **Chart.js** (biểu đồ dashboard, nạp theo trang cần dùng, không nạp
   toàn site), **jsPDF/ExcelJS/SheetJS** (xuất PDF/Excel, chỉ ở các
   trang cần).
@@ -118,8 +118,7 @@ js/                         Toàn bộ logic — 1 file/tính năng (không bund
   ├─ coordinator/, teacher/  Data loader + dashboard riêng từng vai trò
   ├─ repositories/           Lớp truy cập Firestore dùng chung (CRUD)
   ├─ services/                Cache, analytics, hàng đợi gửi lại khi mất mạng, mã kết quả (result-pack)
-  ├─ exam-engine/, word-engine/, excel-engine/, ppt-engine/
-  │                           Mô phỏng thao tác thực hành theo từng ứng dụng
+  ├─ arena/, name-picker/, so-lop/  Đấu trường, Gọi tên, Điểm danh
   └─ game-*.js                Hạ tầng dùng chung cho mini-game (modal, SFX...)
 css/                        1 stylesheet/trang + css/theme.css (token dùng chung)
 data/ic3/                   Ngân hàng câu hỏi (JSON tĩnh, tách nhỏ theo chủ đề)
@@ -161,17 +160,17 @@ Cấu hình Firebase (project `data-ic3`) đã có sẵn trong
 Nếu fork dự án để triển khai độc lập (project Firebase riêng):
 
 1. Tạo project Firebase mới, bật **Firestore** + **Authentication**
-  (Email/Password; bật thêm provider **Anonymous** nếu dùng phòng chơi)
-  + **App Check**.
+  (Email/Password + **Anonymous** cho đường dự phòng Phòng cả lớp).
+  **Không** bật App Check (đã gỡ khỏi web 10/2026 — xem docs/FIREBASE-CHECKLIST.md §3).
 2. Thay `firebaseConfig` trong `js/firebase-config.js` bằng config
    project mới.
 3. Deploy `firestore.rules` lên project đó (`firebase deploy --only firestore:rules`
    nếu dùng Firebase CLI, hoặc dán tay qua Console).
-4. Làm theo hướng dẫn App Check ngay trong comment đầu file
-   `js/firebase-config.js` (đăng ký site key reCAPTCHA Enterprise).
-5. Phòng chơi trực tiếp **không còn dùng Firebase** (đã gộp vào Phòng cả lớp
-  của `arena.html`, chạy WebRTC). Không cần bật Anonymous Auth cho tính năng
-  này nữa; `live-quiz.html` chỉ chuyển hướng link cũ. Collection `live_rooms`
+4. Chạy `firebase deploy --only firestore:indexes` để tạo index + TTL
+   (docs/FIREBASE-CHECKLIST.md §1, §4).
+5. Phòng chơi trực tiếp đã gộp vào Phòng cả lớp của `arena.html` (WebRTC,
+  0 lượt Firebase); chỉ học sinh không nối thẳng được mới đi đường dự phòng
+  Firestore (cần Anonymous Auth); `live-quiz.html` chỉ chuyển hướng link cũ. Collection `live_rooms`
   / `live_hosts` và rules tương ứng trong `firestore.rules` giờ không trang
   nào dùng — giữ lại chỉ để phòng cũ (nếu còn) được TTL dọn; có thể xoá ở
   lần sửa rules sau. Điểm phòng là điểm trò chơi do máy giáo viên tính,

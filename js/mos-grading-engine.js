@@ -1,5 +1,5 @@
 /* ============================================================
-   js/mos-grading-engine.js — Engine chấm điểm MOS Practice (Phase 1: Excel)
+   js/mos-grading-engine.js — Engine chấm điểm MOS Practice (Excel)
 
    Nhận vào 1 ExcelJS.Workbook (đã workbook.xlsx.load() từ file .xlsx
    học sinh nộp, xử lý HOÀN TOÀN trên trình duyệt — không gửi file lên
@@ -10,7 +10,7 @@
    Task với type không tồn tại trong CHECKERS, hoặc type:"manual", LUÔN
    được đánh dấu manual:true — KHÔNG BAO GIỜ tự chấm đúng/sai bừa, để
    tránh chấm sai mà trông như đáng tin cậy (giáo viên tự xem file gốc
-   nộp riêng nếu cần — Phase 1 không lưu file lên server, xem quyết định
+   nộp riêng nếu cần — Bản đầu không lưu file lên server, xem quyết định
    trong plan).
    ============================================================ */
 (function (root) {

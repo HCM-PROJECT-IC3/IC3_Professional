@@ -183,7 +183,7 @@
     wq.on = true;
     const stats = P.wrongStats(visibleRows());
     const label = wqScopeLabel();
-    $('wqStatus').textContent = '⏳ Đang tra nội dung câu hỏi…';
+    $('wqStatus').textContent = 'Đang tra nội dung câu hỏi…';
     const resolved = await L.resolve(stats.items.slice(0, Math.max(WQ_SHOW, WQ_EXAM_MAX)));
     if (run !== wq.run) return;   // bộ lọc đổi trong lúc đang tra → lượt mới lo
     Object.assign(wq, { stats, resolved, label });
@@ -204,7 +204,7 @@
       return `<li class="wq-item"><details>
           <summary><span class="wq-rank">${i + 1}</span><span class="wq-q">${esc(text)}</span>
             <span class="wq-meta">${it.count} lượt sai · ${it.students} HS · ${pct}% bài${r ? ` · ${esc(r.levelName)} › ${esc(r.mt)}` : ''}</span></summary>
-          ${r ? L.answerHtml(r.q) + (r.q.explanation ? `<p class="wq-expl">💡 ${esc(plain(r.q.explanation))}</p>` : '') : ''}
+          ${r ? L.answerHtml(r.q) + (r.q.explanation ? `<p class="wq-expl"><i class="fa-solid fa-lightbulb" aria-hidden="true"></i> ${esc(plain(r.q.explanation))}</p>` : '') : ''}
         </details></li>`;
     }).join('') : '<li class="gk-note">Không có câu sai nào trong phạm vi này.</li>';
     $('wqMakeExam').hidden = !items.some((it) => resolved.has(it.uid));

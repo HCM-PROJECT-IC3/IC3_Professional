@@ -1,6 +1,6 @@
 /* ============================================================
    js/coordinator/student-detail.js
-   Drawer chi tiết 1 học sinh cho Coordinator Dashboard (Commit #5).
+   Drawer chi tiết 1 học sinh cho Coordinator Dashboard.
 
    Hiển thị:
    - Thông tin học sinh (avatar, MSSV, lớp, giáo viên, trạng thái).
@@ -11,8 +11,7 @@
      gian — chi tiết học sinh phải luôn cho xem TOÀN BỘ lịch sử của
      đúng em đó, bất kể bộ lọc đang bật).
    - Lịch sử đăng nhập: xem ghi chú THẬT THÀ bên dưới — hệ thống hiện
-     tại không có, vì học sinh làm bài ẨN DANH (không qua Firebase Auth,
-     xem mục 1 LMAP-ARCHITECTURE.md), nên activity_logs (keyed theo uid)
+     tại không có, vì học sinh làm bài ẨN DANH (không qua Firebase Auth), nên activity_logs (keyed theo uid)
      không có bản ghi nào của các em. Không giả lập số liệu này.
 
    Mỗi lần mở drawer đều ghi 1 dòng activity_logs
@@ -106,7 +105,7 @@
     global.EduRepositories.studentResult
       // global.EduStudentDetailSchoolsScope: mặc định undefined (coordinator/admin,
       // không giới hạn). teacher-dashboard.html gán mảng "schools" của giáo viên
-      // trước khi module này được nạp (xem js/teacher/dashboard.js, Commit #8/LMAP)
+      // trước khi module này được nạp (xem js/teacher/dashboard.js)
       // để listByStudent() query đúng điều kiện firestore.rules yêu cầu.
       .listByStudent({ studentName: student.name, studentClass: student.className, schools: global.EduStudentDetailSchoolsScope })
       .then((results) => {

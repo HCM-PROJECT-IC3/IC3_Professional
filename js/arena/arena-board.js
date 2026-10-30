@@ -3,7 +3,7 @@
 
    Giáo viên chiếu 1 bảng ô 100…500 lên màn hình; các đội (2–6) lần lượt chọn ô, cả lớp
    trả lời ra giấy/bảng con, giáo viên bấm Hiện đáp án rồi bấm tên các đội trả lời đúng.
-   Ô ✖️2 gấp đôi điểm, ô ⚠️ Rủi ro trừ một nửa giá trị nếu đội trả lời sai (EduArenaCore.makeBoard
+   Ô 2 gấp đôi điểm, ô Rủi ro trừ một nửa giá trị nếu đội trả lời sai (EduArenaCore.makeBoard
    / boardScore). Học sinh không cần máy → chạy hoàn toàn trên máy giáo viên: 0 mạng, 0 Firebase.
    Nạp SAU js/arena/arena.js (dùng EduArena.api: bộ câu, dạng câu, số câu, giây mỗi câu).
    ============================================================ */

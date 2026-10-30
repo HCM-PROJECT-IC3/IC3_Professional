@@ -4,7 +4,7 @@
    mỗi màn kết thúc bằng 1 cột cờ) + câu hỏi trắc nghiệm IC3 làm
    "cổng kiểm tra" giữa màn. Canvas 2D thuần, không phụ thuộc thư viện
    ngoài — cùng cấu trúc (picker độ khó → chơi → overlay kết quả) như
-   js/sort-game.js để đồng bộ với các mini-game khác trong Khu Vui Chơi.
+   các mini-game khác.
    ════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';

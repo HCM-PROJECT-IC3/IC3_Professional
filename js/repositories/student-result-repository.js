@@ -55,7 +55,7 @@
      *
      * @param {string[]} [schools] Lọc theo studentSchool ('in', tối đa 10 giá trị —
      *   đủ dùng vì 1 giáo viên hiếm khi được gán quá 10 trường). BẮT BUỘC truyền cho
-     *   teacher-dashboard.html (Commit #6/LMAP) — firestore.rules chỉ cho giáo viên đọc
+     *   teacher-dashboard.html — firestore.rules chỉ cho giáo viên đọc
      *   document có studentSchool nằm trong "schools" của họ, nên nếu KHÔNG lọc where
      *   ở đây, Firestore sẽ từ chối toàn bộ query (không tự lọc giúp). Coordinator/Admin
      *   không cần truyền (đọc không giới hạn theo rule).
@@ -158,7 +158,7 @@
      */
     /**
      * @param {string[]} [schools] BẮT BUỘC truyền khi gọi với vai trò giáo viên
-     *   (Commit #8/LMAP, teacher-dashboard.html tái dùng student-detail.js của
+     *   (teacher-dashboard.html tái dùng student-detail.js của
      *   coordinator) — nếu không, Firestore từ chối query vì không có điều kiện
      *   where khớp rule scoping theo studentSchool. Coordinator/Admin không cần
      *   truyền (rule của họ không yêu cầu).

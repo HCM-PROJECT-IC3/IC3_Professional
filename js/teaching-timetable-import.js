@@ -17,7 +17,7 @@
      BỎ QUA dòng dù mã GV đúng cú pháp (phòng gõ nhầm mã của người khác
      mà tên vẫn để "trùng ngẫu nhiên" đúng hoặc bỏ trống qua mắt).
    - Giờ tiết: nếu khác giờ ĐÃ CẤU HÌNH trước đó cho đúng tiết này (tab
-     "⏱️ Giờ tiết") → vẫn cho ghi nhưng CẢNH BÁO rõ trước khi xác nhận.
+     "Giờ tiết") → vẫn cho ghi nhưng CẢNH BÁO rõ trước khi xác nhận.
    - Trường: nếu có ghi, đối chiếu với "địa điểm" đã lưu ở tab "Lịch
      tuần" (teaching_schedule) cho đúng giáo viên/Thứ/buổi/tuần đó — lệch
      thì CẢNH BÁO (không chặn, vì địa điểm ghi tự do nên tên gọi có thể
@@ -67,7 +67,7 @@
     return wordsA.some((w) => nb.includes(w));
   }
 
-  // ---- 🧾 Tải file mẫu ----
+  // ---- Tải file mẫu ----
   document.getElementById('ttImportTemplateBtn').addEventListener('click', () => {
     if (!window.XLSX) { toast('Chưa tải được thư viện Excel, kiểm tra mạng rồi thử lại.'); return; }
     const header = ['Mã GV', 'Tên GV', 'Trường', 'Thứ', 'Buổi', 'Tiết', 'Mã lớp', 'Giờ bắt đầu', 'Giờ kết thúc'];
@@ -225,8 +225,8 @@
   }
 
   /** Bước 2 (bất đồng bộ — cần đọc Firestore): đối chiếu GIỜ TIẾT với
-   * "⏱️ Giờ tiết" đã cấu hình, và TRƯỜNG với "địa điểm" đã ghi ở tab
-   * "📅 Lịch tuần" — CẢNH BÁO (không loại dòng) vì cả 2 đều là dữ liệu tự
+   * "Giờ tiết" đã cấu hình, và TRƯỜNG với "địa điểm" đã ghi ở tab
+   * "Lịch tuần" — CẢNH BÁO (không loại dòng) vì cả 2 đều là dữ liệu tự
    * do, chỉ cần người nhập TỰ THẤY để xác nhận trước khi lưu. Đồng thời
    * chuẩn bị sẵn `pt`/`days` cho từng giáo viên để bước Xác nhận ghi
    * thẳng vào Firestore mà không cần đọc lại lần 2. */
@@ -302,7 +302,7 @@
     document.getElementById('ttImportWarnCount').textContent = warnings.length;
     const warnList = document.getElementById('ttImportWarnList');
     warnList.classList.toggle('force-hide', warnings.length === 0);
-    warnList.innerHTML = warnings.map((w) => `<div class="tt-import-check-row">⚠️ ${w}</div>`).join('');
+    warnList.innerHTML = warnings.map((w) => `<div class="tt-import-check-row"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> ${w}</div>`).join('');
 
     document.getElementById('ttImportConfirmBtn').disabled = false;
   }
@@ -313,7 +313,7 @@
     if (!ctx.weekKey) { toast('Không xác định được tuần đang chọn, đóng modal rồi thử lại.'); return; }
     const btn = document.getElementById('ttImportConfirmBtn');
     btn.disabled = true;
-    btn.textContent = '⏳ Đang nhập...';
+    btn.textContent = 'Đang nhập...';
     try {
       const db = window.EduFirebase.db;
       const ptCol = window.EduRepositories.teachingPeriodTimes.col();

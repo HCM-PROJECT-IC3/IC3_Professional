@@ -5,7 +5,7 @@
    trên cùng cho bật/tắt tay (nhớ trong localStorage, theo máy).
      • Chữ câu hỏi/đáp án to, đáp án đang chọn tô đặc + nhãn "Em chọn".
      • Dòng nhắc dưới đáp án: "Em đã chọn: B. Máy quét" / "Em hãy bấm 1 đáp án".
-     • 🔊 Nghe câu hỏi (đọc to câu hỏi + đáp án, giọng tiếng Việt của máy).
+     • Nghe câu hỏi (đọc to câu hỏi + đáp án, giọng tiếng Việt của máy).
      • Ôn luyện → "Kiểm tra đáp án": tô xanh/đỏ NGAY trên đáp án (không lặp
        lại danh sách bên dưới) + thẻ "Ghi nhớ" ghi đáp án đúng, đọc to được.
 

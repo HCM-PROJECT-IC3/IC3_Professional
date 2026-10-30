@@ -7,16 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Trang Social Media — Chứng chỉ &amp; Hoạt động</title>
 <meta name="description" content="Trang Social Media — chứng chỉ Certiport/Pearson thật của đội ngũ, khoảnh khắc ngoài giờ code, và feed nội bộ để giáo viên đăng bài/thích/bình luận.">
-<!--
-  ================================================================
-  portfolio.html — Trang Social Media (bản rút gọn)
-  Trang trước đây có đủ 20 mục theo brief "Trang Social Media portfolio" — đã bỏ
-  bớt theo yêu cầu, CHỈ còn 2 phần chính: Certifications on File và
-  Life at Trang Social Media (mỗi phần kèm "Teacher Feed" — đăng bài/thích/bình
-  luận thật qua Firestore, xem js/portfolio.js § PfFeed +
-  firestore.rules § gvlab_posts).
-  ================================================================
--->
+<!-- portfolio.html — trang giới thiệu đội ngũ: Chứng chỉ và Hoạt động, mỗi phần có bảng tin của giáo viên (js/portfolio.js PfFeed). -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="lib/fonts/fonts.css">
@@ -24,13 +15,7 @@
 <link rel="stylesheet" href="lib/fontawesome/css/fa.min.css">
 <link rel="stylesheet" href="css/theme.css">
 <link rel="stylesheet" href="css/portfolio.css">
-<!-- Firebase — cho feed "Trang Social Media" (đăng bài/thích/bình luận, xem
-     js/portfolio.js § PfFeed). Trang vẫn xem công khai không cần đăng
-     nhập (đúng firestore.rules § gvlab_posts "allow read: if true") —
-     chỉ khi bấm đăng bài/thích/bình luận mới cần tài khoản Giáo
-     viên/Admin đã đăng nhập.
-     SDK Firebase nạp THEO YÊU CẦU (js/services/firebase-loader.js): chỉ khi bấm
-     "Xem bài đăng của giáo viên" hoặc máy đã có phiên đăng nhập — mở/F5 trang 0 lượt Firebase. -->
+<!-- Firebase chỉ nạp khi bấm "Xem bài đăng của giáo viên" hoặc máy đã đăng nhập. Xem công khai; đăng/thích/bình luận cần tài khoản giáo viên. -->
 <script src="js/backend-config.js" defer></script>
 <script src="js/services/lazy-script-loader.js" defer></script>
 <script src="js/services/firebase-loader.js" defer></script>
@@ -50,12 +35,7 @@
   <button type="button" class="gv-nav-burger" id="gvBurger" aria-label="Mở menu"><i class="fa-solid fa-bars"></i></button>
 </header>
 
-<!-- ============ PROFILE BAR ============
-     Thanh "mạng lưới Trang Social Media" — hiện đúng người đang đăng nhập (avatar +
-     tên + vai trò), đúng cảm giác mạng xã hội thay vì trang giới thiệu
-     tĩnh. Đổ nội dung động trong js/portfolio.js § PfProfileBar (dùng
-     lại đúng trạng thái đăng nhập đang track cho PfFeed, không tạo
-     luồng auth thứ 2). -->
+<!-- Thanh hồ sơ người đang đăng nhập (js/portfolio.js PfProfileBar). -->
 <div class="gv-profile-bar" id="gvProfileBar" hidden>
   <div class="gv-profile-user" id="gvProfileUser" hidden>
     <span class="gv-avatar gv-mono" id="gvProfileAvatar">?</span>
@@ -69,11 +49,7 @@
   </div>
 </div>
 
-<!-- ============ PROFILE EDIT MODAL ============
-     Giáo viên tự chỉnh ảnh đại diện/trạng thái/tiểu sử — lưu vào
-     Firestore collection "gvlab_profiles" (KHÁC "users" dùng chung
-     toàn nền tảng — tách riêng để không đụng chạm hồ sơ gốc), xem
-     js/portfolio.js § PfProfile + firestore.rules § gvlab_profiles. -->
+<!-- Sửa hồ sơ giáo viên: ảnh đại diện, trạng thái, giới thiệu — lưu ở gvlab_profiles (tách khỏi users). -->
 <div class="gv-modal-overlay" id="gvProfileModalOverlay">
   <div class="gv-modal">
     <button type="button" class="gv-modal-close" id="gvProfileModalClose" aria-label="Đóng">✕</button>
@@ -86,7 +62,7 @@
       </label>
     </div>
     <label class="gv-form-label" for="gvProfileStatusInput">Trạng thái</label>
-    <input type="text" class="gv-form-input" id="gvProfileStatusInput" maxlength="60" placeholder="vd. 🟢 Đang dạy · 🌴 Nghỉ phép...">
+    <input type="text" class="gv-form-input" id="gvProfileStatusInput" maxlength="60" placeholder="vd. Đang dạy · 🌴 Nghỉ phép...">
     <label class="gv-form-label" for="gvProfileBioInput">Giới thiệu ngắn</label>
     <textarea class="gv-form-input" id="gvProfileBioInput" maxlength="220" rows="3" placeholder="Vài dòng về bạn, môn dạy, sở thích..."></textarea>
     <p class="gv-feed-error gv-mono" id="gvProfileFormError" hidden></p>
@@ -94,24 +70,11 @@
   </div>
 </div>
 
-<!-- Trợ lý trợ năng (A11y Assistant) đã được bỏ khỏi trang này theo yêu
-     cầu — chỉ hiển thị khi học sinh đang làm bài Ôn luyện trong
-     index.html (xem js/a11y-assistant.js). Markup gvA11yFab/gvA11yPanel
-     cũ đã xoá; js/portfolio.js § A11yAssistant tự return sớm khi không
-     tìm thấy 2 phần tử này nên không cần sửa gì thêm ở đó. -->
+<!-- Không có trợ lý trợ năng ở trang này (chỉ dùng khi học sinh làm bài). -->
 
 <div id="top"></div>
 
-<!-- ============ CERTIFICATIONS ============
-     Chứng chỉ CỦA RIÊNG TỪNG giáo viên — mỗi Giáo viên/Admin đã đăng
-     nhập tự đăng/xoá chứng chỉ của chính mình (collection Firestore
-     "gvlab_certs", xem js/portfolio.js § PfCerts + firestore.rules §
-     gvlab_certs). 20 ảnh chứng chỉ thật ban đầu (Nguyễn Hoài Bảo, từ
-     PDF gốc Certiport/Pearson VUE, PyMuPDF) vẫn hiện như 1 bộ "sẵn có"
-     trong danh sách — xem hằng số CERTS/LEGACY_TEACHER_NAME trong
-     js/portfolio.js — cộng thêm mọi chứng chỉ mới do các giáo viên
-     khác tự đăng. Bấm vào từng ảnh
-     để xem cỡ đầy đủ (lightbox), xem js/portfolio.js § PfCertLightbox. -->
+<!-- Chứng chỉ của từng giáo viên (gvlab_certs, js/portfolio.js PfCerts); bộ ảnh ban đầu ở hằng số CERTS. Bấm ảnh để xem lớn. -->
 <section class="gv-certs-section" id="certs">
   <h2>Chứng chỉ của đội ngũ</h2>
 
@@ -137,9 +100,7 @@
 
   <div class="gv-certs-grid" id="gvCertsGrid" data-certs></div>
 
-  <!-- Feed kiểu mạng xã hội cho mục Chứng chỉ — đăng bài/thích/bình luận
-       THẬT qua Firestore (collection gvlab_posts, category="certification"),
-       xem js/portfolio.js § PfFeed + firestore.rules § gvlab_posts. -->
+  <!-- Bảng tin mục Chứng chỉ (gvlab_posts, category "certification"). -->
   <div class="gv-feed" data-feed="certification">
     <div class="gv-feed-head">
       <h4>Teacher Feed</h4>

@@ -80,7 +80,7 @@
     el.setAttribute('role', 'alertdialog');
     el.innerHTML = `
       <div class="edu-idle-box">
-        <div class="edu-idle-icon">⏳</div>
+        <div class="edu-idle-icon"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i></div>
         <div class="edu-idle-text">
           Bạn không thao tác ${limitMin} phút rồi.<br>
           Hệ thống sẽ <b>tự đăng xuất sau <span id="edu-idle-count">60</span>s</b>.

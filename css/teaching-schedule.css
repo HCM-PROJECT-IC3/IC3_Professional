@@ -1,5 +1,5 @@
 /* ============================================================
-   TEACHING SCHEDULE MANAGER — trang "📅 Lịch giảng dạy" (admin/coordinator
+   TEACHING SCHEDULE MANAGER — trang "Lịch giảng dạy" (admin/coordinator
    quản lý toàn đội; giáo viên tự cập nhật đúng lịch của mình).
 
    Bố cục nền tảng (topbar/banner/tabs/table/modal/toast/import-*) kế thừa
@@ -162,7 +162,7 @@ body {
 }
 
 /* Bỏ khoảng đệm trên lớn (2rem) vì admin/điều phối không còn khối banner
-   giới thiệu (đã thay bằng nút ℹ️ ở tiêu đề) — nội dung quan trọng nhất
+   giới thiệu (đã thay bằng nút ở tiêu đề) — nội dung quan trọng nhất
    (lịch cả đội) cần lên gần đầu màn hình nhất có thể. */
 /* Không giới hạn max-width (bản trước 1400px để trống 2 dải lớn 2 bên
    trên màn hình rộng) — đây là trang quản lý dữ liệu dày đặc (ma trận cả
@@ -415,7 +415,7 @@ tr:last-child td { border-bottom: none }
 /* Điều phối đào tạo (coordinator) — CHỈ XEM, ẩn MỌI nút thêm/sửa/xoá kể cả
    những nút render ĐỘNG mỗi lần vẽ lại bảng/thẻ (data-edit-sched trên thẻ
    GV lẫn ma trận Tổng quan, data-edit-teacher/data-del-teacher trên bảng
-   "👤 Giáo viên") — gắn 1 class lên <body> (applyCoordinatorReadOnlyUI()
+   "Giáo viên") — gắn 1 class lên <body> (applyCoordinatorReadOnlyUI()
    trong js/teaching-schedule.js) rồi chặn ở đây, không cần sửa từng hàm
    render để tự gọi hide() lặp lại mỗi khi thêm nút mới sau này. Nút CHỈ
    ĐỌC (Xuất PDF/Xuất Phiếu công tác, cả 1-GV lẫn tất cả) KHÔNG nằm trong
@@ -501,7 +501,7 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
 }
 .tc-chip { color: #fff }
 .tc-chip b { font-size: .68rem; font-weight: 800; text-transform: uppercase; opacity: .9 }
-/* Cấu trúc nhiều dòng bên trong chip — GIỐNG HỆT ô trong tab "🗓️ TKB lớp"
+/* Cấu trúc nhiều dòng bên trong chip — GIỐNG HỆT ô trong tab "TKB lớp"
    (Mã lớp đậm/Trường nhạt xếp dưới) để nhìn 1 lần là nhận ra ngay 2 nơi
    cùng 1 kiểu trình bày, không cần đối chiếu qua lại. */
 .tc-chip-title { font-size: .68rem; font-weight: 800; text-transform: uppercase; opacity: .9 }
@@ -528,13 +528,13 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
 .teacher-card-stats { display: flex; flex-wrap: wrap; gap: .4rem .9rem; font-size: .76rem; color: var(--muted) }
 .teacher-card-stats b { color: var(--text); font-size: .84rem }
 
-/* flex-wrap: wrap — thêm nút "📋 Phiếu công tác" (chữ dài hơn hẳn 2 nút
+/* flex-wrap: wrap — thêm nút "Phiếu công tác" (chữ dài hơn hẳn 2 nút
    còn lại) khiến 3 nút chia đều 1 hàng dễ bị bóp chữ trên thẻ hẹp; cho
    phép tự xuống hàng thay vì ép vừa 1 hàng bằng mọi giá. */
 .teacher-card-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: auto }
 .teacher-card-actions .btn { flex: 1; min-width: 110px; padding: .55rem .7rem; font-size: .8rem }
 
-/* Nút chuyển "📊 Tổng quan" ⇄ "🎴 Thẻ" — segmented control nhỏ, cùng
+/* Nút chuyển "Tổng quan" ⇄ "Thẻ" — segmented control nhỏ, cùng
    ngôn ngữ thiết kế với .tabs chính của trang. */
 .view-toggle {
   display: inline-flex; gap: .2rem; background: var(--card2);
@@ -549,7 +549,7 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
 .view-toggle-btn.active { color: #fff; background: var(--purple) }
 
 /* ══════════════════════════════════════════════
-   "📊 Tổng quan" — dashboard cho điều phối đào tạo. Ma trận Thứ2-7 × mọi
+   "Tổng quan" — dashboard cho điều phối đào tạo. Ma trận Thứ2-7 × mọi
    giáo viên (chip màu gọn, ghim cột tên khi cuộn); hàng của GV chưa nhập
    lịch tự tô nền vàng nhạt (.dash-row-missing) — thấy CẢ ĐỘI trong 1
    màn hình, không cần khối KPI/"Cần chú ý" riêng.
@@ -632,7 +632,7 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
    wrap xuống dòng 3 thì avatar+tên lệch nhau (avatar trôi lên cao hơn
    khối tên/mã NV, nhìn như "rớt dòng"); flex + align-items:center luôn
    canh avatar đúng giữa khối tên dù tên ngắn/dài/wrap mấy dòng. Nút
-   ✏️/🖨️ (trước đây là 1 cột "hành động" riêng ở rìa phải bảng) giờ nằm
+   /(trước đây là 1 cột "hành động" riêng ở rìa phải bảng) giờ nằm
    NGAY TRONG ô tên — xem renderDashboardView() trong js/teaching-schedule.js. */
 /* Cỡ chữ/avatar TĂNG hẳn (34→46px, tên .8rem→1.05rem...) + đổi tên sang
    font Baloo 2 (font "đặc sắc" đã dùng cho tiêu đề/thương hiệu khắp app,
@@ -651,7 +651,7 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
   display: flex; align-items: center; justify-content: center;
   overflow: hidden;
 }
-/* Nút "✏️ Sửa lịch" của hàng KHÔNG PHẢI chính mình khi đăng nhập là giáo
+/* Nút "Sửa lịch" của hàng KHÔNG PHẢI chính mình khi đăng nhập là giáo
    viên — giữ vẫn hiện (để biết đồng nghiệp có nút này) nhưng khoá lại,
    quyền ghi thật sự đã chốt ở firestore.rules (chỉ teacherCode == chính
    mình), đây chỉ thêm lớp UX rõ ràng thay vì để bấm xong mới báo lỗi. */
@@ -713,9 +713,9 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
 
 /* Cột "hôm nay" (chỉ khi tuần đang xem CHỨA ngày hôm nay) — viền dưới +
    tint rất nhẹ ở thân cột, đủ để định vị nhanh mà không thêm màu nền gắt
-   gây rối mắt. Header giờ nền CAM (#E36C09) — TRƯỚC ĐÂY đổi màu CHỮ header
+   gây rối mắt. Header giờ nền CAM (#E36C09) — trước đây đổi màu CHỮ header
    sang tím (var(--purple)) khi là cột hôm nay, tím trên nền cam nhìn như
-   1 vệt xanh lạc màu/gạch chân lỗi (phản hồi người dùng) — giữ NGUYÊN chữ
+   1 vệt xanh lạc màu/gạch chân lỗi — giữ NGUYÊN chữ
    trắng như mọi cột khác, CHỈ thêm viền dưới trắng dày để vẫn nổi bật mà
    không đụng màu. */
 /* CHỈ viền dưới header — bỏ hẳn nền tím phủ lên thân cột (trước đây tô
@@ -848,7 +848,7 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
 }
 /* Tiết 1-5: gõ THẲNG mã lớp đang dạy (để trống = không dạy tiết đó) —
    không còn chỉ tích chọn có/không như bản trước, vì điều phối cần biết
-   NGAY đang dạy lớp nào mà không phải mở riêng tab "🗓️ TKB lớp". */
+   NGAY đang dạy lớp nào mà không phải mở riêng tab "TKB lớp". */
 .sched-grid td.sched-period-cell { text-align: center; padding: .3rem !important }
 .sched-grid input.sched-period {
   width: 100%; box-sizing: border-box; text-align: center;
@@ -1031,7 +1031,7 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
 }
 
 /* ══════════════════════════════════════════════
-   TAB "🗓️ TKB LỚP" — thời khoá biểu dạng LƯỚI TIẾT HỌC (Buổi/Tiết/Thời
+   TAB "TKB LỚP" — thời khoá biểu dạng LƯỚI TIẾT HỌC (Buổi/Tiết/Thời
    gian × Thứ2-7), phỏng theo mẫu thời khoá biểu giấy nhà trường (banner
    "IG VIỆT NAM") — mỗi Thứ 1 màu riêng cho vui mắt/dễ định vị như bản
    giấy gốc, ô nhập mã lớp tự do cho từng tiết.
@@ -1137,7 +1137,7 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
    nhưng ô này là lớp THCS chuẩn 45’) — đổi màu cảnh báo để bắt mắt hơn
    huy hiệu bình thường, tooltip (title, gắn ở JS) nói rõ giờ thực tế. */
 .tt-level-badge.tt-level-mismatch { background: #fff1cf; color: #a97a00 }
-/* Ô vừa được TỰ ĐỘNG điền Mã lớp/Trường từ tab "📅 Lịch tuần" (xem
+/* Ô vừa được TỰ ĐỘNG điền Mã lớp/Trường từ tab "Lịch tuần" (xem
    applyScheduleAutoFill() trong js/teaching-timetable.js) — viền xanh lá
    nhạt để phân biệt với ô gõ tay/dán thủ công, vẫn sửa được bình thường. */
 .tt-cell-auto { outline: 1.5px dashed var(--green, #2e9e5b); outline-offset: 2px; border-radius: 8px }
@@ -1155,7 +1155,7 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
   align-self: center;
 }
 
-/* ---- Modal "⏱️ Giờ tiết" — 2 cột Sáng/Chiều, mỗi tiết 1 hàng giờ vào/ra
+/* ---- Modal "Giờ tiết" — 2 cột Sáng/Chiều, mỗi tiết 1 hàng giờ vào/ra
    có thể thêm/bớt (số tiết mỗi trường không nhất thiết giống nhau). ---- */
 /* Tab chọn Thứ đang sửa — MỖI THỨ 1 khung giờ riêng (xem
    js/teaching-timetable.js openPeriodTimesModal()), chỉ Thứ đang chọn mới
@@ -1199,7 +1199,7 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
 }
 .pt-add-btn { align-self: flex-start; margin-top: .2rem }
 
-/* ---- Nút "🖨️ In" KHÔNG còn dùng window.print() nữa (đã đổi sang xuất
+/* ---- Nút "In" KHÔNG còn dùng window.print() nữa (đã đổi sang xuất
    thẳng .pdf bằng jsPDF, xem js/export/teaching-timetable-pdf.js) — lý do:
    hộp thoại in của Chrome/Edge tự chèn header/footer (ngày giờ/tiêu đề/
    URL/số trang) mà không cách nào tắt được từ CSS/JS trang web. Vì vậy
@@ -1207,7 +1207,7 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
    này (không còn nơi nào gắn class đó vào <body> nữa) — nếu sau này có ý
    định quay lại window.print(), nhớ đọc lại comment này trước để hiểu vì
    sao nó từng bị bỏ. ---- */
-/* ---- Modal "📥 Nhập TKB lớp từ Excel" + mẹo dán bảng trực tiếp — dùng
+/* ---- Modal "Nhập TKB lớp từ Excel" + mẹo dán bảng trực tiếp — dùng
    lại đúng .import-hint/.import-summary/.import-stat đã có sẵn (giống
    modal "Nhập từ Excel" của tab Lịch tuần) để đồng bộ giao diện. ---- */
 #ttImportFileInput { margin-top: .6rem }
@@ -1241,7 +1241,7 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
 }
 
 /* ══════════════════════════════════════════════
-   TAB "📊 BÁO CÁO" — biểu đồ (Chart.js) + pivot table tổng hợp nhiều tuần,
+   TAB "BÁO CÁO" — biểu đồ (Chart.js) + pivot table tổng hợp nhiều tuần,
    xem js/teaching-schedule-report.js. Bố cục thẻ biểu đồ theo ĐÚNG quy
    ước đã dùng ở css/dashboard.css (report-charts-grid/chart-card...) cho
    trang Báo cáo kết quả, nhưng đổi sang token màu riêng của FILE NÀY
@@ -1298,7 +1298,7 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
 .report-pivot tr.report-pivot-footer td.report-pivot-total { background: var(--purple) ; color: #fff }
 .report-pivot tbody tr:hover { background: var(--purple-lt) }
 
-/* Tab "🚗 Hỗ trợ xăng xe" — ô km nhập tay trong bảng khoảng cách + tô màu
+/* Tab "Hỗ trợ xăng xe" — ô km nhập tay trong bảng khoảng cách + tô màu
    ô tiền hỗ trợ theo trạng thái (0đ/có hỗ trợ/thiếu dữ liệu km) để liếc
    nhanh biết ngay dòng nào cần bổ sung khoảng cách. */
 .travel-km-input {
@@ -1337,7 +1337,7 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
   table { min-width: 460px }
   .report-pivot { min-width: 460px }
 
-  /* .weekly-cards dùng sàn 320px/thẻ (xem khai báo gốc, tab "📅 Lịch
+  /* .weekly-cards dùng sàn 320px/thẻ (xem khai báo gốc, tab "Lịch
      tuần") — không có mốc hẹp nào override trước đây, tràn ngang trên
      điện thoại thật. */
   .weekly-cards { grid-template-columns: 1fr }

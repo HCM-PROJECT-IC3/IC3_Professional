@@ -30,5 +30,13 @@ assertEq('thiếu avgSecPerQ: tự tính từ thời gian', G.recordResult({ cor
 // Bài ít câu (≤ 3 câu trả lời) không bị coi là bấm bừa — giống ngưỡng cảnh báo trên màn kết quả
 assertEq('bài 3 câu làm nhanh: vẫn có XP', G.recordResult({ correct: 3, incorrect: 0, total: 3, elapsedSec: 3 }).xpGained > 0, true);
 
+// Nộp bài trống: không XP, không tính số bài/chuỗi ngày
+var before = G.getState();
+var empty = G.recordResult({ correct: 0, incorrect: 0, total: 14, elapsedSec: 3 });
+assertEq('nộp bài trống: 0 XP, không huy hiệu, có cờ empty', [empty.xpGained, empty.newBadges.length, empty.empty], [0, 0, true]);
+assertEq('nộp bài trống: không tăng số bài', G.getState().totalQuizzes, before.totalQuizzes);
+// Trả lời 1 câu (sai) vẫn là bài làm thật: có XP hoàn thành
+assertEq('trả lời 1 câu: vẫn có XP', G.recordResult({ correct: 0, incorrect: 1, total: 14, elapsedSec: 60 }).xpGained > 0, true);
+
 console.log(failures ? '\n' + failures + ' FAIL' : '\nTất cả PASS');
 process.exit(failures ? 1 : 0);

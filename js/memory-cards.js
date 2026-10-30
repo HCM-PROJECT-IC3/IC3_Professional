@@ -1,5 +1,5 @@
 /* ============================================================
-   js/memory-cards.js — "🃏 Thẻ ghi nhớ" ở màn Kết quả (index.html)
+   js/memory-cards.js — "Thẻ ghi nhớ" ở màn Kết quả (index.html)
 
    Nộp bài xong, mỗi câu sai/bỏ qua thành 1 thẻ lật: mặt trước là câu hỏi
    (em tự nhớ lại đáp án), bấm lật → mặt sau là đáp án đúng + giải thích.

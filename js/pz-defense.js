@@ -3,7 +3,7 @@
    (tower-defense kiểu Plants vs Zombies, reskin theo chủ đề an
    ninh mạng). Cùng pattern với js/memory-game.js: trang
    pz-defense.html được nhúng qua modal (js/pz-defense-modal.js)
-   giống hệt memory-game.html / sort-game.html — chỉ chứa đúng 1 mini-game độc lập, không đụng
+   giống memory-game.html — chỉ chứa đúng 1 mini-game độc lập, không đụng
    vào quiz-engine.js / gamification.js.
 
    Cơ chế:
@@ -25,9 +25,9 @@
      miễn nhiễm "câu mồi" Phishing, hồi máu Server + giải khóa
      Ransomware, hoặc nổ diện rộng dùng-1-lần.
    - Kiểu PvZ gốc (4 điểm, xem thêm §Sun/§Lawnmower/§bomb/§cooldown
-     bên dưới): (1) Sun ☀️ rơi ngẫu nhiên từ trời + linh vật "sinh Dữ
+     bên dưới): (1) Sun rơi ngẫu nhiên từ trời + linh vật "sinh Dữ
      liệu" chỉ "nảy" ra 1 cục Sun tại chỗ — phải BẤM vào mới thu được,
-     không tự cộng; (2) mỗi hàng có 1 "🚜 Xe cắt cỏ" — mạng chót cứu 1
+     không tự cộng; (2) mỗi hàng có 1 "Xe cắt cỏ" — mạng chót cứu 1
      lần (quét sạch cả hàng thay vì trừ máu Server) rồi hết tác dụng;
      (3) linh vật nổ dùng-1-lần (Công Tắc Ngắt Khẩn) kiểu Cherry Bomb —
      đặt xuống là kích nổ diện rộng gần vị trí rồi tự hủy; (4) mỗi loại
@@ -248,7 +248,7 @@
   var PREP_FRAMES = 300;      // ~5s chuẩn bị giữa các đợt
   var DATA_START = 150;
 
-  // ── Sun (☀️): thay hẳn cơ chế "tự sinh đều" cũ bằng kiểu PvZ gốc —
+  // ── Sun (): thay hẳn cơ chế "tự sinh đều" cũ bằng kiểu PvZ gốc —
   //    Sun rơi ngẫu nhiên từ trời + linh vật "generator" (Excel/Bàn
   //    phím/Máy in) không cộng thẳng vào Dữ liệu nữa mà "nảy" ra 1
   //    cục Sun tại chỗ — người chơi phải BẤM vào mới thu được. ──
@@ -308,7 +308,7 @@
   var skySunTimer = 0;
   var spawnQueue = [], spawnedIdx = 0, spawnTimer = 0, spawnGap = 60;
   var gameOver = false, victory = false;
-  var sessionStartedAtMs = 0; // (Phase 3+) mốc bắt đầu ván, để tính durationSec khi ghi game_sessions
+  var sessionStartedAtMs = 0; // mốc bắt đầu ván, để tính durationSec khi ghi game_sessions
 
   var occ = [];             // occ[row][col] = defender | null
   var defenders = [], zombies = [], projectiles = [];
@@ -373,7 +373,7 @@
     DEF_TYPES.forEach(function (t) { cooldowns[t.id] = 0; });
     selectedDefId = null; hoverCell = null;
     resetOcc();
-    closeUpgradePanel(); // (Phase 9) đóng panel nâng cấp nếu đang mở từ ván trước
+    closeUpgradePanel(); // đóng panel nâng cấp nếu đang mở từ ván trước
     updateHUD();
     hideOverlay();
     frameAcc = 0;
@@ -446,7 +446,7 @@
     if (now - lastRenderTs >= RENDER_INTERVAL_MS) {
       lastRenderTs = now;
       render();
-      if (upgradeTargetId) renderUpgradePanel(); // (Phase 9) cập nhật sống HP bar + tự đóng nếu lá chắn đã chết
+      if (upgradeTargetId) renderUpgradePanel(); // cập nhật sống HP bar + tự đóng nếu lá chắn đã chết
     }
     requestAnimationFrame(step);
   }
@@ -978,7 +978,7 @@
   }
 
   /**
-   * (Phase 3/4) Ghi 1 lượt chơi vào js/gamification.js § recordGameSession
+   * Ghi 1 lượt chơi vào js/gamification.js § recordGameSession
    * — cộng XP cục bộ NGAY LẬP TỨC (không cần mạng) + đồng bộ phụ lên
    * Firestore nếu trang có nạp đủ script (xem cuối pz-defense.html).
    * Im lặng bỏ qua nếu thiếu EduGamification hoặc chưa chọn học sinh nào
@@ -1023,7 +1023,7 @@
       return;
     }
 
-    // (Phase 9) Bấm vào 1 lá chắn ĐÃ ĐẶT, còn sống, không bị hijack,
+    // Bấm vào 1 lá chắn ĐÃ ĐẶT, còn sống, không bị hijack,
     // và KHÔNG đang chọn shop → mở panel nâng cấp thay vì báo lỗi.
     if (!selectedDefId && existing && existing.alive) {
       openUpgradePanel(existing);
@@ -1052,7 +1052,7 @@
       fuseTimer: type.fuseFrames != null ? type.fuseFrames : null,
       stunned: false, stunTimer: 0,
       hijacked: false, verified: false, hijackTimer: 0,
-      level: 1 // (Phase 9 — Cyber Tower Defense) mọi lá chắn bắt đầu ở Lv1/MAX_UPGRADE_LEVEL
+      level: 1 // mọi lá chắn bắt đầu ở Lv1/MAX_UPGRADE_LEVEL
     };
     defenders.push(d);
     occ[row][col] = d;
@@ -1062,14 +1062,14 @@
     updateHUD();
   }
 
-  // ── (Phase 9 — Cyber Tower Defense) Nâng cấp lá chắn đã đặt ──
+  // ── Nâng cấp lá chắn đã đặt ──
   // Mỗi lá chắn có thể nâng lên tối đa MAX_UPGRADE_LEVEL. Nâng cấp
   // KHÔNG đổi cơ chế tấn công/hiệu ứng riêng của từng loại (giữ đúng
-  // cân bằng game đã có từ Phase 4) — chỉ tăng độ bền (HP tối đa,
+  // cân bằng game đã có) — chỉ tăng độ bền (HP tối đa,
   // hồi máu theo đúng tỉ lệ HP hiện tại) để lá chắn "quen việc" trụ
   // vững hơn qua thời gian, đúng tinh thần "level/upgrade" mục 9 yêu
   // cầu gốc. Ở Lv tối đa, mở khoá hiển thị mô tả kiến thức IC3 đầy đủ
-  // của lá chắn (đúng field `desc` đã có sẵn từ Phase 4) như một
+  // của lá chắn (đúng field `desc` đã có sẵn) như một
   // "specialAbility" được "mở khoá" — không bịa thêm cơ chế chiến đấu
   // mới để tránh phá cân bằng đã test kỹ ở các phase trước.
   var MAX_UPGRADE_LEVEL = 3;

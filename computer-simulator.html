@@ -19,19 +19,7 @@
 <button type="button" class="theme-toggle-quick" id="themeToggleQuick" title="Chuyển đổi sáng/tối"></button>
 <script src="js/theme-toggle-quick.js"></script>
 
-  <!-- Trang này được nhúng qua modal (js/game-modal.js),
-       cùng pattern với cyber-detective.html/battle-quiz.html — chỉ chứa
-       đúng 1 mini-game độc lập, không đụng vào quiz-engine.js /
-       gamification.js.
-       Cơ chế (mục 11 yêu cầu gốc "Computer Simulator", PHẠM VI PHASE 8):
-       mô phỏng 1 trình quản lý tệp tin (file explorer) đơn giản — học
-       sinh Tạo thư mục / Đổi tên / Di chuyển / Sao chép / Xoá / Tìm kiếm
-       trên 1 cây thư mục ẢO trong bộ nhớ (không đụng ổ đĩa thật, an
-       toàn tuyệt đối), theo 5 nhiệm vụ có kịch bản thật (nhiệm vụ 2 là
-       ví dụ mẫu chính xác trong yêu cầu gốc: IC3 → Level 1 →
-       Documents/Images). Toàn bộ logic model + kiểm tra nhiệm vụ nằm
-       trong js/computer-simulator.js § FS/MISSIONS (đã test độc lập
-       bằng Node, không phụ thuộc DOM). -->
+  <!-- Máy tính ảo: thao tác tệp/thư mục (tạo, đổi tên, di chuyển, sao chép, xoá, tìm) trên cây thư mục trong bộ nhớ, theo 5 nhiệm vụ. Nhúng qua js/game-modal.js. -->
 
   <div class="cs-wrap">
 

@@ -131,7 +131,7 @@ var back = R.restore(R.snapshot(mid));
 assertEq('khôi phục: câu đang dở được chốt với câu trả lời đã nhận', [back.phase, back.players.x.score, back.players.x.online], ['reveal', 1000, false]);
 assertEq('khôi phục: dữ liệu hỏng → null', [R.restore('{bad'), R.restore({ v: 2 })], [null, null]);
 
-// ── Thẻ thưởng (Tốc độ): đúng liền 3 → 🃏 x2, liền 6 → 🛡️ Khiên ──
+// ── Thẻ thưởng (Tốc độ): đúng liền 3 → x2, liền 6 → Khiên ──
 function cardDeck(n) { var d = []; for (var i = 0; i < n; i++) d.push({ text: 'C' + i, options: ['a', 'b'], correctIdx: 0, img: '', uid: 'k' + i, expl: '' }); return d; }
 function play(rm, answers) {   // answers[cid] = chỉ số đáp án, null = bỏ trống; trả kết quả riêng của từng người
   R.openNext(rm, 0);
@@ -305,7 +305,7 @@ assertEq('giải mã: két bị phá được đổi mã, tiến độ về 0', 
 assertEq('giải mã: xếp hạng theo đá quý', R.leaderboard(hr)[0].value >= R.leaderboard(hr)[1].value, true);
 assertEq('giải mã: kết quả riêng + CSV có số két phá', [R.personalEnd(hr, 'a').opened, R.toCsv(hr).indexOf('Két phá được') > 0], [1, true]);
 
-// ── 🔁 Đấu lại câu sai: chỉ câu có bạn sai, khó nhất trước; cùng mã, giữ người, điểm về 0 ──
+// ── Đấu lại câu sai: chỉ câu có bạn sai, khó nhất trước; cùng mã, giữ người, điểm về 0 ──
 var rm = R.createRoom({ code: 'REM234', mode: 'speed', deck: deck, count: 3, secs: 20, title: 'Bộ thử', now: 0 });
 ['a', 'b'].forEach(function (id) { R.join(rm, { cid: id, name: 'Bạn ' + id, face: '🙂' }); });
 R.join(rm, { cid: 'k', name: 'Bạn bị mời ra', face: '🙂' }); R.kick(rm, 'k');

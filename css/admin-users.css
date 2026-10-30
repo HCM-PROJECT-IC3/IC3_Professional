@@ -80,7 +80,7 @@ tr:last-child td { border-bottom: none }
    select bên phải nên chữ rớt dòng liên tục dù còn thừa chỗ ngang (bảng
    cuộn ngang trong .table-scroll) — ép min-width rộng rãi cho 2 cột này.
    CẢ 2 đều white-space: nowrap (Tên trước đây vẫn cho xuống dòng nếu dài
-   hơn min-width, nhưng người dùng phản hồi vẫn thấy rớt dòng xấu — đổi
+   hơn min-width, nhưng vẫn thấy rớt dòng xấu — đổi
    luôn Tên sang nowrap để nhất quán, hẹp hơn nội dung thì bảng tự cuộn
    ngang thay vì xuống dòng). */
 th:nth-child(1), td:nth-child(1) { min-width: 150px; white-space: nowrap }
@@ -141,7 +141,7 @@ select {
   .topbar h1 { font-size: 1rem }
 }
 
-/* ── Commit #6 (LMAP): gán "Trường được xem" cho giáo viên ── */
+/* ── gán "Trường được xem" cho giáo viên ── */
 .schoolsCell { min-width: 240px }
 .schoolsSelect { width: 100%; min-width: 220px; margin-bottom: .4rem }
 .saveSchoolsBtn {
@@ -204,7 +204,7 @@ select {
 }
 .teacherCodeCell .hint { font-size: .72rem; color: var(--muted); font-style: italic }
 
-/* ── "📥 Nhập giáo viên từ Excel" — tạo hàng loạt tài khoản đăng nhập ── */
+/* ── "Nhập giáo viên từ Excel" — tạo hàng loạt tài khoản đăng nhập ── */
 .import-toolbar {
   display: flex; align-items: center; gap: .9rem; flex-wrap: wrap;
   margin-bottom: 1.2rem;
@@ -212,7 +212,7 @@ select {
 .import-toolbar-hint { font-size: .78rem; color: var(--muted); flex: 1; min-width: 220px }
 .empty-cell { text-align: center; color: var(--muted); padding: 1.6rem !important }
 
-/* ---- Modal (dùng cho "📥 Nhập giáo viên từ Excel") ---- */
+/* ---- Modal (dùng cho "Nhập giáo viên từ Excel") ---- */
 .modal-overlay {
   display: none; position: fixed; inset: 0; z-index: 999;
   background: var(--modal-overlay); align-items: center; justify-content: center; padding: 1rem;

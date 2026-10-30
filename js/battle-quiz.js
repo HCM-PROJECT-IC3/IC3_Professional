@@ -1,7 +1,7 @@
 /* ════════════════════════════════════════════════════════════
    js/battle-quiz.js — Mini-game "Battle Quiz" (Player vs AI).
 
-   Cơ chế (mục 12 yêu cầu gốc):
+   Cơ chế:
    - Mỗi câu hỏi type "single" (đọc thật từ ngân hàng câu hỏi tĩnh
      data/ic3/minitests, KHÔNG bịa câu hỏi mới) có 1 mốc thời gian trả lời (bqCONFIG.timePerQuestionSec).
    - Trả lời ĐÚNG → tấn công AI. Combo càng cao, sát thương càng lớn:
@@ -463,7 +463,7 @@
   }
 
   /**
-   * (Phase 3/4/6) Ghi 1 lượt chơi vào js/gamification.js § recordGameSession
+   * Ghi 1 lượt chơi vào js/gamification.js § recordGameSession
    * — giống hệt pattern đã dùng ở pz-defense.js. Im lặng bỏ qua nếu thiếu
    * EduGamification hoặc chưa chọn học sinh nào ở lobby.
    */

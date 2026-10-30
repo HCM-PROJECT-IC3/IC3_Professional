@@ -26,7 +26,7 @@
   /* Bóng đổ neumorphism tông ấm — khớp nền be #F3EFE6 (xem ghi chú đầu file) */
   --gv-shadow-dark: rgba(176, 165, 138, .55);
   --gv-shadow-light: rgba(255, 255, 255, .95);
-  /* Phẳng (29/10/2026): trước là bóng nổi/lõm neumorphism 2 phía — kiểu "web AI". Giữ tên biến
+  /* Phẳng (29/10/2026): trước là bóng nổi/lõm neumorphism 2 phía. Giữ tên biến
      để mọi quy tắc dùng chúng tự đổi theo: nổi = viền 1px, lõm = viền trong 1px. */
   --gv-raised: 0 0 0 1px var(--gv-shadow-dark);
   --gv-raised-sm: 0 0 0 1px var(--gv-shadow-dark);

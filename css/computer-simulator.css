@@ -237,7 +237,7 @@ body.cs-body {
   .cs-search-input { margin-left: 0; width: 100%; }
 }
 
-/* Icon thư mục/tệp (Font Awesome) — màu như File Explorer, thay emoji 📁📄 */
+/* Icon thư mục/tệp (Font Awesome) — màu như File Explorer, thay emoji */
 .cs-item-icon .fa-folder, .cs-search-icon .fa-folder { color: #d9a531; }
 .cs-item-icon .fa-file-lines, .cs-search-icon .fa-file-lines { color: #5b7ba6; }
 .cs-overlay-icon .fa-trophy { color: #c99a1a; }

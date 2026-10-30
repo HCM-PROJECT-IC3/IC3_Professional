@@ -1,11 +1,10 @@
 /* ============================================================
    js/roster-manager.js
-   Logic cho trang roster-manager.html — Commit #3 của lộ trình LMAP
-   (xem docs/architecture/LMAP-ARCHITECTURE.md, mục 6).
+   Logic cho trang roster-manager.html.
 
    Trang này cho phép Admin / Điều phối đào tạo quản lý 3 collection
    MỚI (courses, classes, students_roster) thông qua các repository đã
-   tạo ở Commit #1 (js/repositories/roster-repository.js). KHÔNG đụng
+   có sẵn trong js/repositories/roster-repository.js. KHÔNG đụng
    tới quiz-engine.js / dashboard.js / firestore.rules hiện có.
 
    Quyền ghi (thêm/sửa/xoá) do firestore.rules chốt (courses/classes/
@@ -78,7 +77,7 @@
 
   function friendlyError(err) {
     if (err && err.code === 'permission-denied') {
-      return 'Chưa có quyền ghi dữ liệu roster — kiểm tra xem Firestore Rules bổ sung (Commit #2) đã được publish chưa.';
+      return 'Chưa có quyền ghi dữ liệu roster — kiểm tra xem firestore.rules đã được publish chưa.';
     }
     return err && err.message ? err.message : String(err);
   }
@@ -115,7 +114,7 @@
   // Cache IndexedDB dùng chung mọi tab (persist) — mở thêm tab không đọc lại ~1.600 học sinh.
   // 2 giờ (trước 15 phút): mỗi lần hết hạn = đọc lại TOÀN BỘ học sinh (~2.800 lượt). An toàn vì mọi
   // thao tác ghi trên máy này đều cập nhật cache tại chỗ (syncOne/dropOne, Nạp Excel tải lại); thay
-  // đổi từ máy khác → nút "🔄 Tải lại" (hiện giờ của dữ liệu đang xem).
+  // đổi từ máy khác → nút "Tải lại" (hiện giờ của dữ liệu đang xem).
   const CACHE_TTL_MS = 2 * 60 * 60 * 1000;
   function rosterCacheKey() {
     const isAdmin = myProfile.role === 'admin';
@@ -209,9 +208,9 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
           return;
         }
       }
-      // Điều phối đào tạo (Commit #7/LMAP): firestore.rules giờ chỉ cho đọc
+      // Điều phối đào tạo: firestore.rules giờ chỉ cho đọc
       // students_roster trong (các) trường đã được Admin gán ở "schools" —
-      // TRƯỚC ĐÂY trang này tải KHÔNG lọc gì (list({orderBy:'name'})), vốn
+      // trước đây trang này tải KHÔNG lọc gì (list({orderBy:'name'})), vốn
       // hoạt động vì coordinator từng mặc định xem hết; giờ 1 query không
       // where(...,'in', schools) sẽ bị Firestore từ chối HẲN cho coordinator
       // (không tự lọc giúp, xem canAccessRosterStudent() trong firestore.rules).
@@ -283,7 +282,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
   }
 
   /** Đổi lại tên các khoá học đang để trần "Khối N" (do 1 bản cũ của
-   * courseInfoForGrade() tự tạo lúc "📥 Nạp từ Excel") thành "Khoá học
+   * courseInfoForGrade() tự tạo lúc "Nạp từ Excel") thành "Khoá học
    * Khối N" — tên trần "Khối 3" dễ bị nhìn nhầm thành tên LỚP (lớp thật
    * sự tên kiểu "3/11"), gây rối vì 2 khái niệm khác nhau (khối = cấp
    * học, lớp = 1 lớp cụ thể trong khối đó) lại trông giống hệt nhau ở
@@ -308,7 +307,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
   }
 
   /** Gộp các "Khoá học" bị trùng TÊN (vd 3 khoá học cùng tên "Khối 3") —
-   * hậu quả của việc tự tạo khoá học lúc "📥 Nạp từ Excel" (xem
+   * hậu quả của việc tự tạo khoá học lúc "Nạp từ Excel" (xem
    * courseInfoForGrade/renderImportPreview phía dưới) chỉ kiểm tra trùng
    * tên dựa trên state.courses đã nạp SẴN TRONG BỘ NHỚ của phiên đó —
    * nếu 2 người cùng nạp Excel gần như đồng thời (mỗi người 1 file lớp
@@ -629,7 +628,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
    * chọn). Nhờ vậy 3 dropdown LUÔN cascading với nhau: chọn 1 GV thì Trường
    * và Lớp tự thu hẹp về đúng phạm vi GV đó đang dạy (và ngược lại) — tránh
    * nhầm lớp/học sinh giữa các giáo viên trùng tên lớp (vd "4A1" của 2
-   * trường khác nhau, người dùng phản hồi hay bị lẫn). Đọc trực tiếp
+   * trường khác nhau, hay bị lẫn). Đọc trực tiếp
    * students_roster (không phải "classes"/"teachers") để luôn khớp ĐÚNG
    * dữ liệu đang hiện trong bảng bên dưới, kể cả khi lệch với "classes".
    */
@@ -1029,7 +1028,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
    * TRƯỜNG KHÁC, bị xếp nhầm "Cập nhật" thay vì "Mới", rồi GHI ĐÈ (merge)
    * lên đúng bản ghi của trường kia khi bấm Nạp — chính là nguyên nhân
    * "chỉ 4 học sinh mới" dù cả lớp thật ra là học sinh mới hoàn toàn.
-   * Học sinh ĐÃ NẠP TRƯỚC ĐÂY (khoá cũ, không có trường) vẫn được nhận
+   * Học sinh ĐÃ NẠP trước đây (khoá cũ, không có trường) vẫn được nhận
    * diện đúng qua fallback so khớp tên+lớp+TRƯỜNG bên dưới (dùng existingId
    * gốc để cập nhật, không đổi ID) — chỉ học sinh MỚI TẠO từ giờ mới dùng
    * khoá mới (có trường) để tránh trùng lặp về sau. */

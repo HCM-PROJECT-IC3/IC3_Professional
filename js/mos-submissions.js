@@ -1,5 +1,5 @@
 /* ============================================================
-   📊 js/mos-submissions.js
+   js/mos-submissions.js
    Module ghi kết quả nộp bài MOS Practice — đích chọn ở js/backend-config.js
    → mosResults: Google Sheet qua Apps Script (tab NhatKyMOS, mặc định) và/hoặc
    Firestore (collection "mos_submissions"). Mô phỏng CHÍNH XÁC pattern của
@@ -8,7 +8,7 @@
    lỗi (không chặn trải nghiệm học sinh nếu lưu thất bại).
 
    CHỈ lưu KẾT QUẢ CHẤM (điểm + chi tiết từng task) — KHÔNG lưu file
-   .xlsx học sinh nộp (Phase 1 không dùng Firebase Storage, xem plan).
+   .xlsx học sinh nộp (Bản đầu không dùng Firebase Storage).
 
    NẠP FILE NÀY SAU: js/backend-config.js, js/services/apps-script-client.js,
    js/services/firebase-loader.js (Firebase chỉ nạp khi mosResults.firestore = true).

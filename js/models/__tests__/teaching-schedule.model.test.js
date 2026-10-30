@@ -1,4 +1,4 @@
-/* Test js/models/teaching-schedule.model.js — gộp mã lớp "Lịch tuần" với "🗓️ TKB lớp".
+/* Test js/models/teaching-schedule.model.js — gộp mã lớp "Lịch tuần" với "TKB lớp".
    Chạy: node js/models/__tests__/teaching-schedule.model.test.js — hàm thuần, không gọi mạng. */
 var path = require('path');
 

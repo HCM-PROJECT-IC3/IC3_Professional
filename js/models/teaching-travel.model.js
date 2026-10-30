@@ -2,7 +2,7 @@
    js/models/teaching-travel.model.js
    Model cho tab "Hỗ trợ xăng xe" (teaching-schedule.html) — tính tiền
    hỗ trợ xăng xe cho giáo viên đi dạy xa, dành cho role "teaching_coordinator"
-   (🚗 Điều phối giáo viên) quản lý.
+   (Điều phối giáo viên) quản lý.
 
    Quy tắc nghiệp vụ (do người dùng cung cấp trực tiếp):
    - Hỗ trợ 20.000đ/ngày nếu tổng khoảng cách đi lại trong ngày từ 11 đến

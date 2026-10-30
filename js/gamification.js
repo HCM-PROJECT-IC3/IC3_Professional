@@ -25,7 +25,7 @@
  *   <script src="js/gamification.js"></script>
  *   <script>EduGamification.renderInto('#lobbyGameStrip');</script>
  *
- * Cách 1 mini-game ghi nhận lượt chơi (Phase 4+, khi game đó được build):
+ * Cách 1 mini-game ghi nhận lượt chơi (cho game mới):
  *   EduGamification.recordGameSession('pz-defense', {
  *     score: 82, scoreType: 'percent', accuracy: 82,
  *     correctAnswers: 41, wrongAnswers: 9, durationSec: 240,
@@ -39,7 +39,7 @@
   const XP_PER_CORRECT = 10;
   const XP_PER_MINITEST_DONE = 50;
   const XP_PER_PERFECT_SCORE = 100; // thêm, cộng dồn cùng XP_PER_MINITEST_DONE
-  const XP_PER_GAME_SESSION = 20; // XP cơ bản cho 1 lượt chơi mini-game xong (Phase 3+)
+  const XP_PER_GAME_SESSION = 20; // XP cơ bản cho 1 lượt chơi mini-game xong
   // Nhiệm vụ hằng ngày: chơi DAILY_GAME_GOAL lượt mini-game → thưởng 1 lần/ngày.
   const DAILY_GAME_GOAL = 3;
   const XP_DAILY_QUEST_BONUS = 30;
@@ -76,7 +76,7 @@
       streak: 0,
       lastPlayedDate: null, // YYYY-MM-DD
       badges: [],
-      totalGameSessions: 0, // (Phase 3+) số lượt chơi mini-game đã ghi nhận, mọi game cộng chung
+      totalGameSessions: 0, // số lượt chơi mini-game đã ghi nhận, mọi game cộng chung
       gameCounts: {},       // gameId -> số lượt chơi (huy hiệu "Nhà thám hiểm")
       daily: { date: null, games: 0, done: false }, // tiến độ nhiệm vụ HÔM NAY
       dailyQuestsDone: 0,
@@ -154,6 +154,11 @@
     if (isRushed(rec)) {
       return { xpGained: 0, newBadges: [], state, prevXp, kind: 'quiz', streakUp: false, rushed: true };
     }
+    // Nộp bài trống (chưa trả lời câu nào): cũng không XP — trước đây bấm Nộp liên tục vẫn được
+    // +50 XP hoàn thành bài, huy hiệu và chuỗi ngày.
+    if ((rec.correct || 0) + (rec.incorrect || 0) === 0 && (rec.total || 0) > 0) {
+      return { xpGained: 0, newBadges: [], state, prevXp, kind: 'quiz', streakUp: false, empty: true };
+    }
     _updateStreak(state);
 
     const correct = rec.correct || 0;
@@ -180,13 +185,13 @@
   }
 
   /**
-   * (Phase 3+) Gọi hàm này khi 1 mini-game (Memory/PZ Defense/Battle
+   * Gọi hàm này khi 1 mini-game (Memory/PZ Defense/Battle
    * Quiz/Cyber Detective/Computer Simulator/Sort Game...) kết thúc 1
    * lượt chơi. KHÔNG đụng streak (streak vẫn chỉ tính theo
    * ngày làm BÀI THI, giữ đúng ý nghĩa cũ) — chỉ cộng XP + đếm lượt
    * chơi + xét huy hiệu liên quan game.
    *
-   * @param {string} gameId — 'pz-defense' | 'memory-game' | 'battle-quiz' | 'cyber-detective' | 'computer-simulator' | 'sort-game'
+   * @param {string} gameId — 'pz-defense' | 'memory-game' | 'battle-quiz' | 'cyber-detective' | 'computer-simulator'
    * @param {Object} [session] — { score, scoreType, accuracy, correctAnswers,
    *   wrongAnswers, topic, difficulty, durationSec, studentName... }. `xp` có thể tự truyền (game tự
    *   tính XP riêng theo combo/độ khó); nếu không truyền, dùng mặc định
@@ -310,7 +315,7 @@
     const close = _el('button', 'edu-reward-close', '×');
     close.type = 'button';
     close.setAttribute('aria-label', 'Đóng');
-    top.append(_el('span', 'edu-reward-xp', '+' + r.xpGained + ' XP'), _el('span', 'edu-reward-lvl', '⭐ Cấp ' + lvl), close);
+    top.append(_el('span', 'edu-reward-xp', '+' + r.xpGained + ' XP'), _el('span', 'edu-reward-lvl', 'Cấp ' + lvl), close);
 
     const bar = _el('div', 'edu-reward-bar');
     const fill = _el('i');
@@ -332,6 +337,8 @@
     const quest = _el('div', 'edu-reward-quest');
     if (r.rushed) {
       quest.textContent = 'Em làm quá nhanh nên bài này không tính XP. Đọc kỹ từng câu rồi chọn nhé.';
+    } else if (r.empty) {
+      quest.textContent = 'Em chưa trả lời câu nào nên bài này không tính XP.';
     } else if (r.kind === 'quiz') {
       quest.append(_el('b', null, 'Chuỗi ' + s.streak + ' ngày'),
         r.streakUp && s.streak > 1 ? ' học liên tiếp. Mai làm thêm 1 bài để giữ chuỗi.' : '. Mai làm thêm 1 bài để nối chuỗi.');
