@@ -239,9 +239,9 @@
   }
 
   // ============================================================
-  // VAI: học sinh / giáo viên / chơi một mình
+  // VAI: học sinh / giáo viên / chơi một mình / mini-game (js/arena/arena-mini.js)
   // ============================================================
-  const ROLES = ['student', 'teacher', 'solo'];
+  const ROLES = ['student', 'teacher', 'solo', 'minigame'];
   function role() { return $('arHome').dataset.role; }
   function setRole(r, persist) {
     if (!ROLES.includes(r)) r = 'student';
@@ -275,6 +275,7 @@
     });
     const deep = ['de', 'cat', 'lvl', 'mt', 'mode'].some((k) => params.get(k));
     if (params.get('phong')) setInvite(true);
+    else if (ROLES.includes(params.get('vai'))) setRole(params.get('vai'), false); // link từ trang chủ: arena.html?vai=minigame
     else setRole(S.role === 'teacher' ? 'teacher' : deep ? 'solo' : (ROLES.includes(S.role) ? S.role : 'student'), false);
   }
   function initHome() {

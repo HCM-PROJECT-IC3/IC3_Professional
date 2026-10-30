@@ -370,7 +370,7 @@
 #arHome.is-teacher-ok .ar-teacher-gate { display: none; }
 
 /* Thanh chọn vai: mỗi vai 1 màu — bấm vào là đổi màu đậm, biểu tượng nhún nhảy */
-.ar-roles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; margin-bottom: 1rem; }
+.ar-roles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .6rem; margin-bottom: 1rem; }
 .ar-role {
   --rc: var(--purple);
   display: flex; flex-direction: column; align-items: center; gap: .1rem; padding: .7rem .5rem; border-radius: 18px; cursor: pointer;
@@ -1545,3 +1545,169 @@ body[data-mode="moon"] .ar-scene { height: clamp(170px, min(30vw, 40vh), 360px);
 .ar-room-boards small { font-weight: 800; color: var(--muted); }
 @media (max-width: 420px) { .ar-fun-slot, .ar-fun-tile { width: 34px; height: 42px; font-size: 1.05rem; } }
 @media (prefers-reduced-motion: reduce) { .ar-fun-bar i { animation-timing-function: steps(1, end); } }
+
+/* ============================================================
+   MINI-GAME (vai thứ 4 — js/arena/arena-mini.js): lưới 7 trò, màn đối đầu,
+   trò chạy trong iframe + thanh đua với đối thủ, bảng công bố kết quả.
+   ============================================================ */
+#arHome[data-role="minigame"] :is(.only-student, .only-teacher, .not-student, .only-solo:not(.also-mini)),
+#arHome:not([data-role="minigame"]) .only-mini { display: none !important; }
+.ar-role[data-role="minigame"] { --rc: #db2777; }
+@media (max-width: 640px) { .ar-roles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.ar-mg-lead { margin: -.4rem 0 .6rem; }
+.ar-mg-day { display: flex; flex-wrap: wrap; gap: .4rem .9rem; margin: 0 0 .9rem; font-size: .84rem; color: var(--muted); }
+.ar-mg-day b { color: var(--text); }
+.ar-mg-day i { color: var(--ar-gold); }
+.ar-mg-day .is-hot, .ar-mg-day .is-hot i { color: #e5484d; }
+.ar-mg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem; }
+.ar-mg-tile {
+  position: relative; display: flex; flex-direction: column; padding: 0; overflow: hidden; text-align: left; cursor: pointer;
+  border: 2px solid var(--border); border-radius: 18px; background: var(--card); color: var(--text);
+  box-shadow: 0 5px 0 color-mix(in srgb, var(--border) 80%, #000); transition: transform .15s, box-shadow .15s, border-color .15s;
+}
+.ar-mg-tile:hover { transform: translateY(-3px); border-color: #db2777; box-shadow: 0 8px 0 color-mix(in srgb, #db2777 55%, #000); }
+.ar-mg-tile:focus-visible { outline: 3px solid #db2777; outline-offset: 2px; }
+.ar-mg-tile.is-feat { border-color: var(--ar-gold); }
+.ar-mg-cover { position: relative; display: block; aspect-ratio: 16 / 7; overflow: hidden; background: #2b2b33; border-bottom: 3px solid rgba(0, 0, 0, .25); }
+.ar-mg-cover > svg { display: block; width: 100%; height: 100%; transition: transform .4s ease; filter: saturate(.85) brightness(.9); }
+.ar-mg-tile:hover .ar-mg-cover > svg { transform: scale(1.06); }
+/* Tranh 3D cách chơi (js/arena/arena-mini-art.js) đè lên cảnh nền — cùng tỉ lệ 16:7 nên không bị cắt */
+.ar-mg-art { position: absolute; inset: 0; transition: transform .35s cubic-bezier(.2, 1.4, .4, 1); }
+.ar-mg-art .mga { display: block; width: 100%; height: 100%; filter: drop-shadow(0 6px 6px rgba(0, 0, 0, .25)); }
+.ar-mg-tile:hover .ar-mg-art { transform: translateY(-4px) scale(1.04); }
+.mga .mga-tw { transform-box: fill-box; transform-origin: center; animation: ar-mg-tw 1.8s ease-in-out infinite; }
+.mga .mga-tw:nth-of-type(2n) { animation-delay: -.9s; }
+@keyframes ar-mg-tw { 0%, 100% { transform: scale(.7) rotate(0); opacity: .7; } 50% { transform: scale(1.1) rotate(20deg); opacity: 1; } }
+.ar-mg-stage-no {
+  position: absolute; left: 10px; top: 10px; display: grid; justify-items: center; min-width: 44px; padding: .15rem .35rem .2rem; border-radius: 12px;
+  background: #fff; color: #2d2416; border: 3px solid #2d2416; box-shadow: 0 3px 0 #2d2416; font: 800 1.35rem/1 'Baloo 2', sans-serif;
+}
+.ar-mg-stage-no small { font: 800 .55rem/1.2 Inter, sans-serif; text-transform: uppercase; letter-spacing: .04em; }
+.ar-mg-tile.is-cleared .ar-mg-stage-no { background: #16a34a; color: #fff; }
+.ar-mg-ribbon {
+  position: absolute; right: 10px; top: 10px; padding: .2rem .6rem; border-radius: 999px; font-size: .74rem; font-weight: 800;
+  background: var(--ar-gold); color: #3b2a00; border: 2px solid #2d2416;
+}
+.ar-mg-body { display: flex; flex-direction: column; gap: .3rem; padding: .7rem .9rem .85rem; flex: 1; }
+.ar-mg-name { font: 800 1.2rem/1.2 'Baloo 2', Inter, sans-serif; display: flex; align-items: center; gap: .45rem; }
+.ar-mg-name i { color: #db2777; font-size: 1rem; }
+.ar-mg-tag { align-self: flex-start; font: 800 .7rem Inter, sans-serif; padding: .12rem .5rem; border-radius: 999px; background: color-mix(in srgb, #1c9bd6 12%, var(--card)); color: #1479a8; border: 1px solid color-mix(in srgb, #1c9bd6 35%, transparent); }
+.ar-mg-desc { font-size: .8rem; color: var(--muted); line-height: 1.4; }
+.ar-mg-learn { font-size: .8rem; line-height: 1.4; padding: .35rem .5rem; border-radius: 8px; background: var(--card2); }
+.ar-mg-learn b { color: #16a34a; }
+.ar-mg-rank { font-size: .82rem; }
+.ar-mg-rank em { font-style: normal; font-weight: 800; font-size: .72rem; padding: .05rem .4rem; border-radius: 6px; color: #fff; background: var(--tc); }
+.ar-mg-foot { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: auto; padding-top: .2rem; font-size: .78rem; color: var(--muted); }
+.ar-mg-pips { display: inline-flex; gap: 4px; }
+.ar-mg-pips i { width: 16px; height: 8px; border-radius: 4px; background: var(--card2); border: 1px solid var(--border); }
+.ar-mg-pips i.is-on { background: var(--tc); border-color: color-mix(in srgb, var(--tc) 70%, #000); }
+.ar-mg-best b { color: var(--text); }
+
+/* ── Màn đối đầu ── */
+.ar-mg-vs {
+  position: relative; isolation: isolate; overflow: hidden; border-radius: 24px; padding: clamp(1.2rem, 4vw, 2.2rem) 16px 1.4rem;
+  color: #fff; text-align: center; border: 3px solid #2d2416; background: #1d1640;
+}
+.ar-mg-vs-bg { position: absolute; inset: 0; z-index: -2; }
+.ar-mg-vs-bg svg { width: 100%; height: 100%; display: block; }
+.ar-mg-vs::before { content: ''; position: absolute; inset: 0; z-index: -1; background: rgba(18, 12, 40, .62); }
+.ar-mg-vs-art { width: min(460px, 100%); aspect-ratio: 16 / 7; margin: -.4rem auto .4rem; }
+.ar-mg-vs-art .mga { display: block; width: 100%; height: 100%; filter: drop-shadow(0 8px 10px rgba(0, 0, 0, .4)); }
+.ar-mg-vs-learn { margin: .9rem auto 0; max-width: 560px; font-size: .86rem; font-weight: 600; opacity: .92; }
+.ar-mg-vs-learn i { color: #7dd3fc; }
+.ar-mg-vs-kicker { margin: 0 0 1rem; font-weight: 800; font-size: .9rem; letter-spacing: .02em; }
+.ar-mg-vs-kicker i { color: var(--ar-gold); }
+.ar-mg-vs-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: .6rem; max-width: 640px; margin: 0 auto; }
+.ar-mg-fighter { display: grid; justify-items: center; gap: .2rem; padding: .8rem .5rem; border-radius: 18px; background: rgba(255, 255, 255, .1); border: 2px solid rgba(255, 255, 255, .25); }
+.ar-mg-fighter.is-me { animation: ar-mg-in-l .5s cubic-bezier(.2, 1.4, .4, 1) both; }
+.ar-mg-fighter.is-rival { border-color: var(--tc); animation: ar-mg-in-r .5s .1s cubic-bezier(.2, 1.4, .4, 1) both; }
+.ar-mg-face { font-size: clamp(2.6rem, 9vw, 4rem); line-height: 1.1; }
+.ar-mg-fighter b { font: 800 1.1rem/1.2 'Baloo 2', Inter, sans-serif; overflow-wrap: anywhere; }
+.ar-mg-fighter small { opacity: .85; font-weight: 700; }
+.ar-mg-vs-mid { font: 800 clamp(1.8rem, 6vw, 3rem) 'Baloo 2', sans-serif; color: var(--ar-gold); text-shadow: 0 3px 0 #2d2416; animation: ar-mg-vs-pulse 1.2s ease-in-out infinite; }
+@keyframes ar-mg-in-l { from { opacity: 0; transform: translateX(-60px); } }
+@keyframes ar-mg-in-r { from { opacity: 0; transform: translateX(60px); } }
+@keyframes ar-mg-vs-pulse { 50% { transform: scale(1.15); } }
+.ar-mg-vs-goal { margin: 1.1rem 0 .3rem; font-size: 1.02rem; }
+.ar-mg-vs-goal b, .ar-mg-vs-prize b { color: var(--ar-gold); }
+.ar-mg-vs-prize { margin: 0; font-size: .84rem; opacity: .9; }
+.ar-mg-count {
+  position: absolute; inset: 0; display: grid; place-items: center; background: rgba(18, 12, 40, .78);
+  font: 800 clamp(4rem, 18vw, 9rem) 'Baloo 2', sans-serif; color: var(--ar-gold); text-shadow: 0 6px 0 #2d2416;
+}
+.ar-mg-count[hidden] { display: none; }
+.ar-mg-count.is-pop { animation: ar-mg-count .6s cubic-bezier(.2, 1.6, .4, 1); }
+@keyframes ar-mg-count { from { transform: scale(2.2); opacity: 0; } }
+
+/* ── Trong trận: 2 làn đua (em / đối thủ), vạch vàng = mốc đối thủ ở 80% làn ── */
+.ar-mg-hud { display: grid; grid-template-columns: 1fr auto; gap: .35rem .7rem; align-items: center; margin: 0 0 .5rem; }
+.ar-mg-race { display: grid; gap: 4px; }
+.ar-mg-lane { display: grid; grid-template-columns: 26px 1fr 64px; align-items: center; gap: .4rem; }
+.ar-mg-who { font-size: 1.15rem; text-align: center; }
+.ar-mg-lane b { font: 800 1rem 'Baloo 2', sans-serif; text-align: right; font-variant-numeric: tabular-nums; }
+.ar-mg-bar { position: relative; height: 12px; border-radius: 999px; background: var(--card2); border: 1px solid var(--border); overflow: hidden; }
+.ar-mg-bar::after { content: ''; position: absolute; top: 0; bottom: 0; left: 80%; border-left: 3px solid var(--ar-gold); }
+.ar-mg-bar i { display: block; height: 100%; width: 0; border-radius: inherit; transition: width .35s ease-out; }
+.ar-mg-lane.is-me .ar-mg-bar i { background: var(--green); }
+.ar-mg-lane.is-rival .ar-mg-bar i { background: #e5484d; opacity: .75; }
+.ar-mg-hud.is-past .ar-mg-lane.is-me b { color: var(--green); }
+.ar-mg-combo { background: #f19a1a; color: #fff; }
+.ar-mg-combo.is-fever { background: #e5484d; animation: arfx-bump .45s ease-out; }
+.ar-mg-caster { grid-column: 1 / -1; margin: 0; min-height: 1.3em; font-weight: 800; font-size: .9rem; color: var(--muted); }
+.ar-mg-caster.t-up { color: var(--green); }
+.ar-mg-caster.t-down { color: #e5484d; }
+.ar-mg-caster.t-final { color: #e5484d; animation: ar-mg-beat 1s ease-in-out infinite; }
+.ar-mg-caster.t-fire { color: #f19a1a; }
+@keyframes ar-mg-beat { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+
+.ar-mg-stage { position: relative; border-radius: 16px; overflow: hidden; border: 3px solid var(--border); background: #111; transition: border-color .2s; }
+.ar-mg-stage.is-fever { border-color: #f19a1a; }
+.ar-mg-frame { display: block; width: 100%; height: calc(100vh - 210px); min-height: 520px; border: 0; background: #fff; }
+.ar-mg-vignette { position: absolute; inset: 0; pointer-events: none; opacity: 0; }
+.ar-mg-vignette.is-good { animation: ar-mg-flash .5s ease-out; --vc: rgba(33, 179, 107, .55); }
+.ar-mg-vignette.is-bad { animation: ar-mg-flash .5s ease-out; --vc: rgba(229, 72, 77, .6); }
+.ar-mg-vignette.is-danger { opacity: 1; --vc: rgba(229, 72, 77, .45); box-shadow: inset 0 0 60px 10px var(--vc); animation: ar-mg-heart 1s ease-in-out infinite; }
+@keyframes ar-mg-flash { 0% { opacity: 1; box-shadow: inset 0 0 70px 18px var(--vc); } 100% { opacity: 0; box-shadow: inset 0 0 70px 18px var(--vc); } }
+@keyframes ar-mg-heart { 0%, 100% { opacity: .35; } 15% { opacity: 1; } 30% { opacity: .5; } 45% { opacity: .9; } }
+
+/* ── Công bố kết quả ── */
+.ar-mg-result { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; padding: 16px; background: rgba(18, 12, 40, .8); overflow-y: auto; }
+.ar-mg-result[hidden] { display: none; }
+.ar-mg-res-card { width: min(560px, 100%); padding: 1.2rem 1.1rem 1.1rem; border-radius: 22px; background: var(--card); color: var(--text); border: 3px solid #2d2416; text-align: center; box-shadow: 0 8px 0 #2d2416; }
+.ar-mg-res-card.t-win { border-color: var(--ar-gold); box-shadow: 0 8px 0 #a87a00; }
+.ar-mg-res-kicker { margin: 0 0 .6rem; font-weight: 800; color: var(--muted); font-size: .85rem; }
+.ar-mg-res-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: end; height: 190px; margin: 0 auto .8rem; max-width: 360px; }
+.ar-mg-col { display: grid; grid-template-rows: auto 1fr auto; height: 100%; gap: .3rem; }
+.ar-mg-col-val { font: 800 1.6rem 'Baloo 2', sans-serif; font-variant-numeric: tabular-nums; }
+.ar-mg-col-bar { position: relative; display: block; border-radius: 12px 12px 4px 4px; background: var(--card2); overflow: hidden; }
+.ar-mg-col-bar i { position: absolute; left: 0; right: 0; bottom: 0; height: 0; border-radius: inherit; transition: height 1.5s cubic-bezier(.2, .8, .3, 1); }
+.ar-mg-result.is-grown .ar-mg-col-bar i { height: var(--h); }
+.ar-mg-col.is-me .ar-mg-col-bar i { background: var(--green); }
+.ar-mg-col.is-rival .ar-mg-col-bar i { background: #e5484d; }
+.ar-mg-col-who { font-weight: 800; font-size: .82rem; overflow-wrap: anywhere; }
+.ar-mg-res-verdict { opacity: 0; transform: translateY(10px); transition: opacity .3s, transform .35s cubic-bezier(.2, 1.4, .4, 1); }
+.ar-mg-res-verdict.is-on { opacity: 1; transform: none; }
+.ar-mg-res-verdict h3 { margin: 0; font: 800 clamp(1.6rem, 6vw, 2.2rem) 'Baloo 2', sans-serif; }
+.t-win .ar-mg-res-verdict h3 { color: #c58a00; }
+.t-near .ar-mg-res-verdict h3 { color: #f19a1a; }
+.t-lose .ar-mg-res-verdict h3 { color: var(--purple); }
+.ar-mg-res-verdict p { margin: .25rem 0; }
+.ar-mg-res-say { font-weight: 700; color: var(--muted); }
+.ar-mg-res-xu { list-style: none; margin: .6rem auto 0; padding: 0; max-width: 300px; font-size: .86rem; }
+.ar-mg-res-xu li { display: flex; justify-content: space-between; gap: .5rem; padding: .15rem 0; border-bottom: 1px dashed var(--border); }
+.ar-mg-res-xu b { color: #a87a00; }
+.ar-mg-res-total { font: 800 1.25rem 'Baloo 2', sans-serif; color: #a87a00; }
+.ar-mg-res-total small { display: block; font: 600 .74rem Inter, sans-serif; color: var(--muted); }
+.ar-mg-res-total i { color: var(--ar-gold); }
+
+@media (max-width: 640px) {
+  .ar-mg-grid { grid-template-columns: 1fr; }
+  .ar-mg-frame { height: calc(100vh - 190px); min-height: 460px; }
+  .ar-mg-hud { grid-template-columns: 1fr; }
+  .ar-mg-res-cols { height: 150px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mga .mga-tw, .ar-mg-vs-mid, .ar-mg-fighter, .ar-mg-caster.t-final, .ar-mg-vignette.is-danger { animation: none; }
+  .ar-mg-col-bar i, .ar-mg-res-verdict { transition: none; }
+}

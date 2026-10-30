@@ -442,21 +442,14 @@
       </div>
       <div class="review-list" id="reviewList"></div>
 
-      <!-- Khu Vui Chơi: gộp cả 5 mini-game vào 1 lối vào duy nhất, chỉ mở
-           khóa khi bài "Tổng hợp" GẦN NHẤT của học sinh ĐANG ĐƯỢC CHỌN đạt
-           từ 90% điểm trở lên — dùng 1 lần rồi khóa lại, phải làm bài
-           Tổng hợp mới để mở lại. Đặt ở màn Kết quả (thay vì form ghi danh)
-           vì đây đúng lúc học sinh biết mình có vừa đạt mốc mở khóa hay
-           chưa. Xem js/game-zone-gate.js (chỉ đọc id qua getElementById,
-           không phụ thuộc vị trí DOM). -->
-      <button type="button" class="game-zone-open-btn" id="openGameZoneBtn"
-        title="Khu Vui Chơi — mở khóa khi làm bài Tổng hợp đạt từ 90% điểm (dùng 1 lần)">
-        <i class="fa-solid fa-gamepad"></i> Khu Vui Chơi
-      </button>
-      <div class="game-zone-hint" id="gameZoneHint"></div>
+      <!-- Mini-game (7 trò của Khu Vui Chơi cũ) nay nằm trong Đấu trường, không khoá:
+           mỗi trò leo 5 hạng đối thủ, thắng nhận xu mở Linh vật (js/arena/arena-mini.js). -->
+      <a class="game-zone-open-btn" id="openGameZoneBtn" href="arena.html?vai=minigame"
+        title="Mini-game trong Đấu trường — leo hạng từng trò, kiếm xu mở Linh vật">
+        <i class="fa-solid fa-gamepad"></i> Mini-game ở Đấu trường
+      </a>
 
-      <!-- "Giải lao: Chim Vượt Ải" — KHÔNG bị khóa như Khu Vui Chơi ở
-           trên (không cần ≥90%/bài Tổng hợp): đây chỉ là gợi ý mini-game
+      <!-- "Giải lao: Chim Vượt Ải" — mở ngay trong trang (modal), đây chỉ là gợi ý mini-game
            giải trí tùy chọn sau MỌI bài thi, tự động lấy đúng chủ đề vừa
            thi (không có bộ câu hỏi riêng nào cho mini-game — xem
            js/quiz-engine.js § openMarioFlappyReward() và
@@ -497,228 +490,6 @@
         <button type="button" class="btn-danger" onclick="clearRecords()"><i class="fa-solid fa-trash"></i> Xóa tất cả</button>
       </div>
       <div id="recordsContent"></div>
-    </div>
-  </div>
-
-  <!-- ============ KHU VUI CHƠI (hub modal) — gộp mini-game, chỉ mở
-       khóa khi bài "Tổng hợp" GẦN NHẤT của học sinh đang chọn đạt ≥90%
-       điểm — dùng 1 lần rồi khóa lại, phải làm bài Tổng hợp mới. Các nút
-       #openMemoryGameBtn/#openPzDefenseBtn NẰM Ở ĐÂY (không còn ở ngoài lobby nữa) để mỗi
-       js/*-modal.js hiện có tự tìm thấy nút của mình mà không cần sửa gì
-       thêm. Xem js/game-zone-gate.js. ============ -->
-  <div class="game-modal-overlay" id="gameZoneModalOverlay">
-    <div class="game-modal game-zone-modal">
-      <div class="game-modal-bar">
-        <span class="game-modal-title"><i class="fa-solid fa-gamepad"></i> Khu Vui Chơi</span>
-        <button type="button" class="game-modal-close" id="closeGameZoneModalBtn"><i class="fa-solid fa-xmark"></i> Đóng</button>
-      </div>
-      <!-- Cấp độ / XP / huy hiệu / nhiệm vụ hôm nay (js/gamification.js, lưu trên máy —
-           tự cập nhật khi đóng game nhờ sự kiện "storage"). -->
-      <div id="lobbyGameStrip" style="padding:.6rem 1rem 0"></div>
-
-      <!-- Trạng thái KHÓA: hiện khi bài "Tổng hợp" gần nhất của học sinh
-           đang chọn chưa đạt 90% (hoặc đã dùng lượt mở khóa rồi) -->
-      <div class="game-zone-locked" id="gameZoneLocked">
-        <div class="game-zone-lock-icon"><i class="fa-solid fa-lock"></i></div>
-        <div class="game-zone-lock-title">Khu Vui Chơi đang khóa</div>
-        <p class="game-zone-lock-desc">
-          Làm bài <strong>Tổng hợp</strong> (ngẫu nhiên chia đều 7 chủ đề) đạt từ
-          <strong>90% điểm</strong> trở lên để mở khóa toàn bộ mini-game bên dưới.
-          Lượt mở khóa chỉ dùng được <strong>1 lần</strong> — sau khi vào chơi, cần làm
-          1 bài Tổng hợp mới đạt ≥90% để mở lại.
-        </p>
-        <div class="game-zone-progress" id="gameZoneProgress"></div>
-      </div>
-
-      <!-- Trạng thái MỞ: hiện lưới mini-game khi đã đạt điều kiện.
-           ĐÂY LÀ "IC3 GAME HUB" — mỗi tile giữ NGUYÊN id cũ (để 5 file
-           js/*-modal.js hiện có tự tìm thấy nút của mình, không cần sửa
-           gì), chỉ giàu thông tin hơn: icon + tên + mô tả ngắn + nhãn.
-           Các card "🔜 Sắp ra mắt" là placeholder tĩnh (không có id
-           trùng với bất kỳ *-modal.js nào, disabled, không onclick) cho
-           game sẽ build ở phase sau (Battle Quiz, Cyber Detective,
-           Computer Simulator) — không load được gì ở bước này. -->
-      <div class="game-zone-unlocked" id="gameZoneUnlocked">
-        <div class="game-hub-kicker"><i class="fa-solid fa-gamepad"></i> IC3 Game Hub</div>
-        <p class="game-zone-unlocked-desc"><i class="fa-solid fa-unlock"></i> Đã mở khóa — chọn 1 mini-game bên dưới để chơi!</p>
-        <div class="game-zone-grid">
-          <button type="button" class="game-zone-tile" id="openMemoryGameBtn" title="Chơi mini-game Trí Nhớ Thiết Bị &amp; Phần Mềm">
-            <span class="game-zone-tile-emoji"><i class="fa-solid fa-brain"></i></span>
-            <span class="game-zone-tile-name">Trí Nhớ Thiết Bị</span>
-            <span class="game-zone-tile-desc">Lật thẻ ghép cặp thuật ngữ IC3</span>
-            <span class="game-zone-tile-tag">Kiến thức</span>
-          </button>
-          <button type="button" class="game-zone-tile" id="openPzDefenseBtn" title="Chơi mini-game Phòng Thủ Dữ Liệu">
-            <span class="game-zone-tile-emoji"><i class="fa-solid fa-shield-halved"></i></span>
-            <span class="game-zone-tile-name">Phòng Thủ Dữ Liệu</span>
-            <span class="game-zone-tile-desc">Chặn nguy cơ bằng kiến thức bảo mật IC3</span>
-            <span class="game-zone-tile-tag">Kiến thức</span>
-          </button>
-
-          <button type="button" class="game-zone-tile" id="openBattleQuizBtn" title="Chơi mini-game Battle Quiz">
-            <span class="game-zone-tile-emoji"><i class="fa-solid fa-hand-fist"></i></span>
-            <span class="game-zone-tile-name">Battle Quiz</span>
-            <span class="game-zone-tile-desc">Đấu trả lời nhanh theo combo</span>
-            <span class="game-zone-tile-tag">Kiến thức</span>
-          </button>
-          <a class="game-zone-tile" id="openLiveQuizBtn" href="arena.html#arRoomCard" target="_blank" rel="noopener" title="Phòng cả lớp trong Đấu trường — nhiều người chơi cùng lúc">
-            <span class="game-zone-tile-emoji"><i class="fa-solid fa-users"></i></span>
-            <span class="game-zone-tile-name">Thử thách cùng lớp</span>
-            <span class="game-zone-tile-desc">Vào Đấu trường, nhập mã phòng và thi đua trực tiếp</span>
-            <span class="game-zone-tile-tag">Nhiều người</span>
-          </a>
-          <button type="button" class="game-zone-tile" id="openCyberDetectiveBtn" title="Chơi mini-game Cyber Detective">
-            <span class="game-zone-tile-emoji"><i class="fa-solid fa-user-secret"></i></span>
-            <span class="game-zone-tile-name">Cyber Detective</span>
-            <span class="game-zone-tile-desc">Điều tra tình huống mất an toàn thông tin</span>
-            <span class="game-zone-tile-tag">Kiến thức</span>
-          </button>
-          <button type="button" class="game-zone-tile" id="openComputerSimBtn" title="Chơi mini-game Computer Simulator">
-            <span class="game-zone-tile-emoji"><i class="fa-solid fa-computer"></i></span>
-            <span class="game-zone-tile-name">Computer Simulator</span>
-            <span class="game-zone-tile-desc">Thực hành thao tác máy tính cơ bản</span>
-            <span class="game-zone-tile-tag">Kiến thức</span>
-          </button>
-          <button type="button" class="game-zone-tile" id="openSortGameBtn" title="Chơi mini-game Phân Loại Thần Tốc">
-            <span class="game-zone-tile-emoji"><i class="fa-solid fa-magnet"></i></span>
-            <span class="game-zone-tile-name">Phân Loại Thần Tốc</span>
-            <span class="game-zone-tile-desc">Bấm đúng thùng trước khi hết giờ</span>
-            <span class="game-zone-tile-tag">Giải trí</span>
-          </button>
-          <button type="button" class="game-zone-tile" id="openMarioFlappyBtn" title="Chơi mini-game Chim Vượt Ải">
-            <span class="game-zone-tile-emoji"><i class="fa-solid fa-dove"></i></span>
-            <span class="game-zone-tile-name">Chim Vượt Ải</span>
-            <span class="game-zone-tile-desc">Vỗ cánh né cột ống, vượt 5 màn, trả lời câu hỏi IC3 ở cổng kiểm tra</span>
-            <span class="game-zone-tile-tag">Giải trí</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============ MINI-GAME "TRÍ NHỚ THIẾT BỊ & PHẦN MỀM" (modal) — xem js/game-modal.js ============ -->
-  <div class="game-modal-overlay" id="memoryGameModalOverlay">
-    <div class="game-modal">
-      <div class="game-modal-bar">
-        <span class="game-modal-title"><i class="fa-solid fa-brain"></i> Trí Nhớ Thiết Bị &amp; Phần Mềm</span>
-        <button type="button" class="game-modal-close" id="closeMemoryGameModalBtn"><i class="fa-solid fa-xmark"></i> Đóng</button>
-      </div>
-      <div class="game-modal-frame">
-        <iframe
-          id="memoryGameModalFrame"
-          class="game-modal-iframe"
-          title="Mini-game Trí Nhớ Thiết Bị &amp; Phần Mềm"
-          src="about:blank"
-          data-src="memory-game.html"
-          loading="lazy"
-          allow="fullscreen"
-        ></iframe>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============ MINI-GAME "PHÒNG THỦ DỮ LIỆU" (modal) — xem js/game-modal.js ============ -->
-  <div class="game-modal-overlay" id="pzDefenseModalOverlay">
-    <div class="game-modal">
-      <div class="game-modal-bar">
-        <span class="game-modal-title"><i class="fa-solid fa-shield-halved"></i> Phòng Thủ Dữ Liệu</span>
-        <button type="button" class="game-modal-close" id="closePzDefenseModalBtn"><i class="fa-solid fa-xmark"></i> Đóng</button>
-      </div>
-      <div class="game-modal-frame">
-        <iframe
-          id="pzDefenseModalFrame"
-          class="game-modal-iframe"
-          title="Mini-game Phòng Thủ Dữ Liệu"
-          src="about:blank"
-          data-src="pz-defense.html"
-          loading="lazy"
-          allow="fullscreen"
-        ></iframe>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============ MINI-GAME "BATTLE QUIZ" (modal) — xem js/game-modal.js ============ -->
-  <div class="game-modal-overlay" id="battleQuizModalOverlay">
-    <div class="game-modal">
-      <div class="game-modal-bar">
-        <span class="game-modal-title"><i class="fa-solid fa-hand-fist"></i> Battle Quiz</span>
-        <button type="button" class="game-modal-close" id="closeBattleQuizModalBtn"><i class="fa-solid fa-xmark"></i> Đóng</button>
-      </div>
-      <div class="game-modal-frame">
-        <iframe
-          id="battleQuizModalFrame"
-          class="game-modal-iframe"
-          title="Mini-game Battle Quiz"
-          src="about:blank"
-          data-src="battle-quiz.html"
-          loading="lazy"
-          allow="fullscreen"
-        ></iframe>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============ MINI-GAME "CYBER DETECTIVE" (modal) — xem js/game-modal.js ============ -->
-  <div class="game-modal-overlay" id="cyberDetectiveModalOverlay">
-    <div class="game-modal">
-      <div class="game-modal-bar">
-        <span class="game-modal-title"><i class="fa-solid fa-user-secret"></i> Cyber Detective</span>
-        <button type="button" class="game-modal-close" id="closeCyberDetectiveModalBtn"><i class="fa-solid fa-xmark"></i> Đóng</button>
-      </div>
-      <div class="game-modal-frame">
-        <iframe
-          id="cyberDetectiveModalFrame"
-          class="game-modal-iframe"
-          title="Mini-game Cyber Detective"
-          src="about:blank"
-          data-src="cyber-detective.html"
-          loading="lazy"
-          allow="fullscreen"
-        ></iframe>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============ MINI-GAME "COMPUTER SIMULATOR" (modal) — xem js/game-modal.js ============ -->
-  <div class="game-modal-overlay" id="computerSimModalOverlay">
-    <div class="game-modal">
-      <div class="game-modal-bar">
-        <span class="game-modal-title"><i class="fa-solid fa-computer"></i> Computer Simulator</span>
-        <button type="button" class="game-modal-close" id="closeComputerSimModalBtn"><i class="fa-solid fa-xmark"></i> Đóng</button>
-      </div>
-      <div class="game-modal-frame">
-        <iframe
-          id="computerSimModalFrame"
-          class="game-modal-iframe"
-          title="Mini-game Computer Simulator"
-          src="about:blank"
-          data-src="computer-simulator.html"
-          loading="lazy"
-          allow="fullscreen"
-        ></iframe>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============ MINI-GAME "PHÂN LOẠI THẦN TỐC" (modal) — xem js/game-modal.js ============ -->
-  <div class="game-modal-overlay" id="sortGameModalOverlay">
-    <div class="game-modal">
-      <div class="game-modal-bar">
-        <span class="game-modal-title"><i class="fa-solid fa-magnet"></i> Phân Loại Thần Tốc</span>
-        <button type="button" class="game-modal-close" id="closeSortGameModalBtn"><i class="fa-solid fa-xmark"></i> Đóng</button>
-      </div>
-      <div class="game-modal-frame">
-        <iframe
-          id="sortGameModalFrame"
-          class="game-modal-iframe"
-          title="Mini-game Phân Loại Thần Tốc"
-          src="about:blank"
-          data-src="sort-game.html"
-          loading="lazy"
-          allow="fullscreen"
-        ></iframe>
-      </div>
     </div>
   </div>
 
@@ -837,14 +608,6 @@
        (quiz-engine gọi window.EduPendingSync.enqueue() khi lưu thất bại). -->
   <script src="js/services/pending-sync-queue.js" defer></script>
 
-  <!-- Module tài khoản để js/game-zone-gate.js biết được nếu người đang mở trang
-       (do đã đăng nhập sẵn từ login.html ở tab/phiên khác) là admin/giáo viên
-       → những vai trò này được vào thẳng Khu Vui Chơi, không cần làm bài thi.
-       auth.js chỉ khai báo hàm; Firebase Auth được nạp khi có phiên (game-zone-gate.js).
-       Trang này KHÔNG bắt buộc đăng nhập (học sinh vẫn vào bình thường không
-       cần tài khoản) — chỉ tận dụng phiên đăng nhập NẾU CÓ SẴN. -->
-  <script src="js/auth.js" defer></script>
-
   <!-- Danh sách Trường/Lớp/Tên: đọc từ file tĩnh data/roster/students-active.json
      (KHÔNG gọi Firestore trực tiếp — tránh nổ quota đọc mỗi lần tải/tải lại trang).
      File này do Điều phối đào tạo xuất ra từ roster-manager.html (nút "🗂️ Xuất JSON")
@@ -873,17 +636,8 @@
   <script src="js/game-modal.js" defer></script>
   <!-- Trước đây là 1 khối <script> nội tuyến gọi initGameModal(...) ngay
        tại đây — tách thành file ngoài js/game-modal-init.js (kèm defer) để
-       giữ ĐÚNG thứ tự thực thi tương đối với game-modal.js (trước) và
-       game-zone-gate.js (sau, cần các listener mở-game đã gắn sẵn). Xem
-       chú thích đầy đủ trong chính file đó — bọc inline bằng
-       DOMContentLoaded ở đây tưởng đúng nhưng thực ra ĐẢO NGƯỢC thứ tự vì
-       mọi script defer chạy xong hết TRƯỚC KHI DOMContentLoaded bắn. -->
+       chạy SAU game-modal.js. -->
   <script src="js/game-modal-init.js" defer></script>
-  <!-- Khu Vui Chơi: mở/khóa hub gộp 5 mini-game theo điểm thi. Nạp SAU
-       5 file *-modal.js ở trên để nút bên trong hub đã có listener mở
-       game riêng trước khi game-zone-gate.js gắn thêm listener "đóng hub
-       khi chọn 1 game". Xem js/game-zone-gate.js. -->
-  <script src="js/game-zone-gate.js" defer></script>
 <script src="js/motion.js" defer></script>
 </body>
 

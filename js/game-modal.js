@@ -35,7 +35,7 @@
       var overlay = document.getElementById(opts.overlayId);
       var closeBtn = document.getElementById(opts.closeBtnId);
       var frame = document.getElementById(opts.frameId);
-      if (!openBtn || !overlay) return;
+      if (!overlay) return; // không có nút mở (vd Chim Vượt Ải mở bằng code) vẫn gắn nút Đóng / Esc
 
       function openModal() {
         if (frame && frame.dataset.src) {
@@ -62,7 +62,7 @@
         }
       }
 
-      openBtn.addEventListener('click', openModal);
+      if (openBtn) openBtn.addEventListener('click', openModal);
       if (closeBtn) closeBtn.addEventListener('click', closeModal);
 
       overlay.addEventListener('click', function (e) {

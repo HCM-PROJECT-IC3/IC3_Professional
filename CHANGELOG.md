@@ -1,5 +1,47 @@
 # EduQuiz — Ghi chú nâng cấp (Tháng 7/2026)
 
+## Mini-game chuyển từ Khu Vui Chơi sang Đấu trường (30/10/2026)
+
+Trước đây mini-game nằm trong "Khu Vui Chơi" ở màn kết quả, phải đạt ≥90% bài Tổng hợp mới mở được 1 lượt nên ít em chơi. Nay chơi ngay trong Đấu trường, không khoá, có thêm lớp thi đấu. Không đổi Apps Script, `firestore.rules`, dữ liệu bài nộp; 0 lượt Firebase.
+
+- **Chỉ giữ 5 trò có nội dung học**. Bỏ Chim Vượt Ải và Phân Loại Thần Tốc — 2 trò mang nhãn "Giải trí" ở Khu Vui Chơi cũ. 2 trang này vẫn còn, Chim Vượt Ải vẫn là nút "Giải lao" sau bài thi ở trang chủ.
+- **Hành trình 5 chặng theo thứ tự học IC3**:
+  1. Trí Nhớ Thiết Bị — nhận biết thiết bị.
+  2. Máy Tính Ảo — thao tác tệp và thư mục.
+  3. Thám Tử Mạng — nhận diện tấn công.
+  4. Phòng Thủ Dữ Liệu — chọn biện pháp phòng thủ.
+  5. Đấu Boss — trận cuối, ôn câu hỏi IC3 tổng hợp.
+- Mỗi thẻ ghi số chặng, chủ đề IC3 và dòng "Em học được". Thắng xong có nút sang chặng kế tiếp.
+- **Tranh bìa 3D tự vẽ** (`js/arena/arena-mini-art.js`):
+  - Mỗi tranh vẽ đúng cách chơi: thẻ lật vừa khớp cặp; màn hình kéo tệp vào thư mục; laptop nhận email lừa đảo dưới kính lúp; vòm lá chắn trùm Server bật mã độc ra; Trùm Virus trúng COMBO.
+  - Tranh đặt trên cảnh nền của chính trò đó, cũng hiện ở màn đối đầu.
+  - Thay cho các ảnh dán cũ (ảnh bàn phím, logo Word, chip Intel).
+- **Vai thứ 4 "Mini-game"** (`arena.html?vai=minigame`). Dùng chung biệt danh, ví xu và Linh vật với Chơi một mình.
+- **Leo hạng từng trò**: mỗi trò có 5 đối thủ máy (Đồng → Bạc → Vàng → Kim cương → Huyền thoại), mỗi người 1 mốc điểm. Hạ hết 5 thì sang chế độ "Giữ ngai vàng": phải vượt kỷ lục của chính mình.
+- **Kịch tính trong trận**:
+  - Trước trận có màn đối đầu (em VS đối thủ, mốc điểm, xu thưởng) và đếm 3-2-1.
+  - Trong trận, thanh trên cho em đua điểm trực tiếp với đối thủ, kèm vạch mốc. Đối thủ vượt lên hay bị vượt đều có lời bình.
+  - Đếm chuỗi đúng: chuỗi 3/5/8 có câu trend, chuỗi từ 5 trở lên có chữ lớn và viền cam.
+  - Màn hình loé xanh khi đúng, đỏ khi sai. Ở nước rút mà còn bị dẫn thì viền đỏ đập như nhịp tim.
+  - Thám Tử Mạng và Máy Tính Ảo hiện "điểm tối đa còn giành được", giảm dần theo giây, theo manh mối và theo lần kiểm tra sai.
+- **Công bố kết quả**:
+  - 2 cột điểm mọc lên rồi mới lộ kết quả: CHIẾN THẮNG / SÁT NÚT (đạt ≥90% mốc) / CHƯA HẠ ĐƯỢC.
+  - Thắng thì lên hạng, có pháo hoa và xu bay vào ví. Thua thì có nút "Phục thù ngay".
+- **Xu**:
+  - Thắng được 8–24 xu tuỳ hạng. Phá kỷ lục +5. Thua mà có điểm được 2 xu khích lệ.
+  - Thắng liền từ 3 trận được thưởng thêm 50%. "Trò của ngày" được ×2 (cả lớp cùng 1 trò, mỗi ngày đổi trò).
+  - Trần 120 xu/ngày từ mini-game, để không cày xu thay cho học bài.
+- **Kỹ thuật**:
+  - Mỗi trang trò nạp `js/minigame-arena-bridge.js`. Khi mở bằng `?arena=1` trong Đấu trường, trang gửi âm thanh đúng/sai, điểm trực tiếp và kết quả ván cho trang cha qua `postMessage` cùng origin.
+  - Mở trang trò trực tiếp thì chơi như cũ.
+  - Logic thuần ở `js/arena/arena-mini-core.js`, có test `js/arena/__tests__/arena-mini-core.test.js`. Giao diện ở `js/arena/arena-mini.js`.
+  - Thám Tử Mạng và Máy Tính Ảo có thêm âm thanh (mở manh mối, kiểm tra sai, hoàn thành).
+- **Trang chủ**:
+  - Nút "Khu Vui Chơi" đổi thành "Mini-game ở Đấu trường".
+  - Bỏ hộp Khu Vui Chơi, 6 modal game và `js/game-zone-gate.js` (khoá 90%), không nạp `js/auth.js` nữa. Máy có phiên giáo viên/admin không còn tự nạp Firebase Auth ở `index.html`.
+  - "Giải lao: Chim Vượt Ải" sau bài thi vẫn giữ nguyên.
+- Đã thử bằng Chrome headless: chọn trò, đối đầu, chơi Trí Nhớ trong iframe (đúng/sai do script giả lập), thẻ "Chặng 2" sau khi thắng, kết quả sát nút → thắng → lên hạng, xu lưu đúng, màn điện thoại 390px. Kết quả: 0 lỗi JS, 0 file 404. Toàn bộ test của dự án đạt.
+
 ## Kiểm tra khi đưa các thay đổi ngày 29/10/2026 lên bản thật
 
 Đã thử bằng test tự động + Chrome headless (Firebase/Apps Script giả, giả lập cảm ứng). Những việc dưới đây chỉ làm được trên hệ thống thật — làm theo thứ tự, mất ~10 phút:

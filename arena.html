@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="EduQuiz IC3">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Đấu trường EduQuiz — chơi bộ câu hỏi IC3/MOS theo kiểu Kahoot và Blooket: Tốc độ, Săn vàng, Đua về đích, sưu tập Linh vật, và Phòng cả lớp nhiều người chơi cùng lúc. Không cần tài khoản.">
+<meta name="description" content="Đấu trường EduQuiz — chơi bộ câu hỏi IC3/MOS theo kiểu Kahoot và Blooket: Tốc độ, Săn vàng, Đua về đích, sưu tập Linh vật, Phòng cả lớp nhiều người chơi cùng lúc, và hành trình 5 mini-game học IC3. Không cần tài khoản.">
 <title>🏟️ Đấu trường — EduQuiz</title>
 <link rel="stylesheet" href="lib/fonts/fonts.css">
 <link rel="stylesheet" href="css/theme.css">
@@ -50,6 +50,7 @@
       <button type="button" class="ar-role" role="tab" data-role="student"><span class="ar-role-ico" aria-hidden="true">🙋</span><b>Học sinh</b><small>Vào phòng của lớp</small></button>
       <button type="button" class="ar-role" role="tab" data-role="teacher"><span class="ar-role-ico" aria-hidden="true">🧑‍🏫</span><b>Giáo viên</b><small>Tạo phòng cho cả lớp</small></button>
       <button type="button" class="ar-role" role="tab" data-role="solo"><span class="ar-role-ico" aria-hidden="true">🎮</span><b>Chơi một mình</b><small>Đấu với máy, sưu tập Linh vật</small></button>
+      <button type="button" class="ar-role" role="tab" data-role="minigame"><span class="ar-role-ico" aria-hidden="true">🕹️</span><b>Mini-game</b><small>5 chặng học IC3, leo hạng</small></button>
     </nav>
 
     <!-- ── HỌC SINH: sân khấu nhiều màu (hình ▲◆●■ bay như Kahoot) + thẻ vào phòng kiểu "Game PIN" ── -->
@@ -78,8 +79,8 @@
       </ol>
     </div>
 
-    <!-- ── CHƠI MỘT MÌNH ── -->
-    <div class="ar-hero only-solo">
+    <!-- ── CHƠI MỘT MÌNH (+ Mini-game dùng chung biệt danh, ví xu, Linh vật) ── -->
+    <div class="ar-hero only-solo also-mini">
       <button type="button" class="ar-avatar ar-avatar-lg" id="arAvatarBtn" title="Đổi Linh vật đại diện"></button>
       <div class="ar-hero-main">
         <label class="ar-label" for="arNick">Biệt danh</label>
@@ -88,6 +89,14 @@
         <p class="ar-due" id="arDue" hidden></p>
       </div>
       <button type="button" class="ar-btn ar-btn-pack" id="arOpenPacks"><span aria-hidden="true">🥚</span> Linh vật</button>
+    </div>
+
+    <!-- ── MINI-GAME: hành trình 5 trò học tập (bỏ 2 trò Giải trí của Khu Vui Chơi cũ), mỗi trò leo 5 hạng đối thủ (js/arena/arena-mini.js) ── -->
+    <div class="ar-card only-mini" id="arMiniCard">
+      <h2 class="ar-h2"><i class="fa-solid fa-gamepad"></i> Hành trình mini-game IC3</h2>
+      <p class="ar-hint ar-mg-lead">5 chặng đi theo đúng thứ tự học: <b>nhận biết thiết bị → thao tác máy tính → nhận diện tấn công → phòng thủ → trận cuối ôn tổng hợp</b>. Mỗi chặng có 5 đối thủ từ Đồng tới Huyền thoại — thắng để lên hạng, nhận xu mở Linh vật và sang chặng kế.</p>
+      <div class="ar-mg-day" id="arMiniDay"></div>
+      <div class="ar-mg-grid" id="arMiniGrid"></div>
     </div>
 
     <!-- ── GIÁO VIÊN: phải đăng nhập tài khoản giáo viên mới thấy các bước tạo phòng (js/arena/arena-teacher.js) ── -->
@@ -271,6 +280,15 @@
     <div id="arRoomBody"></div>
   </section>
 
+  <!-- ===== MINI-GAME đang chơi (màn đối đầu → iframe trò + thanh đua → kết quả; js/arena/arena-mini.js) ===== -->
+  <section id="arMini" class="ar-screen" hidden>
+    <div class="ar-row ar-room-top">
+      <span class="ar-pill ar-pill-main" id="arMiniTitle"></span>
+      <button type="button" class="ar-btn ar-btn-ghost ar-btn-sm" id="arMiniLeave"><i class="fa-solid fa-arrow-left"></i> Đổi trò</button>
+    </div>
+    <div id="arMiniBody"></div>
+  </section>
+
   <!-- ===== KẾT QUẢ ===== -->
   <section id="arEnd" class="ar-screen" hidden>
     <div class="ar-card ar-end">
@@ -317,6 +335,9 @@
 <script src="js/arena/arena-lobby-fun.js"></script>
 <script src="js/arena/arena-room.js"></script>
 <script src="js/arena/arena-board.js"></script>
+<script src="js/arena/arena-mini-core.js"></script>
+<script src="js/arena/arena-mini-art.js"></script>
+<script src="js/arena/arena-mini.js"></script>
 <script src="js/sw-register.js"></script>
 </body>
 </html>
