@@ -21,6 +21,28 @@ Thứ tự: Apps Script → `firestore.rules`/index → đẩy web.
    - F12 → Console, lọc "lượt đọc Firestore": danh sách học sinh chỉ vài lượt mỗi lần mở.
      Lệch dữ liệu thì đặt `rosterDeltaSync: false` trong `js/backend-config.js`.
 
+## 31/10/2026
+
+- **Bộ "Theo chủ đề" đối chiếu với `IC3 Review_All.docx`** (cột "Bài" của từng câu → chủ đề theo PPCT 2026-2027):
+  chuyển 117 câu về đúng chủ đề ở 6 cấp, ghi lý do + nguồn từng câu trong `data/ic3/topic-reassign.json`. Chỉ chuyển khi
+  PPCT của Bài và đề chứa câu trong file Word cùng chỉ một chủ đề (hoặc giáo viên ghi rõ "CDn"). Không thêm/bỏ câu nào,
+  bộ "Bài N" giữ nguyên, không trùng câu. Bộ Ôn tập/Kiểm tra sinh lại theo chủ đề mới.
+- `scripts/build-allkey-map.py`: khi hoà điểm (đề bài chung "Em hãy di chuyển từng thuật ngữ...") ưu tiên câu trùng nhiều
+  chữ hơn — sửa 11 câu All Key trước đây bị ghép nhầm sang câu khác (bộ Ôn tập lấy đúng câu hơn).
+
+- **Sổ đầu bài** (`so-dau-bai.html`, chỉ giáo viên/admin; lối vào ở Trang quản lý và Điểm danh): ghi tiết dạy,
+  học sinh vắng (P/K), nhận xét, thời khóa biểu, tiến độ PPCT, in/xuất Excel. Mục Học sinh có nút
+  **"Lấy từ dữ liệu trường"**: lấy lớp + học sinh từ sổ lớp Điều phối đã đọc ở Điểm danh (có mã HS, ngày sinh,
+  bỏ học sinh nghỉ luôn) hoặc danh sách học sinh của hệ thống — không phải nhập lại.
+  Tiết đã ghi hôm nay có nút **Gọi tên**: mở Gọi tên đúng lớp, bỏ qua bạn vắng, câu hỏi theo bài vừa dạy.
+- Dữ liệu sổ chỉ nằm trên máy (localStorage) + file sao lưu: **0 lượt Firebase, 0 lượt Apps Script**
+  (ngoài lượt đọc hồ sơ đăng nhập đã lưu đệm như mọi trang giáo viên). Không cần deploy Apps Script/rules.
+  Ai đã dùng bản Sổ đầu bài riêng trước đây: "Tải bản sao lưu" ở bản cũ → "Khôi phục từ bản sao lưu" ở trang mới.
+- **Điểm danh 1 lần**: ghi tiết mới trong Sổ đầu bài tự điền học sinh vắng từ Điểm danh (cùng lớp, cùng ngày,
+  tính cả điểm danh chưa ghi vào Sheet), có dòng ghi rõ lấy lúc nào; bấm tên để sửa.
+- **Menu Trang quản lý** gom thành 3 nhóm: Đề & kết quả · Lớp học · Khác; tên mục ngắn lại.
+- **Sổ đầu bài cùng giao diện web**: nút navy phẳng, sáng/tối dùng chung công tắc với các trang khác, có Đăng xuất.
+
 ## 30/10/2026
 
 - **Đấu trường gọn còn 3 thẻ vai**: Học sinh · Giáo viên · Chơi một mình. "Chơi một mình" có công tắc

@@ -1,0 +1,9 @@
+services:
+  mos:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./files:/app/files:ro
+      - ./work:/work
+    restart: unless-stopped

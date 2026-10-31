@@ -89,9 +89,13 @@ def main():
             jac = len(w & sw) / max(1, len(w | sw))
             cont = len(qw & sw) / len(qw) * .9 if len(qw) >= 6 and jac >= .25 else 0
             return max(jac, cont)
+        def jac_of(c, sw):
+            return len(c[1] & sw) / max(1, len(c[1] | sw))
         # Ghép tham lam theo điểm cao trước: mỗi câu All Key → 1 câu dữ liệu; 1 câu dữ liệu chỉ nhận thêm
         # câu All Key thứ 2+ khi gần như y hệt (≥ 0.8 — đề sau lặp lại câu của đề trước).
-        pairs = sorted(((score(c, sw), i, j) for i, (_, sw) in enumerate(slides) for j, c in enumerate(cand)), reverse=True)
+        # Hoà điểm (đề bài chung "Em hãy di chuyển từng thuật ngữ..." đều được 0.9) → câu trùng toàn bộ chữ nhiều hơn
+        # thắng, không phụ thuộc thứ tự câu trong bộ chủ đề.
+        pairs = sorted(((score(c, sw), jac_of(c, sw), i, j) for i, (_, sw) in enumerate(slides) for j, c in enumerate(cand)), reverse=True)
         took, used = {}, set()
         # Ghép tay (allkey-sync.json → links): câu khoá đã có trong data nhưng diễn đạt/dạng khác hẳn
         idx = {c[0]["uid"]: j for j, c in enumerate(cand)}
@@ -104,7 +108,7 @@ def main():
                 continue
             took[i] = idx[ln["uid"]]
             used.add(idx[ln["uid"]])
-        for sc, i, j in pairs:
+        for sc, _, i, j in pairs:
             if sc < .5:
                 break
             if i in took or (j in used and sc < .8):
@@ -116,8 +120,8 @@ def main():
         for i, (_, sw) in enumerate(slides):
             if i in took:
                 continue
-            ranked = sorted(((score(c, sw), j) for j, c in enumerate(cand)), reverse=True)
-            pick = next(((sc, j) for sc, j in ranked if sc >= .5 or (sc >= .28 and j not in used)), None)
+            ranked = sorted(((score(c, sw), jac_of(c, sw), j) for j, c in enumerate(cand)), reverse=True)
+            pick = next(((sc, j) for sc, _, j in ranked if sc >= .5 or (sc >= .28 and j not in used)), None)
             if pick and pick[0] >= .28:
                 took[i] = pick[1]
                 used.add(pick[1])

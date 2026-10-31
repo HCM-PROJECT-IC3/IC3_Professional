@@ -1,0 +1,60 @@
+{
+ "excel-t3-p1": {
+  "1": { "type": "x.cellsEmpty", "sheet": "Exchange Rates", "range": "A11:B11" },
+  "2": { "type": "x.numDecimals", "sheet": "Exchange Rates", "range": "B4:D9", "decimals": 2 },
+  "3": { "type": "x.textGone", "sheet": "New Accounts", "text": "Manley Valve",
+         "keep": ["Alum Sheeting", "Durrable Products", "Fast-Tie Aerospace", "Hulkey Fasteners", "Pylon Accessories", "Spacetime Technologies", "Steelpin Inc."],
+         "keepCells": { "L8": "m" } },
+  "4": { "type": "x.rowFormula", "sheet": "VIP Accounts", "col": "C", "rows": [4, 10], "fn": "AVERAGE",
+         "expect": { "op": "avg", "cols": ["D", "E", "F", "G"] } },
+  "5": { "type": "x.rowFormula", "sheet": "Contact", "col": "C", "rows": [4, 13],
+         "expect": { "op": "concat", "parts": ["{A}", "@gmail.com"] } },
+  "6": { "type": "x.chart", "sheet": "New Accounts", "title": "Account Balances", "seriesCount": 2,
+         "seriesNames": ["Opening Balance", "Current Balance"] }
+ },
+ "excel-t3-p2": {
+  "1": { "type": "x.printArea", "sheet": "January", "range": "A4:F12" },
+  "2": { "type": "x.filterOnly", "sheet": "March", "col": "F", "rows": [5, 13], "equals": ["MP"] },
+  "3": { "type": "x.rowFormula", "sheet": "February", "col": "G", "rows": [5, 16], "fn": "IF",
+         "expect": { "op": "if", "col": "E", "cmp": ">", "value": 5, "then": "YES", "else": "NO" } },
+  "4": { "type": "x.chartAltText", "sheet": "Summary", "text": "New Data" },
+  "5": { "type": "x.rowFormula", "sheet": "February", "col": "F", "rows": [5, 16], "fn": "LEFT",
+         "expect": { "op": "left", "col": "B", "n": 2 } }
+ },
+ "excel-t3-p3": {
+  "1": { "type": "x.styleCopied", "from": "Tasks", "to": "Projects", "cells": ["A1", "A2"] },
+  "2": { "type": "x.tableName", "sheet": "Tasks", "name": "Tasks" },
+  "3": { "type": "x.cellFormula", "sheet": "Grade Criteria", "cell": "B27", "names": ["Total1", "Total2", "Total3"],
+         "noAddress": true, "value": 1000 },
+  "4": { "type": "x.tableProp", "sheet": "Tasks", "rowStripes": true },
+  "5": { "type": "x.cellFormula", "sheet": "Exams", "cell": "E17", "fn": "COUNTBLANK|COUNTIF|COUNTIFS", "value": 3 },
+  "6": { "type": "x.chart", "sheet": "Chart", "legend": false, "showVal": true }
+ },
+ "excel-t3-p4": {
+  "1": { "type": "x.cellsEqual", "sheet": "Substitutes",
+         "values": { "A1": "Last Name", "B1": "First Nam", "C1": "Gender", "D1": "Country", "A2": "Angel", "D2": "France", "A9": "Rasheeda", "D9": "United States" } },
+  "2": { "type": "x.colWidth", "sheet": "Instructional Hours", "cols": "B:G", "width": 12 },
+  "3": { "type": "x.sparklines", "sheet": "Enrollment", "range": "I4:I9", "sparkType": "column", "scope": "Kiểm tra Sparklines dạng cột ở I4:I9." },
+  "4": { "type": "x.noTable", "sheet": "Classes" },
+  "5": { "type": "x.chartSheet", "name": "Graduation Chart" },
+  "6": { "type": "x.chart", "sheet": "Instructional Hours", "valAxisTitle": "Hours" }
+ },
+ "excel-t3-p5": {
+  "1": { "type": "x.rowFormula", "sheet": "Vietnam", "col": "E", "rows": [5, 21],
+         "expect": { "op": "mul", "col": "D", "k": 1.60934 } },
+  "2": { "type": "x.sorted", "sheet": "Asian", "rows": [5, 62], "idCol": "A", "keys": [{ "col": "B" }, { "col": "C" }] },
+  "3": { "type": "x.noCF", "sheet": "Vietnam" },
+  "4": { "type": "x.cellFormula", "sheet": "Asian", "cell": "D64", "fn": "MAX", "value": 3540 },
+  "5": { "type": "x.chart", "sheet": "Vietnam", "title": "Air Miles", "legend": false, "dTable": { "showKeys": false } },
+  "6": { "type": "x.newChart", "sheet": "Asian", "chartType": "barChart", "barDir": "col", "grouping": "clustered", "valCol": "D", "belowRow": 62 }
+ },
+ "excel-t3-p6": {
+  "1": { "type": "x.freeze", "sheet": "Products", "rows": 3, "cols": 0 },
+  "2": { "type": "x.align", "sheet": "Products", "cell": "A1", "horizontal": "left" },
+  "3": { "type": "x.iconSet", "sheet": "Products", "range": "E4:E18", "set": "3TrafficLights1" },
+  "4": { "type": "x.chart", "sheet": "Summary", "colorStyle": "11", "scope": "Đối chiếu mã bảng màu Colorful Palette 2 (id 11) trong tệp biểu đồ." },
+  "5": { "type": "x.tableProp", "sheet": "Products", "style": "TableStyleMedium1" },
+  "6": { "type": "x.rowFormula", "sheet": "Products", "col": "H", "rows": [4, 18],
+         "expect": { "op": "mul", "col": "G", "name": "Rate" } }
+ }
+}

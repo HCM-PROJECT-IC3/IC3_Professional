@@ -1,0 +1,1182 @@
+/* Trang Ôn luyện MOS — điều hướng bằng #hash, không cần máy chủ:
+   #/                 trang chủ (thông tin học sinh, chọn môn)
+   #/s/<môn>          danh sách bộ đề
+   #/set/<bộ đề>      danh sách project + nút thi thử
+   #/p/<project>      luyện tập 1 project (có hướng dẫn, chấm ngay)
+   #/exam/<bộ đề>     thi thử cả bộ có giờ (ẩn hướng dẫn, chấm khi kết thúc)
+   #/r/<lượt làm>     kết quả 1 lượt
+   #/history          lịch sử trên máy này */
+(function () {
+  'use strict';
+
+  const CFG = window.MosConfig;
+  const app = document.getElementById('app');
+
+  // ---------------------------------------------------------------- tiện ích
+
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const $ = sel => app.querySelector(sel);
+
+  const store = {
+    get(k, def) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch (e) { return def; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* bộ nhớ đầy/bị chặn: chỉ mất lịch sử */ } },
+    del(k) { try { localStorage.removeItem(k); } catch (e) { /* bỏ qua */ } },
+  };
+
+  const ICON = {
+    download: '<path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v3h16v-3"/>',
+    upload: '<path d="M12 16V4m0 0-4 4m4-4 4 4M4 17v3h16v-3"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    check: '<path d="m5 12 5 5 9-10"/>',
+    x: '<path d="M6 6l12 12M18 6 6 18"/>',
+    eye: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+    flag: '<path d="M5 21V4h11l-2 4 2 4H5"/>',
+    left: '<path d="m15 6-6 6 6 6"/>',
+    right: '<path d="m9 6 6 6-6 6"/>',
+    file: '<path d="M6 2h8l5 5v15H6z"/><path d="M14 2v5h5"/>',
+    user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>',
+    moon: '<path d="M20 14A8 8 0 1 1 10 4a7 7 0 0 0 10 10z"/>',
+    warn: '<path d="M12 3 2 21h20L12 3z"/><path d="M12 10v5M12 18h.01"/>',
+    dock: '<rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 15h18"/>',
+    expand: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+  };
+  const icon = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24" aria-hidden="true">${ICON[n]}</svg>`;
+
+  const fmtSize = b => b > 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
+  const fmtTime = t => new Date(t).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
+  const clock = ms => { const s = Math.max(0, Math.round(ms / 1000)); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
+  const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+  const setIdOf = pid => pid.replace(/-p\d+$/, '');
+  const subjectOf = id => id.startsWith('ppt-') ? 'powerpoint' : id.startsWith('word-') ? 'word' : 'excel';
+
+  function lines(text) {
+    return esc(text).replace(/\n{2,}/g, '\n').split('\n').map(l => l.trim()).filter(Boolean)
+      .map(l => `<span class="line">${l}</span>`).join('');
+  }
+
+  // ---------------------------------------------------------------- dữ liệu
+
+  const cache = {};
+  async function getJson(url) {
+    if (!cache[url]) {
+      cache[url] = fetch(url, { cache: 'no-cache' }).then(r => {
+        if (!r.ok) throw new Error(`Không tải được ${url} (${r.status})`);
+        return r.json();
+      }).catch(e => { delete cache[url]; throw e; });
+    }
+    return cache[url];
+  }
+  const getIndex = () => getJson('data/index.json');
+  const getSet = id => getJson(`data/sets/${id}.json`);
+  const getRubrics = subject => getJson(`data/rubrics/${subject}.json`).catch(() => ({}));
+
+  let jszip = null;
+  function loadJsZip() {
+    if (window.JSZip) return Promise.resolve();
+    jszip = jszip || new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'js/jszip.min.js';
+      s.onload = res;
+      s.onerror = () => { jszip = null; rej(new Error('Không tải được bộ đọc tệp (jszip).')); };
+      document.head.appendChild(s);
+    });
+    return jszip;
+  }
+
+  /** Chấm 1 tệp; với Excel tải kèm tệp đề gốc (vài chục KB) cho các tiêu chí so trước/sau. */
+  const baseCache = {};
+  async function gradeFile(file, project, rubric, only) {
+    await loadJsZip();
+    const buffer = await file.arrayBuffer();
+    if (/\.(xlsx|docx)$/i.test(project.main) && !(project.id in baseCache)) {
+      const main = project.files.find(f => f.name === project.main);
+      try { baseCache[project.id] = await (await fetch(main.path)).arrayBuffer(); } catch (e) { baseCache[project.id] = null; }
+    }
+    return window.MosGrader.grade(buffer, project, rubric || {}, { baseBuffer: baseCache[project.id] || null, only });
+  }
+
+  // Tệp PowerPoint nặng không đưa lên git — chỉ có khi chạy bằng máy chủ phòng máy (Docker).
+  const availability = {};
+  function checkAvailable(path) {
+    if (!(path in availability)) {
+      availability[path] = fetch(path, { method: 'HEAD' }).then(r => r.ok).catch(() => false);
+    }
+    return availability[path];
+  }
+
+  // ---------------------------------------------------------------- học sinh / lịch sử / gửi kết quả
+
+  const student = () => store.get('mos_student', null);
+  const history = () => store.get('mos_history', []);
+  function saveAttempt(a) {
+    const h = history().filter(x => x.id !== a.id);
+    h.unshift(a);
+    store.set('mos_history', h.slice(0, 200));
+  }
+
+  function toSheetPayload(a) {
+    const st = a.student || {};
+    const results = a.projects.flatMap(p => p.results.map(r => ({
+      id: `${p.no}.${r.no}`, label: (r.text || '').slice(0, 200),
+      passed: r.status === 'self' ? null : r.status === 'pass', manual: r.status === 'self',
+      note: r.note || (p.submitted ? '' : 'Chưa nộp tệp'),
+    }))).slice(0, 200);
+    return {
+      submissionId: a.id.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 64),
+      studentName: (st.name || '').slice(0, 120), studentClass: (st.cls || '').slice(0, 40), studentSchool: (st.school || '').slice(0, 160),
+      projectId: a.mode + ':' + (a.projectId || a.setId),
+      projectTitle: `${a.mode === 'exam' ? 'Thi thử' : 'Luyện tập'} ${a.subjectName} · ${a.title}${a.score != null ? ` (${a.score}/1000)` : ''}`.slice(0, 300),
+      score: a.score == null ? null : Math.round(a.score / 10),
+      passedCount: a.passed, autoTotal: a.auto, manualCount: a.self, results,
+    };
+  }
+
+  async function postSheet(payload) {
+    const res = await fetch(CFG.appsScriptUrl, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'mosSubmit', payload }),
+    });
+    const json = await res.json();
+    if (!json.ok) throw Object.assign(new Error(json.error || 'Apps Script báo lỗi'), { code: json.code });
+  }
+
+  // Gửi lại khi có mạng; trùng submissionId thì Apps Script tự bỏ qua.
+  async function flushPending() {
+    if (!CFG.appsScriptUrl || !navigator.onLine) return;
+    const queue = store.get('mos_pending', []);
+    if (!queue.length) return;
+    const left = [];
+    for (const p of queue) {
+      try { await postSheet(p); } catch (e) { if (e.code !== 'invalid-argument') left.push(p); }
+    }
+    store.set('mos_pending', left);
+  }
+  function sendAttempt(a) {
+    if (!CFG.appsScriptUrl || !a.student || !a.student.name) return;
+    if (a.mode === 'practice' && !CFG.sendPractice) return;
+    const q = store.get('mos_pending', []);
+    q.push(toSheetPayload(a));
+    store.set('mos_pending', q);
+    flushPending();
+  }
+
+  // ---------------------------------------------------------------- khung trang
+
+  function header() {
+    const st = student();
+    const route = location.hash.split('/')[1] || '';
+    return `<header class="topbar">
+      <a class="brand" href="#/"><span class="brand-mark">MOS</span> Ôn luyện MOS</a>
+      <nav class="topnav">
+        <a href="#/" class="${route === '' ? 'on' : ''}">Trang chủ</a>
+        <a href="#/history" class="${route === 'history' ? 'on' : ''}">Lịch sử</a>
+      </nav>
+      <a class="who" href="#/" title="Sửa thông tin">${icon('user')}<span>${st ? esc(st.name) + (st.cls ? ' · ' + esc(st.cls) : '') : 'Chưa nhập tên'}</span></a>
+      <button type="button" class="icon-btn" id="themeBtn" title="Đổi nền sáng/tối">${icon('moon')}</button>
+    </header>`;
+  }
+
+  function page(body, opts) {
+    leave();
+    app.innerHTML = (opts && opts.bare ? '' : header()) + `<main class="wrap${opts && opts.wide ? ' wide' : ''}">${body}</main>`;
+    window.scrollTo(0, 0);
+  }
+
+  function crumbs(items) {
+    return `<nav class="crumbs">${items.map((it, i) => i < items.length - 1 ? `<a href="${it[1]}">${esc(it[0])}</a><span>/</span>` : `<strong>${esc(it[0])}</strong>`).join('')}</nav>`;
+  }
+
+  function showError(e) {
+    page(`<section class="panel"><h1>Không mở được trang</h1><p class="muted">${esc(e.message)}</p><a class="btn" href="#/">Về trang chủ</a></section>`);
+  }
+
+  // ---------------------------------------------------------------- trang chủ
+
+  async function viewHome() {
+    const idx = await getIndex();
+    const st = student() || { name: '', cls: '', school: CFG.defaultSchool };
+    const recent = history().slice(0, 5);
+    const tiles = idx.subjects.map(s => {
+      const tasks = s.sets.reduce((a, st2) => a + st2.projects.reduce((b, p) => b + p.tasks, 0), 0);
+      const empty = !s.sets.length;
+      return `<a class="tile${empty ? ' off' : ''}" ${empty ? 'aria-disabled="true"' : `href="#/s/${s.id}"`}>
+        <span class="tile-mark m-${s.id}">${s.name[0]}</span>
+        <span class="tile-name">${esc(s.name)}</span>
+        <span class="tile-meta">${empty ? 'Chưa có bộ đề' : `${s.sets.length} bộ đề · ${tasks} task`}</span>
+      </a>`;
+    }).join('');
+    page(`
+      <section class="panel intro">
+        <h1>Ôn luyện MOS</h1>
+        <p class="muted">Em tải tệp đề, làm trên Microsoft Office thật, rồi nộp tệp đã lưu để hệ thống chấm ngay trên máy em. Tệp không gửi đi đâu.</p>
+        <form class="student" id="studentForm" autocomplete="on">
+          <label>Họ và tên<input name="name" required maxlength="80" value="${esc(st.name)}" placeholder="Nguyễn Văn A"></label>
+          <label>Lớp<input name="cls" maxlength="20" value="${esc(st.cls)}" placeholder="8A1"></label>
+          <label>Trường<input name="school" maxlength="120" value="${esc(st.school)}" placeholder="THCS ..."></label>
+          <button class="btn" type="submit">Lưu</button>
+          <span class="saved muted" id="savedMsg" hidden>Đã lưu.</span>
+        </form>
+      </section>
+      <h2 class="section-title">Chọn môn</h2>
+      <div class="tiles">${tiles}</div>
+      <h2 class="section-title">Cách làm</h2>
+      <ol class="how">
+        <li><strong>Luyện tập</strong> từng project: có hướng dẫn từng bước, nộp tệp là biết task nào đúng/sai.</li>
+        <li><strong>Thi thử</strong> cả bộ đề trong ${CFG.examMinutes} phút như phòng thi: không xem hướng dẫn, nộp tệp từng project, kết thúc mới có điểm.</li>
+        <li>Điểm theo thang MOS 1000, đạt từ ${CFG.passScore}. Task ghi "Tự kiểm" chưa chấm tự động được — em tự đối chiếu với hướng dẫn.</li>
+      </ol>
+      ${recent.length ? `<h2 class="section-title">Gần đây</h2>${historyTable(recent)}<p><a href="#/history">Xem tất cả</a></p>` : ''}
+    `);
+    $('#studentForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const f = new FormData(e.target);
+      store.set('mos_student', { name: f.get('name').trim(), cls: f.get('cls').trim(), school: f.get('school').trim() });
+      $('#savedMsg').hidden = false;
+      document.querySelector('.who span').textContent = f.get('name').trim() + (f.get('cls').trim() ? ' · ' + f.get('cls').trim() : '');
+    });
+  }
+
+  // ---------------------------------------------------------------- môn / bộ đề
+
+  async function viewSubject(id) {
+    const idx = await getIndex();
+    const s = idx.subjects.find(x => x.id === id);
+    if (!s) throw new Error('Không có môn này.');
+    const rubrics = await getRubrics(id);
+    const best = bestScores();
+    const rows = s.sets.map(st => {
+      const tasks = st.projects.reduce((a, p) => a + p.tasks, 0);
+      const auto = st.projects.reduce((a, p) => a + Object.keys(rubrics[p.id] || {}).length, 0);
+      const b = best['exam:' + st.id];
+      return `<tr>
+        <td><a href="#/set/${st.id}"><strong>${esc(st.title)}</strong></a></td>
+        <td>${st.projects.length} project · ${tasks} task</td>
+        <td>${auto ? `<span class="chip ok">${auto}/${tasks} tự chấm</span>` : '<span class="chip">Tự kiểm</span>'}</td>
+        <td>${b != null ? `<span class="score-sm ${b >= CFG.passScore ? 'pass' : 'fail'}">${b}</span>` : '<span class="muted">—</span>'}</td>
+        <td class="actions"><a class="btn-sec" href="#/set/${st.id}">Luyện tập</a><a class="btn" href="#/exam/${st.id}">Thi thử</a></td>
+      </tr>`;
+    }).join('');
+    page(`${crumbs([['Trang chủ', '#/'], [s.name, '']])}
+      <h1>${esc(s.name)} — bộ đề ôn luyện</h1>
+      <div class="table-wrap"><table class="grid">
+        <thead><tr><th>Bộ đề</th><th>Nội dung</th><th>Chấm</th><th>Thi thử tốt nhất</th><th></th></tr></thead>
+        <tbody>${rows}</tbody></table></div>`);
+  }
+
+  function bestScores() {
+    const out = {};
+    for (const a of history()) {
+      const k = a.mode + ':' + (a.projectId || a.setId);
+      if (a.score != null && (out[k] == null || a.score > out[k])) out[k] = a.score;
+    }
+    return out;
+  }
+
+  async function viewSet(id) {
+    const set = await getSet(id);
+    const idx = await getIndex();
+    const subj = idx.subjects.find(s => s.id === set.subject);
+    const rubrics = await getRubrics(set.subject);
+    const best = bestScores();
+    const rows = set.projects.map(p => {
+      const auto = Object.keys(rubrics[p.id] || {}).length;
+      const b = best['practice:' + p.id];
+      return `<a class="row-link" href="#/p/${p.id}">
+        <span class="row-title">${esc(p.title)}</span>
+        <span class="muted">${p.tasks.length} task${auto ? ` · ${auto} tự chấm` : ''}</span>
+        <span>${b != null ? `<span class="score-sm ${b >= CFG.passScore ? 'pass' : 'fail'}">${b}</span>` : ''}</span>
+        ${icon('right')}
+      </a>`;
+    }).join('');
+    page(`${crumbs([['Trang chủ', '#/'], [subj.name, '#/s/' + subj.id], [set.title, '']])}
+      <div class="head-row"><h1>${esc(subj.name)} · ${esc(set.title)}</h1>
+        <a class="btn" href="#/exam/${set.id}">${icon('clock')} Thi thử ${CFG.examMinutes} phút</a></div>
+      <div class="rows">${rows}</div>
+      ${set.attachments ? `<details class="panel attach"><summary>Dữ liệu đính kèm của đề</summary>${attachTable(set.attachments)}</details>` : ''}`);
+  }
+
+  function attachTable(rows) {
+    return `<div class="table-wrap"><table class="grid small">${rows.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>`;
+  }
+
+  // ---------------------------------------------------------------- tệp đang làm (kiểu GMetrix)
+  // Em tải đề qua trang → làm trên Office → Ctrl+S → trang tự đọc lại tệp để chấm từng câu, không phải tải lên.
+
+  const W = window.MosWorkfile;
+  const leaving = [];
+  function onLeave(fn) { leaving.push(fn); }
+  function leave() { while (leaving.length) { try { leaving.pop()(); } catch (e) { /* bỏ qua */ } } stopTimer(); }
+
+  // Máy chủ phòng máy (mos/server.js): Office mở/lưu thẳng tệp trên máy chủ qua WebDAV.
+  // Trên GitHub Pages không có /api/info → dùng tệp trên máy em (File System Access).
+  const Srv = { ok: false };
+  Srv.ready = fetch('api/info', { cache: 'no-store' }).then(r => (r.ok ? r.json() : null))
+    .then(j => { Srv.ok = !!(j && j.server === 'mos'); }).catch(() => {});
+  const OFFICE_APP = { excel: 'excel', powerpoint: 'powerpoint', word: 'word' };
+  function sessionId() {
+    let id = store.get('mos_sid', '');
+    if (!/^[a-f0-9]{16}$/.test(id)) {
+      id = Array.from(crypto.getRandomValues(new Uint8Array(8)), b => b.toString(16).padStart(2, '0')).join('');
+      store.set('mos_sid', id);
+    }
+    return id;
+  }
+  async function serverFile(url, name) {
+    const r = await fetch(url, { cache: 'no-store' });
+    if (!r.ok) throw new Error('Không đọc được tệp trên máy chủ (' + r.status + ').');
+    const blob = await r.blob();
+    return new File([blob], name, { lastModified: Date.parse(r.headers.get('last-modified')) || Date.now() });
+  }
+
+  function workSession(o) {
+    const key = o.mode + ':' + o.project.id;
+    const slotKey = 'mos_work_' + o.slot;
+    const main = o.project.files.find(f => f.name === o.project.main);
+    let unwatch = null;
+    const ws = { handle: null, perm: '', fileName: '', savedAt: 0, upload: null, url: '', server: false };
+    const live = () => (ws.server ? !!ws.url : !!ws.handle && ws.perm === 'granted');
+    const watchNow = () => {
+      if (unwatch) unwatch();
+      if (ws.server) {
+        // Hỏi máy chủ mỗi 1,5 giây xem tệp có đổi không (HEAD vài trăm byte trong mạng LAN).
+        let last = null, busy = false, stopped = false;
+        const tick = async () => {
+          if (busy || stopped) return;
+          busy = true;
+          try {
+            const r = await fetch(ws.url, { method: 'HEAD', cache: 'no-store' });
+            const sig = r.headers.get('etag') || r.headers.get('last-modified');
+            if (r.ok && last !== null && sig !== last) {
+              last = sig;
+              const f = await serverFile(ws.url, ws.fileName);
+              ws.savedAt = f.lastModified;
+              if (!stopped) await o.onSave(f);
+            } else if (r.ok) last = sig;
+          } catch (e) { /* mất mạng thoáng qua — lần sau hỏi lại */ }
+          busy = false;
+        };
+        tick();
+        const t = setInterval(tick, 1500);
+        unwatch = () => { stopped = true; clearInterval(t); };
+        return;
+      }
+      unwatch = W.watch(ws.handle, async file => { ws.savedAt = file.lastModified; await o.onSave(file); });
+    };
+    Object.assign(ws, {
+      key, live,
+      stop() { if (unwatch) unwatch(); unwatch = null; },
+      async init() {
+        await Srv.ready;
+        if (Srv.ok) {
+          ws.server = true;
+          const u = store.get(slotKey, '');
+          if (!u) return;
+          const r = await fetch(u, { method: 'HEAD', cache: 'no-store' }).catch(() => null);
+          if (!r || !r.ok) { store.del(slotKey); return; }
+          ws.url = u; ws.fileName = decodeURIComponent(u.split('/').pop());
+          ws.savedAt = Date.parse(r.headers.get('last-modified')) || 0;
+          watchNow();
+          return;
+        }
+        if (!W.supported) return;
+        ws.handle = await W.getHandle(key);
+        if (!ws.handle) return;
+        ws.fileName = ws.handle.name;
+        ws.perm = await W.permission(ws.handle, false).catch(() => 'denied');
+        if (live()) {
+          try { ws.savedAt = (await ws.handle.getFile()).lastModified; } catch (e) { /* tệp bị xoá/đổi chỗ */ }
+          watchNow();
+        }
+      },
+      /** Máy chủ: tạo bản làm bài rồi mở bằng Office. Không có máy chủ: lưu tệp đề vào máy em. */
+      async start(reset) {
+        if (ws.server) {
+          const r = await fetch('api/work', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sid: sessionId(), slot: o.slot, file: main.path, reset: !!reset }) });
+          const j = await r.json().catch(() => ({}));
+          if (!r.ok) throw new Error(j.error || 'Máy chủ không tạo được bản làm bài.');
+          ws.url = j.url; ws.fileName = main.name; ws.savedAt = j.mtime;
+          store.set(slotKey, j.url);
+          watchNow();
+          ws.openOffice();
+          return;
+        }
+        ws.handle = await W.saveStarter(key, main.path, main.name, o.subj.ext);
+        ws.fileName = ws.handle.name; ws.perm = 'granted'; ws.savedAt = Date.now();
+        watchNow();
+      },
+      /** Mở tệp trên máy chủ bằng Office (giao thức ms-excel/ms-powerpoint/ms-word, chế độ sửa). */
+      openOffice() {
+        if (!ws.url) return;
+        location.href = `ms-${OFFICE_APP[o.subj.id]}:ofe|u|${new URL(ws.url, location.href).href}`;
+      },
+      async pick() {
+        ws.server = false;
+        ws.handle = await W.pick(key, o.subj.ext);
+        ws.fileName = ws.handle.name; ws.perm = 'granted';
+        ws.savedAt = (await ws.handle.getFile()).lastModified;
+        watchNow();
+      },
+      async resume() {
+        ws.perm = await W.permission(ws.handle, true);
+        if (live()) watchNow();
+      },
+      async file() {
+        if (live()) {
+          const f = ws.server ? await serverFile(ws.url, ws.fileName) : await W.read(ws.handle);
+          ws.savedAt = f.lastModified;
+          return f;
+        }
+        return ws.upload;
+      },
+    });
+    onLeave(() => ws.stop());
+    return ws;
+  }
+
+  // Task "sticky": đúng một lần là giữ (vd bật Track Changes rồi task sau lại tắt đi).
+  function keepSticky(rubric, prev, results) {
+    return results.map(r => (rubric[r.no] && rubric[r.no].sticky && r.status === 'fail' && prev[r.no] && prev[r.no].status === 'pass'
+      ? Object.assign({}, prev[r.no], { note: prev[r.no].note + ' (đã làm đúng ở lần lưu trước)' }) : r));
+  }
+
+  // Trạng thái 1 project: luyện tập lưu riêng từng project; thi thử nằm trong trạng thái bài thi.
+  function practiceCtx(subj, set, project, rubric) {
+    const k = 'mos_prac_' + project.id;
+    const get = () => store.get(k, { byNo: {}, marks: {}, fileName: '', at: 0 });
+    return {
+      mode: 'practice', subj, set, project, rubric, state: get,
+      record(results, fileName) { const s = get(); keepSticky(rubric, s.byNo, results).forEach(r => { s.byNo[r.no] = r; }); s.fileName = fileName; s.at = Date.now(); store.set(k, s); },
+      mark(no, kind) { const s = get(); s.marks[no] = s.marks[no] || {}; s.marks[no][kind] = !s.marks[no][kind]; store.set(k, s); },
+      reset() { store.del(k); },
+    };
+  }
+  function examCtx(subj, set, project, rubric, key) {
+    const get = () => store.get(key, null) || { subs: {}, marks: {} };
+    return {
+      mode: 'exam', subj, set, project, rubric,
+      state() { const ex = get(); const sub = ex.subs[project.id] || {}; return { byNo: sub.byNo || {}, marks: ex.marks[project.id] || {}, fileName: sub.fileName || '', at: sub.at || 0 }; },
+      record(results, fileName) {
+        const ex = store.get(key, null);
+        if (!ex) return;
+        const byNo = {};
+        keepSticky(rubric, (ex.subs[project.id] || {}).byNo || {}, results).forEach(r => { byNo[r.no] = r; });
+        ex.subs[project.id] = { byNo, fileName, at: Date.now() };
+        store.set(key, ex);
+      },
+      mark(no, kind) { const ex = store.get(key, null); if (!ex) return; const m = (ex.marks[project.id] = ex.marks[project.id] || {}); m[no] = m[no] || {}; m[no][kind] = !m[no][kind]; store.set(key, ex); },
+    };
+  }
+
+  const autoNos = ctx => ctx.project.tasks.filter(t => ctx.rubric[t.no]).map(t => t.no);
+
+  /** Chấm các task trong nos (bỏ trống = cả project) từ tệp đang làm hoặc tệp vừa nộp. */
+  async function runCheck(ctx, ws, nos) {
+    const file = await ws.file();
+    if (!file) throw Object.assign(new Error('Em chưa có tệp đang làm — bấm "Tải đề & bắt đầu" hoặc nộp tệp đã lưu.'), { code: 'nofile' });
+    const g = await gradeFile(file, ctx.project, ctx.rubric, nos);
+    ctx.record(g.results, file.name);
+    return g;
+  }
+
+  function summaryOf(ctx) {
+    const s = ctx.state();
+    const autos = autoNos(ctx);
+    const passed = autos.filter(n => s.byNo[n] && s.byNo[n].status === 'pass').length;
+    const checked = autos.filter(n => s.byNo[n]).length;
+    return { auto: autos.length, passed, checked, score: autos.length ? Math.round(1000 * passed / autos.length) : null };
+  }
+
+  function errText(e, ext) {
+    if (e.name === 'AbortError') return '';
+    if (e.code === 'encrypted' || e.code === 'nofile') return e.message;
+    return `Không đọc được tệp (${e.message}). Em kiểm tra đã lưu đúng định dạng ${ext} chưa.`;
+  }
+
+  // ---------------------------------------------------------------- khối giao diện dùng chung
+
+  function extrasBlock(project) {
+    const extra = project.files.filter(f => f.name !== project.main);
+    return extra.length ? `<details class="extras"><summary>Tệp kèm (${extra.length})</summary><div class="files">${extra.map(f =>
+      `<a class="file" href="${esc(f.path)}" download>${icon('file')}<span>${esc(f.name)}</span><small>${fmtSize(f.size)}</small></a>`).join('')}</div></details>` : '';
+  }
+
+  function officeHelp(ctx) {
+    return `<details class="help"><summary>Không thấy ${esc(ctx.subj.name)} mở ra?</summary><ul>
+      <li>Lần đầu, trình duyệt hỏi <em>"Mở Microsoft ${esc(ctx.subj.name)}?"</em> — em chọn <strong>Mở</strong> (có thể tích "Luôn cho phép").</li>
+      <li>${esc(ctx.subj.name)} hiện thanh vàng <em>Protected View</em> thì bấm <strong>Enable Editing</strong>.</li>
+      <li>Máy không cài Office bản máy tính thì không mở được — em báo thầy cô.</li></ul></details>`;
+  }
+
+  function workPanel(ctx, ws) {
+    const main = ctx.project.files.find(f => f.name === ctx.project.main);
+    const warn = `<p class="warn" id="fileWarn" hidden>${icon('warn')} Tệp đề ${esc(ctx.subj.ext)} chưa có trên máy chủ này. Tệp PowerPoint khá nặng nên chỉ có khi mở trang từ máy chủ phòng máy — em hỏi thầy cô địa chỉ.</p>`;
+    if (!main) return '<p class="muted">Chưa có tệp đề.</p>';
+    const app = esc(ctx.subj.name);
+    const upload = `<label class="link-btn">${icon('upload')}Nộp tệp đã lưu<input type="file" class="vh" data-act="upload" accept="${esc(ctx.subj.ext)}"></label>`;
+    const saved = `<small id="savedAt">${ws.savedAt ? 'Lưu lần cuối ' + new Date(ws.savedAt).toLocaleTimeString('vi-VN') : 'Đang theo dõi'}</small>`;
+    const auto = ctx.mode === 'exam' ? 'bài được ghi nhận tự động.' : 'các task em đã chấm/đánh dấu "Đã làm" được chấm lại tự động.';
+
+    // Máy chủ phòng máy: Office mở và lưu thẳng tệp trên máy chủ, em không phải tìm tệp.
+    if (ws.server) {
+      if (!ws.url) {
+        return `<button type="button" class="btn wide-btn" data-act="start">${icon('file')}Mở bằng ${app}</button>
+          <p class="muted small">${app} mở tệp <strong>${esc(main.name)}</strong> ngay. Làm bài rồi bấm <kbd>Ctrl</kbd>+<kbd>S</kbd> — trang tự chấm, không cần tìm tệp hay nộp bài.</p>
+          <div class="row-actions">${upload}</div>
+          ${officeHelp(ctx)}${extrasBlock(ctx.project)}${warn}`;
+      }
+      return `<div class="livefile"><span class="dot" aria-hidden="true"></span><div><strong>${esc(ws.fileName)}</strong>${saved}</div></div>
+        <button type="button" class="btn-sec wide-btn" data-act="office">${icon('file')}Mở lại bằng ${app}</button>
+        <p class="muted small">Bấm <kbd>Ctrl</kbd>+<kbd>S</kbd> trong ${app} — ${auto}</p>
+        <div class="row-actions">${ctx.mode === 'practice' ? `<button type="button" class="link-btn" data-act="restart">${icon('download')}Làm lại từ đầu</button>` : ''}${upload}</div>
+        ${officeHelp(ctx)}${extrasBlock(ctx.project)}`;
+    }
+    if (!W.supported) {
+      return `<div class="files"><a class="file main" href="${esc(main.path)}" download>${icon('download')}<span>${esc(main.name)}</span><small>${fmtSize(main.size)}</small></a></div>
+        ${extrasBlock(ctx.project)}${warn}
+        <p class="muted small">Trình duyệt này chưa hỗ trợ tự đọc tệp đang làm. Em tải đề, mở bằng ${app}, làm xong thì nộp tệp đã lưu (dùng Chrome hoặc Edge để chấm ngay khi bấm Ctrl+S).</p>
+        <label class="drop">${icon('upload')}<span>Nộp tệp đã làm</span><small>Kéo thả hoặc bấm để chọn tệp ${esc(ctx.subj.ext)}</small><input type="file" class="vh" data-act="upload" accept="${esc(ctx.subj.ext)}"></label>`;
+    }
+    if (!ws.handle) {
+      return `<ol class="steps-mini">
+          <li><button type="button" class="btn wide-btn" data-act="start">${icon('download')}Tải đề về máy</button>
+            <span class="muted small">Chọn nơi lưu <strong>${esc(main.name)}</strong> (${fmtSize(main.size)}) — nên lưu ở Desktop cho dễ tìm.</span></li>
+          <li class="muted small">Mở tệp vừa lưu bằng ${app} (nháy đúp vào tệp).</li>
+          <li class="muted small">Làm bài, bấm <kbd>Ctrl</kbd>+<kbd>S</kbd> rồi bấm "Chấm task này".</li></ol>
+        <div class="row-actions"><button type="button" class="link-btn" data-act="pick">${icon('file')}Đã có tệp trên máy? Chọn tệp</button>${upload}</div>
+        ${extrasBlock(ctx.project)}${warn}`;
+    }
+    if (!ws.live()) {
+      return `<p>Tệp đang làm: <strong>${esc(ws.fileName)}</strong></p>
+        <button type="button" class="btn wide-btn" data-act="resume">Cho phép đọc lại tệp này</button>
+        <div class="row-actions"><button type="button" class="link-btn" data-act="start">${icon('download')}Tải đề mới</button>${upload}</div>
+        ${extrasBlock(ctx.project)}`;
+    }
+    return `<div class="livefile"><span class="dot" aria-hidden="true"></span><div><strong>${esc(ws.fileName)}</strong>${saved}</div></div>
+      <p class="next-step">${icon('file')}<span><strong>Mở tệp ${esc(ws.fileName)}</strong> ở thư mục em vừa chọn bằng ${app} (trang web không tự mở được ${app}). Bấm <kbd>Ctrl</kbd>+<kbd>S</kbd> — ${auto}</span></p>
+      <div class="row-actions"><button type="button" class="link-btn" data-act="pick">${icon('file')}Đổi tệp</button>
+        ${ctx.mode === 'practice' ? `<button type="button" class="link-btn" data-act="restart">${icon('download')}Làm lại từ đầu</button>` : ''}</div>
+      ${extrasBlock(ctx.project)}`;
+  }
+
+  function verdictHtml(r) {
+    return r.status === 'pass' ? icon('check') + 'Đúng' : r.status === 'fail' ? icon('x') + 'Chưa đúng' : icon('eye') + 'Tự kiểm';
+  }
+
+  function taskItem(ctx, t, openGuides) {
+    const s = ctx.state();
+    const auto = !!ctx.rubric[t.no];
+    const exam = ctx.mode === 'exam';
+    const r = exam ? null : s.byNo[t.no];
+    const mark = s.marks[t.no] || {};
+    return `<li class="task${r ? ' is-' + r.status : ''}${mark.done ? ' is-done' : ''}" data-no="${t.no}">
+      <div class="task-head">
+        <span class="task-no">Task ${t.no}</span>
+        ${exam ? '' : `<span class="chip${auto ? ' ok' : ''}">${auto ? 'Tự chấm' : 'Tự kiểm'}</span>`}
+        ${r ? `<span class="verdict">${verdictHtml(r)}</span>` : ''}
+        <span class="marks">
+          ${!exam && auto ? `<button type="button" class="mark check" data-act="check">${icon('check')}Chấm task này</button>` : ''}
+          <button type="button" class="mark${mark.done ? ' on' : ''}" data-mark="done" aria-pressed="${!!mark.done}">${icon('check')}Đã làm</button>
+          <button type="button" class="mark${mark.review ? ' on' : ''}" data-mark="review" aria-pressed="${!!mark.review}">${icon('flag')}Xem lại</button>
+        </span>
+      </div>
+      <p class="task-text">${esc(t.text)}</p>
+      ${r && r.note ? `<p class="task-note">${esc(r.note)}${r.scope ? `<br><span class="muted">${esc(r.scope)}</span>` : ''}</p>` : ''}
+      ${!exam && t.guide ? `<details class="guide"${openGuides.has(t.no) ? ' open' : ''}><summary>Hướng dẫn từng bước</summary><div class="steps">${lines(t.guide)}</div>${t.tips ? `<div class="tips"><strong>Lưu ý:</strong>${lines(t.tips)}</div>` : ''}</details>` : ''}
+    </li>`;
+  }
+
+  function scoreBox(sum) {
+    if (sum.score == null) return `<p class="muted">Project này chưa có task tự chấm — em tự đối chiếu với hướng dẫn.</p>`;
+    if (!sum.checked) return '<p class="muted">Chưa chấm task nào. Làm xong task nào em bấm "Chấm task này" ở task đó.</p>';
+    const partial = sum.checked < sum.auto;
+    return `<div class="score ${partial ? 'partial' : sum.score >= CFG.passScore ? 'pass' : 'fail'}"><span class="num">${sum.score}</span><span class="of">/ 1000${partial ? ' · tạm tính' : ''}</span></div>
+      <p class="muted">${sum.passed}/${sum.auto} task tự chấm đúng${partial ? ` · mới chấm ${sum.checked}/${sum.auto} — bấm "Chấm cả project" để có điểm đầy đủ` : ''}</p>`;
+  }
+
+  /**
+   * Nối các nút trong vùng làm bài với phiên làm việc. ui.redraw() vẽ lại; ui.status(msg, kind) báo trạng thái;
+   * ui.focusTask(no) đưa task vừa chấm vào tầm nhìn.
+   */
+  function wireWork(rootEl, ctx, ws, ui) {
+    const handler = async e => {
+      const el = e.target.closest('[data-act],[data-mark]');
+      if (!el || !rootEl.contains(el) || el.dataset.act === 'upload') return;
+      const no = el.closest('.task, [data-no]') ? +el.closest('.task, [data-no]').dataset.no : null;
+      try {
+        if (el.dataset.mark) {
+          ctx.mark(no, el.dataset.mark);
+          if (ctx.mode === 'practice' && el.dataset.mark === 'done' && ctx.state().marks[no]?.done && ctx.rubric[no] && (ws.live() || ws.upload)) {
+            await checkTasks([no]);
+          }
+          return ui.redraw();
+        }
+        const act = el.dataset.act;
+        if (act === 'start' || act === 'restart') {
+          const restart = act === 'restart';
+          if (restart && !confirm(ws.server
+            ? `Làm lại từ đầu? Bản làm bài trên máy chủ trở về như đề gốc. Em đóng tệp đang mở trong ${ctx.subj.name} trước (không lưu).`
+            : 'Tải lại tệp đề gốc? Bài đang làm trong tệp hiện tại vẫn giữ nguyên, em chọn chỗ lưu tệp mới.')) return;
+          await ws.start(restart);
+          if (restart && ctx.reset) ctx.reset();
+          ui.status(ws.server ? `Đang mở ${ws.fileName} bằng ${ctx.subj.name}...` : `Đã lưu ${ws.fileName}. Bước 2: mở tệp này bằng ${ctx.subj.name}.`, 'ok');
+        } else if (act === 'office') {
+          ws.openOffice();
+          ui.status(`Đang mở ${ws.fileName} bằng ${ctx.subj.name}...`, 'ok');
+        } else if (act === 'pick') {
+          await ws.pick();
+          ui.status(`Đang theo dõi ${ws.fileName}.`, 'ok');
+        } else if (act === 'resume') {
+          await ws.resume();
+          if (!ws.live()) ui.status('Em chưa cho phép đọc tệp — bấm lại và chọn "Cho phép".', 'error');
+        } else if (act === 'check') {
+          await checkTasks([no]);
+          ui.focusTask && ui.focusTask(no);
+        } else if (act === 'checkAll') {
+          await checkTasks(null, true);
+        } else if (act === 'dock') {
+          return openDock(ui.dockHash);
+        }
+        ui.redraw();
+      } catch (err) {
+        console.error(err);
+        const msg = errText(err, ctx.subj.ext);
+        if (msg) ui.status(msg, 'error');
+      }
+    };
+    const onUpload = async e => {
+      const input = e.target.closest('[data-act="upload"]');
+      if (!input || !input.files[0]) return;
+      const file = input.files[0];
+      input.value = '';
+      if (!file.name.toLowerCase().endsWith(ctx.subj.ext)) return ui.status(`Cần tệp ${ctx.subj.ext} — em đang chọn "${file.name}".`, 'error');
+      ws.upload = file;
+      try {
+        await checkTasks(null, true);
+        ui.redraw();
+      } catch (err) { ui.status(errText(err, ctx.subj.ext), 'error'); }
+    };
+
+    async function checkTasks(nos, full) {
+      ui.status(nos ? `Đang chấm task ${nos.join(', ')}...` : 'Đang chấm...', 'busy');
+      const g = await runCheck(ctx, ws, nos || undefined);
+      if (ctx.mode === 'exam') {
+        ui.status(`Đã ghi nhận "${ws.upload && !ws.live() ? ws.upload.name : ws.fileName}" lúc ${new Date().toLocaleTimeString('vi-VN')}.`, 'ok');
+      } else if (nos && nos.length === 1) {
+        const r = g.results[0];
+        ui.status(r ? `Task ${r.no}: ${r.status === 'pass' ? 'đúng' : r.status === 'fail' ? 'chưa đúng' : 'tự kiểm'}.` : '', r && r.status === 'pass' ? 'ok' : 'error');
+      } else {
+        ui.status(`Đã chấm ${g.auto} task tự chấm: đúng ${g.passed}.`, 'ok');
+      }
+      if (full && ctx.mode === 'practice') {
+        const a = attemptFrom('practice', ctx.subj, ctx.set, [{ project: ctx.project, graded: g, submitted: true }]);
+        a.projectId = ctx.project.id;
+        a.title = `${ctx.set.title} · ${ctx.project.title}`;
+        saveAttempt(a);
+        sendAttempt(a);
+      }
+    }
+
+    rootEl.addEventListener('click', handler);
+    rootEl.addEventListener('change', onUpload);
+    onLeave(() => { rootEl.removeEventListener('click', handler); rootEl.removeEventListener('change', onUpload); });
+
+    // Mỗi lần em Ctrl+S: thi thử chấm cả project (âm thầm); luyện tập chấm lại các task đã kiểm/đã làm.
+    return async function onSave() {
+      try {
+        if (ctx.mode === 'exam') await checkTasks(null);
+        else {
+          const s = ctx.state();
+          const nos = autoNos(ctx).filter(n => s.byNo[n] || (s.marks[n] && s.marks[n].done));
+          if (nos.length) await checkTasks(nos);
+          else ui.status(`Thấy em vừa lưu lúc ${new Date().toLocaleTimeString('vi-VN')}. Bấm "Chấm task này" ở task em vừa làm.`, 'ok');
+        }
+        ui.redraw();
+      } catch (err) { ui.status(errText(err, ctx.subj.ext), 'error'); }
+    };
+  }
+
+  function attemptFrom(mode, subj, set, parts, extra) {
+    const projects = parts.map(({ project, graded, submitted }) => ({
+      id: project.id, no: project.no, title: project.title, submitted: !!submitted,
+      results: project.tasks.map(t => {
+        const r = graded && graded.results.find(x => x.no === t.no);
+        return Object.assign({ no: t.no, text: t.text }, r || { status: 'fail', note: 'Chưa nộp tệp' });
+      }),
+    }));
+    const all = projects.flatMap(p => p.results);
+    const sum = window.MosGrader.summarize(all);
+    return Object.assign({ id: newId(), mode, subject: subj.id, subjectName: subj.name, setId: set.id, title: set.title,
+      student: student(), at: Date.now(), projects, score: sum.score, auto: sum.auto, passed: sum.passed, self: sum.self }, extra || {});
+  }
+
+  // ---------------------------------------------------------------- thanh làm bài thu gọn (cửa sổ nhỏ dưới đáy màn hình)
+
+  const bc = 'BroadcastChannel' in window ? new BroadcastChannel('mos-dock') : null;
+  let dockWin = null;
+
+  function openDock(hash) {
+    const H = Math.max(260, Math.min(340, Math.round(screen.availHeight * 0.34)));
+    const left = screen.availLeft || 0, top = (screen.availTop || 0) + screen.availHeight - H;
+    dockWin = window.open(location.pathname + '#/dock/' + hash, 'mosdock',
+      `popup=yes,width=${screen.availWidth},height=${H},left=${left},top=${top}`);
+    if (!dockWin) { location.hash = '#/dock/' + hash; return; }
+    location.hash = '#/docked/' + hash;
+  }
+  if (bc) {
+    bc.onmessage = e => {
+      const m = e.data || {};
+      if (m.type === 'undock' && (location.hash.startsWith('#/docked/') || location.hash.startsWith('#/r/'))) location.hash = '#/' + m.hash;
+      if (m.type === 'finished' && location.hash.startsWith('#/docked/')) location.hash = '#/r/' + m.id;
+      if (m.type === 'close-dock' && location.hash.startsWith('#/dock/')) window.close();
+    };
+  }
+
+  function viewDocked(rest) {
+    page(`<section class="panel docked">
+      <h1>Thanh làm bài đang mở</h1>
+      <p>Thanh làm bài nằm ở cửa sổ nhỏ dưới đáy màn hình. Em mở tệp đề bằng Office ở phần trên màn hình và làm bài như trong phòng thi.</p>
+      <p class="muted small">Không thấy cửa sổ nhỏ? Có thể trình duyệt đã chặn cửa sổ bật lên — bấm nút bên dưới để làm ngay trên trang này.</p>
+      <div class="row-actions"><button type="button" class="btn" id="undock">Làm trên trang này</button>
+        <button type="button" class="btn-sec" id="redock">Mở lại thanh làm bài</button></div>
+    </section>`);
+    $('#undock').addEventListener('click', () => { if (bc) bc.postMessage({ type: 'close-dock' }); if (dockWin) dockWin.close(); location.hash = '#/' + rest; });
+    $('#redock').addEventListener('click', () => openDock(rest));
+  }
+
+  // ---------------------------------------------------------------- luyện tập 1 project
+
+  async function loadProject(pid) {
+    const set = await getSet(setIdOf(pid));
+    const project = set.projects.find(p => p.id === pid);
+    if (!project) throw new Error('Không có project này.');
+    const idx = await getIndex();
+    const subj = idx.subjects.find(s => s.id === set.subject);
+    const rubric = (await getRubrics(set.subject))[pid] || {};
+    return { set, project, subj, rubric };
+  }
+
+  async function viewProject(pid, dock) {
+    const { set, project, subj, rubric } = await loadProject(pid);
+    const ctx = practiceCtx(subj, set, project, rubric);
+    const pos = set.projects.indexOf(project);
+    const prev = set.projects[pos - 1], next = set.projects[pos + 1];
+    let onSave = async () => {};
+    const ws = workSession({ mode: 'practice', subj, project, slot: 'practice-' + pid, onSave: f => onSave(f) });
+    await ws.init();
+    if (dock) return dockView({ ctx, ws, title: `${subj.name} · ${set.title} · ${project.title.split(' · ')[0]}`,
+      undock: 'p/' + pid, bindSave: f => { onSave = f; } });
+
+    const openGuides = new Set();
+    page(`${crumbs([['Trang chủ', '#/'], [subj.name, '#/s/' + subj.id], [set.title, '#/set/' + set.id], [project.title, '']])}
+      <div class="head-row"><h1>${esc(subj.name)} · ${esc(set.title)} · ${esc(project.title)}</h1>
+        <button type="button" class="btn-sec" data-act="dock" id="dockBtn">${icon('dock')}Thanh làm bài thu gọn</button></div>
+      <div class="split" id="work">
+        <ol class="tasks" id="tasks"></ol>
+        <aside class="side">
+          <section class="panel"><h2>Tệp đang làm</h2><div id="wp"></div><p class="status" id="status" role="status"></p></section>
+          <section class="panel"><h2>Điểm</h2><div id="score"></div>
+            ${autoNos(ctx).length ? '<button type="button" class="btn-sec wide-btn" data-act="checkAll">Chấm cả project</button>' : ''}</section>
+          <div class="pager">
+            ${prev ? `<a class="btn-sec" href="#/p/${prev.id}">${icon('left')}${esc(prev.title.split(' · ')[0])}</a>` : '<span></span>'}
+            ${next ? `<a class="btn-sec" href="#/p/${next.id}">${esc(next.title.split(' · ')[0])}${icon('right')}</a>` : `<a class="btn" href="#/exam/${set.id}">Thi thử cả bộ</a>`}
+          </div>
+        </aside>
+      </div>`, { wide: true });
+    const root = app.querySelector('main');
+    root.addEventListener('toggle', e => {
+      const li = e.target.closest && e.target.closest('.task');
+      if (li && e.target.matches('details.guide')) { if (e.target.open) openGuides.add(+li.dataset.no); else openGuides.delete(+li.dataset.no); }
+    }, true);
+    const ui = {
+      dockHash: 'p/' + pid,
+      redraw() {
+        $('#tasks').innerHTML = project.tasks.map(t => taskItem(ctx, t, openGuides)).join('');
+        $('#wp').innerHTML = workPanel(ctx, ws);
+        $('#score').innerHTML = scoreBox(summaryOf(ctx));
+        const main = project.files.find(f => f.name === project.main);
+        if (main) checkAvailable(main.path).then(okay => { const w = $('#fileWarn'); if (w && !okay) w.hidden = false; });
+      },
+      status: setStatus,
+      focusTask(no) { const li = app.querySelector(`.task[data-no="${no}"]`); if (li) li.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); },
+    };
+    onSave = wireWork(root, ctx, ws, ui);
+    ui.redraw();
+    const s = ctx.state();
+    if (s.at) setStatus(`Lần chấm gần nhất: ${s.fileName} lúc ${fmtTime(s.at)}.`);
+  }
+
+  function setStatus(msg, kind) {
+    const el = $('#status');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.remove('ok', 'error', 'busy');
+    if (kind) el.classList.add(kind);
+  }
+
+  // ---------------------------------------------------------------- thanh thu gọn: dùng chung luyện tập + thi thử
+
+  function dockView(o) {
+    const { ctx, ws } = o;
+    document.body.classList.add('is-dock');
+    onLeave(() => document.body.classList.remove('is-dock'));
+    const p = ctx.project;
+    let cur = Math.max(0, p.tasks.findIndex(t => !(ctx.state().marks[t.no] || {}).done));
+    let showGuide = false;
+    app.innerHTML = `<div class="dock" id="dock">
+      <header class="dock-bar">
+        <span class="dock-title">${esc(o.title)}</span>
+        ${o.tabs || ''}
+        <span class="dock-file" id="dockFile"></span>
+        ${o.timer ? `<span class="timer" id="timer">${icon('clock')}<b></b></span>` : ''}
+        <button type="button" class="icon-btn" id="undockBtn" title="Mở rộng ra trang đầy đủ">${icon('expand')}</button>
+        ${o.endBtn || ''}
+      </header>
+      <div class="dock-body" id="dockBody"></div>
+      <p class="status dock-status" id="status" role="status"></p>
+      ${o.modal || ''}
+    </div>`;
+    const body = $('#dockBody');
+    const draw = () => {
+      const s = ctx.state();
+      const t = p.tasks[cur];
+      const auto = !!ctx.rubric[t.no];
+      const exam = ctx.mode === 'exam';
+      const r = exam ? null : s.byNo[t.no];
+      const m = s.marks[t.no] || {};
+      const sum = summaryOf(ctx);
+      $('#dockFile').innerHTML = ws.live() ? `<span class="dot" aria-hidden="true"></span>${esc(ws.fileName)}${ws.server ? ` <button type="button" class="dock-open" data-act="office">Mở ${esc(ctx.subj.name)}</button>` : ''}` : '';
+      body.innerHTML = `
+        <nav class="dock-chips" aria-label="Danh sách task">${p.tasks.map((x, i) => {
+          const rr = exam ? null : s.byNo[x.no];
+          const mm = s.marks[x.no] || {};
+          return `<button type="button" class="chip-btn${i === cur ? ' on' : ''}${rr ? ' is-' + rr.status : ''}${mm.done ? ' done' : ''}" data-i="${i}" title="Task ${x.no}">${x.no}${mm.review ? icon('flag', 'flag') : ''}</button>`;
+        }).join('')}
+          ${!exam && sum.score != null && sum.checked ? `<span class="dock-score ${sum.checked < sum.auto ? 'partial' : sum.score >= CFG.passScore ? 'pass' : 'fail'}" title="${sum.checked < sum.auto ? 'Tạm tính: mới chấm ' + sum.checked + '/' + sum.auto + ' task' : 'Điểm project'}">${sum.score}<small>/1000${sum.checked < sum.auto ? ' tạm' : ''}</small></span>` : ''}</nav>
+        <section class="dock-task task${r ? ' is-' + r.status : ''}" data-no="${t.no}">
+          ${ws.live() || ws.upload ? '' : `<div class="dock-start">${workPanel(ctx, ws)}</div>`}
+          <p class="task-text"><strong class="task-no">Task ${t.no}.</strong> ${esc(t.text)}</p>
+          ${r ? `<p class="task-note"><span class="verdict">${verdictHtml(r)}</span> ${esc(r.note || '')}</p>` : ''}
+          ${showGuide && t.guide ? `<div class="dock-guide"><div class="steps">${lines(t.guide)}</div>${t.tips ? `<div class="tips"><strong>Lưu ý:</strong>${lines(t.tips)}</div>` : ''}</div>` : ''}
+        </section>
+        <div class="dock-actions" data-no="${t.no}">
+          <button type="button" class="icon-btn" data-nav="-1" ${cur === 0 ? 'disabled' : ''} title="Task trước">${icon('left')}</button>
+          <button type="button" class="icon-btn" data-nav="1" ${cur === p.tasks.length - 1 ? 'disabled' : ''} title="Task sau">${icon('right')}</button>
+          ${!exam && auto ? `<button type="button" class="btn" data-act="check">${icon('check')}Chấm task này</button>` : ''}
+          <button type="button" class="mark${m.done ? ' on' : ''}" data-mark="done" aria-pressed="${!!m.done}">${icon('check')}Đã làm</button>
+          <button type="button" class="mark${m.review ? ' on' : ''}" data-mark="review" aria-pressed="${!!m.review}">${icon('flag')}Xem lại</button>
+          ${!exam && t.guide ? `<button type="button" class="mark${showGuide ? ' on' : ''}" data-guide="1">${icon('eye')}Hướng dẫn</button>` : ''}
+          ${!exam && !auto ? '<span class="muted small">Task tự kiểm</span>' : ''}
+        </div>`;
+      if (o.afterDraw) o.afterDraw();
+    };
+    body.addEventListener('click', e => {
+      const chip = e.target.closest('[data-i]');
+      const nav = e.target.closest('[data-nav]');
+      if (chip) { cur = +chip.dataset.i; showGuide = false; draw(); }
+      else if (nav) { cur = Math.min(p.tasks.length - 1, Math.max(0, cur + +nav.dataset.nav)); showGuide = false; draw(); }
+      else if (e.target.closest('[data-guide]')) { showGuide = !showGuide; draw(); }
+    });
+    $('#undockBtn').addEventListener('click', () => {
+      if (window.opener && !window.opener.closed && bc) { bc.postMessage({ type: 'undock', hash: o.undock }); window.close(); }
+      else location.hash = '#/' + o.undock;
+    });
+    const ui = { redraw: draw, status: setStatus };
+    o.bindSave(wireWork(app.querySelector('#dock'), ctx, ws, ui));
+    draw();
+    if (o.after) o.after({ draw });
+  }
+
+  // ---------------------------------------------------------------- thi thử
+
+  let timer = null;
+  function stopTimer() { if (timer) { clearInterval(timer); timer = null; } }
+
+  // Bài thi cũ (trước khi có chấm từng câu) lưu subs[pid].graded — đổi sang byNo.
+  function migrateExam(ex) {
+    for (const [pid, s] of Object.entries(ex.subs || {})) if (s.graded && !s.byNo) {
+      s.byNo = {};
+      s.graded.results.forEach(r => { s.byNo[r.no] = r; });
+      delete s.graded;
+    }
+    return ex;
+  }
+
+  async function finishExam(set, subj, rubrics, key, auto) {
+    stopTimer();
+    const ex = migrateExam(store.get(key, null));
+    if (!ex) return;
+    // Đọc lại bản lưu mới nhất của mọi project đang theo dõi (không cần em nộp lại).
+    await Srv.ready;
+    for (const p of set.projects) {
+      const url = Srv.ok ? store.get(`mos_work_exam-${ex.startedAt}-${p.id}`, '') : '';
+      const h = !url && W.supported ? await W.getHandle('exam:' + p.id) : null;
+      if (!url && (!h || await W.permission(h, false).catch(() => 'denied') !== 'granted')) continue;
+      try {
+        const f = url ? await serverFile(url, p.main) : await W.read(h);
+        const g = await gradeFile(f, p, rubrics[p.id]);
+        examCtx(subj, set, p, rubrics[p.id] || {}, key).record(g.results, f.name);
+      } catch (e) { /* giữ lần ghi nhận trước */ }
+    }
+    const done = migrateExam(store.get(key, ex));
+    const parts = set.projects.map(p => {
+      const s = done.subs[p.id];
+      const graded = s ? { results: p.tasks.map(t => s.byNo[t.no] || { no: t.no, status: rubrics[p.id] && rubrics[p.id][t.no] ? 'fail' : 'self', note: '' }) } : stubResults(p, rubrics[p.id]);
+      return { project: p, graded, submitted: !!s };
+    });
+    const a = attemptFrom('exam', subj, set, parts, { startedAt: done.startedAt, minutes: Math.round((Math.min(Date.now(), done.endsAt) - done.startedAt) / 60000), timeUp: !!auto });
+    saveAttempt(a);
+    sendAttempt(a);
+    store.del(key);
+    for (const p of set.projects) { store.del(`mos_work_exam-${done.startedAt}-${p.id}`); if (W.supported) W.delHandle('exam:' + p.id); }
+    if (bc) bc.postMessage({ type: 'finished', id: a.id });
+    location.hash = '#/r/' + a.id;
+  }
+
+  async function viewExam(setId, dock) {
+    const set = await getSet(setId);
+    const idx = await getIndex();
+    const subj = idx.subjects.find(s => s.id === set.subject);
+    const rubrics = await getRubrics(set.subject);
+    const key = 'mos_exam_' + setId;
+    let ex = store.get(key, null);
+
+    if (!ex) {
+      if (dock) { location.hash = '#/exam/' + setId; return; }
+      const st = student();
+      const autoN = set.projects.reduce((a, p) => a + Object.keys(rubrics[p.id] || {}).length, 0);
+      const taskN = set.projects.reduce((a, p) => a + p.tasks.length, 0);
+      page(`${crumbs([['Trang chủ', '#/'], [subj.name, '#/s/' + subj.id], [set.title, '#/set/' + set.id], ['Thi thử', '']])}
+        <section class="panel exam-intro">
+          <h1>Thi thử ${esc(subj.name)} · ${esc(set.title)}</h1>
+          <dl class="facts"><div><dt>Thời gian</dt><dd>${CFG.examMinutes} phút</dd></div>
+            <div><dt>Project</dt><dd>${set.projects.length}</dd></div>
+            <div><dt>Task</dt><dd>${taskN} (${autoN} chấm tự động)</dd></div>
+            <div><dt>Điểm đạt</dt><dd>${CFG.passScore}/1000</dd></div></dl>
+          <ul class="rules">
+            <li>Mỗi project có 1 tệp đề riêng. Em bấm "Tải đề &amp; bắt đầu làm", mở tệp bằng ${esc(subj.name)} và làm bài.</li>
+            ${W.supported ? '<li>Mỗi lần em bấm <kbd>Ctrl</kbd>+<kbd>S</kbd>, bài được ghi nhận tự động. Khi kết thúc, hệ thống đọc bản lưu cuối cùng — không cần nộp tệp.</li>'
+              : '<li>Làm xong project nào thì nộp tệp đã lưu ở project đó. Được nộp lại nhiều lần.</li>'}
+            <li>Nên dùng <strong>thanh làm bài thu gọn</strong>: thanh nằm dưới đáy màn hình, ${esc(subj.name)} ở phía trên — giống phòng thi.</li>
+            <li>Không xem hướng dẫn trong lúc thi. Hết giờ bài tự kết thúc; project chưa làm tính 0 điểm phần tự chấm.</li>
+          </ul>
+          ${st && st.name ? `<p>Thí sinh: <strong>${esc(st.name)}</strong>${st.cls ? ' · Lớp ' + esc(st.cls) : ''} <a href="#/">Sửa</a></p>
+            <div class="row-actions"><button class="btn big" id="startDock">${icon('dock')}Bắt đầu với thanh thu gọn</button>
+            <button class="btn-sec" id="startBtn">Làm trên trang đầy đủ</button></div>`
+            : `<p class="warn">${icon('warn')} Em nhập họ tên ở <a href="#/">trang chủ</a> trước khi thi để thầy cô nhận được kết quả.</p>`}
+        </section>`);
+      const begin = async useDock => {
+        for (const p of set.projects) if (W.supported) await W.delHandle('exam:' + p.id);
+        store.set(key, { startedAt: Date.now(), endsAt: Date.now() + CFG.examMinutes * 60000, cur: 0, subs: {}, marks: {} });
+        if (useDock) openDock('exam/' + setId); else viewExam(setId);
+      };
+      const b = $('#startBtn');
+      if (b) { b.addEventListener('click', () => begin(false)); $('#startDock').addEventListener('click', () => begin(true)); }
+      return;
+    }
+    ex = migrateExam(ex);
+    store.set(key, ex);
+    if (Date.now() >= ex.endsAt) return finishExam(set, subj, rubrics, key, true);
+
+    leave();
+    const p = set.projects[ex.cur] || set.projects[0];
+    const ctx = examCtx(subj, set, p, rubrics[p.id] || {}, key);
+    // Theo dõi mọi project đã có tệp, để em lưu ở project nào cũng được ghi nhận.
+    const sessions = {};
+    let onSaveCur = async () => {};
+    for (const q of set.projects) {
+      const qctx = q === p ? ctx : examCtx(subj, set, q, rubrics[q.id] || {}, key);
+      sessions[q.id] = workSession({ mode: 'exam', subj, project: q, slot: `exam-${ex.startedAt}-${q.id}`,
+        onSave: async f => {
+          if (q === p) return onSaveCur(f);
+          try { const g = await gradeFile(f, q, rubrics[q.id]); qctx.record(g.results, f.name); drawTabs(); } catch (e) { /* lần lưu sau đọc lại */ }
+        } });
+      await sessions[q.id].init();
+    }
+    const ws = sessions[p.id];
+    const go = i => { const e2 = store.get(key, null); if (!e2) return; e2.cur = i; store.set(key, e2); viewExam(setId, dock); };
+    const tabsHtml = () => {
+      const e2 = store.get(key, null) || ex;
+      return set.projects.map((x, i) => {
+        const m = e2.marks[x.id] || {};
+        const flagged = Object.values(m).some(v => v.review);
+        return `<button type="button" class="ptab${i === e2.cur ? ' on' : ''}${e2.subs[x.id] ? ' sent' : ''}" data-p="${i}">
+          ${esc(x.title.split(' · ')[0].replace('Project ', dock ? 'P' : 'Project '))}${e2.subs[x.id] ? icon('check') : ''}${flagged ? icon('flag', 'flag') : ''}</button>`;
+      }).join('');
+    };
+    const drawTabs = () => { const n = app.querySelector('.ptabs'); if (n) n.innerHTML = tabsHtml(); };
+    const modal = `<div class="modal" id="endModal" hidden><div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="endTitle">
+      <h2 id="endTitle">Kết thúc bài thi?</h2>
+      <p id="endInfo"></p>
+      <div class="modal-actions"><button type="button" class="btn-sec" id="endNo">Làm tiếp</button><button type="button" class="btn" id="endYes">Kết thúc</button></div>
+    </div></div>`;
+    const wireEnd = () => {
+      app.querySelector('.ptabs').addEventListener('click', e => { const b2 = e.target.closest('[data-p]'); if (b2) go(+b2.dataset.p); });
+      $('#endBtn').addEventListener('click', () => {
+        const e2 = store.get(key, ex);
+        $('#endInfo').textContent = `Đã ghi nhận ${Object.keys(e2.subs).length}/${set.projects.length} project. Hệ thống đọc bản lưu cuối của các tệp đang theo dõi rồi chấm. Sau khi kết thúc em không sửa được nữa.`;
+        $('#endModal').hidden = false; $('#endNo').focus();
+      });
+      $('#endNo').addEventListener('click', () => { $('#endModal').hidden = true; });
+      $('#endYes').addEventListener('click', () => { $('#endYes').disabled = true; finishExam(set, subj, rubrics, key, false); });
+      const tick = () => {
+        const e2 = store.get(key, null);
+        if (!e2) { stopTimer(); return; }
+        const left = e2.endsAt - Date.now();
+        const el = document.querySelector('#timer b');
+        if (el) { el.textContent = clock(left); el.parentNode.classList.toggle('low', left < 5 * 60000); }
+        if (left <= 0) finishExam(set, subj, rubrics, key, true);
+      };
+      tick();
+      timer = setInterval(tick, 1000);
+    };
+
+    if (dock) {
+      return dockView({ ctx, ws, title: `${subj.name} · ${set.title}`, undock: 'exam/' + setId, timer: true,
+        tabs: `<nav class="ptabs dock-tabs">${tabsHtml()}</nav>`,
+        endBtn: '<button type="button" class="btn-end" id="endBtn">Kết thúc</button>', modal,
+        bindSave: f => { onSaveCur = f; }, after: wireEnd, afterDraw: () => drawTabs() });
+    }
+
+    const openGuides = new Set();
+    app.innerHTML = `<div class="exam">
+      <header class="exam-bar">
+        <span class="exam-title">${esc(subj.name)} · ${esc(set.title)}</span>
+        <span class="exam-who">${esc((student() || {}).name || '')}</span>
+        <button type="button" class="icon-btn" data-act="dock" title="Thanh làm bài thu gọn">${icon('dock')}</button>
+        <span class="timer" id="timer">${icon('clock')}<b></b></span>
+        <button type="button" class="btn-end" id="endBtn">Kết thúc bài thi</button>
+      </header>
+      <nav class="ptabs">${tabsHtml()}</nav>
+      <main class="wrap wide"><div class="split" id="work">
+        <section><h1 class="exam-h">${esc(p.title)}</h1><ol class="tasks" id="tasks"></ol></section>
+        <aside class="side">
+          <section class="panel"><h2>Tệp ${esc(p.title.split(' · ')[0])}</h2><div id="wp"></div><p class="status" id="status" role="status"></p></section>
+          <div class="pager">
+            ${ex.cur > 0 ? `<button type="button" class="btn-sec" data-go="${ex.cur - 1}">${icon('left')}Project trước</button>` : '<span></span>'}
+            ${ex.cur < set.projects.length - 1 ? `<button type="button" class="btn-sec" data-go="${ex.cur + 1}">Project sau${icon('right')}</button>` : ''}
+          </div>
+        </aside>
+      </div></main>
+      ${modal}
+    </div>`;
+    window.scrollTo(0, 0);
+    app.querySelectorAll('[data-go]').forEach(b2 => b2.addEventListener('click', () => go(+b2.dataset.go)));
+    const ui = {
+      dockHash: 'exam/' + setId,
+      redraw() {
+        $('#tasks').innerHTML = p.tasks.map(t => taskItem(ctx, t, openGuides)).join('');
+        $('#wp').innerHTML = workPanel(ctx, ws) + (ctx.state().at ? `<p class="ok-line">${icon('check')} Đã ghi nhận "${esc(ctx.state().fileName)}" lúc ${fmtTime(ctx.state().at)}.</p>` : '');
+        drawTabs();
+        const main = p.files.find(f => f.name === p.main);
+        if (main) checkAvailable(main.path).then(okay => { const w = $('#fileWarn'); if (w && !okay) w.hidden = false; });
+      },
+      status: setStatus,
+    };
+    onSaveCur = wireWork(app.querySelector('.exam'), ctx, ws, ui);
+    ui.redraw();
+    wireEnd();
+  }
+
+  // Project chưa nộp: task có tiêu chí tính "chưa đúng", còn lại "tự kiểm".
+  function stubResults(project, rubric) {
+    return window.MosGrader.summarize(project.tasks.map(t => ({ no: t.no, status: rubric && rubric[t.no] ? 'fail' : 'self', note: 'Chưa nộp tệp' })));
+  }
+
+  // ---------------------------------------------------------------- kết quả / lịch sử
+
+  function viewResult(id) {
+    const a = history().find(x => x.id === id);
+    if (!a) throw new Error('Không tìm thấy lượt làm bài này trên máy.');
+    const pass = a.score != null && a.score >= CFG.passScore;
+    const blocks = a.projects.map(p => {
+      const g = window.MosGrader.summarize(p.results);
+      return `<section class="panel res-proj">
+        <h2>${esc(p.title)} ${p.submitted ? '' : '<span class="chip warn-chip">Chưa nộp</span>'}
+          <span class="res-sub">${g.auto ? `${g.passed}/${g.auto} đúng` : 'Tự kiểm'}</span></h2>
+        ${p.submitted ? '' : `<p class="muted">Em chưa nộp tệp cho project này — các task tự chấm tính 0 điểm.</p>`}
+        <ol class="tasks compact"${p.submitted ? '' : ' hidden'}>${p.results.map(r => `<li class="task is-${r.status}">
+          <div class="task-head"><span class="task-no">Task ${r.no}</span>
+          <span class="verdict">${r.status === 'pass' ? icon('check') + 'Đúng' : r.status === 'fail' ? icon('x') + 'Chưa đúng' : icon('eye') + 'Tự kiểm'}</span></div>
+          <p class="task-text">${esc(r.text)}</p>${r.note ? `<p class="task-note">${esc(r.note)}</p>` : ''}</li>`).join('')}</ol>
+      </section>`;
+    }).join('');
+    page(`${crumbs([['Trang chủ', '#/'], ['Lịch sử', '#/history'], [a.title, '']])}
+      <section class="panel result-head">
+        <div>
+          <p class="muted">${a.mode === 'exam' ? 'Thi thử' : 'Luyện tập'} · ${esc(a.subjectName)} · ${fmtTime(a.at)}${a.minutes != null ? ` · ${a.minutes} phút${a.timeUp ? ' (hết giờ)' : ''}` : ''}</p>
+          <h1>${esc(a.title)}</h1>
+          ${a.student ? `<p>${esc(a.student.name)}${a.student.cls ? ' · Lớp ' + esc(a.student.cls) : ''}</p>` : ''}
+        </div>
+        ${a.score != null ? `<div class="score big ${pass ? 'pass' : 'fail'}"><span class="num">${a.score}</span><span class="of">/ 1000</span>
+          <span class="verdict-big">${pass ? 'Đạt' : 'Chưa đạt'}</span></div>` : ''}
+      </section>
+      <p class="muted">${a.passed}/${a.auto} task tự chấm đúng${a.self ? ` · ${a.self} task tự kiểm (không tính điểm)` : ''}.</p>
+      ${blocks}
+      <div class="pager"><a class="btn-sec" href="#/set/${a.setId}">Về bộ đề</a>
+        <a class="btn" href="${a.mode === 'exam' ? '#/exam/' + a.setId : '#/p/' + a.projectId}">Làm lại</a></div>`);
+  }
+
+  function historyTable(list) {
+    return `<div class="table-wrap"><table class="grid">
+      <thead><tr><th>Thời gian</th><th>Hình thức</th><th>Bài</th><th>Điểm</th></tr></thead>
+      <tbody>${list.map(a => `<tr>
+        <td>${fmtTime(a.at)}</td><td>${a.mode === 'exam' ? 'Thi thử' : 'Luyện tập'}</td>
+        <td><a href="#/r/${a.id}">${esc(a.subjectName)} · ${esc(a.title)}</a></td>
+        <td>${a.score != null ? `<span class="score-sm ${a.score >= CFG.passScore ? 'pass' : 'fail'}">${a.score}</span>` : '<span class="muted">Tự kiểm</span>'}</td>
+      </tr>`).join('')}</tbody></table></div>`;
+  }
+
+  function viewHistory() {
+    const h = history();
+    page(`${crumbs([['Trang chủ', '#/'], ['Lịch sử', '']])}
+      <div class="head-row"><h1>Lịch sử làm bài</h1>${h.length ? '<button type="button" class="btn-sec" id="clearBtn">Xoá lịch sử trên máy này</button>' : ''}</div>
+      <p class="muted">Lịch sử lưu trên trình duyệt của máy này. Kết quả thi thử đã gửi cho thầy cô vẫn còn dù em xoá ở đây.</p>
+      ${h.length ? historyTable(h) : '<p>Chưa có lượt làm bài nào.</p>'}`);
+    const b = $('#clearBtn');
+    if (b) b.addEventListener('click', () => { if (confirm('Xoá toàn bộ lịch sử trên máy này?')) { store.del('mos_history'); viewHistory(); } });
+  }
+
+  // ---------------------------------------------------------------- điều hướng
+
+  async function route() {
+    leave();
+    const parts = (location.hash || '#/').split('/');
+    const [, name, arg] = parts;
+    try {
+      if (!name) await viewHome();
+      else if (name === 's') await viewSubject(arg);
+      else if (name === 'set') await viewSet(arg);
+      else if (name === 'p') await viewProject(arg);
+      else if (name === 'exam') await viewExam(arg);
+      else if (name === 'dock' && arg === 'p') await viewProject(parts[3], true);
+      else if (name === 'dock' && arg === 'exam') await viewExam(parts[3], true);
+      else if (name === 'docked') viewDocked(parts.slice(2).join('/'));
+      else if (name === 'r') viewResult(arg);
+      else if (name === 'history') viewHistory();
+      else await viewHome();
+    } catch (e) {
+      console.error(e);
+      showError(e);
+    }
+  }
+
+  function applyTheme() {
+    const t = store.get('mos_theme', null);
+    if (t) document.documentElement.setAttribute('data-theme', t);
+  }
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#themeBtn')) return;
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark' ||
+      (!document.documentElement.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
+    const next = dark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    store.set('mos_theme', next);
+  });
+
+  applyTheme();
+  window.addEventListener('hashchange', route);
+  window.addEventListener('online', flushPending);
+  route();
+  flushPending();
+})();

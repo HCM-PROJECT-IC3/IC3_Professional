@@ -1,0 +1,41 @@
+{
+ "ppt-t1-p1": {
+  "1": { "type": "p.ink", "slide": 2, "scope": "Kiểm tra có nét tô bằng tab Draw trên trang chiếu 2; màu và cỡ bút em tự đối chiếu với mẫu." },
+  "2": { "type": "p.cropToEdge", "titled": "Other reasons to visit" },
+  "3": { "type": "p.ink", "slide": 4, "scope": "Kiểm tra có nét vẽ trên trang chiếu 4; màu đỏ, cỡ 0.5mm em tự đối chiếu." },
+  "4": { "type": "p.picBackground", "slide": "last", "transparency": 70 },
+  "5": { "type": "p.tableHeaderMerged", "slide": 4, "text": "Effect of Focused Activity", "center": true,
+         "scope": "Kiểm tra hàng mới đã hợp nhất, đúng chữ, căn giữa; đường viền ngoài em tự kiểm." },
+  "6": { "type": "p.showType", "show": "browse", "manual": true }
+ },
+ "ppt-t1-p2": {
+  "1": { "type": "p.slideHidden", "slide": "last", "hidden": true },
+  "2": { "type": "p.untitledVisible" },
+  "3": { "type": "p.textEffect", "slide": 2, "text": "SUPPLIER POWER – Well-integrated supply chain; many suppliers are dependent/captive.",
+         "spacing": 300, "shadow": true },
+  "4": { "type": "p.picBackground", "slide": 3, "transparency": 70 },
+  "5": { "type": "p.layoutExists", "name": "Picture and Text", "placeholders": ["title", "pic", "body"] },
+  "6": { "type": "p.footerText", "text": "MOSIIG", "skipTitle": true, "slideNumber": true }
+ },
+ "ppt-t1-p3": {
+  "1": { "type": "p.shapeGeom", "slide": "last", "geom": "heart", "absent": "cloud" },
+  "2": { "type": "p.centeredH", "slide": 4, "geoms": ["smileyFace", "heart"],
+         "scope": "Kiểm tra phần căn giữa theo chiều ngang; kiểu Subtle Effect, đổ bóng và thứ tự lớp em tự kiểm." },
+  "4": { "type": "p.alignedTop", "titled": "Questions?", "namePattern": "^object 3$" },
+  "5": { "type": "p.chartData", "slide": 3, "chartType": "barChart", "series": ["Can Read", "Can't Read"], "categories": ["Students", "Adults"],
+         "scope": "Kiểm tra loại biểu đồ, tên chuỗi và danh mục." },
+  "6": { "type": "p.slideSize", "width": 8, "height": 11 }
+ },
+ "ppt-t1-p4": {
+  "1": { "type": "p.themeFont", "theme": "Office", "font": "Arial" },
+  "2": { "type": "p.masterPictureBullet" },
+  "4": { "type": "p.animation", "slide": 2, "cls": "entr", "preset": 22, "sub": 8, "onClick": true,
+         "scope": "Kiểm tra hiệu ứng Wipe hướng From Left, xuất hiện khi nhấp chuột." },
+  "5": { "type": "p.footerText", "text": "MOS", "only": [2] }
+ },
+ "ppt-t1-p5": {
+  "1": { "type": "p.animation", "slide": 2, "cls": "entr", "preset": 22, "sub": 1, "minCount": 5, "onClick": true },
+  "2": { "type": "p.animation", "slide": 2, "cls": "path", "scope": "Kiểm tra có đường chuyển động (motion path); hướng Down em tự kiểm." },
+  "3": { "type": "p.masterPlaceholder", "ph": "sldNum" }
+ }
+}

@@ -61,6 +61,7 @@ window.addEventListener('edu:ready', ({ detail }) => {
   // Công cụ lớp học (trước chỉ có ở sảnh học sinh): diem-danh.html chỉ cho admin/teacher
   // (EDU_ALLOWED_ROLES của trang đó); Gọi tên/Gom kết quả không cần đăng nhập.
   show('attendanceLink', role === 'admin' || role === 'teacher');
+  show('lessonBookLink', role === 'admin' || role === 'teacher');
   show('namePickerLink', role === 'admin' || role === 'teacher');
   show('gatherResultsNavLink', role === 'admin' || role === 'teacher');
   show('rosterManagerLink', role === 'admin' || role === 'coordinator');
@@ -84,6 +85,15 @@ window.addEventListener('edu:ready', ({ detail }) => {
   // Giáo viên cần mục này để sao lưu/khôi phục bộ đề tự soạn (chỉ nằm trong trình duyệt);
   // nút "Kiểm tra Apps Script ngay" vẫn chỉ hiện cho admin (js/dashboard-settings.js).
   show('navSettings', role === 'admin' || role === 'teacher');
+
+  // Nhãn nhóm menu (Đề & kết quả · Lớp học · Khác): ẩn khi vai trò không thấy mục nào trong nhóm
+  document.querySelectorAll('.sidebar-nav .nav-section-label').forEach((label) => {
+    let el = label.nextElementSibling, any = false;
+    for (; el && !el.classList.contains('nav-section-label'); el = el.nextElementSibling) {
+      if (el.classList.contains('nav-item') && el.style.display !== 'none') { any = true; break; }
+    }
+    label.style.display = any ? '' : 'none';
+  });
 
   // Giáo viên: mặc định vào thẳng "Bộ đề của tôi" (đã active sẵn trong HTML) —
   // không cần làm gì thêm vì đây cũng là mục duy nhất giáo viên còn thấy

@@ -35,6 +35,7 @@ máy có phiên giáo viên).
 | Tiến độ học, sổ tay câu sai, XP | localStorage máy học sinh | Học sinh | Học sinh |
 | **Link sổ lớp của giáo viên** (link Sheet "FORM QUẢN LÝ LỚP" theo trường, thư mục Drive, tên GV, lớp của tôi) | localStorage + Firebase `teacher_sync/{uid}` (1 doc/GV, < 100k ký tự) — CSV Sheet, điểm danh nháp, bộ lọc chỉ ở máy | Giáo viên (`js/services/teacher-sync.js`, trang diem-danh) | Chính giáo viên đó. Chi phí: 1 đọc/lần mở Điểm danh (bỏ qua nếu < 30 phút), ghi chỉ khi thêm/bỏ sổ, "Cập nhật lớp", đổi tên, gắn sao; nhiều tab không ghi trùng; rule không `get()` hồ sơ |
 | Gọi tên (lịch sử gọi, Đúng/Chưa đúng, câu đã bỏ) | Chỉ localStorage máy giáo viên — 0 Firebase | Giáo viên | Giáo viên |
+| Sổ đầu bài (tiết dạy, vắng, nhận xét, TKB, lớp + học sinh) | Chỉ localStorage `sodaubai_v1` máy giáo viên + file sao lưu .json — 0 Firebase, 0 Apps Script | Giáo viên (`so-dau-bai.html`); lớp/học sinh lấy từ sổ lớp đã đọc ở Điểm danh hoặc `data/roster/students-active.json` | Giáo viên; tiết hôm nay gửi sang Gọi tên (cùng máy) |
 
 ## 3. Công tắc (`js/backend-config.js`)
 

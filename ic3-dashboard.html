@@ -29,6 +29,8 @@
   </div>
 
   <nav class="sidebar-nav">
+    <!-- 3 nhóm theo việc. Nhãn nhóm tự ẩn khi vai trò không thấy mục nào trong nhóm (js/dashboard-page.js). -->
+    <div class="nav-section-label">Đề &amp; kết quả</div>
     <div class="nav-item active" data-section="my-sets" id="navMySets" title="Bộ đề của tôi">
       <span class="nav-icon"><i class="fa-solid fa-book-open"></i></span>
       <span>Bộ đề của tôi</span>
@@ -41,13 +43,52 @@
       <span class="nav-icon"><i class="fa-solid fa-chart-column"></i></span>
       <span>Báo cáo kết quả</span>
     </div>
-    <div class="nav-item" data-section="settings" id="navSettings" title="Cài đặt hệ thống">
-      <span class="nav-icon"><i class="fa-solid fa-gear"></i></span>
-      <span>Cài đặt hệ thống</span>
-    </div>
+    <a class="nav-item link-plain" href="teacher-dashboard.html" id="teacherDashboardLink" style="display:none;" title="Tổng quan kết quả các lớp của tôi">
+      <span class="nav-icon"><i class="fa-solid fa-school"></i></span>
+      <span>Tổng quan của tôi</span>
+    </a>
+    <a class="nav-item link-plain" href="coordinator-dashboard.html" id="coordinatorDashboardLink" style="display:none;" title="Tổng quan điều phối">
+      <span class="nav-icon"><i class="fa-solid fa-compass"></i></span>
+      <span>Tổng quan điều phối</span>
+    </a>
 
-    <!-- Nhóm 2: liên kết sang các trang quản trị khác. -->
-    <div class="nav-section-label">Trang khác</div>
+    <!-- Công cụ lớp học. Gọi tên + Gom kết quả: 0 Firebase; Điểm danh, Sổ đầu bài dùng hồ sơ đã lưu đệm. -->
+    <div class="nav-section-label">Lớp học</div>
+    <a class="nav-item link-plain" href="teaching-schedule.html" id="teachingScheduleLink" style="display:none;" title="Lịch giảng dạy">
+      <span class="nav-icon"><i class="fa-solid fa-calendar-days"></i></span>
+      <span>Lịch giảng dạy</span>
+    </a>
+    <a class="nav-item link-plain" href="diem-danh.html" target="_blank" rel="noopener" id="attendanceLink" style="display:none;" title="Điểm danh &amp; tiến độ lớp từ sổ quản lý lớp của Điều phối">
+      <span class="nav-icon"><i class="fa-solid fa-clipboard-user"></i></span>
+      <span>Điểm danh &amp; tiến độ</span>
+    </a>
+    <a class="nav-item link-plain" href="so-dau-bai.html" target="_blank" rel="noopener" id="lessonBookLink" style="display:none;" title="Sổ đầu bài: ghi tiết dạy, vắng, nhận xét — lớp và học sinh lấy từ dữ liệu có sẵn">
+      <span class="nav-icon"><i class="fa-solid fa-book-bookmark"></i></span>
+      <span>Sổ đầu bài</span>
+    </a>
+    <a class="nav-item link-plain" href="goi-ten.html" target="_blank" rel="noopener" id="namePickerLink" style="display:none;" title="Gọi tên học sinh trên máy chiếu">
+      <span class="nav-icon"><i class="fa-solid fa-bullhorn"></i></span>
+      <span>Gọi tên</span>
+    </a>
+    <a class="nav-item link-plain" href="gom-ket-qua.html" target="_blank" rel="noopener" id="gatherResultsNavLink" style="display:none;" title="Gom kết quả học sinh gửi bằng mã/file">
+      <span class="nav-icon"><i class="fa-solid fa-inbox"></i></span>
+      <span>Gom kết quả</span>
+    </a>
+    <a class="nav-item link-plain" href="roster-manager.html" id="rosterManagerLink" style="display:none;" title="Danh sách học sinh">
+      <span class="nav-icon"><i class="fa-solid fa-clipboard-list"></i></span>
+      <span>Danh sách học sinh</span>
+    </a>
+
+    <div class="nav-section-label">Khác</div>
+    <a class="nav-item link-plain" href="tai-lieu-nam-hoc.html" id="docsSchoolYearLink" style="display:none;" title="Tài liệu năm học 2026-2027">
+      <span class="nav-icon"><i class="fa-solid fa-folder-open"></i></span>
+      <span>Tài liệu năm học</span>
+    </a>
+    <!-- portfolio.html: kênh chung cho cả đội, mọi vai trò đều thấy; mở tab mới. -->
+    <a class="nav-item link-plain" href="portfolio.html" target="_blank" rel="noopener" id="gvLabLink" style="display:none;" title="Trang Social Media">
+      <span class="nav-icon"><i class="fa-solid fa-share-nodes"></i></span>
+      <span>Trang Social Media</span>
+    </a>
     <a class="nav-item link-plain" href="image-manager.html" id="imageManagerLink" style="display:none;" title="Quản lý câu hỏi">
       <span class="nav-icon"><i class="fa-solid fa-image"></i></span>
       <span>Quản lý câu hỏi</span>
@@ -56,45 +97,10 @@
       <span class="nav-icon"><i class="fa-solid fa-crown"></i></span>
       <span>Tài khoản</span>
     </a>
-    <a class="nav-item link-plain" href="teacher-dashboard.html" id="teacherDashboardLink" style="display:none;" title="Tổng quan của tôi">
-      <span class="nav-icon"><i class="fa-solid fa-school"></i></span>
-      <span>Tổng quan của tôi</span>
-    </a>
-    <a class="nav-item link-plain" href="tai-lieu-nam-hoc.html" id="docsSchoolYearLink" style="display:none;" title="Tài liệu năm học 2026-2027">
-      <span class="nav-icon"><i class="fa-solid fa-folder-open"></i></span>
-      <span>Tài liệu năm học 2026-2027</span>
-    </a>
-    <!-- Công cụ lớp học — trước đây chỉ mở được từ sảnh học sinh (index.html "Dành cho thầy cô").
-         Gọi tên + Gom kết quả: 0 Firebase; Điểm danh dùng hồ sơ đã lưu đệm (EduProfileCache). -->
-    <a class="nav-item link-plain" href="diem-danh.html" target="_blank" rel="noopener" id="attendanceLink" style="display:none;" title="Điểm danh &amp; tiến độ">
-      <span class="nav-icon"><i class="fa-solid fa-clipboard-user"></i></span>
-      <span>Điểm danh &amp; tiến độ</span>
-    </a>
-    <a class="nav-item link-plain" href="goi-ten.html" target="_blank" rel="noopener" id="namePickerLink" style="display:none;" title="Gọi tên học sinh">
-      <span class="nav-icon"><i class="fa-solid fa-bullhorn"></i></span>
-      <span>Gọi tên học sinh</span>
-    </a>
-    <a class="nav-item link-plain" href="gom-ket-qua.html" target="_blank" rel="noopener" id="gatherResultsNavLink" style="display:none;" title="Gom kết quả học sinh gửi">
-      <span class="nav-icon"><i class="fa-solid fa-inbox"></i></span>
-      <span>Gom kết quả học sinh gửi</span>
-    </a>
-    <a class="nav-item link-plain" href="roster-manager.html" id="rosterManagerLink" style="display:none;" title="Danh sách học sinh">
-      <span class="nav-icon"><i class="fa-solid fa-clipboard-list"></i></span>
-      <span>Danh sách học sinh</span>
-    </a>
-    <a class="nav-item link-plain" href="teaching-schedule.html" id="teachingScheduleLink" style="display:none;" title="Lịch giảng dạy">
-      <span class="nav-icon"><i class="fa-solid fa-calendar-days"></i></span>
-      <span>Lịch giảng dạy</span>
-    </a>
-    <a class="nav-item link-plain" href="coordinator-dashboard.html" id="coordinatorDashboardLink" style="display:none;" title="Tổng quan điều phối">
-      <span class="nav-icon"><i class="fa-solid fa-compass"></i></span>
-      <span>Tổng quan điều phối</span>
-    </a>
-    <!-- portfolio.html: kênh chung cho cả đội, mọi vai trò đều thấy; mở tab mới. -->
-    <a class="nav-item link-plain" href="portfolio.html" target="_blank" rel="noopener" id="gvLabLink" style="display:none;" title="Trang Social Media">
-      <span class="nav-icon"><i class="fa-solid fa-share-nodes"></i></span>
-      <span>Trang Social Media</span>
-    </a>
+    <div class="nav-item" data-section="settings" id="navSettings" title="Cài đặt hệ thống">
+      <span class="nav-icon"><i class="fa-solid fa-gear"></i></span>
+      <span>Cài đặt hệ thống</span>
+    </div>
   </nav>
 
   <div class="sidebar-footer">

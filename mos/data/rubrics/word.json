@@ -1,0 +1,51 @@
+{
+ "word-t9-p1": {
+  "1": { "type": "w.footerField", "field": "PAGE", "scope": "Kiểm tra số trang ở chân trang; kiểu Accent Bar 4 em tự đối chiếu." },
+  "2": { "type": "w.coreProp", "prop": "title", "value": "Course" },
+  "4": { "type": "w.noComments" },
+  "5": { "type": "w.tableBetween", "after": "Grading", "before": "Course Length", "rows": 6, "cols": 2 }
+ },
+ "word-t9-p2": {
+  "1": { "type": "w.setting", "name": "trackRevisions", "on": true, "sticky": true,
+         "okNote": "Đã bật Track Changes.", "failNote": "Chưa bật Track Changes." },
+  "2": { "all": [
+         { "type": "w.setting", "name": "trackRevisions", "on": false, "failNote": "Track Changes vẫn đang bật." },
+         { "type": "w.noTablesWith", "text": "McAfee AntiVirus Plus" } ] },
+  "4": { "type": "w.shape", "geom": "heart", "scope": "Kiểm tra có hình trái tim; màu nền Blue em tự đối chiếu." },
+  "5": { "type": "w.picturePos", "h": { "relativeFrom": "margin", "align": "left" }, "v": { "relativeFrom": "paragraph" } }
+ },
+ "word-t9-p3": {
+  "1": { "type": "w.drawingKind", "kind": "model3d", "wrap": "square", "label": "Mô hình 3D",
+         "scope": "Kiểm tra có mô hình 3D và kiểu bao chữ Square; vị trí giữa ô em tự đối chiếu." },
+  "2": { "type": "w.textHas", "text": "Game Over™" },
+  "3": { "type": "w.tableSingleCell", "text": "Gone Fishing" },
+  "5": { "type": "w.bgRemoved" }
+ },
+ "word-t9-p4": {
+  "1": { "type": "w.field", "instr": "BIBLIOGRAPHY", "label": "Bibliography" },
+  "2": { "type": "w.bookmarkGone", "name": "sites", "text": "Where to Find Petroglyphs and Pictographs" },
+  "3": { "type": "w.footerText", "text": "Ancient Cultures", "notFirst": true },
+  "4": { "type": "w.field", "instr": "CITATION", "label": "trích dẫn (Citation)", "scope": "Kiểm tra có trích dẫn; tên tác giả và vị trí em tự đối chiếu." },
+  "5": { "all": [ { "type": "w.field", "instr": "TOC", "label": "mục lục" }, { "type": "w.textGone", "text": "<Insert Table of Contents Here>" } ],
+         "scope": "Kiểm tra có mục lục và đã thay chữ giữ chỗ; kiểu Automatic Table 2 em tự đối chiếu." }
+ },
+ "word-t9-p5": {
+  "2": { "type": "w.altText", "text": "New Logo" },
+  "3": { "type": "w.tableColWidth", "header": "Month", "inches": 1 },
+  "4": { "type": "w.drawingKind", "kind": "pic", "isNew": true, "wrap": "topAndBottom", "heightIn": 1.5, "label": "Hình minh hoạ" },
+  "5": { "type": "w.drawingKind", "kind": "smartart", "isNew": true, "widthIn": 6, "heightIn": 0.5, "label": "SmartArt",
+         "scope": "Kiểm tra SmartArt và kích thước; kiểu Basic Process và màu em tự đối chiếu." }
+ },
+ "word-t9-p6": {
+  "1": { "type": "w.drawingKind", "kind": "pic", "isNew": true, "label": "Ảnh chụp màn hình", "scope": "Kiểm tra có thêm ảnh; nội dung ảnh em tự đối chiếu." },
+  "2": { "type": "w.notes" },
+  "3": { "type": "w.columns", "num": 2, "sep": true, "scope": "Kiểm tra 2 cột có đường kẻ giữa; độ rộng 3,1\" em tự đối chiếu." },
+  "4": { "type": "w.columnBreak" },
+  "5": { "type": "w.tableCaption", "text": "Office Hours" }
+ },
+ "word-t9-p7": {
+  "1": { "type": "w.revisions", "accepted": ["Hey, Teachers!", "Workshop"], "pending": ["Friday"] },
+  "2": { "type": "w.listSpacing", "line": 240 },
+  "3": { "type": "w.listLevel", "level": 2 }
+ }
+}

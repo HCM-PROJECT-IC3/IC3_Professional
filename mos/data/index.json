@@ -1,0 +1,1031 @@
+{
+ "subjects": [
+  {
+   "id": "excel",
+   "name": "Excel",
+   "ext": ".xlsx",
+   "sets": [
+    {
+     "id": "excel-t3",
+     "no": 3,
+     "title": "Bộ đề Tiết 3",
+     "projects": [
+      {
+       "id": "excel-t3-p1",
+       "title": "Project 1",
+       "tasks": 6
+      },
+      {
+       "id": "excel-t3-p2",
+       "title": "Project 2",
+       "tasks": 5
+      },
+      {
+       "id": "excel-t3-p3",
+       "title": "Project 3",
+       "tasks": 6
+      },
+      {
+       "id": "excel-t3-p4",
+       "title": "Project 4",
+       "tasks": 6
+      },
+      {
+       "id": "excel-t3-p5",
+       "title": "Project 5",
+       "tasks": 6
+      },
+      {
+       "id": "excel-t3-p6",
+       "title": "Project 6",
+       "tasks": 6
+      }
+     ]
+    },
+    {
+     "id": "excel-t4",
+     "no": 4,
+     "title": "Bộ đề Tiết 4",
+     "projects": [
+      {
+       "id": "excel-t4-p1",
+       "title": "Project 1",
+       "tasks": 6
+      },
+      {
+       "id": "excel-t4-p2",
+       "title": "Project 2",
+       "tasks": 6
+      },
+      {
+       "id": "excel-t4-p3",
+       "title": "Project 3",
+       "tasks": 6
+      },
+      {
+       "id": "excel-t4-p4",
+       "title": "Project 4",
+       "tasks": 6
+      },
+      {
+       "id": "excel-t4-p5",
+       "title": "Project 5",
+       "tasks": 6
+      },
+      {
+       "id": "excel-t4-p6",
+       "title": "Project 6",
+       "tasks": 6
+      },
+      {
+       "id": "excel-t4-p7",
+       "title": "Project 7",
+       "tasks": 6
+      }
+     ]
+    },
+    {
+     "id": "excel-t5",
+     "no": 5,
+     "title": "Bộ đề Tiết 5",
+     "projects": [
+      {
+       "id": "excel-t5-p1",
+       "title": "Project 1",
+       "tasks": 6
+      },
+      {
+       "id": "excel-t5-p2",
+       "title": "Project 2",
+       "tasks": 6
+      },
+      {
+       "id": "excel-t5-p3",
+       "title": "Project 3",
+       "tasks": 6
+      },
+      {
+       "id": "excel-t5-p4",
+       "title": "Project 4",
+       "tasks": 6
+      },
+      {
+       "id": "excel-t5-p5",
+       "title": "Project 5",
+       "tasks": 6
+      },
+      {
+       "id": "excel-t5-p6",
+       "title": "Project 6",
+       "tasks": 5
+      }
+     ]
+    },
+    {
+     "id": "excel-t6",
+     "no": 6,
+     "title": "Bộ đề Tiết 6",
+     "projects": [
+      {
+       "id": "excel-t6-p1",
+       "title": "Project 1",
+       "tasks": 6
+      },
+      {
+       "id": "excel-t6-p2",
+       "title": "Project 2",
+       "tasks": 5
+      },
+      {
+       "id": "excel-t6-p3",
+       "title": "Project 3",
+       "tasks": 6
+      },
+      {
+       "id": "excel-t6-p4",
+       "title": "Project 4",
+       "tasks": 6
+      },
+      {
+       "id": "excel-t6-p5",
+       "title": "Project 5",
+       "tasks": 6
+      },
+      {
+       "id": "excel-t6-p6",
+       "title": "Project 6",
+       "tasks": 6
+      }
+     ]
+    },
+    {
+     "id": "excel-t7",
+     "no": 7,
+     "title": "Bộ đề Tiết 7",
+     "projects": [
+      {
+       "id": "excel-t7-p1",
+       "title": "Project 1",
+       "tasks": 6
+      },
+      {
+       "id": "excel-t7-p2",
+       "title": "Project 2",
+       "tasks": 6
+      },
+      {
+       "id": "excel-t7-p3",
+       "title": "Project 3",
+       "tasks": 6
+      },
+      {
+       "id": "excel-t7-p4",
+       "title": "Project 4",
+       "tasks": 5
+      },
+      {
+       "id": "excel-t7-p5",
+       "title": "Project 5",
+       "tasks": 6
+      },
+      {
+       "id": "excel-t7-p6",
+       "title": "Project 6",
+       "tasks": 5
+      }
+     ]
+    },
+    {
+     "id": "excel-t8",
+     "no": 8,
+     "title": "Bộ đề Tiết 8",
+     "projects": [
+      {
+       "id": "excel-t8-p1",
+       "title": "Project 1",
+       "tasks": 5
+      },
+      {
+       "id": "excel-t8-p2",
+       "title": "Project 2",
+       "tasks": 5
+      },
+      {
+       "id": "excel-t8-p3",
+       "title": "Project 3",
+       "tasks": 5
+      },
+      {
+       "id": "excel-t8-p4",
+       "title": "Project 4",
+       "tasks": 5
+      },
+      {
+       "id": "excel-t8-p5",
+       "title": "Project 5",
+       "tasks": 5
+      },
+      {
+       "id": "excel-t8-p6",
+       "title": "Project 6",
+       "tasks": 5
+      },
+      {
+       "id": "excel-t8-p7",
+       "title": "Project 7",
+       "tasks": 5
+      }
+     ]
+    },
+    {
+     "id": "excel-t9",
+     "no": 9,
+     "title": "Bộ đề Tiết 9",
+     "projects": [
+      {
+       "id": "excel-t9-p1",
+       "title": "Project 1",
+       "tasks": 5
+      },
+      {
+       "id": "excel-t9-p2",
+       "title": "Project 2",
+       "tasks": 5
+      },
+      {
+       "id": "excel-t9-p3",
+       "title": "Project 3",
+       "tasks": 5
+      },
+      {
+       "id": "excel-t9-p4",
+       "title": "Project 4",
+       "tasks": 5
+      },
+      {
+       "id": "excel-t9-p5",
+       "title": "Project 5",
+       "tasks": 5
+      },
+      {
+       "id": "excel-t9-p6",
+       "title": "Project 6",
+       "tasks": 5
+      },
+      {
+       "id": "excel-t9-p7",
+       "title": "Project 7",
+       "tasks": 5
+      }
+     ]
+    },
+    {
+     "id": "excel-t10",
+     "no": 10,
+     "title": "Bộ đề Tiết 10",
+     "projects": [
+      {
+       "id": "excel-t10-p1",
+       "title": "Project 1",
+       "tasks": 4
+      },
+      {
+       "id": "excel-t10-p2",
+       "title": "Project 2",
+       "tasks": 6
+      },
+      {
+       "id": "excel-t10-p3",
+       "title": "Project 3",
+       "tasks": 5
+      },
+      {
+       "id": "excel-t10-p4",
+       "title": "Project 4",
+       "tasks": 4
+      },
+      {
+       "id": "excel-t10-p5",
+       "title": "Project 5",
+       "tasks": 5
+      },
+      {
+       "id": "excel-t10-p6",
+       "title": "Project 6",
+       "tasks": 6
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "powerpoint",
+   "name": "PowerPoint",
+   "ext": ".pptx",
+   "sets": [
+    {
+     "id": "ppt-t1",
+     "no": 1,
+     "title": "Bộ đề Tiết 1",
+     "projects": [
+      {
+       "id": "ppt-t1-p1",
+       "title": "Project 1",
+       "tasks": 6
+      },
+      {
+       "id": "ppt-t1-p2",
+       "title": "Project 2",
+       "tasks": 6
+      },
+      {
+       "id": "ppt-t1-p3",
+       "title": "Project 3",
+       "tasks": 6
+      },
+      {
+       "id": "ppt-t1-p4",
+       "title": "Project 4",
+       "tasks": 6
+      },
+      {
+       "id": "ppt-t1-p5",
+       "title": "Project 5",
+       "tasks": 5
+      }
+     ]
+    },
+    {
+     "id": "ppt-t2",
+     "no": 2,
+     "title": "Bộ đề Tiết 2",
+     "projects": [
+      {
+       "id": "ppt-t2-p1",
+       "title": "Project 1 · RockCrawlMoab",
+       "tasks": 5
+      },
+      {
+       "id": "ppt-t2-p2",
+       "title": "Project 2 · DataNetworking",
+       "tasks": 5
+      },
+      {
+       "id": "ppt-t2-p3",
+       "title": "Project 3 · Toy Story",
+       "tasks": 8
+      },
+      {
+       "id": "ppt-t2-p4",
+       "title": "Project 4 · FishingAdventures",
+       "tasks": 5
+      },
+      {
+       "id": "ppt-t2-p5",
+       "title": "Project 5 · Car",
+       "tasks": 7
+      },
+      {
+       "id": "ppt-t2-p6",
+       "title": "Project 6 · Scuba",
+       "tasks": 5
+      },
+      {
+       "id": "ppt-t2-p7",
+       "title": "Project 7 · Company",
+       "tasks": 6
+      }
+     ]
+    },
+    {
+     "id": "ppt-t3",
+     "no": 3,
+     "title": "Bộ đề Tiết 3",
+     "projects": [
+      {
+       "id": "ppt-t3-p1",
+       "title": "Project 1 · Adventure Travel",
+       "tasks": 6
+      },
+      {
+       "id": "ppt-t3-p2",
+       "title": "Project 2 · IceCream",
+       "tasks": 6
+      },
+      {
+       "id": "ppt-t3-p3",
+       "title": "Project 3 · Coffee house",
+       "tasks": 4
+      },
+      {
+       "id": "ppt-t3-p4",
+       "title": "Project 4 · Inclusive practices",
+       "tasks": 4
+      },
+      {
+       "id": "ppt-t3-p5",
+       "title": "Project 5 · Niagara Falls",
+       "tasks": 5
+      },
+      {
+       "id": "ppt-t3-p6",
+       "title": "Project 6 · Maple Leaf Gardens",
+       "tasks": 5
+      },
+      {
+       "id": "ppt-t3-p7",
+       "title": "Project 7 · Sports Equipment",
+       "tasks": 4
+      }
+     ]
+    },
+    {
+     "id": "ppt-t4",
+     "no": 4,
+     "title": "Bộ đề Tiết 4",
+     "projects": [
+      {
+       "id": "ppt-t4-p1",
+       "title": "Project 1",
+       "tasks": 6
+      },
+      {
+       "id": "ppt-t4-p2",
+       "title": "Project 2",
+       "tasks": 6
+      },
+      {
+       "id": "ppt-t4-p3",
+       "title": "Project 3",
+       "tasks": 1
+      },
+      {
+       "id": "ppt-t4-p4",
+       "title": "Project 4",
+       "tasks": 6
+      },
+      {
+       "id": "ppt-t4-p5",
+       "title": "Project 5",
+       "tasks": 6
+      },
+      {
+       "id": "ppt-t4-p6",
+       "title": "Project 6",
+       "tasks": 6
+      },
+      {
+       "id": "ppt-t4-p7",
+       "title": "Project 7",
+       "tasks": 5
+      }
+     ]
+    },
+    {
+     "id": "ppt-t5",
+     "no": 5,
+     "title": "Bộ đề Tiết 5",
+     "projects": [
+      {
+       "id": "ppt-t5-p1",
+       "title": "Project 1",
+       "tasks": 6
+      },
+      {
+       "id": "ppt-t5-p2",
+       "title": "Project 2",
+       "tasks": 6
+      },
+      {
+       "id": "ppt-t5-p3",
+       "title": "Project 3",
+       "tasks": 6
+      },
+      {
+       "id": "ppt-t5-p4",
+       "title": "Project 4",
+       "tasks": 6
+      },
+      {
+       "id": "ppt-t5-p5",
+       "title": "Project 5",
+       "tasks": 6
+      },
+      {
+       "id": "ppt-t5-p6",
+       "title": "Project 6",
+       "tasks": 5
+      }
+     ]
+    },
+    {
+     "id": "ppt-t6",
+     "no": 6,
+     "title": "Bộ đề Tiết 6",
+     "projects": [
+      {
+       "id": "ppt-t6-p1",
+       "title": "Project 1",
+       "tasks": 7
+      },
+      {
+       "id": "ppt-t6-p2",
+       "title": "Project 2",
+       "tasks": 7
+      },
+      {
+       "id": "ppt-t6-p3",
+       "title": "Project 3",
+       "tasks": 7
+      },
+      {
+       "id": "ppt-t6-p4",
+       "title": "Project 4",
+       "tasks": 7
+      },
+      {
+       "id": "ppt-t6-p5",
+       "title": "Project 5",
+       "tasks": 7
+      }
+     ]
+    },
+    {
+     "id": "ppt-t7",
+     "no": 7,
+     "title": "Bộ đề Tiết 7",
+     "projects": [
+      {
+       "id": "ppt-t7-p1",
+       "title": "Project 1",
+       "tasks": 6
+      },
+      {
+       "id": "ppt-t7-p2",
+       "title": "Project 2",
+       "tasks": 6
+      },
+      {
+       "id": "ppt-t7-p3",
+       "title": "Project 3",
+       "tasks": 6
+      },
+      {
+       "id": "ppt-t7-p4",
+       "title": "Project 4",
+       "tasks": 5
+      },
+      {
+       "id": "ppt-t7-p5",
+       "title": "Project 5",
+       "tasks": 6
+      },
+      {
+       "id": "ppt-t7-p6",
+       "title": "Project 6",
+       "tasks": 6
+      }
+     ]
+    },
+    {
+     "id": "ppt-t8",
+     "no": 8,
+     "title": "Bộ đề Tiết 8",
+     "projects": [
+      {
+       "id": "ppt-t8-p1",
+       "title": "Project 1",
+       "tasks": 7
+      },
+      {
+       "id": "ppt-t8-p2",
+       "title": "Project 2",
+       "tasks": 1
+      },
+      {
+       "id": "ppt-t8-p3",
+       "title": "Project 3",
+       "tasks": 7
+      },
+      {
+       "id": "ppt-t8-p4",
+       "title": "Project 4",
+       "tasks": 7
+      },
+      {
+       "id": "ppt-t8-p5",
+       "title": "Project 5",
+       "tasks": 7
+      },
+      {
+       "id": "ppt-t8-p6",
+       "title": "Project 6",
+       "tasks": 6
+      }
+     ]
+    },
+    {
+     "id": "ppt-t9",
+     "no": 9,
+     "title": "Bộ đề Tiết 9",
+     "projects": [
+      {
+       "id": "ppt-t9-p1",
+       "title": "Project 1 · TA Marketing",
+       "tasks": 4
+      },
+      {
+       "id": "ppt-t9-p2",
+       "title": "Project 2 · Ski Tours",
+       "tasks": 4
+      },
+      {
+       "id": "ppt-t9-p3",
+       "title": "Project 3 · Hiking Tours Media",
+       "tasks": 4
+      },
+      {
+       "id": "ppt-t9-p4",
+       "title": "Project 4 · Transitions",
+       "tasks": 4
+      },
+      {
+       "id": "ppt-t9-p5",
+       "title": "Project 5 · San Francisco Itinerary",
+       "tasks": 4
+      }
+     ]
+    },
+    {
+     "id": "ppt-t10",
+     "no": 10,
+     "title": "Bộ đề Tiết 10",
+     "projects": [
+      {
+       "id": "ppt-t10-p1",
+       "title": "Project 1 · Business Project Plan",
+       "tasks": 4
+      },
+      {
+       "id": "ppt-t10-p2",
+       "title": "Project 2 · Extreme Adventure Analysis",
+       "tasks": 4
+      },
+      {
+       "id": "ppt-t10-p3",
+       "title": "Project 3 · TEC Annual Review",
+       "tasks": 4
+      },
+      {
+       "id": "ppt-t10-p4",
+       "title": "Project 4 · TA-Halloween",
+       "tasks": 4
+      },
+      {
+       "id": "ppt-t10-p5",
+       "title": "Project 5 · Web Draft",
+       "tasks": 4
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "word",
+   "name": "Word",
+   "ext": ".docx",
+   "sets": [
+    {
+     "id": "word-t1",
+     "no": 1,
+     "title": "Bộ đề Tiết 1",
+     "projects": [
+      {
+       "id": "word-t1-p1",
+       "title": "Project 1 · word02.docx",
+       "tasks": 9
+      },
+      {
+       "id": "word-t1-p2",
+       "title": "Project 2 · word01.docx",
+       "tasks": 5
+      },
+      {
+       "id": "word-t1-p3",
+       "title": "Project 3 · word03.docx",
+       "tasks": 6
+      },
+      {
+       "id": "word-t1-p4",
+       "title": "Project 4 · word11.docx",
+       "tasks": 1
+      },
+      {
+       "id": "word-t1-p5",
+       "title": "Project 5 · word12.docx",
+       "tasks": 1
+      },
+      {
+       "id": "word-t1-p6",
+       "title": "Project 6 · word13.docx",
+       "tasks": 1
+      },
+      {
+       "id": "word-t1-p7",
+       "title": "Project 7 · word14.docx",
+       "tasks": 1
+      },
+      {
+       "id": "word-t1-p8",
+       "title": "Project 8 · word15.docx",
+       "tasks": 1
+      },
+      {
+       "id": "word-t1-p9",
+       "title": "Project 9 · word04.docx",
+       "tasks": 1
+      }
+     ]
+    },
+    {
+     "id": "word-t2",
+     "no": 2,
+     "title": "Bộ đề Tiết 2",
+     "projects": [
+      {
+       "id": "word-t2-p1",
+       "title": "Project 1 · word01.docx",
+       "tasks": 8
+      },
+      {
+       "id": "word-t2-p2",
+       "title": "Project 2 · word02.docx",
+       "tasks": 8
+      },
+      {
+       "id": "word-t2-p3",
+       "title": "Project 3 · word04.docx",
+       "tasks": 5
+      },
+      {
+       "id": "word-t2-p4",
+       "title": "Project 4 · word05.docx",
+       "tasks": 7
+      }
+     ]
+    },
+    {
+     "id": "word-t3",
+     "no": 3,
+     "title": "Bộ đề Tiết 3",
+     "projects": [
+      {
+       "id": "word-t3-p1",
+       "title": "Project 1 · word01.docx",
+       "tasks": 2
+      },
+      {
+       "id": "word-t3-p2",
+       "title": "Project 2 · word02.docx",
+       "tasks": 2
+      },
+      {
+       "id": "word-t3-p3",
+       "title": "Project 3 · word03.docx",
+       "tasks": 8
+      },
+      {
+       "id": "word-t3-p4",
+       "title": "Project 4 · word04.docx",
+       "tasks": 8
+      },
+      {
+       "id": "word-t3-p5",
+       "title": "Project 5 · word10.docx",
+       "tasks": 6
+      }
+     ]
+    },
+    {
+     "id": "word-t4",
+     "no": 4,
+     "title": "Bộ đề Tiết 4",
+     "projects": [
+      {
+       "id": "word-t4-p1",
+       "title": "Project 1 · word07.docx",
+       "tasks": 10
+      },
+      {
+       "id": "word-t4-p2",
+       "title": "Project 2 · word08.docx",
+       "tasks": 7
+      },
+      {
+       "id": "word-t4-p3",
+       "title": "Project 3 · word09.docx",
+       "tasks": 8
+      },
+      {
+       "id": "word-t4-p4",
+       "title": "Project 4 · word16.docx",
+       "tasks": 2
+      }
+     ]
+    },
+    {
+     "id": "word-t5",
+     "no": 5,
+     "title": "Bộ đề Tiết 5",
+     "projects": [
+      {
+       "id": "word-t5-p1",
+       "title": "Project 1 · NetPlusSG.docx",
+       "tasks": 13
+      },
+      {
+       "id": "word-t5-p2",
+       "title": "Project 2 · SalesReport.docx",
+       "tasks": 4
+      }
+     ]
+    },
+    {
+     "id": "word-t6",
+     "no": 6,
+     "title": "Bộ đề Tiết 6",
+     "projects": [
+      {
+       "id": "word-t6-p1",
+       "title": "Project 1 · BusinessBrochure.docx",
+       "tasks": 6
+      },
+      {
+       "id": "word-t6-p2",
+       "title": "Project 2 · Newsletter19.docx",
+       "tasks": 6
+      },
+      {
+       "id": "word-t6-p3",
+       "title": "Project 3 · WizOzChapters.docx",
+       "tasks": 6
+      }
+     ]
+    },
+    {
+     "id": "word-t7",
+     "no": 7,
+     "title": "Bộ đề Tiết 7",
+     "projects": [
+      {
+       "id": "word-t7-p1",
+       "title": "Project 1 · Dinosaurs.docx",
+       "tasks": 6
+      },
+      {
+       "id": "word-t7-p2",
+       "title": "Project 2 · Preparing Perfect Muffins.docx",
+       "tasks": 6
+      },
+      {
+       "id": "word-t7-p3",
+       "title": "Project 3 · Hous.docx",
+       "tasks": 6
+      },
+      {
+       "id": "word-t7-p4",
+       "title": "Project 4 · Conference Topic.docx",
+       "tasks": 5
+      },
+      {
+       "id": "word-t7-p5",
+       "title": "Project 5 · lOMoARcPSD.docx",
+       "tasks": 6
+      }
+     ]
+    },
+    {
+     "id": "word-t8",
+     "no": 8,
+     "title": "Bộ đề Tiết 8",
+     "projects": [
+      {
+       "id": "word-t8-p1",
+       "title": "Project 1 · Hous.docx",
+       "tasks": 5
+      },
+      {
+       "id": "word-t8-p2",
+       "title": "Project 2 · Apps For Android and iPhones.docx",
+       "tasks": 5
+      },
+      {
+       "id": "word-t8-p3",
+       "title": "Project 3 · Ice Cream Shop.docx",
+       "tasks": 5
+      },
+      {
+       "id": "word-t8-p4",
+       "title": "Project 4 · Table of Contents.docx",
+       "tasks": 5
+      },
+      {
+       "id": "word-t8-p5",
+       "title": "Project 5 · Society of Professional Journalists.docx",
+       "tasks": 5
+      },
+      {
+       "id": "word-t8-p6",
+       "title": "Project 6 · Herbal Pet Care.docx",
+       "tasks": 5
+      },
+      {
+       "id": "word-t8-p7",
+       "title": "Project 7 · Understanding.docx",
+       "tasks": 5
+      }
+     ]
+    },
+    {
+     "id": "word-t9",
+     "no": 9,
+     "title": "Bộ đề Tiết 9",
+     "projects": [
+      {
+       "id": "word-t9-p1",
+       "title": "Project 1 · Desktop Support technician Course.docx",
+       "tasks": 5
+      },
+      {
+       "id": "word-t9-p2",
+       "title": "Project 2 · Keeping Computers healthy.docx",
+       "tasks": 5
+      },
+      {
+       "id": "word-t9-p3",
+       "title": "Project 3 · Our Mission Statement.docx",
+       "tasks": 5
+      },
+      {
+       "id": "word-t9-p4",
+       "title": "Project 4 · Insert Table of Contents Here.docx",
+       "tasks": 5
+      },
+      {
+       "id": "word-t9-p5",
+       "title": "Project 5 · New Trail Open.docx",
+       "tasks": 5
+      },
+      {
+       "id": "word-t9-p6",
+       "title": "Project 6 · Project6.docx",
+       "tasks": 5
+      },
+      {
+       "id": "word-t9-p7",
+       "title": "Project 7 · Hey.docx",
+       "tasks": 5
+      }
+     ]
+    },
+    {
+     "id": "word-t10",
+     "no": 10,
+     "title": "Bộ đề Tiết 10",
+     "projects": [
+      {
+       "id": "word-t10-p1",
+       "title": "Project 1 · Project 1.docx",
+       "tasks": 6
+      },
+      {
+       "id": "word-t10-p2",
+       "title": "Project 2 · Project 2.docx",
+       "tasks": 6
+      },
+      {
+       "id": "word-t10-p3",
+       "title": "Project 3 · Project 3.docx",
+       "tasks": 6
+      },
+      {
+       "id": "word-t10-p4",
+       "title": "Project 4 · Project 4.docx",
+       "tasks": 6
+      },
+      {
+       "id": "word-t10-p5",
+       "title": "Project 5 · Project 5.docx",
+       "tasks": 5
+      },
+      {
+       "id": "word-t10-p6",
+       "title": "Project 6 · Project 6.docx",
+       "tasks": 5
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

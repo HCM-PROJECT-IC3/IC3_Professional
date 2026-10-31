@@ -123,6 +123,54 @@
   "spark__lv1__t6__q74_new": {
    "to": 5,
    "reason": "Email, tin nhắn, video chat, chọn phương thức truyền thông — PPCT Bài 32–35 (Giao tiếp)"
+  },
+  "spark__lv1__t7__q4": {
+   "to": 1,
+   "reason": "IC3 Review_All.docx › CĐ 1 – Test 1 câu 12 ghi Bài 7 — PPCT Spark LV1: Căn bản về công nghệ"
+  },
+  "spark__lv1__t4__q1": {
+   "to": 1,
+   "reason": "IC3 Review_All.docx › CĐ 1 – Test 2 câu 10 ghi Bài 5+6 — PPCT Spark LV1: Căn bản về công nghệ"
+  },
+  "spark__lv1__t1__q16": {
+   "to": 3,
+   "reason": "IC3 Review_All.docx › CĐ 3 – Test 1 câu 2 ghi Bài 13 — PPCT Spark LV1: Quản lý thông tin"
+  },
+  "spark__lv1__t1__q15": {
+   "to": 4,
+   "reason": "IC3 Review_All.docx › CĐ 4 – Test 1 câu 7 ghi Bài 18 — PPCT Spark LV1: Sáng tạo nội dung"
+  },
+  "spark__lv1__t6__q22": {
+   "to": 5,
+   "reason": "IC3 Review_All.docx › CĐ 5 – Test 2 câu 3 ghi Bài 32 — PPCT Spark LV1: Giao tiếp"
+  },
+  "spark__lv1__t2__q25": {
+   "to": 5,
+   "reason": "IC3 Review_All.docx › CĐ 5 – Test 2 câu 5 ghi Bài 32 — PPCT Spark LV1: Giao tiếp"
+  },
+  "spark__lv1__t2__q15": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 6 – Test 1 câu 1 ghi Bài 9 — PPCT Spark LV1: An toàn và bảo mật"
+  },
+  "spark__lv1__t2__q6": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 6 – Test 1 câu 5 ghi Bài 10 — PPCT Spark LV1: An toàn và bảo mật"
+  },
+  "spark__lv1__t1__q88": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 6 – Test 1 câu 15 ghi Bài 12 — PPCT Spark LV1: An toàn và bảo mật"
+  },
+  "spark__lv1__t2__q2": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 6 – Test 2 câu 1 ghi Bài 9 — PPCT Spark LV1: An toàn và bảo mật"
+  },
+  "spark__lv1__t2__q23": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 6 – Test 2 câu 5 ghi Bài 10 — PPCT Spark LV1: An toàn và bảo mật"
+  },
+  "spark__lv1__t2__q14": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 6 – Test 2 câu 9 ghi Bài 10 — PPCT Spark LV1: An toàn và bảo mật"
   }
  },
  "Spark__LV2": {
@@ -261,6 +309,46 @@
   "spark__lv2__t2__q48": {
    "to": 7,
    "reason": "Phản ứng khi bị bắt nạt trực tuyến — PPCT Spark LV2 Bài 32 (An toàn và bảo mật)"
+  },
+  "spark__lv2__t6__q12": {
+   "to": 2,
+   "reason": "IC3 Review_All.docx › CĐ 2 – Test 1 câu 22 ghi Bài 24 — PPCT Spark LV2: Công dân số"
+  },
+  "spark__lv2__t6__q4": {
+   "to": 3,
+   "reason": "IC3 Review_All.docx › CĐ 3 – Test 2 câu 5 ghi Bài 11 — PPCT Spark LV2: Quản lý thông tin"
+  },
+  "spark__lv2__t4__q2": {
+   "to": 3,
+   "reason": "IC3 Review_All.docx › CĐ 3 – Test 2 câu 7 ghi Bài 11 — PPCT Spark LV2: Quản lý thông tin"
+  },
+  "spark__lv2__t4__q10": {
+   "to": 5,
+   "reason": "IC3 Review_All.docx › CĐ 5 – Test 1 câu 2 ghi Bài 25+26+27 — PPCT Spark LV2: Giao tiếp"
+  },
+  "spark__lv2__t2__q7": {
+   "to": 5,
+   "reason": "IC3 Review_All.docx › CĐ 5 – Test 1 câu 9 ghi Bài 25+26+27 — PPCT Spark LV2: Giao tiếp"
+  },
+  "spark__lv2__t2__q49": {
+   "to": 5,
+   "reason": "IC3 Review_All.docx › CĐ 5 – Test 2 câu 4 ghi Bài 25+26+27 — PPCT Spark LV2: Giao tiếp"
+  },
+  "spark__lv2__t2__q12": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 7 – Test 1 câu 5 ghi Bài 32 — PPCT Spark LV2: An toàn và bảo mật"
+  },
+  "spark__lv2__t5__q2": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 7 – Test 1 câu 8 ghi Bài 34 — PPCT Spark LV2: An toàn và bảo mật"
+  },
+  "spark__lv2__t2__q19": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 7 – Test 1 câu 11 ghi Bài 34 — PPCT Spark LV2: An toàn và bảo mật"
+  },
+  "spark__lv2__t2__q21": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 7 – Test 2 câu 10 ghi Bài 34 — PPCT Spark LV2: An toàn và bảo mật"
   }
  },
  "Spark__LV3": {
@@ -456,6 +544,126 @@
   "spark__lv3__t6__q6": {
    "to": 2,
    "reason": "Xin phép trước khi đăng ảnh người khác lên blog — quyền riêng tư, PPCT Spark LV3 Bài 19–20 (Công dân số)"
+  },
+  "spark__lv3__t3__q1": {
+   "to": 1,
+   "reason": "IC3 Review_All.docx › CĐ 1 – Test 2 câu 1 ghi Bài 1+3 — PPCT Spark LV3: Căn bản về công nghệ"
+  },
+  "spark__lv3__t5__q1": {
+   "to": 1,
+   "reason": "IC3 Review_All.docx › CĐ 1 – Test 2 câu 8 ghi Bài 4+5 — PPCT Spark LV3: Căn bản về công nghệ"
+  },
+  "spark__lv3__t1__q9": {
+   "to": 2,
+   "reason": "IC3 Review_All.docx › CĐ 1 – Test 2 câu 14 ghi Bài 8, 18 CD2 — ghi chú CD2 Spark LV3: Công dân số"
+  },
+  "spark__lv3__t7__q122_new": {
+   "to": 2,
+   "reason": "IC3 Review_All.docx › CĐ 2 – Test 1 câu 2 ghi Bài 17 — PPCT Spark LV3: Công dân số"
+  },
+  "spark__lv3__t7__q124_new": {
+   "to": 2,
+   "reason": "IC3 Review_All.docx › CĐ 2 – Test 1 câu 4 ghi Bài 18 — PPCT Spark LV3: Công dân số"
+  },
+  "spark__lv3__t7__q125_new": {
+   "to": 2,
+   "reason": "IC3 Review_All.docx › CĐ 2 – Test 1 câu 9 ghi Bài 19+20 — PPCT Spark LV3: Công dân số"
+  },
+  "spark__lv3__t7__q5": {
+   "to": 2,
+   "reason": "IC3 Review_All.docx › CĐ 2 – Test 1 câu 10 ghi Bài 19+20 — PPCT Spark LV3: Công dân số"
+  },
+  "spark__lv3__t7__q126_new": {
+   "to": 2,
+   "reason": "IC3 Review_All.docx › CĐ 2 – Test 1 câu 11 ghi Bài 19+20 — PPCT Spark LV3: Công dân số"
+  },
+  "spark__lv3__t7__q127_new": {
+   "to": 2,
+   "reason": "IC3 Review_All.docx › CĐ 2 – Test 1 câu 12 ghi Bài 19+20 — PPCT Spark LV3: Công dân số"
+  },
+  "spark__lv3__t7__q130_new": {
+   "to": 2,
+   "reason": "IC3 Review_All.docx › CĐ 2 – Test 2 câu 8 ghi Bài 19+20 — PPCT Spark LV3: Công dân số"
+  },
+  "spark__lv3__t7__q136_new2": {
+   "to": 2,
+   "reason": "IC3 Review_All.docx › CĐ 2 – Test 2 câu 9 ghi Bài 19+20 — PPCT Spark LV3: Công dân số"
+  },
+  "spark__lv3__t1__q8": {
+   "to": 3,
+   "reason": "IC3 Review_All.docx › CĐ 3 – Test 1 câu 3 ghi Bài 9 — PPCT Spark LV3: Quản lý thông tin"
+  },
+  "spark__lv3__t2__q5": {
+   "to": 3,
+   "reason": "IC3 Review_All.docx › CĐ 3 – Test 1 câu 11 ghi Bài 12+13 — PPCT Spark LV3: Quản lý thông tin"
+  },
+  "spark__lv3__t1__q28": {
+   "to": 3,
+   "reason": "IC3 Review_All.docx › CĐ 3 – Test 1 câu 19 ghi Bài 14 — PPCT Spark LV3: Quản lý thông tin"
+  },
+  "spark__lv3__t6__q109_new": {
+   "to": 5,
+   "reason": "IC3 Review_All.docx › CĐ 5 – Test 1 câu 3 ghi Bài 24 — PPCT Spark LV3: Giao tiếp"
+  },
+  "spark__lv3__t5__q94_new": {
+   "to": 6,
+   "reason": "IC3 Review_All.docx › CĐ 5 – Test 1 câu 5 ghi Bài 24, 29 CD6 — ghi chú CD6 Spark LV3: Hợp tác, cộng tác"
+  },
+  "spark__lv3__t2__q61_new": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 7 – Test 1 câu 3 ghi Bài 31 — PPCT Spark LV3: An toàn và bảo mật"
+  },
+  "spark__lv3__t2__q1": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 7 – Test 1 câu 8 ghi Bài 32 — PPCT Spark LV3: An toàn và bảo mật"
+  },
+  "spark__lv3__t2__q27": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 7 – Test 1 câu 9 ghi Bài 33 — PPCT Spark LV3: An toàn và bảo mật"
+  },
+  "spark__lv3__t2__q28": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 7 – Test 1 câu 10 ghi Bài 33 — PPCT Spark LV3: An toàn và bảo mật"
+  },
+  "spark__lv3__t2__q70_new2": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 7 – Test 1 câu 11 ghi Bài 33 — PPCT Spark LV3: An toàn và bảo mật"
+  },
+  "spark__lv3__t2__q71_new2": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 7 – Test 1 câu 12 ghi Bài 33 — PPCT Spark LV3: An toàn và bảo mật"
+  },
+  "spark__lv3__t2__q64_new": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 7 – Test 1 câu 13 ghi Bài 34 — PPCT Spark LV3: An toàn và bảo mật"
+  },
+  "spark__lv3__t2__q17": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 7 – Test 1 câu 14 ghi Bài 35 — PPCT Spark LV3: An toàn và bảo mật"
+  },
+  "spark__lv3__t1__q25": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 7 – Test 1 câu 15 ghi Bài 35 — PPCT Spark LV3: An toàn và bảo mật"
+  },
+  "spark__lv3__t2__q23": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 7 – Test 2 câu 3 ghi Bài 30 — PPCT Spark LV3: An toàn và bảo mật"
+  },
+  "spark__lv3__t2__q65_new": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 7 – Test 2 câu 4 ghi Bài 30 — PPCT Spark LV3: An toàn và bảo mật"
+  },
+  "spark__lv3__t2__q18": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 7 – Test 2 câu 5 ghi Bài 32 — PPCT Spark LV3: An toàn và bảo mật"
+  },
+  "spark__lv3__t2__q25": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 7 – Test 2 câu 6 ghi Bài 33 — PPCT Spark LV3: An toàn và bảo mật"
+  },
+  "spark__lv3__t2__q75_new2": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 7 – Test 2 câu 15 ghi Bài 34 — PPCT Spark LV3: An toàn và bảo mật"
   }
  },
  "IC3__LV1": {
@@ -489,6 +697,82 @@
    "remove": true,
    "keep": "ic3__lv1__t1__q42",
    "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "ic3__lv1__t7__q167": {
+   "to": 2,
+   "reason": "IC3 Review_All.docx › CĐ 3 – Test 1 câu 1 ghi Bài 14 — PPCT IC3 LV1: Công dân số"
+  },
+  "ic3__lv1__t4__q8": {
+   "to": 2,
+   "reason": "IC3 Review_All.docx › CĐ 3 – Test 1 câu 9 ghi Bài 15 — PPCT IC3 LV1: Công dân số"
+  },
+  "ic3__lv1__t3__q96": {
+   "to": 2,
+   "reason": "IC3 Review_All.docx › CĐ 3 – Test 1 câu 11 ghi Bài 15 — PPCT IC3 LV1: Công dân số"
+  },
+  "ic3__lv1__t3__q4": {
+   "to": 2,
+   "reason": "IC3 Review_All.docx › CĐ 3 – Test 1 câu 12 ghi Bài 15 — PPCT IC3 LV1: Công dân số"
+  },
+  "ic3__lv1__t3__q95": {
+   "to": 2,
+   "reason": "IC3 Review_All.docx › CĐ 3 – Test 2 câu 12 ghi Bài 15 — PPCT IC3 LV1: Công dân số"
+  },
+  "ic3__lv1__t2__q2": {
+   "to": 5,
+   "reason": "IC3 Review_All.docx › CĐ 4 – Test 1 câu 2 ghi Bài 16 — PPCT IC3 LV1: Giao tiếp"
+  },
+  "ic3__lv1__t2__q23": {
+   "to": 5,
+   "reason": "IC3 Review_All.docx › CĐ 4 – Test 1 câu 4 ghi Bài 17 — PPCT IC3 LV1: Giao tiếp"
+  },
+  "ic3__lv1__t2__q26": {
+   "to": 5,
+   "reason": "IC3 Review_All.docx › CĐ 4 – Test 1 câu 7 ghi Bài 17 — PPCT IC3 LV1: Giao tiếp"
+  },
+  "ic3__lv1__t6__q18": {
+   "to": 5,
+   "reason": "IC3 Review_All.docx › CĐ 4 – Test 1 câu 8 ghi Bài 17 — PPCT IC3 LV1: Giao tiếp"
+  },
+  "ic3__lv1__t7__q3": {
+   "to": 5,
+   "reason": "IC3 Review_All.docx › CĐ 4 – Test 1 câu 9 ghi Bài 17 — PPCT IC3 LV1: Giao tiếp"
+  },
+  "ic3__lv1__t6__q5": {
+   "to": 5,
+   "reason": "IC3 Review_All.docx › CĐ 4 – Test 1 câu 11 ghi Bài 18 — PPCT IC3 LV1: Giao tiếp"
+  },
+  "ic3__lv1__t6__q16": {
+   "to": 5,
+   "reason": "IC3 Review_All.docx › CĐ 4 – Test 1 câu 13 ghi Bài 18 — PPCT IC3 LV1: Giao tiếp"
+  },
+  "ic3__lv1__t2__q22": {
+   "to": 5,
+   "reason": "IC3 Review_All.docx › CĐ 4 – Test 1 câu 21 ghi Bài 18 — PPCT IC3 LV1: Giao tiếp"
+  },
+  "ic3__lv1__t1__q176": {
+   "to": 4,
+   "reason": "IC3 Review_All.docx › CĐ 6 – Test 1 câu 1 ghi Bài 24 — PPCT IC3 LV1: Sáng tạo nội dung"
+  },
+  "ic3__lv1__t3__q97": {
+   "to": 4,
+   "reason": "IC3 Review_All.docx › CĐ 6 – Test 1 câu 5 ghi Bài 25 — PPCT IC3 LV1: Sáng tạo nội dung"
+  },
+  "ic3__lv1__t6__q10": {
+   "to": 4,
+   "reason": "IC3 Review_All.docx › CĐ 6 – Test 1 câu 7 ghi Bài 27 — PPCT IC3 LV1: Sáng tạo nội dung"
+  },
+  "ic3__lv1__t3__q12": {
+   "to": 4,
+   "reason": "IC3 Review_All.docx › CĐ 6 – Test 1 câu 14 ghi Bài 32 — PPCT IC3 LV1: Sáng tạo nội dung"
+  },
+  "ic3__lv1__t7__q17": {
+   "to": 6,
+   "reason": "IC3 Review_All.docx › CĐ 7 – Test 1 câu 10 ghi Bài 35 — PPCT IC3 LV1: Hợp tác, cộng tác"
+  },
+  "ic3__lv1__t5__q7": {
+   "to": 6,
+   "reason": "IC3 Review_All.docx › CĐ 7 – Test 1 câu 13 ghi Bài 35 — PPCT IC3 LV1: Hợp tác, cộng tác"
   }
  },
  "IC3__LV2": {
@@ -689,6 +973,138 @@
    "remove": true,
    "keep": "ic3__lv2__t4__q22",
    "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "ic3__lv2__t4__q3": {
+   "to": 1,
+   "reason": "IC3 Review_All.docx › CĐ 1 – Test 1 câu 15 ghi Bài 4 — PPCT IC3 LV2: Căn bản về công nghệ"
+  },
+  "ic3__lv2__t4__q188": {
+   "to": 1,
+   "reason": "IC3 Review_All.docx › CĐ 1 – Test 2 câu 14 ghi Bài 4 — PPCT IC3 LV2: Căn bản về công nghệ"
+  },
+  "ic3__lv2__t4__q14": {
+   "to": 1,
+   "reason": "IC3 Review_All.docx › CĐ 1 – Test 2 câu 23 ghi Bài 6 — PPCT IC3 LV2: Căn bản về công nghệ"
+  },
+  "ic3__lv2__t6__q3": {
+   "to": 1,
+   "reason": "IC3 Review_All.docx › CĐ 1 – Test 2 câu 26 ghi Bài 6 — PPCT IC3 LV2: Căn bản về công nghệ"
+  },
+  "ic3__lv2__t2__q1": {
+   "to": 1,
+   "reason": "IC3 Review_All.docx › CĐ 1 – Test 2 câu 30 ghi Bài 7 — PPCT IC3 LV2: Căn bản về công nghệ"
+  },
+  "ic3__lv2__t4__q5": {
+   "to": 1,
+   "reason": "IC3 Review_All.docx › CĐ 1 – Test 3 câu 17 ghi Bài 4 — PPCT IC3 LV2: Căn bản về công nghệ"
+  },
+  "ic3__lv2__t4__q20": {
+   "to": 1,
+   "reason": "IC3 Review_All.docx › CĐ 1 – Test 3 câu 19 ghi Bài 4 — PPCT IC3 LV2: Căn bản về công nghệ"
+  },
+  "ic3__lv2__t7__q190_new": {
+   "to": 1,
+   "reason": "IC3 Review_All.docx › CĐ 1 – Test 3 câu 22 ghi Bài 6 — PPCT IC3 LV2: Căn bản về công nghệ"
+  },
+  "ic3__lv2__t6__q12": {
+   "to": 5,
+   "reason": "IC3 Review_All.docx › CĐ 2 – Test 1 câu 5 ghi Bài 8+9 — PPCT IC3 LV2: Giao tiếp"
+  },
+  "ic3__lv2__t2__q15": {
+   "to": 5,
+   "reason": "IC3 Review_All.docx › CĐ 2 – Test 1 câu 13 ghi Bài 8+9 — PPCT IC3 LV2: Giao tiếp"
+  },
+  "ic3__lv2__t6__q20": {
+   "to": 5,
+   "reason": "IC3 Review_All.docx › CĐ 2 – Test 1 câu 16 ghi Bài 8+9 — PPCT IC3 LV2: Giao tiếp"
+  },
+  "ic3__lv2__t2__q14": {
+   "to": 5,
+   "reason": "IC3 Review_All.docx › CĐ 2 – Test 2 câu 11 ghi Bài 8+9 — PPCT IC3 LV2: Giao tiếp"
+  },
+  "ic3__lv2__t6__q4": {
+   "to": 5,
+   "reason": "IC3 Review_All.docx › CĐ 2 – Test 2 câu 17 ghi Bài 8+9 — PPCT IC3 LV2: Giao tiếp"
+  },
+  "ic3__lv2__t6__q6": {
+   "to": 5,
+   "reason": "IC3 Review_All.docx › CĐ 2 – Test 2 câu 20 ghi Bài 8+9 — PPCT IC3 LV2: Giao tiếp"
+  },
+  "ic3__lv2__t6__q16": {
+   "to": 2,
+   "reason": "IC3 Review_All.docx › CĐ 3 – Test 1 câu 8 ghi Bài 11 — PPCT IC3 LV2: Công dân số"
+  },
+  "ic3__lv2__t6__q8": {
+   "to": 2,
+   "reason": "IC3 Review_All.docx › CĐ 3 – Test 1 câu 13 ghi Bài 11 — PPCT IC3 LV2: Công dân số"
+  },
+  "ic3__lv2__t6__q9": {
+   "to": 2,
+   "reason": "IC3 Review_All.docx › CĐ 3 – Test 1 câu 20 ghi Bài 11 — PPCT IC3 LV2: Công dân số"
+  },
+  "ic3__lv2__t1__q221": {
+   "to": 2,
+   "reason": "IC3 Review_All.docx › CĐ 3 – Test 1 câu 22 ghi Bài 11 — PPCT IC3 LV2: Công dân số"
+  },
+  "ic3__lv2__t1__q22": {
+   "to": 2,
+   "reason": "IC3 Review_All.docx › CĐ 3 – Test 1 câu 23 ghi Bài 11 — PPCT IC3 LV2: Công dân số"
+  },
+  "ic3__lv2__t1__q215": {
+   "to": 3,
+   "reason": "IC3 Review_All.docx › CĐ 4 – Test 1 câu 1 ghi Bài 12+13 — PPCT IC3 LV2: Quản lý thông tin"
+  },
+  "ic3__lv2__t1__q216": {
+   "to": 3,
+   "reason": "IC3 Review_All.docx › CĐ 4 – Test 1 câu 3 ghi Bài 12+13 — PPCT IC3 LV2: Quản lý thông tin"
+  },
+  "ic3__lv2__t1__q219": {
+   "to": 3,
+   "reason": "IC3 Review_All.docx › CĐ 4 – Test 1 câu 20 ghi Bài 12+13 — PPCT IC3 LV2: Quản lý thông tin"
+  },
+  "ic3__lv2__t1__q217": {
+   "to": 3,
+   "reason": "IC3 Review_All.docx › CĐ 4 – Test 1 câu 22 ghi Bài 12+13 — PPCT IC3 LV2: Quản lý thông tin"
+  },
+  "ic3__lv2__t4__q190": {
+   "to": 3,
+   "reason": "IC3 Review_All.docx › CĐ 4 – Test 1 câu 23 ghi Bài 12+13 — PPCT IC3 LV2: Quản lý thông tin"
+  },
+  "ic3__lv2__t4__q189": {
+   "to": 3,
+   "reason": "IC3 Review_All.docx › CĐ 4 – Test 1 câu 24 ghi Bài 12+13 — PPCT IC3 LV2: Quản lý thông tin"
+  },
+  "ic3__lv2__t2__q68": {
+   "to": 3,
+   "reason": "IC3 Review_All.docx › CĐ 4 – Test 1 câu 25 ghi Bài 12+13 — PPCT IC3 LV2: Quản lý thông tin"
+  },
+  "ic3__lv2__t1__q222": {
+   "to": 4,
+   "reason": "IC3 Review_All.docx › CĐ 5 – Test 1 câu 2 ghi Bài 14+15 — PPCT IC3 LV2: Sáng tạo nội dung"
+  },
+  "ic3__lv2__t2__q65": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 7 – Test 1 câu 6 ghi Bài 33 — PPCT IC3 LV2: An toàn và bảo mật"
+  },
+  "ic3__lv2__t2__q67": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 7 – Test 2 câu 3 ghi Bài 32 — PPCT IC3 LV2: An toàn và bảo mật"
+  },
+  "ic3__lv2__t2__q21": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 7 – Test 2 câu 4 ghi Bài 33 — PPCT IC3 LV2: An toàn và bảo mật"
+  },
+  "ic3__lv2__t2__q66": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 7 – Test 2 câu 6 ghi Bài 33 — PPCT IC3 LV2: An toàn và bảo mật"
+  },
+  "ic3__lv2__t2__q18": {
+   "to": 7,
+   "reason": "IC3 Review_All.docx › CĐ 7 – Test 2 câu 9 ghi Bài 33 — PPCT IC3 LV2: An toàn và bảo mật"
+  },
+  "ic3__lv2__t6__q13": {
+   "to": 3,
+   "reason": "Cùng nội dung với ic3__lv2__t4__q189 (dạng khác) — đi cùng chủ đề Quản lý thông tin theo IC3 Review_All.docx Bài 12+13"
   }
  },
  "IC3__LV3": {
@@ -938,6 +1354,58 @@
    "remove": true,
    "keep": "ic3__lv3__t4__q15",
    "reason": "Trùng nội dung (cùng câu hỏi + cùng đáp án, chỉ khác thứ tự/dạng câu) — giữ 1 bản"
+  },
+  "ic3__lv3__t2__q1": {
+   "to": 4,
+   "reason": "IC3 Review_All.docx › CĐ 1 – Test 1 câu 18 ghi Bài 14 CD4 — ghi chú CD4 IC3 LV3: Sáng tạo nội dung"
+  },
+  "ic3__lv3__t1__q196": {
+   "to": 4,
+   "reason": "IC3 Review_All.docx › CĐ 1 – Test 2 câu 15 ghi Bài 14 CD4 — ghi chú CD4 IC3 LV3: Sáng tạo nội dung"
+  },
+  "ic3__lv3__t7__q3": {
+   "to": 2,
+   "reason": "IC3 Review_All.docx › CĐ 2 – Test 1 câu 9 ghi Bài 9 — PPCT IC3 LV3: Công dân số"
+  },
+  "ic3__lv3__t7__q186": {
+   "to": 2,
+   "reason": "IC3 Review_All.docx › CĐ 2 – Test 1 câu 10 ghi Bài 9 — PPCT IC3 LV3: Công dân số"
+  },
+  "ic3__lv3__t1__q198": {
+   "to": 3,
+   "reason": "IC3 Review_All.docx › CĐ 3 – Test 1 câu 11 ghi Bài 5+6 — PPCT IC3 LV3: Quản lý thông tin"
+  },
+  "ic3__lv3__t7__q1": {
+   "to": 4,
+   "reason": "IC3 Review_All.docx › CĐ 4 – Test 1 câu 1 ghi Bài 14 — PPCT IC3 LV3: Sáng tạo nội dung"
+  },
+  "ic3__lv3__t1__q185_new": {
+   "to": 4,
+   "reason": "IC3 Review_All.docx › CĐ 4 – Test 1 câu 4 ghi Bài 14 — PPCT IC3 LV3: Sáng tạo nội dung"
+  },
+  "ic3__lv3__t6__q31": {
+   "to": 4,
+   "reason": "IC3 Review_All.docx › CĐ 4 – Test 1 câu 5 ghi Bài 14 — PPCT IC3 LV3: Sáng tạo nội dung"
+  },
+  "ic3__lv3__t1__q191": {
+   "to": 4,
+   "reason": "IC3 Review_All.docx › CĐ 4 – Test 1 câu 8 ghi Bài 15 — PPCT IC3 LV3: Sáng tạo nội dung"
+  },
+  "ic3__lv3__t1__q25": {
+   "to": 4,
+   "reason": "IC3 Review_All.docx › CĐ 4 – Test 1 câu 13 ghi Bài 18 — PPCT IC3 LV3: Sáng tạo nội dung"
+  },
+  "ic3__lv3__t3__q14": {
+   "to": 4,
+   "reason": "IC3 Review_All.docx › CĐ 4 – Test 1 câu 15 ghi Bài 18 — PPCT IC3 LV3: Sáng tạo nội dung"
+  },
+  "ic3__lv3__t3__q9": {
+   "to": 4,
+   "reason": "IC3 Review_All.docx › CĐ 4 – Test 1 câu 18 ghi Bài 22 — PPCT IC3 LV3: Sáng tạo nội dung"
+  },
+  "ic3__lv3__t2__q65": {
+   "to": 5,
+   "reason": "IC3 Review_All.docx › CĐ 4 – Test 3 câu 21 ghi Bài 23 CD5 — ghi chú CD5 IC3 LV3: Giao tiếp"
   }
  },
  "_doc": "Rà soát bộ 'Theo chủ đề' (10/2026). {to:N} = chuyển sang chủ đề N theo PPCT của cấp đó; {remove:true, keep} = bỏ khỏi bộ chủ đề vì trùng với câu 'keep'. Áp dụng: node scripts/apply-topic-reassign.js rồi python scripts/split-minitests.py."

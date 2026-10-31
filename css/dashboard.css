@@ -188,6 +188,7 @@ body {
   letter-spacing: .5px;
   color: var(--text-muted);
 }
+.sidebar-nav > .nav-section-label:first-child { margin-top: 2px; padding-top: 0; border-top: 0; }
 
 .sidebar-footer {
   padding: 14px 12px;

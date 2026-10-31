@@ -1,0 +1,10 @@
+# Tệp đề PowerPoint ~460 MB: chỉ phát qua máy chủ phòng máy (Docker), không đưa lên git.
+files/powerpoint/
+# Bài mẫu sinh bằng tools/make-fixtures.js
+tools/fixtures/
+# Bài mẫu PowerPoint lưu bằng Office thật — đi kèm tệp đề PowerPoint nên cũng không đưa lên git
+tools/fixtures-office/*.pptx
+# Bản làm bài của học sinh trên máy chủ phòng máy (server.js)
+work/
+# Video kèm đề Word (10 MB) — chỉ phát qua máy chủ phòng máy
+files/word/*/data/*.mp4
