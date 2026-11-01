@@ -862,10 +862,12 @@ document.getElementById('addQuestionBtn').addEventListener('click', () => {
 function onFilePicked(item, file) {
   if (!file) return;
   const card = document.querySelector(`.qcard[data-docid="${cssEsc(item.docId)}"]`);
-  const reader = new FileReader();
-  reader.onload = () => {
-    const dataUrl = reader.result;
-    const ext = (file.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '') || 'png';
+  // Nén trước (js/services/image-compress.js): ảnh gốc vài MB đẩy lên GitHub là nằm trong lịch sử git mãi mãi.
+  window.EduImageCompress.compress(file).then(({ dataUrl, ext, before, after, compressed }) => {
+    const C = window.EduImageCompress;
+    const sizeNote = compressed
+      ? `Đã nén ${C.fmtBytes(before)} → ${C.fmtBytes(after)} (WebP).`
+      : `Giữ ảnh gốc (${C.fmtBytes(before)}).`;
     const num = claimNextPictureNumber();
     const suggested = `Upload${num}.${ext}`;
 
@@ -873,7 +875,7 @@ function onFilePicked(item, file) {
     box.style.display = 'flex';
     box.innerHTML = `
       <div class="row"><img src="${dataUrl}" style="max-height:90px;border-radius:8px" alt="new preview"></div>
-      <div class="row" style="font-size:.75rem;color:var(--muted)">Chọn cách lưu ảnh cho câu này:</div>
+      <div class="row" style="font-size:.75rem;color:var(--muted)">${sizeNote} Chọn cách lưu ảnh cho câu này:</div>
       <div class="row">
         <button class="btn btn-green btn-sm embedBtn"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Nhúng trực tiếp vào câu hỏi (base64)</button>
       </div>
@@ -915,8 +917,7 @@ function onFilePicked(item, file) {
       refreshCard(item);
       toast(`Ảnh "${fname}" sẽ được đẩy lên img/ cùng lần "Đẩy thay đổi"`);
     });
-  };
-  reader.readAsDataURL(file);
+  }).catch((err) => toast('Không đọc được ảnh: ' + (err && err.message || err)));
 }
 
 /* ============================================================

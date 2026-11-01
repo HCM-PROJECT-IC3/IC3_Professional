@@ -124,6 +124,10 @@ function writeSubmissionLog_(payload) {
  * Không giữ khoá; chỉ lúc phải xoay file mới vào withRareLock_.
  */
 function getSubmissionLogSheet_() {
+  return batchMemo_('sub', openSubmissionLogSheet_); // lô từ máy chủ trường: mở + kiểm tab 1 lần cho cả lô
+}
+
+function openSubmissionLogSheet_() {
   const currentId = cachedProp_(LOG_SPREADSHEET_PROP); // qua cache — xem cachedProp_ (quota Properties)
   const sheet = currentId
     ? SpreadsheetApp.openById(currentId).getSheetByName(SHEET_SUBMISSION_LOG)

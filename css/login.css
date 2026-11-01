@@ -97,7 +97,7 @@ body::before {
   cursor: pointer;
   gap: .55rem;
 }
-/* Logo IIG THẬT (img/iig-logo.png — trước đây chỉ có emoji không liên
+/* Logo IIG THẬT (img/iig-logo.webp — trước đây chỉ có emoji không liên
    quan gì tới thương hiệu thật) "bồng bềnh" nhẹ, cùng kiểu chuyển động với
    icon ở .lobby-card-title trong style.css (đồng bộ ngôn ngữ animation
    toàn app). Nền trắng nhỏ + bo góc vì file gốc là ảnh nền trắng, đặt trực
@@ -287,7 +287,7 @@ form:not(.hidden) { animation: formSlideIn .4s cubic-bezier(.16,1,.3,1) both }
 .role-opt.active { box-shadow: var(--shadow-neu-pressed); color: var(--purple) }
 
 /* Nút submit — ĐỔI sang dải màu 3 tông của chính logo IIG thật (cam →
-   xanh lá → xanh dương navy, xem 3 sọc chéo trong img/iig-logo.png) thay
+   xanh lá → xanh dương navy, xem 3 sọc chéo trong img/iig-logo.webp) thay
    vì gradient tím/teal chung của toàn app (--gradient-cta), để 2 nút
    "Đăng nhập"/"Tạo tài khoản" — hành động quan trọng nhất trên trang —
    gắn rõ thương hiệu IIG ngay từ cái nhìn đầu tiên. background-size lớn

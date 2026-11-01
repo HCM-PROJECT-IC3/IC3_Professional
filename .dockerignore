@@ -1,0 +1,23 @@
+# Ảnh Docker chỉ cần mã trang + server/. Tệp đề MOS gắn từ máy chủ (volume) — không chép vào ảnh.
+.git
+.github
+.vscode
+.env
+**/__tests__
+**/__pycache__
+apps
+docs
+scripts
+server-data
+node_modules
+mos/files
+mos/work
+mos/tools
+mos/Dockerfile
+mos/docker-compose.yml
+*.md
+firestore.rules
+firestore.indexes.json
+firebase.json
+Dockerfile
+docker-compose.yml

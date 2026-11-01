@@ -42,3 +42,32 @@ jobs:
 
       - name: Apps Script — test với Google/Firebase/GitHub giả lập
         run: node apps/__tests__/code-gs.test.js
+
+      - name: Máy chủ trường (server/) — hàng đợi bài nộp + phát trang
+        run: node server/__tests__/server.test.js
+
+  # Ảnh Docker của máy chủ trường: build + chạy thử (không đẩy đi đâu).
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build ảnh
+        run: docker build -t ic3-school-server .
+      - name: Chạy thử container
+        run: |
+          docker run -d --name ic3 -p 8080:8080 -e GAS_FLUSH_SEC=3600 -e SITE_SYNC_MIN=0 ic3-school-server  # không gọi Google/GitHub
+          for i in $(seq 1 20); do curl -fs http://127.0.0.1:8080/api/health && break; sleep 1; done
+          curl -fs http://127.0.0.1:8080/ | grep -qi '<html'
+          curl -fs http://127.0.0.1:8080/js/backend-config.js | grep -q "schoolServer"
+          curl -fs http://127.0.0.1:8080/mos/api/info | grep -q '"mos"'
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/apps/Code.gs)" = 404
+          curl -fs -X POST -H 'Content-Type: text/plain' http://127.0.0.1:8080/api/gas \
+            -d '{"action":"submitExam","endpoint":"https://script.google.com/macros/s/TEST/exec","payload":{"submissionId":"ci000001","studentName":"CI"}}' | grep -q '"queued":true'
+          docker exec ic3 test -s /data/outbox.jsonl
+          curl -fs http://127.0.0.1:8080/api/status | grep -q '"siteSync"'
+          curl -fs -H 'Accept-Encoding: gzip' -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/mos/ | grep -q 200
+          echo "Kích thước ảnh: $(docker image inspect ic3-school-server --format '{{.Size}}' | numfmt --to=iec)"
+      - name: Log container khi lỗi
+        if: failure()
+        run: docker logs ic3 || true

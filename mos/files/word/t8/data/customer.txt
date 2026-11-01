@@ -1,8 +1,0 @@
-Book name	Author	Publisher	Cost	Average sale
-Panic in Level 4: Cannibals, Killer Viruses, and Other Journeys to the Edge of Science	Richard Preston	ABC Clio	39.1	$2,777.70 
-Pirates of the Caribbean: THe Journey to Worlds End.	About Pets	AK PETERS	65.4	$7,083.00 
-Samson 	U. Erich Friese	AK Press	72.1	$3,746.40 
-Sasha: Hip Hop Hot (Bratz)	Seymour Weiss	Alfred Music	17.2	$1,247.40 
-Staying Well (Slim Goodbody Good Health Guides)	Lowell Ackerman,DVM	BA publishing	70.8	$3,591.00 
-Street of Dreams	Gerhard Mueller	Anthem Press	83.3	$4,294.80 
-Tales From Arizona WIldcats	Cozy Baker	APS PRESS	66.8	$3,036.80 

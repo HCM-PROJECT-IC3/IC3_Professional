@@ -35,7 +35,8 @@ function writeMosLog_(p) {
   })).slice(0, 45000);
 
   // Không khoá quanh appendRow (xem withRareLock_ trong 90-utils.gs) — cùng đánh đổi như bài nộp IC3.
-  const sheet = logTab_(SHEET_MOS_LOG, MOS_HEADERS); // tự sang file mới khi đầy — xem logTab_
+  // Tự sang file mới khi đầy — xem logTab_. Trong lô (36-batch.gs) chỉ mở + kiểm 1 lần.
+  const sheet = batchMemo_('mos', function () { return logTab_(SHEET_MOS_LOG, MOS_HEADERS); });
   sheet.appendRow([
     asText_(p.submissionId), asText_(p.studentName), asText_(p.studentClass), asText_(p.studentSchool),
     asText_(p.projectTitle), asText_(p.projectId),

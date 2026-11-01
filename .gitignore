@@ -1,0 +1,4 @@
+# Máy chủ trường (Docker): hàng đợi bài nộp + bản làm bài MOS — dữ liệu chạy, không đưa lên git.
+server-data/
+.env
+node_modules/

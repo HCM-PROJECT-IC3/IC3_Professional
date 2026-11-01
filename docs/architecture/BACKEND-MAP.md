@@ -37,6 +37,10 @@ máy có phiên giáo viên).
 | Gọi tên (lịch sử gọi, Đúng/Chưa đúng, câu đã bỏ) | Chỉ localStorage máy giáo viên — 0 Firebase | Giáo viên | Giáo viên |
 | Sổ đầu bài (tiết dạy, vắng, nhận xét, TKB, lớp + học sinh) | Chỉ localStorage `sodaubai_v1` máy giáo viên + file sao lưu .json — 0 Firebase, 0 Apps Script | Giáo viên (`so-dau-bai.html`); lớp/học sinh lấy từ sổ lớp đã đọc ở Điểm danh hoặc `data/roster/students-active.json` | Giáo viên; tiết hôm nay gửi sang Gọi tên (cùng máy) |
 
+**Máy chủ trường (Docker, tuỳ chọn — [docs/DOCKER.md](../DOCKER.md)):** cùng các trang trên, phát qua LAN.
+`submitExam`/`mosSubmit` của học sinh vào hàng đợi trên đĩa máy chủ (`/api/gas`) rồi lên Apps Script
+theo lô (`submitBatch`, cần Script Properties `RELAY_TOKEN`). Tệp đề MOS Word/PowerPoint chỉ có ở đây.
+
 ## 3. Công tắc (`js/backend-config.js`)
 
 | Khoá | Mặc định | Ý nghĩa |
@@ -48,7 +52,7 @@ máy có phiên giáo viên).
 | `activityLog` | `'sheet'` | `'off'` để tắt nhật ký |
 
 ## 4. Bảo mật
-- Mọi API Apps Script (trừ `ping`, `submitExam`, `mosSubmit`) bắt buộc Firebase ID token;
+- Mọi API Apps Script (trừ `ping`, `submitExam`, `mosSubmit`, và `submitBatch` — cần `RELAY_TOKEN`) bắt buộc Firebase ID token;
   Apps Script tự đọc vai trò/trường từ `users/{uid}` và phân quyền giống `firestore.rules`.
 - Bí mật (token GitHub) chỉ ở Script Properties của Apps Script, không ở trình duyệt.
 - Dữ liệu học sinh gửi lên (công khai) được kiểm tra độ dài/kiểu/khoảng giá trị; chữ được ghi

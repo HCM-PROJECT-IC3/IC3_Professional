@@ -1,6 +1,6 @@
 // ⚠️ FILE TẠO TỰ ĐỘNG từ apps/src/*.gs — đừng sửa tay ở đây.
 // Sửa file nguồn tương ứng rồi chạy: node scripts/build-apps-script.js
-// Thứ tự: 00-config.gs, 10-router.gs, 20-auth.gs, 30-submissions.gs, 35-mos.gs, 40-results.gs, 45-activity.gs, 47-arena.gs, 48-class-sheet.gs, 50-reports.gs, 60-maps.gs, 70-github.gs, 80-sheet-setup.gs, 90-utils.gs, 95-selftest.gs
+// Thứ tự: 00-config.gs, 10-router.gs, 20-auth.gs, 30-submissions.gs, 35-mos.gs, 36-batch.gs, 40-results.gs, 45-activity.gs, 47-arena.gs, 48-class-sheet.gs, 50-reports.gs, 60-maps.gs, 70-github.gs, 80-sheet-setup.gs, 90-utils.gs, 95-selftest.gs
 
 // ──────────────── 00-config.gs ────────────────
 /**
@@ -24,7 +24,7 @@
  */
 
 // ====== CẤU HÌNH - THAY BẰNG ID THẬT CỦA BẠN ======
-const BACKEND_VERSION = '2026-10-28';
+const BACKEND_VERSION = '2026-11-01';
 const SPREADSHEET_ID_DATA = '16ty8LB6pnk5Xai1VauUAKfMbIaT88ewfNUAhWM0z5ck';      // Sheet chứa HocSinh + KetQua
 const SPREADSHEET_ID_REPORT = '16ty8LB6pnk5Xai1VauUAKfMbIaT88ewfNUAhWM0z5ck';    // Sheet chứa báo cáo tổng hợp (có thể trùng với ID trên nếu để chung 1 file, khác tab)
 
@@ -88,7 +88,7 @@ const ALERT_EMAIL_MAX_PER_HOUR = 15;
 // ====== ROUTER ======
 // Mọi API đi qua doPost với body JSON { action, idToken?, ... } (Content-Type text/plain
 // để trình duyệt không gửi preflight — Apps Script không xử lý OPTIONS).
-// roles = null: công khai (chỉ submitExam / mosSubmit — học sinh không đăng nhập). Còn lại bắt buộc
+// roles = null: công khai (submitExam / mosSubmit — học sinh không đăng nhập; submitBatch tự kiểm RELAY_TOKEN). Còn lại bắt buộc
 // Firebase ID token và vai trò nằm trong danh sách (xem requireRole_ trong 20-auth.gs).
 
 const ROLES_RESULTS = ['admin', 'coordinator', 'teacher'];             // giống quyền đọc quiz_results
@@ -104,6 +104,7 @@ function routes_() {
     ping:          { roles: null,          handler: function () { return { version: BACKEND_VERSION }; } },
     submitExam:    { roles: null,          handler: function (p) { return writeSubmissionLog_(p.payload); } },
     mosSubmit:     { roles: null,          handler: function (p) { return writeMosLog_(p.payload); } },
+    submitBatch:   { roles: null,          handler: submitBatch_ }, // máy chủ trường — tự kiểm RELAY_TOKEN (36-batch.gs)
     listResults:   { roles: ROLES_RESULTS, handler: listResults_ },
     wrongStats:    { roles: ROLES_RESULTS, handler: wrongStats_ },
     deleteResults: { roles: ROLES_MANAGE,  handler: deleteResults_ },
@@ -357,6 +358,10 @@ function writeSubmissionLog_(payload) {
  * Không giữ khoá; chỉ lúc phải xoay file mới vào withRareLock_.
  */
 function getSubmissionLogSheet_() {
+  return batchMemo_('sub', openSubmissionLogSheet_); // lô từ máy chủ trường: mở + kiểm tab 1 lần cho cả lô
+}
+
+function openSubmissionLogSheet_() {
   const currentId = cachedProp_(LOG_SPREADSHEET_PROP); // qua cache — xem cachedProp_ (quota Properties)
   const sheet = currentId
     ? SpreadsheetApp.openById(currentId).getSheetByName(SHEET_SUBMISSION_LOG)
@@ -495,7 +500,8 @@ function writeMosLog_(p) {
   })).slice(0, 45000);
 
   // Không khoá quanh appendRow (xem withRareLock_ trong 90-utils.gs) — cùng đánh đổi như bài nộp IC3.
-  const sheet = logTab_(SHEET_MOS_LOG, MOS_HEADERS); // tự sang file mới khi đầy — xem logTab_
+  // Tự sang file mới khi đầy — xem logTab_. Trong lô (36-batch.gs) chỉ mở + kiểm 1 lần.
+  const sheet = batchMemo_('mos', function () { return logTab_(SHEET_MOS_LOG, MOS_HEADERS); });
   sheet.appendRow([
     asText_(p.submissionId), asText_(p.studentName), asText_(p.studentClass), asText_(p.studentSchool),
     asText_(p.projectTitle), asText_(p.projectId),
@@ -506,6 +512,68 @@ function writeMosLog_(p) {
   ]);
   cache.put(dedupeKey, '1', DEDUPE_TTL_SEC);
   return { written: true, duplicate: false };
+}
+
+// ──────────────── 36-batch.gs ────────────────
+// ====== NHẬN BÀI THEO LÔ TỪ MÁY CHỦ TRƯỜNG (Docker — server/relay.js) ======
+// Router: submitBatch. Máy chủ trường nhận bài nộp của học sinh qua LAN, lưu ra đĩa rồi gửi
+// lên đây theo lô: 1 lượt chạy Apps Script cho tối đa BATCH_MAX bài thay vì 1 lượt/bài →
+// mùa thi không còn chạm trần 30 lượt chạy song song / tài khoản.
+// Router để công khai (máy chủ không có tài khoản Firebase) nhưng bắt buộc mã RELAY_TOKEN
+// trong Script Properties, trùng biến GAS_RELAY_TOKEN của máy chủ. Chưa đặt thì tắt hẳn —
+// máy chủ tự gửi từng bài như trang học sinh.
+
+const BATCH_MAX = 100;
+const BATCH_TIME_BUDGET_MS = 4 * 60 * 1000; // Apps Script dừng ở 6 phút — chừa thời gian trả kết quả
+
+// Tab đã mở trong lô đang chạy (null = không trong lô). Mỗi bài lẻ phải mở file, đọc số dòng và
+// đếm ô cả file (logTabFull_) — trong lô làm 1 lần: 100 bài thêm tối đa 100 dòng, còn xa trần
+// xoay file (MAX_LOG_ROWS / FILE_CELL_BUDGET chừa dư hàng triệu ô).
+let BATCH_MEMO_ = null;
+
+function batchMemo_(key, open) {
+  if (!BATCH_MEMO_) return open();
+  if (!BATCH_MEMO_[key]) BATCH_MEMO_[key] = open();
+  return BATCH_MEMO_[key];
+}
+
+function batchActions_() {
+  return { submitExam: writeSubmissionLog_, mosSubmit: writeMosLog_ };
+}
+
+function submitBatch_(p) {
+  // Đọc thẳng Properties (không qua cachedProp_): đặt/đổi mã có hiệu lực ngay; lô hiếm nên không tốn quota.
+  const token = PropertiesService.getScriptProperties().getProperty('RELAY_TOKEN');
+  if (!token) throw appError_('failed-precondition', 'Chưa bật nhận bài theo lô: đặt Script Properties RELAY_TOKEN.');
+  if (typeof p.token !== 'string' || p.token !== token) throw appError_('permission-denied', 'RELAY_TOKEN không khớp.');
+  const items = p.items;
+  if (!Array.isArray(items) || !items.length || items.length > BATCH_MAX) {
+    throw appError_('invalid-argument', 'items phải có 1..' + BATCH_MAX + ' bài');
+  }
+  const actions = batchActions_();
+  const started = Date.now();
+  BATCH_MEMO_ = {};
+  try {
+    return runBatch_(items, actions, started);
+  } finally {
+    BATCH_MEMO_ = null;
+  }
+}
+
+function runBatch_(items, actions, started) {
+  return {
+    results: items.map(function (it) {
+      // Hết thời gian: báo lỗi tạm để máy chủ gửi lại các bài còn lại ở lô sau.
+      if (Date.now() - started > BATCH_TIME_BUDGET_MS) return { ok: false, code: 'deadline-exceeded', error: 'Hết thời gian lô' };
+      const fn = it && Object.prototype.hasOwnProperty.call(actions, it.action) ? actions[it.action] : null;
+      if (!fn) return { ok: false, code: 'invalid-argument', error: 'action' };
+      try {
+        return { ok: true, data: fn(it.payload) };
+      } catch (err) {
+        return { ok: false, code: (err && err.code) || 'internal', error: String((err && err.message) || err) };
+      }
+    }),
+  };
 }
 
 // ──────────────── 40-results.gs ────────────────

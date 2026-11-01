@@ -21,6 +21,38 @@ Thứ tự: Apps Script → `firestore.rules`/index → đẩy web.
    - F12 → Console, lọc "lượt đọc Firestore": danh sách học sinh chỉ vài lượt mỗi lần mở.
      Lệch dữ liệu thì đặt `rosterDeltaSync: false` trong `js/backend-config.js`.
 
+## 01/11/2026
+
+- **Máy chủ trường bằng Docker** (`Dockerfile`, `docker-compose.yml`, `server/`). Hướng dẫn ở [docs/DOCKER.md](docs/DOCKER.md).
+  - Một container phát cả dự án qua LAN. MOS chạy ở `/mos/`.
+  - Bài nộp được ghi vào hàng đợi trên đĩa rồi gửi Apps Script theo lô.
+  - Trên GitHub Pages trang vẫn chạy như cũ.
+- Apps Script `2026-11-01` có thêm `submitBatch`: 1 lượt chạy ghi tới 100 bài.
+  - Route này chỉ bật khi Script Properties có `RELAY_TOKEN`.
+  - Triển khai: đặt `RELAY_TOKEN` → dán `apps/Code.gs` → New version → đặt `GAS_RELAY_TOKEN` trong `.env` của máy chủ.
+  - Chưa làm các bước này thì máy chủ gửi từng bài.
+- Tệp đề MOS Word (~21 MB trên git) và bài mẫu Word được đưa khỏi git, giống PowerPoint.
+  - Từ nay các tệp này chỉ phát qua máy chủ trường.
+  - Sinh lại bằng `mos/tools/build_catalog.py`.
+  - Trên GitHub Pages, đề Word báo "tệp đề chưa có trên máy chủ này".
+- Máy chủ trường **tự cập nhật trang từ GitHub** mỗi 10 phút (`server/sync.js`).
+  - Chỉ tải tệp đã đổi. Không có commit mới thì không tốn hạn mức API.
+  - Câu hỏi hoặc danh sách học sinh admin vừa đẩy lên GitHub có trên máy chủ trường mà không cần build lại.
+  - Tắt bằng `SITE_SYNC_MIN=0`.
+- `submitBatch` mở Sheet một lần cho cả lô, thay vì mở lại cho mỗi bài.
+- **Nén ảnh trước khi đẩy lên GitHub** (`js/services/image-compress.js`, trang Quản lý ảnh).
+  - Ảnh tải lên được thu cạnh dài về ≤ 1600 px và chuyển sang WebP trước khi nhúng hoặc đẩy.
+  - Lý do: 92 MB trong ~142 MB lịch sử git là các bản ảnh cũ chưa nén, và lịch sử giữ mọi ảnh đã commit mãi mãi.
+  - GIF, SVG, và ảnh nén không bớt được ≥ 10% thì giữ nguyên ảnh gốc.
+- **77 ảnh PNG trong `img/` chuyển sang WebP** (9,2 MB → 3,0 MB) bằng `scripts/convert-images-webp.py`.
+  - Đường dẫn trong 104 tệp (`data/ic3`, css, trang) đã được sửa theo.
+  - Không phát sinh đường dẫn gãy mới. 77 ảnh đều mở được trên Chrome.
+  - Giữ PNG cho: icon PWA, 2 ảnh trùng tên, và 26 ảnh nén bớt < 15%.
+- `scripts/shrink-git-history.py` dọn bản cũ của ảnh/tệp đề khỏi lịch sử git trên một bản sao riêng.
+  - Đo thử: 146 MB → 46 MB, bản mới nhất giữ nguyên.
+  - Script không tự đẩy. Force-push do người quản lý repo tự chạy, rồi mọi máy clone lại.
+- Có `/api/status` (hàng đợi + đồng bộ). Workflow `docker-publish.yml` đẩy ảnh lên GHCR để trường khác chỉ cần `docker compose pull`.
+
 ## 31/10/2026
 
 - **Bộ "Theo chủ đề" đối chiếu với `IC3 Review_All.docx`** (cột "Bài" của từng câu → chủ đề theo PPCT 2026-2027):

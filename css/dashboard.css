@@ -100,7 +100,7 @@ body {
 
 .sidebar-logo .logo-icon {
   width: 42px; height: 42px;
-  /* Logo IIG thật (img/iig-logo.png, cùng ảnh dùng trong header các PDF
+  /* Logo IIG thật (img/iig-logo.webp, cùng ảnh dùng trong header các PDF
      xuất ra — xem js/export/iig-logo.js) thay cho icon tự chọn trước
      đây — nền trắng vì logo gốc có nền trắng, khối gradient tím cũ sẽ
      đè màu lên logo. */

@@ -132,9 +132,10 @@
   }
 
   async function postSheet(payload) {
-    const res = await fetch(CFG.appsScriptUrl, {
+    // Máy chủ trường (server/server.js) đặt CFG.relayUrl: gửi vào hàng đợi, máy chủ gửi tiếp Apps Script theo lô.
+    const res = await fetch(CFG.relayUrl || CFG.appsScriptUrl, {
       method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'mosSubmit', payload }),
+      body: JSON.stringify({ action: 'mosSubmit', payload, endpoint: CFG.relayUrl ? CFG.appsScriptUrl : undefined }),
     });
     const json = await res.json();
     if (!json.ok) throw Object.assign(new Error(json.error || 'Apps Script báo lỗi'), { code: json.code });
@@ -510,7 +511,7 @@
 
   function workPanel(ctx, ws) {
     const main = ctx.project.files.find(f => f.name === ctx.project.main);
-    const warn = `<p class="warn" id="fileWarn" hidden>${icon('warn')} Tệp đề ${esc(ctx.subj.ext)} chưa có trên máy chủ này. Tệp PowerPoint khá nặng nên chỉ có khi mở trang từ máy chủ phòng máy — em hỏi thầy cô địa chỉ.</p>`;
+    const warn = `<p class="warn" id="fileWarn" hidden>${icon('warn')} Tệp đề ${esc(ctx.subj.ext)} chưa có trên máy chủ này. Tệp PowerPoint và Word khá nặng nên chỉ có khi mở trang từ máy chủ trường (phòng máy) — em hỏi thầy cô địa chỉ.</p>`;
     if (!main) return '<p class="muted">Chưa có tệp đề.</p>';
     const app = esc(ctx.subj.name);
     const upload = `<label class="link-btn">${icon('upload')}Nộp tệp đã lưu<input type="file" class="vh" data-act="upload" accept="${esc(ctx.subj.ext)}"></label>`;

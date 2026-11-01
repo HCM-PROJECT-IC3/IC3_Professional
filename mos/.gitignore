@@ -6,5 +6,8 @@ tools/fixtures/
 tools/fixtures-office/*.pptx
 # Bản làm bài của học sinh trên máy chủ phòng máy (server.js)
 work/
-# Video kèm đề Word (10 MB) — chỉ phát qua máy chủ phòng máy
-files/word/*/data/*.mp4
+# Tệp đề Word (~31 MB, kể cả video) — như PowerPoint: chỉ phát qua máy chủ trường (Docker, ../docker-compose.yml).
+# Sinh lại bằng tools/build_catalog.py từ On_Tap_Word.zip; data/sets/word-*.json vẫn trên git nên trang vẫn liệt kê đề.
+files/word/
+# Bài mẫu Word lưu bằng Office thật — đi kèm tệp đề Word nên cũng không đưa lên git
+tools/fixtures-office/*.docx

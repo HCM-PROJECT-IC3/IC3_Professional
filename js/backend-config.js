@@ -22,7 +22,7 @@
     // Bản Apps Script web này cần = BACKEND_VERSION trong apps/src/00-config.gs (đổi CẢ 2 chỗ —
     // test backend-consistency báo đỏ nếu lệch). Admin thấy thanh cảnh báo khi bản đang chạy thật
     // cũ hơn (js/services/backend-version-check.js).
-    expectedBackendVersion: '2026-10-28',
+    expectedBackendVersion: '2026-11-01',
 
     // ── Danh sách học sinh (students_roster) ở trang quản trị: chỉ đọc phần THAY ĐỔI (29/10/2026) ──
     //   true  : bản đệm quá hạn chỉ hỏi học sinh có updatedAt mới hơn (~1 lượt thay vì ~2.800);

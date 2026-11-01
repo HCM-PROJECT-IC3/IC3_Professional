@@ -13,7 +13,7 @@ const crypto = require('crypto');
 
 const ROOT = __dirname;
 const FILES = path.join(ROOT, 'files');
-const WORK = process.env.MOS_WORK || path.join(ROOT, 'work');
+const WORK = path.resolve(process.env.MOS_WORK || path.join(ROOT, 'work'));
 const PORT = +process.env.PORT || 8080;
 const WORK_DAYS = +process.env.MOS_WORK_DAYS || 3;
 const MAX_PUT = 200 * 1024 * 1024;
@@ -147,7 +147,8 @@ function cleanup() {
 
 // ---------------------------------------------------------------- định tuyến
 
-const server = http.createServer(async (req, res) => {
+// Máy chủ chung của cả dự án (server/server.js) gọi thẳng hàm này cho đường dẫn /mos/... và /work/...
+async function handle(req, res) {
   let url;
   try { url = decodeURIComponent(req.url.split('?')[0]); } catch (e) { return send(res, 400, {}, ''); }
   try {
@@ -168,7 +169,8 @@ const server = http.createServer(async (req, res) => {
     console.error(req.method, url, e);
     if (!res.headersSent) send(res, 500, {}, '');
   }
-});
+}
+const server = http.createServer(handle);
 
 if (require.main === module) {
   fs.mkdirSync(WORK, { recursive: true });
@@ -180,4 +182,4 @@ if (require.main === module) {
     ips.forEach(ip => console.log(`  Học sinh mở: http://${ip}:${PORT}`));
   });
 }
-module.exports = { server, cleanup };
+module.exports = { server, handle, cleanup, WORK };

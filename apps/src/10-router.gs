@@ -1,7 +1,7 @@
 // ====== ROUTER ======
 // Mọi API đi qua doPost với body JSON { action, idToken?, ... } (Content-Type text/plain
 // để trình duyệt không gửi preflight — Apps Script không xử lý OPTIONS).
-// roles = null: công khai (chỉ submitExam / mosSubmit — học sinh không đăng nhập). Còn lại bắt buộc
+// roles = null: công khai (submitExam / mosSubmit — học sinh không đăng nhập; submitBatch tự kiểm RELAY_TOKEN). Còn lại bắt buộc
 // Firebase ID token và vai trò nằm trong danh sách (xem requireRole_ trong 20-auth.gs).
 
 const ROLES_RESULTS = ['admin', 'coordinator', 'teacher'];             // giống quyền đọc quiz_results
@@ -17,6 +17,7 @@ function routes_() {
     ping:          { roles: null,          handler: function () { return { version: BACKEND_VERSION }; } },
     submitExam:    { roles: null,          handler: function (p) { return writeSubmissionLog_(p.payload); } },
     mosSubmit:     { roles: null,          handler: function (p) { return writeMosLog_(p.payload); } },
+    submitBatch:   { roles: null,          handler: submitBatch_ }, // máy chủ trường — tự kiểm RELAY_TOKEN (36-batch.gs)
     listResults:   { roles: ROLES_RESULTS, handler: listResults_ },
     wrongStats:    { roles: ROLES_RESULTS, handler: wrongStats_ },
     deleteResults: { roles: ROLES_MANAGE,  handler: deleteResults_ },

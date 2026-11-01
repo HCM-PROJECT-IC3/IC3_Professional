@@ -342,6 +342,36 @@ mos({ submissionId: 'mos7654321', score: null });
 eq('MOS: toàn task thủ công → điểm để trống', tabs.NhatKyMOS.rows[1][6], '');
 eq('MOS: dữ liệu sai bị từ chối', mos({ submissionId: 'mos0000001', score: 999 }).code, 'invalid-argument');
 
+// ── Bài nộp theo lô từ máy chủ trường (server/relay.js) ──
+const exam = (id) => ({ action: 'submitExam', payload: { submissionId: id, studentName: 'Lô', studentClass: '6A1', studentSchool: 'TH X',
+  testName: 'BatchTest', score: 60, correct: '6/10', time: '3:00', status: 'OK', examMode: 'test' } });
+const batchItems = [exam('batch000001'), exam('batch000002'), exam('batch000001'), exam('../bad'),
+  { action: 'mosSubmit', payload: { submissionId: 'mosbatch01', studentName: 'Lô', score: 50, results: [] } }, { action: 'githubPublish', payload: {} }];
+eq('lô: chưa đặt RELAY_TOKEN → tắt', call('submitBatch', { token: 'x', items: batchItems }).code, 'failed-precondition');
+props.set('RELAY_TOKEN', 'tok-123');
+eq('lô: sai mã → từ chối', call('submitBatch', { token: 'nope', items: batchItems }).code, 'permission-denied');
+eq('lô: quá BATCH_MAX bài → từ chối', call('submitBatch', { token: 'tok-123', items: new Array(101).fill(exam('batch000009')) }).code, 'invalid-argument');
+const rowsBefore = sheet.data.length;
+const br = call('submitBatch', { token: 'tok-123', items: batchItems }).data.results;
+eq('lô: từng bài có kết quả riêng (trùng mã / sai dữ liệu / action lạ không làm hỏng cả lô)',
+  br.map((r) => (r.ok ? (r.data.duplicate ? 'dup' : 'ok') : r.code)), ['ok', 'ok', 'dup', 'invalid-argument', 'ok', 'invalid-argument']);
+eq('lô: 2 bài IC3 vào NhatKyNopBai', sheet.data.length - rowsBefore, 2);
+eq('lô: bài MOS vào NhatKyMOS', tabs.NhatKyMOS.rows.some((r) => r[0] === 'mosbatch01'), true);
+{
+  const realOpen = ctx.SpreadsheetApp.openById;
+  let opens = 0;
+  ctx.SpreadsheetApp.openById = (id) => { opens++; return realOpen(id); };
+  const many = Array.from({ length: 20 }, (_, k) => exam('memo' + String(k).padStart(6, '0')));
+  call('submitBatch', { token: 'tok-123', items: many });
+  const batchOpens = opens;
+  opens = 0;
+  for (let k = 0; k < 20; k++) call('submitExam', exam('memx' + String(k).padStart(6, '0')));
+  eq('lô 20 bài: mở Sheet 1 lần (bài lẻ: mỗi bài 1 lần)', [batchOpens, opens], [1, 20]);
+  ctx.SpreadsheetApp.openById = realOpen;
+  call('submitExam', exam('afterbatch1'));
+  eq('hết lô → bài lẻ không dùng lại tab đã nhớ', sheet.data[sheet.data.length - 1].disp[0], 'afterbatch1');
+}
+
 // ── Nhật ký hoạt động ──
 eq('nhật ký: không đăng nhập thì không ghi được', call('logActivity', { activity: 'login' }).code, 'unauthenticated');
 eq('nhật ký: hành động lạ bị từ chối', call('logActivity', Object.assign(as('teachX'), { activity: 'drop_db' })).code, 'invalid-argument');

@@ -20,7 +20,7 @@ Trang tĩnh để học sinh ôn thi MOS: tải tệp đề → làm trên Micro
 | GitHub Pages (chung với EduQuiz) | Phát trang + đề Excel (~3 MB) | 0 |
 | Trình duyệt học sinh | Đọc và chấm tệp `.xlsx/.pptx` (tệp không gửi đi đâu) | 0 |
 | Apps Script `mosSubmit` (đã deploy) | Ghi kết quả **thi thử** vào tab `NhatKyMOS` | 1 lượt gọi / bài thi |
-| Máy chủ phòng máy (tuỳ chọn) | `server.js`: phát trang + tệp đề nặng qua LAN, Office mở/lưu bản làm bài qua WebDAV | `node mos/server.js` hoặc 1 container Docker, không cần gói npm |
+| Máy chủ phòng máy (tuỳ chọn) | `server.js`: phát trang + tệp đề Word/PowerPoint (không có trên git) qua LAN, Office mở/lưu bản làm bài qua WebDAV | Máy chủ trường chung (`docker compose up -d` ở thư mục gốc, MOS ở `/mos/` — [docs/DOCKER.md](../docs/DOCKER.md)) hoặc riêng `node mos/server.js`; không cần gói npm |
 | Firebase | **Không dùng** — kết quả chỉ ghi thêm, Sheet hợp hơn và không ăn hạn mức Spark | 0 |
 
 Luyện tập không gửi gì (`sendPractice: false` trong `js/config.js`). Gửi lỗi thì tự gửi lại khi có mạng, trùng mã bài Apps Script tự bỏ qua.
@@ -74,4 +74,4 @@ cd mos && docker compose up -d --build
 - Office mở tệp qua `http://<IP>` có thể hiện thanh vàng *Protected View* — em bấm **Enable Editing**.
   Muốn bỏ hẳn: thêm địa chỉ máy chủ vào *Local intranet* (Internet Options → Security) trên các máy học sinh.
 - Lần đầu Chrome hỏi "Mở Microsoft Excel?" — chọn Mở, tích "Luôn cho phép".
-- Trên GitHub Pages, project PowerPoint vẫn mở được nhưng báo "tệp đề chưa có trên máy chủ này".
+- Trên GitHub Pages, project PowerPoint và Word vẫn mở được nhưng báo "tệp đề chưa có trên máy chủ này" (tệp đề hai môn này không đưa lên git).

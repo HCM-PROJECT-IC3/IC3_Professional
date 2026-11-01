@@ -1,0 +1,41 @@
+# Máy chủ trường: docker compose up -d --build   →  http://<IP máy chủ>:8080   (MOS: /mos/)
+# Cấu hình bằng tệp .env cạnh tệp này (chép từ .env.example). Hướng dẫn: docs/DOCKER.md.
+services:
+  web:
+    build: .
+    # Trường không clone repo: đặt SCHOOL_IMAGE=ghcr.io/hcm-project-ic3/ic3_professional/school-server:latest
+    # trong .env rồi `docker compose pull && docker compose up -d --no-build` (docs/DOCKER.md §6).
+    image: ${SCHOOL_IMAGE:-ic3-school-server}
+    ports:
+      - "${PORT:-8080}:8080"
+    environment:
+      # = Script Properties RELAY_TOKEN của Apps Script → 1 lượt Apps Script ghi cả lô bài.
+      # Bỏ trống: máy chủ vẫn gom bài nhưng gửi từng bài (tối đa 3 lượt cùng lúc).
+      GAS_RELAY_TOKEN: ${GAS_RELAY_TOKEN:-}
+      GAS_BATCH: ${GAS_BATCH:-50}
+      GAS_FLUSH_SEC: ${GAS_FLUSH_SEC:-15}
+      RELAY_RATE_PER_MIN: ${RELAY_RATE_PER_MIN:-120}
+      MOS_WORK_DAYS: ${MOS_WORK_DAYS:-3}
+      # Tự cập nhật trang từ GitHub mỗi SITE_SYNC_MIN phút (chỉ tải tệp đã đổi; 0 = tắt).
+      SITE_SYNC_REPO: ${SITE_SYNC_REPO:-HCM-PROJECT-IC3/IC3_Professional}
+      SITE_SYNC_BRANCH: ${SITE_SYNC_BRANCH:-main}
+      SITE_SYNC_MIN: ${SITE_SYNC_MIN:-10}
+      # Có chạy dịch vụ "peer" bên dưới thì đặt 9000: Phòng cả lớp (Đấu trường) bắt tay qua máy chủ
+      # trường thay cho 0.peerjs.com → học sinh trong LAN nối thẳng, ít phải đi đường dự phòng Firestore.
+      PEER_PUBLIC_PORT: ${PEER_PUBLIC_PORT:-}
+    volumes:
+      - ./mos/files:/app/mos/files:ro
+      - school-data:/data
+    restart: unless-stopped
+
+  # Tuỳ chọn: docker compose --profile arena up -d
+  peer:
+    profiles: ["arena"]
+    image: node:22-alpine
+    command: ["npx", "-y", "peer@1.0.2", "--port", "9000", "--path", "/"]
+    ports:
+      - "9000:9000"
+    restart: unless-stopped
+
+volumes:
+  school-data:

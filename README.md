@@ -187,6 +187,10 @@ là tự động lên bản mới, không cần pipeline CI/CD riêng. Xem file
 [`VERSION`](VERSION) để biết quy ước gắn tag/rollback khi cần mốc phục
 hồi trước 1 đợt deploy lớn.
 
+**Máy chủ trường (Docker, tuỳ chọn):** `docker compose up -d --build` phát cả dự án qua LAN,
+gửi bài nộp lên Apps Script theo lô (không chạm trần 30 lượt chạy song song), phát tệp đề MOS
+Word/PowerPoint không cần đưa lên git. Xem [docs/DOCKER.md](docs/DOCKER.md).
+
 ## Vai trò & trang chính
 
 | Vai trò | Trang vào | Ghi chú |

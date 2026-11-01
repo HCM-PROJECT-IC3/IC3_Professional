@@ -22,7 +22,7 @@
         { id: 'monitor',    label: 'Màn hình',         img: 'img/memory-game/monitor.png' },
         { id: 'extdrive',   label: 'Ổ cứng di động',   img: 'img/memory-game/ext-drive.png' },
         { id: 'cpu',        label: 'CPU',              img: 'img/memory-game/cpu.png' },
-        { id: 'laptop',     label: 'Laptop',           img: 'img/memory-game/laptop.png' },
+        { id: 'laptop',     label: 'Laptop',           img: 'img/memory-game/laptop.webp' },
         { id: 'audio',      label: 'Loa',              img: 'img/memory-game/audio.png' }
       ]
     },
@@ -32,12 +32,12 @@
       name: 'Phần mềm văn phòng',
       desc: 'Word, Excel, PowerPoint & các ứng dụng tạo nội dung',
       items: [
-        { id: 'word',        label: 'Word',        img: 'img/memory-game/word.png' },
-        { id: 'excel',       label: 'Excel',        img: 'img/memory-game/excel.png' },
+        { id: 'word',        label: 'Word',        img: 'img/memory-game/word.webp' },
+        { id: 'excel',       label: 'Excel',        img: 'img/memory-game/excel.webp' },
         { id: 'powerpoint',  label: 'PowerPoint',   img: 'img/memory-game/powerpoint.png' },
-        { id: 'outlook',     label: 'Outlook',      img: 'img/memory-game/outlook.png' },
-        { id: 'illustrator', label: 'Illustrator',  img: 'img/memory-game/illustrator.png' },
-        { id: 'photoshop',   label: 'Photoshop',    img: 'img/memory-game/photoshop.png' }
+        { id: 'outlook',     label: 'Outlook',      img: 'img/memory-game/outlook.webp' },
+        { id: 'illustrator', label: 'Illustrator',  img: 'img/memory-game/illustrator.webp' },
+        { id: 'photoshop',   label: 'Photoshop',    img: 'img/memory-game/photoshop.webp' }
       ]
     },
     {
@@ -46,11 +46,11 @@
       name: 'Hệ điều hành',
       desc: 'Windows, macOS, Linux, iOS, Android',
       items: [
-        { id: 'windows', label: 'Windows 11', img: 'img/memory-game/windown_11.png' },
-        { id: 'macos',   label: 'macOS',       img: 'img/memory-game/mac_os.png' },
-        { id: 'linux',   label: 'Linux',       img: 'img/memory-game/linux.png' },
-        { id: 'ios',     label: 'iOS',         img: 'img/memory-game/ios.png' },
-        { id: 'android', label: 'Android',     img: 'img/memory-game/adroid.png' }
+        { id: 'windows', label: 'Windows 11', img: 'img/memory-game/windown_11.webp' },
+        { id: 'macos',   label: 'macOS',       img: 'img/memory-game/mac_os.webp' },
+        { id: 'linux',   label: 'Linux',       img: 'img/memory-game/linux.webp' },
+        { id: 'ios',     label: 'iOS',         img: 'img/memory-game/ios.webp' },
+        { id: 'android', label: 'Android',     img: 'img/memory-game/adroid.webp' }
       ]
     },
     {
@@ -59,13 +59,13 @@
       name: 'Trình duyệt & Liên lạc',
       desc: 'Trình duyệt web, Email, họp trực tuyến',
       items: [
-        { id: 'chrome', label: 'Chrome',       img: 'img/memory-game/chrome.png' },
-        { id: 'edge',   label: 'Edge',         img: 'img/memory-game/edge.png' },
-        { id: 'gmail',  label: 'Gmail',        img: 'img/memory-game/gmail.png' },
-        { id: 'yahoo',  label: 'Yahoo Mail',   img: 'img/memory-game/yahoo.png' },
-        { id: 'teams',  label: 'Teams',        img: 'img/memory-game/teams.png' },
-        { id: 'zoom',   label: 'Zoom',         img: 'img/memory-game/zoom.png' },
-        { id: 'meet',   label: 'Google Meet',  img: 'img/memory-game/meet.png' }
+        { id: 'chrome', label: 'Chrome',       img: 'img/memory-game/chrome.webp' },
+        { id: 'edge',   label: 'Edge',         img: 'img/memory-game/edge.webp' },
+        { id: 'gmail',  label: 'Gmail',        img: 'img/memory-game/gmail.webp' },
+        { id: 'yahoo',  label: 'Yahoo Mail',   img: 'img/memory-game/yahoo.webp' },
+        { id: 'teams',  label: 'Teams',        img: 'img/memory-game/teams.webp' },
+        { id: 'zoom',   label: 'Zoom',         img: 'img/memory-game/zoom.webp' },
+        { id: 'meet',   label: 'Google Meet',  img: 'img/memory-game/meet.webp' }
       ]
     },
     {
@@ -74,11 +74,11 @@
       name: 'Trợ lý AI',
       desc: 'Các trợ lý trí tuệ nhân tạo phổ biến',
       items: [
-        { id: 'chatgpt',  label: 'ChatGPT',   img: 'img/memory-game/chatgpt.png' },
-        { id: 'claude',   label: 'Claude',    img: 'img/memory-game/claude.png' },
-        { id: 'copilot',  label: 'Copilot',   img: 'img/memory-game/copilot.png' },
-        { id: 'gemini',   label: 'Gemini',    img: 'img/memory-game/gemini.png' },
-        { id: 'siri',     label: 'Siri',      img: 'img/memory-game/siri.png' }
+        { id: 'chatgpt',  label: 'ChatGPT',   img: 'img/memory-game/chatgpt.webp' },
+        { id: 'claude',   label: 'Claude',    img: 'img/memory-game/claude.webp' },
+        { id: 'copilot',  label: 'Copilot',   img: 'img/memory-game/copilot.webp' },
+        { id: 'gemini',   label: 'Gemini',    img: 'img/memory-game/gemini.webp' },
+        { id: 'siri',     label: 'Siri',      img: 'img/memory-game/siri.webp' }
       ]
     }
   ];

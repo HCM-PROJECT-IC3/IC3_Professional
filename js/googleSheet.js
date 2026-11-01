@@ -126,6 +126,10 @@ async function saveToGoogleSheet(data) {
 
   // Code.gs mới định tuyến theo "action" — bọc payload gốc vào đây.
   const requestBody = { action: 'submitExam', payload };
+  // Trang mở từ máy chủ trường (Docker, server/server.js): gửi vào hàng đợi của máy chủ, máy chủ
+  // gửi tiếp lên đúng Apps Script này theo lô — không dồn cả trường vào trần 30 lượt chạy song song.
+  const relayUrl = window.EduBackend && window.EduBackend.schoolServer && window.EduBackend.schoolServer.relayUrl;
+  if (relayUrl) requestBody.endpoint = endpoint;
 
   // ── Thiết lập Timeout (hủy request nếu quá lâu) ──────────
   const controller = new AbortController();
@@ -142,7 +146,7 @@ async function saveToGoogleSheet(data) {
     // (có ContentService trả JSON + Access-Control-Allow-Origin: * khi deploy
     // "Anyone") cho phép đọc được response thật — biết chắc ghi thành công
     // hay lỗi, thay vì đoán mù như trước.
-    const res = await fetch(endpoint, {
+    const res = await fetch(relayUrl || endpoint, {
       method:  'POST',
       signal:  controller.signal,
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
