@@ -1764,8 +1764,44 @@ function updateSidebar() {
   const done = State.questions.filter((_, i) => isAnswered(i)).length;
   const fill = document.getElementById('progressFill');
   if (fill) fill.style.width = `${(done / State.questions.length) * 100}%`;
+  const counter = document.getElementById('qCounter');
+  if (counter) counter.textContent = `Câu ${State.current + 1}/${State.questions.length}`;
+  const setNum = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = n; };
+  setNum('legendAnswered', done);
+  setNum('legendFlagged', State.flags.size);
+  setNum('legendLeft', State.questions.length - done);
+  _scrollActiveQBtnIntoView();
+  // Chờ renderer vẽ xong (nhiều chỗ gọi updateSidebar() TRƯỚC khi vẽ lại câu).
+  requestAnimationFrame(_updatePendingChip);
   // js/kid-mode.js: cập nhật dòng "Em đã chọn…" (gọi sau mỗi lần dựng câu / đổi đáp án, mọi dạng câu).
   window.dispatchEvent(new CustomEvent('edu:quiz-updated'));
+}
+
+/** Danh sách câu dài (49 câu) tự cuộn → ô câu đang làm luôn nằm trong khung
+ * nhìn. Chỉ cuộn riêng .sidebar (không dùng scrollIntoView vì nó cuộn cả khu câu hỏi). */
+function _scrollActiveQBtnIntoView() {
+  const sb = document.getElementById('examSidebar');
+  const b = document.getElementById(`qbtn-${State.current}`);
+  if (!sb || !b || sb.classList.contains('collapsed')) return;
+  const s = sb.getBoundingClientRect(), r = b.getBoundingClientRect(), pad = 14;
+  const legend = sb.querySelector('.legend--counts');
+  const top = s.top + pad + (legend && legend.offsetParent ? legend.offsetHeight : 0); // chú thích dính đầu danh sách
+  if (r.top < top)                  sb.scrollTop  -= top - r.top;
+  else if (r.bottom > s.bottom - pad) sb.scrollTop  += r.bottom - (s.bottom - pad);
+  if (r.left < s.left + pad)        sb.scrollLeft -= (s.left + pad) - r.left;
+  else if (r.right > s.right - pad) sb.scrollLeft += r.right - (s.right - pad);
+}
+
+/** Đáp án ngắn (không ảnh, ≤ 70 ký tự) → xếp 2 cột để 4 đáp án chỉ chiếm 2
+ * hàng, vừa 1 màn hình mà không phải cuộn. Khu câu hỏi hẹp thì CSS tự về 1 cột
+ * (css/quiz-play.css, container query). */
+function _shortOptions(q) {
+  const opts = q.options || [];
+  return opts.length >= 3 && opts.every(o => String(o).replace(/<[^>]*>/g, '').length <= 70);
+}
+/** Đáp án rất ngắn (1–2 từ như "Crop", "Trim") → giữ 2 cột cả trên điện thoại. */
+function _tinyOptions(q) {
+  return (q.options || []).every(o => String(o).replace(/<[^>]*>/g, '').length <= 16);
 }
 
 /**
@@ -1841,6 +1877,7 @@ function prevQ() { if (State.current > 0) jumpTo(State.current - 1); }
  * chèn mini-game, giống cấu trúc "round" của Wayground/Quizizz. */
 function nextQ() {
   if (State.current >= State.questions.length - 1) return;
+  if (_warnPartialBeforeNext()) return;
   const points = State.session?.gameBreakPoints;
   if (points && points.length) {
     const done = State.session.gameBreaksDone || (State.session.gameBreaksDone = new Set());
@@ -1851,6 +1888,121 @@ function nextQ() {
     }
   }
   jumpTo(State.current + 1);
+}
+
+/* ============================================================
+   § 9a — CÒN THIẾU DÒNG NÀO? (câu nhiều dòng: Đúng/Sai, chọn từng
+   dòng, chọn/kéo điền, nối, phân loại)
+   Câu dài phải cuộn → học sinh nhỏ dễ chọn thiếu dòng cuối mà không biết.
+   Chip trên thanh nút đáy luôn báo "Còn N dòng chưa chọn", bấm vào thì
+   cuộn tới dòng đầu tiên còn thiếu và nháy viền. Bấm "Câu tiếp" khi mới
+   làm dở 1 câu → nhắc 1 lần, bấm lần nữa thì cho đi tiếp.
+   ============================================================ */
+function _pendingInfo() {
+  const q = State.questions[State.current];
+  const body = document.getElementById('q-body');
+  if (!q || !body) return null;
+  const pick = (all, isDone, unit, verb = 'chọn') => ({ total: all.length, els: all.filter(el => !isDone(el)), unit, verb });
+  const $$ = sel => [...body.querySelectorAll(sel)];
+  let info = null;
+  switch (q.type) {
+    // Nhiều đáp án / Bấm vào hình: chip thay cho dòng "Hãy chọn đúng 2 đáp án",
+    // "Bấm vào đúng 1 vị trí" (đã bỏ khỏi thẻ câu hỏi cho đỡ rối mắt).
+    case 'multi': {
+      const need = q.correct?.length || 0;
+      const got = $$('.option-btn.selected').length;
+      const list = body.querySelector('.options-list');
+      if (!need || !list) return null;
+      return { total: need, els: Array(Math.max(0, need - got)).fill(list), unit: 'đáp án', verb: 'chọn',
+               start: `Chọn ${need} đáp án`, more: n => `Chọn thêm ${n} đáp án` };
+    }
+    case 'hotspot': {
+      const need = (q.areas || []).filter(a => a.correct).length || (q.areas || []).length;
+      const got = State.hotspot[State.current]?.size || 0;
+      const stage = body.querySelector('.hsq-stage');
+      if (!need || !stage) return null;
+      return { total: need, els: Array(Math.max(0, need - got)).fill(stage), unit: 'chỗ trên hình', verb: 'bấm',
+               start: `Bấm ${need} chỗ đúng trên hình`, more: n => `Bấm thêm ${n} chỗ trên hình` };
+    }
+    case 'truefalse':
+      info = pick($$('.tf-row'), r => r.classList.contains('is-true') || r.classList.contains('is-false'), 'dòng'); break;
+    case 'list':
+      info = pick($$('.list-q-row'), r => !!r.querySelector('.list-opt-btn.selected'), 'dòng'); break;
+    case 'selectfill': case 'dragfill': {
+      const inRows = !!body.querySelector('.tf-list');
+      info = pick($$('.fillblank-slot[data-bi]'), el => el.classList.contains('filled'), inRows ? 'dòng' : 'chỗ trống', q.type === 'dragfill' ? 'điền' : 'chọn'); break;
+    }
+    case 'matching': {
+      const slots = $$('.match-drop-slot');
+      info = slots.length
+        ? pick(slots, el => el.classList.contains('filled'), 'ô', 'nối')
+        : pick($$('.match2col-left .match2col-item'), el => el.classList.contains('linked'), 'mục', 'nối');
+      break;
+    }
+    case 'classify': {
+      const placed = State.classify[State.current] || {};
+      const items = q.items || [];
+      const left = items.filter(it => placed[it.text] === undefined).length;
+      const pool = body.querySelector('.drag-pool');
+      info = { total: items.length, els: left && pool ? Array(left).fill(pool) : [], unit: 'thẻ', verb: 'xếp' };
+      break;
+    }
+  }
+  return info && info.total > 1 ? info : null; // 1 dòng thì nhìn là thấy, khỏi nhắc
+}
+
+function _flashPending(els) {
+  [...new Set(els)].forEach(el => {
+    el.classList.remove('q-pending-flash');
+    void el.offsetWidth; // chạy lại animation nếu đang nháy dở
+    el.classList.add('q-pending-flash');
+    setTimeout(() => el.classList.remove('q-pending-flash'), 1700);
+  });
+}
+
+function goToPending() {
+  const info = _pendingInfo();
+  if (!info || !info.els.length) return;
+  info.els[0].scrollIntoView({ block: 'center', behavior: 'smooth' });
+  _flashPending(info.els);
+}
+
+function _updatePendingChip() {
+  const nav = document.querySelector('#qPanel .q-nav');
+  if (!nav) return;
+  let chip = nav.querySelector('.q-pending');
+  const info = _pendingInfo();
+  if (!info) { if (chip) chip.remove(); return; }
+  if (!chip) {
+    chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'q-pending';
+    chip.setAttribute('aria-live', 'polite');
+    chip.onclick = goToPending;
+    nav.appendChild(chip); // luôn sau 3 nút đầu — js/a11y-assistant.js bấm hộ theo vị trí
+  }
+  const left = info.els.length;
+  const start = left === info.total; // chưa làm gì → nhắc nhẹ (trung tính), làm dở mới tô đỏ
+  chip.classList.toggle('is-done', left === 0);
+  chip.classList.toggle('is-start', start);
+  chip.disabled = left === 0;
+  chip.innerHTML = left === 0
+    ? `<i class="fa-solid fa-circle-check"></i> Đã ${info.verb} đủ ${info.total}/${info.total}`
+    : start && info.start
+      ? `<i class="fa-solid fa-hand-pointer"></i> ${info.start}`
+      : info.more
+        ? `<i class="fa-solid fa-arrow-down"></i> ${info.more(left)}`
+        : `<i class="fa-solid fa-arrow-down"></i> Còn ${left} ${info.unit} chưa ${info.verb}`;
+}
+
+function _warnPartialBeforeNext() {
+  const info = _pendingInfo();
+  const left = info ? info.els.length : 0;
+  if (!left || left === info.total || State._partialWarnedAt === State.current) return false;
+  State._partialWarnedAt = State.current;
+  goToPending();
+  showNotification(`${info.more ? `Câu này cần ${info.verb} ${info.total} ${info.unit}, em còn thiếu ${left}` : `Câu này em còn ${left} ${info.unit} chưa ${info.verb}`}. Bấm "Câu tiếp" lần nữa nếu em muốn bỏ qua.`, 'warning');
+  return true;
 }
 
 /* ============================================================
@@ -2010,13 +2162,16 @@ function renderQuestion(idx) {
   };
   const { icon, label } = TYPE_META[q.type] || { icon: '<i class="fa-solid fa-question"></i>', label: q.type };
 
-  // Nav buttons
-  const navPrev = `<button class="btn-nav" onclick="prevQ()" ${idx === 0 ? 'disabled' : ''}><i class="fa-solid fa-arrow-left"></i> Câu trước</button>`;
+  // Thanh nút cố định ở đáy (css/quiz-play.css). Thứ tự trong DOM giữ nguyên
+  // Câu trước → Câu tiếp/Nộp bài → Đánh dấu vì js/a11y-assistant.js bấm hộ theo
+  // vị trí; nút Kiểm tra đáp án (chỉ Ôn luyện) thêm ở cuối, CSS tự xếp lại.
+  // Chữ trong .nav-label: điện thoại ẩn chữ của nút phụ, chỉ còn icon.
+  const navPrev = `<button type="button" class="btn-nav btn-prev" onclick="prevQ()" title="Câu trước (phím ←)" aria-label="Câu trước" ${idx === 0 ? 'disabled' : ''}><i class="fa-solid fa-arrow-left"></i><span class="nav-label">Câu trước</span></button>`;
   const navNext = idx < State.questions.length - 1
-    ? `<button class="btn-nav btn-next-primary" onclick="nextQ()">Câu tiếp <i class="fa-solid fa-arrow-right"></i></button>`
-    : `<button class="btn-nav" style="background:rgba(6,214,160,.15);border-color:var(--accent5);color:var(--accent5);" onclick="confirmSubmit()">Nộp bài <i class="fa-solid fa-check"></i></button>`;
-  const navFlag = `<button class="btn-nav btn-flag ${State.flags.has(idx) ? 'flagged' : ''}" onclick="toggleFlag(${idx})">
-    ${State.flags.has(idx) ? '<i class="fa-solid fa-flag"></i> Bỏ đánh dấu' : '<i class="fa-regular fa-flag"></i> Đánh dấu'}
+    ? `<button type="button" class="btn-nav btn-next-primary" onclick="nextQ()" title="Câu tiếp (phím →)"><span class="nav-label">Câu tiếp</span><i class="fa-solid fa-arrow-right"></i></button>`
+    : `<button type="button" class="btn-nav btn-submit-last" onclick="confirmSubmit()"><span class="nav-label">Nộp bài</span><i class="fa-solid fa-check"></i></button>`;
+  const navFlag = `<button type="button" class="btn-nav btn-flag ${State.flags.has(idx) ? 'flagged' : ''}" onclick="toggleFlag(${idx})" title="Đánh dấu để xem lại (phím F)" aria-pressed="${State.flags.has(idx)}" aria-label="${State.flags.has(idx) ? 'Bỏ đánh dấu' : 'Đánh dấu'}">
+    ${State.flags.has(idx) ? '<i class="fa-solid fa-flag"></i><span class="nav-label">Bỏ đánh dấu</span>' : '<i class="fa-regular fa-flag"></i><span class="nav-label">Đánh dấu</span>'}
   </button>`;
 
   // Hình ảnh — ưu tiên imageUrl (từ image_file), sau đó SVG minh họa
@@ -2030,13 +2185,15 @@ function renderQuestion(idx) {
   // tra của câu trước KHÔNG còn sót lại (id trùng nhưng nội dung rỗng).
   const practiceCheckBlock = State.examMode === 'practice'
     ? `<div class="q-check-wrap">
-         <button type="button" class="btn-check-answer" onclick="checkCurrentAnswer()"><i class="fa-solid fa-circle-check"></i> Kiểm tra đáp án</button>
          <div class="q-check-result" id="qCheckResult"></div>
        </div>`
     : '';
+  const navCheck = State.examMode === 'practice'
+    ? `<button type="button" class="btn-check-answer" onclick="checkCurrentAnswer()"><i class="fa-solid fa-circle-check"></i><span>Kiểm tra<span class="nav-label"> đáp án</span></span></button>`
+    : '';
 
   panel.innerHTML = `
-    <div class="q-card${q.type === 'hotspot' ? ' q-card--hotspot' : ''}">
+    <div class="q-card${q.type === 'hotspot' ? ' q-card--hotspot' : ''}" data-qtype="${q.type}">
       <div class="q-header">
         <div class="q-badge">${idx + 1}</div>
         <div class="q-meta">
@@ -2048,7 +2205,7 @@ function renderQuestion(idx) {
       <div id="q-body"></div>
       ${practiceCheckBlock}
     </div>
-    <div class="q-nav">${navPrev}${navNext}${navFlag}</div>`;
+    <div class="q-nav">${navPrev}${navNext}${navFlag}${navCheck}</div>`;
 
   // Gọi render theo type
   const renderers = {
@@ -2100,14 +2257,16 @@ function checkCurrentAnswer() {
   if (el && el.dataset.shown === '1') {
     el.innerHTML = '';
     el.dataset.shown = '0';
-    if (btn) btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Kiểm tra đáp án';
+    if (btn) btn.innerHTML = '<i class="fa-solid fa-circle-check"></i><span>Kiểm tra<span class="nav-label"> đáp án</span></span>';
     window.dispatchEvent(new CustomEvent('edu:answer-checked', { detail: null }));
     return;
   }
 
   _renderCheckResult(_buildQuestionDetail(q, i));
   if (el) el.dataset.shown = '1';
-  if (btn) btn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Ẩn kết quả';
+  // Nút nằm ở thanh đáy, kết quả hiện cuối thẻ câu hỏi → cuộn tới cho học sinh thấy ngay.
+  if (el && el.firstElementChild) el.firstElementChild.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  if (btn) btn.innerHTML = '<i class="fa-solid fa-eye-slash"></i><span>Ẩn<span class="nav-label"> kết quả</span></span>';
 }
 
 /** Vẽ banner Đúng/Sai/Chưa trả lời + phần giải thích (tái dùng
@@ -2282,8 +2441,10 @@ function renderSingle(q, qi) {
   const ALPHA   = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const noMarker = _hasImage(q); // câu có ảnh minh hoạ → ẩn nhãn A/B/C/D, chỉ còn nội dung để click
 
+  const useGrid = !noMarker && _shortOptions(q);
+
   document.getElementById('q-body').innerHTML = `
-    <div class="options-list">
+    <div class="options-list${useGrid ? ' options-list--2col' : ''}${useGrid && _tinyOptions(q) ? ' options-list--tiny' : ''}">
       ${(q.options || []).map((opt, j) => `
         <button class="option-btn ${noMarker ? 'no-marker' : ''} ${current === opt ? 'selected' : ''}"
                 data-qi="${qi}"
@@ -2322,10 +2483,10 @@ function renderMulti(q, qi) {
     ? `Hãy chọn đúng <strong>${q.correct.length}</strong> đáp án`
     : 'Chọn tất cả đáp án đúng';
 
-  // Nhiều lựa chọn (>4) → chia 2 cột để vừa màn hình, đỡ cuộn dài
+  // Nhiều lựa chọn (>4) hoặc đáp án ngắn → chia 2 cột để vừa màn hình, đỡ cuộn dài
   // (xem .options-list--2col trong style.css). Ảnh minh hoạ (noMarker)
   // thường đi kèm chú thích dài hơn nên vẫn giữ 1 cột cho dễ đọc.
-  const useGrid = !noMarker && (q.options || []).length > 4;
+  const useGrid = !noMarker && ((q.options || []).length > 4 || _shortOptions(q));
 
   document.getElementById('q-body').innerHTML = `
     <div class="multi-hint" style="
@@ -3032,6 +3193,9 @@ function fitHotspotImage() {
   const wrap  = stage ? stage.querySelector('.hotspot-wrap') : null;
   if (!stage || !img || !wrap) return;
   if (!img.naturalWidth || !img.naturalHeight) return; // ảnh chưa tải xong
+  // Khung lấy đúng tỉ lệ ảnh (css/quiz-play.css) → ảnh rộng hết thẻ, không bị
+  // ép co theo chiều cao còn lại của màn hình. Đổi cỡ khung thì ResizeObserver gọi lại hàm này.
+  stage.style.setProperty('--hsq-ar', String(img.naturalWidth / img.naturalHeight));
 
   const cw = stage.clientWidth;
   const ch = stage.clientHeight;
@@ -3440,21 +3604,75 @@ function renderOrdering(q, qi) {
   if (!State.ordering[qi]) State.ordering[qi] = [...(q._displayOrder || q.items || [])];
   const order = State.ordering[qi];
 
+  // Không hiện gợi ý chữ: tay nắm ⋮⋮ + mũi tên đã tự nói cách làm (css/quiz-play.css).
   body.innerHTML = `
-    ${q.hint ? `<div class="q-hint-line"><i class="fa-solid fa-lightbulb"></i> ${q.hint}</div>` : ''}
-    <div class="ordering-list">
+    <div class="ordering-list" id="orderingList-${qi}">
       ${order.map((text, j) => `
-        <div class="ordering-row">
+        <div class="ordering-row" data-j="${j}">
+          <span class="ordering-handle" title="Giữ và kéo để đổi chỗ" aria-hidden="true"
+                onpointerdown="startOrderingDrag(event, ${qi})"><i class="fa-solid fa-grip-vertical"></i></span>
           <span class="ordering-num">${j + 1}</span>
           <span class="ordering-text">${text}</span>
           <div class="ordering-arrows">
-            <button type="button" class="ordering-arrow-btn" ${j === 0 ? 'disabled' : ''}
-                    data-qi="${qi}" data-j="${j}" data-dir="-1" onclick="moveOrderingItem(this)">▲</button>
-            <button type="button" class="ordering-arrow-btn" ${j === order.length - 1 ? 'disabled' : ''}
-                    data-qi="${qi}" data-j="${j}" data-dir="1" onclick="moveOrderingItem(this)">▼</button>
+            <button type="button" class="ordering-arrow-btn" ${j === 0 ? 'disabled' : ''} aria-label="Đưa bước ${j + 1} lên trên"
+                    data-qi="${qi}" data-j="${j}" data-dir="-1" onclick="moveOrderingItem(this)"><i class="fa-solid fa-chevron-up"></i></button>
+            <button type="button" class="ordering-arrow-btn" ${j === order.length - 1 ? 'disabled' : ''} aria-label="Đưa bước ${j + 1} xuống dưới"
+                    data-qi="${qi}" data-j="${j}" data-dir="1" onclick="moveOrderingItem(this)"><i class="fa-solid fa-chevron-down"></i></button>
           </div>
         </div>`).join('')}
     </div>`;
+}
+
+/** Kéo-thả hàng bằng tay nắm (chuột + cảm ứng, Pointer Events): hàng đang kéo
+ * đổi chỗ trong DOM ngay khi đi qua giữa hàng bên cạnh; thả tay thì ghi thứ tự
+ * mới vào State.ordering và vẽ lại. Mũi tên ▲▼ vẫn giữ cho ai không kéo được. */
+function startOrderingDrag(e, qi) {
+  if (e.button !== undefined && e.button !== 0) return;
+  const row = e.target.closest('.ordering-row');
+  const list = row && row.parentElement;
+  if (!row || !list) return;
+  e.preventDefault();
+  const handle = e.currentTarget;
+  try { handle.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+  row.classList.add('is-dragging');
+  list.classList.add('is-sorting');
+  const startOrder = [...list.children].map(r => r.dataset.j).join();
+
+  const onMove = ev => {
+    const y = ev.clientY;
+    for (const other of list.children) {
+      if (other === row) continue;
+      const r = other.getBoundingClientRect();
+      const mid = r.top + r.height / 2;
+      const otherBelow = row.compareDocumentPosition(other) & Node.DOCUMENT_POSITION_FOLLOWING;
+      if (otherBelow && y > mid) { list.insertBefore(row, other.nextSibling); break; }
+      if (!otherBelow && y < mid) { list.insertBefore(row, other); break; }
+    }
+    // Kéo sát mép trên/dưới khu câu hỏi → tự cuộn
+    const panel = document.getElementById('qPanel');
+    if (panel) {
+      const pr = panel.getBoundingClientRect();
+      if (y < pr.top + 40) panel.scrollTop -= 12;
+      else if (y > pr.bottom - 110) panel.scrollTop += 12;
+    }
+  };
+  const onUp = () => {
+    handle.removeEventListener('pointermove', onMove);
+    handle.removeEventListener('pointerup', onUp);
+    handle.removeEventListener('pointercancel', onUp);
+    row.classList.remove('is-dragging');
+    list.classList.remove('is-sorting');
+    const ids = [...list.children].map(r => r.dataset.j);
+    if (ids.join() === startOrder) return;
+    const old = State.ordering[qi];
+    State.ordering[qi] = ids.map(j => old[+j]);
+    State.session.clicks++;
+    updateSidebar();
+    renderOrdering(State.questions[qi], qi);
+  };
+  handle.addEventListener('pointermove', onMove);
+  handle.addEventListener('pointerup', onUp);
+  handle.addEventListener('pointercancel', onUp);
 }
 
 function moveOrderingItem(el) {
@@ -3485,8 +3703,30 @@ function moveOrderingItem(el) {
    selectfill→ dropdown <select> tại mỗi chỗ trống
    ============================================================ */
 
+/** selectfill ít lựa chọn ngắn (Có/Không, Đúng/Sai…) → hiện thẳng các nút bấm
+ * thay cho <select>: không có menu xổ xuống che dòng bên dưới, học sinh nhỏ
+ * nhìn thấy ngay mọi lựa chọn. Câu dạng đoạn văn chỉ dùng nút khi lựa chọn
+ * rất ngắn để không xé câu. Trả về danh sách lựa chọn, hoặc null = giữ <select>. */
+function _fillChoiceWords(q, inRows) {
+  if (q.type !== 'selectfill') return null;
+  const words = (q.wordBank || []).filter((w, idx, arr) => arr.indexOf(w) === idx);
+  const maxN = inRows ? 5 : 3, maxLen = inRows ? 40 : 16;
+  if (!words.length || words.length > maxN || words.some(w => String(w).length > maxLen)) return null;
+  return words;
+}
+
 /** Nội dung bên trong 1 ô chỗ trống (dùng chung cho cả 2 layout bên dưới). */
-function _fillBlankSlotHtml(q, qi, i, filled, isDrag) {
+function _fillBlankSlotHtml(q, qi, i, filled, isDrag, inRows) {
+  const choices = _fillChoiceWords(q, inRows);
+  if (choices) {
+    return `
+    <span class="fillblank-slot fillblank-slot--choices ${filled[i] ? 'filled' : 'empty-hint'}" data-qi="${qi}" data-bi="${i}"
+          role="group" aria-label="Chỗ trống ${i + 1}">
+      ${choices.map(w => `<button type="button" class="tf-btn fb-choice ${filled[i] === w ? 'selected-true' : ''}"
+          aria-pressed="${filled[i] === w}" data-qi="${qi}" data-bi="${i}" data-val="${encodeURIComponent(w)}"
+          onclick="selectFillChoice(this)">${w}</button>`).join('')}
+    </span>`;
+  }
   return `
     <span class="fillblank-slot ${filled[i] ? 'filled' : 'empty-hint'}"
           data-qi="${qi}" data-bi="${i}"
@@ -3566,7 +3806,7 @@ function renderFillBlank(q, qi) {
               <span class="tf-row-text">${text}</span>
             </div>
             <div class="tf-row-actions">
-              ${_fillBlankSlotHtml(q, qi, blankTok.index, filled, isDrag)}
+              ${_fillBlankSlotHtml(q, qi, blankTok.index, filled, isDrag, true)}
             </div>
           </div>`;
         }).join('')}
@@ -3574,8 +3814,13 @@ function renderFillBlank(q, qi) {
     : `<div class="fillblank-passage">${segments.map((seg, i) =>
         `${seg}${i < blanks.length ? _fillBlankSlotHtml(q, qi, i, filled, isDrag) : ''}`).join('')}</div>`;
 
+  // Dữ liệu gốc ghi "Bấm mở dropdown…" — khi đã đổi sang nút bấm (_fillChoiceWords) thì nói đúng cách làm.
+  const hint = q.hint && _fillChoiceWords(q, isStatementList) && /dropdown|thả xuống/i.test(q.hint)
+    ? (isStatementList ? 'Bấm chọn 1 đáp án ở mỗi dòng.' : 'Bấm chọn đáp án ở mỗi chỗ trống.')
+    : q.hint;
+
   body.innerHTML = `
-    ${q.hint ? `<div class="q-hint-line"><i class="fa-solid fa-lightbulb"></i> ${q.hint}</div>` : ''}
+    ${hint ? `<div class="q-hint-line"><i class="fa-solid fa-lightbulb"></i> ${hint}</div>` : ''}
     <div class="tf-toolbar">
       <div id="fb-counter-${qi}" class="tf-counter">
         ${isDrag ? '<i class="fa-solid fa-puzzle-piece"></i>' : '<i class="fa-solid fa-caret-down"></i>'} Đã điền: ${answeredCount}/${blanks.length}
@@ -3696,6 +3941,19 @@ function removeFillBlank(el) {
   State.session.clicks++;
   updateSidebar();
   renderFillBlank(State.questions[qi], qi);
+}
+
+/** Bấm 1 nút lựa chọn (xem _fillChoiceWords) — bấm lại nút đang chọn để bỏ chọn. */
+function selectFillChoice(el) {
+  const qi = parseInt(el.dataset.qi);
+  const bi = parseInt(el.dataset.bi);
+  const val = decodeURIComponent(el.dataset.val);
+  if (!State.fillblank[qi]) State.fillblank[qi] = {};
+  if (State.fillblank[qi][bi] === val) delete State.fillblank[qi][bi];
+  else State.fillblank[qi][bi] = val;
+  State.session.clicks++;
+  renderFillBlank(State.questions[qi], qi);
+  updateSidebar();
 }
 
 function onSelectFillChange(el) {

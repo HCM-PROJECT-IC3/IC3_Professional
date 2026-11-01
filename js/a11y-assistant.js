@@ -349,8 +349,33 @@
 
     loadFabPos();
 
+    // Màn làm bài (index.html): đáp án nằm sát mép phải và thanh nút ở đáy →
+    // nút nổi ở góc nào cũng có lúc đè lên đáp án. Khi có #a11yFabDock (trong
+    // hàng "Câu x/y") đang hiện, nút chuyển vào đó, không kéo được; rời bài
+    // thi thì trả về chỗ cũ (kể cả vị trí học sinh đã kéo).
+    const fabHome = fab.parentNode;
+    function syncFabDock() {
+      const dock = document.getElementById('a11yFabDock');
+      const useDock = !!(dock && dock.offsetParent !== null);
+      if (useDock && fab.parentNode !== dock) {
+        dock.appendChild(fab);
+        fab.classList.add('is-docked');
+      } else if (!useDock && fab.classList.contains('is-docked')) {
+        fabHome.appendChild(fab);
+        fab.classList.remove('is-docked');
+      }
+      if (!panel.hidden) positionPanelNearFab();
+    }
+    const examScreen = document.getElementById('exam');
+    if (examScreen && document.getElementById('a11yFabDock')) {
+      new MutationObserver(syncFabDock).observe(examScreen, { attributes: true, attributeFilter: ['style'] });
+      window.addEventListener('resize', syncFabDock);
+      syncFabDock();
+    }
+
     fab.addEventListener('pointerdown', (e) => {
       if (e.button !== undefined && e.button !== 0) return; // chỉ chuột trái/chạm, bỏ qua chuột phải
+      if (fab.classList.contains('is-docked')) return; // đang đậu trong hàng "Câu x/y" — không kéo
       dragging = true; dragMoved = false;
       dragStartX = e.clientX; dragStartY = e.clientY;
       const rect = fab.getBoundingClientRect();

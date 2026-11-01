@@ -23,6 +23,43 @@ Thứ tự: Apps Script → `firestore.rules`/index → đẩy web.
 
 ## 01/11/2026
 
+- **Giao diện làm bài mới cho học sinh cấp 1, 2** (`css/quiz-play.css`, chỉ áp dụng ở màn làm bài).
+  - Thẻ viền đậm có bóng cứng, nền giấy kem chấm bi. Không dùng gradient hay hiệu ứng phát sáng.
+  - Ô "Câu x/y" và thanh tiến độ sọc. Danh sách câu là thẻ nổi, câu đang làm có vòng xanh.
+  - Đáp án là nút to, nhấn xuống khi bấm. Câu phân loại tô màu đầu từng nhóm. Nút "Câu tiếp" màu vàng.
+  - Chế độ tối và giao diện điện thoại đều đã kiểm tra. Chế độ "Chữ to" vẫn giữ kiểu chọn đáp án riêng.
+  - Câu "Bấm vào hình": ảnh rộng hết thẻ theo đúng tỉ lệ ảnh, không còn bị ép co theo chiều cao màn hình.
+    Trước đây trên màn thấp ảnh chỉ còn vài chục px, học sinh phải phóng to mới bấm được.
+    Ảnh minh hoạ của các câu khác cũng được hiển thị to hơn.
+  - Thanh nút cố định ở đáy: Câu trước · Đánh dấu · Kiểm tra đáp án · Câu tiếp luôn ở cùng một chỗ, không bị cuộn mất.
+    Kết quả kiểm tra hiện cuối thẻ, trang tự cuộn tới. Trên điện thoại, nút phụ chỉ còn biểu tượng.
+  - Câu "Bấm vào hình" tự co ảnh vừa phần trống phía trên thanh nút: thấy trọn ảnh và các nút cùng lúc, không phải cuộn.
+  - Responsive theo cả chiều cao: màn thấp (laptop 1366×768, máy chiếu) tự thu gọn phần đầu trang.
+    Máy tính bảng dọc dùng dải số câu cuộn ngang như điện thoại. Điện thoại xoay ngang bỏ hàng tiến độ.
+    Thanh nút tự gọn theo bề rộng thật của khu câu hỏi. Đã đo ở 11 cỡ màn hình, không tràn ngang.
+  - Câu chọn điền có 2–5 lựa chọn ngắn (Có/Không, Đúng/Sai…) hiện thẳng các nút bấm, không còn dropdown che dòng bên dưới.
+    Gần như toàn bộ 296 câu chọn điền thuộc dạng này. Câu có lựa chọn dài vẫn dùng dropdown, nhưng ô to và viền rõ hơn.
+  - Câu nhiều dòng (Đúng/Sai, chọn từng dòng, chọn/kéo điền, nối, phân loại): thanh nút đáy báo "Còn N dòng chưa chọn".
+    Bấm vào chip thì trang cuộn tới dòng còn thiếu và nháy viền dòng đó.
+    Bấm "Câu tiếp" khi mới làm dở một câu thì có nhắc một lần; bấm lần nữa thì đi tiếp.
+  - Nút trợ năng nằm trong hàng "Câu x/y" khi đang làm bài, không còn đè lên đáp án.
+  - Vừa một khung hình, không phải cuộn: đáp án ngắn (≤ 70 ký tự) xếp 2 cột khi khu câu hỏi đủ rộng.
+    Đáp án rất ngắn (vd Crop/Trim) giữ 2 cột cả trên điện thoại. Màn thấp ẩn nhãn "Một lựa chọn" để nhường chỗ.
+    Đã đo: màn 1535×650, 1366×657, 1920×960, máy tính bảng và điện thoại dọc đều thấy đủ câu hỏi và 4 đáp án.
+  - Chú thích "Đã làm / Đánh dấu / Chưa làm" có kèm số đếm, nằm dính ở đầu danh sách câu.
+    Danh sách tự cuộn tới câu đang làm. Nút "Quay lại trang chọn bài" lên thanh trên cùng, thành nút "Chọn bài khác".
+  - Câu Sắp xếp thứ tự: có tay nắm kéo-thả, dùng được cả chuột và cảm ứng. Mũi tên lên/xuống vẫn giữ, hàng gọn hơn.
+    Câu 6 bước vừa một màn hình 1535×700. Gợi ý chung trong dữ liệu được thay bằng một câu ngắn khớp với nút trên màn hình.
+  - Gọn chữ: dòng gợi ý thành dải mỏng. Bỏ dòng đếm "Đã điền 1/4" vì đã trùng với chip "Còn N dòng".
+    Khu câu hỏi hẹp (điện thoại): đề bài dùng hết bề ngang, ô số và nhãn dạng câu nằm chung một hàng.
+  - Bỏ nhãn dạng câu ("Nối cột", "Một lựa chọn"…) và mọi dòng gợi ý chữ trên tất cả dạng câu, để học sinh đỡ rối mắt.
+    Chip ở thanh đáy thay cho các dòng đó, ví dụ "Chọn 2 đáp án", "Bấm 3 chỗ đúng trên hình", "Còn 4 mục chưa nối".
+    Lúc mới vào câu chip màu trung tính, chỉ chuyển đỏ khi đã làm dở.
+  - Giao diện tự chỉ cách làm: bấm chọn 1 thẻ hoặc 1 ô thì mọi chỗ còn trống để đặt vào sáng viền xanh nét đứt.
+    Áp dụng cho phân loại, kéo điền, nối trên ảnh và nối 2 cột.
+  - Nối 2 cột: ô phải đã nối có màu "đã nối" (trước đây trông như bị khoá), đường nối dày và rõ cả ở nền tối.
+    Trên điện thoại, cột mô tả rộng hơn cột đáp án.
+  - Không thêm lệnh Firebase/Apps Script nào. Chỉ thêm 1 file CSS (~33 KB, chưa nén), không thêm ảnh hay font.
 - **Máy chủ trường bằng Docker** (`Dockerfile`, `docker-compose.yml`, `server/`). Hướng dẫn ở [docs/DOCKER.md](docs/DOCKER.md).
   - Một container phát cả dự án qua LAN. MOS chạy ở `/mos/`.
   - Bài nộp được ghi vào hàng đợi trên đĩa rồi gửi Apps Script theo lô.
