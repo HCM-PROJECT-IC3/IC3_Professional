@@ -1,7 +1,7 @@
 /* ============================================================
    js/backend-config.js
    NƠI DUY NHẤT quyết định "tác vụ nào ghi dữ liệu vào đâu" ở các trang
-   học sinh (index.html, mos-practice.html). Đổi chế độ ở đây, KHÔNG sửa
+   học sinh (index.html). Đổi chế độ ở đây, KHÔNG sửa
    rải rác trong quiz-engine.js / firestore-results.js / googleSheet.js.
 
    Vì sao cần: gói Spark của Firebase chỉ cho 20.000 lượt ghi/ngày (ngân
@@ -73,14 +73,6 @@
       // sách → APPS_SCRIPT_URL mặc định trong js/googleSheet.js.
       // Ví dụ: sheetEndpoints: { 'THCS Nguyễn Du': 'https://script.google.com/macros/s/XXX/exec' }
       sheetEndpoints: {},
-    },
-
-    // ── Kết quả MOS Practice (mos-practice.html) ──
-    // Không trang nào đọc lại mos_submissions trên Firestore → mặc định chỉ ghi Google
-    // Sheet (tab NhatKyMOS, giáo viên mở Sheet là xem được), 0 lượt ghi Firebase.
-    mosResults: {
-      firestore: false,
-      sheet: true,
     },
 
     // ── Nhật ký hoạt động của tài khoản quản trị (đăng nhập, xem chi tiết HS, sửa roster...) ──

@@ -22,7 +22,7 @@
 
    Đổi CACHE_VERSION khi muốn xoá sạch bản lưu cũ trên mọi máy.
    ============================================================ */
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const PAGES = `eduquiz-pages-${CACHE_VERSION}`;
 const ASSETS = `eduquiz-assets-${CACHE_VERSION}`;
 const NET_TIMEOUT_MS = 4000;      // trang HTML

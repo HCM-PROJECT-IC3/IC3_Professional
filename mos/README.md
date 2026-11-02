@@ -36,6 +36,20 @@ python mos/tools/build_catalog.py --src "C:/Users/Amin/Downloads/On_Tap_MOS"
 
 Đọc `On_tap_Excel.zip`, `On_Tap_PowerPoint.zip` → sinh `data/index.json`, `data/sets/*.json` và chép tệp đề vào `files/`.
 
+## Tệp đề trên Google Drive
+
+Trang tĩnh (GitHub Pages, Live Server) không có tệp đề Word/PowerPoint, nên tệp đề lấy từ 3 thư mục Drive (chia sẻ "Bất kỳ ai có đường liên kết"):
+Excel `153pxS-HlbCTHOX-zQGn3AfaOigHUGdSh`, PowerPoint `10OAD6IRWNWrEQRZdebXNTf6EIA108JN4`, Word `1_dUNYR3p6wvocMM9inOpU4XnRW6PMQph`.
+
+```
+node mos/tools/build-drive-map.js   # ghép tệp đề với ID trên Drive → data/drive.json (chạy lại khi thêm/thay tệp trên Drive)
+```
+
+- Drive chặn `fetch()` từ trang khác tên miền (403), chỉ cho tải khi bấm link. Vì vậy học sinh bấm **Tải đề về máy** (link Drive) rồi **Chọn tệp vừa tải để chấm**.
+- Đặt `driveApiKey` (khoá Google Drive API) trong `js/config.js` thì trang tự tải, tự lưu và tách được đề Word nằm trong bài giảng `BaiOnN_HoanThien.pptx`.
+- Không có khoá: đề Word phải có tệp `.docx` riêng trong thư mục "Tiết N" trên Drive (cùng tên tệp), rồi chạy lại lệnh trên.
+- Máy chủ trường (`server.js`) vẫn dùng tệp đề của nó, không đi qua Drive.
+
 ## Tiêu chí chấm tự động
 
 Viết tay trong `data/rubrics/excel.json`, `data/rubrics/powerpoint.json` theo mã project và số task. Ví dụ:

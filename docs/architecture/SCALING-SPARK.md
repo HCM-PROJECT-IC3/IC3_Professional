@@ -54,7 +54,6 @@ Giới hạn Apps Script đã xử lý thêm trong đợt này:
 | Nạp Firebase khi cần | `js/services/firebase-loader.js` | — | SDK chỉ tải khi ghi hoặc khi máy có phiên giáo viên |
 | Gửi lại khi lỗi | `js/services/pending-sync-queue.js` | đích ban đầu | — |
 | Chấm điểm, hiện kết quả | `js/quiz-engine.js` | localStorage | 0 |
-| Kết quả MOS | `js/mos-submissions.js` | `mos_submissions` | 1 ghi/bài, SDK nạp lúc lưu |
 
 `quiz-engine.js` không còn tự dựng payload hay gọi Sheet/Firestore (đã bỏ khoảng 90 dòng),
 mà chỉ gọi `EduResultSubmitter.submitQuiz(...)`. Google Sheet và Firestore dùng **chung một mã
@@ -237,6 +236,6 @@ gzip nên thực tế ước chừng 0,4–0,5 MB, chưa tính ảnh câu hỏi 
   không tải SDK Firebase, không lỗi JS; nộp ở `'all'` thì nạp SDK lúc nộp, gửi 2 đích cùng mã
   và xếp hàng khi lỗi; `'off'` không nạp SDK, chỉ gửi Sheet; máy có phiên đăng nhập thì tự nạp
   Firebase Auth (vào thẳng Khu Vui Chơi như cũ — từ 30/10/2026 Khu Vui Chơi chuyển vào Đấu trường,
-  `index.html` không còn nạp Auth cho việc này); `mos-practice.html` không nạp SDK lúc mở.
+  `index.html` không còn nạp Auth cho việc này).
 - **Chưa kiểm** trên Firebase/Apps Script thật: phần `Code.gs` mới (chống trùng bằng cache,
   xoay vòng file) cần chạy thử sau khi deploy.

@@ -63,24 +63,6 @@ EduMapDistance.computeDistanceKm('12 Lê Lợi', 'Trường A').then(function (r
   return EduGitHubPublish.fetchRaw('data/ic3/meta.json');
 }).then(function (text) {
   assertEq('GitHub: đọc file mới nhất', text, '{"x":1}');
-  // Kết quả MOS: mặc định chỉ lên Google Sheet, không cần đăng nhập, không chạm Firebase.
-  EduBackend.mosResults = { firestore: false, sheet: true };
-  require(path.join(__dirname, '..', '..', 'mos-submissions.js'));
-  signedIn = false;
-  reply = { ok: true, data: { written: true } };
-  return saveMosSubmission({ submissionId: 'abc123xyz', studentName: 'A', score: 80, results: [], _retry: true });
-}).then(function (res) {
-  var b = sent[sent.length - 1].body;
-  assertEq('MOS: gửi Sheet không cần đăng nhập', [res.success, b.action, b.idToken, b.payload.submissionId], [true, 'mosSubmit', undefined, 'abc123xyz']);
-  assertEq('MOS: không gửi cờ nội bộ _retry', b.payload._retry, undefined);
-  reply = { ok: false, code: 'invalid-argument', error: 'sai' };
-  return saveMosSubmission({ submissionId: 'abc123xyz', studentName: 'A' });
-}).then(function (res) {
-  assertEq('MOS: dữ liệu sai → permanent (không xếp hàng gửi lại)', [res.success, res.permanent], [false, true]);
-  reply = new TypeError('offline');
-  return saveMosSubmission({ submissionId: 'abc123xyz', studentName: 'A' });
-}).then(function (res) {
-  assertEq('MOS: mất mạng → thất bại tạm (hàng đợi gửi lại)', [res.success, res.permanent], [false, false]);
   console.log(failures ? '\n' + failures + ' test FAIL' : '\nTất cả PASS');
   process.exit(failures ? 1 : 0);
 });

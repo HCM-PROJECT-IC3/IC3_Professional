@@ -1,16 +1,11 @@
 /* ============================================================
    js/services/pending-sync-queue.js
    Hàng đợi GỬI LẠI khi mất mạng — dùng chung cho mọi nơi cần ghi kết quả
-   lên Firestore/Google Sheet (js/firestore-results.js, js/googleSheet.js,
-   js/mos-submissions.js).
+   lên Firestore/Google Sheet (js/firestore-results.js, js/googleSheet.js).
 
-   VẤN ĐỀ THẬT trước đây: cả 3 module trên đều "gửi rồi quên" — nếu thất
+   VẤN ĐỀ THẬT trước đây: các module trên đều "gửi rồi quên" — nếu thất
    bại (mất mạng, timeout, Firestore/Apps Script lỗi tạm thời), chỉ
-   console.warn rồi THÔI, không có gì gửi lại khi mạng có lại. Với
-   js/mos-submissions.js cụ thể, đây là NƠI DUY NHẤT lưu kết quả (không
-   như bài kiểm tra chính còn có eduquiz_records làm lưới an toàn local)
-   — mất mạng đúng lúc nộp MOS Practice làm kết quả biến mất không dấu
-   vết.
+   console.warn rồi THÔI, không có gì gửi lại khi mạng có lại.
 
    CÁCH DÙNG — mỗi module tự gọi khi hàm gửi của mình thất bại:
      if (window.EduPendingSync) window.EduPendingSync.enqueue('firestore_quiz_result', payload);
@@ -44,7 +39,7 @@
   // — 8 lần thử với backoff chỉ kéo dài ~35 phút, trước đây bài nộp bị BỎ trong lúc
   // chờ hạn mức đặt lại. Giữ tới khi gửi được (hoặc rules từ chối hẳn), tối đa 30
   // ngày. An toàn vì mỗi bài có mã cố định (createOnce) — gửi lại không tạo trùng.
-  const KEEP_UNTIL_SENT = { firestore_quiz_result: true, mos_submission: true };
+  const KEEP_UNTIL_SENT = { firestore_quiz_result: true };
   // Bài gửi Google Sheet có mã cố định (submissionId — js/services/result-submitter.js)
   // cũng giữ tới khi gửi được: khi js/backend-config.js tắt Firestore, Sheet là nơi
   // lưu DUY NHẤT; apps/Code.gs bỏ qua bản trùng mã nên gửi lại không tạo dòng thừa.
@@ -57,7 +52,6 @@
   const SENDER_FN_NAMES = {
     firestore_quiz_result: 'saveResultToFirestore',
     google_sheet:          'saveToGoogleSheet',
-    mos_submission:        'saveMosSubmission',
   };
 
   function _readQueue() {
@@ -143,6 +137,7 @@
         }
 
         const fnName = SENDER_FN_NAMES[item.type];
+        if (!fnName) continue; // loại đã bỏ (vd mos_submission của trang mos-practice cũ) — xoá khỏi hàng đợi
         const fn = global[fnName];
         if (typeof fn !== 'function') { remaining.push(item); continue; } // module gửi chưa nạp trên trang này — thử lại lượt sau
 

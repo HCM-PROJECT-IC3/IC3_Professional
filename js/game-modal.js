@@ -2,7 +2,7 @@
    GAME MODAL (factory dùng chung)
    Thay thế 10 file js/*-modal.js cũ (battle-quiz, billiards,
    computer-simulator, cyber-detective, memory-game, prism-cascade,
-   pz-defense, shelf, sudoku, word-simulator) — tất cả đều nhúng 1 trang
+   pz-defense, shelf, sudoku) — tất cả đều nhúng 1 trang
    con qua <iframe> dạng modal overlay và chỉ khác nhau ở id DOM +
    hành vi "reset mỗi lần mở" hay "giữ nguyên trạng thái" (persist).
 
@@ -16,7 +16,7 @@
        frameId:    'battleQuizModalFrame'
        // persist: true  → KHÔNG nạp lại iframe nếu đã có src, và KHÔNG
        //   trả về about:blank khi đóng (giữ tiến độ/localStorage của
-       //   iframe). Dùng cho "Kệ sách 3D" (shelf) & MOS Word Simulator.
+       //   iframe). Dùng cho "Kệ sách 3D" (shelf).
        // persist: false (mặc định) → nạp lại iframe mỗi lần mở (ván
        //   chơi luôn bắt đầu mới) và giải phóng iframe khi đóng.
      });

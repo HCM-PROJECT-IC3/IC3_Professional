@@ -101,7 +101,7 @@
   // Hạn mức Spark đặt lại lúc 0h giờ Thái Bình Dương ≈ 14h-15h chiều giờ Việt Nam.
   const QUOTA_HINT = 'Firebase chưa phản hồi (hết lượt miễn phí hôm nay — đặt lại khoảng 14-15h chiều giờ VN — hoặc mất mạng)';
 
-  // ── Ghi bài nộp ĐÚNG 1 LẦN (dùng cho quiz_results / mos_submissions) ──
+  // ── Ghi bài nộp ĐÚNG 1 LẦN (dùng cho quiz_results) ──
   // Mã document do máy học sinh tạo SẴN lúc nộp (lưu kèm payload trong hàng đợi
   // gửi lại) → gửi lại bao nhiêu lần cũng chỉ ra 1 document: lần đầu là "create";
   // các lần sau thành "update" và bị firestore.rules từ chối (chỉ cho create) —

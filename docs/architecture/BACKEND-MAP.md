@@ -28,7 +28,6 @@ máy có phiên giáo viên).
 | Cộng đồng giáo viên (`gvlab_*`) | Firebase | Giáo viên | Giáo viên |
 | **Bài nộp IC3/Spark** | **Sheet `NhatKyNopBai`** (cột P `ChiTiet` = đủ trường như `quiz_results`); Firestore `quiz_results` chỉ khi đổi `quizResults.firestore` (mặc định `'off'` từ 15/10/2026) | Học sinh → `submitExam` | Dashboard → `listResults` (tự đọc Firestore nếu Apps Script cũ chưa có API) |
 | **Câu sai từng bài** (uid, ≤ 30/bài) | **Chỉ Sheet** — cột O `CauSai` của `NhatKyNopBai` | Học sinh → `submitExam` (trường `wrong`) | Dashboard giáo viên → `wrongStats` (tổng hợp trên server) |
-| **Kết quả MOS Practice** | **Sheet `NhatKyMOS`** | Học sinh → `mosSubmit` | Giáo viên mở Sheet |
 | **Nhật ký hoạt động (audit)** | **Sheet `NhatKyHoatDong`** | Trang quản trị → `logActivity`; Apps Script tự ghi khi đẩy GitHub / xoá bài | Admin mở Sheet |
 | **Kết quả Phòng cả lớp (Đấu trường)** | Máy giáo viên (localStorage, 20 phòng + CSV); tuỳ chọn **Sheet `NhatKyDauTruong`** | Giáo viên đăng nhập → `arenaRoomLog` (1 lượt/phòng, mỗi học sinh 1 dòng) | Giáo viên mở Sheet / tải CSV |
 | Khoảng cách nhà → trường (tính) | Apps Script `mapDistance` (Maps của Google) → lưu Firebase `teaching_travel_distances` | Điều phối GV | teaching-schedule |
@@ -48,7 +47,6 @@ theo lô (`submitBatch`, cần Script Properties `RELAY_TOKEN`). Tệp đề MOS
 | `quizResults.firestore` | `'all'` | `'test-only'` / `'off'` để giảm lượt ghi Firebase mùa thi — xem SCALING-SPARK.md §3 |
 | `dashboard.readFrom` | `'auto'` | `'auto'` = đọc Sheet khi Firestore không nhận đủ bài |
 | `quizResults.sheetEndpoints` | `{}` | Chia Apps Script theo trường khi rất nhiều bài/ngày |
-| `mosResults` | Sheet | Bật `firestore: true` nếu muốn giữ thêm bản Firestore |
 | `activityLog` | `'sheet'` | `'off'` để tắt nhật ký |
 
 ## 4. Bảo mật

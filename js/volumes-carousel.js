@@ -43,9 +43,9 @@
         roman: "II",
         discipline: "Soạn thảo văn bản",
         note: "Định dạng, bố cục và hoàn thiện một văn bản.",
-        practiceUrl: "word-simulator.html",
-        practiceLabel: "Luyện tập Ribbon",
-        deck: "Ôn Word: định dạng chữ và đoạn, chia bố cục tài liệu dài, chèn bảng và hình rồi in ấn. Có phòng luyện Ribbon giống phần mềm thật.",
+        practiceUrl: "mos/index.html#/s/word",
+        practiceLabel: "Ôn luyện MOS",
+        deck: "Ôn Word: định dạng chữ và đoạn, chia bố cục tài liệu dài, chèn bảng và hình rồi in ấn. Có đề làm trên Word thật, chấm ngay.",
         binding: "IC3 GS6 · Key Applications (Word)",
         format: "Định dạng · Bố cục · Xuất bản",
         theme: "MOS · Word",
@@ -77,8 +77,8 @@
         roman: "III",
         discipline: "Bảng tính",
         note: "Nhập dữ liệu, viết công thức và đọc kết quả.",
-        practiceUrl: "excel-simulator.html",
-        practiceLabel: "Luyện tập Ribbon",
+        practiceUrl: "mos/index.html#/s/excel",
+        practiceLabel: "Ôn luyện MOS",
         deck: "Ôn Excel: sắp dữ liệu thành bảng, viết công thức và hàm cho đúng, lọc, sắp xếp và vẽ biểu đồ để trả lời câu hỏi.",
         binding: "IC3 GS6 · Key Applications (Excel)",
         format: "Nhập liệu · Công thức · Phân tích",
@@ -111,8 +111,8 @@
         roman: "IV",
         discipline: "Trình chiếu",
         note: "Biến ý tưởng thành slide người xem dễ theo dõi.",
-        practiceUrl: "powerpoint-simulator.html",
-        practiceLabel: "Luyện tập Ribbon",
+        practiceUrl: "mos/index.html#/s/powerpoint",
+        practiceLabel: "Ôn luyện MOS",
         deck: "Ôn PowerPoint: dựng dàn ý thành slide, chọn bố cục dễ đọc, thêm hiệu ứng vừa phải và trình bày tự tin trước lớp.",
         binding: "IC3 GS6 · Key Applications (PowerPoint)",
         format: "Dàn ý · Thiết kế · Trình bày",
@@ -2871,7 +2871,7 @@
       detailMotif.textContent = book.motif;
 
       // Cuốn nào có practiceUrl (Volume II Word, III Excel, IV PowerPoint)
-      // thì hiện nút CTA "Luyện tập" mở simulator tương ứng ở tab mới;
+      // thì hiện nút "Ôn luyện MOS" mở đúng môn trên trang mos/ ở tab mới;
       // cuốn khác vẫn thuần trưng bày như trước (không có nút).
       if (practiceButton) {
         if (book.practiceUrl) {
@@ -4450,7 +4450,7 @@
             // #shelfModalFrame — tránh mất luôn cảnh 3D khi học sinh/GV
             // bấm xong quay lại. Đường dẫn tương đối được resolve theo
             // vị trí của chính quiz-shelf.html (cùng thư mục gốc dự án
-            // với word-simulator.html) nên vẫn đúng dù trang này đang
+            // với mos/) nên vẫn đúng dù trang này đang
             // được nhúng trong iframe của dashboard.
             window.open(book.practiceUrl, "_blank", "noopener");
           }

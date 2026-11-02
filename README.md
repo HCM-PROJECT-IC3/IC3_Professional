@@ -28,8 +28,8 @@ dashboard theo dõi tiến độ cho điều phối đào tạo/giáo viên.
   đúng/sai, nối cột, kéo-thả, bấm vào hình...), chế độ "Ôn luyện" hoặc
   "Kiểm tra" (tính giờ, chống gian lận cơ bản: phát hiện chuyển tab,
   nhiều tab, thoát toàn màn hình...).
-- **Mô phỏng thực hành** Word/Excel/PowerPoint (ribbon giả lập) để học
-  sinh luyện thao tác trước khi thi thật.
+- **Ôn luyện MOS** (`mos/`): tải đề Word/Excel/PowerPoint, làm trên Office
+  thật rồi chấm ngay trên trình duyệt.
 - **Mini-game ôn tập** trong Đấu trường (`arena.html?vai=minigame`, không khoá):
   hành trình 5 chặng theo thứ tự học IC3 — Trí Nhớ Thiết Bị → Máy Tính Ảo →
   Thám Tử Mạng → Phòng Thủ Dữ Liệu → Đấu Boss. Mỗi trò leo 5 hạng đối thủ (Đồng →
@@ -111,7 +111,7 @@ dashboard theo dõi tiến độ cho điều phối đào tạo/giáo viên.
 ```
 index.html                 Trang chính — học sinh chọn bài & làm Quiz
 *-dashboard.html            Dashboard điều phối/giáo viên/admin
-*-simulator.html            Mô phỏng thực hành Word/Excel/PowerPoint
+mos/                        Ôn luyện MOS (xem mos/README.md)
 battle-quiz.html, ...       Các mini-game (chơi trong Đấu trường qua iframe ?arena=1)
 js/                         Toàn bộ logic — 1 file/tính năng (không bundler)
   ├─ quiz-engine.js          Lõi: chọn bài, chấm điểm, chống gian lận

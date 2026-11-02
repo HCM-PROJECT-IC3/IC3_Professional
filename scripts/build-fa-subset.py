@@ -5,7 +5,7 @@ scripts/build-fa-subset.py — bộ icon Font Awesome 6.5.2 RÚT GỌN, tự lư
 Trước đây 32 trang nạp all.min.css + fa-solid-900.woff2 từ cdnjs (~200 KB lần đầu, phụ thuộc CDN —
 mạng trường chặn cdnjs là mất hết icon). Script này:
   1. tải bản gốc Font Awesome Free 6.5.2 từ cdnjs (chỉ lúc build);
-  2. quét mọi icon dự án dùng: "fa-<tên>" trong *.html / *.js / *.css + bảng EMOJI_FA (js/ribbon-sim-core.js,
+  2. quét mọi icon dự án dùng: "fa-<tên>" trong *.html / *.js / *.css + bảng EMOJI_FA (nếu có,
      ghép tên động 'fa-' + tên);
   3. giữ trong CSS: mọi quy tắc chung (fa-solid, fa-spin, fa-2x, fa-fw...) + đúng các icon đó;
   4. cắt 3 font (solid / regular / brands) chỉ còn các ký tự đó → woff2.

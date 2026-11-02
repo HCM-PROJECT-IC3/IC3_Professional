@@ -87,6 +87,63 @@
     return jszip;
   }
 
+  // Tệp đề lấy từ Google Drive (data/drive.json, sinh bằng tools/build-drive-map.js) nên trang tĩnh
+  // (GitHub Pages, Live Server) không cần có tệp đề. Máy chủ phòng máy vẫn dùng tệp của nó cho nhanh.
+  // Drive chặn fetch() khác tên miền (403), nên:
+  //   • có CFG.driveApiKey → đọc tệp qua Drive API (cho phép CORS), đề Word tách từ bài giảng .pptx;
+  //   • không có khoá → học sinh bấm link tải từ Drive (link thường thì Drive cho tải), rồi chọn tệp vừa tải.
+  let DRIVE = {};
+  const driveReady = getJson('data/drive.json').then(d => { DRIVE = d.files || {}; }).catch(() => {});
+  const driveUrl = id => `https://drive.usercontent.google.com/download?id=${id}&export=download&confirm=t`;
+  const driveApi = id => `https://www.googleapis.com/drive/v3/files/${id}?alt=media&key=${encodeURIComponent(CFG.driveApiKey)}`;
+  /** Tệp lấy từ Drive (null = dùng tệp trên máy chủ). Gọi sau driveReady và Srv.ready (route() đợi sẵn). */
+  const driveOf = f => (Srv.ok ? null : DRIVE[f.path] || null);
+  /** Không có khoá API: tệp chỉ tải được bằng link — trả về link đó (đề Word nằm trong bài giảng thì không có link). */
+  const driveLink = f => { const d = driveOf(f); return d && !CFG.driveApiKey ? (d.embed ? '' : driveUrl(d.id)) : null; };
+  async function fetchOk(url) {
+    const r = await fetch(url);
+    if (!r.ok) {
+      throw Object.assign(new Error(r.status === 404
+        ? 'Chưa có tệp đề này trên Drive lẫn máy chủ — em báo thầy cô.'
+        : `Không tải được tệp đề (${r.status}).`), { code: 'nofile' });
+    }
+    return r;
+  }
+  const decks = {};
+  async function fileBlob(f) {
+    const d = driveOf(f);
+    if (!d || !CFG.driveApiKey) return (await fetchOk(f.path)).blob();
+    if (!d.embed) return (await fetchOk(driveApi(d.id))).blob();
+    await loadJsZip();
+    decks[d.id] = decks[d.id] || fetchOk(driveApi(d.id)).then(r => r.arrayBuffer()).then(b => window.JSZip.loadAsync(b))
+      .catch(e => { delete decks[d.id]; throw e; });
+    const entry = (await decks[d.id]).file(d.embed);
+    if (!entry) throw Object.assign(new Error('Bài giảng trên Drive không còn tệp đề này — em báo thầy cô.'), { code: 'nofile' });
+    return entry.async('blob');
+  }
+  // Nút tải tệp (tệp kèm, tệp đề khi trình duyệt không tự đọc được tệp): lấy qua fileBlob rồi lưu với đúng tên.
+  const dlFiles = {};
+  const dlLink = (f, cls, inner) => {
+    const link = driveLink(f);
+    if (link) return `<a class="${cls}" href="${esc(link)}" rel="noopener">${inner}</a>`;
+    dlFiles[f.path] = f;
+    return `<a class="${cls}" href="${esc(f.path)}" data-dl="${esc(f.path)}" download="${esc(f.name)}">${inner}</a>`;
+  };
+  document.addEventListener('click', async e => {
+    const a = e.target.closest && e.target.closest('a[data-dl]');
+    if (!a || !dlFiles[a.dataset.dl]) return;
+    e.preventDefault();
+    const f = dlFiles[a.dataset.dl];
+    a.classList.add('busy');
+    try {
+      const url = URL.createObjectURL(await fileBlob(f));
+      const tmp = Object.assign(document.createElement('a'), { href: url, download: f.name });
+      document.body.appendChild(tmp); tmp.click(); tmp.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (err) { alert(err.message); }
+    a.classList.remove('busy');
+  });
+
   /** Chấm 1 tệp; với Excel tải kèm tệp đề gốc (vài chục KB) cho các tiêu chí so trước/sau. */
   const baseCache = {};
   async function gradeFile(file, project, rubric, only) {
@@ -94,18 +151,20 @@
     const buffer = await file.arrayBuffer();
     if (/\.(xlsx|docx)$/i.test(project.main) && !(project.id in baseCache)) {
       const main = project.files.find(f => f.name === project.main);
-      try { baseCache[project.id] = await (await fetch(main.path)).arrayBuffer(); } catch (e) { baseCache[project.id] = null; }
+      try { baseCache[project.id] = await (await fileBlob(main)).arrayBuffer(); } catch (e) { baseCache[project.id] = null; }
     }
     return window.MosGrader.grade(buffer, project, rubric || {}, { baseBuffer: baseCache[project.id] || null, only });
   }
 
-  // Tệp PowerPoint nặng không đưa lên git — chỉ có khi chạy bằng máy chủ phòng máy (Docker).
+  // Tệp đề có trên Drive thì coi là có; không thì hỏi máy chủ (tệp PowerPoint/Word không nằm trên git).
   const availability = {};
-  function checkAvailable(path) {
-    if (!(path in availability)) {
-      availability[path] = fetch(path, { method: 'HEAD' }).then(r => r.ok).catch(() => false);
+  function checkAvailable(f) {
+    if (!(f.path in availability)) {
+      const d = driveOf(f);
+      availability[f.path] = d && (CFG.driveApiKey || !d.embed) ? Promise.resolve(true)
+        : fetch(f.path, { method: 'HEAD' }).then(r => r.ok).catch(() => false);
     }
-    return availability[path];
+    return availability[f.path];
   }
 
   // ---------------------------------------------------------------- học sinh / lịch sử / gửi kết quả
@@ -476,7 +535,7 @@
           ws.openOffice();
           return;
         }
-        ws.handle = await W.saveStarter(key, main.path, main.name, o.subj.ext);
+        ws.handle = await W.saveStarter(key, () => fileBlob(main), main.name, o.subj.ext);
         ws.fileName = ws.handle.name; ws.perm = 'granted'; ws.savedAt = Date.now();
         watchNow();
       },
@@ -573,7 +632,7 @@
   function extrasBlock(project) {
     const extra = project.files.filter(f => f.name !== project.main);
     return extra.length ? `<details class="extras"><summary>Tệp kèm (${extra.length})</summary><div class="files">${extra.map(f =>
-      `<a class="file" href="${esc(f.path)}" download>${icon('file')}<span>${esc(f.name)}</span><small>${fmtSize(f.size)}</small></a>`).join('')}</div></details>` : '';
+      dlLink(f, 'file', `${icon('file')}<span>${esc(f.name)}</span><small>${fmtSize(f.size)}</small>`)).join('')}</div></details>` : '';
   }
 
   function officeHelp(ctx) {
@@ -607,10 +666,21 @@
         ${officeHelp(ctx)}${extrasBlock(ctx.project)}`;
     }
     if (!W.supported) {
-      return `<div class="files"><a class="file main" href="${esc(main.path)}" download>${icon('download')}<span>${esc(main.name)}</span><small>${fmtSize(main.size)}</small></a></div>
+      return `<div class="files">${dlLink(main, 'file main', `${icon('download')}<span>${esc(main.name)}</span><small>${fmtSize(main.size)}</small>`)}</div>
         ${extrasBlock(ctx.project)}${warn}
         <p class="muted small">Trình duyệt này chưa hỗ trợ tự đọc tệp đang làm. Em tải đề, mở bằng ${app}, làm xong thì nộp tệp đã lưu (dùng Chrome hoặc Edge để chấm ngay khi bấm Ctrl+S).</p>
         <label class="drop">${icon('upload')}<span>Nộp tệp đã làm</span><small>Kéo thả hoặc bấm để chọn tệp ${esc(ctx.subj.ext)}</small><input type="file" class="vh" data-act="upload" accept="${esc(ctx.subj.ext)}"></label>`;
+    }
+    const link = !ws.handle && driveLink(main);
+    if (link) {
+      return `<ol class="steps-mini">
+          <li><a class="btn wide-btn" href="${esc(link)}" rel="noopener">${icon('download')}Tải đề về máy</a>
+            <span class="muted small">Tải <strong>${esc(main.name)}</strong> (${fmtSize(main.size)}) từ Google Drive — tệp nằm trong thư mục Tải xuống.</span></li>
+          <li class="muted small">Mở tệp vừa tải bằng ${app} (nếu có thanh vàng, bấm <strong>Enable Editing</strong>), bấm <kbd>Ctrl</kbd>+<kbd>S</kbd>.</li>
+          <li><button type="button" class="btn-sec wide-btn" data-act="pick">${icon('file')}Chọn tệp vừa tải để chấm</button>
+            <span class="muted small">Từ đó mỗi lần em bấm <kbd>Ctrl</kbd>+<kbd>S</kbd>, trang tự chấm lại.</span></li></ol>
+        <div class="row-actions">${upload}</div>
+        ${extrasBlock(ctx.project)}`;
     }
     if (!ws.handle) {
       return `<ol class="steps-mini">
@@ -872,7 +942,7 @@
         $('#wp').innerHTML = workPanel(ctx, ws);
         $('#score').innerHTML = scoreBox(summaryOf(ctx));
         const main = project.files.find(f => f.name === project.main);
-        if (main) checkAvailable(main.path).then(okay => { const w = $('#fileWarn'); if (w && !okay) w.hidden = false; });
+        if (main) checkAvailable(main).then(okay => { const w = $('#fileWarn'); if (w && !okay) w.hidden = false; });
       },
       status: setStatus,
       focusTask(no) { const li = app.querySelector(`.task[data-no="${no}"]`); if (li) li.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); },
@@ -982,7 +1052,7 @@
           <div class="gm-over-info"><p><strong>${esc(p.title)}</strong></p>
             <p class="muted small">${tasks.length} task${hasAuto && !exam ? ` · ${autoNos(ctx).length} tự chấm` : ''}. Làm lần lượt từng task trên ${name}, bấm <kbd>Ctrl</kbd>+<kbd>S</kbd> sau mỗi task.</p></div></div>`;
         const main = p.files.find(f => f.name === p.main);
-        if (main) checkAvailable(main.path).then(okay => { const w = $('#fileWarn'); if (w && !okay) w.hidden = false; });
+        if (main) checkAvailable(main).then(okay => { const w = $('#fileWarn'); if (w && !okay) w.hidden = false; });
       } else {
         $('#dockBody').innerHTML = `<div class="gm-task task${r ? ' is-' + r.status : ''}">
           ${ws.live() || ws.upload ? '' : `<p class="gm-nofile">${icon('warn')}<span>Em chưa mở tệp đề.</span><button type="button" class="link-btn" data-i="-1">Mở ở tab Tổng quan</button></p>`}
@@ -1202,7 +1272,7 @@
         $('#wp').innerHTML = workPanel(ctx, ws) + (ctx.state().at ? `<p class="ok-line">${icon('check')} Đã ghi nhận "${esc(ctx.state().fileName)}" lúc ${fmtTime(ctx.state().at)}.</p>` : '');
         drawTabs();
         const main = p.files.find(f => f.name === p.main);
-        if (main) checkAvailable(main.path).then(okay => { const w = $('#fileWarn'); if (w && !okay) w.hidden = false; });
+        if (main) checkAvailable(main).then(okay => { const w = $('#fileWarn'); if (w && !okay) w.hidden = false; });
       },
       status: setStatus,
     };
@@ -1274,6 +1344,7 @@
 
   async function route() {
     leave();
+    await Promise.all([driveReady, Srv.ready]);
     const parts = (location.hash || '#/').split('/');
     const [, name, arg] = parts;
     try {

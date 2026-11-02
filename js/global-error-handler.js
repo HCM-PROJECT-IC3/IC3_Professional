@@ -6,7 +6,7 @@
    có thể để trang ở trạng thái treo/trắng mà học sinh không biết phải
    làm gì (đặc biệt nghiêm trọng nếu xảy ra GIỮA LÚC làm bài kiểm tra).
 
-   KHÔNG ảnh hưởng tới các mini-game/Ribbon simulator chạy trong
+   KHÔNG ảnh hưởng tới các mini-game chạy trong
    <iframe> (js/game-modal.js) — lỗi bên trong 1 iframe vốn KHÔNG bao
    giờ bubble ra window cha (mỗi iframe có global scope riêng), nên 1
    mini-game hỏng đã sẵn không làm sập được trang chính; file này chỉ
@@ -75,7 +75,7 @@
   // Hiệu ứng chuyển trang (@view-transition trong css/theme.css) bị trình duyệt huỷ giữa chừng
   // (vd trang đích đổi giao diện ngay lúc mở) → Promise của nó bị từ chối mà không ai bắt.
   // Vô hại (trang vẫn chạy bình thường) nhưng trước đây làm hiện màn hình "Trang gặp sự cố"
-  // khi học sinh chuyển giữa index.html ↔ mos-practice.html (thấy bằng Chrome headless, 29/10/2026).
+  // khi học sinh chuyển trang (thấy bằng Chrome headless, 29/10/2026).
   // Chặn chính ở js/page-transition-guard.js (đầu <head>); đây là lớp dự phòng.
   function isViewTransitionAbort(r) {
     return !!r && (r.name === 'InvalidStateError' || r.name === 'AbortError')

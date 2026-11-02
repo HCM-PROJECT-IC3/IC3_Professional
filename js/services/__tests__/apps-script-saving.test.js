@@ -37,18 +37,18 @@ Date.now = function () { return now; };
   // ===== 1) Hàng đợi gửi lại: cầu dao theo loại =====
   load('js/services/pending-sync-queue.js');
   var Q = globalThis.EduPendingSync;
-  var sheetCalls = 0, mosCalls = 0, sheetUp = false;
+  var sheetCalls = 0, fsCalls = 0, sheetUp = false;
   globalThis.saveToGoogleSheet = function () { sheetCalls++; return Promise.resolve({ success: sheetUp }); };
-  globalThis.saveMosSubmission = function () { mosCalls++; return Promise.resolve({ success: true }); };
+  globalThis.saveResultToFirestore = function () { fsCalls++; return Promise.resolve({ success: true }); };
   // Độ hoãn có rải ngẫu nhiên ±50% (30 giây sau 1 lần lỗi → 15..45 giây): cố định ở giữa để
   // "vòng 20 giây kế tiếp" không thỉnh thoảng rơi vào 15..20 giây (test từng FAIL ~1/6 lần).
   var realRandom = Math.random;
   Math.random = function () { return 0.5; };
   for (var i = 0; i < 20; i++) Q.enqueue('google_sheet', { submissionId: 'sub' + i });
-  Q.enqueue('mos_submission', { id: 'm1' });
+  Q.enqueue('firestore_quiz_result', { id: 'f1' });
   now += 60 * 1000;
   await Q.flush();
-  assertEq('Apps Script lỗi: 20 bài treo → chỉ 1 lượt gọi, loại khác vẫn gửi', [sheetCalls, mosCalls, Q._readQueue().length], [1, 1, 20]);
+  assertEq('Apps Script lỗi: 20 bài treo → chỉ 1 lượt gọi, loại khác vẫn gửi', [sheetCalls, fsCalls, Q._readQueue().length], [1, 1, 20]);
   var waits = Q._readQueue().map(function (x) { return x.nextAttemptAt > now; });
   assertEq('bài cùng loại bị hoãn (không thử lại ở vòng 20 giây kế tiếp)', waits.every(Boolean), true);
   assertEq('bài bị hoãn theo cầu dao không bị tính thêm lần thử', Q._readQueue().filter(function (x) { return x.attempts === 0; }).length, 19);

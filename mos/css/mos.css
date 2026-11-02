@@ -429,3 +429,6 @@ body.is-dock { overflow: hidden; }
   .gm-go .btn, .gm-go .btn-sec { min-width: 0; flex: 1; }
   .gm-go .link-btn { width: 100%; }
 }
+
+/* nút tải tệp đang lấy từ Drive */
+a.busy { opacity: 0.6; pointer-events: none; }

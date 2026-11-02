@@ -1309,7 +1309,7 @@ function initLobby() {
       btn.innerHTML = '<i class="fa-solid fa-play fa-beat"></i> Bắt đầu';
     }
 
-    // Hiện/ẩn nút "MOS Word — Ôn luyện Ribbon" / "MOS Practice" ngay trong
+    // Hiện/ẩn nút "Ôn luyện MOS" ngay trong
     // form chọn bài, tuỳ theo Chương trình/Cấp độ đang chọn — xem
     // js/main.js § updateMosInlinePractice(). Đặt ở cuối refreshMeta() vì
     // hàm này CHẮC CHẮN chạy sau mọi thay đổi catSel/lvlSel lẫn lần tải

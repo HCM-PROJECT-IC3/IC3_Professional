@@ -1,6 +1,6 @@
 /* ============================================================
    js/services/firebase-loader.js
-   Nạp Firebase THEO YÊU CẦU cho trang học sinh (index.html, mos-practice.html).
+   Nạp Firebase THEO YÊU CẦU cho trang học sinh (index.html).
 
    Trước đây mọi học sinh mở trang đều tải 4 file Firebase SDK (~300 KB) và
    khởi tạo Firebase dù chỉ làm bài ôn tập, chưa
@@ -94,7 +94,7 @@
   }
 
   /**
-   * Dùng ở các hàm ghi (firestore-results.js, mos-submissions.js): trả EduFirebase
+   * Dùng ở các hàm ghi (firestore-results.js): trả EduFirebase
    * đã sẵn sàng, tự nạp nếu trang chưa có. null nếu không nạp được (mất mạng...)
    * — nơi gọi trả {success:false} để hàng đợi gửi lại lo tiếp.
    */

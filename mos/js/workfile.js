@@ -33,13 +33,14 @@
   const putHandle = (key, h) => idb('readwrite', s => s.put(h, key)).catch(() => {});
   const delHandle = key => idb('readwrite', s => s.delete(key)).catch(() => {});
 
-  /** Lưu tệp đề vào nơi học sinh chọn và nhớ tệp đó. Phải gọi ngay trong sự kiện bấm nút. */
-  async function saveStarter(key, url, name, ext) {
+  /** Lưu tệp đề vào nơi học sinh chọn và nhớ tệp đó. Phải gọi ngay trong sự kiện bấm nút.
+      getBlob: hàm trả về nội dung tệp đề (từ Drive hoặc máy chủ — xem fileBlob trong app.js). */
+  async function saveStarter(key, getBlob, name, ext) {
     const handle = await root.showSaveFilePicker({ suggestedName: name, types: [TYPES[ext]], id: 'mos-work' });
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Không tải được tệp đề (${res.status}).`);
+    const blob = await getBlob();
     const w = await handle.createWritable();
-    await res.body.pipeTo(w);
+    await w.write(blob);
+    await w.close();
     await putHandle(key, handle);
     return handle;
   }
