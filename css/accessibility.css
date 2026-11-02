@@ -40,11 +40,11 @@ p, li, label, td, th {
   line-height: 1.6;
 }
 
-/* Nội dung câu hỏi: ưu tiên độ rõ ràng thay vì chữ quá nhỏ. */
+/* Nội dung câu hỏi: cỡ mặc định. Màn làm bài tự co giãn theo chỗ trống (css/quiz-play.css § CO GIÃN). */
 .q-text {
-  font-size: clamp(1.05rem, 1.7vw, 1.2rem) !important;
-  line-height: 1.65 !important;
-  font-weight: 650 !important;
+  font-size: clamp(1.05rem, 1.7vw, 1.2rem);
+  line-height: 1.65;
+  font-weight: 650;
   overflow-wrap: anywhere;
 }
 
@@ -254,13 +254,13 @@ p, li, label, td, th {
 
 @media (max-width: 768px) {
   html { font-size: 15.5px; }
-  .q-text { font-size: 1.05rem !important; }
+  .q-text { font-size: 1.05rem; }
   .q-image-zoom-btn { width: 40px; height: 40px; min-width: 40px; min-height: 40px; top: 5px; right: 5px; }
 }
 
 @media (max-width: 480px) {
   html { font-size: 15px; }
-  .q-text { font-size: 1rem !important; }
+  .q-text { font-size: 1rem; }
 }
 
 /* Chỉ hiển thị biểu tượng kính lúp, không hiển thị chữ "Phóng to". */

@@ -812,3 +812,166 @@ body:not(.kid-mode) #exam .option-btn.selected .option-marker {
     transform: none;
   }
 }
+
+/* Phân loại 2 cột (gồm câu "mỗi dòng chọn 1 trong 2" đổi sang kéo thả):
+   2 cột luôn cạnh nhau, thẻ gọn để cả câu vừa 1 khung hình. */
+#exam .classify-zones--two { grid-template-columns: 1fr 1fr; gap: .75rem; margin-top: .75rem; }
+#exam .classify-zones--two .classify-zone { min-height: 96px; }
+#exam .classify-zones--two .classify-zone-title { padding: .5rem .75rem; }
+#exam .classify-zones--two .classify-zone-items { padding: .6rem; gap: .45rem; }
+#exam #q-body:has(.classify-zones--two) .drag-pool { padding: .55rem; gap: .45rem; min-height: 52px; }
+#exam #q-body:has(.classify-zones--two) :is(.drag-chip, .classify-zone-chip) { padding: .4rem .7rem; font-size: .95rem; line-height: 1.35; }
+@container qpanel (max-width: 700px) {
+  #exam .classify-zones--two { gap: .5rem; }
+  #exam .classify-zones--two.is-long { grid-template-columns: 1fr; }
+  #exam .classify-zones--two .classify-zone { min-height: 80px; }
+  #exam #q-body:has(.classify-zones--two) :is(.drag-chip, .classify-zone-chip) { font-size: .88rem; padding: .35rem .55rem; }
+  #exam .classify-zones--two .classify-zone-items { padding: .45rem; }
+}
+
+/* Đề dài (đoạn văn tình huống) → chữ nhỏ hơn 1 nấc để câu trả lời còn trong khung */
+#exam .q-text.q-text--long { font-size: clamp(.98rem, 1.6vw, 1.05rem); font-weight: 700; line-height: 1.5; }
+
+/* Chọn từng dòng: nút giữ nguyên chữ (không bẻ "Bar Cha rt."), thiếu chỗ thì xuống hàng */
+#exam .list-opt-btn { flex: 1 1 auto; min-width: min(100%, max-content); white-space: normal; overflow-wrap: normal; word-break: normal; }
+@container qpanel (max-width: 700px) {
+  #exam .list-q-row { flex-direction: column; align-items: stretch; gap: .5rem; }
+  #exam .list-q-text { flex: 0 0 auto; }
+  #exam .list-q-opts { width: 100%; }
+}
+
+/* Nối 2 cột: bề rộng theo độ dài chữ (biến --m2-left do JS đặt) */
+#exam .match2col-wrap .match2col-left  { flex: var(--m2-left, 1) 1 0; min-width: 0; }
+#exam .match2col-wrap .match2col-right { flex: var(--m2-right, 1) 1 0; min-width: 0; }
+@container qpanel (max-width: 700px) {
+  #exam .match2col-wrap { gap: .9rem; }
+  #exam .match2col-item { padding: .5rem .6rem; font-size: .92rem; line-height: 1.35; }
+}
+
+/* Nối 2 cột — kéo dây: ô nguồn nổi lên, ô bên kia sáng viền chờ thả */
+#exam .match2col-item { touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+#exam .match2col-wrap.m2-dragging { cursor: grabbing; }
+#exam .match2col-item.m2-drag-src { background: var(--pick); border-color: var(--ink); }
+#exam .m2-from-left .match2col-right .match2col-item:not(.full),
+#exam .m2-from-right .match2col-left .match2col-item {
+  outline: 3px dashed var(--pick-ink);
+  outline-offset: 2px;
+}
+#exam .match2col-item.m2-drop-over { background: var(--pick); outline-style: solid; }
+#exam .match2col-line--drag { stroke-dasharray: 6 5; pointer-events: none; }
+#exam .match2col-wrap.m2-dragging .match2col-svg { z-index: 3; pointer-events: none; }
+
+/* ══ GỌN: chữ nhỏ 1 nấc, đệm hẹp lại để thấy trọn câu trong 1 khung ══
+   Giữ mức dễ đọc: chữ ≥ 14px, nút điều hướng ≥ 44px, nút chọn ≥ 36px.
+   Cỡ chữ không áp khi bật "Chữ to" (body.kid-mode); đệm thì áp cho cả hai. */
+html body #exam .q-panel { padding-top: .45rem; }
+html body #exam .q-card { padding: .8rem 1.05rem; margin-bottom: .6rem; border-radius: 16px; }
+html body #exam .q-header { margin-bottom: .6rem; gap: .65rem; }
+html body:not(.kid-mode) #exam .q-badge { width: 32px; height: 32px; font-size: .92rem; border-radius: 10px; }
+html body:not(.kid-mode) #exam .q-text { font-size: 1.06rem; line-height: 1.45; }
+html body:not(.kid-mode) #exam .q-text.q-text--long { font-size: .98rem; line-height: 1.45; }
+
+html body #exam .options-list { gap: .45rem; }
+html body #exam .option-btn { padding: .55rem .85rem; gap: .65rem; min-height: 46px; }
+html body:not(.kid-mode) #exam .option-btn { font-size: .97rem; line-height: 1.4; }
+html body:not(.kid-mode) #exam .option-marker { width: 28px; height: 28px; font-size: .9rem; }
+
+html body #exam :is(.tf-list, .list-q-rows) { gap: .4rem; }
+html body #exam :is(.tf-row, .list-q-row) { padding: .4rem .7rem; }
+html body:not(.kid-mode) #exam :is(.tf-row-text, .list-q-text) { font-size: .97rem; line-height: 1.4; }
+html body #exam :is(.tf-btn, .list-opt-btn) { min-height: 36px; padding: .3rem .85rem; }
+html body:not(.kid-mode) #exam :is(.tf-btn, .list-opt-btn) { font-size: .9rem; }
+
+html body #exam .match2col-col { gap: .4rem; }
+html body #exam .match2col-item { padding: .45rem .7rem; min-height: 42px; }
+html body:not(.kid-mode) #exam .match2col-item { font-size: .95rem; line-height: 1.35; }
+html body #exam .ordering-row { min-height: 42px; }
+html body #exam .drag-pool { padding: .5rem; gap: .45rem; }
+html body #exam .drag-chip { padding: .35rem .75rem; }
+html body #exam .classify-zones { gap: .7rem; margin-top: .7rem; }
+html body #exam .classify-zone-title { padding: .45rem .8rem; }
+html body #exam .classify-zone-items { padding: .55rem; gap: .4rem; }
+
+html body #exam .q-nav { padding-top: .45rem; padding-bottom: .5rem; }
+html body #exam .q-nav > * { min-height: 44px; }
+html body #exam .btn-nav { padding-top: .5rem; padding-bottom: .5rem; }
+html body #exam .q-grid { gap: .4rem; }
+html body #exam .q-btn { min-height: 38px; }
+
+@container qpanel (max-width: 700px) {
+  html body #exam .q-card { padding: .7rem .8rem; }
+  html body:not(.kid-mode) #exam .q-text { font-size: 1rem; }
+  html body:not(.kid-mode) #exam .q-text.q-text--long { font-size: .95rem; }
+  html body #exam :is(.tf-row, .list-q-row) { padding: .45rem .6rem; }
+  html body:not(.kid-mode) #exam :is(.tf-row-text, .list-q-text, .option-btn, .match2col-item) { font-size: .92rem; }
+}
+
+/* ══ CO GIÃN THEO CHỖ TRỐNG (js/quiz-engine.js § _fitQuestion) ══
+   Câu ngắn → thử fit-3 (to nhất) rồi hạ dần tới khi vừa khung.
+   fit-1col: đáp án 2 cột chuyển 1 cột khi đủ chỗ (đọc dọc dễ hơn). */
+html body #exam .q-card.fit-1col .options-list.options-list--2col { display: flex; flex-direction: column; grid-template-columns: none; }
+
+html body #exam .q-card.fit-1 { padding: 1rem 1.3rem; }
+html body #exam .q-card.fit-1 .q-header { margin-bottom: .85rem; }
+html body:not(.kid-mode) #exam .q-card.fit-1 .q-text { font-size: 1.2rem; line-height: 1.5; }
+html body:not(.kid-mode) #exam .q-card.fit-1 .q-badge { width: 36px; height: 36px; font-size: 1rem; }
+html body #exam .q-card.fit-1 .options-list { gap: .6rem; }
+html body #exam .q-card.fit-1 .option-btn { min-height: 56px; padding: .75rem 1rem; font-size: 1.06rem; }
+html body #exam .q-card.fit-1 :is(.tf-list, .list-q-rows) { gap: .55rem; }
+html body #exam .q-card.fit-1 :is(.tf-row, .list-q-row) { padding: .6rem .9rem; }
+html body #exam .q-card.fit-1 :is(.tf-row-text, .list-q-text) { font-size: 1.05rem; }
+html body #exam .q-card.fit-1 :is(.tf-btn, .list-opt-btn) { min-height: 42px; font-size: .98rem; padding: .4rem 1rem; }
+html body #exam .q-card.fit-1 .match2col-col { gap: .55rem; }
+html body #exam .q-card.fit-1 .match2col-item { min-height: 50px; padding: .6rem .85rem; font-size: 1.04rem; }
+html body #exam .q-card.fit-1 :is(.drag-chip, .classify-zone-chip) { font-size: 1.02rem; padding: .45rem .85rem; }
+html body #exam .q-card.fit-1 .classify-zone { min-height: 120px; }
+html body #exam .q-card.fit-1 .ordering-row { min-height: 50px; font-size: 1.04rem; }
+
+html body #exam .q-card.fit-2 { padding: 1.2rem 1.5rem; }
+html body #exam .q-card.fit-2 .q-header { margin-bottom: 1.1rem; }
+html body:not(.kid-mode) #exam .q-card.fit-2 .q-text { font-size: 1.36rem; line-height: 1.5; }
+html body:not(.kid-mode) #exam .q-card.fit-2 .q-badge { width: 40px; height: 40px; font-size: 1.08rem; }
+html body #exam .q-card.fit-2 .options-list { gap: .75rem; }
+html body #exam .q-card.fit-2 .option-btn { min-height: 66px; padding: .95rem 1.2rem; font-size: 1.16rem; }
+html body #exam .q-card.fit-2 .option-marker { width: 34px; height: 34px; font-size: 1rem; }
+html body #exam .q-card.fit-2 :is(.tf-list, .list-q-rows) { gap: .7rem; }
+html body #exam .q-card.fit-2 :is(.tf-row, .list-q-row) { padding: .8rem 1.05rem; }
+html body #exam .q-card.fit-2 :is(.tf-row-text, .list-q-text) { font-size: 1.14rem; }
+html body #exam .q-card.fit-2 :is(.tf-btn, .list-opt-btn) { min-height: 48px; font-size: 1.05rem; padding: .5rem 1.2rem; }
+html body #exam .q-card.fit-2 .match2col-col { gap: .7rem; }
+html body #exam .q-card.fit-2 .match2col-item { min-height: 58px; padding: .75rem 1rem; font-size: 1.12rem; }
+html body #exam .q-card.fit-2 :is(.drag-chip, .classify-zone-chip) { font-size: 1.1rem; padding: .55rem 1rem; }
+html body #exam .q-card.fit-2 .classify-zone { min-height: 150px; }
+html body #exam .q-card.fit-2 .ordering-row { min-height: 58px; font-size: 1.12rem; }
+
+html body #exam .q-card.fit-3 { padding: 1.4rem 1.7rem; }
+html body #exam .q-card.fit-3 .q-header { margin-bottom: 1.35rem; }
+html body:not(.kid-mode) #exam .q-card.fit-3 .q-text { font-size: 1.52rem; line-height: 1.5; }
+html body:not(.kid-mode) #exam .q-card.fit-3 .q-badge { width: 44px; height: 44px; font-size: 1.15rem; }
+html body #exam .q-card.fit-3 .options-list { gap: .9rem; }
+html body #exam .q-card.fit-3 .option-btn { min-height: 76px; padding: 1.1rem 1.35rem; font-size: 1.26rem; }
+html body #exam .q-card.fit-3 .option-marker { width: 38px; height: 38px; font-size: 1.08rem; }
+html body #exam .q-card.fit-3 :is(.tf-list, .list-q-rows) { gap: .85rem; }
+html body #exam .q-card.fit-3 :is(.tf-row, .list-q-row) { padding: 1rem 1.2rem; }
+html body #exam .q-card.fit-3 :is(.tf-row-text, .list-q-text) { font-size: 1.24rem; }
+html body #exam .q-card.fit-3 :is(.tf-btn, .list-opt-btn) { min-height: 54px; font-size: 1.12rem; padding: .6rem 1.35rem; }
+html body #exam .q-card.fit-3 .match2col-col { gap: .85rem; }
+html body #exam .q-card.fit-3 .match2col-item { min-height: 66px; padding: .9rem 1.15rem; font-size: 1.2rem; }
+html body #exam .q-card.fit-3 :is(.drag-chip, .classify-zone-chip) { font-size: 1.18rem; padding: .65rem 1.15rem; }
+html body #exam .q-card.fit-3 .classify-zone { min-height: 180px; }
+html body #exam .q-card.fit-3 .ordering-row { min-height: 66px; font-size: 1.2rem; }
+
+/* fit-s: nhỉnh hơn cỡ gọn 1 chút — cho câu chỉ dư ít chỗ */
+html body #exam .q-card.fit-s { padding: .9rem 1.15rem; }
+html body #exam .q-card.fit-s .q-header { margin-bottom: .7rem; }
+html body:not(.kid-mode) #exam .q-card.fit-s .q-text { font-size: 1.13rem; line-height: 1.48; }
+html body #exam .q-card.fit-s .options-list { gap: .52rem; }
+html body #exam .q-card.fit-s .option-btn { min-height: 51px; padding: .65rem .92rem; font-size: 1.01rem; }
+html body #exam .q-card.fit-s :is(.tf-list, .list-q-rows) { gap: .48rem; }
+html body #exam .q-card.fit-s :is(.tf-row, .list-q-row) { padding: .5rem .8rem; }
+html body #exam .q-card.fit-s :is(.tf-row-text, .list-q-text) { font-size: 1.01rem; }
+html body #exam .q-card.fit-s :is(.tf-btn, .list-opt-btn) { min-height: 39px; font-size: .94rem; }
+html body #exam .q-card.fit-s .match2col-col { gap: .48rem; }
+html body #exam .q-card.fit-s .match2col-item { min-height: 46px; padding: .52rem .78rem; font-size: .99rem; }
+html body #exam .q-card.fit-s :is(.drag-chip, .classify-zone-chip) { font-size: .98rem; }
+html body #exam .q-card.fit-s .ordering-row { min-height: 46px; font-size: .99rem; }

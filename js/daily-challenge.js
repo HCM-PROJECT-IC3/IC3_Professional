@@ -208,7 +208,6 @@
         </div>
         <p class="dc-who">${st.key === 'khach' ? '<i class="fa-solid fa-user" aria-hidden="true"></i> Chưa chọn tên ở sảnh nên kết quả sẽ lưu cho "Khách".' : `<i class="fa-solid fa-user" aria-hidden="true"></i> ${esc(st.name)}`}</p>
         <button type="button" class="dc-btn dc-btn-go" id="dcGo">Bắt đầu</button>
-        <p class="dc-hint dc-keys">Phím tắt: A/B/C/D hoặc 1–4 để chọn, Enter để qua câu.</p>
       </div>`);
     $('dcGo').addEventListener('click', () => start(true));
     $('dcGo').focus();
@@ -366,7 +365,7 @@
           <button type="button" class="dc-btn dc-btn-go" id="dcCopy"><i class="fa-solid fa-copy" aria-hidden="true"></i> Chép kết quả</button>
           <button type="button" class="dc-btn dc-btn-ghost" id="dcAgain"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Làm lại</button>
         </div>
-        <p class="dc-hint" id="dcCopyMsg" aria-live="polite">Đề mới mở lúc 0 giờ mỗi ngày.</p>
+        <p class="dc-hint" id="dcCopyMsg" aria-live="polite"></p>
       </div>`);
     $('dcCopy').addEventListener('click', () => copy(shareText(r)));
     $('dcAgain').addEventListener('click', () => start(false));
@@ -425,7 +424,7 @@
     btn.classList.toggle('is-done', !!done);
     btn.querySelector('.dc-open-sub').textContent = done
       ? `Hôm nay: ${done.correct}/${done.total} câu, ${done.score.toLocaleString('vi-VN')} điểm`
-      : `Số ${challengeNo()} · 5 câu, cả lớp cùng đề`;
+      : '5 câu';
     const fire = btn.querySelector('.dc-open-streak');
     fire.hidden = streak < 1;
     fire.innerHTML = `<i class="fa-solid fa-fire" aria-hidden="true"></i> ${streak}`;

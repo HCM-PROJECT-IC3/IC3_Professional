@@ -47,5 +47,274 @@
   "1": { "type": "w.revisions", "accepted": ["Hey, Teachers!", "Workshop"], "pending": ["Friday"] },
   "2": { "type": "w.listSpacing", "line": 240 },
   "3": { "type": "w.listLevel", "level": 2 }
+ },
+ "word-t1-p1": {
+  "2": {"type": "w.xml", "part": "header", "has": [{"el": "v:textpath", "attrs": {"string": "~SAMPLE"}}], "fail": "Chưa thêm hình mờ SAMPLE.", "ok": "Đã thêm hình mờ SAMPLE."},
+  "3": {"all": [{"type": "w.textGone", "text": "Australia"}, {"type": "w.textHas", "text": "Canada"}]},
+  "4": {"type": "w.xml", "para": {"startsWith": "Confidential Information"}, "has": [{"el": "w:rFonts", "attrs": {"w:ascii": "Arial"}}], "fail": "Đoạn văn chưa dùng font Arial.", "ok": "Đã áp dụng font Arial."},
+  "5": {"type": "w.xml", "para": {"startsWith": "Confidential Information"}, "has": [{"el": "w:ind", "attrs": {"w:left": 1440}, "tol": 10}], "fail": "Đoạn văn chưa thụt lề trái 1\".", "ok": "Đã thụt lề trái 1\"."},
+  "6": {"type": "w.xml", "para": {"withEl": {"el": "w:highlight", "attrs": {"w:val": "yellow"}}, "all": true}, "has": [{"el": "w:tab", "attrs": {"w:val": "left", "w:pos": 1440}, "tol": 10}], "fail": "Các đoạn tô vàng chưa có tab trái ở 1\".", "ok": "Đã đặt tab trái 1\"."},
+  "8": {"type": "w.xml", "has": [{"el": "w:type", "attrs": {"w:val": "continuous"}, "fail": "Chưa tạo section Continuous."}, {"el": "w:pgMar", "attrs": {"w:left": 1080, "w:right": 1080}, "fail": "Chưa áp dụng lề Moderate.", "tol": 10}], "ok": "Đã tạo section lề Moderate."},
+  "9": {"type": "w.xml", "para": {"last": true}, "has": [{"el": "w:keepLines"}], "fail": "Đoạn cuối chưa bật Keep lines together.", "ok": "Đã bật Keep lines together."}
+ },
+ "word-t1-p2": {
+  "1": {"any": [{"type": "w.xml", "part": "styles", "has": [{"el": "w:style", "attrs": {"w:styleId": "Normal"}}, {"el": "w:spacing", "attrs": {"w:line": "480"}}]}, {"type": "w.xml", "para": {"all": true, "text": ""}, "has": [{"el": "w:spacing", "attrs": {"w:line": "480"}}], "fail": "Tài liệu chưa giãn dòng Double."}]},
+  "2": {"type": "w.xml", "has": [{"el": "w:hyperlink", "text": "Fusion Tomo Incorporated"}], "fail": "Chưa chèn siêu liên kết cho Fusion Tomo Incorporated.", "ok": "Đã chèn siêu liên kết."},
+  "3": {"type": "w.xml", "part": "custom", "has": [{"el": "property", "attrs": {"name": "_MarkAsFinal"}}], "fail": "Tài liệu chưa đánh dấu Final.", "missing": "Tài liệu chưa đánh dấu Final.", "ok": "Đã đánh dấu Final."},
+  "5": {"type": "w.xml", "para": {"after": "1.2 Mission"}, "has": [{"el": "w:rStyle", "attrs": {"w:val": "Emphasis"}}], "fail": "Đoạn dưới 1.2 Mission chưa áp dụng kiểu Emphasis.", "ok": "Đã áp dụng kiểu Emphasis."}
+ },
+ "word-t1-p3": {
+  "1": {"type": "w.tableBetween", "after": "A great person once said", "before": "An orange", "rows": 4, "cols": 3, "scope": "Kiểm tra vị trí và kích thước bảng; kiểu bảng em tự kiểm."},
+  "2": {"type": "w.xml", "has": [{"el": "a14:artisticLineDrawing"}], "fail": "Chưa chèn ảnh có hiệu ứng Line Drawing.", "ok": "Đã chèn ảnh có hiệu ứng Line Drawing."},
+  "3": {"type": "w.xml", "has": [{"el": "w:txbxContent", "text": "An apple a day keeps the doctor"}], "fail": "Chưa có hộp văn bản với nội dung yêu cầu.", "ok": "Đã thêm hộp văn bản.", "scope": "Kiểu Motion Quote em tự kiểm."},
+  "4": {"type": "w.tableSize", "text": "Chile", "cols": 2, "scope": "Kiểm tra đã chuyển thành bảng 2 cột; AutoFit em tự kiểm."},
+  "5": {"type": "w.xml", "part": "settings", "has": [{"el": "w:hideGrammaticalErrors"}], "fail": "Chưa tắt Mark grammar errors as you type.", "ok": "Đã tắt đánh dấu lỗi ngữ pháp."},
+  "6": {"type": "w.xml", "part": "endnotes", "has": [{"el": "w:endnote", "text": "Me, 2010"}], "fail": "Chưa có endnote \"Me, 2010\".", "missing": "Chưa có endnote \"Me, 2010\".", "ok": "Đã thêm endnote."}
+ },
+ "word-t1-p4": {
+  "1": {"type": "w.tableSorted", "text": "Tons of Apples", "col": 1, "numeric": true, "desc": true}
+ },
+ "word-t1-p6": {
+  "1": {"type": "w.xml", "has": [{"el": "a:lum", "attrs": {"bright": "40000", "contrast": "-40000"}}], "fail": "Ảnh chưa đặt Brightness +40%, Contrast -40%.", "ok": "Độ sáng và tương phản đúng."}
+ },
+ "word-t1-p7": {
+  "1": {"all": [{"type": "w.textGone", "text": "Service Business Analysis"}, {"type": "w.textGone", "text": "Business Participants"}]}
+ },
+ "word-t1-p8": {
+  "1": {"all": [{"type": "w.xml", "has": [{"el": "w:background", "attrs": {"w:themeColor": "accent2"}}], "fail": "Màu nền trang chưa là Ice Blue, Accent 2.", "part": "document"}, {"type": "w.xml", "has": [{"el": "w:pgBorders"}], "fail": "Chưa thêm đường viền trang Box."}], "note": "Màu nền và viền trang đúng."}
+ },
+ "word-t1-p9": {
+  "1": {"type": "w.xml", "has": [{"el": "v:rect", "attrs": {"o:hr": "t"}}], "fail": "Chưa chèn đường kẻ ngang.", "ok": "Đã chèn đường kẻ ngang.", "scope": "Kiểm tra có đường kẻ ngang; độ rộng 100% em tự kiểm."}
+ },
+ "word-t2-p1": {
+  "1": {"type": "w.xml", "part": "numbering", "has": [{"el": "w:lvlText", "attrs": {"w:val": "~[ü✓✔]"}}], "fail": "Danh sách chưa đổi sang dấu check.", "ok": "Đã đổi dấu đầu dòng thành dấu check."},
+  "2": {"type": "w.xml", "has": [{"el": "w:lnNumType"}], "none": [{"el": "w:lnNumType", "attrs": {"w:restart": "~newPage|newSection"}}], "fail": "Chưa hiện số dòng liên tục (Continuous).", "ok": "Đã hiện số dòng liên tục."},
+  "3": {"all": [{"type": "w.footerField", "field": "PAGE"}, {"any": [{"type": "w.xml", "part": "footer", "has": [{"el": "w:jc", "attrs": {"w:val": "~right|end"}}]}, {"type": "w.xml", "part": "footer", "has": [{"el": "w:framePr", "attrs": {"w:xAlign": "right"}}], "fail": "Số trang chưa căn phải (Plain Number 3)."}]}]},
+  "4": {"type": "w.drawingKind", "kind": "smartart", "isNew": true, "label": "SmartArt", "scope": "Kiểm tra đã chèn SmartArt; kiểu Basic Process và Subtle Effect em tự kiểm."},
+  "5": {"any": [{"type": "w.xml", "para": {"startsWith": "Market Analysis Summary"}, "has": [{"el": "w:pageBreakBefore"}]}, {"type": "w.xml", "has": [{"el": "w:br", "attrs": {"w:type": "page"}}], "fail": "Chưa chèn ngắt trang trước Market Analysis Summary."}]},
+  "6": {"all": [{"type": "w.field", "instr": "SEQ", "label": "chú thích (caption)"}, {"type": "w.textHas", "text": "Finances"}]},
+  "7": {"type": "w.field", "instr": "TOC", "label": "mục lục"}
+ },
+ "word-t2-p2": {
+  "1": {"type": "w.xml", "para": {"startsWith": "Confidential Information"}, "has": [{"el": "w:numPr"}], "fail": "Đoạn Confidential Information chưa được đánh số.", "ok": "Đã đánh số các đoạn."},
+  "2": {"type": "w.columns", "num": 2, "sep": true},
+  "3": {"type": "w.xml", "part": "comments", "has": [{"el": "w:comment", "text": "Two years?"}], "fail": "Chưa có bình luận \"Two years?\".", "missing": "Chưa có bình luận \"Two years?\".", "ok": "Đã thêm bình luận."},
+  "4": {"all": [{"type": "w.xml", "part": "settings", "has": [{"el": "w:view", "attrs": {"w:val": "outline"}}], "fail": "Chưa chuyển sang Outline view."}, {"type": "w.textGone", "text": "Business Developments"}]},
+  "5": {"type": "w.xml", "part": "header", "has": [{"el": "v:textpath", "attrs": {"string": "~CONFIDENTIAL"}}], "fail": "Chưa thêm hình mờ CONFIDENTIAL.", "missing": "Chưa thêm hình mờ CONFIDENTIAL.", "ok": "Đã thêm hình mờ CONFIDENTIAL."},
+  "6": {"all": [{"type": "w.coreProp", "prop": "title", "value": "Fusion Tomo Inc."}, {"type": "w.xml", "part": "header", "has": [{"el": "w:t", "text": "Fusion Tomo Inc."}], "missing": "Chưa chèn Header.", "fail": "Header chưa hiện tiêu đề Fusion Tomo Inc."}], "scope": "Kiểu header Austin em tự kiểm."}
+ },
+ "word-t2-p3": {
+  "1": {"type": "w.xml", "has": [{"el": "w:pgMar", "attrs": {"w:footer": 576}, "tol": 15}], "fail": "Khoảng cách chân trang chưa là 0.4\".", "ok": "Khoảng cách chân trang 0.4\"."},
+  "2": {"type": "w.field", "instr": "TOC .{1,3}o \"1-3", "label": "mục lục 3 cấp", "scope": "Kiểm tra mục lục 3 cấp; định dạng Formal em tự kiểm."},
+  "3": {"type": "w.xml", "part": "document", "has": [{"el": "w:background"}, {"el": "v:fill", "attrs": {"type": "tile"}}], "fail": "Chưa áp dụng nền Parchment.", "ok": "Đã áp dụng nền Parchment."},
+  "4": {"type": "w.xml", "para": {"withEl": {"el": "w:numPr"}, "pick": "last"}, "has": [{"el": "w:ilvl", "attrs": {"w:val": "1"}}], "fail": "Mục cuối của danh sách chưa giảm một cấp.", "ok": "Đã giảm cấp mục cuối."}
+ },
+ "word-t2-p4": {
+  "2": {"type": "w.xml", "para": {"bookmark": "quote"}, "has": [{"el": "w:ind", "attrs": {"w:right": 1440}, "tol": 10}], "fail": "Đoạn tại bookmark quote chưa thụt phải 1\".", "ok": "Đã thụt lề phải 1\"."},
+  "3": {"type": "w.xml", "para": {"startsWith": "Quotations that are longer"}, "has": [{"el": "w:spacing", "attrs": {"w:before": "240"}}], "fail": "Đoạn 3 chưa đặt Spacing Before 12 pt.", "ok": "Spacing Before 12 pt."},
+  "4": {"type": "w.xml", "para": {"startsWith": "Quotations that are longer"}, "has": [{"el": "w:ind", "attrs": {"w:hanging": 1440}, "tol": 10}], "fail": "Đoạn 3 chưa thụt treo (Hanging) 1\".", "ok": "Đã thụt treo 1\"."},
+  "5": {"type": "w.xml", "para": {"startsWith": "Start long quotat"}, "has": [{"el": "w:spacing", "attrs": {"w:after": "240"}}], "fail": "Đoạn 4 chưa đặt Spacing After 12 pt.", "ok": "Spacing After 12 pt."},
+  "6": {"type": "w.xml", "part": "comments", "has": [{"el": "w:comment", "text": "Remove"}], "fail": "Chưa có bình luận \"Remove\".", "missing": "Chưa có bình luận \"Remove\".", "ok": "Đã thêm bình luận."},
+  "7": {"all": [{"type": "w.textGone", "text": "quotatins"}, {"type": "w.textGone", "text": "qotatin"}]}
+ },
+ "word-t3-p1": {
+  "1": {"type": "w.xml", "has": [{"el": "w:dataBinding", "attrs": {"w:xpath": "~title"}}], "fail": "Tiêu đề chưa thay bằng Document Property Title.", "ok": "Đã chèn Document Property Title."},
+  "2": {"all": [{"type": "w.field", "instr": "BIBLIOGRAPHY", "label": "danh mục tài liệu (Bibliography)"}, {"type": "w.textHas", "text": "Works Cited"}]}
+ },
+ "word-t3-p2": {
+  "1": {"type": "w.xml", "has": [{"el": "w:pgMar", "attrs": {"w:top": 1440, "w:bottom": 1440, "w:left": 1440, "w:right": 1440}, "tol": 5}], "fail": "Lề chưa là Normal (1\" mỗi bên).", "ok": "Lề Normal."},
+  "2": {"type": "w.columns", "num": 2}
+ },
+ "word-t3-p3": {
+  "1": {"type": "w.xml", "has": [{"el": "w:pgSz", "attrs": {"w:orient": "landscape"}}], "fail": "Hướng trang chưa là Landscape.", "ok": "Hướng trang Landscape."},
+  "2": {"type": "w.xml", "has": [{"el": "w:pgBorders", "fail": "Chưa thêm viền trang."}, {"el": "w:top", "attrs": {"w:val": "single", "w:sz": "8"}, "fail": "Viền trang chưa là nét liền 1 pt."}], "ok": "Viền trang đúng.", "scope": "Màu cam em tự kiểm."},
+  "3": {"type": "w.xml", "part": "settings", "has": [{"el": "w:view", "attrs": {"w:val": "normal"}}], "fail": "Chưa chuyển sang chế độ xem Draft.", "ok": "Chế độ xem Draft."},
+  "5": {"type": "w.xml", "has": [{"el": "a:srgbClr", "attrs": {"w:val": null, "val": "FF0000"}}], "fail": "Viền hình chữ nhật chưa màu đỏ.", "ok": "Viền hình chữ nhật màu đỏ."},
+  "7": {"type": "w.xml", "has": [{"el": "w:txbxContent", "text": "Apples"}], "fail": "Tiêu đề Apples chưa chuyển thành WordArt.", "ok": "Đã chuyển thành WordArt.", "scope": "Kiểu WordArt và ngắt dòng em tự kiểm."}
+ },
+ "word-t3-p4": {
+  "1": {"type": "w.xml", "part": "settings", "has": [{"el": "w:autoHyphenation"}], "fail": "Chưa bật gạch nối tự động.", "ok": "Đã bật gạch nối tự động."},
+  "2": {"type": "w.xml", "part": "header", "has": [{"el": "v:textpath", "attrs": {"string": "~DRAFT"}}], "fail": "Chưa chèn hình mờ DRAFT.", "missing": "Chưa chèn hình mờ DRAFT.", "ok": "Đã chèn hình mờ DRAFT."},
+  "3": {"type": "w.xml", "part": "settings", "has": [{"el": "w:view", "attrs": {"w:val": "web"}}], "fail": "Chưa chuyển sang Web Layout.", "ok": "Chế độ xem Web Layout."},
+  "4": {"type": "w.xml", "has": [{"el": "w:hyperlink", "text": "email"}], "fail": "Chưa chèn liên kết email.", "ok": "Đã chèn liên kết email."},
+  "7": {"type": "w.textGone", "text": "#"}
+ },
+ "word-t3-p5": {
+  "3": {"all": [{"type": "w.xml", "part": "document", "has": [{"el": "w:background", "attrs": {"w:themeColor": "~background2|light2"}}], "fail": "Màu nền chưa là Tan, Background 2."}, {"type": "w.xml", "has": [{"el": "w:pgBorders"}, {"el": "w:top", "attrs": {"w:sz": "48"}}], "fail": "Chưa có viền Box dày 6 pt."}], "note": "Màu nền và viền trang đúng."},
+  "4": {"type": "w.xml", "has": [{"el": "w:txbxContent", "text": "Hard work is the key to success"}], "fail": "Câu trích dẫn chưa nằm trong hộp văn bản.", "ok": "Đã đưa trích dẫn vào hộp văn bản."},
+  "5": {"type": "w.noComments"},
+  "6": {"type": "w.xml", "para": {"startsWith": "Hard work"}, "has": [{"el": "w:jc", "attrs": {"w:val": "center"}, "fail": "Trích dẫn chưa căn giữa."}, {"el": "w:ind", "attrs": {"w:left": "~[1-9]", "w:right": "~[1-9]"}, "fail": "Trích dẫn chưa thụt lề trái và phải."}], "ok": "Trích dẫn căn giữa, thụt lề hai bên.", "scope": "Kiểm tra căn giữa và có thụt lề hai bên; số đo cụ thể em tự kiểm."}
+ },
+ "word-t4-p1": {
+  "1": {"type": "w.xml", "para": {"after": "ALLOCATION OF FUNCTIONS"}, "has": [{"el": "w:numPr"}], "fail": "Các đoạn dưới ALLOCATION OF FUNCTIONS chưa có dấu đầu dòng.", "ok": "Đã thêm dấu đầu dòng.", "scope": "Kiểu Checkmark em tự kiểm."},
+  "3": {"type": "w.xml", "part": "comments", "has": [{"el": "w:comment"}], "fail": "Chưa thêm bình luận.", "missing": "Chưa thêm bình luận.", "ok": "Đã thêm bình luận.", "scope": "Nội dung bình luận em tự đối chiếu."},
+  "5": {"type": "w.xml", "has": [{"el": "w:txbxContent", "text": "MERIT RATING"}], "fail": "Đoạn MERIT RATING chưa nằm trong hộp văn bản.", "ok": "Đã đưa đoạn vào hộp văn bản."},
+  "7": {"type": "w.tableSize", "text": "P.A. results"},
+  "8": {"type": "w.xml", "part": "footer", "has": [{"el": "w:t", "text": "All Rights Reserved"}], "fail": "Chân trang chưa có dòng Copyright.", "missing": "Chưa thêm chân trang.", "ok": "Đã thêm chân trang."},
+  "9": {"type": "w.xml", "table": "Company presentation", "has": [{"el": "w:insideH"}, {"el": "w:insideV"}], "fail": "Bảng chưa hiện tất cả đường viền.", "ok": "Bảng đã có đủ đường viền."}
+ },
+ "word-t4-p2": {
+  "1": {"type": "w.xml", "has": [{"el": "w:rStyle", "attrs": {"w:val": "IntenseEmphasis"}}], "fail": "Chưa áp dụng kiểu Intense Emphasis.", "ok": "Đã áp dụng Intense Emphasis.", "scope": "Kiểm tra kiểu Intense Emphasis; chuyển bảng thành văn bản em tự kiểm."},
+  "3": {"type": "w.xml", "has": [{"el": "a:glow"}], "fail": "Ảnh đám mây chưa có hiệu ứng Glow.", "ok": "Đã thêm hiệu ứng Glow."},
+  "4": {"type": "w.xml", "none": [{"el": "w:titlePg", "attrs": {"w:val": null}}, {"el": "w:titlePg", "attrs": {"w:val": "~^(1|true|on)$"}}], "fail": "Vẫn bật Different First Page.", "ok": "Đã bỏ Different First Page."},
+  "5": {"type": "w.xml", "has": [{"el": "w:txbxContent", "text": "The Ocean is a Water World"}], "fail": "Chưa chèn hộp văn bản với nội dung yêu cầu.", "ok": "Đã chèn hộp văn bản.", "scope": "Kiểu Retrospect Quote em tự kiểm."},
+  "6": {"type": "w.xml", "part": "document", "has": [{"el": "w:background"}, {"el": "v:fill", "attrs": {"type": "~gradient"}}], "fail": "Nền trang chưa là Gradient Ocean.", "ok": "Đã đặt nền Gradient.", "scope": "Kiểu From Center em tự kiểm."},
+  "7": {"type": "w.xml", "part": "comments", "has": [{"el": "w:comment", "text": "Remove the second paragraph"}], "fail": "Chưa có bình luận yêu cầu.", "missing": "Chưa có bình luận yêu cầu.", "ok": "Đã thêm bình luận."}
+ },
+ "word-t4-p3": {
+  "1": {"type": "w.xml", "part": "comments", "has": [{"el": "w:comment", "text": "Where is the Style Guide"}], "fail": "Chưa có bình luận yêu cầu.", "missing": "Chưa có bình luận yêu cầu.", "ok": "Đã thêm bình luận."},
+  "2": {"type": "w.field", "instr": "TOC", "label": "mục lục", "scope": "Kiểm tra có mục lục; kiểu Automatic Table 2 và cấp tiêu đề em tự kiểm."},
+  "3": {"type": "w.footerField", "field": "PAGE", "scope": "Kiểu Stacked Pages 2 em tự kiểm."},
+  "4": {"type": "w.xml", "part": "custom", "has": [{"el": "property", "attrs": {"name": "_MarkAsFinal"}}], "fail": "Tài liệu chưa đánh dấu Final.", "missing": "Tài liệu chưa đánh dấu Final.", "ok": "Đã đánh dấu Final."},
+  "6": {"type": "w.coreProp", "prop": "category", "value": "Design"},
+  "7": {"type": "w.xml", "para": {"after": "The Purposes"}, "has": [{"el": "w:numPr"}], "fail": "Đoạn dưới The Purposes chưa có dấu đầu dòng.", "ok": "Đã thêm dấu đầu dòng."},
+  "8": {"type": "w.xml", "part": "header", "has": [{"el": "v:imagedata"}], "none": [{"el": "v:imagedata", "attrs": {"gain": "~."}}], "fail": "Chưa thêm hình mờ ảnh không Washout.", "missing": "Chưa thêm hình mờ ảnh.", "ok": "Đã thêm hình mờ ảnh."}
+ },
+ "word-t4-p4": {
+  "1": {"type": "w.field", "instr": "TOC", "label": "mục lục"},
+  "2": {"type": "w.xml", "has": [{"el": "w:txbxContent", "text": "LEARN FROM YESTERDAY"}], "fail": "Hộp văn bản chưa có nội dung yêu cầu.", "ok": "Đã nhập nội dung vào hộp văn bản."}
+ },
+ "word-t5-p1": {
+  "2": {"type": "w.xml", "part": "settings", "has": [{"el": "w:documentProtection", "attrs": {"w:edit": "trackedChanges", "w:enforcement": "~^(1|true|on)$"}}], "fail": "Chưa giới hạn chỉnh sửa chỉ với Track Changes.", "ok": "Đã bảo vệ tài liệu với Track Changes.", "scope": "Mật khẩu em tự kiểm."},
+  "4": {"type": "w.xml", "para": {"text": "Even the introduction of CSMA/CD did not"}, "has": [{"el": "w:strike", "fail": "Câu chưa gạch ngang."}, {"el": "w:color", "attrs": {"w:val": "FF0000"}, "fail": "Câu chưa tô chữ đỏ."}], "ok": "Đã gạch ngang và tô đỏ câu."},
+  "5": {"type": "w.xml", "part": "styles", "within": {"el": "w:style", "has": {"el": "w:name", "attrs": {"w:val": "~^SubObjective Heading$"}}}, "has": [{"el": "w:spacing", "attrs": {"w:val": "15"}, "fail": "Kiểu chưa giãn ký tự 0.75 pt."}, {"el": "w:jc", "attrs": {"w:val": "center"}, "fail": "Kiểu chưa căn giữa."}], "ok": "Đã sửa kiểu SubObjective Heading.", "noShape": "Không thấy kiểu SubObjective Heading."},
+  "6": {"type": "w.xml", "para": {"text": "Carrier Sense Multiple Access/Collision Detection"}, "has": [{"el": "w:i"}], "fail": "Chưa thay bằng chữ in nghiêng.", "noShape": "Chưa thay CSMA/CD đầu tiên bằng cụm đầy đủ.", "ok": "Đã thay bằng chữ in nghiêng."},
+  "7": {"type": "w.textHas", "text": "local network"},
+  "9": {"type": "w.xml", "has": [{"el": "w:docPartGallery", "attrs": {"w:val": "Cover Pages"}}], "fail": "Chưa thêm trang bìa.", "ok": "Đã thêm trang bìa.", "scope": "Mẫu Austin em tự kiểm."},
+  "12": {"type": "w.xml", "part": "comments", "has": [{"el": "w:comment", "text": "Please review"}], "fail": "Chưa có bình luận \"Please review\".", "missing": "Chưa có bình luận.", "ok": "Đã thêm bình luận."},
+  "13": {"type": "w.field", "instr": "TOC.*SubObjective", "label": "mục lục dùng kiểu SubObjective Heading"}
+ },
+ "word-t5-p2": {
+  "1": {"type": "w.xml", "part": "header", "has": [{"el": "v:textpath", "attrs": {"string": "~Pending Approval", "style": "~Impact"}}], "fail": "Chưa có hình mờ Pending Approval font Impact.", "missing": "Chưa có hình mờ.", "ok": "Đã thêm hình mờ tuỳ chỉnh.", "scope": "Cỡ 80 pt em tự kiểm."},
+  "3": {"type": "w.xml", "table": "Product Categories", "has": [{"el": "w:t", "text": "Total"}, {"el": "w:tr", "min": 6}], "fail": "Bảng chưa có hàng Total.", "noShape": "Không thấy bảng March 2007.", "ok": "Đã thêm hàng Total."}
+ },
+ "word-t6-p1": {
+  "1": {"type": "w.xml", "has": [{"el": "w:txbxContent", "text": "Every message must be repeated"}], "fail": "Chưa chèn hộp văn bản với nội dung yêu cầu.", "ok": "Đã chèn hộp văn bản.", "scope": "Kiểu Simple Quote em tự kiểm."},
+  "2": {"type": "w.xml", "has": [{"el": "w:txbxContent", "text": "Every message"}, {"el": "a:gradFill"}], "fail": "Hộp văn bản chưa có nền chuyển sắc.", "ok": "Đã đặt nền chuyển sắc.", "scope": "Kiểu From Center em tự kiểm."},
+  "5": {"type": "w.field", "instr": "BIBLIOGRAPHY", "label": "danh mục tài liệu tham khảo"},
+  "6": {"type": "w.field", "instr": "CITATION Tyl", "label": "trích dẫn Tyler"}
+ },
+ "word-t6-p2": {
+  "1": {"any": [{"type": "w.xml", "has": [{"el": "a:hlinkClick"}]}, {"type": "w.xml", "has": [{"el": "w:hyperlink", "attrs": {"w:anchor": "~."}}], "fail": "Hình ảnh chưa có siêu liên kết."}]},
+  "2": {"type": "w.xml", "para": {"text": "Dr. Jane Miller"}, "has": [{"el": "w:spacing", "attrs": {"w:after": "360"}}], "fail": "Dòng Dr. Jane Miller chưa đặt Spacing After 18 pt.", "ok": "Spacing After 18 pt.", "scope": "Line spacing At least 12 pt em tự kiểm."},
+  "3": {"type": "w.tableSize", "text": "Green tea leaves", "cols": 4},
+  "4": {"type": "w.xml", "para": {"bookmark": "Symptoms"}, "has": [{"el": "w:numPr"}], "fail": "Đoạn trong bookmark Symptoms chưa thành danh sách dấu đầu dòng.", "noShape": "Không thấy bookmark Symptoms.", "ok": "Đã tạo danh sách dấu đầu dòng."},
+  "5": {"all": [{"type": "w.xml", "para": {"bookmark": "Ingredients"}, "has": [{"el": "w:numPr"}], "fail": "Đoạn trong bookmark Ingredients chưa có dấu đầu dòng.", "noShape": "Không thấy bookmark Ingredients."}, {"type": "w.xml", "part": "numbering", "has": [{"el": "w:numPicBullet"}], "fail": "Dấu đầu dòng chưa dùng hình ảnh."}]},
+  "6": {"type": "w.xml", "has": [{"el": "w:hyperlink", "text": "all your questions"}], "fail": "Chưa chèn liên kết email cho \"all your questions\".", "ok": "Đã chèn liên kết email.", "scope": "Địa chỉ và tiêu đề email em tự kiểm."}
+ },
+ "word-t6-p3": {
+  "2": {"any": [{"type": "w.xml", "para": {"startsWith": "1. The Cyclone"}, "has": [{"el": "w:pageBreakBefore"}]}, {"type": "w.xml", "has": [{"el": "w:br", "attrs": {"w:type": "page"}, "min": 2}], "fail": "Chưa chèn ngắt trang trước hai đề mục."}]},
+  "3": {"any": [{"type": "w.xml", "part": "styles", "within": {"el": "w:style", "attrs": {"w:styleId": "Normal"}}, "has": [{"el": "w:keepLines"}]}, {"type": "w.xml", "para": {"all": true, "text": ""}, "has": [{"el": "w:keepLines"}], "fail": "Các đoạn văn chưa bật Keep lines together."}]},
+  "4": {"all": [{"type": "w.footerField", "field": "PAGE"}, {"type": "w.xml", "has": [{"el": "w:pgNumType", "attrs": {"w:fmt": "upperRoman"}}], "fail": "Số trang chưa dùng số La Mã hoa."}, {"type": "w.xml", "has": [{"el": "w:titlePg"}], "fail": "Trang đầu vẫn hiện số trang (chưa bật Different First Page)."}]},
+  "5": {"type": "w.xml", "has": [{"el": "w:txbxContent", "text": "Wonderful Wizard of Oz"}], "fail": "Tiêu đề chưa chuyển thành WordArt.", "ok": "Đã chuyển tiêu đề thành WordArt.", "scope": "Kiểu Gradient Fill em tự kiểm."},
+  "6": {"type": "w.xml", "has": [{"el": "a:glow", "attrs": {"rad": "228600"}, "fail": "Ảnh chưa có Glow 18 pt."}, {"el": "a:xfrm", "attrs": {"rot": "21000000"}, "fail": "Ảnh chưa xoay 350°."}], "ok": "Hiệu ứng và góc xoay đúng."}
+ },
+ "word-t7-p1": {
+  "1": {"type": "w.coreProp", "prop": "category", "value": "Dinosaur"},
+  "3": {"type": "w.tableSorted", "text": "Geologic Period", "col": 1, "scope": "Kiểm tra thứ tự theo Geologic Period; khoá phụ Dinosaur em tự kiểm."},
+  "4": {"type": "w.xml", "para": {"text": "Developed a narrow eyebrow"}, "has": [{"el": "w:ilvl", "attrs": {"w:val": "2"}}], "fail": "Mục chưa ở cấp độ 3.", "ok": "Mục đã ở cấp độ 3."},
+  "5": {"type": "w.xml", "has": [{"el": "~model3d"}], "fail": "Chưa chèn mô hình 3D.", "ok": "Đã chèn mô hình 3D."},
+  "6": {"type": "w.xml", "has": [{"el": "a14:artisticPencilSketch"}], "fail": "Ảnh chưa có hiệu ứng Pencil Sketch.", "ok": "Đã áp dụng Pencil Sketch."}
+ },
+ "word-t7-p2": {
+  "1": {"all": [{"type": "w.xml", "has": [{"el": "w:titlePg"}], "fail": "Chưa bật Different First Page (trang 1 không có header)."}, {"type": "w.xml", "part": "header", "has": [{"el": "w:p"}], "missing": "Chưa chèn header.", "fail": "Chưa chèn header."}], "scope": "Kiểu Integral em tự kiểm."},
+  "2": {"type": "w.xml", "has": [{"el": "w:sym", "attrs": {"w:font": "Webdings"}}], "fail": "Chưa chèn ký hiệu font Webdings.", "ok": "Đã chèn ký hiệu nhiệt kế."},
+  "3": {"any": [{"type": "w.xml", "part": "styles", "within": {"el": "w:style", "attrs": {"w:styleId": "Normal"}}, "has": [{"el": "w:spacing", "attrs": {"w:line": "312"}}]}, {"type": "w.xml", "para": {"all": true, "text": ""}, "has": [{"el": "w:spacing", "attrs": {"w:line": "312"}}], "fail": "Khoảng cách dòng chưa là 1.3."}]},
+  "6": {"type": "w.drawingKind", "kind": "pic", "wrap": "square", "label": "Ảnh bao chữ Square"}
+ },
+ "word-t7-p3": {
+  "1": {"type": "w.textGone", "text": "national"},
+  "2": {"all": [{"type": "w.textGone", "text": "HSBC"}, {"type": "w.textHas", "text": "TMOB"}]},
+  "4": {"type": "w.field", "instr": "TOC", "label": "mục lục"},
+  "5": {"type": "w.xml", "has": [{"el": "w:txbxContent", "text": "Fast and Safe"}], "fail": "Hộp văn bản chưa có chữ \"Fast and Safe\".", "ok": "Đã chèn chữ vào hộp văn bản."}
+ },
+ "word-t7-p4": {
+  "2": {"type": "w.xml", "table": "Conference Location", "has": [{"el": "w:gridSpan", "attrs": {"w:val": "2"}}], "fail": "Hàng đầu của bảng chưa hợp nhất.", "ok": "Đã hợp nhất hàng đầu."},
+  "3": {"type": "w.xml", "para": {"startsWith": "Applying Psychological Theories"}, "has": [{"el": "w:numPr"}], "fail": "Các đoạn chưa chuyển thành danh sách.", "ok": "Đã chuyển thành danh sách."},
+  "4": {"type": "w.xml", "part": "footnotes", "has": [{"el": "w:footnote", "text": "Includes digital and hard file"}], "fail": "Chưa có chú thích chân trang yêu cầu.", "missing": "Chưa có chú thích chân trang.", "ok": "Đã chèn chú thích chân trang."}
+ },
+ "word-t7-p5": {
+  "1": {"type": "w.xml", "has": [{"el": "w:pgBorders", "fail": "Chưa thêm viền trang."}, {"el": "w:top", "attrs": {"w:sz": "24", "w:themeColor": "accent1"}, "fail": "Viền trang chưa 3 pt màu Blue, Accent 1."}], "ok": "Viền trang đúng."},
+  "2": {"type": "w.xml", "part": "header", "emptyOk": true, "none": [{"el": "w:t"}, {"el": "v:textpath"}], "fail": "Vẫn còn header/watermark.", "ok": "Đã xoá header, footer và watermark."},
+  "3": {"type": "w.xml", "para": {"last": true}, "has": [{"el": "w:spacing", "attrs": {"w:line": "280", "w:lineRule": "exact"}}], "fail": "Đoạn cuối chưa giãn dòng Exactly 14 pt.", "ok": "Giãn dòng Exactly 14 pt."},
+  "4": {"type": "w.xml", "para": {"last": true}, "has": [{"el": "w:rStyle", "attrs": {"w:val": "IntenseEmphasis"}}], "fail": "Đoạn cuối chưa áp dụng Intense Emphasis.", "ok": "Đã áp dụng Intense Emphasis."},
+  "5": {"type": "w.xml", "has": [{"el": "w:cols", "attrs": {"w:num": "2", "w:space": 432}, "tol": 10}], "fail": "Chưa chia 2 cột cách nhau 0.3\".", "ok": "Đã chia 2 cột."}
+ },
+ "word-t8-p1": {
+  "1": {"type": "w.noTablesWith", "text": "Aspen"},
+  "2": {"type": "w.xml", "has": [{"el": "w:hyperlink", "text": "log cabin"}], "fail": "Chưa liên kết chữ \"log cabin\".", "ok": "Đã chèn liên kết."},
+  "3": {"type": "w.xml", "has": [{"el": "w:type", "attrs": {"w:val": "continuous"}, "min": 4}], "fail": "Chưa chèn Continuous Section Break.", "ok": "Đã chèn Continuous Section Break."},
+  "4": {"type": "w.xml", "part": "numbering", "has": [{"el": "w:numPicBullet"}], "fail": "Dấu đầu dòng chưa dùng hình Trees.png.", "ok": "Đã dùng dấu đầu dòng hình ảnh."}
+ },
+ "word-t8-p2": {
+  "1": {"type": "w.xml", "has": [{"el": "w:txbxContent", "text": "Note"}], "fail": "Đoạn Note chưa nằm trong hộp văn bản.", "ok": "Đã đưa đoạn Note vào hộp văn bản."},
+  "2": {"type": "w.xml", "has": [{"el": "w:pgMar", "attrs": {"w:top": 1440, "w:bottom": 1440, "w:left": 2160, "w:right": 2160}, "tol": 5}], "fail": "Lề chưa đúng (trên/dưới 1\", trái/phải 1.5\").", "ok": "Lề đúng."},
+  "4": {"type": "w.xml", "has": [{"el": "w:pgBorders", "fail": "Chưa thêm viền trang."}, {"el": "w:top", "attrs": {"w:val": "single", "w:sz": "12"}, "fail": "Viền trang chưa nét liền 1½ pt."}], "ok": "Viền trang đúng.", "scope": "Màu Light Blue em tự kiểm."},
+  "5": {"type": "w.drawingKind", "kind": "pic", "wrap": "tight", "isNew": true, "label": "Ảnh Apps.jpg bao chữ Tight"}
+ },
+ "word-t8-p3": {
+  "1": {"type": "w.tableSorted", "text": "Flavor of the Month", "col": 0},
+  "2": {"type": "w.xml", "para": {"startsWith": "The Party People"}, "has": [{"el": "w:numPr"}], "fail": "Đoạn văn chưa thành danh sách.", "ok": "Đã chuyển thành danh sách."},
+  "3": {"type": "w.xml", "has": [{"el": "w:txbxContent", "text": "We love the unique"}], "fail": "Trích dẫn chưa nằm trong hộp văn bản.", "ok": "Đã chèn hộp văn bản trích dẫn."},
+  "4": {"type": "w.xml", "has": [{"el": "a14:artisticPaintBrush"}], "fail": "Ảnh chưa có hiệu ứng Paint Brush.", "ok": "Đã áp dụng Paint Brush."},
+  "5": {"type": "w.xml", "has": [{"el": "a:camera", "attrs": {"prst": "isometricOffAxis1Right"}}], "fail": "Ảnh chưa xoay 3-D Off Axis 1: Right.", "ok": "Đã áp dụng 3-D Rotation."}
+ },
+ "word-t8-p4": {
+  "1": {"type": "w.xml", "has": [{"el": "w:bookmarkStart", "attrs": {"w:name": "Resorts"}}], "fail": "Chưa đặt bookmark Resorts.", "ok": "Đã đặt bookmark Resorts."},
+  "2": {"type": "w.field", "instr": "TOC", "label": "mục lục tuỳ chỉnh", "scope": "Định dạng Formal và số cấp em tự kiểm."},
+  "3": {"type": "w.tableSize", "text": "Resort Name", "cols": 5},
+  "5": {"type": "w.xml", "part": "commentsExtended", "has": [{"el": "w15:commentEx", "attrs": {"w15:done": "1"}}], "fail": "Bình luận chưa được đánh dấu Resolve.", "missing": "Bình luận chưa được đánh dấu Resolve.", "ok": "Đã Resolve bình luận."}
+ },
+ "word-t8-p5": {
+  "1": {"type": "w.columns", "num": 2},
+  "2": {"type": "w.xml", "part": "footnotes", "has": [{"el": "w:footnote", "text": "spj.org"}], "fail": "Chưa có chú thích chân trang yêu cầu.", "missing": "Chưa có chú thích chân trang.", "ok": "Đã chèn chú thích chân trang."},
+  "3": {"type": "w.xml", "part": "diagramColors", "has": [{"el": "dgm:colorsDef", "attrs": {"uniqueId": "~colorful5"}}], "fail": "SmartArt chưa dùng màu Colorful Range - Accent Colors 5 to 6.", "ok": "Màu SmartArt đúng."},
+  "4": {"type": "w.xml", "part": "diagramData", "has": [{"el": "a:t", "text": "Accountable and Transparent"}], "fail": "SmartArt chưa có hình \"Accountable and Transparent\".", "ok": "Đã thêm hình vào SmartArt."}
+ },
+ "word-t8-p6": {
+  "2": {"all": [{"type": "w.xml", "part": "header", "emptyOk": true, "none": [{"el": "w:t"}, {"el": "v:textpath"}, {"el": "w:drawing"}], "fail": "Vẫn còn header/watermark."}, {"type": "w.xml", "part": "footer", "emptyOk": true, "none": [{"el": "w:t"}, {"el": "w:instrText"}, {"el": "w:fldSimple"}, {"el": "w:drawing"}], "fail": "Vẫn còn footer."}], "note": "Đã xoá header, footer và watermark."},
+  "3": {"type": "w.xml", "part": "comments", "has": [{"el": "w:comment", "min": 2}, {"el": "w:p", "text": "Green"}], "fail": "Chưa trả lời bình luận bằng \"Green\".", "ok": "Đã trả lời bình luận."},
+  "4": {"type": "w.xml", "para": {"startsWith": "Preventing Fleas and Ticks"}, "has": [{"el": "w:pStyle", "attrs": {"w:val": "Heading2"}}], "fail": "Tiêu đề chưa dùng kiểu Heading 2.", "ok": "Đã áp dụng Heading 2."}
+ },
+ "word-t8-p7": {
+  "1": {"type": "w.coreProp", "prop": "description", "value": "Draft"},
+  "2": {"type": "w.textHas", "text": "Registered®"},
+  "3": {"type": "w.xml", "para": {"startsWith": "Trademark"}, "has": [{"el": "w:smallCaps"}], "fail": "Tiêu đề chưa áp dụng Small Caps.", "ok": "Đã áp dụng Small Caps.", "scope": "Kiểm tra tiêu đề Trademark; hai tiêu đề còn lại em tự kiểm."},
+  "4": {"all": [{"type": "w.setting", "name": "trackRevisions", "on": true, "failNote": "Chưa bật Track Changes."}, {"type": "w.xml", "part": "settings", "has": [{"el": "w:documentProtection", "attrs": {"w:edit": "trackedChanges"}}], "fail": "Chưa khoá Track Changes bằng mật khẩu."}]},
+  "5": {"type": "w.xml", "part": "comments", "has": [{"el": "w:comment", "text": "Should we explain Fair Use Law"}], "fail": "Chưa có bình luận yêu cầu.", "missing": "Chưa có bình luận.", "ok": "Đã thêm bình luận."}
+ },
+ "word-t10-p1": {
+  "1": {"type": "w.coreProp", "prop": "category", "value": "Dinosaur"},
+  "3": {"type": "w.tableSorted", "text": "Geologic Period", "col": 1, "scope": "Kiểm tra thứ tự theo Geologic Period; khoá phụ Dinosaur em tự kiểm."},
+  "4": {"type": "w.xml", "para": {"text": "Developed a narrow eyebrow"}, "has": [{"el": "w:ilvl", "attrs": {"w:val": "2"}}], "fail": "Mục chưa ở cấp độ 3.", "ok": "Mục đã ở cấp độ 3."},
+  "5": {"type": "w.xml", "has": [{"el": "~model3d"}], "fail": "Chưa chèn mô hình 3D.", "ok": "Đã chèn mô hình 3D."},
+  "6": {"type": "w.xml", "has": [{"el": "a14:artisticPencilSketch"}], "fail": "Ảnh chưa có hiệu ứng Pencil Sketch.", "ok": "Đã áp dụng Pencil Sketch."}
+ },
+ "word-t10-p2": {
+  "1": {"all": [{"type": "w.xml", "has": [{"el": "w:titlePg"}], "fail": "Chưa bật Different First Page (trang 1 không có header)."}, {"type": "w.xml", "part": "header", "has": [{"el": "w:p"}], "missing": "Chưa chèn header.", "fail": "Chưa chèn header."}], "scope": "Kiểu Integral em tự kiểm."},
+  "2": {"type": "w.xml", "has": [{"el": "w:sym", "attrs": {"w:font": "Webdings"}}], "fail": "Chưa chèn ký hiệu font Webdings.", "ok": "Đã chèn ký hiệu nhiệt kế."},
+  "3": {"any": [{"type": "w.xml", "part": "styles", "within": {"el": "w:style", "attrs": {"w:styleId": "Normal"}}, "has": [{"el": "w:spacing", "attrs": {"w:line": "312"}}]}, {"type": "w.xml", "para": {"all": true, "text": ""}, "has": [{"el": "w:spacing", "attrs": {"w:line": "312"}}], "fail": "Khoảng cách dòng chưa là 1.3."}]},
+  "6": {"type": "w.xml", "para": {"after": "Serving"}, "has": [{"el": "wp:wrapSquare"}], "fail": "Ảnh trong phần Serving chưa bao chữ Square.", "ok": "Ảnh bao chữ Square."}
+ },
+ "word-t10-p3": {
+  "1": {"type": "w.textGone", "text": "national"},
+  "2": {"all": [{"type": "w.textGone", "text": "HSBC"}, {"type": "w.textHas", "text": "MHB"}]},
+  "4": {"type": "w.field", "instr": "TOC", "label": "mục lục"},
+  "5": {"type": "w.xml", "has": [{"el": "w:txbxContent", "text": "EASY AND FAST!"}], "fail": "Hộp văn bản chưa có chữ \"EASY AND FAST!\".", "ok": "Đã chèn chữ vào hộp văn bản."}
+ },
+ "word-t10-p4": {
+  "5": {"type": "w.xml", "has": [{"el": "w:pgSz", "attrs": {"w:orient": "landscape"}}], "fail": "Hướng trang chưa là Landscape.", "ok": "Hướng trang Landscape."}
+ },
+ "word-t10-p5": {
+  "2": {"type": "w.xml", "table": "Conference Location", "has": [{"el": "w:gridSpan", "attrs": {"w:val": "2"}}], "fail": "Hàng đầu của bảng chưa hợp nhất.", "ok": "Đã hợp nhất hàng đầu."},
+  "3": {"type": "w.xml", "para": {"startsWith": "Applying Psychological Theories"}, "has": [{"el": "w:numPr"}], "fail": "Các đoạn chưa chuyển thành danh sách.", "ok": "Đã chuyển thành danh sách.", "scope": "Kiểm tra đã thành danh sách; căn lề bullet em tự kiểm."},
+  "4": {"type": "w.xml", "part": "footnotes", "has": [{"el": "w:footnote", "text": "Includes digital and hard file"}], "fail": "Chưa có chú thích chân trang yêu cầu.", "missing": "Chưa có chú thích chân trang.", "ok": "Đã chèn chú thích chân trang."}
+ },
+ "word-t10-p6": {
+  "1": {"type": "w.xml", "has": [{"el": "w:pgBorders", "fail": "Chưa thêm viền trang."}, {"el": "w:top", "attrs": {"w:sz": "24", "w:themeColor": "accent1"}, "fail": "Viền trang chưa 3 pt màu Blue, Accent 1."}], "ok": "Viền trang đúng."},
+  "2": {"type": "w.xml", "part": "header", "emptyOk": true, "none": [{"el": "w:t"}, {"el": "v:textpath"}], "fail": "Vẫn còn header/watermark.", "ok": "Đã xoá header, footer và watermark."},
+  "3": {"type": "w.xml", "para": {"last": true}, "has": [{"el": "w:spacing", "attrs": {"w:line": "280", "w:lineRule": "exact"}}], "fail": "Đoạn cuối chưa giãn dòng Exactly 14 pt.", "ok": "Giãn dòng Exactly 14 pt."},
+  "4": {"type": "w.xml", "has": [{"el": "w:rStyle", "attrs": {"w:val": "IntenseEmphasis"}}], "fail": "Chưa áp dụng Intense Emphasis.", "ok": "Đã áp dụng Intense Emphasis.", "scope": "Đoạn được áp dụng em tự kiểm."},
+  "5": {"type": "w.xml", "has": [{"el": "w:cols", "attrs": {"w:num": "2", "w:space": 432}, "tol": 10}], "fail": "Chưa chia 2 cột cách nhau 0.3\".", "ok": "Đã chia 2 cột."}
  }
 }

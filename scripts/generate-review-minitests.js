@@ -137,6 +137,10 @@ function main() {
         if (m) { topics[n] = mts[n]; topicByNum[+m[1]] = mts[n].filter((q) => AK[q.uid]); }
         else if (!GENERATED_RE.test(n)) bai[n] = mts[n];
       });
+      // Số chủ đề của từng câu → trường "tp" trong bộ ôn/kiểm tra (màn kết quả thống kê theo chủ đề).
+      const tpOf = new Map();
+      Object.keys(topicByNum).forEach((t) => topicByNum[t].forEach((q) => tpOf.set(q.uid, +t)));
+      const tag = (qs) => qs.map((q) => (tpOf.has(q.uid) ? { ...q, tp: tpOf.get(q.uid) } : q));
       const byLabel = new Map(); // "Đề#số" → câu (Luyện thi)
       Object.values(topics).forEach((list) => list.forEach((q) => (AK[q.uid] || []).forEach((l) => byLabel.set(l, q))));
 
@@ -160,7 +164,7 @@ function main() {
         }
         const name = setName(p);
         if (!qs.length) { console.warn(`⚠ ${key} › ${name}: không có câu All Key nào — bỏ qua bộ này.`); return; }
-        review[name] = qs;
+        review[name] = tag(qs);
       });
 
       // ── 8 tiết Ôn tập cuối khóa (chỉ câu All Key) ──
@@ -175,7 +179,7 @@ function main() {
       Object.keys(topicByNum).sort((a, b) => a - b).forEach((t) => {
         shuffleWithRng(topicByNum[t], rngFull).forEach((q) => buckets[r++ % 4].push(q));
       });
-      buckets.forEach((b, i) => { final[`${FINAL_PREFIX} — Tiết ${i + 1}: phủ đủ câu All Key (phần ${i + 1}/4)`] = shuffleWithRng(b, rngFull); });
+      buckets.forEach((b, i) => { final[`${FINAL_PREFIX} — Tiết ${i + 1}: phủ đủ câu All Key (phần ${i + 1}/4)`] = tag(shuffleWithRng(b, rngFull)); });
       const uses = new Map();
       for (let i = 0; i < 4; i++) {
         const rng = mulberry32(seedFromString(`${key}__final${5 + i}`));
@@ -186,7 +190,7 @@ function main() {
         });
         const qs = evenPickOrdered(pool, Math.min(T, Object.values(pool).reduce((s, l) => s + l.length, 0)), rng);
         qs.forEach((q) => uses.set(q.uid, (uses.get(q.uid) || 0) + 1));
-        final[`${FINAL_PREFIX} — Tiết ${5 + i}: đề tổng hợp ${qs.length} câu`] = qs;
+        final[`${FINAL_PREFIX} — Tiết ${5 + i}: đề tổng hợp ${qs.length} câu`] = tag(qs);
       }
 
       // Ghi lại theo thứ tự Chủ đề → Ôn tập/Kiểm tra/Luyện thi theo tiết → Ôn tập cuối khóa → Bài N

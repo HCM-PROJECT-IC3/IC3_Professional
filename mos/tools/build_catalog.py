@@ -97,7 +97,39 @@ def build_excel(path, copy):
                              'main': main, 'files': files, 'tasks': tasks})
         projects.sort(key=lambda p: p['no'])
         sets[n] = {'id': 'excel-t%d' % n, 'no': n, 'title': 'Bộ đề Tiết %d' % n, 'projects': projects}
+    for st in build_excel_lessons(names, z, copy):
+        sets[st['no']] = st
     return [sets[k] for k in sorted(sets)]
+
+
+def allow_doc_props(path):
+    """Tắt "Remove personal information from file properties on save" để task sửa thuộc tính tài liệu lưu được."""
+    with zipfile.ZipFile(path) as src:
+        items = [(i, src.read(i)) for i in src.infolist()]
+    with zipfile.ZipFile(path, 'w', zipfile.ZIP_DEFLATED) as out:
+        for info, data in items:
+            if info.filename == 'xl/workbook.xml':
+                data = re.sub(rb' filterPrivacy="(1|true)"', b'', data)
+            out.writestr(info, data)
+
+
+def build_excel_lessons(names, z, copy):
+    """Tiết 1-2: 1 tệp bài ôn dùng chung, đề viết tay trong tools/excel-lessons.json (mỗi project là 1 nhóm bài)."""
+    spec = json.load(open(os.path.join(ROOT, 'tools', 'excel-lessons.json'), encoding='utf-8'))
+    find = lambda tail: next(info for name, info in names if name.endswith(tail))
+    out = []
+    for st in spec['sets']:
+        n = st['no']
+        main = copy_file(z, find(st['file']), os.path.join('excel', 't%d' % n, posixpath.basename(st['file'])), copy)
+        if copy and st.get('keepProps'):
+            allow_doc_props(os.path.join(ROOT, main['path']))
+        projects = []
+        for p in st['projects']:
+            extra = [copy_file(z, find(f), os.path.join('excel', 't%d' % n, posixpath.basename(f)), copy) for f in p.get('files', [])]
+            projects.append({'id': 'excel-t%d-p%d' % (n, p['no']), 'no': p['no'], 'title': p['title'],
+                             'main': main['name'], 'files': [main] + extra, 'tasks': p['tasks']})
+        out.append({'id': 'excel-t%d' % n, 'no': n, 'title': 'Bộ đề Tiết %d' % n, 'projects': projects})
+    return out
 
 
 # ---------------------------------------------------------------- PowerPoint

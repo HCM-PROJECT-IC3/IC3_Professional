@@ -6,6 +6,105 @@
    "ext": ".xlsx",
    "sets": [
     {
+     "id": "excel-t1",
+     "no": 1,
+     "title": "Bộ đề Tiết 1",
+     "projects": [
+      {
+       "id": "excel-t1-p1",
+       "title": "Project 1 · Tab File",
+       "tasks": 3
+      },
+      {
+       "id": "excel-t1-p2",
+       "title": "Project 2 · Tab Home (định dạng ô)",
+       "tasks": 8
+      },
+      {
+       "id": "excel-t1-p3",
+       "title": "Project 3 · Tab Home (sắp xếp, tìm kiếm)",
+       "tasks": 6
+      },
+      {
+       "id": "excel-t1-p4",
+       "title": "Project 4 · Tab Insert",
+       "tasks": 3
+      },
+      {
+       "id": "excel-t1-p5",
+       "title": "Project 5 · Page Layout, Formulas, Data, View",
+       "tasks": 5
+      },
+      {
+       "id": "excel-t1-p6",
+       "title": "Project 6 · Hàm cơ bản",
+       "tasks": 5
+      },
+      {
+       "id": "excel-t1-p7",
+       "title": "Project 7 · Thẻ lệnh ngữ cảnh (biểu đồ, bảng)",
+       "tasks": 8
+      }
+     ]
+    },
+    {
+     "id": "excel-t2",
+     "no": 2,
+     "title": "Bộ đề Tiết 2",
+     "projects": [
+      {
+       "id": "excel-t2-p1",
+       "title": "Project 1 · Phép tính cơ bản",
+       "tasks": 7
+      },
+      {
+       "id": "excel-t2-p2",
+       "title": "Project 2 · Tham chiếu tuyệt đối, tên vùng",
+       "tasks": 2
+      },
+      {
+       "id": "excel-t2-p3",
+       "title": "Project 3 · Hàm INT và MOD",
+       "tasks": 4
+      },
+      {
+       "id": "excel-t2-p4",
+       "title": "Project 4 · SUM, AVERAGE, SUMIF, AVERAGEIF",
+       "tasks": 4
+      },
+      {
+       "id": "excel-t2-p5",
+       "title": "Project 5 · MIN và MAX",
+       "tasks": 2
+      },
+      {
+       "id": "excel-t2-p6",
+       "title": "Project 6 · Hàm đếm",
+       "tasks": 4
+      },
+      {
+       "id": "excel-t2-p7",
+       "title": "Project 7 · Hàm IF",
+       "tasks": 2
+      },
+      {
+       "id": "excel-t2-p8",
+       "title": "Project 8 · UPPER, LOWER, PROPER",
+       "tasks": 3
+      },
+      {
+       "id": "excel-t2-p9",
+       "title": "Project 9 · LEFT, MID, RIGHT, LEN",
+       "tasks": 4
+      },
+      {
+       "id": "excel-t2-p10",
+       "title": "Project 10 · Nối chuỗi",
+       "tasks": 3
+      }
+     ]
+    },
+    {
      "id": "excel-t3",
      "no": 3,
      "title": "Bộ đề Tiết 3",

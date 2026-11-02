@@ -71,7 +71,7 @@
     ov.innerHTML = `
       <div class="mc-box">
         <div class="mc-top">
-          <div class="mc-title" id="mcTitle">🃏 Thẻ ghi nhớ</div>
+          <div class="mc-title" id="mcTitle"><i class="fa-solid fa-clone" aria-hidden="true"></i> Thẻ ghi nhớ</div>
           <div class="mc-progress" id="mcProgress"></div>
           <button type="button" class="mc-close" id="mcClose" aria-label="Đóng thẻ ghi nhớ"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
         </div>

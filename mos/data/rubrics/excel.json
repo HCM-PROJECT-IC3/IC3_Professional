@@ -56,5 +56,442 @@
   "5": { "type": "x.tableProp", "sheet": "Products", "style": "TableStyleMedium1" },
   "6": { "type": "x.rowFormula", "sheet": "Products", "col": "H", "rows": [4, 18],
          "expect": { "op": "mul", "col": "G", "name": "Rate" } }
+ },
+ "excel-t4-p1": {
+  "1": {"type": "x.tableName", "sheet": "Employees", "name": "Employees"},
+  "2": {"type": "x.styleCopied", "from": "Inventory", "to": "Employees", "cells": ["A1", "A2"]},
+  "3": {"type": "x.cellFormula", "sheet": "February Sales Calculations", "cell": "I5", "fn": "SUM", "names": ["USFeb", "CanadaFeb"], "noAddress": true},
+  "4": {"type": "x.chart", "sheet": "Weekly Total Sales", "legend": false, "showVal": true},
+  "5": {"type": "x.cellAgg", "sheet": "Inventory", "cell": "F21", "fn": "COUNTBLANK|COUNTIF|COUNTIFS", "agg": "countblank", "range": "F4:F19"},
+  "6": {"type": "x.tableProp", "sheet": "International Sales", "rowStripes": true}
+ },
+ "excel-t4-p2": {
+  "1": {"type": "x.rowFormula", "sheet": "Employee Hours", "col": "G", "rows": [4, 16], "fn": "SUM", "expect": {"op": "sum", "cols": ["B", "C", "D", "E", "F"]}},
+  "2": {"type": "x.noCF", "sheet": "Average Call Time"},
+  "3": {"type": "x.sorted", "sheet": "Sales", "rows": [5, 14], "keys": [{"col": "A"}, {"col": "F", "desc": true}], "idCol": "A"},
+  "4": {"type": "x.cellAgg", "sheet": "Sales Commissions", "cell": "J4", "fn": "MAX", "agg": "max", "range": "G4:G10"},
+  "5": {"type": "x.newChart", "sheet": "Sales", "chartType": "bar3DChart", "barDir": "col", "grouping": "clustered", "valCol": "F", "rightOfCol": "F"},
+  "6": {"all": [{"type": "x.chartSheet", "name": "MondayChart"}, {"type": "x.chart", "sheet": "MondayChart", "dTable": {"showKeys": true}}]}
+ },
+ "excel-t4-p3": {
+  "1": {"type": "x.tableProp", "sheet": "Customers ", "rowStripes": true},
+  "2": {"type": "x.numDecimals", "sheet": "Attractive Locations ", "range": "C8:E12", "decimals": 2},
+  "3": {"type": "x.cellsEmpty", "name": "TotalRooms"},
+  "4": {"type": "x.rowFormula", "sheet": "Attractive Locations ", "col": "F", "rows": [8, 12], "fn": "AVERAGE", "expect": {"op": "avg", "cols": ["C", "D", "E"]}},
+  "5": {"type": "x.rowFormula", "sheet": "Customers ", "col": "D", "rows": [3, 20], "expect": {"op": "concat", "parts": ["{A}@abc.com"]}},
+  "6": {"all": [{"type": "x.chartSwapped", "sheet": "Rooms", "title": "Spring"}, {"type": "x.chartPos", "sheet": "Rooms", "title": "Spring", "rightOfCol": "F"}]}
+ },
+ "excel-t4-p4": {
+  "1": {"type": "x.chartSwapped", "sheet": "Inventory Chart"},
+  "2": {"type": "x.alignment", "sheet": "Feed List", "range": "C4:C25", "horizontal": "left", "indent": 1},
+  "3": {"type": "x.totals", "sheet": "Kind of Food", "cols": ["Inventory", "Sales"], "fn": "sum"},
+  "4": {"type": "x.chart", "sheet": "Norbert's Niblets", "hasTitle": true, "legendPos": "b", "dLblPos": "outEnd"},
+  "5": {"type": "x.cellAgg", "sheet": "Feed List", "cell": "D27", "fn": "COUNTBLANK|COUNTIF|COUNTIFS", "agg": "countblank", "range": "D4:D25"},
+  "6": {"type": "x.noTable", "sheet": "Norbert's Niblets"}
+ },
+ "excel-t4-p5": {
+  "1": {"type": "x.cellStyle", "sheet": "Employee", "cell": "A2", "name": "Heading 1"},
+  "2": {"type": "x.rowFormula", "sheet": "Crop", "col": "I", "rows": [3, 5], "expect": {"op": "expr", "js": "{H}*{L2}"}},
+  "3": {"type": "x.rowFormula", "sheet": "Market Sales", "col": "F", "rows": [6, 13], "fn": "IF", "expect": {"op": "expr", "js": "IF({E}<15000,'LOW','')"}},
+  "4": {"type": "x.tableProp", "sheet": "Farming", "style": "TableStyleMedium9"},
+  "5": {"type": "x.cellsEqual", "sheet": "Employee", "values": {"A3": "Emp ID", "B3": "Last Name", "C3": "First Name", "B4": "Smith", "C4": "Howard", "B23": "Kourios", "B24": "Dixon-Waite", "C24": "Sherrie", "B25": "", "B26": ""}},
+  "6": {"type": "x.chart", "sheet": "Crop", "title2": "January - Mar", "dLblPos": "outEnd"}
+ },
+ "excel-t4-p6": {
+  "1": {"type": "x.filterOnly", "sheet": "Customers", "col": "D", "rows": [4, 31], "equals": ["New York"]},
+  "2": {"type": "x.rowFormula", "sheet": "Sales for July", "col": "B", "rows": [4, 12], "table": true, "fn": "UPPER", "expect": {"op": "expr", "js": "UPPER(LEFT({A},2))"}},
+  "3": {"type": "x.hyperlink", "sheet": "Popular Tours", "cell": "F1", "url": "www.abc.vn", "tip": "ABC Website"},
+  "4": {"type": "x.unique", "sheet": "Sales for July", "col": "C", "from": 4},
+  "5": {"type": "x.noHidden"},
+  "6": {"type": "x.cellsEmpty", "name": "Other"}
+ },
+ "excel-t4-p7": {
+  "1": {"type": "x.cellsEqual", "sheet": "Offer", "values": {"A2": "ID", "B2": "FirstName", "A3": 548, "B3": "James", "B4": "John"}},
+  "2": {"type": "x.styleCopied", "from": "Credit Information", "to": "Weight Loss", "cells": ["A1", "A2"]},
+  "3": {"type": "x.definedName", "name": "Rates", "sheet": "Offer", "range": "I2:J3"},
+  "4": {"type": "x.cellFormula", "sheet": "Receipt", "cell": "D18", "fn": "SUM", "names": ["Quarter1", "Quarter2", "Quarter3", "Quarter4"], "noAddress": true},
+  "5": {"type": "x.freeze", "sheet": "Credit Information", "rows": 4},
+  "6": {"type": "x.colWidth", "sheet": "Receipt", "cols": "B", "width": 25}
+ },
+ "excel-t5-p1": {
+  "1": {"type": "x.filterBy", "sheet": "Company", "col": "B", "rows": [5, 25], "test": "startsWith", "value": "Ba"},
+  "2": {"type": "x.rowFormula", "sheet": "Quarter 3-4", "col": "I", "rows": [6, 26], "expect": {"op": "expr", "js": "{G}+{H}"}},
+  "3": {"type": "x.newChart", "sheet": "Quarter 1", "chartType": "bar3DChart", "barDir": "col", "grouping": "clustered", "valCol": "F", "rightOfCol": "G"},
+  "4": {"type": "x.noTable", "sheet": "Quarter 2"},
+  "5": {"type": "x.sparklines", "sheet": "Quarter 1", "range": "G11:G18", "sparkType": "column"},
+  "6": {"type": "x.freeze", "sheet": "Quarter 3-4", "rows": 5}
+ },
+ "excel-t5-p2": {
+  "1": {"type": "x.privacy"},
+  "2": {"type": "x.sorted", "sheet": "Orders", "rows": [3, 22], "keys": [{"col": "B", "order": ["Canada", "Germany"]}, {"col": "C"}]},
+  "3": {"type": "x.sorted", "sheet": "Product", "rows": [4, 9], "keys": [{"col": "C"}, {"col": "E", "desc": true}]},
+  "4": {"type": "x.hyperlink", "sheet": "Orders", "cell": "D1", "url": "http://www.abc.vn", "tip": "Company Website"},
+  "5": {"type": "x.rowFormula", "sheet": "Product", "col": "D", "rows": [4, 9], "table": true, "fn": "UPPER", "expect": {"op": "expr", "js": "UPPER(LEFT({C},2))"}},
+  "6": {"type": "x.unique", "sheet": "Detail Order", "col": "A", "from": 6}
+ },
+ "excel-t5-p3": {
+  "1": {"type": "x.cellsEqual", "sheet": "Customer List", "values": {"A1": "ID", "B1": "FirstName", "A2": 548, "B2": "James"}},
+  "2": {"type": "x.styleCopied", "from": "Order", "to": "Description", "cells": ["A1", "A2"]},
+  "3": {"type": "x.colWidth", "sheet": "Customer List", "cols": "A", "width": 21},
+  "4": {"type": "x.cellAgg", "sheet": "Order", "cell": "F19", "fn": "COUNTBLANK|COUNTIF|COUNTIFS", "agg": "countblank", "range": "F5:F15"},
+  "5": {"type": "x.cellFormula", "sheet": "Description", "cell": "I13", "fn": "SUM", "names": ["total_chocolate", "total_mango", "total_icecream", "total_cheese"], "noAddress": true},
+  "6": {"type": "x.cellStyle", "sheet": "Order", "cell": "A18", "name": "Title"}
+ },
+ "excel-t5-p4": {
+  "1": {"type": "x.rowFormula", "sheet": "January", "col": "G", "rows": [4, 12], "table": true, "expect": {"op": "expr", "js": "{F}*{K1}"}},
+  "2": {"type": "x.rowFormula", "sheet": "January", "col": "I", "rows": [4, 12], "table": true, "fn": "IF", "expect": {"op": "expr", "js": "IF({H}<0.3,'LOW','')"}},
+  "3": {"type": "x.chart", "sheet": "Chart Analysis", "hasTitle": true, "dLblPos": "outEnd", "showVal": true},
+  "4": {"type": "x.cellsEqual", "sheet": "January", "values": {"C26": "Miles Driven", "D26": "Maintenance Cost", "C27": 9964, "C35": 8484, "D35": 1094, "C36": "", "D36": "", "B26": "Cost per Mile"}},
+  "5": {"type": "x.cellStyle", "sheet": "January", "cell": "A1", "name": "Heading 1"},
+  "6": {"type": "x.printTitles", "sheet": "January", "rows": "*", "cols": "*"}
+ },
+ "excel-t5-p5": {
+  "1": {"type": "x.alignment", "sheet": "ABC shoes shop", "range": "D4:J4", "wrap": true},
+  "2": {"type": "x.chart", "sheet": "Frequency Distribution", "styleN": 7, "palette": "Monochromatic 3"},
+  "3": {"type": "x.definedName", "name": "Size", "sheet": "ABC shoes shop", "range": "H7:J32"},
+  "4": {"type": "x.cellAgg", "sheet": "From Jan to Apr", "cell": "B24", "fn": "MAX", "agg": "max", "range": "C3:F20"},
+  "5": {"type": "x.cfRule", "sheet": "Frequency Distribution", "range": "P7:P21", "ruleType": "cellIs", "operator": "greaterThan", "value": 500, "preset": "yellow"},
+  "6": {"type": "x.rowFormula", "sheet": "From Jan to Apr", "col": "F", "rows": [3, 20], "table": true, "expect": {"op": "expr", "js": "{E}*N('Mar_Increase')"}}
+ },
+ "excel-t5-p6": {
+  "1": {"type": "x.chartSwapped", "sheet": "2021 Sales Chart"},
+  "2": {"type": "x.alignment", "sheet": "The Second Quarter", "range": "A4:A18", "horizontal": "left", "indent": 1},
+  "3": {"type": "x.totals", "sheet": "The Second Quarter", "cols": [" April ", " May ", " June ", "3 months"], "fn": "sum"},
+  "4": {"type": "x.rowFormula", "sheet": "The Second Quarter", "col": "E", "rows": [4, 18], "table": true, "fn": "COUNTIF|COUNTIFS", "expect": {"op": "expr", "js": "COUNTIF0({B},{C},{D})"}},
+  "5": {"type": "x.chart", "sheet": "The Second Quarter", "hasTitle": true, "dTable": {"showKeys": true}}
+ },
+ "excel-t6-p1": {
+  "1": {"type": "x.cellsEmpty", "name": "Order"},
+  "2": {"type": "x.numDecimals", "sheet": "Total", "range": "G2:H13", "decimals": 2},
+  "3": {"type": "x.textGone", "sheet": "Tracker", "text": "SEC-001", "keep": ["IT-007", "HR-001", "Website Redesign"]},
+  "4": {"type": "x.rowFormula", "sheet": "Total", "col": "F", "rows": [2, 13], "table": true, "fn": "AVERAGE", "expect": {"op": "avg", "cols": ["C", "D", "E"]}},
+  "5": {"type": "x.rowFormula", "sheet": "Email", "col": "D", "rows": [2, 11], "table": true, "expect": {"op": "concat", "parts": ["{A}.mosint@gmail.com"]}},
+  "6": {"type": "x.chartSwapped", "sheet": "Order", "title": "Sum"}
+ },
+ "excel-t6-p2": {
+  "1": {"type": "x.printArea", "sheet": "Data", "range": "A5:E29"},
+  "2": {"type": "x.filterOnly", "sheet": "Raw", "col": "D", "rows": [6, 386], "equals": ["Light"]},
+  "3": {"type": "x.rowFormula", "sheet": "Data", "col": "B", "rows": [6, 42], "table": true, "fn": "IF", "expect": {"op": "expr", "js": "IF({E}>=1000,'Yes','No')"}},
+  "4": {"type": "x.rowFormula", "sheet": "Data", "col": "F", "rows": [6, 42], "table": true, "fn": "LEFT", "expect": {"op": "left", "col": "A", "n": 2}},
+  "5": {"type": "x.chartAltText", "sheet": "Chart", "text": "Summary"}
+ },
+ "excel-t6-p3": {
+  "1": {"type": "x.styleCopied", "from": "Data", "to": "Summary", "cells": ["A1", "A2"]},
+  "2": {"type": "x.tableName", "sheet": "Summary", "name": "Result"},
+  "3": {"type": "x.tableProp", "sheet": "Summary", "rowStripes": true},
+  "4": {"type": "x.cellFormula", "sheet": "Total", "cell": "B5", "fn": "SUM", "names": ["New_York", "Los_Angeles", "Las_Vegas"], "noAddress": true, "value": 41719},
+  "5": {"type": "x.cellAgg", "sheet": "Filter", "cell": "I1", "fn": "COUNTBLANK|COUNTIF|COUNTIFS", "agg": "countblank", "range": "I3:I13"},
+  "6": {"type": "x.chart", "sheet": "Total", "legend": false, "showVal": true}
+ },
+ "excel-t6-p4": {
+  "1": {"type": "x.cellsEqual", "sheet": "Import", "values": {"A1": "ID", "B1": "Name", "A2": 101, "B2": "The Great Gatsby"}},
+  "2": {"type": "x.colWidth", "sheet": "Books", "cols": "C:G", "width": 15},
+  "3": {"type": "x.sparklines", "sheet": "Sales", "range": "E5:E28", "sparkType": "column"},
+  "4": {"type": "x.noTable", "sheet": "Books"},
+  "5": {"type": "x.chartSheet", "name": "Sales Chart"},
+  "6": {"type": "x.chart", "sheet": "Sales", "valAxisTitle": "Quantity"}
+ },
+ "excel-t6-p5": {
+  "1": {"type": "x.rowFormula", "sheet": "Pareto", "col": "N", "rows": [4, 13], "fn": "SUM", "expect": {"op": "sum", "cols": ["B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M"]}},
+  "2": {"type": "x.noCF", "sheet": "Pareto"},
+  "3": {"type": "x.sorted", "sheet": "Wine", "rows": [2, 11], "keys": [{"col": "C"}, {"col": "F", "desc": true}], "idCol": "B"},
+  "4": {"type": "x.cellAgg", "sheet": "Wine", "cell": "B14", "fn": "MAX", "agg": "max", "range": "E2:E11"},
+  "5": {"type": "x.newChart", "sheet": "Wine", "chartType": "barChart", "barDir": "col", "grouping": "clustered", "valCol": "D", "catCol": "C"},
+  "6": {"type": "x.chart", "sheet": "Pareto", "dTable": {"showKeys": false}}
+ },
+ "excel-t6-p6": {
+  "1": {"type": "x.freeze", "sheet": "Data", "rows": 3},
+  "2": {"type": "x.align", "sheet": "Data", "cell": "A1", "horizontal": "left"},
+  "3": {"type": "x.iconSet", "sheet": "Data", "range": "E4:E33", "set": "3TrafficLights1"},
+  "4": {"type": "x.tableProp", "sheet": "Data", "style": "TableStyleMedium1"},
+  "5": {"type": "x.chart", "sheet": "Total", "palette": "Colorful 2"},
+  "6": {"all": [{"type": "x.rowFormula", "sheet": "Data", "col": "F", "rows": [4, 33], "table": true, "expect": {"op": "expr", "js": "{E}*N('Rate')"}}, {"type": "x.cellFormula", "sheet": "Data", "cell": "F4", "names": ["Rate"], "noAddress": true}]}
+ },
+ "excel-t7-p1": {
+  "1": {"type": "x.filterBy", "sheet": "Data", "col": "B", "rows": [2, 57], "test": "startsWith", "value": "Ro"},
+  "2": {"type": "x.rowFormula", "sheet": "Quarter 3-4", "col": "J", "rows": [6, 33], "expect": {"op": "expr", "js": "{H}+{I}"}},
+  "3": {"type": "x.newChart", "sheet": "Quarter 1", "chartType": "bar3DChart", "barDir": "col", "grouping": "clustered", "valCols": ["C", "D", "E"], "catCol": "A", "rightOfCol": "F"},
+  "4": {"type": "x.sparklines", "sheet": "Quarter 1", "range": "F5:F12", "sparkType": "column"},
+  "5": {"type": "x.noTable", "sheet": "Quarter 2"},
+  "6": {"type": "x.freeze", "sheet": "Quarter 3-4", "rows": 5}
+ },
+ "excel-t7-p2": {
+  "1": {"type": "x.sorted", "sheet": "Order", "rows": [5, 60], "keys": [{"col": "C", "order": ["Canada", "Germany"]}, {"col": "E"}]},
+  "2": {"type": "x.hyperlink", "sheet": "Order", "cell": "D1", "url": "http://google.com", "tip": "Search Engine"},
+  "3": {"type": "x.unique", "sheet": "Detail Order", "col": "E", "from": 2},
+  "4": {"type": "x.privacy"},
+  "5": {"type": "x.rowFormula", "sheet": "Product", "col": "B", "rows": [5, 12], "table": true, "fn": "UPPER", "expect": {"op": "expr", "js": "UPPER(RIGHT({A},6))"}},
+  "6": {"type": "x.sorted", "sheet": "Product", "rows": [5, 12], "keys": [{"col": "A"}, {"col": "C", "desc": true}]}
+ },
+ "excel-t7-p3": {
+  "1": {"type": "x.cellsEqual", "sheet": "Customer List", "values": {"A1": "Book name", "B1": "Author", "B2": "Richard Preston"}},
+  "3": {"type": "x.styleCopied", "from": "Order", "to": "Description", "cells": ["A1", "A2"]},
+  "4": {"type": "x.cellFormula", "sheet": "Description", "cell": "F21", "fn": "SUM", "names": ["total_chocolate", "total_mango", "total_icecream", "total_cheese"], "noAddress": true},
+  "5": {"type": "x.cellAgg", "sheet": "Order", "cell": "C20", "fn": "COUNTBLANK|COUNTIF|COUNTIFS", "agg": "countblank", "range": "C9:C18"},
+  "6": {"type": "x.cellStyle", "sheet": "Order", "cell": "A22", "name": "Title"}
+ },
+ "excel-t7-p4": {
+  "1": {"type": "x.rowFormula", "sheet": "January", "col": "F", "rows": [4, 26], "table": true, "expect": {"op": "expr", "js": "{E}*{K3}"}},
+  "2": {"type": "x.rowFormula", "sheet": "January", "col": "H", "rows": [4, 26], "table": true, "fn": "IF", "expect": {"op": "expr", "js": "IF({G}<0.3,'Low','')"}},
+  "3": {"type": "x.chart", "sheet": "Chart Analysis", "hasTitle": true, "dLblPos": "outEnd", "showVal": true},
+  "4": {"type": "x.cellsEqual", "sheet": "January", "values": {"C34": "Category", "D34": "Product", "E34": "Total Cost", "D35": "Candies", "D45": "Chocolate", "E45": 3585, "D46": "Candies", "E46": 4011, "D47": "", "E47": ""}},
+  "5": {"type": "x.cellStyle", "sheet": "January", "cell": "B2", "name": "Heading 1"}
+ },
+ "excel-t7-p5": {
+  "1": {"type": "x.alignment", "sheet": "TMO Shop", "range": "B4:F4", "wrap": true},
+  "2": {"type": "x.definedName", "name": "Data", "sheet": "TMO Shop", "range": "D7:F31"},
+  "3": {"type": "x.chart", "sheet": "Database", "styleN": 7, "palette": "Monochromatic 2"},
+  "4": {"type": "x.cfRule", "sheet": "Database", "range": "H10:H14", "ruleType": "cellIs", "operator": "greaterThan", "value": 1600, "preset": "yellow"},
+  "5": {"all": [{"type": "x.rowFormula", "sheet": "Forecast", "col": "D", "rows": [2, 6], "table": true, "expect": {"op": "expr", "js": "{C}*N('Q3increase')"}}, {"type": "x.cellFormula", "sheet": "Forecast", "cell": "D2", "names": ["Q3increase"]}]},
+  "6": {"type": "x.cellAgg", "sheet": "Forecast", "cell": "J2", "fn": "MAX", "agg": "max", "range": "B2:D6"}
+ },
+ "excel-t7-p6": {
+  "1": {"type": "x.chartSwapped", "sheet": "Sale Chart"},
+  "2": {"type": "x.alignment", "sheet": "Misc", "range": "D4:D19", "horizontal": "left", "indent": 1},
+  "3": {"type": "x.totals", "sheet": "Misc", "cols": ["Total"], "fn": "sum"},
+  "4": {"type": "x.rowFormula", "sheet": "Misc", "col": "I", "rows": [4, 19], "table": true, "fn": "COUNTIF|COUNTIFS", "expect": {"op": "expr", "js": "COUNTIF0({E},{F},{G})"}},
+  "5": {"type": "x.chart", "sheet": "Misc", "hasTitle": true, "dTable": {"showKeys": true}}
+ },
+ "excel-t8-p1": {
+  "1": {"all": [{"type": "x.sheetAdded", "contains": {"a": "Performance Ski Only"}}, {"type": "x.dataModel"}]},
+  "2": {"type": "x.styleCleared", "sheet": "Rental Rates", "range": "A4:D4"},
+  "3": {"type": "x.tableName", "sheet": "Rental Rates", "name": "Rates"},
+  "4": {"type": "x.pageSetup", "sheet": "Rental Rates", "orientation": "landscape"},
+  "5": {"type": "x.sheetAdded", "name": "Compatibility"}
+ },
+ "excel-t8-p2": {
+  "1": {"type": "x.merged", "sheet": "Fishing", "range": "A1:E1"},
+  "2": {"type": "x.hyperlink", "sheet": "Tents", "cell": "B13", "url": "Fishing!A4"},
+  "3": {"type": "x.iconSet", "sheet": "Tents", "range": "C4:C11", "set": "3Flags"},
+  "4": {"type": "x.chart", "sheet": "Tents", "catRow": 7},
+  "5": {"type": "x.chart", "sheet": "Tents", "styleN": 4}
+ },
+ "excel-t8-p3": {
+  "1": {"type": "x.textReplaced", "sheet": "Profits", "from": "Choco", "to": "Chocolates"},
+  "2": {"type": "x.printTitles", "sheet": "Costs", "rows": "*"},
+  "4": {"type": "x.chart", "sheet": "Profits", "seriesCount": 2, "seriesNames": ["Expense", "Income"]},
+  "5": {"type": "x.chart", "sheet": "Profits", "legendPos": "t"}
+ },
+ "excel-t8-p4": {
+  "1": {"type": "x.definedName", "name": "Prices", "sheet": "Price List", "range": "D5:D15,D18:D26"},
+  "2": {"type": "x.cellFormula", "sheet": "Price List", "cell": "H5", "fn": "SUM", "names": ["Price_10G", "Install_10G", "Support_10G"], "noAddress": true},
+  "3": {"type": "x.noCF", "sheet": "Price List"},
+  "4": {"all": [{"type": "x.alignment", "sheet": "Price List", "range": "C4:F4", "rotation": 45}, {"type": "x.alignment", "sheet": "Price List", "range": "C17:F17", "rotation": 45}]},
+  "5": {"type": "x.sorted", "sheet": "Price List", "rows": [5, 15], "keys": [{"col": "B"}, {"col": "C"}], "idCol": "A"}
+ },
+ "excel-t8-p5": {
+  "1": {"type": "x.freeze", "sheet": "Catalog", "rows": 3},
+  "2": {"type": "x.coreProp", "prop": "description", "value": "Draft"},
+  "3": {"type": "x.printArea", "sheet": "Q1 Sales", "range": "A1:F17"},
+  "4": {"type": "x.cellAgg", "sheet": "Q1 Sales", "cell": "B19", "fn": "SUM", "agg": "sum", "range": "F4:F17"},
+  "5": {"type": "x.cellFormula", "sheet": "Q1 Sales", "cell": "B4", "fn": "CONCAT|CONCATENATE|TEXTJOIN", "fRegex": "Catalog", "value": "Cross Country - Hardtail"}
+ },
+ "excel-t8-p6": {
+  "1": {"type": "x.totals", "sheet": "Qtr 1", "cols": ["Total"]},
+  "2": {"type": "x.cellAgg", "sheet": "Qtr 1", "cell": "E12", "fn": "MAX", "agg": "max", "range": "E3:E10"},
+  "3": {"type": "x.newChart", "sheet": "Qtr 1", "chartType": "pieChart", "valCol": "E", "catCol": "A", "belowRow": 10},
+  "4": {"type": "x.tableAt", "sheet": "Qtr 2", "ref": "A2:E10", "style": "TableStyleLight14", "headerRow": true},
+  "5": {"type": "x.chart", "sheet": "Qtr 1", "index": 0, "hasTitle": true, "legendPos": "t", "showVal": true, "valAxisDeleted": true}
+ },
+ "excel-t8-p7": {
+  "1": {"all": [{"type": "x.rowFormula", "sheet": "Employee", "col": "F", "rows": [4, 11], "table": true, "expect": {"op": "expr", "js": "{E}*{B15}"}}, {"type": "x.cellFormula", "sheet": "Employee", "cell": "F4", "fRegex": "B\\$15"}]},
+  "2": {"type": "x.rowFormula", "sheet": "Employee", "col": "G", "rows": [4, 11], "table": true, "expect": {"op": "expr", "js": "{F}"}},
+  "3": {"type": "x.textGone", "sheet": "Parts", "text": "Allen", "keep": ["Adrian", "Brian"]},
+  "4": {"type": "x.tableProp", "sheet": "Parts", "style": "TableStyleMedium1"},
+  "5": {"type": "x.sparklines", "sheet": "Parts", "range": "F4", "sparkType": "line"}
+ },
+ "excel-t9-p1": {
+  "1": {"type": "x.cellsEmpty", "name": "AppHeading2"},
+  "2": {"type": "x.rowHeight", "sheet": "Downloads", "rows": [27, 27], "height": 78},
+  "3": {"type": "x.cellStyle", "sheet": "Downloads", "cell": "A27", "name": "40% - Accent2"},
+  "4": {"type": "x.tableAt", "sheet": "Downloads", "ref": "A3:B24", "style": "TableStyleLight10", "headerRow": true},
+  "5": {"all": [{"type": "x.footer", "sheet": "Downloads", "pos": "R", "code": "&D", "label": "ngày hiện tại"}, {"type": "x.view", "sheet": "Downloads", "mode": "normal"}]}
+ },
+ "excel-t9-p2": {
+  "1": {"type": "x.sheetAdded", "contains": {"a": "Dog Food w/ Beef"}, "table": true},
+  "2": {"type": "x.noHyperlink", "sheet": "Feed Inventory", "cell": "C27", "text": "Organic Foods Available Seasonally"},
+  "3": {"type": "x.noCF", "sheet": "Feed Inventory"},
+  "4": {"type": "x.tableAt", "sheet": "Organic Feed", "ref": "A3:F10", "style": "TableStyleMedium7", "headerRow": true},
+  "5": {"type": "x.chart", "sheet": "Feed Inventory", "styleN": 11}
+ },
+ "excel-t9-p3": {
+  "1": {"all": [{"type": "x.view", "sheet": "Costs", "mode": "pageLayout"}, {"type": "x.rowBreak", "sheet": "Costs", "after": 20}]},
+  "2": {"type": "x.styleCopied", "from": "Profits", "to": "Costs", "cells": ["A2"]},
+  "3": {"type": "x.cellAgg", "sheet": "Profits", "cell": "A29", "fn": "AVERAGE", "agg": "avg", "range": "B4:B26"},
+  "4": {"type": "x.chart", "sheet": "Profits", "valIncludes": "Total Profit", "minSeries": 3},
+  "5": {"type": "x.filterBy", "sheet": "Profits", "col": "B", "rows": [4, 26], "test": "aboveAverage"}
+ },
+ "excel-t9-p4": {
+  "2": {"type": "x.coreProp", "prop": "title", "value": "New Rates"},
+  "3": {"type": "x.printArea", "sheet": "Rooms", "range": "A1:F10"},
+  "5": {"type": "x.alignment", "sheet": "Rooms", "range": "A2:F2", "wrap": true}
+ },
+ "excel-t9-p5": {
+  "1": {"type": "x.cellsEqual", "sheet": "Sold", "values": {"A3": "", "B3": "Item Type", "C3": "Description", "G3": "Total"}},
+  "2": {"type": "x.split", "sheet": "Sold", "rows": 6},
+  "3": {"type": "x.freeze", "sheet": "Vehicles", "rows": 3},
+  "4": {"type": "x.tableProp", "sheet": "Sold", "rowStripes": true},
+  "5": {"type": "x.cellFormula", "sheet": "Vehicles", "cell": "B4", "fn": "LEFT", "value": "Se"}
+ },
+ "excel-t9-p6": {
+  "1": {"type": "x.sparklines", "sheet": "Qtr 2", "range": "F10:F14", "sparkType": "column"},
+  "2": {"type": "x.chartSheet", "name": "Qtr 2 Chart"},
+  "3": {"type": "x.numFmt", "sheet": "Qtr 1", "range": "B10:E14", "pattern": "\\$\"?\\*.*0\\.00"},
+  "4": {"type": "x.chartSwapped", "sheet": "Qtr 1"},
+  "5": {"type": "x.view", "sheet": "Qtr 2", "showFormulas": true}
+ },
+ "excel-t9-p7": {
+  "1": {"type": "x.sparklines", "sheet": "Average Call Time", "range": "G4:G16"},
+  "2": {"type": "x.totals", "sheet": "Employee Hours", "table": "Table1", "cols": ["Total Hours"], "fn": "sum"},
+  "3": {"type": "x.rowFormula", "sheet": "Employee Hours", "col": "H", "rows": [4, 4], "fn": "IF", "expect": {"op": "expr", "js": "IF({J}>40,'Yes','No')"}},
+  "4": {"type": "x.rowFormula", "sheet": "Employee Hours", "col": "I", "rows": [4, 4], "fn": "UPPER", "expect": {"op": "expr", "js": "UPPER({A})"}},
+  "5": {"type": "x.newChart", "sheet": "Average Call Time", "chartType": "bar3DChart", "barDir": "col", "valCol": "F", "catCol": "A", "rightOfCol": "G"}
+ },
+ "excel-t10-p1": {
+  "1": {"type": "x.cellsEqual", "sheet": "Order Form", "values": {"A19": "Product ID", "B19": "Description", "C19": "Qty.", "D19": "Price", "B20": "Chocolate General Assortment", "B24": "Chocolate Ice Cream", "B25": "", "D25": ""}},
+  "2": {"type": "x.cellStyle", "sheet": "Order Form", "cell": "A2", "name": "Heading 1"},
+  "3": {"type": "x.filterBy", "sheet": "Order Form", "col": "A", "rows": [20, 25], "test": "startsWith", "value": "WW7881"},
+  "4": {"type": "x.colWidth", "sheet": "Order Form", "cols": "E", "width": 18}
+ },
+ "excel-t10-p2": {
+  "1": {"type": "x.alignment", "sheet": "Enrollment Summary", "range": "A4:F4", "wrap": true},
+  "2": {"type": "x.definedName", "name": "Enrollment", "sheet": "Enrollment Summary", "range": "A4:B8"},
+  "3": {"type": "x.textGone", "sheet": "Last Semester", "text": "Electrician", "keep": ["Sport Science", "Software and Web Development"]},
+  "4": {"type": "x.newChart", "sheet": "Last Semester", "chartType": "barChart", "valCol": "E", "catCol": "A", "belowRow": 11},
+  "5": {"type": "x.chartSwapped", "sheet": "Enrollment Summary"},
+  "6": {"type": "x.chart", "sheet": "Enrollment Summary", "styleN": 7, "palette": "Colorful 4"}
+ },
+ "excel-t10-p3": {
+  "1": {"type": "x.cfRule", "sheet": "2020 Sales", "range": "F3:F12", "ruleType": "cellIs", "operator": "greaterThan", "value": 10000000, "preset": "yellow"},
+  "2": {"type": "x.sorted", "sheet": "2020 Sales", "rows": [3, 12], "keys": [{"col": "A"}, {"col": "F", "desc": true}], "idCol": "A"},
+  "3": {"all": [{"type": "x.rowFormula", "sheet": "2021 Projections", "col": "E", "rows": [3, 12], "table": true, "expect": {"op": "expr", "js": "{D}*N('Q3_Increase')"}}, {"type": "x.cellFormula", "sheet": "2021 Projections", "cell": "E3", "names": ["Q3_Increase"]}]},
+  "4": {"type": "x.cellAgg", "sheet": "2020 Sales", "cell": "B15", "fn": "MAX", "agg": "max", "range": "B3:E12"},
+  "5": {"type": "x.chartSwapped", "sheet": "Revenue Split"}
+ },
+ "excel-t10-p4": {
+  "1": {"type": "x.hyperlink", "sheet": "Best Sellers", "cell": "B3", "url": "http://www.madworldpublishing.ca", "text": "Company Website"},
+  "2": {"type": "x.privacy"},
+  "3": {"type": "x.rowFormula", "sheet": "Best Sellers", "col": "H", "rows": [6, 22], "table": true, "fn": "IF", "expect": {"op": "expr", "js": "IF({G}>=1000,'BESTSELLER','Below Expectations')"}},
+  "4": {"type": "x.rowFormula", "sheet": "Bookstores", "col": "D", "rows": [4, 19], "table": true, "fn": "UPPER", "expect": {"op": "expr", "js": "UPPER(LEFT({C},3))"}}
+ },
+ "excel-t10-p5": {
+  "1": {"type": "x.cellStyle", "sheet": "Merch, Yo! ", "cell": "A1", "name": "Title"},
+  "2": {"type": "x.rowFormula", "sheet": "Merch, Yo! ", "col": "H", "rows": [5, 16], "table": true, "expect": {"op": "expr", "js": "{G}*{H2}"}},
+  "3": {"type": "x.rowFormula", "sheet": "Merch, Yo! ", "col": "E", "rows": [5, 16], "table": true, "fn": "IF", "expect": {"op": "expr", "js": "IF({D}<0.1,'LOW','')"}},
+  "4": {"type": "x.filterBy", "sheet": "Merch, Yo! ", "col": "A", "rows": [5, 16], "test": "startsWith", "value": "It's everyday bro"},
+  "5": {"type": "x.chart", "sheet": "Chart everyday bro!", "hasTitle": true, "dLblPos": "outEnd", "showVal": true}
+ },
+ "excel-t10-p6": {
+  "1": {"type": "x.alignment", "sheet": "Player Stats", "range": "A4:A13", "horizontal": "left", "indent": 1},
+  "2": {"type": "x.sparklines", "sheet": "Player Stats", "range": "J4:J13", "sparkType": "column"},
+  "3": {"type": "x.totals", "sheet": "Player Stats", "cols": ["January", "February", "March", "April", "May", "June"], "fn": "sum"},
+  "4": {"type": "x.rowFormula", "sheet": "Player Stats", "col": "I", "rows": [4, 13], "table": true, "fn": "COUNTBLANK|COUNTIF|COUNTIFS", "expect": {"op": "expr", "js": "COUNTBLANK({B},{C},{D},{E},{F},{G})"}},
+  "5": {"type": "x.chart", "sheet": "Player Stats", "hasTitle": true, "dTable": {"showKeys": true}},
+  "6": {"type": "x.rowFormula", "sheet": "Player Contact information", "col": "C", "rows": [4, 13], "expect": {"op": "concat", "parts": ["{A}@teamname.ca"]}}
+ },
+ "excel-t1-p1": {
+  "1": {"type": "x.coreProp", "prop": "Company", "value": "High School"},
+  "3": {"type": "x.sheetAdded", "name": "Compatibility"}
+ },
+ "excel-t1-p2": {
+  "1": {"type": "x.alignment", "sheet": "Home", "range": "C32:G32", "rotation": 45},
+  "2": {"type": "x.sameStyle", "sheet": "Home", "from": "C57", "cells": ["F57", "I57"]},
+  "3": {"type": "x.alignment", "sheet": "Home", "range": "C73", "wrap": true},
+  "4": {"type": "x.merged", "sheet": "Home", "range": "C88:E88"},
+  "5": {"type": "x.numDecimals", "sheet": "Home", "range": "C119", "decimals": 3},
+  "6": {"type": "x.cfRule", "sheet": "Home", "range": "E152:E155", "ruleType": "cellIs", "operator": "lessThan", "value": 5, "preset": "yellow"},
+  "7": {"type": "x.tableAt", "sheet": "Home", "ref": "D185:E188", "style": "TableStyleMedium3", "headerRow": true},
+  "8": {"type": "x.cellStyle", "sheet": "Home", "cell": "D212", "name": "Warning Text"}
+ },
+ "excel-t1-p3": {
+  "1": {"type": "x.colWidth", "sheet": "Home", "cols": "R", "width": 15},
+  "2": {"all": [{"type": "x.styleCleared", "sheet": "Home", "range": "C244"}, {"type": "x.cellsEqual", "sheet": "Home", "values": {"C244": "EDUSA"}}]},
+  "3": {"type": "x.sorted", "sheet": "Home", "rows": [279, 285], "keys": [{"col": "C", "desc": true}]},
+  "4": {"type": "x.filterOnly", "sheet": "Home", "col": "F", "rows": [300, 306], "equals": ["750"]},
+  "6": {"all": [{"type": "x.textGone", "sheet": "Home", "text": "EduStar"}, {"type": "x.cellsEqual", "sheet": "Home", "values": {"B345": "Sáng Tạo Số", "D347": "Sáng Tạo Số"}}]}
+ },
+ "excel-t1-p4": {
+  "1": {"type": "x.newChart", "sheet": "Insert", "chartType": "bar3DChart", "barDir": "col", "valCol": "H", "catCol": "C", "rightOfCol": "H"},
+  "2": {"type": "x.sparklines", "sheet": "Insert", "range": "G61:G63", "sparkType": "column"},
+  "3": {"type": "x.hyperlink", "sheet": "Insert", "cell": "D87", "url": "http://mos2019.edu.vn", "tip": "hocmos"}
+ },
+ "excel-t1-p5": {
+  "1": {"type": "x.printArea", "sheet": "Page Layout", "range": "A2:J12"},
+  "2": {"type": "x.printTitles", "sheet": "Page Layout", "rows": "1:1"},
+  "3": {"type": "x.definedName", "name": "Tax_Rate", "sheet": "Formulas", "range": "D16"},
+  "4": {"any": [{"type": "x.cellsEqual", "sheet": "Data", "values": {"C20": "ID", "D20": "Name", "C21": 101, "D21": "The Great Gatsby"}}, {"type": "x.sheetAdded", "contains": {"a": "The Great Gatsby"}}]},
+  "5": {"type": "x.freeze", "sheet": "View", "rows": 3}
+ },
+ "excel-t1-p6": {
+  "1": {"type": "x.cellAgg", "sheet": "Hàm", "cell": "F19", "fn": "AVERAGE", "agg": "avg", "range": "C19:E19"},
+  "2": {"type": "x.cellAgg", "sheet": "Hàm", "cell": "F35", "fn": "SUM", "agg": "sum", "range": "C35:E35"},
+  "3": {"type": "x.cellAgg", "sheet": "Hàm", "cell": "C55", "fn": "MAX", "agg": "max", "range": "C52:E54"},
+  "4": {"any": [{"type": "x.rowFormula", "sheet": "Hàm", "col": "D", "rows": [80, 81], "expect": {"op": "concat", "parts": ["{C}@abc.com"]}}, {"type": "x.rowFormula", "sheet": "Hàm", "col": "D", "rows": [80, 81], "expect": {"op": "expr", "js": "String({C}).trim()+'@abc.com'"}}]},
+  "5": {"type": "x.rowFormula", "sheet": "Hàm", "col": "E", "rows": [101, 104], "table": true, "fn": "IF", "expect": {"op": "expr", "js": "IF({D}>=700,'Pass','Fail')"}}
+ },
+ "excel-t1-p7": {
+  "1": {"type": "x.chartSwapped", "sheet": "Thẻ Lệnh Ngữ Cảnh", "index": 0},
+  "2": {"type": "x.chart", "sheet": "Thẻ Lệnh Ngữ Cảnh", "index": 1, "barDir": "bar", "grouping": "clustered"},
+  "3": {"type": "x.chart", "sheet": "Thẻ Lệnh Ngữ Cảnh", "index": 2, "dLblPos": "outEnd", "showVal": true},
+  "4": {"type": "x.chart", "sheet": "Thẻ Lệnh Ngữ Cảnh", "index": 3, "hasTitle": true, "legendPos": "t", "showVal": true, "valAxisDeleted": true},
+  "5": {"type": "x.chart", "sheet": "Thẻ Lệnh Ngữ Cảnh", "index": 4, "palette": "Colorful 3"},
+  "6": {"type": "x.chart", "sheet": "Thẻ Lệnh Ngữ Cảnh", "index": 5, "styleN": 2},
+  "7": {"type": "x.chartAltText", "sheet": "Thẻ Lệnh Ngữ Cảnh", "index": 6, "text": "The chart illustrates toy sales in 2020."},
+  "8": {"type": "x.unique", "sheet": "Thẻ Lệnh Ngữ Cảnh", "col": "C", "from": 331}
+ },
+ "excel-t2-p1": {
+  "1": {"type": "x.rowFormula", "sheet": "1. Basic Operations", "col": "E", "rows": [5, 9], "expect": {"op": "expr", "js": "{C}+{D}"}},
+  "2": {"type": "x.rowFormula", "sheet": "1. Basic Operations", "col": "F", "rows": [5, 9], "expect": {"op": "expr", "js": "{C}-{D}"}},
+  "3": {"type": "x.rowFormula", "sheet": "1. Basic Operations", "col": "G", "rows": [5, 9], "expect": {"op": "expr", "js": "{C}*{D}"}},
+  "4": {"type": "x.rowFormula", "sheet": "1. Basic Operations", "col": "H", "rows": [5, 9], "expect": {"op": "expr", "js": "{C}/{D}"}},
+  "5": {"type": "x.rowFormula", "sheet": "1. Basic Operations", "col": "E", "rows": [15, 18], "expect": {"op": "expr", "js": "{C}*{D}"}},
+  "6": {"type": "x.rowFormula", "sheet": "1. Basic Operations", "col": "G", "rows": [15, 18], "expect": {"op": "expr", "js": "{C}*{D}-{F}"}},
+  "7": {"type": "x.rowFormula", "sheet": "1. Basic Operations", "col": "I", "rows": [15, 18], "expect": {"op": "expr", "js": "{H}-({C}*{D}-{F})"}}
+ },
+ "excel-t2-p2": {
+  "1": {"type": "x.definedName", "name": "DiscountRate", "sheet": "2. References", "range": "C5"},
+  "2": {"all": [{"type": "x.rowFormula", "sheet": "2. References", "col": "D", "rows": [11, 13], "expect": {"op": "expr", "js": "{C}+{C}*{C4}-{C}*{C5}"}}, {"type": "x.cellFormula", "sheet": "2. References", "cell": "D11", "names": ["TaxRate"], "fRegex": "\\$C\\$5|DiscountRate"}]}
+ },
+ "excel-t2-p3": {
+  "1": {"type": "x.rowFormula", "sheet": "3. MOD & INT", "col": "E", "rows": [6, 10], "fn": "INT|QUOTIENT", "expect": {"op": "expr", "js": "INT({C}/{D})"}},
+  "2": {"type": "x.rowFormula", "sheet": "3. MOD & INT", "col": "F", "rows": [6, 10], "fn": "MOD", "expect": {"op": "expr", "js": "MOD({C},{D})"}},
+  "3": {"type": "x.rowFormula", "sheet": "3. MOD & INT", "col": "E", "rows": [18, 21], "fn": "INT|QUOTIENT", "expect": {"op": "expr", "js": "INT({C}/{D})"}},
+  "4": {"type": "x.rowFormula", "sheet": "3. MOD & INT", "col": "F", "rows": [18, 21], "fn": "MOD", "expect": {"op": "expr", "js": "MOD({C},{D})"}}
+ },
+ "excel-t2-p4": {
+  "1": {"type": "x.rowFormula", "sheet": "4. SUM & AVERAGE", "col": "F", "rows": [6, 11], "fn": "SUM", "expect": {"op": "sum", "cols": ["C", "D", "E"]}},
+  "2": {"type": "x.rowFormula", "sheet": "4. SUM & AVERAGE", "col": "G", "rows": [6, 11], "fn": "AVERAGE", "expect": {"op": "avg", "cols": ["C", "D", "E"]}},
+  "3": {"type": "x.cellFormula", "sheet": "4. SUM & AVERAGE", "cell": "F13", "fn": "SUMIF|SUMIFS", "value": 4950},
+  "4": {"type": "x.cellFormula", "sheet": "4. SUM & AVERAGE", "cell": "F15", "fn": "AVERAGEIF|AVERAGEIFS", "value": 457.5}
+ },
+ "excel-t2-p5": {
+  "1": {"type": "x.rowFormula", "sheet": "5. MIN & MAX", "col": "G", "rows": [6, 10], "fn": "MIN", "expect": {"op": "expr", "js": "MIN({C},{D},{E},{F})"}},
+  "2": {"type": "x.rowFormula", "sheet": "5. MIN & MAX", "col": "H", "rows": [6, 10], "fn": "MAX", "expect": {"op": "expr", "js": "MAX({C},{D},{E},{F})"}}
+ },
+ "excel-t2-p6": {
+  "1": {"type": "x.cellAgg", "sheet": "6. Counting", "cell": "F16", "fn": "COUNT", "agg": "count", "range": "C6:C13"},
+  "2": {"type": "x.cellAgg", "sheet": "6. Counting", "cell": "F18", "fn": "COUNTA", "agg": "counta", "range": "E6:E13"},
+  "3": {"type": "x.cellAgg", "sheet": "6. Counting", "cell": "F20", "fn": "COUNTBLANK", "agg": "countblank", "range": "D6:D13"},
+  "4": {"type": "x.cellAgg", "sheet": "6. Counting", "cell": "F22", "fn": "COUNTIF|COUNTIFS", "agg": "countif", "range": "E6:E13", "eq": "Active"}
+ },
+ "excel-t2-p7": {
+  "1": {"type": "x.rowFormula", "sheet": "7. IF", "col": "E", "rows": [6, 10], "fn": "IF", "expect": {"op": "expr", "js": "IF({D}>=60,'Pass','Fail')"}},
+  "2": {"type": "x.rowFormula", "sheet": "7. IF", "col": "E", "rows": [18, 22], "fn": "IF", "expect": {"op": "expr", "js": "IF({C}>={D},500,0)"}}
+ },
+ "excel-t2-p8": {
+  "1": {"type": "x.rowFormula", "sheet": "8. Text Case Formatting", "col": "D", "rows": [6, 11], "fn": "UPPER", "expect": {"op": "expr", "js": "UPPER({C})"}},
+  "2": {"type": "x.rowFormula", "sheet": "8. Text Case Formatting", "col": "E", "rows": [6, 11], "fn": "LOWER", "expect": {"op": "expr", "js": "LOWER({C})"}},
+  "3": {"type": "x.rowFormula", "sheet": "8. Text Case Formatting", "col": "F", "rows": [6, 11], "fn": "PROPER", "expect": {"op": "expr", "js": "PROPER({C})"}}
+ },
+ "excel-t2-p9": {
+  "1": {"type": "x.rowFormula", "sheet": "9. Text Extraction", "col": "C", "rows": [6, 9], "fn": "LEFT", "expect": {"op": "expr", "js": "LEFT({B},2)"}},
+  "2": {"type": "x.rowFormula", "sheet": "9. Text Extraction", "col": "D", "rows": [6, 9], "fn": "MID", "expect": {"op": "expr", "js": "MID({B},4,4)"}},
+  "3": {"type": "x.rowFormula", "sheet": "9. Text Extraction", "col": "E", "rows": [6, 9], "fn": "RIGHT", "expect": {"op": "expr", "js": "RIGHT({B},1)"}},
+  "4": {"type": "x.rowFormula", "sheet": "9. Text Extraction", "col": "F", "rows": [6, 9], "fn": "LEN", "expect": {"op": "expr", "js": "LEN({B})"}}
+ },
+ "excel-t2-p10": {
+  "1": {"all": [{"type": "x.rowFormula", "sheet": "10. String Concatenation", "col": "F", "rows": [6, 10], "expect": {"op": "expr", "js": "{B}+' '+{C}"}}, {"type": "x.cellFormula", "sheet": "10. String Concatenation", "cell": "F6", "fRegex": "&"}]},
+  "2": {"type": "x.rowFormula", "sheet": "10. String Concatenation", "col": "G", "rows": [6, 10], "fn": "CONCAT|CONCATENATE", "expect": {"op": "expr", "js": "{B}+'.'+{C}+'@'+{D}+'.com'"}},
+  "3": {"type": "x.rowFormula", "sheet": "10. String Concatenation", "col": "H", "rows": [6, 10], "fn": "TEXTJOIN", "expect": {"op": "expr", "js": "LEFT({D},3)+'-'+{E}"}}
  }
 }

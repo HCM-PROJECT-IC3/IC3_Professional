@@ -3,7 +3,7 @@
    Trang làm bài: chữ câu hỏi/đáp án to, ô bấm cao, đáp án đang chọn
    tô đặc + nhãn "✓ Em chọn", dòng nhắc "Em đã chọn…", kiểm tra đáp án
    tô xanh/đỏ ngay trên đáp án, thẻ "Nhớ nhé".
-   Nạp SAU css/accessibility.css (ở đó .q-text dùng !important).
+   Nạp SAU css/accessibility.css; cỡ chữ đề ở đây dùng !important để thắng phần co giãn của màn làm bài.
    ══════════════════════════════════════════════════════════════ */
 
 /* Nút bật/tắt trên thanh trên cùng */

@@ -36,7 +36,9 @@
       title = banner.querySelector('b')?.textContent || 'Đề giáo viên soạn';
       count = (banner.querySelector('span')?.textContent.match(/(\d+) câu/) || [])[1] || '';
     } else {
-      const raw = selText('minitestSelect');
+      const opt = $('minitestSelect')?.selectedOptions?.[0];
+      const grp = opt?.parentElement?.tagName === 'OPTGROUP' && /cuối khóa/.test(opt.parentElement.label) ? opt.parentElement.label + ' — ' : '';
+      const raw = grp + selText('minitestSelect');
       const m = raw.match(/^(.*?)\s*\((\d+) câu\)\s*$/);
       title = m ? m[1] : raw;
       count = m ? m[2] : '';
@@ -71,8 +73,8 @@
     const hint = $('startHint');
     if (!hint) return;
     // Nút khoá vì lý do khác (vd bài 0 câu, đang tải) → không đoán bừa.
-    hint.textContent = btn.disabled ? (need ? need.text + ' để bắt đầu.' : '') : 'Đã chọn đủ. Bấm Bắt đầu.';
-    hint.classList.toggle('is-ready', !btn.disabled);
+    // Đủ rồi thì nút Bắt đầu sáng lên là đủ, không thêm dòng chữ.
+    hint.textContent = btn.disabled && need ? need.text : '';
   }
 
   function init() {

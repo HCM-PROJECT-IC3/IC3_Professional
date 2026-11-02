@@ -40,7 +40,11 @@
   }
 
   // Tìm theo tên đầy đủ ("c:ser") hoặc tên cục bộ ("ser") nếu không có dấu ":".
-  function match(n, name) { return name.indexOf(':') < 0 ? n.local === name : n.name === name; }
+  function match(n, name) {
+    if (name === '*') return true;
+    if (name.endsWith(':*')) return n.name.startsWith(name.slice(0, -1));
+    return name.indexOf(':') < 0 ? n.local === name : n.name === name;
+  }
 
   function all(n, name, out) {
     out = out || [];

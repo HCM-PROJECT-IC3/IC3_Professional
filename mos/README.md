@@ -11,7 +11,7 @@ Trang tĩnh để học sinh ôn thi MOS: tải tệp đề → làm trên Micro
 - **Luyện tập** từng project (có hướng dẫn từng bước, điểm tạm tính) và **Thi thử** cả bộ đề 50 phút (ghi nhận âm thầm mỗi lần Ctrl+S, kết thúc đọc bản lưu cuối rồi chấm, thang 1000, đạt 700).
 - Firefox/Safari: nộp tệp đã lưu như cách cũ.
 
-Đề: Excel 8 bộ (281 task), PowerPoint 10 bộ (320 task), Word 10 bộ (283 task — tách từ bài giảng BaiOnN_HoanThien.pptx, tệp .docx thực hành nhúng trong slide).
+Đề: Excel 10 bộ (354 task — Tiết 1–2 soạn tay trong `tools/excel-lessons.json` từ Bai_on_1/2.xlsx), PowerPoint 10 bộ (320 task), Word 10 bộ (275 task — tách từ bài giảng BaiOnN_HoanThien.pptx, tệp .docx thực hành nhúng trong slide).
 
 ## Hạ tầng (dùng ít nhất có thể)
 
@@ -35,7 +35,6 @@ python mos/tools/build_catalog.py --src "C:/Users/Amin/Downloads/On_Tap_MOS"
 ```
 
 Đọc `On_tap_Excel.zip`, `On_Tap_PowerPoint.zip` → sinh `data/index.json`, `data/sets/*.json` và chép tệp đề vào `files/`.
-Word chưa có tệp đề trong bộ ôn tập nên trang hiện "Chưa có bộ đề".
 
 ## Tiêu chí chấm tự động
 
@@ -48,7 +47,11 @@ Viết tay trong `data/rubrics/excel.json`, `data/rubrics/powerpoint.json` theo 
 ```
 
 Các loại kiểm tra nằm trong `js/checks.js` (`x.*` cho Excel, `p.*` cho PowerPoint). Task không có tiêu chí hiện là **Tự kiểm**, không tính điểm.
-Hiện có: Excel Tiết 3 (35/35 task), PowerPoint Tiết 1 (24/29 task), Word Tiết 9 (29/35 task).
+Hiện có: Excel 348/354 task, PowerPoint 294/320, Word 210/275 (còn lại là task không lưu trong tệp — Quick Access Toolbar, AutoCorrect, lưu PDF/XPS/web, mật khẩu — hoặc tệp đề đã đúng sẵn).
+
+Ngoài các loại riêng, có tiêu chí chung theo XML: `p.xml` (PowerPoint: `part` = slide/allSlides/layout/master/handout/presProps/theme/viewProps/presentation)
+và `w.xml` (Word: `part` = body/document/settings/styles/numbering/header/footer/comments/footnotes/endnotes/custom/commentsExtended/diagramData; chọn đoạn bằng `para` — `startsWith`, `text`, `after`, `last`, `bookmark`, `withEl` — hoặc `table`, `within`).
+Luật `has`/`none`: `{ el, attrs, text, min, tol }`; `el` hoặc giá trị thuộc tính bắt đầu bằng `~` là biểu thức chính quy. `scope` luôn là ghi chú hiện cho học sinh.
 `"sticky": true` = task đã đúng một lần thì giữ (vd bật Track Changes rồi task sau lại tắt).
 
 Kiểm tra sau khi sửa tiêu chí:

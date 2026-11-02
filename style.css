@@ -3587,3 +3587,50 @@ html .q-type-badge { text-transform: none; letter-spacing: 0; font-size: .88rem;
 .result-stat-lbl { font-size: .9rem; }
 .result-stat.skipped .result-stat-val { color: var(--amber-text); }
 .game-zone-open-btn, #result .btn-secondary { font-family: inherit; font-size: .95rem; min-height: 44px; }
+
+/* Sảnh: nút tải offline đã tải xong — chữ xanh thay cho dòng trạng thái riêng */
+.lobby-extras #btnOfflinePack.is-packed { color: var(--green-text, var(--green)); }
+.lobby-extras #btnOfflinePack.is-packed i { color: inherit; }
+
+/* Bài luyện tập: tối đa 4 nhóm ngắn → luôn 1 hàng, chia đều */
+.lobby-card #mtModeToggle.mt-mode-toggle { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: .5rem; }
+.lobby-card #mtModeToggle .mt-mode-btn { min-height: 3.4rem; font-size: .95rem; padding: .45rem .25rem; }
+.lobby-card #mtModeToggle .mt-mode-btn i { font-size: 1.1rem; }
+
+/* Kết quả theo chủ đề: nút mở thẳng bộ chủ đề còn yếu */
+.result-topics .rt-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .7rem; }
+.result-topics .rt-practice {
+  display: inline-flex; align-items: center; gap: .4rem; min-height: 44px; padding: .45rem .9rem;
+  border: 1px solid var(--purple); border-radius: 8px; background: var(--card); color: var(--purple);
+  font: inherit; font-size: .95rem; font-weight: 700; cursor: pointer;
+}
+.result-topics .rt-practice:hover { background: var(--purple-lt); }
+.result-topics .rt-weak { font-size: .95rem; font-weight: 700; color: var(--text); }
+[data-theme="dark"] .result-topics .rt-practice { color: #aab6ff; border-color: #aab6ff; }
+
+/* ══ GỌN (màn kết quả + sảnh): bảng chủ đề và danh sách câu lên trên nếp gấp ══ */
+html body .result-card { max-width: 720px; padding: 1.1rem 1.4rem 1.3rem; }
+html body .result-ring-wrap { width: 8.5rem; height: 8.5rem; margin-bottom: .3rem; }
+html body .result-score { font-size: 2.6rem; }
+html body .result-label { font-size: 1rem; margin-bottom: .7rem; }
+html body .integrity-badge { margin-bottom: .8rem; padding: .3rem .9rem; }
+html body .result-stats { gap: .5rem; margin-bottom: .9rem; }
+html body .result-stat { padding: .5rem .6rem; }
+html body .result-stat-val { font-size: 1.45rem; margin-bottom: 0; }
+html body .result-topics { margin-top: .8rem; }
+@media (max-width: 600px) {
+  html body .result-card { padding: .9rem .85rem 1rem; }
+  html body .result-ring-wrap { width: 7.5rem; height: 7.5rem; }
+  html body .result-score { font-size: 2.2rem; }
+}
+
+/* Sảnh vừa 1 màn 1366×768: bớt đệm dọc giữa các nhóm */
+@media (min-width: 960px) and (max-height: 820px) {
+  html body .lobby-card { padding-top: .9rem; padding-bottom: .9rem; }
+  html body .lobby-card .form-group { margin-bottom: .45rem; }
+  html body .lobby-card .lobby-step { margin-bottom: .45rem; padding-bottom: .35rem; }
+  html body .lobby-col-more .lobby-more-label { margin-bottom: .4rem; }
+  html body .lobby-summary { padding: .6rem .8rem; }
+}
+html body .result-score { font-size: 2.15rem; }
+@media (max-width: 600px) { html body .result-score { font-size: 1.9rem; } }

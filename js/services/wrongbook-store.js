@@ -12,7 +12,8 @@
 
      keyOf(name, cls, school)        khoá học sinh
      qKey(q)                         khoá câu (uid ngân hàng, hoặc băm nội dung)
-     record(st, results, opts)       results: [{ q, ok, partial }] → { added, up, mastered, again }
+     record(st, results, opts)       results: [{ q, ok, partial, topic }] → { added, up, mastered, again }
+                                     topic = tên bộ chủ đề ("3. Quản lý thông tin") để Sổ tay lọc theo chủ đề
                                      opts: { src, review (phiên ôn sổ tay: không thêm câu mới), dueOnly (chỉ cho lên hộp khi tới hạn) }
                                      partial = câu chỉ hỏi 1 phần (1 ý Đúng/Sai của câu gốc) → đúng không cho lên hộp
      findByName(name)                học sinh trên máy này có đúng họ tên (lớp/trường lấy từ lịch sử bài làm)
@@ -91,10 +92,10 @@
       } else {
         if (seen.has(k)) return;
         seen.add(k);
-        if (it) { demote(it, now); out.again++; }
+        if (it) { demote(it, now); if (r.topic && !it.topic) it.topic = r.topic; out.again++; }
         else if (!o.review) {
           if (String(q.imageUrl || '').length > MAX_IMG) return;
-          sb.items[k] = { q: slim(q), box: 1, due: now, wrong: 1, right: 0, added: now, src: o.src || '' };
+          sb.items[k] = { q: slim(q), box: 1, due: now, wrong: 1, right: 0, added: now, src: o.src || '', topic: r.topic || '' };
           out.added++;
         }
       }

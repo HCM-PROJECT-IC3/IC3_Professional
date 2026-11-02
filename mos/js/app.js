@@ -39,12 +39,16 @@
     warn: '<path d="M12 3 2 21h20L12 3z"/><path d="M12 10v5M12 18h.01"/>',
     dock: '<rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 15h18"/>',
     expand: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+    home: '<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/>',
+    list: '<path d="M6 2h12v20H6z"/><path d="M9 7h6M9 11h6M9 15h4"/>',
+    help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.7M12 17h.01"/>',
   };
   const icon = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24" aria-hidden="true">${ICON[n]}</svg>`;
 
   const fmtSize = b => b > 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
   const fmtTime = t => new Date(t).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
-  const clock = ms => { const s = Math.max(0, Math.round(ms / 1000)); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
+  const pad2 = n => String(n).padStart(2, '0');
+  const clock = ms => { const s = Math.max(0, Math.round(ms / 1000)); return `${pad2(Math.floor(s / 3600))}:${pad2(Math.floor(s / 60) % 60)}:${pad2(s % 60)}`; };
   const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
   const setIdOf = pid => pid.replace(/-p\d+$/, '');
   const subjectOf = id => id.startsWith('ppt-') ? 'powerpoint' : id.startsWith('word-') ? 'word' : 'excel';
@@ -163,23 +167,25 @@
 
   // ---------------------------------------------------------------- khung trang
 
-  function header() {
-    const st = student();
+  const whoText = st => (st && st.name ? st.name + (st.cls ? ' · ' + st.cls : '') : 'Chưa nhập tên');
+
+  function sidebar() {
     const route = location.hash.split('/')[1] || '';
-    return `<header class="topbar">
-      <a class="brand" href="#/"><span class="brand-mark">MOS</span> Ôn luyện MOS</a>
-      <nav class="topnav">
-        <a href="#/" class="${route === '' ? 'on' : ''}">Trang chủ</a>
-        <a href="#/history" class="${route === 'history' ? 'on' : ''}">Lịch sử</a>
+    const on = names => (names.includes(route) ? ' class="on"' : '');
+    return `<aside class="sidenav">
+      <a class="side-brand" href="#/"><span class="brand-mark">MOS</span><span>Ôn luyện MOS</span></a>
+      <a class="side-who" href="#/" title="Sửa thông tin thí sinh">${icon('user')}<span>${esc(whoText(student()))}</span></a>
+      <nav class="side-nav">
+        <a href="#/"${on(['', 's', 'set', 'p', 'exam'])}>${icon('home')}<span>Trang chủ</span></a>
+        <a href="#/history"${on(['history', 'r'])}>${icon('list')}<span>Bảng điểm</span></a>
       </nav>
-      <a class="who" href="#/" title="Sửa thông tin">${icon('user')}<span>${st ? esc(st.name) + (st.cls ? ' · ' + esc(st.cls) : '') : 'Chưa nhập tên'}</span></a>
-      <button type="button" class="icon-btn" id="themeBtn" title="Đổi nền sáng/tối">${icon('moon')}</button>
-    </header>`;
+      <button type="button" class="side-theme" id="themeBtn">${icon('moon')}<span>Chế độ tối</span></button>
+    </aside>`;
   }
 
   function page(body, opts) {
     leave();
-    app.innerHTML = (opts && opts.bare ? '' : header()) + `<main class="wrap${opts && opts.wide ? ' wide' : ''}">${body}</main>`;
+    app.innerHTML = `<div class="shell">${sidebar()}<main class="wrap${opts && opts.wide ? ' wide' : ''}">${body}</main></div>`;
     window.scrollTo(0, 0);
   }
 
@@ -207,9 +213,10 @@
       </a>`;
     }).join('');
     page(`
+      <h2 class="section-title first">Chọn môn</h2>
+      <div class="tiles">${tiles}</div>
       <section class="panel intro">
-        <h1>Ôn luyện MOS</h1>
-        <p class="muted">Em tải tệp đề, làm trên Microsoft Office thật, rồi nộp tệp đã lưu để hệ thống chấm ngay trên máy em. Tệp không gửi đi đâu.</p>
+        <h2>Thông tin thí sinh</h2>
         <form class="student" id="studentForm" autocomplete="on">
           <label>Họ và tên<input name="name" required maxlength="80" value="${esc(st.name)}" placeholder="Nguyễn Văn A"></label>
           <label>Lớp<input name="cls" maxlength="20" value="${esc(st.cls)}" placeholder="8A1"></label>
@@ -217,23 +224,21 @@
           <button class="btn" type="submit">Lưu</button>
           <span class="saved muted" id="savedMsg" hidden>Đã lưu.</span>
         </form>
+        <details class="how-box"><summary>Cách làm bài</summary><ol class="how">
+          <li>Em tải tệp đề, làm trên Microsoft Office thật. Tệp chấm ngay trên máy em, không gửi đi đâu.</li>
+          <li><strong>Luyện tập</strong>: không giới hạn thời gian, có hướng dẫn từng bước, chấm ngay từng task.</li>
+          <li><strong>Thi thử</strong>: ${CFG.examMinutes} phút như phòng thi, không xem hướng dẫn, kết thúc mới có điểm.</li>
+          <li>Điểm theo thang 1000, đạt từ ${CFG.passScore}. Task ghi "Tự kiểm" em tự đối chiếu với hướng dẫn.</li>
+        </ol></details>
       </section>
-      <h2 class="section-title">Chọn môn</h2>
-      <div class="tiles">${tiles}</div>
-      <h2 class="section-title">Cách làm</h2>
-      <ol class="how">
-        <li><strong>Luyện tập</strong> từng project: có hướng dẫn từng bước, nộp tệp là biết task nào đúng/sai.</li>
-        <li><strong>Thi thử</strong> cả bộ đề trong ${CFG.examMinutes} phút như phòng thi: không xem hướng dẫn, nộp tệp từng project, kết thúc mới có điểm.</li>
-        <li>Điểm theo thang MOS 1000, đạt từ ${CFG.passScore}. Task ghi "Tự kiểm" chưa chấm tự động được — em tự đối chiếu với hướng dẫn.</li>
-      </ol>
-      ${recent.length ? `<h2 class="section-title">Gần đây</h2>${historyTable(recent)}<p><a href="#/history">Xem tất cả</a></p>` : ''}
+      ${recent.length ? `<h2 class="section-title">Gần đây</h2>${historyTable(recent)}<p><a href="#/history">Xem bảng điểm</a></p>` : ''}
     `);
     $('#studentForm').addEventListener('submit', e => {
       e.preventDefault();
       const f = new FormData(e.target);
       store.set('mos_student', { name: f.get('name').trim(), cls: f.get('cls').trim(), school: f.get('school').trim() });
       $('#savedMsg').hidden = false;
-      document.querySelector('.who span').textContent = f.get('name').trim() + (f.get('cls').trim() ? ' · ' + f.get('cls').trim() : '');
+      document.querySelector('.side-who span').textContent = whoText(student());
     });
   }
 
@@ -277,23 +282,92 @@
     const set = await getSet(id);
     const idx = await getIndex();
     const subj = idx.subjects.find(s => s.id === set.subject);
-    const rubrics = await getRubrics(set.subject);
+    startScreen(set, subj, await getRubrics(set.subject), store.get('mos_mode', 'practice'));
+  }
+
+  /** Màn bắt đầu bộ đề: chọn chế độ Luyện tập / Thi thử, xem số task – thời gian – điểm đạt, rồi bấm Bắt đầu. */
+  function startScreen(set, subj, rubrics, mode) {
     const best = bestScores();
+    const taskN = set.projects.reduce((a, p) => a + p.tasks.length, 0);
+    const autoN = set.projects.reduce((a, p) => a + Object.keys(rubrics[p.id] || {}).length, 0);
+    const pracState = p => store.get('mos_prac_' + p.id, null);
+    const doneOf = p => { const s = pracState(p); return s ? p.tasks.filter(t => (s.marks[t.no] || {}).done).length : 0; };
     const rows = set.projects.map(p => {
       const auto = Object.keys(rubrics[p.id] || {}).length;
       const b = best['practice:' + p.id];
+      const done = doneOf(p);
       return `<a class="row-link" href="#/p/${p.id}">
         <span class="row-title">${esc(p.title)}</span>
-        <span class="muted">${p.tasks.length} task${auto ? ` · ${auto} tự chấm` : ''}</span>
+        <span class="muted">${p.tasks.length} task${auto ? ` · ${auto} tự chấm` : ''}${done ? ` · đã làm ${done}` : ''}</span>
         <span>${b != null ? `<span class="score-sm ${b >= CFG.passScore ? 'pass' : 'fail'}">${b}</span>` : ''}</span>
         ${icon('right')}
       </a>`;
     }).join('');
-    page(`${crumbs([['Trang chủ', '#/'], [subj.name, '#/s/' + subj.id], [set.title, '']])}
-      <div class="head-row"><h1>${esc(subj.name)} · ${esc(set.title)}</h1>
-        <a class="btn" href="#/exam/${set.id}">${icon('clock')} Thi thử ${CFG.examMinutes} phút</a></div>
+    const examKey = 'mos_exam_' + set.id;
+    page(`<div class="gm-head">
+        <a class="gm-back" href="#/s/${subj.id}" title="Về danh sách bộ đề ${esc(subj.name)}">${icon('left')}</a>
+        <span class="gm-app"><span class="tile-mark m-${subj.id}">${subj.name[0]}</span>${esc(subj.name)}</span>
+        <h1>${esc(set.title)}</h1>
+      </div>
+      <section class="panel gm-start">
+        ${store.get(examKey, null) ? `<p class="gm-resume">${icon('clock')}<span>Em đang thi thử dở bộ đề này.</span><a class="btn" href="#/exam/${set.id}">Tiếp tục bài thi</a></p>` : ''}
+        <div class="gm-opts">
+          <label for="modeSel">Chế độ</label>
+          <select id="modeSel">
+            <option value="practice"${mode === 'practice' ? ' selected' : ''}>Luyện tập</option>
+            <option value="exam"${mode === 'exam' ? ' selected' : ''}>Thi thử</option>
+          </select>
+          <p class="muted small" id="modeHint"></p>
+        </div>
+        <div class="gm-stats" id="gmStats"></div>
+        <div id="gmWho"></div>
+        <div class="gm-go">
+          <button type="button" class="link-btn" id="goPage">Làm trên trang đầy đủ</button>
+          <a class="btn-sec" href="#/s/${subj.id}">Huỷ bỏ</a>
+          <button type="button" class="btn" id="goBtn">Bắt đầu</button>
+        </div>
+      </section>
+      <h2 class="section-title">Các project</h2>
       <div class="rows">${rows}</div>
       ${set.attachments ? `<details class="panel attach"><summary>Dữ liệu đính kèm của đề</summary>${attachTable(set.attachments)}</details>` : ''}`);
+
+    const draw = () => {
+      const exam = mode === 'exam';
+      const st = student();
+      $('#modeHint').textContent = exam
+        ? `Thi cả ${set.projects.length} project trong ${CFG.examMinutes} phút, không xem hướng dẫn. Kết thúc mới có điểm.`
+        : 'Không giới hạn thời gian, có hướng dẫn từng bước, chấm ngay từng task.';
+      $('#gmStats').innerHTML = `
+        <div class="gm-stat"><div class="gm-box"><b>${taskN}</b><small>${autoN} tự chấm</small></div><span>Task</span></div>
+        <div class="gm-stat"><div class="gm-box"><b>${exam ? CFG.examMinutes : '—'}</b><small>${exam ? 'Phút' : 'Không giới hạn'}</small></div><span>Thời gian</span></div>
+        <div class="gm-stat"><div class="gm-box"><b>${CFG.passScore}</b><small>Hết 1000</small></div><span>Điểm đạt</span></div>`;
+      const needName = exam && !(st && st.name);
+      $('#gmWho').innerHTML = needName
+        ? `<p class="warn">${icon('warn')} Em nhập họ tên ở <a href="#/">trang chủ</a> trước khi thi để thầy cô nhận được kết quả.</p>`
+        : st && st.name ? `<p class="muted small">Thí sinh: <strong>${esc(st.name)}</strong>${st.cls ? ' · Lớp ' + esc(st.cls) : ''}</p>` : '';
+      $('#goBtn').disabled = needName;
+      $('#goPage').disabled = needName;
+    };
+    const go = useDock => {
+      if (mode === 'exam') return beginExam(set, useDock);
+      const p = set.projects.find(x => doneOf(x) < x.tasks.length) || set.projects[0];
+      if (useDock) openDock('p/' + p.id); else location.hash = '#/p/' + p.id;
+    };
+    $('#modeSel').addEventListener('change', e => { mode = e.target.value; store.set('mos_mode', mode); draw(); });
+    $('#goBtn').addEventListener('click', () => go(true));
+    $('#goPage').addEventListener('click', () => go(false));
+    draw();
+  }
+
+  async function beginExam(set, useDock) {
+    const key = 'mos_exam_' + set.id;
+    if (!store.get(key, null)) {
+      for (const p of set.projects) if (W.supported) await W.delHandle('exam:' + p.id);
+      store.set(key, { startedAt: Date.now(), endsAt: Date.now() + CFG.examMinutes * 60000, cur: 0, subs: {}, marks: {} });
+    }
+    if (useDock) openDock('exam/' + set.id);
+    else if (location.hash === '#/exam/' + set.id) route();
+    else location.hash = '#/exam/' + set.id;
   }
 
   function attachTable(rows) {
@@ -448,7 +522,7 @@
     return {
       mode: 'practice', subj, set, project, rubric, state: get,
       record(results, fileName) { const s = get(); keepSticky(rubric, s.byNo, results).forEach(r => { s.byNo[r.no] = r; }); s.fileName = fileName; s.at = Date.now(); store.set(k, s); },
-      mark(no, kind) { const s = get(); s.marks[no] = s.marks[no] || {}; s.marks[no][kind] = !s.marks[no][kind]; store.set(k, s); },
+      mark(no, kind, val) { const s = get(); s.marks[no] = s.marks[no] || {}; s.marks[no][kind] = val ?? !s.marks[no][kind]; store.set(k, s); },
       reset() { store.del(k); },
     };
   }
@@ -465,7 +539,7 @@
         ex.subs[project.id] = { byNo, fileName, at: Date.now() };
         store.set(key, ex);
       },
-      mark(no, kind) { const ex = store.get(key, null); if (!ex) return; const m = (ex.marks[project.id] = ex.marks[project.id] || {}); m[no] = m[no] || {}; m[no][kind] = !m[no][kind]; store.set(key, ex); },
+      mark(no, kind, val) { const ex = store.get(key, null); if (!ex) return; const m = (ex.marks[project.id] = ex.marks[project.id] || {}); m[no] = m[no] || {}; m[no][kind] = val ?? !m[no][kind]; store.set(key, ex); },
     };
   }
 
@@ -765,8 +839,10 @@
     let onSave = async () => {};
     const ws = workSession({ mode: 'practice', subj, project, slot: 'practice-' + pid, onSave: f => onSave(f) });
     await ws.init();
-    if (dock) return dockView({ ctx, ws, title: `${subj.name} · ${set.title} · ${project.title.split(' · ')[0]}`,
-      undock: 'p/' + pid, bindSave: f => { onSave = f; } });
+    if (dock) return dockView({ ctx, ws, title: `${subj.name} · ${set.title}`, undock: 'p/' + pid,
+      pos, total: set.projects.length, stateOf: q => practiceCtx(subj, set, q, {}).state(),
+      goProject: i => { location.hash = '#/dock/p/' + set.projects[i].id; },
+      bindSave: f => { onSave = f; } });
 
     const openGuides = new Set();
     page(`${crumbs([['Trang chủ', '#/'], [subj.name, '#/s/' + subj.id], [set.title, '#/set/' + set.id], [project.title, '']])}
@@ -815,75 +891,159 @@
     if (kind) el.classList.add(kind);
   }
 
-  // ---------------------------------------------------------------- thanh thu gọn: dùng chung luyện tập + thi thử
+  // ---------------------------------------------------------------- thanh làm bài kiểu GMetrix: dùng chung luyện tập + thi thử
+  // Thanh trên: Project x/y, đồng hồ, Danh sách / Làm lại / Chấm / Kết thúc. Hàng tab: Tổng quan + Task 1..n.
+  // Hàng dưới: Task trước · Đã làm xong · Đánh dấu xem lại · Task sau (+ Chấm task, Hướng dẫn khi luyện tập).
+
+  let jumpTo = null; // bấm 1 task của project khác trong Danh sách → mở project đó đúng task này
 
   function dockView(o) {
     const { ctx, ws } = o;
+    const exam = ctx.mode === 'exam';
     document.body.classList.add('is-dock');
     onLeave(() => document.body.classList.remove('is-dock'));
     const p = ctx.project;
-    let cur = Math.max(0, p.tasks.findIndex(t => !(ctx.state().marks[t.no] || {}).done));
+    const tasks = p.tasks;
+    const firstOpen = () => Math.max(0, tasks.findIndex(t => !(ctx.state().marks[t.no] || {}).done));
+    let cur = ws.live() || ws.upload ? firstOpen() : -1; // -1 = tab Tổng quan (tệp đề)
+    if (jumpTo && jumpTo.pid === p.id) { cur = Math.max(0, tasks.findIndex(t => t.no === jumpTo.no)); jumpTo = null; }
     let showGuide = false;
-    app.innerHTML = `<div class="dock" id="dock">
-      <header class="dock-bar">
-        <span class="dock-title">${esc(o.title)}</span>
-        ${o.tabs || ''}
-        <span class="dock-file" id="dockFile"></span>
-        ${o.timer ? `<span class="timer" id="timer">${icon('clock')}<b></b></span>` : ''}
-        <button type="button" class="icon-btn" id="undockBtn" title="Mở rộng ra trang đầy đủ">${icon('expand')}</button>
-        ${o.endBtn || ''}
+    const big = store.get('mos_gm_big', false);
+    const name = esc(ctx.subj.name);
+    const hasAuto = autoNos(ctx).length > 0;
+    app.innerHTML = `<div class="dock gm${big ? ' big' : ''}" id="dock">
+      <header class="gm-bar">
+        <button type="button" class="gm-icon" data-i="-1" title="Tổng quan: tệp đề, cách mở ${name}">${icon('help')}</button>
+        <button type="button" class="gm-icon gm-aa" data-gm="font" title="Đổi cỡ chữ" aria-pressed="${big}">AA</button>
+        <span class="gm-proj">
+          <button type="button" class="gm-icon" data-proj="-1" ${o.pos === 0 ? 'disabled' : ''} title="Project trước">${icon('left')}</button>
+          <span>Project ${o.pos + 1} / ${o.total}</span>
+          <button type="button" class="gm-icon" data-proj="1" ${o.pos === o.total - 1 ? 'disabled' : ''} title="Project sau">${icon('right')}</button>
+        </span>
+        <span class="gm-mid">${o.timer ? '<span class="timer" id="timer"><b></b></span>' : `<span class="gm-set">${esc(o.title)}</span>`}</span>
+        <nav class="gm-menu">
+          <button type="button" data-gm="summary">Danh sách</button>
+          <button type="button" data-act="restart" id="gmRestart">Làm lại project</button>
+          ${!exam && hasAuto ? '<button type="button" data-act="checkAll">Chấm project</button>' : ''}
+          ${o.endBtn || ''}
+          <button type="button" class="gm-icon" id="undockBtn" title="Mở rộng ra trang đầy đủ">${icon('expand')}</button>
+        </nav>
       </header>
-      <div class="dock-body" id="dockBody"></div>
-      <p class="status dock-status" id="status" role="status"></p>
+      <nav class="gm-tabs" id="gmTabs" aria-label="Task"></nav>
+      <section class="gm-body" id="dockBody"></section>
+      <footer class="gm-foot">
+        <p class="status" id="status" role="status"></p>
+        <div class="gm-actions" id="gmActions"></div>
+        <div class="gm-side" id="gmSide"></div>
+      </footer>
+      <div class="modal" id="sumModal" hidden><div class="modal-box gm-sum" role="dialog" aria-modal="true" aria-labelledby="sumTitle">
+        <h2 id="sumTitle">${exam ? 'Thi thử' : 'Luyện tập'} ${name} · ${esc(ctx.set.title)}</h2>
+        <div class="gm-sum-list" id="sumList"></div>
+        <div class="modal-actions"><button type="button" class="btn-sec" data-gm="close">Đóng</button>
+          ${exam ? '<button type="button" class="btn" data-gm="finish">Kết thúc bài thi</button>' : ''}</div>
+      </div></div>
       ${o.modal || ''}
     </div>`;
-    const body = $('#dockBody');
+    const root = $('#dock');
+
+    const summaryHtml = () => ctx.set.projects.map((q, i) => {
+      const st = q.id === p.id ? ctx.state() : o.stateOf(q);
+      const doneN = q.tasks.filter(t => (st.marks[t.no] || {}).done).length;
+      return `<details class="gm-sum-proj"${i === o.pos ? ' open' : ''}>
+        <summary><span>${esc(q.title)}</span><small>${doneN}/${q.tasks.length} hoàn thành</small></summary>
+        <table class="grid small"><thead><tr><th>Task</th><th>Đã xem</th><th>Xem lại</th><th>Hoàn thành</th>${exam ? '' : '<th>Kết quả</th>'}</tr></thead>
+        <tbody>${q.tasks.map(t => {
+          const m = st.marks[t.no] || {};
+          const r = exam ? null : st.byNo[t.no];
+          return `<tr data-jump="${i}:${t.no}" tabindex="0"><td>Task ${t.no}</td><td>${m.viewed ? icon('check') : ''}</td>
+            <td>${m.review ? icon('flag', 'flag') : ''}</td><td>${m.done ? icon('check') : ''}</td>
+            ${exam ? '' : `<td>${r ? `<span class="verdict v-${r.status}">${verdictHtml(r)}</span>` : ''}</td>`}</tr>`;
+        }).join('')}</tbody></table></details>`;
+    }).join('');
+
     const draw = () => {
+      const t = tasks[cur];
+      if (t && !(ctx.state().marks[t.no] || {}).viewed) ctx.mark(t.no, 'viewed', true);
       const s = ctx.state();
-      const t = p.tasks[cur];
-      const auto = !!ctx.rubric[t.no];
-      const exam = ctx.mode === 'exam';
-      const r = exam ? null : s.byNo[t.no];
-      const m = s.marks[t.no] || {};
+      const m = t ? s.marks[t.no] || {} : {};
+      const r = t && !exam ? s.byNo[t.no] : null;
+      const auto = t && !!ctx.rubric[t.no];
       const sum = summaryOf(ctx);
-      $('#dockFile').innerHTML = ws.live() ? `<span class="dot" aria-hidden="true"></span>${esc(ws.fileName)}${ws.server ? ` <button type="button" class="dock-open" data-act="office">Mở ${esc(ctx.subj.name)}</button>` : ''}` : '';
-      body.innerHTML = `
-        <nav class="dock-chips" aria-label="Danh sách task">${p.tasks.map((x, i) => {
-          const rr = exam ? null : s.byNo[x.no];
-          const mm = s.marks[x.no] || {};
-          return `<button type="button" class="chip-btn${i === cur ? ' on' : ''}${rr ? ' is-' + rr.status : ''}${mm.done ? ' done' : ''}" data-i="${i}" title="Task ${x.no}">${x.no}${mm.review ? icon('flag', 'flag') : ''}</button>`;
-        }).join('')}
-          ${!exam && sum.score != null && sum.checked ? `<span class="dock-score ${sum.checked < sum.auto ? 'partial' : sum.score >= CFG.passScore ? 'pass' : 'fail'}" title="${sum.checked < sum.auto ? 'Tạm tính: mới chấm ' + sum.checked + '/' + sum.auto + ' task' : 'Điểm project'}">${sum.score}<small>/1000${sum.checked < sum.auto ? ' tạm' : ''}</small></span>` : ''}</nav>
-        <section class="dock-task task${r ? ' is-' + r.status : ''}" data-no="${t.no}">
-          ${ws.live() || ws.upload ? '' : `<div class="dock-start">${workPanel(ctx, ws)}</div>`}
-          <p class="task-text"><strong class="task-no">Task ${t.no}.</strong> ${esc(t.text)}</p>
+      $('#gmRestart').hidden = !ws.live();
+
+      $('#gmTabs').innerHTML = `<button type="button" class="gm-tab${cur === -1 ? ' on' : ''}" data-i="-1">Tổng quan</button>` + tasks.map((x, i) => {
+        const rr = exam ? null : s.byNo[x.no];
+        const mm = s.marks[x.no] || {};
+        return `<button type="button" class="gm-tab${i === cur ? ' on' : ''}${rr ? ' is-' + rr.status : ''}${mm.done ? ' done' : ''}" data-i="${i}">Task ${x.no}${mm.done ? icon('check') : ''}${mm.review ? icon('flag', 'flag') : ''}</button>`;
+      }).join('');
+
+      if (!t) {
+        $('#dockBody').innerHTML = `<div class="gm-over"><div class="gm-over-file">${workPanel(ctx, ws)}</div>
+          <div class="gm-over-info"><p><strong>${esc(p.title)}</strong></p>
+            <p class="muted small">${tasks.length} task${hasAuto && !exam ? ` · ${autoNos(ctx).length} tự chấm` : ''}. Làm lần lượt từng task trên ${name}, bấm <kbd>Ctrl</kbd>+<kbd>S</kbd> sau mỗi task.</p></div></div>`;
+        const main = p.files.find(f => f.name === p.main);
+        if (main) checkAvailable(main.path).then(okay => { const w = $('#fileWarn'); if (w && !okay) w.hidden = false; });
+      } else {
+        $('#dockBody').innerHTML = `<div class="gm-task task${r ? ' is-' + r.status : ''}">
+          ${ws.live() || ws.upload ? '' : `<p class="gm-nofile">${icon('warn')}<span>Em chưa mở tệp đề.</span><button type="button" class="link-btn" data-i="-1">Mở ở tab Tổng quan</button></p>`}
+          <p class="gm-text">${esc(t.text)}</p>
           ${r ? `<p class="task-note"><span class="verdict">${verdictHtml(r)}</span> ${esc(r.note || '')}</p>` : ''}
           ${showGuide && t.guide ? `<div class="dock-guide"><div class="steps">${lines(t.guide)}</div>${t.tips ? `<div class="tips"><strong>Lưu ý:</strong>${lines(t.tips)}</div>` : ''}</div>` : ''}
-        </section>
-        <div class="dock-actions" data-no="${t.no}">
-          <button type="button" class="icon-btn" data-nav="-1" ${cur === 0 ? 'disabled' : ''} title="Task trước">${icon('left')}</button>
-          <button type="button" class="icon-btn" data-nav="1" ${cur === p.tasks.length - 1 ? 'disabled' : ''} title="Task sau">${icon('right')}</button>
-          ${!exam && auto ? `<button type="button" class="btn" data-act="check">${icon('check')}Chấm task này</button>` : ''}
-          <button type="button" class="mark${m.done ? ' on' : ''}" data-mark="done" aria-pressed="${!!m.done}">${icon('check')}Đã làm</button>
-          <button type="button" class="mark${m.review ? ' on' : ''}" data-mark="review" aria-pressed="${!!m.review}">${icon('flag')}Xem lại</button>
-          ${!exam && t.guide ? `<button type="button" class="mark${showGuide ? ' on' : ''}" data-guide="1">${icon('eye')}Hướng dẫn</button>` : ''}
-          ${!exam && !auto ? '<span class="muted small">Task tự kiểm</span>' : ''}
         </div>`;
+      }
+
+      const acts = $('#gmActions');
+      if (t) acts.dataset.no = t.no; else delete acts.dataset.no;
+      acts.innerHTML = `
+        <button type="button" class="gm-btn g-prev" data-nav="-1" ${cur === -1 ? 'disabled' : ''}>Task trước</button>
+        ${t ? `<button type="button" class="gm-btn g-done${m.done ? ' on' : ''}" data-mark="done" aria-pressed="${!!m.done}">${m.done ? icon('check') : ''}Đã làm xong</button>
+        <button type="button" class="gm-btn g-review${m.review ? ' on' : ''}" data-mark="review" aria-pressed="${!!m.review}">${m.review ? icon('flag') : ''}Đánh dấu xem lại</button>` : ''}
+        <button type="button" class="gm-btn g-next" data-nav="1" ${cur === tasks.length - 1 ? 'disabled' : ''}>${cur === -1 ? 'Bắt đầu Task 1' : 'Task sau'}</button>
+        ${t && !exam && auto ? '<button type="button" class="gm-btn g-check" data-act="check">Chấm task</button>' : ''}
+        ${t && !exam && t.guide ? `<button type="button" class="gm-btn g-help${showGuide ? ' on' : ''}" data-guide="1">Hướng dẫn</button>` : ''}`;
+
+      $('#gmSide').innerHTML = `${ws.live() ? `<span class="gm-file" title="Tệp đang theo dõi"><span class="dot" aria-hidden="true"></span>${esc(ws.fileName)}</span>
+          ${ws.server ? `<button type="button" class="link-btn" data-act="office">Mở ${name}</button>` : ''}` : ''}
+        ${!exam && sum.score != null && sum.checked ? `<span class="dock-score ${sum.checked < sum.auto ? 'partial' : sum.score >= CFG.passScore ? 'pass' : 'fail'}" title="${sum.checked < sum.auto ? `Tạm tính: mới chấm ${sum.checked}/${sum.auto} task` : 'Điểm project'}">${sum.score}<small>/1000${sum.checked < sum.auto ? ' tạm' : ''}</small></span>` : ''}`;
+
+      if (!$('#sumModal').hidden) $('#sumList').innerHTML = summaryHtml();
       if (o.afterDraw) o.afterDraw();
     };
-    body.addEventListener('click', e => {
-      const chip = e.target.closest('[data-i]');
-      const nav = e.target.closest('[data-nav]');
-      if (chip) { cur = +chip.dataset.i; showGuide = false; draw(); }
-      else if (nav) { cur = Math.min(p.tasks.length - 1, Math.max(0, cur + +nav.dataset.nav)); showGuide = false; draw(); }
-      else if (e.target.closest('[data-guide]')) { showGuide = !showGuide; draw(); }
+
+    const jump = v => {
+      const [i, no] = v.split(':').map(Number);
+      $('#sumModal').hidden = true;
+      if (i === o.pos) { cur = Math.max(0, tasks.findIndex(t => t.no === no)); showGuide = false; draw(); }
+      else { jumpTo = { pid: ctx.set.projects[i].id, no }; o.goProject(i); }
+    };
+    root.addEventListener('click', e => {
+      const el = e.target.closest('[data-i],[data-nav],[data-guide],[data-gm],[data-proj],[data-jump]');
+      if (!el || el.disabled) return;
+      const d = el.dataset;
+      if (d.i != null) { cur = +d.i; showGuide = false; draw(); }
+      else if (d.nav) { cur = Math.min(tasks.length - 1, Math.max(-1, cur + +d.nav)); showGuide = false; draw(); }
+      else if (d.guide) { showGuide = !showGuide; draw(); }
+      else if (d.proj) o.goProject(o.pos + +d.proj);
+      else if (d.jump) jump(d.jump);
+      else if (d.gm === 'font') {
+        const on = root.classList.toggle('big');
+        el.setAttribute('aria-pressed', on);
+        store.set('mos_gm_big', on);
+      } else if (d.gm === 'summary') { $('#sumList').innerHTML = summaryHtml(); $('#sumModal').hidden = false; }
+      else if (d.gm === 'close') $('#sumModal').hidden = true;
+      else if (d.gm === 'finish') { $('#sumModal').hidden = true; $('#endBtn').click(); }
+    });
+    root.addEventListener('keydown', e => {
+      if (e.key === 'Escape') root.querySelectorAll('.modal').forEach(x => { x.hidden = true; });
+      const row = e.target.closest && e.target.closest('[data-jump]');
+      if (row && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); jump(row.dataset.jump); }
     });
     $('#undockBtn').addEventListener('click', () => {
       if (window.opener && !window.opener.closed && bc) { bc.postMessage({ type: 'undock', hash: o.undock }); window.close(); }
       else location.hash = '#/' + o.undock;
     });
     const ui = { redraw: draw, status: setStatus };
-    o.bindSave(wireWork(app.querySelector('#dock'), ctx, ws, ui));
+    o.bindSave(wireWork(root, ctx, ws, ui));
     draw();
     if (o.after) o.after({ draw });
   }
@@ -944,36 +1104,7 @@
 
     if (!ex) {
       if (dock) { location.hash = '#/exam/' + setId; return; }
-      const st = student();
-      const autoN = set.projects.reduce((a, p) => a + Object.keys(rubrics[p.id] || {}).length, 0);
-      const taskN = set.projects.reduce((a, p) => a + p.tasks.length, 0);
-      page(`${crumbs([['Trang chủ', '#/'], [subj.name, '#/s/' + subj.id], [set.title, '#/set/' + set.id], ['Thi thử', '']])}
-        <section class="panel exam-intro">
-          <h1>Thi thử ${esc(subj.name)} · ${esc(set.title)}</h1>
-          <dl class="facts"><div><dt>Thời gian</dt><dd>${CFG.examMinutes} phút</dd></div>
-            <div><dt>Project</dt><dd>${set.projects.length}</dd></div>
-            <div><dt>Task</dt><dd>${taskN} (${autoN} chấm tự động)</dd></div>
-            <div><dt>Điểm đạt</dt><dd>${CFG.passScore}/1000</dd></div></dl>
-          <ul class="rules">
-            <li>Mỗi project có 1 tệp đề riêng. Em bấm "Tải đề &amp; bắt đầu làm", mở tệp bằng ${esc(subj.name)} và làm bài.</li>
-            ${W.supported ? '<li>Mỗi lần em bấm <kbd>Ctrl</kbd>+<kbd>S</kbd>, bài được ghi nhận tự động. Khi kết thúc, hệ thống đọc bản lưu cuối cùng — không cần nộp tệp.</li>'
-              : '<li>Làm xong project nào thì nộp tệp đã lưu ở project đó. Được nộp lại nhiều lần.</li>'}
-            <li>Nên dùng <strong>thanh làm bài thu gọn</strong>: thanh nằm dưới đáy màn hình, ${esc(subj.name)} ở phía trên — giống phòng thi.</li>
-            <li>Không xem hướng dẫn trong lúc thi. Hết giờ bài tự kết thúc; project chưa làm tính 0 điểm phần tự chấm.</li>
-          </ul>
-          ${st && st.name ? `<p>Thí sinh: <strong>${esc(st.name)}</strong>${st.cls ? ' · Lớp ' + esc(st.cls) : ''} <a href="#/">Sửa</a></p>
-            <div class="row-actions"><button class="btn big" id="startDock">${icon('dock')}Bắt đầu với thanh thu gọn</button>
-            <button class="btn-sec" id="startBtn">Làm trên trang đầy đủ</button></div>`
-            : `<p class="warn">${icon('warn')} Em nhập họ tên ở <a href="#/">trang chủ</a> trước khi thi để thầy cô nhận được kết quả.</p>`}
-        </section>`);
-      const begin = async useDock => {
-        for (const p of set.projects) if (W.supported) await W.delHandle('exam:' + p.id);
-        store.set(key, { startedAt: Date.now(), endsAt: Date.now() + CFG.examMinutes * 60000, cur: 0, subs: {}, marks: {} });
-        if (useDock) openDock('exam/' + setId); else viewExam(setId);
-      };
-      const b = $('#startBtn');
-      if (b) { b.addEventListener('click', () => begin(false)); $('#startDock').addEventListener('click', () => begin(true)); }
-      return;
+      return startScreen(set, subj, rubrics, 'exam');
     }
     ex = migrateExam(ex);
     store.set(key, ex);
@@ -1012,7 +1143,8 @@
       <div class="modal-actions"><button type="button" class="btn-sec" id="endNo">Làm tiếp</button><button type="button" class="btn" id="endYes">Kết thúc</button></div>
     </div></div>`;
     const wireEnd = () => {
-      app.querySelector('.ptabs').addEventListener('click', e => { const b2 = e.target.closest('[data-p]'); if (b2) go(+b2.dataset.p); });
+      const pt = app.querySelector('.ptabs');
+      if (pt) pt.addEventListener('click', e => { const b2 = e.target.closest('[data-p]'); if (b2) go(+b2.dataset.p); });
       $('#endBtn').addEventListener('click', () => {
         const e2 = store.get(key, ex);
         $('#endInfo').textContent = `Đã ghi nhận ${Object.keys(e2.subs).length}/${set.projects.length} project. Hệ thống đọc bản lưu cuối của các tệp đang theo dõi rồi chấm. Sau khi kết thúc em không sửa được nữa.`;
@@ -1034,8 +1166,8 @@
 
     if (dock) {
       return dockView({ ctx, ws, title: `${subj.name} · ${set.title}`, undock: 'exam/' + setId, timer: true,
-        tabs: `<nav class="ptabs dock-tabs">${tabsHtml()}</nav>`,
-        endBtn: '<button type="button" class="btn-end" id="endBtn">Kết thúc</button>', modal,
+        pos: ex.cur, total: set.projects.length, stateOf: q => examCtx(subj, set, q, {}, key).state(), goProject: go,
+        endBtn: '<button type="button" class="gm-end" id="endBtn">Kết thúc</button>', modal,
         bindSave: f => { onSaveCur = f; }, after: wireEnd, afterDraw: () => drawTabs() });
     }
 

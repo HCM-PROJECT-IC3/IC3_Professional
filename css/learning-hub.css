@@ -205,3 +205,21 @@ a.lh-btn { text-decoration: none; }
   .lh-step .lh-chip { margin-left: 42px; }
   .lh-step .lh-btn { margin-left: auto; }
 }
+
+/* Sổ tay: lọc câu sai theo chủ đề */
+.lh-filters { display: flex; flex-wrap: wrap; gap: .4rem; margin: .7rem 0 .2rem; }
+.lh-filter {
+  min-height: 40px; padding: .35rem .75rem; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--card); color: var(--text);
+  font: inherit; font-size: .9rem; font-weight: 700; cursor: pointer;
+}
+.lh-filter b { margin-left: .2rem; color: var(--muted); font-weight: 800; }
+.lh-filter:hover { border-color: var(--purple); }
+.lh-filter.is-on { background: var(--purple); border-color: var(--purple); color: #fff; }
+.lh-filter.is-on b { color: inherit; }
+
+/* Gọn: ô số liệu và thẻ thấp hơn để thấy được nhiều nội dung hơn */
+html body .lh-box { padding: 1rem 1.2rem .8rem; }
+html body .lh-kpi { padding: .55rem .75rem; }
+html body .lh-kpi b { font-size: 1.3rem; }
+html body .lh-card { padding: .7rem .85rem; margin-bottom: .65rem; }

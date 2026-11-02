@@ -141,14 +141,18 @@
     if (!isSupported()) { btn.hidden = true; return; }
 
     const sel = () => ({ cat: $('categorySelect') && $('categorySelect').value, lvl: $('levelSelect') && $('levelSelect').value });
+    // Đã tải đủ → chỉ đổi nhãn nút (giờ tải nằm ở title); dòng chữ chỉ dùng khi đang tải hoặc lỗi.
     function refreshStatus() {
       const s = sel();
-      if (!s.cat || !s.lvl) { status.textContent = ''; status.classList.remove('is-ready'); return; }
-      const rec = lastPack(s.cat, s.lvl);
-      status.classList.toggle('is-ready', !!rec && !rec.failed);
-      status.textContent = rec
-        ? '✓ Đã tải sẵn ' + rec.name + ' lúc ' + fmtTime(rec.at) + (rec.failed ? ' (thiếu ' + rec.failed + ' file — thử tải lại khi có mạng tốt)' : ' — dùng được khi mất mạng')
-        : '';
+      const rec = s.cat && s.lvl ? lastPack(s.cat, s.lvl) : null;
+      const ok = !!rec && !rec.failed;
+      btn.classList.toggle('is-packed', ok);
+      btn.innerHTML = ok
+        ? '<i class="fa-solid fa-circle-check"></i> Đã tải để dùng offline'
+        : '<i class="fa-solid fa-cloud-arrow-down"></i> Tải sẵn để dùng offline';
+      btn.title = ok ? 'Đã tải ' + rec.name + ' lúc ' + fmtTime(rec.at) + '. Bấm để tải lại.' : 'Tải câu hỏi của cấp độ đang chọn về máy để làm bài khi mất mạng';
+      status.classList.remove('is-ready');
+      status.textContent = rec && rec.failed ? 'Còn thiếu ' + rec.failed + ' file. Bấm tải lại khi mạng tốt hơn.' : '';
     }
 
     let busy = false;
@@ -160,7 +164,6 @@
       try {
         const rec = await pack(s.cat, s.lvl, (t) => { status.textContent = t; });
         refreshStatus();
-        if (rec.failed) status.textContent = '⚠ Đã lưu ' + (rec.total - rec.failed) + '/' + rec.total + ' file. ' + status.textContent;
       } catch (e) {
         status.textContent = 'Chưa tải được: ' + (e && e.message ? e.message : e);
       } finally { busy = false; btn.disabled = false; }

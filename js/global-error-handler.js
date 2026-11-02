@@ -67,6 +67,8 @@
     // "resource failed to load" (những lỗi đó cũng bắn 'error' nhưng
     // không có stack/message hữu ích và KHÔNG làm hỏng luồng JS).
     if (!e.error && !e.message) return;
+    // "ResizeObserver loop …": trình duyệt chỉ báo bố cục đổi trong lúc đo (co giãn câu hỏi), không phải lỗi.
+    if (!e.error && /ResizeObserver loop/i.test(e.message || '')) return;
     showErrorScreen({ type: 'error', message: e.message, filename: e.filename, lineno: e.lineno, stack: e.error && e.error.stack });
   });
 

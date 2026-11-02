@@ -249,6 +249,7 @@
       box-shadow:0 12px 32px rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12);
       transition:transform .45s cubic-bezier(.2,1.3,.4,1),opacity .3s;opacity:0;cursor:pointer}
     .edu-reward.show{transform:translate(-50%,0);opacity:1}
+    @media (min-width:900px){.edu-reward{left:auto;right:20px;transform:translate(0,140%)}.edu-reward.show{transform:none}}
     .edu-reward-top{display:flex;align-items:baseline;gap:10px}
     .edu-reward-xp{font-size:28px;font-weight:800;color:#fde047;letter-spacing:-.5px}
     .edu-reward-lvl{margin-left:auto;font-weight:700;color:#c7d2fe}

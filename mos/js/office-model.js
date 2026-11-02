@@ -86,7 +86,10 @@
       cats: X.all(X.kid(s, 'c:cat'), 'c:pt').map(pt => X.text(X.kid(pt, 'c:v'))),
       vals: X.all(X.kid(s, 'c:val'), 'c:pt').map(pt => X.text(X.kid(pt, 'c:v'))),
       showVal: X.all(s, 'c:showVal').some(n => n.attrs.val === '1'),
+      showPercent: X.all(s, 'c:showPercent').some(n => n.attrs.val === '1'),
+      dLblPos: X.kid(X.kid(s, 'c:dLbls'), 'c:dLblPos')?.attrs.val || null,
     }));
+    const groupLbls = X.kid(typeNode, 'c:dLbls');
     const titleNode = X.kid(chart, 'c:title');
     const axes = (plot?.children || []).filter(c => /Ax$/.test(c.local)).map(a => ({
       kind: a.local, pos: val(a, 'c:axPos'), deleted: val(a, 'c:delete') === '1',
@@ -108,6 +111,9 @@
       legend: !!X.kid(chart, 'c:legend'), legendPos: val(X.kid(chart, 'c:legend'), 'c:legendPos'),
       series, axes, showVal: series.some(s => s.showVal) || X.all(X.kid(typeNode, 'c:dLbls'), 'c:showVal').some(n => n.attrs.val === '1'),
       dTable: dTable ? { showKeys: val(dTable, 'c:showKeys') === '1' } : null,
+      showPercent: series.some(s => s.showPercent) || X.all(groupLbls, 'c:showPercent').some(n => n.attrs.val === '1'),
+      dLblPos: series.find(s => s.dLblPos)?.dLblPos || val(groupLbls, 'c:dLblPos') || null,
+      titleOverlay: val(titleNode, 'c:overlay') === '1',
       style: styleNode?.attrs.val || null, colorStyle, chartStyle,
       is3d: types.some(t => /3D/.test(t)),
     };
@@ -140,7 +146,12 @@
       sheets.push(sheet);
     }
     const tables = sheets.flatMap(s => (s.tables || []).map(t => Object.assign({ sheet: s.name }, t)));
+    const connDoc = await readXml(zip, 'xl/connections.xml');
+    const connections = X.all(connDoc, 'connection').map(c => ({ name: c.attrs.name || '', model: c.attrs.model === '1' || /model/i.test(c.attrs.name || '') }));
+    const files = Object.keys(zip.files);
     return { kind: 'xlsx', sheets, definedNames, tables, styles, props: await loadProps(zip),
+      workbookPr: X.first(wb, 'workbookPr')?.attrs || {}, connections,
+      dataModel: files.some(f => /^xl\/model\//.test(f)), queryTables: files.filter(f => /^xl\/queryTables\//.test(f)).length,
       sheet: name => sheets.find(s => s.name.toLowerCase() === String(name).toLowerCase()) || null,
       charts: () => sheets.flatMap(s => (s.drawings || []).filter(d => d.chart).map(d => Object.assign({ sheet: s.name, anchor: d }, d.chart))) };
   }
@@ -164,7 +175,11 @@
     });
     const cellXfs = X.kids(X.first(doc, 'cellXfs'), 'xf').map(xf);
     const cellStyles = X.kids(X.first(doc, 'cellStyles'), 'cellStyle').map(c => ({ name: c.attrs.name, xfId: +c.attrs.xfId }));
-    return { numFmts, fonts, fills, cellXfs, cellStyles,
+    const dxfs = X.kids(X.first(doc, 'dxfs'), 'dxf').map(d => ({
+      font: X.kid(X.kid(d, 'font'), 'color')?.attrs || null,
+      fill: X.kid(X.first(d, 'patternFill'), 'bgColor')?.attrs || X.kid(X.first(d, 'patternFill'), 'fgColor')?.attrs || null,
+    }));
+    return { numFmts, fonts, fills, cellXfs, cellStyles, dxfs,
       fmtCode(id) {
         const BUILTIN = { 0: 'General', 1: '0', 2: '0.00', 3: '#,##0', 4: '#,##0.00', 9: '0%', 10: '0.00%', 14: 'm/d/yyyy' };
         return numFmts[id] ?? BUILTIN[id] ?? '';
@@ -222,7 +237,9 @@
         totalsRow: +(t.attrs.totalsRowCount || 0) > 0 || t.attrs.totalsRowShown === '1' && !!X.first(t, 'totalsRowFunction'),
         headerRow: t.attrs.headerRowCount !== '0',
         autoFilter: !!X.kid(t, 'autoFilter'), filters: X.all(X.kid(t, 'autoFilter'), 'filterColumn').length,
-        columns: X.all(t, 'tableColumn').map(c => c.attrs.name) });
+        columns: X.all(t, 'tableColumn').map(c => c.attrs.name),
+        totals: Object.fromEntries(X.all(t, 'tableColumn').filter(c => c.attrs.totalsRowFunction || c.attrs.totalsRowLabel)
+          .map(c => [c.attrs.name, c.attrs.totalsRowFunction || 'label'])) });
     }
     const drawings = [];
     for (const d of X.kids(ws, 'drawing')) drawings.push(...await loadDrawing(zip, rels[rid(d)].target));
@@ -230,6 +247,7 @@
     const sortState = X.first(ws, 'sortState');
     return {
       cells, rows, cols, cf, sparklines, tables, drawings,
+      defaultRowHeight: +(X.kid(ws, 'sheetFormatPr')?.attrs.defaultRowHeight || 15),
       pane: pane ? { xSplit: +(pane.attrs.xSplit || 0), ySplit: +(pane.attrs.ySplit || 0), state: pane.attrs.state || '', topLeft: pane.attrs.topLeftCell } : null,
       view: view?.attrs || {},
       autoFilter: af ? { ref: af.attrs.ref, filters: X.kids(af, 'filterColumn').length } : null,
@@ -238,6 +256,7 @@
       hyperlinks: X.all(X.kid(ws, 'hyperlinks'), 'hyperlink').map(h => ({ ref: h.attrs.ref, location: h.attrs.location,
         display: h.attrs.display, tooltip: h.attrs.tooltip, target: rels[rid(h)]?.target })),
       pageSetup: X.kid(ws, 'pageSetup')?.attrs || {},
+      rowBreaks: X.all(X.kid(ws, 'rowBreaks'), 'brk').filter(b => b.attrs.man === '1' || b.attrs.man === 'true').map(b => +b.attrs.id),
       printOptions: X.kid(ws, 'printOptions')?.attrs || {},
       headerFooter: X.kid(ws, 'headerFooter') ? { header: X.text(X.kid(X.kid(ws, 'headerFooter'), 'oddHeader')), footer: X.text(X.kid(X.kid(ws, 'headerFooter'), 'oddFooter')) } : null,
       dataValidations: X.all(X.kid(ws, 'dataValidations'), 'dataValidation').map(v => Object.assign({}, v.attrs, { formula1: X.text(X.kid(v, 'formula1')) })),
@@ -250,7 +269,8 @@
 
   function cfRule(r) {
     const icon = X.first(r, 'iconSet');
-    return { type: r.attrs.type, operator: r.attrs.operator, priority: r.attrs.priority,
+    return { type: r.attrs.type, operator: r.attrs.operator, priority: r.attrs.priority, dxfId: r.attrs.dxfId != null ? +r.attrs.dxfId : null,
+      text: r.attrs.text || '',
       iconSet: icon ? (icon.attrs.iconSet || '3TrafficLights1') : null,
       formula: X.all(r, 'formula').map(f => f.text).concat(X.all(r, 'xm:f').map(f => f.text)),
       dataBar: !!X.first(r, 'dataBar'), colorScale: !!X.first(r, 'colorScale') };
@@ -304,13 +324,23 @@
     const showPr = X.first(presProps, 'p:showPr');
     const masterRel = Object.values(rels).find(r => r.type === 'slideMaster');
     const master = masterRel ? await loadMaster(zip, masterRel.target) : null;
+    const handoutRel = Object.values(rels).find(r => r.type === 'handoutMaster');
+    const files = Object.keys(zip.files);
+    // XML thô của các phần ít dùng — cho tiêu chí chung p.xml (handout, theme, presProps...).
+    const parts = { presentation: pres, presProps, handout: handoutRel ? await readXml(zip, handoutRel.target) : null,
+      master: master ? master.xml : null, theme: master ? master.themeXml : null, app: await readXml(zip, 'docProps/app.xml'),
+      commentAuthors: await readXml(zip, 'ppt/commentAuthors.xml'), viewProps: await readXml(zip, 'ppt/viewProps.xml'),
+      tableStyles: await readXml(zip, 'ppt/tableStyles.xml') };
+    const modernComments = [];
+    for (const f of files.filter(f => /^ppt\/comments\//.test(f))) modernComments.push(...X.all(await readXml(zip, f), 'a:t').map(t => t.text).concat(X.all(await readXml(zip, f), 'p:text').map(t => X.text(t))));
     return {
       kind: 'pptx', slides, sections, customShows, master,
       size: sz ? { cx: +sz.attrs.cx, cy: +sz.attrs.cy, type: sz.attrs.type || '' } : null,
       show: showPr ? { loop: showPr.attrs.loop === '1', useTimings: showPr.attrs.useTimings !== '0', showNarration: showPr.attrs.showNarration !== '0',
         type: X.kid(showPr, 'p:browse') ? 'browse' : X.kid(showPr, 'p:kiosk') ? 'kiosk' : 'present',
         browseScrollbar: X.kid(showPr, 'p:browse')?.attrs.showScrollbar !== '0' } : { type: 'present', useTimings: true },
-      props: await loadProps(zip),
+      props: await loadProps(zip), parts, modernComments,
+      mediaFiles: files.filter(f => /^ppt\/media\//.test(f)),
       hasComments: Object.keys(zip.files).some(f => /^ppt\/(comments|modernComment)/i.test(f)),
       slide: n => n === 'last' ? slides[slides.length - 1] : slides[n - 1] || null,
     };
@@ -325,7 +355,7 @@
     for (const r of Object.values(rels).filter(r => r.type === 'slideLayout')) {
       const l = await readXml(zip, r.target);
       layouts.push({ path: r.target, name: X.first(l, 'p:cSld')?.attrs.name || '',
-        placeholders: X.all(l, 'p:ph').map(ph => ph.attrs.type || 'body') });
+        placeholders: X.all(l, 'p:ph').map(ph => ph.attrs.type || 'body'), xml: l });
     }
     const fontScheme = X.first(theme, 'a:fontScheme');
     return { path: p, layouts,
@@ -335,7 +365,7 @@
         minorFont: X.first(X.first(fontScheme, 'a:minorFont'), 'a:latin')?.attrs.typeface || '',
         colorScheme: X.first(theme, 'a:clrScheme')?.attrs.name || '' } : null,
       bulletPictures: X.all(X.first(doc, 'p:txStyles'), 'a:buBlip').length,
-      xml: doc };
+      xml: doc, themeXml: theme };
   }
 
   async function loadSlide(zip, p, index) {
@@ -396,6 +426,13 @@
     const notes = notesRel ? await readXml(zip, notesRel.target) : null;
     const bg = X.first(sld, 'p:bg');
     const commentsRel = Object.values(rels).filter(r => /comment/i.test(r.type));
+    // SmartArt: id bố cục (process1…) và bảng màu (accent6_2…) trong các phần diagram của trang chiếu.
+    const diagrams = { layouts: [], colors: [], styles: [] };
+    for (const r of Object.values(rels)) {
+      if (r.type === 'diagramData') { const d = await readXml(zip, r.target); (diagrams.texts = diagrams.texts || []).push(...X.all(d, 'dgm:pt').filter(pt => !pt.attrs.type || pt.attrs.type === 'node').map(pt => X.text(pt, 'a:t')).filter(Boolean)); }
+      const key = { diagramLayout: 'layouts', diagramColors: 'colors', diagramQuickStyle: 'styles' }[r.type];
+      if (key) { const d = await readXml(zip, r.target); const root = d && d.children.find(c => c.attrs && c.attrs.uniqueId) || X.first(d, '*'); diagrams[key].push(((root && root.attrs.uniqueId) || '').split('/').pop()); }
+    }
     return {
       index, path: p, hidden: sld?.attrs.show === '0',
       layout: X.first(layoutDoc, 'p:cSld')?.attrs.name || '', layoutPath: layoutRel?.target || null,
@@ -413,7 +450,7 @@
       notes: notes ? X.all(notes, 'p:sp').filter(s => (X.first(s, 'p:ph')?.attrs.type || 'body') === 'body').map(s => X.text(s, 'a:t')).join('\n') : '',
       footers: shapes.filter(s => ['ftr', 'sldNum', 'dt'].includes(s.ph)).map(s => ({ type: s.ph, text: s.text })),
       ink: X.all(sld, 'p14:contentPart').length + X.all(sld, 'p:contentPart').length,
-      comments: commentsRel.length,
+      comments: commentsRel.length, diagrams,
       xml: doc,
     };
   }
@@ -539,8 +576,20 @@
     const notes = async (p, tag) => { const x = await readXml(zip, p); return x ? X.all(x, tag).filter(n => !n.attrs['w:type'] || n.attrs['w:type'] === 'normal').map(wText) : []; };
     const comments = await readXml(zip, 'word/comments.xml');
     const all = X.all(body, 'wp:anchor').concat(X.all(body, 'wp:inline'));
+    // XML thô các phần — cho tiêu chí chung w.xml.
+    const hfDocs = { header: [], footer: [] };
+    for (const r of Object.values(rels)) if (r.type === 'header' || r.type === 'footer') hfDocs[r.type].push(await readXml(zip, r.target));
+    const parts = { body, document: doc, settings, styles: await readXml(zip, 'word/styles.xml'), numbering: await readXml(zip, 'word/numbering.xml'),
+      comments, footnotes: await readXml(zip, 'word/footnotes.xml'), endnotes: await readXml(zip, 'word/endnotes.xml'),
+      app: await readXml(zip, 'docProps/app.xml'), custom: await readXml(zip, 'docProps/custom.xml'), header: hfDocs.header, footer: hfDocs.footer,
+      glossary: await readXml(zip, 'word/glossary/document.xml'), commentsExtended: await readXml(zip, 'word/commentsExtended.xml'),
+      diagramData: [], diagramColors: [] };
+    for (const r of Object.values(rels)) {
+      if (r.type === 'diagramData') parts.diagramData.push(await readXml(zip, r.target));
+      if (r.type === 'diagramColors') parts.diagramColors.push(await readXml(zip, r.target));
+    }
     return {
-      kind: 'docx', blocks, sections, props: await loadProps(zip),
+      kind: 'docx', blocks, sections, props: await loadProps(zip), parts, files: Object.keys(zip.files),
       paragraphs: blocks.filter(b => b.kind === 'p'), tables: X.all(body, 'w:tbl').map(wTable),
       drawings: all.map(wDrawing), headersFooters: Object.values(hf),
       fields: fieldsOf(body).concat(...Object.values(hf).map(h => h.fields)),

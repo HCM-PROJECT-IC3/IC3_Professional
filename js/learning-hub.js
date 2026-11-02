@@ -72,9 +72,11 @@
     st.key = keyOf(st.name, st.cls, st.school);
     const src = [session.level, session.minitest].filter(Boolean).join(' › ');
     const results = [];
+    // Chủ đề của câu: _topic (Tổng hợp, Ôn tập/Kiểm tra theo tiết) hoặc chính bộ "N. Chủ đề" đang làm.
+    const setTopic = /^\d+\.\s/.test(session.mtKey || '') ? session.mtKey : '';
     questions.forEach((q, i) => {
       const d = details[i];
-      if (d && q && (d.status === 'correct' || d.status === 'incorrect')) results.push({ q, ok: d.status === 'correct' });
+      if (d && q && (d.status === 'correct' || d.status === 'incorrect')) results.push({ q, ok: d.status === 'correct', topic: q._topic || setTopic });
     });
     const res = W.record(st, results, { src, review: !!session.isWrongbook });
     if (!res.saved) return;
@@ -376,7 +378,7 @@
   // ============================================================
   // GIAO DIỆN
   // ============================================================
-  const H = { key: '', tab: 'overview', flash: null, pathCat: '', pathLvl: '' };
+  const H = { key: '', tab: 'overview', flash: null, bookTopic: '', pathCat: '', pathLvl: '' };
 
   function ensureModal() {
     if ($('learningHub')) return;
@@ -536,7 +538,7 @@
     if (recs.length && Date.now() - lastTs > 3 * DAY) tips.push(`<div class="lh-tip"><i class="fa-solid fa-calendar-day"></i><div><b>Đã ${Math.floor((Date.now() - lastTs) / DAY)} ngày chưa luyện tập</b><span>Mỗi ngày 1 bài ngắn 10–15 phút hiệu quả hơn 1 buổi dài mỗi tuần.</span></div></div>`);
     const strong = topics.filter((t) => t.avg >= 90 && t.attempts >= 2);
     if (strong.length && !weak) tips.push(`<div class="lh-tip is-good"><i class="fa-solid fa-trophy"></i><div><b>Em đã vững ${strong.length} bài</b><span>Thử chế độ "Kiểm tra" hoặc bài "Tổng hợp" để luyện như thi thật.</span></div></div>`);
-    if (!recs.length) tips.push(`<div class="lh-tip"><i class="fa-solid fa-play"></i><div><b>Bắt đầu với bài "Theo Tên bài" vừa học trên lớp</b><span>Làm xong, câu sai sẽ tự vào Sổ tay để ôn lại.</span></div></div>`);
+    if (!recs.length) tips.push(`<div class="lh-tip"><i class="fa-solid fa-play"></i><div><b>Bắt đầu với nhóm "Bài học": chọn bài vừa học trên lớp</b><span>Làm xong, câu sai sẽ tự vào Sổ tay để ôn lại.</span></div></div>`);
     return `<div class="lh-kpis">
         <div class="lh-kpi"><b>${recs.length}</b><span>Bài đã làm</span></div>
         <div class="lh-kpi ${avg === null ? '' : avg >= PASS ? 'is-good' : 'is-warn'}"><b>${avg === null ? '–' : avg + '%'}</b><span>Điểm TB 10 bài gần nhất</span></div>
@@ -569,9 +571,28 @@
       }).join('')}</div>`;
   }
 
+  const topicLabel = (t) => String(t || '').replace(/^\d+\.\s*/, '');
+  /** Câu trong sổ, lọc theo chủ đề đang chọn (H.bookTopic, rỗng = tất cả). */
+  function bookItems(sb) {
+    return Object.entries(sb.items || {})
+      .filter(([, it]) => !H.bookTopic || it.topic === H.bookTopic)
+      .sort(([, a], [, b]) => (a.due - b.due) || (a.box - b.box));
+  }
+
+  function topicFilterHtml(sb) {
+    const counts = new Map();
+    Object.values(sb.items || {}).forEach((it) => { if (it.topic) counts.set(it.topic, (counts.get(it.topic) || 0) + 1); });
+    if (H.bookTopic && !counts.has(H.bookTopic)) H.bookTopic = '';
+    if (counts.size < 2) return '';
+    const chip = (t, label, n) => `<button type="button" class="lh-filter${H.bookTopic === t ? ' is-on' : ''}" data-act="book-topic" data-topic="${esc(t)}" aria-pressed="${H.bookTopic === t}">${esc(label)} <b>${n}</b></button>`;
+    return `<div class="lh-filters" role="group" aria-label="Lọc theo chủ đề">${chip('', 'Tất cả', Object.keys(sb.items || {}).length)}${
+      [...counts.entries()].sort(([a], [b]) => a.localeCompare(b, 'vi', { numeric: true })).map(([t, n]) => chip(t, topicLabel(t), n)).join('')}</div>`;
+  }
+
   function bookHtml(sb) {
     const now = Date.now();
-    const items = Object.entries(sb.items || {}).sort(([, a], [, b]) => (a.due - b.due) || (a.box - b.box));
+    const filters = topicFilterHtml(sb);
+    const items = bookItems(sb);
     const due = items.filter(([, it]) => it.due <= now);
     const fmtDue = (t) => { if (t <= now) return 'Đến hạn'; const d = Math.ceil((t - now) / DAY); return d <= 1 ? 'Ngày mai' : `Sau ${d} ngày`; };
     const dots = (box) => [1, 2, 3, 4].map((b) => `<i class="${b <= box ? 'on' : ''}"></i>`).join('');
@@ -586,6 +607,7 @@
           <button type="button" class="lh-btn lh-btn-ghost" data-act="review-all" ${items.length ? '' : 'disabled'}>Ôn tất cả (${Math.min(items.length, REVIEW_BATCH)})</button>
           <button type="button" class="lh-btn lh-btn-ghost" data-act="flash" ${items.length ? '' : 'disabled'} title="Lật thẻ: câu hỏi ↔ đáp án + giải thích, tự đánh giá nhớ/chưa nhớ"><i class="fa-regular fa-clone"></i> Thẻ ghi nhớ</button>
         </div>
+        ${filters}
         <p class="lh-note"><i class="fa-solid fa-circle-info"></i> Mỗi câu đi qua 4 hộp: trả lời đúng → lên hộp sau và hẹn ôn thưa dần (ngay → 1 ngày → 3 ngày → 7 ngày → <b>thuộc</b>); sai → quay về hộp 1.</p>
       </div>
       ${items.length ? `<ul class="lh-book">${items.map(([k, it]) => `<li class="${it.due <= now ? 'is-due' : ''}">
@@ -607,10 +629,17 @@
       render(); updateBadge();
       return;
     }
+    if (act === 'book-topic') {
+      H.bookTopic = b.dataset.topic || '';
+      render();
+      return;
+    }
     if (act === 'flash') {
       const sb = studentBook(H.key);
-      const due = dueItems(sb).map(([k]) => k);
-      const rest = Object.keys(sb.items || {}).filter((k) => !due.includes(k));
+      const now = Date.now();
+      const keys = bookItems(sb).map(([k]) => k);
+      const due = keys.filter((k) => sb.items[k].due <= now);
+      const rest = keys.filter((k) => !due.includes(k));
       H.flash = { keys: due.concat(rest).slice(0, REVIEW_BATCH), i: 0, flipped: false, ok: 0, again: 0, mastered: 0 };
       render();
       return;
@@ -630,7 +659,7 @@
       notify(ok ? 'Đã chọn sẵn bài — bấm "Bắt đầu" để làm lại.' : 'Không chọn được bài này (đề có thể đã đổi tên).', ok ? 'success' : 'warning');
     } else if (act === 'review' || act === 'review-all') {
       const sb = studentBook(H.key);
-      const list = act === 'review' ? dueItems(sb) : Object.entries(sb.items || {}).sort(([, a], [, b2]) => a.due - b2.due);
+      const list = act === 'review' ? bookItems(sb).filter(([, it]) => it.due <= Date.now()) : bookItems(sb);
       const qs = list.slice(0, REVIEW_BATCH).map(([, it]) => it.q);
       if (!qs.length || typeof global.startWrongbookReview !== 'function') return;
       const st = knownStudents().find((s) => s.key === H.key) || lobbyStudent() || {};

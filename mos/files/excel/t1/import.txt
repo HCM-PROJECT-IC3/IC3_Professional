@@ -1,0 +1,6 @@
+ID,Name,Category,Quantity,Price
+101,The Great Gatsby,Fiction,50,15.99
+102,Sapiens,History,30,22.50
+103,Atomic Habits,Self-Help,100,18.00
+104,1984,Fiction,40,14.50
+105,Thinking Fast and Slow,Psychology,25,20.00

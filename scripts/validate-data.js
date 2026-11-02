@@ -137,7 +137,8 @@ let levelFiles = 0, questions = 0;
     review.forEach(([name, list]) => list.forEach((q) => {
       if (baiUids.has(q.uid)) err(`${lv.file} › ${name}`, `câu ${q.uid} là câu củng cố "Bài N" — không được trộn vào Ôn tập/Kiểm tra`);
       else if (!byUid.has(q.uid)) err(`${lv.file} › ${name}`, `câu ${q.uid} không còn trong bộ Theo chủ đề`);
-      else if (byUid.get(q.uid) !== JSON.stringify(q)) err(`${lv.file} › ${name}`, `câu ${q.uid} lệch nội dung với bộ Theo chủ đề`);
+      else if (q.tp !== undefined && !topicOf.get(q.uid).startsWith(q.tp + '.')) err(`${lv.file} › ${name}`, `câu ${q.uid} gắn sai chủ đề (tp=${q.tp})`);
+      else if (byUid.get(q.uid) !== JSON.stringify({ ...q, tp: undefined })) err(`${lv.file} › ${name}`, `câu ${q.uid} lệch nội dung với bộ Theo chủ đề`);
       if (ALLKEY && !ALLKEY[q.uid]) err(`${lv.file} › ${name}`, `câu ${q.uid} không có trong đáp án gốc All Key (data/ic3/allkey-map.json)`);
     }));
     // Ôn tập cuối khóa Tiết 1–4: mỗi câu All Key của ngân hàng chủ đề xuất hiện đúng 1 lần

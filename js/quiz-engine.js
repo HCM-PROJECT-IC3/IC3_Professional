@@ -1129,27 +1129,20 @@ function initLobby() {
   pledgeCheckbox?.addEventListener('change', () => refreshMeta());
 
   // Bộ "Bài N" (câu Củng cố theo bài học) chỉ để dạy/luyện trên lớp → khoá chế độ "Kiểm tra"
-  // khi đang chọn nhóm "Theo Tên bài" của Spark/IC3 (MOS chỉ có bộ "Bài N" nên không khoá).
-  // Đề giáo viên soạn (?de=) tự chốt chế độ → không đụng tới.
-  const examLockNote = document.createElement('p');
-  examLockNote.className = 'exam-lock-note';
-  examLockNote.hidden = true;
-  examLockNote.innerHTML = '<i class="fa-solid fa-circle-info"></i> Bộ <b>Theo Tên bài</b> là câu củng cố bài học — chỉ làm ở chế độ <b>Ôn luyện</b>. Muốn làm bài Kiểm tra, chọn nhóm <b>Kiểm tra theo tiết</b>.';
-  examModeWrap?.after(examLockNote);
+  // khi đang chọn nhóm "Bài học" của Spark/IC3 (MOS chỉ có bộ "Bài N" nên không khoá).
+  // Đề giáo viên soạn (?de=) tự chốt chế độ → không đụng tới. Nút mờ là đủ, không thêm dòng giải thích.
   const applyBaiLock = (lock) => {
     if (!examModeWrap || State.customExam) return;
     const testBtn = examModeWrap.querySelector('[data-exam-mode="test"]');
     if (lock && State.examMode === 'test') examModeWrap.querySelector('[data-exam-mode="practice"]')?.click();
-    if (testBtn) { testBtn.disabled = lock; testBtn.title = lock ? 'Bộ Theo Tên bài chỉ làm ở chế độ Ôn luyện' : ''; }
-    examLockNote.hidden = !lock;
+    if (testBtn) { testBtn.disabled = lock; testBtn.title = lock ? 'Bài học chỉ làm ở chế độ Ôn luyện' : ''; }
   };
 
   // "Chế độ" đang chọn ở khối chọn Minitest — nhớ giữa các lần đổi Level
   // (nếu vẫn còn hợp lệ) để không giật lại chế độ mặc định mỗi lần bấm
-  // chọn linh tinh. 'bai' (Theo Tên bài — củng cố đúng 1 bài vừa học) làm
-  // mặc định khi có sẵn vì đây là lộ trình ôn tập ngay-sau-buổi-học được
-  // khuyến nghị nhất; cấp/chương trình nào chưa có bộ "Theo Tên bài" thì
-  // rơi về modes[0] (thường là 'lesson' — Ôn tập theo tiết) như hành vi cũ.
+  // chọn linh tinh. 'bai' (Bài học — củng cố đúng 1 bài vừa học) làm
+  // mặc định khi có sẵn; cấp/chương trình nào chưa có bộ "Bài N" thì
+  // rơi về modes[0].
   let mtMode = 'bai';
 
   // ── Đổ danh mục (categories) ───────────────────────────────
@@ -1203,19 +1196,23 @@ function initLobby() {
       ? Math.min(_randomMixTotalFor(catSel.value, lvlSel.value), totalAvail)
       : 0;
 
-    // Thứ tự nút hiển thị = thứ tự ưu tiên khuyến nghị: Theo Tên bài (củng
-    // cố ngay sau buổi học) → Ôn tập / Kiểm tra theo tiết PPCT (câu All Key)
-    // → Theo chủ đề → Tổng hợp / Tổng hợp Vui (luyện ngẫu nhiên diện rộng).
+    // 4 nhóm, xếp theo lộ trình: Bài học (củng cố ngay sau buổi học) → Ôn tập
+    // (theo tiết PPCT + cuối khóa, câu All Key) → Kiểm tra theo tiết → Chủ đề
+    // (7 chủ đề + bài trộn). Trong mỗi nhóm, <optgroup> tách các loại bài.
     const modes = [];
-    if (baiNames.length)    modes.push({ id: 'bai',    label: '<i class="fa-solid fa-graduation-cap"></i> Theo Tên bài', names: baiNames });
-    if (reviewNames.length) modes.push({ id: 'lesson', label: '<i class="fa-solid fa-flag-checkered"></i> Ôn tập theo tiết', names: reviewNames });
-    if (testNames.length)   modes.push({ id: 'exam',   label: '<i class="fa-solid fa-file-signature"></i> Kiểm tra theo tiết', names: testNames });
-    if (finalNames.length)  modes.push({ id: 'final',  label: '<i class="fa-solid fa-trophy"></i> Ôn tập cuối khóa', names: finalNames });
-    if (topicNames.length)  modes.push({ id: 'topic',  label: '<i class="fa-solid fa-book-open"></i> Theo chủ đề', names: topicNames });
-    if (mixWanted > 0)      modes.push({ id: 'mix',    label: '<i class="fa-solid fa-book"></i> Tổng hợp',   names: [RANDOM_MIX_KEY] });
-    // Cần ít nhất 6 câu để chia được 3 chặng ~đều nhau kèm mini-game (xem
-    // _computeGameBreakPoints) — bài quá ngắn thì không hiện chế độ này.
-    if (mixWanted >= 6)     modes.push({ id: 'mixplay', label: '<i class="fa-solid fa-gamepad"></i> Tổng hợp Vui', names: [RANDOM_MIX_PLAY_KEY] });
+    const grp = (label, names) => ({ label, names });
+    if (baiNames.length) modes.push({ id: 'bai', label: '<i class="fa-solid fa-graduation-cap"></i> Bài học', groups: [grp('', baiNames)] });
+    if (reviewNames.length || finalNames.length) modes.push({ id: 'lesson', label: '<i class="fa-solid fa-flag-checkered"></i> Ôn tập', groups: [
+      grp(finalNames.length && reviewNames.length ? 'Ôn tập theo tiết' : '', reviewNames),
+      grp('Ôn tập cuối khóa', finalNames),
+    ] });
+    if (testNames.length) modes.push({ id: 'exam', label: '<i class="fa-solid fa-file-signature"></i> Kiểm tra', groups: [grp('', testNames)] });
+    // "Tổng hợp Vui" cần ít nhất 6 câu để chia được 3 chặng kèm mini-game (xem _computeGameBreakPoints).
+    const mixNames = mixWanted > 0 ? (mixWanted >= 6 ? [RANDOM_MIX_KEY, RANDOM_MIX_PLAY_KEY] : [RANDOM_MIX_KEY]) : [];
+    if (topicNames.length) modes.push({ id: 'topic', label: '<i class="fa-solid fa-book-open"></i> Chủ đề', groups: [
+      grp(mixNames.length ? 'Từng chủ đề' : '', topicNames),
+      grp('Trộn nhiều chủ đề', mixNames),
+    ] });
 
     // Giữ nguyên chế độ đang chọn nếu Level mới vẫn có (vd đổi Level
     // trong cùng Chương trình, vẫn có "Ôn tập theo tiết") — không thì rơi về
@@ -1239,19 +1236,28 @@ function initLobby() {
       });
     };
 
+    // Nhãn ngắn trong ô chọn: bỏ phần đã có ở tên nhóm (optgroup) và chữ chỉ người soạn đề cần.
+    const optionLabel = (name, group) => {
+      if (name === RANDOM_MIX_KEY) return `Tổng hợp ${topicNames.length} chủ đề (${mixWanted} câu)`;
+      if (name === RANDOM_MIX_PLAY_KEY) return `Tổng hợp Vui — có mini-game (${mixWanted} câu)`;
+      let text = name;
+      if (group && FINAL_KEY_RE.test(name)) {
+        text = name.replace(FINAL_KEY_RE, '').replace(/^—\s*/, '')
+          .replace(/phủ đủ câu All Key\s*\((phần [^)]+)\)/, '$1')
+          .replace(/(đề tổng hợp)\s+\d+\s+câu/, '$1');
+      }
+      return `${text} (${_mtCount(minitests[name])} câu)`;
+    };
+
     const renderOptions = () => {
       mtSel.innerHTML = '';
       const mode = modes.find(m => m.id === mtMode);
       applyBaiLock(mtMode === 'bai' && topicNames.length > 0);
-      (mode?.names || []).forEach(name => {
-        // new Option(...) chỉ render TEXT THUẦN (như <option>) — không thể
-        // nhét icon Font Awesome vào đây, bỏ hẳn emoji thay vì để lọt icon "vỡ".
-        const label = name === RANDOM_MIX_KEY
-          ? `Tổng hợp — ngẫu nhiên chia đều ${topicNames.length} chủ đề (${mixWanted} câu)`
-          : name === RANDOM_MIX_PLAY_KEY
-          ? `Tổng hợp Vui — ngẫu nhiên chia đều ${topicNames.length} chủ đề, xen kẽ mini-game (${mixWanted} câu)`
-          : `${name} (${_mtCount(minitests[name])} câu)`;
-        mtSel.appendChild(new Option(label, name));
+      (mode?.groups || []).forEach(g => {
+        if (!g.names.length) return;
+        // new Option(...) chỉ render chữ thuần — không nhét icon được.
+        const parent = g.label ? mtSel.appendChild(Object.assign(document.createElement('optgroup'), { label: g.label })) : mtSel;
+        g.names.forEach(name => parent.appendChild(new Option(optionLabel(name, g.label), name)));
       });
       refreshMeta();
     };
@@ -1379,7 +1385,7 @@ function initLobby() {
     if (![...lvlSel.options].some((o) => o.value === lvlId)) return false;
     lvlSel.value = lvlId;
     mtMode = BAI_NAME_RE.test(name) ? 'bai' : TEST_KEY_RE.test(name) ? 'exam'
-      : (FINAL_KEY_RE.test(name) || LESSON_KEY_RE.test(name)) ? 'final' : REVIEW_KEY_RE.test(name) ? 'lesson' : 'topic';
+      : (FINAL_KEY_RE.test(name) || LESSON_KEY_RE.test(name) || REVIEW_KEY_RE.test(name)) ? 'lesson' : 'topic';
     refreshMinitests();
     if (![...mtSel.options].some((o) => o.value === name)) return false;
     mtSel.value = name;
@@ -1489,7 +1495,7 @@ async function startExam() {
   const customExam  = State.customExam;
   const isGameBreak = !customExam && mtName === RANDOM_MIX_PLAY_KEY;
   const isRandomMix = !customExam && (mtName === RANDOM_MIX_KEY || isGameBreak);
-  const rawQs = customExam
+  let rawQs = customExam
     ? await _fetchCustomExamQuestions(customExam)
     : isRandomMix
     ? buildRandomMixQuestions(await _fetchTopicsForMix(catId, lvlId), _randomMixTotalFor(catId, lvlId))
@@ -1519,8 +1525,15 @@ async function startExam() {
     ? `Tổng hợp — ngẫu nhiên (${rawQs.length} câu, chia đều ${topicCountForLabel} chủ đề)`
     : mtName;
 
+  // Bộ Ôn tập/Kiểm tra/cuối khóa ghi số chủ đề ở "tp" (scripts/generate-review-minitests.js)
+  // → gắn _topic để màn kết quả có bảng "Kết quả theo chủ đề" như bài Tổng hợp.
+  const topicNamesForTp = Object.keys(lv?.minitests || {}).filter(_isRealTopic);
+  rawQs = rawQs.map(q => (q.tp && !q._topic
+    ? { ...q, _topic: topicNamesForTp.find(n => n.startsWith(q.tp + '.')) }
+    : q));
+
   // ── Deep clone + chuẩn bị (shuffle order & options) ───────
-  State.questions = prepareQuestions(rawQs, { keepOrder: !!customExam && !customExam.shuffle });
+  State.questions = prepareQuestions(rawQs,{ keepOrder: !!customExam && !customExam.shuffle });
   State.answers   = {};
   State.flags     = new Set();
   State.current   = 0;
@@ -1600,11 +1613,88 @@ async function startExam() {
    Shuffle thứ tự câu hỏi và options, giữ nguyên correct[]
    ============================================================ */
 
+/** Chữ IN HOA toàn bộ ("ĐÚNG", "KHÔNG") → viết hoa chữ đầu cho tiêu đề cột. */
+function _twoColLabel(w) {
+  const s = String(w).trim();
+  return s === s.toUpperCase() && s !== s.toLowerCase() ? s.charAt(0) + s.slice(1).toLowerCase() : s;
+}
+
+/**
+ * Câu "mỗi dòng chọn 1 trong 2" (list, hoặc selectfill/dragfill dạng mỗi dòng
+ * 1 chỗ trống) → câu phân loại kéo thả vào 2 cột. Trả về câu classify mới,
+ * hoặc null nếu không đúng dạng. Chấm điểm theo chữ của dòng nên các dòng
+ * phải khác nhau.
+ */
+function _toTwoColumnClassify(q) {
+  let rows = null, choices = null;
+  if (q.type === 'list' && Array.isArray(q.items) && q.items.length > 1) {
+    choices = [...new Set(q.items.flatMap(it => it.options || []))];
+    rows = q.items.map(it => ({ text: String(it.text || '').trim(), zone: it.correct }));
+  } else if ((q.type === 'selectfill' || q.type === 'dragfill') && Array.isArray(q.segments) && Array.isArray(q.blanks)) {
+    const lines = _splitFillBlankLines(q.segments, q.blanks.length);
+    if (lines.length < 2 || !lines.every(l => l.filter(t => t.type === 'blank').length === 1)) return null;
+    choices = [...new Set([...(q.wordBank || []), ...q.blanks])];
+    rows = lines.map(l => ({
+      text: l.filter(t => t.type === 'text').map(t => t.value).join('').trim(),
+      zone: q.blanks[l.find(t => t.type === 'blank').index],
+    }));
+  }
+  if (!rows || choices.length !== 2 || rows.length > 8) return null;
+  if (rows.some(r => !r.text || !choices.includes(r.zone))) return null;
+  if (new Set(rows.map(r => r.text)).size !== rows.length) return null;
+
+  // Đúng/Có luôn ở cột trái; cặp khác giữ thứ tự xuất hiện trong dữ liệu.
+  const yes = /^(đúng|có)$/i;
+  const zones = choices.slice().sort((a, b) => (yes.test(b) ? 1 : 0) - (yes.test(a) ? 1 : 0)).map(_twoColLabel);
+  const out = { ...q, type: 'classify', zones, items: rows.map(r => ({ text: r.text, zone: _twoColLabel(r.zone) })), _fixedZones: true };
+  ['segments', 'blanks', 'wordBank', 'hint'].forEach(k => delete out[k]);
+  return out;
+}
+
+/**
+ * Bỏ câu hướng dẫn thao tác trong đề gốc ("(Nhấp vào vị trí…)", "Để trả lời,
+ * hãy kéo…", "…từ danh sách thả xuống") và ghi chú người soạn ("(Đã sửa ngày…)").
+ * Giao diện tự chỉ cách làm, và lời dặn gốc nhiều khi sai với giao diện
+ * (vd nói "thả xuống" trong khi ở đây là nút bấm hay kéo vào cột).
+ */
+function _stripHowTo(s) {
+  return String(s ?? '')
+    .replace(/\s*\((?:để trả lời|để hoàn thành|hãy kéo|hãy di chuyển|kéo (?:hình|tên|từng|các|mục)|nhấp (?:vào|chọn)|bấm (?:vào|chọn))[^()]*\)/gi, '')
+    .replace(/\s*\(Đã sửa[^()]*\)/gi, '')
+    .replace(/(^|[.?!:]\s*)\s*Để (?:trả lời|hoàn thành câu hỏi)\s*,[^.?!]*[.?!]?/g, '$1')
+    .replace(/(^|[.?!:]\s*)\s*Hãy (?:di chuyển|kéo)[^.?!]*(?:bên phải|bên trái|bên dưới|bên trên)[^.?!]*[.?!]?/g, '$1')
+    .replace(/\s+(?:từ|trong) (?:mỗi |các |từng )?(?:danh sách|menu) thả xuống(?! sau)/gi, '')
+    .replace(/(?<!\.)([.?!])\s*\.(?!\.)/g, '$1')
+    .replace(/[ \t]+([,?!;:])(?=\s|$)/g, '$1')
+    .replace(/[ \t]{2,}/g, ' ')
+    .trim();
+}
+
+/**
+ * Câu Đúng/Sai sinh từ câu nhiều lựa chọn: mọi phát biểu lặp lại nguyên đề
+ * ("Đây là phương án ĐÚNG cho câu hỏi: "…" — Slide Zoom"). Cắt phần chung,
+ * chỉ để lại phần khác nhau sau dấu "—".
+ */
+function _trimSharedStatementPrefix(statements) {
+  const texts = statements.map(st => String(st.text || ''));
+  if (texts.length < 2) return;
+  let n = 0;
+  while (n < texts[0].length && texts.every(t => t[n] === texts[0][n])) n++;
+  const cut = texts[0].lastIndexOf('—', n);
+  if (n < 30 || cut < 20) return;
+  const rest = texts.map(t => t.slice(cut + 1).trim());
+  if (rest.some(r => !r) || new Set(rest).size !== rest.length) return;
+  statements.forEach((st, i) => { st.text = rest[i]; });
+}
+
 function prepareQuestions(rawQs, { keepOrder = false } = {}) {
-  const cloned = JSON.parse(JSON.stringify(rawQs));
+  const cloned = JSON.parse(JSON.stringify(rawQs)).map(q => _toTwoColumnClassify(q) || q);
   const qs = keepOrder ? cloned : shuffle(cloned);
 
   qs.forEach(q => {
+    if (q.question) q.question = _stripHowTo(q.question);
+    if (q.type === 'truefalse' && Array.isArray(q.statements)) _trimSharedStatementPrefix(q.statements);
+
     // Xử lý imageUrl từ image_file nếu chưa có
     if (!q.imageUrl && q.image_file) {
       q.imageUrl = `img/${q.image_file}`;
@@ -1640,9 +1730,8 @@ function prepareQuestions(rawQs, { keepOrder = false } = {}) {
       // Mỗi zone có thể là chuỗi (chữ) HOẶC object {label, image_file} (ảnh minh
       // họa thay cho tiêu đề chữ — vd. hình cổng kết nối phía trên ô đích).
       // "label" luôn là khoá định danh (data-zone), không nhất thiết hiển thị.
-      q._zonesShow = Array.isArray(q.zones)
-        ? shuffle(q.zones.map(z => (typeof z === 'string' ? { label: z } : z)))
-        : [];
+      const zs = Array.isArray(q.zones) ? q.zones.map(z => (typeof z === 'string' ? { label: z } : z)) : [];
+      q._zonesShow = q._fixedZones ? zs : shuffle(zs);
       q._poolShow  = shuffle(q.items.concat(Array.isArray(q.distractors) ? q.distractors : []));
     }
 
@@ -2148,19 +2237,6 @@ function renderQuestion(idx) {
 
   panel.classList.toggle('q-panel--hotspot', q.type === 'hotspot');
 
-  const TYPE_META = {
-    single:    { icon: '<i class="fa-solid fa-circle-dot"></i>', label: 'Một lựa chọn' },
-    multi:     { icon: '<i class="fa-solid fa-square-check"></i>', label: 'Nhiều lựa chọn' },
-    truefalse: { icon: '<i class="fa-solid fa-right-left"></i>', label: 'Đúng / Sai' },
-    matching:  { icon: '<i class="fa-solid fa-arrows-left-right"></i>', label: 'Nối cột' },
-    hotspot:   { icon: '<i class="fa-solid fa-bullseye"></i>', label: 'Bấm vào hình' },
-    list:      { icon: '<i class="fa-solid fa-list-check"></i>', label: 'Chọn cho từng dòng' },
-    classify:  { icon: '<i class="fa-solid fa-layer-group"></i>', label: 'Phân loại' },
-    ordering:  { icon: '<i class="fa-solid fa-sort"></i>', label: 'Sắp xếp thứ tự' },
-    dragfill:  { icon: '<i class="fa-solid fa-puzzle-piece"></i>', label: 'Kéo thả điền chỗ trống' },
-    selectfill:{ icon: '<i class="fa-solid fa-caret-down"></i>', label: 'Chọn điền chỗ trống' },
-  };
-  const { icon, label } = TYPE_META[q.type] || { icon: '<i class="fa-solid fa-question"></i>', label: q.type };
 
   // Thanh nút cố định ở đáy (css/quiz-play.css). Thứ tự trong DOM giữ nguyên
   // Câu trước → Câu tiếp/Nộp bài → Đánh dấu vì js/a11y-assistant.js bấm hộ theo
@@ -2197,8 +2273,7 @@ function renderQuestion(idx) {
       <div class="q-header">
         <div class="q-badge">${idx + 1}</div>
         <div class="q-meta">
-          <div class="q-type-badge">${icon} ${label}</div>
-          <div class="q-text">${q.question}</div>
+          <div class="q-text${String(q.question || '').length > 260 ? ' q-text--long' : ''}">${q.question}</div>
         </div>
       </div>
       ${imgBlock}
@@ -2227,6 +2302,84 @@ function renderQuestion(idx) {
 
   updateSidebar();
   panel.scrollTop = 0;
+  _fitQuestion(panel);
+}
+
+/* ── Co giãn theo chỗ trống: câu ngắn thì chữ và ô đáp án to ra cho dễ đọc,
+   câu dài giữ cỡ gọn. Thử từ mức to nhất (fit-3) xuống, lấy mức đầu tiên vừa
+   khung; fit-s là nấc nhỉnh hơn cỡ gọn một chút. Đáp án 2 cột thử thêm bản
+   1 cột (fit-1col) khi còn đủ chỗ. ── */
+const _FIT_STEPS = [[3, true], [3, false], [2, true], [2, false], [1, true], [1, false], ['s', true], ['s', false], [0, false]];
+
+function _fitClear(card) {
+  card.classList.remove('fit-s', 'fit-1', 'fit-2', 'fit-3', 'fit-1col');
+}
+
+function _fitApply(card, level, oneCol) {
+  _fitClear(card);
+  if (level) card.classList.add('fit-' + level);
+  if (oneCol) card.classList.add('fit-1col');
+}
+
+function _fitOverflows(panel) {
+  return panel.scrollHeight - panel.clientHeight > 2;
+}
+
+function _fitQuestion(panel, from = 0) {
+  const card = panel?.querySelector('.q-card');
+  if (!card || card.classList.contains('q-card--hotspot') || !panel.clientHeight) return;
+  const has2col = !!card.querySelector('.options-list--2col');
+  // Thử mọi nấc còn lại, chọn nấc vừa khung mà câu cao nhất (lấp chỗ trống nhiều nhất);
+  // không nấc nào vừa thì dùng nấc nhỏ nhất.
+  let best = -1, bestH = -1;
+  for (let i = from; i < _FIT_STEPS.length; i++) {
+    const [level, oneCol] = _FIT_STEPS[i];
+    if (oneCol && !has2col) continue;
+    _fitApply(card, level, oneCol);
+    if (_fitOverflows(panel)) continue;
+    if (card.offsetHeight > bestH + 4) { best = i; bestH = card.offsetHeight; }
+  }
+  const pick = best >= 0 ? best : _FIT_STEPS.length - 1;
+  _fitApply(card, ..._FIT_STEPS[pick]);
+  card.dataset.fitStep = pick;
+  if (from === 0) _fitWatch(panel, card);
+}
+
+/** Khoá/mở cỡ chữ câu đang xem; mở khoá thì co giãn lại từ đầu (lấy lại cỡ to nếu đủ chỗ). */
+function _fitLock(on) {
+  const panel = document.getElementById('qPanel');
+  const card = panel?.querySelector('.q-card');
+  if (!card) return;
+  card.dataset.fitLock = on ? '1' : '';
+  if (!on) _fitQuestion(panel);
+}
+
+// Nội dung đổi sau khi đã co giãn (ảnh tải xong, thẻ được kéo vào nhóm, cửa sổ
+// đổi cỡ) → nếu tràn thì hạ tiếp từ nấc hiện tại. Chỉ đi xuống nên không lặp vô hạn.
+let _fitObserver = null;
+let _fitResizeBound = false;
+function _fitWatch(panel, card) {
+  if (typeof ResizeObserver === 'function') {
+    _fitObserver?.disconnect();
+    // Đổi lớp ở khung hình sau (rAF), không đổi ngay trong callback — tránh vòng lặp đo của trình duyệt.
+    _fitObserver = new ResizeObserver(() => requestAnimationFrame(() => {
+      if (!card.isConnected || card.dataset.fitLock === '1' || !_fitOverflows(panel)) return;
+      const cur = +card.dataset.fitStep || 0;
+      if (cur < _FIT_STEPS.length - 1) _fitQuestion(panel, cur + 1);
+    }));
+    _fitObserver.observe(card);
+  }
+  card.querySelectorAll('img').forEach(img => {
+    if (!img.complete) img.addEventListener('load', () => _fitQuestion(panel), { once: true });
+  });
+  if (!_fitResizeBound) {
+    _fitResizeBound = true;
+    let t = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(t);
+      t = setTimeout(() => { const p = document.getElementById('qPanel'); if (p && p.offsetParent) _fitQuestion(p); }, 150);
+    });
+  }
 }
 
 /* ============================================================
@@ -2257,11 +2410,13 @@ function checkCurrentAnswer() {
   if (el && el.dataset.shown === '1') {
     el.innerHTML = '';
     el.dataset.shown = '0';
+    _fitLock(false);
     if (btn) btn.innerHTML = '<i class="fa-solid fa-circle-check"></i><span>Kiểm tra<span class="nav-label"> đáp án</span></span>';
     window.dispatchEvent(new CustomEvent('edu:answer-checked', { detail: null }));
     return;
   }
 
+  _fitLock(true); // giữ cỡ chữ khi giải thích hiện ra (cuộn xuống xem), không co nhỏ đột ngột
   _renderCheckResult(_buildQuestionDetail(q, i));
   if (el) el.dataset.shown = '1';
   // Nút nằm ở thanh đáy, kết quả hiện cuối thẻ câu hỏi → cuộn tới cho học sinh thấy ngay.
@@ -2765,6 +2920,14 @@ function renderMatchingRegions(q, qi, matched, leftItems, body) {
    Nhấn 1 ô cột trái rồi nhấn 1 ô cột phải (hoặc ngược lại) để nối;
    nhấn lại 1 ô trái đã nối để gỡ. Hỗ trợ right value trùng lặp
    (một ô phải có thể nhận nhiều đường nối, hiện đếm x/y). ── */
+/** Cột nào chữ dài hơn thì rộng hơn (trong khoảng 0,75–1,6 lần) — đỡ bị bóp thành cột chữ cao ngất trên điện thoại. */
+function _match2colRatio(leftItems, rights, imgMap) {
+  const avg = arr => arr.reduce((s, t) => s + String(t).length, 0) / Math.max(1, arr.length);
+  const l = avg(leftItems), r = rights.some(x => imgMap[x]) ? 20 : avg(rights);
+  const ratio = Math.min(1.6, Math.max(0.75, Math.sqrt(l / r)));
+  return `--m2-left:${ratio.toFixed(2)};--m2-right:1`;
+}
+
 function renderMatchingTwoCol(q, qi, matched, leftItems, body) {
   const rightImgMap = {};
   q.pairs.forEach(p => { if (p.right_img) rightImgMap[p.right] = p.right_img; });
@@ -2789,7 +2952,7 @@ function renderMatchingTwoCol(q, qi, matched, leftItems, body) {
       <span class="match-hint-count">${answeredPairs}/${leftItems.length} đã nối</span>
     </div>
 
-    <div class="match2col-wrap" id="match2col-${qi}">
+    <div class="match2col-wrap" id="match2col-${qi}" style="${_match2colRatio(leftItems, uniqueRights, rightImgMap)}">
       <svg class="match2col-svg" id="matchSvg-${qi}"></svg>
 
       <div class="match2col-col match2col-left">
@@ -2822,6 +2985,7 @@ function renderMatchingTwoCol(q, qi, matched, leftItems, body) {
 
   body.querySelectorAll('.match2col-item').forEach(el => {
     el.addEventListener('click', onMatch2ColClick);
+    el.addEventListener('pointerdown', _m2DragStart);
   });
 
   _m2ActiveQi = qi;
@@ -2843,6 +3007,7 @@ function _bindMatch2ColResize() {
 }
 
 function onMatch2ColClick(e) {
+  if (_m2SuppressClick) return;
   const el   = e.currentTarget;
   const qi   = parseInt(el.dataset.qi);
   const side = el.dataset.side;
@@ -2904,6 +3069,100 @@ function onMatch2ColClick(e) {
   _m2State = { qi: null, side: null, key: null };
   updateSidebar();
   renderMatching(q, qi);
+}
+
+// ── Kéo dây nối: giữ 1 ô rồi kéo sang ô bên kia (chuột lẫn cảm ứng) ──
+// Chạm rồi thả tại chỗ vẫn là "bấm" như cũ (onMatch2ColClick). Màn cảm ứng
+// giữ cuộn dọc (touch-action: pan-y), kéo ngang mới là nối.
+let _m2Drag = null;
+let _m2SuppressClick = false;
+
+function _m2DragStart(e) {
+  if (e.button !== 0) return;
+  const el = e.currentTarget;
+  const qi = parseInt(el.dataset.qi);
+  const wrap = document.getElementById(`match2col-${qi}`);
+  if (!wrap) return;
+  _m2Drag = { el, qi, wrap, side: el.dataset.side, key: decodeURIComponent(el.dataset.key),
+              x0: e.clientX, y0: e.clientY, on: false, pid: e.pointerId, over: null };
+  el.addEventListener('pointermove', _m2DragMove);
+  el.addEventListener('pointerup', _m2DragEnd);
+  el.addEventListener('pointercancel', _m2DragCancel);
+}
+
+function _m2Target(d, x, y) {
+  const hit = document.elementFromPoint(x, y)?.closest('.match2col-item');
+  return hit && d.wrap.contains(hit) && hit.dataset.side !== d.side ? hit : null;
+}
+
+function _m2DragMove(e) {
+  const d = _m2Drag;
+  if (!d) return;
+  if (!d.on) {
+    if (Math.hypot(e.clientX - d.x0, e.clientY - d.y0) < 8) return;
+    d.on = true;
+    try { d.el.setPointerCapture(d.pid); } catch (err) { /* trình duyệt cũ: vẫn kéo được */ }
+    d.wrap.classList.add('m2-dragging', `m2-from-${d.side}`);
+    d.el.classList.add('m2-drag-src');
+  }
+  const over = _m2Target(d, e.clientX, e.clientY);
+  if (over !== d.over) {
+    d.over?.classList.remove('m2-drop-over');
+    over?.classList.add('m2-drop-over');
+    d.over = over;
+  }
+  // Dây tạm từ chấm của ô nguồn tới đầu ngón tay/chuột
+  const svg = document.getElementById(`matchSvg-${d.qi}`);
+  if (!svg) return;
+  const wr = d.wrap.getBoundingClientRect();
+  const dot = (d.el.querySelector('.match2col-dot') || d.el).getBoundingClientRect();
+  const x1 = (d.side === 'left' ? dot.right : dot.left) - wr.left, y1 = dot.top + dot.height / 2 - wr.top;
+  const x2 = e.clientX - wr.left, y2 = e.clientY - wr.top, mx = (x1 + x2) / 2;
+  let tmp = svg.querySelector('.match2col-line--drag');
+  if (!tmp) {
+    tmp = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    tmp.setAttribute('class', 'match2col-line match2col-line--drag');
+    svg.appendChild(tmp);
+  }
+  tmp.setAttribute('d', `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`);
+}
+
+function _m2DragStop() {
+  const d = _m2Drag;
+  _m2Drag = null;
+  if (!d) return null;
+  ['pointermove', 'pointerup', 'pointercancel'].forEach((t, i) =>
+    d.el.removeEventListener(t, [_m2DragMove, _m2DragEnd, _m2DragCancel][i]));
+  d.wrap.classList.remove('m2-dragging', 'm2-from-left', 'm2-from-right');
+  d.el.classList.remove('m2-drag-src');
+  d.over?.classList.remove('m2-drop-over');
+  document.getElementById(`matchSvg-${d.qi}`)?.querySelector('.match2col-line--drag')?.remove();
+  return d;
+}
+
+function _m2DragCancel() { _m2DragStop(); }
+
+function _m2DragEnd(e) {
+  const d = _m2DragStop();
+  if (!d || !d.on) return;              // chưa kéo → để sự kiện click xử lý như bấm
+  _m2SuppressClick = true;              // click phát sinh ngay sau khi thả: bỏ qua
+  setTimeout(() => { _m2SuppressClick = false; }, 0);
+  const target = _m2Target(d, e.clientX, e.clientY);
+  const q = State.questions[d.qi];
+  if (!target || !q) { drawMatchLines(d.qi); return; }
+  const tKey = decodeURIComponent(target.dataset.key);
+  const left  = d.side === 'left' ? d.key : tKey;
+  const right = d.side === 'left' ? tKey : d.key;
+  if (!State.matching[d.qi]) State.matching[d.qi] = {};
+  const matched = State.matching[d.qi];
+  const cap = q.pairs.filter(p => p.right === right).length;
+  const used = Object.entries(matched).filter(([l, r]) => r === right && l !== left).length;
+  if (used >= cap) { drawMatchLines(d.qi); return; }
+  matched[left] = right;                // kéo từ ô đã nối = đổi sang ô mới
+  State.session.clicks++;
+  _m2State = { qi: null, side: null, key: null };
+  updateSidebar();
+  renderMatching(q, d.qi);
 }
 
 /** Vẽ các đường nối SVG giữa ô trái ↔ ô phải đã ghép cho câu qi. */
@@ -3357,13 +3616,8 @@ function renderList(q, qi) {
   if (!body) return;
   const current = State.list[qi] || {};
   const items = q.items || [];
-  const answeredCount = Object.keys(current).length;
 
   body.innerHTML = `
-    ${q.hint ? `<div class="q-hint-line"><i class="fa-solid fa-lightbulb"></i> ${q.hint}</div>` : ''}
-    <div style="font-size:.82rem;font-weight:700;color:var(--muted);margin:.4rem 0 .75rem;">
-      <i class="fa-solid fa-list-check"></i> Trả lời từng dòng (${answeredCount}/${items.length} đã chọn)
-    </div>
     <div class="list-q-rows">
       ${items.map((it, j) => `
         <div class="list-q-row" id="list-row-${qi}-${j}">
@@ -3441,7 +3695,7 @@ function renderClassify(q, qi) {
           ? `<span class="pool-done"><i class="fa-solid fa-circle-check"></i> Đã phân loại hết — nhấn <i class="fa-solid fa-xmark"></i> trong nhóm để thay đổi</span>`
           : ''}
     </div>
-    <div class="classify-zones${zones.some(z => z.image_file) ? ' classify-zones-img' : ''}">
+    <div class="classify-zones${zones.some(z => z.image_file) ? ' classify-zones-img' : zones.length === 2 ? ' classify-zones--two' + (items.some(it => String(it.text).length > 60) ? ' is-long' : '') : ''}">
       ${zones.map(z => `
         <div class="classify-zone" data-qi="${qi}" data-zone="${encodeURIComponent(z.label)}" onclick="onClassifyZoneTap(this)">
           <div class="classify-zone-title">${z.image_file
@@ -4581,7 +4835,9 @@ function _renderTopicStats(details) {
   const rows = [...byTopic.entries()]
     .map(([name, t]) => ({ name, ...t, pct: Math.round((t.correct / t.total) * 100) }))
     .sort((a, b) => a.pct - b.pct || a.name.localeCompare(b.name, 'vi'));
-  const weak = rows.filter(r => r.pct < 70).map(r => r.name.replace(/^\d+\.\s*/, ''));
+  // Tối đa 2 chủ đề yếu nhất → nút mở thẳng bộ "Chủ đề" đó ở sảnh (câu đã sắp yếu nhất lên đầu).
+  const weak = rows.filter(r => r.pct < 70).slice(0, 2);
+  const canOpen = !State.customExam && !!State.session?.catId && typeof window.lobbySelectMinitest === 'function';
 
   box.hidden = false;
   box.innerHTML = `
@@ -4592,9 +4848,18 @@ function _renderTopicStats(details) {
         <span class="rt-track"><span class="rt-fill" style="width:${r.pct}%"></span></span>
         <span class="rt-val">${r.correct}/${r.total}</span>
       </div>`).join('')}
-    <div class="rt-hint">${weak.length
-      ? `<i class="fa-solid fa-lightbulb"></i> Nên ôn thêm: <b>${weak.map(_acEscapeHtml).join(', ')}</b> — chọn đúng chủ đề đó ở mục "Theo chủ đề".`
-      : '<i class="fa-solid fa-star"></i> Chủ đề nào cũng đạt từ 70% — rất đều tay!'}</div>`;
+    ${weak.length
+      ? `<div class="rt-actions">${weak.map(r => canOpen
+          ? `<button type="button" class="rt-practice" data-topic="${encodeURIComponent(r.name)}"><i class="fa-solid fa-book-open"></i> Ôn chủ đề ${_acEscapeHtml(r.name.replace(/^\d+\.\s*/, ''))}</button>`
+          : `<span class="rt-weak"><i class="fa-solid fa-book-open"></i> Nên ôn: ${_acEscapeHtml(r.name.replace(/^\d+\.\s*/, ''))}</span>`).join('')}</div>`
+      : '<div class="rt-hint"><i class="fa-solid fa-star"></i> Chủ đề nào cũng đạt từ 70%.</div>'}`;
+  box.querySelectorAll('.rt-practice').forEach(btn => btn.addEventListener('click', () => {
+    const { catId, levelId } = State.session;
+    backToLobby();
+    const ok = window.lobbySelectMinitest(catId, levelId, decodeURIComponent(btn.dataset.topic));
+    document.getElementById('btnStart')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (!ok && typeof showNotification === 'function') showNotification('Không mở được bộ chủ đề này.', 'warning');
+  }));
 }
 
 /** Câu sai/bỏ qua của lượt vừa nộp, ở dạng "gốc" (bỏ field _ do prepareQuestions tạo, giữ _topic). */
