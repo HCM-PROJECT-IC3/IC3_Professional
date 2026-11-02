@@ -2680,14 +2680,14 @@ body {
   cursor: pointer;
   transition: var(--transition);
   margin-top: 8px;
-  /* #openMosPracticeBtn là <a> (mở mos-practice.html ở tab mới) thay vì
+  /* #openMosReviewBtn là <a> (mở mos/index.html ở tab mới) thay vì
      <button> như các nút khác cùng class — reset gạch chân mặc định. */
   text-decoration: none;
 }
 .game-zone-open-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow) }
 /* .game-zone-open-btn khai báo display:inline-flex ở trên, đè luôn cả
    [hidden] mặc định của trình duyệt (cùng độ đặc hiệu, quy tắc sau thắng)
-   — #openWordSimBtn/#openMosPracticeBtn set thuộc tính hidden bằng JS
+   — #openMosReviewBtn set thuộc tính hidden bằng JS
    (js/main.js) sẽ KHÔNG ẩn được nếu thiếu dòng này. */
 .game-zone-open-btn[hidden] { display: none; }
 .game-zone-open-btn.is-locked {

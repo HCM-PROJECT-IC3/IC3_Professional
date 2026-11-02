@@ -134,12 +134,19 @@
         </div>
 
         <!-- Bài luyện tập: 4 nhóm (Bài học / Ôn tập / Kiểm tra / Chủ đề) rồi chọn bài trong ô bên dưới. -->
-        <div class="form-group">
+        <div class="form-group" id="minitestGroup">
           <label for="minitestSelect"><i class="fa-solid fa-layer-group"></i> Bài luyện tập</label>
           <div class="mt-mode-toggle" id="mtModeToggle"></div>
           <select id="minitestSelect"></select>
           <div class="minitest-meta" id="minitestMeta"></div>
         </div>
+
+        <!-- Ôn luyện MOS (Excel / PowerPoint / Word): trang mos/index.html — tải đề, làm trên Office thật, chấm ngay.
+             Nằm ở cột "Chọn bài", dưới ô Bài luyện tập; chỉ hiện khi Chương trình = MOS (updateMosInlinePractice trong js/main.js). -->
+        <a class="game-zone-open-btn" id="openMosReviewBtn" href="mos/index.html" target="_blank" rel="noopener" hidden
+          title="Ôn luyện MOS Excel, PowerPoint, Word — làm trên Office thật và chấm ngay">
+          <i class="fa-solid fa-graduation-cap"></i> Ôn luyện MOS
+        </a>
 
         </div>
         <div class="lobby-col lobby-col-3">
@@ -189,26 +196,6 @@
         <!-- Nhắc học sinh còn thiếu bước nào khi nút Bắt đầu đang khoá (js/lobby-form-ux.js) -->
         <p class="start-hint" id="startHint" aria-live="polite"></p>
 
-        <!-- MOS Word: mô phỏng Ribbon, 10 tiết. Chỉ hiện khi chọn MOS + Word (updateMosInlinePractice trong js/main.js). -->
-        <button type="button" class="game-zone-open-btn" id="openWordSimBtn" hidden
-          title="MOS Word 2019 — 10 tiết ôn luyện thao tác Ribbon">
-          <i class="fa-solid fa-pen-to-square"></i> MOS Word — Ôn luyện Ribbon
-        </button>
-
-        <!-- MOS Excel/PowerPoint: mô phỏng Ribbon, chỉ hiện khi chọn đúng cấp độ. -->
-        <button type="button" class="game-zone-open-btn" id="openExcelSimBtn" hidden
-          title="MOS Excel 2019 — 10 tiết ôn luyện thao tác Ribbon">
-          <i class="fa-solid fa-table-cells"></i> MOS Excel — Ôn luyện Ribbon
-        </button>
-        <button type="button" class="game-zone-open-btn" id="openPptSimBtn" hidden
-          title="MOS PowerPoint 2019 — 10 tiết ôn luyện thao tác Ribbon">
-          <i class="fa-solid fa-display"></i> MOS PowerPoint — Ôn luyện Ribbon
-        </button>
-
-        <!-- Thực hành MOS: tải đề, làm trên Office, nộp file để tự chấm (mos-practice.html). -->
-        <a class="game-zone-open-btn" id="openMosPracticeBtn" href="mos-practice.html" target="_blank" rel="noopener" hidden>
-          <i class="fa-solid fa-file-export"></i> Thực hành MOS — nộp file để chấm
-        </a>
         </div>
         <!-- Phần thêm cho học sinh (Thử thách hôm nay, đếm ngược, Góc học tập, Đấu trường, Lịch sử). Các module tìm theo ".lobby-card .lobby-extras". -->
         <div class="lobby-col lobby-col-more">
@@ -396,69 +383,6 @@
           title="Mini-game Chim Vượt Ải"
           src="about:blank"
           data-src="mario-flappy.html"
-          loading="lazy"
-          allow="fullscreen"
-        ></iframe>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============ MOS WORD 2019 — Ôn luyện Ribbon (modal) — xem js/game-modal.js ============ -->
-  <div class="game-modal-overlay" id="wordSimModalOverlay">
-    <div class="game-modal">
-      <div class="game-modal-bar">
-        <span class="game-modal-title"><i class="fa-solid fa-pen-to-square"></i> MOS Word 2019 — Ôn luyện Ribbon</span>
-        <button type="button" class="game-modal-close" id="closeWordSimModalBtn"><i class="fa-solid fa-xmark"></i> Đóng</button>
-      </div>
-      <div class="game-modal-frame">
-        <iframe
-          id="wordSimModalFrame"
-          class="game-modal-iframe"
-          title="MOS Word 2019 — Ôn luyện Ribbon"
-          src="about:blank"
-          data-src="word-simulator.html"
-          loading="lazy"
-          allow="fullscreen"
-        ></iframe>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============ MOS EXCEL 2019 — Ôn luyện Ribbon (modal) — xem js/game-modal.js ============ -->
-  <div class="game-modal-overlay" id="excelSimModalOverlay">
-    <div class="game-modal">
-      <div class="game-modal-bar">
-        <span class="game-modal-title"><i class="fa-solid fa-table-cells"></i> MOS Excel 2019 — Ôn luyện Ribbon</span>
-        <button type="button" class="game-modal-close" id="closeExcelSimModalBtn"><i class="fa-solid fa-xmark"></i> Đóng</button>
-      </div>
-      <div class="game-modal-frame">
-        <iframe
-          id="excelSimModalFrame"
-          class="game-modal-iframe"
-          title="MOS Excel 2019 — Ôn luyện Ribbon"
-          src="about:blank"
-          data-src="excel-simulator.html"
-          loading="lazy"
-          allow="fullscreen"
-        ></iframe>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============ MOS POWERPOINT 2019 — Ôn luyện Ribbon (modal) — xem js/game-modal.js ============ -->
-  <div class="game-modal-overlay" id="pptSimModalOverlay">
-    <div class="game-modal">
-      <div class="game-modal-bar">
-        <span class="game-modal-title"><i class="fa-solid fa-display"></i> MOS PowerPoint 2019 — Ôn luyện Ribbon</span>
-        <button type="button" class="game-modal-close" id="closePptSimModalBtn"><i class="fa-solid fa-xmark"></i> Đóng</button>
-      </div>
-      <div class="game-modal-frame">
-        <iframe
-          id="pptSimModalFrame"
-          class="game-modal-iframe"
-          title="MOS PowerPoint 2019 — Ôn luyện Ribbon"
-          src="about:blank"
-          data-src="powerpoint-simulator.html"
           loading="lazy"
           allow="fullscreen"
         ></iframe>

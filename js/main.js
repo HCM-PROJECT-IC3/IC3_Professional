@@ -5,47 +5,19 @@ document.addEventListener('DOMContentLoaded', () => {
   if (window.EduGamification) EduGamification.renderInto('#lobbyGameStrip');
 });
 
-/* ── MOS Word/Excel/PowerPoint — nút luyện tập THẬT (Ribbon simulator +
-   nộp file chấm điểm) gắn NGAY TRONG form chọn bài, không phải trong Khu
-   Vui Chơi (mini-game, có khoá điểm) — vì đây là nội dung ôn luyện chính,
-   không phải giải trí. Cả 3 môn đều có Ribbon simulator riêng (10 tiết,
-   giống hệt kiến trúc Word — xem excel-simulator.html/powerpoint-simulator.html);
-   Excel/PowerPoint có thêm nút "nộp bài chấm điểm thật" (mos-practice.html)
-   vì 2 môn này còn có đề luyện trên file Office thật. Chỉ hiện các nút phù
-   hợp với Cấp độ đang chọn khi Chương trình = MOS; các trường hợp khác ẩn
-   hết. Gọi từ js/quiz-engine.js § refreshMeta() (chạy lại mỗi khi đổi
-   Chương trình/Cấp độ, và ngay lần tải trang đầu tiên). */
+/* ── Ôn luyện MOS — khi Chương trình = MOS, hiện thêm 1 nút mở trang
+   mos/index.html (Excel/PowerPoint/Word: tải đề, làm trên Office thật,
+   chấm ngay) ngay dưới ô "Bài luyện tập" (bài trắc nghiệm vẫn giữ nguyên).
+   Chương trình khác: ẩn nút. Gọi từ js/quiz-engine.js § refreshMeta()
+   (mỗi lần đổi Chương trình/Cấp độ và lần tải trang đầu tiên). */
 function updateMosInlinePractice(catId, levelId) {
-  const wordBtn = document.getElementById('openWordSimBtn');
-  const excelBtn = document.getElementById('openExcelSimBtn');
-  const pptBtn = document.getElementById('openPptSimBtn');
-  const practiceBtn = document.getElementById('openMosPracticeBtn');
-  // MỖI nút được guard RIÊNG (không return sớm nếu thiếu 1 nút) — nếu
-  // gộp chung 1 điều kiện "thiếu 1 trong N nút thì return hết", 1 nút bị
-  // xoá/đổi id trong tương lai sẽ âm thầm làm hỏng LUÔN cả các nút khác
-  // vốn không liên quan gì đến nó (bug thật đã xảy ra ở đây khi thêm
-  // excelBtn/pptBtn: return sớm bằng "!wordBtn || !excelBtn || !pptBtn ||
-  // !practiceBtn" khiến 1 nút thiếu là practiceBtn/wordBtn cũng bị treo
-  // trạng thái cũ, không cập nhật hidden theo Cấp độ đang chọn).
   const isMos = catId === 'MOS';
-  if (wordBtn) wordBtn.hidden = !(isMos && levelId === 'Word');
-  if (excelBtn) excelBtn.hidden = !(isMos && levelId === 'Excel');
-  if (pptBtn) pptBtn.hidden = !(isMos && levelId === 'PowerPoint');
-
-  const practiceSubject = isMos && levelId === 'Excel' ? 'excel'
-    : isMos && levelId === 'PowerPoint' ? 'powerpoint'
-    : null;
-  if (practiceBtn) {
-    practiceBtn.hidden = !practiceSubject;
-    if (practiceSubject) {
-      // Truyền ?subject= để mos-practice.html tự cuộn/lọc đúng dự án của
-      // môn đang chọn thay vì học sinh phải tự tìm trong danh sách — xem
-      // js/mos-practice.js đọc URLSearchParams lúc khởi tạo.
-      practiceBtn.href = `mos-practice.html?subject=${practiceSubject}`;
-      practiceBtn.innerHTML = practiceSubject === 'excel'
-        ? '<i class="fa-solid fa-file-export" aria-hidden="true"></i> Thực hành MOS — nộp file Excel để chấm'
-        : '<i class="fa-solid fa-file-export" aria-hidden="true"></i> Thực hành MOS — nộp file PowerPoint để chấm';
-    }
+  const reviewBtn = document.getElementById('openMosReviewBtn');
+  if (reviewBtn) {
+    reviewBtn.hidden = !isMos;
+    // Mở sẵn đúng môn đang chọn (excel/powerpoint/word) trên trang mos/.
+    const subject = { Excel: 'excel', PowerPoint: 'powerpoint', Word: 'word' }[levelId];
+    reviewBtn.href = subject ? `mos/index.html#/s/${subject}` : 'mos/index.html';
   }
 }
 window.updateMosInlinePractice = updateMosInlinePractice;
