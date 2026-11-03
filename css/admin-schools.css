@@ -1,0 +1,49 @@
+/* ============================================================
+   admin-schools.html — Danh mục trường. Nền tảng (topbar, bảng, nút,
+   badge, toast) dùng chung css/admin-users.css; file này chỉ thêm phần riêng.
+   ============================================================ */
+
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1rem; margin-bottom: 1.2rem }
+.kpi-card {
+  display: flex; align-items: center; gap: .9rem;
+  padding: 1rem 1.2rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+}
+.kpi-card > i { font-size: 1.3rem; color: var(--blue) }
+.kpi-value { font-size: 1.4rem; font-weight: 800; line-height: 1.1 }
+.kpi-label { font-size: .75rem; color: var(--muted); font-weight: 700 }
+
+.page-hint { font-size: .82rem; color: var(--muted); margin: 0 0 1rem }
+
+/* Bảng ít cột hơn trang tài khoản — không cần sàn 1250px */
+.schools-table { min-width: 1100px }
+.schools-table th:nth-child(2), .schools-table td:nth-child(2) { min-width: 0; white-space: nowrap }
+.schools-table td.school-name { font-weight: 800 }
+.schools-table td.num { text-align: right; font-variant-numeric: tabular-nums }
+.schools-table code { font-size: .75rem; color: var(--muted) }
+.schools-table tr.is-inactive td { opacity: .6 }
+.schools-table tr.is-inactive td:last-child, .schools-table tr.is-inactive td:nth-child(4) { opacity: 1 }
+
+.infoInput {
+  width: 100%;
+  min-width: 140px;
+  font-family: inherit;
+  font-size: .8rem;
+  padding: .4rem .6rem;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--card2);
+  color: var(--text);
+}
+.infoInput:focus { outline: 2px solid var(--blue); outline-offset: 1px }
+.saveInfoBtn { white-space: nowrap; padding: .45rem .9rem }
+.saveInfoBtn:disabled { opacity: .6; cursor: progress }
+.empty-cell { color: var(--muted); text-align: center; padding: 2rem 1rem }
+
+@media (max-width: 640px) {
+  .wrap { padding: 1rem }
+  .kpi-row { grid-template-columns: 1fr 1fr }
+}

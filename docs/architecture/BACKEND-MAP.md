@@ -21,6 +21,7 @@ máy có phiên giáo viên).
 |---|---|---|---|
 | Ngân hàng câu hỏi `data/ic3/` | GitHub Pages | Admin (image-manager → Apps Script `githubPublish`) | Học sinh |
 | Danh sách trường/lớp/tên ở sảnh `data/roster/students-active.json` | GitHub Pages | Admin (roster-manager → Apps Script `publishRoster`) | Học sinh |
+| Danh sách lớp theo **mã lớp** (chế độ `roster.mode = 'class-code'`, mặc định tắt) | Sheet tab `MaLop` | Admin (roster-manager → Apps Script `publishRosterCodes`) | Học sinh nhập mã → `rosterByCode` (1 lớp/lần, 0 lượt Firebase) |
 | Tài khoản, vai trò, trường phụ trách (`users`) | Firebase | Đăng ký / Admin | Mọi trang quản trị; Apps Script (xác thực) |
 | Roster quản lý (`students_roster`, `classes`, `courses`) | Firebase | Điều phối / Admin | Dashboard |
 | Lịch dạy, TKB, khoảng cách xăng xe (`teaching_*`) | Firebase | Giáo viên / Điều phối GV | teaching-schedule |

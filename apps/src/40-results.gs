@@ -108,12 +108,14 @@ function wrongStats_(p, who) {
  * dừng ngay khi gặp bài cũ hơn sinceMs → lần làm mới của dashboard chỉ đọc phần đuôi.
  */
 function listResults_(p, who) {
-  let schools = Array.isArray(p.schools) && p.schools.length ? p.schools.map(String) : null;
-  if (who.schools) {
-    schools = (schools || who.schools).filter(function (s) { return who.schools.indexOf(s) !== -1; });
-    if (!schools.length) return { rows: [], truncated: false };
+  // So theo schoolId (tên trường khác hoa/thường/dấu cách vẫn khớp; xem schoolIdOf_).
+  let schoolIds = Array.isArray(p.schools) && p.schools.length ? p.schools.map(schoolIdOf_) : null;
+  const scope = whoSchoolIdSet_(who);
+  if (scope) {
+    schoolIds = schoolIds ? schoolIds.filter(function (id) { return scope.has(id); }) : Array.from(scope);
+    if (!schoolIds.length) return { rows: [], truncated: false };
   }
-  const schoolSet = schools ? new Set(schools) : null;
+  const schoolSet = schoolIds ? new Set(schoolIds) : null;
   const classSet = Array.isArray(p.classes) && p.classes.length ? new Set(p.classes.map(String)) : null;
   const wantName = p.studentName ? nameKey_(p.studentName) : '';
   const sinceMs = Number(p.sinceMs) || 0;
@@ -146,7 +148,7 @@ function listResults_(p, who) {
         if (sinceMs && ms && ms < sinceMs) { done = true; break; }
         if (!r[0] || seenIds.has(r[0])) continue;
         seenIds.add(r[0]);
-        if (schoolSet && !schoolSet.has(r[3])) continue;
+        if (schoolSet && !schoolSet.has(schoolIdOf_(r[3]))) continue;
         if (classSet && !classSet.has(r[2])) continue;
         if (wantName && nameKey_(r[1]) !== wantName) continue;
         rows.push(logRowToResult_(r, ms));
@@ -183,7 +185,7 @@ function deleteResults_(p, who) {
       wanted.forEach(function (id) {
         const cell = sheet.getRange('A:A').createTextFinder(id).matchEntireCell(true).findNext();
         if (!cell || cell.getRow() < 2) return;
-        if (who.schools && who.schools.indexOf(String(sheet.getRange(cell.getRow(), 4).getDisplayValue())) === -1) return;
+        if (!inWhoScope_(who, sheet.getRange(cell.getRow(), 4).getDisplayValue())) return;
         rowNums.push(cell.getRow());
       });
       rowNums.sort(function (a, b) { return b - a; }).forEach(function (row) {

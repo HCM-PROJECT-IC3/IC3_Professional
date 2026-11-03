@@ -227,7 +227,7 @@
       const password = `${r.cccd}@IIG`;
       try {
         const cred = await secondaryAuth.createUserWithEmailAndPassword(r.email, password);
-        await window.EduFirebase.db.collection('users').doc(cred.user.uid).set({
+        await window.EduRepositories.user.createWithId(cred.user.uid, {
           name: r.hoTen || r.maGV,
           email: r.email,
           role: 'teacher',
@@ -255,6 +255,12 @@
 
     btn.innerHTML = '<i class="fa-solid fa-circle-check" aria-hidden="true"></i> Tạo tài khoản';
     btn.disabled = false;
+    // Chỉ số lượng — không ghi email/CCCD/mật khẩu vào nhật ký.
+    if (window.EduActivityLog && created) {
+      window.EduActivityLog.log(window.EduModels.ActivityLog.ACTIONS.UPDATE_USER, {
+        meta: { userAction: 'import_teachers', created, existed, failed },
+      });
+    }
     toast(`Đã tạo ${created} tài khoản mới${existed ? `, ${existed} đã tồn tại từ trước` : ''}${failed ? `, ${failed} lỗi` : ''}.`);
     if (window.EduAdminUsersReload) window.EduAdminUsersReload();
   });

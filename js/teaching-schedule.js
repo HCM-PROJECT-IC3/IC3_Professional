@@ -184,12 +184,9 @@
     if (cachedMap) {
       teacherCodeToUid = cachedMap;
     } else {
-      db.collection('users').where('role', '==', 'teacher').where('approved', '==', true).limit(1000).get()
-        .then((snap) => {
-          snap.forEach((doc) => {
-            const code = doc.data().teacherCode;
-            if (code) teacherCodeToUid[code] = doc.id;
-          });
+      window.EduRepositories.user.teacherCodeToUid()
+        .then((map) => {
+          Object.assign(teacherCodeToUid, map);
           if (window.EduDataCache) window.EduDataCache.set(TEACHER_MAP_CACHE_KEY, teacherCodeToUid, 30 * 60 * 1000, true);
           patchScheduleAvatars();
         })

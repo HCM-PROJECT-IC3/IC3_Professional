@@ -13,8 +13,15 @@
     constructor() { super(R.COURSES_COLLECTION); }
   }
 
+  // Lớp có field "school" → mọi lần ghi kèm schoolId (js/models/school.model.js).
+  const withSchoolId = (data) => global.EduModels.School.withSchoolId(data);
+
   class ClassRepository extends global.EduBaseRepository {
     constructor() { super(R.CLASSES_COLLECTION); }
+    create(data) { return super.create(withSchoolId(data)); }
+    createWithId(id, data) { return super.createWithId(id, withSchoolId(data)); }
+    update(id, partialData) { return super.update(id, withSchoolId(partialData)); }
+    upsert(id, data) { return super.upsert(id, withSchoolId(data)); }
     async listByTeacher(teacherId) {
       return this.list({ where: [['teacherId', '==', teacherId]] });
     }

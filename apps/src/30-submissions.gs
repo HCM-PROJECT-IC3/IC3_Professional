@@ -29,6 +29,7 @@ function validateSubmission_(p) {
     if (uids.length > WRONG_MAX_UIDS || uids.some(function (u) { return !/^[^,<>"'`&\r\n]{3,80}$/.test(u); })) bad('wrong');
   }
   if (p.detail !== undefined && p.detail !== null) p.detail = cleanDetail_(p.detail, bad);
+  validateWireAnswers_(p, bad); // câu trả lời để máy chủ chấm lại (77-grading.gs)
 }
 
 /**
@@ -80,6 +81,7 @@ function writeSubmissionLog_(payload) {
   const dedupeKey = 'sub:' + String(payload.submissionId).slice(0, 200);
   if (cache.get(dedupeKey)) return { written: false, duplicate: true };
 
+  applyServerGrading_(payload); // bài Kiểm tra có gửi câu trả lời → chấm lại, ⚠️ nếu lệch điểm (77-grading.gs)
   const sheet = getSubmissionLogSheet_();
   // asText_(): giữ NGUYÊN chữ — trước đây Sheet tự đổi "7/24" (số câu đúng), lớp
   // "3/12", thời gian "5:05" thành ngày/giờ, và tên bắt đầu bằng "=" thành công thức.

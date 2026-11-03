@@ -133,9 +133,52 @@
     renderKpis(scoped, filters);
     window.EduCoordinatorCharts.renderAll(scoped);
     renderWatchlists(scoped);
+    renderSchoolComparison(scoped);
     // Bảng quản lý học sinh đầy đủ — dùng lại đúng `scoped` đã
     // lọc 5 chiều, không gọi lại Firestore.
     if (window.EduCoordinatorStudentTable) window.EduCoordinatorStudentTable.render(scoped);
+    if (window.EduWrongQuestions) window.EduWrongQuestions.setContext(wrongQuestionsScope(filters, scoped));
+  }
+
+  /** Bộ lọc → phạm vi hỏi Apps Script (wrongStats, js/teacher/wrong-questions.js).
+   *  Khoá học/Giáo viên/Lớp quy về danh sách tên lớp như applyFilters; Admin = mọi trường. */
+  function wrongQuestionsScope(f, scoped) {
+    const days = { '7': 7, '30': 30, '90': 90 }[f.rangeDays];
+    const byClass = !!(f.courseId || f.teacherId || f.classId);
+    const names = byClass ? [...new Set(scoped.allowedClasses.map((c) => c.name).filter(Boolean))] : null;
+    const optText = (id) => { const el = document.getElementById(id); return el && el.value ? el.options[el.selectedIndex].text : ''; };
+    const who = f.classId ? 'Lớp ' + optText('f-class')
+      : [optText('f-course'), f.teacherId ? 'GV ' + optText('f-teacher') : ''].filter(Boolean).join(' · ') || 'Mọi lớp';
+    return {
+      schools: myProfile.role === 'admin' ? undefined : rawData.schools,
+      // Lọc ra 0 lớp: gửi tên không thể trùng — mảng rỗng thì Apps Script hiểu là "mọi lớp".
+      classes: names ? (names.length ? names : ['\u0000']) : undefined,
+      sinceMs: days ? Date.now() - days * 86400000 - (Date.now() % 3600000) : undefined, // làm tròn giờ như teacher dashboard
+      testName: f.examName || '',
+      label: [who, f.examName ? f.examName.split(' › ').pop() : 'mọi bài', days ? days + ' ngày qua' : 'toàn bộ'].join(' · '),
+    };
+  }
+
+  // ============================================================
+  // SO SÁNH GIỮA CÁC TRƯỜNG — chỉ có nghĩa khi phạm vi xem có ≥ 2 trường
+  // ============================================================
+  function renderSchoolComparison(scoped) {
+    const rows = window.EduAnalytics.schoolComparison(scoped.filteredResults, scoped.filteredStudents);
+    const card = document.getElementById('schoolCompareCard');
+    card.hidden = rows.length < 2;
+    if (card.hidden) return;
+    const pct = (v) => (v === null || v === undefined ? '—' : v + '%');
+    document.getElementById('schoolCompareCount').textContent = `(${rows.length})`;
+    document.getElementById('schoolCompareRows').innerHTML = rows.map((r) => `
+      <tr>
+        <td>${esc(r.school)}</td>
+        <td class="num">${r.rosterSize || '—'}</td>
+        <td class="num">${r.active}</td>
+        <td class="num">${pct(r.participation)}</td>
+        <td class="num">${r.submissions}</td>
+        <td class="num"><b>${pct(r.avg)}</b></td>
+        <td class="num">${pct(r.passRate)}</td>
+      </tr>`).join('');
   }
 
   // ============================================================

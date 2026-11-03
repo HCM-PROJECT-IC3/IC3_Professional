@@ -1629,7 +1629,7 @@ function _toTwoColumnClassify(q) {
   let rows = null, choices = null;
   if (q.type === 'list' && Array.isArray(q.items) && q.items.length > 1) {
     choices = [...new Set(q.items.flatMap(it => it.options || []))];
-    rows = q.items.map(it => ({ text: String(it.text || '').trim(), zone: it.correct }));
+    rows = q.items.map((it, j) => ({ text: String(it.text || '').trim(), zone: it.correct, key: j }));
   } else if ((q.type === 'selectfill' || q.type === 'dragfill') && Array.isArray(q.segments) && Array.isArray(q.blanks)) {
     const lines = _splitFillBlankLines(q.segments, q.blanks.length);
     if (lines.length < 2 || !lines.every(l => l.filter(t => t.type === 'blank').length === 1)) return null;
@@ -1637,6 +1637,7 @@ function _toTwoColumnClassify(q) {
     rows = lines.map(l => ({
       text: l.filter(t => t.type === 'text').map(t => t.value).join('').trim(),
       zone: q.blanks[l.find(t => t.type === 'blank').index],
+      key: l.find(t => t.type === 'blank').index,
     }));
   }
   if (!rows || choices.length !== 2 || rows.length > 8) return null;
@@ -1647,6 +1648,11 @@ function _toTwoColumnClassify(q) {
   const yes = /^(đúng|có)$/i;
   const zones = choices.slice().sort((a, b) => (yes.test(b) ? 1 : 0) - (yes.test(a) ? 1 : 0)).map(_twoColLabel);
   const out = { ...q, type: 'classify', zones, items: rows.map(r => ({ text: r.text, zone: _twoColLabel(r.zone) })), _fixedZones: true };
+  // Nguồn gốc (wireAnswerOf): dòng → chỉ số dòng/chỗ trống của câu gốc, nhãn cột → giá trị gốc.
+  const labelToValue = Object.fromEntries(choices.map(c => [_twoColLabel(c), c]));
+  if (Object.keys(labelToValue).length === choices.length) {
+    out._wire = { type: q.type, byText: Object.fromEntries(rows.map(r => [r.text, r.key])), labelToValue };
+  }
   ['segments', 'blanks', 'wordBank', 'hint'].forEach(k => delete out[k]);
   return out;
 }
@@ -1708,6 +1714,7 @@ function prepareQuestions(rawQs, { keepOrder = false } = {}) {
 
     // Shuffle statements cho truefalse
     if (q.type === 'truefalse' && Array.isArray(q.statements)) {
+      q.statements.forEach((st, j) => { st._o = j; }); // chỉ số gốc — wireAnswerOf
       q.statements = shuffle(q.statements);
     }
 
@@ -1719,6 +1726,7 @@ function prepareQuestions(rawQs, { keepOrder = false } = {}) {
 
     // Xáo thứ tự các dòng cho "list" (mỗi dòng tự có options riêng, không ảnh hưởng đáp án)
     if (q.type === 'list' && Array.isArray(q.items)) {
+      q.items.forEach((it, j) => { it._o = j; }); // chỉ số gốc — wireAnswerOf
       q.items = shuffle(q.items);
     }
 
@@ -2416,6 +2424,11 @@ function checkCurrentAnswer() {
     return;
   }
 
+  if (!window.EduGrading) { // xem _ensureGrading()
+    _ensureGrading();
+    showNotification('Đang tải bộ chấm điểm — thử lại sau vài giây.', 'warning');
+    return;
+  }
   _fitLock(true); // giữ cỡ chữ khi giải thích hiện ra (cuộn xuống xem), không co nhỏ đột ngột
   _renderCheckResult(_buildQuestionDetail(q, i));
   if (el) el.dataset.shown = '1';
@@ -4279,7 +4292,37 @@ function autoSubmit() {
   submitExam();
 }
 
+/** Câu trả lời dạng câu gốc + file khối — chỉ khi bật serverGrading 'verify'. Lỗi → null (bài vẫn nộp). */
+function _wireForServer() {
+  const sg = window.EduBackend && window.EduBackend.serverGrading;
+  if (!sg || sg.mode !== 'verify') return null;
+  try {
+    return {
+      bank: (_findMetaLevel(State.session.catId, State.session.levelId) || {}).file || '',
+      answers: State.questions.map((q, i) => [q.uid || '', wireAnswerOf(q, i)]),
+    };
+  } catch (err) {
+    console.warn('[EduQuiz] Không dựng được câu trả lời để máy chủ chấm lại:', err.message);
+    return null;
+  }
+}
+
+/** Bộ chấm js/core/grading.js — trang HTML cũ trong bản lưu (Service Worker) có thể chưa có thẻ script. */
+function _ensureGrading() {
+  if (window.EduGrading || document.querySelector('script[data-edu-grading]')) return;
+  const s = document.createElement('script');
+  s.src = 'js/core/grading.js';
+  s.dataset.eduGrading = '1';
+  document.head.appendChild(s);
+}
+
 function submitExam() {
+  // Chưa có bộ chấm (hiếm: HTML cũ + JS mới lúc vừa cập nhật) → chưa đánh dấu đã nộp, báo nộp lại.
+  if (!window.EduGrading) {
+    _ensureGrading();
+    showNotification('Đang tải bộ chấm điểm — bấm "Nộp bài" lại sau vài giây.', 'warning');
+    return;
+  }
   // Chặn nộp trùng (double-click "Nộp bài", hoặc hết giờ tự nộp đúng lúc
   // đang nộp tay...): submitExam() không có await nào bên trong nên chạy
   // trọn vẹn 1 lượt đồng bộ — chỉ cần CHECK-rồi-SET cờ này làm dòng ĐẦU
@@ -4321,7 +4364,9 @@ function submitExam() {
   // Lưu bài: dựng payload + chọn đích (Google Sheet / Firestore theo
   // js/backend-config.js) + hàng đợi gửi lại — xem js/services/result-submitter.js.
   if (window.EduResultSubmitter) {
-    window.EduResultSubmitter.submitQuiz({ session: State.session, result, integrity, elapsed, questions: State.questions });
+    window.EduResultSubmitter.submitQuiz({
+      session: State.session, result, integrity, elapsed, questions: State.questions, wire: _wireForServer(),
+    });
   } else {
     console.warn('[EduQuiz] Thiếu js/services/result-submitter.js — bài nộp chỉ lưu trên máy.');
   }
@@ -4342,97 +4387,49 @@ function submitExam() {
  *   2. checkCurrentAnswer() — chấm 1 câu ngay khi đang làm (chỉ chế độ
  *      "Ôn luyện", xem § 6b bên dưới).
  */
+/** Câu trả lời của câu i dạng gửi được qua mạng (JSON) — đầu vào của EduGrading.questionStatus. */
+function _answerOf(q, i) {
+  switch (q.type) {
+    case 'matching': return State.matching[i];
+    case 'hotspot':  return State.hotspot[i] ? [...State.hotspot[i]] : undefined;
+    case 'list':     return State.list[i];
+    case 'classify': return State.classify[i];
+    case 'ordering': return State.ordering[i];
+    case 'dragfill':
+    case 'selectfill': return State.fillblank[i];
+    default:         return State.answers[i]; // single / multi / truefalse
+  }
+}
+
+/**
+ * Câu trả lời câu i theo DẠNG CÂU GỐC trong data/ic3 (chỉ số trước khi xáo, loại câu trước khi
+ * đổi sang "phân loại 2 cột") — máy chủ chấm lại bằng câu gốc (docs/architecture/SERVER-GRADING.md).
+ * EduGrading.questionStatus(câuGốc, wireAnswerOf(q, i)) === trạng thái chấm trên máy
+ * (js/core/__tests__/grading-wire.test.js kiểm trên toàn bộ ngân hàng).
+ */
+function wireAnswerOf(q, i) {
+  const ans = _answerOf(q, i);
+  if (q._wire) { // classify sinh từ list / selectfill / dragfill
+    const out = {};
+    Object.entries(ans || {}).forEach(([text, label]) => {
+      if (text in q._wire.byText) out[q._wire.byText[text]] = label in q._wire.labelToValue ? q._wire.labelToValue[label] : label;
+    });
+    return out;
+  }
+  if ((q.type === 'truefalse' && Array.isArray(q.statements)) || (q.type === 'list' && Array.isArray(q.items))) {
+    const rows = q.type === 'truefalse' ? q.statements : q.items;
+    const out = {};
+    Object.entries(ans || {}).forEach(([j, v]) => { const r = rows[j]; out[r && r._o !== undefined ? r._o : j] = v; });
+    return out;
+  }
+  return ans;
+}
+
 function _buildQuestionDetail(q, i) {
   const ua = State.answers[i];   // user answer
   const ma = State.matching[i];  // user matching
-  let status = 'skipped';
-
-  switch (q.type) {
-    case 'single':
-      if (ua && (q.correct || []).includes(ua)) status = 'correct';
-      else if (ua) status = 'incorrect';
-      break;
-
-    case 'multi': {
-      // Sắp xếp cả 2 mảng rồi so sánh để không phụ thuộc thứ tự
-      const userArr = [...(ua || [])].sort();
-      const corrArr = [...(q.correct || [])].sort();
-      if (userArr.length > 0) {
-        status = JSON.stringify(userArr) === JSON.stringify(corrArr) ? 'correct' : 'incorrect';
-      }
-      break;
-    }
-
-    case 'truefalse': {
-      const ans = ua || {};
-      if (Object.keys(ans).length > 0) {
-        // Kiểm tra TẤT CẢ statements phải đúng
-        const allCorrect = (q.statements || []).every((st, j) => ans[j] === st.answer);
-        status = allCorrect ? 'correct' : 'incorrect';
-      }
-      break;
-    }
-
-    case 'matching': {
-      if (q.pairs && q.pairs.length > 0 && ma && Object.keys(ma).length > 0) {
-        const ok = q.pairs.every(p => ma[p.left] === p.right);
-        status = ok ? 'correct' : 'incorrect';
-      }
-      break;
-    }
-
-    case 'hotspot': {
-      const selSet = State.hotspot[i];
-      const correctIds = (q.areas || []).filter(a => a.correct).map(a => a.id).sort();
-      if (selSet && selSet.size > 0) {
-        const selArr = [...selSet].sort();
-        status = JSON.stringify(selArr) === JSON.stringify(correctIds) ? 'correct' : 'incorrect';
-      }
-      break;
-    }
-
-    case 'list': {
-      const ans = State.list[i] || {};
-      const items = q.items || [];
-      if (Object.keys(ans).length > 0) {
-        const allCorrect = items.every((it, j) => ans[j] === it.correct);
-        status = allCorrect ? 'correct' : 'incorrect';
-      }
-      break;
-    }
-
-    case 'classify': {
-      const ans = State.classify[i] || {};
-      const items = q.items || [];
-      // Bỏ qua/skip chỉ khi KHÔNG item bắt buộc nào được xếp — thẻ mồi nhử
-      // (q.distractors) lỡ bị kéo vào 1 nhóm không tính là "đã trả lời".
-      if (items.some(it => ans[it.text] !== undefined)) {
-        const allCorrect = items.every(it => ans[it.text] === it.zone);
-        status = allCorrect ? 'correct' : 'incorrect';
-      }
-      break;
-    }
-
-    case 'ordering': {
-      const ans = State.ordering[i];
-      const correctOrder = q.items || [];
-      if (ans && ans.length > 0) {
-        status = JSON.stringify(ans) === JSON.stringify(correctOrder) ? 'correct' : 'incorrect';
-      }
-      break;
-    }
-
-    case 'dragfill':
-    case 'selectfill': {
-      const ans = State.fillblank[i] || {};
-      const blanks = q.blanks || [];
-      if (Object.keys(ans).length > 0) {
-        const allCorrect = blanks.every((correctText, bi) => ans[bi] === correctText);
-        status = allCorrect ? 'correct' : 'incorrect';
-      }
-      break;
-    }
-  }
+  // Luật chấm: js/core/grading.js (dùng chung với bản Apps Script apps/src/77-grading.gs).
+  const status = window.EduGrading.questionStatus(q, _answerOf(q, i));
 
   return {
     num:         i + 1,
@@ -5423,6 +5420,7 @@ function showNotification(message, type = 'info') {
 /* ============================================================
    ██ BOOT — Gọi loadData() sau khi DOM sẵn sàng
    ============================================================ */
+_ensureGrading();
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', loadData);
 } else {

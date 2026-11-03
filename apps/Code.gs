@@ -1,6 +1,6 @@
 // ⚠️ FILE TẠO TỰ ĐỘNG từ apps/src/*.gs — đừng sửa tay ở đây.
 // Sửa file nguồn tương ứng rồi chạy: node scripts/build-apps-script.js
-// Thứ tự: 00-config.gs, 10-router.gs, 20-auth.gs, 30-submissions.gs, 35-mos.gs, 36-batch.gs, 40-results.gs, 45-activity.gs, 47-arena.gs, 48-class-sheet.gs, 50-reports.gs, 60-maps.gs, 70-github.gs, 80-sheet-setup.gs, 90-utils.gs, 95-selftest.gs
+// Thứ tự: 00-config.gs, 10-router.gs, 20-auth.gs, 30-submissions.gs, 35-mos.gs, 36-batch.gs, 40-results.gs, 45-activity.gs, 47-arena.gs, 48-class-sheet.gs, 50-reports.gs, 60-maps.gs, 70-github.gs, 75-roster-codes.gs, 77-grading.gs, 80-sheet-setup.gs, 90-utils.gs, 95-selftest.gs
 
 // ──────────────── 00-config.gs ────────────────
 /**
@@ -24,7 +24,7 @@
  */
 
 // ====== CẤU HÌNH - THAY BẰNG ID THẬT CỦA BẠN ======
-const BACKEND_VERSION = '2026-11-01';
+const BACKEND_VERSION = '2026-11-03b';
 const SPREADSHEET_ID_DATA = '16ty8LB6pnk5Xai1VauUAKfMbIaT88ewfNUAhWM0z5ck';      // Sheet chứa HocSinh + KetQua
 const SPREADSHEET_ID_REPORT = '16ty8LB6pnk5Xai1VauUAKfMbIaT88ewfNUAhWM0z5ck';    // Sheet chứa báo cáo tổng hợp (có thể trùng với ID trên nếu để chung 1 file, khác tab)
 
@@ -88,14 +88,14 @@ const ALERT_EMAIL_MAX_PER_HOUR = 15;
 // ====== ROUTER ======
 // Mọi API đi qua doPost với body JSON { action, idToken?, ... } (Content-Type text/plain
 // để trình duyệt không gửi preflight — Apps Script không xử lý OPTIONS).
-// roles = null: công khai (submitExam / mosSubmit — học sinh không đăng nhập; submitBatch tự kiểm RELAY_TOKEN). Còn lại bắt buộc
+// roles = null: công khai (submitExam / mosSubmit / rosterByCode — học sinh không đăng nhập; submitBatch tự kiểm RELAY_TOKEN). Còn lại bắt buộc
 // Firebase ID token và vai trò nằm trong danh sách (xem requireRole_ trong 20-auth.gs).
 
-const ROLES_RESULTS = ['admin', 'coordinator', 'teacher'];             // giống quyền đọc quiz_results
-const ROLES_MANAGE = ['admin', 'coordinator'];                         // xoá bài, roster, báo cáo
-const ROLES_MAPS = ['admin', 'teaching_coordinator', 'teacher', 'coordinator'];
+const ROLES_RESULTS = ['admin', 'coordinator', 'school_admin', 'teacher']; // giống quyền đọc quiz_results
+const ROLES_MANAGE = ['admin', 'coordinator', 'school_admin'];         // xoá bài, roster, báo cáo
+const ROLES_MAPS = ['admin', 'teaching_coordinator', 'teacher', 'coordinator', 'school_admin'];
 const ROLES_ADMIN = ['admin'];
-const ROLES_STAFF = ['admin', 'coordinator', 'teaching_coordinator', 'teacher']; // mọi tài khoản quản trị
+const ROLES_STAFF = ['admin', 'coordinator', 'school_admin', 'teaching_coordinator', 'teacher']; // mọi tài khoản quản trị
 const ROLES_TEACH = ['admin', 'teacher'];                              // trang Điểm danh (sổ lớp điều phối)
 
 // Hàm (không phải hằng) để không phụ thuộc thứ tự nạp file khi dán thành nhiều file .gs.
@@ -116,6 +116,8 @@ function routes_() {
     githubReadFile:{ roles: ROLES_ADMIN,   handler: githubReadFile_ },
     githubPublish: { roles: ROLES_ADMIN,   handler: githubPublish_ },
     publishRoster: { roles: ROLES_ADMIN,   handler: publishRoster_ },
+    publishRosterCodes: { roles: ROLES_ADMIN, handler: publishRosterCodes_ }, // 75-roster-codes.gs
+    rosterByCode:  { roles: null,          handler: rosterByCode_ },          // công khai: mã lớp → tên 1 lớp
     logActivity:   { roles: ROLES_STAFF,   handler: logActivity_ },
     arenaRoomLog:  { roles: ROLES_STAFF,   handler: arenaRoomLog_ },
     arenaRelayTicket: { roles: ROLES_STAFF, handler: arenaRelayTicket_ },
@@ -182,7 +184,8 @@ function appError_(code, message) {
 function authenticate_(idToken) {
   if (!idToken || typeof idToken !== 'string') throw appError_('unauthenticated', 'Chưa đăng nhập.');
   const cache = CacheService.getScriptCache();
-  const key = 'auth2:' + Utilities.base64EncodeWebSafe(
+  // auth3: hồ sơ thêm schoolIds (02/11/2026) — bản đệm auth2 cũ không có, bỏ qua.
+  const key = 'auth3:' + Utilities.base64EncodeWebSafe(
     Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, idToken));
   const hit = cache.get(key);
   if (hit) return JSON.parse(hit);
@@ -211,11 +214,14 @@ function authenticate_(idToken) {
   const role = (f.role && f.role.stringValue) || '';
   const schools = ((f.schools && f.schools.arrayValue && f.schools.arrayValue.values) || [])
     .map(function (v) { return v.stringValue; }).filter(Boolean);
+  const schoolIds = ((f.schoolIds && f.schoolIds.arrayValue && f.schoolIds.arrayValue.values) || [])
+    .map(function (v) { return v.stringValue; }).filter(Boolean);
   const who = {
     uid: uid,
     role: role,
     approved: !!(f.approved && f.approved.booleanValue),
     schools: role === 'admin' ? null : schools,
+    schoolIds: role === 'admin' ? null : schoolIds,
   };
 
   const ttl = Math.min(3600, Math.floor(expSec - Date.now() / 1000) - 60);
@@ -263,6 +269,7 @@ function validateSubmission_(p) {
     if (uids.length > WRONG_MAX_UIDS || uids.some(function (u) { return !/^[^,<>"'`&\r\n]{3,80}$/.test(u); })) bad('wrong');
   }
   if (p.detail !== undefined && p.detail !== null) p.detail = cleanDetail_(p.detail, bad);
+  validateWireAnswers_(p, bad); // câu trả lời để máy chủ chấm lại (77-grading.gs)
 }
 
 /**
@@ -314,6 +321,7 @@ function writeSubmissionLog_(payload) {
   const dedupeKey = 'sub:' + String(payload.submissionId).slice(0, 200);
   if (cache.get(dedupeKey)) return { written: false, duplicate: true };
 
+  applyServerGrading_(payload); // bài Kiểm tra có gửi câu trả lời → chấm lại, ⚠️ nếu lệch điểm (77-grading.gs)
   const sheet = getSubmissionLogSheet_();
   // asText_(): giữ NGUYÊN chữ — trước đây Sheet tự đổi "7/24" (số câu đúng), lớp
   // "3/12", thời gian "5:05" thành ngày/giờ, và tên bắt đầu bằng "=" thành công thức.
@@ -687,12 +695,14 @@ function wrongStats_(p, who) {
  * dừng ngay khi gặp bài cũ hơn sinceMs → lần làm mới của dashboard chỉ đọc phần đuôi.
  */
 function listResults_(p, who) {
-  let schools = Array.isArray(p.schools) && p.schools.length ? p.schools.map(String) : null;
-  if (who.schools) {
-    schools = (schools || who.schools).filter(function (s) { return who.schools.indexOf(s) !== -1; });
-    if (!schools.length) return { rows: [], truncated: false };
+  // So theo schoolId (tên trường khác hoa/thường/dấu cách vẫn khớp; xem schoolIdOf_).
+  let schoolIds = Array.isArray(p.schools) && p.schools.length ? p.schools.map(schoolIdOf_) : null;
+  const scope = whoSchoolIdSet_(who);
+  if (scope) {
+    schoolIds = schoolIds ? schoolIds.filter(function (id) { return scope.has(id); }) : Array.from(scope);
+    if (!schoolIds.length) return { rows: [], truncated: false };
   }
-  const schoolSet = schools ? new Set(schools) : null;
+  const schoolSet = schoolIds ? new Set(schoolIds) : null;
   const classSet = Array.isArray(p.classes) && p.classes.length ? new Set(p.classes.map(String)) : null;
   const wantName = p.studentName ? nameKey_(p.studentName) : '';
   const sinceMs = Number(p.sinceMs) || 0;
@@ -725,7 +735,7 @@ function listResults_(p, who) {
         if (sinceMs && ms && ms < sinceMs) { done = true; break; }
         if (!r[0] || seenIds.has(r[0])) continue;
         seenIds.add(r[0]);
-        if (schoolSet && !schoolSet.has(r[3])) continue;
+        if (schoolSet && !schoolSet.has(schoolIdOf_(r[3]))) continue;
         if (classSet && !classSet.has(r[2])) continue;
         if (wantName && nameKey_(r[1]) !== wantName) continue;
         rows.push(logRowToResult_(r, ms));
@@ -762,7 +772,7 @@ function deleteResults_(p, who) {
       wanted.forEach(function (id) {
         const cell = sheet.getRange('A:A').createTextFinder(id).matchEntireCell(true).findNext();
         if (!cell || cell.getRow() < 2) return;
-        if (who.schools && who.schools.indexOf(String(sheet.getRange(cell.getRow(), 4).getDisplayValue())) === -1) return;
+        if (!inWhoScope_(who, sheet.getRange(cell.getRow(), 4).getDisplayValue())) return;
         rowNums.push(cell.getRow());
       });
       rowNums.sort(function (a, b) { return b - a; }).forEach(function (row) {
@@ -788,7 +798,8 @@ function deleteResults_(p, who) {
 const SHEET_ACTIVITY_LOG = 'NhatKyHoatDong';
 const ACTIVITY_HEADERS = ['ThoiGian', 'Uid', 'VaiTro', 'HanhDong', 'DoiTuong', 'ChiTiet', 'Trang'];
 const ACTIVITY_ACTIONS = ['login', 'logout', 'view_student_detail', 'export_excel', 'export_pdf',
-  'create_exam', 'assign_exam', 'update_roster', 'publish_roster', 'publish_questions', 'delete_results'];
+  'create_exam', 'assign_exam', 'update_roster', 'publish_roster', 'publish_questions', 'delete_results',
+  'update_user', 'update_school'];
 
 /** p: { activity, targetId?, meta?, page? } */
 function logActivity_(p, who) {
@@ -1031,10 +1042,7 @@ function classSheetWrite_(p) {
 function getRoster_(lopFilter, who) {
   const sheet = SpreadsheetApp.openById(SPREADSHEET_ID_DATA).getSheetByName(SHEET_ROSTER);
   let rows = sheetToObjects_(sheet);
-  if (who && who.schools) {
-    const allowed = new Set(who.schools);
-    rows = rows.filter(function (r) { return allowed.has(String(r.Truong)); });
-  }
+  if (who && who.schools) rows = rows.filter(function (r) { return inWhoScope_(who, r.Truong); });
   if (lopFilter) rows = rows.filter(function (r) { return r.Lop === lopFilter; });
   return rows;
 }
@@ -1342,6 +1350,338 @@ function commitFiles_(files, messageText, expectedShas, who) {
   } finally {
     lock.releaseLock();
   }
+}
+
+// ──────────────── 75-roster-codes.gs ────────────────
+// ====== DANH SÁCH LỚP THEO MÃ (chế độ EduBackend.roster.mode = 'class-code') ======
+// Router: publishRosterCodes (Admin), rosterByCode (công khai — học sinh không đăng nhập).
+// Thay cho file công khai data/roster/students-active.json (ai có URL cũng tải được tên MỌI học
+// sinh — docs/architecture/AUDIT-2.0.md §5.1): mỗi lớp 1 mã 6 ký tự ngẫu nhiên, giáo viên phát cho
+// lớp; nhập đúng mã mới thấy tên của ĐÚNG lớp đó. 32^6 ≈ 1 tỉ mã → không dò được.
+// Tab MaLop (file SPREADSHEET_ID_DATA): 1 dòng/lớp. Đẩy lại roster giữ nguyên mã lớp cũ.
+
+const SHEET_ROSTER_CODES = 'MaLop';
+const ROSTER_CODE_HEADERS = ['MaLop', 'Truong', 'Lop', 'SoHocSinh', 'DanhSach', 'CapNhat'];
+const ROSTER_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 32 ký tự, bỏ I O 0 1 (dễ đọc nhầm)
+const ROSTER_CODE_LEN = 6;
+// Dữ liệu chỉ đổi khi Admin đẩy roster (lúc đó xoá + nạp lại) → giữ tối đa của CacheService (6 giờ)
+const ROSTER_CODE_CACHE_SEC = 6 * 60 * 60;
+const ROSTER_CODE_MISS_SEC = 10 * 60;
+
+function normalizeRosterCode_(s) {
+  return String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
+/** Mã mới chưa dùng — lấy từ Utilities.getUuid() (ngẫu nhiên v4), 256 % 32 = 0 nên phân bố đều. */
+function newRosterCode_(taken) {
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const hex = Utilities.getUuid().replace(/-/g, '');
+    let code = '';
+    for (let i = 0; i < ROSTER_CODE_LEN; i++) code += ROSTER_CODE_ALPHABET.charAt(parseInt(hex.substr(i * 2, 2), 16) % 32);
+    if (!taken.has(code)) return code;
+  }
+  throw appError_('internal', 'Không tạo được mã lớp mới.');
+}
+
+function rosterCodeKey_(school, className) {
+  return schoolIdOf_(school) + '|' + String(className || '').trim().toLowerCase();
+}
+
+/**
+ * Admin đẩy roster (cùng nội dung với publishRoster_) → cấp/giữ mã từng lớp, ghi tab MaLop.
+ * p: { content: chuỗi JSON { students:[{school, className, name}] } }
+ * @returns {{ classes: Array<{code, school, className, count}>, students: number }}
+ */
+function publishRosterCodes_(p, who) {
+  const content = String(p.content || '');
+  if (!content || content.length > 5 * 1024 * 1024) throw appError_('invalid-argument', 'Roster rỗng hoặc quá lớn (tối đa 5 MB).');
+  let data;
+  try { data = JSON.parse(content); } catch (e) { throw appError_('invalid-argument', 'Roster không phải JSON hợp lệ.'); }
+  const students = data && data.students;
+  const ok = Array.isArray(students) && students.length > 0 && students.every(function (s) {
+    return s && typeof s.name === 'string' && typeof s.className === 'string' && typeof s.school === 'string';
+  });
+  if (!ok) throw appError_('invalid-argument', 'Roster sai cấu trúc (cần students: [{school, className, name}]).');
+
+  const groups = {};
+  students.forEach(function (s) {
+    const name = s.name.trim();
+    if (!name || !s.className.trim() || !s.school.trim()) return;
+    const key = rosterCodeKey_(s.school, s.className);
+    const g = groups[key] = groups[key] || { school: s.school.trim(), className: s.className.trim(), names: {} };
+    g.names[name] = true;
+  });
+
+  return withRareLock_(function () {
+    const sheet = ensureTab_(SPREADSHEET_ID_DATA, SHEET_ROSTER_CODES, ROSTER_CODE_HEADERS);
+    const last = sheet.getLastRow();
+    const old = last > 1 ? sheet.getRange(2, 1, last - 1, 3).getDisplayValues() : [];
+    const codeByKey = {};
+    const taken = new Set();
+    old.forEach(function (r) {
+      const code = normalizeRosterCode_(r[0]);
+      if (!code) return;
+      taken.add(code);
+      codeByKey[rosterCodeKey_(r[1], r[2])] = code;
+    });
+
+    const now = new Date();
+    const rows = Object.keys(groups).sort().map(function (key) {
+      const g = groups[key];
+      const code = codeByKey[key] || newRosterCode_(taken);
+      taken.add(code);
+      const names = Object.keys(g.names).sort(function (a, b) { return a.localeCompare(b, 'vi'); });
+      return [code, noFormula_(g.school), noFormula_(g.className), names.length, JSON.stringify(names), now];
+    });
+
+    if (last > 1) sheet.getRange(2, 1, last - 1, ROSTER_CODE_HEADERS.length).clearContent();
+    if (rows.length) sheet.getRange(2, 1, rows.length, ROSTER_CODE_HEADERS.length).setValues(rows);
+    // Bỏ bản đệm của mọi mã cũ + mới (lớp đổi danh sách / bị bỏ), rồi nạp sẵn mã đang dùng
+    const cache = CacheService.getScriptCache();
+    cache.removeAll([].concat.apply([], Array.from(taken).map(function (code) { return ['rc:' + code, 'rcx:' + code]; })));
+    warmRosterCodes_(rows.map(function (r) {
+      return [r[0], String(r[1]).replace(/^'/, ''), String(r[2]).replace(/^'/, ''), r[3], r[4]];
+    }));
+
+    const total = rows.reduce(function (n, r) { return n + r[3]; }, 0);
+    auditServer_('publish_roster', who, { mode: 'class-code', classes: rows.length, students: total });
+    return {
+      students: total,
+      classes: rows.map(function (r) { return { code: r[0], school: String(r[1]).replace(/^'/, ''), className: String(r[2]).replace(/^'/, ''), count: r[3] }; }),
+    };
+  });
+}
+
+/**
+ * Nạp bản đệm cho MỌI lớp cùng lúc. Đầu giờ cả lớp (hoặc nhiều lớp) cùng nhập mã: nếu mỗi lượt
+ * trượt bản đệm tự mở Sheet (~1–2 giây) thì vài chục lượt có thể chiếm hết 30 lượt chạy song song
+ * của Apps Script — bài nộp của lớp khác bị từ chối đúng lúc đó. Nay 1 lượt đọc nạp cả bảng.
+ * rows: [[mã, trường, lớp, số HS, danh sách JSON], ...] (giá trị hiển thị).
+ * @returns {Object} { mã: {school, className, names} }
+ */
+function warmRosterCodes_(rows) {
+  const byCode = {};
+  const put = {};
+  rows.forEach(function (r) {
+    const code = normalizeRosterCode_(r[0]);
+    if (!code) return;
+    let names = [];
+    try { names = JSON.parse(r[4]); } catch (e) { names = []; }
+    byCode[code] = { school: r[1], className: r[2], names: Array.isArray(names) ? names : [] };
+    put['rc:' + code] = JSON.stringify(byCode[code]);
+  });
+  const keys = Object.keys(put);
+  for (let i = 0; i < keys.length; i += 500) { // putAll tối đa ~1.000 khoá / lần
+    const chunk = {};
+    keys.slice(i, i + 500).forEach(function (k) { chunk[k] = put[k]; });
+    CacheService.getScriptCache().putAll(chunk, ROSTER_CODE_CACHE_SEC);
+  }
+  return byCode;
+}
+
+/** Công khai: mã lớp → { school, className, names }. Mã sai → not-found (không lộ mã nào tồn tại). */
+function rosterByCode_(p) {
+  const code = normalizeRosterCode_(p.code);
+  if (code.length !== ROSTER_CODE_LEN || /[^A-Z2-9]|[IO]/.test(code)) throw appError_('invalid-argument', 'Mã lớp gồm 6 chữ/số, ví dụ K7P2QX.');
+  const cache = CacheService.getScriptCache();
+  const hit = cache.get('rc:' + code);
+  if (hit) return JSON.parse(hit);
+  // Mã gõ sai vừa tra → không mở Sheet lại (đẩy roster mới xoá dấu này)
+  if (cache.get('rcx:' + code)) throw appError_('not-found', 'Không tìm thấy lớp với mã này.');
+
+  const sheet = SpreadsheetApp.openById(SPREADSHEET_ID_DATA).getSheetByName(SHEET_ROSTER_CODES);
+  const last = sheet ? sheet.getLastRow() : 0;
+  const all = last < 2 ? {} : warmRosterCodes_(sheet.getRange(2, 1, last - 1, 5).getDisplayValues());
+  if (all[code]) return all[code];
+  cache.put('rcx:' + code, '1', ROSTER_CODE_MISS_SEC);
+  throw appError_('not-found', 'Không tìm thấy lớp với mã này.');
+}
+
+// ──────────────── 77-grading.gs ────────────────
+// ====== LUẬT CHẤM 1 CÂU (bản Apps Script của js/core/grading.js) ======
+// Chưa có route nào gọi — nền cho chấm điểm phía máy chủ (docs/architecture/SERVER-GRADING.md).
+// PHẢI giống hệt js/core/grading.js → questionStatus: apps/__tests__/code-gs.test.js so 2 bản trên
+// TOÀN BỘ data/ic3 (đáp án đúng, bỏ trống, sai lệch 1 chỗ). Đổi bên này thì đổi cả bên kia.
+// ans: câu trả lời dạng JSON (xem đầu js/core/grading.js). Trả 'correct' | 'incorrect' | 'skipped'.
+
+function gradingKeys_(o) {
+  return o && typeof o === 'object' ? Object.keys(o) : [];
+}
+
+function questionStatus_(q, ans) {
+  switch (q.type) {
+    case 'single':
+      if (ans && (q.correct || []).indexOf(ans) !== -1) return 'correct';
+      return ans ? 'incorrect' : 'skipped';
+
+    case 'multi': {
+      const user = (Array.isArray(ans) ? ans : []).slice().sort();
+      if (!user.length) return 'skipped';
+      return JSON.stringify(user) === JSON.stringify((q.correct || []).slice().sort()) ? 'correct' : 'incorrect';
+    }
+
+    case 'truefalse': {
+      const a = ans || {};
+      if (!gradingKeys_(a).length) return 'skipped';
+      return (q.statements || []).every(function (st, j) { return a[j] === st.answer; }) ? 'correct' : 'incorrect';
+    }
+
+    case 'matching': {
+      if (!(q.pairs && q.pairs.length && ans && gradingKeys_(ans).length)) return 'skipped';
+      return q.pairs.every(function (p) { return ans[p.left] === p.right; }) ? 'correct' : 'incorrect';
+    }
+
+    case 'hotspot': {
+      const sel = Array.isArray(ans) ? ans : [];
+      if (!sel.length) return 'skipped';
+      const want = (q.areas || []).filter(function (a) { return a.correct; }).map(function (a) { return a.id; }).sort();
+      return JSON.stringify(sel.slice().sort()) === JSON.stringify(want) ? 'correct' : 'incorrect';
+    }
+
+    case 'list': {
+      const a = ans || {};
+      if (!gradingKeys_(a).length) return 'skipped';
+      return (q.items || []).every(function (it, j) { return a[j] === it.correct; }) ? 'correct' : 'incorrect';
+    }
+
+    case 'classify': {
+      const a = ans || {};
+      const items = q.items || [];
+      if (!items.some(function (it) { return a[it.text] !== undefined; })) return 'skipped';
+      return items.every(function (it) { return a[it.text] === it.zone; }) ? 'correct' : 'incorrect';
+    }
+
+    case 'ordering': {
+      if (!(Array.isArray(ans) && ans.length)) return 'skipped';
+      return JSON.stringify(ans) === JSON.stringify(q.items || []) ? 'correct' : 'incorrect';
+    }
+
+    case 'dragfill':
+    case 'selectfill': {
+      const a = ans || {};
+      if (!gradingKeys_(a).length) return 'skipped';
+      return (q.blanks || []).every(function (text, bi) { return a[bi] === text; }) ? 'correct' : 'incorrect';
+    }
+
+    default:
+      return 'skipped';
+  }
+}
+
+// ====== CHẤM LẠI BÀI KIỂM TRA (bước 1 — EduBackend.serverGrading.mode = 'verify', mặc định 'off') ======
+// Web gửi kèm câu trả lời DẠNG CÂU GỐC (js/quiz-engine.js § wireAnswerOf) + file khối của đề.
+// Máy chủ tra đáp án theo uid trong file đó (raw.githubusercontent.com — repo công khai, không cần
+// token), chấm bằng questionStatus_, ghi điểm máy chủ vào ChiTiet (sv) và gắn ⚠️ nếu lệch điểm gửi lên.
+// Lỗi tải đề / câu lạ KHÔNG chặn ghi bài nộp — chỉ ghi chú "chưa chấm lại".
+
+const BANK_FILES = ['IC3__LV1.json', 'IC3__LV2.json', 'IC3__LV3.json', 'Spark__LV1.json', 'Spark__LV2.json',
+  'Spark__LV3.json', 'MOS__Word.json', 'MOS__Excel.json', 'MOS__PowerPoint.json'];
+const ANSWER_KEY_CACHE_SEC = 6 * 3600;
+const VERIFY_MAX_ANSWERS = 300;
+
+/** Chỉ giữ các trường questionStatus_ cần — khoá đáp án gọn để cache theo từng câu. */
+function answerKeyOf_(q) {
+  const k = { type: q.type };
+  if (q.correct) k.correct = q.correct;
+  if (q.statements) k.statements = q.statements.map(function (s) { return { answer: s.answer }; });
+  if (q.pairs) k.pairs = q.pairs.map(function (p) { return { left: p.left, right: p.right }; });
+  if (q.areas) k.areas = q.areas.map(function (a) { return { id: a.id, correct: !!a.correct }; });
+  if (q.items) {
+    k.items = q.items.map(function (it) {
+      if (q.type === 'list') return { correct: it.correct };
+      if (q.type === 'classify') return { text: it.text, zone: it.zone };
+      return it; // ordering: chuỗi
+    });
+  }
+  if (q.blanks) k.blanks = q.blanks;
+  return k;
+}
+
+/** { uid: khoá đáp án } cho các uid cần — bản đệm trước, thiếu thì tải cả file khối 1 lần. */
+function answerKeys_(bank, uids) {
+  const cache = CacheService.getScriptCache();
+  const prefix = 'ak:' + bank + ':';
+  const out = {};
+  const hit = cache.getAll(uids.map(function (u) { return prefix + u; })) || {};
+  uids.forEach(function (u) { if (hit[prefix + u]) out[u] = JSON.parse(hit[prefix + u]); });
+  if (Object.keys(out).length === uids.length) return out;
+  // File khối vừa tải mà vẫn thiếu uid (câu ngoài ngân hàng) → không tải lại ~1 MB cho MỖI bài nộp
+  // (UrlFetch ~20.000 lượt/ngày). Thiếu do bản đệm bị đẩy ra thì cờ này cũng thường đã mất theo.
+  if (cache.get(prefix + '__loaded')) return out;
+
+  const url = 'https://raw.githubusercontent.com/' + GITHUB_OWNER + '/' + GITHUB_REPO + '/' + GITHUB_BRANCH + '/data/ic3/' + bank;
+  const res = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+  if (res.getResponseCode() !== 200) throw appError_('unavailable', 'Không tải được ' + bank + ' (' + res.getResponseCode() + ')');
+  const all = {};
+  (function collect(node) {
+    if (Array.isArray(node)) {
+      node.forEach(function (x) {
+        if (x && typeof x === 'object' && typeof x.type === 'string' && x.uid) all[x.uid] = answerKeyOf_(x);
+        else collect(x);
+      });
+    } else if (node && typeof node === 'object') {
+      Object.keys(node).forEach(function (k) { collect(node[k]); });
+    }
+  })(JSON.parse(res.getContentText('UTF-8')));
+  const put = {};
+  Object.keys(all).forEach(function (u) { put[prefix + u] = JSON.stringify(all[u]); });
+  const keys = Object.keys(put);
+  for (let i = 0; i < keys.length; i += 500) {
+    const chunk = {};
+    keys.slice(i, i + 500).forEach(function (k) { chunk[k] = put[k]; });
+    cache.putAll(chunk, ANSWER_KEY_CACHE_SEC);
+  }
+  cache.put(prefix + '__loaded', '1', 10 * 60);
+  uids.forEach(function (u) { if (all[u]) out[u] = all[u]; });
+  return out;
+}
+
+/**
+ * Chấm lại 1 bài. answers: [[uid, câu trả lời dạng câu gốc], ...]
+ * @returns {{ total, correct, score, unknown }} score = % như web (làm tròn)
+ */
+function verifyAnswers_(bank, answers) {
+  const uids = answers.map(function (a) { return a[0]; });
+  const keys = answerKeys_(bank, uids.filter(function (u, i) { return uids.indexOf(u) === i; }));
+  let correct = 0, unknown = 0;
+  answers.forEach(function (a) {
+    const q = keys[a[0]];
+    if (!q) { unknown++; return; }
+    if (questionStatus_(q, a[1] === null ? undefined : a[1]) === 'correct') correct++;
+  });
+  const total = answers.length;
+  return { total: total, correct: correct, unknown: unknown, score: total ? Math.round((correct / total) * 100) : 0 };
+}
+
+/** Kiểm tra trường answers/bank của bài nộp (gọi từ validateSubmission_). */
+function validateWireAnswers_(p, bad) {
+  if (p.answers === undefined || p.answers === null) return;
+  if (BANK_FILES.indexOf(p.bank) === -1) bad('bank');
+  if (!Array.isArray(p.answers) || !p.answers.length || p.answers.length > VERIFY_MAX_ANSWERS) bad('answers');
+  if (JSON.stringify(p.answers).length > 60000) bad('answers');
+  p.answers.forEach(function (a) {
+    if (!Array.isArray(a) || a.length !== 2 || typeof a[0] !== 'string' || !/^[^<>"'`&\r\n]{3,120}$/.test(a[0])) bad('answers');
+  });
+}
+
+/** Ghi kết quả chấm lại lên payload trước khi ghi Sheet. Không bao giờ ném lỗi. */
+function applyServerGrading_(payload) {
+  if (!payload.answers || payload.examMode !== 'test') return;
+  payload.detail = payload.detail || {};
+  let v;
+  try {
+    v = verifyAnswers_(payload.bank, payload.answers);
+  } catch (e) {
+    payload.detail.sk = 'loi';
+    return;
+  }
+  if (v.unknown) { payload.detail.sk = 'thieu'; return; } // câu ngoài ngân hàng (đề tự soạn...) — không kết luận
+  payload.detail.sv = v.score;
+  const sent = Number(payload.score);
+  if (sent === v.score) { payload.detail.sk = 'ok'; return; }
+  payload.detail.sk = 'lech';
+  payload.status = ('⚠️ Điểm gửi lên ' + sent + '% khác điểm máy chủ chấm ' + v.score + '%' +
+    (payload.status && payload.status !== 'OK' ? ' · ' + payload.status : '')).slice(0, 300);
 }
 
 // ──────────────── 80-sheet-setup.gs ────────────────
@@ -1690,6 +2030,33 @@ function jsonOutput_(obj) {
 }
 
 function nameKey_(s) { return String(s || '').trim().toLowerCase(); }
+
+// Tên trường → schoolId. PHẢI giống js/models/school.model.js → schoolIdOf (test code-gs so 2 bản).
+const SCHOOL_ID_MEMO_ = {};
+function schoolIdOf_(name) {
+  const key = String(name || '');
+  if (!(key in SCHOOL_ID_MEMO_)) {
+    SCHOOL_ID_MEMO_[key] = key
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd').replace(/Đ/g, 'd')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+  return SCHOOL_ID_MEMO_[key];
+}
+
+/** schoolId người gọi được xem: "schoolIds" trên hồ sơ + suy từ "schools" (tên). null = mọi trường (admin). */
+function whoSchoolIdSet_(who) {
+  if (!who || !who.schools) return null;
+  return new Set((who.schoolIds || []).concat(who.schools.map(schoolIdOf_)).filter(Boolean));
+}
+
+/** Bản ghi có tên trường `schoolName` nằm trong phạm vi người gọi (so theo schoolId). */
+function inWhoScope_(who, schoolName) {
+  const set = whoSchoolIdSet_(who);
+  return !set || set.has(schoolIdOf_(schoolName));
+}
 
 /** Chặn chuỗi bị Sheet hiểu thành công thức (= + - @) nhưng giữ số/ngày như cũ. */
 function noFormula_(value) {

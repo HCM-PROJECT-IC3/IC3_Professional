@@ -4,6 +4,7 @@
 .vscode
 .env
 **/__tests__
+tests
 **/__pycache__
 apps
 docs

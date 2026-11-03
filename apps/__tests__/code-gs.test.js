@@ -121,6 +121,8 @@ const cacheStore = new Map();
 const props = new Map();
 let propReads = 0;
 let firestoreCalls = 0;
+let rawFetches = 0;
+let rawFail = false;
 const github = { calls: [], files: {}, headSha: 'c0', treeShas: { 'data/ic3/meta.json': 'sha-meta' } };
 let users = {};
 let geocodeCalls = 0;
@@ -129,7 +131,9 @@ let onLock = null;
 const ctx = {
   console, Date, JSON, Math, Set, Map, String, Number, Array, Object, encodeURIComponent, Error,
   SpreadsheetApp: { openById: (id) => createdFiles[id] || mainFile, create: (name) => newFile(name) },
-  CacheService: { getScriptCache: () => ({ get: (k) => cacheStore.get(k) || null, put: (k, v) => cacheStore.set(k, v), remove: (k) => cacheStore.delete(k) }) },
+  CacheService: { getScriptCache: () => ({ get: (k) => cacheStore.get(k) || null, put: (k, v) => cacheStore.set(k, v), remove: (k) => cacheStore.delete(k),
+    getAll: (ks) => Object.fromEntries(ks.filter((k) => cacheStore.has(k)).map((k) => [k, cacheStore.get(k)])),
+    putAll: (o) => Object.entries(o).forEach(([k, v]) => cacheStore.set(k, v)), removeAll: (ks) => ks.forEach((k) => cacheStore.delete(k)) }) },
   PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => { propReads++; return props.get(k) || null; }, setProperty: (k, v) => props.set(k, v),
     getKeys: () => [...props.keys()], deleteProperty: (k) => props.delete(k) }) },
   // lockWaits đếm lượt chờ khoá chung; onLock giả lập 1 lượt chạy KHÁC làm gì đó trong lúc mình chờ khoá.
@@ -143,6 +147,7 @@ const ctx = {
     base64DecodeWebSafe: (s) => [...Buffer.from(s, 'base64url')],
     newBlob: (bytes) => ({ getDataAsString: () => Buffer.from(bytes).toString('utf8') }),
     formatDate: () => '20261012',
+    getUuid: () => crypto.randomUUID(),
   },
   UrlFetchApp: {
     fetch(url, opt) {
@@ -152,6 +157,13 @@ const ctx = {
         const u = users[decodeURIComponent(url.split('/users/')[1])];
         const ok = tok.endsWith('.sig-ok') && u;
         return { getResponseCode: () => (ok ? 200 : 403), getContentText: () => JSON.stringify(ok ? { fields: u } : {}) };
+      }
+      // File đề trên raw.githubusercontent.com (chấm lại bài Kiểm tra) → đọc data/ic3 trên máy
+      if (url.startsWith('https://raw.githubusercontent.com/HCM-PROJECT-IC3/IC3_Professional/main/data/ic3/')) {
+        rawFetches++;
+        if (rawFail) return { getResponseCode: () => 503, getContentText: () => '' };
+        const f = path.join(__dirname, '..', '..', 'data', 'ic3', url.split('/data/ic3/')[1]);
+        return { getResponseCode: () => 200, getContentText: () => fs.readFileSync(f, 'utf8') };
       }
       // GitHub giả
       const p = url.replace('https://api.github.com/repos/HCM-PROJECT-IC3/IC3_Professional/', '');
@@ -192,7 +204,7 @@ const ctx = {
 };
 vm.createContext(ctx);
 const src = fs.readFileSync(path.join(__dirname, '..', 'Code.gs'), 'utf8');
-vm.runInContext(src + '\n;this.__api = { handleRequest_, asText_, submittedMs_, doGet, noFormula_, kiemTraSauDeploy };', ctx);
+vm.runInContext(src + '\n;this.__api = { handleRequest_, asText_, submittedMs_, doGet, noFormula_, kiemTraSauDeploy, schoolIdOf_, questionStatus_, answerKeyOf_ };', ctx);
 const api = ctx.__api;
 const call = (action, p) => JSON.parse(JSON.stringify(api.handleRequest_(Object.assign({ action }, p || {}))));
 
@@ -207,6 +219,10 @@ users = {
   teachX: { role: S('teacher'), approved: { booleanValue: true }, schools: { arrayValue: { values: [S('TH X')] } } },
   teachPending: { role: S('teacher'), approved: { booleanValue: false } },
   coordY: { role: S('coordinator'), schools: { arrayValue: { values: [S('TH Y')] } } },
+  // Tên gán khác hoa/thường + dấu cách so với cột Trường trên Sheet ("TH Y") — vẫn cùng schoolId.
+  coordYvariant: { role: S('coordinator'), schools: { arrayValue: { values: [S('  th   y ')] } } },
+  // Chỉ có schoolIds (hồ sơ chuyển hẳn sang schoolId), không có schools tên.
+  schoolAdminY: { role: S('school_admin'), schools: { arrayValue: { values: [] } }, schoolIds: { arrayValue: { values: [S('th-y')] } } },
   tcoord: { role: S('teaching_coordinator') },
   student: { role: S('student') },
 };
@@ -236,6 +252,18 @@ eq('admin thấy mọi bài, mới nhất trước', ids(call('listResults', as(
 eq('giáo viên chỉ thấy trường mình', ids(call('listResults', as('teachX'))), ['new2', 'new1', 'old1']);
 eq('giáo viên xin trường khác → rỗng', ids(call('listResults', Object.assign(as('teachX'), { schools: ['TH Y'] }))), []);
 eq('điều phối trường Y', ids(call('listResults', as('coordY'))), ['old3', 'old2']);
+eq('tên trường khác hoa/thường/dấu cách vẫn khớp (schoolId)', ids(call('listResults', as('coordYvariant'))), ['old3', 'old2']);
+eq('quản trị trường chỉ có schoolIds', ids(call('listResults', as('schoolAdminY'))), ['old3', 'old2']);
+eq('quản trị trường xin trường khác → rỗng', ids(call('listResults', Object.assign(as('schoolAdminY'), { schools: ['TH X'] }))), []);
+eq('quản trị trường xem roster trường mình', call('getRoster', as('schoolAdminY')).data.map((r) => r.MSHS), ['2']);
+{
+  // schoolIdOf_ (Apps Script) PHẢI giống js/models/school.model.js — lệch thì rules và Sheet lọc khác nhau
+  const jsCtx = { window: {} };
+  vm.createContext(jsCtx);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', '..', 'js', 'models', 'school.model.js'), 'utf8'), jsCtx);
+  const names = ['THCS Huỳnh Tấn Phát', 'Tiểu học Đinh Bộ Lĩnh', '  THCS  Lê Lợi (Q.3) ', 'Nguyễn Du'.normalize('NFD'), 'TH Y', '', 'Trường 19/5'];
+  eq('schoolIdOf_ giống bản JS', names.map(api.schoolIdOf_), names.map(jsCtx.window.EduModels.School.schoolIdOf));
+}
 eq('giáo viên chưa duyệt bị từ chối', call('listResults', as('teachPending')).code, 'permission-denied');
 eq('điều phối giáo viên không xem điểm', call('listResults', as('tcoord')).code, 'permission-denied');
 eq('học sinh bị từ chối', call('listResults', as('student')).code, 'permission-denied');
@@ -511,6 +539,134 @@ eq('listResults đọc được cả file mới', call('listResults', as('admin1
   eq('sổ lớp: ghi lại y hệt → không ghi gì, không đè ngày đã có', w('teachX', { ngay: '2026-10-20' }).data, { written: 0, ngay: false, done: false });
   eq('sổ lớp: tiết chưa hiện số (ô TIẾT trống) vẫn ghi được, ký hiệu Mới/NL',
     [w('teachX', { cols: [{ col: 8, tiet: 4 }], marks: [{ row: 10, name: 'Nguyễn An', m: 'nl' }, { row: 11, name: 'Trần Bình', m: 'moi' }], done: false }).data.written, rows[10][8].v, rows[11][8].v], [2, 'NL', 'Mới']);
+}
+
+
+// ── Danh sách lớp theo mã (75-roster-codes.gs) ──
+{
+  // Tab MaLop giả: ô lưu giá trị, getDisplayValues trả chuỗi như Sheet hiển thị
+  const cells = [['MaLop', 'Truong', 'Lop', 'SoHocSinh', 'DanhSach', 'CapNhat']];
+  const disp = (v) => (v instanceof Date ? 'DATE' : String(v).replace(/^'/, ''));
+  tabs.MaLop = {
+    getName: () => 'MaLop', getParent: () => mainFile, getMaxColumns: () => 6, deleteColumns() {},
+    getLastRow: () => cells.length,
+    getRange: (r, c, n, m) => ({
+      getDisplayValues: () => cells.slice(r - 1, r - 1 + n).map((row) => row.slice(c - 1, c - 1 + m).map(disp)),
+      clearContent: () => { cells.splice(r - 1, n); },
+      setValues: (v) => { v.forEach((row, i) => { cells[r - 1 + i] = row.slice(); }); return { setFontWeight() {} }; },
+    }),
+  };
+  const roster = (list) => ({ content: JSON.stringify({ students: list }) });
+  const st = (school, className, name) => ({ school, className, name });
+  const pub = (uid, list) => call('publishRosterCodes', Object.assign(as(uid), roster(list)));
+  eq('mã lớp: chỉ Admin đẩy được', [pub('coordY', [st('TH Y', '5A1', 'B')]).code, call('publishRosterCodes', roster([st('TH Y', '5A1', 'B')])).code], ['permission-denied', 'unauthenticated']);
+  const r1 = pub('admin1', [st('TH X', '4A6', 'Nguyễn A'), st('TH X', '4A6', 'An'), st('TH X', '4A6', 'An'), st('TH Y', '5A1', 'B'), st(' th x ', '4A6', 'Chi'), st('TH X', '', 'Thiếu lớp')]);
+  eq('mã lớp: gộp theo trường + lớp (tên gõ lệch cùng 1 lớp), bỏ dòng thiếu lớp, bỏ tên trùng', [r1.data.classes.length, r1.data.students], [2, 4]);
+  const codeX = r1.data.classes.find((c) => c.school === 'TH X').code;
+  const codeY = r1.data.classes.find((c) => c.school === 'TH Y').code;
+  eq('mã lớp: 6 ký tự, không có I O 0 1, 2 lớp 2 mã khác nhau', [/^[A-HJ-NP-Z2-9]{6}$/.test(codeX), /^[A-HJ-NP-Z2-9]{6}$/.test(codeY), codeX !== codeY], [true, true, true]);
+  const get = (code) => call('rosterByCode', { code });
+  eq('mã lớp: không cần đăng nhập, trả đúng 1 lớp, tên sắp xếp', get(codeX).data, { school: 'TH X', className: '4A6', names: ['An', 'Chi', 'Nguyễn A'] });
+  eq('mã lớp: nhập thường/khoảng trắng/gạch vẫn nhận', get(' ' + codeY.slice(0, 3).toLowerCase() + '-' + codeY.slice(3) + ' ').data.names, ['B']);
+  eq('mã lớp: mã sai định dạng / không tồn tại', [get('ABC').code, get('IIIIII').code, get(codeX === 'ZZZZZZ' ? 'YYYYYY' : 'ZZZZZZ').code], ['invalid-argument', 'invalid-argument', 'not-found']);
+  // Đẩy lại: lớp cũ giữ mã, lớp bị bỏ mất mã, danh sách mới thay bản đệm cũ
+  const r2 = pub('admin1', [st('TH X', '4A6', 'An'), st('TH X', '4A6', 'Dũng'), st('TH Z', '1A', 'E')]);
+  eq('mã lớp: đẩy lại giữ nguyên mã lớp cũ', r2.data.classes.find((c) => c.school === 'TH X').code, codeX);
+  eq('mã lớp: danh sách mới (không dùng bản đệm cũ)', get(codeX).data.names, ['An', 'Dũng']);
+  eq('mã lớp: lớp không còn trong roster → mã hết hiệu lực', get(codeY).code, 'not-found');
+  {
+    // Đầu giờ nhiều lớp cùng nhập mã: không mở Sheet cho từng lượt
+    const realOpen = ctx.SpreadsheetApp.openById;
+    let opens = 0;
+    ctx.SpreadsheetApp.openById = (id) => { opens++; return realOpen(id); };
+    const r3 = pub('admin1', [st('TH X', '4A6', 'An'), st('TH Z', '1A', 'E'), st('TH Q', '2B', 'G')]);
+    opens = 0;
+    r3.data.classes.forEach((c) => { for (let k = 0; k < 15; k++) get(c.code); });
+    eq('mã lớp: vừa đẩy roster → 45 lượt nhập mã, 0 lần mở Sheet', opens, 0);
+    [...cacheStore.keys()].filter((k) => k.startsWith('rc:')).forEach((k) => cacheStore.delete(k)); // bản đệm hết hạn
+    r3.data.classes.forEach((c) => { for (let k = 0; k < 15; k++) get(c.code); });
+    eq('mã lớp: bản đệm hết hạn → 1 lượt đọc Sheet nạp lại MỌI lớp', [opens, get(r3.data.classes.find((c) => c.school === 'TH Q').code).data.names], [1, ['G']]);
+    opens = 0;
+    const wrong = r3.data.classes.some((c) => c.code === 'WWWWWW') ? 'XXXXXX' : 'WWWWWW';
+    const wrongTries = [get(wrong).code, get(wrong).code, get(wrong).code];
+    eq('mã lớp: gõ sai nhiều lần chỉ mở Sheet 1 lần', [wrongTries, opens], [['not-found', 'not-found', 'not-found'], 1]);
+    ctx.SpreadsheetApp.openById = realOpen;
+  }
+  eq('mã lớp: tên lớp dạng công thức bị vô hiệu khi ghi Sheet', pub('admin1', [st('TH X', '=HACK()', 'A')]).ok && cells.slice(1).every((r) => !/^=/.test(String(r[2]))), true);
+}
+
+
+// ── Luật chấm Apps Script (77-grading.gs) giống hệt js/core/grading.js trên TOÀN BỘ data/ic3 ──
+{
+  const G = require(path.join(__dirname, '..', '..', 'js', 'core', 'grading.js'));
+  const wrongAnswersOf = require(path.join(__dirname, '..', '..', 'js', 'core', '__tests__', 'grading-perturb.js')).wrongAnswersOf;
+  const bank = require(path.join(__dirname, '..', '..', 'js', 'core', '__tests__', 'grading-bank.js')).loadBank(path.join(__dirname, '..', '..'));
+  let cases = 0;
+  const diffs = [];
+  bank.forEach((q) => {
+    [undefined, G.correctAnswerOf(q)].concat(wrongAnswersOf(q)).forEach((ans) => {
+      // Qua JSON như khi web gửi lên (Set → mảng, khoá số → chuỗi)
+      const wire = ans === undefined ? undefined : JSON.parse(JSON.stringify(ans));
+      cases++;
+      const js = G.questionStatus(q, wire);
+      const gs = api.questionStatus_(q, wire);
+      if (js !== gs && diffs.length < 5) diffs.push({ uid: q.uid, type: q.type, js, gs });
+    });
+  });
+  eq('chấm điểm: Apps Script = web trên ' + bank.length + ' câu / ' + cases + ' trường hợp', diffs, []);
+}
+
+
+// ── Chấm lại bài Kiểm tra (77-grading.gs § applyServerGrading_) ──
+{
+  const G = require(path.join(__dirname, '..', '..', 'js', 'core', 'grading.js'));
+  const wrongAnswersOf = require(path.join(__dirname, '..', '..', 'js', 'core', '__tests__', 'grading-perturb.js')).wrongAnswersOf;
+  const bank = require(path.join(__dirname, '..', '..', 'js', 'core', '__tests__', 'grading-bank.js')).loadBank(path.join(__dirname, '..', '..'));
+  // Khoá đáp án rút gọn (thứ được cache) chấm y như câu đầy đủ — trên toàn bộ ngân hàng
+  const keyDiffs = [];
+  bank.forEach((q) => {
+    const k = JSON.parse(JSON.stringify(api.answerKeyOf_(q)));
+    [undefined, G.correctAnswerOf(q)].concat(wrongAnswersOf(q)).forEach((ans) => {
+      const wire = ans === undefined ? undefined : JSON.parse(JSON.stringify(ans));
+      if (api.questionStatus_(k, wire) !== G.questionStatus(q, wire) && keyDiffs.length < 5) keyDiffs.push(q.uid);
+    });
+  });
+  eq('chấm lại: khoá đáp án rút gọn chấm như câu đầy đủ (toàn bộ ngân hàng)', keyDiffs, []);
+
+  const lv1 = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'data', 'ic3', 'IC3__LV1.json'), 'utf8'));
+  const qs = [];
+  (function collect(n) { if (Array.isArray(n)) n.forEach((x) => (x && x.uid && x.type ? qs.push(x) : collect(x))); else if (n && typeof n === 'object') Object.values(n).forEach(collect); })(lv1);
+  const ten = qs.filter((q) => wrongAnswersOf(q).length).slice(0, 10);
+  const right = ten.map((q) => [q.uid, JSON.parse(JSON.stringify(G.correctAnswerOf(q)))]);
+  const halfWrong = ten.map((q, i) => [q.uid, JSON.parse(JSON.stringify(i < 5 ? wrongAnswersOf(q)[0] : G.correctAnswerOf(q)))]);
+  const before = rawFetches;
+  // Bài nộp có thể nằm ở file nhật ký đã xoay vòng (test phía trên) → tìm theo mã trên mọi tab
+  const rowOf = (id) => {
+    const all = sheet.data.map((d) => d.rawIn).filter(Boolean)
+      .concat(...Object.values(createdFiles).map((f) => Object.values(f.tabs || {}).concat(f.getSheets ? f.getSheets() : []).flatMap((t) => (t && t.rows) || [])));
+    return all.filter((r) => String(r[0]).replace(/^'/, '') === id).pop() || [];
+  };
+  const vsub = (id, p) => { const r = sub(Object.assign({ submissionId: id, examMode: 'test', bank: 'IC3__LV1.json', status: 'OK' }, p)); return [r, rowOf(id)]; };
+  let [r, row] = vsub('verify0001', { answers: right, score: 100 });
+  if (!r.ok) console.log('DEBUG verify0001', JSON.stringify(r));
+  eq('chấm lại: điểm khớp → OK, ghi điểm máy chủ', [r.data.written, row[10], JSON.parse(row[15]).sv, JSON.parse(row[15]).sk], [true, 'OK', 100, 'ok']);
+  eq('chấm lại: tải file khối 1 lần', rawFetches - before, 1);
+  [r, row] = vsub('verify0002', { answers: halfWrong, score: 100 });
+  eq('chấm lại: sửa điểm gửi lên → ⚠️ + điểm máy chủ', [row[10].startsWith('⚠️ Điểm gửi lên 100% khác điểm máy chủ chấm 50%'), JSON.parse(row[15]).sv, JSON.parse(row[15]).sk], [true, 50, 'lech']);
+  eq('chấm lại: lần sau dùng bản đệm (không tải lại)', rawFetches - before, 1);
+  [r, row] = vsub('verify0003', { answers: right.concat([['de_tu_soan__q1', 'A']]), score: 91 });
+  eq('chấm lại: có câu ngoài ngân hàng → không kết luận, không ⚠️', [row[10], JSON.parse(row[15]).sk, JSON.parse(row[15]).sv], ['OK', 'thieu', undefined]);
+  [r, row] = vsub('verify0008', { answers: right.concat([['de_tu_soan__q2', 'A']]), score: 91 });
+  eq('chấm lại: câu ngoài ngân hàng không làm tải lại file khối mỗi bài', [JSON.parse(row[15]).sk, rawFetches - before], ['thieu', 1]);
+  [r, row] = vsub('verify0004', { answers: halfWrong, score: 100, examMode: 'practice' });
+  eq('chấm lại: bài Ôn luyện không chấm lại', [row[10], row[15]], ['OK', '']);
+  eq('chấm lại: file khối ngoài danh sách bị từ chối', vsub('verify0005', { answers: right, bank: '../../secret.json' })[0].code, 'invalid-argument');
+  eq('chấm lại: câu trả lời sai dạng bị từ chối', vsub('verify0006', { answers: [['<x>', 'A']] })[0].code, 'invalid-argument');
+  rawFail = true;
+  cacheStore.forEach((v, k) => { if (k.startsWith('ak:IC3__LV2.json')) cacheStore.delete(k); });
+  [r, row] = vsub('verify0007', { answers: [['ic3__lv2__t1__q1', 'A']], bank: 'IC3__LV2.json', score: 0 });
+  rawFail = false;
+  eq('chấm lại: tải đề lỗi → VẪN ghi bài, đánh dấu chưa chấm', [r.data.written, row[10], JSON.parse(row[15]).sk], [true, 'OK', 'loi']);
 }
 
 console.log(fails ? `\n${fails} FAIL` : '\nTất cả PASS');

@@ -5,12 +5,14 @@
 <script src="js/page-transition-guard.js"></script>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2f40b2">
 <title>IC3 Quiz Dashboard</title>
 <link rel="stylesheet" href="lib/fonts/fonts.css">
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/theme.css">
 <link rel="stylesheet" href="css/dashboard.css">
 <link rel="stylesheet" href="css/exam-builder.css">
+<link rel="stylesheet" href="css/wrong-questions.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="css/accessibility.css">
 <link rel="stylesheet" href="css/motion.css">
@@ -92,6 +94,10 @@
     <a class="nav-item link-plain" href="image-manager.html" id="imageManagerLink" style="display:none;" title="Quản lý câu hỏi">
       <span class="nav-icon"><i class="fa-solid fa-image"></i></span>
       <span>Quản lý câu hỏi</span>
+    </a>
+    <a class="nav-item link-plain" href="admin-schools.html" id="schoolsLink" style="display:none;" title="Danh mục trường">
+      <span class="nav-icon"><i class="fa-solid fa-school"></i></span>
+      <span>Danh mục trường</span>
     </a>
     <a class="nav-item link-plain" href="admin-users.html" id="adminUsersLink" style="display:none;" title="Tài khoản">
       <span class="nav-icon"><i class="fa-solid fa-crown"></i></span>
@@ -379,6 +385,18 @@
         </div>
       </div>
 
+      <!-- Câu học sinh hay sai (Google Sheet cột CauSai — js/teacher/wrong-questions.js, dùng chung với 2 dashboard) -->
+      <div class="chart-card wq-card" id="wrongQCard" hidden>
+        <div class="chart-card-title wq-head"><span><i class="fa-solid fa-circle-xmark"></i> Câu học sinh hay sai</span>
+          <span class="wq-actions">
+            <button type="button" class="btn-refresh" id="wqAnalyze" title="Tổng hợp câu sai từ Google Sheet theo bộ lọc đang chọn (không tốn lượt Firebase)"><i class="fa-solid fa-magnifying-glass"></i> Phân tích</button>
+            <button type="button" class="btn-refresh" id="wqMakeExam" title="Tạo link đề ôn từ các câu sai nhiều nhất (cùng cấp độ), chép sẵn để gửi học sinh" hidden><i class="fa-solid fa-pen-to-square"></i> Tạo đề ôn</button>
+          </span>
+        </div>
+        <div class="wq-status" id="wqStatus"></div>
+        <ol class="wq-list" id="wqList"></ol>
+      </div>
+
       <!-- Table -->
       <div class="report-table-wrap">
         <div class="report-table-header">
@@ -552,6 +570,8 @@
 <script src="js/dashboard.js"></script>
 <script src="js/dashboard-settings.js"></script>
 <script src="js/services/lazy-script-loader.js"></script>
+<script src="js/services/question-bank-lookup.js"></script>
+<script src="js/teacher/wrong-questions.js"></script>
 <script src="js/custom-exam-codec.js"></script>
 <script src="js/services/question-similarity.js"></script>
 <script src="js/exam-builder.js"></script>

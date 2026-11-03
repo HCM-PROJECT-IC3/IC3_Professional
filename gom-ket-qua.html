@@ -5,6 +5,7 @@
 <script src="js/page-transition-guard.js"></script>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2f40b2">
 <meta name="description" content="Gom kết quả bài làm của học sinh từ mã/file học sinh gửi — chạy trên máy giáo viên, không cần mạng, không cần tài khoản.">
 <title>Gom kết quả — EduQuiz</title>
 <link rel="stylesheet" href="css/theme.css">
@@ -48,6 +49,15 @@
       <label for="gkFilterTest" class="gk-note">Bài:</label>
       <select id="gkFilterTest" class="gk-btn"><option value="">Tất cả bài</option></select>
     </div>
+  </section>
+
+  <section class="gk-card gk-board" id="gkBoard" aria-labelledby="gkBoardTitle" hidden>
+    <h2 id="gkBoardTitle"><i class="fa-solid fa-trophy" aria-hidden="true"></i> Bảng xếp hạng Thử thách hôm nay</h2>
+    <div class="gk-row" style="margin:0 0 .6rem">
+      <button type="button" class="gk-btn" id="gkBoardShow"><i class="fa-solid fa-expand" aria-hidden="true"></i> Trình chiếu</button>
+      <span class="gk-note">Từ mã học sinh chép ở "Thử thách hôm nay" (dán cả đoạn chat nhóm lớp cũng được). Mỗi em giữ lượt cao nhất; bằng điểm thì ai nhanh hơn xếp trên. Theo bộ lọc lớp ở mục 2.</span>
+    </div>
+    <div id="gkBoardList"></div>
   </section>
 
   <section class="gk-card" aria-labelledby="gkTableTitle">

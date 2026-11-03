@@ -5,11 +5,13 @@
 <script src="js/page-transition-guard.js"></script>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2f40b2">
 <title>Dashboard Điều phối đào tạo — EduQuiz</title>
 <link rel="stylesheet" href="lib/fonts/fonts.css">
 <link rel="stylesheet" href="css/theme.css">
 <link rel="stylesheet" href="css/admin-common.css">
 <link rel="stylesheet" href="css/coordinator-dashboard.css">
+<link rel="stylesheet" href="css/wrong-questions.css">
 <link rel="stylesheet" href="css/motion.css">
   <link rel="stylesheet" href="css/accessibility.css">
 <link rel="stylesheet" href="lib/fontawesome/css/fa.min.css">
@@ -165,6 +167,28 @@
     </div>
   </div>
 
+  <!-- ============ SO SÁNH GIỮA CÁC TRƯỜNG (chỉ hiện khi phạm vi có ≥ 2 trường — EduAnalytics.schoolComparison) ============ -->
+  <div class="watchlist-card school-compare-card" id="schoolCompareCard" hidden>
+    <div class="watchlist-title"><i class="fa-solid fa-school" aria-hidden="true"></i> So sánh giữa các trường <span class="watchlist-count" id="schoolCompareCount"></span></div>
+    <div class="table-scroll">
+      <table class="school-compare-table">
+        <thead><tr><th>Trường</th><th>Học sinh</th><th>Đã làm bài</th><th>Tham gia</th><th>Lượt nộp</th><th>Điểm TB</th><th>Tỷ lệ đạt</th></tr></thead>
+        <tbody id="schoolCompareRows"></tbody>
+      </table>
+    </div>
+    <div class="school-compare-note">Theo đúng bộ lọc đang chọn. Tham gia = học sinh trong danh sách đã có ít nhất 1 bài nộp. Đạt = điểm ≥ 70%.</div>
+  </div>
+
+  <!-- ============ CÂU CẢ LỚP HAY SAI (Google Sheet cột CauSai — js/teacher/wrong-questions.js, dùng chung với teacher-dashboard) ============ -->
+  <div class="watchlist-card wq-card" id="wrongQCard" hidden>
+    <div class="watchlist-title"><i class="fa-solid fa-circle-xmark" aria-hidden="true"></i> Câu học sinh hay sai
+      <button type="button" class="race-present-btn" id="wqAnalyze" title="Tổng hợp câu sai từ Google Sheet theo bộ lọc đang chọn (không tốn lượt Firebase)"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Phân tích</button>
+      <button type="button" class="race-present-btn" id="wqMakeExam" title="Tạo link đề ôn từ các câu sai nhiều nhất (cùng cấp độ), chép sẵn để gửi giáo viên/học sinh" hidden><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> Tạo đề ôn</button>
+    </div>
+    <div class="wq-status" id="wqStatus"></div>
+    <ol class="wq-list" id="wqList"></ol>
+  </div>
+
   <!-- ============ BẢNG QUẢN LÝ HỌC SINH (đầy đủ) ============ -->
   <div class="student-table-card" id="studentTableCard" hidden>
     <div class="student-table-header">
@@ -257,7 +281,7 @@
 
 <!-- QUAN TRỌNG: khai báo EDU_ALLOWED_ROLES TRƯỚC auth-guard.js (đúng quy
      ước ghi trong chính file đó) — chỉ admin và coordinator được vào. -->
-<script>window.EDU_ALLOWED_ROLES = ['admin', 'coordinator'];</script>
+<script>window.EDU_ALLOWED_ROLES = ['admin', 'coordinator', 'school_admin'];</script>
 <!-- Chart.js: ưu tiên bản trong js/vendor (tránh trình duyệt chặn CDN), không có thì thử CDN. Phải có trước js/coordinator/charts.js. -->
 <script src="js/vendor/chart.umd.min.js"></script>
 <script>
@@ -300,6 +324,8 @@
 <script src="js/repositories/roster-repository.js"></script>
 <script src="js/repositories/student-result-repository.js"></script>
 <script src="js/repositories/activity-log-repository.js"></script>
+<script src="js/models/school.model.js"></script>
+<script src="js/repositories/user-repository.js"></script>
 <script src="js/services/analytics-service.js"></script>
 <script src="js/services/activity-log-service.js"></script>
 
@@ -322,6 +348,8 @@
 <script src="js/coordinator/charts.js"></script>
 <script src="js/coordinator/student-table.js"></script>
 <script src="js/coordinator/student-detail.js"></script>
+<script src="js/services/question-bank-lookup.js"></script>
+<script src="js/teacher/wrong-questions.js"></script>
 <script src="js/coordinator/dashboard.js"></script>
 <script src="js/motion.js"></script>
 

@@ -65,9 +65,10 @@
    * payload.sheet (result-submitter.js) → bản ghi gọn.
    * Khóa: id, n(tên), c(lớp), s(trường), t(bài), p(điểm %), k("đúng/tổng"), tm("mm:ss"),
    *       st(trạng thái), ts(giờ nộp), m(practice|test), tb(đổi tab), w(uid câu sai)
+   *       [pt] điểm tốc độ "Thử thách hôm nay" (js/daily-challenge.js) — chỉ có ở mã thử thách
    */
   function toRecord(sheet) {
-    return {
+    const rec = {
       v: 1,
       id: str(sheet.submissionId, 40),
       n: str(sheet.studentName, LIMITS.n),
@@ -83,6 +84,9 @@
       tb: Math.max(0, Math.round(num(sheet.tabSwitch))),
       w: str(sheet.wrong, LIMITS.w),
     };
+    // Trường tùy chọn: mã bài thường giữ nguyên hình dạng cũ (không thêm khoá)
+    if (sheet.points != null) rec.pt = Math.max(0, Math.min(99999, Math.round(num(sheet.points))));
+    return rec;
   }
 
   /** Bản ghi gọn → chuỗi mã "EQR1.<base64url>.<crc32>". */
@@ -104,6 +108,7 @@
       return { ok: true, rec: toRecord({
         submissionId: o.id, studentName: o.n, studentClass: o.c, studentSchool: o.s, testName: o.t,
         score: o.p, correct: o.k, time: o.tm, status: o.st, timestamp: o.ts, examMode: o.m, tabSwitch: o.tb, wrong: o.w,
+        points: o.pt,
       }) };
     } catch (e) {
       return { ok: false, error: 'Mã không đọc được' };
@@ -195,6 +200,38 @@
     return { submissions: rows.length, withWrong, items };
   }
 
+  /**
+   * Bảng xếp hạng "Thử thách hôm nay" từ các mã có điểm tốc độ (pt). Mỗi bảng = 1 đề
+   * (trường t: số thử thách + cấp độ). 1 học sinh (Họ tên + Lớp + Trường) chỉ giữ lượt cao nhất.
+   * Xếp: điểm giảm dần → làm nhanh hơn → tên. Bằng điểm và bằng giờ thì cùng hạng.
+   * @returns {{test:string, entries:{n,c,s,pt,k,tm,rank}[]}[]} đề mới nhất (số lớn nhất) trước
+   */
+  function challengeBoard(rows) {
+    const secs = (tm) => { const m = /^(\d+):(\d+)$/.exec(tm || ''); return m ? (+m[1]) * 60 + (+m[2]) : Infinity; };
+    const groups = new Map();
+    for (const r of rows) {
+      if (r.pt == null) continue;
+      const g = groups.get(r.t) || new Map();
+      groups.set(r.t, g);
+      const who = [r.n, r.c, r.s].join('|').toLowerCase();
+      const cur = g.get(who);
+      if (!cur || r.pt > cur.pt || (r.pt === cur.pt && secs(r.tm) < secs(cur.tm))) g.set(who, r);
+    }
+    const noOf = (t) => { const m = /số (\d+)/.exec(t || ''); return m ? +m[1] : 0; };
+    return Array.from(groups.entries())
+      .sort((a, b) => noOf(b[0]) - noOf(a[0]) || a[0].localeCompare(b[0], 'vi'))
+      .map(([test, g]) => {
+        const list = Array.from(g.values()).sort((a, b) => b.pt - a.pt || secs(a.tm) - secs(b.tm) || a.n.localeCompare(b.n, 'vi'));
+        let rank = 0;
+        const entries = list.map((r, i) => {
+          const prev = list[i - 1];
+          if (!prev || prev.pt !== r.pt || secs(prev.tm) !== secs(r.tm)) rank = i + 1;
+          return { n: r.n, c: r.c, s: r.s, pt: r.pt, k: r.k, tm: r.tm, rank };
+        });
+        return { test, entries };
+      });
+  }
+
   // ── Phía học sinh: lưu mã các bài đã làm trên máy ──
   function list() {
     try { const a = JSON.parse(global.localStorage.getItem(STORE_KEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; }
@@ -218,7 +255,7 @@
       .replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase().slice(0, 40) || 'hoc-sinh';
   }
 
-  const api = { encode, decode, extractCodes, parseMany, toCsv, summary, wrongStats, toRecord, crc32, list, remember, last, safeName, PREFIX };
+  const api = { encode, decode, extractCodes, parseMany, toCsv, summary, wrongStats, challengeBoard, toRecord, crc32, list, remember, last, safeName, PREFIX };
   global.EduResultPack = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

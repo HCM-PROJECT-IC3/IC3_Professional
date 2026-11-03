@@ -727,5 +727,20 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 
-  global.EduLearningHub = { open, updateBadge, _keyOf: keyOf };
+  /**
+   * Cho "Nhiệm vụ mùa thi" ở sảnh (js/exam-countdown.js): lộ trình của 1 cấp độ + các bài em làm
+   * HÔM NAY ở cấp đó. Chỉ đọc localStorage. null khi ngân hàng câu hỏi chưa nạp / cấp không có lộ trình.
+   */
+  function seasonInfo(name, cls, school, catId, levelId) {
+    const recs = studentRecords(keyOf(name, cls, school));
+    const path = buildPath(recs, catId, levelId);
+    if (!path || !path.steps.length) return null;
+    const t = new Date(); t.setHours(0, 0, 0, 0);
+    const today = recs.filter((r) => recTime(r) >= t.getTime()).map((r) => Object.assign(resolveIds(r), {
+      isMix: !!(r.isRandomMix || /^Tổng hợp/.test(r.minitest || '')), score: Number(r.score) || 0,
+    })).filter((r) => r.catId === catId && r.levelId === levelId);
+    return { path, today };
+  }
+
+  global.EduLearningHub = { open, updateBadge, seasonInfo, _keyOf: keyOf };
 })(window);

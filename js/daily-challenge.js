@@ -73,7 +73,7 @@
     const v = (id) => ($(id)?.value || '').trim();
     const name = v('studentName');
     const key = name ? [name, v('studentClass'), v('studentSchool')].map((x) => x.toLowerCase()).join('|') : 'khach';
-    return { name: name || 'Khách', key };
+    return { name: name || 'Khách', key, className: v('studentClass'), school: v('studentSchool') };
   }
   function lobbySet() {
     const cat = $('categorySelect')?.value || '';
@@ -130,7 +130,28 @@
   function gridOf(marks) { return marks.map((m) => (m ? '🟩' : '🟥')).join(''); }
   function shareText(r) {
     return `EduQuiz · Thử thách số ${r.no} (${r.dayLabel})\n${r.lvlName}: ${r.correct}/${r.total} câu, ${r.score.toLocaleString('vi-VN')} điểm\n`
-      + `${gridOf(r.marks)}${r.streak > 1 ? ` · chuỗi ${r.streak} ngày` : ''}`;
+      + `${gridOf(r.marks)}${r.streak > 1 ? ` · chuỗi ${r.streak} ngày` : ''}`
+      + (r.code ? `\nMã cho thầy cô: ${r.code}` : '');
+  }
+
+  /**
+   * Mã kết quả EQR1 (js/services/result-pack.js) của lượt tính điểm — thầy cô dán cả đoạn chat
+   * nhóm lớp vào gom-ket-qua.html là có bảng xếp hạng. Mã bài cố định theo ngày + cấp độ + học
+   * sinh → dán trùng không tính 2 lần. Chưa chọn tên ở sảnh thì không tạo (không biết là ai).
+   */
+  function resultCode(r, st, set, today, qs, marks) {
+    if (st.key === 'khach' || !global.EduResultPack) return '';
+    const pad = (n) => String(n).padStart(2, '0');
+    return global.EduResultPack.remember({
+      submissionId: 'DC-' + hashStr(`${today}|${set.cat}|${set.lvl}|${st.key}`).toString(36),
+      studentName: st.name, studentClass: st.className, studentSchool: st.school,
+      testName: `Thử thách số ${r.no} (${r.dayLabel}) · ${r.lvlName}`,
+      score: Math.round((r.correct / r.total) * 100), correct: `${r.correct}/${r.total}`,
+      time: `${pad(Math.floor(r.sec / 60))}:${pad(r.sec % 60)}`, status: 'OK',
+      timestamp: new Date().toLocaleString('vi-VN'), examMode: 'practice', tabSwitch: 0,
+      wrong: qs.filter((q, i) => !marks[i] && q.uid).map((q) => q.uid).join(','),
+      points: r.score,
+    });
   }
 
   // ── Giao diện ──
@@ -183,7 +204,7 @@
     G.set = lobbySet();
     G.today = dayKey();
     const st = lobbyStudent();
-    $('dcSub').textContent = `Số ${challengeNo()} ·${dayLabel()} · ${G.set.lvlName}`;
+    $('dcSub').textContent = `Số ${challengeNo()} · ${dayLabel()} · ${G.set.lvlName}`;
     if (!G.set.cat || !G.set.lvl) { setBody('<p class="dc-msg">Chọn Chương trình và Cấp độ ở sảnh trước.</p>'); return; }
 
     const prev = studentData(st.key).results[`${G.today}|${G.set.cat}|${G.set.lvl}`];
@@ -320,6 +341,7 @@
         data.last = G.today;
       }
       r.streak = data.streak;
+      r.code = resultCode(r, st, G.set, G.today, G.qs, G.marks);
       newBest = data.best > 0 && r.score > data.best; // lần đầu chưa có kỷ lục để "phá"
       data.best = Math.max(data.best, r.score);
       data.results[`${G.today}|${G.set.cat}|${G.set.lvl}`] = r;
@@ -360,7 +382,7 @@
           ${xpLine}
         </div>
         ${extra.counted === false ? '<p class="dc-hint">Lượt làm lại không tính điểm, chuỗi và XP.</p>' : ''}
-        <pre class="dc-share" id="dcShare">${esc(shareText(r))}</pre>
+        <pre class="dc-share" id="dcShare">${esc(shareText(Object.assign({}, r, { code: '' })))}${r.code ? `\n<span class="dc-code">Mã cho thầy cô: ${esc(r.code)}</span>` : ''}</pre>
         <div class="dc-actions">
           <button type="button" class="dc-btn dc-btn-go" id="dcCopy"><i class="fa-solid fa-copy" aria-hidden="true"></i> Chép kết quả</button>
           <button type="button" class="dc-btn dc-btn-ghost" id="dcAgain"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Làm lại</button>
@@ -380,7 +402,9 @@
       const sel = getSelection(); sel.removeAllRanges(); sel.addRange(range);
       try { ok = document.execCommand('copy'); } catch (e2) { ok = false; }
     }
-    $('dcCopyMsg').textContent = ok ? 'Đã chép. Dán vào nhóm lớp trên Zalo hoặc Messenger.' : 'Trình duyệt không cho chép tự động. Bôi đen khung kết quả rồi bấm Ctrl+C.';
+    $('dcCopyMsg').textContent = ok
+      ? 'Đã chép. Dán vào nhóm lớp trên Zalo hoặc Messenger' + (/EQR1\./.test(text) ? ' — thầy cô dán lại vào trang Gom kết quả để xếp hạng cả lớp.' : '.')
+      : 'Trình duyệt không cho chép tự động. Bôi đen khung kết quả rồi bấm Ctrl+C.';
   }
 
   function speak(text) {

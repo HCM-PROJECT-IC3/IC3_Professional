@@ -22,7 +22,7 @@
     // Bản Apps Script web này cần = BACKEND_VERSION trong apps/src/00-config.gs (đổi CẢ 2 chỗ —
     // test backend-consistency báo đỏ nếu lệch). Admin thấy thanh cảnh báo khi bản đang chạy thật
     // cũ hơn (js/services/backend-version-check.js).
-    expectedBackendVersion: '2026-11-01',
+    expectedBackendVersion: '2026-11-03b',
 
     // ── Danh sách học sinh (students_roster) ở trang quản trị: chỉ đọc phần THAY ĐỔI (29/10/2026) ──
     //   true  : bản đệm quá hạn chỉ hỏi học sinh có updatedAt mới hơn (~1 lượt thay vì ~2.800);
@@ -30,6 +30,22 @@
     //   false : CÔNG TẮC TẮT NHANH — luôn đọc toàn bộ như trước đợt tối ưu (nếu thấy danh sách lệch).
     //           Lệnh ghi vẫn kèm updatedAt (trường thêm vào, không ảnh hưởng gì) để bật lại lúc nào cũng được.
     rosterDeltaSync: true,
+
+    // ── Danh sách Trường/Lớp/Tên ở sảnh làm bài (index.html, js/lobby-roster.js) ──
+    //   'public-json' : file tĩnh data/roster/students-active.json — ai có URL cũng tải được tên MỌI
+    //                   học sinh (docs/architecture/AUDIT-2.0.md §5.1). Mặc định hiện tại.
+    //   'class-code'  : học sinh nhập MÃ LỚP (6 ký tự, giáo viên phát) → Apps Script trả tên đúng 1 lớp
+    //                   (apps/src/75-roster-codes.gs). "Cập nhật cho học sinh" ở Quản lý lớp cấp mã +
+    //                   tải file CSV mã lớp. Bật xong, phát mã cho lớp, RỒI mới gỡ file JSON công khai
+    //                   (và dọn lịch sử git) — "Gọi tên" khi đó dùng "Dán danh sách".
+    roster: { mode: 'public-json' },
+
+    // ── Chấm lại bài Kiểm tra trên máy chủ (docs/architecture/SERVER-GRADING.md, bước 1) ──
+    //   'off'    : như trước — chỉ gửi điểm máy học sinh tự chấm.
+    //   'verify' : bài Kiểm tra (đề từ ngân hàng data/ic3) gửi kèm câu trả lời; Apps Script chấm lại,
+    //              ghi điểm máy chủ (ChiTiet.sv) và gắn ⚠️ nếu lệch điểm gửi lên. Học sinh vẫn thấy
+    //              điểm ngay. Cần Apps Script ≥ 2026-11-03b. Mỗi khối tải đề 1 lần / 6 giờ (bản đệm).
+    serverGrading: { mode: 'off' },
 
     // ── Dashboard đọc kết quả từ đâu (teacher / coordinator / ic3-dashboard Báo cáo) ──
     //   'auto'      : Firestore khi quizResults.firestore = 'all', ngược lại Google Sheet

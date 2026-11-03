@@ -977,7 +977,7 @@
     const profileName = document.getElementById('gvProfileName');
     const profileRole = document.getElementById('gvProfileRole');
     const profileStatus = document.getElementById('gvProfileStatus');
-    const ROLE_LABEL_SHORT = { admin: 'Quản trị viên', teacher: 'Giáo viên', coordinator: 'Điều phối đào tạo', teaching_coordinator: 'Điều phối giáo viên', student: 'Học sinh' };
+    const ROLE_LABEL_SHORT = { admin: 'Quản trị viên', teacher: 'Giáo viên', coordinator: 'Điều phối đào tạo', school_admin: 'Quản trị trường', teaching_coordinator: 'Điều phối giáo viên', student: 'Học sinh' };
 
     function refreshProfileBarDisplay() {
       if (!profileBar || !profileUser) return;

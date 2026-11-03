@@ -157,6 +157,8 @@ body.dc-open { overflow: hidden; }
   font: 600 .95rem/1.5 system-ui, -apple-system, 'Segoe UI', sans-serif; white-space: pre-wrap; word-break: break-word;
   user-select: all;
 }
+/* Mã EQR1 cho trang Gom kết quả — chép cùng kết quả, hiện nhỏ cho đỡ rối */
+.dc-share .dc-code { display: block; margin-top: .35rem; font: 500 .68rem/1.35 ui-monospace, Consolas, monospace; color: var(--muted); overflow-wrap: anywhere; }
 .dc-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .6rem; }
 
 @media (max-width: 560px) {

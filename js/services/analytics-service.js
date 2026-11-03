@@ -160,7 +160,50 @@
     }).sort((a, b) => (b.points - a.points) || (b.submissions - a.submissions) || compareNatural(a.className, b.className));
   }
 
+  /**
+   * So sánh giữa các trường (Dashboard Điều phối — kế hoạch 2.0 §VII.3). Nhóm theo schoolId
+   * (js/models/school.model.js) để tên gõ lệch hoa/thường/khoảng trắng giữa roster và bài nộp
+   * vẫn về 1 trường. Học sinh "đã làm" = tên + lớp có bài nộp, khớp roster cùng trường.
+   * @param {Array} results bài nộp { studentSchool, studentName, studentClass, score }
+   * @param {Array} students roster đang học { school, name, className }
+   * @returns [{ schoolId, school, rosterSize, active, participation, submissions, avg, passRate }]
+   *   participation = null khi trường không có trong roster; sắp theo điểm TB giảm dần.
+   */
+  function schoolComparison(results, students = [], threshold = 70) {
+    const School = global.EduModels && global.EduModels.School;
+    const idOf = (name) => (School ? School.schoolIdOf(name) : String(name || '').trim().toLowerCase());
+    const keyOf = (name, cls) => `${String(name || '').trim().toLowerCase()}__${String(cls || '').trim().toLowerCase()}`;
+    const groups = {};
+    const group = (id, name) => (groups[id] = groups[id] || { school: name, roster: new Set(), done: new Set(), results: [] });
+    students.forEach((s) => {
+      const id = idOf(s.school);
+      if (id) group(id, s.school).roster.add(keyOf(s.name, s.className));
+    });
+    results.forEach((r) => {
+      const id = idOf(r.studentSchool);
+      if (!id) return;
+      const g = group(id, r.studentSchool);
+      g.results.push(r);
+      g.done.add(keyOf(r.studentName, r.studentClass));
+    });
+    return Object.keys(groups).map((schoolId) => {
+      const g = groups[schoolId];
+      const active = g.roster.size ? [...g.done].filter((k) => g.roster.has(k)).length : g.done.size;
+      return {
+        schoolId,
+        school: g.school,
+        rosterSize: g.roster.size,
+        active,
+        participation: g.roster.size ? Math.round((active / g.roster.size) * 100) : null,
+        submissions: g.results.length,
+        avg: avgScore(g.results),
+        passRate: passRate(g.results, threshold),
+      };
+    }).sort((a, b) => ((b.avg ?? -1) - (a.avg ?? -1)) || (b.submissions - a.submissions) || a.school.localeCompare(b.school, 'vi'));
+  }
+
   global.EduAnalytics = {
+    schoolComparison,
     avgScore, avgTime, passRate, completionRate,
     topStudents, studentsNeedingSupport, classLeaderboard, weekStartMs,
     scoreDistribution, groupAvgBy, heatmapMatrix, trendByDay,

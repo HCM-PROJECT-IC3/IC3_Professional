@@ -188,6 +188,30 @@
     ws.views = [{ state: 'frozen', ySplit: 1 }];
   }
 
+  // ---- Sheet 3b: So sánh giữa các trường (chỉ khi phạm vi có ≥ 2 trường) ----
+  function buildBySchoolSheet(wb, scoped) {
+    const rows = global.EduAnalytics.schoolComparison(scoped.filteredResults, scoped.filteredStudents || []);
+    if (rows.length < 2) return;
+    const ws = wb.addWorksheet('So sánh trường');
+    ws.columns = [
+      { header: 'Trường', key: 'school', width: 30 },
+      { header: 'Học sinh', key: 'rosterSize', width: 11 },
+      { header: 'Đã làm bài', key: 'active', width: 12 },
+      { header: 'Tham gia (%)', key: 'participation', width: 13 },
+      { header: 'Lượt nộp', key: 'submissions', width: 11 },
+      { header: 'Điểm TB (%)', key: 'avg', width: 13 },
+      { header: 'Tỷ lệ đạt (%)', key: 'passRate', width: 14 },
+    ];
+    styleHeaderRow(ws.getRow(1));
+    rows.forEach((r) => ws.addRow(Object.assign({}, r, { rosterSize: r.rosterSize || null })));
+    zebra(ws, 1);
+    ws.addConditionalFormatting({
+      ref: `F2:F${ws.rowCount}`,
+      rules: [{ type: 'colorScale', cfvo: [{ type: 'min' }, { type: 'percentile', value: 50 }, { type: 'max' }], color: [{ argb: 'FFF8696B' }, { argb: 'FFFFEB84' }, { argb: 'FF63BE7B' }] }],
+    });
+    ws.views = [{ state: 'frozen', ySplit: 1 }];
+  }
+
   // ---- Sheet 4: Xu hướng theo ngày ----
   function buildTrendSheet(wb, filteredResults) {
     const ws = wb.addWorksheet('Xu hướng theo ngày');
@@ -263,6 +287,7 @@
     buildOverviewSheet(wb, opts);
     buildStudentSheet(wb, opts.rows);
     buildByClassSheet(wb, scoped.filteredResults);
+    buildBySchoolSheet(wb, scoped);
     buildTrendSheet(wb, scoped.filteredResults);
     buildHeatmapSheet(wb, scoped.filteredResults);
     buildStudentPivotSheet(wb, 'Cần hỗ trợ', global.EduAnalytics.studentsNeedingSupport(scoped.examHistories, 60), FAIL_FILL, FAIL_FONT);

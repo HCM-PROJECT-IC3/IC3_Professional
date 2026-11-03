@@ -91,6 +91,13 @@
         <!-- Nhóm 1: Thông tin học sinh -->
         <div class="form-section-label lobby-step" id="lobbyStep1"><span class="step-num" aria-hidden="true">1</span> Em là ai? <span class="step-done" aria-label="đã xong">✓</span></div>
 
+        <!-- Mã lớp — chỉ hiện khi EduBackend.roster.mode = 'class-code' (js/lobby-roster.js) -->
+        <div class="form-group" id="classCodeGroup" hidden>
+          <label for="classCode"><i class="fa-solid fa-key"></i> Mã lớp <small>(thầy cô phát)</small></label>
+          <input id="classCode" type="text" maxlength="9" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="VD: K7P2QX" aria-describedby="classCodeStatus">
+          <div class="roster-status" id="classCodeStatus" aria-live="polite"></div>
+        </div>
+
         <!-- Trường (full width) — chọn trước để lọc Lớp/Tên bên dưới -->
         <div class="form-group">
           <label for="studentSchool"><i class="fa-solid fa-building-columns"></i> Trường</label>
@@ -405,10 +412,12 @@
   <script src="js/services/pending-sync-queue.js" defer></script>
 
   <!-- Danh sách Trường/Lớp/Tên từ file tĩnh data/roster/students-active.json (js/lobby-roster.js). -->
+  <script src="js/services/apps-script-client.js" defer></script>
   <script src="js/lobby-roster.js" defer></script>
 
   <script src="js/review-detail.js" defer></script>
   <script src="js/custom-exam-codec.js" defer></script>
+  <script src="js/core/grading.js" defer></script>
   <script src="js/quiz-engine.js" defer></script>
   <script src="js/kid-mode.js" defer></script>
   <script src="js/memory-cards.js" defer></script>

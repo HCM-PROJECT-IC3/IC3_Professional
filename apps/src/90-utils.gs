@@ -21,6 +21,33 @@ function jsonOutput_(obj) {
 
 function nameKey_(s) { return String(s || '').trim().toLowerCase(); }
 
+// Tên trường → schoolId. PHẢI giống js/models/school.model.js → schoolIdOf (test code-gs so 2 bản).
+const SCHOOL_ID_MEMO_ = {};
+function schoolIdOf_(name) {
+  const key = String(name || '');
+  if (!(key in SCHOOL_ID_MEMO_)) {
+    SCHOOL_ID_MEMO_[key] = key
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd').replace(/Đ/g, 'd')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+  return SCHOOL_ID_MEMO_[key];
+}
+
+/** schoolId người gọi được xem: "schoolIds" trên hồ sơ + suy từ "schools" (tên). null = mọi trường (admin). */
+function whoSchoolIdSet_(who) {
+  if (!who || !who.schools) return null;
+  return new Set((who.schoolIds || []).concat(who.schools.map(schoolIdOf_)).filter(Boolean));
+}
+
+/** Bản ghi có tên trường `schoolName` nằm trong phạm vi người gọi (so theo schoolId). */
+function inWhoScope_(who, schoolName) {
+  const set = whoSchoolIdSet_(who);
+  return !set || set.has(schoolIdOf_(schoolName));
+}
+
 /** Chặn chuỗi bị Sheet hiểu thành công thức (= + - @) nhưng giữ số/ngày như cũ. */
 function noFormula_(value) {
   return typeof value === 'string' && /^[=+\-@]/.test(value) ? "'" + value : value;

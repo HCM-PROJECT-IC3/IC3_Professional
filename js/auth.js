@@ -8,7 +8,7 @@
    {
      name: "Nguyễn Văn A",
      email: "a@example.com",
-     role: "admin" | "teacher" | "coordinator" | "teaching_coordinator" | "student",
+     role: "admin" | "teacher" | "coordinator" | "school_admin" | "teaching_coordinator" | "student",
      approved: true|false,   // teacher cần admin duyệt mới approved=true
      createdAt: <timestamp>
    }
@@ -200,6 +200,7 @@
     admin: 'Quản trị viên',
     teacher: 'Giáo viên',
     coordinator: 'Điều phối đào tạo',
+    school_admin: 'Quản trị trường',
     teaching_coordinator: 'Điều phối giáo viên',
     student: 'Học sinh',
   };

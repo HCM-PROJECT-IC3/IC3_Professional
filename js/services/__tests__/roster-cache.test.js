@@ -50,6 +50,7 @@ globalThis.EduFirebase = {
   } }; } }; } }; } },
 };
 
+require(path.join(__dirname, '..', '..', 'models', 'school.model.js'));
 require(path.join(__dirname, '..', 'roster-cache-service.js'));
 var R = globalThis.EduRosterCache;
 var ids = function (list) { return list.map(function (s) { return s.id; }).sort(); };
@@ -102,6 +103,7 @@ var tick = function () { return new Promise(function (r) { setTimeout(r, 0); });
   var d = await R.deltaFrom({ students: [{ id: 'a' }], fullAt: now - R.FULL_RESYNC_MS, watermark: null });
   assertEq('deltaFrom: nền quá 3 ngày → null (nơi gọi đọc toàn bộ)', d, null);
   assertEq('stampRoster thêm updatedAt, không sửa object gốc', [R.stampRoster({ a: 1 }), Object.keys({ a: 1 })], [{ a: 1, updatedAt: 'SERVER_TS' }, ['a']]);
+  assertEq('stampRoster kèm schoolId khi có tên trường', R.stampRoster({ school: 'THCS Lê Lợi' }), { school: 'THCS Lê Lợi', schoolId: 'thcs-le-loi', updatedAt: 'SERVER_TS' });
 
   // Công tắc tắt nhanh (js/backend-config.js → rosterDeltaSync: false): luôn đọc toàn bộ như trước
   offline = false;

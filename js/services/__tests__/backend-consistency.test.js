@@ -35,6 +35,12 @@ assertEq('arena_relay/up: giãn cách lần ghi (at == request.time, > 0,5 giây
 assertEq('arena_relay/up: chỉ ghi vào phòng đang mở', /get\(\/databases\/\$\(database\)\/documents\/arena_relay\/\$\(code\)\)\.data\.exp > request\.time/.test(upBlock), true);
 var ttl = JSON.parse(fs.readFileSync(path.join(ROOT, 'firestore.indexes.json'), 'utf8')).fieldOverrides
   .filter(function (f) { return f.ttl; }).map(function (f) { return f.collectionGroup + '.' + f.fieldPath; });
+var mosBlock = rules.slice(rules.indexOf('match /mos_submissions/'), rules.indexOf('match /arena_relay/'));
+assertEq('mos_submissions (web đã bỏ, MOS gửi Apps Script) đóng ghi công khai',
+  (mosBlock.match(/allow create/g) || []).length === 1 && /allow create: if false;/.test(mosBlock), true);
+var qBlock = rules.slice(rules.indexOf('match /questions/'), rules.indexOf('match /quiz_results/'));
+assertEq('questions (ngân hàng cũ, không trang nào dùng) đóng ghi', /allow create, update: if false;/.test(qBlock) && !/isEditor\(\)/.test(qBlock), true);
+assertEq('không còn file web nào ghi mos_submissions', fs.existsSync(path.join(ROOT, 'js', 'mos-submissions.js')), false);
 assertEq('TTL có arena_relay.exp và up.exp', ['arena_relay.exp', 'up.exp'].every(function (k) { return ttl.indexOf(k) !== -1; }), true);
 
 // Web và Apps Script cùng 1 số phiên bản: đổi apps/src mà quên số ở web (hoặc ngược lại) thì
@@ -62,6 +68,14 @@ assertEq('teaching_weeks: giáo viên chỉ được create, không update', /al
 assertEq('arena-relay dùng signInAnonymously ⇒ checklist không bảo tắt Anonymous',
   /signInAnonymously/.test(fs.readFileSync(path.join(ROOT, 'js', 'arena', 'arena-relay.js'), 'utf8'))
     && /Anonymous: Enabled/.test(fs.readFileSync(path.join(ROOT, 'docs', 'FIREBASE-CHECKLIST.md'), 'utf8')), true);
+
+// Nhật ký hoạt động: mọi action web khai báo phải được Apps Script nhận (logActivity_ từ chối action lạ
+// → nhật ký mất âm thầm, chỉ có console.warn).
+globalThis.firebase = globalThis.firebase || { firestore: { FieldValue: { serverTimestamp: function () { return 0; } } } };
+require(path.join(ROOT, 'js', 'models', 'activity-log.model.js'));
+var gsActions = (fs.readFileSync(path.join(ROOT, 'apps', 'src', '45-activity.gs'), 'utf8').match(/ACTIVITY_ACTIONS = \[([^\]]*)\]/) || ['', ''])[1];
+var missingActions = Object.values(globalThis.EduModels.ActivityLog.ACTIONS).filter(function (a) { return gsActions.indexOf("'" + a + "'") === -1; });
+assertEq('mọi ActivityLog.ACTIONS có trong ACTIVITY_ACTIONS (Apps Script)', missingActions, []);
 
 console.log(failures ? '\n' + failures + ' test FAIL' : '\nTất cả PASS');
 process.exit(failures ? 1 : 0);

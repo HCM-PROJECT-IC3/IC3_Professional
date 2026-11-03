@@ -639,6 +639,23 @@ function applyReportFiltersAndRender() {
   renderReportStats(_reportFiltered);
   renderReportTable(_reportFiltered);
   renderReportCharts(_reportFiltered);
+  if (window.EduWrongQuestions) window.EduWrongQuestions.setContext(reportWrongScope(classVal, testVal, rangeMs));
+}
+
+/** Bộ lọc tab Báo cáo → phạm vi "Câu học sinh hay sai" (Apps Script wrongStats, 0 Firebase).
+ *  Apps Script tự giới hạn theo quyền người gọi; Admin = mọi trường. */
+function reportWrongScope(classVal, testVal, rangeDays) {
+  const p = window.EduCurrentProfile || {};
+  const now = Date.now();
+  return {
+    schools: p.role === 'admin' ? undefined : (Array.isArray(p.schools) ? p.schools.filter(Boolean) : []),
+    classes: classVal ? [classVal] : undefined,
+    // Làm tròn giờ như 2 dashboard kia → đổi tab qua lại không bắt phân tích lại
+    sinceMs: rangeDays ? now - rangeDays * 86400000 - (now % 3600000) : undefined,
+    testName: testVal || '',
+    label: [classVal ? 'Lớp ' + classVal : 'Mọi lớp', testVal ? testVal.split(' › ').pop() : 'mọi bài',
+      rangeDays ? rangeDays + ' ngày qua' : 'toàn bộ'].join(' · '),
+  };
 }
 
 function renderReportStats(rows) {

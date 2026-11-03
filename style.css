@@ -3448,6 +3448,27 @@ a.arena-open {
   border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: .8rem;
 }
 .exam-countdown .xc-edit:hover { color: var(--purple); border-color: var(--purple); }
+/* Nhiệm vụ mùa thi ngay dưới đếm ngược (js/exam-countdown.js renderMission) */
+.lobby-extras > .exam-mission {
+  grid-column: 1 / -1; display: flex; align-items: center; gap: .7rem; padding: .5rem .6rem .5rem .9rem;
+  border-radius: var(--radius-sm); background: var(--purple-lt); box-shadow: 0 0 0 1px var(--border); line-height: 1.35;
+}
+.lobby-extras > .exam-mission[hidden] { display: none; }
+.exam-mission .xm-ico { color: var(--purple); font-size: 1.05rem; flex-shrink: 0; }
+.exam-mission .xm-text { flex: 1; min-width: 0; }
+.exam-mission .xm-head { font-size: .78rem; font-weight: 700; color: var(--muted); }
+.exam-mission .xm-head span { color: var(--purple); }
+.exam-mission .xm-main { font-weight: 800; overflow-wrap: anywhere; }
+.exam-mission .xm-sub { font-size: .8rem; color: var(--muted); font-weight: 600; }
+.exam-mission.is-behind .xm-sub { color: var(--amber-text, var(--red)); }
+.exam-mission.is-done { background: var(--green-lt); }
+.exam-mission.is-done .xm-ico, .exam-mission.is-done .xm-head b { color: var(--green); }
+.exam-mission .xm-go {
+  flex-shrink: 0; min-height: 2.4rem; padding: .35rem .8rem; border-radius: 10px; cursor: pointer; font: inherit; font-weight: 800;
+  border: 0; background: var(--purple); color: #fff;
+}
+.exam-mission .xm-go:hover { filter: brightness(1.1); }
+[data-theme="dark"] .exam-mission .xm-ico, [data-theme="dark"] .exam-mission .xm-head span { color: #aab6ff; }
 .exam-countdown .xc-input { position: absolute; right: .5rem; top: 100%; z-index: 5; margin-top: .25rem; padding: .35rem .5rem; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); font: inherit; }
 
 /* ══════════════════════════════════════════════════════════════

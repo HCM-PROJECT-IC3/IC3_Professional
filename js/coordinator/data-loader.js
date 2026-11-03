@@ -105,17 +105,15 @@
       : null;
     if (rosterBundle && forceRefresh && Date.now() - (rosterBundle.cachedAt || 0) > ROSTER_FORCE_MIN_AGE_MS) rosterBundle = null;
     if (!rosterBundle) rosterBundle = await fetchRosterOrStale(rosterCacheKey, async () => {
-      const [courses, classes, students, teacherSnap] = await Promise.all([
+      const [courses, classes, students, teachers] = await Promise.all([
         global.EduRepositories.course.list(),
         global.EduRepositories.class.list(),
         isAdmin
           // Bản đệm chung với các trang quản lý khác (js/services/roster-cache-service.js)
           ? global.EduRosterCache.activeAll(forceRefresh ? { maxAgeMs: ROSTER_FORCE_MIN_AGE_MS } : undefined)
           : studentsByChunkedSchools(schools),
-        global.EduFirebase.db.collection('users').where('role', '==', 'teacher').where('approved', '==', true).limit(1000).get(),
+        global.EduRepositories.user.listApprovedTeachers(),
       ]);
-      if (global.EduFirebase.countSnap) global.EduFirebase.countSnap('users (giáo viên)', teacherSnap);
-      const teachers = teacherSnap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
       const bundle = { courses, classes, students, teachers, cachedAt: Date.now() };
       if (global.EduDataCache) global.EduDataCache.setAsync(rosterCacheKey, bundle, ROSTER_CACHE_TTL_MS, /* persist */ true);
       return bundle;

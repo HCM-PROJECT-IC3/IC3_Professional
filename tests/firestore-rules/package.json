@@ -1,0 +1,14 @@
+{
+  "name": "ic3-firestore-rules-tests",
+  "private": true,
+  "description": "Chạy firestore.rules THẬT trên Firestore emulator (cần Java 21). CI: job \"rules\" trong .github/workflows/ci.yml.",
+  "type": "module",
+  "scripts": {
+    "test": "firebase emulators:exec --only firestore --project demo-ic3 \"node --test\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "6.0.0",
+    "firebase": "13.1.0",
+    "firebase-tools": "15.34.2"
+  }
+}

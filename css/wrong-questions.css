@@ -1,0 +1,31 @@
+/* ============================================================
+   css/wrong-questions.css
+   Thẻ "Câu học sinh hay sai" (js/teacher/wrong-questions.js) — dùng chung cho
+   teacher-dashboard.html, coordinator-dashboard.html và tab Báo cáo của ic3-dashboard.html.
+   ============================================================ */
+
+.wq-card { margin-bottom: 1.4rem; }
+.wq-card .watchlist-title { flex-wrap: wrap; }
+.wq-card .race-present-btn + .race-present-btn { margin-left: 0; }
+.wq-status { font-size: .78rem; color: var(--muted); margin-bottom: .6rem; line-height: 1.5; }
+.wq-status b { color: var(--text); }
+.wq-note { color: var(--muted); font-size: .74rem; }
+.wq-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .45rem; }
+.wq-item details { border-radius: 10px; background: var(--card2); padding: .55rem .7rem; }
+.wq-item summary { display: grid; grid-template-columns: 1.8rem 1fr; gap: .1rem .5rem; cursor: pointer; list-style: none; }
+.wq-item summary::-webkit-details-marker { display: none; }
+.wq-rank {
+  grid-row: 1 / span 2; width: 1.6rem; height: 1.6rem; border-radius: 50%; display: grid; place-items: center;
+  background: var(--red-lt); color: var(--red); font-weight: 900; font-size: .75rem;
+}
+.wq-q { font-size: .84rem; font-weight: 700; color: var(--text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.wq-item details[open] .wq-q { -webkit-line-clamp: unset; }
+.wq-meta { font-size: .72rem; color: var(--muted); font-weight: 600; }
+.wq-ans { margin: .55rem 0 0 2.3rem; padding-left: 1rem; font-size: .8rem; display: flex; flex-direction: column; gap: .2rem; }
+.wq-ans li.is-ok { color: var(--green); font-weight: 800; }
+.wq-expl { margin: .45rem 0 0 2.3rem; font-size: .78rem; line-height: 1.5; }
+
+/* ic3-dashboard (tab Báo cáo): tiêu đề chart-card + nút nằm cùng hàng */
+.wq-head { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.wq-head .wq-actions { margin-left: auto; display: flex; flex-wrap: wrap; gap: .4rem; }
+.chart-card.wq-card { margin-top: 1.1rem; }

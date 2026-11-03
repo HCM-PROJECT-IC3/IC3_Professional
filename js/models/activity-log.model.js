@@ -28,6 +28,8 @@
     CREATE_EXAM: 'create_exam',
     ASSIGN_EXAM: 'assign_exam',
     UPDATE_ROSTER: 'update_roster',
+    UPDATE_SCHOOL: 'update_school',    // Danh mục trường: thông tin liên hệ, trạng thái (meta.schoolAction)
+    UPDATE_USER: 'update_user',        // Quản lý tài khoản: vai trò, duyệt, trường, mã NV, nhập Excel (meta.userAction)
   });
 
   function build({ uid, role, actorName, action, targetId, meta }) {

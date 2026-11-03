@@ -5,6 +5,7 @@
 <script src="js/page-transition-guard.js"></script>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2f40b2">
 <title>Quản lý danh sách học sinh — EduQuiz</title>
 <link rel="stylesheet" href="lib/fonts/fonts.css">
 <link rel="stylesheet" href="css/theme.css">
@@ -133,7 +134,7 @@
 <!-- QUAN TRỌNG: phải khai báo EDU_ALLOWED_ROLES TRƯỚC js/auth-guard.js
      (xem hướng dẫn trong chính file auth-guard.js) — chỉ admin và
      coordinator (Điều phối đào tạo) được vào trang quản lý roster này. -->
-<script>window.EDU_ALLOWED_ROLES = ['admin', 'coordinator'];</script>
+<script>window.EDU_ALLOWED_ROLES = ['admin', 'coordinator', 'school_admin'];</script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
@@ -153,6 +154,8 @@
 <script src="js/models/activity-log.model.js"></script>
 <script src="js/repositories/roster-repository.js"></script>
 <script src="js/repositories/activity-log-repository.js"></script>
+<script src="js/models/school.model.js"></script>
+<script src="js/repositories/user-repository.js"></script>
 <script src="js/services/activity-log-service.js"></script>
 <script src="js/services/data-cache-service.js"></script>
 <script src="js/services/roster-cache-service.js"></script>

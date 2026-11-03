@@ -67,6 +67,24 @@ assertEq('câu sai KHÔNG có trong payload Firestore', 'wrong' in pw.firestore,
 assertEq('không sai câu nào → chuỗi rỗng (Apps Script ghi "-")', S.buildPayloads({ session: session, result: { correct: 1, total: 1, details: [{ status: 'correct' }] }, integrity: integrity, elapsed: 1, id: 'W2', questions: [{ uid: 'a_1' }] }).sheet.wrong, '');
 assertEq('bài 0 câu không chia 0', S.buildPayloads({ session: session, result: { correct: 0, total: 0 }, integrity: { valid: true, flags: [] }, elapsed: 0, id: 'X' }).sheet.score, 0);
 
+// ── Câu trả lời gửi kèm để máy chủ chấm lại (EduBackend.serverGrading) ──
+var testSession = Object.assign({}, session, { examMode: 'test' });
+var wire = { bank: 'IC3__LV1.json', answers: [['ic3__lv1__t1__q1', 'B'], ['ic3__lv1__t1__q2', undefined]] };
+var withWire = function (sess, w) { return S.buildPayloads({ session: sess, result: result, integrity: integrity, elapsed: 1, id: 'G', wire: w }).sheet; };
+var savedBackend = globalThis.EduBackend;
+globalThis.EduBackend = { serverGrading: { mode: 'off' } };
+assertEq("serverGrading 'off': không gửi câu trả lời", 'answers' in withWire(testSession, wire), false);
+globalThis.EduBackend = { serverGrading: { mode: 'verify' } };
+var sv = withWire(testSession, wire);
+assertEq("'verify' + bài Kiểm tra: gửi file khối + câu trả lời (bỏ trống → null)", [sv.bank, sv.answers], ['IC3__LV1.json', [['ic3__lv1__t1__q1', 'B'], ['ic3__lv1__t1__q2', null]]]);
+assertEq('chỉ ở payload Sheet, không ở Firestore', 'answers' in S.buildPayloads({ session: testSession, result: result, integrity: integrity, elapsed: 1, id: 'G', wire: wire }).firestore, false);
+assertEq('bài Ôn luyện: không gửi', 'answers' in withWire(session, wire), false);
+assertEq('đề tự soạn (thiếu uid / file khối): không gửi', ['answers' in withWire(testSession, { bank: 'IC3__LV1.json', answers: [['', 'A']] }), 'answers' in withWire(testSession, { bank: '', answers: wire.answers })], [false, false]);
+var big = { bank: 'IC3__LV1.json', answers: [] };
+for (var b = 0; b < 300; b++) big.answers.push(['ic3__lv1__t1__q' + b, 'x'.repeat(200)]);
+assertEq('quá 40 KB (relay máy chủ trường nhận ≤ 64 KB/bài): không gửi', 'answers' in withWire(testSession, big), false);
+globalThis.EduBackend = savedBackend;
+
 // ── Chống spam bài Ôn luyện ──
 var store = {};
 globalThis.localStorage = { getItem: function (k) { return k in store ? store[k] : null; }, setItem: function (k, v) { store[k] = String(v); } };

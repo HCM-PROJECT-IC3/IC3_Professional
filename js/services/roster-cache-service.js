@@ -54,8 +54,9 @@
   }
 
   /** Field đóng dấu cho MỌI lệnh ghi students_roster (tạo/sửa/nạp Excel/gán lớp). */
+  // Kèm schoolId khi có tên trường (js/models/school.model.js — trang ghi roster phải nạp file đó).
   function stampRoster(data) {
-    return Object.assign({}, data, { updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    return Object.assign({}, global.EduModels.School.withSchoolId(data), { updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
   }
 
   /** Doc students_roster (mọi trạng thái) có updatedAt sau mốc `since` ([giây, nano] | null). */

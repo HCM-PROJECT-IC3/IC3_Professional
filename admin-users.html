@@ -5,6 +5,7 @@
 <script src="js/page-transition-guard.js"></script>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2f40b2">
 <title>Quản lý tài khoản — EduQuiz</title>
 <link rel="stylesheet" href="lib/fonts/fonts.css">
 <link rel="stylesheet" href="css/theme.css">
@@ -83,7 +84,16 @@
 <script src="js/idle-logout.js"></script>
 <script src="js/services/data-cache-service.js"></script>
 <script src="js/backend-config.js"></script>
+<script src="js/services/apps-script-client.js"></script>
 <script src="js/services/roster-cache-service.js"></script>
+<script src="js/repositories/base-repository.js"></script>
+<script src="js/models/school.model.js"></script>
+<script src="js/repositories/user-repository.js"></script>
+<script src="js/repositories/school-repository.js"></script>
+<!-- Nhật ký thao tác tài khoản → Apps Script tab NhatKyHoatDong -->
+<script src="js/models/activity-log.model.js"></script>
+<script src="js/repositories/activity-log-repository.js"></script>
+<script src="js/services/activity-log-service.js"></script>
 <script src="js/admin-users.js"></script>
 <!-- "Nhập giáo viên từ Excel" — đọc file bằng SheetJS, cùng CDN/phiên
      bản đã dùng ở teaching-schedule.html cho đồng bộ toàn hệ thống. -->

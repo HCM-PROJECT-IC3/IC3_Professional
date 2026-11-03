@@ -79,6 +79,66 @@
     return 'Mỗi ngày 1 bài + Thử thách hôm nay.';
   }
 
+  // ── Nhiệm vụ mùa thi: kế hoạch theo số ngày còn lại + lộ trình của chính em ──
+  const SPRINT_DAYS = 14;  // 2 tuần cuối: nước rút bằng đề Tổng hợp chế độ Kiểm tra
+  const MIX_KEY = '__RANDOM_MIX__'; // khoá bài "Tổng hợp" trong js/quiz-engine.js (RANDOM_MIX_KEY)
+  /**
+   * Nhiệm vụ hôm nay. info = EduLearningHub.seasonInfo(...) ({ path, today }) hoặc null.
+   * @returns {null|{phase, text, sub?, act?:{type:'lesson'|'mix'|'book', mt?}, done, behind?}}
+   */
+  function missionFor(left, info) {
+    if (left === 0) return { phase: 'Ngày thi', text: 'Hôm nay thi: không học bài mới. Đọc kỹ đề, làm câu dễ trước.', done: false };
+    if (!info) return null;
+    const P = info.path;
+    const today = info.today || [];
+    const mixDone = today.some((r) => r.isMix);
+    if (left <= 3) return { phase: 'Ôn cuối', text: 'Ôn lại Sổ tay câu sai 10–15 phút, ngủ đủ giấc.', act: { type: 'book' }, done: false };
+    if (left <= SPRINT_DAYS) return { phase: 'Nước rút', text: '1 bài Tổng hợp ở chế độ Kiểm tra, như đề thi thật.', act: { type: 'mix' }, done: mixDone };
+    const remaining = P.steps.length - P.passed;
+    if (!remaining || !P.next) return { phase: 'Giữ phong độ', text: 'Em đã đạt cả lộ trình. Làm 1 bài Tổng hợp để giữ phong độ.', act: { type: 'mix' }, done: mixDone };
+    const weeks = Math.max(1, Math.ceil((left - SPRINT_DAYS) / 7));
+    const perWeek = Math.ceil(remaining / weeks);
+    return {
+      phase: 'Học theo lộ trình', text: `Bài nên làm: ${P.next.name}`,
+      sub: `Còn ${remaining}/${P.steps.length} bài chưa đạt · cần khoảng ${perWeek} bài/tuần để kịp nước rút ${SPRINT_DAYS} ngày cuối`,
+      act: { type: 'lesson', mt: P.next.name },
+      done: today.some((r) => !r.isMix && r.mtKey),
+      behind: perWeek > 5,
+    };
+  }
+
+  function renderMission(ex, st, prog) {
+    const box = $('examMission');
+    if (!box) return;
+    const lvl = $('levelSelect')?.value || '';
+    const hub = global.EduLearningHub;
+    const left = ex ? daysLeft(ex.date) : -1;
+    const info = ex && prog && lvl && hub?.seasonInfo ? hub.seasonInfo(st.name, st.cls, st.school, prog, lvl) : null;
+    const m = ex ? missionFor(left, info) : null;
+    box.hidden = !m;
+    if (!m) return;
+    box.classList.toggle('is-done', !!m.done);
+    box.classList.toggle('is-behind', !!m.behind && !m.done);
+    const btn = m.act && !m.done
+      ? `<button type="button" class="xm-go" data-type="${m.act.type}" data-mt="${esc(m.act.mt || '')}">${m.act.type === 'book' ? 'Mở sổ tay' : 'Làm ngay'}</button>` : '';
+    box.innerHTML = `<i class="fa-solid ${m.done ? 'fa-circle-check' : 'fa-bullseye'} xm-ico" aria-hidden="true"></i>
+      <div class="xm-text"><div class="xm-head">Nhiệm vụ hôm nay · <span>${esc(m.phase)}</span>${m.done ? ' · <b>đã xong</b>' : ''}</div>
+        <div class="xm-main">${esc(m.text)}</div>${m.sub ? `<div class="xm-sub">${esc(m.sub)}${m.behind && !m.done ? ' — nên tăng tốc' : ''}</div>` : ''}</div>${btn}`;
+    box.querySelector('.xm-go')?.addEventListener('click', (e) => go(e.currentTarget.dataset, prog, lvl));
+  }
+
+  /** Chọn sẵn bài ở sảnh (giống nút "Làm bài" của Góc học tập) — em vẫn tự bấm Bắt đầu. */
+  function go(d, prog, lvl) {
+    if (d.type === 'book') { global.EduLearningHub?.open('book'); return; }
+    const ok = typeof global.lobbySelectMinitest === 'function' && global.lobbySelectMinitest(prog, lvl, d.type === 'mix' ? MIX_KEY : d.mt);
+    if (ok && d.type === 'mix') $('examModeTestBtn')?.click();
+    if (typeof global.setLobbyView === 'function') global.setLobbyView('form');
+    $('btnStart')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (typeof global.showNotification === 'function') {
+      global.showNotification(ok ? 'Đã chọn sẵn bài — bấm "Bắt đầu" để làm.' : 'Không chọn được bài này (đề có thể đã đổi tên).', ok ? 'success' : 'warning');
+    }
+  }
+
   function render() {
     const row = $('examCountdown');
     if (!row) return;
@@ -98,6 +158,7 @@
     const edit = row.querySelector('.xc-edit');
     edit.hidden = !!ex?.fixed;
     edit.title = ex ? 'Đổi ngày thi' : 'Đặt ngày thi';
+    renderMission(ex, st, prog);
   }
   function esc(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
@@ -136,14 +197,28 @@
     row.querySelector('.xc-text').addEventListener('click', () => { if (row.classList.contains('is-unset')) editDate(); });
     const dc = $('dailyChallengeBtn');
     if (dc) dc.after(row); else box.prepend(row);
-    ['studentName', 'studentClass', 'studentSchool', 'categorySelect']
+    const mission = document.createElement('div');
+    mission.id = 'examMission';
+    mission.className = 'exam-mission';
+    mission.hidden = true;
+    mission.setAttribute('aria-live', 'polite');
+    row.after(mission);
+    ['studentName', 'studentClass', 'studentSchool', 'categorySelect', 'levelSelect']
       .forEach((id) => $(id)?.addEventListener('change', () => setTimeout(render)));
     global.addEventListener('edu:record-saved', render);
     global.addEventListener('edu:daily-updated', render);
     render();
+    // Ngân hàng câu hỏi (meta.json) + Góc học tập nạp sau → vẽ lại nhiệm vụ khi đã có lộ trình
+    let tries = 0;
+    const wait = setInterval(() => {
+      if ((global.quizRepository && global.EduLearningHub?.seasonInfo) || ++tries > 40) { clearInterval(wait); render(); }
+    }, 300);
   }
+
+  global.EduExamCountdown = { _missionFor: missionFor };
+  if (typeof module !== 'undefined' && module.exports) { module.exports = global.EduExamCountdown; return; }
 
   // Sau js/daily-challenge.js (cùng defer) để nằm ngay dưới nút Thử thách.
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);
   else mount();
-})(window);
+})(typeof window !== 'undefined' ? window : globalThis);

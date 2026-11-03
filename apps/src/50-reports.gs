@@ -7,10 +7,7 @@
 function getRoster_(lopFilter, who) {
   const sheet = SpreadsheetApp.openById(SPREADSHEET_ID_DATA).getSheetByName(SHEET_ROSTER);
   let rows = sheetToObjects_(sheet);
-  if (who && who.schools) {
-    const allowed = new Set(who.schools);
-    rows = rows.filter(function (r) { return allowed.has(String(r.Truong)); });
-  }
+  if (who && who.schools) rows = rows.filter(function (r) { return inWhoScope_(who, r.Truong); });
   if (lopFilter) rows = rows.filter(function (r) { return r.Lop === lopFilter; });
   return rows;
 }

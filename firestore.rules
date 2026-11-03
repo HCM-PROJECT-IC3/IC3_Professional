@@ -10,10 +10,16 @@ rules_version = '2';
 //                         đọc lịch giảng dạy cả đội, sửa lịch của chính mình.
 //   coordinator           Điều phối đào tạo: đọc/ghi roster và đọc kết quả trong các trường
 //                         thuộc "schools"; không có quyền với teaching_*.
+//   school_admin          Quản trị trường: phạm vi như coordinator (theo "schools"), thêm quyền
+//                         sửa thông tin liên hệ của trường mình trong schools/{schoolId}.
 //   teaching_coordinator  Điều phối giáo viên: đọc mọi teaching_*, ghi
 //                         teaching_travel_distances; không có quyền với roster/kết quả.
 //   student               không cần tài khoản để làm bài.
-// admin/coordinator/teaching_coordinator chỉ Admin gán được (admin-users.html).
+// admin/coordinator/school_admin/teaching_coordinator chỉ Admin gán được (admin-users.html).
+//
+// Chuyển tiếp tên trường → schoolId (docs/architecture/AUDIT-2.0.md §6): hồ sơ có "schools"
+// (tên) và "schoolIds" (slug, js/models/school.model.js). Bản ghi thuộc phạm vi nếu tên trường
+// nằm trong "schools" HOẶC field schoolId nằm trong "schoolIds".
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -39,6 +45,13 @@ service cloud.firestore {
     function isCoordinator() {
       return isSignedIn() && myProfile().role == 'coordinator';
     }
+    function isSchoolAdmin() {
+      return isSignedIn() && myProfile().role == 'school_admin';
+    }
+    // Điều phối đào tạo + Quản trị trường: cùng phạm vi theo "schools".
+    function isSchoolStaff() {
+      return isCoordinator() || isSchoolAdmin();
+    }
     function isTeachingCoordinator() {
       return isSignedIn() && myProfile().role == 'teaching_coordinator';
     }
@@ -49,31 +62,37 @@ service cloud.firestore {
     function myTeacherSchools() {
       return isApprovedTeacher() && ('schools' in myProfile()) ? myProfile().schools : [];
     }
-    function myCoordinatorSchools() {
-      return isCoordinator() && ('schools' in myProfile()) ? myProfile().schools : [];
+    function myStaffSchools() {
+      return isSchoolStaff() && ('schools' in myProfile()) ? myProfile().schools : [];
+    }
+    function mySchoolIds() {
+      return ('schoolIds' in myProfile()) ? myProfile().schoolIds : [];
+    }
+    function inScope(data, nameField, schools) {
+      return data[nameField] in schools || (('schoolId' in data) && data.schoolId in mySchoolIds());
     }
     // Query danh sách dùng hàm này phải có where(field, 'in', schools) ở client,
     // nếu không Firestore từ chối cả query.
     function isOwnSchoolField(fieldName) {
       return isAdmin()
-        || (isCoordinator() && resource.data[fieldName] in myCoordinatorSchools())
-        || (isApprovedTeacher() && resource.data[fieldName] in myTeacherSchools());
+        || (isSchoolStaff() && inScope(resource.data, fieldName, myStaffSchools()))
+        || (isApprovedTeacher() && inScope(resource.data, fieldName, myTeacherSchools()));
     }
     // students_roster: giáo viên lọc theo teacherId (đủ chặt, khỏi cần composite index
     // teacherId + school); điều phối lọc theo trường.
     function canAccessRosterStudent() {
       return isAdmin()
-        || (isCoordinator() && resource.data.school in myCoordinatorSchools())
+        || (isSchoolStaff() && inScope(resource.data, 'school', myStaffSchools()))
         || (isApprovedTeacher() && resource.data.teacherId == request.auth.uid);
     }
     // Ghi/xoá roster: chỉ Admin và điều phối của trường đó (giáo viên chỉ đọc).
     function canWriteRosterStudent() {
       return isAdmin()
-        || (isCoordinator() && request.resource.data.school in myCoordinatorSchools());
+        || (isSchoolStaff() && inScope(request.resource.data, 'school', myStaffSchools()));
     }
     function canDeleteRosterStudent() {
       return isAdmin()
-        || (isCoordinator() && resource.data.school in myCoordinatorSchools());
+        || (isSchoolStaff() && inScope(resource.data, 'school', myStaffSchools()));
     }
     // Mã NV (teaching_teachers) Admin gán cho giáo viên.
     function myTeacherCode() {
@@ -84,7 +103,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow get: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
       allow list: if request.query.limit <= 1000 && (isAdmin() || (
-        (isApprovedTeacher() || isCoordinator() || isTeachingCoordinator()) &&
+        (isApprovedTeacher() || isSchoolStaff() || isTeachingCoordinator()) &&
         resource.data.role == 'teacher' && resource.data.approved == true
       ));
 
@@ -119,11 +138,32 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // ---- Ngân hàng câu hỏi cũ (đề nằm ở data/ic3, không trang học sinh nào đọc) ----
+    // ---- Danh mục trường (id = schoolId, js/models/school.model.js) ----
+    // Admin tạo/đổi tên/ngừng; Quản trị trường chỉ sửa thông tin liên hệ của trường mình.
+    match /schools/{schoolId} {
+      allow get: if isAdmin() || isSchoolStaff() || isApprovedTeacher() || isTeachingCoordinator();
+      allow list: if request.query.limit <= 1000 &&
+        (isAdmin() || isSchoolStaff() || isApprovedTeacher() || isTeachingCoordinator());
+      allow create, update: if isAdmin() && request.resource.data.keys().hasOnly([
+          'name', 'status', 'address', 'phone', 'contactName', 'note', 'createdAt', 'updatedAt'
+        ]) &&
+        request.resource.data.name is string && request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() <= 200 &&
+        request.resource.data.status in ['active', 'inactive'];
+      allow update: if isSchoolAdmin() && (resource.data.name in myStaffSchools() || schoolId in mySchoolIds()) &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['address', 'phone', 'contactName', 'note', 'updatedAt']) &&
+        request.resource.data.updatedAt == request.time;
+      allow delete: if isAdmin();
+    }
+
+    // ---- Ngân hàng câu hỏi cũ — KHÔNG trang nào dùng (đề nằm ở data/ic3, sửa qua image-manager →
+    // GitHub). Đóng ghi; Admin còn đọc (xuất lưu nếu cần) và xoá để dọn dung lượng.
     match /questions/{questionId} {
-      allow get: if isEditor();
-      allow list: if isEditor() && request.query.limit <= 1000;
-      allow write: if isEditor();
+      allow get: if isAdmin();
+      allow list: if isAdmin() && request.query.limit <= 1000;
+      allow create, update: if false;
+      allow delete: if isAdmin();
     }
 
     // ---- Kết quả bài thi ----
@@ -171,38 +211,15 @@ service cloud.firestore {
       allow list: if request.query.limit <= 10000 && isOwnSchoolField('studentSchool');
       // Chỉ Admin sửa điểm; điều phối được xoá bản ghi (dọn bài test/trùng) trong trường mình.
       allow update: if isAdmin();
-      allow delete: if isAdmin() || (isCoordinator() && resource.data.studentSchool in myCoordinatorSchools());
+      allow delete: if isAdmin() || (isSchoolStaff() && inScope(resource.data, 'studentSchool', myStaffSchools()));
     }
 
-    // ---- Kết quả MOS Practice (chấm trong trình duyệt, chỉ lưu kết quả) ----
+    // ---- Kết quả MOS Practice (bản cũ) ----
+    // Từ 02/11/2026 bài MOS chỉ gửi Apps Script (route mosSubmit → tab NhatKyMOS, apps/src/35-mos.gs);
+    // web đã bỏ js/mos-submissions.js. Đóng ghi công khai (ai cũng ghi được → đốt hạn mức Spark),
+    // giữ đọc/xoá cho bản ghi cũ tới khi TTL expireAt (45 ngày) tự dọn.
     match /mos_submissions/{submissionId} {
-      allow create: if
-        request.resource.data.keys().hasOnly([
-          'studentName', 'studentClass', 'studentSchool', 'projectId', 'projectTitle',
-          'score', 'autoTotal', 'passedCount', 'manualCount', 'taskResults', 'submittedAt', 'expireAt'
-        ]) &&
-        request.resource.data.studentName is string &&
-        request.resource.data.studentName.size() > 0 &&
-        request.resource.data.studentName.size() < 200 &&
-        request.resource.data.studentSchool is string &&
-        request.resource.data.studentSchool.size() > 0 &&
-        request.resource.data.studentSchool.size() < 200 &&
-        request.resource.data.projectId is string &&
-        request.resource.data.projectId.size() > 0 &&
-        request.resource.data.projectId.size() < 200 &&
-        request.resource.data.projectTitle is string &&
-        request.resource.data.studentClass is string &&
-        request.resource.data.score is number &&
-        request.resource.data.score >= 0 && request.resource.data.score <= 100 &&
-        request.resource.data.autoTotal is number && request.resource.data.autoTotal >= 0 && request.resource.data.autoTotal <= 500 &&
-        request.resource.data.passedCount is number && request.resource.data.passedCount >= 0 && request.resource.data.passedCount <= 500 &&
-        request.resource.data.manualCount is number && request.resource.data.manualCount >= 0 && request.resource.data.manualCount <= 500 &&
-        request.resource.data.taskResults is list && request.resource.data.taskResults.size() <= 300 &&
-        request.resource.data.submittedAt == request.time &&
-        // expireAt (TTL) không bắt buộc — bản ghi cũ trong hàng đợi gửi lại chưa có field này.
-        (!('expireAt' in request.resource.data) || (request.resource.data.expireAt is timestamp &&
-          request.resource.data.expireAt < request.time + duration.value(400, 'd')));
-
+      allow create: if false;
       allow get: if isOwnSchoolField('studentSchool');
       allow list: if request.query.limit <= 10000 && isOwnSchoolField('studentSchool');
       allow update, delete: if isAdmin();
@@ -260,15 +277,15 @@ service cloud.firestore {
     // Trang học sinh đọc file tĩnh data/roster/students-active.json, không đọc Firestore.
     // courses/classes không có field trường nên điều phối truy cập toàn bộ.
     match /courses/{courseId} {
-      allow get: if isAdmin() || isCoordinator();
-      allow list: if request.query.limit <= 10000 && (isAdmin() || isCoordinator());
-      allow write: if isAdmin() || isCoordinator();
+      allow get: if isAdmin() || isSchoolStaff();
+      allow list: if request.query.limit <= 10000 && (isAdmin() || isSchoolStaff());
+      allow write: if isAdmin() || isSchoolStaff();
     }
 
     match /classes/{classId} {
-      allow get: if isAdmin() || isCoordinator();
-      allow list: if request.query.limit <= 10000 && (isAdmin() || isCoordinator());
-      allow write: if isAdmin() || isCoordinator();
+      allow get: if isAdmin() || isSchoolStaff();
+      allow list: if request.query.limit <= 10000 && (isAdmin() || isSchoolStaff());
+      allow write: if isAdmin() || isSchoolStaff();
     }
 
     match /students_roster/{studentId} {

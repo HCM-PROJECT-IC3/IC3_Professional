@@ -88,7 +88,18 @@
    * @param {Object[]} [a.questions] State.questions (cùng thứ tự result.details) — lấy uid câu sai
    * @param {Date}   [a.now]
    */
-  function buildPayloads({ session: s, result, integrity, elapsed, id, questions, now }) {
+  /** Câu trả lời gửi kèm để máy chủ chấm lại — chỉ bài Kiểm tra, đề ngân hàng, khi bật 'verify'. */
+  const WIRE_MAX_CHARS = 40000; // relay máy chủ trường nhận tối đa 64 KB/bài (server/relay.js)
+  function wireForSheet(wire, examMode) {
+    const mode = global.EduBackend && global.EduBackend.serverGrading && global.EduBackend.serverGrading.mode;
+    if (mode !== 'verify' || examMode !== 'test' || !wire || !wire.bank || !Array.isArray(wire.answers) || !wire.answers.length) return null;
+    if (wire.answers.some((a) => !UID_RE.test(String(a[0] || '')))) return null; // có câu tự soạn (không uid ngân hàng)
+    const answers = wire.answers.map((a) => [a[0], a[1] === undefined ? null : a[1]]);
+    if (JSON.stringify(answers).length > WIRE_MAX_CHARS) return null;
+    return { bank: wire.bank, answers };
+  }
+
+  function buildPayloads({ session: s, result, integrity, elapsed, id, questions, now, wire }) {
     const pct = result.total ? Math.round((result.correct / result.total) * 100) : 0;
     const testName = [s.category, s.level, s.minitest].filter(Boolean).join(' › ');
     const flags = integrity.flags || [];
@@ -108,6 +119,7 @@
       note:        flags.length > 1 ? flags.slice(1).join('; ') : (s.timedOut ? 'Hết giờ' : ''),
       examMode:    s.examMode || 'test',
       wrong:       wrongUids(questions, result.details),
+      ...(wireForSheet(wire, s.examMode || 'test') || {}), // bank + answers (chấm lại trên máy chủ)
       // Cột P ChiTiet: phần quiz_results có mà các cột cũ của Sheet không có → dashboard
       // đọc từ Sheet đủ dữ liệu như Firestore (sai/bỏ qua tách riêng, bài chính xác, hết giờ,
       // vi phạm nâng cao). Gọn (khoá 1-2 chữ) vì mỗi bài là 1 dòng Sheet.
@@ -172,12 +184,12 @@
    * Gửi 1 bài nộp IC3/Spark theo EduBackend.quizResults.
    * @returns {{id:string, firestore:boolean, sheet:boolean}} đích đã chọn (để log/test)
    */
-  function submitQuiz({ session, result, integrity, elapsed, questions }) {
+  function submitQuiz({ session, result, integrity, elapsed, questions, wire }) {
     const p = policy();
     const loader = global.EduFirebaseLoader;
     const id = loader ? loader.newDocId()
       : (global.EduFirebase && global.EduFirebase.newDocId ? global.EduFirebase.newDocId('quiz_results') : undefined);
-    const payloads = buildPayloads({ session, result, integrity, elapsed, id, questions });
+    const payloads = buildPayloads({ session, result, integrity, elapsed, id, questions, wire });
     const examMode = payloads.firestore.examMode;
     const throttled = examMode === 'practice' && !takePracticeSlot(p);
     const toFirestore = !throttled && wantsFirestore(examMode, p);

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-/* scripts/check-js.js — kiểm tra CÚ PHÁP mọi file js/ + sw.js (bắt lỗi gõ
-   nhầm làm trắng trang trước khi deploy). File ES module (có "import"/
+/* scripts/check-js.js — kiểm tra CÚ PHÁP mọi file JS (js/, sw.js, mos/, server/, scripts/) — bắt lỗi gõ
+   nhầm làm trắng trang trước khi deploy. File ES module (có "import"/
    "export" ở đầu dòng) được kiểm bằng --input-type=module. Chạy:
      node scripts/check-js.js */
 'use strict';
@@ -10,14 +10,17 @@ const { spawnSync } = require('child_process');
 
 const ROOT = path.resolve(__dirname, '..');
 const files = [];
-(function walk(dir) {
+function walk(dir) {
+  if (!fs.existsSync(dir)) return;
   for (const name of fs.readdirSync(dir)) {
     const p = path.join(dir, name);
-    if (fs.statSync(p).isDirectory()) { if (name !== 'node_modules') walk(p); }
+    if (fs.statSync(p).isDirectory()) { if (name !== 'node_modules' && name !== 'fixtures' && name !== 'fixtures-office') walk(p); }
     else if (name.endsWith('.js')) files.push(p);
   }
-})(path.join(ROOT, 'js'));
-files.push(path.join(ROOT, 'sw.js'));
+}
+// Web (js/, sw.js) + MOS + máy chủ trường + script build/test chạy bằng Node.
+['js', 'mos/js', 'mos/tools', 'server', 'scripts', 'apps/__tests__'].forEach((d) => walk(path.join(ROOT, d)));
+files.push(path.join(ROOT, 'sw.js'), path.join(ROOT, 'mos', 'server.js'));
 
 let bad = 0;
 for (const f of files) {

@@ -165,9 +165,87 @@
     });
   }
 
+  // ── Chế độ mã lớp (EduBackend.roster.mode = 'class-code', apps/src/75-roster-codes.gs) ──
+  // Không tải danh sách cả hệ thống: học sinh nhập mã lớp → Apps Script trả tên ĐÚNG 1 lớp.
+  // Lớp vừa mở được nhớ trên máy (mở lại trang / mất mạng vẫn chọn được tên).
+  const CLASS_CODE_STORE = 'eduquiz_class_code_v1';
+
+  function rosterMode() {
+    return (window.EduBackend && window.EduBackend.roster && window.EduBackend.roster.mode) || 'public-json';
+  }
+
+  function setCodeStatus(msg, isError) {
+    const el = document.getElementById('classCodeStatus');
+    if (!el) return;
+    el.textContent = msg || '';
+    el.classList.toggle('is-error', !!isError);
+  }
+
+  function applyClass(data) {
+    allStudents = (data.names || []).map((name) => ({ school: data.school, className: data.className, name }));
+    applyStudentsToForm(allStudents.length ? null : 'Lớp này chưa có học sinh nào — báo thầy cô.');
+    const schoolSel = document.getElementById('studentSchool');
+    const classSel  = document.getElementById('studentClass');
+    const nameSel   = document.getElementById('studentName');
+    if (!allStudents.length) return;
+    schoolSel.value = data.school;
+    refreshClassOptions(schoolSel, classSel, nameSel);
+    classSel.value = data.className;
+    refreshNameOptions(schoolSel, classSel, nameSel);
+  }
+
+  async function openClassCode(code) {
+    setCodeStatus('Đang mở lớp...');
+    try {
+      const data = await window.EduAppsScript.call('rosterByCode', { code }, { auth: false, timeoutMs: 20 * 1000 });
+      applyClass(data);
+      setCodeStatus(`${data.className} · ${data.school} — ${data.names.length} học sinh`);
+      try { localStorage.setItem(CLASS_CODE_STORE, JSON.stringify({ code, data })); } catch (e) { /* chế độ riêng tư */ }
+    } catch (err) {
+      const msg = err.code === 'not-found' ? 'Không tìm thấy lớp với mã này — kiểm tra lại với thầy cô.'
+        : err.code === 'invalid-argument' ? err.message
+        : 'Không kết nối được máy chủ — kiểm tra mạng rồi nhập lại mã.';
+      setCodeStatus(msg, true);
+    }
+  }
+
+  function initClassCodeMode() {
+    const group = document.getElementById('classCodeGroup');
+    const input = document.getElementById('classCode');
+    if (!group || !input) return;
+    group.hidden = false;
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(CLASS_CODE_STORE)); } catch (e) { saved = null; }
+    if (saved && saved.code && saved.data) {
+      input.value = saved.code;
+      applyClass(saved.data);
+      setCodeStatus(`${saved.data.className} · ${saved.data.school} — nhập mã khác để đổi lớp`);
+    } else {
+      applyStudentsToForm('Nhập mã lớp thầy cô phát để chọn tên.');
+    }
+    let last = saved && saved.code;
+    const tryOpen = () => {
+      const code = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (code.length !== 6 || code === last) return;
+      last = code;
+      openClassCode(code);
+    };
+    input.addEventListener('input', () => {
+      input.value = input.value.toUpperCase();
+      tryOpen();
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      last = null; // Enter = thử lại cả khi mã không đổi (vd vừa có mạng)
+      tryOpen();
+    });
+  }
+
   async function init() {
     if (!document.getElementById('studentSchool')) return; // trang khác không có form này
     initCascadeListeners();
+    if (rosterMode() === 'class-code') { initClassCodeMode(); return; }
     setStatus('Đang nạp danh sách...');
     try {
       allStudents = await fetchRosterFromStaticFile();

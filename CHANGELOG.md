@@ -21,6 +21,154 @@ Thứ tự: Apps Script → `firestore.rules`/index → đẩy web.
    - F12 → Console, lọc "lượt đọc Firestore": danh sách học sinh chỉ vài lượt mỗi lần mở.
      Lệch dữ liệu thì đặt `rosterDeltaSync: false` trong `js/backend-config.js`.
 
+## 02/11/2026
+
+- **Dashboard Điều phối có thẻ "Câu học sinh hay sai"** (dùng chung `js/teacher/wrong-questions.js` với dashboard giáo viên).
+  - Theo đúng bộ lọc Khoá học / Giáo viên / Lớp / Bài thi / Thời gian đang chọn, chỉ trong các trường được gán.
+  - Bấm "Phân tích" mới gọi Apps Script `wrongStats` (đã cho vai trò Điều phối từ trước). 0 lượt Firestore.
+  - "Tạo đề ôn" chép link đề từ các câu sai nhiều nhất, như ở dashboard giáo viên.
+  - Không cần deploy lại Apps Script hay rules.
+- CI kiểm thêm:
+  - `scripts/check-html.js` (mới): trang HTML/CSS không trỏ tới file JS/CSS/ảnh/font đã xoá hoặc đổi tên; trang nào cũng có `lang`, `viewport`, `<title>`.
+  - `scripts/check-js.js` kiểm cú pháp cả `mos/`, `server/`, `scripts/` (trước chỉ `js/` và `sw.js`).
+  - `mos/tools/test-rubrics.js`: tiêu chí chấm MOS không "đạt sẵn" trên tệp đề gốc.
+- Các trang quản lý (đăng nhập, dashboard, sổ đầu bài, lịch dạy…) có `theme-color` như trang chính: thanh trình duyệt điện thoại cùng màu.
+- EduQuiz 2.0 — Sprint 0:
+  - Báo cáo audit kiến trúc + bảo mật: `docs/architecture/AUDIT-2.0.md`.
+  - `js/repositories/user-repository.js` (mới): mọi truy cập collection `users` của trang quản lý đi qua
+    repository (trừ `js/auth.js`). Quản lý tài khoản, Quản lý lớp, Dashboard Điều phối, Lịch giảng dạy
+    không đổi giao diện, không đổi số lượt đọc. Không cần deploy lại rules hay Apps Script.
+  - Khi máy offline/hết lượt đọc, danh sách giáo viên báo lỗi như các danh sách khác thay vì hiện rỗng.
+- **Danh mục trường + vai trò "Quản trị trường"** (EduQuiz 2.0, bước chuẩn hoá đa trường):
+  - Collection mới `schools`, id = `schoolId` suy từ tên ("THCS Huỳnh Tấn Phát" → `thcs-huynh-tan-phat`,
+    `js/models/school.model.js`). Trang Quản lý tài khoản tự thêm trường còn thiếu theo roster (chỉ thêm, không sửa).
+  - Gán "Trường được xem" giờ ghi thêm `schoolIds` lên hồ sơ. Rules nhận bản ghi theo tên trường **hoặc**
+    `schoolId` — dữ liệu cũ chỉ có tên vẫn chạy như trước.
+  - Vai trò `school_admin` (Quản trị trường): Admin gán ở Quản lý tài khoản, kèm "Trường được xem". Dùng
+    Dashboard Điều phối, Quản lý lớp, Báo cáo kết quả như Điều phối đào tạo nhưng chỉ trong trường được gán;
+    sửa được địa chỉ/điện thoại/người liên hệ của trường mình. Không tự đăng ký được.
+  - **Cần triển khai theo thứ tự:** (1) dán `apps/Code.gs` → Deploy → New version (`BACKEND_VERSION` 2026-11-02 —
+    thiếu bước này `school_admin` bị Apps Script từ chối); (2) publish `firestore.rules`; (3) đẩy web.
+  - Kiểm tra sau triển khai: tài khoản `school_admin` chỉ thấy học sinh/kết quả của trường được gán; Admin mở
+    Quản lý tài khoản thấy collection `schools` có đủ trường trong Firebase Console.
+- **Gắn `schoolId` cho học sinh và lớp** (tiếp bước chuẩn hoá đa trường):
+  - Mọi lần thêm/sửa học sinh, lớp (tay, Nạp Excel, đổi giáo viên) tự ghi `schoolId` khớp tên trường.
+  - Dữ liệu cũ: lần đầu **Admin** mở Quản lý lớp sau khi cập nhật, trang tự ghi bù `schoolId` cho học sinh/lớp
+    còn thiếu (1 lần mỗi máy, ~1 lượt ghi/bản ghi — vài nghìn lượt, trong hạn mức 20k ghi/ngày) và báo số bản ghi.
+    Không đổi `updatedAt` nên các máy khác **không** phải đọc lại danh sách học sinh.
+  - Chỉ cần đẩy web — không đổi rules, không đổi Apps Script.
+  - Kiểm tra: Firebase Console → `students_roster`/`classes` có field `schoolId`.
+- **Kết quả bài nộp (Google Sheet) lọc theo `schoolId`:**
+  - Apps Script so trường theo `schoolId` suy từ cột Trường — tên gõ khác hoa/thường/dấu cách
+    (vd "THCS Lê Lợi" / "thcs  lê lợi") giờ vẫn khớp; không thêm cột, không sửa dữ liệu Sheet cũ.
+  - Tài khoản chỉ có `schoolIds` (không có tên trường) vẫn xem được kết quả/roster trường mình.
+  - Quản lý tài khoản cảnh báo nếu có 2 trường tên chỉ khác dấu (vd "TH Ân" / "TH An") — hai trường này
+    sẽ bị coi là một, cần đổi tên cho khác hẳn.
+  - **Cần triển khai:** dán `apps/Code.gs` → Deploy → New version (`BACKEND_VERSION` 2026-11-02b), rồi đẩy web.
+    Không đổi rules.
+- **Siết rules — đóng 2 chỗ ghi không còn ai dùng** (audit §5.3, §3):
+  - `mos_submissions`: trước ai cũng ghi được không cần đăng nhập (đốt hạn mức). Web đã bỏ từ 02/11 — bài MOS
+    chỉ gửi Apps Script (tab `NhatKyMOS`). Bản ghi cũ vẫn đọc được tới khi TTL tự xoá.
+  - `questions` (ngân hàng câu hỏi cũ trên Firestore): giáo viên không ghi được nữa; Admin còn đọc/xoá để dọn.
+  - **Cần triển khai:** `firebase deploy --only firestore:rules --project data-ic3`.
+
+## 03/11/2026
+
+- **Rà soát hạn mức Firebase + Apps Script** (sửa trước khi triển khai đợt này):
+  - Quản lý lớp — ghi bù `schoolId`: máy Admin thứ hai trở đi dùng bản đệm delta (không thấy `schoolId` vừa ghi
+    bù vì cố ý không đổi `updatedAt`) nên sẽ ghi lại **toàn bộ** ~2.800 học sinh (~2.800 lượt ghi mỗi máy).
+    Nay máy nào thấy học sinh "thiếu" `schoolId` trong bản đệm thì đọc lại toàn bộ 1 lần (~2.800 lượt đọc)
+    và chỉ ghi bản ghi thật sự thiếu.
+  - Danh mục trường: Quản lý tài khoản không đọc lại cả collection `schools` mỗi lần tải danh sách trường —
+    chỉ đọc khi roster có trường máy này chưa thấy.
+  - Chấm lại trên máy chủ: bài có câu ngoài ngân hàng không còn làm Apps Script tải lại file khối (~1 MB,
+    UrlFetch ~20.000 lượt/ngày) cho **mỗi** bài nộp — tối đa 1 lần/10 phút/file khối.
+  - Đã rà: Apps Script xác thực nhớ 1 giờ; nhật ký gộp lặp; sảnh mã lớp nhớ trên máy + bản đệm 10 phút trên
+    máy chủ; `firestore.rules` chỉ tốn 1 lượt đọc hồ sơ/request; trang Danh mục trường đọc vài chục lượt.
+- **ic3-dashboard → tab Báo cáo có thẻ "Câu học sinh hay sai"** (như 2 dashboard kia, theo bộ lọc Lớp / Bài thi /
+  Khoảng thời gian). Bấm "Phân tích" mới gọi Apps Script `wrongStats`; 0 lượt Firestore. CSS của thẻ tách ra
+  `css/wrong-questions.css` dùng chung 3 trang. Chỉ cần đẩy web.
+- **Bảng xếp hạng "Thử thách hôm nay" cho cả lớp** (0 Firebase, 0 Apps Script):
+  - Học sinh đã chọn tên ở sảnh: "Chép kết quả" chép thêm dòng `Mã cho thầy cô: EQR1…` (cùng định dạng mã kết quả
+    bài làm). Chỉ lượt đầu trong ngày (lượt tính điểm) có mã; mã cũng nằm trong danh sách kết quả đã lưu trên máy em.
+  - Giáo viên bôi đen cả đoạn chat nhóm lớp → dán vào **Gom kết quả** → mục mới "Bảng xếp hạng Thử thách hôm nay":
+    mỗi đề (số thử thách + cấp độ) 1 bảng, mỗi em giữ lượt cao nhất, bằng điểm thì ai nhanh hơn xếp trên; theo bộ
+    lọc lớp; nút **Trình chiếu** toàn màn hình. Dán trùng không tính 2 lần (mã cố định theo ngày + cấp độ + học sinh).
+  - Mã kết quả có thêm trường tuỳ chọn `pt` (điểm tốc độ). Mã cũ và mã bài làm thường không đổi.
+  - Lưu ý như mọi mã kết quả: chỉ bắt lỗi chép, không chống tự dựng mã giả — đây là trò thi đua, không phải điểm thi.
+  - Chỉ cần đẩy web.
+- **Sảnh "Mã lớp" chịu được cả trường vào cùng lúc** (Apps Script `rosterByCode`, chế độ `class-code`):
+  - Trước: bản đệm mỗi mã chỉ 10 phút; hết hạn thì MỖI lượt nhập mã mở file Sheet (~1–2 giây). Đầu giờ vài lớp cùng
+    nhập mã có thể chiếm hết 30 lượt chạy song song của Apps Script → bài nộp của lớp khác bị từ chối đúng lúc đó.
+  - Nay: "Cập nhật cho học sinh" nạp sẵn bản đệm mọi lớp (6 giờ — tối đa của CacheService); hết hạn thì 1 lượt đọc
+    Sheet nạp lại cả bảng; mã gõ sai nhớ 10 phút (không mở Sheet lại). Test: 45 lượt nhập mã sau khi đẩy roster =
+    0 lần mở Sheet; bản đệm hết hạn = 1 lần.
+  - Triển khai cùng `apps/Code.gs` đợt 2026-11-03b (chưa dán thì chưa có tác dụng, không lỗi).
+- **"Nhiệm vụ hôm nay" theo mùa thi** ở sảnh, ngay dưới đếm ngược (khi đã có ngày thi):
+  - Còn hơn 14 ngày: bài nên làm tiếp trong Lộ trình của chính em + nhịp cần đạt (bài/tuần) để kịp nước rút; nhịp
+    quá dày (> 5 bài/tuần) thì nhắc tăng tốc. 4–14 ngày: 1 bài Tổng hợp chế độ Kiểm tra mỗi ngày. 1–3 ngày: ôn Sổ tay
+    câu sai. Ngày thi: không giao bài. Đạt cả lộ trình: Tổng hợp để giữ phong độ.
+  - "Làm ngay" chọn sẵn bài (nước rút: bật luôn chế độ Kiểm tra), em tự bấm Bắt đầu. Làm xong hiện "đã xong".
+  - Chỉ đọc lịch sử trên máy + danh mục đề đã tải — đã đo trên Chrome: 0 request Firebase / Apps Script.
+    Chỉ cần đẩy web.
+
+- **Nhật ký thao tác Quản lý tài khoản** (audit log — kế hoạch 2.0 §VI.2):
+  - Đổi vai trò (ghi cả vai trò cũ → mới), duyệt tài khoản, gán/đồng bộ "Trường được xem", gán lớp đang dạy,
+    liên kết Mã NV, nhập giáo viên từ Excel (chỉ số lượng — không ghi email/CCCD/mật khẩu) → tab
+    `NhatKyHoatDong` trên Google Sheet, hành động `update_user`, chi tiết ở cột ChiTiet (`userAction`).
+  - Ai làm lấy từ tài khoản đã xác thực trên Apps Script, không tin tên web gửi lên. 0 lượt Firebase.
+  - **Cần triển khai:** dán `apps/Code.gs` → Deploy → New version (`BACKEND_VERSION` 2026-11-03), rồi đẩy web.
+    Thiếu bước Apps Script thì nhật ký `update_user` bị từ chối (thao tác tài khoản vẫn chạy bình thường).
+- **Trang mới "Danh mục trường"** (`admin-schools.html`, menu Trang quản lý → Danh mục trường):
+  - Admin: mọi trường, số học sinh đang học từng trường (từ bản đệm roster dùng chung), đổi trạng thái
+    Đang hoạt động / Ngừng (chỉ đánh dấu, không xoá dữ liệu).
+  - Quản trị trường: chỉ trường được gán; sửa địa chỉ, điện thoại, người liên hệ, ghi chú.
+  - Không đổi tên trường ở đây — tên vẫn là khoá nối roster, Sheet kết quả và quyền.
+  - Mọi lần sửa ghi nhật ký `update_school` (tab `NhatKyHoatDong`).
+  - Rules: Quản trị trường sửa được trường của mình theo tên **hoặc** `schoolId`.
+  - Triển khai cùng đợt trên (Apps Script 2026-11-03 + rules + web).
+- **Dashboard Điều phối: thẻ "So sánh giữa các trường"** (kế hoạch 2.0 §VII.3):
+  - Mỗi trường: số học sinh, số em đã làm bài, % tham gia, lượt nộp, điểm TB, tỷ lệ đạt (≥ 70%), sắp theo điểm TB.
+  - Theo đúng bộ lọc đang chọn; chỉ hiện khi phạm vi xem có từ 2 trường (Admin, Điều phối nhiều trường).
+  - Tên trường gõ lệch giữa danh sách và bài nộp vẫn gộp đúng 1 trường (theo `schoolId`).
+  - File Excel xuất từ dashboard có thêm sheet "So sánh trường" (cùng điều kiện ≥ 2 trường, tô màu cột Điểm TB).
+  - Tính trên dữ liệu dashboard đã tải — 0 lượt Firebase/Apps Script thêm. Chỉ cần đẩy web.
+- **Kiểm thử phân quyền trên Firestore emulator** (kế hoạch 2.0 TEST-01/TEST-02): `tests/firestore-rules/`
+  chạy `firestore.rules` thật — 23 tình huống: không truy cập chéo trường, không tự nâng quyền / tự gán
+  trường, Quản trị trường, chuyển tiếp tên → `schoolId`, chỉ Admin sửa điểm, `schools`, `mos_submissions`,
+  `questions`. CI: job **rules** (Node 24 + Java 21, project giả `demo-ic3` — không đụng Firebase thật).
+  Chạy tay: `cd tests/firestore-rules && npm install && npm test` (cần Java 21).
+- Quản lý tài khoản tự ghi bù `schoolIds` cho mọi tài khoản đã có "Trường được xem" (Điều phối/Quản trị
+  trường gán trước 02/11/2026 chưa có) — chuẩn bị siết rules ghi roster theo `schoolId`.
+- **Chế độ "Mã lớp" cho sảnh làm bài** (sẵn sàng, **mặc định TẮT** — chưa đổi gì với học sinh):
+  - Vì sao: `data/roster/students-active.json` công khai tên 2.838 học sinh (audit §5.1).
+  - Bật: `js/backend-config.js` → `roster: { mode: 'class-code' }`. Khi đó:
+    - Quản lý lớp → "Cập nhật cho học sinh": KHÔNG đẩy tên lên file công khai; Apps Script cấp mỗi lớp 1 mã
+      6 ký tự (giữ nguyên mã cũ khi đẩy lại), lưu tab `MaLop`, trang tải file `ma-lop-<ngày>.csv` để phát.
+    - Sảnh: học sinh nhập mã lớp → thấy tên ĐÚNG lớp đó (Trường/Lớp tự điền). Máy nhớ lớp vừa mở (mở lại
+      trang / mất mạng vẫn chọn được tên).
+  - Quy trình đề xuất: (1) triển khai Apps Script 2026-11-03b; (2) bật `class-code`, bấm "Cập nhật cho học sinh",
+    phát mã cho giáo viên; (3) khi các lớp đã quen, gỡ `data/roster/students-active.json` và dọn lịch sử git —
+    bước này không hoàn tác được, làm khi đã chốt. "Gọi tên" khi đó dùng "Dán danh sách".
+  - **Cần triển khai:** dán `apps/Code.gs` → New version (`BACKEND_VERSION` 2026-11-03b), rồi đẩy web.
+- **Luật chấm điểm dùng chung web ↔ Apps Script** (bước 0 của chấm điểm phía máy chủ —
+  `docs/architecture/SERVER-GRADING.md`):
+  - Luật chấm 10 loại câu tách khỏi `js/quiz-engine.js` sang `js/core/grading.js` (quiz-engine gọi lại);
+    bản Apps Script `apps/src/77-grading.gs` (chưa route nào dùng).
+  - Kiểm chứng: so hàm chấm CŨ với bản mới trên 4.005 câu / 12.614 trường hợp (đúng, bỏ trống, sai lệch 1 chỗ)
+    — kết quả + dữ liệu xem lại bài trùng khớp 100%; test CI so bản Apps Script với bản web trên cùng bộ đó
+    và kiểm mọi câu trong ngân hàng được chấm đúng với chính đáp án của nó.
+  - Học sinh không thấy khác biệt. Chỉ cần đẩy web (Apps Script đi cùng đợt 2026-11-03b).
+- **Chấm lại bài Kiểm tra trên máy chủ** (bước 1, **mặc định TẮT**): `js/backend-config.js` →
+  `serverGrading: { mode: 'verify' }`. Bài Kiểm tra (đề ngân hàng) gửi kèm câu trả lời; Apps Script chấm lại,
+  ghi điểm máy chủ vào ChiTiet và gắn ⚠️ "Điểm gửi lên … khác điểm máy chủ chấm …" nếu học sinh sửa điểm.
+  Lỗi tải đề không làm mất bài. Chi tiết + cách đọc cột: `docs/architecture/SERVER-GRADING.md` §5.
+  Lưu ý: chặn được sửa điểm, CHƯA chặn được đọc đáp án (đề vẫn công khai) — đó là bước 2.
+- An toàn khi cập nhật: nếu máy học sinh dùng trang HTML cũ trong bản lưu (Service Worker, mạng chậm) cùng
+  `quiz-engine.js` mới, trang tự nạp bộ chấm `js/core/grading.js`; bấm Nộp bài lúc bộ chấm chưa tải xong thì
+  bài KHÔNG bị khoá — báo "bấm Nộp bài lại sau vài giây". Dựng câu trả lời cho máy chủ lỗi → bài vẫn nộp.
+  Test: `js/core/__tests__/grading-guard.test.js`.
+
 ## 01/11/2026
 
 - **Giao diện làm bài mới cho học sinh cấp 1, 2** (`css/quiz-play.css`, chỉ áp dụng ở màn làm bài).

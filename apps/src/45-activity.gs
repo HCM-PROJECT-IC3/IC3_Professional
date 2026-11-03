@@ -7,7 +7,8 @@
 const SHEET_ACTIVITY_LOG = 'NhatKyHoatDong';
 const ACTIVITY_HEADERS = ['ThoiGian', 'Uid', 'VaiTro', 'HanhDong', 'DoiTuong', 'ChiTiet', 'Trang'];
 const ACTIVITY_ACTIONS = ['login', 'logout', 'view_student_detail', 'export_excel', 'export_pdf',
-  'create_exam', 'assign_exam', 'update_roster', 'publish_roster', 'publish_questions', 'delete_results'];
+  'create_exam', 'assign_exam', 'update_roster', 'publish_roster', 'publish_questions', 'delete_results',
+  'update_user', 'update_school'];
 
 /** p: { activity, targetId?, meta?, page? } */
 function logActivity_(p, who) {

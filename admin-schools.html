@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<script src="js/page-transition-guard.js"></script>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2f40b2">
+<title>Danh mục trường — EduQuiz</title>
+<link rel="stylesheet" href="lib/fonts/fonts.css">
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/admin-common.css">
+<link rel="stylesheet" href="css/admin-users.css">
+<link rel="stylesheet" href="css/admin-schools.css">
+<link rel="stylesheet" href="css/motion.css">
+<link rel="stylesheet" href="css/accessibility.css">
+<link rel="stylesheet" href="lib/fontawesome/css/fa.min.css">
+</head>
+<body>
+
+<div class="topbar">
+  <a href="ic3-dashboard.html" class="btn btn-ghost">← Trang quản lý</a>
+  <h1><i class="fa-solid fa-school" aria-hidden="true"></i> Danh mục trường</h1>
+  <div class="spacer"></div>
+  <span class="whoami" id="whoami"></span>
+  <button type="button" class="theme-toggle" id="themeToggle" title="Chuyển đổi sáng/tối"></button>
+  <button type="button" class="btn btn-ghost" id="logoutBtn">Đăng xuất</button>
+</div>
+
+<div class="wrap">
+  <div class="kpi-row" id="kpiRow" aria-live="polite"></div>
+
+  <p class="page-hint" id="pageHint"></p>
+
+  <div class="table-scroll">
+    <table class="schools-table">
+      <thead><tr><th>Trường</th><th>Mã trường</th><th>Học sinh</th><th>Trạng thái</th><th>Địa chỉ</th><th>Điện thoại</th><th>Người liên hệ</th><th>Ghi chú</th><th></th></tr></thead>
+      <tbody id="schoolRows"><tr><td colspan="9">Đang tải...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<!-- Khai báo trước auth-guard.js. Quản trị trường chỉ thấy/sửa trường của mình (firestore.rules § schools). -->
+<script>window.EDU_ALLOWED_ROLES = ['admin', 'school_admin'];</script>
+<script src="js/firebase-config.js"></script>
+<script src="js/backend-config.js"></script>
+<script src="js/services/apps-script-client.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/auth-guard.js"></script>
+<script src="js/idle-logout.js"></script>
+<script src="js/services/data-cache-service.js"></script>
+<script src="js/models/school.model.js"></script>
+<script src="js/services/roster-cache-service.js"></script>
+<script src="js/repositories/base-repository.js"></script>
+<script src="js/repositories/school-repository.js"></script>
+<script src="js/models/activity-log.model.js"></script>
+<script src="js/repositories/activity-log-repository.js"></script>
+<script src="js/services/activity-log-service.js"></script>
+<script src="js/admin-schools.js"></script>
+<script src="js/motion.js"></script>
+</body>
+</html>

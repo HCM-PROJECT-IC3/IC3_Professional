@@ -2,7 +2,7 @@
    ic3-dashboard.html — page-specific init (tách ra khỏi HTML)
    ============================================================ */
 
-window.EDU_ALLOWED_ROLES = ['admin', 'teacher', 'coordinator', 'teaching_coordinator'];
+window.EDU_ALLOWED_ROLES = ['admin', 'teacher', 'coordinator', 'school_admin', 'teaching_coordinator'];
 
 window.addEventListener('edu:ready', ({ detail }) => {
   const { user, profile } = detail;
@@ -30,6 +30,8 @@ window.addEventListener('edu:ready', ({ detail }) => {
   }
 
   const role = profile.role;
+  // Quản trị trường dùng chung màn hình với Điều phối đào tạo (phạm vi theo "schools").
+  const isSchoolStaff = role === 'coordinator' || role === 'school_admin';
 
   // ============================================================
   // Ma trận hiển thị menu theo role (đúng yêu cầu: mỗi role chỉ thấy
@@ -55,6 +57,7 @@ window.addEventListener('edu:ready', ({ detail }) => {
   };
 
   show('adminUsersLink', role === 'admin');
+  show('schoolsLink', role === 'admin' || role === 'school_admin');
   show('imageManagerLink', role === 'admin');
   show('teacherDashboardLink', role === 'admin' || role === 'teacher');
   show('docsSchoolYearLink', role === 'admin' || role === 'teacher');
@@ -64,7 +67,7 @@ window.addEventListener('edu:ready', ({ detail }) => {
   show('lessonBookLink', role === 'admin' || role === 'teacher');
   show('namePickerLink', role === 'admin' || role === 'teacher');
   show('gatherResultsNavLink', role === 'admin' || role === 'teacher');
-  show('rosterManagerLink', role === 'admin' || role === 'coordinator');
+  show('rosterManagerLink', role === 'admin' || isSchoolStaff);
   // "Điều phối giáo viên" (teaching_coordinator) được XEM (không sửa)
   // Lịch tuần + TKB lớp + tab "Báo cáo"/"Hỗ trợ xăng xe" ở
   // teaching-schedule.html — khớp EDU_ALLOWED_ROLES + firestore.rules (chỉ
@@ -72,7 +75,7 @@ window.addEventListener('edu:ready', ({ detail }) => {
   // "Điều phối đào tạo" (coordinator) CỐ TÌNH không có trong điều kiện
   // này nữa — 2 role điều phối tách biệt hoàn toàn (xem chú thích ở trên).
   show('teachingScheduleLink', role === 'admin' || role === 'teacher' || role === 'teaching_coordinator');
-  show('coordinatorDashboardLink', role === 'admin' || role === 'coordinator');
+  show('coordinatorDashboardLink', role === 'admin' || isSchoolStaff);
   // Trang Social Media — hiện cho mọi role đăng nhập hợp lệ được vào trang này
   // (không lọc riêng theo role, khác các mục còn lại).
   show('gvLabLink', true);
@@ -81,7 +84,7 @@ window.addEventListener('edu:ready', ({ detail }) => {
   // / Báo cáo kết quả / Cài đặt hệ thống.
   show('navMySets', role === 'admin' || role === 'teacher');
   show('navBuilder', role === 'admin' || role === 'teacher');
-  show('navReports', role === 'admin' || role === 'coordinator');
+  show('navReports', role === 'admin' || isSchoolStaff);
   // Giáo viên cần mục này để sao lưu/khôi phục bộ đề tự soạn (chỉ nằm trong trình duyệt);
   // nút "Kiểm tra Apps Script ngay" vẫn chỉ hiện cho admin (js/dashboard-settings.js).
   show('navSettings', role === 'admin' || role === 'teacher');
@@ -101,7 +104,7 @@ window.addEventListener('edu:ready', ({ detail }) => {
 
   // Điều phối đào tạo: không có "Bộ đề của tôi"/"Cài đặt hệ thống" → mở
   // thẳng vào tab Báo cáo kết quả.
-  if (role === 'coordinator') {
+  if (isSchoolStaff) {
     document.getElementById('navReports')?.click();
   }
 

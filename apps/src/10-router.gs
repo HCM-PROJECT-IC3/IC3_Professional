@@ -1,14 +1,14 @@
 // ====== ROUTER ======
 // Mọi API đi qua doPost với body JSON { action, idToken?, ... } (Content-Type text/plain
 // để trình duyệt không gửi preflight — Apps Script không xử lý OPTIONS).
-// roles = null: công khai (submitExam / mosSubmit — học sinh không đăng nhập; submitBatch tự kiểm RELAY_TOKEN). Còn lại bắt buộc
+// roles = null: công khai (submitExam / mosSubmit / rosterByCode — học sinh không đăng nhập; submitBatch tự kiểm RELAY_TOKEN). Còn lại bắt buộc
 // Firebase ID token và vai trò nằm trong danh sách (xem requireRole_ trong 20-auth.gs).
 
-const ROLES_RESULTS = ['admin', 'coordinator', 'teacher'];             // giống quyền đọc quiz_results
-const ROLES_MANAGE = ['admin', 'coordinator'];                         // xoá bài, roster, báo cáo
-const ROLES_MAPS = ['admin', 'teaching_coordinator', 'teacher', 'coordinator'];
+const ROLES_RESULTS = ['admin', 'coordinator', 'school_admin', 'teacher']; // giống quyền đọc quiz_results
+const ROLES_MANAGE = ['admin', 'coordinator', 'school_admin'];         // xoá bài, roster, báo cáo
+const ROLES_MAPS = ['admin', 'teaching_coordinator', 'teacher', 'coordinator', 'school_admin'];
 const ROLES_ADMIN = ['admin'];
-const ROLES_STAFF = ['admin', 'coordinator', 'teaching_coordinator', 'teacher']; // mọi tài khoản quản trị
+const ROLES_STAFF = ['admin', 'coordinator', 'school_admin', 'teaching_coordinator', 'teacher']; // mọi tài khoản quản trị
 const ROLES_TEACH = ['admin', 'teacher'];                              // trang Điểm danh (sổ lớp điều phối)
 
 // Hàm (không phải hằng) để không phụ thuộc thứ tự nạp file khi dán thành nhiều file .gs.
@@ -29,6 +29,8 @@ function routes_() {
     githubReadFile:{ roles: ROLES_ADMIN,   handler: githubReadFile_ },
     githubPublish: { roles: ROLES_ADMIN,   handler: githubPublish_ },
     publishRoster: { roles: ROLES_ADMIN,   handler: publishRoster_ },
+    publishRosterCodes: { roles: ROLES_ADMIN, handler: publishRosterCodes_ }, // 75-roster-codes.gs
+    rosterByCode:  { roles: null,          handler: rosterByCode_ },          // công khai: mã lớp → tên 1 lớp
     logActivity:   { roles: ROLES_STAFF,   handler: logActivity_ },
     arenaRoomLog:  { roles: ROLES_STAFF,   handler: arenaRoomLog_ },
     arenaRelayTicket: { roles: ROLES_STAFF, handler: arenaRelayTicket_ },

@@ -13,7 +13,8 @@
 function authenticate_(idToken) {
   if (!idToken || typeof idToken !== 'string') throw appError_('unauthenticated', 'Chưa đăng nhập.');
   const cache = CacheService.getScriptCache();
-  const key = 'auth2:' + Utilities.base64EncodeWebSafe(
+  // auth3: hồ sơ thêm schoolIds (02/11/2026) — bản đệm auth2 cũ không có, bỏ qua.
+  const key = 'auth3:' + Utilities.base64EncodeWebSafe(
     Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, idToken));
   const hit = cache.get(key);
   if (hit) return JSON.parse(hit);
@@ -42,11 +43,14 @@ function authenticate_(idToken) {
   const role = (f.role && f.role.stringValue) || '';
   const schools = ((f.schools && f.schools.arrayValue && f.schools.arrayValue.values) || [])
     .map(function (v) { return v.stringValue; }).filter(Boolean);
+  const schoolIds = ((f.schoolIds && f.schoolIds.arrayValue && f.schoolIds.arrayValue.values) || [])
+    .map(function (v) { return v.stringValue; }).filter(Boolean);
   const who = {
     uid: uid,
     role: role,
     approved: !!(f.approved && f.approved.booleanValue),
     schools: role === 'admin' ? null : schools,
+    schoolIds: role === 'admin' ? null : schoolIds,
   };
 
   const ttl = Math.min(3600, Math.floor(expSec - Date.now() / 1000) - 60);

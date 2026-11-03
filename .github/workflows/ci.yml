@@ -30,6 +30,9 @@ jobs:
       - name: Cú pháp mọi file JS
         run: node scripts/check-js.js
 
+      - name: Trang HTML/CSS không trỏ tới file đã xoá/đổi tên
+        run: node scripts/check-html.js
+
       - name: Unit test (mô phỏng Word/Excel/PowerPoint, lưu bài nộp, gọi Apps Script)
         run: |
           for t in js/*/__tests__/*.test.js; do
@@ -43,8 +46,33 @@ jobs:
       - name: Apps Script — test với Google/Firebase/GitHub giả lập
         run: node apps/__tests__/code-gs.test.js
 
+      - name: MOS — tiêu chí chấm không "đạt sẵn" trên tệp đề gốc
+        run: node mos/tools/test-rubrics.js
+
       - name: Máy chủ trường (server/) — hàng đợi bài nộp + phát trang
         run: node server/__tests__/server.test.js
+
+  # firestore.rules chạy THẬT trên Firestore emulator (project giả demo-ic3, không đụng Firebase thật):
+  # cách ly giữa các trường, không tự nâng quyền, Quản trị trường, các collection đã đóng ghi.
+  # Job riêng: cần Java + tải firebase-tools (~1 phút); job "check" ở trên không phải chờ.
+  rules:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Cài firebase-tools + @firebase/rules-unit-testing
+        working-directory: tests/firestore-rules
+        run: npm install --no-audit --no-fund
+      - name: Kiểm thử phân quyền trên emulator
+        working-directory: tests/firestore-rules
+        run: npm test
 
   # Ảnh Docker của máy chủ trường: build + chạy thử (không đẩy đi đâu).
   docker:

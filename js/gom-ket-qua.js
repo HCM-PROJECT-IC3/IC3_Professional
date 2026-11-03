@@ -134,7 +134,40 @@
       body.appendChild(tr);
     });
     $('gkCsv').disabled = !rows.length;
+    renderBoard(rows);
     wqReset();
+  }
+
+  // ── Bảng xếp hạng "Thử thách hôm nay" (mã có điểm tốc độ pt — js/daily-challenge.js) ──
+  const BOARD_SHOW = 30;
+  function renderBoard(rows) {
+    const boards = P.challengeBoard(rows);
+    $('gkBoard').hidden = !boards.length;
+    const box = $('gkBoardList');
+    box.textContent = '';
+    boards.forEach((b) => {
+      const h = document.createElement('h3'); h.className = 'gk-board-test'; h.textContent = b.test + ' — ' + b.entries.length + ' học sinh';
+      const ol = document.createElement('ol'); ol.className = 'gk-board-list';
+      b.entries.slice(0, BOARD_SHOW).forEach((e) => {
+        const li = document.createElement('li');
+        if (e.rank <= 3) li.className = 'top' + e.rank;
+        const parts = [['gk-board-rank', String(e.rank)], ['gk-board-name', e.n], ['gk-board-meta', [e.c, e.k + ' câu', e.tm].filter(Boolean).join(' · ')],
+          ['gk-board-pt', e.pt.toLocaleString('vi-VN') + ' điểm']];
+        parts.forEach(([cls, text]) => { const sp = document.createElement('span'); sp.className = cls; sp.textContent = text; li.appendChild(sp); });
+        ol.appendChild(li);
+      });
+      box.appendChild(h); box.appendChild(ol);
+      if (b.entries.length > BOARD_SHOW) {
+        const more = document.createElement('p'); more.className = 'gk-note';
+        more.textContent = '… và ' + (b.entries.length - BOARD_SHOW) + ' học sinh khác (xem bảng điểm bên dưới).';
+        box.appendChild(more);
+      }
+    });
+  }
+  function showBoard() {
+    const el = $('gkBoard');
+    if (document.fullscreenElement) { document.exitFullscreen(); return; }
+    if (el.requestFullscreen) el.requestFullscreen().catch(() => { /* trình duyệt chặn: vẫn xem trong trang */ });
   }
 
   function renderHead() {
@@ -263,6 +296,7 @@
     drop.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('gkFiles').click(); } });
     $('gkFilterClass').addEventListener('change', (e) => { state.fClass = e.target.value; render(); });
     $('gkFilterTest').addEventListener('change', (e) => { state.fTest = e.target.value; render(); });
+    $('gkBoardShow').addEventListener('click', showBoard);
     $('wqAnalyze').addEventListener('click', wqAnalyze);
     $('wqMakeExam').addEventListener('click', wqMakeExam);
     $('wqLink').addEventListener('focus', (e) => e.target.select());

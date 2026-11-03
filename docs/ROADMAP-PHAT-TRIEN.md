@@ -38,8 +38,7 @@ Mỗi bài nộp là 1 lượt ghi, không giảm được nữa → vượt h�
 Đã làm **không qua Firestore** (`quiz_results` vẫn chỉ lưu điểm tổng → không thêm dung lượng, không
 đổi rules): uid câu sai (≤ 30/bài) đi kèm bài nộp lên Sheet, cột O `CauSai`; Apps Script `wrongStats`
 tổng hợp trên server; dashboard giáo viên → thẻ "❌ Câu cả lớp hay sai" (bấm Phân tích) + "Tạo đề ôn"
-(link đề, 0 Firebase). Xem CHANGELOG 10/2026. Trang `gom-ket-qua.html` cũng có thẻ này, tính từ mã kết quả học sinh gửi (offline, 0 backend — 23/10/2026). Việc còn có thể làm: đưa thẻ này sang coordinator-dashboard
-và tab Báo cáo của ic3-dashboard.
+(link đề, 0 Firebase). Xem CHANGELOG 10/2026. Trang `gom-ket-qua.html` cũng có thẻ này, tính từ mã kết quả học sinh gửi (offline, 0 backend — 23/10/2026). Đã có ở coordinator-dashboard (02/11/2026) và tab Báo cáo của ic3-dashboard (03/11/2026).
 
 ### Ngưỡng D — học sinh dùng nhiều thiết bị / muốn giữ tiến độ khi đổi máy
 Góc học tập, Sổ tay câu sai, mục tiêu tuần đang nằm trong `localStorage` từng máy.
@@ -92,10 +91,13 @@ Góc học tập, Sổ tay câu sai, mục tiêu tuần đang nằm trong `local
 5. ✅ **Đấu trường kiểu Kahoot/Blooket** (10/2026) — `arena.html`: Tốc độ, Săn vàng, Đua về đích, Linh vật; chơi một mình với đối thủ máy, 0 Firebase.
    Tiếp theo có thể làm: thêm chế độ (Phòng thủ tháp, Quán cà phê), sự kiện theo mùa cho Linh vật, chế độ "đấu nhóm trên 1 máy chiếu" dùng Đấu trường.
 6. ✅ **Thử thách hôm nay** (10/2026) — 5 câu chung cả lớp mỗi ngày, điểm tốc độ, chuỗi ngày, mã chia sẻ kiểu Wordle; 0 Firebase.
-   Tiếp theo có thể làm: bảng xếp hạng thử thách trong ngày qua trang gom kết quả (dán mã chia sẻ).
+   ✅ Bảng xếp hạng thử thách trong ngày qua trang gom kết quả (03/11/2026): "Chép kết quả" kèm mã EQR1,
+   giáo viên dán cả đoạn chat nhóm lớp vào `gom-ket-qua.html` → bảng xếp hạng + Trình chiếu. Vẫn 0 Firebase.
 7. ✅ **Đếm ngược kỳ thi** (10/2026) — sảnh hiện số ngày còn lại + số ngày ôn trong tuần + gợi ý; ngày thi khai ở `js/backend-config.js` → `examSeason`.
-   Còn lại của mục này: gói đề theo lịch thi IC3 thật.
-8. **Nhiệm vụ theo mùa thi** — gói đề theo lịch thi IC3 thật, đếm ngược ngày thi trên sảnh.
+   Nhiệm vụ theo ngày thi: xem mục 8.
+8. ✅ **Nhiệm vụ theo mùa thi** (03/11/2026) — dưới đếm ngược: "Nhiệm vụ hôm nay" theo số ngày còn lại + Lộ trình của
+   chính em (học lộ trình, nhịp bài/tuần chừa 14 ngày nước rút → Tổng hợp chế độ Kiểm tra → 3 ngày cuối ôn Sổ tay).
+   Nút "Làm ngay" chọn sẵn bài. 0 Firebase, 0 Apps Script (chỉ localStorage + meta.json đã tải).
 
 ## 5. Thứ tự đề xuất
 

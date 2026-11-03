@@ -228,12 +228,12 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
       const base = isAdmin && !opts.full && window.EduDataCache
         ? await window.EduDataCache.getAsync(cacheKey, /* persist */ true, /* allowStale */ true)
         : null;
-      const [courses, classes, students, teacherSnap] = await Promise.all([
+      const [courses, classes, students, teachers] = await Promise.all([
         window.EduRepositories.course.list({ orderBy: 'name' }),
         window.EduRepositories.class.list({ orderBy: 'name' }),
         isAdmin
           ? window.EduRosterCache.deltaFrom(base, null, 'students_roster (Quản lý lớp, thay đổi)').then((d) => {
-              if (d) return Object.assign(d, { students: d.students.sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'vi')) });
+              if (d) return Object.assign(d, { fromDelta: true, students: d.students.sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'vi')) });
               return window.EduRepositories.studentRoster.list({ orderBy: 'name' })
                 .then((list) => ({ students: list, fullAt: Date.now(), watermark: window.EduRosterCache.watermarkOf(list) }));
             })
@@ -246,7 +246,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
           // gộp các chunk thay vì nhờ Firestore sắp xếp.
           : Promise.all(chunk10(schools).map((part) => window.EduRepositories.studentRoster.list({ where: [['school', 'in', part]] })))
               .then((parts) => parts.flat().sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'vi'))),
-        EduFirebase.db.collection('users').where('role', '==', 'teacher').where('approved', '==', true).limit(1000).get(),
+        window.EduRepositories.user.listApprovedTeachers(),
       ]);
       state.courses = courses;
       state.classes = classes;
@@ -254,10 +254,11 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
         state.students = students.students;
         state.fullAt = students.fullAt;
         state.watermark = students.watermark;
+        state.studentsFromDelta = !!students.fromDelta;
       } else {
         state.students = students;
       }
-      state.teachers = teacherSnap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+      state.teachers = teachers;
       state.cachedAt = Date.now();
       renderDataAge();
       if (window.EduDataCache) {
@@ -276,6 +277,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
       await repairKnownBadTeacherNames();
       await renameGenericCourseNames();
       await repairDuplicateCourses();
+      await backfillSchoolIds();
     } catch (err) {
       toast('Lỗi tải dữ liệu: ' + friendlyError(err));
     }
@@ -386,6 +388,52 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
       renderStudentTeacherFilter();
       renderStudents();
       toast(`Đã tự sửa GV → "${CORRECT_NAME}" cho ${badStudents.length} học sinh + ${badClasses.length} lớp (${SCHOOL}, ${CLASS_NAMES.join(' & ')})`);
+    }
+  }
+
+  /**
+   * Ghi bù schoolId (EduQuiz 2.0 — firestore.rules nhận tên trường HOẶC schoolId) cho học sinh và
+   * lớp còn thiếu/lệch. Chỉ Admin (đủ roster mọi trường), mỗi máy 1 lần (cờ localStorage).
+   * KHÔNG đổi updatedAt: nếu đổi, bản đệm roster trên MỌI máy điều phối/giáo viên phải đọc lại
+   * toàn bộ học sinh qua delta → có thể vượt 50k lượt đọc/ngày. Rules đọc schoolId trên server,
+   * bản đệm trên máy không cần field này; ghi mới đã tự kèm schoolId (stampRoster, ClassRepository).
+   * Hệ quả: bản đệm delta trên máy Admin KHÁC không bao giờ thấy schoolId vừa ghi bù → trước khi ghi,
+   * đọc lại toàn bộ 1 lần (~N lượt đọc) thay vì ghi lại cả N học sinh đã có schoolId (~N lượt ghi).
+   */
+  async function backfillSchoolIds() {
+    const DONE_KEY = 'roster:schoolIdBackfill:v1';
+    if (!myProfile || myProfile.role !== 'admin') return;
+    try { if (localStorage.getItem(DONE_KEY)) return; } catch (e) { /* chế độ riêng tư: chạy lại cũng không sai */ }
+    const idOf = window.EduModels.School.schoolIdOf;
+    const needs = (r) => r.school && r.schoolId !== idOf(r.school);
+    try {
+      if (state.studentsFromDelta && state.students.some(needs)) {
+        const fresh = await window.EduRepositories.studentRoster.list({ orderBy: 'name' });
+        state.students = fresh;
+        state.fullAt = Date.now();
+        state.watermark = window.EduRosterCache.watermarkOf(fresh);
+        state.studentsFromDelta = false;
+        renderStudents();
+      }
+    } catch (err) {
+      console.warn('[RosterManager] Chưa ghi bù được schoolId (thử lại lần mở trang sau):', err.message);
+      return;
+    }
+    const todo = [];
+    state.students.forEach((s) => { if (needs(s)) todo.push(['students_roster', s]); });
+    state.classes.forEach((c) => { if (needs(c)) todo.push(['classes', c]); });
+    try {
+      const db = EduFirebase.db;
+      for (let i = 0; i < todo.length; i += 400) {
+        const batch = db.batch();
+        todo.slice(i, i + 400).forEach(([col, rec]) => batch.update(db.collection(col).doc(rec.id), { schoolId: idOf(rec.school) }));
+        await batch.commit();
+      }
+      todo.forEach(([, rec]) => { rec.schoolId = idOf(rec.school); });
+      try { localStorage.setItem(DONE_KEY, String(Date.now())); } catch (e) { /* bỏ qua */ }
+      if (todo.length) toast(`Đã gắn mã trường (schoolId) cho ${todo.length} học sinh/lớp`);
+    } catch (err) {
+      console.warn('[RosterManager] Chưa ghi bù được schoolId (thử lại lần mở trang sau):', err.message);
     }
   }
 
@@ -814,7 +862,15 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Đang cập nhật…';
     try {
-      await window.EduAppsScript.call('publishRoster', { content: JSON.stringify(payload, null, 2) }, { timeoutMs: 2 * 60 * 1000 });
+      const content = JSON.stringify(payload, null, 2);
+      if (rosterMode() === 'class-code') {
+        // Không đẩy tên lên file công khai — cấp mã từng lớp (giữ mã cũ) + tải CSV mã lớp để phát
+        const res = await window.EduAppsScript.call('publishRosterCodes', { content }, { timeoutMs: 2 * 60 * 1000 });
+        downloadClassCodesCsv(res.classes);
+        toast(`Đã cập nhật ${res.students} học sinh / ${res.classes.length} lớp — đã tải file mã lớp để phát cho giáo viên.`);
+        return;
+      }
+      await window.EduAppsScript.call('publishRoster', { content }, { timeoutMs: 2 * 60 * 1000 });
       toast(`Đã cập nhật ${payload.count} học sinh — trang làm bài thấy sau khoảng 1–2 phút.`);
     } catch (err) {
       console.error('[roster-manager] Cập nhật roster thất bại:', err);
@@ -825,6 +881,26 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
     }
   }
   document.getElementById('publishRosterBtn').addEventListener('click', publishRoster);
+
+  function rosterMode() {
+    return (window.EduBackend && window.EduBackend.roster && window.EduBackend.roster.mode) || 'public-json';
+  }
+
+  /** File mã lớp (Trường, Lớp, Mã, Số HS) — BOM để Excel đọc đúng tiếng Việt. */
+  function downloadClassCodesCsv(classes) {
+    const cell = (v) => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
+    const lines = [['Trường', 'Lớp', 'Mã lớp', 'Số học sinh']].concat(
+      classes.map((c) => [c.school, c.className, c.code, c.count])).map((r) => r.map(cell).join(','));
+    const blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ma-lop-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }
 
   // ============================================================
   // NẠP HỌC SINH TỪ FILE EXCEL (.xlsx/.xls) — đọc bằng SheetJS ngay
@@ -1248,7 +1324,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
           teacherId = teacherMatch ? teacherMatch.id : '';
           teacherName = teacherMatch ? teacherMatch.name : sheetTeacherName;
         }
-        batch.set(ref, { name, school, courseId, teacherId, teacherName, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+        batch.set(ref, window.EduModels.School.withSchoolId({ name, school, courseId, teacherId, teacherName, createdAt: firebase.firestore.FieldValue.serverTimestamp() }));
         classIdByKey[key] = ref.id;
         classTeacherByKey[key] = { id: teacherId, name: teacherName };
         ops++;

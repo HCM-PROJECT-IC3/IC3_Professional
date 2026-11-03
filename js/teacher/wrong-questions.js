@@ -1,6 +1,6 @@
 /* ============================================================
    js/teacher/wrong-questions.js
-   "Câu cả lớp hay sai" — teacher-dashboard.html.
+   "Câu cả lớp hay sai" — teacher-dashboard.html và coordinator-dashboard.html.
 
    Dữ liệu: mỗi bài nộp gửi kèm uid các câu sai lên Google Sheet (cột O
    CauSai — js/services/result-submitter.js); Apps Script tổng hợp ngay trên
@@ -15,7 +15,7 @@
 
    Nạp SAU js/services/sheet-results-api.js, js/services/lazy-script-loader.js,
    js/services/question-bank-lookup.js (tra uid → câu, dùng chung với gom-ket-qua).
-   dashboard.js gọi EduWrongQuestions.setContext(...) mỗi lần đổi bộ lọc.
+   js/teacher/dashboard.js, js/coordinator/dashboard.js gọi EduWrongQuestions.setContext(...) mỗi lần đổi bộ lọc.
    ============================================================ */
 (function (global) {
   'use strict';

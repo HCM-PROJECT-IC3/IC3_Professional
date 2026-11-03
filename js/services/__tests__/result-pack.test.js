@@ -92,5 +92,22 @@ for (var i = 0; i < 80; i++) P.remember(Object.assign({}, sheet, { submissionId:
 assertEq('chỉ giữ 60 bài gần nhất', P.list().length, 60);
 assertEq('tên file an toàn', P.safeName('Nguyễn Đức Hải'), 'nguyen-duc-hai');
 
+// ── Thử thách hôm nay: điểm tốc độ pt + bảng xếp hạng ──
+assertEq('mã bài thường không có khoá pt (giữ hình dạng cũ)', 'pt' in P.toRecord(sheet), false);
+function dc(name, cls, pt, tm, no) {
+  return P.decode(P.encode({ submissionId: 'DC-' + name + no, studentName: name, studentClass: cls, studentSchool: 'THCS A',
+    testName: 'Thử thách số ' + no + ' (3/11) · IC3 Cấp độ 1', score: 80, correct: '4/5', time: tm, examMode: 'practice', points: pt })).rec;
+}
+assertEq('mã thử thách giữ điểm tốc độ', dc('An', '6A', 3650, '00:41', 7).pt, 3650);
+var board = P.challengeBoard([
+  dc('An', '6A', 3650, '00:41', 7), dc('Bình', '6A', 4100, '00:52', 7), dc('Chi', '6A', 3650, '00:35', 7),
+  dc('Dũng', '6A', 3650, '00:41', 7), dc('An', '6A', 3000, '00:30', 7) /* lượt thấp hơn của An bị bỏ */,
+  dc('Em', '6B', 2000, '01:10', 6), d.rec /* bài thường: không vào bảng */,
+]);
+assertEq('bảng xếp hạng: đề mới nhất trước, bỏ bài thường', board.map(function (b) { return b.test; }),
+  ['Thử thách số 7 (3/11) · IC3 Cấp độ 1', 'Thử thách số 6 (3/11) · IC3 Cấp độ 1']);
+assertEq('xếp theo điểm → nhanh hơn → tên; bằng điểm bằng giờ cùng hạng; mỗi em 1 dòng',
+  board[0].entries.map(function (e) { return e.n + ':' + e.rank; }), ['Bình:1', 'Chi:2', 'An:3', 'Dũng:3']);
+
 if (failures) { console.log('\n' + failures + ' kiểm tra THẤT BẠI'); process.exit(1); }
 console.log('\nTất cả kiểm tra đạt.');

@@ -25,6 +25,7 @@
   const ROLES = Object.freeze({
     ADMIN: 'admin',
     COORDINATOR: 'coordinator',                   // Điều phối đào tạo — roster/điểm số/điểm danh học sinh
+    SCHOOL_ADMIN: 'school_admin',                 // Quản trị trường — như Điều phối, giới hạn trường mình + sửa thông tin trường
     TEACHING_COORDINATOR: 'teaching_coordinator',  // Điều phối giáo viên — lịch giảng dạy/báo cáo/hỗ trợ xăng xe
     TEACHER: 'teacher',
     STUDENT: 'student',
@@ -45,12 +46,15 @@
     'admin.viewGlobalDashboard':[ROLES.ADMIN],
 
     // ---- Điều phối đào tạo (coordinator) ----
-    'coordinator.viewDashboard':     [ROLES.ADMIN, ROLES.COORDINATOR],
-    'coordinator.viewStudentList':   [ROLES.ADMIN, ROLES.COORDINATOR],
-    'coordinator.viewStudentDetail': [ROLES.ADMIN, ROLES.COORDINATOR],
-    'coordinator.manageRoster':      [ROLES.ADMIN, ROLES.COORDINATOR],
-    'coordinator.exportExcel':       [ROLES.ADMIN, ROLES.COORDINATOR],
-    'coordinator.exportPdf':         [ROLES.ADMIN, ROLES.COORDINATOR],
+    'coordinator.viewDashboard':     [ROLES.ADMIN, ROLES.COORDINATOR, ROLES.SCHOOL_ADMIN],
+    'coordinator.viewStudentList':   [ROLES.ADMIN, ROLES.COORDINATOR, ROLES.SCHOOL_ADMIN],
+    'coordinator.viewStudentDetail': [ROLES.ADMIN, ROLES.COORDINATOR, ROLES.SCHOOL_ADMIN],
+    'coordinator.manageRoster':      [ROLES.ADMIN, ROLES.COORDINATOR, ROLES.SCHOOL_ADMIN],
+    'coordinator.exportExcel':       [ROLES.ADMIN, ROLES.COORDINATOR, ROLES.SCHOOL_ADMIN],
+    'coordinator.exportPdf':         [ROLES.ADMIN, ROLES.COORDINATOR, ROLES.SCHOOL_ADMIN],
+
+    // ---- Quản trị trường (school_admin) ----
+    'school.editOwnInfo': [ROLES.ADMIN, ROLES.SCHOOL_ADMIN],
 
     // ---- Điều phối giáo viên (teaching_coordinator) — lịch giảng dạy ----
     'teachingCoordinator.viewSchedule':  [ROLES.ADMIN, ROLES.TEACHING_COORDINATOR],
@@ -73,7 +77,7 @@
     'student.viewOwnHistory':    [ROLES.ADMIN, ROLES.TEACHER, ROLES.COORDINATOR, ROLES.STUDENT],
 
     // ---- Báo cáo chung (đã có trong firestore.rules hiện tại: canViewReports) ----
-    'reports.view': [ROLES.ADMIN, ROLES.TEACHER, ROLES.COORDINATOR],
+    'reports.view': [ROLES.ADMIN, ROLES.TEACHER, ROLES.COORDINATOR, ROLES.SCHOOL_ADMIN],
   };
 
   /** Kiểm tra role có quyền thực hiện permission hay không. */

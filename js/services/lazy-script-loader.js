@@ -21,9 +21,13 @@
   function loadOne(src) {
     if (loaded.has(src)) return Promise.resolve();
     if (pending.has(src)) return pending.get(src);
+    // Trang đã nạp sẵn bằng thẻ <script> tĩnh (vd ic3-dashboard nạp custom-exam-codec.js) → khỏi tải lại.
+    // Bỏ qua thẻ defer/async: có thể chưa chạy xong.
+    if (document.querySelector(`script[src="${src}"]:not([defer]):not([async]):not([data-lazy])`)) { loaded.add(src); return Promise.resolve(); }
     const p = new Promise((resolve, reject) => {
       const el = document.createElement('script');
       el.src = src;
+      el.dataset.lazy = '1';
       el.onload = () => { loaded.add(src); pending.delete(src); resolve(); };
       el.onerror = () => { pending.delete(src); reject(new Error('Không tải được: ' + src)); };
       document.body.appendChild(el);
