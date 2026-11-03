@@ -32,7 +32,7 @@ kbd { display: inline-block; padding: 0 .35rem; border-radius: 6px; background: 
 .np-icon-link { display: grid; place-items: center; color: var(--np-ink); text-decoration: none; }
 
 /* ── Lưới chọn trò ── */
-.np-picker { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; } /* 11 trò → 2 hàng 6 + 5 */
+.np-picker { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; } /* 17 trò → 3 hàng 6 + 6 + 5 */
 .np-pick { display: flex; align-items: center; gap: 10px; text-align: left; min-width: 0; padding: 8px 10px; border-radius: 14px; border: 2px solid var(--np-line); background: var(--np-paper);
   transition: transform .15s, border-color .15s, background .15s; }
 .np-pick:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--np-accent) 50%, var(--np-line)); }
@@ -269,6 +269,28 @@ input[type="range"] { width: 100%; accent-color: var(--np-accent); height: 28px;
 .np-chip { padding: 4px 10px; border-radius: 999px; border: 2px solid var(--np-line); background: var(--np-bg); font-size: .82rem !important; font-weight: 600; transition: opacity .15s; }
 .np-chip:hover { border-color: var(--np-accent); }
 .np-chip.is-absent { text-decoration: line-through; opacity: .45; border-style: dashed; }
+
+/* ── Chia nhóm ── */
+.np-grpctl { display: flex; gap: 8px 14px; flex-wrap: wrap; align-items: center; }
+.np-grplbl { font-weight: 700; }
+.np-grpchk { display: flex; gap: 6px; align-items: center; cursor: pointer; color: var(--np-muted); font-size: .9rem; }
+.np-grpchk input { accent-color: var(--np-accent); width: 16px; height: 16px; }
+.np-seg { display: flex; gap: 6px; flex-wrap: wrap; }
+.np-seg button { min-width: 42px; padding: 5px 12px; border-radius: 999px; border: 2px solid var(--np-line); background: var(--np-paper); }
+.np-seg button[aria-checked="true"] { background: var(--np-accent); border-color: var(--np-accent); color: var(--np-accent-ink); }
+.np-small:disabled { opacity: .5; cursor: not-allowed; }
+.np-grpout { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.np-grpout:empty { display: none; }
+.np-grp { --gc: #d9472b; border: 2px solid var(--gc); border-radius: 14px; background: color-mix(in srgb, var(--gc) 10%, var(--np-paper)); padding: 8px 10px; min-width: 0;
+  transition: transform .2s, box-shadow .2s, opacity .2s; }
+.np-grp h3 { margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 6px; font: 800 1.1rem/1.2 var(--np-display); color: var(--gc); }
+.np-grp h3 small { font: 700 .8rem var(--np-body); color: var(--np-muted); white-space: nowrap; }
+.np-grp ul { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 5px; }
+.np-grp li { background: var(--np-paper); border: 1.5px solid color-mix(in srgb, var(--gc) 45%, var(--np-line)); border-radius: 999px; padding: 2px 9px; font-weight: 600; font-size: .9rem; overflow-wrap: anywhere; }
+.np-grp li.is-lead { background: #fff3cf; border-color: var(--np-gold); color: #8a5a12; font-weight: 800; }
+.np-grpout.is-rolling .np-grp:not(.is-hl) { opacity: .55; }
+.np-grp.is-hl { box-shadow: 0 0 0 4px var(--gc); }
+.np-grp.is-win { box-shadow: 0 0 0 5px var(--np-gold); transform: scale(1.03); }
 .np-numhead { display: flex; justify-content: space-between; align-items: baseline; font-weight: 600; }
 .np-numhead output { font: 800 2.2rem/1 var(--np-display); color: var(--np-accent); font-variant-numeric: tabular-nums; }
 .np-numstep { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
@@ -390,7 +412,7 @@ input[type="range"] { width: 100%; accent-color: var(--np-accent); height: 28px;
 @keyframes np-mb-flash { from { opacity: .85; } to { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .np-mb-spin-in, .np-mb-drum-in, .np-mb-chev, .np-mb-hopper { animation: none !important; } }
 
-/* ── Kịch tính chung cho 11 trò (np-games.js: clock, spotlight) ── */
+/* ── Kịch tính chung cho mọi trò (np-games.js: clock, spotlight) ── */
 /* 3 giây cuối: viền sân khấu đỏ nhấp nháy theo nhịp tim */
 .np-world.is-tense::before { content: ''; position: absolute; inset: 0; z-index: 790; pointer-events: none; box-shadow: inset 0 0 110px 20px rgba(229, 72, 77, .5); animation: np-tense .5s ease-in-out infinite alternate; }
 @keyframes np-tense { from { opacity: .4; } to { opacity: 1; } }
@@ -497,3 +519,91 @@ input[type="range"] { width: 100%; accent-color: var(--np-accent); height: 28px;
   .np-world.is-tense::before, .np-cc.is-ready .np-cc-back, .np-sp.is-spot .np-sp-in, .np-mb.is-spot .np-mb-ball { animation: none !important; }
   .np-cc-in, .np-spot.is-on { transition: none; }
 }
+
+/* ── Kịch tính bổ sung cho mọi trò (np-games.js: hunt, clock, glide) ── */
+/* Vòng ngắm đỏ dưới chân bạn sắp bị "bắt" */
+.np-sp.is-target::before { content: ''; position: absolute; left: -40px; top: -15px; width: 80px; height: 30px; border-radius: 50%; z-index: -1;
+  border: 4px solid #ff3b30; box-shadow: 0 0 14px rgba(255, 59, 48, .75), inset 0 0 10px rgba(255, 59, 48, .5); animation: np-target .45s ease-in-out infinite alternate; }
+@keyframes np-target { from { transform: scale(.8); opacity: .55; } to { transform: scale(1.12); opacity: 1; } }
+/* 3 giây cuối: khung điện ảnh — 2 dải đen trên/dưới trượt vào */
+.np-world.is-tense > .np-fx::before { content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(#0b0b12, #0b0b12) top / 100% 7% no-repeat, linear-gradient(#0b0b12, #0b0b12) bottom / 100% 7% no-repeat; animation: np-bars .45s ease-out; }
+@keyframes np-bars { from { background-size: 100% 0, 100% 0; } }
+
+/* ── 6 trò thêm (np-games-extra.js) ── */
+/* Ong tìm hoa */
+.np-bee-sp .np-sp-in { animation: np-float 1.1s ease-in-out infinite; }
+.np-bee-wing { transform-box: fill-box; transform-origin: 50% 100%; animation: np-buzz .08s linear infinite alternate; }
+@keyframes np-buzz { from { transform: rotate(-14deg) scaleY(.85); } to { transform: rotate(10deg) scaleY(1); } }
+.np-bloom-sp .np-sp-in { animation: np-sway 3s ease-in-out infinite; animation-delay: var(--bd, 0s); transform-origin: 50% 100%; }
+@keyframes np-sway { 0%, 100% { transform: translateX(-50%) rotate(-3deg); } 50% { transform: translateX(-50%) rotate(3deg); } }
+.np-petals { transform-box: fill-box; transform-origin: center; transition: transform .35s cubic-bezier(.3, 1.6, .5, 1), filter .3s; }
+.np-sp.is-bloom .np-petals { transform: scale(1.35) rotate(20deg); filter: drop-shadow(0 0 6px #fff6a8); }
+.np-sp.is-droop .np-petals { transform: translateY(6px) rotate(-30deg) scale(.85); filter: saturate(.4); }
+.np-bloom-sp.is-win .np-petals { animation: np-spinpop 1.2s ease-in-out infinite alternate; }
+@keyframes np-spinpop { from { transform: scale(1.3) rotate(0); } to { transform: scale(1.45) rotate(45deg); } }
+/* Mèo bắt chuột */
+.np-cat-tail { transform-box: fill-box; transform-origin: 100% 100%; animation: np-wiggle 1.4s ease-in-out infinite; }
+.np-cat-sp.is-run .np-cat .leg { transform-box: fill-box; transform-origin: 50% 0; animation: np-swing .22s ease-in-out infinite alternate; }
+.np-cat-sp.is-pounce .np-sp-in { animation: np-pounce .45s cubic-bezier(.3, 0, .3, 1); }
+@keyframes np-pounce { 0% { transform: translate(-50%, 0) scale(1, .85); } 45% { transform: translate(-50%, -34px) rotate(-8deg); } 100% { transform: translate(-50%, 0); } }
+.np-mouse-sp.is-run .np-sp-in { animation: np-scurry .12s linear infinite alternate; }
+@keyframes np-scurry { from { transform: translate(-50%, 0) rotate(-3deg); } to { transform: translate(-50%, -3px) rotate(3deg); } }
+.np-mouse-tail { transform-box: fill-box; transform-origin: 100% 50%; animation: np-wiggle .8s ease-in-out infinite; }
+.np-mouse-sp .np-tag { top: 2px; }
+.np-sp.is-caught.np-mouse-sp .np-sp-in { animation: np-shake .12s linear infinite; }
+.np-mouse-sp.is-win .np-sp-in { animation: np-jump .45s ease-in-out infinite alternate; }
+/* Thả diều */
+.np-strings { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+.np-kite-sp { transform-origin: 0 0; }
+.np-kite-sp .np-tag { top: 6px; bottom: auto; }
+.np-kite-sp.is-alt .np-tag { top: 30px; }
+.np-kite-tail { animation: np-wiggle .6s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 0; }
+.np-sp.is-gust .np-sp-in { animation: np-shake .1s linear 8; }
+.np-kite-sp.is-lead .np-sp-in > svg { filter: drop-shadow(0 0 8px #fff6a8); }
+.np-kite-sp.is-win .np-sp-in { animation: np-jump .5s ease-in-out infinite alternate; }
+.np-holder .np-kid-body { animation: none; }
+/* Sút luân lưu */
+.np-gk-sp .np-sp-in { transition: transform .25s ease-out; }
+.np-gk-sp.dive-l .np-sp-in { transform: translate(-90%, -18px) rotate(-78deg); }
+.np-gk-sp.dive-r .np-sp-in { transform: translate(-10%, -18px) rotate(78deg); }
+.np-gk-sp.is-run .np-pose-run, .np-gk-sp .np-pose-run { display: none; }
+.np-gk-sp .np-pose-stand { display: inline !important; }
+.np-fball-sp .np-sp-in { transition: transform .5s ease-out; }
+.np-fball-sp .np-sp-in > svg { animation: np-spin .6s linear infinite paused; }
+.np-fball-sp.is-kick .np-sp-in { transform: translateX(-50%) scale(.7); }
+.np-fball-sp.is-kick .np-sp-in > svg { animation-play-state: running; }
+.np-world.is-net .np-bg { animation: np-net .5s ease-out; }
+@keyframes np-net { 30% { transform: translateY(-3px) scale(1.01); } }
+/* Đèn xanh đèn đỏ */
+.np-lamp { transition: fill .15s, filter .15s; }
+.np-tl-sp.is-red .np-lamp-r { fill: #ff3b30; filter: drop-shadow(0 0 8px #ff3b30); }
+.np-tl-sp.is-green .np-lamp-g { fill: #2ee879; filter: drop-shadow(0 0 8px #2ee879); }
+.np-tl-sp.is-scan .np-pupil { animation: np-look 1s ease-in-out infinite alternate; }
+@keyframes np-look { from { transform: translateX(-1.4px); } to { transform: translateX(1.4px); } }
+.np-tl-sp.is-green .np-tlight-eyes { opacity: .35; }
+/* Bịt mắt bắt dê: luôn dáng đứng, dang tay dò đường, đi lắc lư */
+.np-seeker .np-pose-run { display: none !important; }
+.np-seeker .np-pose-stand { display: inline !important; }
+.np-seeker .np-pose-stand .arm-l { transform: rotate(80deg); }
+.np-seeker .np-pose-stand .arm-r { transform: rotate(-80deg); }
+.np-seeker.is-run .np-sp-in { animation: np-grope .5s ease-in-out infinite alternate; }
+@keyframes np-grope { from { transform: translateX(-50%) rotate(-6deg); } to { transform: translateX(-50%) rotate(6deg); } }
+.np-seeker.is-grab .np-pose-stand .arm-l { transform: rotate(150deg); }
+.np-seeker.is-grab .np-pose-stand .arm-r { transform: rotate(-150deg); }
+.np-seeker .arm { transition: transform .2s; }
+.np-blindfold { transition: transform .5s ease-in, opacity .5s; transform-box: fill-box; transform-origin: 0 50%; }
+.np-seeker.is-unmask .np-blindfold { transform: translate(-30px, 40px) rotate(-60deg); opacity: 0; }
+
+/* ── Chiều sâu 3D (np-art.js vol(), np-games.js depth) ── */
+/* Bóng đổ mềm dưới chân nhân vật đứng trên mặt đất — cỡ theo bề rộng sprite (--sw) */
+:is(.np-kid-sp, .np-cat-sp, .np-mouse-sp, .np-dino-sp, .np-ref-sp, .np-gk-sp, .np-seeker, .np-gift-sp, .np-bloom-sp, .np-tl-sp)::after {
+  content: ''; position: absolute; z-index: -2; pointer-events: none; border-radius: 50%;
+  left: calc(var(--sw, 60px) * -.5); top: calc(var(--sw, 60px) * -.12); width: var(--sw, 60px); height: calc(var(--sw, 60px) * .24);
+  background: radial-gradient(closest-side, rgba(20, 12, 4, .42), rgba(20, 12, 4, .18) 55%, rgba(20, 12, 4, 0)); }
+.np-tl-sp::after { left: calc(var(--sw) * -.4); width: calc(var(--sw) * .8); }
+/* Bị nhấc lên / bay đi: bóng nhạt và thu nhỏ theo độ cao */
+.np-sp.is-lift::after, .np-sp.is-abduct::after { transform: scale(.6); opacity: .5; transition: transform .5s, opacity .5s; }
+.np-sp.is-away::after { opacity: 0; }
+/* Đĩa màu dưới chân nhạt bớt để bóng đổ mềm hiện rõ */
+.np-kid > .np-disc { opacity: .7; }

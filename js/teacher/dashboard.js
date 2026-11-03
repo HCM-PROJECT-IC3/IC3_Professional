@@ -164,6 +164,13 @@
     renderWatchlists(scoped);
     if (window.EduCoordinatorStudentTable) window.EduCoordinatorStudentTable.render(scoped);
     if (window.EduWrongQuestions) window.EduWrongQuestions.setContext(wrongQuestionsScope(filters));
+    // Tổng quan lớp · Giao bài · So sánh 2 đợt · Chuyên cần (js/teacher/insights.js) — tính trên dữ liệu đã tải
+    if (window.EduTeacherInsights && window.EduTeacherInsights.render) {
+      window.EduTeacherInsights.render({
+        rawData, scoped, filters, applyFilters: window.EduTeacherData.applyFilters, openStudent: openStudentByName,
+        keyOf: (s) => window.EduModels.Roster.studentKeyOf({ name: s.name, className: s.className }),
+      });
+    }
   }
 
   /** Bộ lọc dashboard → phạm vi hỏi Apps Script (wrongStats). Admin không gán trường = mọi trường. */
@@ -216,6 +223,8 @@
   const WATCHLIST_LIMIT = 8;
 
   function renderWatchlists(scoped) {
+    lastNotSubmitted = scoped._notSubmitted || [];
+    document.getElementById('notSubmittedCopy').hidden = !lastNotSubmitted.length;
     renderList('notSubmitted', scoped._notSubmitted || [], (s) =>
       `<span class="name">${esc(s.name)}</span><span class="meta">${esc(s.className || '—')}${s.mssv ? ' · ' + esc(s.mssv) : ''}</span>`,
       'Không có học sinh nào — mọi người đã làm bài!');
@@ -231,7 +240,53 @@
       'Chưa có dữ liệu.');
 
     renderClassRace(scoped);
+    renderTrendsAndFlags(scoped);
   }
+
+  // ============================================================
+  // TIẾN BỘ / SA SÚT + BÀI NỘP CẦN XEM LẠI — tính trên bài nộp đã tải (0 lượt đọc thêm)
+  // ============================================================
+  const fmtDate = (ms) => {
+    if (!ms) return '';
+    const d = new Date(ms);
+    const p = (n) => String(n).padStart(2, '0');
+    return `${p(d.getDate())}/${p(d.getMonth() + 1)} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  };
+  const shortTest = (t) => String(t || '').split(' › ').pop();
+
+  function renderTrendsAndFlags(scoped) {
+    const { improving, declining } = window.EduAnalytics.progressTrends(scoped.filteredResults);
+    const trendRow = (e, color) =>
+      `<span class="name">${esc(e.studentName)}</span><span class="meta">${esc(e.studentClass || '—')} · ${e.before}% → ${e.recent}% · ${e.attempts} bài</span>` +
+      `<span class="score-chip" style="background:var(--${color}-lt);color:var(--${color})">${e.delta > 0 ? '+' : '−'}${Math.abs(e.delta)}</span>`;
+    renderList('improving', improving, (e) => trendRow(e, 'green'), 'Chưa thấy em nào tăng rõ (cần từ 3 bài trở lên).');
+    renderList('declining', declining, (e) => trendRow(e, 'red'), 'Không có em nào giảm điểm rõ.');
+    renderList('reviewFlags', window.EduAnalytics.reviewFlags(scoped.filteredResults), ({ result: r, reasons }) =>
+      `<span class="name">${esc(r.studentName)}</span><span class="meta">${esc(r.studentClass || '—')} · ${esc(shortTest(r.testName))} · ${esc(fmtDate(r.submittedAtMs))}<br>${reasons.map(esc).join(' · ')}</span>` +
+      `<span class="score-chip" style="background:var(--yellow-lt);color:var(--text)">${r.score}%</span>`,
+      'Không có bài nào cần xem lại.');
+    document.getElementById('trendNote').hidden = false;
+  }
+
+  /** Tên học sinh chưa làm bài, nhóm theo lớp — dán vào nhóm lớp để nhắc. */
+  async function copyNotSubmitted() {
+    const list = lastNotSubmitted;
+    if (!list.length) return;
+    const byClass = new Map();
+    list.forEach((s) => { const c = s.className || '—'; if (!byClass.has(c)) byClass.set(c, []); byClass.get(c).push(s.name); });
+    const exam = document.getElementById('f-exam').value;
+    const head = `Các em chưa làm bài${exam ? ' "' + shortTest(exam) + '"' : ''}:`;
+    const text = [head].concat([...byClass.entries()].sort((a, b) => window.EduAnalytics.compareNatural(a[0], b[0]))
+      .map(([c, names]) => `Lớp ${c} (${names.length}): ${names.sort((a, b) => a.localeCompare(b, 'vi')).join(', ')}`)).join('\n');
+    try {
+      await navigator.clipboard.writeText(text);
+      toast(`Đã chép ${list.length} tên — dán vào nhóm lớp để nhắc các em.`);
+    } catch (e) {
+      window.prompt('Trình duyệt chặn chép tự động — bôi đen rồi Ctrl+C:', text);
+    }
+  }
+  let lastNotSubmitted = [];
+  document.getElementById('notSubmittedCopy').addEventListener('click', copyNotSubmitted);
 
   // ============================================================
   // THI ĐUA LỚP THEO TUẦN — tính trên kết quả đã tải (0 lượt Firestore thêm)
@@ -276,6 +331,34 @@
   }
   document.getElementById('classRacePresent').addEventListener('click', presentClassRace);
 
+  /** Tên + lớp của 1 dòng: học sinh roster {name}, lịch sử {studentName}, bài nộp cần xem lại {result}. */
+  function whoOf(item) {
+    const x = item.result || item;
+    return { name: x.name || x.studentName || '', className: x.className || x.studentClass || '' };
+  }
+
+  // Bấm 1 dòng → drawer chi tiết (js/coordinator/student-detail.js) như nút "Xem" trong bảng học sinh:
+  // tải bài của cả lớp 1 lần rồi nhớ lại, chỉ khi bấm (không tải trước).
+  function openStudentFromList(li) {
+    if (li) openStudentByName(li.dataset.name, li.dataset.class);
+  }
+  function openStudentByName(name, className) {
+    if (!window.EduCoordinatorStudentDetail || !rawData) return;
+    const key = (n, c) => `${String(n || '').trim().toLowerCase()}__${String(c || '').trim().toLowerCase()}`;
+    const want = key(name, className);
+    const student = rawData.students.find((s) => key(s.name, s.className) === want) || { name, className };
+    window.EduCoordinatorStudentDetail.open(student);
+  }
+  const grid = document.getElementById('watchlistsGrid');
+  grid.addEventListener('click', (e) => openStudentFromList(e.target.closest('.watchlist-item.is-clickable')));
+  grid.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const li = e.target.closest('.watchlist-item.is-clickable');
+    if (!li) return;
+    e.preventDefault();
+    openStudentFromList(li);
+  });
+
   function renderList(prefix, list, rowHtml, emptyMsg) {
     document.getElementById(`${prefix}Count`).textContent = `(${list.length})`;
     const ul = document.getElementById(`${prefix}List`);
@@ -284,7 +367,12 @@
       document.getElementById(`${prefix}More`).textContent = '';
       return;
     }
-    ul.innerHTML = list.slice(0, WATCHLIST_LIMIT).map((item) => `<li class="watchlist-item">${rowHtml(item)}</li>`).join('');
+    ul.innerHTML = list.slice(0, WATCHLIST_LIMIT).map((item) => {
+      const w = whoOf(item);
+      return w.name
+        ? `<li class="watchlist-item is-clickable" tabindex="0" role="button" data-name="${esc(w.name)}" data-class="${esc(w.className)}" title="Xem lịch sử làm bài của ${esc(w.name)}">${rowHtml(item)}</li>`
+        : `<li class="watchlist-item">${rowHtml(item)}</li>`;
+    }).join('');
     document.getElementById(`${prefix}More`).textContent =
       list.length > WATCHLIST_LIMIT ? `+ ${list.length - WATCHLIST_LIMIT} học sinh khác — xem đầy đủ ở bảng danh sách học sinh bên dưới` : '';
   }

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2f40b2">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Thi đua lớp học trên máy chiếu: cộng/trừ điểm theo tiêu chí, thi đua tổ, đổi quà, đo tiếng ồn và đồng hồ đếm ngược. Chạy trên máy giáo viên, không cần đăng nhập.">
+<title>Thi đua lớp học — EduQuiz</title>
+<link rel="stylesheet" href="lib/fonts/fonts.css">
+<link rel="stylesheet" href="css/theme.css">
+<script src="js/theme-inherit.js"></script>
+<link rel="stylesheet" href="lib/fontawesome/css/fa.min.css">
+<link rel="stylesheet" href="css/accessibility.css">
+<link rel="stylesheet" href="css/thi-dua.css">
+</head>
+<body class="td-body">
+<!-- Thi đua lớp học (js/thi-dua/): mọi dữ liệu nằm trong localStorage eduquiz_thidua_v1 của máy giáo viên — không Firebase, không Apps Script.
+     Micro (Đo tiếng ồn) chỉ phân tích âm lượng ngay trên máy, không ghi âm, không gửi đi. -->
+<div class="td-wrap">
+  <header class="td-head">
+    <a class="td-back" href="index.html" title="Về trang chủ"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Trang chủ</a>
+    <h1><i class="fa-solid fa-trophy" aria-hidden="true"></i> Thi đua lớp học</h1>
+    <div class="td-classbar">
+      <label for="tdClass" class="td-sr">Lớp</label>
+      <select id="tdClass" class="td-select" aria-label="Chọn lớp"></select>
+      <button type="button" class="td-btn" id="tdNewClass"><i class="fa-solid fa-plus" aria-hidden="true"></i> Lớp mới</button>
+    </div>
+    <div class="td-tools">
+      <a class="td-icon" href="goi-ten.html" title="Gọi tên học sinh" aria-label="Mở trang Gọi tên học sinh"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i></a>
+      <button type="button" class="td-icon" id="tdSound" aria-label="Bật/tắt âm thanh" title="Bật/tắt âm thanh"><i class="fa-solid fa-volume-high" aria-hidden="true"></i></button>
+      <button type="button" class="td-icon" id="tdTheme" aria-label="Chuyển sáng/tối" title="Sáng/tối"><i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i></button>
+      <button type="button" class="td-icon" id="tdPresent" aria-label="Trình chiếu toàn màn hình" title="Trình chiếu thẻ đang mở (F)"><i class="fa-solid fa-expand" aria-hidden="true"></i></button>
+    </div>
+  </header>
+
+  <!-- Chưa có lớp nào / tạo lớp mới -->
+  <section class="td-card td-setup" id="tdSetup" hidden aria-labelledby="tdSetupTitle">
+    <h2 id="tdSetupTitle">Tạo bảng thi đua cho lớp</h2>
+    <p class="td-note">Mỗi lớp thầy cô dạy có 1 bảng riêng. Dữ liệu chỉ lưu trên máy này — nhớ <b>Sao lưu</b> ở thẻ Cài đặt nếu đổi máy.</p>
+    <div class="td-form">
+      <label>Tên lớp <input id="tdNewName" class="td-input" maxlength="40" placeholder="VD: 6A1 – THCS Lê Lợi"></label>
+      <label>Loại lớp <select id="tdNewKind" class="td-select">
+        <option value="gvbm">Lớp bộ môn (tôi dạy môn)</option><option value="gvcn">Lớp chủ nhiệm</option></select></label>
+      <label>Số tổ <select id="tdNewGroups" class="td-select"><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option></select></label>
+    </div>
+    <div class="td-roster" id="tdRosterPick" hidden>
+      <label>Lấy từ danh sách lớp có sẵn
+        <span class="td-row"><select id="tdRosterSchool" class="td-select" aria-label="Trường"></select><select id="tdRosterClass" class="td-select" aria-label="Lớp"></select>
+        <button type="button" class="td-btn" id="tdRosterUse">Điền danh sách</button></span></label>
+    </div>
+    <label class="td-block">Danh sách học sinh (mỗi dòng 1 tên — dán từ Excel, Word, Zalo đều được)
+      <textarea id="tdNewNames" class="td-text" rows="8" placeholder="Nguyễn Văn An&#10;Trần Thị Bình&#10;..."></textarea></label>
+    <div class="td-row">
+      <button type="button" class="td-btn primary" id="tdCreate"><i class="fa-solid fa-check" aria-hidden="true"></i> Tạo bảng thi đua</button>
+      <button type="button" class="td-btn" id="tdCancelNew" hidden>Huỷ</button>
+      <span class="td-note" id="tdNewCount"></span>
+    </div>
+  </section>
+
+  <div id="tdMain" hidden>
+    <nav class="td-tabs" role="tablist" aria-label="Chức năng">
+      <button type="button" role="tab" data-tab="board"><i class="fa-solid fa-star" aria-hidden="true"></i> Bảng điểm</button>
+      <button type="button" role="tab" data-tab="groups"><i class="fa-solid fa-users" aria-hidden="true"></i> Thi đua tổ</button>
+      <button type="button" role="tab" data-tab="week"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i> Sơ kết tuần</button>
+      <button type="button" role="tab" data-tab="honor"><i class="fa-solid fa-award" aria-hidden="true"></i> Hoa điểm 10</button>
+      <button type="button" role="tab" data-tab="shop"><i class="fa-solid fa-gem" aria-hidden="true"></i> Đổi quà</button>
+      <button type="button" role="tab" data-tab="tools"><i class="fa-solid fa-stopwatch" aria-hidden="true"></i> Công cụ</button>
+      <button type="button" role="tab" data-tab="setup"><i class="fa-solid fa-gear" aria-hidden="true"></i> Cài đặt</button>
+    </nav>
+
+    <!-- ===== BẢNG ĐIỂM ===== -->
+    <section class="td-panel" data-panel="board" aria-label="Bảng điểm">
+      <div class="td-actions" id="tdActions">
+        <div class="td-duty" id="tdDuty" hidden></div>
+        <div class="td-row td-sel">
+          <span id="tdSelInfo" class="td-pill">Chưa chọn em nào</span>
+          <button type="button" class="td-btn" id="tdSelAll">Cả lớp</button>
+          <span id="tdSelGroups" class="td-row"></span>
+          <button type="button" class="td-btn" id="tdSelNone">Bỏ chọn</button>
+          <button type="button" class="td-btn" id="tdUndo" title="Hoàn tác lần cộng/trừ gần nhất (Ctrl+Z)"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Hoàn tác</button>
+        </div>
+        <div class="td-crit" id="tdCritPlus" aria-label="Tiêu chí thưởng"></div>
+        <div class="td-crit minus" id="tdCritMinus" aria-label="Tiêu chí nhắc nhở"></div>
+      </div>
+      <div class="td-boardwrap">
+        <div class="td-grid" id="tdGrid" aria-label="Học sinh — bấm để chọn"></div>
+        <aside class="td-side">
+          <div class="td-card"><h3><i class="fa-solid fa-crown" aria-hidden="true"></i> Ngôi sao tuần này</h3><ol class="td-top" id="tdWeekTop"></ol></div>
+          <div class="td-card"><h3><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Hoạt động gần đây</h3><ul class="td-feed" id="tdFeed"></ul></div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ===== THI ĐUA TỔ ===== -->
+    <section class="td-panel" data-panel="groups" aria-label="Thi đua tổ" hidden>
+      <p class="td-note">Xếp theo <b>điểm trung bình mỗi em</b> (tổ đông người không tự nhiên thắng). Bấm +1 / −1 để cộng trừ cho cả tổ.</p>
+      <ol class="td-groups" id="tdGroups"></ol>
+    </section>
+
+    <!-- ===== SƠ KẾT TUẦN: tin nhắn lớp (cả 2 loại), tin nhắn phụ huynh (chủ nhiệm), so sánh lớp (bộ môn) ===== -->
+    <section class="td-panel" data-panel="week" aria-label="Sơ kết tuần" hidden>
+      <div class="td-row td-weekbar">
+        <div class="td-seg" role="group" aria-label="Chọn tuần">
+          <button type="button" class="td-btn" data-week="0" aria-pressed="true">Tuần này</button>
+          <button type="button" class="td-btn" data-week="-1" aria-pressed="false">Tuần trước</button>
+        </div>
+        <b id="tdWeekLabel"></b>
+        <button type="button" class="td-btn primary" id="tdCopyClassMsg"><i class="fa-solid fa-copy" aria-hidden="true"></i> Chép tin nhắn sơ kết cho lớp</button>
+      </div>
+      <div class="td-weekgrid">
+        <div class="td-card"><h3><i class="fa-solid fa-users" aria-hidden="true"></i> Tổ trong tuần</h3><ol class="td-top" id="tdWeekGroups"></ol></div>
+        <div class="td-card"><h3><i class="fa-solid fa-star" aria-hidden="true"></i> Tuyên dương</h3><ol class="td-top" id="tdWeekPraise"></ol></div>
+        <div class="td-card"><h3><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Cần nhắc nhở <small>(bị trừ từ 2 điểm)</small></h3><ul class="td-top" id="tdWeekRemind"></ul></div>
+        <div class="td-card"><h3><i class="fa-solid fa-list-check" aria-hidden="true"></i> Ghi nhận nhiều nhất</h3><ul class="td-top" id="tdWeekReasons"></ul></div>
+      </div>
+      <pre class="td-msg" id="tdClassMsg"></pre>
+
+      <div class="td-card td-parents" id="tdParents" hidden>
+        <h3><i class="fa-solid fa-envelope" aria-hidden="true"></i> Tin nhắn cho phụ huynh</h3>
+        <p class="td-note">Mỗi em 1 tin, nêu đúng việc được khen / cần nhắc trong tuần. Bấm <b>Chép</b> rồi dán vào Zalo phụ huynh.</p>
+        <div class="td-row"><label>Ký tên <input id="tdSign" class="td-input" maxlength="60" placeholder="VD: GVCN Nguyễn Thị Lan"></label>
+          <label class="td-row"><input type="checkbox" id="tdOnlyNoted" checked> Chỉ em có ghi nhận trong tuần</label>
+          <button type="button" class="td-btn" id="tdCopyAllParents"><i class="fa-solid fa-copy" aria-hidden="true"></i> Chép tất cả</button></div>
+        <ul class="td-parentlist" id="tdParentList"></ul>
+      </div>
+
+      <div class="td-card td-compare" id="tdCompare" hidden>
+        <h3><i class="fa-solid fa-chart-column" aria-hidden="true"></i> So sánh các lớp bộ môn trong tuần</h3>
+        <div class="td-tablewrap"><table class="td-table"><thead><tr><th>Hạng</th><th>Lớp</th><th class="num">Sĩ số</th><th class="num">Em được khen</th>
+          <th class="num">Điểm cộng</th><th class="num">Điểm trừ</th><th class="num">TB/em</th></tr></thead><tbody id="tdCompareRows"></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- ===== HOA ĐIỂM 10: kết quả IC3 (mã EQR1 từ trang Gom kết quả, cùng trình duyệt) → điểm thi đua ===== -->
+    <section class="td-panel" data-panel="honor" aria-label="Hoa điểm 10" hidden>
+      <div class="td-card td-import">
+        <h3><i class="fa-solid fa-file-import" aria-hidden="true"></i> Cộng điểm từ kết quả bài IC3</h3>
+        <p class="td-note">Bài đạt <b>100%: +3 điểm</b> và lên bảng Hoa điểm 10 · <b>từ 90%: +2 điểm</b>. Mỗi bài chỉ cộng 1 lần, nhập lại không sao.
+          Lấy từ mã kết quả học sinh gửi (trang <a href="gom-ket-qua.html" target="_blank" rel="noopener">Gom kết quả</a>) — không cần mạng.</p>
+        <div class="td-row">
+          <button type="button" class="td-btn primary" id="tdImpGather"><i class="fa-solid fa-inbox" aria-hidden="true"></i> Lấy từ trang Gom kết quả</button>
+          <span class="td-note" id="tdImpAvail"></span>
+        </div>
+        <label class="td-block">Hoặc dán mã kết quả (dán lẫn tin nhắn cũng được)
+          <textarea id="tdImpText" class="td-text" rows="3" placeholder="EQR1.…"></textarea></label>
+        <div class="td-row">
+          <button type="button" class="td-btn" id="tdImpPaste">Đọc mã đã dán</button>
+          <label>Lớp ghi trong mã <select id="tdImpClass" class="td-select" aria-label="Chỉ nhận bài của lớp"></select></label>
+        </div>
+        <div class="td-imp-preview" id="tdImpPreview" hidden></div>
+      </div>
+      <div class="td-honor-head"><h2><i class="fa-solid fa-award" aria-hidden="true"></i> Hoa điểm 10 <small id="tdHonorClass"></small></h2></div>
+      <div class="td-honors" id="tdHonors"></div>
+    </section>
+
+    <!-- ===== ĐỔI QUÀ ===== -->
+    <section class="td-panel" data-panel="shop" aria-label="Đổi quà" hidden>
+      <div class="td-row">
+        <label>Học sinh đổi quà <select id="tdShopStudent" class="td-select"></select></label>
+        <span class="td-pill" id="tdShopBalance"></span>
+      </div>
+      <p class="td-note">Đổi quà trừ vào <b>điểm còn lại</b>, không trừ điểm thi đua — em vẫn giữ thứ hạng.</p>
+      <div class="td-rewards" id="tdRewards"></div>
+    </section>
+
+    <!-- ===== CÔNG CỤ ===== -->
+    <section class="td-panel" data-panel="tools" aria-label="Công cụ lớp học" hidden>
+      <div class="td-toolgrid">
+        <div class="td-card td-noise" id="tdNoise">
+          <h3><i class="fa-solid fa-microphone-lines" aria-hidden="true"></i> Đo tiếng ồn</h3>
+          <div class="td-meter" aria-hidden="true"><i id="tdNoiseBar"></i><b id="tdNoiseLine"></b></div>
+          <p class="td-noise-state" id="tdNoiseState" aria-live="polite">Chưa bật micro</p>
+          <label class="td-block">Ngưỡng nhắc <input type="range" id="tdNoiseLimit" min="20" max="90" value="60"> <span id="tdNoiseLimitV"></span></label>
+          <div class="td-row">
+            <button type="button" class="td-btn primary" id="tdNoiseBtn"><i class="fa-solid fa-microphone-lines" aria-hidden="true"></i> Bật micro</button>
+            <span class="td-note" id="tdNoiseCount"></span>
+          </div>
+          <p class="td-note">Micro chỉ đo âm lượng ngay trên máy này — không ghi âm, không gửi đi đâu.</p>
+        </div>
+        <div class="td-card td-timer" id="tdTimer">
+          <h3><i class="fa-solid fa-stopwatch" aria-hidden="true"></i> Đồng hồ đếm ngược</h3>
+          <div class="td-clock" id="tdClock" aria-live="off">05:00</div>
+          <div class="td-row td-presets" id="tdPresets"></div>
+          <div class="td-row">
+            <label class="td-sr" for="tdMin">Phút</label><input type="number" id="tdMin" class="td-input td-num" min="0" max="99" value="5" aria-label="Phút">
+            <span>:</span>
+            <label class="td-sr" for="tdSec">Giây</label><input type="number" id="tdSec" class="td-input td-num" min="0" max="59" value="0" aria-label="Giây">
+            <button type="button" class="td-btn primary" id="tdTimerGo"><i class="fa-solid fa-play" aria-hidden="true"></i> Bắt đầu</button>
+            <button type="button" class="td-btn" id="tdTimerReset"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Đặt lại</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== CÀI ĐẶT ===== -->
+    <section class="td-panel" data-panel="setup" aria-label="Cài đặt" hidden>
+      <div class="td-setgrid">
+        <div class="td-card">
+          <h3>Học sinh & tổ</h3>
+          <div class="td-row"><label>Tên lớp <input id="tdClassName" class="td-input" maxlength="40"></label>
+            <label>Số tổ <input type="number" id="tdGroupCount" class="td-input td-num" min="1" max="12"></label>
+            <button type="button" class="td-btn" id="tdRegroup" title="Chia lại tổ lần lượt theo danh sách">Chia lại tổ</button></div>
+          <div class="td-row"><label>Loại lớp <select id="tdKind" class="td-select"><option value="gvbm">Lớp bộ môn</option><option value="gvcn">Lớp chủ nhiệm</option></select></label></div>
+          <ul class="td-students" id="tdStudents"></ul>
+          <label class="td-block">Thêm học sinh (mỗi dòng 1 tên)<textarea id="tdAddNames" class="td-text" rows="3"></textarea></label>
+          <button type="button" class="td-btn" id="tdAddBtn"><i class="fa-solid fa-plus" aria-hidden="true"></i> Thêm vào lớp</button>
+        </div>
+        <div class="td-card">
+          <h3 id="tdCritTitle">Tiêu chí</h3>
+          <ul class="td-edit" id="tdCritList"></ul>
+          <div class="td-row"><input id="tdCritLabel" class="td-input" maxlength="60" placeholder="Tên tiêu chí" aria-label="Tên tiêu chí">
+            <input type="number" id="tdCritPts" class="td-input td-num" value="1" min="-20" max="20" aria-label="Điểm (âm = nhắc nhở)">
+            <button type="button" class="td-btn" id="tdCritAdd">Thêm</button></div>
+          <p class="td-note">Điểm âm = tiêu chí nhắc nhở.</p>
+          <h3>Phần thưởng</h3>
+          <ul class="td-edit" id="tdRewardList"></ul>
+          <div class="td-row"><input id="tdRewardLabel" class="td-input" maxlength="60" placeholder="Tên phần thưởng" aria-label="Tên phần thưởng">
+            <input type="number" id="tdRewardCost" class="td-input td-num" value="10" min="1" max="999" aria-label="Giá (điểm)">
+            <button type="button" class="td-btn" id="tdRewardAdd">Thêm</button></div>
+        </div>
+        <div class="td-card">
+          <h3>Sao lưu & xuất</h3>
+          <p class="td-note">Dữ liệu chỉ nằm trên trình duyệt máy này. Xoá lịch sử duyệt web hoặc đổi máy sẽ mất — tải file sao lưu định kỳ.</p>
+          <div class="td-col">
+            <button type="button" class="td-btn" id="tdCsv"><i class="fa-solid fa-file-csv" aria-hidden="true"></i> Bảng điểm lớp này (Excel/CSV)</button>
+            <button type="button" class="td-btn" id="tdBackup"><i class="fa-solid fa-file-export" aria-hidden="true"></i> Sao lưu mọi lớp (.json)</button>
+            <label class="td-btn td-file"><i class="fa-solid fa-file-import" aria-hidden="true"></i> Khôi phục từ file sao lưu<input type="file" id="tdRestore" accept=".json,application/json" hidden></label>
+            <button type="button" class="td-btn" id="tdResetPts"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Bắt đầu đợt thi đua mới (điểm về 0)</button>
+            <button type="button" class="td-btn danger" id="tdDelClass"><i class="fa-solid fa-trash" aria-hidden="true"></i> Xoá lớp này</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+<div class="td-toast" id="tdToast" role="status" aria-live="polite" hidden></div>
+<canvas class="td-confetti" id="tdConfetti" aria-hidden="true"></canvas>
+
+<script src="js/name-picker/name-picker-core.js"></script>
+<script src="js/game-sfx.js"></script>
+<script src="js/services/result-pack.js"></script>
+<script src="js/thi-dua/thi-dua-core.js"></script>
+<script src="js/thi-dua/thi-dua.js"></script>
+</body>
+</html>

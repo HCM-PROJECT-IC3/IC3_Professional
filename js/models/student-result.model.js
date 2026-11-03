@@ -26,7 +26,7 @@
    @property {boolean} integrityOk
    @property {string[]} flags
    @property {boolean} timedOut
-   @property {firebase.firestore.Timestamp} submittedAt
+   @property {Timestamp} submittedAt
    ============================================================ */
 (function (global) {
   'use strict';

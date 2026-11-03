@@ -5,7 +5,8 @@
      mount(el, G)     dựng cảnh theo chế độ (Tốc độ: sân bóng · Đua: đường chạy · Kéo co: đồi · Câu cá: ao ·
                       Săn vàng: nông trại · Sinh tồn: đảo hoang · Đấu phép: sân lâu đài · Giải mã: phố ·
                       Đào hoá thạch: chân núi lửa có khủng long canh · Lên Mặt Trăng: tên lửa bay lên, có trạm dừng ·
-                      Diệt Virus: phòng máy chủ, cả đội đứng bên trái đánh Trùm Virus bên phải)
+                      Diệt Virus: phòng máy chủ, cả đội đứng bên trái đánh Trùm Virus bên phải ·
+                     Sút luân lưu: sân bóng, thủ môn giữa khung thành — mỗi cú sút diễn lần lượt)
      sync(G)          so trạng thái trước/sau → chạy tới chỗ mới, nhảy (+điểm), rung (mất máu), nằm mờ (bị loại)
      mood(id, ok)     em trả lời đúng (nhảy) / sai (hoảng)
    Không mạng, không lưu gì. Máy đặt "giảm chuyển động": vẫn vẽ cảnh, bỏ chuyển động.
@@ -32,9 +33,10 @@
     dino: { scene: 'jungle', oy: 150, gy: 262 },
     moon: { scene: 'space', oy: 0, gy: 272 },
     boss: { scene: 'server', oy: 220, gy: 264 },
+    goal: { scene: 'goal', oy: 140, gy: 270 },
   };
-  const KEY = { speed: 'score', gold: 'gold', race: 'pos', survival: 'score', fish: 'kg', tug: 'pull', spell: 'dmg', heist: 'gems', dino: 'fossils', moon: 'km', boss: 'dmg' };
-  const UNIT = { speed: '', gold: ' 🪙', race: '', survival: '', fish: ' kg', tug: '', spell: '', heist: ' 💎', dino: ' 🦴', moon: '', boss: '' };
+  const KEY = { speed: 'score', gold: 'gold', race: 'pos', survival: 'score', fish: 'kg', tug: 'pull', spell: 'dmg', heist: 'gems', dino: 'fossils', moon: 'km', boss: 'dmg', goal: 'goals' };
+  const UNIT = { speed: '', gold: ' 🪙', race: '', survival: '', fish: ' kg', tug: '', spell: '', heist: ' 💎', dino: ' 🦴', moon: '', boss: '', goal: ' ⚽' };
 
   let S = null; // { el, world, layer, fx, mode, sp: {id: sprite}, prev: {id: {...}}, timers }
 
@@ -46,7 +48,7 @@
     const art = A.scene(set.scene);
     // .ar-sc-amb: cùng cảnh, làm mờ + tối, phủ kín cả dải — chỉ lộ ra 2 bên khi dải rộng hơn 10:3 (máy tính)
     const amb = art.replace('viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice"', `viewBox="0 ${set.oy} 1000 300" preserveAspectRatio="xMidYMax slice"`)
-      .replace(/\bid="([^"]+)"/g, 'id="amb-$1"').replace(/url\(#([^)]+)\)/g, 'url(#amb-$1)');
+      .replace(/\bid="([^"]+)"/g, 'id="amb-$1"').replace(/url\(#(?!np(?:Sph|SphSoft|Cyl|Light)\b)([^)]+)\)/g, 'url(#amb-$1)'); // giữ gradient khối 3D dùng chung
     el.innerHTML = `<div class="ar-sc-amb" aria-hidden="true">${amb}</div><div class="ar-sc-world"><div class="ar-sc-bg" style="transform:translateY(${-set.oy}px)">${art}</div><div class="ar-sc-layer"></div><div class="ar-sc-fx"></div></div>`;
     S = { el, world: el.querySelector('.ar-sc-world'), layer: el.querySelector('.ar-sc-layer'), fx: el.querySelector('.ar-sc-fx'), mode: G.mode, set, sp: {}, prev: {}, timers: [] };
     // Dải hẹp (điện thoại): khớp chiều ngang, dư chiều cao thì lộ thêm trời phía trên.
@@ -79,6 +81,7 @@
     if (G.mode === 'fish') fishProps();
     if (G.mode === 'dino') dinoProps();
     if (G.mode === 'boss') bossProps(G);
+    if (G.mode === 'goal') goalProps();
     S.G = G; S.ready = true;
     fit();
     snapshot(G);
@@ -176,6 +179,58 @@
       flashEl(S.dino.el, 'is-sniff', 1400);
       say(S.dino, ['Hít hít...', 'Ai ăn gian đấy?', 'Đào cẩn thận nhé!'][Math.floor(Math.random() * 3)], 1400);
     }, 5200));
+  }
+  /** Sân bóng: thủ môn nhún nhảy giữa khung thành (dải cắt từ y=140 → khung thành ở trên, cầu thủ đứng hàng dưới). */
+  const GOAL = { x0: 340, x1: 660, top: 30, line: 172 };
+  function goalProps() {
+    const el = document.createElement('div');
+    el.className = 'ar-sc-gk';
+    el.innerHTML = A.extra ? A.extra.goalie() : A.kid(6);
+    S.layer.appendChild(el);
+    S.gk = { el, id: 'gk', x: 500, y: GOAL.line, h: 96 };
+    el.style.transform = `translate(500px, ${GOAL.line}px)`;
+    if (reduced()) return;
+    S.timers.push(setInterval(() => {
+      if (!S || !S.gk || S.gk.diving) return;
+      S.gk.x = 450 + Math.random() * 100;
+      el.style.transform = `translate(${S.gk.x}px, ${GOAL.line}px)`;
+    }, 900));
+  }
+  /** 1 cú sút từ chỗ cầu thủ đứng: vào lưới (thủ môn đổ sai hướng) hoặc trượt (cản phá · cột · xà · vọt). */
+  function kick(s, goal) {
+    if (!S || !S.gk) return;
+    const left = Math.random() < .5;
+    const tx = left ? GOAL.x0 + 28 : GOAL.x1 - 28, ty = GOAL.top + 20 + Math.random() * 100;
+    const miss = goal ? '' : ['save', 'post', 'bar', 'over'][Math.floor(Math.random() * 4)];
+    const end = goal ? [tx, ty] : { save: [left ? 440 : 560, GOAL.line - 60], post: [left ? GOAL.x0 : GOAL.x1, 110], bar: [tx, GOAL.top - 6], over: [tx + (left ? -60 : 60), -30] }[miss];
+    const gk = S.gk, dive = goal ? !left : left;
+    if (reduced()) { float(s, goal ? '⚽ VÀO!' : 'Hụt!', goal ? 'gold' : 'down'); return; }
+    gk.diving = true;
+    flashEl(gk.el, dive ? 'is-dive-l' : 'is-dive-r', 900);
+    gk.el.style.transform = `translate(${dive ? 450 : 550}px, ${GOAL.line}px)`;
+    setTimeout(() => { if (S && S.gk) S.gk.diving = false; }, 950);
+    const ball = document.createElement('div');
+    ball.className = 'ar-sc-ball';
+    ball.innerHTML = A.extra ? A.extra.ball() : '⚽';
+    S.fx.appendChild(ball);
+    const x0 = s.x + 18, y0 = s.y - 8;
+    ball.animate([
+      { transform: `translate(${x0}px, ${y0}px) scale(1.1) rotate(0)` },
+      { transform: `translate(${(x0 + end[0]) / 2}px, ${Math.min(y0, end[1]) - 50}px) scale(.85) rotate(360deg)`, offset: .55 },
+      { transform: `translate(${end[0]}px, ${end[1]}px) scale(.62) rotate(720deg)` },
+    ], { duration: 560, easing: 'cubic-bezier(.25,.6,.35,1)', fill: 'forwards' }).onfinish = () => {
+      if (!S) { ball.remove(); return; }
+      if (goal) {
+        burst(end[0], end[1], ['⚽', '✨', '🎉'], 8);
+        flashEl(S.el, 'is-net', 600);
+        float(s, '⚽ VÀO!', 'gold');
+        flash(s, 'is-happy');
+      } else {
+        float(s, { save: '🧤 Cản phá!', post: '💥 Cột dọc!', bar: '💥 Xà ngang!', over: '🙈 Vọt xà!' }[miss], 'down');
+        if (miss === 'save') say(gk, 'Bắt gọn!', 1100, true);
+      }
+      setTimeout(() => ball.remove(), goal ? 500 : 250);
+    };
   }
   /** Phòng máy chủ: Trùm Virus đứng bên phải, thanh máu + tên giai đoạn trên đầu, thỉnh thoảng gầm gừ. */
   function bossProps(G) {
@@ -295,7 +350,7 @@
       return;
     }
     // Tốc độ / Sinh tồn / Đấu phép / Săn vàng / Câu cá / Giải mã: đứng 1 hàng; Tốc độ xếp theo hạng (đổi hạng → chạy đổi chỗ)
-    const order = G.mode === 'speed' || G.mode === 'gold' || G.mode === 'heist' || G.mode === 'fish' || G.mode === 'dino'
+    const order = G.mode === 'speed' || G.mode === 'gold' || G.mode === 'heist' || G.mode === 'fish' || G.mode === 'dino' || G.mode === 'goal'
       ? C.rank(list, KEY[G.mode]) : list;
     const gap = (G.mode === 'dino' ? 700 : 820) / Math.max(1, n); // Đào hoá thạch: chừa chỗ cho khủng long
     // Đứng so le 2 bậc cho có chiều sâu — trừ khi có tim/thanh máu trên đầu (để không bị khung cắt mất)
@@ -305,7 +360,7 @@
 
   // ── Đồng bộ sau mỗi lượt ──
   function snapshot(G) {
-    G.players.forEach((p) => { S.prev[p.id] = { v: p[KEY[G.mode]] || 0, hp: p.hp, gold: p.gold || 0 }; });
+    G.players.forEach((p) => { S.prev[p.id] = { v: p[KEY[G.mode]] || 0, hp: p.hp, gold: p.gold || 0, shots: p.shots || 0 }; });
     paintOver(G);
   }
   /** Dòng trên đầu: tim (Sinh tồn), thanh máu (Đấu phép), hạng (Tốc độ). */
@@ -327,6 +382,7 @@
     const key = KEY[G.mode];
     layout(G, false);
     const hits = []; // Diệt Virus: số sát thương hiện trên đầu Virus khi tia đánh tới nơi
+    const kicks = []; // Sút luân lưu
     G.players.forEach((p, k) => {
       const s = S.sp[p.id], pr = S.prev[p.id];
       if (!s || !pr) return;
@@ -334,6 +390,11 @@
       if (G.mode === 'boss') {
         if (dv > 0 && S.boss) { flash(s, 'is-happy'); shot(s, S.boss, p.lastCrit ? 'is-crit' : 'is-hit', k * 90); hits.push({ dv, crit: p.lastCrit, k }); }
         if (p.hp < pr.hp && S.boss) { shot(S.boss, s, 'is-goo', 380); setTimeout(() => { if (S) { flash(s, 'is-hit'); float(s, '💔', 'down'); } }, 900); }
+        return;
+      }
+      if (G.mode === 'goal') {
+        // Mỗi cú sút mới diễn lần lượt (em trước): bóng bay vào lưới / thủ môn cản / trúng cột / vọt xà
+        if ((p.shots || 0) > pr.shots) kicks.push({ s, goal: dv > 0, me: !!p.me });
         return;
       }
       if (G.mode === 'moon') {
@@ -382,6 +443,7 @@
         b.hp = G.boss.hp;
       }, hits.length ? 640 + hits.length * 90 : 0);
     }
+    if (G.mode === 'goal') kicks.sort((a, b) => b.me - a.me).forEach((kk, i) => setTimeout(() => S && kick(kk.s, kk.goal), i * 520));
     if (G.mode === 'tug') {
       const was = S.prevRope || 0, now = G.rope || 0;
       if (now !== was) Object.values(S.sp).forEach((s) => flash(s, 'is-heave', 600));

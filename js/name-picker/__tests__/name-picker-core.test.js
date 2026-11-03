@@ -61,5 +61,16 @@ var n = 12, okW = true;
 for (var i = 0; i < n; i++) { if (N.wheelIndexAt(N.wheelAngle(i, n, 6, 0.9), n) !== i || N.wheelIndexAt(N.wheelAngle(i, n, 6, -0.9), n) !== i) okW = false; }
 assertEq('vòng quay: dừng đúng ô đã chọn (kể cả lệch trong ô)', okW, true);
 
+// ── Chia nhóm ──
+var cls = Array.from({ length: 23 }, function (_, i) { return 'HS' + (i + 1); });
+var gr = N.makeGroups(cls, 4, rngFrom(9), true);
+var sizes = gr.map(function (g) { return g.members.length; });
+var flat = gr.reduce(function (a, g) { return a.concat(g.members); }, []).sort();
+assertEq('chia nhóm: 4 nhóm lệch nhau tối đa 1 bạn', [gr.length, Math.max.apply(null, sizes) - Math.min.apply(null, sizes) <= 1], [4, true]);
+assertEq('chia nhóm: đủ mọi bạn, không trùng', flat, cls.slice().sort());
+assertEq('chia nhóm: nhóm trưởng thuộc nhóm và đứng đầu', gr.every(function (g) { return g.leader === g.members[0]; }), true);
+assertEq('chia nhóm: không nhóm trưởng', N.makeGroups(cls, 3, rngFrom(1), false).every(function (g) { return g.leader === null; }), true);
+assertEq('chia nhóm: số nhóm > số người → mỗi người 1 nhóm', N.makeGroups(['A', 'B'], 5, rngFrom(1)).length, 2);
+
 console.log(failures ? '\n' + failures + ' test FAIL' : '\nTất cả test PASS');
 process.exit(failures ? 1 : 0);

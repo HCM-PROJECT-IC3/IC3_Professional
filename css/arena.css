@@ -479,7 +479,7 @@ a.ar-btn { text-decoration: none; }
   background: var(--purple); color: #fff; font: 800 .85rem Inter, sans-serif;
 }
 #arHome[data-role="teacher"] .ar-modes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-#arHome[data-role="teacher"] :is(.m-gold, .m-fish, .m-dino, .m-moon, .m-boss) { display: none; }
+#arHome[data-role="teacher"] :is(.m-gold, .m-fish, .m-dino, .m-moon, .m-boss, .m-goal) { display: none; }
 #arHome .ar-opts { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
 .ar-chips-inline button { flex: 0 1 90px; }
 .ar-host-go { width: 100%; margin-top: .9rem; padding: 1rem; font-size: 1.2rem; }
@@ -659,6 +659,7 @@ div.ar-mrow { cursor: default; }
 .ar-mode.m-dino { background: linear-gradient(150deg, #65a30d, #3f6212); }
 .ar-mode.m-moon { background: linear-gradient(150deg, #312e81, #0c0f33); }
 .ar-mode.m-boss { background: linear-gradient(150deg, #0f6b4a, #0b1330); }
+.ar-mode.m-goal { background: linear-gradient(150deg, #2f9e44, #1b3a8f); }
 
 /* Ô chọn trong khung phản hồi (phép / mục tiêu / việc làm / ký hiệu): khung .ar-chest, đổi màu để khỏi giống rương vàng */
 .ar-chests:is(.ar-spells, .ar-heist, .ar-targets, .ar-syms, .ar-dino) .ar-chest {
@@ -1071,6 +1072,7 @@ body[data-mode="moon"] .ar-scene { height: clamp(170px, min(30vw, 40vh), 360px);
 .ar-mode.m-dino { --mc: #5a920c; --mc-d: #3f6212; }
 .ar-mode.m-moon { --mc: #3a3596; --mc-d: #191654; }
 .ar-mode.m-boss { --mc: #127a55; --mc-d: #0b3d2c; }
+.ar-mode.m-goal { --mc: #2b8a3e; --mc-d: #174a22; }
 .ar-mode.m-board { --mc: #24408c; --mc-d: #0b1f4d; }
 .ar-mode.has-cover {
   padding: 0; overflow: hidden; gap: 0; background: var(--mc); min-height: 0;
@@ -1848,3 +1850,15 @@ body[data-mode="moon"] .ar-scene { height: clamp(170px, min(30vw, 40vh), 360px);
   .ar-hostbar #arHostQuick { width: 100%; }
   .ar-hostbar-sum span:first-child, .ar-hostbar-sum span:last-child { display: none; } /* màn hẹp: chỉ chế độ + số câu */
 }
+
+/* ── Sút luân lưu (arena-scene.js goalProps/kick) ── */
+.ar-sc-gk { position: absolute; left: 0; top: 0; width: 0; height: 0; z-index: 120; transition: transform .5s ease-in-out; }
+.ar-sc-gk > svg { position: absolute; left: -30px; bottom: 0; width: 60px; overflow: visible; transition: transform .25s ease-out; }
+.ar-sc-gk .np-pose-run { display: none; }
+.ar-sc-gk.is-dive-l > svg { transform: translate(-28px, -14px) rotate(-78deg); }
+.ar-sc-gk.is-dive-r > svg { transform: translate(28px, -14px) rotate(78deg); }
+.ar-sc-ball { position: absolute; left: -12px; top: -12px; width: 24px; height: 24px; z-index: 950; pointer-events: none; }
+.ar-sc-ball > svg { display: block; width: 100%; height: 100%; }
+.ar-scene.is-net .ar-sc-bg { animation: ar-sc-net .5s ease-out; }
+@keyframes ar-sc-net { 30% { transform: translateY(-143px) scale(1.01); } }
+@media (prefers-reduced-motion: reduce) { .ar-sc-gk, .ar-sc-gk > svg { transition: none; } .ar-scene.is-net .ar-sc-bg { animation: none; } }

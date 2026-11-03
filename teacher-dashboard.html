@@ -13,10 +13,12 @@
 <!-- Dùng lại NGUYÊN css/coordinator-dashboard.css — cùng layout
      KPI/biểu đồ/bảng/drawer, không style riêng nào khác biệt cần thêm. -->
 <link rel="stylesheet" href="css/coordinator-dashboard.css">
+<link rel="stylesheet" href="css/teacher-insights.css">
 <link rel="stylesheet" href="css/wrong-questions.css">
 <link rel="stylesheet" href="css/motion.css">
   <link rel="stylesheet" href="css/accessibility.css">
 <link rel="stylesheet" href="lib/fontawesome/css/fa.min.css">
+<link rel="stylesheet" href="css/ai-assist.css">
 </head>
 <body>
 
@@ -81,6 +83,13 @@
 
   <div class="loading-note" id="loadingNote">Đang tải dữ liệu học sinh &amp; kết quả bài thi của trường bạn...</div>
 
+  <!-- ============ TỔNG QUAN LỚP + GIAO BÀI · SO SÁNH ĐỢT · CHUYÊN CẦN (js/teacher/insights.js — 0 lượt Firebase thêm) ============ -->
+  <section class="ti-overview" id="tiOverview" hidden aria-label="Tổng quan lớp"></section>
+  <section class="ti-tools" id="tiTools" hidden aria-label="Giao bài, so sánh đợt kiểm tra, chuyên cần">
+    <div class="ti-card" id="tiAssign"></div>
+    <div class="ti-card" id="tiRounds"></div>
+    <div class="ti-card" id="tiAttend"></div>
+  </section>
   <!-- ============ 6 KPI (không có "Tổng số giáo viên" như bản Điều phối) ============ -->
   <div class="kpi-grid" id="kpiGrid" hidden>
     <div class="kpi-card">
@@ -146,7 +155,8 @@
   <!-- ============ DANH SÁCH CẦN CHÚ Ý ============ -->
   <div class="watchlists-grid" id="watchlistsGrid" hidden>
     <div class="watchlist-card">
-      <div class="watchlist-title"><i class="fa-solid fa-flag" aria-hidden="true"></i> Học sinh chưa làm bài <span class="watchlist-count" id="notSubmittedCount"></span></div>
+      <div class="watchlist-title"><i class="fa-solid fa-flag" aria-hidden="true"></i> Học sinh chưa làm bài <span class="watchlist-count" id="notSubmittedCount"></span>
+        <button type="button" class="race-present-btn" id="notSubmittedCopy" title="Chép tên học sinh chưa làm bài (theo lớp) để nhắc trong nhóm lớp" hidden><i class="fa-solid fa-copy" aria-hidden="true"></i> Chép danh sách</button></div>
       <ul class="watchlist-list" id="notSubmittedList"></ul>
       <div class="watchlist-more" id="notSubmittedMore"></div>
     </div>
@@ -166,7 +176,24 @@
       <ul class="watchlist-list" id="classRaceList"></ul>
       <div class="watchlist-more">Điểm thi đua = điểm TB × % học sinh của lớp đã làm bài (từ thứ Hai)</div>
     </div>
+    <!-- Tính trên bài nộp đã tải (EduAnalytics.progressTrends / reviewFlags) — 0 lượt Firebase/Apps Script thêm -->
+    <div class="watchlist-card">
+      <div class="watchlist-title"><i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i> Tiến bộ rõ <span class="watchlist-count" id="improvingCount"></span></div>
+      <ul class="watchlist-list wl-stack" id="improvingList"></ul>
+      <div class="watchlist-more" id="improvingMore"></div>
+    </div>
+    <div class="watchlist-card">
+      <div class="watchlist-title"><i class="fa-solid fa-arrow-trend-down" aria-hidden="true"></i> Đang sa sút <span class="watchlist-count" id="decliningCount"></span></div>
+      <ul class="watchlist-list wl-stack" id="decliningList"></ul>
+      <div class="watchlist-more" id="decliningMore"></div>
+    </div>
+    <div class="watchlist-card">
+      <div class="watchlist-title"><i class="fa-solid fa-eye" aria-hidden="true"></i> Bài nộp cần xem lại <span class="watchlist-count" id="reviewFlagsCount"></span></div>
+      <ul class="watchlist-list wl-stack" id="reviewFlagsList"></ul>
+      <div class="watchlist-more" id="reviewFlagsMore"></div>
+    </div>
   </div>
+  <p class="watchlist-note" id="trendNote" hidden>Tiến bộ / sa sút: so điểm TB các bài gần đây với các bài trước đó (từ 3 bài trở lên, chênh ≥ 10 điểm). Bài cần xem lại chỉ là gợi ý để hỏi lại học sinh, không phải kết luận gian lận.</p>
 
   <!-- ============ BẢNG QUẢN LÝ HỌC SINH (dùng lại nguyên js/coordinator/student-table.js) ============ -->
   <!-- ============ CÂU CẢ LỚP HAY SAI (Google Sheet cột CauSai — js/teacher/wrong-questions.js) ============ -->
@@ -339,7 +366,13 @@
 <script src="js/coordinator/student-table.js"></script>
 <script src="js/coordinator/student-detail.js"></script>
 <script src="js/services/question-bank-lookup.js"></script>
+<script src="js/services/ai-core.js"></script>
+<script src="js/services/ai-assistant.js"></script>
+<script src="js/services/ai-service.js"></script>
 <script src="js/teacher/wrong-questions.js"></script>
+<script src="js/so-lop/so-lop-core.js"></script>
+<script src="js/teacher/teacher-insights-core.js"></script>
+<script src="js/teacher/insights.js"></script>
 <script src="js/teacher/dashboard.js"></script>
 <script src="js/motion.js"></script>
 

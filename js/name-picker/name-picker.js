@@ -1,9 +1,10 @@
 /* ============================================================
    js/name-picker/name-picker.js — điều khiển trang "Gọi tên học sinh" (goi-ten.html).
-   Nguồn tên · tuỳ chọn · lịch sử "đã gọi" · nút Bắt đầu. Sân khấu và 11 trò: np-games.js; tranh: np-art.js.
+   Nguồn tên · tuỳ chọn · lịch sử "đã gọi" · nút Bắt đầu. Sân khấu và 11 trò gốc: np-games.js, 6 trò thêm: np-games-extra.js; tranh: np-art.js.
    Người được gọi chọn TRƯỚC (name-picker-core.js), trò chơi chỉ "diễn" tới kết quả đó.
    Câu hỏi "Bốc thử thách" theo tiết/bài hôm nay của lớp: np-lessons.js (PPCT + bộ "Bài N." đúng cấp).
-   Chỉ đọc file tĩnh data/roster/students-active.json; lưu localStorage trên máy này — không gửi gì đi.
+   Chỉ đọc file tĩnh data/roster/students-active.json; lưu localStorage trên máy này — không gửi gì đi,
+   trừ nút "AI soạn thêm câu hỏi" (tên bài + khối → Gemini; câu lưu localStorage eduquiz_goiten_ai_v1, trộn vào Bốc thử thách).
    ============================================================ */
 (function (global) {
   'use strict';
@@ -21,8 +22,11 @@
   const reduced = () => { try { return global.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } };
 
   function load() { try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch (e) { return {}; } }
-  const S = Object.assign({ src: 'class', school: '', cls: '', paste: '', num: 20, game: 'egg', random: false, noRepeat: true, twist: false, secs: 12, called: {}, absent: {}, lesson: {} }, load());
+  const S = Object.assign({ src: 'class', school: '', cls: '', paste: '', num: 20, game: 'egg', random: false, noRepeat: true, twist: false, secs: 12, speak: false,
+    called: {}, absent: {}, lesson: {}, grpK: 4, grpLead: false, groups: {} }, load());
   if (!S.lesson || typeof S.lesson !== 'object') S.lesson = {};
+  if (!S.groups || typeof S.groups !== 'object') S.groups = {};
+  S.grpK = Math.max(2, Math.min(8, S.grpK | 0 || 4));
   if (!G.GAMES.some((g) => g.id === S.game)) S.game = 'egg';   // bản cũ lưu tên trò khác
   S.secs = Math.max(5, Math.min(30, S.secs | 0 || 12));
   S.num = Math.max(2, Math.min(50, S.num | 0 || 20));
@@ -40,6 +44,17 @@
     toast.t = setTimeout(() => { t.hidden = true; }, 2600);
   }
   const sfx = (n) => { try { global.EduSFX && global.EduSFX.play(n); } catch (e) { /* ignore */ } };
+  /** Đọc to bằng giọng của máy (Web Speech, chạy trên máy — không gửi đi). Không có giọng Việt thì dùng giọng mặc định. */
+  function say(text) {
+    if (!S.speak || !('speechSynthesis' in global)) return;
+    try {
+      const v = global.speechSynthesis.getVoices().find((x) => /^vi/i.test(x.lang));
+      global.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'vi-VN'; u.rate = 0.9; if (v) u.voice = v;
+      global.speechSynthesis.speak(u);
+    } catch (e) { /* ignore */ }
+  }
 
   // ============================================================
   // NGUỒN TÊN
@@ -138,6 +153,7 @@
   async function paintLesson() {
     if (!LS || !$('npLevel')) return;
     ppct = await LS.load();
+    setTimeout(paintAi, 0); // số câu AI của bài đang chọn (sau khi paintLesson cập nhật tiết)
     const lv = curLevel(), auto = autoLevel(), r = lessonRec();
     const levelName = (id) => { const l = LS.levelById(id); return l ? `${l.name} (lớp ${l.grade})` : ''; };
     const sel = r.lv === 'auto' && !auto ? 'none' : r.lv;
@@ -171,6 +187,51 @@
   }
 
   // ============================================================
+  // CÂU HỎI AI THEO BÀI (Gemini — js/services/ai-service.js). Lưu theo "cấp độ|tiết" (tối đa 30 bài, 12 câu/bài).
+  // ============================================================
+  const AI_STORE = 'eduquiz_goiten_ai_v1';
+  const aiAll = () => { try { return JSON.parse(localStorage.getItem(AI_STORE)) || {}; } catch (e) { return {}; } };
+  const aiKey = () => `${curLevel() || 'chung'}|${curTiet().tiet || 0}`;
+  function aiCards(key) {
+    const list = aiAll()[key] || [];
+    return LS && LS.toCard ? list.map((q, i) => Object.assign(LS.toCard(q, 'AI soạn'), { uid: `ai:${key}:${i}` })) : [];
+  }
+  function aiTopic() {
+    const lv = curLevel(), l = LS && LS.levelById(lv), t = curTiet(), p = periods().find((x) => x.tiet === t.tiet);
+    if (l && p) return `${l.name} · ${LS.periodLabel(p, lessonSets)}`;
+    if (l) return `${l.name} (kiến thức chung của khối)`;
+    return 'Tin học cơ bản: máy tính, Internet, an toàn thông tin';
+  }
+  function paintAi() {
+    const el = $('npAiNote');
+    if (!el) return;
+    const n = (aiAll()[aiKey()] || []).length;
+    el.innerHTML = n ? ` Đang có <b>${n}</b> câu AI trong xấp của bài này · <button type="button" class="np-link" id="npAiClear">Xoá</button>` : '';
+  }
+  async function aiGenerate() {
+    if (!global.EduAI) { toast('Trang chưa nạp Trợ lý AI.'); return; }
+    const key = aiKey(), l = LS && LS.levelById(curLevel());
+    const g = parseInt((String(S.src === 'class' ? S.cls : '').match(/\d+/) || [])[0], 10);
+    const btn = $('npAiQ');
+    btn.disabled = true;
+    let got = [];
+    await global.EduAI.askInto($('npAiOut'), 'quickQ', { topic: aiTopic(), grade: l ? l.grade : g, count: 6 }, {
+      render: (r) => {
+        got = global.EduAI.parseQuiz(r.text, 8);
+        if (!got.length) return '<p>AI trả về nội dung không đọc được — bấm lại nhé.</p>';
+        const all = aiAll();
+        all[key] = (all[key] || []).concat(got).slice(-12);
+        const keys = Object.keys(all);
+        if (keys.length > 30) keys.slice(0, keys.length - 30).forEach((k) => { delete all[k]; });
+        try { localStorage.setItem(AI_STORE, JSON.stringify(all)); } catch (e) { /* bộ nhớ đầy — vẫn dùng trong phiên */ }
+        return `<p>Đã thêm <b>${got.length}</b> câu AI vào xấp "Bốc thử thách" của <b>${esc(aiTopic())}</b>:</p><ul>${got.map((q) => `<li>${esc(q.question)} <small>— ${esc(q.correct.join(', '))}</small></li>`).join('')}</ul>`;
+      },
+    });
+    btn.disabled = false;
+    paintAi();
+  }
+
+  // ============================================================
   // LƯỚI TRÒ · THANH TRẠNG THÁI · ĐÃ GỌI
   // ============================================================
   function paintGames() {
@@ -194,6 +255,8 @@
     $('npNoRepeat').checked = S.noRepeat;
     $('npTwist').checked = S.twist;
     $('npRandom').checked = S.random;
+    $('npSpeak').checked = S.speak;
+    paintGroups();
     $('npSecs').value = S.secs; $('npSecsOut').textContent = `${S.secs} giây`;
     if (redraw && !busy && !showing) idle();
   }
@@ -251,6 +314,7 @@
       <button type="button" class="np-small" data-rv="absent"><i class="fa-solid fa-user-xmark" aria-hidden="true"></i> Bạn này vắng — gọi bạn khác</button>
       <button type="button" class="np-small" data-rv="close">Đóng <kbd>Esc</kbd></button>`;
     sfx('fanfare');
+    setTimeout(() => say(label(plan.winner)), 700); // sau tiếng kèn cho dễ nghe
     // Pháo hoa + mưa ruy băng + cả lớp vỗ tay (js/fx-party.js); thiếu file thì về pháo giấy cũ
     const P = global.EduParty;
     if (P) { P.flash('gold'); P.fireworks({ shells: 8 }); P.rain({ count: 110, glyphs: G.THEME && G.THEME[plan.game] }); setTimeout(() => sfx('cheer'), 450); }
@@ -277,6 +341,7 @@
       const r = lessonRec();
       if (r.tiet !== t.tiet || r.day !== today()) { if (r.lv === 'auto' && !autoLevel()) r.lv = lv; r.tiet = t.tiet; r.day = today(); save(); paintLesson(); }
     }
+    ctx.pool = ctx.pool.concat(aiCards(aiKey())); // câu AI soạn cho bài này (cùng khoá với nút soạn)
     if (bn) bn.hidden = true;
     const winner = lastPlan.winner;
     CH.open(fxEl, label(winner), (res) => {
@@ -288,6 +353,71 @@
       paintLesson(); // cập nhật số câu (trừ câu vừa bỏ) + dòng "Đã bỏ N câu"
       if (bn) { bn.hidden = false; const n = bn.querySelector('[data-rv="next"]'); if (n) n.focus({ preventScroll: true }); }
     }, ctx);
+  }
+
+  // ============================================================
+  // CHIA NHÓM — trộn các bạn có mặt, chia đều; "Gọi một nhóm" chạy đèn qua các nhóm rồi dừng ở 1 nhóm.
+  // Lưu S.groups[listKey()] = { at, list: [{ members, leader }] } — chỉ trên máy này.
+  // ============================================================
+  const GRP_COLORS = ['#d9472b', '#2f7dd1', '#3d9a4a', '#9b51c9', '#e08a00', '#d03d86', '#178f8f', '#8a6d1f'];
+  const curGroups = () => S.groups[listKey()] || null;
+  let grpBusy = false;
+  function paintGroups() {
+    const k = $('npGrpK');
+    if (!k.children.length) k.innerHTML = [2, 3, 4, 5, 6, 7, 8].map((n) => `<button type="button" role="radio" data-k="${n}">${n}</button>`).join('');
+    k.querySelectorAll('[data-k]').forEach((b) => b.setAttribute('aria-checked', String(+b.dataset.k === S.grpK)));
+    $('npGrpLead').checked = S.grpLead;
+    if (grpBusy) return;
+    const g = curGroups(), n = present().length;
+    $('npGrpGo').innerHTML = `<i class="fa-solid fa-shuffle" aria-hidden="true"></i> ${g ? 'Chia lại' : 'Chia nhóm!'}`;
+    $('npGrpGo').disabled = n < 2;
+    $('npGrpCall').disabled = $('npGrpCopy').disabled = !g;
+    $('npGrpInfo').textContent = g ? `${g.list.length} nhóm · chia lúc ${g.at}` : n < 2 ? 'cần ít nhất 2 bạn' : '';
+    $('npGrpOut').innerHTML = g ? g.list.map((x, i) => `<div class="np-grp" data-g="${i}" style="--gc:${GRP_COLORS[i % GRP_COLORS.length]}">
+        <h3>Nhóm ${i + 1}<small>${x.members.length} bạn</small></h3>
+        <ul>${x.members.map((m) => `<li${m === x.leader ? ' class="is-lead" title="Nhóm trưởng"' : ''}>${m === x.leader ? '★ ' : ''}${esc(label(m))}</li>`).join('')}</ul></div>`).join('') : '';
+  }
+  function splitGroups() {
+    const list = present();
+    if (list.length < 2 || grpBusy) return;
+    if (curGroups() && !global.confirm('Chia lại nhóm? Kết quả chia nhóm cũ của danh sách này sẽ bị thay.')) return;
+    const at = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    S.groups[listKey()] = { at, list: N.makeGroups(list, S.grpK, rng, S.grpLead) };
+    save(); paintGroups(); sfx('whoosh');
+  }
+  async function callGroup() {
+    const g = curGroups(), out = $('npGrpOut');
+    if (!g || grpBusy) return;
+    grpBusy = true; $('npGrpCall').disabled = true;
+    const cards = [...out.querySelectorAll('.np-grp')];
+    cards.forEach((c) => c.classList.remove('is-win', 'is-hl'));
+    const win = Math.floor(rng() * cards.length);
+    if (!reduced() && cards.length > 1) {
+      out.classList.add('is-rolling');
+      // Đèn chạy chậm dần: 2–3 vòng rồi dừng đúng nhóm đã chọn trước
+      const steps = cards.length * 2 + win + 1;
+      for (let s = 0; s < steps; s++) {
+        cards.forEach((c, i) => c.classList.toggle('is-hl', i === s % cards.length));
+        sfx('tick');
+        await new Promise((r) => setTimeout(r, 70 + 260 * Math.pow(s / steps, 2)));
+      }
+      out.classList.remove('is-rolling');
+    }
+    cards.forEach((c) => c.classList.remove('is-hl'));
+    cards[win].classList.add('is-win');
+    cards[win].scrollIntoView({ block: 'nearest', behavior: reduced() ? 'auto' : 'smooth' });
+    sfx('fanfare');
+    toast(`Mời Nhóm ${win + 1}!`);
+    say(`Mời nhóm ${win + 1}`);
+    grpBusy = false; $('npGrpCall').disabled = false;
+  }
+  async function copyGroups() {
+    const g = curGroups();
+    if (!g) return;
+    const title = S.src === 'class' ? `Chia nhóm lớp ${S.cls} (${g.at})` : `Chia nhóm (${g.at})`;
+    const text = [title].concat(g.list.map((x, i) => `Nhóm ${i + 1}: ${x.members.map((m) => label(m) + (m === x.leader ? ' (nhóm trưởng)' : '')).join(', ')}`)).join('\n');
+    try { await navigator.clipboard.writeText(text); toast('Đã sao chép kết quả chia nhóm — dán vào Zalo/Word được.'); }
+    catch (e) { toast('Trình duyệt chặn sao chép — thầy cô chụp màn hình giúp nhé.'); }
   }
 
   // ============================================================
@@ -330,6 +460,13 @@
       if (!e.target.closest('#npUnhide') || !CH) return;
       CH.unhideAll(); paintHidden(); paintLesson(); toast('Đã hiện lại các câu đã bỏ.');
     });
+    $('npAiQ').addEventListener('click', aiGenerate);
+    $('npAiNote').addEventListener('click', (e) => {
+      if (!e.target.closest('#npAiClear')) return;
+      const all = aiAll(); delete all[aiKey()];
+      try { localStorage.setItem(AI_STORE, JSON.stringify(all)); } catch (err) { /* ignore */ }
+      $('npAiOut').hidden = true; paintAi(); toast('Đã xoá câu AI của bài này.');
+    });
     $('npLevel').addEventListener('change', () => { const r = lessonRec(); r.lv = $('npLevel').value; r.tiet = 0; r.day = ''; save(); paintLesson(); });
     $('npTiet').addEventListener('change', () => { const r = lessonRec(); r.lv = $('npLevel').value; r.tiet = +$('npTiet').value; r.day = today(); save(); paintLesson(); });
     $('npRoster').addEventListener('click', (e) => {
@@ -348,7 +485,7 @@
     });
     $('npPasteClear').addEventListener('click', () => {
       if (S.paste && !global.confirm('Xoá danh sách đã dán và lịch sử đã gọi của danh sách này?')) return;
-      S.paste = ''; S.called.paste = []; delete S.absent.paste; save(); paintSource();
+      S.paste = ''; S.called.paste = []; delete S.absent.paste; delete S.groups.paste; save(); paintSource();
     });
     const setNum = (v) => { S.num = Math.max(2, Math.min(50, v | 0 || 2)); save(); $('npNum').value = S.num; $('npNumOut').textContent = S.num; showing = false; refresh(true); };
     $('npNum').addEventListener('input', () => setNum(+$('npNum').value));
@@ -356,6 +493,15 @@
     $('npNoRepeat').addEventListener('change', () => { S.noRepeat = $('npNoRepeat').checked; save(); refresh(!showing); });
     $('npTwist').addEventListener('change', () => { S.twist = $('npTwist').checked; save(); });
     $('npRandom').addEventListener('change', () => { S.random = $('npRandom').checked; save(); });
+    $('npSpeak').addEventListener('change', () => {
+      S.speak = $('npSpeak').checked; save();
+      if (S.speak && !('speechSynthesis' in global)) toast('Trình duyệt này không đọc được tên — thử Chrome hoặc Edge nhé.');
+    });
+    $('npGrpK').addEventListener('click', (e) => { const b = e.target.closest('[data-k]'); if (!b) return; S.grpK = +b.dataset.k; save(); paintGroups(); });
+    $('npGrpLead').addEventListener('change', () => { S.grpLead = $('npGrpLead').checked; save(); });
+    $('npGrpGo').addEventListener('click', splitGroups);
+    $('npGrpCall').addEventListener('click', callGroup);
+    $('npGrpCopy').addEventListener('click', copyGroups);
     $('npSecs').addEventListener('input', () => { S.secs = +$('npSecs').value; save(); $('npSecsOut').textContent = `${S.secs} giây`; });
     $('npReset').addEventListener('click', () => {
       if (!calledList().length) return;

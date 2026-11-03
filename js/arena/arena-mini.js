@@ -44,7 +44,7 @@
     let s = '';
     try { s = ART.scene(name); } catch (e) { return ''; }
     const p = 'mg' + (++coverSeq) + '-'; // id riêng: cùng cảnh có thể đang nằm trong iframe/thẻ khác
-    return s.replace(/<text[\s\S]*?<\/text>/g, '').replace(/\bid="([^"]+)"/g, `id="${p}$1"`).replace(/url\(#([^)]+)\)/g, `url(#${p}$1)`).replace(/href="#([^"]+)"/g, `href="#${p}$1"`);
+    return s.replace(/<text[\s\S]*?<\/text>/g, '').replace(/\bid="([^"]+)"/g, `id="${p}$1"`).replace(/url\(#(?!np(?:Sph|SphSoft|Cyl|Light)\b)([^)]+)\)/g, `url(#${p}$1)`).replace(/href="#([^"]+)"/g, `href="#${p}$1"`);
   }
   // ============================================================
   // MÀN ĐỐI ĐẦU (trước trận)

@@ -271,6 +271,63 @@
     ws.views = [{ state: 'frozen', ySplit: 1 }];
   }
 
+  // ---- Sheet 8: Tiến bộ / sa sút (EduAnalytics.progressTrends) — bỏ qua nếu không có em nào ----
+  function buildTrendStudentsSheet(wb, filteredResults) {
+    const { improving, declining } = global.EduAnalytics.progressTrends(filteredResults);
+    if (!improving.length && !declining.length) return;
+    const ws = wb.addWorksheet('Tiến bộ & sa sút');
+    ws.columns = [
+      { header: 'Xu hướng', key: 'kind', width: 12 },
+      { header: 'Họ tên', key: 'name', width: 24 },
+      { header: 'Lớp', key: 'cls', width: 12 },
+      { header: 'Điểm TB trước (%)', key: 'before', width: 17 },
+      { header: 'Điểm TB gần đây (%)', key: 'recent', width: 19 },
+      { header: 'Chênh lệch', key: 'delta', width: 12 },
+      { header: 'Số bài', key: 'attempts', width: 9 },
+    ];
+    styleHeaderRow(ws.getRow(1));
+    improving.concat(declining).forEach((e) => ws.addRow({
+      kind: e.delta > 0 ? 'Tiến bộ' : 'Sa sút', name: e.studentName, cls: e.studentClass,
+      before: e.before, recent: e.recent, delta: e.delta, attempts: e.attempts,
+    }));
+    zebra(ws, 1);
+    ws.addConditionalFormatting({
+      ref: `F2:F${ws.rowCount}`,
+      rules: [
+        { type: 'cellIs', operator: 'greaterThan', formulae: [0], style: { font: { color: { argb: PASS_FONT }, bold: true } } },
+        { type: 'cellIs', operator: 'lessThan', formulae: [0], style: { font: { color: { argb: FAIL_FONT }, bold: true } } },
+      ],
+    });
+    ws.addRow([]);
+    ws.addRow(['So điểm TB các bài gần đây với các bài trước đó (từ 3 bài, chênh ≥ 10 điểm). Không tính bài bị cảnh báo sửa điểm.']);
+    ws.views = [{ state: 'frozen', ySplit: 1 }];
+  }
+
+  // ---- Sheet 9: Bài nộp cần xem lại (EduAnalytics.reviewFlags) ----
+  function buildReviewSheet(wb, filteredResults) {
+    const list = global.EduAnalytics.reviewFlags(filteredResults);
+    if (!list.length) return;
+    const ws = wb.addWorksheet('Bài nộp cần xem lại');
+    ws.columns = [
+      { header: 'Giờ nộp', key: 'at', width: 18 },
+      { header: 'Họ tên', key: 'name', width: 24 },
+      { header: 'Lớp', key: 'cls', width: 12 },
+      { header: 'Bài thi', key: 'test', width: 36 },
+      { header: 'Điểm (%)', key: 'score', width: 10 },
+      { header: 'Lý do', key: 'why', width: 60 },
+    ];
+    styleHeaderRow(ws.getRow(1));
+    list.forEach(({ result: r, reasons }) => ws.addRow({
+      at: r.submittedAtMs ? new Date(r.submittedAtMs).toLocaleString('vi-VN') : '', name: r.studentName, cls: r.studentClass,
+      test: r.testName, score: r.score, why: reasons.join(' · '),
+    }));
+    zebra(ws, 1);
+    ws.getColumn('why').alignment = { wrapText: true, vertical: 'top' };
+    ws.addRow([]);
+    ws.addRow(['Gợi ý để hỏi lại học sinh — không phải kết luận gian lận.']);
+    ws.views = [{ state: 'frozen', ySplit: 1 }];
+  }
+
   /**
    * @param {Object} scoped { filteredResults, filteredStudents, examHistories }
    * @param {Object} opts   { rows (từ student-table state.rows), scopeLabel, kpis: [[label,value],...], fileName }
@@ -292,6 +349,8 @@
     buildHeatmapSheet(wb, scoped.filteredResults);
     buildStudentPivotSheet(wb, 'Cần hỗ trợ', global.EduAnalytics.studentsNeedingSupport(scoped.examHistories, 60), FAIL_FILL, FAIL_FONT);
     buildStudentPivotSheet(wb, 'Xuất sắc', global.EduAnalytics.topStudents(scoped.examHistories, 20), PASS_FILL, PASS_FONT);
+    buildTrendStudentsSheet(wb, scoped.filteredResults);
+    buildReviewSheet(wb, scoped.filteredResults);
 
     const buf = await wb.xlsx.writeBuffer();
     const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });

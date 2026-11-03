@@ -12,7 +12,7 @@
    @property {string} action         vd. "login" | "logout" | "export_excel" | "view_student_detail"
    @property {string} [targetId]     id đối tượng bị tác động (vd. resultId, studentKey)
    @property {Object} [meta]         dữ liệu phụ tuỳ action (giữ nhỏ gọn, không lưu dữ liệu nhạy cảm)
-   @property {firebase.firestore.Timestamp} createdAt
+   @property {Timestamp} createdAt  (ghi: EduModels.SERVER_TIME)
    ============================================================ */
 (function (global) {
   'use strict';
@@ -32,6 +32,11 @@
     UPDATE_USER: 'update_user',        // Quản lý tài khoản: vai trò, duyệt, trường, mã NV, nhập Excel (meta.userAction)
   });
 
+  // Thời điểm do MÁY CHỦ ghi — model chỉ đánh dấu, tầng repository (base-repository.js) đổi sang
+  // FieldValue.serverTimestamp() của Firestore. Model không phụ thuộc Firebase (docs/architecture/CLEAN-ARCHITECTURE.md).
+  global.EduModels = global.EduModels || {};
+  const SERVER_TIME = global.EduModels.SERVER_TIME || (global.EduModels.SERVER_TIME = Object.freeze({ __eduServerTime: true }));
+
   function build({ uid, role, actorName, action, targetId, meta }) {
     return {
       uid: uid || null,
@@ -40,7 +45,7 @@
       action,
       targetId: targetId || null,
       meta: meta || {},
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdAt: SERVER_TIME,
     };
   }
 

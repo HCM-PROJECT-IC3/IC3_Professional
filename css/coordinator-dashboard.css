@@ -601,3 +601,16 @@ body {
 .school-compare-table td.num, .school-compare-table th:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums }
 .school-compare-table tr:last-child td { border-bottom: none }
 .school-compare-note { font-size: .74rem; color: var(--muted); margin-top: .6rem }
+
+/* Dashboard giáo viên: chú thích dưới lưới "Tiến bộ / Sa sút / Bài nộp cần xem lại" */
+.watchlist-note { margin: .6rem 0 1.4rem; font-size: .74rem; color: var(--muted); line-height: 1.5; }
+.watchlist-note[hidden] { display: none; }
+/* Tên ở trên, mô tả dài ở dưới, chip điểm bên phải (thẻ Tiến bộ / Sa sút / Bài nộp cần xem lại) */
+.wl-stack .watchlist-item { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "name chip" "meta chip"; gap: .1rem .6rem; }
+.wl-stack .watchlist-item .name { grid-area: name; }
+.wl-stack .watchlist-item .meta { grid-area: meta; line-height: 1.45; }
+.wl-stack .watchlist-item .score-chip { grid-area: chip; align-self: center; }
+/* Dòng bấm được → mở chi tiết học sinh (js/teacher/dashboard.js openStudentFromList) */
+.watchlist-item.is-clickable { cursor: pointer; transition: box-shadow .15s ease; }
+.watchlist-item.is-clickable:hover { box-shadow: 0 0 0 1px var(--purple); }
+.watchlist-item.is-clickable:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }

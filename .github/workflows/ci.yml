@@ -33,6 +33,9 @@ jobs:
       - name: Trang HTML/CSS không trỏ tới file đã xoá/đổi tên
         run: node scripts/check-html.js
 
+      - name: Kiến trúc sạch — Domain thuần, giao diện không thêm lượt gọi Firestore trực tiếp
+        run: node scripts/check-architecture.js
+
       - name: Unit test (mô phỏng Word/Excel/PowerPoint, lưu bài nộp, gọi Apps Script)
         run: |
           for t in js/*/__tests__/*.test.js; do

@@ -82,8 +82,16 @@
     timers.forEach(clearTimeout); timers.forEach(clearInterval); timers = [];
     frames.forEach(cancelAnimationFrame); frames = [];
   }
+  /** Máy quay lướt mềm tới (z, x, y) — dùng lúc bắt thật để cận cảnh (Đua bi tự điều khiển máy quay từng khung hình). */
+  const calm = () => { try { return global.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } };
+  function glide(z, x, y, ms) {
+    if (calm()) return;
+    world.style.transition = `transform ${ms || 700}ms cubic-bezier(.3,0,.2,1)`;
+    camera(z, x, y);
+  }
   function reset(scene) {
     stopAll();
+    world.style.transition = '';
     camera(1, W / 2, H / 2);
     world.querySelector('.np-bg').innerHTML = A.scene(scene);
     const small = world.classList.contains('is-small');
@@ -103,15 +111,18 @@
     el.innerHTML = `<div class="np-sp-in" style="width:${o.w || 60}px">${html}</div>${o.tag ? `<span class="np-tag${/^\d+$/.test(o.tag) ? ' is-num' : ''}">${esc(o.tag)}</span>` : ''}`;
     layer.appendChild(el);
     if (o.data) el.dataset.name = o.data.name; // để soi đèn đúng người lúc công bố (spotlight)
-    const sp = { el, x, y, w: o.w || 60, h: o.h || (o.w || 60) * 1.6, frozen: false, data: o.data };
+    el.style.setProperty('--sw', (o.w || 60) + 'px'); // cỡ bóng đổ dưới chân (CSS .np-sp::after)
+    const sp = { el, x, y, w: o.w || 60, h: o.h || (o.w || 60) * 1.6, frozen: false, data: o.data, flat: !!o.flat };
     place(sp, x, y, 0);
     return sp;
   }
+  /** Phối cảnh: càng xa (y nhỏ) càng nhỏ, càng gần càng to. flat: trò xếp làn (Đua, Tên lửa, Diều) giữ cỡ đều. */
+  const depth = (y) => Math.max(.82, Math.min(1.12, .86 + .26 * (y - 300) / 300));
   function place(sp, x, y, ms, ease) {
     if (x !== sp.x) sp.el.classList.toggle('is-left', x < sp.x);
     sp.x = x; sp.y = y;
     sp.el.style.transition = ms ? `transform ${ms}ms ${ease || 'linear'}` : 'none';
-    sp.el.style.transform = `translate(${x}px, ${y}px)`;
+    sp.el.style.transform = `translate(${x}px, ${y}px)` + (sp.flat ? '' : ` scale(${depth(y).toFixed(3)})`);
     sp.el.style.zIndex = String(Math.round(y));
   }
   /** Đi/chạy tới (x, y) trong ms; trả Promise khi tới nơi. */
@@ -256,11 +267,14 @@
     const t0 = performance.now(), end = t0 + o.D;
     const find = (name) => list.find((s) => s.data.name === name);
     const winner = find(plan.winner), decoy = plan.twist ? find(plan.twist) : null;
+    // Vòng ngắm đỏ dưới chân bạn sắp bị "bắt" trong lúc người bắt lao tới — cả lớp nín thở
     const reach = async (sp, ms) => {
       sp.frozen = true;
+      sp.el.classList.add('is-target');
       const p = o.offset ? o.offset(sp) : { x: sp.x, y: sp.y };
       if (o.before) o.before(sp);
       await go(agent, p.x, p.y, Math.max(350, ms), { ease: 'cubic-bezier(.4,0,.3,1)' });
+      sp.el.classList.remove('is-target');
     };
     const travel = (sp) => Math.min(1500, Math.max(450, dist(agent, sp) / o.speed * 1000));
     const fakes = Math.max(1, Math.min(5, Math.round(o.D / 4200)));
@@ -286,6 +300,7 @@
       decoy.frozen = false;
     }
     await reach(winner, Math.max(500, Math.min(1800, end - performance.now() - 300)));
+    glide(1.3, (winner.x + agent.x) / 2, winner.y - winner.h * .5); // cận cảnh khoảnh khắc bắt thật
     await o.take(winner, true);
   }
 
@@ -348,7 +363,7 @@
     const n = items.length, top = 86, laneH = 500 / n;
     const w = Math.max(18, Math.min(44, laneH * .8));
     world.querySelector('.np-bg svg').insertAdjacentHTML('beforeend', Array.from({ length: n - 1 }, (_, k) => `<path d="M0 ${top + laneH * (k + 1)}h1000" stroke="#f1d2bd" stroke-width="2" stroke-dasharray="14 10" opacity=".7"/>`).join(''));
-    const list = items.map((it, k) => sprite(A.kid(it.idx), 40, top + laneH * (k + 1) - 3, { w, h: w * 1.62, tag: it.label, cls: 'np-kid-sp np-lane-kid', data: it }));
+    const list = items.map((it, k) => sprite(A.kid(it.idx), 40, top + laneH * (k + 1) - 3, { w, h: w * 1.62, tag: it.label, cls: 'np-kid-sp np-lane-kid', data: it, flat: true }));
     list.forEach((sp) => sp.el.style.setProperty('--w', w + 'px'));
     const names = items.map((it) => it.name);
     const sc = N.raceScript(names, plan.winner, rng, plan.twist);
@@ -496,7 +511,7 @@
   // Tên lửa — phóng cùng lúc, chiếc nào chạm Mặt Trăng trước
   PLAY.rocket = async (items, plan, D) => {
     const n = items.length, cw = 940 / n, w = Math.max(28, Math.min(58, cw * .82));
-    const list = items.map((it, k) => sprite(A.rocket(A.FUN[it.idx % A.FUN.length]), 30 + cw * (k + .5), 540, { w, h: w * 1.86, tag: it.label, cls: 'np-rocket-sp' + (k % 2 ? ' is-alt' : ''), data: it }));
+    const list = items.map((it, k) => sprite(A.rocket(A.FUN[it.idx % A.FUN.length]), 30 + cw * (k + .5), 540, { w, h: w * 1.86, tag: it.label, cls: 'np-rocket-sp' + (k % 2 ? ' is-alt' : ''), data: it, flat: true }));
     const names = items.map((it) => it.name);
     const sc = N.raceScript(names, plan.winner, rng, plan.twist);
     shout('3... 2... 1... Phóng!');
@@ -1094,12 +1109,14 @@
     const items = cast(game, list, null, numeric, allNames);
     if (!items.length) return;
     // Mỗi trò vẽ cảnh đầu bằng chính hàm chơi với thời gian 0: dùng bố cục tĩnh đơn giản cho nhanh
-    if (game === 'race') {
+    if (g.idle) {
+      g.idle(items); // trò đăng ký thêm (np-games-extra.js) tự vẽ cảnh chờ
+    } else if (game === 'race') {
       const laneH = 500 / items.length, w = Math.max(18, Math.min(44, laneH * .8));
-      items.forEach((it, k) => sprite(A.kid(it.idx), 40, 86 + laneH * (k + 1) - 3, { w, h: w * 1.62, tag: it.label, cls: 'np-kid-sp np-lane-kid' }).el.style.setProperty('--w', w + 'px'));
+      items.forEach((it, k) => sprite(A.kid(it.idx), 40, 86 + laneH * (k + 1) - 3, { w, h: w * 1.62, tag: it.label, cls: 'np-kid-sp np-lane-kid', flat: true }).el.style.setProperty('--w', w + 'px'));
     } else if (game === 'rocket') {
       const cw = 940 / items.length, w = Math.max(28, Math.min(58, cw * .82));
-      items.forEach((it, k) => sprite(A.rocket(A.FUN[it.idx % A.FUN.length]), 30 + cw * (k + .5), 540, { w, h: w * 1.86, tag: it.label, cls: 'np-rocket-sp' + (k % 2 ? ' is-alt' : '') }));
+      items.forEach((it, k) => sprite(A.rocket(A.FUN[it.idx % A.FUN.length]), 30 + cw * (k + .5), 540, { w, h: w * 1.86, tag: it.label, cls: 'np-rocket-sp' + (k % 2 ? ' is-alt' : ''), flat: true }));
     } else if (game === 'fish') {
       scatter(items.length, 130, 230, 880, 520).forEach((p, k) => sprite(A.fish(A.FUN[items[k].idx % A.FUN.length]), p.x, p.y, { w: 70, h: 44, tag: items[k].label, cls: 'np-fish-sp' }));
     } else if (game === 'balloon') {
@@ -1154,6 +1171,8 @@
     try {
       await PLAY[game](items, plan, plan.ms);
       world.classList.remove('is-tense');
+      if (camZ > 1) { glide(1, W / 2, H / 2, 600); await sleep(650); } // về toàn cảnh trước khi soi đèn
+      world.style.transition = '';
       music(0); // im lặng để nghe trống dồn lúc soi đèn
       await spotlight(plan.winner);
     } finally { stopAll(); music(0); world.classList.remove('is-tense'); }
@@ -1194,5 +1213,22 @@
   }
   function clearResult() { if (fx) fx.querySelectorAll('.np-banner').forEach((e) => e.remove()); }
 
-  global.EduNamePickerGames = { GAMES, CAP, THEME, mount, idle, play, result, clearResult, labels, stop: stopAll };
+  /**
+   * Đăng ký thêm trò từ file khác (np-games-extra.js). def: { id, name, desc, scene, icon, idle(items), play(items, plan, D), cap, theme }.
+   * kit: các hàm dựng sân khấu dùng chung để trò mới "diễn" cùng kiểu với 11 trò gốc.
+   */
+  function register(def) {
+    if (GAMES.some((g) => g.id === def.id)) return;
+    GAMES.push({ id: def.id, name: def.name, desc: def.desc, scene: def.scene, icon: def.icon, idle: def.idle });
+    PLAY[def.id] = def.play;
+    if (def.cap) CAP[def.id] = def.cap;
+    if (def.theme) THEME[def.id] = def.theme;
+  }
+  const kit = {
+    W, H, CROWD, sleep, rand, pickOne, sfx, esc, sprite, place, go, say, shout, burst, banner, scatter, kids, kidW, wander, roomy, flee, hunt, twistTalk,
+    every, later, glide, dist, frame: (fn) => frames.push(requestAnimationFrame(fn)), setActors: (l) => { actors = l; },
+    get world() { return world; }, get layer() { return layer; }, get fx() { return fx; },
+  };
+
+  global.EduNamePickerGames = { GAMES, CAP, THEME, mount, idle, play, result, clearResult, labels, stop: stopAll, register, kit };
 })(window);

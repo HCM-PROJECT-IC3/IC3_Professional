@@ -260,6 +260,23 @@ assertEq('mặt trăng: đúng hết, thật nhanh → tới nơi ở câu 7/10'
 var m2 = { id: 'n', km: 110, streak: 0 };
 A.moonStep(m2, false, 0, 20000, 10, 0);
 assertEq('mặt trăng: sai gần trạm thì dừng ở trạm', m2.km, 96);
+
+// ── Sút luân lưu ──
+assertEq('sút: tỉ lệ vào 95% khi trả lời tức thì, 50% sát giờ, 70% không giới hạn giờ',
+  [A.kickChance(0, 20000), A.kickChance(20000, 20000), A.kickChance(5000, 0)].map(function (x) { return Math.round(x * 100); }), [95, 50, 70]);
+var k1 = { id: 'k', goals: 0, shots: 0, streak: 0 };
+var miss = A.penaltyKick(k1, false, 0, 20000, A.rngFrom(1));
+assertEq('sút: sai → mất lượt, không tính cú sút', [miss.shot, k1.shots, k1.goals], [false, 0, 0]);
+var hi = A.penaltyKick(k1, true, 0, 20000, function () { return 0.99; });
+assertEq('sút: rủi ro cao nhất vẫn có thể trượt (thủ môn/cột/xà)', [hi.shot, hi.goal, k1.shots, k1.goals, ['save', 'post', 'bar', 'over'].indexOf(hi.how) >= 0], [true, false, 1, 0, true]);
+k1.streak = A.KICK_SURE;
+var th = A.penaltyKick(k1, true, 20000, 20000, function () { return 0.99; });
+assertEq('sút: chuỗi 3 → cú sút sấm sét chắc chắn vào', [th.goal, th.sure, th.how, k1.goals], [true, true, 'thunder', 1]);
+var kr = A.rngFrom(42), kp = { goals: 0, shots: 0, streak: 0 };
+for (var kk = 0; kk < 400; kk++) A.penaltyKick(kp, true, 0, 20000, kr);
+assertEq('sút: trả lời tức thì → khoảng 95% vào lưới (400 lần)', kp.goals >= 360 && kp.goals <= 395, true);
+assertEq('sút: xếp hạng nhiều bàn → bằng bàn thì ít cú sút hơn',
+  [{ id: 'a', goals: 3, shots: 5 }, { id: 'b', goals: 4, shots: 6 }, { id: 'c', goals: 3, shots: 3 }].sort(A.kickOrder).map(function (p) { return p.id; }), ['b', 'c', 'a']);
 var m3 = { id: 'o', km: 380, streak: 4 };
 var ld = A.moonStep(m3, true, 0, 20000, 10, 7);
 assertEq('mặt trăng: chạm Mặt Trăng → dừng ở 384, ghi câu đáp', [ld.landed, m3.km, m3.landedAt], [true, 384, 7]);

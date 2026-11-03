@@ -202,8 +202,60 @@
     }).sort((a, b) => ((b.avg ?? -1) - (a.avg ?? -1)) || (b.submissions - a.submissions) || a.school.localeCompare(b.school, 'vi'));
   }
 
+  /**
+   * Tiến bộ / sa sút của từng học sinh (Dashboard giáo viên): so điểm TB các bài GẦN ĐÂY với các
+   * bài TRƯỚC ĐÓ trong phạm vi lọc. Cần ≥ 3 bài để không kết luận từ 1 lần làm tình cờ.
+   * Chia đôi theo thời gian nộp: nửa đầu (làm tròn xuống) = trước, phần còn lại = gần đây.
+   * Bỏ bài không qua kiểm tra toàn vẹn (vd điểm bị sửa) — những bài đó nằm ở reviewFlags().
+   * @returns {{ improving: Array, declining: Array }} mỗi phần tử { studentName, studentClass,
+   *   attempts, before, recent, delta }; improving giảm dần theo delta, declining tăng dần.
+   */
+  function progressTrends(results, { minAttempts = 3, minDelta = 10 } = {}) {
+    const groups = {};
+    results.forEach((r) => {
+      if (typeof r.score !== 'number' || !r.studentName || r.integrityOk === false) return;
+      const k = `${String(r.studentName).trim().toLowerCase()}__${String(r.studentClass || '').trim().toLowerCase()}`;
+      (groups[k] = groups[k] || { studentName: r.studentName, studentClass: r.studentClass || '', list: [] }).list.push(r);
+    });
+    const mean = (a) => Math.round(a.reduce((s, x) => s + x, 0) / a.length);
+    const rows = Object.values(groups).filter((g) => g.list.length >= minAttempts).map((g) => {
+      const scores = g.list.slice().sort((a, b) => (a.submittedAtMs || 0) - (b.submittedAtMs || 0)).map((r) => r.score);
+      const split = Math.floor(scores.length / 2);
+      const before = mean(scores.slice(0, split));
+      const recent = mean(scores.slice(split));
+      return { studentName: g.studentName, studentClass: g.studentClass, attempts: scores.length, before, recent, delta: recent - before };
+    });
+    const byName = (a, b) => String(a.studentName).localeCompare(String(b.studentName), 'vi');
+    return {
+      improving: rows.filter((r) => r.delta >= minDelta).sort((a, b) => (b.delta - a.delta) || byName(a, b)),
+      declining: rows.filter((r) => r.delta <= -minDelta).sort((a, b) => (a.delta - b.delta) || byName(a, b)),
+    };
+  }
+
+  /**
+   * Bài nộp nên xem lại: cảnh báo toàn vẹn (vd Apps Script chấm lại thấy điểm gửi lên bị sửa —
+   * docs/architecture/SERVER-GRADING.md), rời trang làm bài nhiều lần, hoặc điểm cao mà làm
+   * nhanh bất thường. Chỉ là gợi ý để giáo viên hỏi lại học sinh, không tự kết luận gian lận.
+   * @returns [{ result, reasons: string[] }] bài mới nộp trước.
+   */
+  function reviewFlags(results, { tabLimit = 3, secPerQuestion = 4, fastMinScore = 80 } = {}) {
+    return results.map((r) => {
+      const reasons = [];
+      if (r.integrityOk === false) {
+        const f = (Array.isArray(r.flags) ? r.flags : []).filter(Boolean);
+        reasons.push(...(f.length ? f : ['Không qua kiểm tra toàn vẹn bài làm']));
+      }
+      if ((r.tabSwitches || 0) >= tabLimit) reasons.push(`Rời trang làm bài ${r.tabSwitches} lần`);
+      if (r.total >= 10 && r.elapsedSec > 0 && r.elapsedSec < r.total * secPerQuestion && r.score >= fastMinScore) {
+        reasons.push(`Làm rất nhanh: ${r.elapsedSec} giây cho ${r.total} câu, đạt ${r.score}%`);
+      }
+      return { result: r, reasons: [...new Set(reasons)] };
+    }).filter((x) => x.reasons.length)
+      .sort((a, b) => (b.result.submittedAtMs || 0) - (a.result.submittedAtMs || 0));
+  }
+
   global.EduAnalytics = {
-    schoolComparison,
+    schoolComparison, progressTrends, reviewFlags,
     avgScore, avgTime, passRate, completionRate,
     topStudents, studentsNeedingSupport, classLeaderboard, weekStartMs,
     scoreDistribution, groupAvgBy, heatmapMatrix, trendByDay,

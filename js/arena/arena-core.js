@@ -10,6 +10,7 @@
      • tug   — "Kéo co" 2 đội · spell — "Đấu phép" · heist — "Giải mã" (kiểu Wayground)
      • dino  — "Đào hoá thạch" kiểu Blooket Deceptive Dinos · moon — "Lên Mặt Trăng" kiểu Mastery Peak
      • boss  — "Diệt Virus" kiểu Boss Raid: cả đội cùng hạ 1 Trùm Virus có 3 giai đoạn
+     • goal  — "Sút luân lưu": đúng = 1 cú sút, đúng nhanh sút hiểm hơn, chuỗi 3 = cú sút sấm sét
      • board — "Bảng điểm" kiểu Board Battle: giáo viên trình chiếu, các đội không cần máy
    + Linh vật: xu kiếm được khi chơi → mở hộp → sưu tập (localStorage).
    0 lượt Firebase, 0 Apps Script — không gửi gì ra ngoài.
@@ -764,6 +765,34 @@
   }
 
   // ============================================================
+  // SÚT LUÂN LƯU — mỗi câu ĐÚNG = 1 cú sút penalty; sai/hết giờ = mất lượt sút.
+  // Trả lời càng nhanh cú sút càng hiểm: vào lưới 50% (sát giờ) → 95% (tức thì); không giới hạn giờ: 70%.
+  // Đúng liền KICK_SURE câu → "Cú sút sấm sét" chắc chắn vào. Nhiều bàn thắng nhất thắng (bằng bàn → ít cú sút hơn).
+  // ============================================================
+  const KICK_SURE = 3;
+  const KICK_MISS = ['save', 'post', 'bar', 'over'];
+  function kickChance(ms, limitMs) {
+    if (!limitMs) return 0.7;
+    return 0.5 + 0.45 * (1 - Math.min(1, Math.max(0, ms / limitMs)));
+  }
+  /**
+   * 1 câu cho 1 cầu thủ (sửa p.goals / p.shots; p.streak đã tính câu này).
+   * Trả { shot, goal, sure, how }: how = corner · low · thunder (vào) | save · post · bar · over (trượt) | none.
+   */
+  function penaltyKick(p, ok, ms, limitMs, rng) {
+    if (!ok) return { shot: false, goal: false, sure: false, how: 'none' };
+    const sure = (p.streak || 0) >= KICK_SURE;
+    const goal = sure || rng() < kickChance(ms, limitMs);
+    p.shots = (p.shots || 0) + 1;
+    if (goal) p.goals = (p.goals || 0) + 1;
+    const how = goal ? (sure ? 'thunder' : rng() < 0.5 ? 'corner' : 'low') : KICK_MISS[Math.floor(rng() * KICK_MISS.length)];
+    return { shot: true, goal, sure, how };
+  }
+  function kickOrder(a, b) {
+    return ((b.goals || 0) - (a.goals || 0)) || ((a.shots || 0) - (b.shots || 0)) || (a.bot === b.bot ? 0 : a.bot ? 1 : -1);
+  }
+
+  // ============================================================
   // DIỆT VIRUS (kiểu Boss Raid) — em + 3 bạn máy chung 1 đội, cùng hạ "Trùm Virus"
   // Đúng: tấn công (10, nhanh thêm tới 6) × combo theo chuỗi (×1.1 … ×1.4), 15% chí mạng ×2.
   // Sai/hết giờ: Virus đánh trả, mất 1 tim (đúng liền 3 câu hồi 1 tim — như Sinh tồn); hết tim = gục.
@@ -987,6 +1016,7 @@
     VAULT_LEN, VAULT_SYMS, HEIST_STEAL, newVault, mineGems, crackOf, rekey, crackTry, vaultThreat, botHeist,
     DINO_CHEAT, DINO_CHEAT_TURNS, DINO_FINE, rollRocks, rockLabel, digRock, inspect, tickCheat, botDino,
     MOON_KM, MOON_FALL, MOON_STAGES, moonBoost, moonFloor, moonStep, moonOrder,
+    KICK_SURE, kickChance, penaltyKick, kickOrder,
     BOSS_PER, BOSS_HEAL, BOSS_PHASES, bossMaxHp, bossPhase, bossCombo, bossHit, bossRound, bossOrder,
     BOARD_VALUES, makeBoard, boardScore,
     coinsFor, PACK_PRICE, RARITY, PACKS, blookById, openPack, newProfile, buyPack, PITY_MAX, SET_BONUS, STAR_AT, DAILY_GOAL, starsOf, addDaily, dailyOf, ghostScoreAt,

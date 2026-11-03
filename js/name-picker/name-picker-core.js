@@ -113,8 +113,24 @@
   }
   const easeOut = (t) => 1 - Math.pow(1 - t, 4);
 
+  /**
+   * Chia nhóm: trộn rồi chia vòng → các nhóm lệch nhau tối đa 1 bạn.
+   * withLeader → mỗi nhóm 1 nhóm trưởng ngẫu nhiên (đứng đầu danh sách nhóm).
+   * @returns {{ members: string[], leader: string|null }[]}  (số nhóm ≤ số người, bỏ nhóm rỗng)
+   */
+  function makeGroups(names, k, rng, withLeader) {
+    const n = Math.max(1, Math.min(names.length, k | 0));
+    const groups = Array.from({ length: n }, () => []);
+    shuffle(names, rng).forEach((x, i) => groups[i % n].push(x));
+    return groups.filter((g) => g.length).map((g) => {
+      if (!withLeader) return { members: g, leader: null };
+      const leader = pick(g, rng);
+      return { members: [leader].concat(g.filter((x) => x !== leader)), leader };
+    });
+  }
+
   global.EduNamePicker = {
     MAX_NAMES, SEG, keyOf, parseNames, numberList, remaining, pick, decoy, shuffle, finalists,
-    raceScript, raceAt, popOrder, wheelAngle, wheelIndexAt, easeOut,
+    raceScript, raceAt, popOrder, wheelAngle, wheelIndexAt, easeOut, makeGroups,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

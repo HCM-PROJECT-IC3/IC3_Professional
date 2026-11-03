@@ -1420,7 +1420,7 @@
         weekKey: state.currentWeekKey,
         weekLabel: week ? week.label || week.id : '',
         days: schedModalDraftDays,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: window.EduModels.SERVER_TIME,
       });
       toast('Đã lưu lịch tuần');
       const savedCode = schedModalTeacherCode;
@@ -1483,24 +1483,11 @@
       if (cloneFrom) {
         const sourceRows = await window.EduRepositories.teachingSchedule.listByWeek(cloneFrom);
         if (sourceRows.length) {
-          const db = window.EduFirebase.db;
-          const schedCol = window.EduRepositories.teachingSchedule.col();
-          let batch = db.batch();
-          let ops = 0;
-          const flushIfNeeded = async () => { if (ops >= 400) { await batch.commit(); batch = db.batch(); ops = 0; } };
-          for (const row of sourceRows) {
-            const docId = M.scheduleDocId(row.teacherCode, weekKey);
-            batch.set(schedCol.doc(docId), {
-              teacherCode: row.teacherCode,
-              teacherName: row.teacherName,
-              weekKey, weekLabel,
-              days: row.days,
-              updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            });
-            ops++; await flushIfNeeded();
-          }
-          if (ops > 0) await batch.commit();
-          clonedCount = sourceRows.length;
+          const repo = window.EduRepositories.teachingSchedule;
+          clonedCount = await window.EduBaseRepository.commitBatch(sourceRows.map((row) => ({
+            repo, id: M.scheduleDocId(row.teacherCode, weekKey),
+            data: { teacherCode: row.teacherCode, teacherName: row.teacherName, weekKey, weekLabel, days: row.days, updatedAt: window.EduModels.SERVER_TIME },
+          })));
         }
       }
 
@@ -2040,24 +2027,15 @@
     renderImportPlan(pendingImport.plan);
   });
 
+  /** Ghi kết quả nhập lịch theo lô qua tầng repository (EduBaseRepository.commitBatch — tự chia lô 450). */
   async function commitImportWrites(writes) {
-    const db = window.EduFirebase.db;
-    const cols = {
-      week: window.EduRepositories.teachingWeek.col(),
-      teacher: window.EduRepositories.teachingTeacher.col(),
-      sched: window.EduRepositories.teachingSchedule.col(),
-      tt: writes.some((w) => w.kind === 'tt') ? window.EduRepositories.teachingTimetable.col() : null,
-    };
-    const ts = firebase.firestore.FieldValue.serverTimestamp();
-    for (let i = 0; i < writes.length; i += 450) {
-      const batch = db.batch();
-      writes.slice(i, i + 450).forEach((w) => {
-        const data = (w.kind === 'sched' || w.kind === 'tt') ? Object.assign({}, w.data, { updatedAt: ts }) : w.data;
-        if (w.merge) batch.set(cols[w.kind].doc(w.id), data, { merge: true });
-        else batch.set(cols[w.kind].doc(w.id), data);
-      });
-      await batch.commit();
-    }
+    const R = window.EduRepositories;
+    const repoOf = { week: R.teachingWeek, teacher: R.teachingTeacher, sched: R.teachingSchedule, tt: R.teachingTimetable };
+    const now = window.EduModels.SERVER_TIME; // repository đổi thành serverTimestamp()
+    await window.EduBaseRepository.commitBatch(writes.map((w) => ({
+      repo: repoOf[w.kind], id: w.id, merge: !!w.merge,
+      data: (w.kind === 'sched' || w.kind === 'tt') ? Object.assign({}, w.data, { updatedAt: now }) : w.data,
+    })));
   }
 
   /** Cập nhật state ngay tại máy từ đúng những gì vừa ghi — KHÔNG gọi

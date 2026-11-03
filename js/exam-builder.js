@@ -17,6 +17,9 @@
    (Đúng/Sai) · ordering (sắp xếp) · matching (nối cặp). Câu từ ngân hàng
    data/ic3 giữ nguyên mọi dạng, đổi được sang câu tự soạn để sửa.
 
+   AI soạn câu (Gemini — js/services/ai-service.js): chủ đề / đoạn bài học → câu 4 phương án, đổ vào
+   hộp "Nhập nhanh" để giáo viên duyệt rồi mới thêm. Key cá nhân hoặc key trường qua Apps Script.
+
    FIREBASE: 0 lượt đọc/ghi. Đề nằm gọn trong link (js/custom-exam-codec.js,
    nén deflate); danh sách đề lưu localStorage "ic3_custom_sets"; bản nháp
    "ic3_exam_builder_draft". Sang máy khác: "Mở đề từ link".
@@ -480,6 +483,7 @@
           <button type="button" class="eb-btn eb-btn-primary" data-act="add-type" data-type="single"><i class="fa-solid fa-plus"></i> Câu trắc nghiệm</button>
           <button type="button" class="eb-btn eb-btn-soft" data-act="open-bank"><i class="fa-solid fa-database"></i> Ngân hàng</button>
           <button type="button" class="eb-btn eb-btn-soft" data-act="open-import"><i class="fa-solid fa-paste"></i> Nhập nhanh</button>
+          <button type="button" class="eb-btn eb-btn-soft" data-act="open-ai" title="Gemini soạn câu hỏi theo chủ đề hoặc đoạn bài học"><i class="fa-solid fa-wand-magic-sparkles"></i> AI soạn câu</button>
         </div></div>`;
       return;
     }
@@ -1252,6 +1256,39 @@
     });
     return { out, skipped };
   }
+  /** AI soạn câu: Gemini trả câu dạng ngân hàng → văn bản "Nhập nhanh" → mở hộp Nhập nhanh để giáo viên duyệt/sửa. */
+  function openAiGen() {
+    if (!global.EduAI) { showToast('Trang chưa nạp Trợ lý AI.'); return; }
+    const body = modal('<i class="fa-solid fa-wand-magic-sparkles"></i> AI soạn câu hỏi (Gemini)', `
+      <label class="eb-field"><span>Chủ đề</span><input id="ebAiTopic" class="eb-input" maxlength="200" placeholder="VD: Thiết bị nhập và thiết bị xuất"></label>
+      <label class="eb-field"><span>Nội dung bài học (không bắt buộc) — AI chỉ hỏi trong phần này</span>
+        <textarea id="ebAiSource" class="eb-input ai-gen-ta" maxlength="6000" placeholder="Dán đoạn bài học, tối đa 6.000 ký tự…"></textarea></label>
+      <div class="ai-gen-grid">
+        <label class="eb-field"><span>Số câu</span><select id="ebAiCount" class="eb-input">${[3, 5, 8, 10, 15].map((n) => `<option${n === 5 ? ' selected' : ''}>${n}</option>`).join('')}</select></label>
+        <label class="eb-field"><span>Độ khó</span><select id="ebAiLevel" class="eb-input"><option>dễ</option><option selected>vừa</option><option>khó</option></select></label>
+        <label class="eb-field"><span>Lớp</span><select id="ebAiGrade" class="eb-input"><option value="0">Không ghi</option>${[3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((g) => `<option value="${g}">Lớp ${g}</option>`).join('')}</select></label>
+      </div>
+      <label class="eb-check"><input type="checkbox" id="ebAiMix"> Xen câu Đúng/Sai và câu nhiều đáp án</label>
+      <div id="ebAiOut" class="ai-box" hidden data-ai-staff aria-live="polite"></div>
+      <p class="eb-matrix-hint">Câu AI soạn sẽ hiện trong hộp "Nhập nhanh" để thầy cô <b>đọc lại, sửa rồi mới thêm</b>. AI có thể nhầm — nhất là đáp án. 0 lượt Firebase.</p>`,
+    `<button class="btn-cancel" onclick="closeModal()">Huỷ</button><button class="btn-save" id="ebAiGo"><i class="fa-solid fa-wand-magic-sparkles"></i> Soạn bằng AI</button>`);
+    const go = $('ebAiGo');
+    go.addEventListener('click', async () => {
+      const payload = { topic: $('ebAiTopic').value, source: $('ebAiSource').value, count: +$('ebAiCount').value, level: $('ebAiLevel').value, grade: +$('ebAiGrade').value, mix: $('ebAiMix').checked };
+      if (!payload.topic.trim() && !payload.source.trim()) { $('ebAiTopic').focus(); showToast('Nhập chủ đề hoặc dán nội dung bài học.'); return; }
+      go.disabled = true;
+      let list = [];
+      const r = await global.EduAI.askInto($('ebAiOut'), 'genQuiz', payload, { staff: true, render: (res) => { list = global.EduAI.parseQuiz(res.text, payload.count); return `<p>AI soạn được <b>${list.length}</b> câu dùng được.</p>`; } });
+      go.disabled = false;
+      if (!r) return;
+      if (!list.length) { $('ebAiOut').insertAdjacentHTML('afterbegin', '<p>AI trả về nội dung không đọc được thành câu hỏi — bấm soạn lại nhé.</p>'); return; }
+      openImport();
+      const ta = $('ebImportText');
+      ta.value = global.EduAI.toQuickText(list);
+      ta.dispatchEvent(new Event('input'));
+    });
+    setTimeout(() => $('ebAiTopic').focus(), 50);
+  }
   function openImport() {
     const sample = 'Câu 1: Thiết bị nào là thiết bị nhập?\nA. Màn hình\n*B. Bàn phím\nC. Loa\nD. Máy in\nGiải thích: Bàn phím dùng để nhập dữ liệu vào máy tính.\n\nCâu 2: RAM là bộ nhớ trong.\n*Đúng\nSai';
     const body = modal('<i class="fa-solid fa-paste"></i> Nhập nhanh nhiều câu', `
@@ -1948,6 +1985,7 @@
       if (act === 'add-type') return addCustom(b.dataset.type);
       if (act === 'open-bank') return openBank();
       if (act === 'open-import') return openImport();
+      if (act === 'open-ai') return openAiGen();
       const s = B.slides[B.cur];
       if (!s) return;
       if (act === 'swap' || act === 'swap-ak') { swapSlide(B.cur, { allKey: act === 'swap-ak' }); return; }

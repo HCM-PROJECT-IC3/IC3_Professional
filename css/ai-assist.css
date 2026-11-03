@@ -1,0 +1,61 @@
+/* ============================================================
+   css/ai-assist.css — Trợ lý AI (js/services/ai-service.js): nút "Hỏi AI", ô trả lời, hộp Cài đặt AI.
+   Tự đủ màu (không phụ thuộc biến của từng trang) + giao diện tối theo [data-theme="dark"].
+   ============================================================ */
+:root {
+  --ai-c: #5b3fd6; --ai-c2: #1f7ae0; --ai-bg: #f6f3ff; --ai-bd: #d9cffd; --ai-ink: #241b4d; --ai-muted: #6b6290;
+  --ai-paper: #fff; --ai-ok: #1d7a43; --ai-bad: #c0352b;
+}
+:root[data-theme="dark"] {
+  --ai-c: #a993ff; --ai-c2: #6fb2ff; --ai-bg: #211b3a; --ai-bd: #3d3466; --ai-ink: #ece8ff; --ai-muted: #aaa2cc;
+  --ai-paper: #17132b; --ai-ok: #6fd69a; --ai-bad: #ff8a80;
+}
+
+.ai-btn { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; padding: 6px 14px; border-radius: 999px; cursor: pointer;
+  border: 1.5px solid var(--ai-bd); background: linear-gradient(135deg, var(--ai-bg), color-mix(in srgb, var(--ai-c2) 10%, var(--ai-bg)));
+  color: var(--ai-c); font: 700 .86rem/1.3 inherit; transition: transform .12s, border-color .12s; }
+.ai-btn:hover:not(:disabled) { border-color: var(--ai-c); transform: translateY(-1px); }
+.ai-btn:disabled { opacity: .6; cursor: progress; }
+.ai-btn:focus-visible, .ai-btn2:focus-visible, .ai-link:focus-visible { outline: 3px solid var(--ai-c2); outline-offset: 2px; }
+
+.ai-box { margin-top: 8px; padding: 10px 14px; border-radius: 12px; border: 1.5px solid var(--ai-bd); background: var(--ai-bg); color: var(--ai-ink);
+  font-size: .92rem; line-height: 1.55; text-align: left; overflow-wrap: anywhere; }
+.ai-box p { margin: 0 0 6px; }
+.ai-box ul { margin: 0 0 6px; padding-left: 20px; }
+.ai-box li { margin: 2px 0; }
+.ai-box.is-loading { color: var(--ai-muted); display: flex; align-items: center; gap: 8px; }
+.ai-box.is-err { border-color: color-mix(in srgb, var(--ai-bad) 45%, var(--ai-bd)); }
+.ai-foot { margin: 6px 0 0 !important; font-size: .76rem; color: var(--ai-muted); display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.ai-link { border: 0; background: none; padding: 0; color: var(--ai-c); font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
+.ai-spin { width: 16px; height: 16px; border-radius: 50%; border: 2.5px solid var(--ai-bd); border-top-color: var(--ai-c); animation: ai-spin .8s linear infinite; flex: none; }
+@keyframes ai-spin { to { transform: rotate(360deg); } }
+
+/* Hộp Cài đặt AI */
+.ai-modal { position: fixed; inset: 0; z-index: 10050; display: grid; place-items: center; padding: 16px; background: rgba(15, 10, 35, .55); }
+.ai-modal-box { position: relative; width: min(560px, 100%); max-height: calc(100dvh - 32px); overflow: auto; padding: 20px 20px 16px; border-radius: 18px;
+  background: var(--ai-paper); color: var(--ai-ink); box-shadow: 0 20px 60px rgba(0, 0, 0, .35); font-size: .95rem; line-height: 1.5; }
+.ai-modal-box h2 { margin: 0 34px 6px 0; font-size: 1.25rem; color: var(--ai-c); }
+.ai-modal-box h3 { margin: 0 0 8px; font-size: 1rem; }
+.ai-modal-box h3 small { font-weight: 500; color: var(--ai-muted); }
+.ai-x { position: absolute; right: 12px; top: 12px; width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid var(--ai-bd); background: var(--ai-bg); color: var(--ai-ink); cursor: pointer; }
+.ai-help, .ai-note { margin: 0 0 10px; color: var(--ai-muted); font-size: .85rem; }
+.ai-note a { color: var(--ai-c2); font-weight: 700; }
+.ai-sec { border-top: 1.5px dashed var(--ai-bd); padding-top: 12px; margin-top: 12px; }
+.ai-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; font-weight: 600; font-size: .85rem; }
+.ai-field input, .ai-field select { font: inherit; font-size: 16px; font-weight: 500; padding: 8px 12px; border-radius: 10px; border: 1.5px solid var(--ai-bd); background: var(--ai-bg); color: var(--ai-ink); min-width: 0; }
+.ai-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.ai-btn2 { padding: 8px 14px; border-radius: 999px; border: 1.5px solid var(--ai-bd); background: var(--ai-paper); color: var(--ai-ink); font: 700 .86rem/1.2 inherit; cursor: pointer; }
+.ai-btn2.is-primary { background: var(--ai-c); border-color: var(--ai-c); color: #fff; }
+:root[data-theme="dark"] .ai-btn2.is-primary { color: #17132b; }
+.ai-btn2.is-danger { color: var(--ai-bad); }
+.ai-btn2:disabled { opacity: .6; cursor: progress; }
+.ai-status { margin: 8px 0; font-weight: 600; font-size: .86rem; }
+.ai-status.is-ok { color: var(--ai-ok); }
+.ai-status.is-bad { color: var(--ai-bad); }
+
+/* Soạn đề bằng AI (js/exam-builder.js) */
+.ai-gen-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 620px) { .ai-gen-grid { grid-template-columns: 1fr; } }
+.ai-gen-ta { width: 100%; min-height: 110px; resize: vertical; }
+
+@media (prefers-reduced-motion: reduce) { .ai-spin { animation-duration: 2s; } .ai-btn { transition: none; } }

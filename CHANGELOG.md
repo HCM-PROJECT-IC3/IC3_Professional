@@ -74,6 +74,84 @@ Thứ tự: Apps Script → `firestore.rules`/index → đẩy web.
 
 ## 03/11/2026
 
+- **Dashboard giáo viên: "Tổng quan lớp" kiểu thẻ + Giao bài · So sánh 2 đợt · Chuyên cần — 0 lượt Firebase thêm**
+  (`js/teacher/insights.js`, logic thuần `js/teacher/teacher-insights-core.js` + test, `css/teacher-insights.css`):
+  - **Thống kê lớp** (tổng học sinh, cần hỗ trợ < 60%, xuất sắc ≥ 85%, thanh "% học sinh đã làm bài") ·
+    **Năng lực cả lớp** (vòng tròn Giỏi/Khá/TB/Yếu theo điểm TB từng em + 4 em tiêu biểu kèm nhãn Tiến bộ/Sa sút/Ổn định)
+    · **Cần hỗ trợ & Xuất sắc** (3 + 3 em, nút "Xem" mở lịch sử làm bài) · **Tổng kết tiến độ** (đồng hồ Chưa làm /
+    Chưa đạt / Đạt / Vượt trội). Theo đúng bộ lọc trường/lớp/bài/thời gian; sáng/tối, điện thoại.
+  - **Giao bài theo lớp:** chọn đề đã soạn (Soạn đề trên cùng máy) → hạn nộp → các lớp → "Giao bài". Mỗi bài hiện
+    đã nộp/sĩ số từng lớp, số em nộp muộn, điểm TB; "Chép lời giao bài" (tên đề, hạn, link) và "Chép tên chưa nộp" để
+    dán nhóm lớp. Lưu trên máy (`eduquiz_assign_v1`).
+  - **So sánh 2 đợt kiểm tra:** chọn đợt A/B → điểm TB từng lớp (2 thanh), chênh lệch, số em tiến bộ/sa sút (±5).
+  - **Chuyên cần:** tỉ lệ có mặt từng lớp + em vắng ≥ 3 buổi / vắng liền ≥ 2, lấy từ sổ lớp trang Điểm danh đã đọc
+    trên cùng máy (Google Sheet, không Firebase). Chưa có thì hướng dẫn mở Điểm danh → "Cập nhật tất cả".
+  - Tính trên bài nộp dashboard đã tải + localStorage → **0 lượt đọc/ghi Firestore, 0 lượt Apps Script thêm**.
+    Các phần sẵn có giữ nguyên (KPI, 6 biểu đồ, danh sách cần chú ý, câu hay sai, bảng học sinh, xuất Excel/PDF).
+  - Chỉ cần đẩy web.
+- **Clean Architecture — quy ước + máy kiểm tra** (`docs/architecture/CLEAN-ARCHITECTURE.md`). Người dùng không thấy khác:
+  - 4 tầng gắn vào thư mục sẵn có: Domain (`js/core`, `js/models`, `*-core.js`) · Use case · Adapter
+    (`js/repositories`, Apps Script, Gemini, localStorage) · Giao diện. Phụ thuộc chỉ hướng vào trong.
+  - CI thêm bước `node scripts/check-architecture.js`: Domain không đụng DOM/mạng/Firebase/bộ nhớ trình duyệt;
+    repository không đụng giao diện; trang không thêm lượt gọi Firestore trực tiếp (nợ cũ ghi số, chỉ được giảm).
+  - Model không còn gọi `firebase.firestore.FieldValue` — đặt dấu `EduModels.SERVER_TIME`, repository đổi thành
+    `serverTimestamp()`; chạy được trong Node. Ghi theo lô qua `EduBaseRepository.commitBatch` (tự chia lô 450).
+  - Lịch giảng dạy (nhập lịch từ Excel, tạo tuần có sao chép lịch, lưu lịch tuần) ghi qua repository thay vì tự dựng
+    `db.batch()` — số lượt ghi Firestore **không đổi**.
+  - Trợ lý AI tách use case `js/services/ai-assistant.js` (luật key 2 lớp, test bằng cổng giả) khỏi adapter/giao diện
+    trong `ai-service.js`. Các trang AI nạp thêm `ai-assistant.js`.
+  - Test mới: `js/repositories/__tests__/base-repository.test.js`, `js/services/__tests__/ai-assistant.test.js`.
+  - Chỉ cần đẩy web. Không đổi Apps Script, không đổi rules.
+- **Trợ lý AI (Gemini) — 0 lượt Firebase** (theo giáo trình "Web App", phần API key Gemini: key hệ thống + key cá nhân):
+  - **Học sinh — "Hỏi AI: vì sao em sai?"** ở màn xem lại bài (cả chế độ Ôn luyện): giải thích vì sao lựa chọn của em
+    chưa đúng, vì sao đáp án đúng, 1 mẹo nhớ. Chỉ câu sai/bỏ trống, chỉ khi em bấm.
+  - **Giáo viên — "AI soạn câu"** ở Soạn đề: chủ đề hoặc đoạn bài học → 3–15 câu (độ khó, lớp, có thể xen Đúng/Sai và
+    nhiều đáp án), đổ vào hộp "Nhập nhanh" để duyệt/sửa rồi mới thêm.
+  - **Giáo viên — "Gợi ý dạy lại (AI)"** trong thẻ "Câu học sinh hay sai" (dashboard giáo viên / điều phối / ic3-dashboard):
+    vì sao hay sai, cách giảng lại trong 3 phút, 1 câu củng cố.
+  - **Gọi tên — "AI soạn thêm câu hỏi cho bài này"**: câu hỏi miệng theo bài đang chọn, trộn vào xấp "Bốc thử thách";
+    lưu trên máy (`eduquiz_goiten_ai_v1`), xoá được.
+  - **Key 2 lớp:** (1) key cá nhân trong localStorage → gọi thẳng Gemini, không gửi lên máy chủ; (2) không có / hết hạn
+    mức / key sai → Apps Script gọi bằng **key của trường** cất trong Script Properties (học sinh F12 không thấy);
+    (3) cả 2 không được → báo lý do + nút "Cài đặt AI". Hộp "Cài đặt AI" có "Kết nối thử" trước khi lưu; Admin cài key
+    trường ngay trên web (Apps Script gọi thử, sai thì không lưu).
+  - **Chống hao phí:** câu lệnh do code dựng (không ai mượn key trường hỏi việc khác); lời giải lưu đệm trên máy + 6 giờ ở
+    máy chủ (nhiều em hỏi cùng câu → 1 lượt Gemini); trần 30 lượt/máy học sinh/ngày, 150/tài khoản giáo viên/ngày,
+    800 lượt/ngày cả trường (đổi được). Không gửi tên học sinh. Lượt học sinh **không đọc Firestore** (đã test).
+  - Mã: `js/services/ai-core.js` (+ test), `js/services/ai-service.js`, `css/ai-assist.css`, `apps/src/78-ai.gs`
+    (câu lệnh giống hệt bản web — `apps/__tests__/code-gs.test.js` so 2 bản).
+  - **Cần triển khai:** (1) dán `apps/Code.gs` → Deploy → New version (`BACKEND_VERSION` 2026-11-03c);
+    (2) đẩy web; (3) Admin mở Soạn đề hoặc dashboard → bấm "AI soạn câu"/"Gợi ý dạy lại" → "Cài đặt AI" → "Key hệ thống
+    của trường" → dán key từ aistudio.google.com/apikey → "Kiểm tra & lưu". Chưa cài key trường thì ai có key cá nhân
+    vẫn dùng được. Không cần sửa rules.
+- **Gọi tên: thẻ "Chia nhóm" + đọc to tên** (`goi-ten.html`):
+  - Chọn 2–8 nhóm, tuỳ chọn mỗi nhóm 1 nhóm trưởng ngẫu nhiên (★). Chỉ chia các bạn có mặt; nhóm lệch nhau tối đa 1 bạn.
+  - "Gọi một nhóm": đèn chạy qua các nhóm rồi dừng ở 1 nhóm. "Sao chép kết quả" để dán vào Zalo/Word.
+  - Kết quả chia nhóm lưu theo từng danh sách trong localStorage (`eduquiz_goiten_v1`); "Xoá hết tên" xoá luôn nhóm của danh sách dán.
+  - Tuỳ chọn "Đọc to tên người được gọi" (giọng có sẵn trên máy qua Web Speech; không có giọng Việt thì dùng giọng mặc định).
+  - 0 Firebase / Apps Script. Test: `js/name-picker/__tests__/name-picker-core.test.js` (`makeGroups`). Chỉ cần đẩy web.
+- **Gọi tên: 17 trò (thêm 6) + kịch tính hơn ở mọi trò** (`js/name-picker/np-games-extra.js`, tranh SVG tự vẽ):
+  - Trò mới: **Ong tìm hoa** (tới 40 bạn) · **Mèo bắt chuột** · **Thả diều** (gió lớn giữa chừng) · **Sút luân lưu**
+    (thủ môn bắt, trúng cột, dội xà... bàn thắng vàng ở cú cuối) · **Đèn xanh đèn đỏ** (đèn đỏ cuối rơi đúng lúc hết giờ) ·
+    **Bịt mắt bắt dê** (dưới gốc đa). Đều có Lật kèo và "Mỗi lượt đổi trò ngẫu nhiên".
+  - Mọi trò dùng khung "người bắt": vòng ngắm đỏ nhấp nháy dưới chân bạn sắp bị bắt; máy quay cận cảnh lúc bắt thật
+    (tắt khi máy bật "giảm chuyển động"); 3 giây cuối có 2 dải đen kiểu phim.
+  - Đã chạy thử trên Chrome cả 6 trò mới + Trộm trứng, Đèn pin, Thẻ đỏ, UFO: đủ lượt, hiện khung tên, không lỗi console.
+  - 0 Firebase / Apps Script. Chỉ cần đẩy web.
+- **Tranh "3D": nhân vật có khối** (Gọi tên + Đấu trường + mọi trang dùng `np-art.js`):
+  - Đầu, tóc, bóng bay, trứng, cá… đổ sáng/tối kiểu khối cầu; áo, tay chân, tên lửa, hộp quà kiểu khối trụ — ánh sáng
+    từ trên-trái, cảnh nền có thêm vệt nắng. Gradient dùng chung gắn 1 lần vào trang (`#npShadeDefs`), không dùng filter
+    → máy chiếu yếu vẫn mượt.
+  - Gọi tên: phối cảnh xa–gần (bạn đứng xa nhỏ hơn) và bóng đổ mềm dưới chân; trò xếp làn (Đua, Tên lửa, Diều) giữ cỡ đều.
+  - Tranh 6 trò thêm tách sang `js/name-picker/np-art-extra.js` (Đấu trường dùng chung sân bóng, thủ môn, quả bóng).
+- **Đấu trường: chế độ mới "⚽ Sút luân lưu"** (Chơi một mình — chưa có ở phòng giáo viên):
+  - Mỗi câu đúng = 1 quả penalty; trả lời càng nhanh càng dễ vào (50% sát giờ → 95% tức thì); đúng liền 3 câu =
+    "cú sút sấm sét" chắc chắn vào; sai = mất lượt sút. Nhiều bàn nhất thắng (bằng bàn → ít cú sút hơn).
+  - Sân khấu: khung thành có thủ môn nhún nhảy; mỗi cú sút của em và bạn máy diễn lần lượt — vào lưới, thủ môn cản phá,
+    trúng cột, dội xà, vọt xà. Bảng xếp hạng hiện số cú sút và tỉ lệ vào; thẻ chọn chế độ có tranh bìa riêng.
+  - Logic thuần `C.penaltyKick` / `C.kickOrder` + test trong `js/arena/__tests__/arena-core.test.js`.
+  - 0 Firebase / Apps Script. Chỉ cần đẩy web.
+
 - **Rà soát hạn mức Firebase + Apps Script** (sửa trước khi triển khai đợt này):
   - Quản lý lớp — ghi bù `schoolId`: máy Admin thứ hai trở đi dùng bản đệm delta (không thấy `schoolId` vừa ghi
     bù vì cố ý không đổi `updatedAt`) nên sẽ ghi lại **toàn bộ** ~2.800 học sinh (~2.800 lượt ghi mỗi máy).
@@ -111,6 +189,54 @@ Thứ tự: Apps Script → `firestore.rules`/index → đẩy web.
   - "Làm ngay" chọn sẵn bài (nước rút: bật luôn chế độ Kiểm tra), em tự bấm Bắt đầu. Làm xong hiện "đã xong".
   - Chỉ đọc lịch sử trên máy + danh mục đề đã tải — đã đo trên Chrome: 0 request Firebase / Apps Script.
     Chỉ cần đẩy web.
+- **Dashboard giáo viên: 3 thẻ mới + nút nhắc bài** (theo đúng bộ lọc Trường / Lớp / Bài / Thời gian):
+  - **Tiến bộ rõ / Đang sa sút:** so điểm TB các bài gần đây với các bài trước đó của từng em (từ 3 bài, chênh
+    ≥ 10 điểm), vd "48% → 85% · +37". Bài bị cảnh báo sửa điểm không được tính.
+  - **Bài nộp cần xem lại:** điểm gửi lên khác điểm máy chủ chấm (khi bật `serverGrading: 'verify'`), rời trang làm
+    bài ≥ 3 lần, hoặc điểm ≥ 80% mà dưới 4 giây/câu. Ghi rõ lý do; chỉ là gợi ý để hỏi lại học sinh.
+  - **"Chép danh sách"** ở thẻ Học sinh chưa làm bài: chép tên theo từng lớp (kèm tên bài nếu đang lọc) để dán
+    nhắc trong nhóm lớp.
+  - Tính trên bài nộp dashboard đã tải — 0 lượt đọc Firestore / Apps Script thêm, không đổi rules. Chỉ cần đẩy web.
+  - **Bấm vào tên** ở mọi thẻ danh sách (chưa làm bài, cần hỗ trợ, xuất sắc, tiến bộ, sa sút, cần xem lại) → mở
+    chi tiết lịch sử làm bài của em đó, như nút "Xem" ở bảng học sinh (dùng được bằng bàn phím: Tab + Enter).
+    Chi phí như nút "Xem": chỉ khi bấm, bài của cả lớp tải 1 lần rồi nhớ lại cho các em cùng lớp.
+- **Trang mới "Thi đua lớp học"** (`thi-dua.html` — sảnh → Dành cho thầy cô; nút cúp ở trang Gọi tên). Dùng trên máy
+  chiếu trong giờ học, không cần đăng nhập:
+  - **Bảng điểm:** mỗi lớp thầy cô dạy 1 bảng riêng. Bấm tên (hoặc Cả lớp / 1 tổ) rồi bấm tiêu chí thưởng / nhắc nhở;
+    Hoàn tác (Ctrl+Z); "Ngôi sao tuần này" và hoạt động gần đây.
+  - **Thi đua tổ:** xếp theo điểm TB mỗi em (tổ đông không tự thắng), cộng/trừ cả tổ.
+  - **Đổi quà:** trừ vào điểm còn lại, KHÔNG trừ điểm thi đua (em vẫn giữ hạng); không đủ điểm thì báo rõ.
+  - **Công cụ:** đo tiếng ồn bằng micro (chỉ đo âm lượng trên máy, không ghi âm; ẩn tab là tự tắt micro) với ngưỡng
+    nhắc chỉnh được; đồng hồ đếm ngược (6 mốc nhanh, đếm 5 giây cuối, báo hết giờ). Nút toàn màn hình / phím F.
+  - **Cài đặt:** thêm/xoá học sinh, đổi tổ, chia lại tổ, sửa tiêu chí và phần thưởng; xuất CSV; sao lưu / khôi phục
+    mọi lớp (.json); bắt đầu đợt thi đua mới.
+  - Danh sách học sinh: dán từ Excel/Word/Zalo (cùng bộ tách tên với Gọi tên) hoặc chọn lớp có sẵn.
+  - Dữ liệu chỉ ở localStorage máy giáo viên (`eduquiz_thidua_v1`) — đã đo trên Chrome: 0 request Firebase /
+    Apps Script, 0 request ra ngoài. Test: `js/thi-dua/__tests__/thi-dua-core.test.js`. Chỉ cần đẩy web.
+  - Ý tưởng lấy từ app GVCN "Lớp học hạnh phúc"; viết lại theo cấu trúc dự án và cho giáo viên dạy nhiều lớp.
+  - **Thẻ "Hoa điểm 10" — nối kết quả IC3 với điểm thi đua:** "Lấy từ trang Gom kết quả" đọc thẳng các mã kết quả
+    giáo viên đã gom trên cùng trình duyệt (hoặc dán mã). Bài 100%: +3 điểm và lên bảng Hoa điểm 10; từ 90%: +2.
+    - Xem trước trước khi cộng: số bài / điểm sẽ cộng, bài đã nhập, bài dưới mốc, tên không khớp bảng.
+    - Chỉ nhận bài của **lớp ghi trong mã** (tự đoán theo tên bảng, đổi được) — 2 em trùng họ tên ở 2 lớp không bị
+      cộng nhầm. Bỏ qua mã "Thử thách hôm nay".
+    - Mỗi bài chỉ cộng 1 lần (nhớ mã bài, cả sau sao lưu/khôi phục và sau "Bắt đầu đợt thi đua mới").
+    - Bảng vinh danh: số bài điểm 10 của từng em, bài gần nhất; trình chiếu toàn màn hình.
+    - 0 Firebase / Apps Script (đã đo trên Chrome). Chỉ cần đẩy web.
+  - **Lớp chủ nhiệm (GVCN) và lớp bộ môn (GVBM):** chọn loại lớp khi tạo bảng (đổi được ở Cài đặt; bảng cũ mặc định
+    là lớp bộ môn, không mất dữ liệu).
+    - Mỗi loại 1 bộ tiêu chí dùng chung: bộ môn = học tập trong giờ (như trước); chủ nhiệm = nề nếp (đi học muộn,
+      đồng phục, bài tập về nhà, trực nhật, phong trào…). Sửa ở Cài đặt.
+    - Lớp chủ nhiệm: **tổ trực nhật tuần này** trên Bảng điểm, tự xoay vòng mỗi thứ Hai; "Đổi tổ" để dời lượt.
+  - **Thẻ "Sơ kết tuần"** (tuần này / tuần trước): tổ trong tuần, tuyên dương, cần nhắc nhở (bị trừ từ 2 điểm), ghi
+    nhận nhiều nhất.
+    - "Chép tin nhắn sơ kết cho lớp" — dán nhóm lớp; KHÔNG nêu tên em bị nhắc nhở (nhắc riêng).
+    - Lớp chủ nhiệm: **tin nhắn riêng cho từng phụ huynh** nêu đúng việc được khen / cần nhắc trong tuần + điểm tích
+      luỹ + chữ ký giáo viên; Chép từng em hoặc Chép tất cả.
+    - Lớp bộ môn: **so sánh các lớp bộ môn** trong tuần (em được khen, điểm cộng/trừ, TB/em), không lẫn lớp chủ nhiệm.
+  - Tạo lớp mới thì mở thẳng Bảng điểm.
+- **File Excel từ Dashboard giáo viên và Dashboard Điều phối** có thêm 2 sheet (chỉ khi có dữ liệu):
+  "Tiến bộ & sa sút" (điểm TB trước → gần đây, chênh lệch tô xanh/đỏ) và "Bài nộp cần xem lại" (giờ nộp, bài,
+  điểm, lý do). Tính trên dữ liệu đã tải — 0 lượt đọc thêm.
 
 - **Nhật ký thao tác Quản lý tài khoản** (audit log — kế hoạch 2.0 §VI.2):
   - Đổi vai trò (ghi cả vai trò cũ → mới), duyệt tài khoản, gán/đồng bộ "Trường được xem", gán lớp đang dạy,

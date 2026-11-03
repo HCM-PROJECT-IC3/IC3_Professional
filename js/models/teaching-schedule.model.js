@@ -188,6 +188,11 @@
     };
   }
 
+  // Thời điểm do MÁY CHỦ ghi — model chỉ đánh dấu, tầng repository (base-repository.js) đổi sang
+  // FieldValue.serverTimestamp() của Firestore. Model không phụ thuộc Firebase (docs/architecture/CLEAN-ARCHITECTURE.md).
+  global.EduModels = global.EduModels || {};
+  const SERVER_TIME = global.EduModels.SERVER_TIME || (global.EduModels.SERVER_TIME = Object.freeze({ __eduServerTime: true }));
+
   function buildTeacher({ code, name, phone, address }) {
     return {
       code: (code || '').trim(),
@@ -195,14 +200,14 @@
       phone: (phone || '').trim(),
       address: (address || '').trim(),
       active: true,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdAt: SERVER_TIME,
     };
   }
 
   function buildWeek({ label }) {
     return {
       label: (label || '').trim(),
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdAt: SERVER_TIME,
     };
   }
 

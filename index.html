@@ -41,6 +41,8 @@
   <noscript><link rel="stylesheet" href="css/review-detail.css"></noscript>
   <link rel="stylesheet" href="css/learning-hub.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="css/learning-hub.css"></noscript>
+  <link rel="stylesheet" href="css/ai-assist.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="css/ai-assist.css"></noscript>
   <link rel="stylesheet" href="css/daily-challenge.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="css/daily-challenge.css"></noscript>
   <link rel="stylesheet" href="css/result-pack.css" media="print" onload="this.media='all'">
@@ -232,6 +234,10 @@
             title="Gọi tên học sinh ngẫu nhiên trên máy chiếu — dùng danh sách lớp có sẵn hoặc dán danh sách">
             <i class="fa-solid fa-bullhorn" aria-hidden="true"></i> <span>Gọi tên học sinh</span>
           </a>
+          <a href="thi-dua.html" target="_blank" rel="noopener" class="lobby-staff-btn"
+            title="Cộng/trừ điểm thi đua, thi đua tổ, đổi quà, đo tiếng ồn, đồng hồ đếm ngược — chạy trên máy, không cần đăng nhập">
+            <i class="fa-solid fa-trophy" aria-hidden="true"></i> <span>Thi đua lớp học</span>
+          </a>
           <a href="diem-danh.html" target="_blank" rel="noopener" class="lobby-staff-btn"
             title="Điểm danh và xem tiến độ lớp từ sổ quản lý lớp (Google Sheet) của Điều phối đào tạo">
             <i class="fa-solid fa-clipboard-user" aria-hidden="true"></i> <span>Điểm danh & tiến độ</span>
@@ -415,6 +421,9 @@
   <script src="js/services/apps-script-client.js" defer></script>
   <script src="js/lobby-roster.js" defer></script>
 
+  <script src="js/services/ai-core.js" defer></script>
+  <script src="js/services/ai-assistant.js" defer></script>
+  <script src="js/services/ai-service.js" defer></script>
   <script src="js/review-detail.js" defer></script>
   <script src="js/custom-exam-codec.js" defer></script>
   <script src="js/core/grading.js" defer></script>

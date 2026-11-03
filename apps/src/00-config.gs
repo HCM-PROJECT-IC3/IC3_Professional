@@ -16,10 +16,12 @@
  *     - GITHUB_TOKEN: fine-grained token, quyền "Contents: Read and write" trên đúng repo
  *       (dùng cho nút đẩy câu hỏi ở image-manager.html — token chỉ nằm ở đây, không ở
  *       trình duyệt của ai).
+ *     - GEMINI_API_KEY / GEMINI_MODEL / AI_DAILY_MAX: key Gemini hệ thống cho Trợ lý AI (78-ai.gs).
+ *       Admin cài từ web (nút "Cài đặt AI" → Key hệ thống) — có gọi thử trước khi lưu; hoặc dán tay ở đây.
  */
 
 // ====== CẤU HÌNH - THAY BẰNG ID THẬT CỦA BẠN ======
-const BACKEND_VERSION = '2026-11-03b';
+const BACKEND_VERSION = '2026-11-03c';
 const SPREADSHEET_ID_DATA = '16ty8LB6pnk5Xai1VauUAKfMbIaT88ewfNUAhWM0z5ck';      // Sheet chứa HocSinh + KetQua
 const SPREADSHEET_ID_REPORT = '16ty8LB6pnk5Xai1VauUAKfMbIaT88ewfNUAhWM0z5ck';    // Sheet chứa báo cáo tổng hợp (có thể trùng với ID trên nếu để chung 1 file, khác tab)
 

@@ -21,7 +21,7 @@
     el.setAttribute('aria-hidden', 'true');
     // Id riêng (gb-…) để không đè id của tranh khác trên cùng trang; bỏ chữ vẽ trong tranh
     // (vd bảng lớp học ghi "Bạn ở đâu...?" của trò Đèn pin) — nằm sau tiêu đề trò, gây rối
-    el.innerHTML = art.replace(/<text[\s\S]*?<\/text>/g, '').replace(/\bid="([^"]+)"/g, 'id="gb-$1"').replace(/url\(#([^)]+)\)/g, 'url(#gb-$1)');
+    el.innerHTML = art.replace(/<text[\s\S]*?<\/text>/g, '').replace(/\bid="([^"]+)"/g, 'id="gb-$1"').replace(/url\(#(?!np(?:Sph|SphSoft|Cyl|Light)\b)([^)]+)\)/g, 'url(#gb-$1)');
     document.body.prepend(el);
     document.body.classList.add('has-game-backdrop');
   }

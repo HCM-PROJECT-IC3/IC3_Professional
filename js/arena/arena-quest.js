@@ -105,7 +105,7 @@
   function sceneSvg(name) {
     const raw = global.EduArenaMini && global.EduArenaMini.sceneSvg ? global.EduArenaMini.sceneSvg(name) : '';
     const p = 'q' + (++sceneN) + '-'; // đổi lại id: nhiều vùng có thể dùng chung cảnh
-    return raw.replace(/\bid="([^"]+)"/g, `id="${p}$1"`).replace(/url\(#([^)]+)\)/g, `url(#${p}$1)`).replace(/href="#([^"]+)"/g, `href="#${p}$1"`);
+    return raw.replace(/\bid="([^"]+)"/g, `id="${p}$1"`).replace(/url\(#(?!np(?:Sph|SphSoft|Cyl|Light)\b)([^)]+)\)/g, `url(#${p}$1)`).replace(/href="#([^"]+)"/g, `href="#${p}$1"`);
   }
 
   function mapHtml(key) {

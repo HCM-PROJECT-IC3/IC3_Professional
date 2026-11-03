@@ -21,6 +21,26 @@
   const ol = (w) => `stroke="${INK}" stroke-width="${w || 1.8}" stroke-linejoin="round" stroke-linecap="round"`;
 
   // ============================================================
+  // KHỐI 3D: gradient dùng chung (ánh sáng từ trên-trái) gắn 1 lần vào trang; vol(el) vẽ thêm 1 lớp
+  // phủ cùng hình — mảng tròn thành khối cầu, thân/tay chân thành khối trụ. Không dùng filter → máy yếu vẫn mượt.
+  // ============================================================
+  const SHADE_DEFS = `<radialGradient id="npSph" cx=".36" cy=".3" r=".78" fx=".3" fy=".22"><stop offset="0" stop-color="#fff" stop-opacity=".6"/><stop offset=".25" stop-color="#fff" stop-opacity=".14"/>
+      <stop offset=".55" stop-color="#fff" stop-opacity="0"/><stop offset=".82" stop-color="#1a0f05" stop-opacity=".1"/><stop offset="1" stop-color="#1a0f05" stop-opacity=".34"/></radialGradient>
+    <radialGradient id="npSphSoft" cx=".36" cy=".28" r=".8"><stop offset="0" stop-color="#fff" stop-opacity=".32"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#1a0f05" stop-opacity=".28"/></radialGradient>
+    <linearGradient id="npCyl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity=".34"/><stop offset=".22" stop-color="#fff" stop-opacity=".06"/>
+      <stop offset=".55" stop-color="#1a0f05" stop-opacity="0"/><stop offset=".85" stop-color="#1a0f05" stop-opacity=".16"/><stop offset="1" stop-color="#1a0f05" stop-opacity=".32"/></linearGradient>
+    <radialGradient id="npLight" cx=".12" cy="0" r="1.1"><stop offset="0" stop-color="#fff6d8" stop-opacity=".55"/><stop offset=".5" stop-color="#fff6d8" stop-opacity=".08"/><stop offset="1" stop-color="#1a1208" stop-opacity=".18"/></radialGradient>`;
+  const addShadeDefs = () => {
+    if (document.getElementById('npShadeDefs')) return;
+    document.body.insertAdjacentHTML('beforeend', `<svg id="npShadeDefs" width="0" height="0" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true" focusable="false"><defs>${SHADE_DEFS}</defs></svg>`);
+  };
+  if (typeof document !== 'undefined') {
+    if (document.body) addShadeDefs(); else document.addEventListener('DOMContentLoaded', addShadeDefs);
+  }
+  /** Phần tử SVG + bản sao phủ gradient khối (bỏ viền, không bắt chuột). g: npSph · npSphSoft · npCyl. */
+  const vol = (el, g) => el + el.replace(/\s(fill|stroke|stroke-width|stroke-linejoin|stroke-linecap|class)="[^"]*"/g, '').replace(/\/>$/, ` fill="url(#${g || 'npSph'})" pointer-events="none"/>`);
+
+  // ============================================================
   // HỌC SINH
   // ============================================================
   /** Kiểu cố định theo số thứ tự: nữ (tóc 2 bím / đuôi ngựa) · nam (mũ lưỡi trai / kính). */
@@ -41,19 +61,19 @@
 
   function kidStand(L) {
     return `<g class="np-pose np-pose-stand">
-    <g class="leg leg-l"><rect x="24" y="72" width="7" height="17" rx="3" fill="${L.skin}" ${ol(1.6)}/><rect x="24" y="85" width="7" height="5" fill="#fff" ${ol(1.2)}/><path d="M21.5 89.5h10v5.5H20q-1-5.5 1.5-5.5z" fill="${L.shoe}" ${ol(1.6)}/></g>
-    <g class="leg leg-r"><rect x="33" y="72" width="7" height="17" rx="3" fill="${L.skin}" ${ol(1.6)}/><rect x="33" y="85" width="7" height="5" fill="#fff" ${ol(1.2)}/><path d="M32.5 89.5h10q2.5 0 1.5 5.5h-11.5z" fill="${L.shoe}" ${ol(1.6)}/></g>
-    ${L.girl ? `<path d="M19 62h26l5 13H14z" fill="#24408c" ${ol()}/><path d="M24 63l-3 12M32 63v12M40 63l3 12" stroke="#17306e" stroke-width="1.4"/>` : `<path d="M20 62h24l1.5 12h-10l-3.5-5-3.5 5h-10z" fill="#24408c" ${ol()}/>`}
-    <g class="arm arm-l"><path d="M18 46q-6 2-7 12l5 2q1-7 4-9z" fill="#fff" ${ol(1.6)}/><circle cx="13.5" cy="61" r="3.6" fill="${L.skin}" ${ol(1.4)}/></g>
-    <g class="arm arm-r"><path d="M46 46q6 2 7 12l-5 2q-1-7-4-9z" fill="#fff" ${ol(1.6)}/><circle cx="50.5" cy="61" r="3.6" fill="${L.skin}" ${ol(1.4)}/></g>
-    <path d="M19 47q13-6 26 0l1 17H18z" fill="#fff" ${ol()}/><path d="M38 48q5 2 6 4l1 12h-6z" fill="#dfe6f3"/>
+    <g class="leg leg-l">${vol(`<rect x="24" y="72" width="7" height="17" rx="3" fill="${L.skin}" ${ol(1.6)}/>`, 'npCyl')}<rect x="24" y="85" width="7" height="5" fill="#fff" ${ol(1.2)}/><path d="M21.5 89.5h10v5.5H20q-1-5.5 1.5-5.5z" fill="${L.shoe}" ${ol(1.6)}/></g>
+    <g class="leg leg-r">${vol(`<rect x="33" y="72" width="7" height="17" rx="3" fill="${L.skin}" ${ol(1.6)}/>`, 'npCyl')}<rect x="33" y="85" width="7" height="5" fill="#fff" ${ol(1.2)}/><path d="M32.5 89.5h10q2.5 0 1.5 5.5h-11.5z" fill="${L.shoe}" ${ol(1.6)}/></g>
+    ${L.girl ? `${vol(`<path d="M19 62h26l5 13H14z" fill="#24408c" ${ol()}/>`, 'npCyl')}<path d="M24 63l-3 12M32 63v12M40 63l3 12" stroke="#17306e" stroke-width="1.4"/>` : `${vol(`<path d="M20 62h24l1.5 12h-10l-3.5-5-3.5 5h-10z" fill="#24408c" ${ol()}/>`, 'npCyl')}`}
+    <g class="arm arm-l">${vol(`<path d="M18 46q-6 2-7 12l5 2q1-7 4-9z" fill="#fff" ${ol(1.6)}/>`, 'npCyl')}<circle cx="13.5" cy="61" r="3.6" fill="${L.skin}" ${ol(1.4)}/></g>
+    <g class="arm arm-r">${vol(`<path d="M46 46q6 2 7 12l-5 2q-1-7-4-9z" fill="#fff" ${ol(1.6)}/>`, 'npCyl')}<circle cx="50.5" cy="61" r="3.6" fill="${L.skin}" ${ol(1.4)}/></g>
+    ${vol(`<path d="M19 47q13-6 26 0l1 17H18z" fill="#fff" ${ol()}/>`, 'npCyl')}<path d="M38 48q5 2 6 4l1 12h-6z" fill="#dfe6f3"/>
     <path d="M25.5 44.5l6.5 6.5 6.5-6.5z" fill="#e23b2e" ${ol(1.4)}/><path d="M30 50l-3 9 5-4 5 4-3-9z" fill="#d22f22" ${ol(1.4)}/>
     <g class="np-head">
       ${L.tail === 'pony' ? `<path d="M46 16q14 6 9 24-3-10-10-13z" fill="${L.hair}" ${ol()}/>` : ''}
       ${L.tail === 'pig' ? `<path d="M13 20q-9 4-6 16 4-9 9-9z" fill="${L.hair}" ${ol()}/><path d="M51 20q9 4 6 16-4-9-9-9z" fill="${L.hair}" ${ol()}/><circle cx="13" cy="20" r="2.4" fill="#e23b2e" ${ol(1)}/><circle cx="51" cy="20" r="2.4" fill="#e23b2e" ${ol(1)}/>` : ''}
       <ellipse cx="13.5" cy="27" rx="3.4" ry="4.4" fill="${L.skin}" ${ol(1.4)}/><ellipse cx="50.5" cy="27" rx="3.4" ry="4.4" fill="${L.skin}" ${ol(1.4)}/>
-      <circle cx="32" cy="25" r="18.5" fill="${L.skin}" ${ol()}/>
-      <path d="M14 26q-2-22 18-22t18 22q-3-10-10-12-3 5-11 6 3-3 2-6-11 3-17 12z" fill="${L.hair}" ${ol()}/>
+      ${vol(`<circle cx="32" cy="25" r="18.5" fill="${L.skin}" ${ol()}/>`, 'npSph')}
+      ${vol(`<path d="M14 26q-2-22 18-22t18 22q-3-10-10-12-3 5-11 6 3-3 2-6-11 3-17 12z" fill="${L.hair}" ${ol()}/>`, 'npSphSoft')}
       <path d="M22 9q7-3 14-1" stroke="rgba(255,255,255,.35)" stroke-width="2.5" fill="none"/>
       ${L.cap ? `<path d="M13 19q19-21 38 0z" fill="${L.cap}" ${ol()}/><path d="M13 19q19-6 38 0" fill="none" stroke="#fff" stroke-width="2"/><path d="M42 17q13-1 16 5H41z" fill="${L.cap}" ${ol(1.6)}/><circle cx="32" cy="6" r="2" fill="#fff" ${ol(1)}/>` : ''}
       <g stroke="none">${eye(25, 27)}${eye(39, 27)}<ellipse cx="20" cy="33" rx="3" ry="1.8" fill="#f59a9a" opacity=".6"/><ellipse cx="44" cy="33" rx="3" ry="1.8" fill="#f59a9a" opacity=".6"/></g>
@@ -66,16 +86,16 @@
     return `<g class="np-pose np-pose-run">
     <g class="leg leg-r"><path d="M28 70l-9 13 3 3 10-12z" fill="${L.skin}" ${ol(1.6)}/><path d="M16 83l6-1 3 5-8 3q-4-3-1-7z" fill="${L.shoe}" ${ol(1.6)}/></g>
     <g class="leg leg-l"><path d="M34 70l9 12-2 4-10-11z" fill="${L.skin}" ${ol(1.6)}/><rect x="38" y="80" width="6" height="5" fill="#fff" transform="rotate(40 41 82)" ${ol(1.2)}/><path d="M41 84l8 1q3 4-2 6l-9-2z" fill="${L.shoe}" ${ol(1.6)}/></g>
-    ${L.girl ? `<path d="M21 60h22l6 14H15z" fill="#24408c" ${ol()}/>` : `<path d="M22 60h20l2 12h-9l-3-4-3 4h-9z" fill="#24408c" ${ol()}/>`}
+    ${L.girl ? `${vol(`<path d="M21 60h22l6 14H15z" fill="#24408c" ${ol()}/>`, 'npCyl')}` : `${vol(`<path d="M22 60h20l2 12h-9l-3-4-3 4h-9z" fill="#24408c" ${ol()}/>`, 'npCyl')}`}
     <g class="arm arm-r"><path d="M26 48q-8 4-12 12l4 3q4-6 10-9z" fill="#fff" ${ol(1.6)}/><circle cx="15" cy="62" r="3.4" fill="${L.skin}" ${ol(1.4)}/></g>
-    <path d="M22 46q12-7 22 0l-1 16H22z" fill="#fff" ${ol()}/><path d="M38 47q4 3 5 5l-1 10h-5z" fill="#dfe6f3"/>
+    ${vol(`<path d="M22 46q12-7 22 0l-1 16H22z" fill="#fff" ${ol()}/>`, 'npCyl')}<path d="M38 47q4 3 5 5l-1 10h-5z" fill="#dfe6f3"/>
     <path d="M34 45l6 5-7 2z" fill="#e23b2e" ${ol(1.4)}/><path d="M37 50l4 8-6-3z" fill="#d22f22" ${ol(1.4)}/>
     <g class="arm arm-l"><path d="M38 48q8 0 16 3l-1 5q-8-1-15-3z" fill="#fff" ${ol(1.6)}/><circle cx="56" cy="53" r="3.6" fill="${L.skin}" ${ol(1.4)}/></g>
     <g class="np-head">
       ${L.tail === 'pony' ? `<path d="M20 14q-16 2-14 20 4-10 12-12z" fill="${L.hair}" ${ol()}/>` : ''}
       ${L.tail === 'pig' ? `<path d="M18 18q-12 2-11 15 4-8 11-8z" fill="${L.hair}" ${ol()}/><circle cx="17" cy="18" r="2.4" fill="#e23b2e" ${ol(1)}/>` : ''}
-      <circle cx="35" cy="25" r="18" fill="${L.skin}" ${ol()}/>
-      <path d="M19 38q-8-14-1-26 8-10 20-8 14 2 16 15-7-5-12-5-2 5-9 6 1-3 0-5-6 3-7 9-1 7 1 13z" fill="${L.hair}" ${ol()}/>
+      ${vol(`<circle cx="35" cy="25" r="18" fill="${L.skin}" ${ol()}/>`, 'npSph')}
+      ${vol(`<path d="M19 38q-8-14-1-26 8-10 20-8 14 2 16 15-7-5-12-5-2 5-9 6 1-3 0-5-6 3-7 9-1 7 1 13z" fill="${L.hair}" ${ol()}/>`, 'npSphSoft')}
       <ellipse cx="30" cy="29" rx="3" ry="3.9" fill="${L.skin}" ${ol(1.4)}/><path d="M30 27.5q1.3 1.5 0 3" stroke="${L.skinD}" stroke-width="1.2" fill="none"/>
       <path d="M27 9q7-3 13-1" stroke="rgba(255,255,255,.35)" stroke-width="2.5" fill="none"/>
       ${L.cap ? `<path d="M17 19q18-20 36-2z" fill="${L.cap}" ${ol()}/><path d="M46 15q11-2 15 4l-14 1z" fill="${L.cap}" ${ol(1.6)}/>` : ''}
@@ -106,7 +126,7 @@
   <g class="leg leg-r"><path d="M68 84v16m0 0l-6 4m6-4l6 4" stroke="#e8a21c" stroke-width="4" stroke-linecap="round"/></g>
   <g ${ol(2.4)}>
     <path d="M18 46q-12-6-16-22 14 2 20 12z" fill="#b5582a"/><path d="M14 56q-14-2-13-16 12 2 15 10z" fill="#d07a3a"/>
-    <path d="M20 60q-6-26 14-30 10-2 18 4 6-20 26-18 20 4 18 26 18 4 20 22-4 30-40 30H44q-24 0-24-34z" fill="#fff6e8"/>
+    ${vol(`<path d="M20 60q-6-26 14-30 10-2 18 4 6-20 26-18 20 4 18 26 18 4 20 22-4 30-40 30H44q-24 0-24-34z" fill="#fff6e8"/>`, 'npSphSoft')}
     <path d="M38 56q16-14 38 0-8 20-38 0z" fill="#d9a77b"/><path d="M44 58q12 6 26 0M46 64q10 4 20 0" fill="none" stroke-width="1.6"/>
     <path d="M74 14q4-12 10-2 4-10 8 0 6-6 6 4-12 2-24-2z" fill="#e23b2e"/>
     <path d="M98 34l14 5-14 5z" fill="#f2b632"/><path d="M96 46q4 10-2 14-4-6 2-14z" fill="#e23b2e"/>
@@ -116,7 +136,7 @@
   <path class="np-hen-zz" d="M80 30q5 4 10 0" stroke="${INK}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
 </svg>`;
 
-  const egg = () => `<svg class="np-egg" viewBox="0 0 24 30" aria-hidden="true"><ellipse cx="12" cy="16" rx="10" ry="13" fill="#fffaf0" ${ol(1.5)}/><ellipse cx="8" cy="11" rx="2.5" ry="4" fill="#fff"/><path d="M15 22q4-3 4-8" stroke="#eadcc0" stroke-width="2" fill="none"/></svg>`;
+  const egg = () => `<svg class="np-egg" viewBox="0 0 24 30" aria-hidden="true">${vol(`<ellipse cx="12" cy="16" rx="10" ry="13" fill="#fffaf0" ${ol(1.5)}/>`, 'npSph')}<ellipse cx="8" cy="11" rx="2.5" ry="4" fill="#fff"/><path d="M15 22q4-3 4-8" stroke="#eadcc0" stroke-width="2" fill="none"/></svg>`;
   const cake = () => `<svg class="np-cake" viewBox="0 0 40 30" aria-hidden="true"><path d="M3 14h34v13H3z" fill="#f7d6a8" ${ol(1.4)}/><path d="M3 14h34v5H3z" fill="#f48fb1" ${ol(1.4)}/><path d="M5 19q3 3 6 0t6 0 6 0 6 0 6 0" fill="none" stroke="#fff" stroke-width="2"/><rect x="18" y="4" width="4" height="10" rx="1" fill="#7cc4ff" ${ol(1.2)}/><path d="M20 0q3 3 0 5-3-2 0-5z" fill="#ffb02e"/></svg>`;
 
   const dino = () => `<svg class="np-dino" viewBox="0 0 220 170" aria-hidden="true">
@@ -151,7 +171,7 @@
   const fish = (c) => `<svg class="np-fish" viewBox="0 0 90 56" aria-hidden="true"><g ${ol(2)}>
   <path class="np-fish-tail" d="M16 28L0 12v32z" fill="${c}"/>
   <path d="M38 8q10-10 22-2l-4 4z" fill="${c}"/>
-  <path d="M14 28q14-26 44-24 26 2 30 24-4 22-30 24-30 2-44-24z" fill="${c}"/>
+  ${vol(`<path d="M14 28q14-26 44-24 26 2 30 24-4 22-30 24-30 2-44-24z" fill="${c}"/>`, 'npSph')}
   <path d="M42 40q6 8 12 2" fill="${c}"/></g>
   <path d="M30 18q14-10 30-8" stroke="rgba(255,255,255,.55)" stroke-width="4" fill="none" stroke-linecap="round"/>
   <path d="M40 24q4 6 0 12M48 24q4 6 0 12" stroke="rgba(0,0,0,.18)" stroke-width="2" fill="none"/>
@@ -161,7 +181,7 @@
 
   const balloon = (c) => `<svg class="np-balloon-svg" viewBox="0 0 70 130" aria-hidden="true">
   <path class="np-string" d="M35 86q-6 14 2 26t-2 18" fill="none" stroke="#5b5b6b" stroke-width="1.6"/>
-  <path d="M35 4C14 4 4 22 4 40c0 24 20 40 31 44 11-4 31-20 31-44C66 22 56 4 35 4z" fill="${c}" ${ol(2.4)}/>
+  ${vol(`<path d="M35 4C14 4 4 22 4 40c0 24 20 40 31 44 11-4 31-20 31-44C66 22 56 4 35 4z" fill="${c}" ${ol(2.4)}/>`, 'npSph')}
   <path d="M50 18q10 10 8 26" stroke="rgba(0,0,0,.15)" stroke-width="6" fill="none" stroke-linecap="round"/>
   <path d="M31 84h8l-4 6z" fill="${c}" ${ol(1.8)}/>
   <ellipse cx="22" cy="24" rx="6" ry="10" fill="#fff" opacity=".45" transform="rotate(20 22 24)"/>
@@ -170,7 +190,7 @@
   const rocket = (c) => `<svg class="np-rocket" viewBox="0 0 70 130" aria-hidden="true">
   <path class="np-flame" d="M24 104q11 30 11 26 0 4 11-26z" fill="#ffb02e"/><path class="np-flame" d="M29 104q6 16 6 14 0 2 6-14z" fill="#fff3b0"/>
   <g ${ol(2.2)}><path d="M16 74L2 104h18z M54 74l14 30H50z" fill="${c}"/>
-  <path d="M35 2q-22 22-20 64v38h40V66q2-42-20-64z" fill="#f7f7fb"/>
+  ${vol(`<path d="M35 2q-22 22-20 64v38h40V66q2-42-20-64z" fill="#f7f7fb"/>`, 'npCyl')}
   <path d="M35 2q-12 12-17 28h34Q47 14 35 2z" fill="${c}"/>
   <circle cx="35" cy="54" r="11" fill="#7fd1ff"/><rect x="30" y="80" width="10" height="24" rx="4" fill="${c}"/></g>
   <circle cx="35" cy="54" r="14" fill="none" stroke="#9aa3b8" stroke-width="3"/>
@@ -179,7 +199,7 @@
 
   const gift = (c) => `<svg class="np-gift" viewBox="0 0 90 90" aria-hidden="true">
   <ellipse class="np-shadow" cx="45" cy="86" rx="36" ry="4"/>
-  <g ${ol(2.2)}><rect x="9" y="34" width="72" height="50" rx="4" fill="${c}"/><rect x="40" y="34" width="10" height="50" fill="#fff" opacity=".7"/></g>
+  <g ${ol(2.2)}>${vol(`<rect x="9" y="34" width="72" height="50" rx="4" fill="${c}"/>`, 'npCyl')}<rect x="40" y="34" width="10" height="50" fill="#fff" opacity=".7"/></g>
   <rect x="58" y="38" width="20" height="44" fill="rgba(0,0,0,.12)"/>
   <g class="np-lid" ${ol(2.2)}><rect x="4" y="22" width="82" height="16" rx="3" fill="${c}"/><rect x="40" y="22" width="10" height="16" fill="#fff" opacity=".75"/>
     <path d="M45 22q-18-20-24-8 0 8 24 8zM45 22q18-20 24-8 0 8-24 8z" fill="#fff"/></g>
@@ -237,7 +257,7 @@
     <linearGradient id="npGrassG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b6e58c" stop-opacity=".45"/><stop offset="1" stop-color="#3f8a30" stop-opacity=".5"/></linearGradient>
     <pattern id="npWood" width="1000" height="36" patternUnits="userSpaceOnUse"><rect width="1000" height="36" fill="#c58b52"/><path d="M0 35h1000" stroke="#a46e3a" stroke-width="3"/><path d="M120 0v36M380 0v36M610 0v36M860 0v36" stroke="#b07a44" stroke-width="2"/></pattern>
   </defs>`;
-  const FINISH = `<rect width="1000" height="600" fill="#fff" filter="url(#npBrush)" style="mix-blend-mode:soft-light"/><rect width="1000" height="600" fill="#000" filter="url(#npPaper)" opacity=".18"/><rect width="1000" height="600" fill="url(#npVig)"/>`;
+  const FINISH = `<rect width="1000" height="600" fill="url(#npLight)" style="mix-blend-mode:soft-light"/><rect width="1000" height="600" fill="#fff" filter="url(#npBrush)" style="mix-blend-mode:soft-light"/><rect width="1000" height="600" fill="#000" filter="url(#npPaper)" opacity=".18"/><rect width="1000" height="600" fill="url(#npVig)"/>`;
   const svg = (inner, cls) => `<svg class="np-scene ${cls || ''}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${DEFS}${inner}${FINISH}</svg>`;
   const skyGrad = (id, a, b) => `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs>`;
   const cloud = (x, y, s, cls) => `<g class="np-cloud ${cls || ''}" transform="translate(${x} ${y}) scale(${s})"><path d="M0 46q-2-24 22-24 6-20 30-18 12-16 36-4 24-6 30 18 22 0 22 28z" fill="#fff" stroke="#cfe3f3" stroke-width="3"/><path d="M14 46q20-6 40 0t46 0" stroke="#e3eff9" stroke-width="6" fill="none" stroke-linecap="round"/></g>`;
@@ -463,5 +483,10 @@
     },
   };
 
-  global.EduNamePickerArt = { kid, hen, egg, cake, dino, bird, fish, balloon, rocket, gift, referee, card, ufo, bus, virus, scene: (id) => SCENES[id](), FUN };
+  global.EduNamePickerArt = {
+    kid, hen, egg, cake, dino, bird, fish, balloon, rocket, gift, referee, card, ufo, bus, virus, scene: (id) => (SCENES[id] || SCENES.farm)(), FUN,
+    // Cho np-games-extra.js vẽ cảnh mới cùng nét (khung giấy, mây, cây, bụi cỏ...)
+    addScene: (id, fn) => { SCENES[id] = fn; },
+    paint: { INK, ol, vol, svg, skyGrad, cloud, sun, tree, tuft, flower, bush, blades, rock, front, farHills },
+  };
 })(window);

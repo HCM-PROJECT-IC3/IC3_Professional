@@ -105,7 +105,31 @@ function _rdBuildDetailBody(d, opts) {
     ${showQuestionText ? `<div class="rd-question">${_rdEsc(d.fullText)}</div>` : ''}
     ${answerBlock}
     ${explanation}
+    ${_rdAiBlock(d)}
   `;
+}
+
+// ── Trợ lý AI: "Vì sao em sai?" (js/services/ai-service.js) — chỉ câu sai/bỏ trống, chỉ khi em bấm.
+// Gửi nội dung câu + đáp án (không gửi tên em). Lời giải lưu đệm trên máy: bấm lại câu đó không tốn lượt.
+const _rdAiItems = new Map();
+function _rdAiBlock(d) {
+  if (!window.EduAI || d.status === 'correct' || !d.fullText) return '';
+  const id = 'rdai' + (_rdAiItems.size + 1);
+  _rdAiItems.set(id, d);
+  return `<div class="rd-ai"><button type="button" class="ai-btn" onclick="_rdAskAI('${id}', this)">
+      <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Hỏi AI: vì sao em sai?</button>
+    <div class="ai-box" hidden aria-live="polite"></div></div>`;
+}
+async function _rdAskAI(id, btn) {
+  const d = _rdAiItems.get(id);
+  if (!d || !window.EduAI) return;
+  const r = d.raw || {};
+  btn.disabled = true;
+  const ok = await window.EduAI.askInto(btn.nextElementSibling, 'explain', {
+    question: d.fullText, type: d.type, options: r.options || [],
+    correct: r.correct != null ? r.correct : r.answer, chosen: r.userAns, explanation: d.explanation,
+  });
+  if (ok) btn.hidden = true; else btn.disabled = false;
 }
 
 function _rdChoiceBlock(r) {

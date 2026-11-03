@@ -1,7 +1,7 @@
 // ====== ROUTER ======
 // Mọi API đi qua doPost với body JSON { action, idToken?, ... } (Content-Type text/plain
 // để trình duyệt không gửi preflight — Apps Script không xử lý OPTIONS).
-// roles = null: công khai (submitExam / mosSubmit / rosterByCode — học sinh không đăng nhập; submitBatch tự kiểm RELAY_TOKEN). Còn lại bắt buộc
+// roles = null: công khai (submitExam / mosSubmit / rosterByCode / aiAsk — học sinh không đăng nhập; submitBatch tự kiểm RELAY_TOKEN). Còn lại bắt buộc
 // Firebase ID token và vai trò nằm trong danh sách (xem requireRole_ trong 20-auth.gs).
 
 const ROLES_RESULTS = ['admin', 'coordinator', 'school_admin', 'teacher']; // giống quyền đọc quiz_results
@@ -35,6 +35,10 @@ function routes_() {
     arenaRoomLog:  { roles: ROLES_STAFF,   handler: arenaRoomLog_ },
     arenaRelayTicket: { roles: ROLES_STAFF, handler: arenaRelayTicket_ },
     classSheetWrite:  { roles: ROLES_TEACH, handler: classSheetWrite_ },
+    aiAsk:         { roles: null,          handler: aiAsk_ },        // 78-ai.gs — công khai: giải thích câu sai, câu hỏi nhanh (có trần lượt)
+    aiAskStaff:    { roles: ROLES_STAFF,   handler: aiAskStaff_ },
+    aiStatus:      { roles: ROLES_STAFF,   handler: aiStatus_ },
+    aiConfig:      { roles: ROLES_ADMIN,   handler: aiConfig_ },
   };
 }
 

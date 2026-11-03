@@ -62,6 +62,7 @@
     moon: { scene: 'space', vb: [170, 0], art: () => `${put(A.rocket('#e5484d'), 420, 130, 76, 140, 'cv-rocket', 'rotate(18 458 200)')}${put(A.rocket('#2f7be0'), 600, 190, 56, 104, 'cv-rocket d2', 'rotate(10 628 242)')}${spark(330, 200, 1.2)}${spark(740, 140, 1)}` },
     boss: { scene: 'server', vb: [170, 214], art: () => `${put(A.virus(), 520, 290, 200, 200, 'cv-boss')}${kid(3, 250, 500, true)}${kid(10, 350, 500, false, 'd1')}
       <path class="cv-pulse" d="M440 400l60-26-14 20 44-8" stroke="#3fe0ff" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>${spark(470, 330, 1.3, '#bfe9ff')}${spark(720, 300, 1)}` },
+    goal: { scene: 'goal', vb: [170, 140], art: () => (A.extra ? `${put(A.extra.goalie(), 545, 160, 70, 112, 'cv-dive', 'rotate(58 580 216)')}${put(A.extra.ball(), 420, 250, 36, 36, 'cv-float')}${kid(5, 250, 440, true)}${spark(470, 210, 1.2)}${spark(700, 300, 1)}` : kid(5, 250, 440, true)) },
     board: { scene: 'classroom', vb: [170, 60], art: () => `${board(330, 110)}${kid(4, 270, 360)}${kid(9, 700, 360, false, '', true)}` },
   };
 
@@ -74,7 +75,8 @@
     let s = A.scene(c.scene)
       .replace('viewBox="0 0 1000 600"', `viewBox="${c.vb[0]} ${c.vb[1]} 660 300"`)
       .replace(/<\/svg>\s*$/, `<g class="cv-cast"${c.dy ? ` transform="translate(0 ${c.dy})"` : ''}>${c.art()}</g></svg>`);
-    s = s.replace(/\bid="([^"]+)"/g, `id="${pre}$1"`).replace(/url\(#([^)]+)\)/g, `url(#${pre}$1)`);
+    // Gradient khối 3D dùng chung (npSph, npCyl… — np-art.js gắn 1 lần vào trang) giữ nguyên id
+    s = s.replace(/\bid="([^"]+)"/g, `id="${pre}$1"`).replace(/url\(#(?!np(?:Sph|SphSoft|Cyl|Light)\b)([^)]+)\)/g, `url(#${pre}$1)`);
     return s;
   }
 

@@ -16,10 +16,10 @@
   // Thước đo hiện cho em: [trường, đơn vị]
   const MEASURE = {
     speed: ['score', 'điểm'], gold: ['gold', 'vàng'], race: ['pos', 'bước'], survival: ['score', 'điểm'], fish: ['kg', 'kg'],
-    spell: ['hp', 'máu'], heist: ['gems', 'đá quý'], dino: ['fossils', 'hoá thạch'], moon: ['km', 'nghìn km'],
+    spell: ['hp', 'máu'], heist: ['gems', 'đá quý'], dino: ['fossils', 'hoá thạch'], moon: ['km', 'nghìn km'], goal: ['goals', 'bàn thắng'],
   };
   // Khoảng cách coi là "sát nút" giữa em và người kế bên
-  const CLOSE = { speed: 250, gold: 40, race: 1, survival: 250, fish: 4, spell: 10, heist: 15, dino: 20, moon: 25 };
+  const CLOSE = { speed: 250, gold: 40, race: 1, survival: 250, fish: 4, spell: 10, heist: 15, dino: 20, moon: 25, goal: 1 };
   const CLIMAX = {
     race: { title: 'NƯỚC RÚT!', icon: 'fa-flag-checkered', tone: 'final', sub: 'Có người sắp về đích — tăng tốc!' },
     moon: { title: 'SẮP CHẠM MẶT TRĂNG!', icon: 'fa-rocket', tone: 'speed', sub: 'Chặng cuối — đúng nhanh để bứt lên!' },

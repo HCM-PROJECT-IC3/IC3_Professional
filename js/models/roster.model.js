@@ -49,6 +49,11 @@
     return `${(name || '').trim().toLowerCase()}__${(className || '').trim().toLowerCase()}`;
   }
 
+  // Thời điểm do MÁY CHỦ ghi — model chỉ đánh dấu, tầng repository (base-repository.js) đổi sang
+  // FieldValue.serverTimestamp() của Firestore. Model không phụ thuộc Firebase (docs/architecture/CLEAN-ARCHITECTURE.md).
+  global.EduModels = global.EduModels || {};
+  const SERVER_TIME = global.EduModels.SERVER_TIME || (global.EduModels.SERVER_TIME = Object.freeze({ __eduServerTime: true }));
+
   function buildStudent({ mssv, name, className, school, classId, teacherId, teacherName, avatarUrl }) {
     return {
       mssv: mssv || '',
@@ -60,7 +65,7 @@
       teacherName: teacherName || '',
       avatarUrl: avatarUrl || '',
       status: STUDENT_STATUS.ACTIVE,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdAt: SERVER_TIME,
     };
   }
 

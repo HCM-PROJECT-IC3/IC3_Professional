@@ -6,7 +6,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#d9472b">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Gọi tên học sinh ngẫu nhiên trên máy chiếu với 11 trò: Trộm trứng, Đường đua, Câu cá, Bóng bay, Khủng long, Tên lửa, Đèn pin, Hộp quà, Thẻ đỏ, UFO, Đua bi. Dùng danh sách lớp có sẵn hoặc dán danh sách.">
+<meta name="description" content="Gọi tên học sinh ngẫu nhiên trên máy chiếu với 17 trò: Trộm trứng, Đường đua, Câu cá, Bóng bay, Khủng long, Tên lửa, Đèn pin, Hộp quà, Thẻ đỏ, UFO, Đua bi, Ong tìm hoa, Mèo bắt chuột, Thả diều, Sút luân lưu, Đèn xanh đèn đỏ, Bịt mắt bắt dê. Dùng danh sách lớp có sẵn hoặc dán danh sách.">
 <title>Gọi tên học sinh — EduQuiz</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="lib/fonts/fonts.css">
@@ -15,19 +15,21 @@
 <link rel="stylesheet" href="lib/fontawesome/css/fa.min.css">
 <link rel="stylesheet" href="css/accessibility.css">
 <link rel="stylesheet" href="css/name-picker.css">
+<link rel="stylesheet" href="css/ai-assist.css">
 </head>
 <body class="np-body">
-<!-- Gọi tên học sinh (js/name-picker/): chạy trên máy giáo viên, tranh SVG trong np-art.js. Tên lấy từ data/roster/students-active.json hoặc danh sách dán vào; thử thách theo bài từ data/ic3/ppct-lessons.json. Không gửi dữ liệu đi đâu (localStorage eduquiz_goiten_v1). -->
+<!-- Gọi tên học sinh (js/name-picker/): chạy trên máy giáo viên, tranh SVG trong np-art.js; 6 trò thêm trong np-games-extra.js. Tên lấy từ data/roster/students-active.json hoặc danh sách dán vào; thử thách theo bài từ data/ic3/ppct-lessons.json. Không gửi dữ liệu đi đâu (localStorage eduquiz_goiten_v1) — trừ khi bấm "AI soạn thêm câu hỏi": chỉ gửi tên bài + khối lớp cho Gemini (js/services/ai-service.js), câu AI lưu ở eduquiz_goiten_ai_v1. Thẻ "Chia nhóm" dùng N.makeGroups, lưu S.groups theo danh sách. -->
 <div class="np-wrap">
   <header class="np-head">
     <a class="np-back" href="index.html" title="Về trang chủ"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Trang chủ</a>
     <div class="np-tools">
+      <a class="np-icon-btn np-icon-link" href="thi-dua.html" title="Thi đua lớp học (cộng điểm, thi đua tổ, đổi quà)" aria-label="Mở trang Thi đua lớp học"><i class="fa-solid fa-trophy"></i></a>
       <a class="np-icon-btn np-icon-link" href="diem-danh.html" title="Điểm danh & tiến độ (sổ lớp điều phối)" aria-label="Mở trang Điểm danh & tiến độ"><i class="fa-solid fa-clipboard-user"></i></a>
       <button type="button" class="np-icon-btn" id="npSound" title="Bật/tắt âm thanh" aria-label="Bật/tắt âm thanh"><i class="fa-solid fa-volume-high"></i></button>
       <button type="button" class="np-icon-btn" id="npTheme" title="Sáng/tối" aria-label="Chuyển sáng/tối"><i class="fa-solid fa-circle-half-stroke"></i></button>
     </div>
     <h1>Gọi Tên Vui</h1>
-    <p class="np-sub">11 trò chơi gọi tên ngẫu nhiên cho lớp học. Chọn trò, bấm <b>Bắt đầu</b>, và chờ xem ai "trúng thưởng"!</p>
+    <p class="np-sub">17 trò chơi gọi tên ngẫu nhiên cho lớp học. Chọn trò, bấm <b>Bắt đầu</b>, và chờ xem ai "trúng thưởng"!</p>
   </header>
 
   <div class="np-picker" id="npGames" role="radiogroup" aria-label="Chọn trò chơi"></div>
@@ -44,6 +46,7 @@
       <label><input type="checkbox" id="npNoRepeat"> Bạn đã được gọi thì nghỉ lượt sau</label>
       <label><input type="checkbox" id="npTwist"> Lật kèo: tưởng bắt được rồi nhưng cuối cùng là người khác</label>
       <label><input type="checkbox" id="npRandom"> Mỗi lượt đổi trò ngẫu nhiên</label>
+      <label><input type="checkbox" id="npSpeak"> Đọc to tên người được gọi</label>
       <button type="button" class="np-small" id="npFull"><i class="fa-solid fa-expand" aria-hidden="true"></i> Toàn màn hình <kbd>F</kbd></button>
     </div>
     <div class="np-timeset">
@@ -58,7 +61,10 @@
         <label class="np-field"><span>Hôm nay học</span><select id="npTiet"></select></label>
       </div>
       <p class="np-hint" id="npLessonNote">Chỉ hỏi câu của bài đã học trong tiết đó, đúng cấp độ của khối lớp.</p>
-      <p class="np-hint" id="npHidden" hidden></p>    </div>
+      <p class="np-hint" id="npHidden" hidden></p>
+      <div class="np-row"><button type="button" class="np-small" id="npAiQ"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> AI soạn thêm câu hỏi cho bài này</button><span class="np-hint" id="npAiNote"></span></div>
+      <div class="ai-box" id="npAiOut" hidden aria-live="polite"></div>
+    </div>
   </section>
 
   <div class="np-two">
@@ -98,6 +104,22 @@
       <ol class="np-called" id="npCalled"></ol>
     </section>
   </div>
+
+  <section class="np-card" aria-label="Chia nhóm">
+    <div class="np-step"><h2>Chia nhóm <small id="npGrpInfo"></small></h2></div>
+    <div class="np-grpctl">
+      <span class="np-grplbl">Số nhóm</span>
+      <div class="np-seg" id="npGrpK" role="radiogroup" aria-label="Số nhóm"></div>
+      <label class="np-grpchk"><input type="checkbox" id="npGrpLead"> Mỗi nhóm 1 nhóm trưởng (ngẫu nhiên)</label>
+    </div>
+    <div class="np-row">
+      <button type="button" class="np-add" id="npGrpGo"><i class="fa-solid fa-shuffle" aria-hidden="true"></i> Chia nhóm!</button>
+      <button type="button" class="np-small" id="npGrpCall" disabled><i class="fa-solid fa-bullseye" aria-hidden="true"></i> Gọi một nhóm</button>
+      <button type="button" class="np-small" id="npGrpCopy" disabled><i class="fa-regular fa-copy" aria-hidden="true"></i> Sao chép kết quả</button>
+    </div>
+    <div class="np-grpout" id="npGrpOut" aria-live="polite"></div>
+    <p class="np-hint">Chỉ chia các bạn có mặt (bỏ bạn đánh dấu vắng). Kết quả lưu riêng cho từng danh sách trên máy này.</p>
+  </section>
 </div>
 <div class="np-toast" id="npToast" role="status" hidden></div>
 
@@ -106,9 +128,16 @@
 <script src="js/fx-party.js"></script>
 <script src="js/name-picker/name-picker-core.js"></script>
 <script src="js/name-picker/np-art.js"></script>
+<script src="js/name-picker/np-art-extra.js"></script>
 <script src="js/name-picker/np-games.js"></script>
+<script src="js/name-picker/np-games-extra.js"></script>
 <script src="js/name-picker/np-lessons.js"></script>
 <script src="js/name-picker/np-challenge.js"></script>
+<script src="js/backend-config.js"></script>
+<script src="js/services/apps-script-client.js"></script>
+<script src="js/services/ai-core.js"></script>
+<script src="js/services/ai-assistant.js"></script>
+<script src="js/services/ai-service.js"></script>
 <script src="js/name-picker/name-picker.js"></script>
 </body>
 </html>

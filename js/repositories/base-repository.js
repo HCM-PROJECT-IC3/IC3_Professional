@@ -27,6 +27,24 @@
   // "classes"/"courses"), không nhằm giới hạn dữ liệu cần thiết.
   const DEFAULT_LIST_LIMIT = 10000;
 
+  /**
+   * Dữ liệu từ tầng model → dạng Firestore: field mang dấu EduModels.SERVER_TIME ({ __eduServerTime: true })
+   * thành FieldValue.serverTimestamp(). Chỉ xét field cấp 1 (model chỉ đặt dấu ở createdAt/updatedAt).
+   */
+  function toStore(data) {
+    if (!data || typeof data !== 'object') return data;
+    let out = null;
+    Object.keys(data).forEach((k) => {
+      const v = data[k];
+      if (v && v.__eduServerTime === true) {
+        out = out || Object.assign({}, data);
+        out[k] = global.firebase.firestore.FieldValue.serverTimestamp();
+      }
+    });
+    return out || data;
+  }
+  const BATCH_MAX = 450; // Firestore cho tối đa 500 thao tác/lô — chừa chỗ an toàn
+
   /** In "[trang] N lượt đọc Firestore — <nhãn>" (xem countSnap() trong firebase-config.js). */
   function meter(label, snap) {
     if (global.EduFirebase && global.EduFirebase.countSnap) global.EduFirebase.countSnap(label, snap);
@@ -89,23 +107,41 @@
     }
 
     async create(data) {
-      const ref = await this.col().add(data);
+      const ref = await this.col().add(toStore(data));
       return ref.id;
     }
 
     /** Tạo với ID chỉ định trước (vd. dùng MSSV làm ID cho roster). */
     async createWithId(id, data) {
-      await this.col().doc(id).set(data);
+      await this.col().doc(id).set(toStore(data));
       return id;
     }
 
     async update(id, partialData) {
-      await this.col().doc(id).update(partialData);
+      await this.col().doc(id).update(toStore(partialData));
     }
 
     /** Tạo mới nếu chưa có, cập nhật nếu đã có (dựa theo id). */
     async upsert(id, data) {
-      await this.col().doc(id).set(data, { merge: true });
+      await this.col().doc(id).set(toStore(data), { merge: true });
+    }
+
+    /**
+     * Ghi nhiều tài liệu (có thể thuộc nhiều repository) theo lô ≤ 450 thao tác — trang giao diện
+     * KHÔNG tự dựng db.batch(). items: [{ repo, id, data, merge? }]. Trả số tài liệu đã ghi.
+     */
+    static async commitBatch(items) {
+      const db = global.EduFirebase && global.EduFirebase.db;
+      if (!db) throw new Error('[EduRepository] Firestore chưa sẵn sàng (thiếu firebase-config.js).');
+      for (let i = 0; i < items.length; i += BATCH_MAX) {
+        const batch = db.batch();
+        items.slice(i, i + BATCH_MAX).forEach((w) => {
+          const ref = w.repo.col().doc(w.id);
+          if (w.merge) batch.set(ref, toStore(w.data), { merge: true }); else batch.set(ref, toStore(w.data));
+        });
+        await batch.commit();
+      }
+      return items.length;
     }
 
     async remove(id) {
@@ -113,5 +149,6 @@
     }
   }
 
+  BaseRepository.toStore = toStore;
   global.EduBaseRepository = BaseRepository;
 })(window);

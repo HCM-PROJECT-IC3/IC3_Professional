@@ -13,6 +13,9 @@
    "Tạo đề ôn" dựng link đề (js/custom-exam-codec.js, nạp lười) từ các câu hay
    sai nhất — đề nằm trong link, 0 Firebase.
 
+   "Gợi ý dạy lại (AI)" trong từng câu: Gemini phân tích lỗi hay gặp + cách giảng lại (js/services/ai-service.js,
+   chỉ chạy khi bấm, 0 Firestore — key cá nhân hoặc key trường qua Apps Script).
+
    Nạp SAU js/services/sheet-results-api.js, js/services/lazy-script-loader.js,
    js/services/question-bank-lookup.js (tra uid → câu, dùng chung với gom-ket-qua).
    js/teacher/dashboard.js, js/coordinator/dashboard.js gọi EduWrongQuestions.setContext(...) mỗi lần đổi bộ lọc.
@@ -45,6 +48,7 @@
           <summary><span class="wq-rank">${i + 1}</span><span class="wq-q">${esc(text)}</span>
             <span class="wq-meta">${it.count} lượt sai · ${it.students} HS${pct(it.count)}${r ? ` · ${esc(r.levelName)} › ${esc(r.mt)}` : ''}</span></summary>
           ${r ? answerHtml(r.q) + (r.q.explanation ? `<p class="wq-expl"><i class="fa-solid fa-lightbulb" aria-hidden="true"></i> ${esc(plain(r.q.explanation))}</p>` : '') : ''}
+          ${r && global.EduAI ? `<div class="wq-ai" data-ai-staff><button type="button" class="ai-btn" data-wq-ai="${i}"><i class="fa-solid fa-chalkboard-user" aria-hidden="true"></i> Gợi ý dạy lại (AI)</button><div class="ai-box" hidden aria-live="polite"></div></div>` : ''}
         </details></li>`;
     }).join('') : '<li class="watchlist-empty">Chưa có câu sai nào trong phạm vi này (hoặc học sinh chưa nộp bài từ khi bật tính năng).</li>';
     $('wqMakeExam').hidden = !items.some((it) => resolved.has(it.uid));
@@ -111,10 +115,26 @@
     setStatus(`Phạm vi: <b>${esc(c.label)}</b> — bấm <b>Phân tích</b> để xem câu học sinh sai nhiều nhất.`);
   }
 
+  const txt = (x) => (typeof x === 'string' ? plain(x) : x); // chuỗi có thẻ HTML → chữ; đáp án dạng đối tượng giữ nguyên
+  /** "Gợi ý dạy lại (AI)": câu + đáp án + số lượt sai → Gemini gợi ý vì sao sai, cách giảng lại, câu củng cố. */
+  async function reteach(btn) {
+    const it = last && last.stats.items[+btn.dataset.wqAi];
+    const r = it && last.resolved.get(it.uid);
+    if (!r || !global.EduAI) return;
+    const grade = parseInt((String(r.levelName || '').match(/lớp\s*(\d+)/i) || [])[1], 10) || 0;
+    btn.disabled = true;
+    const ok = await global.EduAI.askInto(btn.nextElementSibling, 'reteach', {
+      question: plain(r.q.question), options: (r.q.options || []).map(txt), correct: Array.isArray(r.q.correct) ? r.q.correct.map(txt) : r.q.correct,
+      explanation: plain(r.q.explanation || ''), wrong: it.count, students: it.students, scope: ctx && ctx.label, grade,
+    }, { staff: true });
+    if (ok) btn.hidden = true; else btn.disabled = false;
+  }
+
   function init() {
     if (!$('wrongQCard')) return;
     $('wqAnalyze').addEventListener('click', analyze);
     $('wqMakeExam').addEventListener('click', makeExam);
+    $('wqList').addEventListener('click', (e) => { const b = e.target.closest('[data-wq-ai]'); if (b) reteach(b); });
   }
   init();
 

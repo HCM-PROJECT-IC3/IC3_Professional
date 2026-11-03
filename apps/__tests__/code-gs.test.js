@@ -128,6 +128,8 @@ let users = {};
 let geocodeCalls = 0;
 let lockWaits = 0;
 let onLock = null;
+// Gemini giả (78-ai.gs): gemini.mode 'ok' | 429 | 403 | 404; đếm lượt gọi, nhớ key + thân yêu cầu cuối
+const gemini = { mode: 'ok', calls: 0, lastKey: '', lastBody: null, lastUrl: '' };
 const ctx = {
   console, Date, JSON, Math, Set, Map, String, Number, Array, Object, encodeURIComponent, Error,
   SpreadsheetApp: { openById: (id) => createdFiles[id] || mainFile, create: (name) => newFile(name) },
@@ -151,6 +153,11 @@ const ctx = {
   },
   UrlFetchApp: {
     fetch(url, opt) {
+      if (url.startsWith('https://generativelanguage.googleapis.com/')) {
+        gemini.calls++; gemini.lastKey = opt.headers['x-goog-api-key']; gemini.lastBody = JSON.parse(opt.payload); gemini.lastUrl = url;
+        if (gemini.mode !== 'ok') return { getResponseCode: () => gemini.mode, getContentText: () => (gemini.mode === 403 ? '{"error":{"status":"PERMISSION_DENIED"}}' : '{}') };
+        return { getResponseCode: () => 200, getContentText: () => JSON.stringify({ candidates: [{ content: { parts: [{ text: 'nghĩ', thought: true }, { text: 'Lời giải #' + gemini.calls }] }, finishReason: 'STOP' }] }) };
+      }
       if (url.startsWith('https://firestore.googleapis.com/')) {
         firestoreCalls++;
         const tok = opt.headers.Authorization.replace('Bearer ', '');
@@ -204,7 +211,7 @@ const ctx = {
 };
 vm.createContext(ctx);
 const src = fs.readFileSync(path.join(__dirname, '..', 'Code.gs'), 'utf8');
-vm.runInContext(src + '\n;this.__api = { handleRequest_, asText_, submittedMs_, doGet, noFormula_, kiemTraSauDeploy, schoolIdOf_, questionStatus_, answerKeyOf_ };', ctx);
+vm.runInContext(src + '\n;this.__api = { handleRequest_, asText_, submittedMs_, doGet, noFormula_, kiemTraSauDeploy, schoolIdOf_, questionStatus_, answerKeyOf_, aiBuild_ };', ctx);
 const api = ctx.__api;
 const call = (action, p) => JSON.parse(JSON.stringify(api.handleRequest_(Object.assign({ action }, p || {}))));
 
@@ -667,6 +674,65 @@ eq('listResults đọc được cả file mới', call('listResults', as('admin1
   [r, row] = vsub('verify0007', { answers: [['ic3__lv2__t1__q1', 'A']], bank: 'IC3__LV2.json', score: 0 });
   rawFail = false;
   eq('chấm lại: tải đề lỗi → VẪN ghi bài, đánh dấu chưa chấm', [r.data.written, row[10], JSON.parse(row[15]).sk], [true, 'OK', 'loi']);
+}
+
+
+// ── Trợ lý AI (78-ai.gs): proxy key giáo viên — lượt học sinh 0 Firestore ──
+{
+  const AIC = require(path.join(__dirname, '..', '..', 'js', 'services', 'ai-core.js'));
+  const samples = [
+    ['explain', { question: ' RAM là gì?\u0007', type: 'single', options: ['Bộ nhớ tạm', 'Ổ cứng', { a: 1 }], correct: ['Bộ nhớ tạm'], chosen: ['Ổ cứng'], explanation: 'x', grade: 7 }],
+    ['explain', { question: 'Nối', correct: { CPU: 'xử lý' }, grade: 99 }],
+    ['genQuiz', { topic: 'Phần cứng', source: 'a\n\n\n\nb  c', count: 40, level: 'khó', grade: 8, mix: true }],
+    ['genQuiz', { source: 'Bài học', level: 'lạ' }],
+    ['reteach', { question: 'Q', options: ['a', 'b'], correct: 'a', explanation: 'e', wrong: 12, students: 9, scope: '8A1', grade: 6 }],
+    ['quickQ', { topic: 'Bài 3. Thư mục', grade: 4, count: 0 }],
+  ];
+  const diff = samples.filter(([t, p]) => JSON.stringify(AIC.build(t, p)) !== JSON.stringify(JSON.parse(JSON.stringify(api.aiBuild_(t, p))))).map(([t]) => t);
+  eq('AI: câu lệnh Apps Script = web (ai-core.js build) trên ' + samples.length + ' mẫu', diff, []);
+
+  const ask = (task, payload, cid) => call('aiAsk', { task, payload, cid: cid || 'may-hoc-sinh-01' });
+  const exP = { question: 'RAM là gì?', options: ['Bộ nhớ tạm', 'Ổ cứng'], correct: ['Bộ nhớ tạm'], chosen: 'Ổ cứng' };
+  eq('AI: chưa cài key hệ thống → ai-no-key, không gọi Gemini', [ask('explain', exP).code, gemini.calls], ['ai-no-key', 0]);
+  eq('AI: học sinh không gọi được việc của giáo viên', ask('genQuiz', { topic: 'x' }).code, 'permission-denied');
+  eq('AI: thiếu mã máy → invalid-argument', call('aiAsk', { task: 'explain', payload: exP }).code, 'invalid-argument');
+  eq('AI: chỉ admin cài key (giáo viên bị chặn)', call('aiConfig', Object.assign({ key: 'AIzaTEST_teacher_key_0123456789' }, as('teachX'))).code, 'permission-denied');
+  gemini.mode = 403;
+  const bad = call('aiConfig', Object.assign({ key: 'AIzaWRONG_key_0123456789abcdef' }, as('admin1')));
+  eq('AI: admin cài key sai → gọi thử báo lỗi, KHÔNG lưu', [bad.code, props.has('GEMINI_API_KEY')], ['ai-key', false]);
+  gemini.mode = 'ok';
+  const cfg = call('aiConfig', Object.assign({ key: 'AIzaGOOD_key_0123456789abcdef', model: 'gemini-flash-lite-latest' }, as('admin1')));
+  eq('AI: admin cài key đúng → lưu, trả tình trạng KHÔNG kèm key', [cfg.ok, props.get('GEMINI_API_KEY'), cfg.data.model, JSON.stringify(cfg).indexOf('AIzaGOOD') < 0],
+    [true, 'AIzaGOOD_key_0123456789abcdef', 'gemini-flash-lite-latest', true]);
+  eq('AI: key sai dạng bị từ chối trước khi gọi Gemini', call('aiConfig', Object.assign({ key: 'x y' }, as('admin1'))).code, 'invalid-argument');
+
+  const g0 = gemini.calls, fs0 = firestoreCalls;
+  const r1 = ask('explain', exP);
+  eq('AI: học sinh hỏi → Gemini bằng key hệ thống (header, không nằm trên URL), bỏ phần suy nghĩ',
+    [r1.ok, r1.data.text, r1.data.cached, gemini.lastKey, gemini.lastUrl.indexOf('key=') < 0, /gemini-flash-lite-latest:generateContent$/.test(gemini.lastUrl)],
+    [true, 'Lời giải #' + (g0 + 1), false, 'AIzaGOOD_key_0123456789abcdef', true, true]);
+  eq('AI: thân yêu cầu = requestBody của web', JSON.stringify(gemini.lastBody), JSON.stringify(AIC.requestBody(AIC.build('explain', exP))));
+  const r2 = ask('explain', Object.assign({}, exP), 'may-hoc-sinh-02');
+  eq('AI: em khác hỏi đúng câu đó → dùng bản đệm, không gọi Gemini lần 2', [r2.data.text, r2.data.cached, gemini.calls - g0], [r1.data.text, true, 1]);
+  eq('AI: lượt hỏi của học sinh không đọc Firestore', firestoreCalls - fs0, 0);
+
+  // Trần mỗi máy: 30 lượt Gemini thật/ngày
+  let lastCode = '';
+  for (let k = 0; k < 31; k++) { const r = ask('explain', Object.assign({}, exP, { chosen: 'lần ' + k }), 'may-hoc-sinh-04'); lastCode = r.ok ? 'ok' : r.code; }
+  eq('AI: quá 30 lượt/máy/ngày → ai-limit', lastCode, 'ai-limit');
+  props.set('AI_DAILY_MAX', '1');
+  eq('AI: quá trần cả trường → ai-limit (máy khác cũng bị)', ask('explain', Object.assign({}, exP, { chosen: 'mới' }), 'may-hoc-sinh-05').code, 'ai-limit');
+  props.delete('AI_DAILY_MAX');
+
+  const st = call('aiAskStaff', Object.assign({ task: 'genQuiz', payload: { topic: 'Phần cứng', count: 3 } }, as('teachX')));
+  eq('AI: giáo viên soạn đề qua aiAskStaff (JSON mode)', [st.ok, gemini.lastBody.generationConfig.responseMimeType], [true, 'application/json']);
+  eq('AI: tài khoản học sinh không dùng được aiAskStaff', call('aiAskStaff', Object.assign({ task: 'reteach', payload: exP }, as('student'))).code, 'permission-denied');
+  gemini.mode = 429;
+  eq('AI: key hệ thống hết hạn mức → ai-quota (web mời nhập key cá nhân)', ask('explain', Object.assign({}, exP, { chosen: 'z' }), 'may-hoc-sinh-06').code, 'ai-quota');
+  gemini.mode = 'ok';
+  const stat = call('aiStatus', as('teachX'));
+  eq('AI: tình trạng cho giáo viên — có key, số lượt hôm nay, không lộ key', [stat.data.configured, stat.data.usedToday > 0, JSON.stringify(stat).indexOf('AIza') < 0], [true, true, true]);
+  eq('AI: gỡ key hệ thống', [call('aiConfig', Object.assign({ remove: true }, as('admin1'))).data.configured, props.has('GEMINI_API_KEY')], [false, false]);
 }
 
 console.log(fails ? `\n${fails} FAIL` : '\nTất cả PASS');

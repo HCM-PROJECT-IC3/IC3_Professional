@@ -525,9 +525,9 @@
   // ============================================================
   let G = null;
   const MODE_LABEL = { speed: '⚡ Tốc độ', gold: '💰 Săn vàng', race: '🏁 Đua về đích', survival: '❤️ Sinh tồn', fish: '🎣 Câu cá',
-    tug: '🪢 Kéo co', spell: '🔮 Đấu phép', heist: '🔐 Giải mã', dino: '🦖 Đào hoá thạch', moon: '🚀 Lên Mặt Trăng', boss: '🦠 Diệt Virus' };
-  const KEY_OF = { speed: 'score', gold: 'gold', race: 'pos', survival: 'score', fish: 'kg', tug: 'pull', spell: 'dmg', heist: 'gems', dino: 'fossils', moon: 'km', boss: 'dmg' };
-  const UNIT_OF = { score: 'điểm', gold: 'vàng', pos: 'bước', kg: 'kg', pull: 'lực kéo', dmg: 'sát thương', gems: 'đá quý', fossils: 'hoá thạch', km: 'nghìn km' };
+    tug: '🪢 Kéo co', spell: '🔮 Đấu phép', heist: '🔐 Giải mã', dino: '🦖 Đào hoá thạch', moon: '🚀 Lên Mặt Trăng', boss: '🦠 Diệt Virus', goal: '⚽ Sút luân lưu' };
+  const KEY_OF = { speed: 'score', gold: 'gold', race: 'pos', survival: 'score', fish: 'kg', tug: 'pull', spell: 'dmg', heist: 'gems', dino: 'fossils', moon: 'km', boss: 'dmg', goal: 'goals' };
+  const UNIT_OF = { score: 'điểm', gold: 'vàng', pos: 'bước', kg: 'kg', pull: 'lực kéo', dmg: 'sát thương', gems: 'đá quý', fossils: 'hoá thạch', km: 'nghìn km', goals: 'bàn thắng' };
   const POWER_MODES = ['speed', 'survival', 'moon']; // chế độ có vật phẩm hỗ trợ (kiểu Wayground)
 
   /**
@@ -570,7 +570,7 @@
     const nBots = { race: 3, heist: 3, tug: 5, boss: 3 }[mode] || 4; // Diệt Virus: đội 4 người
     const players = drill ? [me] : [me].concat(C.makeBots(nBots, rng, S.prefs.level));
     players.forEach((pl, i) => {
-      Object.assign(pl, { kg: 0, frenzy: 0, hp: mode === 'spell' ? C.SPELL_HP : C.LIVES, pull: 0, dmg: 0, shield: false, gems: 0, fossils: 0, cheat: 0, lastGain: 0, km: 0 });
+      Object.assign(pl, { kg: 0, frenzy: 0, hp: mode === 'spell' ? C.SPELL_HP : C.LIVES, pull: 0, dmg: 0, shield: false, gems: 0, fossils: 0, cheat: 0, lastGain: 0, km: 0, goals: 0, shots: 0 });
       if (mode === 'tug') pl.team = i < 3 ? 'red' : 'blue'; // em + 2 bạn máy (Đỏ) đấu 3 bạn máy (Xanh)
       if (mode === 'heist') pl.vault = C.newVault(rng);
     });
@@ -799,6 +799,15 @@
       const st = botsTug(pull);
       fb = (ok ? `<b>+${pull}</b> lực kéo${pull === 2 ? ' <span class="ar-tag up">⚡ nhanh — kéo gấp đôi</span>' : ''}` : (k === null ? 'Hết giờ — đội em hụt 1 nhịp' : 'Chưa đúng — đội em hụt 1 nhịp'))
         + ` <span class="ar-tag${st.delta > 0 ? ' up' : ''}">${st.delta > 0 ? `Dây dịch về Đội Đỏ ${st.delta} vạch` : st.delta < 0 ? `Dây dịch về Đội Xanh ${-st.delta} vạch` : 'Dây đứng yên'}</span>`;
+    } else if (G.mode === 'goal') {
+      const kick = C.penaltyKick(me, ok, ms, G.limitMs, rng);
+      G.lastKick = kick; // sân khấu (arena-scene.js) diễn đúng cú sút này
+      if (kick.goal) pop = '⚽ +1';
+      botsGoal(events);
+      fb = !ok ? `${k === null ? 'Hết giờ' : 'Chưa đúng'} — mất lượt sút ⚽`
+        : kick.goal ? `<b>⚽ VÀOOO!</b> ${KICK_TXT[kick.how]}${kick.sure ? ` <span class="ar-tag up">⚡ Chuỗi ${me.streak} — cú sút sấm sét!</span>` : ''}`
+        : `Sút ${KICK_TXT[kick.how]} 😮 <span class="ar-tag">Trả lời nhanh hơn để sút hiểm hơn · đúng liền ${C.KICK_SURE} câu chắc chắn vào</span>`;
+      if (kick.sure && global.EduFX) global.EduFX.confetti({ count: 40 });
     } else if (G.mode === 'moon') {
       const st = C.moonStep(me, ok, ms, G.limitMs, G.n, G.i);
       const gain = st.gain * (dbl === 2 && st.gain ? 1 : 0); // 2: bay thêm 1 lần nữa (không vượt Mặt Trăng)
@@ -1425,6 +1434,19 @@
     return { total, ok };
   }
 
+  // ── Sút luân lưu ──
+  const KICK_TXT = { corner: 'Sút góc chết!', low: 'Sút sệt căng như kẻ chỉ!', thunder: 'Cú sút sấm sét!',
+    save: '— thủ môn bay người cản phá', post: '— trúng cột dọc', bar: '— dội xà ngang', over: '— bóng vọt xà', none: '' };
+  function botsGoal(events) {
+    G.players.forEach((p) => {
+      if (!p.bot) return;
+      const a = C.botAnswer(p, G.limitMs, rng);
+      p.streak = a.correct ? (p.streak || 0) + 1 : 0;
+      const kick = C.penaltyKick(p, a.correct, a.ms, G.limitMs, rng);
+      if (kick.sure && kick.goal) events.push(`⚡ ${who(p)} tung cú sút sấm sét!`);
+    });
+  }
+
   // ── Lên Mặt Trăng ──
   function botsMoon(events) {
     G.players.forEach((p) => {
@@ -1533,6 +1555,7 @@
     if (G.mode === 'survival') return list.slice().sort(C.survivalOrder);
     if (G.mode === 'spell') return list.slice().sort(C.spellOrder);
     if (G.mode === 'moon') return list.slice().sort(C.moonOrder);
+    if (G.mode === 'goal') return list.slice().sort(C.kickOrder);
     if (G.mode === 'boss') return list.slice().sort(C.bossOrder);
     return C.rank(list, KEY_OF[G.mode]);
   }
@@ -1548,6 +1571,7 @@
       : G.mode === 'heist' ? `💎 ${me.gems.toLocaleString('vi-VN')} · két em ${locks(C.vaultThreat(G.crack, me))}`
       : G.mode === 'dino' ? `🦴 ${me.fossils.toLocaleString('vi-VN')} hoá thạch${me.cheat > 0 ? ` <span class="ar-tag">🤫 đang ăn gian · còn ${me.cheat} lượt</span>` : ''}`
       : G.mode === 'moon' ? `🚀 ${me.km}/${C.MOON_KM} nghìn km${C.moonBoost(me.streak) > 1 ? ` <span class="ar-tag up">🔥 ×${C.moonBoost(me.streak)}</span>` : ''}`
+      : G.mode === 'goal' ? `⚽ ${me.goals} bàn · ${me.shots} cú sút${me.streak >= 2 && me.streak < C.KICK_SURE ? ` <span class="ar-tag up">còn ${C.KICK_SURE - me.streak} câu tới cú sút sấm sét</span>` : me.streak >= C.KICK_SURE ? ' <span class="ar-tag up">⚡ cú sút sấm sét sẵn sàng</span>' : ''}`
       : G.mode === 'boss' ? `<span class="ar-hud-hp">${C.hearts(me.hp)}</span> ⚔️ ${me.dmg} · 🦠 <span class="ar-hpbar is-virus" aria-hidden="true"><i style="width:${(G.boss.hp / G.boss.max) * 100}%"></i></span> ${G.boss.hp}/${G.boss.max}`
       : `🏁 ${me.pos}/${G.goal} bước`;
     const rv = $('arRival');
@@ -1569,6 +1593,7 @@
     const sub = (p) => (spell ? `<span class="ar-board-sub"><span class="ar-hpbar" title="${p.hp} máu"><i style="width:${p.hp}%"></i></span> ${p.hp}${p.shield ? ' 🛡️' : ''}</span>`
       : G.mode === 'heist' && !p.me ? `<span class="ar-board-sub" title="Em đã mở ${C.crackOf(G.crack, 'me', p.id).pos}/${C.VAULT_LEN} ô két bạn này">${locks(C.crackOf(G.crack, 'me', p.id).pos)}</span>`
       : G.mode === 'dino' && p.lastGain ? `<span class="ar-board-sub">vừa đào +${p.lastGain}${p.lastGain >= 90 && !p.me ? ' 🤨' : ''}</span>`
+      : G.mode === 'goal' ? `<span class="ar-board-sub">${p.shots} cú sút${p.shots ? ` · vào ${Math.round((p.goals / p.shots) * 100)}%` : ''}</span>`
       : G.mode === 'moon' ? `<span class="ar-board-sub">${p.km >= C.MOON_KM ? '🌕 đã tới Mặt Trăng' : `<span class="ar-hpbar is-moon"><i style="width:${Math.round((p.km / C.MOON_KM) * 100)}%"></i></span> ${C.moonFloor(p.km) ? `Trạm ${C.MOON_STAGES.indexOf(C.moonFloor(p.km)) + 1}` : 'bệ phóng'}`}</span>` : '');
     FX.flip($('arSide'), () => { $('arSide').innerHTML = `<h3>${G.practice ? '🔁 Luyện câu sai' : MODE_LABEL[G.mode]} <small>· ${unit}</small></h3><ol class="ar-board">${ranked(G.players).map((p, i) => `<li data-key="${p.id}" class="${p.me ? 'is-me' : ''}${p.ghost ? ' is-ghost' : ''}${(surv || spell) && p.hp <= 0 ? ' is-out' : ''}">
       <span class="ar-board-rank">${i + 1}</span><span class="ar-board-face">${p.face}</span>
@@ -1659,6 +1684,7 @@
       : G.mode === 'spell' && place === 1 ? `🏆 ${nickName()} là pháp sư trụ lại cuối cùng!`
       : G.mode === 'heist' && place === 1 ? `🏆 ${nickName()} là Vua giải mã!`
       : G.mode === 'dino' && place === 1 ? `🏆 ${nickName()} là Nhà khảo cổ số 1!`
+      : G.mode === 'goal' && place === 1 ? `🏆 ${nickName()} là Vua phá lưới!`
       : G.mode === 'moon' && place === 1 && G.me.km >= C.MOON_KM ? `🚀 ${nickName()} chạm Mặt Trăng đầu tiên!`
       : G.mode === 'moon' && place === 1 ? `🏆 ${nickName()} bay cao nhất!`
       : G.mode === 'boss' && bossWin ? (mvp ? `🏆 Cả đội đã diệt Trùm Virus — ${nickName()} là MVP!` : `🛡️ Cả đội đã diệt Trùm Virus! Em gây ${G.me.dmg} sát thương`)
@@ -1681,6 +1707,7 @@
       ${G.mode === 'spell' ? `<div><b>${G.me.hp}</b><span>máu còn lại</span></div>` : ''}
       ${G.mode === 'heist' ? `<div><b>${G.opened}</b><span>két em phá được</span></div>` : ''}
       ${G.mode === 'dino' ? `<div><b>${G.busted}</b><span>lần em bắt quả tang${G.cheats ? ` · em ăn gian ${G.cheats} lần` : ''}</span></div>` : ''}
+      ${G.mode === 'goal' ? `<div><b>${G.me.goals}/${G.me.shots}</b><span>bàn thắng / cú sút</span></div>` : ''}
       ${G.mode === 'moon' ? `<div><b>${Math.round((G.me.km / C.MOON_KM) * 100)}%</b><span>${G.me.km >= C.MOON_KM ? 'đã tới Mặt Trăng' : 'quãng đường tới Mặt Trăng'}</span></div>` : ''}
       ${G.mode === 'boss' ? `${bossWin ? `<div><b>${total}</b><span>câu để diệt Virus</span></div>` : `<div><b>${Math.round((G.boss.hp / G.boss.max) * 100)}%</b><span>máu Virus còn lại</span></div>`}<div><b>${C.hearts(G.me.hp)}</b><span>${mvp ? 'MVP của đội' : `hạng ${board.indexOf(G.me) + 1}/${board.length} sát thương`}</span></div>` : ''}
       ${G.mode === 'tug' ? `<div><b>${Math.abs(G.rope)}/${C.TUG_GOAL}</b><span>${won ? `dây lệch về ${C.TEAMS[won].name}` : 'dây cân bằng'}</span></div>` : ''}
