@@ -14,7 +14,14 @@
    updatedAt = serverTimestamp() (stampRoster() bên dưới) → bản đệm hết hạn chỉ hỏi những doc
    có updatedAt MỚI HƠN mốc đã thấy: không ai sửa gì = 1 lượt đọc. Mỗi FULL_RESYNC_MS đọc lại
    toàn bộ 1 lần để bỏ học sinh bị XOÁ HẲN ở máy khác (xoá không để lại dấu cho delta) và bắt
-   doc do bản web cũ ghi (chưa có updatedAt).
+   doc do bản web cũ ghi (chưa có updatedAt). 14 ngày (04/11/2026, trước 3 ngày ≈ 950 lượt đọc/ngày
+   mỗi máy Admin): SDK compat 10.13 không có count() để dò xoá rẻ hơn; cần thấy ngay thì bấm "Tải lại".
+
+   GIÁO VIÊN / ĐIỀU PHỐI (scopedRoster, 04/11/2026): trước đây mỗi người đọc lại CẢ danh sách của mình 12 giờ/lần
+   — nguồn đọc đều đặn lớn nhất còn lại. Nay hỏi phần thay đổi trong đúng phạm vi rules cho phép (teacherId / school),
+   cần composite index (firestore.indexes.json); chưa deploy index thì tự đọc toàn bộ như cũ. Học sinh CHUYỂN khỏi phạm
+   vi (đổi giáo viên) không khớp query nên không thấy qua delta → đọc lại toàn bộ SCOPED_FULL_MS/lần; nút "Làm mới
+   dữ liệu" luôn đọc toàn bộ.
 
    Mọi lần ghi students_roster trên máy này gọi invalidate() → lần đọc sau hỏi phần thay đổi
    (không đọc lại toàn bộ). Bản đệm cũ vẫn được dùng làm phương án cuối khi Firebase hết lượt
@@ -30,7 +37,8 @@
   // Trong khoảng này: 0 lượt đọc. Quá hạn: hỏi phần thay đổi (~1 lượt) — trước đây 6 giờ vì
   // mỗi lần làm mới tốn cả roster; nay rẻ nên giữ ngắn cho dữ liệu tươi hơn.
   const TTL_MS = 30 * 60 * 1000;
-  const FULL_RESYNC_MS = 3 * 24 * 60 * 60 * 1000;
+  const FULL_RESYNC_MS = 14 * 24 * 60 * 60 * 1000;
+  const SCOPED_FULL_MS = 3 * 24 * 60 * 60 * 1000;
   const KEEP_MS = 30 * 24 * 60 * 60 * 1000; // giữ bản đệm làm nền cho delta / phương án cuối
   const DELTA_LIMIT = 5000; // chạm trần = thay đổi quá nhiều → đọc lại toàn bộ cho chắc
   let inflight = null; // 2 phần trong cùng 1 trang hỏi cùng lúc → chỉ 1 lần đọc
@@ -60,9 +68,10 @@
   }
 
   /** Doc students_roster (mọi trạng thái) có updatedAt sau mốc `since` ([giây, nano] | null). */
-  async function changedSince(since, label) {
+  async function changedSince(since, label, narrow) {
     const ts = since ? new firebase.firestore.Timestamp(since[0], since[1]) : firebase.firestore.Timestamp.fromMillis(0);
-    const snap = await global.EduFirebase.db.collection('students_roster').where('updatedAt', '>', ts).limit(DELTA_LIMIT).get();
+    const col = global.EduFirebase.db.collection('students_roster');
+    const snap = await (narrow ? narrow(col) : col).where('updatedAt', '>', ts).limit(DELTA_LIMIT).get();
     if (snap.metadata && snap.metadata.fromCache) throw Object.assign(new Error('offline'), { code: 'unavailable' });
     if (global.EduFirebase.countSnap) global.EduFirebase.countSnap(label || 'students_roster (thay đổi)', snap);
     if (snap.docs.length >= DELTA_LIMIT) throw Object.assign(new Error('quá nhiều thay đổi'), { code: 'delta-overflow' });
@@ -83,16 +92,21 @@
    * Trả null khi cần đọc lại toàn bộ: chưa có nền, nền đã quá FULL_RESYNC_MS, hoặc thay đổi quá nhiều.
    * watermark chỉ tiến theo các lần đọc từ máy chủ (toàn bộ/phần thay đổi) — KHÔNG theo lần sửa lẻ
    * trên máy này, để không nhảy qua thay đổi máy khác ghi trước đó.
+   * opts.narrows: [q => q.where(...)] thu hẹp theo phạm vi (mỗi hàm 1 truy vấn) · opts.fullMs: thay FULL_RESYNC_MS.
    */
-  async function deltaFrom(base, keep, label) {
+  async function deltaFrom(base, keep, label, opts = {}) {
     // Công tắc tắt nhanh trong js/backend-config.js → luôn đọc toàn bộ như trước.
     if (global.EduBackend && global.EduBackend.rosterDeltaSync === false) return null;
-    if (!base || !Array.isArray(base.students) || !base.fullAt || Date.now() - base.fullAt >= FULL_RESYNC_MS) return null;
-    let changes;
+    if (!base || !Array.isArray(base.students) || !base.fullAt || Date.now() - base.fullAt >= (opts.fullMs || FULL_RESYNC_MS)) return null;
+    let changes = [];
     try {
-      changes = await changedSince(base.watermark || null, label);
+      for (const narrow of opts.narrows || [null]) changes = changes.concat(await changedSince(base.watermark || null, label, narrow));
     } catch (err) {
       if (err.code === 'delta-overflow') return null;
+      if (opts.narrows && (err.code === 'failed-precondition' || err.code === 'permission-denied')) {
+        console.warn('[EduRosterCache] Chưa hỏi được phần thay đổi (index chưa deploy?), đọc toàn bộ:', err.message);
+        return null;
+      }
       throw err;
     }
     return {
@@ -100,6 +114,29 @@
       fullAt: base.fullAt,
       watermark: laterStamp(base.watermark || null, watermarkOf(changes)),
     };
+  }
+
+  /**
+   * Máy khác đã ghi bù schoolId chưa? Bản đệm delta không thấy field ghi bù (cố ý không đổi updatedAt) nên trông như còn
+   * thiếu cả trăm bản ghi. Đọc n bản rải đều, có cả bản cuối — ghi bù dở giữa chừng thì phần đuôi còn thiếu — thay vì
+   * đọc lại toàn bộ. readOne(id) → bản ghi trên máy chủ | null (đã xoá).
+   */
+  async function alreadyStamped(records, idOf, readOne, n = 5) {
+    const step = Math.max(1, (records.length - 1) / Math.max(1, n - 1));
+    const picks = [...new Set(Array.from({ length: n }, (_, i) => Math.min(records.length - 1, Math.round(i * step))))];
+    const found = await Promise.all(picks.map((i) => readOne(records[i].id)));
+    return found.every((s) => !s || s.schoolId === idOf(s.school));
+  }
+
+  /**
+   * Danh sách trong phạm vi 1 người (giáo viên, điều phối). stale: bản lưu cũ (kể cả hết hạn), null = đọc toàn bộ.
+   * loadAll(): đọc toàn bộ phạm vi. Trả { students, fullAt, watermark }.
+   */
+  async function scopedRoster(stale, { narrows, loadAll, label }) {
+    const entry = await deltaFrom(stale, isActive, label, { narrows, fullMs: SCOPED_FULL_MS });
+    if (entry) return entry;
+    const students = await loadAll();
+    return { students, fullAt: Date.now(), watermark: watermarkOf(students) };
   }
 
   async function readAll() {
@@ -167,7 +204,7 @@
   }
 
   global.EduRosterCache = {
-    activeAll, put, invalidate, stampRoster, deltaFrom, watermarkOf,
-    ROSTER_KEY, TTL_MS, FULL_RESYNC_MS,
+    activeAll, put, invalidate, stampRoster, deltaFrom, scopedRoster, watermarkOf, alreadyStamped,
+    ROSTER_KEY, TTL_MS, FULL_RESYNC_MS, SCOPED_FULL_MS,
   };
 })(window);

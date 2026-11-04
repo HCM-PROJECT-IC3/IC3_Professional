@@ -215,9 +215,11 @@ vm.runInContext(src + '\n;this.__api = { handleRequest_, asText_, submittedMs_, 
 const api = ctx.__api;
 const call = (action, p) => JSON.parse(JSON.stringify(api.handleRequest_(Object.assign({ action }, p || {}))));
 
+// Mốc cố định: 2 lần gọi lệch sang giây khác không được tạo ra 2 token khác nhau (test "xác thực được nhớ" từng đỏ ngẫu nhiên)
+const TOKEN_NOW = Math.floor(Date.now() / 1000);
 function token(uid, o = {}) {
   const body = Buffer.from(JSON.stringify({ user_id: uid, aud: o.aud || 'data-ic3',
-    exp: Math.floor(Date.now() / 1000) + (o.expIn || 3600) })).toString('base64url');
+    exp: TOKEN_NOW + (o.expIn || 3600) })).toString('base64url');
   return 'h.' + body + '.' + (o.bad ? 'sig-bad' : 'sig-ok');
 }
 const S = (v) => ({ stringValue: v });

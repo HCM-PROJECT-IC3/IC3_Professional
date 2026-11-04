@@ -105,11 +105,13 @@
     if (students && forceRefresh && Date.now() - rosterAt > ROSTER_FORCE_MIN_AGE_MS) students = null;
     if (!students) {
       const fetched = await fetchRosterOrStale(rosterCacheKey, async () => {
-        const list = isAdmin
+        const entry = isAdmin
           // Bản đệm chung với các trang quản lý khác (js/services/roster-cache-service.js)
-          ? await global.EduRosterCache.activeAll(forceRefresh ? { maxAgeMs: ROSTER_FORCE_MIN_AGE_MS } : undefined)
-          : await global.EduRepositories.studentRoster.listByTeacher(uid);
-        const bundle = { students: list, cachedAt: Date.now() };
+          ? { students: await global.EduRosterCache.activeAll(forceRefresh ? { maxAgeMs: ROSTER_FORCE_MIN_AGE_MS } : undefined) }
+          : await global.EduRosterCache.scopedRoster(
+            !forceRefresh && global.EduDataCache ? await global.EduDataCache.getAsync(rosterCacheKey, true, /* allowStale */ true) : null,
+            { narrows: [(q) => q.where('teacherId', '==', uid)], loadAll: () => global.EduRepositories.studentRoster.listByTeacher(uid), label: 'students_roster (lớp của tôi, thay đổi)' });
+        const bundle = Object.assign({}, entry, { cachedAt: Date.now() });
         if (global.EduDataCache) global.EduDataCache.setAsync(rosterCacheKey, bundle, ROSTER_CACHE_TTL_MS, /* persist */ true);
         return bundle;
       });

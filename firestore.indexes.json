@@ -4,53 +4,235 @@
       "collectionGroup": "quiz_results",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "studentSchool", "order": "ASCENDING" },
-        { "fieldPath": "submittedAt", "order": "DESCENDING" }
+        {
+          "fieldPath": "studentSchool",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "submittedAt",
+          "order": "DESCENDING"
+        }
       ]
     },
     {
       "collectionGroup": "quiz_results",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "studentClass", "order": "ASCENDING" },
-        { "fieldPath": "studentSchool", "order": "ASCENDING" },
-        { "fieldPath": "submittedAt", "order": "DESCENDING" }
+        {
+          "fieldPath": "studentClass",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "studentSchool",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "submittedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "students_roster",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "teacherId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "updatedAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "students_roster",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "school",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "updatedAt",
+          "order": "ASCENDING"
+        }
       ]
     }
   ],
   "fieldOverrides": [
-    { "collectionGroup": "quiz_results", "fieldPath": "expireAt", "ttl": true, "indexes": [] },
-    { "collectionGroup": "quiz_results", "fieldPath": "studentName", "indexes": [] },
-    { "collectionGroup": "quiz_results", "fieldPath": "category", "indexes": [] },
-    { "collectionGroup": "quiz_results", "fieldPath": "level", "indexes": [] },
-    { "collectionGroup": "quiz_results", "fieldPath": "minitest", "indexes": [] },
-    { "collectionGroup": "quiz_results", "fieldPath": "score", "indexes": [] },
-    { "collectionGroup": "quiz_results", "fieldPath": "correct", "indexes": [] },
-    { "collectionGroup": "quiz_results", "fieldPath": "incorrect", "indexes": [] },
-    { "collectionGroup": "quiz_results", "fieldPath": "skipped", "indexes": [] },
-    { "collectionGroup": "quiz_results", "fieldPath": "total", "indexes": [] },
-    { "collectionGroup": "quiz_results", "fieldPath": "elapsedSec", "indexes": [] },
-    { "collectionGroup": "quiz_results", "fieldPath": "tabSwitches", "indexes": [] },
-    { "collectionGroup": "quiz_results", "fieldPath": "clicks", "indexes": [] },
-    { "collectionGroup": "quiz_results", "fieldPath": "integrityOk", "indexes": [] },
-    { "collectionGroup": "quiz_results", "fieldPath": "flags", "indexes": [] },
-    { "collectionGroup": "quiz_results", "fieldPath": "timedOut", "indexes": [] },
-    { "collectionGroup": "mos_submissions", "fieldPath": "expireAt", "ttl": true, "indexes": [] },
-    { "collectionGroup": "mos_submissions", "fieldPath": "taskResults", "indexes": [] },
-    { "collectionGroup": "live_rooms", "fieldPath": "expiresAt", "ttl": true, "indexes": [] },
-    { "collectionGroup": "live_rooms", "fieldPath": "currentQuestion", "indexes": [] },
-    { "collectionGroup": "live_rooms", "fieldPath": "nextQuestion", "indexes": [] },
-    { "collectionGroup": "live_rooms", "fieldPath": "leaderboard", "indexes": [] },
-    { "collectionGroup": "live_rooms", "fieldPath": "scores", "indexes": [] },
-    { "collectionGroup": "live_rooms", "fieldPath": "streaks", "indexes": [] },
-    { "collectionGroup": "live_rooms", "fieldPath": "deadline", "indexes": [] },
-    { "collectionGroup": "live_rooms", "fieldPath": "phaseAt", "indexes": [] },
-    { "collectionGroup": "players", "fieldPath": "expiresAt", "ttl": true, "indexes": [] },
-    { "collectionGroup": "answers", "fieldPath": "expiresAt", "ttl": true, "indexes": [] },
-    { "collectionGroup": "arena_relay", "fieldPath": "exp", "ttl": true, "indexes": [] },
-    { "collectionGroup": "arena_relay", "fieldPath": "out", "indexes": [] },
-    { "collectionGroup": "arena_relay", "fieldPath": "blobs", "indexes": [] },
-    { "collectionGroup": "up", "fieldPath": "exp", "ttl": true, "indexes": [] },
-    { "collectionGroup": "up", "fieldPath": "m", "indexes": [] }
+    {
+      "collectionGroup": "quiz_results",
+      "fieldPath": "expireAt",
+      "ttl": true,
+      "indexes": []
+    },
+    {
+      "collectionGroup": "quiz_results",
+      "fieldPath": "studentName",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "quiz_results",
+      "fieldPath": "category",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "quiz_results",
+      "fieldPath": "level",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "quiz_results",
+      "fieldPath": "minitest",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "quiz_results",
+      "fieldPath": "score",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "quiz_results",
+      "fieldPath": "correct",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "quiz_results",
+      "fieldPath": "incorrect",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "quiz_results",
+      "fieldPath": "skipped",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "quiz_results",
+      "fieldPath": "total",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "quiz_results",
+      "fieldPath": "elapsedSec",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "quiz_results",
+      "fieldPath": "tabSwitches",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "quiz_results",
+      "fieldPath": "clicks",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "quiz_results",
+      "fieldPath": "integrityOk",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "quiz_results",
+      "fieldPath": "flags",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "quiz_results",
+      "fieldPath": "timedOut",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "mos_submissions",
+      "fieldPath": "expireAt",
+      "ttl": true,
+      "indexes": []
+    },
+    {
+      "collectionGroup": "mos_submissions",
+      "fieldPath": "taskResults",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "live_rooms",
+      "fieldPath": "expiresAt",
+      "ttl": true,
+      "indexes": []
+    },
+    {
+      "collectionGroup": "live_rooms",
+      "fieldPath": "currentQuestion",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "live_rooms",
+      "fieldPath": "nextQuestion",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "live_rooms",
+      "fieldPath": "leaderboard",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "live_rooms",
+      "fieldPath": "scores",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "live_rooms",
+      "fieldPath": "streaks",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "live_rooms",
+      "fieldPath": "deadline",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "live_rooms",
+      "fieldPath": "phaseAt",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "players",
+      "fieldPath": "expiresAt",
+      "ttl": true,
+      "indexes": []
+    },
+    {
+      "collectionGroup": "answers",
+      "fieldPath": "expiresAt",
+      "ttl": true,
+      "indexes": []
+    },
+    {
+      "collectionGroup": "arena_relay",
+      "fieldPath": "exp",
+      "ttl": true,
+      "indexes": []
+    },
+    {
+      "collectionGroup": "arena_relay",
+      "fieldPath": "out",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "arena_relay",
+      "fieldPath": "blobs",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "up",
+      "fieldPath": "exp",
+      "ttl": true,
+      "indexes": []
+    },
+    {
+      "collectionGroup": "up",
+      "fieldPath": "m",
+      "indexes": []
+    }
   ]
 }

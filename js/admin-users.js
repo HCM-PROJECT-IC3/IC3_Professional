@@ -499,6 +499,8 @@ window.EDU_ALLOWED_ROLES = ['admin'];
             const studentsSnap = await EduFirebase.db.collection('students_roster')
               .where('classId', '==', classId).where('status', '==', 'active').limit(2000).get();
             for (const d of studentsSnap.docs) {
+              const cur = d.data();
+              if ((cur.teacherId || '') === teacherIdVal && (cur.teacherName || '') === teacherNameVal) continue; // không đổi: khỏi ghi, khỏi đẩy updatedAt cho mọi máy
               batch.set(d.ref, window.EduRosterCache.stampRoster({ teacherId: teacherIdVal, teacherName: teacherNameVal }), { merge: true });
               ops++; await flushIfNeeded();
             }

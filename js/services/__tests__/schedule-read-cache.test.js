@@ -31,6 +31,7 @@ function CollectionReference(p) { this.path = p; }
 CollectionReference.prototype.add = function () { return Promise.resolve(); };
 function WriteBatch() {}
 WriteBatch.prototype.commit = function () { return Promise.resolve(); };
+WriteBatch.prototype.set = function () { return this; };
 globalThis.firebase = { firestore: { DocumentReference: DocumentReference, CollectionReference: CollectionReference, WriteBatch: WriteBatch } };
 
 require(path.join(__dirname, '..', 'schedule-read-cache.js'));
@@ -52,7 +53,34 @@ function loader() { calls++; return Promise.resolve(['row' + calls]); }
   await new DocumentReference('users/abc').set({});
   assertEq('ghi collection khác teaching_*: cache giữ nguyên', [await RC.read('weeks', loader), calls], [['row1'], 1]);
 
-  await new DocumentReference('teaching_schedule/2026-10-19_GV01').set({});
+  // Lưu lịch 1 giáo viên 1 tuần: chỉ mất phần của tuần đó
+  var old = 0;
+  function oldLoader() { old++; return Promise.resolve(['x' + old]); }
+  await Promise.all(['teachers', 'schedule:2026-10-12', 'schedule:2026-10-19', 'timetable:2026-10-19', 'doc:schedule:GV01__2026-10-19', 'schedule-by-teacher:GV01', 'doc:periods:GV01']
+    .map(function (k) { return RC.read(k, oldLoader); }));
+  old = 0;
+  await new DocumentReference('teaching_schedule/GV01__2026-10-19').set({});
+  await Promise.all(['teachers', 'schedule:2026-10-12', 'timetable:2026-10-19', 'doc:periods:GV01'].map(function (k) { return RC.read(k, oldLoader); }));
+  assertEq('lưu lịch 1 tuần: giáo viên, tuần khác, TKB, giờ tiết vẫn dùng bản đệm', old, 0);
+  await Promise.all(['schedule:2026-10-19', 'doc:schedule:GV01__2026-10-19', 'schedule-by-teacher:GV01'].map(function (k) { return RC.read(k, oldLoader); }));
+  assertEq('lưu lịch 1 tuần: đúng phần tuần đó đọc lại máy chủ', old, 3);
+
+  // Ghi theo lô: chỉ xoá document trong lô; lô không phải lịch thì giữ nguyên
+  old = 0;
+  await RC.read('timetable:2026-11-02', oldLoader);
+  var b1 = new WriteBatch();
+  b1.set(new DocumentReference('users/abc'), {});
+  await b1.commit();
+  await RC.read('timetable:2026-11-02', oldLoader);
+  assertEq('lô không ghi teaching_*: cache giữ nguyên', old, 1);
+  var b2 = new WriteBatch();
+  b2.set(new DocumentReference('teaching_timetable/GV01__2026-11-02'), {});
+  await b2.commit();
+  await RC.read('timetable:2026-11-02', oldLoader);
+  await RC.read('schedule:2026-10-12', oldLoader);
+  assertEq('lô ghi TKB: đọc lại đúng tuần đó, khoá khác còn', old, 2);
+
+  await new DocumentReference('teaching_weeks/2026-10-19').set({});
   assertEq('ghi teaching_*: cache bị xoá, đọc lại máy chủ', [await RC.read('weeks', loader), calls], [['row2'], 2]);
   assertEq('tab đã ghi: luôn đọc thẳng máy chủ', [await RC.read('weeks', loader), calls], [['row3'], 3]);
 
@@ -66,7 +94,8 @@ function loader() { calls++; return Promise.resolve(['row' + calls]); }
   assertEq('tuần đã qua: giữ 12 giờ', [RC.ttlFor('schedule:2026-10-19', now), RC.ttlFor('timetable:2026-09-07', now)], [12 * H, 12 * H]);
   assertEq('tuần hiện tại/tới: 10 phút', [RC.ttlFor('schedule:2026-10-26', now), RC.ttlFor('schedule:2026-11-02', now)], [RC.TTL_MS, RC.TTL_MS]);
   assertEq('giáo viên/giờ tiết 1 giờ, danh sách tuần 30 phút', [RC.ttlFor('teachers'), RC.ttlFor('periodTimes'), RC.ttlFor('weeks')], [H, H, 30 * 60 * 1000]);
-  assertEq('khoá khác: 10 phút', RC.ttlFor('schedule-by-teacher:GV01', now), RC.TTL_MS);
+  assertEq('khoá khác: 10 phút', RC.ttlFor('doc:schedule:GV01__2026-10-26', now), RC.TTL_MS);
+  assertEq('gợi ý theo giáo viên: 1 giờ', [RC.ttlFor('schedule-by-teacher:GV01', now), RC.ttlFor('timetable-by-teacher:GV01', now)], [3600000, 3600000]);
 
   console.log(failures ? '\n' + failures + ' test FAIL' : '\nTất cả PASS');
   process.exit(failures ? 1 : 0);

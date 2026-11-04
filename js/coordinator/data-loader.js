@@ -105,16 +105,20 @@
       : null;
     if (rosterBundle && forceRefresh && Date.now() - (rosterBundle.cachedAt || 0) > ROSTER_FORCE_MIN_AGE_MS) rosterBundle = null;
     if (!rosterBundle) rosterBundle = await fetchRosterOrStale(rosterCacheKey, async () => {
-      const [courses, classes, students, teachers] = await Promise.all([
+      const stale = !isAdmin && !forceRefresh && global.EduDataCache ? await global.EduDataCache.getAsync(rosterCacheKey, true, /* allowStale */ true) : null;
+      const [courses, classes, roster, teachers] = await Promise.all([
         global.EduRepositories.course.list(),
         global.EduRepositories.class.list(),
         isAdmin
           // Bản đệm chung với các trang quản lý khác (js/services/roster-cache-service.js)
-          ? global.EduRosterCache.activeAll(forceRefresh ? { maxAgeMs: ROSTER_FORCE_MIN_AGE_MS } : undefined)
-          : studentsByChunkedSchools(schools),
+          ? global.EduRosterCache.activeAll(forceRefresh ? { maxAgeMs: ROSTER_FORCE_MIN_AGE_MS } : undefined).then((students) => ({ students }))
+          : global.EduRosterCache.scopedRoster(stale, {
+            narrows: chunk10(schools).map((part) => (q) => q.where('school', 'in', part)),
+            loadAll: () => studentsByChunkedSchools(schools), label: 'students_roster (trường của tôi, thay đổi)',
+          }),
         global.EduRepositories.user.listApprovedTeachers(),
       ]);
-      const bundle = { courses, classes, students, teachers, cachedAt: Date.now() };
+      const bundle = Object.assign({ courses, classes, teachers, cachedAt: Date.now() }, roster);
       if (global.EduDataCache) global.EduDataCache.setAsync(rosterCacheKey, bundle, ROSTER_CACHE_TTL_MS, /* persist */ true);
       return bundle;
     });

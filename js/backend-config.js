@@ -22,11 +22,11 @@
     // Bản Apps Script web này cần = BACKEND_VERSION trong apps/src/00-config.gs (đổi CẢ 2 chỗ —
     // test backend-consistency báo đỏ nếu lệch). Admin thấy thanh cảnh báo khi bản đang chạy thật
     // cũ hơn (js/services/backend-version-check.js).
-    expectedBackendVersion: '2026-11-04b',
+    expectedBackendVersion: '2026-11-04c',
 
     // ── Danh sách học sinh (students_roster) ở trang quản trị: chỉ đọc phần THAY ĐỔI (29/10/2026) ──
     //   true  : bản đệm quá hạn chỉ hỏi học sinh có updatedAt mới hơn (~1 lượt thay vì ~2.800);
-    //           đọc lại toàn bộ 3 ngày/lần (js/services/roster-cache-service.js § deltaFrom).
+    //           đọc lại toàn bộ 14 ngày/lần (js/services/roster-cache-service.js § deltaFrom).
     //   false : CÔNG TẮC TẮT NHANH — luôn đọc toàn bộ như trước đợt tối ưu (nếu thấy danh sách lệch).
     //           Lệnh ghi vẫn kèm updatedAt (trường thêm vào, không ảnh hưởng gì) để bật lại lúc nào cũng được.
     rosterDeltaSync: true,

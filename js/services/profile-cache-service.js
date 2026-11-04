@@ -28,7 +28,7 @@
 
   const COLLECTION = 'gvlab_profiles';
   const FRESH_MS = 2 * 60 * 1000;
-  const FULL_RESYNC_MS = 24 * 60 * 60 * 1000;
+  const FULL_RESYNC_MS = 7 * 24 * 60 * 60 * 1000; // sửa hồ sơ đã có updatedAt → delta thấy; đọc toàn bộ chỉ để bắt hồ sơ bị xoá
   const SINGLE_TTL_MS = 10 * 60 * 1000;
   const MISSING_TTL_MS = 6 * 60 * 60 * 1000; // uid chưa có hồ sơ (chỉ ảnh hưởng ảnh đại diện)
 

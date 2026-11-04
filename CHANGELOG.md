@@ -23,13 +23,27 @@ Thứ tự: Apps Script → `firestore.rules`/index → đẩy web.
 
 ## 04/11/2026
 
+- **Rà soát lượt Firebase toàn dự án** (đỉnh 10K đọc + 3K ghi trong 1 giờ, sau khi đẩy bản có ghi bù `schoolId`):
+  - Ghi bù `schoolId`: máy Admin khác chỉ đọc 5 bản mẫu thay vì ~2.800 học sinh; hơn 300 bản ghi thì hỏi Admin trước; 2 tab không chạy đôi.
+  - Danh sách học sinh ở trang Admin đọc lại toàn bộ 14 ngày/lần (trước 3 ngày): bớt ~750 lượt đọc/ngày mỗi máy Admin. Học sinh bị **xoá hẳn** ở máy khác có thể còn hiện tới 14 ngày; bấm "Tải lại" để thấy ngay. Thêm/sửa vẫn tự cập nhật.
+  - Gán lớp ở Quản lý tài khoản không ghi lại học sinh không đổi (trước còn đẩy `updatedAt`, mọi máy phải đọc lại phần đó).
+  - Lịch dạy: xuất nhiều tuần dùng bản đệm, tuần đã xem không đọc lại.
+  - Lịch dạy: lưu lịch chỉ xoá bản đệm của đúng tuần vừa sửa (trước xoá sạch cả giáo viên + tuần cũ, tab đó đọc thẳng máy chủ tới khi đóng). Đợt lưu rồi mở Báo cáo/Xăng xe không còn đọc lại hàng trăm lượt.
+  - Lịch dạy: bảng mã NV → tài khoản (chỉ để hiện ảnh đại diện) giữ 12 giờ thay vì 30 phút; gợi ý từ lịch cũ giữ 1 giờ thay vì 10 phút.
+  - Hồ sơ Trang Social Media đọc lại toàn bộ 7 ngày/lần thay vì mỗi ngày (sửa hồ sơ vẫn thấy qua phần thay đổi).
+  - Quản lý lớp của Điều phối: giữ danh sách 6 giờ thay vì 2 giờ. Điều phối khác sửa cùng trường thì bấm "Tải lại" để thấy ngay.
+  - Lịch dạy: xuất PDF kèm tuần cuối tháng cũng dùng bản đệm.
+  - **Giáo viên, Điều phối chỉ đọc phần thay đổi của danh sách học sinh:** trước đây mỗi người đọc lại cả danh sách 12 giờ/lần, nay ~1 lượt/lần và đọc toàn bộ 3 ngày/lần. Học sinh chuyển sang giáo viên/trường khác có thể còn hiện ở người cũ tới 3 ngày; "Làm mới dữ liệu" đọc toàn bộ để thấy ngay. Cần `firebase deploy --only firestore:indexes --project data-ic3` (2 index mới của `students_roster`); chưa deploy thì tự đọc như cũ.
+  - **Đồng hồ trang nặng:** trang đọc vượt 500/2.000/5.000 lượt hoặc ghi vượt 300/1.000/3.000 lượt trong 1 lần mở thì tự ghi 1 dòng `firestore_heavy` vào tab `NhatKyHoatDong` (trang, người, số lượt, truy vấn tốn nhất). Lần sau có đỉnh, mở tab đó lọc `firestore_heavy` là biết ngay. 0 lượt Firebase.
+  - Triển khai: đẩy web là các sửa ở trên có hiệu lực (trừ phần thay đổi của giáo viên cần index như trên); riêng đồng hồ cần deploy Apps Script `BACKEND_VERSION` 2026-11-04c (chưa deploy thì dòng nhật ký bị bỏ qua, trang không lỗi). Không đổi rules.
+
 - **Sổ lớp dùng chung theo trường (Điểm danh).** 1 giáo viên dán link điều phối gửi, mọi giáo viên được Admin gán trường đó tự có sổ trên mọi máy.
   - Giáo viên trường khác không nhận được mã file; máy chủ chỉ cho "Ghi vào Sheet" vào sổ của trường được gán (Admin: mọi sổ).
   - Sổ dán từ trước nằm ở "Sổ chờ đưa lên trường" (thẻ Cài đặt): chọn trường, bấm "Đưa lên trường" 1 lần. Chưa đưa thì không hiện ở lịch/lớp.
   - Gỡ sổ: người đã thêm hoặc Admin. Máy dùng chung: người khác đăng nhập thì sổ và bản đọc của người trước bị xoá khỏi máy.
   - Máy mới chưa đọc lớp nào tự đọc các lớp ngay (Google CSV, không tốn Firebase).
   - Hạn mức: 0 lượt Firestore thêm; Apps Script 1 lượt/giáo viên/30 phút khi mở trang, đọc tab SoLopTruong qua bản đệm. Không đổi `firestore.rules`.
-  - **Triển khai:** deploy Apps Script (`BACKEND_VERSION` 2026-11-04b) rồi đẩy web. Từ lúc deploy, giáo viên chỉ ghi được sổ đã đưa lên trường; kiểm tra `schools` của giáo viên ở trang Tài khoản trước.
+  - **Triển khai:** deploy Apps Script (`BACKEND_VERSION` 2026-11-04c) rồi đẩy web. Từ lúc deploy, giáo viên chỉ ghi được sổ đã đưa lên trường; kiểm tra `schools` của giáo viên ở trang Tài khoản trước.
 - **Sổ lớp riêng tư.** Điều phối tắt được link công khai (Sheet có ngày sinh học sinh), chỉ chia sẻ cho tài khoản deploy Apps Script. Trang tự chuyển sang đọc qua Apps Script (`classSheetRead`, `classSheetInfo`), kiểm trường như khi ghi.
   - Chỉ trả tab đúng mẫu FORM QUẢN LÝ LỚP và từ chối file dữ liệu của hệ thống, vì tài khoản deploy mở được các file đó.
   - Hạn mức: sổ còn link công khai không tốn thêm gì. Sổ riêng tư: 1 lượt Apps Script/lần mở lớp, 1 lượt/sổ khi "Cập nhật tất cả", lớp đang mở đọc lại 10 phút/lần (thay vì 2 phút). 0 lượt Firestore thêm.

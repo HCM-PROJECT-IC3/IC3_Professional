@@ -68,5 +68,12 @@
     return json.data;
   }
 
+  // Trang đọc/ghi Firebase vượt mốc (js/firebase-config.js § Đồng hồ trang nặng) → 1 dòng ở tab NhatKyHoatDong
+  if (global.addEventListener) global.addEventListener('edu:firestore-heavy', (e) => {
+    const d = e.detail;
+    call('logActivity', { activity: 'firestore_heavy', targetId: d.page, page: d.page, meta: { reads: d.reads, writes: d.writes, top: d.top } })
+      .catch(() => { /* chỉ để đo, không ảnh hưởng trang */ });
+  });
+
   global.EduAppsScript = { call, idToken };
 })(window);

@@ -89,6 +89,19 @@ describe('users — không tự nâng quyền', () => {
   });
 });
 
+describe('students_roster — chỉ đọc phần thay đổi (scopedRoster)', () => {
+  const since = new Date(0);
+  const changed = (uid, ...cond) => getDocs(query(collection(db(uid), 'students_roster'), ...cond, where('updatedAt', '>', since), limit(5000)));
+  test('giáo viên hỏi được phần thay đổi của lớp mình, không hỏi được của người khác', async () => {
+    await assertSucceeds(changed('teacherA', where('teacherId', '==', 'teacherA')));
+    await assertFails(changed('teacherA', where('teacherId', '==', 'other')));
+  });
+  test('điều phối hỏi được trường mình, không hỏi được trường khác', async () => {
+    await assertSucceeds(changed('coordA', where('school', 'in', ['THCS A'])));
+    await assertFails(changed('coordA', where('school', 'in', ['THCS B'])));
+  });
+});
+
 describe('students_roster — cách ly theo trường', () => {
   test('điều phối A: đọc học sinh trường A, không đọc trường B', async () => {
     await assertSucceeds(getDoc(doc(db('coordA'), 'students_roster', 's1')));

@@ -116,6 +116,9 @@
   // thao tác ghi trên máy này đều cập nhật cache tại chỗ (syncOne/dropOne, Nạp Excel tải lại); thay
   // đổi từ máy khác → nút "Tải lại" (hiện giờ của dữ liệu đang xem).
   const CACHE_TTL_MS = 2 * 60 * 60 * 1000;
+  // Điều phối không hỏi được phần thay đổi (rules bắt lọc theo trường): hết hạn là đọc lại CẢ học sinh các trường mình
+  const STAFF_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+  const cacheTtl = () => (myProfile && myProfile.role === 'admin' ? CACHE_TTL_MS : STAFF_CACHE_TTL_MS);
   function rosterCacheKey() {
     const isAdmin = myProfile.role === 'admin';
     const schools = Array.isArray(myProfile.schools) ? myProfile.schools.filter(Boolean) : [];
@@ -135,7 +138,7 @@
   }
   function persistState() {
     if (window.EduDataCache) {
-      window.EduDataCache.setAsync(rosterCacheKey(), { courses: state.courses, classes: state.classes, students: state.students, teachers: state.teachers, cachedAt: state.cachedAt, fullAt: state.fullAt, watermark: state.watermark }, CACHE_TTL_MS, /* persist */ true);
+      window.EduDataCache.setAsync(rosterCacheKey(), { courses: state.courses, classes: state.classes, students: state.students, teachers: state.teachers, cachedAt: state.cachedAt, fullAt: state.fullAt, watermark: state.watermark }, cacheTtl(), /* persist */ true);
     }
     shareRoster();
   }
@@ -176,7 +179,7 @@
     const n = (state.students || []).length + (state.classes || []).length + (state.courses || []).length + (state.teachers || []).length;
     if (!confirm(`Đọc lại toàn bộ khoá học, lớp, học sinh, giáo viên từ máy chủ?
 
-Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường KHÔNG cần: thao tác trên máy này đã tự cập nhật, học sinh máy khác thêm/sửa sẽ tự hiện khi dữ liệu quá 2 giờ (chỉ tốn vài lượt). Chỉ cần khi máy khác vừa XOÁ HẲN học sinh và muốn thấy ngay.`)) return;
+Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường KHÔNG cần: thao tác trên máy này đã tự cập nhật, học sinh máy khác thêm/sửa sẽ tự hiện khi dữ liệu quá ${cacheTtl() / 3600000} giờ. Chỉ cần khi máy khác vừa XOÁ HẲN học sinh và muốn thấy ngay.`)) return;
     reloadBtn.disabled = true;
     try { await loadEverything(true, { full: true }); toast('Đã tải lại dữ liệu mới nhất.'); } finally { reloadBtn.disabled = false; }
   });
@@ -262,7 +265,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
       state.cachedAt = Date.now();
       renderDataAge();
       if (window.EduDataCache) {
-        window.EduDataCache.setAsync(cacheKey, { courses: state.courses, classes: state.classes, students: state.students, teachers: state.teachers, cachedAt: state.cachedAt, fullAt: state.fullAt, watermark: state.watermark }, CACHE_TTL_MS, /* persist */ true);
+        window.EduDataCache.setAsync(cacheKey, { courses: state.courses, classes: state.classes, students: state.students, teachers: state.teachers, cachedAt: state.cachedAt, fullAt: state.fullAt, watermark: state.watermark }, cacheTtl(), /* persist */ true);
       }
       // Admin vừa đọc toàn bộ → các trang quản lý khác khỏi đọc lại; Điều phối tải lại sau khi ghi → bỏ bản đệm chung
       if (isAdmin || forceRefresh) shareRoster();
@@ -397,17 +400,30 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
    * KHÔNG đổi updatedAt: nếu đổi, bản đệm roster trên MỌI máy điều phối/giáo viên phải đọc lại
    * toàn bộ học sinh qua delta → có thể vượt 50k lượt đọc/ngày. Rules đọc schoolId trên server,
    * bản đệm trên máy không cần field này; ghi mới đã tự kèm schoolId (stampRoster, ClassRepository).
-   * Hệ quả: bản đệm delta trên máy Admin KHÁC không bao giờ thấy schoolId vừa ghi bù → trước khi ghi,
-   * đọc lại toàn bộ 1 lần (~N lượt đọc) thay vì ghi lại cả N học sinh đã có schoolId (~N lượt ghi).
+   * Hệ quả: bản đệm delta trên máy Admin KHÁC không bao giờ thấy schoolId vừa ghi bù → hỏi máy chủ vài bản mẫu
+   * (EduRosterCache.alreadyStamped, 5 lượt đọc); mẫu còn thiếu mới đọc lại toàn bộ để chỉ ghi bản thật sự thiếu.
+   * Đợt 04/11/2026: 1 lần chạy = ~3.000 lượt ghi trong 1 giờ mà Admin không hay biết → nay nhiều bản ghi thì hỏi trước.
    */
   async function backfillSchoolIds() {
+    const locks = navigator.locks;
+    // 2 tab cùng mở chỉ 1 tab chạy, không ghi đôi
+    if (locks) return locks.request('edu-roster-backfill', { ifAvailable: true }, (lock) => (lock ? runSchoolIdBackfill() : null));
+    return runSchoolIdBackfill();
+  }
+  async function runSchoolIdBackfill() {
     const DONE_KEY = 'roster:schoolIdBackfill:v1';
+    const ASK_OVER = 300;
     if (!myProfile || myProfile.role !== 'admin') return;
     try { if (localStorage.getItem(DONE_KEY)) return; } catch (e) { /* chế độ riêng tư: chạy lại cũng không sai */ }
     const idOf = window.EduModels.School.schoolIdOf;
     const needs = (r) => r.school && r.schoolId !== idOf(r.school);
     try {
-      if (state.studentsFromDelta && state.students.some(needs)) {
+      const stale = state.studentsFromDelta ? state.students.filter(needs) : [];
+      const repo = window.EduRepositories.studentRoster;
+      if (stale.length && await window.EduRosterCache.alreadyStamped(stale, idOf, (id) => repo.getById(id))) {
+        stale.forEach((s) => { s.schoolId = idOf(s.school); });
+        persistState();
+      } else if (stale.length) {
         const fresh = await window.EduRepositories.studentRoster.list({ orderBy: 'name' });
         state.students = fresh;
         state.fullAt = Date.now();
@@ -422,6 +438,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
     const todo = [];
     state.students.forEach((s) => { if (needs(s)) todo.push(['students_roster', s]); });
     state.classes.forEach((c) => { if (needs(c)) todo.push(['classes', c]); });
+    if (todo.length > ASK_OVER && !confirm(`Gắn mã trường (schoolId) cho ${todo.length} học sinh/lớp còn thiếu?\n\nTốn khoảng ${todo.length.toLocaleString('vi-VN')} lượt ghi Firebase (hạn mức 20.000/ngày), chỉ làm 1 lần. Bấm Huỷ để làm vào lần mở trang sau.`)) return;
     try {
       const db = EduFirebase.db;
       for (let i = 0; i < todo.length; i += 400) {
@@ -430,6 +447,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
         await batch.commit();
       }
       todo.forEach(([, rec]) => { rec.schoolId = idOf(rec.school); });
+      if (todo.length) persistState();
       try { localStorage.setItem(DONE_KEY, String(Date.now())); } catch (e) { /* bỏ qua */ }
       if (todo.length) toast(`Đã gắn mã trường (schoolId) cho ${todo.length} học sinh/lớp`);
     } catch (err) {

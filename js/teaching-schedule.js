@@ -187,7 +187,7 @@
       window.EduRepositories.user.teacherCodeToUid()
         .then((map) => {
           Object.assign(teacherCodeToUid, map);
-          if (window.EduDataCache) window.EduDataCache.set(TEACHER_MAP_CACHE_KEY, teacherCodeToUid, 30 * 60 * 1000, true);
+          if (window.EduDataCache) window.EduDataCache.set(TEACHER_MAP_CACHE_KEY, teacherCodeToUid, 12 * 60 * 60 * 1000, true); // chỉ để hiện ảnh đại diện; mỗi lần đọc = cả danh sách giáo viên
           patchScheduleAvatars();
         })
         .catch((err) => console.warn('[Lịch giảng dạy] Không dựng được map giáo viên → tài khoản:', err.message));
@@ -938,8 +938,13 @@
    * computeExtraWeekEvidence()) — chỉ giữ đúng những ngày còn trong tháng
    * (clippedDaysForWeek), dùng làm trang phụ minh chứng của PDF "Lịch giảng
    * dạy" (xem exportOne()/exportMany() trong js/export/teaching-schedule-pdf.js). */
+  /** Lịch cả đội 1 tuần để XUẤT (cùng khoá với lúc mở tuần). Đối chiếu trước khi ghi thì đọc thẳng listByWeek. */
+  function weekRowsForExport(wk) {
+    const load = () => window.EduRepositories.teachingSchedule.listByWeek(wk);
+    return window.EduScheduleReadCache ? window.EduScheduleReadCache.read('schedule:' + wk, load) : load();
+  }
   async function fetchExtraWeekDaysFor(teacherCode, extra) {
-    const rows = await window.EduRepositories.teachingSchedule.listByWeek(extra.weekKey);
+    const rows = await weekRowsForExport(extra.weekKey);
     const row = rows.find((r) => r.teacherCode === teacherCode);
     const rawDays = (row && row.days) || M.emptyDays();
     return clippedDaysForWeek(rawDays, extra.weekKey, [extra.range], M);
@@ -983,7 +988,7 @@
       if (extra) {
         // Tải MỘT LẦN cho cả tuần cuối tháng (dùng chung cho mọi giáo viên
         // trong danh sách), không lặp lại 1 query/GV.
-        const rows = await window.EduRepositories.teachingSchedule.listByWeek(extra.weekKey);
+        const rows = await weekRowsForExport(extra.weekKey);
         const rawDaysByTeacher = new Map();
         rows.forEach((r) => rawDaysByTeacher.set(r.teacherCode, r.days));
         fullList = list.map(({ teacher, days }) => ({
@@ -1114,9 +1119,7 @@
    * liệu đã có sẵn trong state (không tải lại). */
   async function fetchScheduleRowsByWeek(weekKeys) {
     const otherWeekKeys = weekKeys.filter((wk) => wk !== state.currentWeekKey);
-    const otherRows = await Promise.all(
-      otherWeekKeys.map((wk) => window.EduRepositories.teachingSchedule.listByWeek(wk)),
-    );
+    const otherRows = await Promise.all(otherWeekKeys.map(weekRowsForExport));
     const byWeek = new Map();
     if (weekKeys.includes(state.currentWeekKey)) {
       const cur = new Map();

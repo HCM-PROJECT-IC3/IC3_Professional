@@ -10,9 +10,11 @@
 
    Không thấy dữ liệu cũ sau khi chính máy này sửa: MỌI thao tác ghi vào
    collection teaching_* trên trang (doc.set/update/delete, collection.add,
-   batch.commit — dù từ module nào) đều xoá sạch cache này ngay. Sửa từ MÁY KHÁC
-   thì tối đa TTL_MS sau mới thấy (nút tải lại trang vẫn đọc từ cache trong
-   thời gian đó — chấp nhận để giữ hạn mức).
+   batch.commit — dù từ module nào) đều xoá ngay các khoá liên quan tới document đó
+   (affected()). Trước 04/11/2026 lưu 1 ô lịch là xoá SẠCH cache kể cả giáo viên, các tuần
+   cũ, và tab đó đọc thẳng máy chủ tới khi đóng → tab Báo cáo/Xăng xe đọc lại hàng trăm
+   lượt. Sửa từ MÁY KHÁC thì tối đa TTL_MS sau mới thấy (nút tải lại trang vẫn đọc từ
+   cache trong thời gian đó — chấp nhận để giữ hạn mức).
 
    Thời hạn theo loại dữ liệu (ttlFor): tuần ĐÃ QUA gần như không ai sửa → 12 giờ (tab Báo
    cáo/Xăng xe đọc nhiều tuần cũ: trước đây mỗi 10 phút đọc lại T lượt/tuần); danh sách giáo
@@ -28,10 +30,12 @@
   const STATIC_TTL = { teachers: HOUR, periodTimes: HOUR, weeks: 30 * 60 * 1000 };
   const PAST_WEEK_TTL_MS = 12 * HOUR;
   const WEEK_KEYED = /^(schedule|timetable):(\d{4})-(\d{2})-(\d{2})$/;
+  const SUGGEST_KEY = /-by-teacher:/; // gợi ý từ lịch cũ của 1 giáo viên: đọc cả năm học, không cần tươi
 
   /** Thời hạn bản lưu cho 1 khoá (now: ms, để test). weekKey = ngày thứ Hai đầu tuần "YYYY-MM-DD". */
   function ttlFor(key, now) {
     if (STATIC_TTL[key]) return STATIC_TTL[key];
+    if (SUGGEST_KEY.test(key)) return HOUR;
     const m = WEEK_KEYED.exec(key);
     if (m) {
       const weekEnd = new Date(+m[2], +m[3] - 1, +m[4] + 7).getTime(); // 0 giờ thứ Hai tuần sau (giờ máy)
@@ -43,9 +47,26 @@
   const KEYS_INDEX = PREFIX + '__keys';
 
   function cache() { return global.EduDataCache || null; }
-  // Xoá IndexedDB là bất đồng bộ: tab vừa ghi thì từ đó luôn đọc thẳng máy chủ (không
+  // Xoá IndexedDB là bất đồng bộ: khoá tab vừa ghi thì từ đó luôn đọc thẳng máy chủ (không
   // phụ thuộc thứ tự transaction), chắc chắn thấy đúng dữ liệu mình vừa lưu.
-  let bypass = false;
+  const bypass = [];
+  const bypassed = (key) => bypass.some((match) => match(key));
+
+  /** Khoá bị ảnh hưởng khi ghi document `path` (khoá chưa có tiền tố PREFIX). Collection lạ: mọi khoá. */
+  function affected(path) {
+    const [col, id] = String(path || '').split('/');
+    const week = (/\d{4}-\d{2}-\d{2}/.exec(id || '') || [])[0];
+    const data = (word) => (k) => k.includes(word) && (!week || k.includes(week) || SUGGEST_KEY.test(k));
+    switch (col) {
+      case 'teaching_teachers': return (k) => k === 'teachers' || k.startsWith('doc:teacher:');
+      case 'teaching_weeks': return (k) => k === 'weeks';
+      case 'teaching_timetable_periods': return (k) => k === 'periodTimes' || k.startsWith('doc:periods:');
+      case 'teaching_schedule': return data('schedule');
+      case 'teaching_timetable': return data('timetable');
+      case 'teaching_travel_distances': return () => false; // không đọc qua cache này
+      default: return () => true;
+    }
+  }
 
   function rememberKey(key) {
     try {
@@ -70,7 +91,7 @@
   async function readNow(key, loader) {
     const C = cache();
     const fullKey = PREFIX + key;
-    if (C && !bypass) {
+    if (C && !bypassed(key)) {
       const hit = await C.getAsync(fullKey, true);
       if (hit !== null && hit !== undefined) return hit;
     }
@@ -82,15 +103,18 @@
     return value;
   }
 
-  function invalidate() {
-    bypass = true;
+  /** Xoá các khoá khớp match (bỏ trống = mọi khoá). */
+  function invalidate(match) {
+    const hit = match || (() => true);
+    bypass.push(hit);
     inflight.clear();
     const C = cache();
     if (!C) return;
     let keys = [];
     try { keys = JSON.parse(localStorage.getItem(KEYS_INDEX) || '[]'); } catch (e) { keys = []; }
-    keys.forEach((k) => C.clear(k, true));
-    try { localStorage.removeItem(KEYS_INDEX); } catch (e) { /* ignore */ }
+    const gone = keys.filter((k) => hit(k.slice(PREFIX.length)));
+    gone.forEach((k) => C.clear(k, true));
+    try { localStorage.setItem(KEYS_INDEX, JSON.stringify(keys.filter((k) => !gone.includes(k)))); } catch (e) { /* ignore */ }
   }
 
   // ── Xoá cache khi có ghi vào teaching_* ──
@@ -99,22 +123,37 @@
     if (!fs || fs.__scheduleCacheHooked) return;
     fs.__scheduleCacheHooked = true;
     const isSchedulePath = (path) => /^teaching_/.test(String(path || ''));
-    const wrap = (proto, method, pathOf) => {
+    const wrap = (proto, method, matchOf) => {
       if (!proto || typeof proto[method] !== 'function') return;
       const original = proto[method];
       proto[method] = function () {
+        const match = matchOf(this, arguments);
         const result = original.apply(this, arguments);
-        if (pathOf(this)) Promise.resolve(result).then(invalidate, invalidate);
+        if (match) { const drop = () => invalidate(match); Promise.resolve(result).then(drop, drop); }
         return result;
       };
     };
-    const docPath = (ref) => isSchedulePath(ref && ref.path);
-    wrap(fs.DocumentReference && fs.DocumentReference.prototype, 'set', docPath);
-    wrap(fs.DocumentReference && fs.DocumentReference.prototype, 'update', docPath);
-    wrap(fs.DocumentReference && fs.DocumentReference.prototype, 'delete', docPath);
-    wrap(fs.CollectionReference && fs.CollectionReference.prototype, 'add', docPath);
-    // Batch không lộ đường dẫn từng thao tác — trang này chỉ ghi dữ liệu lịch nên xoá luôn.
-    wrap(fs.WriteBatch && fs.WriteBatch.prototype, 'commit', () => true);
+    const docMatch = (ref) => (ref && isSchedulePath(ref.path) ? affected(ref.path) : null);
+    wrap(fs.DocumentReference && fs.DocumentReference.prototype, 'set', docMatch);
+    wrap(fs.DocumentReference && fs.DocumentReference.prototype, 'update', docMatch);
+    wrap(fs.DocumentReference && fs.DocumentReference.prototype, 'delete', docMatch);
+    wrap(fs.CollectionReference && fs.CollectionReference.prototype, 'add', docMatch);
+    // Batch: nhớ document từng lệnh ghi; commit mới xoá đúng các khoá đó. Không nhớ được gì: xoá hết cho chắc.
+    const batchPaths = new WeakMap();
+    const noteBatch = (batch, args) => {
+      const ref = args[0];
+      if (ref && ref.path) batchPaths.set(batch, (batchPaths.get(batch) || []).concat(ref.path));
+      return null;
+    };
+    const batchProto = fs.WriteBatch && fs.WriteBatch.prototype;
+    ['set', 'update', 'delete'].forEach((m) => wrap(batchProto, m, noteBatch));
+    wrap(batchProto, 'commit', (batch) => {
+      const paths = batchPaths.get(batch);
+      if (!paths) return () => true;
+      const matches = paths.filter(isSchedulePath).map(affected);
+      batchPaths.delete(batch);
+      return matches.length ? (k) => matches.some((match) => match(k)) : null;
+    });
   }
 
   installWriteHooks();

@@ -32,7 +32,7 @@ var cmp = function (a, b) { return a.seconds - b.seconds || a.nanoseconds - b.na
 globalThis.firebase = { firestore: { Timestamp: Ts, FieldValue: { serverTimestamp: function () { return 'SERVER_TS'; } } } };
 
 // Firestore giả: đếm lần đọc toàn bộ (where status) và lần hỏi phần thay đổi (where updatedAt)
-var full = 0, delta = 0, offline = false;
+var full = 0, delta = 0, offline = false, scoped = 0, scopedError = null;
 var DOCS = [
   { id: 's1', name: 'An', school: 'A', status: 'active', updatedAt: new Ts(100, 500) },
   { id: 's2', name: 'Bình', school: 'B', status: 'active' }, // doc cũ chưa có updatedAt
@@ -42,7 +42,15 @@ function snapOf(list) {
 }
 globalThis.EduFirebase = {
   countSnap: function () {},
-  db: { collection: function () { return { where: function (field, op, val) { return { limit: function () { return { get: function () {
+  db: { collection: function () { return { where: function (field, op, val) {
+    if (field === 'teacherId') {
+      return { where: function (f2, o2, v2) { return { limit: function () { return { get: function () {
+        if (scopedError) return Promise.reject(scopedError);
+        scoped++;
+        return Promise.resolve(snapOf(DOCS.filter(function (d) { return d.teacherId === val && d.updatedAt && cmp(d.updatedAt, v2) > 0; })));
+      } }; } }; } };
+    }
+    return { limit: function () { return { get: function () {
     var list = field === 'status'
       ? (full++, DOCS.filter(function (d) { return d.status === val; }))
       : (delta++, DOCS.filter(function (d) { return d.updatedAt && cmp(d.updatedAt, val) > 0; }));
@@ -99,6 +107,43 @@ var tick = function () { return new Promise(function (r) { setTimeout(r, 0); });
   offline = true;
   var stale = await R.activeAll();
   assertEq('hết lượt đọc/mất mạng → dùng bản đệm cũ thay vì báo lỗi', [delta, ids(stale)], [4, ['s1', 's3']]);
+
+  offline = false;
+  // Giáo viên: chỉ hỏi phần thay đổi trong lớp mình
+  DOCS.push({ id: 'g1', name: 'Giang', status: 'active', teacherId: 'gv', updatedAt: new Ts(500, 0) });
+  var byTeacher = function (q) { return q.where('teacherId', '==', 'gv'); };
+  var loads = 0;
+  var loadAll = function () { loads++; return Promise.resolve(DOCS.filter(function (d) { return d.teacherId === 'gv' && d.status === 'active'; })); };
+  var scope = { narrows: [byTeacher], loadAll: loadAll, label: 't' };
+  var e1 = await R.scopedRoster(null, scope);
+  assertEq('giáo viên lần đầu: đọc toàn bộ lớp mình', [loads, ids(e1.students)], [1, ['g1']]);
+  var e2 = await R.scopedRoster(e1, scope);
+  assertEq('giáo viên hết hạn, không ai sửa: 1 truy vấn thay đổi, không đọc toàn bộ', [loads, scoped, ids(e2.students)], [1, 1, ['g1']]);
+  DOCS.push({ id: 'g2', name: 'Hà', status: 'active', teacherId: 'gv', updatedAt: new Ts(600, 0) });
+  DOCS[DOCS.length - 2] = Object.assign({}, DOCS[DOCS.length - 2], { status: 'inactive', updatedAt: new Ts(601, 0) });
+  var e3 = await R.scopedRoster(e2, scope);
+  assertEq('giáo viên: thêm em mới, em nghỉ học bị bỏ', [loads, ids(e3.students)], [1, ['g2']]);
+  now += R.SCOPED_FULL_MS;
+  await R.scopedRoster(e3, scope);
+  assertEq('giáo viên: 3 ngày đọc toàn bộ 1 lần (bắt em chuyển sang giáo viên khác)', loads, 2);
+  var e4 = await R.scopedRoster(null, scope);
+  scopedError = Object.assign(new Error('The query requires an index'), { code: 'failed-precondition' });
+  var e5 = await R.scopedRoster(e4, scope);
+  assertEq('chưa deploy index: tự đọc toàn bộ như cũ, không lỗi', [loads, ids(e5.students)], [4, ['g2']]);
+  scopedError = Object.assign(new Error('offline'), { code: 'unavailable' });
+  var thrown = null;
+  try { await R.scopedRoster(e4, scope); } catch (err) { thrown = err.code; }
+  assertEq('mất mạng: báo lỗi để trang dùng bản đã lưu, không đọc toàn bộ', [thrown, loads], ['unavailable', 4]);
+  scopedError = null;
+
+  // Ghi bù schoolId: máy khác đã xong → 5 lượt đọc thay vì đọc lại toàn bộ; ghi bù dở (đuôi còn thiếu) → phát hiện được
+  var idOf = function (n) { return n.toLowerCase(); };
+  var recs = Array.from({ length: 2800 }, function (_, i) { return { id: 'r' + i, school: 'A' }; });
+  var asked = [];
+  var serverDone = function (id) { asked.push(id); return Promise.resolve({ school: 'A', schoolId: 'a' }); };
+  assertEq('ghi bù: máy khác đã xong → chỉ đọc 5 bản', [await R.alreadyStamped(recs, idOf, serverDone), asked.length, asked[4]], [true, 5, 'r2799']);
+  assertEq('ghi bù: dừng dở ở bản 1200 → còn thiếu', await R.alreadyStamped(recs, idOf, function (id) { return Promise.resolve(+id.slice(1) < 1200 ? { school: 'A', schoolId: 'a' } : { school: 'A' }); }), false);
+  assertEq('ghi bù: 1 bản ghi, bản đã bị xoá không tính là thiếu', await R.alreadyStamped([{ id: 'x' }], idOf, function () { return Promise.resolve(null); }), true);
 
   var d = await R.deltaFrom({ students: [{ id: 'a' }], fullAt: now - R.FULL_RESYNC_MS, watermark: null });
   assertEq('deltaFrom: nền quá 3 ngày → null (nơi gọi đọc toàn bộ)', d, null);

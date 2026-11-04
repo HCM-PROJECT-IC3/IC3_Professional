@@ -80,9 +80,31 @@
   // lượt đọc phát sinh trong firestore.rules (get()/exists()) không thấy được ở đây.
   const PAGE_LABEL = (location.pathname.split('/').pop() || 'index.html').replace(/\.html$/, '') || 'index';
   let readTotal = 0;
+
+  // ── Đồng hồ trang nặng (04/11/2026) ──
+  // Biểu đồ Firebase chỉ cho biết TỔNG theo giờ, không biết trang nào, ai gây ra. Trang đọc/ghi vượt mốc thì
+  // bắn "edu:firestore-heavy"; js/services/apps-script-client.js ghi 1 dòng vào tab NhatKyHoatDong (0 lượt Firebase,
+  // tối đa 6 lượt Apps Script/lần mở trang, mở bình thường không tới mốc nào). Trang không có file đó thì bỏ qua.
+  const HEAVY_READS = [500, 2000, 5000];
+  const HEAVY_WRITES = [300, 1000, 3000];
+  const usage = { reads: 0, writes: 0, top: {}, passed: 0, timer: null };
+  function noteUsage(kind, n) {
+    usage[kind] += n;
+    const passed = HEAVY_READS.filter((x) => usage.reads >= x).length + HEAVY_WRITES.filter((x) => usage.writes >= x).length;
+    if (passed <= usage.passed || usage.timer) return;
+    usage.passed = passed;
+    // Chờ 2 giây: gom các lô ghi liền nhau, và để countSnap kịp ghi tên truy vấn vừa về
+    usage.timer = setTimeout(() => {
+      usage.timer = null;
+      const top = Object.keys(usage.top).sort((a, b) => usage.top[b] - usage.top[a]).slice(0, 5)
+        .map((k) => k + ': ' + usage.top[k]);
+      window.dispatchEvent(new CustomEvent('edu:firestore-heavy', { detail: { page: PAGE_LABEL, reads: usage.reads, writes: usage.writes, top } }));
+    }, 2000);
+  }
   function countReads(label, n) {
     const reads = Math.max(1, Number(n) || 0);
     readTotal += reads;
+    usage.top[label] = (usage.top[label] || 0) + reads;
     console.info('[' + PAGE_LABEL + '] ' + reads + ' lượt đọc Firestore — ' + label + ' (tổng trang: ' + readTotal + ')');
     return reads;
   }
@@ -183,12 +205,27 @@
     const guarded = function (options) {
       if (!(options && options.source === 'cache') && burstTotal() >= BURST_MAX_READS) return Promise.reject(burstError());
       return orig.call(this, options).then((snap) => {
-        if (snap && !(snap.metadata && snap.metadata.fromCache)) noteBurst(Math.max(1, Number(snap.size) || 0));
+        if (snap && !(snap.metadata && snap.metadata.fromCache)) {
+          const n = Math.max(1, Number(snap.size) || 0);
+          noteBurst(n);
+          noteUsage('reads', n);
+        }
         return snap;
       });
     };
     guarded.__eduBreaker = true;
     proto.get = guarded;
+  })();
+  (function meterBatches() {
+    const B = firebase.firestore && firebase.firestore.WriteBatch;
+    const proto = B && B.prototype;
+    if (!proto || proto.__eduMeter) return;
+    proto.__eduMeter = true;
+    ['set', 'update', 'delete'].forEach((m) => {
+      const orig = proto[m];
+      if (typeof orig !== 'function') return;
+      proto[m] = function () { noteUsage('writes', 1); return orig.apply(this, arguments); };
+    });
   })();
 
   /** Mã document ngẫu nhiên tạo ở máy (không tốn lượt đọc/ghi). */
