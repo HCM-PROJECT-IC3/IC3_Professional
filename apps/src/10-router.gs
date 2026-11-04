@@ -35,6 +35,11 @@ function routes_() {
     arenaRoomLog:  { roles: ROLES_STAFF,   handler: arenaRoomLog_ },
     arenaRelayTicket: { roles: ROLES_STAFF, handler: arenaRelayTicket_ },
     classSheetWrite:  { roles: ROLES_TEACH, handler: classSheetWrite_ },
+    classBooks:       { roles: ROLES_TEACH, handler: classBooks_ },      // 49-class-books.gs — sổ lớp theo trường được gán
+    classBookSave:    { roles: ROLES_TEACH, handler: classBookSave_ },
+    classBookRemove:  { roles: ROLES_TEACH, handler: classBookRemove_ },
+    classSheetRead:   { roles: ROLES_TEACH, handler: classSheetRead_ },  // sổ đã tắt link công khai
+    classSheetInfo:   { roles: ROLES_TEACH, handler: classSheetInfo_ },
     aiAsk:         { roles: null,          handler: aiAsk_ },        // 78-ai.gs — công khai: giải thích câu sai, câu hỏi nhanh (có trần lượt)
     aiAskStaff:    { roles: ROLES_STAFF,   handler: aiAskStaff_ },
     aiStatus:      { roles: ROLES_STAFF,   handler: aiStatus_ },

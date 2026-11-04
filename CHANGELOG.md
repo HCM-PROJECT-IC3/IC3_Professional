@@ -21,6 +21,20 @@ Thứ tự: Apps Script → `firestore.rules`/index → đẩy web.
    - F12 → Console, lọc "lượt đọc Firestore": danh sách học sinh chỉ vài lượt mỗi lần mở.
      Lệch dữ liệu thì đặt `rosterDeltaSync: false` trong `js/backend-config.js`.
 
+## 04/11/2026
+
+- **Sổ lớp dùng chung theo trường (Điểm danh).** 1 giáo viên dán link điều phối gửi, mọi giáo viên được Admin gán trường đó tự có sổ trên mọi máy.
+  - Giáo viên trường khác không nhận được mã file; máy chủ chỉ cho "Ghi vào Sheet" vào sổ của trường được gán (Admin: mọi sổ).
+  - Sổ dán từ trước nằm ở "Sổ chờ đưa lên trường" (thẻ Cài đặt): chọn trường, bấm "Đưa lên trường" 1 lần. Chưa đưa thì không hiện ở lịch/lớp.
+  - Gỡ sổ: người đã thêm hoặc Admin. Máy dùng chung: người khác đăng nhập thì sổ và bản đọc của người trước bị xoá khỏi máy.
+  - Máy mới chưa đọc lớp nào tự đọc các lớp ngay (Google CSV, không tốn Firebase).
+  - Hạn mức: 0 lượt Firestore thêm; Apps Script 1 lượt/giáo viên/30 phút khi mở trang, đọc tab SoLopTruong qua bản đệm. Không đổi `firestore.rules`.
+  - **Triển khai:** deploy Apps Script (`BACKEND_VERSION` 2026-11-04b) rồi đẩy web. Từ lúc deploy, giáo viên chỉ ghi được sổ đã đưa lên trường; kiểm tra `schools` của giáo viên ở trang Tài khoản trước.
+- **Sổ lớp riêng tư.** Điều phối tắt được link công khai (Sheet có ngày sinh học sinh), chỉ chia sẻ cho tài khoản deploy Apps Script. Trang tự chuyển sang đọc qua Apps Script (`classSheetRead`, `classSheetInfo`), kiểm trường như khi ghi.
+  - Chỉ trả tab đúng mẫu FORM QUẢN LÝ LỚP và từ chối file dữ liệu của hệ thống, vì tài khoản deploy mở được các file đó.
+  - Hạn mức: sổ còn link công khai không tốn thêm gì. Sổ riêng tư: 1 lượt Apps Script/lần mở lớp, 1 lượt/sổ khi "Cập nhật tất cả", lớp đang mở đọc lại 10 phút/lần (thay vì 2 phút). 0 lượt Firestore thêm.
+- Sổ đầu bài: lớp của sổ đang chờ đưa lên trường không còn hiện (trước đọc thẳng bản lưu).
+
 ## 02/11/2026
 
 - **Dashboard Điều phối có thẻ "Câu học sinh hay sai"** (dùng chung `js/teacher/wrong-questions.js` với dashboard giáo viên).

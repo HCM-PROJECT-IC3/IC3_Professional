@@ -72,6 +72,7 @@ kbd { display: inline-block; padding: 0 .35rem; border-radius: 6px; background: 
 .dd-file { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 8px 10px; border: 2px solid var(--dd-line); border-radius: 12px; }
 .dd-file small { color: var(--dd-muted); flex: 1 1 200px; }
 .dd-file.is-folder { border-style: dashed; }
+.dd-pend { flex: 1 1 220px; width: auto; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* Tổng quan các lớp */

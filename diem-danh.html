@@ -18,7 +18,7 @@
 <link rel="stylesheet" href="css/diem-danh.css">
 </head>
 <body class="dd-body">
-<!-- Điểm danh & tiến độ (js/so-lop/): đọc sổ lớp Google Sheet của Điều phối qua link CSV công khai, ghi qua Apps Script. Chỉ giáo viên/admin. Link sổ lớp lưu ở localStorage eduquiz_solop_v1 (và teacher_sync trên tài khoản), không đưa vào repo vì Sheet có ngày sinh học sinh. -->
+<!-- Điểm danh & tiến độ (js/so-lop/): đọc sổ lớp Google Sheet của Điều phối qua link CSV công khai, ghi qua Apps Script. Chỉ giáo viên/admin. Danh sách sổ theo trường nằm ở Apps Script (tab SoLopTruong, chỉ trả cho giáo viên được Admin gán trường); bản trên máy ở localStorage eduquiz_solop_v1. Không đưa link vào repo vì Sheet có ngày sinh học sinh. -->
 <!-- Thanh trên cùng giống các trang quản trị (teaching-schedule.html…): về Trang quản lý · tên trang · tài khoản · sáng/tối · Đăng xuất -->
 <div class="topbar">
   <a href="ic3-dashboard.html" class="btn btn-ghost">← Trang quản lý</a>
@@ -47,7 +47,7 @@
     <button type="button" class="dd-small" id="ddOvLoad" title="Đọc lại mọi tab lớp trên Google Sheet (bỏ qua tab đã đọc trong 6 giờ)"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Cập nhật tất cả</button>
     <small class="dd-muted" id="ddOvInfo"></small>
   </div>
-  <p class="dd-empty" id="ddNoLinks" hidden>Chưa có sổ lớp nào. Vào thẻ <button type="button" class="dd-link" data-goto="setup">Cài đặt</button> để dán link sổ lớp của điều phối.</p>
+  <p class="dd-empty" id="ddNoLinks" hidden>Chưa có sổ lớp nào. Vào thẻ <button type="button" class="dd-link" data-goto="setup">Cài đặt</button> để dán link sổ lớp của điều phối.<span id="ddNoLinksNote"></span></p>
 
   <!-- LỊCH DẠY -->
   <div class="dd-panel" id="ddPanelWeek" data-panel="week" role="tabpanel">
@@ -162,13 +162,26 @@
   <!-- CÀI ĐẶT -->
   <div class="dd-panel" id="ddPanelSetup" data-panel="setup" role="tabpanel" hidden>
     <section class="dd-card" id="ddLinks" aria-label="Sổ lớp của điều phối">
-      <div class="dd-step"><h2>Thêm sổ lớp</h2></div>
+      <div class="dd-step"><h2>Thêm sổ lớp cho trường</h2></div>
+      <p class="dd-hint">Chỉ cần 1 giáo viên dán link: mọi giáo viên được Admin gán trường đó tự có sổ, đăng nhập máy nào cũng thấy. Giáo viên trường khác không thấy.</p>
       <label class="dd-field"><span>Dán link điều phối gửi — mỗi dòng "Tên trường: link" (Google Sheet hoặc thư mục Drive)</span>
         <textarea id="ddLinkInput" rows="4" spellcheck="false" placeholder="THCS Mạch Kiếm Hùng: https://drive.google.com/drive/folders/…&#10;TiH Nguyễn Trung Ngạn: https://docs.google.com/spreadsheets/d/…"></textarea></label>
+      <label class="dd-field" id="ddLinkSchoolWrap" hidden><span>Trường của sổ (khi tên trên Sheet khác tên trường được gán)</span>
+        <select id="ddLinkSchool" class="dd-input"></select></label>
       <div class="dd-row"><button type="button" class="dd-go dd-go-sm" id="ddLinkAdd">Thêm</button></div>
+      <details class="dd-help"><summary>Giữ sổ riêng tư (khuyên dùng — Sheet có ngày sinh học sinh)</summary>
+        <p>Điều phối bấm <b>Chia sẻ</b> trên file: thêm email tài khoản Google chạy Apps Script với quyền <b>Người chỉnh sửa</b>, rồi đổi "Quyền truy cập chung" thành <b>Hạn chế</b>.
+          Trang vẫn đọc và ghi sổ qua máy chủ, chỉ cho giáo viên được gán trường đó. Người có link cũ không mở được nữa; giáo viên muốn bấm "Mở" trên Google thì điều phối thêm email của giáo viên.
+          Sổ riêng tư tự đọc lại 10 phút/lần thay vì 2 phút.</p></details>
       <details class="dd-help"><summary>Link thư mục Drive dùng thế nào?</summary>
         <p>Google không cho trang tự xem bên trong thư mục. Trang lưu link thư mục để bấm "Mở thư mục"; trong đó chọn các file <b>FORM QUẢN LÝ LỚP</b>
-          → chuột phải → <b>Chia sẻ → Sao chép đường liên kết</b> → dán vào ô trên. File phải để chế độ "Bất kỳ ai có đường liên kết đều xem được".</p></details>
+          → chuột phải → <b>Chia sẻ → Sao chép đường liên kết</b> → dán vào ô trên.</p></details>
+    </section>
+    <section class="dd-card" id="ddPendingCard" aria-label="Sổ chờ đưa lên trường" hidden>
+      <div class="dd-step"><h2>Sổ chờ đưa lên trường</h2></div>
+      <p class="dd-hint" id="ddPendHint"></p>
+      <div class="dd-school" id="ddPending"></div>
+      <div class="dd-row"><button type="button" class="dd-go dd-go-sm" id="ddPendShare"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i> Đưa lên trường</button></div>
     </section>
     <section class="dd-card">
       <label class="dd-field"><span>Tên của tôi (đúng như ô TÊN GV trên Sheet) — để lọc lớp và lịch của tôi</span>
@@ -177,7 +190,8 @@
     <section class="dd-card">
       <div class="dd-step"><h2>Trường & sổ lớp đã thêm</h2></div>
       <div id="ddSchools"></div>
-      <p class="dd-hint">Khi bấm "Ghi vào Sheet", mã file và cột điểm danh được gửi qua Apps Script của dự án để ghi vào đúng Sheet.</p>
+      <p class="dd-hint">Khi bấm "Ghi vào Sheet", mã file và cột điểm danh được gửi qua Apps Script của dự án để ghi vào đúng Sheet; máy chủ chỉ cho ghi vào sổ của trường được gán.
+        Nút × chỉ hiện với người đã thêm sổ và Admin.</p>
     </section>
     <section class="dd-card" aria-label="Lưu trên tài khoản">
       <div class="dd-step"><h2><i class="fa-solid fa-cloud" aria-hidden="true"></i> Lưu trên tài khoản</h2></div>
@@ -188,9 +202,8 @@
         <button type="button" class="dd-small" id="ddSyncImportBtn"><i class="fa-solid fa-upload" aria-hidden="true"></i> Nhập tệp sao lưu</button>
         <input type="file" id="ddSyncImport" accept=".json,application/json" hidden>
       </div>
-      <p class="dd-hint">Các link sổ lớp và thư mục Drive theo trường, "Tên của tôi" và các lớp gắn sao được lưu vào tài khoản của thầy/cô
-        (chỉ chính tài khoản này đọc được) — đăng nhập máy khác là có lại đủ link. Tự lưu khi thêm/bỏ sổ hoặc "Cập nhật lớp";
-        trang tự kiểm tra tài khoản 2 giờ/lần — vừa sửa ở máy khác thì bấm "Đồng bộ ngay".
+      <p class="dd-hint">Sổ lớp của trường do máy chủ cấp theo trường được gán, trang tự hỏi lại 30 phút/lần. Thư mục Drive, "Tên của tôi" và các lớp gắn sao lưu vào tài khoản của thầy/cô
+        (chỉ chính tài khoản này đọc được), trang tự kiểm tra 2 giờ/lần. Đồng nghiệp vừa thêm sổ hoặc vừa sửa ở máy khác thì bấm "Đồng bộ ngay".
         Dữ liệu lớp đọc từ Sheet, điểm danh nháp và Gọi tên vẫn chỉ ở máy này. Tệp sao lưu tải về máy, không qua mạng.</p>
     </section>
   </div>

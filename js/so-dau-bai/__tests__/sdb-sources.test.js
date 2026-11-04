@@ -58,6 +58,9 @@ assertEq('sổ lớp: 1 lớp, bản mới nhất, bỏ học sinh NL', fs.map(f
   [['TiH Phong Phú 2', '3.1', ['Nguyễn Văn A', 'Đỗ Thị E']]]);
 assertEq('sổ lớp: có mã HS + ngày sinh', fs[0].students[0], { code: 'HS01', name: 'Nguyễn Văn A', dob: '01/02/2018' });
 assertEq('sổ lớp trống', X.fromSoLop({}, L), []);
+var cacheKey = Object.keys(store.cache)[0], fileId = cacheKey.split('|')[0];
+assertEq('sổ chờ đưa lên trường: không hiện ở Sổ đầu bài', X.fromSoLop(Object.assign({}, store, { booksAt: 1, links: [] }), L), []);
+assertEq('sổ đã có trên trường: vẫn hiện', X.fromSoLop(Object.assign({}, store, { booksAt: 1, links: [{ id: fileId }] }), L).length, fs.length);
 assertEq('2 nguồn cùng trường khác tên gộp 1 nhóm', X.groupBySchool(fs.concat(fr.slice(0, 2))).map(function (g) { return [g.school, g.classes.length]; }), [['TiH Phong Phú 2', 2]]);
 
 // ── Điểm danh 1 lần: vắng của lớp trong ngày từ sổ lớp đã đọc ──

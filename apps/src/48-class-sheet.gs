@@ -32,8 +32,9 @@ function classSheetFind_(disp, label) {
  * p = { sheetId, gid, cols: [{ col, tiet }], marks: [{ row, name, m }], ngay?: 'YYYY-MM-DD', done?: bool }
  * row/col 0-based như CSV web đã đọc. Trả { written, ngay, done }.
  */
-function classSheetWrite_(p) {
+function classSheetWrite_(p, who) {
   if (!/^[A-Za-z0-9_-]{20,}$/.test(String(p.sheetId || ''))) throw appError_('invalid-argument', 'Mã file Sheet không hợp lệ.');
+  requireClassBook_(who, p.sheetId); // 49-class-books.gs
   const cols = Array.isArray(p.cols) ? p.cols : [];
   const marks = Array.isArray(p.marks) ? p.marks : [];
   if (!cols.length || cols.length > 3) throw appError_('invalid-argument', 'Cần 1–3 cột tiết.');

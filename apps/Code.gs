@@ -1,6 +1,6 @@
 // ⚠️ FILE TẠO TỰ ĐỘNG từ apps/src/*.gs — đừng sửa tay ở đây.
 // Sửa file nguồn tương ứng rồi chạy: node scripts/build-apps-script.js
-// Thứ tự: 00-config.gs, 10-router.gs, 20-auth.gs, 30-submissions.gs, 35-mos.gs, 36-batch.gs, 40-results.gs, 45-activity.gs, 47-arena.gs, 48-class-sheet.gs, 50-reports.gs, 60-maps.gs, 70-github.gs, 75-roster-codes.gs, 77-grading.gs, 78-ai.gs, 80-sheet-setup.gs, 90-utils.gs, 95-selftest.gs
+// Thứ tự: 00-config.gs, 10-router.gs, 20-auth.gs, 30-submissions.gs, 35-mos.gs, 36-batch.gs, 40-results.gs, 45-activity.gs, 47-arena.gs, 48-class-sheet.gs, 49-class-books.gs, 50-reports.gs, 60-maps.gs, 70-github.gs, 75-roster-codes.gs, 77-grading.gs, 78-ai.gs, 80-sheet-setup.gs, 90-utils.gs, 95-selftest.gs
 
 // ──────────────── 00-config.gs ────────────────
 /**
@@ -26,7 +26,7 @@
  */
 
 // ====== CẤU HÌNH - THAY BẰNG ID THẬT CỦA BẠN ======
-const BACKEND_VERSION = '2026-11-03c';
+const BACKEND_VERSION = '2026-11-04b';
 const SPREADSHEET_ID_DATA = '16ty8LB6pnk5Xai1VauUAKfMbIaT88ewfNUAhWM0z5ck';      // Sheet chứa HocSinh + KetQua
 const SPREADSHEET_ID_REPORT = '16ty8LB6pnk5Xai1VauUAKfMbIaT88ewfNUAhWM0z5ck';    // Sheet chứa báo cáo tổng hợp (có thể trùng với ID trên nếu để chung 1 file, khác tab)
 
@@ -124,6 +124,11 @@ function routes_() {
     arenaRoomLog:  { roles: ROLES_STAFF,   handler: arenaRoomLog_ },
     arenaRelayTicket: { roles: ROLES_STAFF, handler: arenaRelayTicket_ },
     classSheetWrite:  { roles: ROLES_TEACH, handler: classSheetWrite_ },
+    classBooks:       { roles: ROLES_TEACH, handler: classBooks_ },      // 49-class-books.gs — sổ lớp theo trường được gán
+    classBookSave:    { roles: ROLES_TEACH, handler: classBookSave_ },
+    classBookRemove:  { roles: ROLES_TEACH, handler: classBookRemove_ },
+    classSheetRead:   { roles: ROLES_TEACH, handler: classSheetRead_ },  // sổ đã tắt link công khai
+    classSheetInfo:   { roles: ROLES_TEACH, handler: classSheetInfo_ },
     aiAsk:         { roles: null,          handler: aiAsk_ },        // 78-ai.gs — công khai: giải thích câu sai, câu hỏi nhanh (có trần lượt)
     aiAskStaff:    { roles: ROLES_STAFF,   handler: aiAskStaff_ },
     aiStatus:      { roles: ROLES_STAFF,   handler: aiStatus_ },
@@ -805,7 +810,7 @@ const SHEET_ACTIVITY_LOG = 'NhatKyHoatDong';
 const ACTIVITY_HEADERS = ['ThoiGian', 'Uid', 'VaiTro', 'HanhDong', 'DoiTuong', 'ChiTiet', 'Trang'];
 const ACTIVITY_ACTIONS = ['login', 'logout', 'view_student_detail', 'export_excel', 'export_pdf',
   'create_exam', 'assign_exam', 'update_roster', 'publish_roster', 'publish_questions', 'delete_results',
-  'update_user', 'update_school'];
+  'update_user', 'update_school', 'update_class_books'];
 
 /** p: { activity, targetId?, meta?, page? } */
 function logActivity_(p, who) {
@@ -944,8 +949,9 @@ function classSheetFind_(disp, label) {
  * p = { sheetId, gid, cols: [{ col, tiet }], marks: [{ row, name, m }], ngay?: 'YYYY-MM-DD', done?: bool }
  * row/col 0-based như CSV web đã đọc. Trả { written, ngay, done }.
  */
-function classSheetWrite_(p) {
+function classSheetWrite_(p, who) {
   if (!/^[A-Za-z0-9_-]{20,}$/.test(String(p.sheetId || ''))) throw appError_('invalid-argument', 'Mã file Sheet không hợp lệ.');
+  requireClassBook_(who, p.sheetId); // 49-class-books.gs
   const cols = Array.isArray(p.cols) ? p.cols : [];
   const marks = Array.isArray(p.marks) ? p.marks : [];
   if (!cols.length || cols.length > 3) throw appError_('invalid-argument', 'Cần 1–3 cột tiết.');
@@ -1036,6 +1042,211 @@ function classSheetWrite_(p) {
   } finally {
     lock.releaseLock();
   }
+}
+
+// ──────────────── 49-class-books.gs ────────────────
+// ====== SỔ LỚP DÙNG CHUNG THEO TRƯỜNG (diem-danh.html) ======
+// Router: classBooks, classBookSave, classBookRemove (admin + giáo viên đã duyệt).
+// Trước đây mỗi giáo viên tự dán link sổ của điều phối trên máy mình và classSheetWrite ghi được mọi file.
+// Nay 1 người dán, cả trường dùng chung: tab SoLopTruong (file SPREADSHEET_ID_DATA), mỗi file 1 dòng gắn 1 trường.
+// Máy chủ chỉ trả sổ thuộc các trường Admin đã gán trên hồ sơ (who.schools / schoolIds) → giáo viên trường khác
+// không nhận được mã file, đăng nhập máy nào cũng có đủ sổ. 0 lượt Firestore ngoài xác thực (đã nhớ 1 giờ).
+//
+// Sổ riêng tư (classSheetRead, classSheetInfo): Sheet có ngày sinh học sinh, điều phối có thể tắt "Bất kỳ ai có đường
+// liên kết" và chỉ chia sẻ cho tài khoản deploy; trang không đọc thẳng được thì đọc qua đây. Tài khoản deploy mở được cả
+// file dữ liệu của hệ thống, nên 2 route này chỉ trả tab đúng mẫu FORM QUẢN LÝ LỚP và không bao giờ mở file hệ thống.
+
+const SHEET_CLASS_BOOKS = 'SoLopTruong';
+const CLASS_BOOK_HEADERS = ['FileId', 'SchoolId', 'Truong', 'TieuDe', 'Tabs', 'NguoiThem', 'CapNhat'];
+const CLASS_BOOK_CACHE_KEY = 'classbooks1';
+const CLASS_BOOK_CACHE_SEC = 30 * 60; // ghi sổ là xoá bản đệm; hạn ngắn phòng lượt đọc chậm đè lại bản cũ
+const CLASS_BOOK_MAX_SAVE = 20;
+const CLASS_READ_MAX_TABS = 30;
+
+function classBookTab_() {
+  return ensureTab_(SPREADSHEET_ID_DATA, SHEET_CLASS_BOOKS, CLASS_BOOK_HEADERS);
+}
+
+/** Mọi sổ (qua bản đệm): [{ id, schoolId, school, title, tabs, by }]. Chỉ dùng trong máy chủ — chưa lọc theo trường. */
+function classBooksAll_() {
+  const cache = CacheService.getScriptCache();
+  const hit = cache.get(CLASS_BOOK_CACHE_KEY);
+  if (hit) return JSON.parse(hit);
+  const sheet = classBookTab_();
+  const last = sheet.getLastRow();
+  const rows = last < 2 ? [] : sheet.getRange(2, 1, last - 1, 6).getDisplayValues();
+  const books = rows.filter(function (r) { return r[0]; }).map(function (r) {
+    let tabs = [];
+    try { tabs = JSON.parse(r[4]); } catch (e) { tabs = []; }
+    return { id: r[0], schoolId: r[1], school: r[2], title: r[3], tabs: tabs, by: r[5] };
+  });
+  const text = JSON.stringify(books);
+  if (text.length < 90000) cache.put(CLASS_BOOK_CACHE_KEY, text, CLASS_BOOK_CACHE_SEC);
+  return books;
+}
+
+/**
+ * Sổ người gọi được thấy + các trường được gán (ô chọn trường khi thêm sổ).
+ * Admin (who.schools = null) thấy mọi sổ; schools = các trường đang có sổ.
+ */
+function classBooks_(p, who) {
+  const scope = whoSchoolIdSet_(who);
+  const all = classBooksAll_();
+  const names = scope ? who.schools : all.map(function (b) { return b.school; });
+  return {
+    all: !scope,
+    schools: names.filter(function (n, i) { return names.indexOf(n) === i; }),
+    books: all.filter(function (b) { return !scope || scope.has(b.schoolId); }).map(function (b) {
+      return { id: b.id, school: b.school, title: b.title, tabs: b.tabs, own: b.by === who.uid };
+    }),
+  };
+}
+
+function cleanClassBook_(b) {
+  const id = String((b && b.id) || '');
+  const school = String((b && b.school) || '').trim().slice(0, 160);
+  const tabs = (b && Array.isArray(b.tabs) ? b.tabs : []).slice(0, 200).map(function (t) {
+    return { gid: String((t && t.gid) || '0'), name: String((t && t.name) || '').trim().slice(0, 80) };
+  }).filter(function (t) { return /^\d{1,12}$/.test(t.gid) && t.name; });
+  if (!/^[A-Za-z0-9_-]{20,}$/.test(id) || !schoolIdOf_(school) || !tabs.length) {
+    throw appError_('invalid-argument', 'Sổ lớp thiếu mã file, trường hoặc danh sách lớp.');
+  }
+  refuseSystemFile_(id);
+  return { id: id, school: school, title: String((b && b.title) || 'Sổ lớp').slice(0, 200), tabs: tabs };
+}
+
+/** Dòng hiện có của từng file: { id: { row, schoolId, by } }. */
+function classBookRows_(sheet) {
+  const last = sheet.getLastRow();
+  const out = {};
+  (last < 2 ? [] : sheet.getRange(2, 1, last - 1, 6).getDisplayValues()).forEach(function (r, i) {
+    if (r[0]) out[r[0]] = { row: i + 2, schoolId: r[1], by: r[5] };
+  });
+  return out;
+}
+
+/**
+ * Thêm sổ / cập nhật danh sách lớp (giữ người thêm đầu tiên). Chỉ vào trường mình được gán;
+ * file đã thuộc trường ngoài phạm vi thì từ chối, không nói là trường nào.
+ * p: { books: [{ id, school, title, tabs: [{ gid, name }] }] }
+ */
+function classBookSave_(p, who) {
+  const items = Array.isArray(p.books) ? p.books : [];
+  if (!items.length || items.length > CLASS_BOOK_MAX_SAVE) throw appError_('invalid-argument', 'Mỗi lần thêm 1–' + CLASS_BOOK_MAX_SAVE + ' sổ.');
+  const books = items.map(cleanClassBook_);
+  const scope = whoSchoolIdSet_(who);
+  books.forEach(function (b) {
+    if (!inWhoScope_(who, b.school)) throw appError_('permission-denied', 'Tài khoản chưa được gán trường "' + b.school + '" — nhờ Admin gán trước.');
+  });
+  const sheet = classBookTab_(); // ngoài khoá: ensureTab_ có thể tự lấy khoá chung
+  withRareLock_(function () {
+    const rows = classBookRows_(sheet);
+    // Kiểm hết trước khi ghi: 1 sổ bị từ chối thì cả lượt không đổi gì
+    books.forEach(function (b) {
+      if (rows[b.id] && scope && !scope.has(rows[b.id].schoolId)) throw appError_('conflict', 'Sổ này đã thuộc một trường khác.');
+    });
+    books.forEach(function (b) {
+      const old = rows[b.id];
+      const line = [asText_(b.id), asText_(schoolIdOf_(b.school)), asText_(b.school), asText_(b.title),
+        asText_(JSON.stringify(b.tabs)), old ? old.by : who.uid, new Date()];
+      if (old) sheet.getRange(old.row, 1, 1, line.length).setValues([line]);
+      else sheet.appendRow(line);
+    });
+    CacheService.getScriptCache().remove(CLASS_BOOK_CACHE_KEY);
+  });
+  auditServer_('update_class_books', who, { saved: books.map(function (b) { return b.id; }) });
+  return classBooks_(p, who);
+}
+
+/** Gỡ sổ khỏi trường: người đã thêm hoặc Admin. File trên Google không bị đụng tới. p: { id } */
+function classBookRemove_(p, who) {
+  const id = String(p.id || '');
+  const sheet = classBookTab_();
+  withRareLock_(function () {
+    const old = classBookRows_(sheet)[id];
+    if (!old) return;
+    if (who.schools && old.by !== who.uid) throw appError_('permission-denied', 'Chỉ người đã thêm sổ hoặc Admin mới gỡ được.');
+    sheet.deleteRow(old.row);
+    CacheService.getScriptCache().remove(CLASS_BOOK_CACHE_KEY);
+  });
+  auditServer_('update_class_books', who, { removed: id });
+  return classBooks_(p, who);
+}
+
+/** Ghi điểm danh chỉ vào sổ của trường người gọi được gán (Admin: mọi file). */
+function requireClassBook_(who, sheetId) {
+  const scope = whoSchoolIdSet_(who);
+  if (!scope) return;
+  const ok = classBooksAll_().some(function (b) { return b.id === String(sheetId) && scope.has(b.schoolId); });
+  if (!ok) throw appError_('permission-denied', 'Sổ này không thuộc trường được gán cho tài khoản — nhờ Admin gán trường hoặc thêm sổ ở thẻ Cài đặt.');
+}
+
+function refuseSystemFile_(id) {
+  if ([SPREADSHEET_ID_DATA, SPREADSHEET_ID_REPORT].concat(logSpreadsheetIds_()).indexOf(id) !== -1) {
+    throw appError_('permission-denied', 'Đây không phải sổ lớp.');
+  }
+}
+
+function openClassFile_(sheetId) {
+  const id = String(sheetId || '');
+  if (!/^[A-Za-z0-9_-]{20,}$/.test(id)) throw appError_('invalid-argument', 'Mã file Sheet không hợp lệ.');
+  refuseSystemFile_(id);
+  try { return SpreadsheetApp.openById(id); } catch (e) {
+    throw appError_('permission-denied', NO_EDIT_MSG_);
+  }
+}
+
+/** Bảng hiển thị của tab nếu đúng mẫu FORM QUẢN LÝ LỚP, không thì null. */
+function classTabRows_(sh) {
+  const nRow = sh.getLastRow(), nCol = sh.getLastColumn();
+  if (!nRow || !nCol) return null;
+  const disp = sh.getRange(1, 1, nRow, nCol).getDisplayValues();
+  return classSheetFind_(disp, 'TIẾT') && classSheetFind_(disp, 'BÀI DẠY') ? disp : null;
+}
+
+/** Cùng dạng /export?format=csv của Google: web phân tích và ghi theo đúng vị trí dòng/cột như đọc thẳng. */
+function classRowsCsv_(rows) {
+  return rows.map(function (r) {
+    return r.map(function (v) { return /[",\r\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(',');
+  }).join('\n');
+}
+
+/** Đọc các tab lớp của 1 sổ trong phạm vi người gọi. p: { sheetId, gids: [...] } → { tabs: { gid: csv } } (tab sai mẫu bị bỏ). */
+function classSheetRead_(p, who) {
+  const gids = Array.isArray(p.gids) ? p.gids.map(String) : [];
+  if (!gids.length || gids.length > CLASS_READ_MAX_TABS) throw appError_('invalid-argument', 'Mỗi lần đọc 1–' + CLASS_READ_MAX_TABS + ' lớp.');
+  const ss = openClassFile_(p.sheetId);
+  requireClassBook_(who, p.sheetId);
+  const tabs = {};
+  ss.getSheets().forEach(function (sh) {
+    const gid = String(sh.getSheetId());
+    if (gids.indexOf(gid) === -1) return;
+    const rows = classTabRows_(sh);
+    if (rows) tabs[gid] = classRowsCsv_(rows);
+  });
+  return { tabs: tabs };
+}
+
+/**
+ * Thêm sổ riêng tư: web không đọc được tên file + danh sách tab nên hỏi ở đây. Chưa thuộc trường nào thì người có mã file
+ * xem được tên tab; không trả nội dung lớp (phải thêm vào trường mình mới đọc được). p: { sheetId } → { title, school, tabs }
+ */
+function classSheetInfo_(p, who) {
+  const ss = openClassFile_(p.sheetId);
+  const scope = whoSchoolIdSet_(who);
+  const book = classBooksAll_().filter(function (b) { return b.id === String(p.sheetId); })[0];
+  if (book && scope && !scope.has(book.schoolId)) throw appError_('conflict', 'Sổ này đã thuộc một trường khác.');
+  let school = '';
+  const tabs = [];
+  ss.getSheets().forEach(function (sh) {
+    const rows = classTabRows_(sh);
+    if (!rows) return;
+    tabs.push({ gid: String(sh.getSheetId()), name: sh.getName() });
+    const at = !school && classSheetFind_(rows, 'TRƯỜNG');
+    if (at) school = String(rows[at.r][at.c + 1] || '').trim();
+  });
+  if (!tabs.length) throw appError_('failed-precondition', 'File này không có tab đúng mẫu FORM QUẢN LÝ LỚP.');
+  return { title: ss.getName(), school: school, tabs: tabs };
 }
 
 // ──────────────── 50-reports.gs ────────────────

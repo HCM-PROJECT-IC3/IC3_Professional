@@ -44,10 +44,19 @@
     return [...by.values()];
   }
 
+  /** Bản đọc dùng được: từ khi có danh sách sổ của trường (booksAt), sổ chờ đưa lên trường không tính. */
+  function usableCache(store) {
+    const cache = (store && store.cache) || {};
+    if (!store || !store.booksAt) return cache;
+    const ids = new Set((store.links || []).map((f) => f.id)), out = {};
+    Object.keys(cache).forEach((k) => { if (ids.has(k.split('|')[0])) out[k] = cache[k]; });
+    return out;
+  }
+
   /** Bản CSV sổ lớp đã lưu ở trang Điểm danh → cùng dạng fromRoster; bỏ học sinh đã nghỉ luôn (NL). */
   function fromSoLop(store, L) {
     const out = [], seen = new Set();
-    const cache = (store && store.cache) || {};
+    const cache = usableCache(store);
     // Bản mới đọc trước: cùng lớp đọc 2 lần (2 sổ / tab trùng) thì giữ bản mới
     Object.keys(cache).sort((a, b) => (cache[b].at || 0) - (cache[a].at || 0)).forEach((k) => {
       let c;
@@ -86,7 +95,7 @@
    * → { school, at, bai: ['Bài 7'], absent: [tên], sessions: số tiết } | null (không có lớp / ngày đó chưa có tiết)
    */
   function attendanceOn(store, L, opts) {
-    const cache = (store && store.cache) || {}, drafts = (store && store.drafts) || {};
+    const cache = usableCache(store), drafts = (store && store.drafts) || {};
     const key = normClass(opts.cls), d = opts.date;
     const keys = Object.keys(cache).sort((a, b) => (cache[b].at || 0) - (cache[a].at || 0));
     for (const k of keys) {

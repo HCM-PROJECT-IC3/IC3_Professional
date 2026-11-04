@@ -14,7 +14,13 @@
    Giao diện 4 thẻ (showTab): Lịch dạy · Các lớp · Điểm danh · Cài đặt — bộ lọc Trường/GV dùng chung cho 2 thẻ đầu.
    Đỡ việc tay: mở trang tự đọc lại các lớp của tôi đã cũ hơn 6 giờ · "Bảng công tháng" dán Excel · "Tin nhắn báo vắng"
    dán Zalo · "Học sinh cần chú ý" (vắng nhiều/vắng liền) gom từ mọi lớp đã đọc.
-   Lưu trên tài khoản (thẻ Cài đặt): js/services/teacher-sync.js — link sổ lớp, thư mục Drive, tên GV, lớp của tôi vào 1 document teacher_sync/{uid}.
+   Sổ dùng chung theo trường (Apps Script classBooks — apps/src/49-class-books.gs): 1 giáo viên dán link, mọi giáo viên được
+   Admin gán trường đó có sổ trên mọi máy; trường khác không nhận được mã file. S.links = đúng danh sách máy chủ trả;
+   sổ dán từ bản trước chưa lên trường nằm ở S.pending (không hiện ở lịch/lớp) tới khi bấm "Đưa lên trường".
+   Hỏi máy chủ tối đa 30 phút/lần khi mở trang (0 lượt Firestore), nút "Đồng bộ ngay" hỏi liền. Đổi tài khoản trên cùng máy → xoá sổ của người trước.
+   Sổ đã tắt link công khai: đọc thẳng không được thì đọc qua Apps Script (classSheetRead, ghi nhớ ở S.via), gộp cả sổ 1 lượt khi "Cập nhật tất cả",
+   lớp đang mở tự đọc lại 10 phút/lần thay vì 2 phút để không chiếm lượt chạy của bài nộp.
+   Lưu trên tài khoản (thẻ Cài đặt): js/services/teacher-sync.js — sổ chờ, thư mục Drive, tên GV, lớp của tôi vào 1 document teacher_sync/{uid}.
    ============================================================ */
 (function (global) {
   'use strict';
@@ -27,6 +33,9 @@
   const MAX_CACHE = 80;          // tab lớp lưu tạm (mỗi tab ~20–40KB CSV)
   const FRESH_MS = 6 * 3600e3;   // bảng tổng quan dùng lại bản đọc trong 6 giờ
   const POLL_MS = 2 * 60e3;      // lớp đang mở: đọc lại Sheet 2 phút/lần khi đang xem (1 file CSV, không Firebase)
+  const BOOKS_MS = 30 * 60e3;    // danh sách sổ của trường: mở trang hỏi Apps Script tối đa 30 phút/lần
+  const VIA_POLL_MS = 10 * 60e3; // sổ riêng tư: mỗi lần đọc lại là 1 lượt Apps Script
+  const VIA_BATCH = 30;          // khớp CLASS_READ_MAX_TABS (apps/src/49-class-books.gs)
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const sheetUrl = (id) => `https://docs.google.com/spreadsheets/d/${id}`;
   const lower = (s) => String(s || '').replace(/\s+/g, ' ').trim().toLocaleLowerCase('vi');
@@ -36,8 +45,10 @@
   const fmtDate = (d) => (d ? `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}` : '');
 
   function load() { try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch (e) { return {}; } }
-  // links: [{ id, title, school, label, tabs }] · folders: [{ id, url, label }] · mine: { 'id|gid': true } · me: tên GV
-  const S = Object.assign({ links: [], folders: [], folder: '', sel: '', drafts: {}, cache: {}, mine: {}, me: '', scope: 'all', tab: '' }, load());
+  // links: [{ id, title, school, label, tabs, shared, own }] · pending: sổ chờ đưa lên trường · folders: [{ id, url, label }] · mine: { 'id|gid': true } · me: tên GV
+  // owner: uid chủ dữ liệu trên máy · booksAt: lần cuối nhận danh sách sổ từ máy chủ (0 = chưa, chạy theo link dán tay như bản trước)
+  // schoolsOk: trường được gán · allSchools: Admin · via: { mã file: true } sổ phải đọc qua Apps Script
+  const S = Object.assign({ links: [], pending: [], folders: [], folder: '', sel: '', drafts: {}, cache: {}, mine: {}, me: '', scope: 'all', tab: '', owner: '', booksAt: 0, schoolsOk: [], allSchools: false, via: {} }, load());
   if (S.scope !== 'mine') S.scope = 'all'; // bản trước có "Hôm nay dạy" — nay đã nằm ở thẻ Lịch dạy
   // Bản cũ chỉ có 1 thư mục chung, không gắn trường → gắn vào trường của sổ có sẵn từ bản cũ (fillSchools)
   if (S.folder && !S.folders.length) S.folders.push({ id: S.folder.split('/').pop().split('?')[0], url: S.folder, label: '', old: true });
@@ -72,15 +83,35 @@
     if (!r.ok) throw new Error('HTTP ' + r.status);
     return r.text();
   }
-  /** CSV 1 tab lớp — dùng bản lưu nếu còn mới (maxAge), không thì đọc lại từ Google. */
-  async function tabCSV(id, gid, maxAge) {
-    const key = `${id}|${gid}`, c = S.cache[key];
-    if (c && maxAge != null && Date.now() - c.at < maxAge) return c;
-    const csv = await getText(`${sheetUrl(id)}/export?format=csv&gid=${gid}`);
+  function keepTab(id, gid, csv) {
+    const key = `${id}|${gid}`;
     S.cache[key] = { at: Date.now(), csv };
     const keys = Object.keys(S.cache).sort((a, b) => S.cache[b].at - S.cache[a].at);
     keys.slice(MAX_CACHE).forEach((k) => delete S.cache[k]);
     return S.cache[key];
+  }
+  const serverTabs = async (id, gids) => (await bookCall('classSheetRead', { sheetId: id, gids })).tabs;
+  /** Sổ không đọc thẳng được: file riêng tư bị Google chuyển sang trang đăng nhập (trình duyệt báo lỗi mạng) hoặc 401/403/404.
+      429/5xx là lỗi tạm, không chuyển qua Apps Script. */
+  const isClosed = (e) => !/^HTTP (?!40[134])/.test(e.message);
+  async function getCSV(url) {
+    const t = await getText(url);
+    if (/^\s*<(!doctype|html)/i.test(t)) throw new Error('HTTP 403');
+    return t;
+  }
+  /** CSV 1 tab lớp — dùng bản lưu nếu còn mới (maxAge), không thì đọc lại từ Google (sổ riêng tư: qua Apps Script). */
+  async function tabCSV(id, gid, maxAge) {
+    const c = S.cache[`${id}|${gid}`];
+    if (c && maxAge != null && Date.now() - c.at < maxAge) return c;
+    if (!S.via[id]) {
+      try { return keepTab(id, gid, await getCSV(`${sheetUrl(id)}/export?format=csv&gid=${gid}`)); } catch (e) {
+        if (!isClosed(e) || !S.links.some((f) => f.id === id && f.shared)) throw e;
+      }
+    }
+    const csv = (await serverTabs(id, [gid]))[gid];
+    if (csv == null) throw new Error('no-tab');
+    S.via[id] = true;
+    return keepTab(id, gid, csv);
   }
 
   // ── Tên bộ "Bài N." theo cấp (để hiện tên bài + khớp bài chỉ ghi tên) ──
@@ -122,7 +153,17 @@
   }
   /** Đọc 1 file Sheet: danh sách tab lớp + tên trường (ô TRƯỜNG của tab lớp đầu — đọc luôn vào bản lưu). */
   async function readSheet(id, label) {
-    const info = L.parseTabs(await getText(`${sheetUrl(id)}/htmlview`));
+    let info = null;
+    try { info = L.parseTabs(await getText(`${sheetUrl(id)}/htmlview`)); } catch (e) {
+      if (!S.booksAt || !isClosed(e)) throw e;
+    }
+    if (!info || !info.tabs.length) {
+      if (!S.booksAt) throw new Error('no-tabs');
+      const r = await bookCall('classSheetInfo', { sheetId: id });
+      S.via[id] = true;
+      return { id, title: r.title || 'Sổ lớp', school: r.school, label: label || '', tabs: r.tabs.filter((t) => L.isClassTab(t.name)).sort((a, b) => byText(a.name, b.name)) };
+    }
+    delete S.via[id]; // đọc thẳng được (điều phối mở lại link) → thôi đi qua Apps Script
     const tabs = info.tabs.filter((t) => L.isClassTab(t.name));
     if (!tabs.length) throw new Error('no-tabs');
     let school = '';
@@ -133,30 +174,106 @@
     const p = L.parsePaste($('ddLinkInput').value);
     if (!p.sheets.length && !p.folders.length) { toast('Chưa thấy link Google Sheet hay thư mục Drive nào trong ô.'); return; }
     $('ddLinkAdd').disabled = true;
+    const picked = $('ddLinkSchool').value, send = [];
     p.folders.forEach((f) => {
       const old = S.folders.find((x) => x.id === f.id);
       if (old) { if (f.label) old.label = f.label; } else S.folders.push(f);
     });
-    let ok = 0, bad = 0;
+    let ok = 0, bad = 0, wait = 0, badMsg = '';
     for (const sh of p.sheets) {
-      status(`Đang đọc sổ lớp ${ok + bad + 1}/${p.sheets.length}...`);
+      status(`Đang đọc sổ lớp ${ok + bad + wait + 1}/${p.sheets.length}...`);
       try {
         const rec = await readSheet(sh.id, sh.label);
         const i = S.links.findIndex((x) => x.id === sh.id);
-        if (i >= 0) { rec.label = rec.label || S.links[i].label; S.links[i] = rec; } else S.links.push(rec);
-        ok++;
-      } catch (e) { bad++; }
+        if (S.booksAt) {
+          const school = schoolFor(rec, picked);
+          if (school) { send.push(Object.assign(rec, { school })); ok++; } else { addPending([rec]); wait++; }
+        } else {
+          if (i >= 0) { rec.label = rec.label || S.links[i].label; S.links[i] = rec; } else S.links.push(rec);
+          ok++;
+        }
+      } catch (e) { bad++; if (e.source === 'apps-script') badMsg = e.message; }
+    }
+    let saveErr = '';
+    if (send.length) {
+      try { await saveBooks(send); } catch (e) { addPending(send); saveErr = e.message; wait += ok; ok = 0; }
     }
     $('ddLinkAdd').disabled = false;
     save();
-    const msg = [ok && `Đã thêm ${ok} sổ lớp`, p.folders.length && `lưu ${p.folders.length} thư mục`, bad && `${bad} link không đọc được (kiểm tra quyền chia sẻ "Bất kỳ ai có đường liên kết")`].filter(Boolean).join(' · ');
+    const msg = [ok && `Đã thêm ${ok} sổ lớp${S.booksAt ? ' cho trường' : ''}`, p.folders.length && `lưu ${p.folders.length} thư mục`, bad && `${bad} link không đọc được${badMsg ? ': ' + badMsg : ' (kiểm tra quyền chia sẻ của file)'}`,
+      wait && (saveErr || `${wait} sổ chưa rõ trường — chọn trường ở mục "Sổ chờ đưa lên trường"`)].filter(Boolean).join(' · ');
     toast(msg + '.');
-    if (!bad) $('ddLinkInput').value = '';
+    if (!bad && !wait) $('ddLinkInput').value = '';
     status('');
     paintLinks(); paintPick();
     if (ok && !S.sel) { const f = S.links[0]; S.sel = `${f.id}|${f.tabs[0].gid}`; save(); paintPick(); openClass(false); }
     if (ok) { $('ddOverview').hidden = false; paintOverview(); }
-    if (ok && !bad && !p.folders.length) showTab('week');
+    if (ok && !bad && !wait && !p.folders.length) showTab('week');
+  }
+
+  // ── Sổ dùng chung theo trường (Apps Script classBooks) ──
+  const sameSchool = (a, b) => plain(a).replace(/[^a-z0-9]+/g, '') === plain(b).replace(/[^a-z0-9]+/g, '');
+  /** Trường của sổ: ô chọn → nhãn "Tên trường: link" / ô TRƯỜNG trên Sheet khớp trường được gán. Admin lấy thẳng tên đó. */
+  function schoolFor(rec, picked) {
+    if (picked) return picked;
+    const names = [rec.label, rec.school].filter(Boolean);
+    if (S.allSchools) return names[0] || '';
+    return S.schoolsOk.find((n) => names.some((x) => sameSchool(n, x))) || '';
+  }
+  function addPending(list) {
+    list.forEach((f) => {
+      const i = S.pending.findIndex((x) => x.id === f.id);
+      const rec = { id: f.id, title: f.title, school: f.school, label: f.label, tabs: f.tabs };
+      if (i >= 0) S.pending[i] = rec; else S.pending.push(rec);
+    });
+  }
+  /** Sổ không có dấu của máy chủ (tải từ tài khoản / tệp sao lưu bản cũ) → chờ, không hiện ở lịch và lớp. */
+  function splitLegacy() {
+    if (!S.booksAt) return;
+    addPending(S.links.filter((f) => !f.shared));
+    S.links = S.links.filter((f) => f.shared);
+    if (!selFile()) S.sel = '';
+  }
+  /** Nhận danh sách từ máy chủ: S.links = đúng danh sách đó. Sổ từng chia sẻ mà nay không còn (bị gỡ, thôi dạy trường) thì bỏ hẳn cả bản lưu. */
+  async function applyBooks(r) {
+    const hadNone = !S.links.length;
+    const old = new Map(S.links.map((f) => [f.id, f])), ids = new Set(r.books.map((b) => b.id));
+    addPending(S.links.filter((f) => !f.shared && !ids.has(f.id)));
+    S.pending = S.pending.filter((f) => !ids.has(f.id));
+    S.links = r.books.map((b) => ({ id: b.id, title: b.title, school: b.school, label: (old.get(b.id) || {}).label || '', tabs: b.tabs, shared: true, own: !!b.own }));
+    S.schoolsOk = r.schools || []; S.allSchools = !!r.all; S.booksAt = Date.now();
+    const keep = new Set([...ids, ...S.pending.map((f) => f.id)]);
+    Object.keys(S.cache).forEach((k) => { if (!keep.has(k.split('|')[0])) delete S.cache[k]; });
+    ovMemo.clear();
+    if (S.sel && !selFile()) {
+      S.sel = ''; cls = null; status('');
+      ['ddProgress', 'ddAttend', 'ddStats'].forEach((id) => { $(id).hidden = true; });
+    }
+    const first = !S.sel && S.links.find((f) => f.tabs.length);
+    if (first) S.sel = `${first.id}|${first.tabs[0].gid}`;
+    save(); paintLinks(); paintPick();
+    if (hadNone && S.links.length && S.tab === 'setup') showTab('week');
+    if (first) openClass(false);
+    await paintOverview();
+  }
+  const bookCall = (action, body) => global.EduAppsScript.call(action, body, { timeoutMs: 60e3 });
+  const saveBooks = async (list) => applyBooks(await bookCall('classBookSave', { books: list.map((f) => ({ id: f.id, school: f.school, title: f.title, tabs: f.tabs })) }));
+  /** Hỏi máy chủ danh sách sổ (force: bỏ qua giãn cách). Apps Script chưa deploy bản này (not-found) → giữ link dán tay như cũ. */
+  async function syncBooks(force) {
+    if (!global.EduAppsScript || (!force && Date.now() - S.booksAt < BOOKS_MS)) return;
+    try { await applyBooks(await bookCall('classBooks', {})); } catch (e) {
+      if (e.code !== 'not-found' && !S.links.length) toast('Chưa tải được sổ lớp của trường — kiểm tra mạng rồi bấm "Đồng bộ ngay" ở thẻ Cài đặt.');
+    }
+  }
+  /** Đưa các sổ chờ đã chọn trường lên máy chủ. */
+  async function sharePending() {
+    const list = [...$('ddPending').querySelectorAll('[data-pend]')].filter((s) => s.value)
+      .map((s) => Object.assign({}, S.pending.find((f) => f.id === s.dataset.pend), { school: s.value }));
+    if (!list.length) { toast('Chọn trường cho sổ trước.'); return; }
+    $('ddPendShare').disabled = true;
+    try { await saveBooks(list); toast(`Đã đưa ${list.length} sổ lên trường — giáo viên của trường đăng nhập máy nào cũng thấy.`); autoRefresh(); }
+    catch (e) { toast(e.message); }
+    finally { $('ddPendShare').disabled = false; }
   }
   /** Gom file + thư mục theo trường. Thư mục khớp trường theo nhãn hoặc tên trường đọc được từ Sheet. */
   function schools() {
@@ -176,13 +293,29 @@
       ${s.files.map((f) => `<div class="dd-file"><b>${esc(f.title)}</b> <small>${f.tabs.map((t) => esc(t.name)).join(', ')}</small>
         <a class="dd-small dd-a" href="${sheetUrl(f.id)}/edit" target="_blank" rel="noopener">Mở</a>
         <button type="button" class="dd-small" data-relink="${f.id}" title="Đọc lại danh sách lớp (điều phối thêm tab mới)">Cập nhật lớp</button>
-        <button type="button" class="dd-x" data-unlink="${f.id}" aria-label="Bỏ sổ ${esc(f.title)}">×</button></div>`).join('')}
+        ${!f.shared || S.allSchools || f.own ? `<button type="button" class="dd-x" data-unlink="${f.id}" aria-label="Bỏ sổ ${esc(f.title)}">×</button>` : ''}</div>`).join('')}
       ${s.folders.map((d) => `<div class="dd-file is-folder"><i class="fa-brands fa-google-drive" aria-hidden="true"></i> <b>Thư mục giảng dạy</b>
         <small>${s.files.length ? 'mở để lấy thêm file khi điều phối thêm lớp/khối mới' : 'chưa có sổ lớp — mở thư mục, chép link các file FORM QUẢN LÝ LỚP rồi dán vào ô trên'}</small>
         <a class="dd-small dd-a" href="${esc(d.url)}" target="_blank" rel="noopener">Mở thư mục</a>
         <button type="button" class="dd-x" data-unfolder="${esc(d.id)}" aria-label="Bỏ thư mục">×</button></div>`).join('')}</div>`).join('');
+    const opts = (f) => [...new Set(S.schoolsOk.concat(S.allSchools && f.school ? [f.school] : []))];
+    $('ddLinkSchool').innerHTML = '<option value="">Tự nhận theo tên trường</option>' + S.schoolsOk.map((n) => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+    $('ddLinkSchoolWrap').hidden = !S.schoolsOk.length;
+    $('ddPendingCard').hidden = !S.pending.length;
+    $('ddPending').innerHTML = S.pending.map((f) => {
+      const hit = schoolFor(f, ''), o = opts(f);
+      return `<div class="dd-file"><b>${esc(f.title)}</b> <small>${esc(f.school || f.label || '')} · ${f.tabs.length} lớp</small>
+        ${o.length ? `<select class="dd-input dd-pend" data-pend="${f.id}" aria-label="Trường của sổ ${esc(f.title)}"><option value="">— Chọn trường —</option>${o.map((n) => `<option value="${esc(n)}"${n === hit ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select>` : ''}
+        <button type="button" class="dd-x" data-unpend="${f.id}" aria-label="Bỏ sổ ${esc(f.title)}">×</button></div>`;
+    }).join('');
+    $('ddPendShare').hidden = !S.schoolsOk.length && !S.allSchools;
+    $('ddPendHint').textContent = $('ddPendShare').hidden
+      ? 'Tài khoản chưa được gán trường nào — nhờ Admin gán trường, rồi bấm "Đồng bộ ngay" ở dưới.'
+      : 'Sổ dán từ trước, mới chỉ có trên tài khoản của thầy/cô. Đưa lên trường thì mọi giáo viên của trường đó dùng chung; chưa đưa thì sổ không hiện ở Lịch dạy, Các lớp, Điểm danh.';
     $('ddMe').value = S.me || '';
     $('ddNoLinks').hidden = !!S.links.length || S.tab === 'setup';
+    $('ddNoLinksNote').textContent = S.pending.length ? ` Có ${S.pending.length} sổ đang chờ đưa lên trường.`
+      : S.booksAt && !S.schoolsOk.length && !S.allSchools ? ' Tài khoản chưa được gán trường nào — nhờ Admin gán trường.' : '';
     $('ddToolbar').hidden = !S.links.length || (S.tab !== 'week' && S.tab !== 'classes');
   }
 
@@ -458,8 +591,19 @@
     const worker = async () => {
       while (todo.length) {
         const x = todo.shift();
-        try { await tabCSV(x.f.id, x.t.gid, FRESH_MS); } catch (e) { fail++; }
-        done++;
+        if (S.via[x.f.id]) {
+          // Sổ riêng tư: các lớp cùng sổ đi chung 1 lượt Apps Script
+          const same = [x].concat(todo.filter((y) => y.f.id === x.f.id)).slice(0, VIA_BATCH);
+          same.forEach((y) => { const i = todo.indexOf(y); if (i >= 0) todo.splice(i, 1); });
+          try {
+            const tabs = await serverTabs(x.f.id, same.map((y) => y.t.gid));
+            same.forEach((y) => { if (tabs[y.t.gid] != null) keepTab(x.f.id, y.t.gid, tabs[y.t.gid]); else fail++; });
+          } catch (e) { fail += same.length; }
+          done += same.length;
+        } else {
+          try { await tabCSV(x.f.id, x.t.gid, FRESH_MS); } catch (e) { fail++; }
+          done++;
+        }
         $('ddOvInfo').textContent = `đang đọc ${done}/${done + todo.length} lớp${only instanceof Set ? ' của tôi' : ''}...`;
       }
     };
@@ -475,11 +619,12 @@
   /** Mở trang: lớp của tôi (★ hoặc có tên trên Sheet) đọc lần cuối hơn 6 giờ trước → tự đọc lại, khỏi bấm "Cập nhật tất cả". */
   function autoRefresh() {
     if (navigator.onLine === false) return;
+    if (S.links.length && !lastRows.some((r) => r.p)) { loadAll(); return; } // máy mới: chưa đọc lớp nào → đọc luôn, khỏi bấm
     const keys = new Set(lastRows.filter((r) => (S.mine[r.key] || r.mineByName) && r.at && Date.now() - r.at >= FRESH_MS).map((r) => r.key));
     if (keys.size) loadAll(keys);
   }
   async function paintOverview() {
-    if (!S.links.length) { $('ddOverview').hidden = true; return; }
+    if (!S.links.length) { ['ddOverview', 'ddWeek', 'ddToday'].forEach((id) => { $(id).hidden = true; }); return; }
     $('ddOverview').hidden = false;
     document.querySelectorAll('#ddScope [data-scope]').forEach((b) => { const on = b.dataset.scope === S.scope; b.classList.toggle('is-on', on); b.setAttribute('aria-checked', on); });
     const rows = await Promise.all(allTabs().map(ovRow));
@@ -718,13 +863,14 @@
   async function pollClass(minAge) {
     if (document.hidden || S.tab !== 'class' || !S.sel || writing || navigator.onLine === false) return;
     const f = selFile(), t = selTab(), c = S.cache[S.sel];
-    if (!f || !t || (c && Date.now() - c.at < minAge)) return;
+    const every = S.via[f && f.id] ? VIA_POLL_MS : minAge;
+    if (!f || !t || (c && Date.now() - c.at < every - 5e3)) return;
     const key = S.sel, before = c ? c.csv : '';
     try {
       const n = await tabCSV(f.id, t.gid, null);
       save();
       if (S.sel === key && n.csv !== before) { await showKeep(n, attendCol); toast('Sheet vừa có thay đổi — đã cập nhật.'); }
-      else if (S.sel === key) status(`Đã đọc lúc ${new Date(n.at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} · tự đọc lại 2 phút/lần khi đang xem.`);
+      else if (S.sel === key) status(`Đã đọc lúc ${new Date(n.at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} · tự đọc lại ${S.via[f.id] ? 10 : 2} phút/lần khi đang xem.`);
     } catch (e) { /* mất mạng — lần sau thử lại */ }
   }
 
@@ -780,6 +926,8 @@
       const { saved: ok, applied } = await T.syncNow();
       paintSync(T.status());
       if (applied.length) { toast('Đã tải link mới từ tài khoản — đang tải lại trang...'); onSyncApplied(); return; }
+      await syncBooks(true);
+      autoRefresh();
       toast(ok ? 'Đã lưu lên tài khoản.' : ok === null ? 'Đã đồng bộ — không có gì mới.' : 'Chưa lưu được — thử lại sau.');
     });
     $('ddSyncExport').addEventListener('click', () => {
@@ -802,7 +950,20 @@
     });
   }
 
+  /** Máy dùng chung: người khác đăng nhập → bỏ sổ và bản đọc của người trước (giữ điểm danh nháp, thẻ, giao diện). */
+  function bindOwner(user) {
+    const uid = user && user.uid;
+    if (!uid) return;
+    if (S.owner && S.owner !== uid) {
+      Object.assign(S, { links: [], pending: [], folders: [], cache: {}, mine: {}, me: '', sel: '', booksAt: 0, schoolsOk: [], allSchools: false, via: {}, fSchool: '', fTeacher: '', fTeacherName: '' });
+    }
+    S.owner = uid;
+    save();
+  }
+
   function init(ev) {
+    bindOwner(ev && ev.detail && ev.detail.user);
+    splitLegacy();
     paintAccount(ev && ev.detail);
     initSync();
     fitTop(); global.addEventListener('resize', fitTop);
@@ -816,12 +977,26 @@
     });
     document.querySelector('[data-goto="setup"]').addEventListener('click', () => showTab('setup'));
     $('ddLinkAdd').addEventListener('click', addLinks);
+    $('ddPendShare').addEventListener('click', sharePending);
+    $('ddPending').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-unpend]');
+      if (!b || !global.confirm('Bỏ sổ này khỏi tài khoản? (Sheet trên Google không bị ảnh hưởng)')) return;
+      const id = b.dataset.unpend;
+      S.pending = S.pending.filter((f) => f.id !== id);
+      [S.cache, S.drafts, S.mine].forEach((o) => Object.keys(o).forEach((k) => { if (k.startsWith(id + '|')) delete o[k]; }));
+      save(); paintLinks();
+    });
     $('ddMe').addEventListener('change', () => { S.me = $('ddMe').value.trim(); save(); ovMemo.clear(); paintOverview(); if (cls) paintProgress(); });
-    $('ddSchools').addEventListener('click', (e) => {
+    $('ddSchools').addEventListener('click', async (e) => {
       const un = e.target.closest('[data-unlink]'), re = e.target.closest('[data-relink]'), uf = e.target.closest('[data-unfolder]');
       if (un) {
-        if (!global.confirm('Bỏ sổ lớp này khỏi máy? (Sheet trên Google không bị ảnh hưởng)')) return;
         const id = un.dataset.unlink;
+        if (S.links.some((f) => f.id === id && f.shared)) {
+          if (!global.confirm('Gỡ sổ này khỏi trường? Mọi giáo viên của trường sẽ không thấy sổ nữa. (Sheet trên Google không bị ảnh hưởng)')) return;
+          try { await applyBooks(await bookCall('classBookRemove', { id })); toast('Đã gỡ sổ khỏi trường.'); } catch (err) { toast(err.message); }
+          return;
+        }
+        if (!global.confirm('Bỏ sổ lớp này khỏi máy? (Sheet trên Google không bị ảnh hưởng)')) return;
         S.links = S.links.filter((f) => f.id !== id);
         [S.cache, S.drafts, S.mine].forEach((o) => Object.keys(o).forEach((k) => { if (k.startsWith(id + '|')) delete o[k]; }));
         if (S.sel.startsWith(id + '|')) S.sel = '';
@@ -830,7 +1005,8 @@
         S.folders = S.folders.filter((d) => d.id !== uf.dataset.unfolder); save(); paintLinks(); paintPick();
       } else if (re) {
         const f = S.links.find((x) => x.id === re.dataset.relink);
-        $('ddLinkInput').value = `${f && f.label ? f.label + ': ' : ''}${sheetUrl(re.dataset.relink)}`; addLinks();
+        const name = f && (f.shared ? f.school : f.label);
+        $('ddLinkInput').value = `${name ? name + ': ' : ''}${sheetUrl(re.dataset.relink)}`; addLinks();
       }
     });
     $('ddClass').addEventListener('change', () => { S.sel = $('ddClass').value; save(); paintPick(); openClass(false); });
@@ -897,7 +1073,7 @@
     // Mở đúng thẻ: chưa có sổ → Cài đặt; có rồi → thẻ lần trước (mặc định Lịch dạy)
     showTab(S.links.length ? (S.tab || 'week') : 'setup');
     save(); // ghi lại dạng mới (folders) nếu là bản cũ
-    paintOverview().then(autoRefresh);
+    paintOverview().then(() => syncBooks(false)).then(autoRefresh);
     // Sổ thêm từ bản trước chưa có tên trường → điền (đọc 1 tab nếu máy chưa có bản lưu nào của sổ đó)
     fillSchools(true).then((ch) => { if (ch) { paintLinks(); paintPick(); paintOverview(); } });
     if (S.sel) openClass(false);

@@ -211,7 +211,7 @@ const ctx = {
 };
 vm.createContext(ctx);
 const src = fs.readFileSync(path.join(__dirname, '..', 'Code.gs'), 'utf8');
-vm.runInContext(src + '\n;this.__api = { handleRequest_, asText_, submittedMs_, doGet, noFormula_, kiemTraSauDeploy, schoolIdOf_, questionStatus_, answerKeyOf_, aiBuild_ };', ctx);
+vm.runInContext(src + '\n;this.__api = { handleRequest_, asText_, submittedMs_, doGet, noFormula_, kiemTraSauDeploy, schoolIdOf_, questionStatus_, answerKeyOf_, aiBuild_, classRowsCsv_, SYSTEM_ID_: SPREADSHEET_ID_DATA };', ctx);
 const api = ctx.__api;
 const call = (action, p) => JSON.parse(JSON.stringify(api.handleRequest_(Object.assign({ action }, p || {}))));
 
@@ -224,6 +224,9 @@ const S = (v) => ({ stringValue: v });
 users = {
   admin1: { role: S('admin') },
   teachX: { role: S('teacher'), approved: { booleanValue: true }, schools: { arrayValue: { values: [S('TH X')] } } },
+  teachX2: { role: S('teacher'), approved: { booleanValue: true }, schools: { arrayValue: { values: [S('  th  x ')] } } },
+  teachY: { role: S('teacher'), approved: { booleanValue: true }, schools: { arrayValue: { values: [S('TH Y')] } } },
+  teachNone: { role: S('teacher'), approved: { booleanValue: true } },
   teachPending: { role: S('teacher'), approved: { booleanValue: false } },
   coordY: { role: S('coordinator'), schools: { arrayValue: { values: [S('TH Y')] } } },
   // Tên gán khác hoa/thường + dấu cách so với cột Trường trên Sheet ("TH Y") — vẫn cùng schoolId.
@@ -523,7 +526,7 @@ eq('listResults đọc được cả file mới', call('listResults', as('admin1
     ['HS2', 'Trần  Bình', '', '', '', 'x', 'v', '', ''],
   ].map((r) => r.map((v) => ({ v, f: v instanceof Date ? 'dd.mm' : '' })));
   const tab = {
-    getSheetId: () => 777, getLastRow: () => rows.length, getLastColumn: () => rows[0].length,
+    getSheetId: () => 777, getName: () => '3A1', getLastRow: () => rows.length, getLastColumn: () => rows[0].length,
     getRange(r, c, nr, nc) {
       if (nr) return { getDisplayValues: () => rows.slice(r - 1, r - 1 + nr).map((x) => x.slice(c - 1, c - 1 + nc).map((y) => show(y.v))) };
       const cell = rows[r - 1][c - 1];
@@ -532,11 +535,70 @@ eq('listResults đọc được cả file mới', call('listResults', as('admin1
     },
   };
   const CS = 'CLASSFORM_abcdefghijklmnop';
-  createdFiles[CS] = { getSheets: () => [tab] };
+  // Tab không phải sổ lớp trong cùng file (vd bảng lương của điều phối): không được lộ qua classSheetRead
+  const otherTab = { getSheetId: () => 900, getName: () => 'Luong', getLastRow: () => 1, getLastColumn: () => 2,
+    getRange: () => ({ getDisplayValues: () => [['Tên', 'Lương']] }) };
+  createdFiles[CS] = { getName: () => 'FORM TH X', getSheets: () => [tab, otherTab] };
   ctx.SpreadsheetApp.flush = () => {};
   const w = (who, o) => call('classSheetWrite', Object.assign(as(who), { sheetId: CS, gid: 777, cols: [{ col: 7, tiet: 3 }],
     marks: [{ row: 10, name: 'Nguyễn An', m: 'v' }, { row: 11, name: 'Trần Bình', m: 'x' }], ngay: '2026-10-13', done: true }, o));
   eq('sổ lớp: học sinh/điều phối không ghi được', [w('student').code, w('coordY').code], ['permission-denied', 'permission-denied']);
+
+  // Sổ dùng chung theo trường (49-class-books.gs): tab SoLopTruong giả
+  const bookRows = [['FileId', 'SchoolId', 'Truong', 'TieuDe', 'Tabs', 'NguoiThem', 'CapNhat']];
+  const bookDisp = (v) => (v instanceof Date ? 'DATE' : String(v).replace(/^'/, ''));
+  tabs.SoLopTruong = {
+    getName: () => 'SoLopTruong', getParent: () => mainFile, getMaxColumns: () => 7, deleteColumns() {},
+    getLastRow: () => bookRows.length, appendRow: (v) => { bookRows.push(v.slice()); }, deleteRow: (r) => { bookRows.splice(r - 1, 1); },
+    getRange: (r, c, n, m) => ({
+      getDisplayValues: () => bookRows.slice(r - 1, r - 1 + n).map((x) => x.slice(c - 1, c - 1 + m).map(bookDisp)),
+      setValues: (v) => { bookRows[r - 1] = v[0].slice(); },
+    }),
+  };
+  const book = (id, school, tabList) => ({ id, school, title: 'FORM ' + school, tabs: tabList || [{ gid: '777', name: '3A1' }] });
+  const save = (who, ...list) => call('classBookSave', Object.assign(as(who), { books: list }));
+  const seen = (who) => call('classBooks', as(who)).data.books.map((b) => b.id);
+  const CS2 = 'CLASSFORM_otherschool000000';
+  eq('sổ trường: chưa có sổ → giáo viên chưa ghi được dù đúng vai trò', w('teachX').code, 'permission-denied');
+  eq('sổ trường: học sinh/điều phối không gọi được', [call('classBooks', as('student')).code, call('classBooks', as('coordY')).code, call('classBooks', {}).code], ['permission-denied', 'permission-denied', 'unauthenticated']);
+  eq('sổ trường: không thêm được vào trường chưa gán', [save('teachX', book(CS2, 'TH Y')).code, save('teachNone', book(CS2, 'TH X')).code, bookRows.length], ['permission-denied', 'permission-denied', 1]);
+  eq('sổ trường: thiếu tab / mã file sai bị từ chối', [save('teachX', book(CS, 'TH X', [])).code, save('teachX', book('ngan', 'TH X')).code], ['invalid-argument', 'invalid-argument']);
+  const read = (who, o) => call('classSheetRead', Object.assign(as(who), { sheetId: CS, gids: ['777'] }, o));
+  const info = (who, id) => call('classSheetInfo', Object.assign(as(who), { sheetId: id || CS }));
+  eq('sổ riêng tư: chưa thêm vào trường → không đọc được nội dung, chỉ xem tên tab', [read('teachX').code, info('teachX').data], ['permission-denied', { title: 'FORM TH X', school: 'TH X', tabs: [{ gid: '777', name: '3A1' }] }]);
+  eq('sổ riêng tư: không mở được file dữ liệu hệ thống dù gọi bằng mọi đường',
+    [info('teachX', api.SYSTEM_ID_).code, read('admin1', { sheetId: api.SYSTEM_ID_ }).code, save('teachX', book(api.SYSTEM_ID_, 'TH X')).code, bookRows.length], ['permission-denied', 'permission-denied', 'permission-denied', 1]);
+  eq('sổ trường: 1 giáo viên thêm → trả danh sách, đúng người thêm', save('teachX', book(CS, 'TH X')).data.books.map((b) => [b.id, b.school, b.own]), [[CS, 'TH X', true]]);
+  eq('sổ trường: đồng nghiệp cùng trường thấy (tên gán lệch hoa/thường vẫn khớp), không phải chủ sổ', call('classBooks', as('teachX2')).data.books.map((b) => [b.id, b.own]), [[CS, false]]);
+  eq('sổ trường: trường khác / chưa gán trường không thấy', [seen('teachY'), seen('teachNone')], [[], []]);
+  save('teachY', book(CS2, 'TH Y'));
+  eq('sổ trường: mỗi giáo viên chỉ thấy trường mình, Admin thấy tất cả', [seen('teachX'), seen('teachY'), seen('admin1')], [[CS], [CS2], [CS, CS2]]);
+  eq('sổ trường: danh sách trường được gán / Admin', [call('classBooks', as('teachY')).data, call('classBooks', as('admin1')).data.all].map((x) => (x.schools ? [x.all, x.schools] : x)), [[false, ['TH Y']], true]);
+  const csv = read('teachX', { gids: ['777', '900', '12345'] }).data.tabs;
+  const parsed = require(path.join(__dirname, '..', '..', 'js', 'so-lop', 'so-lop-core.js'));
+  const SL = parsed.parseCSV ? parsed : globalThis.EduSoLop;
+  const cl = SL.parseClass(SL.parseCSV(csv['777']));
+  eq('sổ riêng tư: CSV từ máy chủ đọc được như CSV Google, đúng dòng/cột để ghi lại; tab không phải sổ lớp bị bỏ',
+    [Object.keys(csv), cl.school, cl.cls, cl.students.map((s) => [s.name, s.row]), cl.sessions.map((s) => s.col)], [['777'], 'TH X', '3A1', [['Nguyễn An', 10], ['Trần Bình', 11]], [5, 6, 7]]);
+  eq('sổ riêng tư: ô có dấu phẩy, ngoặc kép vẫn đúng', SL.parseCSV(api.classRowsCsv_([['a,b', 'c"d', 'e\nf', '']])), [['a,b', 'c"d', 'e\nf', '']]);
+  eq('sổ riêng tư: giáo viên trường khác không đọc được, không dò được', [read('teachY').code, read('teachNone').code, info('teachY').code], ['permission-denied', 'permission-denied', 'conflict']);
+  eq('sổ riêng tư: mỗi lượt tối đa 30 lớp', read('teachX', { gids: Array.from({ length: 31 }, (_, i) => String(i)) }).code, 'invalid-argument');
+  eq('sổ trường: giáo viên khác ghi sổ không phải trường mình bị chặn', [w('teachY').code, w('teachNone').code], ['permission-denied', 'permission-denied']);
+  eq('sổ trường: không cướp được sổ của trường khác bằng cách lưu đè', [save('teachX', book(CS2, 'TH X')).code, seen('teachY')], ['conflict', [CS2]]);
+  const moreTabs = [{ gid: '777', name: '3A1' }, { gid: '778', name: '3A2' }];
+  eq('sổ trường: đồng nghiệp "Cập nhật lớp" — không tạo dòng mới, giữ người thêm đầu tiên',
+    [save('teachX2', book(CS, 'TH X', moreTabs)).data.books[0].tabs.length, bookRows.length, call('classBooks', as('teachX')).data.books[0].own], [2, 3, true]);
+  eq('sổ trường: đồng nghiệp không gỡ được sổ người khác thêm', [call('classBookRemove', Object.assign(as('teachX2'), { id: CS })).code, seen('teachX')], ['permission-denied', [CS]]);
+  eq('sổ trường: chủ sổ gỡ → cả trường hết thấy, thêm lại được', [call('classBookRemove', Object.assign(as('teachX'), { id: CS })).data.books, seen('teachX2'), save('teachX', book(CS, 'TH X')).data.books.length], [[], [], 1]);
+  {
+    const realOpen = ctx.SpreadsheetApp.openById;
+    let opens = 0;
+    ctx.SpreadsheetApp.openById = (id) => { opens++; return realOpen(id); };
+    seen('teachX'); seen('teachX2'); seen('teachY'); seen('admin1');
+    eq('sổ trường: 4 giáo viên mở trang liền nhau → 0 lần mở Sheet (bản đệm)', opens, 0);
+    ctx.SpreadsheetApp.openById = realOpen;
+  }
+
   eq('sổ lớp: tên trên Sheet đã đổi → từ chối, không ghi lệch', [w('teachX', { marks: [{ row: 10, name: 'Lê Chi', m: 'v' }] }).code, rows[10][7].v], ['conflict', '']);
   eq('sổ lớp: cột không còn là tiết đó → từ chối', w('teachX', { cols: [{ col: 6, tiet: 3 }] }).code, 'conflict');
   eq('sổ lớp: ký hiệu lạ / cột ngoài vùng', [w('teachX', { marks: [{ row: 10, name: 'Nguyễn An', m: '=HACK()' }] }).code, w('teachX', { cols: [{ col: 3, tiet: 3 }] }).code], ['invalid-argument', 'invalid-argument']);

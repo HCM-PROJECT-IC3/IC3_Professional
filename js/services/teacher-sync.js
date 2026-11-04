@@ -1,6 +1,6 @@
 /* ============================================================
    js/services/teacher-sync.js — lưu link sổ lớp của giáo viên lên tài khoản (đăng nhập máy khác không mất).
-   Chỉ lưu phần Sổ lớp khó nhập lại: link Sheet "FORM QUẢN LÝ LỚP" theo trường (links), link thư mục Drive (folders),
+   Chỉ lưu phần Sổ lớp khó nhập lại: link Sheet "FORM QUẢN LÝ LỚP" (links, sổ chờ đưa lên trường: pending), link thư mục Drive (folders),
    "Tên của tôi" (me) và "Lớp của tôi" (mine) → ĐÚNG 1 document teacher_sync/{uid}. Gọi tên KHÔNG lưu (chỉ máy này);
    bản CSV Sheet, điểm danh nháp, thẻ/bộ lọc là của từng máy (máy khác tự đọc lại Sheet).
    Tiết kiệm hạn mức Spark (không dùng Apps Script):
@@ -34,7 +34,7 @@
   const MAX_CHARS = 95000; // khớp rule (< 100000 ký tự); ~45 lớp × 6 sổ chỉ ~10.000
   /** Khoá localStorage được lưu · pick: chỉ các trường này lên tài khoản (còn lại là của từng máy, giữ nguyên khi tải về). */
   const KEYS = {
-    eduquiz_solop_v1: { pick: ['links', 'folders', 'me', 'mine'] },
+    eduquiz_solop_v1: { pick: ['links', 'pending', 'folders', 'me', 'mine'] },
   };
 
   const readJSON = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } };
