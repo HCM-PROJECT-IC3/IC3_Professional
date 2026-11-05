@@ -3360,8 +3360,11 @@ a.arena-open {
   .lobby-card #mtModeToggle .mt-mode-btn { font-size: .82rem; min-height: 3.7rem; }
 }
 
-/* Nút "Tải sẵn để dùng offline" (js/offline-pack.js): nằm riêng 1 hàng đầy đủ dưới 3 nút phụ cho khỏi lẻ cột. */
-.lobby-extras > #btnOfflinePack { grid-column: 1 / -1; }
+/* Mục phụ của học sinh sau nút "Thêm" (js/lobby-form-ux.js): 1 hàng đầy dưới các nút chính. */
+.lobby-extras > .lobby-more-panel { grid-column: 1 / -1; margin-top: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.lobby-more-panel[hidden] { display: none; }
+.lobby-more-panel > #offlinePackStatus { grid-column: 1 / -1; margin: 0; }
+.lobby-more-btn[aria-expanded="true"] { box-shadow: 0 0 0 2px var(--purple); }
 
 /* ══════════════════════════════════════════════════════════════
    GIAO DIỆN PHẲNG KIỂU PHẦN MỀM THI (10/2026)
@@ -3487,30 +3490,6 @@ a.arena-open {
 [data-theme="dark"] .lobby-more-label i { color: #aab6ff; }
 .lobby-col-more .lobby-more-label + .lobby-extras { margin-top: 0; }
 @media (min-width: 960px) { .lobby-more-label { margin-top: 0; } }
-/* Dải "Dành cho thầy cô": nằm NGOÀI thẻ học sinh (10/2026), cùng bề ngang thẻ,
-   nền trong suốt + viền nét đứt để đọc ra ngay là khu riêng, không phải bước làm bài. */
-.lobby-staff {
-  display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .6rem;
-  width: 100%; max-width: 680px; margin: 1rem auto 0; padding: .7rem 1rem;
-  border: 1px dashed var(--border); border-radius: var(--radius-sm); background: transparent;
-}
-.lobby-staff-label { font-size: .85rem; font-weight: 700; color: var(--muted); margin-right: auto; }
-.lobby-staff-label i { margin-right: .25rem; }
-.lobby-staff-btn {
-  display: inline-flex; align-items: center; gap: .45rem; min-height: 2.4rem; padding: .4rem .9rem;
-  border-radius: 10px; border: 1px solid var(--border); background: transparent; color: var(--muted);
-  font-size: .85rem; font-weight: 700; text-decoration: none;
-}
-@media (min-width: 960px) { .lobby-staff { max-width: 1100px; } }
-@media (min-width: 1400px) { .lobby-staff { max-width: min(1520px, 94vw); } }
-.lobby-staff-btn i { color: var(--purple); }
-[data-theme="dark"] .lobby-staff-btn i { color: #aab6ff; }
-.lobby-staff-btn:hover { border-color: var(--purple); color: var(--purple); }
-.lobby-staff-btn:focus-visible { outline: 3px solid var(--purple); outline-offset: 2px; }
-@media (max-width: 520px) {
-  .lobby-staff-label { flex-basis: 100%; text-align: center; margin-right: 0; }
-  .lobby-staff-btn { flex: 1 1 100%; justify-content: center; }
-}
 
 @media (min-width: 960px) {
   .lobby-col-more { grid-area: x; }
@@ -3520,16 +3499,15 @@ a.arena-open {
   .lobby-card { grid-template-areas: "c1 c3" "c2 c3" "x x"; grid-template-rows: auto 1fr auto; }
 }
 @media (min-width: 1400px) {
-  /* 1 hàng ngang dưới cả 3 cột: Thử thách (2) · Đếm ngược (2) · 4 nút phụ (1 mỗi nút) */
+  /* 1 hàng ngang dưới cả 3 cột */
   .lobby-card { grid-template-areas: "c1 c2 c3" "x x x"; grid-template-rows: auto auto; }
-  .lobby-card .lobby-col-more .lobby-extras { grid-template-columns: repeat(8, minmax(0, 1fr)); }
 }
 @media (min-width: 960px) {
   .lobby-col-more { margin-top: 1.2rem; padding-top: 1.2rem; border-top: 1px solid var(--border); }
-  .lobby-col-more .lobby-extras { margin-top: 0; grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .lobby-col-more .lobby-extras > .dc-open-btn,
-  .lobby-col-more .lobby-extras > .exam-countdown { grid-column: span 2; }
-  .lobby-col-more .lobby-extras > #btnOfflinePack { grid-column: auto; }
+  /* Thử thách (2 ô) · Góc học tập · Đấu trường · Thêm */
+  .lobby-col-more .lobby-extras { margin-top: 0; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .lobby-col-more .lobby-extras > .dc-open-btn { grid-column: span 2; }
+  .lobby-col-more .lobby-extras.lobby-more-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 .lobby-col-more #offlinePackStatus:empty { display: none; }
 /* Dòng trạng thái tải offline: thông tin phụ → nhỏ, không dùng màu cam đậm của dòng nhắc "còn thiếu" */

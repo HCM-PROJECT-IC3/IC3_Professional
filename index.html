@@ -37,6 +37,7 @@
   <link rel="stylesheet" href="lib/fonts/fonts.css">
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="css/lobby-skin.css">
   <link rel="stylesheet" href="css/review-detail.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="css/review-detail.css"></noscript>
   <link rel="stylesheet" href="css/learning-hub.css" media="print" onload="this.media='all'">
@@ -78,15 +79,77 @@
      LOBBY — Two-column layout
      ═══════════════════════════════════ -->
   <div id="lobby" role="main">
-    <!-- Sảnh chỉ có form; link cho giáo viên ở dưới form. -->
+    <!-- Nền + sơ đồ 3 vòng tròn đều tự vẽ, không dùng logo Certiport/IC3 hay logo phần mềm. Thanh trái (màn rộng, css/lobby-skin.css). -->
+    <aside class="lobby-side" aria-label="Điều hướng">
+      <div class="lobby-side-brand"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i><div>EduQuiz <span>IC3</span></div></div>
+      <button type="button" class="lobby-nav" aria-current="page"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3 2.5 11.2l1.3 1.5L5 11.7V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-8.3l1.2 1 1.3-1.5z"/></svg> Trang chủ</button>
+      <button type="button" class="lobby-nav" onclick="window.EduLearningHub?.open()"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Tiến độ của em</button>
+      <button type="button" class="lobby-nav" onclick="showRecords()"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Lịch sử bài làm</button>
+      <!-- Số liệu của học sinh đang chọn, đọc từ máy này (js/lobby-form-ux.js) -->
+      <section class="lobby-me" aria-label="Kết quả của em" aria-live="polite">
+        <h2>Kết quả của em</h2>
+        <div id="lobbyMe"></div>
+      </section>
+      <svg class="lobby-mascot" viewBox="0 0 150 170" aria-hidden="true">
+        <ellipse cx="75" cy="162" rx="52" ry="6" fill="#0d1550" opacity=".35"/>
+        <rect x="42" y="104" width="66" height="50" rx="16" fill="#bfe0f5"/><rect x="58" y="118" width="34" height="20" rx="6" fill="#2f50d8"/><path d="m67 128 6 6 11-12" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="20" y="112" width="18" height="34" rx="9" fill="#7fbfe6"/><rect x="112" y="96" width="18" height="34" rx="9" fill="#7fbfe6" transform="rotate(24 121 113)"/>
+        <rect x="28" y="40" width="94" height="68" rx="26" fill="#9fd0ee"/><rect x="40" y="54" width="70" height="40" rx="18" fill="#17226e"/>
+        <circle cx="60" cy="74" r="7" fill="#8fd3ff"/><circle cx="90" cy="74" r="7" fill="#8fd3ff"/><path d="M66 85q9 7 18 0" fill="none" stroke="#8fd3ff" stroke-width="3" stroke-linecap="round"/>
+        <path d="M75 8 22 30l53 22 53-22z" fill="#0f1a5c"/><path d="M44 42v14q31 15 62 0V42L75 54z" fill="#1c2a8c"/><path d="M122 33v26" stroke="#ffb02e" stroke-width="3.5"/><circle cx="122" cy="62" r="5" fill="#ffb02e"/>
+      </svg>
+    </aside>
     <!-- Right: form -->
     <div class="lobby-right">
       <!-- Không còn là link sang portfolio.html (10/2026): trang đó nạp Firebase + App Check và
            đọc ~85 document Firestore mỗi lần mở — học sinh bấm/F5 liên tục là cạn hạn mức Spark. -->
-      <div class="lobby-brand">
-        <span class="lobby-brand-emoji"><i class="fa-solid fa-graduation-cap"></i></span>
-        <span class="lobby-brand-name">EduQuiz IC3</span>
-      </div>
+      <header class="lobby-hero">
+        <div class="lobby-hero-text">
+          <h1 class="lobby-hero-title">EduQuiz <span>IC3</span></h1>
+          <p>Xây dựng kỹ năng thiết yếu cho thế giới số</p>
+        </div>
+        <svg class="lobby-venn" viewBox="0 0 268 108" role="img" aria-label="Ba mảng kỹ năng số: máy tính căn bản, ứng dụng chính, cuộc sống số">
+          <g style="isolation:isolate">
+            <g style="mix-blend-mode:multiply"><circle cx="52" cy="54" r="50" fill="#7cc6ee"/></g>
+            <g style="mix-blend-mode:multiply"><circle cx="134" cy="54" r="50" fill="#9fd283"/></g>
+            <g style="mix-blend-mode:multiply"><circle cx="216" cy="54" r="50" fill="#f8b35f"/></g>
+          </g>
+          <g fill="none" stroke-width="2"><circle cx="52" cy="54" r="50" stroke="#1b87c9"/><circle cx="134" cy="54" r="50" stroke="#4e9f35"/><circle cx="216" cy="54" r="50" stroke="#e07c12"/></g>
+          <!-- màn hình · tài liệu · ổ khoá: hình tự vẽ -->
+          <rect x="36" y="20" width="30" height="20" rx="2.5" fill="#0d3a5c"/><rect x="39" y="23" width="24" height="14" rx="1" fill="#d9f1ff"/><rect x="47" y="40" width="8" height="3" fill="#0d3a5c"/><rect x="42" y="43" width="18" height="2.4" rx="1.2" fill="#0d3a5c"/>
+          <path d="M125 19h13l7 7v20h-20z" fill="#fff" stroke="#2f6b1e" stroke-width="2" stroke-linejoin="round"/><path d="M130 30h10M130 35h10M130 40h6" stroke="#2f6b1e" stroke-width="2" stroke-linecap="round"/>
+          <rect x="206" y="31" width="22" height="15" rx="3" fill="#7a3f06"/><path d="M210 31v-5a7 7 0 0 1 14 0v5" fill="none" stroke="#7a3f06" stroke-width="3"/><circle cx="217" cy="38" r="2.6" fill="#ffe2b8"/>
+          <text x="48" y="63">MÁY TÍNH</text><text x="48" y="75">CĂN BẢN</text>
+          <text x="134" y="63">ỨNG DỤNG</text><text x="134" y="75">CHÍNH</text>
+          <text x="220" y="63">CUỘC SỐNG</text><text x="220" y="75">SỐ</text>
+        </svg>
+        <!-- Dành cho thầy cô: thu gọn để học sinh không bấm nhầm. Giữ id="adminEntryLink" (quiz-engine.js ẩn khi làm bài, hiện lại ở sảnh) -->
+        <details class="lobby-staff" id="lobbyStaff">
+          <summary class="lobby-staff-label"><i class="fa-solid fa-chalkboard-user" aria-hidden="true"></i> Dành cho thầy cô <i class="fa-solid fa-chevron-down lobby-staff-chev" aria-hidden="true"></i></summary>
+          <div class="lobby-staff-links">
+            <a href="ic3-dashboard.html" target="_blank" rel="noopener" id="adminEntryLink" class="lobby-staff-btn"
+              title="Đăng nhập trang quản lý: soạn đề, báo cáo kết quả, danh sách học sinh">
+              <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i> <span>Đăng nhập trang quản lý</span>
+            </a>
+            <a href="gom-ket-qua.html" target="_blank" rel="noopener" id="gatherResultsLink" class="lobby-staff-btn"
+              title="Gom kết quả học sinh gửi bằng mã/file — không cần đăng nhập, chạy cả khi mất mạng">
+              <i class="fa-solid fa-inbox" aria-hidden="true"></i> <span>Gom kết quả học sinh gửi</span>
+            </a>
+            <a href="goi-ten.html" target="_blank" rel="noopener" class="lobby-staff-btn"
+              title="Gọi tên học sinh ngẫu nhiên trên máy chiếu — dùng danh sách lớp có sẵn hoặc dán danh sách">
+              <i class="fa-solid fa-bullhorn" aria-hidden="true"></i> <span>Gọi tên học sinh</span>
+            </a>
+            <a href="thi-dua.html" target="_blank" rel="noopener" class="lobby-staff-btn"
+              title="Cộng/trừ điểm thi đua, thi đua tổ, đổi quà, đo tiếng ồn, đồng hồ đếm ngược — chạy trên máy, không cần đăng nhập">
+              <i class="fa-solid fa-trophy" aria-hidden="true"></i> <span>Thi đua lớp học</span>
+            </a>
+            <a href="diem-danh.html" target="_blank" rel="noopener" class="lobby-staff-btn"
+              title="Điểm danh và xem tiến độ lớp từ sổ quản lý lớp (Google Sheet) của Điều phối đào tạo">
+              <i class="fa-solid fa-clipboard-user" aria-hidden="true"></i> <span>Điểm danh & tiến độ</span>
+            </a>
+          </div>
+        </details>
+      </header>
       <div class="lobby-card">
         <!-- Mỗi bước 1 cột: ≥1400px 3 cột · 1100–1399px 2 cột (1+2 | 3) · hẹp hơn 1 cột (style.css § FORM KHÔNG LÃNG PHÍ) -->
         <div class="lobby-col lobby-col-1">
@@ -206,42 +269,20 @@
         <p class="start-hint" id="startHint" aria-live="polite"></p>
 
         </div>
-        <!-- Phần thêm cho học sinh (Thử thách hôm nay, đếm ngược, Góc học tập, Đấu trường, Lịch sử). Các module tìm theo ".lobby-card .lobby-extras". -->
+        <!-- Phần thêm cho học sinh. Ngoài: Thử thách hôm nay, Góc học tập, Đấu trường (JS chèn trước nút Thêm) + ngày thi nếu đã có.
+             Trong nút Thêm: Đặt ngày thi (khi chưa có), Lịch sử, Tải offline. Các module tìm theo ".lobby-card .lobby-extras" (khối đầu tiên = khối ngoài). -->
         <div class="lobby-col lobby-col-more">
-          <p class="lobby-more-label"><i class="fa-solid fa-user-graduate" aria-hidden="true"></i> Ôn tập thêm cho em</p>
-          <!-- Nút phụ gom 1 hàng (Góc học tập / Đấu trường do JS chèn trước nút Lịch sử) -->
+          <p class="lobby-more-label"><i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i> Công cụ hỗ trợ</p>
           <div class="lobby-extras">
-            <button type="button" class="btn-secondary" onclick="showRecords()"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử bài làm</button>
-            <button type="button" class="btn-secondary" id="btnOfflinePack" title="Tải trọn câu hỏi của khối đang chọn về máy để làm bài khi mất mạng"><i class="fa-solid fa-cloud-arrow-down"></i> Tải sẵn để dùng offline</button>
+            <button type="button" class="btn-secondary lobby-more-btn" id="lobbyMoreBtn" aria-expanded="false" aria-controls="lobbyMorePanel"><i class="fa-solid fa-ellipsis" aria-hidden="true"></i> Thêm</button>
+            <div class="lobby-extras lobby-more-panel" id="lobbyMorePanel" hidden>
+              <button type="button" class="btn-secondary" onclick="showRecords()"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử bài làm</button>
+              <button type="button" class="btn-secondary" id="btnOfflinePack" title="Tải trọn câu hỏi của khối đang chọn về máy để làm bài khi mất mạng"><i class="fa-solid fa-cloud-arrow-down"></i> Tải sẵn để dùng offline</button>
+              <!-- Tiến độ / kết quả tải sẵn (js/offline-pack.js) -->
+              <p class="start-hint" id="offlinePackStatus" aria-live="polite"></p>
+            </div>
           </div>
-          <!-- Tiến độ / kết quả tải sẵn (js/offline-pack.js) -->
-          <p class="start-hint" id="offlinePackStatus" aria-live="polite"></p>
         </div>
-      </div>
-      <!-- Dành cho thầy cô — nằm NGOÀI thẻ của học sinh (10/2026) để học sinh không nhầm là việc của mình.
-           Giữ id="adminEntryLink" (quiz-engine.js ẩn khi làm bài, hiện lại ở sảnh) -->
-      <div class="lobby-staff">
-          <span class="lobby-staff-label"><i class="fa-solid fa-chalkboard-user" aria-hidden="true"></i> Dành cho thầy cô</span>
-          <a href="ic3-dashboard.html" target="_blank" rel="noopener" id="adminEntryLink" class="lobby-staff-btn"
-            title="Đăng nhập trang quản lý: soạn đề, báo cáo kết quả, danh sách học sinh">
-            <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i> <span>Đăng nhập trang quản lý</span>
-          </a>
-          <a href="gom-ket-qua.html" target="_blank" rel="noopener" id="gatherResultsLink" class="lobby-staff-btn"
-            title="Gom kết quả học sinh gửi bằng mã/file — không cần đăng nhập, chạy cả khi mất mạng">
-            <i class="fa-solid fa-inbox" aria-hidden="true"></i> <span>Gom kết quả học sinh gửi</span>
-          </a>
-          <a href="goi-ten.html" target="_blank" rel="noopener" class="lobby-staff-btn"
-            title="Gọi tên học sinh ngẫu nhiên trên máy chiếu — dùng danh sách lớp có sẵn hoặc dán danh sách">
-            <i class="fa-solid fa-bullhorn" aria-hidden="true"></i> <span>Gọi tên học sinh</span>
-          </a>
-          <a href="thi-dua.html" target="_blank" rel="noopener" class="lobby-staff-btn"
-            title="Cộng/trừ điểm thi đua, thi đua tổ, đổi quà, đo tiếng ồn, đồng hồ đếm ngược — chạy trên máy, không cần đăng nhập">
-            <i class="fa-solid fa-trophy" aria-hidden="true"></i> <span>Thi đua lớp học</span>
-          </a>
-          <a href="diem-danh.html" target="_blank" rel="noopener" class="lobby-staff-btn"
-            title="Điểm danh và xem tiến độ lớp từ sổ quản lý lớp (Google Sheet) của Điều phối đào tạo">
-            <i class="fa-solid fa-clipboard-user" aria-hidden="true"></i> <span>Điểm danh & tiến độ</span>
-          </a>
       </div>
     </div>
   </div>

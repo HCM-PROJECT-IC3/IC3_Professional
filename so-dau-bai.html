@@ -14,7 +14,7 @@
 <script src="js/theme-inherit.js"></script>
 </head>
 <body>
-<!-- Sổ đầu bài (js/so-dau-bai/): dữ liệu sổ ở localStorage sodaubai_v1 trên máy này, không lên Firebase/Apps Script.
+<!-- Sổ đầu bài (js/so-dau-bai/): dữ liệu sổ ở localStorage sodaubai_v1[:mã] trên máy này (mỗi tài khoản, mỗi trường 1 sổ), không lên Firebase/Apps Script.
      Lớp + học sinh lấy từ sổ lớp Điều phối đã đọc ở Điểm danh hoặc data/roster (sdb-sources.js). Chỉ giáo viên/admin. -->
 <div class="app">
   <aside class="side">
@@ -39,7 +39,9 @@
   <div class="main">
     <header class="topbar">
       <div class="crumb" id="crumb"></div>
+      <select class="inp book-sel" id="bookSel" aria-label="Sổ của trường" hidden></select>
       <span class="grow"></span>
+      <a class="btn" href="diem-danh.html" title="Điểm danh và tiến độ từ sổ lớp của Điều phối">Điểm danh</a>
       <button class="btn primary" id="newEntry" type="button"></button>
     </header>
     <main id="view"></main>

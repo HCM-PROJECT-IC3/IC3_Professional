@@ -1129,6 +1129,7 @@ function showToast(msg, iconClass) {
 // gán qua innerHTML — cần innerHTML (thay vì textContent như code cũ) để
 // thẻ <i> Font Awesome bên trong thật sự RENDER thành icon.
 const SECTION_TITLES = {
+  'overview': '<i class="fa-solid fa-chart-line"></i> Tổng quan',
   'my-sets': '<i class="fa-solid fa-book-open"></i> Bộ đề của tôi',
   'builder': '<i class="fa-solid fa-file-pen"></i> Soạn đề',
   'reports': '<i class="fa-solid fa-chart-column"></i> Báo cáo kết quả',

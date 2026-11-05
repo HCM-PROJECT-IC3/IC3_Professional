@@ -21,8 +21,8 @@
     return 'arena.html' + (q ? '?' + q : '');
   }
   function mount() {
-    const hist = document.querySelector('.lobby-card button[onclick="showRecords()"]');
-    if (!hist || document.getElementById('arenaBtn')) return;
+    const more = document.getElementById('lobbyMoreBtn');
+    if (!more || document.getElementById('arenaBtn')) return;
     const a = document.createElement('a');
     a.id = 'arenaBtn';
     a.className = 'btn-secondary arena-open';
@@ -33,7 +33,7 @@
     const sync = () => { a.href = arenaUrl(); };
     ['pointerdown', 'focus', 'mouseenter'].forEach((ev) => a.addEventListener(ev, sync));
     a.addEventListener('click', sync);
-    hist.before(a);
+    more.before(a);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);
   else mount();

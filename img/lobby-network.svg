@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <!-- Nền trang chủ: bản đồ thế giới cách điệu + mạng lưới phát sáng. Tự vẽ, không dùng ảnh ngoài. -->
+  <defs>
+    <filter id="soft"><feGaussianBlur stdDeviation="11"/></filter>
+    <radialGradient id="node"><stop offset="0" stop-color="#fff"/><stop offset=".3" stop-color="#d7f2ff" stop-opacity=".95"/><stop offset="1" stop-color="#7fd0f5" stop-opacity="0"/></radialGradient>
+    <radialGradient id="warm"><stop offset="0" stop-color="#fff"/><stop offset=".3" stop-color="#fff0c9" stop-opacity=".95"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></radialGradient>
+  </defs>
+  <g fill="#6fb4dd" opacity=".42" filter="url(#soft)">
+    <path d="M150 190l90-42 130-14 90 30-30 54-64 26-22 54-62 40-20 58-44-28-34-70-58-34-30-44z"/>
+    <path d="M430 92l80-16 56 24-34 44-66 12-44-26z"/>
+    <path d="M372 470l70 10 62 44-14 66-52 76-34 92-26-8-8-96-30-96z"/>
+    <path d="M730 170l88-26 58 26-22 44-64 22-58-16z"/>
+    <path d="M738 280l104-16 88 40 30 86-62 74-22 92-58 26-34-82-22-74-54-54z"/>
+    <path d="M880 150l170-50 220 14 130 62-30 78-92 22-24 72-70 30-48-46-44 66-74-68-96 8-60-58z"/>
+    <path d="M1250 590l112-26 62 46-22 66-102 16-58-44z"/>
+  </g>
+  <g fill="none" stroke="#ffffff" stroke-width="2.2" opacity="1">
+    <path d="M-20 700C150 560 300 520 430 520S760 610 980 420 1320 150 1640 110"/>
+    <path d="M-20 230C180 150 330 330 300 280S620 60 900 90s460 230 720 120"/>
+    <path d="M60 900c120-210 300-290 520-280s420 110 640-20 300-250 400-260"/>
+    <path d="M1180 -20c-60 180 60 260 220 300s170 180 220 240"/>
+    <path d="M-20 520c160-40 240 40 330 180s190 200 290 240"/>
+  </g>
+  <g fill="none" stroke="#ffffff" stroke-width="1.4" opacity=".9">
+    <path d="M1400 280l-150 130 140 110 180-90zM1250 410l-110 150M240 150l60 130 130 240M60 610l130 90"/>
+  </g>
+  <g>
+    <circle cx="300" cy="280" r="34" fill="url(#node)"/><circle cx="430" cy="520" r="26" fill="url(#warm)"/>
+    <circle cx="240" cy="150" r="24" fill="url(#node)"/><circle cx="980" cy="420" r="22" fill="url(#node)"/>
+    <circle cx="1400" cy="280" r="34" fill="url(#node)"/><circle cx="1250" cy="410" r="24" fill="url(#node)"/>
+    <circle cx="1390" cy="520" r="20" fill="url(#warm)"/><circle cx="190" cy="700" r="30" fill="url(#warm)"/>
+    <circle cx="900" cy="90" r="20" fill="url(#node)"/><circle cx="1140" cy="560" r="18" fill="url(#node)"/>
+    <circle cx="60" cy="610" r="22" fill="url(#node)"/><circle cx="1530" cy="430" r="26" fill="url(#node)"/>
+  </g>
+</svg>

@@ -147,5 +147,10 @@ assertEq('tiết đã qua chưa tick Hoàn thành: gộp theo ngày, bỏ hôm n
   L.untickedSessions([{ key: 'u', school: 'PP2', cls: U }], 'Bảo', new Date(2026, 9, 28)).map(function (e) { return e.date.getDate() + ':' + e.sessions.map(function (s) { return s.tiet; }).join(','); }), ['26:2,3']);
 assertEq('học sinh cần chú ý: vắng ≥3 hoặc 2 tiết liền, bỏ bạn đã nghỉ luôn', L.watchList(W).map(function (x) { return x.name; }), ['An', 'Bình']);
 
+var D = { students: [{ row: 5, marks: { 1: 'v' } }, { row: 6, marks: {} }, { row: 7, marks: { 1: 'x' } }] };
+assertEq('nháp khác Sheet: đổi vắng → có mặt, ô trống → vắng; trùng Sheet không tính', L.draftChanges(D, { 5: 'x', 6: 'v', 7: 'x' }, 1), 2);
+assertEq('ô trống trên Sheet tính là có mặt', L.draftChanges(D, { 6: 'x' }, 1), 0);
+assertEq('không có nháp', L.draftChanges(D, undefined, 1), 0);
+
 console.log(failures ? failures + ' FAIL' : 'Tất cả PASS');
 process.exit(failures ? 1 : 0);

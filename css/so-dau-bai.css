@@ -49,7 +49,13 @@ svg.i{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .nav button:hover{background:var(--surface-2);color:var(--ink)}
 .nav button.on{background:var(--brand-soft);color:var(--brand)}
 .nav .badge{margin-left:auto}
-.nav .sep{height:1px;background:var(--line);margin:10px 8px}
+.nav-h{padding:14px 12px 4px;font-size:12px;font-weight:600;color:var(--ink-3)}
+.nav-h:first-child{padding-top:0}
+.book-sel{width:auto;max-width:260px;padding:6px 10px;font-size:14px}
+.book-sel[hidden]{display:none}
+.step-n{flex:none;width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--sunk);color:var(--ink-2);font-size:13px;font-weight:600}
+.step-n.ok{background:var(--green-soft);color:var(--green)}
+.step-n svg.i{width:15px;height:15px}
 .side-foot{margin-top:auto;border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:10px}
 .me{padding:0 8px;font-size:13px;line-height:1.4}
 .me b{display:block;font-weight:600;font-size:14px}
@@ -300,6 +306,9 @@ kbd{font:inherit;font-size:11px;border:1px solid var(--line-2);border-bottom-wid
   .day .dn{font-size:18px}
 }
 @media (max-width:520px){
+  .crumb:has(+ .book-sel:not([hidden])){display:none}
+  .book-sel{flex:1;min-width:0;max-width:none}
+  .book-sel + .grow{display:none}
   .c2,.c3,.c4{grid-template-columns:1fr}
   .df .btn.primary{flex:1}
   .df .grow{flex:0;display:none}

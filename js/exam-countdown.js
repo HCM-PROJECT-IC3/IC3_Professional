@@ -1,7 +1,7 @@
 /* ============================================================
    js/exam-countdown.js — "Còn N ngày đến kỳ thi" ở sảnh index.html
 
-   Một hàng nhỏ trong .lobby-extras (ngay dưới "Thử thách hôm nay"):
+   Một hàng nhỏ ở sảnh: chưa có ngày thi thì nằm trong nút "Thêm", có rồi thì hiện ngoài .lobby-extras:
      • Ngày thi: EduBackend.examSeason (thầy cô khai trong js/backend-config.js,
        theo Chương trình đang chọn); chưa khai thì học sinh tự đặt — lưu
        localStorage 'eduquiz_examdate' theo học sinh + chương trình.
@@ -139,6 +139,14 @@
     }
   }
 
+  /** Chưa có ngày thi: chỉ là 1 thao tác phụ, cất trong "Thêm". Có rồi: là thông tin cần thấy, đưa ra ngoài. */
+  function place(row, unset) {
+    const panel = $('lobbyMorePanel'), mission = $('examMission');
+    if (!panel || (row.parentElement === panel) === unset) return;
+    if (unset) panel.prepend(row); else panel.before(row);
+    row.after(mission);
+  }
+
   function render() {
     const row = $('examCountdown');
     if (!row) return;
@@ -149,6 +157,7 @@
     const dd = ex ? `${ex.date.getDate()}/${ex.date.getMonth() + 1}` : '';
     const left = ex ? daysLeft(ex.date) : 0;
     row.classList.toggle('is-unset', !ex);
+    place(row, !ex);
     row.classList.toggle('is-near', !!ex && left <= 14);
     row.querySelector('.xc-main').innerHTML = ex
       ? `<b>${left === 0 ? 'Hôm nay' : `Còn ${left} ngày`}</b> <span>${esc(ex.label)} · ${dd}</span>`
@@ -195,8 +204,7 @@
       + '<input type="date" id="examCountdownInput" class="xc-input" hidden aria-label="Ngày thi">';
     row.querySelector('.xc-edit').addEventListener('click', editDate);
     row.querySelector('.xc-text').addEventListener('click', () => { if (row.classList.contains('is-unset')) editDate(); });
-    const dc = $('dailyChallengeBtn');
-    if (dc) dc.after(row); else box.prepend(row);
+    box.append(row);
     const mission = document.createElement('div');
     mission.id = 'examMission';
     mission.className = 'exam-mission';

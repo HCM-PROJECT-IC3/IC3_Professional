@@ -120,5 +120,42 @@ assertEq('không có tiết → không ghi câu hỏi', r2.g.lesson.paste, undef
 var r3 = X.goitenPatch({}, { names: ['A B'], absent: [], hit: null, tiet: 4, level: 'Spark__LV2', day: day });
 assertEq('danh sách dán ghi rõ cấp độ', r3.g.lesson.paste, { lv: 'Spark__LV2', tiet: 4, day: day });
 
+// ── Bản nháp áp cho cả buổi ──
+var C2 = { students: [{ row: 1, name: 'An Bình', marks: { 5: 'x', 6: 'v' } }, { row: 2, name: 'Chi Dũng', marks: { 5: 'v', 6: 'v' } }, { row: 3, name: 'Em Giang', marks: { 5: 'x', 6: 'x' } }] };
+var ss2 = [{ col: 5 }, { col: 6 }];
+assertEq('không nháp: vắng tiết nào cũng tính', X.absentOf(C2, 'k', ss2, {}), ['An Bình', 'Chi Dũng']);
+assertEq('nháp ở cột đầu quyết định cả buổi', X.absentOf(C2, 'k', ss2, { 'k|5': { marks: { 1: 'x', 3: 'v' } } }), ['Chi Dũng', 'Em Giang']);
+
+// ── Tiết trên Sheet (khỏi nhập TKB) ──
+var csvS = ['TRƯỜNG,TiH Phong Phú 2,,,', 'LỚP:,3A1,,,', ',,THỨ,Thứ 3,Thứ 3', ',,NGÀY,06.10,13.10', ',,TÊN GV,Bảo,Hằng', ',,BÀI DẠY,Bài 1,Bài 2', ',HỌ & TÊN,TIẾT,1,2', ',Nguyễn Văn A,,x,x'].join('\n');
+var rowsS = X.sheetSessions({ cache: { 'a|1': { at: 1, csv: csvS } } }, L, { teacher: 'Bảo', ref: new Date(2026, 9, 20) });
+assertEq('tiết có ngày, đánh dấu của tôi', rowsS.map(function (r) { return [r.date, r.cls, r.bai, r.mine]; }), [['2026-10-06', '3.1', 'Bài 1', true], ['2026-10-13', '3.1', 'Bài 2', false]]);
+assertEq('không có tên GV thì không có tiết của tôi', X.sheetSessions({ cache: { 'a|1': { at: 1, csv: csvS } } }, L, { ref: new Date(2026, 9, 20) }).filter(function (r) { return r.mine; }).length, 0);
+
+// ── Bài trên Sheet → tiết PPCT ──
+var pp = [{ t: 1, name: 'Giới thiệu' }, { t: 2, name: 'Bài 1: Phần cứng' }, { t: 3, name: 'Bài 1: Phần cứng' }, { t: 4, name: 'Bài 2: Phần mềm' }];
+assertEq('khớp theo số bài, không theo số tiết', X.pickLesson(pp, 'Bài 2', 0, L.lessonOf), { ppct: 4, lesson: 'Bài 2: Phần mềm' });
+assertEq('bài 2 tiết: lấy tiết sau tiết đã dạy', X.pickLesson(pp, 'Bài 1', 2, L.lessonOf), { ppct: 3, lesson: 'Bài 1: Phần cứng' });
+assertEq('không khớp thì giữ chữ trên Sheet', X.pickLesson(pp, 'Ôn tập CĐ1', 0, L.lessonOf), { ppct: null, lesson: 'Ôn tập CĐ1' });
+assertEq('Sheet chưa ghi bài', X.pickLesson(pp, '', 0, L.lessonOf), null);
+
+// ── Sổ theo trường + tài khoản ──
+function fakeLS(o) { return { get length() { return Object.keys(o).length; }, key: function (i) { return Object.keys(o)[i]; }, getItem: function (k) { return k in o ? o[k] : null; }, setItem: function (k, v) { o[k] = v; } }; }
+var book = function (owner, school, entries) { return JSON.stringify({ v: 1, owner: owner, settings: { school: school }, entries: entries || [] }); };
+var ls = fakeLS({ sodaubai_v1: book('u1', 'TiH Phong Phú 2', [{ date: '2026-10-06', cls: '3.1' }, { date: '2026-10-06', cls: '3.1' }]), 'sodaubai_v1:b': book('u1', 'THCS Mạch Kiếm Hùng'), 'sodaubai_v1:c': book('u2', 'TiH Võ Văn Tần'), sodaubai_ui: '{}', 'sodaubai_v1:hong': '{' });
+assertEq('chỉ sổ của tài khoản, sổ đầu tiên đứng trước', X.listBooks(ls, 'u1').map(function (b) { return b.key; }), ['sodaubai_v1', 'sodaubai_v1:b']);
+assertEq('người khác không thấy', X.listBooks(ls, 'u2').map(function (b) { return b.school; }), ['TiH Võ Văn Tần']);
+assertEq('sổ chưa có chủ ai cũng thấy', X.listBooks(fakeLS({ sodaubai_v1: book('', 'A') }), 'u9').length, 1);
+var mine = X.listBooks(ls, 'u1');
+assertEq('tìm sổ theo trường khác cách viết', X.bookForSchool(mine, 'TRƯỜNG TIỂU HỌC PHONG PHÚ 2').key, 'sodaubai_v1');
+assertEq('trường chưa có sổ', X.bookForSchool(mine, 'TiH Khác'), null);
+assertEq('đếm tiết đã ghi (tên lớp 3A1)', X.bookEntries(mine, 'TiH Phong Phú 2', '3A1', '2026-10-06'), 2);
+assertEq('ngày chưa ghi', X.bookEntries(mine, 'TiH Phong Phú 2', '3.1', '2026-10-07'), 0);
+
+// ── Bộ nhớ đầy ──
+var ls2 = fakeLS({ eduquiz_solop_v1: JSON.stringify({ links: [1], cache: { a: { at: 3 }, b: { at: 1 }, c: { at: 2 } } }) });
+assertEq('bỏ bản đọc cũ nhất', [X.trimSoLop(ls2, 2), Object.keys(JSON.parse(ls2.getItem('eduquiz_solop_v1')).cache), JSON.parse(ls2.getItem('eduquiz_solop_v1')).links], [true, ['a'], [1]]);
+assertEq('hết bản đọc để bỏ', X.trimSoLop(fakeLS({ eduquiz_solop_v1: '{"cache":{}}' }), 2), false);
+
 console.log(failures ? '\n' + failures + ' FAIL' : '\nTất cả PASS');
 process.exit(failures ? 1 : 0);

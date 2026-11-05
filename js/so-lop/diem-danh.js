@@ -11,6 +11,8 @@
    Đồng bộ 2 chiều: "Ghi vào Sheet" (Apps Script classSheetWrite — điểm danh, ô NGÀY trống, ô Đã hoàn thành), xong đọc lại;
    lớp đang mở tự đọc lại Sheet 2 phút/lần khi đang xem. Dự phòng: "Sao chép cột" + "Mở Sheet ở ô" để dán tay (Ctrl+V).
    "Dùng cho Gọi tên": đánh dấu vắng hôm nay + chọn tiết/bài cho Bốc thử thách trong localStorage của goi-ten.html.
+   "Ghi sổ đầu bài": gửi lớp, ngày, bài, tên vắng qua localStorage (sodaubai_handoff) rồi mở so-dau-bai.html?ghi=1. Thẻ Lịch dạy đọc sổ trên máy
+   để báo buổi nào chưa ghi sổ. Không có gì đi qua mạng.
    Giao diện 4 thẻ (showTab): Lịch dạy · Các lớp · Điểm danh · Cài đặt — bộ lọc Trường/GV dùng chung cho 2 thẻ đầu.
    Đỡ việc tay: mở trang tự đọc lại các lớp của tôi đã cũ hơn 6 giờ · "Bảng công tháng" dán Excel · "Tin nhắn báo vắng"
    dán Zalo · "Học sinh cần chú ý" (vắng nhiều/vắng liền) gom từ mọi lớp đã đọc.
@@ -30,6 +32,8 @@
   const $ = (id) => document.getElementById(id);
   const STORE = 'eduquiz_solop_v1';
   const GOITEN = 'eduquiz_goiten_v1';
+  const SRC = global.EduSdbSources;
+  const HANDOFF = 'sodaubai_handoff';
   const MAX_CACHE = 80;          // tab lớp lưu tạm (mỗi tab ~20–40KB CSV)
   const FRESH_MS = 6 * 3600e3;   // bảng tổng quan dùng lại bản đọc trong 6 giờ
   const POLL_MS = 2 * 60e3;      // lớp đang mở: đọc lại Sheet 2 phút/lần khi đang xem (1 file CSV, không Firebase)
@@ -40,8 +44,6 @@
   const sheetUrl = (id) => `https://docs.google.com/spreadsheets/d/${id}`;
   const lower = (s) => String(s || '').replace(/\s+/g, ' ').trim().toLocaleLowerCase('vi');
   const byText = (a, b) => a.localeCompare(b, 'vi', { numeric: true });
-  // goi-ten.html ghi ngày dạng "2026-10-28" không đệm số 0 — phải khớp đúng để "vắng hôm nay" có hiệu lực
-  const goitenToday = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
   const fmtDate = (d) => (d ? `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}` : '');
 
   function load() { try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch (e) { return {}; } }
@@ -339,7 +341,7 @@
     const sc = schools().filter((s) => s.files.length);
     $('ddClass').innerHTML = sc.length
       ? sc.map((s) => `<optgroup label="${esc(s.name)}">${s.files.flatMap((f) => f.tabs.map((t) => ({ f, t }))).sort((a, b) => byText(a.t.name, b.t.name))
-        .map(({ f, t }) => `<option value="${f.id}|${t.gid}">${S.mine[`${f.id}|${t.gid}`] ? '' : ''}${esc(t.name)} — ${esc(s.name)}</option>`).join('')}</optgroup>`).join('')
+        .map(({ f, t }) => `<option value="${f.id}|${t.gid}">${esc(t.name)} — ${esc(s.name)}</option>`).join('')}</optgroup>`).join('')
       : '<option value="">— Thêm link sổ lớp trước —</option>';
     $('ddClass').value = S.sel;
     $('ddClass').disabled = $('ddReload').disabled = !S.links.length;
@@ -427,17 +429,23 @@
     const before = cls.sessions.filter((s) => s.col < attendCol).some((s) => st.marks[s.col] === 'nl');
     return before ? 'nl' : 'x';
   }
-  function setMark(row, m) {
+  /** Ghi nháp nhiều bạn rồi lưu 1 lần (bản lưu gồm cả CSV các lớp, vài MB — không lưu theo từng bạn). */
+  function setMarks(list) {
     const k = draftKey(), d = S.drafts[k] || (S.drafts[k] = { at: Date.now(), marks: {} });
-    d.marks[row] = m; d.at = Date.now();
+    list.forEach(([row, m]) => { d.marks[row] = m; });
+    d.at = Date.now();
     Object.keys(S.drafts).forEach((x) => { if (Date.now() - (S.drafts[x].at || 0) > 45 * 864e5) delete S.drafts[x]; });
     save();
   }
+  const setMark = (row, m) => setMarks([[row, m]]);
+  /** Có mặt của 1 bạn ở buổi đang chọn: học sinh Mới giữ ký hiệu Mới trên Sheet. */
+  const presentMark = (st) => (st.marks[attendCol] === 'moi' ? 'moi' : 'x');
+  const flip = (st) => { const m = markOf(st); return m === 'x' || m === 'moi' ? 'v' : presentMark(st); };
   function paintSessionSelect() {
     $('ddAttend').hidden = false;
     const today = L.todaySession(cls.sessions), next = L.nextSession(cls.sessions);
     $('ddSession').innerHTML = cls.sessions.filter((s) => s.bai || s.ngay || s.done || s === next || s.col === attendCol).map((s) =>
-      `<option value="${s.col}">Tiết ${s.tiet}${s.bai ? ' · ' + esc(s.bai) : ''}${s.ngay ? ' · ' + esc(s.ngay) : ''}${today && s.col === today.col ? ' (hôm nay)' : ''}${s.done ? '' : ''}</option>`).join('');
+      `<option value="${s.col}">Tiết ${s.tiet}${s.bai ? ' · ' + esc(s.bai) : ''}${s.ngay ? ' · ' + esc(s.ngay) : ''}${today && s.col === today.col ? ' (hôm nay)' : ''}</option>`).join('');
     $('ddSession').value = String(attendCol);
   }
   const LABEL = { x: 'Có mặt', v: 'Vắng', nl: 'Nghỉ luôn', moi: 'Mới' };
@@ -450,7 +458,7 @@
       if (m === 'x' || m === 'moi') co++; else if (m === 'v') v++;
       const n = vang.get(s.name) || 0;
       return `<li class="m-${esc(m)}"><button type="button" class="dd-name" data-flip="${s.row}"><small>${i + 1}</small> ${esc(s.name)}${n ? ` <em title="Số buổi vắng trên Sheet">vắng ${n}</em>` : ''}</button>
-        <span class="dd-seg" role="radiogroup" aria-label="${esc(s.name)}">${['x', 'v', 'nl'].map((k) => `<button type="button" role="radio" aria-checked="${m === k}" data-row="${s.row}" data-m="${k}">${LABEL[k]}</button>`).join('')}</span></li>`;
+        <span class="dd-seg" role="radiogroup" aria-label="${esc(s.name)}">${[presentMark(s), 'v', 'nl'].map((k) => `<button type="button" role="radio" aria-checked="${m === k}" data-row="${s.row}" data-m="${k}">${LABEL[k]}</button>`).join('')}</span></li>`;
     }).join('');
     $('ddCount').textContent = `Có mặt ${co} · Vắng ${v}`;
     applyFind();
@@ -478,7 +486,7 @@
     $('ddWNgayWrap').hidden = !g.length || g.some((s) => s.ngay);
     $('ddWNgayText').textContent = `Điền ngày dạy ${fmtDate(d)} vào ô NGÀY`;
     $('ddWDoneWrap').hidden = !g.length || g.every((s) => s.done);
-    const d0 = S.drafts[draftKey()], n = d0 && d0.marks ? cls.students.filter((st) => d0.marks[st.row] != null && d0.marks[st.row] !== (st.marks[attendCol] || 'x')).length : 0;
+    const d0 = S.drafts[draftKey()], n = d0 ? L.draftChanges(cls, d0.marks, attendCol) : 0;
     $('ddDraftInfo').textContent = n ? `${n} thay đổi chưa ghi vào Sheet` : '';
   }
   let writing = false;
@@ -509,7 +517,7 @@
     try {
       const r = await global.EduAppsScript.call('classSheetWrite', body, { timeoutMs: 60e3 });
       delete S.drafts[`${key}|${col}`]; save();
-      toast(`Đã ghi vào Sheet: ${r.written} ô điểm danh${r.ngay ? ' · ngày dạy' : ''}${r.done ? ' · Đã hoàn thành' : ''}.`);
+      toast(`Đã ghi vào Sheet: ${r.written} ô điểm danh${r.ngay ? ' · ngày dạy' : ''}${r.done ? ' · Đã hoàn thành' : ''}. Tiếp theo: Ghi sổ đầu bài.`);
       // Đọc lại để thấy đúng như trên Sheet, vẫn ở buổi vừa ghi
       try { const n = await tabCSV(f.id, t.gid, null); save(); if (S.sel === key) await showKeep(n, col); } catch (e2) { /* lần đọc sau sẽ cập nhật */ }
     } catch (e) {
@@ -633,25 +641,14 @@
     paintFilters(rows);
     const today = new Date().getDay(), loaded = rows.filter((r) => r.sm);
     const isMine = (r) => S.mine[r.key] || r.mineByName;
-    const teacher = curTeacher();
     let shown = filtered(rows);
     if (S.scope === 'mine') shown = shown.filter(isMine);
-    if (S.scope === 'today') {
-      // Có chọn GV (hoặc Tên của tôi): lớp có trong lịch hôm nay của GV đó; không thì lớp có buổi học vào thứ hôm nay
-      const who = teacher || S.me;
-      if (who) {
-        const now = new Date(), keys = new Set(L.weekPlan(planInput(shown), who, L.mondayOf(now), now)
-          .filter((e) => e.date.toDateString() === now.toDateString()).map((e) => e.key));
-        shown = shown.filter((r) => keys.has(r.key));
-      } else shown = shown.filter((r) => r.sm && r.sm.days.includes(today) && (!Object.keys(S.mine).length || isMine(r)));
-    }
     const missing = rows.filter((r) => r.missing).length;
     $('ddOvInfo').textContent = `${loaded.length}/${rows.length} lớp đã đọc${missing ? ` · ${missing} lớp chưa đọc — bấm "Cập nhật tất cả"` : ''}`;
     // Gộp theo trường không phân biệt hoa thường ("TiH Phong Phú 2" = "TIH PHONG PHÚ 2")
     const by = new Map();
     shown.forEach((r) => { const k = lower(schoolOf(r.f)); if (!by.has(k)) by.set(k, { name: schoolOf(r.f), rows: [] }); by.get(k).rows.push(r); });
-    const empty = S.scope === 'today' ? `Hôm nay (${L.THU[today]}) không có lớp nào${teacher ? ` của GV ${teacher}` : S.me || Object.keys(S.mine).length ? ' của thầy cô' : ''} theo lịch đã dạy trên Sheet.`
-      : S.scope === 'mine' ? 'Chưa đánh dấu lớp của tôi — bấm ☆ ở cột đầu (chọn "Tất cả"), hoặc nhập "Tên của tôi" ở phần Trường & sổ lớp.' : 'Chưa có lớp.';
+    const empty = S.scope === 'mine' ? 'Chưa đánh dấu lớp của tôi — bấm ☆ ở cột đầu (chọn "Tất cả"), hoặc nhập "Tên của tôi" ở thẻ Cài đặt.' : 'Chưa có lớp.';
     $('ddOv').innerHTML = shown.length ? [...by.values()].sort((a, b) => byText(a.name, b.name)).map(({ name: school, rows: rs }) => `<h3>${esc(school)}</h3>
       <table class="dd-table"><thead><tr><th scope="col"><span class="sr-only">Lớp của tôi</span></th><th scope="col">Lớp</th><th scope="col">Đã dạy</th><th scope="col">Gần nhất</th><th scope="col">Tiếp theo</th><th scope="col">Lịch</th></tr></thead>
       <tbody>${rs.sort((a, b) => byText(a.t.name, b.t.name)).map((r) => {
@@ -735,20 +732,30 @@
     if ($('ddToday').hidden) return;
     const input = planInput(rows), name = (key, c) => { const r = rows.find((x) => x.key === key); return r && r.t ? r.t.name : c.cls; };
     const tietOf = (ss) => ss.length ? `Tiết ${ss.map((x) => x.tiet).join(', ')}` : '';
-    const item = (key, col, title, sub, btn) => `<li><div><b>${esc(title)}</b><small>${esc(sub)}</small></div>
-      <button type="button" class="dd-small" data-open="${key}"${col >= 0 ? ` data-col="${col}"` : ''}>${btn}</button></li>`;
+    const bookBtn = (key, col) => `<button type="button" class="dd-small" data-book="${key}" data-col="${col}"><i class="fa-solid fa-book-bookmark" aria-hidden="true"></i> Ghi sổ</button>`;
+    const item = (key, col, title, sub, btn, more) => `<li><div><b>${esc(title)}</b><small>${esc(sub)}</small></div>
+      <span class="dd-task-acts">${more || ''}${btn ? `<button type="button" class="dd-small" data-open="${key}"${col >= 0 ? ` data-col="${col}"` : ''}>${btn}</button>` : ''}</span></li>`;
+    // Sổ đầu bài cùng máy: chỉ nhắc khi thầy/cô đang dùng sổ (đã có tiết ghi), đọc localStorage, không qua mạng
+    const books = SRC.listBooks(localStorage, S.owner), usesBook = books.some((b) => b.entries.length);
+    const unwritten = (e) => usesBook && e.sessions.length > 0 && SRC.bookEntries(books, e.school, e.cls.cls, SRC.isoDay(e.date)) < e.sessions.length;
     $('ddTodayDate').textContent = `${L.THU[now.getDay()]} ${fmtDate(now)}`;
     const today = L.weekPlan(input, who, L.mondayOf(now), now).filter((e) => e.date.toDateString() === now.toDateString() && e.kind !== 'missing');
     $('ddTodayList').innerHTML = today.length ? today.map((e) => item(e.key, e.sessions[0] ? e.sessions[0].col : -1, name(e.key, e.cls),
-      [e.school, weekText(e, (rows.find((r) => r.key === e.key) || {}).nm), e.kind === 'done' ? 'đã tick hoàn thành' : ''].filter(Boolean).join(' · '),
-      '<i class="fa-solid fa-clipboard-user" aria-hidden="true"></i> Điểm danh')).join('')
+      [e.school, weekText(e, (rows.find((r) => r.key === e.key) || {}).nm), e.kind === 'done' ? 'đã tick hoàn thành' : '', usesBook && e.sessions.length && !unwritten(e) ? 'đã ghi sổ đầu bài' : ''].filter(Boolean).join(' · '),
+      '<i class="fa-solid fa-clipboard-user" aria-hidden="true"></i> Điểm danh', e.sessions[0] && (!usesBook || unwritten(e)) ? bookBtn(e.key, e.sessions[0].col) : '')).join('')
       : '<li class="dd-muted">Hôm nay không có lớp nào theo lịch trên Sheet.</li>';
     const unt = L.untickedSessions(input, who, now, 30);
     const miss = L.weekPlan(input, who, L.mondayOf(now), now).filter((e) => e.kind === 'missing');
-    const todo = unt.map((e) => item(e.key, e.sessions[0].col, `${name(e.key, e.cls)} · ${L.THU[e.date.getDay()]} ${fmtDate(e.date)}`,
-      `${e.school} · ${tietOf(e.sessions)} chưa tick "Đã hoàn thành"`, 'Mở'))
-      .concat(miss.map((e) => item(e.key, -1, `${name(e.key, e.cls)} · ${L.THU[e.date.getDay()]} ${fmtDate(e.date)}`,
-        `${e.school} · ngày thường dạy nhưng Sheet chưa có buổi — điểm danh và ghi ngày`, 'Mở')));
+    const title = (e) => `${name(e.key, e.cls)} · ${L.THU[e.date.getDay()]} ${fmtDate(e.date)}`;
+    // Điểm danh nháp chưa ghi vào Sheet (nháp chỉ nằm trên máy này, dễ quên nhất nên xếp đầu)
+    const drafts = rows.flatMap((r) => Object.keys(S.drafts).filter((k) => k.startsWith(r.key + '|')).map((k) => {
+      const col = +k.slice(r.key.length + 1), s = r.p.sessions.find((x) => x.col === col), n = L.draftChanges(r.p, S.drafts[k].marks, col);
+      return s && n ? item(r.key, col, `${r.t.name} · Tiết ${s.tiet}`, `${schoolOf(r.f)} · ${n} ô điểm danh chưa ghi vào Sheet`, 'Mở') : '';
+    })).filter(Boolean);
+    const past = L.weekPlan(input, who, L.mondayOf(now), now).filter((e) => e.date.toDateString() !== now.toDateString() && e.date < now && unwritten(e));
+    const todo = drafts.concat(unt.map((e) => item(e.key, e.sessions[0].col, title(e), `${e.school} · ${tietOf(e.sessions)} chưa tick "Đã hoàn thành"`, 'Mở')))
+      .concat(miss.map((e) => item(e.key, -1, title(e), `${e.school} · ngày thường dạy nhưng Sheet chưa có buổi — điểm danh và ghi ngày`, 'Mở')))
+      .concat(past.map((e) => item(e.key, e.sessions[0].col, title(e), `${e.school} · ${tietOf(e.sessions)} chưa ghi sổ đầu bài`, '', bookBtn(e.key, e.sessions[0].col))));
     $('ddTodoN').textContent = todo.length ? `${todo.length}` : '';
     $('ddTodoList').innerHTML = todo.length ? todo.join('') : '<li class="dd-muted"><i class="fa-solid fa-check" aria-hidden="true"></i> Không còn việc tồn — Sheet đã cập nhật đủ.</li>';
   }
@@ -766,7 +773,7 @@
     $('ddWeekRange').textContent = `${fmtDate(mon)} – ${fmtDate(sun)}${weekOff === 0 ? ' (tuần này)' : ''}`;
     $('ddWeekWho').textContent = who ? `GV ${who}${S.fSchool ? ' · ' + $('ddFSchool').selectedOptions[0].textContent : ''}` : '';
     if (!who) {
-      $('ddWeekGrid').innerHTML = '<p class="dd-hint">Chọn giáo viên ở ô "Giáo viên" phía trên (hoặc nhập "Tên của tôi" ở phần Trường & sổ lớp) để xem lịch giảng dạy.</p>';
+      $('ddWeekGrid').innerHTML = '<p class="dd-hint">Chọn giáo viên ở ô "Giáo viên" phía trên (hoặc nhập "Tên của tôi" ở thẻ Cài đặt) để xem lịch giảng dạy.</p>';
       $('ddMonth').textContent = ''; weekPlanText = ''; monthText = ''; $('ddMonthCopy').hidden = true;
       return;
     }
@@ -782,7 +789,7 @@
     $('ddWeekGrid').innerHTML = `<div class="dd-week" style="--cols:${cols.length}">${cols.map((d) => {
       const es = on(d);
       return `<div class="dd-day${d.toDateString() === today ? ' is-today' : ''}"><h4>${L.THU[d.getDay()]} <small>${fmtDate(d)}</small></h4>
-        ${es.length ? es.map((e) => `<button type="button" class="dd-ev k-${e.kind}" data-open="${e.key}" title="${esc(KIND[e.kind])} — bấm để mở lớp">
+        ${es.length ? es.map((e) => `<button type="button" class="dd-ev k-${e.kind}" data-open="${e.key}"${e.sessions[0] ? ` data-col="${e.sessions[0].col}"` : ''} title="${esc(KIND[e.kind])} — bấm để mở đúng buổi này">
           <b>${esc(rowOf(e.key).t ? rowOf(e.key).t.name : e.cls.cls)}</b> <small>${esc(e.school)}</small><span>${esc(weekText(e, rowOf(e.key).nm))}</span><em>${esc(KIND[e.kind])}</em></button>`).join('')
           : '<p class="dd-free">—</p>'}</div>`;
     }).join('')}</div>`;
@@ -822,36 +829,35 @@
   async function toPicker() {
     let g;
     try { g = JSON.parse(localStorage.getItem(GOITEN)) || {}; } catch (e) { g = {}; }
-    g.absent = g.absent || {}; g.lesson = g.lesson || {}; g.called = g.called || {};
     const out = cls.students.filter((s) => { const m = markOf(s); return m === 'v' || m === 'nl'; }).map((s) => s.name);
     // Lớp có trong danh sách lớp của trang (data/roster) → dùng luôn lớp đó; không có → dán danh sách từ Sheet
-    let key, rosterNames = cls.students.map((s) => s.name);
-    try {
-      const data = await (await fetch('data/roster/students-active.json', { cache: 'no-cache' })).json();
-      const hit = (data.students || []).find((s) => lower(s.school) === lower(cls.school) && lower(s.className) === lower(cls.cls));
-      if (hit) {
-        g.src = 'class'; g.school = hit.school; g.cls = hit.className; key = `class:${hit.school}|${hit.className}`;
-        rosterNames = (data.students || []).filter((s) => s.school === hit.school && s.className === hit.className).map((s) => String(s.name).trim());
-      }
-    } catch (e) { /* không đọc được danh sách lớp → dán danh sách */ }
-    if (!key) { g.src = 'paste'; g.paste = rosterNames.join('\n'); key = 'paste'; }
-    const byLower = new Map(rosterNames.map((n) => [lower(n), n]));
-    const absent = out.map((n) => byLower.get(lower(n))).filter(Boolean);
-    g.absent[key] = { day: goitenToday(), names: absent };
+    let hit = null;
+    try { hit = SRC.rosterHit(await (await fetch('data/roster/students-active.json', { cache: 'no-cache' })).json(), cls.school, cls.cls); } catch (e) { /* không đọc được danh sách lớp → dán danh sách */ }
     const sess = cls.sessions.find((s) => s.col === attendCol);
-    let lessonNote = '';
+    let lessonNote = '', tiet = 0, level = '';
     if (LS && sess) {
-      const lv = LS.levelForClass(cls.cls), ppct = await LS.load(), periods = (ppct[lv] && ppct[lv].periods) || [];
-      const tiet = periods.length ? ppctTiet(periods, sess) : 0;
-      if (tiet) {
-        g.lesson[key] = { lv: key === 'paste' ? lv : 'auto', tiet, day: goitenToday() }; // danh sách dán không tự biết khối
-        lessonNote = ` · câu hỏi theo ${sess.bai || lessonText(L.summary(cls, lessons).nextLesson, names)}`;
-      }
+      level = LS.levelForClass(cls.cls);
+      const ppct = await LS.load(), periods = (ppct[level] && ppct[level].periods) || [];
+      tiet = periods.length ? ppctTiet(periods, sess) : 0;
+      if (tiet) lessonNote = ` · câu hỏi theo ${sess.bai || lessonText(L.summary(cls, lessons).nextLesson, names)}`;
     }
-    try { localStorage.setItem(GOITEN, JSON.stringify(g)); } catch (e) { toast('Không lưu được sang Gọi tên (bộ nhớ trình duyệt bị chặn).'); return; }
-    const miss = out.length - absent.length;
-    toast(`Đã gửi sang Gọi tên: ${absent.length} bạn vắng${lessonNote}.${miss ? ` ${miss} tên không khớp danh sách lớp.` : ''}`);
+    const r = SRC.goitenPatch(g, { names: cls.students.map((s) => s.name), absent: out, hit, tiet, level, day: SRC.goitenDay(new Date()) });
+    try { localStorage.setItem(GOITEN, JSON.stringify(r.g)); } catch (e) { toast('Không lưu được sang Gọi tên (bộ nhớ trình duyệt bị chặn).'); return; }
+    toast(`Đã gửi sang Gọi tên: ${r.absent} bạn vắng${lessonNote}.${r.miss ? ` ${r.miss} tên không khớp danh sách lớp.` : ''}`);
     global.open('goi-ten.html', 'eduquiz-goiten');
+  }
+
+  /** Mở khung ghi tiết của Sổ đầu bài cho 1 buổi. Tên học sinh đi qua localStorage (không để trên URL); buổi chưa có ngày trên Sheet tính là hôm nay. */
+  function toBook(p, key, col, extraBai) {
+    const s = p.sessions.find((x) => x.col === +col), g = L.sessionGroup(p.sessions, s);
+    if (!g.length) return;
+    const bai = g.map((x) => x.bai).filter(Boolean);
+    const ho = {
+      at: Date.now(), school: p.school, cls: p.cls, date: SRC.isoDay(L.dateOf(s.ngay) || new Date()),
+      bai: bai.length ? bai : [extraBai].filter(Boolean), absent: SRC.absentOf(p, key, g, S.drafts),
+    };
+    try { localStorage.setItem(HANDOFF, JSON.stringify(ho)); } catch (e) { toast('Bộ nhớ trình duyệt đầy — mở Sổ đầu bài và ghi tay.'); return; }
+    global.open('so-dau-bai.html?ghi=1', 'eduquiz-sodaubai');
   }
 
   /** Hiện bản vừa đọc nhưng giữ nguyên buổi đang điểm danh (show() tự nhảy về buổi hôm nay/tiếp theo). */
@@ -1021,8 +1027,12 @@
     $('ddWeekPrev').addEventListener('click', () => { weekOff--; paintWeek(); });
     $('ddWeekNext').addEventListener('click', () => { weekOff++; paintWeek(); });
     $('ddWeekNow').addEventListener('click', () => { weekOff = 0; paintWeek(); });
-    $('ddWeekGrid').addEventListener('click', (e) => { const b = e.target.closest('[data-open]'); if (b) selectClass(b.dataset.open); });
-    $('ddToday').addEventListener('click', (e) => { const b = e.target.closest('[data-open]'); if (b) selectClass(b.dataset.open, b.dataset.col); });
+    $('ddWeekGrid').addEventListener('click', (e) => { const b = e.target.closest('[data-open]'); if (b) selectClass(b.dataset.open, b.dataset.col); });
+    $('ddToday').addEventListener('click', (e) => {
+      const k = e.target.closest('[data-book]'), b = e.target.closest('[data-open]');
+      if (k) { const r = lastRows.find((x) => x.key === k.dataset.book); if (r && r.p) toBook(r.p, r.key, k.dataset.col); }
+      else if (b) selectClass(b.dataset.open, b.dataset.col);
+    });
     $('ddFind').addEventListener('input', applyFind);
     $('ddFind').addEventListener('keydown', (e) => {
       // Enter: đổi Có mặt ↔ Vắng cho bạn duy nhất đang hiện rồi xoá ô tìm (điểm danh bằng bàn phím)
@@ -1030,7 +1040,7 @@
       const vis = [...$('ddList').children].filter((li) => !li.hidden);
       if (vis.length !== 1) return;
       const st = cls.students.find((s) => s.row === +vis[0].querySelector('[data-flip]').dataset.flip);
-      setMark(st.row, markOf(st) === 'x' ? 'v' : 'x'); $('ddFind').value = ''; paintAttend();
+      setMark(st.row, flip(st)); $('ddFind').value = ''; paintAttend();
       toast(`${st.name}: ${LABEL[markOf(st)]}`);
     });
     $('ddLogout').addEventListener('click', async () => {
@@ -1055,16 +1065,17 @@
     $('ddList').addEventListener('click', (e) => {
       const b = e.target.closest('[data-m]'), f = e.target.closest('[data-flip]');
       if (b) setMark(+b.dataset.row, b.dataset.m);
-      else if (f) { const st = cls.students.find((s) => s.row === +f.dataset.flip); setMark(st.row, markOf(st) === 'x' ? 'v' : 'x'); }
+      else if (f) { const st = cls.students.find((s) => s.row === +f.dataset.flip); setMark(st.row, flip(st)); }
       else return;
       paintAttend();
     });
-    $('ddAllIn').addEventListener('click', () => { cls.students.forEach((s) => { if (markOf(s) !== 'nl') setMark(s.row, 'x'); }); paintAttend(); });
+    $('ddAllIn').addEventListener('click', () => { setMarks(cls.students.filter((s) => markOf(s) !== 'nl').map((s) => [s.row, presentMark(s)])); paintAttend(); });
     $('ddCopy').addEventListener('click', copyColumn);
     $('ddWriteBtn').addEventListener('click', writeSheet);
     setInterval(() => pollClass(POLL_MS - 5e3), POLL_MS);
     document.addEventListener('visibilitychange', () => pollClass(60e3));
     $('ddToPicker').addEventListener('click', toPicker);
+    $('ddToBook').addEventListener('click', () => { if (cls) toBook(cls, S.sel, attendCol, lessonText(L.summary(cls, lessons).nextLesson, names)); });
     $('ddTheme').addEventListener('click', () => {
       const dark = document.documentElement.getAttribute('data-theme') !== 'dark';
       document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');

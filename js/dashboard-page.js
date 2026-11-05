@@ -82,6 +82,7 @@ window.addEventListener('edu:ready', ({ detail }) => {
 
   // 3 mục trong chính trang này (SPA, không phải link riêng): Bộ đề của tôi
   // / Báo cáo kết quả / Cài đặt hệ thống.
+  show('navOverview', role === 'admin' || role === 'teacher');
   show('navMySets', role === 'admin' || role === 'teacher');
   show('navBuilder', role === 'admin' || role === 'teacher');
   show('navReports', role === 'admin' || isSchoolStaff);
@@ -98,9 +99,10 @@ window.addEventListener('edu:ready', ({ detail }) => {
     label.style.display = any ? '' : 'none';
   });
 
-  // Giáo viên: mặc định vào thẳng "Bộ đề của tôi" (đã active sẵn trong HTML) —
-  // không cần làm gì thêm vì đây cũng là mục duy nhất giáo viên còn thấy
-  // cùng "Dashboard của tôi" (link riêng, không phải section trong trang này).
+  // Giáo viên: máy đã có sổ lớp thì mở Tổng quan; chưa có thì giữ "Bộ đề của tôi" (đã active sẵn trong HTML).
+  if ((role === 'admin' || role === 'teacher') && window.EduTeacherOverview?.init({ uid: user.uid, name: profile.name || '' })) {
+    document.getElementById('navOverview').click();
+  }
 
   // Điều phối đào tạo: không có "Bộ đề của tôi"/"Cài đặt hệ thống" → mở
   // thẳng vào tab Báo cáo kết quả.

@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="css/dashboard.css">
 <link rel="stylesheet" href="css/exam-builder.css">
 <link rel="stylesheet" href="css/wrong-questions.css">
+<link rel="stylesheet" href="css/teacher-overview.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="css/accessibility.css">
 <link rel="stylesheet" href="css/motion.css">
@@ -33,6 +34,10 @@
 
   <nav class="sidebar-nav">
     <!-- 3 nhóm theo việc. Nhãn nhóm tự ẩn khi vai trò không thấy mục nào trong nhóm (js/dashboard-page.js). -->
+    <div class="nav-item" data-section="overview" id="navOverview" style="display:none;" title="Việc trong tuần: lịch dạy, chuyên cần, tiến độ lớp">
+      <span class="nav-icon"><i class="fa-solid fa-chart-line"></i></span>
+      <span>Tổng quan</span>
+    </div>
     <div class="nav-section-label">Đề &amp; kết quả</div>
     <div class="nav-item active" data-section="my-sets" id="navMySets" title="Bộ đề của tôi">
       <span class="nav-icon"><i class="fa-solid fa-book-open"></i></span>
@@ -145,6 +150,9 @@
 
   <!-- CONTENT -->
   <main id="content">
+
+    <!-- Tổng quan của giáo viên (js/teacher/overview.js): chỉ đọc dữ liệu trên máy, 0 Firebase -->
+    <section class="section" id="section-overview"><div id="overviewRoot"></div></section>
 
     <!-- ========================================
          MY SETS SECTION
@@ -576,6 +584,10 @@
 <script src="js/services/ai-assistant.js"></script>
 <script src="js/services/ai-service.js"></script>
 <script src="js/teacher/wrong-questions.js"></script>
+<script src="js/so-lop/so-lop-core.js"></script>
+<script src="js/so-dau-bai/sdb-sources.js"></script>
+<script src="js/teacher/overview-core.js"></script>
+<script src="js/teacher/overview.js"></script>
 <script src="js/custom-exam-codec.js"></script>
 <script src="js/services/question-similarity.js"></script>
 <script src="js/exam-builder.js"></script>

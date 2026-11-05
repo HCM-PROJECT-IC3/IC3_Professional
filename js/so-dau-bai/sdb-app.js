@@ -1,12 +1,19 @@
 /* ============================================================
    js/so-dau-bai/sdb-app.js — Sổ đầu bài điện tử (so-dau-bai.html).
-   Dữ liệu sổ lưu trong localStorage (sodaubai_v1) của trình duyệt — không lên Firebase, không gọi Apps Script.
+   Dữ liệu sổ lưu trong localStorage của trình duyệt — không lên Firebase, không gọi Apps Script.
+   Mỗi tài khoản, mỗi trường 1 sổ riêng: sodaubai_v1 (sổ đầu tiên), sodaubai_v1:<mã> (sổ khác). Mọi hàm chỉ làm việc với sổ đang mở (S, KEY).
    Lớp + học sinh lấy từ dữ liệu có sẵn của web (js/so-dau-bai/sdb-sources.js): sổ lớp Điều phối đã đọc ở
    trang Điểm danh, hoặc data/roster/students-active.json. Tiết đã ghi hôm nay gửi sang Gọi tên (vắng + bài).
+   Tiết để ghi: theo TKB, hoặc theo ngày dạy trên sổ lớp nếu chưa nhập TKB (weekItems). Nút "Ghi sổ đầu bài" ở Điểm danh mở thẳng
+   khung ghi qua sodaubai_handoff (takeHandoff) — tên học sinh đi qua bộ nhớ máy, không đưa lên URL.
    ============================================================ */
 'use strict';
 
-const KEY = 'sodaubai_v1';
+const BOOK0 = 'sodaubai_v1';              // sổ đầu tiên; sổ khác: sodaubai_v1:<mã>
+const CUR_KEY = 'sodaubai_cur';           // { uid: khoá sổ đang mở }
+const HANDOFF_KEY = 'sodaubai_handoff';   // Điểm danh → khung ghi tiết (dùng 1 lần)
+let KEY = BOOK0;
+let ME = '';                              // uid đang đăng nhập (edu:ready)
 const SOLOP_KEY = 'eduquiz_solop_v1';   // sổ lớp Điều phối đã đọc (js/so-lop/diem-danh.js)
 const GOITEN_KEY = 'eduquiz_goiten_v1'; // trang Gọi tên (js/name-picker/name-picker.js)
 const ROSTER_URL = 'data/roster/students-active.json';
@@ -17,6 +24,7 @@ const DOW = ['CN', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ
 const DOW_FULL = ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
 const DEFAULT_UU = ['Hào hứng, tích cực phát biểu.', 'Nắm được nội dung chính của bài.', 'Thực hành nhanh, chính xác.', 'Làm việc nhóm hiệu quả.', 'Liên hệ thực tế tốt.'];
 const DEFAULT_HC = ['Một số HS chưa tập trung.', 'Còn nói chuyện riêng.', 'Thao tác còn chậm.', 'Chưa quen nề nếp phòng máy.', 'Một số em ghi nhớ chưa chắc.'];
+const BACKUP_DAYS = 7;
 const OFF_REASONS = ['Nghỉ lễ', 'Trường tổ chức hoạt động chung', 'GV nghỉ phép (dạy bù sau)', 'HS kiểm tra / thi', 'Sự cố phòng máy'];
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -80,7 +88,7 @@ const bySlot = (a, b) => slotOrder(a).localeCompare(slotOrder(b));
 
 /* ---------- trạng thái ---------- */
 let S = load() || seed();
-if (!S.srcSchool) S.srcSchool = {}; // lớp → trường trong dữ liệu nguồn (để khớp danh sách Gọi tên)
+fixBook();
 let UI = Object.assign({ view: 'home', week: null, day: null, cls: null, weekCls: '', ppctProg: null, ppctGrade: null }, loadUI());
 if (UI.view === 'dash') UI.view = 'home';
 if (!UI.week) UI.week = curWeek();
@@ -103,9 +111,77 @@ function seed() {
   };
 }
 function load() { try { const s = JSON.parse(localStorage.getItem(KEY)); return s && s.v ? s : null; } catch { return null; } }
+function fixBook() { if (!S.srcSchool) S.srcSchool = {}; } // lớp → trường trong dữ liệu nguồn (để khớp danh sách Gọi tên)
 function loadUI() { try { return JSON.parse(localStorage.getItem(UI_KEY)) || {}; } catch { return {}; } }
-function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { toast('Trình duyệt không cho lưu – hãy tải bản sao lưu.'); } }
+/** Bộ nhớ đầy (bản CSV của Điểm danh chiếm phần lớn): bỏ dần bản đọc cũ — đọc lại được — để tiết vừa ghi không bị mất. */
+function save() {
+  const text = JSON.stringify(S);
+  do { try { localStorage.setItem(KEY, text); return; } catch { /* thử bỏ bớt */ } } while (SRC.trimSoLop(localStorage, 10));
+  toast('Trình duyệt không cho lưu – hãy tải bản sao lưu.');
+}
 function saveUI() { try { localStorage.setItem(UI_KEY, JSON.stringify(UI)); } catch { } }
+
+/* ---------- sổ theo tài khoản + trường ---------- */
+function rememberBook() {
+  if (!ME) return;
+  let cur = {}; try { cur = JSON.parse(localStorage.getItem(CUR_KEY)) || {}; } catch { }
+  cur[ME] = KEY;
+  try { localStorage.setItem(CUR_KEY, JSON.stringify(cur)); } catch { }
+}
+function useBook(key) { KEY = key; S = load() || seed(); fixBook(); UI.cls = null; UI.weekCls = ''; solopMemo = sheetMemo = null; rememberBook(); }
+/** Sổ của tài khoản: sổ mở lần trước → sổ đầu tiên. Máy dùng chung: sổ người khác giữ nguyên, người mới có sổ trống. Sổ bản trước chưa có chủ thì thuộc người mở đầu tiên. */
+function bindOwner(me) {
+  ME = me; solopMemo = sheetMemo = null;
+  const mine = SRC.listBooks(localStorage, me);
+  let cur = {}; try { cur = JSON.parse(localStorage.getItem(CUR_KEY)) || {}; } catch { }
+  const hit = mine.find(b => b.key === cur[me]) || mine.find(b => b.owner === me) || mine[0];
+  useBook(hit ? hit.key : localStorage.getItem(BOOK0) == null ? BOOK0 : `${BOOK0}:${uid()}`);
+  if (S.owner !== me) { S.owner = me; save(); }
+}
+/** Sổ mới cho trường khác: giữ người dạy, môn, PPCT, cách tính tuần; lớp, TKB, tiết đã ghi để trống. */
+function addBook(school) {
+  const o = S, b = seed();
+  b.owner = ME; b.programs = o.programs; b.ppct = o.ppct;
+  b.settings = Object.assign({}, o.settings, { ubnd: '', school, toTruong: '', pht: '' });
+  KEY = `${BOOK0}:${uid()}`; S = b; fixBook(); UI.cls = null; UI.weekCls = ''; solopMemo = sheetMemo = null;
+  save(); rememberBook();
+}
+/** Mở đúng sổ của trường; chưa có thì dùng sổ chưa đặt tên trường, không nữa thì tạo sổ mới. */
+function goSchool(school) {
+  if (!school || SRC.sameSchool(S.settings.school, school)) return;
+  const hit = SRC.bookForSchool(SRC.listBooks(localStorage, ME), school);
+  if (hit) return useBook(hit.key);
+  if (!S.settings.school) { S.settings.school = school; sheetMemo = null; return save(); }
+  addBook(school); toast(`Đã tạo sổ riêng cho ${school}`);
+}
+
+/* ---------- sổ lớp đã đọc ở Điểm danh (cùng máy) ---------- */
+let solopMemo = null, sheetMemo = null;
+function soLop() {
+  if (solopMemo) return solopMemo;
+  let s = {}; try { s = JSON.parse(localStorage.getItem(SOLOP_KEY)) || {}; } catch { }
+  return solopMemo = s.owner && ME && s.owner !== ME ? {} : s; // sổ lớp của người khác trên máy dùng chung thì bỏ qua
+}
+/** Tiết có ngày trên sổ lớp của trường đang mở; mine = tiết của giáo viên này. */
+function sheetRows() {
+  const teacher = soLop().me || S.settings.teacher || '', k = `${S.settings.school}|${teacher}`;
+  if (sheetMemo && sheetMemo.k === k) return sheetMemo.rows;
+  const rows = !window.EduSoLop ? [] : SRC.sheetSessions(soLop(), window.EduSoLop, { teacher, ref: new Date() })
+    .filter(r => SRC.sameSchool(r.school, S.settings.school) || SRC.sameSchool(r.school, S.srcSchool[r.cls]));
+  sheetMemo = { k, rows };
+  return rows;
+}
+/** Lớp chưa có danh sách → lấy luôn từ sổ lớp, khỏi vào mục Học sinh. */
+function ensureClass(cls, school) {
+  if ((S.students[cls] || []).length || !window.EduSoLop) return;
+  const want = school || S.srcSchool[cls] || S.settings.school;
+  const c = SRC.fromSoLop(soLop(), window.EduSoLop).find(x => x.key === cls && SRC.sameSchool(x.school, want));
+  if (!c) return;
+  S.students[cls] = SRC.mergeStudents(S.students[cls], c.students).list;
+  S.srcSchool[cls] = c.school;
+  if (!S.classes.includes(cls)) S.classes.push(cls), S.classes.sort(cmpClass);
+  save();
+}
 
 const progName = id => (S.programs.find(p => p.id === id) || { name: id }).name;
 const ppctOf = (prog, cls) => S.ppct[`${prog}|${gradeOf(cls)}`] || [];
@@ -119,6 +195,7 @@ function lastPPCT(prog, cls, before) {
   return best;
 }
 // Tất cả tiết của tuần n: tiết theo TKB (kèm entry nếu đã ghi) + tiết ghi ngoài TKB
+// + tiết của tôi có ngày trên sổ lớp mà TKB không có lớp đó hôm đó (chưa nhập TKB, dạy bù). Sheet không có giờ học nên tạm xếp từ tiết 1 buổi sáng, khung ghi mở sẵn ô đổi tiết.
 function weekItems(n) {
   const dates = weekDates(n), out = [], used = new Set();
   for (const s of S.tkb) {
@@ -129,9 +206,31 @@ function weekItems(n) {
     out.push({ date, cls: s.cls, prog: s.prog, buoi: s.buoi, tiet: s.tiet, entry: e });
   }
   for (const e of S.entries) if (e.date >= dates[0] && e.date <= dates[5] && !used.has(e.id)) out.push({ date: e.date, cls: e.cls, prog: e.prog, buoi: e.buoi, tiet: e.tiet, entry: e, extra: true });
+  const need = new Map();
+  for (const r of sheetRows()) if (r.mine && r.date >= dates[0] && r.date <= dates[5]) { const k = r.date + '|' + r.cls; need.set(k, (need.get(k) || 0) + 1); }
+  for (const [k, n] of need) {
+    const [date, cls] = k.split('|'), same = out.filter(o => o.date === date && o.cls === cls);
+    if (same.some(o => !o.extra)) continue;
+    const taken = new Set(same.filter(o => o.buoi === 'Sáng').map(o => +o.tiet));
+    for (let i = same.length, t = 1; i < n; i++, t++) { while (taken.has(t)) t++; out.push({ date, cls, prog: S.programs[0]?.id, buoi: 'Sáng', tiet: t, sheet: i + 1 }); } // sheet: tiết thứ mấy của buổi trên Sheet
+  }
   return out.sort(bySlot);
 }
 const isMissing = it => it.cls && !it.entry && it.date <= today();
+/** Vị trí của tiết trong các tiết cùng lớp cùng ngày (tiết thứ 2 của buổi lấy bài thứ 2 trên Sheet). */
+function slotIndex(c) {
+  const order = slotOrder(c), dow = parseD(c.date).getDay() + 1;
+  return Math.max(S.entries.filter(x => x.cls === c.cls && x.date === c.date && slotOrder(x) < order).length,
+    S.tkb.filter(t => t.cls === c.cls && t.dow === dow && slotOrder({ date: c.date, buoi: t.buoi, tiet: t.tiet }) < order).length);
+}
+/** Bài gợi ý: theo Sheet ngày đó (ho = bài gửi từ Điểm danh), không có thì tiết kế tiếp của sổ. */
+function suggestFor(c, ho, sheet) {
+  const last = lastPPCT(c.prog, c.cls, slotOrder(c)), next = { ppct: last + 1, lesson: lessonAt(c.prog, c.cls, last + 1), fromSheet: false };
+  if (!window.EduSoLop) return next;
+  const list = ho && ho.cls === c.cls && ho.date === c.date ? ho.bai : sheetRows().filter(r => r.cls === c.cls && r.date === c.date).map(r => r.bai);
+  const p = SRC.pickLesson(ppctOf(c.prog, c.cls), list[Math.min(sheet ? sheet - 1 : slotIndex(c), list.length - 1)], last, window.EduSoLop.lessonOf);
+  return p ? { ppct: p.ppct ?? next.ppct, lesson: p.lesson, fromSheet: true } : next;
+}
 function absentCount(cls, name) {
   let P = 0, K = 0;
   for (const e of S.entries) if (e.cls === cls) for (const a of e.absent || []) if (a.name === name) a.type === 'K' ? K++ : P++;
@@ -171,13 +270,14 @@ function progressRows() {
    KHUNG GIAO DIỆN
    ========================================================= */
 const NAV = [
+  { head: 'Hằng ngày' },
   { v: 'home', label: 'Hôm nay', short: 'Hôm nay', icon: 'home' },
   { v: 'week', label: 'Sổ đầu bài', short: 'Sổ tuần', icon: 'book' },
+  { v: 'report', label: 'In & xuất file', short: 'In', icon: 'printer' },
+  { head: 'Thiết lập' },
   { v: 'tkb', label: 'Thời khóa biểu', short: 'TKB', icon: 'grid' },
   { v: 'classes', label: 'Học sinh', short: 'Học sinh', icon: 'users' },
   { v: 'ppct', label: 'Chương trình', short: 'PPCT', icon: 'list' },
-  { sep: true },
-  { v: 'report', label: 'In & xuất file', short: 'In', icon: 'printer' },
   { v: 'settings', label: 'Cài đặt', short: 'Cài đặt', icon: 'sliders' },
 ];
 const VIEWS = { home: viewHome, week: viewWeek, tkb: viewTKB, classes: viewClasses, ppct: viewPPCT, report: viewReport, settings: viewSettings };
@@ -186,12 +286,15 @@ let CARDS = [];
 function go(v) { UI.view = v; saveUI(); render(); window.scrollTo(0, 0); }
 function render() {
   const due = weekItems(curWeek()).filter(isMissing).length;
-  $('#nav').innerHTML = NAV.map(n => n.sep ? '<div class="sep"></div>' :
+  $('#nav').innerHTML = NAV.map(n => n.head ? `<div class="nav-h">${n.head}</div>` :
     `<button type="button" data-v="${n.v}" class="${UI.view === n.v ? 'on' : ''}">${ic(n.icon)}${n.label}${n.v === 'week' && due ? `<span class="badge" title="Tiết chưa ghi">${due}</span>` : ''}</button>`).join('');
-  $('#bottomnav').innerHTML = NAV.filter(n => !n.sep).map(n => `<button type="button" data-v="${n.v}" class="${UI.view === n.v ? 'on' : ''}">${ic(n.icon)}${n.short}</button>`).join('');
+  $('#bottomnav').innerHTML = NAV.filter(n => n.v).map(n => `<button type="button" data-v="${n.v}" class="${UI.view === n.v ? 'on' : ''}">${ic(n.icon)}${n.short}</button>`).join('');
   $('#brandSub').textContent = `Năm học ${S.settings.year}`;
   $('#me').innerHTML = `<b>${esc(S.settings.teacher)}</b><span class="faint">${esc(S.settings.school)}</span>`;
   $('#crumb').innerHTML = `<b>Tuần ${pad(curWeek())}</b><span class="crumb-date"> · ${longDate(today())}</span>`;
+  const books = ME ? SRC.listBooks(localStorage, ME) : [], bs = $('#bookSel');
+  bs.hidden = books.length < 2;
+  bs.innerHTML = books.map(b => `<option value="${esc(b.key)}" ${b.key === KEY ? 'selected' : ''}>${esc(b.school || 'Sổ chưa đặt tên trường')}</option>`).join('');
   $('#newEntry').innerHTML = `${ic('plus')}<span>Ghi tiết dạy</span>`;
   $('#themeBtn').innerHTML = document.documentElement.dataset.theme === 'dark' ? `${ic('sun')}Sáng` : `${ic('moon')}Tối`;
   $('#quickBackup').innerHTML = `${ic('save')}Sao lưu`;
@@ -214,6 +317,7 @@ $('#logoutBtn').onclick = async () => {
   location.href = 'login.html';
 };
 $('#quickBackup').onclick = () => downloadBackup();
+$('#bookSel').onchange = ev => { useBook(ev.target.value); saveUI(); render(); };
 $('#newEntry').onclick = () => {
   const d = weekDates(UI.view === 'week' ? UI.week : curWeek());
   openEntry({ date: d.includes(today()) ? today() : (UI.view === 'home' && UI.day) || d[0] });
@@ -229,7 +333,7 @@ $('#view').addEventListener('click', ev => {
   if (!act) return;
   if (act === 'pick') sendToPicker(it.entry);
   else if (act === 'edit') openEntry(it.entry);
-  else openEntry({ date: it.date, cls: it.cls, buoi: it.buoi, tiet: it.tiet, prog: it.prog, off: act === 'off' });
+  else openEntry({ date: it.date, cls: it.cls, buoi: it.buoi, tiet: it.tiet, prog: it.prog, off: act === 'off', sheet: it.sheet });
 });
 
 function toast(msg, action) {
@@ -275,14 +379,14 @@ function bindWeekNav(root) {
 function lessonCard(it, { comment = false } = {}) {
   if (it.label) return `<div class="lesson label"><div class="when"><b>Tiết ${it.tiet}</b><span>${it.buoi}</span></div><div>${esc(it.label)}</div></div>`;
   const i = CARDS.push(it) - 1, e = it.entry;
-  const when = `<div class="when"><b>Tiết ${it.tiet}</b><span>${it.buoi}</span></div>`;
+  const when = it.sheet ? '<div class="when"><b>Sổ lớp</b><span>chưa rõ tiết</span></div>' : `<div class="when"><b>Tiết ${it.tiet}</b><span>${it.buoi}</span></div>`;
   const prog = multiProg() ? `<span>${esc(progName(it.prog))}</span>` : '';
   if (!e) {
-    const next = lastPPCT(it.prog, it.cls, slotOrder(it)) + 1, name = lessonAt(it.prog, it.cls, next);
+    const { ppct: next, lesson: name, fromSheet } = suggestFor(it, null, it.sheet);
     const late = it.date < today();
     return `<article class="lesson todo" data-ci="${i}">${when}${clsBadge(it.cls)}
       <div class="what"><div class="ttl">${name ? esc(name) : 'Chưa ghi sổ'}</div>
-        <div class="sub"><span>Gợi ý tiết PPCT ${next}</span>${prog}${late ? '<span class="tag warn">Chưa ghi</span>' : ''}</div></div>
+        <div class="sub"><span>Gợi ý tiết PPCT ${next}${fromSheet ? ' theo sổ lớp' : ''}</span>${prog}${late ? '<span class="tag warn">Chưa ghi</span>' : ''}</div></div>
       <div class="act"><button type="button" class="btn ghost" data-act="off">${ic('pause')}Nghỉ</button><button type="button" class="btn primary lg" data-act="write">${ic('edit')}Ghi sổ</button></div></article>`;
   }
   const abs = (e.absent || []);
@@ -297,6 +401,42 @@ function lessonCard(it, { comment = false } = {}) {
 /* =========================================================
    HÔM NAY
    ========================================================= */
+/** Bảng 3 bước cho sổ mới, ẩn khi đã xong hoặc đã có tiết đã ghi. */
+function setupCard() {
+  if (S.entries.length) return '';
+  const hasStu = Object.values(S.students).some(l => l.length), mine = sheetRows().some(r => r.mine);
+  const steps = [
+    { ok: !!(S.settings.school && S.settings.teacher), t: 'Tên trường và giáo viên', s: 'In ở đầu sổ', go: 'settings', b: 'Mở Cài đặt' },
+    { ok: hasStu, t: 'Lớp và học sinh', s: 'Lấy từ sổ lớp đã đọc ở Điểm danh hoặc danh sách của hệ thống', go: 'classes', b: 'Mở Học sinh' },
+    { ok: S.tkb.some(t => t.cls) || mine, t: 'Lịch dạy', s: mine ? 'Đang dùng ngày dạy trên sổ lớp' : 'Nhập TKB, hoặc bỏ qua nếu sổ lớp ở Điểm danh đã có ngày dạy và đúng tên giáo viên', go: 'tkb', b: 'Mở TKB' },
+  ];
+  if (steps.every(x => x.ok)) return '';
+  return `<section class="panel setup" style="margin-bottom:22px"><div class="panel-h"><h2>Bắt đầu sổ mới</h2></div><div class="panel-b mini">
+    ${steps.map((x, i) => `<div><span class="step-n ${x.ok ? 'ok' : ''}">${x.ok ? ic('check') : i + 1}</span><div class="grow"><div class="t">${x.t}</div><div class="s">${x.s}</div></div>${x.ok ? '' : `<button type="button" class="btn sm" data-go="${x.go}">${x.b}</button>`}</div>`).join('')}
+  </div></section>`;
+}
+/** Dữ liệu chỉ ở máy này nên nhắc sao lưu; không sao lưu cũng không chặn việc gì. */
+function backupCard() {
+  if (!S.entries.length) return '';
+  const days = S.backupAt ? Math.floor((Date.now() - S.backupAt) / 864e5) : null;
+  if (days != null && days < BACKUP_DAYS) return '';
+  return `<section class="panel"><div class="panel-b mini"><div><div class="grow"><div class="t">${days == null ? 'Sổ chưa được sao lưu' : `Đã ${days} ngày chưa sao lưu`}</div><div class="s">Sổ chỉ nằm trên máy này. Xóa dữ liệu trình duyệt là mất.</div></div><button type="button" class="btn sm" id="hBackup">${ic('save')}Sao lưu</button></div></div></section>`;
+}
+/** Một ngày nghỉ chung (lễ, trường có việc): đánh dấu mọi tiết chưa ghi của ngày trong 1 lần. */
+function offDay(date, items) {
+  modal(`Nghỉ cả ngày ${thu(date)}, ${shortDate(date)}`, `<p style="margin-top:0">${items.length} tiết chưa ghi của ngày này sẽ được đánh dấu nghỉ, không tính vào tiến độ. Tiết đã ghi giữ nguyên.</p>
+    <div class="chips" id="odChips">${OFF_REASONS.map(r => `<button type="button" class="chip">${esc(r)}</button>`).join('')}</div>
+    <label class="field" style="margin-top:12px"><span>Lý do</span><input class="inp" type="text" id="odReason" placeholder="Chọn ở trên hoặc tự gõ"></label>`,
+    `<button type="button" class="btn" data-close>Hủy</button><button type="button" class="btn primary" id="odOk">${ic('check')}Đánh dấu nghỉ</button>`);
+  $('#odChips').onclick = ev => { const c = ev.target.closest('.chip'); if (c) { $('#odReason').value = c.textContent; $$('.chip', $('#odChips')).forEach(x => x.classList.toggle('on', x === c)); } };
+  $('#odOk').onclick = () => {
+    const lesson = $('#odReason').value.trim() || 'Nghỉ';
+    const added = items.map(it => ({ id: uid(), date, cls: it.cls, prog: it.prog, buoi: it.buoi, tiet: it.tiet, ppct: '', lesson, absent: [], uu: '', hc: '', teacher: S.settings.teacher, note: '', off: true }));
+    S.entries.push(...added); save(); $('#modal').close(); render();
+    toast(`Đã đánh dấu nghỉ ${added.length} tiết`, { label: 'Hoàn tác', fn: () => { S.entries = S.entries.filter(e => !added.includes(e)); save(); render(); } });
+  };
+}
+
 function viewHome(root) {
   const wk = curWeek(), dates = weekDates(wk), items = weekItems(wk);
   const teachDays = S.settings.days.map(d => dates[d - 2]).filter(Boolean);
@@ -306,13 +446,15 @@ function viewHome(root) {
       : (items.find(isMissing) || {}).date || (teachDays.includes(today()) ? today() : teachDays.filter(d => d <= today()).pop() || teachDays[0]);
   }
   const dayItems = items.filter(it => it.date === UI.day);
+  const dayTodo = dayItems.filter(it => it.cls && !it.entry);
   const real = items.filter(it => it.cls);
-  const missing = real.filter(isMissing);
+  const missing = real.filter(isMissing), catchUp = missing.filter(it => it.date !== UI.day); // tiết của ngày đang xem đã hiện ở cột trái
   const absences = real.reduce((a, it) => a + ((it.entry && it.entry.absent) || []).length, 0);
   const hot = hotStudents();
   const prog = progressRows();
 
   root.innerHTML = `${phead(longDate(UI.day), `Tuần ${pad(wk)} · ${vnDate(dates[0])} – ${vnDate(dates[5])}`)}
+  ${setupCard()}
   <div class="layout-home">
     <div>
       <div class="days" style="grid-template-columns:repeat(${teachDays.length},minmax(0,1fr))">${teachDays.map(d => {
@@ -323,14 +465,16 @@ function viewHome(root) {
       }).join('')}</div>
       <div class="lessons">${dayItems.length ? dayItems.map(it => lessonCard(it)).join('')
         : `<div class="panel">${emptyBox('book', 'Không có tiết nào theo thời khóa biểu', '<div>Bấm “Ghi tiết dạy” để ghi tiết dạy bù hoặc ngoài lịch.</div>')}</div>`}</div>
+      ${dayTodo.length > 1 ? `<div class="row" style="margin-top:12px"><button type="button" class="btn ghost sm" id="hOffDay">${ic('pause')}Nghỉ cả ngày (${dayTodo.length} tiết)</button></div>` : ''}
     </div>
     <div class="stack">
+      ${backupCard()}
       <section class="panel"><div class="panel-h"><h2>Tuần này</h2></div><div class="panel-b">
         <div class="summary"><div><b>${real.filter(it => it.entry).length}<span class="faint" style="font-size:16px">/${real.length}</span></b><span>tiết đã ghi</span></div>
         <div><b style="color:${missing.length ? 'var(--amber)' : 'var(--green)'}">${missing.length}</b><span>chưa ghi</span></div>
         <div><b>${absences}</b><span>lượt vắng</span></div></div></div></section>
-      ${missing.length ? `<section class="panel"><div class="panel-h"><h2>Cần ghi bổ sung</h2><span class="grow"></span><span class="badge">${missing.length}</span></div><div class="panel-b mini">
-        ${missing.slice(0, 8).map(it => `<div data-ci="${CARDS.push(it) - 1}">${clsBadge(it.cls, true)}<div class="grow"><div class="t">${thu(it.date)}, ${shortDate(it.date)}</div><div class="s">Tiết ${it.tiet} buổi ${it.buoi.toLowerCase()}</div></div><button type="button" class="btn sm" data-act="write">Ghi</button></div>`).join('')}
+      ${catchUp.length ? `<section class="panel"><div class="panel-h"><h2>Cần ghi bổ sung</h2><span class="grow"></span><span class="badge">${catchUp.length}</span></div><div class="panel-b mini">
+        ${catchUp.slice(0, 8).map(it => `<div data-ci="${CARDS.push(it) - 1}">${clsBadge(it.cls, true)}<div class="grow"><div class="t">${thu(it.date)}, ${shortDate(it.date)}</div><div class="s">Tiết ${it.tiet} buổi ${it.buoi.toLowerCase()}</div></div><button type="button" class="btn sm" data-act="write">Ghi</button></div>`).join('')}
       </div></section>` : ''}
       <section class="panel"><div class="panel-h"><h2>Học sinh cần chú ý</h2></div><div class="panel-b mini">
         ${hot.length ? hot.slice(0, 6).map(o => `<div>${clsBadge(o.cls, true)}<div class="grow"><div class="t">${esc(o.name)}</div><div class="s">Vắng ${o.P + o.K} buổi (${o.P} P, ${o.K} K)</div></div><span class="tag bad">Báo GVCN</span></div>`).join('')
@@ -344,6 +488,9 @@ function viewHome(root) {
     </div>
   </div>`;
   $$('[data-day]', root).forEach(b => b.onclick = () => { UI.day = b.dataset.day; saveUI(); render(); });
+  $$('[data-go]', root).forEach(b => b.onclick = () => go(b.dataset.go));
+  const od = $('#hOffDay', root); if (od) od.onclick = () => offDay(UI.day, dayTodo);
+  const bk = $('#hBackup', root); if (bk) bk.onclick = () => { downloadBackup(); render(); };
 }
 
 /* =========================================================
@@ -380,10 +527,11 @@ function viewWeek(root) {
    KHUNG GHI TIẾT DẠY
    ========================================================= */
 function openEntry(src) {
-  const isNew = !src.id;
-  const e = Object.assign({ id: uid(), date: today(), cls: '', prog: S.programs[0]?.id, buoi: 'Sáng', tiet: 1, ppct: '', lesson: '', absent: [], uu: '', hc: '', teacher: S.settings.teacher, note: '', off: false }, structuredClone(src));
-  if (isNew && e.cls && !e.off && !e.ppct) { e.ppct = lastPPCT(e.prog, e.cls, slotOrder(e)) + 1; e.lesson = e.lesson || lessonAt(e.prog, e.cls, e.ppct); }
-  const prefilled = !!src.cls;
+  const isNew = !src.id, { ho, sheet, ...rest } = src; // ho: buổi gửi từ Điểm danh · sheet: tiết lấy từ sổ lớp, chưa rõ tiết TKB
+  const e = Object.assign({ id: uid(), date: today(), cls: '', prog: S.programs[0]?.id, buoi: 'Sáng', tiet: 1, ppct: '', lesson: '', absent: [], uu: '', hc: '', teacher: S.settings.teacher, note: '', off: false }, structuredClone(rest));
+  if (isNew && e.cls) ensureClass(e.cls, ho && ho.school);
+  if (isNew && e.cls && !e.off && !e.ppct) { const sg = suggestFor(e, ho, sheet); e.ppct = sg.ppct; e.lesson = e.lesson || sg.lesson; }
+  const prefilled = !!src.cls && !sheet;
   const form = $('#drawerForm');
   form.innerHTML = `
   <div class="dh"><span id="dBadge"></span><div class="grow"><h2>${isNew ? 'Ghi tiết dạy' : 'Sửa tiết dạy'}</h2><p id="dSub"></p></div>
@@ -464,7 +612,8 @@ function openEntry(src) {
     const c = cur(), list = ppctOf(c.prog, c.cls);
     $('#lessonList').innerHTML = list.map(r => `<option value="${esc(r.name)}">Tiết ${r.t}${r.topic ? ' · ' + esc(r.topic) : ''}</option>`).join('');
     const last = c.cls ? lastPPCT(c.prog, c.cls, isNew ? slotOrder(c) : slotOrder(e)) : 0;
-    $('#ppctHint').textContent = !isClass(c.cls) ? '' : (last ? `Tiết trước của lớp ${c.cls}: tiết ${last} – ${lessonAt(c.prog, c.cls, last) || '…'}` : `Đây là tiết đầu tiên của lớp ${c.cls}.`) + (list.length ? '' : ' · Chưa có PPCT cho khối này.');
+    $('#ppctHint').textContent = !isClass(c.cls) ? '' : (last ? `Tiết trước của lớp ${c.cls}: tiết ${last} – ${lessonAt(c.prog, c.cls, last) || '…'}` : `Đây là tiết đầu tiên của lớp ${c.cls}.`)
+      + (isNew && suggestFor(c, ho, sheet).fromSheet ? ' · Bài lấy theo sổ lớp.' : '') + (list.length ? '' : ' · Chưa có PPCT cho khối này.');
     header(); drawAbsent();
   };
   // Điểm danh 1 lần: lớp đã điểm danh ở trang Điểm danh (sổ lớp của Điều phối) → điền sẵn học sinh vắng.
@@ -473,15 +622,19 @@ function openEntry(src) {
   const prefillAbsent = () => {
     const c = cur(), box = $('#absSrc');
     if (touched || !window.EduSoLop || !isClass(c.cls) || !c.date) return;
-    let a = null;
-    try { a = SRC.attendanceOn(JSON.parse(localStorage.getItem(SOLOP_KEY)) || {}, window.EduSoLop, { school: (S.srcSchool || {})[c.cls] || S.settings.school, cls: c.cls, date: parseD(c.date) }); } catch { a = null; }
+    let a = ho && ho.cls === c.cls && ho.date === c.date ? ho : null;
+    if (!a) try { a = SRC.attendanceOn(soLop(), window.EduSoLop, { school: (S.srcSchool || {})[c.cls] || S.settings.school, cls: c.cls, date: parseD(c.date) }); } catch { a = null; }
     if (fromSheet && !a) { e.absent = []; fromSheet = false; box.textContent = ''; drawAbsent(); }
-    if (!a) return;
+    if (!a) {
+      const known = SRC.fromSoLop(soLop(), window.EduSoLop).some(x => x.key === c.cls && (SRC.sameSchool(x.school, S.srcSchool[c.cls]) || SRC.sameSchool(x.school, S.settings.school)));
+      box.innerHTML = known ? 'Sổ lớp chưa có buổi ngày này. <a href="diem-danh.html">Điểm danh trước</a> thì danh sách vắng tự điền, hoặc bấm tên bên dưới.' : '';
+      return;
+    }
     const byLow = new Map((S.students[c.cls] || []).map(s => [s.name.toLocaleLowerCase('vi'), s.name]));
     e.absent = a.absent.map(n => ({ name: byLow.get(n.toLocaleLowerCase('vi')) || n, type: 'P' }));
     fromSheet = true;
     const at = new Date(a.at);
-    box.textContent = `Lấy từ Điểm danh (sổ lớp đọc lúc ${pad(at.getHours())}:${pad(at.getMinutes())} ${pad(at.getDate())}/${pad(at.getMonth() + 1)}): `
+    box.textContent = `Lấy từ Điểm danh (cập nhật ${pad(at.getHours())}:${pad(at.getMinutes())} ${pad(at.getDate())}/${pad(at.getMonth() + 1)}): `
       + (a.absent.length ? `${a.absent.length} bạn vắng` : 'đủ sĩ số') + (a.bai.length ? ` · Sheet ghi “${a.bai.join(', ')}”` : '') + '. Bấm tên để sửa.';
     drawAbsent();
   };
@@ -519,10 +672,11 @@ function openEntry(src) {
   chipBox('#hcChips', 'hc', phraseFreq('hc', DEFAULT_HC));
 
   const setPPCT = n => { F('ppct').value = n; const name = lessonAt(F('prog').value, cur().cls, n); if (name) F('lesson').value = name; };
+  const applySuggest = () => { const sg = suggestFor(cur(), ho, sheet); F('ppct').value = sg.ppct; if (sg.lesson) F('lesson').value = sg.lesson; };
   $$('[data-st]', form).forEach(b => b.onclick = () => setPPCT(Math.max(0, (+F('ppct').value || 0) + +b.dataset.st)));
   F('ppct').addEventListener('input', () => setPPCT(F('ppct').value));
   F('lesson').addEventListener('change', () => { const r = ppctOf(F('prog').value, cur().cls).find(r => r.name === F('lesson').value); if (r) F('ppct').value = r.t; });
-  const onSlot = () => { if (isNew && isClass(cur().cls)) setPPCT(lastPPCT(F('prog').value, cur().cls, slotOrder(cur())) + 1); refresh(); prefillAbsent(); };
+  const onSlot = () => { if (isNew && isClass(cur().cls)) { ensureClass(cur().cls); applySuggest(); } refresh(); prefillAbsent(); };
   ['cls', 'prog', 'date', 'buoi', 'tiet'].forEach(n => F(n).addEventListener('change', onSlot));
   const toggleOff = () => { const off = F('off').checked; $('#offBox').classList.toggle('hide', !off); $('#teachBox').classList.toggle('hide', off); };
   F('off').addEventListener('change', toggleOff);
@@ -541,10 +695,15 @@ function openEntry(src) {
       off, ppct: off ? '' : F('ppct').value, lesson, absent: off ? [] : e.absent,
       uu: off ? '' : F('uu').value.trim(), hc: off ? '' : F('hc').value.trim(), teacher: F('teacher').value.trim(), note: F('note').value.trim(),
     });
+    S = load() || S; fixBook(); // tab khác có thể vừa ghi lúc khung này đang mở
     if (!S.classes.includes(c.cls)) S.classes.push(c.cls), S.classes.sort(cmpClass);
     const i = S.entries.findIndex(x => x.id === e.id);
     i >= 0 ? (S.entries[i] = e) : S.entries.push(e);
-    save(); $('#drawer').close(); render(); toast(off ? `Đã đánh dấu nghỉ – lớp ${c.cls}` : `Đã lưu tiết dạy lớp ${c.cls}`);
+    save(); $('#drawer').close(); render();
+    // Lớp 2 tiết/buổi: mở tiếp tiết còn lại của buổi, giữ danh sách vắng Điểm danh gửi sang
+    const next = off ? null : weekItems(weekOf(c.date)).find(it => it.cls === c.cls && it.date === c.date && !it.entry);
+    toast(off ? `Đã đánh dấu nghỉ – lớp ${c.cls}` : `Đã lưu tiết dạy lớp ${c.cls}`,
+      next ? { label: 'Ghi tiết tiếp', fn: () => openEntry({ date: next.date, cls: next.cls, buoi: next.buoi, tiet: next.tiet, prog: next.prog, sheet: next.sheet, ho }) } : undefined);
   };
   $('#dSave').onclick = doSave;
   form.onkeydown = ev => { if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) { ev.preventDefault(); doSave(); } };
@@ -897,13 +1056,14 @@ function viewSettings(root) {
     <div class="row gap-s" style="margin-top:14px;flex-wrap:nowrap"><input class="inp" type="text" id="npId" placeholder="Mã, vd TA" style="width:120px"><input class="inp" type="text" id="npName" placeholder="Tên, vd Tiếng Anh"><button type="button" class="btn" id="npAdd">${ic('plus')}Thêm</button></div>
   </div></section>
   <section class="panel"><div class="panel-h"><h2>Dữ liệu</h2><span class="grow"></span><span class="faint sm-t">${S.entries.length} tiết · ${S.classes.length} lớp · ${Object.values(S.students).reduce((a, l) => a + l.length, 0)} học sinh</span></div><div class="panel-b">
-    <p class="muted sm-t" style="margin-top:0">Dữ liệu chỉ lưu trong trình duyệt trên máy này. Nên tải bản sao lưu mỗi tuần; dùng file sao lưu để chuyển sang máy khác.</p>
+    <p class="muted sm-t" style="margin-top:0">Dữ liệu chỉ lưu trong trình duyệt trên máy này. Nên tải bản sao lưu mỗi tuần; dùng file sao lưu để chuyển sang máy khác. Dạy nhiều trường thì mỗi trường 1 sổ riêng, đổi sổ ở ô trên cùng; sao lưu theo từng sổ.</p>
     <div class="row">
       <button type="button" class="btn" id="bImportOld">${ic('upload')}Nhập sổ cũ (Excel)</button>
       <button type="button" class="btn" id="bBackup">${ic('download')}Tải bản sao lưu</button>
       <button type="button" class="btn" id="bRestore">${ic('upload')}Khôi phục từ bản sao lưu</button>
+      <button type="button" class="btn" id="bNewBook">${ic('plus')}Thêm sổ cho trường khác</button>
       <span class="grow"></span>
-      <button type="button" class="btn danger" id="bReset">${ic('trash')}Xóa toàn bộ</button></div>
+      <button type="button" class="btn danger" id="bReset">${ic('trash')}Xóa sổ này</button></div>
   </div></section>
   </div>`;
 
@@ -943,18 +1103,35 @@ function viewSettings(root) {
   $('#bRestore').onclick = () => pickFile('.json', async f => {
     let d; try { d = JSON.parse(await f.text()); if (!d.v || !Array.isArray(d.entries)) throw 0; } catch { return toast('File sao lưu không hợp lệ'); }
     if (!await ask({ title: 'Khôi phục dữ liệu?', body: `Dữ liệu hiện tại sẽ được thay bằng bản sao lưu (${d.entries.length} tiết).`, ok: 'Khôi phục' })) return;
-    S = d; save(); render(); toast('Đã khôi phục');
+    S = d; S.owner = ME; fixBook(); sheetMemo = null; save(); render(); toast('Đã khôi phục');
   });
   $('#bReset').onclick = async () => {
-    if (!await ask({ title: 'Xóa toàn bộ dữ liệu?', body: 'Mọi tiết đã ghi, danh sách học sinh và cài đặt sẽ trở về mặc định. <b>Không thể hoàn tác</b> – hãy tải bản sao lưu trước.', ok: 'Xóa toàn bộ', danger: true })) return;
-    S = seed(); save(); render();
+    if (!await ask({ title: 'Xóa sổ này?', body: `Mọi tiết đã ghi, danh sách học sinh và cài đặt của sổ ${esc(S.settings.school || 'này')} sẽ bị xóa. <b>Không thể hoàn tác</b> – hãy tải bản sao lưu trước.`, ok: 'Xóa sổ', danger: true })) return;
+    const other = SRC.listBooks(localStorage, ME).find(b => b.key !== KEY);
+    if (other) { localStorage.removeItem(KEY); useBook(other.key); } else { S = seed(); S.owner = ME; fixBook(); sheetMemo = null; save(); }
+    render();
+  };
+  $('#bNewBook').onclick = () => {
+    const have = SRC.listBooks(localStorage, ME), names = SRC.groupBySchool(SRC.fromSoLop(soLop(), window.EduSoLop || {})).map(g => g.school).filter(n => !SRC.bookForSchool(have, n));
+    modal('Thêm sổ cho trường khác', `<p style="margin-top:0">Sổ mới giữ tên giáo viên, môn học và PPCT. Lớp, học sinh và TKB của trường đó nhập riêng.</p>
+      <label class="field"><span>Tên trường</span><input class="inp" id="nbName" list="nbList" placeholder="vd TiH Phong Phú 2"></label><datalist id="nbList">${names.map(n => `<option value="${esc(n)}">`).join('')}</datalist>`,
+      '<button type="button" class="btn" data-close>Hủy</button><button type="button" class="btn primary" id="nbOk">Tạo sổ</button>');
+    $('#nbName').focus();
+    $('#nbOk').onclick = () => {
+      const school = $('#nbName').value.trim(); if (!school) return toast('Nhập tên trường');
+      const hit = SRC.bookForSchool(have, school);
+      if (hit) useBook(hit.key); else addBook(school);
+      $('#modal').close(); go('home'); toast(hit ? `Đã mở sổ ${hit.school}` : `Đã tạo sổ ${school}`);
+    };
   };
   $('#bImportOld').onclick = () => pickFile('.xlsx,.xls', importOldBook);
 }
 function downloadBackup() {
+  S.backupAt = Date.now(); save();
   const blob = new Blob([JSON.stringify(S, null, 1)], { type: 'application/json' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = `sodaubai_saoluu_${today()}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  const tag = SRC.schoolKey(S.settings.school).replace(/\s+/g, '-');
+  a.download = `sodaubai_saoluu_${tag ? tag + '_' : ''}${today()}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   toast('Đã tải bản sao lưu');
 }
 
@@ -1013,7 +1190,7 @@ let rosterData = null; // students-active.json — đọc 1 lần mỗi lần m�
 const rosterJson = async () => rosterData || (rosterData = await (await fetch(ROSTER_URL, { cache: 'no-cache' })).json());
 async function loadSources() {
   let solop = [], roster = [];
-  try { if (window.EduSoLop) solop = SRC.fromSoLop(JSON.parse(localStorage.getItem(SOLOP_KEY)) || {}, window.EduSoLop); } catch { }
+  try { if (window.EduSoLop) solop = SRC.fromSoLop(soLop(), window.EduSoLop); } catch { }
   try { roster = SRC.fromRoster(await rosterJson()); } catch { }
   return { solop: SRC.groupBySchool(solop), roster: SRC.groupBySchool(roster) };
 }
@@ -1105,10 +1282,42 @@ async function sendToPicker(e) {
   window.open('goi-ten.html', 'eduquiz-goiten');
 }
 
-/** Sổ mới chưa có tên giáo viên → lấy tên tài khoản (hồ sơ auth-guard đã đọc, không đọc thêm). */
+/** Nút "Ghi sổ đầu bài" ở Điểm danh: mở đúng sổ của trường rồi mở khung ghi của buổi đó. */
+function takeHandoff() {
+  if (new URLSearchParams(location.search).get('ghi') !== '1') return;
+  history.replaceState(null, '', location.pathname);
+  let ho = null;
+  try { ho = JSON.parse(localStorage.getItem(HANDOFF_KEY)); localStorage.removeItem(HANDOFF_KEY); } catch { }
+  if (!ho || Date.now() - ho.at > 10 * 60e3) return;
+  ho.cls = normClass(ho.cls);
+  if (!isClass(ho.cls)) return toast(`Tên lớp “${ho.cls}” chưa có dạng 3.1 hoặc 3A1 – bấm “Ghi tiết dạy” để ghi tay`);
+  goSchool(ho.school);
+  ensureClass(ho.cls, ho.school);
+  UI.view = 'home'; UI.day = ho.date; saveUI(); render();
+  const items = weekItems(weekOf(ho.date)).filter(it => it.date === ho.date && it.cls === ho.cls);
+  const it = items.find(x => !x.entry);
+  if (it) openEntry({ date: it.date, cls: it.cls, buoi: it.buoi, tiet: it.tiet, prog: it.prog, sheet: it.sheet, ho });
+  else if (items.length) openEntry(items[0].entry);
+  else openEntry({ date: ho.date, cls: ho.cls, sheet: true, ho });
+}
+
 window.addEventListener('edu:ready', ev => {
-  const p = (ev.detail && ev.detail.profile) || {};
-  if (!S.settings.teacher && p.name) { S.settings.teacher = String(p.name).trim(); save(); render(); }
+  const p = (ev.detail && ev.detail.profile) || {}, id = ev.detail && ev.detail.user && ev.detail.user.uid;
+  if (id) bindOwner(id);
+  // Sổ mới chưa có tên giáo viên → lấy tên tài khoản (hồ sơ auth-guard đã đọc, không đọc thêm)
+  if (!S.settings.teacher && p.name) { S.settings.teacher = String(p.name).trim(); save(); }
+  render();
+  takeHandoff();
 });
+
+// Tab khác vừa ghi: nạp lại để không ghi đè bằng bản cũ trong bộ nhớ. Đang mở khung ghi thì không vẽ lại (doSave tự nạp trước khi lưu).
+let staleView = false;
+const dialogOpen = () => $('#drawer').open || $('#modal').open;
+window.addEventListener('storage', ev => {
+  if (ev.key === SOLOP_KEY) { solopMemo = sheetMemo = null; staleView = true; }
+  if (ev.key === KEY && ev.newValue && !dialogOpen()) { S = load() || S; fixBook(); staleView = true; }
+  if (staleView && !document.hidden && !dialogOpen()) { staleView = false; render(); }
+});
+document.addEventListener('visibilitychange', () => { if (staleView && !document.hidden && !dialogOpen()) { staleView = false; render(); } });
 
 render();

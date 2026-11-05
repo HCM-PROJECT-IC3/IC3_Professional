@@ -24,6 +24,29 @@ Thứ tự: Apps Script → `firestore.rules`/index → đẩy web.
 
 ## 05/11/2026
 
+- **Trang chủ học sinh giao diện mới:** nền trời nhạt có bản đồ và mạng lưới, 3 vòng tròn kỹ năng số ở tiêu đề (tự vẽ, không dùng logo Certiport/IC3), 3 bước mang 3 màu xanh dương, xanh lá, cam, nút Bắt đầu màu cam, thanh trái trên màn rộng (Trang chủ, Tiến độ của em, Lịch sử bài làm). Thẻ "Kết quả của em" ở thanh trái hiện số bài, chuỗi ngày học, câu đến hạn ôn của học sinh đang chọn, đọc từ máy này. Dấu ✓ hiện lần lượt từng bước. Nhóm Bài học khoá chế độ Kiểm tra thì hiện dòng lý do ngay dưới nút. "Dành cho thầy cô" thành 1 nút ở tiêu đề. Đủ thông tin thì hiện "Cố lên nhé!". 0 lượt Firebase.
+- **Trang quản lý có màn Tổng quan** cho giáo viên, Admin: số lớp, tiết tuần này, chuyên cần, buổi chưa ghi sổ, lịch tuần, học sinh cần chú ý, tiến độ các lớp, thao tác nhanh. Đọc từ sổ lớp và sổ đầu bài trên máy: 0 lượt Firebase, 0 lượt Apps Script; số liệu mới như lần cuối mở Điểm danh. Máy chưa có sổ lớp thì vẫn mở Bộ đề của tôi như cũ.
+- **Trang chủ học sinh bớt nút (11 còn 5):** ngoài chỉ còn Thử thách hôm nay, Góc học tập, Đấu trường, nút **Thêm** (Đặt ngày thi, Lịch sử bài làm, Tải offline). Đã có ngày thi thì đếm ngược vẫn hiện ngoài. 5 nút của thầy cô thu vào 1 dòng "Dành cho thầy cô", bấm mới mở, để học sinh không bấm nhầm. Không bỏ chức năng nào, 0 lượt Firebase.
+- Console không còn cảnh báo `enableMultiTabIndexedDbPersistence` trên các trang có Firestore (đặt mức log trước khi bật cache offline). Cache offline giữ nguyên, 0 lượt Firebase.
+- **Điểm danh và Sổ đầu bài nối thành một việc, bớt nhập lại:**
+  - Điểm danh có nút **Ghi sổ đầu bài**: mở khung ghi tiết với lớp, bài, danh sách vắng của buổi đó (kể cả điểm danh chưa ghi vào Sheet), chỉ cần thêm nhận xét. Lớp 2 tiết/buổi lưu xong có nút "Ghi tiết tiếp".
+  - Sổ đầu bài không còn bắt buộc nhập TKB: tiết của giáo viên có ngày trên sổ lớp tự hiện ở Hôm nay và Sổ tuần (cần đúng tên trường và tên GV như trên Sheet). Sheet không có giờ học nên thẻ ghi "Sổ lớp · chưa rõ tiết", khung ghi mở sẵn ô đổi tiết.
+  - Bài gợi ý lấy theo Sheet ngày đó, khớp theo "Bài N" với PPCT; danh sách lớp tự lấy khi ghi tiết đầu tiên.
+  - Lịch dạy của Điểm danh báo buổi đã/chưa ghi sổ đầu bài; "Việc cần làm" thêm điểm danh nháp chưa ghi vào Sheet và buổi đã qua trong tuần chưa ghi sổ (chỉ nhắc khi thầy/cô đang dùng sổ).
+  - Sổ đầu bài có nút sang Điểm danh, menu chia Hằng ngày/Thiết lập, bảng 3 bước cho sổ mới, nút **Nghỉ cả ngày**, nhắc sao lưu sau 7 ngày.
+- **Sổ đầu bài tách theo trường và theo tài khoản:**
+  - Dạy nhiều trường: mỗi trường 1 sổ, đổi ở ô trên cùng (trước: lớp 3.1 của 2 trường dùng chung 1 danh sách, bản in chung 1 tiêu đề). Tạo ở Cài đặt, hoặc tự tạo khi Ghi sổ từ lớp của trường chưa có sổ. Sao lưu theo từng sổ.
+  - Máy dùng chung: người khác đăng nhập có sổ riêng, không thấy sổ của người trước; sổ cũ giữ nguyên. **Sổ từ bản trước chưa có chủ nên thuộc về tài khoản mở đầu tiên sau bản này.**
+  - "Xóa toàn bộ" đổi thành "Xóa sổ này".
+- **Sửa lỗi:**
+  - Sổ đầu bài báo không lưu được khi bộ nhớ trình duyệt đầy bản CSV của Điểm danh: nay tự bỏ bản đọc cũ (đọc lại được) rồi lưu.
+  - 2 tab Sổ đầu bài: tab sau không còn đè tiết tab trước vừa ghi.
+  - Bấm 1 lớp ở lịch tuần mở đúng buổi đó (trước luôn nhảy về buổi hôm nay/tiếp theo).
+  - Học sinh ký hiệu "Mới": có nút Mới được chọn; "Tất cả có mặt", bấm tên không đổi thành X.
+  - "Tất cả có mặt" lưu 1 lần thay vì lưu lại vài MB theo từng học sinh.
+  - Dùng cho Gọi tên nhận lớp khi tên trường viết khác nhau ("TiH" và "TRƯỜNG TIỂU HỌC"), dùng chung hàm với Sổ đầu bài.
+- Điểm danh gọn hơn: "Sao chép cột", "Mở Sheet ở ô" chuyển vào mục "Không ghi được vào Sheet?".
+- **Hạn mức:** 0 lượt Firestore, 0 lượt Apps Script thêm; mọi trao đổi giữa 2 trang qua localStorage cùng máy. Không đổi rules, index, Apps Script. **Triển khai:** chỉ cần đẩy web. Sổ đầu bài vẫn chỉ ở máy giáo viên, tên học sinh không đưa lên URL.
 - **Rà soát đỉnh 3,1K đọc lúc ~0h (24 giờ: 3,1K đọc / 5 ghi / 2 xoá):** cỡ đỉnh khớp 1 lần đọc toàn bộ `students_roster` (~2.800) + khoá học/lớp/giáo viên trên 1 máy Admin, không thấy vòng lặp hay tác vụ nền nào đọc đều. Chỉ bằng ~6% trần 50.000/ngày. Bản web có đồng hồ trang nặng từ 23:48 ngày 04/11: tra tab NhatKyHoatDong, `firestore_heavy`, để biết đúng trang.
 - **Bấm làm mới, cập nhật liên tục không còn đốt lượt đọc:**
   - Quản lý lớp, nút "Tải lại": bấm lại trong 3 phút không đọc gì; trong 6 giờ từ lần đọc toàn bộ chỉ hỏi phần thay đổi (cùng khoá học/lớp/giáo viên, ~300 lượt thay vì ~3.100). Quá 6 giờ mới hỏi rồi đọc toàn bộ.

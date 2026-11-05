@@ -138,18 +138,23 @@
         </div>
         <div class="dd-acts">
           <button type="button" class="dd-go dd-go-sm" id="ddWriteBtn"><i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i> Ghi vào Sheet</button>
-          <button type="button" class="dd-small" id="ddCopy"><i class="fa-solid fa-copy" aria-hidden="true"></i> Sao chép cột</button>
-          <a class="dd-small dd-a" id="ddOpenCell" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> Mở Sheet ở ô</a>
+          <button type="button" class="dd-small" id="ddToBook" title="Mở khung ghi tiết của Sổ đầu bài với lớp, bài và danh sách vắng của buổi này"><i class="fa-solid fa-book-bookmark" aria-hidden="true"></i> Ghi sổ đầu bài</button>
           <button type="button" class="dd-small" id="ddNotice" title="Tin nhắn: lớp, buổi, sĩ số có mặt, tên bạn vắng — dán vào Zalo"><i class="fa-solid fa-message" aria-hidden="true"></i> Tin nhắn báo vắng</button>
           <button type="button" class="dd-small" id="ddToPicker"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i> Dùng cho Gọi tên</button>
         </div>
+        <details class="dd-help"><summary>Không ghi được vào Sheet?</summary>
+          <p id="ddPasteHint"></p>
+          <div class="dd-acts">
+            <button type="button" class="dd-small" id="ddCopy"><i class="fa-solid fa-copy" aria-hidden="true"></i> Sao chép cột</button>
+            <a class="dd-small dd-a" id="ddOpenCell" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> Mở Sheet ở ô</a>
+          </div></details>
         <details class="dd-help"><summary>Ghi vào Sheet hoạt động thế nào?</summary>
           <p><b>Ghi vào Sheet</b> điền ký hiệu điểm danh vào đúng cột tiết (lớp 2 tiết/buổi điền cả 2 cột), điền ngày vào ô NGÀY nếu đang trống
             và tick ô "Đã hoàn thành". Trước khi ghi, máy chủ kiểm lại tên từng học sinh — điều phối vừa chèn/xoá dòng thì báo lỗi, không ghi lệch.
             Tài khoản Google chạy Apps Script phải được điều phối chia sẻ quyền <b>Người chỉnh sửa</b> trên file.</p>
           <p>Chiều ngược lại: lớp đang mở tự đọc lại Sheet 2 phút/lần (và khi quay lại tab trình duyệt), nên điều phối sửa trên Sheet thì trang cũng đổi theo.</p>
-          <p id="ddPasteHint"></p>
-          <p>Bấm tên để đổi nhanh Có mặt ↔ Vắng. Chưa ghi vào Sheet thì bản nháp vẫn giữ trên máy này.</p></details>
+          <p>Bấm tên để đổi nhanh Có mặt ↔ Vắng. Chưa ghi vào Sheet thì bản nháp vẫn giữ trên máy này và hiện ở "Việc cần làm".</p>
+          <p><b>Ghi sổ đầu bài</b> mở khung ghi tiết với lớp, bài và danh sách vắng của buổi này (kể cả bản nháp), chỉ cần thêm nhận xét rồi lưu.</p></details>
       </section>
 
       <section class="dd-card" id="ddStats" aria-label="Chuyên cần" hidden>
@@ -223,6 +228,7 @@
 <script src="js/auth-guard.js"></script>
 <script src="js/so-lop/so-lop-core.js"></script>
 <script src="js/name-picker/np-lessons.js"></script>
+<script src="js/so-dau-bai/sdb-sources.js"></script>
 <script src="js/services/teacher-sync.js"></script>
 <script src="js/so-lop/diem-danh.js"></script>
 </body>

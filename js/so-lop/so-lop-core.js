@@ -13,6 +13,7 @@
      todaySession · nextSession · sessionGroup · dateOf · summary · stats · pasteText · cellRef · isMine
      teacherKey · teachersOf · taughtBy · mondayOf · weekPlan · monthCount · monthLog   (lọc theo GV + lịch giảng dạy, bảng công)
      watchList(cls) → học sinh vắng nhiều / vắng liền · untickedSessions → tiết đã qua chưa tick Hoàn thành
+     draftChanges(cls, marks, col) → số ô điểm danh nháp khác Sheet
    Ký hiệu điểm danh như hướng dẫn trên Sheet: X có mặt · V vắng · NL nghỉ luôn · Mới học sinh mới.
    ============================================================ */
 (function (global) {
@@ -396,9 +397,14 @@
     return stats(cls).students.filter((x) => !x.nl && (x.vang >= 3 || x.lien >= 2)).sort((a, b) => b.lien - a.lien || b.vang - a.vang);
   }
 
+  /** Số học sinh có điểm danh nháp khác Sheet ở cột col (ô trống trên Sheet tính là có mặt). */
+  function draftChanges(cls, marks, col) {
+    return cls.students.filter((st) => marks && marks[st.row] != null && marks[st.row] !== (st.marks[col] || 'x')).length;
+  }
+
   global.EduSoLop = {
     parseLinks, parsePaste, parseTabs, isClassTab, parseCSV, mark, parseClass,
     lessonOf, matchName, lessonsOf, dateOf, todaySession, nextSession, perDay, sessionGroup, summary,
-    stats, pasteText, colName, cellRef, isMine, teacherKey, teachersOf, taughtBy, mondayOf, weekPlan, monthCount, monthLog, watchList, untickedSessions, SHEET_MARK, THU,
+    stats, pasteText, colName, cellRef, isMine, teacherKey, teachersOf, taughtBy, mondayOf, weekPlan, monthCount, monthLog, watchList, untickedSessions, draftChanges, SHEET_MARK, THU,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -39,12 +39,12 @@
     firebase.initializeApp(firebaseConfig);
   }
 
+  // Chỉ giữ log mức lỗi. Phải đặt TRƯỚC enablePersistence(): SDK in cảnh báo "will be deprecated" ngay lúc gọi hàm đó.
+  try { firebase.firestore.setLogLevel('error'); } catch (e) { /* bỏ qua */ }
+
   // Bật cache offline (không bắt buộc, giúp trang mượt hơn khi mạng chập chờn).
-  // enablePersistence({synchronizeTabs:true}) (= enableMultiTabIndexedDbPersistence
-  // bên dưới) đã bị SDK 10.13 đánh dấu deprecated — chuyển sang cấu hình cache
-  // mới qua settings({ localCache: persistentLocalCache(...) }) theo hướng dẫn
-  // migrate chính thức của Firebase. Phải gọi settings() TRƯỚC lần dùng
-  // firestore() đầu tiên nên đặt ngay tại đây, trước khi build EduFirebase.db.
+  // SDK compat 10.13 chưa có API cache mới (persistentLocalCache) nên hiện chạy nhánh enablePersistence();
+  // nhánh trên dùng khi nâng SDK. Phải gọi settings() TRƯỚC lần dùng firestore() đầu tiên.
   try {
     if (firebase.firestore && firebase.firestore.persistentLocalCache) {
       firebase.firestore().settings({
@@ -57,10 +57,6 @@
       firebase.firestore().enablePersistence({ synchronizeTabs: true }).catch(() => {});
     }
   } catch (e) { /* cache offline là tính năng "nice-to-have", lỗi ở đây không được làm hỏng app */ }
-
-  // SDK compat 10.13 chưa có API cache mới nên vẫn dùng enablePersistence() ở trên và
-  // in cảnh báo "will be deprecated" (vô hại) — chỉ giữ log mức lỗi cho sạch console.
-  try { firebase.firestore.setLogLevel('error'); } catch (e) { /* bỏ qua */ }
 
   // firebase.auth() chỉ tồn tại nếu trang có nạp firebase-auth-compat.js.
   // index.html (trang học sinh làm bài) không yêu cầu đăng nhập nên có thể

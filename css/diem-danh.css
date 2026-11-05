@@ -118,7 +118,7 @@ kbd { display: inline-block; padding: 0 .35rem; border-radius: 6px; background: 
 .dd-seg { display: inline-flex; border: 2px solid var(--dd-line); border-radius: 999px; overflow: hidden; flex: none; }
 .dd-seg button { border: 0; background: var(--dd-paper); padding: 4px 10px; font-size: .8rem; }
 .dd-seg button + button { border-left: 1px solid var(--dd-line); }
-.dd-seg button[aria-checked="true"][data-m="x"] { background: var(--dd-leaf); color: #fff; }
+.dd-seg button[aria-checked="true"][data-m="x"], .dd-seg button[aria-checked="true"][data-m="moi"] { background: var(--dd-leaf); color: #fff; }
 .dd-seg button[aria-checked="true"][data-m="v"] { background: var(--dd-red); color: #fff; }
 .dd-seg button[aria-checked="true"][data-m="nl"] { background: var(--dd-muted); color: #fff; }
 .dd-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
@@ -212,6 +212,7 @@ kbd { display: inline-block; padding: 0 .35rem; border-radius: 6px; background: 
 .dd-find .dd-input { padding: 6px 10px; }
 .dd-list li[hidden] { display: none; }
 .dd-tasks li .dd-small { white-space: nowrap; flex: none; }
+.dd-task-acts { display: flex; flex: none; gap: 6px; }
 .dd-nofind { margin: 0; padding: 8px; color: var(--dd-muted); font-size: .85rem; }
 .dd-nofind[hidden] { display: none; }
 

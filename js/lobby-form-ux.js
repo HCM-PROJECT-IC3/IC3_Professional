@@ -3,7 +3,9 @@
      • dấu ✓ trên từng bước (1 Em là ai? · 2 Chọn bài · 3 Cách làm bài)
        khi học sinh đã chọn xong bước đó;
      • dòng nhắc dưới nút "Bắt đầu" cho biết CÒN THIẾU gì khi nút đang khoá
-       (thay vì chỉ thấy nút mờ mà không biết vì sao).
+       (thay vì chỉ thấy nút mờ mà không biết vì sao);
+     • nút "Thêm" mở/đóng các mục phụ của học sinh; menu "Dành cho thầy cô" tự đóng khi bấm ra ngoài;
+     • thẻ "Kết quả của em" ở thanh trái: số liệu của học sinh đang chọn, đọc từ máy này.
    Chỉ ĐỌC trạng thái form — quy tắc bật nút vẫn nằm ở quiz-engine.js
    § refreshMeta() (count && name && cls && school && pledged). 0 mạng.
    ============================================================ */
@@ -65,19 +67,55 @@
     if (!btn) return;
     renderSummary();
     const need = missing();
-    $('lobbyStep1')?.classList.toggle('is-done', !!$('studentName')?.value);
-    $('lobbyStep2')?.classList.toggle('is-done', !visible($('minitestSelect')) || !!$('minitestSelect').value);
-    $('lobbyStep3')?.classList.toggle('is-done', !visible($('antiCheatPledge')) || $('antiCheatPledge').checked);
+    // Đánh dấu xong lần lượt: bước 2, 3 có sẵn giá trị mặc định, tick từ đầu sẽ giống như học sinh đã làm xong
+    const done1 = !!$('studentName')?.value;
+    const done2 = done1 && (!visible($('minitestSelect')) || !!$('minitestSelect').value);
+    const done3 = done2 && (!visible($('antiCheatPledge')) || $('antiCheatPledge').checked);
+    $('lobbyStep1')?.classList.toggle('is-done', done1);
+    $('lobbyStep2')?.classList.toggle('is-done', done2);
+    $('lobbyStep3')?.classList.toggle('is-done', done3);
+    renderMe();
+    renderModeNote();
     document.querySelectorAll('.lobby-card .is-next-field').forEach((el) => el.classList.remove('is-next-field'));
     if (btn.disabled && need) $(need.id)?.classList.add('is-next-field');
     const hint = $('startHint');
     if (!hint) return;
     // Nút khoá vì lý do khác (vd bài 0 câu, đang tải) → không đoán bừa.
-    // Đủ rồi thì nút Bắt đầu sáng lên là đủ, không thêm dòng chữ.
-    hint.textContent = btn.disabled && need ? need.text : '';
+    const ready = !btn.disabled;
+    hint.textContent = btn.disabled && need ? need.text : ready ? 'Cố lên nhé!' : '';
+    hint.classList.toggle('is-ready', ready);
+  }
+
+  /** Bài học chỉ làm ở chế độ Ôn luyện (quiz-engine.js khoá nút Kiểm tra): ghi rõ lý do, máy cảm ứng không có tooltip. */
+  function renderModeNote() {
+    const b = $('examModeTestBtn'), wrap = $('examModeToggle');
+    if (!b || !wrap) return;
+    let note = $('lobbyModeNote');
+    if (!note) { note = document.createElement('p'); note.id = 'lobbyModeNote'; note.className = 'lobby-mode-note'; wrap.after(note); }
+    note.hidden = !(b.disabled && b.title);
+    note.textContent = note.hidden ? '' : `${b.title}. Chọn nhóm Ôn tập, Kiểm tra hoặc Chủ đề để làm bài tính giờ.`;
+  }
+
+  function renderMe() {
+    const box = $('lobbyMe');
+    if (!box) return;
+    const m = window.EduLearningHub?.studentSummary?.();
+    if (!m) { box.innerHTML = '<p>Chọn họ tên để xem kết quả của em.</p>'; return; }
+    if (!m.done) { box.innerHTML = '<p>Em chưa làm bài nào trên máy này.</p>'; return; }
+    box.innerHTML = `<dl><div><dt>Bài đã làm</dt><dd>${m.done}</dd></div><div><dt>Chuỗi ngày học</dt><dd>${m.streak}</dd></div><div><dt>Câu đến hạn ôn</dt><dd>${m.due}</dd></div></dl>`;
   }
 
   function init() {
+    window.addEventListener('edu:record-saved', renderMe);
+    const more = $('lobbyMoreBtn');
+    more?.addEventListener('click', () => {
+      const open = more.getAttribute('aria-expanded') !== 'true';
+      more.setAttribute('aria-expanded', String(open));
+      $('lobbyMorePanel').hidden = !open;
+    });
+    const staff = $('lobbyStaff');
+    document.addEventListener('click', (e) => { if (staff?.open && !staff.contains(e.target)) staff.open = false; });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && staff?.open) { staff.open = false; staff.querySelector('summary').focus(); } });
     const card = document.querySelector('.lobby-card');
     const btn = $('btnStart');
     if (!card || !btn) return;

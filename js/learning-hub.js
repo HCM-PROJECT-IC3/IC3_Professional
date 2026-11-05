@@ -697,8 +697,8 @@
     btn.title = n ? `${n} câu trong Sổ tay đến hạn ôn` : 'Tiến độ học tập, bài cần củng cố, Sổ tay câu sai';
   }
   function mountButton() {
-    const hist = document.querySelector('.lobby-card button[onclick="showRecords()"]');
-    if (!hist || $('learningHubBtn')) return;
+    const more = $('lobbyMoreBtn');
+    if (!more || $('learningHubBtn')) return;
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.id = 'learningHubBtn';
@@ -706,7 +706,7 @@
     btn.innerHTML = '<i class="fa-solid fa-seedling"></i> Góc học tập <span class="lh-badge" hidden></span>'
       + '<span class="lh-open-goal" hidden><b><i></i></b><span></span></span>';
     btn.addEventListener('click', () => open());
-    hist.before(btn);
+    more.before(btn);
     ['studentName', 'studentClass', 'studentSchool'].forEach((id) => $(id)?.addEventListener('change', updateBadge));
     updateBadge();
   }
@@ -742,5 +742,13 @@
     return { path, today };
   }
 
-  global.EduLearningHub = { open, updateBadge, seasonInfo, _keyOf: keyOf };
+  /** Số liệu của học sinh đang chọn ở sảnh, trên máy này. null = chưa chọn tên. */
+  function studentSummary() {
+    const st = lobbyStudent();
+    if (!st) return null;
+    const recs = studentRecords(st.key);
+    return { done: recs.length, streak: streakOf(recs).streak, due: dueItems(studentBook(st.key)).length };
+  }
+
+  global.EduLearningHub = { open, updateBadge, seasonInfo, studentSummary, _keyOf: keyOf };
 })(window);
