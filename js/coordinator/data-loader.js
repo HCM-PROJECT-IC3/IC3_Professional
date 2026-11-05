@@ -105,7 +105,7 @@
       : null;
     if (rosterBundle && forceRefresh && Date.now() - (rosterBundle.cachedAt || 0) > ROSTER_FORCE_MIN_AGE_MS) rosterBundle = null;
     if (!rosterBundle) rosterBundle = await fetchRosterOrStale(rosterCacheKey, async () => {
-      const stale = !isAdmin && !forceRefresh && global.EduDataCache ? await global.EduDataCache.getAsync(rosterCacheKey, true, /* allowStale */ true) : null;
+      const stale = !isAdmin && global.EduDataCache ? await global.EduDataCache.getAsync(rosterCacheKey, true, /* allowStale */ true) : null;
       const [courses, classes, roster, teachers] = await Promise.all([
         global.EduRepositories.course.list(),
         global.EduRepositories.class.list(),
@@ -115,6 +115,7 @@
           : global.EduRosterCache.scopedRoster(stale, {
             narrows: chunk10(schools).map((part) => (q) => q.where('school', 'in', part)),
             loadAll: () => studentsByChunkedSchools(schools), label: 'students_roster (trường của tôi, thay đổi)',
+            fullMs: forceRefresh ? global.EduRosterCache.MANUAL_FULL_MS : undefined,
           }),
         global.EduRepositories.user.listApprovedTeachers(),
       ]);

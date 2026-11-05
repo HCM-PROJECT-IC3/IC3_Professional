@@ -22,6 +22,12 @@ Lệnh này publish rules, tạo composite index, **tắt index các field khôn
 **bật luôn các TTL policy** ở mục 4 (khai báo trong `fieldOverrides` của `firestore.indexes.json`).
 CLI hỏi "xoá index không có trong file?" → chọn **No**.
 
+**⚠️ Project `data-ic3` đang chạy (đối chiếu 05/11/2026):** Firebase mới có composite index, CHƯA có TTL lẫn
+`fieldOverrides` nào. Deploy `firestore:indexes` từ file trong repo sẽ bật TTL ở 7 collection: Firestore tự xoá
+**vĩnh viễn** bản ghi quá hạn (kể cả `quiz_results` cũ) và tắt index 26 trường. Trước khi chạy: xác nhận bài cũ đã có
+trên Google Sheet và không truy vấn nào cần các index đó. Chỉ cần thêm index thì tạo tay ở Firebase Console → Firestore
+→ Indexes → Composite, hoặc deploy bản copy của file đã bỏ `fieldOverrides`. Chỉ cần rules: `--only firestore:rules`.
+
 **Cách thủ công (không dùng CLI):**
 1. Mở `firestore.rules` → sao chép toàn bộ → Firebase Console → Firestore Database → **Rules** →
    dán → **Publish**.
@@ -67,7 +73,7 @@ mở trang có Firebase tốn 1 lượt → báo `AppCheck: ReCAPTCHA error`). F
 
 ## 4. TTL — tự xoá dữ liệu cũ (miễn phí)
 
-`firebase deploy --only firestore:indexes` (mục 1) đã bật sẵn. Làm tay: Firestore → tab **TTL**
+`firebase deploy --only firestore:indexes` (mục 1) bật toàn bộ bảng dưới (xem cảnh báo ở mục 1 trước khi chạy). Làm tay: Firestore → tab **TTL**
 → Create policy cho từng dòng:
 
 | Collection group | Field | Tác dụng |

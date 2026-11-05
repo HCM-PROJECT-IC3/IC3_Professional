@@ -21,7 +21,7 @@
    — nguồn đọc đều đặn lớn nhất còn lại. Nay hỏi phần thay đổi trong đúng phạm vi rules cho phép (teacherId / school),
    cần composite index (firestore.indexes.json); chưa deploy index thì tự đọc toàn bộ như cũ. Học sinh CHUYỂN khỏi phạm
    vi (đổi giáo viên) không khớp query nên không thấy qua delta → đọc lại toàn bộ SCOPED_FULL_MS/lần; nút "Làm mới
-   dữ liệu" luôn đọc toàn bộ.
+   dữ liệu" đọc toàn bộ tối đa MANUAL_FULL_MS/lần, các lần bấm khác chỉ hỏi phần thay đổi.
 
    Mọi lần ghi students_roster trên máy này gọi invalidate() → lần đọc sau hỏi phần thay đổi
    (không đọc lại toàn bộ). Bản đệm cũ vẫn được dùng làm phương án cuối khi Firebase hết lượt
@@ -39,6 +39,9 @@
   const TTL_MS = 30 * 60 * 1000;
   const FULL_RESYNC_MS = 14 * 24 * 60 * 60 * 1000;
   const SCOPED_FULL_MS = 3 * 24 * 60 * 60 * 1000;
+  // Bấm "Tải lại"/"Làm mới dữ liệu" liên tục: mỗi máy đọc toàn bộ tối đa 6 giờ/lần (05/11/2026), còn lại chỉ hỏi phần
+  // thay đổi. Thêm/sửa vẫn thấy ngay; riêng học sinh bị xoá hẳn hoặc chuyển đi có thể còn hiện tới 6 giờ.
+  const MANUAL_FULL_MS = 6 * 60 * 60 * 1000;
   const KEEP_MS = 30 * 24 * 60 * 60 * 1000; // giữ bản đệm làm nền cho delta / phương án cuối
   const DELTA_LIMIT = 5000; // chạm trần = thay đổi quá nhiều → đọc lại toàn bộ cho chắc
   let inflight = null; // 2 phần trong cùng 1 trang hỏi cùng lúc → chỉ 1 lần đọc
@@ -129,11 +132,22 @@
   }
 
   /**
-   * Danh sách trong phạm vi 1 người (giáo viên, điều phối). stale: bản lưu cũ (kể cả hết hạn), null = đọc toàn bộ.
-   * loadAll(): đọc toàn bộ phạm vi. Trả { students, fullAt, watermark }.
+   * Bản đệm còn thiếu schoolId: máy chủ đã có chưa (vài lượt đọc)? Chưa có thì HỎI rồi mới đọc toàn bộ — bấm Huỷ không tốn
+   * thêm lượt nào. Trả { stamped } | { declined } | { fresh: danh sách mới }.
    */
-  async function scopedRoster(stale, { narrows, loadAll, label }) {
-    const entry = await deltaFrom(stale, isActive, label, { narrows, fullMs: SCOPED_FULL_MS });
+  async function resolveUnstamped(stale, { idOf, readOne, ask, readFull }) {
+    if (await alreadyStamped(stale, idOf, readOne)) return { stamped: true };
+    if (!ask()) return { declined: true };
+    return { fresh: await readFull() };
+  }
+
+  /**
+   * Danh sách trong phạm vi 1 người (giáo viên, điều phối). stale: bản lưu cũ (kể cả hết hạn), null = đọc toàn bộ.
+   * loadAll(): đọc toàn bộ phạm vi. fullMs: tuổi tối đa của lần đọc toàn bộ (mặc định SCOPED_FULL_MS).
+   * Trả { students, fullAt, watermark }.
+   */
+  async function scopedRoster(stale, { narrows, loadAll, label, fullMs }) {
+    const entry = await deltaFrom(stale, isActive, label, { narrows, fullMs: fullMs || SCOPED_FULL_MS });
     if (entry) return entry;
     const students = await loadAll();
     return { students, fullAt: Date.now(), watermark: watermarkOf(students) };
@@ -204,7 +218,7 @@
   }
 
   global.EduRosterCache = {
-    activeAll, put, invalidate, stampRoster, deltaFrom, scopedRoster, watermarkOf, alreadyStamped,
-    ROSTER_KEY, TTL_MS, FULL_RESYNC_MS, SCOPED_FULL_MS,
+    activeAll, put, invalidate, stampRoster, deltaFrom, scopedRoster, watermarkOf, alreadyStamped, resolveUnstamped,
+    ROSTER_KEY, TTL_MS, FULL_RESYNC_MS, SCOPED_FULL_MS, MANUAL_FULL_MS,
   };
 })(window);

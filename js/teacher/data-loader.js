@@ -109,8 +109,11 @@
           // Bản đệm chung với các trang quản lý khác (js/services/roster-cache-service.js)
           ? { students: await global.EduRosterCache.activeAll(forceRefresh ? { maxAgeMs: ROSTER_FORCE_MIN_AGE_MS } : undefined) }
           : await global.EduRosterCache.scopedRoster(
-            !forceRefresh && global.EduDataCache ? await global.EduDataCache.getAsync(rosterCacheKey, true, /* allowStale */ true) : null,
-            { narrows: [(q) => q.where('teacherId', '==', uid)], loadAll: () => global.EduRepositories.studentRoster.listByTeacher(uid), label: 'students_roster (lớp của tôi, thay đổi)' });
+            global.EduDataCache ? await global.EduDataCache.getAsync(rosterCacheKey, true, /* allowStale */ true) : null,
+            {
+              narrows: [(q) => q.where('teacherId', '==', uid)], loadAll: () => global.EduRepositories.studentRoster.listByTeacher(uid), label: 'students_roster (lớp của tôi, thay đổi)',
+              fullMs: forceRefresh ? global.EduRosterCache.MANUAL_FULL_MS : undefined,
+            });
         const bundle = Object.assign({}, entry, { cachedAt: Date.now() });
         if (global.EduDataCache) global.EduDataCache.setAsync(rosterCacheKey, bundle, ROSTER_CACHE_TTL_MS, /* persist */ true);
         return bundle;

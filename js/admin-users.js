@@ -193,11 +193,11 @@ window.EDU_ALLOWED_ROLES = ['admin'];
     loadUsers();
   });
 
-  // Cache 3 phút — giống js/roster-manager.js/js/coordinator/data-loader.js:
-  // F5/mở lại trang trong 3 phút không tốn thêm lượt đọc Firestore (4 collection
-  // users/students_roster/classes/teaching_teachers) — xem js/services/data-cache-service.js.
+  // Cache 15 phút theo tab (05/11/2026, trước 3 phút): hết hạn thì thao tác ghi kế tiếp đọc lại CẢ collection users,
+  // Admin sửa từng tài khoản chậm rãi là mỗi lần bấm tốn trọn danh sách. Máy này sửa thì bản đệm tự cập nhật
+  // (refreshUserRow); tài khoản mới đăng ký ở nơi khác hiện chậm tối đa 15 phút trong tab đang mở, tải lại tab là thấy.
   const USERS_CACHE_KEY = 'admin-users:all';
-  const USERS_CACHE_TTL_MS = 3 * 60 * 1000;
+  const USERS_CACHE_TTL_MS = 15 * 60 * 1000;
 
   /** Sau khi ghi 1 tài khoản (đổi vai trò/duyệt/gán trường/mã NV): sửa đúng dòng đó trong bản đệm
    *  rồi vẽ lại — trước đây loadUsers(true) đọc lại CẢ collection users (mỗi tài khoản 1 lượt đọc)

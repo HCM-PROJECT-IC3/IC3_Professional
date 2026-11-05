@@ -116,8 +116,9 @@
   // thao tác ghi trên máy này đều cập nhật cache tại chỗ (syncOne/dropOne, Nạp Excel tải lại); thay
   // đổi từ máy khác → nút "Tải lại" (hiện giờ của dữ liệu đang xem).
   const CACHE_TTL_MS = 2 * 60 * 60 * 1000;
-  // Điều phối không hỏi được phần thay đổi (rules bắt lọc theo trường): hết hạn là đọc lại CẢ học sinh các trường mình
+  // Điều phối: hết hạn chỉ hỏi phần thay đổi trong các trường của mình (05/11/2026), đọc toàn bộ SCOPED_FULL_MS/lần
   const STAFF_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+  const RELOAD_MIN_GAP_MS = 3 * 60 * 1000;
   const cacheTtl = () => (myProfile && myProfile.role === 'admin' ? CACHE_TTL_MS : STAFF_CACHE_TTL_MS);
   function rosterCacheKey() {
     const isAdmin = myProfile.role === 'admin';
@@ -176,6 +177,19 @@
   }
   const reloadBtn = document.getElementById('reloadRosterBtn');
   if (reloadBtn) reloadBtn.addEventListener('click', async () => {
+    const R = window.EduRosterCache;
+    const now = Date.now();
+    // Bấm liên tục: dữ liệu vừa đọc xong thì không đọc nữa
+    if (now - state.cachedAt < RELOAD_MIN_GAP_MS) { toast('Dữ liệu vừa tải xong, chưa cần tải lại.'); return; }
+    const deltaOn = !window.EduBackend || window.EduBackend.rosterDeltaSync !== false;
+    if (deltaOn && now - state.fullAt < R.MANUAL_FULL_MS) {
+      reloadBtn.disabled = true;
+      try {
+        await loadEverything(true, { deltaOnly: true });
+        toast(`Đã cập nhật phần thay đổi. Đọc lại toàn bộ tối đa ${R.MANUAL_FULL_MS / 3600000} giờ/lần để tiết kiệm lượt Firebase.`);
+      } finally { reloadBtn.disabled = false; }
+      return;
+    }
     const n = (state.students || []).length + (state.classes || []).length + (state.courses || []).length + (state.teachers || []).length;
     if (!confirm(`Đọc lại toàn bộ khoá học, lớp, học sinh, giáo viên từ máy chủ?
 
@@ -186,8 +200,9 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
 
   /** @param {boolean} [forceRefresh] Bỏ qua cache — dùng sau khi ghi (thêm/sửa/xoá)
    * để dữ liệu mới hiện ngay, không đợi cache 3 phút hết hạn.
-   * @param {{full?: boolean}} [opts] full: Admin đọc lại TOÀN BỘ học sinh (nút "Tải lại");
-   * mặc định chỉ hỏi học sinh thay đổi kể từ lần đọc trước (vài lượt thay vì ~2.800). */
+   * @param {{full?: boolean, deltaOnly?: boolean}} [opts] full: đọc lại TOÀN BỘ học sinh (nút "Tải lại");
+   * mặc định chỉ hỏi học sinh thay đổi kể từ lần đọc trước (vài lượt thay vì ~2.800).
+   * deltaOnly: không hỏi được phần thay đổi (chưa deploy index...) thì giữ danh sách đang có, không đọc toàn bộ. */
   async function loadEverything(forceRefresh, opts = {}) {
     try {
       const cacheKey = rosterCacheKey();
@@ -227,40 +242,39 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
         return;
       }
 
-      // Admin: bản lưu cũ (kể cả đã hết hạn) làm nền → chỉ hỏi học sinh có updatedAt mới hơn.
-      const base = isAdmin && !opts.full && window.EduDataCache
+      // Bản lưu cũ (kể cả đã hết hạn) làm nền → chỉ hỏi học sinh có updatedAt mới hơn.
+      const base = !opts.full && window.EduDataCache
         ? await window.EduDataCache.getAsync(cacheKey, /* persist */ true, /* allowStale */ true)
         : null;
+      const byName = (a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'vi');
+      const readAllStudents = () => (isAdmin
+        ? window.EduRepositories.studentRoster.list({ orderBy: 'name' })
+        // CỐ TÌNH KHÔNG dùng listBySchools() (chỉ lọc status "active") — trang
+        // này cần quản lý CẢ học sinh đã nghỉ/đã tốt nghiệp (đổi trạng thái,
+        // xem lại lịch sử...), nên lọc trực tiếp theo "school" mà không kèm
+        // điều kiện status. KHÔNG truyền orderBy ở query này (where('in',...)
+        // + orderBy field khác đòi hỏi composite index phải tạo tay trong
+        // Firebase Console — không có sẵn) — sắp xếp lại theo tên ở JS sau khi
+        // gộp các chunk thay vì nhờ Firestore sắp xếp.
+        : Promise.all(chunk10(schools).map((part) => window.EduRepositories.studentRoster.list({ where: [['school', 'in', part]] })))
+          .then((parts) => parts.flat().sort(byName)));
+      const scope = isAdmin ? {} : { narrows: chunk10(schools).map((part) => (q) => q.where('school', 'in', part)), fullMs: window.EduRosterCache.SCOPED_FULL_MS };
       const [courses, classes, students, teachers] = await Promise.all([
         window.EduRepositories.course.list({ orderBy: 'name' }),
         window.EduRepositories.class.list({ orderBy: 'name' }),
-        isAdmin
-          ? window.EduRosterCache.deltaFrom(base, null, 'students_roster (Quản lý lớp, thay đổi)').then((d) => {
-              if (d) return Object.assign(d, { fromDelta: true, students: d.students.sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'vi')) });
-              return window.EduRepositories.studentRoster.list({ orderBy: 'name' })
-                .then((list) => ({ students: list, fullAt: Date.now(), watermark: window.EduRosterCache.watermarkOf(list) }));
-            })
-          // CỐ TÌNH KHÔNG dùng listBySchools() (chỉ lọc status "active") — trang
-          // này cần quản lý CẢ học sinh đã nghỉ/đã tốt nghiệp (đổi trạng thái,
-          // xem lại lịch sử...), nên lọc trực tiếp theo "school" mà không kèm
-          // điều kiện status. KHÔNG truyền orderBy ở query này (where('in',...)
-          // + orderBy field khác đòi hỏi composite index phải tạo tay trong
-          // Firebase Console — không có sẵn) — sắp xếp lại theo tên ở JS sau khi
-          // gộp các chunk thay vì nhờ Firestore sắp xếp.
-          : Promise.all(chunk10(schools).map((part) => window.EduRepositories.studentRoster.list({ where: [['school', 'in', part]] })))
-              .then((parts) => parts.flat().sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'vi'))),
+        window.EduRosterCache.deltaFrom(base, null, 'students_roster (Quản lý lớp, thay đổi)', scope).then((d) => {
+          if (d) return Object.assign(d, { fromDelta: true, students: d.students.sort(byName) });
+          if (opts.deltaOnly && base) return { students: base.students, fullAt: base.fullAt, watermark: base.watermark, fromDelta: true };
+          return readAllStudents().then((list) => ({ students: list, fullAt: Date.now(), watermark: window.EduRosterCache.watermarkOf(list) }));
+        }),
         window.EduRepositories.user.listApprovedTeachers(),
       ]);
       state.courses = courses;
       state.classes = classes;
-      if (isAdmin) {
-        state.students = students.students;
-        state.fullAt = students.fullAt;
-        state.watermark = students.watermark;
-        state.studentsFromDelta = !!students.fromDelta;
-      } else {
-        state.students = students;
-      }
+      state.students = students.students;
+      state.fullAt = students.fullAt;
+      state.watermark = students.watermark;
+      state.studentsFromDelta = !!students.fromDelta;
       state.teachers = teachers;
       state.cachedAt = Date.now();
       renderDataAge();
@@ -401,7 +415,8 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
    * toàn bộ học sinh qua delta → có thể vượt 50k lượt đọc/ngày. Rules đọc schoolId trên server,
    * bản đệm trên máy không cần field này; ghi mới đã tự kèm schoolId (stampRoster, ClassRepository).
    * Hệ quả: bản đệm delta trên máy Admin KHÁC không bao giờ thấy schoolId vừa ghi bù → hỏi máy chủ vài bản mẫu
-   * (EduRosterCache.alreadyStamped, 5 lượt đọc); mẫu còn thiếu mới đọc lại toàn bộ để chỉ ghi bản thật sự thiếu.
+   * (EduRosterCache.alreadyStamped, 5 lượt đọc); mẫu còn thiếu thì HỎI Admin rồi mới đọc lại toàn bộ để chỉ ghi bản thật sự thiếu.
+   * Huỷ hoặc ghi lỗi: 7 ngày sau mới thử lại (rules vẫn nhận tên trường nên không gấp), không đọc lại mỗi lần mở trang.
    * Đợt 04/11/2026: 1 lần chạy = ~3.000 lượt ghi trong 1 giờ mà Admin không hay biết → nay nhiều bản ghi thì hỏi trước.
    */
   async function backfillSchoolIds() {
@@ -412,24 +427,42 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
   }
   async function runSchoolIdBackfill() {
     const DONE_KEY = 'roster:schoolIdBackfill:v1';
+    const SNOOZE_KEY = 'roster:schoolIdBackfill:snoozeUntil';
+    const SNOOZE_DAYS = 7;
     const ASK_OVER = 300;
+    const snooze = () => { try { localStorage.setItem(SNOOZE_KEY, String(Date.now() + SNOOZE_DAYS * 864e5)); } catch (e) { /* bỏ qua */ } };
     if (!myProfile || myProfile.role !== 'admin') return;
-    try { if (localStorage.getItem(DONE_KEY)) return; } catch (e) { /* chế độ riêng tư: chạy lại cũng không sai */ }
+    try {
+      if (localStorage.getItem(DONE_KEY)) return;
+      if (Date.now() < Number(localStorage.getItem(SNOOZE_KEY))) return;
+    } catch (e) { /* chế độ riêng tư: chạy lại cũng không sai */ }
     const idOf = window.EduModels.School.schoolIdOf;
     const needs = (r) => r.school && r.schoolId !== idOf(r.school);
+    let asked = false;
     try {
       const stale = state.studentsFromDelta ? state.students.filter(needs) : [];
       const repo = window.EduRepositories.studentRoster;
-      if (stale.length && await window.EduRosterCache.alreadyStamped(stale, idOf, (id) => repo.getById(id))) {
-        stale.forEach((s) => { s.schoolId = idOf(s.school); });
-        persistState();
-      } else if (stale.length) {
-        const fresh = await window.EduRepositories.studentRoster.list({ orderBy: 'name' });
-        state.students = fresh;
-        state.fullAt = Date.now();
-        state.watermark = window.EduRosterCache.watermarkOf(fresh);
-        state.studentsFromDelta = false;
-        renderStudents();
+      if (stale.length) {
+        const found = await window.EduRosterCache.resolveUnstamped(stale, {
+          idOf,
+          readOne: (id) => repo.getById(id),
+          ask: () => {
+            asked = true;
+            return confirm(`Có thể còn học sinh chưa gắn mã trường (schoolId).\n\nCần đọc lại toàn bộ danh sách (khoảng ${state.students.length.toLocaleString('vi-VN')} lượt đọc Firebase) rồi ghi các bản còn thiếu (tối đa ${stale.length.toLocaleString('vi-VN')} lượt ghi), chỉ làm 1 lần. Bấm Huỷ để nhắc lại sau ${SNOOZE_DAYS} ngày.`);
+          },
+          readFull: () => repo.list({ orderBy: 'name' }),
+        });
+        if (found.declined) { snooze(); return; }
+        if (found.stamped) {
+          stale.forEach((s) => { s.schoolId = idOf(s.school); });
+        } else {
+          state.students = found.fresh;
+          state.fullAt = Date.now();
+          state.watermark = window.EduRosterCache.watermarkOf(found.fresh);
+          state.studentsFromDelta = false;
+          renderStudents();
+        }
+        persistState(); // lưu ngay: lần mở sau không phải đọc lại toàn bộ
       }
     } catch (err) {
       console.warn('[RosterManager] Chưa ghi bù được schoolId (thử lại lần mở trang sau):', err.message);
@@ -438,7 +471,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
     const todo = [];
     state.students.forEach((s) => { if (needs(s)) todo.push(['students_roster', s]); });
     state.classes.forEach((c) => { if (needs(c)) todo.push(['classes', c]); });
-    if (todo.length > ASK_OVER && !confirm(`Gắn mã trường (schoolId) cho ${todo.length} học sinh/lớp còn thiếu?\n\nTốn khoảng ${todo.length.toLocaleString('vi-VN')} lượt ghi Firebase (hạn mức 20.000/ngày), chỉ làm 1 lần. Bấm Huỷ để làm vào lần mở trang sau.`)) return;
+    if (!asked && todo.length > ASK_OVER && !confirm(`Gắn mã trường (schoolId) cho ${todo.length} học sinh/lớp còn thiếu?\n\nTốn khoảng ${todo.length.toLocaleString('vi-VN')} lượt ghi Firebase (hạn mức 20.000/ngày), chỉ làm 1 lần. Bấm Huỷ để nhắc lại sau ${SNOOZE_DAYS} ngày.`)) { snooze(); return; }
     try {
       const db = EduFirebase.db;
       for (let i = 0; i < todo.length; i += 400) {
@@ -451,6 +484,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
       try { localStorage.setItem(DONE_KEY, String(Date.now())); } catch (e) { /* bỏ qua */ }
       if (todo.length) toast(`Đã gắn mã trường (schoolId) cho ${todo.length} học sinh/lớp`);
     } catch (err) {
+      snooze();
       console.warn('[RosterManager] Chưa ghi bù được schoolId (thử lại lần mở trang sau):', err.message);
     }
   }

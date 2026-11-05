@@ -75,6 +75,18 @@ const B = global.EduFirebase.readBreaker;
   const ok = await new Query(7).get();
   eq('truy vấn chạy lại bình thường', [ok.size, B.total()], [7, 7]);
 
+  // Trần theo ngày: đọc đều (không vượt cửa sổ 10 phút) vẫn bị chặn; sang ngày hạn mức mới thì mở lại
+  const day = JSON.parse(store.get('edu_fs_read_day'));
+  eq('đếm cả ngày, không reset theo cửa sổ 10 phút', B.dayTotal(), day.n);
+  store.set('edu_fs_read_day', JSON.stringify({ d: day.d, n: B.dayMax }));
+  const beforeDay = serverCalls;
+  let errDay = null;
+  try { await new Query(1).get(); } catch (e) { errDay = e; }
+  eq('quá trần ngày → từ chối, KHÔNG gọi máy chủ', [errDay && errDay.code, errDay && /hôm nay/.test(errDay.message), serverCalls - beforeDay], ['resource-exhausted', true, 0]);
+  eq('quá trần ngày: cache máy vẫn đọc được', (await new Query(3).get({ source: 'cache' })).size, 3);
+  store.set('edu_fs_read_day', JSON.stringify({ d: '2000-01-01', n: B.dayMax }));
+  eq('sang ngày mới → mở lại', [B.dayTotal(), (await new Query(2).get()).size, B.dayTotal()], [0, 2, 2]);
+
   // localStorage bị chặn → vẫn đếm trong tab
   global.localStorage = { getItem() { throw new Error('blocked'); }, setItem() { throw new Error('blocked'); } };
   await new Query(6000).get();

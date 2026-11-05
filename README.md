@@ -167,7 +167,8 @@ Nếu fork dự án để triển khai độc lập (project Firebase riêng):
 3. Deploy `firestore.rules` lên project đó (`firebase deploy --only firestore:rules`
    nếu dùng Firebase CLI, hoặc dán tay qua Console).
 4. Chạy `firebase deploy --only firestore:indexes` để tạo index + TTL
-   (docs/FIREBASE-CHECKLIST.md §1, §4).
+   (docs/FIREBASE-CHECKLIST.md §1, §4). Chỉ chạy nguyên lệnh này trên project mới: TTL tự xoá
+   vĩnh viễn dữ liệu quá hạn, project đang có dữ liệu xem cảnh báo ở §1 trước.
 5. Phòng chơi trực tiếp đã gộp vào Phòng cả lớp của `arena.html` (WebRTC,
   0 lượt Firebase); chỉ học sinh không nối thẳng được mới đi đường dự phòng
   Firestore (cần Anonymous Auth); `live-quiz.html` chỉ chuyển hướng link cũ. Collection `live_rooms`

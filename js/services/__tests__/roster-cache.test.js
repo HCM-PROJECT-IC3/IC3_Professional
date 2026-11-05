@@ -145,6 +145,26 @@ var tick = function () { return new Promise(function (r) { setTimeout(r, 0); });
   assertEq('ghi bù: dừng dở ở bản 1200 → còn thiếu', await R.alreadyStamped(recs, idOf, function (id) { return Promise.resolve(+id.slice(1) < 1200 ? { school: 'A', schoolId: 'a' } : { school: 'A' }); }), false);
   assertEq('ghi bù: 1 bản ghi, bản đã bị xoá không tính là thiếu', await R.alreadyStamped([{ id: 'x' }], idOf, function () { return Promise.resolve(null); }), true);
 
+  // Ghi bù: Huỷ không đọc toàn bộ; máy chủ đã đủ thì không hỏi
+  var fullReads = 0, asks = 0;
+  var readFull = function () { fullReads++; return Promise.resolve(recs); };
+  var missing = function () { return Promise.resolve({ school: 'A' }); };
+  var ask = function (yes) { return function () { asks++; return yes; }; };
+  assertEq('ghi bù: bấm Huỷ → 0 lượt đọc toàn bộ', [await R.resolveUnstamped(recs, { idOf: idOf, readOne: missing, ask: ask(false), readFull: readFull }), fullReads, asks], [{ declined: true }, 0, 1]);
+  assertEq('ghi bù: đồng ý → đọc toàn bộ đúng 1 lần', [(await R.resolveUnstamped(recs, { idOf: idOf, readOne: missing, ask: ask(true), readFull: readFull })).fresh.length, fullReads, asks], [2800, 1, 2]);
+  assertEq('ghi bù: máy chủ đã đủ → không hỏi, không đọc toàn bộ', [await R.resolveUnstamped(recs, { idOf: idOf, readOne: serverDone, ask: ask(true), readFull: readFull }), fullReads, asks], [{ stamped: true }, 1, 2]);
+
+  // Bấm "Làm mới dữ liệu" liên tục: đọc toàn bộ tối đa MANUAL_FULL_MS/lần
+  var l0 = loads;
+  var e6 = await R.scopedRoster(null, scope);
+  var manual = Object.assign({}, scope, { fullMs: R.MANUAL_FULL_MS });
+  now += R.MANUAL_FULL_MS - 1;
+  var e7 = await R.scopedRoster(e6, manual);
+  assertEq('làm mới trong 6 giờ: chỉ hỏi phần thay đổi', [loads - l0, e7.fullAt], [1, e6.fullAt]);
+  now += 1;
+  await R.scopedRoster(e7, manual);
+  assertEq('làm mới sau 6 giờ: đọc toàn bộ', loads - l0, 2);
+
   var d = await R.deltaFrom({ students: [{ id: 'a' }], fullAt: now - R.FULL_RESYNC_MS, watermark: null });
   assertEq('deltaFrom: nền quá 3 ngày → null (nơi gọi đọc toàn bộ)', d, null);
   assertEq('stampRoster thêm updatedAt, không sửa object gốc', [R.stampRoster({ a: 1 }), Object.keys({ a: 1 })], [{ a: 1, updatedAt: 'SERVER_TS' }, ['a']]);

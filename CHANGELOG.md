@@ -9,9 +9,10 @@ Thứ tự: Apps Script → `firestore.rules`/index → đẩy web.
 
 1. `node scripts/check-deployed-backend.js` — Apps Script đang chạy phải khớp `BACKEND_VERSION`.
    Lệch thì dán `apps/Code.gs`, chạy `kiemTraSauDeploy`, Deploy → New version.
-2. Publish rules và index (cần nếu chưa làm từ đợt 26/10 và 29/10: `teacher_sync`,
-   giáo viên tự nhập lịch, `arena_relay`):
-   `firebase deploy --only firestore:rules,firestore:indexes --project data-ic3`
+2. Publish rules (cần nếu chưa làm từ đợt 26/10 và 29/10: `teacher_sync`,
+   giáo viên tự nhập lịch, `arena_relay`): `firebase deploy --only firestore:rules --project data-ic3`.
+   Index: **đọc cảnh báo ở `docs/FIREBASE-CHECKLIST.md` §1 trước**. Deploy `firestore:indexes` từ file trong repo
+   sẽ bật cả TTL (tự xoá vĩnh viễn dữ liệu quá hạn).
 3. Firebase Console → Authentication → Anonymous: **Enabled** (đường dự phòng Phòng cả lớp).
    App Check: không Enforce.
 4. Kiểm tra nhanh trên bản thật:
@@ -20,6 +21,20 @@ Thứ tự: Apps Script → `firestore.rules`/index → đẩy web.
    - Giáo viên nhập lịch từ Excel tổ sau khi đồng nghiệp vừa nhập: không báo lỗi quyền.
    - F12 → Console, lọc "lượt đọc Firestore": danh sách học sinh chỉ vài lượt mỗi lần mở.
      Lệch dữ liệu thì đặt `rosterDeltaSync: false` trong `js/backend-config.js`.
+
+## 05/11/2026
+
+- **Rà soát đỉnh 3,1K đọc lúc ~0h (24 giờ: 3,1K đọc / 5 ghi / 2 xoá):** cỡ đỉnh khớp 1 lần đọc toàn bộ `students_roster` (~2.800) + khoá học/lớp/giáo viên trên 1 máy Admin, không thấy vòng lặp hay tác vụ nền nào đọc đều. Chỉ bằng ~6% trần 50.000/ngày. Bản web có đồng hồ trang nặng từ 23:48 ngày 04/11: tra tab NhatKyHoatDong, `firestore_heavy`, để biết đúng trang.
+- **Bấm làm mới, cập nhật liên tục không còn đốt lượt đọc:**
+  - Quản lý lớp, nút "Tải lại": bấm lại trong 3 phút không đọc gì; trong 6 giờ từ lần đọc toàn bộ chỉ hỏi phần thay đổi (cùng khoá học/lớp/giáo viên, ~300 lượt thay vì ~3.100). Quá 6 giờ mới hỏi rồi đọc toàn bộ.
+  - Dashboard giáo viên, điều phối, nút "Làm mới dữ liệu": đọc toàn bộ danh sách học sinh tối đa 6 giờ/lần, còn lại chỉ hỏi phần thay đổi. Thêm/sửa vẫn thấy ngay; học sinh bị xoá hẳn hoặc chuyển đi có thể còn hiện tới 6 giờ.
+  - Điều phối ở Quản lý lớp: hết hạn chỉ hỏi phần thay đổi trong trường của mình, đọc toàn bộ 3 ngày/lần (trước đọc trọn 6 giờ/lần và sau mỗi lần nạp Excel). Dùng chung index `school` + `updatedAt`, chưa deploy thì tự đọc toàn bộ như cũ.
+  - Ghi bù `schoolId`: hỏi Admin trước khi đọc toàn bộ, lưu lại kết quả đã đọc; Huỷ hoặc ghi lỗi thì 7 ngày sau mới thử lại (trước: Huỷ xong lần mở sau đọc lại ~2.800 lượt).
+  - Quản lý tài khoản: bản đệm 15 phút thay vì 3 phút. Tài khoản mới đăng ký ở nơi khác hiện chậm tối đa 15 phút trong tab đang mở; tải lại tab là thấy.
+  - Cầu dao đọc thêm trần **15.000 lượt/máy/ngày** (`DAY_MAX_READS`, `js/firebase-config.js`). Quá trần thì truy vấn danh sách bị chặn tới khi Firebase đặt lại lượt (14-15h chiều giờ VN), trang dùng bản đã lưu; ghi không bị ảnh hưởng.
+  - **Triển khai:** chỉ cần đẩy web, không đổi Apps Script hay rules. 2 index `students_roster` (`teacherId`/`school` + `updatedAt`) **chưa có trên Firebase** (đối chiếu 05/11): thiếu thì giáo viên, điều phối vẫn đọc toàn bộ.
+  - **Cẩn thận khi deploy `firestore.indexes.json`:** file còn 33 `fieldOverrides` chưa lên Firebase, gồm TTL ở 7 collection (Firestore tự xoá vĩnh viễn bản ghi quá hạn, kể cả `quiz_results` cũ) và tắt index 26 trường. `firebase deploy --only firestore:indexes` áp dụng cả các mục này, cần quyết định riêng trước khi chạy nguyên file. Hướng dẫn: `docs/FIREBASE-CHECKLIST.md` §1.
+  - `firestore.indexes.json` bổ sung 2 index đã có trên Firebase mà file còn thiếu (`quiz_results` theo `studentClass` + `submittedAt`, `gvlab_posts` theo `category` + `createdAt`): sau này chọn xoá index "không có trong file" không làm hỏng truy vấn của 2 collection này.
 
 ## 04/11/2026
 
