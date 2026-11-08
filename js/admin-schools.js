@@ -42,6 +42,7 @@
 
   let profile = null;
   let schools = [];
+  let allSchools = []; // bản đầy đủ danh mục (admin: = schools) — để lưu lại bản đệm sau khi sửa
   let studentCount = null; // { schoolId: số HS đang học } — chỉ Admin
 
   const isAdmin = () => profile && profile.role === 'admin';
@@ -111,6 +112,7 @@
       try {
         await repo.updateInfo(id, info);
         changed.forEach((k) => { cur[k] = info[k]; });
+        saveList(allSchools);
         logSchoolChange('update_info', id, { fields: changed });
         toast('Đã lưu thông tin trường');
       } catch (err) {
@@ -129,6 +131,7 @@
         await repo.setStatus(id, status);
         logSchoolChange('set_status', id, { from: cur.status || 'active', to: status });
         cur.status = status;
+        saveList(allSchools);
         render();
         toast(status === 'inactive' ? 'Đã chuyển trường sang Ngừng' : 'Trường hoạt động trở lại');
       } catch (err) {
@@ -138,9 +141,25 @@
     }));
   }
 
+  // Danh mục trường chỉ vài chục doc nhưng đọc lại ở MỖI lần tải trang (F5 / chuyển trang qua lại): bản đệm theo tab 5 phút,
+  // cập nhật ngay khi sửa ở đây (07/11/2026). Trường mới do trang Quản lý tài khoản thêm hiện sau tối đa 5 phút.
+  const LIST_KEY = 'admin-schools:list';
+  const LIST_TTL_MS = 5 * 60 * 1000;
+  async function listSchools() {
+    const C = window.EduDataCache;
+    const hit = C ? await C.getAsync(LIST_KEY, false) : null;
+    if (Array.isArray(hit)) return hit;
+    const all = await repo.listAll();
+    saveList(all);
+    return all;
+  }
+  function saveList(all) {
+    if (window.EduDataCache) window.EduDataCache.setAsync(LIST_KEY, all, LIST_TTL_MS, false);
+  }
+
   async function load() {
     try {
-      const all = await repo.listAll();
+      const all = allSchools = await listSchools();
       if (isAdmin()) {
         schools = all;
       } else {

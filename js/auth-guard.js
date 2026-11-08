@@ -202,6 +202,24 @@
   // reload. Chỉ mở khoá + bắn sự kiện MỘT lần cho mỗi tài khoản.
   let unlockedUid = null;
 
+  // ── F5 liên tục (08/11/2026) ──
+  // Đo (scripts/measure-firestore/burst.py): F5 8 lần lúc trang đang tải = mỗi lần gửi truy vấn (đã tính phí) rồi chết trước
+  // khi kịp lưu bản đệm — Lịch dạy 8 × ~250 lượt, Quản lý tài khoản 8 × ~3.000. Trang này vừa được mở lại trong cùng tab
+  // cách < RAPID_RELOAD_MS → hoãn "edu:ready" (lúc các trang bắt đầu đọc dữ liệu) thêm RELOAD_SETTLE_MS: bấm F5 dồn dập
+  // không tốn lượt nào, chỉ lần tải cuối mới đọc. Mở trang bình thường không bị chậm.
+  const RAPID_RELOAD_MS = 4000;
+  const RELOAD_SETTLE_MS = 1500;
+  const settleMs = (() => {
+    const key = 'edu:guard:lastLoad:' + location.pathname;
+    let prev = 0;
+    try {
+      prev = Number(sessionStorage.getItem(key)) || 0;
+      sessionStorage.setItem(key, String(Date.now()));
+    } catch (e) { return 0; }
+    const gap = Date.now() - prev;
+    return prev && gap >= 0 && gap < RAPID_RELOAD_MS ? RELOAD_SETTLE_MS : 0;
+  })();
+
   function unlock(user, profile) {
     if (unlockedUid === user.uid) {
       window.EduCurrentUser = user;
@@ -220,8 +238,9 @@
       overlay.remove();
       window.dispatchEvent(new CustomEvent('edu:ready', { detail: { user: window.EduCurrentUser, profile: window.EduCurrentProfile } }));
     };
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fire, { once: true });
-    else fire();
+    const go = settleMs ? () => setTimeout(fire, settleMs) : fire;
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go, { once: true });
+    else go();
   }
 
   function boot() {

@@ -84,10 +84,27 @@
     refresh();
   }
 
+  const REFRESH_COOLDOWN_MS = 20 * 1000;
+  const REFRESH_AT_KEY = 'edu:coordinator:manualRefreshAt';
+  function refreshCooldownLeft() {
+    let at = 0;
+    try { at = Number(localStorage.getItem(REFRESH_AT_KEY)) || 0; } catch (e) { /* storage bị chặn: không giới hạn */ }
+    const left = at + REFRESH_COOLDOWN_MS - Date.now();
+    return left > 0 && left <= REFRESH_COOLDOWN_MS ? left : 0; // đồng hồ máy bị chỉnh lùi → bỏ qua
+  }
+  function markRefreshed() {
+    try { localStorage.setItem(REFRESH_AT_KEY, String(Date.now())); } catch (e) { /* bỏ qua */ }
+  }
+
   // "Làm mới dữ liệu": bỏ qua cache 3 phút, đọc lại thẳng từ Firestore —
   // dùng khi cần xem số liệu tức thời (vd. đang theo dõi buổi thi trực tiếp).
   document.getElementById('refreshDataBtn').addEventListener('click', async () => {
     const btn = document.getElementById('refreshDataBtn');
+    // Bấm liên tục / nhiều tab (08/11/2026, burst.py: 6 lần bấm = 6 lần gọi Apps Script listResults): mỗi máy làm mới
+    // tối đa 1 lần / REFRESH_COOLDOWN_MS, tính chung mọi tab (localStorage).
+    const wait = refreshCooldownLeft();
+    if (wait > 0) { toast(`Dữ liệu vừa được làm mới — bấm lại sau ${Math.ceil(wait / 1000)} giây.`); return; }
+    markRefreshed();
     btn.disabled = true;
     const oldLabel = btn.textContent;
     btn.innerHTML = '<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Đang tải...';

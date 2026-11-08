@@ -38,6 +38,7 @@
   // roster có hàng chục nghìn học sinh: tách khỏi cache quiz_results để
   // không phải đọc lại TOÀN BỘ roster mỗi 3 phút chỉ vì cần kết quả tươi.
   const ROSTER_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
+  const LOOKUP_CACHE_MS = 10 * 60 * 1000; // khoá học/lớp/giáo viên: dùng chung với Quản lý lớp
   // Đợt tối ưu hạn mức 10/2026: trước đây 30 phút → mỗi lần mở dashboard cách nhau
   // >30 phút lại đọc lại CẢ roster (hàng trăm-nghìn lượt). Giờ giữ 12 giờ; nút
   // "Làm mới dữ liệu" chỉ đọc lại roster khi bản lưu đã cũ hơn 30 phút (đúng
@@ -91,8 +92,9 @@
       return { courses: [], classes: [], students: [], teachers: [], results: [], schools: [], noSchoolsAssigned: true };
     }
 
-    const scopeKey = isAdmin ? 'admin-all-schools' : (profile.uid || profile.id || 'unknown') + ':' + schools.slice().sort().join('|');
-    const rosterCacheKey = 'coordinator:roster:' + scopeKey;
+    const RC = global.EduRosterCache;
+    const scopeKey = isAdmin ? 'admin-all-schools' : RC.scopeKeyOf(profile);
+    const rosterCacheKey = RC.SCOPED_KEYS.dashboard + scopeKey;
     const resultsCacheKey = 'coordinator:results:' + scopeKey;
 
     // 2 cache TÁCH RIÊNG, đọc song song — roster (persist=true, 30 phút,
@@ -104,11 +106,23 @@
       ? await global.EduDataCache.getAsync(rosterCacheKey, /* persist */ true)
       : null;
     if (rosterBundle && forceRefresh && Date.now() - (rosterBundle.cachedAt || 0) > ROSTER_FORCE_MIN_AGE_MS) rosterBundle = null;
-    if (!rosterBundle) rosterBundle = await fetchRosterOrStale(rosterCacheKey, async () => {
-      const stale = !isAdmin && global.EduDataCache ? await global.EduDataCache.getAsync(rosterCacheKey, true, /* allowStale */ true) : null;
+    const askedAt = Date.now();
+    const C = global.EduDataCache;
+    const lock = C && C.exclusive ? (fn) => C.exclusive(rosterCacheKey, fn) : (fn) => fn();
+    if (!rosterBundle) rosterBundle = await fetchRosterOrStale(rosterCacheKey, () => lock(async () => {
+      // Mở DỒN (08/11/2026): chỉ 1 tab đọc máy chủ cho cùng khoá, tab khác đợi rồi lấy bản vừa lưu (EduDataCache.exclusive).
+      const again = C ? await C.getAsync(rosterCacheKey, /* persist */ true) : null;
+      if (again && (!forceRefresh || (again.cachedAt || 0) > askedAt)) return again;
+      let stale = !isAdmin && global.EduDataCache ? await global.EduDataCache.getAsync(rosterCacheKey, true, /* allowStale */ true) : null;
+      // Chưa có bản đệm riêng nhưng máy đã mở Quản lý lớp cùng phạm vi → lấy HS đang học từ đó làm nền, chỉ hỏi phần thay đổi
+      // (đo 08/11/2026: điều phối 3 trường 210 → 1 lượt). Dùng getAsync allowStale: nền cho delta, không phải dữ liệu hiển thị ngay.
+      if (!stale && !isAdmin && global.EduDataCache) {
+        stale = RC.scopedActiveFrom(await global.EduDataCache.getAsync(RC.SCOPED_KEYS.manager + scopeKey, true, /* allowStale */ true));
+      }
       const [courses, classes, roster, teachers] = await Promise.all([
-        global.EduRepositories.course.list(),
-        global.EduRepositories.class.list(),
+        // Cùng điều kiện với Quản lý lớp → dùng chung bản đệm 10 phút (js/repositories/base-repository.js § list cacheMs)
+        global.EduRepositories.course.list({ orderBy: 'name', cacheMs: LOOKUP_CACHE_MS, refresh: !!forceRefresh }),
+        global.EduRepositories.class.list({ orderBy: 'name', cacheMs: LOOKUP_CACHE_MS, refresh: !!forceRefresh }),
         isAdmin
           // Bản đệm chung với các trang quản lý khác (js/services/roster-cache-service.js)
           ? global.EduRosterCache.activeAll(forceRefresh ? { maxAgeMs: ROSTER_FORCE_MIN_AGE_MS } : undefined).then((students) => ({ students }))
@@ -117,12 +131,12 @@
             loadAll: () => studentsByChunkedSchools(schools), label: 'students_roster (trường của tôi, thay đổi)',
             fullMs: forceRefresh ? global.EduRosterCache.MANUAL_FULL_MS : undefined,
           }),
-        global.EduRepositories.user.listApprovedTeachers(),
+        global.EduRepositories.user.listApprovedTeachers({ refresh: !!forceRefresh }),
       ]);
       const bundle = Object.assign({ courses, classes, teachers, cachedAt: Date.now() }, roster);
-      if (global.EduDataCache) global.EduDataCache.setAsync(rosterCacheKey, bundle, ROSTER_CACHE_TTL_MS, /* persist */ true);
+      if (global.EduDataCache) await global.EduDataCache.setAsync(rosterCacheKey, bundle, ROSTER_CACHE_TTL_MS, /* persist */ true);
       return bundle;
-    });
+    }));
 
     // Tải tăng dần (xem listRecentCached): chỉ đọc bài MỚI nộp kể từ lần trước.
     const results = await global.EduRepositories.studentResult.listRecentCached({

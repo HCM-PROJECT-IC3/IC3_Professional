@@ -12,8 +12,9 @@ const catalog = { subjects: index.subjects.map(s => Object.assign({}, s, {
   sets: s.sets.map(st => JSON.parse(fs.readFileSync(path.join(ROOT, 'data/sets', st.id + '.json'), 'utf8'))) })) };
 const rubrics = Object.assign({},
   ...['excel', 'powerpoint', 'word'].map(s => JSON.parse(fs.readFileSync(path.join(ROOT, 'data/rubrics', s + '.json'), 'utf8'))));
-// fixtures/: bài mẫu sinh bằng make-fixtures.js; fixtures-office/: tệp lưu bằng Excel/PowerPoint thật.
-const FIXTURE_DIRS = ['fixtures', 'fixtures-office'].map(name => {
+// fixtures/: bài mẫu sinh bằng make-fixtures.js; fixtures-office/: tệp lưu bằng Excel/PowerPoint thật;
+// fixtures-com/: tệp làm bằng Office thật qua COM (tools/fixtures-com-*.ps1) cho các tiêu chí bổ sung 11/2026.
+const FIXTURE_DIRS = ['fixtures', 'fixtures-office', 'fixtures-com'].map(name => {
   const dir = path.join(__dirname, name);
   const mf = path.join(dir, 'manifest.json');
   return { name, path: dir, done: fs.existsSync(mf) ? JSON.parse(fs.readFileSync(mf, 'utf8')) : {} };

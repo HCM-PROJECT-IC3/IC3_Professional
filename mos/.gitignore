@@ -11,3 +11,6 @@ work/
 files/word/
 # Bài mẫu Word lưu bằng Office thật — đi kèm tệp đề Word nên cũng không đưa lên git
 tools/fixtures-office/*.docx
+# Bài mẫu PowerPoint/Word làm bằng Office thật qua COM (tools/fixtures-com-*.ps1) — đi kèm tệp đề nên không đưa lên git
+tools/fixtures-com/*.pptx
+tools/fixtures-com/*.docx

@@ -1,0 +1,140 @@
+{
+ "_note": "Tệp lưu bằng Excel/PowerPoint/Word thật qua COM (tools/fixtures-com-*.ps1) cho các tiêu chí bổ sung 11/2026. Ghi các task đã làm trong từng tệp.",
+ "excel-t1-p1": [
+  2
+ ],
+ "excel-t1-p3": [
+  5
+ ],
+ "ppt-t1-p3": [
+  3
+ ],
+ "ppt-t1-p4": [
+  6
+ ],
+ "ppt-t1-p5": [
+  4
+ ],
+ "ppt-t2-p6": [
+  2,
+  5
+ ],
+ "ppt-t2-p7": [
+  2
+ ],
+ "ppt-t3-p6": [
+  1
+ ],
+ "ppt-t4-p2": [
+  4
+ ],
+ "ppt-t4-p6": [
+  3,
+  5
+ ],
+ "ppt-t5-p1": [
+  6
+ ],
+ "ppt-t5-p4": [
+  2
+ ],
+ "ppt-t6-p1": [
+  4
+ ],
+ "ppt-t7-p2": [
+  5
+ ],
+ "ppt-t7-p5": [
+  5
+ ],
+ "ppt-t7-p6": [
+  5
+ ],
+ "ppt-t8-p5": [
+  7
+ ],
+ "ppt-t10-p4": [
+  1
+ ],
+ "word-t1-p5": [
+  1
+ ],
+ "word-t2-p1": [
+  8
+ ],
+ "word-t2-p2": [
+  8
+ ],
+ "word-t2-p3": [
+  5
+ ],
+ "word-t3-p4": [
+  6
+ ],
+ "word-t4-p1": [
+  4,
+  6
+ ],
+ "word-t5-p1": [
+  1,
+  8,
+  10
+ ],
+ "word-t5-p2": [
+  4
+ ],
+ "word-t7-p1": [
+  2
+ ],
+ "word-t10-p1": [
+  2
+ ],
+ "word-t7-p2": [
+  4,
+  5
+ ],
+ "word-t10-p2": [
+  4,
+  5
+ ],
+ "word-t9-p7": [
+  4
+ ],
+ "word-t7-p3": [
+  3,
+  6
+ ],
+ "word-t10-p3": [
+  3,
+  6
+ ],
+ "word-t7-p4": [
+  1
+ ],
+ "word-t8-p2": [
+  3
+ ],
+ "word-t10-p4": [
+  3,
+  4
+ ],
+ "word-t10-p5": [
+  1,
+  5
+ ],
+ "word-t8-p5": [
+  5
+ ],
+ "word-t8-p6": [
+  5
+ ],
+ "word-t9-p2": [
+  3
+ ],
+ "word-t9-p3": [
+  4
+ ],
+ "word-t9-p5": [
+  1
+ ]
+}

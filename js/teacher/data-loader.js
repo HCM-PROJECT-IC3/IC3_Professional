@@ -104,7 +104,13 @@
     const rosterAt = cachedRoster && !Array.isArray(cachedRoster) ? cachedRoster.cachedAt || 0 : 0;
     if (students && forceRefresh && Date.now() - rosterAt > ROSTER_FORCE_MIN_AGE_MS) students = null;
     if (!students) {
-      const fetched = await fetchRosterOrStale(rosterCacheKey, async () => {
+      const askedAt = Date.now();
+      const C = global.EduDataCache;
+      const lock = C && C.exclusive ? (fn) => C.exclusive(rosterCacheKey, fn) : (fn) => fn();
+      const fetched = await fetchRosterOrStale(rosterCacheKey, () => lock(async () => {
+        // Mở DỒN (08/11/2026): chỉ 1 tab đọc máy chủ cho cùng khoá, tab khác đợi rồi lấy bản vừa lưu (EduDataCache.exclusive).
+        const again = C ? await C.getAsync(rosterCacheKey, /* persist */ true) : null;
+        if (again && !Array.isArray(again) && (!forceRefresh || (again.cachedAt || 0) > askedAt)) return again;
         const entry = isAdmin
           // Bản đệm chung với các trang quản lý khác (js/services/roster-cache-service.js)
           ? { students: await global.EduRosterCache.activeAll(forceRefresh ? { maxAgeMs: ROSTER_FORCE_MIN_AGE_MS } : undefined) }
@@ -115,9 +121,9 @@
               fullMs: forceRefresh ? global.EduRosterCache.MANUAL_FULL_MS : undefined,
             });
         const bundle = Object.assign({}, entry, { cachedAt: Date.now() });
-        if (global.EduDataCache) global.EduDataCache.setAsync(rosterCacheKey, bundle, ROSTER_CACHE_TTL_MS, /* persist */ true);
+        if (global.EduDataCache) await global.EduDataCache.setAsync(rosterCacheKey, bundle, ROSTER_CACHE_TTL_MS, /* persist */ true);
         return bundle;
-      });
+      }));
       students = Array.isArray(fetched) ? fetched : fetched.students;
     }
 

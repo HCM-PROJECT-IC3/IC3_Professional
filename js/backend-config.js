@@ -31,6 +31,15 @@
     //           Lệnh ghi vẫn kèm updatedAt (trường thêm vào, không ảnh hưởng gì) để bật lại lúc nào cũng được.
     rosterDeltaSync: true,
 
+    // ── Trang Quản lý tài khoản (admin-users.html): có đọc cả roster khi mở trang không? (07/11/2026) ──
+    //   false : như trước — mở trang đọc ~2.800 học sinh để suy ra danh sách trường + trường mỗi giáo viên đang dạy
+    //           và TỰ SỬA "Trường được xem" của giáo viên cho khớp (~3.200 lượt cho mỗi máy admin chưa có bản đệm).
+    //   true  : mở trang chỉ đọc danh mục `schools` (~40 lượt) để có danh sách trường (~370 lượt/máy cho cả trang);
+    //           KHÔNG tự sửa "Trường được xem" lúc mở trang. Bấm nút "đồng bộ trường" của 1 giáo viên mới đọc roster
+    //           (bản đệm dùng chung, hoặc ~2.800 lượt nếu máy chưa có) rồi đặt đúng trường người đó đang dạy.
+    //   Đổi rồi đo lại: scripts/measure-firestore/. Mặc định false để không đổi cách phân quyền khi chưa chủ động bật.
+    adminUsers: { lazyRoster: false },
+
     // ── Danh sách Trường/Lớp/Tên ở sảnh làm bài (index.html, js/lobby-roster.js) ──
     //   'public-json' : file tĩnh data/roster/students-active.json — ai có URL cũng tải được tên MỌI
     //                   học sinh (docs/architecture/AUDIT-2.0.md §5.1). Mặc định hiện tại.

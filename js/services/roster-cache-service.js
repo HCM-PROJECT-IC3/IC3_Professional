@@ -153,18 +153,55 @@
     return { students, fullAt: Date.now(), watermark: watermarkOf(students) };
   }
 
-  async function readAll() {
-    const snap = await global.EduFirebase.db.collection('students_roster').where('status', '==', 'active').limit(10000).get();
-    // SDK offline (hết lượt/mất mạng) trả cache máy thay vì báo lỗi — coi là thất bại
-    if (snap.metadata && snap.metadata.fromCache) throw Object.assign(new Error('offline'), { code: 'unavailable' });
-    if (global.EduFirebase.countSnap) global.EduFirebase.countSnap('students_roster (đang học, bản đệm chung)', snap);
-    return snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+  // ── Đọc TOÀN BỘ theo từng phần, lưu tiến độ (08/11/2026) ──
+  // Đo (burst.py, Firestore giả có độ trễ): F5 8 lần lúc Quản lý tài khoản đang đọc ~2.800 học sinh = 25.097 lượt — mỗi lần
+  // tải lại bỏ dở 1 truy vấn đã tính phí rồi đọc lại từ đầu. Nay đọc PAGE_SIZE doc/lần theo mã doc, lưu phần đã đọc vào
+  // bản đệm; trang tải lại (hoặc tab khác) đọc tiếp từ chỗ dở. Cùng số lượt khi không ai F5 (+1 lượt nếu phần cuối rỗng).
+  const PAGE_SIZE = 1000;
+  const PARTIAL_TTL_MS = 10 * 60 * 1000; // bản dở cũ hơn → bỏ, đọc lại từ đầu
+  const PARTIAL_PREFIX = 'roster:partial:';
+
+  /**
+   * Đọc toàn bộ kết quả của baseQuery() theo từng phần (orderBy mã doc — không cần index ghép khi chỉ lọc ==).
+   * name: khoá lưu tiến độ (khác nhau cho mỗi loại truy vấn). Trả { docs, watermark }: watermark = updatedAt lớn nhất
+   * của PHẦN ĐẦU — mọi doc đọc sau có updatedAt ≤ lúc đọc, thay đổi xảy ra sau lúc đọc phần đầu > mốc này → lần hỏi
+   * phần thay đổi kế tiếp vẫn bắt được (dùng max của cả danh sách có thể nhảy qua thay đổi xen giữa 2 phần).
+   */
+  async function pagedRead(name, baseQuery, label, { pageSize = PAGE_SIZE } = {}) {
+    const C = cache();
+    const key = PARTIAL_PREFIX + name;
+    let part = C ? await C.getAsync(key, true) : null;
+    if (!part || !Array.isArray(part.docs) || !part.startedAt || Date.now() - part.startedAt > PARTIAL_TTL_MS) {
+      part = { docs: [], lastId: null, startedAt: Date.now(), watermark: null, done: false };
+    }
+    const docId = firebase.firestore.FieldPath.documentId();
+    while (!part.done) {
+      let q = baseQuery().orderBy(docId).limit(pageSize);
+      if (part.lastId) q = q.startAfter(part.lastId);
+      const snap = await q.get();
+      // SDK offline (hết lượt/mất mạng) trả cache máy thay vì báo lỗi — coi là thất bại
+      if (snap.metadata && snap.metadata.fromCache) throw Object.assign(new Error('offline'), { code: 'unavailable' });
+      if (global.EduFirebase.countSnap) global.EduFirebase.countSnap(label, snap);
+      const docs = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+      if (!part.lastId) part.watermark = watermarkOf(docs);
+      part.docs = part.docs.concat(docs);
+      if (docs.length) part.lastId = docs[docs.length - 1].id;
+      part.done = docs.length < pageSize;
+      if (C && !part.done) await C.setAsync(key, part, PARTIAL_TTL_MS, true);
+    }
+    if (C) await C.setAsync(key, null, 1, true); // xong → bỏ tiến độ (lần sau đọc mới từ đầu)
+    return { docs: part.docs, watermark: part.watermark };
+  }
+
+  function readAll() {
+    return pagedRead('active', () => global.EduFirebase.db.collection('students_roster').where('status', '==', 'active'),
+      'students_roster (đang học, bản đệm chung)');
   }
 
   const isActive = (s) => s.status === 'active';
 
   function save(entry) {
-    if (cache()) cache().setAsync(ROSTER_KEY, entry, KEEP_MS, /* persist */ true);
+    return cache() ? cache().setAsync(ROSTER_KEY, entry, KEEP_MS, /* persist */ true) : Promise.resolve();
   }
 
   /**
@@ -177,26 +214,100 @@
     const usable = hit && Array.isArray(hit.students);
     if (usable && !dirty && Date.now() - (hit.cachedAt || 0) < maxAgeMs) return hit.students;
     if (inflight) return inflight;
-    inflight = (async () => {
+    const wasDirty = dirty;
+    // Khoá giữa các tab (EduDataCache.exclusive): nhiều tab cùng mở khi bản đệm trống → 1 tab đọc, các tab kia đợi rồi lấy
+    // bản vừa lưu. Kiểm lại bản đệm SAU khi có khoá (tab trước có thể vừa lưu xong).
+    const lock = C && C.exclusive ? (fn) => C.exclusive(ROSTER_KEY, fn) : (fn) => fn();
+    inflight = lock(async () => {
+      const cur = C ? await C.getAsync(ROSTER_KEY, true, /* allowStale */ true) : null;
+      const curUsable = cur && Array.isArray(cur.students);
+      if (curUsable && !wasDirty && Date.now() - (cur.cachedAt || 0) < maxAgeMs) return cur.students;
       try {
-        let entry = await deltaFrom(usable ? hit : null, isActive);
+        let entry = await deltaFrom(curUsable ? cur : null, isActive);
         if (!entry) {
-          const students = await readAll();
-          entry = { students, fullAt: Date.now(), watermark: watermarkOf(students) };
+          const full = await readAll();
+          entry = { students: full.docs, fullAt: Date.now(), watermark: full.watermark };
         }
         entry.cachedAt = Date.now();
         dirty = false;
-        save(entry);
+        await save(entry);
         return entry.students;
       } catch (err) {
-        if (usable) {
+        if (curUsable) {
           console.warn('[EduRosterCache] Không đọc được danh sách học sinh mới, dùng bản đã lưu:', err.message);
-          return hit.students;
+          return cur.students;
         }
         throw err;
       }
-    })().finally(() => { inflight = null; });
+    }).finally(() => { inflight = null; });
     return inflight;
+  }
+
+  /**
+   * Nền cho trang cần CẢ học sinh đã nghỉ (Quản lý lớp, Admin) khi trang chưa có bản đệm riêng (05→07/11/2026):
+   * máy đã có bản đệm "đang học" dùng chung (do trang Quản lý tài khoản/Dashboard/Trường đọc trước) thì dựng nền từ đó +
+   * CHỈ đọc học sinh không đang học (status != active) — thay vì đọc lại cả roster (~2.800 lượt, đo trên Firestore giả).
+   * Trả { students, fullAt, watermark } để đưa vào deltaFrom() (hỏi tiếp phần thay đổi kể từ mốc) — hoặc null khi nên đọc
+   * toàn bộ như trước: chưa có/đã quá FULL_RESYNC_MS/định dạng cũ, tắt rosterDeltaSync, mất mạng.
+   * Giới hạn: doc không có field status không nằm trong cả 2 truy vấn (bản đệm chung cũng vậy) → được bù ở lần đọc toàn bộ kế tiếp.
+   */
+  async function seedAllStatuses() {
+    if (global.EduBackend && global.EduBackend.rosterDeltaSync === false) return null;
+    const C = cache();
+    const hit = C ? await C.getAsync(ROSTER_KEY, true, /* allowStale */ true) : null;
+    if (!hit || !Array.isArray(hit.students) || !hit.fullAt || Date.now() - hit.fullAt >= FULL_RESYNC_MS) return null;
+    try {
+      const snap = await global.EduFirebase.db.collection('students_roster').where('status', '!=', 'active').limit(10000).get();
+      if (snap.metadata && snap.metadata.fromCache) return null;
+      if (snap.docs.length >= 10000) return null; // chạm trần → có thể thiếu, đọc toàn bộ cho chắc
+      if (global.EduFirebase.countSnap) global.EduFirebase.countSnap('students_roster (đã nghỉ, dựng nền từ bản đệm chung)', snap);
+      const inactive = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+      return { students: hit.students.concat(inactive), fullAt: hit.fullAt, watermark: hit.watermark || watermarkOf(hit.students) };
+    } catch (err) {
+      return null;
+    }
+  }
+
+  // ── Điều phối / Quản trị trường: Dashboard điều phối ↔ Quản lý lớp dùng chung phạm vi (08/11/2026) ──
+  // Đo (multi.py, điều phối 3 trường): Dashboard đọc 210 HS đang học rồi Quản lý lớp đọc lại 225 HS mọi trạng thái của
+  // CÙNG các trường đó (và ngược lại) — mỗi máy đọc trùng ~210 lượt. Hai trang giữ bản đệm riêng theo cùng phạm vi:
+  const SCOPED_KEYS = Object.freeze({ dashboard: 'coordinator:roster:', manager: 'roster-manager:' });
+  /** Phạm vi 1 tài khoản không phải Admin: "uid:Trường A|Trường B" (khớp khoá cũ của 2 trang). */
+  function scopeKeyOf(profile) {
+    const schools = Array.isArray(profile && profile.schools) ? profile.schools.filter(Boolean) : [];
+    return ((profile && (profile.uid || profile.id)) || 'unknown') + ':' + schools.slice().sort().join('|');
+  }
+  const scopedUsable = (e) => !!(e && Array.isArray(e.students) && e.fullAt && Date.now() - e.fullAt < SCOPED_FULL_MS)
+    && !(global.EduBackend && global.EduBackend.rosterDeltaSync === false);
+
+  /** Bản đệm Quản lý lớp (mọi trạng thái) → nền cho Dashboard (chỉ đang học), giữ mốc để hỏi tiếp phần thay đổi. 0 lượt đọc. */
+  function scopedActiveFrom(entry) {
+    if (!scopedUsable(entry)) return null;
+    return { students: entry.students.filter(isActive), fullAt: entry.fullAt, watermark: entry.watermark || null };
+  }
+
+  /**
+   * Bản đệm Dashboard (đang học) → nền cho Quản lý lớp: thêm HS đã nghỉ của đúng các trường (status == inactive & school in,
+   * chỉ cần index đơn trường — cùng dạng truy vấn Dashboard đang dùng). null khi nên đọc toàn bộ như trước: không có/quá
+   * SCOPED_FULL_MS, mất mạng, bị từ chối. Doc thiếu field status: như seedAllStatuses — bù ở lần đọc toàn bộ kế tiếp.
+   */
+  async function seedScopedAllStatuses(entry, schools) {
+    const list = (schools || []).filter(Boolean);
+    if (!scopedUsable(entry) || !list.length) return null;
+    try {
+      const col = global.EduFirebase.db.collection('students_roster');
+      const byId = new Map(entry.students.map((s) => [s.id, s]));
+      for (let i = 0; i < list.length; i += 10) {
+        const snap = await col.where('status', '==', 'inactive').where('school', 'in', list.slice(i, i + 10)).limit(10000).get();
+        if (snap.metadata && snap.metadata.fromCache) return null;
+        if (snap.docs.length >= 10000) return null;
+        if (global.EduFirebase.countSnap) global.EduFirebase.countSnap('students_roster (đã nghỉ, dựng nền từ Dashboard)', snap);
+        snap.docs.forEach((d) => byId.set(d.id, Object.assign({ id: d.id }, d.data())));
+      }
+      return { students: Array.from(byId.values()), fullAt: entry.fullAt, watermark: entry.watermark || null };
+    } catch (err) {
+      return null;
+    }
   }
 
   /** Ghi bản đệm từ dữ liệu đọc ở nơi khác (vd roster-manager đọc cả HS đã nghỉ).
@@ -218,7 +329,8 @@
   }
 
   global.EduRosterCache = {
-    activeAll, put, invalidate, stampRoster, deltaFrom, scopedRoster, watermarkOf, alreadyStamped, resolveUnstamped,
+    activeAll, put, invalidate, stampRoster, deltaFrom, scopedRoster, seedAllStatuses, watermarkOf, alreadyStamped, resolveUnstamped,
+    scopeKeyOf, scopedActiveFrom, seedScopedAllStatuses, SCOPED_KEYS, pagedRead,
     ROSTER_KEY, TTL_MS, FULL_RESYNC_MS, SCOPED_FULL_MS, MANUAL_FULL_MS,
   };
 })(window);

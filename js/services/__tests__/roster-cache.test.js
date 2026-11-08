@@ -29,10 +29,10 @@ globalThis.EduDataCache = {
 function Ts(s, ns) { this.seconds = s; this.nanoseconds = ns; }
 Ts.fromMillis = function (ms) { return new Ts(Math.floor(ms / 1000), (ms % 1000) * 1e6); };
 var cmp = function (a, b) { return a.seconds - b.seconds || a.nanoseconds - b.nanoseconds; };
-globalThis.firebase = { firestore: { Timestamp: Ts, FieldValue: { serverTimestamp: function () { return 'SERVER_TS'; } } } };
+globalThis.firebase = { firestore: { Timestamp: Ts, FieldPath: { documentId: function () { return '__name__'; } }, FieldValue: { serverTimestamp: function () { return 'SERVER_TS'; } } } };
 
 // Firestore giả: đếm lần đọc toàn bộ (where status) và lần hỏi phần thay đổi (where updatedAt)
-var full = 0, delta = 0, offline = false, scoped = 0, scopedError = null;
+var full = 0, delta = 0, neq = 0, offline = false, scoped = 0, scopedError = null;
 var DOCS = [
   { id: 's1', name: 'An', school: 'A', status: 'active', updatedAt: new Ts(100, 500) },
   { id: 's2', name: 'Bình', school: 'B', status: 'active' }, // doc cũ chưa có updatedAt
@@ -50,8 +50,11 @@ globalThis.EduFirebase = {
         return Promise.resolve(snapOf(DOCS.filter(function (d) { return d.teacherId === val && d.updatedAt && cmp(d.updatedAt, v2) > 0; })));
       } }; } }; } };
     }
-    return { limit: function () { return { get: function () {
-    var list = field === 'status'
+    // Đọc toàn bộ theo phần (pagedRead): where(status).orderBy(mã doc).limit(1000) — dữ liệu test < 1 phần nên 1 truy vấn
+    return { orderBy: function () { return this; }, limit: function () { return { get: function () {
+    var list = field === 'status' && op === '!='
+      ? (neq++, DOCS.filter(function (d) { return d.status !== undefined && d.status !== val; })) // Firestore '!=' bỏ qua doc không có field
+      : field === 'status'
       ? (full++, DOCS.filter(function (d) { return d.status === val; }))
       : (delta++, DOCS.filter(function (d) { return d.updatedAt && cmp(d.updatedAt, val) > 0; }));
     return new Promise(function (resolve) { setTimeout(function () { resolve(snapOf(list)); }, 5); });
@@ -181,6 +184,37 @@ var tick = function () { return new Promise(function (r) { setTimeout(r, 0); });
   now += R.TTL_MS + 1;
   await R.activeAll();
   assertEq('bật lại: quay về hỏi phần thay đổi', [full - f0, delta - d0], [1, 1]);
+
+  // Quản lý lớp (Admin) chưa có bản đệm riêng nhưng máy đã có bản đệm "đang học" dùng chung:
+  // dựng nền từ đó + chỉ đọc HS KHÔNG đang học (status != active), KHÔNG đọc lại cả roster (~2.800 lượt).
+  offline = false;
+  globalThis.EduBackend = { rosterDeltaSync: true };
+  R.put([{ id: 'a1', status: 'active', updatedAt: new Ts(100, 0) }, { id: 'a2', status: 'active', updatedAt: new Ts(150, 0) }], now, [150, 0]);
+  await tick();
+  var fS = full, nS = neq, dS = delta;
+  var seed = await R.seedAllStatuses();
+  assertEq('nền từ bản đệm chung: HS đang học (đệm) + HS đã nghỉ (1 truy vấn status!=active)', [ids(seed.students), full - fS, neq - nS, delta - dS], [['a1', 'a2', 'g1', 's2'], 0, 1, 0]);
+  assertEq('nền giữ mốc đồng bộ + thời điểm đọc toàn bộ của bản đệm chung', [seed.watermark, seed.fullAt], [[150, 0], mem.get(R.ROSTER_KEY).value.fullAt]);
+  var seeded = await R.deltaFrom(seed, null, 'test', {});
+  assertEq('nền + phần thay đổi (mọi trạng thái) → đủ danh sách, vẫn 0 lần đọc toàn bộ', [ids(seeded.students), full - fS], [['a1', 'a2', 'g1', 'g2', 's2', 's3'], 0]);
+
+  var nBefore = neq;
+  mem.delete(R.ROSTER_KEY);
+  assertEq('chưa có bản đệm chung → null (trang tự đọc toàn bộ), 0 lượt đọc', [await R.seedAllStatuses(), neq - nBefore], [null, 0]);
+  mem.set(R.ROSTER_KEY, { value: { students: [{ id: 'z' }], cachedAt: 0, fullAt: now - R.FULL_RESYNC_MS - 1, watermark: null }, expiresAt: now + 1e9 });
+  assertEq('bản đệm chung quá hạn đọc toàn bộ → null (để đọc lại toàn bộ bắt HS bị xoá hẳn)', [await R.seedAllStatuses(), neq - nBefore], [null, 0]);
+  mem.set(R.ROSTER_KEY, { value: { students: [{ id: 'z' }], cachedAt: 0 }, expiresAt: now + 1e9 });
+  assertEq('bản đệm định dạng cũ (chưa có fullAt) → null', await R.seedAllStatuses(), null);
+  R.put([{ id: 'a1', status: 'active' }], now, null);
+  await tick();
+  offline = true;
+  assertEq('mất mạng / hết lượt đọc → null, không dựng nền thiếu HS đã nghỉ', await R.seedAllStatuses(), null);
+  offline = false;
+  globalThis.EduBackend = { rosterDeltaSync: false };
+  R.put([{ id: 'a1', status: 'active' }], now, null);
+  await tick();
+  assertEq('tắt công tắc rosterDeltaSync → null (đọc toàn bộ như trước)', await R.seedAllStatuses(), null);
+  globalThis.EduBackend = { rosterDeltaSync: true };
 
   console.log(failures ? '\n' + failures + ' FAIL' : '\nTất cả PASS');
   process.exit(failures ? 1 : 0);

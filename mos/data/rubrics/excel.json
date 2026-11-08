@@ -391,6 +391,7 @@
  },
  "excel-t1-p1": {
   "1": {"type": "x.coreProp", "prop": "Company", "value": "High School"},
+  "2": {"type": "x.privacy"},
   "3": {"type": "x.sheetAdded", "name": "Compatibility"}
  },
  "excel-t1-p2": {
@@ -408,6 +409,7 @@
   "2": {"all": [{"type": "x.styleCleared", "sheet": "Home", "range": "C244"}, {"type": "x.cellsEqual", "sheet": "Home", "values": {"C244": "EDUSA"}}]},
   "3": {"type": "x.sorted", "sheet": "Home", "rows": [279, 285], "keys": [{"col": "C", "desc": true}]},
   "4": {"type": "x.filterOnly", "sheet": "Home", "col": "F", "rows": [300, 306], "equals": ["750"]},
+  "5": {"type": "x.selection", "sheet": "Home", "name": "Find_and_Select", "sticky": true},
   "6": {"all": [{"type": "x.textGone", "sheet": "Home", "text": "EduStar"}, {"type": "x.cellsEqual", "sheet": "Home", "values": {"B345": "Sáng Tạo Số", "D347": "Sáng Tạo Số"}}]}
  },
  "excel-t1-p4": {

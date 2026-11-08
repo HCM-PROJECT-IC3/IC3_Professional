@@ -250,6 +250,8 @@
       defaultRowHeight: +(X.kid(ws, 'sheetFormatPr')?.attrs.defaultRowHeight || 15),
       pane: pane ? { xSplit: +(pane.attrs.xSplit || 0), ySplit: +(pane.attrs.ySplit || 0), state: pane.attrs.state || '', topLeft: pane.attrs.topLeftCell } : null,
       view: view?.attrs || {},
+      // Vùng đang chọn khi lưu (vd sau Go To một tên vùng).
+      selection: X.kid(view, 'selection')?.attrs || null,
       autoFilter: af ? { ref: af.attrs.ref, filters: X.kids(af, 'filterColumn').length } : null,
       sortState: sortState ? X.kids(sortState, 'sortCondition').map(s => ({ ref: s.attrs.ref, descending: s.attrs.descending === '1' })) : [],
       merges: X.all(X.kid(ws, 'mergeCells'), 'mergeCell').map(m => m.attrs.ref),

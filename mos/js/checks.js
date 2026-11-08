@@ -437,6 +437,15 @@
       const ps = sheetOf(m, p.sheet).pageSetup;
       return (ps.orientation || 'portrait') === p.orientation ? ok(`Hướng giấy ${p.orientation}.`) : fail(`Hướng giấy đang là ${ps.orientation || 'portrait'}.`);
     },
+    // Vùng đang chọn trên trang tính (Go To / Name Box đến tên vùng) — Excel lưu trong <sheetView><selection sqref>.
+    selection(m, p) {
+      const nr = p.name ? nameRange(m, p.name) : null;
+      const s = sheetOf(m, nr ? nr.sheet : p.sheet);
+      const want = (nr ? nr.range : p.range || '').replace(/\$/g, '').toUpperCase();
+      const got = ((s.selection && s.selection.sqref) || 'A1').replace(/\$/g, '').toUpperCase();
+      if (!want) return fail('Không thấy tên vùng cần đến.');
+      return got === want || got.split(' ').includes(want) ? ok(`Đang chọn ${want}.`) : fail(`Vùng đang chọn là ${got}, chưa phải ${p.name || want} (${want}).`);
+    },
     view(m, p) {
       const v = sheetOf(m, p.sheet).view;
       if (p.mode && (v.view || 'normal') !== p.mode) return fail(`Chế độ xem đang là ${v.view || 'normal'}.`);
@@ -889,8 +898,54 @@
       const bad = m.slides.filter(s => !(s.transitionXml.includes(p.kind) || (s.transition?.all || []).includes(p.kind))).map(s => s.index);
       return bad.length ? fail(`Chưa có hiệu ứng ${p.label || p.kind} ở trang chiếu ${list(bad.map(String), 6)}.`) : ok('Đã áp dụng hiệu ứng chuyển tiếp cho mọi trang chiếu.');
     },
+    // Mô hình 3D (nằm trong mc:AlternateContent nên không có trong danh sách hình): góc nhìn đã đổi, kích thước, hiệu ứng.
+    model3d(m, p) {
+      const XM = typeof module !== 'undefined' && module.exports ? require('./xml.js') : root.MosXml;
+      const s = slideOf(m, p);
+      const frames = XM.all(s.xml, 'p:graphicFrame').filter(n => XM.first(n, 'am3d:model3d'));
+      if (!frames.length) return fail('Không thấy mô hình 3D trên trang chiếu.');
+      const f = frames[0];
+      if (p.rotChanged) {
+        const r = XM.first(f, 'am3d:rot')?.attrs || {};
+        const from = p.fromRot || {};
+        if (['ax', 'ay', 'az'].every(k => +(r[k] || 0) === +(from[k] || 0))) return fail('Góc nhìn (3D Model Views) của mô hình chưa đổi.');
+      }
+      const ext = XM.first(XM.first(f, 'p:xfrm'), 'a:ext')?.attrs || {};
+      const nearIn = (emu, inch) => Math.abs(+emu - inch * EMU_IN) <= EMU_IN * 0.03;
+      if (p.hIn !== undefined && !nearIn(ext.cy, p.hIn)) return fail(`Chiều cao mô hình đang là ${(+ext.cy / EMU_IN).toFixed(2)}".`);
+      if (p.wIn !== undefined && !nearIn(ext.cx, p.wIn)) return fail(`Chiều rộng mô hình đang là ${(+ext.cx / EMU_IN).toFixed(2)}".`);
+      if (p.anim) {
+        const id = XM.first(f, 'p:cNvPr')?.attrs.id;
+        const cts = XM.all(s.xml, 'p:cTn').filter(c => c.attrs.presetClass && XM.all(c, 'p:spTgt').some(t => t.attrs.spid === id)
+          && (!p.anim.cls || new RegExp(p.anim.cls).test(c.attrs.presetClass)));
+        if (!cts.length) return fail('Mô hình 3D chưa có hiệu ứng hoạt hoạ.');
+        if (p.anim.after && !cts.some(c => c.attrs.nodeType === 'afterEffect')) return fail('Hiệu ứng của mô hình 3D chưa đặt After Previous.');
+      }
+      return ok(p.ok || 'Mô hình 3D đúng yêu cầu.');
+    },
+    // Ảnh chèn trên Slide Master: cạnh trên khớp placeholder topOf, cạnh phải khớp placeholder rightOf.
+    masterPicAlign(m, p) {
+      const XM = typeof module !== 'undefined' && module.exports ? require('./xml.js') : root.MosXml;
+      const tree = XM.first(m.master.xml, 'p:spTree');
+      const box = n => {
+        const x = XM.first(XM.first(n, 'p:spPr'), 'a:xfrm');
+        const o = XM.first(x, 'a:off'), e = XM.first(x, 'a:ext');
+        return o && e ? { x: +o.attrs.x, y: +o.attrs.y, cx: +e.attrs.cx, cy: +e.attrs.cy } : null;
+      };
+      const ph = t => XM.kids(tree, 'p:sp').find(n => { const h = XM.first(n, 'p:ph'); return h && (h.attrs.type || 'body') === t; });
+      const topN = ph(p.topOf || 'body'), rightN = ph(p.rightOf || 'sldNum');
+      const top = topN && box(topN), right = rightN && box(rightN);
+      if (!top || !right) return fail('Không đọc được vị trí placeholder trên Slide Master.');
+      const pics = XM.kids(tree, 'p:pic').map(box).filter(b => b && b.cx < m.size.cx * 0.9); // bỏ ảnh nền phủ cả trang
+      if (!pics.length) return fail('Slide Master chưa có ảnh mới (chèn trên Slide Master, không phải layout).');
+      const tol = EMU_IN * 0.03;
+      if (pics.some(b => Math.abs(b.y - top.y) <= tol && Math.abs(b.x + b.cx - (right.x + right.cx)) <= tol)) return ok('Ảnh trên Slide Master đã căn đúng.');
+      const b = pics[pics.length - 1];
+      return fail(Math.abs(b.y - top.y) > tol ? 'Cạnh trên của ảnh chưa khớp cạnh trên của khung nội dung.' : 'Cạnh phải của ảnh chưa khớp cạnh phải của khung số trang.');
+    },
     timings(m, p) {
-      const bad = m.slides.filter(s => !s.hidden && !(s.transition && +(s.transition.attrs.advTm || 0) >= (p.min || 1000))).map(s => s.index);
+      // from = chỉ xét từ trang chiếu này (vd ghi hình bắt đầu từ trang chiếu 3).
+      const bad = m.slides.filter(s => !s.hidden && s.index >= (p.from || 1) && !(s.transition && +(s.transition.attrs.advTm || 0) >= (p.min || 1000))).map(s => s.index);
       return bad.length ? fail(`Chưa có thời gian trình chiếu ở trang chiếu ${list(bad.map(String), 6)}.`) : ok('Đã lưu thời gian trình chiếu.');
     },
     animOrder(m, p) {
@@ -943,6 +998,13 @@
       if (p.wIn !== undefined && !near(sh.cx, p.wIn * EMU_IN)) return fail(`Chiều rộng đang là ${(sh.cx / EMU_IN).toFixed(2)}".`);
       if (p.hIn !== undefined && !near(sh.cy, p.hIn * EMU_IN)) return fail(`Chiều cao đang là ${(sh.cy / EMU_IN).toFixed(2)}".`);
       if (p.centerV && Math.abs(sh.y + sh.cy / 2 - m.size.cy / 2) > EMU_IN * 0.03) return fail('Chưa căn giữa theo chiều dọc của trang chiếu.');
+      if (p.bottomIn !== undefined && !near(sh.y + sh.cy, p.bottomIn * EMU_IN)) return fail(`Cạnh dưới đang ở ${((sh.y + sh.cy) / EMU_IN).toFixed(2)}", cần ${p.bottomIn}".`);
+      // crop: "b" = phải cắt cạnh dưới nhiều hơn minCrop (mức cắt sẵn trong tệp đề); true = có cắt bất kỳ cạnh nào — không chấp nhận co/kéo.
+      if (p.crop) {
+        const c = sh.crop || {};
+        const cut = p.crop === true ? ['l', 't', 'r', 'b'].some(k => +(c[k] || 0) > 0) : +(c[p.crop] || 0) > (p.minCrop || 0);
+        if (!cut) return fail('Đối tượng được di chuyển/co lại chứ chưa cắt (Crop).');
+      }
       return ok('Vị trí, kích thước đúng.');
     },
     tableStyle(m, p) {
@@ -981,6 +1043,81 @@
       if (typeof v === 'number') return got !== undefined && Math.abs(+got - v) <= (rule.tol ?? 0);
       return got === String(v);
     }) && (!rule.text || norm(XM.text(n)).includes(norm(rule.text))));
+  }
+
+
+  // ---- Word: duyệt đoạn văn theo thứ tự tài liệu, bỏ bản sao trong mc:Fallback (hộp văn bản có 2 bản).
+  function wParas(XM, body) {
+    const dup = new Set(XM.all(body, 'mc:Fallback').flatMap(f => XM.all(f, 'w:p')));
+    return XM.all(body, 'w:p').filter(x => !dup.has(x));
+  }
+  // Chữ của riêng đoạn (không tính chữ trong hộp văn bản neo ở đoạn đó).
+  function ownText(XM, para) {
+    const inner = new Set(XM.all(para, 'w:txbxContent').flatMap(t => XM.all(t, 'w:t')));
+    return XM.all(para, 'w:t').filter(t => !inner.has(t)).map(t => t.text).join('');
+  }
+  function findPara(XM, ps, f) {
+    const t = x => norm(ownText(XM, x));
+    // field = đoạn chứa trường (vd ngày DATE tự cập nhật nên không tìm theo chữ được).
+    if (f.field) {
+      const re = new RegExp('^\\s*' + f.field + '\\b', 'i');
+      return ps.find(x => !XM.first(x, 'w:txbxContent') && XM.all(x, 'w:instrText').some(i => re.test(i.text)) || XM.all(x, 'w:fldSimple').some(i => re.test(i.attrs['w:instr'] || '')));
+    }
+    return ps.find(x => (f.startsWith ? t(x).startsWith(norm(f.startsWith)) : t(x).includes(norm(f.text || ''))) && t(x));
+  }
+  // Đánh số danh sách như Word: các w:num dùng chung abstractNum thì đếm tiếp nhau, trừ khi có startOverride.
+  function numbering(XM, m) {
+    const nx = m.parts.numbering;
+    const lvlOf = n => {
+      const out = {};
+      for (const l of XM.kids(n, 'w:lvl')) {
+        const v = k => XM.kid(l, k)?.attrs['w:val'];
+        const rf = XM.first(XM.kid(l, 'w:rPr'), 'w:rFonts');
+        out[+l.attrs['w:ilvl']] = { start: v('w:start') != null ? +v('w:start') : 1, fmt: v('w:numFmt') || 'decimal', text: v('w:lvlText') ?? '', font: rf ? (rf.attrs['w:ascii'] || rf.attrs['w:hAnsi'] || '') : '' };
+      }
+      return out;
+    };
+    const abs = {}, nums = {};
+    for (const a of nx ? XM.all(nx, 'w:abstractNum') : []) abs[a.attrs['w:abstractNumId']] = lvlOf(a);
+    for (const n of nx ? XM.all(nx, 'w:num') : []) {
+      const ov = {};
+      for (const o of XM.kids(n, 'w:lvlOverride')) {
+        const so = XM.kid(o, 'w:startOverride');
+        const lv = XM.kid(o, 'w:lvl');
+        ov[+o.attrs['w:ilvl']] = { start: so ? +so.attrs['w:val'] : null, lvl: lv ? Object.values(lvlOf({ children: [lv] }))[0] || null : null };
+      }
+      nums[n.attrs['w:numId']] = { abs: XM.kid(n, 'w:abstractNumId')?.attrs['w:val'], ov };
+    }
+    const level = (numId, ilvl) => { const n = nums[numId]; if (!n) return null; return (n.ov[ilvl] && n.ov[ilvl].lvl) || (abs[n.abs] || {})[ilvl] || null; };
+    // Giá trị số hiển thị của từng đoạn (Map đoạn → số), chỉ tính đánh số trực tiếp (numPr trong đoạn).
+    const values = new Map();
+    const counters = {}, seen = new Set();
+    for (const para of wParas(XM, m.parts.body)) {
+      const np = XM.first(XM.kid(para, 'w:pPr'), 'w:numPr');
+      const numId = np && XM.kid(np, 'w:numId')?.attrs['w:val'];
+      if (!numId || numId === '0' || !nums[numId]) continue;
+      const ilvl = +(XM.kid(np, 'w:ilvl')?.attrs['w:val'] || 0);
+      const n = nums[numId];
+      const c = (counters[n.abs] = counters[n.abs] || {});
+      if (!seen.has(numId)) {
+        seen.add(numId);
+        for (const [l, o] of Object.entries(n.ov)) if (o.start != null) { c[l] = undefined; c['start' + l] = o.start; }
+      }
+      const lv = level(numId, ilvl) || { start: 1 };
+      const v = c[ilvl] === undefined ? (c['start' + ilvl] ?? lv.start) : c[ilvl] + 1;
+      c[ilvl] = v;
+      delete c['start' + ilvl];
+      for (const k of Object.keys(c)) if (/^\d+$/.test(k) && +k > ilvl) c[k] = undefined;
+      values.set(para, { value: v, numId, ilvl, lvl: lv });
+    }
+    return { values, level };
+  }
+  // Định dạng đoạn + ký tự (bỏ rsid, ngôn ngữ, chữ không kiểm lỗi) để so "Format Painter".
+  function fmtKey(XM, para) {
+    const clean = n => !n ? '' : n.children.filter(c => !/^(rsid|rPr|sectPr|pPrChange|rPrChange|lang|noProof|proofErr|webHidden)$/.test(c.local) && !/^w14:/.test(c.name))
+      .map(c => c.name + JSON.stringify(Object.fromEntries(Object.entries(c.attrs).filter(([k]) => !/rsid|w14:/.test(k)))) + clean(c)).sort().join(';');
+    const run = XM.kids(para, 'w:r').find(r => XM.all(r, 'w:t').some(t => t.text.trim()));
+    return { p: clean(XM.kid(para, 'w:pPr')), r: clean(XM.kid(run, 'w:rPr')) };
   }
 
   const Wd = {
@@ -1153,6 +1290,82 @@
       if (lost.length) return fail(`Thay đổi bị từ chối nhầm: ${lost.join(', ')}.`);
       if ((p.pending || []).some(t => !inRev(t))) return fail(`Không được chấp nhận/từ chối thay đổi "${p.pending.join('/')}".`);
       return ok('Duyệt thay đổi đúng.');
+    },
+    // Xoá header của một loại trang (default = trang thường, first = trang đầu) mà vẫn giữ header loại khác.
+    headerGone(m, p) {
+      const hs = m.sections.flatMap(sct => sct.headers);
+      const has = which => hs.some(h => h.which === which && norm(h.text || '').includes(norm(p.text)));
+      if (has(p.which || 'default')) return fail(`Header "${p.text}" vẫn còn ở trang cần xoá.`);
+      if (p.keep && !has(p.keep)) return fail(`Đã xoá nhầm cả header ở trang ${p.keep === 'first' ? 'đầu tiên' : 'khác'}.`);
+      return ok('Đã xoá header ở trang yêu cầu.');
+    },
+    // Đoạn b có cùng định dạng đoạn + ký tự với đoạn a (Format Painter). a/b: {startsWith|text} hoặc {after, nth}.
+    sameFormat(m, p) {
+      const XM = typeof module !== 'undefined' && module.exports ? require('./xml.js') : root.MosXml;
+      const ps = wParas(XM, m.parts.body);
+      const pick = f => {
+        if (!f.after) return findPara(XM, ps, f);
+        const i = ps.findIndex(x => norm(ownText(XM, x)).includes(norm(f.after)));
+        return i < 0 ? null : ps.slice(i + 1).filter(x => ownText(XM, x).trim())[(f.nth || 1) - 1];
+      };
+      const a = pick(p.a), b = pick(p.b);
+      if (!a || !b) return fail('Không thấy đoạn văn cần so định dạng.');
+      const ka = fmtKey(XM, a), kb = fmtKey(XM, b);
+      if (p.char !== false && ka.r !== kb.r) return fail('Định dạng ký tự của đoạn sau chưa giống đoạn đầu.');
+      if (p.para !== false && ka.p !== kb.p) return fail('Định dạng đoạn (thụt lề, giãn dòng, căn lề) chưa giống đoạn đầu.');
+      return ok(p.ok || 'Đã sao chép định dạng.');
+    },
+    // Số hiển thị của mục danh sách (đếm như Word). value = số cần có; prevPlus: {startsWith} = số của mục đó + 1.
+    listValue(m, p) {
+      const XM = typeof module !== 'undefined' && module.exports ? require('./xml.js') : root.MosXml;
+      const ps = wParas(XM, m.parts.body);
+      const nb = numbering(XM, m);
+      const para = findPara(XM, ps, p.para);
+      if (!para) return fail('Không thấy mục danh sách.');
+      const v = nb.values.get(para);
+      if (!v || v.lvl.fmt === 'bullet' || v.lvl.fmt === 'none') return fail(p.notList || 'Đoạn văn chưa được đánh số.');
+      let want = p.value;
+      if (p.after) {
+        const ref = findPara(XM, ps, p.after);
+        const rv = ref && nb.values.get(ref);
+        if (!rv) return fail('Không đọc được danh sách đứng trước.');
+        want = rv.value + 1;
+      }
+      if (p.count) {
+        const i = ps.indexOf(para);
+        const run = ps.slice(i, i + p.count).map(x => nb.values.get(x));
+        if (run.some((x, k) => !x || x.value !== want + k)) return fail(`Các mục chưa được đánh số liên tục từ ${want}.`);
+      }
+      return v.value === want ? ok(p.ok || `Mục danh sách bắt đầu từ ${want}.`) : fail(`Mục "${p.para.startsWith || p.para.text}" đang mang số ${v.value}, cần ${want}.`);
+    },
+    // Kiểu đánh số/bullet của mục danh sách: fmt (upperRoman, decimal, bullet...), lvlText, hoặc like = giống mục khác.
+    listFormat(m, p) {
+      const XM = typeof module !== 'undefined' && module.exports ? require('./xml.js') : root.MosXml;
+      const ps = wParas(XM, m.parts.body);
+      const nb = numbering(XM, m);
+      const targets = p.para.all ? ps.filter(x => norm(ownText(XM, x)).startsWith(norm(p.para.startsWith))) : [findPara(XM, ps, p.para)].filter(Boolean);
+      if (!targets.length) return fail('Không thấy danh sách.');
+      const ref = p.like ? nb.values.get(findPara(XM, ps, p.like)) : null;
+      if (p.like && !ref) return fail('Không đọc được danh sách mẫu.');
+      for (const t of targets) {
+        const v = nb.values.get(t);
+        if (!v) return fail('Đoạn văn chưa thuộc danh sách.');
+        if (p.fmt && v.lvl.fmt !== p.fmt) return fail(p.fail || `Kiểu đánh số đang là ${v.lvl.fmt}.`);
+        if (p.lvlText !== undefined && v.lvl.text !== p.lvlText) return fail(p.fail || `Mẫu số đang là "${v.lvl.text}".`);
+        if (ref && (v.lvl.fmt !== ref.lvl.fmt || v.lvl.text !== ref.lvl.text || norm(v.lvl.font) !== norm(ref.lvl.font))) return fail(p.fail || 'Kiểu bullet chưa giống các danh sách khác.');
+      }
+      return ok(p.ok || 'Kiểu danh sách đúng.');
+    },
+    // Đoạn chứa phần tử el (vd SmartArt = dgm:relIds) nằm trước đoạn before và sau đoạn after.
+    elBefore(m, p) {
+      const XM = typeof module !== 'undefined' && module.exports ? require('./xml.js') : root.MosXml;
+      const ps = wParas(XM, m.parts.body);
+      const i = ps.findIndex(x => XM.first(x, p.el));
+      if (i < 0) return fail(p.missing || 'Không thấy đối tượng.');
+      const b = ps.indexOf(findPara(XM, ps, p.before));
+      const a = p.after ? ps.indexOf(findPara(XM, ps, p.after)) : -1;
+      if (b < 0) return fail('Không thấy mục mốc.');
+      return i < b && i > a ? ok(p.ok || 'Vị trí đúng.') : fail(p.fail || 'Đối tượng chưa nằm đúng chỗ.');
     },
     listSpacing(m, p) {
       const ps = listParas(m, p);

@@ -167,5 +167,25 @@
     if (ok === undefined) set(key, value, ttlMs, persist); // IndexedDB bị chặn → thử storage thường
   }
 
-  global.EduDataCache = { get, set, clear, clearAll, getAsync, setAsync };
+  /**
+   * Chỉ 1 tab trên máy chạy fn() cho cùng `name` tại 1 thời điểm (Web Locks). Dùng quanh "bản đệm trống → đọc máy chủ →
+   * lưu": fn() tự kiểm lại bản đệm trước khi đọc và CHỜ lưu xong mới trả về, để tab đến sau lấy được bản vừa lưu.
+   * Đo 08/11/2026 (burst.py): Admin mở 5 tab Quản lý lớp cùng lúc → 5 tab cùng đọc ~3.000 học sinh (15.776 lượt).
+   * Tab giữ khoá bị F5/đóng → trình duyệt tự nhả. Chờ quá waitMs (tab kia treo mạng) → tự chạy, không chờ mãi.
+   * Trình duyệt không có Web Locks → chạy luôn như trước.
+   */
+  function exclusive(name, fn, { waitMs = 20000 } = {}) {
+    const locks = global.navigator && global.navigator.locks;
+    if (!locks || typeof locks.request !== 'function' || typeof AbortController === 'undefined') return Promise.resolve().then(fn);
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), waitMs);
+    return locks.request('edu-load:' + name, { signal: ctrl.signal }, () => { clearTimeout(timer); return fn(); })
+      .catch((err) => {
+        clearTimeout(timer);
+        if (err && err.name === 'AbortError' && ctrl.signal.aborted) return fn();
+        throw err;
+      });
+  }
+
+  global.EduDataCache = { get, set, clear, clearAll, getAsync, setAsync, exclusive };
 })(window);

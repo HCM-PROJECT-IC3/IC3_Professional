@@ -176,22 +176,16 @@
   function initScheduleAvatars() {
     if (!window.EduFirebase || !window.EduFirebase.db) return;
     const db = window.EduFirebase.db;
-    // Map mã NV → uid chỉ đổi khi admin gán teacherCode cho tài khoản — cache
-    // localStorage 30 phút (js/services/data-cache-service.js) để F5/chuyển trang
-    // không đọc lại cả bảng users giáo viên.
-    const TEACHER_MAP_CACHE_KEY = 'teaching-schedule:teacherCodeToUid';
-    const cachedMap = window.EduDataCache ? window.EduDataCache.get(TEACHER_MAP_CACHE_KEY, true) : null;
-    if (cachedMap) {
-      teacherCodeToUid = cachedMap;
-    } else {
-      window.EduRepositories.user.teacherCodeToUid()
-        .then((map) => {
-          Object.assign(teacherCodeToUid, map);
-          if (window.EduDataCache) window.EduDataCache.set(TEACHER_MAP_CACHE_KEY, teacherCodeToUid, 12 * 60 * 60 * 1000, true); // chỉ để hiện ảnh đại diện; mỗi lần đọc = cả danh sách giáo viên
-          patchScheduleAvatars();
-        })
-        .catch((err) => console.warn('[Lịch giảng dạy] Không dựng được map giáo viên → tài khoản:', err.message));
-    }
+    // Map mã NV → uid chỉ đổi khi admin gán teacherCode cho tài khoản, và chỉ để hiện ảnh đại diện — mỗi lần dựng =
+    // đọc cả danh sách giáo viên đã duyệt (~100 lượt). Trước 08/11/2026 giữ 12 giờ → mỗi máy giáo viên ~100 lượt/ngày
+    // (đo multi.py). Nay giữ 7 ngày trong bản đệm repository (IndexedDB): Admin gán mã trên máy này → bỏ ngay; máy khác
+    // thấy ảnh của giáo viên vừa liên kết sau tối đa 7 ngày (trước đó hiện chữ viết tắt).
+    window.EduRepositories.user.teacherCodeToUid({ cacheMs: 7 * 24 * 60 * 60 * 1000 })
+      .then((map) => {
+        Object.assign(teacherCodeToUid, map);
+        patchScheduleAvatars();
+      })
+      .catch((err) => console.warn('[Lịch giảng dạy] Không dựng được map giáo viên → tài khoản:', err.message));
     // Đọc qua EduProfileCache (IndexedDB + đồng bộ delta theo updatedAt) thay vì
     // đọc lại TOÀN BỘ gvlab_profiles (avatar base64 tới ~300KB/hồ sơ) mỗi lần mở trang.
     // Ảnh mới hiện sau khi tải lại trang là đủ.

@@ -22,6 +22,139 @@ Thứ tự: Apps Script → `firestore.rules`/index → đẩy web.
    - F12 → Console, lọc "lượt đọc Firestore": danh sách học sinh chỉ vài lượt mỗi lần mở.
      Lệch dữ liệu thì đặt `rosterDeltaSync: false` trong `js/backend-config.js`.
 
+
+## 09/11/2026 (3) — MOS: tải đề xong mở luôn bằng Office (không cần máy chủ trường)
+
+Học sinh thấy (mở trang không qua máy chủ trường, vd Live Server / GitHub Pages, trên Chrome/Edge):
+- Nút **"Tải đề & mở bằng Excel/PowerPoint/Word"**: trang lưu đề vào **thư mục làm bài** rồi mở ngay bằng Office,
+  song song với trang / thanh làm bài thu gọn. Có nút **"Mở bằng …"** để mở lại; "Tải cả bộ đề" cũng lưu vào thư mục này.
+- Lần đầu em chọn thư mục làm bài (gợi ý tạo `C:\MOS`) và dán đường dẫn của nó 1 lần (trình duyệt không cho trang biết đường dẫn).
+  Đường dẫn phải **không dấu**; tên thư mục/tệp trang tạo cũng không dấu (vd `MOS Excel - Bo de Tiet 3\P1_Project_1.xlsx`).
+- Office có thể hỏi "Do you trust this content?" → bấm **Yes**; thanh vàng Protected View → **Enable Editing** (đã ghi trong hướng dẫn).
+
+Đã thử: mở bằng giao thức `ms-powerpoint:ofe|u|file:///…` với PowerPoint thật → mở được và sửa được (không chỉ đọc);
+đường dẫn có dấu tiếng Việt thì không mở được (nên trang chặn). Excel/Word cùng cách, có thêm hộp hỏi "Do you trust…".
+Thử tự động trên Chrome (thư mục giả OPFS, Drive giả): 17/17 bước đạt — hỏi/kiểm tra đường dẫn, lưu tệp, gửi đúng lệnh mở,
+mở lại trang không hỏi lại, Ctrl+S tự chấm, tải cả bộ đề không hỏi lại thư mục, tải hỏng thì báo đúng lỗi.
+
+Sửa kèm:
+- **Lỗi cũ**: ở trang làm bài đầy đủ, mở lại / F5 trang thì Ctrl+S không còn tự chấm (vẽ trang huỷ mất việc theo dõi tệp vừa bật).
+- Tải đề hỏng giữa chừng để lại tệp rỗng 0 byte, lần sau trang giữ luôn tệp rỗng đó — nay tải xong mới tạo tệp.
+- Báo lỗi tải đề sai hướng ("kiểm tra định dạng .xlsx") — nay báo mất mạng / Drive tạm chặn.
+
+Lưu ý: Google Drive tạm chặn IP khi tải dồn dập ("Sorry…", gặp khi chạy thử nhiều lần) — cả phòng máy chung 1 IP cũng có thể gặp;
+phòng máy nên dùng máy chủ trường (không phụ thuộc Drive). Firebase 0, Apps Script không đổi.
+
+## 09/11/2026 (2) — MOS: nâng cấp giao diện
+
+Học sinh thấy:
+- Trang chủ có mục **Làm tiếp**: bài thi thử chưa kết thúc (còn bao nhiêu phút, luôn đứng đầu) và các project luyện tập đang làm dở.
+- Ô môn ghi **Thi thử tốt nhất**; danh sách bộ đề có thanh tiến độ "Đã làm x/y task".
+- **Bảng điểm** (đổi tên thống nhất, trước lẫn lộn "Lịch sử"): lọc Thi thử / Luyện tập / theo môn, số liệu lượt làm, điểm cao nhất, trung bình, số lượt đạt.
+- Trang kết quả có thẻ tóm tắt từng project ở đầu, bấm để tới chi tiết.
+- Bỏ chip "Tự chấm" lặp lại ở mọi task (chỉ còn chip "Tự kiểm" ở task không chấm tự động).
+- Sửa: nút đổi giao diện luôn ghi "Chế độ tối" kể cả khi đang tối (nay ghi đúng + biểu tượng mặt trời/mặt trăng);
+  thanh làm bài hẹp bị bóp méo các tab task (nay cuộn ngang); nút "Task sau" gần như vô hình ở chế độ tối;
+  đường kẻ hàng bảng bộ đề bị đứt ở cột nút.
+
+Kiểm tra: chụp màn hình mọi trang ở máy tính / điện thoại 390px / chế độ tối, không tràn ngang, không lỗi JS;
+11 phép thử thao tác (đổi giao diện, Làm tiếp, lọc Bảng điểm, thẻ kết quả) đạt; chạy lại thử Ctrl+S → chấm qua máy chủ đạt.
+Tải hệ thống: chỉ đọc localStorage trên máy — Firebase 0, Apps Script không đổi.
+Lưu ý: một lần chạy thử (dùng lại hồ sơ trình duyệt cũ) đã gửi 1 bài thi thử giả "Test · lớp 1 · Thi thử Excel · Bộ đề Tiết 3" vào tab NhatKyMOS — xoá dòng đó.
+Các script thử nay chặn mọi request tới Google nên không gửi lại nữa.
+
+## 09/11/2026 — MOS: bổ sung chấm tự động 53 task (Excel 350/354, PowerPoint 312/320, Word 243/275)
+
+Học sinh thấy: 53 task trước ghi "Tự kiểm" nay được chấm tự động, ví dụ Inspect Document, Go To tên vùng (Excel);
+3D Model Views + kích thước, crop ảnh/video, logo trên Slide Master, Cube, hiệu ứng From Bottom-Right, ghi thời gian từ trang 3,
+mã hoá mật khẩu (PowerPoint); Whisp/Facet footer, Banded Quote, bộ kiểu Casual/Lines (Simple)/Minimalist/Centered,
+Continue Numbering / Set Numbering Value, I. II. III., Format Painter, Convert Text to Table, xoá bình luận, Accept/Reject,
+AutoFit Contents, Bevel SmartArt, chuyển SmartArt, Clear Formatting, mã hoá mật khẩu (Word).
+Task chỉ kiểm được một phần có ghi chú "em tự đối chiếu" (vd đúng tên kiểu 3D view, Turntable).
+
+Cách kiểm chứng: mỗi tiêu chí mới phải trượt trên tệp đề gốc và đạt trên tệp làm bằng Excel/PowerPoint/Word thật qua COM
+(`mos/tools/fixtures-com-*.ps1`, bài mẫu ở `mos/tools/fixtures-com/`). `node mos/tools/test-rubrics.js`: 905 tiêu chí, 0 lỗi.
+Không thêm được (để Tự kiểm): tệp đề đã đúng sẵn (Excel t7-p3#2, t8-p3#3; PowerPoint t4-p1#1; Word t1-p2#4, t3-p5#2, t10-p4#1),
+Company bị xoá do tệp bật "xoá thông tin cá nhân khi lưu" (PowerPoint t7-p6#2, Word t10-p4#2), task trên tệp khác (Word t6-p3#1 word18.docx),
+tệp đề không có tracked changes (Word t7-p4#5), thao tác chưa tạo được bài mẫu thật (Always Open Read-Only, Hide Comments, Change Picture,
+bullet trong hộp văn bản Word t8-p4#4, Decrease Indent Word t4-p1#10).
+
+Tải hệ thống: chấm vẫn chạy trên trình duyệt — Firebase 0, Apps Script không đổi.
+
+## 08/11/2026 (3) — MOS: tải cả bộ đề, mở song song kiểu GMetrix, chấm không giật
+
+Học sinh thấy:
+- **Tải cả bộ đề vào một thư mục** (Chrome/Edge, khi mở trang không qua máy chủ trường): 1 lần chọn thư mục → mọi project
+  có sẵn (`P1_…xlsx`, `P2_…`, kèm tệp dữ liệu). Mở song song bao nhiêu tệp cũng được, lưu tệp nào trang chấm tệp đó.
+  Thi thử: tải bản gốc trước khi bấm Bắt đầu (đồng hồ chưa chạy). Mở lại trang chỉ cần cho phép đọc **1 lần cho cả thư mục**.
+- Tệp đề tải từ Drive được giữ trong trình duyệt (Cache Storage): lần sau mở/thi lại không tải lại; đề Word tách từ bài giảng
+  chỉ tải bài giảng 1 lần.
+- Chấm bài chạy trong Web Worker (`mos/js/grade-worker.js`): Ctrl+S trên tệp lớn không còn làm đứng trang/thanh làm bài.
+  Tệp đề gốc chỉ phân tích 1 lần mỗi project; thi thử tải sẵn tệp gốc lúc rảnh → lần chấm đầu nhanh.
+- Máy chủ phòng máy: bắt đầu thi thử tạo sẵn bản làm bài cả bộ trong 1 lượt gọi → chuyển project là mở Office ngay.
+
+Tải hệ thống:
+- **Firebase: 0** (MOS không dùng Firebase). **Apps Script: không đổi** (1 lượt/bài thi thử, luyện tập không gửi).
+- Máy chủ trường: theo dõi Ctrl+S gộp thành 1 request `POST /mos/api/stat` mỗi 1,5 giây cho mọi project
+  (trước: 1 HEAD/project/1,5 giây — 40 em × 6 project ≈ 160 request/giây, nay ≈ 27). Project không đang mở hỏi thưa 3 lần,
+  trang bị thu nhỏ thưa 4 lần.
+- Drive API: mỗi tệp đề tải 1 lần/máy thay vì mỗi lần bấm.
+
+Triển khai: chép lại `mos/` lên máy chủ trường (cần `mos/server.js` mới cho `api/stat` và tạo bản làm bài theo lô;
+máy chủ cũ vẫn chạy được, trang tự quay về HEAD từng tệp).
+
+## 08/11/2026 (2) — Mở dồn: NetSupport, nhiều tab cùng lúc, F5 liên tục, bấm nút liên tục
+
+Đo bằng `scripts/measure-firestore/burst.py` (mới; Firestore giả có độ trễ giống thật, máy chủ tự đếm lượt nên không mất
+số khi trang tải lại; `FS_BASELINE=1` = đối chứng tắt các sửa đổi dưới đây; `serve.py` thay `http.server` khi mở dồn).
+- **Trang học sinh** (index, arena, portfolio, battle-quiz, live-quiz, thi-dua): 30 máy cùng mở = 0 lượt Firebase,
+  0 lần gọi Apps Script — không cần sửa.
+- **Nhiều tab cùng lúc** (cùng máy): bản đệm trống thì tab nào cũng tự đọc toàn bộ. Nay chỉ 1 tab đọc, tab khác đợi rồi
+  lấy bản vừa lưu (`EduDataCache.exclusive`, Web Locks; tab giữ khoá bị F5/đóng thì tự nhả, chờ quá 20 giây thì tự chạy).
+  Áp cho bản đệm học sinh chung, danh sách nhỏ của repository, Quản lý lớp, Dashboard điều phối/giáo viên, Lịch dạy, hồ sơ ảnh.
+- **F5 liên tục**: trang mở lại trong cùng tab cách < 4 giây thì hoãn bắt đầu đọc 1,5 giây (`auth-guard.js`) — F5 dồn dập
+  không tốn lượt, chỉ lần cuối đọc. Đọc toàn bộ học sinh (Admin) theo từng phần 1.000 em và lưu tiến độ
+  (`EduRosterCache.pagedRead`): bị tải lại giữa chừng thì lần sau đọc tiếp, không đọc lại từ đầu.
+- **Nút "Làm mới dữ liệu"** (Dashboard điều phối/giáo viên): tối đa 1 lần / 20 giây mỗi máy (tính chung các tab).
+
+Không cần deploy rules/index/Apps Script: truy vấn theo phần (`status == active` / không lọc, sắp theo mã doc) không cần index ghép.
+
+## 08/11/2026 — Giảm đọc trùng giữa các trang theo từng vai trò, nhiều máy cùng tài khoản
+
+Đo bằng Firestore giả (`scripts/measure-firestore/multi.py`, nay nhận `schools` cho từng máy để thử Giáo viên / Điều phối /
+Quản trị trường / Điều phối giáo viên / Admin, và in chi tiết từng truy vấn với `FS_DETAIL=1`). Ba chỗ còn đọc trùng:
+- **Điều phối / Quản trị trường**: Dashboard điều phối và Quản lý lớp lấy nền của nhau theo cùng phạm vi trường
+  (`EduRosterCache.scopedActiveFrom` / `seedScopedAllStatuses`). Mở Dashboard rồi Quản lý lớp: 225 → 16 lượt
+  (chỉ đọc học sinh đã nghỉ + phần thay đổi); mở theo thứ tự ngược lại: Dashboard 210 → 1 lượt.
+- **Admin**: Quản lý tài khoản đọc lớp qua bản đệm dùng chung 10 phút và mồi sẵn danh sách giáo viên đã duyệt từ danh sách
+  tài khoản vừa đọc → mở Quản lý lớp ngay sau: 463 → 207 lượt.
+- **Lịch dạy**: bảng Mã NV → tài khoản (chỉ để hiện ảnh đại diện) giữ 7 ngày thay vì 12 giờ: mỗi máy giáo viên bớt ~100
+  lượt/ngày (mở lại hôm sau: 167 → 61). Admin gán Mã NV trên máy này thì bảng tự đọc lại ngay; máy khác thấy ảnh của giáo
+  viên vừa liên kết sau tối đa 7 ngày (trong lúc đó hiện chữ viết tắt).
+
+Kịch bản 7 máy (giáo viên 3 máy, admin 2, điều phối 2; có ghi xen giữa, tua +30 phút, +1 ngày): 9.124 → 8.194 lượt đọc, lượt
+ghi không đổi. Đã kiểm dữ liệu: học sinh bị máy khác cho nghỉ giữa chừng vẫn hiện đúng trạng thái ở cả 2 trang.
+Không cần deploy rules/index/Apps Script (truy vấn mới `status == inactive` + `school in` cùng dạng truy vấn Dashboard đang dùng).
+
+## 07/11/2026 — Giảm lượt đọc Firebase khi Admin mở nhiều trang quản trị
+
+Đo bằng Firestore giả (`scripts/measure-firestore/`, dữ liệu cỡ thật ~3.000 học sinh): mỗi trình duyệt chưa có bản đệm
+tốn ~3.000 lượt cho lần mở trang quản trị đầu tiên; mở `Quản lý tài khoản` rồi `Quản lý lớp` trong cùng trình duyệt
+tốn gấp đôi (~6.400) vì `Quản lý lớp` đọc lại cả roster. Từ bản này:
+- `Quản lý lớp` (Admin) dựng nền từ bản đệm roster dùng chung + chỉ đọc học sinh đã nghỉ: ~3.260 → ~500 lượt.
+- `Quản lý trường`: danh mục trường có bản đệm 5 phút theo tab (tải lại: 40 → 0 lượt).
+Đo thêm nhiều máy dùng chung 1 tài khoản (`multi.py`): chi phí chỉ tăng theo số máy CHƯA có bản đệm (Admin ~3.200–3.700 lượt/máy
+ở lần mở đầu, giáo viên ~280/máy); thao tác sau đó rẻ (đổi vai trò = 1 ghi, 0 đọc; sửa học sinh ở máy này, máy khác chỉ đọc đúng
+doc đổi khi bản đệm hết hạn); đồng bộ `teacher_sync` giữa 3 máy hội tụ sau 2 lần ghi, không ghi qua lại.
+Dùng chung danh sách nhỏ giữa các trang (`BaseRepository.list({ cacheMs })`, bản đệm 10 phút trong IndexedDB): khoá học, lớp và giáo viên
+đã duyệt chỉ đọc 1 lần cho Dashboard điều phối + Quản lý lớp + Lịch dạy. Đo: điều phối mở 2 trang 660 → 403 lượt; admin cả buổi
+(7 trang) 5.791 → 5.428. Mọi lệnh ghi qua repository bỏ bản đệm ngay (cả tab khác); nạp Excel/gán lớp cho giáo viên (ghi thẳng
+Firestore) cũng gọi invalidate(); nút "Tải lại" luôn đọc mới. Giáo viên vừa được duyệt ở máy khác hiện sau tối đa 10 phút.
+Tuỳ chọn mới, MẶC ĐỊNH TẮT: `EduBackend.adminUsers.lazyRoster` trong `js/backend-config.js`. Bật (`true`) thì mở `Quản lý tài khoản`
+chỉ tốn ~370 lượt/máy (thay vì ~3.170): danh sách trường lấy từ danh mục `schools`, không tự sửa "Trường được xem" lúc mở trang;
+bấm nút đồng bộ trường của 1 giáo viên mới đọc roster. Đã đo cả hai chế độ. Chỉ bật khi chấp nhận việc không tự sửa quyền xem trường.
+Không cần deploy Apps Script/rules/index. Học sinh không có field `status` (doc cũ) chỉ hiện sau lần đọc toàn bộ kế tiếp.
+
 ## 05/11/2026
 
 - **Trang chủ học sinh giao diện mới:** nền trời nhạt có bản đồ và mạng lưới, 3 vòng tròn kỹ năng số ở tiêu đề (tự vẽ, không dùng logo Certiport/IC3), 3 bước mang 3 màu xanh dương, xanh lá, cam, nút Bắt đầu màu cam, thanh trái trên màn rộng (Trang chủ, Tiến độ của em, Lịch sử bài làm). Thẻ "Kết quả của em" ở thanh trái hiện số bài, chuỗi ngày học, câu đến hạn ôn của học sinh đang chọn, đọc từ máy này. Dấu ✓ hiện lần lượt từng bước. Nhóm Bài học khoá chế độ Kiểm tra thì hiện dòng lý do ngay dưới nút. "Dành cho thầy cô" thành 1 nút ở tiêu đề. Đủ thông tin thì hiện "Cố lên nhé!". 0 lượt Firebase.

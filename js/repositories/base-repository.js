@@ -50,6 +50,25 @@
     if (global.EduFirebase && global.EduFirebase.countSnap) global.EduFirebase.countSnap(label, snap);
   }
 
+  // ── Bản đệm dùng chung cho danh sách nhỏ, ít đổi (07/11/2026) ──
+  // Lớp, khoá học, giáo viên đã duyệt... được nhiều trang quản lý đọc lại từng trang một (đo: coordinator mở Dashboard rồi
+  // Quản lý lớp tốn 656 lượt, trong đó 256 là đọc trùng). list({ cacheMs }) lưu kết quả vào EduDataCache (IndexedDB, dùng chung
+  // mọi trang/tab của máy) trong cacheMs. Mọi lệnh ghi qua repository nâng "phiên bản" của collection (localStorage → tab khác
+  // cũng thấy) nên bản cũ bị bỏ ngay; nơi ghi thẳng Firestore gọi repo.invalidate(). refresh:true = bỏ qua bản đệm nhưng vẫn
+  // lưu bản mới. KHÔNG truyền cacheMs → như cũ. Dữ liệu lấy từ đệm có Timestamp đã mất hàm (toMillis...) như mọi bản đệm IndexedDB.
+  const VER_PREFIX = 'edu_repo_ver:';
+  const memVer = {};
+  const inflightLists = new Map();
+  function verOf(col) {
+    try { const v = localStorage.getItem(VER_PREFIX + col); if (v !== null) return v; } catch (e) { /* dùng bản trong tab */ }
+    return memVer[col] || '0';
+  }
+  function bumpVer(col) {
+    const v = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    memVer[col] = v;
+    try { localStorage.setItem(VER_PREFIX + col, v); } catch (e) { /* bỏ qua */ }
+  }
+
   class BaseRepository {
     /** @param {string} collectionName Tên collection Firestore */
     constructor(collectionName) {
@@ -78,6 +97,7 @@
      * @param {number} [options.limit]
      */
     async list(options = {}) {
+      if (options.cacheMs > 0 && global.EduDataCache) return this._listShared(options);
       let q = this.col();
       (options.where || []).forEach(([field, op, value]) => { q = q.where(field, op, value); });
       if (options.orderBy) q = q.orderBy(options.orderBy, options.direction || 'asc');
@@ -106,24 +126,98 @@
       return snap.docs.map((doc) => Object.assign({ id: doc.id }, doc.data()));
     }
 
+    _listKey(options) {
+      return 'repo:' + this.collectionName + ':' + JSON.stringify([options.where || [], options.orderBy || '', options.direction || '', options.limit || 0]);
+    }
+
+    /** Phiên bản hiện tại của collection — lấy TRƯỚC khi đọc rồi đưa vào prime()/bản đệm (ghi xen giữa → bản đó tự bị coi là cũ). */
+    versionToken() { return verOf(this.collectionName); }
+
+    /**
+     * Mồi bản đệm list({ cacheMs }) bằng dữ liệu vừa đọc ở truy vấn KHÁC nhưng chắc chắn cùng kết quả (vd lọc từ danh sách
+     * đầy đủ) — trang sau hỏi đúng điều kiện đó khỏi đọc lại. ver: versionToken() lấy trước lần đọc gốc.
+     */
+    prime(options, docs, cacheMs, ver) {
+      if (!global.EduDataCache || !(cacheMs > 0) || !Array.isArray(docs)) return;
+      global.EduDataCache.setAsync(this._listKey(options), { ver: ver === undefined ? verOf(this.collectionName) : ver, docs }, cacheMs, true);
+    }
+
+    /**
+     * Giá trị dẫn xuất từ collection này (vd bảng Mã NV → uid), lưu cacheMs và bỏ ngay khi máy này ghi vào collection
+     * (cùng cơ chế phiên bản với list({ cacheMs })). Máy khác ghi: thấy sau tối đa cacheMs. loader() lỗi → không lưu.
+     */
+    async cachedValue(name, cacheMs, loader) {
+      if (!(cacheMs > 0) || !global.EduDataCache) return loader();
+      const key = 'repo:' + this.collectionName + ':value:' + name;
+      const ver = verOf(this.collectionName);
+      const C = global.EduDataCache;
+      const hit = await C.getAsync(key, true);
+      if (hit && hit.ver === ver && 'value' in hit) return hit.value;
+      const run = async () => { // nhiều tab cùng lúc → 1 tab dựng, tab khác dùng lại (xem list cacheMs)
+        const again = await C.getAsync(key, true);
+        if (again && again.ver === verOf(this.collectionName) && 'value' in again) return again.value;
+        const value = await loader();
+        await C.setAsync(key, { ver, value }, cacheMs, true);
+        return value;
+      };
+      return C.exclusive ? C.exclusive(key, run) : run();
+    }
+
+    async _listShared(options) {
+      const col = this.collectionName;
+      const key = this._listKey(options);
+      const ver = verOf(col); // lấy TRƯỚC khi đọc: ghi xen giữa → bản này tự bị coi là cũ ở lần sau
+      if (!options.refresh) {
+        const hit = await global.EduDataCache.getAsync(key, true);
+        if (hit && hit.ver === ver && Array.isArray(hit.docs)) return hit.docs;
+      }
+      const flightKey = key + '|' + ver;
+      if (inflightLists.has(flightKey)) return inflightLists.get(flightKey);
+      // Nhiều TAB cùng hỏi khi bản đệm trống (mở dồn, 08/11/2026): khoá theo khoá đệm, tab đến sau kiểm lại bản đệm sau khi
+      // có khoá. refresh: chỉ nhận bản đọc SAU lúc hỏi (tab khác vừa đọc mới cho mình rồi). Lưu xong mới nhả khoá.
+      const asked = Date.now();
+      const C = global.EduDataCache;
+      const lock = C.exclusive ? (fn) => C.exclusive(key, fn) : (fn) => fn();
+      const p = lock(async () => {
+        const hit = await C.getAsync(key, true);
+        if (hit && hit.ver === verOf(col) && Array.isArray(hit.docs) && (!options.refresh || (hit.at || 0) > asked)) return hit.docs;
+        const docs = await this.list(Object.assign({}, options, { cacheMs: 0 }));
+        await C.setAsync(key, { ver, docs, at: Date.now() }, options.cacheMs, true);
+        return docs;
+      }).finally(() => inflightLists.delete(flightKey));
+      inflightLists.set(flightKey, p);
+      return p;
+    }
+
+    /** Bỏ mọi bản đệm list({ cacheMs }) của collection này — gọi ở nơi ghi THẲNG Firestore (không qua repository). */
+    invalidate() { bumpVer(this.collectionName); }
+
     async create(data) {
-      const ref = await this.col().add(toStore(data));
-      return ref.id;
+      try {
+        const ref = await this.col().add(toStore(data));
+        return ref.id;
+      } finally { this.invalidate(); }
     }
 
     /** Tạo với ID chỉ định trước (vd. dùng MSSV làm ID cho roster). */
     async createWithId(id, data) {
-      await this.col().doc(id).set(toStore(data));
-      return id;
+      try {
+        await this.col().doc(id).set(toStore(data));
+        return id;
+      } finally { this.invalidate(); }
     }
 
     async update(id, partialData) {
-      await this.col().doc(id).update(toStore(partialData));
+      try {
+        await this.col().doc(id).update(toStore(partialData));
+      } finally { this.invalidate(); }
     }
 
     /** Tạo mới nếu chưa có, cập nhật nếu đã có (dựa theo id). */
     async upsert(id, data) {
-      await this.col().doc(id).set(toStore(data), { merge: true });
+      try {
+        await this.col().doc(id).set(toStore(data), { merge: true });
+      } finally { this.invalidate(); }
     }
 
     /**
@@ -133,19 +227,24 @@
     static async commitBatch(items) {
       const db = global.EduFirebase && global.EduFirebase.db;
       if (!db) throw new Error('[EduRepository] Firestore chưa sẵn sàng (thiếu firebase-config.js).');
-      for (let i = 0; i < items.length; i += BATCH_MAX) {
-        const batch = db.batch();
-        items.slice(i, i + BATCH_MAX).forEach((w) => {
-          const ref = w.repo.col().doc(w.id);
-          if (w.merge) batch.set(ref, toStore(w.data), { merge: true }); else batch.set(ref, toStore(w.data));
-        });
-        await batch.commit();
-      }
+      const touched = new Set(items.map((w) => w.repo.collectionName));
+      try {
+        for (let i = 0; i < items.length; i += BATCH_MAX) {
+          const batch = db.batch();
+          items.slice(i, i + BATCH_MAX).forEach((w) => {
+            const ref = w.repo.col().doc(w.id);
+            if (w.merge) batch.set(ref, toStore(w.data), { merge: true }); else batch.set(ref, toStore(w.data));
+          });
+          await batch.commit();
+        }
+      } finally { touched.forEach((c) => bumpVer(c)); }
       return items.length;
     }
 
     async remove(id) {
-      await this.col().doc(id).delete();
+      try {
+        await this.col().doc(id).delete();
+      } finally { this.invalidate(); }
     }
   }
 

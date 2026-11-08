@@ -91,16 +91,26 @@
   async function readNow(key, loader) {
     const C = cache();
     const fullKey = PREFIX + key;
-    if (C && !bypassed(key)) {
+    const usable = () => C && !bypassed(key);
+    if (usable()) {
       const hit = await C.getAsync(fullKey, true);
       if (hit !== null && hit !== undefined) return hit;
     }
-    const value = await loader();
-    if (C) {
-      rememberKey(fullKey);
-      C.setAsync(fullKey, value, ttlFor(key), true);
-    }
-    return value;
+    // Mở DỒN (08/11/2026, burst.py): 5 tab Lịch dạy cùng lúc = 761 lượt (1 tab: 253) — tab nào cũng thấy bản đệm trống.
+    // Khoá theo khoá đệm: 1 tab đọc + lưu xong, tab khác kiểm lại rồi dùng bản đó.
+    const run = async () => {
+      if (usable()) {
+        const hit = await C.getAsync(fullKey, true);
+        if (hit !== null && hit !== undefined) return hit;
+      }
+      const value = await loader();
+      if (C) {
+        rememberKey(fullKey);
+        await C.setAsync(fullKey, value, ttlFor(key), true);
+      }
+      return value;
+    };
+    return C && C.exclusive && usable() ? C.exclusive(fullKey, run) : run();
   }
 
   /** Xoá các khoá khớp match (bỏ trống = mọi khoá). */

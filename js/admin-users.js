@@ -44,6 +44,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
   // multi-select tay (dễ gán nhầm/gán sót — đã thấy
   // nhiều giáo viên khác nhau bị gán CÙNG 1 bộ trường giống hệt nhau).
   let schoolsByTeacherId = {};
+  let rosterLoaded = true; // false: schoolsByTeacherId CHƯA suy ra từ roster (chế độ EduBackend.adminUsers.lazyRoster)
 
   let lookupsLoadedAt = 0;
 
@@ -60,7 +61,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
     if (!window.EduDataCache) return;
     const byTeacher = {};
     Object.keys(schoolsByTeacherId).forEach((k) => { byTeacher[k] = [...schoolsByTeacherId[k]]; });
-    window.EduDataCache.setAsync(LOOKUPS_CACHE_KEY, { allSchools, allClasses, allTeachingTeachers, byTeacher }, LOOKUPS_TTL_MS, true);
+    window.EduDataCache.setAsync(LOOKUPS_CACHE_KEY, { allSchools, allClasses, allTeachingTeachers, byTeacher, rosterLoaded }, LOOKUPS_TTL_MS, true);
   }
 
   /** Nhật ký thao tác trên tài khoản (Apps Script → tab NhatKyHoatDong, ai làm lấy từ token). */
@@ -80,6 +81,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
     allTeachingTeachers = c.allTeachingTeachers || [];
     schoolsByTeacherId = {};
     Object.keys(c.byTeacher || {}).forEach((k) => { schoolsByTeacherId[k] = new Set(c.byTeacher[k]); });
+    rosterLoaded = c.rosterLoaded !== false;
     return true;
   }
 
@@ -103,6 +105,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
         (schoolsByTeacherId[data.teacherId] = schoolsByTeacherId[data.teacherId] || new Set()).add(s);
       });
       allSchools = [...set].sort((a, b) => a.localeCompare(b, 'vi'));
+      rosterLoaded = true;
       const collisions = window.EduModels.School.findCollisions(allSchools);
       if (collisions.length) {
         toast(`⚠️ Tên trường chỉ khác dấu sẽ bị coi là 1 trường: ${collisions.map((g) => g.join(' / ')).join('; ')} — đổi tên trong Quản lý lớp cho khác hẳn`);
@@ -115,7 +118,29 @@ window.EDU_ALLOWED_ROLES = ['admin'];
       console.warn('[EduAdminUsers] Không tải được danh sách trường (students_roster):', err.message);
       allSchools = [];
       schoolsByTeacherId = {};
+      rosterLoaded = false;
     }
+  }
+
+  const lazyRoster = () => !!(window.EduBackend && window.EduBackend.adminUsers && window.EduBackend.adminUsers.lazyRoster);
+  /** Chế độ lazyRoster: danh sách trường lấy từ danh mục `schools` (vài chục doc) thay vì suy từ cả roster. */
+  async function loadSchoolsLite() {
+    try {
+      const list = await window.EduRepositories.school.listAll();
+      allSchools = list.filter((s) => s.status !== 'inactive').map((s) => String(s.name || '').trim()).filter(Boolean)
+        .sort((a, b) => a.localeCompare(b, 'vi'));
+    } catch (err) {
+      console.warn('[EduAdminUsers] Không tải được danh mục trường:', err.message);
+      allSchools = [];
+    }
+    schoolsByTeacherId = {};
+    rosterLoaded = false;
+  }
+  /** Cần biết giáo viên đang dạy trường nào (nút đồng bộ trường): đọc roster khi chưa có. */
+  async function ensureRoster() {
+    if (rosterLoaded) return;
+    await loadSchools();
+    if (rosterLoaded) { lookupsLoadedAt = Date.now(); saveLookupsCache(); }
   }
 
   /** Trường THẬT SỰ giáo viên `uid` đang dạy (suy từ students_roster đang
@@ -139,11 +164,12 @@ window.EDU_ALLOWED_ROLES = ['admin'];
   // được lớp cho từng giáo viên ngay tại đây.
   let allClasses = []; // [{id, name, school, courseId, teacherId, teacherName, ...}]
 
-  async function loadClasses() {
+  // Cùng điều kiện (orderBy name) với Quản lý lớp / Dashboard điều phối → dùng chung bản đệm 10 phút của
+  // BaseRepository.list({ cacheMs }) (đo 08/11/2026: Admin mở Quản lý tài khoản rồi Quản lý lớp đọc 150 lớp 2 lần).
+  // Lớp thiếu field name không có trong kết quả — giống hệt danh sách lớp ở Quản lý lớp.
+  async function loadClasses(forceRefresh) {
     try {
-      const snap = await EduFirebase.db.collection('classes').limit(5000).get();
-      EduFirebase.countSnap('classes', snap);
-      allClasses = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+      allClasses = await new window.EduBaseRepository('classes').list({ orderBy: 'name', cacheMs: 10 * 60 * 1000, refresh: !!forceRefresh });
     } catch (err) {
       console.warn('[EduAdminUsers] Không tải được danh sách lớp (classes):', err.message);
       allClasses = [];
@@ -241,8 +267,8 @@ window.EDU_ALLOWED_ROLES = ['admin'];
       const lookupsFresh = lookupsInMemory || lookupsFromStorage;
       const [list] = await Promise.all([
         window.EduRepositories.user.listAll(),
-        lookupsFresh ? null : loadSchools(),
-        lookupsFresh ? null : loadClasses(),
+        lookupsFresh ? null : (lazyRoster() ? loadSchoolsLite() : loadSchools()),
+        lookupsFresh ? null : loadClasses(forceRefresh),
         lookupsFresh ? null : loadTeachingTeachers(),
       ]);
       if (!lookupsFresh) { lookupsLoadedAt = Date.now(); saveLookupsCache(); }
@@ -265,7 +291,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
       const batch = EduFirebase.db.batch();
       let fixedCount = 0;
       users.forEach(({ doc, u }) => {
-        if (lookupsFromStorage) return;
+        if (lookupsFromStorage || !rosterLoaded) return; // chưa có dữ liệu roster → không tự sửa
         if (u.role !== 'teacher') return;
         const saved = Array.isArray(u.schools) ? [...u.schools].sort((a, b) => a.localeCompare(b, 'vi')) : [];
         const actual = actualSchoolsOf(doc.id);
@@ -439,6 +465,8 @@ window.EDU_ALLOWED_ROLES = ['admin'];
     tbody.querySelectorAll('.syncSchoolsBtn').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         const uid = e.target.closest('tr').dataset.uid;
+        btn.disabled = true;
+        try { await ensureRoster(); } finally { btn.disabled = false; }
         const actual = actualSchoolsOf(uid);
         if (!actual.length) {
           toast('Giáo viên này chưa có lớp nào đang học trong danh sách học sinh (roster-manager.html) — không có gì để đồng bộ.');
@@ -509,6 +537,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
           for (const c of toUnassign) await applyToClass(c.id, '', '');
           if (ops > 0) await batch.commit();
           if (window.EduRosterCache) window.EduRosterCache.invalidate(); // vừa đổi teacherId của học sinh
+          new window.EduBaseRepository('classes').invalidate(); // ghi thẳng collection classes → bỏ bản đệm lớp dùng chung
 
           // Cập nhật ngay "Trường được xem" theo đúng lớp vừa gán, không cần
           // đợi vòng tự sửa của lần tải trang sau (xem loadUsers()).
@@ -545,8 +574,8 @@ window.EDU_ALLOWED_ROLES = ['admin'];
         try {
           await window.EduRepositories.user.setTeacherCode(uid, code);
           logUserChange('set_teacher_code', uid, { teacherCode: code });
-          // Map Mã NV → uid của Lịch giảng dạy (js/teaching-schedule.js) được cache 30 phút.
-          if (window.EduDataCache) window.EduDataCache.clear('teaching-schedule:teacherCodeToUid', true);
+          // Map Mã NV → uid của Lịch giảng dạy (UserRepository.teacherCodeToUid, giữ 7 ngày) tự bỏ trên máy này vì
+          // setTeacherCode ghi qua repository (đổi phiên bản collection users).
           toast(code ? 'Đã liên kết Mã NV cho giáo viên' : 'Đã bỏ liên kết Mã NV');
           refreshUserRow(uid, { teacherCode: code || undefined });
         } catch (err) {

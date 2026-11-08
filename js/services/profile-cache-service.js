@@ -74,8 +74,14 @@
   async function idbPut(value) {
     const idb = await openIdb();
     if (!idb) return;
-    try { idb.transaction(IDB_STORE, 'readwrite').objectStore(IDB_STORE).put(value, IDB_KEY); }
-    catch (e) { /* hết quota/bị chặn — cache RAM vẫn chạy */ }
+    // Chờ ghi xong (tab khác đang đợi khoá sẽ đọc lại ngay sau đó)
+    await new Promise((resolve) => {
+      try {
+        const tx = idb.transaction(IDB_STORE, 'readwrite');
+        tx.objectStore(IDB_STORE).put(value, IDB_KEY);
+        tx.oncomplete = tx.onerror = tx.onabort = () => resolve();
+      } catch (e) { resolve(); /* hết quota/bị chặn — cache RAM vẫn chạy */ }
+    });
   }
 
   let statePromise = null;
@@ -143,27 +149,38 @@
   function getAll(opts) {
     const force = !!(opts && opts.force);
     if (inflight && !force) return inflight;
+    const C = global.EduDataCache;
+    // Mở DỒN (08/11/2026): nhiều tab cùng mở khi bản đệm trống → 1 tab đọc gvlab_profiles (ảnh tới ~300KB/hồ sơ), tab
+    // khác đợi khoá rồi đọc lại bản đệm vừa lưu.
+    const lock = C && C.exclusive ? (fn) => C.exclusive('gvlab_profiles', fn) : (fn) => fn();
     const run = (async () => {
-      let state = await loadState();
-      const now = Date.now();
-      if (!force && state.fullAt && now - state.syncedAt < FRESH_MS) return state.docs;
-      if (force || !state.fullAt || now - state.fullAt > FULL_RESYNC_MS) {
-        state = await fullSync(state);
-      } else {
-        try {
-          state = await deltaSync(state);
-        } catch (e) {
-          console.warn('[EduProfileCache] Đồng bộ delta lỗi, đọc lại toàn bộ:', e.message);
-          state = await fullSync(state);
-        }
-      }
-      statePromise = Promise.resolve(state);
-      saveState(state);
-      return state.docs;
+      const state = await loadState();
+      if (!force && state.fullAt && Date.now() - state.syncedAt < FRESH_MS) return state.docs;
+      return lock(() => sync(force));
     })();
     inflight = run;
     run.then(() => { if (inflight === run) inflight = null; }, () => { if (inflight === run) inflight = null; });
     return run;
+  }
+
+  async function sync(force) {
+    statePromise = null; // đọc lại từ IndexedDB: tab khác có thể vừa lưu trong lúc chờ khoá
+    let state = await loadState();
+    const now = Date.now();
+    if (!force && state.fullAt && now - state.syncedAt < FRESH_MS) return state.docs;
+    if (force || !state.fullAt || now - state.fullAt > FULL_RESYNC_MS) {
+      state = await fullSync(state);
+    } else {
+      try {
+        state = await deltaSync(state);
+      } catch (e) {
+        console.warn('[EduProfileCache] Đồng bộ delta lỗi, đọc lại toàn bộ:', e.message);
+        state = await fullSync(state);
+      }
+    }
+    statePromise = Promise.resolve(state);
+    await saveState(state);
+    return state.docs;
   }
 
   /**

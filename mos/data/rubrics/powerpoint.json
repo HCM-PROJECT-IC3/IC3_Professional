@@ -21,6 +21,7 @@
   "1": { "type": "p.shapeGeom", "slide": "last", "geom": "heart", "absent": "cloud" },
   "2": { "type": "p.centeredH", "slide": 4, "geoms": ["smileyFace", "heart"],
          "scope": "Kiểm tra phần căn giữa theo chiều ngang; kiểu Subtle Effect, đổ bóng và thứ tự lớp em tự kiểm." },
+  "3": {"all": [{"type": "p.xml", "slide": 5, "shape": {"name": "^Sun"}, "has": [{"el": "a:innerShdw", "fail": "Hình mặt trời chưa có bóng Inside (Shadow → Inner)."}, {"el": "a:schemeClr", "attrs": {"val": "accent4"}, "fail": "Hình mặt trời chưa dùng kiểu màu Orange, Accent 4."}]}, {"type": "p.zOrderTop", "slide": 5, "name": "^Sun"}], "scope": "Kiểm tra bóng Inside, màu Accent 4 và hình nằm trên cùng; đúng hàng Moderate Effect, hướng Bottom Right em tự đối chiếu."},
   "4": { "type": "p.alignedTop", "titled": "Questions?", "namePattern": "^object 3$" },
   "5": { "type": "p.chartData", "slide": 3, "chartType": "barChart", "series": ["Can Read", "Can't Read"], "categories": ["Students", "Adults"],
          "scope": "Kiểm tra loại biểu đồ, tên chuỗi và danh mục." },
@@ -31,12 +32,14 @@
   "2": { "type": "p.masterPictureBullet" },
   "4": { "type": "p.animation", "slide": 2, "cls": "entr", "preset": 22, "sub": 8, "onClick": true,
          "scope": "Kiểm tra hiệu ứng Wipe hướng From Left, xuất hiện khi nhấp chuột." },
-  "5": { "type": "p.footerText", "text": "MOS", "only": [2] }
+  "5": { "type": "p.footerText", "text": "MOS", "only": [2] },
+  "6": {"type": "p.timings", "from": 3, "scope": "Kiểm tra các trang chiếu từ 3 đến hết đã có thời gian ghi hình; lời thuyết minh/nét vẽ em tự đối chiếu."}
  },
  "ppt-t1-p5": {
   "1": { "type": "p.animation", "slide": 2, "cls": "entr", "preset": 22, "sub": 1, "minCount": 5, "onClick": true },
   "2": { "type": "p.animation", "slide": 2, "cls": "path", "scope": "Kiểm tra có đường chuyển động (motion path); hướng Down em tự kiểm." },
-  "3": { "type": "p.masterPlaceholder", "ph": "sldNum" }
+  "3": { "type": "p.masterPlaceholder", "ph": "sldNum" },
+  "4": {"type": "p.encrypted", "scope": "Mật khẩu ForMOS em tự đối chiếu (trang không mở được tệp đã mã hoá)."}
  },
  "ppt-t2-p1": {
   "1": {"type": "p.titleCount", "title": "Most Popular", "count": 2},
@@ -79,11 +82,14 @@
  },
  "ppt-t2-p6": {
   "1": {"type": "p.transitionAll", "kind": "ripple", "label": "Ripple"},
+  "2": {"type": "p.animation", "slide": 2, "cls": "entr", "sub": 6},
   "3": {"type": "p.comment", "text": "Update the fee to $90"},
-  "4": {"type": "p.animOrder", "slide": 5, "order": ["Theory", "Skills", "Ocean Dive"]}
+  "4": {"type": "p.animOrder", "slide": 5, "order": ["Theory", "Skills", "Ocean Dive"]},
+  "5": {"type": "p.model3d", "slide": 5, "anim": {"after": true}, "scope": "Kiểm tra mô hình 3D có hiệu ứng mới đặt After Previous; đúng hiệu ứng Turntable em tự đối chiếu."}
  },
  "ppt-t2-p7": {
   "1": {"type": "p.xml", "has": [{"el": "a:clrScheme", "attrs": {"name": "Blue"}}], "fail": "Màu chủ đề chưa phải Blue.", "ok": "Màu chủ đề Blue.", "part": "theme"},
+  "2": {"type": "p.masterPicAlign", "topOf": "body", "rightOf": "sldNum"},
   "3": {"type": "p.xml", "slide": 2, "has": [{"el": "a:buBlip"}], "fail": "Danh sách chưa dùng bullet hình ảnh.", "ok": "Đã dùng bullet hình ảnh."},
   "4": {"type": "p.slideOrder", "positions": {"3": "Board of Directors"}},
   "5": {"type": "p.xml", "titled": "FusionTomo", "has": [{"el": "a:videoFile"}], "fail": "Chưa chèn video.", "ok": "Đã chèn video."},
@@ -125,6 +131,7 @@
   "5": {"type": "p.xml", "has": [{"el": "p:transition", "attrs": {"p14:dur": "3000"}, "fail": "Thời lượng chuyển tiếp chưa là 3 giây"}, {"el": "p:snd", "attrs": {"name": "~breeze"}, "fail": "Âm thanh chuyển tiếp chưa là Breeze"}], "ok": "Thời lượng và âm thanh chuyển tiếp đúng.", "part": "allSlides"}
  },
  "ppt-t3-p6": {
+  "1": {"type": "p.shapePos", "slide": 3, "media": true, "xIn": 6.5, "wIn": 4.4, "crop": true, "noShape": "Không thấy video trên trang chiếu 3."},
   "2": {"type": "p.animation", "slide": 2, "cls": "path"},
   "3": {"type": "p.layoutExists", "name": "Media", "placeholders": ["media"]},
   "4": {"type": "p.slideCount", "count": 6},
@@ -147,6 +154,7 @@
   "1": {"type": "p.xml", "scope": "Số bản in và Collated em tự kiểm (không lưu trong tệp).", "has": [{"el": "p:prnPr", "attrs": {"prnWhat": "notes"}}], "fail": "Chưa đặt in Notes Pages.", "ok": "Đã đặt in Notes Pages."},
   "2": {"type": "p.xml", "slide": 1, "has": [{"el": "~sldZm"}], "fail": "Chưa chèn Slide Zoom.", "ok": "Đã chèn Slide Zoom.", "scope": "Vị trí hình thu nhỏ em tự kiểm."},
   "3": {"type": "p.comment", "text": "Check the data again"},
+  "4": {"type": "p.model3d", "slide": "last", "rotChanged": true, "hIn": 4, "scope": "Kiểm tra đã đổi góc nhìn và chiều cao 4\"; đúng kiểu Above Front Right em tự đối chiếu."},
   "5": {"type": "p.slideCount", "count": 10},
   "6": {"type": "p.shapeGeom", "titled": "About us", "geom": "sun", "absent": "cloud"}
  },
@@ -169,7 +177,9 @@
  "ppt-t4-p6": {
   "1": {"type": "p.slideOrder", "positions": {"5": "Benefits of Reforestation"}},
   "2": {"type": "p.xml", "slide": 4, "has": [{"el": "p:grpSp", "min": 9}], "fail": "Chưa nhóm ba đồ hoạ.", "ok": "Đã nhóm ba đồ hoạ."},
+  "3": {"type": "p.shapePos", "titled": "Effective Reforestation", "kind": "pic", "name": "^Picture 12$", "yIn": 6.04, "bottomIn": 9.045, "wIn": 4.026, "crop": "b", "minCrop": 640},
   "4": {"type": "p.xml", "scope": "Số bản in em tự kiểm (không lưu trong tệp).", "has": [{"el": "p:prnPr", "attrs": {"prnWhat": "handouts3", "clrMode": "gray"}}], "fail": "Chưa đặt in handout 3 trang/tờ, Grayscale.", "ok": "Thiết lập in đúng."},
+  "5": {"type": "p.model3d", "titled": "Introduction", "rotChanged": true, "scope": "Kiểm tra đã đổi góc nhìn; đúng kiểu Above Front Left em tự đối chiếu."},
   "6": {"type": "p.xml", "slide": 2, "has": [{"el": "~ummaryZm|sumZm|sectionZm"}], "fail": "Trang chiếu 2 chưa là Summary Zoom.", "ok": "Đã chèn Summary Zoom.", "scope": "Các trang chiếu được chọn em tự kiểm."}
  },
  "ppt-t4-p7": {
@@ -184,7 +194,8 @@
   "2": {"type": "p.coreProp", "prop": "category", "value": "Education"},
   "3": {"type": "p.xml", "slide": 6, "has": [{"el": "a:bodyPr", "attrs": {"numCol": "2"}}], "fail": "Danh sách chưa chia 2 cột.", "ok": "Danh sách đã chia 2 cột."},
   "4": {"type": "p.largestAtBack", "slide": "last", "name": "^Graphic"},
-  "5": {"all": [{"type": "p.sectionNamed", "name": "Music"}, {"type": "p.xml", "none": [{"el": "p14:section", "attrs": {"name": "Learning"}}], "fail": "Vẫn còn phần \"Learning\".", "part": "presentation"}]}
+  "5": {"all": [{"type": "p.sectionNamed", "name": "Music"}, {"type": "p.xml", "none": [{"el": "p14:section", "attrs": {"name": "Learning"}}], "fail": "Vẫn còn phần \"Learning\".", "part": "presentation"}]},
+  "6": {"type": "p.xml", "slide": 3, "shape": {"ph": "title"}, "has": [{"el": "a:rPr", "attrs": {"spc": "100"}, "fail": "Khoảng cách ký tự chưa phải Expanded 1pt."}], "none": [{"el": "a:srgbClr", "fail": "Tiêu đề vẫn còn màu cũ, chưa đổi sang Blue, Accent 2."}, {"el": "a:schemeClr", "attrs": {"val": "~^(?!accent2$)"}, "fail": "Màu tiêu đề chưa phải Blue, Accent 2."}], "ok": "Màu chữ (Blue, Accent 2) và khoảng cách ký tự đúng."}
  },
  "ppt-t5-p2": {
   "1": {"all": [{"type": "p.xml", "slide": 4, "has": [{"el": "~morph"}], "fail": "Trang chiếu 4 chưa có Morph."}, {"type": "p.xml", "slide": 5, "has": [{"el": "~morph"}], "fail": "Trang chiếu 5 chưa có Morph."}, {"type": "p.xml", "slide": 6, "has": [{"el": "~morph"}], "fail": "Trang chiếu 6 chưa có Morph."}, {"type": "p.xml", "slide": 3, "none": [{"el": "~morph"}], "fail": "Morph chỉ áp dụng cho trang chiếu 4, 5, 6."}, {"type": "p.xml", "slide": 7, "none": [{"el": "~morph"}], "fail": "Morph chỉ áp dụng cho trang chiếu 4, 5, 6."}], "note": "Đã áp dụng Morph cho trang chiếu 4–6."},
@@ -204,6 +215,7 @@
  },
  "ppt-t5-p4": {
   "1": {"type": "p.xml", "slide": 7, "has": [{"el": "p:cTn", "attrs": {"repeatCount": "indefinite"}}], "fail": "Video chưa đặt Loop until Stopped.", "ok": "Video phát lặp lại."},
+  "2": {"type": "p.shapePos", "slide": 5, "kind": "pic", "name": "^Picture 2$", "yIn": 1.822, "bottomIn": 4.52, "wIn": 1.674, "crop": "b"},
   "3": {"type": "p.smartArt", "slide": 4, "texts": ["Bay boat tour", "Hiking", "Tea ceremony"], "scope": "Kiểm tra nội dung và thứ tự; kiểu Staggered Process em tự đối chiếu."},
   "4": {"type": "p.shapePos", "slide": 8, "name": "^Graphic 5$", "sameAs": "^Graphic 2$"},
   "5": {"type": "p.slideSize", "width": 11, "height": 7},
@@ -228,6 +240,7 @@
   "1": {"all": [{"type": "p.sectionNamed", "name": "Opening", "first": 1}, {"type": "p.xml", "part": "presentation", "none": [{"el": "p14:section", "attrs": {"name": "Starter"}}], "fail": "Vẫn còn phần \"Starter\"."}]},
   "2": {"type": "p.coreProp", "prop": "subject", "value": "Education"},
   "3": {"type": "p.xml", "slide": 2, "has": [{"el": "~ummaryZm|sumZm|sectionZm"}], "fail": "Trang chiếu 2 chưa là Summary Zoom.", "ok": "Đã chèn Summary Zoom.", "scope": "Các trang chiếu được chọn em tự kiểm."},
+  "4": {"type": "p.model3d", "titled": "RIVER OVERFLOW", "rotChanged": true, "hIn": 6, "scope": "Kiểm tra đã đổi góc nhìn và chiều cao 6\"; đúng kiểu Above Front Right em tự đối chiếu."},
   "5": {"type": "p.smartArt", "slide": 11, "scope": "Kiểm tra đã chuyển thành SmartArt; kiểu Picture Caption List em tự đối chiếu."},
   "6": {"type": "p.shapeGeom", "slide": 4, "geom": "cloud", "absent": "sun"},
   "7": {"type": "p.xml", "slide": 9, "has": [{"el": "p:grpSp", "min": 2}], "fail": "Chưa nhóm 2 hình đồ hoạ.", "ok": "Đã nhóm hai hình."}
@@ -281,6 +294,7 @@
   "2": {"type": "p.xml", "part": "master", "has": [{"el": "p:ph", "attrs": {"type": "sldNum"}}], "fail": "Slide master chưa có placeholder số trang.", "ok": "Đã chèn placeholder số trang."},
   "3": {"type": "p.xml", "slide": 8, "shape": {"table": true}, "has": [{"el": "a:tr", "min": 4}, {"el": "a:gridCol", "min": 3}, {"el": "a:t", "text": "Year"}, {"el": "a:t", "text": "North India"}, {"el": "a:t", "text": "South India"}], "fail": "Chưa chèn bảng 3 cột × 4 hàng với tiêu đề Year / North India / South India.", "ok": "Đã chèn bảng đúng yêu cầu."},
   "4": {"type": "p.xml", "slide": 3, "has": [{"el": "p:cTn", "attrs": {"repeatCount": "indefinite"}}], "fail": "Video chưa đặt Loop until Stopped.", "ok": "Video phát lặp lại."},
+  "5": {"type": "p.model3d", "slide": 7, "rotChanged": true, "fromRot": {"ax": 2238846, "ay": -5030372, "az": -2229253}, "scope": "Kiểm tra đã đổi góc nhìn; đúng kiểu Above Front em tự đối chiếu."},
   "6": {"type": "p.xml", "slide": 5, "shape": {"text": "WHO IS DR"}, "has": [{"el": "a:schemeClr", "attrs": {"val": "bg1"}, "fail": "Màu nền chưa là Light Green, Background 1."}, {"el": "a:schemeClr", "attrs": {"val": "accent6"}, "fail": "Màu viền chưa là Dark Green, Accent 6."}], "ok": "Màu nền và viền đúng."}
  },
  "ppt-t7-p3": {
@@ -303,12 +317,14 @@
   "2": {"type": "p.xml", "slide": 7, "has": [{"el": "p:grpSp"}], "fail": "Chưa nhóm 3 hình.", "ok": "Đã nhóm các hình."},
   "3": {"type": "p.xml", "titled": "Questions", "has": [{"el": "a:videoFile"}], "fail": "Chưa chèn video.", "ok": "Đã chèn video."},
   "4": {"type": "p.smartArt", "titled": "Class Rules", "layout": "VerticalCurvedList", "texts": ["Be respectful"]},
+  "5": {"type": "p.shapePos", "slide": 3, "kind": "pic", "name": "^Picture 6$", "yIn": 4.177, "bottomIn": 6.399, "wIn": 3.552, "crop": "b", "minCrop": 20992},
   "6": {"all": [{"type": "p.xml", "slide": 5, "has": [{"el": "~morph"}], "fail": "Trang chiếu 5 chưa có Morph."}, {"type": "p.xml", "slide": 6, "has": [{"el": "~morph"}], "fail": "Trang chiếu 6 chưa có Morph."}, {"type": "p.xml", "slide": 7, "has": [{"el": "~morph"}], "fail": "Trang chiếu 7 chưa có Morph."}, {"type": "p.xml", "slide": 8, "has": [{"el": "~morph"}], "fail": "Trang chiếu 8 chưa có Morph."}, {"type": "p.xml", "slide": 4, "none": [{"el": "~morph"}], "fail": "Morph chỉ áp dụng cho trang chiếu 5–8."}], "note": "Đã áp dụng Morph cho trang chiếu 5–8."}
  },
  "ppt-t7-p6": {
   "1": {"type": "p.slideCount", "count": 8},
   "3": {"type": "p.xml", "part": "master", "none": [{"el": "p:ph", "attrs": {"type": "dt"}}], "fail": "Slide master vẫn còn placeholder Date.", "ok": "Đã xoá placeholder Date."},
   "4": {"type": "p.shapeGeom", "slide": 7, "geom": "smileyFace", "absent": "heart"},
+  "5": {"type": "p.model3d", "slide": 4, "rotChanged": true, "wIn": 3.5, "scope": "Kiểm tra đã đổi góc nhìn và chiều rộng 3.5\"; đúng kiểu Back em tự đối chiếu."},
   "6": {"type": "p.animation", "slide": 1, "cls": "path"}
  },
  "ppt-t8-p1": {
@@ -344,7 +360,8 @@
   "3": {"type": "p.layoutExists", "name": "Table and Chart"},
   "4": {"type": "p.xml", "titled": "How we help", "has": [{"el": "adec:decorative", "attrs": {"val": "1"}}], "fail": "Hình ảnh chưa đánh dấu Decorative.", "ok": "Đã đánh dấu hình trang trí."},
   "5": {"type": "p.shapePos", "slide": 3, "name": "^Graphic 6$", "sameAs": "^Graphic 8$"},
-  "6": {"type": "p.xml", "part": "handout", "has": [{"el": "a:t", "text": "Deam Com", "fail": "Đầu trang handout chưa là \"Deam Com\"."}, {"el": "a:t", "text": "Draft", "fail": "Chân trang handout chưa là \"Draft\"."}], "ok": "Đầu và chân trang handout đúng."}
+  "6": {"type": "p.xml", "part": "handout", "has": [{"el": "a:t", "text": "Deam Com", "fail": "Đầu trang handout chưa là \"Deam Com\"."}, {"el": "a:t", "text": "Draft", "fail": "Chân trang handout chưa là \"Draft\"."}], "ok": "Đầu và chân trang handout đúng."},
+  "7": {"type": "p.model3d", "slide": "last", "rotChanged": true, "scope": "Kiểm tra đã đổi góc nhìn; đúng kiểu Above Front Right em tự đối chiếu."}
  },
  "ppt-t8-p6": {
   "1": {"type": "p.xml", "slide": 4, "has": [{"el": "a:videoFile"}], "fail": "Chưa chèn video.", "ok": "Đã chèn video."},
@@ -372,6 +389,7 @@
   "4": {"type": "p.xml", "slide": 6, "has": [{"el": "a:audioFile", "fail": "Chưa chèn âm thanh."}, {"el": "p:cTn", "attrs": {"presetClass": "mediacall", "nodeType": "~afterEffect|withEffect"}, "fail": "Âm thanh chưa đặt Start: Automatically."}, {"el": "p:cTn", "attrs": {"repeatCount": "indefinite"}, "fail": "Âm thanh chưa bật Loop until Stopped."}], "ok": "Âm thanh đúng thiết lập."}
  },
  "ppt-t10-p4": {
+  "1": {"type": "p.xml", "part": "allSlides", "has": [{"el": "p14:prism", "fail": "Chưa có hiệu ứng Cube"}], "none": [{"el": "p14:prism", "attrs": {"isContent": "1"}, "fail": "Đang là hiệu ứng Box/Orbit, chưa phải Cube"}], "ok": "Đã áp dụng Cube cho mọi trang chiếu."},
   "2": {"type": "p.xml", "part": "allSlides", "has": [{"el": "p:transition", "attrs": {"p14:dur": "1500"}, "fail": "Thời lượng chuyển cảnh chưa là 1.5 giây"}, {"el": "p:snd", "attrs": {"name": "~wind"}, "fail": "Âm thanh chuyển cảnh chưa là Wind"}], "ok": "Thời lượng và âm thanh chuyển cảnh đúng."},
   "3": {"type": "p.animation", "slide": 2, "cls": "entr", "scope": "Kiểm tra có hiệu ứng xuất hiện; kiểu Bounce em tự kiểm."},
   "4": {"type": "p.xml", "slide": 2, "has": [{"el": "p:cTn", "attrs": {"presetClass": "entr", "repeatCount": "2000"}, "fail": "Hiệu ứng chưa đặt Repeat = 2."}, {"el": "p:cTn", "attrs": {"presetClass": "entr", "nodeType": "clickEffect"}, "fail": "Hiệu ứng chưa giữ Start = On Click."}], "ok": "Thiết lập hiệu ứng đúng."}

@@ -120,10 +120,10 @@
   const STAFF_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
   const RELOAD_MIN_GAP_MS = 3 * 60 * 1000;
   const cacheTtl = () => (myProfile && myProfile.role === 'admin' ? CACHE_TTL_MS : STAFF_CACHE_TTL_MS);
+  // Cùng định dạng khoá phạm vi với Dashboard điều phối (js/services/roster-cache-service.js § SCOPED_KEYS) → 2 trang lấy nền của nhau
   function rosterCacheKey() {
-    const isAdmin = myProfile.role === 'admin';
-    const schools = Array.isArray(myProfile.schools) ? myProfile.schools.filter(Boolean) : [];
-    return isAdmin ? 'roster-manager:admin-all-schools' : 'roster-manager:' + (myProfile.uid || myProfile.id || 'unknown') + ':' + schools.slice().sort().join('|');
+    const RC = window.EduRosterCache;
+    return RC.SCOPED_KEYS.manager + (myProfile.role === 'admin' ? 'admin-all-schools' : RC.scopeKeyOf(myProfile));
   }
 
   // Sau khi thêm/sửa/xoá 1 bản ghi: cập nhật state tại chỗ (1 lượt đọc lại đúng bản ghi đó)
@@ -203,28 +203,30 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
    * @param {{full?: boolean, deltaOnly?: boolean}} [opts] full: đọc lại TOÀN BỘ học sinh (nút "Tải lại");
    * mặc định chỉ hỏi học sinh thay đổi kể từ lần đọc trước (vài lượt thay vì ~2.800).
    * deltaOnly: không hỏi được phần thay đổi (chưa deploy index...) thì giữ danh sách đang có, không đọc toàn bộ. */
+  // Khoá học/lớp/giáo viên dùng chung bản đệm 10 phút với Dashboard điều phối (js/repositories/base-repository.js § list cacheMs)
+  const LOOKUP_CACHE_MS = 10 * 60 * 1000;
+  function applyCached(cached) {
+    state.courses = cached.courses;
+    state.classes = cached.classes;
+    state.students = cached.students;
+    state.teachers = cached.teachers;
+    state.cachedAt = cached.cachedAt || 0;
+    state.fullAt = cached.fullAt || 0;
+    state.watermark = cached.watermark || null;
+    renderDataAge();
+    renderCourses();
+    renderClasses();
+    renderStudentClassFilter();
+    renderStudentSchoolFilter();
+    renderStudentTeacherFilter();
+    renderStudents();
+  }
   async function loadEverything(forceRefresh, opts = {}) {
     try {
       const cacheKey = rosterCacheKey();
       if (!forceRefresh && window.EduDataCache) {
         const cached = await window.EduDataCache.getAsync(cacheKey, /* persist */ true);
-        if (cached) {
-          state.courses = cached.courses;
-          state.classes = cached.classes;
-          state.students = cached.students;
-          state.teachers = cached.teachers;
-          state.cachedAt = cached.cachedAt || 0;
-          state.fullAt = cached.fullAt || 0;
-          state.watermark = cached.watermark || null;
-          renderDataAge();
-          renderCourses();
-          renderClasses();
-          renderStudentClassFilter();
-          renderStudentSchoolFilter();
-          renderStudentTeacherFilter();
-          renderStudents();
-          return;
-        }
+        if (cached) { applyCached(cached); return; }
       }
       // Điều phối đào tạo: firestore.rules giờ chỉ cho đọc
       // students_roster trong (các) trường đã được Admin gán ở "schools" —
@@ -242,45 +244,64 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
         return;
       }
 
-      // Bản lưu cũ (kể cả đã hết hạn) làm nền → chỉ hỏi học sinh có updatedAt mới hơn.
-      const base = !opts.full && window.EduDataCache
-        ? await window.EduDataCache.getAsync(cacheKey, /* persist */ true, /* allowStale */ true)
-        : null;
-      const byName = (a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'vi');
-      const readAllStudents = () => (isAdmin
-        ? window.EduRepositories.studentRoster.list({ orderBy: 'name' })
-        // CỐ TÌNH KHÔNG dùng listBySchools() (chỉ lọc status "active") — trang
-        // này cần quản lý CẢ học sinh đã nghỉ/đã tốt nghiệp (đổi trạng thái,
-        // xem lại lịch sử...), nên lọc trực tiếp theo "school" mà không kèm
-        // điều kiện status. KHÔNG truyền orderBy ở query này (where('in',...)
-        // + orderBy field khác đòi hỏi composite index phải tạo tay trong
-        // Firebase Console — không có sẵn) — sắp xếp lại theo tên ở JS sau khi
-        // gộp các chunk thay vì nhờ Firestore sắp xếp.
-        : Promise.all(chunk10(schools).map((part) => window.EduRepositories.studentRoster.list({ where: [['school', 'in', part]] })))
-          .then((parts) => parts.flat().sort(byName)));
-      const scope = isAdmin ? {} : { narrows: chunk10(schools).map((part) => (q) => q.where('school', 'in', part)), fullMs: window.EduRosterCache.SCOPED_FULL_MS };
-      const [courses, classes, students, teachers] = await Promise.all([
-        window.EduRepositories.course.list({ orderBy: 'name' }),
-        window.EduRepositories.class.list({ orderBy: 'name' }),
-        window.EduRosterCache.deltaFrom(base, null, 'students_roster (Quản lý lớp, thay đổi)', scope).then((d) => {
-          if (d) return Object.assign(d, { fromDelta: true, students: d.students.sort(byName) });
-          if (opts.deltaOnly && base) return { students: base.students, fullAt: base.fullAt, watermark: base.watermark, fromDelta: true };
-          return readAllStudents().then((list) => ({ students: list, fullAt: Date.now(), watermark: window.EduRosterCache.watermarkOf(list) }));
-        }),
-        window.EduRepositories.user.listApprovedTeachers(),
-      ]);
-      state.courses = courses;
-      state.classes = classes;
-      state.students = students.students;
-      state.fullAt = students.fullAt;
-      state.watermark = students.watermark;
-      state.studentsFromDelta = !!students.fromDelta;
-      state.teachers = teachers;
-      state.cachedAt = Date.now();
+      // Mở DỒN (nhiều tab cùng lúc, 08/11/2026): chỉ 1 tab đọc máy chủ, tab khác đợi rồi lấy bản vừa lưu. Kiểm lại bản đệm
+      // sau khi có khoá; forceRefresh chỉ nhận bản lưu SAU lúc gọi (tab khác vừa đọc mới giúp rồi). Lưu xong mới nhả khoá.
+      const asked = Date.now();
+      const C = window.EduDataCache;
+      const lock = C && C.exclusive ? (fn) => C.exclusive(cacheKey, fn) : (fn) => fn();
+      const got = await lock(async () => {
+        if (C && !opts.full) {
+          const again = await C.getAsync(cacheKey, /* persist */ true);
+          if (again && (!forceRefresh || (again.cachedAt || 0) > asked)) return { cached: again };
+        }
+        // Bản lưu cũ (kể cả đã hết hạn) làm nền → chỉ hỏi học sinh có updatedAt mới hơn.
+        let base = !opts.full && window.EduDataCache
+          ? await window.EduDataCache.getAsync(cacheKey, /* persist */ true, /* allowStale */ true)
+          : null;
+        // Admin chưa có bản đệm riêng của trang này nhưng máy đã đọc roster ở trang khác (Quản lý tài khoản, Dashboard...):
+        // dựng nền từ bản đệm chung + HS đã nghỉ, khỏi đọc lại cả ~3.000 học sinh (07/11/2026).
+        if (!base && !opts.full && isAdmin && window.EduRosterCache && window.EduRosterCache.seedAllStatuses) {
+          base = await window.EduRosterCache.seedAllStatuses();
+        }
+        // Điều phối / Quản trị trường: máy đã mở Dashboard điều phối cùng phạm vi → HS đang học lấy từ đó, chỉ đọc HS đã nghỉ
+        // của các trường mình rồi hỏi phần thay đổi (đo 08/11/2026: điều phối 3 trường 225 → ~16 lượt).
+        if (!base && !opts.full && !isAdmin && window.EduRosterCache && window.EduRosterCache.seedScopedAllStatuses && window.EduDataCache) {
+          const dash = await window.EduDataCache.getAsync(window.EduRosterCache.SCOPED_KEYS.dashboard + window.EduRosterCache.scopeKeyOf(myProfile), true, /* allowStale */ true);
+          base = await window.EduRosterCache.seedScopedAllStatuses(dash, schools);
+        }
+        const byName = (a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'vi');
+        const readAllStudents = () => (isAdmin
+          // Admin: đọc toàn bộ theo từng phần + lưu tiến độ (EduRosterCache.pagedRead) — F5 giữa chừng không đọc lại từ đầu
+          ? window.EduRosterCache.pagedRead('manager-all', () => EduFirebase.db.collection('students_roster'), 'students_roster (Quản lý lớp, toàn bộ)')
+            .then((r) => Object.assign(r.docs.sort(byName), { watermark: r.watermark }))
+          // CỐ TÌNH KHÔNG dùng listBySchools() (chỉ lọc status "active") — trang
+          // này cần quản lý CẢ học sinh đã nghỉ/đã tốt nghiệp (đổi trạng thái,
+          // xem lại lịch sử...), nên lọc trực tiếp theo "school" mà không kèm
+          // điều kiện status. KHÔNG truyền orderBy ở query này (where('in',...)
+          // + orderBy field khác đòi hỏi composite index phải tạo tay trong
+          // Firebase Console — không có sẵn) — sắp xếp lại theo tên ở JS sau khi
+          // gộp các chunk thay vì nhờ Firestore sắp xếp.
+          : Promise.all(chunk10(schools).map((part) => window.EduRepositories.studentRoster.list({ where: [['school', 'in', part]] })))
+            .then((parts) => parts.flat().sort(byName)));
+        const scope = isAdmin ? {} : { narrows: chunk10(schools).map((part) => (q) => q.where('school', 'in', part)), fullMs: window.EduRosterCache.SCOPED_FULL_MS };
+        const [courses, classes, students, teachers] = await Promise.all([
+          window.EduRepositories.course.list({ orderBy: 'name', cacheMs: LOOKUP_CACHE_MS, refresh: !!forceRefresh }),
+          window.EduRepositories.class.list({ orderBy: 'name', cacheMs: LOOKUP_CACHE_MS, refresh: !!forceRefresh }),
+          window.EduRosterCache.deltaFrom(base, null, 'students_roster (Quản lý lớp, thay đổi)', scope).then((d) => {
+            if (d) return Object.assign(d, { fromDelta: true, students: d.students.sort(byName) });
+            if (opts.deltaOnly && base) return { students: base.students, fullAt: base.fullAt, watermark: base.watermark, fromDelta: true };
+            return readAllStudents().then((list) => ({ students: list, fullAt: Date.now(), watermark: list.watermark || window.EduRosterCache.watermarkOf(list) }));
+          }),
+          window.EduRepositories.user.listApprovedTeachers({ refresh: !!forceRefresh }),
+        ]);
+        const bundle = { courses, classes, students: students.students, teachers, cachedAt: Date.now(), fullAt: students.fullAt, watermark: students.watermark };
+        if (C) await C.setAsync(cacheKey, bundle, cacheTtl(), /* persist */ true);
+        return { bundle, fromDelta: !!students.fromDelta };
+      });
+      if (got.cached) { applyCached(got.cached); return; }
+      Object.assign(state, got.bundle);
+      state.studentsFromDelta = got.fromDelta;
       renderDataAge();
-      if (window.EduDataCache) {
-        window.EduDataCache.setAsync(cacheKey, { courses: state.courses, classes: state.classes, students: state.students, teachers: state.teachers, cachedAt: state.cachedAt, fullAt: state.fullAt, watermark: state.watermark }, cacheTtl(), /* persist */ true);
-      }
       // Admin vừa đọc toàn bộ → các trang quản lý khác khỏi đọc lại; Điều phối tải lại sau khi ghi → bỏ bản đệm chung
       if (isAdmin || forceRefresh) shareRoster();
 
@@ -1428,6 +1449,9 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
       logRosterChange('import_excel', null, { count: rows.length, newClasses: newClassKeys.length, format: pendingImportFormat });
       toast(`Đã nạp ${rows.length} học sinh từ Excel` + (skippedUnchanged ? ` (bỏ qua ${skippedUnchanged} học sinh không thay đổi)` : ''));
       closeImportModal();
+      // Nạp Excel ghi thẳng Firestore (khoá học/lớp) → bỏ bản đệm dùng chung của các trang khác
+      window.EduRepositories.course.invalidate();
+      window.EduRepositories.class.invalidate();
       loadEverything(true);
     } catch (err) {
       toast(friendlyError(err));

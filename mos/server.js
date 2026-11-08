@@ -68,20 +68,53 @@ function serveFile(req, res, file, extra) {
 
 // ---------------------------------------------------------------- API: tạo bản làm bài
 
-async function apiWork(req, res) {
-  let body;
-  try { body = JSON.parse((await readBody(req, 4096)).toString('utf8')); } catch (e) { return json(res, 400, { error: 'Dữ liệu không hợp lệ' }); }
-  const { sid, slot, file, reset } = body || {};
-  if (!/^[a-z0-9]{8,40}$/i.test(sid || '') || !/^[a-z0-9-]{1,100}$/i.test(slot || '')) return json(res, 400, { error: 'Mã phiên không hợp lệ' });
+const SID_RE = /^[a-z0-9]{8,40}$/i, SLOT_RE = /^[a-z0-9-]{1,100}$/i;
+
+/** Tạo (hoặc giữ) bản làm bài của 1 project. Trả { slot, url, mtime } hoặc { slot, error, code }. */
+function makeWork(sid, slot, file, reset) {
+  if (!SLOT_RE.test(slot || '')) return { slot, error: 'Mã phiên không hợp lệ', code: 400 };
   const src = path.join(ROOT, String(file || ''));
-  if (!inside(FILES, src) || !fs.existsSync(src)) return json(res, 404, { error: 'Không có tệp đề này trên máy chủ' });
+  if (!inside(FILES, src) || !fs.existsSync(src)) return { slot, error: 'Không có tệp đề này trên máy chủ', code: 404 };
   const dir = path.join(WORK, sid, slot);
   const dest = path.join(dir, path.basename(src));
   fs.mkdirSync(dir, { recursive: true });
   if (reset || !fs.existsSync(dest)) fs.copyFileSync(src, dest);
   fs.utimesSync(dir, new Date(), new Date());
   const url = '/work/' + [sid, slot, path.basename(src)].map(encodeURIComponent).join('/');
-  json(res, 200, { url, mtime: fs.statSync(dest).mtimeMs });
+  return { slot, url, mtime: fs.statSync(dest).mtimeMs };
+}
+
+// { sid, slot, file, reset } → 1 bản làm bài; { sid, items: [{ slot, file }] } → chuẩn bị cả bộ đề trong 1 lần gọi.
+async function apiWork(req, res) {
+  let body;
+  try { body = JSON.parse((await readBody(req, 32768)).toString('utf8')); } catch (e) { return json(res, 400, { error: 'Dữ liệu không hợp lệ' }); }
+  const { sid, slot, file, reset, items } = body || {};
+  if (!SID_RE.test(sid || '')) return json(res, 400, { error: 'Mã phiên không hợp lệ' });
+  if (Array.isArray(items)) {
+    if (items.length > 30) return json(res, 400, { error: 'Quá nhiều tệp' });
+    return json(res, 200, { items: items.map(it => makeWork(sid, it && it.slot, it && it.file, false)) });
+  }
+  const r = makeWork(sid, slot, file, reset);
+  if (r.error) return json(res, r.code, { error: r.error });
+  json(res, 200, { url: r.url, mtime: r.mtime });
+}
+
+/** Dấu thời gian các bản làm bài trong 1 lần gọi: { urls: ['/work/...'] } → { sigs: { url: "size-mtime" | null } }.
+    Trang hỏi 1 lần cho mọi project đang theo dõi thay vì mỗi project một lượt HEAD. */
+async function apiStat(req, res) {
+  let body;
+  try { body = JSON.parse((await readBody(req, 65536)).toString('utf8')); } catch (e) { return json(res, 400, { error: 'Dữ liệu không hợp lệ' }); }
+  const urls = Array.isArray(body && body.urls) ? body.urls.slice(0, 40) : [];
+  const sigs = {};
+  for (const u of urls) {
+    let file = null;
+    try { file = typeof u === 'string' && u.startsWith('/work/') ? path.join(WORK, decodeURIComponent(u.slice(6))) : null; } catch (e) { /* bỏ qua */ }
+    const ok = file && inside(WORK, file) && file.split(path.sep).length - WORK.split(path.sep).length === 3;
+    let st = null;
+    try { st = ok ? fs.statSync(file) : null; } catch (e) { /* tệp đã xoá */ }
+    sigs[u] = st && st.isFile() ? `${st.size.toString(36)}-${st.mtimeMs.toString(36)}` : null;
+  }
+  json(res, 200, { sigs });
 }
 
 // ---------------------------------------------------------------- WebDAV tối thiểu cho Office (đã thử với Excel 365)
@@ -153,8 +186,9 @@ async function handle(req, res) {
   try { url = decodeURIComponent(req.url.split('?')[0]); } catch (e) { return send(res, 400, {}, ''); }
   try {
     if (req.method === 'OPTIONS') return send(res, 200, DAV, '');
-    if (url === '/api/info') return json(res, 200, { server: 'mos', workDays: WORK_DAYS });
+    if (url === '/api/info') return json(res, 200, { server: 'mos', workDays: WORK_DAYS, stat: true });
     if (url === '/api/work' && req.method === 'POST') return await apiWork(req, res);
+    if (url === '/api/stat' && req.method === 'POST') return await apiStat(req, res);
     if (url.startsWith('/work/')) {
       const file = path.join(WORK, url.slice(6));
       if (!inside(WORK, file) || file.split(path.sep).length - WORK.split(path.sep).length !== 3) return send(res, 403, DAV, '');
