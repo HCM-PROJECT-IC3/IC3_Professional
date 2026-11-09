@@ -63,12 +63,18 @@
 
           <div class="sidebar-group">
             <label for="weekSelect"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> Tuần</label>
-            <select id="weekSelect" class="form-input"><option value="">-- Chưa có tuần nào --</option></select>
+            <div class="week-nav">
+              <button type="button" class="week-nav-btn" id="weekPrevBtn" title="Tuần trước (phím ←)" aria-label="Tuần trước"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+              <select id="weekSelect" class="form-input"><option value="">-- Chưa có tuần nào --</option></select>
+              <button type="button" class="week-nav-btn" id="weekNextBtn" title="Tuần sau (phím →)" aria-label="Tuần sau"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+              <button type="button" class="week-nav-today" id="weekTodayBtn" title="Về tuần hiện tại">Tuần này</button>
+            </div>
           </div>
 
           <div class="sidebar-group" id="weeklyFiltersWrap">
             <label for="teacherSearch"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Tìm kiếm</label>
-            <input type="text" id="teacherSearch" class="form-input" placeholder="Tìm theo tên hoặc mã NV...">
+            <input type="search" id="teacherSearch" class="form-input" placeholder="Tên hoặc mã NV — gõ không dấu cũng được" autocomplete="off">
+            <small class="search-count" id="teacherSearchCount" aria-live="polite"></small>
           </div>
 
           <label class="chk-missing"><input type="checkbox" id="onlyMissingChk"> Chỉ hiện GV chưa có lịch</label>

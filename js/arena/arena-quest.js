@@ -284,8 +284,7 @@
     }
     document.addEventListener('arena:role', (e) => { if (e.detail && e.detail.role === 'minigame') paint(true); });
     $('arNick').addEventListener('change', () => paint());
-    const join = $('arJoinScene');
-    if (join) join.innerHTML = sceneSvg('classroom');
+    // Cảnh lớp học vẽ sau thẻ vào phòng: bỏ 10/11/2026 (màn vào phòng gọn, không tranh trang trí).
     paint();
   }
 

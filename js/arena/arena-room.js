@@ -923,6 +923,9 @@
   }
   function playerLost(conn, force) {
     if (P.stopped || (!force && conn !== P.conn)) return;
+    // Đóng hẳn kết nối vừa hỏng (đường dự phòng: huỷ listener Firestore) — trước đây chỉ bỏ tham chiếu, mỗi lần
+    // nối lại sót 1 listener vẫn bị tính lượt đọc. conn !== P.conn: kết nối đó đã bị thay, cũng đóng nốt.
+    [conn, P.conn].forEach((c) => { if (c && c.relay) { try { c.close(); } catch (e) { /* ignore */ } } });
     P.conn = null;
     P.retry++;
     // Nối thẳng thất bại (mạng khác nhau / máy chủ bắt tay bị chặn) → chuyển ngay sang đường dự phòng
@@ -1457,7 +1460,16 @@
     $('arJoinName').addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && R.normCode($('arJoinCode').value).length < R.CODE_LEN) { e.preventDefault(); $('arJoinCode').focus(); }
     });
-    $('arJoinCode').addEventListener('input', (e) => { e.target.value = R.normCode(e.target.value); $('arJoinFromLink').hidden = true; paintJoinReady(); });
+    $('arJoinCode').addEventListener('input', (e) => {
+      const raw = e.target.value.replace(/\s+/g, '');
+      e.target.value = R.normCode(raw);
+      // Gõ 0/O/1/I/L (không có trong mã) trước đây bị xoá âm thầm — em tưởng bàn phím hỏng. Nay nhắc ngay dưới ô.
+      const dropped = /[^2-9A-HJKMNP-Z]/i.test(raw); // ký tự không có trong mã (0, 1, O, I, L, dấu...)
+      const hint = $('arJoinCodeHint');
+      if (hint) hint.classList.toggle('is-warn', dropped);
+      $('arJoinFromLink').hidden = true;
+      paintJoinReady();
+    });
     $('arJoinName').addEventListener('input', paintJoinReady);
     $('arRoomMax').addEventListener('click', (e) => {
       const b = e.target.closest('button');

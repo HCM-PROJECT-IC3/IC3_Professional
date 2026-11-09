@@ -50,7 +50,11 @@
   // Xoá IndexedDB là bất đồng bộ: khoá tab vừa ghi thì từ đó luôn đọc thẳng máy chủ (không
   // phụ thuộc thứ tự transaction), chắc chắn thấy đúng dữ liệu mình vừa lưu.
   const bypass = [];
-  const bypassed = (key) => bypass.some((match) => match(key));
+  // Khoá vừa được ghi lại bằng dữ liệu đúng của chính tab này (put) sau lệnh ghi: dùng bản đệm lại bình thường.
+  // Trước 10/11/2026: lưu lịch 1 giáo viên là cả tuần đó đọc thẳng máy chủ tới khi đóng tab — đổi tuần qua lại
+  // mỗi lần 120 lượt (lịch + TKB của cả đội). Lệnh ghi kế tiếp chạm khoá này lại bỏ ghim (invalidate).
+  const pinned = new Set();
+  const bypassed = (key) => !pinned.has(key) && bypass.some((match) => match(key));
 
   /** Khoá bị ảnh hưởng khi ghi document `path` (khoá chưa có tiền tố PREFIX). Collection lạ: mọi khoá. */
   function affected(path) {
@@ -117,6 +121,7 @@
   function invalidate(match) {
     const hit = match || (() => true);
     bypass.push(hit);
+    [...pinned].forEach((k) => { if (hit(k)) pinned.delete(k); });
     inflight.clear();
     const C = cache();
     if (!C) return;
@@ -125,6 +130,24 @@
     const gone = keys.filter((k) => hit(k.slice(PREFIX.length)));
     gone.forEach((k) => C.clear(k, true));
     try { localStorage.setItem(KEYS_INDEX, JSON.stringify(keys.filter((k) => !gone.includes(k)))); } catch (e) { /* ignore */ }
+  }
+
+  /** Ghi thẳng giá trị ĐÚNG (trang tự dựng từ dữ liệu đang có + phần vừa lưu) vào khoá — 0 lượt đọc lại.
+   *  Gọi SAU khi lệnh ghi Firestore xong (móc ghi đã bỏ khoá này). */
+  async function put(key, value) {
+    const C = cache();
+    if (!C) return;
+    pinned.add(key);
+    inflight.delete(key);
+    rememberKey(PREFIX + key);
+    await C.setAsync(PREFIX + key, value, ttlFor(key), true);
+  }
+  /** Bản đệm còn hạn của khoá, KHÔNG đọc máy chủ khi chưa có (null). */
+  async function peek(key) {
+    const C = cache();
+    if (!C || bypassed(key)) return null;
+    const hit = await C.getAsync(PREFIX + key, true);
+    return hit === undefined ? null : hit;
   }
 
   // ── Xoá cache khi có ghi vào teaching_* ──
@@ -239,5 +262,5 @@
   }
 
   installWriteHooks();
-  global.EduScheduleReadCache = { read, invalidate, ttlFor, TTL_MS, readDelta, mergeDelta, teachers, DELTA_FRESH_MS, DELTA_FULL_MS };
+  global.EduScheduleReadCache = { read, put, peek, invalidate, ttlFor, TTL_MS, readDelta, mergeDelta, teachers, DELTA_FRESH_MS, DELTA_FULL_MS };
 })(window);

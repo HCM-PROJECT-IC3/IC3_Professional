@@ -74,12 +74,23 @@
   /** Kết nối giả cùng giao diện với PeerJS DataConnection (on/send/close/open). */
   function makeConn(sendImpl, closeImpl) {
     const handlers = {};
+    let disposed = false;
     const conn = {
       open: false, relay: true,
       on(ev, fn) { (handlers[ev] = handlers[ev] || []).push(fn); return conn; },
-      emit(ev, arg) { (handlers[ev] || []).slice().forEach((fn) => { try { fn(arg); } catch (e) { console.error('[Relay]', e); } }); },
+      emit(ev, arg) { if (disposed) return; (handlers[ev] || []).slice().forEach((fn) => { try { fn(arg); } catch (e) { console.error('[Relay]', e); } }); },
       send(msg) { if (conn.open) sendImpl(msg); },
-      close() { if (!conn.open) return; conn.open = false; closeImpl(); conn.emit('close'); },
+      // Luôn huỷ listener, kể cả khi CHƯA mở (sai mã phòng, hết giờ chờ, lỗi) hoặc phòng vừa đóng. Trước 10/11/2026
+      // close() bỏ qua khi chưa mở → mỗi lần em bấm Thử lại sót 1 listener; phòng mở bằng mã đó thì mọi listener sót
+      // đều bị tính lượt đọc ở mỗi lần đổi.
+      close() {
+        if (disposed) return;
+        disposed = true; // đặt TRƯỚC khi báo "close": handler (playerLost) gọi lại close() không huỷ listener lần 2
+        const wasOpen = conn.open;
+        conn.open = false;
+        closeImpl();
+        if (wasOpen) (handlers.close || []).slice().forEach((fn) => { try { fn(); } catch (e) { console.error('[Relay]', e); } });
+      },
     };
     return conn;
   }
@@ -245,7 +256,7 @@
 
     unsub = ref.onSnapshot((doc) => {
       if (!doc.exists) {
-        if (conn.open) { conn.open = false; conn.emit('close'); } else conn.emit('error', { type: 'peer-unavailable' });
+        if (conn.open) conn.close(); else conn.emit('error', { type: 'peer-unavailable' }); // phòng đóng: huỷ luôn listener
         return;
       }
       if (!conn.open) { conn.open = true; conn.emit('open'); }

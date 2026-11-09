@@ -33,41 +33,52 @@
     backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   }
 }
-@media (max-height: 700px) { .lobby-mascot { display: none; } }
 .lobby-side-brand { display: flex; align-items: center; gap: .55rem; padding: 0 .4rem 1.1rem; font-size: 1.15rem; font-weight: 800; line-height: 1.1; }
 .lobby-side-brand i { font-size: 1.5rem; color: var(--ic-blue); }
 .lobby-side-brand span { color: var(--ic-orange); }
 .lobby-nav {
-  display: flex; align-items: center; gap: .6rem; width: 100%; min-height: 2.8rem; padding: .5rem .75rem; border: 0; border-radius: 12px; cursor: pointer;
+  display: flex; align-items: center; gap: .6rem; width: 100%; min-height: 2.5rem; padding: .45rem .7rem; border: 0; border-radius: 9px; cursor: pointer;
   background: transparent; color: var(--sky-sub); font: inherit; font-size: .92rem; font-weight: 700; text-align: left; white-space: nowrap;
 }
 .lobby-nav svg, .lobby-nav i { flex: none; width: 1.15rem; height: 1.15rem; font-size: 1.05rem; text-align: center; }
 .lobby-nav:hover { background: color-mix(in srgb, var(--ic-blue) 12%, transparent); color: var(--sky-ink); }
 .lobby-nav[aria-current="page"] { background: #1b78b5; color: #fff; }
 .lobby-nav:focus-visible { outline: 3px solid var(--ic-blue); outline-offset: 1px; }
-.lobby-mascot { width: 100%; max-width: 120px; margin: .6rem auto 0; display: block; }
 
-/* Kết quả của em: số liệu thật, cùng robot thành khối cuối thanh trái */
-.lobby-me { margin-top: auto; padding: .7rem .75rem; border-radius: 12px; background: color-mix(in srgb, var(--ic-blue) 10%, transparent); box-shadow: inset 0 0 0 1px var(--glass-line); }
-.lobby-me h2 { margin: 0 0 .4rem; font-size: .85rem; font-weight: 800; color: var(--sky-ink); }
+/* Kết quả của em: nhóm thứ 2 của thanh trái, ngay dưới menu (kiểu thanh bên macOS: tiêu đề nhóm chữ nhỏ màu xám,
+   không đóng khung) — trước đây đẩy xuống đáy cùng robot, để lại khoảng trống lớn giữa thanh */
+.lobby-me { margin-top: .9rem; padding: .9rem .7rem 0; border-top: 1px solid var(--glass-line); }
+.lobby-me h2 { margin: 0 0 .5rem; font-size: .72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--sky-sub); }
 .lobby-me p { margin: 0; font-size: .82rem; line-height: 1.4; color: var(--sky-sub); }
-.lobby-me dl { margin: 0; display: grid; gap: .25rem; }
-.lobby-me dl div { display: flex; justify-content: space-between; gap: .5rem; font-size: .82rem; }
+.lobby-me dl { margin: 0; display: grid; gap: .1rem; }
+.lobby-me dl div { display: flex; justify-content: space-between; gap: .5rem; padding: .3rem 0; font-size: .85rem; }
+.lobby-me dl div + div { border-top: 1px dashed var(--glass-line); }
 .lobby-me dt { color: var(--sky-sub); }
 .lobby-me dd { margin: 0; font-weight: 800; color: var(--sky-ink); font-variant-numeric: tabular-nums; }
 
-/* Tiêu đề: tên + khẩu hiệu bên trái, sơ đồ 3 vòng tròn ở giữa */
+/* Tiêu đề kiểu thanh công cụ macOS: 1 hàng thấp — tên + khẩu hiệu | 3 mảng kỹ năng | Dành cho thầy cô.
+   (10/11/2026: thay chữ in hoa cỡ lớn + sơ đồ 3 vòng tròn to để lại khoảng trống giữa tiêu đề; 3 màu vẫn là 3 màu 3 bước) */
 .lobby-right { justify-content: flex-start; }
-.lobby-hero { position: relative; z-index: 3; width: 100%; max-width: 680px; padding: .2rem .4rem; display: flex; align-items: center; gap: 1.2rem; color: var(--sky-ink); }
+.lobby-hero { position: relative; z-index: 3; width: 100%; padding: .1rem .3rem; display: flex; align-items: center; gap: 1rem 1.4rem; color: var(--sky-ink); }
 /* #lobby: thắng quy tắc căn giữa cũ ".lobby-right > :first-child { margin-top: auto }" của style.css */
-#lobby .lobby-hero { margin: 0 auto .7rem; }
-.lobby-hero-text { min-width: 0; flex: 1; }
-.lobby-hero-title { margin: 0; font-family: 'Baloo 2', sans-serif; font-size: clamp(1.8rem, 3.6vw, 3rem); font-weight: 800; line-height: 1.02; letter-spacing: .5px; text-transform: uppercase; color: var(--sky-ink); }
+#lobby .lobby-hero { margin: 0 0 .9rem; }
+.lobby-hero-text { min-width: 0; flex: 0 1 auto; }
+.lobby-hero-title { margin: 0; font-family: 'Baloo 2', sans-serif; font-size: clamp(1.45rem, 2.3vw, 2rem); font-weight: 800; line-height: 1.05; letter-spacing: 0; color: var(--sky-ink); }
 .lobby-hero-title span { color: var(--ic-blue); }
-.lobby-hero-text p { margin: .3rem 0 0; font-size: clamp(.85rem, 1.35vw, 1.05rem); font-weight: 600; letter-spacing: .2px; color: var(--sky-sub); }
-.lobby-venn { flex: none; width: 268px; height: auto; display: none; overflow: visible; }
-.lobby-venn text { font: 800 10px 'Inter', system-ui, sans-serif; fill: #0d2238; text-anchor: middle; }
-@media (min-width: 760px) { .lobby-venn { display: block; } }
+.lobby-hero-text p { margin: .1rem 0 0; font-size: clamp(.82rem, 1.1vw, .95rem); font-weight: 600; color: var(--sky-sub); }
+/* 3 mảng kỹ năng: chấm màu + tên; 3 chấm chồng nhau ở đầu hàng là sơ đồ 3 vòng tròn thu nhỏ */
+.lobby-domains { flex: 1 1 auto; display: none; align-items: center; justify-content: flex-end; gap: .35rem 1.1rem; flex-wrap: wrap; margin: 0; padding: 0; list-style: none; }
+@media (min-width: 760px) { .lobby-domains { display: flex; } }
+.lobby-domains li { display: inline-flex; align-items: center; gap: .4rem; font-size: .84rem; font-weight: 700; color: var(--sky-sub); white-space: nowrap; }
+.lobby-domains li[style]::before { content: ''; width: .55rem; height: .55rem; border-radius: 50%; background: var(--d); }
+.lobby-domains-mark { gap: 0 !important; margin-right: -.3rem; }
+.lobby-domains-mark i { width: 1rem; height: 1rem; border-radius: 50%; mix-blend-mode: multiply; opacity: .9; }
+.lobby-domains-mark i + i { margin-left: -.38rem; }
+.lobby-domains-mark i:nth-child(1) { background: var(--ic-blue); }
+.lobby-domains-mark i:nth-child(2) { background: var(--ic-green); }
+.lobby-domains-mark i:nth-child(3) { background: var(--ic-orange); }
+[data-theme="dark"] .lobby-domains-mark i { mix-blend-mode: screen; opacity: .85; }
+@media (min-width: 760px) and (max-width: 1250px) { .lobby-domains li[style] { font-size: .78rem; } .lobby-domains { gap: .3rem .8rem; } }
 
 /* Dành cho thầy cô: 1 nút ở tiêu đề, bấm mới mở danh sách */
 .lobby-staff { position: relative; flex: none; margin-right: 3.6rem; }
@@ -138,11 +149,11 @@
   .lobby-card .lobby-col-more { margin-top: 0; padding-top: .8rem; }
   .lobby-card, .lobby-hero { max-width: 1100px; }
 }
-/* Màn rộng: tiêu đề và khung cùng bề ngang, cao theo nội dung, canh giữa màn hình (margin auto của style.css).
-   Không kéo khung cho đầy: sẽ tạo khoảng trống trong từng cột. Ô giãn nhẹ theo chiều cao màn hình. */
+/* Màn rộng: tiêu đề và khung cùng bề ngang, cao theo nội dung, bám lên trên như cửa sổ macOS (10/11/2026; trước canh giữa
+   theo chiều dọc → dải trống trên tiêu đề). Không kéo khung cho đầy: sẽ tạo khoảng trống trong từng cột. */
 @media (min-width: 1100px) {
   .lobby-card, .lobby-hero { max-width: none; }
-  #lobby .lobby-hero { margin: auto 0 .7rem; }
+  #lobby .lobby-hero { margin: .2rem 0 .9rem; }
   #lobby .lobby-card { margin: 0 0 auto; align-items: stretch; }
 }
 @media (min-width: 1200px) {

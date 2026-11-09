@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="css/theme.css">
 <link rel="stylesheet" href="css/admin-common.css">
 <link rel="stylesheet" href="css/admin-users.css">
+<link rel="stylesheet" href="css/ui-select.css">
 <link rel="stylesheet" href="css/motion.css">
   <link rel="stylesheet" href="css/accessibility.css">
 <link rel="stylesheet" href="lib/fontawesome/css/fa.min.css">
@@ -34,13 +35,25 @@
     <input type="file" id="importTeachersInput" accept=".xlsx,.xls" hidden>
   </div>
 
+  <div class="au-bar">
+    <label class="au-search"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+      <input type="search" id="auSearch" placeholder="Tìm tên, email, trường, lớp, Mã NV…" aria-label="Tìm tài khoản" autocomplete="off"><kbd>/</kbd></label>
+    <span class="au-status" id="auStatus"></span>
+    <button type="button" class="au-refresh" id="auRefresh" title="Chỉ hỏi tài khoản mới tạo hoặc vừa sửa ở máy khác (2 lượt đọc)"><i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i> Cập nhật</button>
+  </div>
+  <div class="au-tabs" id="auTabs" role="tablist" aria-label="Lọc tài khoản"></div>
+
   <div class="table-scroll">
-    <table>
-      <thead><tr><th>Tên</th><th>Email</th><th>Vai trò hiện tại</th><th>Đổi vai trò</th><th>Trường được xem/hỗ trợ (Giáo viên + Điều phối đào tạo)</th><th>Lớp đang dạy (chọn trực tiếp)</th><th>Mã NV liên kết (Lịch giảng dạy)</th><th>Trạng thái</th></tr></thead>
-      <tbody id="userRows"><tr><td colspan="8">Đang tải...</td></tr></tbody>
+    <table class="au-table">
+      <thead><tr><th>Tài khoản</th><th>Vai trò</th><th>Trường được xem</th><th>Lớp đang dạy</th><th>Mã NV</th><th><span class="sr-only">Thao tác</span></th></tr></thead>
+      <tbody id="userRows"><tr><td colspan="6" class="au-empty">Đang tải…</td></tr></tbody>
     </table>
   </div>
 </div>
+
+<!-- Bảng sửa 1 tài khoản (js/admin-users.js openEditor): dựng khi mở, gom mọi thay đổi vào 1 lần Lưu -->
+<div class="au-scrim" id="auScrim" hidden></div>
+<aside class="au-drawer" id="auDrawer" role="dialog" aria-modal="true" aria-labelledby="auDrawerTitle" hidden></aside>
 
 <!-- ============ MODAL: NHẬP GIÁO VIÊN TỪ EXCEL → TẠO TÀI KHOẢN HÀNG LOẠT
      ============ -->
@@ -94,6 +107,7 @@
 <script src="js/models/activity-log.model.js"></script>
 <script src="js/repositories/activity-log-repository.js"></script>
 <script src="js/services/activity-log-service.js"></script>
+<script src="js/ui-select.js"></script>
 <script src="js/admin-users.js"></script>
 <!-- "Nhập giáo viên từ Excel" — đọc file bằng SheetJS, cùng CDN/phiên
      bản đã dùng ở teaching-schedule.html cho đồng bộ toàn hệ thống. -->

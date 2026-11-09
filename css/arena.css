@@ -1862,3 +1862,77 @@ body[data-mode="moon"] .ar-scene { height: clamp(170px, min(30vw, 40vh), 360px);
 .ar-scene.is-net .ar-sc-bg { animation: ar-sc-net .5s ease-out; }
 @keyframes ar-sc-net { 30% { transform: translateY(-143px) scale(1.01); } }
 @media (prefers-reduced-motion: reduce) { .ar-sc-gk, .ar-sc-gk > svg { transition: none; } .ar-scene.is-net .ar-sc-bg { animation: none; } }
+
+/* ══ Màn chọn gọn (10/11/2026) ══
+   Bỏ: nền chuyển màu + bóng khối + biểu tượng nhún ở thanh chọn vai; cảnh lớp học vẽ, mặt cười tròn nổi trên thẻ,
+   nút "Vào phòng" phập phồng, 3 ô hướng dẫn có emoji. Giữ màu riêng từng vai (xanh lá / tím / cam) ở mức nhẹ. */
+.ar-roles { gap: .4rem; padding: .3rem; border-radius: 14px; background: var(--card2, rgba(0, 0, 0, .04)); border: 1px solid var(--border); }
+.ar-role {
+  flex-direction: row; justify-content: center; gap: .55rem; padding: .55rem .6rem; border-radius: 10px;
+  border: 1px solid transparent; background: transparent; text-align: left; box-shadow: none;
+}
+.ar-role > b { font-family: Inter, sans-serif; font-size: .95rem; font-weight: 700; }
+.ar-role-ico { font-size: 1.15rem; line-height: 1; filter: saturate(.85); }
+.ar-role small { display: none; }
+.ar-role:hover { transform: none; border-color: transparent; background: color-mix(in srgb, var(--rc) 8%, transparent); }
+.ar-role.is-on {
+  color: var(--text); background: var(--card); border-color: color-mix(in srgb, var(--rc) 45%, var(--border));
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .08), inset 0 -2px 0 var(--rc);
+}
+.ar-role.is-on small { color: var(--muted); }
+.ar-role.is-on .ar-role-ico { animation: none; }
+
+.ar-join-stage {
+  overflow: visible; isolation: auto; min-height: 0; padding: clamp(.6rem, 4vh, 2.2rem) 0 .8rem;
+  background: transparent; border: 0; box-shadow: none; border-radius: 0;
+}
+.ar-join-stage::after, .ar-join-scene, .ar-join-badge { display: none; }
+#arHome.is-invite .ar-join-stage { min-height: 0; padding-top: clamp(1rem, 8vh, 4rem); }
+.ar-join-card {
+  max-width: 440px; padding: 1.5rem 1.4rem 1rem; border: 1px solid var(--border); border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 8px 24px rgba(16, 24, 40, .06); animation: none;
+}
+.ar-join-title { display: flex; align-items: center; justify-content: center; gap: .5rem; font: 800 1.45rem/1.2 Inter, sans-serif; letter-spacing: -.01em; }
+.ar-join-face { font-size: 1.35rem; }
+.ar-join-lead { font-size: .86rem; margin-bottom: 1.1rem; }
+.ar-join-field > span { font-size: .82rem; font-weight: 700; }
+.ar-join-num { width: 19px; height: 19px; font-size: .68rem; background: var(--muted); }
+.ar-join-input { font-size: 1.05rem; padding: .7rem .85rem; }
+.ar-join-form .ar-code-input { font-size: clamp(1.45rem, 5.5vw, 1.8rem); padding-top: .55rem; padding-bottom: .55rem; }
+.ar-join-form .ar-code-input::placeholder { opacity: .25; }
+.ar-join-form .ar-input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px color-mix(in srgb, var(--purple) 20%, transparent); }
+.ar-join-hint.is-warn { color: #b45309; font-weight: 700; }
+[data-theme="dark"] .ar-join-hint.is-warn { color: #fbbf24; }
+.ar-join-go { padding: .85rem; font-size: 1.1rem; }
+.ar-join-go.is-ready { animation: none; }
+.ar-join-steps {
+  display: flex; justify-content: center; flex-wrap: wrap; gap: .3rem 1.1rem; max-width: 440px; margin: .9rem auto 0;
+  counter-reset: arstep; font-size: .8rem; color: var(--muted);
+}
+.ar-join-steps li { display: flex; flex-direction: row; align-items: center; gap: .35rem; white-space: nowrap; padding: 0; border: 0; background: none; box-shadow: none; color: var(--muted); counter-increment: arstep; }
+.ar-join-steps li::before {
+  content: counter(arstep); display: inline-grid; place-items: center; width: 17px; height: 17px; border-radius: 50%;
+  font: 700 .65rem Inter, sans-serif; color: var(--muted); border: 1px solid var(--border);
+}
+.ar-join-steps b { font: 700 .8rem Inter, sans-serif; color: var(--text); }
+.ar-join-steps li > b + * { display: none; }
+.ar-join-wait { margin-top: .6rem; }
+@media (max-width: 640px) {
+  .ar-role { padding: .5rem .3rem; gap: .35rem; }
+  .ar-role > b { font-size: .84rem; }
+  .ar-join-card { padding: 1.2rem 1rem .9rem; }
+  .ar-join-steps { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .ar-role, .ar-join-card { transition: none; } }
+/* "Chưa có mã phòng?" → 1 dòng chữ liên kết, không khung vàng viền dày (trên điện thoại từng bị chia 3 cột) */
+.ar-join-wait {
+  display: block; width: auto; max-width: 440px; min-height: 0; margin: .7rem auto 0; padding: .4rem .6rem; text-align: center;
+  background: none; border: 0; box-shadow: none; border-radius: 8px; color: var(--muted); font: 600 .84rem/1.4 Inter, sans-serif; cursor: pointer;
+}
+.ar-join-wait b { color: var(--purple); font-weight: 700; }
+.ar-join-wait:hover b { text-decoration: underline; }
+.ar-join-wait i { margin-right: .3rem; }
+@media (max-width: 640px) {
+  .ar-role-ico { display: none; }
+  .ar-role > b { white-space: nowrap; }
+}

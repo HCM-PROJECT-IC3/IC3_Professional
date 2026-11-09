@@ -221,23 +221,10 @@ window.EDU_ALLOWED_ROLES = ['admin'];
 
   // Cache 15 phút theo tab (05/11/2026, trước 3 phút): hết hạn thì thao tác ghi kế tiếp đọc lại CẢ collection users,
   // Admin sửa từng tài khoản chậm rãi là mỗi lần bấm tốn trọn danh sách. Máy này sửa thì bản đệm tự cập nhật
-  // (refreshUserRow); tài khoản mới đăng ký ở nơi khác hiện chậm tối đa 15 phút trong tab đang mở, tải lại tab là thấy.
+  // (persist() sau mỗi lần lưu); tài khoản mới đăng ký ở nơi khác hiện chậm tối đa 15 phút trong tab đang mở, tải lại tab là thấy.
   const USERS_CACHE_KEY = 'admin-users:all';
   const USERS_CACHE_TTL_MS = 15 * 60 * 1000;
 
-  /** Sau khi ghi 1 tài khoản (đổi vai trò/duyệt/gán trường/mã NV): sửa đúng dòng đó trong bản đệm
-   *  rồi vẽ lại — trước đây loadUsers(true) đọc lại CẢ collection users (mỗi tài khoản 1 lượt đọc)
-   *  sau MỖI lần bấm. Không có bản đệm (hết hạn 3 phút) thì mới đọc lại như cũ.
-   *  patch[k] === undefined = trường đã bị xoá (FieldValue.delete()). */
-  async function refreshUserRow(uid, patch) {
-    const c = window.EduDataCache ? await window.EduDataCache.getAsync(USERS_CACHE_KEY) : null;
-    const row = c && Array.isArray(c.users) ? c.users.find((x) => x.id === uid) : null;
-    if (!row) return loadUsers(true);
-    Object.keys(patch).forEach((k) => { if (patch[k] === undefined) delete row.u[k]; else row.u[k] = patch[k]; });
-    await window.EduDataCache.setAsync(USERS_CACHE_KEY, c, USERS_CACHE_TTL_MS);
-    await patchUsersDelta(uid, patch);
-    return loadUsers(false);
-  }
   const sameList = (a, b) => JSON.stringify([...(a || [])].sort()) === JSON.stringify([...(b || [])].sort());
   const serverNow = () => firebase.firestore.FieldValue.serverTimestamp();
 
@@ -308,19 +295,9 @@ window.EDU_ALLOWED_ROLES = ['admin'];
     window.EduDataCache.setAsync(USERS_CACHE_KEY, { allSchools, allClasses, allTeachingTeachers, users: d.rows }, USERS_CACHE_TTL_MS);
     return d.rows.map(({ id, u }) => ({ doc: { id }, u }));
   }
-  /** Sửa 1 dòng ở máy này → sửa luôn bản đệm bền (khỏi đọc lại cả danh sách). */
-  async function patchUsersDelta(uid, patch) {
-    const C = window.EduDataCache;
-    const e = C ? await C.getAsync(USERS_DELTA_KEY, true) : null;
-    const row = e && Array.isArray(e.users) ? e.users.find((x) => x.id === uid) : null;
-    if (!row) return;
-    Object.keys(patch).forEach((k) => { if (patch[k] === undefined) delete row.u[k]; else row.u[k] = patch[k]; });
-    await C.setAsync(USERS_DELTA_KEY, e, USERS_KEEP_MS, true);
-  }
-
   /** @param {boolean} [forceRefresh] Bỏ qua cache — dùng sau khi ghi (duyệt/xoá/đổi role...). */
   async function loadUsers(forceRefresh) {
-    const tbody = document.getElementById('userRows');
+    const gen = ++loadGen;
 
     // Cache hit: dựng lại đúng hình dạng { doc: {id}, u } mà toàn bộ code
     // render + gắn sự kiện bên dưới đang dùng (KHÔNG viết lại code đó —
@@ -353,7 +330,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
       ]);
       if (!lookupsFresh) { lookupsLoadedAt = Date.now(); saveLookupsCache(); }
       if (!list.length) {
-        tbody.innerHTML = '<tr><td colspan="8">Chưa có tài khoản nào.</td></tr>';
+        if (gen === loadGen) { USERS = []; syncedAt = Date.now(); renderAll(); }
         return;
       }
 
@@ -417,254 +394,561 @@ window.EDU_ALLOWED_ROLES = ['admin'];
       }
     }
 
-    tbody.innerHTML = users.map(({ doc, u }) => {
-      const pending = u.role === 'teacher' && u.approved === false;
-      const userSchools = Array.isArray(u.schools) ? u.schools : [];
-      // Tài khoản đăng ký từ login.html chọn "Điều phối đào tạo"/"Điều
-      // phối giáo viên" đều tạm lưu role:'teacher' (bắt buộc theo
-      // firestore.rules — xem js/auth.js registerUser()) kèm field
-      // requestedRole ghi ĐÚNG vai trò họ thật sự muốn — hiện rõ ở đây để
-      // admin biết cần gán role gì khi duyệt, không phải đoán/hỏi lại.
-      const wantsOtherRole = pending && u.requestedRole && u.requestedRole !== 'teacher';
-      const pendingLabel = wantsOtherRole
-        ? `Chờ duyệt · muốn làm ${esc(EduAuth.ROLE_LABEL[u.requestedRole] || u.requestedRole)}`
-        : 'Chờ duyệt';
-      return `
-      <tr data-uid="${doc.id}">
-        <td>${esc(u.name || '(chưa đặt tên)')}</td>
-        <td>${esc(u.email || '')}</td>
-        <td><span class="badge ${esc(u.role)}">${esc(EduAuth.ROLE_LABEL[u.role] || u.role)}</span>${pending ? `<span class="badge pending">${pendingLabel}</span>` : ''}</td>
-        <td>
-          <select class="roleSelect">
-            <option value="student" ${u.role === 'student' ? 'selected' : ''}>Học sinh</option>
-            <option value="teacher" ${u.role === 'teacher' ? 'selected' : ''}>Giáo viên</option>
-            <option value="coordinator" ${u.role === 'coordinator' ? 'selected' : ''}>Điều phối đào tạo</option>
-            <option value="school_admin" ${u.role === 'school_admin' ? 'selected' : ''}>Quản trị trường</option>
-            <option value="teaching_coordinator" ${u.role === 'teaching_coordinator' ? 'selected' : ''}>Điều phối giáo viên</option>
-            <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Quản trị viên</option>
-          </select>
-        </td>
-        <td class="schoolsCell" ${['teacher', 'coordinator', 'school_admin'].includes(u.role) ? '' : 'hidden'}>
-          ${allSchools.length ? `
-            <select class="schoolsSelect" multiple size="${Math.min(4, Math.max(2, allSchools.length))}" title="Giữ Ctrl (hoặc Cmd) để chọn nhiều trường${u.role === 'teacher' ? ' — trang đã TỰ ĐỘNG đồng bộ theo lớp đang dạy thật mỗi lần tải trang, chỉ sửa tay ở đây nếu cần thêm ngoại lệ' : ''}">
-              ${allSchools.map(s => `<option value="${esc(s)}" ${userSchools.includes(s) ? 'selected' : ''}>${esc(s)}</option>`).join('')}
-            </select>
-            <button type="button" class="saveSchoolsBtn"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Lưu trường</button>
-            ${u.role === 'teacher' ? `<button type="button" class="syncSchoolsBtn" title="Đặt lại đúng theo trường giáo viên này ĐANG DẠY THẬT (students_roster), bỏ mọi chỉnh tay"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Đồng bộ theo lớp đang dạy</button>` : ''}
-          ` : `<span class="hint">Chưa có trường nào trong danh sách học sinh (roster-manager.html)</span>`}
-          ${userSchools.length ? `<div class="schoolsCurrent">${u.role === 'coordinator' ? 'Đang hỗ trợ' : u.role === 'school_admin' ? 'Quản trị' : 'Đang xem'}: ${userSchools.map(esc).join(', ')}</div>` : (u.role === 'coordinator' || u.role === 'school_admin' ? `<div class="schoolsCurrent hint"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Chưa gán trường nào — tài khoản này CHƯA xem/sửa được trường nào cả</div>` : '')}
-        </td>
-        <td class="classesCell" ${u.role === 'teacher' ? '' : 'hidden'}>
-          ${allClasses.length ? `
-            <select class="classesSelect" multiple size="${Math.min(6, Math.max(3, allClasses.length))}" title="Giữ Ctrl (hoặc Cmd) để chọn nhiều lớp — gán TRỰC TIẾP lớp giáo viên này dạy, không cần đợi khớp tên lúc Nạp Excel">
-              ${classOptionsHtml(doc.id)}
-            </select>
-            <button type="button" class="saveClassesBtn"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Lưu lớp</button>
-          ` : `<span class="hint">Chưa có lớp nào (roster-manager.html)</span>`}
-          ${(() => {
-            const mine = allClasses.filter(c => c.teacherId === doc.id);
-            return mine.length
-              ? `<div class="classesCurrent">Đang dạy: ${mine.map(c => esc(`${c.school || '?'} · ${c.name || '?'}`)).join(', ')}</div>`
-              : `<div class="classesCurrent hint">Chưa gán lớp nào</div>`;
-          })()}
-        </td>
-        <td class="teacherCodeCell" ${u.role === 'teacher' ? '' : 'hidden'}>
-          ${allTeachingTeachers.length ? `
-            <select class="teacherCodeSelect">
-              <option value="">-- Chưa liên kết --</option>
-              ${allTeachingTeachers.map(tc => `<option value="${esc(tc.code)}" ${u.teacherCode === tc.code ? 'selected' : ''}>${esc(tc.code)} — ${esc(tc.name)}</option>`).join('')}
-            </select>
-            <button type="button" class="saveTeacherCodeBtn"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Lưu</button>
-          ` : `<span class="hint">Chưa có giáo viên nào trong Lịch giảng dạy (teaching-schedule.html)</span>`}
-        </td>
-        <td>${pending ? `<button class="approveBtn" data-requested-role="${esc(u.requestedRole || '')}"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Duyệt${wantsOtherRole ? ' làm ' + esc(EduAuth.ROLE_LABEL[u.requestedRole] || '') : ' ngay'}</button>` : '—'}</td>
-      </tr>`;
-    }).join('');
-
-    tbody.querySelectorAll('.roleSelect').forEach(sel => {
-      sel.addEventListener('change', async (e) => {
-        const uid = e.target.closest('tr').dataset.uid;
-        const newRole = e.target.value;
-        try {
-          const before = users.find(x => x.doc.id === uid);
-          await window.EduRepositories.user.setRole(uid, newRole);
-          logUserChange('set_role', uid, { from: before ? before.u.role : '', to: newRole });
-          toast('Đã cập nhật vai trò');
-          refreshUserRow(uid, { role: newRole, approved: true });
-        } catch (err) {
-          toast('Lỗi: ' + err.message);
-        }
-      });
-    });
-
-    tbody.querySelectorAll('.approveBtn').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        const uid = e.target.closest('tr').dataset.uid;
-        // Đăng ký muốn làm "Điều phối đào tạo"/"Điều phối giáo viên" (2 role
-        // KHÔNG tự đăng ký thẳng được, xem js/auth.js registerUser()) —
-        // duyệt là gán LUÔN đúng role đó thay vì để mãi ở "teacher", đỡ
-        // admin phải vào lại đổi role thủ công ở cột bên cạnh thêm 1 bước.
-        const requestedRole = e.target.dataset.requestedRole;
-        const patch = { approved: true };
-        if (requestedRole === 'coordinator' || requestedRole === 'teaching_coordinator') {
-          patch.role = requestedRole;
-        }
-        try {
-          await window.EduRepositories.user.upsert(uid, patch);
-          logUserChange('approve', uid, patch.role ? { role: patch.role } : {});
-          toast('Đã duyệt tài khoản' + (patch.role ? ` làm ${EduAuth.ROLE_LABEL[patch.role]}` : ''));
-          refreshUserRow(uid, patch);
-        } catch (err) {
-          toast('Lỗi: ' + err.message);
-        }
-      });
-    });
-
-    tbody.querySelectorAll('.saveSchoolsBtn').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        const tr = e.target.closest('tr');
-        const uid = tr.dataset.uid;
-        const sel = tr.querySelector('.schoolsSelect');
-        const chosen = Array.from(sel.selectedOptions).map(o => o.value);
-        if (!chosen.length) {
-          toast('Chọn ít nhất 1 trường trước khi lưu (nếu muốn giáo viên không xem trường nào, đổi vai trò tạm thời)');
-          return;
-        }
-        const cur = users.find(x => x.doc.id === uid);
-        if (cur && sameList(cur.u.schools, chosen)) { toast('Không có thay đổi để lưu.'); return; }
-        try {
-          await window.EduRepositories.user.setSchools(uid, chosen);
-          logUserChange('set_schools', uid, { schools: chosen });
-          toast(`Đã gán ${chosen.length} trường cho giáo viên`);
-          refreshUserRow(uid, { schools: chosen });
-        } catch (err) {
-          toast('Lỗi: ' + err.message);
-        }
-      });
-    });
-
-    tbody.querySelectorAll('.syncSchoolsBtn').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        const uid = e.target.closest('tr').dataset.uid;
-        btn.disabled = true;
-        try { await ensureRoster(); } finally { btn.disabled = false; }
-        const actual = actualSchoolsOf(uid);
-        if (!actual.length) {
-          toast('Giáo viên này chưa có lớp nào đang học trong danh sách học sinh (roster-manager.html) — không có gì để đồng bộ.');
-          return;
-        }
-        const cur = users.find(x => x.doc.id === uid);
-        if (cur && sameList(cur.u.schools, actual)) { toast('Trường được xem đã đúng với lớp đang dạy — không cần đồng bộ.'); return; }
-        try {
-          await window.EduRepositories.user.setSchools(uid, actual);
-          logUserChange('sync_schools', uid, { schools: actual });
-          toast(`Đã đặt lại đúng ${actual.length} trường đang dạy thật`);
-          refreshUserRow(uid, { schools: actual });
-        } catch (err) {
-          toast('Lỗi: ' + err.message);
-        }
-      });
-    });
-
-    tbody.querySelectorAll('.saveClassesBtn').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        const tr = e.target.closest('tr');
-        const uid = tr.dataset.uid;
-        const row = users.find(x => x.doc.id === uid);
-        const teacherName = row ? (row.u.name || row.u.email || '') : '';
-        const sel = tr.querySelector('.classesSelect');
-        const chosenIds = new Set(Array.from(sel.selectedOptions).map(o => o.value));
-        const toAssign = allClasses.filter(c => chosenIds.has(c.id) && c.teacherId !== uid);
-        const toUnassign = allClasses.filter(c => c.teacherId === uid && !chosenIds.has(c.id));
-        if (!toAssign.length && !toUnassign.length) {
-          toast('Không có thay đổi để lưu.');
-          return;
-        }
-        // Gán chồng: 1 lớp không nên có 2 GV phụ trách — cảnh báo (không
-        // chặn cứng, phòng trường hợp cố ý cho GV khác xem tạm) để admin
-        // biết mình vừa "cướp" lớp khỏi giáo viên đang đứng lớp đó.
-        const stolen = toAssign.filter(c => c.teacherId);
-        if (stolen.length && !confirm(
-          `${stolen.length} lớp bạn vừa chọn đang có giáo viên khác phụ trách:\n` +
-          stolen.map(c => `- ${c.school || '?'} · ${c.name || '?'} (đang: ${c.teacherName || c.teacherId})`).join('\n') +
-          `\n\nTiếp tục sẽ CHUYỂN các lớp này sang "${teacherName}". Tiếp tục?`
-        )) return;
-
-        btn.disabled = true;
-        const oldLabel = btn.textContent;
-        btn.innerHTML = '<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Đang lưu...';
-        try {
-          let batch = EduFirebase.db.batch();
-          let ops = 0;
-          const flushIfNeeded = async () => {
-            if (ops >= 400) { await batch.commit(); batch = EduFirebase.db.batch(); ops = 0; }
-          };
-          const applyToClass = async (classId, teacherIdVal, teacherNameVal) => {
-            batch.set(EduFirebase.db.collection('classes').doc(classId), { teacherId: teacherIdVal, teacherName: teacherNameVal }, { merge: true });
-            ops++; await flushIfNeeded();
-            // Lan xuống từng học sinh ĐANG HỌC của lớp — students_roster.teacherId
-            // là bản sao (denormalize) dùng để lọc trực tiếp ở
-            // js/teacher/data-loader.js, không tự suy từ "classes" lúc đọc.
-            const studentsSnap = await EduFirebase.db.collection('students_roster')
-              .where('classId', '==', classId).where('status', '==', 'active').limit(2000).get();
-            for (const d of studentsSnap.docs) {
-              const cur = d.data();
-              if ((cur.teacherId || '') === teacherIdVal && (cur.teacherName || '') === teacherNameVal) continue; // không đổi: khỏi ghi, khỏi đẩy updatedAt cho mọi máy
-              batch.set(d.ref, window.EduRosterCache.stampRoster({ teacherId: teacherIdVal, teacherName: teacherNameVal }), { merge: true });
-              ops++; await flushIfNeeded();
-            }
-          };
-          for (const c of toAssign) await applyToClass(c.id, uid, teacherName);
-          for (const c of toUnassign) await applyToClass(c.id, '', '');
-          if (ops > 0) await batch.commit();
-          if (window.EduRosterCache) window.EduRosterCache.invalidate(); // vừa đổi teacherId của học sinh
-          new window.EduBaseRepository('classes').invalidate(); // ghi thẳng collection classes → bỏ bản đệm lớp dùng chung
-
-          // Cập nhật ngay "Trường được xem" theo đúng lớp vừa gán, không cần
-          // đợi vòng tự sửa của lần tải trang sau (xem loadUsers()).
-          allClasses = allClasses.map(c => {
-            if (toAssign.some(x => x.id === c.id)) return Object.assign({}, c, { teacherId: uid, teacherName });
-            if (toUnassign.some(x => x.id === c.id)) return Object.assign({}, c, { teacherId: '', teacherName: '' });
-            return c;
-          });
-          const newSchools = [...new Set(allClasses.filter(c => c.teacherId === uid).map(c => c.school).filter(Boolean))]
-            .sort((a, b) => a.localeCompare(b, 'vi'));
-          await window.EduRepositories.user.setSchools(uid, newSchools);
-          logUserChange('set_classes', uid, { assigned: toAssign.length, unassigned: toUnassign.length, schools: newSchools });
-
-          toast(`Đã cập nhật lớp đang dạy (${toAssign.length} gán thêm, ${toUnassign.length} bỏ gán)`);
-          invalidateLookups();
-          loadUsers(true);
-        } catch (err) {
-          toast('Lỗi: ' + err.message);
-        } finally {
-          btn.disabled = false;
-          btn.textContent = oldLabel;
-        }
-      });
-    });
-
-    tbody.querySelectorAll('.saveTeacherCodeBtn').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        const tr = e.target.closest('tr');
-        const uid = tr.dataset.uid;
-        const sel = tr.querySelector('.teacherCodeSelect');
-        const code = sel.value;
-        const cur = users.find(x => x.doc.id === uid);
-        if (cur && (cur.u.teacherCode || '') === code) { toast('Không có thay đổi để lưu.'); return; }
-        try {
-          await window.EduRepositories.user.setTeacherCode(uid, code);
-          logUserChange('set_teacher_code', uid, { teacherCode: code });
-          // Map Mã NV → uid của Lịch giảng dạy (UserRepository.teacherCodeToUid, giữ 7 ngày) tự bỏ trên máy này vì
-          // setTeacherCode ghi qua repository (đổi phiên bản collection users).
-          toast(code ? 'Đã liên kết Mã NV cho giáo viên' : 'Đã bỏ liên kết Mã NV');
-          refreshUserRow(uid, { teacherCode: code || undefined });
-        } catch (err) {
-          toast('Lỗi: ' + err.message);
-        }
-      });
-    });
+    if (gen !== loadGen) return; // một lần tải mới hơn đã chạy xong trước — không vẽ đè bằng dữ liệu cũ
+    USERS = users;
+    syncedAt = Date.now();
+    renderAll();
   }
+
+  // ══ Bảng tài khoản gọn + bảng sửa từng người (10/11/2026) ══
+  // Trước: mỗi dòng dựng sẵn ô chọn nhiều của TẤT CẢ trường + lớp (121 dòng → ~31.000 <option>, ~39.000 phần tử),
+  // phải giữ Ctrl để chọn — bấm nhầm không giữ Ctrl là mất hết lựa chọn rồi lỡ tay Lưu. Đổi vai trò ghi NGAY khi
+  // chọn. Mỗi lần lưu lớp còn đọc lại cả users + classes + teaching_teachers (~400 lượt) và vẽ lại cả bảng.
+  // Nay: dòng chỉ hiện tóm tắt; bấm "Sửa" mở bảng sửa 1 người (dựng danh sách khi mở), gom mọi thay đổi vào
+  // 1 lần Lưu; trước khi ghi lớp đọc lại đúng các lớp sắp đổi (vài lượt) để không ghi đè phân công vừa đổi ở máy
+  // khác; lưu xong sửa thẳng dữ liệu trong bộ nhớ + bản đệm, 0 lượt đọc lại.
+  let USERS = [];   // [{ doc: { id }, u }] — dữ liệu của tab, bản đệm ghi lại từ đây
+  let loadGen = 0;
+  let syncedAt = 0;
+  const PAGE = 60;
+  let shown = PAGE;
+  const F = { q: '', tab: 'all' };
+  const ROLES = [['student', 'Học sinh'], ['teacher', 'Giáo viên'], ['coordinator', 'Điều phối đào tạo'], ['school_admin', 'Quản trị trường'], ['teaching_coordinator', 'Điều phối giáo viên'], ['admin', 'Quản trị viên']];
+  const SCOPED = ['teacher', 'coordinator', 'school_admin'];
+  const vi = (a, b) => String(a || '').localeCompare(String(b || ''), 'vi');
+  const plain = (s) => (window.EduSmartSelect && EduSmartSelect.plain ? EduSmartSelect.plain(s) : String(s || '').toLowerCase());
+  const roleLabel = (r) => (EduAuth.ROLE_LABEL && EduAuth.ROLE_LABEL[r]) || r || '?';
+  const findUser = (uid) => USERS.find((x) => x.doc.id === uid);
+  const isPending = (u) => u.role === 'teacher' && u.approved === false;
+  const schoolsFromClasses = (list) => [...new Set(list.map((c) => c.school).filter(Boolean))].sort(vi);
+
+  let classIdx = { src: null, map: {} };
+  /** Lớp đang gán cho uid — chỉ mục dựng lại khi allClasses được thay (luôn gán mảng mới, không sửa tại chỗ). */
+  function classesOf(uid) {
+    if (classIdx.src !== allClasses) {
+      const map = {};
+      allClasses.forEach((c) => { if (c.teacherId) (map[c.teacherId] = map[c.teacherId] || []).push(c); });
+      classIdx = { src: allClasses, map };
+    }
+    return classIdx.map[uid] || [];
+  }
+
+  /** Việc cần xử lý của 1 tài khoản — lọc "Cần xử lý" + nhãn cảnh báo trên dòng. */
+  function issuesOf({ doc, u }) {
+    const out = [];
+    if (isPending(u)) out.push('Chờ duyệt');
+    const sch = Array.isArray(u.schools) ? u.schools : [];
+    if ((u.role === 'coordinator' || u.role === 'school_admin') && !sch.length) out.push('Chưa gán trường');
+    if (u.role === 'teacher' && !isPending(u)) {
+      const mine = classesOf(doc.id);
+      if (!mine.length && allClasses.length) out.push('Chưa gán lớp');
+      else if (schoolsFromClasses(mine).some((s) => !sch.includes(s))) out.push('Thiếu trường của lớp đang dạy');
+      if (!u.teacherCode && allTeachingTeachers.length) out.push('Chưa liên kết Mã NV');
+    }
+    return out;
+  }
+
+  const TABS = [
+    ['all', 'Tất cả', () => true],
+    ['issues', 'Cần xử lý', (r) => issuesOf(r).length > 0],
+    ['pending', 'Chờ duyệt', (r) => isPending(r.u)],
+    ['teacher', 'Giáo viên', (r) => r.u.role === 'teacher'],
+    ['staff', 'Điều phối · QT trường', (r) => ['coordinator', 'teaching_coordinator', 'school_admin'].includes(r.u.role)],
+    ['admin', 'Quản trị viên', (r) => r.u.role === 'admin'],
+    ['student', 'Học sinh', (r) => r.u.role === 'student'],
+  ];
+
+  function haystack({ doc, u }) {
+    return plain([u.name, u.email, u.teacherCode, roleLabel(u.role), ...(u.schools || []), ...classesOf(doc.id).map((c) => c.name)].join(' '));
+  }
+  function visibleRows() {
+    const tab = TABS.find((t) => t[0] === F.tab) || TABS[0];
+    const words = plain(F.q).trim().split(/\s+/).filter(Boolean);
+    return USERS.filter((r) => tab[2](r) && (!words.length || ((h) => words.every((w) => h.includes(w)))(haystack(r))));
+  }
+
+  function chips(list, max, cls) {
+    if (!list.length) return '';
+    const head = list.slice(0, max).map((x) => `<span class="au-chip ${cls || ''}" title="${esc(x.title || x.text)}">${esc(x.text)}</span>`).join('');
+    const rest = list.slice(max);
+    return head + (rest.length ? `<span class="au-chip au-more" title="${esc(rest.map((x) => x.title || x.text).join(', '))}">+${rest.length}</span>` : '');
+  }
+  const none = (t) => `<span class="au-none">${t}</span>`;
+  const dash = '<span class="au-dash">—</span>';
+
+  function rowHtml(r) {
+    const { doc, u } = r;
+    const pending = isPending(u);
+    const wants = pending && u.requestedRole && u.requestedRole !== 'teacher';
+    const sch = Array.isArray(u.schools) ? u.schools : [];
+    const mine = classesOf(doc.id).slice().sort((a, b) => vi(a.school, b.school) || vi(a.name, b.name));
+    const iss = issuesOf(r).filter((x) => x !== 'Chờ duyệt');
+    const teacher = u.role === 'teacher';
+    return `<tr data-uid="${esc(doc.id)}"${iss.length ? ' class="has-issue"' : ''}>
+      <td class="au-who" data-label="Tài khoản"><b>${esc(u.name || '(chưa đặt tên)')}</b><small>${esc(u.email || '')}</small></td>
+      <td data-label="Vai trò"><span class="badge ${esc(u.role)}">${esc(roleLabel(u.role))}</span>${pending ? `<span class="badge pending">${wants ? 'Chờ duyệt · muốn làm ' + esc(roleLabel(u.requestedRole)) : 'Chờ duyệt'}</span>` : ''}</td>
+      <td data-label="Trường được xem">${SCOPED.includes(u.role) ? (chips(sch.map((s) => ({ text: s })), 2) || none('Chưa gán')) : dash}</td>
+      <td data-label="Lớp đang dạy">${teacher ? (chips(mine.map((c) => ({ text: c.name || '?', title: `${c.school || '?'} · ${c.name || '?'}` })), 4, 'is-cls') || none('Chưa gán')) : dash}</td>
+      <td data-label="Mã NV">${teacher ? (u.teacherCode ? `<code class="au-code">${esc(u.teacherCode)}</code>` : none('Chưa liên kết')) : dash}</td>
+      <td class="au-act">${iss.length ? `<span class="au-warn" title="${esc(iss.join(' · '))}"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>${esc(iss[0])}${iss.length > 1 ? ` <b>+${iss.length - 1}</b>` : ''}</span>` : ''}${pending ? `<button type="button" class="approveBtn" data-requested-role="${esc(u.requestedRole || '')}"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Duyệt${wants ? ' làm ' + esc(roleLabel(u.requestedRole)) : ''}</button>` : ''}<button type="button" class="au-edit" aria-label="Sửa ${esc(u.name || u.email || '')}"><i class="fa-solid fa-pen" aria-hidden="true"></i> Sửa</button></td>
+    </tr>`;
+  }
+
+  function renderTabs() {
+    const box = document.getElementById('auTabs');
+    if (!box) return;
+    box.innerHTML = TABS.map(([k, label, fn]) => {
+      const n = USERS.filter(fn).length;
+      if (!n && k !== 'all' && k !== F.tab) return '';
+      return `<button type="button" role="tab" data-tab="${k}" aria-selected="${F.tab === k}"${k === 'issues' && n ? ' class="is-alert"' : ''}>${label}<span>${n}</span></button>`;
+    }).join('');
+  }
+  function renderAll() {
+    const tbody = document.getElementById('userRows');
+    renderTabs();
+    const rows = visibleRows();
+    const page = rows.slice(0, shown);
+    tbody.innerHTML = page.length ? page.map(rowHtml).join('')
+      : `<tr><td colspan="6" class="au-empty">${USERS.length ? 'Không có tài khoản nào khớp. Thử bỏ bớt chữ tìm hoặc chọn "Tất cả".' : 'Chưa có tài khoản nào.'}</td></tr>`;
+    if (rows.length > page.length) {
+      tbody.insertAdjacentHTML('beforeend', `<tr class="au-morerow"><td colspan="6"><button type="button" class="au-showmore">Xem thêm ${Math.min(PAGE, rows.length - page.length)} tài khoản · còn ${rows.length - page.length}</button></td></tr>`);
+    }
+    const st = document.getElementById('auStatus');
+    if (st) st.textContent = `${rows.length === USERS.length ? USERS.length : rows.length + '/' + USERS.length} tài khoản` + (syncedAt ? ` · cập nhật ${new Date(syncedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}` : '');
+  }
+
+  // Bản đệm ghi lại TỪ bộ nhớ, tuần tự: bấm lưu nhanh liên tiếp 2 người không còn cảnh 2 lần "đọc–sửa–ghi" chen nhau
+  // làm mất lần sửa trước trong bản đệm (rồi trang hiện dữ liệu cũ, Admin tưởng chưa lưu và lưu đè lần nữa).
+  let persistQ = Promise.resolve();
+  function persist(uids) {
+    persistQ = persistQ.then(async () => {
+      const C = window.EduDataCache;
+      if (!C) return;
+      const rows = USERS.map(({ doc, u }) => ({ id: doc.id, u }));
+      await C.setAsync(USERS_CACHE_KEY, { allSchools, allClasses, allTeachingTeachers, users: rows }, USERS_CACHE_TTL_MS);
+      if (!uids.length) return;
+      const e = await C.getAsync(USERS_DELTA_KEY, true);
+      if (!e || !Array.isArray(e.users)) return;
+      const byId = new Map(rows.map((x) => [x.id, x]));
+      e.users = e.users.map((x) => (uids.includes(x.id) && byId.get(x.id)) || x);
+      await C.setAsync(USERS_DELTA_KEY, e, USERS_KEEP_MS, true);
+    }).catch((err) => console.warn('[EduAdminUsers] Không lưu được bản đệm:', err.message));
+    return persistQ;
+  }
+  /** patch[k] === undefined = field đã xoá (FieldValue.delete()). */
+  function applyLocal(uid, patch) {
+    const r = findUser(uid);
+    if (!r) return;
+    Object.keys(patch).forEach((k) => { if (patch[k] === undefined) delete r.u[k]; else r.u[k] = patch[k]; });
+  }
+
+  /** "Cập nhật": chỉ hỏi tài khoản mới tạo/vừa sửa ở máy khác (2 lượt đọc), không đọc lại cả danh sách. */
+  async function softReload() {
+    await persistQ;
+    const C = window.EduDataCache;
+    if (C) {
+      C.clear(USERS_CACHE_KEY);
+      const e = await C.getAsync(USERS_DELTA_KEY, true);
+      if (e) { e.checkedAt = 0; await C.setAsync(USERS_DELTA_KEY, e, USERS_KEEP_MS, true); }
+    }
+    return loadUsers(false);
+  }
+
+  async function approve(uid, btn) {
+    if (!findUser(uid) || btn.disabled) return;
+    const requestedRole = btn.dataset.requestedRole;
+    const patch = { approved: true };
+    // Đăng ký muốn làm Điều phối (2 vai trò không tự đăng ký thẳng được, xem js/auth.js registerUser()) → duyệt là gán luôn.
+    if (requestedRole === 'coordinator' || requestedRole === 'teaching_coordinator') patch.role = requestedRole;
+    btn.disabled = true;
+    try {
+      await window.EduRepositories.user.upsert(uid, patch);
+      logUserChange('approve', uid, patch.role ? { role: patch.role } : {});
+      toast('Đã duyệt tài khoản' + (patch.role ? ` làm ${roleLabel(patch.role)}` : ''));
+      applyLocal(uid, patch);
+      persist([uid]);
+      renderAll();
+    } catch (err) {
+      btn.disabled = false;
+      toast('Lỗi: ' + err.message);
+    }
+  }
+
+  // ── Bảng sửa 1 tài khoản ──
+  const ED = { uid: null, busy: false, base: null, role: '', schools: new Set(), classes: new Set(), code: '', touched: false, qS: '', qC: '', onlySel: false, opener: null };
+  const $d = (sel) => document.querySelector('#auDrawer ' + sel);
+
+  function editorHtml({ u }) {
+    const pending = isPending(u);
+    const wants = pending && u.requestedRole && u.requestedRole !== 'teacher';
+    const codeOwner = {};
+    USERS.forEach(({ doc, u: x }) => { if (x.teacherCode && doc.id !== ED.uid) codeOwner[x.teacherCode] = x.name || x.email || doc.id; });
+    return `
+      <header class="au-dh">
+        <div><h2 id="auDrawerTitle">${esc(u.name || '(chưa đặt tên)')}</h2><p>${esc(u.email || '')}</p></div>
+        <button type="button" class="au-x" aria-label="Đóng"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+      </header>
+      <div class="au-db">
+        ${pending ? `<p class="au-note"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Tài khoản đang chờ duyệt${wants ? ` · đăng ký làm <b>${esc(roleLabel(u.requestedRole))}</b>` : ''}. Đổi vai trò rồi Lưu cũng là duyệt.</p>` : ''}
+        <section class="au-sec">
+          <label class="au-lbl" for="auRole">Vai trò</label>
+          <select id="auRole" class="au-role">${ROLES.map(([v, t]) => `<option value="${v}"${u.role === v ? ' selected' : ''}>${t}</option>`).join('')}</select>
+        </section>
+        <section class="au-sec" data-sec="schools">
+          <div class="au-sh"><span class="au-lbl">Trường được xem</span><span class="au-cnt" id="auSchCnt"></span>
+            <button type="button" class="au-link" id="auFromCls" data-only="teacher" title="Đặt trường đúng theo các lớp đang chọn bên dưới">Theo lớp đang dạy</button></div>
+          <div class="au-picked" id="auSchPicked"></div>
+          ${allSchools.length ? `<input type="search" class="au-q" id="auSchQ" placeholder="Tìm trường để thêm…" autocomplete="off">
+          <div class="au-list" id="auSchList" role="group" aria-label="Danh sách trường"></div>` : '<p class="au-help">Chưa có trường nào trong danh sách học sinh (Quản lý lớp).</p>'}
+        </section>
+        <section class="au-sec" data-sec="classes">
+          <div class="au-sh"><span class="au-lbl">Lớp đang dạy</span><span class="au-cnt" id="auClsCnt"></span>
+            <label class="au-toggle"><input type="checkbox" id="auOnlySel"> Chỉ trường đã chọn</label></div>
+          ${allClasses.length ? `<input type="search" class="au-q" id="auClsQ" placeholder="Tìm lớp hoặc trường…" autocomplete="off">
+          <div class="au-list au-cls" id="auClsList" role="group" aria-label="Danh sách lớp"></div>` : '<p class="au-help">Chưa có lớp nào (Quản lý lớp).</p>'}
+        </section>
+        <section class="au-sec" data-sec="code">
+          <label class="au-lbl" for="auCode">Mã NV liên kết (Lịch giảng dạy)</label>
+          ${allTeachingTeachers.length ? `<select id="auCode" class="au-code-sel"><option value="">Chưa liên kết</option>${allTeachingTeachers.map((tc) => `<option value="${esc(tc.code)}"${u.teacherCode === tc.code ? ' selected' : ''}>${esc(tc.code)} — ${esc(tc.name)}${codeOwner[tc.code] ? ` · đã gán: ${esc(codeOwner[tc.code])}` : ''}</option>`).join('')}</select>`
+            : '<p class="au-help">Chưa có giáo viên nào trong Lịch giảng dạy.</p>'}
+        </section>
+      </div>
+      <footer class="au-df"><span class="au-diff" id="auDiff" aria-live="polite"></span>
+        <button type="button" class="btn btn-ghost au-cancel">Huỷ</button>
+        <button type="button" class="btn btn-primary au-save" disabled>Lưu thay đổi</button></footer>`;
+  }
+
+  function sectionsForRole() {
+    const show = { schools: SCOPED.includes(ED.role), classes: ED.role === 'teacher', code: ED.role === 'teacher' };
+    document.querySelectorAll('#auDrawer [data-sec]').forEach((s) => { s.hidden = !show[s.dataset.sec]; });
+    const b = $d('#auFromCls');
+    if (b) b.hidden = ED.role !== 'teacher';
+  }
+
+  function renderSchools() {
+    const picked = [...ED.schools].sort(vi);
+    $d('#auSchCnt').textContent = picked.length ? `${picked.length} trường` : '';
+    $d('#auSchPicked').innerHTML = picked.length
+      ? picked.map((s) => `<span class="au-chip is-pick">${esc(s)}<button type="button" data-rm="${esc(s)}" aria-label="Bỏ ${esc(s)}"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></span>`).join('')
+      : `<span class="au-none">${ED.role === 'teacher' ? 'Chưa gán — chọn lớp bên dưới, trường tự thêm theo' : 'Chưa gán trường nào — tài khoản này chưa xem được trường nào'}</span>`;
+    const list = $d('#auSchList');
+    if (!list) return;
+    const q = plain(ED.qS).trim();
+    const rows = allSchools.filter((s) => !q || plain(s).includes(q));
+    list.innerHTML = rows.map((s) => `<label class="au-opt"><input type="checkbox" value="${esc(s)}"${ED.schools.has(s) ? ' checked' : ''}><span>${esc(s)}</span></label>`).join('')
+      || '<p class="au-help">Không có trường khớp.</p>';
+  }
+
+  function renderClasses() {
+    const list = $d('#auClsList');
+    if (!list) return;
+    $d('#auClsCnt').textContent = ED.classes.size ? `${ED.classes.size} lớp` : '';
+    const q = plain(ED.qC).trim();
+    const by = {};
+    allClasses.forEach((c) => {
+      const sch = c.school || '(Chưa gán trường)';
+      if (ED.onlySel && !ED.schools.has(sch) && !ED.classes.has(c.id)) return;
+      if (q && !plain(sch + ' ' + (c.name || '')).includes(q)) return;
+      (by[sch] = by[sch] || []).push(c);
+    });
+    const names = Object.keys(by).sort(vi);
+    list.innerHTML = names.map((sch) => {
+      const cls = by[sch].slice().sort((a, b) => vi(a.name, b.name));
+      const n = cls.filter((c) => ED.classes.has(c.id)).length;
+      return `<div class="au-grp"><div class="au-gh"><span>${esc(sch)}</span>${n ? `<b>${n}</b>` : ''}</div><div class="au-grid">${cls.map((c) => {
+        const other = c.teacherId && c.teacherId !== ED.uid;
+        return `<label class="au-opt${other ? ' is-other' : ''}" title="${other ? esc('Đang: ' + (c.teacherName || c.teacherId)) : ''}"><input type="checkbox" value="${esc(c.id)}"${ED.classes.has(c.id) ? ' checked' : ''}><span>${esc(c.name || '(chưa đặt tên)')}${other ? `<em>${esc(c.teacherName || 'GV khác')}</em>` : ''}</span></label>`;
+      }).join('')}</div></div>`;
+    }).join('') || `<p class="au-help">${ED.onlySel ? 'Trường đã chọn chưa có lớp khớp. Bỏ tích "Chỉ trường đã chọn" để xem mọi trường.' : 'Không có lớp khớp.'}</p>`;
+  }
+
+  /** Thay đổi so với lúc mở — chỉ phần áp dụng cho vai trò đang chọn. */
+  function diff() {
+    const b = ED.base;
+    const d = { role: ED.role !== b.role ? ED.role : null, schools: null, add: [], rm: [], code: null };
+    if (SCOPED.includes(ED.role)) {
+      const sch = [...ED.schools].sort(vi);
+      if (!sameList(sch, b.schools)) d.schools = sch;
+    }
+    if (ED.role === 'teacher') {
+      d.add = [...ED.classes].filter((id) => !b.classes.includes(id));
+      d.rm = b.classes.filter((id) => !ED.classes.has(id));
+      if (ED.code !== b.code) d.code = ED.code;
+    }
+    d.any = !!(d.role || d.schools || d.add.length || d.rm.length || d.code !== null);
+    return d;
+  }
+  function updateDiff() {
+    const d = diff();
+    const parts = [];
+    if (d.role) parts.push(`vai trò → ${roleLabel(d.role)}`);
+    if (d.add.length) parts.push(`+${d.add.length} lớp`);
+    if (d.rm.length) parts.push(`−${d.rm.length} lớp`);
+    if (d.schools) parts.push(`${d.schools.length} trường`);
+    if (d.code !== null) parts.push(d.code ? `Mã NV ${d.code}` : 'bỏ Mã NV');
+    $d('#auDiff').textContent = parts.length ? 'Sẽ lưu: ' + parts.join(' · ') : 'Chưa có thay đổi';
+    $d('.au-save').disabled = !d.any || ED.busy;
+  }
+  /** Chưa sửa tay ô trường → trường đi theo lớp đang chọn (giống "Lưu lớp" cũ: trường = trường của các lớp). */
+  function followClasses(force) {
+    if (ED.touched && !force) return;
+    const derived = schoolsFromClasses(allClasses.filter((c) => ED.classes.has(c.id)));
+    if (derived.length || force) ED.schools = new Set(derived);
+    if (force) ED.touched = false;
+  }
+
+  function openEditor(uid, opener) {
+    if (ED.busy) return;
+    const r = findUser(uid);
+    if (!r) return;
+    const u = r.u;
+    ED.uid = uid;
+    ED.opener = opener || null;
+    ED.base = { role: u.role, schools: [...(Array.isArray(u.schools) ? u.schools : [])].sort(vi), classes: classesOf(uid).map((c) => c.id).sort(), code: u.teacherCode || '' };
+    ED.role = u.role;
+    ED.schools = new Set(ED.base.schools);
+    ED.classes = new Set(ED.base.classes);
+    ED.code = ED.base.code;
+    ED.touched = false;
+    ED.qS = ''; ED.qC = '';
+    ED.onlySel = ED.schools.size > 0;
+    const dr = document.getElementById('auDrawer');
+    dr.innerHTML = editorHtml(r);
+    const only = $d('#auOnlySel');
+    if (only) only.checked = ED.onlySel;
+    sectionsForRole();
+    renderSchools();
+    renderClasses();
+    updateDiff();
+    const code = $d('#auCode');
+    if (code && window.EduSmartSelect && EduSmartSelect.enhance) EduSmartSelect.enhance(code, { title: 'Mã NV', unit: 'giáo viên', searchMin: 7 });
+    document.getElementById('auScrim').hidden = false;
+    dr.hidden = false;
+    document.body.classList.add('au-locked');
+    requestAnimationFrame(() => dr.classList.add('is-open'));
+    $d('#auRole').focus();
+  }
+  function closeEditor(force) {
+    const dr = document.getElementById('auDrawer');
+    if (dr.hidden || ED.busy) return;
+    if (!force && diff().any && !confirm('Bỏ các thay đổi chưa lưu của tài khoản này?')) return;
+    dr.classList.remove('is-open');
+    dr.hidden = true;
+    dr.innerHTML = '';
+    document.getElementById('auScrim').hidden = true;
+    document.body.classList.remove('au-locked');
+    const back = ED.opener && document.contains(ED.opener) ? ED.opener : document.querySelector(`#userRows tr[data-uid="${CSS.escape(ED.uid || '')}"] .au-edit`);
+    ED.uid = null;
+    if (back) back.focus();
+  }
+  function setBusy(on) {
+    ED.busy = on;
+    const btn = $d('.au-save');
+    if (!btn) return;
+    btn.innerHTML = on ? '<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Đang lưu…' : 'Lưu thay đổi';
+    document.querySelectorAll('#auDrawer input, #auDrawer select, #auDrawer .au-cancel, #auDrawer .au-x').forEach((el) => { el.disabled = on; });
+    if (!on) updateDiff(); else btn.disabled = true;
+  }
+
+  /** Ghi lớp + lan xuống học sinh đang học (students_roster.teacherId là bản sao để lọc ở js/teacher/data-loader.js). */
+  async function writeClasses(uid, teacherName, addCls, rmCls) {
+    let batch = EduFirebase.db.batch();
+    let ops = 0;
+    const flush = async () => { if (ops >= 400) { await batch.commit(); batch = EduFirebase.db.batch(); ops = 0; } };
+    const apply = async (classId, tid, tname) => {
+      batch.set(new window.EduBaseRepository('classes').col().doc(classId), { teacherId: tid, teacherName: tname }, { merge: true });
+      ops++; await flush();
+      const snap = await EduFirebase.db.collection('students_roster')
+        .where('classId', '==', classId).where('status', '==', 'active').limit(2000).get();
+      for (const d of snap.docs) {
+        const cur = d.data();
+        if ((cur.teacherId || '') === tid && (cur.teacherName || '') === tname) continue; // không đổi: khỏi ghi, khỏi đẩy updatedAt cho mọi máy
+        batch.set(d.ref, window.EduRosterCache.stampRoster({ teacherId: tid, teacherName: tname }), { merge: true });
+        ops++; await flush();
+      }
+    };
+    for (const c of addCls) await apply(c.id, uid, teacherName);
+    for (const c of rmCls) await apply(c.id, '', '');
+    if (ops > 0) await batch.commit();
+  }
+
+  async function saveEditor() {
+    if (ED.busy || !ED.uid) return;
+    const uid = ED.uid;
+    const r = findUser(uid);
+    if (!r) return;
+    const d = diff();
+    if (!d.any) return;
+    const teacherName = r.u.name || r.u.email || '';
+    if (d.role && (d.role === 'admin' || ED.base.role === 'admin') && !confirm(d.role === 'admin'
+      ? `Cấp quyền Quản trị viên (toàn quyền hệ thống) cho "${teacherName}"?`
+      : `Bỏ quyền Quản trị viên của "${teacherName}"?`)) return;
+    if (d.schools && !d.schools.length && !confirm('Không gán trường nào → tài khoản này sẽ không xem được dữ liệu trường nào. Vẫn lưu?')) return;
+    const byId = new Map(allClasses.map((c) => [c.id, c]));
+    const addCls = d.add.map((id) => byId.get(id)).filter(Boolean);
+    const rmCls = d.rm.map((id) => byId.get(id)).filter(Boolean);
+    const stolen = addCls.filter((c) => c.teacherId && c.teacherId !== uid);
+    if (stolen.length && !confirm(`${stolen.length} lớp đang có giáo viên khác phụ trách:\n` +
+      stolen.map((c) => `- ${c.school || '?'} · ${c.name || '?'} (đang: ${c.teacherName || c.teacherId})`).join('\n') +
+      `\n\nLưu sẽ CHUYỂN các lớp này sang "${teacherName}". Tiếp tục?`)) return;
+
+    setBusy(true);
+    let classesWritten = false;
+    try {
+      const touched = [...addCls, ...rmCls];
+      if (touched.length) {
+        // Đọc lại đúng các lớp sắp đổi (vài lượt): danh sách lớp trên trang có thể cũ tới 12 giờ — máy khác vừa chuyển
+        // lớp đi thì không ghi đè (trước đây "bỏ gán" theo dữ liệu cũ xoá mất giáo viên mới của lớp).
+        const classRepo = new window.EduBaseRepository('classes');
+        const fresh = await Promise.all(touched.map((c) => classRepo.getById(c.id)));
+        const moved = [];
+        const serverOf = {};
+        fresh.forEach((s, i) => {
+          const c = touched[i];
+          serverOf[c.id] = s;
+          if (!s || (s.teacherId || '') !== (c.teacherId || '')) moved.push(c);
+        });
+        if (moved.length) {
+          allClasses = allClasses.filter((c) => serverOf[c.id] !== null)
+            .map((c) => (serverOf[c.id] ? Object.assign({}, c, { teacherId: serverOf[c.id].teacherId || '', teacherName: serverOf[c.id].teacherName || '' }) : c));
+          ED.base.classes = classesOf(uid).map((c) => c.id).sort();
+          ED.classes = new Set([...ED.classes].filter((id) => allClasses.some((c) => c.id === id)));
+          new window.EduBaseRepository('classes').invalidate();
+          saveLookupsCache();
+          persist([]);
+          renderClasses();
+          renderAll();
+          toast(`${moved.map((c) => c.name || c.id).join(', ')} vừa được đổi ở máy khác — đã cập nhật danh sách, xem lại rồi bấm Lưu lần nữa`);
+          return;
+        }
+        await writeClasses(uid, teacherName, addCls, rmCls);
+        classesWritten = true;
+        const add = new Set(addCls.map((c) => c.id)), rm = new Set(rmCls.map((c) => c.id));
+        allClasses = allClasses.map((c) => (add.has(c.id) ? Object.assign({}, c, { teacherId: uid, teacherName })
+          : rm.has(c.id) ? Object.assign({}, c, { teacherId: '', teacherName: '' }) : c));
+        if (window.EduRosterCache) window.EduRosterCache.invalidate(); // vừa đổi teacherId của học sinh
+        new window.EduBaseRepository('classes').invalidate();          // bản đệm lớp dùng chung với Quản lý lớp/Dashboard
+      }
+
+      // Hồ sơ tài khoản: gộp vai trò + trường + Mã NV vào 1 lệnh ghi (trước: mỗi nút Lưu 1 lệnh, lỗi giữa chừng là lệch nửa vời).
+      const patch = {}, local = {};
+      if (d.role) Object.assign(patch, { role: d.role, approved: true });
+      if (d.schools) Object.assign(patch, window.EduRepositories.UserRepository.schoolsPatch(d.schools));
+      if (d.code !== null) { patch.teacherCode = d.code || firebase.firestore.FieldValue.delete(); local.teacherCode = d.code || undefined; }
+      if (Object.keys(patch).length) {
+        await window.EduRepositories.user.upsert(uid, patch);
+        applyLocal(uid, Object.assign({}, patch, local));
+      }
+
+      // Giáo viên vừa bị chuyển lớp đi: "Trường được xem" theo lớp còn lại (lần tải đủ sau vòng tự sửa cũng làm vậy).
+      const losers = [...new Set(stolen.map((c) => c.teacherId))];
+      const changedUids = [uid];
+      for (const lid of losers) {
+        const L = findUser(lid);
+        if (!L || L.u.role !== 'teacher') continue;
+        const left = schoolsFromClasses(classesOf(lid));
+        if (!left.length || sameList(left, L.u.schools)) continue;
+        try {
+          const p = window.EduRepositories.UserRepository.schoolsPatch(left);
+          await window.EduRepositories.user.upsert(lid, p);
+          applyLocal(lid, p);
+          changedUids.push(lid);
+        } catch (err) { console.warn('[EduAdminUsers] Không cập nhật được trường của GV bị chuyển lớp:', err.message); }
+      }
+      if (classesWritten) {
+        [uid, ...losers].forEach((id) => { schoolsByTeacherId[id] = new Set(schoolsFromClasses(classesOf(id))); });
+        saveLookupsCache();
+      }
+      persist(changedUids);
+
+      if (d.role) logUserChange('set_role', uid, { from: ED.base.role, to: d.role });
+      if (d.schools) logUserChange('set_schools', uid, { schools: d.schools });
+      if (classesWritten) logUserChange('set_classes', uid, { assigned: addCls.length, unassigned: rmCls.length });
+      if (d.code !== null) logUserChange('set_teacher_code', uid, { teacherCode: d.code });
+
+      ED.busy = false;
+      closeEditor(true);
+      renderAll();
+      const flash = document.querySelector(`#userRows tr[data-uid="${CSS.escape(uid)}"]`);
+      if (flash) flash.classList.add('is-saved');
+      toast(`Đã lưu ${teacherName}` + (losers.length ? ` · chuyển ${stolen.length} lớp từ giáo viên khác` : ''));
+    } catch (err) {
+      if (classesWritten || addCls.length || rmCls.length) invalidateLookups(); // lỗi giữa chừng khi ghi lớp: lần tải sau đọc lại cho chắc
+      toast('Lỗi: ' + err.message + (classesWritten ? ' — lớp đã lưu, phần hồ sơ chưa lưu' : ' — chưa lưu gì'));
+      persist([uid]);
+      renderAll();
+    } finally {
+      if (ED.busy) setBusy(false);
+    }
+  }
+
+  (function initTable() {
+    const tbody = document.getElementById('userRows');
+    tbody.addEventListener('click', (e) => {
+      if (e.target.closest('.au-showmore')) { shown += PAGE; renderAll(); return; }
+      const tr = e.target.closest('tr[data-uid]');
+      if (!tr) return;
+      const ap = e.target.closest('.approveBtn');
+      if (ap) { approve(tr.dataset.uid, ap); return; }
+      const ed = e.target.closest('.au-edit');
+      if (ed) openEditor(tr.dataset.uid, ed);
+    });
+    tbody.addEventListener('dblclick', (e) => {
+      const tr = e.target.closest('tr[data-uid]');
+      if (tr && !e.target.closest('button')) openEditor(tr.dataset.uid, tr.querySelector('.au-edit'));
+    });
+    const q = document.getElementById('auSearch');
+    let t = 0;
+    if (q) {
+      const fromUrl = new URLSearchParams(location.search).get('q');
+      if (fromUrl) { q.value = fromUrl; F.q = fromUrl; }
+      q.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => { F.q = q.value; shown = PAGE; renderAll(); }, 120); });
+    }
+    const tabs = document.getElementById('auTabs');
+    if (tabs) tabs.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-tab]');
+      if (!b) return;
+      F.tab = b.dataset.tab; shown = PAGE; renderAll();
+    });
+    const rf = document.getElementById('auRefresh');
+    if (rf) rf.addEventListener('click', async () => {
+      rf.disabled = true;
+      try { await softReload(); toast('Đã cập nhật danh sách'); } finally { rf.disabled = false; }
+    });
+
+    const dr = document.getElementById('auDrawer');
+    document.getElementById('auScrim').addEventListener('click', () => closeEditor());
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !dr.hidden && !document.querySelector('.ss-panel')) closeEditor();
+      if (e.key === '/' && q && document.activeElement === document.body && dr.hidden) { e.preventDefault(); q.focus(); }
+    });
+    dr.addEventListener('click', (e) => {
+      if (e.target.closest('.au-x, .au-cancel')) { closeEditor(); return; }
+      if (e.target.closest('.au-save')) { saveEditor(); return; }
+      const rm = e.target.closest('[data-rm]');
+      if (rm && !ED.busy) { ED.schools.delete(rm.dataset.rm); ED.touched = true; renderSchools(); renderClasses(); updateDiff(); return; }
+      if (e.target.closest('#auFromCls')) { followClasses(true); renderSchools(); renderClasses(); updateDiff(); }
+    });
+    dr.addEventListener('change', (e) => {
+      const el = e.target;
+      const box = el.closest('#auSchList') ? '#auSchList' : el.closest('#auClsList') ? '#auClsList' : '';
+      if (el.id === 'auRole') { ED.role = el.value; sectionsForRole(); renderSchools(); }
+      else if (el.id === 'auCode') ED.code = el.value;
+      else if (el.id === 'auOnlySel') { ED.onlySel = el.checked; renderClasses(); }
+      else if (box === '#auSchList') { if (el.checked) ED.schools.add(el.value); else ED.schools.delete(el.value); ED.touched = true; renderSchools(); if (ED.onlySel) renderClasses(); }
+      else if (box === '#auClsList') { if (el.checked) ED.classes.add(el.value); else ED.classes.delete(el.value); followClasses(false); renderSchools(); renderClasses(); }
+      // Danh sách vừa dựng lại → trả con trỏ bàn phím về đúng ô vừa tích (Space/Tab chọn tiếp được)
+      if (box && !document.contains(el)) {
+        const same = [...document.querySelectorAll(`#auDrawer ${box} input`)].find((i) => i.value === el.value);
+        if (same) same.focus({ preventScroll: true });
+      }
+      updateDiff();
+    });
+    dr.addEventListener('input', (e) => {
+      if (e.target.id === 'auSchQ') { ED.qS = e.target.value; renderSchools(); }
+      if (e.target.id === 'auClsQ') { ED.qC = e.target.value; renderClasses(); }
+    });
+  })();
 
   function esc(s) {
     return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -672,6 +956,5 @@ window.EDU_ALLOWED_ROLES = ['admin'];
 
   // Lộ ra ngoài để js/admin-users-import.js gọi lại sau khi tạo xong hàng
   // loạt tài khoản — bảng chính tự làm mới, không cần F5 mới thấy 18 tài
-  // khoản giáo viên vừa tạo. Luôn bỏ qua cache (forceRefresh) vì vừa ghi
-  // xong, cần thấy ngay các tài khoản mới tạo.
-  window.EduAdminUsersReload = () => loadUsers(true);
+  // khoản giáo viên vừa tạo.
+  window.EduAdminUsersReload = () => softReload(); // tài khoản vừa tạo có createdAt → phần thay đổi bắt được, khỏi đọc lại cả danh sách

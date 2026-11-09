@@ -255,6 +255,17 @@
     document.body.classList.add('role-teaching-coordinator');
   }
 
+  /** Chữ thường, bỏ dấu (Đặng → dang) — tìm "nhung", "dang thi" vẫn ra "ĐẶNG THỊ KIM NHUNG". */
+  function foldText(s) {
+    return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').toLowerCase().replace(/\s+/g, ' ');
+  }
+  /** Trước: t.name.toLowerCase() — 1 giáo viên thiếu tên/mã (doc nhập dở) là cả ô tìm + Xuất PDF tất cả báo lỗi. */
+  function matchesSearch(t, q) {
+    if (!q) return true;
+    const hay = foldText(`${t.name || ''} ${t.code || t.id || ''}`);
+    return q.split(' ').every((w) => hay.includes(w));
+  }
+
   async function loadEverything() {
     try {
       // Giáo viên giờ ĐỌC ĐƯỢC cả đội (firestore.rules đã nới quyền đọc
@@ -282,17 +293,14 @@
     }
   }
 
-  // Sau khi lưu lịch của 1 giáo viên: chỉ đọc lại ĐÚNG document đó (1 lượt đọc) rồi vẽ lại,
-  // thay vì loadWeekSchedules() đọc lại lịch + TKB + giờ tiết của cả đội (~50-100 lượt đọc).
-  async function refreshOneSchedule(teacherCode, docId) {
-    const fresh = await window.EduRepositories.teachingSchedule.getById(docId);
-    if (fresh) state.schedulesByTeacher[teacherCode] = fresh;
-    renderWeeklyTab();
-  }
-
+  // Chọn tuần A rồi B thật nhanh: A về SAU B thì trước đây bảng hiện lịch tuần A dưới nhãn tuần B — mở sửa
+  // rồi Lưu là ghi lịch tuần A vào tuần B. Nay mỗi lần chọn có số thứ tự, lần cũ về muộn bị bỏ.
+  let weekLoadSeq = 0;
   async function loadWeekSchedules(weekKey) {
     state.currentWeekKey = weekKey;
+    const seq = ++weekLoadSeq;
     try {
+      // Bảng đang hiện tuần cũ → xoá ngay để không ai bấm sửa nhầm trong lúc chờ
       state.schedulesByTeacher = {};
       state.timetablesByTeacher = {};
       // teaching_timetable/teaching_timetable_periods (tab "TKB lớp") là
@@ -315,13 +323,17 @@
         // ma trận "Tổng quan" bên dưới.
         PT ? cached('periodTimes', () => PT.list()) : Promise.resolve([]),
       ]);
-      rows.forEach((r) => { state.schedulesByTeacher[r.teacherCode] = r; });
-      ttRows.forEach((r) => { state.timetablesByTeacher[r.teacherCode] = r; });
-      state.periodTimesByTeacher = {};
-      ptRows.forEach((r) => { state.periodTimesByTeacher[r.id] = r; });
+      if (seq !== weekLoadSeq) return;
+      const sched = {}, tt = {}, pt = {};
+      rows.forEach((r) => { sched[r.teacherCode] = r; });
+      ttRows.forEach((r) => { tt[r.teacherCode] = r; });
+      ptRows.forEach((r) => { pt[r.id] = r; });
+      state.schedulesByTeacher = sched;
+      state.timetablesByTeacher = tt;
+      state.periodTimesByTeacher = pt;
       renderWeeklyTab();
     } catch (err) {
-      toast(friendlyError(err));
+      if (seq === weekLoadSeq) toast(friendlyError(err));
     }
   }
 
@@ -461,6 +473,7 @@
     // mới tự chọn mặc định, và mặc định giờ là ĐÚNG TUẦN HIỆN TẠI theo giờ
     // thực (không còn luôn dừng ở tuần cuối danh sách).
     sel.value = state.weeks.some((w) => w.id === prev) ? prev : pickDefaultWeekKey(state.weeks);
+    updateWeekNav();
     if (sel.value !== state.currentWeekKey) {
       state.currentWeekKey = sel.value;
       loadWeekSchedules(sel.value);
@@ -481,9 +494,36 @@
     if (past.length) return past[past.length - 1].id;
     return weeks[0].id;
   }
-  document.getElementById('weekSelect').addEventListener('change', (e) => loadWeekSchedules(e.target.value));
+  document.getElementById('weekSelect').addEventListener('change', (e) => { loadWeekSchedules(e.target.value); updateWeekNav(); });
+  /** ‹ › Tuần này: chỉ đổi lựa chọn (tuần đã xem → bản đệm, 0 lượt đọc). */
+  function stepWeek(delta) {
+    const sel = document.getElementById('weekSelect');
+    const ids = state.weeks.map((w) => w.id);
+    const i = ids.indexOf(sel.value);
+    const to = delta === 0 ? pickDefaultWeekKey(state.weeks) : ids[i + delta];
+    if (!to || to === sel.value) return;
+    sel.value = to;
+    sel.dispatchEvent(new Event('change'));
+  }
+  function updateWeekNav() {
+    const ids = state.weeks.map((w) => w.id);
+    const i = ids.indexOf(document.getElementById('weekSelect').value);
+    const set = (id, off) => { const b = document.getElementById(id); if (b) b.disabled = off; };
+    set('weekPrevBtn', i <= 0);
+    set('weekNextBtn', i < 0 || i >= ids.length - 1);
+    set('weekTodayBtn', !ids.length || pickDefaultWeekKey(state.weeks) === ids[i]);
+  }
+  document.getElementById('weekPrevBtn')?.addEventListener('click', () => stepWeek(-1));
+  document.getElementById('weekNextBtn')?.addEventListener('click', () => stepWeek(1));
+  document.getElementById('weekTodayBtn')?.addEventListener('click', () => stepWeek(0));
+  document.addEventListener('keydown', (e) => {
+    if (e.altKey || e.ctrlKey || e.metaKey || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+    if (document.querySelector('.modal-overlay.show') || /^(INPUT|SELECT|TEXTAREA)$/.test((document.activeElement || {}).tagName || '')) return;
+    if (!document.getElementById('panel-weekly').classList.contains('active')) return;
+    stepWeek(e.key === 'ArrowLeft' ? -1 : 1);
+  });
   document.getElementById('teacherSearch').addEventListener('input', (e) => {
-    state.search = e.target.value.trim().toLowerCase();
+    state.search = foldText(e.target.value).trim();
     renderWeeklyTab();
   });
   document.getElementById('onlyMissingChk').addEventListener('change', renderWeeklyTab);
@@ -590,7 +630,9 @@
     }
 
     const q = state.search;
-    let teachers = state.teachers.filter((t) => !q || t.name.toLowerCase().includes(q) || t.code.toLowerCase().includes(q));
+    let teachers = state.teachers.filter((t) => matchesSearch(t, q));
+    const countEl = document.getElementById('teacherSearchCount');
+    if (countEl) countEl.textContent = q ? (teachers.length ? `${teachers.length}/${state.teachers.length} giáo viên khớp` : 'Không có giáo viên nào khớp') : '';
 
     const daysOf = (t) => (state.schedulesByTeacher[t.code] && state.schedulesByTeacher[t.code].days) || M.emptyDays();
 
@@ -937,10 +979,27 @@
     const load = () => window.EduRepositories.teachingSchedule.listByWeek(wk);
     return window.EduScheduleReadCache ? window.EduScheduleReadCache.read('schedule:' + wk, load) : load();
   }
+  /** `days` của 1 giáo viên ở 1 tuần — xuất PDF/Phiếu công tác CỦA 1 NGƯỜI. Trước: tải lịch CẢ ĐỘI của tuần đó
+   *  (~60 lượt/tuần, Phiếu công tác tới 5 tuần ≈ 300 lượt) chỉ để lấy 1 dòng. Nay: tuần đang xem lấy sẵn trên trang;
+   *  tuần khác có bản đệm cả đội thì dùng; không thì đọc đúng 1 doc (1 lượt, giữ trong bản đệm như tab TKB). */
+  async function teacherWeekDays(teacherCode, weekKey) {
+    if (weekKey === state.currentWeekKey) {
+      const row = state.schedulesByTeacher[teacherCode];
+      return (row && row.days) || M.emptyDays();
+    }
+    const RC = window.EduScheduleReadCache;
+    const team = RC && RC.peek ? await RC.peek('schedule:' + weekKey) : null;
+    if (Array.isArray(team)) {
+      const row = team.find((r) => r.teacherCode === teacherCode);
+      return (row && row.days) || M.emptyDays();
+    }
+    const id = M.scheduleDocId(teacherCode, weekKey);
+    const load = () => window.EduRepositories.teachingSchedule.getById(id).then((v) => ({ v: v || null }));
+    const box = RC ? await RC.read('doc:schedule:' + id, load) : await load();
+    return (box && box.v && box.v.days) || M.emptyDays();
+  }
   async function fetchExtraWeekDaysFor(teacherCode, extra) {
-    const rows = await weekRowsForExport(extra.weekKey);
-    const row = rows.find((r) => r.teacherCode === teacherCode);
-    const rawDays = (row && row.days) || M.emptyDays();
+    const rawDays = await teacherWeekDays(teacherCode, extra.weekKey);
     return clippedDaysForWeek(rawDays, extra.weekKey, [extra.range], M);
   }
 
@@ -951,7 +1010,7 @@
    * tác"), tránh lặp lại đúng 1 đoạn lọc ở 2 nơi. */
   function filteredTeachersWithDays() {
     const q = state.search;
-    let teachers = state.teachers.filter((t) => !q || t.name.toLowerCase().includes(q) || t.code.toLowerCase().includes(q));
+    let teachers = state.teachers.filter((t) => matchesSearch(t, q));
     const onlyMissingChk = document.getElementById('onlyMissingChk');
     if (onlyMissingChk && onlyMissingChk.checked) {
       teachers = teachers.filter((t) => !M.hasAnySchedule((state.schedulesByTeacher[t.code] && state.schedulesByTeacher[t.code].days) || M.emptyDays()));
@@ -1000,7 +1059,7 @@
   document.getElementById('exportAllPdfBtn')?.addEventListener('click', exportAllPdf);
 
   /** Bản nháp lịch tuần y hệt bản đã lưu (hoặc lịch trống khi chưa có) → bấm Lưu không ghi gì
-   *  (trước: mỗi lần bấm 1 lượt ghi + 1 lượt đọc lại refreshOneSchedule). */
+   *  (trước: mỗi lần bấm 1 lượt ghi + 1 lượt đọc lại). */
   const sameAsSaved = (code, draft) => {
     const existing = state.schedulesByTeacher[code];
     return JSON.stringify(draft) === JSON.stringify((existing && existing.days) || M.emptyDays());
@@ -1212,8 +1271,11 @@
     openCongTacRangeModal(async (ranges) => {
       try {
         const weekKeys = weekKeysOverlappingRanges(ranges);
-        const byWeek = await fetchScheduleRowsByWeek(weekKeys);
-        const weekEntries = weekEntriesFromByWeek(byWeek, weekKeys, teacherCode, ranges);
+        const code = t.code || t.id;
+        const byWeek = new Map();
+        const daysList = await Promise.all(weekKeys.map((wk) => teacherWeekDays(code, wk)));
+        weekKeys.forEach((wk, i) => byWeek.set(wk, new Map([[code, daysList[i]]])));
+        const weekEntries = weekEntriesFromByWeek(byWeek, weekKeys, code, ranges);
         window.EduCongTacPdf.exportOne(t, weekEntries, M);
       } catch (err) {
         console.error('[Lịch giảng dạy] Lỗi khi xuất Phiếu công tác:', err);
@@ -1409,26 +1471,57 @@
     const week = state.weeks.find((w) => w.id === state.currentWeekKey);
     const docId = M.scheduleDocId(schedModalTeacherCode, state.currentWeekKey);
     const btn = document.getElementById('schedModalSaveBtn');
+    if (btn.disabled) return; // Ctrl+S liên tiếp khi đang lưu
     btn.disabled = true;
+    const code = schedModalTeacherCode;
+    const weekKey = state.currentWeekKey;
+    const draft = schedModalDraftDays;
     try {
-      await window.EduRepositories.teachingSchedule.upsert(docId, {
-        teacherCode: schedModalTeacherCode,
+      // Đọc đúng doc này trước khi ghi (1 lượt — thay lượt đọc lại SAU khi ghi trước đây): 2 người cùng sửa lịch 1 giáo
+      // viên thì người lưu sau từng ghi đè mất phần của người trước mà không ai biết.
+      const server = await window.EduRepositories.teachingSchedule.getById(docId);
+      const opened = schedModalSavedJson || JSON.stringify(M.emptyDays());
+      const serverJson = JSON.stringify((server && server.days) || M.emptyDays());
+      if (serverJson !== opened && serverJson !== JSON.stringify(draft)) {
+        if (!window.confirm(`Lịch tuần này của ${t ? t.name : code} vừa được sửa ở máy khác sau khi bạn mở.\n\n` +
+          'OK = vẫn lưu bản của bạn (ghi đè bản kia)\nHuỷ = giữ bản kia, đóng hộp sửa và xem lại')) {
+          if (server && weekKey === state.currentWeekKey) state.schedulesByTeacher[code] = server;
+          closeSchedModal();
+          renderWeeklyTab();
+          putWeekCache(weekKey);
+          return;
+        }
+      }
+      const row = {
+        teacherCode: code,
         teacherName: t ? t.name : '',
-        weekKey: state.currentWeekKey,
+        weekKey,
         weekLabel: week ? week.label || week.id : '',
-        days: schedModalDraftDays,
-        updatedAt: window.EduModels.SERVER_TIME,
-      });
+        days: draft,
+      };
+      await window.EduRepositories.teachingSchedule.upsert(docId, Object.assign({}, row, { updatedAt: window.EduModels.SERVER_TIME }));
       toast('Đã lưu lịch tuần');
-      const savedCode = schedModalTeacherCode;
-      closeSchedModal();
-      await refreshOneSchedule(savedCode, docId);
+      if (schedModalTeacherCode === code) closeSchedModal();
+      // Đã biết chắc nội dung vừa ghi → sửa thẳng bảng + bản đệm tuần, không đọc lại (trước: 1 lượt đọc + cả tuần
+      // đó đọc thẳng máy chủ tới khi đóng tab). Người dùng đã đổi sang tuần khác lúc đang lưu: không đụng bảng tuần mới.
+      if (weekKey === state.currentWeekKey) {
+        state.schedulesByTeacher[code] = Object.assign({ id: docId }, (server || {}), row);
+        renderWeeklyTab();
+        putWeekCache(weekKey);
+      }
     } catch (err) {
       toast(friendlyError(err));
     } finally {
       btn.disabled = false;
     }
   });
+  /** Ghi bản đệm "lịch cả đội của tuần" từ dữ liệu đang hiện (đúng với máy chủ ngay sau khi lưu). */
+  function putWeekCache(weekKey) {
+    const RC = window.EduScheduleReadCache;
+    if (!RC || !RC.put || weekKey !== state.currentWeekKey) return;
+    RC.put('schedule:' + weekKey, Object.values(state.schedulesByTeacher))
+      .catch((err) => console.warn('[Lịch giảng dạy] Không lưu được bản đệm tuần:', err.message));
+  }
 
   // ============================================================
   // TỰ ĐỘNG HOÁ: "Tuần mới" — tạo tuần kế tiếp trong 1 bước, có thể tự

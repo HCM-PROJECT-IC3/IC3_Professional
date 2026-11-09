@@ -1343,3 +1343,15 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
   .weekly-cards { grid-template-columns: 1fr }
 }
 
+/* Chuyển tuần nhanh (10/11/2026): ‹ tuần › + "Tuần này" — tuần đã xem rồi mở lại 0 lượt đọc (bản đệm). */
+.week-nav { display: flex; align-items: center; gap: .3rem }
+.week-nav .form-input { min-width: 150px }
+.week-nav-btn, .week-nav-today {
+  height: 2.35rem; border: 1px solid var(--border); background: var(--card); color: var(--text);
+  border-radius: 8px; cursor: pointer; font: inherit; font-size: .8rem; font-weight: 700;
+}
+.week-nav-btn { width: 2.1rem; flex: none; display: inline-flex; align-items: center; justify-content: center; color: var(--muted) }
+.week-nav-today { padding: 0 .7rem; white-space: nowrap }
+.week-nav-btn:hover:not(:disabled), .week-nav-today:hover:not(:disabled) { border-color: var(--purple); color: var(--purple) }
+.week-nav-btn:disabled, .week-nav-today:disabled { opacity: .4; cursor: default }
+.search-count { font-size: .7rem; color: var(--muted); font-weight: 600; min-height: 1em }

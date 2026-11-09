@@ -172,6 +172,28 @@ const Relay = global.EduArenaRelay;
   ghost.on('error', (e) => { err = e.type; });
   await sleep(50);
   eq('mã phòng không có → peer-unavailable', err, 'peer-unavailable');
+  // Em gõ sai mã rồi bấm Thử lại nhiều lần: mỗi lần conn bị bỏ phải huỷ listener (trước: close() bỏ qua khi
+  // chưa mở → listener sống mãi, phòng mở sau bằng mã đó thì mỗi lần đổi bị đọc thêm 1 lượt cho mỗi lần thử).
+  const before = listeners.length;
+  ghost.close();
+  eq('đóng conn chưa mở: huỷ listener', listeners.length, before - 1);
+  const tries = [];
+  for (let i = 0; i < 3; i++) { const c = await Relay.connect('ZZZ999'); await sleep(20); c.close(); tries.push(c); }
+  eq('thử lại 3 lần mã sai: không sót listener nào', listeners.filter((l) => l.path === 'arena_relay/ZZZ999').length, 0);
+  let ghostEvents = 0;
+  tries.forEach((c) => c.on('open', () => { ghostEvents++; }));
+  await docRef('arena_relay/ZZZ999').set({ out: {}, blobs: {} });
+  await sleep(30);
+  eq('phòng mở sau bằng mã đó: conn đã bỏ không nhận gì', ghostEvents, 0);
+  // Phòng bị đóng (document xoá) rồi mở lại cùng mã: conn cũ đã nhận "close" phải huỷ listener luôn
+  const live = await Relay.connect('ZZZ999');
+  await sleep(30);
+  let liveClosed = 0;
+  live.on('close', () => { liveClosed++; });
+  await docRef('arena_relay/ZZZ999').delete();
+  await sleep(30);
+  live.close();
+  eq('phòng đóng → "close" 1 lần, listener huỷ khi bỏ conn', [liveClosed, listeners.filter((l) => l.path === 'arena_relay/ZZZ999').length], [1, 0]);
 
   // ── Hạn mức chỗ (Firestore dùng chung cả dự án) ──
   let calls = 0;

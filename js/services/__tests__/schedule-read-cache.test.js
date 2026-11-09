@@ -97,6 +97,21 @@ function loader() { calls++; return Promise.resolve(['row' + calls]); }
   assertEq('khoá khác: 10 phút', RC.ttlFor('doc:schedule:GV01__2026-10-26', now), RC.TTL_MS);
   assertEq('gợi ý theo giáo viên: 1 giờ', [RC.ttlFor('schedule-by-teacher:GV01', now), RC.ttlFor('timetable-by-teacher:GV01', now)], [3600000, 3600000]);
 
+  // put sau khi lưu: tuần vừa lưu dùng lại bản đệm (trước: đọc thẳng máy chủ tới khi đóng tab)
+  var n = 0;
+  function weekLoader() { n++; return Promise.resolve(['server' + n]); }
+  await RC.read('schedule:2026-11-09', weekLoader);
+  await new DocumentReference('teaching_schedule/GV01__2026-11-09').set({});
+  await new Promise(function (r) { setTimeout(r, 0); });
+  assertEq('peek sau khi ghi: không có bản đệm', await RC.peek('schedule:2026-11-09'), null);
+  await RC.put('schedule:2026-11-09', ['local-after-save']);
+  assertEq('put: đọc lại lấy bản vừa ghi, 0 lượt máy chủ', [await RC.read('schedule:2026-11-09', weekLoader), n], [['local-after-save'], 1]);
+  assertEq('peek: trả bản đệm, không gọi máy chủ', [await RC.peek('schedule:2026-11-09'), n], [['local-after-save'], 1]);
+  await new DocumentReference('teaching_schedule/GV02__2026-11-09').set({});
+  await new Promise(function (r) { setTimeout(r, 0); });
+  assertEq('lệnh ghi kế tiếp: bỏ ghim, đọc máy chủ lại', [await RC.read('schedule:2026-11-09', weekLoader), n], [['server2'], 2]);
+  assertEq('peek khoá chưa có: null', await RC.peek('schedule:2030-01-06'), null);
+
   console.log(failures ? '\n' + failures + ' test FAIL' : '\nTất cả PASS');
   process.exit(failures ? 1 : 0);
 })();

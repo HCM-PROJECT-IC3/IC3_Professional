@@ -41,19 +41,17 @@
       <button type="button" class="ar-role" role="tab" data-role="solo"><span class="ar-role-ico" aria-hidden="true">🎮</span><b>Chơi một mình</b><small>Hành trình IC3 · đấu tự do</small></button>
     </nav>
 
-    <!-- ── HỌC SINH: cảnh lớp học vẽ tay (np-art, js/arena/arena-quest.js đổ vào) + thẻ vào phòng ── -->
+    <!-- ── HỌC SINH: thẻ vào phòng (gọn, không tranh nền — 10/11/2026) ── -->
     <div class="ar-join-stage only-student">
-      <div class="ar-join-scene" id="arJoinScene" aria-hidden="true"></div>
       <div class="ar-card ar-join-card" id="arJoinCard">
-        <div class="ar-join-badge" aria-hidden="true"><span id="arJoinAvatarFace">🙂</span></div>
-        <h2 class="ar-join-title">Vào trận cùng cả lớp!</h2>
-        <p class="ar-join-lead">Nhập <b>họ tên</b> và <b>mã phòng</b> trên bảng là chơi ngay — không cần tài khoản.</p>
+        <h2 class="ar-join-title"><span class="ar-join-face" id="arJoinAvatarFace" aria-hidden="true">🙂</span> Vào phòng của lớp</h2>
+        <p class="ar-join-lead">Nhập họ tên và mã phòng trên bảng — không cần tài khoản.</p>
         <form class="ar-join-form" id="arJoinForm" novalidate autocomplete="on">
           <label class="ar-field ar-join-field" for="arJoinName" id="arJoinNameField"><span><i class="ar-join-num" aria-hidden="true">1</i> Họ và tên <i class="fa-solid fa-circle-check ar-join-ok" aria-hidden="true"></i></span>
             <input id="arJoinName" class="ar-input ar-join-input" name="name" maxlength="30" autocomplete="name" autocapitalize="words" enterkeyhint="next" placeholder="VD: Nguyễn Văn An"></label>
-          <label class="ar-field ar-join-field" for="arJoinCode" id="arJoinCodeField"><span><i class="ar-join-num" aria-hidden="true">2</i> Mã phòng <em>(6 ký tự trên bảng)</em> <i class="fa-solid fa-circle-check ar-join-ok" aria-hidden="true"></i></span>
+          <label class="ar-field ar-join-field" for="arJoinCode" id="arJoinCodeField"><span><i class="ar-join-num" aria-hidden="true">2</i> Mã phòng <em>6 ký tự</em> <i class="fa-solid fa-circle-check ar-join-ok" aria-hidden="true"></i></span>
             <input id="arJoinCode" class="ar-input ar-code-input" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="go" placeholder="4H7K9M" inputmode="text" aria-describedby="arJoinCodeHint">
-            <small class="ar-join-hint" id="arJoinCodeHint">Chỉ có chữ và số — không có số 0, 1 và chữ O, I, L.</small></label>
+            <small class="ar-join-hint" id="arJoinCodeHint">Mã không có số 0, 1 và chữ O, I, L.</small></label>
           <p class="ar-join-link" id="arJoinFromLink" hidden><i class="fa-solid fa-circle-check"></i> Mã phòng đã được điền sẵn từ link của thầy/cô — em chỉ cần nhập họ tên.</p>
           <button type="submit" class="ar-btn ar-btn-play ar-join-go" id="arJoinBtn"><i class="fa-solid fa-right-to-bracket"></i> Vào phòng</button>
         </form>
@@ -61,9 +59,9 @@
           <span aria-hidden="true">🥚</span><span>Đổi Linh vật đại diện</span></button>
       </div>
       <ol class="ar-join-steps" aria-label="Cách chơi">
-        <li><span aria-hidden="true">📺</span><b>Nhìn mã</b><small>trên bảng / máy chiếu</small></li>
-        <li><span aria-hidden="true">⌨️</span><b>Nhập tên + mã</b><small>rồi bấm Vào phòng</small></li>
-        <li><span aria-hidden="true">🏆</span><b>Trả lời nhanh</b><small>đúng + nhanh = lên top</small></li>
+        <li><b>Nhìn mã</b> trên bảng</li>
+        <li><b>Nhập tên + mã</b></li>
+        <li><b>Trả lời</b> đúng và nhanh</li>
       </ol>
       <button type="button" class="ar-join-wait" data-goto-role="minigame"><i class="fa-solid fa-route" aria-hidden="true"></i> Chưa có mã phòng? <b>Chơi Hành trình IC3</b> trong lúc chờ</button>
     </div>

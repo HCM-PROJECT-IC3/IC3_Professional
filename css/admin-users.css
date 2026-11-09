@@ -61,7 +61,7 @@ body {
 .table-scroll { overflow-x: auto; border-radius: var(--radius-sm) }
 table {
   width: 100%;
-  min-width: 1250px; /* nâng theo min-width mới của các cột (Tên/Mã NV) — sàn chung không được nhỏ hơn tổng các cột */
+  min-width: 860px;
   border-collapse: collapse;
   background: var(--card);
   border: 1px solid var(--border);
@@ -75,16 +75,6 @@ table {
 th, td { padding: .8rem .9rem; text-align: left; font-size: .85rem; border-bottom: 1px solid var(--border); white-space: normal; vertical-align: top; word-break: break-word }
 th { background: var(--card2); font-weight: 800; font-size: .75rem; text-transform: uppercase; color: var(--muted); white-space: nowrap }
 tr:last-child td { border-bottom: none }
-
-/* Cột "Tên" + "Email" (1 & 2) trước đây bị co quá hẹp so với các cột
-   select bên phải nên chữ rớt dòng liên tục dù còn thừa chỗ ngang (bảng
-   cuộn ngang trong .table-scroll) — ép min-width rộng rãi cho 2 cột này.
-   CẢ 2 đều white-space: nowrap (Tên trước đây vẫn cho xuống dòng nếu dài
-   hơn min-width, nhưng vẫn thấy rớt dòng xấu — đổi
-   luôn Tên sang nowrap để nhất quán, hẹp hơn nội dung thì bảng tự cuộn
-   ngang thay vì xuống dòng). */
-th:nth-child(1), td:nth-child(1) { min-width: 150px; white-space: nowrap }
-th:nth-child(2), td:nth-child(2) { min-width: 230px; white-space: nowrap }
 
 select {
   font-family: inherit;
@@ -141,69 +131,6 @@ select {
   .topbar { padding: .8rem 1rem }
   .topbar h1 { font-size: 1rem }
 }
-
-/* ── gán "Trường được xem" cho giáo viên ── */
-.schoolsCell { min-width: 240px }
-.schoolsSelect { width: 100%; min-width: 220px; margin-bottom: .4rem }
-.saveSchoolsBtn {
-  background: var(--blue-lt);
-  color: var(--blue);
-  border: none;
-  border-radius: 999px;
-  padding: .35rem .75rem;
-  font-size: .72rem;
-  font-weight: 800;
-  cursor: pointer;
-}
-.syncSchoolsBtn {
-  background: var(--teal-lt, var(--blue-lt));
-  color: var(--teal, var(--blue));
-  border: none;
-  border-radius: 999px;
-  padding: .35rem .75rem;
-  font-size: .72rem;
-  font-weight: 800;
-  cursor: pointer;
-  margin-left: .3rem;
-}
-.schoolsCurrent { font-size: .7rem; color: var(--muted); margin-top: .3rem }
-.schoolsCell .hint { font-size: .72rem; color: var(--muted); font-style: italic }
-
-/* ── Gán trực tiếp "Lớp đang dạy" (classes.teacherId) cho giáo viên ── */
-.classesCell { min-width: 260px }
-.classesSelect { width: 100%; min-width: 240px; margin-bottom: .4rem }
-.saveClassesBtn {
-  background: var(--green-lt, var(--blue-lt));
-  color: var(--green, var(--blue));
-  border: none;
-  border-radius: 999px;
-  padding: .35rem .75rem;
-  font-size: .72rem;
-  font-weight: 800;
-  cursor: pointer;
-}
-.classesCurrent { font-size: .7rem; color: var(--muted); margin-top: .3rem }
-.classesCurrent.hint { font-style: italic }
-.classesCell .hint { font-size: .72rem; color: var(--muted); font-style: italic }
-
-/* ── Liên kết "Mã NV" (Lịch giảng dạy) cho giáo viên tự xem lịch của mình ──
-   Nâng min-width — option dạng "HCM0107 — Tên đầy đủ" hay dài hơn 230px,
-   bị trình duyệt cắt bớt thành "..." ngay trong khung select đóng (không
-   phải lỗi xuống dòng, mà do select quá hẹp so với chữ). */
-.teacherCodeCell { min-width: 300px }
-.teacherCodeSelect { width: 100%; min-width: 280px; margin-bottom: .4rem; display: block }
-.saveTeacherCodeBtn {
-  background: var(--purple-lt);
-  color: var(--purple);
-  border: none;
-  border-radius: 999px;
-  padding: .35rem .75rem;
-  font-size: .72rem;
-  font-weight: 800;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.teacherCodeCell .hint { font-size: .72rem; color: var(--muted); font-style: italic }
 
 /* ── "Nhập giáo viên từ Excel" — tạo hàng loạt tài khoản đăng nhập ── */
 .import-toolbar {
@@ -268,3 +195,166 @@ select {
 #importPreviewTable .row-status-skip { color: var(--muted); font-weight: 700 }
 #importPreviewTable .row-status-exists { color: var(--yellow); font-weight: 800 }
 #importPreviewTable .row-status-err  { color: var(--red); font-weight: 800 }
+
+/* ══ Bảng tài khoản gọn + bảng sửa 1 người (10/11/2026) ══
+   Trước: mỗi dòng 2 ô chọn nhiều (giữ Ctrl) chứa mọi trường/lớp. Nay dòng chỉ tóm tắt, sửa trong bảng trượt bên phải. */
+.btn-primary { background: var(--purple); color: #fff; border: 1px solid var(--purple); display: inline-flex; align-items: center; gap: .4rem }
+.btn-primary:hover:not(:disabled) { filter: brightness(1.08) }
+.btn-primary:disabled { opacity: .45; cursor: not-allowed }
+.import-toolbar .btn-primary { background: var(--card); color: var(--text); border: 1px solid var(--border) }
+.import-toolbar .btn-primary:hover { border-color: var(--purple); color: var(--purple); filter: none }
+.wrap { padding-top: 1.4rem }
+.import-toolbar { margin-bottom: .9rem }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap }
+
+.au-bar { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; margin-bottom: .6rem }
+.au-search {
+  flex: 1 1 320px; max-width: 520px; display: flex; align-items: center; gap: .55rem;
+  background: var(--card); border: 1px solid var(--border); border-radius: 9px; padding: 0 .7rem; height: 2.3rem;
+  color: var(--muted); transition: border-color .15s, box-shadow .15s;
+}
+.au-search:focus-within { border-color: var(--purple); box-shadow: 0 0 0 3px color-mix(in srgb, var(--purple) 18%, transparent) }
+.au-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text); font: inherit; font-size: .88rem }
+.au-search kbd { font: 600 .68rem/1 ui-monospace, Consolas, monospace; color: var(--muted); border: 1px solid var(--border); border-radius: 5px; padding: .2rem .38rem }
+.au-search:focus-within kbd { display: none }
+.au-status { font-size: .78rem; color: var(--muted); font-weight: 600 }
+.au-refresh {
+  margin-left: auto; display: inline-flex; align-items: center; gap: .35rem; height: 2.1rem; padding: 0 .8rem;
+  border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text); font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer;
+}
+.au-refresh:hover { border-color: var(--purple); color: var(--purple) }
+.au-refresh:disabled { opacity: .5; cursor: progress }
+
+.au-tabs { display: flex; gap: .3rem; flex-wrap: wrap; margin-bottom: .9rem }
+.au-tabs button {
+  display: inline-flex; align-items: center; gap: .4rem; border: 1px solid transparent; background: transparent;
+  color: var(--muted); font: inherit; font-size: .8rem; font-weight: 700; padding: .3rem .7rem; border-radius: 7px; cursor: pointer;
+}
+.au-tabs button span { font-size: .7rem; font-weight: 700; color: var(--muted); background: var(--card2); border-radius: 5px; padding: .05rem .38rem; min-width: 1.4rem; text-align: center }
+.au-tabs button:hover { color: var(--text); background: var(--card2) }
+.au-tabs button[aria-selected="true"] { color: var(--text); background: var(--card); border-color: var(--border); box-shadow: 0 1px 2px rgba(16,24,40,.06) }
+.au-tabs button.is-alert span { background: var(--yellow-lt); color: #a46a00 }
+
+.au-table th { position: sticky; top: 0; z-index: 1; font-size: .7rem; letter-spacing: .02em; padding: .6rem .9rem }
+.au-table td { padding: .62rem .9rem; vertical-align: middle; font-size: .84rem }
+.au-table tbody tr { transition: background .15s }
+.au-table tbody tr:hover { background: var(--card2) }
+.au-table tbody tr.is-saved { animation: au-saved 1.6s ease-out }
+@keyframes au-saved { from { background: color-mix(in srgb, var(--green) 18%, transparent) } to { background: transparent } }
+.au-who b { display: block; font-weight: 700; white-space: nowrap }
+.au-who small { display: block; color: var(--muted); font-size: .76rem; white-space: nowrap }
+.au-table .badge + .badge { margin-left: .3rem }
+.au-chip {
+  display: inline-block; max-width: 15rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle;
+  font-size: .74rem; font-weight: 600; color: var(--text); background: var(--card2); border: 1px solid var(--border);
+  border-radius: 6px; padding: .12rem .45rem; margin: .1rem .25rem .1rem 0;
+}
+.au-chip.is-cls { font-variant-numeric: tabular-nums }
+.au-chip.au-more { color: var(--muted); cursor: help }
+.au-none { font-size: .76rem; color: var(--muted); font-style: italic }
+.au-dash { color: var(--muted); opacity: .6 }
+.au-code { font: 600 .76rem ui-monospace, Consolas, monospace; color: var(--purple); background: var(--purple-lt); border-radius: 5px; padding: .12rem .4rem }
+.au-act { white-space: nowrap; text-align: right; width: 1% }
+.au-act > * { vertical-align: middle }
+.au-warn { display: inline-flex; align-items: center; gap: .3rem; font-size: .72rem; font-weight: 700; color: #a46a00; margin-right: .5rem; cursor: help }
+[data-theme="dark"] .au-warn, [data-theme="dark"] .au-tabs button.is-alert span { color: #f7c75a }
+.au-warn b { font-weight: 700; opacity: .8 }
+.au-edit {
+  display: inline-flex; align-items: center; gap: .3rem; border: 1px solid var(--border); background: var(--card);
+  color: var(--text); font: inherit; font-size: .76rem; font-weight: 700; padding: .3rem .65rem; border-radius: 7px; cursor: pointer; margin-left: .35rem;
+}
+.au-edit:hover, .au-edit:focus-visible { border-color: var(--purple); color: var(--purple) }
+.approveBtn { border-radius: 7px }
+.au-empty { text-align: center; color: var(--muted); padding: 2rem 1rem !important }
+.au-morerow td { text-align: center; padding: .7rem !important }
+.au-showmore { border: 1px dashed var(--border); background: transparent; color: var(--purple); font: inherit; font-size: .8rem; font-weight: 700; padding: .45rem 1rem; border-radius: 8px; cursor: pointer }
+.au-showmore:hover { border-style: solid; border-color: var(--purple) }
+
+/* Bảng sửa trượt từ phải (điện thoại: toàn màn hình) */
+body.au-locked { overflow: hidden }
+.au-scrim { position: fixed; inset: 0; z-index: 900; background: rgba(15, 18, 32, .32); backdrop-filter: blur(1.5px) }
+.au-scrim[hidden], .au-drawer[hidden] { display: none }
+.au-drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 901; width: min(560px, 100vw);
+  display: flex; flex-direction: column; background: var(--card); color: var(--text);
+  border-left: 1px solid var(--border); box-shadow: -18px 0 50px rgba(16, 24, 40, .18);
+  transform: translateX(16px); opacity: 0; transition: transform .2s ease, opacity .2s ease;
+}
+.au-drawer.is-open { transform: none; opacity: 1 }
+.au-dh { display: flex; align-items: flex-start; gap: .8rem; padding: 1rem 1.2rem .8rem; border-bottom: 1px solid var(--border) }
+.au-dh > div { flex: 1; min-width: 0 }
+.au-dh h2 { font-size: 1.05rem; font-weight: 800; line-height: 1.3 }
+.au-dh p { font-size: .78rem; color: var(--muted); overflow-wrap: anywhere }
+.au-x { flex: none; width: 30px; height: 30px; border-radius: 8px; border: 0; background: var(--card2); color: var(--muted); cursor: pointer; font-size: .95rem }
+.au-x:hover { color: var(--text) }
+.au-db { flex: 1; overflow-y: auto; padding: .4rem 1.2rem 1rem; overscroll-behavior: contain }
+.au-note { margin: .7rem 0 0; font-size: .78rem; color: #a46a00; background: var(--yellow-lt); border-radius: 8px; padding: .55rem .7rem }
+[data-theme="dark"] .au-note { color: #f7c75a; background: color-mix(in srgb, var(--yellow) 14%, transparent) }
+.au-sec { padding: .9rem 0; border-bottom: 1px solid var(--border) }
+.au-sec:last-child { border-bottom: 0 }
+.au-sec[hidden] { display: none }
+.au-lbl { display: block; font-size: .7rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin-bottom: .45rem }
+.au-sh { display: flex; align-items: baseline; gap: .5rem; margin-bottom: .45rem }
+.au-sh .au-lbl { margin: 0 }
+.au-cnt { font-size: .74rem; color: var(--purple); font-weight: 700 }
+.au-link { margin-left: auto; border: 0; background: none; color: var(--purple); font: inherit; font-size: .76rem; font-weight: 700; cursor: pointer; padding: 0 }
+.au-link:hover { text-decoration: underline }
+.au-link[hidden] { display: none }
+.au-toggle { margin-left: auto; display: inline-flex; align-items: center; gap: .3rem; font-size: .76rem; color: var(--muted); font-weight: 600; cursor: pointer }
+.au-help { font-size: .76rem; color: var(--muted); padding: .3rem 0 }
+.au-drawer select.au-role, .au-drawer .ss-trigger { width: 100%; min-width: 0; height: 2.3rem; font-size: .86rem }
+.au-picked { display: flex; flex-wrap: wrap; gap: .3rem; margin-bottom: .55rem; min-height: 1.6rem; align-items: center }
+.au-chip.is-pick { display: inline-flex; align-items: center; gap: .25rem; margin: 0; padding-right: .15rem; background: var(--purple-lt); border-color: transparent; color: var(--purple) }
+.au-chip.is-pick button { border: 0; background: none; color: inherit; width: 18px; height: 18px; border-radius: 4px; cursor: pointer; font-size: .7rem; opacity: .7 }
+.au-chip.is-pick button:hover { opacity: 1; background: color-mix(in srgb, var(--purple) 14%, transparent) }
+.au-q {
+  width: 100%; height: 2.1rem; border: 1px solid var(--border); border-radius: 8px; background: var(--card2); color: var(--text);
+  font: inherit; font-size: .84rem; padding: 0 .65rem; margin-bottom: .45rem; outline: 0;
+}
+.au-q:focus { border-color: var(--purple) }
+.au-list { max-height: 11.5rem; overflow-y: auto; border: 1px solid var(--border); border-radius: 9px; padding: .25rem; overscroll-behavior: contain }
+.au-list.au-cls { max-height: min(46vh, 22rem) }
+.au-opt { display: flex; align-items: center; gap: .5rem; padding: .32rem .5rem; border-radius: 6px; font-size: .82rem; cursor: pointer; line-height: 1.25 }
+.au-opt:hover { background: var(--card2) }
+.au-opt input { accent-color: var(--purple); width: 15px; height: 15px; flex: none; margin: 0 }
+.au-opt:has(input:checked) { background: var(--purple-lt) }
+.au-opt:has(input:focus-visible) { outline: 2px solid var(--purple); outline-offset: -2px }
+.au-opt em { display: block; font-style: normal; font-size: .68rem; color: var(--orange) }
+.au-grp + .au-grp { margin-top: .25rem }
+.au-gh { position: sticky; top: -.25rem; z-index: 1; display: flex; justify-content: space-between; align-items: center; gap: .5rem; background: var(--card); padding: .35rem .5rem .2rem; font-size: .72rem; font-weight: 800; color: var(--muted) }
+.au-gh b { color: var(--purple); font-size: .7rem }
+.au-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: .1rem }
+.au-df { display: flex; align-items: center; gap: .55rem; padding: .8rem 1.2rem; border-top: 1px solid var(--border); background: var(--card) }
+.au-diff { flex: 1; min-width: 0; font-size: .76rem; color: var(--muted) }
+.au-df .btn { padding: .5rem .95rem; font-size: .82rem }
+
+@media (max-width: 760px) {
+  .wrap { padding: 1rem .9rem 2rem }
+  .import-toolbar-hint { display: none }
+  .au-search { flex-basis: 100%; max-width: none }
+  .au-search kbd { display: none }
+  .au-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -.9rem .8rem; padding: 0 .9rem }
+  .au-tabs button { flex: none }
+  .table-scroll { overflow: visible }
+  .au-table { min-width: 0; border: 0; background: transparent }
+  .au-table thead { display: none }
+  .au-table, .au-table tbody { display: block }
+  .au-table tbody tr { display: grid; grid-template-columns: 1fr; gap: .3rem; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: .75rem .85rem; margin-bottom: .55rem }
+  .au-table td { display: block; padding: 0; border: 0; font-size: .82rem }
+  .au-table td[data-label]:not(.au-who) { display: flex; gap: .5rem; align-items: baseline; flex-wrap: wrap }
+  .au-table td[data-label]:not(.au-who)::before { content: attr(data-label); flex: 0 0 6.6rem; font-size: .7rem; font-weight: 700; color: var(--muted) }
+  .au-table td[data-label]:has(> .au-dash) { display: none }
+  .au-who b, .au-who small { white-space: normal; overflow-wrap: anywhere }
+  .au-table td.au-act { text-align: left; white-space: normal; width: auto; padding-top: .35rem; display: flex; flex-wrap: wrap; gap: .4rem; align-items: center }
+  .au-act .au-edit { margin-left: auto }
+  .au-table tbody tr.au-morerow, .au-table tbody tr:has(> .au-empty) { display: block; border: 0; background: none; padding: 0 }
+  .au-drawer { width: 100vw; border-left: 0 }
+  .au-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)) }
+}
+@media (prefers-reduced-motion: reduce) {
+  .au-drawer { transition: none }
+  .au-table tbody tr.is-saved { animation: none }
+}
+/* Nhãn vai trò ở chế độ tối: chữ tím đậm trên nền tím tối gần như không đọc được */
+[data-theme="dark"] .badge.teacher { color: #b4bcff }
+[data-theme="dark"] .badge.coordinator, [data-theme="dark"] .badge.school_admin { color: #8cc4ff }

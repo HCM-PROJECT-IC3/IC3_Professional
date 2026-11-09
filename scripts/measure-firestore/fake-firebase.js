@@ -20,6 +20,7 @@
   // __FS_PROFILE.schools: trường được xem (giáo viên/điều phối/quản trị trường).
   // __FS_PROFILES (multi.py): hồ sơ của MỌI máy — máy nào nạp dữ liệu mẫu lên Firestore chung trước cũng có đủ tài khoản.
   (window.__FS_PROFILES || [P]).forEach((Q) => { col('users')[Q.uid] = Object.assign({}, col('users')[Q.uid], { role: Q.role, approved: true, name: Q.name || 'Tài khoản thử', email: Q.uid + '@x.vn', schools: Q.schools || (col('users')[Q.uid] || {}).schools || [] }); });
+  if (typeof window.__FS_SEED === 'function') window.__FS_SEED(col, T, now); // kịch bản đo tự thêm dữ liệu riêng (vd lịch giảng dạy)
   for (let i = 0; i < 85; i++) col('gvlab_profiles')['g' + i] = { name: 'P' + i };
   const PERSIST = ['users', 'schools', 'classes', 'teacher_sync'];
   const ser = (o) => JSON.stringify(o, (k, v) => (v && v.__ts ? { __tsms: v.toMillis() } : v));
@@ -46,7 +47,7 @@
   const OPS = { '==': (a, b) => cmpv(a) === cmpv(b), '!=': (a, b) => cmpv(a) !== cmpv(b), '>': (a, b) => cmpv(a) > cmpv(b), '>=': (a, b) => cmpv(a) >= cmpv(b), '<': (a, b) => cmpv(a) < cmpv(b), '<=': (a, b) => cmpv(a) <= cmpv(b), in: (a, b) => b.includes(a), 'array-contains': (a, b) => Array.isArray(a) && a.includes(b), 'array-contains-any': (a, b) => Array.isArray(a) && a.some((x) => b.includes(x)) };
   const docSnap = (path, id, data) => ({ id, exists: data !== undefined, ref: { path, id }, metadata: { fromCache: false }, data: () => (data === undefined ? undefined : JSON.parse(JSON.stringify(data), (k, v) => v)), get: (f) => (data || {})[f] });
   // data() phải trả lại Timestamp thật → không JSON hoá
-  const mk = (path, id, data) => { const s = docSnap(path, id, data); s.data = () => (data === undefined ? undefined : Object.assign({}, data)); return s; };
+  const mk = (path, id, data) => { const s = docSnap(path, id, data); s.data = () => (data === undefined ? undefined : Object.assign({}, data)); s.ref = new DocRef(path.slice(0, path.lastIndexOf('/')), id); return s; }; // ref ghi được (batch.set(d.ref, …))
   // Máy chủ chung tự đếm lượt đọc (không mất khi trang tải lại / đóng giữa chừng — Firestore thật vẫn tính phí truy vấn đã gửi)
   const report = (label, n) => { if (window.__FS_SHARED) try { fetch(window.__FS_SHARED + '/read', { method: 'POST', body: JSON.stringify({ label, n }), keepalive: true }); } catch (e) {} };
   const note = (kind, label, n, extra) => { report(label, n); LOG.reads.push(Object.assign({ kind, label, n, at: Date.now() - LOG.t0 }, extra || {})); };

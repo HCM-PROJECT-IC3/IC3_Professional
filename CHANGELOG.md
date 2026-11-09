@@ -23,6 +23,96 @@ Thứ tự: Apps Script → `firestore.rules`/index → đẩy web.
      Lệch dữ liệu thì đặt `rosterDeltaSync: false` trong `js/backend-config.js`.
 
 
+## 10/11/2026 (8) — Đấu trường: màn vào phòng gọn; đường dự phòng không còn sót listener Firestore
+
+Học sinh thấy (arena.html):
+- Thanh chọn vai thành 3 nút phẳng trong 1 khung (vai đang chọn: nền trắng + gạch màu dưới), bỏ nền chuyển màu,
+  bóng khối và biểu tượng nhún. Điện thoại: chỉ chữ, không xuống dòng.
+- Thẻ vào phòng: bỏ cảnh lớp học vẽ phía sau (không còn dựng SVG), bỏ mặt cười tròn nổi trên thẻ, bỏ nút phập phồng.
+  Tiêu đề "Vào phòng của lớp" (kèm Linh vật nhỏ), 1 dòng dẫn. 3 bước cách chơi thành 1 dòng chữ (ẩn trên điện thoại).
+  "Chưa có mã phòng? Chơi Hành trình IC3" thành dòng liên kết (trước: khung vàng viền dày, điện thoại bị chia 3 cột).
+- Gõ 0, 1, O, I, L vào ô mã: trước bị xoá âm thầm; nay dòng nhắc "Mã không có số 0, 1 và chữ O, I, L." đổi màu cam.
+
+Firebase — đường dự phòng (học sinh không nối thẳng được máy giáo viên, js/arena/arena-relay.js):
+- `close()` bỏ qua khi kết nối CHƯA mở → gõ sai mã / hết giờ chờ / lỗi rồi bấm Thử lại: mỗi lần sót 1 listener trên
+  arena_relay/{mã}. Phòng mở sau bằng mã đó (hoặc giáo viên mở lại phòng cũ) thì MỖI listener sót bị tính 1 lượt đọc
+  ở mọi lần máy giáo viên ghi (~1 lần/giây trong trận). Phòng đóng (document xoá) cũng không huỷ listener.
+  Nay đóng luôn huỷ listener; phòng đóng tự đóng hẳn; arena-room.js đóng kết nối hỏng trước khi nối lại.
+  Test (Firestore giả): 3 lần thử mã sai → trước 4 listener sót, phòng mở thì 3 kết nối đã bỏ vẫn nhận tin; nay 0.
+- Đã rà: câu hỏi là file tĩnh (data/ic3), chọn bộ khác không gọi Firebase; học sinh nối thẳng 0 lượt Firebase.
+Phòng/trận không đổi giao thức. Apps Script: không đổi.
+
+## 10/11/2026 (7) — Lịch giảng dạy: xuất của 1 GV không đọc cả đội; đổi tuần nhanh / 2 người cùng sửa không hỏng dữ liệu
+
+Thầy cô thấy (teaching-schedule.html, tab Lịch tuần):
+- Cạnh ô Tuần: nút ‹ › và "Tuần này" (phím ← → khi không gõ chữ). Tuần đã xem mở lại không tốn lượt đọc.
+- Ô tìm: gõ không dấu vẫn ra ("dang thi" → ĐẶNG THỊ…), nhiều từ thì khớp đủ các từ; dòng nhỏ "12/60 giáo viên khớp".
+- Lưu lịch mà máy khác vừa sửa đúng lịch đó sau khi mình mở: hỏi lại (OK = ghi đè, Huỷ = giữ bản kia và hiện lên bảng).
+
+Lỗi dữ liệu / bất đồng bộ đã sửa (đã thử lại trên bản cũ: đều tái hiện được):
+- Chọn tuần A rồi tuần B thật nhanh: A về sau B → bảng hiện lịch tuần A dưới nhãn tuần B; bấm Sửa rồi Lưu là ghi lịch
+  tuần A vào tuần B. Nay lần chọn cũ về muộn bị bỏ.
+- Đang lưu thì đổi tuần: lượt đọc lại sau khi lưu gắn lịch tuần cũ vào bảng tuần mới. Nay không đụng bảng tuần khác.
+- 2 người cùng sửa lịch 1 giáo viên: người lưu sau ghi đè mất phần của người trước mà không biết.
+- 1 giáo viên thiếu tên/mã (doc nhập dở) → ô tìm + "Xuất PDF tất cả" báo lỗi `toLowerCase`.
+
+Firebase (Firebase giả cỡ thật: 60 GV × 12 tuần, scratchpad ts_test.py / ts_ct.py; cũ → mới):
+| Thao tác | Trước | Sau |
+|---|---|---|
+| Phiếu công tác 1 GV, khoảng ngày 4 tuần chưa mở | 180 (lịch cả đội 3 tuần) | 3 (đúng doc của GV đó) |
+| PDF lịch 1 GV có trang "cuối tháng" chưa mở | 60 | 1 |
+| Lưu lịch 1 GV | 1 đọc lại sau khi ghi | 1 đọc trước khi ghi (kiểm tra xung đột), 0 sau |
+| Sau khi lưu, đổi tuần rồi quay lại tuần đó (mỗi lần) | 60 (tuần đó đọc thẳng máy chủ tới khi đóng tab) | 0 |
+Mở trang / mở lại / tìm / chuyển tab không đổi (cold 504 do ảnh đại diện + GV, mở lại 0). Apps Script: không đổi.
+js/services/schedule-read-cache.js: thêm `put` (ghi bản đúng vào bản đệm sau khi lưu, bỏ cờ "đọc thẳng máy chủ" của
+đúng khoá đó; lệnh ghi kế tiếp lại bỏ) và `peek` (xem bản đệm, không đọc máy chủ) — có test. Bộ Firebase giả: thêm
+`window.__FS_SEED` để kịch bản đo tự nạp dữ liệu riêng.
+
+## 10/11/2026 (6) — Quản lý tài khoản: bảng gọn, tìm/lọc, sửa từng người trong 1 bảng; lưu không đọc lại cả danh sách
+
+Admin thấy (admin-users.html):
+- Ô tìm (tên, email, trường, lớp, Mã NV; phím `/`) + các tab lọc có số đếm: Tất cả · Cần xử lý · Chờ duyệt · Giáo viên ·
+  Điều phối/QT trường · Quản trị viên · Học sinh. "Cần xử lý" gom tài khoản chờ duyệt, điều phối chưa gán trường,
+  giáo viên chưa gán lớp / thiếu trường của lớp đang dạy / chưa liên kết Mã NV — dòng có nhãn cảnh báo vàng.
+  Tìm và lọc chạy trên dữ liệu đã có: 0 lượt đọc. Mở thẳng `admin-users.html?q=<email>` là lọc sẵn 1 người.
+- Mỗi dòng chỉ tóm tắt (thẻ trường, thẻ lớp, Mã NV); 60 dòng/lần, "Xem thêm". Điện thoại: mỗi tài khoản 1 thẻ.
+- Bấm "Sửa" (hoặc nhấp đúp dòng) → bảng trượt bên phải: vai trò, trường (tìm + tích, thẻ bỏ được), lớp theo trường
+  (tìm, "Chỉ trường đã chọn", lớp của GV khác ghi tên GV), Mã NV (ô chọn có tìm, ghi rõ mã đã gán cho ai).
+  Chọn lớp là trường tự thêm theo (đến khi sửa tay ô trường). Chân bảng ghi "Sẽ lưu: …"; 1 nút Lưu cho tất cả.
+- Đổi vai trò không còn ghi ngay khi chọn nhầm trong danh sách; cấp/bỏ quyền Quản trị viên phải xác nhận.
+
+Lỗi dữ liệu / bất đồng bộ đã sửa:
+- Ô chọn nhiều giữ Ctrl: bấm không giữ Ctrl là mất hết trường/lớp đã chọn rồi lỡ tay Lưu → nay là ô tích từng mục.
+- Bỏ gán lớp theo danh sách lớp cũ (đệm tới 12 giờ) xoá mất giáo viên mà máy khác vừa gán. Nay trước khi ghi đọc lại
+  đúng các lớp sắp đổi; lớp đã đổi ở máy khác → không ghi gì, cập nhật danh sách và báo xem lại.
+- Lưu nhanh 2 người liên tiếp: 2 lần sửa bản đệm chen nhau làm mất lần trước (mở lại trang thấy dữ liệu cũ). Nay ghi
+  bản đệm tuần tự từ bộ nhớ. Lần tải cũ về muộn không vẽ đè lần tải mới.
+- Vai trò + trường + Mã NV gộp 1 lệnh ghi (trước 3 nút, lỗi giữa chừng là lệch nửa vời). Giáo viên bị chuyển lớp đi
+  được đặt lại "Trường được xem" theo lớp còn lại ngay.
+
+Firebase (đo bằng Firebase giả cỡ thật, 121 tài khoản / 150 lớp / 3.000 học sinh):
+| Thao tác | Trước | Sau |
+|---|---|---|
+| Lưu lớp cho 1 giáo viên (chuyển 1 lớp) | 396 đọc (đọc lại users, classes, teaching_teachers) | 20 đọc (1 lớp + 19 học sinh của lớp đó) |
+| Đổi vai trò / trường / Mã NV | 0 đọc, mỗi mục 1 lệnh ghi | 0 đọc, 1 lệnh ghi |
+| Nút "Cập nhật" mới / sau Nhập GV từ Excel | đọc lại 121 tài khoản | 2 lượt (chỉ tài khoản mới tạo / vừa sửa) |
+| Tìm, lọc, mở bảng sửa | — | 0 |
+| Phần tử trong bảng | ~38.800 (31.097 `<option>`) | ~1.000 |
+Mở trang lần đầu / mở lại không đổi (3.172 / 0). Apps Script: không đổi (mỗi mục đổi vẫn 1 dòng nhật ký như trước).
+Bộ Firebase giả (scripts/measure-firestore/fake-firebase.js): doc trả về từ truy vấn nay có `ref` ghi được (batch.set(d.ref)).
+
+## 10/11/2026 (5) — Sảnh gọn kiểu macOS: tiêu đề 1 hàng, bỏ robot, bỏ khoảng trống
+
+Học sinh thấy (index.html — vẫn nền trời xanh, 3 màu 3 bước):
+- Tiêu đề thành 1 hàng thấp như thanh công cụ: "EduQuiz IC3" + khẩu hiệu bên trái; bên phải 3 mảng kỹ năng (chấm màu +
+  tên: Máy tính căn bản · Ứng dụng chính · Cuộc sống số, 3 chấm chồng nhau thay sơ đồ 3 vòng tròn to) và "Dành cho thầy cô".
+  Bỏ chữ in hoa cỡ lớn.
+- Màn rộng: nội dung bám lên trên thay vì canh giữa theo chiều dọc → hết dải trống trên tiêu đề; khung 3 bước lên cao ~50px.
+- Thanh trái: bỏ robot hoạt hình; "Kết quả của em" thành nhóm thứ 2 ngay dưới menu (tiêu đề nhóm chữ nhỏ màu xám, không
+  đóng khung) thay vì bị đẩy xuống đáy.
+- Điện thoại: tiêu đề + nút Dành cho thầy cô, ẩn hàng 3 mảng kỹ năng để nhường chỗ cho các bước.
+Bản trước nằm ở commit ef6824c (css/lobby-skin.css, index.html) nếu cần quay lại sơ đồ 3 vòng tròn.
+
 ## 10/11/2026 (4) — Lịch chọn ngày tiếng Việt; ô chọn đẹp ở Đấu trường, Góc học tập, Thi đua
 
 Học sinh thấy:
