@@ -180,7 +180,7 @@
         const RC = window.EduScheduleReadCache;
         const cached = (key, loader) => (RC ? RC.read(key, loader) : loader());
         [teachers, weeks] = await Promise.all([
-          cached('teachers', () => window.EduRepositories.teachingTeacher.list({ orderBy: 'name' })),
+          RC ? RC.teachers() : window.EduRepositories.teachingTeacher.list({ orderBy: 'name' }),
           cached('weeks', () => window.EduRepositories.teachingWeek.listAll()),
         ]);
       }

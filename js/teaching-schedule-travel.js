@@ -168,7 +168,8 @@
    * cache lại, không tải lại mỗi lần bấm "Tính hỗ trợ". */
   async function ensureTeachersLoaded() {
     if (state.teachersLoaded) return;
-    const rows = await cachedRead('teachers', () => window.EduRepositories.teachingTeacher.list({ orderBy: 'name' }));
+    const RC = window.EduScheduleReadCache;
+    const rows = await (RC ? RC.teachers() : window.EduRepositories.teachingTeacher.list({ orderBy: 'name' }));
     state.teachersByCode = {};
     rows.forEach((t) => { state.teachersByCode[t.code || t.id] = t; });
     state.teachersLoaded = true;

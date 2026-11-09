@@ -176,6 +176,20 @@
     const prog = program();
     const all = lsGet(PREF_KEY, {});
     const key = `${st.key}|${prog}`;
+    const save = (v) => {
+      const d = parseDay(v);
+      if (d && daysLeft(d) >= 0) all[key] = v; else delete all[key];
+      lsSet(PREF_KEY, all);
+      render();
+    };
+    // Lịch tiếng Việt (js/ui-date.js) — lịch của trình duyệt theo ngôn ngữ Windows (tiếng Anh, mm/dd/yyyy) và bật ra sai chỗ
+    if (global.EduDatePicker && global.EduDatePicker.open) {
+      global.EduDatePicker.open({
+        anchor: $('examCountdown').querySelector('.xc-edit'), value: all[key] || '', min: dayKey(today0()),
+        title: 'Ngày thi của em', countdown: true, clearLabel: 'Xoá ngày thi', onPick: save,
+      });
+      return;
+    }
     const inp = $('examCountdownInput');
     inp.min = dayKey(today0());
     inp.value = all[key] || '';

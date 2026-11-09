@@ -8,11 +8,17 @@
 
   const M = global.EduModels.TeachingSchedule;
 
+  // Mọi lệnh ghi giáo viên đóng dấu updatedAt = serverTimestamp(): máy khác chỉ hỏi phần thay đổi
+  // (EduScheduleReadCache.teachers()) — ghi thiếu dấu thì máy khác chỉ thấy ở lần đọc đủ hằng ngày.
+  const stamped = (data) => Object.assign({}, data, { updatedAt: global.EduModels.SERVER_TIME });
   class TeachingTeacherRepository extends global.EduBaseRepository {
     constructor() { super(M.TEACHERS_COLLECTION); }
     async listActive() {
       return this.list({ where: [['active', '==', true]], orderBy: 'name' });
     }
+    createWithId(id, data) { return super.createWithId(id, stamped(data)); }
+    update(id, data) { return super.update(id, stamped(data)); }
+    upsert(id, data) { return super.upsert(id, stamped(data)); }
   }
 
   class TeachingWeekRepository extends global.EduBaseRepository {

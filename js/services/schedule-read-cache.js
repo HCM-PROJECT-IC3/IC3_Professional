@@ -58,7 +58,7 @@
     const week = (/\d{4}-\d{2}-\d{2}/.exec(id || '') || [])[0];
     const data = (word) => (k) => k.includes(word) && (!week || k.includes(week) || SUGGEST_KEY.test(k));
     switch (col) {
-      case 'teaching_teachers': return (k) => k === 'teachers' || k.startsWith('doc:teacher:');
+      case 'teaching_teachers': return (k) => k === 'teachers' || k === 'teachers~delta' || k.startsWith('doc:teacher:');
       case 'teaching_weeks': return (k) => k === 'weeks';
       case 'teaching_timetable_periods': return (k) => k === 'periodTimes' || k.startsWith('doc:periods:');
       case 'teaching_schedule': return data('schedule');
@@ -166,6 +166,78 @@
     });
   }
 
+  // ── Danh sách giáo viên: đồng bộ PHẦN THAY ĐỔI (09/11/2026) ──
+  // Đo (measure_all, giáo viên t3): bản đệm 'teachers' hết hạn 1 giờ → mở lại sau 1 giờ / hôm sau đọc lại đủ ~60 doc.
+  // 50 GV × 3–4 lần mở cách nhau/ngày ≈ 9.000 lượt/ngày chỉ để lấy danh sách gần như không đổi.
+  // Nay: đọc đủ DELTA_FULL_MS/lần (bắt GV bị xoá + doc cũ chưa có updatedAt); giữa các lần, quá DELTA_FRESH_MS thì chỉ hỏi
+  // doc có updatedAt mới hơn mốc đã thấy (không ai sửa = 1 lượt). Mọi lệnh ghi teaching_teachers đóng dấu updatedAt
+  // (EduRepositories.teachingTeacher + nhập Excel). Ghi ở máy này: bỏ bản đệm (affected 'teachers~delta') → đọc đủ ngay.
+  const DELTA_FRESH_MS = HOUR;
+  // 7 ngày như hồ sơ (profile-cache-service): chỉ admin xoá được GV và máy admin thấy ngay; máy khác thấy GV bị xoá
+  // muộn nhất 7 ngày (thêm/sửa vẫn thấy sau ≤ 1 giờ).
+  const DELTA_FULL_MS = 7 * 24 * HOUR;
+  const DELTA_KEEP_MS = 30 * 24 * HOUR;
+  const DELTA_MARGIN_MS = 10 * 60 * 1000; // chưa doc nào có updatedAt: mốc = lúc đọc đủ trừ lệch đồng hồ máy/máy chủ
+  const msOf = (v) => (v && typeof v.seconds === 'number' ? v.seconds * 1e3 + Math.floor((Number(v.nanoseconds) || 0) / 1e6) : (typeof v === 'number' ? v : 0));
+  const maxStamp = (list) => (list || []).reduce((m, d) => Math.max(m, msOf(d && d.updatedAt)), 0);
+  const byName = (a, b) => (String(a.name || '') < String(b.name || '') ? -1 : String(a.name || '') > String(b.name || '') ? 1 : 0);
+
+  /**
+   * Gộp phần thay đổi vào danh sách đã lưu (thuần — test được). entry: { list, watermark, fullAt, checkedAt }.
+   * → entry mới (doc cùng id thay bằng bản mới, doc mới thêm vào, sắp theo tên như orderBy('name')).
+   */
+  function mergeDelta(entry, changes, now) {
+    const byId = new Map((entry.list || []).map((d) => [d.id, d]));
+    (changes || []).forEach((d) => byId.set(d.id, d));
+    return {
+      list: [...byId.values()].sort(byName),
+      watermark: Math.max(entry.watermark || 0, maxStamp(changes)),
+      fullAt: entry.fullAt,
+      checkedAt: now,
+    };
+  }
+
+  /**
+   * Đọc qua bản đệm delta. o = { full: () => Promise<list>, since: (Timestamp) => Promise<list thay đổi>, now? }.
+   * Lỗi mạng khi hỏi phần thay đổi → dùng bản đã lưu (cũ còn hơn trống).
+   */
+  function readDelta(key, o) {
+    const k = key + '~delta';
+    if (inflight.has(k)) return inflight.get(k);
+    const p = readDeltaNow(k, o).finally(() => inflight.delete(k));
+    inflight.set(k, p);
+    return p;
+  }
+  async function readDeltaNow(k, o) {
+    const C = cache(), fullKey = PREFIX + k, now = (o.now || Date.now)();
+    const store = async (entry) => { if (C) { rememberKey(fullKey); await C.setAsync(fullKey, entry, DELTA_KEEP_MS, true); } return entry.list; };
+    const loadFull = async () => {
+      const list = await o.full();
+      return store({ list, watermark: maxStamp(list) || now - DELTA_MARGIN_MS, fullAt: now, checkedAt: now });
+    };
+    if (!C || bypassed(k)) return loadFull();
+    const run = async () => {
+      const e = await C.getAsync(fullKey, true);
+      if (!e || !Array.isArray(e.list) || now - (e.fullAt || 0) >= DELTA_FULL_MS) return loadFull();
+      if (now - (e.checkedAt || 0) < DELTA_FRESH_MS) return e.list;
+      const TS = global.firebase && global.firebase.firestore && global.firebase.firestore.Timestamp;
+      if (!TS) return loadFull();
+      let changes;
+      try { changes = await o.since(TS.fromMillis(e.watermark || 0)); } catch (err) { return e.list; }
+      return store(mergeDelta(e, changes, now));
+    };
+    return C.exclusive ? C.exclusive(fullKey, run) : run();
+  }
+
+  /** Danh sách giáo viên (teaching_teachers) theo tên — dùng chung Lịch tuần, TKB, Xăng xe. */
+  function teachers() {
+    const repo = global.EduRepositories && global.EduRepositories.teachingTeacher;
+    return readDelta('teachers', {
+      full: () => repo.list({ orderBy: 'name' }),
+      since: (ts) => repo.list({ where: [['updatedAt', '>', ts]], limit: 1000 }),
+    });
+  }
+
   installWriteHooks();
-  global.EduScheduleReadCache = { read, invalidate, ttlFor, TTL_MS };
+  global.EduScheduleReadCache = { read, invalidate, ttlFor, TTL_MS, readDelta, mergeDelta, teachers, DELTA_FRESH_MS, DELTA_FULL_MS };
 })(window);

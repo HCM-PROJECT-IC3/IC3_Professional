@@ -75,6 +75,8 @@ const weekOf = s => Math.floor(Math.round((parseD(s) - parseD(S.settings.week1))
 const weekMonday = n => addDays(S.settings.week1, (n - 1) * 7);
 const weekDates = n => { const m = weekMonday(n); return [0, 1, 2, 3, 4, 5].map(i => addDays(m, i)); };
 const curWeek = () => Math.max(1, weekOf(today()));
+/** Ngày dạy cuối tuần theo Cài đặt (mặc định T2–T6 → thứ Sáu), như dòng "Từ ngày … đến ngày …" của mẫu trường. */
+const lastDay = d => d[Math.min(d.length - 1, Math.max(...(S.settings.days || [6])) - 2)] || d[d.length - 1];
 
 /* ---------- lớp ---------- */
 const normClass = s => String(s ?? '').trim().replace(/^(\d+)\s*[Aa.\/_-]\s*(\d+)$/, '$1.$2');
@@ -273,6 +275,7 @@ const NAV = [
   { head: 'Hằng ngày' },
   { v: 'home', label: 'Hôm nay', short: 'Hôm nay', icon: 'home' },
   { v: 'week', label: 'Sổ đầu bài', short: 'Sổ tuần', icon: 'book' },
+  { v: 'fill', label: 'Điền bảng tuần', short: 'Bảng tuần', icon: 'clip' },
   { v: 'report', label: 'In & xuất file', short: 'In', icon: 'printer' },
   { head: 'Thiết lập' },
   { v: 'tkb', label: 'Thời khóa biểu', short: 'TKB', icon: 'grid' },
@@ -280,7 +283,7 @@ const NAV = [
   { v: 'ppct', label: 'Chương trình', short: 'PPCT', icon: 'list' },
   { v: 'settings', label: 'Cài đặt', short: 'Cài đặt', icon: 'sliders' },
 ];
-const VIEWS = { home: viewHome, week: viewWeek, tkb: viewTKB, classes: viewClasses, ppct: viewPPCT, report: viewReport, settings: viewSettings };
+const VIEWS = { home: viewHome, week: viewWeek, fill: viewFill, tkb: viewTKB, classes: viewClasses, ppct: viewPPCT, report: viewReport, settings: viewSettings };
 let CARDS = [];
 
 function go(v) { UI.view = v; saveUI(); render(); window.scrollTo(0, 0); }
@@ -956,7 +959,7 @@ function printHTML(n) {
   }).join('');
   return `<table class="hdr"><tr><td style="width:40%">${esc(st.ubnd)}<br>${esc(st.school)}<br>———</td><td></td><td style="width:45%">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM<br><u>Độc lập - Tự do - Hạnh phúc</u></td></tr></table>
   <div class="ttl">${esc(st.reportTitle)}<br>NĂM HỌC ${esc(st.year)}</div>
-  <div style="text-align:center;margin:4px 0 8px;font-style:italic">Tuần: ${pad(n)} &nbsp; Từ ngày ${vnDate(d[0])} đến ngày ${vnDate(d[5])}</div>
+  <div style="text-align:center;margin:4px 0 8px;font-style:italic">Tuần: ${pad(n)} &nbsp; Từ ngày ${vnDate(d[0])} đến ngày ${vnDate(lastDay(d))}</div>
   ${sections}
   <div class="sec2">TỔNG KẾT TUẦN</div>
   <div>- Số tiết đã dạy: ${inWeek.filter(e => !e.off).length}${inWeek.some(e => e.off) ? `; tiết nghỉ: ${inWeek.filter(e => e.off).length}` : ''}.</div>
@@ -978,6 +981,8 @@ function viewReport(root) {
     <button type="button" class="btn primary lg" id="rPrint">${ic('printer')}In / Lưu PDF</button>
     <button type="button" class="btn lg" id="rXlsx">${ic('download')}Excel tuần ${pad(UI.week)}</button>
     <button type="button" class="btn lg" id="rXlsxAll">${ic('download')}Excel cả năm</button>
+    ${UI.wkLink ? `<button type="button" class="btn lg" id="rSync" title="Đọc lại tab tuần của trường (link ở Điền bảng tuần): tiết, vắng, nhận xét, tên ký">${ic('download')}Lấy từ bảng tuần</button>` : ''}
+    <span class="faint" id="rSyncInfo"></span>
   </div>
   <div class="paper">${printHTML(UI.week)}</div>
   <div class="panel noprint" style="margin-top:24px"><div class="panel-h"><h2>Thống kê cả năm theo lớp</h2></div>
@@ -985,6 +990,28 @@ function viewReport(root) {
     ${stats.map(o => `<tr><td>${clsBadge(o.cls, true)}</td>${mp ? `<td>${esc(progName(o.prog))}</td>` : ''}<td class="n">${o.n}</td><td class="n">${o.off || '<span class="faint">–</span>'}</td><td class="n">${lastPPCT(o.prog, o.cls) || '–'}</td><td class="n">${o.P}</td><td class="n">${o.K}</td></tr>`).join('')}</tbody></table></div>`
       : emptyBox('printer', 'Chưa có dữ liệu')}</div>`;
   bindWeekNav(root);
+  const sync = async (auto) => {
+    const b = $('#rSync'), info = $('#rSyncInfo');
+    if (!b) return;
+    b.disabled = true;
+    try {
+      const r = await wkSync(UI.wkLink, t => { info.textContent = t; });
+      const wk = WK.sheet.rows.length ? weekOf(WK.sheet.rows[0].date) : 0;
+      if (wk && wk !== UI.week) { UI.week = wk; saveUI(); }
+      render();
+      toast(`Đã lấy ${r.fills.size} tiết của ${WK.teacher} từ bảng tuần ${pad(wk)}${r.added ? ` (${r.added} tiết mới)` : ''}`);
+    } catch (err) {
+      b.disabled = false; info.textContent = '';
+      if (!auto) toast(err.message === 'PRIVATE' ? 'Không đọc được Sheet qua link – vào Điền bảng tuần, dán cả bảng' : (err.message || 'Không đọc được bảng tuần'));
+    }
+  };
+  if ($('#rSync')) $('#rSync').onclick = () => sync(false);
+  // Tuần đang xem chưa có tiết nào mà đã có link bảng tuần → tự lấy 1 lần (mỗi tuần, mỗi lần mở trang)
+  const d = weekDates(UI.week);
+  if (UI.wkLink && !S.entries.some(e => e.date >= d[0] && e.date <= d[5]) && !viewReport.tried?.has(UI.week)) {
+    (viewReport.tried ||= new Set()).add(UI.week);
+    sync(true);
+  }
   $('#rPrint').onclick = () => window.print();
   $('#rXlsx').onclick = () => exportXlsx([UI.week]);
   $('#rXlsxAll').onclick = () => {
@@ -1003,7 +1030,7 @@ function exportXlsx(weeks) {
     A.push([]);
     A.push([st.reportTitle]); mg(3, 0, 9);
     A.push([`NĂM HỌC ${st.year}`]); mg(4, 0, 9);
-    A.push([`Tuần: ${pad(n)} Từ ngày ${vnDate(d[0])} đến ngày ${vnDate(d[5])}`]); mg(5, 0, 9);
+    A.push([`Tuần: ${pad(n)} Từ ngày ${vnDate(d[0])} đến ngày ${vnDate(lastDay(d))}`]); mg(5, 0, 9);
     S.programs.forEach((p, i) => {
       const rows = inWeek.filter(e => e.prog === p.id).sort((a, b) => cmpClass(a.cls, b.cls) || bySlot(a, b));
       if (!rows.length && i > 0) return;
@@ -1259,6 +1286,399 @@ async function openSourcePicker() {
     save(); saveUI(); $('#modal').close(); render();
     toast(`Đã lấy ${list.length} lớp · ${added} học sinh mới${removed ? ` · ${removed} tên không còn trong danh sách` : ''}`);
   };
+}
+
+/* =========================================================
+   ĐIỀN BẢNG TUẦN CỦA TRƯỜNG (js/so-dau-bai/sdb-weekly.js)
+   Tab tuần Google Sheet đã có ngày/lớp/tiết/bài/GV → điền Số lượng vắng, Tên vắng, Nhận xét cho các dòng của mình,
+   sao chép 1 khối F:H để dán vào Sheet. Đọc qua link CSV công khai (trình duyệt tự tải, không qua máy chủ) hoặc
+   giáo viên tự dán bảng (Sheet không công khai). 0 Firebase, 0 Apps Script; bản điền cũng lưu vào sổ đầu bài.
+   ========================================================= */
+const WKL = window.EduSdbWeekly;
+let WK = null; // { src, raw, sheet, at, teacher, edit: { [r]: { names?, uu?, hc?, turn } } }
+/* Sổ lớp của Điều phối (FORM QUẢN LÝ LỚP 3/4/5): link lấy ở trang Điểm danh (eduquiz_solop_v1.links) + link dán ở đây.
+   Lưu trên máy (sodaubai_solop): danh sách tab mỗi file (7 ngày) và "Kiến thức cần đạt" của tab BÁO GIẢNG (7 ngày).
+   Bảng lớp (có ngày sinh HS) chỉ giữ trong bộ nhớ trang; dùng lại bản Điểm danh đã đọc nếu mới hơn 30 phút. */
+const BOOKS_KEY = 'sodaubai_solop';
+const BOOK_TTL = 7 * 864e5, TAB_FRESH = 30 * 60e3;
+let BK = { cls: {}, grades: {}, errs: [], at: 0 }; // cls '3.1' → { c, key }; grades 3 → mục tiêu từng bài
+function booksStore() { try { const s = JSON.parse(localStorage.getItem(BOOKS_KEY)); return s && s.books ? s : { added: [], books: {}, goals: {} }; } catch { return { added: [], books: {}, goals: {} }; } }
+function booksSave(s) { try { localStorage.setItem(BOOKS_KEY, JSON.stringify(s)); } catch { /* bộ nhớ đầy: lần sau đọc lại */ } }
+const sheetBase = id => `https://docs.google.com/spreadsheets/d/${id}`;
+async function getPublic(url) {
+  const r = await fetch(url, { cache: 'no-store', credentials: 'omit' });
+  const t = r.ok ? await r.text() : '';
+  if (!t || /^\s*<(!doctype|html)/i.test(t) && !/htmlview/.test(url)) throw new Error('closed');
+  return t;
+}
+async function pool(items, n, fn) { const q = [...items]; await Promise.all(Array.from({ length: n }, async () => { while (q.length) await fn(q.shift()); })); }
+/** Sổ lớp dùng cho trường của bảng tuần: link của Điểm danh cùng trường + link dán ở đây. */
+function bookIds(school) {
+  const st = booksStore(), sl = soLop();
+  const fromDD = (sl.links || []).filter(f => !school || !f.school || SRC.sameSchool(f.school, school) || SRC.sameSchool(f.label, school)).map(f => f.id);
+  return [...new Set([...fromDD, ...st.added])];
+}
+/** Đọc tab lớp + BÁO GIẢNG của mọi sổ → BK. Gọi khi đọc bảng tuần; onStep(n, tổng) để hiện tiến độ. */
+async function loadBooks(school, onStep) {
+  const st = booksStore(), sl = soLop(), ids = bookIds(school), errs = [];
+  BK = { cls: {}, grades: {}, errs, at: Date.now() };
+  if (!ids.length || !window.EduSoLop) return;
+  const L = window.EduSoLop, now = Date.now();
+  await pool(ids, 3, async id => {
+    const b = st.books[id];
+    if (b && now - b.at < BOOK_TTL) return;
+    try { const info = L.parseTabs(await getPublic(`${sheetBase(id)}/htmlview`)); if (!info.tabs.length) throw new Error('closed'); st.books[id] = { title: info.title, tabs: info.tabs, at: now }; }
+    catch { errs.push((b && b.title) || (sl.links || []).find(f => f.id === id)?.title || 'Sổ lớp ' + id.slice(0, 6)); }
+  });
+  const jobs = [];
+  for (const id of ids) {
+    const b = st.books[id]; if (!b) continue;
+    for (const t of b.tabs) {
+      if (L.isClassTab(t.name)) jobs.push({ id, t, kind: 'cls' });
+      else if (/b[áa]o\s*gi[ảa]ng/i.test(t.name)) jobs.push({ id, t, kind: 'bg' });
+    }
+  }
+  let done = 0;
+  await pool(jobs, 4, async j => {
+    const key = `${j.id}|${j.t.gid}`;
+    try {
+      if (j.kind === 'bg') {
+        const g = st.goals[key];
+        const list = g && now - g.at < BOOK_TTL ? g.list : WKL.parseGoals(L.parseCSV(await getPublic(`${sheetBase(j.id)}/export?format=csv&gid=${j.t.gid}`)));
+        if (!g || g.list !== list) st.goals[key] = { at: now, list };
+        const grade = (st.books[j.id].tabs.find(t => L.isClassTab(t.name)) || {}).name?.match(/^\d+/)?.[0] || (st.books[j.id].title.match(/LỚP\s*(\d+)/i) || [])[1];
+        if (grade && list.length) BK.grades[grade] = list;
+      } else {
+        const hit = (sl.cache || {})[key];
+        const csv = hit && now - hit.at < TAB_FRESH ? hit.csv : await getPublic(`${sheetBase(j.id)}/export?format=csv&gid=${j.t.gid}`);
+        const c = L.parseClass(L.parseCSV(csv));
+        if (c && (!school || !c.school || SRC.sameSchool(c.school, school))) BK.cls[SRC.normClass(c.cls || j.t.name)] = { c, key };
+      }
+    } catch { /* tab lỗi: lớp đó dùng nguồn khác */ }
+    onStep && onStep(++done, jobs.length);
+  });
+  booksSave(st);
+}
+const goalList = cls => BK.grades[gradeOf(cls)] || [];
+/** Buổi trên sổ lớp của 1 dòng bảng tuần (2 tiết cùng ngày: theo thứ tự buổi/tiết trên bảng tuần). */
+function wkHit(x) {
+  const b = BK.cls[x.cls]; if (!b || !window.EduSoLop) return null;
+  const same = WK.sheet.rows.filter(y => y.cls === x.cls && y.date === x.date).sort((p, q) => (p.buoi === q.buoi ? p.tiet - q.tiet : p.buoi === 'Sáng' ? -1 : 1));
+  const hit = WKL.sessionFor(b.c, x, same.indexOf(x), window.EduSoLop.dateOf, parseD(x.date));
+  return hit && Object.assign(hit, { b });
+}
+
+async function wkLoad(text) {
+  const src = WKL.readSource(text);
+  if (!src) throw new Error('Chưa nhận ra link Google Sheet hoặc bảng dán vào.');
+  let raw;
+  if (src.kind === 'paste') raw = WKL.parseTSV(text);
+  else {
+    let r;
+    try { r = await fetch(`https://docs.google.com/spreadsheets/d/${src.id}/export?format=csv&gid=${src.gid}`, { cache: 'no-store', credentials: 'omit' }); } catch { r = null; }
+    const body = r && r.ok ? await r.text() : '';
+    if (!body || /^\s*<(!doctype|html)/i.test(body)) throw new Error('PRIVATE');
+    raw = window.EduSoLop.parseCSV(body);
+  }
+  const sheet = WKL.parseWeekSheet(raw);
+  if (!sheet) throw new Error('Không thấy dòng tiêu đề “Thứ, ngày | Lớp dạy | … | Học sinh vắng | Nhận xét” — đây có phải tab bảng tuần không?');
+  if (!sheet.rows.length) throw new Error('Tab này chưa có tiết nào.');
+  const prev = WK && WK.src && WK.src.id === src.id && WK.src.gid === src.gid ? WK : null; // đọc lại cùng tab: giữ chữ đã sửa
+  WK = { src: src.kind === 'link' ? src : null, raw, sheet, at: Date.now(), teacher: prev ? prev.teacher : '', edit: prev ? prev.edit : {} };
+  if (sheet.school) goSchool(sheet.school);
+  applySigners(sheet);
+  if (!WK.teacher || !sheet.teachers.includes(WK.teacher)) {
+    WK.teacher = sheet.teachers.find(t => WKL.sameTeacher(t, S.settings.teacher)) || sheet.teachers.find(t => WKL.sameTeacher(t, soLop().me)) || sheet.teachers[0] || '';
+  }
+  if (UI.wkGen == null && sheet.rows.length) { UI.wkGen = weekOf(sheet.rows[0].date) + 1; saveUI(); }
+  return src;
+}
+/** Tên ký cuối bảng tuần của trường (GVBM · Tổ trưởng · Phó hiệu trưởng) → Cài đặt của sổ, để bản in/Excel ký đúng người. */
+function applySigners(sheet) {
+  const sg = sheet.signers || {}, changed = [];
+  // Đầu bản in: UBND + tên trường đầy đủ như Sheet (tên trường viết khác nhưng cùng trường thì sổ vẫn khớp — sameSchool)
+  const want = { teacher: sg.gvbm, toTruong: sg.toTruong, pht: sg.pht, ubnd: sheet.ubnd,
+    school: sheet.school && SRC.sameSchool(sheet.school, S.settings.school) ? sheet.school : '' };
+  for (const [f, v] of Object.entries(want)) if (v && v !== S.settings[f]) { S.settings[f] = v; changed.push(f); }
+  if (!changed.length) return;
+  save();
+  if (changed.some(f => /teacher|toTruong|pht/.test(f))) toast(`Tên ký theo bảng tuần: ${[sg.gvbm, sg.toTruong, sg.pht].filter(Boolean).join(' · ')}`);
+}
+/** Bảng tuần lệch sổ lớp (mọi GV): wrong = sai PPCT/bài (sửa tab tuần), undated = lớp sổ lớp chưa ghi ngày (nhờ điều phối). */
+function wkChecks() {
+  const wrong = [], undated = new Set();
+  for (const x of WK.sheet.rows) {
+    if (!BK.cls[x.cls]) continue;
+    const hit = wkHit(x), msg = WKL.crossCheck(x, hit, window.EduSoLop.lessonOf);
+    if (hit && hit.by === 'tiet') undated.add(x.cls);
+    const rest = msg.split('; ').filter(m => !/chưa ghi ngày/.test(m)).join('; ');
+    if (rest) wrong.push(`${x.cls} – ${shortDate(x.date)}: ${rest}`);
+  }
+  return { wrong, undated: [...undated].sort(cmpClass) };
+}
+
+/** Tiết của sổ ứng với dòng Sheet: đúng ngày + lớp + buổi + tiết; không thì lớp đó ngày đó chỉ có 1 tiết ở cả 2 bên. */
+function wkEntry(x) {
+  const hit = S.entries.find(e => e.date === x.date && e.cls === x.cls && e.buoi === x.buoi && +e.tiet === +x.tiet);
+  if (hit) return hit;
+  const same = S.entries.filter(e => e.date === x.date && e.cls === x.cls);
+  return same.length === 1 && WK.sheet.rows.filter(y => y.date === x.date && y.cls === x.cls).length === 1 ? same[0] : null;
+}
+
+/** 1 dòng của tôi → nội dung sẽ điền. src: sl (sổ lớp vừa đọc) · dd (bản Điểm danh trên máy) · book (sổ đầu bài) · sheet (ô đã có) · '' (chưa có). */
+function wkFill(x) {
+  const ed = WK.edit[x.r] || {}, e = wkEntry(x);
+  const future = x.date > today();
+  let absent = [], known = false, src = '';
+  const typed = n => ({ name: n, type: ((e && e.absent) || []).find(a => a.name === n)?.type || 'P' });
+  const hit = wkHit(x);
+  const sl = !future && hit ? WKL.absentAt(hit.b.c, hit.s, ((soLop().drafts || {})[`${hit.b.key}|${hit.s.col}`] || {}).marks) : null;
+  const att = !future && !(sl && sl.known) && window.EduSoLop ? SRC.attendanceOn(soLop(), window.EduSoLop, { school: WK.sheet.school || S.settings.school, cls: x.cls, date: parseD(x.date) }) : null;
+  if (sl && sl.known) { absent = sl.names.map(typed); known = true; src = 'sl'; }
+  else if (att) { absent = att.absent.map(typed); known = true; src = 'dd'; }
+  else if (e && !e.noAtt) { absent = e.absent || []; known = true; src = 'book'; }
+  else if (x.cur[0] || x.cur[1]) { absent = WKL.splitNames(x.cur[1]); known = true; src = 'sheet'; }
+  if (ed.names != null) { absent = WKL.splitNames(ed.names); known = true; }
+  let uu = '', hc = '', csrc = 'bank';
+  if (e && (e.uu || e.hc) && !ed.turn) { uu = e.uu; hc = e.hc; csrc = 'book'; }
+  else if (x.cur[2] && !ed.turn) {
+    const m = x.cur[2].match(/^\s*(?:Ư|U)u(?: điểm)?\s*:\s*([\s\S]*?)\s*(?:(?:Hạn chế|Nhược điểm)\s*:\s*([\s\S]*))?$/i);
+    uu = m ? m[1].trim() : x.cur[2].trim(); hc = m && m[2] ? m[2].trim() : ''; csrc = 'sheet';
+  } else {
+    // Tab tuần ghi khác bài sổ lớp → nhận xét theo bài đã dạy thật (sổ lớp), cảnh báo vẫn hiện để sửa tab tuần
+    const L = window.EduSoLop, real = hit && L && L.lessonOf(hit.s.bai).bai.length && /bài ghi/.test(WKL.crossCheck(x, hit, L.lessonOf));
+    const y = real ? Object.assign({}, x, { lesson: hit.s.bai, ppct: String(hit.s.tiet) }) : x;
+    ({ uu, hc } = autoComment(y, absent.length, hit ? hit.b.c.students.length : 0, ed.turn));
+    if (goalOf(y)) csrc = 'goal';
+  }
+  if (ed.uu != null) uu = ed.uu;
+  if (ed.hc != null) hc = ed.hc;
+  return { x, e, future, absent, known, src, uu, hc, csrc, check: hit ? WKL.crossCheck(x, hit, window.EduSoLop.lessonOf) : '' };
+}
+const goalOf = x => window.EduSoLop ? WKL.goalsFor(goalList(x.cls), x.lesson, x.ppct, window.EduSoLop.lessonOf) : null;
+/** Nhận xét tự động: theo Kiến thức cần đạt của bài (BÁO GIẢNG) nếu có, không thì theo chủ đề PPCT. */
+function autoComment(x, nAbsent, size, turn) {
+  const g = goalOf(x);
+  const topic = (g && g.topic) || WKL.topicOf(ppctOf(S.programs[0]?.id, x.cls), x.lesson, window.EduSoLop && window.EduSoLop.lessonOf);
+  return WKL.pickComment(window.SDB_COMMENT_BANK, { lesson: x.lesson, topic, goals: g && g.goals, cls: x.cls, date: x.date, tiet: x.tiet, absent: nAbsent, size: size || (S.students[x.cls] || []).length, turn: turn || 0 });
+}
+const wkMine = () => WK ? WK.sheet.rows.filter(x => x.teacher === WK.teacher) : [];
+
+function viewFill(root) {
+  const zero = UI.wkZero !== false;
+  const rows = WK ? wkMine().map(wkFill) : [];
+  const done = rows.filter(f => !f.future), noAtt = done.filter(f => !f.known);
+  const SRC_TAG = { sl: '<span class="tag ok">Sổ lớp</span>', dd: '<span class="tag ok">Điểm danh</span>', book: '<span class="tag brand">Sổ đầu bài</span>', sheet: '<span class="tag">Đã có trên Sheet</span>', goal: '<span class="tag ok" title="Theo Kiến thức cần đạt (tab BÁO GIẢNG)">Theo bài</span>' };
+  const at = WK ? new Date(WK.at) : null;
+  const nCls = Object.keys(BK.cls).length, grades = Object.keys(BK.grades).sort();
+  const ids = WK ? bookIds(WK.sheet.school) : bookIds('');
+  const checks = WK && nCls ? wkChecks() : { wrong: [], undated: [] };
+  const warns = WK ? [...WK.sheet.warnings, ...(checks.wrong.length ? [`Tab tuần khác sổ lớp (${checks.wrong.length} tiết): ${checks.wrong.slice(0, 12).join(' · ')}${checks.wrong.length > 12 ? ' …' : ''}`] : []),
+    ...(checks.undated.length ? [`Sổ lớp chưa ghi ô NGÀY (đã khớp theo tiết PPCT): lớp ${checks.undated.join(', ')} – nhờ điều phối điền để bảng tuần sau tạo được đủ lớp.`] : [])] : [];
+  root.innerHTML = `${phead('Điền bảng tuần', 'Tự điền Học sinh vắng và Nhận xét vào tab tuần của trường – sao chép rồi dán vào Google Sheet')}
+  <section class="panel" style="margin-bottom:20px"><div class="panel-b stack" style="gap:12px">
+    <label class="field"><span>Link tab tuần (mở đúng tab tuần rồi sao chép link trên thanh địa chỉ) – hoặc dán cả bảng</span>
+      <textarea class="inp" id="wkSrc" rows="2" placeholder="https://docs.google.com/spreadsheets/d/…/edit#gid=…">${esc(UI.wkLink || '')}</textarea></label>
+    <div class="row gap-s">
+      <button type="button" class="btn primary" id="wkRead">${ic('download')}${WK ? 'Đọc lại' : 'Đọc bảng tuần'}</button>
+      <span class="faint" id="wkStatus">${WK ? `Đọc lúc ${pad(at.getHours())}:${pad(at.getMinutes())}${WK.src ? '' : ' (bảng dán)'}` : ''}</span>
+    </div>
+    <div class="wk-books">
+      <div><b>Sổ lớp của Điều phối</b> <span class="faint">(FORM QUẢN LÝ LỚP – lấy vắng, kiểm tra PPCT, Kiến thức cần đạt)</span></div>
+      <div class="faint">${ids.length ? `${ids.length} sổ${nCls ? ` · đã đọc ${nCls} lớp` : ''}${grades.length ? ` · Kiến thức cần đạt khối ${grades.join(', ')}` : ''}` : 'Chưa có link sổ lớp – dán ở dưới (hoặc thêm ở trang Điểm danh).'}
+        ${BK.errs.length ? `<br><span style="color:var(--red)">Không đọc được: ${BK.errs.map(esc).join(', ')} (file không mở công khai)</span>` : ''}</div>
+      <details ${ids.length ? '' : 'open'}><summary class="faint">Thêm link sổ lớp</summary>
+        <p class="faint" style="margin:8px 0">Trình duyệt không đọc được thư mục Drive – mở thư mục, chuột phải từng file FORM QUẢN LÝ LỚP 3/4/5 → Chia sẻ → Sao chép đường liên kết, dán tất cả vào đây.</p>
+        <textarea class="inp" id="wkBooks" rows="3" placeholder="https://docs.google.com/spreadsheets/d/…"></textarea>
+        <div class="row gap-s" style="margin-top:8px"><button type="button" class="btn sm" id="wkAddBooks">${ic('plus')}Thêm sổ</button></div>
+      </details>
+    </div>
+    <details><summary class="faint">Sheet của trường không mở công khai?</summary>
+      <p class="faint" style="margin-top:8px">Mở tab tuần trên Google Sheet → bấm vào ô A1 → <b>Ctrl+A</b> → <b>Ctrl+C</b> → dán (<b>Ctrl+V</b>) vào ô link rồi bấm “Đọc bảng tuần”. Web không cần quyền vào file.</p></details>
+  </div></section>
+  ${!WK ? emptyBox('clip', 'Chưa đọc bảng tuần', '<p>Dán link tab tuần của trường (ví dụ tab Tuần 10) rồi bấm “Đọc bảng tuần”.</p>') : `
+  ${warns.length ? `<section class="panel" style="margin-bottom:20px;border-color:var(--amber)"><div class="panel-b stack" style="gap:6px">${warns.map(w => `<div><span class="tag warn">Kiểm tra</span> ${esc(w)}</div>`).join('')}</div></section>` : ''}
+  <section class="panel" style="margin-bottom:20px"><div class="panel-h" style="flex-wrap:wrap">
+      <h2>${esc(WK.sheet.school || 'Bảng tuần')}${rows.length ? ` · Tuần ${pad(weekOf(rows[0].x.date))}` : ''}</h2><span class="grow"></span>
+      <label class="row gap-s"><span class="faint">Giáo viên</span><select class="inp" id="wkTeacher" style="width:auto">${WK.sheet.teachers.map(t => `<option ${t === WK.teacher ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></label>
+    </div>
+    <div class="panel-b">
+      <p class="faint" style="margin:0 0 12px">${rows.length} tiết của thầy cô${noAtt.length ? ` · <b style="color:var(--amber)">${noAtt.length} tiết chưa điểm danh</b> (ô vắng để trống – <a href="diem-danh.html">mở Điểm danh</a> hoặc gõ tên vắng)` : ''}${rows.length - done.length ? ` · ${rows.length - done.length} tiết chưa đến ngày (không điền)` : ''}</p>
+      <div class="wk-list">${rows.map(f => `<div class="wk-row${f.future ? ' wk-future' : ''}" data-r="${f.x.r}">
+        <div class="wk-when">${clsBadge(f.x.cls, true)}<div><b>${thu(f.x.date)}, ${shortDate(f.x.date)}</b><div class="faint">Tiết ${f.x.tiet} (${f.x.buoi}) · PPCT ${esc(f.x.ppct)}</div></div></div>
+        <div class="wk-lesson">${esc(f.x.lesson)}${f.check ? `<div><span class="tag bad">${esc(f.check)}</span></div>` : ''}</div>
+        ${f.future ? '<div class="faint">Chưa đến ngày dạy</div>' : `
+        <label class="field"><span>Vắng ${f.known ? `<b>${f.absent.length}</b>` : ''} ${SRC_TAG[f.src] || '<span class="tag warn">Chưa điểm danh</span>'}</span>
+          <input class="inp" data-wn="${f.x.r}" value="${esc(WKL.namesText(f.absent))}" placeholder="${f.known ? 'Đủ' : 'Tên vắng, cách nhau dấu phẩy; (K) = không phép'}"></label>
+        <div class="field"><span>Nhận xét ${SRC_TAG[f.csrc] || ''} <button type="button" class="btn sm ghost" data-wt="${f.x.r}" title="Chọn câu khác">↻ Đổi câu</button></span>
+          <label class="wk-cmt"><b>Ưu điểm</b><textarea class="inp" rows="3" data-wu="${f.x.r}">${esc(f.uu)}</textarea></label>
+          <label class="wk-cmt"><b>Hạn chế</b><textarea class="inp" rows="2" data-wh="${f.x.r}">${esc(f.hc)}</textarea></label></div>`}
+      </div>`).join('') || emptyBox('users', 'Không có tiết nào của giáo viên này')}</div>
+    </div>
+    <div class="panel-b row gap-s" style="border-top:1px solid var(--line)">
+      <button type="button" class="btn primary lg" id="wkCopy" ${done.length ? '' : 'disabled'}>${ic('clip')}Sao chép để dán vào Sheet</button>
+      <label class="row gap-s"><input type="checkbox" id="wkZero" ${zero ? 'checked' : ''}> Lớp đủ ghi “0”</label>
+    </div>
+  </section>
+  ${nCls ? genPanel() : ''}`}`;
+
+  $('#wkRead').onclick = async () => {
+    const text = $('#wkSrc').value.trim(), b = $('#wkRead'), st = $('#wkStatus');
+    b.disabled = true;
+    try {
+      st.textContent = 'Đang đọc bảng tuần…';
+      const src = await wkSync(text, t => { st.textContent = t; });
+      if (src.noGid) toast('Link không có “gid” – đang đọc tab đầu tiên. Mở đúng tab tuần rồi sao chép lại link.');
+      render();
+    } catch (err) {
+      b.disabled = false; st.textContent = '';
+      if (err.message === 'PRIVATE') ask({ title: 'Không đọc được Sheet qua link', ok: 'Đã hiểu', cancel: 'Đóng', body: '<p>File không mở cho “Bất kỳ ai có đường liên kết”. Cách khác, không cần quyền:</p><p>Mở tab tuần → bấm ô A1 → <b>Ctrl+A</b>, <b>Ctrl+C</b> → dán vào ô link ở trang này → bấm “Đọc bảng tuần”.</p>' });
+      else toast(err.message || 'Không đọc được');
+    }
+  };
+  $('#wkAddBooks').onclick = async () => {
+    const text = $('#wkBooks').value, got = window.EduSoLop ? window.EduSoLop.parseLinks(text) : [];
+    if (!got.length) return toast(/drive\.google\.com\/drive/.test(text) ? 'Đây là link thư mục – cần link từng file FORM QUẢN LÝ LỚP bên trong' : 'Chưa thấy link Google Sheet');
+    const st = booksStore(); st.added = [...new Set([...(st.added || []), ...got])]; booksSave(st);
+    toast(`Đã thêm ${got.length} sổ lớp`);
+    if (WK) { $('#wkStatus').textContent = 'Đang đọc sổ lớp…'; await loadBooks(WK.sheet.school, (n, all) => { const s = $('#wkStatus'); if (s) s.textContent = `Đang đọc sổ lớp ${n}/${all}…`; }); }
+    render();
+  };
+  if (!WK) return;
+  $('#wkTeacher').onchange = ev => { WK.teacher = ev.target.value; render(); };
+  $('#wkZero').onchange = ev => { UI.wkZero = ev.target.checked; saveUI(); };
+  const ed = r => (WK.edit[r] ||= {});
+  // Sửa chữ: nhớ ngay trong trang, rời ô thì lưu vào sổ (In/Excel dùng được luôn, khỏi bấm Sao chép)
+  $$('[data-wn]', root).forEach(i => { i.oninput = () => { ed(i.dataset.wn).names = i.value; }; i.onchange = () => wkSave(); });
+  $$('[data-wu]', root).forEach(i => { i.oninput = () => { ed(i.dataset.wu).uu = i.value; }; i.onchange = () => wkSave(); });
+  $$('[data-wh]', root).forEach(i => { i.oninput = () => { ed(i.dataset.wh).hc = i.value; }; i.onchange = () => wkSave(); });
+  $$('[data-wt]', root).forEach(b => b.onclick = () => { const o = ed(b.dataset.wt); o.turn = (o.turn || 0) + 1; delete o.uu; delete o.hc; wkSave(); render(); });
+  $('#wkCopy').onclick = () => wkCopy();
+  $$('[data-gw]', root).forEach(b => b.onclick = () => { UI.wkGen = Math.max(1, (UI.wkGen || curWeek()) + +b.dataset.gw); saveUI(); render(); });
+  const g = $('#wkGen'); if (g) g.onclick = () => genCopy();
+}
+
+async function clipWrite(html, tsv) {
+  try {
+    if (navigator.clipboard && window.ClipboardItem) {
+      await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([tsv], { type: 'text/plain' }) })]);
+      return true;
+    }
+    if (navigator.clipboard) { await navigator.clipboard.writeText(tsv); return true; }
+  } catch { /* trình duyệt chặn */ }
+  return false;
+}
+
+/** Tiết đã qua của tôi trên bảng tuần → sổ đầu bài (để In/Excel có ngay): tiết có rồi chỉ cập nhật vắng + nhận xét.
+    Gọi khi đọc bảng tuần, khi sửa chữ trên trang và khi sao chép. → { fills: Map dòng → [F, G, H], added } */
+function wkSave() {
+  const zero = UI.wkZero !== false, fills = new Map();
+  let added = 0;
+  if (!WK) return { fills, added };
+  for (const f of wkMine().map(wkFill)) {
+    if (f.future) continue;
+    const cmt = commentText({ uu: f.uu.trim(), hc: f.hc.trim() });
+    fills.set(f.x.r, [...WKL.absentCells(f.absent, f.known, zero), cmt]);
+    const patch = { uu: f.uu.trim(), hc: f.hc.trim() };
+    if (f.known) { patch.absent = f.absent; patch.noAtt = false; }
+    if (f.e) Object.assign(f.e, patch, f.e.lesson ? {} : { lesson: f.x.lesson }, f.e.ppct === '' ? { ppct: f.x.ppct } : {});
+    else {
+      S.entries.push(Object.assign({ id: uid(), date: f.x.date, cls: f.x.cls, prog: S.programs[0]?.id, buoi: f.x.buoi, tiet: f.x.tiet, ppct: f.x.ppct, lesson: f.x.lesson, absent: [], noAtt: !f.known, teacher: WK.teacher, note: '', off: false }, patch));
+      if (!S.classes.includes(f.x.cls)) S.classes.push(f.x.cls), S.classes.sort(cmpClass);
+      added++;
+    }
+  }
+  save();
+  return { fills, added };
+}
+/** Đọc bảng tuần + sổ lớp rồi lưu luôn tiết vào sổ (nút Đọc bảng tuần, trang In). onStep(chữ) báo tiến độ. */
+async function wkSync(text, onStep) {
+  const src = await wkLoad(text);
+  if (src.kind === 'link') { UI.wkLink = text; saveUI(); }
+  onStep && onStep('Đang đọc sổ lớp…');
+  await loadBooks(WK.sheet.school, (n, all) => onStep && onStep(`Đang đọc sổ lớp ${n}/${all}…`));
+  return Object.assign(src, wkSave());
+}
+
+/** Lưu vào sổ đầu bài rồi sao chép khối F:H. */
+async function wkCopy() {
+  const { fills, added } = wkSave();
+  const blk = WKL.clipBlock(WK.sheet, fills, WK.raw);
+  if (!blk) return toast('Không có tiết nào để điền');
+  const ok = await clipWrite(blk.html, blk.tsv);
+  const open = WK.src ? `<p><a class="btn" target="_blank" rel="noopener" href="${sheetBase(WK.src.id)}/edit#gid=${WK.src.gid}&range=${blk.a1}">Mở Sheet ở ô ${blk.a1}</a></p>` : '';
+  const m = modal(ok ? 'Đã sao chép – dán vào Sheet' : 'Sao chép thủ công', `
+    <ol style="padding-left:20px;line-height:1.7">
+      <li>Mở tab tuần trên Google Sheet, bấm vào ô <b>${blk.a1}</b> (ô “Số lượng” của dòng tiết đầu tiên).</li>
+      <li>Bấm <b>Ctrl+Shift+V</b> (dán giá trị – giữ nguyên khung kẻ, cỡ chữ của trường).</li>
+    </ol>
+    <p class="faint">Vùng dán ${blk.range}: ${blk.mine} tiết của thầy cô; ${blk.rows - blk.mine} dòng của đồng nghiệp giữ nguyên chữ đang có lúc đọc.
+      Nếu đồng nghiệp vừa điền sau lúc đọc, bấm “Đọc lại” trước khi sao chép để không ghi đè phần của họ.</p>
+    ${open}
+    ${ok ? '' : `<p>Trình duyệt chặn sao chép tự động – bấm vào ô dưới, Ctrl+A, Ctrl+C:</p><textarea class="inp" rows="6" readonly id="wkTsv">${esc(blk.tsv)}</textarea>`}
+    ${added ? `<p class="faint">Đã lưu thêm ${added} tiết vào sổ đầu bài.</p>` : ''}`,
+    '<button type="button" class="btn primary" data-close>Xong</button>');
+  const ta = $('#wkTsv', m); if (ta) { ta.focus(); ta.select(); }
+}
+
+/* ---------- Tạo bảng tuần mới từ sổ lớp (mọi lớp, mọi GV của trường) ---------- */
+/** Tên bài như bảng tuần của trường: "Bài 9: …" theo BÁO GIẢNG, "Ôn tập CĐ1" → "Ôn tập 1". */
+function genLesson(cls, s) {
+  const L = window.EduSoLop, G = goalList(cls), l = L.lessonOf(s.bai);
+  if (l.bai.length) { const g = G.find(x => /^bài\s*\d/i.test(x.name) && L.lessonOf(x.name).bai[0] === l.bai[0]); if (g) return g.name; }
+  if (l.review) { const k = /(\d+)\s*$/.exec(s.bai); if (k) return 'Ôn tập ' + k[1]; }
+  const g = G.find(x => x.t.includes(s.tiet));
+  return g ? g.name.split('\n')[0] : (s.bai || lessonAt(S.programs[0]?.id, cls, s.tiet));
+}
+function genWeek(n) {
+  const dates = weekDates(n), L = window.EduSoLop;
+  const classes = Object.entries(BK.cls).map(([cls, b]) => ({ cls, c: b.c }));
+  const r = WKL.buildWeek(classes, { dates, tkbOf: WKL.tkbMap(WK.sheet), lessonOf: genLesson, dateOf: L.dateOf, ref: parseD(dates[0]) });
+  for (const x of r.rows) {
+    x.past = x.date <= today();
+    const a = x.past ? WKL.absentAt(x.c, x.s) : { known: false, names: [] };
+    x.absent = a.names.map(name => ({ name, type: 'P' })); x.known = a.known;
+    x.cmt = x.past ? commentText(autoComment({ cls: x.cls, date: x.date, tiet: x.s.tiet, lesson: x.lesson, ppct: x.ppct }, a.names.length, x.c.students.length, 0)) : '';
+  }
+  return Object.assign(r, { n, dates });
+}
+function genPanel() {
+  const n = UI.wkGen || curWeek() + 1, g = genWeek(n);
+  const per = {};
+  g.rows.forEach(x => { const t = x.teacher || '(chưa ghi GV)'; per[t] = (per[t] || 0) + 1; });
+  return `<section class="panel"><div class="panel-h" style="flex-wrap:wrap"><h2>Tạo bảng tuần mới từ sổ lớp</h2><span class="grow"></span>
+      <div class="row gap-s"><button type="button" class="btn icon" data-gw="-1" aria-label="Tuần trước">${ic('left')}</button><b>Tuần ${pad(n)}</b>
+      <button type="button" class="btn icon" data-gw="1" aria-label="Tuần sau">${ic('right')}</button></div></div>
+    <div class="panel-b">
+      <p class="faint" style="margin:0 0 12px">${vnDate(g.dates[0])} – ${vnDate(g.dates[4])} · ${g.rows.length} tiết theo ngày dạy trên sổ lớp${Object.keys(per).length ? ' · ' + Object.entries(per).map(([t, k]) => `${esc(t)}: ${k}`).join(' · ') : ''}.
+        Tiết TKB lấy theo tab tuần vừa đọc (cùng lớp, cùng thứ). Tiết đã qua có sẵn vắng + nhận xét.</p>
+      ${g.undated.length ? `<p><span class="tag warn">Chưa có ngày dạy</span> Lớp ${g.undated.map(esc).join(', ')}: sổ lớp không có tiết nào ghi ngày trong tuần này nên không có trong bảng – điền tay, hoặc nhờ điều phối ghi ô NGÀY rồi bấm Đọc lại.</p>` : ''}
+      ${g.rows.length ? `<div class="tw"><table class="t wk-gen"><thead><tr><th>Ngày</th><th>Lớp</th><th>Tiết TKB</th><th class="n">PPCT</th><th>Bài</th><th class="n">Vắng</th><th>GV</th></tr></thead><tbody>
+        ${g.rows.map(x => `<tr><td>${thu(x.date)}, ${shortDate(x.date)}</td><td>${clsBadge(x.cls, true)}</td><td>${x.tkb ? esc(x.tkb) : '<span class="tag warn">?</span>'}</td><td class="n">${esc(x.ppct)}</td><td>${esc(x.lesson)}</td><td class="n">${x.past ? (x.known ? x.absent.length : '<span class="faint">–</span>') : ''}</td><td>${esc(x.teacher)}</td></tr>`).join('')}
+      </tbody></table></div>` : emptyBox('grid', 'Sổ lớp chưa có tiết nào trong tuần này')}
+    </div>
+    ${g.rows.length ? `<div class="panel-b row gap-s" style="border-top:1px solid var(--line)"><button type="button" class="btn primary" id="wkGen">${ic('clip')}Sao chép bảng tuần ${pad(n)}</button></div>` : ''}
+  </section>`;
+}
+async function genCopy() {
+  const zero = UI.wkZero !== false, g = genWeek(UI.wkGen || curWeek() + 1);
+  const grid = g.rows.map(x => [WKL.dmy(x.date), x.cls, x.tkb, x.ppct, x.lesson, ...WKL.absentCells(x.absent, x.past && x.known, zero), x.cmt, x.teacher, '']);
+  const clip = WKL.gridClip(grid), ok = await clipWrite(clip.html, clip.tsv);
+  const per = {};
+  g.rows.forEach(x => { if (x.teacher) per[x.teacher] = (per[x.teacher] || 0) + 1; });
+  const foot = [`Tuần: ${pad(g.n)} (Từ ngày ${vnDate(g.dates[0])} đến ngày ${vnDate(g.dates[4])})`, ...Object.entries(per).map(([t, k]) => `Số tiết GV ${t} dạy: ${pad(k)} tiết.`), `Tổng cộng: ${g.rows.length} tiết`].join('\n');
+  const m = modal(ok ? `Đã sao chép bảng tuần ${pad(g.n)}` : 'Sao chép thủ công', `
+    <ol style="padding-left:20px;line-height:1.7">
+      <li>Trên Google Sheet: chuột phải tab tuần trước → <b>Tạo bản sao</b>, đổi tên thành Tuần ${pad(g.n)}.</li>
+      <li>Xoá chữ các dòng tiết cũ (từ ô A9 tới cột J của dòng tiết cuối). Bảng mới có <b>${g.rows.length} dòng</b> – thêm/bớt dòng cho khớp.</li>
+      <li>Bấm ô <b>A9</b> → <b>Ctrl+Shift+V</b>.</li>
+      <li>Sửa dòng tiêu đề tuần và các dòng đếm tiết bên dưới theo khung này:</li>
+    </ol>
+    <textarea class="inp" rows="${Object.keys(per).length + 2}" readonly>${esc(foot)}</textarea>
+    ${g.rows.some(x => !x.tkb) ? '<p class="faint">Ô Tiết TKB để trống: lớp/thứ đó không có trong tab tuần vừa đọc – điền tay.</p>' : ''}
+    ${ok ? '' : `<p>Trình duyệt chặn sao chép tự động – bấm vào ô dưới, Ctrl+A, Ctrl+C:</p><textarea class="inp" rows="6" readonly id="wkTsv">${esc(clip.tsv)}</textarea>`}`,
+    '<button type="button" class="btn primary" data-close>Xong</button>');
+  const ta = $('#wkTsv', m); if (ta) { ta.focus(); ta.select(); }
 }
 
 /** Tiết đã ghi hôm nay → Gọi tên (cùng máy): đúng lớp, bỏ qua bạn vắng, câu hỏi theo bài vừa dạy. */

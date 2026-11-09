@@ -122,7 +122,8 @@
       const [courses, classes, roster, teachers] = await Promise.all([
         // Cùng điều kiện với Quản lý lớp → dùng chung bản đệm 10 phút (js/repositories/base-repository.js § list cacheMs)
         global.EduRepositories.course.list({ orderBy: 'name', cacheMs: LOOKUP_CACHE_MS, refresh: !!forceRefresh }),
-        global.EduRepositories.class.list({ orderBy: 'name', cacheMs: LOOKUP_CACHE_MS, refresh: !!forceRefresh }),
+        // Cùng điều kiện với Quản lý lớp: nhân sự trường chỉ đọc lớp các trường được gán
+        global.EduRepositories.class.listForSchools(isAdmin ? null : schools, { cacheMs: LOOKUP_CACHE_MS, refresh: !!forceRefresh }),
         isAdmin
           // Bản đệm chung với các trang quản lý khác (js/services/roster-cache-service.js)
           ? global.EduRosterCache.activeAll(forceRefresh ? { maxAgeMs: ROSTER_FORCE_MIN_AGE_MS } : undefined).then((students) => ({ students }))

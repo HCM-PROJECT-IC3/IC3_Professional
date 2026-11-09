@@ -11,7 +11,8 @@ function assertEq(label, actual, expected) {
 
 globalThis.window = globalThis;
 var DELETE = { __delete: true };
-globalThis.firebase = { firestore: { FieldValue: { delete: function () { return DELETE; } } } };
+var STAMP = { __serverTimestamp: true };
+globalThis.firebase = { firestore: { FieldValue: { delete: function () { return DELETE; }, serverTimestamp: function () { return STAMP; } } } };
 
 // Firestore giả: ghi lại query cuối cùng + các lệnh set(merge)
 var DOCS = {
@@ -83,9 +84,9 @@ var repo = globalThis.EduRepositories.user;
   await repo.setSchools('t1', ['THCS A', 'THCS B']);
   await repo.setTeacherCode('t2', 'GV02');
   await repo.setTeacherCode('t1', '');
-  assertEq('setRole: kèm duyệt, merge', writes[0], { col: 'users', id: 't3', data: { role: 'coordinator', approved: true }, merge: true });
-  assertEq('setSchools: merge, kèm schoolIds', writes[1], { col: 'users', id: 't1', data: { schools: ['THCS A', 'THCS B'], schoolIds: ['thcs-a', 'thcs-b'] }, merge: true });
-  assertEq('setTeacherCode: merge', writes[2], { col: 'users', id: 't2', data: { teacherCode: 'GV02' }, merge: true });
+  assertEq('setRole: kèm duyệt, merge, đóng dấu updatedAt', writes[0], { col: 'users', id: 't3', data: { role: 'coordinator', approved: true, updatedAt: STAMP }, merge: true });
+  assertEq('setSchools: merge, kèm schoolIds', writes[1], { col: 'users', id: 't1', data: { schools: ['THCS A', 'THCS B'], schoolIds: ['thcs-a', 'thcs-b'], updatedAt: STAMP }, merge: true });
+  assertEq('setTeacherCode: merge', writes[2], { col: 'users', id: 't2', data: { teacherCode: 'GV02', updatedAt: STAMP }, merge: true });
   assertEq('setTeacherCode rỗng: xoá field', writes[3].data.teacherCode === DELETE, true);
 
   // 5. Tạo hồ sơ (nhập GV từ Excel): set KHÔNG merge, id = uid

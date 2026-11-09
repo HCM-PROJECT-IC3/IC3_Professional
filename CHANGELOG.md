@@ -23,6 +23,154 @@ Thứ tự: Apps Script → `firestore.rules`/index → đẩy web.
      Lệch dữ liệu thì đặt `rosterDeltaSync: false` trong `js/backend-config.js`.
 
 
+## 10/11/2026 (4) — Lịch chọn ngày tiếng Việt; ô chọn đẹp ở Đấu trường, Góc học tập, Thi đua
+
+Học sinh thấy:
+- **Đặt ngày thi** (sảnh): bấm bút chì không còn hiện ô "mm/dd/yyyy" lơ lửng và lịch tiếng Anh bật ra góc màn hình. Nay là lịch
+  tiếng Việt (`js/ui-date.js`) mở ngay dưới nút: tuần bắt đầu Thứ Hai, T7/CN màu cam, ngày đã qua bị gạch, hôm nay có vòng
+  tròn, dòng dưới "Thứ Sáu, 20/11/2026 · còn 11 ngày", nút **Xoá ngày thi**; điện thoại là tấm trượt; dùng được phím mũi tên.
+- Ô chọn có tìm kiếm (như sảnh) ở: **Đấu trường** (Chương trình, Cấp độ, Bài/chủ đề), **Góc học tập** (chọn học sinh, cấp độ
+  lộ trình — có ảnh chữ cái), **Thi đua** (lớp, loại lớp, số tổ, trường/lớp có sẵn, học sinh đổi quà). Các trang này giữ nguyên
+  màu/viền của trang (chế độ `ss-keep`: nút mang class của `<select>` gốc), chỉ thay bảng chọn; ô nhỏ trong bảng học sinh
+  của Thi đua giữ kiểu cũ cho gọn.
+Kỹ thuật: trang bật bằng `<script src="js/ui-select.js" data-auto="select.ar-input">`; ô vẽ thêm sau (Góc học tập, Thi đua)
+tự được bọc. Chế độ tối: màu nhấn sáng hơn cho đủ tương phản trên nền tối.
+Đã thử trên Chrome (1366px và 390px, tối): đổi Chương trình ở Đấu trường → Cấp độ đổi theo; Thi đua đổi Loại lớp → giá trị
+đúng; đặt/đổi/xoá ngày thi; không lỗi JS, không cuộn ngang. Test: `ui-date.test.js` (9 ca), `ui-select.test.js` thêm ca chữ cái.
+Chưa làm: ô ngày ở trang giáo viên (Sổ đầu bài, Lịch giảng dạy) vẫn dùng lịch của trình duyệt; ô chọn trang quản lý giữ nguyên.
+
+## 10/11/2026 (3) — Sảnh học sinh: ô chọn Trường / Lớp / Họ và tên đẹp hơn, có tìm kiếm
+
+Học sinh thấy (index.html, giữ nguyên giao diện sảnh xanh da trời):
+- 6 ô chọn (Trường, Lớp, Họ và tên, Chương trình, Cấp độ, Bài luyện tập) không còn danh sách xám của hệ điều hành: bảng chọn
+  theo màu của bước (xanh dương · xanh lá · cam), mục đang chọn có ✓, nhóm bài có tiêu đề, có chế độ tối.
+- **Tìm tên không dấu**: gõ "khoa", "nguyen van an" hoặc chữ đầu "nva"; chữ khớp được tô; chân bảng "2/36 học sinh".
+  Tên học sinh có ảnh chữ cái đầu (họ + tên). Ô chưa chọn hiện số mục ("36 học sinh", "18 lớp").
+- **Tự sang bước sau**: chọn Trường xong tự mở danh sách Lớp, chọn Lớp xong tự mở Họ và tên.
+- Bàn phím: ↑ ↓ Enter Esc Home End, gõ chữ trên ô để tìm ngay. Điện thoại: bảng chọn thành tấm trượt từ dưới lên, chữ to.
+  Chữ to (kid-mode) và giảm chuyển động được tôn trọng.
+Kỹ thuật: `js/ui-select.js` + `css/ui-select.css` bọc ngoài `<select>` gốc — `<select>` vẫn giữ giá trị, code cũ (lobby-roster,
+quiz-engine, main, Mã lớp gán `.value`) không đổi; bảng tự cập nhật khi option/khoá/ô cần chọn đổi. 0 Firebase, 0 Apps Script.
+Đã thử trên Chrome (sáng/tối, 1530px và 390px): chọn Trường → Lớp tự mở → Họ và tên tự mở → bước 1 ✓; gõ "khoa" ra 2/36;
+gán `.value` bằng code vẫn hiện đúng. Test: `node js/services/__tests__/ui-select.test.js` (18 ca).
+
+## 10/11/2026 (2) — Điều phối / Quản trị trường chỉ đọc lớp của trường mình
+
+Đo: mỗi nhân sự trường mở Quản lý lớp (và Dashboard điều phối) đọc **cả 150 lớp mọi trường** mỗi ngày, trong khi chỉ dùng
+~4 lớp của trường mình; Quản lý lớp còn hiện lớp trường khác kèm nút Sửa/Xoá.
+- `EduRepositories.class.listForSchools(schools)`: nhân sự trường → `where school in [trường được gán]` (≤ 10/truy vấn, không
+  orderBy → không cần index, sắp tên ở máy); Admin → mọi lớp như cũ; chưa gán trường → 0 lớp. Dùng ở Quản lý lớp + Dashboard điều phối.
+- Đo lại (điều phối 1 trường): lớp **150 → 4 lượt** mỗi lần tải; Quản lý lớp lần đầu 333 → 187, hôm sau 267 → 121.
+  Giao diện: bảng Lớp chỉ còn lớp Trường 9. Admin không đổi (150 lớp).
+- Test thêm 4 ca trong `js/repositories/__tests__/admin-delta.test.js`.
+Còn lại: rules `classes` vẫn cho Điều phối/Quản trị trường GHI lớp của mọi trường (giao diện đã không còn hiện) — nên siết theo
+`schoolId` khi cập nhật rules (docs/architecture/AUDIT-2.0.md §4); danh sách 106 giáo viên đã duyệt vẫn đọc 1 lần/ngày/người
+(thu hẹp cần composite index).
+
+## 10/11/2026 — Admin: Quản lý tài khoản + Danh mục trường chỉ đọc phần thay đổi
+
+Đo (Firebase giả cỡ thật, 121 tài khoản, 40 trường; mở lại nhiều mốc trên cùng 1 máy):
+
+| Admin mở lại | Trước | Sau |
+|---|---|---|
+| Quản lý tài khoản, tab mới / sau 15 phút | 122 lượt (đọc lại cả `users`) | **3 lượt** |
+| Quản lý tài khoản, bản tra cứu trường/lớp hết hạn 12 giờ | 366 (đọc lại cả `users` kèm tra cứu) | 247 (chỉ tra cứu; `users` vẫn phần thay đổi) |
+| Danh mục trường, sau 5 phút / tab mới | 41 | **1** (bản đệm 6 giờ dùng chung) |
+| Danh mục trường ngay sau Quản lý tài khoản | 41 | **1** |
+
+- `users`: bản đệm bền IndexedDB (mọi tab), đọc đủ 24 giờ/lần (bắt tài khoản bị xoá, người dùng tự đổi tên/email — rules
+  không cho họ ghi `updatedAt`); giữa các lần chỉ hỏi `createdAt >` (tự đăng ký) + `updatedAt >` (Admin vừa sửa) = 2 lượt.
+  Mọi lệnh ghi qua `EduRepositories.user` và 2 lô tự đồng bộ trường trên trang đóng dấu `updatedAt`.
+  Đã thử: tài khoản tự đăng ký + Admin máy khác đổi vai trò → mở lại sau 2 giờ thấy cả hai, 3 lượt đọc.
+  Đường phần thay đổi vẫn mồi bản đệm "giáo viên đã duyệt" (`UserRepository.primeApproved`) như khi đọc đủ: mở Quản lý lớp
+  ngay sau đó không đọc lại ~106 tài khoản (đo bằng flow.py: admin-users → +2h → admin-users → roster-manager).
+- `schools`: `listAll()` qua bản đệm dùng chung 6 giờ (BaseRepository cacheMs); sửa/ngừng/tạo trường trên máy này bỏ bản đệm
+  ngay (`ensureFromNames` nay cũng bỏ); trường do máy Admin khác tạo hiện sau ≤ 6 giờ.
+- Test: `node js/repositories/__tests__/admin-delta.test.js` (9 ca); `user-repository.test.js` cập nhật theo `updatedAt`.
+Không đổi rules/index (Admin được ghi mọi field `users`/`schools`/`teaching_teachers`; truy vấn 1 trường dùng index tự động).
+
+## 09/11/2026 (8) — Dò hạn mức Firestore toàn dự án; Lịch giảng dạy: danh sách giáo viên chỉ đọc phần thay đổi
+
+Đo bằng Firebase giả cỡ thật (`scripts/measure-firestore/fake-firebase.js`: 3.000 HS, 120 tài khoản GV, 60 GV lịch dạy),
+mở 28 trang theo vai admin / giáo viên / điều phối, mỗi trang mở lần đầu rồi mở lại sau 30 phút, 2 giờ, 1 ngày:
+- Phần lớn trang: 0–2 lượt/lần mở. Trang học sinh (index, arena, trò chơi…): 0.
+- Trang admin (admin-users, roster-manager, admin-schools) máy mới đọc ~3.000 HS 1 lần rồi chỉ hỏi phần thay đổi — đúng thiết kế.
+- **Rò lớn nhất: Lịch giảng dạy (giáo viên mở nhiều nhất)** — bản đệm danh sách giáo viên hết hạn 1 giờ nên mở lại sau 1 giờ
+  hoặc hôm sau đọc lại đủ 60 doc: **63 lượt/lần mở**. 50 GV × 3 lần/ngày ≈ 9.000 lượt/ngày (~30% ngân sách 60%).
+
+Sửa:
+- `EduScheduleReadCache.teachers()` (js/services/schedule-read-cache.js): đọc đủ 7 ngày/lần (bắt GV bị xoá), giữa các lần
+  quá 1 giờ chỉ hỏi `teaching_teachers where updatedAt > mốc` (không ai sửa = 1 lượt). Dùng chung Lịch tuần, TKB, Xăng xe.
+- Mọi lệnh ghi giáo viên đóng dấu `updatedAt` (EduRepositories.teachingTeacher create/update/upsert + nhập lịch từ Excel).
+  Ghi ở máy này → bỏ bản đệm, đọc đủ ngay (thấy liền GV vừa thêm/sửa).
+- Kết quả đo giáo viên: mở lại sau 2 giờ **63 → 4 lượt**, hôm sau **63 → 4 lượt**; mở lần đầu không đổi (253).
+  Ước tính tiết kiệm ~8.000 lượt đọc/ngày. Thêm/sửa GV ở máy khác thấy sau ≤ 1 giờ; GV bị xoá hẳn có thể còn hiện ≤ 7 ngày
+  ở máy khác (máy admin thấy ngay).
+- Công cụ đo: Firebase giả có thêm `DocumentReference`/`CollectionReference` như SDK thật, nên đo được cả việc xoá bản đệm khi ghi.
+- Test: `node js/services/__tests__/schedule-teachers-delta.test.js` (10 ca: đọc đủ, 0 lượt trong 1 giờ, phần thay đổi,
+  mốc, 7 ngày, doc chưa có dấu, mất mạng, ghi ở máy này).
+
+Còn lại (chưa sửa, chi phí thấp): admin-users mở lại sau 2 giờ đọc lại 121 tài khoản (chỉ admin); admin-schools đọc 40 trường
+mỗi 5 phút (chỉ admin); điều phối mở Quản lý lớp lần đầu đọc cả 150 lớp mọi trường.
+Không đổi rules/index — triển khai chỉ cần đẩy web.
+
+## 09/11/2026 (7) — Sổ đầu bài: In/PDF có ngay tiết của bảng tuần (không cần bấm Sao chép)
+
+Sửa: trước đây tiết chỉ vào sổ khi bấm "Sao chép để dán vào Sheet", nên mở In & xuất file thấy "Không có tiết dạy" và tên ký cũ.
+- Đọc bảng tuần là lưu luôn các tiết đã qua (vắng + nhận xét) vào sổ; sửa ô vắng/nhận xét, Đổi câu cũng lưu ngay.
+- In & xuất file: nút **Lấy từ bảng tuần** (dùng link đã dán ở Điền bảng tuần); tuần đang xem trống thì tự lấy 1 lần khi mở trang.
+- Đầu bản in lấy theo tab tuần: dòng UBND (vd UBND XÃ BÌNH HƯNG) + tên trường đầy đủ (TRƯỜNG TIỂU HỌC PHONG PHÚ 2).
+- "Từ ngày … đến ngày …" tính tới ngày dạy cuối theo Cài đặt (T2–T6 → thứ Sáu), như mẫu trường. Bản in không còn dòng
+  chú thích "Bản in đúng mẫu…" và thông báo nổi.
+Đã thử trên Chrome: sổ trống, tên GV Nguyễn Hoài Bảo → mở In → tự lấy 16 tiết tuần 10, ký Nguyễn Văn Hùng · Trần Văn Diện ·
+Trần Hoàng Minh. 0 Firebase, 0 Apps Script.
+
+## 09/11/2026 (6) — Sổ đầu bài: tên ký bản in lấy theo bảng tuần của trường
+
+- Đọc tab tuần ở "Điền bảng tuần" → lấy 3 tên dưới dòng GVBM · TỔ TRƯỞNG · PHÓ HIỆU TRƯỞNG (vd Nguyễn Văn Hùng · Trần Văn Diện ·
+  Trần Hoàng Minh) ghi vào Cài đặt của sổ (Giáo viên bộ môn, Tổ trưởng, Phó hiệu trưởng) → bản in PDF và Excel ký đúng 3 tên.
+  Có thông báo khi tên đổi; vẫn sửa tay được ở Cài đặt (lần đọc bảng tuần sau sẽ lấy lại tên trên Sheet). 0 Firebase, 0 Apps Script.
+
+## 09/11/2026 (5) — Điền bảng tuần: tự đọc sổ lớp của Điều phối, nhận xét theo Kiến thức cần đạt, tạo bảng tuần mới
+
+Giáo viên thấy (so-dau-bai.html → Điền bảng tuần):
+- Khung **Sổ lớp của Điều phối**: dùng luôn link sổ đã có ở trang Điểm danh (cùng trường), hoặc dán link các file
+  FORM QUẢN LÝ LỚP 3/4/5 ngay tại đây (trình duyệt không đọc được thư mục Drive — chép link từng file). Bấm Đọc bảng tuần
+  là đọc luôn mọi tab lớp + tab BÁO GIẢNG, không cần mở Điểm danh trước.
+- **Vắng lấy thẳng từ sổ lớp** (ký hiệu V của buổi đó; bản nháp chưa ghi của Điểm danh được tính trước). Sổ lớp chưa ghi ô
+  NGÀY thì khớp theo tiết PPCT.
+- **Nhận xét theo "Kiến thức cần đạt"** của bài (tab BÁO GIẢNG): Ưu = 1 mục tiêu ("HS trình bày được …"), Hạn chế = mục tiêu
+  khác ("Một số HS chưa phân biệt được …"); ôn tập / luyện thi / bài không có mục tiêu vẫn dùng bộ câu chung. Tab tuần ghi
+  sai bài thì nhận xét theo bài sổ lớp ghi đã dạy.
+- **Đối chiếu tab tuần với sổ lớp**: báo tiết ghi sai PPCT (vd 3.4 – 12/11: PPCT ghi 8, sổ lớp là tiết 12), sai bài
+  (3.2 – 11/11: ghi Bài 10, sổ lớp là Bài 9), buổi sổ lớp không có; riêng 1 dòng các lớp sổ lớp chưa ghi ô NGÀY.
+- **Tạo bảng tuần mới từ sổ lớp** (chọn tuần): mọi lớp có ngày dạy trong tuần → dòng A:J (ngày, lớp, tiết TKB theo tab tuần
+  vừa đọc, PPCT, tên bài như BÁO GIẢNG, vắng + nhận xét nếu đã qua, GV). Sao chép → tạo bản sao tab tuần trước → bấm A9 →
+  Ctrl+Shift+V; kèm dòng tiêu đề tuần + số tiết từng GV để dán. Lớp chưa có ngày dạy trong tuần được liệt kê để điền tay.
+
+Chi phí: **0 Firestore, 0 Apps Script.** Mỗi lần đọc: tối đa 1 lượt `htmlview` mỗi sổ (nhớ 7 ngày), 1 lượt CSV mỗi tab lớp
+(dùng lại bản Điểm danh nếu mới hơn 30 phút), 1 lượt tab BÁO GIẢNG mỗi sổ (nhớ 7 ngày) — đều là link công khai của Google.
+Bảng lớp (có ngày sinh HS) chỉ giữ trong bộ nhớ trang, không lưu thêm; localStorage `sodaubai_solop` chỉ có danh sách tab
+và Kiến thức cần đạt. Đã thử trên Chrome với 3 sổ thật của TiH Phong Phú 2: đọc 18 lớp, 13/16 tiết có vắng từ sổ lớp,
+bảng tuần 11 có 16 dòng. Test: `node js/so-dau-bai/__tests__/sdb-weekly.test.js`.
+
+## 09/11/2026 (4) — Sổ đầu bài: "Điền bảng tuần" của trường (vắng + nhận xét, sao chép dán vào Sheet)
+
+Giáo viên thấy (so-dau-bai.html → mục mới **Điền bảng tuần**):
+- Dán link tab tuần của trường ("BẢNG THEO DÕI, NHẬN XÉT…", vd tab Tuần 10) → **Đọc bảng tuần**. Trang tự chọn các tiết
+  có tên mình ở cột GV (đổi được ở ô Giáo viên).
+- Mỗi tiết đã qua tự có **vắng** (ưu tiên Điểm danh trên sổ lớp, rồi sổ đầu bài, rồi ô đã có trên Sheet) và **nhận xét chung**
+  Ưu điểm / Hạn chế theo chủ đề PPCT của bài (ôn tập, luyện thi, giới thiệu có bộ câu riêng; vắng ≥ 3 thêm câu sĩ số).
+  Các lớp cùng bài ra câu khác nhau, mở lại vẫn đúng câu cũ; nút **↻ Đổi câu**, sửa tay được.
+- **Sao chép để dán vào Sheet** → bấm ô F đầu tiên (vd F9) → **Ctrl+Shift+V**. Một khối F:H; dòng của đồng nghiệp
+  giữ nguyên chữ đang có lúc đọc (bấm Đọc lại trước khi sao chép nếu họ vừa điền). Đồng thời lưu các tiết vào sổ đầu bài.
+- Sheet không mở công khai: trên Sheet Ctrl+A, Ctrl+C → dán cả bảng vào ô link. Không cần chia sẻ file cho ai.
+- Cảnh báo khi đọc: tiêu đề "Tuần: …" không khớp ngày dạy; tiết PPCT của 1 lớp không tăng dần.
+- Câu nhận xét chung sửa ở `js/so-dau-bai/nhan-xet-ic3.js`.
+
+Chi phí: **0 Firestore, 0 Apps Script** — trình duyệt tự tải CSV từ docs.google.com (như trang Điểm danh), dữ liệu ở localStorage.
+Test: `node js/so-dau-bai/__tests__/sdb-weekly.test.js`. Đã thử trên Chrome với tab Tuần 10 thật (16 tiết, vùng F9:H40).
+
 ## 09/11/2026 (3) — MOS: tải đề xong mở luôn bằng Office (không cần máy chủ trường)
 
 Học sinh thấy (mở trang không qua máy chủ trường, vd Live Server / GitHub Pages, trên Chrome/Edge):

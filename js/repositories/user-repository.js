@@ -28,15 +28,21 @@
     async listAll() {
       const ver = this.versionToken();
       const all = await this.list({ orderBy: 'createdAt', direction: 'desc', limit: MAX_LIST });
-      // Đã có đủ giáo viên đã duyệt trong tay → mồi bản đệm của listApprovedTeachers(): Admin mở Quản lý tài khoản rồi
-      // Quản lý lớp/Dashboard khỏi đọc lại ~100 lượt (đo 08/11/2026). Chạm trần MAX_LIST = có thể thiếu → không mồi.
-      // Thứ tự theo id = thứ tự Firestore trả cho truy vấn không orderBy.
-      if (all.length < MAX_LIST) {
-        const approved = all.filter((u) => u.role === 'teacher' && u.approved === true)
-          .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-        this.prime(APPROVED_QUERY, approved, LOOKUP_CACHE_MS, ver);
-      }
+      this.primeApproved(all, ver);
       return all;
+    }
+
+    /**
+     * Đã có đủ mọi tài khoản trong tay (đọc đủ, hoặc bản đệm + phần thay đổi ở admin-users.js) → mồi bản đệm của
+     * listApprovedTeachers(): Admin mở Quản lý tài khoản rồi Quản lý lớp/Dashboard khỏi đọc lại ~100 lượt (đo 08/11/2026).
+     * Chạm trần MAX_LIST = có thể thiếu → không mồi. Thứ tự theo id = thứ tự Firestore trả cho truy vấn không orderBy.
+     * ver: versionToken() lấy TRƯỚC khi đọc (có lệnh ghi xen giữa thì bản mồi tự bị bỏ).
+     */
+    primeApproved(all, ver) {
+      if (!Array.isArray(all) || all.length >= MAX_LIST) return;
+      const approved = all.filter((u) => u.role === 'teacher' && u.approved === true)
+        .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+      this.prime(APPROVED_QUERY, approved, LOOKUP_CACHE_MS, ver);
     }
 
     /** Giáo viên đã duyệt — query DUY NHẤT rules cho phép giáo viên/điều phối list. */
@@ -57,6 +63,28 @@
         (await this.listApprovedTeachers()).forEach((u) => { if (u.teacherCode) map[u.teacherCode] = u.id; });
         return map;
       });
+    }
+
+    // Ghi qua repository chỉ có Admin (admin-users.html, nhập Excel) — rules cho Admin ghi mọi field. Đóng dấu updatedAt
+    // để máy Admin khác chỉ hỏi phần thay đổi (changedSince). Người dùng tự sửa tên/email đi thẳng qua js/auth.js (rules
+    // không cho thêm field) → thấy ở lần đọc đủ hằng ngày.
+    createWithId(id, data) { return super.createWithId(id, UserRepository.stamped(data)); }
+    update(id, data) { return super.update(id, UserRepository.stamped(data)); }
+    upsert(id, data) { return super.upsert(id, UserRepository.stamped(data)); }
+    static stamped(data) { return Object.assign({}, data, { updatedAt: global.EduModels.SERVER_TIME || { __eduServerTime: true } }); }
+
+    /**
+     * Tài khoản tạo mới (createdAt > createdSince — tự đăng ký luôn có createdAt) hoặc Admin vừa sửa (updatedAt > updatedSince).
+     * 2 truy vấn, không có gì đổi = 2 lượt đọc. Tham số là Timestamp.
+     */
+    async changedSince(createdSince, updatedSince) {
+      const [a, b] = await Promise.all([
+        this.list({ where: [['createdAt', '>', createdSince]], limit: MAX_LIST }),
+        this.list({ where: [['updatedAt', '>', updatedSince]], limit: MAX_LIST }),
+      ]);
+      const byId = new Map(a.map((u) => [u.id, u]));
+      b.forEach((u) => byId.set(u.id, u));
+      return [...byId.values()];
     }
 
     /** Admin đổi vai trò — đổi vai trò luôn kèm duyệt. */

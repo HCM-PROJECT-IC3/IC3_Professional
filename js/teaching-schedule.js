@@ -266,7 +266,7 @@
       const RC = window.EduScheduleReadCache;
       const cached = (key, loader) => (RC ? RC.read(key, loader) : loader());
       const [teachers, weeks] = await Promise.all([
-        cached('teachers', () => window.EduRepositories.teachingTeacher.list({ orderBy: 'name' })),
+        RC ? RC.teachers() : window.EduRepositories.teachingTeacher.list({ orderBy: 'name' }), // chỉ đọc phần thay đổi
         cached('weeks', () => window.EduRepositories.teachingWeek.listAll()),
       ]);
       state.teachers = teachers;
@@ -2031,7 +2031,8 @@
     const now = window.EduModels.SERVER_TIME; // repository đổi thành serverTimestamp()
     await window.EduBaseRepository.commitBatch(writes.map((w) => ({
       repo: repoOf[w.kind], id: w.id, merge: !!w.merge,
-      data: (w.kind === 'sched' || w.kind === 'tt') ? Object.assign({}, w.data, { updatedAt: now }) : w.data,
+      // teacher: updatedAt để máy khác thấy GV mới qua phần thay đổi (EduScheduleReadCache.teachers)
+      data: (w.kind === 'sched' || w.kind === 'tt' || w.kind === 'teacher') ? Object.assign({}, w.data, { updatedAt: now }) : w.data,
     })));
   }
 

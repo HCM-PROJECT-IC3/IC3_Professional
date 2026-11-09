@@ -28,6 +28,25 @@
     async listByCourse(courseId) {
       return this.list({ where: [['courseId', '==', courseId]] });
     }
+
+    /**
+     * Lớp cho trang quản lý (10/11/2026). schools = trường được gán của Điều phối/Quản trị trường → chỉ lớp các trường đó
+     * (where school in, ≤ 10 trường/truy vấn, KHÔNG orderBy để khỏi cần composite index — sắp theo tên ở đây).
+     * Trước đây mọi nhân sự trường đọc CẢ collection (đo: 150 lượt/ngày/người cho ~4 lớp cần dùng) và Quản lý lớp hiện
+     * lớp của trường khác kèm nút Sửa/Xoá. schools null/undefined (Admin) → mọi lớp, như cũ; [] (chưa gán trường) → [].
+     * opts: { cacheMs, refresh }.
+     */
+    async listForSchools(schools, opts = {}) {
+      const base = { cacheMs: opts.cacheMs, refresh: !!opts.refresh };
+      if (schools == null) return this.list(Object.assign({ orderBy: 'name' }, base));
+      if (!Array.isArray(schools) || !schools.length) return [];
+      const parts = [];
+      for (let i = 0; i < schools.length; i += 10) parts.push(schools.slice(i, i + 10));
+      const lists = await Promise.all(parts.map((part) => this.list(Object.assign({ where: [['school', 'in', part]] }, base))));
+      const byId = new Map();
+      lists.flat().forEach((c) => byId.set(c.id, c));
+      return [...byId.values()].sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'vi'));
+    }
   }
 
   class StudentRosterRepository extends global.EduBaseRepository {

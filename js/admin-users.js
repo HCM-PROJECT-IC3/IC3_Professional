@@ -235,9 +235,88 @@ window.EDU_ALLOWED_ROLES = ['admin'];
     if (!row) return loadUsers(true);
     Object.keys(patch).forEach((k) => { if (patch[k] === undefined) delete row.u[k]; else row.u[k] = patch[k]; });
     await window.EduDataCache.setAsync(USERS_CACHE_KEY, c, USERS_CACHE_TTL_MS);
+    await patchUsersDelta(uid, patch);
     return loadUsers(false);
   }
   const sameList = (a, b) => JSON.stringify([...(a || [])].sort()) === JSON.stringify([...(b || [])].sort());
+  const serverNow = () => firebase.firestore.FieldValue.serverTimestamp();
+
+  // ── Danh sách tài khoản: bản đệm bền + chỉ hỏi phần thay đổi (10/11/2026) ──
+  // Đo (Firebase giả cỡ thật): bản đệm 15 phút theo TAB → mỗi lần Admin mở tab mới / mở lại sau 15 phút đọc lại cả
+  // collection users (121 lượt). Nay lưu IndexedDB (mọi tab dùng chung): đọc đủ USERS_FULL_MS/lần (bắt tài khoản bị xoá,
+  // người dùng tự đổi tên/email — rules không cho họ ghi updatedAt); giữa các lần chỉ hỏi tài khoản TẠO MỚI
+  // (createdAt, tự đăng ký luôn có) + Admin VỪA SỬA (updatedAt, mọi lệnh ghi Admin đều đóng dấu) = 2 lượt.
+  // Nút tải lại / sau thao tác cần đọc lại (loadUsers(true)) vẫn đọc đủ như cũ.
+  const USERS_DELTA_KEY = 'admin-users:delta';
+  const USERS_FULL_MS = 24 * 60 * 60 * 1000;
+  const USERS_FRESH_MS = 60 * 1000;
+  const USERS_KEEP_MS = 30 * 24 * 60 * 60 * 1000;
+  const MARGIN_MS = 10 * 60 * 1000; // chưa doc nào có dấu thời gian: mốc = lúc đọc đủ − lệch đồng hồ máy/máy chủ
+  const msOf = (v) => (v && typeof v.seconds === 'number' ? v.seconds * 1e3 + Math.floor((Number(v.nanoseconds) || 0) / 1e6) : 0);
+  const maxMs = (rows, f) => rows.reduce((m, r) => Math.max(m, msOf(r.u[f])), 0);
+  const newestFirst = (a, b) => msOf(b.u.createdAt) - msOf(a.u.createdAt);
+
+  function saveUsersDelta(rows, fullAt, checkedAt) {
+    if (!window.EduDataCache) return;
+    window.EduDataCache.setAsync(USERS_DELTA_KEY, {
+      users: rows, fullAt, checkedAt,
+      wmC: maxMs(rows, 'createdAt') || fullAt - MARGIN_MS,
+      wmU: maxMs(rows, 'updatedAt') || fullAt - MARGIN_MS,
+    }, USERS_KEEP_MS, true);
+  }
+  /** Bản đệm bền + phần thay đổi → rows [{ id, u }] | null (hết hạn đọc đủ / chưa có). Lưu lại phần vừa gộp. */
+  async function deltaRows() {
+    const C = window.EduDataCache;
+    const e = C ? await C.getAsync(USERS_DELTA_KEY, true) : null;
+    const now = Date.now();
+    if (!e || !Array.isArray(e.users) || now - (e.fullAt || 0) >= USERS_FULL_MS) return null;
+    let rows = e.users;
+    if (now - (e.checkedAt || 0) >= USERS_FRESH_MS) {
+      try {
+        const TS = firebase.firestore.Timestamp;
+        const changed = await window.EduRepositories.user.changedSince(TS.fromMillis(e.wmC || 0), TS.fromMillis(e.wmU || 0));
+        const byId = new Map(rows.map((r) => [r.id, r]));
+        changed.forEach(({ id, ...u }) => byId.set(id, { id, u }));
+        rows = [...byId.values()].sort(newestFirst);
+        const wmC = Math.max(e.wmC || 0, maxMs(rows, 'createdAt')), wmU = Math.max(e.wmU || 0, maxMs(rows, 'updatedAt'));
+        C.setAsync(USERS_DELTA_KEY, { users: rows, fullAt: e.fullAt, checkedAt: now, wmC, wmU }, USERS_KEEP_MS, true);
+      } catch (err) {
+        console.warn('[EduAdminUsers] Không hỏi được phần thay đổi — dùng bản đã lưu:', err.message);
+      }
+    }
+    return { rows, fullAt: e.fullAt };
+  }
+  /** Danh sách tài khoản cho nhánh đọc lại: phần thay đổi nếu bản đệm bền còn hạn, không thì đọc đủ.
+      → { list: [{ id, ...u }] như listAll(), fullAt } */
+  async function usersList(force) {
+    const ver = window.EduRepositories.user.versionToken();
+    const d = force ? null : await deltaRows();
+    if (d) {
+      const list = d.rows.map(({ id, u }) => Object.assign({ id }, u));
+      window.EduRepositories.user.primeApproved(list, ver); // như listAll(): Quản lý lớp/Dashboard khỏi đọc lại GV đã duyệt
+      return { list, fullAt: d.fullAt };
+    }
+    return { list: await window.EduRepositories.user.listAll(), fullAt: Date.now() };
+  }
+  /** Nhánh nhanh: bản đệm bền + bản tra cứu còn hạn → [{ doc: {id}, u }] | null. */
+  async function usersFromDelta() {
+    if (!(await restoreLookupsCache())) return null; // tra cứu hết hạn: đi nhánh đọc lại (vẫn dùng usersList → phần thay đổi)
+    const ver = window.EduRepositories.user.versionToken();
+    const d = await deltaRows();
+    if (!d) return null;
+    window.EduRepositories.user.primeApproved(d.rows.map(({ id, u }) => Object.assign({ id }, u)), ver);
+    window.EduDataCache.setAsync(USERS_CACHE_KEY, { allSchools, allClasses, allTeachingTeachers, users: d.rows }, USERS_CACHE_TTL_MS);
+    return d.rows.map(({ id, u }) => ({ doc: { id }, u }));
+  }
+  /** Sửa 1 dòng ở máy này → sửa luôn bản đệm bền (khỏi đọc lại cả danh sách). */
+  async function patchUsersDelta(uid, patch) {
+    const C = window.EduDataCache;
+    const e = C ? await C.getAsync(USERS_DELTA_KEY, true) : null;
+    const row = e && Array.isArray(e.users) ? e.users.find((x) => x.id === uid) : null;
+    if (!row) return;
+    Object.keys(patch).forEach((k) => { if (patch[k] === undefined) delete row.u[k]; else row.u[k] = patch[k]; });
+    await C.setAsync(USERS_DELTA_KEY, e, USERS_KEEP_MS, true);
+  }
 
   /** @param {boolean} [forceRefresh] Bỏ qua cache — dùng sau khi ghi (duyệt/xoá/đổi role...). */
   async function loadUsers(forceRefresh) {
@@ -257,6 +336,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
         users = cached.users.map(({ id, u }) => ({ doc: { id }, u }));
       }
     }
+    if (!users && !forceRefresh) users = await usersFromDelta();
 
     if (!users) {
       // Sau mỗi thao tác ghi (duyệt/đổi role/gán trường...) loadUsers(true) chỉ cần đọc lại
@@ -265,8 +345,8 @@ window.EDU_ALLOWED_ROLES = ['admin'];
       const lookupsInMemory = !!(forceRefresh && lookupsLoadedAt && Date.now() - lookupsLoadedAt < LOOKUPS_TTL_MS);
       const lookupsFromStorage = !lookupsInMemory && await restoreLookupsCache();
       const lookupsFresh = lookupsInMemory || lookupsFromStorage;
-      const [list] = await Promise.all([
-        window.EduRepositories.user.listAll(),
+      const [{ list, fullAt: usersFullAt }] = await Promise.all([
+        usersList(forceRefresh), // bản tra cứu hết hạn ≠ danh sách tài khoản hết hạn: vẫn chỉ hỏi phần thay đổi
         lookupsFresh ? null : (lazyRoster() ? loadSchoolsLite() : loadSchools()),
         lookupsFresh ? null : loadClasses(forceRefresh),
         lookupsFresh ? null : loadTeachingTeachers(),
@@ -297,7 +377,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
         const actual = actualSchoolsOf(doc.id);
         if (!actual.length) return;
         if (JSON.stringify(saved) === JSON.stringify(actual)) return;
-        batch.set(window.EduRepositories.user.col().doc(doc.id), window.EduRepositories.UserRepository.schoolsPatch(actual), { merge: true });
+        batch.set(window.EduRepositories.user.col().doc(doc.id), Object.assign(window.EduRepositories.UserRepository.schoolsPatch(actual), { updatedAt: serverNow() }), { merge: true });
         u.schools = actual; // cập nhật NGAY object dùng để render, không cần tải lại
         u.schoolIds = window.EduModels.School.schoolIdsOf(actual);
         fixedCount++;
@@ -311,7 +391,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
         if (fixedCount + idFixedCount >= 450) return; // 1 batch ≤ 500 lệnh ghi — phần còn lại lần mở trang sau
         const want = window.EduModels.School.schoolIdsOf(u.schools);
         if (JSON.stringify(u.schoolIds || []) === JSON.stringify(want)) return;
-        batch.set(window.EduRepositories.user.col().doc(doc.id), { schoolIds: want }, { merge: true });
+        batch.set(window.EduRepositories.user.col().doc(doc.id), { schoolIds: want, updatedAt: serverNow() }, { merge: true });
         u.schoolIds = want;
         idFixedCount++;
       });
@@ -333,6 +413,7 @@ window.EDU_ALLOWED_ROLES = ['admin'];
           allSchools, allClasses, allTeachingTeachers,
           users: users.map(({ doc, u }) => ({ id: doc.id, u })),
         }, USERS_CACHE_TTL_MS);
+        saveUsersDelta(users.map(({ doc, u }) => ({ id: doc.id, u })), usersFullAt, Date.now());
       }
     }
 

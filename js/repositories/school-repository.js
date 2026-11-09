@@ -24,8 +24,11 @@
     constructor() { super(S.SCHOOLS_COLLECTION); }
 
     /** Toàn bộ danh mục (vài chục trường), sắp theo tên. */
-    async listAll() {
-      const list = await this.list({ limit: 1000 });
+    // Bản đệm dùng chung 6 giờ (IndexedDB, mọi trang/tab — BaseRepository cacheMs): danh mục vài chục trường hầu như không đổi;
+    // trước đây admin-schools đọc lại mỗi 5 phút/tab. Ghi qua repository (sửa, ngừng, tạo trường mới) bỏ bản đệm ngay;
+    // trường do máy Admin KHÁC tạo hiện sau tối đa 6 giờ. opts.refresh = đọc lại ngay.
+    async listAll(opts = {}) {
+      const list = await this.list({ limit: 1000, cacheMs: 6 * 60 * 60 * 1000, refresh: !!opts.refresh });
       return list.sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'vi'));
     }
 
@@ -54,7 +57,8 @@
       const ids = [...new Set((names || []).map((n) => S.schoolIdOf(String(n || '').trim())).filter(Boolean))];
       const known = readKnownIds();
       if (ids.every((id) => known.has(id))) return [];
-      const existing = new Set((await this.list({ limit: 1000 })).map((s) => s.id));
+      // Đọc mới (có tên lạ thì phải chắc) nhưng qua bản đệm dùng chung → Danh mục trường mở sau đó khỏi đọc lại.
+      const existing = new Set((await this.listAll({ refresh: true })).map((s) => s.id));
       const byId = new Map();
       (names || []).forEach((name) => {
         const clean = String(name || '').trim();
@@ -67,7 +71,7 @@
         byId.forEach((name, id) => {
           batch.set(this.col().doc(id), { name, status: S.SCHOOL_STATUS.ACTIVE, createdAt: now, updatedAt: now });
         });
-        await batch.commit();
+        try { await batch.commit(); } finally { this.invalidate(); } // trường mới → bỏ bản đệm listAll()
       }
       saveKnownIds([...existing, ...byId.keys()]);
       return [...byId.keys()];

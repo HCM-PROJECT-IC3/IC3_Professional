@@ -286,7 +286,8 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
         const scope = isAdmin ? {} : { narrows: chunk10(schools).map((part) => (q) => q.where('school', 'in', part)), fullMs: window.EduRosterCache.SCOPED_FULL_MS };
         const [courses, classes, students, teachers] = await Promise.all([
           window.EduRepositories.course.list({ orderBy: 'name', cacheMs: LOOKUP_CACHE_MS, refresh: !!forceRefresh }),
-          window.EduRepositories.class.list({ orderBy: 'name', cacheMs: LOOKUP_CACHE_MS, refresh: !!forceRefresh }),
+          // Nhân sự trường: chỉ lớp các trường được gán (trước: cả 150 lớp mọi trường, kèm nút Sửa/Xoá)
+          window.EduRepositories.class.listForSchools(isAdmin ? null : schools, { cacheMs: LOOKUP_CACHE_MS, refresh: !!forceRefresh }),
           window.EduRosterCache.deltaFrom(base, null, 'students_roster (Quản lý lớp, thay đổi)', scope).then((d) => {
             if (d) return Object.assign(d, { fromDelta: true, students: d.students.sort(byName) });
             if (opts.deltaOnly && base) return { students: base.students, fullAt: base.fullAt, watermark: base.watermark, fromDelta: true };

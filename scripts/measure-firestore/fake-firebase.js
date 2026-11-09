@@ -118,6 +118,8 @@
   };
   const fs = () => dbObj;
   fs.Query = Query; fs.WriteBatch = Batch; fs.setLogLevel = () => {};
+  // Như SDK compat thật: trang móc vào prototype các lớp này để xoá bản đệm khi ghi (schedule-read-cache installWriteHooks)
+  fs.DocumentReference = DocRef; fs.CollectionReference = CollRef;
   fs.FieldPath = { documentId: () => '__name__' };
   fs.FieldValue = { serverTimestamp: () => sentinel, increment: (n) => ({ __inc: n }), arrayUnion: (...a) => a, arrayRemove: (...a) => a, delete: () => null };
   fs.Timestamp = Object.assign(function (sec, ns) { return new Ts(sec, ns || 0); }, { fromMillis: T, now: () => T(Date.now()), fromDate: (d) => T(d.getTime()) });
