@@ -329,8 +329,15 @@ kbd{font:inherit;font-size:11px;border:1px solid var(--line-2);border-bottom-wid
 .wk-cmt{display:flex;flex-direction:column;gap:3px}
 .wk-cmt > b{font-size:12px;font-weight:500;color:var(--ink-3)}
 .wk-cmt + .wk-cmt{margin-top:6px}
+.wk-gen tr.is-plan td{color:var(--ink-2)}
+.wk-gen td .tag{margin-left:2px;vertical-align:1px}
 .wk-cmt textarea{field-sizing:content;min-height:3.2em;resize:vertical;font-size:14px}
 @media (max-width:1100px){ .wk-row{grid-template-columns:1fr 1fr} .wk-row .wk-lesson{grid-column:2} }
 @media (max-width:640px){ .wk-row{grid-template-columns:1fr} .wk-row .wk-lesson{grid-column:auto} }
 .wk-books{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border:1px dashed var(--line-2);border-radius:10px}
 table.wk-gen td,table.wk-gen th{padding:8px 10px;font-size:13px}
+/* Buổi/tiết đoán (lớp chưa có trong TKB): dòng nhắc trong khung ghi + dấu "?" ở danh sách */
+.slot-hint{margin:12px 0 0;padding:8px 10px;border-radius:8px;background:var(--surface-2);color:var(--ink-2);font-size:13px}
+.slot-hint.is-warn{background:color-mix(in srgb,#d97706 12%,var(--surface));color:var(--ink)}
+.slot-hint[hidden]{display:none}
+.when.is-guess b{color:var(--ink-2)}

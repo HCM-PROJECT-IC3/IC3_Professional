@@ -30,7 +30,7 @@ kbd { display: inline-block; padding: 0 .35rem; border-radius: 6px; background: 
 .btn { border: none; border-radius: 999px; padding: .55rem 1.1rem; font-weight: 700; font-size: .85rem; cursor: pointer; }
 .btn-ghost { background: var(--card2); color: var(--text); border: 1.5px solid var(--border); text-decoration: none; display: inline-flex; align-items: center; gap: .4rem; }
 .btn-ghost:hover { border-color: var(--dd-accent); color: var(--dd-accent); }
-.dd-wrap { max-width: 1320px; margin: 0 auto; padding: 0 1.6rem 2.5rem; display: flex; flex-direction: column; gap: 14px; }
+.dd-wrap { max-width: none; margin: 0 auto; padding: 0 1.6rem 2.5rem; display: flex; flex-direction: column; gap: 14px; }
 @media (max-width: 760px) { .topbar { padding: .6rem 1rem; } .dd-wrap { padding: 0 .8rem 2rem; } .topbar .btn-ghost[href="goi-ten.html"] { display: none; } }
 
 /* ── Thẻ, tiêu đề mục, ô nhập, nút ── */
@@ -140,18 +140,47 @@ kbd { display: inline-block; padding: 0 .35rem; border-radius: 6px; background: 
 /* Bộ lọc trường / giáo viên + lịch giảng dạy theo tuần */
 .dd-filters .dd-field { flex: 1 1 240px; }
 .dd-weeknav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.dd-week { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 6px; }
-.dd-day { border: 1px solid var(--dd-line); border-radius: 12px; padding: 6px; display: flex; flex-direction: column; gap: 6px; min-width: 0; min-height: 90px; }
-.dd-day.is-today { border: 2px solid var(--dd-accent); }
-.dd-day h4 { margin: 0; font: 700 .9rem/1.2 var(--dd-display); }
-.dd-day h4 small { color: var(--dd-muted); font: 500 .75rem var(--dd-body); }
-.dd-free { margin: 0; color: var(--dd-muted); font-size: .8rem; }
-.dd-ev { display: flex; flex-direction: column; gap: 1px; text-align: left; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--dd-line); background: var(--dd-paper); font-size: .78rem; line-height: 1.3; min-width: 0; }
+/* Lịch tuần kiểu TKB: cột Thứ × hàng Sáng / Chiều, kẻ bảng như thời khoá biểu giấy */
+.dd-tkb-scroll { overflow-x: auto; border: 1px solid var(--dd-line); border-radius: 8px; }
+.dd-tkb { display: grid; grid-template-columns: 64px repeat(var(--cols), minmax(150px, 1fr)); }
+.dd-tkb-row { display: contents; }
+.dd-tkb-row > * { border-right: 1px solid var(--dd-line); border-bottom: 1px solid var(--dd-line); min-width: 0; }
+.dd-tkb-row > :last-child { border-right: 0; }
+.dd-tkb-row:last-child > * { border-bottom: 0; }
+.dd-tkb-head, .dd-tkb-corner { padding: 7px 10px; background: var(--card2); font-weight: 700; font-size: .85rem; }
+.dd-tkb-head small { font-weight: 500; color: var(--dd-muted); margin-left: 2px; }
+.dd-tkb-head.is-today { color: var(--dd-accent); box-shadow: inset 0 -2px 0 var(--dd-accent); }
+.dd-tkb-side { position: sticky; left: 0; z-index: 1; display: flex; align-items: center; justify-content: center; padding: 6px 4px; background: var(--card2);
+  font-weight: 700; font-size: .8rem; text-align: center; line-height: 1.25; }
+.dd-tkb-cell { padding: 6px; display: flex; flex-direction: column; gap: 6px; min-height: 92px; }
+.dd-tkb-cell.is-today { background: color-mix(in srgb, var(--dd-accent) 4%, var(--dd-paper)); }
+.dd-tkb-row.is-a > * { border-top: 1px solid var(--dd-line); } /* vạch đôi ngăn Sáng | Chiều */
+.dd-tkb-row.is-u > * { border-top: 1px dashed var(--dd-line); }
+.dd-tkb-row.is-u .dd-tkb-side { color: var(--dd-muted); font-weight: 600; font-size: .74rem; }
+.dd-tkb-row.is-u .dd-tkb-cell { min-height: 0; }
+.dd-tkb-note { margin-top: -4px; }
+/* Thẻ 1 lớp trong ô */
+.dd-ev { position: relative; display: flex; flex-direction: column; border: 1px solid var(--dd-line); border-radius: 6px; background: var(--dd-paper); min-width: 0; }
+.dd-ev:hover, .dd-ev:focus-within { border-color: color-mix(in srgb, var(--dd-accent) 60%, var(--dd-line)); }
+.dd-ev-main { display: flex; flex-direction: column; gap: 1px; text-align: left; border: 0; background: none; padding: 5px 26px 6px 8px; font-size: .78rem; line-height: 1.3; min-width: 0; }
 .dd-ev b { font-size: .9rem; }
 .dd-ev small { color: var(--dd-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dd-ev span { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
-.dd-ev em { font-style: normal; font-weight: 700; font-size: .7rem; }
-.dd-ev:hover { border-color: var(--dd-accent); }
+.dd-ev-main span { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.dd-ev em { font-style: normal; font-weight: 600; font-size: .7rem; }
+.dd-ev-mv { position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; padding: 0; border: 1px solid transparent; border-radius: 4px; background: none;
+  color: var(--dd-muted); font-size: .8rem; line-height: 1; opacity: 0; }
+.dd-ev:hover .dd-ev-mv, .dd-ev:focus-within .dd-ev-mv { opacity: 1; }
+.dd-ev-mv:hover { border-color: var(--dd-line); color: var(--dd-accent); }
+@media (hover: none) { .dd-ev-mv { opacity: .7; } }
+.dd-ev-set { display: flex; border-top: 1px solid var(--dd-line); }
+.dd-ev-set button { flex: 1; border: 0; background: none; padding: 3px 0; font-size: .74rem; font-weight: 600; color: var(--dd-muted); }
+.dd-ev-set button + button { border-left: 1px solid var(--dd-line); }
+.dd-ev-set button:hover { color: var(--dd-accent); background: var(--card2); }
+/* Lớp của tôi chưa đọc được → báo ngay trên lịch, đọc lại đúng các lớp đó */
+.dd-weekwarn { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 7px 10px; font-size: .85rem; border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--dd-red) 35%, var(--dd-line)); background: color-mix(in srgb, var(--dd-red) 5%, var(--dd-paper)); }
+.dd-weekwarn[hidden] { display: none; }
+.dd-weekwarn span { flex: 1 1 260px; }
 .k-done { border-left: 4px solid var(--dd-leaf); }
 .dd-ev.k-done em, .dd-legend .k-done { color: var(--dd-leaf); }
 .k-planned { border-left: 4px solid var(--dd-gold); }
@@ -163,9 +192,21 @@ kbd { display: inline-block; padding: 0 .35rem; border-radius: 6px; background: 
 .dd-ev.k-missing em { color: var(--dd-red); }
 .dd-legend { margin: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .78rem; color: var(--dd-muted); }
 .dd-legend span { padding-left: 6px; }
+.dd-legend .k-done, .dd-legend .k-planned, .dd-legend .k-expected, .dd-legend .k-missing { border-left-width: 3px; }
+/* Thẻ Lịch dạy: màn rộng chia 2 cột — Hôm nay + Việc cần làm bên trái, lịch tuần bên phải (hết khoảng trống 2 bên) */
+#ddPanelWeek:not([hidden]) { display: grid; grid-template-columns: minmax(300px, 360px) minmax(0, 1fr); gap: 14px; align-items: start; }
+#ddPanelWeek:has(> #ddToday[hidden]) { grid-template-columns: minmax(0, 1fr); }
+.dd-today:not([hidden]) { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+/* Cột hẹp: chữ trên, nút xuống dưới — không ép chữ thành cột dọc */
+.dd-today .dd-tasks li { flex-direction: column; align-items: stretch; gap: 6px; }
+.dd-today .dd-task-acts { justify-content: flex-start; }
+@media (max-width: 1180px) {
+  #ddPanelWeek:not([hidden]) { grid-template-columns: minmax(0, 1fr); }
+  .dd-today:not([hidden]) { display: grid; grid-template-columns: 1fr 1fr; align-items: start; }
+}
 @media (max-width: 760px) {
-  .dd-week { grid-template-columns: 1fr; }
-  .dd-day { min-height: 0; }
+  .dd-today:not([hidden]) { grid-template-columns: 1fr; }
+  .dd-tkb { grid-template-columns: 52px repeat(var(--cols), minmax(140px, 1fr)); }
 }
 
 /* Bố cục 4 thẻ: Lịch dạy · Các lớp · Điểm danh · Cài đặt — thanh thẻ phẳng kiểu phần mềm, gạch chân thẻ đang mở */
@@ -218,3 +259,40 @@ kbd { display: inline-block; padding: 0 .35rem; border-radius: 6px; background: 
 
 /* Nút phẳng kiểu phần mềm thi — giống khối cuối css/admin-common.css (trang này không nạp file đó). */
 html .btn { border-radius: 8px; }
+
+/* ── 10/11: gọn kiểu phần mềm — góc 8px, viền 1px, nút chữ trong danh sách thay cho nút viên thuốc có icon ── */
+.dd-small, .dd-go, .dd-modes, .dd-modes button, .dd-seg { border-radius: 8px; }
+.dd-small, .dd-file, .dd-seg, .dd-modes, .dd-field select, .dd-field textarea, .dd-input { border-width: 1px; }
+.dd-input { border-radius: 8px; }
+.dd-card { border-radius: 10px; }
+.dd-step h2 > i { display: none; } /* icon trước tiêu đề mục: chữ đã đủ rõ */
+.dd-tbtn { border: 1px solid var(--dd-line); background: transparent; border-radius: 6px; padding: 3px 10px; font-size: .82rem; font-weight: 600; color: var(--dd-ink); white-space: nowrap; }
+.dd-tbtn:hover:not(:disabled) { border-color: var(--dd-accent); color: var(--dd-accent); }
+.dd-tbtn.is-main { background: var(--dd-accent); border-color: var(--dd-accent); color: var(--dd-accent-ink); }
+.dd-tbtn.is-main:hover { filter: brightness(1.08); color: var(--dd-accent-ink); }
+.dd-tbtn:disabled { opacity: .5; cursor: progress; }
+/* Hôm nay · Việc cần làm: hàng mảnh, kẻ dòng, không khung từng mục, không thanh cuộn lồng trong thẻ */
+#ddTodayList { max-height: none; overflow: visible; }
+.dd-tasks { gap: 0; }
+.dd-tasks li { border: 0; border-bottom: 1px solid var(--dd-line); border-radius: 0; padding: 8px 2px; }
+.dd-tasks li:last-child { border-bottom: 0; }
+.dd-tasks li.dd-muted { border: 0; padding: 4px 2px; }
+.dd-tasks li > div { display: block; }
+.dd-tasks li > div > b { margin-right: 6px; }
+.dd-tasks li > div > small { display: block; }
+.dd-tag { font-style: normal; font-size: .72rem; font-weight: 600; padding: 1px 6px; border-radius: 4px; color: var(--dd-muted); background: var(--card2); vertical-align: 1px; }
+.dd-tag.is-ok { color: var(--dd-leaf); background: color-mix(in srgb, var(--dd-leaf) 12%, transparent); }
+.dd-tag.is-draft { color: #b5541b; background: color-mix(in srgb, #e07a1b 14%, transparent); }
+[data-theme="dark"] .dd-tag.is-draft { color: #f0a35e; }
+/* Bảng Các lớp: lớp đọc lỗi */
+.dd-table tr.is-fail td:nth-child(3) { color: var(--dd-red); }
+.dd-table .dd-tbtn { margin-left: 6px; }
+/* Đang tải lớp khác: danh sách cũ mờ đi, vẫn bấm được (ghi đúng lớp đang hiện) */
+.dd-card.is-loading { opacity: .45; transition: opacity .15s; }
+#ddTodoList .dd-tbtn.is-main { background: transparent; border-color: var(--dd-line); color: var(--dd-ink); }
+#ddTodoList .dd-tbtn.is-main:hover { border-color: var(--dd-accent); color: var(--dd-accent); filter: none; }
+/* Lớp đã điểm danh xong: nút Điểm danh thôi nổi (chỉ còn để xem/sửa) */
+#ddTodayList li:has(.dd-tag.is-ok) .dd-tbtn.is-main { background: transparent; border-color: var(--dd-line); color: var(--dd-ink); }
+/* Lớp xếp theo TKB ở Lịch giảng dạy: nhãn tiết TKB góc phải (không có nút đổi buổi) */
+.dd-ev-tkb { position: absolute; top: 5px; right: 6px; font-style: normal; font-size: .7rem; font-weight: 600; color: var(--dd-muted); }
+.dd-ev:has(.dd-ev-tkb) .dd-ev-main { padding-right: 70px; }

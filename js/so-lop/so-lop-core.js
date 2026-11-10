@@ -13,7 +13,12 @@
      todaySession · nextSession · sessionGroup · dateOf · summary · stats · pasteText · cellRef · isMine
      teacherKey · teachersOf · taughtBy · mondayOf · weekPlan · monthCount · monthLog   (lọc theo GV + lịch giảng dạy, bảng công)
      watchList(cls) → học sinh vắng nhiều / vắng liền · untickedSessions → tiết đã qua chưa tick Hoàn thành
-     draftChanges(cls, marks, col) → số ô điểm danh nháp khác Sheet
+     draftChanges(cls, draft, col) → số ô điểm danh nháp khác Sheet · draftMark(draft, st) → ký hiệu nháp của 1 bạn
+     compactCSV(text) → bỏ ô/dòng trống ở cuối (giữ nguyên số dòng) — bản lưu trên máy nhỏ đi nhiều lần
+     buoiOf(slots, key, date) · buoiGrid(plan, slots, days) → lịch tuần dạng TKB Sáng/Chiều (Sheet không có giờ học:
+       GV tự xếp buổi cho từng lớp theo thứ, lưu trên máy — slots = { 'mã lớp|thứ': 'm' | 'a' })
+     classKey(tên lớp) · tkbCells(days) · tkbFor(cells, lớp, trường, ngày, sameSchool) → xếp tự động theo TKB ở
+       Lịch giảng dạy (teaching_timetable.days: "2".."7" → { morning: [ô], afternoon: [ô] }, ô = { maLop, truong } | "maLop")
    Ký hiệu điểm danh như hướng dẫn trên Sheet: X có mặt · V vắng · NL nghỉ luôn · Mới học sinh mới.
    ============================================================ */
 (function (global) {
@@ -82,6 +87,14 @@
     }
     if (cell || row.length) { row.push(cell); rows.push(row); }
     return rows;
+  }
+  /** CSV Google xuất đủ cột/dòng của trang tính (",,,,,," hàng trăm ô trống) → bỏ ô trống cuối mỗi dòng và dòng trống
+      cuối bảng. Dòng trống ở giữa vẫn giữ (số dòng = số dòng trên Sheet, ghi điểm danh theo số dòng). */
+  function compactCSV(text) {
+    const q = (c) => (/[",\r\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c);
+    const out = parseCSV(text).map((r) => { let n = r.length; while (n && r[n - 1] === '') n--; return r.slice(0, n).map(q).join(','); });
+    while (out.length && out[out.length - 1] === '') out.pop();
+    return out.join('\n');
   }
 
   /** Ký hiệu điểm danh → 'x' | 'v' | 'nl' | 'moi' | '' ; ô ghi thứ khác (số phòng, ghi chú) → '?' — không tính. */
@@ -397,14 +410,80 @@
     return stats(cls).students.filter((x) => !x.nl && (x.vang >= 3 || x.lien >= 2)).sort((a, b) => b.lien - a.lien || b.vang - a.vang);
   }
 
-  /** Số học sinh có điểm danh nháp khác Sheet ở cột col (ô trống trên Sheet tính là có mặt). */
-  function draftChanges(cls, marks, col) {
-    return cls.students.filter((st) => marks && marks[st.row] != null && marks[st.row] !== (st.marks[col] || 'x')).length;
+  /** Ký hiệu nháp của 1 bạn — null nếu chưa có. Nháp lưu theo số dòng kèm tên: điều phối vừa chèn/xoá dòng trên Sheet
+      (dòng đó nay là bạn khác) thì bỏ, không gán vắng nhầm người. Nháp bản trước (chưa có tên) vẫn dùng. */
+  function draftMark(d, st) {
+    if (!d || !d.marks || d.marks[st.row] == null) return null;
+    const n = d.names && d.names[st.row];
+    return n && low(n) !== low(st.name) ? null : d.marks[st.row];
+  }
+  /** Số học sinh có điểm danh nháp khác Sheet ở cột col (ô trống trên Sheet tính là có mặt).
+      d: bản nháp { marks, names } (hoặc chỉ { row: ký hiệu } như bản trước). */
+  function draftChanges(cls, d, col) {
+    if (!d) return 0;
+    const dr = d.marks ? d : { marks: d };
+    return cls.students.filter((st) => { const m = draftMark(dr, st); return m != null && m !== (st.marks[col] || 'x'); }).length;
+  }
+
+  /** Buổi GV đã xếp cho lớp `key` vào thứ của `date`: 'm' sáng · 'a' chiều · '' chưa xếp. */
+  function buoiOf(slots, key, date) {
+    const v = slots && date ? slots[`${key}|${date.getDay()}`] : '';
+    return v === 'm' || v === 'a' ? v : '';
+  }
+  /** Tên lớp so khớp giữa Sheet và TKB: "4A5" · "4/5" · "4.5" · "lớp 4 A 5" → "4.5". Không có dạng khối+số → nguyên chữ hoa. */
+  function classKey(s) {
+    const t = String(s == null ? '' : s).replace(/^\s*lớp\s*/i, '').replace(/\s+/g, '').toUpperCase();
+    const m = /^(\d{1,2})[^\d]{0,3}?(\d{1,2})$/.exec(t);
+    return m ? `${+m[1]}.${+m[2]}` : t;
+  }
+  /** Ô TKB của 1 tuần → [{ dow (getDay: 1 = Thứ 2), b: 'm'|'a', tiet, cls (classKey), school }]. Tiết chiều đánh số tiếp
+      sau tiết sáng như TKB giấy (sáng 4 tiết → chiều bắt đầu tiết 5). Ô trống bỏ qua. */
+  function tkbCells(days) {
+    const out = [];
+    Object.keys(days || {}).forEach((k) => {
+      const d = days[k] || {}, dow = +k - 1;
+      if (!(dow >= 1 && dow <= 6)) return;
+      const mo = Array.isArray(d.morning) ? d.morning : [], af = Array.isArray(d.afternoon) ? d.afternoon : [];
+      const add = (raw, b, tiet) => {
+        const c = raw && typeof raw === 'object' ? raw : { maLop: raw };
+        const cls = norm(c.maLop);
+        if (cls) out.push({ dow, b, tiet, cls: classKey(cls), school: norm(c.truong) });
+      };
+      mo.forEach((c, i) => add(c, 'm', i + 1));
+      af.forEach((c, i) => add(c, 'a', mo.length + i + 1));
+    });
+    return out;
+  }
+  /** Buổi + tiết TKB của lớp `cls` (trường `school`) ngày `date` → { b, tiet: [..], m: [tiết sáng], a: [tiết chiều] } | null. Ô TKB không ghi trường thì
+      khớp theo tên lớp; có ghi thì phải cùng trường (same = so tên trường, mặc định so nguyên chữ thường). */
+  function tkbFor(cells, cls, school, date, same) {
+    if (!cells || !cells.length || !date) return null;
+    const k = classKey(cls), dow = date.getDay(), eq = same || ((a, b) => norm(a).toLowerCase() === norm(b).toLowerCase());
+    const hit = cells.filter((c) => c.dow === dow && c.cls === k && (!c.school || !school || eq(c.school, school))).sort((a, b) => a.tiet - b.tiet);
+    // m / a: tiết từng buổi — lớp dạy cả sáng lẫn chiều cùng ngày thì trang tách thành 2 thẻ
+    return hit.length ? { b: hit[0].b, tiet: hit.map((c) => c.tiet), m: hit.filter((c) => c.b === 'm').map((c) => c.tiet), a: hit.filter((c) => c.b === 'a').map((c) => c.tiet) } : null;
+  }
+
+  /** Lưới TKB của 1 tuần: { m, a, u } — mỗi hàng là mảng theo `days` (cùng thứ tự), mỗi ô là các mục weekPlan của buổi đó.
+      u = chưa xếp buổi. Trong 1 ô giữ thứ tự của weekPlan (trường → lớp). */
+  function buoiGrid(plan, slots, days) {
+    const pick = typeof slots === 'function' ? slots : (e) => buoiOf(slots, e.key, e.date); // hàm: buổi từ TKB / xếp tay
+    const idx = new Map((days || []).map((d, i) => [day0(d).getTime(), i]));
+    const g = { m: [], a: [], u: [] };
+    (days || []).forEach(() => { g.m.push([]); g.a.push([]); g.u.push([]); });
+    (plan || []).forEach((e) => {
+      const i = idx.get(day0(e.date).getTime());
+      if (i == null) return;
+      const b = pick(e);
+      g[b === 'm' || b === 'a' ? b : 'u'][i].push(e);
+    });
+    return g;
   }
 
   global.EduSoLop = {
+    buoiOf, buoiGrid, classKey, tkbCells, tkbFor,
     parseLinks, parsePaste, parseTabs, isClassTab, parseCSV, mark, parseClass,
     lessonOf, matchName, lessonsOf, dateOf, todaySession, nextSession, perDay, sessionGroup, summary,
-    stats, pasteText, colName, cellRef, isMine, teacherKey, teachersOf, taughtBy, mondayOf, weekPlan, monthCount, monthLog, watchList, untickedSessions, draftChanges, SHEET_MARK, THU,
+    stats, pasteText, colName, cellRef, isMine, teacherKey, teachersOf, taughtBy, mondayOf, weekPlan, monthCount, monthLog, watchList, untickedSessions, draftChanges, draftMark, compactCSV, SHEET_MARK, THU,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

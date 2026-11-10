@@ -100,7 +100,9 @@
   function absentOf(c, k, sess, drafts) {
     const out = [];
     c.students.forEach((st) => {
-      const dr = sess.map((s) => (drafts || {})[`${k}|${s.col}`]).find((d) => d && d.marks && d.marks[st.row] != null);
+      // Nháp kèm tên (Điểm danh bản mới): dòng đó nay là bạn khác (điều phối chèn/xoá dòng) → bỏ qua nháp
+      const ok = (d) => d && d.marks && d.marks[st.row] != null && !(d.names && d.names[st.row] && low(d.names[st.row]) !== low(st.name));
+      const dr = sess.map((s) => (drafts || {})[`${k}|${s.col}`]).find(ok);
       const off = dr ? dr.marks[st.row] === 'v' : sess.some((s) => st.marks[s.col] === 'v');
       if (off && !out.includes(norm(st.name))) out.push(norm(st.name));
     });
@@ -145,7 +147,7 @@
       const mine = new Set(teacher ? L.taughtBy(c, teacher) : []);
       c.sessions.forEach((s) => {
         const d = L.dateOf(s.ngay, ref);
-        if (d) out.push({ school: norm(c.school), cls: normClass(c.cls), date: isoDay(d), tiet: s.tiet, bai: norm(s.bai), mine: mine.has(s) });
+        if (d) out.push({ school: norm(c.school), cls: normClass(c.cls), date: isoDay(d), tiet: s.tiet, bai: norm(s.bai), mine: mine.has(s), key: k, col: s.col });
       });
     });
     return out;

@@ -23,6 +23,9 @@
    Sổ đã tắt link công khai: đọc thẳng không được thì đọc qua Apps Script (classSheetRead, ghi nhớ ở S.via), gộp cả sổ 1 lượt khi "Cập nhật tất cả",
    lớp đang mở tự đọc lại 10 phút/lần thay vì 2 phút để không chiếm lượt chạy của bài nộp.
    Lưu trên tài khoản (thẻ Cài đặt): js/services/teacher-sync.js — sổ chờ, thư mục Drive, tên GV, lớp của tôi vào 1 document teacher_sync/{uid}.
+   Chống lệch dữ liệu: nháp theo lớp ĐANG HIỆN (clsKey) và kèm tên học sinh (Sheet chèn/xoá dòng → bỏ nháp dòng lệch);
+   lần mở lớp cũ về muộn bị bỏ (showSeq); 2 tab cùng mở nhận bản lưu của nhau (onStorage) để không lưu đè bản cũ;
+   1 tab đang đọc dở thì các nơi khác dùng chung lượt đọc đó (reading); lớp đọc lỗi đọc lại riêng ("Đọc lại lớp này").
    ============================================================ */
 (function (global) {
   'use strict';
@@ -50,7 +53,9 @@
   // links: [{ id, title, school, label, tabs, shared, own }] · pending: sổ chờ đưa lên trường · folders: [{ id, url, label }] · mine: { 'id|gid': true } · me: tên GV
   // owner: uid chủ dữ liệu trên máy · booksAt: lần cuối nhận danh sách sổ từ máy chủ (0 = chưa, chạy theo link dán tay như bản trước)
   // schoolsOk: trường được gán · allSchools: Admin · via: { mã file: true } sổ phải đọc qua Apps Script
-  const S = Object.assign({ links: [], pending: [], folders: [], folder: '', sel: '', drafts: {}, cache: {}, mine: {}, me: '', scope: 'all', tab: '', owner: '', booksAt: 0, schoolsOk: [], allSchools: false, via: {} }, load());
+  // slots: { 'id|gid|thứ': 'm' | 'a' } buổi Sáng/Chiều GV tự xếp cho lớp (Sheet không có giờ) — chỉ máy này, không đồng bộ
+  const S = Object.assign({ links: [], pending: [], folders: [], folder: '', sel: '', drafts: {}, cache: {}, mine: {}, me: '', scope: 'all', tab: '', owner: '', booksAt: 0, schoolsOk: [], allSchools: false, via: {}, slots: {} }, load());
+  if (!S.slots || typeof S.slots !== 'object' || Array.isArray(S.slots)) S.slots = {};
   if (S.scope !== 'mine') S.scope = 'all'; // bản trước có "Hôm nay dạy" — nay đã nằm ở thẻ Lịch dạy
   // Bản cũ chỉ có 1 thư mục chung, không gắn trường → gắn vào trường của sổ có sẵn từ bản cũ (fillSchools)
   if (S.folder && !S.folders.length) S.folders.push({ id: S.folder.split('/').pop().split('?')[0], url: S.folder, label: '', old: true });
@@ -87,7 +92,8 @@
   }
   function keepTab(id, gid, csv) {
     const key = `${id}|${gid}`;
-    S.cache[key] = { at: Date.now(), csv };
+    S.cache[key] = { at: Date.now(), csv: L.compactCSV(csv) }; // bỏ ô trống cuối dòng: bản lưu nhỏ → ít bị xoá vì đầy bộ nhớ
+    failed.delete(key);
     const keys = Object.keys(S.cache).sort((a, b) => S.cache[b].at - S.cache[a].at);
     keys.slice(MAX_CACHE).forEach((k) => delete S.cache[k]);
     return S.cache[key];
@@ -101,10 +107,19 @@
     if (/^\s*<(!doctype|html)/i.test(t)) throw new Error('HTTP 403');
     return t;
   }
-  /** CSV 1 tab lớp — dùng bản lưu nếu còn mới (maxAge), không thì đọc lại từ Google (sổ riêng tư: qua Apps Script). */
-  async function tabCSV(id, gid, maxAge) {
-    const c = S.cache[`${id}|${gid}`];
-    if (c && maxAge != null && Date.now() - c.at < maxAge) return c;
+  /** CSV 1 tab lớp — dùng bản lưu nếu còn mới (maxAge), không thì đọc lại từ Google (sổ riêng tư: qua Apps Script).
+      Cùng 1 tab đang đọc dở (mở lớp + "Cập nhật tất cả" + tự đọc lại cùng lúc) → dùng chung 1 lượt, không đọc trùng. */
+  const reading = new Map();
+  const failed = new Map(); // key → lỗi lần đọc gần nhất (chỉ trong phiên) — bảng Các lớp cho đọc lại riêng lớp đó
+  function tabCSV(id, gid, maxAge) {
+    const key = `${id}|${gid}`, c = S.cache[key];
+    if (c && maxAge != null && Date.now() - c.at < maxAge) return Promise.resolve(c);
+    if (reading.has(key)) return reading.get(key);
+    const p = readTab(id, gid).catch((e) => { failed.set(key, (e && e.message) || 'lỗi'); throw e; }).finally(() => reading.delete(key));
+    reading.set(key, p);
+    return p;
+  }
+  async function readTab(id, gid) {
     if (!S.via[id]) {
       try { return keepTab(id, gid, await getCSV(`${sheetUrl(id)}/export?format=csv&gid=${gid}`)); } catch (e) {
         if (!isClosed(e) || !S.links.some((f) => f.id === id && f.shared)) throw e;
@@ -248,7 +263,7 @@
     Object.keys(S.cache).forEach((k) => { if (!keep.has(k.split('|')[0])) delete S.cache[k]; });
     ovMemo.clear();
     if (S.sel && !selFile()) {
-      S.sel = ''; cls = null; status('');
+      S.sel = ''; cls = null; clsKey = ''; status('');
       ['ddProgress', 'ddAttend', 'ddStats'].forEach((id) => { $(id).hidden = true; });
     }
     const first = !S.sel && S.links.find((f) => f.tabs.length);
@@ -335,8 +350,10 @@
   // ============================================================
   // CHỌN LỚP · TẢI TAB
   // ============================================================
-  const selFile = () => S.links.find((f) => S.sel.startsWith(f.id + '|')) || null;
-  const selTab = () => { const f = selFile(); const gid = S.sel.split('|')[1]; return f ? f.tabs.find((t) => t.gid === gid) || null : null; };
+  const fileOf = (key) => S.links.find((f) => String(key || '').startsWith(f.id + '|')) || null;
+  const tabOf = (key) => { const f = fileOf(key), gid = String(key || '').split('|')[1]; return f ? f.tabs.find((t) => t.gid === gid) || null : null; };
+  const selFile = () => fileOf(S.sel);
+  const selTab = () => tabOf(S.sel);
   function paintPick() {
     const sc = schools().filter((s) => s.files.length);
     $('ddClass').innerHTML = sc.length
@@ -354,6 +371,9 @@
   }
 
   let cls = null;       // lớp đang xem (EduSoLop.parseClass)
+  let clsKey = '';      // 'file|gid' của lớp đang hiện — nháp và "Ghi vào Sheet" theo lớp ĐANG HIỆN, không theo ô chọn
+                        // (chọn lớp khác khi lớp đó còn đang tải: bấm tên ở danh sách cũ không ghi nhầm sang lớp mới)
+  let showSeq = 0;      // lần hiện gần nhất — lần cũ về muộn (đang chờ tên bài) thì bỏ
   let lessons = [];     // bài từng tiết (EduSoLop.lessonsOf)
   let names = {};       // tên bộ "Bài N." của cấp lớp đó
   let attendCol = -1;   // tiết đầu của buổi đang điểm danh
@@ -362,31 +382,44 @@
     const f = selFile(), t = selTab();
     if (!f || !t) return;
     const key = S.sel, cached = S.cache[key];
-    if (cached && !fresh) { await show(cached.csv, cached.at); return; }
+    if (cached && !fresh) { await show(cached, key); return; }
     status(`Đang tải lớp ${t.name} từ Sheet...`);
+    setLoading(clsKey && clsKey !== key);
     $('ddReload').disabled = true;
     try {
       const c = await tabCSV(f.id, t.gid, null);
       save();
-      if (S.sel === key) await show(c.csv, c.at);
+      if (S.sel === key) await show(c, key, clsKey === key ? attendCol : null);
       paintOverview();
     } catch (e) {
-      if (cached) { await show(cached.csv, cached.at); toast('Mất mạng — đang dùng bản đã lưu trên máy.'); }
-      else status('Không tải được lớp này — kiểm tra mạng hoặc quyền chia sẻ của file.');
+      if (S.sel !== key) return; // đã chọn lớp khác — lỗi lớp này không đụng tới lớp đang xem
+      if (cached) { await show(cached, key, clsKey === key ? attendCol : null); toast('Mất mạng — đang dùng bản đã lưu trên máy.'); }
+      else { setLoading(false); status('Không tải được lớp này — kiểm tra mạng hoặc quyền chia sẻ của file, rồi bấm "Tải lại từ Sheet".'); }
     } finally { $('ddReload').disabled = false; }
   }
-  async function show(csv, at) {
-    cls = L.parseClass(L.parseCSV(csv));
-    if (!cls) { status('Tab này không đúng mẫu FORM QUẢN LÝ LỚP (không thấy dòng TIẾT / BÀI DẠY).'); ['ddProgress', 'ddAttend', 'ddStats'].forEach((id) => { $(id).hidden = true; }); return; }
-    const when = new Date(at).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
+  /** Đang tải lớp khác: làm mờ danh sách cũ để không nhầm (thao tác vẫn ghi đúng lớp đang hiện — clsKey). */
+  function setLoading(on) { ['ddProgress', 'ddAttend', 'ddStats'].forEach((id) => $(id).classList.toggle('is-loading', !!on)); }
+  /** Hiện 1 bản đọc (c = { csv, at }) của lớp key. keepCol: giữ buổi đang điểm danh nếu còn trên Sheet.
+      Trả false nếu đã có lần hiện mới hơn hoặc đã chọn lớp khác (bản này bỏ). */
+  async function show(c, key, keepCol) {
+    const seq = ++showSeq;
+    const p = L.parseClass(L.parseCSV(c.csv));
+    if (!p) {
+      cls = null; clsKey = ''; setLoading(false);
+      status('Tab này không đúng mẫu FORM QUẢN LÝ LỚP (không thấy dòng TIẾT / BÀI DẠY).'); ['ddProgress', 'ddAttend', 'ddStats'].forEach((id) => { $(id).hidden = true; }); return false;
+    }
+    const nm = await namesFor(p.cls);
+    if (seq !== showSeq || S.sel !== key) return false;
+    cls = p; clsKey = key; names = nm; setLoading(false);
+    const when = new Date(c.at).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
     status(`Đã đọc lúc ${when} · bấm "Tải lại từ Sheet" sau khi điều phối/thầy cô cập nhật Sheet.`);
-    const sf = selFile();
+    const sf = fileOf(key);
     if (sf && !sf.school && cls.school) { sf.school = cls.school; save(); paintLinks(); paintPick(); paintOverview(); }
-    names = await namesFor(cls.cls);
     lessons = L.lessonsOf(cls.sessions, names);
     const today = L.todaySession(cls.sessions), next = L.nextSession(cls.sessions);
-    attendCol = (today || next || cls.sessions[0] || { col: -1 }).col;
+    attendCol = keepCol != null && cls.sessions.some((s) => s.col === keepCol) ? keepCol : (today || next || cls.sessions[0] || { col: -1 }).col;
     paintProgress(); paintSessionSelect(); paintAttend(); paintStats();
+    return true;
   }
 
   // ============================================================
@@ -418,12 +451,12 @@
   // ============================================================
   // ĐIỂM DANH
   // ============================================================
-  const draftKey = () => `${S.sel}|${attendCol}`;
+  const draftKey = () => `${clsKey}|${attendCol}`;
   const group = () => { const s = cls.sessions.find((x) => x.col === attendCol); return L.sessionGroup(cls.sessions, s); };
   /** Ký hiệu đang dùng: bản nháp → Sheet → NL nếu đã nghỉ luôn trước đó → có mặt. */
   function markOf(st) {
-    const d = S.drafts[draftKey()];
-    if (d && d.marks && d.marks[st.row] != null) return d.marks[st.row];
+    const dm = L.draftMark(S.drafts[draftKey()], st);
+    if (dm != null) return dm;
     const m = st.marks[attendCol];
     if (m && m !== '?') return m;
     const before = cls.sessions.filter((s) => s.col < attendCol).some((s) => st.marks[s.col] === 'nl');
@@ -431,9 +464,13 @@
   }
   /** Ghi nháp nhiều bạn rồi lưu 1 lần (bản lưu gồm cả CSV các lớp, vài MB — không lưu theo từng bạn). */
   function setMarks(list) {
-    const k = draftKey(), d = S.drafts[k] || (S.drafts[k] = { at: Date.now(), marks: {} });
-    list.forEach(([row, m]) => { d.marks[row] = m; });
+    if (!cls || !clsKey) return;
+    const k = draftKey(), d = S.drafts[k] || (S.drafts[k] = { at: Date.now(), marks: {}, names: {} });
+    if (!d.names) d.names = {};
+    const nameOf = new Map(cls.students.map((st) => [st.row, st.name]));
+    list.forEach(([row, m]) => { d.marks[row] = m; d.names[row] = nameOf.get(row) || ''; });
     d.at = Date.now();
+    if (!d.t0) d.t0 = d.at; // lúc bắt đầu điểm danh buổi này — Sổ đầu bài đoán buổi/tiết theo giờ (attAt)
     Object.keys(S.drafts).forEach((x) => { if (Date.now() - (S.drafts[x].at || 0) > 45 * 864e5) delete S.drafts[x]; });
     save();
   }
@@ -462,7 +499,7 @@
     }).join('');
     $('ddCount').textContent = `Có mặt ${co} · Vắng ${v}`;
     applyFind();
-    const g = group(), f = selFile(), t = selTab(), ref = cls.students.length ? L.cellRef(attendCol, cls.students[0].row) : '';
+    const g = group(), f = fileOf(clsKey), t = tabOf(clsKey), ref = cls.students.length ? L.cellRef(attendCol, cls.students[0].row) : '';
     $('ddOpenCell').href = f && t ? `${sheetUrl(f.id)}/edit#gid=${t.gid}&range=${ref}` : '#';
     $('ddOpenCell').lastChild.textContent = ` Mở Sheet ở ô ${ref}`;
     paintWrite(g);
@@ -486,17 +523,17 @@
     $('ddWNgayWrap').hidden = !g.length || g.some((s) => s.ngay);
     $('ddWNgayText').textContent = `Điền ngày dạy ${fmtDate(d)} vào ô NGÀY`;
     $('ddWDoneWrap').hidden = !g.length || g.every((s) => s.done);
-    const d0 = S.drafts[draftKey()], n = d0 ? L.draftChanges(cls, d0.marks, attendCol) : 0;
+    const n = L.draftChanges(cls, S.drafts[draftKey()], attendCol);
     $('ddDraftInfo').textContent = n ? `${n} thay đổi chưa ghi vào Sheet` : '';
   }
   let writing = false;
   async function writeSheet() {
     if (writing || !cls) return;
-    const f = selFile(), t = selTab(), g = group();
+    const key = clsKey, f = fileOf(key), t = tabOf(key), g = group();
     if (!f || !t || !g.length) return;
     if (!global.EduAppsScript) { toast('Trang chưa nạp được Apps Script — dùng "Sao chép cột".'); return; }
     writing = true; $('ddWriteBtn').disabled = true;
-    const key = S.sel, col = attendCol, d = new Date();
+    const col = attendCol, d = new Date();
     const body = {
       sheetId: f.id, gid: t.gid, cols: g.map((s) => ({ col: s.col, tiet: s.tiet })),
       marks: cls.students.map((st) => ({ row: st.row, name: st.name, m: markOf(st) })),
@@ -507,19 +544,36 @@
     // → không gọi Apps Script (trước: bấm "Ghi" lần 2 vẫn tốn 1 lượt chạy + ghi lại cả cột).
     const same = !body.ngay && !body.done
       && g.every((s) => body.marks.every((x, i) => cls.students[i].marks[s.col] === x.m));
+    // Nháp lúc bấm ghi: ghi xong chỉ xoá nếu chưa bị sửa tiếp trong lúc chờ (ghi mất ~5–20 giây, thầy cô vẫn bấm được)
+    // → bỏ các ô đã gửi đúng như hiện tại, giữ ô sửa thêm/sửa lại.
+    const dk = `${key}|${col}`, sentMarks = Object.assign({}, (S.drafts[dk] || {}).marks), sent = JSON.stringify(sentMarks);
+    const dropDraft = () => {
+      const d0 = S.drafts[dk];
+      if (d0 && d0.marks) {
+        Object.keys(sentMarks).forEach((r) => { if (d0.marks[r] === sentMarks[r]) { delete d0.marks[r]; if (d0.names) delete d0.names[r]; } });
+        if (!Object.keys(d0.marks).length) delete S.drafts[dk];
+      }
+      save();
+    };
     if (same) {
       writing = false; $('ddWriteBtn').disabled = false;
-      delete S.drafts[`${key}|${col}`]; save();
+      dropDraft();
       toast('Sheet đã đúng như vậy rồi — không cần ghi lại.');
       return;
     }
     status(`Đang ghi Tiết ${g.map((s) => s.tiet).join(', ')} vào Sheet...`);
     try {
       const r = await global.EduAppsScript.call('classSheetWrite', body, { timeoutMs: 60e3 });
-      delete S.drafts[`${key}|${col}`]; save();
-      toast(`Đã ghi vào Sheet: ${r.written} ô điểm danh${r.ngay ? ' · ngày dạy' : ''}${r.done ? ' · Đã hoàn thành' : ''}. Tiếp theo: Ghi sổ đầu bài.`);
-      // Đọc lại để thấy đúng như trên Sheet, vẫn ở buổi vừa ghi
-      try { const n = await tabCSV(f.id, t.gid, null); save(); if (S.sel === key) await showKeep(n, col); } catch (e2) { /* lần đọc sau sẽ cập nhật */ }
+      // Giờ điểm danh của buổi (chỉ trên máy, vài chục byte): Sổ đầu bài dùng để điền buổi Sáng/Chiều + tiết khi TKB chưa có lớp này
+      const t0 = (S.drafts[dk] || {}).t0 || Date.now();
+      S.attAt = S.attAt || {};
+      g.forEach((s) => { const k2 = `${key}|${s.col}`; if (!S.attAt[k2]) S.attAt[k2] = t0; });
+      Object.keys(S.attAt).forEach((k2) => { if (Date.now() - S.attAt[k2] > 14 * 864e5) delete S.attAt[k2]; });
+      const edited = JSON.stringify(Object.assign({}, (S.drafts[dk] || {}).marks)) !== sent;
+      dropDraft();
+      toast(`Đã ghi vào Sheet: ${r.written} ô điểm danh${r.ngay ? ' · ngày dạy' : ''}${r.done ? ' · Đã hoàn thành' : ''}.${edited ? ' Phần vừa sửa trong lúc ghi vẫn là nháp — bấm Ghi lần nữa.' : ' Tiếp theo: Ghi sổ đầu bài.'}`);
+      // Đọc lại để thấy đúng như trên Sheet, giữ buổi đang xem (có thể đã đổi buổi trong lúc ghi)
+      try { const n = await tabCSV(f.id, t.gid, null); save(); if (S.sel === key) await show(n, key, clsKey === key ? attendCol : col); } catch (e2) { /* lần đọc sau sẽ cập nhật */ }
     } catch (e) {
       const msg = e.code === 'not-found' && /action/i.test(e.message) ? 'Apps Script chưa cập nhật bản có chức năng ghi sổ lớp — nhờ admin deploy lại apps/Code.gs. Tạm dùng "Sao chép cột".'
         : e.code === 'unauthenticated' ? 'Phiên đăng nhập hết hạn — tải lại trang rồi ghi lại.'
@@ -605,8 +659,8 @@
           same.forEach((y) => { const i = todo.indexOf(y); if (i >= 0) todo.splice(i, 1); });
           try {
             const tabs = await serverTabs(x.f.id, same.map((y) => y.t.gid));
-            same.forEach((y) => { if (tabs[y.t.gid] != null) keepTab(x.f.id, y.t.gid, tabs[y.t.gid]); else fail++; });
-          } catch (e) { fail += same.length; }
+            same.forEach((y) => { if (tabs[y.t.gid] != null) keepTab(x.f.id, y.t.gid, tabs[y.t.gid]); else { fail++; failed.set(y.key, 'no-tab'); } });
+          } catch (e) { fail += same.length; same.forEach((y) => failed.set(y.key, (e && e.message) || 'lỗi')); }
           done += same.length;
         } else {
           try { await tabCSV(x.f.id, x.t.gid, FRESH_MS); } catch (e) { fail++; }
@@ -615,36 +669,64 @@
         $('ddOvInfo').textContent = `đang đọc ${done}/${done + todo.length} lớp${only instanceof Set ? ' của tôi' : ''}...`;
       }
     };
-    await Promise.all([worker(), worker(), worker()]);
-    save();
-    ovBusy = false;
-    $('ddOvLoad').disabled = false;
-    if (fail) toast(`${fail} lớp không đọc được — thử lại sau.`);
+    try { await Promise.all([worker(), worker(), worker()]); } finally {
+      if (!(only instanceof Set)) S.fullAt = Date.now(); // đã đọc cả bộ ít nhất 1 lần (máy mới) — xem autoRefresh
+      save();
+      ovBusy = false;
+      $('ddOvLoad').disabled = false;
+    }
+    if (fail) toast(`${fail} lớp không đọc được — bấm "Đọc lại lớp này" ở dòng lớp đó (thẻ Các lớp), không cần cập nhật tất cả.`);
     else if (only instanceof Set && done) toast(`Đã cập nhật ${done} lớp của tôi từ Sheet.`);
     await paintOverview();
-    if (done && cls && S.cache[S.sel]) show(S.cache[S.sel].csv, S.cache[S.sel].at); // lớp đang mở cũng vừa được đọc lại
+    // Lớp đang mở cũng vừa được đọc lại: hiện bản mới, giữ buổi đang điểm danh
+    if (done && cls && clsKey === S.sel && S.cache[S.sel]) show(S.cache[S.sel], S.sel, attendCol);
+  }
+  /** Đọc lại đúng 1 lớp (lớp lỗi / chưa đọc ở bảng Các lớp) — không đụng các lớp khác. */
+  async function readOne(key) {
+    const f = fileOf(key), t = tabOf(key);
+    if (!f || !t) return;
+    $('ddOvInfo').textContent = `đang đọc lớp ${t.name}...`;
+    try { await tabCSV(f.id, t.gid, null); save(); toast(`Đã đọc lớp ${t.name}.`); } catch (e) { toast(`Lớp ${t.name} vẫn chưa đọc được — kiểm tra quyền chia sẻ của file hoặc mạng.`); }
+    await paintOverview();
+    if (cls && clsKey === key && S.sel === key && S.cache[key]) show(S.cache[key], key, attendCol);
   }
   /** Mở trang: lớp của tôi (★ hoặc có tên trên Sheet) đọc lần cuối hơn 6 giờ trước → tự đọc lại, khỏi bấm "Cập nhật tất cả". */
   function autoRefresh() {
     if (navigator.onLine === false) return;
-    if (S.links.length && !lastRows.some((r) => r.p)) { loadAll(); return; } // máy mới: chưa đọc lớp nào → đọc luôn, khỏi bấm
+    if (S.links.length && !lastRows.some((r) => r.p)) {
+      // Máy mới (chưa từng đọc cả bộ): đọc luôn, khỏi bấm. Máy đã đọc rồi mà nay trống (bộ nhớ đầy / Sổ đầu bài dọn bản cũ)
+      // → chỉ đọc lại lớp của tôi, KHÔNG tự đọc lại cả 40–80 lớp mỗi lần mở trang (sổ riêng tư: mỗi lượt là Apps Script).
+      if (!S.fullAt) { loadAll(); return; }
+      const have = new Set(allTabs().map((x) => x.key));
+      const mine = new Set(Object.keys(Object.assign({}, S.mineAuto, S.mine)).filter((k) => have.has(k)));
+      if (mine.size) loadAll(mine);
+      return;
+    }
     const keys = new Set(lastRows.filter((r) => (S.mine[r.key] || r.mineByName) && r.at && Date.now() - r.at >= FRESH_MS).map((r) => r.key));
     if (keys.size) loadAll(keys);
   }
+  let ovSeq = 0;
   async function paintOverview() {
     if (!S.links.length) { ['ddOverview', 'ddWeek', 'ddToday'].forEach((id) => { $(id).hidden = true; }); return; }
     $('ddOverview').hidden = false;
     document.querySelectorAll('#ddScope [data-scope]').forEach((b) => { const on = b.dataset.scope === S.scope; b.classList.toggle('is-on', on); b.setAttribute('aria-checked', on); });
+    const seq = ++ovSeq;
     const rows = await Promise.all(allTabs().map(ovRow));
+    if (seq !== ovSeq) return; // lần vẽ mới hơn đã chạy (bấm lọc liên tục / đọc xong nhiều lớp cùng lúc) — bỏ bản cũ
     if (await fillSchools(false)) { paintLinks(); paintPick(); }
+    if (seq !== ovSeq) return;
     lastRows = rows;
+    // Nhớ lớp có tên mình trên Sheet (vài chục byte) — bản đọc bị dọn vẫn biết lớp nào là của tôi để đọc lại đúng lớp đó
+    const auto = {};
+    rows.forEach((r) => { if (r.mineByName) auto[r.key] = 1; });
+    if (rows.some((r) => r.p) && JSON.stringify(auto) !== JSON.stringify(S.mineAuto || {})) { S.mineAuto = auto; save(); }
     paintFilters(rows);
     const today = new Date().getDay(), loaded = rows.filter((r) => r.sm);
     const isMine = (r) => S.mine[r.key] || r.mineByName;
     let shown = filtered(rows);
     if (S.scope === 'mine') shown = shown.filter(isMine);
-    const missing = rows.filter((r) => r.missing).length;
-    $('ddOvInfo').textContent = `${loaded.length}/${rows.length} lớp đã đọc${missing ? ` · ${missing} lớp chưa đọc — bấm "Cập nhật tất cả"` : ''}`;
+    const bad = rows.filter((r) => r.missing && failed.has(r.key)).length, missing = rows.filter((r) => r.missing).length - bad;
+    $('ddOvInfo').textContent = `${loaded.length}/${rows.length} lớp đã đọc${bad ? ` · ${bad} lớp lỗi — bấm "Đọc lại lớp này" ở thẻ Các lớp` : ''}${missing ? ` · ${missing} lớp chưa đọc — bấm "Cập nhật tất cả"` : ''}`;
     // Gộp theo trường không phân biệt hoa thường ("TiH Phong Phú 2" = "TIH PHONG PHÚ 2")
     const by = new Map();
     shown.forEach((r) => { const k = lower(schoolOf(r.f)); if (!by.has(k)) by.set(k, { name: schoolOf(r.f), rows: [] }); by.get(k).rows.push(r); });
@@ -653,7 +735,10 @@
       <table class="dd-table"><thead><tr><th scope="col"><span class="sr-only">Lớp của tôi</span></th><th scope="col">Lớp</th><th scope="col">Đã dạy</th><th scope="col">Gần nhất</th><th scope="col">Tiếp theo</th><th scope="col">Lịch</th></tr></thead>
       <tbody>${rs.sort((a, b) => byText(a.t.name, b.t.name)).map((r) => {
         const sm = r.sm, star = S.mine[r.key] ? '★' : r.mineByName ? '★' : '☆';
-        if (!sm) return `<tr><td><button type="button" class="dd-star" data-star="${r.key}" aria-pressed="${!!S.mine[r.key]}" title="Lớp của tôi">${star}</button></td><td><button type="button" class="dd-link" data-open="${r.key}">${esc(r.t.name)}</button></td><td colspan="4" class="dd-muted">${r.bad ? 'không đúng mẫu FORM' : 'chưa đọc'}</td></tr>`;
+        if (!sm) {
+          const why = r.bad ? 'không đúng mẫu FORM' : failed.has(r.key) ? 'không đọc được lần trước' : 'chưa đọc';
+          return `<tr class="${failed.has(r.key) ? 'is-fail' : ''}"><td><button type="button" class="dd-star" data-star="${r.key}" aria-pressed="${!!S.mine[r.key]}" title="Lớp của tôi">${star}</button></td><td><button type="button" class="dd-link" data-open="${r.key}">${esc(r.t.name)}</button></td><td colspan="4" class="dd-muted">${why}${r.bad ? '' : ` <button type="button" class="dd-tbtn" data-read="${r.key}">Đọc lại lớp này</button>`}</td></tr>`;
+        }
         const nx = sm.next, nxText = nx ? `Tiết ${nx.tiet} · ${nx.bai ? lessonText(sm.nextLesson, r.nm) || nx.bai : sm.nextLesson ? 'dự kiến ' + lessonText(sm.nextLesson, r.nm) : '—'}` : 'xong';
         const stale = sm.lastDate && (Date.now() - sm.lastDate) > 9 * 864e5 && nx;
         return `<tr class="${sm.days.includes(today) ? 'is-today' : ''}"><td><button type="button" class="dd-star" data-star="${r.key}" aria-pressed="${!!S.mine[r.key]}" title="${r.mineByName && !S.mine[r.key] ? 'Có tên thầy cô trên Sheet' : 'Lớp của tôi'}">${star}</button></td>
@@ -713,6 +798,60 @@
     $('ddFTeacher').value = S.fTeacher || '';
   }
   const KIND = { done: 'Đã dạy', planned: 'Chưa tick hoàn thành', expected: 'Dự kiến', missing: 'Sheet chưa cập nhật' };
+  const BUOI = { m: 'Sáng', a: 'Chiều', '': '' }, BUOI_ORD = { m: 0, a: 1, '': 2 };
+  // ── Buổi/tiết tự động theo TKB ở Lịch giảng dạy (js/so-lop/tkb-source.js: 1 lượt đọc/tuần đang xem, lưu trên máy) ──
+  const TKB = global.EduSoLopTkb;
+  let profile = null;
+  const tkbMemo = new Map(); // 'tên gv|weekKey' → { cells, from, fallback } | { none, code } | { loading }
+  const tkbKey = (who, mon) => `${lower(who)}|${TKB ? TKB.weekKeyOf(mon) : ''}`;
+  /** Chưa có TKB của GV + tuần này trong phiên → đọc (nền), xong thì vẽ lại lịch từ bản đã có. Mỗi cặp chỉ 1 lần/phiên. */
+  function needTkb(who, mon) {
+    if (!TKB || !who) return;
+    const k = tkbKey(who, mon);
+    if (tkbMemo.has(k)) return;
+    tkbMemo.set(k, { loading: true });
+    (async () => {
+      const code = await TKB.codeOf(who, profile);
+      const w = code ? await TKB.week(code, mon) : null;
+      tkbMemo.set(k, w ? { cells: L.tkbCells(w.days), from: w.from, fallback: w.fallback } : { none: true, code: code == null ? '?' : code });
+    })().catch(() => { tkbMemo.set(k, { none: true, code: '?' }); }).then(() => paintWeek());
+  }
+  /** Buổi của 1 mục lịch: TKB khớp lớp + thứ (+ trường) trước; không khớp (dạy bù, chưa có TKB) → buổi GV tự xếp. */
+  function slotOf(e, who) {
+    if (e.part) return { b: e.part, tiet: e.partTiet, tkb: true }; // nửa sáng / nửa chiều đã tách (splitByTkb)
+    const m = tkbMemo.get(tkbKey(who, L.mondayOf(e.date)));
+    if (m && m.cells) {
+      const r = lastRows.find((x) => x.key === e.key);
+      for (const n of [r && r.t ? r.t.name : '', e.cls && e.cls.cls]) {
+        const h = n ? L.tkbFor(m.cells, n, e.school, e.date, SRC.sameSchool) : null;
+        if (h) return { b: h.b, tiet: h.tiet, m: h.m, a: h.a, tkb: true };
+      }
+    }
+    return { b: L.buoiOf(S.slots, e.key, e.date), tiet: [], tkb: false };
+  }
+  const slotOrder = (x) => BUOI_ORD[x.b] * 100 + (x.tiet[0] || 99);
+  /** TKB cho lớp dạy cả sáng lẫn chiều cùng ngày (vd 4/1 tiết 3 + tiết 7) và Sheet có đủ tiết hôm đó → 2 thẻ:
+      các tiết đầu vào buổi sáng, phần còn lại vào buổi chiều. Sheet ít tiết hơn TKB thì giữ 1 thẻ (ghi đủ tiết TKB). */
+  function splitByTkb(plan, who) {
+    return plan.flatMap((e) => {
+      const s = slotOf(e, who);
+      if (!s.tkb || !s.m || !s.a || !s.m.length || !s.a.length || e.sessions.length < s.m.length + s.a.length) return [e];
+      const k = s.m.length;
+      return [Object.assign({}, e, { sessions: e.sessions.slice(0, k), part: 'm', partTiet: s.m }),
+        Object.assign({}, e, { sessions: e.sessions.slice(k), part: 'a', partTiet: s.a })];
+    });
+  }
+  const slotText = (x) => (!x.b ? '' : x.m && x.m.length && x.a && x.a.length ? `Sáng tiết ${x.m.join(', ')} · Chiều tiết ${x.a.join(', ')}`
+    : BUOI[x.b] + (x.tiet.length ? ' tiết ' + x.tiet.join(', ') : ''));
+  function tkbNote(who, mon) {
+    const m = tkbMemo.get(tkbKey(who, mon));
+    if (!TKB || !m) return '';
+    if (m.loading) return 'Đang đọc TKB ở Lịch giảng dạy...';
+    if (m.cells) return m.fallback ? `Tuần này chưa nhập TKB — xếp buổi, tiết theo TKB tuần ${esc(m.from.split('-').reverse().slice(0, 2).join('/'))} ở Lịch giảng dạy.` : 'Buổi và tiết theo TKB ở Lịch giảng dạy.';
+    if (m.code === '?') return 'Không đọc được TKB ở Lịch giảng dạy (mạng) — đang dùng buổi xếp tay.';
+    if (!m.code) return `Chưa tìm thấy giáo viên "${esc(who)}" ở Lịch giảng dạy — xếp buổi bằng tay.`;
+    return 'Lịch giảng dạy chưa có TKB của giáo viên này — xếp buổi bằng tay.';
+  }
   function weekText(e, nm) {
     if (e.kind === 'missing') return 'Ngày thường dạy — chưa có buổi trên Sheet';
     if (!e.sessions.length) return 'Tiết kế tiếp';
@@ -732,24 +871,33 @@
     if ($('ddToday').hidden) return;
     const input = planInput(rows), name = (key, c) => { const r = rows.find((x) => x.key === key); return r && r.t ? r.t.name : c.cls; };
     const tietOf = (ss) => ss.length ? `Tiết ${ss.map((x) => x.tiet).join(', ')}` : '';
-    const bookBtn = (key, col) => `<button type="button" class="dd-small" data-book="${key}" data-col="${col}"><i class="fa-solid fa-book-bookmark" aria-hidden="true"></i> Ghi sổ</button>`;
-    const item = (key, col, title, sub, btn, more) => `<li><div><b>${esc(title)}</b><small>${esc(sub)}</small></div>
-      <span class="dd-task-acts">${more || ''}${btn ? `<button type="button" class="dd-small" data-open="${key}"${col >= 0 ? ` data-col="${col}"` : ''}>${btn}</button>` : ''}</span></li>`;
+    const bookBtn = (key, col) => `<button type="button" class="dd-tbtn" data-book="${key}" data-col="${col}">Ghi sổ</button>`;
+    const item = (key, col, title, sub, btn, more, tag) => `<li><div><b>${esc(title)}</b>${tag || ''}<small>${esc(sub)}</small></div>
+      <span class="dd-task-acts">${more || ''}${btn ? `<button type="button" class="dd-tbtn is-main" data-open="${key}"${col >= 0 ? ` data-col="${col}"` : ''}>${btn}</button>` : ''}</span></li>`;
+    // Trạng thái điểm danh buổi đó: nháp trên máy · đã có trên Sheet · chưa (đọc từ bản đã lưu, không mạng)
+    const attTag = (key, ss) => {
+      const r = rows.find((x) => x.key === key);
+      if (!r || !r.p || !ss.length) return '';
+      if (ss.some((s) => L.draftChanges(r.p, S.drafts[`${key}|${s.col}`], s.col))) return '<em class="dd-tag is-draft">nháp chưa ghi</em>';
+      const n = r.p.students.filter((st) => ss.some((s) => st.marks[s.col])).length;
+      return n ? `<em class="dd-tag is-ok">đã điểm danh</em>` : '<em class="dd-tag">chưa điểm danh</em>';
+    };
     // Sổ đầu bài cùng máy: chỉ nhắc khi thầy/cô đang dùng sổ (đã có tiết ghi), đọc localStorage, không qua mạng
     const books = SRC.listBooks(localStorage, S.owner), usesBook = books.some((b) => b.entries.length);
     const unwritten = (e) => usesBook && e.sessions.length > 0 && SRC.bookEntries(books, e.school, e.cls.cls, SRC.isoDay(e.date)) < e.sessions.length;
     $('ddTodayDate').textContent = `${L.THU[now.getDay()]} ${fmtDate(now)}`;
-    const today = L.weekPlan(input, who, L.mondayOf(now), now).filter((e) => e.date.toDateString() === now.toDateString() && e.kind !== 'missing');
+    const today = L.weekPlan(input, who, L.mondayOf(now), now).filter((e) => e.date.toDateString() === now.toDateString() && e.kind !== 'missing')
+      .map((e, i) => ({ e, i, s: slotOf(e, who) })).sort((x, y) => slotOrder(x.s) - slotOrder(y.s) || x.i - y.i).map((x) => x.e);
     $('ddTodayList').innerHTML = today.length ? today.map((e) => item(e.key, e.sessions[0] ? e.sessions[0].col : -1, name(e.key, e.cls),
-      [e.school, weekText(e, (rows.find((r) => r.key === e.key) || {}).nm), e.kind === 'done' ? 'đã tick hoàn thành' : '', usesBook && e.sessions.length && !unwritten(e) ? 'đã ghi sổ đầu bài' : ''].filter(Boolean).join(' · '),
-      '<i class="fa-solid fa-clipboard-user" aria-hidden="true"></i> Điểm danh', e.sessions[0] && (!usesBook || unwritten(e)) ? bookBtn(e.key, e.sessions[0].col) : '')).join('')
+      [slotText(slotOf(e, who)), e.school, weekText(e, (rows.find((r) => r.key === e.key) || {}).nm), e.kind === 'done' ? 'đã tick hoàn thành' : '', usesBook && e.sessions.length && !unwritten(e) ? 'đã ghi sổ đầu bài' : ''].filter(Boolean).join(' · '),
+      'Điểm danh', e.sessions[0] && (!usesBook || unwritten(e)) ? bookBtn(e.key, e.sessions[0].col) : '', attTag(e.key, e.sessions))).join('')
       : '<li class="dd-muted">Hôm nay không có lớp nào theo lịch trên Sheet.</li>';
     const unt = L.untickedSessions(input, who, now, 30);
     const miss = L.weekPlan(input, who, L.mondayOf(now), now).filter((e) => e.kind === 'missing');
     const title = (e) => `${name(e.key, e.cls)} · ${L.THU[e.date.getDay()]} ${fmtDate(e.date)}`;
     // Điểm danh nháp chưa ghi vào Sheet (nháp chỉ nằm trên máy này, dễ quên nhất nên xếp đầu)
     const drafts = rows.flatMap((r) => Object.keys(S.drafts).filter((k) => k.startsWith(r.key + '|')).map((k) => {
-      const col = +k.slice(r.key.length + 1), s = r.p.sessions.find((x) => x.col === col), n = L.draftChanges(r.p, S.drafts[k].marks, col);
+      const col = +k.slice(r.key.length + 1), s = r.p.sessions.find((x) => x.col === col), n = L.draftChanges(r.p, S.drafts[k], col);
       return s && n ? item(r.key, col, `${r.t.name} · Tiết ${s.tiet}`, `${schoolOf(r.f)} · ${n} ô điểm danh chưa ghi vào Sheet`, 'Mở') : '';
     })).filter(Boolean);
     const past = L.weekPlan(input, who, L.mondayOf(now), now).filter((e) => e.date.toDateString() !== now.toDateString() && e.date < now && unwritten(e));
@@ -759,11 +907,26 @@
     $('ddTodoN').textContent = todo.length ? `${todo.length}` : '';
     $('ddTodoList').innerHTML = todo.length ? todo.join('') : '<li class="dd-muted"><i class="fa-solid fa-check" aria-hidden="true"></i> Không còn việc tồn — Sheet đã cập nhật đủ.</li>';
   }
+  /** Lớp của tôi chưa có bản đọc (lỗi mạng / quyền / bộ nhớ bị dọn) thì không có trên lịch — báo ngay trên lịch kèm nút
+      đọc lại ĐÚNG các lớp đó, khỏi bấm "Cập nhật tất cả" (đọc lại 40–80 lớp, sổ riêng tư mỗi lượt là Apps Script). */
+  let warnKeys = [];
+  function paintWeekWarn() {
+    const mine = Object.assign({}, S.mineAuto, S.mine);
+    const miss = lastRows.filter((r) => r.missing && mine[r.key] && (!S.fSchool || lower(schoolOf(r.f)) === S.fSchool));
+    warnKeys = miss.map((r) => r.key);
+    const w = $('ddWeekWarn');
+    w.hidden = !miss.length;
+    if (!miss.length) return;
+    const names = miss.slice(0, 6).map((r) => esc(r.t.name)).join(', ') + (miss.length > 6 ? ` và ${miss.length - 6} lớp khác` : '');
+    w.innerHTML = `<span>${miss.length} lớp của tôi chưa đọc được nên chưa có trên lịch: <b>${names}</b>.</span>
+      <button type="button" class="dd-tbtn" id="ddWeekReread"${ovBusy ? ' disabled' : ''}>Đọc lại ${miss.length === 1 ? 'lớp này' : miss.length + ' lớp này'}</button>`;
+  }
   function paintWeek() {
     $('ddToday').hidden = true; // paintToday mở lại khi đã biết GV + có lớp đã đọc
     const card = $('ddWeek');
     card.hidden = !S.links.length;
     if (!lastRows.some((r) => r.p)) {
+      $('ddWeekWarn').hidden = true;
       $('ddWeekGrid').innerHTML = '<p class="dd-hint">Chưa đọc lớp nào trên máy này — bấm <b>Cập nhật tất cả</b> ở trên để đọc các lớp rồi xem lịch.</p>';
       $('ddMonth').textContent = ''; weekPlanText = ''; monthText = ''; $('ddMonthCopy').hidden = true;
       return;
@@ -773,26 +936,42 @@
     $('ddWeekRange').textContent = `${fmtDate(mon)} – ${fmtDate(sun)}${weekOff === 0 ? ' (tuần này)' : ''}`;
     $('ddWeekWho').textContent = who ? `GV ${who}${S.fSchool ? ' · ' + $('ddFSchool').selectedOptions[0].textContent : ''}` : '';
     if (!who) {
+      $('ddWeekWarn').hidden = true;
       $('ddWeekGrid').innerHTML = '<p class="dd-hint">Chọn giáo viên ở ô "Giáo viên" phía trên (hoặc nhập "Tên của tôi" ở thẻ Cài đặt) để xem lịch giảng dạy.</p>';
       $('ddMonth').textContent = ''; weekPlanText = ''; monthText = ''; $('ddMonthCopy').hidden = true;
       return;
     }
     const rows = lastRows.filter((r) => r.p && (!S.fSchool || lower(schoolOf(r.f)) === S.fSchool));
+    needTkb(who, L.mondayOf(new Date())); // "Hôm nay"
+    needTkb(who, mon);
     paintToday(rows, who);
-    const plan = L.weekPlan(planInput(rows), who, mon, new Date());
+    paintWeekWarn();
+    const plan = splitByTkb(L.weekPlan(planInput(rows), who, mon, new Date()), who);
     const rowOf = (key) => rows.find((r) => r.key === key) || {};
     const today = new Date().toDateString();
     const days = [];
     for (let i = 0; i < 7; i++) { const d = new Date(mon); d.setDate(d.getDate() + i); days.push(d); }
     const on = (d) => plan.filter((e) => e.date.toDateString() === d.toDateString());
     const cols = days.filter((d, i) => i < 6 || on(d).length);
-    $('ddWeekGrid').innerHTML = `<div class="dd-week" style="--cols:${cols.length}">${cols.map((d) => {
-      const es = on(d);
-      return `<div class="dd-day${d.toDateString() === today ? ' is-today' : ''}"><h4>${L.THU[d.getDay()]} <small>${fmtDate(d)}</small></h4>
-        ${es.length ? es.map((e) => `<button type="button" class="dd-ev k-${e.kind}" data-open="${e.key}"${e.sessions[0] ? ` data-col="${e.sessions[0].col}"` : ''} title="${esc(KIND[e.kind])} — bấm để mở đúng buổi này">
-          <b>${esc(rowOf(e.key).t ? rowOf(e.key).t.name : e.cls.cls)}</b> <small>${esc(e.school)}</small><span>${esc(weekText(e, rowOf(e.key).nm))}</span><em>${esc(KIND[e.kind])}</em></button>`).join('')
-          : '<p class="dd-free">—</p>'}</div>`;
-    }).join('')}</div>`;
+    // Lưới kiểu TKB: hàng Sáng / Chiều (+ "Chưa xếp buổi" khi còn lớp chưa xếp) × cột Thứ
+    const slot = new Map(plan.map((e) => [e, slotOf(e, who)]));
+    const grid = L.buoiGrid(plan, (e) => slot.get(e).b, cols), hasU = grid.u.some((c) => c.length);
+    ['m', 'a'].forEach((r) => grid[r].forEach((c) => c.sort((x, y) => slotOrder(slot.get(x)) - slotOrder(slot.get(y))))); // theo tiết TKB
+    const nameOf = (e) => (rowOf(e.key).t ? rowOf(e.key).t.name : e.cls.cls);
+    const ev = (e, b) => {
+      const sk = `${e.key}|${e.date.getDay()}`, to = b === 'm' ? 'chiều' : 'sáng', sl = slot.get(e);
+      const ctl = sl.tkb ? `<i class="dd-ev-tkb" title="Tiết theo TKB ở Lịch giảng dạy (khác tiết PPCT trên Sheet)">TKB tiết ${sl.tiet.join(', ')}</i>`
+        : b ? `<button type="button" class="dd-ev-mv" data-buoi="${esc(sk)}" data-to="${b === 'm' ? 'a' : 'm'}" title="Chuyển ${esc(nameOf(e))} (${L.THU[e.date.getDay()]}) sang buổi ${to}" aria-label="Chuyển sang buổi ${to}">⇅</button>`
+        : `<span class="dd-ev-set"><button type="button" data-buoi="${esc(sk)}" data-to="m">Sáng</button><button type="button" data-buoi="${esc(sk)}" data-to="a">Chiều</button></span>`;
+      return `<div class="dd-ev k-${e.kind}"><button type="button" class="dd-ev-main" data-open="${e.key}"${e.sessions[0] ? ` data-col="${e.sessions[0].col}"` : ''} title="${esc(KIND[e.kind])} — bấm để mở đúng buổi này">
+        <b>${esc(nameOf(e))}</b><small>${esc(e.school)}</small><span>${esc(weekText(e, rowOf(e.key).nm))}</span><em>${esc(KIND[e.kind])}</em></button>${ctl}</div>`;
+    };
+    const rowsOf = [['m', 'Sáng'], ['a', 'Chiều']].concat(hasU ? [['u', 'Chưa xếp buổi']] : []);
+    const isT = (d) => (d.toDateString() === today ? ' is-today' : '');
+    $('ddWeekGrid').innerHTML = `<div class="dd-tkb-scroll"><div class="dd-tkb" style="--cols:${cols.length}" role="table" aria-label="Lịch tuần theo buổi">
+      <div class="dd-tkb-row" role="row"><span class="dd-tkb-corner" role="columnheader"></span>${cols.map((d) => `<span class="dd-tkb-head${isT(d)}" role="columnheader">${L.THU[d.getDay()]} <small>${fmtDate(d)}</small></span>`).join('')}</div>
+      ${rowsOf.map(([r, label]) => `<div class="dd-tkb-row is-${r}" role="row"><span class="dd-tkb-side" role="rowheader">${label}</span>${grid[r].map((es, i) => `<div class="dd-tkb-cell${isT(cols[i])}" role="cell">${es.map((e) => ev(e, r === 'u' ? '' : r)).join('')}</div>`).join('')}</div>`).join('')}
+    </div></div><p class="dd-hint dd-tkb-note">${[tkbNote(who, mon), hasU ? 'Lớp không có trong TKB: bấm <b>Sáng</b> hoặc <b>Chiều</b> ở hàng cuối, xếp 1 lần các tuần sau tự theo (chỉ lưu trên máy này).' : ''].filter(Boolean).join(' ')}</p>`;
     const cnt = L.monthCount(planInput(rows), who, mon.getFullYear(), mon.getMonth());
     const tot = Object.values(cnt).reduce((a, b) => a + b, 0);
     $('ddMonth').textContent = tot
@@ -806,7 +985,10 @@
       .concat(['', ...Object.entries(cnt).sort((a, b) => byText(a[0], b[0])).map(([k, v]) => ['', '', '', k, '', v, 'tiết'].join('\t')), ['', '', '', 'Tổng', '', tot, 'tiết'].join('\t')]).join('\n') : '';
     weekPlanText = [`Lịch giảng dạy GV ${who} — tuần ${fmtDate(mon)}–${fmtDate(sun)}`].concat(cols.map((d) => {
       const es = on(d).filter((e) => e.kind !== 'missing');
-      return es.length ? `${L.THU[d.getDay()]} ${fmtDate(d)}: ` + es.map((e) => `${rowOf(e.key).t ? rowOf(e.key).t.name : e.cls.cls} (${e.school}) ${weekText(e, rowOf(e.key).nm)}`).join('; ') : '';
+      const one = (e) => `${nameOf(e)} (${e.school}) ${weekText(e, rowOf(e.key).nm)}`;
+      const part = (k) => es.filter((e) => slot.get(e).b === k).sort((x, y) => slotOrder(slot.get(x)) - slotOrder(slot.get(y)));
+      const txt = ['m', 'a', ''].map((k) => (part(k).length ? (BUOI[k] ? BUOI[k] + ': ' : '') + part(k).map(one).join('; ') : '')).filter(Boolean).join(' | ');
+      return es.length ? `${L.THU[d.getDay()]} ${fmtDate(d)}: ${txt}` : '';
     }).filter(Boolean)).join('\n');
   }
 
@@ -855,27 +1037,24 @@
     const ho = {
       at: Date.now(), school: p.school, cls: p.cls, date: SRC.isoDay(L.dateOf(s.ngay) || new Date()),
       bai: bai.length ? bai : [extraBai].filter(Boolean), absent: SRC.absentOf(p, key, g, S.drafts),
+      // giờ điểm danh buổi này (nháp đang làm hoặc đã ghi vào Sheet) → Sổ đầu bài đoán buổi + tiết khi TKB chưa có lớp
+      attAt: g.map((x) => (S.drafts[`${key}|${x.col}`] || {}).t0 || (S.attAt || {})[`${key}|${x.col}`]).find(Boolean) || 0,
     };
     try { localStorage.setItem(HANDOFF, JSON.stringify(ho)); } catch (e) { toast('Bộ nhớ trình duyệt đầy — mở Sổ đầu bài và ghi tay.'); return; }
     global.open('so-dau-bai.html?ghi=1', 'eduquiz-sodaubai');
   }
 
-  /** Hiện bản vừa đọc nhưng giữ nguyên buổi đang điểm danh (show() tự nhảy về buổi hôm nay/tiếp theo). */
-  async function showKeep(c, keep) {
-    await show(c.csv, c.at);
-    if (cls && cls.sessions.some((s) => s.col === keep)) { attendCol = keep; paintSessionSelect(); paintAttend(); }
-  }
   // ── Sheet → web: lớp đang mở tự đọc lại khi đang xem (điều phối/thầy cô khác sửa trên Sheet) ──
   async function pollClass(minAge) {
     if (document.hidden || S.tab !== 'class' || !S.sel || writing || navigator.onLine === false) return;
     const f = selFile(), t = selTab(), c = S.cache[S.sel];
     const every = S.via[f && f.id] ? VIA_POLL_MS : minAge;
     if (!f || !t || (c && Date.now() - c.at < every - 5e3)) return;
-    const key = S.sel, before = c ? c.csv : '';
+    const key = S.sel, before = c ? L.compactCSV(c.csv) : ''; // bản lưu trước bản này chưa rút gọn
     try {
       const n = await tabCSV(f.id, t.gid, null);
       save();
-      if (S.sel === key && n.csv !== before) { await showKeep(n, attendCol); toast('Sheet vừa có thay đổi — đã cập nhật.'); }
+      if (S.sel === key && n.csv !== before) { if (await show(n, key, clsKey === key ? attendCol : null)) toast('Sheet vừa có thay đổi — đã cập nhật.'); }
       else if (S.sel === key) status(`Đã đọc lúc ${new Date(n.at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} · tự đọc lại ${S.via[f.id] ? 10 : 2} phút/lần khi đang xem.`);
     } catch (e) { /* mất mạng — lần sau thử lại */ }
   }
@@ -928,6 +1107,9 @@
     if (!T) { paintSync(null); return; }
     T.autoStart({ onApplied: onSyncApplied, onStatus: paintSync }).then((r) => { if (r === null) paintSync(null); });
     $('ddSyncNow').addEventListener('click', async () => {
+      // Bấm liên tục không tốn thêm: mỗi lần là 1 lượt đọc Firestore + 1 lượt Apps Script → khoá nút 20 giây
+      const btn = $('ddSyncNow');
+      btn.disabled = true; setTimeout(() => { btn.disabled = false; }, 20e3);
       save(); // ghi S hiện tại vào máy trước khi gửi
       const { saved: ok, applied } = await T.syncNow();
       paintSync(T.status());
@@ -956,6 +1138,26 @@
     });
   }
 
+  /** 2 tab Điểm danh (hoặc Sổ đầu bài dọn bộ nhớ) cùng máy: tab kia vừa lưu → nhận bản mới vào S. Không có bước này
+      thì tab cũ lưu đè (mất nháp vừa điểm danh ở tab kia; link cũ bị coi là "thay đổi" và gửi lên tài khoản = 1 lượt
+      ghi Firestore đè mất link mới). Giữ phần riêng của tab: thẻ đang mở, lớp đang chọn, bộ lọc. */
+  const TAB_ONLY = ['tab', 'sel', 'scope', 'fSchool', 'fTeacher', 'fTeacherName'];
+  let crossT = 0;
+  function onStorage(e) {
+    if (e.key !== STORE || !e.newValue) return;
+    let n;
+    try { n = JSON.parse(e.newValue); } catch (err) { return; }
+    if (!n || typeof n !== 'object') return;
+    Object.keys(n).forEach((k) => { if (!TAB_ONLY.includes(k)) S[k] = n[k]; });
+    ['links', 'pending', 'folders'].forEach((k) => { if (!Array.isArray(S[k])) S[k] = []; });
+    ['drafts', 'cache', 'mine', 'via'].forEach((k) => { if (!S[k] || typeof S[k] !== 'object') S[k] = {}; });
+    clearTimeout(crossT);
+    crossT = setTimeout(() => { // gộp nhiều lần lưu liền nhau thành 1 lần vẽ
+      paintLinks(); paintPick(); paintOverview();
+      if (cls && clsKey && fileOf(clsKey)) paintAttend();
+    }, 300);
+  }
+
   /** Máy dùng chung: người khác đăng nhập → bỏ sổ và bản đọc của người trước (giữ điểm danh nháp, thẻ, giao diện). */
   function bindOwner(user) {
     const uid = user && user.uid;
@@ -970,8 +1172,10 @@
   function init(ev) {
     bindOwner(ev && ev.detail && ev.detail.user);
     splitLegacy();
+    profile = (ev && ev.detail && ev.detail.profile) || null;
     paintAccount(ev && ev.detail);
     initSync();
+    global.addEventListener('storage', onStorage);
     fitTop(); global.addEventListener('resize', fitTop);
     paintLinks(); paintPick();
     $('ddTabs').addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) showTab(b.dataset.tab); });
@@ -989,7 +1193,7 @@
       if (!b || !global.confirm('Bỏ sổ này khỏi tài khoản? (Sheet trên Google không bị ảnh hưởng)')) return;
       const id = b.dataset.unpend;
       S.pending = S.pending.filter((f) => f.id !== id);
-      [S.cache, S.drafts, S.mine].forEach((o) => Object.keys(o).forEach((k) => { if (k.startsWith(id + '|')) delete o[k]; }));
+      [S.cache, S.drafts, S.mine, S.slots].forEach((o) => Object.keys(o).forEach((k) => { if (k.startsWith(id + '|')) delete o[k]; }));
       save(); paintLinks();
     });
     $('ddMe').addEventListener('change', () => { S.me = $('ddMe').value.trim(); save(); ovMemo.clear(); paintOverview(); if (cls) paintProgress(); });
@@ -1004,7 +1208,7 @@
         }
         if (!global.confirm('Bỏ sổ lớp này khỏi máy? (Sheet trên Google không bị ảnh hưởng)')) return;
         S.links = S.links.filter((f) => f.id !== id);
-        [S.cache, S.drafts, S.mine].forEach((o) => Object.keys(o).forEach((k) => { if (k.startsWith(id + '|')) delete o[k]; }));
+        [S.cache, S.drafts, S.mine, S.slots].forEach((o) => Object.keys(o).forEach((k) => { if (k.startsWith(id + '|')) delete o[k]; }));
         if (S.sel.startsWith(id + '|')) S.sel = '';
         save(); paintLinks(); paintPick(); paintOverview();
       } else if (uf) {
@@ -1017,7 +1221,7 @@
     });
     $('ddClass').addEventListener('change', () => { S.sel = $('ddClass').value; save(); paintPick(); openClass(false); });
     $('ddReload').addEventListener('click', () => openClass(true));
-    $('ddOvLoad').addEventListener('click', loadAll);
+    $('ddOvLoad').addEventListener('click', () => loadAll());
     $('ddFSchool').addEventListener('change', () => { S.fSchool = $('ddFSchool').value; save(); paintOverview(); });
     $('ddFTeacher').addEventListener('change', () => {
       S.fTeacher = $('ddFTeacher').value;
@@ -1027,7 +1231,23 @@
     $('ddWeekPrev').addEventListener('click', () => { weekOff--; paintWeek(); });
     $('ddWeekNext').addEventListener('click', () => { weekOff++; paintWeek(); });
     $('ddWeekNow').addEventListener('click', () => { weekOff = 0; paintWeek(); });
-    $('ddWeekGrid').addEventListener('click', (e) => { const b = e.target.closest('[data-open]'); if (b) selectClass(b.dataset.open, b.dataset.col); });
+    $('ddWeekGrid').addEventListener('click', (e) => {
+      const m = e.target.closest('[data-buoi]'), b = e.target.closest('[data-open]');
+      if (m) {
+        // Xếp buổi: chỉ ghi localStorage rồi vẽ lại từ bản đã đọc — không đọc Sheet, không qua mạng
+        const k = m.dataset.buoi;
+        S.slots[k] = m.dataset.to; save(); paintWeek();
+        const back = [...document.querySelectorAll('#ddWeekGrid [data-buoi]')].find((x) => x.dataset.buoi === k);
+        if (back) back.focus();
+      } else if (b) selectClass(b.dataset.open, b.dataset.col);
+    });
+    $('ddWeekWarn').addEventListener('click', (e) => {
+      const b = e.target.closest('#ddWeekReread');
+      if (!b || !warnKeys.length) return;
+      if (ovBusy) { toast('Đang đọc các lớp khác — chờ xong rồi bấm lại.'); return; }
+      b.disabled = true;
+      loadAll(new Set(warnKeys));
+    });
     $('ddToday').addEventListener('click', (e) => {
       const k = e.target.closest('[data-book]'), b = e.target.closest('[data-open]');
       if (k) { const r = lastRows.find((x) => x.key === k.dataset.book); if (r && r.p) toBook(r.p, r.key, k.dataset.col); }
@@ -1036,7 +1256,7 @@
     $('ddFind').addEventListener('input', applyFind);
     $('ddFind').addEventListener('keydown', (e) => {
       // Enter: đổi Có mặt ↔ Vắng cho bạn duy nhất đang hiện rồi xoá ô tìm (điểm danh bằng bàn phím)
-      if (e.key !== 'Enter') return;
+      if (e.key !== 'Enter' || !cls) return;
       const vis = [...$('ddList').children].filter((li) => !li.hidden);
       if (vis.length !== 1) return;
       const st = cls.students.find((s) => s.row === +vis[0].querySelector('[data-flip]').dataset.flip);
@@ -1058,24 +1278,27 @@
     $('ddScope').addEventListener('click', (e) => { const b = e.target.closest('[data-scope]'); if (!b) return; S.scope = b.dataset.scope; save(); paintOverview(); });
     $('ddOv').addEventListener('click', (e) => {
       const st = e.target.closest('[data-star]'), op = e.target.closest('[data-open]');
+      const rd = e.target.closest('[data-read]');
       if (st) { const k = st.dataset.star; if (S.mine[k]) delete S.mine[k]; else S.mine[k] = true; save(); paintOverview(); paintPick(); }
+      else if (rd) { rd.disabled = true; readOne(rd.dataset.read); }
       else if (op) selectClass(op.dataset.open);
     });
-    $('ddSession').addEventListener('change', () => { attendCol = +$('ddSession').value; paintAttend(); });
+    $('ddSession').addEventListener('change', () => { if (!cls) return; attendCol = +$('ddSession').value; paintAttend(); });
     $('ddList').addEventListener('click', (e) => {
+      if (!cls) return;
       const b = e.target.closest('[data-m]'), f = e.target.closest('[data-flip]');
       if (b) setMark(+b.dataset.row, b.dataset.m);
       else if (f) { const st = cls.students.find((s) => s.row === +f.dataset.flip); setMark(st.row, flip(st)); }
       else return;
       paintAttend();
     });
-    $('ddAllIn').addEventListener('click', () => { setMarks(cls.students.filter((s) => markOf(s) !== 'nl').map((s) => [s.row, presentMark(s)])); paintAttend(); });
-    $('ddCopy').addEventListener('click', copyColumn);
+    $('ddAllIn').addEventListener('click', () => { if (!cls) return; setMarks(cls.students.filter((s) => markOf(s) !== 'nl').map((s) => [s.row, presentMark(s)])); paintAttend(); });
+    $('ddCopy').addEventListener('click', () => { if (cls) copyColumn(); });
     $('ddWriteBtn').addEventListener('click', writeSheet);
     setInterval(() => pollClass(POLL_MS - 5e3), POLL_MS);
     document.addEventListener('visibilitychange', () => pollClass(60e3));
-    $('ddToPicker').addEventListener('click', toPicker);
-    $('ddToBook').addEventListener('click', () => { if (cls) toBook(cls, S.sel, attendCol, lessonText(L.summary(cls, lessons).nextLesson, names)); });
+    $('ddToPicker').addEventListener('click', () => { if (cls) toPicker(); });
+    $('ddToBook').addEventListener('click', () => { if (cls) toBook(cls, clsKey, attendCol, lessonText(L.summary(cls, lessons).nextLesson, names)); });
     $('ddTheme').addEventListener('click', () => {
       const dark = document.documentElement.getAttribute('data-theme') !== 'dark';
       document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');

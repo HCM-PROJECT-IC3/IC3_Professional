@@ -152,5 +152,53 @@ assertEq('nháp khác Sheet: đổi vắng → có mặt, ô trống → vắng;
 assertEq('ô trống trên Sheet tính là có mặt', L.draftChanges(D, { 6: 'x' }, 1), 0);
 assertEq('không có nháp', L.draftChanges(D, undefined, 1), 0);
 
+// ── Nháp kèm tên: Sheet chèn/xoá dòng → không gán nhầm người ──
+var stA = { row: 5, name: 'Nguyễn Văn A', marks: {} };
+assertEq('nháp đúng tên', L.draftMark({ marks: { 5: 'v' }, names: { 5: 'nguyễn  văn a' } }, stA), 'v');
+assertEq('dòng 5 nay là bạn khác → bỏ nháp', L.draftMark({ marks: { 5: 'v' }, names: { 5: 'Trần Thị B' } }, stA), null);
+assertEq('nháp bản trước (không có tên) vẫn dùng', L.draftMark({ marks: { 5: 'v' } }, stA), 'v');
+var Dn = { students: [{ row: 5, name: 'Trần Thị B', marks: { 1: 'x' } }] };
+assertEq('đếm thay đổi bỏ dòng lệch tên', L.draftChanges(Dn, { marks: { 5: 'v' }, names: { 5: 'Nguyễn Văn A' } }, 1), 0);
+
+// ── Rút gọn CSV: bỏ ô trống cuối, giữ số dòng và ô có ngoặc kép ──
+var raw = 'LỚP:,3A1,,,,\r\n,,,,,\r\nTIẾT,1,2,,,\r\n"Lê ""Bi"", An",x,"v\nghi chú",,,\r\n,,,,,\r\n,,,,,\r\n';
+var cmp = L.compactCSV(raw);
+assertEq('rút gọn', cmp, 'LỚP:,3A1\n\nTIẾT,1,2\n"Lê ""Bi"", An",x,"v\nghi chú"');
+assertEq('đọc lại giống hệt (bỏ ô trống)', L.parseCSV(cmp)[3], ['Lê "Bi", An', 'x', 'v\nghi chú']);
+assertEq('giữ dòng trống ở giữa (số dòng không đổi)', L.parseCSV(cmp).length, 4);
+var big = [], r2, c2;
+for (r2 = 0; r2 < 60; r2++) { var row2 = ['HS ' + r2, 'x', 'v']; for (c2 = 0; c2 < 120; c2++) row2.push(''); big.push(row2.join(',')); }
+var bigCSV = big.join('\r\n'), small = L.compactCSV(bigCSV);
+assertEq('lớp mẫu 60 dòng × 123 cột: nhỏ hơn 10 lần', small.length * 10 < bigCSV.length, true);
+var P1 = L.parseClass(L.parseCSV(bigCSV)), P2 = L.parseClass(L.parseCSV(small));
+assertEq('parseClass như nhau sau khi rút gọn', JSON.stringify(P1) === JSON.stringify(P2), true);
+
+// ── Lịch TKB Sáng/Chiều (GV tự xếp buổi theo lớp + thứ) ──
+var wk = []; for (var i = 0; i < 6; i++) { var dd = L.mondayOf(new Date(2026, 9, 28)); dd.setDate(dd.getDate() + i); wk.push(dd); }
+var slots = { 'k0|2': 'm', 'k0|3': 'a', 'x|2': 'zz' };
+assertEq('buổi theo lớp + thứ; giá trị lạ = chưa xếp', [L.buoiOf(slots, 'k0', new Date(2026, 9, 27)), L.buoiOf(slots, 'k0', new Date(2026, 9, 28)), L.buoiOf(slots, 'x', new Date(2026, 9, 27)), L.buoiOf(null, 'k0', new Date(2026, 9, 27))], ['m', 'a', '', '']);
+var g = L.buoiGrid(plan.concat([{ key: 'k9', date: new Date(2026, 9, 27, 15, 30) }, { key: 'k9', date: new Date(2026, 10, 9) }]), slots, wk);
+var cnt = function (row) { return row.map(function (c) { return c.length; }); };
+assertEq('lưới TKB: Thứ 3 sáng, Thứ 4 chiều, lớp chưa xếp ở hàng riêng (giờ trong ngày không làm lệch), ngoài tuần thì bỏ', [cnt(g.m), cnt(g.a), cnt(g.u)], [[0, 1, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0], [0, 1, 0, 0, 0, 0]]);
+
+// ── Xếp tự động theo TKB ở Lịch giảng dạy (teaching_timetable.days) ──
+assertEq('tên lớp Sheet ↔ TKB', ['4A5', '4/5', '4.5', ' Lớp 4 A 5', '10A12', '6A1', 'K3'].map(L.classKey), ['4.5', '4.5', '4.5', '4.5', '10.12', '6.1', 'K3']);
+var tkbDays = {
+  '2': { morning: ['', '4/5', '', '5/6'], afternoon: [] },
+  '3': { morning: [{ maLop: '', truong: '' }, { maLop: '5/5', truong: 'TiH Phong Phú 2' }, { maLop: '4/1', truong: '' }, { maLop: '3/3', truong: '' }], afternoon: [{ maLop: '5/2', truong: '' }, { maLop: '4/6', truong: '' }, { maLop: '', truong: '' }] },
+  '3x': { morning: ['9/9'] }, '8': { morning: ['9/9'] },
+};
+var cells = L.tkbCells(tkbDays);
+assertEq('ô TKB: thứ, buổi, tiết (chiều đánh số tiếp sau sáng), bỏ ô trống và thứ lạ', cells.map(function (c) { return c.dow + c.b + c.tiet + ':' + c.cls; }), ['1m2:4.5', '1m4:5.6', '2m2:5.5', '2m3:4.1', '2m4:3.3', '2a5:5.2', '2a6:4.6']);
+var same = function (a, b) { return a.toLowerCase().replace(/^tih /, '') === b.toLowerCase().replace(/^tih /, ''); };
+var tue = new Date(2026, 10, 10), mon = new Date(2026, 10, 9);
+var bt = function (h) { return h && [h.b, h.tiet]; };
+assertEq('khớp lớp + thứ → buổi, tiết', [bt(L.tkbFor(cells, '4A6', 'TIH PHONG PHÚ 2', tue, same)), bt(L.tkbFor(cells, '3A3', 'X', tue, same)), bt(L.tkbFor(cells, '4A5', '', mon, same))], [['a', [6]], ['m', [4]], ['m', [2]]]);
+assertEq('ô có ghi trường: khác trường thì không khớp; khác thứ / không có lớp → null', [L.tkbFor(cells, '5A5', 'THCS Mạch Kiếm Hùng', tue, same), bt(L.tkbFor(cells, '5A5', 'TIH PHONG PHÚ 2', tue, same)), L.tkbFor(cells, '4A6', '', mon, same), L.tkbFor([], '4A6', '', tue)], [null, ['m', [2]], null, null]);
+var both = L.tkbFor(L.tkbCells({ '3': { morning: ['', '', '4/1'], afternoon: ['4/1'] } }), '4A1', '', tue);
+assertEq('lớp dạy cả sáng lẫn chiều: tách tiết theo buổi', [both.b, both.m, both.a], ['m', [3], [4]]);
+var g2 = L.buoiGrid([{ key: 'a', date: tue }, { key: 'b', date: tue }, { key: 'c', date: tue }], function (e) { return { a: 'a', b: 'm' }[e.key] || ''; }, [mon, tue]);
+assertEq('lưới nhận hàm chọn buổi (TKB trước, xếp tay sau)', [g2.m[1].length, g2.a[1].length, g2.u[1].length], [1, 1, 1]);
+
 console.log(failures ? failures + ' FAIL' : 'Tất cả PASS');
 process.exit(failures ? 1 : 0);

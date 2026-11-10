@@ -9,7 +9,8 @@
      pickComment(bank, info) · splitNames · absentCells · clipBlock(sheet, fills, opts)
    Sổ lớp của Điều phối (FORM QUẢN LÝ LỚP): parseGoals (tab BÁO GIẢNG → Kiến thức cần đạt) · goalsFor · sessionFor (buổi theo
      ngày, sổ chưa ghi ngày thì theo tiết PPCT) · absentAt · crossCheck (bảng tuần lệch sổ lớp) · buildWeek + tkbMap + gridClip
-     (tạo bảng tuần mới A:J từ sổ lớp, tiết TKB theo bảng tuần đã đọc)
+     (tạo bảng tuần mới A:J từ sổ lớp, tiết TKB theo bảng tuần đã đọc) · weekSessions (tiết sổ lớp chưa ghi ngày → xếp theo
+     lịch hằng tuần của lớp) · tkbPairs · week1From (số tuần theo tiêu đề tab) · planBlock (khối báo giảng K8:M12)
    ============================================================ */
 (function (global) {
   'use strict';
@@ -342,11 +343,13 @@
   }
   const iso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   /** Vắng của 1 buổi: known = đã có ít nhất 1 ô điểm danh; drafts = bản nháp chưa ghi Sheet của trang Điểm danh ({ row: mark }). */
-  function absentAt(c, s, drafts) {
+  function absentAt(c, s, drafts, draftNames) {
     let known = false;
     const names = [];
     c.students.forEach((st) => {
-      const m = drafts && drafts[st.row] != null ? drafts[st.row] : st.marks[s.col];
+      // draftNames (Điểm danh bản mới): dòng đó nay là bạn khác → bỏ nháp của dòng đó
+      const nm = draftNames && draftNames[st.row], okRow = !nm || norm(nm).toLowerCase() === norm(st.name).toLowerCase();
+      const m = okRow && drafts && drafts[st.row] != null ? drafts[st.row] : st.marks[s.col];
       if (m === 'x' || m === 'v' || m === 'moi') known = true;
       if (m === 'v') names.push(norm(st.name));
     });
@@ -374,32 +377,118 @@
    */
   function buildWeek(classes, o) {
     const rows = [], undated = [];
-    const [d0, d1] = [o.dates[0], o.dates[o.dates.length - 1]];
     for (const { cls, c } of classes || []) {
       if (!c) continue;
-      const list = c.sessions.map((s) => ({ s, d: o.dateOf(s.ngay, o.ref) })).filter((x) => x.d && iso(x.d) >= d0 && iso(x.d) <= d1);
+      const list = weekSessions(c, o.dates, o.dateOf, o.ref);
       if (!list.length) undated.push(cls);
       const seen = {};
-      for (const { s, d } of list) {
-        const date = iso(d), dow = d.getDay() + 1, nth = seen[date] = (seen[date] ?? -1) + 1;
-        rows.push({ date, cls, tkb: o.tkbOf(cls, dow, nth) || '', ppct: String(s.tiet), lesson: o.lessonOf(cls, s), teacher: s.gv || c.teacher || '', s, c });
-      }
+      list.forEach(({ s, date, plan }, j) => {
+        const dow = isoDate(date).getDay() + 1, nth = seen[date] = (seen[date] ?? -1) + 1;
+        // Thứ này không có trong TKB đã biết (lớp đổi ngày dạy) → tiết thứ j trong tuần của lớp đó, đánh dấu để kiểm tra
+        const t = o.tkbOf(cls, dow, nth) || '', g = !t && o.tkbOf.guess ? o.tkbOf.guess(cls, j) : '';
+        rows.push({ date, cls, tkb: t || g, tkbGuess: !!g, ppct: String(s.tiet), lesson: o.lessonOf(cls, s), teacher: s.gv || c.teacher || '', s, c, plan });
+      });
     }
     const cmpC = (a, b) => { const [a1, a2] = a.split('.').map(Number), [b1, b2] = b.split('.').map(Number); return a1 - b1 || a2 - b2; };
     rows.sort((a, b) => cmpC(a.cls, b.cls) || a.date.localeCompare(b.date) || a.s.tiet - b.s.tiet);
     undated.sort(cmpC);
     return { rows, undated };
   }
-  /** TKB của lớp theo bảng tuần đã đọc: lớp + thứ (+ tiết thứ mấy trong ngày) → "2 (Sáng)". */
-  function tkbMap(sheet) {
-    const m = new Map(), seen = {};
-    for (const x of (sheet && sheet.rows) || []) {
-      const [y, mo, d] = x.date.split('-').map(Number);
-      const dow = new Date(y, mo - 1, d).getDay() + 1, k = `${x.cls}|${dow}`;
-      const nth = seen[`${k}|${x.date}`] = (seen[`${k}|${x.date}`] ?? -1) + 1;
-      if (x.tiet) m.set(`${k}|${nth}`, `${x.tiet} (${x.buoi})`);
+  const isoDate = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+  const plusDays = (s, n) => { const d = isoDate(s); d.setDate(d.getDate() + n); return iso(d); };
+  const mondayOf = (d) => iso(new Date(d.getFullYear(), d.getMonth(), d.getDate() - ((d.getDay() + 6) % 7)));
+  /** Ô THỨ "Thứ 3" → 3 · "CN" → 8 · '' → 0 */
+  const thuNum = (t) => { const m = /(\d)/.exec(norm(t)); return m ? +m[1] : (/^(cn|chu nhat)/.test(plain(t)) ? 8 : 0); };
+
+  /**
+   * Tiết của 1 lớp trong tuần dates (['YYYY-MM-DD' T2…T7]) theo sổ lớp → [{ s, date, plan }] theo thứ tự tiết.
+   *   • Tiết có ô NGÀY: đúng ngày đó (plan: false).
+   *   • Tiết sau tiết có ngày cuối cùng (điều phối chưa ghi ngày, kể cả tiết đã tick hoàn thành): xếp tiếp theo lịch
+   *     hằng tuần của lớp (plan: true) — số tiết/tuần = số hay gặp nhất trong các tuần đã có ngày, thứ dạy = tuần gần nhất
+   *     đủ số tiết đó; ô THỨ của tiết (nếu có) được ưu tiên. Tuần nghỉ lễ chưa biết trước: điều phối ghi NGÀY là theo ngày đó.
+   */
+  function weekSessions(c, dates, dateOf, ref) {
+    const ss = (c && c.sessions) || [], d0 = dates[0], d1 = dates[dates.length - 1];
+    const dated = [];
+    ss.forEach((s, i) => { const d = s.ngay ? dateOf(s.ngay, ref) : null; if (d) dated.push({ s, i, date: iso(d), mon: mondayOf(d), dow: d.getDay() + 1 }); });
+    const out = dated.filter((x) => x.date >= d0 && x.date <= d1).map((x) => ({ s: x.s, date: x.date, plan: false, i: x.i }));
+    if (dated.length) {
+      const by = new Map();
+      dated.forEach((x) => (by.get(x.mon) || by.set(x.mon, []).get(x.mon)).push(x));
+      const cnt = {};
+      for (const g of by.values()) cnt[g.length] = (cnt[g.length] || 0) + 1;
+      const k = +Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a] || b - a)[0];
+      const mons = [...by.keys()].sort(), last = mons[mons.length - 1];
+      const full = [...mons].reverse().find((m) => by.get(m).length === k);
+      const pattern = by.get(full).slice().sort((a, b) => a.i - b.i).map((x) => x.dow);
+      const want = mondayOf(isoDate(d0));
+      let p = by.get(last).length; // vị trí tiếp theo, tính từ thứ Hai của tuần cuối có ngày
+      for (let i = Math.max(...by.get(last).map((x) => x.i)) + 1; i < ss.length; i++) {
+        const s = ss[i];
+        if (s.ngay && dateOf(s.ngay, ref)) continue; // có ngày (ghi lệch thứ tự): đã xếp theo ngày ở trên
+        const mon = plusDays(last, Math.floor(p / k) * 7), dow = thuNum(s.thu) || pattern[p % k];
+        p++;
+        if (mon > want) break;
+        const date = plusDays(mon, dow - 2);
+        if (mon === want && date >= d0 && date <= d1) out.push({ s, date, plan: true, i });
+      }
     }
-    return (cls, dow, nth) => m.get(`${cls}|${dow}|${nth}`) || m.get(`${cls}|${dow}|0`) || '';
+    return out.sort((a, b) => a.i - b.i).map(({ s, date, plan }) => ({ s, date, plan }));
+  }
+
+  /**
+   * TKB theo bảng tuần đã đọc (lưu trên máy để các tuần sau dùng):
+   * { 'lớp|thứ|tiết thứ mấy trong ngày': '2 (Sáng)', 'lớp|#j': tiết thứ j trong tuần của lớp (dự phòng khi lớp đổi thứ) }.
+   */
+  function tkbPairs(sheet) {
+    const m = {}, seen = {}, order = (x) => x.date + (x.buoi === 'Chiều' ? 1 : 0) + pad(x.tiet);
+    const rows = ((sheet && sheet.rows) || []).slice().sort((a, b) => order(a).localeCompare(order(b)));
+    const j = {};
+    for (const x of rows) {
+      const dow = isoDate(x.date).getDay() + 1, k = `${x.cls}|${dow}`;
+      const nth = seen[`${k}|${x.date}`] = (seen[`${k}|${x.date}`] ?? -1) + 1;
+      const n = j[x.cls] = (j[x.cls] ?? -1) + 1;
+      if (x.tiet) m[`${k}|${nth}`] = m[`${x.cls}|#${n}`] = `${x.tiet} (${x.buoi})`;
+    }
+    return m;
+  }
+  /**
+   * TKB của lớp: lớp + thứ (+ tiết thứ mấy trong ngày) → "2 (Sáng)" | ''. src: bảng tuần đã đọc hoặc { cặp đã lưu }.
+   * .guess(lớp, j): tiết thứ j trong tuần của lớp — chỉ dùng khi thứ đó không có trong TKB.
+   */
+  function tkbMap(src) {
+    const m = src && src.rows ? tkbPairs(src) : (src || {});
+    const f = (cls, dow, nth) => m[`${cls}|${dow}|${nth}`] || m[`${cls}|${dow}|0`] || '';
+    f.guess = (cls, j) => m[`${cls}|#${j}`] || '';
+    return f;
+  }
+  /**
+   * Thứ Hai của Tuần 01 theo tiêu đề tab "Tuần: 10 (Từ ngày 09/11/2026 …)" → 'YYYY-MM-DD' | ''
+   * ('' khi tiêu đề không khớp ngày dạy bên dưới — tab chép từ tuần trước quên sửa tiêu đề).
+   */
+  function week1From(sheet) {
+    const m = /tuan\s*:?\s*(\d+)\s*\(\s*tu ngay\s*(\d{1,2})\s*\/\s*(\d{1,2})\s*\/\s*(\d{4})/.exec(plain(sheet && sheet.weekText));
+    if (!m || !+m[1] || (sheet.warnings || []).some((w) => /^Tiêu đề tab/.test(w))) return '';
+    return plusDays(mondayOf(new Date(+m[4], +m[3] - 1, +m[2])), -(+m[1] - 1) * 7);
+  }
+  /**
+   * Khối báo giảng bên phải bảng tuần (K8:M12 của mẫu trường): ngày thứ Hai + tiết PPCT đầu tuần, rồi mỗi khối 2 bài
+   * của tuần (bài hay gặp nhất trong các lớp của khối, theo thứ tự tiết). rows: buildWeek().rows.
+   */
+  function planBlock(rows, monday) {
+    const per = new Map();
+    for (const x of rows || []) (per.get(x.cls) || per.set(x.cls, []).get(x.cls)).push(x);
+    const mode = (list) => { const c = new Map(); list.filter(Boolean).forEach((v) => c.set(v, (c.get(v) || 0) + 1)); return [...c].sort((a, b) => b[1] - a[1])[0]?.[0] || ''; };
+    const firsts = [], grades = new Map();
+    for (const [cls, list] of per) {
+      list.sort((a, b) => +a.ppct - +b.ppct);
+      firsts.push(list[0].ppct);
+      const g = parseInt(cls, 10);
+      (grades.get(g) || grades.set(g, []).get(g)).push(list.map((x) => x.lesson));
+    }
+    const out = [[dmy(monday), mode(firsts), ''], ['Lớp', 'Bài dạy', 'Tin học quốc tế']];
+    [...grades.keys()].sort((a, b) => a - b).forEach((g) => { const ls = grades.get(g); out.push([String(g), mode(ls.map((l) => l[0])), mode(ls.map((l) => l[1]))]); });
+    return out;
   }
   /** Ô A:J của bảng tuần (Thứ ngày … Ghi chú) → { tsv, html } để dán từ ô A của dòng tiết đầu. */
   function gridClip(grid) {
@@ -414,5 +503,6 @@
     parseTSV, readSource, dateISO, parseWeekSheet, signBlock, sameTeacher, kindOf, topicOf, hash,
     shortLesson, pickComment, splitNames, namesText, absentCells, clipBlock, colName,
     cleanGoal, parseGoals, goalsFor, asHS, sessionFor, absentAt, crossCheck, buildWeek, tkbMap, gridClip, dmy,
+    weekSessions, tkbPairs, week1From, planBlock,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

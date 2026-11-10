@@ -37,6 +37,22 @@
   function save() { try { localStorage.setItem(STORE, JSON.stringify(S)); } catch (e) { /* bộ nhớ đầy / bị chặn — vẫn chơi được */ } }
   const S = Object.assign({ players: {}, last: '', prefs: {} }, load());
   S.prefs = Object.assign({ mode: 'speed', count: 15, level: 'normal', secs: 20 }, S.prefs);
+  // 2 tab Đấu trường cùng máy (em mở thêm tab từ Gọi tên, Sổ tay...): mỗi tab giữ S riêng, tab lưu sau ghi đè
+  // xu/Linh vật/kỷ lục vừa kiếm ở tab kia. Tab kia vừa lưu → nhận hồ sơ người chơi của nó (gộp TẠI CHỖ, giữ tham chiếu
+  // profile() mà Hành trình / mini-game đang cầm). Biệt danh, thẻ, bộ câu, chế độ đang chọn là của từng tab.
+  global.addEventListener('storage', (e) => {
+    if (e.key !== STORE || !e.newValue) return;
+    let n;
+    try { n = JSON.parse(e.newValue); } catch (err) { return; }
+    if (!n || !n.players || typeof n.players !== 'object') return;
+    Object.keys(n.players).forEach((k) => {
+      const v = n.players[k];
+      if (!v || typeof v !== 'object') return;
+      if (S.players[k]) Object.assign(S.players[k], v); else S.players[k] = v;
+    });
+    if (n.prefs && Array.isArray(n.prefs.recent)) S.prefs.recent = n.prefs.recent;
+    try { refreshWallet(); } catch (err) { /* trang chưa dựng xong */ }
+  });
   const nickKey = (n) => String(n || '').trim().toLowerCase() || 'khach';
   function profile() {
     const k = nickKey(S.last);
@@ -74,7 +90,29 @@
   const TEST_RE = /^Kiểm tra\s/;
   const BAI_RE = /^Bài \d+[.:]/; // câu Củng cố theo bài học — không trộn vào "Trộn mọi chủ đề"
   const ALL = '__ALL__';
-  const getJson = (u) => fetch(u).then((r) => { if (!r.ok) throw new Error(u + ' ' + r.status); return r.json(); });
+  // File câu hỏi đã tải trong phiên: chọn lại bộ cũ / "Trộn mọi chủ đề" / Hành trình không tải lại. Lỗi thì quên ngay
+  // (lần sau tải lại ĐÚNG file đó, không phải cả bộ).
+  const jsonMemo = new Map();
+  const getJson = (u) => {
+    if (!jsonMemo.has(u)) {
+      jsonMemo.set(u, fetch(u).then((r) => { if (!r.ok) throw new Error(u + ' ' + r.status); return r.json(); })
+        .catch((e) => { jsonMemo.delete(u); throw e; }));
+    }
+    return jsonMemo.get(u);
+  };
+  /** Tải các file của 1 bộ: { lists, failed } — file lỗi không làm mất các file khác. */
+  async function loadFiles(paths) {
+    const failed = [];
+    const lists = await Promise.all(paths.map((p) => (p ? getJson('data/ic3/' + p).catch(() => { failed.push(p); return []; }) : [])));
+    return { lists, failed };
+  }
+  /** Dòng báo lỗi kèm nút "Thử lại" (chỉ tải lại phần lỗi — các file đã tải nằm trong jsonMemo). */
+  function deckError(msg, retry) {
+    const box = $('arDeckInfo');
+    box.innerHTML = `⚠️ ${esc(msg)} <button type="button" class="ar-retry">Thử lại</button>`;
+    box.querySelector('.ar-retry').addEventListener('click', retry, { once: true });
+    $('arDeckInfoTeacher').textContent = '⚠️ ' + msg;
+  }
 
   async function initSource() {
     if (SRC.de) {
@@ -102,7 +140,8 @@
     try {
       [SRC.meta, SRC.manifest] = await Promise.all([getJson('data/ic3/meta.json'), getJson('data/ic3/minitests-manifest.json')]);
     } catch (e) {
-      $('arDeckInfo').textContent = '⚠️ Không tải được ngân hàng câu hỏi — kiểm tra mạng rồi tải lại trang.';
+      $('arPlay').disabled = true;
+      deckError('Không tải được danh sách bộ câu hỏi — kiểm tra mạng.', () => { $('arDeckInfo').textContent = 'Đang tải lại...'; initSource(); });
       return;
     }
     const cat = $('arCat');
@@ -149,8 +188,18 @@
     const files = SRC.manifest[`${cat}__${lvl}`] || {};
     const lv = curCat()?.levels.find((l) => l.id === lvl);
     const names = mt === ALL ? Object.keys(lv?.minitests || {}).filter((n) => !LESSON_RE.test(n) && !TEST_RE.test(n) && !BAI_RE.test(n)) : [mt];
-    const lists = await Promise.all(names.map((n) => (files[n] ? getJson('data/ic3/' + files[n]).catch(() => []) : [])));
+    const { lists, failed } = await loadFiles(names.map((n) => files[n]));
     if (seq !== loadSeq) return; // người dùng đã chọn bài khác
+    if (failed.length) {
+      // Trước: file lỗi bị coi là bộ rỗng → báo "không có câu thuộc dạng đã chọn" và mở mục dạng câu (sai hướng).
+      // Bộ trộn còn phần tải được thì vẫn cho chơi phần đó; nút Thử lại chỉ tải lại file lỗi.
+      const got = lists.flat();
+      SRC.questions = got.length ? got : null;
+      if (got.length) updateDeckInfo(); else $('arPlay').disabled = true;
+      deckError(failed.length === names.length ? 'Không tải được bộ câu này — kiểm tra mạng.'
+        : `Thiếu ${failed.length}/${names.length} phần của bộ (lỗi mạng) — đang chơi được ${got.length} câu.`, () => { if (seq === loadSeq) bankChanged(); });
+      return;
+    }
     SRC.questions = lists.flat();
     updateDeckInfo();
   }
@@ -542,9 +591,11 @@
     const files = SRC.manifest[`${q.cat}__${q.lvl}`] || {};
     const topics = Object.keys(lv?.minitests || {}).filter((n) => !LESSON_RE.test(n) && !TEST_RE.test(n) && !BAI_RE.test(n));
     const names = q.mt === ALL ? topics : topics.filter((n) => n.startsWith(q.mt));
-    const lists = await Promise.all(names.map((n) => (files[n] ? getJson('data/ic3/' + files[n]).catch(() => []) : [])));
+    const { lists, failed } = await loadFiles(names.map((n) => files[n]));
     const questions = lists.flat();
-    if (!questions.length) { toast('Chủ đề này chưa có câu hỏi ở cấp đang chọn.'); return false; }
+    // Lỗi mạng ≠ chủ đề không có câu (trước đây báo nhầm "chưa có câu hỏi"). Bấm chặng lần nữa chỉ tải lại file lỗi.
+    if (!questions.length) { toast(failed.length ? 'Không tải được câu hỏi của chặng này — kiểm tra mạng rồi bấm lại.' : 'Chủ đề này chưa có câu hỏi ở cấp đang chọn.'); return false; }
+    if (failed.length) toast(`Thiếu ${failed.length} phần do lỗi mạng — chặng này chơi với ${questions.length} câu tải được.`);
     start(null, { questions, mode: q.mode, n: q.n, key: `quest|${q.cat}|${q.lvl}|${q.mt}`, title: q.title, quest: q.quest });
     return true;
   }

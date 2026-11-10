@@ -187,6 +187,39 @@ var C2 = L.parseClass(classCSV(['05.10', '', ''], ['Bài 1', 'Bài 2', 'Bài 3']
 C2.sessions[1].done = true;
 assertEq('lớp không có tiết có ngày trong tuần → báo', W.buildWeek([{ cls: '4.5', c: C2 }], { dates: ['2026-11-09', '2026-11-14'], tkbOf: tk, lessonOf: function () { return ''; }, dateOf: L.dateOf, ref: ref }).undated, ['4.5']);
 assertEq('ngày d/m/yyyy như bảng trường', W.dmy('2026-11-09'), '9/11/2026');
+
+// ── Tuần sau: sổ lớp chưa ghi ngày → xếp theo lịch hằng tuần của lớp ──
+var W11 = ['2026-11-16', '2026-11-17', '2026-11-18', '2026-11-19', '2026-11-20', '2026-11-21'];
+var W12 = ['2026-11-23', '2026-11-24', '2026-11-25', '2026-11-26', '2026-11-27', '2026-11-28'];
+var ws = function (c, d) { return W.weekSessions(c, d, L.dateOf, ref).map(function (x) { return [x.date, x.s.tiet, x.plan]; }); };
+assertEq('tuần 11 của 3.4 (T3 + T5, chưa ghi ngày)', ws(C, W11), [['2026-11-17', 13, true], ['2026-11-19', 14, true]]);
+assertEq('tuần 12: hết tiết trên sổ → không có', ws(C, W12), []);
+assertEq('tuần đã có ngày giữ nguyên', ws(C, ['2026-11-09', '2026-11-10', '2026-11-11', '2026-11-12', '2026-11-13', '2026-11-14']), [['2026-11-10', 11, false], ['2026-11-12', 12, false]]);
+var wk11 = W.buildWeek([{ cls: '3.4', c: C }], { dates: W11, tkbOf: tk, lessonOf: function (cls, s) { return s.bai; }, dateOf: L.dateOf, ref: ref });
+assertEq('bảng tuần 11 có tiết dự kiến + tiết TKB', wk11.rows.map(function (x) { return [x.date, x.tkb, x.ppct, x.lesson, x.plan]; }),
+  [['2026-11-17', '3 (Sáng)', '13', 'Bài 10', true], ['2026-11-19', '1 (Chiều)', '14', 'Bài 11', true]]);
+// Lớp đã tick hoàn thành nhưng điều phối bỏ trống ô NGÀY mấy tuần (như 4A5): tiết đã dạy vẫn chiếm tuần của nó
+var C3 = L.parseClass(classCSV(['26.10', '27.10', '', '', '', '', '', ''], ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8'], [['x', 'x', '', '', '', '', '', '']]));
+assertEq('tiết thứ 5–6 rơi vào tuần 10 (T2, T3)', ws(C3, ['2026-11-09', '2026-11-10', '2026-11-11', '2026-11-12', '2026-11-13', '2026-11-14']), [['2026-11-09', 13, true], ['2026-11-10', 14, true]]);
+// 2 tiết cùng ngày (như 4A1: Thứ 3 × 2) + ô THỨ của tiết chưa có ngày được ưu tiên
+var C4 = L.parseClass(classCSV(['03.11', '03.11', '10.11', '10.11', '', ''], ['B1', 'B2', 'B3', 'B4', 'B5', 'B6'], [['x', 'x', 'x', 'x', '', '']]));
+assertEq('2 tiết cùng thứ 3', ws(C4, W11), [['2026-11-17', 13, true], ['2026-11-17', 14, true]]);
+C4.sessions[5].thu = 'Thứ 5';
+assertEq('ô THỨ của tiết được ưu tiên', ws(C4, W11), [['2026-11-17', 13, true], ['2026-11-19', 14, true]]);
+// TKB đã lưu (cặp) + đoán khi lớp đổi thứ
+var saved = W.tkbPairs(S), tk2 = W.tkbMap(saved);
+assertEq('TKB từ cặp đã lưu', [tk2('3.4', 3, 0), tk2('3.4', 5, 0)], ['3 (Sáng)', '1 (Chiều)']);
+assertEq('đổi thứ → đoán theo tiết thứ mấy trong tuần', [tk2('3.4', 4, 0), tk2.guess('3.4', 0), tk2.guess('3.4', 1)], ['', '3 (Sáng)', '1 (Chiều)']);
+// Số tuần theo tiêu đề tab
+assertEq('tiêu đề lệch ngày dạy → không chỉnh Tuần 01', W.week1From(S), '');
+assertEq('Tuần 10 từ 09/11/2026 → Tuần 01 = 07/09/2026', W.week1From({ weekText: 'Tuần: 10 (Từ ngày 09/11/2026 đến ngày 13/11/2026)', warnings: [] }), '2026-09-07');
+// Khối báo giảng K8:M12
+var pb = W.planBlock([
+  { cls: '3.1', ppct: '11', lesson: 'Ôn tập 1' }, { cls: '3.1', ppct: '12', lesson: 'Bài 9: A' },
+  { cls: '3.2', ppct: '12', lesson: 'Bài 10: Nhầm' }, { cls: '3.2', ppct: '11', lesson: 'Ôn tập 1' }, { cls: '3.3', ppct: '11', lesson: 'Ôn tập 1' }, { cls: '3.3', ppct: '12', lesson: 'Bài 9: A' },
+  { cls: '4.1', ppct: '11', lesson: 'Bài 9: B' }, { cls: '4.1', ppct: '12', lesson: 'Bài 10: C' },
+], '2026-11-09');
+assertEq('khối báo giảng', pb, [['9/11/2026', '11', ''], ['Lớp', 'Bài dạy', 'Tin học quốc tế'], ['3', 'Ôn tập 1', 'Bài 9: A'], ['4', 'Bài 9: B', 'Bài 10: C']]);
 var gc = W.gridClip([['9/11/2026', '3.4', '3 (Sáng)', '11', 'Ôn tập 1', '0', '', 'Ưu: a\nHạn chế: b', 'GV', '']]);
 assertEq('khối A:J 10 ô', W.parseTSV(gc.tsv)[0].length, 10);
 

@@ -23,6 +23,121 @@ Thứ tự: Apps Script → `firestore.rules`/index → đẩy web.
      Lệch dữ liệu thì đặt `rosterDeltaSync: false` trong `js/backend-config.js`.
 
 
+## 10/11/2026 (13) — Điểm danh › Lịch dạy: lịch tuần kiểu TKB Sáng/Chiều, hết khoảng trống 2 bên
+
+- Trang dùng hết bề ngang màn hình (bỏ giới hạn 1320px). Màn rộng: "Hôm nay" + "Việc cần làm" thành cột trái,
+  lịch tuần chiếm phần còn lại; màn dưới 1180px xếp chồng như cũ.
+- Lịch tuần kẻ bảng như thời khoá biểu: cột Thứ 2 → Thứ 7, hàng **Sáng / Chiều**. Sheet không ghi giờ học nên
+  GV bấm "Sáng"/"Chiều" trên lớp ở hàng "Chưa xếp buổi" (⇅ để đổi). Xếp theo lớp + thứ, các tuần sau tự theo;
+  "Hôm nay" xếp lớp sáng trước, "Sao chép lịch" ghi rõ buổi.
+- Lớp của tôi chưa đọc được thì báo ngay trên lịch, nút "Đọc lại lớp này" chỉ đọc đúng các lớp đó
+  (không phải bấm "Cập nhật tất cả").
+- **Tự xếp theo TKB** ở Lịch giảng dạy (`teaching_timetable`): lớp vào đúng buổi + nhãn "TKB tiết N", sắp theo tiết;
+  lớp dạy cả sáng lẫn chiều cùng ngày (vd 4/1 tiết 3 + tiết 7) tách 2 thẻ. Tuần chưa nhập TKB dùng TKB gần nhất
+  (TKB bàn giao). Lớp không có trong TKB (dạy bù) mới phải xếp tay.
+- Chi phí Firestore (`js/so-lop/tkb-source.js`, lưu `eduquiz_tkb_v1`): 1 get/tuần đang xem, giữ 6 giờ (tuần đã qua
+  30 ngày, kể cả tuần không có TKB); máy chưa có TKB nào → 1 lần `listByTeacher` (≤ 1 lần/3 ngày); Admin không có
+  `teacherCode` → 1 lần danh sách GV (giữ 3 ngày). Đo bằng test E2E: mở lần đầu 3 lượt, đổi tuần qua lại chỉ thêm
+  1 lượt/tuần mới, tải lại trang 0 lượt. Lỗi mạng: không thử lại trong 30 phút.
+- Xếp tay chỉ lưu localStorage (`eduquiz_solop_v1.slots`), không Firebase, không `teacher_sync`.
+  Test: `so-lop-core.test.js` (buoiOf, buoiGrid, classKey, tkbCells, tkbFor), `tkb-source.test.js` (đếm lượt đọc).
+
+## 10/11/2026 (12) — Điền bảng tuần: tạo tab tuần sau tự động từ sổ lớp của điều phối (K3/K4/K5)
+
+**Vấn đề:** "Tạo bảng tuần mới" chỉ lấy lớp có ô NGÀY trên sổ lớp. Điều phối thường chỉ ghi ngày tới tuần hiện tại, nên ở tuần 11 có 10/18 lớp bị thiếu: 8 lớp chưa có ngày sau tuần 10, còn 4A5 và 5A6 bỏ trống ngày từ 27/10. Ngoài ra phải đọc tab tuần trước mỗi lần, số tuần không tự chuyển sang tuần mới, và khối báo giảng K8:M12 phải gõ tay.
+
+**Đã sửa (js/so-dau-bai/sdb-weekly.js, sdb-app.js, css/so-dau-bai.css):**
+- `weekSessions`: tiết có NGÀY giữ đúng ngày. Tiết sau tiết có ngày cuối cùng, kể cả tiết đã tick hoàn thành, được xếp tiếp theo lịch hằng tuần của lớp: số tiết mỗi tuần và các thứ dạy lấy từ sổ lớp, ô THỨ được ưu tiên. Bảng đánh dấu các tiết này là "dự kiến". Khi điều phối ghi NGÀY, ngày thật sẽ thay cho ngày dự kiến.
+- Tiết TKB của tab tuần đã đọc được lưu trên máy (`sodaubai_solop.tkb`), nên các tuần sau chỉ cần bấm **Đọc sổ lớp**. Lớp đổi thứ dạy thì lấy theo tiết thứ mấy trong tuần và đánh dấu "?" để kiểm tra.
+- Tuần 01 tự chỉnh theo tiêu đề tab ("Tuần: 10 (Từ ngày 09/11/2026…)"). Bảng tạo tuần tự chọn tuần kế tiếp.
+- Thêm nút sao chép **khối báo giảng K8:M12**: ngày đầu tuần, tiết PPCT và 2 bài của mỗi khối.
+- Tab lớp bị lỗi mạng có nút **Đọc lại N tab lỗi**, chỉ đọc lại các tab đó.
+
+**Test với dữ liệu thật của 3 sổ điều phối (route giả, không gọi Google):**
+
+| | Trước | Sau |
+|---|---|---|
+| Tuần 10 | 36 tiết | 36 tiết; khối K8:M12 trùng bảng trường |
+| Tuần 11 / 12 | thiếu 10 lớp | 36 / 36 tiết, 20 tiết "dự kiến" |
+| Bắt buộc đọc tab tuần mỗi lần | có | không (TKB đã lưu) |
+| 1 tab lỗi | đọc lại 21 tab | đọc lại 1 tab |
+
+Firebase: 0. Apps Script: 0. Chỉ đọc CSV công khai của Google Sheet như trước.
+
+## 10/11/2026 (11) — Sổ đầu bài: tự điền buổi/tiết khi TKB chưa có lớp; gợi ý nhận xét Ưu điểm/Hạn chế ngay khi ghi tiết
+
+Thầy cô thấy (so-dau-bai.html, khung Ghi tiết dạy — nhất là khi mở từ nút "Ghi sổ" của Điểm danh):
+- Lớp có buổi trên sổ lớp nhưng **TKB của sổ chưa có lớp đó hôm đó**: trước luôn điền "Tiết 1 buổi sáng" (mọi lớp như vậy
+  cùng chồng lên Sáng 1). Nay đoán theo thứ tự, chỉ từ dữ liệu trên máy:
+  1. lần gần nhất (8 tuần) đã ghi lớp đó **cùng thứ** — gồm cả tiết lưu từ "Điền bảng tuần" của trường;
+  2. **giờ điểm danh** ở trang Điểm danh (cùng ngày): trước 13:15 là Sáng, sau là Chiều; tiết theo giờ vào tiết
+     (Cài đặt → mới: "Vào tiết 1 buổi sáng/chiều", "Phút mỗi tiết", "Ra chơi sau tiết 2"; mặc định 7:15 · 14:00 · 35 · 20);
+  3. không có gì thì như cũ, nhưng chọn tiết còn trống (không chồng lên lớp khác).
+  Khung ghi hiện dòng "Buổi, tiết theo giờ điểm danh 14:50 — kiểm tra lại" và mở sẵn ô buổi/tiết; danh sách hiện "Tiết 2?".
+- **Nhận xét gợi ý**: tiết mới tự điền Ưu điểm + Hạn chế theo bài (ngân hàng nhận xét IC3 + "Kiến thức cần đạt" của bài nếu
+  đã đọc bảng tuần trước đó), có nhắc vắng nhiều. Nút **Gợi ý khác** đổi câu. Đổi bài / đổi danh sách vắng thì gợi ý theo;
+  ô thầy cô đã tự gõ không bị ghi đè. Tiết đã ghi trước đây không tự đổi.
+- Điểm danh ghi lại giờ bắt đầu điểm danh của từng buổi (chỉ trên máy, xoá sau 14 ngày) để Sổ đầu bài dùng.
+
+Test (Playwright, sổ lớp giả 3 lớp dạy thứ 3 + TKB chỉ có 4.4; bản cũ → mới):
+| Lớp | Bản cũ | Bản mới |
+|---|---|---|
+| 5.2 (thứ 3 tuần trước ghi Chiều tiết 3) | Sáng 1 | Chiều 3 (theo lần trước) |
+| 5.5 (điểm danh lúc 14:50) | Sáng 1 | Chiều 2 (theo giờ) |
+| 4.1 (không có dữ liệu) | Sáng 1 (chồng 2 lớp kia) | Sáng 1, ghi "chưa rõ tiết" |
+| Nhận xét khi mở từ Điểm danh | trống | điền sẵn, "Gợi ý khác" đổi được, chữ tự gõ giữ nguyên khi đổi bài |
+
+Firebase: 0 (sổ, TKB, sổ lớp, ngân hàng nhận xét đều trên máy / file tĩnh). Apps Script: 0. Không đọc mạng thêm khi mở khung ghi.
+
+## 10/11/2026 (10) — Đấu trường, Chơi một mình: lỗi mạng báo đúng + Thử lại phần lỗi; 2 tab không mất xu; giao diện phẳng
+
+Học sinh thấy (arena.html, thẻ Chơi một mình):
+- Công tắc Hành trình IC3 | Đấu tự do thành thanh chọn phẳng cùng kiểu thanh vai (bỏ viền nâu dày, bóng khối, vòng tròn icon).
+  Nút Linh vật và ô ảnh đại diện bỏ khối nổi; icon tiêu đề thẻ nhạt đi. Thẻ chế độ có tranh giữ nguyên.
+- Tải bộ câu lỗi mạng: báo "Không tải được bộ câu này" + nút **Thử lại**. Bộ "Trộn mọi chủ đề" thiếu vài phần thì vẫn chơi
+  được phần đã tải, có báo thiếu.
+
+Lỗi đã sửa (Playwright, chặn data/ic3 giả lỗi mạng; bản cũ đều tái hiện được):
+| Tình huống | Trước | Sau |
+|---|---|---|
+| Mạng lỗi khi tải bộ câu | báo nhầm "không có câu thuộc dạng đã chọn", tự mở mục Dạng câu, không có cách tải lại ngoài F5 | báo lỗi mạng + Thử lại (chỉ tải phần lỗi) |
+| Đổi bài → Trộn mọi chủ đề → bài cũ (3 lần đổi) | 9 lượt tải file | 1 (file đã tải nhớ trong phiên) |
+| Hành trình: chặng tải lỗi | "Chủ đề này chưa có câu hỏi" | báo lỗi mạng, bấm lại chỉ tải phần lỗi |
+| 2 tab Đấu trường: tab 1 được +25 xu, tab 2 đổi cài đặt | xu về 8 (mất 25) | 33 ở cả 2 tab |
+| Giáo viên: tài khoản bị từ chối, đổi tab rồi quay lại | kẹt "Đang kiểm tra tài khoản..." | giữ đúng thông báo |
+
+Firebase: không thêm lượt nào. Chơi một mình vẫn 0 Firebase; cổng Giáo viên vẫn chỉ nghe đăng nhập 1 lần.
+Apps Script: không đổi.
+
+## 10/11/2026 (9) — Điểm danh: 1 lớp lỗi chỉ đọc lại lớp đó; nháp không còn ghi nhầm lớp/nhầm bạn; giao diện gọn
+
+Thầy cô thấy (diem-danh.html):
+- "Hôm nay": mỗi lớp 1 dòng mảnh, kèm nhãn **chưa điểm danh / nháp chưa ghi / đã điểm danh**; hết thanh cuộn lồng trong thẻ.
+  Nút chữ nhỏ "Ghi sổ" · "Điểm danh" (lớp đã điểm danh thì nút nhạt đi). Bỏ icon trước tiêu đề mục, nút góc 8px, viền 1px.
+- Thẻ Các lớp: lớp đọc lỗi có chữ đỏ + nút **Đọc lại lớp này** (chỉ đọc đúng lớp đó). Dòng trên báo "N lớp lỗi" riêng.
+- Đang mở lớp khác (còn tải): danh sách lớp cũ mờ đi.
+- Ghi vào Sheet mà trong lúc chờ có sửa thêm: phần sửa thêm vẫn là nháp, có nhắc "bấm Ghi lần nữa".
+- "Đồng bộ ngay" khoá 20 giây sau mỗi lần bấm.
+
+Lỗi dữ liệu / bất đồng bộ đã sửa (Playwright, Sheet + Apps Script giả; bản cũ đều tái hiện được):
+| Tình huống | Trước | Sau |
+|---|---|---|
+| Bản đọc trên máy bị dọn (bộ nhớ đầy / Sổ đầu bài dọn) rồi mở trang | đọc lại **cả 6/6 lớp** (sổ riêng tư: mỗi lượt là Apps Script) | chỉ 4 lớp của tôi |
+| Chọn lớp B (đang tải) rồi bấm tên ở danh sách lớp A còn hiện | nháp ghi vào **lớp B** theo dòng của lớp A | vào lớp A (lớp đang hiện) |
+| Sửa thêm 1 bạn trong lúc đang ghi vào Sheet | mất phần sửa thêm | còn trong nháp |
+| Điều phối chèn 1 dòng học sinh, nháp cũ còn | **bạn mới chèn bị đánh vắng** | nháp dòng lệch tên bị bỏ |
+| 2 tab Điểm danh: tab 1 điểm danh, tab 2 bấm ★ | nháp tab 1 mất | còn |
+- 2 tab: tab cũ lưu đè cả link sổ cũ → teacher-sync coi là "thay đổi" và ghi đè lên `teacher_sync/{uid}` (1 lượt ghi
+  Firestore + mất link mới). Nay tab nhận bản lưu của tab kia (sự kiện storage) trước khi lưu.
+- Cùng 1 lớp đang đọc (mở lớp + "Cập nhật tất cả" + tự đọc lại) → dùng chung 1 lượt, không đọc trùng.
+- Lần mở lớp cũ về muộn (chờ tên bài) không đè lớp mới; bảng Các lớp vẽ lần cũ về muộn cũng bỏ.
+- Bản CSV lưu trên máy bỏ ô trống cuối dòng (giữ số dòng): lớp mẫu 3.176 → 562 ký tự, ít bị dọn vì đầy bộ nhớ.
+  Sổ đầu bài, Trang quản lý đọc bản này như cũ.
+- Nháp lưu thêm tên học sinh theo dòng; Sổ đầu bài (vắng lấy từ nháp) cũng bỏ dòng lệch tên.
+
+Firebase: không thêm lượt nào (đọc Sheet là link Google; teacher-sync vẫn 1 lượt đọc/2 giờ). Bớt: ghi đè `teacher_sync` từ tab cũ.
+Apps Script: không đổi máy chủ; sổ riêng tư bớt lượt khi bản đọc bị dọn hoặc 1 lớp lỗi.
+
 ## 10/11/2026 (8) — Đấu trường: màn vào phòng gọn; đường dự phòng không còn sót listener Firestore
 
 Học sinh thấy (arena.html):

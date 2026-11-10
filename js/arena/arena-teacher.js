@@ -77,6 +77,9 @@
 
   async function check() {
     if (T.busy || T.state === 'ok') return;
+    // Đã nghe đăng nhập (onAuthReady): trạng thái từ chối/chờ duyệt/chưa đăng nhập tự cập nhật khi tài khoản đổi.
+    // Trước đây mỗi lần quay lại tab Giáo viên lại set('checking') mà không có gì báo lại → kẹt "Đang kiểm tra" mãi.
+    if (T.listening && T.state !== 'error') return;
     T.busy = true;
     set('checking');
     try {

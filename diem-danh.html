@@ -51,14 +51,14 @@
 
   <!-- LỊCH DẠY -->
   <div class="dd-panel" id="ddPanelWeek" data-panel="week" role="tabpanel">
-    <!-- Hôm nay + việc cần làm: mở thẳng điểm danh đúng buổi -->
-    <div class="dd-two dd-today" id="ddToday" hidden>
+    <!-- Màn rộng: cột trái Hôm nay + Việc cần làm, lịch tuần chiếm phần còn lại; màn hẹp xếp chồng -->
+    <div class="dd-today" id="ddToday" hidden>
       <section class="dd-card" aria-label="Hôm nay">
-        <div class="dd-step"><h2><i class="fa-solid fa-sun" aria-hidden="true"></i> Hôm nay <small id="ddTodayDate"></small></h2></div>
+        <div class="dd-step"><h2>Hôm nay <small id="ddTodayDate"></small></h2></div>
         <ul class="dd-tasks" id="ddTodayList"></ul>
       </section>
       <section class="dd-card" aria-label="Việc cần làm">
-        <div class="dd-step"><h2><i class="fa-solid fa-list-check" aria-hidden="true"></i> Việc cần làm <small id="ddTodoN"></small></h2></div>
+        <div class="dd-step"><h2>Việc cần làm <small id="ddTodoN"></small></h2></div>
         <ul class="dd-tasks" id="ddTodoList"></ul>
       </section>
     </div>
@@ -71,13 +71,17 @@
         <span class="dd-grow" id="ddWeekWho"></span>
         <button type="button" class="dd-small" id="ddWeekCopy"><i class="fa-solid fa-copy" aria-hidden="true"></i> Sao chép lịch</button>
       </div>
+      <p class="dd-weekwarn" id="ddWeekWarn" hidden></p>
       <div id="ddWeekGrid"></div>
       <p class="dd-legend"><span class="k-done">Đã dạy</span> <span class="k-planned">Chưa tick hoàn thành</span> <span class="k-expected">Dự kiến</span> <span class="k-missing">Sheet chưa cập nhật</span></p>
       <div class="dd-month"><p class="dd-hint" id="ddMonth"></p>
         <button type="button" class="dd-small" id="ddMonthCopy" hidden title="Mỗi tiết đã tick Hoàn thành 1 dòng: ngày, trường, lớp, tiết, bài — dán vào Excel"><i class="fa-solid fa-file-excel" aria-hidden="true"></i> Sao chép bảng công tháng</button></div>
       <details class="dd-help"><summary>Lịch này được tính thế nào?</summary>
-        <p>Lấy từ ngày dạy và tên GV trên Sheet của từng lớp (Sheet không có giờ học). Lớp nhiều GV dạy luân phiên chỉ tính tiết có tên GV đó.
-          "Dự kiến" là thứ GV thường dạy lớp đó trong các buổi gần nhất. "Sheet chưa cập nhật": ngày thường dạy đã qua mà lớp chưa có buổi nào. Bấm 1 lớp để mở điểm danh.</p></details>
+        <p>Lấy từ ngày dạy và tên GV trên Sheet của từng lớp. Lớp nhiều GV dạy luân phiên chỉ tính tiết có tên GV đó.
+          "Dự kiến" là thứ GV thường dạy lớp đó trong các buổi gần nhất. "Sheet chưa cập nhật": ngày thường dạy đã qua mà lớp chưa có buổi nào. Bấm tên lớp để mở điểm danh.</p>
+        <p>Buổi <b>Sáng/Chiều</b> và tiết lấy từ TKB ở <a href="teaching-schedule.html">Lịch giảng dạy</a> (khớp lớp "4A1" với "4/1" theo thứ).
+          Tuần chưa nhập TKB thì dùng TKB gần nhất. Mỗi tuần đọc TKB 1 lần rồi lưu trên máy (tuần hiện tại 6 giờ), nên Admin vừa sửa TKB thì vài giờ sau mới thấy.
+          Lớp không có trong TKB (dạy bù...) thì bấm "Sáng" hoặc "Chiều" ở hàng "Chưa xếp buổi" (⇅ để đổi) — xếp 1 lần, các tuần sau tự theo, chỉ lưu trên máy này.</p></details>
     </section>
   </div>
 
@@ -97,7 +101,7 @@
       <details class="dd-help"><summary>Ghi chú</summary>
         <p>Bấm ☆ để đánh dấu lớp của tôi (lớp có tên thầy cô ở ô TÊN GV tự có ★). Chữ đỏ ở cột "Gần nhất": hơn 9 ngày chưa có tiết mới.
           "Cập nhật tất cả" đọc từng tab lớp trên Google Sheet (không dùng Firebase); bản đọc giữ trên máy 6 giờ.
-          Lớp của tôi tự đọc lại khi mở trang nếu bản trên máy đã cũ hơn 6 giờ.
+          Lớp của tôi tự đọc lại khi mở trang nếu bản trên máy đã cũ hơn 6 giờ. Lớp nào đọc lỗi thì bấm "Đọc lại lớp này" ở dòng đó — chỉ đọc đúng lớp đó.
           "Học sinh cần chú ý": vắng từ 3 tiết, hoặc vắng 2 tiết liền gần nhất (không tính bạn đã nghỉ luôn).</p></details>
     </section>
   </div>
@@ -227,6 +231,13 @@
 <script src="js/auth.js"></script>
 <script src="js/auth-guard.js"></script>
 <script src="js/so-lop/so-lop-core.js"></script>
+<!-- TKB ở Lịch giảng dạy (teaching_timetable) để xếp Sáng/Chiều tự động — 1 lượt đọc/tuần đang xem, lưu trên máy (tkb-source.js) -->
+<script src="js/repositories/base-repository.js"></script>
+<script src="js/models/teaching-schedule.model.js"></script>
+<script src="js/repositories/teaching-schedule-repository.js"></script>
+<script src="js/models/teaching-timetable.model.js"></script>
+<script src="js/repositories/teaching-timetable-repository.js"></script>
+<script src="js/so-lop/tkb-source.js"></script>
 <script src="js/name-picker/np-lessons.js"></script>
 <script src="js/so-dau-bai/sdb-sources.js"></script>
 <script src="js/services/teacher-sync.js"></script>
