@@ -262,6 +262,8 @@
 
   function onResult(game, session) {
     if (!cur || game !== cur.g.id) return;
+    // Đã chốt ván này (trò gửi "result" 2 lần — vd bấm Chơi lại trong khung trò): không cộng xu/sao lần nữa
+    if (cur.race && cur.race.settled) return;
     const a = (session && session.arena) || {};
     if (a.final === false) { // Chim Vượt Ải qua 1 màn: mốc giữa chừng, chưa chốt
       if (D) D.banner('QUA MÀN ' + (a.level || ''), { tone: 'up', icon: 'fa-flag-checkered', sub: fmt(M.points(game, session)) + ' điểm', ms: 1200 });

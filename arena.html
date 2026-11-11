@@ -165,6 +165,8 @@
           <button type="button" data-v="easy">Dễ</button><button type="button" data-v="normal">Vừa</button><button type="button" data-v="hard">Khó</button></div></div>
         <div class="ar-field"><span>Giây mỗi câu</span><div class="ar-chips" id="arSecs">
           <button type="button" data-v="10">10</button><button type="button" data-v="20">20</button><button type="button" data-v="30">30</button></div></div>
+        <div class="ar-field only-teacher ar-roommax-field"><span>Học sinh tối đa</span><div class="ar-chips" id="arRoomMax">
+          <button type="button" data-v="30">30</button><button type="button" data-v="45">45</button><button type="button" data-v="60">60</button><button type="button" data-v="80">80</button></div></div>
       </div>
       <!-- Tuỳ chọn ít dùng: thu gọn để màn chọn ngắn lại; dòng tóm tắt cho biết đang bật gì. -->
       <details class="ar-more" id="arMore">
@@ -187,12 +189,10 @@
 
     <!-- ── GIÁO VIÊN: tạo phòng ── -->
     <div class="ar-card ar-room-card only-teacher needs-teacher" id="arRoomCard">
-      <h2 class="ar-h2"><span class="ar-step" aria-hidden="true">3</span><i class="fa-solid fa-users"></i> Tạo phòng cho cả lớp <span class="ar-badge">Nhiều người chơi</span></h2>
+      <!-- 11/2026: nút "Tạo phòng" + "Số học sinh tối đa" chuyển lên thẻ 2 (thanh dính đáy) — trước có 2 nút tạo phòng giống hệt nhau.
+           Thẻ này chỉ còn: phòng đang dở, cách tổ chức, lịch sử phòng trên máy. -->
+      <h2 class="ar-h2 ar-h2-quiet"><i class="fa-solid fa-users"></i> Phòng cả lớp</h2>
       <div class="ar-room-resume" id="arRoomResume" hidden></div>
-      <div class="ar-field"><span>Số học sinh tối đa</span><div class="ar-chips ar-chips-inline" id="arRoomMax">
-        <button type="button" data-v="30">30</button><button type="button" data-v="45">45</button><button type="button" data-v="60">60</button><button type="button" data-v="80">80</button></div></div>
-      <button type="button" class="ar-btn ar-btn-play ar-host-go" id="arHostBtn"><i class="fa-solid fa-tower-broadcast"></i> Tạo phòng và lấy mã</button>
-      <p class="ar-hint" id="arRoomModeNote"></p>
       <details class="ar-more ar-more-how" id="arRoomHow">
         <summary><i class="fa-solid fa-circle-question" aria-hidden="true"></i> Cách tổ chức phòng (3 bước)</summary>
         <ol class="ar-howto" aria-label="Các bước">

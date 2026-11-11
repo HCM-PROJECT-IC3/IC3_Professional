@@ -60,7 +60,7 @@ a{color:inherit}
   background:var(--neu-surface);border:none;border-radius:var(--radius-sm);
   padding:.8rem;margin-bottom:1.2rem;box-shadow:var(--shadow-neu-raised);
 }
-.filters input[type=text],.filters select{
+.filters input[type=text],.filters input[type=search],.filters select{
   font-family:inherit;font-size:.85rem;padding:.5rem .8rem;
   border-radius:999px;border:none;background:var(--neu-surface);color:var(--text);
   box-shadow:var(--shadow-neu-pressed);
@@ -95,7 +95,7 @@ a{color:inherit}
   box-shadow:2px 3px 6px rgba(0,0,0,.6),-1px -1px 3px rgba(255,255,255,.08);
 }
 .theme-toggle:hover{box-shadow:var(--shadow-neu-raised),0 0 0 3px rgba(47,64,178,.15)}
-.filters input[type=text]{flex:1;min-width:180px}
+.filters input[type=text],.filters input[type=search]{flex:1;min-width:180px}
 /* Tên minitest dài (vd "Bài 12. …") làm select giãn quá bề ngang điện thoại. */
 .filters select{max-width:100%;min-width:0}
 .chip-group{display:flex;gap:.4rem;flex-wrap:wrap}
@@ -267,3 +267,13 @@ a{color:inherit}
 html .btn { border-radius: 8px; }
 html .btn-primary { box-shadow: none; }
 html .btn-ghost { border: 1.5px solid var(--border); box-shadow: none; }
+
+/* ── 11/2026 ── */
+details.im-help { cursor: default; }
+details.im-help summary { cursor: pointer; line-height: 1.5; }
+details.im-help[open] summary { margin-bottom: .4rem; }
+#tabWarn[hidden] { display: none; }
+.im-loadfail { max-width: 640px; margin: 0 auto; line-height: 1.6; color: var(--text); font-weight: 500; }
+.im-loadfail .btn { margin-top: .6rem; }
+.is-publishing { opacity: .55; pointer-events: none; }
+#exportStaticBtn.has-pending { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--yellow, #f6a723); }

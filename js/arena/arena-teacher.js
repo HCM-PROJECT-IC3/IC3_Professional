@@ -34,7 +34,7 @@
     who.hidden = T.state !== 'ok';
     if (T.state === 'ok') {
       gate.innerHTML = '';
-      who.innerHTML = `<span class="ar-teacher-ava" aria-hidden="true">🧑‍🏫</span>
+      who.innerHTML = `<span class="ar-teacher-ava" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
         <span><b>${esc(T.name || 'Giáo viên')}</b><small>${T.role === 'admin' ? 'Quản trị viên' : 'Giáo viên'} · đã xác minh <i class="fa-solid fa-circle-check"></i></small></span>
         <button type="button" class="ar-btn ar-btn-ghost ar-btn-sm" id="arTeacherOut"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button>`;
       $('arTeacherOut').addEventListener('click', logout);

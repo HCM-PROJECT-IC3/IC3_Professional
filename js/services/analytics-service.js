@@ -121,10 +121,57 @@
     const byDay = {};
     results.forEach((r) => {
       if (!r.submittedAtMs) return;
-      const day = new Date(r.submittedAtMs).toISOString().slice(0, 10);
+      // Ngày theo GIỜ MÁY (trước: toISOString = giờ UTC → bài nộp 0h–7h sáng giờ VN bị tính sang hôm trước)
+      const d = new Date(r.submittedAtMs);
+      const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       (byDay[day] = byDay[day] || []).push(r);
     });
     return Object.keys(byDay).sort().map((day) => ({ date: day, avg: avgScore(byDay[day]), count: byDay[day].length }));
+  }
+
+  /** Điểm TB theo TUẦN (thứ Hai, giờ máy) → [{ weekMs, avg, count }] tăng dần. Theo ngày thì ngày ít bài làm đường
+   *  dao động 20↔100 vô nghĩa; gộp tuần cho xu hướng thật. count để biết điểm đó dựa trên bao nhiêu bài. */
+  function trendByWeek(results) {
+    const by = new Map();
+    results.forEach((r) => {
+      if (!r.submittedAtMs || typeof r.score !== 'number') return;
+      const k = weekStartMs(r.submittedAtMs);
+      if (!by.has(k)) by.set(k, []);
+      by.get(k).push(r);
+    });
+    return [...by.keys()].sort((a, b) => a - b).map((k) => ({ weekMs: k, avg: avgScore(by.get(k)), count: by.get(k).length }));
+  }
+
+  /** Phân bố điểm 4 mức để đọc nhanh: dưới 50 · 50–69 (chưa đạt) · 70–84 · 85–100 → [{ label, min, max, count }]. */
+  function scoreBands(results) {
+    const bands = [
+      { label: 'Dưới 50%', min: 0, max: 49.999 }, { label: '50–69%', min: 50, max: 69.999 },
+      { label: '70–84%', min: 70, max: 84.999 }, { label: '85–100%', min: 85, max: 100 },
+    ].map((b) => Object.assign(b, { count: 0 }));
+    results.forEach((r) => {
+      if (typeof r.score !== 'number') return;
+      const s = Math.max(0, Math.min(100, r.score));
+      const b = bands.find((x) => s >= x.min && s <= x.max) || bands[bands.length - 1];
+      b.count++;
+    });
+    return bands;
+  }
+
+  /** Thống kê theo lớp: điểm TB + số bài nộp + sĩ số (roster) + số HS đã làm ≥ 1 bài → tham gia %.
+   *  [{ cls, avg, count, roster, submitted, participation }] — avg/participation null khi không có dữ liệu.
+   *  Học sinh khớp theo tên + lớp (không phân biệt hoa thường/khoảng trắng) như cách đối chiếu roster ↔ kết quả. */
+  function classStats(results, students = []) {
+    const norm = (s) => String(s || '').normalize('NFC').replace(/\s+/g, ' ').trim().toLowerCase();
+    const m = new Map();
+    const get = (cls) => { const k = String(cls || '').trim() || '—'; if (!m.has(k)) m.set(k, { cls: k, rs: [], roster: 0, who: new Set() }); return m.get(k); };
+    students.forEach((st) => { get(st.className).roster++; });
+    results.forEach((r) => { const g = get(r.studentClass); g.rs.push(r); g.who.add(norm(r.studentName)); });
+    return [...m.values()].map((g) => {
+      const rosterNames = new Set(students.filter((st) => (String(st.className || '').trim() || '—') === g.cls).map((st) => norm(st.name)));
+      const submitted = g.roster ? [...g.who].filter((n) => rosterNames.has(n)).length : g.who.size;
+      return { cls: g.cls, avg: avgScore(g.rs), count: g.rs.length, roster: g.roster, submitted,
+        participation: g.roster ? Math.round((submitted / g.roster) * 100) : null };
+    }).sort((a, b) => compareNatural(a.cls, b.cls));
   }
 
   /** 0h thứ Hai của tuần chứa thời điểm ts (giờ máy). */
@@ -255,6 +302,7 @@
   }
 
   global.EduAnalytics = {
+    trendByWeek, scoreBands, classStats,
     schoolComparison, progressTrends, reviewFlags,
     avgScore, avgTime, passRate, completionRate,
     topStudents, studentsNeedingSupport, classLeaderboard, weekStartMs,

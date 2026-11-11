@@ -139,7 +139,10 @@
     }).join('');
   }
 
+  let paintedNick = null; // biệt danh của lần vẽ gần nhất
+  const nickNow = () => String(($('arNick') && $('arNick').value) || '').trim().toLowerCase();
   function paint(focusNext) {
+    paintedNick = nickNow();
     const key = mapKey();
     if (!$('arQuestMap')) return;
     $('arQuestHead').innerHTML = headHtml(key);
@@ -199,20 +202,30 @@
     sheetNode = null;
     if (back) back.focus();
   }
+  let going = false;
   async function go() {
     const n = sheetNode;
-    if (!n) return;
+    if (!n || going) return;
     const nick = A.setNick($('arNick').value || '');
     if (!nick) { closeSheet(); A.toast('Nhập biệt danh trước để lưu sao và xu của em nhé!'); $('arNick').focus(); return; }
     const key = mapKey(), lv = levelOf(key), r = Q.regionById(n.region);
     closeSheet();
     if (n.kind === 'mini') { if (global.EduArenaMini) global.EduArenaMini.openVs(n.game); return; }
     A.toast('Đang tải câu hỏi ' + (r.final ? 'trận cuối' : 'chủ đề ' + r.name) + '...');
-    await A.playQuest({
-      cat: lv.cat, lvl: lv.lvl, mt: r.mt, mode: r.mode, n: Q.QUIZ_N,
-      title: 'Hành trình · ' + (r.final ? 'Trùm cuối' : 'Vùng ' + r.no + ': ' + r.name),
-      quest: { node: n.id, map: key },
-    });
+    // Trong lúc tải: bản đồ mờ + không bấm được chặng khác (1 lượt vào trận duy nhất)
+    going = true;
+    const map = $('arQuestMap');
+    if (map) { map.classList.add('is-loading'); map.setAttribute('aria-busy', 'true'); }
+    try {
+      await A.playQuest({
+        cat: lv.cat, lvl: lv.lvl, mt: r.mt, mode: r.mode, n: Q.QUIZ_N,
+        title: 'Hành trình · ' + (r.final ? 'Trùm cuối' : 'Vùng ' + r.no + ': ' + r.name),
+        quest: { node: n.id, map: key },
+      });
+    } finally {
+      going = false;
+      if (map) { map.classList.remove('is-loading'); map.removeAttribute('aria-busy'); }
+    }
   }
 
   // ============================================================
@@ -272,7 +285,7 @@
   function init() {
     const map = $('arQuestMap');
     if (map) {
-      map.addEventListener('click', (e) => { const b = e.target.closest('.ar-q-node'); if (b) openSheet(b.dataset.node); });
+      map.addEventListener('click', (e) => { const b = e.target.closest('.ar-q-node'); if (b && !going) openSheet(b.dataset.node); });
       $('arQuestHead').addEventListener('click', (e) => {
         const b = e.target.closest('.ar-q-lv');
         if (!b) return;
@@ -283,7 +296,9 @@
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
     }
     document.addEventListener('arena:role', (e) => { if (e.detail && e.detail.role === 'minigame') paint(true); });
-    $('arNick').addEventListener('change', () => paint());
+    // Gõ biệt danh rồi bấm ngay 1 chặng: ô biệt danh mất focus bắn "change" giữa lúc nhấn chuột → trước đây vẽ lại cả bản đồ
+    // (id SVG cảnh nền đổi mỗi lần vẽ) làm nút đang bấm bị thay → mất cú bấm, phải bấm lần 2. Nay chỉ vẽ khi biệt danh đổi thật.
+    $('arNick').addEventListener('change', () => { if (nickNow() !== paintedNick) paint(); });
     // Cảnh lớp học vẽ sau thẻ vào phòng: bỏ 10/11/2026 (màn vào phòng gọn, không tranh trang trí).
     paint();
   }

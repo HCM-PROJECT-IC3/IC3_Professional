@@ -174,20 +174,46 @@
     open();
   }
   /** Đường dự phòng Firestore cho học sinh không nối thẳng được (mở khi mã phòng đã chốt). */
+  // 11/2026: startRelay được gọi 2 lần (ngay khi tạo phòng + khi PeerJS mở). Firebase tải chậm hơn PeerJS thì lần 2
+  // tới lúc lần 1 CHƯA xong (H.relay còn null) → trước đây mở đường dự phòng thứ 2: thêm 1 lượt ghi, và listener
+  // onSnapshot của đường 1 không bao giờ đóng → mỗi lần em dự phòng gửi tin bị tính đọc 2 lần suốt trận.
+  // Nay: đang mở cho mã này (H.relayBusy) thì bỏ qua; về muộn mà đã có đường khác thì đóng đường thừa.
   function startRelay(room) {
-    if (!global.EduArenaRelay || roomCfg().relay === false || (H.relay && H.relayCode === room.code)) return;
+    if (!global.EduArenaRelay || roomCfg().relay === false) return;
+    if (H.relayCode === room.code && (H.relay || H.relayBusy)) return;
     if (H.relay) { H.relay.close(); H.relay = null; }
-    H.relayCode = room.code;
+    const code = room.code;
+    H.relayCode = code;
     H.relayErr = null;
+    H.relayBusy = true;
     H.slots = newRelaySlots();
-    global.EduArenaRelay.host(room.code, onConn, () => !!H.room && H.room.phase === 'lobby')
-      .then((relay) => { if (H.room === room && H.relayCode === room.code) H.relay = relay; else relay.close(); })
+    const mine = () => H.room === room && H.relayCode === code;
+    global.EduArenaRelay.host(code, onConn, () => !!H.room && H.room.phase === 'lobby')
+      .then((relay) => {
+        if (mine() && !H.relay) H.relay = relay; else relay.close();
+      })
       .catch((e) => {
         console.warn('[Phòng cả lớp] Không mở được đường dự phòng:', e);
-        if (H.room !== room) return;
+        if (!mine()) return;
         H.relayErr = e;
-        if (room.phase === 'lobby') renderHost();
+      })
+      .finally(() => {
+        if (H.relayCode === code) H.relayBusy = false;
+        if (mine() && room.phase === 'lobby') renderHostLobbyNet();
       });
+  }
+  /** Chỉ mở lại đường dự phòng (1 lượt ghi) — không đóng/tạo lại phòng, học sinh đã vào giữ nguyên. */
+  function retryRelay() {
+    const room = H.room;
+    if (!room || H.relay || H.relayBusy) return;
+    startRelay(room);
+    renderHostLobbyNet();
+  }
+  /** Vẽ lại riêng dòng trạng thái đường dự phòng ở sảnh chờ (không vẽ lại cả màn → không mất QR/ô đang bấm). */
+  function renderHostLobbyNet() {
+    const box = $('arRRelay');
+    // Chưa có sảnh chờ (PeerJS chưa mở): chỉ vẽ cả màn khi có lỗi cần báo — như trước
+    if (box) box.innerHTML = relayStatusHtml(); else if (H.relayErr && H.room && H.room.phase === 'lobby') renderHost();
   }
   // ── Hạn mức đường dự phòng: Firestore DÙNG CHUNG cả dự án (dashboard, lịch dạy, đăng nhập…) ──
   // Mỗi em dự phòng ~21 ghi + ~66 đọc/trận 20 câu. Nhiều giáo viên cùng mở phòng không được ăn hết
@@ -205,8 +231,12 @@
     });
   }
   function relayStatusHtml() {
+    if (H.relayBusy && !H.relay && H.relayTried) return '<p class="ar-hint ar-room-relayinfo"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Đang mở lại đường dự phòng...</p>';
     if (H.relayErr) {
-      return `<p class="ar-hint ar-room-norelay">⚠️ Chưa mở được đường dự phòng (${esc(H.relayErr.code || H.relayErr.message || 'lỗi')}): học sinh <b>dùng 4G hoặc Wi-Fi khác</b> máy thầy cô có thể không vào được — cho cả lớp dùng <b>chung Wi-Fi</b> với máy này, hoặc nhờ quản trị publish firestore.rules mới.</p>`;
+      const code = String(H.relayErr.code || '');
+      // Thử lại chỉ có ích khi lỗi mạng/tạm thời; sai quyền (rules) hoặc chưa đăng nhập thì thử lại vẫn hỏng → không hiện nút
+      const canRetry = !/permission-denied|unauthenticated|failed-precondition/.test(code);
+      return `<p class="ar-hint ar-room-norelay">⚠️ Chưa mở được đường dự phòng (${esc(code || H.relayErr.message || 'lỗi')}): học sinh <b>dùng 4G hoặc Wi-Fi khác</b> máy thầy cô có thể không vào được — cho cả lớp dùng <b>chung Wi-Fi</b> với máy này${canRetry ? '' : ', hoặc nhờ quản trị publish firestore.rules mới'}.${canRetry ? ' <button type="button" class="ar-retry" data-act="relay">Thử mở lại đường dự phòng</button>' : ''}</p>`;
     }
     const st = H.slots && H.slots.state;
     if (!st || (!st.cids.size && !st.out)) return '';
@@ -501,7 +531,7 @@
     const peer = H.peer;
     setTimeout(() => { try { peer && peer.destroy(); } catch (e) { /* ignore */ } }, 500);
     if (H.relay) { H.relay.close(); H.relay = null; }
-    H.relayCode = ''; H.relayErr = null;
+    H.relayCode = ''; H.relayErr = null; H.relayBusy = false; H.relayTried = false;
     H.peer = null; H.room = null; H.conns = new Map();
     $('arRoom').classList.remove('is-climax', 'is-tense');
     resetHype();
@@ -541,7 +571,7 @@
         ${room.mode === 'heist' ? `<p class="ar-hint">🔐 Mỗi em có 1 két khoá mã ${C.VAULT_LEN} ký hiệu · trả lời đúng được chọn ngay 1 việc: ⛏️ đào đá quý (nhanh được nhiều hơn) · 🔓 đoán 1 ký hiệu két của bạn, mở đủ ${C.VAULT_LEN} ô lấy ${C.HEIST_STEAL * 100}% đá quý · 🔁 đổi mã khi bị dòm ngó · nhiều đá quý nhất thắng</p>` : ''}
         ${room.mode === 'tug' ? '<p class="ar-hint">🪢 Máy tự chia 2 đội Đỏ – Xanh đều người theo lượt vào phòng · đúng kéo 1, đúng trong nửa đầu thời gian kéo 2 · dây chạm vạch 1 bên → đội đó thắng ngay</p>' : ''}
         ${H.ready ? '' : '<p class="ar-hint"><i class="fa-solid fa-spinner fa-spin"></i> Đang mở cổng kết nối...</p>'}
-        ${relayStatusHtml()}
+        <div id="arRRelay">${relayStatusHtml()}</div>
       </div>
       <div class="ar-card">
         <div class="ar-row"><h2 class="ar-h2"><i class="fa-solid fa-users"></i> Người chơi <span class="ar-muted">${ids.length}/${room.max}</span></h2>
@@ -778,11 +808,16 @@
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
+  const sheetBusy = new Set(); // id phòng đang lưu lên Sheet
   async function saveToSheet(entry, btn) {
     if (!entry) return;
-    if (entry.synced) { A.toast('Phòng này đã lưu lên Google Sheet rồi.'); return; }
+    const stored = findEntry(entry.id);
+    if (entry.synced || (stored && stored.synced)) { entry.synced = true; renderHistory(); A.toast('Phòng này đã lưu lên Google Sheet rồi.'); return; }
+    // Đang lưu phòng này (bấm ở màn kết quả rồi bấm tiếp ở "Lịch sử phòng", hoặc bấm 2 lần lúc mạng chậm): không gọi lần 2
+    if (sheetBusy.has(entry.id)) { A.toast('Đang lưu phòng này lên Google Sheet — chờ một chút.'); return; }
     if (!global.EduBackend || !global.EduBackend.appsScriptUrl) { A.toast('Chưa cấu hình Apps Script (js/backend-config.js) — dùng nút tải CSV.'); return; }
     if (btn) btn.disabled = true;
+    sheetBusy.add(entry.id);
     try {
       await global.EduLazyLoad.loadScripts(['js/services/firebase-loader.js', 'js/services/apps-script-client.js']);
       // Chỉ nạp Firebase Auth để lấy ID token cho Apps Script — KHÔNG đọc/ghi Firestore.
@@ -804,7 +839,7 @@
     } catch (err) {
       A.toast(err.code === 'permission-denied' ? 'Tài khoản này không có quyền lưu kết quả.' : err.code === 'not-found'
         ? 'Apps Script chưa có chức năng này — cần deploy bản mới (apps/Code.gs).' : 'Chưa lưu được: ' + (err.message || err) + ' — thử lại sau, hoặc tải CSV.');
-    } finally { if (btn) btn.disabled = false; }
+    } finally { sheetBusy.delete(entry.id); if (btn && btn.isConnected && !entry.synced) btn.disabled = false; }
   }
   function renderHistory() {
     const box = $('arRoomHist');
@@ -1375,6 +1410,8 @@
     const bar = document.querySelector('.ar-hostbar');
     if (!bar) return;
     bar.hidden = mode === 'board'; // Bảng điểm có thẻ riêng, không tạo phòng
+    const max = $('arRoomMax') && $('arRoomMax').closest('.ar-field');
+    if (max) max.hidden = mode === 'board';
     const src = A.deckSource();
     const n = C.buildDeck(src.questions || [], A.rng, 0, A.kinds()).length;
     const count = n ? C.playCount(A.prefs.count, n) : 0;
@@ -1382,12 +1419,10 @@
     $('arHostSum').innerHTML = `<span><i class="fa-solid fa-book-open" aria-hidden="true"></i> ${A.esc(title)}</span>` +
       `<span>${A.esc(MODE_LABEL[mode] || MODE_LABEL.speed)}</span><span>${count} câu · ${A.prefs.secs} giây/câu</span>` +
       `<span><i class="fa-solid fa-users" aria-hidden="true"></i> tối đa ${A.prefs.roomMax || 60} em</span>`;
-    $('arHostQuick').disabled = $('arHostBtn').disabled;
   }
   function paintHostCard() {
     const mode = A.effMode();
-    $('arRoomModeNote').textContent = `Phòng sẽ chơi ${MODE_LABEL[mode] || MODE_LABEL.speed} với bộ câu, số câu và giây mỗi câu đã chọn ở trên.`;
-    $('arHostBtn').disabled = !(A.deckSource().questions || []).length || $('arPlay').disabled;
+    $('arHostQuick').disabled = !(A.deckSource().questions || []).length || $('arPlay').disabled;
     paintHostBar(mode);
     document.querySelectorAll('#arRoomMax button').forEach((b) => b.classList.toggle('is-on', +b.dataset.v === (A.prefs.roomMax || 60)));
     const saved = store.get(HOST_KEY, null);
@@ -1435,6 +1470,7 @@
       case 'home': goHome(); break;
       case 'packs': goHome(); $('arOpenPacks').click(); break;
       case 'resume': resumeHost(); break;
+      case 'relay': H.relayTried = true; retryRelay(); break;
       case 'drop': if (confirm('Bỏ phòng đang dở? Điểm của phòng này sẽ mất.')) { store.del(HOST_KEY); paintHostCard(); } break;
       case 'rejoin': playerJoin(P.code); break;
       case 'practice': A.practice(P.log); break;
@@ -1453,7 +1489,6 @@
   }
 
   function init() {
-    $('arHostBtn').addEventListener('click', hostCreate);
     $('arHostQuick').addEventListener('click', hostCreate);
     // Học sinh: Họ và tên → Mã phòng → Vào phòng (Enter ở ô tên chuyển sang ô mã nếu mã chưa đủ).
     $('arJoinForm').addEventListener('submit', (e) => { e.preventDefault(); playerJoin($('arJoinCode').value); });

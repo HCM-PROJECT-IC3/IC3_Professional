@@ -40,32 +40,77 @@
     boot();
   });
 
+  // ── Tải dữ liệu theo TỪNG PHẦN (11/2026) ─────────────────────────────────────────────
+  // Trước: roster + kết quả bài nộp chung 1 try — 1 nguồn lỗi (vd Google Sheet bận) là trắng cả trang, thử lại phải
+  // đọc lại hết. Nay 2 phần độc lập: phần nào lỗi chỉ phần đó báo, nút "Thử lại" đọc lại ĐÚNG phần đó; phần đã có giữ
+  // nguyên (kể cả bản tải trước). Mỗi lượt tải có số thứ tự: lượt cũ về sau lượt mới thì bỏ, không đè dữ liệu mới.
+  const part = { roster: null, results: null, rosterErr: null, resultsErr: null };
+  const seq = { all: 0, roster: 0, results: 0 };
+  const LOADERS = { roster: 'loadRoster', results: 'loadResults' };
+  const PART_LABEL = { roster: 'danh sách học sinh / lớp', results: 'kết quả bài nộp' };
+
+  function errText(err) {
+    const F = window.EduFirebase;
+    if (err && err.source === 'apps-script') return 'Không đọc được kết quả từ Google Sheet (' + err.message + ') — mạng chập chờn hoặc Apps Script đang bận.';
+    if (err && err.breaker) return err.message;
+    if (F && F.isQuotaOrOffline && F.isQuotaOrOffline(err)) return F.QUOTA_HINT + ' — máy này chưa có bản đã lưu.';
+    return 'Lỗi: ' + ((err && err.message) || err);
+  }
+
   async function boot(forceRefresh) {
-    try {
-      rawData = await window.EduCoordinatorData.loadAll(myProfile, { forceRefresh: !!forceRefresh });
-    } catch (err) {
-      const F = window.EduFirebase;
-      document.getElementById('loadingNote').textContent = err && err.source === 'apps-script'
-        // Kết quả bài nộp đọc từ Google Sheet — lỗi ở đây KHÔNG phải Firebase hết lượt
-        ? 'Không đọc được kết quả bài nộp từ Google Sheet (' + err.message + '). Mạng chập chờn hoặc Apps Script đang bận — bấm "Làm mới dữ liệu" để thử lại.'
-        : err && err.breaker ? err.message
-        : F && F.isQuotaOrOffline(err)
-        ? F.QUOTA_HINT + '. Máy này chưa có dữ liệu đã lưu — thử lại sau.'
-        : 'Không tải được dữ liệu: ' + err.message;
-      return;
-    }
-    // Chưa được Admin gán trường nào để hỗ trợ — không còn
-    // mặc định xem hết như trước, dừng ở đây với thông báo rõ ràng thay vì
-    // hiện dashboard rỗng khó hiểu.
-    if (rawData.noSchoolsAssigned) {
+    const D = window.EduCoordinatorData;
+    if (!D.scopeOf(myProfile)) {
+      // Chưa được Admin gán trường nào — không query gì cả (tránh query rỗng bị rules từ chối)
       document.getElementById('loadingNote').innerHTML = '<i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Bạn chưa được Admin gán trường nào để hỗ trợ (Quản lý tài khoản → Trường được xem/hỗ trợ). Liên hệ Admin để được gán trường.';
+      return false;
+    }
+    const my = ++seq.all;
+    const kinds = ['roster', 'results'], mine = kinds.map((k) => ++seq[k]);
+    const settled = await Promise.allSettled(kinds.map((k) => D[LOADERS[k]](myProfile, { forceRefresh: !!forceRefresh })));
+    if (my !== seq.all) return false; // đã có lượt tải mới hơn
+    kinds.forEach((k, i) => { if (mine[i] === seq[k]) takePart(k, settled[i]); });
+    show();
+    return !part.rosterErr && !part.resultsErr;
+  }
+
+  function takePart(kind, st) {
+    if (st.status === 'fulfilled') { part[kind] = st.value; part[kind + 'Err'] = null; }
+    else { part[kind + 'Err'] = st.reason || new Error('lỗi'); console.warn('[Tổng quan điều phối] Không tải được ' + PART_LABEL[kind] + ':', st.reason); }
+  }
+
+  /** Nút "Thử lại phần này": đọc lại ĐÚNG 1 nguồn bị lỗi, không đụng nguồn đã tải được. */
+  async function retryPart(kind, btn) {
+    if (btn) { btn.disabled = true; btn.textContent = 'Đang tải...'; }
+    const my = ++seq[kind];
+    const [st] = await Promise.allSettled([window.EduCoordinatorData[LOADERS[kind]](myProfile, {})]);
+    if (my !== seq[kind]) return;
+    takePart(kind, st);
+    show();
+    if (!part[kind + 'Err']) toast('Đã tải ' + PART_LABEL[kind] + '.');
+  }
+
+  function partialHtml(kinds) {
+    return kinds.map((k) => `<div class="partial-row"><span><b>Chưa tải được ${PART_LABEL[k]}.</b> ${esc(errText(part[k + 'Err']))}${part[k] ? ' Đang hiện bản tải trước.' : ''}</span>
+      <button type="button" class="btn-ghost partial-retry" data-retry="${k}">Thử lại phần này</button></div>`).join('');
+  }
+
+  function show() {
+    const failed = ['roster', 'results'].filter((k) => part[k + 'Err']);
+    const note = document.getElementById('loadingNote'), pn = document.getElementById('partialNote');
+    if (!part.roster && !part.results) {
+      note.hidden = false;
+      note.innerHTML = failed.length ? partialHtml(failed) : 'Đang tải dữ liệu roster &amp; kết quả bài thi...';
+      if (pn) pn.hidden = true;
       return;
     }
-    // js/coordinator/student-detail.js dùng biến toàn cục này để lọc đúng
-    // studentSchool khi tải lịch sử làm bài của 1 học sinh (listByStudent) —
-    // giống hệt cơ chế js/teacher/dashboard.js đã dùng cho Teacher Dashboard
-    // — KHÔNG gán thì query đó sẽ bị Firestore từ chối hẳn
-    // với coordinator đã bị siết phạm vi trường.
+    note.hidden = true;
+    if (pn) { pn.hidden = !failed.length; pn.innerHTML = failed.length ? partialHtml(failed) : ''; }
+    const sc = window.EduCoordinatorData.scopeOf(myProfile);
+    rawData = Object.assign({ courses: [], classes: [], students: [], teachers: [] }, part.roster || {},
+      { results: part.results || [], schools: sc ? sc.schools : [], noSchoolsAssigned: false, _noRoster: !part.roster, _noResults: !part.results });
+
+    // js/coordinator/student-detail.js dùng biến toàn cục này để lọc đúng studentSchool khi tải lịch sử 1 học sinh —
+    // KHÔNG gán thì query đó bị Firestore từ chối với điều phối đã bị siết phạm vi trường.
     window.EduStudentDetailSchoolsScope = myProfile.role === 'admin' ? undefined : rawData.schools;
 
     // Làm mới dữ liệu dựng lại ô lọc: nhớ lựa chọn hiện tại để không bị reset về "Tất cả".
@@ -77,12 +122,16 @@
       if (el && keptFilters[id] && Array.from(el.options).some((o) => o.value === keptFilters[id])) el.value = keptFilters[id];
     });
     wireFilters();
-    document.getElementById('loadingNote').hidden = true;
     document.getElementById('kpiGrid').hidden = false;
     document.getElementById('chartsGrid').hidden = false;
     document.getElementById('watchlistsGrid').hidden = false;
     refresh();
   }
+
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-retry]');
+    if (b && LOADERS[b.dataset.retry]) retryPart(b.dataset.retry, b);
+  });
 
   const REFRESH_COOLDOWN_MS = 20 * 1000;
   const REFRESH_AT_KEY = 'edu:coordinator:manualRefreshAt';
@@ -109,8 +158,7 @@
     const oldLabel = btn.textContent;
     btn.innerHTML = '<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Đang tải...';
     try {
-      await boot(true);
-      toast('Đã cập nhật dữ liệu mới nhất.');
+      if (await boot(true)) toast('Đã cập nhật dữ liệu mới nhất.');
     } finally {
       btn.disabled = false;
       btn.textContent = oldLabel;
@@ -205,7 +253,8 @@
     const { filteredResults, filteredStudents, examHistories, allowedClasses } = scoped;
     const anyClassFilterActive = !!(filters.courseId || filters.teacherId || filters.classId);
 
-    document.getElementById('kpiStudents').textContent = filteredStudents.length;
+    const noR = rawData._noRoster, noS = rawData._noResults, dash = (id) => { document.getElementById(id).textContent = '—'; };
+    document.getElementById('kpiStudents').textContent = noR ? '—' : filteredStudents.length;
 
     const teacherCount = anyClassFilterActive
       ? new Set(allowedClasses.map((c) => c.teacherId).filter(Boolean)).size
@@ -225,7 +274,10 @@
     const notSubmitted = filteredStudents.filter((s) => !submittedKeys.has(
       window.EduModels.Roster.studentKeyOf({ name: s.name, className: s.className })
     ));
-    document.getElementById('kpiNotSubmitted').textContent = notSubmitted.length;
+    document.getElementById('kpiNotSubmitted').textContent = noR || noS ? '—' : notSubmitted.length;
+    const sub = document.getElementById('kpiNotSubmittedSub');
+    if (sub) sub.textContent = noR || noS || !filteredStudents.length ? '' : `${Math.round((notSubmitted.length / filteredStudents.length) * 100)}% sĩ số · đã làm ${filteredStudents.length - notSubmitted.length}`;
+    if (noS) ['kpiExams', 'kpiAvgScore', 'kpiPassRate', 'kpiNeedsSupport'].forEach(dash);
 
     const needsSupport = window.EduAnalytics.studentsNeedingSupport(examHistories, 60);
     document.getElementById('kpiNeedsSupport').textContent = needsSupport.length;

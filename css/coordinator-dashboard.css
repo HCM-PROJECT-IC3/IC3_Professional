@@ -176,6 +176,16 @@ body {
 .heatmap-table th { background: var(--card2); font-weight: 800; color: var(--muted) }
 .heatmap-table th:first-child, .heatmap-table td:first-child { text-align: left; font-weight: 700; position: sticky; left: 0; background: var(--card) }
 .heatmap-cell { font-weight: 800; color: #fff; border-radius: 4px }
+/* 11/2026: cả ô tô nền nhạt + chữ đậm cùng sắc — đủ tương phản (≥ 4,5:1) ở cả sáng lẫn tối */
+.heatmap-table td.hm { font-weight: 800; font-variant-numeric: tabular-nums; }
+.hm-1 { background: #fde2e0; color: #9b1c13; }
+.hm-2 { background: #fdf0d2; color: #7a4a00; }
+.hm-3 { background: #e3e8fb; color: #23308f; }
+.hm-4 { background: #dcf1e3; color: #145a32; }
+[data-theme="dark"] .hm-1 { background: #47201d; color: #ffb3ab; }
+[data-theme="dark"] .hm-2 { background: #3d3115; color: #ffd27a; }
+[data-theme="dark"] .hm-3 { background: #252f5c; color: #c4ceff; }
+[data-theme="dark"] .hm-4 { background: #173a28; color: #9be3b4; }
 .heatmap-cell.empty { color: var(--muted); background: var(--card2); font-weight: 400 }
 
 /* ---- Progress rings (tự vẽ bằng conic-gradient, không cần plugin) ---- */
@@ -607,3 +617,20 @@ body {
 .watchlist-item.is-clickable { cursor: pointer; transition: box-shadow .15s ease; }
 .watchlist-item.is-clickable:hover { box-shadow: 0 0 0 1px var(--purple); }
 .watchlist-item.is-clickable:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+
+/* ── 11/2026: bớt hiệu ứng "giao diện mẫu" — ô KPI không bấm được nên không nhấc lên khi rê chuột, không hiện so le,
+   icon không nhấp nhô liên tục ── */
+.kpi-card, .kpi-grid .kpi-card { animation: none; transition: none; }
+.kpi-card:hover { transform: none; box-shadow: var(--shadow-card); border-color: var(--border); }
+.kpi-card.kpi-warn:hover { border-color: rgba(240,72,62,.3); }
+.kpi-icon { animation: none; color: var(--muted); font-size: 1.1rem; }
+.kpi-warn .kpi-icon { color: var(--red); }
+.kpi-sub { font-size: .74rem; color: var(--muted); margin-top: .15rem; }
+.chart-card-title small { font-weight: 500; color: var(--muted); margin-left: .35rem; font-size: .74rem; }
+/* 1 nguồn dữ liệu lỗi: báo riêng + nút thử lại đúng nguồn đó (js/coordinator/dashboard.js retryPart) */
+.partial-note { margin: 0 0 1rem; display: grid; gap: .5rem; }
+.partial-note[hidden] { display: none; }
+.partial-row, .loading-note .partial-row { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; padding: .65rem .9rem; border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--red) 35%, var(--border)); background: color-mix(in srgb, var(--red) 6%, var(--card)); font-size: .85rem; text-align: left; }
+.partial-row > span { flex: 1 1 320px; }
+.partial-retry { white-space: nowrap; }

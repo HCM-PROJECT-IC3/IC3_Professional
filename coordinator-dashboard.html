@@ -81,6 +81,8 @@
   </div>
 
   <div class="loading-note" id="loadingNote">Đang tải dữ liệu roster &amp; kết quả bài thi...</div>
+  <!-- 1 nguồn lỗi (roster hoặc kết quả bài nộp) chỉ báo ở đây kèm nút thử lại đúng nguồn đó — phần còn lại vẫn hiện -->
+  <div class="partial-note" id="partialNote" role="status" hidden></div>
 
   <!-- ============ 7 KPI ============ -->
   <div class="kpi-grid" id="kpiGrid" hidden>
@@ -113,6 +115,7 @@
       <div class="kpi-icon"><i class="fa-solid fa-flag" aria-hidden="true"></i></div>
       <div class="kpi-label">Học sinh chưa làm bài</div>
       <div class="kpi-value" id="kpiNotSubmitted">—</div>
+      <div class="kpi-sub" id="kpiNotSubmittedSub"></div>
     </div>
     <div class="kpi-card kpi-warn">
       <div class="kpi-icon"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i></div>
@@ -124,27 +127,27 @@
   <!-- ============ 6 LOẠI BIỂU ĐỒ ============ -->
   <div class="charts-grid" id="chartsGrid" hidden>
     <div class="chart-card">
-      <div class="chart-card-title"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Điểm trung bình theo lớp (Bar)</div>
+      <div class="chart-card-title"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Điểm TB theo lớp <small>lớp yếu nhất trước · vạch đạt 70%</small></div>
       <div class="chart-card-body"><canvas id="chartBar"></canvas></div>
     </div>
     <div class="chart-card">
-      <div class="chart-card-title"><i class="fa-solid fa-chart-line" aria-hidden="true"></i> Xu hướng điểm TB theo ngày (Line)</div>
+      <div class="chart-card-title"><i class="fa-solid fa-chart-line" aria-hidden="true"></i> <span id="lineTitle">Điểm TB theo tuần</span> <small>rê chuột để xem số bài</small></div>
       <div class="chart-card-body"><canvas id="chartLine"></canvas></div>
     </div>
     <div class="chart-card">
-      <div class="chart-card-title"><i class="fa-solid fa-chart-pie" aria-hidden="true"></i> Tỷ lệ Đạt / Chưa đạt (Pie)</div>
+      <div class="chart-card-title"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Phân bố điểm <small id="bandsNote"></small></div>
       <div class="chart-card-body"><canvas id="chartPie"></canvas></div>
     </div>
     <div class="chart-card">
-      <div class="chart-card-title"><i class="fa-solid fa-circle-nodes" aria-hidden="true"></i> So sánh điểm TB giữa các lớp (Radar)</div>
+      <div class="chart-card-title"><i class="fa-solid fa-user-check" aria-hidden="true"></i> Học sinh đã làm bài theo lớp <small>% sĩ số · lớp ít nhất trước</small></div>
       <div class="chart-card-body"><canvas id="chartRadar"></canvas></div>
     </div>
     <div class="chart-card chart-card-wide">
-      <div class="chart-card-title"><i class="fa-solid fa-temperature-half" aria-hidden="true"></i> Ma trận điểm TB: Lớp × Bài thi (Heatmap)</div>
+      <div class="chart-card-title"><i class="fa-solid fa-temperature-half" aria-hidden="true"></i> Điểm TB: Lớp × Bài thi</div>
       <div class="chart-card-body" id="chartHeatmap"><div class="chart-empty">Chưa đủ dữ liệu.</div></div>
     </div>
     <div class="chart-card">
-      <div class="chart-card-title"><i class="fa-solid fa-bullseye" aria-hidden="true"></i> Tiến độ tổng quan (Progress)</div>
+      <div class="chart-card-title"><i class="fa-solid fa-bullseye" aria-hidden="true"></i> Tiến độ tổng quan</div>
       <div class="chart-card-body" id="chartProgress"></div>
     </div>
   </div>

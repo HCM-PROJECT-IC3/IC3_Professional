@@ -33,14 +33,15 @@
 
 <div class="wrap">
 
-  <div class="banner">
-    Trang này sửa trực tiếp <b>ngân hàng câu hỏi học sinh đang dùng</b> (<code>data/ic3/</code>) —
-    <b>không tốn lượt đọc/ghi Firebase</b>. Mọi thay đổi được lưu tạm thành <b>bản nháp</b> trên máy này
-    (đóng tab vẫn còn); bấm <b>"Đẩy thay đổi cho học sinh"</b> để đưa lên GitHub — học sinh thấy sau
-    khoảng 1–2 phút. Sửa 1 câu sẽ cập nhật luôn các bản chép của nó ở các bộ Ôn tập/Kiểm tra theo tiết (cùng mã câu).
-    Việc đẩy đi qua Apps Script (token GitHub do admin cài 1 lần trong Script Properties của Apps Script,
-    không cần dán vào trình duyệt); trang tải bản trên web (0 lượt Apps Script), riêng 15 phút sau khi đẩy thì tải thẳng từ GitHub để thấy ngay bản vừa đẩy.
-  </div>
+  <details class="banner im-help">
+    <summary>Sửa trực tiếp <b>ngân hàng câu hỏi học sinh đang dùng</b> (<code>data/ic3/</code>) · lưu nháp trên máy · bấm <b>Đẩy thay đổi</b> để học sinh thấy (1–2 phút)</summary>
+    Không tốn lượt đọc/ghi Firebase. Bản nháp lưu trên máy này (đóng tab vẫn còn). Sửa 1 câu sẽ cập nhật luôn các bản chép
+    của nó ở các bộ Ôn tập/Kiểm tra theo tiết (cùng mã câu). Việc đẩy đi qua Apps Script (token GitHub do admin cài 1 lần trong
+    Script Properties); trang tải bản trên web (0 lượt Apps Script), riêng 15 phút sau khi đẩy thì tải thẳng từ GitHub để thấy ngay bản vừa đẩy.
+    Mở trang ở 2 tab cùng lúc: bản nháp của 2 tab không được ghi đè nhau — trang sẽ cảnh báo.
+  </details>
+  <!-- Cảnh báo mở ở tab khác / bản nháp bị tab khác lưu mới hơn (js/image-manager.js § NHIỀU TAB) -->
+  <div class="banner banner-warn" id="tabWarn" role="alert" hidden></div>
   <div id="loadState" class="loadbar">Đang tải ngân hàng câu hỏi (data/ic3)…</div>
 
   <div id="app" class="hidden">
@@ -52,7 +53,7 @@
     </div>
 
     <div class="filters">
-      <input type="text" id="searchBox" placeholder="Tìm theo nội dung câu hỏi...">
+      <input type="search" id="searchBox" placeholder="Tìm theo nội dung câu hỏi (gõ không dấu cũng được)" autocomplete="off">
       <select id="gradeFilter"><option value="">Tất cả khối</option></select>
       <select id="minitestFilter"><option value="">Tất cả Minitest</option></select>
       <div class="chip-group" id="statusChips">

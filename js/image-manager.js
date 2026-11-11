@@ -93,6 +93,18 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 /* ============================================================
    TẢI DỮ LIỆU TỪ data/ic3/
    ============================================================ */
+// File đã tải được trong lượt tải đang dở (nguồn|path → text): "Thử lại các file lỗi" chỉ đọc lại file còn thiếu.
+// Xoá khi tải xong trọn vẹn (lần tải sau — vd sau khi đẩy — phải đọc bản mới).
+let LOAD_TEXTS = {};
+async function readOnce(path) {
+  const k = LOADED_FROM + '|' + path;
+  if (LOAD_TEXTS[k] != null) return LOAD_TEXTS[k];
+  let lastErr;
+  for (let i = 0; i < 2; i++) { // thử lại 1 lần sau 0,8 s (mạng chập chờn / Apps Script bận)
+    try { const t = await readSourceFile(path); LOAD_TEXTS[k] = t; return t; } catch (e) { lastErr = e; if (i === 0) await new Promise((r) => setTimeout(r, 800)); }
+  }
+  throw lastErr;
+}
 async function readSourceFile(path) {
   const gh = window.EduGitHubPublish;
   if (LOADED_FROM === 'github') return gh.fetchRaw(path);
@@ -139,20 +151,30 @@ async function loadQuestions() {
   try {
     let metaText;
     try {
-      metaText = await readSourceFile(DATA_DIR + 'meta.json');
+      metaText = await readOnce(DATA_DIR + 'meta.json');
     } catch (err) {
       if (LOADED_FROM !== 'github') throw err;
       console.warn('[image-manager] Không đọc được qua GitHub API, dùng bản trên trang web:', err.message);
       LOADED_FROM = 'site';
-      metaText = await readSourceFile(DATA_DIR + 'meta.json');
+      LOAD_TEXTS = {};
+      metaText = await readOnce(DATA_DIR + 'meta.json');
     }
     META = JSON.parse(metaText);
     const levels = levelsOf(META);
     const manifestPath = DATA_DIR + 'minitests-manifest.json';
-    const [texts, manifestText] = await Promise.all([
-      Promise.all(levels.map(({ lvl }) => readSourceFile(DATA_DIR + lvl.file))),
-      readSourceFile(manifestPath).catch(() => null),
-    ]);
+    // Từng file riêng: 1 file lỗi không làm hỏng cả lượt tải; file tải được giữ lại (LOAD_TEXTS)
+    const settled = await Promise.allSettled(levels.map(({ lvl }) => readOnce(DATA_DIR + lvl.file)));
+    const manifestText = await readOnce(manifestPath).catch(() => null);
+    const failedFiles = levels.map(({ lvl }, i) => (settled[i].status === 'rejected' ? { file: lvl.file, err: settled[i].reason } : null)).filter(Boolean);
+    if (failedFiles.length) {
+      // CHƯA cho sửa/đẩy khi thiếu file: đẩy lúc đó sẽ ghi sai số câu trong meta.json của khối thiếu
+      loadState.innerHTML = `<div class="im-loadfail"><b>Chưa tải được ${failedFiles.length}/${levels.length} file câu hỏi:</b> ${failedFiles.map((f) => `<code>${esc(f.file)}</code>`).join(', ')}
+        <br><small>${esc((failedFiles[0].err && failedFiles[0].err.message) || 'lỗi mạng')} — ${levels.length - failedFiles.length} file đã tải được giữ lại, thử lại chỉ tải file lỗi.</small>
+        <br><button type="button" class="btn btn-primary btn-sm" id="retryFailedBtn">Thử lại ${failedFiles.length} file lỗi</button></div>`;
+      document.getElementById('retryFailedBtn').addEventListener('click', () => loadQuestions());
+      return;
+    }
+    const texts = settled.map((x) => x.value);
 
     SOURCE = { [DATA_DIR + 'meta.json']: metaText };
     MANIFEST = manifestText ? JSON.parse(manifestText) : null;
@@ -193,6 +215,7 @@ async function loadQuestions() {
     PENDING_IMAGES = {};
     await restoreDraftIfAny();
 
+    LOAD_TEXTS = {};
     scanUsedPictureNumbers();
     loadState.style.display = 'none';
     document.getElementById('app').style.display = 'block';
@@ -215,22 +238,55 @@ function snapshotQuestions() {
   return QUESTIONS.map(({ q, docId, fileKey }) => ({ q, docId, fileKey }));
 }
 
+/* ── NHIỀU TAB (11/2026) ── Bản nháp chung 1 khoá IndexedDB: trước đây 2 tab cùng sửa thì tab lưu sau ghi đè mất bản
+   sửa của tab kia. Nay mỗi bản nháp ghi kèm TAB_ID; tab khác vừa lưu bản MỚI HƠN lần đọc/lưu gần nhất của tab này thì
+   KHÔNG ghi đè — báo để người dùng "Sao lưu JSON" rồi tải lại. BroadcastChannel báo sớm khi trang đang mở ở tab khác. */
+const TAB_ID = Math.random().toString(36).slice(2, 10);
+let draftSeenAt = 0;      // savedAt của bản nháp tab này đã đọc hoặc tự lưu gần nhất
+let draftBlocked = false;
+function tabWarn(html) { const el = document.getElementById('tabWarn'); if (!el) return; el.innerHTML = html; el.hidden = !html; }
+try {
+  const ch = new BroadcastChannel('image-manager');
+  ch.onmessage = (e) => {
+    const m = e.data || {};
+    if (m.tab === TAB_ID) return;
+    if (m.type === 'hello') ch.postMessage({ type: 'here', tab: TAB_ID });
+    if ((m.type === 'hello' || m.type === 'here') && !draftBlocked) {
+      tabWarn('<i class="fa-solid fa-clone" aria-hidden="true"></i> Trang này <b>đang mở ở tab khác</b>. Chỉ sửa ở 1 tab — bản nháp của 2 tab không gộp được với nhau.');
+    }
+    // 'draft-saved' cố tình KHÔNG nâng draftSeenAt: tab này chưa có các sửa đổi của tab kia trong bộ nhớ — ghi nháp lúc này sẽ làm mất chúng.
+  };
+  ch.postMessage({ type: 'hello', tab: TAB_ID });
+  window.__imChannel = ch;
+} catch (e) { /* trình duyệt cũ: vẫn có chốt chặn ở saveDraftSoon */ }
+
 function saveDraftSoon() {
   clearTimeout(draftTimer);
-  draftTimer = setTimeout(() => {
-    if (!window.EduDataCache) return;
-    if (!changedIds.size && !deletedCount && !Object.keys(PENDING_IMAGES).length) {
-      window.EduDataCache.clear(DRAFT_KEY, true);
+  draftTimer = setTimeout(async () => {
+    if (!window.EduDataCache || draftBlocked) return;
+    const cur = await window.EduDataCache.getAsync(DRAFT_KEY, true).catch(() => null);
+    if (cur && cur.tabId && cur.tabId !== TAB_ID && (cur.savedAt || 0) > draftSeenAt) {
+      draftBlocked = true;
+      tabWarn('<i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> <b>Tab khác vừa lưu bản nháp mới hơn</b> — bản sửa ở tab này <b>chưa được lưu nháp</b> (để không ghi đè tab kia). '
+        + 'Bấm <b>Sao lưu JSON</b> để giữ phần đã sửa ở đây, rồi đóng tab này và tiếp tục ở tab kia.');
       return;
     }
-    window.EduDataCache.setAsync(DRAFT_KEY, {
+    if (!changedIds.size && !deletedCount && !Object.keys(PENDING_IMAGES).length) {
+      if (!cur || cur.tabId === TAB_ID || !cur.tabId) window.EduDataCache.clear(DRAFT_KEY, true);
+      return;
+    }
+    const savedAt = Date.now();
+    await window.EduDataCache.setAsync(DRAFT_KEY, {
       baseShas: SOURCE_SHAS,
       questions: snapshotQuestions(),
       changedIds: [...changedIds],
       deletedCount,
       pendingImages: PENDING_IMAGES,
-      savedAt: Date.now(),
+      savedAt,
+      tabId: TAB_ID,
     }, DRAFT_TTL_MS, true);
+    draftSeenAt = savedAt;
+    try { window.__imChannel && window.__imChannel.postMessage({ type: 'draft-saved', tab: TAB_ID, savedAt }); } catch (e) { /* bỏ qua */ }
   }, 800);
 }
 
@@ -245,6 +301,7 @@ async function restoreDraftIfAny() {
   if (!window.EduDataCache) return;
   const draft = await window.EduDataCache.getAsync(DRAFT_KEY, true);
   if (!draft || !Array.isArray(draft.questions)) return;
+  draftSeenAt = Math.max(draftSeenAt, draft.savedAt || 0);
   const sameBase = Object.keys(SOURCE_SHAS).every(p => !SOURCE_SHAS[p] || !draft.baseShas || draft.baseShas[p] === SOURCE_SHAS[p]);
   if (sameBase) {
     QUESTIONS = draft.questions;
@@ -434,13 +491,14 @@ function rebuildGroups() {
 }
 
 function applyFilters() {
-  const s = state.search.trim().toLowerCase();
+  const fold = (x) => String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').toLowerCase();
+  const s = fold(state.search.trim());
   rebuildGroups();
   filtered = PRIMARY.filter(item => {
     if (state.grade && item.q.gradeName !== state.grade) return false;
     if (state.minitest && !item.sets.includes(state.minitest)) return false; // chọn bộ Ôn tập/Kiểm tra vẫn ra đúng câu của bộ đó
     if (state.status && questionStatus(item.q) !== state.status) return false;
-    if (s && !(item.q.question || '').toLowerCase().includes(s)) return false;
+    if (s && !fold(item.q.question).includes(s)) return false;
     return true;
   });
   currentPage = 1;
@@ -1102,7 +1160,7 @@ function updatePublishButton() {
   if (!btn || btn.dataset.busy) return;
   const n = pendingChangeCount();
   btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i> ' + (n ? `Đẩy ${n} thay đổi cho học sinh` : 'Đẩy thay đổi cho học sinh'); // n là số
-  btn.classList.toggle('btn-pulse', n > 0);
+  btn.classList.toggle('has-pending', n > 0); // trước: btn-pulse nhấp nháy liên tục
 }
 
 window.addEventListener('beforeunload', (e) => {
@@ -1124,6 +1182,10 @@ document.getElementById('exportStaticBtn').addEventListener('click', async () =>
   btn.dataset.busy = '1';
   btn.disabled = true;
   btn.innerHTML = '<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Đang đẩy lên GitHub…';
+  // Khoá vùng sửa: đẩy xong trang tải lại bản mới từ GitHub — sửa thêm trong lúc đẩy sẽ mất (file đã gom từ trước)
+  const appEl = document.getElementById('app'), upBtn = document.getElementById('uploadJsonBtn');
+  appEl.setAttribute('inert', ''); appEl.classList.add('is-publishing');
+  if (upBtn) upBtn.disabled = true;
   try {
     await window.EduGitHubPublish.publishFiles(
       files,
@@ -1153,6 +1215,8 @@ document.getElementById('exportStaticBtn').addEventListener('click', async () =>
   } finally {
     delete btn.dataset.busy;
     btn.disabled = false;
+    appEl.removeAttribute('inert'); appEl.classList.remove('is-publishing');
+    if (upBtn) upBtn.disabled = false;
     updatePublishButton();
   }
 });
@@ -1160,9 +1224,11 @@ document.getElementById('exportStaticBtn').addEventListener('click', async () =>
 /* ============================================================
    FILTER UI WIRING
    ============================================================ */
+let searchTimer = 0;
 document.getElementById('searchBox').addEventListener('input', (e) => {
   state.search = e.target.value;
-  applyFilters();
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(applyFilters, 200); // gom ~8.000 câu mỗi phím gõ làm giật trang
 });
 document.getElementById('gradeFilter').addEventListener('change', (e) => {
   state.grade = e.target.value;

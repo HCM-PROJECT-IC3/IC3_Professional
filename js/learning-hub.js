@@ -448,6 +448,8 @@
     if (!m || m.style.display === 'none') return;
     m.style.display = 'none';
     if (lastFocus && document.contains(lastFocus)) lastFocus.focus();
+    // Thanh trái sảnh (js/lobby-form-ux.js) tính lại "Câu đến hạn ôn" sau khi em vừa ôn trong Góc học tập
+    global.dispatchEvent(new CustomEvent('edu:hub-closed'));
   }
 
   function render() {
@@ -747,7 +749,11 @@
     const st = lobbyStudent();
     if (!st) return null;
     const recs = studentRecords(st.key);
-    return { done: recs.length, streak: streakOf(recs).streak, due: dueItems(studentBook(st.key)).length };
+    // recent: 4 bài mới nhất cho thanh trái sảnh (js/lobby-form-ux.js) — chỉ đọc máy này, 0 mạng
+    const recent = recs.slice(-4).reverse().map((r) => ({
+      title: String(r.minitest || r.level || 'Bài làm'), score: Number(r.score) || 0, t: recTime(r), test: r.examMode === 'test',
+    }));
+    return { key: st.key, name: st.name, done: recs.length, streak: streakOf(recs).streak, due: dueItems(studentBook(st.key)).length, recent };
   }
 
   global.EduLearningHub = { open, updateBadge, seasonInfo, studentSummary, _keyOf: keyOf };

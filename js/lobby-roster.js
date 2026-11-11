@@ -62,17 +62,22 @@
     if (values.includes(current)) sel.value = current;
   }
 
-  function setStatus(msg, isError) {
+  // 11/2026: chỉ hiện khi CẦN (lỗi / đang dùng bản lưu trên máy) — "Đã nạp N học sinh" không hiện nữa.
+  // retry=true → kèm nút "Thử lại" chỉ tải lại danh sách (trước: "thử tải lại trang" = tải lại cả trang + ngân hàng câu hỏi).
+  // msg luôn là chuỗi TĨNH/tự dựng trong file này; vẫn escape cho chắc.
+  function setStatus(msg, isError, retry) {
     const el = document.getElementById('rosterStatus');
     if (!el) return;
-    if (!msg) { el.textContent = ''; el.classList.toggle('is-error', !!isError); return; }
-    // innerHTML (không phải textContent) để icon Font Awesome render được
-    // — msg luôn là chuỗi TĨNH tự viết trong file này, không nội suy dữ
-    // liệu người dùng nên an toàn.
-    const iconClass = isError ? 'fa-triangle-exclamation' : 'fa-circle-info';
-    el.innerHTML = `<i class="fa-solid ${iconClass}"></i> ${msg}`;
+    el.hidden = !msg;
     el.classList.toggle('is-error', !!isError);
+    if (!msg) { el.textContent = ''; return; }
+    const iconClass = isError ? 'fa-triangle-exclamation' : 'fa-circle-info';
+    el.innerHTML = `<i class="fa-solid ${iconClass}" aria-hidden="true"></i> <span>${escHtml(msg)}</span>` +
+      (retry ? ' <button type="button" class="roster-retry">Thử lại</button>' : '');
+    const b = el.querySelector('.roster-retry');
+    if (b) b.addEventListener('click', loadStatic, { once: true });
   }
+
 
   // ── Nạp roster từ file tĩnh data/roster/students-active.json ──
   // 'cache: no-cache' để trình duyệt LUÔN kiểm tra lại với server
@@ -132,12 +137,12 @@
     if (errorMsg || !allStudents.length || !schools.length) {
       schoolSel.disabled = true;
       // <option> chỉ render TEXT THUẦN — bỏ hẳn emoji thay vì để lọt icon "vỡ".
-      schoolSel.innerHTML = `<option value="">Chưa có danh sách — liên hệ Điều phối đào tạo</option>`;
+      schoolSel.innerHTML = errorMsg ? '<option value="">Chưa tải được danh sách</option>'
+        : '<option value="">Chưa có danh sách — liên hệ Điều phối đào tạo</option>';
       classSel.disabled = true;
       classSel.innerHTML = '<option value="">—</option>';
       nameSel.disabled = true;
       nameSel.innerHTML = '<option value="">—</option>';
-      setStatus(errorMsg || '', !!errorMsg);
       return;
     }
 
@@ -148,7 +153,6 @@
     nameSel.disabled = true;
     nameSel.innerHTML = '<option value="">-- Chọn lớp trước --</option>';
 
-    setStatus(`Đã nạp ${allStudents.length} học sinh`);
   }
 
   function initCascadeListeners() {
@@ -242,20 +246,68 @@
     });
   }
 
+  // Bản danh sách tải được gần nhất (gọn: [trường, lớp, tên]) — mất mạng / máy chủ lỗi vẫn chọn được tên để làm bài.
+  const ROSTER_CACHE = 'eduquiz_roster_cache_v1';
+  function saveCache(list) {
+    try { localStorage.setItem(ROSTER_CACHE, JSON.stringify({ at: Date.now(), s: list.map((x) => [x.school, x.className, x.name]) })); }
+    catch (e) { /* đầy bộ nhớ / chế độ riêng tư: bỏ qua */ }
+  }
+  function readCache() {
+    try {
+      const c = JSON.parse(localStorage.getItem(ROSTER_CACHE) || 'null');
+      if (!c || !Array.isArray(c.s) || !c.s.length) return null;
+      return { at: c.at, list: c.s.map(([school, className, name]) => ({ school: school || '', className: className || '', name })).filter((x) => x.name) };
+    } catch (e) { return null; }
+  }
+
+  let loading = false;
+  async function loadStatic() {
+    if (loading) return; // bấm Thử lại liên tục: 1 lượt tải
+    loading = true;
+    const keep = ['studentSchool', 'studentClass', 'studentName'].map((id) => document.getElementById(id)?.value || '');
+    if (document.getElementById('rosterStatus')?.hidden === false) setStatus('Đang nạp danh sách...'); // chỉ khi bấm Thử lại (lần đầu không nháy dòng chữ)
+    try {
+      const list = await fetchRosterFromStaticFile();
+      allStudents = list;
+      applyStudentsToForm(null);
+      setStatus('');
+      saveCache(list);
+    } catch (err) {
+      console.error('[EduQuiz] Lỗi nạp roster từ file tĩnh:', err);
+      const c = readCache();
+      if (c && c.list.length) {
+        allStudents = c.list;
+        applyStudentsToForm(null);
+        setStatus(`Mạng chậm — đang dùng danh sách lưu trên máy (${new Date(c.at).toLocaleDateString('vi-VN')}).`, false, true);
+      } else {
+        allStudents = [];
+        const msg = 'Không tải được danh sách học sinh — kiểm tra mạng rồi bấm Thử lại.';
+        applyStudentsToForm(msg);
+        setStatus(msg, true, true);
+      }
+    } finally {
+      loading = false;
+    }
+    restoreSelection(keep);
+  }
+  /** Sau khi tải lại (Thử lại): giữ trường/lớp/tên em đã chọn nếu vẫn còn trong danh sách. */
+  function restoreSelection([school, cls, name]) {
+    const s = document.getElementById('studentSchool'), c = document.getElementById('studentClass'), n = document.getElementById('studentName');
+    if (!school || !s || s.disabled || ![...s.options].some((o) => o.value === school)) return;
+    s.value = school; s.dispatchEvent(new Event('change', { bubbles: true }));
+    if (!cls || ![...c.options].some((o) => o.value === cls)) return;
+    c.value = cls; c.dispatchEvent(new Event('change', { bubbles: true }));
+    if (!name || ![...n.options].some((o) => o.value === name)) return;
+    n.value = name; n.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
   async function init() {
     if (!document.getElementById('studentSchool')) return; // trang khác không có form này
     initCascadeListeners();
     if (rosterMode() === 'class-code') { initClassCodeMode(); return; }
-    setStatus('Đang nạp danh sách...');
-    try {
-      allStudents = await fetchRosterFromStaticFile();
-      applyStudentsToForm(null);
-    } catch (err) {
-      console.error('[EduQuiz] Lỗi nạp roster từ file tĩnh:', err);
-      allStudents = [];
-      applyStudentsToForm('Không nạp được danh sách, thử tải lại trang.');
-    }
+    await loadStatic();
   }
+
 
   document.addEventListener('DOMContentLoaded', init);
 })();

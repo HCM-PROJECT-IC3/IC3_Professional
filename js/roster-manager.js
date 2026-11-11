@@ -168,6 +168,15 @@
     persistState();
   }
 
+  /** Sau khi GHI thành công: đọc lại đúng bản ghi đó. Đọc lại lỗi (mạng) thì báo rõ là ĐÃ LƯU — trước đây chung 1 try
+   *  với lệnh ghi nên báo như lưu thất bại, người dùng bấm Lưu lần nữa → ghi trùng. */
+  async function refreshSaved(key, repo, id) {
+    try { await syncOne(key, repo, id); } catch (err) {
+      console.warn('[Quản lý lớp] Đã lưu nhưng chưa đọc lại được', key, id, err);
+      toast('Đã lưu. Chưa hiện được bản mới trên bảng (mạng chập chờn) — bấm "Tải lại" sau, KHÔNG cần lưu lại.');
+    }
+  }
+
   /** "Dữ liệu lúc HH:MM" cạnh nút Tải lại — biết đang xem bản lưu từ lúc nào. */
   function renderDataAge() {
     const el = document.getElementById('rosterDataAge');
@@ -272,7 +281,7 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
         const byName = (a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'vi');
         const readAllStudents = () => (isAdmin
           // Admin: đọc toàn bộ theo từng phần + lưu tiến độ (EduRosterCache.pagedRead) — F5 giữa chừng không đọc lại từ đầu
-          ? window.EduRosterCache.pagedRead('manager-all', () => EduFirebase.db.collection('students_roster'), 'students_roster (Quản lý lớp, toàn bộ)')
+          ? window.EduRosterCache.pagedRead('manager-all', () => window.EduRepositories.studentRoster.col(), 'students_roster (Quản lý lớp, toàn bộ)')
             .then((r) => Object.assign(r.docs.sort(byName), { watermark: r.watermark }))
           // CỐ TÌNH KHÔNG dùng listBySchools() (chỉ lọc status "active") — trang
           // này cần quản lý CẢ học sinh đã nghỉ/đã tốt nghiệp (đổi trạng thái,
@@ -313,12 +322,14 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
       renderStudentTeacherFilter();
       renderStudents();
 
-      await repairKnownBadTeacherNames();
-      await renameGenericCourseNames();
-      await repairDuplicateCourses();
-      await backfillSchoolIds();
     } catch (err) {
       toast('Lỗi tải dữ liệu: ' + friendlyError(err));
+      return;
+    }
+    // Sửa dữ liệu cũ (chạy nền, mỗi bước bọc riêng): 1 bước lỗi KHÔNG báo "Lỗi tải dữ liệu" — dữ liệu đã hiện đủ,
+    // trước đây thông báo đó khiến người dùng bấm Tải lại (đọc lại cả nghìn học sinh) vô ích.
+    for (const fix of [repairKnownBadTeacherNames, renameGenericCourseNames, repairDuplicateCourses, backfillSchoolIds]) {
+      try { await fix(); } catch (err) { console.warn('[Quản lý lớp] Bỏ qua bước sửa dữ liệu cũ', fix.name, err); }
     }
   }
 
@@ -601,10 +612,11 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
       }
       toast('Đã lưu khoá học');
       closeModal();
-      await syncOne('courses', window.EduRepositories.course, savedId);
     } catch (err) {
       toast(friendlyError(err));
+      return;
     }
+    await refreshSaved('courses', window.EduRepositories.course, savedId);
   }
 
   async function deleteCourse(id) {
@@ -721,10 +733,11 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
       }
       toast('Đã lưu lớp học');
       closeModal();
-      await syncOne('classes', window.EduRepositories.class, savedId);
     } catch (err) {
       toast(friendlyError(err));
+      return;
     }
+    await refreshSaved('classes', window.EduRepositories.class, savedId);
   }
 
   async function deleteClass(id) {
@@ -832,45 +845,63 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
     renderStudents();
   }
 
-  function renderStudents() {
-    const search = document.getElementById('studentSearch').value.trim().toLowerCase();
+  // Vẽ tối đa STUDENT_PAGE dòng, "Hiện thêm" để xem tiếp — trước đây mỗi phím gõ vẽ lại ~2.800 dòng + gắn ~5.600 listener.
+  const STUDENT_PAGE = 200;
+  let studentShown = STUDENT_PAGE;
+  const foldVi = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').toLowerCase();
+  function renderStudents(keepShown) {
+    if (!keepShown) studentShown = STUDENT_PAGE;
+    const q = foldVi(document.getElementById('studentSearch').value.trim());
+    const st = document.getElementById('studentStatusFilter') ? document.getElementById('studentStatusFilter').value : '';
     const filtered = studentsForFilterOptions().filter((s) => {
-      if (search && !(`${s.name} ${s.mssv} ${s.school || ''}`.toLowerCase().includes(search))) return false;
+      if (st && (s.status === 'active' ? 'active' : 'inactive') !== st) return false;
+      if (q && !foldVi(`${s.name} ${s.mssv} ${s.school || ''}`).includes(q)) return false; // gõ không dấu cũng tìm được
       return true;
     });
 
-    document.getElementById('studentCount').textContent = `${filtered.length} / ${state.students.length}`;
+    document.getElementById('studentCount').textContent = filtered.length === state.students.length ? `${filtered.length}` : `${filtered.length} / ${state.students.length}`;
     const tbody = document.getElementById('studentRows');
+    const more = document.getElementById('studentMore');
     if (!filtered.length) {
-      tbody.innerHTML = '<tr><td colspan="8" class="empty-cell">Không tìm thấy học sinh nào.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-cell">Không tìm thấy học sinh nào.</td></tr>';
+      if (more) more.hidden = true;
       return;
     }
-    tbody.innerHTML = filtered.map((s) => {
-      const initials = (s.name || '?').trim().charAt(0).toUpperCase();
-      const avatar = s.avatarUrl
-        ? `<img src="${esc(s.avatarUrl)}" alt="">`
-        : initials;
+    tbody.innerHTML = filtered.slice(0, studentShown).map((s) => {
       const statusOk = s.status === 'active';
       return `<tr>
-        <td><div class="avatar-cell">${avatar}</div></td>
         <td>${esc(s.mssv || '—')}</td>
         <td>${esc(s.name)}</td>
         <td>${esc(s.school || '—')}</td>
         <td>${esc(s.className || '—')}</td>
         <td>${esc(s.teacherName || '—')}</td>
         <td><span class="badge ${statusOk ? 'active' : 'inactive'}">${statusOk ? 'Đang học' : 'Ngừng học'}</span></td>
-        <td>
-          <button type="button" class="btn-edit-text" data-edit-student="${s.id}">Sửa</button>
-          <button type="button" class="btn-danger-text" data-del-student="${s.id}">Xoá</button>
+        <td class="row-acts">
+          <button type="button" class="btn-edit-text" data-edit-student="${esc(s.id)}" aria-label="Sửa ${esc(s.name)}">Sửa</button>
+          <button type="button" class="btn-danger-text" data-del-student="${esc(s.id)}" aria-label="Xoá ${esc(s.name)}">Xoá</button>
         </td>
       </tr>`;
     }).join('');
-
-    tbody.querySelectorAll('[data-edit-student]').forEach((b) => b.addEventListener('click', () => openStudentModal(b.dataset.editStudent)));
-    tbody.querySelectorAll('[data-del-student]').forEach((b) => b.addEventListener('click', () => deleteStudent(b.dataset.delStudent)));
+    if (more) {
+      const left = filtered.length - Math.min(studentShown, filtered.length);
+      more.hidden = left <= 0;
+      more.innerHTML = left > 0 ? `<button type="button" class="btn btn-ghost" id="studentMoreBtn">Hiện thêm ${Math.min(STUDENT_PAGE, left)} học sinh</button> <span>đang hiện ${studentShown} / ${filtered.length}</span>` : '';
+    }
   }
-
-  document.getElementById('studentSearch').addEventListener('input', renderStudents);
+  // Gắn 1 lần cho cả bảng (event delegation) thay vì mỗi dòng mỗi lần vẽ
+  document.getElementById('studentRows').addEventListener('click', (e) => {
+    const ed = e.target.closest('[data-edit-student]'), del = e.target.closest('[data-del-student]');
+    if (ed) openStudentModal(ed.dataset.editStudent);
+    else if (del) deleteStudent(del.dataset.delStudent);
+  });
+  document.getElementById('studentMore').addEventListener('click', (e) => {
+    if (!e.target.closest('#studentMoreBtn')) return;
+    studentShown += STUDENT_PAGE;
+    renderStudents(true);
+  });
+  let searchT = 0;
+  document.getElementById('studentSearch').addEventListener('input', () => { clearTimeout(searchT); searchT = setTimeout(() => renderStudents(), 160); });
+  document.getElementById('studentStatusFilter').addEventListener('change', () => renderStudents());
   document.getElementById('studentClassFilter').addEventListener('change', onStudentFacetFilterChange);
   document.getElementById('studentSchoolFilter').addEventListener('change', onStudentFacetFilterChange);
   document.getElementById('studentTeacherFilter').addEventListener('change', onStudentFacetFilterChange);
@@ -1538,10 +1569,11 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
       }
       toast('Đã lưu học sinh');
       closeModal();
-      await syncOne('students', window.EduRepositories.studentRoster, savedId);
     } catch (err) {
       toast(friendlyError(err));
+      return;
     }
+    await refreshSaved('students', window.EduRepositories.studentRoster, savedId);
   }
 
   async function deleteStudent(id) {
@@ -1567,15 +1599,21 @@ Tốn khoảng ${n.toLocaleString('vi-VN')} lượt đọc Firebase. Thường K
     document.getElementById('modalOverlay').classList.remove('show');
     modalMode = null;
   }
-  document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
-  document.getElementById('modalCancelBtn').addEventListener('click', closeModal);
+  // Người dùng đóng (×, Huỷ, bấm nền) khi đang ghi: chặn — tránh đóng giữa chừng rồi mở lại lưu lần nữa
+  const userClose = () => { if (!saving) closeModal(); };
+  document.getElementById('modalCloseBtn').addEventListener('click', userClose);
+  document.getElementById('modalCancelBtn').addEventListener('click', userClose);
   document.getElementById('modalOverlay').addEventListener('click', (e) => {
-    if (e.target.id === 'modalOverlay') closeModal();
+    if (e.target.id === 'modalOverlay') userClose();
   });
-  document.getElementById('modalSaveBtn').addEventListener('click', () => {
-    if (!modalMode) return;
-    if (modalMode.type === 'course') saveCourse();
-    else if (modalMode.type === 'class') saveClass();
-    else if (modalMode.type === 'student') saveStudent();
+  // Đang ghi thì khoá nút Lưu: trước đây bấm 2 lần lúc mạng chậm = 2 lệnh create → học sinh/lớp/khoá học TRÙNG trên Firestore.
+  let saving = false;
+  document.getElementById('modalSaveBtn').addEventListener('click', async () => {
+    if (!modalMode || saving) return;
+    const fn = { course: saveCourse, class: saveClass, student: saveStudent }[modalMode.type];
+    if (!fn) return;
+    const btn = document.getElementById('modalSaveBtn'), label = btn.innerHTML;
+    saving = true; btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Đang lưu...';
+    try { await fn(); } finally { saving = false; btn.disabled = false; btn.innerHTML = label; }
   });
 })();

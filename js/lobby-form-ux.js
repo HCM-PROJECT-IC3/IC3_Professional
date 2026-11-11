@@ -96,17 +96,68 @@
     note.textContent = note.hidden ? '' : `${b.title}. Chọn nhóm Ôn tập, Kiểm tra hoặc Chủ đề để làm bài tính giờ.`;
   }
 
-  function renderMe() {
+  // "Kết quả của em": chỉ tính lại khi đổi học sinh hoặc vừa nộp bài. Trước đây mỗi cú bấm/gõ trong form lại đọc + parse
+  // toàn bộ lịch sử bài làm (kèm chi tiết từng câu) trong localStorage → máy yếu giật khi có nhiều bài.
+  let meKey = null, meHtml = '';
+  const fmtAgo = (t) => {
+    const d = Math.floor((Date.now() - t) / 86400000);
+    if (!t || d < 0) return '';
+    if (d === 0) return 'hôm nay';
+    if (d === 1) return 'hôm qua';
+    if (d < 7) return d + ' ngày trước';
+    return new Date(t).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+  };
+  const shortTitle = (t) => String(t).replace(/\s*\(\d+ câu\)\s*$/, '').replace(/^Bài\s+(\d+)\.\s*/, 'Bài $1 · ');
+  function meMarkup(m) {
+    if (!m) return '<p>Chọn họ tên ở bước 1 để xem kết quả của em.</p>';
+    if (!m.done) return '<p>Em chưa làm bài nào trên máy này. Làm xong bài đầu tiên, kết quả sẽ hiện ở đây.</p>';
+    const recent = m.recent.map((r) => `<li title="${esc(r.title)}"><span class="lm-t">${esc(shortTitle(r.title))}</span>
+        <span class="lm-s ${r.score >= 70 ? 'is-ok' : 'is-low'}">${r.score}%</span><small>${r.test ? 'Kiểm tra' : 'Ôn luyện'} · ${esc(fmtAgo(r.t))}</small></li>`).join('');
+    return `<dl><div><dt>Bài đã làm</dt><dd>${m.done}</dd></div><div><dt>Chuỗi ngày học</dt><dd>${m.streak}</dd></div><div><dt>Câu đến hạn ôn</dt><dd>${m.due}</dd></div></dl>
+      ${m.due ? `<button type="button" class="lm-due" data-me="hub"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Ôn ${m.due} câu đến hạn</button>` : ''}
+      <h3>Gần đây</h3><ul class="lm-recent">${recent}</ul>
+      <button type="button" class="lm-all" data-me="records">Xem tất cả bài làm <i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>`;
+  }
+  function renderMe(force) {
     const box = $('lobbyMe');
     if (!box) return;
-    const m = window.EduLearningHub?.studentSummary?.();
-    if (!m) { box.innerHTML = '<p>Chọn họ tên để xem kết quả của em.</p>'; return; }
-    if (!m.done) { box.innerHTML = '<p>Em chưa làm bài nào trên máy này.</p>'; return; }
-    box.innerHTML = `<dl><div><dt>Bài đã làm</dt><dd>${m.done}</dd></div><div><dt>Chuỗi ngày học</dt><dd>${m.streak}</dd></div><div><dt>Câu đến hạn ôn</dt><dd>${m.due}</dd></div></dl>`;
+    const key = [$('studentSchool')?.value, $('studentClass')?.value, $('studentName')?.value].join('|');
+    if (!force && key === meKey) return;
+    meKey = key;
+    let m = null;
+    try { m = window.EduLearningHub?.studentSummary?.() || null; } catch (e) { console.warn('[lobby] Kết quả của em:', e); }
+    const html = meMarkup(m);
+    if (html !== meHtml) { box.innerHTML = html; meHtml = html; }
+    renderHello(m);
+  }
+
+  /** Lời chào ở thanh tiêu đề: học sinh thấy ngay máy đang ghi bài cho AI (máy dùng chung: tránh làm bài dưới tên bạn khác). */
+  function renderHello(m) {
+    const h = $('lobbyHello'), sub = $('lobbyHelloSub');
+    if (!h) return;
+    const name = $('studentName')?.value || '';
+    if (!name) { h.textContent = 'Chào em!'; if (sub) sub.textContent = 'Chọn trường, lớp và họ tên ở bước 1 để bắt đầu.'; return; }
+    const given = name.trim().split(/\s+/).pop();
+    h.textContent = 'Chào ' + given + '!';
+    if (sub) {
+      const cls = $('studentClass')?.value, sch = $('studentSchool')?.value;
+      sub.textContent = [cls ? 'Lớp ' + cls : '', sch].filter(Boolean).join(' · ') + ' — không phải em? Đổi họ tên ở bước 1.';
+    }
   }
 
   function init() {
-    window.addEventListener('edu:record-saved', renderMe);
+    window.addEventListener('edu:record-saved', () => renderMe(true));
+    window.addEventListener('edu:hub-closed', () => renderMe(true));
+    // Tab khác vừa nộp bài / ôn câu (cùng máy) → số liệu mới
+    window.addEventListener('storage', (e) => { if (!e.key || /^eduquiz_(records|wrongbook)|learning/i.test(e.key)) renderMe(true); });
+    // Học sinh quay lại sảnh sau khi làm bài ở tab này
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) renderMe(true); });
+    $('lobbyMe')?.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-me]');
+      if (!b) return;
+      if (b.dataset.me === 'hub') window.EduLearningHub?.open?.();
+      else if (typeof window.showRecords === 'function') window.showRecords();
+    });
     const more = $('lobbyMoreBtn');
     more?.addEventListener('click', () => {
       const open = more.getAttribute('aria-expanded') !== 'true';

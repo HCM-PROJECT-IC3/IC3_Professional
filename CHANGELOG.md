@@ -23,6 +23,110 @@ Thứ tự: Apps Script → `firestore.rules`/index → đẩy web.
      Lệch dữ liệu thì đặt `rosterDeltaSync: false` trong `js/backend-config.js`.
 
 
+## 11/11/2026 (24) — Trang chủ: tiêu đề 1 dòng chào học sinh; "Kết quả của em" có bài gần đây; danh sách lỗi chỉ thử lại phần đó
+
+(0 Firebase / Apps Script — trang chủ không gọi Firebase; số liệu đọc localStorage của máy này.)
+- Thanh tiêu đề (màn ≥ 1100px): bỏ chữ "EduQuiz IC3" cỡ lớn + khẩu hiệu (đã có ở thanh trái; h1 vẫn giữ cho trình đọc màn
+  hình). Thay bằng lời chào "Chào Khánh! Lớp 8A1 · Trường … — không phải em? Đổi họ tên ở bước 1" → máy dùng chung không
+  làm bài nhầm dưới tên bạn khác. Chú thích 3 mảng kỹ năng chỉ hiện từ 1500px, 1 hàng, bỏ cụm 3 chấm chồng nhau.
+- Thanh trái "Kết quả của em": thêm 4 bài gần đây (tên bài, %, Ôn luyện/Kiểm tra, hôm nay/hôm qua/N ngày trước), nút
+  "Ôn N câu đến hạn" (mở Góc học tập) và "Xem tất cả bài làm" — thay khoảng trống.
+  Hiệu năng: trước mỗi cú bấm/gõ trong form đọc + parse lại toàn bộ lịch sử (kèm chi tiết từng câu); nay chỉ tính lại khi
+  đổi học sinh, vừa nộp bài, đóng Góc học tập, quay lại tab hoặc tab khác lưu bài.
+- Danh sách học sinh (js/lobby-roster.js): tải lỗi trước đây ghi "Chưa có danh sách — liên hệ Điều phối đào tạo" (sai — do
+  mạng) và chỉ còn cách tải lại cả trang (tải lại cả ngân hàng câu hỏi). Nay báo đúng lỗi + nút "Thử lại" CHỈ tải lại
+  danh sách (bấm liên tục = 1 lượt), giữ trường/lớp/tên đã chọn. Lưu bản danh sách gần nhất trên máy (gọn [trường, lớp,
+  tên]) → mạng lỗi vẫn chọn được tên để làm bài, có dòng báo "đang dùng danh sách lưu trên máy" + Thử lại.
+- E2E 42/42 (sáng + tối, không gọi mạng ngoài); 59 file test PASS (1 lần chạy có 1 test lỗi ngẫu nhiên, 4 lần chạy lại đều
+  PASS), check-js/html/architecture PASS.
+
+## 11/11/2026 (23) — Đấu trường › Giáo viên: gọn kiểu macOS; đường dự phòng Firebase không mở 2 lần, lỗi chỉ thử lại phần lỗi
+
+- Firebase (js/arena/arena-room.js startRelay): tạo phòng gọi mở đường dự phòng 2 lần (ngay khi tạo + khi PeerJS mở).
+  Firebase tải chậm hơn PeerJS (thường gặp) → trước mở 2 đường: thêm 1 lượt ghi, và listener onSnapshot của đường 1 không
+  bao giờ đóng — kể cả sau khi Thoát phòng — nên mỗi tin của em dự phòng bị tính đọc 2 lần tới khi đóng tab. Đo bằng E2E
+  với code cũ: mở 2, thoát phòng còn 1 listener sống; bản mới: mở 1, thoát phòng đóng hết, PeerJS nối lại không mở thêm.
+- Đường dự phòng lỗi mạng: thêm nút "Thử mở lại đường dự phòng" ở sảnh chờ — chỉ mở lại đường đó (1 lượt ghi), phòng/mã/
+  học sinh đã vào giữ nguyên (trước phải Thoát phòng tạo lại = mất mã + ghi lại). Bấm liên tiếp chỉ 1 lượt. Lỗi sai quyền /
+  chưa đăng nhập thì không hiện nút (thử lại vẫn hỏng). Chỉ vẽ lại dòng trạng thái, không vẽ lại cả sảnh chờ.
+- Lưu Google Sheet: bấm ở màn kết quả rồi bấm tiếp ở "Lịch sử phòng" (hoặc bấm 2 lần lúc mạng chậm) → trước 2 lượt Apps
+  Script; nay 1 lượt mỗi phòng, đã lưu thì không gọi lại.
+- Giao diện tab Giáo viên (chỉ vai Giáo viên; màn chơi, Học sinh, Chơi một mình giữ nguyên):
+  - Thẻ chế độ: bỏ tranh bìa to + bóng khối → hàng gọn (ảnh nhỏ + tên + 1 dòng), 4 cột; điện thoại 2 cột.
+  - Số câu / Giây mỗi câu / Học sinh tối đa: segmented control 1 hàng. "Học sinh tối đa" chuyển lên cùng hàng (ẩn khi chọn
+    Bảng điểm).
+  - Bỏ nút "Tạo phòng và lấy mã" thứ 2 ở thẻ 3 (trùng thanh dính đáy) và dòng ghi chú lặp tóm tắt; thẻ 3 còn: phòng đang
+    dở, cách tổ chức, lịch sử. Nút phẳng, không nổi 3D. Dòng tài khoản 1 hàng phẳng (bỏ khung xanh + emoji).
+  - Toàn bộ thiết lập vừa 1 màn hình 1440×900 (trước phải cuộn ~1,7 màn).
+- E2E 40/40 (sáng + tối, PeerJS/Firebase/Apps Script giả, không gọi mạng ngoài); 59 file test, check-js/html/architecture PASS.
+
+## 11/11/2026 (22) — Đấu trường › Hành trình IC3: không chấm sai sao/xu do bất đồng bộ; bấm chặng ăn ngay lần đầu
+
+(0 Firebase / Apps Script — xu, sao, nhiệm vụ lưu localStorage theo biệt danh.)
+- Vào chặng (js/arena/arena.js playQuest, arena-quest.js go): bấm 2 chặng lúc đang tải câu → trước đây start() chạy 2 lần,
+  đồng hồ trận cũ chạy ngầm trên trận mới; trận mới là Săn vàng (không giới hạn giờ) thì đồng hồ cũ chia 0 → mọi câu bị
+  chấm hết giờ → sai sao/xu lưu vào hồ sơ. Nay chỉ 1 lượt tải một lúc (lượt sau báo "Đang tải chặng trước"), bản đồ khoá
+  trong lúc tải, start() dừng hẳn trận đang dở trước khi vào trận mới.
+- Mini-game (arena-mini.js onResult): trò gửi "result" 2 lần (vd Chơi lại trong khung trò) → trước cộng xu + sao 2 lần.
+  Nay đã chốt ván thì bỏ qua.
+- Gõ biệt danh rồi bấm ngay 1 chặng: ô biệt danh mất focus bắn "change" → vẽ lại cả bản đồ (id SVG cảnh nền đổi mỗi lần)
+  giữa lúc nhấn chuột → mất cú bấm, phải bấm 2 lần. Nay chỉ vẽ lại khi biệt danh đổi thật.
+- Tối: số sao trên chip cấp đang chọn đủ tương phản (trước 2,6:1). E2E 10/10 (sáng + tối, không gọi mạng ngoài), 59 file test PASS.
+
+## 11/11/2026 (21) — Quản lý câu hỏi & hình ảnh: 2 tab không ghi đè nháp, lỗi 1 file chỉ thử lại file đó
+
+- Nhiều tab (js/image-manager.js): bản nháp chung 1 khoá IndexedDB → trước đây tab lưu sau ghi đè mất bản sửa của tab kia.
+  Nay nháp ghi kèm id tab; tab khác vừa lưu bản mới hơn thì KHÔNG ghi đè, báo "Sao lưu JSON rồi đóng tab này".
+  BroadcastChannel báo ngay khi trang đang mở ở tab khác.
+- Tải ngân hàng câu hỏi: từng file khối riêng, tự thử lại 1 lần; còn lỗi thì báo đúng file + nút "Thử lại N file lỗi" chỉ đọc
+  lại file đó (file đã tải giữ trong bộ nhớ — đọc qua Apps Script là mỗi file 1 lượt). Thiếu file thì chưa mở vùng sửa
+  (đẩy lúc đó sẽ ghi sai số câu của khối thiếu trong meta.json).
+- Đang "Đẩy thay đổi": khoá vùng sửa + "Tải JSON cập nhật" (đẩy xong trang tải lại từ GitHub — sửa thêm lúc đẩy sẽ mất).
+- Tìm câu hỏi: chờ gõ xong 200 ms (trước gom ~8.000 câu mỗi phím), gõ không dấu cũng tìm được.
+- Giao diện: khung giới thiệu 6 dòng → 1 dòng + gập; nút "Đẩy N thay đổi" thôi nhấp nháy (viền vàng tĩnh).
+- E2E 14/14 (sáng + tối, 2 tab thật cùng lúc), 59 file test PASS. Không thêm lượt Firebase/Apps Script.
+
+## 11/11/2026 (20) — Tài liệu năm học: khung slide không còn "đen im lặng" khi Office Online mở chậm
+
+- Đo thật (IC3 LV3 › Bài 1, pptx 10 MB): trình chiếu Office Online lần đầu mở 1 file > 40 giây chỉ thấy nền đen
+  "SLIDE – OF –" (khung Office báo load ngay nên chữ "Đang mở bài…" tắt sớm); trình xem Drive (Xem dạng trang) 3–6 giây.
+  Mở lại file đó sau: Office có sẵn bản chuyển đổi, ~4 giây. Link tải Drive vẫn trả đúng file.
+- Thêm thanh trạng thái trên khung slide khi trình chiếu: cỡ file + đếm giây, sau 20 giây ghi "lần đầu thường 30–60
+  giây", nút "Xem ngay dạng trang" (nhớ lựa chọn; phím M để quay lại). Không che slide; tự ẩn khi bấm vào slide, đổi
+  bài/chế độ, bấm × hoặc sau 60 giây. Chỉ đổi giao diện — trang này không dùng Firebase/Apps Script.
+- E2E (Office/Drive thật, sáng + tối) PASS; 59 file test PASS.
+
+## 11/11/2026 (19) — Quản lý danh sách học sinh: không ghi trùng, lỗi phụ không báo "lỗi tải", bảng nhẹ
+
+- Ghi dữ liệu (js/roster-manager.js):
+  - Nút Lưu khoá khi đang ghi ("Đang lưu...") — trước bấm 2 lần lúc mạng chậm = 2 lệnh create → học sinh/lớp/khoá học
+    TRÙNG. Đang ghi thì ×/Huỷ/bấm nền không đóng hộp thoại.
+  - Lưu xong mà đọc lại bản ghi lỗi → báo "Đã lưu… KHÔNG cần lưu lại" (trước chung 1 try, báo như lưu thất bại → lưu lại).
+  - 4 bước sửa dữ liệu cũ sau khi tải chạy riêng từng bước: 1 bước lỗi không còn báo "Lỗi tải dữ liệu" (khiến bấm Tải lại
+    đọc lại cả nghìn học sinh vô ích).
+  - Đọc toàn bộ học sinh qua repository (`studentRoster.col()`) thay `EduFirebase.db.collection` — check-architecture
+    hết lỗi R3 (14/13) tồn tại từ trước.
+- Bảng học sinh: vẽ 200 dòng + "Hiện thêm" (trước mỗi phím gõ vẽ lại ~2.800 dòng + ~5.600 listener; nay 1 listener cho cả
+  bảng, gõ tìm chờ 160 ms); tìm không dấu ("au dinh an" ra "Âu Dĩnh Ân"); thêm lọc Trạng thái. Không thêm lượt đọc nào.
+- Giao diện: 1 hàng lọc + 1 hàng thao tác (trước rải 3 hàng), hướng dẫn "Cập nhật cho học sinh" gập lại, bỏ cột avatar
+  chữ cái; huy hiệu Đang học/Ngừng học đủ tương phản (trước 2,5:1). E2E 21/21 (sáng + tối), 59 file test PASS.
+
+## 11/11/2026 (18) — Tổng quan điều phối: lỗi 1 nguồn không trắng cả trang; biểu đồ đọc được thay kiểu "mẫu"
+
+- Tải theo TỪNG PHẦN (js/coordinator/dashboard.js, data-loader.js tách `loadRoster` / `loadResults`): trước roster +
+  kết quả bài nộp chung 1 try — Google Sheet bận là trắng cả trang, thử lại đọc lại hết. Nay phần nào lỗi chỉ phần đó
+  báo (kèm lý do), nút "Thử lại phần này" đọc lại ĐÚNG nguồn đó; phần đã có giữ nguyên (KPI phần thiếu hiện "—").
+  Mỗi lượt tải có số thứ tự: lượt cũ về muộn không đè lượt mới. `loadAll` giữ nguyên cho nơi gọi cũ.
+- Biểu đồ (js/coordinator/charts.js): bỏ nhãn (Bar)/(Line)/(Pie)/(Radar). Điểm TB theo lớp → cột ngang xếp lớp yếu
+  trước, lớp < 70% màu cảnh báo, vạch đạt 70%, tooltip số bài. Xu hướng → theo tuần (dữ liệu < 3 tuần thì theo ngày),
+  đường thẳng không làm mượt/không tô nền. Pie Đạt/Chưa đạt (trùng KPI) → Phân bố điểm 4 mức. Radar (trùng biểu đồ 1)
+  → % học sinh đã làm bài theo lớp, lớp ít nhất trước. Màu lấy theo theme, đổi sáng/tối tự vẽ lại (không tải lại).
+  Bảng Lớp × Bài thi: tô cả ô nền nhạt + chữ đậm (trước chữ trắng trên vàng/xanh nhạt ~1,5:1).
+- KPI: "Chưa làm bài" thêm % sĩ số; bỏ nhấc ô khi rê chuột, hiện so le, icon nhấp nhô.
+- analytics-service.js: thêm `trendByWeek`, `scoreBands`, `classStats` (test: analytics-coordinator.test.js);
+  `trendByDay` tính ngày theo giờ máy (trước giờ UTC → bài nộp 0h–7h sáng bị tính sang hôm trước).
+- Không thêm lượt đọc Firestore/Apps Script nào: lọc, đổi theme, vẽ lại đều dùng dữ liệu đã tải. E2E 20/20, 59 file test PASS.
+
 ## 11/11/2026 (17) — Làm bài: màu "Đã làm" không lẫn với Đúng/Sai; "Kiểm tra đáp án" mỗi câu 1 lần
 
 - Màu (css/quiz-play.css): "Đã làm" trước dùng xanh lá — trùng màu "Đúng" khi kiểm tra; thanh tiến độ xanh lá có sọc.

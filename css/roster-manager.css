@@ -157,7 +157,7 @@ body {
 }
 
 /* Neumorphism — ô nhập/dropdown LÕM XUỐNG (pressed). */
-#studentSearch, #studentClassFilter, #studentSchoolFilter, #studentTeacherFilter, select.form-input, input.form-input {
+#studentSearch, #studentClassFilter, #studentSchoolFilter, #studentTeacherFilter, #studentStatusFilter, select.form-input, input.form-input {
   font-family: inherit;
   font-size: .92rem;
   padding: .7rem 1rem;
@@ -168,7 +168,7 @@ body {
   box-shadow: var(--shadow-neu-pressed);
 }
 #studentSearch { min-width: 220px; flex: 1 }
-#studentSchoolFilter, #studentClassFilter, #studentTeacherFilter { min-width: 170px }
+#studentSchoolFilter, #studentClassFilter, #studentTeacherFilter, #studentStatusFilter { min-width: 0 }
 
 /* ---- Table (giống admin-users.css) ---- */
 .table-scroll { overflow-x: auto; border-radius: var(--radius-sm) }
@@ -199,10 +199,10 @@ tr:last-child td { border-bottom: none }
    sang white-space: nowrap — CHẮC CHẮN không bao giờ xuống dòng nữa vì cột
    sẽ tự nới rộng đúng bằng bề rộng chữ, hẹp hơn thì bảng cuộn ngang
    (.table-scroll đã có overflow-x: auto) thay vì bóp/rớt dòng. */
+#studentsRosterTable td:nth-child(1),
 #studentsRosterTable td:nth-child(2),
 #studentsRosterTable td:nth-child(3),
-#studentsRosterTable td:nth-child(4),
-#studentsRosterTable td:nth-child(6) { white-space: nowrap }
+#studentsRosterTable td:nth-child(5) { white-space: nowrap }
 /* Bảng "Lớp học": "Giáo viên phụ trách" (cột 3) cùng lý do như trên. */
 #classesTable td:nth-child(3) { white-space: nowrap }
 
@@ -215,8 +215,10 @@ tr:last-child td { border-bottom: none }
 .avatar-cell img { width: 100%; height: 100%; object-fit: cover }
 
 .badge { display: inline-flex; padding: .32rem .8rem; border-radius: 999px; font-size: .76rem; font-weight: 800; white-space: nowrap }
-.badge.active   { background: var(--green-lt); color: var(--green) }
-.badge.inactive { background: var(--red-lt);   color: var(--red) }
+.badge.active   { background: var(--green-lt); color: #15653a } /* 11/2026: --green trên nền nhạt chỉ 2,5:1 */
+.badge.inactive { background: var(--red-lt);   color: #a8261c }
+[data-theme="dark"] .badge.active   { color: #7fdca2 }
+[data-theme="dark"] .badge.inactive { color: #ff9b91 }
 
 /* ---- Modal ---- */
 .modal-overlay {
@@ -322,3 +324,25 @@ tr:last-child td { border-bottom: none }
 
 /* "Dữ liệu lúc HH:MM" cạnh nút Tải lại (js/roster-manager.js renderDataAge) */
 .data-age { font-size: 12px; color: var(--text-muted); white-space: nowrap; align-self: center; }
+
+/* ── 11/2026: tab Học sinh — lọc 1 hàng, thao tác 1 hàng, hướng dẫn gập, phân trang; bỏ cột avatar chữ cái ── */
+.st-filters { display: grid; grid-template-columns: minmax(220px, 2fr) repeat(4, minmax(140px, 1fr)); gap: .6rem; margin-bottom: .75rem; }
+.st-search { position: relative; display: block; }
+.st-search i { position: absolute; left: .8rem; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: .85rem; pointer-events: none; }
+.st-search input { width: 100%; padding-left: 2.2rem !important; }
+.st-filters select, .st-search input { min-width: 0; }
+.st-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-bottom: .75rem; }
+.st-actions .btn { margin-left: 0; }
+.st-spacer { flex: 1; }
+.st-actions .panel-toolbar-info { font-size: .85rem; color: var(--muted); font-weight: 600; }
+.st-actions .panel-toolbar-info b { color: var(--text); font-size: 1rem; }
+.st-actions .data-age { margin-left: .5rem; font-weight: 500; }
+details.export-hint { margin: 0 0 .75rem; padding: .45rem .8rem; background: transparent; border: 1px solid var(--border); border-radius: 8px; font-size: .8rem; color: var(--muted); }
+details.export-hint summary { cursor: pointer; font-weight: 600; color: var(--text); }
+details.export-hint[open] summary { margin-bottom: .35rem; }
+.st-more { display: flex; align-items: center; gap: .8rem; justify-content: center; padding: .8rem 0; font-size: .82rem; color: var(--muted); }
+.st-more[hidden] { display: none; }
+#studentsRosterTable .row-acts { white-space: nowrap; text-align: right; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (max-width: 900px) { .st-filters { grid-template-columns: 1fr 1fr; } .st-search { grid-column: 1 / -1; } }
+@media (max-width: 520px) { .st-filters { grid-template-columns: 1fr; } .st-spacer { display: none; } }

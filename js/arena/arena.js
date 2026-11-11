@@ -583,7 +583,15 @@
    * Trận quiz của 1 chặng trên bản đồ Hành trình. q: { cat, lvl, mt: tiền tố bộ "Theo chủ đề" ('1.'…'7.')
    * hoặc ALL (trộn 7 chủ đề), mode, n, title, quest: { node, map } }. Tải bộ câu riêng rồi vào trận.
    */
+  // Đang tải câu của 1 chặng: bấm chặng khác lúc này bị bỏ qua (trước đây 2 lượt tải xong = start() 2 lần → đồng hồ trận
+  // cũ vẫn chạy trên trận mới, hết giờ nhanh gấp đôi → chấm sai sao/xu lưu vào hồ sơ).
+  let questLoading = false;
   async function playQuest(q) {
+    if (questLoading) { toast('Đang tải chặng trước — chờ một chút nhé.'); return false; }
+    questLoading = true;
+    try { return await playQuestNow(q); } finally { questLoading = false; }
+  }
+  async function playQuestNow(q) {
     try {
       if (!SRC.meta || !SRC.manifest) [SRC.meta, SRC.manifest] = await Promise.all([getJson('data/ic3/meta.json'), getJson('data/ic3/minitests-manifest.json')]);
     } catch (e) { toast('Không tải được ngân hàng câu hỏi — kiểm tra mạng rồi thử lại.'); return false; }
@@ -609,6 +617,8 @@
     // force = chặng trên bản đồ Hành trình (js/arena/arena-quest.js): bộ câu, chế độ, số câu riêng —
     // không đụng bộ câu / chế độ em đang chọn ở Chơi một mình.
     force = !drill && force && Array.isArray(force.questions) ? force : null;
+    // Trận trước còn chạy (vào trận mới khi chưa kết thúc): dừng đồng hồ + bạn máy của nó, không để chạy ngầm trên trận mới
+    if (G && G.phase !== 'end') { clearInterval(G.timer); try { liveStop(); } catch (e) { /* chưa có */ } G.phase = 'end'; }
     if (!drill) { S.last = $('arNick').value.trim().slice(0, 30); save(); }
     const deck = drill || C.buildDeck((force ? force.questions : SRC.questions) || [], rng, 0, kinds());
     if (!deck.length) { if (force) toast('Bộ câu của chặng này chưa có câu chơi được.'); return; }

@@ -82,20 +82,32 @@
    * @param {Object} [opts]
    * @param {boolean} [opts.forceRefresh] Bỏ qua cache, luôn đọc lại từ Firestore.
    */
-  async function loadAll(profile, { forceRefresh = false } = {}) {
+  /** Phạm vi đọc của người đang đăng nhập: { isAdmin, schools, scopeKey } | null khi chưa được gán trường. */
+  function scopeOf(profile) {
     const isAdmin = profile.role === 'admin';
     const schools = Array.isArray(profile.schools) ? profile.schools.filter(Boolean) : [];
-    if (!isAdmin && !schools.length) {
-      // Chưa được Admin gán trường nào để hỗ trợ — không query gì cả (tránh
-      // query rỗng vô nghĩa/bị rules từ chối), trả về rỗng kèm cờ báo để UI
-      // hiện đúng thông báo (giống hệt teacher/data-loader.js).
-      return { courses: [], classes: [], students: [], teachers: [], results: [], schools: [], noSchoolsAssigned: true };
-    }
+    if (!isAdmin && !schools.length) return null;
+    return { isAdmin, schools, scopeKey: isAdmin ? 'admin-all-schools' : global.EduRosterCache.scopeKeyOf(profile) };
+  }
 
+  /**
+   * Tải toàn bộ dữ liệu nền (roster + kết quả) — giữ cho nơi gọi cũ. Trang Tổng quan điều phối gọi RIÊNG
+   * loadRoster / loadResults (11/2026) để 1 nguồn lỗi không làm trắng cả trang, và "Thử lại" chỉ đọc lại đúng nguồn lỗi.
+   */
+  async function loadAll(profile, opts = {}) {
+    const sc = scopeOf(profile);
+    if (!sc) return { courses: [], classes: [], students: [], teachers: [], results: [], schools: [], noSchoolsAssigned: true };
+    const [roster, results] = await Promise.all([loadRoster(profile, opts), loadResults(profile, opts)]);
+    return Object.assign({}, roster, { results, schools: sc.schools, noSchoolsAssigned: false });
+  }
+
+  /** Roster (khoá học, lớp, học sinh, giáo viên) — bản lưu 12 giờ trên máy, "Làm mới" chỉ đọc lại khi bản lưu > 30 phút. */
+  async function loadRoster(profile, { forceRefresh = false } = {}) {
+    const sc = scopeOf(profile);
+    if (!sc) return { courses: [], classes: [], students: [], teachers: [] };
+    const { isAdmin, schools, scopeKey } = sc;
     const RC = global.EduRosterCache;
-    const scopeKey = isAdmin ? 'admin-all-schools' : RC.scopeKeyOf(profile);
     const rosterCacheKey = RC.SCOPED_KEYS.dashboard + scopeKey;
-    const resultsCacheKey = 'coordinator:results:' + scopeKey;
 
     // 2 cache TÁCH RIÊNG, đọc song song — roster (persist=true, 30 phút,
     // sống qua nhiều lần mở tab) và quiz_results (sessionStorage, 3 phút).
@@ -138,14 +150,17 @@
       if (global.EduDataCache) await global.EduDataCache.setAsync(rosterCacheKey, bundle, ROSTER_CACHE_TTL_MS, /* persist */ true);
       return bundle;
     }));
+    return rosterBundle;
+  }
 
-    // Tải tăng dần (xem listRecentCached): chỉ đọc bài MỚI nộp kể từ lần trước.
-    const results = await global.EduRepositories.studentResult.listRecentCached({
-      cacheKey: resultsCacheKey, schools: isAdmin ? undefined : schools, limit: 1000,
-      freshMs: forceRefresh ? 15 * 1000 : RESULTS_CACHE_TTL_MS
+  /** Kết quả bài nộp — tải tăng dần (listRecentCached): chỉ đọc bài MỚI nộp kể từ lần trước. */
+  async function loadResults(profile, { forceRefresh = false } = {}) {
+    const sc = scopeOf(profile);
+    if (!sc) return [];
+    return global.EduRepositories.studentResult.listRecentCached({
+      cacheKey: 'coordinator:results:' + sc.scopeKey, schools: sc.isAdmin ? undefined : sc.schools, limit: 1000,
+      freshMs: forceRefresh ? 15 * 1000 : RESULTS_CACHE_TTL_MS,
     });
-
-    return Object.assign({}, rosterBundle, { results, schools, noSchoolsAssigned: false });
   }
 
   /** Xoá các <option> đã thêm động trước đó (giữ lại option đầu tiên — "Tất cả"). */
@@ -221,5 +236,5 @@
     return { filteredResults, filteredStudents, examHistories, allowedClasses };
   }
 
-  global.EduCoordinatorData = { loadAll, buildFilterOptions, applyFilters };
+  global.EduCoordinatorData = { loadAll, loadRoster, loadResults, scopeOf, buildFilterOptions, applyFilters };
 })(window);

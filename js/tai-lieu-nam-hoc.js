@@ -145,6 +145,7 @@
   }
 
   function clearViewer() {
+    slowStop();
     $('slidesFrame').querySelector('iframe')?.remove();
     $('slidesEmpty').hidden = false;
     $('slidesNow').textContent = 'Chưa chọn slide';
@@ -172,6 +173,7 @@
       const done = () => { $('slidesLoading').hidden = true; };
       iframe.onload = done;
       setTimeout(done, 15000); // trình xem lỗi không báo load: không che khung mãi
+      slowWatch(modeFor(it.file) === 'show' && it.file.kind !== 'gslides' ? it.file : null);
     }
     renderMode(it.file);
     updateTip();
@@ -192,6 +194,33 @@
       list.scrollTop = row.offsetTop - list.clientHeight / 2 + row.offsetHeight / 2; // .slides-list là offsetParent
     }
   }
+
+  // Office Online: khung của Office báo "load" ngay nhưng slide hiện sau 30–60 giây+ (lần đầu mở file) → trước đây chỉ thấy
+  // nền đen. Thanh trạng thái đếm giây + nút chuyển ngay sang dạng trang (Drive, 3–6 giây). Ẩn khi bấm vào slide (đang
+  // dùng được), đổi bài/chế độ, bấm ×, hoặc sau SLOW_HIDE_S giây.
+  const SLOW_HIDE_S = 60; // file đã mở gần đây thì Office có sẵn bản chuyển đổi, slide hiện sau vài giây — không giữ thanh quá lâu
+  let slowTimer = 0, slowStart = 0;
+  function slowStop() { clearInterval(slowTimer); slowTimer = 0; $('slidesSlow').hidden = true; }
+  function slowWatch(file) {
+    slowStop();
+    if (!file) return;
+    slowStart = Date.now();
+    const mb = Math.max(1, Math.round((showFile(file).size || 0) / 1e6));
+    const paint = () => {
+      const s = Math.round((Date.now() - slowStart) / 1000);
+      if (s >= SLOW_HIDE_S) { slowStop(); return; }
+      $('slidesSlowText').textContent = s < 20
+        ? `Office Online đang mở trình chiếu (${mb} MB)… ${s}s`
+        : `Vẫn đang mở (${s}s) — lần đầu mở 1 file thường mất 30–60 giây.`;
+    };
+    paint();
+    $('slidesSlow').hidden = false;
+    slowTimer = setInterval(paint, 1000);
+  }
+  $('slidesSlowClose').addEventListener('click', slowStop);
+  $('slidesSlowPages').addEventListener('click', () => { slowStop(); if (modeFor((flat[current] || {}).file || {}) === 'show') toggleMode(); });
+  // Bấm vào khung trình chiếu = slide đã dùng được → thôi nhắc
+  window.addEventListener('blur', () => setTimeout(() => { if (slideshowHasFocus()) slowStop(); }, 0));
 
   /** Nút chuyển chế độ: ghi chế độ SẼ chuyển sang; khoá khi file chỉ xem được 1 kiểu */
   function renderMode(f) {

@@ -99,7 +99,9 @@
       <header class="lobby-hero">
         <div class="lobby-hero-text">
           <h1 class="lobby-hero-title">EduQuiz <span>IC3</span></h1>
-          <p>Xây dựng kỹ năng thiết yếu cho thế giới số</p>
+          <p class="lobby-tagline">Xây dựng kỹ năng thiết yếu cho thế giới số</p>
+          <!-- Màn rộng (tên đã có ở thanh trái): lời chào thay tiêu đề — học sinh thấy ngay máy đang ghi bài cho ai (js/lobby-form-ux.js) -->
+          <p class="lobby-hello" aria-live="polite"><b id="lobbyHello">Chào em!</b> <span id="lobbyHelloSub">Chọn trường, lớp và họ tên ở bước 1 để bắt đầu.</span></p>
         </div>
         <!-- 3 mảng kỹ năng = 3 màu của 3 bước (trước: sơ đồ 3 vòng tròn to — nay 1 hàng gọn, 3 chấm chồng nhau giữ hình sơ đồ) -->
         <ul class="lobby-domains" aria-label="Ba mảng kỹ năng số">
@@ -155,7 +157,7 @@
             <!-- <option> chỉ render text thuần — bỏ hẳn emoji thay vì để lọt icon "vỡ". -->
             <option value="">Chưa có danh sách — liên hệ Điều phối đào tạo</option>
           </select>
-          <!-- <div class="roster-status" id="rosterStatus"></div> -->
+          <div class="roster-status" id="rosterStatus" role="status" hidden></div>
         </div>
 
         <!-- Lớp + Họ và tên (lọc dần theo Trường đã chọn) -->

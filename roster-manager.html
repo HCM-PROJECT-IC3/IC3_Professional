@@ -69,33 +69,37 @@
 
   <!-- ============ TAB: STUDENTS ============ -->
   <section class="tab-panel" id="panel-students">
-    <div class="panel-toolbar">
-      <div class="panel-toolbar-info"><span id="studentCount">0</span> học sinh</div>
-      <div class="panel-toolbar-filters">
-        <input type="text" id="studentSearch" placeholder="Tìm theo tên hoặc MSSV...">
-        <select id="studentSchoolFilter"><option value="">Tất cả trường</option></select>
-        <select id="studentClassFilter"><option value="">Tất cả lớp</option></select>
-        <select id="studentTeacherFilter"><option value="">Tất cả GV phụ trách</option></select>
-      </div>
+    <!-- Hàng 1: lọc (mọi lọc chạy trên dữ liệu đã tải — không đọc Firebase). Hàng 2: số lượng + thao tác. -->
+    <div class="st-filters">
+      <label class="st-search"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+        <input type="search" id="studentSearch" placeholder="Tìm tên, MSSV hoặc trường" autocomplete="off" aria-label="Tìm học sinh"></label>
+      <select id="studentSchoolFilter" aria-label="Lọc theo trường"><option value="">Tất cả trường</option></select>
+      <select id="studentClassFilter" aria-label="Lọc theo lớp"><option value="">Tất cả lớp</option></select>
+      <select id="studentTeacherFilter" aria-label="Lọc theo GV phụ trách"><option value="">Tất cả GV phụ trách</option></select>
+      <select id="studentStatusFilter" aria-label="Lọc theo trạng thái"><option value="">Mọi trạng thái</option><option value="active">Đang học</option><option value="inactive">Ngừng học</option></select>
+    </div>
+    <div class="st-actions">
+      <div class="panel-toolbar-info"><b id="studentCount">0</b> học sinh <span class="data-age" id="rosterDataAge"></span></div>
+      <span class="st-spacer"></span>
+      <button type="button" class="btn btn-ghost" id="reloadRosterBtn" title="Đọc lại dữ liệu mới nhất từ máy chủ — chỉ cần khi người khác vừa sửa trên máy khác (tốn lượt đọc Firebase)"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Tải lại</button>
+      <button type="button" class="btn btn-secondary" id="exportRosterJsonBtn"><i class="fa-solid fa-file-export" aria-hidden="true"></i> Xuất JSON</button>
       <button type="button" class="btn btn-secondary" id="importExcelBtn"><i class="fa-solid fa-file-import" aria-hidden="true"></i> Nạp từ Excel</button>
       <input type="file" id="importExcelInput" accept=".xlsx,.xls" hidden>
-      <button type="button" class="btn btn-primary" id="publishRosterBtn" hidden><i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i> Cập nhật cho học sinh</button>
-      <button type="button" class="btn btn-secondary" id="exportRosterJsonBtn"><i class="fa-solid fa-folder-tree" aria-hidden="true"></i> Xuất JSON (thủ công)</button>
-      <button type="button" class="btn btn-ghost" id="reloadRosterBtn" title="Đọc lại dữ liệu mới nhất từ máy chủ — chỉ cần khi người khác vừa sửa trên máy khác (tốn lượt đọc Firebase)"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Tải lại</button>
-      <span class="data-age" id="rosterDataAge"></span>
+      <button type="button" class="btn btn-secondary" id="publishRosterBtn" hidden><i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i> Cập nhật cho học sinh</button>
       <button type="button" class="btn btn-primary" id="addStudentBtn"><i class="fa-solid fa-plus" aria-hidden="true"></i> Thêm học sinh</button>
     </div>
-    <div class="export-hint" id="exportRosterHint">
-      <i class="fa-solid fa-lightbulb" aria-hidden="true"></i> Sau khi thêm/sửa/xoá/nạp Excel: Admin bấm <b>"<i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i> Cập nhật cho học sinh"</b> — Apps Script tự đưa
-      danh sách lên trang làm bài (học sinh thấy sau 1–2 phút). Điều phối đào tạo bấm <b>"<i class="fa-solid fa-folder-tree" aria-hidden="true"></i> Xuất JSON (thủ công)"</b>
-      rồi gửi file cho Admin (file dùng chung cho mọi trường).
-    </div>
+    <details class="export-hint" id="exportRosterHint">
+      <summary>Học sinh thấy thay đổi khi nào?</summary>
+      Sau khi thêm/sửa/xoá/nạp Excel: Admin bấm <b>Cập nhật cho học sinh</b> — Apps Script đưa danh sách lên trang làm bài
+      (học sinh thấy sau 1–2 phút). Điều phối đào tạo bấm <b>Xuất JSON</b> rồi gửi file cho Admin (file dùng chung cho mọi trường).
+    </details>
     <div class="table-scroll">
       <table id="studentsRosterTable">
-        <thead><tr><th></th><th>MSSV</th><th>Họ tên</th><th>Trường</th><th>Lớp</th><th>GV phụ trách</th><th>Trạng thái</th><th></th></tr></thead>
-        <tbody id="studentRows"><tr><td colspan="8" class="empty-cell">Đang tải...</td></tr></tbody>
+        <thead><tr><th>MSSV</th><th>Họ tên</th><th>Trường</th><th>Lớp</th><th>GV phụ trách</th><th>Trạng thái</th><th><span class="sr-only">Thao tác</span></th></tr></thead>
+        <tbody id="studentRows"><tr><td colspan="7" class="empty-cell">Đang tải...</td></tr></tbody>
       </table>
     </div>
+    <div class="st-more" id="studentMore" hidden></div>
   </section>
 </div>
 

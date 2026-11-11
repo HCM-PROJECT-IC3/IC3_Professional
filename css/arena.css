@@ -1778,6 +1778,7 @@ body[data-mode="moon"] .ar-scene { height: clamp(170px, min(30vw, 40vh), 360px);
 
 
 [data-theme="dark"] .ar-q-lv.is-on { background: #ffd23f; }
+[data-theme="dark"] .ar-q-lv.is-on small { color: #5c3d00; } /* 11/2026: #b07800 trên nền vàng chỉ 2,6:1 */
 [data-theme="dark"] .ar-q-rules li.is-on { background: #3b3220; color: #ffe9a6; }
 
 @media (max-width: 820px) {
@@ -1970,3 +1971,133 @@ body[data-mode="moon"] .ar-scene { height: clamp(170px, min(30vw, 40vh), 360px);
 .ar-retry { margin-left: .4rem; padding: .2rem .7rem; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text);
   font: 700 .82rem/1.3 Inter, sans-serif; cursor: pointer; }
 .ar-retry:hover { border-color: var(--purple); color: var(--purple-ink); }
+
+/* 11/2026: đang tải câu của 1 chặng — bản đồ mờ, không bấm chặng khác (js/arena/arena-quest.js go) */
+#arQuestMap.is-loading { opacity: .6; pointer-events: none; cursor: progress; transition: opacity .15s; }
+
+/* ══ Tab Giáo viên kiểu macOS (11/11/2026) ══
+   Trang thiết lập của thầy cô, không phải màn chơi: bỏ tranh bìa to + bóng khối + nút nổi 3D; thẻ chế độ thành hàng
+   (ảnh thu nhỏ + tên + 1 dòng); chip thành segmented control; 1 nút "Tạo phòng" duy nhất ở thanh dính đáy.
+   Chỉ áp cho #arHome[data-role="teacher"] — màn chơi / học sinh / chơi một mình giữ nguyên. */
+#arHome[data-role="teacher"] {
+  --tc-accent: var(--purple);
+  --tc-line: color-mix(in srgb, var(--text) 11%, transparent);
+  --tc-fill: color-mix(in srgb, var(--text) 5%, var(--card));
+}
+#arHome[data-role="teacher"] .ar-card { border-radius: 14px; padding: 1rem 1.1rem; box-shadow: 0 1px 2px rgba(16, 24, 40, .05); border-color: var(--tc-line); }
+#arHome[data-role="teacher"] .ar-h2 { font: 700 1.02rem/1.3 Inter, system-ui, sans-serif; margin-bottom: .75rem; }
+#arHome[data-role="teacher"] .ar-h2 > i { color: var(--muted); font-size: .9em; }
+#arHome[data-role="teacher"] .ar-step { width: 20px; height: 20px; font-size: .72rem; background: var(--tc-fill); color: var(--text); box-shadow: inset 0 0 0 1px var(--tc-line); }
+#arHome[data-role="teacher"] .ar-h2-quiet { font-size: .92rem; color: var(--muted); }
+#arHome[data-role="teacher"] .ar-field > span { font-weight: 600; font-size: .76rem; }
+#arHome[data-role="teacher"] .ar-hint { font-size: .78rem; }
+
+/* Tài khoản: 1 dòng phẳng, không khung xanh */
+.ar-teacher-who { background: transparent; border: 0; padding: .1rem .2rem; margin-bottom: .7rem; border-radius: 0; }
+.ar-teacher-ava {
+  display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; font-size: .9rem; flex: none;
+  background: var(--card2); color: var(--muted); box-shadow: inset 0 0 0 1px var(--border);
+}
+.ar-teacher-who > span:nth-child(2) { flex-direction: row; align-items: baseline; gap: .5rem; flex-wrap: wrap; }
+.ar-teacher-who b { font-weight: 700; font-size: .92rem; }
+.ar-teacher-who small { font-size: .78rem; }
+
+/* Thẻ chế độ → hàng gọn: ảnh thu nhỏ 2,2:1 + tên + 1 dòng */
+#arHome[data-role="teacher"] .ar-modes { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: .5rem; }
+#arHome[data-role="teacher"] .ar-mode,
+#arHome[data-role="teacher"] .ar-mode.has-cover,
+#arHome[data-role="teacher"] .ar-mode.m-tug.has-cover {
+  display: grid; grid-template-columns: 76px minmax(0, 1fr); grid-template-rows: auto auto; align-items: center; column-gap: .7rem; row-gap: .1rem;
+  min-height: 0; padding: .45rem .7rem .45rem .45rem; border-radius: 10px; color: var(--text);
+  background: var(--card); border: 1px solid var(--tc-line); box-shadow: none; outline: 0; transform: none; transition: background .12s, border-color .12s;
+}
+#arHome[data-role="teacher"] .ar-mode:hover { background: var(--tc-fill); transform: none; box-shadow: none; }
+/* Chế độ chỉ chơi 1 người: vẫn ẩn ở vai Giáo viên (khối trên đặt display:grid, đặc hiệu cao hơn quy tắc ẩn cũ) */
+#arHome[data-role="teacher"] .ar-mode:is(.m-gold, .m-fish, .m-dino, .m-moon, .m-boss, .m-goal) { display: none; }
+#arHome[data-role="teacher"] .ar-mode .ar-cover {
+  grid-row: 1 / span 2; width: 76px; aspect-ratio: 660 / 300; border-radius: 6px; border: 0; background: var(--mc-d);
+}
+#arHome[data-role="teacher"] .ar-mode .ar-cover::after { display: none; }
+#arHome[data-role="teacher"] .ar-mode .ar-cover > svg { transform: none !important; }
+#arHome[data-role="teacher"] .ar-mode .ar-cover * { animation: none !important; } /* ảnh nhỏ: không chạy hoạt hình */
+#arHome[data-role="teacher"] .ar-mode .ar-mode-ico { grid-row: 1 / span 2; width: 76px; text-align: center; font-size: 1.5rem; }
+#arHome[data-role="teacher"] .ar-mode > b,
+#arHome[data-role="teacher"] .ar-mode.has-cover > b { padding: 0; align-self: end; font: 650 .92rem/1.25 Inter, system-ui, sans-serif; }
+#arHome[data-role="teacher"] .ar-mode > .ar-mode-tag,
+#arHome[data-role="teacher"] .ar-mode.has-cover > .ar-mode-tag {
+  padding: 0; align-self: start; font-size: .76rem; font-weight: 500; color: var(--muted); opacity: 1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#arHome[data-role="teacher"] .ar-mode.is-on,
+#arHome[data-role="teacher"] .ar-mode.has-cover.is-on {
+  background: color-mix(in srgb, var(--tc-accent) 7%, var(--card)); border-color: var(--tc-accent);
+  box-shadow: 0 0 0 1px var(--tc-accent); transform: none; outline: 0;
+}
+#arHome[data-role="teacher"] .ar-mode.is-on::after,
+#arHome[data-role="teacher"] .ar-mode.has-cover.is-on::after {
+  top: 50%; right: .6rem; width: 18px; height: 18px; margin-top: -9px; font-size: .65rem; background: var(--tc-accent); color: #fff; box-shadow: none;
+}
+#arHome[data-role="teacher"] .ar-mode.is-on > :is(b, .ar-mode-tag) { padding-right: 1.4rem; }
+#arHome[data-role="teacher"] .ar-mode:focus-visible { outline: 2px solid var(--tc-accent); outline-offset: 2px; }
+#arHome[data-role="teacher"] .ar-mode-desc { margin-top: .6rem; padding: 0 .1rem; background: none; border: 0; font-size: .82rem; color: var(--muted); }
+#arHome[data-role="teacher"] .ar-mode-desc b { color: var(--text); font-weight: 600; }
+
+/* Chip → segmented control (rãnh xám, mục đang chọn nền trắng) */
+#arHome[data-role="teacher"] .ar-opts { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: .6rem 1rem; margin-top: .9rem; }
+#arHome[data-role="teacher"] .ar-opts .ar-chips {
+  flex-wrap: nowrap; gap: 2px; padding: 2px; border-radius: 9px; background: var(--tc-fill); box-shadow: inset 0 0 0 1px var(--tc-line);
+}
+#arHome[data-role="teacher"] .ar-opts .ar-chips button {
+  flex: 1 1 0; min-width: 0; padding: .32rem .4rem; border: 0; border-radius: 7px; background: transparent; color: var(--text);
+  font: 600 .84rem/1.25 Inter, system-ui, sans-serif; white-space: nowrap; transition: background .12s;
+}
+#arHome[data-role="teacher"] .ar-opts .ar-chips button:hover { background: color-mix(in srgb, var(--text) 6%, transparent); }
+#arHome[data-role="teacher"] .ar-opts .ar-chips button.is-on {
+  background: var(--card); color: var(--text); box-shadow: 0 1px 2px rgba(16, 24, 40, .14), 0 0 0 .5px var(--tc-line);
+}
+[data-theme="dark"] #arHome[data-role="teacher"] .ar-opts .ar-chips button.is-on { background: color-mix(in srgb, var(--text) 16%, var(--card)); }
+#arHome[data-role="teacher"] .ar-opts .ar-chips button:focus-visible { outline: 2px solid var(--tc-accent); outline-offset: 1px; }
+#arHome[data-role="teacher"] .ar-more { border-radius: 10px; border-color: var(--tc-line); background: transparent; }
+#arHome[data-role="teacher"] .ar-more > summary { font-weight: 600; font-size: .84rem; }
+
+/* Thanh tạo phòng dính đáy: 1 nút phẳng */
+#arHome[data-role="teacher"] .ar-playbar {
+  margin: .9rem -1.1rem -1rem; padding: .6rem 1.1rem; border-radius: 0 0 14px 14px; border-top-color: var(--tc-line);
+  background: color-mix(in srgb, var(--card) 86%, transparent); backdrop-filter: saturate(1.6) blur(12px);
+}
+#arHome[data-role="teacher"] .ar-hostbar-sum span { padding: .18rem .55rem; border-radius: 6px; background: var(--tc-fill); border-color: transparent; font-size: .8rem; font-weight: 600; }
+#arHome[data-role="teacher"] .ar-hostbar-sum span i { color: var(--muted); }
+#arHome[data-role="teacher"] .ar-btn-play {
+  padding: .55rem 1.1rem; border-radius: 9px; font: 600 .92rem/1.2 Inter, system-ui, sans-serif;
+  background: #15803d; box-shadow: 0 1px 2px rgba(16, 24, 40, .18), inset 0 1px 0 rgba(255, 255, 255, .12);
+}
+#arHome[data-role="teacher"] .ar-btn-play:active:not(:disabled) { transform: translateY(1px); box-shadow: none; }
+#arHome[data-role="teacher"] .ar-host-go { width: auto; margin-top: .8rem; padding: .55rem 1.1rem; font-size: .92rem; }
+#arHome[data-role="teacher"] .ar-btn-ghost { border-width: 1px; border-radius: 8px; font-weight: 600; }
+
+/* Bộ câu gần đây: chip phẳng cùng kiểu */
+#arHome[data-role="teacher"] .ar-recent-lbl { font-weight: 600; font-size: .78rem; }
+#arHome[data-role="teacher"] .ar-recent-chip { min-height: 30px; padding: .2rem .65rem; border-radius: 7px; border-width: 1px; border-color: var(--tc-line); font-weight: 600; font-size: .82rem; }
+#arHome[data-role="teacher"] .ar-recent-chip:hover { border-color: var(--tc-accent); }
+#arHome[data-role="teacher"] .ar-recent-chip.is-on { border-color: var(--tc-accent); background: color-mix(in srgb, var(--tc-accent) 8%, var(--card)); color: var(--text); }
+#arHome[data-role="teacher"] .ar-room-resume { border-radius: 10px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ar-gold) 45%, transparent); }
+#arHome[data-role="teacher"] .ar-room-card .ar-more-how { margin-top: 0; }
+
+/* Cổng đăng nhập: bỏ biểu tượng nhún + vạch tím đầu thẻ */
+.ar-teacher-gate { border-top: 1px solid var(--border); }
+.ar-gate-ico { animation: none; font-size: 2.2rem; }
+.ar-gate-title { font: 700 1.2rem/1.3 Inter, system-ui, sans-serif; }
+
+@media (min-width: 1000px) { #arHome[data-role="teacher"] .ar-modes { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 640px) {
+  #arHome[data-role="teacher"] .ar-opts { grid-template-columns: 1fr; }
+  /* Điện thoại: 2 cột, ảnh nhỏ + tên (dòng mô tả đã có ở #arModeDesc) */
+  #arHome[data-role="teacher"] .ar-modes { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .4rem; }
+  #arHome[data-role="teacher"] .ar-mode, #arHome[data-role="teacher"] .ar-mode.has-cover, #arHome[data-role="teacher"] .ar-mode.m-tug.has-cover {
+    grid-template-columns: 48px minmax(0, 1fr); column-gap: .5rem; padding: .35rem .5rem .35rem .35rem; }
+  #arHome[data-role="teacher"] .ar-mode .ar-cover { width: 48px; grid-row: auto; }
+  #arHome[data-role="teacher"] .ar-mode > .ar-mode-tag { display: none; }
+  #arHome[data-role="teacher"] .ar-mode > b, #arHome[data-role="teacher"] .ar-mode.has-cover > b { align-self: center; font-size: .86rem; }
+  #arHome[data-role="teacher"] .ar-mode.is-on::after, #arHome[data-role="teacher"] .ar-mode.has-cover.is-on::after { right: .4rem; width: 16px; height: 16px; margin-top: -8px; }
+  #arHome[data-role="teacher"] .ar-hostbar #arHostQuick { width: 100%; }
+}
