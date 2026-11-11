@@ -284,7 +284,7 @@ form:not(.hidden) { animation: formSlideIn .4s cubic-bezier(.16,1,.3,1) both }
   transition: var(--transition);
 }
 .role-opt:hover { box-shadow: var(--shadow-neu-raised) }
-.role-opt.active { box-shadow: var(--shadow-neu-pressed); color: var(--purple) }
+.role-opt.active { box-shadow: var(--shadow-neu-pressed); color: var(--purple-ink) }
 
 /* Nút submit — ĐỔI sang dải màu 3 tông của chính logo IIG thật (cam →
    xanh lá → xanh dương navy, xem 3 sọc chéo trong img/iig-logo.webp) thay
@@ -365,7 +365,7 @@ form:not(.hidden) { animation: formSlideIn .4s cubic-bezier(.16,1,.3,1) both }
   text-align: center;
   margin-top: .8rem;
   font-size: .8rem;
-  color: var(--purple);
+  color: var(--purple-ink);
   font-weight: 700;
   cursor: pointer;
   transition: color .15s ease;

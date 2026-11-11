@@ -157,7 +157,7 @@ body {
   font-weight: 800; font-size: .78rem; cursor: pointer; white-space: nowrap;
 }
 .btn-edit-text {
-  background: none; border: none; color: var(--purple);
+  background: none; border: none; color: var(--purple-ink);
   font-weight: 800; font-size: .78rem; cursor: pointer; margin-right: .8rem; white-space: nowrap;
 }
 
@@ -683,7 +683,7 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
 .dash-matrix-stat-card.stat-main { background: var(--teal-lt) }
 .dash-matrix-stat-card.stat-main b { color: var(--teal) }
 .dash-matrix-stat-card.stat-sub { background: var(--purple-lt) }
-.dash-matrix-stat-card.stat-sub b { color: var(--purple) }
+.dash-matrix-stat-card.stat-sub b { color: var(--purple-ink) }
 /* Cột "Buổi" — chữ cam (Sáng)/xanh lá đậm (Chiều) ĐÚNG màu chữ "SÁNG"/
    "CHIỀU" trong Excel gốc (ED7D31/375623) và bản PDF xuất ra. Nền không
    khai báo riêng ở đây nữa — dùng chung nền tint cả hàng (.dash-row-sess-*
@@ -862,7 +862,7 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
 .sched-grid input.sched-period::placeholder { color: var(--border) }
 /* Gợi ý trong hộp Sửa lịch (xem paintSchedHints()): số tiết/ngày dưới nhãn Thứ,
    ô tiết đã gõ lớp tô nhẹ, buổi có lớp mà chưa chọn Loại hình viền đỏ. */
-.sched-grid th .sched-day-count { display: block; font-size: .68rem; font-weight: 700; color: var(--purple); min-height: 1em }
+.sched-grid th .sched-day-count { display: block; font-size: .68rem; font-weight: 700; color: var(--purple-ink); min-height: 1em }
 .sched-grid input.sched-period.has-value { background: var(--purple-lt); border-color: var(--purple) }
 .sched-grid select.sched-type.is-missing { border-color: var(--red); background: var(--red-lt) }
 /* Chế độ "chỉ xem" (giáo viên) — làm mờ nhẹ + đổi con trỏ để rõ ràng đây
@@ -930,7 +930,7 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
 }
 .day-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px) }
 .day-card-title {
-  font-weight: 800; font-size: .82rem; color: var(--purple);
+  font-weight: 800; font-size: .82rem; color: var(--purple-ink);
   text-transform: uppercase; letter-spacing: .03em;
 }
 /* Mỗi buổi (Sáng/Chiều) là 1 khối riêng, TỰ ĐỔI MÀU theo "loại hình phụ
@@ -1051,7 +1051,7 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
    cột đang cần, đặc biệt hữu ích khi bảng dài phải cuộn ngang. */
 .tt-day-head.tt-day-0 { background: var(--blue-lt);   color: var(--blue) }
 .tt-day-head.tt-day-1 { background: var(--teal-lt);   color: var(--teal) }
-.tt-day-head.tt-day-2 { background: var(--purple-lt); color: var(--purple) }
+.tt-day-head.tt-day-2 { background: var(--purple-lt); color: var(--purple-ink) }
 .tt-day-head.tt-day-3 { background: var(--orange-lt); color: var(--orange) }
 .tt-day-head.tt-day-4 { background: rgba(221,79,166,.16); color: var(--pink) }
 .tt-day-head.tt-day-5 { background: var(--green-lt);  color: var(--green) }
@@ -1061,7 +1061,7 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
   width: 64px;
 }
 .tt-sess-morning   { background: var(--yellow-lt); color: #a97a00 }
-.tt-sess-afternoon { background: var(--purple-lt); color: var(--purple) }
+.tt-sess-afternoon { background: var(--purple-lt); color: var(--purple-ink) }
 .tt-tiet-cell { font-weight: 800; color: var(--muted); width: 44px }
 
 /* Chú thích huy hiệu cấp học — đặt ngay trên lưới, KHỚP màu với
@@ -1150,7 +1150,7 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
    cấu hình khung THCS 45’ trong khi cột chung đang hiện giờ Tiểu học
    35’ của Thứ 2) — hiện ngay trong ô, không phụ thuộc cột dùng chung. */
 .tt-cell-own-time {
-  font-size: .64rem; font-weight: 800; color: var(--purple);
+  font-size: .64rem; font-weight: 800; color: var(--purple-ink);
   background: var(--purple-lt); border-radius: 5px; padding: .1rem .3rem;
   align-self: center;
 }
@@ -1213,7 +1213,7 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
 #ttImportFileInput { margin-top: .6rem }
 #ttImportFileInput ~ .tt-import-progress { margin-top: .6rem }
 .tt-import-progress {
-  font-size: .8rem; font-weight: 700; color: var(--purple);
+  font-size: .8rem; font-weight: 700; color: var(--purple-ink);
   display: flex; align-items: center; gap: .5rem;
 }
 .tt-import-progress::before {
@@ -1293,7 +1293,7 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
 }
 .report-pivot thead th:first-child, .report-pivot td.report-pivot-name { text-align: left }
 .report-pivot td.report-pivot-name { font-weight: 700; white-space: nowrap }
-.report-pivot td.report-pivot-total { font-weight: 800; color: var(--purple); background: var(--purple-lt) }
+.report-pivot td.report-pivot-total { font-weight: 800; color: var(--purple-ink); background: var(--purple-lt) }
 .report-pivot tr.report-pivot-footer { font-weight: 800; background: var(--card2) }
 .report-pivot tr.report-pivot-footer td.report-pivot-total { background: var(--purple) ; color: #fff }
 .report-pivot tbody tr:hover { background: var(--purple-lt) }
@@ -1352,6 +1352,6 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
 }
 .week-nav-btn { width: 2.1rem; flex: none; display: inline-flex; align-items: center; justify-content: center; color: var(--muted) }
 .week-nav-today { padding: 0 .7rem; white-space: nowrap }
-.week-nav-btn:hover:not(:disabled), .week-nav-today:hover:not(:disabled) { border-color: var(--purple); color: var(--purple) }
+.week-nav-btn:hover:not(:disabled), .week-nav-today:hover:not(:disabled) { border-color: var(--purple); color: var(--purple-ink) }
 .week-nav-btn:disabled, .week-nav-today:disabled { opacity: .4; cursor: default }
 .search-count { font-size: .7rem; color: var(--muted); font-weight: 600; min-height: 1em }

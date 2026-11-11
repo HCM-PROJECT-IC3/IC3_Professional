@@ -12,18 +12,18 @@
 .td-head h1 { margin: 0; font: 800 1.5rem/1.2 'Baloo 2', 'Inter', sans-serif; display: flex; align-items: center; gap: .5rem; }
 .td-head h1 i { color: var(--yellow); }
 .td-back { color: var(--muted); text-decoration: none; font-weight: 700; font-size: .9rem; }
-.td-back:hover { color: var(--purple); }
+.td-back:hover { color: var(--purple-ink); }
 .td-classbar { display: flex; gap: .5rem; align-items: center; flex: 1 1 260px; }
 .td-classbar .td-select { flex: 1; min-width: 0; max-width: 320px; }
 .td-tools { display: flex; gap: .4rem; margin-left: auto; }
 .td-icon { width: 2.5rem; height: 2.5rem; display: grid; place-items: center; border-radius: 12px; border: 1px solid var(--border);
   background: var(--card); color: var(--text); cursor: pointer; text-decoration: none; font-size: 1rem; }
-.td-icon:hover { border-color: var(--purple); color: var(--purple); }
+.td-icon:hover { border-color: var(--purple); color: var(--purple-ink); }
 
 /* Điều khiển chung */
 .td-btn { display: inline-flex; align-items: center; gap: .4rem; min-height: 2.4rem; padding: .35rem .85rem; border-radius: 10px;
   border: 1px solid var(--border); background: var(--card); color: var(--text); font: inherit; font-weight: 700; font-size: .88rem; cursor: pointer; }
-.td-btn:hover:not(:disabled) { border-color: var(--purple); color: var(--purple); }
+.td-btn:hover:not(:disabled) { border-color: var(--purple); color: var(--purple-ink); }
 .td-btn:disabled { opacity: .5; cursor: not-allowed; }
 .td-btn.primary { background: var(--purple); border-color: var(--purple); color: #fff; }
 .td-btn.primary:hover { filter: brightness(1.1); color: #fff; }
@@ -34,11 +34,11 @@
 .td-text { width: 100%; resize: vertical; margin-top: .35rem; min-height: 5rem; }
 .td-num { width: 4.6rem; }
 .td-select:focus-visible, .td-input:focus-visible, .td-text:focus-visible, .td-btn:focus-visible, .td-icon:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
-.td-pill { display: inline-flex; align-items: center; min-height: 2rem; padding: .2rem .8rem; border-radius: 999px; background: var(--purple-lt); color: var(--purple); font-weight: 800; font-size: .85rem; }
+.td-pill { display: inline-flex; align-items: center; min-height: 2rem; padding: .2rem .8rem; border-radius: 999px; background: var(--purple-lt); color: var(--purple-ink); font-weight: 800; font-size: .85rem; }
 [data-theme="dark"] .td-pill { color: #aab6ff; }
 .td-card { background: var(--card); border-radius: var(--radius-sm); box-shadow: var(--shadow-card); padding: 1rem; min-width: 0; }
 .td-card h2, .td-card h3 { margin: 0 0 .6rem; font-size: 1rem; display: flex; align-items: center; gap: .45rem; }
-.td-card h3 i { color: var(--purple); }
+.td-card h3 i { color: var(--purple-ink); }
 [data-theme="dark"] .td-card h3 i { color: #aab6ff; }
 
 /* Tạo lớp */
@@ -89,7 +89,7 @@
 .td-feed li b { grid-row: span 2; align-self: center; text-align: center; font-weight: 900; }
 .td-feed li.is-plus b { color: var(--green); }
 .td-feed li.is-minus b { color: var(--red); }
-.td-feed li.is-redeem b { color: var(--purple); }
+.td-feed li.is-redeem b { color: var(--purple-ink); }
 .td-feed small { color: var(--muted); }
 
 /* Thi đua tổ */
@@ -147,7 +147,7 @@
 
 /* Hoa điểm 10 */
 .td-import { margin-bottom: 1rem; }
-.td-import a { color: var(--purple); font-weight: 700; }
+.td-import a { color: var(--purple-ink); font-weight: 700; }
 .td-imp-preview { margin-top: .8rem; padding: .8rem 1rem; border-radius: 10px; background: var(--purple-lt); font-size: .9rem; }
 .td-imp-preview p { margin: 0 0 .3rem; }
 .td-imp-preview ul { margin: 0 0 .7rem; padding-left: 1.2rem; line-height: 1.6; }
@@ -174,7 +174,7 @@
 .td-rewards { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: .7rem; margin-top: .6rem; }
 .td-reward { display: flex; flex-direction: column; align-items: center; gap: .4rem; padding: 1.1rem .8rem; border-radius: 14px; border: 2px solid transparent;
   background: var(--card); box-shadow: var(--shadow-card); color: var(--text); font: inherit; font-weight: 800; cursor: pointer; text-align: center; }
-.td-reward i { font-size: 1.8rem; color: var(--purple); }
+.td-reward i { font-size: 1.8rem; color: var(--purple-ink); }
 .td-reward b { color: var(--green); }
 .td-reward:hover { border-color: var(--purple); }
 .td-reward.is-locked { opacity: .5; }

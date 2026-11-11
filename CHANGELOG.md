@@ -23,6 +23,54 @@ Thứ tự: Apps Script → `firestore.rules`/index → đẩy web.
      Lệch dữ liệu thì đặt `rosterDeltaSync: false` trong `js/backend-config.js`.
 
 
+## 11/11/2026 (17) — Làm bài: màu "Đã làm" không lẫn với Đúng/Sai; "Kiểm tra đáp án" mỗi câu 1 lần
+
+- Màu (css/quiz-play.css): "Đã làm" trước dùng xanh lá — trùng màu "Đúng" khi kiểm tra; thanh tiến độ xanh lá có sọc.
+  Nay ô đã làm TÔ ĐẶC màu mực như phiếu trắc nghiệm (`--done`: sáng navy/chữ trắng 14:1, tối nền sáng/chữ đậm 13:1),
+  thanh tiến độ + chấm chú thích cùng màu, bỏ sọc. Xanh lá/đỏ chỉ còn cho Đúng/Sai: dấu ✓/✕ nhỏ ở góc ô câu đã kiểm tra.
+  Đáp án đang chọn giữ xanh dương nhạt, câu đang xem giữ vòng viền xanh.
+- Ôn luyện (js/quiz-engine.js): "Kiểm tra đáp án" mỗi câu CHỈ 1 LẦN. Trước bấm lại được ("Ẩn kết quả" → đổi đáp án →
+  kiểm tra tiếp) nên thử dần tới khi đúng. Nay kiểm tra xong: ghi `State.checked[câu]`, khoá phần trả lời (inert + chặn
+  click/chạm/kéo/phím ở pha capture, cả phím tắt 1–9/A–E), nút thành "🔒 Đã kiểm tra". Quay lại câu vẫn khoá và vẫn
+  thấy giải thích. Chưa chọn đáp án mà bấm thì chỉ nhắc, không tính lượt. `checked` lưu cùng bài làm dở (autosave
+  localStorage) nên tải lại trang vẫn khoá. Chế độ "Kiểm tra" không đổi (vốn không có nút này).
+- Không đổi chấm điểm, kết quả gửi lên Firestore/Sheet. E2E 30/30 (sáng + tối), 58 file test PASS.
+
+## 11/11/2026 (16) — Rà nốt 11 trang còn lại (học sinh, trò chơi, Đấu trường, đăng nhập, Hotspot)
+
+- Đấu trường / Live quiz: nút "Vào phòng" chữ trắng trên `--green` chỉ 2,7:1 (cả 2 chế độ) → xanh đậm `#15803d` (5:1);
+  chữ navy trên nền tối (2,27:1: "Đấu trường", "Chơi Hành trình IC3") → `--purple-ink` (arena.css, 13 chỗ, sáng không đổi).
+- Bỏ gradient kiểu "mẫu AI" ở luồng học sinh: thẻ ghi nhớ + thanh mục tiêu tím→ngọc (learning-hub.css), nút trợ lý AI
+  (ai-assist.css) → màu phẳng.
+- Giữ nguyên có chủ đích: tiêu đề chữ gradient + emoji của 6 trò chơi (Battle Quiz, Cyber Detective, Trí nhớ, Chim Vượt Ải,
+  PZ Defense, Mô phỏng máy tính), sảnh học sinh (đã chốt thiết kế; chữ logo "IC3" màu cam là logo), hoạ tiết giấy ở màn
+  làm bài, lớp mờ 3px sau hộp thoại.
+- Sau sửa: 0 chỗ < 3:1 ở cả 2 chế độ trên 28/28 trang (trừ chữ logo và báo nhầm của chữ gradient / lớp phủ đang ẩn).
+  Chỉ CSS — không đổi Firebase/dữ liệu. 58 file test PASS.
+
+## 11/11/2026 (15) — Độ tương phản chữ ở chế độ tối/sáng (đo tự động)
+
+Đo tỉ lệ tương phản chữ/nền thực tế của mọi phần tử hiển thị trên 17 trang quản lý (Playwright, cả 2 chế độ).
+- Tối: 19 chỗ chữ `#2f40b2` (`--purple`) trên nền tối chỉ 1,8–2,3:1 (Bộ đề, Danh sách HS, Quản lý hình ảnh, Tài liệu).
+  Thêm token **`--purple-ink`** cho MÀU CHỮ nhấn: sáng = `--purple` (không đổi gì), tối = `#9fadff` (≥ 6:1). 112 chỗ
+  `color: var(--purple|--accent-purple)` chuyển sang token này (chỉ thuộc tính `color`, không đụng nền/viền; bỏ qua arena.css).
+- Sáng: `--text-muted` `#9ca3af` (2,5:1) → `#6b7280` (4,8:1); số liệu xanh/vàng ở Quản lý hình ảnh dùng sắc đậm khi sáng.
+- Chip lọc đang chọn ở Bộ đề: bóng lõm neumorphic (tối gần như không thấy) → nền tím nhạt + viền mảnh.
+- Sau sửa: 0 chỗ < 3:1 ở cả 2 chế độ trên các trang đo. Chỉ CSS/màu — không đổi Firebase/dữ liệu. 58 file test PASS.
+
+## 11/11/2026 (14) — Bỏ dấu vết "giao diện mẫu AI" còn sót ở trang quản lý (chỉ đổi hiển thị)
+
+Rà 17 trang quản lý bằng ảnh chụp (đăng nhập giả, Firestore giả, chặn mạng). Đa số đã phẳng từ các đợt trước; sửa phần còn sót:
+- Thanh trên Bộ đề / Tổng quan điều phối: dải gradient chạy animation và chữ tiêu đề gradient → 1 màu, đứng yên.
+- Avatar gradient cam→đỏ kèm bóng đỏ, thanh tiến độ / avatar học sinh gradient "kẹo" (teacher-insights) → màu phẳng.
+- Bìa thẻ bộ đề: vẽ 1 màu (màu đầu của `coverGradient`) và bỏ hoạ tiết chấm bi. **Giá trị `coverGradient`/`icon`
+  lưu trong bộ đề không đổi** (`coverColor()` ở dashboard.js, `flatCover()` ở exam-builder.js chỉ dùng lúc vẽ).
+- Icon ✨ (`wand-magic-sparkles`) và 🚀 → icon đúng nghĩa: "Đề có sẵn" `layer-group`, "Bắt đầu làm bài" `play`,
+  thông báo `circle-info`, nút AI soạn câu `pen-to-square`. Nút dùng Gemini vẫn ghi rõ "AI"/"Gemini".
+- Giữ nguyên có chủ đích: trò chơi học sinh (Arena, Gọi tên, PZ Defense…), sảnh học sinh, vòng focus bàn phím,
+  emoji trong tin nhắn Zalo của Thi đua, emoji bìa bộ đề GV tự chọn (là dữ liệu).
+- Không đổi Firestore/Apps Script/localStorage. 58 file test + check-js/html/fa-subset đều PASS.
+
 ## 10/11/2026 (13) — Điểm danh › Lịch dạy: lịch tuần kiểu TKB Sáng/Chiều, hết khoảng trống 2 bên
 
 - Trang dùng hết bề ngang màn hình (bỏ giới hạn 1320px). Màn rộng: "Hôm nay" + "Việc cần làm" thành cột trái,
@@ -32,13 +80,18 @@ Thứ tự: Apps Script → `firestore.rules`/index → đẩy web.
   "Hôm nay" xếp lớp sáng trước, "Sao chép lịch" ghi rõ buổi.
 - Lớp của tôi chưa đọc được thì báo ngay trên lịch, nút "Đọc lại lớp này" chỉ đọc đúng các lớp đó
   (không phải bấm "Cập nhật tất cả").
-- **Tự xếp theo TKB** ở Lịch giảng dạy (`teaching_timetable`): lớp vào đúng buổi + nhãn "TKB tiết N", sắp theo tiết;
+- **Tự xếp theo Lịch giảng dạy + hiện giờ dạy** (sửa 11/11: bản 10/11 chỉ đọc `teaching_timetable` — thường trống vì lưới TKB lớp
+  tự điền từ Lịch tuần lúc mở, không lưu — và tra GV bằng `where active + orderBy name` cần index ghép → không xếp được gì).
+  Nay đọc như tab TKB lớp: mã lớp ở Lịch tuần (`teaching_schedule.periods`, `effectivePeriods`), thiếu mới lấy TKB lớp;
+  trường theo `location`/`periodSchools`; giờ ở Giờ tiết (`teaching_timetable_periods`, chưa đặt → khung mặc định).
+  Mọi truy vấn chỉ `where` 1 trường hoặc `orderBy` 1 trường (không cần index ghép). Thẻ lớp hiện giờ "08:10–08:45";
   lớp dạy cả sáng lẫn chiều cùng ngày (vd 4/1 tiết 3 + tiết 7) tách 2 thẻ. Tuần chưa nhập TKB dùng TKB gần nhất
   (TKB bàn giao). Lớp không có trong TKB (dạy bù) mới phải xếp tay.
-- Chi phí Firestore (`js/so-lop/tkb-source.js`, lưu `eduquiz_tkb_v1`): 1 get/tuần đang xem, giữ 6 giờ (tuần đã qua
-  30 ngày, kể cả tuần không có TKB); máy chưa có TKB nào → 1 lần `listByTeacher` (≤ 1 lần/3 ngày); Admin không có
-  `teacherCode` → 1 lần danh sách GV (giữ 3 ngày). Đo bằng test E2E: mở lần đầu 3 lượt, đổi tuần qua lại chỉ thêm
-  1 lượt/tuần mới, tải lại trang 0 lượt. Lỗi mạng: không thử lại trong 30 phút.
+- Chi phí Firestore (`js/so-lop/tkb-source.js`, lưu `eduquiz_tkb_v2`, tự xoá v1): 2 get/tuần đang xem (Lịch tuần + TKB lớp),
+  giữ 6 giờ (tuần đã qua 30 ngày, kể cả tuần trống); Giờ tiết 1 get/3 ngày; máy chưa có tuần nào → 1 lần đọc các tuần
+  Lịch tuần của GV (≤ 1 lần/3 ngày); Admin không có `teacherCode` → 1 lần danh sách GV (giữ 3 ngày). Đo bằng test E2E:
+  mở lần đầu 5 lượt, đổi tuần qua lại thêm 2 lượt/tuần mới, tải lại trang 0 lượt. Lỗi: không thử lại trong 30 phút,
+  in `[Lịch dạy · TKB]` ra Console, dòng dưới lịch nói rõ lý do.
 - Xếp tay chỉ lưu localStorage (`eduquiz_solop_v1.slots`), không Firebase, không `teacher_sync`.
   Test: `so-lop-core.test.js` (buoiOf, buoiGrid, classKey, tkbCells, tkbFor), `tkb-source.test.js` (đếm lượt đọc).
 

@@ -65,6 +65,8 @@
     'linear-gradient(135deg, #FFECC2 0%, #FFF8E6 100%)',
     'linear-gradient(135deg, #FFDCCF 0%, #FFEFE8 100%)',
   ];
+  /** Bìa vẽ 1 màu (màu đầu của gradient). COVERS giữ nguyên vì là giá trị coverGradient đã lưu trong bộ đề. */
+  const flatCover = (g) => { const m = /#[0-9a-f]{3,8}\b/i.exec(String(g || '')); return m ? m[0] : g; };
   const COVER_ICONS = ['📝', '💻', '🧠', '🚀', '🎯', '🔐', '🌐', '📚', '🧩', '⭐', '🏆', '🎨', '📊', '🔬', '💡', '🎮'];
   const MAX_OPTIONS = 6;
   const MAX_ROWS = 8;
@@ -389,7 +391,7 @@
   function renderTop() {
     const cover = $('ebCover');
     cover.textContent = B.theme.icon || '📝';
-    cover.style.background = COVERS[B.theme.color] || COVERS[0];
+    cover.style.background = flatCover(COVERS[B.theme.color] || COVERS[0]);
     $('ebTitleText').textContent = B.title.trim() || 'Đề chưa đặt tên';
     const lv = examLevel();
     const bits = [`${B.slides.length} câu`, (B.type || defaultType()) === 'elementary' ? 'Tiểu học' : 'THCS'];
@@ -477,13 +479,13 @@
     const s = B.slides[B.cur];
     if (!s) {
       stage.innerHTML = `<div class="eb-canvas eb-canvas-empty">
-        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <i class="fa-solid fa-file-circle-plus"></i>
         <p>Đề chưa có câu nào. Thêm câu tự soạn, lấy từ ngân hàng hoặc dán nhanh nhiều câu.</p>
         <div class="eb-empty-actions">
           <button type="button" class="eb-btn eb-btn-primary" data-act="add-type" data-type="single"><i class="fa-solid fa-plus"></i> Câu trắc nghiệm</button>
           <button type="button" class="eb-btn eb-btn-soft" data-act="open-bank"><i class="fa-solid fa-database"></i> Ngân hàng</button>
           <button type="button" class="eb-btn eb-btn-soft" data-act="open-import"><i class="fa-solid fa-paste"></i> Nhập nhanh</button>
-          <button type="button" class="eb-btn eb-btn-soft" data-act="open-ai" title="Gemini soạn câu hỏi theo chủ đề hoặc đoạn bài học"><i class="fa-solid fa-wand-magic-sparkles"></i> AI soạn câu</button>
+          <button type="button" class="eb-btn eb-btn-soft" data-act="open-ai" title="Gemini soạn câu hỏi theo chủ đề hoặc đoạn bài học"><i class="fa-solid fa-pen-to-square"></i> AI soạn câu</button>
         </div></div>`;
       return;
     }
@@ -1052,13 +1054,13 @@
   function openSettings(focusTitle) {
     const body = modal('<i class="fa-solid fa-sliders"></i> Cài đặt đề', `
       <div class="eb-set">
-        <div class="eb-set-cover" id="ebSetCover" style="background:${COVERS[B.theme.color] || COVERS[0]}">${esc(B.theme.icon || '📝')}</div>
+        <div class="eb-set-cover" id="ebSetCover" style="background:${flatCover(COVERS[B.theme.color] || COVERS[0])}">${esc(B.theme.icon || '📝')}</div>
         <div class="eb-set-fields">
           <label class="eb-field"><span>Tên đề *</span><input id="ebSetTitle" maxlength="120" value="${esc(B.title)}" placeholder="VD: Kiểm tra giữa kỳ – Khối 7"></label>
           <label class="eb-field"><span>Mô tả ngắn</span><input id="ebSetDesc" maxlength="300" value="${esc(B.desc)}" placeholder="VD: Ôn tập chủ đề 1–3, làm trong tiết 2"></label>
         </div>
       </div>
-      <div class="eb-field"><span>Màu bìa</span><div class="eb-swatches">${COVERS.map((g, i) => `<button type="button" class="eb-swatch${i === B.theme.color ? ' is-active' : ''}" data-color="${i}" style="background:${g}" aria-label="Màu ${i + 1}"></button>`).join('')}</div></div>
+      <div class="eb-field"><span>Màu bìa</span><div class="eb-swatches">${COVERS.map((g, i) => `<button type="button" class="eb-swatch${i === B.theme.color ? ' is-active' : ''}" data-color="${i}" style="background:${flatCover(g)}" aria-label="Màu ${i + 1}"></button>`).join('')}</div></div>
       <div class="eb-field"><span>Biểu tượng</span><div class="eb-icons">${COVER_ICONS.map((ic) => `<button type="button" class="eb-icon-pick${ic === B.theme.icon ? ' is-active' : ''}" data-icon="${ic}">${ic}</button>`).join('')}</div></div>
       <div class="eb-field-row">
         <label class="eb-field"><span>Cấp học</span><select id="ebSetType"><option value="elementary">Tiểu học</option><option value="middle">THCS</option></select></label>
@@ -1072,7 +1074,7 @@
     $('ebSetType').value = B.type || defaultType();
     let color = B.theme.color, icon = B.theme.icon;
     const paint = () => {
-      $('ebSetCover').style.background = COVERS[color]; $('ebSetCover').textContent = icon;
+      $('ebSetCover').style.background = flatCover(COVERS[color]); $('ebSetCover').textContent = icon;
       body.querySelectorAll('[data-color]').forEach((b) => b.classList.toggle('is-active', +b.dataset.color === color));
       body.querySelectorAll('[data-icon]').forEach((b) => b.classList.toggle('is-active', b.dataset.icon === icon));
     };
@@ -1259,7 +1261,7 @@
   /** AI soạn câu: Gemini trả câu dạng ngân hàng → văn bản "Nhập nhanh" → mở hộp Nhập nhanh để giáo viên duyệt/sửa. */
   function openAiGen() {
     if (!global.EduAI) { showToast('Trang chưa nạp Trợ lý AI.'); return; }
-    const body = modal('<i class="fa-solid fa-wand-magic-sparkles"></i> AI soạn câu hỏi (Gemini)', `
+    const body = modal('<i class="fa-solid fa-pen-to-square"></i> AI soạn câu hỏi (Gemini)', `
       <label class="eb-field"><span>Chủ đề</span><input id="ebAiTopic" class="eb-input" maxlength="200" placeholder="VD: Thiết bị nhập và thiết bị xuất"></label>
       <label class="eb-field"><span>Nội dung bài học (không bắt buộc) — AI chỉ hỏi trong phần này</span>
         <textarea id="ebAiSource" class="eb-input ai-gen-ta" maxlength="6000" placeholder="Dán đoạn bài học, tối đa 6.000 ký tự…"></textarea></label>
@@ -1271,7 +1273,7 @@
       <label class="eb-check"><input type="checkbox" id="ebAiMix"> Xen câu Đúng/Sai và câu nhiều đáp án</label>
       <div id="ebAiOut" class="ai-box" hidden data-ai-staff aria-live="polite"></div>
       <p class="eb-matrix-hint">Câu AI soạn sẽ hiện trong hộp "Nhập nhanh" để thầy cô <b>đọc lại, sửa rồi mới thêm</b>. AI có thể nhầm — nhất là đáp án. 0 lượt Firebase.</p>`,
-    `<button class="btn-cancel" onclick="closeModal()">Huỷ</button><button class="btn-save" id="ebAiGo"><i class="fa-solid fa-wand-magic-sparkles"></i> Soạn bằng AI</button>`);
+    `<button class="btn-cancel" onclick="closeModal()">Huỷ</button><button class="btn-save" id="ebAiGo"><i class="fa-solid fa-pen-to-square"></i> Soạn bằng AI</button>`);
     const go = $('ebAiGo');
     go.addEventListener('click', async () => {
       const payload = { topic: $('ebAiTopic').value, source: $('ebAiSource').value, count: +$('ebAiCount').value, level: $('ebAiLevel').value, grade: +$('ebAiGrade').value, mix: $('ebAiMix').checked };
@@ -2288,7 +2290,7 @@
     if (!levels.length) { toast('Ngân hàng chưa có bộ Ôn tập / Kiểm tra nào.', 'fa-triangle-exclamation'); return; }
     let pick = levels[0];
     let chosen = '';
-    const body = modal('<i class="fa-solid fa-wand-magic-sparkles"></i> Tạo nhanh từ đề có sẵn', '',
+    const body = modal('<i class="fa-solid fa-layer-group"></i> Tạo nhanh từ đề có sẵn', '',
       '<button class="btn-cancel" onclick="closeModal()">Huỷ</button><button class="btn-save" id="ebQuickGo" disabled><i class="fa-solid fa-floppy-disk"></i> Lưu vào Bộ đề của tôi</button>');
     const draw = () => {
       const names = Object.keys(levelMeta(pick.cat, pick.level)?.minitests || {}).filter(isReady);

@@ -12,7 +12,7 @@
 }
 
 .ai-btn { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; padding: 6px 14px; border-radius: 999px; cursor: pointer;
-  border: 1.5px solid var(--ai-bd); background: linear-gradient(135deg, var(--ai-bg), color-mix(in srgb, var(--ai-c2) 10%, var(--ai-bg)));
+  border: 1.5px solid var(--ai-bd); background: var(--ai-bg); /* 11/2026: bỏ gradient chéo */
   color: var(--ai-c); font: 700 .86rem/1.3 inherit; transition: transform .12s, border-color .12s; }
 .ai-btn:hover:not(:disabled) { border-color: var(--ai-c); transform: translateY(-1px); }
 .ai-btn:disabled { opacity: .6; cursor: progress; }

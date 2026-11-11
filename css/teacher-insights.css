@@ -14,15 +14,15 @@
   box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 24px rgba(47, 64, 178, .06); }
 .ti-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px 12px; flex-wrap: wrap; margin-bottom: 12px; }
 .ti-head h2 { margin: 0; font-size: 1.12rem; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 8px; }
-.ti-head h2 i { color: var(--purple); font-size: .95em; }
+.ti-head h2 i { color: var(--purple-ink); font-size: .95em; }
 .ti-scope { font-size: .8rem; font-weight: 600; color: var(--muted); }
 .ti-link { font-size: .82rem; font-weight: 700; color: var(--muted); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
-.ti-link:hover { color: var(--purple); }
+.ti-link:hover { color: var(--purple-ink); }
 .ti-sub { margin: -6px 0 10px; font-size: .82rem; color: var(--muted); }
 .ti-h3 { margin: 14px 0 6px; font-size: .92rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
 .ti-note { margin: 10px 0 0; font-size: .74rem; color: var(--muted); line-height: 1.45; }
 .ti-empty { color: var(--muted); font-size: .86rem; list-style: none; padding: 6px 0; }
-.ti-empty a { color: var(--purple); font-weight: 700; }
+.ti-empty a { color: var(--purple-ink); font-weight: 700; }
 .t-red { color: var(--red); } .t-green { color: var(--green); } .t-yellow { color: var(--yellow); }
 .t-gioi { color: var(--green); font-style: normal; } .t-kha { color: var(--blue); font-style: normal; } .t-tb { color: #b7791f; font-style: normal; } .t-yeu { color: var(--red); font-style: normal; }
 
@@ -36,13 +36,13 @@
 .ti-bub-ic.is-orange { background: var(--orange-lt); color: var(--orange); }
 .ti-bub-ic.is-green { background: var(--green-lt); color: var(--green); }
 .ti-progress { margin-top: 16px; display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 14px; background: var(--card2, var(--bg)); }
-.ti-prog-ic { width: 52px; height: 52px; flex: none; border-radius: 12px; display: grid; place-items: center; background: var(--purple-lt); color: var(--purple); font-size: 1.4rem; }
+.ti-prog-ic { width: 52px; height: 52px; flex: none; border-radius: 12px; display: grid; place-items: center; background: var(--purple-lt); color: var(--purple-ink); font-size: 1.4rem; }
 .ti-prog-body { flex: 1; min-width: 0; }
 .ti-prog-body small { font-size: .76rem; color: var(--muted); }
 .ti-prog-body b { font-size: .95rem; }
 .ti-bar { display: block; height: 8px; border-radius: 999px; background: var(--border); overflow: hidden; margin: 6px 0; }
-.ti-bar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--blue), var(--purple)); transition: width .6s ease; }
-.ti-bar.is-warn i { background: linear-gradient(90deg, var(--orange), var(--red)); }
+.ti-bar i { display: block; height: 100%; border-radius: inherit; background: var(--purple); transition: width .6s ease; }
+.ti-bar.is-warn i { background: var(--red); }
 
 /* Năng lực — vòng tròn */
 .ti-donut-row { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
@@ -61,10 +61,11 @@
 .ti-person { display: flex; align-items: center; gap: 12px; padding: 7px 4px; border-radius: 12px; }
 .ti-person:hover { background: var(--card2, var(--bg)); }
 .ti-ava { width: 40px; height: 40px; flex: none; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: .85rem; color: #fff; background: var(--muted); }
-.ti-ava.b-gioi { background: linear-gradient(135deg, #34d399, var(--green)); }
-.ti-ava.b-kha { background: linear-gradient(135deg, #60a5fa, var(--blue)); }
-.ti-ava.b-tb { background: linear-gradient(135deg, #fbbf24, var(--yellow)); }
-.ti-ava.b-yeu { background: linear-gradient(135deg, #fb7185, var(--red)); }
+/* 11/2026: màu phẳng theo xếp loại (trước: gradient 135° kiểu giao diện mẫu) */
+.ti-ava.b-gioi { background: var(--green); }
+.ti-ava.b-kha { background: var(--blue); }
+.ti-ava.b-tb { background: #c98a00; }
+.ti-ava.b-yeu { background: var(--red); }
 .ti-pname { flex: 1; min-width: 0; }
 .ti-pname b { display: block; font-size: .92rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ti-pname small { font-size: .74rem; color: var(--muted); }
@@ -72,7 +73,7 @@
 .ti-pill.is-up { background: var(--green-lt); color: var(--green); }
 .ti-pill.is-down { background: var(--orange-lt); color: var(--orange); }
 .ti-pill.is-ok { background: var(--blue-lt); color: var(--blue); }
-.ti-pill.is-top { background: var(--purple-lt); color: var(--purple); }
+.ti-pill.is-top { background: var(--purple-lt); color: var(--purple-ink); }
 .ti-view { flex: none; padding: 5px 16px; border-radius: 999px; border: 1.5px solid var(--blue); background: transparent; color: var(--blue); font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; }
 .ti-view:hover { background: var(--blue); color: #fff; }
 .ti-view:focus-visible, .ti-mini:focus-visible { outline: 3px solid var(--purple); outline-offset: 2px; }
@@ -111,7 +112,7 @@
 .ti-cls-meta small { display: block; font-size: .7rem; }
 .ti-assign-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .ti-mini { padding: 5px 10px; border-radius: 999px; border: 1px solid var(--border); background: var(--card); color: var(--text); font: inherit; font-size: .76rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
-.ti-mini:hover:not(:disabled) { border-color: var(--purple); color: var(--purple); }
+.ti-mini:hover:not(:disabled) { border-color: var(--purple); color: var(--purple-ink); }
 .ti-mini:disabled { opacity: .5; cursor: default; }
 .ti-mini.is-danger { color: var(--red); }
 .ti-rounds-pick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }

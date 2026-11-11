@@ -117,7 +117,7 @@ function _rdAiBlock(d) {
   const id = 'rdai' + (_rdAiItems.size + 1);
   _rdAiItems.set(id, d);
   return `<div class="rd-ai"><button type="button" class="ai-btn" onclick="_rdAskAI('${id}', this)">
-      <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Hỏi AI: vì sao em sai?</button>
+      <i class="fa-solid fa-circle-question" aria-hidden="true"></i> Hỏi AI: vì sao em sai?</button>
     <div class="ai-box" hidden aria-live="polite"></div></div>`;
 }
 async function _rdAskAI(id, btn) {

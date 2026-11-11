@@ -80,7 +80,7 @@ body {
 .btn-edit-text {
   background: none;
   border: none;
-  color: var(--purple);
+  color: var(--purple-ink);
   font-weight: 800;
   font-size: .88rem;
   cursor: pointer;
@@ -120,7 +120,7 @@ body {
   transition: var(--transition);
 }
 .tab-btn:hover { color: var(--text) }
-.tab-btn.active { color: var(--purple); border-bottom-color: var(--purple) }
+.tab-btn.active { color: var(--purple-ink); border-bottom-color: var(--purple) }
 
 .tab-panel { display: none }
 .tab-panel.active { display: block; animation: fadeIn .2s ease }
@@ -208,7 +208,7 @@ tr:last-child td { border-bottom: none }
 
 .avatar-cell {
   width: 42px; height: 42px; border-radius: 50%;
-  background: var(--purple-lt); color: var(--purple);
+  background: var(--purple-lt); color: var(--purple-ink);
   display: flex; align-items: center; justify-content: center;
   font-weight: 800; font-size: .92rem; overflow: hidden;
 }

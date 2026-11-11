@@ -189,14 +189,19 @@ var tkbDays = {
   '3x': { morning: ['9/9'] }, '8': { morning: ['9/9'] },
 };
 var cells = L.tkbCells(tkbDays);
-assertEq('ô TKB: thứ, buổi, tiết (chiều đánh số tiếp sau sáng), bỏ ô trống và thứ lạ', cells.map(function (c) { return c.dow + c.b + c.tiet + ':' + c.cls; }), ['1m2:4.5', '1m4:5.6', '2m2:5.5', '2m3:4.1', '2m4:3.3', '2a5:5.2', '2a6:4.6']);
+assertEq('ô TKB: thứ, buổi, tiết trong buổi (như lưới TKB lớp), bỏ ô trống và thứ lạ', cells.map(function (c) { return c.dow + c.b + c.tiet + ':' + c.cls; }), ['1m2:4.5', '1m4:5.6', '2m2:5.5', '2m3:4.1', '2m4:3.3', '2a1:5.2', '2a2:4.6']);
+var times = { '3': { morning: [{ start: '07:30', end: '08:05' }, { start: '08:10', end: '08:45' }, { start: '09:20', end: '09:55' }, { start: '10:00', end: '10:35' }], afternoon: [{ start: '13:30', end: '14:05' }, { start: '14:10', end: '14:45' }] } };
+var cellsT = L.tkbCells(tkbDays, times);
+assertEq('giờ tiết gắn theo thứ + buổi + tiết', cellsT.filter(function (c) { return c.dow === 2; }).map(function (c) { return c.cls + ' ' + c.start + '-' + c.end; }), ['5.5 08:10-08:45', '4.1 09:20-09:55', '3.3 10:00-10:35', '5.2 13:30-14:05', '4.6 14:10-14:45']);
+assertEq('thứ không có giờ tiết → trống', cellsT.filter(function (c) { return c.dow === 1; }).map(function (c) { return c.start; }), ['', '']);
 var same = function (a, b) { return a.toLowerCase().replace(/^tih /, '') === b.toLowerCase().replace(/^tih /, ''); };
 var tue = new Date(2026, 10, 10), mon = new Date(2026, 10, 9);
 var bt = function (h) { return h && [h.b, h.tiet]; };
-assertEq('khớp lớp + thứ → buổi, tiết', [bt(L.tkbFor(cells, '4A6', 'TIH PHONG PHÚ 2', tue, same)), bt(L.tkbFor(cells, '3A3', 'X', tue, same)), bt(L.tkbFor(cells, '4A5', '', mon, same))], [['a', [6]], ['m', [4]], ['m', [2]]]);
+assertEq('khớp lớp + thứ → buổi, tiết', [bt(L.tkbFor(cells, '4A6', 'TIH PHONG PHÚ 2', tue, same)), bt(L.tkbFor(cells, '3A3', 'X', tue, same)), bt(L.tkbFor(cells, '4A5', '', mon, same))], [['a', [2]], ['m', [4]], ['m', [2]]]);
+assertEq('giờ dạy của lớp', [L.tkbFor(cellsT, '4A6', '', tue).time, L.tkbFor(cellsT, '4A5', '', mon).time], [{ m: '', a: '14:10–14:45' }, { m: '', a: '' }]);
 assertEq('ô có ghi trường: khác trường thì không khớp; khác thứ / không có lớp → null', [L.tkbFor(cells, '5A5', 'THCS Mạch Kiếm Hùng', tue, same), bt(L.tkbFor(cells, '5A5', 'TIH PHONG PHÚ 2', tue, same)), L.tkbFor(cells, '4A6', '', mon, same), L.tkbFor([], '4A6', '', tue)], [null, ['m', [2]], null, null]);
-var both = L.tkbFor(L.tkbCells({ '3': { morning: ['', '', '4/1'], afternoon: ['4/1'] } }), '4A1', '', tue);
-assertEq('lớp dạy cả sáng lẫn chiều: tách tiết theo buổi', [both.b, both.m, both.a], ['m', [3], [4]]);
+var both = L.tkbFor(L.tkbCells({ '3': { morning: ['', '', '4/1', '4/1'], afternoon: ['4/1'] } }, times), '4A1', '', tue);
+assertEq('lớp dạy cả sáng lẫn chiều: tách tiết + giờ theo buổi', [both.b, both.m, both.a, both.time], ['m', [3, 4], [1], { m: '09:20–10:35', a: '13:30–14:05' }]);
 var g2 = L.buoiGrid([{ key: 'a', date: tue }, { key: 'b', date: tue }, { key: 'c', date: tue }], function (e) { return { a: 'a', b: 'm' }[e.key] || ''; }, [mon, tue]);
 assertEq('lưới nhận hàm chọn buổi (TKB trước, xếp tay sau)', [g2.m[1].length, g2.a[1].length, g2.u[1].length], [1, 1, 1]);
 

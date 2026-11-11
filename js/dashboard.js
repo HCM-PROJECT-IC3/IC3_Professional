@@ -42,6 +42,11 @@ let currentSearch = '';
    ======================================== */
 /* set.icon có thể là đường dẫn ảnh (img/*.png) hoặc 1 emoji do người dùng nhập khi tạo bộ đề
    mới (modal "Tạo bộ đề mới") — hàm này render đúng loại tương ứng. */
+/** Màu bìa hiển thị: màu đầu của coverGradient đã lưu (bìa phẳng 1 màu). Chỉ đổi cách vẽ — dữ liệu bộ đề giữ nguyên. */
+function coverColor(g) {
+  const m = /#[0-9a-f]{3,8}\b|rgba?\([^)]*\)/i.exec(String(g || ''));
+  return m ? m[0] : (g || '#e8ecff');
+}
 function renderDeckIcon(set) {
   const icon = set.icon || '🎯';
   if (/\.(png|jpg|jpeg|webp|svg)$/i.test(icon)) {
@@ -84,7 +89,7 @@ function renderCards() {
       // Chưa có bộ đề nào (không phải do lọc/tìm kiếm) → mời soạn đề đầu tiên
       ? `<div class="no-results no-sets"><span class="emoji"><i class="fa-solid fa-book-open"></i></span>
           <p><b>Chưa có bộ đề nào.</b><br>Soạn đề từ ngân hàng câu hỏi IC3/Spark, hoặc lấy ngay 1 bộ Ôn tập / Kiểm tra theo tiết có sẵn, rồi gửi link cho học sinh làm bài.</p>
-          <div class="no-sets-actions"><button type="button" class="btn-create" onclick="openExamBuilder({ fresh: true })"><i class="fa-solid fa-plus"></i> Soạn đề đầu tiên</button><button type="button" class="btn-create btn-create-ghost" onclick="EduExamBuilder.quickCreate()"><i class="fa-solid fa-wand-magic-sparkles"></i> Lấy đề Ôn tập / Kiểm tra có sẵn</button></div></div>`
+          <div class="no-sets-actions"><button type="button" class="btn-create" onclick="openExamBuilder({ fresh: true })"><i class="fa-solid fa-plus"></i> Soạn đề đầu tiên</button><button type="button" class="btn-create btn-create-ghost" onclick="EduExamBuilder.quickCreate()"><i class="fa-solid fa-layer-group"></i> Lấy đề Ôn tập / Kiểm tra có sẵn</button></div></div>`
       : `<div class="no-results"><span class="emoji"><i class="fa-solid fa-magnifying-glass"></i></span><p>Không tìm thấy bộ đề nào phù hợp.</p></div>`;
     if (dotsWrap) dotsWrap.innerHTML = '';
     track.style.paddingLeft = track.style.paddingRight = '';
@@ -98,7 +103,7 @@ function renderCards() {
   track.innerHTML = sets.map(set => `
     <div class="carousel-item" data-id="${set.id}">
       <div class="quiz-card" data-id="${set.id}" data-type="${set.type}">
-        <div class="card-cover" style="background:${set.coverGradient};">
+        <div class="card-cover" style="background:${coverColor(set.coverGradient)};">
           <div class="cover-pattern"></div>
           <div class="cover-icon-wrap" style="color:${set.iconColor || '#5B8DEF'};">${renderDeckIcon(set)}</div>
         </div>
@@ -114,7 +119,7 @@ function renderCards() {
             <div class="stat-item"><span><i class="fa-solid fa-users"></i></span><span>${getAttemptCount(set.id)} lượt</span></div>
           </div>
           <div class="card-actions">
-            <button class="btn-play" onclick="openStartModal('${set.id}', event)"><i class="fa-solid fa-rocket"></i> Bắt đầu làm bài</button>
+            <button class="btn-play" onclick="openStartModal('${set.id}', event)"><i class="fa-solid fa-play"></i> Bắt đầu làm bài</button>
             <button class="btn-manage" onclick="openManageModal('${set.id}', event)" title="Quản lý bộ đề"><i class="fa-solid fa-gear"></i></button>
           </div>
         </div>
@@ -385,10 +390,10 @@ function openStartModal(id, event) {
   const set = allSets.find(s => s.id === id);
   if (!set) return;
 
-  document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-rocket"></i> Bắt đầu – ${set.title}`;
+  document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-play"></i> Bắt đầu – ${set.title}`;
   document.getElementById('modal-footer').innerHTML = `
     <button class="btn-cancel" onclick="closeModal()">Huỷ bỏ</button>
-    <button class="btn-save" onclick="confirmStartQuiz('${id}')"><i class="fa-solid fa-rocket"></i> Mở bài làm</button>
+    <button class="btn-save" onclick="confirmStartQuiz('${id}')"><i class="fa-solid fa-play"></i> Mở bài làm</button>
   `;
   document.getElementById('modal-body').innerHTML = `
     <div class="form-group">
@@ -1115,7 +1120,7 @@ function showToast(msg, iconClass) {
   const iconEl = toast.querySelector('.toast-icon i');
   if (iconEl) {
     // Icon đứng yên (trước: fa-bounce nhún khi thành công, xem giao diện phẳng).
-    iconEl.className = 'fa-solid ' + (iconClass || 'fa-rocket');
+    iconEl.className = 'fa-solid ' + (iconClass || 'fa-circle-info');
   }
   document.getElementById('toast-text').textContent = msg;
   toast.classList.add('show');

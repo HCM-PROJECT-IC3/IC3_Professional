@@ -320,7 +320,7 @@
     ul.innerHTML = classRace.length
       ? classRace.map((c, i) => `<li class="watchlist-item race-item"><span class="name">${MEDALS[i] || `${i + 1}.`} ${esc(c.className)}</span>`
         + `<span class="meta">TB ${c.avg}% · ${c.active}${c.rosterSize ? '/' + c.rosterSize : ''} HS · ${c.submissions} bài</span>`
-        + `<span class="score-chip" style="background:var(--purple-lt);color:var(--purple)">${c.points}</span></li>`).join('')
+        + `<span class="score-chip" style="background:var(--purple-lt);color:var(--purple-ink)">${c.points}</span></li>`).join('')
       : '<li class="watchlist-empty">Tuần này chưa có bài nộp nào (theo bộ lọc đang chọn).</li>';
   }
 

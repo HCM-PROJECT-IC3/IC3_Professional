@@ -89,7 +89,7 @@ select {
 
 .badge { display: inline-flex; padding: .25rem .65rem; border-radius: 999px; font-size: .68rem; font-weight: 800; white-space: nowrap }
 .badge.admin   { background: #ffe5b0; color: #a97a00 }
-.badge.teacher { background: var(--purple-lt); color: var(--purple) }
+.badge.teacher { background: var(--purple-lt); color: var(--purple-ink) }
 .badge.student { background: var(--teal-lt);   color: var(--teal) }
 .badge.coordinator { background: var(--blue-lt); color: var(--blue) }
 .badge.teaching_coordinator { background: var(--orange-lt); color: var(--orange) }
@@ -173,7 +173,7 @@ select {
 .import-hint b { color: var(--text) }
 .import-hint code {
   font-family: 'JetBrains Mono', 'Consolas', monospace; font-size: .76rem;
-  background: var(--card); padding: .1rem .35rem; border-radius: 5px; color: var(--purple);
+  background: var(--card); padding: .1rem .35rem; border-radius: 5px; color: var(--purple-ink);
 }
 .import-summary { display: flex; gap: .6rem; flex-wrap: wrap }
 .import-stat {
@@ -202,7 +202,7 @@ select {
 .btn-primary:hover:not(:disabled) { filter: brightness(1.08) }
 .btn-primary:disabled { opacity: .45; cursor: not-allowed }
 .import-toolbar .btn-primary { background: var(--card); color: var(--text); border: 1px solid var(--border) }
-.import-toolbar .btn-primary:hover { border-color: var(--purple); color: var(--purple); filter: none }
+.import-toolbar .btn-primary:hover { border-color: var(--purple); color: var(--purple-ink); filter: none }
 .wrap { padding-top: 1.4rem }
 .import-toolbar { margin-bottom: .9rem }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap }
@@ -222,7 +222,7 @@ select {
   margin-left: auto; display: inline-flex; align-items: center; gap: .35rem; height: 2.1rem; padding: 0 .8rem;
   border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text); font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer;
 }
-.au-refresh:hover { border-color: var(--purple); color: var(--purple) }
+.au-refresh:hover { border-color: var(--purple); color: var(--purple-ink) }
 .au-refresh:disabled { opacity: .5; cursor: progress }
 
 .au-tabs { display: flex; gap: .3rem; flex-wrap: wrap; margin-bottom: .9rem }
@@ -253,7 +253,7 @@ select {
 .au-chip.au-more { color: var(--muted); cursor: help }
 .au-none { font-size: .76rem; color: var(--muted); font-style: italic }
 .au-dash { color: var(--muted); opacity: .6 }
-.au-code { font: 600 .76rem ui-monospace, Consolas, monospace; color: var(--purple); background: var(--purple-lt); border-radius: 5px; padding: .12rem .4rem }
+.au-code { font: 600 .76rem ui-monospace, Consolas, monospace; color: var(--purple-ink); background: var(--purple-lt); border-radius: 5px; padding: .12rem .4rem }
 .au-act { white-space: nowrap; text-align: right; width: 1% }
 .au-act > * { vertical-align: middle }
 .au-warn { display: inline-flex; align-items: center; gap: .3rem; font-size: .72rem; font-weight: 700; color: #a46a00; margin-right: .5rem; cursor: help }
@@ -263,11 +263,11 @@ select {
   display: inline-flex; align-items: center; gap: .3rem; border: 1px solid var(--border); background: var(--card);
   color: var(--text); font: inherit; font-size: .76rem; font-weight: 700; padding: .3rem .65rem; border-radius: 7px; cursor: pointer; margin-left: .35rem;
 }
-.au-edit:hover, .au-edit:focus-visible { border-color: var(--purple); color: var(--purple) }
+.au-edit:hover, .au-edit:focus-visible { border-color: var(--purple); color: var(--purple-ink) }
 .approveBtn { border-radius: 7px }
 .au-empty { text-align: center; color: var(--muted); padding: 2rem 1rem !important }
 .au-morerow td { text-align: center; padding: .7rem !important }
-.au-showmore { border: 1px dashed var(--border); background: transparent; color: var(--purple); font: inherit; font-size: .8rem; font-weight: 700; padding: .45rem 1rem; border-radius: 8px; cursor: pointer }
+.au-showmore { border: 1px dashed var(--border); background: transparent; color: var(--purple-ink); font: inherit; font-size: .8rem; font-weight: 700; padding: .45rem 1rem; border-radius: 8px; cursor: pointer }
 .au-showmore:hover { border-style: solid; border-color: var(--purple) }
 
 /* Bảng sửa trượt từ phải (điện thoại: toàn màn hình) */
@@ -296,15 +296,15 @@ body.au-locked { overflow: hidden }
 .au-lbl { display: block; font-size: .7rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin-bottom: .45rem }
 .au-sh { display: flex; align-items: baseline; gap: .5rem; margin-bottom: .45rem }
 .au-sh .au-lbl { margin: 0 }
-.au-cnt { font-size: .74rem; color: var(--purple); font-weight: 700 }
-.au-link { margin-left: auto; border: 0; background: none; color: var(--purple); font: inherit; font-size: .76rem; font-weight: 700; cursor: pointer; padding: 0 }
+.au-cnt { font-size: .74rem; color: var(--purple-ink); font-weight: 700 }
+.au-link { margin-left: auto; border: 0; background: none; color: var(--purple-ink); font: inherit; font-size: .76rem; font-weight: 700; cursor: pointer; padding: 0 }
 .au-link:hover { text-decoration: underline }
 .au-link[hidden] { display: none }
 .au-toggle { margin-left: auto; display: inline-flex; align-items: center; gap: .3rem; font-size: .76rem; color: var(--muted); font-weight: 600; cursor: pointer }
 .au-help { font-size: .76rem; color: var(--muted); padding: .3rem 0 }
 .au-drawer select.au-role, .au-drawer .ss-trigger { width: 100%; min-width: 0; height: 2.3rem; font-size: .86rem }
 .au-picked { display: flex; flex-wrap: wrap; gap: .3rem; margin-bottom: .55rem; min-height: 1.6rem; align-items: center }
-.au-chip.is-pick { display: inline-flex; align-items: center; gap: .25rem; margin: 0; padding-right: .15rem; background: var(--purple-lt); border-color: transparent; color: var(--purple) }
+.au-chip.is-pick { display: inline-flex; align-items: center; gap: .25rem; margin: 0; padding-right: .15rem; background: var(--purple-lt); border-color: transparent; color: var(--purple-ink) }
 .au-chip.is-pick button { border: 0; background: none; color: inherit; width: 18px; height: 18px; border-radius: 4px; cursor: pointer; font-size: .7rem; opacity: .7 }
 .au-chip.is-pick button:hover { opacity: 1; background: color-mix(in srgb, var(--purple) 14%, transparent) }
 .au-q {
@@ -322,7 +322,7 @@ body.au-locked { overflow: hidden }
 .au-opt em { display: block; font-style: normal; font-size: .68rem; color: var(--orange) }
 .au-grp + .au-grp { margin-top: .25rem }
 .au-gh { position: sticky; top: -.25rem; z-index: 1; display: flex; justify-content: space-between; align-items: center; gap: .5rem; background: var(--card); padding: .35rem .5rem .2rem; font-size: .72rem; font-weight: 800; color: var(--muted) }
-.au-gh b { color: var(--purple); font-size: .7rem }
+.au-gh b { color: var(--purple-ink); font-size: .7rem }
 .au-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: .1rem }
 .au-df { display: flex; align-items: center; gap: .55rem; padding: .8rem 1.2rem; border-top: 1px solid var(--border); background: var(--card) }
 .au-diff { flex: 1; min-width: 0; font-size: .76rem; color: var(--muted) }

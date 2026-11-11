@@ -45,6 +45,7 @@
      đã vốn rất gần màu cam logo nên chỉ tinh chỉnh nhẹ. */
   --purple:    #2f40b2;   /* primary brand / interactive accent — navy IIG */
   --purple-lt: #eef0f9;
+  --purple-ink: var(--purple); /* màu CHỮ nhấn (link, tab đang chọn, nút viền) — tối thì sáng lên cho đủ tương phản */
   --teal:      #17b3a3;   /* secondary accent — "true" state, highlights */
   --teal-lt:   #e3faf6;
   --red:       #f0483e;   /* semantic danger — grading / errors ONLY */
@@ -107,7 +108,7 @@
   --bg-topbar:      var(--surface);
   --text-primary:   var(--text);
   --text-secondary: var(--muted);
-  --text-muted:     #9ca3af;
+  --text-muted:     #6b7280; /* 11/2026: #9ca3af trên nền trắng chỉ 2,5:1 */
   --border-color:   var(--border);
   --accent-purple:       var(--purple);
   --accent-purple-light: var(--purple-lt);
@@ -149,6 +150,7 @@
   --text:      #e8eaf6;
   --muted:     #8892c8;
   --purple-lt: rgba(47,64,178,.22);
+  --purple-ink: #9fadff;   /* chữ #2f40b2 trên nền tối chỉ ~2:1 (đo 11/2026) → ≥ 6:1 */
   --teal-lt:   rgba(23,179,163,.15);
   --red-lt:    rgba(240,72,62,.15);
   --yellow-lt: rgba(246,167,35,.12);
@@ -201,7 +203,7 @@
   font-size: .74rem;
   font-weight: 800;
   letter-spacing: .2px;
-  color: var(--purple);
+  color: var(--purple-ink);
   background: color-mix(in srgb, var(--purple) 12%, transparent);
   border: 1.5px solid color-mix(in srgb, var(--purple) 30%, transparent);
 }

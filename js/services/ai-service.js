@@ -120,7 +120,7 @@
   // ============================================================
   const VIA = { mine: 'key cá nhân', school: 'key của trường', 'school-cache': 'đã lưu ở máy chủ trường', cache: 'đã lưu trên máy này' };
   function footHtml(via) {
-    return `<p class="ai-foot"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Gemini · ${esc(VIA[via] || '')} · AI có thể nhầm, hãy đối chiếu với bài học.
+    return `<p class="ai-foot"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Gemini · ${esc(VIA[via] || '')} · AI có thể nhầm, hãy đối chiếu với bài học.
       <button type="button" class="ai-link" data-ai-settings>Cài đặt AI</button></p>`;
   }
   function errHtml(e) {
@@ -170,7 +170,7 @@
     wrap.className = 'ai-modal';
     wrap.innerHTML = `<div class="ai-modal-box" role="dialog" aria-modal="true" aria-labelledby="aiMTitle">
       <button type="button" class="ai-x" data-ai-close aria-label="Đóng"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
-      <h2 id="aiMTitle"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Trợ lý AI (Gemini)</h2>
+      <h2 id="aiMTitle"><i class="fa-solid fa-message" aria-hidden="true"></i> Trợ lý AI (Gemini)</h2>
       <p class="ai-help">AI giải thích câu sai, gợi ý dạy lại, soạn câu hỏi. Máy dùng <b>key cá nhân</b> trước; không có thì dùng <b>key của trường</b> (nếu Admin đã cài). Không tốn lượt Firebase.</p>
       <section class="ai-sec">
         <h3><i class="fa-solid fa-key" aria-hidden="true"></i> Key cá nhân trên máy này</h3>

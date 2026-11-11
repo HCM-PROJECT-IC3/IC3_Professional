@@ -26,7 +26,7 @@
   padding: .6rem .8rem; border: none; border-radius: 11px; background: transparent; cursor: pointer;
   font: inherit; font-weight: 800; font-size: .86rem; color: var(--muted);
 }
-.lh-tabs button.is-active { background: var(--card); color: var(--purple); box-shadow: var(--shadow); }
+.lh-tabs button.is-active { background: var(--card); color: var(--purple-ink); box-shadow: var(--shadow); }
 .lh-tab-badge:not(:empty) { background: var(--red); color: #fff; border-radius: 999px; padding: 0 .45rem; font-size: .7rem; }
 
 .lh-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: .6rem; margin-bottom: 1rem; }
@@ -42,7 +42,7 @@
 
 .lh-card { border: 1.5px solid var(--border); border-radius: 16px; padding: .9rem 1rem; margin-bottom: .9rem; background: var(--card); }
 .lh-card-title { font-weight: 800; font-size: .9rem; margin-bottom: .6rem; color: var(--text); }
-.lh-card-title i { color: var(--purple); margin-right: .3rem; }
+.lh-card-title i { color: var(--purple-ink); margin-right: .3rem; }
 .lh-spark { width: 100%; height: auto; display: block; }
 .lh-spark-line { fill: none; stroke: var(--purple); stroke-width: 2.5; stroke-linejoin: round; }
 .lh-spark-area { fill: color-mix(in srgb, var(--purple) 12%, transparent); }
@@ -54,7 +54,7 @@
 .lh-spark-empty { padding: .9rem; text-align: center; color: var(--muted); font-weight: 600; font-size: .88rem; }
 
 .lh-tip { display: flex; align-items: center; gap: .8rem; padding: .7rem .8rem; border-radius: 12px; background: var(--card2); margin-bottom: .5rem; }
-.lh-tip > i { flex-shrink: 0; width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--purple-lt); color: var(--purple); }
+.lh-tip > i { flex-shrink: 0; width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--purple-lt); color: var(--purple-ink); }
 .lh-tip.is-hot > i { background: var(--red-lt); color: var(--red); }
 .lh-tip.is-good > i { background: var(--green-lt); color: var(--green); }
 .lh-tip > div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
@@ -71,7 +71,7 @@
 .lh-btn-sm { padding: .35rem .65rem; font-size: .75rem; }
 
 .lh-note { font-size: .8rem; color: var(--muted); font-weight: 600; margin: 0 0 .7rem; line-height: 1.5; }
-.lh-note i { color: var(--purple); }
+.lh-note i { color: var(--purple-ink); }
 .lh-topics { display: flex; flex-direction: column; gap: .5rem; }
 .lh-topic { display: flex; gap: .8rem; align-items: center; padding: .7rem .85rem; border-radius: 13px; border: 1.5px solid var(--border); border-left-width: 5px; background: var(--card); }
 .lh-topic.is-bad { border-left-color: var(--red); }
@@ -129,12 +129,12 @@
 .lh-fc-top .lh-bar { flex: 1; }
 .lh-fc {
   position: relative; min-height: 260px; padding: 1.4rem 1.5rem; border-radius: 20px; cursor: pointer; outline: none;
-  background: linear-gradient(160deg, var(--purple-lt), var(--card)); border: 2px solid color-mix(in srgb, var(--purple) 30%, var(--border));
+  background: color-mix(in srgb, var(--purple-lt) 60%, var(--card)); border: 2px solid color-mix(in srgb, var(--purple) 30%, var(--border));
   box-shadow: 0 8px 0 color-mix(in srgb, var(--purple) 18%, transparent), var(--shadow);
   animation: lh-flip-in .28s ease-out;
 }
 .lh-fc:focus-visible { box-shadow: 0 0 0 3px var(--purple); }
-.lh-fc.is-flipped { cursor: default; background: linear-gradient(160deg, var(--teal-lt), var(--card)); border-color: color-mix(in srgb, var(--teal) 40%, var(--border)); box-shadow: 0 8px 0 color-mix(in srgb, var(--teal) 20%, transparent), var(--shadow); }
+.lh-fc.is-flipped { cursor: default; background: color-mix(in srgb, var(--teal-lt) 60%, var(--card)); border-color: color-mix(in srgb, var(--teal) 40%, var(--border)); box-shadow: 0 8px 0 color-mix(in srgb, var(--teal) 20%, transparent), var(--shadow); }
 @keyframes lh-flip-in { from { transform: perspective(900px) rotateY(-14deg); opacity: .4; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .lh-fc { animation: none; } }
 .lh-fc-q { font-size: 1.15rem; font-weight: 800; line-height: 1.45; color: var(--text); margin-bottom: .8rem; }
@@ -160,9 +160,9 @@
 .lh-goal-pick { padding: .45rem .9rem; border-radius: 999px; border: 1.5px solid var(--border); background: var(--card2); color: var(--text); font: inherit; font-weight: 800; font-size: .82rem; cursor: pointer; }
 .lh-goal-pick:hover { border-color: var(--purple); }
 .lh-goal-pick.is-active { background: var(--purple); border-color: var(--purple); color: #fff; }
-.lh-goal-count { float: right; font-weight: 900; color: var(--purple); }
+.lh-goal-count { float: right; font-weight: 900; color: var(--purple-ink); }
 .lh-goal-bar { height: 12px; border-radius: 999px; background: var(--card2); overflow: hidden; margin: .2rem 0 .55rem; }
-.lh-goal-bar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--purple), var(--teal)); transition: width .5s ease; }
+.lh-goal-bar i { display: block; height: 100%; border-radius: inherit; background: var(--teal); transition: width .5s ease; } /* 11/2026: 1 màu (trước gradient tím→ngọc) */
 .lh-goal.is-done { border-color: color-mix(in srgb, var(--green) 40%, var(--border)); background: color-mix(in srgb, var(--green-lt) 55%, var(--card)); }
 .lh-goal.is-done .lh-goal-bar i { background: var(--green); }
 .lh-goal.is-done .lh-goal-count { color: var(--green); }

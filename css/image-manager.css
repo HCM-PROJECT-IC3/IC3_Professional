@@ -49,8 +49,10 @@ a{color:inherit}
 }
 .stat-card .n{font-size:1.5rem;font-weight:800}
 .stat-card .l{font-size:.75rem;color:var(--muted);font-weight:700}
-.stat-card.need .n{color:var(--yellow)}
-.stat-card.have .n{color:var(--green)}
+.stat-card.need .n{color:#a16207}
+.stat-card.have .n{color:#15803d}
+[data-theme="dark"] .stat-card.need .n{color:var(--yellow)}
+[data-theme="dark"] .stat-card.have .n{color:var(--green)} /* 11/2026: sáng dùng sắc đậm cho đủ tương phản (≥ 4,5:1) */
 .stat-card.skip .n{color:var(--muted)}
 
 .filters{
@@ -145,7 +147,7 @@ a{color:inherit}
 .qactions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.3rem}
 .upload-label{
   display:inline-flex;align-items:center;gap:.4rem;
-  background:var(--purple-lt);color:var(--purple);border-radius:999px;
+  background:var(--purple-lt);color:var(--purple-ink);border-radius:999px;
   padding:.4rem .85rem;font-size:.78rem;font-weight:700;cursor:pointer;
 }
 .upload-label input{display:none}
@@ -183,7 +185,7 @@ a{color:inherit}
   background:var(--purple-lt);border:1.5px solid rgba(47,64,178,.3);border-radius:var(--radius-sm);
   padding:.8rem 1rem;margin-bottom:1.2rem;font-size:.82rem;color:var(--text);line-height:1.6;
 }
-.banner b{color:var(--purple)}
+.banner b{color:var(--purple-ink)}
 .loadbar{padding:3rem;text-align:center;color:var(--muted);font-weight:700}
 
 .whoami{font-size:.78rem;color:var(--muted);font-weight:700}
@@ -219,7 +221,7 @@ a{color:inherit}
   border-radius:8px;padding:.35rem .8rem;font-size:.76rem;font-weight:700;cursor:pointer;
 }
 .advToggle{
-  background:none;border:none;color:var(--purple);font-size:.74rem;font-weight:800;
+  background:none;border:none;color:var(--purple-ink);font-size:.74rem;font-weight:800;
   cursor:pointer;padding:.2rem 0;text-align:left;width:fit-content;
 }
 .advBox{display:none;flex-direction:column;gap:.4rem}

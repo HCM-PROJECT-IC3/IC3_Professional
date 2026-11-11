@@ -37,7 +37,7 @@
     padding-right: 5.5rem; /* chừa chỗ nút sáng/tối (.theme-toggle-quick, cố định góc phải) */
   }
   header h1 {
-    font-size: 1.02rem; margin: 0; font-weight: 800; color: var(--purple);
+    font-size: 1.02rem; margin: 0; font-weight: 800; color: var(--purple-ink);
     display: flex; align-items: center; gap: .45rem; white-space: nowrap;
   }
   header h1 span.tag {
@@ -51,7 +51,7 @@
     padding: .5rem .85rem; border-radius: 9px; font-weight: 700; font-size: .8rem;
     cursor: pointer; transition: all .12s; display: inline-flex; align-items: center; gap: .4rem;
   }
-  .btn:hover { border-color: var(--purple); color: var(--purple); }
+  .btn:hover { border-color: var(--purple); color: var(--purple-ink); }
   .btn.primary { background: var(--purple); border-color: var(--purple); color: #fff; }
   .btn.primary:hover { background: #3d58e6; color: #fff; }
   .btn.ghost { background: transparent; }

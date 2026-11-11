@@ -82,7 +82,7 @@ body.dc-open { overflow: hidden; }
 }
 .dc-stats > span i { color: var(--muted); margin-right: .2rem; }
 .dc-stats .dc-best { background: var(--yellow-lt); border-color: var(--yellow); color: #8a5300; }
-.dc-stats .dc-xp { background: var(--purple-lt); border-color: var(--purple); color: var(--purple); font-weight: 900; }
+.dc-stats .dc-xp { background: var(--purple-lt); border-color: var(--purple); color: var(--purple-ink); font-weight: 900; }
 [data-theme="dark"] .dc-stats .dc-best { background: rgba(246,167,35,.15); color: #fcd34d; }
 [data-theme="dark"] .dc-stats .dc-xp { background: rgba(129,140,248,.15); border-color: #818cf8; color: #c7d2fe; }
 .dc-who { font-size: .95rem; font-weight: 700; color: var(--muted); margin: 0 0 .9rem; }

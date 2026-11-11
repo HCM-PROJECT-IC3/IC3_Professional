@@ -408,6 +408,9 @@ const State = {
   questions: [],
   answers:   {},     // qi → value (string | string[] | {j: 'true'|'false'})
   flags:     new Set(),
+  // Ôn luyện: câu đã bấm "Kiểm tra đáp án" — qi → 'correct' | 'incorrect'. Mỗi câu kiểm tra ĐÚNG 1 lần, sau đó khoá đáp án
+  // (không cho chọn lại rồi kiểm tra tiếp tới khi đúng). Lưu cùng bài làm dở (autosave) nên tải lại trang vẫn khoá.
+  checked:   {},
   current:   0,
   timer:     null,
   timeLeft:  3000,
@@ -472,6 +475,7 @@ function saveInProgress() {
       questions: State.questions, // đã shuffle sẵn — PHẢI lưu nguyên để answers khớp đúng thứ tự option khi khôi phục
       answers:   State.answers,
       flags:     [...State.flags],
+      checked:   State.checked,
       current:   State.current,
       timeLeft:  State.timeLeft,
       matching:  State.matching,
@@ -547,6 +551,7 @@ function tryResumeInProgress() {
   State.questions = data.questions;
   State.answers   = data.answers || {};
   State.flags     = new Set(data.flags || []);
+  State.checked   = (data.checked && typeof data.checked === 'object') ? data.checked : {};
   State.current   = data.current || 0;
   State.submitted = false; // § 1b — đang làm tiếp, chưa nộp, cho phép autosave tiếp
   State.timeLeft  = data.timeLeft;
@@ -1536,6 +1541,7 @@ async function startExam() {
   State.questions = prepareQuestions(rawQs,{ keepOrder: !!customExam && !customExam.shuffle });
   State.answers   = {};
   State.flags     = new Set();
+  State.checked   = {};
   State.current   = 0;
   State.submitted = false; // § 1b — bài MỚI, cho phép autosave lại từ đầu
   State.matching  = {};
@@ -1856,7 +1862,9 @@ function updateSidebar() {
     if (i === State.current) cls += ' active';
     if (isAnswered(i))       cls += ' answered';
     if (State.flags.has(i))  cls += ' flagged';
+    if (State.checked[i])    cls += State.checked[i] === 'correct' ? ' checked-ok' : ' checked-bad';
     b.className = cls;
+    b.setAttribute('aria-label', `Câu ${i + 1}${isAnswered(i) ? ', đã làm' : ', chưa làm'}${State.flags.has(i) ? ', đánh dấu' : ''}${State.checked[i] ? (State.checked[i] === 'correct' ? ', kiểm tra: đúng' : ', kiểm tra: sai') : ''}`);
   });
   const done = State.questions.filter((_, i) => isAnswered(i)).length;
   const fill = document.getElementById('progressFill');
@@ -2273,7 +2281,9 @@ function renderQuestion(idx) {
        </div>`
     : '';
   const navCheck = State.examMode === 'practice'
-    ? `<button type="button" class="btn-check-answer" onclick="checkCurrentAnswer()"><i class="fa-solid fa-circle-check"></i><span>Kiểm tra<span class="nav-label"> đáp án</span></span></button>`
+    ? (State.checked[idx]
+      ? `<button type="button" class="btn-check-answer is-done" disabled aria-disabled="true" title="Mỗi câu chỉ kiểm tra 1 lần — đáp án đã khoá"><i class="fa-solid fa-lock"></i><span>Đã<span class="nav-label"> kiểm tra</span></span></button>`
+      : `<button type="button" class="btn-check-answer" onclick="checkCurrentAnswer()" title="Mỗi câu chỉ kiểm tra được 1 lần — sau đó không đổi đáp án được"><i class="fa-solid fa-circle-check"></i><span>Kiểm tra<span class="nav-label"> đáp án</span></span></button>`)
     : '';
 
   panel.innerHTML = `
@@ -2307,6 +2317,12 @@ function renderQuestion(idx) {
 
   // Mọi câu có hình đều có nút phóng to riêng, kể cả hotspot/matching/classify.
   _attachQuestionImageZoom(panel);
+
+  if (State.examMode === 'practice' && State.checked[idx]) {
+    _lockCheckedAnswer();
+    if (window.EduGrading) _renderCheckResult(_buildQuestionDetail(q, idx));
+    else _ensureGrading();
+  }
 
   updateSidebar();
   panel.scrollTop = 0;
@@ -2403,38 +2419,53 @@ function _fitWatch(panel, card) {
    ============================================================ */
 
 /** Chấm + hiện đúng/sai + giải thích cho ĐÚNG câu đang xem — gọi từ nút
- * "Kiểm tra đáp án" (chỉ render.ở chế độ 'practice', xem renderQuestion()).
- * Bấm lần 2 (khi kết quả đang hiện) sẽ ẨN kết quả đi thay vì kiểm tra lại vô
- * ích — nút tự đổi nhãn thành "Ẩn kết quả" để vẫn còn tác dụng và học
- * sinh chủ động tắt được gợi ý/giải thích khi không muốn xem nữa. */
+ * "Kiểm tra đáp án" (chỉ render ở chế độ 'practice', xem renderQuestion()).
+ * MỖI CÂU CHỈ KIỂM TRA 1 LẦN (11/2026): trước đây bấm lại được (Ẩn kết quả → đổi đáp án → kiểm tra tiếp) nên học sinh
+ * thử lần lượt từng đáp án tới khi "Chính xác". Nay kiểm tra xong là ghi State.checked, khoá phần trả lời
+ * (_lockCheckedAnswer) và nút thành "Đã kiểm tra". Chưa chọn đáp án thì KHÔNG tính lượt (chỉ nhắc chọn trước). */
 function checkCurrentAnswer() {
   if (State.examMode !== 'practice') return; // phòng hờ — nút này vốn không tồn tại ở chế độ Kiểm tra
   const i = State.current;
   const q = State.questions[i];
-  if (!q) return;
-  const el = document.getElementById('qCheckResult');
-  const btn = document.querySelector('.btn-check-answer');
-
-  if (el && el.dataset.shown === '1') {
-    el.innerHTML = '';
-    el.dataset.shown = '0';
-    _fitLock(false);
-    if (btn) btn.innerHTML = '<i class="fa-solid fa-circle-check"></i><span>Kiểm tra<span class="nav-label"> đáp án</span></span>';
-    window.dispatchEvent(new CustomEvent('edu:answer-checked', { detail: null }));
-    return;
-  }
+  if (!q || State.checked[i]) return;
 
   if (!window.EduGrading) { // xem _ensureGrading()
     _ensureGrading();
     showNotification('Đang tải bộ chấm điểm — thử lại sau vài giây.', 'warning');
     return;
   }
+  const d = _buildQuestionDetail(q, i);
   _fitLock(true); // giữ cỡ chữ khi giải thích hiện ra (cuộn xuống xem), không co nhỏ đột ngột
-  _renderCheckResult(_buildQuestionDetail(q, i));
-  if (el) el.dataset.shown = '1';
-  // Nút nằm ở thanh đáy, kết quả hiện cuối thẻ câu hỏi → cuộn tới cho học sinh thấy ngay.
+  _renderCheckResult(d);
+  const el = document.getElementById('qCheckResult');
   if (el && el.firstElementChild) el.firstElementChild.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  if (btn) btn.innerHTML = '<i class="fa-solid fa-eye-slash"></i><span>Ẩn<span class="nav-label"> kết quả</span></span>';
+  if (d.status === 'skipped') return; // chưa trả lời: không tốn lượt
+
+  State.checked[i] = d.status === 'correct' ? 'correct' : 'incorrect';
+  _lockCheckedAnswer();
+  const btn = document.querySelector('.btn-check-answer');
+  if (btn) {
+    btn.disabled = true; btn.setAttribute('aria-disabled', 'true'); btn.classList.add('is-done');
+    btn.title = 'Mỗi câu chỉ kiểm tra 1 lần — đáp án đã khoá';
+    btn.innerHTML = '<i class="fa-solid fa-lock"></i><span>Đã<span class="nav-label"> kiểm tra</span></span>';
+  }
+  saveInProgress(); // tải lại trang vẫn giữ khoá
+  updateSidebar();
+}
+
+/** Khoá phần trả lời của câu đang xem (đã kiểm tra): inert + chặn ở pha capture mọi click/chạm/kéo/phím —
+ * kể cả .click() do phím tắt 1–9/A–E gọi (inert không chặn click từ code). Panel dựng lại mỗi lần đổi câu
+ * nên khoá chỉ sống tới khi rời câu; renderQuestion() gọi lại cho câu đã kiểm tra. */
+const _LOCK_EVENTS = ['click', 'pointerdown', 'mousedown', 'touchstart', 'dragstart', 'drop', 'keydown', 'change', 'input'];
+function _blockLocked(e) { e.stopPropagation(); e.preventDefault(); }
+function _lockCheckedAnswer() {
+  const body = document.getElementById('q-body');
+  if (!body || body.dataset.locked === '1') return;
+  body.dataset.locked = '1';
+  body.classList.add('is-locked');
+  body.setAttribute('inert', '');
+  body.setAttribute('aria-disabled', 'true');
+  _LOCK_EVENTS.forEach((t) => body.addEventListener(t, _blockLocked, true));
 }
 
 /** Vẽ banner Đúng/Sai/Chưa trả lời + phần giải thích (tái dùng
@@ -2660,7 +2691,7 @@ function renderMulti(q, qi) {
     <div class="multi-hint" style="
         background:var(--purple-lt);border:1.5px solid rgba(79,107,255,.25);
         border-radius:10px;padding:.55rem 1rem;margin-bottom:.8rem;
-        font-size:.85rem;font-weight:700;color:var(--purple);">
+        font-size:.85rem;font-weight:700;color:var(--purple-ink);">
       <i class="fa-solid fa-square-check"></i> ${hint}
       <span id="multi-counter-${qi}" style="color:${q.correct?.length ? (current.length === q.correct.length ? 'var(--teal)' : 'var(--yellow)') : 'var(--muted)'};font-weight:600;margin-left:.5rem;">
         (Đã chọn: <span id="multi-count-${qi}">${current.length}</span>/${q.correct?.length || '?'})
@@ -4898,6 +4929,7 @@ function startRetryWrong() {
   State.questions = prepareQuestions(wrong);
   State.answers   = {};
   State.flags     = new Set();
+  State.checked   = {};
   State.current   = 0;
   State.submitted = false;
   State.matching  = {};
@@ -4950,6 +4982,7 @@ function startWrongbookReview(qs, student) {
   State.questions = prepareQuestions(qs);
   State.answers   = {};
   State.flags     = new Set();
+  State.checked   = {};
   State.current   = 0;
   State.submitted = false;
   State.matching  = {};
@@ -5008,6 +5041,7 @@ function _onExamKeydown(e) {
   if (/^[1-9]$/.test(e.key)) idx = Number(e.key) - 1;
   else if (/^[a-eA-E]$/.test(e.key)) idx = e.key.toUpperCase().charCodeAt(0) - 65;
   if (idx < 0) return;
+  if (State.checked[State.current]) return; // câu đã kiểm tra: đáp án khoá
   const opts = document.querySelectorAll('#q-body .option-btn');
   if (opts[idx] && !opts[idx].disabled) { e.preventDefault(); opts[idx].click(); opts[idx].focus({ preventScroll: true }); }
 }

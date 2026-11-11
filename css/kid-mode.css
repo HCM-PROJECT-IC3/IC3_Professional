@@ -13,7 +13,7 @@
   border: 2px solid var(--border); background: var(--surface, var(--card)); color: var(--text);
   font-family: 'Baloo 2', sans-serif; font-size: .88rem; font-weight: 800;
 }
-.kid-toggle:hover { border-color: var(--purple); color: var(--purple); }
+.kid-toggle:hover { border-color: var(--purple); color: var(--purple-ink); }
 .kid-toggle[aria-pressed="true"] { background: var(--purple); border-color: var(--purple); color: #fff; }
 @media (max-width: 640px) { .kid-toggle-label { display: none; } }
 
@@ -64,10 +64,10 @@ body.kid-mode .option-btn.selected.c4, body.kid-mode .option-btn.selected.c5 {
   box-shadow: 0 6px 20px rgba(47,64,178,.4); transform: none;
   padding-right: 8.5rem;
 }
-body.kid-mode .option-btn.selected .option-marker { background: #fff; border-color: #fff; color: var(--purple); box-shadow: none; }
+body.kid-mode .option-btn.selected .option-marker { background: #fff; border-color: #fff; color: var(--purple-ink); box-shadow: none; }
 body.kid-mode .option-btn.selected::after {
   content: "✓ Em chọn"; position: absolute; right: 1rem; top: 50%; transform: translateY(-50%);
-  padding: .3rem .75rem; border-radius: 999px; background: #fff; color: var(--purple);
+  padding: .3rem .75rem; border-radius: 999px; background: #fff; color: var(--purple-ink);
   font-size: 1rem; font-weight: 900; white-space: nowrap;
 }
 body.kid-mode .option-btn:hover:not(.selected) { transform: none; }
@@ -185,7 +185,7 @@ body.kid-mode .q-check-result .rd-explain { font-size: 1.12rem; line-height: 1.6
    ══════════════════════════════════════════════════════════════ */
 .btn-retry.btn-memory-cards {
   margin: .8rem 0 .6rem;
-  background: var(--card); color: var(--purple); border: 1.5px solid var(--purple); box-shadow: none;
+  background: var(--card); color: var(--purple-ink); border: 1.5px solid var(--purple); box-shadow: none;
 }
 .btn-retry.btn-memory-cards:hover { background: var(--purple-lt); }
 .btn-retry.btn-memory-cards i { margin-right: .3rem; }

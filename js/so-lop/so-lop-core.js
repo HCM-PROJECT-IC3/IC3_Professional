@@ -436,32 +436,43 @@
     const m = /^(\d{1,2})[^\d]{0,3}?(\d{1,2})$/.exec(t);
     return m ? `${+m[1]}.${+m[2]}` : t;
   }
-  /** Ô TKB của 1 tuần → [{ dow (getDay: 1 = Thứ 2), b: 'm'|'a', tiet, cls (classKey), school }]. Tiết chiều đánh số tiếp
-      sau tiết sáng như TKB giấy (sáng 4 tiết → chiều bắt đầu tiết 5). Ô trống bỏ qua. */
-  function tkbCells(days) {
+  /** Ô TKB của 1 tuần → [{ dow (getDay: 1 = Thứ 2), b: 'm'|'a', tiet, cls (classKey), school, start, end }]. Tiết đánh số
+      trong từng buổi như lưới "TKB lớp" (Sáng 1–5, Chiều 1–4); giờ lấy từ "Giờ tiết" đã chuẩn hoá theo thứ
+      (times = { "2".."7": { morning: [{ start, end }], afternoon: [...] } }, thiếu thì để trống). Ô trống bỏ qua. */
+  function tkbCells(days, times) {
     const out = [];
     Object.keys(days || {}).forEach((k) => {
       const d = days[k] || {}, dow = +k - 1;
       if (!(dow >= 1 && dow <= 6)) return;
       const mo = Array.isArray(d.morning) ? d.morning : [], af = Array.isArray(d.afternoon) ? d.afternoon : [];
-      const add = (raw, b, tiet) => {
+      const tk = (times && times[k]) || {};
+      const add = (raw, b, i) => {
         const c = raw && typeof raw === 'object' ? raw : { maLop: raw };
-        const cls = norm(c.maLop);
-        if (cls) out.push({ dow, b, tiet, cls: classKey(cls), school: norm(c.truong) });
+        const cls = norm(c.maLop), p = ((b === 'm' ? tk.morning : tk.afternoon) || [])[i] || {};
+        if (cls) out.push({ dow, b, tiet: i + 1, cls: classKey(cls), school: norm(c.truong), start: norm(p.start), end: norm(p.end) });
       };
-      mo.forEach((c, i) => add(c, 'm', i + 1));
-      af.forEach((c, i) => add(c, 'a', mo.length + i + 1));
+      mo.forEach((c, i) => add(c, 'm', i));
+      af.forEach((c, i) => add(c, 'a', i));
     });
     return out;
   }
-  /** Buổi + tiết TKB của lớp `cls` (trường `school`) ngày `date` → { b, tiet: [..], m: [tiết sáng], a: [tiết chiều] } | null. Ô TKB không ghi trường thì
+  /** Giờ dạy của các ô TKB cùng buổi: "07:30–08:45" (đầu tiết đầu – cuối tiết cuối) | '' khi thiếu giờ. */
+  function tkbTime(cells) {
+    const xs = (cells || []).filter((c) => c.start && c.end).sort((a, b) => a.tiet - b.tiet);
+    return xs.length ? `${xs[0].start}–${xs[xs.length - 1].end}` : '';
+  }
+  /** Buổi + tiết TKB của lớp `cls` (trường `school`) ngày `date` → { b, tiet: [..], m: [tiết sáng], a: [tiết chiều],
+      time: { m: 'giờ sáng', a: 'giờ chiều' } } | null. Ô TKB không ghi trường thì
       khớp theo tên lớp; có ghi thì phải cùng trường (same = so tên trường, mặc định so nguyên chữ thường). */
   function tkbFor(cells, cls, school, date, same) {
     if (!cells || !cells.length || !date) return null;
     const k = classKey(cls), dow = date.getDay(), eq = same || ((a, b) => norm(a).toLowerCase() === norm(b).toLowerCase());
-    const hit = cells.filter((c) => c.dow === dow && c.cls === k && (!c.school || !school || eq(c.school, school))).sort((a, b) => a.tiet - b.tiet);
+    const hit = cells.filter((c) => c.dow === dow && c.cls === k && (!c.school || !school || eq(c.school, school)));
     // m / a: tiết từng buổi — lớp dạy cả sáng lẫn chiều cùng ngày thì trang tách thành 2 thẻ
-    return hit.length ? { b: hit[0].b, tiet: hit.map((c) => c.tiet), m: hit.filter((c) => c.b === 'm').map((c) => c.tiet), a: hit.filter((c) => c.b === 'a').map((c) => c.tiet) } : null;
+    if (!hit.length) return null;
+    hit.sort((a, b) => (a.b === b.b ? a.tiet - b.tiet : a.b === 'm' ? -1 : 1)); // sáng trước chiều
+    const of = (b) => hit.filter((c) => c.b === b);
+    return { b: hit[0].b, tiet: hit.map((c) => c.tiet), m: of('m').map((c) => c.tiet), a: of('a').map((c) => c.tiet), time: { m: tkbTime(of('m')), a: tkbTime(of('a')) } };
   }
 
   /** Lưới TKB của 1 tuần: { m, a, u } — mỗi hàng là mảng theo `days` (cùng thứ tự), mỗi ô là các mục weekPlan của buổi đó.
@@ -481,7 +492,7 @@
   }
 
   global.EduSoLop = {
-    buoiOf, buoiGrid, classKey, tkbCells, tkbFor,
+    buoiOf, buoiGrid, classKey, tkbCells, tkbFor, tkbTime,
     parseLinks, parsePaste, parseTabs, isClassTab, parseCSV, mark, parseClass,
     lessonOf, matchName, lessonsOf, dateOf, todaySession, nextSession, perDay, sessionGroup, summary,
     stats, pasteText, colName, cellRef, isMine, teacherKey, teachersOf, taughtBy, mondayOf, weekPlan, monthCount, monthLog, watchList, untickedSessions, draftChanges, draftMark, compactCSV, SHEET_MARK, THU,

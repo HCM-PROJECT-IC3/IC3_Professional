@@ -21,6 +21,10 @@
   --bad-lt:     #fde3e1;
   --sun:        #ffc93c;
   --sun-lt:     #fff1c7;
+  /* "Đã làm" + thanh tiến độ: ô TÔ ĐẶC màu mực như phiếu trắc nghiệm — KHÔNG dùng xanh lá (xanh/đỏ chỉ để báo Đúng/Sai
+     sau "Kiểm tra đáp án"), không dùng xanh dương (màu đáp án đang chọn). 11/2026 */
+  --done:       #1f2a44;
+  --done-on:    #ffffff;
   --pop:        0 4px 0 var(--ink);
   --pop-sm:     0 3px 0 var(--ink);
   --pop-press:  0 1px 0 var(--ink);
@@ -43,6 +47,8 @@
   --bad:        #ff7a70;
   --bad-lt:     #45201f;
   --sun-lt:     #3d3315;
+  --done:       #c9d3f2;
+  --done-on:    #0a0d18;
 }
 /* Nền tối: mép thẻ cần sáng hơn nền để còn thấy khối */
 [data-theme="dark"] #exam :is(.q-card, .sidebar, .option-btn, .q-btn, .btn-nav, .tf-row, .list-q-row,
@@ -61,7 +67,7 @@
 #exam .topbar-brand {
   background: none;
   -webkit-text-fill-color: currentColor;
-  color: var(--purple);
+  color: var(--purple-ink);
   animation: none;
   font-weight: 900;
 }
@@ -117,10 +123,8 @@
 }
 #exam .progress-bar-fill {
   border-radius: 999px;
-  background-color: var(--ok);
-  background-image: repeating-linear-gradient(-45deg,
-    rgba(255,255,255,.28) 0 7px, transparent 7px 14px);
-  background-size: auto;
+  background-color: var(--done); /* cùng màu ô "Đã làm" — tiến độ = số câu đã làm, không phải số câu đúng */
+  background-image: none;
   animation: none;
 }
 #exam .progress-bar-fill::after { display: none; }
@@ -162,8 +166,9 @@
   animation: none;
 }
 #exam .q-btn:hover { transform: translateY(-1px); box-shadow: var(--pop-sm); background: var(--chip); color: var(--text); border-color: var(--ink); }
-#exam .q-btn.answered { background: var(--ok-lt); color: var(--ok); border-color: var(--ink); }
-#exam .q-btn.flagged  { background: var(--sun-lt); border-color: var(--ink); }
+#exam .q-btn.answered { background: var(--done); color: var(--done-on); border-color: var(--ink); }
+#exam .q-btn.answered:hover { background: var(--done); color: var(--done-on); }
+#exam .q-btn.flagged:not(.answered) { background: var(--sun-lt); border-color: var(--ink); }
 #exam .q-btn.flagged::after {
   content: '';
   top: -6px; right: -6px;
@@ -178,7 +183,15 @@
   border-color: var(--ink);
   box-shadow: 0 0 0 3px var(--card), 0 0 0 6px var(--pick-ink);
 }
-#exam .q-btn.active.answered { background: var(--ok-lt); color: var(--ok); }
+#exam .q-btn.active.answered { background: var(--done); color: var(--done-on); }
+/* Ôn luyện — câu đã "Kiểm tra đáp án": dấu ✓/✗ ở góc dưới (xanh/đỏ CHỈ dùng cho đúng/sai) */
+#exam .q-btn.checked-ok::before, #exam .q-btn.checked-bad::before {
+  position: absolute; right: -6px; bottom: -6px; width: 17px; height: 17px; border-radius: 50%;
+  display: grid; place-items: center; font: 900 10px/1 system-ui, sans-serif; color: #fff; border: 2px solid var(--card);
+}
+#exam .q-btn.checked-ok::before  { content: '✓'; background: #1d7a44; }
+#exam .q-btn.checked-bad::before { content: '✕'; background: #c2362c; }
+#exam .q-btn { position: relative; }
 /* Chú thích kèm số đếm — 3 ô nhỏ ngay dưới tiêu đề, trên lưới số câu */
 #exam .legend.legend--counts {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: .35rem;
@@ -199,7 +212,7 @@
 #exam .legend--counts .legend-item span { grid-column: 1 / -1; color: var(--muted); white-space: nowrap; }
 #exam .sidebar.collapsed .legend.legend--counts { display: none; }
 #exam .legend-dot { width: 12px; height: 12px; border: 2px solid var(--ink); border-radius: 4px; }
-#exam .legend-dot.answered   { background: var(--ok); border-color: var(--ink); }
+#exam .legend-dot.answered   { background: var(--done); border-color: var(--ink); }
 #exam .legend-dot.flagged    { background: var(--sun); border-color: var(--ink); }
 #exam .legend-dot.unanswered { background: var(--card); border-color: var(--ink); }
 
@@ -975,3 +988,9 @@ html body #exam .q-card.fit-s .match2col-col { gap: .48rem; }
 html body #exam .q-card.fit-s .match2col-item { min-height: 46px; padding: .52rem .78rem; font-size: .99rem; }
 html body #exam .q-card.fit-s :is(.drag-chip, .classify-zone-chip) { font-size: .98rem; }
 html body #exam .q-card.fit-s .ordering-row { min-height: 46px; font-size: .99rem; }
+
+/* ── 11/2026: "Kiểm tra đáp án" mỗi câu 1 lần — nút thành "Đã kiểm tra", đáp án khoá (js/quiz-engine.js _lockCheckedAnswer) ── */
+#exam .btn-check-answer.is-done,
+#exam .btn-check-answer.is-done:hover { cursor: not-allowed; transform: none; box-shadow: none; background: var(--chip); color: var(--muted); border-style: dashed; }
+#exam #q-body.is-locked { cursor: not-allowed; }
+#exam #q-body.is-locked :is(.option-btn, .tf-btn, .list-opt-btn, .drag-chip) { cursor: not-allowed; }

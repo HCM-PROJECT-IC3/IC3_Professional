@@ -21,7 +21,7 @@
   backdrop-filter: blur(8px); border-bottom: 1px solid var(--border);
 }
 .ar-back { color: var(--muted); text-decoration: none; font-weight: 700; font-size: .85rem; }
-.ar-brand { flex: 1; text-align: center; font-weight: 800; font-size: 1.25rem; color: var(--purple); }
+.ar-brand { flex: 1; text-align: center; font-weight: 800; font-size: 1.25rem; color: var(--purple-ink); }
 .ar-wallet { display: inline-flex; align-items: center; gap: .3rem; padding: .3rem .7rem; border-radius: 999px; background: color-mix(in srgb, var(--ar-gold) 18%, var(--card)); font-weight: 800; }
 .ar-icon-btn { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border); background: var(--card); color: var(--text); cursor: pointer; }
 
@@ -29,7 +29,7 @@
 .ar-screen[hidden] { display: none !important; }
 .ar-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 1.1rem 1.2rem; margin-bottom: 1rem; box-shadow: var(--shadow); }
 .ar-h2 { margin: 0 0 .8rem; font-size: 1.2rem; display: flex; align-items: center; gap: .45rem; }
-.ar-h2 i { color: var(--purple); }
+.ar-h2 i { color: var(--purple-ink); }
 .ar-h3 { margin: 1rem 0 .5rem; font-size: 1rem; }
 .ar-hint { margin: .3rem 0 0; font-size: .8rem; color: var(--muted); }
 .ar-muted { color: var(--muted); font-size: .85rem; }
@@ -55,7 +55,7 @@
 .ar-btn:hover:not(:disabled) { filter: brightness(1.08); }
 .ar-btn:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 color-mix(in srgb, var(--purple) 60%, #000); }
 .ar-btn:disabled { opacity: .5; cursor: not-allowed; }
-.ar-btn-play { background: var(--green); box-shadow: 0 5px 0 color-mix(in srgb, var(--green) 55%, #000); font-size: 1.05rem; }
+.ar-btn-play { background: #15803d; box-shadow: 0 5px 0 color-mix(in srgb, #15803d 55%, #000); font-size: 1.05rem; } /* 11/2026: chữ trắng trên --green chỉ 2,7:1 → xanh đậm 5:1 */
 .ar-btn-pack { background: var(--ar-gold); color: #3b2a00; box-shadow: 0 5px 0 #a87a00; }
 .ar-btn-ghost { background: var(--card2); color: var(--text); border: 1.5px solid var(--border); box-shadow: none; }
 .ar-btn-ghost:active:not(:disabled) { box-shadow: none; }
@@ -85,7 +85,7 @@
 .ar-mode.m-survival { background: linear-gradient(150deg, #e11d48, #8f1035); }
 .ar-mode.m-fish { background: linear-gradient(150deg, #0ea5e9, #1d4ed8); }
 .ar-mode.is-on { border-color: #fff; outline: 3px solid var(--purple); transform: translateY(-3px); }
-.ar-mode.is-on::after { content: '✓'; position: absolute; top: .6rem; right: .8rem; width: 26px; height: 26px; border-radius: 50%; background: #fff; color: var(--purple); display: grid; place-items: center; font-weight: 900; }
+.ar-mode.is-on::after { content: '✓'; position: absolute; top: .6rem; right: .8rem; width: 26px; height: 26px; border-radius: 50%; background: #fff; color: var(--purple-ink); display: grid; place-items: center; font-weight: 900; }
 .ar-mode-ico { font-size: 2rem; }
 .ar-mode b { font-size: 1.3rem; }
 .ar-mode small { font-size: .78rem; line-height: 1.45; opacity: .95; }
@@ -210,7 +210,7 @@
 .ar-track[hidden] { display: none; }
 .ar-lane { display: grid; grid-template-columns: 6.5rem 1fr; align-items: center; gap: .5rem; }
 .ar-lane-name { font-size: .78rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ar-lane.is-me .ar-lane-name { color: var(--purple); font-weight: 900; }
+.ar-lane.is-me .ar-lane-name { color: var(--purple-ink); font-weight: 900; }
 .ar-lane-road { position: relative; height: 2.1rem; border-radius: 999px; background: repeating-linear-gradient(90deg, var(--card2) 0 18px, color-mix(in srgb, var(--border) 70%, var(--card2)) 18px 20px); }
 .ar-lane.is-me .ar-lane-road { box-shadow: inset 0 0 0 2px var(--purple); }
 .ar-runner { position: absolute; top: 50%; transform: translateY(-50%); font-size: 1.6rem; transition: left .6s cubic-bezier(.34,1.56,.64,1); }
@@ -227,7 +227,7 @@
 .ar-pod.p1 .ar-pod-block { height: 130px; background: linear-gradient(180deg, #ffcf3f, #e09b00); }
 .ar-pod.p2 .ar-pod-block { height: 95px; background: linear-gradient(180deg, #c7cfdb, #8a94a6); }
 .ar-pod.p3 .ar-pod-block { height: 70px; background: linear-gradient(180deg, #e5a36b, #b8692e); }
-.ar-pod.is-me .ar-pod-name { color: var(--purple); }
+.ar-pod.is-me .ar-pod-name { color: var(--purple-ink); }
 .ar-end-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: .6rem; }
 .ar-end-stats div { padding: .7rem; border-radius: 14px; background: var(--card2); border: 1px solid var(--border); }
 .ar-end-stats b { display: block; font-size: 1.4rem; font-weight: 900; }
@@ -277,7 +277,7 @@
 }
 
 /* ── Phòng cả lớp (js/arena/arena-room.js) ── */
-.ar-badge { margin-left: .3rem; padding: .1rem .55rem; border-radius: 999px; background: var(--purple-lt); color: var(--purple); font: 800 .7rem Inter, sans-serif; }
+.ar-badge { margin-left: .3rem; padding: .1rem .55rem; border-radius: 999px; background: var(--purple-lt); color: var(--purple-ink); font: 800 .7rem Inter, sans-serif; }
 .ar-room-split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
 .ar-room-pane { display: flex; flex-direction: column; gap: .45rem; padding: .9rem; border-radius: 16px; background: var(--card2); border: 1px solid var(--border); min-width: 0; }
 .ar-room-pane .ar-h3 { margin: 0 0 .2rem; }
@@ -304,7 +304,7 @@
 .ar-room-qr-hint { margin: 0 0 .5rem; }
 .ar-room-qr[hidden] + .ar-room-qr-hint { display: none; }
 .ar-room-link { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: .5rem; margin: 0; font-weight: 700; overflow-wrap: anywhere; }
-.ar-room-link a { color: var(--purple); }
+.ar-room-link a { color: var(--purple-ink); }
 .ar-room-players { display: flex; flex-wrap: wrap; gap: .4rem; }
 .ar-room-chip { display: inline-flex; align-items: center; gap: .3rem; padding: .3rem .3rem .3rem .6rem; border-radius: 999px; background: var(--card2); border: 1.5px solid var(--border); font-weight: 700; font-size: .85rem; animation: ar-pop .25s; }
 .ar-room-chip button { width: 22px; height: 22px; border-radius: 50%; border: none; background: transparent; color: var(--muted); cursor: pointer; font-weight: 900; line-height: 1; }
@@ -446,7 +446,7 @@
   display: flex; align-items: center; justify-content: center; gap: .4rem; width: 100%; margin-top: .8rem; padding: .35rem;
   background: none; border: none; color: var(--muted); font-size: .8rem; font-weight: 700; cursor: pointer;
 }
-.ar-join-avatar:hover { color: var(--purple); }
+.ar-join-avatar:hover { color: var(--purple-ink); }
 .ar-join-steps { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; max-width: 560px; margin: 1.3rem auto 0; padding: 0; }
 .ar-join-steps li {
   display: flex; flex-direction: column; align-items: center; gap: .05rem; padding: .6rem .35rem; border-radius: 16px; text-align: center;
@@ -797,7 +797,7 @@ button.ar-btile:hover { transform: translateY(-3px); background: #1d4ed8; }
 .fx-float.fx-gold { color: #d99a00; }
 .fx-float.fx-gem { color: #0ea5a4; }
 .fx-float.fx-heal { color: #16a34a; }
-.fx-float.fx-info { color: var(--purple); font-size: 1.2rem; }
+.fx-float.fx-info { color: var(--purple-ink); font-size: 1.2rem; }
 .fx-fly { font-size: 2rem; filter: drop-shadow(0 4px 6px rgba(0,0,0,.3)); }
 .fx-particle { font-size: 1.1rem; }
 
@@ -1461,7 +1461,7 @@ body[data-mode="moon"] .ar-scene { height: clamp(170px, min(30vw, 40vh), 360px);
 
 /* Sổ tay câu sai: dòng báo đã ghi câu sai của trận (js/services/wrongbook-store.js) */
 .ar-book-note { margin: .8rem 0 0; padding: .6rem .9rem; border-radius: 12px; background: var(--card2); border: 1px dashed var(--border); font-size: .88rem; text-align: center; }
-.ar-book-note i { color: var(--purple); margin-right: .25rem; }
+.ar-book-note i { color: var(--purple-ink); margin-right: .25rem; }
 .ar-due { margin: .45rem 0 0; padding: .45rem .75rem; border-radius: 10px; background: #fff6e0; border: 1px solid #f1c25a; color: #6b4a00; font-size: .85rem; font-weight: 600; }
 .ar-due[hidden] { display: none; }
 .ar-due i { color: #c98a00; margin-right: .2rem; }
@@ -1635,7 +1635,7 @@ body[data-mode="moon"] .ar-scene { height: clamp(170px, min(30vw, 40vh), 360px);
 .ar-mg-res-verdict h3 { margin: 0; font: 800 clamp(1.6rem, 6vw, 2.2rem) 'Baloo 2', sans-serif; }
 .t-win .ar-mg-res-verdict h3 { color: #c58a00; }
 .t-near .ar-mg-res-verdict h3 { color: #f19a1a; }
-.t-lose .ar-mg-res-verdict h3 { color: var(--purple); }
+.t-lose .ar-mg-res-verdict h3 { color: var(--purple-ink); }
 .ar-mg-res-verdict p { margin: .25rem 0; }
 .ar-mg-res-say { font-weight: 700; color: var(--muted); }
 .ar-mg-res-xu { list-style: none; margin: .6rem auto 0; padding: 0; max-width: 300px; font-size: .86rem; }
@@ -1929,7 +1929,7 @@ body[data-mode="moon"] .ar-scene { height: clamp(170px, min(30vw, 40vh), 360px);
   display: block; width: auto; max-width: 440px; min-height: 0; margin: .7rem auto 0; padding: .4rem .6rem; text-align: center;
   background: none; border: 0; box-shadow: none; border-radius: 8px; color: var(--muted); font: 600 .84rem/1.4 Inter, sans-serif; cursor: pointer;
 }
-.ar-join-wait b { color: var(--purple); font-weight: 700; }
+.ar-join-wait b { color: var(--purple-ink); font-weight: 700; }
 .ar-join-wait:hover b { text-decoration: underline; }
 .ar-join-wait i { margin-right: .3rem; }
 @media (max-width: 640px) {
@@ -1969,4 +1969,4 @@ body[data-mode="moon"] .ar-scene { height: clamp(170px, min(30vw, 40vh), 360px);
 /* Dòng lỗi tải bộ câu + nút Thử lại (chỉ tải lại phần lỗi) */
 .ar-retry { margin-left: .4rem; padding: .2rem .7rem; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text);
   font: 700 .82rem/1.3 Inter, sans-serif; cursor: pointer; }
-.ar-retry:hover { border-color: var(--purple); color: var(--purple); }
+.ar-retry:hover { border-color: var(--purple); color: var(--purple-ink); }

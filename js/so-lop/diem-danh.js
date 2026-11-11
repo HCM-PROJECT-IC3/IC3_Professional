@@ -799,7 +799,8 @@
   }
   const KIND = { done: 'Đã dạy', planned: 'Chưa tick hoàn thành', expected: 'Dự kiến', missing: 'Sheet chưa cập nhật' };
   const BUOI = { m: 'Sáng', a: 'Chiều', '': '' }, BUOI_ORD = { m: 0, a: 1, '': 2 };
-  // ── Buổi/tiết tự động theo TKB ở Lịch giảng dạy (js/so-lop/tkb-source.js: 1 lượt đọc/tuần đang xem, lưu trên máy) ──
+  // ── Buổi, tiết, giờ dạy tự động theo Lịch giảng dạy (js/so-lop/tkb-source.js: Lịch tuần + TKB lớp + Giờ tiết,
+  //    2 lượt đọc/tuần đang xem, lưu trên máy) ──
   const TKB = global.EduSoLopTkb;
   let profile = null;
   const tkbMemo = new Map(); // 'tên gv|weekKey' → { cells, from, fallback } | { none, code } | { loading }
@@ -812,19 +813,22 @@
     tkbMemo.set(k, { loading: true });
     (async () => {
       const code = await TKB.codeOf(who, profile);
-      const w = code ? await TKB.week(code, mon) : null;
-      tkbMemo.set(k, w ? { cells: L.tkbCells(w.days), from: w.from, fallback: w.fallback } : { none: true, code: code == null ? '?' : code });
+      const [w, raw] = code ? await Promise.all([TKB.week(code, mon), TKB.periods(code)]) : [null, null];
+      // Giờ tiết như trang TKB lớp: bản GV tự đặt, chưa đặt thì khung mặc định (normalizePeriodTimesDoc)
+      const TT = global.EduModels && global.EduModels.TeachingTimetable;
+      const times = TT && TT.normalizePeriodTimesDoc ? TT.normalizePeriodTimesDoc(raw) : (raw && raw.byDay) || null;
+      tkbMemo.set(k, w ? { cells: L.tkbCells(w.days, times), from: w.from, fallback: w.fallback } : { none: true, code: code == null ? '?' : code });
     })().catch(() => { tkbMemo.set(k, { none: true, code: '?' }); }).then(() => paintWeek());
   }
   /** Buổi của 1 mục lịch: TKB khớp lớp + thứ (+ trường) trước; không khớp (dạy bù, chưa có TKB) → buổi GV tự xếp. */
   function slotOf(e, who) {
-    if (e.part) return { b: e.part, tiet: e.partTiet, tkb: true }; // nửa sáng / nửa chiều đã tách (splitByTkb)
+    if (e.part) return { b: e.part, tiet: e.partTiet, time: e.partTime, tkb: true }; // nửa sáng / nửa chiều đã tách (splitByTkb)
     const m = tkbMemo.get(tkbKey(who, L.mondayOf(e.date)));
     if (m && m.cells) {
       const r = lastRows.find((x) => x.key === e.key);
       for (const n of [r && r.t ? r.t.name : '', e.cls && e.cls.cls]) {
         const h = n ? L.tkbFor(m.cells, n, e.school, e.date, SRC.sameSchool) : null;
-        if (h) return { b: h.b, tiet: h.tiet, m: h.m, a: h.a, tkb: true };
+        if (h) return { b: h.b, tiet: h.tiet, m: h.m, a: h.a, time: h.time[h.b] || '', times: h.time, tkb: true };
       }
     }
     return { b: L.buoiOf(S.slots, e.key, e.date), tiet: [], tkb: false };
@@ -837,18 +841,20 @@
       const s = slotOf(e, who);
       if (!s.tkb || !s.m || !s.a || !s.m.length || !s.a.length || e.sessions.length < s.m.length + s.a.length) return [e];
       const k = s.m.length;
-      return [Object.assign({}, e, { sessions: e.sessions.slice(0, k), part: 'm', partTiet: s.m }),
-        Object.assign({}, e, { sessions: e.sessions.slice(k), part: 'a', partTiet: s.a })];
+      return [Object.assign({}, e, { sessions: e.sessions.slice(0, k), part: 'm', partTiet: s.m, partTime: s.times.m }),
+        Object.assign({}, e, { sessions: e.sessions.slice(k), part: 'a', partTiet: s.a, partTime: s.times.a })];
     });
   }
-  const slotText = (x) => (!x.b ? '' : x.m && x.m.length && x.a && x.a.length ? `Sáng tiết ${x.m.join(', ')} · Chiều tiết ${x.a.join(', ')}`
-    : BUOI[x.b] + (x.tiet.length ? ' tiết ' + x.tiet.join(', ') : ''));
+  // "Sáng 07:30–08:05" (có giờ tiết) · "Sáng tiết 2" (chưa có giờ) · "Sáng" (xếp tay)
+  const partText = (b, tiet, time) => BUOI[b] + (time ? ' ' + time : tiet && tiet.length ? ' tiết ' + tiet.join(', ') : '');
+  const slotText = (x) => (!x.b ? '' : x.m && x.m.length && x.a && x.a.length ? `${partText('m', x.m, x.times.m)} · ${partText('a', x.a, x.times.a)}`
+    : partText(x.b, x.tiet, x.time));
   function tkbNote(who, mon) {
     const m = tkbMemo.get(tkbKey(who, mon));
     if (!TKB || !m) return '';
     if (m.loading) return 'Đang đọc TKB ở Lịch giảng dạy...';
-    if (m.cells) return m.fallback ? `Tuần này chưa nhập TKB — xếp buổi, tiết theo TKB tuần ${esc(m.from.split('-').reverse().slice(0, 2).join('/'))} ở Lịch giảng dạy.` : 'Buổi và tiết theo TKB ở Lịch giảng dạy.';
-    if (m.code === '?') return 'Không đọc được TKB ở Lịch giảng dạy (mạng) — đang dùng buổi xếp tay.';
+    if (m.cells) return m.fallback ? `Tuần này Lịch giảng dạy chưa có lớp — xếp theo Lịch tuần ${esc(m.from.split('-').reverse().slice(0, 2).join('/'))} (TKB gần nhất).` : 'Buổi, tiết, giờ dạy theo Lịch tuần + Giờ tiết ở Lịch giảng dạy.';
+    if (m.code === '?') return 'Không đọc được Lịch giảng dạy (mạng hoặc quyền — chi tiết ở Console) — đang dùng buổi xếp tay.';
     if (!m.code) return `Chưa tìm thấy giáo viên "${esc(who)}" ở Lịch giảng dạy — xếp buổi bằng tay.`;
     return 'Lịch giảng dạy chưa có TKB của giáo viên này — xếp buổi bằng tay.';
   }
@@ -960,7 +966,7 @@
     const nameOf = (e) => (rowOf(e.key).t ? rowOf(e.key).t.name : e.cls.cls);
     const ev = (e, b) => {
       const sk = `${e.key}|${e.date.getDay()}`, to = b === 'm' ? 'chiều' : 'sáng', sl = slot.get(e);
-      const ctl = sl.tkb ? `<i class="dd-ev-tkb" title="Tiết theo TKB ở Lịch giảng dạy (khác tiết PPCT trên Sheet)">TKB tiết ${sl.tiet.join(', ')}</i>`
+      const ctl = sl.tkb ? `<i class="dd-ev-tkb" title="${esc(BUOI[sl.b])} · tiết TKB ${sl.tiet.join(', ')} theo Lịch giảng dạy (khác tiết PPCT trên Sheet)">${esc(sl.time || 'TKB tiết ' + sl.tiet.join(', '))}</i>`
         : b ? `<button type="button" class="dd-ev-mv" data-buoi="${esc(sk)}" data-to="${b === 'm' ? 'a' : 'm'}" title="Chuyển ${esc(nameOf(e))} (${L.THU[e.date.getDay()]}) sang buổi ${to}" aria-label="Chuyển sang buổi ${to}">⇅</button>`
         : `<span class="dd-ev-set"><button type="button" data-buoi="${esc(sk)}" data-to="m">Sáng</button><button type="button" data-buoi="${esc(sk)}" data-to="a">Chiều</button></span>`;
       return `<div class="dd-ev k-${e.kind}"><button type="button" class="dd-ev-main" data-open="${e.key}"${e.sessions[0] ? ` data-col="${e.sessions[0].col}"` : ''} title="${esc(KIND[e.kind])} — bấm để mở đúng buổi này">
@@ -985,7 +991,7 @@
       .concat(['', ...Object.entries(cnt).sort((a, b) => byText(a[0], b[0])).map(([k, v]) => ['', '', '', k, '', v, 'tiết'].join('\t')), ['', '', '', 'Tổng', '', tot, 'tiết'].join('\t')]).join('\n') : '';
     weekPlanText = [`Lịch giảng dạy GV ${who} — tuần ${fmtDate(mon)}–${fmtDate(sun)}`].concat(cols.map((d) => {
       const es = on(d).filter((e) => e.kind !== 'missing');
-      const one = (e) => `${nameOf(e)} (${e.school}) ${weekText(e, rowOf(e.key).nm)}`;
+      const one = (e) => `${slot.get(e).time ? slot.get(e).time + ' ' : ''}${nameOf(e)} (${e.school}) ${weekText(e, rowOf(e.key).nm)}`;
       const part = (k) => es.filter((e) => slot.get(e).b === k).sort((x, y) => slotOrder(slot.get(x)) - slotOrder(slot.get(y)));
       const txt = ['m', 'a', ''].map((k) => (part(k).length ? (BUOI[k] ? BUOI[k] + ': ' : '') + part(k).map(one).join('; ') : '')).filter(Boolean).join(' | ');
       return es.length ? `${L.THU[d.getDay()]} ${fmtDate(d)}: ${txt}` : '';
