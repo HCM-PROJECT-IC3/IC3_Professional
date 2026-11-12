@@ -40,6 +40,8 @@ const CORE = [
 export const BUNDLES = {
   auth: CORE.slice(0, 8),
   teacher: [...CORE, 'js/teacher/data-loader.js'],
+  // Quản trị 2.0 CHỈ ĐỌC bản đệm của admin-users.js — chỉ cần đăng nhập + data-cache-service, không nạp repository nào
+  admin: [...CORE.slice(0, 8), 'js/services/data-cache-service.js'],
   // thứ tự theo coordinator-dashboard.html (user-repository: danh sách giáo viên đã duyệt)
   coordinator: [...CORE, 'js/repositories/user-repository.js', 'js/coordinator/data-loader.js'],
 } as const;

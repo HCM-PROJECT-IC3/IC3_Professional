@@ -13,6 +13,7 @@ import { UiGalleryPage } from '@/features/preview/UiGalleryPage';
    Cổng nhân sự là lazy route: học sinh không tải mã quản trị, không nạp Firebase. */
 const TeacherRoute = lazy(() => import('@/features/teacher/TeacherRoute'));
 const CoordinatorRoute = lazy(() => import('@/features/coordinator/CoordinatorRoute'));
+const AdminRoute = lazy(() => import('@/features/admin/AdminRoute'));
 
 const lazyPage = (node: ReactNode) => (
   <Suspense
@@ -38,6 +39,7 @@ export const router = createHashRouter([
       { index: true, element: <OverviewPage /> },
       { path: 'giao-vien', element: lazyPage(<TeacherRoute />) },
       { path: 'dieu-phoi', element: lazyPage(<CoordinatorRoute />) },
+      { path: 'quan-tri', element: lazyPage(<AdminRoute />) },
       { path: 'ui', element: <UiGalleryPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],

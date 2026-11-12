@@ -82,6 +82,17 @@ Dành cho `admin`, `coordinator`, `school_admin`, đúng như `coordinator-dashb
 - Nhiều trường có lớp trùng tên, nên điểm theo lớp nhóm theo **trường + lớp**. Lớp được xếp điểm thấp trước, hiện tối đa 60 lớp.
 - Bảng so sánh giữa các trường dùng `EduAnalytics.schoolComparison`, và bị **ẩn khi chưa tải được kết quả**.
 
+## Quản trị (Phase 4d: `/app/#/quan-tri`, chỉ xem)
+
+Chỉ dành cho `admin`, đúng như `admin-users.html`. Trang **chỉ xem, 0 lượt đọc và 0 lượt ghi Firebase**.
+
+- **Không gọi Firestore.** Trang chỉ đọc hai bản đệm mà `admin-users.js` đã lưu trên máy (IndexedDB qua `EduDataCache`), kể cả khi bản đệm đã quá hạn:
+  - `admin-users:delta`: danh sách tài khoản, giữ 30 ngày.
+  - `admin-users:lookups`: lớp, trường, mã nhân viên, giữ 12 giờ.
+- Nếu máy chưa có bản đệm, trang hướng dẫn mở Quản lý tài khoản (trang cũ) một lần.
+- Luật "Chờ duyệt" và "Cần xử lý" **chép đúng** từ `admin-users.js` (`isPending`, `issuesOf`). Sửa bên đó thì phải sửa cả bên này.
+- Mọi thao tác ghi (duyệt, đổi vai trò, gán trường, danh mục trường) vẫn nằm ở trang cũ.
+
 ## Luật bắt buộc
 
 1. Không sửa trang cũ, `sw.js`, `manifest.webmanifest`, `firestore.rules`, `js/` chỉ để phục vụ React.

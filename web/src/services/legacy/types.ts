@@ -146,8 +146,34 @@ export interface EduFirebaseApi {
   isQuotaOrOffline?(err: unknown): boolean;
 }
 
+/* ── Bản đệm trên máy (js/services/data-cache-service.js, IndexedDB) ── */
+export interface EduDataCacheApi {
+  /** persist=true: bản lưu bền (qua nhiều phiên); allowStale=true: lấy cả bản đã quá hạn. */
+  getAsync<T = unknown>(key: string, persist?: boolean, allowStale?: boolean): Promise<T | null>;
+}
+
+/** Firestore Timestamp sau khi lưu vào IndexedDB còn dạng { seconds, nanoseconds }. */
+export interface TsLike {
+  seconds: number;
+  nanoseconds?: number;
+}
+
+/** 1 doc users/{uid} như admin-users.js lưu trong bản đệm. */
+export interface UserDoc {
+  name?: string;
+  email?: string;
+  role?: Role | string;
+  approved?: boolean;
+  requestedRole?: string;
+  schools?: string[];
+  teacherCode?: string;
+  createdAt?: TsLike | null;
+  updatedAt?: TsLike | null;
+}
+
 declare global {
   interface Window {
+    EduDataCache?: EduDataCacheApi;
     EduAuth?: EduAuthApi;
     EduTeacherData?: EduTeacherDataApi;
     EduCoordinatorData?: EduCoordinatorDataApi;
