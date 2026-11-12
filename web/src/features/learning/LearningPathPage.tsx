@@ -8,11 +8,14 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { StatCard } from '@/components/shared/StatCard';
 import { EmptyState, ErrorState, LoadingState } from '@/components/shared/States';
 import { useMeta } from '@/features/learning/meta';
-import { LegacyLink } from '@/features/legacy/LegacyLink';
 import { StudentPicker } from '@/features/student/StudentPicker';
 import { useStudent } from '@/features/student/useStudent';
 import { PASS, STEP_LABEL, buildPath, pathLevels, studentRecords, type MasteryState, type PathStep } from '@/features/student/progress';
-import { cn } from '@/lib/utils';
+import { cn, legacyUrl } from '@/lib/utils';
+
+/** Link mở thẳng 1 bài ở sảnh cũ (quiz-engine.js § _selectMinitestFromUrl) — chỉ chọn sẵn, em bấm Bắt đầu như thường. */
+const practiceUrl = (catId: string, levelId: string, name: string) =>
+  legacyUrl(`index.html?ct=${encodeURIComponent(catId)}&cap=${encodeURIComponent(levelId)}&bai=${encodeURIComponent(name)}`);
 
 /* Lộ trình học — theo mạch "Bài N" của cấp độ (PPCT), mức nắm vững từ lịch sử TRÊN MÁY.
    Công thức chép đúng js/learning-hub.js § buildPath. 0 Firebase: mục lục = data/ic3/meta.json (tĩnh).
@@ -36,7 +39,7 @@ function readLevel() {
   }
 }
 
-function StepRow({ s, isNext }: { s: PathStep; isNext: boolean }) {
+function StepRow({ s, isNext, href }: { s: PathStep; isNext: boolean; href: string }) {
   const Icon = s.state === 'good' || s.state === 'great' ? CheckCircle2 : Circle;
   return (
     <li className={cn('flex items-center gap-3 px-5 py-3', isNext && 'bg-secondary/50')}>
@@ -45,13 +48,19 @@ function StepRow({ s, isNext }: { s: PathStep; isNext: boolean }) {
         aria-hidden
       />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{s.name}</p>
+        <p className="line-clamp-2 text-sm font-medium sm:truncate">{s.name}</p>
         <p className="text-xs text-muted-foreground">
+          <span className="font-medium text-foreground sm:hidden">{STEP_LABEL[s.state]} · </span>
           {s.attempts ? `TB ${s.avg}% · cao nhất ${s.best}% · ${s.attempts} lần` : 'Chưa làm'}
           {isNext && <span className="font-medium text-foreground"> · nên làm tiếp</span>}
         </p>
       </div>
-      <Badge tone={STATE_TONE[s.state]}>{STEP_LABEL[s.state]}</Badge>
+      <Badge tone={STATE_TONE[s.state]} className="hidden sm:inline-flex">
+        {STEP_LABEL[s.state]}
+      </Badge>
+      <a href={href} className={buttonVariants({ variant: isNext ? 'default' : 'outline', size: 'sm', className: 'shrink-0' })} aria-label={`${s.attempts ? 'Làm lại' : 'Làm bài'}: ${s.name}`}>
+        {s.attempts ? 'Làm lại' : 'Làm bài'}
+      </a>
     </li>
   );
 }
@@ -168,9 +177,9 @@ export function LearningPathPage() {
                 <p className="mt-0.5 font-semibold">{P.next.name}</p>
                 <p className="text-sm text-muted-foreground">{P.reason}</p>
               </div>
-              <LegacyLink page="index.html" className={buttonVariants({ className: 'w-full sm:w-auto' })}>
-                Vào luyện tập <ArrowRight />
-              </LegacyLink>
+              <a href={practiceUrl(P.catId, P.levelId, P.next.name)} className={buttonVariants({ className: 'w-full sm:w-auto' })}>
+                Làm bài này <ArrowRight />
+              </a>
             </div>
           )
         )}
@@ -180,12 +189,12 @@ export function LearningPathPage() {
         <CardHeader>
           <CardTitle>Các bài trong {P.levelName}</CardTitle>
           <CardDescription>
-            Theo thứ tự chương trình. Ở trang luyện tập, chọn {data.cur.levelId} rồi chọn đúng tên bài để làm.
+            Theo thứ tự chương trình. Bấm "Làm bài" — trang luyện tập mở sẵn đúng bài, em chọn tên rồi bắt đầu.
           </CardDescription>
         </CardHeader>
         <ul className="divide-y border-t">
           {P.steps.map((s) => (
-            <StepRow key={s.name} s={s} isNext={P.next?.name === s.name} />
+            <StepRow key={s.name} s={s} isNext={P.next?.name === s.name} href={practiceUrl(P.catId, P.levelId, s.name)} />
           ))}
         </ul>
       </Card>

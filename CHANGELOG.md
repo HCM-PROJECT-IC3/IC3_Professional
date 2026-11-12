@@ -23,6 +23,21 @@ Thứ tự: Apps Script → `firestore.rules`/index → đẩy web.
      Lệch dữ liệu thì đặt `rosterDeltaSync: false` trong `js/backend-config.js`.
 
 
+## 12/11/2026 (25) — Vá lỗi hiện chữ câu hỏi chạy được mã; link mở thẳng 1 bài ở sảnh
+
+(0 Firebase / Apps Script. Không đổi chấm điểm, nộp bài, ngân hàng đề.)
+- An toàn: 6 hàm lấy "chữ thuần" từ HTML câu hỏi (Góc học tập, Thử thách hôm nay, chế độ trẻ em, thẻ trí nhớ,
+  tra câu hỏi ở dashboard, Soạn đề) dùng `div.innerHTML` → `<img src=x onerror=…>` trong nội dung CHẠY được dù
+  không hiện ra (đo thật: bật hộp thoại ở index.html khi mở Sổ tay). Nay dùng `DOMParser` (tài liệu trơ: không tải
+  ảnh, không chạy gì). Chữ hiện ra GIỐNG HỆT: so 91/91 chuỗi HTML của data/ic3 trên cả 6 hàm.
+  Rủi ro trước đây thấp (nội dung đến từ ngân hàng đề trong repo), vá để không phụ thuộc điều đó.
+  CI: `scripts/check-plain-text.js` chặn mẫu cũ quay lại.
+- Link mở thẳng 1 bài: `index.html?ct=<Chương trình>&cap=<Cấp độ>&bai=<tên bài>` — chỉ CHỌN SẴN trên sảnh (như bấm
+  tay / nút "Ôn ngay" của Góc học tập), em vẫn chọn tên và bấm Bắt đầu. Link đề giáo viên (`?de=`) được ưu tiên.
+  Đọc xong xoá khỏi URL. Link hỏng → sảnh như bình thường. Dùng ở app 2.0 → Lộ trình học → "Làm bài".
+- Kiểm thử (Chrome thật): 10/10 trường hợp link (kể cả có `?de=`, tên bài có ngoặc, bài không còn, chọn lớp cùng cấp
+  giữ nguyên bài); 6 trang nạp các file sửa mở không lỗi.
+
 ## 11/11/2026 (24) — Trang chủ: tiêu đề 1 dòng chào học sinh; "Kết quả của em" có bài gần đây; danh sách lỗi chỉ thử lại phần đó
 
 (0 Firebase / Apps Script — trang chủ không gọi Firebase; số liệu đọc localStorage của máy này.)

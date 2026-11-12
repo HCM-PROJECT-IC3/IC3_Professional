@@ -104,7 +104,7 @@ Cả hai trang **không cần đăng nhập và không tốn lượt Firebase**.
 - **Sổ tay câu sai:** chỉ đọc `eduquiz_wrongbook_v1`.
   - Câu hỏi hiện dưới dạng **chữ thuần**: tách bằng `DOMParser` và không chèn HTML vào trang, nên HTML lạ trong câu hỏi không chạy được.
   - Nút "Ôn ngay" dùng link có sẵn `index.html?goc=sotay&hs=<khoá>`. Chấm điểm và chuyển hộp vẫn do code cũ làm.
-- **Làm bài vẫn ở trang cũ.** Trang cũ chưa có link mở thẳng một bài, nên nút "Vào luyện tập" chỉ dẫn về sảnh.
+- **Làm bài vẫn ở trang cũ.** Nút "Làm bài" dùng link `index.html?ct=&cap=&bai=` (`quiz-engine.js § _selectMinitestFromUrl`, thêm ngày 12/11/2026) để chọn sẵn đúng bài trên sảnh. Em vẫn chọn tên và bấm Bắt đầu như thường.
 
 ## Luật bắt buộc
 

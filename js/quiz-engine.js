@@ -1443,12 +1443,33 @@ function initLobby() {
     refreshMeta();
   }
 
+  // § 1c — link mở thẳng 1 bài (app 2.0 /app/#/lo-trinh): index.html?ct=<catId>&cap=<levelId>&bai=<tên bài>
+  _selectMinitestFromUrl();
+
   // § 1b — dựng lobby XONG như bình thường trước (để khi học sinh nộp bài
   // dở dang này xong và bấm "Quay lại trang chọn bài", lobby vẫn hoạt
   // động đầy đủ — backToLobby() không gọi lại initLobby()), rồi MỚI kiểm
   // tra có bài làm dở đang lưu không; nếu có và học sinh đồng ý, che lobby
   // lại và nhảy thẳng vào màn hình thi.
   tryResumeInProgress();
+}
+
+/**
+ * Link mở thẳng 1 bài: index.html?ct=<catId>&cap=<levelId>&bai=<tên minitest> (app 2.0 "Lộ trình học").
+ * Chỉ CHỌN SẴN trên sảnh qua lobbySelectMinitest — y như học sinh bấm tay / nút "Ôn ngay" của Góc học tập:
+ * không tự bắt đầu thi, không đụng chấm điểm / nộp bài. Link đề giáo viên (?de=) được ưu tiên → bỏ qua.
+ * Đọc xong thì xoá 3 tham số khỏi URL (F5 không chọn lại; giữ nguyên tham số khác).
+ * Link hỏng (bài/cấp không còn) → lobbySelectMinitest trả false, sảnh giữ mặc định.
+ */
+function _selectMinitestFromUrl() {
+  try {
+    const p = new URLSearchParams(location.search);
+    const cat = p.get('ct'), lvl = p.get('cap'), bai = p.get('bai');
+    if (!cat || !lvl || !bai) return;
+    ['ct', 'cap', 'bai'].forEach((k) => p.delete(k));
+    history.replaceState(history.state, '', location.pathname + (p.toString() ? '?' + p : '') + location.hash);
+    if (!State.customExam && typeof window.lobbySelectMinitest === 'function') window.lobbySelectMinitest(cat, lvl, bai);
+  } catch (e) { /* URL lạ — vào sảnh bình thường */ }
 }
 
 /** Tìm category theo id từ quizRepository */
