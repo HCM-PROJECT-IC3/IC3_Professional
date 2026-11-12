@@ -40,6 +40,8 @@ const CORE = [
 export const BUNDLES = {
   auth: CORE.slice(0, 8),
   teacher: [...CORE, 'js/teacher/data-loader.js'],
+  // thứ tự theo coordinator-dashboard.html (user-repository: danh sách giáo viên đã duyệt)
+  coordinator: [...CORE, 'js/repositories/user-repository.js', 'js/coordinator/data-loader.js'],
 } as const;
 
 const loaded = new Map<string, Promise<void>>();

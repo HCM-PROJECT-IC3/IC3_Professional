@@ -76,7 +76,64 @@ export interface EduTeacherDataApi {
   applyFilters(data: TeacherData, filters: TeacherFilters): TeacherScoped;
 }
 
+/* ── Điều phối (js/coordinator/data-loader.js) ── */
+export interface Course {
+  id: string;
+  name: string;
+}
+export interface ClassRow {
+  id: string;
+  name: string;
+  courseId?: string;
+  teacherId?: string;
+  school?: string;
+}
+export interface TeacherRow {
+  id: string;
+  name?: string;
+  email?: string;
+}
+export interface CoordinatorRoster {
+  courses: Course[];
+  classes: ClassRow[];
+  students: RosterStudent[];
+  teachers: TeacherRow[];
+}
+export interface CoordinatorData extends CoordinatorRoster {
+  results: QuizResult[];
+  schools: string[];
+  noSchoolsAssigned: boolean;
+}
+export interface CoordinatorFilters {
+  courseId?: string;
+  teacherId?: string;
+  classId?: string;
+  examName?: string;
+  rangeDays?: '' | '7' | '30' | '90';
+}
+export interface CoordinatorScoped extends TeacherScoped {
+  allowedClasses: ClassRow[];
+}
+export interface EduCoordinatorDataApi {
+  scopeOf(profile: StaffProfile): { isAdmin: boolean; schools: string[]; scopeKey: string } | null;
+  loadRoster(profile: StaffProfile, opts?: { forceRefresh?: boolean }): Promise<CoordinatorRoster>;
+  loadResults(profile: StaffProfile, opts?: { forceRefresh?: boolean }): Promise<QuizResult[]>;
+  applyFilters(data: CoordinatorData, filters: CoordinatorFilters): CoordinatorScoped;
+}
+
+export interface SchoolComparisonRow {
+  schoolId: string;
+  school: string;
+  rosterSize: number;
+  active: number;
+  participation: number | null;
+  submissions: number;
+  avg: number | null;
+  passRate: number | null;
+}
+
 export interface EduAnalyticsApi {
+  schoolComparison(results: QuizResult[], students: RosterStudent[], threshold?: number): SchoolComparisonRow[];
   avgScore(results: QuizResult[]): number | null;
   passRate(results: QuizResult[], threshold?: number): number | null;
   topStudents(h: ExamHistory[], topN?: number, minScore?: number): ExamHistory[];
@@ -93,6 +150,7 @@ declare global {
   interface Window {
     EduAuth?: EduAuthApi;
     EduTeacherData?: EduTeacherDataApi;
+    EduCoordinatorData?: EduCoordinatorDataApi;
     EduAnalytics?: EduAnalyticsApi;
     EduFirebase?: EduFirebaseApi;
     EduModels?: { Roster?: { studentKeyOf(s: { name: string; className?: string }): string } };

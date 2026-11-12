@@ -1,120 +1,25 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, BookOpen, ClipboardList, ExternalLink, RefreshCw, Target, Trophy, UserX, Users } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ClassAverageBars, type ClassAvg } from '@/components/charts/ClassAverageBars';
-import { DataTable, type Column } from '@/components/shared/DataTable';
+import { DataTable } from '@/components/shared/DataTable';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { StatCard } from '@/components/shared/StatCard';
 import { EmptyState, ErrorState, LoadingState } from '@/components/shared/States';
 import { useStaff } from '@/features/auth/StaffGate';
 import { LegacyLink } from '@/features/legacy/LegacyLink';
+import { PASS, PeopleList, RANGES, SUPPORT, errorText, resultColumns } from '@/features/staff/shared';
 import { cn } from '@/lib/utils';
-import {
-  need, type ExamHistory, type QuizResult, type RosterStudent, type TeacherData, type TeacherFilters,
-} from '@/services/legacy/types';
+import { need, type ExamHistory, type RosterStudent, type TeacherData, type TeacherFilters } from '@/services/legacy/types';
+
+const RESULT_COLUMNS = resultColumns();
 
 /* Dashboard giáo viên 2.0.
    Dữ liệu: EduTeacherData.loadAll() — CHÍNH hàm của teacher-dashboard.html (roster theo teacherId,
    bài nộp theo lớp mình dạy, bản đệm 12 giờ / 3 phút DÙNG CHUNG với trang cũ). Lọc, KPI, danh sách:
    tính trên máy bằng EduAnalytics/applyFilters — đổi bộ lọc = 0 lượt đọc.
    "Làm mới" = loadAll({forceRefresh}) như nút cũ: chỉ đọc bài MỚI nộp. */
-
-const PASS = 70; // EduModels.StudentResult.isPassing / EduAnalytics.passRate
-const SUPPORT = 60; // ngưỡng "Cần hỗ trợ" của trang cũ
-const pad = (n: number) => String(n).padStart(2, '0');
-const fmtTime = (t: number) => {
-  const d = new Date(t);
-  return `${pad(d.getHours())}:${pad(d.getMinutes())} ${d.getDate()}/${d.getMonth() + 1}`;
-};
-
-const RANGES: { id: NonNullable<TeacherFilters['rangeDays']>; label: string }[] = [
-  { id: '7', label: '7 ngày' },
-  { id: '30', label: '30 ngày' },
-  { id: '90', label: '90 ngày' },
-  { id: '', label: 'Tất cả' },
-];
-
-function tone(score: number) {
-  return score >= PASS ? 'green' : score >= 50 ? 'orange' : 'red';
-}
-
-const RESULT_COLUMNS: Column<QuizResult>[] = [
-  { key: 'name', header: 'Học sinh', sortValue: (r) => r.studentName, cell: (r) => <span className="font-medium">{r.studentName || 'Ẩn danh'}</span> },
-  { key: 'class', header: 'Lớp', sortValue: (r) => r.studentClass, cell: (r) => r.studentClass || '–', hideOnMobile: true },
-  {
-    key: 'test',
-    header: 'Bài',
-    sortValue: (r) => r.testName,
-    cell: (r) => <span className="block max-w-72 truncate" title={r.testName}>{(r.testName || '').split(' › ').pop() || '–'}</span>,
-  },
-  {
-    key: 'score',
-    header: 'Điểm',
-    sortValue: (r) => r.score ?? null,
-    cell: (r) => (typeof r.score === 'number' ? <Badge tone={tone(r.score)} className="tabular-nums">{r.score}%</Badge> : '–'),
-    align: 'right',
-  },
-  {
-    key: 'at',
-    header: 'Nộp lúc',
-    sortValue: (r) => r.submittedAtMs ?? null,
-    cell: (r) => <span className="whitespace-nowrap text-muted-foreground tabular-nums">{r.submittedAtMs ? fmtTime(r.submittedAtMs) : '–'}</span>,
-    align: 'right',
-    hideOnMobile: true,
-  },
-];
-
-function PeopleList({
-  title,
-  description,
-  icon: Icon,
-  items,
-  empty,
-}: {
-  title: string;
-  description: string;
-  icon: typeof Users;
-  items: { key: string; name: string; meta: string; score?: number | null }[];
-  empty: string;
-}) {
-  const [all, setAll] = useState(false);
-  const shown = all ? items : items.slice(0, 6);
-  return (
-    <Card className="flex flex-col">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Icon className="size-4 text-muted-foreground" aria-hidden /> {title}
-          <span className="ml-auto text-sm font-normal tabular-nums text-muted-foreground">{items.length}</span>
-        </CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      {items.length ? (
-        <ul className="divide-y px-5 pb-3">
-          {shown.map((p) => (
-            <li key={p.key} className="flex items-center gap-3 py-2">
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{p.name}</p>
-                <p className="truncate text-xs text-muted-foreground">{p.meta}</p>
-              </div>
-              {typeof p.score === 'number' && <Badge tone={tone(p.score)} className="tabular-nums">{p.score}%</Badge>}
-            </li>
-          ))}
-          {items.length > 6 && (
-            <li className="pt-2">
-              <Button variant="ghost" size="sm" className="w-full" onClick={() => setAll((v) => !v)}>
-                {all ? 'Thu gọn' : `Xem thêm ${items.length - 6}`}
-              </Button>
-            </li>
-          )}
-        </ul>
-      ) : (
-        <EmptyState compact title={empty} />
-      )}
-    </Card>
-  );
-}
 
 export default function TeacherDashboard() {
   const { profile } = useStaff();
@@ -130,8 +35,7 @@ export default function TeacherDashboard() {
       try {
         setData(await need(window.EduTeacherData, 'EduTeacherData').loadAll(profile, { forceRefresh }));
       } catch (e) {
-        const F = window.EduFirebase;
-        setError(F?.isQuotaOrOffline?.(e) ? F.QUOTA_HINT || 'Hết lượt đọc hôm nay hoặc mất mạng.' : (e as Error).message);
+        setError(errorText(e));
       } finally {
         setRefreshing(false);
       }

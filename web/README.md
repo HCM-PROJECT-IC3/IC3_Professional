@@ -73,6 +73,15 @@ XP, cấp và huy hiệu là số liệu **chung của cả máy** (gamification
 - **Dữ liệu lớp:** `EduTeacherData.loadAll()`, cùng hàm với `teacher-dashboard.html`. Đổi bộ lọc là **0 lượt đọc**. Nút "Làm mới" chỉ đọc bài mới nộp.
 - Xuất Excel/PDF, câu hay sai và trợ lý AI vẫn nằm ở trang cũ (nút "Bản đầy đủ").
 
+## Cổng điều phối (Phase 4c: `/app/#/dieu-phoi`)
+
+Dành cho `admin`, `coordinator`, `school_admin`, đúng như `coordinator-dashboard.html`.
+
+- Dùng `EduCoordinatorData.loadRoster` và `loadResults` của trang cũ. Hai hàm được **gọi riêng**: một nguồn lỗi thì trang vẫn hiện nguồn còn lại, và nút "Thử lại" chỉ đọc lại đúng nguồn bị lỗi.
+- Bản đệm dùng chung với trang cũ: danh sách học sinh 12 giờ, kết quả 3 phút, khoá học và lớp 10 phút.
+- Nhiều trường có lớp trùng tên, nên điểm theo lớp nhóm theo **trường + lớp**. Lớp được xếp điểm thấp trước, hiện tối đa 60 lớp.
+- Bảng so sánh giữa các trường dùng `EduAnalytics.schoolComparison`, và bị **ẩn khi chưa tải được kết quả**.
+
 ## Luật bắt buộc
 
 1. Không sửa trang cũ, `sw.js`, `manifest.webmanifest`, `firestore.rules`, `js/` chỉ để phục vụ React.
