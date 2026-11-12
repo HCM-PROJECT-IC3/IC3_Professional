@@ -39,6 +39,10 @@ export interface EduGradingApi {
 
 /** 1 câu trong Sổ tay câu sai (js/services/wrongbook-store.js) — hộp Leitner 1→4. */
 export interface WrongbookItem {
+  /** Bản gọn của câu hỏi (wrongbook-store.js § slim) — question là HTML: CHỈ hiện chữ thuần, không innerHTML. */
+  q?: { question?: string; type?: string };
+  /** Nguồn: "Cấp độ › Bài" lúc làm sai. */
+  src?: string;
   box: number;
   due: number;
   added?: number;

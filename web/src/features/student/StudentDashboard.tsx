@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { ArrowDown, ArrowRight, ArrowUp, BookCheck, CalendarCheck, Flame, Minus, Target } from 'lucide-react';
+import { Link } from 'react-router';
+import { ArrowDown, ArrowRight, ArrowUp, BookCheck, BookX, CalendarCheck, Flame, Minus, Route, Target } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,10 +13,11 @@ import { StatCard } from '@/components/shared/StatCard';
 import { EmptyState } from '@/components/shared/States';
 import { gamification } from '@/domain/legacy';
 import { LegacyLink } from '@/features/legacy/LegacyLink';
-import { useStorageVersion } from '@/hooks/useStorageVersion';
+import { StudentPicker } from '@/features/student/StudentPicker';
+import { useStudent } from '@/features/student/useStudent';
 import { cn } from '@/lib/utils';
 import {
-  GOAL_CHOICES, PASS, WATCH_KEYS, dueItems, getChosenStudent, goalOf, knownStudents, recTime, setChosenStudent,
+  GOAL_CHOICES, PASS, dueItems, goalOf, recTime,
   setGoal, streakOf, studentBook, studentRecords, topicStats, weekDone, type ExamRecord,
 } from '@/features/student/progress';
 
@@ -87,11 +89,8 @@ function NoData() {
 }
 
 export function StudentDashboard() {
-  const version = useStorageVersion(WATCH_KEYS);
+  const { students, student, pick, version } = useStudent();
   const [goalTick, setGoalTick] = useState(0);
-  const students = useMemo(() => knownStudents(), [version]);
-  const [chosen, setChosen] = useState<string | null>(getChosenStudent);
-  const student = students.find((s) => s.key === chosen) ?? students[0];
 
   const data = useMemo(() => {
     if (!student) return null;
@@ -126,10 +125,6 @@ export function StudentDashboard() {
     );
   }
 
-  const pick = (key: string) => {
-    setChosen(key);
-    setChosenStudent(key);
-  };
   const chooseGoal = (n: number) => {
     setGoal(student.key, n);
     setGoalTick((t) => t + 1);
@@ -147,6 +142,16 @@ export function StudentDashboard() {
       <PageHeader
         title="Góc học tập"
         description="Số liệu lấy từ lịch sử làm bài trên máy này — không cần đăng nhập."
+        actions={
+          <>
+            <Link to="/lo-trinh" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+              <Route /> Lộ trình học
+            </Link>
+            <Link to="/so-tay" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+              <BookX /> Sổ tay câu sai
+            </Link>
+          </>
+        }
       />
 
       <Card className="flex flex-wrap items-center gap-x-4 gap-y-3 p-4 sm:p-5">
@@ -156,23 +161,9 @@ export function StudentDashboard() {
           <p className="truncate text-sm text-muted-foreground">
             {[student.cls && `Lớp ${student.cls}`, student.school].filter(Boolean).join(' · ') || 'Chưa có lớp/trường'}
           </p>
-          {students.length > 1 && (
-            <label className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-              <span className="whitespace-nowrap">Không phải em?</span>
-              <select
-                value={student.key}
-                onChange={(e) => pick(e.target.value)}
-                className="h-8 max-w-56 rounded-md border bg-card px-2 text-sm text-foreground"
-              >
-                {students.map((s) => (
-                  <option key={s.key} value={s.key}>
-                    {s.name}
-                    {s.cls ? ` · ${s.cls}` : ''}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
+          <div className="mt-2">
+            <StudentPicker students={students} value={student.key} onPick={pick} />
+          </div>
         </div>
         <LegacyLink page="index.html" className={buttonVariants({ className: 'w-full sm:w-auto' })}>
           Vào luyện tập <ArrowRight />

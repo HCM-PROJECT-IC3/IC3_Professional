@@ -5,6 +5,8 @@ import { ViewerProvider } from '@/app/providers/ViewerProvider';
 import { Card } from '@/components/ui/card';
 import { LoadingState } from '@/components/shared/States';
 import { NotFoundPage } from '@/features/foundation/NotFoundPage';
+import { LearningPathPage } from '@/features/learning/LearningPathPage';
+import { WrongbookPage } from '@/features/learning/WrongbookPage';
 import { OverviewPage } from '@/features/preview/OverviewPage';
 import { UiGalleryPage } from '@/features/preview/UiGalleryPage';
 
@@ -37,6 +39,8 @@ export const router = createHashRouter([
     ),
     children: [
       { index: true, element: <OverviewPage /> },
+      { path: 'lo-trinh', element: <LearningPathPage /> },
+      { path: 'so-tay', element: <WrongbookPage /> },
       { path: 'giao-vien', element: lazyPage(<TeacherRoute />) },
       { path: 'dieu-phoi', element: lazyPage(<CoordinatorRoute />) },
       { path: 'quan-tri', element: lazyPage(<AdminRoute />) },

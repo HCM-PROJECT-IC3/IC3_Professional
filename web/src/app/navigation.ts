@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
 import {
-  BookOpen, Building2, CalendarDays, ClipboardCheck, FolderOpen, Gamepad2, GraduationCap, Image, LayoutDashboard, Library,
-  Monitor, NotebookPen, Palette, School, ShieldCheck, Shuffle, Swords, Trophy, Users, UserCog, FileSpreadsheet,
+  BookOpen, BookX, Building2, CalendarDays, ClipboardCheck, FolderOpen, Gamepad2, GraduationCap, Image, LayoutDashboard, Library,
+  Monitor, NotebookPen, Palette, Route, School, ShieldCheck, Shuffle, Swords, Trophy, Users, UserCog, FileSpreadsheet,
 } from 'lucide-react';
 import type { Role } from '@/domain/legacy';
 
@@ -54,6 +54,8 @@ export const NAV: NavGroup[] = [
   {
     label: 'Học tập',
     items: [
+      { label: 'Lộ trình học', icon: Route, to: '/lo-trinh', roles: STUDENT },
+      { label: 'Sổ tay câu sai', icon: BookX, to: '/so-tay', roles: STUDENT },
       { label: 'Luyện tập & thi thử', icon: BookOpen, legacy: 'index.html', roles: STUDENT },
       { label: 'Kệ sách đề', icon: Library, legacy: 'quiz-shelf.html', roles: STUDENT },
       { label: 'Luyện MOS', icon: FileSpreadsheet, legacy: 'mos/index.html', roles: STUDENT },

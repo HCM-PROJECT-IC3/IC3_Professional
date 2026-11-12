@@ -93,6 +93,19 @@ Chỉ dành cho `admin`, đúng như `admin-users.html`. Trang **chỉ xem, 0 l�
 - Luật "Chờ duyệt" và "Cần xử lý" **chép đúng** từ `admin-users.js` (`isPending`, `issuesOf`). Sửa bên đó thì phải sửa cả bên này.
 - Mọi thao tác ghi (duyệt, đổi vai trò, gán trường, danh mục trường) vẫn nằm ở trang cũ.
 
+## Học tập (Phase 5a: Lộ trình học `/app/#/lo-trinh`, Sổ tay câu sai `/app/#/so-tay`)
+
+Cả hai trang **không cần đăng nhập và không tốn lượt Firebase**.
+
+- **Mục lục đề:** `data/ic3/meta.json`, cũng là file mà `quiz-engine.js` dùng làm `quizRepository`. Đây là file tĩnh 44 KB, `sw.js` lưu sẵn để dùng offline.
+- **Lộ trình học:** `progress.ts § buildPath` chép đúng `learning-hub.js § buildPath`.
+  - Đã đối chiếu với `EduLearningHub.seasonInfo()` trên cùng dữ liệu, kể cả bản ghi kiểu cũ chỉ có tên.
+  - Khác bản cũ đúng một điểm: khi em chưa làm bài nào, danh sách cấp độ hiện mọi cấp. Lý do: trang 2.0 không có ô chọn cấp ở sảnh.
+- **Sổ tay câu sai:** chỉ đọc `eduquiz_wrongbook_v1`.
+  - Câu hỏi hiện dưới dạng **chữ thuần**: tách bằng `DOMParser` và không chèn HTML vào trang, nên HTML lạ trong câu hỏi không chạy được.
+  - Nút "Ôn ngay" dùng link có sẵn `index.html?goc=sotay&hs=<khoá>`. Chấm điểm và chuyển hộp vẫn do code cũ làm.
+- **Làm bài vẫn ở trang cũ.** Trang cũ chưa có link mở thẳng một bài, nên nút "Vào luyện tập" chỉ dẫn về sảnh.
+
 ## Luật bắt buộc
 
 1. Không sửa trang cũ, `sw.js`, `manifest.webmanifest`, `firestore.rules`, `js/` chỉ để phục vụ React.

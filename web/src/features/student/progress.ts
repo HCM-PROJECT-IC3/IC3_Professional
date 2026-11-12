@@ -29,6 +29,9 @@ export interface ExamRecord {
   minitest?: string;
   isRandomMix?: boolean;
   examMode?: 'practice' | 'test';
+  catId?: string;
+  levelId?: string;
+  mtKey?: string;
   score: number;
   correct?: number;
   total?: number;
@@ -199,6 +202,128 @@ export function setChosenStudent(key: string) {
   } catch {
     /* bỏ qua */
   }
+}
+
+/* ── Lộ trình học (learning-hub.js § resolveIds, pathNames, mastery, pathLevels, buildPath) ── */
+
+export interface MetaLevel {
+  id: string;
+  name: string;
+  minitests: Record<string, { count: number }>;
+}
+export interface MetaCategory {
+  id: string;
+  name: string;
+  levels: MetaLevel[];
+}
+
+const BAI_RE = /^Bài \d+[.:]/;
+const LESSON_RE = /^(Tiết \d+$|Ôn tập\s|Luyện thi\s|Kiểm tra\s)/; // bộ theo tiết ôn/kiểm tra — không phải 1 bài
+
+/** Tra id Chương trình/Cấp độ cho bản ghi cũ (chỉ lưu tên hiển thị). */
+export function resolveIds(r: ExamRecord, cats: MetaCategory[]) {
+  if (r.catId && r.levelId) return { catId: r.catId, levelId: r.levelId, mtKey: r.mtKey || '' };
+  const cat = cats.find((c) => c.name === r.category);
+  const lv = cat?.levels?.find((l) => l.name === r.level);
+  const mtKey = lv && lv.minitests && Object.prototype.hasOwnProperty.call(lv.minitests, r.minitest || '') ? r.minitest || '' : '';
+  return { catId: cat?.id || '', levelId: lv?.id || '', mtKey };
+}
+
+/** Các bài của lộ trình: bộ "Bài N" theo số bài; cấp chưa có bộ này → các chủ đề. */
+export function pathNames(lv: MetaLevel): string[] {
+  const names = Object.keys(lv.minitests || {});
+  const bai = names.filter((n) => BAI_RE.test(n));
+  if (bai.length) return bai.sort((a, b) => (parseInt(a.match(/\d+/)![0], 10) || 0) - (parseInt(b.match(/\d+/)![0], 10) || 0));
+  return names.filter((n) => !LESSON_RE.test(n));
+}
+
+export type MasteryState = 'new' | 'bad' | 'warn' | 'good' | 'great';
+export const STEP_LABEL: Record<MasteryState, string> = { new: 'Chưa làm', bad: 'Yếu', warn: 'Cần ôn', good: 'Đạt', great: 'Vững' };
+
+/** Mức nắm vững 1 bài: TB 3 lần gần nhất. */
+export function mastery(scores: number[]): { state: MasteryState; avg: number | null; attempts: number; best: number } {
+  if (!scores.length) return { state: 'new', avg: null, attempts: 0, best: 0 };
+  const recent = scores.slice(-3);
+  const avg = Math.round(recent.reduce((s, x) => s + x, 0) / recent.length);
+  const state: MasteryState = avg >= 90 && scores.length >= 2 ? 'great' : avg >= PASS ? 'good' : avg >= 50 ? 'warn' : 'bad';
+  return { state, avg, attempts: scores.length, best: Math.max(...scores) };
+}
+
+function levelInfo(cats: MetaCategory[], catId: string, levelId: string) {
+  const cat = cats.find((c) => c.id === catId);
+  const lv = cat?.levels?.find((l) => l.id === levelId);
+  return cat && lv ? { cat, lv } : null;
+}
+
+export interface PathLevel {
+  catId: string;
+  levelId: string;
+  name: string;
+}
+
+/** Cấp độ em từng làm (mới nhất trước); chưa làm bài nào → mọi cấp có lộ trình (app 2.0 không có ô chọn ở sảnh). */
+export function pathLevels(recs: ExamRecord[], cats: MetaCategory[]): PathLevel[] {
+  const out: PathLevel[] = [];
+  const add = (catId: string, levelId: string) => {
+    if (!catId || !levelId || out.some((x) => x.catId === catId && x.levelId === levelId)) return;
+    const info = levelInfo(cats, catId, levelId);
+    if (info && pathNames(info.lv).length) out.push({ catId, levelId, name: info.lv.name || `${info.cat.name} ${levelId}` });
+  };
+  recs.slice().reverse().forEach((r) => {
+    const ids = resolveIds(r, cats);
+    add(ids.catId, ids.levelId);
+  });
+  cats.forEach((c) => c.levels.forEach((l) => add(c.id, l.id)));
+  return out;
+}
+
+export interface PathStep {
+  name: string;
+  i: number;
+  state: MasteryState;
+  avg: number | null;
+  attempts: number;
+  best: number;
+}
+
+export function buildPath(recs: ExamRecord[], cats: MetaCategory[], catId: string, levelId: string) {
+  const info = levelInfo(cats, catId, levelId);
+  if (!info) return null;
+  const byName = new Map<string, number[]>();
+  recs.forEach((r) => {
+    const ids = resolveIds(r, cats);
+    if (ids.catId !== catId || ids.levelId !== levelId || !ids.mtKey) return;
+    if (!byName.has(ids.mtKey)) byName.set(ids.mtKey, []);
+    byName.get(ids.mtKey)!.push(Number(r.score) || 0);
+  });
+  const steps: PathStep[] = pathNames(info.lv).map((name, i) => ({ name, i, ...mastery(byName.get(name) || []) }));
+  // Ưu tiên: bài đã làm nhưng còn yếu nhất → bài chưa làm kế tiếp theo mạch → bài "Đạt" thấp nhất để lên "Vững".
+  const weak = steps.filter((s) => s.state === 'bad' || s.state === 'warn').sort((a, b) => (a.avg ?? 0) - (b.avg ?? 0))[0];
+  const fresh = steps.find((s) => s.state === 'new');
+  const polish = steps.filter((s) => s.state === 'good').sort((a, b) => (a.avg ?? 0) - (b.avg ?? 0))[0];
+  const next = weak || fresh || polish || null;
+  const passed = steps.filter((s) => s.state === 'good' || s.state === 'great').length;
+  const done = steps.filter((s) => s.attempts).map((s) => s.avg ?? 0);
+  return {
+    catId,
+    levelId,
+    levelName: info.lv.name,
+    steps,
+    next,
+    reason: !next
+      ? ''
+      : next === weak
+        ? `Điểm TB gần đây ${next.avg}% — chưa đạt ${PASS}%, củng cố trước khi học tiếp.`
+        : next === fresh
+          ? passed
+            ? 'Bài kế tiếp trong chương trình mà em chưa làm.'
+            : 'Bắt đầu lộ trình từ bài đầu tiên.'
+          : `Đã đạt (${next.avg}%) — làm lại để lên mức Vững (≥ 90%, ít nhất 2 lần).`,
+    passed,
+    great: steps.filter((s) => s.state === 'great').length,
+    avg: done.length ? Math.round(done.reduce((s, x) => s + x, 0) / done.length) : null,
+    complete: steps.length > 0 && passed === steps.length,
+  };
 }
 
 /** Khoá localStorage mà dashboard cần nghe để tự làm mới khi tab sảnh cũ ghi bài mới. */
