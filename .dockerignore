@@ -11,6 +11,8 @@ docs
 scripts
 server-data
 node_modules
+# Mã nguồn React 2.0 — máy chủ chỉ cần bản build app/ (đã commit)
+web
 mos/files
 mos/work
 mos/tools

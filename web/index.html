@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Bản xem trước 2.0: chưa cho máy tìm kiếm lập chỉ mục -->
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#0ea5e9" />
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <!-- KHÔNG gắn manifest ở đây: Vite sẽ chép 1 bản vào app/assets với start_url sai.
+         PWA vẫn cài từ sảnh cũ (manifest.webmanifest ở gốc, scope "./" đã bao gồm /app/). -->
+    <title>IC3 Professional 2.0</title>
+    <script>
+      // Áp theme TRƯỚC khi vẽ (tránh nháy trắng). Dùng CHUNG khoá "ic3_theme" với giao diện cũ.
+      try {
+        var t = localStorage.getItem('ic3_theme');
+        if (t === 'dark' || (!t && matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>Trình duyệt cần bật JavaScript để dùng IC3 Professional.</noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+/* Dark mode theo class .dark trên <html> (đặt sớm trong index.html từ khoá "ic3_theme"). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ============================================================
+   Token màu — nền xanh da trời tối giản, khớp sảnh hiện tại.
+   3 màu bước (xanh dương / xanh lá / cam) giữ như sảnh cũ.
+   Phase 3 sẽ hoàn thiện; tên biến theo quy ước shadcn/ui.
+   ============================================================ */
+:root {
+  --background: #f6f9fc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --muted: #eef3f8;
+  --muted-foreground: #5b6b80;
+  --border: #dde5ee;
+  --input: #dde5ee;
+  --ring: #0ea5e9;
+  --primary: #0284c7;
+  --primary-foreground: #ffffff;
+  --secondary: #e0f2fe;
+  --secondary-foreground: #075985;
+  --accent: #f0f9ff;
+  --accent-foreground: #0c4a6e;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --step-1: #0284c7;
+  --step-2: #16a34a;
+  --step-3: #ea580c;
+  /* màu biểu đồ: đã chạy validate_palette (dataviz) — đạt độ sáng + tương phản 3:1 trên nền thẻ */
+  --chart-1: #0284c7;
+  --radius: 0.625rem;
+}
+
+.dark {
+  --background: #0b1220;
+  --foreground: #e6edf5;
+  --card: #111a2b;
+  --card-foreground: #e6edf5;
+  --muted: #172235;
+  --muted-foreground: #93a3b8;
+  --border: #223049;
+  --input: #223049;
+  --ring: #38bdf8;
+  --primary: #38bdf8;
+  --primary-foreground: #04131f;
+  --secondary: #0c2a40;
+  --secondary-foreground: #bae6fd;
+  --accent: #13243a;
+  --accent-foreground: #e0f2fe;
+  --destructive: #f87171;
+  --destructive-foreground: #1b0606;
+  --step-1: #38bdf8;
+  --step-2: #4ade80;
+  --step-3: #fb923c;
+  --chart-1: #1d8fd0;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-step-1: var(--step-1);
+  --color-step-2: var(--step-2);
+  --color-step-3: var(--step-3);
+  --color-chart-1: var(--chart-1);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+@layer base {
+  * { border-color: var(--color-border); }
+  html { color-scheme: light; }
+  html.dark { color-scheme: dark; }
+  body {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible { outline: 2px solid var(--color-ring); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+}

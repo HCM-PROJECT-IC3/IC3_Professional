@@ -36,6 +36,9 @@ jobs:
       - name: Kiến trúc sạch — Domain thuần, giao diện không thêm lượt gọi Firestore trực tiếp
         run: node scripts/check-architecture.js
 
+      - name: Đường dẫn cũ giữ nguyên + bản build React (app/) đầy đủ
+        run: node scripts/check-legacy-paths.js
+
       - name: Unit test (mô phỏng Word/Excel/PowerPoint, lưu bài nộp, gọi Apps Script)
         run: |
           for t in js/*/__tests__/*.test.js; do
@@ -76,6 +79,29 @@ jobs:
       - name: Kiểm thử phân quyền trên emulator
         working-directory: tests/firestore-rules
         run: npm test
+
+  # IC3 Professional 2.0 (React, web/): kiểu TypeScript + build thử vào thư mục tạm.
+  # Bản phục vụ thật là app/ đã commit (GitHub Pages không có bước build) — job này
+  # chỉ bắt lỗi mã nguồn; job "check" bắt app/ thiếu file.
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Cài thư viện
+        working-directory: web
+        run: npm ci --no-audit --no-fund
+      - name: Kiểm tra kiểu TypeScript
+        working-directory: web
+        run: npm run typecheck
+      - name: Build thử (không ghi đè app/)
+        working-directory: web
+        run: npx vite build --outDir "$RUNNER_TEMP/app-build" --emptyOutDir
 
   # Ảnh Docker của máy chủ trường: build + chạy thử (không đẩy đi đâu).
   docker:
