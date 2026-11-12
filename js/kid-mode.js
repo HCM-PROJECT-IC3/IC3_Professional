@@ -23,7 +23,7 @@
   function esc(s) {
     return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
-  function plain(html) { const d = document.createElement('div'); d.innerHTML = String(html ?? ''); return (d.textContent || '').trim(); }
+  function plain(html) { const d = new DOMParser().parseFromString(String(html ?? ''), 'text/html'); return (d.body.textContent || '').trim(); } // DOMParser: tài liệu trơ — không tải ảnh, không chạy onerror/script (div.innerHTML thì có)
   function getPref() { try { return localStorage.getItem(PREF_KEY) || ''; } catch (e) { return ''; } }
   function setPref(v) { try { v ? localStorage.setItem(PREF_KEY, v) : localStorage.removeItem(PREF_KEY); } catch (e) { /* ignore */ } }
 

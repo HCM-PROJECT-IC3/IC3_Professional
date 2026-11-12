@@ -39,6 +39,9 @@ jobs:
       - name: Đường dẫn cũ giữ nguyên + bản build React (app/) đầy đủ
         run: node scripts/check-legacy-paths.js
 
+      - name: Không lấy chữ thuần bằng innerHTML (chạy được onerror trong nội dung câu hỏi)
+        run: node scripts/check-plain-text.js
+
       - name: Unit test (mô phỏng Word/Excel/PowerPoint, lưu bài nộp, gọi Apps Script)
         run: |
           for t in js/*/__tests__/*.test.js; do

@@ -93,7 +93,7 @@
   function esc(s) {
     return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
-  function stripHtml(s) { const d = document.createElement('div'); d.innerHTML = String(s ?? ''); return (d.textContent || '').trim(); }
+  function stripHtml(s) { const d = new DOMParser().parseFromString(String(s ?? ''), 'text/html'); return (d.body.textContent || '').trim(); } // DOMParser: tài liệu trơ — không tải ảnh, không chạy onerror/script
   function toast(msg, icon) { global.showToast?.(msg, icon); }
   function shuffled(arr) {
     const a = arr.slice();

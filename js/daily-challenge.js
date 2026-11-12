@@ -27,7 +27,7 @@
   function esc(s) {
     return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
-  function plain(html) { const d = document.createElement('div'); d.innerHTML = String(html ?? ''); return (d.textContent || '').trim(); }
+  function plain(html) { const d = new DOMParser().parseFromString(String(html ?? ''), 'text/html'); return (d.body.textContent || '').trim(); } // DOMParser: tài liệu trơ — không tải ảnh, không chạy onerror/script (div.innerHTML thì có)
   function lsGet(k, fb) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : fb; } catch (e) { return fb; } }
   function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
   function sfx(name) { try { global.EduSFX?.play(name); } catch (e) { /* âm thanh chỉ là phụ */ } }
