@@ -62,6 +62,17 @@ Công thức thống kê ở `src/features/student/progress.ts` **chép đúng**
 
 XP, cấp và huy hiệu là số liệu **chung của cả máy** (gamification cũ không tách theo học sinh). Giao diện có ghi rõ điều này.
 
+## Cổng nhân sự (Phase 4b: Lớp học của tôi, `/app/#/giao-vien`)
+
+- **Không viết lại tầng dữ liệu.** `src/services/legacy/runtime.ts` nạp **đúng các file `js/` của trang cũ**, theo đúng thứ tự. Firebase compat **10.13.0** phải trùng với các trang cũ.
+  - Query, `limit`, bản đệm và cầu dao đếm lượt đọc giống hệt trang cũ, và **dùng chung bản đệm**. Mở cả trang cũ lẫn trang 2.0 không làm đọc gấp đôi.
+  - Phiên đăng nhập dùng chung với trang cũ, vì cùng một SDK.
+- **Route nạp lười.** Học sinh không tải mã này và không nạp Firebase.
+- **`StaffGate`** làm lại đúng luật của `auth-guard.js`: chưa đăng nhập, không có hồ sơ, sai vai trò, giáo viên chờ duyệt. Có cả chống F5 dồn dập. Hồ sơ đọc qua `EduAuth.onAuthReady`, nên tối đa 1 lượt đọc mỗi 5 phút, dùng chung bản đệm.
+- **Tự đăng xuất khi không thao tác** (`features/auth/idle.ts`) dùng cùng khoá và cùng giới hạn với `idle-logout.js` (15 phút trên máy dùng chung, 60 phút trên máy cá nhân).
+- **Dữ liệu lớp:** `EduTeacherData.loadAll()`, cùng hàm với `teacher-dashboard.html`. Đổi bộ lọc là **0 lượt đọc**. Nút "Làm mới" chỉ đọc bài mới nộp.
+- Xuất Excel/PDF, câu hay sai và trợ lý AI vẫn nằm ở trang cũ (nút "Bản đầy đủ").
+
 ## Luật bắt buộc
 
 1. Không sửa trang cũ, `sw.js`, `manifest.webmanifest`, `firestore.rules`, `js/` chỉ để phục vụ React.

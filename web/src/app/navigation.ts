@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import {
-  BookOpen, CalendarDays, ClipboardCheck, FolderOpen, Gamepad2, Image, LayoutDashboard, Library,
+  BookOpen, CalendarDays, ClipboardCheck, FolderOpen, Gamepad2, GraduationCap, Image, LayoutDashboard, Library,
   Monitor, NotebookPen, Palette, School, Shuffle, Swords, Trophy, Users, UserCog, FileSpreadsheet,
 } from 'lucide-react';
 import type { Role } from '@/domain/legacy';
@@ -45,6 +45,7 @@ export const NAV: NavGroup[] = [
     label: 'Bản 2.0',
     items: [
       { label: 'Tổng quan', icon: LayoutDashboard, to: '/', roles: EVERYONE },
+      { label: 'Lớp học của tôi', icon: GraduationCap, to: '/giao-vien', roles: TEACHER_TOOLS },
       { label: 'Thư viện giao diện', icon: Palette, to: '/ui', roles: EVERYONE },
     ],
   },

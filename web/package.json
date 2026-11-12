@@ -1,7 +1,7 @@
 {
   "name": "ic3-professional-web",
   "private": true,
-  "version": "2.0.0-phase4a",
+  "version": "2.0.0-phase4b",
   "description": "IC3 Professional 2.0 — mã nguồn React. Build ra ../app/ (commit cùng mã nguồn, GitHub Pages phục vụ tại /app/).",
   "type": "module",
   "scripts": {

@@ -1,13 +1,30 @@
+import { lazy, Suspense, type ReactNode } from 'react';
 import { createHashRouter } from 'react-router';
 import { AppShell } from '@/app/layouts/AppShell';
 import { ViewerProvider } from '@/app/providers/ViewerProvider';
+import { Card } from '@/components/ui/card';
+import { LoadingState } from '@/components/shared/States';
 import { NotFoundPage } from '@/features/foundation/NotFoundPage';
 import { OverviewPage } from '@/features/preview/OverviewPage';
 import { UiGalleryPage } from '@/features/preview/UiGalleryPage';
 
-/* HashRouter (#/…) vì GitHub Pages không có SPA fallback: F5 ở /app/#/ui
-   vẫn tải đúng app/index.html, không 404. Các cổng (student/teacher/coordinator/
-   admin) sẽ thêm ở Phase 4 dưới dạng lazy route — học sinh không tải mã quản trị. */
+/* HashRouter (#/…) vì GitHub Pages không có SPA fallback: F5 ở /app/#/giao-vien
+   vẫn tải đúng app/index.html, không 404.
+   Cổng nhân sự là lazy route: học sinh không tải mã quản trị, không nạp Firebase. */
+const TeacherRoute = lazy(() => import('@/features/teacher/TeacherRoute'));
+
+const lazyPage = (node: ReactNode) => (
+  <Suspense
+    fallback={
+      <Card className="p-6">
+        <LoadingState />
+      </Card>
+    }
+  >
+    {node}
+  </Suspense>
+);
+
 export const router = createHashRouter([
   {
     path: '/',
@@ -18,6 +35,7 @@ export const router = createHashRouter([
     ),
     children: [
       { index: true, element: <OverviewPage /> },
+      { path: 'giao-vien', element: lazyPage(<TeacherRoute />) },
       { path: 'ui', element: <UiGalleryPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],

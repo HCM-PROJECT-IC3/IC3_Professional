@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState, type ReactNode } from 'react';
-import { Bell, LogIn, Menu, Moon, Sun } from 'lucide-react';
+import { Bell, LogIn, LogOut, Menu, Moon, Sun } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { EmptyState } from '@/components/shared/States';
 import { ROLE_LABEL, type ViewerRole } from '@/app/navigation';
@@ -35,7 +35,7 @@ function Popover({ label, icon, children }: { label: string; icon: ReactNode; ch
 }
 
 export function Header({ onMenu }: { onMenu: () => void }) {
-  const { role, setPreviewRole } = useViewer();
+  const { role, setPreviewRole, session, logout } = useViewer();
   const [theme, setThemeState] = useState<Theme>(getTheme);
   const toggleTheme = () => {
     const next: Theme = theme === 'dark' ? 'light' : 'dark';
@@ -49,6 +49,9 @@ export function Header({ onMenu }: { onMenu: () => void }) {
         <Menu />
       </Button>
 
+      {session ? (
+        <span className="ml-auto" />
+      ) : (
       <label className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
         <span className="hidden md:inline">Xem thử với vai trò</span>
         <select
@@ -64,6 +67,7 @@ export function Header({ onMenu }: { onMenu: () => void }) {
           ))}
         </select>
       </label>
+      )}
 
       <Popover label="Thông báo" icon={<Bell />}>
         <p className="px-1 pb-1 text-sm font-medium">Thông báo</p>
@@ -78,17 +82,31 @@ export function Header({ onMenu }: { onMenu: () => void }) {
         label="Hồ sơ"
         icon={
           <span className="grid size-8 place-items-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground">
-            {initials(ROLE_LABEL[role])}
+            {initials(session?.name || ROLE_LABEL[role])}
           </span>
         }
       >
+        {session ? (
+          <div className="px-1">
+            <p className="truncate text-sm font-medium">{session.name}</p>
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">
+              {ROLE_LABEL[role]} · {session.email}
+            </p>
+            {logout && (
+              <Button variant="outline" size="sm" className="mt-3 w-full" onClick={logout}>
+                <LogOut /> Đăng xuất
+              </Button>
+            )}
+          </div>
+        ) : (
         <div className="px-1">
           <p className="text-sm font-medium">{ROLE_LABEL[role]}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {role === 'guest' ? 'Học sinh không cần đăng nhập — chọn tên ở sảnh.' : 'Bản xem trước — chưa đăng nhập thật.'}
           </p>
         </div>
-        {role !== 'guest' && (
+        )}
+        {!session && role !== 'guest' && (
           <LegacyLink page="login.html" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'mt-3 w-full')}>
             <LogIn /> Đăng nhập thầy cô
           </LegacyLink>
