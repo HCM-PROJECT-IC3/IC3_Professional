@@ -106,6 +106,18 @@ Cả hai trang **không cần đăng nhập và không tốn lượt Firebase**.
   - Nút "Ôn ngay" dùng link có sẵn `index.html?goc=sotay&hs=<khoá>`. Chấm điểm và chuyển hộp vẫn do code cũ làm.
 - **Làm bài vẫn ở trang cũ.** Nút "Làm bài" dùng link `index.html?ct=&cap=&bai=` (`quiz-engine.js § _selectMinitestFromUrl`, thêm ngày 12/11/2026) để chọn sẵn đúng bài trên sảnh. Em vẫn chọn tên và bấm Bắt đầu như thường.
 
+## Trò chơi & thành tích (Phase 6: Khu vui chơi `/app/#/tro-choi`, Thành tích `/app/#/thanh-tich`)
+
+Hai trang này không cần đăng nhập, không tốn lượt Firebase và không sửa file cũ nào.
+
+- **Khu vui chơi** gom Đấu trường, 5 mini-game và 3 trang mô phỏng/thư viện. Mỗi thẻ mở trang cũ, nên game vẫn chạy và ghi XP như trước.
+  - Đấu trường mở bằng tham số có sẵn `arena.html?vai=minigame|solo|student`.
+  - Ngày 12/11/2026 đã thử từng trang game mở trực tiếp: không lỗi, không gọi Firebase hay Google.
+- **Thành tích** chỉ đọc `eduquiz_gamestate` qua `gamification.js` (`getState`, `levelForXp`, `xpToNextLevel`, `BADGE_DEFS`).
+  - XP và huy hiệu tính chung cho cả máy, đúng như hệ thống cũ. Trang có ghi rõ điều này.
+  - Nhiệm vụ ngày tính theo ngày UTC, giống `gamification.js § _today()`.
+- Danh mục game nằm ở `src/features/play/games.ts`. Mô tả game được đối chiếu với nội dung thật của từng file game. `gameId` phải trùng với khoá mà game ghi qua `recordGameSession`.
+
 ## Luật bắt buộc
 
 1. Không sửa trang cũ, `sw.js`, `manifest.webmanifest`, `firestore.rules`, `js/` chỉ để phục vụ React.

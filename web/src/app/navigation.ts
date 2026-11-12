@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
 import {
-  BookOpen, BookX, Building2, CalendarDays, ClipboardCheck, FolderOpen, Gamepad2, GraduationCap, Image, LayoutDashboard, Library,
-  Monitor, NotebookPen, Palette, Route, School, ShieldCheck, Shuffle, Swords, Trophy, Users, UserCog, FileSpreadsheet,
+  Award, BookOpen, BookX, Building2, CalendarDays, ClipboardCheck, FolderOpen, Gamepad2, GraduationCap, Image, LayoutDashboard,
+  NotebookPen, Palette, Route, School, ShieldCheck, Shuffle, Trophy, Users, UserCog, FileSpreadsheet,
 } from 'lucide-react';
 import type { Role } from '@/domain/legacy';
 
@@ -57,10 +57,9 @@ export const NAV: NavGroup[] = [
       { label: 'Lộ trình học', icon: Route, to: '/lo-trinh', roles: STUDENT },
       { label: 'Sổ tay câu sai', icon: BookX, to: '/so-tay', roles: STUDENT },
       { label: 'Luyện tập & thi thử', icon: BookOpen, legacy: 'index.html', roles: STUDENT },
-      { label: 'Kệ sách đề', icon: Library, legacy: 'quiz-shelf.html', roles: STUDENT },
       { label: 'Luyện MOS', icon: FileSpreadsheet, legacy: 'mos/index.html', roles: STUDENT },
-      { label: 'Mô phỏng máy tính', icon: Monitor, legacy: 'computer-simulator.html', roles: STUDENT },
-      { label: 'Đấu trường', icon: Swords, legacy: 'arena.html', roles: STUDENT },
+      { label: 'Khu vui chơi', icon: Gamepad2, to: '/tro-choi', roles: STUDENT },
+      { label: 'Thành tích', icon: Award, to: '/thanh-tich', roles: STUDENT },
     ],
   },
   {
