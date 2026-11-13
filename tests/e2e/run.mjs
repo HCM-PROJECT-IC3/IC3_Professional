@@ -40,7 +40,14 @@ const shots = process.env.E2E_SHOTS ? path.resolve(process.env.E2E_SHOTS) : null
 if (shots) fs.mkdirSync(shots, { recursive: true });
 
 const { server, base } = await startServer(ROOT);
-const browser = await puppeteer.launch({ executablePath: findChrome(), headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage'] });
+// E2E_NETLOG=<file.json>: nhật ký mạng của CẢ Chrome (mọi trang, service worker, tiến trình nền) — để chứng minh
+// bộ kiểm thử không chạm Firestore/Firebase Auth ở bất kỳ đâu (node netlog-check.mjs <file.json>).
+const netlog = process.env.E2E_NETLOG ? path.resolve(process.env.E2E_NETLOG) : null;
+const browser = await puppeteer.launch({
+  executablePath: findChrome(),
+  headless: true,
+  args: ['--no-sandbox', '--disable-dev-shm-usage', ...(netlog ? [`--log-net-log=${netlog}`, '--net-log-capture-mode=Default'] : [])],
+});
 
 let failed = 0;
 let total = 0;

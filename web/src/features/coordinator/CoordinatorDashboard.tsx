@@ -12,6 +12,7 @@ import { StatCard } from '@/components/shared/StatCard';
 import { EmptyState, ErrorState, LoadingState } from '@/components/shared/States';
 import { useStaff } from '@/features/auth/StaffGate';
 import { LegacyLink } from '@/features/legacy/LegacyLink';
+import { ColdStart, coordinatorRosterKeys, hasLocalRoster } from '@/features/staff/ColdStart';
 import { PASS, PeopleList, RANGES, SUPPORT, errorText, resultColumns, tone } from '@/features/staff/shared';
 import { cn } from '@/lib/utils';
 import {
@@ -96,11 +97,25 @@ export default function CoordinatorDashboard() {
     [C, profile],
   );
 
-  useEffect(() => {
-    if (!scope) return; // chưa gán trường: không query gì (như trang cũ)
+  // Máy chưa có bản lưu danh sách học sinh → HỎI trước khi đọc toàn bộ (features/staff/ColdStart.tsx). 0 lượt Firebase để kiểm tra.
+  const [gate, setGate] = useState<'checking' | 'cold' | 'go'>('checking');
+  const startLoad = useCallback(() => {
+    setGate('go');
     loadRoster();
     loadResults();
-  }, [scope, loadRoster, loadResults]);
+  }, [loadRoster, loadResults]);
+  useEffect(() => {
+    if (!scope) return; // chưa gán trường: không query gì (như trang cũ)
+    let alive = true;
+    hasLocalRoster(coordinatorRosterKeys(scope)).then((warm) => {
+      if (!alive) return;
+      if (warm) startLoad();
+      else setGate('cold');
+    });
+    return () => {
+      alive = false;
+    };
+  }, [scope, startLoad]);
 
   const refreshAll = async () => {
     setRefreshing(true);
@@ -180,6 +195,15 @@ export default function CoordinatorDashboard() {
         <Card>
           <EmptyState title="Tài khoản chưa được gán trường" description="Nhờ quản trị viên gán trường ở trang Tài khoản & phân quyền, rồi tải lại trang." />
         </Card>
+      </div>
+    );
+  }
+
+  if (gate === 'cold') {
+    return (
+      <div className="space-y-6">
+        {header}
+        <ColdStart kind={scope.isAdmin ? 'admin' : 'coordinator'} fullPage="coordinator-dashboard.html" onLoad={startLoad} />
       </div>
     );
   }

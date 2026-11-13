@@ -1,6 +1,6 @@
 // Cổng điều phối 2.0 (/app/#/dieu-phoi). Dữ liệu giả 2 trường có lớp TRÙNG TÊN; applyFilters, scopeOf,
 // EduAnalytics.schoolComparison là code THẬT. Có tình huống lỗi riêng phần kết quả + "Thử lại".
-import { openApp, overflow, seed, stat, stubAuth, waitStaff } from './_helpers.mjs';
+import { mainText, openApp, overflow, seed, seedCache, stat, stubAuth, waitStaff } from './_helpers.mjs';
 
 const DAY = 864e5;
 const SCHOOLS = ['TH Hoà Bình', 'TH Thử Nghiệm'];
@@ -24,12 +24,15 @@ const loader = (failOnce) => {
     C.loadResults = async () => { window.__s = (window.__s || 0) + 1; if (fail-- > 0) throw new Error('Mạng chập chờn (giả lập)'); return ${JSON.stringify(f.results)}; }; }`;
 };
 const COORD = { uid: 'u', role: 'coordinator', name: 'Điều phối Thử', schools: SCHOOLS };
+// Khoá bản lưu của js/coordinator/data-loader.js: SCOPED_KEYS.dashboard + scopeKeyOf (uid:các trường đã sắp xếp).
+const warmKey = (prof) => (prof.role === 'admin' ? 'roster:active:all' : `coordinator:roster:${prof.uid}:${(prof.schools || []).slice().sort().join('|')}`);
 
 export default async function ({ base, page, check, shot }) {
-  const scenario = async (profile, { failOnce = false, size } = {}) => {
+  const scenario = async (profile, { failOnce = false, size, cold = false } = {}) => {
     const p = await page(size);
     await stubAuth(p, base, profile, loader(failOnce));
     await seed(p, base, { ic3_theme: 'light' });
+    if (!cold) await seedCache(p, base, [[warmKey(profile), { students: [], courses: [], classes: [], teachers: [], cachedAt: Date.now() }]]);
     await openApp(p, base, '#/dieu-phoi');
     await waitStaff(p);
     return p;
@@ -60,6 +63,27 @@ export default async function ({ base, page, check, shot }) {
 
   p = await scenario({ ...COORD, role: 'school_admin', schools: [SCHOOLS[1]] }, { size: { width: 375, height: 812 } });
   check('quản trị trường vào được; 375px không tràn ngang', /Tổng quan điều phối/.test(await p.evaluate(() => document.querySelector('main').innerText)) && !(await overflow(p)));
+  await p.closeAll();
+
+  // Khoá app 2.0 dò bản lưu PHẢI trùng khoá trang cũ ghi — so với EduRosterCache.scopeKeyOf THẬT (lệch → máy đã có
+  // bản lưu vẫn bị hỏi lại mỗi lần; không tốn lượt nhưng phiền).
+  p = await scenario(COORD);
+  const keys = await p.evaluate((prof) => {
+    const RC = window.EduRosterCache;
+    const scoped = RC.scopeKeyOf(prof);
+    return { coordinator: RC.SCOPED_KEYS.dashboard + scoped, teacher: 'teacher:roster:' + scoped };
+  }, COORD);
+  check('khoá dò bản lưu (điều phối) trùng khoá trang cũ', keys.coordinator === warmKey(COORD), keys);
+  check('khoá dò bản lưu (giáo viên) trùng khoá trang cũ', keys.teacher === `teacher:roster:${COORD.uid}:${COORD.schools.slice().sort().join('|')}`, keys);
+  await p.closeAll();
+
+  // Máy CHƯA có bản lưu → không tự đọc; bấm mới tải (cả 2 nguồn đúng 1 lần)
+  p = await scenario(COORD, { cold: true });
+  const t = await mainText(p);
+  check('điều phối, máy chưa có bản lưu → không tự tải, báo trước', /Lần đầu mở trên máy này/.test(t) && (await p.evaluate(() => [window.__r || 0, window.__s || 0].join())) === '0,0', t.slice(0, 200));
+  await p.evaluate(() => [...document.querySelectorAll('main button')].find((b) => /Tải dữ liệu/.test(b.textContent)).click());
+  await p.waitForFunction(() => /Học sinh/.test(document.querySelector('main').innerText) && document.querySelectorAll('main table').length);
+  check('bấm "Tải dữ liệu" → tải mỗi nguồn 1 lần', (await p.evaluate(() => [window.__r, window.__s].join())) === '1,1' && (await stat(p, 'Học sinh')) === '36');
   await p.closeAll();
 
   p = await scenario({ uid: 'u', role: 'teacher', approved: true, schools: SCHOOLS });

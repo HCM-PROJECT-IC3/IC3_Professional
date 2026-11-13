@@ -1,6 +1,6 @@
 // Cổng giáo viên 2.0 (/app/#/giao-vien). Dữ liệu giả thay EduTeacherData.loadAll; applyFilters, ExamHistory,
 // EduAnalytics… là code THẬT. Trường hợp "chưa đăng nhập" chạy Firebase SDK THẬT (không phiên → 0 lượt đọc).
-import { firebaseHosts, openApp, overflow, seed, stat, stubAuth, waitStaff } from './_helpers.mjs';
+import { firebaseHosts, mainText, openApp, overflow, seed, seedCache, stat, stubAuth, waitStaff } from './_helpers.mjs';
 
 const DAY = 864e5;
 function fixture(now = Date.now()) {
@@ -18,6 +18,8 @@ function fixture(now = Date.now()) {
 const loader = (data) => `if (window.EduTeacherData) window.EduTeacherData.loadAll = async (prof) => { window.__loads = (window.__loads || 0) + 1;
   return (prof.schools || []).length ? ${JSON.stringify(data)} : { schools: [], students: [], results: [], noSchoolsAssigned: true }; };`;
 const TEACHER = { uid: 'u1', role: 'teacher', approved: true, name: 'Cô Thử Nghiệm', schools: ['TH Thử Nghiệm'] };
+// Khoá bản lưu danh sách học sinh mà js/teacher/data-loader.js dùng (uid:các trường đã sắp xếp; Admin: toàn bộ).
+const warmKey = (prof) => (prof.role === 'admin' ? 'roster:active:all' : `teacher:roster:${prof.uid}:${(prof.schools || []).slice().sort().join('|')}`);
 
 export default async function ({ base, page, check, shot }) {
   // Firebase thật, chưa đăng nhập
@@ -31,10 +33,12 @@ export default async function ({ base, page, check, shot }) {
   check('chưa đăng nhập: SDK thật nạp, 0 request Firestore/Auth', firebaseHosts(p).length === 0 && !p.errors.length, { fb: firebaseHosts(p), errs: p.errors });
   await p.closeAll();
 
+  // Mặc định máy ĐÃ có bản lưu (đã từng mở) → tự tải. cold: máy chưa có bản lưu → phải hỏi trước, không tự đọc.
   const scenario = async (profile, opts = {}) => {
     const q = await page(opts.size);
     await stubAuth(q, base, profile, loader(fixture()));
     await seed(q, base, { ic3_theme: opts.theme || 'light' });
+    if (!opts.cold && profile) await seedCache(q, base, [[warmKey(profile), { students: [], cachedAt: Date.now() }]]);
     await openApp(q, base, '#/giao-vien');
     await waitStaff(q);
     return q;
@@ -57,6 +61,22 @@ export default async function ({ base, page, check, shot }) {
   check('375px + tối: không tràn ngang', !(await overflow(p)));
   await p.closeAll();
 
+  // Máy CHƯA có bản lưu (lần đầu / địa chỉ mới): KHÔNG tự đọc Firebase — hỏi trước, chỉ tải khi bấm.
+  p = await scenario(TEACHER, { cold: true });
+  let t = await mainText(p);
+  check('máy chưa có bản lưu → không tự tải (0 lần gọi loadAll)', (await p.evaluate(() => window.__loads || 0)) === 0, t.slice(0, 160));
+  check('máy chưa có bản lưu → báo trước số lượt đọc ước tính', /Lần đầu mở trên máy này/.test(t) && /lượt đọc/.test(t), t.slice(0, 200));
+  await p.evaluate(() => [...document.querySelectorAll('main button')].find((b) => /Tải dữ liệu/.test(b.textContent)).click());
+  await p.waitForFunction(() => /Tổng quan lớp học/.test(document.querySelector('main').innerText) && document.querySelectorAll('main table').length);
+  check('bấm "Tải dữ liệu" → tải đúng 1 lần, hiện dashboard', (await p.evaluate(() => window.__loads)) === 1 && (await stat(p, 'Học sinh')) === '12');
+  await p.closeAll();
+
+  p = await scenario({ uid: 'a1', role: 'admin', name: 'Quản trị' }, { cold: true });
+  t = await mainText(p);
+  await shot(p, 'teacher-cold-admin.png');
+  check('Quản trị viên, máy chưa có bản lưu → cảnh báo đọc TOÀN BỘ học sinh, 0 lần tải', /toàn bộ học sinh/.test(t) && (await p.evaluate(() => window.__loads || 0)) === 0, t.slice(0, 200));
+  await p.closeAll();
+
   // Tự đăng xuất khi không thao tác (features/auth/idle.ts — cùng luật js/idle-logout.js).
   // Tua đồng hồ bằng Date.now giả (không chờ thật 15 phút). Máy dùng chung: edu_idle_remember = '0' → 15 phút.
   p = await page();
@@ -67,6 +87,7 @@ export default async function ({ base, page, check, shot }) {
   });
   await stubAuth(p, base, TEACHER, loader(fixture()));
   await seed(p, base, { edu_idle_remember: '0' });
+  await seedCache(p, base, [[warmKey(TEACHER), { students: [], cachedAt: Date.now() }]]);
   await openApp(p, base, '#/giao-vien');
   await waitStaff(p);
   await p.waitForFunction(() => /Tổng quan lớp học/.test(document.querySelector('main').innerText));

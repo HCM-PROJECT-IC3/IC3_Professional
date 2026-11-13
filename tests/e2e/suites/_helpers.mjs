@@ -52,6 +52,16 @@ export async function stubAuth(p, base, profile, patch = '') {
   });
 }
 
+/** Ghi bản đệm IndexedDB bằng CHÍNH js/services/data-cache-service.js (đúng định dạng trang cũ lưu).
+ *  entries: [[key, value, persist]] — persist=true: bản lưu bền (qua nhiều phiên). */
+export async function seedCache(p, base, entries) {
+  await p.goto(base + 'app/', { waitUntil: 'networkidle0' });
+  await p.addScriptTag({ url: base + 'js/services/data-cache-service.js' });
+  await p.evaluate(async (list) => {
+    for (const [k, v, persist] of list) await window.EduDataCache.setAsync(k, v, 12 * 3600e3, persist !== false);
+  }, entries);
+}
+
 /** Đợi cổng nhân sự xong (gồm hoãn 1,5 giây chống F5 dồn dập khi mở lại trang < 4 giây). */
 export async function waitStaff(p) {
   await p.waitForFunction(() => {

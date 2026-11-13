@@ -9,6 +9,7 @@ import { StatCard } from '@/components/shared/StatCard';
 import { EmptyState, ErrorState, LoadingState } from '@/components/shared/States';
 import { useStaff } from '@/features/auth/StaffGate';
 import { LegacyLink } from '@/features/legacy/LegacyLink';
+import { ColdStart, hasLocalRoster, teacherRosterKeys } from '@/features/staff/ColdStart';
 import { PASS, PeopleList, RANGES, SUPPORT, errorText, resultColumns } from '@/features/staff/shared';
 import { cn } from '@/lib/utils';
 import { need, type ExamHistory, type RosterStudent, type TeacherData, type TeacherFilters } from '@/services/legacy/types';
@@ -43,9 +44,20 @@ export default function TeacherDashboard() {
     [profile],
   );
 
+  // Máy chưa có bản lưu danh sách học sinh → HỎI trước khi đọc toàn bộ (features/staff/ColdStart.tsx). 0 lượt Firebase để kiểm tra.
+  const [gate, setGate] = useState<'checking' | 'cold' | 'go'>('checking');
   useEffect(() => {
-    load();
-  }, [load]);
+    let alive = true;
+    const noSchools = profile.role !== 'admin' && !(profile.schools || []).filter(Boolean).length; // loadAll không query gì
+    (noSchools ? Promise.resolve(true) : hasLocalRoster(teacherRosterKeys(profile))).then((warm) => {
+      if (!alive) return;
+      setGate(warm ? 'go' : 'cold');
+      if (warm) load();
+    });
+    return () => {
+      alive = false;
+    };
+  }, [load, profile]);
 
   const view = useMemo(() => {
     if (!data) return null;
@@ -99,6 +111,22 @@ export default function TeacherDashboard() {
       }
     />
   );
+
+  if (gate === 'cold') {
+    return (
+      <div className="space-y-6">
+        {header}
+        <ColdStart
+          kind={profile.role === 'admin' ? 'admin' : 'teacher'}
+          fullPage="teacher-dashboard.html"
+          onLoad={() => {
+            setGate('go');
+            load();
+          }}
+        />
+      </div>
+    );
+  }
 
   if (error && !data) {
     return (
