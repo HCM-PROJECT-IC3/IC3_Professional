@@ -118,6 +118,16 @@ Hai trang này không cần đăng nhập, không tốn lượt Firebase và kh�
   - Nhiệm vụ ngày tính theo ngày UTC, giống `gamification.js § _today()`.
 - Danh mục game nằm ở `src/features/play/games.ts`. Mô tả game được đối chiếu với nội dung thật của từng file game. `gameId` phải trùng với khoá mà game ghi qua `recordGameSession`.
 
+## Offline
+
+`src/main.tsx` đăng ký **chính `sw.js` của trang cũ**, với cùng phạm vi gốc (`../sw.js`, scope `../`). Trình duyệt coi đây là cùng 1 service worker với sảnh cũ, không tạo bản thứ hai.
+
+Nhờ vậy, máy chỉ từng mở app 2.0 vẫn dùng được khi mất mạng sau lần mở đầu. Bộ `tests/e2e/suites/offline.mjs` kiểm tra điều này bằng cách tắt hẳn máy chủ rồi mở lại trang.
+
+## Kiểm thử trình duyệt
+
+Xem `tests/e2e/README.md`: 11 bộ, 140 kiểm tra, CI job `e2e`. Khi thêm trang 2.0 mới, hãy thêm một bộ vào `tests/e2e/suites/`.
+
 ## Luật bắt buộc
 
 1. Không sửa trang cũ, `sw.js`, `manifest.webmanifest`, `firestore.rules`, `js/` chỉ để phục vụ React.

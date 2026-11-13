@@ -106,6 +106,36 @@ jobs:
         working-directory: web
         run: npx vite build --outDir "$RUNNER_TEMP/app-build" --emptyOutDir
 
+  # Kiểm thử trình duyệt thật (Chrome headless có sẵn trên ubuntu-latest) cho trang cũ + app 2.0:
+  # số liệu khớp bản cũ, phân quyền, link mở bài, vá chữ thuần, game, 0 request Firestore.
+  # KHÔNG gọi Firebase thật (đăng nhập + dữ liệu nhân sự là bản giả ngay trong trình duyệt).
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: tests/e2e/package-lock.json
+      - name: Cài puppeteer-core (không tải Chrome — dùng Chrome của máy CI)
+        working-directory: tests/e2e
+        run: npm ci --no-audit --no-fund
+      - name: Kiểm thử trình duyệt (10 bộ)
+        working-directory: tests/e2e
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+          E2E_SHOTS: ${{ runner.temp }}/e2e-shots
+        run: npm test
+      - name: Ảnh chụp màn hình khi lỗi
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-shots
+          path: ${{ runner.temp }}/e2e-shots
+          retention-days: 7
+
   # Ảnh Docker của máy chủ trường: build + chạy thử (không đẩy đi đâu).
   docker:
     runs-on: ubuntu-latest

@@ -2,3 +2,6 @@
 server-data/
 .env
 node_modules/
+
+# Ảnh chụp kiểm thử E2E (tests/e2e, E2E_SHOTS)
+.e2e-shots/
