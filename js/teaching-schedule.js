@@ -1679,6 +1679,114 @@
     if (!weekLabel) weekLabel = sheetName;
     const weekKey = computeWeekKeyFromLabel(weekLabel, sheetName);
 
+    const byLabels = parseTeacherBlocksByLabels(rows, headerRowIdx);
+    const teachers = byLabels || parseTeacherBlocksFixedStride(rows, headerRowIdx);
+
+    // Có hàng "MÃ NV" nhưng không đọc được giáo viên nào — khác hẳn
+    // 'no-header' (đây LÀ sheet lịch tuần thật, chỉ là cấu trúc khối 14
+    // dòng/cột G,I,K,M,O,Q không khớp, vd sai dòng/thiếu cột) — đáng để
+    // người nhập kiểm tra lại file, không nên im lặng bỏ qua như nhau.
+    return { weekKey, weekLabel, teachers, reason: teachers.length ? null : 'no-teachers' };
+  }
+
+  /** Đọc 1 buổi (cột chính + cột phụ) của 1 ngày từ các dòng đã xác định. */
+  function readDaySession(rows, typeRow, locRow, periodRows, col) {
+    const cell = (r, c) => (r < 0 ? '' : String(((rows[r] || [])[c]) ?? '').trim());
+    const read = (c) => ({
+      type: cell(typeRow, c), location: cell(locRow, c),
+      periods: periodRows.map((rr) => cell(rr, c)),
+    });
+    return mergeSecondarySchoolColumn(read(col), read(col + 1));
+  }
+
+  /** Đọc khối giáo viên DỰA THEO NHÃN ở cột "BUỔI" ("Chọn loại hình phụ
+   * trách" / "Địa điểm giảng dạy" / "SÁNG" / "CHIỀU") và số tiết 1-5 ở cột
+   * "TIẾT", thay vì nhảy cứng 14 dòng/GV. Lý do: người nhập lịch hay lỡ
+   * chèn thêm 1 dòng trống trong khối 1 GV (sheet "09.11-14.11.2026": khối
+   * HCM0177 dài 15 dòng) → bộ đọc 14 dòng lệch nhịp, gặp 2 khối "trống"
+   * liên tiếp và DỪNG, bỏ sót toàn bộ GV phía sau (lịch tuần đó trống
+   * trơn dù đã nhập file). Cũng chịu được mã NV bị lệch xuống dòng dưới
+   * trong ô gộp cột A (sheet "5.10-10.10.2026", HCM0092). Trả null nếu sheet
+   * không có nhãn nào → dùng cách đọc 14 dòng cũ. */
+  function parseTeacherBlocksByLabels(rows, headerRowIdx) {
+    const norm = (v) => String(v ?? '').normalize('NFC').trim().toLowerCase();
+    const header = rows[headerRowIdx] || [];
+    const findCol = (label, fallback) => {
+      const i = header.findIndex((c) => norm(c) === label);
+      return i === -1 ? fallback : i;
+    };
+    const labelCol = findCol('buổi', 4);
+    const periodCol = findCol('tiết', 5);
+    const lab = (r) => norm((rows[r] || [])[labelCol]);
+    const isTypeRow = (r) => lab(r).includes('loại hình');
+
+    // Mỗi buổi bắt đầu bằng 1 dòng "Chọn loại hình phụ trách".
+    const sessions = [];
+    for (let r = headerRowIdx + 1; r < rows.length; r++) {
+      if (!isTypeRow(r)) continue;
+      let end = r + 1;
+      while (end < rows.length && !isTypeRow(end)) end++;
+      let locRow = -1;
+      let markerRow = -1;
+      let kind = '';
+      for (let k = r + 1; k < end && k <= r + 6; k++) {
+        const s = lab(k);
+        if (locRow === -1 && s.startsWith('địa điểm')) locRow = k;
+        if (!kind && (s === 'sáng' || s === 'chiều')) { kind = s === 'sáng' ? 'morning' : 'afternoon'; markerRow = k; }
+      }
+      if (!kind) continue;
+      // Tiết 1-5: tìm dòng có số tiết tương ứng ở cột "TIẾT" (bỏ qua dòng
+      // trống chèn giữa); không thấy thì lấy dòng kế tiếp như cấu trúc gốc.
+      const periodRows = [];
+      let next = markerRow;
+      for (let p = 1; p <= 5; p++) {
+        let found = -1;
+        for (let k = next; k < end && k <= next + 3; k++) {
+          if (norm((rows[k] || [])[periodCol]) === String(p)) { found = k; break; }
+        }
+        const rowIdx = found !== -1 ? found : (next < end ? next : -1);
+        periodRows.push(rowIdx);
+        next = rowIdx === -1 ? end : rowIdx + 1;
+      }
+      sessions.push({ start: r, end, kind, typeRow: r, locRow, periodRows });
+    }
+    if (!sessions.length) return null;
+
+    // Ghép buổi thành khối GV: mỗi buổi Sáng mở 1 khối mới, buổi Chiều gắn vào khối đang mở.
+    const blocks = [];
+    sessions.forEach((s) => {
+      if (s.kind === 'morning' || !blocks.length || blocks[blocks.length - 1].afternoon) {
+        blocks.push({ start: s.start, end: s.end, morning: s.kind === 'morning' ? s : null, afternoon: s.kind === 'afternoon' ? s : null });
+      } else {
+        const b = blocks[blocks.length - 1];
+        b.afternoon = s;
+        b.end = s.end;
+      }
+    });
+
+    const teachers = [];
+    blocks.forEach((b) => {
+      let infoRow = -1;
+      for (let k = b.start; k < b.end; k++) {
+        if (String(((rows[k] || [])[0]) ?? '').trim()) { infoRow = k; break; }
+      }
+      if (infoRow === -1) return; // khối trống (chưa điền GV) — bỏ qua như trước
+      const info = (c) => String(((rows[infoRow] || [])[c]) ?? '').trim();
+      const days = {};
+      WEEKDAY_COL_IDX.forEach((col, wi) => {
+        const read = (s) => (s
+          ? readDaySession(rows, s.typeRow, s.locRow, s.periodRows, col)
+          : readDaySession(rows, -1, -1, [-1, -1, -1, -1, -1], col));
+        days[String(wi + 2)] = { morning: read(b.morning), afternoon: read(b.afternoon) };
+      });
+      teachers.push({ code: info(0), name: info(1), phone: info(2), address: info(3), days });
+    });
+    return teachers;
+  }
+
+  /** Cách đọc cũ: khối cố định 14 dòng/GV ngay sau hàng "MÃ NV" (dự phòng
+   * cho file không có nhãn ở cột "BUỔI"). */
+  function parseTeacherBlocksFixedStride(rows, headerRowIdx) {
     const teachers = [];
     let r = headerRowIdx + 1;
     let consecutiveEmpty = 0;
@@ -1712,12 +1820,7 @@
       teachers.push({ code, name, phone, address, days });
       r += BLOCK_ROWS;
     }
-
-    // Có hàng "MÃ NV" nhưng không đọc được giáo viên nào — khác hẳn
-    // 'no-header' (đây LÀ sheet lịch tuần thật, chỉ là cấu trúc khối 14
-    // dòng/cột G,I,K,M,O,Q không khớp, vd sai dòng/thiếu cột) — đáng để
-    // người nhập kiểm tra lại file, không nên im lặng bỏ qua như nhau.
-    return { weekKey, weekLabel, teachers, reason: teachers.length ? null : 'no-teachers' };
+    return teachers;
   }
 
   /** Parse 1 workbook (ArrayBuffer) thành { weeks, skippedSheets } và mở
