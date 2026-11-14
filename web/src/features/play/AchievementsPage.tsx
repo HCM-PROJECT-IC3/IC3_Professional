@@ -92,11 +92,12 @@ export function AchievementsPage() {
           <CardTitle>Huy hiệu</CardTitle>
           <CardDescription>Huy hiệu khoá hiện cách đạt.</CardDescription>
         </CardHeader>
-        <ul className="grid gap-2 px-5 pb-5 sm:grid-cols-2 lg:grid-cols-3">
+        {/* grid-cols-1 = minmax(0,1fr): thiếu nó, cột ngầm định rộng theo chữ `truncate` dài nhất → tràn ngang ở 375px. */}
+        <ul className="grid grid-cols-1 gap-2 px-5 pb-5 sm:grid-cols-2 lg:grid-cols-3">
           {gamification.BADGE_DEFS.map((b) => {
             const got = earned.has(b.id);
             return (
-              <li key={b.id} title={`${b.label} — ${got ? 'đã đạt' : BADGE_HOW[b.id] || 'chưa đạt'}`} className={cn('flex items-center gap-3 rounded-lg border p-3', !got && 'bg-muted/40')}>
+              <li key={b.id} title={`${b.label} — ${got ? 'đã đạt' : BADGE_HOW[b.id] || 'chưa đạt'}`} className={cn('flex min-w-0 items-center gap-3 rounded-lg border p-3', !got && 'bg-muted/40')}>
                 <span
                   className={cn(
                     'grid size-10 shrink-0 place-items-center rounded-full',
