@@ -40,25 +40,36 @@ const shots = process.env.E2E_SHOTS ? path.resolve(process.env.E2E_SHOTS) : null
 if (shots) fs.mkdirSync(shots, { recursive: true });
 
 const { server, base } = await startServer(ROOT);
-// E2E_NETLOG=<file.json>: nhật ký mạng của CẢ Chrome (mọi trang, service worker, tiến trình nền) — để chứng minh
-// bộ kiểm thử không chạm Firestore/Firebase Auth ở bất kỳ đâu (node netlog-check.mjs <file.json>).
+// E2E_NETLOG=<thư mục>: nhật ký mạng của CẢ Chrome (mọi trang, service worker, tiến trình nền), 1 file/bộ — để chứng
+// minh bộ kiểm thử không chạm Firestore/Firebase Auth ở bất kỳ đâu (node netlog-check.mjs <thư mục>/*.json).
 const netlog = process.env.E2E_NETLOG ? path.resolve(process.env.E2E_NETLOG) : null;
-const browser = await puppeteer.launch({
-  executablePath: findChrome(),
+if (netlog) fs.mkdirSync(netlog, { recursive: true });
+const chrome = findChrome();
+// MỖI BỘ 1 Chrome RIÊNG (13/11/2026): chạy cả 11 bộ trên 1 Chrome (~40 hồ sơ, nhiều service worker) làm Chrome sập giữa
+// chừng ("Connection closed") → mọi bộ sau hỏng dây chuyền — gặp ở CI (ít RAM) và tái hiện được trên máy.
+const launch = (name) => puppeteer.launch({
+  executablePath: chrome,
   headless: true,
-  args: ['--no-sandbox', '--disable-dev-shm-usage', ...(netlog ? [`--log-net-log=${netlog}`, '--net-log-capture-mode=Default'] : [])],
+  args: ['--no-sandbox', '--disable-dev-shm-usage',
+    ...(netlog ? [`--log-net-log=${path.join(netlog, name + '.json')}`, '--net-log-capture-mode=Default'] : [])],
 });
+// Trên GitHub Actions: mỗi kiểm tra lỗi thành 1 annotation (::error) — đọc được qua API công khai, không cần tải log.
+const gha = !!process.env.GITHUB_ACTIONS;
+const ghaEscape = (s) => String(s).replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
 
 let failed = 0;
 let total = 0;
 const started = Date.now();
 for (const name of run) {
+  const browser = await launch(name);
   const results = [];
   const check = (label, ok, info) => {
     results.push(ok);
     total++;
     if (!ok) failed++;
-    console.log(`  ${ok ? '✓' : '✗'} ${label}${ok || info === undefined ? '' : '\n      → ' + JSON.stringify(info).slice(0, 400)}`);
+    const detail = ok || info === undefined ? '' : JSON.stringify(info).slice(0, 400);
+    console.log(`  ${ok ? '✓' : '✗'} ${label}${detail ? '\n      → ' + detail : ''}`);
+    if (!ok && gha) console.log(`::error title=E2E ${name}::${ghaEscape(label + (detail ? ' → ' + detail : ''))}`);
   };
   const ctx = {
     base, root: ROOT, browser, check,
@@ -75,6 +86,8 @@ for (const name of run) {
       }
       const p = await bc.newPage();
       await p.setViewport({ width, height });
+      // Múi giờ trình duyệt = múi giờ của Node (TZ) → giờ trang và giờ dữ liệu giả luôn khớp, ở máy VN cũng như CI (UTC).
+      if (process.env.TZ) await p.emulateTimezone(process.env.TZ);
       p.errors = [];
       p.external = new Set();
       p.dialogs = [];
@@ -106,9 +119,9 @@ for (const name of run) {
     check(`${name}: chạy hết bộ không lỗi`, false, e.stack || e.message);
   }
   console.log(`  (${((Date.now() - t0) / 1000).toFixed(1)}s)`);
+  await browser.close().catch(() => {});
 }
 
-await browser.close();
 server.close();
 console.log(`\n${failed ? '✗ FAIL' : '✓ PASS'} — ${total - failed}/${total} kiểm tra, ${run.length} bộ, ${((Date.now() - started) / 1000).toFixed(0)}s`);
 process.exit(failed ? 1 : 0);

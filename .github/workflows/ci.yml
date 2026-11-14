@@ -122,10 +122,11 @@ jobs:
       - name: Cài puppeteer-core (không tải Chrome — dùng Chrome của máy CI)
         working-directory: tests/e2e
         run: npm ci --no-audit --no-fund
-      - name: Kiểm thử trình duyệt (10 bộ)
+      - name: Kiểm thử trình duyệt (11 bộ, mỗi bộ 1 Chrome riêng)
         working-directory: tests/e2e
         env:
           CHROME_PATH: /usr/bin/google-chrome
+          TZ: UTC
           E2E_SHOTS: ${{ runner.temp }}/e2e-shots
         run: npm test
       - name: Ảnh chụp màn hình khi lỗi

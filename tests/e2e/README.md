@@ -8,7 +8,7 @@ npm ci
 npm test                        # 11 bộ, 148 kiểm tra, khoảng 3 phút
 npm test -- learning deeplink   # chỉ chạy vài bộ
 E2E_SHOTS=../../.e2e-shots npm test   # lưu ảnh chụp màn hình
-E2E_NETLOG=../../.e2e-shots/net.json npm test && node netlog-check.mjs ../../.e2e-shots/net.json
+E2E_NETLOG=../../.e2e-shots/net npm test && node netlog-check.mjs ../../.e2e-shots/net
 #   ↑ nhật ký mạng của CẢ Chrome (gồm service worker, tiến trình nền); báo lỗi nếu có kết nối tới Firestore hay Firebase Auth
 ```
 
