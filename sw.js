@@ -71,9 +71,12 @@ async function networkFirst(event, req) {
   const cache = await openCache(PAGES);
   if (!cache) return fetch(req);
   // Bỏ query khi tra bản lưu (vd index.html?de=… vẫn dùng được bản index.html đã lưu).
-  const cacheKey = req.mode === 'navigate' ? new Request(new URL(req.url).pathname) : req;
+  const url = new URL(req.url);
+  const cacheKey = req.mode === 'navigate' ? new Request(url.pathname) : req;
   const network = fetch(req).then((res) => {
-    if (cacheable(res)) event.waitUntil(cache.put(cacheKey, res.clone()).catch(() => {}));
+    if (cacheable(res)) {
+      event.waitUntil(cache.put(cacheKey, res.clone()).then(() => (BUNDLE_RE.test(url.pathname) ? trimBundles(cache) : null)).catch(() => {}));
+    }
     return res;
   });
   const wait = req.mode === 'navigate' ? NET_TIMEOUT_MS : SUB_TIMEOUT_MS;
@@ -101,6 +104,15 @@ async function staleWhileRevalidate(event, req) {
   });
   if (cached) { event.waitUntil(network.catch(() => {})); return cached; }
   return network;
+}
+
+/* File gộp bundles/<băm>.js|css (chỉ có trên bản Firebase Hosting — scripts/build-hosting.mjs): mỗi lần deploy
+   đổi tên → bản cũ không bao giờ được hỏi lại. Giữ MAX_BUNDLES bản mới nhất để kho trang không phình mãi. */
+const BUNDLE_RE = /\/bundles\/[0-9a-f]{10}\.(js|css)$/;
+const MAX_BUNDLES = 120;
+async function trimBundles(cache) {
+  const keys = (await cache.keys()).filter((r) => BUNDLE_RE.test(new URL(r.url).pathname));
+  for (let i = 0; i < keys.length - MAX_BUNDLES; i++) await cache.delete(keys[i]);
 }
 
 async function trim(cache) {

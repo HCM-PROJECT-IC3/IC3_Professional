@@ -5,3 +5,6 @@ node_modules/
 
 # Ảnh chụp kiểm thử E2E (tests/e2e, E2E_SHOTS)
 .e2e-shots/
+
+# Bản rút gọn cho Firebase Hosting (scripts/build-hosting.mjs) — sinh lại mỗi lần deploy
+dist-hosting/

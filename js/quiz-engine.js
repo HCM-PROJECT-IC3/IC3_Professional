@@ -112,7 +112,9 @@ async function _fetchLevelData(catId, levelId) {
     const metaLevel = _findMetaLevel(catId, levelId);
     if (metaLevel?.file) {
       try {
-        return await _fetchJsonWithTimeout(`data/ic3/${metaLevel.file}`, { cache: 'no-store' });
+        // 'no-cache' (không phải 'no-store'): luôn hỏi lại máy chủ nên vẫn thấy bản mới ngay, nhưng file
+        // không đổi chỉ tốn 1 phản hồi 304 vài trăm byte — đỡ quota truyền tải của host (Firebase Hosting 360 MB/ngày).
+        return await _fetchJsonWithTimeout(`data/ic3/${metaLevel.file}`, { cache: 'no-cache' });
       } catch (err) {
         console.warn(`[EduQuiz] Không tải được data/ic3/${metaLevel.file}, dùng dữ liệu rỗng`, err.message);
       }
@@ -157,7 +159,7 @@ async function _fetchLevelData(catId, levelId) {
 let _minitestManifestPromise = null;
 function _loadMinitestManifest() {
   if (!_minitestManifestPromise) {
-    _minitestManifestPromise = _fetchJsonWithTimeout('data/ic3/minitests-manifest.json', { cache: 'no-store', timeoutMs: 8000 })
+    _minitestManifestPromise = _fetchJsonWithTimeout('data/ic3/minitests-manifest.json', { cache: 'no-cache', timeoutMs: 8000 })
       .catch(() => ({})); // manifest là tối ưu "nice-to-have" — lỗi thì rơi về _fetchLevelData(), không chặn học sinh
   }
   return _minitestManifestPromise;
@@ -988,7 +990,7 @@ async function loadData() {
 
   try {
     // ── Ưu tiên: meta.json nhẹ (vài KB) để dựng lobby ─────────
-    const meta = await _fetchJsonWithTimeout('data/ic3/meta.json', { cache: 'no-store' });
+    const meta = await _fetchJsonWithTimeout('data/ic3/meta.json', { cache: 'no-cache' }); // luôn kiểm bản mới; không đổi → 304
 
     window.quizRepository = meta;
     State.quizData = meta;

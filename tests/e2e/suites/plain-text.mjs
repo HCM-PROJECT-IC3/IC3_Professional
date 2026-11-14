@@ -20,7 +20,9 @@ export default async function ({ base, page, check }) {
     const expected = uniq.map(reference);
     const out = { count: uniq.length };
     for (const file of files) {
-      const src = await (await fetch('/' + file)).text();
+      let src = await (await fetch('/' + file)).text();
+      // Bản rút gọn cho Firebase (E2E_ROOT=dist-hosting): tên hàm nội bộ đã bị đổi → lấy mã gốc trong .map.
+      if (/sourceMappingURL=/.test(src)) src = (await (await fetch('/' + file + '.map')).json()).sourcesContent[0];
       const m = src.match(/(?:function (?:plain|stripHtml)\((?:html|s)\)\s*\{[^\n]*\}|const plain = \(html\) => \{[^\n]*\};)/);
       if (!m) { out[file] = { error: 'không tìm thấy hàm' }; continue; }
       const body = m[0].startsWith('const') ? m[0].replace('const plain =', 'return') : `${m[0]}; return ${m[0].match(/function (\w+)/)[1]};`;

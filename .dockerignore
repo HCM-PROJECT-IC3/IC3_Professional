@@ -24,3 +24,4 @@ firestore.indexes.json
 firebase.json
 Dockerfile
 docker-compose.yml
+dist-hosting

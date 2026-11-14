@@ -359,7 +359,7 @@
 
     async function loadLiveBookStats() {
       try {
-        const res = await fetch("data/ic3/meta.json", { cache: "no-store" });
+        const res = await fetch("data/ic3/meta.json", { cache: "no-cache" }); // luôn kiểm bản mới; không đổi → 304
         if (!res.ok) return;
         attachLiveBookStats(await res.json());
       } catch (error) {

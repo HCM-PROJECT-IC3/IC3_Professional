@@ -10,6 +10,8 @@ npm test -- learning deeplink   # chỉ chạy vài bộ
 E2E_SHOTS=../../.e2e-shots npm test   # lưu ảnh chụp màn hình
 E2E_NETLOG=../../.e2e-shots/net npm test && node netlog-check.mjs ../../.e2e-shots/net
 #   ↑ nhật ký mạng của CẢ Chrome (gồm service worker, tiến trình nền); báo lỗi nếu có kết nối tới Firestore hay Firebase Auth
+node bandwidth.mjs --students=2000   # số byte 1 học sinh tải từ host + có vượt quota Firebase Hosting (10 GB/tháng) không
+E2E_ROOT=../../dist-hosting npm test   # cả bộ trên bản rút gọn cho Firebase (node scripts/build-hosting.mjs trước)
 ```
 
 Trình chạy tự bật máy chủ tĩnh (`server.mjs`) và tự tìm Chrome đã cài trên máy. Nếu không tìm thấy, đặt biến `CHROME_PATH` trỏ tới Chrome.

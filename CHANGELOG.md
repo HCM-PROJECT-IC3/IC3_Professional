@@ -23,6 +23,40 @@ Thứ tự: Apps Script → `firestore.rules`/index → đẩy web.
      Lệch dữ liệu thì đặt `rosterDeltaSync: false` trong `js/backend-config.js`.
 
 
+## 14/11/2026 (26) — Sẵn sàng cho Firebase Hosting: cấu hình `hosting`, bản rút gọn, đo dung lượng mỗi học sinh
+
+- `firebase.json` có phần `hosting` (chưa deploy; GitHub Pages vẫn là bản chính). `ignore` bỏ tệp đề PowerPoint/Word,
+  mã nguồn, tài liệu, kiểm thử → deploy **77 MB** thay vì 716 MB. Header cache: `app/assets/**` lưu 1 năm (tên có mã băm);
+  ảnh/font lưu 7 ngày; HTML/JS/CSS/JSON `no-cache` (luôn hỏi lại, không đổi thì 304 vài trăm byte, bản mới thấy ngay).
+- `quiz-engine.js`, `volumes-carousel.js`: `meta.json`, `minitests-manifest.json`, file khối đổi `no-store` → `no-cache`.
+  Vẫn luôn lấy bản mới, nhưng học sinh quay lại không phải tải lại cả file (cũng đỡ trên GitHub Pages).
+- `tests/e2e/bandwidth.mjs`: đo byte thật bằng Chrome (gzip, ETag/304, header lấy từ `firebase.json`).
+  Kết quả: máy mới **653 KB/lượt**, máy quay lại **15 KB/lượt** (trước sửa 32 KB), "Tải sẵn offline" 1 khối 1,7 MB.
+- **Bản rút gọn cho Firebase** (`scripts/build-hosting.mjs` → `dist-hosting/`, không lên git; `firebase.json` "predeploy"
+  tự chạy, `public: dist-hosting`): 285 file JS/CSS rút gọn bằng esbuild, kèm `.map`. JSON/HTML/ảnh giữ nguyên.
+  Mã nguồn và GitHub Pages không đổi. Máy mới **653 → 507 KB/lượt** (đo gzip; Firebase dùng brotli qua HTTPS nên còn ít hơn),
+  "Tải sẵn offline" 1,7 → 1,4 MB. Cả 11 bộ E2E (148 kiểm tra) đạt trên bản rút gọn: `E2E_ROOT=../../dist-hosting npm test`.
+  CI job "web" build thử `--strict`.
+- **Gộp file + tên theo nội dung** (cũng trong `build-hosting.mjs`, chỉ bản Firebase): 27 trang HTML, thẻ script/link
+  cùng nguồn 501 → 156, ghi vào `bundles/<băm>.js|css` lưu 1 năm (`firebase.json`). File gộp chèn mã từng file thành
+  `<script>` riêng → "use strict", biến toàn cục, lỗi của từng file vẫn tách biệt như cũ (đã thử: phần 1 ném lỗi, phần 2–3 vẫn chạy).
+  Không gộp: script thường/CSS được tải động, `js/auth.js`, thẻ có thuộc tính riêng (`ui-select.js` data-auto), vendor.
+  `sw.js`: giữ tối đa 120 file `bundles/` trong kho (đổi tên mỗi lần deploy; GitHub Pages không có thư mục này → không đổi gì).
+  Kết quả mỗi lượt: máy mới **75 → 28 request**, 507 → 473 KB; máy quay lại **65 → 11 request**, 15 → 3 KB.
+  `**/__tests__/**` không còn bị deploy.
+- Quota Spark hiện là **10 GB/tháng** (vượt → trang bị tắt tới hết tháng): khoảng 1000 lượt máy mới/ngày.
+  Phòng máy xoá cache khi khởi động lại thì 2000 lượt/ngày ≈ 20 GB/tháng → phải dùng Blaze (≈ $1,5/tháng) hoặc giữ GitHub Pages.
+  So 4 host (`bandwidth.mjs` in cuối báo cáo), 2000 lượt/ngày: máy giữ cache → cả 4 đều ổn (0,63 triệu request/tháng);
+  phòng máy xoá cache → chỉ GitHub Pages ổn (Vercel vượt 1 triệu request, Netlify vượt 300 credit, Firebase vượt 10 GB).
+  Firestore: không đổi (0 lượt đọc/ghi thêm).
+- **Sửa lỗi build**: bộ lọc `ignore` chỉ xét từng file nên `.git/` (lịch sử repo), `.github/`, `.e2e-shots/` lọt vào
+  `dist-hosting/`. Giờ thư mục khớp mẫu thì bỏ cả cây. Bản deploy còn **1.283 file, 49 MB** (trước báo 86 MB là tính thừa).
+- **Cloudflare Pages** (khuyên dùng nếu không dùng GitHub Pages): file tĩnh không giới hạn băng thông/request.
+  Build sinh `_headers` (cache 1 năm cho `bundles/`, `app/assets/`; 7 ngày cho ảnh, font) và kiểm giới hạn
+  20.000 file / 25 MiB mỗi file. Cài đặt khi nối repo GitHub: Build command
+  `cd web && npm ci && cd .. && node scripts/build-hosting.mjs --strict`, Build output `dist-hosting`.
+- Deploy Firebase: `cd web && npm ci` (một lần, để có esbuild) rồi `firebase deploy --only hosting`.
+
 ## 12/11/2026 (25) — Vá lỗi hiện chữ câu hỏi chạy được mã; link mở thẳng 1 bài ở sảnh
 
 (0 Firebase / Apps Script. Không đổi chấm điểm, nộp bài, ngân hàng đề.)

@@ -105,6 +105,9 @@ jobs:
       - name: Build thử (không ghi đè app/)
         working-directory: web
         run: npx vite build --outDir "$RUNNER_TEMP/app-build" --emptyOutDir
+      # Bản rút gọn cho Firebase Hosting (dùng esbuild của web/): mọi JS/CSS phải rút gọn được.
+      - name: Build thử dist-hosting (Firebase Hosting)
+        run: node scripts/build-hosting.mjs --strict
 
   # Kiểm thử trình duyệt thật (Chrome headless có sẵn trên ubuntu-latest) cho trang cũ + app 2.0:
   # số liệu khớp bản cũ, phân quyền, link mở bài, vá chữ thuần, game, 0 request Firestore.
