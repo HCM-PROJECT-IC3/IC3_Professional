@@ -8,3 +8,5 @@ node_modules/
 
 # Bản rút gọn cho Firebase Hosting (scripts/build-hosting.mjs) — sinh lại mỗi lần deploy
 dist-hosting/
+# Thư mục tạm của "wrangler dev" (chạy thử Cloudflare trên máy)
+.wrangler/

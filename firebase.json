@@ -9,6 +9,7 @@
     "ignore": [
       "firebase.json",
       "_headers",
+      "wrangler.jsonc",
       "**/.*",
       "**/node_modules/**",
       "**/__pycache__/**",

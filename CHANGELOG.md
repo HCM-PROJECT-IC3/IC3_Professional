@@ -55,6 +55,12 @@ Thứ tự: Apps Script → `firestore.rules`/index → đẩy web.
   Build sinh `_headers` (cache 1 năm cho `bundles/`, `app/assets/`; 7 ngày cho ảnh, font) và kiểm giới hạn
   20.000 file / 25 MiB mỗi file. Cài đặt khi nối repo GitHub: Build command
   `cd web && npm ci && cd .. && node scripts/build-hosting.mjs --strict`, Build output `dist-hosting`.
+- **Cloudflare Workers** (dự án tạo kiểu Worker, lệnh deploy `npx wrangler deploy`): thêm `wrangler.jsonc` +
+  `scripts/cloudflare-worker.js`. Thiếu file này wrangler tự phát CẢ thư mục repo (đã thấy `apps/Code.gs`,
+  `firestore.rules`, `scripts/` tải được công khai). Giờ chỉ phát `dist-hosting/`; `html_handling: none` → `arena.html`
+  phục vụ thẳng, không chuyển 307 sang `/arena` (đỡ 1 vòng mạng, service worker mở offline được). Worker chỉ chạy khi
+  không có file tĩnh: `/`, `/app/` → index.html; `/app` → `/app/`; còn lại 404. Đã thử bằng `wrangler dev` + Chrome:
+  sảnh, Đấu trường, app 2.0 không lỗi; tắt mạng vẫn mở được sảnh và Đấu trường.
 - Deploy Firebase: `cd web && npm ci` (một lần, để có esbuild) rồi `firebase deploy --only hosting`.
 
 ## 12/11/2026 (25) — Vá lỗi hiện chữ câu hỏi chạy được mã; link mở thẳng 1 bài ở sảnh

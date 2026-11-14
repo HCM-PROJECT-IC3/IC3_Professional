@@ -1,0 +1,17 @@
+// Cloudflare Workers (Static Assets) — "npx wrangler deploy" (lệnh deploy của Cloudflare) đọc file này.
+// Thiếu file này, wrangler tự đoán thư mục "." → phát CẢ repo (mã nguồn, apps/Code.gs, firestore.rules…).
+// Build command trên Cloudflare: cd web && npm ci && cd .. && node scripts/build-hosting.mjs --strict
+{
+  "name": "ic3-professional",
+  "compatibility_date": "2026-11-13",
+  // Chỉ chạy khi KHÔNG có file tĩnh khớp (vd "/", "/app/", đường dẫn sai) — file tĩnh không tốn lượt Worker.
+  "main": "scripts/cloudflare-worker.js",
+  "assets": {
+    "directory": "./dist-hosting",
+    "binding": "ASSETS",
+    // Phục vụ đúng "arena.html" như GitHub Pages / Firebase. Mặc định Cloudflare chuyển hướng 307 *.html → bỏ đuôi:
+    // thêm 1 vòng mạng mỗi trang, và service worker lưu phản hồi đã chuyển hướng → mở offline báo lỗi.
+    "html_handling": "none"
+  },
+  "observability": { "enabled": true }
+}
