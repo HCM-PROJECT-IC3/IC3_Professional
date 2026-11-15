@@ -18,7 +18,11 @@
   const SKIN_D = ['#efb38c', '#e6a87e', '#eab088', '#dca274'];
   const HAIR = ['#3b2418', '#2a1a12', '#4a2c1a', '#1f1612'];
   const FUN = ['#e5484d', '#2f7be0', '#f19a1a', '#8b4fd6', '#16a37f', '#e0559a', '#6c9a1f', '#1fa3b8'];
-  const ol = (w) => `stroke="${INK}" stroke-width="${w || 1.8}" stroke-linejoin="round" stroke-linecap="round"`;
+  // PHẲNG (15/11/2026): tranh trước vẽ kiểu "khối 3D + chất liệu" (gradient sáng/tối mọi khối, vân giấy, nét cọ, ánh sáng
+  // phủ, viền tối 4 góc) → nhìn như ảnh AI tạo. FLAT = true: vol() chỉ vẽ hình gốc, bỏ lớp FINISH, trời/tán lá 1 màu,
+  // viền mảnh 60%. Đặt false là về tranh cũ (không phải sửa nơi gọi).
+  const FLAT = true;
+  const ol = (w) => `stroke="${INK}" stroke-width="${(w || 1.8) * (FLAT ? 0.6 : 1)}" stroke-linejoin="round" stroke-linecap="round"`;
 
   // ============================================================
   // KHỐI 3D: gradient dùng chung (ánh sáng từ trên-trái) gắn 1 lần vào trang; vol(el) vẽ thêm 1 lớp
@@ -38,7 +42,7 @@
     if (document.body) addShadeDefs(); else document.addEventListener('DOMContentLoaded', addShadeDefs);
   }
   /** Phần tử SVG + bản sao phủ gradient khối (bỏ viền, không bắt chuột). g: npSph · npSphSoft · npCyl. */
-  const vol = (el, g) => el + el.replace(/\s(fill|stroke|stroke-width|stroke-linejoin|stroke-linecap|class)="[^"]*"/g, '').replace(/\/>$/, ` fill="url(#${g || 'npSph'})" pointer-events="none"/>`);
+  const vol = (el, g) => FLAT ? el : el + el.replace(/\s(fill|stroke|stroke-width|stroke-linejoin|stroke-linecap|class)="[^"]*"/g, '').replace(/\/>$/, ` fill="url(#${g || 'npSph'})" pointer-events="none"/>`);
 
   // ============================================================
   // HỌC SINH
@@ -54,7 +58,8 @@
     };
   }
   /** Mắt to long lanh + miệng (cười / há hoảng) + nước mắt — dùng chung 2 dáng. */
-  const eye = (x, y) => `<ellipse cx="${x}" cy="${y}" rx="3.1" ry="3.9" fill="#2a1a12"/><ellipse cx="${x}" cy="${y + 1.4}" rx="2" ry="1.6" fill="#6b3a1f"/><circle cx="${x + 1}" cy="${y - 1.4}" r="1.3" fill="#fff"/><circle cx="${x - 1}" cy="${y + 1.6}" r=".6" fill="#fff"/>`;
+  // FLAT: mắt là 1 chấm tối (bỏ đốm sáng "long lanh" kiểu tranh AI/anime)
+  const eye = (x, y) => FLAT ? `<ellipse cx="${x}" cy="${y}" rx="2.6" ry="3.3" fill="#2a1a12"/>` : `<ellipse cx="${x}" cy="${y}" rx="3.1" ry="3.9" fill="#2a1a12"/><ellipse cx="${x}" cy="${y + 1.4}" rx="2" ry="1.6" fill="#6b3a1f"/><circle cx="${x + 1}" cy="${y - 1.4}" r="1.3" fill="#fff"/><circle cx="${x - 1}" cy="${y + 1.6}" r=".6" fill="#fff"/>`;
   const mouths = (x, y) => `<path class="np-mouth np-mouth-smile" d="M${x - 4} ${y}q4 4 8 0" fill="#c2453a" stroke="${INK}" stroke-width="1.4"/>
       <path class="np-mouth np-mouth-o" d="M${x - 3.5} ${y - 1}q3.5-3 7 0q.5 6-3.5 6t-3.5-6z" fill="#9b2d24" stroke="${INK}" stroke-width="1.4"/>
       <g class="np-tears" stroke="none"><path d="M${x - 11} ${y - 4}q-2 5 0 6 2-1 0-6z" fill="#6ec3ff"/><path d="M${x + 11} ${y - 4}q-2 5 0 6 2-1 0-6z" fill="#6ec3ff"/></g>`;
@@ -251,15 +256,18 @@
     <filter id="npPaper" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="7"/><feColorMatrix values="0 0 0 0 .35  0 0 0 0 .25  0 0 0 0 .15  0 0 0 .5 0"/><feComposite in2="SourceGraphic" operator="in"/></filter>
     <filter id="npBrush" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".012 .03" numOctaves="3" seed="3"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .22 -.04"/><feComposite in2="SourceGraphic" operator="in"/></filter>
     <radialGradient id="npVig" cx=".5" cy=".5" r=".75"><stop offset=".6" stop-color="#1a1208" stop-opacity="0"/><stop offset="1" stop-color="#1a1208" stop-opacity=".32"/></radialGradient>
-    <radialGradient id="npLeaf" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#8fd468"/><stop offset=".55" stop-color="#5aa83e"/><stop offset="1" stop-color="#3a7f2c"/></radialGradient>
-    <radialGradient id="npLeafD" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#6cbd4f"/><stop offset=".6" stop-color="#3f8a30"/><stop offset="1" stop-color="#2a6422"/></radialGradient>
+    ${FLAT ? `<linearGradient id="npLeaf"><stop offset="0" stop-color="#5aa83e"/></linearGradient>` : `<radialGradient id="npLeaf" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#8fd468"/><stop offset=".55" stop-color="#5aa83e"/><stop offset="1" stop-color="#3a7f2c"/></radialGradient>`}
+    ${FLAT ? `<linearGradient id="npLeafD"><stop offset="0" stop-color="#3f8a30"/></linearGradient>` : `<radialGradient id="npLeafD" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#6cbd4f"/><stop offset=".6" stop-color="#3f8a30"/><stop offset="1" stop-color="#2a6422"/></radialGradient>`}
     <linearGradient id="npDirtG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0cf98" stop-opacity=".55"/><stop offset="1" stop-color="#b9864a" stop-opacity=".55"/></linearGradient>
     <linearGradient id="npGrassG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b6e58c" stop-opacity=".45"/><stop offset="1" stop-color="#3f8a30" stop-opacity=".5"/></linearGradient>
     <pattern id="npWood" width="1000" height="36" patternUnits="userSpaceOnUse"><rect width="1000" height="36" fill="#c58b52"/><path d="M0 35h1000" stroke="#a46e3a" stroke-width="3"/><path d="M120 0v36M380 0v36M610 0v36M860 0v36" stroke="#b07a44" stroke-width="2"/></pattern>
   </defs>`;
   const FINISH = `<rect width="1000" height="600" fill="url(#npLight)" style="mix-blend-mode:soft-light"/><rect width="1000" height="600" fill="#fff" filter="url(#npBrush)" style="mix-blend-mode:soft-light"/><rect width="1000" height="600" fill="#000" filter="url(#npPaper)" opacity=".18"/><rect width="1000" height="600" fill="url(#npVig)"/>`;
-  const svg = (inner, cls) => `<svg class="np-scene ${cls || ''}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${DEFS}${inner}${FINISH}</svg>`;
-  const skyGrad = (id, a, b) => `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs>`;
+  const FINISH_USED = FLAT ? '' : FINISH;
+  const svg = (inner, cls) => `<svg class="np-scene ${cls || ''}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${DEFS}${inner}${FINISH_USED}</svg>`;
+  /** Màu giữa 2 màu hex #rrggbb (trời phẳng). */
+  const mix = (x, y) => '#' + [1, 3, 5].map((k) => Math.round((parseInt(x.substr(k, 2), 16) + parseInt(y.substr(k, 2), 16)) / 2).toString(16).padStart(2, '0')).join('');
+  const skyGrad = (id, a, b) => `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${FLAT ? mix(a, b) : a}"/><stop offset="1" stop-color="${FLAT ? mix(a, b) : b}"/></linearGradient></defs>`; // FLAT: 1 màu (giữa 2 màu cũ)
   const cloud = (x, y, s, cls) => `<g class="np-cloud ${cls || ''}" transform="translate(${x} ${y}) scale(${s})"><path d="M0 46q-2-24 22-24 6-20 30-18 12-16 36-4 24-6 30 18 22 0 22 28z" fill="#fff" stroke="#cfe3f3" stroke-width="3"/><path d="M14 46q20-6 40 0t46 0" stroke="#e3eff9" stroke-width="6" fill="none" stroke-linecap="round"/></g>`;
   const sun = (x, y, r, face) => `<g class="np-sun" transform="translate(${x} ${y})"><circle r="${r * 1.9}" fill="#fff6c4" opacity=".45"/><g class="np-sun-rays">${Array.from({ length: 12 }, (_, k) => `<rect x="-3.5" y="${-r - 28}" width="7" height="18" rx="3.5" fill="#ffd34d" transform="rotate(${k * 30})"/>`).join('')}</g>
     <circle r="${r}" fill="#ffd84a" stroke="#f0a91f" stroke-width="4"/><circle cx="${-r / 3}" cy="${-r / 3}" r="${r / 3}" fill="#fff3a8" opacity=".6"/>${face ? `<circle cx="${-r / 3}" cy="${-r / 8}" r="4.5" fill="#5a3a12"/><circle cx="${r / 3}" cy="${-r / 8}" r="4.5" fill="#5a3a12"/><path d="M${-r / 3} ${r / 5}q${r / 3} ${r / 3} ${r * 2 / 3} 0" stroke="#5a3a12" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="${-r / 1.7}" cy="${r / 6}" r="7" fill="#ff9a8a" opacity=".6"/><circle cx="${r / 1.7}" cy="${r / 6}" r="7" fill="#ff9a8a" opacity=".6"/>` : ''}</g>`;

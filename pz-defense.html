@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🧟 Phòng Thủ Dữ Liệu — Mini Game</title>
+  <title>Phòng Thủ Dữ Liệu — Mini Game</title>
   <link rel="stylesheet" href="lib/fonts/fonts.css">
   <link rel="stylesheet" href="css/pz-defense.css">
   <link rel="stylesheet" href="css/accessibility.css">
@@ -19,31 +19,31 @@
 <button type="button" class="theme-toggle-quick" id="themeToggleQuick" title="Chuyển đổi sáng/tối"></button>
 <script src="js/theme-toggle-quick.js"></script>
 
-  <!-- Phòng thủ dữ liệu: đặt lá chắn (phần mềm, phần cứng, công tắc ngắt khẩn) lên lưới 5 hàng để chặn mã độc. Icon SVG trong img/pz-defense/defenders/. Nhúng qua js/game-modal.js. -->
+  <!-- Phòng thủ dữ liệu: đặt lá chắn (phần mềm, phần cứng, công tắc ngắt khẩn) lên lưới 5 hàng để chặn mã độc. Icon SVG trong img/defenders/. Nhúng qua js/game-modal.js. -->
 
   <div class="pz-wrap">
     <div class="pz-topbar">
       <div class="pz-header">
-        <div class="pz-title">🧟 Phòng Thủ Dữ Liệu</div>
-        <div class="pz-subtitle">Bấm ☀️ Sun để hứng Dữ liệu, đặt lá chắn chặn zombie mã độc — mỗi hàng có 1 lần 🚜 cứu nguy, đừng để hết!</div>
+        <div class="pz-title"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Phòng Thủ Dữ Liệu</div>
+        <div class="pz-subtitle">Bấm ☀️ Sun để hứng Dữ liệu, đặt lá chắn chặn mã độc — mỗi hàng có 1 lần 🚜 cứu nguy, đừng để hết!</div>
       </div>
 
       <div class="pz-stats">
         <div class="pz-stat">
-          <div class="pz-stat-label">💾 Dữ liệu</div>
+          <div class="pz-stat-label"><i class="fa-solid fa-database" aria-hidden="true"></i> Dữ liệu</div>
           <div class="pz-stat-value" id="pzData">0</div>
         </div>
         <div class="pz-stat">
-          <div class="pz-stat-label">🌊 Đợt tấn công</div>
+          <div class="pz-stat-label"><i class="fa-solid fa-water" aria-hidden="true"></i> Đợt tấn công</div>
           <div class="pz-stat-value" id="pzWave">0/0</div>
         </div>
         <div class="pz-stat pz-stat-wide">
-          <div class="pz-stat-label">🖥️ Máu Server</div>
+          <div class="pz-stat-label"><i class="fa-solid fa-server" aria-hidden="true"></i> Máu Server</div>
           <div class="pz-hp-bar"><div class="pz-hp-fill" id="pzHpFill"></div></div>
         </div>
       </div>
 
-      <button type="button" class="pz-btn pz-restart-btn" id="pzRestartBtn">🔄 Chơi lại</button>
+      <button type="button" class="pz-btn pz-restart-btn" id="pzRestartBtn"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Chơi lại</button>
     </div>
 
     <div class="pz-main">
@@ -69,11 +69,11 @@
         <!-- Kết thúc overlay (thắng/thua) -->
         <div class="pz-overlay" id="pzOverlay">
           <div class="pz-overlay-card">
-            <div class="pz-overlay-icon" id="pzOverlayIcon">🏆</div>
+            <div class="pz-overlay-icon" id="pzOverlayIcon"><i class="fa-solid fa-trophy" aria-hidden="true"></i></div>
             <div class="pz-overlay-title" id="pzOverlayTitle">Hoàn thành!</div>
             <div class="pz-overlay-sub" id="pzOverlaySub"></div>
             <div class="pz-overlay-stats" id="pzOverlayStats"></div>
-            <button type="button" class="pz-btn pz-btn-primary" id="pzOverlayRestartBtn">🔄 Chơi lại</button>
+            <button type="button" class="pz-btn pz-btn-primary" id="pzOverlayRestartBtn"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Chơi lại</button>
           </div>
         </div>
       </div>
@@ -84,10 +84,10 @@
          Render danh sách bằng JS trong js/pz-defense.js § buildLoadoutUI. -->
     <div class="pz-loadout-overlay" id="pzLoadoutOverlay">
       <div class="pz-loadout-card">
-        <div class="pz-loadout-title">🧩 Chọn đội hình phòng thủ</div>
+        <div class="pz-loadout-title"><i class="fa-solid fa-puzzle-piece" aria-hidden="true"></i> Chọn đội hình phòng thủ</div>
         <div class="pz-loadout-sub">Chọn đúng <strong>7</strong> linh vật để mang vào trận — đã chọn: <span id="pzLoadoutCount">0</span>/7</div>
         <div class="pz-loadout-grid" id="pzLoadoutGrid"><!-- render bằng JS --></div>
-        <button type="button" class="pz-btn pz-btn-primary" id="pzLoadoutStartBtn" disabled>🚀 Bắt đầu</button>
+        <button type="button" class="pz-btn pz-btn-primary" id="pzLoadoutStartBtn" disabled><i class="fa-solid fa-play" aria-hidden="true"></i> Bắt đầu</button>
       </div>
     </div>
 

@@ -15,6 +15,9 @@
   'use strict';
 
   const INK = '#2d2416';
+  // PHẲNG (15/11/2026): mỗi mặt khối 1 màu (vẫn 3 sắc độ trên/trước/phải để đọc ra khối), cầu phẳng không đốm sáng,
+  // bỏ vệt bóng loáng mép hộp, viền mảnh 60%. Trước: gradient mọi mặt + bóng loáng → nhìn như tranh AI. false = tranh cũ.
+  const FLAT = true;
   const AX = [0.95, 0.18];  // trục x (rộng) trên màn hình — nghiêng nhẹ để vật rộng không trôi khỏi khung
   const AY = [-0.5, 0.3];   // trục y (sâu)
 
@@ -31,11 +34,12 @@
   function kit(p) {
     const defs = [];
     const P = (ox, oy, x, y, z) => [ox + x * AX[0] + y * AY[0], oy + x * AX[1] + y * AY[1] - z];
-    const ol = (w) => `stroke="${INK}" stroke-width="${w || 2}" stroke-linejoin="round"`;
+    const ol = (w) => `stroke="${INK}" stroke-width="${(w || 2) * (FLAT ? 0.6 : 1)}" stroke-linejoin="round"`;
     let gid = 0;
 
     /** Gradient tuyến tính dọc (trên sáng → dưới tối) cho 1 mặt. */
     function lin(c1, c2, vertical) {
+      if (FLAT) return c1;
       const id = `${p}g${++gid}`;
       defs.push(`<linearGradient id="${id}" x1="0" y1="0" x2="${vertical === false ? 1 : 0}" y2="${vertical === false ? 0 : 1}"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient>`);
       return `url(#${id})`;
@@ -62,7 +66,7 @@
       }
       // vệt bóng loáng trên mép trước
       const g0 = A(w * 0.08, d, h - 3), g1 = A(w * 0.55, d, h - 3);
-      s += `<line x1="${g0[0].toFixed(1)}" y1="${g0[1].toFixed(1)}" x2="${g1[0].toFixed(1)}" y2="${g1[1].toFixed(1)}" stroke="#fff" stroke-opacity=".45" stroke-width="2.5" stroke-linecap="round"/>`;
+      if (!FLAT) s += `<line x1="${g0[0].toFixed(1)}" y1="${g0[1].toFixed(1)}" x2="${g1[0].toFixed(1)}" y2="${g1[1].toFixed(1)}" stroke="#fff" stroke-opacity=".45" stroke-width="2.5" stroke-linecap="round"/>`;
       return s;
     }
     /** Ma trận để vẽ phẳng lên mặt TRƯỚC (y = d) của hộp: toạ độ cục bộ (u sang phải theo x, v xuống từ mép trên). */
@@ -81,8 +85,8 @@
       const id = `${p}s${++gid}`;
       defs.push(`<radialGradient id="${id}" cx=".36" cy=".3" r=".75"><stop offset="0" stop-color="${shade(col, 0.55)}"/><stop offset=".45" stop-color="${col}"/><stop offset="1" stop-color="${shade(col, -0.55)}"/></radialGradient>`);
       let s = o.shadow === false ? '' : `<ellipse cx="${cx}" cy="${cy + r * 0.95}" rx="${r * 0.85}" ry="${r * 0.2}" fill="#000" opacity=".3" filter="url(#${p}blur)"/>`;
-      s += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#${id})" ${ol(o.w || 2.2)}/>`;
-      s += `<ellipse cx="${cx - r * 0.35}" cy="${cy - r * 0.42}" rx="${r * 0.28}" ry="${r * 0.16}" fill="#fff" opacity=".7" transform="rotate(-30 ${cx - r * 0.35} ${cy - r * 0.42})"/>`;
+      s += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${FLAT ? col : `url(#${id})`}" ${ol(o.w || 2.2)}/>`;
+      if (!FLAT) s += `<ellipse cx="${cx - r * 0.35}" cy="${cy - r * 0.42}" rx="${r * 0.28}" ry="${r * 0.16}" fill="#fff" opacity=".7" transform="rotate(-30 ${cx - r * 0.35} ${cy - r * 0.42})"/>`;
       return s;
     }
     /** Virus 3D: cầu + gai có núm + mặt. mood: 'angry' | 'hurt'. */

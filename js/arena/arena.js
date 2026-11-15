@@ -173,7 +173,7 @@
     const lessons = names.filter((n) => LESSON_RE.test(n) && !finals.includes(n)); // đã xếp theo tiết trong file
     const tests = names.filter((n) => TEST_RE.test(n));
     const grp = (label, list) => (list.length ? `<optgroup label="${esc(label)}">${list.map((n) => `<option value="${esc(n)}">${esc(n)}</option>`).join('')}</optgroup>` : '');
-    $('arMt').innerHTML = (topics.length > 1 ? `<option value="${ALL}">🎲 Trộn mọi chủ đề</option>` : '')
+    $('arMt').innerHTML = (topics.length > 1 ? `<option value="${ALL}">Trộn mọi chủ đề</option>` : '')
       + grp('Theo tên bài', bai) + grp('Theo chủ đề', topics) + grp('Ôn tập theo tiết', lessons) + grp('Kiểm tra theo tiết', tests) + grp('Ôn tập cuối khóa', finals);
   }
   let loadSeq = 0;
@@ -317,7 +317,11 @@
       if (!on) return;
       // Luật đầy đủ của chế độ đang chọn (thẻ chỉ còn 1 dòng ngắn) + tên chế độ trên nút Vào trận
       const desc = b.querySelector(role() === 'teacher' ? 'small:not(.only-solo)' : 'small:not(.only-teacher)');
-      $('arModeDesc').innerHTML = `<b>${esc(b.querySelector('b').textContent)}:</b> ${esc(desc ? desc.textContent : '')}`;
+      // Thẻ Luật chơi (nhãn + 3 bước + cao trào, js/arena/arena-rules.js); thiếu module thì 1 dòng mô tả như cũ
+      const name = b.querySelector('b').textContent;
+      const rules = global.EduArenaRules && global.EduArenaRules.card(m, name);
+      $('arModeDesc').classList.toggle('ar-rules', !!rules);
+      $('arModeDesc').innerHTML = rules || `<b>${esc(name)}:</b> ${esc(desc ? desc.textContent : '')}`;
       $('arPlayLabel').textContent = 'Vào trận: ' + b.querySelector('b').textContent;
     });
     $('arSecs').closest('.ar-field').hidden = m === 'gold'; // Săn vàng không giới hạn giờ (như Blooket)
@@ -432,7 +436,7 @@
   const bar = (v, max) => `<span class="ar-qbar"><i style="width:${Math.min(100, Math.round((v / max) * 100))}%"></i></span>`;
   /** Cộng câu đúng vào nhiệm vụ ngày (Chơi một mình + Phòng cả lớp). Đủ mục tiêu → báo nhận vé. */
   function addDaily(correct) {
-    if (C.addDaily(profile(), correct, today())) { save(); toast('🎯 Xong nhiệm vụ hôm nay — em nhận 1 🎟️ vé mở hộp miễn phí!'); return true; }
+    if (C.addDaily(profile(), correct, today())) { save(); toast('Xong nhiệm vụ hôm nay: em nhận 1 vé mở hộp miễn phí!'); return true; }
     return false;
   }
   function renderPacks(fresh) {
@@ -441,30 +445,35 @@
     const d = C.dailyOf(p, today());
     const tickets = p.tickets || 0;
     const left = C.PITY_MAX - (p.pity || 0);
-    const total = C.PACKS.reduce((n, pk) => n + pk.blooks.length, 0);
-    const owned = Object.keys(p.owned).length;
-    const sets = C.PACKS.filter((pk) => p.sets && p.sets[pk.id]).length;
+    // Hộp theo mùa (arena-core § SEASONS): bày bán khi đang mùa; bộ sưu tập hiện thêm hộp mùa em đã có linh vật
+    const season = C.seasonOn(new Date());
+    const shown = C.ALL_PACKS.filter((pk) => !pk.season || pk === season || pk.blooks.some((b) => p.owned[b.id]));
+    const total = shown.reduce((n, pk) => n + pk.blooks.length, 0);
+    const owned = shown.reduce((n, pk) => n + pk.blooks.filter((b) => p.owned[b.id]).length, 0);
+    const sets = shown.filter((pk) => p.sets && p.sets[pk.id]).length;
     $('arQuests').innerHTML = `
-      <div class="ar-quest${d.done ? ' is-done' : ''}"><span class="ar-quest-ico" aria-hidden="true">🎯</span><div>
+      <div class="ar-quest${d.done ? ' is-done' : ''}"><i class="fa-solid fa-bullseye ar-quest-ico" aria-hidden="true"></i><div>
         <b>Nhiệm vụ hôm nay</b><small>${d.done ? 'Đã xong — mai quay lại nhận vé mới nhé' : `Trả lời đúng ${d.goal} câu trong Đấu trường → 1 vé mở hộp miễn phí`}</small>
-        ${bar(d.correct, d.goal)}<em>${d.correct}/${d.goal} câu${tickets ? ` · <strong>🎟️ ${tickets} vé</strong>` : ''}</em></div></div>
-      <div class="ar-quest"><span class="ar-quest-ico" aria-hidden="true">🛡️</span><div>
+        ${bar(d.correct, d.goal)}<em>${d.correct}/${d.goal} câu${tickets ? ` · <strong><i class="fa-solid fa-ticket" aria-hidden="true"></i> ${tickets} vé</strong>` : ''}</em></div></div>
+      <div class="ar-quest"><i class="fa-solid fa-shield-halved ar-quest-ico" aria-hidden="true"></i><div>
         <b>Bảo hiểm Sử thi</b><small>${left <= 1 ? 'Hộp kế tiếp <strong>chắc chắn</strong> ra Sử thi trở lên!' : `Còn ${left} hộp nữa chắc chắn ra Sử thi trở lên`}</small>
         ${bar(p.pity || 0, C.PITY_MAX - 1)}<em>${p.pity || 0}/${C.PITY_MAX - 1} hộp chưa ra Sử thi</em></div></div>
-      <div class="ar-quest"><span class="ar-quest-ico" aria-hidden="true">📚</span><div>
+      <div class="ar-quest"><i class="fa-solid fa-layer-group ar-quest-ico" aria-hidden="true"></i><div>
         <b>Sưu tập</b><small>Đủ 9 Linh vật của 1 hộp → thưởng ${C.SET_BONUS} xu</small>
-        ${bar(owned, total)}<em>${owned}/${total} Linh vật · ${sets}/${C.PACKS.length} hộp đã đủ</em></div></div>`;
-    $('arPackList').innerHTML = C.PACKS.map((pk) => {
+        ${bar(owned, total)}<em>${owned}/${total} Linh vật · ${sets}/${shown.length} hộp đã đủ</em></div></div>${season ? `
+      <div class="ar-quest is-season"><i class="fa-solid ${season.fa} ar-quest-ico" aria-hidden="true"></i><div>
+        <b>Sự kiện: ${esc(season.name)}</b><small>${esc(season.note)} — hộp chỉ mở được thêm <strong>${C.seasonDaysLeft(season, new Date())} ngày</strong>; linh vật mở được thì giữ mãi.</small></div></div>` : ''}`;
+    $('arPackList').innerHTML = C.packsOn(new Date()).map((pk) => {
       const own = pk.blooks.filter((b) => p.owned[b.id]).length;
       const done = p.sets && p.sets[pk.id];
       const can = tickets > 0 || p.coins >= C.PACK_PRICE;
-      return `<button type="button" class="ar-pack${done ? ' is-done' : ''}" data-pack="${pk.id}" ${can ? '' : 'disabled'}>
-        <span class="ar-pack-ico" aria-hidden="true">${pk.icon}</span><b>${esc(pk.name)}</b>
-        <small>${done ? '🏆 Đã đủ bộ' : `${own}/${pk.blooks.length} · đủ bộ +${C.SET_BONUS} 🪙`}</small>${bar(own, pk.blooks.length)}
-        <span class="ar-price">${tickets ? '🎟️ Miễn phí' : `🪙 ${C.PACK_PRICE}`}</span></button>`;
+      return `<button type="button" class="ar-pack${done ? ' is-done' : ''}${pk.season ? ' is-season' : ''}" data-pack="${pk.id}" ${can ? '' : 'disabled'}>${pk.season ? `<span class="ar-pack-tag">Còn ${C.seasonDaysLeft(pk, new Date())} ngày</span>` : ''}
+        <i class="fa-solid ${pk.fa} ar-pack-ico" aria-hidden="true"></i><b>${esc(pk.name)}</b>
+        <small>${done ? '<i class="fa-solid fa-trophy" aria-hidden="true"></i> Đã đủ bộ' : `${own}/${pk.blooks.length} · đủ bộ +${C.SET_BONUS} xu`}</small>${bar(own, pk.blooks.length)}
+        <span class="ar-price">${tickets ? '<i class="fa-solid fa-ticket" aria-hidden="true"></i> Miễn phí' : `<i class="fa-solid fa-coins" aria-hidden="true"></i> ${C.PACK_PRICE}`}</span></button>`;
     }).join('');
     $('arCollCount').textContent = `${owned}/${total}`;
-    $('arCollection').innerHTML = C.PACKS.map((pk) => `<h3 class="ar-h3">${pk.icon} ${esc(pk.name)}${p.sets && p.sets[pk.id] ? ' <span class="ar-set-done">🏆 Đủ bộ</span>' : ''}</h3><div class="ar-blooks">${pk.blooks.map((b) => {
+    $('arCollection').innerHTML = shown.map((pk) => `<h3 class="ar-h3"><i class="fa-solid ${pk.fa}" aria-hidden="true"></i> ${esc(pk.name)}${p.sets && p.sets[pk.id] ? ' <span class="ar-set-done">🏆 Đủ bộ</span>' : ''}</h3><div class="ar-blooks">${pk.blooks.map((b) => {
       const has = p.owned[b.id];
       return `<button type="button" class="ar-blook r-${b.rarity}${has ? '' : ' is-locked'}${p.avatar === b.id ? ' is-avatar' : ''}${fresh === b.id ? ' is-new' : ''}" data-blook="${has ? b.id : ''}"
         title="${has ? esc(b.name) + ' · ' + C.RARITY[b.rarity].label + (has > 1 ? ' · x' + has : '') : 'Chưa có — ' + C.RARITY[b.rarity].label}" ${has ? '' : 'disabled'}>
@@ -479,7 +488,7 @@
   /** Ô "Nhiệm vụ hôm nay" ở màn kết thúc (Chơi một mình + Phòng cả lớp). */
   function dailyStat() {
     const d = C.dailyOf(profile(), today());
-    return `<div class="is-quest"><b>${d.done ? '🎟️' : `${d.correct}/${d.goal}`}</b><span>${d.done ? 'nhiệm vụ hôm nay xong — có vé mở hộp' : 'câu đúng hôm nay · đủ thì nhận vé mở hộp'}</span></div>`;
+    return `<div class="is-quest"><b>${d.done ? '<i class="fa-solid fa-ticket" aria-hidden="true"></i>' : `${d.correct}/${d.goal}`}</b><span>${d.done ? 'nhiệm vụ hôm nay xong — có vé mở hộp' : 'câu đúng hôm nay · đủ thì nhận vé mở hộp'}</span></div>`;
   }
   function closeReveal() {
     if (RV) clearTimeout(RV.t);
@@ -491,17 +500,20 @@
     const p = profile();
     const ticket = (p.tickets || 0) > 0;
     const res = C.buyPack(p, packId, rng, { ticket });
-    if (!res.ok) { toast('Chưa đủ xu — chơi thêm vài ván nhé!'); return; }
+    if (!res.ok) {
+      if (res.reason === 'season') { toast('Sự kiện này đã kết thúc — linh vật em đã mở vẫn được giữ nhé!'); renderPacks(); return; }
+      toast('Chưa đủ xu — chơi thêm vài ván nhé!'); return;
+    }
     save();
     renderPacks(res.blook.id);
-    const pk = C.PACKS.find((x) => x.id === packId);
+    const pk = C.ALL_PACKS.find((x) => x.id === packId);
     const r = $('arReveal');
     if (RV) clearTimeout(RV.t);
     RV = { res, pk, ticket, stage: 'shake' };
     r.hidden = false;
     r.className = `ar-reveal r-${res.blook.rarity}${R_HIGH.includes(res.blook.rarity) ? ' is-high' : ''}`;
     r.innerHTML = `<div class="ar-reveal-box">
-      <button type="button" class="ar-reveal-pack" data-rv="skip" aria-label="Mở nhanh"><span class="ar-reveal-glow" aria-hidden="true"></span><span class="ar-reveal-ico">${pk.icon}</span></button>
+      <button type="button" class="ar-reveal-pack" data-rv="skip" aria-label="Mở nhanh"><span class="ar-reveal-glow" aria-hidden="true"></span><i class="fa-solid ${pk.fa} ar-reveal-ico" aria-hidden="true"></i></button>
       <p class="ar-reveal-tip">${res.pity ? '🛡️ Bảo hiểm kích hoạt — chắc chắn Sử thi trở lên!' : 'Đang mở hộp... bấm để mở nhanh'}</p></div>`;
     sfx('flip');
     if (FX.reduced()) { revealCard(); return; }
@@ -516,7 +528,7 @@
     const r = $('arReveal');
     const pack = r.querySelector('.ar-reveal-pack');
     if (pack) FX.burst(pack, R_SPARK[b.rarity], R_HIGH.includes(b.rarity) ? 14 : 8);
-    const again = (p.tickets || 0) > 0 ? '🎟️ Mở tiếp (miễn phí)' : `Mở tiếp · 🪙 ${C.PACK_PRICE}`;
+    const again = (p.tickets || 0) > 0 ? '<i class="fa-solid fa-ticket" aria-hidden="true"></i> Mở tiếp (miễn phí)' : `Mở tiếp · <i class="fa-solid fa-coins" aria-hidden="true"></i> ${C.PACK_PRICE}`;
     const canAgain = (p.tickets || 0) > 0 || p.coins >= C.PACK_PRICE;
     r.classList.add('is-open');
     r.innerHTML = `<div class="ar-reveal-box">
@@ -524,16 +536,16 @@
         <span class="ar-reveal-badge">${res.dupe ? (res.starUp ? '⬆️ Lên sao!' : 'Đã có') : '✨ MỚI!'}</span>
         <span class="ar-reveal-emoji">${b.emoji}</span><b>${esc(b.name)}</b>
         <span class="ar-rarity">${C.RARITY[b.rarity].label}</span>${starsHtml(res.stars)}
-        <small>${res.dupe ? `Trùng — hoàn lại 🪙 ${res.refund}` : `Linh vật mới trong ${esc(pk.name)}`}</small>
-        ${res.set ? `<p class="ar-reveal-set">🏆 Đủ bộ ${esc(pk.name)}! +${res.set.bonus} 🪙</p>` : ''}
-        ${res.pity ? '<p class="ar-reveal-note">🛡️ Nhờ bảo hiểm Sử thi</p>' : ''}</div>
+        <small>${res.dupe ? `Trùng, hoàn lại ${res.refund} xu` : `Linh vật mới trong ${esc(pk.name)}`}</small>
+        ${res.set ? `<p class="ar-reveal-set"><i class="fa-solid fa-trophy" aria-hidden="true"></i> Đủ bộ ${esc(pk.name)}: +${res.set.bonus} xu</p>` : ''}
+        ${res.pity ? '<p class="ar-reveal-note"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Nhờ bảo hiểm Sử thi</p>' : ''}</div>
       <div class="ar-row ar-center-row">
         <button type="button" class="ar-btn ar-btn-play" data-rv="again" ${canAgain ? '' : 'disabled'}>${again}</button>
         ${p.avatar === b.id ? '' : '<button type="button" class="ar-btn" data-rv="avatar">Làm ảnh đại diện</button>'}
         <button type="button" class="ar-btn ar-btn-ghost" data-rv="close">Đóng</button></div></div>`;
     const card = r.querySelector('.ar-reveal-card');
     FX.burst(card, R_SPARK[b.rarity], R_HIGH.includes(b.rarity) ? 16 : 6);
-    if (res.set) setTimeout(() => FX.float(r.querySelector('.ar-reveal-set'), `+${res.set.bonus} 🪙`, 'gold'), 500);
+    if (res.set) setTimeout(() => FX.float(r.querySelector('.ar-reveal-set'), `+${res.set.bonus} xu`, 'gold'), 500);
     sfx(['legendary', 'mystery'].includes(b.rarity) ? 'critical' : res.set ? 'win' : 'match');
     if ((R_HIGH.includes(b.rarity) || res.set) && global.EduFX) global.EduFX.confetti({ count: b.rarity === 'epic' ? 70 : 130 });
     r.querySelector('[data-rv="again"]').focus();
@@ -678,7 +690,57 @@
     $('arScene').hidden = !scene;
     if (scene) SC.mount($('arScene'), G); else if (SC) SC.clear();
     sfx('click');
-    nextQuestion();
+    matchIntro(nextQuestion);
+  }
+
+  /** Màn mở trận 3‑2‑1 (15/11/2026): tên chế độ, điều kiện thắng, cao trào (js/arena/arena-rules.js) rồi mới vào câu 1.
+   *  Chưa tính giờ, phím đáp án bị chặn (phase 'ready'). Bấm/Enter/Space → vào ngay. Luyện câu sai, thiếu luật → vào thẳng.
+   *  Bỏ cuộc giữa chừng (G đổi) → không chạy tiếp. Máy "giảm chuyển động": vẫn hiện chữ, số đổi không hiệu ứng. */
+  const INTRO_STEP_MS = 800;
+  function matchIntro(go) {
+    const R = global.EduArenaRules && global.EduArenaRules.RULES[G.mode];
+    if (G.practice || !R) { go(); return; }
+    const g = G;
+    g.phase = 'ready';
+    const box = document.createElement('div');
+    box.className = 'ar-intro';
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-label', 'Chuẩn bị vào trận');
+    const name = String(MODE_LABEL[g.mode] || '').replace(/^\S+\s/, '');
+    box.innerHTML = `<div class="ar-intro-card">
+        <small>Chuẩn bị</small><h2>${esc(name)}</h2>
+        <p class="ar-intro-win"><i class="fa-solid fa-trophy" aria-hidden="true"></i> <span><b>Thắng:</b> ${esc(R.win)}</span></p>
+        <p class="ar-intro-twist"><i class="fa-solid fa-bolt-lightning" aria-hidden="true"></i> <span><b>Cao trào:</b> ${esc(R.twist)}</span></p>
+        <b class="ar-intro-n" aria-live="assertive">3</b>
+        <button type="button" class="ar-btn ar-btn-ghost ar-intro-skip">Vào ngay <kbd>Enter</kbd></button></div>`;
+    $('arGame').appendChild(box);
+    let k = 3, t = 0, done = false;
+    const num = box.querySelector('.ar-intro-n');
+    const finish = () => {
+      if (done) return;
+      done = true;
+      clearTimeout(t);
+      document.removeEventListener('keydown', onKey, true);
+      box.remove();
+      if (G !== g) return; // đã bỏ cuộc / trận khác
+      sfx('combo');
+      go();
+    };
+    const onKey = (e) => {
+      if (G !== g) { finish(); return; }
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); finish(); }
+    };
+    const tick = () => {
+      if (G !== g) { finish(); return; }
+      if (--k <= 0) { finish(); return; }
+      num.textContent = String(k);
+      if (!FX.reduced()) { num.classList.remove('is-pop'); void num.offsetWidth; num.classList.add('is-pop'); }
+      sfx('click');
+      t = setTimeout(tick, INTRO_STEP_MS);
+    };
+    box.addEventListener('click', finish);
+    document.addEventListener('keydown', onKey, true);
+    t = setTimeout(tick, INTRO_STEP_MS);
   }
 
   function cur() { return G.deck[G.i % G.deck.length]; }
@@ -1845,7 +1907,7 @@
     const now = Date.now();
     const n = st ? Object.values(W.studentBook(st.key).items || {}).filter((it) => it.due <= now).length : 0;
     el.hidden = !n;
-    if (n) el.innerHTML = `<i class="fa-solid fa-book-bookmark" aria-hidden="true"></i> Em có <b>${n}</b> câu trong Sổ tay đến hạn ôn — <a href="${esc(bookLink(st))}">ôn ngay</a> cho nhớ lâu, rồi quay lại chiến tiếp!`;
+    if (n) el.innerHTML = `<i class="fa-solid fa-book-bookmark" aria-hidden="true"></i> Em có <b>${n}</b> câu trong Sổ tay đến hạn ôn. <a href="${esc(bookLink(st))}">Ôn ngay</a> để nhớ lâu hơn.`;
   }
   function reviewHtml(wrong) {
     const F = global.EduArenaFlash; // xấp thẻ lật ôn nhanh (js/arena/arena-flash.js)
@@ -1857,7 +1919,7 @@
   }
   function paintPracticeBtn(btn, n) {
     btn.hidden = !n;
-    btn.innerHTML = `<span aria-hidden="true">🔁</span> Luyện lại ${n} câu sai`;
+    btn.innerHTML = `<i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Luyện lại ${n} câu sai`;
   }
   /** Bắt đầu lượt "Luyện câu sai" từ nhật ký [{ q, ok }]; false nếu không còn câu sai. */
   function practice(log) {

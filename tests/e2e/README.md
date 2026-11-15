@@ -25,7 +25,7 @@ Trình chạy tự bật máy chủ tĩnh (`server.mjs`) và tự tìm Chrome đ
 | `plain-text` | 6 hàm lấy chữ thuần: không chạy `onerror`; chữ ra giống hệt cách cũ trên mọi chuỗi HTML của `data/ic3` |
 | `play` | Khu vui chơi và Thành tích: link game có thật, nhiệm vụ ngày, huy hiệu |
 | `offline` | Tắt hẳn máy chủ rồi mở lại `/app/` vẫn chạy (máy chỉ mở app, hoặc mở sảnh cũ trước); dùng chung 1 service worker |
-| `pages` | 17 trang cũ mở thẳng: không lỗi, không gọi Firestore hay Firebase Auth |
+| `pages` | MỌI trang .html ở gốc (tự thêm trang mới) + 3 cách mở Đấu trường + MOS: không lỗi JS, không gọi Firestore hay Firebase Auth, không file cùng nguồn nào 404, thu về 375px không tràn ngang, không vẻ "mẫu AI" (emoji ở tiêu đề tab, chữ gradient, tên sản phẩm khác) |
 | `teacher` | Cổng giáo viên: **máy chưa có bản lưu thì 0 lần tải cho tới khi bấm "Tải dữ liệu"** (giáo viên và quản trị); chưa đăng nhập (SDK thật, 0 request), lọc không tải lại, chặn sai vai trò hoặc chờ duyệt; **tự đăng xuất** (cảnh báo 14,5 phút, quá 15 phút thì về `login.html?reason=idle`, tua đồng hồ giả) |
 | `coordinator` | Cổng điều phối: chặn đọc toàn bộ khi máy chưa có bản lưu; khoá dò trùng `EduRosterCache.scopeKeyOf` thật; 2 trường có lớp trùng tên, lỗi riêng phần kết quả rồi "Thử lại", phân quyền |
 | `admin` | Quản trị chỉ xem: đọc bản đệm, luật "Cần xử lý", tìm không dấu, 0 request Firebase |

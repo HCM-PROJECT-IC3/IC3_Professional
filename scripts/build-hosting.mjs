@@ -110,6 +110,8 @@ export function build({ quiet = false } = {}) {
   const b = bundlePages(out);
   st.pages = b.pages; st.tagsBefore = b.tagsBefore; st.tagsAfter = b.tagsAfter;
   fs.writeFileSync(path.join(out, '_headers'), CLOUDFLARE_HEADERS);
+  fs.writeFileSync(path.join(out, '_redirects'), cloudflareRedirects(out));
+  if (!fs.existsSync(path.join(out, '404.html'))) fs.writeFileSync(path.join(out, '404.html'), NOT_FOUND_HTML);
   const lim = checkLimits(out);
   st.failed.push(...lim.problems);
   if (!quiet) {
@@ -137,6 +139,34 @@ const CLOUDFLARE_HEADERS = `# Sinh bởi scripts/build-hosting.mjs — đừng s
 /lib/fontawesome/webfonts/*
   Cache-Control: public, max-age=604800
 `;
+
+/* Cloudflare (Workers Static Assets, wrangler.jsonc) KHÔNG cần Worker (15/11/2026). Trước đó scripts/cloudflare-worker.js
+   lo "/", "/app/", "/mos/" vì html_handling "none" không tự tìm index.html → MỖI lần mở trang chủ / app 2.0 + MỌI đường
+   dẫn sai (bot dò /wp-login.php, /favicon.ico...) tốn 1 lượt Worker. Gói Free 100.000 lượt/ngày; vượt → Worker lỗi 1027,
+   trang chủ "/" chết với MỌI người tới hết ngày. Giờ: luật tĩnh trong _redirects (Cloudflare xử lý trước khi tìm file,
+   không tính lượt Worker) + not_found_handling "404-page" (404.html dưới đây). Đã thử bằng "wrangler dev".
+   Cloudflare Pages cũng đọc _redirects (luật thừa vô hại); Firebase bỏ qua (firebase.json "ignore"), tự dùng 404.html. */
+export function cloudflareRedirects(out) {
+  const dirs = [];
+  const walk = (dir, rel) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (!e.isDirectory()) continue;
+      const r = rel + e.name + '/';
+      if (fs.existsSync(path.join(dir, e.name, 'index.html'))) dirs.push(r);
+      walk(path.join(dir, e.name), r);
+    }
+  };
+  walk(out, '/');
+  dirs.sort();
+  const lines = ['# Sinh bởi scripts/build-hosting.mjs — đừng sửa tay (sửa trong script).', '/ /index.html 200'];
+  dirs.forEach((d) => lines.push(`${d} ${d}index.html 200`, `${d.slice(0, -1)} ${d} 301`));
+  return lines.join('\n') + '\n';
+}
+
+const NOT_FOUND_HTML = '<!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+  + '<link rel="icon" href="/favicon.svg" type="image/svg+xml">' // không có thẻ này trình duyệt tự xin /favicon.ico → thêm 1 lần 404
+  + '<title>Không tìm thấy trang</title><body style="font-family:system-ui,sans-serif;max-width:32rem;margin:15vh auto;padding:0 16px">'
+  + '<h1>Không tìm thấy trang</h1><p>Đường dẫn này không có. <a href="/">Về trang chủ</a></p></body></html>\n';
 
 /** Giới hạn host miễn phí: Cloudflare Pages 20.000 file + 25 MiB/file; Firebase 10 GB lưu trữ; GitHub Pages 1 GB. */
 function checkLimits(out) {

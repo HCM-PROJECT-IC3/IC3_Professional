@@ -1,17 +1,19 @@
 // Cloudflare Workers (Static Assets) — "npx wrangler deploy" (lệnh deploy của Cloudflare) đọc file này.
 // Thiếu file này, wrangler tự đoán thư mục "." → phát CẢ repo (mã nguồn, apps/Code.gs, firestore.rules…).
 // Build command trên Cloudflare: cd web && npm ci && cd .. && node scripts/build-hosting.mjs --strict
+//
+// CHỈ file tĩnh, KHÔNG có Worker ("main") → không tính vào 100.000 lượt Worker/ngày của gói Free, không giới hạn request.
+// "/", "/app/", "/mos/" → index.html và "/app" → "/app/" nhờ dist-hosting/_redirects; đường dẫn sai → dist-hosting/404.html
+// (cả hai do scripts/build-hosting.mjs sinh). Trước 15/11/2026 dùng scripts/cloudflare-worker.js: mỗi lần mở trang chủ
+// và mỗi lượt bot dò đường dẫn sai tốn 1 lượt Worker, vượt hạn mức → trang chủ lỗi 1027 tới hết ngày.
 {
   "name": "ic3-professional",
   "compatibility_date": "2026-11-13",
-  // Chỉ chạy khi KHÔNG có file tĩnh khớp (vd "/", "/app/", đường dẫn sai) — file tĩnh không tốn lượt Worker.
-  "main": "scripts/cloudflare-worker.js",
   "assets": {
     "directory": "./dist-hosting",
-    "binding": "ASSETS",
     // Phục vụ đúng "arena.html" như GitHub Pages / Firebase. Mặc định Cloudflare chuyển hướng 307 *.html → bỏ đuôi:
     // thêm 1 vòng mạng mỗi trang, và service worker lưu phản hồi đã chuyển hướng → mở offline báo lỗi.
-    "html_handling": "none"
-  },
-  "observability": { "enabled": true }
+    "html_handling": "none",
+    "not_found_handling": "404-page"
+  }
 }

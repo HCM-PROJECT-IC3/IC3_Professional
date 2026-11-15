@@ -23,6 +23,96 @@ Thứ tự: Apps Script → `firestore.rules`/index → đẩy web.
      Lệch dữ liệu thì đặt `rosterDeltaSync: false` trong `js/backend-config.js`.
 
 
+## 15/11/2026 (27) — Rà soát toàn dự án; Cloudflare bỏ hẳn Worker (0 lượt Worker/ngày)
+
+- **Kiểm thử trước khi sửa** (đều đạt): 66 file unit test, kiểm tra dữ liệu/JS/HTML/kiến trúc/đường dẫn cũ, Apps Script,
+  MOS, máy chủ trường, `tsc`, `build-hosting --strict`, E2E 148/148 trên cả mã nguồn lẫn `dist-hosting`.
+  (`tests/firestore-rules` cần Java — chỉ chạy trên CI.)
+- **Firestore** (đo bằng `scripts/measure-firestore/flow.py`, dữ liệu cỡ thật 2.800 HS/150 lớp/121 tài khoản):
+  trang học sinh 0 lượt; trang nhân sự mở lại sau 2 giờ chỉ đọc phần thay đổi (Quản lý tài khoản 122, Lịch giảng 2,
+  Điểm danh 1). Lần đầu trên máy mới vẫn đọc toàn bộ 1 lần (Quản lý tài khoản ~3.170) như thiết kế. Đường dự phòng
+  Đấu trường: tối đa 25 em/phòng, gom ghi ≤ 1 lần/giây, không phát tin cả lớp mỗi lượt trả lời. **Không đổi gì.**
+- **Cloudflare — sửa**: `scripts/cloudflare-worker.js` chạy cho MỌI lần mở `/`, `/app/`, `/mos/` và MỌI đường dẫn
+  sai (bot dò `/wp-login.php`, `/favicon.ico`…). Gói Free 100.000 lượt Worker/ngày; vượt → lỗi 1027, trang chủ chết
+  với mọi người tới hết ngày. Giờ `build-hosting.mjs` sinh `dist-hosting/_redirects` (`/` → `index.html`, `/app` → `/app/`…,
+  luật tĩnh, không tính lượt) + `404.html`; `wrangler.jsonc` bỏ `main`, thêm `not_found_handling: "404-page"`.
+  Đã thử bằng `wrangler dev` (cấu hình thật) và `wrangler pages dev`: `/` 200 không chuyển hướng, `/app` 301 → `/app/`,
+  đường sai 404. File tĩnh vẫn không giới hạn request. Firebase Hosting bỏ qua `_redirects`, tự dùng `404.html`.
+  Firestore/Apps Script: không đổi (0 lượt thêm).
+- **E2E `pages` mở rộng** (148 → 234 kiểm tra): tự mở MỌI trang `.html` ở gốc (11 trang trước chưa từng được kiểm:
+  Điểm danh, Sổ đầu bài, Lịch giảng, Thi đua, Quản lý trường/lớp, Portfolio…), thêm 2 phép kiểm cho mỗi trang:
+  không file cùng nguồn nào lỗi 404, thu về 375px không tràn ngang. Bắt được và đã sửa:
+  - **Quản lý trường trên điện thoại** rộng 1115px (cả trang trượt ngang): `admin-users.css` tắt cuộn của
+    `.table-scroll` ≤ 760px cho bảng tài khoản dạng thẻ, bảng trường không đổi dạng → `admin-schools.css` giữ cuộn ngang.
+  - **Hotspot editor** ≤ 980px: nút trên thanh tiêu đề xuống dòng (trước đẩy trang rộng 760px).
+  - `404.html` mới sinh thiếu icon → trình duyệt xin thêm `/favicon.ico` (1 lần 404 nữa).
+  Cả bộ đạt trên mã nguồn và trên `dist-hosting`. Firestore: không đổi.
+- **Mới — Linh vật theo mùa** (Đấu trường → Linh vật; ROADMAP §4.5): hộp đặc biệt chỉ mở được trong khung ngày —
+  💐 Tri ân 20/11 (10–30/11), 🎄 Giáng sinh (15/12–5/1), 🧧 Tết (15/1–28/2, phủ Tết âm mọi năm), 🏖️ Mùa hè (1/6–15/8).
+  Mỗi hộp 9 linh vật đủ 5 độ hiếm, cùng giá, bảo hiểm Sử thi, thưởng đủ bộ như hộp thường. Đang mùa: hộp mùa trải
+  hàng đầu với nhãn "Còn N ngày" + dải sự kiện. Hết mùa: không mở được (kể cả vé miễn phí), linh vật đã có **giữ mãi**,
+  vẫn làm ảnh đại diện. Emoji chọn loại hiện được trên Windows 10 (phòng máy). Logic thuần trong `arena-core.js`
+  (`SEASONS`, `seasonOn`, `packsOn`, `seasonDaysLeft`), 15 unit test (từng ngày trong năm thuộc ≤ 1 mùa, vắt năm mới,
+  hết mùa từ chối không trừ xu) + 7 kiểm tra E2E với đồng hồ trình duyệt cố định (20/11 và 5/12).
+  **0 Firebase, 0 Apps Script** (chỉ localStorage `eduquiz_arena_v1` như cũ).
+  E2E: 242/242 trên mã nguồn, 246/246 trên `dist-hosting`.
+- **Đấu trường bỏ dấu vết "giao diện AI"** (trước đây cố ý chừa lại). Chỉ đổi khung giao diện; tranh bản đồ/thẻ chế độ,
+  linh vật sưu tập, hiệu ứng và câu chúc mừng trong trận giữ nguyên.
+  - Emoji màu (Windows hiện kiểu 3D bóng) làm icon → Font Awesome phẳng: thanh vai, ví xu, nút Linh vật, 13 icon chế độ,
+    3 ô nhiệm vụ, icon 8 hộp, giá/vé/đủ bộ, màn mở hộp, cổng giáo viên, "Luyện lại câu sai". Tiêu đề tab bỏ emoji.
+  - Bỏ tên sản phẩm khác ("Kiểu Kahoot/Blooket/WayArena/Wayground/Battle Royale…") khỏi mô tả chế độ và thẻ meta;
+    câu chữ bớt chấm than, nói thẳng luật chơi.
+  - Thẻ "Danh hiệu": nền nâu + chữ vàng + vương miện trong vòng tròn vàng → thẻ phẳng như thẻ khác. Chip cấp độ đang
+    chọn: nền vàng + bóng khối → viền tím mảnh. Hộp mùa: bỏ nền chuyển màu.
+  - Dòng nhắc Sổ tay: link "Ôn ngay" màu xanh mặc định trình duyệt trên nền vàng → cùng màu chữ, gạch chân.
+  - Cổng giáo viên ghi "3 chế độ cả lớp" (cũ) → đúng 6 chế độ phòng cả lớp + Bảng điểm.
+  - Bộ icon rút gọn dựng lại (`scripts/build-fa-subset.py`): thêm egg, fish, futbol, vault, paw, snowflake…; bỏ 42 icon
+    không còn dùng. Icon hộp lưu tên đầy đủ (`fa-paw`) — ghép `'fa-' + tên` thì script không dò thấy (đã gặp: paw,
+    snowflake thiếu). Unit test mới kiểm icon mọi hộp có trong bộ rút gọn.
+  0 Firebase. Unit test + kiểm tra tĩnh + E2E 242/242 đạt.
+- **Mới — Thẻ "Luật chơi" + màn mở trận 3‑2‑1** (Đấu trường; học cách trình bày "chọn trò + luật 3 bước" của các nền
+  tảng quiz, KHÔNG chép tên/nhân vật/hình). `js/arena/arena-rules.js` (dữ liệu thuần):
+  - Chọn chế độ → thẻ hiện 2–3 nhãn tính chất (Phản xạ, Chiến thuật, May rủi, Đối đầu, Đồng đội, Bền bỉ, Thư giãn),
+    **3 bước chơi** có icon và **"Cao trào"** — khoảnh khắc lật kèo riêng của chế độ (vd Sinh tồn: còn 2 người là đấu
+    tay đôi; Kéo co: dây sát vạch vẫn kéo ngược được). Thay dòng mô tả 1 câu. Có cho cả vai Giáo viên.
+  - Bấm Vào trận → màn mở trận: tên chế độ, điều kiện thắng, cao trào, đếm 3‑2‑1 rồi mới vào câu 1. Chưa tính giờ,
+    phím đáp án bị chặn; bấm/Enter/Space để vào ngay. Luyện câu sai vào thẳng. Giảm chuyển động: số đổi không hiệu ứng.
+  - Số liệu luật lấy từ hằng số `arena-core.js` (số tim, 384 nghìn km, 100 vạch, phạt 40%...) → đổi luật là thẻ tự đúng.
+    Đã đối chiếu từng câu với code (vd Đua về đích: câu đúng liền thứ 3 tiến 2 bước; Virus sắp gục thì chí mạng dễ hơn).
+  - Test: `arena-rules.test.js` (mọi chế độ trên trang có luật, 3 bước, nhãn hợp lệ, không tên sản phẩm khác, không chấm
+    than, icon có trong bộ rút gọn, số liệu khớp core) + 9 kiểm tra E2E (đổi chế độ đổi luật, phím 1 không trả lời lúc
+    đếm, Enter vào ngay, tự vào sau đếm, 375px). 0 Firebase. E2E 251/251.
+- **Rà "giao diện AI" toàn dự án bằng máy** (Chrome thật, 31 điểm vào): đếm emoji trong chữ hiển thị, tên sản phẩm khác,
+  chữ chuyển màu (`background-clip: text`), nền gradient, phát sáng. 22 trang đã sạch; còn nặng ở **5 trò nhỏ** (trước đây
+  cố ý chừa): Battle Quiz, Cyber Detective, Chim Vượt Ải, Trí Nhớ, Phòng Thủ Dữ Liệu. Đã sửa phần KHUNG:
+  - Tiêu đề tab bỏ emoji; tiêu đề trang chữ 3 màu → 1 màu + icon; nút chính chuyển màu → phẳng; thanh máu/giờ → 1 màu.
+  - Emoji làm icon (HUD, nút Chơi lại/Kỷ lục/Đổi độ khó, biểu tượng lớn trên hộp thoại mở đầu/kết quả, nút chủ đề 🎲,
+    nút vụ án 📁, chấm 🟢🟡🔴 chọn độ khó, icon chủ đề Trí Nhớ, ✅ chọn đội hình, huy chương 🥇🥈🥉 bảng kỷ lục) → Font
+    Awesome 1 màu. 5 trang nạp thêm `lib/fontawesome/css/fa.min.css` (dùng chung site, đã có trong bộ nhớ đệm).
+  - Phần làm phẳng gom ở cuối `css/game-backdrop.css` (5 trò cùng nạp, nạp sau cùng).
+  - Giữ nguyên có chủ đích: tranh nền, nhân vật, hình vẽ trên canvas, tim/sao/nhãn combo và thông báo trong trận,
+    ảnh đại diện mặc định của người chơi.
+  - Kết quả quét sau sửa: 5 trò 0 chữ gradient, 0 nền gradient, emoji còn lại chỉ là nội dung trò chơi.
+  - Chơi thử bằng Chrome: Battle Quiz vào trận có 4 đáp án; Cyber Detective mở vụ án; Phòng Thủ chọn đủ 7 → Bắt đầu;
+    0 lỗi JS. E2E 251/251 (mã nguồn), 255/255 (`dist-hosting`). 0 Firebase.
+  - Giữ không tái phát: bộ E2E `pages` thêm 1 kiểm tra/trang — tiêu đề tab không emoji, không chữ gradient, không tên
+    sản phẩm khác (Kahoot, Blooket, Quizizz, Gimkit, Wayground…). 150/150.
+- **Tranh vẽ phẳng** (người dùng duyệt ảnh trước/sau: "tranh vẽ cũng phải đổi"):
+  - **12 nhân vật mã độc vẽ lại** — ảnh raster `img/pz-defense/zom_*.png` (zombie chi tiết, nét bẩn, vải rách — kiểu ảnh AI
+    tạo, lại mang dáng zombie của một trò thủ thành nổi tiếng) → họ nhân vật tự thiết kế `img/malware/<id>.svg`, sinh bằng
+    `scripts/build-malware-art.mjs`: thân khối 1 màu, mắt tròn, biểu tượng đúng cách tấn công (Ransomware = ổ khoá,
+    Phishing = cá + móc câu + thư, Worm = thân đốt, Logic Bomb = bom đếm giờ…). Đọc rõ ở ô 48px. Dùng ở Phòng Thủ (canvas +
+    thẻ), Battle Quiz (đối thủ), Cyber Detective. Xoá 12 PNG cũ (−522 KB bản deploy). CI: `build-malware-art.mjs --check`.
+    Bỏ hẳn thư mục `img/pz-defense/`: 19 icon lá chắn (SVG phẳng, vẫn dùng) chuyển sang `img/defenders/`.
+  - **`np-art.js` § FLAT** (nguồn chung của bản đồ Hành trình, thẻ chế độ, cảnh trong trận, nền trò nhỏ, Gọi tên): bỏ lớp
+    "khối 3D" phủ mọi hình, bỏ lớp chất liệu (vân giấy, nét cọ, ánh sáng phủ, viền tối 4 góc), trời/tán lá 1 màu, viền
+    mảnh 60%, mắt nhân vật 1 chấm (bỏ đốm sáng "long lanh"). `FLAT = false` là về tranh cũ.
+  - **`arena-mini-art.js` § FLAT**: mỗi mặt khối 1 màu (giữ 3 sắc độ), cầu phẳng, bỏ vệt bóng loáng.
+  - **Khung bản đồ + thẻ chế độ**: bỏ viền nâu đen 3–4px và bóng cứng "0 6px 0"; vòng chặng 1 viền + bóng mềm.
+  - Battle Quiz: ô "Bạn" emoji 🧑 → icon phẳng. Phòng Thủ: "zombie mã độc" → "mã độc".
+  - Chơi thử: Battle Quiz hiện đối thủ mới; Phòng Thủ chơi 28 giây, canvas vẽ mã độc mới; 0 lỗi tải, 0 lỗi JS.
+    E2E 281/281. 0 Firebase.
+
 ## 14/11/2026 (26) — Sẵn sàng cho Firebase Hosting: cấu hình `hosting`, bản rút gọn, đo dung lượng mỗi học sinh
 
 - `firebase.json` có phần `hosting` (chưa deploy; GitHub Pages vẫn là bản chính). `ignore` bỏ tệp đề PowerPoint/Word,

@@ -20,6 +20,9 @@
 
 /* Bảng ít cột hơn trang tài khoản — không cần sàn 1250px */
 .schools-table { min-width: 1100px }
+/* admin-users.css (≤760px) đặt .table-scroll overflow: visible vì bảng tài khoản chuyển sang dạng thẻ; bảng trường
+   KHÔNG chuyển → phải giữ cuộn ngang trong khung, không thì cả trang rộng 1115px trên điện thoại (E2E pages, 15/11/2026). */
+@media (max-width: 760px) { .table-scroll { overflow-x: auto } }
 .schools-table th:nth-child(2), .schools-table td:nth-child(2) { min-width: 0; white-space: nowrap }
 .schools-table td.school-name { font-weight: 800 }
 .schools-table td.num { text-align: right; font-variant-numeric: tabular-nums }

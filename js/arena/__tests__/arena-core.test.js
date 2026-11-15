@@ -360,6 +360,52 @@ assertEq('bốc thẻ: chỉ ở mốc 3 câu và đúng ≥ 2/3', [
   assertEq('bốc thẻ: Kho báu hiếm hơn Túi xu', seen.jackpot < seen.coins, true);
 })();
 
+// ── Linh vật theo mùa (15/11/2026): hộp chỉ mở được trong khung ngày, linh vật đã có giữ mãi ──
+(function () {
+  var D = function (s) { return new Date(s + 'T10:00:00'); };
+  var seasonId = function (s) { var x = A.seasonOn(D(s)); return x ? x.season : null; };
+  assertEq('mùa: 20/11 trong khung 10–30/11', seasonId('2026-11-20'), 'teacher');
+  assertEq('mùa: ngày đầu/cuối khung tính cả', [seasonId('2026-11-10'), seasonId('2026-11-30')], ['teacher', 'teacher']);
+  assertEq('mùa: 9/11 và 1/12 không có', [seasonId('2026-11-09'), seasonId('2026-12-01')], [null, null]);
+  assertEq('mùa: Giáng sinh vắt qua năm mới (20/12, 3/1)', [seasonId('2026-12-20'), seasonId('2027-01-03')], ['noel', 'noel']);
+  assertEq('mùa: Tết 10/2, Hè 1/7', [seasonId('2027-02-10'), seasonId('2027-07-01')], ['tet', 'summer']);
+  assertEq('mùa: các khung không chồng nhau (mọi ngày trong năm ≤ 1 mùa)', (function () {
+    for (var t = D('2027-01-01').getTime(); t < D('2028-01-01').getTime(); t += 864e5) {
+      var d = new Date(t), md = String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      if (A.SEASONS.filter(function (s) { return A.inWindow(md, s.from, s.to); }).length > 1) return md;
+    }
+    return true;
+  })(), true);
+  assertEq('hộp mùa: đủ 9 linh vật, đủ 5 độ hiếm, mã không trùng hộp thường', A.SEASONS.every(function (s) {
+    return s.blooks.length === 9 && Object.keys(A.RARITY).every(function (k) { return s.blooks.some(function (b) { return b.rarity === k; }); })
+      && s.blooks.every(function (b) { return ids.indexOf(b.id) < 0 && A.blookById(b.id) === b; });
+  }), true);
+  assertEq('packsOn: ngoài mùa = 4 hộp thường; trong mùa thêm hộp mùa ở đầu', [A.packsOn(D('2026-10-01')).length, A.packsOn(D('2026-11-20')).length, A.packsOn(D('2026-11-20'))[0].season], [4, 5, 'teacher']);
+  assertEq('daysLeft: 20/11 → còn 11 ngày (tới hết 30/11)', A.seasonDaysLeft(A.seasonOn(D('2026-11-20')), D('2026-11-20')), 11);
+  assertEq('daysLeft: vắt năm 20/12 → hết 5/1 còn 17 ngày', A.seasonDaysLeft(A.seasonOn(D('2026-12-20')), D('2026-12-20')), 17);
+  var tp = A.SEASONS[0];
+  var sp = A.newProfile(); sp.coins = 100;
+  var r1 = A.buyPack(sp, tp.id, A.rngFrom(3), { now: D('2026-11-20') });
+  assertEq('mua hộp mùa trong mùa: được, ra linh vật của hộp mùa', [r1.ok, r1.blook.pack, sp.coins <= 100 - A.PACK_PRICE + A.RARITY.mystery.refund], [true, tp.id, true]);
+  var before = sp.coins;
+  var r2 = A.buyPack(sp, tp.id, A.rngFrom(3), { now: D('2026-12-05') });
+  assertEq('hết mùa: từ chối (lý do season), không trừ xu', [r2.ok, r2.reason, sp.coins], [false, 'season', before]);
+  assertEq('hết mùa: linh vật đã có vẫn tra được (làm ảnh đại diện)', A.blookById(r1.blook.id).name, r1.blook.name);
+  var tk = A.newProfile(); tk.tickets = 1;
+  assertEq('hết mùa: vé miễn phí cũng không mở được hộp mùa', [A.buyPack(tk, tp.id, A.rngFrom(3), { now: D('2026-10-01'), ticket: true }).reason, tk.tickets], ['season', 1]);
+  var full = A.newProfile(); full.coins = 1000;
+  tp.blooks.slice(0, 8).forEach(function (b) { full.owned[b.id] = 1; });
+  var last = tp.blooks[8], seq = 0;
+  var pickLast = function () { return seq++ === 0 ? 0.9999 : 0.9999; }; // trọng số cuối = Bí ẩn = con thứ 9
+  var rs = A.buyPack(full, tp.id, pickLast, { now: D('2026-11-15') });
+  assertEq('đủ bộ hộp mùa → thưởng như hộp thường', [rs.blook.id === last.id, rs.set && rs.set.bonus], [true, A.SET_BONUS]);
+  var faCss = fs.readFileSync(path.join(__dirname, '..', '..', '..', 'lib', 'fontawesome', 'css', 'fa.min.css'), 'utf8');
+  assertEq('icon mọi hộp (pk.fa) có trong bộ Font Awesome rút gọn — thiếu thì hiện ô trống', A.ALL_PACKS.filter(function (pk) {
+    return !/^fa-[a-z0-9-]+$/.test(pk.fa) || faCss.indexOf('.' + pk.fa + ':') < 0;
+  }).map(function (pk) { return pk.id + '=' + pk.fa; }), []);
+  assertEq('hộp thường không bị khung ngày chặn', A.buyPack(Object.assign(A.newProfile(), { coins: 50 }), 'pets', A.rngFrom(1), { now: D('2026-03-03') }).ok, true);
+})();
+
 console.log(failures ? '\n' + failures + ' FAIL' : '\nTất cả PASS');
 process.exit(failures ? 1 : 0);
 

@@ -33,25 +33,25 @@
   };
 
   // ── Dãy đối thủ (boss ladder) — dùng lại đúng bộ ảnh "zombie mối đe doạ
-  // mạng" đã có sẵn từ pz-defense (img/pz-defense/), xếp theo mức độ nguy
+  // mạng" tự vẽ (img/malware/, scripts/build-malware-art.mjs), xếp theo mức độ nguy
   // hiểm tăng dần để vừa tạo cảm giác "lên hạng" khi thắng liên tiếp, vừa
   // ôn lại đúng các khái niệm An toàn & bảo mật (chủ đề 7 IC3). Thắng 1
   // trận → tiến 1 bậc (lưu localStorage, KHÔNG lùi hạng khi thua) — đây là
   // động lực "chơi lại để lên hạng tiếp" thay vì luôn gặp lại đúng 1 đối
   // thủ y hệt mọi ván như bản cũ.
   var ENEMIES = [
-    { id: 'adware',       name: 'Adware — Quảng cáo độc hại',   img: 'img/pz-defense/zom_adware.png',       hp: 70,  counterDmg: 8,  timePerQ: 15 },
-    { id: 'spyware',      name: 'Spyware — Phần mềm gián điệp', img: 'img/pz-defense/zom_spyware.png',      hp: 85,  counterDmg: 9,  timePerQ: 14 },
-    { id: 'virus',        name: 'Virus máy tính',                img: 'img/pz-defense/zom_virus.png',        hp: 100, counterDmg: 10, timePerQ: 14 },
-    { id: 'worm',         name: 'Worm — Sâu máy tính',           img: 'img/pz-defense/zom_worm.png',         hp: 112, counterDmg: 11, timePerQ: 13 },
-    { id: 'trojan',       name: 'Trojan — Ngựa thành Troy',      img: 'img/pz-defense/zom_trojan.png',       hp: 124, counterDmg: 12, timePerQ: 13 },
-    { id: 'phishing',     name: 'Phishing — Lừa đảo trực tuyến', img: 'img/pz-defense/zom_phishing.png',     hp: 136, counterDmg: 13, timePerQ: 12 },
-    { id: 'sqlinjection', name: 'SQL Injection',                 img: 'img/pz-defense/zom_sqlinjection.png', hp: 148, counterDmg: 14, timePerQ: 12 },
-    { id: 'rootkit',      name: 'Rootkit',                       img: 'img/pz-defense/zom_rootkit.png',      hp: 160, counterDmg: 15, timePerQ: 11 },
-    { id: 'logicbomb',    name: 'Logic Bomb — Bom logic',        img: 'img/pz-defense/zom_logicbomb.png',    hp: 172, counterDmg: 16, timePerQ: 11 },
-    { id: 'ransomware',   name: 'Ransomware — Tống tiền dữ liệu',img: 'img/pz-defense/zom_ransom.png',       hp: 188, counterDmg: 18, timePerQ: 10 },
-    { id: 'botnet',       name: 'Botnet',                        img: 'img/pz-defense/zom_botnet.png',       hp: 205, counterDmg: 20, timePerQ: 10 },
-    { id: 'ddos',         name: 'DDoS — Trùm cuối',              img: 'img/pz-defense/zom_ddos.png',         hp: 230, counterDmg: 24, timePerQ: 9  },
+    { id: 'adware',       name: 'Adware — Quảng cáo độc hại',   img: 'img/malware/adware.svg',       hp: 70,  counterDmg: 8,  timePerQ: 15 },
+    { id: 'spyware',      name: 'Spyware — Phần mềm gián điệp', img: 'img/malware/spyware.svg',      hp: 85,  counterDmg: 9,  timePerQ: 14 },
+    { id: 'virus',        name: 'Virus máy tính',                img: 'img/malware/virus.svg',        hp: 100, counterDmg: 10, timePerQ: 14 },
+    { id: 'worm',         name: 'Worm — Sâu máy tính',           img: 'img/malware/worm.svg',         hp: 112, counterDmg: 11, timePerQ: 13 },
+    { id: 'trojan',       name: 'Trojan — Ngựa thành Troy',      img: 'img/malware/trojan.svg',       hp: 124, counterDmg: 12, timePerQ: 13 },
+    { id: 'phishing',     name: 'Phishing — Lừa đảo trực tuyến', img: 'img/malware/phishing.svg',     hp: 136, counterDmg: 13, timePerQ: 12 },
+    { id: 'sqlinjection', name: 'SQL Injection',                 img: 'img/malware/sqlinjection.svg', hp: 148, counterDmg: 14, timePerQ: 12 },
+    { id: 'rootkit',      name: 'Rootkit',                       img: 'img/malware/rootkit.svg',      hp: 160, counterDmg: 15, timePerQ: 11 },
+    { id: 'logicbomb',    name: 'Logic Bomb — Bom logic',        img: 'img/malware/logicbomb.svg',    hp: 172, counterDmg: 16, timePerQ: 11 },
+    { id: 'ransomware',   name: 'Ransomware — Tống tiền dữ liệu',img: 'img/malware/ransom.svg',       hp: 188, counterDmg: 18, timePerQ: 10 },
+    { id: 'botnet',       name: 'Botnet',                        img: 'img/malware/botnet.svg',       hp: 205, counterDmg: 20, timePerQ: 10 },
+    { id: 'ddos',         name: 'DDoS — Trùm cuối',              img: 'img/malware/ddos.svg',         hp: 230, counterDmg: 24, timePerQ: 9  },
   ];
   var PROGRESS_KEY = 'eduquiz_battlequiz_progress'; // { enemyIndex: number, wins: number }
 
@@ -219,9 +219,9 @@
     el.enemyPreview.innerHTML =
       '<img src="' + enemy.img + '" alt="' + enemy.name + '" class="bq-enemy-preview-img">' +
       '<div class="bq-enemy-preview-info">' +
-        '<div class="bq-enemy-preview-rank">' + rankLabel + (p.wins > 0 ? ' · 🏆 ' + p.wins + ' trận thắng' : '') + '</div>' +
+        '<div class="bq-enemy-preview-rank">' + rankLabel + (p.wins > 0 ? ' · <i class="fa-solid fa-trophy" aria-hidden="true"></i> ' + p.wins + ' trận thắng' : '') + '</div>' +
         '<div class="bq-enemy-preview-name">' + enemy.name + '</div>' +
-        '<div class="bq-enemy-preview-hp">❤️ ' + enemy.hp + ' HP · ⏱ ' + enemy.timePerQ + 's/câu</div>' +
+        '<div class="bq-enemy-preview-hp"><i class="fa-solid fa-heart" aria-hidden="true"></i> ' + enemy.hp + ' HP · <i class="fa-solid fa-stopwatch" aria-hidden="true"></i> ' + enemy.timePerQ + 's/câu</div>' +
       '</div>';
   }
 
@@ -234,7 +234,7 @@
     var randomBtn = document.createElement('button');
     randomBtn.type = 'button';
     randomBtn.className = 'bq-topic-btn bq-topic-random';
-    randomBtn.textContent = '🎲 Tổng hợp ngẫu nhiên (mọi chủ đề)';
+    randomBtn.innerHTML = '<i class="fa-solid fa-shuffle" aria-hidden="true"></i> Tổng hợp ngẫu nhiên (mọi chủ đề)';
     randomBtn.addEventListener('click', function () { startMatch(null); });
     el.topicGrid.appendChild(randomBtn);
 
@@ -430,7 +430,7 @@
         if (wasLast) setTimeout(function () { EduFX.confetti({ x: 0.7, count: 80 }); }, 200);
       }
       if (wasLast) {
-        rankUpNote = '\n\n👑 Bạn đã hạ TRÙM CUỐI! Chơi lại để phá kỷ lục điểm số.';
+        rankUpNote = '\n\nBạn đã hạ TRÙM CUỐI! Chơi lại để phá kỷ lục điểm số.';
       } else {
         var next = currentEnemy();
         rankUpNote = '\n\n⬆ Lên hạng! Đối thủ tiếp theo: ' + next.name + ' (' + next.hp + ' HP).';
@@ -444,14 +444,14 @@
       score: state.score, accuracy: accuracyPct, maxCombo: state.maxCombo,
       enemy: state.enemy.name, win: win, at: Date.now(),
     }) : 0;
-    if (recordRank === 1) rankUpNote += '\n\n🌟 KỶ LỤC MỚI của bạn trên máy này!';
-    else if (recordRank > 1) rankUpNote += '\n\n📈 Lọt top ' + recordRank + ' kỷ lục của bạn.';
+    if (recordRank === 1) rankUpNote += '\n\nKỷ lục mới của bạn trên máy này!';
+    else if (recordRank > 1) rankUpNote += '\n\nLọt top ' + recordRank + ' kỷ lục của bạn.';
 
     // XP thật = XP game + thưởng điểm cao/nhiệm vụ ngày do js/gamification.js cộng thêm.
     var reward = recordSessionIfPossible(win, accuracyPct);
     if (reward) { state.xp = reward.xpGained; updateHud(); }
 
-    el.resultIcon.textContent = win ? '🏆' : '💥';
+    el.resultIcon.innerHTML = win ? '<i class="fa-solid fa-trophy" aria-hidden="true"></i>' : '<i class="fa-solid fa-burst" aria-hidden="true"></i>';
     el.resultTitle.textContent = win ? 'Chiến Thắng trước ' + state.enemy.name + '!' : 'Bạn Đã Thua!';
     el.resultStats.textContent =
       'Điểm: ' + state.score + '\n' +
@@ -531,12 +531,12 @@
     }
     el.leaderboardList.innerHTML = rows.map(function (r, i) {
       var rank = i + 1;
-      var medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : String(rank);
+      var medal = String(rank); // hạng 1–3 tô màu bằng .bq-leaderboard-top3 (không dùng huy chương emoji)
       var cls = 'bq-leaderboard-row' + (rank <= 3 ? ' bq-leaderboard-top3' : '');
       var date = new Date(r.at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
       return '<div class="' + cls + '">' +
         '<div class="bq-leaderboard-rank">' + medal + '</div>' +
-        '<div class="bq-leaderboard-name">' + (r.win ? '🏆 ' : '') + escapeHtml(r.enemy || '') +
+        '<div class="bq-leaderboard-name">' + (r.win ? '<i class="fa-solid fa-trophy" aria-hidden="true"></i> ' : '') + escapeHtml(r.enemy || '') +
           ' <span class="bq-leaderboard-meta">(' + r.accuracy + '% · combo ' + r.maxCombo + ' · ' + date + ')</span></div>' +
         '<div class="bq-leaderboard-score">' + r.score + '</div>' +
         '</div>';

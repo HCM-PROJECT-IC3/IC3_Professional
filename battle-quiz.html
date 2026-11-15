@@ -5,7 +5,7 @@
 <script src="js/page-transition-guard.js"></script>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⚔ Battle Quiz — Mini Game</title>
+<title>Battle Quiz — Mini Game</title>
 <link rel="stylesheet" href="lib/fonts/fonts.css">
 <link rel="stylesheet" href="css/theme.css">
 <script src="js/theme-inherit.js"></script>
@@ -27,22 +27,22 @@
     <!-- ============ TOPBAR: tiêu đề + HUD ============ -->
     <div class="bq-topbar">
       <div class="bq-header">
-        <div class="bq-title">⚔ Battle Quiz</div>
+        <div class="bq-title"><i class="fa-solid fa-khanda" aria-hidden="true"></i> Battle Quiz</div>
         <div class="bq-subtitle">Trả lời đúng để tấn công — trả lời sai hoặc hết giờ, đối thủ sẽ phản công!</div>
       </div>
       <div class="bq-hud">
-        <div class="bq-hud-chip" title="Điểm số">🏆 <span id="bqScore">0</span></div>
-        <div class="bq-hud-chip" title="Combo hiện tại">🔥 Combo <span id="bqCombo">0</span></div>
-        <div class="bq-hud-chip" title="XP đã tích luỹ ván này">⭐ <span id="bqXp">0</span> XP</div>
-        <button type="button" class="bq-restart-btn" id="bqLeaderboardBtn" title="Xem kỷ lục của bạn">🏆 Kỷ lục</button>
-        <button type="button" class="bq-restart-btn" id="bqRestartBtn" title="Chơi lại từ đầu">🔄 Chơi lại</button>
+        <div class="bq-hud-chip" title="Điểm số"><i class="fa-solid fa-trophy" aria-hidden="true"></i> <span id="bqScore">0</span></div>
+        <div class="bq-hud-chip" title="Combo hiện tại"><i class="fa-solid fa-fire" aria-hidden="true"></i> Combo <span id="bqCombo">0</span></div>
+        <div class="bq-hud-chip" title="XP đã tích luỹ ván này"><i class="fa-solid fa-star" aria-hidden="true"></i> <span id="bqXp">0</span> XP</div>
+        <button type="button" class="bq-restart-btn" id="bqLeaderboardBtn" title="Xem kỷ lục của bạn"><i class="fa-solid fa-medal" aria-hidden="true"></i> Kỷ lục</button>
+        <button type="button" class="bq-restart-btn" id="bqRestartBtn" title="Chơi lại từ đầu"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Chơi lại</button>
       </div>
     </div>
 
     <!-- ============ ARENA: 2 thanh HP + avatar ============ -->
     <div class="bq-arena">
       <div class="bq-fighter bq-fighter-player">
-        <div class="bq-fighter-avatar">🧑</div>
+        <div class="bq-fighter-avatar"><i class="fa-solid fa-user-shield" aria-hidden="true"></i></div>
         <div class="bq-fighter-info">
           <div class="bq-fighter-name">Bạn</div>
           <div class="bq-hpbar"><div class="bq-hpbar-fill" id="bqPlayerHpFill"></div></div>
@@ -56,7 +56,7 @@
           <div class="bq-hpbar"><div class="bq-hpbar-fill bq-hpbar-fill-enemy" id="bqEnemyHpFill"></div></div>
           <div class="bq-hp-text"><span id="bqEnemyHpText">100</span>/<span id="bqEnemyHpMax">100</span></div>
         </div>
-        <div class="bq-fighter-avatar"><img src="img/pz-defense/zom_botnet.png" alt="AI Thử Thách" class="bq-enemy-img" id="bqEnemyImg"></div>
+        <div class="bq-fighter-avatar"><img src="img/malware/botnet.svg" alt="AI Thử Thách" class="bq-enemy-img" id="bqEnemyImg"></div>
       </div>
       <div class="bq-floater-layer" id="bqFloaterLayer"></div>
     </div>
@@ -71,7 +71,7 @@
     <!-- ============ MÀN CHỌN CHỦ ĐỀ (trước khi bắt đầu) ============ -->
     <div class="bq-overlay" id="bqTopicOverlay">
       <div class="bq-overlay-card">
-        <div class="bq-overlay-icon">⚔</div>
+        <div class="bq-overlay-icon"><i class="fa-solid fa-khanda" aria-hidden="true"></i></div>
         <div class="bq-overlay-title">Chọn chủ đề để đấu</div>
         <div class="bq-overlay-desc">Chọn 1 chủ đề IC3 để tập trung ôn luyện, hoặc chơi tổng hợp ngẫu nhiên.</div>
         <div class="bq-enemy-preview" id="bqEnemyPreview"><!-- điền động bằng JS: đối thủ tiếp theo trong dãy đấu --></div>
@@ -82,12 +82,12 @@
     <!-- ============ MÀN KẾT QUẢ ============ -->
     <div class="bq-overlay" id="bqResultOverlay" hidden>
       <div class="bq-overlay-card">
-        <div class="bq-overlay-icon" id="bqResultIcon">🏆</div>
+        <div class="bq-overlay-icon" id="bqResultIcon"><i class="fa-solid fa-trophy" aria-hidden="true"></i></div>
         <div class="bq-overlay-title" id="bqResultTitle">Chiến Thắng!</div>
         <div class="bq-overlay-desc" id="bqResultStats"></div>
         <div class="bq-overlay-actions">
-          <button type="button" class="bq-btn bq-btn-primary" id="bqPlayAgainBtn">🔄 Chơi lại</button>
-          <button type="button" class="bq-btn" id="bqViewLeaderboardBtn">🏆 Kỷ lục của bạn</button>
+          <button type="button" class="bq-btn bq-btn-primary" id="bqPlayAgainBtn"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Chơi lại</button>
+          <button type="button" class="bq-btn" id="bqViewLeaderboardBtn"><i class="fa-solid fa-medal" aria-hidden="true"></i> Kỷ lục của bạn</button>
         </div>
       </div>
     </div>
@@ -95,7 +95,7 @@
     <!-- ============ BẢNG XẾP HẠNG ============ -->
     <div class="bq-overlay" id="bqLeaderboardOverlay" hidden>
       <div class="bq-overlay-card">
-        <div class="bq-overlay-icon">🏆</div>
+        <div class="bq-overlay-icon"><i class="fa-solid fa-medal" aria-hidden="true"></i></div>
         <div class="bq-overlay-title">Kỷ lục của bạn (trên máy này)</div>
         <div class="bq-overlay-desc">10 ván điểm cao nhất bạn từng chơi trên máy này — chơi tiếp để phá kỷ lục của chính mình!</div>
         <div class="bq-leaderboard-list" id="bqLeaderboardList"><!-- điền động bằng JS --></div>

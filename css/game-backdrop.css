@@ -8,3 +8,38 @@
 /* Bỏ nền trơn của trang để thấy tranh (theme-toggle-quick.css ép nền bằng !important) */
 html body.has-game-backdrop, [data-theme="dark"] body.has-game-backdrop { background: #141a33 !important; }
 @media (prefers-reduced-motion: reduce) { .game-backdrop * { animation: none !important; } }
+
+/* ── Khung mini-game PHẲNG (15/11/2026) — 5 trò Battle Quiz, Cyber Detective, Chim Vượt Ải, Trí Nhớ, Phòng Thủ Dữ Liệu.
+   File này nạp SAU css riêng của từng trò nên ghi đè được. Bỏ dấu vết "giao diện mẫu AI": chữ tiêu đề chuyển 3 màu,
+   nút chuyển màu, thanh máu/giờ chuyển màu → 1 màu. Tranh nền, nhân vật, hình vẽ trên canvas giữ nguyên. ── */
+.bq-title, .cd-title, .mf-title, .mg-title, .pz-title, .pz-loadout-title {
+  background: none !important; -webkit-background-clip: border-box !important; background-clip: border-box !important;
+  -webkit-text-fill-color: currentColor !important; color: #eef0ff !important; }
+.bq-title > i, .cd-title > i, .mf-title > i, .mg-title > i, .pz-title > i, .pz-loadout-title > i { color: #8fa4ff; font-size: .9em; margin-right: .2rem; }
+.bq-btn-primary, .cd-btn-primary, .mf-btn-primary, .mg-btn-primary, .pz-btn-primary { background: #8fa4ff !important; color: #11142b !important; border: 0; }
+.bq-btn-primary:hover, .cd-btn-primary:hover, .mf-btn-primary:hover, .mg-btn-primary:hover, .pz-btn-primary:hover { background: #a6b6ff !important; }
+.pz-btn-primary:disabled { background: #3a3f63 !important; color: #9aa0c3 !important; }
+.mg-card-back { background: #20244a; }
+.bq-hpbar-fill { background: #3fc77a; }
+.bq-hpbar-fill-enemy { background: #f0663e; }
+.bq-timerbar-fill { background: #66e0d0; }
+.bq-timerbar-fill.bq-timer-low { background: #f0663e; }
+.pz-hp-fill { background: #35d18a; }
+.pz-hp-fill.pz-hp-mid { background: #ffb35c; }
+.pz-hp-fill.pz-hp-low { background: #ef5350; }
+.pz-upgrade-hpfill { background: #3fc77a; }
+.pz-upgrade-btn.is-maxed { background: #ffb35c; }
+/* Biểu tượng lớn trên hộp thoại (trước: emoji 3D) → icon 1 màu trong ô vuông bo tròn */
+.bq-overlay-icon > i, .cd-overlay-icon > i, .mf-overlay-icon > i, .mg-overlay-icon > i, .pz-overlay-icon > i {
+  display: inline-grid; place-items: center; width: 64px; height: 64px; border-radius: 16px; font-size: 1.7rem;
+  background: rgba(143, 164, 255, .14); color: #a9b8ff; }
+.bq-topic-btn > i, .cd-case-btn > i, .bq-restart-btn > i, .cd-restart-btn > i, .bq-hud-chip > i { color: #a9b8ff; margin-right: .15rem; }
+.cd-case-btn > i.fa-folder { color: #ffcf80; }
+.bq-enemy-preview-rank > i, .bq-enemy-preview-hp > i { margin: 0 .1rem; }
+.bq-enemy-preview-hp > i.fa-heart { color: #ff6b81; }
+.bq-leaderboard-name > i.fa-trophy { color: #ffcf80; }
+/* Màn chọn: độ khó (Chim Vượt Ải), chủ đề (Trí Nhớ) — icon 1 màu thay chấm màu / emoji */
+.mf-diff-icon > i { font-size: 1.3rem; }
+.mf-diff-easy { color: #4fd67a; } .mf-diff-medium { color: #ffcf80; } .mf-diff-hard { color: #ff7a6b; }
+.mg-cat-icon > i { font-size: 1.3rem; color: #a9b8ff; }
+.bq-fighter-avatar > i { font-size: 1.8rem; color: #a9b8ff; }

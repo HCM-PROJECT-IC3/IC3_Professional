@@ -50,4 +50,95 @@ export default async function ({ base, page, check, shot }) {
   check('khu vui chơi 375px: không tràn ngang', !(await overflow(p)));
   check('không lỗi JavaScript', p.errors.length === 0, p.errors);
   await p.closeAll();
+
+  // ── Linh vật theo mùa (arena-core § SEASONS): đồng hồ trình duyệt cố định để không phụ thuộc ngày chạy CI ──
+  const arena = async (iso, store) => {
+    const q = await page();
+    await q.evaluateOnNewDocument((t) => {
+      const R = Date;
+      class F extends R { constructor(...a) { super(...(a.length ? a : [t])); } static now() { return t; } }
+      globalThis.Date = F;
+    }, Date.parse(iso));
+    await q.goto(base + 'arena.html?vai=solo', { waitUntil: 'networkidle0' });
+    await q.evaluate((s) => localStorage.setItem('eduquiz_arena_v1', JSON.stringify(s)), store);
+    await q.reload({ waitUntil: 'networkidle0' });
+    await q.evaluate(() => { document.getElementById('arNick').value = 'Bin'; document.getElementById('arOpenPacks').click(); });
+    await q.waitForSelector('#arPacks:not([hidden]) .ar-pack', { timeout: 10000 });
+    return q;
+  };
+  const prof = (extra) => ({ last: 'Bin', players: { bin: Object.assign({ coins: 100, owned: {}, avatar: '', best: {}, games: 1 }, extra) }, prefs: {} });
+  let q = await arena('2026-11-20T10:00:00', prof());
+  const packs = await q.evaluate(() => [...document.querySelectorAll('#arPackList [data-pack]')].map((b) => b.dataset.pack));
+  check('20/11: cửa hàng có Hộp Tri ân đứng đầu + 4 hộp thường', packs.length === 5 && packs[0] === 'season-teacher', packs);
+  t = await q.evaluate(() => document.getElementById('arPacks').innerText);
+  check('20/11: báo sự kiện + còn 11 ngày', /Sự kiện: Hộp Tri ân 20\/11/.test(t) && /Còn 11 ngày/.test(t));
+  await q.evaluate(() => document.querySelector('#arPackList [data-pack="season-teacher"]').click());
+  await new Promise((r) => setTimeout(r, 300));
+  const got = await q.evaluate(() => JSON.parse(localStorage.getItem('eduquiz_arena_v1')).players.bin);
+  const mine = Object.keys(got.owned);
+  check('mở Hộp Tri ân: trừ xu, nhận linh vật của hộp mùa, làm ảnh đại diện', got.coins < 100 && mine.length === 1 && /^season-teacher:/.test(mine[0]) && got.avatar === mine[0], got);
+  await shot(q, 'season-shop.png');
+  await q.setViewport({ width: 375, height: 812 });
+  await shot(q, 'season-shop-375.png');
+  check('cửa hàng mùa 375px: không tràn ngang', !(await overflow(q)));
+  check('cửa hàng mùa: không lỗi JavaScript', q.errors.length === 0, q.errors);
+  await q.closeAll();
+
+  q = await arena('2026-12-05T10:00:00', prof({ owned: got.owned, avatar: got.avatar }));
+  const after = await q.evaluate(() => ({
+    packs: [...document.querySelectorAll('#arPackList [data-pack]')].map((b) => b.dataset.pack),
+    coll: document.getElementById('arCollection').innerText,
+    avatar: document.getElementById('arAvatarBtn')?.textContent || '',
+  }));
+  check('hết mùa (5/12): không bán Hộp Tri ân, còn 4 hộp thường', after.packs.length === 4 && !after.packs.some((x) => /^season-/.test(x)), after.packs);
+  check('hết mùa: bộ sưu tập vẫn giữ Hộp Tri ân đã mở', /Hộp Tri ân 20\/11/.test(after.coll));
+  check('hết mùa: không lỗi JavaScript', q.errors.length === 0, q.errors);
+  await q.closeAll();
+
+  // ── Thẻ Luật chơi + màn mở trận 3‑2‑1 (js/arena/arena-rules.js, arena.js § matchIntro) ──
+  const r = await page();
+  await r.goto(base + 'arena.html', { waitUntil: 'networkidle0' });
+  await r.evaluate(() => localStorage.setItem('eduquiz_arena_v1', JSON.stringify({ last: 'Bin', players: {}, prefs: { mode: 'speed', count: 10 } })));
+  await r.goto(base + 'arena.html?vai=solo', { waitUntil: 'networkidle0' });
+  const rules = () => r.evaluate(() => {
+    const d = document.getElementById('arModeDesc');
+    return { steps: d.querySelectorAll('.ar-rules-steps li').length, tags: d.querySelectorAll('.ar-rules-tag').length, text: d.innerText };
+  });
+  let rc = await rules();
+  check('Luật chơi Tốc độ: 3 bước, nhãn, cao trào', rc.steps === 3 && rc.tags >= 2 && /Cao trào/.test(rc.text) && /Tốc độ/.test(rc.text), rc);
+  await r.evaluate(() => document.querySelector('.ar-mode[data-mode="race"]').click());
+  rc = await rules();
+  check('đổi sang Đua về đích → luật đổi theo (tiến 2 bước)', /Đua về đích/.test(rc.text) && /2 bước/.test(rc.text), rc.text);
+  check('Luật chơi không nhắc tên sản phẩm khác', !/kahoot|blooket|wayarena|wayground/i.test(await r.evaluate(() => document.getElementById('arHome').innerText)));
+  await shot(r, 'rules-card.png');
+  await r.setViewport({ width: 375, height: 812 });
+  check('Luật chơi 375px: không tràn ngang', !(await overflow(r)));
+  await r.setViewport({ width: 1280, height: 800 });
+
+  await r.waitForFunction(() => !document.getElementById('arPlay').disabled, { timeout: 20000 });
+  await r.evaluate(() => document.getElementById('arPlay').click());
+  await r.waitForSelector('#arGame .ar-intro', { timeout: 10000 });
+  const intro = await r.evaluate(() => ({ text: document.querySelector('.ar-intro').innerText, phase: document.querySelector('.ar-ans:not([disabled])') ? 'q' : 'wait' }));
+  check('vào trận → màn mở trận: tên, điều kiện thắng, cao trào, đếm 3', /Đua về đích/.test(intro.text) && /Thắng:/.test(intro.text) && /Cao trào:/.test(intro.text) && /\b3\b/.test(intro.text), intro.text);
+  await shot(r, 'match-intro.png');
+  await r.keyboard.press('1');
+  await new Promise((res) => setTimeout(res, 150));
+  check('đang đếm ngược: phím 1 không trả lời, màn vẫn còn', await r.evaluate(() => !!document.querySelector('#arGame .ar-intro')));
+  await r.keyboard.press('Enter');
+  await r.waitForFunction(() => !document.querySelector('#arGame .ar-intro') && document.getElementById('arQ').textContent.trim().length > 0, { timeout: 5000 });
+  check('Enter → vào câu 1 ngay', /Câu 1/.test(await r.evaluate(() => document.getElementById('arQNum').textContent)));
+  check('Luật chơi + mở trận: không lỗi JavaScript', r.errors.length === 0, r.errors);
+  await r.closeAll();
+
+  // Tự vào câu 1 sau ~3 nhịp, không cần bấm
+  const a2 = await page();
+  await a2.goto(base + 'arena.html', { waitUntil: 'networkidle0' });
+  await a2.evaluate(() => localStorage.setItem('eduquiz_arena_v1', JSON.stringify({ last: 'Bin', players: {}, prefs: { mode: 'speed', count: 10 } })));
+  await a2.goto(base + 'arena.html?vai=solo', { waitUntil: 'networkidle0' });
+  await a2.waitForFunction(() => !document.getElementById('arPlay').disabled, { timeout: 20000 });
+  await a2.evaluate(() => document.getElementById('arPlay').click());
+  await a2.waitForSelector('#arGame .ar-intro', { timeout: 10000 });
+  await a2.waitForFunction(() => !document.querySelector('#arGame .ar-intro'), { timeout: 6000 }).catch(() => {});
+  check('không bấm gì → tự vào câu 1 sau đếm ngược', await a2.evaluate(() => !document.querySelector('#arGame .ar-intro') && /Câu 1/.test(document.getElementById('arQNum').textContent)));
+  await a2.closeAll();
 }

@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🐥 Chim Vượt Ải — Mini Game</title>
+  <title>Chim Vượt Ải — Mini Game</title>
   <link rel="stylesheet" href="lib/fonts/fonts.css">
   <link rel="stylesheet" href="css/mario-flappy.css">
   <link rel="stylesheet" href="css/accessibility.css">
@@ -23,7 +23,7 @@
 
   <div class="mf-wrap">
     <div class="mf-header">
-      <div class="mf-title">🐥 Chim Vượt Ải</div>
+      <div class="mf-title"><i class="fa-solid fa-dove" aria-hidden="true"></i> Chim Vượt Ải</div>
       <div class="mf-subtitle" id="mfSubtitle">Chọn độ khó để bắt đầu hành trình 5 màn</div>
     </div>
 
@@ -84,7 +84,7 @@
             <div class="mf-overlay-stats" id="mfLevelCompleteStats"></div>
             <div class="mf-footer">
               <button type="button" class="mf-btn mf-btn-primary" id="mfNextLevelBtn">Màn tiếp theo ➜</button>
-              <button type="button" class="mf-btn" id="mfLevelPickerBtn">🔀 Đổi độ khó</button>
+              <button type="button" class="mf-btn" id="mfLevelPickerBtn"><i class="fa-solid fa-sliders" aria-hidden="true"></i> Đổi độ khó</button>
             </div>
           </div>
         </div>
@@ -92,13 +92,13 @@
         <!-- Hoàn thành cả 5 màn -->
         <div class="mf-overlay" id="mfGameClearOverlay">
           <div class="mf-overlay-card">
-            <div class="mf-overlay-icon">👑</div>
+            <div class="mf-overlay-icon"><i class="fa-solid fa-crown" aria-hidden="true"></i></div>
             <div class="mf-overlay-title">Chinh phục cả 5 màn!</div>
             <div class="mf-overlay-sub" id="mfGameClearSub"></div>
             <div class="mf-overlay-stats" id="mfGameClearStats"></div>
             <div class="mf-footer">
-              <button type="button" class="mf-btn mf-btn-primary" id="mfClearRestartBtn">🔄 Chơi lại từ Màn 1</button>
-              <button type="button" class="mf-btn" id="mfClearPickerBtn">🔀 Đổi độ khó</button>
+              <button type="button" class="mf-btn mf-btn-primary" id="mfClearRestartBtn"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Chơi lại từ Màn 1</button>
+              <button type="button" class="mf-btn" id="mfClearPickerBtn"><i class="fa-solid fa-sliders" aria-hidden="true"></i> Đổi độ khó</button>
             </div>
           </div>
         </div>
@@ -106,13 +106,13 @@
         <!-- Game Over -->
         <div class="mf-overlay" id="mfGameOverOverlay">
           <div class="mf-overlay-card">
-            <div class="mf-overlay-icon">💥</div>
+            <div class="mf-overlay-icon"><i class="fa-solid fa-burst" aria-hidden="true"></i></div>
             <div class="mf-overlay-title">Hết mạng rồi!</div>
             <div class="mf-overlay-sub" id="mfGameOverSub"></div>
             <div class="mf-overlay-stats" id="mfGameOverStats"></div>
             <div class="mf-footer">
-              <button type="button" class="mf-btn mf-btn-primary" id="mfRetryBtn">🔄 Thử lại Màn này</button>
-              <button type="button" class="mf-btn" id="mfGameOverPickerBtn">🔀 Đổi độ khó</button>
+              <button type="button" class="mf-btn mf-btn-primary" id="mfRetryBtn"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Thử lại Màn này</button>
+              <button type="button" class="mf-btn" id="mfGameOverPickerBtn"><i class="fa-solid fa-sliders" aria-hidden="true"></i> Đổi độ khó</button>
             </div>
           </div>
         </div>
@@ -121,8 +121,8 @@
       <div class="mf-hint">Bấm / chạm vào khung chơi hoặc nhấn phím <strong>Space</strong> để vỗ cánh bay lên</div>
 
       <div class="mf-footer">
-        <button type="button" class="mf-btn" id="mfRestartBtn">🔄 Chơi lại màn này</button>
-        <button type="button" class="mf-btn" id="mfPickerBtn">🔀 Đổi độ khó</button>
+        <button type="button" class="mf-btn" id="mfRestartBtn"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Chơi lại màn này</button>
+        <button type="button" class="mf-btn" id="mfPickerBtn"><i class="fa-solid fa-sliders" aria-hidden="true"></i> Đổi độ khó</button>
         <!-- Chỉ hiện khi được mở từ bài Quiz (gamebreak hoặc sau khi nộp
              bài) — đóng mini-game và quay lại đúng chỗ trong Quiz. Xem
              js/mario-flappy.js § bindBackToQuiz(). -->

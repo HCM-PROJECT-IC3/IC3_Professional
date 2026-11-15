@@ -899,30 +899,79 @@
     legendary: { label: 'Huyền thoại', w: 27, refund: 40 },
     mystery: { label: 'Bí ẩn', w: 3, refund: 100 },
   };
+  // fa: TÊN ĐẦY ĐỦ class Font Awesome ('fa-paw', không ghép 'fa-' + tên: scripts/build-fa-subset.py chỉ dò chuỗi fa-<tên>) — icon vẽ ở giao diện (phẳng, 1 màu — 15/11/2026); icon emoji giữ cho chỗ cũ/ghi chép.
   const PACKS = [
-    { id: 'hardware', name: 'Hộp Phần cứng', icon: '💻', blooks: [
+    { id: 'hardware', name: 'Hộp Phần cứng', icon: '💻', fa: 'fa-laptop', blooks: [
       ['mouse', 'Chuột Click', '🖱️', 'common'], ['keyboard', 'Bàn Phím', '⌨️', 'common'], ['printer', 'Máy In', '🖨️', 'common'],
       ['disk', 'Đĩa Mềm', '💾', 'common'], ['battery', 'Pin Năng Lượng', '🔋', 'rare'], ['monitor', 'Màn Hình', '🖥️', 'rare'],
       ['chip', 'Chip Thông Minh', '🧠', 'epic'], ['robot', 'Rô-bốt IC3', '🤖', 'legendary'], ['alien', 'Bọ Lỗi Ngoài Hành Tinh', '👾', 'mystery'],
     ] },
-    { id: 'internet', name: 'Hộp Internet', icon: '🌐', blooks: [
+    { id: 'internet', name: 'Hộp Internet', icon: '🌐', fa: 'fa-globe', blooks: [
       ['mail', 'Thư Điện Tử', '📧', 'common'], ['link', 'Liên Kết', '🔗', 'common'], ['cloud', 'Đám Mây', '☁️', 'common'],
       ['phone', 'Điện Thoại', '📱', 'common'], ['satellite', 'Vệ Tinh', '🛰️', 'rare'], ['compass', 'La Bàn Web', '🧭', 'rare'],
       ['rocket', 'Tên Lửa 5G', '🚀', 'epic'], ['owl', 'Cú Tra Cứu', '🦉', 'legendary'], ['ufo', 'Đĩa Bay Wi-Fi', '🛸', 'mystery'],
     ] },
-    { id: 'security', name: 'Hộp An toàn', icon: '🛡️', blooks: [
+    { id: 'security', name: 'Hộp An toàn', icon: '🛡️', fa: 'fa-shield-halved', blooks: [
       ['lock', 'Ổ Khoá', '🔒', 'common'], ['key', 'Chìa Khoá', '🔑', 'common'], ['shield', 'Khiên Chắn', '🛡️', 'common'],
       ['bug', 'Sâu Máy Tính', '🐛', 'common'], ['detective', 'Thám Tử Mạng', '🕵️', 'rare'], ['virus', 'Vi-rút Bị Bắt', '🦠', 'rare'],
       ['fire', 'Tường Lửa', '🧯', 'epic'], ['dragon', 'Rồng Bảo Mật', '🐉', 'legendary'], ['ghost', 'Bóng Ma Hacker', '👻', 'mystery'],
     ] },
-    { id: 'pets', name: 'Hộp Thú cưng', icon: '🐾', blooks: [
+    { id: 'pets', name: 'Hộp Thú cưng', icon: '🐾', fa: 'fa-paw', blooks: [
       ['cat', 'Mèo', '🐱', 'common'], ['dog', 'Cún', '🐶', 'common'], ['frog', 'Ếch', '🐸', 'common'], ['penguin', 'Chim Cánh Cụt', '🐧', 'common'],
       ['fox', 'Cáo', '🦊', 'rare'], ['panda', 'Gấu Trúc', '🐼', 'rare'], ['tiger', 'Hổ', '🐯', 'epic'],
       ['unicorn', 'Kỳ Lân', '🦄', 'legendary'], ['dragonpet', 'Rồng Con', '🐲', 'mystery'],
     ] },
   ].map((p) => Object.assign(p, { blooks: p.blooks.map(([id, name, emoji, rarity]) => ({ id: p.id + ':' + id, name, emoji, rarity, pack: p.id })) }));
+  // ── Hộp THEO MÙA (15/11/2026): chỉ mở được trong khung ngày [from, to] (MM-DD, giờ máy, tính cả 2 đầu; to < from = vắt
+  // qua năm mới). Linh vật đã có GIỮ MÃI (blookById vẫn tra được → làm ảnh đại diện cả năm). Khung KHÔNG chồng nhau
+  // (test kiểm từng ngày). Tết theo âm lịch xê dịch 21/1–20/2 → khung 15/1–28/2 phủ mọi năm. Chỉ localStorage, 0 Firebase.
+  const SEASONS = [
+    { season: 'teacher', name: 'Hộp Tri ân 20/11', icon: '💐', fa: 'fa-chalkboard-user', note: 'Mừng Ngày Nhà giáo Việt Nam', from: '11-10', to: '11-30', blooks: [
+      ['pen', 'Bút Mực Tím', '🖊️', 'common'], ['book', 'Sách Giáo Khoa', '📘', 'common'], ['ruler', 'Thước Kẻ', '📏', 'common'],
+      ['bell', 'Trống Trường', '🔔', 'common'], ['card', 'Thiệp Cảm Ơn', '💌', 'rare'], ['flower', 'Bó Hoa Tri Ân', '💐', 'rare'],
+      ['globe', 'Quả Địa Cầu', '🌏', 'epic'], ['owlteach', 'Cú Thầy Giáo', '🦉', 'legendary'], ['star', 'Ngôi Sao Bục Giảng', '🌟', 'mystery'],
+    ] },
+    { season: 'noel', name: 'Hộp Giáng sinh', icon: '🎄', fa: 'fa-snowflake', note: 'Giáng sinh & năm mới', from: '12-15', to: '01-05', blooks: [
+      ['sock', 'Tất Quà', '🧦', 'common'], ['bellx', 'Chuông Bạc', '🛎️', 'common'], ['candy', 'Kẹo Gậy', '🍬', 'common'],
+      ['snowman', 'Người Tuyết', '⛄', 'common'], ['gift', 'Hộp Quà', '🎁', 'rare'], ['tree', 'Cây Thông', '🎄', 'rare'],
+      ['deer', 'Tuần Lộc', '🦌', 'epic'], ['santa', 'Ông Già Tuyết', '🎅', 'legendary'], ['comet', 'Sao Băng Đêm Đông', '🌠', 'mystery'],
+    ] },
+    { season: 'tet', name: 'Hộp Tết', icon: '🧧', fa: 'fa-envelope', note: 'Xuân về — chúc mừng năm mới', from: '01-15', to: '02-28', blooks: [
+      ['envelope', 'Bao Lì Xì', '🧧', 'common'], ['lantern', 'Đèn Lồng', '🏮', 'common'], ['peach', 'Cành Đào', '🌸', 'common'],
+      ['tangerine', 'Cây Quất', '🍊', 'common'], ['firework', 'Pháo Hoa', '🎆', 'rare'], ['kite', 'Diều Giấy', '🪁', 'rare'],
+      ['cat', 'Mèo Vàng', '🐈', 'epic'], ['lion', 'Lân Múa', '🦁', 'legendary'], ['firecracker', 'Pháo Giao Thừa', '🧨', 'mystery'],
+    ] },
+    { season: 'summer', name: 'Hộp Mùa hè', icon: '🏖️', fa: 'fa-sun', note: 'Hè vui — vẫn ôn đều tay', from: '06-01', to: '08-15', blooks: [
+      ['shell', 'Vỏ Sò', '🐚', 'common'], ['icecream', 'Kem Que', '🍦', 'common'], ['crab', 'Cua Biển', '🦀', 'common'],
+      ['sun', 'Ông Mặt Trời', '☀️', 'common'], ['surf', 'Ván Lướt Sóng', '🏄', 'rare'], ['turtle', 'Rùa Biển', '🐢', 'rare'],
+      ['dolphin', 'Cá Heo', '🐬', 'epic'], ['island', 'Đảo Thần Tiên', '🏝️', 'legendary'], ['mermaid', 'Tiên Cá', '🧜', 'mystery'],
+    ] },
+  ].map((p) => {
+    const id = 'season-' + p.season;
+    return Object.assign(p, { id, blooks: p.blooks.map(([bid, name, emoji, rarity]) => ({ id: id + ':' + bid, name, emoji, rarity, pack: id })) });
+  });
+  const ALL_PACKS = PACKS.concat(SEASONS);
+  const mdOf = (d) => String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  /** md 'MM-DD' nằm trong [from, to] (tính cả 2 đầu); to < from → vắt qua năm mới. */
+  function inWindow(md, from, to) { return from <= to ? md >= from && md <= to : md >= from || md <= to; }
+  /** Hộp mùa đang mở vào ngày `now` (Date, giờ máy) — null nếu không có mùa nào. */
+  function seasonOn(now) {
+    const md = mdOf(now || new Date());
+    return SEASONS.find((s) => inWindow(md, s.from, s.to)) || null;
+  }
+  /** Hộp bày bán hôm nay: hộp mùa (nếu có) đứng đầu + 4 hộp thường. */
+  function packsOn(now) { const s = seasonOn(now); return s ? [s].concat(PACKS) : PACKS.slice(); }
+  /** Số ngày còn mở hộp mùa, tính cả hôm nay (ngày cuối khung = 1). */
+  function seasonDaysLeft(s, now) {
+    const d = now || new Date();
+    const [m, day] = s.to.split('-').map(Number);
+    let end = new Date(d.getFullYear(), m - 1, day);
+    const start = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    if (end < start) end = new Date(d.getFullYear() + 1, m - 1, day); // khung vắt năm: 20/12 → 5/1 năm sau
+    return Math.round((end - start) / 864e5) + 1;
+  }
   function blookById(id) {
-    for (const p of PACKS) { const b = p.blooks.find((x) => x.id === id); if (b) return b; }
+    for (const p of ALL_PACKS) { const b = p.blooks.find((x) => x.id === id); if (b) return b; }
     return null;
   }
   // Thử thách quanh việc mở hộp (kiểu gacha "bảo hiểm" + sưu tập):
@@ -938,7 +987,7 @@
   const starsOf = (count) => STAR_AT.filter((n) => (count || 0) >= n).length;
   /** Mở 1 hộp: chọn độ hiếm theo trọng số rồi chọn đều trong độ hiếm đó. `high` → chỉ Sử thi trở lên (bảo hiểm). */
   function openPack(packId, rng, high) {
-    const pack = PACKS.find((p) => p.id === packId);
+    const pack = ALL_PACKS.find((p) => p.id === packId);
     if (!pack) return null;
     const avail = Object.keys(RARITY).filter((r) => (!high || HIGH.includes(r)) && pack.blooks.some((b) => b.rarity === r)).map((r) => ({ r, w: RARITY[r].w }));
     const r = pickWeighted(avail, rng).r;
@@ -957,6 +1006,8 @@
    */
   function buyPack(profile, packId, rng, opts) {
     const ticket = !!(opts && opts.ticket);
+    const sp = SEASONS.find((x) => x.id === packId);
+    if (sp && seasonOn(opts && opts.now) !== sp) return { ok: false, reason: 'season' }; // hết mùa: kể cả vé miễn phí
     if (ticket ? !(profile.tickets > 0) : profile.coins < PACK_PRICE) return { ok: false, reason: ticket ? 'ticket' : 'coins' };
     const pity = (profile.pity || 0) >= PITY_MAX - 1;
     const blook = openPack(packId, rng, pity);
@@ -972,7 +1023,7 @@
     if (!profile.avatar) profile.avatar = blook.id;
     const stars = starsOf(before + 1);
     let set = null;
-    const pack = PACKS.find((p) => p.id === packId);
+    const pack = ALL_PACKS.find((p) => p.id === packId);
     profile.sets = profile.sets || {};
     if (!dupe && !profile.sets[packId] && pack.blooks.every((b) => profile.owned[b.id])) {
       profile.sets[packId] = Date.now();
@@ -1019,6 +1070,6 @@
     KICK_SURE, kickChance, penaltyKick, kickOrder,
     BOSS_PER, BOSS_HEAL, BOSS_PHASES, bossMaxHp, bossPhase, bossCombo, bossHit, bossRound, bossOrder,
     BOARD_VALUES, makeBoard, boardScore,
-    coinsFor, PACK_PRICE, RARITY, PACKS, blookById, openPack, newProfile, buyPack, PITY_MAX, SET_BONUS, STAR_AT, DAILY_GOAL, starsOf, addDaily, dailyOf, ghostScoreAt,
+    coinsFor, PACK_PRICE, RARITY, PACKS, SEASONS, ALL_PACKS, inWindow, seasonOn, packsOn, seasonDaysLeft, blookById, openPack, newProfile, buyPack, PITY_MAX, SET_BONUS, STAR_AT, DAILY_GOAL, starsOf, addDaily, dailyOf, ghostScoreAt,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

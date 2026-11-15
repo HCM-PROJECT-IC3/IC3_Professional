@@ -12,9 +12,9 @@
   var BEST_KEY = 'ic3_mario_flappy_best';
 
   var DIFFICULTIES = [
-    { id: 'easy', name: 'Dễ', icon: '🟢', gravity: 0.30, flap: -6.0, pipeGap: 176, speed: 2.3, spacing: 265, desc: 'Khoảng hở rộng, bay chậm — hợp cho người mới làm quen.' },
-    { id: 'medium', name: 'Vừa', icon: '🟡', gravity: 0.38, flap: -6.6, pipeGap: 152, speed: 2.9, spacing: 235, desc: 'Tốc độ & khoảng hở cân bằng — thử thách vừa phải.' },
-    { id: 'hard', name: 'Khó', icon: '🔴', gravity: 0.46, flap: -7.2, pipeGap: 130, speed: 3.5, spacing: 210, desc: 'Bay nhanh, khe hẹp — dành cho cao thủ IC3.' }
+    { id: 'easy', name: 'Dễ', icon: '<i class="fa-solid fa-feather mf-diff-easy" aria-hidden="true"></i>', gravity: 0.30, flap: -6.0, pipeGap: 176, speed: 2.3, spacing: 265, desc: 'Khoảng hở rộng, bay chậm — hợp cho người mới làm quen.' },
+    { id: 'medium', name: 'Vừa', icon: '<i class="fa-solid fa-gauge mf-diff-medium" aria-hidden="true"></i>', gravity: 0.38, flap: -6.6, pipeGap: 152, speed: 2.9, spacing: 235, desc: 'Tốc độ & khoảng hở cân bằng — thử thách vừa phải.' },
+    { id: 'hard', name: 'Khó', icon: '<i class="fa-solid fa-fire mf-diff-hard" aria-hidden="true"></i>', gravity: 0.46, flap: -7.2, pipeGap: 130, speed: 3.5, spacing: 210, desc: 'Bay nhanh, khe hẹp — dành cho cao thủ IC3.' }
   ];
 
   var LEVELS = [

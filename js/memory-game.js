@@ -10,7 +10,7 @@
   var CATEGORIES = [
     {
       id: 'hardware',
-      icon: '🖥️',
+      icon: 'fa-desktop',
       name: 'Thiết bị phần cứng',
       desc: 'Thiết bị nhập / xuất & linh kiện máy tính',
       items: [
@@ -28,7 +28,7 @@
     },
     {
       id: 'office',
-      icon: '📊',
+      icon: 'fa-table-cells',
       name: 'Phần mềm văn phòng',
       desc: 'Word, Excel, PowerPoint & các ứng dụng tạo nội dung',
       items: [
@@ -42,7 +42,7 @@
     },
     {
       id: 'os',
-      icon: '🪟',
+      icon: 'fa-window-maximize',
       name: 'Hệ điều hành',
       desc: 'Windows, macOS, Linux, iOS, Android',
       items: [
@@ -55,7 +55,7 @@
     },
     {
       id: 'web',
-      icon: '🌐',
+      icon: 'fa-globe',
       name: 'Trình duyệt & Liên lạc',
       desc: 'Trình duyệt web, Email, họp trực tuyến',
       items: [
@@ -70,7 +70,7 @@
     },
     {
       id: 'ai',
-      icon: '🤖',
+      icon: 'fa-robot',
       name: 'Trợ lý AI',
       desc: 'Các trợ lý trí tuệ nhân tạo phổ biến',
       items: [
@@ -163,7 +163,7 @@
       card.type = 'button';
       card.className = 'mg-cat-card';
       card.innerHTML =
-        '<div class="mg-cat-icon">' + cat.icon + '</div>' +
+        '<div class="mg-cat-icon"><i class="fa-solid ' + cat.icon + '" aria-hidden="true"></i></div>' + // icon = class Font Awesome
         '<div class="mg-cat-name">' + cat.name + '</div>' +
         '<div class="mg-cat-desc">' + cat.desc + '</div>' +
         '<div class="mg-cat-count">' + cat.items.length + ' cặp thẻ</div>' +
@@ -185,7 +185,7 @@
     state.catId = cat.id;
     pickerEl.style.display = 'none';
     playEl.style.display = 'block';
-    subtitleEl.textContent = cat.icon + ' ' + cat.name;
+    subtitleEl.textContent = cat.name;
     resetGame();
   }
 

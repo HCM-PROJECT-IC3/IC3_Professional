@@ -1465,6 +1465,8 @@ body[data-mode="moon"] .ar-scene { height: clamp(170px, min(30vw, 40vh), 360px);
 .ar-due { margin: .45rem 0 0; padding: .45rem .75rem; border-radius: 10px; background: #fff6e0; border: 1px solid #f1c25a; color: #6b4a00; font-size: .85rem; font-weight: 600; }
 .ar-due[hidden] { display: none; }
 .ar-due i { color: #c98a00; margin-right: .2rem; }
+/* Link "ôn ngay": trước để màu xanh mặc định trình duyệt trên nền vàng */
+.ar-due a { color: inherit; font-weight: 800; text-decoration: underline; text-underline-offset: 2px; }
 [data-theme="dark"] .ar-due { background: #3a2c10; border-color: #8a6a1e; color: #ffd98a; }
 
 /* ============================================================
@@ -1666,17 +1668,20 @@ body[data-mode="moon"] .ar-scene { height: clamp(170px, min(30vw, 40vh), 360px);
 .ar-q-levels { display: flex; flex-wrap: wrap; gap: .4rem; }
 .ar-q-lv { display: inline-flex; align-items: center; gap: .4rem; min-height: 40px; padding: .35rem .8rem; border-radius: 12px; cursor: pointer;
   border: 2px solid var(--border); background: var(--card); color: var(--text); font: 800 .9rem/1.2 Inter, sans-serif; }
-.ar-q-lv small { font-weight: 800; color: #b07800; }
-.ar-q-lv.is-on { border-color: #2d2416; background: #fff3c4; color: #2d2416; box-shadow: 0 3px 0 #2d2416; }
+.ar-q-lv small { font-weight: 700; color: var(--muted); }
+.ar-q-lv.is-on { border-color: var(--purple-ink); background: color-mix(in srgb, var(--purple) 10%, var(--card)); color: var(--purple-ink); }
+.ar-q-lv.is-on small { color: inherit; }
 .ar-q-lv:focus-visible, .ar-q-node:focus-visible { outline: 3px solid #f97316; outline-offset: 3px; }
-.ar-q-badge { display: flex; gap: .75rem; align-items: center; padding: .8rem .9rem; border-radius: 16px; background: #2d2416; color: #fff8e6; }
+/* Danh hiệu: thẻ phẳng cùng màu thẻ khác (15/11/2026 — trước: nền nâu, chữ vàng, vương miện trong vòng tròn vàng viền dày) */
+.ar-q-badge { display: flex; gap: .7rem; align-items: center; padding: .75rem .9rem; border-radius: 14px; background: var(--card2); border: 1px solid var(--border); color: var(--text); }
 .ar-q-badge > div { display: flex; flex-direction: column; gap: .2rem; min-width: 0; font-size: .88rem; }
-.ar-q-badge b { font: 800 1.25rem/1.15 'Baloo 2', Inter, sans-serif; color: #ffd23f; }
-.ar-q-badge small b { font: inherit; color: #ffd23f; }
-.ar-q-badge-ico { flex: none; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: #ffd23f; color: #2d2416; font-size: 1.5rem; border: 3px solid #fff8e6; }
+.ar-q-badge b { font: 800 1.1rem/1.2 Inter, sans-serif; color: var(--text); }
+.ar-q-badge small { color: var(--muted); }
+.ar-q-badge small b { font: inherit; color: var(--purple-ink); }
+.ar-q-badge-ico { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 10px; background: color-mix(in srgb, var(--purple) 12%, var(--card)); color: var(--purple-ink); font-size: 1.05rem; }
 .ar-q-mini-day { opacity: .9; }
-.ar-q-bar { display: block; height: 9px; border-radius: 99px; background: rgba(255, 255, 255, .18); overflow: hidden; }
-.ar-q-bar i { display: block; height: 100%; border-radius: inherit; background: #ffd23f; transition: width .6s ease; }
+.ar-q-bar { display: block; height: 6px; border-radius: 99px; background: var(--border); overflow: hidden; }
+.ar-q-bar i { display: block; height: 100%; border-radius: inherit; background: var(--purple); transition: width .6s ease; }
 
 /* Nhiệm vụ ngày */
 .ar-q-day { margin: 1rem 0 1.2rem; }
@@ -1777,8 +1782,6 @@ body[data-mode="moon"] .ar-scene { height: clamp(170px, min(30vw, 40vh), 360px);
 .ar-q-res-title b { color: #ffd23f; }
 
 
-[data-theme="dark"] .ar-q-lv.is-on { background: #ffd23f; }
-[data-theme="dark"] .ar-q-lv.is-on small { color: #5c3d00; } /* 11/2026: #b07800 trên nền vàng chỉ 2,6:1 */
 [data-theme="dark"] .ar-q-rules li.is-on { background: #3b3220; color: #ffe9a6; }
 
 @media (max-width: 820px) {
@@ -2101,3 +2104,92 @@ body[data-mode="moon"] .ar-scene { height: clamp(170px, min(30vw, 40vh), 360px);
   #arHome[data-role="teacher"] .ar-mode.is-on::after, #arHome[data-role="teacher"] .ar-mode.has-cover.is-on::after { right: .4rem; width: 16px; height: 16px; margin-top: -8px; }
   #arHome[data-role="teacher"] .ar-hostbar #arHostQuick { width: 100%; }
 }
+
+/* ── Hộp theo mùa (15/11/2026, arena-core § SEASONS) ──
+   Đang mùa có 5 hộp: hộp mùa trải hết hàng đầu (desktop 4 cột / điện thoại 2 cột) thay vì 4 + 1 lẻ loi. */
+.ar-pack-list > .ar-pack.is-season { grid-column: 1 / -1; flex-direction: row; justify-content: center; flex-wrap: wrap; gap: .3rem .9rem; border-color: var(--ar-gold);
+  background: color-mix(in srgb, var(--ar-gold) 10%, var(--card)); }
+.ar-pack.is-season .ar-qbar { width: 100%; max-width: 220px; }
+.ar-pack-tag { position: absolute; top: -.6rem; right: .8rem; padding: .1rem .55rem; border-radius: 999px; background: var(--ar-gold); color: #3b2a00; font-size: .72rem; font-weight: 800; }
+.ar-quest.is-season { grid-column: 1 / -1; border-color: var(--ar-gold); background: color-mix(in srgb, var(--ar-gold) 10%, var(--card)); }
+
+/* ── Icon phẳng thay emoji 3D (15/11/2026): thanh vai, ví, Linh vật, nhiệm vụ, hộp, cổng giáo viên ──
+   Emoji màu (Windows hiện kiểu 3D bóng) chỉ còn ở NỘI DUNG trò chơi: linh vật sưu tập, cá, vật phẩm trong trận. */
+.ar-wallet > i { color: #c98a00; }
+.ar-role-ico { color: var(--muted); filter: none; }
+.ar-role.is-on .ar-role-ico { color: var(--purple-ink); }
+.ar-btn-pack > i, .ar-join-avatar > i { margin-right: .15rem; }
+.ar-pack-ico { display: grid; place-items: center; width: 56px; height: 56px; margin-bottom: .2rem; border-radius: 14px; font-size: 1.6rem;
+  color: var(--purple-ink); background: color-mix(in srgb, var(--purple) 10%, var(--card)); }
+.ar-pack.is-season .ar-pack-ico { color: #8a5a00; background: color-mix(in srgb, var(--ar-gold) 22%, var(--card)); }
+.ar-quest-ico { width: 1.6rem; text-align: center; font-size: 1.2rem; color: var(--purple-ink); padding-top: .15rem; }
+.ar-quest.is-done .ar-quest-ico { color: var(--green); }
+.ar-quest.is-season .ar-quest-ico { color: #b07800; }
+.ar-h3 > i { color: var(--muted); font-size: .9em; }
+.ar-reveal-ico { font-size: 4.5rem; color: var(--purple-ink); }
+.ar-gate-feats li > i { color: var(--purple-ink); font-size: 1.15rem; margin-bottom: .2rem; }
+[data-theme="dark"] .ar-pack.is-season .ar-pack-ico, [data-theme="dark"] .ar-quest.is-season .ar-quest-ico { color: #ffd98a; }
+.ar-gate-ico i { color: var(--purple-ink); }
+.ar-price > i, .ar-reveal-set > i, .ar-reveal-note > i { margin-right: .15rem; }
+.ar-price > i.fa-coins { color: #c98a00; }
+
+/* ── Thẻ "Luật chơi" của chế độ đang chọn (15/11/2026, js/arena/arena-rules.js) ──
+   Nhãn tính chất + 3 bước + cao trào. Phẳng: nền thẻ, viền mảnh, icon 1 màu; không gradient, không phát sáng. */
+.ar-mode-desc.ar-rules, #arHome[data-role="teacher"] .ar-mode-desc.ar-rules {
+  margin-top: .9rem; padding: .9rem 1rem; border-radius: 14px; background: var(--card2); border: 1px solid var(--border); font-size: .88rem; color: var(--text); }
+.ar-rules-head { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem .7rem; margin-bottom: .7rem; }
+.ar-rules-head > b { font-size: 1.02rem; }
+.ar-rules-tags { display: flex; flex-wrap: wrap; gap: .35rem; }
+.ar-rules-tag { display: inline-flex; align-items: center; gap: .3rem; padding: .12rem .55rem; border-radius: 999px; border: 1px solid var(--border);
+  background: var(--card); color: var(--muted); font-size: .74rem; font-weight: 700; }
+.ar-rules-tag i { font-size: .72rem; }
+.ar-rules-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .55rem; margin: 0; padding: 0; list-style: none; counter-reset: none; }
+.ar-rules-steps li { display: grid; grid-template-columns: auto auto 1fr; align-items: start; gap: .45rem; padding: .6rem .65rem; border-radius: 12px;
+  background: var(--card); border: 1px solid var(--border); }
+.ar-rules-n { display: grid; place-items: center; width: 1.25rem; height: 1.25rem; border-radius: 50%; background: var(--purple); color: #fff; font-size: .7rem; font-weight: 800; }
+.ar-rules-steps li > i { color: var(--purple-ink); font-size: 1rem; padding-top: .1rem; }
+.ar-rules-steps li b { display: block; font-size: .86rem; }
+.ar-rules-steps li small { display: block; color: var(--muted); font-size: .78rem; line-height: 1.4; margin-top: .1rem; }
+.ar-rules-twist { display: flex; gap: .5rem; align-items: baseline; margin: .65rem 0 0; font-size: .84rem; line-height: 1.45; }
+.ar-rules-twist i { color: #d97706; }
+@media (max-width: 760px) { .ar-rules-steps { grid-template-columns: 1fr; } }
+
+/* ── Màn mở trận 3‑2‑1 (arena.js § matchIntro): phủ khu chơi, chưa tính giờ ── */
+#arGame { position: relative; }
+.ar-intro { position: absolute; inset: 0; z-index: 40; display: grid; place-items: start center; padding: 6vh 16px 16px; cursor: pointer;
+  background: color-mix(in srgb, var(--bg, #0f1220) 72%, transparent); backdrop-filter: blur(2px); }
+.ar-intro-card { width: min(460px, 100%); padding: 1.3rem 1.4rem 1.1rem; border-radius: 18px; background: var(--card); border: 1px solid var(--border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .18); text-align: center; cursor: default; }
+.ar-intro-card > small { color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; font-size: .72rem; }
+.ar-intro-card h2 { margin: .15rem 0 .8rem; font-size: 1.5rem; }
+.ar-intro-card p { display: flex; gap: .5rem; align-items: baseline; text-align: left; margin: 0 0 .5rem; font-size: .9rem; line-height: 1.45; }
+.ar-intro-win i { color: var(--purple-ink); }
+.ar-intro-twist i { color: #d97706; }
+.ar-intro-n { display: block; margin: .6rem 0 .5rem; font: 800 3.4rem/1 Inter, sans-serif; color: var(--purple-ink); font-variant-numeric: tabular-nums; }
+.ar-intro-n.is-pop { animation: ar-intro-pop .35s ease-out; }
+@keyframes ar-intro-pop { from { transform: scale(1.35); opacity: .4; } to { transform: scale(1); opacity: 1; } }
+.ar-intro-skip kbd { margin-left: .3rem; font-size: .7rem; padding: 0 .3rem; border: 1px solid var(--border); border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) { .ar-intro-n.is-pop { animation: none; } .ar-intro { backdrop-filter: none; } }
+
+/* ── Tranh & khung PHẲNG (15/11/2026) — bản đồ Hành trình + thẻ chế độ ──
+   Trước: viền nâu đen 3–4px, bóng cứng "0 6px 0" kiểu khối nổi, vòng chặng 2 lớp viền → nhìn như game thương mại/tranh AI.
+   Tranh bên trong cũng đã phẳng ở nguồn (np-art.js / arena-mini-art.js § FLAT). */
+.ar-q-region { border: 1px solid rgba(45, 36, 22, .25); box-shadow: none; border-radius: 16px; }
+.ar-q-region::after { background: rgba(20, 14, 6, .16); }
+.ar-q-region.is-final { box-shadow: inset 0 0 0 3px #f5b301; }
+.ar-q-rhead { border: 0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
+.ar-q-link { width: 3px; background: repeating-linear-gradient(180deg, rgba(45, 36, 22, .45) 0 6px, transparent 6px 12px); }
+.ar-q-path::before { border-top-width: 4px; }
+.ar-q-medal { border: 3px solid #fffdf7; box-shadow: 0 2px 8px rgba(0, 0, 0, .22); }
+.ar-q-node.s-3 .ar-q-medal { border-color: #f5b301; box-shadow: 0 2px 8px rgba(0, 0, 0, .22); }
+.ar-q-node.is-next .ar-q-medal { animation: ar-q-ring-flat 1.6s ease-in-out infinite; }
+@keyframes ar-q-ring-flat { 0%, 100% { box-shadow: 0 2px 8px rgba(0, 0, 0, .22), 0 0 0 0 rgba(249, 115, 22, .55); } 50% { box-shadow: 0 2px 8px rgba(0, 0, 0, .22), 0 0 0 7px rgba(249, 115, 22, 0); } }
+.ar-q-nname { border: 0; box-shadow: 0 1px 3px rgba(0, 0, 0, .15); }
+.ar-q-stars { background: rgba(45, 36, 22, .78); }
+.ar-q-me { border-width: 2px; }
+.ar-mode.has-cover, .ar-mode.m-tug.has-cover { box-shadow: none; border: 0; }
+.ar-mode.has-cover:hover, .ar-mode.m-tug.has-cover:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, .14); }
+.ar-mode.has-cover:active { transform: none; box-shadow: none; }
+.ar-mode.has-cover.is-on { outline: 3px solid var(--mc); outline-offset: 2px; box-shadow: none; transform: none; }
+.ar-cover { border-bottom: 0; }
+@media (prefers-reduced-motion: reduce) { .ar-q-node.is-next .ar-q-medal { animation: none; outline: 3px solid #f97316; } }

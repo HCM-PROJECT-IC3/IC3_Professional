@@ -89,7 +89,8 @@ Góc học tập, Sổ tay câu sai, mục tiêu tuần đang nằm trong `local
 3. ✅ **Lộ trình học thích ứng** (10/2026) — Góc học tập → tab "Lộ trình", gợi ý bài nên làm tiếp.
 4. ✅ **Đề "ôn từ câu cả lớp hay sai"** (10/2026) — nút "Tạo đề ôn" trên thẻ Câu cả lớp hay sai.
 5. ✅ **Đấu trường kiểu Kahoot/Blooket** (10/2026) — `arena.html`: Tốc độ, Săn vàng, Đua về đích, Linh vật; chơi một mình với đối thủ máy, 0 Firebase.
-   Tiếp theo có thể làm: thêm chế độ (Phòng thủ tháp, Quán cà phê), sự kiện theo mùa cho Linh vật, chế độ "đấu nhóm trên 1 máy chiếu" dùng Đấu trường.
+   ✅ Sự kiện theo mùa cho Linh vật (15/11/2026): hộp 20/11, Giáng sinh, Tết, Mùa hè — chỉ mở trong mùa, linh vật giữ mãi; 0 Firebase.
+   Tiếp theo có thể làm: thêm chế độ (Phòng thủ tháp, Quán cà phê), chế độ "đấu nhóm trên 1 máy chiếu" dùng Đấu trường.
 6. ✅ **Thử thách hôm nay** (10/2026) — 5 câu chung cả lớp mỗi ngày, điểm tốc độ, chuỗi ngày, mã chia sẻ kiểu Wordle; 0 Firebase.
    ✅ Bảng xếp hạng thử thách trong ngày qua trang gom kết quả (03/11/2026): "Chép kết quả" kèm mã EQR1,
    giáo viên dán cả đoạn chat nhóm lớp vào `gom-ket-qua.html` → bảng xếp hạng + Trình chiếu. Vẫn 0 Firebase.

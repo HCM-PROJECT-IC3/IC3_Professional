@@ -6,7 +6,7 @@
 
    6 nguyên nhân dùng ĐÚNG 6 trong 12 id tác nhân đã có sẵn ở
    ZOMBIE_TYPES (js/pz-defense.js) — không bịa tác nhân mới, dùng
-   lại icon ảnh (img/pz-defense/zom_*.png) đã có. Câu gợi ý phòng
+   lại icon ảnh (img/malware/*.svg — nhân vật tự vẽ, scripts/build-malware-art.mjs) đã có. Câu gợi ý phòng
    thủ sau khi kết luận lấy TRỰC TIẾP từ
    EduGameEngine.QuestionTopicMap.getWeaknessForEnemy() —
    không viết lại nội dung đã có.
@@ -21,12 +21,12 @@
   // icon), không phải bản sao của ZOMBIE_TYPES (không có hp/dmg/
   // mechanic ở đây, những field đó chỉ Cyber Defense cần).
   var CAUSE_LABELS = {
-    phishing: { name: 'Phishing (Lừa đảo qua link/email giả)', img: 'img/pz-defense/zom_phishing.png' },
-    ransom:   { name: 'Ransomware (Mã hoá đòi tiền chuộc)',     img: 'img/pz-defense/zom_ransom.png' },
-    trojan:   { name: 'Trojan (Phần mềm giả danh vô hại)',      img: 'img/pz-defense/zom_trojan.png' },
-    worm:     { name: 'Worm (Tự lây lan qua mạng nội bộ)',      img: 'img/pz-defense/zom_worm.png' },
-    spyware:  { name: 'Spyware (Theo dõi/đánh cắp thông tin)',  img: 'img/pz-defense/zom_spyware.png' },
-    ddos:     { name: 'DDoS (Làm ngập lụt server)',             img: 'img/pz-defense/zom_ddos.png' },
+    phishing: { name: 'Phishing (Lừa đảo qua link/email giả)', img: 'img/malware/phishing.svg' },
+    ransom:   { name: 'Ransomware (Mã hoá đòi tiền chuộc)',     img: 'img/malware/ransom.svg' },
+    trojan:   { name: 'Trojan (Phần mềm giả danh vô hại)',      img: 'img/malware/trojan.svg' },
+    worm:     { name: 'Worm (Tự lây lan qua mạng nội bộ)',      img: 'img/malware/worm.svg' },
+    spyware:  { name: 'Spyware (Theo dõi/đánh cắp thông tin)',  img: 'img/malware/spyware.svg' },
+    ddos:     { name: 'DDoS (Làm ngập lụt server)',             img: 'img/malware/ddos.svg' },
   };
 
   var CATEGORIES = [
@@ -164,7 +164,8 @@
       var btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'cd-case-btn';
-      btn.textContent = '📁 ' + c.title;
+      btn.innerHTML = '<i class="fa-solid fa-folder" aria-hidden="true"></i> ';
+      btn.appendChild(document.createTextNode(c.title));
       btn.addEventListener('click', function () { startCase(c); });
       el.caseList.appendChild(btn);
     });
@@ -276,12 +277,12 @@
     var correctLabel = CAUSE_LABELS[state.currentCase.correctCause].name;
 
     if (window.EduSFX) EduSFX.play(isCorrect ? 'win' : 'wrong');
-    el.resultIcon.textContent = isCorrect ? '🏆' : '❌';
+    el.resultIcon.innerHTML = isCorrect ? '<i class="fa-solid fa-trophy" aria-hidden="true"></i>' : '<i class="fa-solid fa-xmark" aria-hidden="true"></i>';
     el.resultTitle.textContent = isCorrect ? 'Kết luận chính xác!' : 'Kết luận chưa đúng!';
     el.resultDesc.textContent =
       'Nguyên nhân thật sự: ' + correctLabel + '\n' +
       'Đã điều tra ' + revealedCount + '/6 hướng.\n' +
-      (weakness ? ('💡 Cách phòng thủ: ' + weakness) : '') +
+      (weakness ? ('Cách phòng thủ: ' + weakness) : '') +
       (isCorrect ? ('\n\nĐiểm ván này: ' + scorePct) : '');
     el.resultOverlay.hidden = false;
 

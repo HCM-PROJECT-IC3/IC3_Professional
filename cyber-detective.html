@@ -5,7 +5,7 @@
 <script src="js/page-transition-guard.js"></script>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🔎 Cyber Detective — Mini Game</title>
+<title>Cyber Detective — Mini Game</title>
 <link rel="stylesheet" href="lib/fonts/fonts.css">
 <link rel="stylesheet" href="css/theme.css">
 <script src="js/theme-inherit.js"></script>
@@ -27,12 +27,12 @@
     <!-- ============ TOPBAR ============ -->
     <div class="cd-topbar">
       <div class="cd-header">
-        <div class="cd-title">🔎 Cyber Detective</div>
+        <div class="cd-title"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Cyber Detective</div>
         <div class="cd-subtitle" id="cdCaseTitle">Đang tải vụ án…</div>
       </div>
       <div class="cd-hud">
         <div class="cd-hud-chip" title="Số hướng điều tra đã mở"><span id="cdRevealedCount">0</span>/6 đã điều tra</div>
-        <button type="button" class="cd-restart-btn" id="cdRestartBtn" title="Chọn vụ án khác">🔄 Vụ án khác</button>
+        <button type="button" class="cd-restart-btn" id="cdRestartBtn" title="Chọn vụ án khác"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Vụ án khác</button>
       </div>
     </div>
 
@@ -44,15 +44,15 @@
 
     <!-- ============ KHUNG KẾT LUẬN ============ -->
     <div class="cd-conclude-panel">
-      <div class="cd-conclude-title">🧩 Kết luận: Nguyên nhân tấn công là gì?</div>
+      <div class="cd-conclude-title"><i class="fa-solid fa-gavel" aria-hidden="true"></i> Kết luận: Nguyên nhân tấn công là gì?</div>
       <div class="cd-cause-grid" id="cdCauseGrid"><!-- điền động bằng JS --></div>
-      <button type="button" class="cd-btn cd-btn-primary" id="cdSubmitBtn" disabled>✅ Nộp kết luận</button>
+      <button type="button" class="cd-btn cd-btn-primary" id="cdSubmitBtn" disabled><i class="fa-solid fa-check" aria-hidden="true"></i> Nộp kết luận</button>
     </div>
 
     <!-- ============ MÀN CHỌN VỤ ÁN ============ -->
     <div class="cd-overlay" id="cdCaseOverlay">
       <div class="cd-overlay-card">
-        <div class="cd-overlay-icon">🔎</div>
+        <div class="cd-overlay-icon"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></div>
         <div class="cd-overlay-title">Chọn 1 vụ án để điều tra</div>
         <div class="cd-overlay-desc">Mỗi vụ án là 1 tình huống mất an toàn thông tin có thật trong đời sống số. Điều tra càng ít hướng mà vẫn kết luận đúng, điểm càng cao!</div>
         <div class="cd-case-list" id="cdCaseList"><!-- điền động bằng JS --></div>
@@ -62,11 +62,11 @@
     <!-- ============ MÀN KẾT QUẢ ============ -->
     <div class="cd-overlay" id="cdResultOverlay" hidden>
       <div class="cd-overlay-card">
-        <div class="cd-overlay-icon" id="cdResultIcon">🏆</div>
+        <div class="cd-overlay-icon" id="cdResultIcon"><i class="fa-solid fa-trophy" aria-hidden="true"></i></div>
         <div class="cd-overlay-title" id="cdResultTitle">Kết luận chính xác!</div>
         <div class="cd-overlay-desc" id="cdResultDesc"></div>
         <div class="cd-overlay-actions">
-          <button type="button" class="cd-btn cd-btn-primary" id="cdNextCaseBtn">🔎 Vụ án khác</button>
+          <button type="button" class="cd-btn cd-btn-primary" id="cdNextCaseBtn"><i class="fa-solid fa-folder-open" aria-hidden="true"></i> Vụ án khác</button>
         </div>
       </div>
     </div>

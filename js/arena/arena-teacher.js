@@ -42,29 +42,29 @@
       return;
     }
     const views = {
-      idle: ['🔐', 'Khu vực giáo viên', 'Đang chuẩn bị...', ''],
-      checking: ['⏳', 'Đang kiểm tra tài khoản...', 'Chờ một chút nhé.', ''],
-      login: ['🔐', 'Đăng nhập để tạo phòng', 'Chỉ <b>tài khoản giáo viên</b> mới tạo được phòng cho cả lớp. Em là học sinh? Chọn tab <b>Học sinh</b> ở trên để vào phòng.', 'login'],
-      denied: ['🙅', 'Tài khoản này không tạo được phòng', 'Chỉ tài khoản <b>giáo viên</b> hoặc <b>quản trị viên</b> mới tạo phòng. Học sinh hãy chọn tab <b>Học sinh</b> để vào phòng.', 'switch'],
-      pending: ['⏳', 'Tài khoản đang chờ duyệt', 'Tài khoản giáo viên của thầy/cô chưa được quản trị viên duyệt. Vui lòng thử lại sau.', 'switch'],
-      error: ['📡', 'Chưa kiểm tra được tài khoản', 'Kiểm tra kết nối mạng rồi thử lại.', 'retry'],
+      idle: ['fa-lock', 'Khu vực giáo viên', 'Đang chuẩn bị...', ''],
+      checking: ['fa-hourglass-half', 'Đang kiểm tra tài khoản...', 'Chờ một chút nhé.', ''],
+      login: ['fa-lock', 'Đăng nhập để tạo phòng', 'Chỉ <b>tài khoản giáo viên</b> mới tạo được phòng cho cả lớp. Em là học sinh? Chọn tab <b>Học sinh</b> ở trên để vào phòng.', 'login'],
+      denied: ['fa-ban', 'Tài khoản này không tạo được phòng', 'Chỉ tài khoản <b>giáo viên</b> hoặc <b>quản trị viên</b> mới tạo phòng. Học sinh hãy chọn tab <b>Học sinh</b> để vào phòng.', 'switch'],
+      pending: ['fa-hourglass-half', 'Tài khoản đang chờ duyệt', 'Tài khoản giáo viên của thầy/cô chưa được quản trị viên duyệt. Vui lòng thử lại sau.', 'switch'],
+      error: ['fa-wifi', 'Chưa kiểm tra được tài khoản', 'Kiểm tra kết nối mạng rồi thử lại.', 'retry'],
     };
     const [ico, title, msg, act] = views[T.state] || views.idle;
-    gate.innerHTML = `<div class="ar-gate-ico" aria-hidden="true">${ico}</div>
+    gate.innerHTML = `<div class="ar-gate-ico" aria-hidden="true"><i class="fa-solid ${ico}"></i></div>
       <h2 class="ar-gate-title">${title}</h2>
       <p class="ar-gate-msg">${msg}</p>
       <div class="ar-row ar-center-row">
         ${act === 'login' ? `<a class="ar-btn ar-btn-play ar-gate-go" href="${LOGIN_URL}"><i class="fa-solid fa-right-to-bracket"></i> Đăng nhập tài khoản giáo viên</a>` : ''}
         ${act === 'switch' ? `<button type="button" class="ar-btn" id="arGateSwitch"><i class="fa-solid fa-user-gear"></i> Đăng nhập tài khoản khác</button>` : ''}
         ${act === 'retry' ? '<button type="button" class="ar-btn" id="arGateRetry"><i class="fa-solid fa-rotate-right"></i> Thử lại</button>' : ''}
-        <button type="button" class="ar-btn ar-btn-ghost" id="arGateStudent">🙋 Em là học sinh</button>
+        <button type="button" class="ar-btn ar-btn-ghost" id="arGateStudent"><i class="fa-solid fa-user-graduate" aria-hidden="true"></i> Em là học sinh</button>
       </div>
       ${T.state === 'checking' ? '<div class="waiting-dots" aria-hidden="true"><i></i><i></i><i></i></div>' : ''}
       <ul class="ar-gate-feats" aria-label="Phòng cả lớp có gì">
-        <li><span aria-hidden="true">📱</span><b>Vào phòng bằng QR</b><small>Học sinh quét mã hoặc nhập 6 ký tự — không cần tài khoản.</small></li>
-        <li><span aria-hidden="true">⚡🏁❤️</span><b>3 chế độ cả lớp</b><small>Tốc độ kiểu Kahoot, Đua về đích, Sinh tồn kiểu Battle Royale.</small></li>
-        <li><span aria-hidden="true">🧩</span><b>Nhiều dạng câu</b><small>Chọn 1, chọn nhiều, sắp xếp, ghép đôi — lấy từ ngân hàng câu theo bài.</small></li>
-        <li><span aria-hidden="true">📊</span><b>Bảng điểm tức thì</b><small>Tải CSV, xem câu cả lớp hay sai. Không tốn lượt Firebase.</small></li>
+        <li><i class="fa-solid fa-qrcode" aria-hidden="true"></i><b>Vào phòng bằng QR</b><small>Học sinh quét mã hoặc nhập 6 ký tự — không cần tài khoản.</small></li>
+        <li><i class="fa-solid fa-gamepad" aria-hidden="true"></i><b>6 chế độ cả lớp</b><small>Tốc độ, Đua về đích, Sinh tồn, Kéo co, Đấu phép, Giải mã. Thêm Bảng điểm chiếu lên bảng, học sinh không cần máy.</small></li>
+        <li><i class="fa-solid fa-list-check" aria-hidden="true"></i><b>Nhiều dạng câu</b><small>Chọn 1, chọn nhiều, sắp xếp, ghép đôi — lấy từ ngân hàng câu theo bài.</small></li>
+        <li><i class="fa-solid fa-chart-column" aria-hidden="true"></i><b>Bảng điểm tức thì</b><small>Tải CSV, xem câu cả lớp hay sai. Không tốn lượt Firebase.</small></li>
       </ul>`;
     $('arGateStudent').addEventListener('click', () => A.setRole('student', true));
     const sw = $('arGateSwitch');

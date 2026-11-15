@@ -191,6 +191,11 @@
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
   @media (max-width: 980px) {
     .layout { grid-template-columns: 1fr; height: auto; }
+    /* Nút trên thanh tiêu đề xuống dòng thay vì đẩy trang rộng 760px ở điện thoại */
+    header { flex-wrap: wrap; gap: .5rem; padding: .6rem .9rem; padding-right: 4.5rem; }
+    header h1 { flex-basis: 100%; }
+    header .spacer { display: none; }
+    #levelSelect { max-width: 100%; }
     .pane { max-height: 46vh; }
   }
 

@@ -30,6 +30,9 @@ jobs:
       - name: Cú pháp mọi file JS
         run: node scripts/check-js.js
 
+      - name: Tranh nhân vật mã độc (img/malware) khớp scripts/build-malware-art.mjs
+        run: node scripts/build-malware-art.mjs --check
+
       - name: Trang HTML/CSS không trỏ tới file đã xoá/đổi tên
         run: node scripts/check-html.js
 
