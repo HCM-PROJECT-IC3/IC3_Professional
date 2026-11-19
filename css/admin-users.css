@@ -144,7 +144,6 @@ select {
 .modal-overlay {
   display: none; position: fixed; inset: 0; z-index: 999;
   background: var(--modal-overlay); align-items: center; justify-content: center; padding: 1rem;
-  backdrop-filter: blur(2px);
 }
 .modal-overlay.show { display: flex }
 .modal-box {
@@ -272,7 +271,7 @@ select {
 
 /* Bảng sửa trượt từ phải (điện thoại: toàn màn hình) */
 body.au-locked { overflow: hidden }
-.au-scrim { position: fixed; inset: 0; z-index: 900; background: rgba(15, 18, 32, .32); backdrop-filter: blur(1.5px) }
+.au-scrim { position: fixed; inset: 0; z-index: 900; background: rgba(15, 18, 32, .32) }
 .au-scrim[hidden], .au-drawer[hidden] { display: none }
 .au-drawer {
   position: fixed; top: 0; right: 0; bottom: 0; z-index: 901; width: min(560px, 100vw);

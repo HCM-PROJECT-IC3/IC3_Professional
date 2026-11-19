@@ -20,7 +20,7 @@ import { startServer } from './server.mjs';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 // E2E_ROOT=../../dist-hosting: chạy cả bộ trên bản rút gọn cho Firebase Hosting (scripts/build-hosting.mjs).
 const ROOT = process.env.E2E_ROOT ? path.resolve(process.env.E2E_ROOT) : path.resolve(HERE, '..', '..');
-const SUITES = ['foundation', 'offline', 'student', 'learning', 'deeplink', 'plain-text', 'play', 'pages', 'teacher', 'coordinator', 'admin'];
+const SUITES = ['foundation', 'offline', 'student', 'learning', 'deeplink', 'plain-text', 'play', 'pages', 'teacher', 'coordinator', 'admin', 'techrealm', 'responsive'];
 
 function findChrome() {
   const c = [

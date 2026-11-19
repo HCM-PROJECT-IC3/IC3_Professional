@@ -99,7 +99,7 @@
     el.className = 'ar-sc-sp' + (p.me ? ' is-me' : '');
     const w = size || (n > 5 ? 54 : 62);
     el.innerHTML = `<div class="ar-sc-in" style="width:${w}px">${art}</div>
-      <span class="ar-sc-tag">${p.me ? '⭐ Em' : `${p.face} ${esc(p.name)}`}</span><span class="ar-sc-over"></span>`;
+      <span class="ar-sc-tag">${p.me ? '⭐ Em' : `${p.face} ${esc(p.name)}`}</span><span class="ar-sc-over"></span>${p.bot ? '<span class="ar-sc-think" aria-hidden="true"><i></i><i></i><i></i></span>' : ''}`;
     S.layer.appendChild(el);
     return { el, x: 0, y: 0, w, h: w * 1.62, id: p.id };
   }
@@ -482,14 +482,21 @@
   /** Bạn máy "chốt đáp án" trong lúc em đang nghĩ: dấu ✔ ở thẻ tên. id = null → gỡ hết. */
   function lockIn(id, on) {
     if (!S) return;
-    if (id === null) { Object.values(S.sp).forEach((s) => s.el.classList.remove('is-locked')); return; }
+    if (id === null) { Object.values(S.sp).forEach((s) => s.el.classList.remove('is-locked', 'is-think', 'is-stuck')); return; }
     const s = S.sp[id];
     if (!s) return;
     s.el.classList.toggle('is-locked', !!on);
-    if (on) flash(s, 'is-wave', 600);
+    if (on) { s.el.classList.remove('is-think', 'is-stuck'); flash(s, 'is-wave', 600); }
+  }
+  /** Bạn máy đang nghĩ (dấu ba chấm trên đầu) · stuck: nghĩ quá giờ chưa chốt (dấu hỏi). Gỡ khi chốt / hết câu. */
+  function think(id, on, stuck) {
+    const s = S && S.sp[id];
+    if (!s) return;
+    s.el.classList.toggle('is-think', !!on && !stuck);
+    s.el.classList.toggle('is-stuck', !!stuck);
   }
   /** Hào quang lửa dưới chân khi đang chuỗi đúng (em: từ 3 câu). */
   function aura(id, on) { if (S && S.sp[id]) S.sp[id].el.classList.toggle('is-fire', !!on); }
 
-  global.EduArenaScene = { mount, sync, mood, cheer, talk, clear, lockIn, aura, SET };
+  global.EduArenaScene = { mount, sync, mood, cheer, talk, clear, lockIn, think, aura, SET };
 })(window);

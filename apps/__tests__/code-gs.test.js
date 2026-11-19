@@ -211,7 +211,7 @@ const ctx = {
 };
 vm.createContext(ctx);
 const src = fs.readFileSync(path.join(__dirname, '..', 'Code.gs'), 'utf8');
-vm.runInContext(src + '\n;this.__api = { handleRequest_, asText_, submittedMs_, doGet, noFormula_, kiemTraSauDeploy, schoolIdOf_, questionStatus_, answerKeyOf_, aiBuild_, classRowsCsv_, SYSTEM_ID_: SPREADSHEET_ID_DATA };', ctx);
+vm.runInContext(src + '\n;this.__api = { handleRequest_, asText_, submittedMs_, doGet, noFormula_, kiemTraSauDeploy, schoolIdOf_, questionStatus_, answerKeyOf_, aiBuild_, classRowsCsv_, logTab_, SYSTEM_ID_: SPREADSHEET_ID_DATA };', ctx);
 const api = ctx.__api;
 const call = (action, p) => JSON.parse(JSON.stringify(api.handleRequest_(Object.assign({ action }, p || {}))));
 
@@ -794,6 +794,32 @@ eq('listResults đọc được cả file mới', call('listResults', as('admin1
   gemini.mode = 429;
   eq('AI: key hệ thống hết hạn mức → ai-quota (web mời nhập key cá nhân)', ask('explain', Object.assign({}, exP, { chosen: 'z' }), 'may-hoc-sinh-06').code, 'ai-quota');
   gemini.mode = 'ok';
+  // ── AI Sư Phụ (js/techrealm/mentor-core.js chép nguyên văn vào Code.gs) ──
+  require(path.join(__dirname, '..', '..', 'js', 'techrealm', 'mentor-core.js'));
+  const mSamples = [
+    ['mentorConcept', { topic: 'Phần cứng', question: 'Tên em là An, RAM là gì? sđt 0912345678', grade: 6 }],
+    ['mentorHint', { question: 'Thiết bị nhập?', options: ['Bàn phím', 'Loa'], correct: ['Bàn phím'], level: 3 }],
+    ['codeHelp', { language: 'python', code: 'print(1\n', error: 'SyntaxError' }],
+    ['rubricReview', { title: 'Áp phích', description: 'Áp phích mật khẩu mạnh, có 3 mẹo và hình ổ khoá rõ ràng.', criteria: [{ name: 'Nội dung', max: 4 }] }],
+  ];
+  const mDiff = mSamples.filter(([t, p]) => JSON.stringify(AIC.build(t, p)) !== JSON.stringify(JSON.parse(JSON.stringify(api.aiBuild_(t, p))))).map(([t]) => t);
+  eq('AI Sư Phụ: câu lệnh Apps Script = web trên 4 việc mới (cùng 1 file luật)', mDiff, []);
+  const hintR = ask('mentorHint', mSamples[1][1], 'may-hoc-sinh-07');
+  eq('AI Sư Phụ: học sinh xin gợi ý → OK; gói gửi Gemini KHÔNG chứa đáp án hệ thống', [hintR.ok, JSON.stringify(gemini.lastBody).indexOf('"correct"') < 0], [true, true]);
+  ask('mentorConcept', mSamples[0][1], 'may-hoc-sinh-07');
+  eq('AI Sư Phụ: số điện thoại, tên học sinh bị lọc TRÊN MÁY CHỦ trước khi gửi Gemini', [JSON.stringify(gemini.lastBody).indexOf('0912345678') < 0, JSON.stringify(gemini.lastBody).indexOf('An,') < 0], [true, true]);
+  eq('AI Sư Phụ: chấm rubric là việc của giáo viên — học sinh gọi bị chặn', ask('rubricReview', mSamples[3][1], 'may-hoc-sinh-07').code, 'permission-denied');
+  const rubR = call('aiAskStaff', Object.assign({ task: 'rubricReview', payload: mSamples[3][1] }, as('teachX')));
+  eq('AI Sư Phụ: giáo viên chấm rubric qua aiAskStaff (JSON)', [rubR.ok, gemini.lastBody.generationConfig.responseMimeType], [true, 'application/json']);
+  const aiRows = api.logTab_('NhatKyAI', ['ThoiGian']).rows; // tab nằm ở file nhật ký nào thì lấy đúng file đó (như máy chủ)
+  eq('nhật ký AI: có dòng cho mỗi lượt; KHÔNG lưu nội dung câu hỏi, KHÔNG lưu mã máy thô',
+    [aiRows.length > 3, aiRows.every((r) => JSON.stringify(r).indexOf('RAM là gì') < 0 && JSON.stringify(r).indexOf('may-hoc-sinh') < 0)], [true, true]);
+  const rep = call('aiReport', { task: 'mentorHint', reason: 'lo-dap-an', note: 'AI nói luôn đáp án, gọi em 0912345678', cid: 'may-hoc-sinh-08' });
+  const repRow = aiRows[aiRows.length - 1] || [];
+  eq('báo lỗi AI: ghi nhật ký loại "bao-loi:lo-dap-an", ghi chú đã lọc số điện thoại', [rep.ok, String(repRow[1]), JSON.stringify(repRow).indexOf('0912345678') < 0], [true, 'bao-loi:lo-dap-an', true]);
+  for (let k = 0; k < 9; k++) call('aiReport', { task: 'x', reason: 'khac', cid: 'may-hoc-sinh-08' });
+  eq('báo lỗi AI: quá 10 lần/ngày/máy → ai-limit; thiếu mã máy → invalid-argument', [call('aiReport', { reason: 'khac', cid: 'may-hoc-sinh-08' }).code, call('aiReport', { reason: 'khac' }).code], ['ai-limit', 'invalid-argument']);
+
   const stat = call('aiStatus', as('teachX'));
   eq('AI: tình trạng cho giáo viên — có key, số lượt hôm nay, không lộ key', [stat.data.configured, stat.data.usedToday > 0, JSON.stringify(stat).indexOf('AIza') < 0], [true, true, true]);
   eq('AI: gỡ key hệ thống', [call('aiConfig', Object.assign({ remove: true }, as('admin1'))).data.configured, props.has('GEMINI_API_KEY')], [false, false]);

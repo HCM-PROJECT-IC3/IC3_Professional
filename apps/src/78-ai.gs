@@ -38,6 +38,10 @@ function aiForGrade_(g) { return g ? ' lớp ' + g : ''; }
 
 /** Bản Apps Script của EduAICore.build(): { task, payload, system, user, json, maxTokens, temperature }. */
 function aiBuild_(task, payload) {
+  // AI Sư Phụ: dùng CHÍNH js/techrealm/mentor-core.js (chép nguyên văn vào Code.gs) — câu lệnh giống hệt trình duyệt.
+  if (typeof EduMentor !== 'undefined' && Object.prototype.hasOwnProperty.call(EduMentor.TASKS, task)) {
+    try { return EduMentor.build(task, payload); } catch (e) { throw appError_('invalid-argument', e.message); }
+  }
   const p = payload || {};
   let n, user, json, maxTokens, temperature;
   if (task === 'explain') {
@@ -156,7 +160,7 @@ function aiRun_(task, payload, ident, cap) {
   const cache = CacheService.getScriptCache();
   const ck = 'ai1:' + Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, task + '|' + b.user));
   const hit = cache.get(ck);
-  if (hit) return { text: hit, cached: true };
+  if (hit) { aiLog_('dung-dem', task, ident, b.user.length, hit.length); return { text: hit, cached: true }; }
 
   const props = PropertiesService.getScriptProperties();
   const key = props.getProperty('GEMINI_API_KEY');
@@ -169,8 +173,10 @@ function aiRun_(task, payload, ident, cap) {
   if (used >= aiDailyMax_(props)) throw appError_('ai-limit', 'Trường đã dùng hết lượt AI hôm nay — mai thử lại, hoặc dùng key cá nhân.');
 
   const model = aiModel_(props);
-  const text = aiCallGemini_(key, model, b);
+  let text;
+  try { text = aiCallGemini_(key, model, b); } catch (e) { aiLog_('loi:' + (e.code || 'khac'), task, ident, b.user.length, 0); throw e; }
   if (!text) throw appError_('ai-empty', 'Gemini không trả về nội dung — thử lại.');
+  aiLog_('ok', task, ident, b.user.length, text.length);
   cache.put(mineKey, String(mine + 1), AI_CACHE_SEC);
   props.setProperty('AI_COUNT', day + ':' + (used + 1));
   if (text.length < 90000) cache.put(ck, text, AI_CACHE_SEC);
@@ -178,15 +184,16 @@ function aiRun_(task, payload, ident, cap) {
 }
 
 /** Công khai (học sinh không đăng nhập): chỉ việc nhẹ, có mã máy để đếm lượt. */
+function aiIsMentor_(task, list) { return typeof EduMentor !== 'undefined' && EduMentor[list].indexOf(task) >= 0; }
 function aiAsk_(p) {
-  if (AI_PUBLIC_TASKS.indexOf(p.task) < 0) throw appError_('permission-denied', 'Việc AI này cần đăng nhập tài khoản giáo viên.');
+  if (AI_PUBLIC_TASKS.indexOf(p.task) < 0 && !aiIsMentor_(p.task, 'PUBLIC_TASKS')) throw appError_('permission-denied', 'Việc AI này cần đăng nhập tài khoản giáo viên.');
   const cid = String(p.cid || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40);
   if (cid.length < 8) throw appError_('invalid-argument', 'Thiếu mã máy.');
   return aiRun_(p.task, p.payload, 'c:' + cid, AI_CLIENT_MAX);
 }
 /** Tài khoản quản trị: mọi việc AI. */
 function aiAskStaff_(p, who) {
-  if (AI_PUBLIC_TASKS.indexOf(p.task) < 0 && AI_STAFF_TASKS.indexOf(p.task) < 0) throw appError_('invalid-argument', 'Việc AI không hợp lệ: ' + p.task);
+  if (AI_PUBLIC_TASKS.indexOf(p.task) < 0 && AI_STAFF_TASKS.indexOf(p.task) < 0 && !aiIsMentor_(p.task, 'PUBLIC_TASKS') && !aiIsMentor_(p.task, 'STAFF_TASKS')) throw appError_('invalid-argument', 'Việc AI không hợp lệ: ' + p.task);
   return aiRun_(p.task, p.payload, 'u:' + who.uid, AI_STAFF_MAX);
 }
 /** Admin cài / đổi / gỡ key hệ thống. Có key mới hoặc đổi model → gọi thử Gemini, lỗi thì KHÔNG lưu. */
@@ -207,3 +214,35 @@ function aiStatus_() {
   const props = PropertiesService.getScriptProperties();
   return { configured: !!props.getProperty('GEMINI_API_KEY'), model: aiModel_(props), usedToday: aiUsedToday_(props), dailyMax: aiDailyMax_(props) };
 }
+
+// ====== NHẬT KÝ AI + BÁO LỖI (Prompt 07 §4) ======
+// Tab NhatKyAI: 1 dòng/lượt gọi — KHÔNG lưu nội dung câu hỏi/trả lời, KHÔNG lưu mã máy/uid thô (chỉ 10 ký tự băm).
+// Ghi nhật ký không bao giờ làm hỏng lượt AI (lỗi ghi thì bỏ qua).
+const AI_LOG_TAB = 'NhatKyAI';
+const AI_LOG_HEADERS = ['ThoiGian', 'Loai', 'Viec', 'NguoiDung', 'SoKyTuHoi', 'SoKyTuTraLoi', 'GhiChu'];
+const AI_REPORT_REASONS = ['sai-kien-thuc', 'lo-dap-an', 'khong-phu-hop', 'khac'];
+const AI_REPORT_MAX = 10;
+function aiIdentHash_(ident) {
+  return Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(ident))).slice(0, 10);
+}
+function aiLog_(kind, task, ident, inChars, outChars, note) {
+  try {
+    logTab_(AI_LOG_TAB, AI_LOG_HEADERS).appendRow([new Date(), kind, task, aiIdentHash_(ident), inChars || 0, outChars || 0, asText_(String(note || '').slice(0, 300))]);
+  } catch (e) { /* nhật ký là phụ — không chặn lượt AI */ }
+}
+/** Công khai: học sinh / giáo viên báo một câu trả lời AI có vấn đề. Giới hạn 10 lần/ngày/máy. Ghi chú được lọc thông tin cá nhân. */
+function aiReport_(p) {
+  const cid = String(p.cid || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40);
+  if (cid.length < 8) throw appError_('invalid-argument', 'Thiếu mã máy.');
+  const reason = AI_REPORT_REASONS.indexOf(p.reason) >= 0 ? p.reason : 'khac';
+  const task = String(p.task || '').replace(/[^A-Za-z]/g, '').slice(0, 30);
+  const cache = CacheService.getScriptCache();
+  const k = 'aiR:' + aiDay_() + ':' + cid;
+  const n = Number(cache.get(k)) || 0;
+  if (n >= AI_REPORT_MAX) throw appError_('ai-limit', 'Đã gửi đủ ' + AI_REPORT_MAX + ' báo lỗi hôm nay trên máy này.');
+  cache.put(k, String(n + 1), AI_CACHE_SEC);
+  const note = typeof EduMentor !== 'undefined' ? EduMentor.scrubPII(String(p.note || '').slice(0, 300)).text : '';
+  aiLog_('bao-loi:' + reason, task, 'c:' + cid, 0, 0, note);
+  return { ok: true };
+}
+

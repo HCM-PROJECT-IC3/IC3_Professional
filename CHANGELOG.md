@@ -23,6 +23,179 @@ Thứ tự: Apps Script → `firestore.rules`/index → đẩy web.
      Lệch dữ liệu thì đặt `rosterDeltaSync: false` trong `js/backend-config.js`.
 
 
+## 18/11/2026 (36) — Giao diện phẳng hơn, nhẹ hơn cho máy phòng tin; Portfolio tốn ít lượt đọc hơn
+
+- **Bỏ mờ kính (backdrop-filter) ở mọi trang** (18 chỗ: sảnh, thanh trên Đấu trường / Sổ đầu bài / app 2.0, lớp phủ
+  hộp thoại ở trang quản trị, Thử thách hôm nay, kệ sách). Mờ kính bắt trình duyệt vẽ lại phần nền phía sau mỗi khi
+  cuộn — nguyên nhân chính gây giật trên máy yếu. Nay là nền đặc, nhìn gần như cũ.
+- **Tắt animation trang trí chạy mãi** trên nền đã phẳng (`gradientShift`, ánh sáng quét thanh tiến độ, nút câu đang
+  làm nhấp nháy, emoji kết quả lơ lửng, chấm "ping"). Không thấy khác biệt nhưng trước đây vẫn vẽ lại từng khung hình.
+  Giữ: đồng hồ nhấp nháy lúc sắp hết giờ, vòng quay đang tải, hiệu ứng trong cảnh trò chơi.
+- **Gradient → 1 màu:** nút tím/xanh ở màn làm bài và dashboard, nút Bắt đầu (bỏ bóng cam toả), avatar Lịch dạy,
+  thanh máu/giờ Battle Quiz, **chữ tiêu đề cầu vồng** ở 5 mini-game, nền sảnh.
+- **Nền sảnh vẽ lại phẳng** (`img/lobby-network.svg`): vẫn bản đồ + mạng lưới, nhưng lục địa không làm mờ, nút mạng là
+  chấm tròn có viền thay cho đốm "phát sáng". Nền mini-game bỏ blur toàn màn hình.
+- **Chuyển trang nhanh hơn ~0,6 s** (`css/motion.css`, `js/motion.js`): trước đây cả trang trượt ra 0,32 s rồi trượt
+  vào 0,45 s từ bên phải (lúc trượt, trang rộng hơn màn hình → tablet nháy thanh cuộn ngang). Nay chỉ mờ nhẹ 0,12 s / 0,18 s.
+- **App 2.0 mở nhanh hơn:** Lộ trình, Sổ tay, Trò chơi, Thành tích, Bộ sưu tập UI tải khi mở (gói đầu 413 → 383 KB).
+- **Portfolio — ít lượt đọc Firestore hơn** (`js/portfolio.js` § `liveQuery`): feed bài đăng + chứng chỉ vẫn cập nhật
+  trực tiếp, nhưng **tab ẩn quá 60 giây thì tạm ngắt**, hiện lại thì nghe lại. Trước đây tab để mở cả ngày vẫn tốn
+  1 lượt đọc cho mỗi lượt thích/bình luận/bài mới của người khác. Nghe lại trong 30 phút chỉ tính tài liệu đã đổi
+  (bộ đệm offline đã bật). Mở trang, xem bình thường: **không đổi** số lượt. 0 Apps Script.
+- **Kiểm thử:**
+  - Mới `tests/e2e/ui-audit.mjs` (`npm run ui-audit`, thêm vào CI job e2e): mở 29 trang bằng Chrome thật, báo
+    gradient chuyển màu, mờ kính, animation chạy mãi, glow, emoji màu trên nút/tiêu đề, tác vụ dài. Hiện **29/29 sạch**.
+  - E2E `pages` +5: Portfolio ẩn tab ngắn không ngắt, ẩn lâu ngắt hết, hiện lại nghe lại đúng số truy vấn (thử bỏ
+    đoạn ngắt thì bị bắt).
+  - Sửa `fa-subset.test.js` khi bản build cũ đã xoá khỏi ổ đĩa nhưng git chưa ghi nhận.
+
+## 18/11/2026 (35) — Đấu trường: bạn máy chơi "như người", Hành trình IC3 nhập vai, hết giật
+
+- **Bạn máy có tính cách** (`arena-core.js` § `botPlan`, `PERSONAS`): Cẩn thận / Hấp tấp / Đều tay / Bùng nổ.
+  - Đọc đề mất thời gian: câu dài, nhiều phương án → nghĩ lâu hơn và dễ sai hơn.
+  - Thời gian nghĩ không đều nhịp (đa số vừa, thỉnh thoảng rất lâu, có khi quá giờ). Bấm quá vội dễ sai.
+  - Đang chuỗi đúng thì tự tin, sai liên tiếp thì cuống. Trận cách biệt xa thì bạn máy hăng hoặc đuối nhẹ (±6 %) để trận vẫn gay cấn.
+- **Sửa lỗi "giả":** lúc em nghĩ, bạn máy "chốt" ở một thời điểm, nhưng lúc chấm lại tung xúc xắc lần nữa (chốt giây thứ 2 mà
+  điểm tốc độ như trả lời giây thứ 9). Nay mỗi câu chỉ có **1 kế hoạch**, dùng cho cả lúc chốt lẫn lúc chấm. Bạn nào nghĩ quá giờ thì không chốt.
+- **Bạn máy nói theo tính cách** (`arena-hype.js` § `VOICE`): mỗi tính cách 4 loại câu (vượt em, bị em vượt, quá giờ,
+  đứt chuỗi). Không lặp liền một câu, không nói mỗi câu.
+- **Đối thủ nhớ em** (`arena-core.js` § `settleRivals`, `featuredRival`, `rivalTalk`; lưu `players[biệt danh].rivals`):
+  - Mỗi bạn máy nhớ thắng/thua với em qua các trận đối kháng (trừ Kéo co, Diệt Virus).
+  - **Màn mở trận** giới thiệu đối thủ hôm nay, kèm tính cách và thành tích đối đầu (em thắng–thua). Bạn gặp em nhiều nhất nhắc chuyện cũ ("Lần trước em thắng tớ. Hôm nay tớ phục thù!", "Tớ thắng em 4/4 ván rồi đấy…"), rồi nói lại trên sân.
+  - **Hết trận**, bạn sát hạng em nói một câu theo kết quả.
+- **Bạn máy "đang nghĩ" trên sân** (`arena-scene.js` § `think`): bong bóng ba chấm cho tới khi chốt. Bạn nào nghĩ quá giờ thì hiện dấu hỏi.
+- **Hành trình IC3 nhập vai** (`arena-quest.js`):
+  - Mỗi vùng có **người dẫn đường** (hình phẳng tự vẽ). Chỉ người dẫn đường của vùng em đang đi lên tiếng, lời thoại theo tiến độ (mới tới / còn N chặng / đã xong).
+  - Vùng phía trước phủ **sương "Chưa khám phá"** (vẫn bấm được).
+  - **Nhân vật đi bộ** từ chặng vừa chơi sang chặng kế, thay vì dịch chuyển tức thời.
+  - Lúc tải câu hỏi có màn **"Đang lên đường tới…"** (thay dòng thông báo nhỏ + bản đồ mờ). Màn này tắt ngay khi trận bắt đầu.
+- **Hết giật khi về bản đồ:** trước đây bản đồ vẽ lại 2 lần liền, mỗi lần dựng lại 8 cảnh SVG lớn (id đổi theo bộ đếm).
+  - Nay các lần vẽ trong cùng một nhịp được gộp làm một, id cố định, nội dung không đổi thì không đụng DOM.
+  - Vùng ngoài màn hình không vẽ (`content-visibility`).
+  - Có "giảm chuyển động" thì không đi bộ, không hiệu ứng.
+- 0 Firebase, 0 Apps Script (như trước).
+- **Kiểm thử:**
+  - `arena-core` +17: độ khó → thời gian và đúng/sai, không đều nhịp, tính cách, cuống, chuỗi, giữ trận gay cấn, lặp lại được, đối thủ nhớ em (7).
+  - `arena-hype` +5.
+  - E2E `play` +19 (29 → 48): điểm bạn máy = kế hoạch đã chốt (thử đột biến kiểu cũ thì bị bắt), giới thiệu đối thủ + nhắc chuyện cũ, đang nghĩ trên sân, trận 3 câu trọn vẹn lưu thắng/thua + lời sau trận, người dẫn đường, sương, 0 lần dựng lại, màn lên đường, đi bộ, 375 px.
+
+## 17/11/2026 (34) — TechRealm 2.0: QA, bảo mật, staging, sao lưu (Prompt 08)
+
+- **Khi triển khai:** làm theo `docs/techrealm/DEPLOYMENT_GUIDE.md`: sao lưu → staging → nghiệm thu → production.
+  Apps Script lên `2026-11-17a` (dán `apps/Code.gs`; bản đang chạy hiện là `2026-11-04c`). Firestore **không đổi**.
+- **Bảo mật (sửa):**
+  - `react-router` 7.9.1 → 7.18.5 (lỗ hổng chuyển hướng mở); Vite 7.1.7 → 7.3.8 (chỉ dùng khi phát triển). `npm audit` web: 0.
+  - Thêm header `X-Content-Type-Options: nosniff` + `Referrer-Policy` (Cloudflare `_headers`, `firebase.json`).
+  - `build-hosting` **luôn bỏ** `backups/`, và `--strict` dừng nếu bản phát hành có `*.gs`, `*.bundle`, `*.patch`, khoá,
+    `.env`, `firestore.rules`.
+- **Staging:** `node scripts/build-hosting.mjs --staging=<URL /exec thử nghiệm>` (thay URL Apps Script, chặn máy tìm kiếm)
+  + `npx wrangler deploy --env staging` (Worker riêng `ic3-professional-staging`, bản thật không bị đụng).
+  `check-deployed-backend.js <URL>` kiểm được deployment staging.
+- **Sao lưu:** `node scripts/backup-before-deploy.mjs` → `backups/<thời điểm>/` (bundle git, việc chưa commit,
+  Code.gs đang chạy, SHA-256). Đã thử khôi phục: khớp 142/142 file.
+- **Kiểm thử mới:**
+  - Bộ E2E `responsive`: 51 trang × tablet dọc / tablet ngang / 1920 px, kiểm tràn ngang, lỗi JS, console.error, Firebase.
+  - Bộ `teacher` thêm 6 kiểm tra Báo cáo năng lực (quyền, số liệu, lỗ hổng, lọc lớp, 375 px).
+  - Toàn bộ E2E chạy trên Chrome và Edge.
+- Tài liệu: `docs/techrealm/QA_REPORT.md`, `SECURITY_REPORT.md`, `DEPLOYMENT_GUIDE.md`, `USER_GUIDE.md`.
+
+## 17/11/2026 (33) — TechRealm: AI Sư Phụ + Báo cáo năng lực + Tông môn (giáo viên)
+
+- **Khi triển khai: phải dán lại `apps/Code.gs`** (thêm việc AI Sư Phụ, `aiReport`, nhật ký `NhatKyAI`). Chưa dán thì AI Sư Phụ
+  vẫn chạy bằng key cá nhân; key trường sẽ báo "việc không hợp lệ".
+- **AI Sư Phụ** (`/app/#/the-gioi/su-phu`, `js/techrealm/mentor-core.js`): hỏi kiến thức, gợi ý bài tập 3 mức (không nêu đáp án),
+  hướng dẫn và phân tích lỗi code, gợi ý nhiệm vụ (luật trên máy, không dùng AI), chấm theo rubric cho giáo viên (`aiAskStaff`).
+  Dùng lại Trợ lý AI có sẵn (bản đệm, key cá nhân, key trường, trần lượt).
+- **Chế độ kiểm tra:** máy đang có bài Kiểm tra chưa nộp → mọi việc AI của học sinh bị chặn (cả giải thích câu sai cũ).
+- **Bảo vệ dữ liệu:** lọc email / SĐT / địa chỉ / mật khẩu ở cả trình duyệt và máy chủ; nhật ký `NhatKyAI` không lưu nội dung,
+  người dùng ghi bằng mã băm; nút "Báo câu trả lời có vấn đề" (10/ngày/máy).
+- **Báo cáo năng lực học viên + báo cáo lớp** (`/app/#/giao-vien/nang-luc`, `js/techrealm/analytics-core.js`): tỷ lệ hoàn thành,
+  kết quả kiểm tra, năng lực theo lĩnh vực / chủ đề, lỗ hổng, học sinh cần chú ý, bài khó nhất lớp, CSV, in. Dùng lại dữ liệu
+  và bản đệm của trang giáo viên → **không thêm lượt đọc** ngoài lần tải kết quả vốn có.
+- **Tông môn** (`/app/#/the-gioi/tong-mon`): mục lục việc của giáo viên và quản trị, trạng thái thật từng việc. 0 lượt mạng.
+- Tài liệu: `docs/techrealm/AI_MENTOR.md`, `docs/techrealm/HUONG_DAN_GIAO_VIEN.md`.
+- **Firebase 0.** Apps Script: 1 lượt mỗi câu hỏi bằng key trường (như trước), ghi nhật ký trong cùng lượt.
+- **Kiểm thử:** mentor-core, analytics-core (dữ liệu meta/courses thật), code-gs khối "AI Sư Phụ", E2E techrealm 91.
+
+## 17/11/2026 (32) — TechRealm: Vạn Tượng Giới + Thành phố thông minh (mô hình tương tác)
+
+- **Thành phố thông minh** (`js/techrealm/smart-city-core.js` + `city/SmartCityPage.tsx`): bản đồ 6×6, 8 công trình mẫu
+  (trạm năng lượng mặt trời / than), 6 chỉ số có công thức rõ và bảng "vì sao". Mỗi công trình (trừ Khu dân cư) mở khoá
+  bằng bài đã đạt, sao Bí cảnh 1 hoặc nhiệm vụ đời sống. Lưu trên máy (`tr.city.v1`).
+- **Nhiệm vụ đời sống mới** (`life-missions-core.js`): Tính tiền điện (kWh, bậc thang, **giá minh hoạ** — ghi rõ không
+  phải biểu giá hiện hành), Phân loại rác (17 món, nhóm theo Luật BVMT 2020 + nguy hại thu gom riêng, có giải thích).
+- **Vạn Tượng Giới** chia 3 khu (khoa học · công nghệ · đời sống), mục nào cũng trỏ nội dung thật hoặc ghi "Sắp mở".
+- Gói lười riêng (thành phố 5,2 KB + luật 6,3 KB + nhiệm vụ 3 KB gzip). **Firebase 0, Apps Script 0.** Sân tập, không sinh EXP.
+- **Kiểm thử:** smart-city 33, E2E techrealm 79 (2 nhiệm vụ qua giao diện → mở công trình → xây → chỉ số đổi đúng công thức).
+
+## 17/11/2026 (31) — TechRealm: Bí cảnh (Challenge System) + Bí cảnh 1 "Thành phố mất điện"
+
+- **Khung bí cảnh** `js/techrealm/challenge-core.js`: màn chơi là máy trạng thái thuần, tất định theo hạt giống;
+  chấm 6 tiêu chí (hoàn thành, chính xác 40, giải quyết vấn đề 25, vận dụng 20, thời gian 10, số lần thử 5); kiểm nhật ký.
+- **Bí cảnh 1 hoàn chỉnh** (`thanh-pho-mat-dien-core.js` + `PowerCityGame.tsx`): cốt truyện, NPC Kỹ sư Lam, bản đồ
+  4 địa điểm, 3 màn (mạch điện, chia điện, dữ liệu) + Boss "Cơn bão quá tải", câu vận dụng, kết quả, kỷ lục trên máy.
+  Bí cảnh 2–5 mới ở mức thiết kế (`docs/techrealm/GAME_DESIGN.md`).
+- **Xác nhận phần thưởng bằng chạy lại:** gửi `{seed, actions}`, máy chủ chạy lại bằng cùng mã (chép vào `apps/Code.gs`)
+  và tự chấm. Nguồn EXP mới `CHALLENGE` (≥85: 30, ≥65: 20, ≥50: 10, Boss +40, 1 lần/màn). Hook `trRewardChallenge_`
+  **chưa nối, công tắc `TR_REWARDS` tắt**.
+- **Gói lười riêng** cho trò chơi (14 KB gzip), không nằm trong gói TechRealm/gói chung. SVG phẳng tự vẽ, không dùng
+  Phaser. **Firebase 0, Apps Script 0.**
+- **Kiểm thử:** challenge 31 (gồm quét 200 hạt giống × 4 màn), cultivation 65, tr-ledger 27, E2E techrealm 60 (chơi màn 1
+  qua giao diện, điểm màn hình = điểm Node chạy lại). Test phát hiện và đã sửa 1 lỗi nội dung: chỗ rò điện không đủ nổi
+  bật ở 9/200 đề.
+
+## 16/11/2026 (30) — TechRealm: Learning System (Tàng Kinh Các + Luyện Công Đường)
+
+- **Kho học liệu sinh từ dữ liệu có sẵn:** `scripts/build-techrealm-courses.mjs` → `data/techrealm/courses.json`
+  (12 lĩnh vực, 13 khoá, 259 bài, 18 bài kiểm tra, bài giảng từ `slides-manifest.json`). CI thêm bước `--check`.
+  6 lĩnh vực chưa có nội dung ghi "Sắp mở".
+- **Luật học tập** `js/techrealm/learning-core.js` (chép vào `apps/Code.gs`): nối bài làm → bài học, cây kỹ năng
+  tuần tự/tự do, cấu hình giáo viên (làm sạch), tiến độ, hoàn thành, sự kiện EXP từ bài đã chấm lại trên máy chủ.
+- **Trang:** Tàng Kinh Các (12 lĩnh vực, tiến độ thật từ lịch sử trên máy), trang công pháp (cây bài, chi tiết, tài
+  liệu, video, điều kiện, EXP), **Quản lý công pháp** cho giáo viên (cấu hình → link lớp `?lop=`), tab **Tiến độ &
+  lịch sử** (xuất CSV). Làm bài vẫn ở sảnh: `quiz-engine.js` và cách chấm không đổi.
+- **EXP:** hook `trRewardSubmission_` (chỉ bài Kiểm tra máy chủ chấm lại và khớp điểm), **chưa nối, công tắc
+  `TR_REWARDS` tắt**: Apps Script đang chạy không đổi hành vi.
+- **Firebase 0, Apps Script 0.** Thêm 1 file tĩnh 24 KB gzip (chỉ khi mở Tàng Kinh Các). Gói TechRealm 48,9 KB gzip;
+  CSS/JS chung không đổi.
+- **Kiểm thử:** learning-core 30, tr-ledger 23, E2E 12 bộ 330 kiểm tra (bộ techrealm 49). Lượt chạy toàn bộ đầu tiên có
+  1 lỗi chập chờn ở `pages` (tai-lieu-nam-hoc, không liên quan); chạy lại bộ đó 2 lần đều 150/150.
+
+## 16/11/2026 (29) — TechRealm: Cultivation Engine (luật tu luyện + sổ cái chỉ thêm)
+
+- **Luật** `js/techrealm/cultivation-core.js` + **CultivationService** `js/techrealm/cultivation-service.js`: 7 cảnh giới
+  × 3 tiểu cảnh giới, 7 nguồn EXP có bằng chứng (không thưởng "mở trang"/làm lại), mức thưởng Admin cấu hình
+  (`TR_CONFIG`, có kiểm hợp lệ), 5 linh căn từ bài đánh giá đã chấm (không khoá lộ trình), 6 loại vật phẩm (cấm cộng EXP),
+  đột phá 4 nhóm điều kiện, thành tựu tự xét. Tài liệu: `docs/techrealm/CULTIVATION_SYSTEM.md`.
+- **Một nguồn luật cho trình duyệt + Apps Script:** `scripts/build-apps-script.js` chép nguyên văn 2 file trên vào
+  `apps/Code.gs` (chặn `?.`/`??`). Adapter `apps/src/79-tr-ledger.gs`: tab `TR_SoCai` trong file Sheet riêng, ScriptLock,
+  TextFinder. **Chưa đăng ký route nào**: chưa thay đổi hành vi Apps Script đang chạy. Dán `Code.gs` mới lúc này là
+  an toàn nhưng chưa cần.
+- **Chống trùng:** txId tất định + tính tổng chỉ đếm dòng đầu mỗi txId (chịu được ghi đua) + khoá cho trần ngày/tuần.
+- **Giao diện xem thử** dùng luật thật trên dữ liệu mẫu: cảnh giới, tiểu cảnh giới, điều kiện đột phá, linh căn,
+  linh thạch, lịch sử (EXP, đột phá, vật phẩm, thành tựu, huỷ, chờ duyệt, thời gian tu luyện). Hiệu ứng đột phá phẳng
+  khoảng 1,3 giây, tôn trọng "giảm chuyển động" (chân trang → "Xem thử hiệu ứng đột phá").
+- **Firebase: 0 lượt.** Apps Script: 0 lượt (chưa có route). Gói TechRealm +9,6 KB gzip; CSS và JS chung không đổi.
+- **Kiểm thử:** core 62, service 30, Sheet giả lập 17 (CI thêm bước `apps/__tests__/tr-ledger.test.js`), E2E bộ
+  techrealm 36. Đã cài lỗi thử (bỏ khử trùng / bỏ trần ngày / bỏ điều kiện công pháp): test bắt cả 3.
+
+## 16/11/2026 (28) — TechRealm 2.0: audit, kiến trúc, giao diện xem thử (dữ liệu mẫu)
+
+- **Tài liệu:** `TECHREALM_2.0_AUDIT.md` và `docs/techrealm/` (ARCHITECTURE, DATABASE_SCHEMA, FIREBASE_SECURITY,
+  MODULE_DEPENDENCIES, MIGRATION_PLAN, UI_DESIGN_SYSTEM, COMPONENT_GUIDE). Kiến trúc, schema và rules mới **chỉ là đề
+  xuất**: chưa đổi `firestore.rules`, Apps Script hay dữ liệu.
+- **Giao diện xem thử** ở `/app/#/the-gioi`: 11 trang (Tổng quan, Thế giới tu luyện, Tàng Kinh Các, Luyện Công Đường,
+  Bí Cảnh, Bách Công Phường, Vạn Tượng Giới, Đấu Trường, Túi Càn Khôn, Thành tựu, Hồ sơ nhân vật), thông báo, menu hồ sơ,
+  công tắc 4 trạng thái dữ liệu ở chân trang. Dữ liệu mẫu nằm trong gói. Link "Luyện" mở đúng bài ở sảnh cũ.
+  Chưa có mục menu nào trỏ tới khu này; vào bằng đường dẫn trực tiếp cho tới khi nghiệm thu.
+- **Firebase: 0 lượt đọc/ghi, 0 lượt Apps Script, 0 request ra ngoài** (E2E `techrealm` kiểm từng trang).
+- **Dung lượng:** khu TechRealm là gói nạp lười riêng: JS 28,7 KB gzip + CSS 5,8 KB gzip, chỉ tải khi mở `/the-gioi`.
+  CSS chung của app 2.0 **giữ nguyên** (cùng mã băm; `globals.css` có `@source not` thư mục techrealm). JS chung +1,9 KB
+  (+0,03 KB gzip).
+- **Kiểm thử:** E2E 12 bộ / 310 kiểm tra đạt (thêm bộ `techrealm`: 29 kiểm tra); `tsc`, `check-*`, `validate-data`,
+  `build-hosting --strict` đạt.
+- Không sửa trang cũ, `js/`, `sw.js`, `firestore.rules`, Apps Script.
+
 ## 15/11/2026 (27) — Rà soát toàn dự án; Cloudflare bỏ hẳn Worker (0 lượt Worker/ngày)
 
 - **Kiểm thử trước khi sửa** (đều đạt): 66 file unit test, kiểm tra dữ liệu/JS/HTML/kiến trúc/đường dẫn cũ, Apps Script,

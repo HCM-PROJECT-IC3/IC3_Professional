@@ -1,0 +1,127 @@
+/* ============================================================
+   TechRealm — stylesheet RIÊNG, nạp cùng gói lười TechRealmApp.
+   globals.css bỏ qua thư mục này (@source not), nên trang học sinh
+   và nhân sự không tải thêm byte nào của khu TechRealm.
+   Chỉ sinh utility cho file trong thư mục này (source(none) + @source "./").
+   Preflight/base đã có ở globals.css — không nạp lại.
+   Quy chuẩn: docs/techrealm/UI_DESIGN_SYSTEM.md.
+   ============================================================ */
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@source "./";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Token — CHỈ áp trong phần tử có class .tr. Phẳng: không gradient, không glow. */
+.tr {
+  --background: #f4f2ec;           /* giấy dó */
+  --foreground: #172033;           /* mực */
+  --card: #fffdf8;
+  --card-foreground: #172033;
+  --muted: #ebe7dd;
+  --muted-foreground: #586274;
+  --border: #e0d9c9;
+  --input: #e0d9c9;
+  --ring: #0e7490;
+  --primary: #0e7490;              /* xanh công nghệ */
+  --primary-foreground: #ffffff;
+  --secondary: #e3eff1;
+  --secondary-foreground: #0b4f61;
+  --accent: #eef5f6;
+  --accent-foreground: #0b4f61;
+  --destructive: #c42b2b;
+  --destructive-foreground: #ffffff;
+  --step-1: #0e7490;  --step-2: #2f7d55;  --step-3: #b45309;   /* màu Badge dùng chung */
+  --tr-night: #13203a;             /* xanh đêm — dải đầu trang */
+  --tr-night-foreground: #eef2f8;
+  --tr-gold-night: #e2bb5a;        /* vàng kim trên nền đêm — cố định cả 2 theme, tương phản 8:1 */
+  --tr-gold: #95650b;              /* vàng kim — chỉ để nhấn */
+  --tr-violet: #6b46c1;            /* tím huyền */
+  --el-kim: #86650f;  --el-moc: #2f7d55;  --el-thuy: #2563c9;  --el-hoa: #c2452a;  --el-tho: #8c6239;
+  --rar-1: #6b7280;   --rar-2: #2f7d55;   --rar-3: #2563c9;    --rar-4: #6b46c1;   --rar-5: #95650b;
+}
+.dark .tr {
+  --background: #0a1120;
+  --foreground: #e7ecf3;
+  --card: #101a2d;
+  --card-foreground: #e7ecf3;
+  --muted: #17233a;
+  --muted-foreground: #9aa7ba;
+  --border: #22314c;
+  --input: #22314c;
+  --ring: #22c3dd;
+  --primary: #22c3dd;
+  --primary-foreground: #04161c;
+  --secondary: #0f3340;
+  --secondary-foreground: #b5ecf5;
+  --accent: #142338;
+  --accent-foreground: #d7f6fb;
+  --destructive: #f87171;
+  --destructive-foreground: #1b0606;
+  --step-1: #22c3dd;  --step-2: #5cc98a;  --step-3: #f0a24e;
+  --tr-night: #142240;             /* sáng hơn nền trang tối để dải đầu trang vẫn tách khối */
+  --tr-night-foreground: #e7ecf3;
+  --tr-gold-night: #e2bb5a;
+  --tr-gold: #e2bb5a;
+  --tr-violet: #a78bfa;
+  --el-kim: #e2bb5a;  --el-moc: #5cc98a;  --el-thuy: #6aa5f8;  --el-hoa: #f58b6c;  --el-tho: #d2a26b;
+  --rar-1: #9aa7ba;   --rar-2: #5cc98a;   --rar-3: #6aa5f8;    --rar-4: #a78bfa;   --rar-5: #e2bb5a;
+}
+
+/* Ánh xạ token → utility. Phần đầu lặp lại globals.css (cần để build riêng sinh được bg-card, text-primary…). */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-night: var(--tr-night);
+  --color-night-foreground: var(--tr-night-foreground);
+  --color-gold: var(--tr-gold);
+  --color-gold-night: var(--tr-gold-night);
+  --color-violet: var(--tr-violet);
+  --color-el-kim: var(--el-kim);
+  --color-el-moc: var(--el-moc);
+  --color-el-thuy: var(--el-thuy);
+  --color-el-hoa: var(--el-hoa);
+  --color-el-tho: var(--el-tho);
+  --color-rar-1: var(--rar-1);
+  --color-rar-2: var(--rar-2);
+  --color-rar-3: var(--rar-3);
+  --color-rar-4: var(--rar-4);
+  --color-rar-5: var(--rar-5);
+  --font-mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, monospace;
+  --animate-tr-in: tr-in 180ms ease-out both;
+  --animate-tr-panel: tr-panel 200ms ease-out both;
+  /* Đột phá (~1,3 giây, phẳng): ấn cũ mờ đi → vòng ấn tự vẽ → ấn mới hiện → chữ và vật phẩm. */
+  --animate-tr-seal-out: tr-seal-out 380ms ease-in both;
+  --animate-tr-ring: tr-ring 650ms 250ms ease-out both;
+  --animate-tr-seal-in: tr-seal-in 420ms 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-tr-rise: tr-rise 280ms 1000ms ease-out both;
+  --animate-tr-rise-late: tr-rise 280ms 1150ms ease-out both;
+}
+
+@keyframes tr-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@keyframes tr-panel { from { transform: translateX(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes tr-seal-out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.7); } }
+@keyframes tr-ring { from { stroke-dashoffset: 302; opacity: 0.3; } to { stroke-dashoffset: 0; opacity: 1; } }
+@keyframes tr-seal-in { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }
+@keyframes tr-flow { to { stroke-dashoffset: -14; } } /* dòng điện chạy trên dây khi mạch kín (bí cảnh 1) */
+@keyframes tr-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }

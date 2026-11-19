@@ -9,6 +9,14 @@ export async function seed(p, base, data, { clear = true } = {}) {
   }, data, clear);
 }
 
+/** Mở 1 trang và chờ "ổn định": DOM xong, rồi mạng rảnh 500 ms (tối đa 15 s, KHÔNG bắt buộc).
+ *  networkidle0 không dùng được cho trang nhúng khung bên thứ ba giữ kết nối mãi (tai-lieu-nam-hoc.html nhúng
+ *  PowerPoint Online: "load" ~28 s, mạng không bao giờ rảnh) — mã của trang vẫn chạy xong, lỗi JS vẫn bắt được. */
+export async function gotoSettled(p, url) {
+  await p.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
+  await p.waitForNetworkIdle({ idleTime: 500, timeout: 15000 }).catch(() => {});
+}
+
 /** Mở 1 route của app (nạp lại trang để index.html áp theme + đọc localStorage từ đầu). */
 export async function openApp(p, base, hash) {
   await p.goto(base + 'app/' + hash, { waitUntil: 'networkidle0' });

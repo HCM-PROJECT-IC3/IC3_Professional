@@ -27,6 +27,9 @@ jobs:
       - name: Ngân hàng câu hỏi khớp đáp án All Key (data/ic3/allkey-sync.json)
         run: node scripts/apply-allkey-sync.js --check
 
+      - name: TechRealm — data/techrealm/courses.json khớp ngân hàng câu hỏi
+        run: node scripts/build-techrealm-courses.mjs --check
+
       - name: Cú pháp mọi file JS
         run: node scripts/check-js.js
 
@@ -57,6 +60,9 @@ jobs:
 
       - name: Apps Script — test với Google/Firebase/GitHub giả lập
         run: node apps/__tests__/code-gs.test.js
+
+      - name: Apps Script — sổ cái TechRealm trên Sheet giả lập (luật dùng chung với trình duyệt)
+        run: node apps/__tests__/tr-ledger.test.js
 
       - name: MOS — tiêu chí chấm không "đạt sẵn" trên tệp đề gốc
         run: node mos/tools/test-rubrics.js
@@ -135,6 +141,13 @@ jobs:
           TZ: UTC
           E2E_SHOTS: ${{ runner.temp }}/e2e-shots
         run: npm test
+      # 29 trang: không gradient chuyển màu, không mờ kính (backdrop-filter), không animation trang trí chạy mãi,
+      # không glow, không emoji màu trên nút/tiêu đề — giữ giao diện phẳng, nhẹ cho máy phòng tin.
+      - name: Giao diện phẳng + nhẹ (không "kiểu AI", không hiệu ứng gây giật)
+        working-directory: tests/e2e
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+        run: node ui-audit.mjs --strict
       - name: Ảnh chụp màn hình khi lỗi
         if: failure()
         uses: actions/upload-artifact@v4

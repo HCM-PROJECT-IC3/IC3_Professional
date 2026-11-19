@@ -67,7 +67,8 @@ export function build({ quiet = false } = {}) {
   const fb = JSON.parse(fs.readFileSync(path.join(ROOT, 'firebase.json'), 'utf8'));
   // LUÔN bỏ (dù firebase.json thiếu "hosting"): dotfile/thư mục chấm (.git = lịch sử repo, .env…), node_modules, chính dist.
   // Cloudflare Pages / máy build khác KHÔNG tự bỏ .git như Firebase CLI → thiếu dòng này là lộ cả lịch sử mã nguồn.
-  const ignore = ['**/.*', '**/node_modules/**', OUT_DIR + '/**', ...(fb.hosting?.ignore || [])].map(globToRe);
+  // backups/ (scripts/backup-before-deploy.mjs) = TOÀN BỘ repo + Code.gs — không bao giờ được phát (Prompt 08).
+  const ignore = ['**/.*', '**/node_modules/**', OUT_DIR + '/**', 'backups/**', ...(fb.hosting?.ignore || [])].map(globToRe);
   const out = path.join(ROOT, OUT_DIR);
   fs.rmSync(out, { recursive: true, force: true });
 
@@ -128,6 +129,11 @@ export function build({ quiet = false } = {}) {
    lưu lâu, KHÔNG chồng nhau; còn lại để mặc định Cloudflare "public, max-age=0, must-revalidate" (= luôn hỏi
    lại, không đổi → 304), tương đương "no-cache" trong firebase.json. */
 const CLOUDFLARE_HEADERS = `# Sinh bởi scripts/build-hosting.mjs — đừng sửa tay (sửa trong script).
+# Bảo mật (Prompt 08, SECURITY_REPORT.md §5): tên header khác Cache-Control → gộp không xung đột. KHÔNG đặt
+# X-Frame-Options / frame-ancestors: thầy cô nhúng trang làm bài vào Google Sites / LMS.
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
 /bundles/*
   Cache-Control: public, max-age=31536000, immutable
 /app/assets/*
@@ -176,9 +182,12 @@ function checkLimits(out) {
       const abs = path.join(dir, e.name);
       if (e.isDirectory()) { walk(abs); continue; }
       const sz = fs.statSync(abs).size;
+      const rel = path.relative(out, abs).split(path.sep).join('/');
       r.count++; r.size += sz;
-      if (sz > r.max) { r.max = sz; r.maxPath = path.relative(out, abs).split(path.sep).join('/'); }
-      if (sz > 25 * 1048576) r.problems.push(`${r.maxPath}: ${(sz / 1048576).toFixed(1)} MB > 25 MiB (Cloudflare Pages)`);
+      if (sz > r.max) { r.max = sz; r.maxPath = rel; }
+      if (sz > 25 * 1048576) r.problems.push(`${rel}: ${(sz / 1048576).toFixed(1)} MB > 25 MiB (Cloudflare Pages)`);
+      // Chốt chặn (Prompt 08): mã máy chủ / sao lưu / bí mật KHÔNG bao giờ được phát, dù firebase.json quên bỏ.
+      if (/\.(gs|bundle|patch|pem|key)$|(^|\/)(\.env[^/]*|firestore\.rules|untracked\.tar|MANIFEST\.txt)$/.test(rel)) r.problems.push(`${rel}: file không được phát công khai`);
     }
   };
   walk(out);
@@ -364,8 +373,48 @@ function bundlePages(out) {
   return stat;
 }
 
+/* ── STAGING (Prompt 08, docs/techrealm/DEPLOYMENT_GUIDE.md §3) ──
+   Bản thử nghiệm phát ở 1 địa chỉ RIÊNG, bản thật giữ nguyên tới khi nghiệm thu. Khác bản thật đúng 2 điểm:
+   • URL Apps Script → 1 deployment THỬ NGHIỆM (Apps Script → Deploy → New deployment: URL /exec mới chạy mã mới; deployment
+     cũ của bản thật KHÔNG đổi). URL được thay ở MỌI file .js/.html của dist-hosting (kể cả gói app/ đã build sẵn).
+   • Chặn máy tìm kiếm: robots.txt "Disallow: /" + header X-Robots-Tag: noindex.
+   Mã nguồn và bản thật không đổi gì. */
+export function applyStaging(out, stagingUrl) {
+  if (!/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{20,}\/exec$/.test(stagingUrl)) {
+    throw new Error('URL Apps Script thử nghiệm không hợp lệ (dạng https://script.google.com/macros/s/…/exec): ' + stagingUrl);
+  }
+  const prod = fs.readFileSync(path.join(ROOT, 'js', 'backend-config.js'), 'utf8').match(/appsScriptUrl:\s*'([^']+)'/)?.[1];
+  if (!prod) throw new Error('Không đọc được appsScriptUrl trong js/backend-config.js');
+  let files = 0;
+  const walk = (dir) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const abs = path.join(dir, e.name);
+      if (e.isDirectory()) { walk(abs); continue; }
+      if (!/\.(js|html)$/.test(e.name)) continue;
+      const s = fs.readFileSync(abs, 'utf8');
+      if (!s.includes(prod)) continue;
+      fs.writeFileSync(abs, s.split(prod).join(stagingUrl));
+      files++;
+    }
+  };
+  walk(out);
+  if (!files) throw new Error('Không tìm thấy URL Apps Script của bản thật trong dist-hosting — không thay được.');
+  fs.writeFileSync(path.join(out, 'robots.txt'), 'User-agent: *\nDisallow: /\n');
+  fs.appendFileSync(path.join(out, '_headers'), '/*\n  X-Robots-Tag: noindex\n');
+  return { files };
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const st = build();
+  // --staging=<URL /exec thử nghiệm> (hoặc biến STAGING_APPS_SCRIPT_URL): bản thử nghiệm, xem applyStaging.
+  const stArg = process.argv.find((a) => a.startsWith('--staging'));
+  if (stArg) {
+    const url = stArg.includes('=') ? stArg.slice(stArg.indexOf('=') + 1) : process.env.STAGING_APPS_SCRIPT_URL || '';
+    try {
+      const r = applyStaging(path.join(ROOT, OUT_DIR), url);
+      console.log(`STAGING: đã trỏ ${r.files} file sang Apps Script thử nghiệm, chặn máy tìm kiếm.`);
+    } catch (e) { console.error('STAGING lỗi: ' + e.message); process.exit(1); }
+  }
   // --strict (CI): file nào không rút gọn được là lỗi — tránh âm thầm phát bản đầy đủ.
   if (process.argv.includes('--strict') && st.failed.length) process.exit(1);
 }

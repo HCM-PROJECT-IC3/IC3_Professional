@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router';
 import { AlertTriangle, BookOpen, ClipboardList, ExternalLink, RefreshCw, Target, Trophy, UserX, Users } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -104,6 +105,9 @@ export default function TeacherDashboard() {
           <Button variant="outline" size="sm" onClick={() => load(true)} disabled={!data || refreshing}>
             <RefreshCw className={cn(refreshing && 'animate-spin')} /> Làm mới
           </Button>
+          <Link to="/giao-vien/nang-luc" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+            <Target /> Năng lực học viên
+          </Link>
           <LegacyLink page="teacher-dashboard.html" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
             Bản đầy đủ <ExternalLink />
           </LegacyLink>

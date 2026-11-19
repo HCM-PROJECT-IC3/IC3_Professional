@@ -331,20 +331,125 @@
   // ============================================================
   const BOT_NAMES = ['Mèo Wifi', 'Cú Bit', 'Rùa Byte', 'Cáo Pixel', 'Gấu Cache', 'Sóc USB', 'Cá Cloud', 'Thỏ Router'];
   const BOT_FACES = ['🐱', '🦉', '🐢', '🦊', '🐻', '🐿️', '🐟', '🐰'];
-  /** level: 'easy' | 'normal' | 'hard' — độ chính xác + tốc độ của bot. */
+  /* TÍNH CÁCH bạn máy (18/11/2026) — để bạn máy chơi "như người", không như máy:
+     • đọc đề mất thời gian (đề dài, nhiều phương án → chậm hơn), thời gian lệch kiểu người (phân bố lệch phải: đa số
+       nhanh vừa, thỉnh thoảng nghĩ rất lâu), không bao giờ chốt cùng một nhịp;
+     • câu khó (dài, nhiều phương án, dạng ghép/sắp xếp) dễ sai hơn; trả lời quá vội cũng dễ sai;
+     • đang chuỗi đúng → tự tin hơn; sai liên tiếp → cuống (vội hơn, sai thêm) — mỗi tính cách một mức;
+     • trận cách biệt quá xa → bạn máy hơi "đuối"/"hăng" để trận vẫn gay cấn (nhẹ, ±6%).
+     speed = tỉ lệ thời gian thường dùng; acc = cộng thêm vào độ chính xác. */
+  const PERSONAS = {
+    'can-than': { name: 'Cẩn thận', speed: [0.42, 0.6], acc: 0.06, spread: 0.28, tilt: 0.02, hot: 0.02 },
+    'hap-tap': { name: 'Hấp tấp', speed: [0.16, 0.3], acc: -0.07, spread: 0.5, tilt: 0.08, hot: 0.03 },
+    'deu-tay': { name: 'Đều tay', speed: [0.28, 0.42], acc: 0, spread: 0.22, tilt: 0.03, hot: 0.03 },
+    'bung-no': { name: 'Bùng nổ', speed: [0.22, 0.45], acc: -0.02, spread: 0.38, tilt: 0.06, hot: 0.08 },
+  };
+  const PERSONA_IDS = Object.keys(PERSONAS);
+  const clamp01 = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
+  /** level: 'easy' | 'normal' | 'hard' — độ chính xác + tốc độ của bot. Mỗi bot 1 tính cách (không trùng khi ≤ 4 bot). */
   function makeBots(n, rng, level) {
     const acc = { easy: [0.45, 0.65], normal: [0.6, 0.8], hard: [0.75, 0.92] }[level] || [0.6, 0.8];
-    return shuffle(BOT_NAMES.map((name, i) => ({ name, face: BOT_FACES[i] })), rng).slice(0, n).map((b, i) => Object.assign(b, {
-      id: 'bot' + i, bot: true,
-      accuracy: acc[0] + rng() * (acc[1] - acc[0]),
-      speed: 0.25 + rng() * 0.5, // tỉ lệ thời gian thường dùng
-      score: 0, gold: 0, pos: 0, streak: 0,
-    }));
+    const kinds = shuffle(PERSONA_IDS.slice(), rng);
+    return shuffle(BOT_NAMES.map((name, i) => ({ name, face: BOT_FACES[i] })), rng).slice(0, n).map((b, i) => {
+      const persona = kinds[i % kinds.length], P = PERSONAS[persona];
+      return Object.assign(b, {
+        id: 'bot' + i, bot: true, persona,
+        accuracy: clamp01(acc[0] + rng() * (acc[1] - acc[0]) + P.acc, acc[0] - 0.08, acc[1] + 0.04),
+        speed: P.speed[0] + rng() * (P.speed[1] - P.speed[0]),
+        score: 0, gold: 0, pos: 0, streak: 0, run: 0, miss: 0,
+      });
+    });
   }
+  /** Độ khó ước lượng của 1 câu (0 dễ … 1 khó) + thời gian ĐỌC đề (ms) — chỉ dựa vào hình thức câu, không cần đáp án. */
+  function questionLoad(q) {
+    if (!q) return { hard: 0.3, readMs: 2500 };
+    const text = String(q.text || '');
+    const opts = Array.isArray(q.options) ? q.options : [];
+    const optChars = opts.reduce((s, o) => s + String(o || '').length, 0);
+    const kind = kindOf(q);
+    const hard = clamp01(text.length / 260 * 0.45 + Math.max(0, opts.length - 2) * 0.08 + optChars / 400 * 0.2 + (kind === 'choice' ? 0 : 0.25), 0, 1);
+    const readMs = 1200 + Math.min(9000, (text.length + optChars * 0.7) * 38) + (kind === 'choice' ? 0 : 2500);
+    return { hard, readMs };
+  }
+  /** Gauss chuẩn từ rng (Box–Muller) — để thời gian nghĩ lệch kiểu người (log-normal). */
+  function gauss(rng) { return Math.sqrt(-2 * Math.log(Math.max(1e-9, rng()))) * Math.cos(2 * Math.PI * rng()); }
+  /**
+   * Lượt trả lời của 1 bạn máy cho câu `q`. ctx: { gap } — chênh lệch của EM so với bạn máy này (−1 em thua xa … +1 em
+   * dẫn xa), dùng để giữ trận gay cấn. Trả { correct, ms, timeout }. Hàm thuần (rng truyền vào → test lặp lại được).
+   * arena.js gọi 1 LẦN mỗi câu lúc bắt đầu tính giờ: cùng 1 kết quả cho cả "chốt đáp án" trên màn hình lẫn lúc chấm.
+   */
+  function botPlan(bot, q, limitMs, rng, ctx) {
+    const P = PERSONAS[bot.persona] || PERSONAS['deu-tay'];
+    const lim = limitMs > 0 ? limitMs : 20000;
+    const L = questionLoad(q);
+    // Thời gian: đọc đề + nghĩ (log-normal quanh tốc độ quen của bạn này), câu khó nghĩ lâu hơn, đang cuống thì vội.
+    const think = lim * (bot.speed || 0.4) * (0.75 + L.hard * 0.7) * Math.exp(gauss(rng) * P.spread - P.spread * P.spread / 2);
+    const rush = (bot.miss || 0) >= 2 ? 0.7 : 1;
+    let ms = Math.round(Math.min(L.readMs, lim * 0.45) * (bot.persona === 'hap-tap' ? 0.55 : 1) + think * rush);
+    const timeout = ms > lim * 0.985;
+    ms = Math.max(Math.round(lim * 0.06), Math.min(lim, ms));
+    // Đúng/sai: độ chính xác quen − độ khó − vội quá + tự tin/cuống ± giữ trận gay cấn.
+    let p = (bot.accuracy || 0.7) - (L.hard - 0.3) * 0.18;
+    if (ms < lim * 0.15) p -= 0.08;
+    if ((bot.run || 0) >= 3) p += P.hot;
+    if ((bot.miss || 0) >= 2) p -= P.tilt;
+    const gap = ctx && typeof ctx.gap === 'number' ? clamp01(ctx.gap, -1, 1) : 0;
+    p += gap * 0.06; // em dẫn xa → bạn máy "hăng" hơn; em thua xa → bạn máy "đuối" bớt
+    const correct = !timeout && rng() < clamp01(p, 0.05, 0.97);
+    return { correct, ms, timeout };
+  }
+  /** Ghi nhận kết quả lượt vừa rồi vào "tâm lý" của bạn máy (chuỗi đúng / sai liên tiếp). */
+  function botMood(bot, correct) {
+    bot.run = correct ? (bot.run || 0) + 1 : 0;
+    bot.miss = correct ? 0 : (bot.miss || 0) + 1;
+    return bot;
+  }
+  /* ĐỐI THỦ NHỚ EM (18/11/2026): mỗi bạn máy (theo tên) nhớ số trận thắng/thua với em qua các trận → vào trận nói đúng
+     chuyện cũ ("lần trước em thắng tớ, hôm nay phục thù!"), hết trận nói theo kết quả. Lưu ở hồ sơ biệt danh: p.rivals.
+     rivals[name] = { w: số trận EM xếp trên bạn ấy, l: số trận bạn ấy xếp trên em, last: 'w' | 'l' (trận gần nhất, theo em) }. */
+  const RIVAL_MAX = 999;
+  /** Ghi kết quả 1 trận đối kháng (board: đã xếp hạng, me: em). Không dùng cho trận đồng đội (Kéo co, Diệt Virus). */
+  function settleRivals(rivals, board, me) {
+    const R = rivals && typeof rivals === 'object' ? rivals : {};
+    const myAt = board.indexOf(me);
+    if (myAt < 0) return R;
+    board.forEach((p, i) => {
+      if (!p || !p.bot || p.ghost || !p.name) return;
+      const r = R[p.name] && typeof R[p.name] === 'object' ? R[p.name] : (R[p.name] = { w: 0, l: 0, last: '' });
+      if (i > myAt) { r.w = Math.min(RIVAL_MAX, (r.w || 0) + 1); r.last = 'w'; } else { r.l = Math.min(RIVAL_MAX, (r.l || 0) + 1); r.last = 'l'; }
+    });
+    return R;
+  }
+  /** Bạn máy "đáng nhắc" nhất trong trận: đã gặp em nhiều nhất (hoà thì chênh lệch thắng thua lớn hơn); chưa ai gặp → bạn đầu tiên. */
+  function featuredRival(rivals, bots) {
+    const R = rivals || {};
+    const n = (b) => { const r = R[b.name]; return r ? (r.w || 0) + (r.l || 0) : 0; };
+    const d = (b) => { const r = R[b.name]; return r ? Math.abs((r.w || 0) - (r.l || 0)) : 0; };
+    return bots.slice().sort((a, b) => (n(b) - n(a)) || (d(b) - d(a)))[0] || null;
+  }
+  /**
+   * Câu nói của bạn máy theo lịch sử với em. when: 'intro' (trước trận) | 'end' (sau trận, đã settleRivals).
+   * Trả { kind, text }. kind (để test): first | nemesis | victim | revenge | defend | won | lost.
+   */
+  function rivalTalk(rec, when) {
+    const r = rec || {}, w = r.w || 0, l = r.l || 0, tot = w + l;
+    if (when === 'end') {
+      if (r.last === 'w') return w === 1 && !l ? { kind: 'won', text: 'Em thắng tớ trận đầu rồi. Lần sau gặp lại nhé!' }
+        : { kind: 'won', text: `Thua em lần thứ ${w} rồi… tớ sẽ quay lại!` };
+      return l >= 3 ? { kind: 'lost', text: `Tớ thắng em ${l}/${tot} ván rồi đấy. Ôn thêm rồi gỡ nhé!` }
+        : { kind: 'lost', text: 'Hôm nay tớ may hơn một chút. Ván sau em gỡ nhé!' };
+    }
+    if (!tot) return { kind: 'first', text: 'Lần đầu đấu với em. Chơi đẹp nhé!' };
+    if (l - w >= 3) return { kind: 'nemesis', text: `Tớ thắng em ${l}/${tot} ván rồi đấy. Hôm nay thử xem!` };
+    if (w - l >= 3) return { kind: 'victim', text: `Em thắng tớ ${w} lần rồi… lần này tớ ôn kỹ lắm!` };
+    if (r.last === 'w') return { kind: 'revenge', text: 'Lần trước em thắng tớ. Hôm nay tớ phục thù!' };
+    return { kind: 'defend', text: 'Lần trước tớ thắng đấy. Em gỡ được không?' };
+  }
+
+  /** Tương thích cũ (không biết câu hỏi): như botPlan với câu trung bình. */
   function botAnswer(bot, limitMs, rng) {
-    const correct = rng() < bot.accuracy;
-    const ms = Math.min(limitMs, Math.round(limitMs * Math.max(0.08, bot.speed + (rng() - 0.5) * 0.3)));
-    return { correct, ms };
+    const a = botPlan(bot, null, limitMs, rng, null);
+    return { correct: a.correct, ms: a.ms };
   }
 
   // ============================================================
@@ -1057,7 +1162,7 @@
   global.EduArenaCore = {
     rngFrom, shuffle, strip, convert, buildDeck, practiceDeck, normText, dedupeKey, playCount, extendDeck,
     KINDS, KIND_LABEL, KIND_ICON, kindOf, countKinds, isAnswer, grade, partial, answerLines, chosenLines, answerText,
-    speedPoints, streakBonus, makeBots, botAnswer,
+    speedPoints, streakBonus, makeBots, botAnswer, botPlan, botMood, questionLoad, PERSONAS, settleRivals, featuredRival, rivalTalk,
     CHESTS, rollChests, applyChest, chestLabel, raceStep, rank,
     LIVES, HEAL_EVERY, survivalStep, survivalOrder, hearts, FISH, castLine,
     POWERUPS, POWER_EVERY, POWER_MAX, earnPowerup, fiftyFifty,

@@ -134,3 +134,15 @@ Xem `tests/e2e/README.md`: 11 bộ, 140 kiểm tra, CI job `e2e`. Khi thêm tran
 2. Không gắn `<link rel="manifest">` trong `web/index.html`. Vite sẽ chép một bản với `start_url` sai.
 3. Gọi Firestore chỉ qua repository có cache và `limit`. Không dùng `onSnapshot` ngoài Arena. Tắt refetch khi focus hoặc reconnect.
 4. Luồng làm bài, MOS, Arena và mini-game vẫn là trang cũ. Mở chúng bằng `LegacyLink`.
+
+## TechRealm (bản xem thử giao diện, 16/11/2026)
+
+Khu riêng ở `/app/#/the-gioi`, có khung riêng (`src/features/techrealm/layout/TrShell.tsx`), gói JS và CSS nạp lười
+riêng. Hiện dùng **dữ liệu mẫu** (`src/features/techrealm/demo/data.ts`), **0 lượt mạng**. Chưa có mục menu nào trỏ tới.
+
+- Quy chuẩn: `docs/techrealm/UI_DESIGN_SYSTEM.md` · cách dùng thành phần: `docs/techrealm/COMPONENT_GUIDE.md`.
+- Token màu chỉ áp trong `.tr` (`src/features/techrealm/techrealm.css`). `globals.css` bỏ qua thư mục này
+  (`@source not`), nên CSS chung không nặng thêm.
+- AI Sư Phụ (`/the-gioi/su-phu`) và Tông môn (`/the-gioi/tong-mon`): `docs/techrealm/AI_MENTOR.md`,
+  hướng dẫn giáo viên `docs/techrealm/HUONG_DAN_GIAO_VIEN.md`. Báo cáo năng lực ở `/giao-vien/nang-luc`.
+- Kiểm thử: `cd ../tests/e2e && node run.mjs techrealm`.

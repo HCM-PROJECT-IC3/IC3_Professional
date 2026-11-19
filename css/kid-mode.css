@@ -194,7 +194,7 @@ body.kid-mode .q-check-result .rd-explain { font-size: 1.12rem; line-height: 1.6
 body.mc-open { overflow: hidden; }
 .mc-overlay {
   position: fixed; inset: 0; z-index: 9000; display: flex; align-items: center; justify-content: center;
-  padding: 1rem; background: rgba(10, 16, 48, .6); backdrop-filter: blur(3px);
+  padding: 1rem; background: rgba(10, 16, 48, .6); 
 }
 .mc-overlay[hidden] { display: none !important; }
 .mc-box {

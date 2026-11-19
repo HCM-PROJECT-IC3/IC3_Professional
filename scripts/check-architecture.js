@@ -30,7 +30,7 @@ function stripComments(src) {
 }
 
 // ── Phân tầng ──
-const PURE_EXTRA = ['js/services/ai-assistant.js'];                  // use case thuần (Application) — luật như Domain
+const PURE_EXTRA = ['js/services/ai-assistant.js', 'js/techrealm/cultivation-service.js'];                  // use case thuần (Application) — luật như Domain
 const isDomain = (f) => /^js\/(core|models)\/[^/]+\.js$/.test(f) || /-core\.js$/.test(f) || PURE_EXTRA.includes(f);
 const isRepository = (f) => f.startsWith('js/repositories/');
 const FIRESTORE_ADAPTERS = [                                          // bộ nối hạ tầng được phép gọi Firestore

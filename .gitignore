@@ -10,3 +10,6 @@ node_modules/
 dist-hosting/
 # Thư mục tạm của "wrangler dev" (chạy thử Cloudflare trên máy)
 .wrangler/
+
+# Sao lưu trước khi triển khai (scripts/backup-before-deploy.mjs) — chỉ giữ trên máy
+backups/

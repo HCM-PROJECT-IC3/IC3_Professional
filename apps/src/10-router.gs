@@ -42,6 +42,7 @@ function routes_() {
     classSheetInfo:   { roles: ROLES_TEACH, handler: classSheetInfo_ },
     aiAsk:         { roles: null,          handler: aiAsk_ },        // 78-ai.gs — công khai: giải thích câu sai, câu hỏi nhanh (có trần lượt)
     aiAskStaff:    { roles: ROLES_STAFF,   handler: aiAskStaff_ },
+    aiReport:      { roles: null,          handler: aiReport_ },     // 78-ai.gs — công khai: báo câu trả lời AI có vấn đề (10/ngày/máy)
     aiStatus:      { roles: ROLES_STAFF,   handler: aiStatus_ },
     aiConfig:      { roles: ROLES_ADMIN,   handler: aiConfig_ },
   };

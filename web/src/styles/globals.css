@@ -1,4 +1,7 @@
 @import "tailwindcss";
+/* TechRealm có stylesheet riêng, nạp cùng gói lười (features/techrealm/techrealm.css) — không quét ở đây,
+   để trang học sinh/nhân sự không tải thêm CSS của khu đó. */
+@source not "../features/techrealm";
 
 /* Dark mode theo class .dark trên <html> (đặt sớm trong index.html từ khoá "ic3_theme"). */
 @custom-variant dark (&:where(.dark, .dark *));

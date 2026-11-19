@@ -8,16 +8,17 @@
 :root {
   --sky-1: #c5e4f6; --sky-2: #e9f6fd; --sky-ink: #10263f; --sky-sub: #35506b;
   --ic-blue: #1b87c9; --ic-green: #4e9f35; --ic-orange: #e07c12;
-  --glass: rgba(255, 255, 255, .78); --glass-line: rgba(27, 135, 201, .22);
+  --glass: #f7fbfe; --glass-line: rgba(27, 135, 201, .22);
 }
 [data-theme="dark"] {
   --sky-1: #0b1b30; --sky-2: #0f2740; --sky-ink: #eaf4ff; --sky-sub: #b4c7dc;
   --ic-blue: #5cbcf0; --ic-green: #86cf68; --ic-orange: #f6a64e;
-  --glass: rgba(17, 34, 56, .8); --glass-line: rgba(92, 188, 240, .25);
+  --glass: #122a45; --glass-line: rgba(92, 188, 240, .25);
 }
 
 #lobby::after { display: none; }
-#lobby { background: linear-gradient(160deg, var(--sky-1), var(--sky-2) 55%, var(--sky-1)); align-items: stretch; }
+/* Nền trời 1 màu (bỏ gradient 18/11/2026): phẳng, không cần vẽ lại khi cuộn. */
+#lobby { background: var(--sky-1); align-items: stretch; }
 /* style.css có dòng cũ ẩn ::before nên phải bật lại */
 #lobby::before { display: block; position: fixed; inset: 0; background: url("../img/lobby-network.svg") center / cover no-repeat; }
 [data-theme="dark"] #lobby::before { background: url("../img/lobby-network.svg") center / cover no-repeat; opacity: .3; }
@@ -30,7 +31,6 @@
   .lobby-side {
     display: flex; flex-direction: column; gap: .35rem; position: sticky; top: 0; z-index: 2; height: 100vh; align-self: start; padding: 1.2rem .8rem .8rem;
     background: var(--glass); border-right: 1px solid var(--glass-line); color: var(--sky-ink);
-    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   }
 }
 .lobby-side-brand { display: flex; align-items: center; gap: .55rem; padding: 0 .4rem 1.1rem; font-size: 1.15rem; font-weight: 800; line-height: 1.1; }
@@ -113,8 +113,8 @@
 .lobby-col-2 { --step: var(--ic-green); }
 .lobby-col-3 { --step: var(--ic-orange); }
 .lobby-col-more { --step: var(--ic-blue); }
-.lobby-card .lobby-col { background: var(--glass); border-radius: 18px; padding: 1rem; border: 0; margin-left: 0; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-  box-shadow: inset 0 4px 0 var(--step), 0 0 0 1px var(--glass-line), 0 6px 18px rgba(16, 38, 63, .07); }
+.lobby-card .lobby-col { background: var(--glass); border-radius: 18px; padding: 1rem; border: 0; margin-left: 0;
+  box-shadow: inset 0 4px 0 var(--step), 0 0 0 1px var(--glass-line); }
 .lobby-card .lobby-col + .lobby-col { margin-top: .8rem; }
 .lobby-card .lobby-col > .form-section-label.lobby-step:first-child, .lobby-card .form-section-label.lobby-step { margin: 0 0 .9rem; padding: .5rem .7rem; border: 0; border-radius: 14px; background: color-mix(in srgb, var(--step) 15%, transparent); color: var(--sky-ink); font-size: 1.1rem; }
 .lobby-card .step-num, .lobby-card .lobby-step.is-done .step-num { background: var(--step); color: #fff; box-shadow: none; }
@@ -129,7 +129,8 @@
 
 /* Nút Bắt đầu: cam khi bấm được; đậm vừa đủ để chữ trắng đạt tương phản chữ lớn */
 .lobby-card .btn-start { border-radius: 999px; }
-.lobby-card .btn-start:not(:disabled) { background: linear-gradient(180deg, #f58a0b, #dd6800); box-shadow: 0 8px 20px rgba(221, 104, 0, .35); }
+.lobby-card .btn-start:not(:disabled) { background: #dd6800; box-shadow: none; }
+.lobby-card .btn-start:not(:disabled):hover { background: #c55d00; }
 .lobby-card #startHint.is-ready { color: var(--ic-orange); font-style: italic; font-weight: 700; text-align: center; }
 
 /* Công cụ hỗ trợ: icon theo 3 màu */

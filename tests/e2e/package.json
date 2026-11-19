@@ -4,7 +4,8 @@
   "description": "Kiểm thử trình duyệt thật (Chrome headless) cho trang cũ + app 2.0. Không gọi Firebase thật. CI: job \"e2e\".",
   "type": "module",
   "scripts": {
-    "test": "node run.mjs"
+    "test": "node run.mjs",
+    "ui-audit": "node ui-audit.mjs --strict"
   },
   "devDependencies": {
     "puppeteer-core": "23.11.1"

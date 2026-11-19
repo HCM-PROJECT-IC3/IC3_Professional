@@ -212,7 +212,7 @@
       var done = false;
       var go = function () { if (!done) { done = true; window.location.href = a.href; } };
       document.body.addEventListener('animationend', go, { once: true });
-      setTimeout(go, 380);
+      setTimeout(go, 180); // an toàn: hiệu ứng ra chỉ .12s (css/motion.css)
     });
   }
 

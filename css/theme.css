@@ -211,7 +211,7 @@
   width: 7px; height: 7px; border-radius: 50%;
   background: var(--teal);
   box-shadow: 0 0 0 0 rgba(23,179,163,.6);
-  animation: dotPing 1.8s ease-in-out infinite;
+  animation: none;
 }
 @keyframes dotPing {
   0%   { box-shadow: 0 0 0 0 rgba(23,179,163,.55) }

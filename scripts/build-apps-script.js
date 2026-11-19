@@ -13,11 +13,23 @@ const SRC = path.join(ROOT, 'apps', 'src');
 const OUT = path.join(ROOT, 'apps', 'Code.gs');
 
 const files = fs.readdirSync(SRC).filter((f) => f.endsWith('.gs')).sort();
+// Domain thuần DÙNG CHUNG với trình duyệt: chép NGUYÊN VĂN (không bản sao tay → không lệch luật).
+// File phải là IIFE gắn vào globalThis, không `?.`/`??`, không DOM/mạng (scripts/check-architecture.js R1).
+const SHARED = ['js/techrealm/cultivation-core.js', 'js/techrealm/cultivation-service.js', 'js/techrealm/learning-core.js',
+  'js/techrealm/challenge-core.js', 'js/techrealm/thanh-pho-mat-dien-core.js', 'js/techrealm/mentor-core.js'];
 const banner =
-  '// ⚠️ FILE TẠO TỰ ĐỘNG từ apps/src/*.gs — đừng sửa tay ở đây.\n' +
+  '// ⚠️ FILE TẠO TỰ ĐỘNG từ ' + SHARED.join(', ') + ' + apps/src/*.gs — đừng sửa tay ở đây.\n' +
   '// Sửa file nguồn tương ứng rồi chạy: node scripts/build-apps-script.js\n' +
-  '// Thứ tự: ' + files.join(', ') + '\n';
-const body = files.map((f) => {
+  '// Thứ tự: ' + SHARED.map((f) => path.basename(f)).concat(files).join(', ') + '\n';
+const shared = SHARED.map((f) => {
+  const text = fs.readFileSync(path.join(ROOT, f), 'utf8').replace(/\r\n/g, '\n').replace(/\s+$/, '');
+  if (/\?\.|\?\?/.test(text.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '').replace(/'(?:[^'\\]|\\.)*'/g, "''"))) {
+    console.error('✖ ' + f + ' dùng `?.` hoặc `??` — Apps Script có thể không chạy được, hãy viết lại.');
+    process.exit(1);
+  }
+  return '\n// ──────────────── ' + f + ' (dùng chung với trình duyệt — sửa ở file gốc) ────────────────\n' + text + '\n';
+}).join('');
+const body = shared + files.map((f) => {
   const text = fs.readFileSync(path.join(SRC, f), 'utf8').replace(/\r\n/g, '\n').replace(/\s+$/, '');
   return '\n// ──────────────── ' + f + ' ────────────────\n' + text + '\n';
 }).join('');

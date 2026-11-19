@@ -1,6 +1,1389 @@
-// ⚠️ FILE TẠO TỰ ĐỘNG từ apps/src/*.gs — đừng sửa tay ở đây.
+// ⚠️ FILE TẠO TỰ ĐỘNG từ js/techrealm/cultivation-core.js, js/techrealm/cultivation-service.js, js/techrealm/learning-core.js, js/techrealm/challenge-core.js, js/techrealm/thanh-pho-mat-dien-core.js, js/techrealm/mentor-core.js + apps/src/*.gs — đừng sửa tay ở đây.
 // Sửa file nguồn tương ứng rồi chạy: node scripts/build-apps-script.js
-// Thứ tự: 00-config.gs, 10-router.gs, 20-auth.gs, 30-submissions.gs, 35-mos.gs, 36-batch.gs, 40-results.gs, 45-activity.gs, 47-arena.gs, 48-class-sheet.gs, 49-class-books.gs, 50-reports.gs, 60-maps.gs, 70-github.gs, 75-roster-codes.gs, 77-grading.gs, 78-ai.gs, 80-sheet-setup.gs, 90-utils.gs, 95-selftest.gs
+// Thứ tự: cultivation-core.js, cultivation-service.js, learning-core.js, challenge-core.js, thanh-pho-mat-dien-core.js, mentor-core.js, 00-config.gs, 10-router.gs, 20-auth.gs, 30-submissions.gs, 35-mos.gs, 36-batch.gs, 40-results.gs, 45-activity.gs, 47-arena.gs, 48-class-sheet.gs, 49-class-books.gs, 50-reports.gs, 60-maps.gs, 70-github.gs, 75-roster-codes.gs, 77-grading.gs, 78-ai.gs, 79-tr-ledger.gs, 80-sheet-setup.gs, 90-utils.gs, 95-selftest.gs
+
+// ──────────────── js/techrealm/cultivation-core.js (dùng chung với trình duyệt — sửa ở file gốc) ────────────────
+/* ============================================================
+   js/techrealm/cultivation-core.js — LUẬT TU LUYỆN của TechRealm (Domain thuần).
+
+   MỘT nguồn duy nhất, chạy ở 3 nơi, KHÔNG có bản chép tay:
+     • trình duyệt (app React: web/src/features/techrealm/engine.ts import dạng side-effect)
+     • Node (unit test: js/techrealm/__tests__/)
+     • Apps Script — scripts/build-apps-script.js chép NGUYÊN VĂN file này vào apps/Code.gs.
+   Vì vậy: không DOM, không mạng, không localStorage, không Date.now() (giờ do bên gọi đưa vào),
+   và không dùng cú pháp `?.` / `??` (giữ an toàn cho V8 của Apps Script).
+
+   Sổ cái (ledger) là CHUỖI SỰ KIỆN CHỈ THÊM. Không dòng nào bị sửa: duyệt, huỷ, đột phá, nhận vật phẩm
+   đều là dòng mới trỏ về dòng cũ. Trạng thái hiện tại = summarize(toàn bộ dòng). Mỗi dòng có txId TẤT ĐỊNH
+   → gửi lại cùng sự kiện ra cùng txId → summarize chỉ tính 1 lần (chống cộng trùng kể cả khi ghi đua).
+   Tài liệu: docs/techrealm/CULTIVATION_SYSTEM.md
+   ============================================================ */
+(function (root) {
+  'use strict';
+
+  /* ── 1. Cảnh giới và tiểu cảnh giới ─────────────────────────────────────────── */
+  const REALMS = [
+    { id: 1, name: 'Luyện Khí', plain: 'Làm quen' },
+    { id: 2, name: 'Trúc Cơ', plain: 'Nền tảng' },
+    { id: 3, name: 'Kim Đan', plain: 'Vững vàng' },
+    { id: 4, name: 'Nguyên Anh', plain: 'Thành thạo' },
+    { id: 5, name: 'Hóa Thần', plain: 'Vận dụng' },
+    { id: 6, name: 'Độ Kiếp', plain: 'Vượt thử thách' },
+    { id: 7, name: 'Chân Tiên', plain: 'Chứng chỉ thật' },
+  ];
+  const STAGES = ['Sơ kỳ', 'Trung kỳ', 'Hậu kỳ'];
+  const MAX_REALM = 7;
+
+  /* ── 2. Nguồn EXP (chỉ những hoạt động có BẰNG CHỨNG — không có "mở trang") ── */
+  // actors: ai được phép gửi sự kiện loại này. 'system' = Apps Script sau khi tự chấm / tự đối chiếu.
+  const SOURCES = {
+    LESSON:   { label: 'Hoàn thành bài học',      actors: ['system'],                   idField: 'lessonId',   needScore: true },
+    EXERCISE: { label: 'Hoàn thành bài tập',      actors: ['system'],                   idField: 'exerciseId', needScore: true },
+    TEST:     { label: 'Vượt qua bài kiểm tra',   actors: ['system'],                   idField: 'testId',     needScore: true },
+    QUEST:    { label: 'Hoàn thành nhiệm vụ',     actors: ['system', 'teacher', 'admin'], idField: 'questId' },
+    PROJECT:  { label: 'Hoàn thành dự án',        actors: ['teacher', 'admin'],         idField: 'projectId',  needPct: true },
+    TEACHER:  { label: 'Giáo viên xác nhận',      actors: ['teacher', 'admin'],         idField: 'awardId',    needNote: true },
+    ACTIVITY: { label: 'Tham gia hoạt động học tập', actors: ['system', 'teacher', 'admin'], idField: 'activityId' },
+    // Bí cảnh: điểm do MÁY CHỦ chạy lại nhật ký thao tác (challenge-core.replay) — không nhận điểm từ trình duyệt.
+    CHALLENGE: { label: 'Vượt bí cảnh', actors: ['system'], idField: 'challengeId', needScore: true },
+  };
+
+  function seq(prefix, n) { const out = []; for (let i = 1; i <= n; i++) out.push(prefix + i); return out; }
+
+  /* ── 3. Cấu hình mặc định — Admin ghi đè từng phần (mergeConfig), luôn qua validateConfig ── */
+  const DEFAULT_CONFIG = {
+    version: '2026-11-16',
+    // once: true → mỗi (học sinh, id nguồn) chỉ được thưởng 1 lần, làm lại không cộng thêm.
+    rewards: {
+      LESSON:   { amount: 20, minScore: 70, once: true, perDay: 200 },
+      EXERCISE: { amount: 10, minScore: 60, once: true, perDay: 100 },
+      TEST:     { amount: 60, minScore: 70, once: true, perfectBonus: 20 },
+      QUEST:    { amount: 40, once: true },
+      PROJECT:  { once: true, tiers: [{ minPct: 90, amount: 180 }, { minPct: 75, amount: 150 }, { minPct: 50, amount: 120 }] },
+      TEACHER:  { amount: 10, maxAmount: 30, perWeek: 50 },          // vượt perWeek → chờ Admin duyệt
+      ACTIVITY: { amount: 15, once: true, perDay: 30 },
+      // Mỗi màn 1 lần; mức theo điểm máy chủ chấm lại; màn Boss cộng thêm bossBonus.
+      CHALLENGE: { once: true, minScore: 50, perDay: 150, bossBonus: 40, tiers: [{ minPct: 85, amount: 30 }, { minPct: 65, amount: 20 }, { minPct: 50, amount: 10 }] },
+    },
+    // Điều kiện đột phá LÊN cảnh giới n. courses = id công pháp phải hoàn thành; tests = id bài khảo hạch phải đạt.
+    breakthrough: {
+      2: { minExp: 300,   courses: [],        tests: ['khao-hach-2'], projects: 0, quests: 0 },
+      3: { minExp: 900,   courses: ['ic3-1'], tests: ['khao-hach-3'], projects: 1, quests: 0 },
+      4: { minExp: 2000,  courses: ['ic3-1', 'mos-word'], tests: ['khao-hach-4'], projects: 2, quests: 1 },
+      5: { minExp: 4000,  courses: ['ic3-2'], tests: ['khao-hach-5'], projects: 3, quests: 2 },
+      6: { minExp: 7000,  courses: ['ic3-3'], tests: ['khao-hach-6'], projects: 4, quests: 3 },
+      7: { minExp: 11000, courses: ['ic3-3'], tests: ['khao-hach-7'], projects: 4, quests: 3, certified: true },
+    },
+    // Công pháp → danh sách bài (lessonId = <chương trình>-<cấp>/<số bài>, giống learning-core.lessonIdOf).
+    // KHỚP data/techrealm/courses.json (scripts/build-techrealm-courses.mjs) — test learning-core.test.js kiểm.
+    courses: {
+      'ic3-1': seq('ic3-lv1/', 35),
+      'ic3-2': seq('ic3-lv2/', 35),
+      'ic3-3': seq('ic3-lv3/', 35),
+      'mos-word': seq('mos-word/', 8),
+    },
+    // Vật phẩm tặng khi đột phá thành công lên cảnh giới n.
+    realmRewards: {
+      2: [{ itemId: 'khung-van-may', qty: 1 }, { itemId: 'linh-thach', qty: 100 }],
+      3: [{ itemId: 'khung-kim-an', qty: 1 }, { itemId: 'dh-kim-dan', qty: 1 }, { itemId: 'linh-thach', qty: 200 }],
+      4: [{ itemId: 'cp-mos-excel', qty: 1 }, { itemId: 'linh-thach', qty: 300 }],
+      5: [{ itemId: 'linh-thach', qty: 400 }],
+      6: [{ itemId: 'linh-thach', qty: 500 }],
+      7: [{ itemId: 'dh-chan-tien', qty: 1 }],
+    },
+  };
+
+  /* ── 4. Vật phẩm ─────────────────────────────────────────────────────────── */
+  const ITEM_KINDS = ['linh-thach', 'cong-phap', 'phap-bao', 'dan-duoc', 'danh-hieu', 'trang-tri'];
+  // Chức năng được phép. KHÔNG có chức năng nào cộng EXP / đổi điểm / đổi cảnh giới — vật phẩm không mua được thành tích.
+  const ITEM_EFFECTS = ['currency', 'unlock-course', 'cosmetic', 'title', 'streak-freeze', 'practice-hint'];
+  const OBTAIN_TYPES = ['realm', 'achievement', 'shop', 'event', 'start'];
+  const DEFAULT_ITEMS = [
+    { id: 'linh-thach', name: 'Linh thạch', kind: 'linh-thach', rarity: 1, desc: 'Tiền đổi vật phẩm trang trí.', obtain: { type: 'realm' }, effect: { type: 'currency' } },
+    { id: 'cp-mos-excel', name: 'Số Toán Kinh', kind: 'cong-phap', rarity: 3, desc: 'Mở công pháp MOS Excel.', obtain: { type: 'realm', value: 4 }, effect: { type: 'unlock-course', courseId: 'mos-excel' } },
+    { id: 'kiem-thanh-phong', name: 'Thanh Phong Kiếm', kind: 'phap-bao', rarity: 3, desc: 'Pháp bảo trang trí hồ sơ.', obtain: { type: 'achievement', value: 'diet-rong' }, effect: { type: 'cosmetic' } },
+    { id: 'an-ho-phap', name: 'Ấn Hộ Pháp', kind: 'phap-bao', rarity: 4, desc: 'Dành cho người vững An toàn và bảo mật.', obtain: { type: 'shop', price: 400 }, effect: { type: 'cosmetic' } },
+    { id: 'dan-hoi-xuan', name: 'Hồi Xuân Đan', kind: 'dan-duoc', rarity: 2, desc: 'Giữ chuỗi ngày học khi lỡ nghỉ 1 ngày.', obtain: { type: 'shop', price: 150 }, effect: { type: 'streak-freeze', days: 1 } },
+    { id: 'dan-ngo-dao', name: 'Ngộ Đạo Đan', kind: 'dan-duoc', rarity: 2, desc: 'Xem 1 gợi ý khi LUYỆN TẬP (không dùng được khi khảo hạch).', obtain: { type: 'shop', price: 60 }, effect: { type: 'practice-hint', uses: 1 } },
+    { id: 'dh-kim-dan', name: 'Kim Đan chân nhân', kind: 'danh-hieu', rarity: 4, desc: 'Danh hiệu khi đạt Kim Đan.', obtain: { type: 'realm', value: 3 }, effect: { type: 'title' } },
+    { id: 'dh-chan-tien', name: 'Chân Tiên', kind: 'danh-hieu', rarity: 5, desc: 'Đạt chứng chỉ thật, được thầy cô xác nhận.', obtain: { type: 'realm', value: 7 }, effect: { type: 'title' } },
+    { id: 'khung-van-may', name: 'Khung Vân Mây', kind: 'trang-tri', rarity: 2, desc: 'Viền chân dung hoạ tiết mây.', obtain: { type: 'realm', value: 2 }, effect: { type: 'cosmetic' } },
+    { id: 'khung-kim-an', name: 'Khung Kim Ấn', kind: 'trang-tri', rarity: 5, desc: 'Viền vàng kim của bậc Kim Đan.', obtain: { type: 'realm', value: 3 }, effect: { type: 'cosmetic' } },
+  ];
+
+  /* ── 5. Thành tựu (khai báo, đánh giá từ tóm tắt sổ cái) ── */
+  const DEFAULT_ACHIEVEMENTS = [
+    { id: 'nhap-mon', name: 'Nhập môn', when: { type: 'exp_at_least', value: 1 } },
+    { id: 'pha-canh-truc-co', name: 'Phá cảnh Trúc Cơ', when: { type: 'realm_at_least', value: 2 } },
+    { id: 'pha-canh-kim-dan', name: 'Phá cảnh Kim Đan', when: { type: 'realm_at_least', value: 3 } },
+    { id: 'tho-ca', name: 'Thợ cả', when: { type: 'projects_at_least', value: 3 } },
+    { id: 'ngu-hanh-can-bang', name: 'Ngũ hành cân bằng', when: { type: 'all_elements_at_least', value: 60 } },
+  ];
+
+  /* ── 6. Linh căn: 7 chủ đề IC3 → 5 linh căn ── */
+  const ELEMENTS = ['kim', 'moc', 'thuy', 'hoa', 'tho'];
+  const TOPIC_ELEMENT = { 1: 'kim', 2: 'tho', 3: 'tho', 4: 'moc', 5: 'thuy', 6: 'thuy', 7: 'hoa' };
+  const ELEMENT_HALF_LIFE_DAYS = 45; // bài cũ giảm nửa trọng số sau 45 ngày → linh căn theo kịp sự tiến bộ
+
+  /* ── Tiện ích ─────────────────────────────────────────────────────────────── */
+  const LEARNER_RE = /^L[0-9A-Z]{10}$/;
+  const ID_RE = /^[A-Za-z0-9][A-Za-z0-9._:\/-]{0,79}$/;
+  const isObj = (o) => !!o && typeof o === 'object' && !Array.isArray(o);
+  const num = (v) => typeof v === 'number' && isFinite(v);
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  /** Ngày theo giờ Việt Nam (UTC+7) — trần ngày/tuần không lệch lúc 0h–7h sáng. */
+  function dayKey(iso) { return new Date(Date.parse(iso) + 7 * 3600e3).toISOString().slice(0, 10); }
+  function weekKey(iso) {
+    const d = new Date(Date.parse(dayKey(iso) + 'T00:00:00Z'));
+    d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); // thứ Hai đầu tuần
+    return d.toISOString().slice(0, 10);
+  }
+  function fail(code, reason) { return { ok: false, code: code, reason: reason }; }
+
+  function realmInfo(id) { return REALMS[Math.max(1, Math.min(MAX_REALM, id)) - 1]; }
+
+  /* ── Cấu hình ─────────────────────────────────────────────────────────────── */
+  /** Ghép phần Admin ghi đè vào mặc định (ghép sâu theo khoá; mảng thay nguyên). */
+  function mergeConfig(base, override) {
+    if (!isObj(override)) return clone(base);
+    const out = clone(base);
+    (function merge(dst, src) {
+      Object.keys(src).forEach(function (k) {
+        if (isObj(src[k]) && isObj(dst[k])) merge(dst[k], src[k]);
+        else dst[k] = clone(src[k]);
+      });
+    })(out, override);
+    return out;
+  }
+
+  /** Kiểm cấu hình. Trả [] khi hợp lệ, ngược lại danh sách lỗi (chữ tiếng Việt). */
+  function validateConfig(c) {
+    const e = [];
+    if (!isObj(c) || !isObj(c.rewards) || !isObj(c.breakthrough) || !isObj(c.courses)) return ['Thiếu rewards / breakthrough / courses.'];
+    if (typeof c.version !== 'string' || !c.version) e.push('Thiếu version.');
+    Object.keys(c.rewards).forEach(function (t) {
+      const r = c.rewards[t];
+      if (!SOURCES[t]) return e.push('Nguồn lạ trong rewards: ' + t);
+      const amounts = [r.amount, r.maxAmount, r.perfectBonus, r.perDay, r.perWeek, r.bossBonus].filter(function (x) { return x !== undefined; });
+      if (r.tiers) {
+        if (!Array.isArray(r.tiers) || !r.tiers.length) e.push(t + ': tiers rỗng.');
+        else r.tiers.forEach(function (x) { amounts.push(x.amount); if (!num(x.minPct) || x.minPct < 0 || x.minPct > 100) e.push(t + ': minPct phải 0–100.'); });
+      } else if (r.amount === undefined) e.push(t + ': thiếu amount.');
+      amounts.forEach(function (a) { if (!Number.isInteger(a) || a < 0 || a > 1000) e.push(t + ': mức thưởng phải là số nguyên 0–1000 (gặp ' + a + ').'); });
+      if (r.minScore !== undefined && (!num(r.minScore) || r.minScore < 0 || r.minScore > 100)) e.push(t + ': minScore phải 0–100.');
+    });
+    Object.keys(SOURCES).forEach(function (t) { if (!c.rewards[t]) e.push('Thiếu mức thưởng cho ' + t + '.'); });
+    let prev = 0;
+    for (let n = 2; n <= MAX_REALM; n++) {
+      const b = c.breakthrough[n];
+      if (!isObj(b)) { e.push('Thiếu điều kiện đột phá lên cảnh giới ' + n + '.'); continue; }
+      if (!Number.isInteger(b.minExp) || b.minExp <= prev) e.push('Cảnh giới ' + n + ': minExp phải tăng dần (> ' + prev + ').');
+      prev = num(b.minExp) ? b.minExp : prev;
+      (b.courses || []).forEach(function (id) { if (!c.courses[id]) e.push('Cảnh giới ' + n + ': công pháp lạ ' + id + '.'); });
+      if (!Array.isArray(b.tests)) e.push('Cảnh giới ' + n + ': tests phải là mảng.');
+    }
+    return e;
+  }
+
+  /** Kiểm danh mục vật phẩm: đủ thông tin, độ hiếm, điều kiện nhận, chức năng hợp lệ. */
+  function validateItems(items) {
+    const e = [];
+    const seen = {};
+    (items || []).forEach(function (it, i) {
+      const at = 'Vật phẩm #' + i + (it && it.id ? ' (' + it.id + ')' : '');
+      if (!it || !ID_RE.test(it.id || '')) return e.push(at + ': id không hợp lệ.');
+      if (seen[it.id]) e.push(at + ': trùng id.');
+      seen[it.id] = true;
+      if (!it.name || !it.desc) e.push(at + ': thiếu tên hoặc mô tả.');
+      if (ITEM_KINDS.indexOf(it.kind) < 0) e.push(at + ': loại lạ ' + it.kind + '.');
+      if (!Number.isInteger(it.rarity) || it.rarity < 1 || it.rarity > 5) e.push(at + ': độ hiếm phải 1–5.');
+      if (!isObj(it.obtain) || OBTAIN_TYPES.indexOf(it.obtain.type) < 0) e.push(at + ': điều kiện nhận không hợp lệ.');
+      if (it.obtain && it.obtain.type === 'shop' && !(Number.isInteger(it.obtain.price) && it.obtain.price > 0)) e.push(at + ': hàng bán phải có giá.');
+      if (!isObj(it.effect) || ITEM_EFFECTS.indexOf(it.effect.type) < 0) e.push(at + ': chức năng không hợp lệ (không được cộng EXP).');
+      if (it.kind === 'dan-duoc' && ['streak-freeze', 'practice-hint'].indexOf(it.effect && it.effect.type) < 0) e.push(at + ': đan dược chỉ hỗ trợ luyện tập.');
+    });
+    return e;
+  }
+
+  /* ── Mã giao dịch tất định ─────────────────────────────────────────────────── */
+  function safePart(s) { return String(s).replace(/\|/g, '/'); }
+  function txIdOf(learnerId, type, key) { return [learnerId, type, key].map(safePart).join('|'); }
+
+  /* ── Tóm tắt sổ cái ─────────────────────────────────────────────────────────
+     Dòng (row): { txId, learnerId, kind, type?, sourceId?, amount?, status?, refTxId?, itemId?, qty?,
+                   realm?, achievementId?, facts?, note?, by, createdAt, rulesVersion }
+     kind: 'exp' | 'review' | 'reversal' | 'realm' | 'item' | 'achievement' | 'assessment'
+     Cùng txId xuất hiện nhiều lần (ghi đua / gửi lại) → chỉ dòng ĐẦU TIÊN có hiệu lực. */
+  function summarize(rows) {
+    const seen = {};
+    const list = [];
+    (rows || []).forEach(function (r) { if (r && r.txId && !seen[r.txId]) { seen[r.txId] = true; list.push(r); } });
+    list.sort(function (a, b) { return a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0; });
+
+    const review = {};
+    const reversed = {};
+    list.forEach(function (r) {
+      if (r.kind === 'review' && r.refTxId && !review[r.refTxId]) review[r.refTxId] = r;
+      if (r.kind === 'reversal' && r.refTxId) reversed[r.refTxId] = r;
+    });
+
+    const s = {
+      exp: 0, pendingExp: 0, realm: 1, realmAt: null, items: {}, achievements: {},
+      lessonsDone: {}, testsPassed: {}, projects: 0, quests: 0, certified: false,
+      activitySec: 0, byType: {}, history: [], assessments: [], txIds: seen,
+    };
+    list.forEach(function (r) {
+      if (r.kind === 'exp') {
+        let status = r.status;
+        if (status === 'pending' && review[r.txId]) status = review[r.txId].status === 'confirmed' ? 'confirmed' : 'rejected';
+        if (reversed[r.txId]) status = 'reversed';
+        // Người xác nhận hiển thị = người ra quyết định CUỐI: huỷ > duyệt > người ghi.
+        const last = reversed[r.txId] || review[r.txId];
+        const h = { txId: r.txId, kind: 'exp', type: r.type, sourceId: r.sourceId, amount: r.amount, status: status, by: last ? last.by : r.by, at: r.createdAt, note: r.note };
+        if (reversed[r.txId]) h.reverseNote = reversed[r.txId].note;
+        s.history.push(h);
+        if (r.facts && num(r.facts.durationSec)) s.activitySec += r.facts.durationSec;
+        if (status === 'pending') s.pendingExp += r.amount;
+        if (status !== 'confirmed') return;
+        s.exp += r.amount;
+        s.byType[r.type] = (s.byType[r.type] || 0) + r.amount;
+        if (r.type === 'LESSON') s.lessonsDone[r.sourceId] = true;
+        if (r.type === 'TEST') s.testsPassed[r.sourceId] = true;
+        if (r.type === 'PROJECT') s.projects++;
+        if (r.type === 'QUEST') { s.quests++; if (r.facts && r.facts.certified) s.certified = true; }
+      } else if (r.kind === 'realm') {
+        if (r.realm > s.realm) { s.realm = r.realm; s.realmAt = r.createdAt; }
+        s.history.push({ txId: r.txId, kind: 'realm', realm: r.realm, by: r.by, at: r.createdAt });
+      } else if (r.kind === 'item') {
+        s.items[r.itemId] = (s.items[r.itemId] || 0) + (r.qty || 1);
+        s.history.push({ txId: r.txId, kind: 'item', itemId: r.itemId, qty: r.qty || 1, by: r.by, at: r.createdAt, note: r.note });
+      } else if (r.kind === 'achievement') {
+        s.achievements[r.achievementId] = r.createdAt;
+        s.history.push({ txId: r.txId, kind: 'achievement', achievementId: r.achievementId, by: r.by, at: r.createdAt });
+      } else if (r.kind === 'assessment') {
+        s.assessments.push({ at: r.createdAt, topics: (r.facts && r.facts.topics) || {} });
+      }
+    });
+    s.history.reverse(); // mới nhất trước
+    return s;
+  }
+
+  /* ── Tiểu cảnh giới: chia đoạn EXP của cảnh giới hiện tại thành 3 kỳ ──
+     Cảnh giới do ĐỘT PHÁ quyết định, không do EXP. EXP vượt ngưỡng mà chưa đột phá → "Hậu kỳ · đỉnh phong". */
+  function stageOf(realm, exp, config) {
+    const c = config || DEFAULT_CONFIG;
+    if (realm >= MAX_REALM) return { realm: MAX_REALM, stage: 'Viên mãn', index: 3, from: c.breakthrough[MAX_REALM].minExp, to: null, progress: 1, peak: false };
+    const from = realm === 1 ? 0 : c.breakthrough[realm].minExp;
+    const to = c.breakthrough[realm + 1].minExp;
+    const span = to - from;
+    const into = Math.max(0, exp - from);
+    const peak = exp >= to;
+    const index = peak ? 2 : Math.min(2, Math.floor((into / span) * 3));
+    return { realm: realm, stage: STAGES[index], index: index, from: from, to: to, progress: Math.min(1, into / span), peak: peak };
+  }
+
+  /* ── Đột phá ── */
+  function breakthroughCheck(summary, config) {
+    const c = config || DEFAULT_CONFIG;
+    const target = summary.realm + 1;
+    if (target > MAX_REALM) return { from: summary.realm, to: null, eligible: false, conditions: [] };
+    const b = c.breakthrough[target];
+    const conds = [];
+    conds.push({ id: 'exp', label: 'Đạt ' + b.minExp + ' EXP', current: Math.min(summary.exp, b.minExp), target: b.minExp, met: summary.exp >= b.minExp });
+    (b.courses || []).forEach(function (cid) {
+      const lessons = c.courses[cid] || [];
+      const done = lessons.filter(function (l) { return summary.lessonsDone[l]; }).length;
+      conds.push({ id: 'course:' + cid, label: 'Hoàn thành công pháp ' + cid, current: done, target: lessons.length, met: lessons.length > 0 && done === lessons.length });
+    });
+    (b.tests || []).forEach(function (tid) {
+      conds.push({ id: 'test:' + tid, label: 'Vượt qua ' + tid, current: summary.testsPassed[tid] ? 1 : 0, target: 1, met: !!summary.testsPassed[tid] });
+    });
+    if (b.projects) conds.push({ id: 'projects', label: 'Dự án được duyệt', current: Math.min(summary.projects, b.projects), target: b.projects, met: summary.projects >= b.projects });
+    if (b.quests) conds.push({ id: 'quests', label: 'Nhiệm vụ thực hành', current: Math.min(summary.quests, b.quests), target: b.quests, met: summary.quests >= b.quests });
+    if (b.certified) conds.push({ id: 'certified', label: 'Chứng chỉ thật được xác nhận', current: summary.certified ? 1 : 0, target: 1, met: summary.certified });
+    return { from: summary.realm, to: target, eligible: conds.every(function (x) { return x.met; }), conditions: conds };
+  }
+
+  /** Dòng sổ cái cho 1 lần đột phá thành công (cảnh giới + vật phẩm thưởng). null khi chưa đủ điều kiện. */
+  function breakthroughRows(learnerId, summary, config, by, nowIso) {
+    const c = config || DEFAULT_CONFIG;
+    const chk = breakthroughCheck(summary, c);
+    if (!chk.eligible) return null;
+    const rows = [{ txId: txIdOf(learnerId, 'REALM', chk.to), learnerId: learnerId, kind: 'realm', realm: chk.to, by: by, createdAt: nowIso, rulesVersion: c.version }];
+    (c.realmRewards[chk.to] || []).forEach(function (g) {
+      rows.push({ txId: txIdOf(learnerId, 'ITEM', g.itemId + '@realm-' + chk.to), learnerId: learnerId, kind: 'item', itemId: g.itemId, qty: g.qty, note: 'Thưởng đột phá ' + realmInfo(chk.to).name, by: by, createdAt: nowIso, rulesVersion: c.version });
+    });
+    return { to: chk.to, rows: rows };
+  }
+
+  /* ── Tính 1 sự kiện → dòng EXP (hoặc từ chối có lý do) ──
+     event: { type, learnerId, evidence: { <idField>, score?, pct?, amount?, note?, durationSec?, topic?, certified? } }
+     ctx:   { config, summary (của học sinh đó), actor: { kind:'system'|'teacher'|'admin', uid }, now: ISO } */
+  function evaluateEvent(event, ctx) {
+    const c = ctx.config || DEFAULT_CONFIG;
+    const actor = ctx.actor || {};
+    if (!isObj(event)) return fail('invalid', 'Sự kiện rỗng.');
+    const src = SOURCES[event.type];
+    if (!src) return fail('invalid', 'Loại hoạt động không được thưởng: ' + event.type + '.');
+    if (!LEARNER_RE.test(event.learnerId || '')) return fail('invalid', 'Mã học viên không hợp lệ.');
+    if (src.actors.indexOf(actor.kind) < 0) return fail('forbidden', src.label + ' chỉ ghi nhận bởi: ' + src.actors.join(', ') + '.');
+    const ev = isObj(event.evidence) ? event.evidence : {};
+    const sourceId = ev[src.idField];
+    if (!ID_RE.test(String(sourceId || ''))) return fail('invalid', 'Thiếu hoặc sai ' + src.idField + '.');
+    if (src.needScore && !(num(ev.score) && ev.score >= 0 && ev.score <= 100)) return fail('invalid', 'Điểm phải 0–100 (do máy chủ chấm).');
+    if (src.needPct && !(num(ev.pct) && ev.pct >= 0 && ev.pct <= 100)) return fail('invalid', 'Điểm tiêu chí (pct) phải 0–100.');
+    if (src.needNote && !(typeof ev.note === 'string' && ev.note.trim().length >= 5 && ev.note.length <= 300)) return fail('invalid', 'Cần ghi lý do (5–300 ký tự).');
+
+    const rule = c.rewards[event.type];
+    const txId = txIdOf(event.learnerId, event.type, sourceId);
+    const s = ctx.summary || summarize([]);
+    if (s.txIds[txId]) return { ok: true, duplicate: true, txId: txId };
+
+    // Mức thưởng — luôn tra bảng, không lấy số từ bên gửi (trừ TEACHER: trong [1, maxAmount]).
+    let amount;
+    if (src.needScore && ev.score < rule.minScore) return fail('below-threshold', 'Chưa đạt ' + rule.minScore + ' điểm — làm lại khi sẵn sàng.');
+    if (rule.tiers) {
+      const val = src.needPct ? ev.pct : ev.score; // dự án: điểm tiêu chí; bí cảnh: điểm máy chủ chấm lại
+      const tier = rule.tiers.slice().sort(function (a, b) { return b.minPct - a.minPct; }).filter(function (t) { return val >= t.minPct; })[0];
+      if (!tier) return fail('below-threshold', 'Chưa đạt mức tối thiểu.');
+      amount = tier.amount + (rule.bossBonus && ev.boss === true ? rule.bossBonus : 0);
+    } else if (event.type === 'TEACHER') {
+      amount = ev.amount === undefined ? rule.amount : ev.amount;
+      if (!Number.isInteger(amount) || amount < 1 || amount > rule.maxAmount) return fail('invalid', 'Mức thưởng của thầy cô phải 1–' + rule.maxAmount + '.');
+    } else {
+      amount = rule.amount + (rule.perfectBonus && ev.score === 100 ? rule.perfectBonus : 0);
+    }
+
+    // Trần theo ngày / tuần (tính trên giao dịch đã xác nhận + đang chờ cùng loại).
+    let status = 'confirmed';
+    const now = ctx.now;
+    const used = function (keyFn) {
+      return s.history.filter(function (h) {
+        return h.kind === 'exp' && h.type === event.type && (h.status === 'confirmed' || h.status === 'pending') && keyFn(h.at) === keyFn(now);
+      }).reduce(function (a, h) { return a + h.amount; }, 0);
+    };
+    if (rule.perDay !== undefined) {
+      const left = rule.perDay - used(dayKey);
+      if (left <= 0) return fail('cap-reached', 'Đã đạt mức thưởng tối đa hôm nay cho ' + src.label.toLowerCase() + '.');
+      amount = Math.min(amount, left);
+    }
+    if (rule.perWeek !== undefined && used(weekKey) + amount > rule.perWeek) {
+      if (event.type !== 'TEACHER') return fail('cap-reached', 'Đã đạt mức thưởng tối đa tuần này.');
+      status = 'pending'; // thầy cô thưởng vượt trần tuần → chờ Admin duyệt
+    }
+
+    const facts = {};
+    ['score', 'pct', 'durationSec', 'topic', 'certified', 'boss'].forEach(function (k) { if (ev[k] !== undefined) facts[k] = ev[k]; });
+    return {
+      ok: true,
+      tx: {
+        txId: txId, learnerId: event.learnerId, kind: 'exp', type: event.type, sourceId: String(sourceId), amount: amount,
+        status: status, facts: facts, note: ev.note ? String(ev.note).slice(0, 300) : '',
+        by: actor.kind === 'system' ? 'system' : String(actor.uid || actor.kind), createdAt: now, rulesVersion: c.version,
+      },
+    };
+  }
+
+  /* ── Linh căn: trung bình có trọng số theo thời gian, từ bài ĐÃ XÁC THỰC ──
+     Trả { kim: { score, samples } | null, … }. null = CHƯA ĐÁNH GIÁ (không phải 0, không phải "yếu"). */
+  function elementScores(assessments, nowIso) {
+    const now = Date.parse(nowIso);
+    const acc = {};
+    ELEMENTS.forEach(function (e) { acc[e] = { w: 0, sum: 0, n: 0 }; });
+    (assessments || []).forEach(function (a) {
+      const ageDays = Math.max(0, (now - Date.parse(a.at)) / 864e5);
+      const w = Math.pow(0.5, ageDays / ELEMENT_HALF_LIFE_DAYS);
+      Object.keys(a.topics || {}).forEach(function (t) {
+        const el = TOPIC_ELEMENT[t];
+        const v = a.topics[t];
+        if (!el || !num(v) || v < 0 || v > 100) return;
+        acc[el].w += w; acc[el].sum += w * v; acc[el].n++;
+      });
+    });
+    const out = {};
+    ELEMENTS.forEach(function (e) { out[e] = acc[e].n ? { score: Math.round(acc[e].sum / acc[e].w), samples: acc[e].n } : null; });
+    return out;
+  }
+
+  /* ── Thành tựu mới đạt (chưa có trong sổ cái) ── */
+  function newAchievements(summary, catalog, elements) {
+    return (catalog || DEFAULT_ACHIEVEMENTS).filter(function (a) {
+      if (summary.achievements[a.id]) return false;
+      const w = a.when || {};
+      switch (w.type) {
+        case 'exp_at_least': return summary.exp >= w.value;
+        case 'realm_at_least': return summary.realm >= w.value;
+        case 'projects_at_least': return summary.projects >= w.value;
+        case 'tests_passed_at_least': return Object.keys(summary.testsPassed).length >= w.value;
+        case 'all_elements_at_least':
+          return !!elements && ELEMENTS.every(function (e) { return elements[e] && elements[e].score >= w.value; });
+        default: return false;
+      }
+    });
+  }
+
+  /** Vật phẩm này học sinh đã đủ điều kiện nhận chưa (để hiển thị / cửa hàng kiểm). */
+  function canObtain(item, summary, balance) {
+    const o = item.obtain || {};
+    if (o.type === 'realm') return summary.realm >= (o.value || 1);
+    if (o.type === 'achievement') return !!summary.achievements[o.value];
+    if (o.type === 'shop') return (balance || 0) >= o.price;
+    if (o.type === 'start') return true;
+    return false; // event: chỉ cấp qua sự kiện
+  }
+
+  const api = {
+    REALMS: REALMS, STAGES: STAGES, MAX_REALM: MAX_REALM, SOURCES: SOURCES, DEFAULT_CONFIG: DEFAULT_CONFIG,
+    ITEM_KINDS: ITEM_KINDS, ITEM_EFFECTS: ITEM_EFFECTS, DEFAULT_ITEMS: DEFAULT_ITEMS, DEFAULT_ACHIEVEMENTS: DEFAULT_ACHIEVEMENTS,
+    ELEMENTS: ELEMENTS, TOPIC_ELEMENT: TOPIC_ELEMENT,
+    realmInfo: realmInfo, mergeConfig: mergeConfig, validateConfig: validateConfig, validateItems: validateItems,
+    txIdOf: txIdOf, summarize: summarize, stageOf: stageOf, breakthroughCheck: breakthroughCheck, breakthroughRows: breakthroughRows,
+    evaluateEvent: evaluateEvent, elementScores: elementScores, newAchievements: newAchievements, canObtain: canObtain,
+    dayKey: dayKey, weekKey: weekKey,
+  };
+  root.EduCultivation = api;
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+// ──────────────── js/techrealm/cultivation-service.js (dùng chung với trình duyệt — sửa ở file gốc) ────────────────
+/* ============================================================
+   js/techrealm/cultivation-service.js — CultivationService (tầng Application, thuần).
+
+   Điều phối luật ở cultivation-core.js với 1 CỔNG lưu trữ duy nhất:
+     store.transact(learnerId, fn)  — đọc mọi dòng sổ cái của học sinh, gọi fn(rows) → dòng mới,
+                                     ghi các dòng mới mà txId CHƯA có. Phải chạy loại trừ lẫn nhau
+                                     (Apps Script: LockService; bộ nhớ: tự nhiên) và trả { appended, rows }.
+   Không biết Sheet, Firestore hay trình duyệt tồn tại. Chạy y hệt ở:
+     • Apps Script (apps/src/79-tr-ledger.gs nối store = Google Sheet) — NƠI DUY NHẤT ghi sổ cái thật;
+     • Node (unit test) và app React (bản xem thử) với store trong bộ nhớ (createMemoryStore).
+   Không dùng `?.` / `??` (chép nguyên văn vào apps/Code.gs).
+   ============================================================ */
+(function (root) {
+  'use strict';
+  const C = root.EduCultivation;
+  if (!C) throw new Error('Cần nạp js/techrealm/cultivation-core.js trước cultivation-service.js');
+
+  const STAFF = ['teacher', 'admin'];
+
+  function create(opts) {
+    const store = opts.store;
+    const clock = opts.clock || function () { return new Date().toISOString(); };
+    const config = C.mergeConfig(C.DEFAULT_CONFIG, opts.config);
+    const errs = C.validateConfig(config);
+    if (errs.length) throw new Error('Cấu hình tu luyện không hợp lệ: ' + errs.join(' '));
+    const items = opts.items || C.DEFAULT_ITEMS;
+    const itemErrs = C.validateItems(items);
+    if (itemErrs.length) throw new Error('Danh mục vật phẩm không hợp lệ: ' + itemErrs.join(' '));
+    const achievements = opts.achievements || C.DEFAULT_ACHIEVEMENTS;
+
+    /** Sau mỗi thay đổi: ghi thêm thành tựu vừa đạt (cùng giao dịch). */
+    function withAchievements(learnerId, rows, newRows, by, now) {
+      const s = C.summarize(rows.concat(newRows));
+      const el = C.elementScores(s.assessments, now);
+      return newRows.concat(C.newAchievements(s, achievements, el).map(function (a) {
+        return { txId: C.txIdOf(learnerId, 'ACH', a.id), learnerId: learnerId, kind: 'achievement', achievementId: a.id, by: by, createdAt: now, rulesVersion: config.version };
+      }));
+    }
+
+    /**
+     * Ghi nhận 1 hoạt động có bằng chứng. actor: { kind: 'system'|'teacher'|'admin', uid }.
+     * → { ok, duplicate?, tx?, code?, reason? }. Gửi lại cùng sự kiện → { ok:true, duplicate:true }, KHÔNG cộng thêm.
+     */
+    function recordEvent(event, actor) {
+      let result;
+      const now = clock();
+      store.transact(event && event.learnerId, function (rows) {
+        const s = C.summarize(rows);
+        result = C.evaluateEvent(event, { config: config, summary: s, actor: actor, now: now });
+        if (!result.ok || result.duplicate) return [];
+        return withAchievements(event.learnerId, rows, [result.tx], result.tx.by, now);
+      });
+      return result;
+    }
+
+    /** Bài đánh giá năng lực đã chấm trên máy chủ → dữ liệu linh căn. topics: { '1'..'7': điểm 0–100 }. */
+    function recordAssessment(learnerId, attemptId, topics, actor) {
+      if (!actor || actor.kind !== 'system') return { ok: false, code: 'forbidden', reason: 'Chỉ máy chủ chấm mới ghi bài đánh giá.' };
+      const clean = {};
+      Object.keys(topics || {}).forEach(function (t) {
+        const v = topics[t];
+        if (C.TOPIC_ELEMENT[t] && typeof v === 'number' && v >= 0 && v <= 100) clean[t] = Math.round(v);
+      });
+      if (!Object.keys(clean).length) return { ok: false, code: 'invalid', reason: 'Không có điểm chủ đề hợp lệ.' };
+      const now = clock();
+      const row = { txId: C.txIdOf(learnerId, 'ASSESS', attemptId), learnerId: learnerId, kind: 'assessment', sourceId: String(attemptId), facts: { topics: clean }, by: 'system', createdAt: now, rulesVersion: config.version };
+      const out = store.transact(learnerId, function (rows) { return withAchievements(learnerId, rows, [row], 'system', now); });
+      return { ok: true, duplicate: !out.appended.some(function (r) { return r.txId === row.txId; }) };
+    }
+
+    /** Duyệt giao dịch đang chờ (chỉ Admin — giao dịch chờ là thưởng của thầy cô vượt trần tuần). */
+    function review(learnerId, refTxId, decision, actor, note) {
+      if (!actor || actor.kind !== 'admin') return { ok: false, code: 'forbidden', reason: 'Chỉ Admin duyệt giao dịch chờ.' };
+      if (decision !== 'confirmed' && decision !== 'rejected') return { ok: false, code: 'invalid', reason: 'Quyết định phải là confirmed hoặc rejected.' };
+      let result;
+      const now = clock();
+      store.transact(learnerId, function (rows) {
+        const h = C.summarize(rows).history.filter(function (x) { return x.txId === refTxId; })[0];
+        if (!h) { result = { ok: false, code: 'not-found', reason: 'Không có giao dịch này.' }; return []; }
+        if (h.status !== 'pending') { result = { ok: true, duplicate: true, status: h.status }; return []; }
+        result = { ok: true, status: decision };
+        return withAchievements(learnerId, rows, [{ txId: refTxId + '|review', learnerId: learnerId, kind: 'review', refTxId: refTxId, status: decision, note: note || '', by: actor.uid, createdAt: now, rulesVersion: config.version }], actor.uid, now);
+      });
+      return result;
+    }
+
+    /** Huỷ 1 giao dịch đã xác nhận (phát hiện gian lận, chấm nhầm). Bắt buộc lý do. Cảnh giới đã đạt KHÔNG bị hạ tự động. */
+    function reverse(learnerId, refTxId, actor, note) {
+      if (!actor || STAFF.indexOf(actor.kind) < 0) return { ok: false, code: 'forbidden', reason: 'Chỉ thầy cô / Admin được huỷ giao dịch.' };
+      if (!(typeof note === 'string' && note.trim().length >= 5)) return { ok: false, code: 'invalid', reason: 'Cần ghi lý do huỷ (từ 5 ký tự).' };
+      let result;
+      const now = clock();
+      store.transact(learnerId, function (rows) {
+        const h = C.summarize(rows).history.filter(function (x) { return x.txId === refTxId && x.kind === 'exp'; })[0];
+        if (!h) { result = { ok: false, code: 'not-found', reason: 'Không có giao dịch EXP này.' }; return []; }
+        if (h.status === 'reversed') { result = { ok: true, duplicate: true }; return []; }
+        result = { ok: true };
+        return [{ txId: refTxId + '|reversal', learnerId: learnerId, kind: 'reversal', refTxId: refTxId, amount: -h.amount, note: note.slice(0, 300), by: actor.uid, createdAt: now, rulesVersion: config.version }];
+      });
+      return result;
+    }
+
+    /** Học sinh bấm Đột phá: máy chủ tự kiểm lại mọi điều kiện → { ok, to?, items?, conditions? }. */
+    function breakthrough(learnerId, actor) {
+      let result;
+      const now = clock();
+      store.transact(learnerId, function (rows) {
+        const s = C.summarize(rows);
+        const made = C.breakthroughRows(learnerId, s, config, actor && actor.kind === 'system' ? 'system' : String((actor && actor.uid) || 'learner'), now);
+        if (!made) {
+          result = { ok: false, code: 'not-eligible', reason: 'Chưa đủ điều kiện đột phá.', conditions: C.breakthroughCheck(s, config).conditions };
+          return [];
+        }
+        result = { ok: true, to: made.to, items: made.rows.filter(function (r) { return r.kind === 'item'; }).map(function (r) { return { itemId: r.itemId, qty: r.qty }; }) };
+        return withAchievements(learnerId, rows, made.rows, 'system', now);
+      });
+      return result;
+    }
+
+    /** Hồ sơ tu luyện đầy đủ (chỉ đọc). */
+    function profile(learnerId) {
+      const now = clock();
+      let rows = [];
+      store.transact(learnerId, function (r) { rows = r; return []; });
+      const s = C.summarize(rows);
+      return {
+        learnerId: learnerId,
+        exp: s.exp,
+        pendingExp: s.pendingExp,
+        realm: C.realmInfo(s.realm),
+        stage: C.stageOf(s.realm, s.exp, config),
+        next: C.breakthroughCheck(s, config),
+        elements: C.elementScores(s.assessments, now),
+        items: s.items,
+        achievements: s.achievements,
+        activityMinutes: Math.round(s.activitySec / 60),
+        history: s.history,
+      };
+    }
+
+    return { config: config, items: items, recordEvent: recordEvent, recordAssessment: recordAssessment, review: review, reverse: reverse, breakthrough: breakthrough, profile: profile };
+  }
+
+  /** Kho trong bộ nhớ — cho unit test và bản xem thử. `rows` có thể nạp sẵn. */
+  function createMemoryStore(seed) {
+    const all = (seed || []).slice();
+    return {
+      rows: all,
+      transact: function (learnerId, fn) {
+        const mine = all.filter(function (r) { return r.learnerId === learnerId; });
+        const have = {};
+        mine.forEach(function (r) { have[r.txId] = true; });
+        const appended = (fn(mine.slice()) || []).filter(function (r) { if (have[r.txId]) return false; have[r.txId] = true; return true; });
+        appended.forEach(function (r) { all.push(r); });
+        return { appended: appended, rows: mine.concat(appended) };
+      },
+    };
+  }
+
+  const api = { create: create, createMemoryStore: createMemoryStore };
+  root.EduCultivationService = api;
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+// ──────────────── js/techrealm/learning-core.js (dùng chung với trình duyệt — sửa ở file gốc) ────────────────
+/* ============================================================
+   js/techrealm/learning-core.js — LUẬT HỌC TẬP của Tàng Kinh Các (Domain thuần).
+
+   Chạy ở trình duyệt (app React), Node (test) và Apps Script (scripts/build-apps-script.js chép nguyên văn).
+   Không DOM, không mạng, không localStorage; không `?.` / `??`.
+
+   Nội dung khoá học: data/techrealm/courses.json (sinh bởi scripts/build-techrealm-courses.mjs từ data/ic3).
+   Tiến độ: đọc LỊCH SỬ BÀI LÀM SẴN CÓ (eduquiz_records do js/quiz-engine.js ghi) — không ghi thêm gì, không đổi
+   cách chấm. Mỗi bài làm được nối về đúng bài học nhờ { catId, levelId, mtKey } mà sảnh cũ đã lưu.
+   Cấu hình của giáo viên (thứ tự mở bài, điểm đạt, khoá/mở bài, video/tài liệu thêm) đi trong LINK lớp học, như
+   đề tự soạn `?de=` — 0 lượt Firebase. Cấu hình này chỉ là hướng dẫn học tập; EXP và cảnh giới vẫn do máy chủ xác
+   thực (cultivation-core), nên tự sửa link không lấy được phần thưởng nào.
+   Tài liệu: docs/techrealm/LEARNING_SYSTEM.md
+   ============================================================ */
+(function (root) {
+  'use strict';
+
+  const LESSON_RE = /^Bài (\d+)[.:]\s*/;
+  const ID_RE = /^[a-z0-9][a-z0-9._\/-]{0,99}$/;
+  const PASS = 70; // = js/learning-hub.js § PASS
+
+  /** Giống hệt scripts/build-techrealm-courses.mjs § slug (test so khớp với courses.json). */
+  function slug(s) {
+    return String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'd')
+      .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
+  }
+
+  /** Bài làm (catId, levelId, tên minitest) → id đơn vị học: bài học, bài kiểm tra, ôn tập; null nếu không thuộc khoá nào. */
+  function unitIdOf(catId, levelId, mtKey) {
+    if (!catId || !levelId || !mtKey) return null;
+    const base = (String(catId) + '-' + String(levelId)).toLowerCase();
+    const m = LESSON_RE.exec(mtKey);
+    if (m) return { kind: 'lesson', id: base + '/' + Number(m[1]) };
+    if (/^Kiểm tra/.test(mtKey)) return { kind: 'gate', id: base + '/kt-' + slug(mtKey) };
+    if (/^Ôn tập/.test(mtKey)) return { kind: 'review', id: base + '/ot-' + slug(mtKey) };
+    return null;
+  }
+
+  /* ── Cấu hình lớp (giáo viên) ─────────────────────────────────────────────── */
+  const DEFAULT_COURSE_CFG = { mode: 'sequential', minScore: PASS, locked: [], unlocked: [], gateAfter: {}, extra: {} };
+
+  function cleanStr(v, max) { return typeof v === 'string' ? v.replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, max) : ''; }
+  function cleanUrl(v) {
+    const s = cleanStr(v, 300);
+    return /^https:\/\/[^\s"'<>]+$/.test(s) ? s : ''; // chỉ https — chặn javascript:, data:, http:
+  }
+  function cleanIds(a, max) {
+    return (Array.isArray(a) ? a : []).filter(function (x) { return typeof x === 'string' && ID_RE.test(x); }).slice(0, max);
+  }
+  function cleanLinks(a) {
+    return (Array.isArray(a) ? a : []).map(function (x) { return x && { title: cleanStr(x.title, 80), url: cleanUrl(x.url) }; })
+      .filter(function (x) { return x && x.title && x.url; }).slice(0, 5);
+  }
+
+  /** Cấu hình lớp nhận từ link (không tin được) → bản sạch. Sai kiểu thì về mặc định, không ném lỗi. */
+  function sanitizeClassConfig(raw) {
+    const r = raw && typeof raw === 'object' ? raw : {};
+    const out = { v: 1, className: cleanStr(r.className, 40), issuedAt: typeof r.issuedAt === 'number' ? r.issuedAt : 0, courses: {} };
+    const courses = r.courses && typeof r.courses === 'object' ? r.courses : {};
+    Object.keys(courses).slice(0, 20).forEach(function (cid) {
+      if (!ID_RE.test(cid)) return;
+      const c = courses[cid] || {};
+      const extra = {};
+      Object.keys(c.extra && typeof c.extra === 'object' ? c.extra : {}).slice(0, 100).forEach(function (lid) {
+        if (!ID_RE.test(lid)) return;
+        const e = { videos: cleanLinks(c.extra[lid].videos), docs: cleanLinks(c.extra[lid].docs) };
+        if (e.videos.length || e.docs.length) extra[lid] = e;
+      });
+      const gateAfter = {};
+      Object.keys(c.gateAfter && typeof c.gateAfter === 'object' ? c.gateAfter : {}).slice(0, 30).forEach(function (gid) {
+        if (ID_RE.test(gid) && ID_RE.test(String(c.gateAfter[gid]))) gateAfter[gid] = c.gateAfter[gid];
+      });
+      const ms = Number(c.minScore);
+      out.courses[cid] = {
+        mode: c.mode === 'free' ? 'free' : 'sequential',
+        minScore: ms >= 40 && ms <= 100 ? Math.round(ms) : PASS,
+        locked: cleanIds(c.locked, 300),
+        unlocked: cleanIds(c.unlocked, 300),
+        gateAfter: gateAfter,
+        extra: extra,
+      };
+    });
+    return out;
+  }
+  function courseCfg(classCfg, courseId) {
+    const c = classCfg && classCfg.courses && classCfg.courses[courseId];
+    return c || DEFAULT_COURSE_CFG;
+  }
+
+  /* ── Tiến độ từ lịch sử bài làm ───────────────────────────────────────────── */
+  /** records: eduquiz_records ĐÃ lọc theo học sinh. → { units: { id: { best, attempts, lastAt, bestTest, timeSec } } } */
+  function progressOf(records) {
+    const units = {};
+    (records || []).forEach(function (r) {
+      const u = unitIdOf(r.catId, r.levelId, r.mtKey);
+      if (!u || typeof r.score !== 'number') return;
+      const p = units[u.id] || (units[u.id] = { kind: u.kind, best: 0, attempts: 0, lastAt: 0, bestTest: null, timeSec: 0 });
+      p.attempts++;
+      p.best = Math.max(p.best, r.score);
+      if (r.examMode === 'test') p.bestTest = Math.max(p.bestTest === null ? 0 : p.bestTest, r.score);
+      const t = Number(r.id) > 1e14 ? Math.floor(Number(r.id) / 1000) : Number(r.id) || 0;
+      p.lastAt = Math.max(p.lastAt, t);
+      if (typeof r.elapsedSec === 'number' && r.elapsedSec > 0) p.timeSec += Math.min(r.elapsedSec, 4 * 3600);
+    });
+    return { units: units };
+  }
+
+  /* ── Cây kỹ năng: trạng thái từng nút ──
+     done: điểm cao nhất ≥ điểm đạt · available: mở được · locked: chưa mở (reason: 'teacher' | 'requires') */
+  function nodeStates(course, progress, classCfg) {
+    const cfg = courseCfg(classCfg, course.id);
+    const min = cfg.minScore;
+    const units = (progress && progress.units) || {};
+    const st = {};
+    const passed = function (id) { return !!units[id] && units[id].best >= min; };
+    function decide(node, requires) {
+      if (passed(node.id)) return { state: 'done', best: units[node.id].best };
+      if (cfg.locked.indexOf(node.id) >= 0) return { state: 'locked', reason: 'teacher' };
+      if (cfg.mode === 'free' || cfg.unlocked.indexOf(node.id) >= 0) return { state: 'available', best: units[node.id] ? units[node.id].best : null };
+      const missing = requires.filter(function (r) { return !passed(r); });
+      return missing.length ? { state: 'locked', reason: 'requires', missing: missing } : { state: 'available', best: units[node.id] ? units[node.id].best : null };
+    }
+    course.lessons.forEach(function (l) { st[l.id] = decide(l, l.requires || []); });
+    (course.gates || []).forEach(function (g) { st[g.id] = decide(g, cfg.gateAfter[g.id] ? [cfg.gateAfter[g.id]] : g.requires || []); });
+    return st;
+  }
+
+  /** Điều kiện hoàn thành khoá học + bài nên làm tiếp. */
+  function courseStatus(course, progress, classCfg) {
+    const st = nodeStates(course, progress, classCfg);
+    const cfg = courseCfg(classCfg, course.id);
+    const lDone = course.lessons.filter(function (l) { return st[l.id].state === 'done'; }).length;
+    const gates = course.gates || [];
+    const gDone = gates.filter(function (g) { return st[g.id].state === 'done'; }).length;
+    const conditions = [{ id: 'lessons', label: 'Đạt ' + cfg.minScore + ' điểm ở mọi bài học', current: lDone, target: course.lessons.length, met: lDone === course.lessons.length }];
+    if (gates.length) conditions.push({ id: 'gates', label: 'Đạt ' + cfg.minScore + ' điểm ở mọi bài kiểm tra', current: gDone, target: gates.length, met: gDone === gates.length });
+    const total = course.lessons.length + gates.length;
+    const next = course.lessons.concat(gates).filter(function (n) { return st[n.id].state === 'available'; })[0] || null;
+    return {
+      states: st, lessonsDone: lDone, gatesDone: gDone, total: total,
+      pct: total ? Math.round(((lDone + gDone) / total) * 100) : 0,
+      complete: conditions.every(function (c) { return c.met; }), conditions: conditions, next: next,
+    };
+  }
+
+  /** EXP xem trước (theo bảng thưởng của cultivation-core). Chỉ để HIỂN THỊ — máy chủ mới ghi EXP thật. */
+  function expPreview(course, cultivationConfig) {
+    const r = (cultivationConfig && cultivationConfig.rewards) || {};
+    const perLesson = (r.LESSON && r.LESSON.amount) || 0;
+    const perGate = (r.TEST && r.TEST.amount) || 0;
+    return { perLesson: perLesson, perGate: perGate, total: perLesson * course.lessons.length + perGate * (course.gates || []).length };
+  }
+
+  /**
+   * Bài nộp ĐÃ ĐƯỢC MÁY CHỦ CHẤM LẠI → sự kiện cho CultivationService. Không có điểm máy chủ → [] (không thưởng).
+   * sub: { learnerId, catId, levelId, mtKey, serverScore, durationSec }
+   */
+  function submissionEvents(sub) {
+    if (!sub || typeof sub.serverScore !== 'number' || !sub.learnerId) return [];
+    const u = unitIdOf(sub.catId, sub.levelId, sub.mtKey);
+    if (!u) return [];
+    const ev = { score: Math.max(0, Math.min(100, Math.round(sub.serverScore))) };
+    if (typeof sub.durationSec === 'number') ev.durationSec = Math.max(0, Math.min(4 * 3600, Math.round(sub.durationSec)));
+    if (u.kind === 'lesson') { ev.lessonId = u.id; return [{ type: 'LESSON', learnerId: sub.learnerId, evidence: ev }]; }
+    if (u.kind === 'gate') { ev.testId = u.id; return [{ type: 'TEST', learnerId: sub.learnerId, evidence: ev }]; }
+    ev.exerciseId = u.id;
+    return [{ type: 'EXERCISE', learnerId: sub.learnerId, evidence: ev }];
+  }
+
+  const api = {
+    PASS: PASS, DEFAULT_COURSE_CFG: DEFAULT_COURSE_CFG, slug: slug, unitIdOf: unitIdOf,
+    sanitizeClassConfig: sanitizeClassConfig, courseCfg: courseCfg, progressOf: progressOf,
+    nodeStates: nodeStates, courseStatus: courseStatus, expPreview: expPreview, submissionEvents: submissionEvents,
+  };
+  root.EduLearning = api;
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+// ──────────────── js/techrealm/challenge-core.js (dùng chung với trình duyệt — sửa ở file gốc) ────────────────
+/* ============================================================
+   js/techrealm/challenge-core.js — KHUNG BÍ CẢNH (Domain thuần).
+
+   Mỗi màn chơi là một "máy trạng thái" thuần và tất định:
+       state0 = level.init(rng(seed))
+       state' = level.apply(state, action)           (không sửa state cũ)
+       eval   = level.evaluate(state)                → { completed, accuracy, solving, application, attempts, minAttempts }
+   Giao diện (React) chỉ gửi action vào CHÍNH các hàm này, nên trạng thái trên màn hình = trạng thái máy chủ dựng lại.
+   Nhận thưởng: trình duyệt gửi { seed, actions } — KHÔNG gửi điểm. Apps Script chạy lại (replay) bằng đúng file này
+   (scripts/build-apps-script.js chép nguyên văn vào apps/Code.gs) và tự tính điểm. Sửa điểm trong gói tin vô tác dụng.
+
+   Không DOM, không mạng, không Date.now(), không Math.random() (dùng rng có hạt giống), không `?.` / `??`.
+   Tài liệu: docs/techrealm/CHALLENGE_SYSTEM.md, docs/techrealm/GAME_DESIGN.md
+   ============================================================ */
+(function (root) {
+  'use strict';
+
+  const registry = {};
+  const MAX_ACTIONS = 600;
+  const MAX_DURATION_MS = 2 * 3600e3;
+  const MIN_MS_PER_ACTION = 120; // người thật không bấm nhanh hơn ~8 lần/giây suốt cả màn
+
+  /** Bộ sinh số ngẫu nhiên có hạt giống (mulberry32) — cùng seed ra cùng dãy ở mọi nơi chạy. */
+  function rng(seed) {
+    let a = seed >>> 0;
+    const next = function () {
+      a = (a + 0x6D2B79F5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    return {
+      next: next,
+      int: function (lo, hi) { return lo + Math.floor(next() * (hi - lo + 1)); },
+      pick: function (arr) { return arr[Math.floor(next() * arr.length)]; },
+      shuffle: function (arr) { const a2 = arr.slice(); for (let i = a2.length - 1; i > 0; i--) { const j = Math.floor(next() * (i + 1)); const tmp = a2[i]; a2[i] = a2[j]; a2[j] = tmp; } return a2; },
+    };
+  }
+
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+
+  /** Đăng ký 1 bí cảnh: { id, title, levels: [{ id, title, par (giây), init, apply, evaluate }] }. */
+  function register(def) {
+    if (!def || !def.id || !Array.isArray(def.levels) || !def.levels.length) throw new Error('Bí cảnh không hợp lệ');
+    def.levels.forEach(function (l) {
+      ['init', 'apply', 'evaluate'].forEach(function (k) { if (typeof l[k] !== 'function') throw new Error('Màn ' + l.id + ' thiếu ' + k); });
+    });
+    registry[def.id] = def;
+    return def;
+  }
+  function get(id) { return registry[id] || null; }
+  function levelOf(challengeId, levelId) {
+    const c = registry[challengeId];
+    if (!c) return null;
+    return c.levels.filter(function (l) { return l.id === levelId; })[0] || null;
+  }
+
+  /* ── Tiêu chí đánh giá (Prompt 05 §4) → điểm 0–100 ──
+       hoàn thành nhiệm vụ (điều kiện bắt buộc) · độ chính xác 40 · giải quyết vấn đề 25 · vận dụng kiến thức 20
+       · thời gian 10 · số lần thử 5.  Chưa hoàn thành: chỉ tính tối đa 40% để vẫn ghi nhận cố gắng. */
+  const WEIGHTS = { accuracy: 40, solving: 25, application: 20, time: 10, attempts: 5 };
+  function clamp01(x) { return Math.max(0, Math.min(1, Number(x) || 0)); }
+  function score(ev, durationSec, par) {
+    const time = durationSec <= par ? 1 : clamp01(1 - (durationSec - par) / (2 * par));
+    const extra = Math.max(0, (ev.attempts || 0) - (ev.minAttempts || 1));
+    const attempts = clamp01(1 - extra / 5);
+    const parts = {
+      accuracy: Math.round(WEIGHTS.accuracy * clamp01(ev.accuracy)),
+      solving: Math.round(WEIGHTS.solving * clamp01(ev.solving)),
+      application: Math.round(WEIGHTS.application * clamp01(ev.application)),
+      time: Math.round(WEIGHTS.time * time),
+      attempts: Math.round(WEIGHTS.attempts * attempts),
+    };
+    let total = parts.accuracy + parts.solving + parts.application + parts.time + parts.attempts;
+    if (!ev.completed) total = Math.min(total, 40);
+    const stars = !ev.completed ? 0 : total >= 85 ? 3 : total >= 65 ? 2 : 1;
+    return { score: total, stars: stars, parts: parts, completed: !!ev.completed };
+  }
+
+  /** Kiểm nhật ký thao tác (không tin được): mảng { t: ms từ lúc bắt đầu, type: chuỗi, … } tăng dần, giới hạn số lượng. */
+  function validateLog(actions) {
+    if (!Array.isArray(actions)) return 'Nhật ký không phải mảng.';
+    if (actions.length > MAX_ACTIONS) return 'Quá nhiều thao tác.';
+    let prev = 0;
+    for (let i = 0; i < actions.length; i++) {
+      const a = actions[i];
+      if (!a || typeof a !== 'object' || typeof a.type !== 'string' || a.type.length > 20) return 'Thao tác #' + i + ' sai dạng.';
+      if (typeof a.t !== 'number' || !isFinite(a.t) || a.t < prev || a.t > MAX_DURATION_MS) return 'Thời điểm thao tác #' + i + ' không hợp lệ.';
+      if (JSON.stringify(a).length > 200) return 'Thao tác #' + i + ' quá dài.';
+      prev = a.t;
+    }
+    if (actions.length > 2 && prev < (actions.length - 1) * MIN_MS_PER_ACTION) return 'Thao tác nhanh bất thường.';
+    return null;
+  }
+
+  /** Chạy lại một màn từ seed + nhật ký. Dùng ở CẢ trình duyệt (để chấm) lẫn máy chủ (để xác thực). */
+  function replay(challengeId, levelId, seed, actions) {
+    const level = levelOf(challengeId, levelId);
+    if (!level) return { ok: false, code: 'not-found', reason: 'Không có màn này.' };
+    if (!(Number.isInteger(seed) && seed >= 0 && seed <= 0xFFFFFFFF)) return { ok: false, code: 'invalid', reason: 'Hạt giống không hợp lệ.' };
+    const bad = validateLog(actions);
+    if (bad) return { ok: false, code: 'invalid', reason: bad };
+    let state = level.init(rng(seed));
+    for (let i = 0; i < actions.length; i++) {
+      if (state.done) break; // màn đã kết thúc: thao tác sau đó bỏ qua
+      state = level.apply(clone(state), actions[i]);
+    }
+    const ev = level.evaluate(state);
+    const durationSec = Math.round((actions.length ? actions[actions.length - 1].t : 0) / 1000);
+    return { ok: true, state: state, eval: ev, durationSec: durationSec, result: score(ev, durationSec, level.par) };
+  }
+
+  /** Bài nộp bí cảnh → sự kiện CHALLENGE cho luật tu luyện (chỉ khi replay hợp lệ và màn đã hoàn thành). */
+  function rewardEvent(sub) {
+    if (!sub || !/^L[0-9A-Z]{10}$/.test(String(sub.learnerId || ''))) return null;
+    const r = replay(sub.challengeId, sub.levelId, sub.seed, sub.actions);
+    if (!r.ok || !r.result.completed) return null;
+    const level = levelOf(sub.challengeId, sub.levelId);
+    return {
+      type: 'CHALLENGE', learnerId: sub.learnerId,
+      evidence: { challengeId: sub.challengeId + '/' + sub.levelId, score: r.result.score, durationSec: r.durationSec, boss: !!level.boss },
+    };
+  }
+
+  const api = { rng: rng, register: register, get: get, levelOf: levelOf, score: score, validateLog: validateLog, replay: replay, rewardEvent: rewardEvent, WEIGHTS: WEIGHTS, clone: clone };
+  root.EduChallenge = api;
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+// ──────────────── js/techrealm/thanh-pho-mat-dien-core.js (dùng chung với trình duyệt — sửa ở file gốc) ────────────────
+/* ============================================================
+   js/techrealm/thanh-pho-mat-dien-core.js — BÍ CẢNH 1: THÀNH PHỐ MẤT ĐIỆN (luật thuần, tất định).
+   Kiến thức: vật lý (mạch điện, vật dẫn/cách điện, mạch song song), năng lượng, toán (cộng trừ trong giới hạn),
+   dữ liệu (đọc biểu đồ, phát hiện bất thường).
+   Đăng ký vào EduChallenge (challenge-core.js — phải nạp trước). Chạy ở trình duyệt, Node (test) và Apps Script.
+   Kịch bản, nhân vật, bản đồ: docs/techrealm/GAME_DESIGN.md §2.
+   ============================================================ */
+(function (root) {
+  'use strict';
+  const E = root.EduChallenge;
+  if (!E) throw new Error('Cần nạp js/techrealm/challenge-core.js trước');
+
+  /* ── Dữ liệu chung ── */
+  const MATERIALS = {
+    dong: { name: 'Dây đồng', conductor: true },
+    sat: { name: 'Đinh sắt', conductor: true },
+    nhom: { name: 'Giấy nhôm', conductor: true },
+    chi: { name: 'Ruột bút chì', conductor: true }, // than chì dẫn điện
+    nhua: { name: 'Thanh nhựa', conductor: false },
+    go: { name: 'Que gỗ khô', conductor: false },
+    len: { name: 'Sợi len', conductor: false },
+    thuytinh: { name: 'Ống thủy tinh', conductor: false },
+    caosu: { name: 'Cục tẩy cao su', conductor: false },
+  };
+  const BUILDINGS = [
+    { id: 'benh-vien', name: 'Bệnh viện', base: 30, essential: true },
+    { id: 'tram-nuoc', name: 'Trạm bơm nước', base: 20, essential: true },
+    { id: 'truong-hoc', name: 'Trường học', base: 15 },
+    { id: 'nha-o', name: 'Khu nhà ở', base: 35 },
+    { id: 'sieu-thi', name: 'Siêu thị', base: 25 },
+    { id: 'den-duong', name: 'Đèn đường', base: 10 },
+  ];
+
+  /** Câu hỏi trắc nghiệm: phương án đúng luôn khai báo ở vị trí 0, rồi xáo theo seed. */
+  function mcq(r, id, text, options) {
+    const order = r.shuffle(options.map(function (_, i) { return i; }));
+    return { id: id, text: text, options: order.map(function (i) { return options[i]; }), correct: order.indexOf(0) };
+  }
+  function answerQ(s, a) {
+    const q = s.qs.filter(function (x) { return x.id === a.q; })[0];
+    if (!q || !(Number.isInteger(a.o) && a.o >= 0 && a.o < q.options.length)) return s;
+    const rec = s.answers[q.id] || (s.answers[q.id] = { first: a.o, tries: 0, solved: false });
+    if (rec.solved) return s;
+    rec.tries++;
+    if (a.o === q.correct) rec.solved = true;
+    return s;
+  }
+  const firstRight = function (s, ids) { return ids.filter(function (id) { return s.answers[id] && s.answers[id].first === s.qs.filter(function (q) { return q.id === id; })[0].correct; }).length; };
+  const allSolved = function (s) { return s.qs.every(function (q) { return s.answers[q.id] && s.answers[q.id].solved; }); };
+
+  /* ═════════ Màn 1: Trạm biến áp — nối lại mạch điện ═════════ */
+  function circuitLit(round, placed, sw) {
+    const ok = function (slot) { return !!placed[slot] && !!MATERIALS[placed[slot]] && MATERIALS[placed[slot]].conductor; };
+    const lit = {};
+    if (round.kind === 'loop') {
+      const on = round.slots.every(ok) && (round.switch === undefined || sw === true);
+      round.lamps.forEach(function (l) { lit[l] = on; });
+    } else {
+      const main = round.main.every(ok);
+      round.branches.forEach(function (b) { lit[b.lamp] = main && b.slots.every(ok); });
+    }
+    return lit;
+  }
+  const L1 = {
+    id: 'mach-dien', title: 'Trạm biến áp: nối lại mạch điện', par: 150,
+    init: function (r) {
+      const cond = r.shuffle(['dong', 'sat', 'nhom', 'chi']).slice(0, 3);
+      const ins = r.shuffle(['nhua', 'go', 'len', 'thuytinh', 'caosu']).slice(0, 3);
+      const palette = r.shuffle(cond.concat(ins));
+      const c0 = MATERIALS[cond[0]].name.toLowerCase();
+      return {
+        palette: palette, round: 0, placed: {}, sw: false, tests: 0, firstOk: [], roundTests: 0, lastLit: null, done: false,
+        rounds: [
+          { kind: 'loop', title: 'Nối 2 chỗ đứt để đèn sáng', slots: ['a', 'b'], lamps: ['den'], goal: { den: true } },
+          { kind: 'loop', title: 'Mạch có công tắc: làm đèn sáng', slots: ['a'], switch: true, lamps: ['den'], goal: { den: true } },
+          { kind: 'parallel', title: 'Chỉ cấp điện cho Bệnh viện, tắt Khu vui chơi để tiết kiệm', main: ['m'],
+            branches: [{ lamp: 'benh-vien', name: 'Bệnh viện', slots: ['h'] }, { lamp: 'vui-choi', name: 'Khu vui chơi', slots: ['p'] }],
+            goal: { 'benh-vien': true, 'vui-choi': false } },
+        ],
+        qs: [
+          mcq(r, 'q1', 'Vì sao đèn sáng khi em nối bằng ' + c0 + '?', ['Vì ' + c0 + ' là vật dẫn điện, dòng điện đi qua được', 'Vì ' + c0 + ' rất nặng', 'Vì ' + c0 + ' có màu sáng', 'Vì pin tự làm đèn sáng, không cần dây']),
+          mcq(r, 'q2', 'Vật nào KHÔNG cho dòng điện đi qua?', [MATERIALS[ins[0]].name, MATERIALS[cond[0]].name, MATERIALS[cond[1]].name, MATERIALS[cond[2]].name]),
+          mcq(r, 'q3', 'Trong mạch song song, vì sao Bệnh viện vẫn sáng khi nhánh Khu vui chơi bị ngắt?', ['Mỗi nhánh có đường đi riêng cho dòng điện', 'Bệnh viện có pin riêng', 'Dòng điện chỉ chạy vào toà nhà lớn', 'Vì bóng đèn Khu vui chơi bị hỏng']),
+        ],
+        answers: {},
+      };
+    },
+    apply: function (s, a) {
+      const rd = s.rounds[s.round];
+      if (a.type === 'answer') { if (!rd) { answerQ(s, a); if (allSolved(s)) s.done = true; } return s; }
+      if (!rd) return s;
+      const slots = rd.kind === 'loop' ? rd.slots : rd.main.concat(rd.branches[0].slots, rd.branches[1].slots);
+      if (a.type === 'place' && slots.indexOf(a.slot) >= 0 && s.palette.indexOf(a.m) >= 0) s.placed[a.slot] = a.m;
+      else if (a.type === 'clear' && slots.indexOf(a.slot) >= 0) delete s.placed[a.slot];
+      else if (a.type === 'toggle' && rd.switch) s.sw = !s.sw;
+      else if (a.type === 'test') {
+        s.tests++; s.roundTests++;
+        const lit = circuitLit(rd, s.placed, s.sw);
+        s.lastLit = lit;
+        const ok = Object.keys(rd.goal).every(function (k) { return !!lit[k] === rd.goal[k]; });
+        if (ok) { s.firstOk.push(s.roundTests === 1); s.round++; s.placed = {}; s.sw = false; s.roundTests = 0; s.lastLit = null; }
+      }
+      return s;
+    },
+    evaluate: function (s) {
+      const built = s.round >= s.rounds.length;
+      return {
+        completed: built && allSolved(s),
+        accuracy: s.firstOk.filter(Boolean).length / s.rounds.length,
+        solving: built ? Math.min(1, s.rounds.length / Math.max(s.rounds.length, s.tests)) : s.round / s.rounds.length * 0.5,
+        application: firstRight(s, ['q1', 'q2', 'q3']) / 3,
+        attempts: s.tests, minAttempts: s.rounds.length,
+      };
+    },
+  };
+
+  /* ═════════ Màn 2: Nhà máy điện — phân phối năng lượng ═════════ */
+  function totalOn(bs, on) { return bs.filter(function (b) { return on[b.id]; }).reduce(function (t, b) { return t + b.demand; }, 0); }
+  function bestTotal(bs, cap, must) {
+    let best = -1;
+    for (let mask = 0; mask < (1 << bs.length); mask++) {
+      let t = 0; let ok = true;
+      for (let i = 0; i < bs.length; i++) {
+        const on = (mask >> i) & 1;
+        if (!on && (bs[i].essential || (must && must.indexOf(bs[i].id) >= 0))) { ok = false; break; }
+        if (on) t += bs[i].demand;
+      }
+      if (ok && t <= cap && t > best) best = t;
+    }
+    return best;
+  }
+  const L2 = {
+    id: 'phan-phoi', title: 'Nhà máy điện: chia điện cho thành phố', par: 120,
+    init: function (r) {
+      const bs = BUILDINGS.map(function (b) { return { id: b.id, name: b.name, demand: Math.max(5, b.base + r.int(-1, 1) * 5), essential: !!b.essential }; });
+      const cap = r.pick([90, 100, 110]);
+      return { buildings: bs, cap: cap, on: {}, submits: 0, passedAt: 0, done: false, qs: [], answers: {}, perm: r.shuffle([0, 1, 2, 3]), best: bestTotal(bs, cap) };
+    },
+    apply: function (s, a) {
+      if (a.type === 'answer') { if (s.passedAt) { answerQ(s, a); if (allSolved(s)) s.done = true; } return s; }
+      if (s.passedAt) return s;
+      if (a.type === 'toggle' && s.buildings.some(function (b) { return b.id === a.id; })) s.on[a.id] = !s.on[a.id];
+      else if (a.type === 'submit') {
+        s.submits++;
+        const t = totalOn(s.buildings, s.on);
+        const essentials = s.buildings.every(function (b) { return !b.essential || s.on[b.id]; });
+        s.lastCheck = { total: t, overload: t > s.cap, essentials: essentials };
+        if (t <= s.cap && essentials) {
+          s.passedAt = s.submits; s.final = t;
+          const left = s.cap - t;
+          const opts = [left, s.cap + t, t, left + 10].map(String);
+          const order = s.perm;
+          s.qs = [
+            { id: 'q1', text: 'Máy phát có ' + s.cap + ' kW. Các khu em bật dùng ' + t + ' kW. Còn dư bao nhiêu kW?', options: order.map(function (i) { return opts[i] + ' kW'; }), correct: order.indexOf(0) },
+            { id: 'q2', text: 'Vì sao phải cấp điện cho Bệnh viện và Trạm bơm nước trước?', options: order.map(function (i) { return ['Vì đó là nơi thiết yếu cho sức khoẻ và nước sạch', 'Vì hai nơi đó dùng ít điện nhất', 'Vì hai nơi đó gần nhà máy nhất', 'Vì đèn ở đó đẹp nhất'][i]; }), correct: order.indexOf(0) },
+          ];
+        }
+      }
+      return s;
+    },
+    evaluate: function (s) {
+      return {
+        completed: !!s.passedAt && allSolved(s),
+        accuracy: !s.passedAt ? 0 : s.passedAt === 1 ? 1 : 0.5,
+        solving: s.passedAt && s.best > 0 ? s.final / s.best : 0,
+        application: firstRight(s, ['q1', 'q2']) / 2,
+        attempts: s.submits, minAttempts: 1,
+      };
+    },
+  };
+
+  /* ═════════ Màn 3: Phòng điều khiển — tìm chỗ rò điện trong dữ liệu ═════════ */
+  const DISTRICTS = ['Khu Bắc', 'Khu Nam', 'Khu Đông', 'Khu Tây'];
+  const HOURS = [6, 9, 12, 15, 18, 21];
+  const PROFILE = [20, 30, 35, 30, 45, 40]; // ít buổi sáng, đỉnh buổi tối
+  const L3 = {
+    id: 'du-lieu', title: 'Phòng điều khiển: tìm chỗ rò điện', par: 150,
+    init: function (r) {
+      const factor = DISTRICTS.map(function () { return 0.8 + r.int(0, 4) / 10; });
+      const data = DISTRICTS.map(function (_, d) { return PROFILE.map(function (p) { return Math.round(p * factor[d]) + r.int(-3, 3); }); });
+      const ad = r.int(0, 3);
+      const ah = r.int(0, 2) * 2 + 1; // 9h, 15h hoặc 21h — tránh trùng đỉnh tự nhiên 18h
+      // Rò điện phải NHÌN THẤY được: cao nhất trong chính khu đó và ≥ 1,8× các khu khác cùng giờ (test kiểm 200 seed).
+      const own = Math.max.apply(null, data[ad].filter(function (_, h) { return h !== ah; }));
+      const peers = Math.max.apply(null, data.filter(function (_, d) { return d !== ad; }).map(function (row) { return row[ah]; }));
+      data[ad][ah] = Math.round(Math.max(own, peers) * 1.8) + 5;
+      const sums = HOURS.map(function (_, h) { return data.reduce(function (t, row) { return t + row[h]; }, 0); });
+      let peak = 0;
+      sums.forEach(function (v, h) { if (v > sums[peak]) peak = h; });
+      sums.forEach(function (v, h) { if (h !== peak && v === sums[peak]) { data[0][peak] += 1; sums[peak] += 1; } });
+      return {
+        data: data, districts: DISTRICTS, hours: HOURS, done: false, answers: {},
+        qs: [
+          mcq(r, 'q1', 'Khu nào có số liệu bất thường (bị rò điện)?', [DISTRICTS[ad]].concat(DISTRICTS.filter(function (_, i) { return i !== ad; }))),
+          mcq(r, 'q2', 'Bất thường xảy ra lúc mấy giờ?', [HOURS[ah] + ' giờ'].concat(HOURS.filter(function (_, i) { return i !== ah; }).slice(0, 3).map(function (h) { return h + ' giờ'; }))),
+          mcq(r, 'q3', 'Lúc mấy giờ cả thành phố dùng nhiều điện nhất?', [HOURS[peak] + ' giờ'].concat(HOURS.filter(function (_, i) { return i !== peak; }).slice(0, 3).map(function (h) { return h + ' giờ'; }))),
+          mcq(r, 'q4', 'Vì sao phải sửa chỗ rò điện ngay?', ['Vì rò điện vừa tốn điện vô ích, vừa có thể gây giật điện, cháy nổ', 'Vì rò điện làm đèn sáng hơn', 'Vì rò điện giúp tiết kiệm tiền', 'Vì đồng hồ điện sẽ chạy chậm lại']),
+        ],
+      };
+    },
+    apply: function (s, a) {
+      if (a.type === 'answer') { answerQ(s, a); if (allSolved(s)) s.done = true; }
+      return s;
+    },
+    evaluate: function (s) {
+      const tries = s.qs.reduce(function (t, q) { return t + (s.answers[q.id] ? s.answers[q.id].tries : 0); }, 0);
+      return {
+        completed: allSolved(s),
+        accuracy: firstRight(s, ['q1', 'q2', 'q3']) / 3,
+        solving: Math.max(0, 1 - Math.max(0, tries - 4) / 6),
+        application: firstRight(s, ['q4']),
+        attempts: tries, minAttempts: 4,
+      };
+    },
+  };
+
+  /* ═════════ Boss: Cơn bão quá tải — 5 lượt giữ thành phố không sập điện ═════════ */
+  const EVENTS = [
+    { id: 'set', text: 'Sét đánh trúng trạm: máy phát giảm 20 kW.', cap: -20 },
+    { id: 'nang', text: 'Nắng nóng: Khu nhà ở cần thêm 15 kW cho quạt.', demand: { 'nha-o': 15 } },
+    { id: 'toi', text: 'Trời tối sầm: phải bật Đèn đường cho an toàn.', must: ['den-duong'] },
+    { id: 'cap-cuu', text: 'Bệnh viện có ca mổ cấp cứu: cần thêm 10 kW.', demand: { 'benh-vien': 10 } },
+    { id: 'mat-troi', text: 'Pin mặt trời trên mái trường phát thêm 15 kW.', cap: 15 },
+    { id: 'mua', text: 'Mưa lớn: Trạm bơm nước chạy hết sức, cần thêm 10 kW.', demand: { 'tram-nuoc': 10 } },
+  ];
+  const BOSS = {
+    id: 'bao-qua-tai', title: 'Boss: Cơn bão quá tải', par: 240, boss: true,
+    init: function (r) {
+      const s = { cap0: 110, base: BUILDINGS.map(function (b) { return { id: b.id, name: b.name, demand: b.base, essential: !!b.essential }; }),
+        events: r.shuffle(EVENTS).slice(0, 5), turn: 0, on: { 'benh-vien': true, 'tram-nuoc': true }, hp: 100, log: [], done: false, answers: {},
+        qs: [mcq(r, 'q1', 'Khi máy phát bị giảm công suất, em nên tắt khu nào trước?', ['Khu không thiết yếu, như Siêu thị', 'Bệnh viện', 'Trạm bơm nước', 'Tắt hết cả thành phố cho chắc'])] };
+      return s;
+    },
+    apply: function (s, a) {
+      if (s.turn >= s.events.length) {
+        if (a.type === 'answer') { answerQ(s, a); if (allSolved(s)) s.done = true; }
+        return s;
+      }
+      const ev = s.events[s.turn];
+      if (a.type === 'toggle' && s.base.some(function (b) { return b.id === a.id; })) s.on[a.id] = !s.on[a.id];
+      else if (a.type === 'end-turn') {
+        const cap = s.cap0 + (ev.cap || 0);
+        const bs = s.base.map(function (b) { return { id: b.id, essential: b.essential, demand: b.demand + ((ev.demand && ev.demand[b.id]) || 0) }; });
+        const total = totalOn(bs, s.on);
+        const must = (ev.must || []).every(function (id) { return s.on[id]; });
+        const essentials = bs.every(function (b) { return !b.essential || s.on[b.id]; });
+        const best = bestTotal(bs, cap, ev.must);
+        let ts = 0;
+        if (total <= cap) ts = (essentials && must ? 1 : 0.3) * (best > 0 ? total / best : 0);
+        const dmg = Math.round(20 * ts);
+        s.hp = Math.max(0, s.hp - dmg);
+        s.log.push({ event: ev.id, cap: cap, total: total, overload: total > cap, essentials: essentials, must: must, score: ts, dmg: dmg });
+        s.turn++;
+      }
+      return s;
+    },
+    evaluate: function (s) {
+      const n = s.log.length || 1;
+      const safe = s.log.filter(function (l) { return !l.overload; }).length;
+      return {
+        completed: s.turn >= s.events.length && allSolved(s) && safe >= 3,
+        accuracy: safe / s.events.length,
+        solving: s.log.reduce(function (t, l) { return t + l.score; }, 0) / n,
+        application: firstRight(s, ['q1']),
+        attempts: 1 + (s.events.length - safe), minAttempts: 1,
+      };
+    },
+  };
+
+  const def = E.register({
+    id: 'thanh-pho-mat-dien',
+    title: 'Thành phố mất điện',
+    levels: [L1, L2, L3, BOSS],
+    data: { MATERIALS: MATERIALS, BUILDINGS: BUILDINGS, EVENTS: EVENTS, circuitLit: circuitLit, totalOn: totalOn, bestTotal: bestTotal },
+  });
+  if (typeof module !== 'undefined' && module.exports) module.exports = def;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+// ──────────────── js/techrealm/mentor-core.js (dùng chung với trình duyệt — sửa ở file gốc) ────────────────
+/* ============================================================
+   js/techrealm/mentor-core.js — AI SƯ PHỤ (Domain thuần).
+
+   Mở rộng Trợ lý AI có sẵn (js/services/ai-core.js) bằng 4 việc mới, cùng khuôn: CODE dựng câu lệnh từ dữ liệu có
+   cấu trúc (không nhận câu lệnh tự do) → không mượn được key của trường để hỏi việc khác.
+     mentorConcept  HS  giải thích kiến thức (câu hỏi ngắn của học sinh, đã lọc thông tin cá nhân)
+     mentorHint     HS  gợi ý giải bài tập theo 3 mức — KHÔNG nhận đáp án đúng, dặn AI không nêu đáp án
+     codeHelp       HS  hướng dẫn lập trình / phân tích lỗi code — chỉ ra lỗi + gợi ý, không viết lời giải trọn vẹn
+     rubricReview   GV  gợi ý chấm sản phẩm theo rubric (GIÁO VIÊN quyết định điểm)
+   Chạy ở trình duyệt (ai-core.build gọi sang đây) VÀ Apps Script (scripts/build-apps-script.js chép nguyên văn; 78-ai.gs
+   aiBuild_ gọi sang đây) → câu lệnh hai nơi giống hệt, không có bản chép tay.
+   Không DOM, không mạng, không `?.` / `??`. Tài liệu: docs/techrealm/AI_MENTOR.md
+   ============================================================ */
+(function (root) {
+  'use strict';
+
+  const PUBLIC_TASKS = ['mentorConcept', 'mentorHint', 'codeHelp'];
+  const STAFF_TASKS = ['rubricReview'];
+  const LANGS = { python: 'Python', javascript: 'JavaScript', html: 'HTML/CSS', scratch: 'Scratch (mô tả khối lệnh)' };
+
+  const SYS = 'Bạn là "AI Sư Phụ" — trợ giảng thân thiện cho học sinh phổ thông Việt Nam, môn Tin học, khoa học và kỹ năng số. '
+    + 'Trả lời bằng tiếng Việt chuẩn, ngắn gọn, đúng kiến thức, hợp lứa tuổi. Không bịa; không chắc thì nói không chắc. '
+    + 'Mục tiêu là giúp học sinh TỰ HIỂU và TỰ LÀM: hướng dẫn từng bước, không làm bài hộ. '
+    + 'Chỉ trả lời nội dung học tập. Nếu câu hỏi ngoài phạm vi học tập, không phù hợp lứa tuổi, nguy hiểm, hoặc hỏi/đưa thông tin '
+    + 'cá nhân (tên, địa chỉ, số điện thoại, mật khẩu): từ chối lịch sự bằng 1 câu và gợi ý hỏi nội dung bài học. '
+    + 'Không bao giờ đề nghị học sinh cung cấp thông tin cá nhân.';
+
+  /* ── Lọc thông tin cá nhân khỏi chữ học sinh gõ (chạy ở CẢ trình duyệt lẫn máy chủ) ── */
+  const PII = [
+    [/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, '[email]'],
+    [/https?:\/\/\S+|www\.\S+/gi, '[link]'],
+    [/(?:\+?84|0)(?:[\s.-]?\d){8,10}\b/g, '[số điện thoại]'],
+    [/\b\d{9,12}\b/g, '[dãy số]'],
+    [/(?:mật khẩu|mat khau|password|pass)\s*(?:là|:|=)?\s*\S+/gi, '[mật khẩu]'],
+    [/\b(?:tên|ten)\s+(?:em|mình|minh|tôi|toi|tớ|to|con)\s+(?:là|la)\s+[^\s,.!?]+(?:\s+[^\s,.!?]+){0,3}/gi, '[tên]'],
+    [/\b(?:em|mình|tôi|tớ)\s+(?:tên là|ten la|là học sinh lớp)\s+[^\s,.!?]+(?:\s+[^\s,.!?]+){0,3}/gi, '[tên]'],
+    [/\b(?:nhà|nha)\s+(?:em|mình|tôi|tớ)\s+(?:ở|o)\s+[^.!?\n]{1,60}/gi, '[địa chỉ]'],
+  ];
+  function scrubPII(s) {
+    let text = String(s == null ? '' : s);
+    let removed = 0;
+    PII.forEach(function (rule) {
+      text = text.replace(rule[0], function () { removed++; return rule[1]; });
+    });
+    return { text: text, removed: removed };
+  }
+
+  const ctrl = /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g;
+  function clip(s, n) { return scrubPII(String(s == null ? '' : s).replace(ctrl, '').replace(/\s+/g, ' ').trim()).text.slice(0, n); }
+  function clipCode(s, n) { return scrubPII(String(s == null ? '' : s).replace(ctrl, '').replace(/\t/g, '  ').replace(/\n{3,}/g, '\n\n').replace(/\s+$/, '')).text.slice(0, n); }
+  function int(v, a, b, d) { const x = Math.round(Number(v)); return isFinite(x) ? Math.max(a, Math.min(b, x)) : d; }
+  function grade(v) { const g = Math.round(Number(v)); return g >= 3 && g <= 12 ? g : 0; }
+  const forGrade = function (g) { return g ? ' lớp ' + g : ''; };
+  const opts = function (a) { return (Array.isArray(a) ? a : []).slice(0, 8).map(function (x) { return clip(x, 200); }).filter(Boolean); };
+
+  const TASKS = {
+    mentorConcept: {
+      norm: function (p) { return { topic: clip(p.topic, 120), question: clip(p.question, 300), grade: grade(p.grade) }; },
+      ok: function (n) { return n.question.length >= 5; },
+      prompt: function (n) {
+        return {
+          user: 'Học sinh' + forGrade(n.grade) + (n.topic ? ' đang học "' + n.topic + '"' : '') + ' hỏi:\n"' + n.question + '"\n\n'
+            + 'Giải thích dễ hiểu trong tối đa 150 chữ, có 1 ví dụ gần gũi đời sống. '
+            + 'Kết thúc bằng 1 câu hỏi ngắn để học sinh tự kiểm tra mình đã hiểu chưa (KHÔNG kèm đáp án của câu đó).',
+          json: false, maxTokens: 700, temperature: 0.4,
+        };
+      },
+    },
+    mentorHint: {
+      // Cố ý KHÔNG có trường đáp án đúng: AI không được biết đáp án do hệ thống đưa.
+      norm: function (p) { return { question: clip(p.question, 900), options: opts(p.options), attempt: clip(p.attempt, 300), level: int(p.level, 1, 3, 1), grade: grade(p.grade) }; },
+      ok: function (n) { return !!n.question; },
+      prompt: function (n) {
+        const lv = ['', 'MỨC 1: chỉ nhắc khái niệm / kiến thức liên quan, không đề cập phương án nào.',
+          'MỨC 2: gợi ý cách suy luận hoặc cách loại trừ, có thể nói 1 phương án CHẮC CHẮN SAI và vì sao.',
+          'MỨC 3: phân tích lần lượt từng phương án (điểm hợp lý / chưa hợp lý) nhưng KHÔNG kết luận phương án nào đúng.'][n.level];
+        return {
+          user: 'Học sinh' + forGrade(n.grade) + ' nhờ gợi ý cho bài tập LUYỆN TẬP sau:\n' + n.question
+            + (n.options.length ? '\nCác phương án:\n' + n.options.map(function (o, i) { return 'ABCDEFGH'.charAt(i) + '. ' + o; }).join('\n') : '')
+            + (n.attempt ? '\nHọc sinh đang nghĩ: "' + n.attempt + '"' : '')
+            + '\n\nĐưa gợi ý ' + lv + ' TUYỆT ĐỐI không nêu đáp án đúng, không viết "đáp án là…". Tối đa 100 chữ. '
+            + 'Kết thúc bằng 1 câu hỏi dẫn dắt để học sinh tự nghĩ tiếp.',
+          json: false, maxTokens: 500, temperature: 0.3,
+        };
+      },
+    },
+    codeHelp: {
+      norm: function (p) { return { language: LANGS[p.language] ? p.language : 'python', code: clipCode(p.code, 1500), error: clip(p.error, 300), goal: clip(p.goal, 200), grade: grade(p.grade) }; },
+      ok: function (n) { return n.code.trim().length >= 3; },
+      prompt: function (n) {
+        return {
+          user: 'Học sinh' + forGrade(n.grade) + ' đang học ' + LANGS[n.language] + '.'
+            + (n.goal ? '\nMục tiêu chương trình: ' + n.goal : '')
+            + '\nCode của học sinh:\n```\n' + n.code + '\n```'
+            + (n.error ? '\nThông báo lỗi / hiện tượng: ' + n.error : '')
+            + '\n\nHãy: (1) chỉ ra dòng hoặc chỗ có vấn đề và GIẢI THÍCH vì sao; (2) gợi ý cách sửa bằng lời, '
+            + 'nếu cần minh hoạ thì tối đa 3 dòng code cho đúng chỗ lỗi đó; (3) KHÔNG viết lại toàn bộ chương trình hay lời giải hoàn chỉnh; '
+            + '(4) kết thúc bằng 1 việc nhỏ để học sinh tự thử. Tối đa 180 chữ.',
+          json: false, maxTokens: 900, temperature: 0.2,
+        };
+      },
+    },
+    rubricReview: {
+      norm: function (p) {
+        const crit = (Array.isArray(p.criteria) ? p.criteria : []).slice(0, 8).map(function (c) { return { name: clip(c && c.name, 80), max: int(c && c.max, 1, 10, 4) }; }).filter(function (c) { return c.name; });
+        return { title: clip(p.title, 120), description: clipCode(p.description, 1500), criteria: crit, grade: grade(p.grade) };
+      },
+      ok: function (n) { return n.description.trim().length >= 20 && n.criteria.length > 0; },
+      prompt: function (n) {
+        return {
+          user: 'Bạn hỗ trợ GIÁO VIÊN chấm sản phẩm học sinh' + forGrade(n.grade) + (n.title ? ' cho dự án "' + n.title + '"' : '') + '.\n'
+            + 'Mô tả / nội dung sản phẩm:\n' + n.description + '\n\nRubric:\n'
+            + n.criteria.map(function (c, i) { return (i + 1) + '. ' + c.name + ' (tối đa ' + c.max + ' điểm)'; }).join('\n')
+            + '\n\nĐề xuất điểm từng tiêu chí (số nguyên, không vượt tối đa) kèm nhận xét ngắn, cụ thể, khích lệ. '
+            + 'Chỉ dựa trên mô tả; thiếu thông tin thì cho điểm thận trọng và ghi rõ "cần xem sản phẩm". '
+            + 'Trả về DUY NHẤT JSON: {"criteria":[{"name":"…","score":0,"comment":"…"}],"overall":"…"}',
+          json: true, maxTokens: 1200, temperature: 0.2,
+        };
+      },
+    },
+  };
+
+  /** Dựng câu lệnh — cùng dạng kết quả với ai-core.build. Lỗi: { code: 'invalid-argument' }. */
+  function build(task, payload) {
+    const t = Object.prototype.hasOwnProperty.call(TASKS, task) ? TASKS[task] : null;
+    if (!t) throw Object.assign(new Error('Việc AI không hợp lệ: ' + task), { code: 'invalid-argument' });
+    const n = t.norm(payload || {});
+    if (!t.ok(n)) throw Object.assign(new Error('Thiếu dữ liệu cho việc AI ' + task), { code: 'invalid-argument' });
+    const p = t.prompt(n);
+    return { task: task, payload: n, system: SYS, user: p.user, json: p.json, maxTokens: p.maxTokens, temperature: p.temperature };
+  }
+
+  /* ── Chế độ học / kiểm tra ──
+     Đang làm bài KIỂM TRA (bản tự lưu của sảnh có examMode 'test', chưa nộp, < 8 giờ) → AI Sư Phụ nghỉ HẲN cho học sinh.
+     Lớp bảo vệ thứ 2: mentorHint không nhận đáp án; lớp 3 (GĐ5): máy chủ từ chối khi học viên có phiên khảo hạch đang mở. */
+  const TEST_MAX_AGE_MS = 8 * 3600e3;
+  function modeOf(inProgress, nowMs) {
+    if (inProgress && inProgress.examMode === 'test' && typeof inProgress.savedAt === 'number' && nowMs - inProgress.savedAt < TEST_MAX_AGE_MS) return 'test';
+    return 'learn';
+  }
+  function policy(mode, task) {
+    if (STAFF_TASKS.indexOf(task) >= 0) return { allowed: true };
+    if (PUBLIC_TASKS.indexOf(task) < 0 && ['explain', 'quickQ'].indexOf(task) < 0) return { allowed: false, reason: 'Việc AI không hợp lệ.' };
+    if (mode === 'test') return { allowed: false, reason: 'Em đang làm bài kiểm tra — AI Sư Phụ tạm nghỉ tới khi em nộp bài. Cố gắng tự làm nhé!' };
+    return { allowed: true };
+  }
+
+  /** JSON rubric AI trả về → điểm đã kẹp trong [0, tối đa] theo đúng rubric; null nếu không đọc được. */
+  function parseRubric(text, criteria) {
+    let j = null;
+    try { j = JSON.parse(String(text).replace(/^```(?:json)?\s*|\s*```$/g, '')); } catch (e) { j = null; }
+    if (!j || !Array.isArray(j.criteria)) return null;
+    const rows = (criteria || []).map(function (c, i) {
+      const hit = j.criteria.filter(function (x) { return x && String(x.name || '').trim().toLowerCase() === String(c.name).trim().toLowerCase(); })[0] || j.criteria[i] || {};
+      return { name: c.name, max: c.max, score: int(hit.score, 0, c.max, 0), comment: clip(hit.comment, 300) };
+    });
+    return { rows: rows, total: rows.reduce(function (t, r) { return t + r.score; }, 0), max: rows.reduce(function (t, r) { return t + r.max; }, 0), overall: clip(j.overall, 500) };
+  }
+
+  /* ── Gợi ý nhiệm vụ: LUẬT trên máy, KHÔNG gọi AI (không gửi dữ liệu học tập đi đâu) ──
+     input: { courses: [{ id, name, pct, next: { title, href } | null, started }], challengeLevels: [{ id, name, stars, unlocked }],
+              missions: [{ id, name, score, href }], due: số câu cần ôn trong Sổ tay } */
+  function suggestNext(input) {
+    const out = [];
+    const i = input || {};
+    if ((i.due || 0) > 0) out.push({ kind: 'on-tap', title: 'Ôn ' + i.due + ' câu đến hạn trong Sổ tay câu sai', why: 'Ôn đúng lúc sắp quên giúp nhớ lâu nhất.' });
+    const started = (i.courses || []).filter(function (c) { return c.started && c.next && c.pct < 100; })
+      .sort(function (a, b) { return b.pct - a.pct; });
+    if (started[0]) out.push({ kind: 'bai-hoc', title: 'Học tiếp ' + started[0].next.title, why: 'Công pháp "' + started[0].name + '" đã được ' + started[0].pct + '% — làm tiếp cho trọn.', href: started[0].next.href });
+    const lv = (i.challengeLevels || []).filter(function (l) { return l.unlocked && l.stars < 3; })[0];
+    if (lv) out.push({ kind: 'bi-canh', title: (lv.stars ? 'Lấy thêm sao ở ' : 'Vượt màn ') + lv.name, why: lv.stars ? 'Em đã có ' + lv.stars + '/3 sao.' : 'Màn này đã mở cho em.', href: lv.href });
+    const ms = (i.missions || []).filter(function (m) { return (m.score || 0) < 60; })[0];
+    if (ms) out.push({ kind: 'nhiem-vu', title: 'Làm nhiệm vụ ' + ms.name, why: 'Đạt từ 60 điểm để mở công trình mới trong thành phố.', href: ms.href });
+    if (!started.length) {
+      const first = (i.courses || []).filter(function (c) { return !c.started && c.next; })[0];
+      if (first) out.push({ kind: 'bai-hoc', title: 'Bắt đầu ' + first.name, why: 'Em chưa học công pháp nào — bắt đầu từ bài đầu tiên.', href: first.next.href });
+    }
+    return out.slice(0, 4);
+  }
+
+  const api = { PUBLIC_TASKS: PUBLIC_TASKS, STAFF_TASKS: STAFF_TASKS, LANGS: LANGS, TASKS: TASKS, SYS: SYS, scrubPII: scrubPII, build: build, modeOf: modeOf, policy: policy, parseRubric: parseRubric, suggestNext: suggestNext };
+  root.EduMentor = api;
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(typeof window !== 'undefined' ? window : globalThis);
 
 // ──────────────── 00-config.gs ────────────────
 /**
@@ -26,7 +1409,7 @@
  */
 
 // ====== CẤU HÌNH - THAY BẰNG ID THẬT CỦA BẠN ======
-const BACKEND_VERSION = '2026-11-04c';
+const BACKEND_VERSION = '2026-11-17a';
 const SPREADSHEET_ID_DATA = '16ty8LB6pnk5Xai1VauUAKfMbIaT88ewfNUAhWM0z5ck';      // Sheet chứa HocSinh + KetQua
 const SPREADSHEET_ID_REPORT = '16ty8LB6pnk5Xai1VauUAKfMbIaT88ewfNUAhWM0z5ck';    // Sheet chứa báo cáo tổng hợp (có thể trùng với ID trên nếu để chung 1 file, khác tab)
 
@@ -131,6 +1514,7 @@ function routes_() {
     classSheetInfo:   { roles: ROLES_TEACH, handler: classSheetInfo_ },
     aiAsk:         { roles: null,          handler: aiAsk_ },        // 78-ai.gs — công khai: giải thích câu sai, câu hỏi nhanh (có trần lượt)
     aiAskStaff:    { roles: ROLES_STAFF,   handler: aiAskStaff_ },
+    aiReport:      { roles: null,          handler: aiReport_ },     // 78-ai.gs — công khai: báo câu trả lời AI có vấn đề (10/ngày/máy)
     aiStatus:      { roles: ROLES_STAFF,   handler: aiStatus_ },
     aiConfig:      { roles: ROLES_ADMIN,   handler: aiConfig_ },
   };
@@ -1942,6 +3326,10 @@ function aiForGrade_(g) { return g ? ' lớp ' + g : ''; }
 
 /** Bản Apps Script của EduAICore.build(): { task, payload, system, user, json, maxTokens, temperature }. */
 function aiBuild_(task, payload) {
+  // AI Sư Phụ: dùng CHÍNH js/techrealm/mentor-core.js (chép nguyên văn vào Code.gs) — câu lệnh giống hệt trình duyệt.
+  if (typeof EduMentor !== 'undefined' && Object.prototype.hasOwnProperty.call(EduMentor.TASKS, task)) {
+    try { return EduMentor.build(task, payload); } catch (e) { throw appError_('invalid-argument', e.message); }
+  }
   const p = payload || {};
   let n, user, json, maxTokens, temperature;
   if (task === 'explain') {
@@ -2060,7 +3448,7 @@ function aiRun_(task, payload, ident, cap) {
   const cache = CacheService.getScriptCache();
   const ck = 'ai1:' + Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, task + '|' + b.user));
   const hit = cache.get(ck);
-  if (hit) return { text: hit, cached: true };
+  if (hit) { aiLog_('dung-dem', task, ident, b.user.length, hit.length); return { text: hit, cached: true }; }
 
   const props = PropertiesService.getScriptProperties();
   const key = props.getProperty('GEMINI_API_KEY');
@@ -2073,8 +3461,10 @@ function aiRun_(task, payload, ident, cap) {
   if (used >= aiDailyMax_(props)) throw appError_('ai-limit', 'Trường đã dùng hết lượt AI hôm nay — mai thử lại, hoặc dùng key cá nhân.');
 
   const model = aiModel_(props);
-  const text = aiCallGemini_(key, model, b);
+  let text;
+  try { text = aiCallGemini_(key, model, b); } catch (e) { aiLog_('loi:' + (e.code || 'khac'), task, ident, b.user.length, 0); throw e; }
   if (!text) throw appError_('ai-empty', 'Gemini không trả về nội dung — thử lại.');
+  aiLog_('ok', task, ident, b.user.length, text.length);
   cache.put(mineKey, String(mine + 1), AI_CACHE_SEC);
   props.setProperty('AI_COUNT', day + ':' + (used + 1));
   if (text.length < 90000) cache.put(ck, text, AI_CACHE_SEC);
@@ -2082,15 +3472,16 @@ function aiRun_(task, payload, ident, cap) {
 }
 
 /** Công khai (học sinh không đăng nhập): chỉ việc nhẹ, có mã máy để đếm lượt. */
+function aiIsMentor_(task, list) { return typeof EduMentor !== 'undefined' && EduMentor[list].indexOf(task) >= 0; }
 function aiAsk_(p) {
-  if (AI_PUBLIC_TASKS.indexOf(p.task) < 0) throw appError_('permission-denied', 'Việc AI này cần đăng nhập tài khoản giáo viên.');
+  if (AI_PUBLIC_TASKS.indexOf(p.task) < 0 && !aiIsMentor_(p.task, 'PUBLIC_TASKS')) throw appError_('permission-denied', 'Việc AI này cần đăng nhập tài khoản giáo viên.');
   const cid = String(p.cid || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40);
   if (cid.length < 8) throw appError_('invalid-argument', 'Thiếu mã máy.');
   return aiRun_(p.task, p.payload, 'c:' + cid, AI_CLIENT_MAX);
 }
 /** Tài khoản quản trị: mọi việc AI. */
 function aiAskStaff_(p, who) {
-  if (AI_PUBLIC_TASKS.indexOf(p.task) < 0 && AI_STAFF_TASKS.indexOf(p.task) < 0) throw appError_('invalid-argument', 'Việc AI không hợp lệ: ' + p.task);
+  if (AI_PUBLIC_TASKS.indexOf(p.task) < 0 && AI_STAFF_TASKS.indexOf(p.task) < 0 && !aiIsMentor_(p.task, 'PUBLIC_TASKS') && !aiIsMentor_(p.task, 'STAFF_TASKS')) throw appError_('invalid-argument', 'Việc AI không hợp lệ: ' + p.task);
   return aiRun_(p.task, p.payload, 'u:' + who.uid, AI_STAFF_MAX);
 }
 /** Admin cài / đổi / gỡ key hệ thống. Có key mới hoặc đổi model → gọi thử Gemini, lỗi thì KHÔNG lưu. */
@@ -2110,6 +3501,185 @@ function aiConfig_(p) {
 function aiStatus_() {
   const props = PropertiesService.getScriptProperties();
   return { configured: !!props.getProperty('GEMINI_API_KEY'), model: aiModel_(props), usedToday: aiUsedToday_(props), dailyMax: aiDailyMax_(props) };
+}
+
+// ====== NHẬT KÝ AI + BÁO LỖI (Prompt 07 §4) ======
+// Tab NhatKyAI: 1 dòng/lượt gọi — KHÔNG lưu nội dung câu hỏi/trả lời, KHÔNG lưu mã máy/uid thô (chỉ 10 ký tự băm).
+// Ghi nhật ký không bao giờ làm hỏng lượt AI (lỗi ghi thì bỏ qua).
+const AI_LOG_TAB = 'NhatKyAI';
+const AI_LOG_HEADERS = ['ThoiGian', 'Loai', 'Viec', 'NguoiDung', 'SoKyTuHoi', 'SoKyTuTraLoi', 'GhiChu'];
+const AI_REPORT_REASONS = ['sai-kien-thuc', 'lo-dap-an', 'khong-phu-hop', 'khac'];
+const AI_REPORT_MAX = 10;
+function aiIdentHash_(ident) {
+  return Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(ident))).slice(0, 10);
+}
+function aiLog_(kind, task, ident, inChars, outChars, note) {
+  try {
+    logTab_(AI_LOG_TAB, AI_LOG_HEADERS).appendRow([new Date(), kind, task, aiIdentHash_(ident), inChars || 0, outChars || 0, asText_(String(note || '').slice(0, 300))]);
+  } catch (e) { /* nhật ký là phụ — không chặn lượt AI */ }
+}
+/** Công khai: học sinh / giáo viên báo một câu trả lời AI có vấn đề. Giới hạn 10 lần/ngày/máy. Ghi chú được lọc thông tin cá nhân. */
+function aiReport_(p) {
+  const cid = String(p.cid || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40);
+  if (cid.length < 8) throw appError_('invalid-argument', 'Thiếu mã máy.');
+  const reason = AI_REPORT_REASONS.indexOf(p.reason) >= 0 ? p.reason : 'khac';
+  const task = String(p.task || '').replace(/[^A-Za-z]/g, '').slice(0, 30);
+  const cache = CacheService.getScriptCache();
+  const k = 'aiR:' + aiDay_() + ':' + cid;
+  const n = Number(cache.get(k)) || 0;
+  if (n >= AI_REPORT_MAX) throw appError_('ai-limit', 'Đã gửi đủ ' + AI_REPORT_MAX + ' báo lỗi hôm nay trên máy này.');
+  cache.put(k, String(n + 1), AI_CACHE_SEC);
+  const note = typeof EduMentor !== 'undefined' ? EduMentor.scrubPII(String(p.note || '').slice(0, 300)).text : '';
+  aiLog_('bao-loi:' + reason, task, 'c:' + cid, 0, 0, note);
+  return { ok: true };
+}
+
+// ──────────────── 79-tr-ledger.gs ────────────────
+// ====== TECHREALM: SỔ CÁI TU LUYỆN trên Google Sheet ======
+// Luật (EduCultivation) và CultivationService (EduCultivationService) KHÔNG viết lại ở đây: scripts/build-apps-script.js
+// chép NGUYÊN VĂN js/techrealm/cultivation-core.js + cultivation-service.js vào đầu apps/Code.gs. File này chỉ là
+// ADAPTER: kho dòng sổ cái = tab TR_SoCai, khoá = LockService, cấu hình Admin = Script Property TR_CONFIG.
+//
+// CHƯA ĐĂNG KÝ ROUTE NÀO (chưa có cách gọi từ web): học sinh cần mã học tập trước (docs/techrealm/MIGRATION_PLAN.md
+// GĐ4–5). Khi bật, route sẽ gọi trService_().recordEvent(...) với actor do MÁY CHỦ xác định (token / mã phiên),
+// không bao giờ lấy số EXP hay actor từ gói tin của trình duyệt. Tài liệu: docs/techrealm/CULTIVATION_SYSTEM.md
+//
+// Chuẩn bị (1 lần, khi tới GĐ5): tạo 1 file Google Sheet RIÊNG cho sổ cái, đặt Script Property
+// TR_LEDGER_SPREADSHEET_ID = id file đó. Sổ cái không xoay vòng sang file mới như nhật ký (phải tìm được mọi dòng
+// của 1 học sinh), nên để file riêng: 12 cột × ~800.000 dòng ≈ trần 10 triệu ô.
+
+const TR_LEDGER_TAB = 'TR_SoCai';
+// Trường hiếm dùng (itemId, qty, realm, achievementId, facts) gom vào cột Data (JSON) để giữ 12 cột.
+const TR_LEDGER_HEADERS = ['TxId', 'LearnerId', 'Kind', 'Type', 'SourceId', 'Amount', 'Status', 'RefTxId', 'Data', 'Note', 'By', 'CreatedAt'];
+const TR_LOCK_WAIT_MS = 15000;
+
+function trLedgerSheet_() {
+  // cachedProp_ nhớ cả "chưa có" tới 6 giờ → vừa đặt Property xong vẫn báo thiếu. Thiếu thì đọc thẳng Properties
+  // (chỉ tốn lượt khi CHƯA cấu hình), có rồi thì ghi vào bản đệm để các lượt sau dùng.
+  let id = cachedProp_('TR_LEDGER_SPREADSHEET_ID');
+  if (!id) {
+    id = PropertiesService.getScriptProperties().getProperty('TR_LEDGER_SPREADSHEET_ID');
+    if (id) setCachedProp_('TR_LEDGER_SPREADSHEET_ID', id);
+  }
+  if (!id) throw appError_('failed-precondition', 'Chưa cấu hình sổ cái TechRealm (Script Property TR_LEDGER_SPREADSHEET_ID).');
+  return ensureTab_(id, TR_LEDGER_TAB, TR_LEDGER_HEADERS);
+}
+
+/** Ô chữ: luôn thêm ' để Sheet không đổi "2026-11-16T…" thành ngày giờ hay "=…" thành công thức. */
+function trCell_(v) { return v === null || v === undefined || v === '' ? '' : "'" + String(v); }
+
+function trRowToSheet_(r) {
+  const data = {};
+  ['itemId', 'qty', 'realm', 'achievementId', 'facts', 'rulesVersion'].forEach(function (k) { if (r[k] !== undefined) data[k] = r[k]; });
+  return [trCell_(r.txId), trCell_(r.learnerId), trCell_(r.kind), trCell_(r.type), trCell_(r.sourceId),
+    typeof r.amount === 'number' ? r.amount : '', trCell_(r.status), trCell_(r.refTxId), trCell_(JSON.stringify(data)),
+    trCell_(r.note), trCell_(r.by), trCell_(r.createdAt)];
+}
+
+function trSheetToRow_(v) {
+  let data = {};
+  try { data = JSON.parse(String(v[8] || '{}')); } catch (e) { data = {}; }
+  const r = { txId: String(v[0]), learnerId: String(v[1]), kind: String(v[2]), by: String(v[10]), createdAt: String(v[11]) };
+  if (v[3] !== '') r.type = String(v[3]);
+  if (v[4] !== '') r.sourceId = String(v[4]);
+  if (v[5] !== '' && v[5] !== null) r.amount = Number(v[5]);
+  if (v[6] !== '') r.status = String(v[6]);
+  if (v[7] !== '') r.refTxId = String(v[7]);
+  if (v[9] !== '') r.note = String(v[9]);
+  Object.keys(data).forEach(function (k) { r[k] = data[k]; });
+  return r;
+}
+
+/** Mọi dòng của 1 học sinh (TextFinder trên cột LearnerId — khớp cả ô, không quét cả tab bằng getValues). */
+function trRowsOf_(sheet, learnerId) {
+  const last = sheet.getLastRow();
+  if (last < 2) return [];
+  const cells = sheet.getRange(2, 2, last - 1, 1).createTextFinder(learnerId).matchEntireCell(true).findAll();
+  return cells.map(function (c) { return trSheetToRow_(sheet.getRange(c.getRow(), 1, 1, TR_LEDGER_HEADERS.length).getValues()[0]); });
+}
+
+/**
+ * Cổng store cho CultivationService. Đọc–tính–ghi của 1 học sinh nằm trong ScriptLock để trần ngày/tuần không bị
+ * vượt khi 2 yêu cầu tới cùng lúc. Dù vậy, chống TRÙNG không phụ thuộc khoá: txId tất định + summarize() chỉ tính
+ * dòng đầu tiên của mỗi txId. Hết thời gian chờ khoá → lỗi "bận", web xếp hàng gửi lại (pending-sync-queue).
+ */
+function trSheetStore_() {
+  return {
+    transact: function (learnerId, fn) {
+      if (!/^L[0-9A-Z]{10}$/.test(String(learnerId || ''))) throw appError_('invalid-argument', 'Mã học viên không hợp lệ.');
+      const sheet = trLedgerSheet_();
+      const lock = LockService.getScriptLock();
+      if (!lock.tryLock(TR_LOCK_WAIT_MS)) throw appError_('resource-exhausted', 'Máy chủ đang bận, em thử lại sau vài giây.');
+      try {
+        const rows = trRowsOf_(sheet, learnerId);
+        const have = {};
+        rows.forEach(function (r) { have[r.txId] = true; });
+        const fresh = (fn(rows.slice()) || []).filter(function (r) {
+          if (r.learnerId !== learnerId || have[r.txId]) return false;
+          have[r.txId] = true;
+          return true;
+        });
+        if (fresh.length) sheet.getRange(sheet.getLastRow() + 1, 1, fresh.length, TR_LEDGER_HEADERS.length).setValues(fresh.map(trRowToSheet_));
+        return { appended: fresh, rows: rows.concat(fresh) };
+      } finally {
+        lock.releaseLock();
+      }
+    },
+  };
+}
+
+/** Cấu hình Admin (Script Property TR_CONFIG, JSON — chỉ phần muốn ghi đè). JSON hỏng → báo lỗi, KHÔNG âm thầm dùng mặc định. */
+function trConfigOverride_() {
+  const raw = cachedProp_('TR_CONFIG');
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch (e) { throw appError_('failed-precondition', 'TR_CONFIG không phải JSON hợp lệ.'); }
+}
+
+/** CultivationService nối với Google Sheet. Mỗi lượt chạy tạo mới (Apps Script không giữ trạng thái giữa các lượt). */
+function trService_() {
+  return EduCultivationService.create({
+    store: trSheetStore_(),
+    config: trConfigOverride_(),
+    clock: function () { return new Date().toISOString(); },
+  });
+}
+
+// ====== TÀNG KINH CÁC → EXP: bài nộp ĐÃ ĐƯỢC MÁY CHỦ CHẤM LẠI ======
+// CHƯA được gọi ở đâu và có công tắc riêng (Script Property TR_REWARDS = 'on', mặc định tắt). Khi bật ở GĐ4–5:
+// writeSubmissionLog_ gọi trRewardSubmission_(payload) SAU applyServerGrading_ (30-submissions.gs). Luật nối bài làm →
+// bài học nằm ở js/techrealm/learning-core.js (chép nguyên văn vào Code.gs), không viết lại ở đây.
+// Chỉ thưởng khi: có mã học viên (payload.lid — sảnh gửi kèm từ GĐ4) + máy chủ chấm được (detail.sv) + điểm gửi lên
+// KHỚP điểm máy chủ (detail.sk === 'ok'). Lệch điểm ('lech') = nghi sửa gói tin → không tự thưởng, giáo viên xem.
+// Lưu ý: applyServerGrading_ chỉ chấm lại bài chế độ KIỂM TRA → muốn nhận EXP của 1 bài học, làm bài đó ở chế độ Kiểm tra.
+
+/** payload bài nộp → đầu vào EduLearning.submissionEvents; null nếu chưa đủ điều kiện xác thực. */
+function trSubmissionOf_(payload) {
+  const d = (payload && payload.detail) || {};
+  const lid = String((payload && payload.lid) || '');
+  if (!/^L[0-9A-Z]{10}$/.test(lid) || typeof d.sv !== 'number' || d.sk !== 'ok') return null;
+  const m = /^([A-Za-z0-9]+)__([A-Za-z0-9]+)\.json$/.exec(String(payload.bank || '')); // 'IC3__LV1.json'
+  if (!m || !d.m) return null;
+  return { learnerId: lid, catId: m[1], levelId: m[2], mtKey: String(d.m), serverScore: d.sv, durationSec: Number(d.e) || 0 };
+}
+
+/** Ghi EXP cho 1 bài nộp đã xác thực. Trả kết quả từng sự kiện ([] khi tắt / không đủ điều kiện). */
+function trRewardSubmission_(payload) {
+  if (cachedProp_('TR_REWARDS') !== 'on') return [];
+  const sub = trSubmissionOf_(payload);
+  if (!sub) return [];
+  const svc = trService_();
+  return EduLearning.submissionEvents(sub).map(function (e) { return svc.recordEvent(e, { kind: 'system' }); });
+}
+
+// ====== BÍ CẢNH → EXP: máy chủ CHẠY LẠI nhật ký thao tác ======
+// Trình duyệt gửi { lid, challengeId, levelId, seed, actions } — KHÔNG gửi điểm (có gửi cũng bị bỏ qua).
+// EduChallenge.replay (js/techrealm/challenge-core.js, chép nguyên văn) dựng lại màn chơi bằng đúng luật đã chạy trên
+// máy học sinh rồi tự tính điểm; chỉ màn HOÀN THÀNH mới sinh sự kiện CHALLENGE. Cùng công tắc TR_REWARDS; chưa có route.
+function trRewardChallenge_(payload) {
+  if (cachedProp_('TR_REWARDS') !== 'on') return null;
+  const p = payload || {};
+  const ev = EduChallenge.rewardEvent({ learnerId: String(p.lid || ''), challengeId: String(p.challengeId || ''), levelId: String(p.levelId || ''), seed: p.seed, actions: p.actions });
+  return ev ? trService_().recordEvent(ev, { kind: 'system' }) : null;
 }
 
 // ──────────────── 80-sheet-setup.gs ────────────────

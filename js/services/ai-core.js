@@ -126,6 +126,9 @@
    */
   function build(task, payload) {
     const t = Object.prototype.hasOwnProperty.call(TASKS, task) ? TASKS[task] : null;
+    // Việc của AI Sư Phụ (js/techrealm/mentor-core.js) — chỉ khi trang có nạp file đó; trang cũ không đổi gì.
+    const M = global.EduMentor;
+    if (!t && M && Object.prototype.hasOwnProperty.call(M.TASKS, task)) return M.build(task, payload);
     if (!t) throw Object.assign(new Error('Việc AI không hợp lệ: ' + task), { code: 'invalid-argument' });
     const n = t.norm(payload || {});
     if (!t.ok(n)) throw Object.assign(new Error('Thiếu dữ liệu cho việc AI ' + task), { code: 'invalid-argument' });

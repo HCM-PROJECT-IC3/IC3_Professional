@@ -198,7 +198,6 @@
       transform: translate(16px, 18px);
       transition: opacity 120ms ease;
       pointer-events: none;
-      backdrop-filter: blur(8px);
     }
 
     .pointer-label[aria-hidden="true"] {
@@ -274,7 +273,6 @@
         border-color 180ms ease,
         background 180ms ease,
         transform 180ms var(--ease-out);
-      backdrop-filter: blur(8px);
     }
 
     .round-button {
@@ -387,7 +385,6 @@
       transform: translateY(28px);
       transition: opacity 620ms var(--ease-out), transform 620ms var(--ease-out);
       pointer-events: none;
-      backdrop-filter: blur(14px);
     }
 
     .detail-panel::before {

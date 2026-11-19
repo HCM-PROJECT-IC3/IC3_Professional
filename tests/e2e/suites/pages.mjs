@@ -2,7 +2,8 @@
 // không lỗi JavaScript, không gọi Firestore / Firebase Auth, không file cùng nguồn nào lỗi (404 = gõ sai tên/xoá nhầm file),
 // thu về 375px (điện thoại) không tràn ngang. Trang nhân sự chưa đăng nhập chỉ hiện màn chờ / mời đăng nhập.
 import fs from 'node:fs';
-import { firebaseHosts } from './_helpers.mjs';
+import { firebaseHosts, gotoSettled } from './_helpers.mjs';
+import { portfolioPause } from './_portfolio-pause.mjs';
 
 const PAGES = [
   ['index.html', ['EduLearningHub', 'lobbySelectMinitest', 'EduGamification']],
@@ -23,7 +24,7 @@ export default async function ({ base, root, page, check }) {
     const p = await page({ width: 1280, height: 800 });
     const bad = new Set();
     p.on('response', (r) => { if (r.url().startsWith(base) && r.status() >= 400) bad.add(r.status() + ' ' + r.url().slice(base.length)); });
-    await p.goto(base + path, { waitUntil: 'networkidle0', timeout: 45000 }).catch((e) => p.errors.push('load: ' + e.message));
+    await gotoSettled(p, base + path).catch((e) => p.errors.push('load: ' + e.message));
     await new Promise((r) => setTimeout(r, 1200));
     const missing = await p.evaluate((g) => g.filter((k) => typeof window[k] === 'undefined'), globals).catch(() => globals);
     const fb = firebaseHosts(p);
@@ -43,4 +44,5 @@ export default async function ({ base, root, page, check }) {
     check(`${path}: 375px không tràn ngang`, wide === 0, { scrollWidth: wide });
     await p.closeAll();
   }
+  await portfolioPause({ base, page, check });
 }

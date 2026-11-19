@@ -91,7 +91,7 @@
   async function schoolAsk(task, payload) {
     const A = global.EduAppsScript;
     if (!A) throw aiErr('no-school', 'Trang này chưa nối máy chủ trường.');
-    const staff = C.STAFF_TASKS.indexOf(task) >= 0;
+    const staff = C.STAFF_TASKS.indexOf(task) >= 0 || !!(global.EduMentor && global.EduMentor.STAFF_TASKS.indexOf(task) >= 0);
     try {
       return staff
         ? await A.call('aiAskStaff', { task, payload }, { timeoutMs: 90000 })

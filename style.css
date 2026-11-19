@@ -110,7 +110,7 @@ body {
     radial-gradient(40% 44% at 85% 90%, color-mix(in srgb, var(--pink) 18%, transparent) 0%, transparent 70%),
     radial-gradient(36% 40% at 8% 88%, color-mix(in srgb, var(--yellow) 22%, transparent) 0%, transparent 70%);
   filter: blur(2px);
-  animation: lobbyBlobDrift 18s ease-in-out infinite alternate;
+  animation: none;
 }
 @keyframes lobbyBlobDrift {
   from { transform: translate(0,0) scale(1) }
@@ -149,9 +149,6 @@ body {
   padding: .25rem;
   margin: .6rem 0 0;
   background: var(--card);
-  background: color-mix(in srgb, var(--card) 92%, transparent);
-  backdrop-filter: blur(10px) saturate(1.1);
-  -webkit-backdrop-filter: blur(10px) saturate(1.1);
   border: 2px solid var(--border);
   border-radius: 999px;
   box-shadow: var(--shadow);
@@ -170,7 +167,7 @@ body {
 }
 .view-toggle-btn:not(.active):hover { color: var(--purple); background: var(--purple-lt) }
 .view-toggle-btn.active {
-  background: linear-gradient(135deg, var(--purple), #8b5cf6);
+  background: var(--purple);
   color: #fff;
   box-shadow: 0 4px 10px rgba(79,107,255,.28);
 }
@@ -229,7 +226,7 @@ body {
   background-size: 200% 200%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: gradientShift 6s ease-in-out infinite;
+  animation: none;
 }
 .lobby-stat-lbl { font-size: .7rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px }
 
@@ -268,11 +265,11 @@ body {
   font-size: clamp(1.1rem, 1.9vw, 1.4rem);
   font-weight: 800;
   letter-spacing: -.5px;
-  background: linear-gradient(135deg, var(--purple), var(--teal), var(--purple));
+  background: var(--purple);
   background-size: 200% 200%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: gradientShift 6s ease-in-out infinite;
+  animation: none;
   text-shadow: 0 2px 18px rgba(255,255,255,.35);
 }
 
@@ -287,9 +284,7 @@ body {
   width: 100%;
   max-width: 560px;
   margin: 0 auto;
-  background: color-mix(in srgb, var(--neu-surface) 88%, transparent);
-  backdrop-filter: blur(14px) saturate(1.15);
-  -webkit-backdrop-filter: blur(14px) saturate(1.15);
+  background: var(--neu-surface);
   border: none;
   border-radius: calc(var(--radius)*1.3);
   padding: clamp(1rem, 1.8vw, 1.4rem);
@@ -417,7 +412,7 @@ body {
 .btn-start {
   width: 100%;
   padding: .7rem;
-  background: linear-gradient(135deg, var(--purple), #8b5cf6);
+  background: var(--purple);
   background-size: 200% 200%;
   border: none;
   border-radius: var(--radius);
@@ -588,7 +583,7 @@ body {
   position: absolute; left: 0; right: 0; top: 0; height: 3px;
   background: var(--gradient-hero);
   background-size: 200% 100%;
-  animation: gradientShift 5s ease-in-out infinite;
+  animation: none;
 }
 .topbar-brand {
   font-size: 1.1rem;
@@ -597,7 +592,7 @@ body {
   background-size: 200% 200%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: gradientShift 6s ease-in-out infinite;
+  animation: none;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -640,7 +635,7 @@ body {
 /* Submit button in topbar */
 .btn-submit-top {
   padding: .55rem 1.2rem;
-  background: linear-gradient(135deg, var(--red), #ff3232);
+  background: var(--red);
   border: none;
   border-radius: 100px;
   color: #fff;
@@ -659,11 +654,11 @@ body {
 .progress-bar-wrap { width: 100%; height: 6px; background: var(--border); overflow: hidden }
 .progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--purple), var(--teal), var(--purple));
+  background: var(--purple);
   background-size: 200% 100%;
   transition: width .4s ease;
   border-radius: 3px;
-  animation: gradientShift 3s linear infinite;
+  animation: none;
   position: relative;
 }
 .progress-bar-fill::after {
@@ -671,7 +666,7 @@ body {
   position: absolute; inset: 0;
   background: var(--shine);
   background-size: 60% 100%;
-  animation: shineSweep 2.6s ease-in-out infinite;
+  animation: none;
 }
 @keyframes shineSweep {
   0%   { background-position: -100% 0 }
@@ -771,11 +766,11 @@ body {
 .q-btn:hover { border-color: var(--purple); color: var(--purple); background: var(--purple-lt); transform: translateY(-2px) }
 .q-btn.active {
   border-color: var(--purple);
-  background: linear-gradient(135deg, var(--purple), #8b5cf6);
+  background: var(--purple);
   color: #fff;
   transform: scale(1.08);
   box-shadow: var(--glow-purple);
-  animation: qBtnActivePulse 1.8s ease-in-out infinite;
+  animation: none;
 }
 @keyframes qBtnActivePulse {
   0%,100% { box-shadow: var(--glow-purple) }
@@ -947,7 +942,7 @@ body {
   flex-shrink: 0;
   width: 44px; height: 44px;
   border-radius: 14px;
-  background: linear-gradient(135deg, var(--purple), #8b5cf6);
+  background: var(--purple);
   display: flex; align-items: center; justify-content: center;
   font-family: 'Space Mono', monospace;
   font-size: .9rem;
@@ -1967,7 +1962,7 @@ body {
 }
 .btn-flag.flagged { background: rgba(255,179,0,.25) !important }
 .btn-next-primary {
-  background: linear-gradient(135deg, var(--purple), #8b5cf6);
+  background: var(--purple);
   border-color: transparent;
   color: #fff;
   box-shadow: 0 4px 16px rgba(79,107,255,.35);
@@ -1983,7 +1978,7 @@ body {
    RESULT PAGE
    ══════════════════════════════════════════════ */
 #result {
-  background: linear-gradient(160deg, #eef2ff 0%, #f0fdf9 60%, #fff8e1 100%);
+  background: #f4f6fb;
 }
 .result-card {
   background: var(--card);
@@ -2003,13 +1998,13 @@ body {
   border-radius: 3px;
   background: var(--gradient-hero);
   background-size: 200% 100%;
-  animation: gradientShift 5s ease-in-out infinite;
+  animation: none;
 }
 .result-emoji {
   font-size: 4.5rem;
   margin-bottom: .4rem;
   display: block;
-  animation: bounce .6s ease .2s both, emojiFloat 2.6s 1s ease-in-out infinite;
+  animation: bounce .6s ease .2s both;
   filter: drop-shadow(0 10px 18px rgba(79,107,255,.28));
 }
 @keyframes bounce { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-18px) scale(1.1)} }
@@ -2024,7 +2019,7 @@ body {
   -webkit-text-fill-color: transparent;
   line-height: 1;
   margin-bottom: .4rem;
-  animation: gradientShift 5s ease-in-out infinite, scoreIn .6s .15s cubic-bezier(.16,1,.3,1) both;
+  animation: scoreIn .6s .15s cubic-bezier(.16,1,.3,1) both;
 }
 @keyframes scoreIn { from { opacity:0; transform: scale(.7) } to { opacity:1; transform: scale(1) } }
 
@@ -2156,7 +2151,7 @@ body {
 .btn-retry {
   width: 100%;
   padding: 1rem;
-  background: linear-gradient(135deg, var(--teal), #00a07a);
+  background: var(--teal);
   border: none;
   border-radius: var(--radius);
   color: #fff;
@@ -2198,7 +2193,6 @@ body {
   z-index: 200;
   display: flex; align-items: center; justify-content: center;
   padding: 1rem;
-  backdrop-filter: blur(4px);
 }
 .modal-box {
   background: var(--card);
@@ -2541,7 +2535,6 @@ body {
   justify-content: center;
   padding: 20px;
   background: rgba(10, 12, 20, 0.72);
-  backdrop-filter: blur(2px);
 }
 .game-modal-overlay.show { display: flex }
 
@@ -2647,7 +2640,7 @@ body {
   padding: 8px 16px;
   border-radius: 999px;
   border: 1px solid rgba(79,107,255,.3);
-  background: linear-gradient(90deg, var(--purple-lt), var(--teal-lt));
+  background: var(--purple-lt);
   color: var(--purple);
   font-family: 'Baloo 2', sans-serif;
   font-weight: 700;
@@ -2672,7 +2665,7 @@ body {
   padding: 8px 14px;
   border-radius: 999px;
   border: 1px solid rgba(79,107,255,.35);
-  background: linear-gradient(90deg, var(--purple-lt), var(--teal-lt));
+  background: var(--purple-lt);
   color: var(--purple);
   font-family: 'Baloo 2', sans-serif;
   font-weight: 800;
@@ -3086,7 +3079,7 @@ body {
 .result-topics .rt-hint { margin-top: .6rem; font-size: .85rem; color: var(--muted); }
 .btn-retry.btn-retry-wrong {
   margin-bottom: .6rem;
-  background: linear-gradient(135deg, var(--yellow), #e08a00);
+  background: var(--yellow);
   box-shadow: 0 4px 18px rgba(246,167,35,.35);
 }
 .btn-retry.btn-retry-wrong small { font-weight: 600; opacity: .85; }

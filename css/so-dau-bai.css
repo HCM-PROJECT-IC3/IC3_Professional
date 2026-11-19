@@ -60,7 +60,7 @@ svg.i{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .me{padding:0 8px;font-size:13px;line-height:1.4}
 .me b{display:block;font-weight:600;font-size:14px}
 .main{min-width:0;display:flex;flex-direction:column}
-.topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding:14px 32px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding:14px 32px;background:var(--bg);border-bottom:1px solid var(--line)}
 .crumb{font-size:14px;color:var(--ink-2)}
 .crumb b{color:var(--ink);font-weight:600}
 main#view{padding:28px 32px 64px;max-width:1240px;width:100%}
@@ -192,7 +192,7 @@ table.t tr.topic td{background:var(--surface-2);font-weight:600;font-size:13px;c
 
 /* ===== Drawer (ghi tiết) ===== */
 dialog{color:var(--ink);padding:0;border:0}
-dialog::backdrop{background:rgba(12,16,14,.42);backdrop-filter:blur(2px)}
+dialog::backdrop{background:rgba(12,16,14,.42)}
 .drawer{margin:0 0 0 auto;height:100vh;max-height:100vh;width:min(620px,100vw);background:var(--surface);box-shadow:var(--shadow-lg)}
 .drawer[open]{animation:slide .18s ease-out}
 @keyframes slide{from{transform:translateX(24px);opacity:.4}to{transform:none;opacity:1}}

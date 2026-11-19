@@ -55,8 +55,46 @@
   /** 1 câu trend theo tình huống; seed để mỗi lượt đổi câu nhưng tải lại trang vẫn ra như cũ. */
   function say(kind, seed) { const l = TREND[kind]; return l ? l[Math.abs(Math.round(seed || 0)) % l.length] : ''; }
 
-  const TAUNT_UP = ['Vượt rồi nhé! 😜', 'Theo kịp không?', 'Tớ lên đây!', 'Hì hì, xin vượt!'];
+  const TAUNT_UP = ['Vượt rồi nhé!', 'Theo kịp không?', 'Tớ lên đây!', 'Hì hì, xin vượt!'];
   const TAUNT_DOWN = ['Ơ kìa!', 'Không thể nào!', 'Nhanh thế!', 'Để xem câu sau!'];
+  /* Giọng riêng theo tính cách bạn máy (EduArenaCore.PERSONAS) — mỗi bạn nói kiểu của mình, không lặp một câu chung.
+     up: vừa vượt em · down: vừa bị em vượt · late: nghĩ quá giờ · broke: đứt chuỗi đúng ≥ 3. */
+  const VOICE = {
+    'can-than': {
+      up: ['Chậm mà chắc nhé.', 'Đọc kỹ đề là lên thôi.', 'Từ từ rồi tới.'],
+      down: ['Ừm, em nhanh thật.', 'Để tớ đọc kỹ lại…', 'Câu sau tớ không chậm nữa.'],
+      late: ['Tớ còn đang đọc phương án cuối…', 'Kỹ quá thành lỡ giờ mất rồi.'],
+      broke: ['Tớ đọc sót một chữ…', 'Lần này cẩn thận chưa đủ.'],
+    },
+    'hap-tap': {
+      up: ['Bấm trước nghĩ sau, vẫn đúng!', 'Nhanh như chớp!', 'Lên luôn!'],
+      down: ['Ơ, tớ bấm vội quá!', 'Sao em nhanh hơn tớ được?', 'Không được, phải gỡ!'],
+      late: ['Ơ, đang phân vân thì hết giờ!', 'Lần này lại chậm, lạ thật.'],
+      broke: ['Bấm vội quá rồi…', 'Tay nhanh hơn não mất rồi!'],
+    },
+    'deu-tay': {
+      up: ['Đều đều thôi mà.', 'Tớ lên một bậc.', 'Cứ thế mà đi.'],
+      down: ['Được đấy!', 'Em chơi chắc tay thật.', 'Ván còn dài.'],
+      late: ['Câu này khó, tớ chịu.', 'Hết giờ rồi à…'],
+      broke: ['Trượt một câu, không sao.', 'Câu này lừa ghê.'],
+    },
+    'bung-no': {
+      up: ['Đang vào phom!', 'Nóng tay rồi đây!', 'Không ai cản được!'],
+      down: ['Hừ, chờ tớ bùng lại!', 'Em giỏi đấy, nhưng chưa xong đâu!', 'Tớ sẽ quay lại!'],
+      late: ['Tụt phom mất rồi…', 'Đang hăng mà lại hết giờ!'],
+      broke: ['Đứt chuỗi rồi, tiếc quá!', 'Mất nhịp mất rồi!'],
+    },
+  };
+  /** Câu nói theo tính cách; tránh lặp đúng câu vừa nói (G.lastTaunt). */
+  function voice(G, p, kind, fallback) {
+    const v = VOICE[p.persona];
+    const list = (v && v[kind]) || fallback;
+    if (!list || !list.length) return '';
+    let s = pick(list, G.i + p.name.length);
+    if (s === G.lastTaunt && list.length > 1) s = list[(list.indexOf(s) + 1) % list.length];
+    G.lastTaunt = s;
+    return s;
+  }
 
   const fmt = (n) => Math.round(n).toLocaleString('vi-VN');
   const nm = (p) => `${p.face} ${p.name}`;
@@ -160,11 +198,21 @@
       const myNow = order.indexOf(me) + 1;
       const passedMe = order.find((p) => p.bot && b.rank[p.id] > b.rank.me && order.indexOf(p) + 1 < myNow);
       const passedByMe = order.find((p) => p.bot && b.rank[p.id] < b.rank.me && order.indexOf(p) + 1 > myNow);
-      if (passedMe) out.taunt = { id: passedMe.id, text: pick(TAUNT_UP, G.i + passedMe.name.length), hot: false };
-      else if (passedByMe) out.taunt = { id: passedByMe.id, text: pick(TAUNT_DOWN, G.i + passedByMe.name.length), hot: true };
+      if (passedMe) out.taunt = { id: passedMe.id, text: voice(G, passedMe, 'up', TAUNT_UP), hot: false };
+      else if (passedByMe) out.taunt = { id: passedByMe.id, text: voice(G, passedByMe, 'down', TAUNT_DOWN), hot: true };
+    }
+    // Không ai vượt ai: thỉnh thoảng (câu chẵn) 1 bạn máy than thở chuyện của chính mình — nghĩ quá giờ, đứt chuỗi đúng.
+    // G.plan (arena.js planBots): kết quả câu vừa rồi; p.run = chuỗi đúng TRƯỚC câu này (botMood cập nhật ở câu sau).
+    if (!out.taunt && G.plan && G.plan.i === G.i && G.i % 2 === 0) {
+      const bots = G.players.filter((p) => p.bot && !p.ghost && !outOf(G, p) && G.plan.by[p.id]);
+      const late = bots.find((p) => G.plan.by[p.id].timeout);
+      const broke = bots.find((p) => (p.run || 0) >= 3 && !G.plan.by[p.id].correct);
+      if (broke) out.taunt = { id: broke.id, text: voice(G, broke, 'broke'), hot: false };
+      else if (late) out.taunt = { id: late.id, text: voice(G, late, 'late'), hot: false };
+      if (out.taunt && !out.taunt.text) out.taunt = null;
     }
     return out;
   }
 
-  global.EduArenaHype = { before, rivalLine, commentary, say, CLIMAX, MEASURE, TREND };
+  global.EduArenaHype = { before, rivalLine, commentary, say, CLIMAX, MEASURE, TREND, VOICE };
 })(typeof window !== 'undefined' ? window : globalThis);

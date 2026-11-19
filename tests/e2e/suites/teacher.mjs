@@ -1,5 +1,7 @@
 // Cổng giáo viên 2.0 (/app/#/giao-vien). Dữ liệu giả thay EduTeacherData.loadAll; applyFilters, ExamHistory,
 // EduAnalytics… là code THẬT. Trường hợp "chưa đăng nhập" chạy Firebase SDK THẬT (không phiên → 0 lượt đọc).
+import fs from 'node:fs';
+import path from 'node:path';
 import { firebaseHosts, mainText, openApp, overflow, seed, seedCache, stat, stubAuth, waitStaff } from './_helpers.mjs';
 
 const DAY = 864e5;
@@ -21,7 +23,7 @@ const TEACHER = { uid: 'u1', role: 'teacher', approved: true, name: 'Cô Thử N
 // Khoá bản lưu danh sách học sinh mà js/teacher/data-loader.js dùng (uid:các trường đã sắp xếp; Admin: toàn bộ).
 const warmKey = (prof) => (prof.role === 'admin' ? 'roster:active:all' : `teacher:roster:${prof.uid}:${(prof.schools || []).slice().sort().join('|')}`);
 
-export default async function ({ base, page, check, shot }) {
+export default async function ({ base, root, page, check, shot }) {
   // Firebase thật, chưa đăng nhập
   let p = await page();
   await seed(p, base, { 'ic3v2.previewRole': 'teacher' });
@@ -116,4 +118,49 @@ export default async function ({ base, page, check, shot }) {
     check(label, re.test(t) && (label.includes('chặn') ? loads === 0 : true) && !p.errors.length, { t: t.slice(0, 120), loads, errs: p.errors });
     await p.closeAll();
   }
+
+  // ── Năng lực học viên (/giao-vien/nang-luc, Prompt 07) — testName dựng bằng TÊN THẬT trong meta như result-submitter ──
+  const meta = JSON.parse(fs.readFileSync(path.join(root, 'data/ic3/meta.json'), 'utf8'));
+  const course = JSON.parse(fs.readFileSync(path.join(root, 'data/techrealm/courses.json'), 'utf8')).courses.find((c) => c.id === 'ic3-1');
+  const cat = meta.categories.find((c) => c.id === 'IC3');
+  const lv = cat.levels.find((l) => l.id === 'LV1');
+  const TN = (n) => [cat.name, lv.name, course.lessons[n - 1].src.bai].join(' › ');
+  const now = Date.now();
+  const comp = {
+    schools: ['TH Thử Nghiệm'], noSchoolsAssigned: false,
+    students: [{ id: 'a', name: 'Học sinh An', className: '4A1' }, { id: 'b', name: 'Học sinh Bình', className: '4A1' }, { id: 'c', name: 'Học sinh Chi', className: '4A2' }],
+    results: [
+      { id: 'x1', studentName: 'Học sinh An', studentClass: '4A1', testName: TN(1), score: 90, submittedAtMs: now - DAY },
+      { id: 'x2', studentName: 'Học sinh An', studentClass: '4A1', testName: TN(3), score: 80, submittedAtMs: now - DAY },
+      { id: 'x3', studentName: 'Học sinh Bình', studentClass: '4A1', testName: TN(1), score: 30, submittedAtMs: now - 20 * DAY },
+    ],
+  };
+  const compOpen = async (profile) => {
+    const q = await page();
+    await stubAuth(q, base, profile, loader(comp));
+    await seed(q, base, { ic3_theme: 'light' });
+    if (profile) await seedCache(q, base, [[warmKey(profile), { students: [], cachedAt: Date.now() }]]);
+    await openApp(q, base, '#/giao-vien/nang-luc');
+    await waitStaff(q);
+    return q;
+  };
+  p = await compOpen(TEACHER);
+  await p.waitForFunction(() => /Cần chú ý/.test(document.querySelector('main').innerText), { timeout: 20000 }).catch(() => {});
+  check('Năng lực học viên (giáo viên): 3 học sinh, 2 đã nộp, 2 cần chú ý (Bình điểm thấp + lâu không làm; Chi chưa nộp)',
+    (await stat(p, 'Học sinh')) === '3' && (await stat(p, 'Đã nộp bài')) === '2' && (await stat(p, 'Cần chú ý')) === '2', await mainText(p).then((t) => t.slice(0, 300)));
+  await p.evaluate(() => [...document.querySelectorAll('main tbody button')].find((b) => b.textContent === 'Học sinh An').click());
+  const gapTitle = course.lessons[1].title;
+  check(`Năng lực học viên: An bỏ bài 2 → hồ sơ ghi lỗ hổng "${gapTitle}"; tải dữ liệu đúng 1 lần, không lỗi JS`,
+    (await mainText(p)).includes(gapTitle) && (await p.evaluate(() => window.__loads)) === 1 && !p.errors.length, p.errors);
+  await p.$$eval('main select', (ss) => { const s = ss.find((x) => [...x.options].some((o) => o.value === '4A2')); s.value = '4A2'; s.dispatchEvent(new Event('change', { bubbles: true })); });
+  check('lọc lớp 4A2 → 1 học sinh, KHÔNG tải lại', (await stat(p, 'Học sinh')) === '1' && (await p.evaluate(() => window.__loads)) === 1);
+  await p.setViewport({ width: 375, height: 812 });
+  check('Năng lực học viên 375px: không tràn ngang', !(await overflow(p)));
+  await p.closeAll();
+  p = await compOpen({ uid: 'u2', role: 'coordinator' });
+  check('Năng lực học viên: điều phối → bị chặn, 0 lần tải dữ liệu', /không có quyền/.test(await mainText(p)) && !(await p.evaluate(() => window.__loads || 0)));
+  await p.closeAll();
+  p = await compOpen(null);
+  check('Năng lực học viên: chưa đăng nhập → mời đăng nhập, 0 lần tải', !!(await p.$('main a[href*="login.html"]')) && !(await p.evaluate(() => window.__loads || 0)));
+  await p.closeAll();
 }

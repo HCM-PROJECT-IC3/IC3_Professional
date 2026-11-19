@@ -351,6 +351,26 @@
     }
     const db = window.EduFirebase.db;
 
+    // ── Nghe realtime NHƯNG tạm ngắt khi tab ẩn lâu (18/11/2026) ──
+    // Giáo viên hay để tab Portfolio mở cả ngày: mỗi lượt thích/bình luận/bài mới của người khác = 1 lượt đọc
+    // cho MỖI tab đang nghe, kể cả tab ẩn. Ẩn > 60 giây → ngắt; hiện lại → nghe lại. Firestore đã bật bộ đệm
+    // offline (js/firebase-config.js) nên nghe lại trong 30 phút chỉ tính lượt cho tài liệu đã đổi.
+    const HIDDEN_PAUSE_MS = 60e3;
+    function liveQuery(query, onNext, onError) {
+      let unsub = query.onSnapshot(onNext, onError);
+      let pauseTimer = 0;
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+          clearTimeout(pauseTimer);
+          pauseTimer = setTimeout(() => { if (unsub) { unsub(); unsub = null; } }, HIDDEN_PAUSE_MS);
+        } else {
+          clearTimeout(pauseTimer);
+          if (!unsub) unsub = query.onSnapshot(onNext, onError);
+        }
+      });
+      return () => { clearTimeout(pauseTimer); if (unsub) unsub(); unsub = null; };
+    }
+
     let currentUser = null;
     let currentProfile = null; // users/{uid} — role/approved/name (hồ sơ gốc toàn nền tảng)
     function canEditFeed() {
@@ -698,13 +718,13 @@
         });
       }
 
-      db.collection('gvlab_posts')
+      liveQuery(db.collection('gvlab_posts')
         .where('category', '==', category)
         .orderBy('createdAt', 'desc')
         // Trang công khai, mỗi bài mang ảnh base64 (tới ~700KB): 30 bài/lần xem có thể tải
         // ~20MB (băng thông Firestore Spark chỉ 10GB/tháng) — giữ 12 bài mới nhất.
-        .limit(12)
-        .onSnapshot((snap) => {
+        .limit(12),
+        (snap) => {
           commentUnsubs.forEach((unsub) => unsub());
           commentUnsubs.clear();
           listEl.innerHTML = snap.empty
@@ -872,8 +892,8 @@
         }
       });
 
-      db.collection('gvlab_certs').orderBy('createdAt', 'desc').limit(60)
-        .onSnapshot((snap) => {
+      liveQuery(db.collection('gvlab_certs').orderBy('createdAt', 'desc').limit(60),
+        (snap) => {
           dynamicCerts = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
           renderGrid();
         }, (err) => {

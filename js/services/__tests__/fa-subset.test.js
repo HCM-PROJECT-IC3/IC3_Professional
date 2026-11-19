@@ -18,7 +18,7 @@ const ROOT = path.join(__dirname, '..', '..', '..');
 const NOT_ICON = /^((solid|regular|brands)-\d+|solid|regular|brands|light|thin|duotone|sharp|classic|fw|lg|sm|xs|2xs|xl|2xl|[1-9]0?x|spin|spin-pulse|spin-reverse|pulse|beat|beat-fade|bounce|fade|flip|shake|rotate-\d+|rotate-by|flip-horizontal|flip-vertical|flip-both|inverse|border|pull-left|pull-right|pull-start|pull-end|stack|stack-1x|stack-2x|ul|li|width-auto|layers|sr-only|sr-only-focusable|swap-opacity)$/;
 
 const files = execSync('git ls-files "*.html" "*.js" "*.css"', { cwd: ROOT, encoding: 'utf8' }).split('\n').filter(Boolean)
-  .filter((f) => !f.includes('__tests__') && !f.startsWith('lib/') && !f.startsWith('apps/'));
+  .filter((f) => !f.includes('__tests__') && !f.startsWith('lib/') && !f.startsWith('apps/') && fs.existsSync(path.join(ROOT, f)));
 const used = new Map(); // tên → file đầu tiên dùng
 let cdn = [];
 files.forEach((f) => {

@@ -461,7 +461,6 @@ body {
   justify-content: center;
   padding: 24px;
   background: rgba(10, 12, 20, 0.72);
-  backdrop-filter: blur(2px);
 }
 .shelf-modal-overlay.show { display: flex }
 

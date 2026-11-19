@@ -34,7 +34,7 @@
 body.dc-open { overflow: hidden; }
 .dc-overlay {
   position: fixed; inset: 0; z-index: 9000; display: flex; align-items: center; justify-content: center;
-  padding: 1rem; background: rgba(10, 16, 48, .65); backdrop-filter: blur(3px);
+  padding: 1rem; background: rgba(10, 16, 48, .65); 
 }
 .dc-overlay[hidden] { display: none !important; }
 .dc-modal {

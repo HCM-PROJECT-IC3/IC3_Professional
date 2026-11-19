@@ -95,6 +95,30 @@ function byScore(list, key) { return list.slice().sort(function (a, b) { return 
   assertEq('Giữa trận → không có final3', H.commentary(G, b4, order).climax, '');
 })();
 
+// ── Giọng theo tính cách bạn máy (18/11/2026) ──
+(function () {
+  var me = pl('me', 'Em', { score: 900 }), a = pl('b0', 'Mèo Wifi', { score: 500 });
+  a.bot = true; a.persona = 'hap-tap';
+  var G = { mode: 'speed', me: me, players: [me, a], i: 2, maxRounds: 10 };
+  var b4 = H.before(G, byScore(G.players, 'score'));
+  a.score = 1500;
+  var c = H.commentary(G, b4, byScore(G.players, 'score'));
+  assertEq('Hấp tấp vượt em → nói câu của tính cách Hấp tấp', H.VOICE['hap-tap'].up.indexOf(c.taunt && c.taunt.text) >= 0, true);
+  // Không ai vượt: bạn đang chuỗi 4 câu đúng vừa sai → than đứt chuỗi; câu lẻ thì im lặng (không nói mỗi câu)
+  var me2 = pl('me', 'Em', { score: 900 }), b = pl('b1', 'Cú Bit', { score: 100 });
+  b.bot = true; b.persona = 'bung-no'; b.run = 4;
+  var G2 = { mode: 'speed', me: me2, players: [me2, b], i: 4, maxRounds: 10, plan: { i: 4, by: { b1: { correct: false, ms: 5000 } } } };
+  var o2 = byScore(G2.players, 'score');
+  var c2 = H.commentary(G2, H.before(G2, o2), o2);
+  assertEq('đứt chuỗi ≥ 3 → than theo tính cách', [c2.taunt && c2.taunt.id, H.VOICE['bung-no'].broke.indexOf(c2.taunt && c2.taunt.text) >= 0], ['b1', true]);
+  G2.i = 5; G2.plan.i = 5;
+  assertEq('câu lẻ → không than (bạn máy không nói liên tục)', H.commentary(G2, H.before(G2, o2), o2).taunt, null);
+  G2.i = 6; G2.plan = { i: 6, by: { b1: { correct: false, ms: 20000, timeout: true } } }; b.run = 0;
+  assertEq('nghĩ quá giờ → than "hết giờ"', H.VOICE['bung-no'].late.indexOf((H.commentary(G2, H.before(G2, o2), o2).taunt || {}).text) >= 0, true);
+  var all = Object.keys(H.VOICE).every(function (k) { return ['up', 'down', 'late', 'broke'].every(function (t) { return H.VOICE[k][t].length >= 2; }); });
+  assertEq('mỗi tính cách đủ 4 loại câu, mỗi loại ≥ 2 câu', all, true);
+})();
+
 // ── Mọi chữ cao trào đều có tiêu đề ──
 (function () {
   var ok = ['race', 'moon', 'tug', 'duel', 'boss', 'final3'].every(function (k) { return H.CLIMAX[k] && H.CLIMAX[k].title; });

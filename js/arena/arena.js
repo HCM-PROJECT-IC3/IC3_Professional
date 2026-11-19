@@ -707,10 +707,21 @@
     box.setAttribute('role', 'dialog');
     box.setAttribute('aria-label', 'Chuẩn bị vào trận');
     const name = String(MODE_LABEL[g.mode] || '').replace(/^\S+\s/, '');
+    // Đối thủ hôm nay + tính cách; bạn máy "đáng nhắc" nhất nói đúng chuyện cũ với em (arena-core § rivalTalk).
+    // Trận đồng đội (Kéo co, Diệt Virus) không tính thắng/thua từng bạn → không nhắc chuyện cũ.
+    const bots = g.players.filter((p) => p.bot && !p.ghost);
+    const rivals = profile().rivals || {};
+    const h2h = g.mode !== 'tug' && g.mode !== 'boss';
+    const star = h2h ? C.featuredRival(rivals, bots) : null;
+    const talk = star ? C.rivalTalk(rivals[star.name], 'intro') : null;
+    g.introTalk = talk ? { id: star.id, text: talk.text } : null;
+    const rec = (b) => { const r = rivals[b.name]; return h2h && r && (r.w || r.l) ? `<em title="Em thắng ${r.w || 0}, thua ${r.l || 0}">${r.w || 0}–${r.l || 0}</em>` : ''; };
     box.innerHTML = `<div class="ar-intro-card">
         <small>Chuẩn bị</small><h2>${esc(name)}</h2>
         <p class="ar-intro-win"><i class="fa-solid fa-trophy" aria-hidden="true"></i> <span><b>Thắng:</b> ${esc(R.win)}</span></p>
         <p class="ar-intro-twist"><i class="fa-solid fa-bolt-lightning" aria-hidden="true"></i> <span><b>Cao trào:</b> ${esc(R.twist)}</span></p>
+        ${bots.length ? `<ul class="ar-intro-foes" aria-label="Đối thủ hôm nay">${bots.map((b) => `<li><span aria-hidden="true">${b.face}</span><b>${esc(b.name)}</b><small>${esc((C.PERSONAS[b.persona] || {}).name || '')}</small>${rec(b)}</li>`).join('')}</ul>` : ''}
+        ${talk ? `<p class="ar-intro-say"><b>${star.face} ${esc(star.name)}:</b> “${esc(talk.text)}”</p>` : ''}
         <b class="ar-intro-n" aria-live="assertive">3</b>
         <button type="button" class="ar-btn ar-btn-ghost ar-intro-skip">Vào ngay <kbd>Enter</kbd></button></div>`;
     $('arGame').appendChild(box);
@@ -725,6 +736,8 @@
       if (G !== g) return; // đã bỏ cuộc / trận khác
       sfx('combo');
       go();
+      // bạn máy vừa "nói chuyện cũ" ở màn mở trận nhắc lại 1 lần trên sân (bong bóng trên đầu)
+      if (g.introTalk && SC) setTimeout(() => { if (G === g) SC.talk(g.introTalk.id, g.introTalk.text, 2400); }, 250);
     };
     const onKey = (e) => {
       if (G !== g) { finish(); return; }
@@ -793,6 +806,7 @@
       G.qStart = G.chalStart = performance.now(); // chalStart: vật phẩm Thêm giờ không kéo dài Thử thách tốc độ
       music(1);
       startTimer();
+      planBots();
       liveStart();
     }, reducedMotion() ? 0 : big ? 1350 : 600);
   }
@@ -1143,7 +1157,27 @@
   }
 
   // ── Không khí trận đấu (js/arena/arena-hype.js) ──
-  /** Trong lúc em nghĩ: từng bạn máy lần lượt "chốt đáp án" (chỉ là hình — kết quả bạn máy vẫn tính lúc chấm). */
+  /* Bạn máy "như người" (EduArenaCore.botPlan, 18/11/2026): mỗi câu tính 1 KẾ HOẠCH cho từng bạn máy ngay lúc bắt đầu tính
+     giờ — theo tính cách, độ dài/độ khó câu, tâm lý (chuỗi đúng / sai liên tiếp) và thế trận. Cả lúc "chốt đáp án" trên
+     màn hình lẫn lúc chấm điểm đều dùng ĐÚNG kế hoạch đó (trước đây 2 lần tung xúc xắc khác nhau: chốt giây 2 mà điểm
+     tốc độ như trả lời giây 9). */
+  function planBots() {
+    const prev = G.plan;
+    if (prev && prev.i !== G.i) G.players.forEach((p) => { const a = prev.by[p.id]; if (p.bot && a) C.botMood(p, a.correct); });
+    const order = ranked(G.players.filter((p) => !p.ghost));
+    const n = Math.max(2, order.length), meAt = order.indexOf(G.me), q = cur(), by = {};
+    G.players.forEach((p) => {
+      if (!p.bot || p.ghost) return;
+      // gap > 0: em đang xếp trên bạn này (bạn ấy hăng hơn một chút); < 0: em đang thua (bạn ấy đuối bớt)
+      by[p.id] = C.botPlan(p, q, G.limitMs, rng, { gap: meAt < 0 ? 0 : (order.indexOf(p) - meAt) / (n - 1) });
+    });
+    G.plan = { i: G.i, by };
+  }
+  function botAns(p) {
+    const pl = G.plan;
+    return (pl && pl.i === G.i && pl.by[p.id]) || C.botAnswer(p, G.limitMs, rng);
+  }
+  /** Trong lúc em nghĩ: từng bạn máy "chốt đáp án" đúng thời điểm trong kế hoạch của bạn ấy; bạn nào sẽ hết giờ thì không chốt. */
   function liveStart() {
     liveStop();
     if (!G || G.practice) return;
@@ -1154,7 +1188,13 @@
     G.live = live;
     paintLive();
     bots.forEach((b) => {
-      const at = lim * Math.min(0.95, Math.max(0.12, (b.speed || 0.5) + (Math.random() - 0.5) * 0.3));
+      const a = botAns(b);
+      if (SC && SC.think) SC.think(b.id, true);
+      if (a.timeout) { // bạn này nghĩ quá giờ — không chốt (như người thật); gần hết giờ hiện dấu hỏi
+        live.t.push(setTimeout(() => { if (G === g && G.i === i && G.phase === 'q' && SC && SC.think) SC.think(b.id, true, true); }, lim * 0.8));
+        return;
+      }
+      const at = a.ms * (lim / (G.limitMs || 20000));
       live.t.push(setTimeout(() => {
         if (G !== g || G.i !== i || G.phase !== 'q' || G.live !== live) return;
         live.done++;
@@ -1231,7 +1271,7 @@
   function botsSurvival(events) {
     G.players.forEach((p) => {
       if (!p.bot || p.hp <= 0) return;
-      const a = C.botAnswer(p, G.limitMs, rng);
+      const a = botAns(p);
       const st = C.survivalStep(p, a.correct, G.i);
       if (a.correct) p.score += C.speedPoints(true, a.ms, G.limitMs);
       if (st.out) events.push(`💀 ${p.face} ${esc(p.name)} hết tim — bị loại!`);
@@ -1239,7 +1279,7 @@
   }
   function botsFish(events) {
     G.players.forEach((p) => {
-      if (!p.bot || rng() > p.accuracy) return;
+      if (!p.bot || !botAns(p).correct) return;
       const c = C.castLine(rng, p.frenzy);
       p.frenzy = c.frenzy;
       p.kg += c.kg;
@@ -1250,18 +1290,18 @@
     G.players.forEach((p) => {
       if (p.ghost) { p.score = C.ghostScoreAt(G.best, G.i) || 0; return; }
       if (!p.bot) return;
-      const a = C.botAnswer(p, G.limitMs, rng);
+      const a = botAns(p);
       p.streak = a.correct ? p.streak + 1 : 0;
       p.score += C.speedPoints(a.correct, a.ms, G.limitMs) + (a.correct ? C.streakBonus(p.streak) : 0);
     });
   }
   function botsRace() {
-    G.players.forEach((p) => { if (p.bot) C.raceStep(p, C.botAnswer(p, G.limitMs, rng).correct, G.goal); });
+    G.players.forEach((p) => { if (p.bot) C.raceStep(p, botAns(p).correct, G.goal); });
   }
   /** Mỗi bot trả lời 1 câu; đúng → mở 1 rương ngẫu nhiên (có thể cướp/đổi vàng của em). */
   function botsGold(events) {
     G.players.forEach((p) => {
-      if (!p.bot || rng() > p.accuracy) return;
+      if (!p.bot || !botAns(p).correct) return;
       const chests = C.rollChests(rng);
       const c = chests[Math.floor(rng() * 3)];
       const r = C.applyChest(c, p, G.players);
@@ -1318,7 +1358,7 @@
     const pulls = { red: [], blue: [] };
     G.players.forEach((p) => {
       let pull = myPull;
-      if (p.bot) { const a = C.botAnswer(p, G.limitMs, rng); pull = C.tugPull(a.correct, a.ms, G.limitMs); p.pull += pull; }
+      if (p.bot) { const a = botAns(p); pull = C.tugPull(a.correct, a.ms, G.limitMs); p.pull += pull; }
       pulls[p.team].push(pull);
     });
     const st = C.tugStep(G.rope, pulls.red, pulls.blue);
@@ -1424,7 +1464,7 @@
     const events = [];
     G.players.forEach((p) => {
       if (!p.bot || p.hp <= 0) return;
-      const a = C.botAnswer(p, G.limitMs, rng);
+      const a = botAns(p);
       if (!a.correct) return;
       const pick = C.botSpell(p, G.players, rng);
       const r = C.castSpell(p, pick.id, pick.target, G.players, C.spellBoost(a.ms, G.limitMs), G.i);
@@ -1519,7 +1559,7 @@
     let robbed = false;
     G.players.forEach((p) => {
       if (!p.bot) return;
-      const a = C.botAnswer(p, G.limitMs, rng);
+      const a = botAns(p);
       if (!a.correct) return;
       const d = C.botHeist(p, G.players, G.crack, rng);
       if (d.act === 'mine') p.gems += C.mineGems(rng, C.spellBoost(a.ms, G.limitMs));
@@ -1546,7 +1586,7 @@
     let total = 0, ok = 0;
     G.players.forEach((p) => {
       if (!p.bot || p.hp <= 0) return;
-      const a = C.botAnswer(p, G.limitMs || 20000, rng);
+      const a = botAns(p);
       const h = C.bossHit(p, a.correct, a.ms, G.limitMs, ph, rng, G.i);
       p.lastCrit = h.crit;
       total += h.dmg;
@@ -1563,7 +1603,7 @@
   function botsGoal(events) {
     G.players.forEach((p) => {
       if (!p.bot) return;
-      const a = C.botAnswer(p, G.limitMs, rng);
+      const a = botAns(p);
       p.streak = a.correct ? (p.streak || 0) + 1 : 0;
       const kick = C.penaltyKick(p, a.correct, a.ms, G.limitMs, rng);
       if (kick.sure && kick.goal) events.push(`⚡ ${who(p)} tung cú sút sấm sét!`);
@@ -1574,7 +1614,7 @@
   function botsMoon(events) {
     G.players.forEach((p) => {
       if (!p.bot) return;
-      const a = C.botAnswer(p, G.limitMs, rng);
+      const a = botAns(p);
       const st = C.moonStep(p, a.correct, a.ms, G.limitMs, G.n, G.i);
       if (st.landed && st.gain) events.push(`🌕 ${who(p)} đã chạm Mặt Trăng!`);
       else if (st.stage) events.push(`🛰️ ${who(p)} qua Trạm ${C.MOON_STAGES.indexOf(st.stage) + 1}`);
@@ -1654,7 +1694,7 @@
     const events = [];
     const acts = G.players.filter((p) => p.bot).map((p) => {
       p.lastGain = 0;
-      const a = C.botAnswer(p, G.limitMs, rng);
+      const a = botAns(p);
       return a.correct ? { p, d: C.botDino(p, G.players, rng) } : null;
     }).filter(Boolean);
     acts.forEach(({ p, d }) => {
@@ -1784,6 +1824,14 @@
     const old = p.best[G.bestKey];
     const record = !G.practice && (!old || value > old.value);
     if (record) p.best[G.bestKey] = { value, at: Date.now(), trail: G.mode === 'speed' ? G.trail.slice(0, 40) : undefined };
+    // Đối thủ nhớ em: ghi thắng/thua với từng bạn máy (trận đối kháng), bạn sát hạng em nói 1 câu theo kết quả.
+    let rivalEnd = null;
+    if (!G.practice && G.mode !== 'tug' && G.mode !== 'boss') {
+      p.rivals = C.settleRivals(p.rivals, board, G.me);
+      const at = board.indexOf(G.me), up = board[at - 1], dn = board[at + 1];
+      const near = up && up.bot ? up : dn && dn.bot ? dn : null;
+      if (near) rivalEnd = { p: near, t: C.rivalTalk(p.rivals[near.name], 'end') };
+    }
     save();
     // Chặng trên bản đồ Hành trình: chấm sao, rương, nhiệm vụ (js/arena/arena-quest.js tự lưu + cộng xu)
     const QU = G.force && G.force.quest && global.EduArenaQuest;
@@ -1814,6 +1862,10 @@
       : G.mode === 'boss' && G.me.hp <= 0 ? `😵 Em đã gục — Virus còn ${Math.round((G.boss.hp / G.boss.max) * 100)}% máu. Thử lại nhé!`
       : G.mode === 'boss' ? `🦠 Hết câu — Virus còn ${Math.round((G.boss.hp / G.boss.max) * 100)}% máu. Lần sau cả đội dồn sức nhé!`
       : place === 1 ? `🏆 ${nickName()} vô địch ${MODE_LABEL[G.mode]}!` : `${MODE_LABEL[G.mode]} — em về hạng ${place}/${board.length}`;
+    let rvEl = $('arEndRival');
+    if (!rvEl) { rvEl = document.createElement('p'); rvEl.id = 'arEndRival'; rvEl.className = 'ar-end-rival'; $('arEndTitle').after(rvEl); }
+    rvEl.hidden = !rivalEnd;
+    rvEl.innerHTML = rivalEnd ? `<span aria-hidden="true">${rivalEnd.p.face}</span> <b>${esc(rivalEnd.p.name)}:</b> “${esc(rivalEnd.t.text)}”` : '';
     $('arPodium').hidden = G.practice;
     $('arAgain').hidden = G.practice;
     const top = board.slice(0, 3);

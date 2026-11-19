@@ -15,5 +15,19 @@
     // thêm 1 vòng mạng mỗi trang, và service worker lưu phản hồi đã chuyển hướng → mở offline báo lỗi.
     "html_handling": "none",
     "not_found_handling": "404-page"
+  },
+  // STAGING (Prompt 08, docs/techrealm/DEPLOYMENT_GUIDE.md §3): Worker RIÊNG tên "ic3-professional-staging" → địa chỉ riêng
+  // ic3-professional-staging.<tài khoản>.workers.dev; bản thật "ic3-professional" KHÔNG bị đụng tới. Cũng chỉ file tĩnh.
+  //   node scripts/build-hosting.mjs --strict --staging=<URL /exec của deployment Apps Script thử nghiệm>
+  //   npx wrangler deploy --env staging
+  "env": {
+    "staging": {
+      "name": "ic3-professional-staging",
+      "assets": {
+        "directory": "./dist-hosting",
+        "html_handling": "none",
+        "not_found_handling": "404-page"
+      }
+    }
   }
 }

@@ -2192,7 +2192,7 @@ function _ensureGameBreakStyle() {
   const style = document.createElement('style');
   style.textContent = `
     .game-break-overlay{position:fixed;inset:0;background:rgba(10,14,25,.78);
-      backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;
+      display:none;align-items:center;justify-content:center;
       z-index:9999;padding:16px;}
     .game-break-overlay.show{display:flex;}
     .game-break-card{background:#12172a;border-radius:16px;width:min(960px,96vw);

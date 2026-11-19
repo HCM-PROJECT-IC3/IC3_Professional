@@ -62,9 +62,53 @@ assertEq('chuỗi đúng 1/2/4/9', [1, 2, 4, 9].map(A.streakBonus), [0, 100, 300
 
 // ── Bot ──
 var bots = A.makeBots(4, A.rngFrom(7), 'hard');
-assertEq('4 bot khác tên, độ chính xác mức khó', [new Set(bots.map(function (b) { return b.name; })).size, bots.every(function (b) { return b.accuracy >= 0.75 && b.accuracy <= 0.92; })], [4, true]);
+assertEq('4 bot khác tên, độ chính xác mức khó (± tính cách)', [new Set(bots.map(function (b) { return b.name; })).size, bots.every(function (b) { return b.accuracy >= 0.67 && b.accuracy <= 0.96; })], [4, true]);
 var ans = A.botAnswer(bots[0], 20000, A.rngFrom(3));
 assertEq('bot trả lời trong giới hạn giờ', ans.ms > 0 && ans.ms <= 20000, true);
+
+// ── Bạn máy "như người" (botPlan) ──
+assertEq('4 bot = 4 tính cách khác nhau', new Set(bots.map(function (b) { return b.persona; })).size, 4);
+function sample(bot, q, n, ctx, seed) {
+  var rr = A.rngFrom(seed || 11), ms = [], ok = 0;
+  for (var k = 0; k < n; k++) { var a = A.botPlan(bot, q, 20000, rr, ctx); ms.push(a.ms); if (a.correct) ok++; if (a.timeout && a.correct) throw new Error('hết giờ mà vẫn đúng'); if (a.ms < 0 || a.ms > 20000) throw new Error('ngoài giờ'); }
+  ms.sort(function (x, y) { return x - y; });
+  var mean = ms.reduce(function (s, x) { return s + x; }, 0) / n;
+  return { mean: mean, median: ms[n >> 1], acc: ok / n, sd: Math.sqrt(ms.reduce(function (s, x) { return s + (x - mean) * (x - mean); }, 0) / n) };
+}
+var steady = { persona: 'deu-tay', accuracy: 0.8, speed: 0.35 };
+var easyQ = { text: 'RAM là gì?', options: ['Bộ nhớ', 'Chuột'] };
+var hardQ = { text: 'Một nhóm học sinh cần cùng chỉnh sửa một bài trình chiếu, mỗi bạn phụ trách vài trang, giáo viên muốn xem lịch sử ai đã sửa gì và khôi phục bản trước nếu cần. Cách làm nào phù hợp nhất trong các cách sau đây?',
+  options: ['Gửi tệp qua email cho từng bạn rồi gộp lại cuối tuần', 'Lưu tệp trên dịch vụ đám mây, chia sẻ quyền chỉnh sửa và dùng lịch sử phiên bản', 'Mỗi bạn sao chép tệp vào USB rồi đưa cho giáo viên', 'In bài ra giấy để cả nhóm ghi chú trực tiếp'] };
+var sE = sample(steady, easyQ, 3000), sH = sample(steady, hardQ, 3000);
+assertEq('câu dài + nhiều phương án → nghĩ lâu hơn VÀ sai nhiều hơn', [sH.mean > sE.mean * 1.3, sH.acc < sE.acc - 0.03], [true, true]);
+assertEq('thời gian không đều nhịp (độ lệch chuẩn > 15% trung bình) và lệch phải kiểu người (TB > trung vị)', [sE.sd > sE.mean * 0.15, sE.mean > sE.median], [true, true]);
+var careful = sample({ persona: 'can-than', accuracy: 0.8, speed: 0.5 }, easyQ, 3000), rash = sample({ persona: 'hap-tap', accuracy: 0.8, speed: 0.22 }, easyQ, 3000);
+assertEq('tính cách: Hấp tấp nhanh hơn Cẩn thận', rash.mean < careful.mean * 0.7, true);
+var calm = sample({ persona: 'hap-tap', accuracy: 0.8, speed: 0.22, miss: 0 }, easyQ, 3000), tilted = sample({ persona: 'hap-tap', accuracy: 0.8, speed: 0.22, miss: 3 }, easyQ, 3000);
+assertEq('sai liên tiếp → cuống: vội hơn và sai nhiều hơn', [tilted.mean < calm.mean, tilted.acc < calm.acc - 0.04], [true, true]);
+var hot = sample({ persona: 'bung-no', accuracy: 0.7, speed: 0.3, run: 4 }, easyQ, 3000), cold = sample({ persona: 'bung-no', accuracy: 0.7, speed: 0.3, run: 0 }, easyQ, 3000);
+assertEq('Bùng nổ: đang chuỗi đúng → chính xác hơn', hot.acc > cold.acc + 0.04, true);
+var lead = sample(steady, easyQ, 3000, { gap: 1 }), trail = sample(steady, easyQ, 3000, { gap: -1 });
+assertEq('giữ trận gay cấn: em dẫn xa → bạn máy chính xác hơn; em thua xa → kém hơn (lệch ≤ 15%)', [lead.acc > trail.acc + 0.06, lead.acc - trail.acc < 0.15], [true, true]);
+assertEq('cùng hạt giống → cùng kết quả (chấm lại được)', JSON.stringify(A.botPlan(steady, hardQ, 20000, A.rngFrom(5))) === JSON.stringify(A.botPlan(steady, hardQ, 20000, A.rngFrom(5))), true);
+// ── Đối thủ nhớ em (settleRivals / featuredRival / rivalTalk) ──
+(function () {
+  var me = { me: true, id: 'me' }, cao = { bot: true, name: 'Cáo Pixel', id: 'b0' }, cu = { bot: true, name: 'Cú Bit', id: 'b1' }, ghost = { ghost: true, name: 'Kỷ lục', id: 'g' };
+  var R = A.settleRivals({}, [cao, me, ghost, cu], me);
+  assertEq('trận 1: Cáo xếp trên em (bạn ấy thắng), Cú xếp dưới (em thắng); bóng kỷ lục không tính',
+    [R['Cáo Pixel'].l, R['Cáo Pixel'].last, R['Cú Bit'].w, R['Cú Bit'].last, Object.keys(R).length], [1, 'l', 1, 'w', 2]);
+  assertEq('lời vào trận: chưa gặp → làm quen; em thắng lần trước → phục thù; bạn ấy thắng lần trước → thách gỡ',
+    [A.rivalTalk(undefined, 'intro').kind, A.rivalTalk(R['Cú Bit'], 'intro').kind, A.rivalTalk(R['Cáo Pixel'], 'intro').kind], ['first', 'revenge', 'defend']);
+  for (var k = 0; k < 3; k++) A.settleRivals(R, [cao, me, cu], me);
+  assertEq('Cáo thắng em 4/4 → "khắc tinh", nói đúng số ván', [A.rivalTalk(R['Cáo Pixel'], 'intro').kind, /4\/4/.test(A.rivalTalk(R['Cáo Pixel'], 'intro').text)], ['nemesis', true]);
+  assertEq('em thắng Cú 4 lần → Cú "ôn kỹ"', [A.rivalTalk(R['Cú Bit'], 'intro').kind, /4 lần/.test(A.rivalTalk(R['Cú Bit'], 'intro').text)], ['victim', true]);
+  assertEq('bạn máy đáng nhắc nhất: gặp nhiều nhất; chưa ai gặp → bạn đầu tiên',
+    [A.featuredRival(R, [{ name: 'Mèo Wifi' }, cao]).name, A.featuredRival({}, [{ name: 'Mèo Wifi' }, cao]).name], ['Cáo Pixel', 'Mèo Wifi']);
+  assertEq('lời sau trận theo kết quả vừa rồi', [A.rivalTalk(R['Cú Bit'], 'end').kind, A.rivalTalk(R['Cáo Pixel'], 'end').kind], ['won', 'lost']);
+  assertEq('dữ liệu hỏng không làm lỗi', A.settleRivals({ 'Cú Bit': 'x' }, [me, cu], me)['Cú Bit'].w, 1);
+})();
+var mood = A.botMood(A.botMood(A.botMood({}, true), false), false);
+assertEq('botMood: chuỗi đúng / sai liên tiếp', [mood.run, mood.miss, A.botMood({ run: 2 }, true).run], [0, 2, 3]);
 
 // ── Rương ──
 var r = A.rngFrom(99), allOk = true;
