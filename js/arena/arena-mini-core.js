@@ -60,6 +60,11 @@
       desc: 'Đặt lá chắn chặn 13 đợt mã độc, giữ Server sống sót.',
       ladder: [210, 420, 620, 830, 1050], expectSec: 600, live: true,
       rivals: [['Lính Gác Mới', '💂'], ['Kỹ Sư Mạng', '👷'], ['Chuyên Gia Tường Lửa', '🧱'], ['Đội Trưởng SOC', '🛡️'], ['Tổng Chỉ Huy', '🎖️']] },
+    { id: 'the-gioi-khoi', page: 'the-gioi-khoi.html', name: 'Thế Giới Khối', fa: 'fa-cube', scene: 'farm',
+      topic: 'Ôn tổng hợp', learn: 'Trả lời câu hỏi IC3 thật để lấy quặng, chế tạo công cụ và chặn mã độc ban đêm.',
+      desc: 'Đào khối, chế tạo, xây chỗ trú — quặng quý phải trả lời đúng mới lấy được.',
+      ladder: [300, 520, 760, 1000, 1300], expectSec: 420, live: true,
+      rivals: [['Thợ Đào Mới', '⛏️'], ['Bạn Xây Nhà', '🧱'], ['Thợ Rèn', '🔨'], ['Kỹ Sư Khối', '🧑‍🔧'], ['Người Giữ Lõi', '🛡️']] },
     { id: 'battle-quiz', page: 'battle-quiz.html', name: 'Đấu Boss', fa: 'fa-hand-fist', scene: 'castle',
       topic: 'Ôn tổng hợp', learn: 'Trả lời câu hỏi IC3 thật trong ngân hàng đề — trận cuối của hành trình.',
       desc: 'Đúng liền tay tung combo, hạ Boss mã độc trước khi hết máu.',
@@ -83,6 +88,7 @@
         return Math.round(600 * clamp(done, 0, 1) + stars * 100 + clamp(100 - Math.floor(num(s.durationSec) / 3), 0, 100));
       }
       case 'battle-quiz': return Math.round(num(a.score) + (a.win ? 100 + clamp(num(a.hp), 0, 100) : 0));
+      case 'the-gioi-khoi': return Math.round(num(a.score)); // đã gồm thưởng thắng (js/the-gioi-khoi.js § finish)
       case 'pz-defense': {
         const total = num(a.total) || 13;
         const hpPct = a.hpMax ? clamp(num(a.hp) / a.hpMax, 0, 1) : 0;

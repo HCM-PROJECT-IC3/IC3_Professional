@@ -897,7 +897,7 @@
     $('ddTodayList').innerHTML = today.length ? today.map((e) => item(e.key, e.sessions[0] ? e.sessions[0].col : -1, name(e.key, e.cls),
       [slotText(slotOf(e, who)), e.school, weekText(e, (rows.find((r) => r.key === e.key) || {}).nm), e.kind === 'done' ? 'đã tick hoàn thành' : '', usesBook && e.sessions.length && !unwritten(e) ? 'đã ghi sổ đầu bài' : ''].filter(Boolean).join(' · '),
       'Điểm danh', e.sessions[0] && (!usesBook || unwritten(e)) ? bookBtn(e.key, e.sessions[0].col) : '', attTag(e.key, e.sessions))).join('')
-      : '<li class="dd-muted">Hôm nay không có lớp nào theo lịch trên Sheet.</li>';
+      : nextDayHtml(input, who, now, name, item);
     const unt = L.untickedSessions(input, who, now, 30);
     const miss = L.weekPlan(input, who, L.mondayOf(now), now).filter((e) => e.kind === 'missing');
     const title = (e) => `${name(e.key, e.cls)} · ${L.THU[e.date.getDay()]} ${fmtDate(e.date)}`;
@@ -911,7 +911,23 @@
       .concat(miss.map((e) => item(e.key, -1, title(e), `${e.school} · ngày thường dạy nhưng Sheet chưa có buổi — điểm danh và ghi ngày`, 'Mở')))
       .concat(past.map((e) => item(e.key, e.sessions[0].col, title(e), `${e.school} · ${tietOf(e.sessions)} chưa ghi sổ đầu bài`, '', bookBtn(e.key, e.sessions[0].col))));
     $('ddTodoN').textContent = todo.length ? `${todo.length}` : '';
-    $('ddTodoList').innerHTML = todo.length ? todo.join('') : '<li class="dd-muted"><i class="fa-solid fa-check" aria-hidden="true"></i> Không còn việc tồn — Sheet đã cập nhật đủ.</li>';
+    const TODO_SHOW = 5, more = todo.length - TODO_SHOW;
+    $('ddTodoList').innerHTML = todo.length ? todo.slice(0, TODO_SHOW).join('')
+      + (more > 0 ? `<li class="dd-more"><details><summary>Xem thêm ${more} việc</summary><ul class="dd-tasks">${todo.slice(TODO_SHOW).join('')}</ul></details></li>` : '') : '<li class="dd-muted"><i class="fa-solid fa-check" aria-hidden="true"></i> Không còn việc tồn — Sheet đã cập nhật đủ.</li>';
+  }
+  /** Ngày dạy gần nhất sau hôm nay (tuần này + 2 tuần tới) — để "Hôm nay" trống vẫn có việc để bấm. */
+  function nextDayHtml(input, who, now, name, item) {
+    const end = new Date(now); end.setHours(23, 59, 59, 999);
+    for (let w = 0; w < 3; w++) {
+      const mon = L.mondayOf(now, w);
+      const es = L.weekPlan(input, who, mon, now).filter((e) => e.date > end && e.kind !== 'missing').sort((a, b) => a.date - b.date);
+      if (!es.length) continue;
+      const day = es[0].date.toDateString(), list = es.filter((e) => e.date.toDateString() === day);
+      const d = list[0].date;
+      return `<li class="dd-muted">Hôm nay không có lớp. Buổi dạy tới: <b>${L.THU[d.getDay()]} ${fmtDate(d)}</b> · ${list.length} lớp</li>`
+        + list.map((e) => item(e.key, e.sessions[0] ? e.sessions[0].col : -1, name(e.key, e.cls), [e.school, weekText(e, null)].join(' · '), 'Mở')).join('');
+    }
+    return '<li class="dd-muted">Hôm nay và 2 tuần tới chưa có lớp nào theo lịch trên Sheet.</li>';
   }
   /** Lớp của tôi chưa có bản đọc (lỗi mạng / quyền / bộ nhớ bị dọn) thì không có trên lịch — báo ngay trên lịch kèm nút
       đọc lại ĐÚNG các lớp đó, khỏi bấm "Cập nhật tất cả" (đọc lại 40–80 lớp, sổ riêng tư mỗi lượt là Apps Script). */
@@ -970,13 +986,18 @@
         : b ? `<button type="button" class="dd-ev-mv" data-buoi="${esc(sk)}" data-to="${b === 'm' ? 'a' : 'm'}" title="Chuyển ${esc(nameOf(e))} (${L.THU[e.date.getDay()]}) sang buổi ${to}" aria-label="Chuyển sang buổi ${to}">⇅</button>`
         : `<span class="dd-ev-set"><button type="button" data-buoi="${esc(sk)}" data-to="m">Sáng</button><button type="button" data-buoi="${esc(sk)}" data-to="a">Chiều</button></span>`;
       return `<div class="dd-ev k-${e.kind}"><button type="button" class="dd-ev-main" data-open="${e.key}"${e.sessions[0] ? ` data-col="${e.sessions[0].col}"` : ''} title="${esc(KIND[e.kind])} — bấm để mở đúng buổi này">
-        <b>${esc(nameOf(e))}</b><small>${esc(e.school)}</small><span>${esc(weekText(e, rowOf(e.key).nm))}</span><em>${esc(KIND[e.kind])}</em></button>${ctl}</div>`;
+        <b>${esc(nameOf(e))}</b>${S.fSchool ? '' : `<small>${esc(e.school)}</small>`}<span>${esc(weekText(e, rowOf(e.key).nm))}</span>${e.kind === 'done' ? '' : `<em>${esc(KIND[e.kind])}</em>`}</button>${ctl}</div>`;
     };
-    const rowsOf = [['m', 'Sáng'], ['a', 'Chiều']].concat(hasU ? [['u', 'Chưa xếp buổi']] : []);
+    // Gọn: bỏ hàng Sáng/Chiều trống cả tuần (giữ ít nhất 1 hàng); ngày không có lớp thu thành cột hẹp.
+    const filled = (r) => grid[r].some((c) => c.length);
+    const main = [['m', 'Sáng'], ['a', 'Chiều']].filter(([r]) => filled(r));
+    const rowsOf = (main.length ? main : [['m', 'Sáng']]).concat(hasU ? [['u', 'Chưa xếp buổi']] : []);
+    const emptyDay = cols.map((d, i) => !['m', 'a', 'u'].some((r) => grid[r][i] && grid[r][i].length));
+    const tpl = `64px ${emptyDay.map((e) => (e ? '58px' : 'minmax(150px, 1fr)')).join(' ')}`;
     const isT = (d) => (d.toDateString() === today ? ' is-today' : '');
-    $('ddWeekGrid').innerHTML = `<div class="dd-tkb-scroll"><div class="dd-tkb" style="--cols:${cols.length}" role="table" aria-label="Lịch tuần theo buổi">
-      <div class="dd-tkb-row" role="row"><span class="dd-tkb-corner" role="columnheader"></span>${cols.map((d) => `<span class="dd-tkb-head${isT(d)}" role="columnheader">${L.THU[d.getDay()]} <small>${fmtDate(d)}</small></span>`).join('')}</div>
-      ${rowsOf.map(([r, label]) => `<div class="dd-tkb-row is-${r}" role="row"><span class="dd-tkb-side" role="rowheader">${label}</span>${grid[r].map((es, i) => `<div class="dd-tkb-cell${isT(cols[i])}" role="cell">${es.map((e) => ev(e, r === 'u' ? '' : r)).join('')}</div>`).join('')}</div>`).join('')}
+    $('ddWeekGrid').innerHTML = `<div class="dd-tkb-scroll"><div class="dd-tkb" style="--cols:${cols.length};grid-template-columns:${tpl}" role="table" aria-label="Lịch tuần theo buổi">
+      <div class="dd-tkb-row" role="row"><span class="dd-tkb-corner" role="columnheader"></span>${cols.map((d) => `<span class="dd-tkb-head${isT(d)}${emptyDay[cols.indexOf(d)] ? ' is-empty' : ''}" role="columnheader" title="${emptyDay[cols.indexOf(d)] ? 'Không có lớp' : ''}">${L.THU[d.getDay()]} <small>${fmtDate(d)}</small></span>`).join('')}</div>
+      ${rowsOf.map(([r, label]) => `<div class="dd-tkb-row is-${r}" role="row"><span class="dd-tkb-side" role="rowheader">${label}</span>${grid[r].map((es, i) => `<div class="dd-tkb-cell${isT(cols[i])}${emptyDay[i] ? ' is-empty' : ''}" role="cell">${es.map((e) => ev(e, r === 'u' ? '' : r)).join('')}</div>`).join('')}</div>`).join('')}
     </div></div><p class="dd-hint dd-tkb-note">${[tkbNote(who, mon), hasU ? 'Lớp không có trong TKB: bấm <b>Sáng</b> hoặc <b>Chiều</b> ở hàng cuối, xếp 1 lần các tuần sau tự theo (chỉ lưu trên máy này).' : ''].filter(Boolean).join(' ')}</p>`;
     const cnt = L.monthCount(planInput(rows), who, mon.getFullYear(), mon.getMonth());
     const tot = Object.values(cnt).reduce((a, b) => a + b, 0);

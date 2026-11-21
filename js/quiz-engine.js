@@ -1898,6 +1898,15 @@ function updateSidebar() {
   setNum('legendAnswered', done);
   setNum('legendFlagged', State.flags.size);
   setNum('legendLeft', State.questions.length - done);
+  // Nút Nộp bài cho biết còn bao nhiêu câu chưa làm (không phải mở danh sách câu mới biết)
+  const left = State.questions.length - done, sub = document.querySelector('#exam .btn-submit-top');
+  if (sub) {
+    let tag = sub.querySelector('.submit-left');
+    if (!tag) { tag = document.createElement('small'); tag.className = 'submit-left'; sub.appendChild(tag); }
+    tag.textContent = left ? `còn ${left}` : '';
+    tag.hidden = !left;
+    sub.title = left ? `Còn ${left} câu chưa làm` : 'Đã làm hết — nộp bài';
+  }
   _scrollActiveQBtnIntoView();
   // Chờ renderer vẽ xong (nhiều chỗ gọi updateSidebar() TRƯỚC khi vẽ lại câu).
   requestAnimationFrame(_updatePendingChip);
@@ -5059,6 +5068,15 @@ function _onExamKeydown(e) {
   if (e.key === 'ArrowRight') { e.preventDefault(); nextQ(); return; }
   if (e.key === 'ArrowLeft') { e.preventDefault(); prevQ(); return; }
   if (e.key === 'f' || e.key === 'F') { e.preventDefault(); toggleFlag(State.current); return; }
+  // Enter: Ôn luyện — kiểm tra câu đang làm, đã kiểm tra thì sang câu tiếp; Kiểm tra — đã chọn thì sang câu tiếp.
+  // (Đang đứng trên 1 nút khác thì để nút đó tự xử lý Enter.)
+  if (e.key === 'Enter' && !(e.target && e.target.tagName === 'BUTTON' && !e.target.classList.contains('option-btn'))) {
+    if (!isAnswered(State.current)) return;
+    e.preventDefault();
+    if (State.examMode === 'practice' && !State.checked[State.current]) checkCurrentAnswer();
+    else if (State.current < State.questions.length - 1) nextQ();
+    return;
+  }
 
   let idx = -1;
   if (/^[1-9]$/.test(e.key)) idx = Number(e.key) - 1;
@@ -5078,7 +5096,7 @@ function _maybeShowKeyHint() {
   if (window.matchMedia && !window.matchMedia('(pointer: fine)').matches) return; // máy cảm ứng — không có bàn phím
   // Chỉ máy có bàn phím + chuột (điện thoại/máy tính bảng không có phím để dùng mẹo này).
   const hasKeyboard = !window.matchMedia || window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-  if (hasKeyboard) setTimeout(() => showNotification('Mẹo: dùng phím ← → để chuyển câu, 1–9 hoặc A–E để chọn đáp án, F để gắn cờ.', 'info'), 1200);
+  if (hasKeyboard) setTimeout(() => showNotification('Mẹo: phím 1–9 hoặc A–E để chọn đáp án, Enter để kiểm tra / sang câu tiếp, ← → để chuyển câu, F để gắn cờ.', 'info'), 1200);
 }
 
 /**

@@ -313,6 +313,35 @@
     return K.wrap(s);
   };
 
+  // Thế Giới Khối: tranh phẳng tự vẽ — đồi khối, cây, quặng, bạn nhỏ cầm cuốc, bọ mã độc trong hang (không gradient)
+  ART['the-gioi-khoi'] = () => {
+    const S = 40, blk = (x, y, c, e) => `<rect x="${x * S}" y="${y * S}" width="${S}" height="${S}" fill="${c}" stroke="rgba(0,0,0,.18)"/>${e || ''}`;
+    let s = '<rect width="640" height="280" fill="#8ecdf5"/><rect x="520" y="26" width="44" height="44" fill="#ffd84d"/>';
+    const surf = [4, 4, 3, 3, 3, 4, 4, 5, 5, 4, 4, 3, 3, 4, 4, 4];
+    surf.forEach((h, x) => {
+      for (let y = h; y < 7; y++) {
+        const cave = x >= 9 && x <= 12 && y >= 5;
+        if (cave) { s += `<rect x="${x * S}" y="${y * S}" width="${S}" height="${S}" fill="#2b303b"/>`; continue; }
+        const ore = (x === 2 && y === 6) ? '#cfe3ff' : (x === 6 && y === 6) ? '#e8873a' : (x === 14 && y === 6) ? '#4fe0e6' : '';
+        const c = y === h ? '#5cb85c' : y < h + 2 ? '#9b6b43' : '#8a8f98';
+        s += blk(x, y, c, ore ? [[6, 8], [22, 6], [14, 22], [26, 26]].map(([a, b]) => `<rect x="${x * S + a}" y="${y * S + b}" width="7" height="7" fill="${ore}"/>`).join('') : '');
+        if (y === h) s += `<rect x="${x * S}" y="${y * S}" width="${S}" height="9" fill="#4a9e48"/>`;
+      }
+    });
+    // cây
+    [[1, 3], [13, 3]].forEach(([x, h]) => {
+      for (let i = 1; i <= 2; i++) s += blk(x, h - i, '#8b5a2b');
+      for (let dx = -1; dx <= 1; dx++) for (let dy = 3; dy <= 4; dy++) s += blk(x + dx, h - dy, '#3f9d4f');
+    });
+    // bạn nhỏ (áo trắng, quần xanh, khăn đỏ) cầm cuốc
+    const px = 300, py = 72;
+    s += `<rect x="${px + 6}" y="${py + 52}" width="10" height="26" fill="#2f4e9e"/><rect x="${px + 22}" y="${py + 52}" width="10" height="26" fill="#2f4e9e"/>`;
+    s += `<rect x="${px + 2}" y="${py + 26}" width="34" height="28" fill="#f4f6fb" stroke="rgba(0,0,0,.3)"/><rect x="${px + 15}" y="${py + 26}" width="8" height="12" fill="#e5484d"/>`;
+    s += `<rect x="${px + 4}" y="${py}" width="30" height="27" fill="#f2c9a0"/><rect x="${px + 2}" y="${py - 4}" width="34" height="9" fill="#2b2118"/><rect x="${px + 25}" y="${py + 12}" width="4" height="6" fill="#2b2118"/>`;
+    s += `<rect x="${px + 36}" y="${py + 20}" width="6" height="34" fill="#8b5a2b" transform="rotate(-30 ${px + 39} ${py + 37})"/><rect x="${px + 30}" y="${py + 14}" width="30" height="8" fill="#8a8f98" transform="rotate(-30 ${px + 45} ${py + 18})"/>`;
+    return `<svg class="mga" viewBox="0 0 640 280" preserveAspectRatio="xMidYMid meet" aria-hidden="true">${s}<image href="img/malware/trojan.svg" x="404" y="212" width="58" height="58"/></svg>`;
+  };
+
   let seq = 0;
   /** Tranh 3D của 1 trò (chuỗi <svg>), '' nếu chưa có. */
   function draw(gameId) {

@@ -467,10 +467,12 @@ function setupCard() {
     { ok: hasStu, t: 'Lớp và học sinh', s: 'Lấy từ sổ lớp đã đọc ở Điểm danh hoặc danh sách của hệ thống', go: 'classes', b: 'Mở Học sinh' },
     { ok: S.tkb.some(t => t.cls) || mine, t: 'Lịch dạy', s: mine ? 'Đang dùng ngày dạy trên sổ lớp' : 'Nhập TKB, hoặc bỏ qua nếu sổ lớp ở Điểm danh đã có ngày dạy và đúng tên giáo viên', go: 'tkb', b: 'Mở TKB' },
   ];
-  if (steps.every(x => x.ok)) return '';
-  return `<section class="panel setup" style="margin-bottom:22px"><div class="panel-h"><h2>Bắt đầu sổ mới</h2></div><div class="panel-b mini">
-    ${steps.map((x, i) => `<div><span class="step-n ${x.ok ? 'ok' : ''}">${x.ok ? ic('check') : i + 1}</span><div class="grow"><div class="t">${x.t}</div><div class="s">${x.s}</div></div>${x.ok ? '' : `<button type="button" class="btn sm" data-go="${x.go}">${x.b}</button>`}</div>`).join('')}
-  </div></section>`;
+  const todo = steps.filter(x => !x.ok);
+  if (!todo.length || UI.hideSetup) return '';
+  // Gọn: 1 dòng, chỉ bước còn thiếu; "Ẩn" nhớ trên máy.
+  return `<section class="setup-strip" aria-label="Bắt đầu sổ mới"><span class="ss-t">Còn ${todo.length}/3 bước để sổ tự chạy:</span>
+    ${todo.map(x => `<button type="button" class="btn sm" data-go="${x.go}" title="${esc(x.s)}">${x.t}</button>`).join('')}
+    <span class="grow"></span><button type="button" class="btn ghost sm" id="hHideSetup" title="Ẩn gợi ý này">Ẩn</button></section>`;
 }
 /** Dữ liệu chỉ ở máy này nên nhắc sao lưu; không sao lưu cũng không chặn việc gì. */
 function backupCard() {
@@ -497,6 +499,8 @@ function offDay(date, items) {
 function viewHome(root) {
   const wk = curWeek(), dates = weekDates(wk), items = weekItems(wk);
   const teachDays = S.settings.days.map(d => dates[d - 2]).filter(Boolean);
+  if (dates.includes(today()) && !teachDays.includes(today())) teachDays.push(today()); // hôm nay luôn có ô
+  teachDays.sort();
   if (!UI.day || !dates.includes(UI.day)) {
     const has = d => items.some(it => it.date === d && it.cls);
     UI.day = (teachDays.includes(today()) && has(today())) ? today()
@@ -518,21 +522,31 @@ function viewHome(root) {
         const its = items.filter(it => it.date === d && it.cls), done = its.every(it => it.entry);
         const st = !its.length ? '' : done ? 'done' : d <= today() ? 'miss' : 'future';
         return `<button type="button" class="day ${st} ${d === UI.day ? 'on' : ''} ${d === today() ? 'today' : ''}" data-day="${d}" title="${its.length} tiết">
-          <div class="dw">${thu(d).replace('Thứ ', 'T')}</div><div class="dn">${parseD(d).getDate()}</div><span class="dot"></span></button>`;
+          <div class="dw">${thu(d).replace('Thứ ', 'T')}</div><div class="dn">${parseD(d).getDate()}</div><span class="dc">${its.length ? its.length + ' tiết' : '—'}</span></button>`;
       }).join('')}</div>
       <div class="lessons">${dayItems.length ? dayItems.map(it => lessonCard(it)).join('')
-        : `<div class="panel">${emptyBox('book', 'Không có tiết nào theo thời khóa biểu', '<div>Bấm “Ghi tiết dạy” để ghi tiết dạy bù hoặc ngoài lịch.</div>')}</div>`}</div>
+        : (() => {
+          const withLes = [...new Set(items.filter(it => it.cls).map(it => it.date))];
+          const near = withLes.filter(d => d > UI.day)[0] || withLes.filter(d => d < UI.day).pop();
+          const hasPlan = S.tkb.some(t => t.cls) || sheetRows().some(r => r.mine);
+          return `<div class="panel empty-day"><div class="ed-t">${ic('book')}<div><b>${UI.day === today() ? 'Hôm nay' : thu(UI.day)} không có tiết theo lịch</b>
+            <span>${hasPlan ? 'Dạy bù hoặc ngoài lịch thì ghi tay.' : 'Chưa có lịch dạy — nhập TKB để sổ tự xếp tiết mỗi ngày.'}</span></div></div>
+            <div class="row gap-s">${near ? `<button type="button" class="btn sm primary" data-day="${near}">Xem ${thu(near)}, ${shortDate(near)}</button>` : ''}
+            <button type="button" class="btn sm" id="hNew">${ic('plus')}Ghi tiết dạy</button>
+            ${hasPlan ? '' : '<button type="button" class="btn sm ghost" data-go="tkb">Nhập TKB</button>'}</div></div>`;
+        })()}</div>
       ${dayTodo.length > 1 ? `<div class="row" style="margin-top:12px"><button type="button" class="btn ghost sm" id="hOffDay">${ic('pause')}Nghỉ cả ngày (${dayTodo.length} tiết)</button></div>` : ''}
+      ${catchUp.length ? `<section class="panel catchup"><div class="panel-h"><h2>Cần ghi bổ sung</h2><span class="grow"></span><span class="badge">${catchUp.length} tiết</span></div><div class="panel-b">
+        ${[...new Set(catchUp.map(it => it.date))].map(d => `<div class="cu-day"><button type="button" class="cu-date" data-day="${d}" title="Mở ngày này">${thu(d)}, ${shortDate(d)}</button>
+          <div class="cu-list">${catchUp.filter(it => it.date === d).map(it => `<button type="button" class="cu-it" data-ci="${CARDS.push(it) - 1}" data-act="write" title="Ghi tiết ${it.tiet} buổi ${it.buoi.toLowerCase()} lớp ${esc(it.cls)}">${clsBadge(it.cls, true)}<span>T${it.tiet}${it.buoi === 'Chiều' ? ' chiều' : ''}</span></button>`).join('')}</div></div>`).join('')}
+      </div></section>` : ''}
     </div>
-    <div class="stack">
+    <div class="stack home-side">
       ${backupCard()}
       <section class="panel"><div class="panel-h"><h2>Tuần này</h2></div><div class="panel-b">
         <div class="summary"><div><b>${real.filter(it => it.entry).length}<span class="faint" style="font-size:16px">/${real.length}</span></b><span>tiết đã ghi</span></div>
         <div><b style="color:${missing.length ? 'var(--amber)' : 'var(--green)'}">${missing.length}</b><span>chưa ghi</span></div>
         <div><b>${absences}</b><span>lượt vắng</span></div></div></div></section>
-      ${catchUp.length ? `<section class="panel"><div class="panel-h"><h2>Cần ghi bổ sung</h2><span class="grow"></span><span class="badge">${catchUp.length}</span></div><div class="panel-b mini">
-        ${catchUp.slice(0, 8).map(it => `<div data-ci="${CARDS.push(it) - 1}">${clsBadge(it.cls, true)}<div class="grow"><div class="t">${thu(it.date)}, ${shortDate(it.date)}</div><div class="s">Tiết ${it.tiet} buổi ${it.buoi.toLowerCase()}</div></div><button type="button" class="btn sm" data-act="write">Ghi</button></div>`).join('')}
-      </div></section>` : ''}
       <section class="panel"><div class="panel-h"><h2>Học sinh cần chú ý</h2></div><div class="panel-b mini">
         ${hot.length ? hot.slice(0, 6).map(o => `<div>${clsBadge(o.cls, true)}<div class="grow"><div class="t">${esc(o.name)}</div><div class="s">Vắng ${o.P + o.K} buổi (${o.P} P, ${o.K} K)</div></div><span class="tag bad">Báo GVCN</span></div>`).join('')
           : '<div><span class="faint sm-t">Chưa có học sinh vắng nhiều.</span></div>'}
@@ -545,6 +559,8 @@ function viewHome(root) {
     </div>
   </div>`;
   $$('[data-day]', root).forEach(b => b.onclick = () => { UI.day = b.dataset.day; saveUI(); render(); });
+  if ($('#hNew', root)) $('#hNew', root).onclick = () => $('#newEntry').click();
+  if ($('#hHideSetup', root)) $('#hHideSetup', root).onclick = () => { UI.hideSetup = true; saveUI(); render(); toast('Đã ẩn — các bước vẫn ở Cài đặt, Học sinh, Thời khóa biểu'); };
   $$('[data-go]', root).forEach(b => b.onclick = () => go(b.dataset.go));
   const od = $('#hOffDay', root); if (od) od.onclick = () => offDay(UI.day, dayTodo);
   const bk = $('#hBackup', root); if (bk) bk.onclick = () => { downloadBackup(); render(); };
@@ -1599,14 +1615,16 @@ function viewFill(root) {
   const checks = WK && nCls ? wkChecks() : { wrong: [], undated: [] };
   const warns = WK ? [...WK.sheet.warnings, ...(checks.wrong.length ? [`Tab tuần khác sổ lớp (${checks.wrong.length} tiết): ${checks.wrong.slice(0, 12).join(' · ')}${checks.wrong.length > 12 ? ' …' : ''}`] : []),
     ...(checks.undated.length ? [`Sổ lớp chưa ghi ô NGÀY (đã khớp theo tiết PPCT): lớp ${checks.undated.join(', ')} – nhờ điều phối điền để bảng tuần sau tạo được đủ lớp.`] : [])] : [];
-  root.innerHTML = `${phead('Điền bảng tuần', 'Tự điền Học sinh vắng và Nhận xét vào tab tuần của trường – sao chép rồi dán vào Google Sheet')}
+  root.innerHTML = `${phead('Bảng tuần', 'Tạo bảng theo dõi giảng dạy của tuần từ sổ lớp – xuất Excel để in nộp trường')}
   <section class="panel" style="margin-bottom:20px"><div class="panel-b stack" style="gap:12px">
+    <details class="wk-opt" ${WK ? 'open' : ''}><summary><b>Điền vào tab tuần có sẵn của trường</b> <span class="faint">(tuỳ chọn – khi trường đã tạo tab tuần trên Google Sheet)</span></summary>
+    <div class="stack" style="gap:12px;margin-top:12px">
     <label class="field"><span>Link tab tuần (mở đúng tab tuần rồi sao chép link trên thanh địa chỉ) – hoặc dán cả bảng</span>
       <textarea class="inp" id="wkSrc" rows="2" placeholder="https://docs.google.com/spreadsheets/d/…/edit#gid=…">${esc(UI.wkLink || '')}</textarea></label>
     <div class="row gap-s">
       <button type="button" class="btn primary" id="wkRead">${ic('download')}${WK ? 'Đọc lại' : 'Đọc bảng tuần'}</button>
       <span class="faint" id="wkStatus">${WK ? `Đọc lúc ${pad(at.getHours())}:${pad(at.getMinutes())}${WK.src ? '' : ' (bảng dán)'}` : ''}</span>
-    </div>
+    </div></div></details>
     <div class="wk-books">
       <div><b>Sổ lớp của Điều phối</b> <span class="faint">(FORM QUẢN LÝ LỚP – lấy vắng, kiểm tra PPCT, Kiến thức cần đạt)</span></div>
       <div class="faint">${ids.length ? `${ids.length} sổ${nCls ? ` · đã đọc ${nCls} lớp` : ''}${grades.length ? ` · Kiến thức cần đạt khối ${grades.join(', ')}` : ''}` : 'Chưa có link sổ lớp – dán ở dưới (hoặc thêm ở trang Điểm danh).'}
@@ -1624,7 +1642,7 @@ function viewFill(root) {
     <details><summary class="faint">Sheet của trường không mở công khai?</summary>
       <p class="faint" style="margin-top:8px">Mở tab tuần trên Google Sheet → bấm vào ô A1 → <b>Ctrl+A</b> → <b>Ctrl+C</b> → dán (<b>Ctrl+V</b>) vào ô link rồi bấm “Đọc bảng tuần”. Web không cần quyền vào file.</p></details>
   </div></section>
-  ${!WK ? (nCls ? genPanel() : emptyBox('clip', 'Chưa đọc bảng tuần', '<p>Dán link tab tuần của trường (ví dụ tab Tuần 10) rồi bấm “Đọc bảng tuần”. Chỉ để tạo bảng tuần sau: bấm “Đọc sổ lớp”.</p>')) : `
+  ${!WK ? (nCls ? genPanel() : emptyBox('clip', 'Chưa đọc sổ lớp', '<p>Bấm <b>Đọc sổ lớp</b> ở trên: bảng tuần được tạo từ sổ lớp của điều phối, rồi xuất Excel để in.</p>')) : `
   ${warns.length ? `<section class="panel" style="margin-bottom:20px;border-color:var(--amber)"><div class="panel-b stack" style="gap:6px">${warns.map(w => `<div><span class="tag warn">Kiểm tra</span> ${esc(w)}</div>`).join('')}</div></section>` : ''}
   <section class="panel" style="margin-bottom:20px"><div class="panel-h" style="flex-wrap:wrap">
       <h2>${esc(WK.sheet.school || 'Bảng tuần')}${rows.length ? ` · Tuần ${pad(weekOf(rows[0].x.date))}` : ''}</h2><span class="grow"></span>
@@ -1684,6 +1702,7 @@ function viewFill(root) {
   const rt = $('#wkRetryTabs'); if (rt) rt.onclick = () => readBooks(rt, new Set(BK.fail.map(f => f.key)));
   $$('[data-gw]', root).forEach(b => b.onclick = () => { UI.wkGen = Math.max(1, genN() + +b.dataset.gw); UI.wkGenOn = curWeek(); saveUI(); render(); });
   const g = $('#wkGen'); if (g) g.onclick = () => genCopy();
+  const gx = $('#wkXlsx'); if (gx) gx.onclick = () => genXlsx(gx);
   if (!WK) return;
   $('#wkTeacher').onchange = ev => { WK.teacher = ev.target.value; render(); };
   $('#wkZero').onchange = ev => { UI.wkZero = ev.target.checked; saveUI(); };
@@ -1801,8 +1820,33 @@ function genPanel() {
       </tbody></table></div>
       ${nGuess || nNo ? `<p class="faint" style="margin:10px 0 0">${nGuess ? `${nGuess} ô Tiết TKB có dấu ? là đoán (lớp đổi thứ dạy)` : ''}${nGuess && nNo ? ' · ' : ''}${nNo ? `${nNo} ô chưa biết tiết TKB (để trống khi dán)` : ''}.</p>` : ''}` : emptyBox('grid', 'Sổ lớp chưa có tiết nào trong tuần này')}
     </div>
-    ${g.rows.length ? `<div class="panel-b row gap-s" style="border-top:1px solid var(--line)"><button type="button" class="btn primary" id="wkGen">${ic('clip')}Sao chép bảng tuần ${pad(n)}</button></div>` : ''}
+    ${g.rows.length ? `<div class="panel-b row gap-s" style="border-top:1px solid var(--line)"><button type="button" class="btn primary" id="wkXlsx">${ic('download')}Xuất Excel bảng tuần ${pad(n)}</button>
+      <button type="button" class="btn" id="wkGen">${ic('clip')}Sao chép để dán vào Sheet cũ</button>
+      <span class="faint">File .xlsx in được ngay (A4 ngang, có quốc hiệu, viền, chữ ký). Cần link Google Sheet: tải file lên Drive → Mở bằng Google Trang tính.</span></div>` : ''}
   </section>`;
+}
+/** Bảng tuần từ sổ lớp → file Excel định dạng in (js/so-dau-bai/sdb-xlsx.js, ExcelJS tải khi bấm lần đầu). */
+async function genXlsx(btn) {
+  const zero = UI.wkZero !== false, g = genWeek(genN());
+  if (!g.rows.length) return toast('Tuần này chưa có tiết nào');
+  const per = {};
+  g.rows.forEach(x => { if (x.teacher) per[x.teacher] = (per[x.teacher] || 0) + 1; });
+  const meta = (WK && WK.sheet) || {};
+  const school = meta.school || S.settings.school || '';
+  const data = {
+    ubnd: meta.ubnd || '', school, title: meta.title || 'Bảng theo dõi, nhận xét tình hình giảng dạy môn Tin học',
+    weekText: `Tuần: ${pad(g.n)} (Từ ngày ${vnDate(g.dates[0])} đến ngày ${vnDate(g.dates[4])})`,
+    rows: g.rows.map(x => {
+      const [absN, absNames] = WKL.absentCells(x.absent, x.past && x.known, zero);
+      return { thu: thu(x.date), date: WKL.dmy(x.date), cls: x.cls, tkb: x.tkb, ppct: x.ppct, lesson: x.lesson, absN, absNames, cmt: x.cmt || '', teacher: x.teacher, note: x.plan ? 'Dự kiến' : '' };
+    }),
+    perTeacher: Object.entries(per), signName: S.settings.teacher || '', fileName: `Bang_tuan_${pad(g.n)}`,
+  };
+  const old = btn.innerHTML;
+  btn.disabled = true; btn.textContent = 'Đang tạo file…';
+  try { await window.EduSdbXlsx.exportWeek(data); toast(`Đã tải Bảng tuần ${pad(g.n)} (.xlsx)`); }
+  catch (e) { toast(e.message || 'Không tạo được file Excel'); }
+  finally { btn.disabled = false; btn.innerHTML = old; }
 }
 async function genCopy() {
   const zero = UI.wkZero !== false, g = genWeek(genN());

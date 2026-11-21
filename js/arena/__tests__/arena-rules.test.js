@@ -48,7 +48,7 @@ assertEq('Đào hoá thạch: phạt = DINO_FINE', R.RULES.dino.steps[1][2].inde
 
 var h = R.card('speed', 'Tốc độ <b>');
 assertEq('card: thoát HTML tên chế độ', h.indexOf('Tốc độ &lt;b&gt;') >= 0, true);
-assertEq('card: 3 bước + nhãn + cao trào', [(h.match(/<li>/g) || []).length, (h.match(/ar-rules-tag"/g) || []).length, h.indexOf('Cao trào') >= 0], [3, 2, true]);
+assertEq('card: 3 bước + nhãn + cao trào', [(h.match(/<li>/g) || []).length, (h.match(/ar-rules-tag"/g) || []).length, h.indexOf('Gay cấn nhất') >= 0], [3, 2, true]);
 assertEq('card: chế độ lạ → rỗng', R.card('khong-co', 'x'), '');
 
 console.log(failures ? '\n' + failures + ' FAIL' : '\nTất cả PASS');

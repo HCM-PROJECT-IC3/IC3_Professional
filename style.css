@@ -3626,3 +3626,13 @@ html body .result-topics { margin-top: .8rem; }
 }
 html body .result-score { font-size: 2.15rem; }
 @media (max-width: 600px) { html body .result-score { font-size: 1.9rem; } }
+
+/* ---- Sảnh: gợi ý "Làm tiếp" dưới ô Bài luyện tập (js/lobby-form-ux.js § renderNext) ---- */
+.lobby-next { margin-top: 8px; }
+.lobby-next button { width: 100%; display: grid; grid-template-columns: auto 1fr; column-gap: 10px; align-items: center; text-align: left;
+  padding: 8px 12px; border-radius: 10px; border: 1px dashed currentColor; background: transparent; color: var(--green, #2f9e44); font: inherit; cursor: pointer; }
+.lobby-next button:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+.lobby-next button i { grid-row: span 2; font-size: 1rem; }
+.lobby-next button span { color: var(--text, inherit); font-size: .9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lobby-next button small { color: var(--muted, #8892b0); font-size: .76rem; }
+

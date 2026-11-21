@@ -225,3 +225,56 @@
 [data-theme="dark"] .lobby-card .roster-status.is-error { color: #ff8a80; }
 .roster-retry { padding: .15rem .6rem; border-radius: 7px; border: 1px solid var(--glass-line); background: var(--card, #fff); color: var(--sky-ink); font: 600 .78rem/1.4 Inter, system-ui, sans-serif; cursor: pointer; }
 .roster-retry:hover { border-color: var(--ic-blue); }
+
+/* ---- Thanh trái lấp đầy (11/2026): Huy hiệu của em + menu thầy cô ở đáy (mở trong thanh, không che bước 3) ---- */
+.lobby-badges { margin-top: .6rem; padding: .8rem .7rem 0; border-top: 1px solid var(--glass-line); }
+.lobby-badges h2 { margin: 0 0 .55rem; font-size: .72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--sky-sub); display: flex; justify-content: space-between; }
+.lobby-badges h2 small { letter-spacing: 0; color: var(--sky-ink); }
+.lobby-badges ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .4rem; }
+.lobby-badges li { position: relative; display: flex; flex-direction: column; align-items: center; gap: .25rem; padding: .45rem .15rem .4rem; border-radius: 10px;
+  text-align: center; font-size: .66rem; line-height: 1.15; font-weight: 700; color: var(--sky-sub); background: color-mix(in srgb, var(--sky-ink) 5%, transparent); }
+.lobby-badges li i { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; font-size: .9rem; color: var(--sky-sub);
+  background: color-mix(in srgb, var(--sky-ink) 8%, transparent); }
+.lobby-badges li.is-on { color: var(--sky-ink); }
+.lobby-badges li.is-on i { background: var(--bc); color: #fff; }
+.lobby-badges li em { position: absolute; top: .2rem; right: .25rem; font-style: normal; font-size: .6rem; color: var(--sky-sub); }
+.lobby-badges li.is-new i { animation: lobby-badge-pop .6s ease-out 2; }
+@keyframes lobby-badge-pop { 50% { transform: scale(1.25); } }
+@media (prefers-reduced-motion: reduce) { .lobby-badges li.is-new i { animation: none; } }
+
+.lobby-side-foot { margin-top: auto; padding-top: .6rem; border-top: 1px solid var(--glass-line); }
+.lobby-side-foot .lobby-staff { margin: 0; }
+.lobby-side-foot .lobby-staff-label { width: 100%; justify-content: flex-start; background: transparent; box-shadow: none; padding: .45rem .7rem; border-radius: 9px; }
+.lobby-side-foot .lobby-staff-label:hover { background: color-mix(in srgb, var(--ic-blue) 12%, transparent); box-shadow: none; }
+.lobby-side-foot .lobby-staff-chev { margin-left: auto; transform: rotate(180deg); }
+.lobby-side-foot .lobby-staff[open] .lobby-staff-chev { transform: none; }
+/* Mở lên trên, nằm trong thanh trái */
+.lobby-side-foot .lobby-staff { display: flex; flex-direction: column-reverse; }
+.lobby-side-foot .lobby-staff-links { position: static; width: auto; max-width: none; padding: .2rem 0 .3rem; box-shadow: none; background: transparent; }
+.lobby-side-foot .lobby-staff-btn { font-size: .8rem; min-height: 2.1rem; padding: .3rem .7rem; color: var(--sky-ink); }
+
+/* Thanh trái có thêm huy hiệu: màn thấp thì thanh tự cuộn, không đẩy menu thầy cô ra ngoài */
+@media (min-width: 1100px) { .lobby-side { overflow-y: auto; scrollbar-width: thin; } }
+/* Menu thầy cô đã xuống thanh trái → hàng 3 mảng kỹ năng tự chừa chỗ cho nút sáng/tối (cố định góc phải) */
+@media (min-width: 1100px) { .lobby-domains { margin-right: 3.6rem; } }
+
+/* ---- Thanh trái gọn, chuyên nghiệp hơn (11/2026 lần 2): huy hiệu 1 hàng icon, mục tiêu tiếp theo 1 dòng, nút thầy cô 1 dòng ---- */
+.lobby-badges { margin-top: .4rem; padding: .75rem .55rem .2rem; }
+.lobby-badges h2 { margin-bottom: .5rem; }
+.lobby-badges ul { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .25rem; }
+.lobby-badges li { padding: 0; background: none; border-radius: 50%; aspect-ratio: 1; display: grid; place-items: center; }
+.lobby-badges li i { width: 100%; height: auto; aspect-ratio: 1; max-width: 1.75rem; font-size: .72rem; }
+.lobby-badges li:not(.is-on) i { opacity: .55; }
+.lobby-badges li span, .lobby-badges li em { display: none; }
+.lobby-goal { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: .2rem .45rem; margin-top: .6rem; font-size: .74rem; color: var(--sky-sub); }
+.lobby-goal .lg-t { grid-column: 1 / -1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lobby-goal .lg-t b { color: var(--sky-ink); }
+.lobby-goal .lg-t.is-done { color: var(--ic-green); font-weight: 700; }
+.lobby-goal .lg-bar { height: 6px; border-radius: 999px; background: color-mix(in srgb, var(--sky-ink) 10%, transparent); overflow: hidden; }
+.lobby-goal .lg-bar i { display: block; height: 100%; border-radius: inherit; }
+.lobby-goal .lg-n { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--sky-ink); }
+/* Nút thầy cô: 1 dòng, chữ vừa thanh */
+.lobby-side-foot .lobby-staff-label { white-space: nowrap; font-size: .8rem; gap: .4rem; padding: .45rem .55rem; }
+/* Bớt khoảng cách dọc để thanh không phải cuộn ở màn thấp */
+@media (min-width: 1100px) { .lobby-side { gap: .2rem; padding-top: 1rem; } .lobby-side-brand { padding-bottom: .8rem; } .lobby-me { margin-top: .5rem; padding-top: .75rem; } }
+

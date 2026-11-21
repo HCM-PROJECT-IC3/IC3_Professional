@@ -319,7 +319,9 @@
       const desc = b.querySelector(role() === 'teacher' ? 'small:not(.only-solo)' : 'small:not(.only-teacher)');
       // Thẻ Luật chơi (nhãn + 3 bước + cao trào, js/arena/arena-rules.js); thiếu module thì 1 dòng mô tả như cũ
       const name = b.querySelector('b').textContent;
-      const rules = global.EduArenaRules && global.EduArenaRules.card(m, name);
+      // Tranh sân đấu: vẽ bản riêng (id riêng) — tranh trên thẻ có thể chưa gắn lúc này
+      const cov = global.EduArenaCovers && global.EduArenaCovers.cover(m);
+      const rules = global.EduArenaRules && global.EduArenaRules.card(m, name, cov || '');
       $('arModeDesc').classList.toggle('ar-rules', !!rules);
       $('arModeDesc').innerHTML = rules || `<b>${esc(name)}:</b> ${esc(desc ? desc.textContent : '')}`;
       $('arPlayLabel').textContent = 'Vào trận: ' + b.querySelector('b').textContent;

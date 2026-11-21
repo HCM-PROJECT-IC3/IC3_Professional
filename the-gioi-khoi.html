@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<title>Thế Giới Khối — EduQuiz</title>
+<link rel="stylesheet" href="lib/fonts/fonts.css">
+<link rel="stylesheet" href="lib/fontawesome/css/fa.min.css">
+<!-- Thế Giới Khối (js/the-gioi-khoi.js): thế giới khối 2D tự vẽ (hình phẳng, không ảnh ngoài). Đào khối, chế tạo, xây; quặng quý
+     phải trả lời đúng 1 câu IC3 thật (data/ic3/minitests, file tĩnh). Đêm có bọ mã độc (img/malware/*.svg). 0 Firebase.
+     Chạy riêng hoặc trong Đấu trường (?arena=1, js/minigame-arena-bridge.js). -->
+<style>
+  :root { --ink: #1d2433; --panel: rgba(18, 24, 40, .92); --line: rgba(255, 255, 255, .14); --txt: #eef2ff; --muted: #a8b3d6; --brand: #4f6bff; --ok: #2fb36d; --bad: #e5484d; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #0e1424; color: var(--txt); font-family: 'Be Vietnam Pro', 'Segoe UI', sans-serif; overflow: hidden; }
+  #tgk { position: fixed; inset: 0; display: block; touch-action: none; cursor: crosshair; }
+  .hud { position: fixed; left: 10px; right: 10px; top: 10px; display: flex; gap: 8px; align-items: center; pointer-events: none; z-index: 3; flex-wrap: wrap; }
+  .hud > * { pointer-events: auto; }
+  .chip { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 14px; font-weight: 600; display: inline-flex; gap: 6px; align-items: center; }
+  .chip .fa-heart { color: #ff6b6b; } .chip .fa-sun { color: #f7c331; } .chip .fa-moon { color: #b9c4ff; }
+  .grow { flex: 1; }
+  .btn { font: inherit; font-size: 14px; font-weight: 600; color: var(--txt); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+  .btn:hover { border-color: var(--brand); }
+  .btn.pri { background: var(--brand); border-color: var(--brand); }
+  .bar { position: fixed; left: 50%; bottom: 10px; transform: translateX(-50%); display: flex; gap: 4px; z-index: 3; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 5px; }
+  .slot { width: 52px; height: 52px; border-radius: 7px; border: 2px solid transparent; background: rgba(255, 255, 255, .05); position: relative; display: grid; place-items: center; cursor: pointer; }
+  .slot.on { border-color: #fff; }
+  .slot i.sw { width: 26px; height: 26px; border-radius: 4px; display: block; box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .22); }
+  .slot b { position: absolute; right: 4px; bottom: 2px; font-size: 12px; }
+  .slot small { position: absolute; left: 4px; top: 2px; font-size: 10px; color: var(--muted); }
+  .tool { position: fixed; left: 10px; bottom: 10px; z-index: 3; }
+  .panel { position: fixed; z-index: 6; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  .craft { right: 10px; top: 56px; width: 300px; max-height: calc(100vh - 140px); overflow: auto; }
+  .craft h3, .modal h3 { margin: 0 0 10px; font-size: 16px; }
+  .rec { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); font-size: 13px; }
+  .rec:first-of-type { border-top: 0; }
+  .rec small { display: block; color: var(--muted); }
+  .rec .need.miss { color: #ff9b9b; }
+  .modal-wrap { position: fixed; inset: 0; z-index: 8; background: rgba(6, 9, 18, .6); display: grid; place-items: center; padding: 16px; }
+  .modal { position: relative; width: min(560px, 100%); }
+  .modal p.q { font-size: 17px; line-height: 1.5; margin: 0 0 14px; font-weight: 600; }
+  .opts { display: grid; gap: 8px; }
+  .opts button { text-align: left; font: inherit; font-size: 15px; color: var(--txt); background: rgba(255, 255, 255, .06); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; cursor: pointer; }
+  .opts button:hover:not(:disabled) { border-color: var(--brand); }
+  .opts button.ok { background: rgba(47, 179, 109, .25); border-color: var(--ok); }
+  .opts button.no { background: rgba(229, 72, 77, .22); border-color: var(--bad); }
+  .note { color: var(--muted); font-size: 13px; margin: 10px 0 0; }
+  .ore-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+  .ore-tag i { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+  .intro ul { margin: 6px 0 12px; padding-left: 18px; line-height: 1.6; font-size: 14px; color: var(--muted); }
+  .intro ul b { color: var(--txt); }
+  .touch { position: fixed; right: 10px; bottom: 80px; z-index: 3; display: none; gap: 6px; }
+  .touch .btn { width: 56px; height: 56px; font-size: 20px; }
+  @media (pointer: coarse) { .touch { display: flex; } }
+  .toast { position: fixed; left: 50%; top: 60px; transform: translateX(-50%); z-index: 9; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  .toast.on { opacity: 1; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<canvas id="tgk" aria-label="Thế giới khối"></canvas>
+
+<div class="hud">
+  <a class="btn" href="index.html" id="tgkHome"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i></a>
+  <span class="chip" id="tgkHearts"></span>
+  <span class="chip" id="tgkTime"></span>
+  <span class="chip"><i class="fa-solid fa-star" aria-hidden="true"></i><span id="tgkScore">0</span></span>
+  <span class="chip" title="Câu trả lời đúng / đã gặp"><i class="fa-solid fa-circle-check" aria-hidden="true"></i><span id="tgkQ">0/0</span></span>
+  <span class="grow"></span>
+  <button class="btn" id="tgkCraftBtn" type="button"><i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i> Chế tạo (C)</button>
+  <button class="btn" id="tgkHelpBtn" type="button" aria-label="Cách chơi"><i class="fa-solid fa-circle-question" aria-hidden="true"></i></button>
+</div>
+
+<div class="chip tool" id="tgkTool"></div>
+<div class="bar" id="tgkBar" role="toolbar" aria-label="Túi đồ"></div>
+<div class="touch">
+  <button class="btn" type="button" data-k="left" aria-label="Sang trái">◀</button>
+  <button class="btn" type="button" data-k="jump" aria-label="Nhảy">▲</button>
+  <button class="btn" type="button" data-k="right" aria-label="Sang phải">▶</button>
+  <button class="btn" type="button" id="tgkPlaceMode" aria-label="Đổi đào / đặt khối"><i class="fa-solid fa-cube" aria-hidden="true"></i></button>
+</div>
+
+<div class="panel craft" id="tgkCraft" hidden><h3><i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i> Chế tạo</h3><div id="tgkRecipes"></div></div>
+
+<div class="modal-wrap" id="tgkModal" hidden><div class="panel modal" id="tgkModalBox"></div></div>
+<div class="toast" id="tgkToast" role="status"></div>
+
+<script src="js/gamification.js"></script>
+<script src="js/game-sfx.js"></script>
+<script src="js/minigame-arena-bridge.js"></script>
+<script src="js/the-gioi-khoi.js"></script>
+</body>
+</html>

@@ -633,3 +633,9 @@ body {
   border: 1px solid color-mix(in srgb, var(--red) 35%, var(--border)); background: color-mix(in srgb, var(--red) 6%, var(--card)); font-size: .85rem; text-align: left; }
 .partial-row > span { flex: 1 1 320px; }
 .partial-retry { white-space: nowrap; }
+
+/* ---- Bớt ô trống (11/2026): thẻ rộng (Heatmap) không để lại lỗ — thẻ sau tự lấp chỗ trống;
+   thẻ cùng hàng cao bằng nhau. Dùng chung trang Tổng quan của tôi + Tổng quan điều phối. ---- */
+.charts-grid, .watchlists-grid { grid-auto-flow: row dense; align-items: stretch; }
+.chart-card, .watchlist-card { display: flex; flex-direction: column; }
+.chart-card-body { flex: 1 1 auto; }

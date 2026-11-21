@@ -1354,3 +1354,52 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
 .week-nav-btn:hover:not(:disabled), .week-nav-today:hover:not(:disabled) { border-color: var(--purple); color: var(--purple-ink) }
 .week-nav-btn:disabled, .week-nav-today:disabled { opacity: .4; cursor: default }
 .search-count { font-size: .7rem; color: var(--muted); font-weight: 600; min-height: 1em }
+
+/* ---- Tab "Nghỉ phép" (js/teaching-schedule-leave.js) ---- */
+.lv-layout { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr); gap: 1rem; align-items: start }
+.lv-side { display: grid; gap: 1rem }
+.lv-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.1rem; box-shadow: var(--shadow) }
+.lv-head { display: flex; align-items: center; justify-content: space-between; gap: .6rem; margin-bottom: .6rem }
+.lv-head h3 { margin: 0; font-size: 1.02rem; display: flex; gap: .45rem; align-items: center }
+.lv-head .form-input { width: auto }
+.lv-tag { font-size: .72rem; font-weight: 800; color: var(--purple-ink); background: var(--purple-lt); padding: .15rem .6rem; border-radius: 999px }
+.lv-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem .8rem }
+.lv-grid label { display: flex; flex-direction: column; gap: .25rem; font-size: .74rem; font-weight: 800; color: var(--muted) }
+.lv-grid .span2 { grid-column: span 2 }
+.lv-grid label.lv-check { flex-direction: row; align-items: center; gap: .45rem; padding-top: 1.2rem }
+.lv-sub { font-size: .74rem; font-weight: 800; color: var(--muted); margin: .9rem 0 .4rem }
+.lv-trow { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr) 5.2rem auto minmax(0, 1fr) 5.2rem 4.8rem; gap: .4rem; align-items: center;
+  padding: .3rem .45rem; border-radius: var(--radius-sm); margin-bottom: .2rem }
+.lv-trow:not(.on) .form-input { opacity: .35 }
+.lv-trow.on { background: var(--purple-lt) }
+.lv-tname { display: flex; align-items: center; gap: .45rem; font-weight: 700; cursor: pointer }
+.lv-arrow { color: var(--muted) }
+.lv-tot { font-weight: 800; font-size: .82rem; text-align: right }
+.lv-tot.bad, .lv-bad { color: var(--red) }
+.lv-summary { margin: .9rem 0 .2rem }
+.lv-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem }
+.lv-stats > div { background: var(--card2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: .5rem .7rem }
+.lv-stats span { display: block; font-size: .7rem; font-weight: 800; color: var(--muted) }
+.lv-stats b { font-size: 1.05rem }
+.lv-affect { margin-top: .6rem; background: var(--yellow-lt); border: 1px solid var(--yellow); border-radius: var(--radius-sm); padding: .55rem .75rem; font-size: .84rem }
+.lv-affect ul { margin: .3rem 0 0; padding-left: 1.1rem }
+.lv-muted { color: var(--muted); font-size: .8rem; margin: .4rem 0 }
+.lv-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .9rem }
+.lv-sign { display: block; width: 100%; max-width: 360px; height: 120px; border: 1px dashed var(--border); border-radius: var(--radius-sm); background: #fff; touch-action: none; cursor: crosshair; margin-bottom: .4rem }
+.lv-statrow { display: flex; flex-wrap: wrap; gap: .35rem; margin-bottom: .5rem }
+.lv-chip { font-size: .74rem; background: var(--card2); border: 1px solid var(--border); border-radius: 999px; padding: .15rem .6rem }
+.lv-chip.strong { background: var(--green-lt); border-color: var(--green) }
+.lv-history { list-style: none; margin: 0; padding: 0; max-height: 360px; overflow: auto }
+.lv-history li { display: grid; grid-template-columns: 1fr auto; gap: .3rem .5rem; padding: .55rem 0; border-bottom: 1px solid var(--border); font-size: .84rem }
+.lv-history li .lv-muted { margin: .1rem 0 0 }
+.lv-history .lv-st { width: auto; font-size: .78rem; padding: .2rem .4rem }
+.lv-acts { grid-column: span 2; display: flex; gap: .25rem }
+.lv-acts .btn { padding: .3rem .55rem }
+.lv-preview { width: 100%; height: 80vh; border: 0; border-radius: var(--radius-sm) }
+#lvPreviewWrap { margin-top: 1rem }
+@media (max-width: 1100px) { .lv-layout { grid-template-columns: 1fr } }
+@media (max-width: 700px) {
+  .lv-trow { grid-template-columns: 1fr 1fr 5rem; }
+  .lv-trow .lv-tname, .lv-trow .lv-tot { grid-column: span 3 } .lv-arrow { display: none }
+  .lv-grid, .lv-stats { grid-template-columns: 1fr } .lv-grid .span2 { grid-column: auto }
+}

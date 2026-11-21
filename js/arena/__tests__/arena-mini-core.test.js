@@ -17,9 +17,9 @@ var DAY = '2026-10-30';
 (function () {
   var fs = require('fs');
   var root = path.join(__dirname, '..', '..', '..');
-  assertEq('5 trò học tập (bỏ 2 trò Giải trí)', M.GAMES.map(function (g) { return g.id; }), ['memory-game', 'computer-simulator', 'cyber-detective', 'pz-defense', 'battle-quiz']);
+  assertEq('5 trò học tập (bỏ 2 trò Giải trí)', M.GAMES.map(function (g) { return g.id; }), ['memory-game', 'computer-simulator', 'cyber-detective', 'pz-defense', 'the-gioi-khoi', 'battle-quiz']);
   assertEq('Chặng kế của Thám tử = Phòng thủ', M.nextStage('cyber-detective').id, 'pz-defense');
-  assertEq('Đấu Boss là trận cuối', [M.nextStage('battle-quiz'), M.stageOf('battle-quiz')], [null, 5]);
+  assertEq('Đấu Boss là trận cuối', [M.nextStage('battle-quiz'), M.stageOf('battle-quiz')], [null, 6]);
   M.GAMES.forEach(function (g) {
     var up = g.ladder.every(function (v, i) { return i === 0 || v > g.ladder[i - 1]; });
     assertEq(g.id + ': 5 mốc tăng dần + 5 đối thủ', [g.ladder.length, up, g.rivals.length], [5, true, 5]);

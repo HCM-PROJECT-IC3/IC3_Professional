@@ -135,3 +135,16 @@
 @media print { .ti-assign-form, .ti-assign-acts, .ti-view { display: none !important; } .ti-card { box-shadow: none; break-inside: avoid; } }
 :root[data-theme="dark"] .ti-pill.is-top { color: #b4bcff; background: rgba(129, 140, 248, .18); }
 :root[data-theme="dark"] .ti-view:hover { color: #0b1020; }
+
+/* ---- Bớt khoảng trống (11/2026): Giao bài + So sánh xếp chồng cột trái, Chuyên cần cột phải cao bằng,
+   danh sách lớp gọn 1 dòng/lớp và tự cuộn khi dài — không còn khoảng trống dưới 2 thẻ ngắn. ---- */
+@media (min-width: 900px) {
+  .ti-tools { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-areas: "assign attend" "rounds attend"; align-items: stretch; }
+  #tiAssign { grid-area: assign; } #tiRounds { grid-area: rounds; } #tiAttend { grid-area: attend; }
+  #tiAttend { display: flex; flex-direction: column; min-height: 0; }
+  #tiAttend .ti-rounds { flex: 1 1 0; min-height: 220px; overflow-y: auto; padding-right: 4px; scrollbar-width: thin; }
+}
+@media (min-width: 1300px) { #tiAttend .ti-rounds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 18px; align-content: start; } }
+#tiAttend .ti-rounds li { grid-template-columns: 52px minmax(0, 1fr) 4.2rem; }
+#tiAttend .ti-cls-meta small { display: inline; margin-left: 4px; }
+#tiAttend .ti-bar { margin: 0; }

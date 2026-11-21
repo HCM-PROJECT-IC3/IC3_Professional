@@ -2262,3 +2262,57 @@ body[data-mode="moon"] .ar-scene { height: clamp(170px, min(30vw, 40vh), 360px);
 .ar-mode.has-cover.is-on { outline: 3px solid var(--mc); outline-offset: 2px; box-shadow: none; transform: none; }
 .ar-cover { border-bottom: 0; }
 @media (prefers-reduced-motion: reduce) { .ar-q-node.is-next .ar-q-medal { animation: none; outline: 3px solid #f97316; } }
+
+/* ---- Luật chơi = "sân đấu" (11/2026): tranh bìa phóng to chạy liên tục bên trái, luật xếp dọc như lời dẫn trận bên phải.
+   Thay 3 ô bằng nhau + số tròn (trông như mẫu tự sinh). Tranh vẫn là tranh phẳng tự vẽ của arena-covers.js. ---- */
+.ar-mode-desc.ar-rules:has(.ar-stage), #arHome[data-role="teacher"] .ar-mode-desc.ar-rules:has(.ar-stage) { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 1.1rem; align-items: stretch; }
+.ar-stage { position: relative; border-radius: 12px; overflow: hidden; background: var(--mc-d, #1f2c80); min-height: 150px; }
+.ar-stage-art { position: absolute; inset: 0; }
+.ar-stage-art > svg { width: 100%; height: 100%; display: block; }
+.ar-stage-win { position: absolute; left: .6rem; bottom: .6rem; max-width: calc(100% - 1.2rem); padding: .25rem .6rem; border-radius: 6px; background: rgba(15, 18, 40, .78);
+  color: #fff; font-size: .78rem; font-weight: 700; line-height: 1.3; }
+.ar-stage-win i { color: #f7c331; margin-right: .2rem; }
+/* Tranh trong sân đấu luôn chuyển động (trên thẻ chỉ động khi rê chuột / đang chọn) */
+.ar-stage .is-run:not(.is-pull) .leg-l, .ar-stage .is-run:not(.is-pull) .arm-r { animation: ar-sc-swing .3s ease-in-out infinite alternate; }
+.ar-stage .is-run:not(.is-pull) .leg-r, .ar-stage .is-run:not(.is-pull) .arm-l { animation: ar-sc-swing .3s ease-in-out infinite alternate-reverse; }
+.ar-stage .is-run:not(.is-pull) { animation: ar-sc-hop .3s ease-in-out infinite alternate; }
+.ar-stage .leg, .ar-stage .arm { transform-box: fill-box; transform-origin: 50% 8%; }
+.ar-stage .np-pose-run, .ar-stage .np-mouth-o, .ar-stage .np-tears { display: none; }
+.ar-stage .is-run .np-pose-run { display: inline; }
+.ar-stage .is-run .np-pose-stand { display: none; }
+.ar-stage .is-pull { animation: ar-cv-heave .9s ease-in-out infinite; }
+.ar-stage .is-pull .np-kid-body { transform-box: fill-box; transform-origin: 50% 100%; transform: rotate(-16deg); }
+.ar-stage .cv-bob { animation: ar-cv-bob 1.2s ease-in-out infinite; }
+.ar-stage .cv-pulse { animation: ar-cv-pulse .7s ease-in-out infinite alternate; transform-origin: 50% 50%; }
+.ar-stage .cv-float { animation: ar-cv-shoot 1.4s ease-in-out infinite; transform-origin: 50% 50%; }
+.ar-stage .cv-twinkle { animation: ar-sc-twinkle .6s ease-in-out infinite alternate; }
+.ar-stage .cv-scared { animation: ar-cv-shiver .12s linear infinite alternate; }
+.ar-stage .cv-peek { animation: ar-cv-peek 1.6s ease-in-out infinite; }
+.ar-stage .cv-cast g[class] { transform-box: fill-box; transform-origin: 50% 100%; }
+.ar-stage .np-torch { transform-box: fill-box; transform-origin: 50% 100%; animation: ar-sc-flame .18s ease-in-out infinite alternate; }
+.ar-stage .np-shadow { fill: rgba(0, 0, 0, .18); }
+.ar-stage .d1 { animation-delay: -.4s !important; }
+.ar-stage .d2 { animation-delay: -.8s !important; }
+/* Màu sân theo chế độ (giống thẻ) */
+.ar-stage.m-speed { --mc-d: #2f2588; } .ar-stage.m-race { --mc-d: #0f6f8a; } .ar-stage.m-survival { --mc-d: #8f1035; }
+.ar-stage.m-tug { --mc-d: #1d3f8a; } .ar-stage.m-spell { --mc-d: #3b0764; } .ar-stage.m-heist { --mc-d: #134e4a; } .ar-stage.m-board { --mc-d: #0b1f4d; }
+
+.ar-rules-body { min-width: 0; display: flex; flex-direction: column; }
+.ar-rules-steps { display: flex; flex-direction: column; gap: 0; margin: 0; padding: 0; list-style: none; }
+.ar-rules-steps li { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr); gap: .5rem; align-items: baseline; padding: .45rem 0; border: 0; border-radius: 0;
+  background: none; border-bottom: 1px dashed var(--border); }
+.ar-rules-steps li:last-child { border-bottom: 0; }
+.ar-rules-steps li > i { color: var(--purple-ink); font-size: .95rem; text-align: center; }
+.ar-rules-steps li b { display: inline; font-size: .9rem; }
+.ar-rules-steps li span { color: var(--muted); font-size: .84rem; }
+.ar-rules-twist { display: block; margin: auto 0 0; padding: .55rem .75rem; border-left: 3px solid #d97706; background: color-mix(in srgb, #d97706 8%, transparent);
+  border-radius: 0 8px 8px 0; font-size: .84rem; }
+.ar-rules-twist b { color: #b45309; }
+[data-theme="dark"] .ar-rules-twist b { color: #f0a64e; }
+@media (max-width: 760px) {
+  .ar-mode-desc.ar-rules, #arHome[data-role="teacher"] .ar-mode-desc.ar-rules { grid-template-columns: 1fr; }
+  .ar-stage { min-height: 0; aspect-ratio: 660 / 300; }
+  .ar-rules-steps { display: flex; }
+}
+@media (prefers-reduced-motion: reduce) { .ar-stage * { animation: none !important; } }
+

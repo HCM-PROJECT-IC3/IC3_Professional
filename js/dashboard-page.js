@@ -98,6 +98,7 @@ window.addEventListener('edu:ready', ({ detail }) => {
     }
     label.style.display = any ? '' : 'none';
   });
+  initNavGroups();
 
   // Giáo viên: máy đã có sổ lớp thì mở Tổng quan; chưa có thì giữ "Bộ đề của tôi" (đã active sẵn trong HTML).
   if ((role === 'admin' || role === 'teacher') && window.EduTeacherOverview?.init({ uid: user.uid, name: profile.name || '' })) {
@@ -132,3 +133,39 @@ window.addEventListener('edu:ready', ({ detail }) => {
     }
   });
 });
+
+/** Nhóm menu gấp/mở: bấm nhãn nhóm để thu gọn. Trạng thái lưu localStorage (eduquiz_navfold) — 0 lượt mạng. */
+function initNavGroups() {
+  const KEY = 'eduquiz_navfold';
+  let fold;
+  try { fold = JSON.parse(localStorage.getItem(KEY)); } catch (e) { fold = null; }
+  if (!fold || typeof fold !== 'object') fold = { 'Khác': true }; // mặc định: nhóm ít dùng gấp lại
+  const itemsOf = (label) => {
+    const out = [];
+    for (let el = label.nextElementSibling; el && !el.classList.contains('nav-section-label'); el = el.nextElementSibling) {
+      if (el.classList.contains('nav-item')) out.push(el);
+    }
+    return out;
+  };
+  const apply = (label) => {
+    const name = label.dataset.group, items = itemsOf(label);
+    const shut = !!fold[name] && !items.some((el) => el.classList.contains('active'));
+    label.classList.toggle('is-folded', shut);
+    label.setAttribute('aria-expanded', String(!shut));
+    items.forEach((el) => el.classList.toggle('nav-folded', shut));
+  };
+  document.querySelectorAll('.sidebar-nav .nav-section-label').forEach((label) => {
+    if (label.dataset.group) return apply(label);
+    label.dataset.group = label.textContent.trim();
+    label.setAttribute('role', 'button');
+    label.tabIndex = 0;
+    const toggle = () => {
+      fold[label.dataset.group] = !label.classList.contains('is-folded');
+      try { localStorage.setItem(KEY, JSON.stringify(fold)); } catch (e) { /* bỏ qua */ }
+      apply(label);
+    };
+    label.addEventListener('click', toggle);
+    label.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+    apply(label);
+  });
+}

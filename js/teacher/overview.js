@@ -33,7 +33,7 @@
       const d = new Date(t), items = week.filter((e) => e.date.getTime() === t);
       return `<div class="ov-day${items[0].today ? ' is-today' : ''}"><div class="ov-date"><span>${global.EduSoLop.THU[d.getDay()]}</span><b>${dm(d)}</b></div>
         <ul>${items.map((e) => `<li class="k-${e.kind}"><b>${esc(e.name)}</b> <small>${esc(e.school)}</small>
-          <span>${e.tiet.length ? `Tiết ${e.tiet.join(', ')}` : 'Tiết kế tiếp'}${e.bai.length ? ' · ' + esc(e.bai.join(' · ')) : ''}</span><em>${KIND[e.kind]}</em></li>`).join('')}</ul></div>`;
+          <span>${e.tiet.length ? `Tiết ${e.tiet.join(', ')}` : 'Tiết kế tiếp'}${e.bai.length ? ' · ' + esc(e.bai.join(' · ')) : ''}</span>${e.kind === 'done' ? '' : `<em>${KIND[e.kind]}</em>`}</li>`).join('')}</ul></div>`;
     }).join('');
   }
 
@@ -46,6 +46,8 @@
       <a href="so-dau-bai.html" target="_blank" rel="noopener"><i class="fa-solid fa-book-bookmark" aria-hidden="true"></i> Sổ đầu bài</a>
       <button type="button" data-nav="navBuilder"><i class="fa-solid fa-file-pen" aria-hidden="true"></i> Soạn đề</button>
       <a href="goi-ten.html" target="_blank" rel="noopener"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i> Gọi tên</a>
+      <a href="teaching-schedule.html"><i class="fa-solid fa-calendar" aria-hidden="true"></i> Lịch giảng dạy</a>
+      <a href="teaching-schedule.html#nghi-phep" target="_blank" rel="noopener"><i class="fa-solid fa-file-signature" aria-hidden="true"></i> Đơn nghỉ phép</a>
     </div></section>`;
     const hello = `<h2 class="ov-hello">Xin chào${me.name ? ', ' + esc(me.name) : ''}</h2>`;
     if (!r.hasData) {
@@ -70,11 +72,11 @@
             ${r.watch.length ? `<ul class="ov-watch">${r.watch.slice(0, 6).map((w) => `<li><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i><div><b>${esc(w.name)}</b><small>${esc(w.cls)} · ${esc(w.school)} · vắng ${w.vang} tiết${w.lien >= 2 ? `, ${w.lien} tiết liền` : ''}</small></div></li>`).join('')}</ul>`
               : '<p class="ov-empty">Chưa có bạn nào vắng nhiều.</p>'}
           </section>
-        </div>
         <section class="ov-card ov-progress"><h3>Tiến độ các lớp${r.progress.length > show.length ? ` <small>${show.length} lớp chậm nhất / ${r.progress.length}</small>` : ''}</h3>
           <ul>${show.map((p) => `<li title="${esc(p.school)}: đã dạy ${p.done}/${p.total} tiết"><span class="ov-pname"><b>${esc(p.name)}</b> <small>${esc(p.school)}</small></span>
             <span class="ov-meter" role="img" aria-label="${esc(p.name)} đã dạy ${p.done} trên ${p.total} tiết"><i style="width:${p.pct}%"></i></span><span class="ov-pval">${p.done}/${p.total}</span></li>`).join('')}</ul>
         </section>
+        </div>
       </div>`;
   }
 

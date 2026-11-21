@@ -1527,3 +1527,15 @@ html[data-motion="off"] *, html[data-motion="off"] *::before, html[data-motion="
 .btn-create:active { box-shadow: none; }
 .btn-create i.fa-beat, .btn-create:hover i.fa-beat { animation: none; }
 .btn-create.btn-create-ghost:hover { background: var(--accent-purple); }
+
+/* ---- Menu gọn (11/2026): mục thấp hơn, nhãn nhóm bấm để gấp/mở ---- */
+.sidebar-nav { gap: 2px; padding: 12px 10px; }
+.nav-item { padding: 8px 12px; border-radius: 10px; font-size: 13.5px; gap: 10px; }
+.nav-item .nav-icon { font-size: 15px; width: 18px; text-align: center; }
+.nav-section-label { cursor: pointer; display: flex; align-items: center; justify-content: space-between; margin: 8px 12px 2px; padding-top: 8px; user-select: none; }
+.nav-section-label::after { content: '▾'; font-size: 12px; transition: transform .15s; }
+.nav-section-label.is-folded::after { transform: rotate(-90deg); }
+.nav-section-label:hover, .nav-section-label:focus-visible { color: var(--purple-ink); outline: none; }
+.nav-item.nav-folded { display: none !important; }
+/* Menu thu thành cột icon: không có nhãn nhóm để mở lại → hiện mọi mục (trừ mục bị ẩn theo vai trò). */
+#sidebar.collapsed .nav-item.nav-folded:not([style*="display:none"]):not([style*="display: none"]) { display: flex !important; }

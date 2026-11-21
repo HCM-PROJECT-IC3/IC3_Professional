@@ -994,3 +994,8 @@ html body #exam .q-card.fit-s .ordering-row { min-height: 46px; font-size: .99re
 #exam .btn-check-answer.is-done:hover { cursor: not-allowed; transform: none; box-shadow: none; background: var(--chip); color: var(--muted); border-style: dashed; }
 #exam #q-body.is-locked { cursor: not-allowed; }
 #exam #q-body.is-locked :is(.option-btn, .tf-btn, .list-opt-btn, .drag-chip) { cursor: not-allowed; }
+
+/* Nút Nộp bài: nhãn nhỏ "còn N" câu chưa làm (js/quiz-engine.js § updateSidebar) */
+#exam .btn-submit-top .submit-left { margin-left: .35rem; padding: .05rem .45rem; border-radius: 999px; background: rgba(255, 255, 255, .25); font-size: .72rem; font-weight: 700; }
+#exam .btn-submit-top .submit-left[hidden] { display: none; }
+

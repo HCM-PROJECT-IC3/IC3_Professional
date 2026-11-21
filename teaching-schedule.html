@@ -46,6 +46,7 @@
       <!-- Báo cáo và Hỗ trợ xăng xe: chỉ admin/điều phối giáo viên (ẩn trong teaching-schedule-report.js / teaching-schedule-travel.js). -->
       <button type="button" class="tab-btn" data-tab="report" role="tab" id="reportTabBtn"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Báo cáo</button>
       <button type="button" class="tab-btn" data-tab="travel" role="tab" id="travelTabBtn"><i class="fa-solid fa-car" aria-hidden="true"></i> Hỗ trợ xăng xe</button>
+        <button type="button" class="tab-btn" data-tab="leave" role="tab"><i class="fa-solid fa-file-signature" aria-hidden="true"></i> Nghỉ phép</button>
     </div>
 
     <!-- Thanh trên: chế độ xem, tuần/lọc, hành động. Khối chính: ma trận hoặc thẻ. -->
@@ -131,6 +132,7 @@
         <button type="button" class="tab-btn" data-tab="teachers" role="tab"><i class="fa-solid fa-user" aria-hidden="true"></i> Giáo viên</button>
         <button type="button" class="tab-btn" data-tab="report" role="tab"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Báo cáo</button>
         <button type="button" class="tab-btn" data-tab="travel" role="tab"><i class="fa-solid fa-car" aria-hidden="true"></i> Hỗ trợ xăng xe</button>
+        <button type="button" class="tab-btn" data-tab="leave" role="tab"><i class="fa-solid fa-file-signature" aria-hidden="true"></i> Nghỉ phép</button>
       </div>
       <div class="sidebar-group">
         <label for="ttWeekSelect"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> Tuần</label>
@@ -177,6 +179,7 @@
         <button type="button" class="tab-btn active" data-tab="teachers" role="tab"><i class="fa-solid fa-user" aria-hidden="true"></i> Giáo viên</button>
         <button type="button" class="tab-btn" data-tab="report" role="tab"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Báo cáo</button>
         <button type="button" class="tab-btn" data-tab="travel" role="tab"><i class="fa-solid fa-car" aria-hidden="true"></i> Hỗ trợ xăng xe</button>
+        <button type="button" class="tab-btn" data-tab="leave" role="tab"><i class="fa-solid fa-file-signature" aria-hidden="true"></i> Nghỉ phép</button>
       </div>
       <div class="panel-toolbar-info"><span id="teacherCount">0</span> giáo viên</div>
       <button type="button" class="btn btn-primary push-right" id="addTeacherBtn"><i class="fa-solid fa-plus" aria-hidden="true"></i> Thêm giáo viên</button>
@@ -198,6 +201,7 @@
         <button type="button" class="tab-btn" data-tab="teachers" role="tab"><i class="fa-solid fa-user" aria-hidden="true"></i> Giáo viên</button>
         <button type="button" class="tab-btn active" data-tab="report" role="tab"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Báo cáo</button>
         <button type="button" class="tab-btn" data-tab="travel" role="tab"><i class="fa-solid fa-car" aria-hidden="true"></i> Hỗ trợ xăng xe</button>
+        <button type="button" class="tab-btn" data-tab="leave" role="tab"><i class="fa-solid fa-file-signature" aria-hidden="true"></i> Nghỉ phép</button>
       </div>
       <div class="sidebar-group">
         <label for="reportFromWeek"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> Từ tuần</label>
@@ -252,6 +256,7 @@
         <button type="button" class="tab-btn" data-tab="teachers" role="tab"><i class="fa-solid fa-user" aria-hidden="true"></i> Giáo viên</button>
         <button type="button" class="tab-btn" data-tab="report" role="tab"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Báo cáo</button>
         <button type="button" class="tab-btn active" data-tab="travel" role="tab"><i class="fa-solid fa-car" aria-hidden="true"></i> Hỗ trợ xăng xe</button>
+        <button type="button" class="tab-btn" data-tab="leave" role="tab"><i class="fa-solid fa-file-signature" aria-hidden="true"></i> Nghỉ phép</button>
       </div>
       <div class="sidebar-group">
         <label for="travelPeriodType"><i class="fa-solid fa-calendar-week" aria-hidden="true"></i> Xem theo</label>
@@ -311,6 +316,71 @@
         </table>
       </div>
     </div>
+  </section>
+
+  <!-- Nghỉ phép (js/teaching-schedule-leave.js): đơn theo mẫu IIG, lưu localStorage trên máy này — 0 lượt Firebase/Apps Script. -->
+  <section class="tab-panel" id="panel-leave">
+    <div class="panel-toolbar">
+      <div class="tabs" role="tablist">
+        <button type="button" class="tab-btn" data-tab="weekly" role="tab"><i class="fa-solid fa-calendar" aria-hidden="true"></i> Lịch tuần</button>
+        <button type="button" class="tab-btn" data-tab="timetable" role="tab"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> TKB lớp</button>
+        <button type="button" class="tab-btn" data-tab="teachers" role="tab"><i class="fa-solid fa-user" aria-hidden="true"></i> Giáo viên</button>
+        <button type="button" class="tab-btn" data-tab="report" role="tab"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Báo cáo</button>
+        <button type="button" class="tab-btn" data-tab="travel" role="tab"><i class="fa-solid fa-car" aria-hidden="true"></i> Hỗ trợ xăng xe</button>
+        <button type="button" class="tab-btn active" data-tab="leave" role="tab"><i class="fa-solid fa-file-signature" aria-hidden="true"></i> Nghỉ phép</button>
+      </div>
+      <span class="panel-toolbar-info push-right">Đơn chỉ lưu trên máy này — dùng "Sao lưu" khi đổi máy</span>
+      <button type="button" class="btn btn-ghost" id="lvExport"><i class="fa-solid fa-download" aria-hidden="true"></i> Sao lưu</button>
+      <label class="btn btn-ghost" for="lvImport"><i class="fa-solid fa-upload" aria-hidden="true"></i> Khôi phục</label>
+      <input type="file" id="lvImport" accept=".json,application/json" hidden>
+    </div>
+
+    <div class="lv-layout">
+      <div class="lv-card" id="lvForm">
+        <div class="lv-head"><h3><i class="fa-solid fa-file-signature" aria-hidden="true"></i> Đơn xin nghỉ phép</h3><span class="lv-tag" id="lvEditing">Đơn mới</span></div>
+        <div class="lv-grid">
+          <label>Họ tên<input class="form-input" id="lvName" autocomplete="name"></label>
+          <label>Bộ phận / chức vụ<input class="form-input" id="lvDept" placeholder="Dự Án / GVTH"></label>
+          <label>Ngày làm đơn<input class="form-input" type="date" id="lvDate"></label>
+          <label>Trạng thái<select class="form-input" id="lvStatus"><option value="draft">Nháp</option><option value="sent">Đã nộp</option><option value="ok">Đã duyệt</option><option value="no">Không duyệt</option></select></label>
+        </div>
+        <div class="lv-sub">Loại nghỉ — tích loại cần nghỉ, mỗi loại có khoảng ngày riêng</div>
+        <div id="lvTypes"></div>
+        <div class="lv-grid">
+          <label class="span2">Lý do cụ thể<input class="form-input" id="lvReason" placeholder="Có công việc gia đình"></label>
+          <label class="span2">Bàn giao / người dạy thay (tuỳ chọn, in vào đơn)<input class="form-input" id="lvHandover" placeholder="VD: Thầy A dạy thay lớp 6A1 tiết 2–3"></label>
+          <label>Phép còn (để trống = tự tính)<input class="form-input" id="lvLeft" placeholder="Tự tính"></label>
+        </div>
+        <div id="lvSummary" class="lv-summary"></div>
+        <div class="lv-actions">
+          <button type="button" class="btn btn-primary" id="lvPdf"><i class="fa-solid fa-file-export" aria-hidden="true"></i> Tải PDF</button>
+          <button type="button" class="btn btn-secondary" id="lvPreviewBtn"><i class="fa-solid fa-eye" aria-hidden="true"></i> Xem trước</button>
+          <button type="button" class="btn btn-ghost" id="lvSave"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Lưu đơn</button>
+          <button type="button" class="btn btn-ghost" id="lvNew"><i class="fa-solid fa-plus" aria-hidden="true"></i> Đơn mới</button>
+        </div>
+      </div>
+
+      <div class="lv-side">
+        <div class="lv-card">
+          <div class="lv-head"><h3><i class="fa-solid fa-sliders" aria-hidden="true"></i> Thiết lập</h3></div>
+          <div class="lv-grid">
+            <label>Số ngày phép năm<input class="form-input" id="lvQuota" inputmode="decimal"></label>
+            <label class="lv-check"><input type="checkbox" id="lvSat"> Thứ Bảy là ngày làm việc</label>
+            <label class="span2">Ngày lễ khác (dd/mm/yyyy, cách nhau dấu phẩy — VD Tết, Giỗ Tổ)<input class="form-input" id="lvHolidays" placeholder="16/02/2026, 17/02/2026, 26/04/2026"></label>
+          </div>
+          <div class="lv-muted">Đã tự trừ Chủ nhật và lễ 1/1, 30/4, 1/5, 2/9.</div>
+          <div class="lv-sub">Chữ ký (vẽ bằng chuột / ngón tay)</div>
+          <canvas id="lvSignPad" class="lv-sign" width="360" height="120"></canvas>
+          <button type="button" class="btn btn-ghost" id="lvSignClear"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Xoá chữ ký</button>
+        </div>
+        <div class="lv-card">
+          <div class="lv-head"><h3><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Đơn đã lưu</h3><select class="form-input" id="lvHistYear" aria-label="Năm"></select></div>
+          <div class="lv-statrow" id="lvStats"></div>
+          <ul class="lv-history" id="lvHistory"></ul>
+        </div>
+      </div>
+    </div>
+    <div class="lv-card force-hide" id="lvPreviewWrap"><iframe id="lvPreview" title="Xem trước đơn nghỉ phép" class="lv-preview"></iframe></div>
   </section>
 </div>
 
@@ -651,6 +721,7 @@
 </script>
 <script src="js/teaching-schedule-report.js"></script>
 <script src="js/teaching-schedule-travel.js"></script>
+<script src="js/teaching-schedule-leave.js"></script>
 <script src="js/motion.js"></script>
 </body>
 </html>

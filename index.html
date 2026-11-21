@@ -91,6 +91,14 @@
         <h2>Kết quả của em</h2>
         <div id="lobbyMe"></div>
       </section>
+      <!-- Huy hiệu: mở khoá theo bài đã làm trên máy này (js/lobby-form-ux.js § renderBadges) — 0 mạng -->
+      <section class="lobby-badges" aria-label="Huy hiệu của em">
+        <h2>Huy hiệu của em <small id="lobbyBadgeN"></small></h2>
+        <ul id="lobbyBadges"></ul>
+        <div class="lobby-goal" id="lobbyGoal"></div>
+      </section>
+      <!-- Màn rộng: menu "Dành cho thầy cô" được chuyển xuống đây (mở ngay trong thanh trái, không che bước 3) -->
+      <div class="lobby-side-foot" id="lobbySideFoot"></div>
     </aside>
     <!-- Right: form -->
     <div class="lobby-right">
@@ -261,9 +269,8 @@
         <div class="lobby-col lobby-col-more">
           <p class="lobby-more-label"><i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i> Công cụ hỗ trợ</p>
           <div class="lobby-extras">
-            <button type="button" class="btn-secondary lobby-more-btn" id="lobbyMoreBtn" aria-expanded="false" aria-controls="lobbyMorePanel"><i class="fa-solid fa-ellipsis" aria-hidden="true"></i> Thêm</button>
+            <button type="button" class="btn-secondary lobby-more-btn" id="lobbyMoreBtn" aria-expanded="false" aria-controls="lobbyMorePanel"><i class="fa-solid fa-ellipsis" aria-hidden="true"></i> Ngày thi · Offline</button>
             <div class="lobby-extras lobby-more-panel" id="lobbyMorePanel" hidden>
-              <button type="button" class="btn-secondary" onclick="showRecords()"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử bài làm</button>
               <button type="button" class="btn-secondary" id="btnOfflinePack" title="Tải trọn câu hỏi của khối đang chọn về máy để làm bài khi mất mạng"><i class="fa-solid fa-cloud-arrow-down"></i> Tải sẵn để dùng offline</button>
               <!-- Tiến độ / kết quả tải sẵn (js/offline-pack.js) -->
               <p class="start-hint" id="offlinePackStatus" aria-live="polite"></p>

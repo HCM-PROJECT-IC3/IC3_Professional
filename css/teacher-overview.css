@@ -65,3 +65,13 @@
 @media (max-width: 1100px) { .ov-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ov-grid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 720px) { .ov-progress ul { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 460px) { .ov-tiles { grid-template-columns: minmax(0, 1fr); } .ov-progress li { grid-template-columns: minmax(0, 7rem) minmax(0, 1fr) 3rem; } }
+
+/* ---- Gọn hơn (11/2026): lớp trong ngày xếp lưới, cột phải gánh Tiến độ, bớt khoảng trống ---- */
+.ov-day ul { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+.ov-day li { padding: .35rem .6rem; font-size: .84rem; }
+.ov-day li small { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .72rem; }
+.ov-day li b + small { margin-top: -1px; }
+.ov-side .ov-progress ul { grid-template-columns: minmax(0, 1fr); gap: .5rem; }
+.ov-side .ov-progress li { grid-template-columns: minmax(0, 7.5rem) minmax(0, 1fr) 2.8rem; }
+.ov-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 1100px) { .ov-grid { grid-template-columns: minmax(0, 1fr); } .ov-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

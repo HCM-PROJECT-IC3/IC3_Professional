@@ -296,3 +296,12 @@ html .btn { border-radius: 8px; }
 /* Lớp xếp theo TKB ở Lịch giảng dạy: nhãn tiết TKB góc phải (không có nút đổi buổi) */
 .dd-ev-tkb { position: absolute; top: 5px; right: 6px; font-style: normal; font-size: .7rem; font-weight: 600; color: var(--dd-muted); }
 .dd-ev:has(.dd-ev-tkb) .dd-ev-main { padding-right: 70px; }
+
+/* ---- Gọn hơn (11/2026): ngày không có lớp thu hẹp, việc cần làm gấp lại, nút điểm danh luôn trong tầm tay ---- */
+.dd-tkb-head.is-empty { color: var(--dd-muted); font-weight: 600; font-size: .74rem; text-align: center; padding: 7px 2px; line-height: 1.15; }
+.dd-tkb-head.is-empty small { display: block; margin: 0; }
+.dd-tkb-cell.is-empty { min-height: 0; background: repeating-linear-gradient(135deg, transparent 0 6px, color-mix(in srgb, var(--dd-line) 45%, transparent) 6px 7px); }
+.dd-more { display: block !important; padding: 0 !important; border: 0 !important; }
+.dd-more summary { cursor: pointer; font-weight: 600; font-size: .84rem; color: var(--dd-accent); padding: 8px 2px; }
+.dd-more .dd-tasks { margin: 0; padding: 0; }
+#ddAttend .dd-acts { position: sticky; bottom: 0; z-index: 2; background: var(--dd-paper); padding: 8px 0; margin-top: 4px; border-top: 1px solid var(--dd-line); }

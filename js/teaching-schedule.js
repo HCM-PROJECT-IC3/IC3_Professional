@@ -69,6 +69,8 @@
     search: '',
     viewMode: 'dashboard', // 'dashboard' (tổng quan, mặc định) | 'cards' (thẻ từng GV) — chỉ áp dụng admin/coordinator
   };
+  // Chỉ ĐỌC từ module khác (js/teaching-schedule-leave.js: buổi dạy trùng ngày nghỉ) — 0 lượt Firebase thêm.
+  window.EduTeachingScheduleState = state;
   /** true khi tài khoản đăng nhập là giáo viên — giờ dùng CHUNG bảng tổng
    * hợp "Tổng quan"/"Thẻ" nhiều GV với admin (đã được cấp quyền ĐỌC cả đội
    * qua firestore.rules, KHÔNG còn giới hạn chỉ đọc đúng 1 GV như trước) —

@@ -341,3 +341,28 @@ table.wk-gen td,table.wk-gen th{padding:8px 10px;font-size:13px}
 .slot-hint.is-warn{background:color-mix(in srgb,#d97706 12%,var(--surface));color:var(--ink)}
 .slot-hint[hidden]{display:none}
 .when.is-guess b{color:var(--ink-2)}
+
+/* ---- Gọn hơn (11/2026): gợi ý thiết lập 1 dòng, số tiết dưới mỗi ngày, ngày trống có việc để bấm ---- */
+.setup-strip{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 18px;padding:10px 14px;border:1px dashed var(--line);border-radius:12px;background:var(--surface)}
+.setup-strip .ss-t{font-size:13px;color:var(--ink-2);font-weight:600}
+.day .dc{display:block;margin-top:3px;font-size:11px;color:var(--ink-3);font-weight:600}
+.day.done .dc{color:var(--green)}
+.day.miss .dc{color:var(--amber)}
+.empty-day{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px}
+.empty-day .ed-t{display:flex;align-items:center;gap:12px;min-width:0}
+.empty-day .ed-t svg{width:22px;height:22px;flex:none;color:var(--ink-3)}
+.empty-day b{display:block;font-size:15px}
+.empty-day span{font-size:13px;color:var(--ink-2)}
+/* Cần ghi bổ sung: cột trái, gom theo ngày, mỗi tiết 1 nút nhỏ (trước: 8 dòng to ở cột phải → cột trái trống) */
+.catchup{margin-top:18px}
+.cu-day{display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px;align-items:start;padding:8px 0;border-top:1px solid var(--line)}
+.cu-day:first-child{border-top:0;padding-top:0}
+.cu-date{border:0;background:none;padding:4px 0;text-align:left;font:inherit;font-weight:600;font-size:13px;color:var(--ink);cursor:pointer}
+.cu-date:hover{color:var(--brand)}
+.cu-list{display:flex;flex-wrap:wrap;gap:6px}
+.cu-it{display:inline-flex;align-items:center;gap:6px;padding:3px 9px 3px 3px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font:inherit;font-size:12px;color:var(--ink-2);cursor:pointer}
+.cu-it:hover{border-color:var(--brand);color:var(--brand)}
+/* Cột phải dính dưới thanh trên khi cuộn */
+@media (min-width:1101px){ .home-side{position:sticky;top:84px;max-height:calc(100vh - 100px);overflow-y:auto;scrollbar-width:thin} }
+/* Màn rộng: nội dung không dồn về trái để lại mảng trống bên phải */
+main#view{max-width:1440px;margin-inline:auto}

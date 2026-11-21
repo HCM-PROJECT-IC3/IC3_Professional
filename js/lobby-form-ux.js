@@ -129,6 +129,104 @@
     const html = meMarkup(m);
     if (html !== meHtml) { box.innerHTML = html; meHtml = html; }
     renderHello(m);
+    renderBadges(m);
+    lastDone = m && m.recent && m.recent[0] ? m.recent[0] : null;
+    renderNext();
+  }
+
+  /** Huy hiệu: mục tiêu nhỏ, rõ ràng (bài đã làm, chuỗi ngày, điểm cao, ôn câu sai). Chưa chọn tên → hiện mờ để em biết có gì. */
+  const BADGES = [
+    { id: 'first', fa: 'fa-flag', c: 'var(--ic-blue)', name: 'Bài đầu tiên', goal: 1, val: (m) => m.done },
+    { id: 'five', fa: 'fa-book-open', c: 'var(--ic-blue)', name: 'Chăm chỉ', goal: 5, unit: 'bài', val: (m) => m.done },
+    { id: 'streak', fa: 'fa-fire', c: 'var(--ic-orange)', name: 'Học 3 ngày liền', goal: 3, unit: 'ngày', val: (m) => m.streak },
+    { id: 'good', fa: 'fa-star', c: 'var(--ic-green)', name: 'Đạt từ 80%', goal: 1, val: (m) => (m.recent || []).filter((r) => r.score >= 80).length },
+    { id: 'full', fa: 'fa-medal', c: 'var(--ic-orange)', name: 'Điểm tuyệt đối', goal: 1, val: (m) => (m.recent || []).filter((r) => r.score >= 100).length },
+    { id: 'twenty', fa: 'fa-trophy', c: 'var(--ic-green)', name: 'Siêng năng', goal: 20, unit: 'bài', val: (m) => m.done },
+  ];
+  let badgeKey = '';
+  function renderBadges(m) {
+    const ul = $('lobbyBadges');
+    if (!ul) return;
+    const got = BADGES.map((b) => { const v = m ? Math.max(0, Number(b.val(m)) || 0) : 0; return { b, v, ok: v >= b.goal }; });
+    const key = got.map((x) => x.v).join(',') + (m ? '1' : '0');
+    if (key === badgeKey) return;
+    // Vừa mở khoá huy hiệu mới (cùng học sinh) → nảy nhẹ để em để ý
+    const before = new Set(badgeKey ? badgeKey.split(',').map((v, i) => (+v >= BADGES[i].goal ? BADGES[i].id : '')).filter(Boolean) : []);
+    const fresh = badgeKey && m ? got.filter((x) => x.ok && !before.has(x.b.id)).map((x) => x.b.id) : [];
+    badgeKey = key;
+    $('lobbyBadgeN').textContent = m ? `${got.filter((x) => x.ok).length}/${BADGES.length}` : '';
+    // 1 hàng icon gọn (tên ở chú thích khi rê chuột / trình đọc màn hình) + 1 dòng "Mục tiêu tiếp theo" có thanh tiến độ
+    ul.innerHTML = got.map(({ b, v, ok }) => {
+      const label = `${b.name}${b.goal > 1 ? ` — ${Math.min(v, b.goal)}/${b.goal} ${b.unit || ''}` : ''}${ok ? ' (đã đạt)' : ' (chưa đạt)'}`;
+      return `<li class="${ok ? 'is-on' : ''}${fresh.includes(b.id) ? ' is-new' : ''}" style="--bc:${b.c}" title="${esc(label)}" aria-label="${esc(label)}">
+        <i class="fa-solid ${b.fa}" aria-hidden="true"></i></li>`;
+    }).join('');
+    const goal = $('lobbyGoal');
+    if (!goal) return;
+    const next = got.find((x) => !x.ok);
+    if (!m) { goal.innerHTML = '<span class="lg-t">Chọn tên để mở khoá</span>'; return; }
+    if (!next) { goal.innerHTML = '<span class="lg-t is-done"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Em đã có đủ huy hiệu!</span>'; return; }
+    const pct = Math.round(Math.min(next.v, next.b.goal) / next.b.goal * 100);
+    goal.innerHTML = `<span class="lg-t">Tiếp theo: <b>${esc(next.b.name)}</b></span>
+      <span class="lg-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${next.b.goal}" aria-valuenow="${Math.min(next.v, next.b.goal)}"><i style="width:${pct}%;background:${next.b.c}"></i></span>
+      <span class="lg-n">${Math.min(next.v, next.b.goal)}/${next.b.goal}</span>`;
+  }
+
+  /** Màn rộng (có thanh trái): chuyển menu thầy cô xuống đáy thanh trái — mở trong thanh, không đè lên bước 3. Màn hẹp: về lại đầu trang. */
+  function placeStaff() {
+    const staff = $('lobbyStaff'), foot = $('lobbySideFoot'), domains = document.querySelector('.lobby-domains');
+    if (!staff || !foot || !domains) return;
+    const mq = window.matchMedia('(min-width: 1100px)');
+    const put = () => {
+      if (mq.matches && staff.parentNode !== foot) foot.appendChild(staff);
+      else if (!mq.matches && staff.parentNode === foot) domains.after(staff);
+    };
+    put();
+    mq.addEventListener ? mq.addEventListener('change', put) : mq.addListener(put);
+  }
+
+  /** "Làm tiếp": bài ngay sau bài em làm gần nhất (cùng chương trình/cấp đang chọn) — 1 chạm chọn luôn. Chỉ đọc máy này. */
+  let lastDone = null;
+  const bare = (t) => String(t || '').replace(/\s*\(\d+\s*câu\)\s*$/i, '').trim().toLowerCase();
+  function renderNext() {
+    const sel = $('minitestSelect'), grp = $('minitestGroup');
+    if (!sel || !grp) return;
+    let box = $('lobbyNext');
+    if (!box) {
+      box = document.createElement('div'); box.id = 'lobbyNext'; box.className = 'lobby-next'; grp.appendChild(box);
+      box.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-next]'); if (!b) return;
+        sel.value = b.dataset.next;
+        sel.dispatchEvent(new Event('change', { bubbles: true }));
+        box.hidden = true;
+        $('btnStart')?.focus();
+      });
+    }
+    const opts = [...sel.options].filter((o) => o.value);
+    const i = lastDone ? opts.findIndex((o) => bare(o.text) === bare(lastDone.title)) : -1;
+    const next = i >= 0 ? (lastDone.score >= 70 ? opts[i + 1] : opts[i]) : null; // chưa đạt 70% thì gợi ý làm lại
+    box.hidden = !next || next.value === sel.value || !visible(sel);
+    if (box.hidden) return;
+    const again = next === opts[i];
+    box.innerHTML = `<button type="button" data-next="${esc(next.value)}"><i class="fa-solid ${again ? 'fa-rotate' : 'fa-forward'}" aria-hidden="true"></i>
+      <span><b>${again ? 'Làm lại' : 'Làm tiếp'}:</b> ${esc(shortTitle(next.text))}</span>
+      <small>${again ? `Lần trước ${lastDone.score}% — làm lại cho chắc` : `Bài sau "${esc(shortTitle(lastDone.title))}" em vừa làm`}</small></button>`;
+  }
+
+  /** Chọn xong 1 ô thì chuyển sang ô kế tiếp (Trường → Lớp → Họ tên → Bắt đầu): bớt bấm, rõ phải làm gì tiếp. */
+  function autoAdvance() {
+    const chain = [['studentSchool', 'studentClass'], ['studentClass', 'studentName'], ['studentName', 'btnStart']];
+    chain.forEach(([from, to]) => {
+      $(from)?.addEventListener('change', () => {
+        if (!$(from).value) return;
+        setTimeout(() => { // chờ lobby-roster.js đổ danh sách vào ô sau
+          const t = $(to);
+          if (!t || t.disabled) return;
+          const shown = t.closest('.form-group')?.querySelector('.ui-select-btn, [role="combobox"]');
+          (shown && visible(shown) ? shown : t).focus({ preventScroll: false });
+        }, 60);
+      });
+    });
   }
 
   /** Lời chào ở thanh tiêu đề: học sinh thấy ngay máy đang ghi bài cho AI (máy dùng chung: tránh làm bài dưới tên bạn khác). */
@@ -158,6 +256,10 @@
       if (b.dataset.me === 'hub') window.EduLearningHub?.open?.();
       else if (typeof window.showRecords === 'function') window.showRecords();
     });
+    autoAdvance();
+    placeStaff();
+    renderBadges(null);
+    ['categorySelect', 'levelSelect', 'minitestSelect'].forEach((id) => $(id)?.addEventListener('change', () => setTimeout(renderNext, 0)));
     const more = $('lobbyMoreBtn');
     more?.addEventListener('click', () => {
       const open = more.getAttribute('aria-expanded') !== 'true';
@@ -165,7 +267,7 @@
       $('lobbyMorePanel').hidden = !open;
     });
     const staff = $('lobbyStaff');
-    document.addEventListener('click', (e) => { if (staff?.open && !staff.contains(e.target)) staff.open = false; });
+    document.addEventListener('click', (e) => { if (staff?.open && !staff.contains(e.target) && !staff.closest('#lobbySideFoot')) staff.open = false; });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && staff?.open) { staff.open = false; staff.querySelector('summary').focus(); } });
     const card = document.querySelector('.lobby-card');
     const btn = $('btnStart');
