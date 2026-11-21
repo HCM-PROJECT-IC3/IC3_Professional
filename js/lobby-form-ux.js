@@ -115,8 +115,7 @@
         <span class="lm-s ${r.score >= 70 ? 'is-ok' : 'is-low'}">${r.score}%</span><small>${r.test ? 'Kiểm tra' : 'Ôn luyện'} · ${esc(fmtAgo(r.t))}</small></li>`).join('');
     return `<dl><div><dt>Bài đã làm</dt><dd>${m.done}</dd></div><div><dt>Chuỗi ngày học</dt><dd>${m.streak}</dd></div><div><dt>Câu đến hạn ôn</dt><dd>${m.due}</dd></div></dl>
       ${m.due ? `<button type="button" class="lm-due" data-me="hub"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Ôn ${m.due} câu đến hạn</button>` : ''}
-      <h3>Gần đây</h3><ul class="lm-recent">${recent}</ul>
-      <button type="button" class="lm-all" data-me="records">Xem tất cả bài làm <i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>`;
+      <h3>Gần đây</h3><ul class="lm-recent">${recent}</ul>`;
   }
   function renderMe(force) {
     const box = $('lobbyMe');

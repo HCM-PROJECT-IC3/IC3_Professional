@@ -277,4 +277,6 @@
 .lobby-side-foot .lobby-staff-label { white-space: nowrap; font-size: .8rem; gap: .4rem; padding: .45rem .55rem; }
 /* Bớt khoảng cách dọc để thanh không phải cuộn ở màn thấp */
 @media (min-width: 1100px) { .lobby-side { gap: .2rem; padding-top: 1rem; } .lobby-side-brand { padding-bottom: .8rem; } .lobby-me { margin-top: .5rem; padding-top: .75rem; } }
+/* Nút chỉ cần ở màn hẹp (màn rộng đã có ở thanh trái) */
+@media (min-width: 1100px) { .lobby-narrow-only { display: none !important; } }
 

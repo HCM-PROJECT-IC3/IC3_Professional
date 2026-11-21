@@ -84,7 +84,6 @@
     <aside class="lobby-side" aria-label="Điều hướng">
       <div class="lobby-side-brand"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i><div>EduQuiz <span>IC3</span></div></div>
       <button type="button" class="lobby-nav" aria-current="page"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3 2.5 11.2l1.3 1.5L5 11.7V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-8.3l1.2 1 1.3-1.5z"/></svg> Trang chủ</button>
-      <button type="button" class="lobby-nav" onclick="window.EduLearningHub?.open()"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Tiến độ của em</button>
       <button type="button" class="lobby-nav" onclick="showRecords()"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Lịch sử bài làm</button>
       <!-- Số liệu của học sinh đang chọn, đọc từ máy này (js/lobby-form-ux.js) -->
       <section class="lobby-me" aria-label="Kết quả của em" aria-live="polite">
@@ -271,6 +270,7 @@
           <div class="lobby-extras">
             <button type="button" class="btn-secondary lobby-more-btn" id="lobbyMoreBtn" aria-expanded="false" aria-controls="lobbyMorePanel"><i class="fa-solid fa-ellipsis" aria-hidden="true"></i> Ngày thi · Offline</button>
             <div class="lobby-extras lobby-more-panel" id="lobbyMorePanel" hidden>
+              <button type="button" class="btn-secondary lobby-narrow-only" onclick="showRecords()"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử bài làm</button>
               <button type="button" class="btn-secondary" id="btnOfflinePack" title="Tải trọn câu hỏi của khối đang chọn về máy để làm bài khi mất mạng"><i class="fa-solid fa-cloud-arrow-down"></i> Tải sẵn để dùng offline</button>
               <!-- Tiến độ / kết quả tải sẵn (js/offline-pack.js) -->
               <p class="start-hint" id="offlinePackStatus" aria-live="polite"></p>

@@ -51,9 +51,9 @@
       <span class="nav-icon"><i class="fa-solid fa-chart-column"></i></span>
       <span>Báo cáo kết quả</span>
     </div>
-    <a class="nav-item link-plain" href="teacher-dashboard.html" id="teacherDashboardLink" style="display:none;" title="Tổng quan kết quả các lớp của tôi">
+    <a class="nav-item link-plain" href="teacher-dashboard.html" id="teacherDashboardLink" style="display:none;" title="Kết quả bài làm các lớp của tôi: điểm, câu hay sai, so sánh đợt kiểm tra">
       <span class="nav-icon"><i class="fa-solid fa-school"></i></span>
-      <span>Tổng quan của tôi</span>
+      <span>Kết quả lớp của tôi</span>
     </a>
     <a class="nav-item link-plain" href="coordinator-dashboard.html" id="coordinatorDashboardLink" style="display:none;" title="Tổng quan điều phối">
       <span class="nav-icon"><i class="fa-solid fa-compass"></i></span>
@@ -73,10 +73,6 @@
     <a class="nav-item link-plain" href="so-dau-bai.html" target="_blank" rel="noopener" id="lessonBookLink" style="display:none;" title="Sổ đầu bài: ghi tiết dạy, vắng, nhận xét — lớp và học sinh lấy từ dữ liệu có sẵn">
       <span class="nav-icon"><i class="fa-solid fa-book-bookmark"></i></span>
       <span>Sổ đầu bài</span>
-    </a>
-    <a class="nav-item link-plain" href="goi-ten.html" target="_blank" rel="noopener" id="namePickerLink" style="display:none;" title="Gọi tên học sinh trên máy chiếu">
-      <span class="nav-icon"><i class="fa-solid fa-bullhorn"></i></span>
-      <span>Gọi tên</span>
     </a>
     <a class="nav-item link-plain" href="gom-ket-qua.html" target="_blank" rel="noopener" id="gatherResultsNavLink" style="display:none;" title="Gom kết quả học sinh gửi bằng mã/file">
       <span class="nav-icon"><i class="fa-solid fa-inbox"></i></span>
@@ -464,6 +460,17 @@
             <span class="settings-chip">Mọi bài</span>
           </div>
         </div>
+        <div class="settings-card" id="lbCard">
+          <h3><i class="fa-solid fa-floppy-disk"></i> Sao lưu tất cả dữ liệu trên máy</h3>
+          <p class="settings-note">Sổ đầu bài, Đơn nghỉ phép, Điểm danh, Gọi tên, Thi đua, Bộ đề tự soạn… chỉ lưu trên máy này. Tải 1 file để mang sang máy khác hoặc phòng khi máy bị xoá dữ liệu.</p>
+          <div id="lbSummary"></div>
+          <div class="settings-row" style="gap:8px;flex-wrap:wrap;justify-content:flex-start">
+            <button type="button" class="btn-primary" id="lbExport"><i class="fa-solid fa-download"></i> Tải file sao lưu</button>
+            <button type="button" class="btn-secondary" id="lbImportBtn"><i class="fa-solid fa-upload"></i> Khôi phục từ file</button>
+            <input type="file" id="lbImport" accept=".json,application/json" hidden>
+          </div>
+          <p class="settings-note" id="lbStatus" aria-live="polite"></p>
+        </div>
         <div class="settings-card">
           <h3><i class="fa-solid fa-palette"></i> Giao diện trên máy này</h3>
           <div class="settings-row">
@@ -586,6 +593,7 @@
 <script src="js/teacher/wrong-questions.js"></script>
 <script src="js/so-lop/so-lop-core.js"></script>
 <script src="js/so-dau-bai/sdb-sources.js"></script>
+<script src="js/local-backup.js"></script>
 <script src="js/teacher/overview-core.js"></script>
 <script src="js/teacher/overview.js"></script>
 <script src="js/custom-exam-codec.js"></script>

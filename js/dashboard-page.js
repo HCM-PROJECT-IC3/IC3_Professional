@@ -65,7 +65,6 @@ window.addEventListener('edu:ready', ({ detail }) => {
   // (EDU_ALLOWED_ROLES của trang đó); Gọi tên/Gom kết quả không cần đăng nhập.
   show('attendanceLink', role === 'admin' || role === 'teacher');
   show('lessonBookLink', role === 'admin' || role === 'teacher');
-  show('namePickerLink', role === 'admin' || role === 'teacher');
   show('gatherResultsNavLink', role === 'admin' || role === 'teacher');
   show('rosterManagerLink', role === 'admin' || isSchoolStaff);
   // "Điều phối giáo viên" (teaching_coordinator) được XEM (không sửa)
