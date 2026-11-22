@@ -29,6 +29,7 @@
   const MAX_WEEKS = 16;
   const OWN_PERIODS = 5; // = TeachingSchedule.PERIODS_PER_SESSION
   const WEEKDAYS = ['2', '3', '4', '5', '6', '7'], SESSIONS = ['morning', 'afternoon'];
+  const NON_TEACHING_RE = /^(nghi|wfh|soan bai|lam viec|kham)/;
 
   const plain = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toLowerCase().replace(/\s+/g, ' ').trim();
   const str = (s) => (typeof s === 'string' ? s.trim() : '');
@@ -47,7 +48,13 @@
         const sess = (sched && sched.days && sched.days[d] && sched.days[d][s]) || null;
         const ttc = ((tt && tt.days && tt.days[d] && tt.days[d][s]) || []).map(cellOf);
         const own = (sess && Array.isArray(sess.periods) ? sess.periods : []).map(str);
-        const ownWins = own.some(Boolean), len = Math.max(OWN_PERIODS, own.length, ttc.length);
+        const ownWins = own.some(Boolean);
+        // Buổi nghỉ/không dạy (= TeachingSchedule.isNonTeachingType) → không lấy lớp TKB cũ.
+        if (!ownWins && sess && NON_TEACHING_RE.test(plain(sess.type))) {
+          out[d][s] = Array.from({ length: Math.max(OWN_PERIODS, own.length) }, () => ({ maLop: '', truong: '' }));
+          return;
+        }
+        const len = Math.max(OWN_PERIODS, own.length, ttc.length);
         const locs = String((sess && sess.location) || '').split(' + ').map((x) => x.trim()).filter(Boolean);
         const loc = locs.length === 1 ? locs[0] : '', ps = (sess && sess.periodSchools) || [];
         out[d][s] = Array.from({ length: len }, (_, i) => {
@@ -58,7 +65,12 @@
         });
       });
     });
-    return any ? out : null;
+    // Cả tuần chỉ toàn buổi nghỉ/không dạy (vd tuần nghỉ lễ) → lưới trống là lịch THẬT của tuần
+    // đó, KHÔNG để week() mượn TKB tuần khác (buổi "Dạy chính" chưa gõ lớp thì vẫn mượn như cũ).
+    const types = [];
+    WEEKDAYS.forEach((d) => SESSIONS.forEach((s) => { const ty = str(sched && sched.days && sched.days[d] && sched.days[d][s] && sched.days[d][s].type); if (ty) types.push(ty); }));
+    const weekOff = types.length > 0 && types.every((ty) => NON_TEACHING_RE.test(plain(ty)));
+    return any || weekOff ? out : null;
   }
 
   function create(opts) {
@@ -132,8 +144,9 @@
       return e ? e.raw : null;
     }
 
-    /** Lớp từng tiết tuần `monday` của GV `code` → { days (dạng TKB lớp), from (weekKey bản dùng), fallback } | null. */
-    async function week(code, monday) {
+    /** Lớp từng tiết tuần `monday` của GV `code` → { days (dạng TKB lớp), from (weekKey bản dùng), fallback } | null.
+     *  opts.exact: chỉ đúng tuần đó, không mượn tuần gần nhất → KHÔNG chạy truy vấn danh sách mọi tuần của GV (Sổ đầu bài). */
+    async function week(code, monday, opts) {
       if (!code) return null;
       const wk = weekKeyOf(monday), id = `${code}__${wk}`;
       let st = load(), e = st.w[id];
@@ -150,6 +163,7 @@
         }
       }
       if (e && e.days) return { days: e.days, from: wk, fallback: false };
+      if (opts && opts.exact) return null;
       let best = pickNear(st, code, wk);
       const lk = 'list:' + code;
       if (!best && !(st.l[code] && now() - st.l[code] < LIST_TTL) && !failedRecently(lk)) {
@@ -172,7 +186,9 @@
       return best ? { days: best.days, from: best.wk, fallback: true } : null;
     }
     function pickNear(st, code, wk) {
-      const have = Object.keys(st.w).filter((k) => k.startsWith(code + '__') && st.w[k] && st.w[k].days)
+      // Chỉ mượn tuần CÓ lớp (tuần nghỉ cả tuần không dùng làm TKB thay thế).
+      const hasClass = (days) => WEEKDAYS.some((d) => SESSIONS.some((s) => ((days[d] && days[d][s]) || []).some((c) => c && c.maLop)));
+      const have = Object.keys(st.w).filter((k) => k.startsWith(code + '__') && st.w[k] && st.w[k].days && hasClass(st.w[k].days))
         .map((k) => ({ wk: k.slice(code.length + 2), days: st.w[k].days }));
       const before = have.filter((x) => x.wk <= wk).sort((a, b) => (a.wk < b.wk ? 1 : -1))[0];
       return before || have.filter((x) => x.wk > wk).sort((a, b) => (a.wk < b.wk ? -1 : 1))[0] || null;

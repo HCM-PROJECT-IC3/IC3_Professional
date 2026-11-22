@@ -1,6 +1,7 @@
 /* ============================================================
    js/so-dau-bai/sdb-app.js — Sổ đầu bài điện tử (so-dau-bai.html).
    Dữ liệu sổ lưu trong localStorage của trình duyệt — không lên Firebase, không gọi Apps Script.
+   Chỉ ĐỌC Lịch giảng dạy (2 lượt get/tuần, có bộ đệm chung với Điểm danh) để tự xếp tiết theo TKB Excel tổ — xem lgdWeek().
    Mỗi tài khoản, mỗi trường 1 sổ riêng: sodaubai_v1 (sổ đầu tiên), sodaubai_v1:<mã> (sổ khác). Mọi hàm chỉ làm việc với sổ đang mở (S, KEY).
    Lớp + học sinh lấy từ dữ liệu có sẵn của web (js/so-dau-bai/sdb-sources.js): sổ lớp Điều phối đã đọc ở
    trang Điểm danh, hoặc data/roster/students-active.json. Tiết đã ghi hôm nay gửi sang Gọi tên (vắng + bài).
@@ -202,14 +203,118 @@ function lastPPCT(prog, cls, before) {
 }
 // Tất cả tiết của tuần n: tiết theo TKB (kèm entry nếu đã ghi) + tiết ghi ngoài TKB
 // + tiết của tôi có ngày trên sổ lớp mà TKB không có lớp đó hôm đó (chưa nhập TKB, dạy bù). Sheet không có giờ học nên tạm xếp từ tiết 1 buổi sáng, khung ghi mở sẵn ô đổi tiết.
+/* ── Tiết TỪNG TUẦN theo Lịch giảng dạy (TKB lấy từ file Excel tổ) — js/so-lop/tkb-source.js, cùng nguồn và cùng bộ đệm
+   trên máy (eduquiz_tkb_v2) với Điểm danh: khỏi nhập TKB riêng cho sổ, tuần đổi lịch / nghỉ lễ tự đúng theo Excel.
+   Lượt Firestore: mã NV lấy từ hồ sơ đăng nhập (0 lượt); mỗi tuần mở 2 lượt get, giữ 6 giờ (tuần đã qua 30 ngày) —
+   Điểm danh vừa đọc tuần đó thì 0 lượt. `exact`: không mượn tuần khác → không bao giờ chạy truy vấn danh sách mọi tuần
+   của GV. Bảng TKB của sổ (S.tkb) tự chép từ tuần gần nhất có lịch (syncTkbFromLgd) → tuần Lịch giảng dạy chưa có
+   vẫn có TKB, và mở lại trang khi không mạng vẫn thấy. Không có mã NV / chưa có lịch → dùng TKB của sổ như trước. ── */
+let PROFILE = null;
+const LGD = new Map(); // thứ Hai 'YYYY-MM-DD' → { loading } | { days } | { none }
+/* Mã NV ở Lịch giảng dạy: hồ sơ đăng nhập (Admin gán) → mã đã lưu trong sổ (Cài đặt) → tự tìm theo TÊN giáo viên của sổ
+   (EduSoLopTkb.codeOf: 1 lần đọc danh sách giáo viên, giữ 3 ngày, dùng chung với Điểm danh). Tìm được thì LƯU vào sổ →
+   các lần sau 0 lượt. Tài khoản giáo viên không được đọc danh sách (rules) → nhập tay ở Cài đặt hoặc nhờ Admin gán. */
+let codeLookup = ''; // '' chưa tìm · 'busy' · 'notfound' · 'error'
+let codeLookupFor = ''; // tên đã tìm — đổi tên giáo viên thì tìm lại
+function lgdCode() {
+  const own = String((PROFILE && PROFILE.teacherCode) || S.settings.teacherCode || '').trim().toUpperCase();
+  if (own) return own;
+  const T = window.EduSoLopTkb, name = S.settings.teacher || (PROFILE && PROFILE.name) || '';
+  if (!T || !T.codeOf || !name || !PROFILE) return '';
+  if (codeLookupFor !== name) { codeLookupFor = name; codeLookup = ''; }
+  if (!codeLookup) {
+    codeLookup = 'busy';
+    T.codeOf(name, PROFILE).then(code => {
+      if (code) { S.settings.teacherCode = code; codeLookup = ''; save(); LGD.clear(); toast(`Đã nhận mã NV ${code} theo tên giáo viên — sổ tự lấy TKB ở Lịch giảng dạy`); }
+      else codeLookup = code === null ? 'error' : 'notfound';
+    }).catch(() => { codeLookup = 'error'; }).then(() => { if (!dialogOpen()) render(); });
+  }
+  return '';
+}
+function lgdWeek(n) {
+  const T = window.EduSoLopTkb, code = lgdCode();
+  if (!T || !code) return null;
+  const mon = weekMonday(n);
+  if (!LGD.has(mon)) {
+    LGD.set(mon, { loading: true });
+    T.week(code, parseD(mon), { exact: true })
+      .then(w => LGD.set(mon, w && !w.fallback ? { days: w.days } : { none: true })) // tuần mượn (fallback) không dùng: dễ nhắc "chưa ghi" sai
+      .catch(() => LGD.set(mon, { none: true }))
+      .then(() => { if (!dialogOpen()) render(); });
+  }
+  return LGD.get(mon);
+}
+/** Tiết của sổ này (đúng trường) theo Lịch giảng dạy tuần n → [{ date, cls, buoi, tiet }], [] = tuần nghỉ / không dạy lớp nào,
+ *  null = chưa có lịch tuần đó, hoặc có lớp nhưng không lớp nào khớp tên trường của sổ (dùng TKB của sổ). */
+function lgdSlots(n) {
+  const m = lgdWeek(n); if (!m || !m.days) return null;
+  const dates = weekDates(n), out = [], src = S.srcSchool || {};
+  let any = false;
+  for (const [d, day] of Object.entries(m.days)) {
+    const date = dates[+d - 2]; if (!date || !day) continue;
+    [['morning', 'Sáng'], ['afternoon', 'Chiều']].forEach(([k, buoi]) => (day[k] || []).forEach((c, i) => {
+      if (!c || !c.maLop) return;
+      any = true;
+      const cls = normClass(c.maLop);
+      if (!isClass(cls) || !(SRC.sameSchool(c.truong, S.settings.school) || SRC.sameSchool(c.truong, src[cls]))) return;
+      out.push({ date, cls, buoi, tiet: i + 1 });
+    }));
+  }
+  return out.length || !any ? out : null;
+}
+const lgdInUse = n => !!lgdSlots(n);
+const slotKey = t => `${t.dow}|${BUOI.indexOf(t.buoi)}|${pad(t.tiet)}`;
+/** Tuần dùng làm bảng TKB của sổ: tuần này; tuần này nghỉ / chưa có lịch (vd Chủ nhật, nghỉ lễ) → tuần sau.
+ *  → { n, slots } | { loading } | null. Chỉ đọc 2 tuần này, không dò xa hơn. */
+function lgdTemplateWeek() {
+  const now = curWeek();
+  for (const n of [now, now + 1]) {
+    const m = lgdWeek(n);
+    if (!m) return null;
+    if (m.loading) return { loading: true };
+    const sl = lgdSlots(n);
+    if (sl && sl.length) return { n, slots: sl };
+  }
+  return null;
+}
+/** Chép TKB tuần mẫu vào bảng TKB của sổ (localStorage, 0 Firebase). Ngày tuần mẫu không có lớp nào (nghỉ lễ, ngày ở trường
+ *  khác) giữ lớp cũ của ngày đó; ô chữ (Chào cờ...) giữ nếu không trùng tiết có lớp. Chỉ lưu khi thật sự khác. */
+function syncTkbFromLgd() {
+  const t = lgdTemplateWeek(); if (!t || !t.slots) return false;
+  const def = S.programs[0]?.id;
+  const fresh = t.slots.map(g => ({ dow: parseD(g.date).getDay() + 1, buoi: g.buoi, tiet: g.tiet, cls: g.cls, prog: (S.tkb.find(x => x.cls === g.cls) || {}).prog || def }));
+  const taken = new Set(fresh.map(slotKey)), days = new Set(fresh.map(x => x.dow));
+  const out = S.tkb.filter(x => !taken.has(slotKey(x)) && (!x.cls || !days.has(x.dow))).concat(fresh)
+    .sort((a, b) => slotKey(a).localeCompare(slotKey(b)));
+  const sorted = [...S.tkb].sort((a, b) => slotKey(a).localeCompare(slotKey(b)));
+  if (JSON.stringify(out) === JSON.stringify(sorted) && S.lgdFrom === weekMonday(t.n)) return false;
+  S.tkb = out; S.lgdFrom = weekMonday(t.n);
+  fresh.forEach(x => {
+    if ((S.settings.periods[x.buoi] || 0) < x.tiet) S.settings.periods[x.buoi] = x.tiet;
+    if (!S.settings.days.includes(x.dow)) { S.settings.days.push(x.dow); S.settings.days.sort(); }
+    if (!S.classes.includes(x.cls)) S.classes.push(x.cls);
+  });
+  S.classes.sort(cmpClass);
+  save();
+  return true;
+}
+
 function weekItems(n) {
   const dates = weekDates(n), out = [], used = new Set();
+  const lg = lgdSlots(n);
   for (const s of S.tkb) {
     const date = dates[s.dow - 2]; if (!date) continue;
-    if (!s.cls) { out.push({ ...s, date }); continue; }
+    if (lg && s.cls) continue; // tuần này lớp theo Lịch giảng dạy
+    if (!s.cls) { if (!(lg && lg.some(g => g.date === date && g.buoi === s.buoi && +g.tiet === +s.tiet))) out.push({ ...s, date }); continue; }
     const e = S.entries.find(x => x.date === date && x.cls === s.cls && x.buoi === s.buoi && +x.tiet === +s.tiet);
     if (e) used.add(e.id);
     out.push({ date, cls: s.cls, prog: s.prog, buoi: s.buoi, tiet: s.tiet, entry: e });
+  }
+  for (const g of lg || []) {
+    const e = S.entries.find(x => x.date === g.date && x.cls === g.cls && x.buoi === g.buoi && +x.tiet === +g.tiet);
+    if (e) used.add(e.id);
+    const prog = (S.tkb.find(t => t.cls === g.cls) || {}).prog || S.programs[0]?.id;
+    out.push({ date: g.date, cls: g.cls, prog, buoi: g.buoi, tiet: g.tiet, entry: e, lgd: true });
   }
   for (const e of S.entries) if (e.date >= dates[0] && e.date <= dates[5] && !used.has(e.id)) out.push({ date: e.date, cls: e.cls, prog: e.prog, buoi: e.buoi, tiet: e.tiet, entry: e, extra: true });
   const need = new Map();
@@ -465,7 +570,7 @@ function setupCard() {
   const steps = [
     { ok: !!(S.settings.school && S.settings.teacher), t: 'Tên trường và giáo viên', s: 'In ở đầu sổ', go: 'settings', b: 'Mở Cài đặt' },
     { ok: hasStu, t: 'Lớp và học sinh', s: 'Lấy từ sổ lớp đã đọc ở Điểm danh hoặc danh sách của hệ thống', go: 'classes', b: 'Mở Học sinh' },
-    { ok: S.tkb.some(t => t.cls) || mine, t: 'Lịch dạy', s: mine ? 'Đang dùng ngày dạy trên sổ lớp' : 'Nhập TKB, hoặc bỏ qua nếu sổ lớp ở Điểm danh đã có ngày dạy và đúng tên giáo viên', go: 'tkb', b: 'Mở TKB' },
+    { ok: S.tkb.some(t => t.cls) || mine || lgdInUse(curWeek()), t: 'Lịch dạy', s: mine ? 'Đang dùng ngày dạy trên sổ lớp' : 'Nhập TKB, hoặc bỏ qua nếu sổ lớp ở Điểm danh đã có ngày dạy và đúng tên giáo viên', go: 'tkb', b: 'Mở TKB' },
   ];
   const todo = steps.filter(x => !x.ok);
   if (!todo.length || UI.hideSetup) return '';
@@ -497,6 +602,7 @@ function offDay(date, items) {
 }
 
 function viewHome(root) {
+  syncTkbFromLgd(); // bảng TKB của sổ theo Lịch giảng dạy (chỉ lưu trên máy khi khác)
   const wk = curWeek(), dates = weekDates(wk), items = weekItems(wk);
   const teachDays = S.settings.days.map(d => dates[d - 2]).filter(Boolean);
   if (dates.includes(today()) && !teachDays.includes(today())) teachDays.push(today()); // hôm nay luôn có ô
@@ -528,7 +634,7 @@ function viewHome(root) {
         : (() => {
           const withLes = [...new Set(items.filter(it => it.cls).map(it => it.date))];
           const near = withLes.filter(d => d > UI.day)[0] || withLes.filter(d => d < UI.day).pop();
-          const hasPlan = S.tkb.some(t => t.cls) || sheetRows().some(r => r.mine);
+          const hasPlan = S.tkb.some(t => t.cls) || sheetRows().some(r => r.mine) || lgdInUse(curWeek());
           return `<div class="panel empty-day"><div class="ed-t">${ic('book')}<div><b>${UI.day === today() ? 'Hôm nay' : thu(UI.day)} không có tiết theo lịch</b>
             <span>${hasPlan ? 'Dạy bù hoặc ngoài lịch thì ghi tay.' : 'Chưa có lịch dạy — nhập TKB để sổ tự xếp tiết mỗi ngày.'}</span></div></div>
             <div class="row gap-s">${near ? `<button type="button" class="btn sm primary" data-day="${near}">Xem ${thu(near)}, ${shortDate(near)}</button>` : ''}
@@ -819,6 +925,8 @@ function openEntry(src) {
    THỜI KHÓA BIỂU
    ========================================================= */
 function viewTKB(root) {
+  syncTkbFromLgd();
+  const tpl = lgdTemplateWeek(), fromLgd = !!(tpl && tpl.slots);
   const days = S.settings.days, P = S.settings.periods, def = S.programs[0]?.id;
   const cellText = (dow, buoi, tiet) => {
     const s = S.tkb.find(x => x.dow === dow && x.buoi === buoi && +x.tiet === tiet);
@@ -829,15 +937,26 @@ function viewTKB(root) {
   for (const buoi of BUOI) {
     if (!P[buoi]) continue;
     rows += `<tr class="bh"><td colspan="${days.length + 1}">Buổi ${buoi.toLowerCase()}</td></tr>`;
-    for (let t = 1; t <= P[buoi]; t++) rows += `<tr><th class="r">Tiết ${t}</th>${days.map(d => { const v = cellText(d, buoi, t); return `<td><input class="${cellCls(v)}" data-d="${d}" data-b="${buoi}" data-t="${t}" value="${esc(v)}" aria-label="${DOW[d - 1]} tiết ${t} buổi ${buoi.toLowerCase()}"></td>`; }).join('')}</tr>`;
+    for (let t = 1; t <= P[buoi]; t++) rows += `<tr><th class="r">Tiết ${t}</th>${days.map(d => { const v = cellText(d, buoi, t); return `<td><input class="${cellCls(v)}"${fromLgd && /^g/.test(cellCls(v)) ? ' readonly title="Theo Lịch giảng dạy"' : ''} data-d="${d}" data-b="${buoi}" data-t="${t}" value="${esc(v)}" aria-label="${DOW[d - 1]} tiết ${t} buổi ${buoi.toLowerCase()}"></td>`; }).join('')}</tr>`;
   }
   const count = S.tkb.filter(s => s.cls).length;
+  const wkLabel = n => `${shortDate(weekDates(n)[0])} – ${shortDate(weekDates(n)[5])}`;
+  const lgNote = fromLgd ? `<div class="panel" style="margin-bottom:16px"><div class="panel-b sm-t" style="line-height:1.7">${ic('check')} <b>Lấy từ Lịch giảng dạy</b> — tuần ${wkLabel(tpl.n)}, ${tpl.slots.length} tiết ở ${esc(S.settings.school || 'trường này')} (TKB file Excel tổ). Mỗi tuần sổ tự xếp tiết theo đúng lịch tuần đó; tuần chưa có lịch dùng bảng này.<br><span class="muted">Ô có lớp tự cập nhật — muốn đổi thì sửa ở Lịch giảng dạy / file Excel tổ. Ô trống vẫn gõ được (vd Chào cờ).</span></div></div>`
+    : tpl && tpl.loading ? '<div class="panel" style="margin-bottom:16px"><div class="panel-b muted sm-t">Đang đọc Lịch giảng dạy…</div></div>'
+    : lgdCode() ? `<div class="panel" style="margin-bottom:16px"><div class="panel-b muted sm-t" style="line-height:1.7">Mã NV <b>${esc(lgdCode())}</b>: Lịch giảng dạy tuần này và tuần sau chưa có tiết nào ở <b>${esc(S.settings.school || 'trường của sổ')}</b> — gõ TKB vào bảng dưới. Tên trường ở Cài đặt cần khớp cột Trường trên Lịch giảng dạy.</div></div>`
+    : codeLookup === 'busy' ? '<div class="panel" style="margin-bottom:16px"><div class="panel-b muted sm-t">Đang tìm mã NV theo tên giáo viên ở Lịch giảng dạy…</div></div>'
+    : `<div class="panel" style="margin-bottom:16px"><div class="panel-b sm-t row gap-s" style="line-height:1.7"><span class="grow muted">${codeLookup === 'notfound'
+        ? `Không thấy giáo viên <b>${esc(S.settings.teacher)}</b> trên Lịch giảng dạy (tên cần giống cột GVTH trong file Excel tổ).`
+        : 'Chưa xác định được mã NV ở Lịch giảng dạy (tài khoản giáo viên không được tra danh sách, hoặc mất mạng).'} Nhập <b>Mã NV</b> (vd HCM0328) ở Cài đặt để sổ tự lấy TKB.</span>
+        <button type="button" class="btn sm primary" data-go="settings">Mở Cài đặt</button></div></div>`;
   root.innerHTML = `${phead('Thời khóa biểu', `${esc(S.settings.teacher)} · ${count} tiết mỗi tuần`, `<span class="tag warn hide" id="tDirty">Chưa lưu</span><button type="button" class="btn primary" id="tSave">${ic('check')}Lưu thời khóa biểu</button>`)}
+  ${lgNote}
   <div class="panel"><div class="panel-b tw"><table class="tkb"><thead><tr><th></th>${days.map(d => `<th>${DOW[d - 1]}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div></div>
   <div class="panel" style="margin-top:16px"><div class="panel-b muted sm-t" style="line-height:1.8">
     Gõ tên lớp vào ô, ví dụ <b>4.6</b> hoặc <b>4A6</b>. Ô có chữ khác (như <b>Chào cờ</b>) chỉ để hiển thị.
     ${S.programs.length > 1 ? `<br>Lớp học chương trình khác thì thêm mã sau tên lớp, ví dụ <b>3.2 ${esc(S.programs[1].id)}</b>. Mã: ${S.programs.map((p, i) => `<b>${esc(p.id)}</b> = ${esc(p.name)}${i === 0 ? ' (mặc định)' : ''}`).join(' · ')}` : ''}
   </div></div>`;
+  $$('[data-go]', root).forEach(b => b.onclick = () => go(b.dataset.go));
   root.oninput = ev => { if (ev.target.matches('.tkb input')) { ev.target.className = cellCls(ev.target.value); $('#tDirty').classList.remove('hide'); } };
   $('#tSave').onclick = async () => {
     const out = [], bad = [];
@@ -1161,7 +1280,8 @@ function viewSettings(root) {
   <section class="panel"><div class="panel-h"><h2>Trường &amp; người ký</h2></div><div class="panel-b">
     <div class="grid c3">${fld('ubnd', 'Cơ quan chủ quản')}${fld('school', 'Tên trường')}${fld('year', 'Năm học')}</div>
     <div class="grid" style="margin-top:14px">${fld('reportTitle', 'Tiêu đề bảng khi in')}</div>
-    <div class="grid c3" style="margin-top:14px">${fld('teacher', 'Giáo viên bộ môn')}${fld('toTruong', 'Tổ trưởng')}${fld('pht', 'Phó hiệu trưởng')}</div>
+    <div class="grid c4" style="margin-top:14px">${fld('teacher', 'Giáo viên bộ môn')}${fld('teacherCode', 'Mã NV (Lịch giảng dạy)')}${fld('toTruong', 'Tổ trưởng')}${fld('pht', 'Phó hiệu trưởng')}</div>
+    <p class="faint sm-t" style="margin:6px 0 0">Mã NV để sổ tự lấy TKB từng tuần ở Lịch giảng dạy (vd HCM0328). Để trống: sổ tự tìm theo tên giáo viên.${PROFILE && PROFILE.teacherCode ? ` Tài khoản đang gán mã <b>${esc(PROFILE.teacherCode)}</b> — mã này được dùng trước.` : ''}</p>
   </div></section>
   <section class="panel"><div class="panel-h"><h2>Năm học &amp; tiết học</h2></div><div class="panel-b">
     <div class="grid c4">${fld('week1', 'Thứ Hai của Tuần 01', 'date')}
@@ -1220,7 +1340,10 @@ function viewSettings(root) {
     S.programs.push({ id, name }); save(); drawProgs(); $('#npId').value = $('#npName').value = '';
   };
   $('#sSave').onclick = () => {
+    const oldCode = st.teacherCode || '', oldName = st.teacher || '';
     $$('[data-k]', root).forEach(i => st[i.dataset.k] = i.type === 'number' ? +i.value : i.value.trim());
+    st.teacherCode = String(st.teacherCode || '').toUpperCase();
+    if (st.teacherCode !== oldCode || st.teacher !== oldName) { LGD.clear(); codeLookup = ''; }
     st.periods = { 'Sáng': +$('#pS').value || 4, 'Chiều': +$('#pC').value || 0 };
     st.bell = Object.assign({}, st.bell, { 'Sáng': $('#bS').value || '07:15', 'Chiều': $('#bC').value || '14:00', len: +$('#bL').value || 35, recess: +$('#bR').value || 0 });
     st.days = $$('[data-day].on', root).map(x => +x.dataset.day);
@@ -1920,6 +2043,7 @@ function takeHandoff() {
 
 window.addEventListener('edu:ready', ev => {
   const p = (ev.detail && ev.detail.profile) || {}, id = ev.detail && ev.detail.user && ev.detail.user.uid;
+  PROFILE = p;
   if (id) bindOwner(id);
   // Sổ mới chưa có tên giáo viên → lấy tên tài khoản (hồ sơ auth-guard đã đọc, không đọc thêm)
   if (!S.settings.teacher && p.name) { S.settings.teacher = String(p.name).trim(); save(); }

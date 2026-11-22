@@ -158,7 +158,7 @@
       <div class="tt-legend">
         <span class="tt-legend-item"><span class="tt-level-badge tt-level-tieuHoc">TiH</span> Tiểu học · 35’/tiết</span>
         <span class="tt-legend-item"><span class="tt-level-badge tt-level-thcs">THCS</span> THCS · 45’/tiết</span>
-        <span class="tt-legend-item tt-legend-warn"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Giờ trong ô lệch với khung giờ đang áp dụng cho cả tuần</span>
+        <span class="tt-legend-item tt-legend-warn" id="ttLegendWarn" hidden><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Giờ trong ô lệch với khung giờ đang áp dụng cho cả tuần</span>
       </div>
       <div class="table-scroll">
         <table class="tt-grid" id="ttGrid"></table>
@@ -457,10 +457,7 @@
            hiện có (xem buildImportPlan() trong js/teaching-schedule.js). -->
       <div class="import-summary force-hide" id="importPlanSummary"></div>
       <div class="import-conflict" id="importConflictBox" hidden>
-        <div class="import-conflict-head"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> <b id="importConflictCount">0</b> ô TKB lớp đang khác Excel</div>
-        <label class="import-conflict-toggle">
-          <input type="checkbox" id="importOverrideChk"> Ghi đè các ô này theo Excel (bỏ tick = giữ nguyên TKB lớp)
-        </label>
+        <div class="import-conflict-head"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> <b id="importConflictCount">0</b> ô TKB lớp đang khác Excel — sẽ cập nhật theo Excel (ô Excel để trống thì xoá)</div>
         <ul class="import-skipped-list" id="importConflictList"></ul>
       </div>
     </div>

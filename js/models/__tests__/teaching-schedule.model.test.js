@@ -29,6 +29,10 @@ assertEq('dữ liệu cũ dạng boolean true không tính là mã lớp', M.eff
 assertEq('TKB cũ dạng chuỗi thẳng vẫn đọc được', M.effectivePeriods(null, ['3K', ' 3G '], cellOf), ['3K', '3G', '', '', '']);
 assertEq('cắt khoảng trắng mã lớp', M.effectivePeriods({ periods: [' 4.1 '] }, [], cellOf), ['4.1', '', '', '', '']);
 assertEq('không có gì → 5 tiết trống', M.effectivePeriods(null, null, cellOf), ['', '', '', '', '']);
+// Buổi nghỉ (Excel ghi "Nghỉ lễ"/"Nghỉ phép"/WFH...) không có mã lớp → KHÔNG lấy lớp TKB cũ
+assertEq('Nghỉ lễ: bỏ lớp TKB cũ', M.effectivePeriods({ type: 'Nghỉ lễ', location: '', periods: ['', '', '', '', ''] }, [cell('4/6'), cell('3/3')], cellOf), ['', '', '', '', '']);
+assertEq('WFH: bỏ lớp TKB cũ', M.effectivePeriods({ type: 'WFH', periods: [] }, ['4/6'], cellOf), ['', '', '', '', '']);
+assertEq('isNonTeachingType', ['Nghỉ phép', 'Nghỉ phép/ lễ', 'Khám sức khỏe', 'Làm việc tại cty', 'Soạn bài', 'Dạy chính', 'Trợ Giảng', ''].map(M.isNonTeachingType), [true, true, true, true, true, false, false, false]);
 
 console.log(failures ? '\n' + failures + ' FAIL' : '\nTất cả PASS');
 process.exit(failures ? 1 : 0);

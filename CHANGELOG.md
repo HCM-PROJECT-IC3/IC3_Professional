@@ -23,6 +23,31 @@ Thứ tự: Apps Script → `firestore.rules`/index → đẩy web.
      Lệch dữ liệu thì đặt `rosterDeltaSync: false` trong `js/backend-config.js`.
 
 
+## 22/11/2026 (38) — TKB theo đúng file Excel tổ; Sổ đầu bài tự lấy tiết từ Lịch giảng dạy; Soạn đề phẳng hơn
+
+Firestore **không đổi** (rules, index), Apps Script không đổi. Lượt Firebase: Sổ đầu bài thêm **2 lượt get/tuần mở** (giữ 6 giờ,
+dùng chung bộ đệm với Điểm danh — Điểm danh vừa đọc tuần đó thì 0 lượt); còn lại 0.
+
+- **Lịch giảng dạy — Nhập Excel:** TKB lớp tiết 1–5 lấy **đúng theo Excel**: ô Excel trống thì xoá lớp cũ, lớp khác thì cập nhật
+  (trước: ô cũ được giữ nguyên → lớp tuần trước "sống mãi", phải xoá tay từng tuần). Bỏ ô tick "Ghi đè"; modal vẫn liệt kê các ô sẽ đổi.
+  **Cần làm 1 lần:** nhập lại file Excel năm học (mặc định đã chọn các tuần từ tuần này trở đi).
+- **Buổi nghỉ / không dạy** ("Nghỉ lễ", "Nghỉ phép", WFH, Soạn bài, Làm việc tại cty, Khám sức khỏe — nhận cả cách viết mới của file
+  2026-2027) không còn hiện lớp TKB cũ ở Tổng quan, TKB lớp, Lịch dạy của Điểm danh. Tuần nghỉ cả tuần không mượn TKB tuần khác.
+- **Sổ đầu bài lấy TKB từ Lịch giảng dạy** (theo mã NV của tài khoản, đúng trường của sổ — "TiH Phong Phú 2" khớp
+  "TRƯỜNG TIỂU HỌC PHONG PHÚ 2"): mỗi tuần tự xếp tiết theo đúng lịch tuần đó (đổi lịch, nghỉ lễ tự đúng); bảng **Thời khóa biểu**
+  của sổ tự chép từ tuần này (Chủ nhật / tuần nghỉ thì tuần sau), lưu trên máy để tuần chưa có lịch hay lúc mất mạng vẫn dùng được.
+  Ô có lớp khoá lại (sửa ở Lịch giảng dạy / Excel tổ), ô trống vẫn gõ được (Chào cờ...). Lượt đọc: chỉ đúng tuần cần
+  (`tkb-source` `week(…, { exact: true })` — không chạy truy vấn danh sách mọi tuần của GV như Điểm danh khi tuần trống).
+  **Mã NV:** hồ sơ tài khoản (Admin gán) → mã lưu trong sổ → tự tìm theo tên giáo viên của sổ (1 lần đọc danh sách giáo viên,
+  giữ 3 ngày, chung với Điểm danh), tìm được thì lưu vào sổ — lần sau 0 lượt. Cài đặt có ô **Mã NV (Lịch giảng dạy)** để nhập tay
+  (tài khoản giáo viên không được tra danh sách giáo viên).
+- **Lịch giảng dạy — TKB lớp gọn, dễ đọc hơn:** ô trống không còn 2 khung "Mã lớp / Trường..." (rê chuột / bấm vào mới hiện để gõ;
+  giáo viên chỉ xem thì trống hẳn); ô có lớp là 1 thẻ liền (giờ · mã lớp · trường); buổi **Nghỉ lễ / Nghỉ phép / WFH / Soạn bài**
+  theo Lịch tuần tô nhạt và ghi rõ lý do; bỏ viền nét đứt xanh "tự điền" (gần như mọi ô đều tự điền → thành nhiễu, nguồn vẫn ở
+  tooltip); giờ tiết dùng biểu tượng đồng hồ thay emoji ⏱; chú thích "giờ lệch khung" chỉ hiện khi thật sự có ô lệch.
+- **Soạn đề:** ô đáp án là thẻ phẳng nhãn **A–F** (bỏ ô 4 màu đậm + ▲◆●■, như Đấu trường) ở khung soạn, Xem trước, Trình chiếu;
+  khung "Thêm ảnh" thu thành 1 dải → màn 1366–1536×700 thấy đủ 4 đáp án; thanh cuộn tối theo chế độ tối (mọi trang dùng `theme.css`).
+
 ## 22/11/2026 (37) — Rà soát toàn dự án: chống xoá nhầm bài nộp, bớt lượt đọc Portfolio, huy hiệu không mất
 
 Apps Script lên `2026-11-22a` (dán `apps/Code.gs`, Deploy → New version). Firestore **không đổi** (rules, index).

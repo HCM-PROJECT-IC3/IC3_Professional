@@ -142,6 +142,7 @@
 
 /* ── Dark Mode ── */
 [data-theme="dark"] {
+  color-scheme: dark; /* thanh cuộn, ô chọn ngày… của trình duyệt cũng tối (trước: thanh cuộn trắng giữa trang tối) */
   --bg:        #0d0f1a;
   --surface:   #161929;
   --card:      #1e2236;

@@ -56,7 +56,8 @@
   ];
   const TYPE_BY_ID = Object.fromEntries(CUSTOM_TYPES.map((t) => [t.id, t]));
   // Ô đáp án kiểu Kahoot: màu + hình (người mù màu vẫn phân biệt được).
-  const TILE_SHAPES = ['fa-play fa-rotate-270', 'fa-diamond', 'fa-circle', 'fa-square', 'fa-star', 'fa-heart'];
+  // Nhãn ô đáp án A–F (thẻ phẳng như Đấu trường — bỏ ô 4 màu đậm + ▲◆●■).
+  const TILE_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
   const COVERS = [
     'linear-gradient(135deg, #CFE3FF 0%, #EAF3FF 100%)',
     'linear-gradient(135deg, #C9F3E6 0%, #E9FBF5 100%)',
@@ -503,10 +504,10 @@
           <button type="button" class="eb-btn eb-btn-danger" data-act="img-remove"><i class="fa-solid fa-trash"></i> Bỏ ảnh</button>
         </div></div>`;
     }
-    return `<div class="eb-media" data-act="img-upload" tabindex="0" role="button" aria-label="Thêm ảnh minh hoạ">
+    // Dải gọn 1 hàng (trước là ô cao 150px đẩy đáp án 3–4 xuống dưới mép màn 1366×650–700).
+    return `<div class="eb-media is-empty" data-act="img-upload" tabindex="0" role="button" aria-label="Thêm ảnh minh hoạ">
       <i class="fa-regular fa-image"></i>
-      <b>Thêm ảnh minh hoạ</b>
-      <span>Bấm để chọn ảnh, kéo thả hoặc dán (Ctrl+V) — ảnh được nén gọn tự động</span>
+      <span class="eb-media-txt"><b>Thêm ảnh minh hoạ</b><span>Bấm chọn, kéo thả hoặc dán (Ctrl+V) — tự nén gọn</span></span>
       <input type="url" class="eb-input eb-img-url" data-f="imgurl" placeholder="…hoặc dán link ảnh https://" aria-label="Link ảnh">
     </div>`;
   }
@@ -518,7 +519,7 @@
       answers = `<div class="eb-tiles">${opts.map((o, i) => {
         const ok = (c.correct || []).includes(i);
         return `<div class="eb-tile c${i}${ok ? ' is-correct' : ''}${String(o).trim() ? ' has-text' : ''}">
-          <span class="eb-tile-shape"><i class="fa-solid ${TILE_SHAPES[i]}"></i></span>
+          <span class="eb-tile-shape">${TILE_LETTERS[i]}</span>
           <textarea rows="2" class="eb-tile-input" data-f="opt" data-i="${i}" maxlength="300" placeholder="Đáp án ${i + 1}${i >= 2 ? ' (tuỳ chọn)' : ''}">${esc(o)}</textarea>
           <button type="button" class="eb-tile-ok" data-act="toggle-correct" data-i="${i}" title="${ok ? 'Đáp án đúng' : 'Đánh dấu là đáp án đúng'}" aria-pressed="${ok}" aria-label="Đáp án ${i + 1} đúng"><i class="fa-solid fa-check"></i></button>
           ${opts.length > 2 ? `<button type="button" class="eb-tile-del" data-act="del-opt" data-i="${i}" title="Bỏ đáp án này" aria-label="Bỏ đáp án ${i + 1}"><i class="fa-solid fa-xmark"></i></button>` : ''}
@@ -1548,7 +1549,7 @@
       body = `<div class="eb-pv-tiles${q.options.length <= 2 ? ' is-two' : ''}">${q.options.map((o, i) => {
         const cls = P.revealed ? (correct.has(o) ? ' is-right' : P.picked.has(i) ? ' is-wrong' : ' is-dim') : (P.picked.has(i) ? ' is-picked' : '');
         return `<button type="button" class="eb-pv-tile c${i}${cls}" data-pv="pick" data-i="${i}" ${P.revealed ? 'disabled' : ''}>
-          <span class="eb-tile-shape"><i class="fa-solid ${TILE_SHAPES[i]}"></i></span><span>${esc(stripHtml(o))}</span>
+          <span class="eb-tile-shape">${TILE_LETTERS[i]}</span><span>${esc(stripHtml(o))}</span>
           ${P.revealed && correct.has(o) ? '<i class="fa-solid fa-check eb-pv-mark"></i>' : P.revealed && P.picked.has(i) ? '<i class="fa-solid fa-xmark eb-pv-mark"></i>' : ''}</button>`;
       }).join('')}</div>
       ${q.type === 'multi' && !P.revealed ? `<button type="button" class="eb-btn eb-btn-primary eb-pv-check" data-pv="reveal" ${P.picked.size ? '' : 'disabled'}>Kiểm tra (${P.picked.size} đã chọn)</button>` : ''}`;
@@ -1621,7 +1622,7 @@
     let teams = T.teams.length || 4;
     const names = () => {
       const old = T.teams.map((t) => t.name);
-      $('ebPtNames').innerHTML = teams ? Array.from({ length: teams }, (_, k) => `<label class="eb-pt-name ${TEAM_COLORS[k]}"><i class="fa-solid ${TILE_SHAPES[k]}"></i><input maxlength="20" data-team="${k}" value="${esc(old[k] || 'Nhóm ' + (k + 1))}" aria-label="Tên nhóm ${k + 1}"></label>`).join('') : '';
+      $('ebPtNames').innerHTML = teams ? Array.from({ length: teams }, (_, k) => `<label class="eb-pt-name ${TEAM_COLORS[k]}"><span class="eb-pt-team-no">${k + 1}</span><input maxlength="20" data-team="${k}" value="${esc(old[k] || 'Nhóm ' + (k + 1))}" aria-label="Tên nhóm ${k + 1}"></label>`).join('') : '';
     };
     names();
     body.querySelector('#ebPtSecs').addEventListener('click', (e) => { const b = e.target.closest('[data-secs]'); if (!b) return; secs = +b.dataset.secs; body.querySelectorAll('[data-secs]').forEach((x) => x.classList.toggle('is-active', x === b)); });
@@ -1680,7 +1681,7 @@
           <div class="eb-pt-trophy"><i class="fa-solid fa-trophy"></i></div>
           <h2>${ranked.length ? 'Bảng xếp hạng' : `Hoàn thành ${n} câu!`}</h2>
           ${ranked.length ? `<ol class="eb-pt-rank">${ranked.map((t, r) => `<li class="${TEAM_COLORS[t.k]}${r === 0 && t.score > 0 ? ' is-first' : ''}">
-            <span class="eb-pt-place">${r + 1}</span><span class="eb-tile-shape"><i class="fa-solid ${TILE_SHAPES[t.k]}"></i></span>
+            <span class="eb-pt-place">${r + 1}</span>
             <b>${esc(t.name)}</b><em>${t.score} điểm</em></li>`).join('')}</ol>` : ''}
           <div class="eb-pt-final-actions">
             <button type="button" class="eb-btn eb-btn-ghost" data-pt="again"><i class="fa-solid fa-rotate"></i> Chơi lại</button>
@@ -1694,13 +1695,13 @@
     const correct = new Set(q.correct || []);
     const body = tiles
       ? `<div class="eb-pv-tiles">${q.options.map((o, k) => `<div class="eb-pv-tile c${k}${T.revealed ? (correct.has(o) ? ' is-right' : ' is-dim') : ''}">
-          <span class="eb-tile-shape"><i class="fa-solid ${TILE_SHAPES[k]}"></i></span><span>${esc(stripHtml(o))}</span>
+          <span class="eb-tile-shape">${TILE_LETTERS[k]}</span><span>${esc(stripHtml(o))}</span>
           ${T.revealed && correct.has(o) ? '<i class="fa-solid fa-check eb-pv-mark"></i>' : ''}</div>`).join('')}</div>`
       : `<div class="eb-pv-static">${renderQuestionDetail(Object.assign({}, q, { explanation: '' }), { answer: T.revealed })}</div>`;
     const img = q.imageUrl || (q.image_file ? `img/${q.image_file}` : '');
     const expl = T.revealed && q.explanation ? `<div class="eb-pv-expl"><i class="fa-regular fa-lightbulb"></i> ${esc(stripHtml(q.explanation))}</div>` : '';
     const teams = T.teams.length ? `<div class="eb-pt-teams">${T.teams.map((t, k) => `<button type="button" class="eb-pt-team ${TEAM_COLORS[k]}${T.gained.has(k) ? ' is-gain' : ''}" data-pt="team" data-k="${k}" ${T.revealed ? '' : 'disabled'} title="${T.revealed ? 'Bấm (hoặc phím ' + (k + 1) + ') để cộng 1 điểm cho nhóm trả lời đúng' : 'Hiện đáp án rồi mới chấm'}">
-        <i class="fa-solid ${TILE_SHAPES[k]}"></i><span>${esc(t.name)}</span><b>${t.score + (T.gained.has(k) ? 1 : 0)}</b>${T.revealed ? `<em>${T.gained.has(k) ? '+1 ✓' : '+1'}</em>` : ''}</button>`).join('')}</div>` : '<span></span>';
+        <span class="eb-pt-team-no">${k + 1}</span><span>${esc(t.name)}</span><b>${t.score + (T.gained.has(k) ? 1 : 0)}</b>${T.revealed ? `<em>${T.gained.has(k) ? '+1 ✓' : '+1'}</em>` : ''}</button>`).join('')}</div>` : '<span></span>';
     ov.innerHTML = `
       <div class="eb-pv-top">
         <span class="eb-pv-count">${T.i + 1} / ${n}</span>
