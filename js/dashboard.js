@@ -438,7 +438,7 @@ function confirmStartQuiz(id) {
 function saveSession(session) {
   let sessions = getSessions();
   sessions.push(session);
-  localStorage.setItem('ic3_sessions', JSON.stringify(sessions));
+  try { localStorage.setItem('ic3_sessions', JSON.stringify(sessions)); } catch (e) { console.warn('[EduQuiz] Không ghi được ic3_sessions (bộ nhớ đầy):', e.message); } // vẫn mở link bài
 }
 
 function getSessions() {
@@ -457,7 +457,7 @@ function recordScore(sessionId, score) {
   if (idx === -1) return;
   sessions[idx].score = score;
   sessions[idx].status = 'Hoàn thành';
-  localStorage.setItem('ic3_sessions', JSON.stringify(sessions));
+  try { localStorage.setItem('ic3_sessions', JSON.stringify(sessions)); } catch (e) { console.warn('[EduQuiz] Không ghi được ic3_sessions (bộ nhớ đầy):', e.message); }
   const set = allSets.find(s => s.id === sessions[idx].setId);
   if (set) openManageModal(set.id);
   updateReportTab();
@@ -1097,15 +1097,26 @@ function saveNewSet() {
     link: link
   };
 
-  // Save to localStorage
-  const saved = JSON.parse(localStorage.getItem('ic3_custom_sets') || '[]');
+  // Save to localStorage — bộ nhớ đầy / bản lưu hỏng: báo rõ, giữ hộp thoại (trước: ném lỗi giữa chừng, mất bộ đề vừa soạn)
+  const saved = readCustomSets();
   saved.push(newSet);
-  localStorage.setItem('ic3_custom_sets', JSON.stringify(saved));
+  if (!writeCustomSets(saved)) return;
 
   allSets = loadSets();
   renderCards();
   closeModal();
   showToast('Đã tạo bộ đề: ' + name, 'fa-circle-check');
+}
+
+/** Bộ đề tự soạn trên máy. Bản lưu hỏng (sửa tay / ghi dở) → cất nguyên văn sang ic3_custom_sets_hong để còn cứu, trả []. */
+function readCustomSets() {
+  const raw = localStorage.getItem('ic3_custom_sets');
+  try { const v = JSON.parse(raw || '[]'); return Array.isArray(v) ? v : []; }
+  catch (e) { try { localStorage.setItem('ic3_custom_sets_hong', raw); } catch (e2) { /* bỏ qua */ } return []; }
+}
+function writeCustomSets(list) {
+  try { localStorage.setItem('ic3_custom_sets', JSON.stringify(list)); return true; }
+  catch (e) { showToast('Không lưu được: bộ nhớ trình duyệt đầy — xoá bớt bộ đề cũ hoặc dữ liệu web rồi thử lại', 'fa-triangle-exclamation'); return false; }
 }
 
 /* ========================================
@@ -1158,8 +1169,8 @@ function refreshSetsFromStorage() {
 function deleteCustomSet(id) {
   const set = allSets.find(s => s.id === id);
   if (!set || !confirm(`Xoá bộ đề "${set.title}"? Link làm bài đã gửi cho học sinh vẫn dùng được, chỉ mất khỏi danh sách này.`)) return;
-  const saved = JSON.parse(localStorage.getItem('ic3_custom_sets') || '[]').filter(s => s.id !== id);
-  localStorage.setItem('ic3_custom_sets', JSON.stringify(saved));
+  const saved = readCustomSets().filter(s => s.id !== id);
+  if (!writeCustomSets(saved)) return;
   refreshSetsFromStorage();
   closeModal();
   showToast('Đã xoá bộ đề: ' + set.title, 'fa-trash');

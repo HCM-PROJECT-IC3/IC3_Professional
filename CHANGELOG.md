@@ -48,6 +48,9 @@ Lượt Firebase: **giảm** (Portfolio); Apps Script: không thêm lượt gọ
   emoji 3D; tên trên sân không còn emoji; thanh thời gian 1 màu. 0 Firebase.
 - **Sao lưu tất cả dữ liệu trên máy:** thêm Bản nháp Soạn đề.
 - `nghi-phep.html` thêm thẻ viewport (CI `check-html` đang báo lỗi).
+- **Bộ đề tự soạn (trang quản lý):** bộ nhớ trình duyệt đầy / bản lưu hỏng không còn làm mất bộ đề vừa soạn âm thầm —
+  báo lỗi, giữ hộp thoại; bản hỏng được cất ở `ic3_custom_sets_hong`. Ghi nhật ký phiên lỗi vẫn mở link bài.
+  (Quét cả 296 file JS: mọi chỗ ghi localStorage ngoài `try` còn lại chỉ là nút đổi sáng/tối — vô hại.)
 
 ## 18/11/2026 (36) — Giao diện phẳng hơn, nhẹ hơn cho máy phòng tin; Portfolio tốn ít lượt đọc hơn
 
