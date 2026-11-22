@@ -1835,7 +1835,7 @@ async function genXlsx(btn) {
   const school = meta.school || S.settings.school || '';
   const data = {
     ubnd: meta.ubnd || '', school, title: meta.title || 'Bảng theo dõi, nhận xét tình hình giảng dạy môn Tin học',
-    weekText: `Tuần: ${pad(g.n)} (Từ ngày ${vnDate(g.dates[0])} đến ngày ${vnDate(g.dates[4])})`,
+    weekText: `Tuần: ${pad(g.n)} (Từ ngày ${vnDate(g.dates[0])} đến ngày ${vnDate(g.rows.reduce((m, x) => (x.date > m ? x.date : m), g.dates[4]))})`, // có tiết Thứ 7 → ghi đến Thứ 7
     rows: g.rows.map(x => {
       const [absN, absNames] = WKL.absentCells(x.absent, x.past && x.known, zero);
       return { thu: thu(x.date), date: WKL.dmy(x.date), cls: x.cls, tkb: x.tkb, ppct: x.ppct, lesson: x.lesson, absN, absNames, cmt: x.cmt || '', teacher: x.teacher, note: x.plan ? 'Dự kiến' : '' };

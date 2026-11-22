@@ -137,9 +137,10 @@
   const BADGES = [
     { id: 'first', fa: 'fa-flag', c: 'var(--ic-blue)', name: 'Bài đầu tiên', goal: 1, val: (m) => m.done },
     { id: 'five', fa: 'fa-book-open', c: 'var(--ic-blue)', name: 'Chăm chỉ', goal: 5, unit: 'bài', val: (m) => m.done },
-    { id: 'streak', fa: 'fa-fire', c: 'var(--ic-orange)', name: 'Học 3 ngày liền', goal: 3, unit: 'ngày', val: (m) => m.streak },
-    { id: 'good', fa: 'fa-star', c: 'var(--ic-green)', name: 'Đạt từ 80%', goal: 1, val: (m) => (m.recent || []).filter((r) => r.score >= 80).length },
-    { id: 'full', fa: 'fa-medal', c: 'var(--ic-orange)', name: 'Điểm tuyệt đối', goal: 1, val: (m) => (m.recent || []).filter((r) => r.score >= 100).length },
+    // Tính trên toàn bộ lịch sử (learning-hub studentSummary) — trước đây chỉ 4 bài gần nhất / chuỗi hiện tại nên huy hiệu đã đạt bị mất.
+    { id: 'streak', fa: 'fa-fire', c: 'var(--ic-orange)', name: 'Học 3 ngày liền', goal: 3, unit: 'ngày', val: (m) => Math.max(m.streak || 0, m.bestStreak || 0) },
+    { id: 'good', fa: 'fa-star', c: 'var(--ic-green)', name: 'Đạt từ 80%', goal: 1, val: (m) => (m.good != null ? m.good : (m.recent || []).filter((r) => r.score >= 80).length) },
+    { id: 'full', fa: 'fa-medal', c: 'var(--ic-orange)', name: 'Điểm tuyệt đối', goal: 1, val: (m) => (m.perfect != null ? m.perfect : (m.recent || []).filter((r) => r.score >= 100).length) },
     { id: 'twenty', fa: 'fa-trophy', c: 'var(--ic-green)', name: 'Siêng năng', goal: 20, unit: 'bài', val: (m) => m.done },
   ];
   let badgeKey = '';

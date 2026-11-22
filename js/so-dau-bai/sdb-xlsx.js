@@ -10,7 +10,9 @@
 (function (global) {
   'use strict';
 
-  const CDN = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
+  // Bản tự chứa (ExcelJS 4.4.0, dùng chung với Báo cáo/Soạn đề) — mạng trường chặn CDN / offline vẫn xuất được.
+  // CDN chỉ là dự phòng khi file cục bộ lỗi.
+  const SRC = ['js/vendor/exceljs.min.js', 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js'];
   const FONT = 'Times New Roman';
   const COLS = [
     { h: 'Thứ, ngày', w: 12 }, { h: 'Lớp', w: 7 }, { h: 'Tiết TKB', w: 10 }, { h: 'Tiết PPCT', w: 7.5 },
@@ -24,13 +26,15 @@
   function lib() {
     if (global.ExcelJS) return Promise.resolve(global.ExcelJS);
     if (!loading) {
-      loading = new Promise((ok, no) => {
+      const one = (src) => new Promise((ok, no) => {
         const s = document.createElement('script');
-        s.src = CDN; s.async = true;
+        s.src = src; s.async = true;
         s.onload = () => (global.ExcelJS ? ok(global.ExcelJS) : no(new Error('Không tải được thư viện Excel')));
-        s.onerror = () => { loading = null; no(new Error('Không tải được thư viện Excel — kiểm tra mạng rồi thử lại')); };
+        s.onerror = () => { s.remove(); no(new Error('Không tải được thư viện Excel — kiểm tra mạng rồi thử lại')); };
         document.head.appendChild(s);
       });
+      loading = SRC.slice(1).reduce((p, src) => p.catch(() => one(src)), one(SRC[0]))
+        .catch((e) => { loading = null; throw e; });
     }
     return loading;
   }

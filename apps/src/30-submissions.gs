@@ -209,6 +209,12 @@ function sendCheatAlertEmail_(payload) {
       return;
     }
 
+    // Trần theo GIỜ chưa đủ: Gmail thường chỉ ~100 người nhận/NGÀY cho cả script — chừa 20 cho việc khác.
+    if (typeof MailApp.getRemainingDailyQuota === 'function' && MailApp.getRemainingDailyQuota() < ALERT_EMAILS.length + 20) {
+      console.warn('Hạn mức email trong ngày sắp hết — bỏ qua email cảnh báo (dòng log vẫn ghi đủ).');
+      return;
+    }
+
     const subject = '⚠️ Nghi vấn gian lận: ' + (payload.studentName || 'Ẩn danh') + ' — ' + (payload.testName || '');
     const body = [
       'Học sinh: ' + (payload.studentName || ''),

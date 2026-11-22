@@ -22,7 +22,10 @@
   const CHAL_XU = 5;     // xu thưởng mỗi thử thách (Câu hỏi vàng / Thử thách tốc độ)
   const CHAL_MS = 5000;  // Thử thách tốc độ: đúng trong 5 giây
   const STORE = 'eduquiz_arena_v1';
-  const SHAPES = ['▲', '◆', '●', '■', '★', '⬟'];
+  // Nhãn phương án A–F (22/11/2026: bỏ ▲◆●■ + 4 ô màu kiểu Kahoot — nhìn như mẫu AI/sản phẩm khác).
+  const SHAPES = ['A', 'B', 'C', 'D', 'E', 'F'];
+  /** Bảng xếp hạng: chữ cái đầu trong ô tròn phẳng thay emoji (Windows vẽ emoji thành hình 3D bóng). */
+  const initialOf = (name) => (String(name || '?').trim().split(/\s+/).pop() || '?').charAt(0).toUpperCase();
   const AVATAR_DEFAULT = '🙂';
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1761,7 +1764,7 @@
       : G.mode === 'goal' ? `<span class="ar-board-sub">${p.shots} cú sút${p.shots ? ` · vào ${Math.round((p.goals / p.shots) * 100)}%` : ''}</span>`
       : G.mode === 'moon' ? `<span class="ar-board-sub">${p.km >= C.MOON_KM ? '🌕 đã tới Mặt Trăng' : `<span class="ar-hpbar is-moon"><i style="width:${Math.round((p.km / C.MOON_KM) * 100)}%"></i></span> ${C.moonFloor(p.km) ? `Trạm ${C.MOON_STAGES.indexOf(C.moonFloor(p.km)) + 1}` : 'bệ phóng'}`}</span>` : '');
     FX.flip($('arSide'), () => { $('arSide').innerHTML = `<h3>${G.practice ? '🔁 Luyện câu sai' : MODE_LABEL[G.mode]} <small>· ${unit}</small></h3><ol class="ar-board">${ranked(G.players).map((p, i) => `<li data-key="${p.id}" class="${p.me ? 'is-me' : ''}${p.ghost ? ' is-ghost' : ''}${(surv || spell) && p.hp <= 0 ? ' is-out' : ''}">
-      <span class="ar-board-rank">${i + 1}</span><span class="ar-board-face">${p.face}</span>
+      <span class="ar-board-rank">${i + 1}</span><span class="ar-board-face" aria-hidden="true">${esc(initialOf(p.name))}</span>
       <span class="ar-board-name">${esc(p.name)}${extra(p)}</span><b>${p[key].toLocaleString('vi-VN')}</b>${sub(p)}</li>`).join('')}</ol>`; });
     if (SC && G && !G.practice) SC.sync(G);
   }

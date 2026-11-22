@@ -165,8 +165,8 @@
     const r = RULES[mode];
     if (!r) return '';
     // cover: HTML tranh bìa của thẻ đang chọn (arena-covers.js) — phóng to làm "sân đấu", chạy liên tục.
-    const stage = cover ? `<div class="ar-stage m-${esc(mode)}" aria-hidden="true"><div class="ar-stage-art">${cover}</div>
-      <span class="ar-stage-win"><i class="fa-solid fa-trophy" aria-hidden="true"></i> ${esc(r.win || '')}</span></div>` : '';
+    const stage = cover ? `<div class="ar-rstage m-${esc(mode)}" aria-hidden="true"><div class="ar-rstage-art">${cover}</div>
+      <span class="ar-rstage-win"><i class="fa-solid fa-trophy" aria-hidden="true"></i> ${esc(r.win || '')}</span></div>` : '';
     return `${stage}<div class="ar-rules-body">
       <div class="ar-rules-head"><b>${esc(name)}</b><span class="ar-rules-tags">${r.tags.map((t) => `<span class="ar-rules-tag"><i class="fa-solid ${TAGS[t].fa}" aria-hidden="true"></i>${esc(TAGS[t].label)}</span>`).join('')}</span></div>
       <ol class="ar-rules-steps">${r.steps.map(([fa, t, d]) => `<li><i class="fa-solid ${fa}" aria-hidden="true"></i><div><b>${esc(t)}</b> <span>${esc(d)}</span></div></li>`).join('')}</ol>

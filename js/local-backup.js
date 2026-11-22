@@ -17,6 +17,7 @@
     { p: 'eduquiz_goiten', name: 'Gọi tên' },
     { p: 'eduquiz_thidua', name: 'Thi đua lớp học' },
     { p: 'ic3_custom_sets', name: 'Bộ đề tự soạn' },
+    { p: 'ic3_exam_builder_draft', name: 'Bản nháp Soạn đề' },
     { p: 'eduquiz_assign', name: 'Giao bài theo lớp' },
     { p: 'eduquiz_gom_ket_qua', name: 'Gom kết quả' },
     { p: 'eduquiz_insights', name: 'Tổng quan lớp' },

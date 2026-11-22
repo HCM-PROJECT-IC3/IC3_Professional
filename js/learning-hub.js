@@ -118,6 +118,17 @@
     while (days.has(dayKey(d.getTime()))) { n++; d.setDate(d.getDate() - 1); }
     return { streak: n, days: days.size };
   }
+  /** Chuỗi ngày học liên tiếp DÀI NHẤT từng có (huy hiệu "Học 3 ngày liền" không mất khi nghỉ 1 ngày). */
+  function bestStreakOf(recs) {
+    const mid = (t) => { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); };
+    const days = Array.from(new Set(recs.map((r) => recTime(r)).filter((t) => t > 0).map(mid))).sort((a, b) => a - b);
+    let best = 0, run = 0, prev = null;
+    days.forEach((d) => {
+      run = prev != null && Math.round((d - prev) / 864e5) === 1 ? run + 1 : 1; // round: ngày đổi giờ mùa hè
+      best = Math.max(best, run); prev = d;
+    });
+    return best;
+  }
   /** Tra id Chương trình/Cấp độ cho bản ghi cũ (chỉ lưu tên hiển thị). */
   function resolveIds(r) {
     if (r.catId && r.levelId) return { catId: r.catId, levelId: r.levelId, mtKey: r.mtKey || '' };
@@ -753,7 +764,10 @@
     const recent = recs.slice(-4).reverse().map((r) => ({
       title: String(r.minitest || r.level || 'Bài làm'), score: Number(r.score) || 0, t: recTime(r), test: r.examMode === 'test',
     }));
-    return { key: st.key, name: st.name, done: recs.length, streak: streakOf(recs).streak, due: dueItems(studentBook(st.key)).length, recent };
+    // Huy hiệu ở sảnh tính trên TOÀN BỘ lịch sử (không chỉ 4 bài gần nhất) — đã đạt thì không mất khi bài cũ trôi đi.
+    const good = recs.filter((r) => (Number(r.score) || 0) >= 80).length;
+    const perfect = recs.filter((r) => (Number(r.score) || 0) >= 100).length;
+    return { key: st.key, name: st.name, done: recs.length, streak: streakOf(recs).streak, bestStreak: bestStreakOf(recs), good, perfect, due: dueItems(studentBook(st.key)).length, recent };
   }
 
   global.EduLearningHub = { open, updateBadge, seasonInfo, studentSummary, _keyOf: keyOf };

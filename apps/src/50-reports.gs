@@ -103,12 +103,17 @@ function writeSummaryReport_(report) {
     throw appError_('invalid-argument', 'report rỗng, quá lớn hoặc sai định dạng');
   }
   const sheet = SpreadsheetApp.openById(SPREADSHEET_ID_REPORT).getSheetByName(SHEET_REPORT_SUMMARY);
+  if (!sheet || sheet.getLastColumn() < 1) throw appError_('failed-precondition', 'Chưa có tab ' + SHEET_REPORT_SUMMARY + ' — chạy "Cài đặt Sheet" trước.');
   const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
 
   const rows = report.map(function (item) {
     return headers.map(function (h) { return item[h] !== undefined ? noFormula_(item[h]) : ''; });
   });
-  sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, headers.length).setValues(rows);
+  // getLastRow() + setValues không nguyên tử như appendRow: 2 lượt xuất cùng lúc sẽ ghi ĐÈ lên
+  // cùng vùng dòng → giữ khoá chung (việc hiếm, không chặn bài nộp).
+  withRareLock_(function () {
+    sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, headers.length).setValues(rows);
+  });
 
   return { rowsWritten: rows.length };
 }

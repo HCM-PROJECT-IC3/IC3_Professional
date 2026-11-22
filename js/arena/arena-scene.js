@@ -20,20 +20,21 @@
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const reduced = () => { try { return global.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } };
 
-  /** Cảnh nền + đoạn cắt (oy: lấy dải 300px từ cảnh 1000×600) + mặt đất (gy) cho mỗi chế độ. */
+  /** Cảnh nền + đoạn cắt (oy: lấy dải 300px từ cảnh 1000×600) + mặt đất (gy) cho mỗi chế độ.
+   *  side: màu phẳng 2 bên khi dải rộng hơn tranh 10:3 — 1 màu, hoặc [trên, dưới, % chia] (đo từ mép tranh). */
   const SET = {
-    speed: { scene: 'field', oy: 250, gy: 262 },
-    race: { scene: 'track', oy: 130, gy: 0 },
-    tug: { scene: 'sky', oy: 300, gy: 262 },
-    fish: { scene: 'pond', oy: 300, gy: 266 },
-    gold: { scene: 'farm', oy: 300, gy: 264 },
-    survival: { scene: 'island', oy: 250, gy: 264 },
-    spell: { scene: 'castle', oy: 240, gy: 264 },
-    heist: { scene: 'street', oy: 228, gy: 236 },
-    dino: { scene: 'jungle', oy: 150, gy: 262 },
-    moon: { scene: 'space', oy: 0, gy: 272 },
-    boss: { scene: 'server', oy: 220, gy: 264 },
-    goal: { scene: 'goal', oy: 140, gy: 270 },
+    speed: { scene: 'field', oy: 250, gy: 262, side: '#74b55a' },
+    race: { scene: 'track', oy: 130, gy: 0, side: '#c6673d' },
+    tug: { scene: 'sky', oy: 300, gy: 262, side: ['#7fc4f6', '#5ea145', 72] },
+    fish: { scene: 'pond', oy: 300, gy: 266, side: '#6aae4d' },
+    gold: { scene: 'farm', oy: 300, gy: 264, side: ['#dab074', '#5f8f3c', 86] },
+    survival: { scene: 'island', oy: 250, gy: 264, side: ['#7fbcd6', '#c4ae83', 82] },
+    spell: { scene: 'castle', oy: 240, gy: 264, side: ['#8d5a64', '#57477f', 42] },
+    heist: { scene: 'street', oy: 228, gy: 236, side: ['#a2738f', '#cfc3b7', 42] },
+    dino: { scene: 'jungle', oy: 150, gy: 262, side: ['#fabd77', '#7fbe5d', 58] },
+    moon: { scene: 'space', oy: 0, gy: 272, side: '#18164c' },
+    boss: { scene: 'server', oy: 220, gy: 264, side: '#16224a' },
+    goal: { scene: 'goal', oy: 140, gy: 270, side: '#72bb57' },
   };
   const KEY = { speed: 'score', gold: 'gold', race: 'pos', survival: 'score', fish: 'kg', tug: 'pull', spell: 'dmg', heist: 'gems', dino: 'fossils', moon: 'km', boss: 'dmg', goal: 'goals' };
   const UNIT = { speed: '', gold: ' 🪙', race: '', survival: '', fish: ' kg', tug: '', spell: '', heist: ' 💎', dino: ' 🦴', moon: '', boss: '', goal: ' ⚽' };
@@ -46,13 +47,14 @@
     const set = SET[G.mode] || SET.speed;
     el.hidden = false;
     const art = A.scene(set.scene);
-    // .ar-sc-amb: cùng cảnh, làm mờ + tối, phủ kín cả dải — chỉ lộ ra 2 bên khi dải rộng hơn 10:3 (máy tính)
-    const amb = art.replace('viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice"', `viewBox="0 ${set.oy} 1000 300" preserveAspectRatio="xMidYMax slice"`)
-      .replace(/\bid="([^"]+)"/g, 'id="amb-$1"').replace(/url\(#(?!np(?:Sph|SphSoft|Cyl|Light)\b)([^)]+)\)/g, 'url(#amb-$1)'); // giữ gradient khối 3D dùng chung
-    el.innerHTML = `<div class="ar-sc-amb" aria-hidden="true">${amb}</div><div class="ar-sc-world"><div class="ar-sc-bg" style="transform:translateY(${-set.oy}px)">${art}</div><div class="ar-sc-layer"></div><div class="ar-sc-fx"></div></div>`;
+    // 2 bên (dải rộng hơn 10:3 trên máy tính): màu phẳng đo từ mép tranh. Trước 22/11/2026 là bản sao cả tranh làm nhoè
+    // (nhìn "kiểu AI", tốn thêm 1 SVG lớn mỗi trận).
+    const side = Array.isArray(set.side) ? `linear-gradient(180deg, ${set.side[0]} ${set.side[2]}%, ${set.side[1]} ${set.side[2]}%)` : (set.side || '#9fd4ef');
+    el.style.setProperty('--sc-side', side);
+    el.innerHTML = `<div class="ar-sc-world"><div class="ar-sc-bg" style="transform:translateY(${-set.oy}px)">${art}</div><div class="ar-sc-layer"></div><div class="ar-sc-fx"></div></div>`;
     S = { el, world: el.querySelector('.ar-sc-world'), layer: el.querySelector('.ar-sc-layer'), fx: el.querySelector('.ar-sc-fx'), mode: G.mode, set, sp: {}, prev: {}, timers: [] };
     // Dải hẹp (điện thoại): khớp chiều ngang, dư chiều cao thì lộ thêm trời phía trên.
-    // Dải rộng (máy tính): khớp chiều cao để thấy trọn tranh, khung 1000 đặt giữa, mép tranh mờ dần vào nền mờ 2 bên
+    // Dải rộng (máy tính): khớp chiều cao để thấy trọn tranh, khung 1000 đặt giữa, 2 bên là màu phẳng (--sc-side)
     // (không soi gương/lặp tranh — lặp sẽ thấy 2 núi lửa, 2 lâu đài...).
     const fit = () => {
       if (!S) return;
@@ -99,7 +101,7 @@
     el.className = 'ar-sc-sp' + (p.me ? ' is-me' : '');
     const w = size || (n > 5 ? 54 : 62);
     el.innerHTML = `<div class="ar-sc-in" style="width:${w}px">${art}</div>
-      <span class="ar-sc-tag">${p.me ? '⭐ Em' : `${p.face} ${esc(p.name)}`}</span><span class="ar-sc-over"></span>${p.bot ? '<span class="ar-sc-think" aria-hidden="true"><i></i><i></i><i></i></span>' : ''}`;
+      <span class="ar-sc-tag">${p.me ? 'Em' : esc(p.name)}</span><span class="ar-sc-over"></span>${p.bot ? '<span class="ar-sc-think" aria-hidden="true"><i></i><i></i><i></i></span>' : ''}`;
     S.layer.appendChild(el);
     return { el, x: 0, y: 0, w, h: w * 1.62, id: p.id };
   }

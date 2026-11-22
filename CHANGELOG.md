@@ -23,6 +23,32 @@ Thứ tự: Apps Script → `firestore.rules`/index → đẩy web.
      Lệch dữ liệu thì đặt `rosterDeltaSync: false` trong `js/backend-config.js`.
 
 
+## 22/11/2026 (37) — Rà soát toàn dự án: chống xoá nhầm bài nộp, bớt lượt đọc Portfolio, huy hiệu không mất
+
+Apps Script lên `2026-11-22a` (dán `apps/Code.gs`, Deploy → New version). Firestore **không đổi** (rules, index).
+Lượt Firebase: **giảm** (Portfolio); Apps Script: không thêm lượt gọi.
+
+- **Xoá bài nộp (Báo cáo kết quả) chắc chắn không xoá nhầm dòng:** trước đây chỉ dùng khoá theo người dùng (`getUserLock`)
+  và xoá theo số dòng đã tìm, không kiểm tra lại. Nay dùng khoá chung (không chặn bài nộp) và đọc lại mã bài ở đúng
+  dòng ngay trước khi xoá — dòng đã đổi thì bỏ qua (`apps/src/40-results.gs`).
+- **Xuất báo cáo tổng hợp (tab TongHop):** 2 lượt xuất cùng lúc không còn ghi đè lên nhau (`50-reports.gs`).
+- **Email cảnh báo gian lận:** dừng khi hạn mức email trong ngày sắp hết (trước chỉ giới hạn theo giờ).
+- **Portfolio:** đóng khung bình luận thì ngắt nghe realtime (trước nghe mãi — mỗi bình luận mới tốn 1 lượt đọc);
+  mở lại khung không còn gửi trùng bình luận.
+- **Sảnh — huy hiệu:** "Đạt từ 80%", "Điểm tuyệt đối", "Học 3 ngày liền" tính trên toàn bộ lịch sử trên máy
+  (trước chỉ 4 bài gần nhất / chuỗi hiện tại nên huy hiệu đã đạt bị mất).
+- **Sổ đầu bài — Xuất Excel bảng tuần:** dùng ExcelJS có sẵn trong web (mạng trường chặn CDN vẫn xuất được);
+  tuần có tiết Thứ 7 ghi đúng "đến ngày" Thứ 7.
+- **Đấu trường — thẻ luật có tranh sân đấu (đợt 21/11) vỡ trên điện thoại:** trang rộng ~2.700px ở màn 375px.
+  Class `.ar-stage` của tranh trùng tên khung sân chơi trong trận (nền tối, `overflow:hidden`, `aspect-ratio` áp nhầm
+  vào trận) và quy tắc 1 cột cho màn hẹp thua độ ưu tiên của `:has()`. Đổi tên thành `.ar-rstage`, sửa media query.
+- **Đấu trường — màn trong trận vừa 1 màn hình, phẳng hơn:** màn 1366–1536×650–700 trước bị mất đáp án 3–4 dưới mép.
+  Sân thấp theo chiều cao màn hình; ô đáp án là thẻ phẳng có nhãn **A B C D** (bỏ ô 4 màu đậm + ▲◆●■ + bóng cứng);
+  hai bên sân là màu phẳng của từng sân (bỏ bản tranh làm nhoè — nhẹ máy hơn); bảng xếp hạng dùng chữ cái đầu thay
+  emoji 3D; tên trên sân không còn emoji; thanh thời gian 1 màu. 0 Firebase.
+- **Sao lưu tất cả dữ liệu trên máy:** thêm Bản nháp Soạn đề.
+- `nghi-phep.html` thêm thẻ viewport (CI `check-html` đang báo lỗi).
+
 ## 18/11/2026 (36) — Giao diện phẳng hơn, nhẹ hơn cho máy phòng tin; Portfolio tốn ít lượt đọc hơn
 
 - **Bỏ mờ kính (backdrop-filter) ở mọi trang** (18 chỗ: sảnh, thanh trên Đấu trường / Sổ đầu bài / app 2.0, lớp phủ

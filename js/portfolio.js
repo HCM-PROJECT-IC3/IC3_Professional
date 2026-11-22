@@ -652,6 +652,8 @@
         if (!panel) return;
         const show = panel.hidden;
         panel.hidden = !show;
+        // Đóng khung → ngắt nghe (trước: nghe mãi tới khi feed vẽ lại, mỗi bình luận mới = 1 lượt đọc).
+        if (!show && commentUnsubs.has(postId)) { commentUnsubs.get(postId)(); commentUnsubs.delete(postId); return; }
         if (show && !commentUnsubs.has(postId)) {
           const commentsList = panel.querySelector('[data-comments-list]');
           const unsub = db.collection('gvlab_posts').doc(postId).collection('comments')
@@ -671,6 +673,8 @@
             }, (err) => { commentsList.innerHTML = `<p class="gv-feed-empty">Lỗi tải bình luận: ${esc(err.message)}</p>`; });
           commentUnsubs.set(postId, unsub);
           const form = panel.querySelector('[data-comment-form]');
+          if (form.dataset.bound) return; // mở lại khung: không gắn thêm submit (gửi trùng bình luận)
+          form.dataset.bound = '1';
           form.addEventListener('submit', (e) => {
             e.preventDefault();
             if (!currentUser || !canEditFeed()) { window.location.href = 'login.html'; return; }

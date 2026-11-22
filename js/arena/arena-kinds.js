@@ -11,7 +11,7 @@
   'use strict';
 
   const C = global.EduArenaCore;
-  const SHAPES = ['▲', '◆', '●', '■', '★', '⬟'];
+  const SHAPES = ['A', 'B', 'C', 'D', 'E', 'F']; // khớp arena.js
   const LETTERS = 'ABCDEF';
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 

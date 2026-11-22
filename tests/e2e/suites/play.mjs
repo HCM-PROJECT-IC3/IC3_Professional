@@ -105,7 +105,7 @@ export default async function ({ base, page, check, shot }) {
     return { steps: d.querySelectorAll('.ar-rules-steps li').length, tags: d.querySelectorAll('.ar-rules-tag').length, text: d.innerText };
   });
   let rc = await rules();
-  check('Luật chơi Tốc độ: 3 bước, nhãn, cao trào', rc.steps === 3 && rc.tags >= 2 && /Cao trào/.test(rc.text) && /Tốc độ/.test(rc.text), rc);
+  check('Luật chơi Tốc độ: 3 bước, nhãn, cao trào', rc.steps === 3 && rc.tags >= 2 && /Gay cấn nhất/.test(rc.text) && /Tốc độ/.test(rc.text), rc);
   await r.evaluate(() => document.querySelector('.ar-mode[data-mode="race"]').click());
   rc = await rules();
   check('đổi sang Đua về đích → luật đổi theo (tiến 2 bước)', /Đua về đích/.test(rc.text) && /2 bước/.test(rc.text), rc.text);

@@ -171,32 +171,34 @@ function deleteResults_(p, who) {
   const wanted = new Set((Array.isArray(p.ids) ? p.ids : []).slice(0, 500).map(String));
   if (!wanted.size) return { deleted: 0 };
 
-  // Khoá riêng (không chặn bài nộp đang ghi): appendRow chỉ thêm dòng cuối, không làm lệch
-  // số dòng đã tìm thấy ở đây; khoá này chỉ để 2 lượt xoá không chạy chồng nhau.
-  const lock = LockService.getUserLock();
-  lock.waitLock(30000);
-  try {
-    let deleted = 0;
+  // Khoá CHUNG (withRareLock_, không chặn bài nộp — appendRow không lấy khoá): appendRow chỉ thêm
+  // dòng cuối nên không làm lệch số dòng đã tìm; nhưng 2 người xoá cùng lúc (2 Admin / Điều phối)
+  // thì deleteRow của người này làm lệch số dòng của người kia. Trước 22/11/2026 dùng getUserLock() — phạm vi
+  // phụ thuộc cách triển khai Web App — và không kiểm tra lại dòng trước khi xoá.
+  // Thêm 1 lớp nữa: đọc lại mã ở đúng dòng ngay trước khi xoá — khác mã thì bỏ qua.
+  const deleted = withRareLock_(function () {
+    let n = 0;
     const ids = logSpreadsheetIds_();
     for (let f = 0; f < ids.length && wanted.size; f++) {
       const sheet = SpreadsheetApp.openById(ids[f]).getSheetByName(SHEET_SUBMISSION_LOG);
       if (!sheet || sheet.getLastRow() < 2) continue;
-      const rowNums = [];
+      const hits = [];
       wanted.forEach(function (id) {
         const cell = sheet.getRange('A:A').createTextFinder(id).matchEntireCell(true).findNext();
         if (!cell || cell.getRow() < 2) return;
         if (!inWhoScope_(who, sheet.getRange(cell.getRow(), 4).getDisplayValue())) return;
-        rowNums.push(cell.getRow());
+        hits.push({ row: cell.getRow(), id: id });
       });
-      rowNums.sort(function (a, b) { return b - a; }).forEach(function (row) {
-        wanted.delete(String(sheet.getRange(row, 1).getDisplayValue()));
-        sheet.deleteRow(row);
-        deleted++;
+      hits.sort(function (a, b) { return b.row - a.row; }).forEach(function (h) {
+        if (String(sheet.getRange(h.row, 1).getDisplayValue()) !== h.id) return; // dòng đã đổi → không xoá nhầm
+        sheet.deleteRow(h.row);
+        wanted.delete(h.id);
+        n++;
       });
     }
-    if (deleted) auditServer_('delete_results', who, { deleted: deleted, ids: Array.from(new Set(p.ids)).slice(0, 50) });
-    return { deleted: deleted };
-  } finally {
-    lock.releaseLock();
-  }
+    return n;
+  });
+  // Ngoài khoá: ghi nhật ký có thể tự lấy khoá chung (tạo tab / xoay file).
+  if (deleted) auditServer_('delete_results', who, { deleted: deleted, ids: Array.from(new Set(p.ids)).slice(0, 50) });
+  return { deleted: deleted };
 }
