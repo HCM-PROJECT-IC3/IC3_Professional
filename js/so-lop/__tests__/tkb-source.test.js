@@ -47,6 +47,12 @@ var classesOf = function (days, d, s) { return days[d][s].map(function (c) { ret
   assertEq('buổi 2 trường → trường theo từng tiết (periodSchools)', [m2['2'].morning[0].truong, m2['2'].morning[1].truong], ['TiH A', 'THCS B']);
   assertEq('không có lớp nào → null', [mergeWeek(null, null), mergeWeek({ days: { '2': { morning: sess(['', '', '', '', '']) } } }, null)], [null, null]);
 
+  var off = { days: { '3': { morning: { type: 'Nghỉ lễ', location: '', periods: ['', '', '', '', ''] } } } };
+  var mOff = mergeWeek(off, { days: { '3': { morning: [{ maLop: '5/5', truong: 'A' }] } } });
+  assertEq('Nghỉ lễ: bỏ lớp TKB cũ, tuần nghỉ cả tuần không mượn tuần khác', mOff && mOff['3'].morning.map(function (c) { return c.maLop; }), ['', '', '', '', '']);
+  var mMix = mergeWeek({ days: { '2': { morning: { type: 'WFH', periods: [] }, afternoon: { type: 'Dạy chính', periods: [] } } } }, null);
+  assertEq('có buổi Dạy chính chưa gõ lớp → vẫn null (mượn tuần gần nhất)', mMix, null);
+
   var t = Date.UTC(2026, 10, 11, 3); // Thứ 4 11/11/2026
   var clock = function () { return t; };
   var mon = new Date(2026, 10, 9), prev = new Date(2026, 10, 2), old = new Date(2026, 9, 5);
@@ -71,6 +77,11 @@ var classesOf = function (days, d, s) { return days[d][s].map(function (c) { ret
   assertEq('lượt đọc: 2 tuần × 2 nguồn + 1 list', [R3.n.sched, R3.n.tt, R3.n.list], [2, 2, 1]);
   await T3.week('HCM0328', mon); await T3.week('HCM0328', prev);
   assertEq('xem lại: không đọc thêm (nhớ cả tuần trống)', [R3.n.sched, R3.n.list], [2, 1]);
+
+  // 3b. exact (Sổ đầu bài): tuần chưa nhập → null, KHÔNG list mọi tuần của GV
+  var R3b = fakeRepos({ sched: { 'HCM0328__2026-10-05': SCHED } }), T3b = create({ repos: R3b, storage: mem(), now: clock, log: quiet });
+  var xb = await T3b.week('HCM0328', mon, { exact: true });
+  assertEq('exact: tuần trống → null, 0 list', [xb, R3b.n.sched, R3b.n.list], [null, 1, 0]);
 
   // 4. Hết hạn: tuần hiện tại 6 giờ; tuần cũ 30 ngày
   t += 7 * 3600e3;

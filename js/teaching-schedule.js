@@ -733,7 +733,8 @@
   // Loại hình KHÔNG tách theo tiết (áp dụng cho CẢ buổi, không có khái
   // niệm "tiết mấy") — chỉ hiện 1 lần ở TIẾT ĐẦU TIÊN của buổi đó khi
   // không có mã lớp nào, các tiết sau để trống, tránh lặp lại vô nghĩa.
-  const NON_PERIOD_TYPES = new Set(['Làm việc tại cty', 'WFH', 'Soạn bài', 'Nghỉ phép/ lễ', 'Khám SK']);
+  // Nghỉ phép/lễ, WFH, Soạn bài, Làm việc tại cty, Khám SK — so khớp nới lỏng (Excel mới ghi "Nghỉ lễ", "Nghỉ phép" riêng).
+  const NON_PERIOD_TYPES = { has: (type) => M.isNonTeachingType(type) };
 
   /** Mã lớp CỦA ĐÚNG 1 TIẾT (không phải cả buổi) — ưu tiên dữ liệu đã điền
    * ở tab "TKB lớp" (nguồn chi tiết nhất theo từng tiết), nếu trống thì
@@ -1945,7 +1946,6 @@
     pendingImport.plan = null;
     document.getElementById('importPlanSummary').classList.add('force-hide');
     document.getElementById('importConflictBox').hidden = true;
-    document.getElementById('importOverrideChk').checked = false;
     const btn = document.getElementById('importConfirmBtn');
     const n = pendingImport.selected.size;
     btn.disabled = n === 0;
@@ -2018,7 +2018,6 @@
     document.getElementById('importWeekPicker').hidden = true;
     document.getElementById('importPlanSummary').classList.add('force-hide');
     document.getElementById('importConflictBox').hidden = true;
-    document.getElementById('importOverrideChk').checked = false;
     const btn = document.getElementById('importConfirmBtn');
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Nhập dữ liệu';
@@ -2104,10 +2103,9 @@
 
   /** So file Excel với dữ liệu hiện có → danh sách document CẦN GHI (chỉ
    * những gì thực sự khác) + các ô TKB lớp đang khác Excel. Không gọi
-   * Firestore — đổi tuỳ chọn "Ghi đè" chỉ tính lại, không đọc thêm.
-   * TKB lớp: ô đang trống lấy theo Excel; ô đã có mã lớp khác Excel thì
-   * giữ nguyên, trừ khi override=true. */
-  function buildImportPlan(override) {
+   * Firestore. TKB lớp tiết 1-5: lấy ĐÚNG theo Excel (ô trống = xoá lớp cũ);
+   * `conflicts` chỉ để liệt kê cho người nhập xem trước những ô sẽ đổi. */
+  function buildImportPlan() {
     const imp = pendingImport;
     const TTM = window.EduModels.TeachingTimetable;
     const hasTT = !!(TTM && window.EduRepositories.teachingTimetable);
@@ -2156,14 +2154,15 @@
           ttDays[String(d)] = {};
           ['morning', 'afternoon'].forEach((s) => {
             const oldCells = (oldDay[s] || []).map((c) => TTM.cellOf(c));
-            const cells = sessionToTimetableCells(daySess[s] || {}).map((cell, i) => {
+            // Excel là NGUỒN DUY NHẤT: ô nào Excel để trống thì TKB lớp cũng trống, mã lớp khác thì
+            // lấy theo Excel. Trước đây ô cũ được GIỮ NGUYÊN → lớp tuần trước "sống mãi" trong TKB,
+            // phải vào xoá tay từng tuần. Ghi cả mảng 5 tiết (merge chỉ thay đúng mảng buổi này).
+            const cells = sessionToTimetableCells(daySess[s] || {});
+            cells.forEach((cell, i) => {
               const old = oldCells[i];
-              if (!old || !old.maLop) return cell;
-              if (cell.maLop && cell.maLop !== old.maLop) {
+              if (old && old.maLop && old.maLop !== cell.maLop) {
                 conflicts.push({ teacherCode: t.code, teacherName: t.name, weekLabel: week.weekLabel, day: d, session: s, periodIdx: i, old, cell });
-                if (override) return cell;
               }
-              return old;
             });
             if (cells.some((c) => c.maLop)) anyClass = true;
             if (stableJson(cells) !== stableJson(oldCells)) ttChanged = true;
@@ -2181,7 +2180,7 @@
         }
       });
     });
-    return { writes, conflicts, stats, override };
+    return { writes, conflicts, stats };
   }
 
   function renderImportPlan(plan) {
@@ -2198,7 +2197,7 @@
     cBox.hidden = plan.conflicts.length === 0;
     if (plan.conflicts.length) {
       document.getElementById('importConflictCount').textContent = plan.conflicts.length;
-      const fmt = (c) => `"${esc(c.maLop)}"${c.truong ? ' <small>(' + esc(c.truong) + ')</small>' : ''}`;
+      const fmt = (c) => (c.maLop ? `"${esc(c.maLop)}"${c.truong ? ' <small>(' + esc(c.truong) + ')</small>' : ''}` : '<i>trống (xoá lớp cũ)</i>');
       document.getElementById('importConflictList').innerHTML = plan.conflicts.map((c) =>
         `<li><b>${esc(c.teacherName)}</b> · ${esc(c.weekLabel)} · ${M.WEEKDAY_LABELS[c.day]} ${M.SESSION_LABELS[c.session]}, tiết ${c.periodIdx + 1}: `
         + `TKB lớp ${fmt(c.old)} → Excel ${fmt(c.cell)}</li>`
@@ -2215,12 +2214,6 @@
     btn.disabled = false;
     btn.textContent = plan.writes.length ? `Ghi ${plan.writes.length} thay đổi` : 'Đóng (không có gì để ghi)';
   }
-
-  document.getElementById('importOverrideChk').addEventListener('change', (e) => {
-    if (!pendingImport || !pendingImport.plan) return;
-    pendingImport.plan = buildImportPlan(e.target.checked);
-    renderImportPlan(pendingImport.plan);
-  });
 
   /** Ghi kết quả nhập lịch theo lô qua tầng repository (EduBaseRepository.commitBatch — tự chia lô 450). */
   async function commitImportWrites(writes) {
@@ -2274,11 +2267,10 @@
         btn.innerHTML = '<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Đang so sánh với dữ liệu hiện có...';
         await loadExistingForSelectedWeeks();
         if (pendingImport !== imp) return; // modal đã đóng trong lúc chờ
-        imp.plan = buildImportPlan(document.getElementById('importOverrideChk').checked);
+        imp.plan = buildImportPlan();
         renderImportPlan(imp.plan);
         // Có ô TKB lớp khác Excel → dừng lại cho người nhập xem danh sách
-        // và chọn giữ/ghi đè TRƯỚC khi ghi (1 lần ghi duy nhất, không phải
-        // ghi xong mới phát hiện rồi ghi đè thêm lượt nữa như trước).
+        // ô sẽ đổi/xoá theo Excel, bấm lần nữa mới ghi.
         if (imp.plan.conflicts.length) return;
       }
       const plan = imp.plan;
@@ -2291,10 +2283,9 @@
       await commitImportWrites(plan.writes);
       applyImportToLocalState(plan);
       const s = plan.stats;
-      const keptConflicts = plan.override ? 0 : plan.conflicts.length;
       toast(`Đã nhập: ${s.schedNew} lịch mới, ${s.schedChanged} lịch đổi, ${s.schedSame} không đổi`
         + (s.ttWrites ? `, ${s.ttWrites} TKB lớp` : '')
-        + (keptConflicts ? ` — giữ nguyên ${keptConflicts} ô TKB lớp` : ''));
+        + (plan.conflicts.length ? ` — ${plan.conflicts.length} ô TKB lớp cũ đã cập nhật theo Excel` : ''));
       closeImportModal();
     } catch (err) {
       toast(friendlyError(err));

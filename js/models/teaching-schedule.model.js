@@ -107,6 +107,15 @@
     return { morning: emptySession(), afternoon: emptySession() };
   }
 
+  /** Loại hình KHÔNG dạy lớp cả buổi (nghỉ phép/lễ, WFH, soạn bài, làm việc tại cty, khám
+   * sức khoẻ) — so khớp nới lỏng vì file Excel mỗi năm đổi chữ ("Nghỉ lễ", "Nghỉ phép",
+   * "Nghỉ phép/ lễ", "Khám SK", "Khám sức khỏe"...). */
+  function isNonTeachingType(type) {
+    const t = String(type || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd')
+      .toLowerCase().replace(/\s+/g, ' ').trim();
+    return /^(nghi|wfh|soan bai|lam viec|kham)/.test(t);
+  }
+
   /** Mã lớp THẬT của từng tiết trong 1 buổi, gộp "Lịch tuần" (sess.periods) với
    * "TKB lớp" (ttCells, đọc qua cellOf) — Lịch tuần là NGUỒN GỐC: buổi nào
    * đã gõ ít nhất 1 mã lớp ở Lịch tuần thì tiết 1-5 lấy ĐÚNG theo Lịch tuần
@@ -117,6 +126,11 @@
   function effectivePeriods(sess, ttCells, cellOf) {
     const own = (sess && Array.isArray(sess.periods) ? sess.periods : [])
       .map((p) => (typeof p === 'string' ? p.trim() : ''));
+    // Buổi nghỉ/không dạy (Nghỉ lễ, WFH, Soạn bài...) mà không gõ mã lớp → KHÔNG có tiết nào,
+    // kể cả lớp TKB cũ còn lưu (trước đây lớp tuần cũ vẫn hiện trong buổi Nghỉ lễ).
+    if (sess && isNonTeachingType(sess.type) && !own.some(Boolean)) {
+      return Array.from({ length: Math.max(PERIODS_PER_SESSION, own.length) }, () => '');
+    }
     const tt = (Array.isArray(ttCells) ? ttCells : [])
       .map((c) => String((cellOf ? cellOf(c).maLop : c) || '').trim());
     const ownWins = own.some(Boolean);
@@ -268,6 +282,7 @@
     emptyDay,
     emptyDays,
     effectivePeriods,
+    isNonTeachingType,
     scheduleDocId,
     computeWeekStats,
     buildTeacher,

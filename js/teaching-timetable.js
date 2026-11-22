@@ -307,7 +307,13 @@
         // KHÔNG dạy: xoá ô TKB cũ (lớp đã bỏ/chuyển tiết) thay vì giữ lại —
         // cùng quy ước TS.effectivePeriods() mà "Tổng quan" dùng.
         const schedHasCodes = periods.some((p) => typeof p === 'string' && p.trim());
+        // Buổi nghỉ/không dạy (Nghỉ lễ, WFH, Soạn bài...) → xoá MỌI ô lớp cũ của buổi đó.
+        const sessOff = !schedHasCodes && TS && TS.isNonTeachingType && TS.isNonTeachingType(schedSess.type);
         (state.days[String(d)][s] || []).forEach((cell, i) => {
+          if (sessOff) {
+            if (cell.maLop) { cell.maLop = ''; cell.truong = ''; state.autoCells.add(`${d}-${s}-${i}`); }
+            return;
+          }
           const raw = periods[i];
           // Tương thích ngược: dữ liệu Lịch tuần CŨ có thể vẫn là boolean
           // true (giai đoạn chỉ tích chọn, chưa có mã lớp dạng chữ) — bỏ
@@ -424,6 +430,21 @@
    * (số thứ tự, không đổi theo Thứ). Thứ nào có ÍT tiết hơn Thứ nhiều nhất
    * (vd chỉ dạy 4 tiết Sáng thay vì 5) — ô dư ra của Thứ đó bị khoá (không
    * có ô nhập, hiện "—"). */
+  /** Loại hình buổi KHÔNG dạy theo Lịch tuần (Nghỉ lễ, WFH...) khi buổi đó không gõ mã lớp nào → tên loại hình, không thì ''. */
+  function offType(d, s) {
+    const sess = state.scheduleDoc && state.scheduleDoc.days && state.scheduleDoc.days[String(d)] && state.scheduleDoc.days[String(d)][s];
+    if (!sess || !TS || !TS.isNonTeachingType || !TS.isNonTeachingType(sess.type)) return '';
+    return (sess.periods || []).some((p) => typeof p === 'string' && p.trim()) ? '' : sess.type;
+  }
+  /** Tiết đầu tiên của buổi có ô (Thứ này) — nơi ghi nhãn "Nghỉ lễ"... */
+  function firstPeriodIdx(d, s) { return (state.periodTimesByDay[String(d)][s] || []).findIndex(Boolean); }
+
+  /** Chú thích "giờ lệch khung" chỉ hiện khi lưới thật sự có ô lệch (trước luôn hiện, gây hiểu nhầm là có lỗi). */
+  function syncLegendWarn(table) {
+    const el = document.getElementById('ttLegendWarn');
+    if (el) el.hidden = !table.querySelector('.tt-level-mismatch');
+  }
+
   function renderGrid() {
     const table = document.getElementById('ttGrid');
     const dayHeaders = M.WEEKDAYS.map((d, i) => `<th class="tt-day-head tt-day-${i}">${M.WEEKDAY_LABELS[d]}</th>`).join('');
@@ -445,7 +466,7 @@
       const mismatched = rowMinutes && level.minutes !== rowMinutes;
       const realPeriod = (M.LEVEL_PERIOD_TIMES[levelKey][sessionKey] || [])[pi];
       const warnTitle = mismatched && realPeriod
-        ? ` title="Ô này đang để ${rowMinutes}’/tiết, nhưng ${level.label} chuẩn ${level.minutes}’/tiết (≈ ${esc(realPeriod.start)}–${esc(realPeriod.end)}). Sửa khung giờ đúng Thứ này trong ⏱️ Giờ tiết nếu cần."`
+        ? ` title="Ô này đang để ${rowMinutes}’/tiết, nhưng ${level.label} chuẩn ${level.minutes}’/tiết (≈ ${esc(realPeriod.start)}–${esc(realPeriod.end)}). Sửa khung giờ đúng Thứ này trong Giờ tiết nếu cần."`
         : '';
       return `<span class="tt-level-badge tt-level-${levelKey}${mismatched ? ' tt-level-mismatch' : ''}"${warnTitle}>${esc(level.short)}${mismatched ? ' <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>' : ''}</span>`;
     }
@@ -457,7 +478,7 @@
      * tải lại cả lưới. */
     function computeOwnTimeHtml(d, pi, cell, period) {
       if (!cell.maLop || !period) return '';
-      return `<div class="tt-cell-own-time" title="Giờ tiết ${pi + 1} của ${esc(M.WEEKDAY_LABELS[d])}">⏱ ${esc(period.start)}–${esc(period.end)}</div>`;
+      return `<div class="tt-cell-own-time" title="Giờ tiết ${pi + 1} của ${esc(M.WEEKDAY_LABELS[d])}"><i class="fa-regular fa-clock" aria-hidden="true"></i> ${esc(period.start)}–${esc(period.end)}</div>`;
     }
 
     function sessionRows(sessionKey) {
@@ -485,8 +506,13 @@
           // (gõ tự do VẪN được, danh sách chỉ là gợi ý) — nạp động theo
           // đúng giáo viên/tuần đang xem qua loadSuggestions().
           const isAuto = state.autoCells.has(`${d}-${sessionKey}-${pi}`);
-          const autoTitle = isAuto ? ' title="Tự động lấy từ Lịch tuần — vẫn sửa được nếu TKB cần khác đi"' : '';
-          return `<td class="tt-cell"><div class="tt-cell-inner${isAuto ? ' tt-cell-auto' : ''}"${autoTitle}>
+          const autoTitle = isAuto && cell.maLop ? ' title="Lấy từ Lịch tuần (file Excel tổ) — vẫn sửa được nếu TKB cần khác đi"' : '';
+          // Buổi nghỉ / không dạy (Nghỉ lễ, WFH, Soạn bài...) theo Lịch tuần: ô trống tô nhạt, tiết đầu ghi rõ lý do —
+          // trước chỉ là ô trống như chưa xếp lớp.
+          const off = offType(d, sessionKey);
+          const offHtml = off && !cell.maLop ? (pi === firstPeriodIdx(d, sessionKey) ? `<div class="tt-off-label">${esc(off)}</div>` : '') : '';
+          const stateCls = cell.maLop ? ' has-class' : (cell.truong ? '' : ' is-empty');
+          return `<td class="tt-cell${off && !cell.maLop ? ' tt-cell-off' : ''}"><div class="tt-cell-inner${stateCls}"${autoTitle}>${offHtml}
             <span class="tt-own-time-slot">${computeOwnTimeHtml(d, pi, cell, period)}</span>
             <input type="text" class="tt-input tt-input-lop" list="ttLopOptions" data-day="${d}" data-session="${sessionKey}" data-period-idx="${pi}" data-field="maLop" value="${esc(cell.maLop)}" placeholder="Mã lớp"${readOnlyAttr}>
             <div class="tt-truong-row">
@@ -523,6 +549,7 @@
       <thead><tr><th>Buổi</th><th>Tiết</th>${dayHeaders}</tr></thead>
       <tbody>${sessionRows('morning')}${sessionDivider}${sessionRows('afternoon')}</tbody>`;
 
+    syncLegendWarn(table);
     if (!readOnly) {
       table.querySelectorAll('.tt-input').forEach((el) => {
         el.addEventListener('input', () => {
@@ -538,6 +565,9 @@
           if (badgeSlot) badgeSlot.innerHTML = computeBadgeHtml(s, pi, cell, period);
           const timeSlot = inner.querySelector('.tt-own-time-slot');
           if (timeSlot) timeSlot.innerHTML = computeOwnTimeHtml(d, pi, cell, period);
+          inner.classList.toggle('has-class', !!String(cell.maLop || '').trim());
+          inner.classList.toggle('is-empty', !String(cell.maLop || '').trim() && !String(cell.truong || '').trim());
+          syncLegendWarn(table);
         });
         // Dán bảng trực tiếp CHỈ áp dụng cho cột "Mã lớp" (trường hợp dùng
         // nhiều nhất — dán nguyên hàng mã lớp từ Excel) — ô "Trường" thường
@@ -592,6 +622,7 @@
         const v = val.trim();
         target.value = v;
         state.days[String(day)][session][idx].maLop = v;
+        target.dispatchEvent(new Event('input')); // cập nhật giờ / huy hiệu / kiểu ô như khi gõ
         filled++;
       });
     });

@@ -1070,6 +1070,7 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
   margin-bottom: .7rem; font-size: .76rem; color: var(--muted); font-weight: 700;
 }
 .tt-legend-item { display: inline-flex; align-items: center; gap: .35rem }
+.tt-legend-item[hidden] { display: none }
 .tt-legend-warn { color: #a97a00 }
 .tt-break-row td.tt-break-label {
   background: var(--card2); color: var(--muted); font-weight: 700; font-size: .76rem;
@@ -1139,7 +1140,31 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
 /* Ô vừa được TỰ ĐỘNG điền Mã lớp/Trường từ tab "Lịch tuần" (xem
    applyScheduleAutoFill() trong js/teaching-timetable.js) — viền xanh lá
    nhạt để phân biệt với ô gõ tay/dán thủ công, vẫn sửa được bình thường. */
-.tt-cell-auto { outline: 1.5px dashed var(--green, #2e9e5b); outline-offset: 2px; border-radius: 8px }
+/* (22/11/2026) Bỏ viền nét đứt xanh: gần như mọi ô giờ đều tự lấy từ Lịch tuần (file Excel tổ) nên viền thành nhiễu —
+   nguồn ô vẫn ghi ở tooltip. */
+/* Ô CÓ lớp: 1 thẻ liền (mã lớp + giờ + trường), thay 3 khung rời. */
+.tt-cell-inner.has-class {
+  background: var(--card2); border: 1px solid var(--border); border-radius: 10px; padding: .3rem;
+}
+.tt-cell-inner.has-class .tt-input { background: transparent }
+.tt-cell-inner.has-class .tt-input-lop { font-size: .95rem; font-weight: 800; padding: .25rem .3rem }
+.tt-cell-inner.has-class .tt-input-truong { border-color: transparent }
+/* Ô TRỐNG: không vẽ khung/chữ gợi ý cho đỡ rối — rê chuột / bấm vào (chế độ sửa) mới hiện lại để gõ. */
+.tt-cell-inner.is-empty .tt-input { background: transparent; border-color: transparent }
+.tt-cell-inner.is-empty .tt-input::placeholder { color: transparent }
+.tt-cell:hover .tt-cell-inner.is-empty .tt-input:not([readonly]),
+.tt-cell-inner.is-empty:focus-within .tt-input { background: var(--card2) }
+.tt-cell:hover .tt-cell-inner.is-empty .tt-input-truong:not([readonly]),
+.tt-cell-inner.is-empty:focus-within .tt-input-truong { background: transparent; border-color: var(--border) }
+.tt-cell:hover .tt-cell-inner.is-empty .tt-input:not([readonly])::placeholder,
+.tt-cell-inner.is-empty:focus-within .tt-input::placeholder { color: var(--muted) }
+.tt-input[readonly]:focus { box-shadow: none; border-color: transparent }
+/* Buổi nghỉ / không dạy theo Lịch tuần */
+.tt-cell-off { background: color-mix(in srgb, var(--muted) 7%, transparent) }
+.tt-off-label {
+  align-self: center; font-size: .72rem; font-weight: 800; color: var(--muted);
+  border: 1px solid var(--border); border-radius: 999px; padding: .12rem .55rem; background: var(--card);
+}
 /* Ô Thứ không có đủ tiết (buổi đó ở Thứ này ít tiết hơn Thứ khác trong
    tuần, vd chỉ 4 tiết Sáng thay vì 5) — khoá hẳn, không có ô nhập, tránh
    hiểu lầm "còn tiết trống chưa xếp lớp". */
@@ -1149,10 +1174,10 @@ body.role-teaching-coordinator [data-del-teacher] { display: none !important; }
    cấu hình khung THCS 45’ trong khi cột chung đang hiện giờ Tiểu học
    35’ của Thứ 2) — hiện ngay trong ô, không phụ thuộc cột dùng chung. */
 .tt-cell-own-time {
-  font-size: .64rem; font-weight: 800; color: var(--purple-ink);
-  background: var(--purple-lt); border-radius: 5px; padding: .1rem .3rem;
-  align-self: center;
+  font-size: .64rem; font-weight: 700; color: var(--muted);
+  align-self: center; font-variant-numeric: tabular-nums;
 }
+.tt-cell-own-time i { font-size: .6rem; margin-right: .1rem }
 
 /* ---- Modal "Giờ tiết" — 2 cột Sáng/Chiều, mỗi tiết 1 hàng giờ vào/ra
    có thể thêm/bớt (số tiết mỗi trường không nhất thiết giống nhau). ---- */
